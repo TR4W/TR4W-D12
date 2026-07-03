@@ -2669,7 +2669,7 @@ function ListView_GetItemTextA(hwndLV: HWND; i, iSubItem: integer;
 function ListView_GetItemTextW(hwndLV: HWND; i, iSubItem: integer;
   pszText: PWideChar; cchTextMax: integer): integer;
 function ListView_GetItemText(hwndLV: HWND; i, iSubItem: integer;
-  pszText: PChar; cchTextMax: integer): integer;
+  pszText: PAnsiChar; cchTextMax: integer): integer;
 
 const
   LVM_SETITEMTEXTA                      = LVM_FIRST + 46;
@@ -2681,7 +2681,7 @@ function ListView_SetItemTextA(hwndLV: HWND; i, iSubItem: integer;
 function ListView_SetItemTextW(hwndLV: HWND; i, iSubItem: integer;
   pszText: PWideChar): BOOL;
 function ListView_SetItemText(hwndLV: HWND; i, iSubItem: integer;
-  pszText: PChar): BOOL;
+  pszText: PAnsiChar): BOOL;
 
 const
   LVM_SETITEMCOUNT                      = LVM_FIRST + 47;
@@ -5045,7 +5045,7 @@ begin
 end;
 
 function ListView_GetItemText(hwndLV: HWND; i, iSubItem: integer;
-  pszText: PChar; cchTextMax: integer): integer;
+  pszText: PAnsiChar; cchTextMax: integer): integer;
 var
   Item                                  : TLVItem;
 begin
@@ -5076,7 +5076,7 @@ begin
 end;
 
 function ListView_SetItemText(hwndLV: HWND; i, iSubItem: integer;
-  pszText: PChar): BOOL;
+  pszText: PAnsiChar): BOOL;
 var
   Item                                  : TLVItem;
 begin

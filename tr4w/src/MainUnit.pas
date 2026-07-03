@@ -8075,8 +8075,8 @@ var
  MapBase : Pointer;
  LogSize : Cardinal;
  h : HWND;
- CurrentPos : PChar;
- StartPos : PChar;
+ CurrentPos : PAnsiChar;
+ StartPos : PAnsiChar;
  PosDecimal : integer; // 4.55.1
  QSOCounter : integer;
  FieldLength : integer;
@@ -8085,7 +8085,7 @@ var
  Switch : Boolean;
  TempBand : BandType;
  TempMode : ModeType;
- TempBuffer : array[0..8] of Char;
+ TempBuffer : array[0..8] of AnsiChar;
  TempInteger : integer;
 const
  ADIF_CALL = Ord('L') * $1000000 + Ord('L') * $10000 + Ord('A') * $100 + Ord('C');
@@ -9197,7 +9197,7 @@ begin
   // Switched to write a file
 
   first := true;
-  LongTimeFormat := 'hh nn ss (zzz)';
+  FormatSettings.LongTimeFormat := 'hh nn ss (zzz)';
   DateTimeToString(formattedDate, 'tt', Now);
   if length(s) > 60 then
   begin

@@ -118,8 +118,8 @@ function DeleteSlashes(p: PChar): PChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
 function GetValueFromArray(PCharArrayAddress: PChar; ArraySize: Byte; CMD: PChar): Byte;
-function StrPos(const Str1, Str2: PChar): PChar;
-function StrPosPartial(const Str1, Str2: PChar): PChar;
+function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
+function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 function GetDialogItemText(h: HWND; Control: integer): ShortString;
 function GetNumberFromCharBuffer(p: PChar): integer;
 procedure tLoadKeyboardLayout;
@@ -862,13 +862,13 @@ end;
 
 
 
-function StrPosPartial(const Str1, Str2: PChar): PChar;
+function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 begin
   // Issue #997: extracted to uStrSearch (golden-master tested).
   Result := uStrSearch.StrPosPartial(Str1, Str2);
 end;
 
-function StrPos(const Str1, Str2: PChar): PChar;
+function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 begin
   // Issue #997: extracted to uStrSearch (golden-master tested).
   Result := uStrSearch.StrPos(Str1, Str2);
@@ -1398,7 +1398,7 @@ var
   h                                     : HWND;
   FileSize                              : Cardinal;
   MapFin                                : Cardinal;
-  MapBase                               : PChar;
+  MapBase                               : PAnsiChar;
   StartPos, FilePos                     : Cardinal;
   TempString                            : ShortString;
   LineSize                              : integer;
@@ -1489,7 +1489,7 @@ var
   h                                     : HWND;
   FileSize                              : Cardinal;
   MapFin                                : Cardinal;
-  MapBase                               : PChar;
+  MapBase                               : PAnsiChar;
   StartPos, FilePos                     : Cardinal;
   TempString                            : ShortString;
   LineSize                              : integer;

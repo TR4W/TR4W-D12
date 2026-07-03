@@ -1,4 +1,4 @@
-program tr4w;
+﻿program tr4w;
 {$IMPORTEDDATA OFF}
 
 // VERSIONINFO PE resource (Windows Properties dialog: File version /
@@ -602,7 +602,7 @@ begin
 
    logger.info('******************** PROGRAM STARTUP ************************');
    logger.Trace('trace output');
-   logger.Info('DecimalSeparator = ' + DecimalSeparator);
+   logger.Info('DecimalSeparator = ' + FormatSettings.DecimalSeparator);
 
 
 
@@ -708,7 +708,7 @@ begin
   HamScoreInit;
   UpdateDebugLogLevel;
   //logger.debug('**************** Program Startup ************************');
-  logger.info('DecimalSeparator = ' + DecimalSeparator);
+  logger.info('DecimalSeparator = ' + FormatSettings.DecimalSeparator);
   logger.debug('Current program version = %s',[TR4W_CURRENTVERSION]);
   logger.debug('Current TR4W Server version = %s',[TR4WSERVER_CURRENTVERSION]);
   logger.debug('Current log version = %s',[LOGVERSION]);

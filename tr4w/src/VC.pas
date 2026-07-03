@@ -121,7 +121,7 @@ type
   SCPIndexArrayType = array[0..36, 0..36] of longword {LONGINT n6tr} {LongWord {ua4wli};
   SCPIndexArrayPtr = ^SCPIndexArrayType;
 
-  FourChar = array[0..3] of Char;
+  FourChar = array[0..3] of AnsiChar;
   TAdditionalMultByBand = (dmbbDefauld, dmbbAllBand);
   Yaesu5Bytes = array[0..4] of Byte;
   FileNameType = array[0..MAX_PATH - 1] of Char;
@@ -2706,7 +2706,7 @@ var
 
   TerminalFont                          : HFONT;
   SymbolFont                            : HFONT;
-  Fontstructure                         : tagLOGFONT;
+  Fontstructure                         : TLogFont;
 
   WAV_STOP_PTT_TIMER_IDENTIFIER         : integer;
 

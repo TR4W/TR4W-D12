@@ -49,20 +49,20 @@ unit uStrSearch;
 
 interface
 
-function StrPos(const Str1, Str2: PChar): PChar;
-function StrPosPartial(const Str1, Str2: PChar): PChar;
-function StrComp_JOH_IA32_6(const Str1, Str2: PChar): integer;
+function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
+function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
+function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
 procedure StrU(var Str: ShortString);
 
 implementation
 
 uses
-  SysUtils;
+  SysUtils, System.AnsiStrings;
 
 // Issue #997: x86 inline-asm bodies replaced by the Delphi RTL / pure Pascal.
 // Equivalence to the original asm is frozen by uTestStrSearch (31 golden cases).
 
-function StrComp_JOH_IA32_6(const Str1, Str2: PChar): integer;
+function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
 var
   Cmp: integer;
 begin
@@ -70,7 +70,7 @@ begin
   // (sbb eax,eax; or al,1). SysUtils.StrComp instead returns the raw byte
   // difference of the first mismatch (e.g. '' vs 'A' -> -65). Normalize the
   // sign to preserve the original contract byte-for-byte.
-  Cmp := SysUtils.StrComp(Str1, Str2);
+  Cmp := System.AnsiStrings.StrComp(Str1, Str2);
   if Cmp < 0 then
     Result := -1
   else if Cmp > 0 then
@@ -79,7 +79,7 @@ begin
     Result := 0;
 end;
 
-function StrPosPartial(const Str1, Str2: PChar): PChar;
+function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 var
   Len1, Len2: integer;
   i, j: integer;
@@ -93,11 +93,11 @@ begin
   if (Str1 = nil) or (Str2 = nil) then
     Exit;
 
-  Len2 := SysUtils.StrLen(Str2);
+  Len2 := System.AnsiStrings.StrLen(Str2);
   if Len2 = 0 then          // empty pattern -> nil (matches the asm)
     Exit;
 
-  Len1 := SysUtils.StrLen(Str1);
+  Len1 := System.AnsiStrings.StrLen(Str1);
   if Len1 < Len2 then       // pattern longer than text -> nil
     Exit;
 
@@ -125,11 +125,11 @@ begin
     end;
 end;
 
-function StrPos(const Str1, Str2: PChar): PChar;
+function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 begin
   // TF's original asm body was Borland's classic StrPos verbatim, so the RTL
   // is bit-equivalent (including empty-pattern / over-length / nil -> nil).
-  Result := SysUtils.StrPos(Str1, Str2);
+  Result := System.AnsiStrings.StrPos(Str1, Str2);
 end;
 
 procedure StrU(var Str: ShortString);
@@ -143,7 +143,7 @@ begin
   for i := 1 to Length(Str) do
     begin
     if Str[i] in ['a'..'z'] then
-      Str[i] := Chr(Ord(Str[i]) - $20);
+      Str[i] := AnsiChar(Ord(Str[i]) - $20);
     end;
 end;
 

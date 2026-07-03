@@ -5,8 +5,8 @@ uses VC, SysUtils;
 
 function UpperCase(const s: ShortString): ShortString;
 
-function tCharIsNumbers(c: Char): boolean;
-function tCharIsAlphaNumericOrDash(c: Char): boolean;
+function tCharIsNumbers(c: AnsiChar): boolean;
+function tCharIsAlphaNumericOrDash(c: AnsiChar): boolean;
 
 function safeFloat(sStringFloat : AnsiString) : double;
 function StringHas(LongString: Str160; SearchString: Str80): boolean;
@@ -22,7 +22,7 @@ function StringWithFirstWordDeleted(InputString: Str160): Str160;
 function PostcedingString(LongString: ShortString; Deliminator: ShortString): ShortString;
 function PrecedingString(LongString: ShortString; Deliminator: ShortString): ShortString;
 
-function tPos(s: ShortString; c: Char): integer; //wli
+function tPos(s: ShortString; c: AnsiChar): integer; //wli
 function pPos(c: Char; p: PChar): integer;
 
 function StrComp(const Str1, Str2: PChar): integer;
@@ -32,9 +32,9 @@ implementation
 
 function UpperCase(const s: ShortString): ShortString;
 var
-  ch                                    : Char;
+  ch                                    : AnsiChar;
   l                                     : integer;
-  Source, Dest                          : PChar;
+  Source, Dest                          : PAnsiChar;
 begin
 //  inc(tempshowcty);
   //      Result := UpperCase_JOH_IA32_5(s);
@@ -158,12 +158,12 @@ begin
   StringIsAllNumbers := True;
 end;
 
-function tCharIsNumbers(c: Char): boolean;
+function tCharIsNumbers(c: AnsiChar): boolean;
 begin
   Result := c in ['0'..'9'];
 end;
 
-function tCharIsAlphaNumericOrDash(c: Char): boolean;
+function tCharIsAlphaNumericOrDash(c: AnsiChar): boolean;
 begin
    Result := (c in ['0'..'9']) or
              (c in ['A'..'Z']) or
@@ -210,7 +210,7 @@ function StringWithFirstWordDeleted(InputString: Str160): Str160;
     string passed to it.                                                   }
 
 var
-  DeletedChar                           : Char;
+  DeletedChar                           : AnsiChar;
 
 begin
   if (InputString = '') or (not StringHas(InputString, ' ')) then
@@ -281,7 +281,7 @@ begin
   end;
 end;
 
-function tPos(s: ShortString; c: Char): integer; //
+function tPos(s: ShortString; c: AnsiChar): integer; //
 var
   i                                     : Cardinal;
 begin
@@ -349,10 +349,10 @@ var
 
 begin
   sStringFloat := stringReplace(sStringFloat, '%', '', [rfIgnoreCase, rfReplaceAll]);
-  sStringFloat := stringReplace(sStringFloat, CurrencyString , '', [rfIgnoreCase, rfReplaceAll]);
+  sStringFloat := stringReplace(sStringFloat, FormatSettings.CurrencyString , '', [rfIgnoreCase, rfReplaceAll]);
   sStringFloat := stringReplace(sStringFloat, ' ', '', [rfIgnoreCase, rfReplaceAll]);
   sStringFloat := stringReplace(sStringFloat, ',', '', [rfIgnoreCase, rfReplaceAll]);
-  sStringFloat := stringReplace(sStringFloat, ThousandSeparator, '', [rfIgnoreCase, rfReplaceAll]);
+  sStringFloat := stringReplace(sStringFloat, FormatSettings.ThousandSeparator, '', [rfIgnoreCase, rfReplaceAll]);
   try
     dReturn := strToFloat(sStringFloat);
   except

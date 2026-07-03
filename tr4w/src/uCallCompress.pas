@@ -31,7 +31,7 @@ interface
 uses
    VC;
 
-function WordValueFromCharacter(Character: Char): Word;
+function WordValueFromCharacter(Character: AnsiChar): Word;
 procedure CompressThreeCharacters(Input: Str80; var Output: TwoBytes);
 procedure CompressFormat(Call: CallString; var Output: FourBytes);
 procedure BigCompressFormat(Call: CallString; var CompressedBigCall: EightBytes);
@@ -41,7 +41,7 @@ implementation
 uses
    uStrSearch;
 
-function WordValueFromCharacter(Character: Char): Word;
+function WordValueFromCharacter(Character: AnsiChar): Word;
 begin
   if (Character = CHR(0)) or (Character = ' ') or
     (Character = '/') or (Character = '?') then

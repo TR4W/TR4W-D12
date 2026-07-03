@@ -846,14 +846,14 @@ begin
 
             tAdifFREQ:
                begin
-               saveDecimalSeparator := DecimalSeparator;
+               saveDecimalSeparator := FormatSettings.DecimalSeparator;
                try
-                  DecimalSeparator := '.';
+                  FormatSettings.DecimalSeparator := '.';
                   neFreq := StrToFloat(fieldValue);
                   neFreq := neFreq * 1000000;
                   exch.Frequency := Trunc(neFreq);
                finally
-                  DecimalSeparator := saveDecimalSeparator;
+                  FormatSettings.DecimalSeparator := saveDecimalSeparator;
                end;
                end;
 
@@ -1194,12 +1194,12 @@ begin
       Result := '';
       Exit;
       end;
-   saveSep := DecimalSeparator;
+   saveSep := FormatSettings.DecimalSeparator;
    try
-      DecimalSeparator := '.';
+      FormatSettings.DecimalSeparator := '.';
       Result := FloatToStr(freqHz / 1000000);
    finally
-      DecimalSeparator := saveSep;
+      FormatSettings.DecimalSeparator := saveSep;
    end;
 end;
 

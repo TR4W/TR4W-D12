@@ -29,7 +29,7 @@ uses
 
 procedure scpLoadInDateBase(FileName: PChar);
 procedure scpClose;
-function scpGetAddress(Call: CallString): PChar;
+function scpGetAddress(Call: CallString): PAnsiChar;
 function scpMakeIndex(c: Char): integer;
 function scpFoundCallsign(Call: CallPtr; ListBoxHWND: HWND; data: DataBaseEntryRecordPtr): boolean;
 
@@ -38,7 +38,7 @@ var
   scpLoaded                             : boolean;
   scpHWND                               : HWND;
   scpFMO                                : Cardinal;
-  scpMap                                : PChar;
+  scpMap                                : PAnsiChar;
   SCPIndexArray                         : SCPIndexArrayPtr;
   scpFileSize                           : Cardinal;
 
@@ -84,7 +84,7 @@ begin
   if scpFileSize <> PCardinal(@scpMap[SizeOf(SCPIndexArrayType)])^ then scpClose;
 end;
 
-function scpGetAddress(Call: CallString): PChar;
+function scpGetAddress(Call: CallString): PAnsiChar;
 begin
   Result := @scpMap[SCPIndexArray[scpMakeIndex(Call[1]), scpMakeIndex(Call[2])]];
 end;
@@ -103,9 +103,9 @@ label NextByte;
 var
   StartingOffset, EndingOffset, Offset  : Cardinal;
   Offset1, Offset2                      : Cardinal;
-  Index                                 : PChar;
-  TempBuffer                            : array[0..15] of Char;
-  CallBuffer                            : array[0..15] of Char;
+  Index                                 : PAnsiChar;
+  TempBuffer                            : array[0..15] of AnsiChar;
+  CallBuffer                            : array[0..15] of AnsiChar;
   Partial1                              : Byte;
   Partial2                              : Byte;
   TempPointer                           : Cardinal;

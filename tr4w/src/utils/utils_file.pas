@@ -7,7 +7,7 @@ uses SysUtils, Windows;
 function FileExists(FileName: PChar): boolean;
 
 function sWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD): BOOL;
-function sWriteFileFromString(hFile: THandle; sBuffer: string): BOOL;
+function sWriteFileFromString(hFile: THandle; sBuffer: AnsiString): BOOL;
 function tWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): BOOL;
 function sReadFile(hFile: THandle; var Buffer; nNumberOfBytesToRead: DWORD): BOOL;
 
@@ -52,7 +52,7 @@ begin
   Result := Windows.WriteFile(hFile, Buffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, nil);
 end;
 
-function sWriteFileFromString(hFile: THandle; sBuffer: string): BOOL;
+function sWriteFileFromString(hFile: THandle; sBuffer: AnsiString): BOOL;
 // Write the entire string to hFile.  Bug history: prior versions copied
 // sBuffer into a fixed 256-byte stack buffer via StrLCopy and then asked
 // WriteFile to write length(sBuffer) bytes -- which read random stack
@@ -69,7 +69,7 @@ begin
       Result := True;
       Exit;
       end;
-   Result := Windows.WriteFile(hFile, PChar(sBuffer)^, Length(sBuffer),
+   Result := Windows.WriteFile(hFile, PAnsiChar(sBuffer)^, Length(sBuffer),
                                lpNumberOfBytesWritten, nil);
 end;
 

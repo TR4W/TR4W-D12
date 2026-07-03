@@ -29,7 +29,7 @@ type
    TStrSearchTests = class(TTestCase)
    protected
       // Returns the offset of p within base, or -1 if p is nil.
-      function Off(base, p: PChar): integer;
+      function Off(base, p: PAnsiChar): integer;
 
       // StrPos -- exact substring search
       procedure Test_StrPos_Start;
@@ -81,7 +81,7 @@ type
 
 implementation
 
-function TStrSearchTests.Off(base, p: PChar): integer;
+function TStrSearchTests.Off(base, p: PAnsiChar): integer;
 begin
    if p = nil then
       Result := -1
@@ -94,7 +94,7 @@ end;
 // ---------------------------------------------------------------------------
 
 procedure TStrSearchTests.Test_StrPos_Start;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_Start');
    s := 'ABCDEF';
@@ -102,7 +102,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_StrPos_Middle;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_Middle');
    s := 'HELLO WORLD';
@@ -110,7 +110,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_StrPos_End;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_End');
    s := 'ABCDEF';
@@ -118,7 +118,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_StrPos_NotFound;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_NotFound');
    s := 'ABCDEF';
@@ -126,7 +126,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_StrPos_WholeString;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_WholeString');
    s := 'ABC';
@@ -134,7 +134,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_StrPos_Overlap;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_Overlap');
    s := 'AAB';
@@ -142,7 +142,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_StrPos_RepeatedFirstChar;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_RepeatedFirstChar');
    s := 'XXXY';
@@ -150,7 +150,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_StrPos_EmptyPattern;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_EmptyPattern');
    // The asm returns nil for an empty pattern (len(str2)=0 -> JE @@2).
@@ -159,7 +159,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_StrPos_PatternLongerThanText;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_StrPos_PatternLongerThanText');
    s := 'AB';
@@ -230,7 +230,7 @@ end;
 // ---------------------------------------------------------------------------
 
 procedure TStrSearchTests.Test_Partial_NoWildcard;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_NoWildcard');
    s := 'HELLO';
@@ -238,7 +238,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_MidWildcard;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_MidWildcard');
    s := 'HELLO';
@@ -247,7 +247,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_MultipleWildcards;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_MultipleWildcards');
    s := 'ABCDE';
@@ -256,7 +256,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_LeadingQuestionIsLiteral_Found;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_LeadingQuestionIsLiteral_Found');
    // Leading '?' is matched literally: it must find an actual '?' char.
@@ -265,7 +265,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_LeadingQuestionIsLiteral_NotFound;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_LeadingQuestionIsLiteral_NotFound');
    // No literal '?' present -> leading '?' cannot wildcard the first char.
@@ -274,7 +274,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_BacktrackRetry;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_BacktrackRetry');
    // First 'X' at 0 fails ('C' vs str1[2]='X'); retry finds 'X' at 2 -> match.
@@ -283,7 +283,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_NotFound;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_NotFound');
    s := 'ABC';
@@ -291,7 +291,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_PatternLongerThanText;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_PatternLongerThanText');
    s := 'AB';
@@ -299,7 +299,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_EmptyPattern;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_EmptyPattern');
    s := 'ABC';
@@ -314,7 +314,7 @@ begin
 end;
 
 procedure TStrSearchTests.Test_Partial_SCPStyle;
-var s: PChar;
+var s: PAnsiChar;
 begin
    BeginTest('Test_Partial_SCPStyle');
    // Representative super-check-partial use: a partial callsign with a '?'

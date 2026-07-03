@@ -24,7 +24,7 @@ type
    TUtilsFileTests = class(TTestCase)
    protected
       // Write s via sWriteFileFromString, read the raw file back as a string.
-      function RoundTrip(const s: string): string;
+      function RoundTrip(const s: AnsiString): AnsiString;
 
       procedure Test_LongString_NoTruncationOrGarbage;
       procedure Test_BoundaryLengths_255_256_257;
@@ -36,12 +36,12 @@ type
 
 implementation
 
-function TUtilsFileTests.RoundTrip(const s: string): string;
+function TUtilsFileTests.RoundTrip(const s: AnsiString): AnsiString;
 var
    tmpDir  : array[0..MAX_PATH] of Char;
    tmpFile : array[0..MAX_PATH] of Char;
    h       : THandle;
-   buf     : string;
+   buf     : AnsiString;
    got     : DWORD;
 begin
    Result := '';
@@ -65,7 +65,7 @@ begin
    try
       SetLength(buf, Length(s) + 64);
       got := 0;
-      ReadFile(h, PChar(buf)^, Length(buf), got, nil);
+      ReadFile(h, PAnsiChar(buf)^, Length(buf), got, nil);
       SetLength(buf, got);
       Result := buf;
    finally

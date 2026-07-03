@@ -37,8 +37,8 @@ function CISCountry(CountryID: Str20): boolean;
 function UBACountry(CountryID: Str20): boolean;
 function ScandinavianCountry(CountryID: Str20): boolean;
 function IndonesianCountry(CountryID: Str20): boolean;
-function GetNumber(Call: CallString): Char;
-function GetFirstSuffixLetter(Call: CallString): Char;
+function GetNumber(Call: CallString): AnsiChar;
+function GetFirstSuffixLetter(Call: CallString): AnsiChar;
 function RussianID(ID: ShortString): boolean;
 function FrenchID(ID: ShortString): boolean;
 function SpanishStation(ID: ShortString): boolean;
@@ -55,7 +55,7 @@ function RootCall(Call: CallString): CallString;
 function RoverCall(Call: CallString): boolean;
 function SimilarCall(Call1: CallString; Call2: CallString): boolean;
 function GoodCallSyntax(Call: CallString): boolean;
-function ValidCallCharacter(CallChar: Char): boolean;
+function ValidCallCharacter(CallChar: AnsiChar): boolean;
 implementation
 uses uCTYDAT;
 function ARRLSectionCountry(CountryID: Str20): boolean;
@@ -87,7 +87,7 @@ begin
   Result := False;
   if pos(' ' + CountryID + ' ', IndonesianCountries) <> 0 then Result := True;
 end;
-function GetNumber(Call: CallString): Char;
+function GetNumber(Call: CallString): AnsiChar;
 { This function will look at the callsign passed to it and return the
   single number that is in it.  If the call is portable, the number from
   the portable designator will be given if there is one.  If the call
@@ -102,9 +102,9 @@ begin
       GetNumber := Call[CharPtr];
       Exit;
     end ;
-  GetNumber := CHR(0);
+  GetNumber := #0;
 end;
-function GetFirstSuffixLetter(Call: CallString): Char;
+function GetFirstSuffixLetter(Call: CallString): AnsiChar;
 { This function will get the first letter after the last number in the
   callsign or portable designator.  If the call does not have a letter
   after the last number, or if the portable designator does not have
@@ -126,7 +126,7 @@ begin
         GetFirstSuffixLetter := Call[CharPtr + 1];
         Exit;
       end;
-  GetFirstSuffixLetter := CHR(0);
+  GetFirstSuffixLetter := #0;
   end;
 end;
 function OKOMStation(ID: ShortString): boolean;
@@ -353,8 +353,8 @@ end;
 function GetOblast(Call: CallString): Str2;
 var
   i                                     : integer;
-  c1                                    : Char;
-  c2                                    : Char;
+  c1                                    : AnsiChar;
+  c2                                    : AnsiChar;
 begin
   Call := StandardCallFormat(Call, False);
   if StringHas(Call, '/') then Call := PrecedingString(Call, '/');
@@ -407,12 +407,12 @@ begin
   if tPos(Call, '/') <> 0 then Exit;
   Oblast := GetOblast(Call);
   if length(Oblast) < 2 then Exit;
-  reg := GetRussiaOblastByTwoChars(Oblast[1], Oblast[2]);
+  reg := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
   if reg = rtUnknownRegion then Exit;
-  r := RussianRegionsTypeIdArray[GetRussiaOblastByTwoChars(Oblast[1], Oblast[2])];
+  r := RussianRegionsTypeIdArray[GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]))];
   Result[0] := #2;
-  Result[1] := r[0];
-  Result[2] := r[1];
+  Result[1] := AnsiChar(r[0]);
+  Result[2] := AnsiChar(r[1]);
 end;
 function CaliforniaCall(Call: CallString): boolean;
 begin
@@ -545,7 +545,7 @@ begin
   }
   GoodCallSyntax := True;
 end;
-function ValidCallCharacter(CallChar: Char): boolean;
+function ValidCallCharacter(CallChar: AnsiChar): boolean;
 begin
   Result := CallChar in ['/', '0'..'9', 'A'..'Z'];
 end;

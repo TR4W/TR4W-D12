@@ -167,8 +167,8 @@ const
   BlackSeaCountriesString               = ' OE ZA EU LZ E7 HA DL 4L I Z3 ER SP UA YO OM S5 TA UR 9A 4O OK HB YU ';
 
 type
-  DXMultString = array[0..7] of Char;
-  PrefixName = array[0..13] of Char;
+  DXMultString = array[0..7] of AnsiChar;
+  PrefixName = array[0..13] of AnsiChar;
 
 //  ZoneModeType = (CQZoneMode, ITUZoneMode);
 //const
@@ -195,7 +195,7 @@ type
 
     {08}DefaultGrid: GridString;
 
-    {32}Name: array[0..31] of Char;
+    {32}Name: array[0..31] of AnsiChar;
     {01}DefaultITUZone: Byte;
     {02}UTCOffset: Smallint;
     {01}DefaultCQZone: Byte;
@@ -205,7 +205,7 @@ type
   CountryInfoArrayType = array[0..MaxCountries - 1] of CountryInfoRecord;
 
   CTYInterface = record
-    ctyVersion: array[0..15] of Char;
+    ctyVersion: array[0..15] of AnsiChar;
     ctyTable: CountryInfoArrayType;
     ctyNumberCountries: longint;   // 4.42.6
     ctyPrefixesTable: HDSA;
@@ -233,7 +233,7 @@ type
 function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
 //function ctyInit(ctyFilename: PChar): boolean;
 function ctyLoadInCountryFile(ctyFilename: PChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
-function ctyFindCallsign(const s: PChar; var Index: integer): boolean;
+function ctyFindCallsign(const s: PAnsiChar; var Index: integer): boolean;
 function ctyGetGrid(Call: CallString; var ID: DXMultiplierString): GridString;
 function ctyGetContinent(Call: CallString): ContinentType;
 function ctyGetCountry(Call: CallString): Word;
@@ -248,7 +248,7 @@ function ctyGetDefaultGrid(Country: Word): GridString;
 function ctyGetCountryIdByIndex(Country: Word): DXMultiplierString;
 function ctyGetContinentByIndex(Country: Word): ContinentType;
 function ctyGetTotalCountries: integer;
-function ctyGetVersion: PChar;
+function ctyGetVersion: PAnsiChar;
 function ctyIsActiveMultiplier(Index: Word): boolean;
 procedure ctySetCountryMode(CountryMode: CountryModeType);
 
@@ -261,7 +261,7 @@ procedure ctyShellSort;
 procedure ctyAddNewPrefixRecord(pr: PrefixRecPtr; CheckDupe: boolean);
 procedure ctyMakeDefaultRemainingCountryList;
 procedure ctyLoadInRFOblList;   // n4af 4.42.6
-procedure ctyLoadInRemainingMults(p: PChar);
+procedure ctyLoadInRemainingMults(p: PAnsiChar);
 procedure ctyLoadInR150SList;
 
 var
@@ -428,11 +428,11 @@ label
 var
   MapFin                                : Cardinal;
   MapBase                               : Pointer;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
   h                                     : HWND;
   i                                     : Cardinal;
   s                                     : Cardinal;
-  b                                     : array[0..31] of Char;
+  b                                     : array[0..31] of AnsiChar;
   //rmbuffer                              : array[0..4096 - 1] of Char;
   c                                     : ctyColumns;
   //x                                     : Cardinal;
@@ -500,7 +500,7 @@ begin
                 begin
                   // Issue #997: removed asm nop (no-op).
                   Windows.CopyMemory(@r.ID[1], @p[i - l], l);
-                  r.ID[0] := CHR(l);
+                  r.ID[0] := AnsiChar(l);
                   ReplaceCountry(r);
                   c := cpCountryName;
                   Continue;
@@ -560,7 +560,7 @@ begin
             cpPrimaryPrefix:
               begin
                 Windows.CopyMemory(@r.ID[1], @p[s], l);
-                r.ID[0] := CHR(l);
+                r.ID[0] := AnsiChar(l);
 //                if r.ID = 'UA9' then
 //                  asm nop end;
 {
@@ -623,7 +623,7 @@ begin
               if pr.Prefix[2] = 'R' then
                 if pr.Prefix[3] = '2' then
                   if pr.Prefix[4] = '0' then
-                    Windows.lstrcat(CTY.CtyVersion, pr.Prefix);
+                    Windows.lstrcatA(CTY.CtyVersion, pr.Prefix);
 
           s := i + 1;
           e := 0;
@@ -635,7 +635,11 @@ begin
 
   if LoadRemainingMults then
   begin
-    p := Strpos(MapBase, rm);
+    // D12 NOTE: StrPos here is the WideChar RTL variant, so it will not locate
+    // the ANSI 'REMAINING MULTS' marker in the byte-mapped file -- this branch is
+    // effectively disabled until given a PAnsiChar search. Not exercised by the
+    // test (LoadRemainingMults=False); flagged with the remaining-mults feature.
+    p := PAnsiChar(Strpos(MapBase, rm));
     if p <> nil then ctyLoadInRemainingMults(p);
   end;
 
@@ -729,7 +733,7 @@ begin
 
 end;
 
-function ctyFindCallsign(const s: PChar; var Index: integer): boolean;
+function ctyFindCallsign(const s: PAnsiChar; var Index: integer): boolean;
 var
   l, h, i, c                            : integer;
 
@@ -933,7 +937,7 @@ begin
     for TempInteger := 1 to GridsArraysCount do
       if ID = GridsIndexArray[TempInteger] then
       begin
-        TempChar := GetNumber(Call);
+        TempChar := Char(GetNumber(Call));
         if TempChar in ['0'..'9'] then
         begin
           Result := GridsArray[TempInteger][TempChar];
@@ -1293,7 +1297,7 @@ begin
 
 end;
 
-procedure ctyLoadInRemainingMults(p: PChar);
+procedure ctyLoadInRemainingMults(p: PAnsiChar);
 var
   i                                     : Cardinal;
   s                                     : Cardinal;
@@ -1309,7 +1313,7 @@ begin
       begin
         Windows.ZeroMemory(@b, SizeOf(b));
         Windows.CopyMemory(@b, @p[s], i - s);
-        StrUpper(@b);
+        StrUpper(PAnsiChar(@b));
         for e := 0 to MaxCountries - 1 do
         begin
 
@@ -1331,7 +1335,7 @@ begin
   Result := CTY.ctyNumberCountries;
 end;
 
-function ctyGetVersion: PChar;
+function ctyGetVersion: PAnsiChar;
 begin
   Result := cty.ctyVersion;
 end;

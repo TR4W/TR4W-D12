@@ -16,10 +16,10 @@ unit Log4D;
   The Initial Developer of the Original Code is Keith Wood.
   All Rights Reserved.
 
-  Contributor(s): adasen, mhoenemann, aweber, ahesse, michaelJustin.
+  Contributor(s): adasen, mhoenemann, aweber, ahesse, michaelJustin, svenHarazim.
 }
 
-{  
+{
   Logging for Delphi.
   Based on log4j Java package from Apache
   (http://jakarta.apache.org/log4j/docs/index.html).
@@ -55,11 +55,16 @@ unit Log4D;
   - make TLogLevel.Create() public to add User defined Log Levels
   - TLogLogger.IsEnabledFor() must use the same logic as TLogLogger.Log()
 
+  changes by svenHarazim and michaelJustin
+  - removed jedi.inc and add IF / IFEND blocks
+  - add methods with signature (const Fmt: string; const Args: array of const; const Err: Exception = nil);
+  - use const on string arguments
+  - add resource protection (try .. finally) in TLogFileAppender.SetLogFile
+  - replace fmShareDenyWrite with fmShareDenyNone for concurrent logging
+
 }
 
 interface
-
-{$I Defines.inc}
 
 uses
   Classes,
@@ -68,9 +73,7 @@ uses
 {$ELSE}
   Windows,
 {$ENDIF}
-{$IFDEF HAS_UNIT_CONTNRS}
   Contnrs,
-{$ENDIF}
   SysUtils;
 
 const
@@ -148,7 +151,7 @@ const
   DEFAULT_MAX_BACKUP_INDEX = 1;
 
 type
-{$IFDEF DELPHI4}
+{$IFDEF VER120}
   TClassList  = TList;
   TObjectList = TList;
 {$ENDIF}
@@ -198,7 +201,7 @@ type
     FLevel: Integer;
     FName: string;
   public
-    constructor Create(Name: string; Level: Integer);
+    constructor Create(const Name: string; Level: Integer);
     property Level: Integer read FLevel;
     property Name: string read FName;
     function IsGreaterOrEqual(LogLevel: TLogLevel): Boolean;
@@ -208,9 +211,9 @@ type
     class function GetLevel(LogLevel: Integer; DefaultLevel: TLogLevel): TLogLevel;
       overload;
     { Retrieve a level object given its name. }
-    class function GetLevel(Name: string): TLogLevel; overload;
+    class function GetLevel(const Name: string): TLogLevel; overload;
     { Retrieve a level object given its name, or default if not valid. }
-    class function GetLevel(Name: string; DefaultLevel: TLogLevel): TLogLevel;
+    class function GetLevel(const Name: string; DefaultLevel: TLogLevel): TLogLevel;
       overload;
   end;
 
@@ -348,16 +351,19 @@ type
       overload;
     procedure AssertLog(const Assertion: Boolean; const Message: TObject);
       overload;
-    procedure Debug(const sFormat: string; const Args: array of const); overload; virtual;
+    procedure Debug(const Fmt: string; const Args: array of const; const Err: Exception = nil);
+      overload; virtual;
     procedure Debug(const Message: string; const Err: Exception = nil);
       overload; virtual;
     procedure Debug(const Message: TObject; const Err: Exception = nil);
+      overload; virtual;
+    procedure Error(const Fmt: string; const Args: array of const; const Err: Exception = nil);
       overload; virtual;
     procedure Error(const Message: string; const Err: Exception = nil);
       overload; virtual;
     procedure Error(const Message: TObject; const Err: Exception = nil);
       overload; virtual;
-    procedure Error(const sFormat: string; const Args: array of const);
+    procedure Fatal(const Fmt: string; const Args: array of const; const Err: Exception = nil);
       overload; virtual;
     procedure Fatal(const Message: string; const Err: Exception = nil);
       overload; virtual;
@@ -369,7 +375,8 @@ type
     class function GetLogger(const Name: string;
       const Factory: ILogLoggerFactory = nil): TLogLogger; overload;
     class function GetRootLogger: TLogLogger;
-    procedure Info(const sFormat: string; const Args: array of const); overload; virtual;
+    procedure Info(const Fmt: string; const Args: array of const; const Err: Exception = nil);
+      overload; virtual;
     procedure Info(const Message: string; const Err: Exception = nil);
       overload; virtual;
     procedure Info(const Message: TObject; const Err: Exception = nil);
@@ -383,6 +390,8 @@ type
     function IsWarnEnabled: Boolean;
     function IsTraceEnabled: Boolean;
     procedure LockLogger;
+    procedure Log(const LogLevel: TLogLevel; const Fmt: string; const Args: array of const;
+      const Err: Exception = nil); overload;
     procedure Log(const LogLevel: TLogLevel; const Message: string;
       const Err: Exception = nil); overload;
     procedure Log(const LogLevel: TLogLevel; const Message: TObject;
@@ -390,17 +399,19 @@ type
     procedure RemoveAllAppenders;
     procedure RemoveAppender(const Appender: ILogAppender); overload;
     procedure RemoveAppender(const Name: string); overload;
-    procedure Trace(const sFormat: string; const Args: array of const); overload; virtual;
+    procedure Trace(const Fmt: string; const Args: array of const; const Err: Exception = nil);
+      overload; virtual;
     procedure Trace(const Message: string; const Err: Exception = nil);
       overload; virtual;
     procedure Trace(const Message: TObject; const Err: Exception = nil);
       overload; virtual;
     procedure UnlockLogger;
+    procedure Warn(const Fmt: string; const Args: array of const; const Err: Exception = nil);
+      overload; virtual;
     procedure Warn(const Message: string; const Err: Exception = nil);
       overload; virtual;
     procedure Warn(const Message: TObject; const Err: Exception = nil);
       overload; virtual;
-      procedure Warn(const sFormat: string; const Args: array of const); overload; virtual;
   end;
 
   { The specialised root logger - cannot have a nil level. }
@@ -1188,7 +1199,7 @@ begin
     end
     else if TLogLevel(Levels[Index]).Level = Level.Level then
     begin
-{$IFDEF DELPHI4}
+{$IFDEF VER120}
       TObject(Levels[Index]).Free;
 {$ELSE}
       Levels[Index].Free;
@@ -1199,7 +1210,7 @@ begin
   Levels.Add(Level);
 end;
 
-constructor TLogLevel.Create(Name: string; Level: Integer);
+constructor TLogLevel.Create(const Name: string; Level: Integer);
 begin
   inherited Create;
   FName  := Name;
@@ -1231,13 +1242,13 @@ begin
 end;
 
 { Retrieve a level object given its name. }
-class function TLogLevel.GetLevel(Name: string): TLogLevel;
+class function TLogLevel.GetLevel(const Name: string): TLogLevel;
 begin
   Result := GetLevel(Name, Debug);
 end;
 
 { Retrieve a level object given its name, or default if not valid. }
-class function TLogLevel.GetLevel(Name: string; DefaultLevel: TLogLevel):
+class function TLogLevel.GetLevel(const Name: string; DefaultLevel: TLogLevel):
   TLogLevel;
 var
   Index: Integer;
@@ -1471,7 +1482,7 @@ begin
   Renderer := Logger.Hierarchy.GetRenderer(Message.ClassType);
   if Renderer = nil then
   begin
-    LogLog.Error(Format(NoRendererMsg, [Message.ClassName]));
+    LogLog.Error(NoRendererMsg, [Message.ClassName]);
     Abort;
   end
   else
@@ -1587,7 +1598,7 @@ begin
   try
     if CountAppenders = 0 then
     begin
-      LogLog.Error(Format(NoAppendersMsg, [Name]));
+      LogLog.Error(NoAppendersMsg, [Name]);
       LogLog.Error(PleaseInitMsg);
       Exit;
     end;
@@ -1621,16 +1632,9 @@ begin
     Result := Result + Parent.CountAppenders;
 end;
 
-procedure TLogLogger.Debug(const sFormat: string; const Args: array of const);
+procedure TLogLogger.Debug(const Fmt: string; const Args: array of const; const Err: Exception);
 begin
-   if Self.IsDebugEnabled then
-      begin
-         try
-            Log(Log4D.Debug,Format(sFormat, Args));
-         except on E : Exception do
-            Log(Log4D.Debug,'Exception in Debug with Format statement = ' + sFormat,E);
-         end;
-      end;
+  Log(Log4D.Debug, Fmt, Args, Err);
 end;
 
 procedure TLogLogger.Debug(const Message: string; const Err: Exception);
@@ -1670,16 +1674,9 @@ begin
   end;
 end;
 
-procedure TLogLogger.Error(const sFormat: string; const Args: array of const);
+procedure TLogLogger.Error(const Fmt: string; const Args: array of const; const Err: Exception);
 begin
-   if Self.IsErrorEnabled then
-      begin
-         try
-            Log(Log4D.Error,Format(sFormat, Args));
-         except on E : Exception do
-            Log(Log4D.Error,'Exception in Debug with Format statement = ' + sFormat,E);
-         end;
-      end;
+  Log(Log4D.Error, Fmt, Args, Err);
 end;
 
 procedure TLogLogger.Error(const Message: string; const Err: Exception);
@@ -1690,6 +1687,11 @@ end;
 procedure TLogLogger.Error(const Message: TObject; const Err: Exception);
 begin
   Log(Log4D.Error, Message, Err);
+end;
+
+procedure TLogLogger.Fatal(const Fmt: string; const Args: array of const; const Err: Exception);
+begin
+  Log(Log4D.Fatal, Fmt, Args, Err);
 end;
 
 procedure TLogLogger.Fatal(const Message: string; const Err: Exception);
@@ -1750,16 +1752,9 @@ begin
     Result := Parent.Level;
 end;
 
-procedure TLogLogger.Info(const sFormat: string; const Args: array of const);
+procedure TLogLogger.Info(const Fmt: string; const Args: array of const; const Err: Exception);
 begin
-   if Self.IsInfoEnabled then
-      begin
-         try
-            Log(Log4D.Info,Format(sFormat, Args));
-         except on E : Exception do
-            Log(Log4D.Info,'Exception in Debug with Format statement = ' + sFormat,E);
-         end;
-      end;
+  Log(Log4D.Info, Fmt, Args, Err);
 end;
 
 procedure TLogLogger.Info(const Message: string; const Err: Exception);
@@ -1821,6 +1816,13 @@ begin
 end;
 
 { Hierarchy can disable logging at a global level. }
+procedure TLogLogger.Log(const LogLevel: TLogLevel; const Fmt: string; const Args: array of const;
+  const Err: Exception);
+begin
+  if IsEnabledFor(LogLevel) then
+    DoLog(LogLevel, Format(Fmt, Args), Err);
+end;
+
 procedure TLogLogger.Log(const LogLevel: TLogLevel; const Message: string; const Err: Exception);
 begin
   if IsEnabledFor(LogLevel) then
@@ -1869,17 +1871,9 @@ begin
   end;
 end;
 
-procedure TLogLogger.Trace(const sFormat: string; const Args: array of const);
+procedure TLogLogger.Trace(const Fmt: string; const Args: array of const; const Err: Exception);
 begin
-   if Self.IsTraceEnabled then     // We do this so we do not spend time formatting a statement we will not use
-      begin
-         try
-            Log(Log4D.Trace,Format(sFormat, Args));
-         except on E : Exception do
-            Log(Log4D.Trace,'Exception in Trace with Format statement = ' + sFormat,E);
-         end;
-      end;
-
+  Log(Log4D.Trace, Fmt, Args, Err);
 end;
 
 procedure TLogLogger.Trace(const Message: string; const Err: Exception);
@@ -1898,6 +1892,11 @@ begin
   LeaveCriticalSection(FCriticalLogger);
 end;
 
+procedure TLogLogger.Warn(const Fmt: string; const Args: array of const; const Err: Exception);
+begin
+  Log(Log4D.Warn, Fmt, Args, Err);
+end;
+
 procedure TLogLogger.Warn(const Message: string; const Err: Exception);
 begin
   Log(Log4D.Warn, Message, Err);
@@ -1907,22 +1906,6 @@ procedure TLogLogger.Warn(const Message: TObject; const Err: Exception);
 begin
   Log(Log4D.Warn, Message, Err);
 end;
-
-procedure TLogLogger.Warn(const sFormat: string; const Args: array of const);
-begin
-   if Self.IsWarnEnabled then     // We do this so we do not spend time formatting a statement we will not use
-      begin
-         try
-            Log(Log4D.Warn,Format(sFormat, Args));
-         except on E : Exception do
-            Log(Log4D.Warn,'Exception in Warn with Format statement = ' + sFormat,E);
-         end;
-      end;
-
-end;
-
-
-
 
 { TLogRoot --------------------------------------------------------------------}
 
@@ -2054,7 +2037,7 @@ procedure TLogHierarchy.EmitNoAppenderWarning(const Logger: TLogLogger);
 begin
   if not FEmittedNoAppenderWarning then
   begin
-    LogLog.Warn(Format(NoAppendersMsg, [Logger.Name]));
+    LogLog.Warn(NoAppendersMsg, [Logger.Name]);
     LogLog.Warn(PleaseInitMsg);
     FEmittedNoAppenderWarning := True;
   end;
@@ -2200,7 +2183,7 @@ var
 begin
   Level := TLogLevel.GetLevel(LowerCase(Name), nil);
   if Level = nil then
-    LogLog.Warn(Format(ConvertErrorMsg, [Name]))
+    LogLog.Warn(ConvertErrorMsg, [Name])
   else
     Threshold := Level;
 end;
@@ -2286,12 +2269,13 @@ end;
 procedure TLogCustomLayout.Init;
 begin
   inherited Init;
-  SetOption(DateFormatOpt,'dd mmm yyyy hh:nn:ss.zzz');
-(*  SetOption(DateFormatOpt,
-    {$IFDEF DELPHIXE_UP}FormatSettings.{$ENDIF}
-    {$IFDEF FPC}FormatSettings.{$ENDIF}
+  SetOption(DateFormatOpt,
+    {$IFDEF FPC}
+    FormatSettings.
+    {$ELSE}
+    {$IF CompilerVersion >= 22}FormatSettings.{$IFEND}
+    {$ENDIF}
     ShortDateFormat);
-    *)
 end;
 
 { Set a list of options for this layout. }
@@ -2536,20 +2520,20 @@ end;
 procedure TLogCustomErrorHandler.SetAppender(const Appender: ILogAppender);
 begin
   FAppender := Appender;
-  LogLog.Debug(Format(SettingAppenderMsg, [Appender.Name]));
+  LogLog.Debug(SettingAppenderMsg, [Appender.Name]);
 end;
 
 procedure TLogCustomErrorHandler.SetBackupAppender(
   const BackupAppender: ILogAppender);
 begin
   FBackupAppender := BackupAppender;
-  LogLog.Debug(Format(SettingBackupMsg, [BackupAppender.Name]));
+  LogLog.Debug(SettingBackupMsg, [BackupAppender.Name]);
 end;
 
 procedure TLogCustomErrorHandler.SetLogger(const Logger: TLogLogger);
 begin
   FLogger := Logger;
-  LogLog.Debug(Format(SettingLoggerMsg, [Logger.Name]));
+  LogLog.Debug(SettingLoggerMsg, [Logger.Name]);
 end;
 
 { TLogOnlyOnceErrorHandler ----------------------------------------------------}
@@ -2577,9 +2561,17 @@ constructor TLogFallbackErrorHandler.Create;
 begin
   inherited Create;
   FLoggers             := TObjectList.Create;
-{$IFDEF DELPHI5_UP}
+{$IFDEF FPC}
+  FLoggers.OwnsObjects := False;
+{$ELSE}
+{$IFDEF VER130}
   FLoggers.OwnsObjects := False;
 {$ENDIF}
+{$IF CompilerVersion >= 14}
+  FLoggers.OwnsObjects := False;
+{$IFEND}
+{$ENDIF FPC}
+
 end;
 
 destructor TLogFallbackErrorHandler.Destroy;
@@ -2593,12 +2585,12 @@ procedure TLogFallbackErrorHandler.Error(const Message: string);
 var
   Index: Integer;
 begin
-  LogLog.Debug(Format(FallbackMsg, [Message]));
+  LogLog.Debug(FallbackMsg, [Message]);
   for Index := 0 to FLoggers.Count - 1 do
     with TLogLogger(FLoggers[Index]) do
     begin
-      LogLog.Debug(Format(FallbackReplaceMsg,
-        [FAppender.Name, FBackupAppender.Name, Name]));
+      LogLog.Debug(FallbackReplaceMsg,
+        [FAppender.Name, FBackupAppender.Name, Name]);
       RemoveAppender(FAppender);
       AddAppender(FBackupAppender);
     end;
@@ -2616,7 +2608,7 @@ begin
   if FLoggers.IndexOf(Logger) = -1 then
   begin
     FLoggers.Add(Logger);
-    LogLog.Debug(Format(AddingLoggerMsg, [Logger.Name]));
+    LogLog.Debug(AddingLoggerMsg, [Logger.Name]);
   end;
 end;
 
@@ -3050,33 +3042,28 @@ end;
 procedure TLogFileAppender.SetLogFile(const Name: string);
 var
   strPath: string;
-  f : TextFile;
 begin
   CloseLogFile;
   FFileName := Name;
   if FAppend and FileExists(FFileName) then
   begin
     // append to existing file
-
-    FStream := TFileStream.Create(FFileName, fmOpenReadWrite or fmShareDenyWrite);
+    // note that we replace fmShareDenyWrite with fmShareDenyNone for concurrent logging possibility
+    FStream := TFileStream.Create(FFileName, fmOpenReadWrite or fmShareDenyNone);
     FStream.Seek(0, soFromEnd);
   end
   else
   begin
     // Check if directory exists
     strPath := ExtractFileDir(FFileName);
-    if (strPath <> '') and  not DirectoryExists(strPath) then
+    if (strPath <> '') and not DirectoryExists(strPath) then
       ForceDirectories(strPath);
 
     //FIX 04.10.2006 MHoenemann:
     //  SysUtils.FileCreate() ignores any sharing option (like our fmShareDenyWrite),
-    // Creating new file
-    AssignFile(f, FFileName);
-    ReWrite(f);
-    CloseFile(f);
-    // now use this file
-    FStream := TFileStream.Create(FFileName, fmOpenReadWrite or fmShareDenyWrite);
-
+    // Creating new file directly via TFileStream with fmCreate, which truncates/creates
+    // the file and gives us the stream with the desired share mode in one step.
+    FStream := TFileStream.Create(FFileName, fmCreate or fmShareDenyNone);
   end;
   WriteHeader;
 end;
@@ -3262,17 +3249,17 @@ var
   Rendered: TClass;
   Renderer: ILogRenderer;
 begin
-  LogLog.Debug(Format(RendererMsg, [RendererName, RenderedName]));
+  LogLog.Debug(RendererMsg, [RendererName, RenderedName]);
   Rendered := FindRendered(RenderedName);
   Renderer := FindRenderer(RendererName);
   if Rendered = nil then
   begin
-    LogLog.Error(Format(NoRenderedCreatedMsg, [RenderedName]));
+    LogLog.Error(NoRenderedCreatedMsg, [RenderedName]);
     Exit;
   end;
   if Renderer = nil then
   begin
-    LogLog.Error(Format(NoRendererCreatedMsg, [RendererName]));
+    LogLog.Error(NoRendererCreatedMsg, [RendererName]);
     Exit;
   end;
 
@@ -3326,7 +3313,7 @@ begin
   begin
     FLoggerFactory := FindLoggerFactory(FactoryClassName);
     if FLoggerFactory <> nil then
-      LogLog.Debug(Format(LoggerFactoryMsg, [FactoryClassName]))
+      LogLog.Debug(LoggerFactoryMsg, [FactoryClassName])
     else
       FLoggerFactory := TLogDefaultLoggerFactory.Create;
   end;
@@ -3427,8 +3414,8 @@ begin
       DoConfigure(Props, Hierarchy);
     except on Ex: Exception do
       begin
-        LogLog.Error(Format(BadConfigFileMsg, [FileName, Ex.Message]));
-        LogLog.Error(Format(IgnoreConfigMsg, [FileName]));
+        LogLog.Error(BadConfigFileMsg, [FileName, Ex.Message]);
+        LogLog.Error(IgnoreConfigMsg, [FileName]);
       end;
     end;
   finally
@@ -3644,7 +3631,7 @@ begin
   ConfigureRootLogger(Props, Hierarchy);
   ParseLoggersAndRenderers(Props, Hierarchy);
 
-  LogLog.Debug(Format(FinishedConfigMsg, [ClassName]));
+  LogLog.Debug(FinishedConfigMsg, [ClassName]);
 end;
 
 const
@@ -3657,14 +3644,14 @@ var
   Value: string;
 begin
   Value := Props.Values[AdditiveKey + Logger.Name];
-  LogLog.Debug(Format(HandlingAdditivityMsg,
-    [AdditiveKey + Logger.Name, Value]));
+  LogLog.Debug(HandlingAdditivityMsg,
+    [AdditiveKey + Logger.Name, Value]);
   { Touch additivity only if necessary }
   if Value <> '' then
   begin
     Logger.Additive := StrToBool(Value, True);
-    LogLog.Debug(Format(SettingAdditivityMsg,
-      [Logger.Name, Bool[Logger.Additive]]));
+    LogLog.Debug(SettingAdditivityMsg,
+      [Logger.Name, Bool[Logger.Additive]]);
   end;
 end;
 
@@ -3681,7 +3668,7 @@ begin
   Result := AppenderGet(AppenderName);
   if Result <> nil then
   begin
-    LogLog.Debug(Format(AppenderDefinedMsg, [AppenderName]));
+    LogLog.Debug(AppenderDefinedMsg, [AppenderName]);
     Exit;
   end;
 
@@ -3690,7 +3677,7 @@ begin
   Result := FindAppender(Props.Values[Prefix]);
   if Result = nil then
   begin
-    LogLog.Error(Format(NoAppenderCreatedMsg, [AppenderName]));
+    LogLog.Error(NoAppenderCreatedMsg, [AppenderName]);
     Exit;
   end;
 
@@ -3702,9 +3689,9 @@ begin
   if ErrorHandler <> nil then
   begin
     Result.ErrorHandler := ErrorHandler;
-    LogLog.Debug(Format(ParsingErrorHandlerMsg, [AppenderName]));
+    LogLog.Debug(ParsingErrorHandlerMsg, [AppenderName]);
     SetSubProps(SubPrefix, Props, ErrorHandler);
-    LogLog.Debug(Format(EndErrorHandlerMsg, [AppenderName]));
+    LogLog.Debug(EndErrorHandlerMsg, [AppenderName]);
   end;
 
   { Process any layout entry. }
@@ -3713,12 +3700,12 @@ begin
   if Layout <> nil then
   begin
     Result.Layout := Layout;
-    LogLog.Debug(Format(ParsingLayoutMsg, [AppenderName]));
+    LogLog.Debug(ParsingLayoutMsg, [AppenderName]);
     SetSubProps(SubPrefix, Props, Layout);
-    LogLog.Debug(Format(EndLayoutMsg, [AppenderName]));
+    LogLog.Debug(EndLayoutMsg, [AppenderName]);
   end;
   if Result.RequiresLayout and (Result.Layout = nil) then
-    LogLog.Error(Format(LayoutRequiredMsg, [AppenderName]));
+    LogLog.Error(LayoutRequiredMsg, [AppenderName]);
 
   { Process any filter entries. }
   SubPrefix := Prefix + FilterKey;
@@ -3731,15 +3718,15 @@ begin
         Continue;
 
       Result.AddFilter(Filter);
-      LogLog.Debug(Format(ParsingFiltersMsg, [AppenderName]));
+      LogLog.Debug(ParsingFiltersMsg, [AppenderName]);
       SetSubProps(Props.Names[Index], Props, Filter);
-      LogLog.Debug(Format(EndFiltersMsg, [AppenderName]));
+      LogLog.Debug(EndFiltersMsg, [AppenderName]);
     end;
 
   { Set any options for the appender. }
   SetSubProps(Prefix, Props, Result);
 
-  LogLog.Debug(Format(EndAppenderMsg, [AppenderName]));
+  LogLog.Debug(EndAppenderMsg, [AppenderName]);
   AppenderPut(Result);
 end;
 
@@ -3780,7 +3767,7 @@ var
   Index: Integer;
   Items: TStringList;
 begin
-  LogLog.Debug(Format(ParsingLoggerMsg, [Logger.Name, Value]));
+  LogLog.Debug(ParsingLoggerMsg, [Logger.Name, Value]);
   Items := TStringList.Create;
   try
     { We must skip over ',' but not white space }
@@ -3791,7 +3778,7 @@ begin
       the level of the logger. }
     if Items[0] <> '' then
     begin
-      LogLog.Debug(Format(LevelTokenMsg, [Items[0]]));
+      LogLog.Debug(LevelTokenMsg, [Items[0]]);
 
       { If the level value is inherited, set logger level value to nil.
         We also check that the user has not specified inherited for the
@@ -3801,7 +3788,7 @@ begin
         Logger.Level := nil
       else
         Logger.Level := TLogLevel.GetLevel(LowerCase(Items[0]));
-      LogLog.Debug(Format(SettingLevelMsg, [Logger.Name, Logger.Level.Name]));
+      LogLog.Debug(SettingLevelMsg, [Logger.Name, Logger.Level.Name]);
     end;
 
     { Remove all existing appenders. They will be reconstructed below. }
@@ -3811,7 +3798,7 @@ begin
     begin
       if Items[Index] = '' then
         Continue;
-      LogLog.Debug(Format(ParsingAppenderMsg, [Items[Index]]));
+      LogLog.Debug(ParsingAppenderMsg, [Items[Index]]);
       Appender := ParseAppender(Props, Items[Index]);
       if Appender <> nil then
         Logger.AddAppender(Appender);
@@ -3825,7 +3812,7 @@ end;
 
 { Register a class as an implementor of a particular interface. }
 procedure RegisterClass(ClassType: TClass; InterfaceType: TGUID;
-  InterfaceName: string; Names: TStringList; Classes: TClassList);
+  const InterfaceName: string; Names: TStringList; Classes: TClassList);
 var
   Index: Integer;
 begin
@@ -3844,7 +3831,7 @@ begin
 end;
 
 { Create a new instance of a class implementing a particular interface. }
-function FindClass(ClassName: string; InterfaceType: TGUID;
+function FindClass(const ClassName: string; InterfaceType: TGUID;
   Names: TStringList; Classes: TClassList): IUnknown;
 var
   Index: Integer;
@@ -3856,12 +3843,12 @@ begin
   Index := Names.IndexOf(ClassName);
   if Index = -1 then
   begin
-    LogLog.Error(Format(NoClassMsg, [ClassName]));
+    LogLog.Error(NoClassMsg, [ClassName]);
     Result := nil;
   end
   else
   begin
-{$IFDEF DELPHI4}
+{$IFDEF VER120}
     TClass(Classes[Index]).Create.GetInterface(InterfaceType, Result);
 {$ELSE}
     Classes[Index].Create.GetInterface(InterfaceType, Result);
@@ -3977,11 +3964,11 @@ begin
   Index := RenderedNames.IndexOf(ClassName);
   if Index = -1 then
   begin
-    LogLog.Error(Format(NoClassMsg, [ClassName]));
+    LogLog.Error(NoClassMsg, [ClassName]);
     Result := nil;
   end
   else
-{$IFDEF DELPHI4}
+{$IFDEF VER120}
     Result := TClass(RenderedClasses[Index]);
 {$ELSE}
     Result := RenderedClasses[Index];
@@ -4059,9 +4046,16 @@ initialization
   InitializeCriticalSection(CriticalNDC);
   { Standard levels. }
   Levels             := TObjectList.Create;
-{$IFDEF DELPHI5_UP}
+{$IFDEF FPC}
+  Levels.OwnsObjects := True;
+{$ELSE}
+{$IFDEF VER130}
   Levels.OwnsObjects := True;
 {$ENDIF}
+{$IF CompilerVersion >= 14}
+  Levels.OwnsObjects := True;
+{$IFEND}
+{$ENDIF FPC}
   All   := TLogLevel.Create('all',   AllValue);
   Trace := TLogLevel.Create('trace', TraceValue);
   Debug := TLogLevel.Create('debug', DebugValue);
@@ -4111,9 +4105,10 @@ initialization
   { Internal logging }
   LogLog           := TLogLog.Create;
   LogLog.Hierarchy := DefaultHierarchy;
+
 finalization
 
-{$IFDEF DELPHI4}
+{$IFDEF VER120}
   LevelFree;
 {$ENDIF}
   Levels.Free;
