@@ -84,7 +84,7 @@ begin
         SendMessage(AltDEditWindowHandle, EM_LIMITTEXT, 12, 0);
          OldAltDEditProc := Pointer(Windows.SetWindowLong(AltDEditWindowHandle, GWL_WNDPROC, integer(@NewAltDEditProc)));
          if AltDBufferEnable then
-          Windows.SetWindowText(AltDEditWindowHandle, @DupeInfoCall[1]);
+          Windows.SetWindowTextA(AltDEditWindowHandle, @DupeInfoCall[1]);
       end;
 
     WM_CTLCOLOREDIT:
@@ -99,7 +99,7 @@ begin
         if HiWord(wParam) = EN_CHANGE then
         begin
       //    tClearDupeInfoCall;   4.39.4
-          DupeInfoCall[0] := CHR(Windows.GetDlgItemText(hwnddlg, 101, @DupeInfoCall[1], SizeOf(DupeInfoCall) - 1));
+          DupeInfoCall[0] := CHR(Windows.GetDlgItemTextA(hwnddlg, 101, @DupeInfoCall[1], SizeOf(DupeInfoCall) - 1));
 //          DupeInfoCall := GetDialogItemText(hwnddlg, 101);
           if SCPMinimumLetters > 0 then
           begin

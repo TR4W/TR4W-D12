@@ -429,7 +429,7 @@ function GetADIFBand(sBand: string): BandType;
 var
    sBandLower : string;
    iBand      : BandType;
-   entry      : PChar;
+   entry      : PAnsiChar;
 begin
    Result := NoBand;
    // Reject empty input — ADIFBANDSTRINGSARRAY has nil entries for the

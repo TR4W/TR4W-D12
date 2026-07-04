@@ -130,7 +130,7 @@ var
 const
   siCreate                              = 1;
   siCancel                              = 2;
-  CabrSumLabels111                      : array[147..168] of PChar = (
+  CabrSumLabels111                      : array[147..168] of PAnsiChar = (
     'CATEGORY-ASSISTED',
     'CATEGORY-BAND',
     'CATEGORY-MODE',
@@ -244,7 +244,7 @@ begin
                 TR4W_INI_FILENAME);
 
               if TempCardinal <> 0 then
-                Windows.SetWindowText(TempHWND, TempBuffer1);
+                Windows.SetWindowTextA(TempHWND, TempBuffer1);
             end;
           end;
         end;
@@ -271,8 +271,10 @@ begin
         for TempTag := Low(CabrilloTags) to High(CabrilloTags) do
           if CabrilloTagSArray[TempTag].ctrSave then
           begin
-            if Windows.GetDlgItemText(hwnddlg, integer(TempTag) + 200, TempBuffer1, SizeOf(TempBuffer1)) > 0 then
-              WritePrivateProfileString(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1, TR4W_INI_FILENAME);
+            if Windows.GetDlgItemTextA(hwnddlg, integer(TempTag) + 200, TempBuffer1, SizeOf(TempBuffer1)) > 0 then
+               begin
+               WritePrivateProfileString(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1, TR4W_INI_FILENAME);
+               end;
 
           end;
 

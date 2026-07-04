@@ -52,7 +52,7 @@ type
 {*)}
 type
   THBE_STREAM = longword;
-  PHBE_STREAM = ^PHBE_STREAM;
+  PHBE_STREAM = ^THBE_STREAM;
   BE_ERR = longword;
 
 const
@@ -140,7 +140,7 @@ const
   MCI_DGV_OPEN_16BIT                    = $00080000;
   MCI_DGV_OPEN_32BIT                    = $00100000;
 
-  MP3RecorderDurationSA                 : array[TMP3RecorderDuration] of PChar = ('EACH QSO', 'EACH HOUR', 'NON-STOP');
+  MP3RecorderDurationSA                 : array[TMP3RecorderDuration] of PAnsiChar = ('EACH QSO', 'EACH HOUR', 'NON-STOP');
   Freq                                  = 11025;
   bufsize                               = Freq * 2;
   PeakProgressBarMaxValue               = 45;
@@ -254,7 +254,7 @@ procedure mp3recSetProgressBarPosition(NewPosition: integer);
 function mp3recDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 function InitStrem: boolean;
 function SaveLastQSOToMP3File(CE: ContestExchangePtr): boolean;
-function MakeMP3Filename(CE: ContestExchangePtr): PChar;
+function MakeMP3Filename(CE: ContestExchangePtr): PAnsiChar;
 
 var
 //  TotalBytesInWAVFile              : integer;
@@ -387,7 +387,7 @@ begin
 
         Format(TR4W_TEMP_MP3_FILENAME, 'MP3 Recorder (%ukbps)', RecorderBitrate);
 
-        Windows.SetWindowText(hwnddlg, TR4W_TEMP_MP3_FILENAME);
+        Windows.SetWindowTextA(hwnddlg, TR4W_TEMP_MP3_FILENAME);
 
         Windows.CreateDirectory(TR4W_MP3PATH, nil);
 
@@ -518,7 +518,7 @@ begin
 //              Windows.SetDlgItemInt(tr4whandle, 88, Temp576BufferPos, False);
           end;
 
-          Windows.SetDlgItemText(MP3RECWNDHND, 102, MillisecondsToFormattedString(Windows.GetTickCount - RecorderStartTime, False));
+          Windows.SetDlgItemTextA(MP3RECWNDHND, 102, MillisecondsToFormattedString(Windows.GetTickCount - RecorderStartTime, False));
           MaxAmplitude := 0;
 
           for t := 0 to Freq - 1 do
@@ -577,7 +577,7 @@ end;
 procedure OpenTempMP3File;
 begin
   Format(TR4W_TEMP_MP3_FILENAME, '%s\TEMP_%02u_%02u.MP3', TR4W_MP3PATH, UTC.wHour, UTC.wDay);
-  TempMP3FileHandle := CreateFile(TR4W_TEMP_MP3_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+  TempMP3FileHandle := CreateFileA(TR4W_TEMP_MP3_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   RecorderStartTime := Windows.GetTickCount;
 end;
 
@@ -586,7 +586,7 @@ begin
   CloseHandle(TempMP3FileHandle);
 end;
 
-function MakeMP3Filename(CE: ContestExchangePtr): PChar;
+function MakeMP3Filename(CE: ContestExchangePtr): PAnsiChar;
 begin
   Format(TR4W_GET_MP3_FILENAME, '%s\%u%02u%02u_%02u%02u%02u_%sm_%s.MP3',
 

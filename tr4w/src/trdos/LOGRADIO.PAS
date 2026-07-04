@@ -96,7 +96,7 @@ type
 // var EventHandlers : TEventHandlers;
 const
 
-   tr4w_RTSDTRTypeSA: array[tr4w_RTSDTRType] of PChar =
+   tr4w_RTSDTRTypeSA: array[tr4w_RTSDTRType] of PAnsiChar =
       (
       'NONE',
       'OFF',
@@ -210,7 +210,7 @@ type
       ModeVFOAWndHandle: HWND;  // Issue #566: mode label beside VFO A freq
       ModeVFOBWndHandle: HWND;  // Issue #566: mode label beside VFO B freq
       tRadioOnTheMove: boolean;
-      tBuf: array[1..512] of char;
+      tBuf: array[1..512] of AnsiChar;
       active : boolean;
       CurrentStatus:   RadioStatusRecord; { Last reading taken }
       PreviousStatus:  RadioStatusRecord; { Reading before Last }
@@ -423,7 +423,7 @@ var
    HAMLIbONLYRadios: HamLib_ONLY_RadioTypes;
 
 const
-   RTS_DTR_Values_Array: array[1..4] of PChar =
+   RTS_DTR_Values_Array: array[1..4] of PAnsiChar =
       ('OFF', 'ON', 'CW', 'PTT');
 
 type
@@ -588,7 +588,7 @@ const
 );
 {*)}
 const
-   InterfacedRadioTypeSA: array[InterfacedRadioType] of PChar = (
+   InterfacedRadioTypeSA: array[InterfacedRadioType] of PAnsiChar = (
 
       'NONE',
       'K2',

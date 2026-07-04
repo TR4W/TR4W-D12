@@ -75,7 +75,7 @@ begin
         SendDlgItemMessage(hwnddlg, 106, STM_SETIMAGE, IMAGE_ICON, LoadIcon(0, integer(IDI_QUESTION) + PChar(integer(tInputDialogWarning))));
 
         Windows.SetWindowLong(Get101Window(hwnddlg), GWL_STYLE, dwNewLong);
-        SetDlgItemText(hwnddlg, 101, @tInputDialogPreviousValue[1]);
+        SetDlgItemTextA(hwnddlg, 101, @tInputDialogPreviousValue[1]);
 
         // Issue #783 -- when editing a ctPassword field with "Show passwords"
         // off, the caller sets tInputDialogPassword and pre-fills the value

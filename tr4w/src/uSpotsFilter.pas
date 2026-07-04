@@ -32,7 +32,7 @@ uses
 const
   SpotsFiltersCount                = 41;
 var
-  SpotsFiltersArray                : array[0..SpotsFiltersCount - 1] of PChar =
+  SpotsFiltersArray                : array[0..SpotsFiltersCount - 1] of PAnsiChar =
     (
     '160-CW',
     '160-SSB',
@@ -145,8 +145,8 @@ begin
                 begin
                   Selected := True;
                   ListView_GetItemText(SpotsFilterListView, I, 0, TempBuffer1, 10);
-                  Windows.lstrcat(wsprintfBuffer, TempBuffer1);
-                  Windows.lstrcat(wsprintfBuffer, ',');
+                  Windows.lstrcatA(wsprintfBuffer, TempBuffer1);
+                  Windows.lstrcatA(wsprintfBuffer, ',');
                 end;
               end;
               if Selected then

@@ -295,7 +295,7 @@ begin
     else
     Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
     Windows.ZeroMemory(@DomQTHDataFileName, SizeOf(DomQTHDataFileName));
-    Windows.lstrcat(DomQTHDataFileName, wsprintfBuffer);
+    Windows.lstrcatA(DomQTHDataFileName, wsprintfBuffer);
     if not DomQTHTable.LoadInDomQTHFile(DomQTHDataFileName) then halt;
   end;
 

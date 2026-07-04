@@ -210,7 +210,7 @@ begin
           if ContestsArray[Contest].Email <> nil then
           begin
             Format(wsprintfBuffer, 'Send log to %s', ContestsArray[Contest].Email);
-            AppendMenu(Menu, MF_CHECKED + MF_STRING, 105, wsprintfBuffer);
+            AppendMenuA(Menu, MF_CHECKED + MF_STRING, 105, wsprintfBuffer);
           end;
 
           //if Contest in [DARCWAEDCCW, DARCWAEDCSSB, RUSSIANDX, IARU, ARRL160, ARRL10, ARRLSSCW, ARRLSSSSB, ARRLDXCW, ARRLDXSSB, CQ160CW, CQ160SSB, CQWPXCW, CQWPXSSB, CQWWCW, CQWWSSB, CQWWRTTY] then

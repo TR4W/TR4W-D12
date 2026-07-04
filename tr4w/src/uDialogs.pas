@@ -148,7 +148,7 @@ const
   CDM_LAST                              = WM_USER + 200;
 
   (*******************************************************************************
-  Вызов диалога "Смена значка":
+  пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ":
   var
    filename: String;
    iconindex: Integer;
@@ -159,57 +159,57 @@ const
   *******************************************************************************)
   //function ChangeIconDialog(hOwner: HWND; var FileName: string; var IconIndex: integer): boolean;
 
-  //Вызов диалога "Цвет"
+  //пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅ"
 function SelectColor(hWin: HWND; FullOpen: boolean): TColorRef;
 
-//Вызов диалога "Открыть с помощью..." для файла
+//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ..." пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 //function OpenWith(hOpen: HWND; FileName: string): integer;
 
-//Открытие диалога для выбора каталога
-// Edit1 . Text := SelectFolder(Form1.Handle, nil, 'Выберите каталог...', '', True);
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+// Edit1 . Text := SelectFolder(Form1.Handle, nil, 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ...', '', True);
 //function SelectFolder(hSelFolder: HWND; Text, Title: PChar; OutPutDir: string; showPath: BOOL): string;
 
-// Диалог выбора директории с кнопкой "Создать папку"
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ"
 //function SelectDirPlus(HWND: HWND; const Caption: string; const Root: WideString; Directory: string): string;
 
-//Открытие диалога для выбора файла
-//OpenFileDlg(Handle, Memo1.Handle, 'Текстовый документ (*.txt)'#0'*.txt'#0+'Все файлы (*.*)'#0'*.*'#0#0);
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+//OpenFileDlg(Handle, Memo1.Handle, 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (*.txt)'#0'*.txt'#0+'пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (*.*)'#0'*.*'#0#0);
 function OpenFileDlg(Title: PChar; hOpenFileOwner: HWND; FilterString: PChar; var fname: FileNameType; Flags: Cardinal): BOOL;
 
 //procedure OpenPathDlg(hOpenFile: HWND; hControl: HWND; FilterString: PChar);
 
-//Открытие диалога для сохранения файла
-//SaveFileDlg(Handle, Memo1.Handle, 'Текстовый документ (*.txt)'#0'*.txt'#0#0)
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+//SaveFileDlg(Handle, Memo1.Handle, 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (*.txt)'#0'*.txt'#0#0)
 procedure SaveFileDlg(hSaveFile: HWND; hControl: HWND; FilterString: PChar);
 
-//Вызов диалога Windows "Свойства..."
+//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ Windows "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ..."
 //ShowProperties(Handle, 'C:\windows\regedit.exe');
 //function ShowProperties(hwndOwner: HWND; const FileName: string): boolean;
 
-//Следующие две процедуры открывают окно "Запуск программы" (Пуск/Выполнить)
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ" (пїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 //RunFileDlg(FindWindow('Shell_TrayWnd', nil), 0, PChar('InitialDir'),
-// PChar('Запуск программы'), PChar('Введите имя программы, папки или документа, который требуется открыть.'), 0);
+// PChar('пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ'), PChar('пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.'), 0);
 //For Win NT
 //procedure RunFileDlgW(OwnerWnd: HWND; Icon: HICON; lpstrDirectory: PWideChar; lpstrTitle: PWideChar; lpstrDescription: PWideChar; Flags: LONGINT); stdcall;
 //For Win 9x (Win NT to show standard captions )
 //procedure RunFileDlg(OwnerWnd: HWND; Icon: HICON; lpstrDirectory: PChar; lpstrTitle: PChar; lpstrDescription: PChar; Flags: LONGINT); stdcall;
 
-//Вызов диалога Windows "О программе..."
+//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ Windows "пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ..."
 //ShowAboutDlg(handle, 'My Program', '(c) 2003 by LENIN INC', LoadIcon(hInstance, 'MAINICON'));
 //function ShowAboutDlg(hAbout: HWND; Caption, Text: string; Icon: HICON): integer;
 
-//Вызов диалога "Завершение работы Windows"
+//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Windows"
 //ExitWindowsDialog(0)
 //procedure ExitWindowsDialog(ParentWnd: HWND); stdcall;
 
-//Вызов диалога "Изменение параметров системы"
-//if RestartDialog(Handle, nil, EWX_REBOOT) = IDYES или IDNO then
-//Параметр Flags может быть следующим:
-//EWX_LOGOFF - Перезагрузка Windows и вход в систему под другим именем
-//EWX_SHUTDOWN - Выключение компьютера
-//EW_RESTARTWINDOWS - Перезагрузка Windows (легкая перезагрузка)
-//EW_REBOOTSYSTEM - Перезагрузка системы
-//EW_EXITANDEXECAPP - Перезагрузка компьютера в режиме MS-DOS
+//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ"
+//if RestartDialog(Handle, nil, EWX_REBOOT) = IDYES пїЅпїЅпїЅ IDNO then
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Flags пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
+//EWX_LOGOFF - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Windows пїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+//EWX_SHUTDOWN - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+//EW_RESTARTWINDOWS - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Windows (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
+//EW_REBOOTSYSTEM - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+//EW_EXITANDEXECAPP - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ MS-DOS
 
 { $ E X TERNALSYM SHBrowseForFolder}
 //function SHBrowseForFolder(var lpbi: TBrowseInfo): PItemIDList; stdcall;
@@ -644,7 +644,7 @@ end;
 
 function SelectColor(hWin: HWND; FullOpen: boolean): TColorRef;
 var
-  custColors                            : array[0..15] of COLORREF; // массив с преопределенными цветами
+  custColors                            : array[0..15] of COLORREF; // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
   CC                                    : TCHOOSECOLOR;
 begin
   CC.lStructSize := SizeOf(TCHOOSECOLOR);
@@ -718,7 +718,7 @@ end;
 }
 {
 function SelectDirPlus(HWND: HWND; const Caption: string; const Root: WideString; Directory: string): string;
-// Диалог выбора директории с кнопкой "Создать папку"
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ"
 var
    //  WindowList: Pointer;
   BrowseInfo                  : TBrowseInfo;
@@ -916,7 +916,7 @@ begin
   ofn.Flags := OFN_FILEMUSTEXIST or OFN_PATHMUSTEXIST or OFN_LONGNAMES or OFN_HIDEREADONLY;
   if GetSaveFileName(ofn) then
   begin
-    hFile := CreateFile(wsprintfBuffer {Lenin_Buffer}, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or
+    hFile := CreateFileA(wsprintfBuffer {Lenin_Buffer}, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or
       FILE_SHARE_WRITE, nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
     hMemory := GlobalAlloc(GMEM_MOVEABLE or GMEM_ZEROINIT, MemSize);
     pMemory := GlobalLock(hMemory);

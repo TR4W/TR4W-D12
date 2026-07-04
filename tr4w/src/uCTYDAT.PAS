@@ -232,7 +232,7 @@ type
 
 function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
 //function ctyInit(ctyFilename: PChar): boolean;
-function ctyLoadInCountryFile(ctyFilename: PChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
+function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
 function ctyFindCallsign(const s: PAnsiChar; var Index: integer): boolean;
 function ctyGetGrid(Call: CallString; var ID: DXMultiplierString): GridString;
 function ctyGetContinent(Call: CallString): ContinentType;
@@ -252,8 +252,8 @@ function ctyGetVersion: PAnsiChar;
 function ctyIsActiveMultiplier(Index: Word): boolean;
 procedure ctySetCountryMode(CountryMode: CountryModeType);
 
-function ctyGetCountryNamePchar(Index: Word): PChar;
-function ctyGetCountryIdPchar(Index: Word): PChar;
+function ctyGetCountryNamePchar(Index: Word): PAnsiChar;
+function ctyGetCountryIdPchar(Index: Word): PAnsiChar;
 function ctyGetCountryName(Index: Word): ShortString;
 function ctyGetCountryID(Call: CallString): DXMultiplierString;
 
@@ -414,7 +414,7 @@ begin
 
 end;
 
-function ctyLoadInCountryFile(ctyFilename: PChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
+function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
 
 // (#) Override CQ Zone
 // [#] Override ITU Zone
@@ -457,7 +457,7 @@ begin
 //  Start := GetCPU;
   Result := False;
   z := 0; // 4.79.3
-  h := CreateFile(ctyFilename, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
+  h := CreateFileA(ctyFilename, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
   if h = INVALID_HANDLE_VALUE then Exit;
 
   MapFin := Windows.CreateFileMapping(h, nil, PAGE_READONLY, 0, 0, nil);
@@ -1261,7 +1261,7 @@ begin
   CTY.ctyZoneMode := TempZoneModeType;
 end;
 
-function ctyGetCountryNamePchar(Index: Word): PChar;
+function ctyGetCountryNamePchar(Index: Word): PAnsiChar;
 begin
   if (Index >= 0) and (Index < CTY.ctyNumberCountries) then
     Result := @CTY.ctyTable[Index].Name
@@ -1269,7 +1269,7 @@ begin
     Result := nil;
 end;
 
-function ctyGetCountryIdPchar(Index: Word): PChar;
+function ctyGetCountryIdPchar(Index: Word): PAnsiChar;
 begin
   if (Index >= 0) and (Index < CTY.ctyNumberCountries) then
     Result := @CTY.ctyTable[Index].ID[1]

@@ -74,8 +74,8 @@ var
   LocalTime                             : SYSTEMTIME;
   i                                     : integer;
 const
-  l                                     : array[0..5] of PChar = (RC_NTPSERVER, RC_LOCALTIME, 'PC UTC', 'Server UTC', RC_SERVERANSWER, RC_LOCALOFFSET);
-  b                                     : array[0..3] of PChar = (RC_GETOFFSET, RC_SYNCLOCK, RC_TIMESYN, EXIT_WORD);
+  l                                     : array[0..5] of PAnsiChar = (RC_NTPSERVER, RC_LOCALTIME, 'PC UTC', 'Server UTC', RC_SERVERANSWER, RC_LOCALOFFSET);
+  b                                     : array[0..3] of PAnsiChar = (RC_GETOFFSET, RC_SYNCLOCK, RC_TIMESYN, EXIT_WORD);
 begin
   Result := False;
   case Msg of
@@ -131,7 +131,7 @@ begin
         Offset := round((STToInt64(T2) - STToInt64(T1) + STToInt64(T3) - STToInt64(T4)) / 2);
 
         Format(wsprintfBuffer, '%d ' + TC_MS, integer(Offset));
-        SetDlgItemText(hwnddlg, 105, wsprintfBuffer);
+        SetDlgItemTextA(hwnddlg, 105, wsprintfBuffer);
 
 //        TR4W_WM_SetTest(hwnddlg, 123, _StrInt64(Offset, 1) + TC_MS);
 
@@ -182,14 +182,14 @@ end;
 
 procedure ShowTime(Control: integer; LocalTime: SYSTEMTIME);
 begin
-  SetDlgItemText(st_window_handle, Control, TF.SystemTimeToString(LocalTime));
+  SetDlgItemTextA(st_window_handle, Control, TF.SystemTimeToString(LocalTime));
 end;
 
 procedure GetServerAnswerOffset;
 begin
 //  TR4W_WM_SetTest(st_window_handle, 122, IntToStr(STToInt64(T4) - STToInt64(T1)) + TC_MS);
   Format(wsprintfBuffer, '%d ' + TC_MS, integer(STToInt64(T4) - STToInt64(T1)));
-  SetDlgItemText(st_window_handle, 104, wsprintfBuffer);
+  SetDlgItemTextA(st_window_handle, 104, wsprintfBuffer);
 end;
 
 procedure GetInt64AndSysTimeFromBuffer(BufPtr: Byte; var St: SYSTEMTIME);

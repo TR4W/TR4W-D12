@@ -358,14 +358,14 @@ type
   MultiMessageListPointer = ^MultiMessageListArrayType;
 
 const
-  DupeCheckSoundTypeSA: array[DupeCheckSoundType] of PChar =
+  DupeCheckSoundTypeSA: array[DupeCheckSoundType] of PAnsiChar =
     (
     'NONE',
     'DUPE BEEP',
     'MULT FANFARE'
     );
 
-  ParameterOkayModeTypeStringArray: array[ParameterOkayModeType] of PChar = (
+  ParameterOkayModeTypeStringArray: array[ParameterOkayModeType] of PAnsiChar = (
     'NONE',
     'STANDARD',
     'QSL BUT DO NOT LOG',

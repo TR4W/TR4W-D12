@@ -109,7 +109,7 @@ type
     );
 
 const
-  DebugMessagesArray                    : array[DebugMessageType] of PChar =
+  DebugMessagesArray                    : array[DebugMessageType] of PAnsiChar =
     ('SVN', 'RX ', 'TX ', 'RUN', 'DSC', 'MF ', 'RXD', 'QSO', 'LST', 'ACC', 'TF ', 'LI ', 'PAS', 'SS ', 'DXS', 'TS ', 'PAR', 'INT', 'EQ ', 'CLL', 'CLD', 'SLC', 'MES', 'TR ', 'OLQ');
 
   _TR4WSERVER                           = 'TR4WSERVER';

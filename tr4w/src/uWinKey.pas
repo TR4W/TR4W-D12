@@ -65,8 +65,8 @@ type
   TWKSidetoneFrequency = (stf4000, stf2000, stf1333, stf1000, stf800, stf666, stf571, stf500, stf444, stf400);
 
 const
-  KeyerModeSA                           : array[TWK2KeyerMode] of PChar = ('IAMBIC B', 'IAMBIC A', 'ULTIMATIC', 'BUG MODE');
-  SidetoneFrequencySA                   : array[TWKSidetoneFrequency] of PChar = ('4000', '2000', '1333', '1000', '800', '666', '571', '500', '444', '400');
+  KeyerModeSA                           : array[TWK2KeyerMode] of PAnsiChar = ('IAMBIC B', 'IAMBIC A', 'ULTIMATIC', 'BUG MODE');
+  SidetoneFrequencySA                   : array[TWKSidetoneFrequency] of PAnsiChar = ('4000', '2000', '1333', '1000', '800', '666', '571', '500', '444', '400');
 type
   TwkValueList = packed record
     {(*}
@@ -519,11 +519,11 @@ const
     );
 
 //  WK2HangTimeArray                      : array[1..4] of PChar = ('1.0', '1.33', '1.66', '2.0');
-  WK2SettingsNamesArray                 : array[1..wkBool] of PChar = (TC_WINKEYERENABLE, TC_AUTOSPACE, TC_CTSPACING, TC_SIDETONE, TC_PADDLESWAP, TC_IGNORESPEEDPOT, TC_PADDLEONLYSIDETONE);
-  WK2ComboSettingsNamesArray            : array[1..wkCombo] of PChar = (TC_WINKEYERPORT, TC_KEYERMODE, TC_SIDETONEFREQ {, TC_HANGTIME});
-  WK2KeyerModesArray                    : array[1..4] of PChar = (TC_IAMBICB, TC_IAMBICA, TC_ULTIMATIC, TC_BUGMODE);
+  WK2SettingsNamesArray                 : array[1..wkBool] of PAnsiChar = (TC_WINKEYERENABLE, TC_AUTOSPACE, TC_CTSPACING, TC_SIDETONE, TC_PADDLESWAP, TC_IGNORESPEEDPOT, TC_PADDLEONLYSIDETONE);
+  WK2ComboSettingsNamesArray            : array[1..wkCombo] of PAnsiChar = (TC_WINKEYERPORT, TC_KEYERMODE, TC_SIDETONEFREQ {, TC_HANGTIME});
+  WK2KeyerModesArray                    : array[1..4] of PAnsiChar = (TC_IAMBICB, TC_IAMBICA, TC_ULTIMATIC, TC_BUGMODE);
 
-  WK2SliderLabelArray                   : array[1..wkRange] of PChar = (TC_WEIGHTING, TC_DITDAHRATIO, TC_LEADIN, TC_TAIL, TC_FIRSTEXTENSION, TC_KEYCOMP, TC_PADDLESWITCHPOINT);
+  WK2SliderLabelArray                   : array[1..wkRange] of PAnsiChar = (TC_WEIGHTING, TC_DITDAHRATIO, TC_LEADIN, TC_TAIL, TC_FIRSTEXTENSION, TC_KEYCOMP, TC_PADDLESWITCHPOINT);
 
   WK2UpDownValue                        : array[1..wkRange] of PByte = (
     @WinKeySettings.wksValueList.vlWeight,
@@ -1061,7 +1061,7 @@ begin
     inc(wkHostBufferSendIndex);
     if wkHostBufferSendIndex >= SizeOfHostBuffer then wkHostBufferSendIndex := 0;
 {$IF WINKEYDEBUG}
-    Windows.SetWindowText(InsertWindowHandle, inttopchar(wkHostBufferSendIndex));
+    Windows.SetWindowTextA(InsertWindowHandle, inttopchar(wkHostBufferSendIndex));
 {$IFEND}
     inc(wkWaitingBytesInWK);
     Result := True;
@@ -1077,8 +1077,8 @@ end;
 
 procedure wkWriteToDebugFile(b: Char; TX: boolean);
 const
-  InOutArray                            : array[boolean] of PChar = ('RX <', 'TX >');
-  InOutClassArray                       : array[boolean] of PChar = ('RX', 'TX');
+  InOutArray                            : array[boolean] of PAnsiChar = ('RX <', 'TX >');
+  InOutClassArray                       : array[boolean] of PAnsiChar = ('RX', 'TX');
 {$IF K6VVA_WK_DEBUG}
 var
   lpNumberOfBytesWritten                : Cardinal;

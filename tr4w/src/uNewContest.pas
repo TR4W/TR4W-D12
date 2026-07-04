@@ -59,7 +59,7 @@ uses MainUnit;
 const
 
   CSAS                                  = 9;
-  InitialCommandsSA2                    : array[1..CSAS] of PChar = (
+  InitialCommandsSA2                    : array[1..CSAS] of PAnsiChar = (
     nil,
     nil,
     // Issue #976: CATEGORY-OVERLAY removed -- it was only a dangling label
@@ -73,7 +73,7 @@ const
     'CATEGORY-POWER',
     'CATEGORY-TRANSMITTER');
 
-  InitialCommandsSA                     : array[InitialCommands] of PChar =
+  InitialCommandsSA                     : array[InitialCommands] of PAnsiChar =
     (
     'MY CHECK',
     'MY FD CLASS',
@@ -168,11 +168,11 @@ begin
               MSSansSerifFont);
 
             Windows.CopyMemory(@TempBuffer1, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
-            Windows.CharLower(TempBuffer1);
+            Windows.CharLowerA(TempBuffer1);
             Format(wsprintfBuffer, TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s', TempBuffer1);
             //i := GetDlgItem(hwnddlg, NC_BUTTON_LATEST_CONFIG);
 
-            Windows.SetWindowText(TempCardinal, wsprintfBuffer);
+            Windows.SetWindowTextA(TempCardinal, wsprintfBuffer);
             EnableWindow(TempCardinal, True);
             Windows.ShowWindow(TempCardinal, SW_SHOW);
           end;
@@ -247,7 +247,7 @@ begin
 
         MainCallsign[0] := CHR(GetPrivateProfileString(_COMMANDS, MAIN_CALLSIGN, nil, @MainCallsign[1], SizeOf(MainCallsign), TR4W_INI_FILENAME));
         if MainCallsign <> '' then
-          Windows.SetDlgItemText(hwnddlg, NC_CALL_EDIT, @MainCallsign[1]);
+          Windows.SetDlgItemTextA(hwnddlg, NC_CALL_EDIT, @MainCallsign[1]);
 
         {OK}
         CreateButton(BS_DEFPUSHBUTTON, OK_WORD, 350, 430, 80, hwnddlg, NC_BUTTON_OK);
@@ -586,7 +586,7 @@ var
 begin
   res := True;
   if tCB_GETCURSEL(h, NC_CONTEST_COMBOBOX) = -1 then res := False;
-  i := GetDlgItemText(h, NC_CALL_EDIT, @Call[1], SizeOf(CallString));
+  i := GetDlgItemTextA(h, NC_CALL_EDIT, @Call[1], SizeOf(CallString));
   if i < 3 then res := False;
   Call[0] := CHR(i);
   if not GoodCallSyntax(Call) then res := False;
@@ -606,7 +606,7 @@ var
 begin
   begin
       {callsign}
-    i := Windows.GetDlgItemText(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
+    i := Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
     if MainCallsign = '' then
     begin
       MainCallsign[0] := CHR(i);
@@ -616,7 +616,7 @@ begin
     DeleteSlashes(TempBuffer1);
 
       {Contest Name}
-    Windows.GetDlgItemText(h, NC_CONTEST_COMBOBOX, TempBuffer2, SizeOf(TempBuffer2));
+    Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer2, SizeOf(TempBuffer2));
 
     if TempBuffer2 = 'POTA' then
        begin
@@ -631,7 +631,7 @@ begin
   end;
 
   {CFGFileName}
-  Windows.GetDlgItemText(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
+  Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
   Format(TR4W_CFG_FILENAME, '%s%s.CFG', wsprintfBuffer, TempBuffer1);
 
   if FileExists(TR4W_CFG_FILENAME) then
@@ -640,23 +640,23 @@ begin
     if YesOrNo(h, SYSERRORBUFFER) = IDno then Exit;
   end;
 
-  f := CreateFile(TR4W_CFG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
+  f := CreateFileA(TR4W_CFG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
   if f <> INVALID_HANDLE_VALUE then
   begin
 
-    Windows.GetDlgItemText(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
+    Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
     BytesToWrite := Format(wsprintfBuffer, ';Created by ' + TR4W_CURRENTVERSION + #13#10#13#10'[COMMANDS]'#13#10'MY CALL=%s'#13#10, TempBuffer1);
     sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
     for i := 1 to CSAS do
     begin
-      GetWindowText(InitialCommandsHWNDArray[i, 1], TempBuffer1, SizeOf(TempBuffer1));
-      if GetWindowText(InitialCommandsHWNDArray[i, 2], TempBuffer2, SizeOf(TempBuffer2)) = 0 then Continue;
+      GetWindowTextA(InitialCommandsHWNDArray[i, 1], TempBuffer1, SizeOf(TempBuffer1));
+      if GetWindowTextA(InitialCommandsHWNDArray[i, 2], TempBuffer2, SizeOf(TempBuffer2)) = 0 then Continue;
       BytesToWrite := Format(wsprintfBuffer, '%s=%s'#13#10, TempBuffer1, TempBuffer2);
       sWriteFile(f, wsprintfBuffer, BytesToWrite);
     end;
 
-    Windows.GetDlgItemText(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
+    Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
     BytesToWrite := Format(wsprintfBuffer, 'CONTEST=%s', TempBuffer1);
     sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
@@ -667,9 +667,9 @@ begin
     // is not an exact multiple of SizeOf(ContestExchange), which will be
     // true of any .TRW from a previous (different) contest.
     lstrcpy(TempBuffer1, TR4W_CFG_FILENAME);
-    TempBuffer1[lstrlen(TempBuffer1) - 3] := 'T';
-    TempBuffer1[lstrlen(TempBuffer1) - 2] := 'R';
-    TempBuffer1[lstrlen(TempBuffer1) - 1] := 'W';
+    TempBuffer1[lstrlenA(TempBuffer1) - 3] := 'T';
+    TempBuffer1[lstrlenA(TempBuffer1) - 2] := 'R';
+    TempBuffer1[lstrlenA(TempBuffer1) - 1] := 'W';
     Windows.DeleteFile(TempBuffer1); // no-op (returns False) if no .TRW exists
 
     DestroyWindow(h);
@@ -683,7 +683,7 @@ procedure DisplayCheckBox(Text: PChar);
 begin
   // Issue #997: asm-push wsprintf -> Format (TC_IAMIN = '&I am in %s').
   Format(wsprintfBuffer, TC_IAMIN, Text);
-  Windows.SetWindowText(NewContestCheckBox, wsprintfBuffer);
+  Windows.SetWindowTextA(NewContestCheckBox, wsprintfBuffer);
   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
 end;
 
@@ -700,7 +700,7 @@ begin
   // Issue #997: asm-push wsprintf -> Format. TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX
   // has two %s, both = State.
   Format(wsprintfBuffer, TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX, State, State);
-  Windows.SetWindowText(NewContestCommentWndHandle, wsprintfBuffer);
+  Windows.SetWindowTextA(NewContestCommentWndHandle, wsprintfBuffer);
 end;
 
 procedure StartContestFromListbox();
@@ -708,7 +708,7 @@ var
   p                                     : PChar;
 begin
   p := TR4W_CFG_FILENAME;
-  GetDlgItemText(NewContestDlgWndHandle, 445, TR4W_CFG_FILENAME, SizeOf(TR4W_CFG_FILENAME));
+  GetDlgItemTextA(NewContestDlgWndHandle, 445, TR4W_CFG_FILENAME, SizeOf(TR4W_CFG_FILENAME));
   Windows.GetFullPathName(@TempBuffer1, 256, @TR4W_CFG_FILENAME, p);
   DestroyWindow(NewContestDlgWndHandle);
 end;
@@ -728,7 +728,7 @@ begin
     StartContestFromListbox;
     Exit;
   end;
-  Windows.lstrcat(TempBuffer1, '*.CFG');
+  Windows.lstrcatA(TempBuffer1, '*.CFG');
   DlgDirList(NewContestDlgWndHandle, TempBuffer1, NC_LISTBOX, 445, sfFLAG);
 
   SelectParentDir(NewContestListBoxHandle);
@@ -739,7 +739,7 @@ begin
   inc(NewContestDisplayedCommands);
   ShowWindow(InitialCommandsHWNDArray[NewContestDisplayedCommands, 1], SW_SHOWNORMAL);
   ShowWindow(InitialCommandsHWNDArray[NewContestDisplayedCommands, 2], SW_SHOWNORMAL);
-  Windows.SetWindowText(InitialCommandsHWNDArray[NewContestDisplayedCommands, 1], InitialCommandsSA[Command]);
+  Windows.SetWindowTextA(InitialCommandsHWNDArray[NewContestDisplayedCommands, 1], InitialCommandsSA[Command]);
 end;
 
 end.

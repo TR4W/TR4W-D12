@@ -566,7 +566,7 @@ begin
   StrPCopy(wsprintfBuffer, SysUtils.Format(TC_DUPESHEET+' - %s',
     [string(BandStringsArray[Band]), string(ModeStringArray[Mode]), string(PChar(@Radio.RadioName[1]))]));
 //  asm add esp,16  end;
-  Windows.SetWindowText(Radio.tDupeSheetWnd, wsprintfBuffer);
+  Windows.SetWindowTextA(Radio.tDupeSheetWnd, wsprintfBuffer);
 end;
 
 procedure TCallsignsList.ClearDupes;

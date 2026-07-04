@@ -186,7 +186,7 @@ begin
             begin
               if Windows.IsWindowVisible(MsgEditHWND) then
               begin
-                if Windows.GetWindowText(MsgEditHWND, TempBuffer2, 255) <> 0 then
+                if Windows.GetWindowTextA(MsgEditHWND, TempBuffer2, 255) <> 0 then
                 begin
                   Windows.SetWindowText(MsgEditHWND, nil);
                   Exit;
@@ -391,7 +391,7 @@ begin
           end;
         if not AllowEscapes then Exit;
         SendMessage(MsgEditHWND, EM_GETSEL, LONGINT(@Selection.StartPos), LONGINT(@Selection.EndPos));
-        c := Windows.GetWindowText(MsgEditHWND, TempBuffer1, 255);
+        c := Windows.GetWindowTextA(MsgEditHWND, TempBuffer1, 255);
 
         TempBuffer1[c + 1] := #0;
         if c <> 0 then
@@ -399,7 +399,7 @@ begin
             TempBuffer1[I + 1] := TempBuffer1[I];
         TempBuffer1[Selection.StartPos] := CHR(wParam - 64);
 
-        Windows.SetWindowText(MsgEditHWND, TempBuffer1);
+        Windows.SetWindowTextA(MsgEditHWND, TempBuffer1);
         Windows.SendMessage(MsgEditHWND, EM_SETSEL, Selection.StartPos + 1, Selection.EndPos + 1);
         AllowEscapes := False;
       end;

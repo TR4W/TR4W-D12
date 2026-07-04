@@ -62,7 +62,7 @@ const
 
   QTCCustomMessages                     = 7;
 var
-  QTCTXButtonsPChar                     : array[0..QTCCustomMessages] of PChar =
+  QTCTXButtonsPChar                     : array[0..QTCCustomMessages] of PAnsiChar =
     (
     'N&EXT [return]',
     nil,
@@ -106,7 +106,7 @@ begin
         // cdecl-reverse pushes -> arg1=QRVString, arg2=QTCCallsign.
         TF.Format(wsprintfBuffer, TC_QTC_FOR, @QRVString[1], @QTCCallsign[1]);
 
-        Windows.SetWindowText(hwnddlg, wsprintfBuffer);
+        Windows.SetWindowTextA(hwnddlg, wsprintfBuffer);
         QTCTXButtonsPChar[1] := @QRVString[1];
         {Custom buttons}
         for I := 0 to QTCCustomMessages do
@@ -318,7 +318,7 @@ var
   Format                                : PChar;
   TempQTCMinutes                        : boolean;
 const
-  FormatArray                           : array[boolean, boolean, boolean] of PChar =
+  FormatArray                           : array[boolean, boolean, boolean] of PAnsiChar =
 //QTCQRS,QTCExtraSpace,QTCMinutes
 //false,true
   (

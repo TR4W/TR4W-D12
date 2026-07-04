@@ -32,7 +32,7 @@ uses
 const
   DXSSpotsFiltersCount             = 8;
 var
-  DXSSpotsFiltersArray             : array[0..DXSSpotsFiltersCount - 1] of PChar =
+  DXSSpotsFiltersArray             : array[0..DXSSpotsFiltersCount - 1] of PAnsiChar =
     (
     'SHOW/FILTER',
     'CLEAR/SPOTS ALL',

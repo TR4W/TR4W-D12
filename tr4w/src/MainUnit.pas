@@ -475,7 +475,7 @@ var
   PreviousProcAddress: integer;
   debugstr: string;
 const
-  PCharDayTags: array[0..6] of PChar = (TC_SUN, TC_MON, TC_TUE, TC_WED, TC_THU,
+  PCharDayTags: array[0..6] of PAnsiChar = (TC_SUN, TC_MON, TC_TUE, TC_WED, TC_THU,
     TC_FRI, TC_SAT);
   CWByCATBufferTerminator = Chr(242);
   tAboutText =
@@ -2680,7 +2680,7 @@ var
   TempExchange: ContestExchange;
   DQTH: boolean;
 begin
-  ExchangeWindowString[0] := Char(Windows.GetWindowText(wh[mweExchange],
+  ExchangeWindowString[0] := Char(Windows.GetWindowTextA(wh[mweExchange],
     @ExchangeWindowString[1], SizeOf(ExchangeWindowString)));
   if VHFBandsEnabled then
     ShowBeamAndHeadingInVHFContest(ExchangeWindowString);
@@ -2884,7 +2884,7 @@ begin
     QSONeedWindowsHandles1[Band] := CreateTR4WStaticWindow(MainWindowChildsWidth
       - RightTopWidth + (integer(Band) + 1) * w, ws, w - 2,
       QSOMULTSWINDOWSTYLE);
-    Windows.SetWindowText(QSONeedWindowsHandles1[Band], BandStringsArray[Band])
+    Windows.SetWindowTextA(QSONeedWindowsHandles1[Band], BandStringsArray[Band])
   end;
   QSONeedWindowHandle1 := CreateTR4WStaticWindow(MainWindowChildsWidth -
     RightTopWidth, ws, w, QSOMULTSMODEWINDOWSTYLE);
@@ -2897,7 +2897,7 @@ begin
       QSONeedWindowsHandles2[Band] :=
         CreateTR4WStaticWindow(MainWindowChildsWidth - RightTopWidth +
         (integer(Band) + 1) * w, ws * 2, w - 2, QSOMULTSWINDOWSTYLE);
-      Windows.SetWindowText(QSONeedWindowsHandles2[Band], BandStringsArray[Band])
+      Windows.SetWindowTextA(QSONeedWindowsHandles2[Band], BandStringsArray[Band])
     end;
     QSONeedWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
       RightTopWidth, ws * 2, w, QSOMULTSMODEWINDOWSTYLE);
@@ -2917,7 +2917,7 @@ begin
     MultsWindowsHandles1[Band] := CreateTR4WStaticWindowID(MainWindowChildsWidth
       - RightTopWidth + (integer(Band) + 1) * w, ws * 4, w - 2,
       QSOMULTSWINDOWSTYLE, MULTSARRAYWINDOW);
-    Windows.SetWindowText(MultsWindowsHandles1[Band], BandStringsArray[Band])
+    Windows.SetWindowTextA(MultsWindowsHandles1[Band], BandStringsArray[Band])
   end;
   MultWindowHandle1 := CreateTR4WStaticWindow(MainWindowChildsWidth -
     RightTopWidth, ws * 4, w, QSOMULTSMODEWINDOWSTYLE);
@@ -2931,7 +2931,7 @@ begin
         CreateTR4WStaticWindowID(MainWindowChildsWidth - RightTopWidth +
         (integer(Band) + 1) * w, ws * 5, w - 2, QSOMULTSWINDOWSTYLE,
         MULTSARRAYWINDOW);
-      Windows.SetWindowText(MultsWindowsHandles2[Band], BandStringsArray[Band])
+      Windows.SetWindowTextA(MultsWindowsHandles2[Band], BandStringsArray[Band])
     end;
     MultWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
       RightTopWidth, ws * 5, w, QSOMULTSMODEWINDOWSTYLE);
@@ -3104,11 +3104,11 @@ begin
   CreateTotalWindow;
 
   Format(wsprintfBuffer, TC_RULESONQRZRU, ContestTypeSA[Contest]);
-  ModifyMenu(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND + MF_STRING,
+  ModifyMenuA(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND + MF_STRING,
     menu_qrzru_calendar, wsprintfBuffer);
 
   Format(wsprintfBuffer, TC_RULESONSM3CER, ContestTypeSA[Contest]);
-  ModifyMenu(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND + MF_STRING,
+  ModifyMenuA(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND + MF_STRING,
     menu_WA7BNM_calendar, wsprintfBuffer);
   if (pos('CQ-WW', ContestTypeSA[Contest]) <> 0) or (pos('IARU-HF',
     ContestTypeSA[Contest]) <> 0) then //n4af 4.35.5 // 4.115.4
@@ -4721,7 +4721,7 @@ begin
   h := CreateDialogIndirectParam(hInstance, PDlgTemplate(@MAINTR4WDLGTEMPLATE)^,
     tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
 
-  Windows.GetMenuString(tr4w_main_menu, 10199 + Ord(ID), TempBuffer1,
+  Windows.GetMenuStringA(tr4w_main_menu, 10199 + Ord(ID), TempBuffer1,
     SizeOf(TempBuffer1), MF_BYCOMMAND);
 
   for i := 0 to SizeOf(TempBuffer1) - 1 do
@@ -4731,11 +4731,11 @@ begin
       Break;
     end;
 
-  Windows.SetWindowText(h, TempBuffer1);
+  Windows.SetWindowTextA(h, TempBuffer1);
   {
-  Windows.GetMenuString(tr4w_main_menu, 10199 + Ord(ID), wsprintfBuffer, SizeOf(wsprintfBuffer), MF_BYCOMMAND);
+  Windows.GetMenuStringA(tr4w_main_menu, 10199 + Ord(ID), wsprintfBuffer, SizeOf(wsprintfBuffer), MF_BYCOMMAND);
   for TempFlag := 0 to 100 do if wsprintfBuffer[TempFlag] = #9 then wsprintfBuffer[TempFlag] := #0;
-  Windows.SetWindowText(h, wsprintfBuffer);
+  Windows.SetWindowTextA(h, wsprintfBuffer);
   }
   tr4w_WindowsArray[ID].WndHandle := h;
 
@@ -4884,7 +4884,7 @@ end;
 
 procedure CreateDirectoryIfNotExist;
 const
-  DirArray: array[0..5] of PChar = ('dvk', 'dvk\lettersandnumbers',
+  DirArray: array[0..5] of PAnsiChar = ('dvk', 'dvk\lettersandnumbers',
     'dvk\fullcallsigns', 'dvk\fullserialnumbers', 'settings', 'dxcluster');
 var
   i: integer;
@@ -4937,7 +4937,7 @@ begin
 
   Stop := GetCPU;
   if Stop - Start < MAXLONG then
-    Windows.SetWindowText(CPUButtonHandle, inttopchar(Stop - Start));
+    Windows.SetWindowTextA(CPUButtonHandle, inttopchar(Stop - Start));
 
 end;
 
@@ -5296,7 +5296,7 @@ begin
     gdHorizontal);
 
   SetBkMode(PCDRAWITEMSTRUCT^.HDC, TRANSPARENT);
-  Windows.DrawText(PCDRAWITEMSTRUCT^.HDC,
+  Windows.DrawTextA(PCDRAWITEMSTRUCT^.HDC,
     @PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Call[1],
     length(PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Call),
     PCDRAWITEMSTRUCT^.rcItem, DT_END_ELLIPSIS + DT_SINGLELINE + DT_CENTER +
@@ -6836,7 +6836,7 @@ function OpenLogFile {(dwCreationDisposition: DWORD)}: boolean;
 var
   h: HWND;
 begin
-  h := CreateFile(
+  h := CreateFileA(
     TR4W_LOG_FILENAME,
     GENERIC_WRITE or GENERIC_READ,
     FILE_SHARE_WRITE or FILE_SHARE_READ,
@@ -7269,7 +7269,7 @@ begin
     exit; // n4af issue 158
   end;
   logger.debug('Calling Windows.SetWindowText wh[mweCall] to %s',[call]);
-  Windows.SetWindowText(wh[mweCall], @Call[1]);
+  Windows.SetWindowTextA(wh[mweCall], @Call[1]);
   PlaceCaretToTheEnd(wh[mweCall]);
 end;
 
@@ -8127,7 +8127,7 @@ const
 
 begin
 
- h := CreateFile(TR4W_ADIF_FILENAME, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+ h := CreateFileA(TR4W_ADIF_FILENAME, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
  if h = INVALID_HANDLE_VALUE then Exit;
  LogSize := Windows.GetFileSize(h, nil);
 
@@ -8847,7 +8847,7 @@ end;
 function EnumMorseRunnerChildProc(wnd: HWND; l: lParam): BOOL; stdcall;
 begin
   Windows.GetClassName(wnd, wsprintfBuffer, SizeOf(wsprintfBuffer));
-  if Windows.lstrcmp(wsprintfBuffer, 'TEdit') = 0 then
+  if Windows.lstrcmpA(wsprintfBuffer, 'TEdit') = 0 then
   begin
     if MorseRunnerWindowsCounter = 0 then
       MorseRunner_MyCallsign := wnd;

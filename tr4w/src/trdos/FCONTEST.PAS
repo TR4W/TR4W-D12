@@ -1627,8 +1627,8 @@ begin
 
   if TempDomesticQTHDataFileName <> nil then
   begin
-    Windows.lstrcat(DomQTHDataFileName, TempDomesticQTHDataFileName);
-    Windows.lstrcat(DomQTHDataFileName, '.dom');
+    Windows.lstrcatA(DomQTHDataFileName, TempDomesticQTHDataFileName);
+    Windows.lstrcatA(DomQTHDataFileName, '.dom');
   end;
 
   case ActiveExchange of

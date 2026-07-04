@@ -54,7 +54,7 @@ function BoolToString(b: boolean): string;
 
 Type ExternalLoggerType = (lt_NoExternalLogger, lt_DXKeeper, lt_ACLog, lt_HRD);
 
-const ExternalLoggerTypeSA                     : array[ExternalLoggerType] of PChar = ('NONE', 'DXKEEPER', 'ACLOG', 'HRD');
+const ExternalLoggerTypeSA                     : array[ExternalLoggerType] of PAnsiChar = ('NONE', 'DXKEEPER', 'ACLOG', 'HRD');
 
    // Reconnection configuration
    RECONNECT_INITIAL_DELAY = 1000;    // 1 second initial delay

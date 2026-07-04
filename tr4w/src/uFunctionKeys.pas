@@ -173,7 +173,7 @@ begin
           FKDRAWITEMSTRUCT^.rcItem.Bottom := FKDRAWITEMSTRUCT^.rcItem.Bottom + delta;
           FKDRAWITEMSTRUCT^.rcItem.Right := FKDRAWITEMSTRUCT^.rcItem.Right + delta;
         end;
-        Windows.DrawText(
+        Windows.DrawTextA(
           FKDRAWITEMSTRUCT^.HDC,
           @ButtonsText[FKDRAWITEMSTRUCT^.CtlID][1],
           length(ButtonsText[FKDRAWITEMSTRUCT^.CtlID]),

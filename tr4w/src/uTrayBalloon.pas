@@ -13,6 +13,7 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
 
+
  You should have received a copy of the GNU General
      Public License along with TR4W in  GPL_License.TXT. 
 If not, ref: 

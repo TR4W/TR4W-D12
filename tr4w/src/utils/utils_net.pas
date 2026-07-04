@@ -6,7 +6,7 @@ uses
 
   Windows,
   WinSock2;
-function GetConnection(var socket: DWORD; Host: PChar; port: Cardinal; struct: integer): boolean;
+function GetConnection(var socket: DWORD; Host: PAnsiChar; port: Cardinal; struct: integer): boolean;
 
 var
   WindowsSocketsInitialised             : boolean;
@@ -14,7 +14,7 @@ var
 
 implementation
 
-function GetConnection(var socket: DWORD; Host: PChar; port: Cardinal; struct: integer): boolean;
+function GetConnection(var socket: DWORD; Host: PAnsiChar; port: Cardinal; struct: integer): boolean;
 var
   TempSockaddr                          : sockaddr_in;
   TempHostent                           : Phostent;
@@ -34,7 +34,7 @@ begin
   TempHostent := WinSock2.gethostbyname(Host);
   if TempHostent = nil then Exit;               // name resolution failed
 
-  TempSockaddr.sa_family := AF_INET;
+  TempSockaddr.sin_family := AF_INET;
   TempSockaddr.sin_addr.S_addr := inet_addr(iNet_ntoa(PInAddr(TempHostent^.h_addr_list^)^));
   TempSockaddr.sin_port := htons(port);
 
@@ -42,7 +42,7 @@ begin
   socket := WinSock2.socket(AF_INET, struct, IPPROTO_IP {Protocol});
   if socket = INVALID_SOCKET then Exit;          // socket creation failed
 
-  Result := WinSock2.Connect(socket, @TempSockaddr, SizeOf(TSockAddrIn)) = 0;
+  Result := WinSock2.Connect(socket, PSockAddr(@TempSockaddr)^, SizeOf(TSockAddrIn)) = 0;
   if not Result then
   begin
     // Issue #23 -- closesocket() resets WSAGetLastError to 0 (its own success),

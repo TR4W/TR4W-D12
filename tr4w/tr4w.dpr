@@ -118,7 +118,6 @@ uses
   uMessagesList in 'src\uMessagesList.pas',
   uRussiaOblasts in 'src\uRussiaOblasts.pas',
   uMenu in 'src\uMenu.pas',
-  winsock2 in 'include\WinSock2.pas',
   utils_net in 'src\utils\utils_net.pas',
   utils_hw in 'src\utils\utils_hw.pas',
   utils_text in 'src\utils\utils_text.pas',

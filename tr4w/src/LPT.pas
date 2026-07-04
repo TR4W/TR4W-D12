@@ -53,7 +53,7 @@ var
   Style                                 : Cardinal;
 //  p                                     : PChar;
 const
-  LPTPortNamesArray                     : array[1..6] of PChar = ('FOOT SWITCH', 'PADDLE', 'RADIO ONE BAND OUTPUT', 'RADIO TWO BAND OUTPUT', 'RELAY CONTROL', 'STEREO CONTROL');
+  LPTPortNamesArray                     : array[1..6] of PAnsiChar = ('FOOT SWITCH', 'PADDLE', 'RADIO ONE BAND OUTPUT', 'RADIO TWO BAND OUTPUT', 'RELAY CONTROL', 'STEREO CONTROL');
 begin
   Result := False;
   case Msg of

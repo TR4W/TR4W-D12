@@ -1692,7 +1692,7 @@ begin
   Format(wsprintfBuffer, TC_MISSINGMULTSREPORT, NumberCountriesDisplayed,
     MultReportMinimumBands);
 
-  Windows.SetWindowText(h, wsprintfBuffer);
+  Windows.SetWindowTextA(h, wsprintfBuffer);
 
   //       GoToXY (8, 17);
   //       Write ('Countries on at least ', MultReportMinimumBands, ' but not all bands.  Any key to exit.');

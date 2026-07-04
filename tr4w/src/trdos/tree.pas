@@ -714,7 +714,7 @@ var
 
   //  tr4w_SerialPortDebug        : boolean;
 function CheckPTTLockout: boolean;
-function GetRealPath(Path, FileName, AddFolder: PChar): PChar;
+function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
 
 function AddBand(Band: BandType): Char;
 function AddMode(Mode: ModeType): Char;
@@ -765,12 +765,12 @@ procedure FormFeed;
 
 function GetChecksum8(Call: FourBytes): integer;
 function GetColorInteger(ColorString: Str80): tr4wColors;
-function GetDateString: PChar;
+function GetDateString: PAnsiChar;
 function GetDayString: Str80;
 //procedure GetFileNames(Path: Str80; Mask: Str80; var FileNames: FileNameRecord);
 
 function GetFirstString(LongString: string): Str80;
-function GetFullTimeString(WithMilliseconds: boolean): PChar {str80};
+function GetFullTimeString(WithMilliseconds: boolean): PAnsiChar {str80};
 function GetIntegerTime: integer;
 
 function GetLastString(LongString: ShortString): Str80;
@@ -804,11 +804,11 @@ function GetSCPCharFromInteger(Index: integer): Char;
 function GetSCPIntegerFromChar(InputChar: Char): integer;
 function GetStateFromSection(Section: Str20): Str20;
 function GetSuffix(Call: CallString): CallString;
-function GetTimeString: PChar {str80};
-function GetTimeString4Digit: PChar;
+function GetTimeString: PAnsiChar {str80};
+function GetTimeString4Digit: PAnsiChar;
 function GetTomorrowString: Str80;
 
-function GetYearString: PChar {Str20};
+function GetYearString: PAnsiChar {Str20};
 
 function GoodLookingGrid(Grid: Str20): boolean;
 function GoodLookingGrid2(Grid: Str20): boolean;
@@ -1907,7 +1907,7 @@ begin
   if ColorString = 'BTNFACE' then GetColorInteger := trBtnFace;
 end;
 
-function GetDateString: PChar;
+function GetDateString: PAnsiChar;
 
 { This function goes off and reads the DOS clock and generates a nice
   looking ASCII string using the format 25-DEC-90.  It takes the Time
@@ -2450,7 +2450,7 @@ begin
   GetSuffix := TempString;
 end;
 
-function GetFullTimeString(WithMilliseconds: boolean): PChar;
+function GetFullTimeString(WithMilliseconds: boolean): PAnsiChar;
 
 { This function will look at the DOS clock and generate a nice looking
   ASCII string showing the time using the format 23:42:32.  It will take
@@ -2464,14 +2464,14 @@ begin
               UTC.wMilliseconds, WithMilliseconds);
 end;
 
-function GetTimeString: PChar;
+function GetTimeString: PAnsiChar;
 begin
   tGetSystemTime;
   Format(GetTimeStringBuffer, '%.2hu:%.2hu', UTC.wHour, UTC.wMinute);
   Result := GetTimeStringBuffer;
 end;
 
-function GetTimeString4Digit: PChar;
+function GetTimeString4Digit: PAnsiChar;
 begin
   tGetSystemTime;
   Format(GetTimeStringBuffer, '%.2hu%.2hu', UTC.wHour, UTC.wMinute);
@@ -2504,7 +2504,7 @@ begin
     GetReal := 0;
 end;
 
-function GetYearString: PChar;
+function GetYearString: PAnsiChar;
 begin
   tGetSystemTime;
 {
@@ -4994,7 +4994,7 @@ begin
   Format(wsprintfBuffer, _COM, portnr);
 
   Result :=
-    CreateFile(
+    CreateFileA(
     wsprintfBuffer,
     GENERIC_READ or GENERIC_WRITE,
     0,
@@ -5072,7 +5072,7 @@ begin
           end;
 end;
 
-function GetRealPath(Path, FileName, AddFolder: PChar): PChar;
+function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
 begin
   Windows.ZeroMemory(@GETREALPATHBUFFER, SizeOf(GETREALPATHBUFFER));
   if pPos('\', TR4W_DVKPATH) = -1 then
@@ -5086,11 +5086,11 @@ begin
 
   if AddFolder <> nil then
   begin
-    Windows.lstrcat(GETREALPATHBUFFER, AddFolder);
-    Windows.lstrcat(GETREALPATHBUFFER, '\');
+    Windows.lstrcatA(GETREALPATHBUFFER, AddFolder);
+    Windows.lstrcatA(GETREALPATHBUFFER, '\');
   end;
 
-  Windows.lstrcat(GETREALPATHBUFFER, FileName);
+  Windows.lstrcatA(GETREALPATHBUFFER, FileName);
 
   Result := GETREALPATHBUFFER;
 end;

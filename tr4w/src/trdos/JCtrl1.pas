@@ -275,14 +275,14 @@ var
   DisplayString                         : Str80;
 //  Changed                               : array[MenuEntryType] of boolean;
 
-function Description(Line: MenuEntryType): PChar;
-function DisplayInfoLine(Line: MenuEntryType; Active: boolean): PChar;
+function Description(Line: MenuEntryType): PAnsiChar;
+function DisplayInfoLine(Line: MenuEntryType; Active: boolean): PAnsiChar;
 
 implementation
 uses MainUnit,
   uNet;
 
-function Description(Line: MenuEntryType): PChar;
+function Description(Line: MenuEntryType): PAnsiChar;
 
 begin
   case Line of
@@ -530,7 +530,7 @@ begin
 
 end;
 
-function DisplayInfoLine(Line: MenuEntryType; Active: boolean): PChar;
+function DisplayInfoLine(Line: MenuEntryType; Active: boolean): PAnsiChar;
 var
   I                                     : integer;
 begin

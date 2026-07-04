@@ -51,7 +51,7 @@ procedure SetItemEnabled(Item: integer);
 
 const
 
-  QTCRXButtonsPChar                     : array[1..10] of PChar =
+  QTCRXButtonsPChar                     : array[1..10] of PAnsiChar =
     (
     '&AGN',
     'R&PT?',
@@ -204,7 +204,7 @@ begin
         end;
         // Issue #997: asm wsprintf-push -> TF.Format.
         Format(wsprintfBuffer, '&DE %s', @MyCall[1]);
-        SetDlgItemText(hwnddlg, 96, wsprintfBuffer);
+        SetDlgItemTextA(hwnddlg, 96, wsprintfBuffer);
         SetFocus(QTCNrWndHandle);
         QTCsReceived := 0;
         CurrentGroup := 0;

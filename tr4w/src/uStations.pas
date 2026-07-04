@@ -228,7 +228,7 @@ begin
   end;
   tSetWindowRedraw(wh[mweStations], True);
   Format(wsprintfBuffer, TC_STATIONSINMODE, ModeStringArray[ActiveMode]);
-  Windows.SetWindowText(tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle, wsprintfBuffer);
+  Windows.SetWindowTextA(tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle, wsprintfBuffer);
 end;
 
 procedure SelectCallsignInStationsList();

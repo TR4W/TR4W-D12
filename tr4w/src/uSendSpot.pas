@@ -49,7 +49,7 @@ var
   p                                     : PChar;
   LastCallsign                          : CallString;
 const
-  l                                     : array[1..3] of PChar = (RC_CALLSIGN, RC_FREQUENCY, RC_COMMENT);
+  l                                     : array[1..3] of PAnsiChar = (RC_CALLSIGN, RC_FREQUENCY, RC_COMMENT);
 label
   1;
 begin
@@ -70,24 +70,24 @@ begin
         CreateOKCancelButtons(hwnddlg);
 
         if CallWindowString <> '' then
-          SetDlgItemText(hwnddlg, 107, @CallWindowString[1])
+          SetDlgItemTextA(hwnddlg, 107, @CallWindowString[1])
         else
         begin
           Windows.ZeroMemory(@LastCallsign, SizeOf(LastCallsign));
           LastCallsign := VisibleLog.LastEntry(True,letCallsign);
-          SetDlgItemText(hwnddlg, 107, @LastCallsign[1]);
+          SetDlgItemTextA(hwnddlg, 107, @LastCallsign[1]);
         end;
 
         Hz100 := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]} mod 100;
         i := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]} - Hz100;
         if Hz100 >= 50 then i := i + 100;
 
-        SetDlgItemText(hwnddlg, 108, FreqToPChar(i));
+        SetDlgItemTextA(hwnddlg, 108, FreqToPChar(i));
 
         if tContestNameInComment then
         begin
           Windows.SendDlgItemMessage(hwnddlg, 104, BM_SETCHECK, BST_CHECKED, 0);
-          Windows.SetDlgItemText(hwnddlg, 109, ContestTypeSA[Contest]);
+          Windows.SetDlgItemTextA(hwnddlg, 109, ContestTypeSA[Contest]);
         end;
       end;
 
@@ -124,8 +124,8 @@ begin
               TempBuffer1[0] := ' ';
               for i := 107 to 109 do
               begin
-                Windows.GetDlgItemText(hwnddlg, i, @TempBuffer1[1], SizeOf(TempBuffer1) - 1);
-                Windows.lstrcat(TempBuffer2, TempBuffer1);
+                Windows.GetDlgItemTextA(hwnddlg, i, @TempBuffer1[1], SizeOf(TempBuffer1) - 1);
+                Windows.lstrcatA(TempBuffer2, TempBuffer1);
               end;
               if TelnetSock <> 0 then
                 SendViaTelnetSocket(TempBuffer2)

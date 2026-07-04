@@ -71,7 +71,7 @@ procedure pFT736R(rig: RadioPtr);
 procedure pFT817_FT847_FT857_FT897(rig: RadioPtr);
 procedure pFT1000MP(rig: RadioPtr);
 procedure pFT100(rig: RadioPtr);
-function ArrayToString(const a: array of Char): string;
+function ArrayToString(const a: array of AnsiChar): string;
 
 procedure pIcom(rig: RadioPtr);
 procedure pIcomNew(rig: RadioPtr);
@@ -146,7 +146,7 @@ var
    TempCommand: tKenwoodCommands;
    cwByCatLock: boolean;
 const
-   KenwoodPollRequests: array[tKenwoodCommands] of PChar = ('IF;', 'FA;',
+   KenwoodPollRequests: array[tKenwoodCommands] of PAnsiChar = ('IF;', 'FA;',
       'FB;');
    KenwoodPollRequestsAnswerLength: array[tKenwoodCommands] of integer = (38,
       14, 14);
@@ -466,7 +466,7 @@ var
    i: integer;
 const
    PollsCount = 4;
-   OrionPollRequests: array[0..PollsCount - 1] of PChar = ('?AF'#13, '?BF'#13,
+   OrionPollRequests: array[0..PollsCount - 1] of PAnsiChar = ('?AF'#13, '?BF'#13,
       '?KV'#13, '?RMM'#13);
    OrionPollRequestsLength: array[0..PollsCount - 1] of integer = (4, 4, 4, 5);
    //  OrionPollRequestsAnswerLength         : array[0..PollsCount - 1] of integer = (12, 12, 7, 6);
@@ -1278,7 +1278,7 @@ var
    Step: integer;
    TempVFO: ActiveVFOStatusType;
 const
-   KenwoodVFORequests: array[ActiveVFOStatusType] of PChar = (nil, 'FA;', 'FB;',
+   KenwoodVFORequests: array[ActiveVFOStatusType] of PAnsiChar = (nil, 'FA;', 'FB;',
       'FB;');
    KenwoodPollCount = 10;
 begin
@@ -2993,15 +2993,15 @@ end;
 procedure WriteToDebugFile(port: PortType; MessageType: DebugFileMessagetype; p:
    PChar; Count: Cardinal);
 var
-   DirectionChar: PChar;
+   DirectionChar: PAnsiChar;
    i, lpNumberOfBytesWritten: Cardinal;
-   P1: PChar;
+   P1: PAnsiChar;
    tChar: Char;
    bgColor: PChar;
    h: HWND;
 
 const
-   InOutArray: array[DebugFileMessagetype] of PChar = ('PC >', 'PC <', 'Error');
+   InOutArray: array[DebugFileMessagetype] of PAnsiChar = ('PC >', 'PC <', 'Error');
 begin
    if MessageType = dfmRX then
       bgColor := ' BGCOLOR=#00FF00';
@@ -3339,10 +3339,10 @@ begin
                 rig.CurrentStatus.VFO[VFOA].Frequency]);
          if h <> 0 then
             begin
-               SetDlgItemText(h, 102,
+               SetDlgItemTextA(h, 102,
                   FreqToPChar(rig.CurrentStatus.VFO[VFOA].Frequency));
             end;
-         Windows.SetWindowText(rig^.FreqWindowHandle,
+         Windows.SetWindowTextA(rig^.FreqWindowHandle,
             FreqToPChar(rig.CurrentStatus.Freq));
       end
    else
@@ -3374,7 +3374,7 @@ begin
                 rig.CurrentStatus.VFO[VFOB].Frequency]);
          if h <> 0 then
             begin
-               SetDlgItemText(h, 104,
+               SetDlgItemTextA(h, 104,
                   FreqToPChar(rig.CurrentStatus.VFO[VFOB].Frequency));
             end;
          //Windows.SetWindowText(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
@@ -3400,7 +3400,7 @@ begin
       begin
          { $ R A NGECHECKS OFF}
              //SetDlgItemInt(h, 120, Cardinal(rig.CurrentStatus.RITFreq), rig.CurrentStatus.RITFreq < 0);
-         SetDlgItemText(h, 120, RITFreqToPchar(rig.CurrentStatus.RITFreq));
+         SetDlgItemTextA(h, 120, RITFreqToPchar(rig.CurrentStatus.RITFreq));
          { $ R A NGECHECKS ON}
          rig.CurrentStatus.PrevRITFreq := rig.CurrentStatus.RITFreq;
       end;
@@ -4425,7 +4425,7 @@ begin
       end;
 end;
 
-function ArrayToString(const a: array of Char): string;
+function ArrayToString(const a: array of AnsiChar): string;
 begin
   if Length(a)>0 then
     SetString(Result, PChar(@a[0]), Length(a))

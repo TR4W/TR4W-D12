@@ -260,7 +260,7 @@ const
 
   NumberErmakOverlayCategories          = 11;
 
-  ErmakOverlayCategory                  : array[0..NumberErmakOverlayCategories - 1] of PChar = (
+  ErmakOverlayCategory                  : array[0..NumberErmakOverlayCategories - 1] of PAnsiChar = (
     'YL',
     'JR',
     'JR-13',
@@ -279,14 +279,14 @@ const
     'MULTI-OP',
     'CHECKLOG');
  }
-  TimeCategory                          : array[0..NumberTimeCategories - 1] of PChar = (
+  TimeCategory                          : array[0..NumberTimeCategories - 1] of PAnsiChar = (
     '6-HOURS',
     '8-HOURS',
     '12-HOURS',
     '24-HOURS'
     );
 
-  TransmitterCategory                   : array[0..NumberTransmitterCategories - 1] of PChar = (
+  TransmitterCategory                   : array[0..NumberTransmitterCategories - 1] of PAnsiChar = (
     'ONE',
     'TWO',
     'LIMITED',
@@ -299,7 +299,7 @@ const
     'ASSISTED'
     );
 }
-  StationCategory                       : array[0..NumberStationCategories - 1] of PChar =
+  StationCategory                       : array[0..NumberStationCategories - 1] of PAnsiChar =
     (
     'DISTRIBUTED',
     'FIXED',
@@ -341,7 +341,7 @@ const
     'SSB',
     'MIXED');
 }
-  OverlayCategory                       : array[0..NumberOverlayCategories - 1] of PChar = (
+  OverlayCategory                       : array[0..NumberOverlayCategories - 1] of PAnsiChar = (
     'CLASSIC',  //n4af 4.35.4
     'ROOKIE',
     'TB-WIRES',
@@ -349,7 +349,7 @@ const
     'NOVICE-TECH',
     'YL');
 
-    Certificate                 : array[0..NumberCertificateCategories - 1] of PChar = (           //N4AF 37.0.1
+    Certificate                 : array[0..NumberCertificateCategories - 1] of PAnsiChar = (           //N4AF 37.0.1
     'YES',
     'NO');
 
@@ -782,7 +782,7 @@ begin
   begin
     if ErmakSpecification then if TempTag = ctOperators then Continue;
 
-    Windows.GetDlgItemText(CreateCabrilloWindow, integer(TempTag) + 200, @TempBuffer2, SizeOf(TempBuffer2));
+    Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(TempTag) + 200, @TempBuffer2, SizeOf(TempBuffer2));
     if TempBuffer2[0] = #0 then Continue;
 
     nNumberOfBytesToWrite := Format(wsprintfBuffer, '%22s: %s'#13#10, @CabrilloTagsArray[TempTag].ctrTag[1], TempBuffer2);
@@ -819,7 +819,7 @@ var
   totalMults                            : integer;
 const
   h                                     = #13#10'  BAND   Raw QSOs   Valid QSOs   Points';
-  mn                                    :array[RemainingMultiplierType] of PChar = ('','Mults', 'Countries', 'Zones', 'Prefixes');
+  mn                                    :array[RemainingMultiplierType] of PAnsiChar = ('','Mults', 'Countries', 'Zones', 'Prefixes');
   breakline                             = #13#10' __________________________________________________________________';
 begin
   TotalLine := False;
@@ -1729,8 +1729,8 @@ var
   TempTag                               : CabrilloTags;
 const
   EDI_ModeCodes                         : array[ModeType] of integer = (2, 7, 1, 0, 0, 6);
-  EDI_NewArray                          : array[boolean] of PChar = (nil, 'N');
-  EDI_DupeArray                         : array[boolean] of PChar = (nil, 'D');
+  EDI_NewArray                          : array[boolean] of PAnsiChar = (nil, 'N');
+  EDI_DupeArray                         : array[boolean] of PAnsiChar = (nil, 'D');
 begin
   if QSOTotals[Band, Both] = 0 then Exit;
 
@@ -1748,13 +1748,13 @@ begin
   Windows.ZeroMemory(@wsprintfBuffer, SizeOf(wsprintfBuffer));
   for TempTag := ctAddress to ctAddressCountry do
   begin
-    if Windows.GetDlgItemText(CreateCabrilloWindow, integer(TempTag) + 200, @TempBuffer1, SizeOf(TempBuffer1)) = 0 then Continue;
-    Windows.lstrcat(wsprintfBuffer, TempBuffer1);
-    Windows.lstrcat(wsprintfBuffer, ' ');
+    if Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(TempTag) + 200, @TempBuffer1, SizeOf(TempBuffer1)) = 0 then Continue;
+    Windows.lstrcatA(wsprintfBuffer, TempBuffer1);
+    Windows.lstrcatA(wsprintfBuffer, ' ');
   end;
 
-  Windows.GetDlgItemText(CreateCabrilloWindow, integer(ctName) + 200, @TempBuffer1, SizeOf(TempBuffer1));
-  Windows.GetDlgItemText(CreateCabrilloWindow, integer(ctCategoryOperator) + 200, @TempBuffer2, SizeOf(TempBuffer2));
+  Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(ctName) + 200, @TempBuffer1, SizeOf(TempBuffer1));
+  Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(ctCategoryOperator) + 200, @TempBuffer2, SizeOf(TempBuffer2));
 
   // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
   // ContestName, MyCall, MyGrid, BandString, Name, Address, Section, QSOcount.
@@ -2181,7 +2181,7 @@ begin
   Result := False;
 
   if (Contest = ARRL10) or (Contest = WINTERFIELDDAY) then
-    if Windows.GetDlgItemText(CreateCabrilloWindow, integer(ctLocation) + 200, @TempBuffer2, SizeOf(TempBuffer2)) = 0 then
+    if Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(ctLocation) + 200, @TempBuffer2, SizeOf(TempBuffer2)) = 0 then
     begin
       showwarning('LOCATION field is empty.');
       Exit;
@@ -2215,7 +2215,7 @@ begin
   begin
     if ErmakSpecification then if TempTag = ctOperators then Continue;
 
-    Windows.GetDlgItemText(CreateCabrilloWindow, integer(TempTag) + 200, @TempBuffer2, SizeOf(TempBuffer2));
+    Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(TempTag) + 200, @TempBuffer2, SizeOf(TempBuffer2));
     //if TempBuffer2[0] = #0 then Continue;
     if TempTag = ctOperators then
        begin

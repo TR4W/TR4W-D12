@@ -78,7 +78,7 @@ begin
         if HiWord(wParam) = EN_CHANGE then
         begin
 //          s := GetDialogItemText(hwnddlg, 101);
-          s[0] := Char(Windows.GetDlgItemText(hwnddlg, 101, @s[1], SizeOf(s) - 1));
+          s[0] := Char(Windows.GetDlgItemTextA(hwnddlg, 101, @s[1], SizeOf(s) - 1));
           if ActiveMode <> Phone then
           begin
             if s <> '' then

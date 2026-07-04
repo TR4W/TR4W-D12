@@ -160,27 +160,27 @@ begin
 
             ControlA:
               begin
-                Windows.lstrcat(@data.Section[1], TempBuffer);
-                data.Section[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.Section[1], TempBuffer);
+                data.Section[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlC:
               begin
-                Windows.lstrcat(@data.CQZone[1], TempBuffer);
-                data.CQZone[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.CQZone[1], TempBuffer);
+                data.CQZone[0] := CHR(Windows.lstrlenA(TempBuffer));
 
               end;
 
             ControlF:
               begin
-                Windows.lstrcat(@data.FOC[1], TempBuffer);
-                data.FOC[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.FOC[1], TempBuffer);
+                data.FOC[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlG:
               begin
-                Windows.lstrcat(@data.Grid[1], TempBuffer);
-                data.Grid[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.Grid[1], TempBuffer);
+                data.Grid[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlH:
@@ -191,32 +191,32 @@ begin
 
             ControlI:
               begin
-                Windows.lstrcat(@data.ITUZone[1], TempBuffer);
-                data.ITUZone[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.ITUZone[1], TempBuffer);
+                data.ITUZone[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlK:
               begin
-                Windows.lstrcat(@data.Check[1], TempBuffer);
-                data.Check[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.Check[1], TempBuffer);
+                data.Check[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlN:
               begin
-                Windows.lstrcat(@data.mName[1], TempBuffer);
-                data.mName[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.mName[1], TempBuffer);
+                data.mName[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlO:
               begin
-                Windows.lstrcat(@data.OldCall[1], TempBuffer);
-                data.OldCall[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.OldCall[1], TempBuffer);
+                data.OldCall[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlQ:
               begin
-                Windows.lstrcat(@data.QTH[1], TempBuffer);
-                data.QTH[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.QTH[1], TempBuffer);
+                data.QTH[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlS:
@@ -227,38 +227,38 @@ begin
 
             ControlT:
               begin
-                Windows.lstrcat(@data.TENTEN[1], TempBuffer);
-                data.TENTEN[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.TENTEN[1], TempBuffer);
+                data.TENTEN[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlU:
               begin
-                Windows.lstrcat(@data.User1[1], TempBuffer);
-                data.User1[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.User1[1], TempBuffer);
+                data.User1[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlV:
               begin
-                Windows.lstrcat(@data.User2[1], TempBuffer);
-                data.User2[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.User2[1], TempBuffer);
+                data.User2[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlW:
               begin
-                Windows.lstrcat(@data.User3[1], TempBuffer);
-                data.User3[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.User3[1], TempBuffer);
+                data.User3[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlX:
               begin
-                Windows.lstrcat(@data.User4[1], TempBuffer);
-                data.User4[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.User4[1], TempBuffer);
+                data.User4[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
             ControlY:
               begin
-                Windows.lstrcat(@data.User5[1], TempBuffer);
-                data.User5[0] := CHR(Windows.lstrlen(TempBuffer));
+                Windows.lstrcatA(@data.User5[1], TempBuffer);
+                data.User5[0] := CHR(Windows.lstrlenA(TempBuffer));
               end;
 
           end;

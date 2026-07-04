@@ -92,7 +92,7 @@ uses
   ZoneCont
   ;
   var TimeLastScoreBroadcast : TDateTime;
-  const BandTypeToUDPContactBand  : array[Band160..BandLight] of PChar =
+  const BandTypeToUDPContactBand  : array[Band160..BandLight] of PAnsiChar =
     (
     '1.8',
     '3.5',
@@ -2712,7 +2712,7 @@ var
 begin
   Result := False;
   if tPreviousDupeQSOsShowed then ShowPreviousDupeQSOsWnd(False); //DestroyPreviousDupeQSOsWnd;
-  LogHandle := CreateFile(TR4W_LOG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, 0);
+  LogHandle := CreateFileA(TR4W_LOG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, 0);
   if LogHandle = INVALID_HANDLE_VALUE then
   begin
 //    showwarning(SysErrorMessage(GetLastError));
@@ -2749,10 +2749,10 @@ var
     nTotal                                : integer;
     sContestName                          : string;
 const
-  GetScoresMults                        : array[RemainingMultiplierType] of PChar = (nil, 'state', 'country', 'zone', 'prefix');
-  GetScoresMultsIARU                   : array[RemainingMultiplierType] of PChar = (nil, 'HQ', 'country', 'zone', 'prefix');
-  GetScoresMultsWRTC                   : array[RemainingMultiplierType] of PChar = (nil, 'HQ', 'country', 'zone', 'prefix');
-  GetScoresModesArray                   : array[ModeType] of PChar = ('CW', 'DIG', 'PH', 'ALL', nil, nil);
+  GetScoresMults                        : array[RemainingMultiplierType] of PAnsiChar = (nil, 'state', 'country', 'zone', 'prefix');
+  GetScoresMultsIARU                   : array[RemainingMultiplierType] of PAnsiChar = (nil, 'HQ', 'country', 'zone', 'prefix');
+  GetScoresMultsWRTC                   : array[RemainingMultiplierType] of PAnsiChar = (nil, 'HQ', 'country', 'zone', 'prefix');
+  GetScoresModesArray                   : array[ModeType] of PAnsiChar = ('CW', 'DIG', 'PH', 'ALL', nil, nil);
 begin
 // Score formatted for WRTC Score Computer
 {

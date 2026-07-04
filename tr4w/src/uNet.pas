@@ -748,7 +748,7 @@ var
 //  p                                     : PChar;
   TempBuffer                            : array[0..31] of Char;
 const
-  da                                    : array[boolean] of PChar = (nil, 'D');
+  da                                    : array[boolean] of PAnsiChar = (nil, 'D');
 begin
   i := PosInClientsList[Index] - 1;
   CurrentDisplayedRow := Index;
@@ -896,7 +896,7 @@ begin
          logger.Info('Auto-synchronizing local log from server (CRC mismatch: local %x, server %x)',
                      [s^.liLocalCRC32, s^.liSeverCRC32]);
          QuickDisplay(TC_AUTOSYNCHRONIZINGLOG);
-         NewServerLogHandle := CreateFile(TR4W_SYN_FILENAME,
+         NewServerLogHandle := CreateFileA(TR4W_SYN_FILENAME,
                                           GENERIC_READ or GENERIC_WRITE,
                                           FILE_SHARE_READ or FILE_SHARE_WRITE,
                                           nil, CREATE_ALWAYS,
@@ -968,7 +968,7 @@ end;
 procedure ShowConnectionStatus(Operation: PChar);
 begin
   Format(@NetBuffer, TC_NETWORK, Operation, @ServerAddress[1], ServerPort);
-  Windows.SetWindowText(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer);
+  Windows.SetWindowTextA(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer);
 end;
 
 procedure DisplayMessageStatus(Index: integer; Msg: TMessageState);

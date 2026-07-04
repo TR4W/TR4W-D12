@@ -205,7 +205,7 @@ type
   end;
 
 const
-  DXMultTypenameArray                   : array[DXMultType] of PChar =
+  DXMultTypenameArray                   : array[DXMultType] of PAnsiChar =
     (
 //    'NO COUNT', //    NoCountDXMults,
     'NONE', //    NoDXMults,

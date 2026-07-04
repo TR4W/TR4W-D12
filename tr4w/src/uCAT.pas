@@ -494,17 +494,17 @@ begin
         for i := 101 to 111 do
            begin
            tCB_SETCURSEL(hwnddlg, i + 20, 0);
-           Windows.GetDlgItemText(hwnddlg, i, TempBuffer1, SizeOf(TempBuffer1));
+           Windows.GetDlgItemTextA(hwnddlg, i, TempBuffer1, SizeOf(TempBuffer1));
            Format(wsprintfBuffer, '%s%s', TempPchar, TempBuffer1);         // This prepends RADIO ONE or RADIO TWO.
            if i = 103 then
               Format(wsprintfBuffer, 'KEYER %s%s', TempPchar, TempBuffer1);
-           Windows.SetDlgItemText(hwnddlg, i, wsprintfBuffer);
+           Windows.SetDlgItemTextA(hwnddlg, i, wsprintfBuffer);
            end;
 
         i := 1000;
-        Windows.GetDlgItemText(hwnddlg, i, TempBuffer1, SizeOf(TempBuffer1));
+        Windows.GetDlgItemTextA(hwnddlg, i, TempBuffer1, SizeOf(TempBuffer1));
         Format(wsprintfBuffer, '%s%s', TempPchar, TempBuffer1);         // This prepends RADIO ONE or RADIO TWO.
-        Windows.SetDlgItemText(hwnddlg, i, wsprintfBuffer);
+        Windows.SetDlgItemTextA(hwnddlg, i, wsprintfBuffer);
 
 
         {radio type}

@@ -49,7 +49,7 @@ function LooksLikeAGeoCoordinates(Coordinates: Str40; var LatValue, LongValue: i
 //function LooksLikeRadio160Square(Square: Str20): boolean;
 
 const
-  DistanceDisplayTypeSA                 : array[DistanceDisplayType] of PChar = ('NONE', 'MILES', 'KM');
+  DistanceDisplayTypeSA                 : array[DistanceDisplayType] of PAnsiChar = ('NONE', 'MILES', 'KM');
 
 var
   DistanceMode                          : DistanceDisplayType = DistanceKM;

@@ -43,7 +43,7 @@ var
 
 const
   BEACONS                               = 18;
-  BeaconsNames                          : array[0..BEACONS - 1] of PChar = ('4U1UN', 'VE8AT', 'W6WX', 'KH6WO', 'ZL6B', 'VK6RBP', 'JA2IGY', 'RR9O', 'VR2B', '4S7B', 'ZS6DN', '5Z4B', '4X6TU', 'OH2B', 'CS3B', 'LU4AA', 'OA4B', 'YV5B');
+  BeaconsNames                          : array[0..BEACONS - 1] of PAnsiChar = ('4U1UN', 'VE8AT', 'W6WX', 'KH6WO', 'ZL6B', 'VK6RBP', 'JA2IGY', 'RR9O', 'VR2B', '4S7B', 'ZS6DN', '5Z4B', '4X6TU', 'OH2B', 'CS3B', 'LU4AA', 'OA4B', 'YV5B');
 {
   BeaconsGrids                          : array[0..BEACONS - 1] of string[4] = (
     'FN30',

@@ -78,7 +78,7 @@ type
 
 procedure EnumDOMFILE(FileString: PShortString);
 const
-  RemainingMultDisplayModeTypeSA        : array[RemainingMultDisplayModeType] of PChar = ('NONE', 'ERASE', 'HILIGHT');
+  RemainingMultDisplayModeTypeSA        : array[RemainingMultDisplayModeType] of PAnsiChar = ('NONE', 'ERASE', 'HILIGHT');
 //  ExternalLogTypeSA                     : array[ExternalLogType] of PChar( = ('None', 'DXKeeper', 'ACLog', 'HRD');
 
 var

@@ -258,8 +258,8 @@ var
   m                                     : RemainingMultiplierType;
   BandPchar                             : PChar;
 const
-  GetScoresMults                        : array[RemainingMultiplierType] of PChar = (nil, 'state', 'country', 'zone', 'prefix');
-  GetScoresModesArray                   : array[ModeType] of PChar = ('CW', 'DIG', 'PH', 'ALL', nil, nil);
+  GetScoresMults                        : array[RemainingMultiplierType] of PAnsiChar = (nil, 'state', 'country', 'zone', 'prefix');
+  GetScoresModesArray                   : array[ModeType] of PAnsiChar = ('CW', 'DIG', 'PH', 'ALL', nil, nil);
 begin
 
   pContest := ContestTypeSA[Contest];

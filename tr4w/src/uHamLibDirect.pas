@@ -371,10 +371,10 @@ function rig_set_func(rig: PRIG; vfo: vfo_t; func: setting_t; status: Integer): 
 -----------------------------------------------------------------------------}
 
 // Get error message for error code
-function rigerror(errnum: Integer): PChar; cdecl; external HAMLIB_DLL;
+function rigerror(errnum: Integer): PAnsiChar; cdecl; external HAMLIB_DLL;
 
 // Mode string conversion
-function rig_strrmode(mode: rmode_t): PChar; cdecl; external HAMLIB_DLL;
+function rig_strrmode(mode: rmode_t): PAnsiChar; cdecl; external HAMLIB_DLL;
 
 {-----------------------------------------------------------------------------
   Transceive Mode

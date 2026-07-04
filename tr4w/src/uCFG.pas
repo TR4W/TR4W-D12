@@ -309,9 +309,9 @@ const
 
    //  CFGKindStringArray                    : array[CFGKind] of PChar = ('Supported', 'Supported', 'Supported', 'Supported', 'Supported', 'Added', 'Removed', 'Not supported');
 
-   CFGStatusArray: array[CFGStatus] of PChar = ('New', 'Old', 'Removed');
+   CFGStatusArray: array[CFGStatus] of PAnsiChar = ('New', 'Old', 'Removed');
 
-   CFGTypeStringArray: array[CFGType] of PChar = (nil, 'Directory', 'FileName',
+   CFGTypeStringArray: array[CFGType] of PAnsiChar = (nil, 'Directory', 'FileName',
       'String', 'Multiplier', 'Boolean', 'Real', 'Byte', 'Integer', 'Integer',
       { 'Integer', } 'String', 'URL', 'CaseSensitive', 'Password', 'Operation', 'Other', 'Char', 'Char',
       {'Port',} 'Port', 'Band');
@@ -1893,10 +1893,10 @@ begin
          SA[i].isString^[0] := Char(lstrlen(SA[i].isPcharString));
       end;
    p := 'logback.tr4w';
-   Windows.lstrcat(TR4W_FLOPPY_FILENAME, p); // 4.56.13
-   Windows.lstrcat(TR4W_INITIALEX_FILENAME, 'INITIAL.EX');
-   Windows.lstrcat(TR4W_MP3PATH, 'MP3');
-   Windows.lstrcat(TR4W_DVKPATH, 'DVK');
+   Windows.lstrcatA(TR4W_FLOPPY_FILENAME, p); // 4.56.13
+   Windows.lstrcatA(TR4W_INITIALEX_FILENAME, 'INITIAL.EX');
+   Windows.lstrcatA(TR4W_MP3PATH, 'MP3');
+   Windows.lstrcatA(TR4W_DVKPATH, 'DVK');
 
 end;
 

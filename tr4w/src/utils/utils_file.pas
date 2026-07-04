@@ -11,7 +11,7 @@ function sWriteFileFromString(hFile: THandle; sBuffer: AnsiString): BOOL;
 function tWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD; var lpNumberOfBytesWritten: DWORD): BOOL;
 function sReadFile(hFile: THandle; var Buffer; nNumberOfBytesToRead: DWORD): BOOL;
 
-function tOpenFileForWrite(var h: HWND; FileName: PChar): boolean;
+function tOpenFileForWrite(var h: HWND; FileName: PAnsiChar): boolean;
 function OpenFileForWrite(var FileHandle: Text; FileName: string): boolean;
 
 implementation
@@ -73,9 +73,9 @@ begin
                                lpNumberOfBytesWritten, nil);
 end;
 
-function tOpenFileForWrite(var h: HWND; FileName: PChar): boolean;
+function tOpenFileForWrite(var h: HWND; FileName: PAnsiChar): boolean;
 begin
-  h := CreateFile(FileName, GENERIC_READ + GENERIC_WRITE, FILE_SHARE_READ + FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
+  h := CreateFileA(FileName, GENERIC_READ + GENERIC_WRITE, FILE_SHARE_READ + FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
   Result := h <> INVALID_HANDLE_VALUE;
 end;
 

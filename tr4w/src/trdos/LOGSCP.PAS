@@ -248,7 +248,7 @@ type
   end;
 
 const
-  PossibleCallActionTypeStringArray     : array[PossibleCallActionType] of PChar =
+  PossibleCallActionTypeStringArray     : array[PossibleCallActionType] of PAnsiChar =
     (
     'ALL',
     'NAMES',

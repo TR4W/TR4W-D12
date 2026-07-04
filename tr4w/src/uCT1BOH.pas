@@ -29,7 +29,7 @@ uses
   Tree
   ;
 function ct1bohDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-function CT1BOHInfoString(QSOs: integer; Percents: integer): PChar;
+function CT1BOHInfoString(QSOs: integer; Percents: integer): PAnsiChar;
 implementation
 uses MainUnit;
 function ct1bohDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -125,7 +125,7 @@ begin
     WM_CLOSE: 1: EndDialog(hwnddlg, 0);
   end;
 end;
-function CT1BOHInfoString(QSOs: integer; Percents: integer): PChar;
+function CT1BOHInfoString(QSOs: integer; Percents: integer): PAnsiChar;
 begin
   if QSOs = 0 then
     wsprintfBuffer[0] := #0

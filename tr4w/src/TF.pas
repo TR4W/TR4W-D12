@@ -49,7 +49,7 @@ b:byte;
 b2:byte;
 bbb: array[0..5] of Byte;
 c80: array[0..3] of Byte;
-    fn: array[0..170] of Char;
+    fn: array[0..170] of AnsiChar;
   }end;
 
   TEnumLinesFunc = procedure(Line: PShortString);
@@ -63,7 +63,7 @@ const
   LB_STYLE_3                            = LBS_NOTIFY or LBS_MULTIPLESEL or LBS_HASSTRINGS or LBS_NOINTEGRALHEIGHT or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP;
 
   Ten                                   : Double = 10.0;
-  Layout                                : array[0..9] of Char = ('0', '0', '0', '0', '0', '4', '0', '9', #0, #0);
+  Layout                                : array[0..9] of AnsiChar = ('0', '0', '0', '0', '0', '4', '0', '9', #0, #0);
   UNKNOWNTYPE                           = 255;
 const
   LISTVIEW                              = 'SysListView32';
@@ -78,33 +78,33 @@ var
   EditPChar                             : PChar = 'Edit';
   LISTBOX                               : PChar = 'LISTBOX';
 
-  wsprintfBuffer                        : array[0..4096 - 1] of Char;
-  tempprintfBuffer                      : array[0..4096 - 1] of Char;   // To use with wsPrintfBuffer Issue 601 ny4i
-  MillisecondsBuffer                    : array[0..31] of Char;
-  QuickDisplayBuffer                    : array[0..255] of Char;
-  TempBuffer1                           : array[0..255] of Char;
-  TempBuffer2                           : array[0..255] of Char;
-  SetDlgItemTextBuffer                  : array[0..255] of Char;
-  TelnetBuffer                          : array[0..4096 * 5 - 1] of Char;
-  spotsBuffer                            : array[0..4096 * 5 - 1] of Char;
-  NetBuffer                             : array[1..4096] of Char;
-  SyncNetBuffer                         : array[0..4096 - 1] of Char;
-  SYSERRORBUFFER                        : array[0..255] of Char;
+  wsprintfBuffer                        : array[0..4096 - 1] of AnsiChar;
+  tempprintfBuffer                      : array[0..4096 - 1] of AnsiChar;   // To use with wsPrintfBuffer Issue 601 ny4i
+  MillisecondsBuffer                    : array[0..31] of AnsiChar;
+  QuickDisplayBuffer                    : array[0..255] of AnsiChar;
+  TempBuffer1                           : array[0..255] of AnsiChar;
+  TempBuffer2                           : array[0..255] of AnsiChar;
+  SetDlgItemTextBuffer                  : array[0..255] of AnsiChar;
+  TelnetBuffer                          : array[0..4096 * 5 - 1] of AnsiChar;
+  spotsBuffer                            : array[0..4096 * 5 - 1] of AnsiChar;
+  NetBuffer                             : array[1..4096] of AnsiChar;
+  SyncNetBuffer                         : array[0..4096 - 1] of AnsiChar;
+  SYSERRORBUFFER                        : array[0..255] of AnsiChar;
 
-  GETREALPATHBUFFER                     : array[0..255] of Char;
+  GETREALPATHBUFFER                     : array[0..255] of AnsiChar;
 
-  LogDisplayBuffer                      : array[0..128 - 1] of Char;
-  IntToPCharBuffer                      : array[0..15] of Char;
-  FreqToPCharBuffer                     : array[0..15] of Char;
+  LogDisplayBuffer                      : array[0..128 - 1] of AnsiChar;
+  IntToPCharBuffer                      : array[0..15] of AnsiChar;
+  FreqToPCharBuffer                     : array[0..15] of AnsiChar;
 
-  GetDateFormatBuffer                   : array[0..31] of Char;
+  GetDateFormatBuffer                   : array[0..31] of AnsiChar;
 
-  GetTimeStringBuffer                   : array[0..31] of Char;
-  SystemTimeToStringBuffer              : array[0..31] of Char;
-  GetFullTimeStringBuffer               : array[0..31] of Char;
-  GetYearStringBuffer                   : array[0..7] of Char;
-  GetDateStringBuffer                   : array[0..15] of Char;
-  IQPrompt                              : array[0..63] of Char;
+  GetTimeStringBuffer                   : array[0..31] of AnsiChar;
+  SystemTimeToStringBuffer              : array[0..31] of AnsiChar;
+  GetFullTimeStringBuffer               : array[0..31] of AnsiChar;
+  GetYearStringBuffer                   : array[0..7] of AnsiChar;
+  GetDateStringBuffer                   : array[0..15] of AnsiChar;
+  IQPrompt                              : array[0..63] of AnsiChar;
 
 function CreateRichEdit(hwndParent: HWND): HWND;
 function Createmsctls_progress32(X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
@@ -112,7 +112,7 @@ function Createmsctls_progress32(X, Y, Width, Height: integer; hwndParent: HWND;
 function CreateOwnerDrawListBox(dwStyle: DWORD; hwndParent: HWND): HWND;
 function EnumerateLinesInFile(FileName: PChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function EnumerateLinesInFile_old(FileName: PChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
-function tGetDateFormat(DT: TQSOTime): PChar; //assembler;
+function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 procedure UnableToFindFileMessage(FileName: PChar);
 function DeleteSlashes(p: PChar): PChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
@@ -156,7 +156,7 @@ function tCB_GETCURSEL(ParentHandle: HWND; Control: integer): integer;
 
 procedure tSetWindowText(WindowHandle: HWND; s: string);
 procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
-function SystemTimeToString(SysTime: SYSTEMTIME): PChar;
+function SystemTimeToString(SysTime: SYSTEMTIME): PAnsiChar;
 procedure SelectParentDir(h: HWND);
 
 //function StrLen(const Str: PChar): Cardinal;
@@ -167,27 +167,27 @@ function GetWindowByHandle(h: HWND): WindowsType;
 procedure tEnableMenuItem(uIDEnableItem: UINT; uEnable: UINT);
 
 
-function SysErrorMessage(ErrorCode: Cardinal): PChar;
+function SysErrorMessage(ErrorCode: Cardinal): PAnsiChar;
 procedure showwarning(Text: PChar);
 procedure ShowSysErrorMessage(ID: PChar);
 
 
 //function tr4w_GetTimeString: PChar;
-function RITFreqToPchar(i: integer): PChar;
-function FreqToPChar(i: integer): PChar;
-function FreqToPChar2(i: integer): PChar;
-function FreqToPCharWithoutHZ(i: integer): PChar;
-function kHzToPChar(Freq: Word): PChar;
+function RITFreqToPchar(i: integer): PAnsiChar;
+function FreqToPChar(i: integer): PAnsiChar;
+function FreqToPChar2(i: integer): PAnsiChar;
+function FreqToPCharWithoutHZ(i: integer): PAnsiChar;
+function kHzToPChar(Freq: Word): PAnsiChar;
 //function InitSysMonthCal32: boolean;
 function BitmapFromIcon(Handle: HWND; i: HICON): HBITMAP;
 function ExtractBigIcon(IconIndex: integer): HICON;
-function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): PChar;
+function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): PAnsiChar;
 
 //function Pos(Substr: string; S: string): Integer;
 function ArrayToString(const a: array of Char): string;
 procedure InvertBoolean(var b: boolean);
-function inttopchar(i: integer): PChar;
-function inttopcharHEX(i: integer): PChar;
+function inttopchar(i: integer): PAnsiChar;
+function inttopcharHEX(i: integer): PAnsiChar;
 procedure DragWindow(h: HWND);
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 function SetLink(HWindow: HWND; Link: PChar): BOOL;
@@ -207,36 +207,36 @@ function CreateListView2(X, Y, nWidth, nHeight: Word; hwndParent: HWND): HWND;
 function CreateComboBox(hwndParent: HWND; HMENU: HMENU): HWND;
 function SendDlgItemMessage(hDlg: HWND; nIDDlgItem: integer; Msg: UINT): LONGINT; stdcall;
 
-function tOpenFileForRead(var h: HWND; FileName: PChar): boolean;
+function tOpenFileForRead(var h: HWND; FileName: PAnsiChar): boolean;
 
 procedure GetTime(var Hour, Minute, Second, Sec100: Word);
 procedure GetDate(var Year, Month, Day, DayOfWeek: Word);
 
 {$EXTERNALSYM Format}
-function Format(Output: PChar; Format: PChar; c: Char): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer; overload; cdecl; overload;
 
-function Format(Output: PChar; Format: PChar; s1: PChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PChar; s3: PChar): integer; overload; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar; p4: PChar): integer; overload; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar; p4: PChar; p5: PChar): integer; overload; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar): integer; overload; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar; i: integer): integer; overload; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar; i: integer; i2: integer): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar; p5: PAnsiChar): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer; i2: integer): integer; overload; cdecl; overload;
 
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; i: integer): integer; overload; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar): integer; overload; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; i: integer): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar): integer; overload; cdecl; overload;
 
-function Format(Output: PChar; Format: PChar; i: integer; i2: integer; i3: integer): integer; cdecl; overload;
-function Format(Output: PChar; Format: PChar; i: integer; i2: integer; p: PChar): integer; cdecl; overload;
-function Format(Output: PChar; Format: PChar; i: integer): integer; overload; cdecl; overload;
-function Format(Output: PChar; Format: PChar; i: integer; i2: integer): integer; cdecl; overload;
-function Format(Output: PChar; Format: PChar; i: integer; p: PChar): integer; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; i: integer): integer; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; i: integer; i2: integer): integer; cdecl; overload;
-function Format(Output: PChar; Format: PChar; p: PChar; i: integer; P2: PChar): integer; cdecl; overload;
-function Format(Output: PChar; Format: PChar; i: integer; p: PChar; i2: integer): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; i3: integer): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; p: PAnsiChar): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer): integer; overload; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; i2: integer): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; P2: PAnsiChar): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar; i2: integer): integer; cdecl; overload;
 
-function Format(Output: PChar; Format: PChar; P1, P2, p3, p4, p5, p6, p7: PChar): integer; cdecl; overload;
+function Format(Output: PAnsiChar; Format: PAnsiChar; P1, P2, p3, p4, p5, p6, p7: PAnsiChar): integer; cdecl; overload;
 //function pos(Substr: string; s: string): integer;
 const
   shell32                               = 'shell32.dll';
@@ -248,34 +248,34 @@ const
 implementation
 
 uses MainUnit, uFreqTimeFormat, uStrSearch;   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
-function Format(Output: PChar; Format: PChar; c: Char): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer; external user32 Name 'wsprintfA';
 
-function Format(Output: PChar; Format: PChar; s1: PChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PChar; s3: PChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar; p4: PChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar; p4: PChar; p5: pChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar; i: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; p3: PChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar; p5: pChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
 
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar; i: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; P2: PChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar): integer; external user32 Name 'wsprintfA';
 
-function Format(Output: PChar; Format: PChar; i: integer; i2: integer; i3: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; i: integer; i2: integer; p: PChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; i: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; i: integer; p: PChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; i: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; p: PChar; i: integer; P2: PChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; i: integer; p: PChar; i2: integer): integer; external user32 Name 'wsprintfA';
-function Format(Output: PChar; Format: PChar; P1, P2, p3, p4, p5, p6, p7: PChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; i3: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer; p: PAnsiChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; i: integer; P2: PAnsiChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar; i2: integer): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; P1, P2, p3, p4, p5, p6, p7: PAnsiChar): integer; external user32 Name 'wsprintfA';
 //uses mainunit;
 
-function SysErrorMessage(ErrorCode: Cardinal): PChar;
+function SysErrorMessage(ErrorCode: Cardinal): PAnsiChar;
 begin
-  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM or FORMAT_MESSAGE_ARGUMENT_ARRAY, nil, ErrorCode, 0, SYSERRORBUFFER, SizeOf(SYSERRORBUFFER), nil);
+  FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM or FORMAT_MESSAGE_ARGUMENT_ARRAY, nil, ErrorCode, 0, SYSERRORBUFFER, SizeOf(SYSERRORBUFFER), nil);
   Result := SYSERRORBUFFER;
 end;
 
@@ -285,13 +285,13 @@ begin
   MessageBox(0, Text, tr4w_ClassName, MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
 end;
 
-function FreqToPChar2(i: integer): PChar;
+function FreqToPChar2(i: integer): PAnsiChar;
 begin
   Format(FreqToPCharBuffer, '%u.%u', i div 1000, (i mod 1000) div 100);
   Result := FreqToPCharBuffer;
 end;
 
-function RITFreqToPchar(i: integer): PChar;
+function RITFreqToPchar(i: integer): PAnsiChar;
 var absI: integer;
 begin  // This does not handle negative numbers very well.
    if i < 0 then
@@ -306,18 +306,18 @@ begin  // This does not handle negative numbers very well.
    Result := FreqToPCharBuffer;
 end;
 
-function FreqToPChar(i: integer): PChar;
+function FreqToPChar(i: integer): PAnsiChar;
 begin
   // Issue #997: extracted to uFreqTimeFormat (golden-master tested).
   Result := uFreqTimeFormat.FreqToPChar(i);
 end;
 
-function FreqToPCharWithoutHZ(i: integer): PChar;
+function FreqToPCharWithoutHZ(i: integer): PAnsiChar;
 begin
   Result := uFreqTimeFormat.FreqToPCharWithoutHZ(i);   // Issue #997: extracted
 end;
 
-function kHzToPChar(Freq: Word): PChar;
+function kHzToPChar(Freq: Word): PAnsiChar;
 begin
   Result := uFreqTimeFormat.kHzToPChar(Freq);   // Issue #997: extracted
 end;
@@ -386,7 +386,7 @@ begin
   Result := BigIcon {SmallIcon};
 end;
 
-function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): PChar;
+function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): PAnsiChar;
 begin
   // Issue #997: extracted to uFreqTimeFormat (golden-master tested).
   Result := uFreqTimeFormat.MillisecondsToFormattedString(msecs, WithMsec);
@@ -399,13 +399,13 @@ begin
   b := not b;
 end;
 
-function inttopchar(i: integer): PChar;
+function inttopchar(i: integer): PAnsiChar;
 begin
   Format(IntToPCharBuffer, '%d', i);
   Result := IntToPCharBuffer;
 end;
 
-function inttopcharHEX(i: integer): PChar;
+function inttopcharHEX(i: integer): PAnsiChar;
 begin
   Format(IntToPCharBuffer, '%#x', i);
   Result := IntToPCharBuffer;
@@ -594,7 +594,7 @@ end;
 
 function _StrInt64(Val: int64; Width: integer): ShortString;
 var
-  d                                     : array[0..31] of Char; { need 19 digits and a sign }
+  d                                     : array[0..31] of AnsiChar; { need 19 digits and a sign }
   i, k                                  : integer;
   sign                                  : boolean;
   spaces                                : integer;
@@ -643,7 +643,7 @@ function ShowServerDialog(AHandle: THandle): string;
 var
   ServerBrowseDialogA0                  : TServerBrowseDialogA0;
   LANMAN_DLL                            : DWORD;
-  Buffer                                : array[0..256] of Char;
+  Buffer                                : array[0..256] of AnsiChar;
   bLoadLib                              : boolean;
 begin
   LANMAN_DLL := GetModuleHandle('NTLANMAN.DLL');
@@ -719,7 +719,7 @@ begin
   SendMessage(wnd, WM_SETREDRAW, integer(Redraw), 0);
 end;
 
-function SystemTimeToString(SysTime: SYSTEMTIME): PChar;
+function SystemTimeToString(SysTime: SYSTEMTIME): PAnsiChar;
 begin
   // Issue #997: extracted to uFreqTimeFormat (golden-master tested).
   Result := uFreqTimeFormat.SystemTimeToString(SysTime);
@@ -768,7 +768,7 @@ var
 begin
   ContestString[Ord(ContestString[0]) + 1] := #0;
   for TempContest := Succ(DUMMYCONTEST) to High(ContestType) do
-    if Windows.lstrcmp(ContestTypeSA[TempContest], @ContestString[1]) = 0 then
+    if Windows.lstrcmpA(ContestTypeSA[TempContest], @ContestString[1]) = 0 then
     begin
       Result := TempContest;
       Exit;
@@ -920,7 +920,7 @@ begin
   end;
 end;
 
-function tGetDateFormat(DT: TQSOTime): PChar; //assembler;
+function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 
  
 begin
@@ -1402,7 +1402,7 @@ var
   StartPos, FilePos                     : Cardinal;
   TempString                            : ShortString;
   LineSize                              : integer;
-  TempBuffer                            : array[0..255] of Char;
+  TempBuffer                            : array[0..255] of AnsiChar;
   NewLine                               : boolean;
 begin
   Result := False;
@@ -1493,7 +1493,7 @@ var
   StartPos, FilePos                     : Cardinal;
   TempString                            : ShortString;
   LineSize                              : integer;
-  TempBuffer                            : array[0..255] of Char;
+  TempBuffer                            : array[0..255] of AnsiChar;
   NewLine                               : boolean;
 begin
   Result := False;
@@ -1586,7 +1586,7 @@ type
     Menu: Word;
     windowClass: Word;
     Title: LPWSTR;
-    ttt: array[0..127 - 5] of Char;
+    ttt: array[0..127 - 5] of AnsiChar;
   end;
   PDLGTEMPLATEEX = ^TDLGTEMPLATEEX;
 
@@ -1725,9 +1725,9 @@ begin
   DayOfWeek := St.wDayOfWeek;
 end;
 
-function tOpenFileForRead(var h: HWND; FileName: PChar): boolean;
+function tOpenFileForRead(var h: HWND; FileName: PAnsiChar): boolean;
 begin
-  h := CreateFile(FileName, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_ATTRIBUTE_ARCHIVE, 0);
+  h := CreateFileA(FileName, GENERIC_READ, FILE_SHARE_READ, nil, OPEN_EXISTING, FILE_ATTRIBUTE_ARCHIVE, 0);
   Result := h <> INVALID_HANDLE_VALUE;
 end;
 

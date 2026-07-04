@@ -132,7 +132,7 @@ begin
         for i := 0 to 2 do
         begin
           ListView_GetItemText(AltPListView, lParam, i, TempBuffer1, SizeOf(TempBuffer1));
-          Windows.SetDlgItemText(hwnddlg, 101 + i, TempBuffer1);
+          Windows.SetDlgItemTextA(hwnddlg, 101 + i, TempBuffer1);
           //if I = 2 then Continue;
 
           // Issue #997: asm tWM_SETFONT (EAX = GetDlgItem result) -> direct call.
@@ -189,7 +189,7 @@ begin
             end;
           109:
             begin
-              i := Windows.GetDlgItemText(hwnddlg, 102, @TempBuffer2, SizeOf(ID));
+              i := Windows.GetDlgItemTextA(hwnddlg, 102, @TempBuffer2, SizeOf(ID));
               if i < 5 then Exit;
               if PInteger(@TempBuffer2[i - 4])^ <> 1447122734 then Exit;
 
@@ -230,19 +230,19 @@ begin
           2: goto 1;
           1: //if not PutCommandFromHintListBox then
             begin
-              ID[0] := Char(Windows.GetDlgItemText(hwnddlg, 101, @ID[1], 80));
-              CMD[0] := Char(Windows.GetDlgItemText(hwnddlg, 102, @CMD[1], 255));
+              ID[0] := Char(Windows.GetDlgItemTextA(hwnddlg, 101, @ID[1], 80));
+              CMD[0] := Char(Windows.GetDlgItemTextA(hwnddlg, 102, @CMD[1], 255));
               DeleteEscapeChars(CMD);
               Windows.WritePrivateProfileString(m, @ID[1], @CMD[1], @TR4W_CFG_FILENAME);
               CheckCommand(@ID, CMD);
 
               if MesWindow <> OtherMsgWin then
               begin
-                i := Windows.GetDlgItemText(hwnddlg, 103, @CMD[1], 255);
+                i := Windows.GetDlgItemTextA(hwnddlg, 103, @CMD[1], 255);
 //              if I <> 0 then
                 begin
                   CMD[0] := CHR(i);
-                  Windows.lstrcat(@ID[1], ' CAPTION');
+                  Windows.lstrcatA(@ID[1], ' CAPTION');
                   inc(Byte(ID[0]), 8);
                   p := @CMD[1];
                   if CMD = '' then p := nil;
@@ -322,7 +322,7 @@ begin
         if not AllowEscapes then Exit;
 
         SendMessage(MsgEditHWND, EM_GETSEL, LONGINT(@Selection.StartPos), LONGINT(@Selection.EndPos));
-        c := Windows.GetWindowText(MsgEditHWND, TempBuffer1, 255);
+        c := Windows.GetWindowTextA(MsgEditHWND, TempBuffer1, 255);
 
         TempBuffer1[c + 1] := #0;
         if c <> 0 then
@@ -330,7 +330,7 @@ begin
             TempBuffer1[i + 1] := TempBuffer1[i];
         TempBuffer1[Selection.StartPos] := CHR(wParam - 64);
 
-        Windows.SetWindowText(MsgEditHWND, TempBuffer1);
+        Windows.SetWindowTextA(MsgEditHWND, TempBuffer1);
         Windows.SendMessage(MsgEditHWND, EM_SETSEL, Selection.StartPos + 1, Selection.EndPos + 1);
         AllowEscapes := False;
       end;

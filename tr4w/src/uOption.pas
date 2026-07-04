@@ -101,7 +101,7 @@ var
   St                                    : Cardinal;
   m                                     : HMENU;
 const
-  l                                     : array[0..4] of PChar = (RC_RETURNTOMOD, RC_ALTW, RC_ALTG, RC_ALTN, EXIT_WORD);
+  l                                     : array[0..4] of PAnsiChar = (RC_RETURNTOMOD, RC_ALTW, RC_ALTG, RC_ALTN, EXIT_WORD);
 begin
   Result := 0; // False;
   case Msg of
@@ -896,9 +896,9 @@ begin
      begin
      Format(wsprintfBuffer, '%s %s %s', tempprintfBuffer, #13#10#13#10, 'Sent to Network');
      end;
-  Windows.SetDlgItemText(settingswindowhandle, 105, wsprintfBuffer);
+  Windows.SetDlgItemTextA(settingswindowhandle, 105, wsprintfBuffer);
   GetPrivateProfileString(TempBuffer1, 'DEFAULT', nil, wsprintfBuffer, SizeOf(wsprintfBuffer), TR4W_COMM_HELP_FILENAME);
-  Windows.SetDlgItemText(settingswindowhandle, 104, wsprintfBuffer);
+  Windows.SetDlgItemTextA(settingswindowhandle, 104, wsprintfBuffer);
 
 end;
 

@@ -200,7 +200,7 @@ type
   RealTimeMessagePointer = ^RealTimeMessageType;
 
 const
-  FootSwitchModeTypeStringArray         : array[FootSwitchModeType] of PChar =
+  FootSwitchModeTypeStringArray         : array[FootSwitchModeType] of PAnsiChar =
     (
     'DISABLED',
     'CW GRANT',

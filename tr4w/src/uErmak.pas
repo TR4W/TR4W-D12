@@ -36,11 +36,11 @@ type
 
 const
 
-  ZVANIYA                               : array[0..7] of PChar = ('�/�', '1', '2', '3', '���', '��', '����', '���');
+  ZVANIYA                               : array[0..7] of PAnsiChar = ('�/�', '1', '2', '3', '���', '��', '����', '���');
 
   ERMAKFIELDS                           = 8;
 
-  eOpFields                             : array[TErmakFields] of PChar = (
+  eOpFields                             : array[TErmakFields] of PAnsiChar = (
     '��������',
     '�������',
     '���',
@@ -215,7 +215,7 @@ begin
                       end;
                   else
                     begin
-                      Windows.GetDlgItemText(hwnddlg, ControlID, wsprintfBuffer, SizeOf(wsprintfBuffer));
+                      Windows.GetDlgItemTextA(hwnddlg, ControlID, wsprintfBuffer, SizeOf(wsprintfBuffer));
                     end;
                   end;
 

@@ -527,12 +527,12 @@ var
   TempBuffer                            : array[0..1024 - 1] of Char;
   h                                     : HWND;
   lpNumberOfBytesRead                   : Cardinal;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
 begin
   if not tMissCallsFileEnable then Exit;
   if not LooksLikeACallSign(Callsign) then Exit;
   p := GetRealPath(TR4W_DVKPATH, 'FULLCALLSIGNS\MISSINGCALLSIGNS.TXT', nil);
-  h := CreateFile(p, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+  h := CreateFileA(p, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   if h = INVALID_HANDLE_VALUE then
   begin
 //    ShowSysErrorMessage(p);

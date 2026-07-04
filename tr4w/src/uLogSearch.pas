@@ -64,7 +64,7 @@ var
   TempOperator                          : OperatorType;
   i                                     : integer;
 const
-  l                                     : array[0..3] of PChar = (RC_CALLSIGN, RC_MODE, RC_BAND, RC_OPERATOR);
+  l                                     : array[0..3] of PAnsiChar = (RC_CALLSIGN, RC_MODE, RC_BAND, RC_OPERATOR);
 begin
   Result := False;
   case Msg of
@@ -98,7 +98,7 @@ begin
         Windows.ZeroMemory(@TempString, SizeOf(TempString));
         TempString := CallWindowString;
         if TempString = '' then TempString := EscapeDeletedCallEntry;
-        Windows.SetDlgItemText(hwnddlg, 200, @TempString[1]);
+        Windows.SetDlgItemTextA(hwnddlg, 200, @TempString[1]);
         goto SearchStart;
       end;
 
@@ -112,8 +112,8 @@ begin
             begin
               SearchStart:
 
-              TempString[0] := Char(Windows.GetDlgItemText(hwnddlg, 200, @TempString[1], CallstringLength - 1));
-              Windows.GetDlgItemText(hwnddlg, 203, TempOperator, SizeOf(OperatorType));
+              TempString[0] := Char(Windows.GetDlgItemTextA(hwnddlg, 200, @TempString[1], CallstringLength - 1));
+              Windows.GetDlgItemTextA(hwnddlg, 203, TempOperator, SizeOf(OperatorType));
               if (TempString[0] = #0) and (TempOperator[0] = #0) then Exit;
 
               LogSearchListViewIndex := 0;
@@ -150,7 +150,7 @@ begin
               // TC_ENTRIESPERMS = '%u entries per %u ms'; args = index, elapsed ms.
               StrPCopy(wsprintfBuffer, SysUtils.Format(TC_ENTRIESPERMS,
                 [LogSearchListViewIndex, Windows.GetTickCount - StartCPU]));
-              Windows.SetDlgItemText(hwnddlg, 104, wsprintfBuffer);
+              Windows.SetDlgItemTextA(hwnddlg, 104, wsprintfBuffer);
               if LogSearchListViewIndex > 0 then EnsureListViewColumnVisible(LogSearchListView);
             end;
 

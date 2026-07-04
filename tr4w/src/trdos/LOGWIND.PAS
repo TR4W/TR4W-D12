@@ -409,7 +409,7 @@ type
   CallWindowPositionType = (NormalCallWindowPosition, UpOneCallWindowPosition);
 
 const
-  ZoneMultTypeSA                        : array[ZoneMultType] of PChar =
+  ZoneMultTypeSA                        : array[ZoneMultType] of PAnsiChar =
     (
     'NONE',
     'CQ ZONES',
@@ -420,21 +420,21 @@ const
     'RF CHAMP ZONES'
     );
 
-  TenMinuteRuleTypeSA                   : array[TenMinuteRuleType] of PChar = ('NONE', 'TIME OF FIRST QSO');
+  TenMinuteRuleTypeSA                   : array[TenMinuteRuleType] of PAnsiChar = ('NONE', 'TIME OF FIRST QSO');
 
-  RotatorTypeSA                         : array[RotatorType] of PChar = ('NONE', 'DCU1', 'ORION', 'YAESU', 'ALFA SPID', 'PSTROTATOR');
+  RotatorTypeSA                         : array[RotatorType] of PAnsiChar = ('NONE', 'DCU1', 'ORION', 'YAESU', 'ALFA SPID', 'PSTROTATOR');
 
-  CallWindowPositionTypeSA              : array[CallWindowPositionType] of PChar = ('NORMAL', 'UP');
+  CallWindowPositionTypeSA              : array[CallWindowPositionType] of PAnsiChar = ('NORMAL', 'UP');
 
-  BandMapSplitModeTypeSA                : array[BandMapSplitModeType] of PChar = ('BY CUTOFF FREQ', 'ALWAYS PHONE');
+  BandMapSplitModeTypeSA                : array[BandMapSplitModeType] of PAnsiChar = ('BY CUTOFF FREQ', 'ALWAYS PHONE');
 
-  HourDisplayTypeSA                     : array[HourDisplayType] of PChar = ('THIS HOUR', 'LAST SIXTY MINUTES', 'BAND CHANGES', 'BAND CHANGES ON THIS COMPUTER');
+  HourDisplayTypeSA                     : array[HourDisplayType] of PAnsiChar = ('THIS HOUR', 'LAST SIXTY MINUTES', 'BAND CHANGES', 'BAND CHANGES ON THIS COMPUTER');
 
-  RateDisplayTypeStringArray            : array[RateDisplayType] of PChar = ('QSOS', 'QSO POINTS', 'BAND QSOS');
+  RateDisplayTypeStringArray            : array[RateDisplayType] of PAnsiChar = ('QSOS', 'QSO POINTS', 'BAND QSOS');
 
-  IECursorPosTypeStringArray            : array[InitialExchangeCursorPosType] of PChar = ('AT END', 'AT START');
+  IECursorPosTypeStringArray            : array[InitialExchangeCursorPosType] of PAnsiChar = ('AT END', 'AT START');
 
-  InitialExchangeTypeStringArray        : array[InitialExchangeType] of PChar =
+  InitialExchangeTypeStringArray        : array[InitialExchangeType] of PAnsiChar =
     (
     'NONE',
     'NAME',
@@ -452,7 +452,7 @@ const
     'USER 5',
     'CUSTOM'
     );
-  UserInfoTypeSA                        : array[UserInfoType] of PChar =
+  UserInfoTypeSA                        : array[UserInfoType] of PAnsiChar =
     (
     'NONE',
     'NAME',
@@ -1405,7 +1405,7 @@ begin
   mov dword ptr TempBuffer1,eax
   end;
   TempBuffer1[4] := #0;
-  Windows.SetWindowText(LocatorWindowHandle, @TempBuffer1);
+  Windows.SetWindowTextA(LocatorWindowHandle, @TempBuffer1);
 }
 end;
 
@@ -1552,7 +1552,7 @@ end;
 procedure DisplayContestTitle;
 begin
   Format(wsprintfBuffer, TR4W_CURRENTVERSION + ' - %s'{$IF tDebugMode} + ' - DEBUG MODE'{$IFEND}, @ContestTitle[1]);
-  Windows.SetWindowText(tr4whandle, wsprintfBuffer);
+  Windows.SetWindowTextA(tr4whandle, wsprintfBuffer);
 end;
 
 procedure DisplayCodeSpeed {(WPM: integer; SendingEnabled: boolean; DVPEnabled: boolean; Mode: ModeType)};
@@ -1743,7 +1743,7 @@ end;
 
 procedure DisplayInsertMode;
 const
-  InsertModeStringArray                 : array[boolean] of PChar = (TC_OVERRIDE, TC_INSERT);
+  InsertModeStringArray                 : array[boolean] of PAnsiChar = (TC_OVERRIDE, TC_INSERT);
 begin
   SetMainWindowText(mweInsert, InsertModeStringArray[InsertMode]);
 end;
@@ -1770,7 +1770,7 @@ end;
 
 procedure DisplayNextQSONumber;
 const
-  QSONumberStringArray                  : array[boolean] of PChar = ('%d', '*%d');   
+  QSONumberStringArray                  : array[boolean] of PAnsiChar = ('%d', '*%d');   
 begin
   // Issue #954: show the next serial we will actually send (high-water mark of
   // numbers sent + 1), NOT a QSO count.  Count-based display reverted the number
@@ -1779,7 +1779,7 @@ begin
   Format(wsprintfBuffer, QSONumberStringArray[AutoQSONumberDecrement], NextSerialToSend);
   if ServerSerialNumber <> 0 then
     if PreviousSerialNumberType = sntReserved then
-      Windows.lstrcat(wsprintfBuffer, 'L');
+      Windows.lstrcatA(wsprintfBuffer, 'L');
   SetMainWindowText(mweQSONumber, wsprintfBuffer);
 end;
 
@@ -4757,7 +4757,7 @@ begin
       begin
 {$RANGECHECKS OFF}
        //SetDlgItemInt(h, 120, CurrentStatus.RITFreq, CurrentStatus.RITFreq < 0);
-       SetDlgItemText(h, 120, RITFreqToPChar(CurrentStatus.RITFreq)); //FreqToPChar(CurrentStatus.RITFreq));
+       SetDlgItemTextA(h, 120, RITFreqToPChar(CurrentStatus.RITFreq)); //FreqToPChar(CurrentStatus.RITFreq));
 {$RANGECHECKS ON}
         CurrentStatus.PrevRITFreq := CurrentStatus.RITFreq;
       end;
@@ -4781,8 +4781,8 @@ begin
         CurrentStatus.PrevVFOStatus := CurrentStatus.VFOStatus;
       end;
 
-      SetDlgItemText(h, 102, FreqToPChar(CurrentStatus.VFO[VFOA].Frequency));
-      SetDlgItemText(h, 104, FreqToPChar(CurrentStatus.VFO[VFOB].Frequency));
+      SetDlgItemTextA(h, 102, FreqToPChar(CurrentStatus.VFO[VFOA].Frequency));
+      SetDlgItemTextA(h, 104, FreqToPChar(CurrentStatus.VFO[VFOB].Frequency));
 
           //              if (CurrentStatus.VFOA.Frequency = 0) or (CurrentStatus.VFOB.Frequency = 0) then SetDlgItemText(h, 120, nil)
 
@@ -4791,7 +4791,7 @@ begin
       Windows.EnableWindow(Windows.GetDlgItem(h, 123), CurrentStatus.Split);
     end;
 
-    Windows.SetWindowText(rig^.FreqWindowHandle, FreqToPChar(CurrentStatus.Freq));
+    Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(CurrentStatus.Freq));
 //    rig.CurrentBand := rig.CurrentStatus.Band;
 //    rig.CurrentMode := rig.CurrentStatus.Mode;
 
@@ -5257,7 +5257,7 @@ begin
   Format(TempBuffer2, TC_NEWTOUR, IntegerTime, TourDuration);
 
 //  Windows.SetDlgItemText(ReminderDlgHandle, 102, TempBuffer2);
-  Windows.SetWindowText(TorDurationWindow, TempBuffer2);
+  Windows.SetWindowTextA(TorDurationWindow, TempBuffer2);
 
   if IntegerTime = 1 then
   begin

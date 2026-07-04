@@ -45,7 +45,7 @@ begin
   if (Windows.GetParent(wnd) = tr4whandle) or (wnd = tr4whandle) then
     if IsWindowVisible(wnd) then
     begin
-      Windows.GetWindowText(wnd, wsprintfBuffer, 100);
+      Windows.GetWindowTextA(wnd, wsprintfBuffer, 100);
 //      if wnd = tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndHandle then Exit;
       Windows.SendMessage(Manager, LB_SETITEMDATA, Windows.SendMessage(Manager, LB_ADDSTRING, 0, integer(@wsprintfBuffer)), wnd);
     end;

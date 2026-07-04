@@ -54,7 +54,7 @@ type
 
 const
 
-  FID                                   : array[FeatureType] of PChar = (' ', '+', 'F', '-', 'R');
+  FID                                   : array[FeatureType] of PAnsiChar = (' ', '+', 'F', '-', 'R');
 
   hr1                                   : HistoryRecord = (hrFeature: ftAdded);
 

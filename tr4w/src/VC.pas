@@ -124,8 +124,8 @@ type
   FourChar = array[0..3] of AnsiChar;
   TAdditionalMultByBand = (dmbbDefauld, dmbbAllBand);
   Yaesu5Bytes = array[0..4] of Byte;
-  FileNameType = array[0..MAX_PATH - 1] of Char;
-  OperatorType = array[0..10] of Char;
+  FileNameType = array[0..MAX_PATH - 1] of AnsiChar;
+  OperatorType = array[0..10] of AnsiChar;
   ZoneModeType = (CQZoneMode, ITUZoneMode);
 
 const
@@ -133,7 +133,7 @@ const
   MAINTR4WDLGTEMPLATE                   : TR4WDLGTEMPLATE =
     (Style: DS_MODALFRAME or DS_3DLOOK or WS_POPUP or WS_CAPTION or WS_SYSMENU or WS_THICKFRAME; dwExtendedStyle: WS_EX_DLGMODALFRAME or WS_EX_TOOLWINDOW);
 
-  ZoneModeTypeSA                        : array[ZoneModeType] of PChar = ('CQ Zone', 'ITU Zone');
+  ZoneModeTypeSA                        : array[ZoneModeType] of PAnsiChar = ('CQ Zone', 'ITU Zone');
 
 const
   tr4w_ClassName                        : array[0..4] of Char = ('T', 'R', '4', 'W', #0);
@@ -359,11 +359,11 @@ const
 const
 
   TWO_STRINGS                           : PChar = '%s%s';
-  BA                                    : array[boolean] of PChar = ('FALSE', 'TRUE');
-  BAl                                   : array[boolean] of PChar = ('false', 'true');
-  BAHTML                                : array[boolean] of PChar = ('FALSE', 'TRUE');
-  BAR                                   : array[boolean] of PChar = ('No', 'Yes');
-  BAMARK                                : array[boolean] of PChar = (nil, '+');
+  BA                                    : array[boolean] of PAnsiChar = ('FALSE', 'TRUE');
+  BAl                                   : array[boolean] of PAnsiChar = ('false', 'true');
+  BAHTML                                : array[boolean] of PAnsiChar = ('FALSE', 'TRUE');
+  BAR                                   : array[boolean] of PAnsiChar = ('No', 'Yes');
+  BAMARK                                : array[boolean] of PAnsiChar = (nil, '+');
 
   MIXWMODE                              = False;
 
@@ -461,7 +461,7 @@ const
   BASECOLUMNWIDTH                       = 49;     // 4.90.4
   PREFIXCOLUMNWIDTH                     = 104;    // 4.90.4
 
-  tr4wColorsSA                          : array[tr4wColors] of PChar = (
+  tr4wColorsSA                          : array[tr4wColors] of PAnsiChar = (
     'LIGHT BLUE',
     'BLACK',
     'BLUE',
@@ -552,7 +552,7 @@ type
     );
 
 const
-  tContinentArray                       : array[ContinentType] of PChar =
+  tContinentArray                       : array[ContinentType] of PAnsiChar =
     (
     TC_C9_UNKNOWN,
     TC_C9_NORTHAMERICA,
@@ -740,9 +740,9 @@ var
     );
 
 const
-  CabrilloExtantionSA                   : array[CabrilloExtantionType] of PChar = ('%s%s.CBR', '%s%s.LOG');
+  CabrilloExtantionSA                   : array[CabrilloExtantionType] of PAnsiChar = ('%s%s.CBR', '%s%s.LOG');
 
-  ContinentTypeSA                       : array[ContinentType] of PChar =
+  ContinentTypeSA                       : array[ContinentType] of PAnsiChar =
     ('NONE', 'NA', 'SA', 'EU', 'AF', 'AS', 'OC', 'AN');
 
 type
@@ -761,14 +761,14 @@ type
 
 const
                                             // Use uppercase
-  tLogLevelsSA                          : array[tLogLevels] of PChar = ('NONE' ,'FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE');
-  tCategoryAssistedSA                   : array[tCategoryAssisted] of PChar = ('NON-ASSISTED', 'ASSISTED');
-  tCategoryBandSA                       : array[tCategoryBand] of PChar = ('ALL', '160M', '80M', '40M', '20M', '15M', '10M', '6M', '2M', '222', '432', '902', '1.2G');
-  tCategoryModeSA                       : array[tCategoryMode] of PChar = ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM');    // 4.90.14; FM added Issue #976
-  tCertificateSA                        : array[tCertificate] of PChar = ('Yes', 'No');
-  tCategoryOperatorSA                   : array[tCategoryOperator] of PChar = ('SINGLE-OP', 'MULTI-OP', 'CHECKLOG');
-  tCategoryPowerSA                      : array[tCategoryPower] of PChar = ('HIGH', 'LOW', 'QRP');
-  tCategoryTransmitterSA                : array[tCategoryTransmitter] of PChar = ('ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL');
+  tLogLevelsSA                          : array[tLogLevels] of PAnsiChar = ('NONE' ,'FATAL', 'ERROR', 'WARN', 'INFO', 'DEBUG', 'TRACE');
+  tCategoryAssistedSA                   : array[tCategoryAssisted] of PAnsiChar = ('NON-ASSISTED', 'ASSISTED');
+  tCategoryBandSA                       : array[tCategoryBand] of PAnsiChar = ('ALL', '160M', '80M', '40M', '20M', '15M', '10M', '6M', '2M', '222', '432', '902', '1.2G');
+  tCategoryModeSA                       : array[tCategoryMode] of PAnsiChar = ('CW', 'RTTY', 'DIGI', 'SSB', 'MIXED', 'FM');    // 4.90.14; FM added Issue #976
+  tCertificateSA                        : array[tCertificate] of PAnsiChar = ('Yes', 'No');
+  tCategoryOperatorSA                   : array[tCategoryOperator] of PAnsiChar = ('SINGLE-OP', 'MULTI-OP', 'CHECKLOG');
+  tCategoryPowerSA                      : array[tCategoryPower] of PAnsiChar = ('HIGH', 'LOW', 'QRP');
+  tCategoryTransmitterSA                : array[tCategoryTransmitter] of PAnsiChar = ('ONE', 'TWO', 'LIMITED', 'UNLIMITED', 'SWL');
 
 var
   CategoryAssisted                      : tCategoryAssisted;
@@ -1248,12 +1248,12 @@ const
   ControlRightBracket                   = CHR(29);
   ControlDash                           = CHR(31);
 
-  MonthTags                             : array[1..12] of PChar = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+  MonthTags                             : array[1..12] of PAnsiChar = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
 
   CallstringLength                      = 13;
 
-  ADIFModeString                        : array[ModeType] of PChar = ('CW', 'DIGITAL',  'SSB', 'BTH', 'NON', 'FM');
-  ModeStringArray                       : array[ModeType] of PChar = ('CW', 'DIGI',  'SSB', 'BTH', 'NON', 'FM');
+  ADIFModeString                        : array[ModeType] of PAnsiChar = ('CW', 'DIGITAL',  'SSB', 'BTH', 'NON', 'FM');
+  ModeStringArray                       : array[ModeType] of PAnsiChar = ('CW', 'DIGI',  'SSB', 'BTH', 'NON', 'FM');
 
 
   ExtendedModeStringArray               : array[ExtendedModeType] of string =
@@ -1261,7 +1261,7 @@ const
                                                'MFSK', 'JS8', 'USB', 'LSB', 'DATA', 'CW-R', 'DATA-R', 'RTTY-R', 'FM-N', 'AM-N',
                                                'DATA-FM', 'C4FM', 'D-STAR', 'PSK-R', 'WFM');
 
-  BandStringsArray                      : array[BandType] of PChar {string} =
+  BandStringsArray                      : array[BandType] of PAnsiChar {string} =
     (
     '160',
     ' 80',
@@ -1289,7 +1289,7 @@ const
     'NON'
     );
 
-  BandStringsArrayWithOutSpaces         : array[BandType] of PChar {string} =
+  BandStringsArrayWithOutSpaces         : array[BandType] of PAnsiChar {string} =
     (
     '160',
     '80',
@@ -1317,7 +1317,7 @@ const
     'NON'
     );
 
-  ADIFBANDSTRINGSARRAY                  : array[BandType] of PChar =
+  ADIFBANDSTRINGSARRAY                  : array[BandType] of PAnsiChar =
     (
     '160m',
     '80m',
@@ -1345,7 +1345,7 @@ const
     nil
     );
 
-  EDIFBANDSTRINGSARRAY                  : array[BandType] of PChar =
+  EDIFBANDSTRINGSARRAY                  : array[BandType] of PAnsiChar =
     (
     '160',
     '80',
@@ -2239,7 +2239,7 @@ var
   // Without this, CFGs are language-locked: a CFG saved by an English build
   // fails to load in a Spanish/Russian/etc. build because ColumnsArray[].Text
   // is translated at compile time.
-  ColumnCanonicalName: array[LogColumnsType] of PChar = (
+  ColumnCanonicalName: array[LogColumnsType] of PAnsiChar = (
     'BAND',     'DATE',     'UTC',      'QSS',      'CALLSIGN', 'QTC',
     'QSR',      'DX',       'ZN',       'PX',       'PRE',      'CK',
     'NAME',     'CL.',      'QTH',      'AGE',      'CH.',      'PWR',
@@ -2866,7 +2866,7 @@ type
     );
    // 4.67.9 NOTE: ORDER MUST MATCH PREFIXMULTTYPE (ABOVE)
 const
-  PrefixMultStringArray                 : array[PrefixMultType] of PChar =
+  PrefixMultStringArray                 : array[PrefixMultType] of PAnsiChar =
     (
     'NONE',
     'ASIAN PREFIXES',
@@ -3038,7 +3038,7 @@ type
 
 const
 
-  DomesticMultStringArray               : array[DomesticMultType] of PChar =
+  DomesticMultStringArray               : array[DomesticMultType] of PAnsiChar =
     (
     'NONE',
     'WYSIWYG',
@@ -3051,7 +3051,7 @@ const
     'NUMERIC ID'
     );
 
-  QSOPointMethodArray                   : array[QSOPointMethodType] of PChar =
+  QSOPointMethodArray                   : array[QSOPointMethodType] of PAnsiChar =
     (
     'NONE', //    NoQSOPointMethod, { Score = 0 }
     'ALL ASIAN', //    AllAsianQSOPointMethod,
@@ -3260,7 +3260,7 @@ type
     ); //WLI
 
 const
-  ActiveExchangeArray                   : array[ExchangeType] of PChar =
+  ActiveExchangeArray                   : array[ExchangeType] of PAnsiChar =
     (
      'UNKNOWN',
     'NONE',
@@ -3610,7 +3610,7 @@ QSOPartiesCount = 20;
 
 
   // Warning - Do not change names here without careful consideration. If you do, it will break old config files. Better to use the ADIFName or CABName fields if needed. In a perfect world, these would all be the ADIFNAME.
-    ContestTypeSA                       : array[ContestType] of PChar =
+    ContestTypeSA                       : array[ContestType] of PAnsiChar =
 
     (
       'DUMMY CONTEST',

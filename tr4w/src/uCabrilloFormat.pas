@@ -40,7 +40,7 @@ const
    //
    // BandType enum order must match the QSOTotals/ContestExchange band order
    // -- this array is also referenced by LOGContactToUDP.
-   tCabrilloFreqString : array[Band160..BandLight] of PChar =
+   tCabrilloFreqString : array[Band160..BandLight] of PAnsiChar =
       (
          '1800',
          '3500',
@@ -69,7 +69,7 @@ const
    // Digital and FM have callers-side overrides (see FormatCabrilloMode);
    // nil entries correspond to ModeType slots that do not appear in
    // Cabrillo logs.
-   tCabrilloModeString : array[ModeType] of PChar =
+   tCabrilloModeString : array[ModeType] of PAnsiChar =
       (
          'CW',
          'RY',

@@ -42,7 +42,7 @@ var
 //  p                                     : PChar;
   i                                     : integer;
 const
-  l                                     : array[0..3] of PChar = (nil, 'RIT', 'XIT', 'SPLIT');
+  l                                     : array[0..3] of PAnsiChar = (nil, 'RIT', 'XIT', 'SPLIT');
 begin
   Result := False;
   case Msg of

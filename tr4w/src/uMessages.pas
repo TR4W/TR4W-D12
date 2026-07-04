@@ -44,7 +44,7 @@ var
   i                                     : integer;
 const
   LineHeight                            = 15;
-  ceoa                                  : array[1..3] of PChar = (RC_PRESS_C, RC_PRESS_E, RC_PRESS_O);
+  ceoa                                  : array[1..3] of PAnsiChar = (RC_PRESS_C, RC_PRESS_E, RC_PRESS_O);
 label
   1;
 

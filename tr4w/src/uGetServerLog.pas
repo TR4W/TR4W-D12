@@ -86,7 +86,7 @@ begin
             begin
               SyncMode := True;
               EnableWindowFalse(hwnddlg, 102);
-              NewServerLogHandle := CreateFile(TR4W_SYN_FILENAME, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
+              NewServerLogHandle := CreateFileA(TR4W_SYN_FILENAME, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
               if NewServerLogHandle = INVALID_HANDLE_VALUE then goto CloseLabel;
               logger.Info('Calling tCreateThread from GetServerLogDlgProc');
               if LogSyncThreadID = 0 then tCreateThread(@RunSyncThread, LogSyncThreadID);

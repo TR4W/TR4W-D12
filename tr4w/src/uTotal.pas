@@ -45,15 +45,15 @@ procedure ClearTotals(StartColumn: integer);
 
 implementation
 
-procedure TotalTextOut(s: PChar; X, Y: integer);
+procedure TotalTextOut(s: PAnsiChar; X, Y: integer);
 begin
   if s = nil then
     if TotWinHandlesFilled[X, Y] = False then Exit;
-  Windows.SetWindowText(TotWinHandles[X, Y], s);
+  Windows.SetWindowTextA(TotWinHandles[X, Y], s);
   TotWinHandlesFilled[X, Y] := s <> nil;
 end;
 
-procedure WriteLeftColumnText(Text: PChar);
+procedure WriteLeftColumnText(Text: PAnsiChar);
 begin
   inc(Row);
   TotalTextOut(Text, 0, Row);
@@ -61,7 +61,7 @@ end;
 
 procedure iTotalTextOut(Number: integer);
 var
-  TempPchar                        : PChar;
+  TempPchar                        : PAnsiChar;
 begin
   inc(Row);
 
@@ -69,9 +69,9 @@ begin
   TotalTextOut(TempPchar, Column, Row);
 {
   if Number = 0 then
-    Windows.SetWindowText(TotWinHandles[Column, Row], nil)
+    Windows.SetWindowTextA(TotWinHandles[Column, Row], nil)
   else
-    Windows.SetWindowText(TotWinHandles[Column, Row], inttopchar(Number));
+    Windows.SetWindowTextA(TotWinHandles[Column, Row], inttopchar(Number));
 }
 end;
 
@@ -123,7 +123,7 @@ begin
       //      Windows.SendMessage(TotWinheadHandles[Column], BM_SETCHECK, BST_CHECKED, 0);
     TotWinCurrrentColumn := Column;
   end;
-  Windows.SetWindowText(TotWinheadHandles[Column], {col_title} BandStringsArrayWithOutSpaces[Band]);
+  Windows.SetWindowTextA(TotWinheadHandles[Column], {col_title} BandStringsArrayWithOutSpaces[Band]);
 
   Row := -1;
   MultDisplayEnable := True;
@@ -194,8 +194,8 @@ var
   PHi :  real;
 //  CWR : integer;
 //  PHR : integer;
-  CWp  : pchar;
-  PHp : pchar;
+  CWp  : AnsiString;
+  PHp : AnsiString;
   s1 : string;
   S2 : string;
 begin
@@ -221,12 +221,12 @@ begin
   PHi  := ((QTotals[AllBands,Phone]) / (Qtotals[AllBands,CW]+Qtotals[AllBands,Phone]) * 100);
   Str(round(CWi),s1);
    S1 := concat('CW: ',s1,'%');
-    CWp := pchar(S1);
+    CWp := AnsiString(S1);
    S2 := concat('PH: ',inttostr(round(PHi)),'%');
-    PHp := pchar(S2);
+    PHp := AnsiString(S2);
 
-  WriteLeftColumnText(CWP);
-  WriteLeftColumnText(PHp);
+  WriteLeftColumnText(PAnsiChar(CWp));
+  WriteLeftColumnText(PAnsiChar(PHp));
    goto skip;
   end;
   end;

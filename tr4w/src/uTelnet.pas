@@ -478,7 +478,7 @@ begin
       HideClusterCommandTooltip;
       Exit;
       end;
-   GetMenuString(TelPopMemu, ItemId, wsprintfBuffer, 256, MF_BYCOMMAND);
+   GetMenuStringA(TelPopMemu, ItemId, wsprintfBuffer, 256, MF_BYCOMMAND);
    Expanded := ExpandClusterTokens(wsprintfBuffer);
    if Expanded = AnsiString(wsprintfBuffer) then
       begin
@@ -583,7 +583,7 @@ begin
               if ConnectionCommand <> '' then
                  SendViaTelnetSocket(@ConnectionCommand[1])
               else
-                 SetDlgItemText(hwnddlg, 106, @MyCall[1]);
+                 SetDlgItemTextA(hwnddlg, 106, @MyCall[1]);
               SendClientStatus;
               EnableTelnetToolbatButtons(True);
               EnableWindowTrue(hwnddlg, 104);
@@ -756,7 +756,7 @@ begin
         if (wParam >= 1000) then
           if (wParam <= 1000 + MAXITEMSINTELNETPOPUPMENU) then
           begin
-            GetMenuString(TelPopMemu, wParam, wsprintfBuffer, 256,
+            GetMenuStringA(TelPopMemu, wParam, wsprintfBuffer, 256,
               MF_BYCOMMAND);
             //n4af    4.51.1
             // Issue #973: expand {TOKEN} fields to live values before sending.
@@ -796,7 +796,7 @@ begin
           104:
             begin
               SendMessage(TelnetCommandWindow, CB_SHOWDROPDOWN, 0, 0);
-              Windows.GetWindowText(TelnetCommandWindow, TempBuffer1,
+              Windows.GetWindowTextA(TelnetCommandWindow, TempBuffer1,
                 SizeOf(TempBuffer1));
               if TempBuffer1[0] = #0 then
                 Exit;
@@ -949,7 +949,7 @@ begin
 
   StackTelHandle := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
   PendingTelnetPort := 23;
-  i := Windows.GetDlgItemText(StackTelHandle, 102, TempBuffer1, SizeOf(TempBuffer1));
+  i := Windows.GetDlgItemTextA(StackTelHandle, 102, TempBuffer1, SizeOf(TempBuffer1));
 
   // TempBuffer1 is 0-based; scan [length-1 .. 0].  ':' splits host:port; ' '
   // terminates the host.
@@ -1123,7 +1123,7 @@ begin
   StrPCopy(wsprintfBuffer, SysUtils.Format('%sDXCluster\dxcluster %s %s.txt',
     [string(PChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]));
 
-  TelnetLogHandle := CreateFile(wsprintfBuffer, GENERIC_WRITE, FILE_SHARE_WRITE,
+  TelnetLogHandle := CreateFileA(wsprintfBuffer, GENERIC_WRITE, FILE_SHARE_WRITE,
     nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
 
   if TelnetLogHandle <> INVALID_HANDLE_VALUE then
