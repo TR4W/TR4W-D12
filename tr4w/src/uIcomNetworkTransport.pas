@@ -1,3 +1,19 @@
+﻿{
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+ This file is part of TR4W  (SRC)
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+}
 unit uIcomNetworkTransport;
 
 {
@@ -505,7 +521,7 @@ procedure TIcomNetworkTransport.CreateSockets;
     // Increase UDP receive buffer to 256KB to reduce packet loss under load
     RcvBufSize := 256 * 1024;
     WinSock.setsockopt(Binding.Handle, SOL_SOCKET, SO_RCVBUF,
-      PChar(@RcvBufSize), SizeOf(RcvBufSize));
+      PAnsiChar(@RcvBufSize), SizeOf(RcvBufSize));
 
     logger.Debug('[IcomTransport:' + FRadioName + '] Socket bound to port %d', [Binding.Port]);
   end;
@@ -602,7 +618,7 @@ begin
     Sock := WinSock.socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if Sock = INVALID_SOCKET then Exit;
     try
-      DestIP := WinSock.inet_addr(PChar(FRadioAddress));
+      DestIP := WinSock.inet_addr(PAnsiChar(AnsiString(FRadioAddress)));
       if DestIP = INADDR_NONE then Exit;
 
       FillChar(DestAddr, SizeOf(DestAddr), 0);
@@ -1055,7 +1071,7 @@ begin
     // Increase UDP receive buffer to 256KB to reduce packet loss under load
     RcvBufSize := 256 * 1024;
     WinSock.setsockopt(FCivSocket.Bindings[0].Handle, SOL_SOCKET, SO_RCVBUF,
-      PChar(@RcvBufSize), SizeOf(RcvBufSize));
+      PAnsiChar(@RcvBufSize), SizeOf(RcvBufSize));
 
     logger.Debug('[IcomTransport:' + FRadioName + '] CI-V socket pre-bound to port %d',
                  [FCivSocket.Bindings[0].Port]);
@@ -1529,7 +1545,7 @@ begin
   FillChar(Addr, SizeOf(Addr), 0);
   Addr.sin_family := 2;  // AF_INET
   Addr.sin_port   := (TargetPort shr 8) or ((TargetPort and $FF) shl 8);  // htons
-  Addr.sin_addr   := LongWord(inet_addr(PChar(TargetAddr)));
+  Addr.sin_addr   := LongWord(inet_addr(PAnsiChar(AnsiString(TargetAddr))));
 
   Ret := ws2_sendto(SockHandle, Data, DataLen, 0, Addr, SizeOf(Addr));
   if Ret < 0 then

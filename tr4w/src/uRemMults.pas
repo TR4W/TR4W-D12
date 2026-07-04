@@ -50,13 +50,13 @@ implementation
 uses MainUnit;
 
 var
-  RemMultsBuf                           : array[0..7] of Char;
+  RemMultsBuf                           : array[0..7] of AnsiChar;
 //  ShowToolTip                           : boolean;
 //  PrevItem                              : integer;
 
 function RemainingMultsDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 var
-  p                                     : PChar;
+  p                                     : PAnsiChar;
   DS                                    : PDrawItemStruct;
   i                                     : integer;
   Index                                 : integer;
@@ -105,7 +105,7 @@ begin
 
         if CleanSweep then
         begin
-          Windows.TextOut(DS^.HDC, 0, 0, TC_CLEANSWEEPCONGRATULATIONS, 31);
+          Windows.TextOutA(DS^.HDC, 0, 0, TC_CLEANSWEEPCONGRATULATIONS, 31);
           Exit;
         end;
 
@@ -175,7 +175,7 @@ begin
 }
         end;
 
-        i := Windows.lstrlen(p);
+        i := Windows.lstrlenA(p);
 {
         if RemMultsColumnWidthArray[rmt] < i then
         begin
@@ -199,7 +199,7 @@ begin
 
         SetBkMode(DS^.HDC, TRANSPARENT);
 
-        Windows.TextOut(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, i);
+        Windows.TextOutA(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, i);
 
       end;
 
@@ -236,7 +236,7 @@ begin
             end;
           tw_REMMULTSWINDOW_INDEX: p := 'Remaining mults';  // 4.91.5
         end;
-         Windows.SetWindowText(hwnddlg, p);    // 4.91.5
+         Windows.SetWindowTextA(hwnddlg, p);    // 4.91.5
 
         SetRemMultsColumnWidth;
 

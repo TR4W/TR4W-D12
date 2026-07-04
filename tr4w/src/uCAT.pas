@@ -176,7 +176,7 @@ var
   i            : Integer;
   msg          : string;
   savedCursor  : HCURSOR;
-  radioName    : string;
+  radioName    : AnsiString;
   rt           : InterfacedRadioType;
 begin
   rt := InterfacedRadioType(tCB_GETCURSEL(hwnddlg, 121));
@@ -186,7 +186,7 @@ begin
   // radios with LAN auto-discovery: K4, the network Icoms, FLEX).
   if not TRadioFactory.IsDiscoverable(TRadioFactory.ModelForInterfacedType(rt)) then
      begin
-     Format(wsprintfBuffer, TC_DISCOVER_NOT_AVAILABLE, PChar(radioName));
+     Format(wsprintfBuffer, TC_DISCOVER_NOT_AVAILABLE, PAnsiChar(radioName));
      showwarning(wsprintfBuffer);
      Exit;
      end;
@@ -204,25 +204,25 @@ begin
 
      if found.Count = 0 then
         begin
-        Format(wsprintfBuffer, TC_DISCOVER_NONE_FOUND, PChar(radioName));
+        Format(wsprintfBuffer, TC_DISCOVER_NONE_FOUND, PAnsiChar(radioName));
         showwarning(wsprintfBuffer);
         end
      else
         begin
         // Fill the IP edit (130) from the first (or only) radio found.
-        Windows.SetDlgItemText(hwnddlg, 130, PChar(found[0]));
+        Windows.SetDlgItemTextA(hwnddlg, 130, PAnsiChar(AnsiString(found[0])));
         // Issue #968 -- discovery gives us the IP but not the port; fill the
         // model default (K4=9200, Icom=50001, ...) so the radio is connectable.
         ApplyDefaultNetworkPort(hwnddlg);
         if found.Count > 1 then
            begin
-           Format(wsprintfBuffer, TC_DISCOVER_MULTI_FOUND, PChar(radioName));
+           Format(wsprintfBuffer, TC_DISCOVER_MULTI_FOUND, PAnsiChar(radioName));
            msg := string(wsprintfBuffer) + #13#10;
            for i := 0 to found.Count - 1 do
               begin
               msg := msg + #13#10 + found[i];
               end;
-           showwarning(PChar(msg));
+           showwarning(PAnsiChar(AnsiString(msg)));
            end;
         end;
   finally
@@ -238,7 +238,7 @@ var
   BRT                                   : BaudRateType;
   TempKeyerPortType                     : PortType;
 //  TempByte                              : Byte;
-  TempPchar                             : PChar;
+  TempPchar                             : PAnsiChar;
   RadioType                             : InterfacedRadioType;
   hamLibCheckBoxWind                    : HWnd;
   LabelX, LabelW, EditX, EditW, NewY   : Integer;
@@ -345,7 +345,7 @@ begin
           TempKeyerPortType := Radio2.tKeyerPort;
           TempPchar := 'RADIO TWO ';
         end;
-        SetWindowText(hwnddlg, TempPchar);
+        SetWindowTextA(hwnddlg, TempPchar);
 
         {radio}
 		for RadioType := Low(InterfacedRadioType) to High(InterfacedRadioType) do
@@ -556,12 +556,12 @@ begin
         {freq adder}
 
 //        Windows.SetDlgItemInt(hwnddlg, 129, TempRadio^.FrequencyAdder, False);
-        Windows.SetDlgItemText(hwnddlg, 129, PChar(string(CATWTR^.RadioName)));
+        Windows.SetDlgItemTextA(hwnddlg, 129, PAnsiChar(AnsiString(CATWTR^.RadioName)));
 
-        Windows.SetDlgItemText(hwnddlg, 130, PChar(string(CATWTR^.IPAddress)));
+        Windows.SetDlgItemTextA(hwnddlg, 130, PAnsiChar(AnsiString(CATWTR^.IPAddress)));
         Windows.SetDlgItemInt(hwnddlg, 131, CATWTR^.RadioTCPPort, False);
-        Windows.SetDlgItemText(hwnddlg, 132, PChar(string(CATWTR^.NetworkUsername)));
-        Windows.SetDlgItemText(hwnddlg, 133, PChar(string(CATWTR^.NetworkPassword)));
+        Windows.SetDlgItemTextA(hwnddlg, 132, PAnsiChar(AnsiString(CATWTR^.NetworkUsername)));
+        Windows.SetDlgItemTextA(hwnddlg, 133, PAnsiChar(AnsiString(CATWTR^.NetworkPassword)));
         hamLibCheckBoxWind := GetDlgItem(hwnddlg, 1000);
 
         if RadioType in HAMLibONLYRadios then
@@ -586,7 +586,7 @@ begin
         // OK/Apply call RestartPollingThread), so the new label simply makes the
         // edit-commit semantics explicit.  Done at runtime to cover all
         // languages without touching the per-language resources.
-        Windows.SetDlgItemText(hwnddlg, 119, CANCEL_WORD);
+        Windows.SetDlgItemTextA(hwnddlg, 119, CANCEL_WORD);
       end;
 
     WM_COMMAND:
@@ -667,18 +667,18 @@ begin
               // and may be blank.  TCP PORT is an integer (ctInteger): a blank
               // value triggers the Issue #968 "has no value" warning on apply,
               // so reset it to 0 -- the in-range default that means "no port".
-              Windows.SetDlgItemText(hwnddlg, 130, '');     // IP ADDRESS
+              Windows.SetDlgItemTextA(hwnddlg, 130, '');     // IP ADDRESS
               Windows.SetDlgItemInt(hwnddlg, 131, 0, False);  // TCP PORT -> 0
 
               // NAME (control 129) is a freeform rig label; reset it to the
               // documented per-radio default ('Rig 1' / 'Rig 2').
               if CATWTR = @Radio1 then
                  begin
-                 Windows.SetDlgItemText(hwnddlg, 129, 'Rig 1');
+                 Windows.SetDlgItemTextA(hwnddlg, 129, 'Rig 1');
                  end
               else
                  begin
-                 Windows.SetDlgItemText(hwnddlg, 129, 'Rig 2');
+                 Windows.SetDlgItemTextA(hwnddlg, 129, 'Rig 2');
                  end;
 
               ButtonsEnable;
@@ -793,7 +793,7 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
     ID := GetDialogItemText(CATWndHWND, i);
     CMD := GetDialogItemText(CATWndHWND, i + 20);
     logger.Trace('[RestartPollingThread] ID = %s, CMD = %s',[ID, CMD]);
-    Windows.WritePrivateProfileString('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
+    Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
 //    if not
     CheckCommand(@ID, CMD)
 //    then      showwarning(@id[1])
@@ -814,7 +814,7 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
      end;
 
   logger.Trace('[RestartPollingThread] ID = %s, CMD = %s',[ID, CMD]);
-  Windows.WritePrivateProfileString('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
+  Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
 
 
@@ -830,14 +830,14 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
   else
      ID := 'RADIO TWO NETWORK USERNAME';
   CMD := GetDialogItemText(CATWndHWND, 132);
-  Windows.WritePrivateProfileString('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
+  Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
   // Delete the legacy ICOM NETWORK USERNAME key (nil value = delete).
   if CATWTR = @Radio1 then
      ID := 'RADIO ONE ICOM NETWORK USERNAME'
   else
      ID := 'RADIO TWO ICOM NETWORK USERNAME';
-  Windows.WritePrivateProfileString('Radio', @ID[1], nil, TR4W_INI_FILENAME);
+  Windows.WritePrivateProfileStringA('Radio', @ID[1], nil, TR4W_INI_FILENAME);
 
   Windows.ZeroMemory(@ID, SizeOf(ID));
   Windows.ZeroMemory(@CMD, SizeOf(CMD));
@@ -846,14 +846,14 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
   else
      ID := 'RADIO TWO NETWORK PASSWORD';
   CMD := GetDialogItemText(CATWndHWND, 133);
-  Windows.WritePrivateProfileString('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
+  Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
   // Delete the legacy ICOM NETWORK PASSWORD key.
   if CATWTR = @Radio1 then
      ID := 'RADIO ONE ICOM NETWORK PASSWORD'
   else
      ID := 'RADIO TWO ICOM NETWORK PASSWORD';
-  Windows.WritePrivateProfileString('Radio', @ID[1], nil, TR4W_INI_FILENAME);
+  Windows.WritePrivateProfileStringA('Radio', @ID[1], nil, TR4W_INI_FILENAME);
 
   CATWTR^.CheckAndInitializePorts_ForThisRadio;
   InitializeKeyer;

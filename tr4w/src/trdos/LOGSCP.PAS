@@ -52,7 +52,7 @@ const
   MaximumCallsAlreadSaved               = 3000;
 
 type
-  EntryArrayType = array[0..300] of Char;
+  EntryArrayType = array[0..300] of AnsiChar;
   EntryArrayPtr = ^EntryArrayType;
 
   CallsAlreadySavedArray = array[0..MaximumCallsAlreadSaved - 1] of CallString;
@@ -81,7 +81,7 @@ type
   MemoryBlock = array[0..MemoryBlockSize - 1] of Byte;
   MemoryBlockPtr = ^MemoryBlock;
 
-  BufferArray = array[0..BufferArraySize - 1] of Char;
+  BufferArray = array[0..BufferArraySize - 1] of AnsiChar;
   BufferPtr = ^BufferArray;
 
   CellBufferObject = object
@@ -483,7 +483,7 @@ function CellBufferObject.GetNextEntry(var EntryString: ShortString {string}): b
 { Returns FALSE when no more entries left in the cell buffer }
 
 var
-  CellChar                              : Char;
+  CellChar                              : AnsiChar;
 
 begin
   EntryString := '';
@@ -520,7 +520,7 @@ function CellBufferObject.GetNextEntryAddress(var EntryAddress: Pointer): boolea
 { Returns FALSE when no more entries left in the cell buffer }
 
 var
-  CellChar                              : Char;
+  CellChar                              : AnsiChar;
 
 begin
   { Find address of first byte in the record to be read }
@@ -1462,7 +1462,7 @@ procedure CallDatabase.GetDataFromASCIIEntry(FileString: ShortString; var data: 
 
 var
   TestName, Command                     : Str40;
-  ID                                    : Char;
+  ID                                    : AnsiChar;
   Result                                : integer;
 
 begin
@@ -2144,7 +2144,7 @@ begin
         if CellSize > BufferArraySize * 3 then
         begin
 
-          ShowMessage(PChar(string(GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y) + ' cell is too large - 3!!')));
+          ShowMessage(PAnsiChar(AnsiString(GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y) + ' cell is too large - 3!!')));
           halt;
         end;
 
@@ -2794,7 +2794,7 @@ function CallDatabase.RandomCall: CallString;
 var
   NextX, NextY, X, Y                    : Word;
   StartingOffset, Address, EndingOffset, Range: LONGINT;
-  MiniBuffer                            : array[0..63] of Char;
+  MiniBuffer                            : array[0..63] of AnsiChar;
   Call                                  : CallString;
 
 begin

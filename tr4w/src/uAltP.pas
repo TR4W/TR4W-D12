@@ -35,13 +35,13 @@ uses
 
 type
   TOtherMessageType = packed record
-    omCommand: PChar;
+    omCommand: PAnsiChar;
     omCWMessage: MessagePointer;
     omSSBMessage: MessagePointer;
   end;
 
   TOtherShortMessageType = packed record
-    osmCommand: PChar;
+    osmCommand: PAnsiChar;
     osmMessage: PChar;
   end;
 
@@ -118,7 +118,7 @@ begin
         AltWnd := hwnddlg;
 //        AltPListView := Get101Window(hwnddlg);
 
-        Windows.SetWindowText(hwnddlg, RC_LISTOFMESS);
+        Windows.SetWindowTextA(hwnddlg, RC_LISTOFMESS);
         AltPListView := CreateListView2(0, 0, 790, 350, hwnddlg);
 
         // Issue #997: asm tWM_SETFONT (EAX = AltPListView above).
@@ -168,9 +168,9 @@ var
   elvi                                  : TLVItem;
 //  TempPchar                             : PChar;
   TempInt                               : integer;
-  ModeString                            : PChar;
-  OpModeString                          : PChar;
-  ButtonString                          : PChar;
+  ModeString                            : PAnsiChar;
+  OpModeString                          : PAnsiChar;
+  ButtonString                          : PAnsiChar;
   TempMessagePointer                    : MessagePointer;
   TempMode                              : ModeType;
 begin
@@ -237,7 +237,7 @@ begin
 
           elvi.iSubItem := 1;
 
-          wsprintfBuffer[0] := OtherShortMessagesArray[TempInt].osmMessage[0];
+          wsprintfBuffer[0] := AnsiChar(OtherShortMessagesArray[TempInt].osmMessage[0]);
           wsprintfBuffer[1] := #0;
           elvi.pszText := wsprintfBuffer;
           ListView_SetItem(AltPListView, elvi);

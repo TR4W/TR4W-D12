@@ -615,7 +615,7 @@ begin
                     asm add esp,12
                     end;
                     Frequency := QuickEditFreq(wsprintfBuffer, 10);
-                    //          Frequency := QuickEditFreq(PChar(string('frequency for ' + CallWindowString + ' in kHz')), 10);
+                    //          Frequency := QuickEditFreq(PAnsiChar(AnsiString('frequency for ' + CallWindowString + ' in kHz')), 10);
                     if Frequency <> -1 then
                       begin
                         VisibleLog.DetermineIfNewMult(CallWindowString, ActiveBand, ActiveMode, MultString);

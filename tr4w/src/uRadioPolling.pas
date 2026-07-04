@@ -91,17 +91,17 @@ procedure UpdateStatus(rig: RadioPtr);
 procedure ClearRadioStatus(rig: RadioPtr);
 
 procedure WriteToDebugFile(port: PortType; MessageType: DebugFileMessagetype; p:
-   PChar; Count: Cardinal);
+   PAnsiChar; Count: Cardinal);
 //function WriteToSerialCATPort(data: Str80; port: HWND): Cardinal;
-function GetFrequencyForYaesu3(p: PChar): Cardinal;
-function GetFrequencyForYaesu4(p: PChar): Cardinal;
-function GetFrequencyFromBCD(Count: Cardinal; Addr: PChar): Cardinal;
-function GetFrequencyForYaesuFT747(a: PChar): Cardinal;
-procedure GetVFOInfoForYaesuType3(buf: PChar; var VFO: VFOStatusType;
+function GetFrequencyForYaesu3(p: PAnsiChar): Cardinal;
+function GetFrequencyForYaesu4(p: PAnsiChar): Cardinal;
+function GetFrequencyFromBCD(Count: Cardinal; Addr: PAnsiChar): Cardinal;
+function GetFrequencyForYaesuFT747(a: PAnsiChar): Cardinal;
+procedure GetVFOInfoForYaesuType3(buf: PAnsiChar; var VFO: VFOStatusType;
    FrequencyAdder: integer);
-procedure GetVFOInfoForYaesuType5(buf: PChar; var VFO: VFOStatusType;
+procedure GetVFOInfoForYaesuType5(buf: PAnsiChar; var VFO: VFOStatusType;
    FrequencyAdder: integer);
-procedure GetVFOInfoForYaesuFTX1(buf: PChar; var VFO: VFOStatusType;
+procedure GetVFOInfoForYaesuFTX1(buf: PAnsiChar; var VFO: VFOStatusType;
    FrequencyAdder: integer);
 procedure BeginPolling(rig: RadioPtr); stdcall;
 procedure SetDCBForIcom(port: HWND);
@@ -109,8 +109,8 @@ function ReadICOM(b: Cardinal; rig: RadioPtr): boolean;
 
 procedure DisplayCurrentStatus(rig: RadioPtr);
 procedure ProcessFilteredStatus(rig: RadioPtr);
-function BufferToInt(buf: PChar; StartPos, EndPos: integer): integer;
-procedure GetVFOInfoForFT2000(buf: PChar; var VFO: VFOStatusType;
+function BufferToInt(buf: PAnsiChar; StartPos, EndPos: integer): integer;
+procedure GetVFOInfoForFT2000(buf: PAnsiChar; var VFO: VFOStatusType;
    FrequencyAdder: integer);
 procedure SetVFOA(rig: RadioPtr);
 procedure SetVFOB(rig: RadioPtr);
@@ -765,7 +765,7 @@ var
    lastPollTick: LongWord;
    lastHeartbeatTick: LongWord;
    lastRITXITTick: LongWord;
-   authErrBuf: array[0..127] of Char;
+   authErrBuf: array[0..127] of AnsiChar;
    handshakeStuckSinceTick: LongWord;  // GetTickCount when we first noticed IsConnected but not IsOperational; 0 = not tracking
    actVFO: TVFO;                       // active (RX) VFO for the aggregate main-window status (ro.GetActiveVFO)
 const
@@ -947,7 +947,7 @@ begin
             QuickDisplayError(authErrBuf);
             if rig^.tRadioInterfaceWndHandle <> 0 then
                begin
-               SetDlgItemText(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
+               SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
                end;
             Break;
             end;
@@ -1080,11 +1080,11 @@ begin
             // Blank the frequency display immediately. FreqToPChar(0) shows "0.000"
             // which is as misleading as the stale value, so write '' directly.
             if rig^.FreqWindowHandle <> 0 then
-               Windows.SetWindowText(rig^.FreqWindowHandle, '');
+               Windows.SetWindowTextA(rig^.FreqWindowHandle, '');
             if rig^.tRadioInterfaceWndHandle <> 0 then
                begin
-               SetDlgItemText(rig^.tRadioInterfaceWndHandle, 102, '');
-               SetDlgItemText(rig^.tRadioInterfaceWndHandle, 104, '');
+               SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 102, '');
+               SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 104, '');
                end;
             reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on new disconnect
             end;
@@ -1097,7 +1097,7 @@ begin
             QuickDisplayError(authErrBuf);
             if rig^.tRadioInterfaceWndHandle <> 0 then
                begin
-               SetDlgItemText(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
+               SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
                end;
             Break;
             end;
@@ -1304,7 +1304,7 @@ begin
             ClearRadioStatus(rig)
          else
             begin
-               //      Windows.SetWindowText(tr4whandle, @rig^.tBuf);
+               //      Windows.SetWindowTextA(tr4whandle, @rig^.tBuf);
                rig.CurrentStatus.VFOStatus :=
                   ActiveVFOStatusType(Ord(rig^.tBuf[31]) - Ord('0') + 1);
 
@@ -2733,7 +2733,7 @@ begin
       rig.CurrentStatus.Freq := TempVFO.Frequency;
       rig.CurrentStatus.Band := TempVFO.Band;
       rig.CurrentStatus.Mode := TempVFO.Mode;
-      //    Windows.SetWindowText(tr4whandle, inttopchar(integer(rig.CurrentStatus.Mode)));
+      //    Windows.SetWindowTextA(tr4whandle, inttopchar(integer(rig.CurrentStatus.Mode)));
       rig.CurrentStatus.RITFreq := TempVFO.RITFreq;
       rig.CurrentStatus.RIT := TempVFO.RIT;
       rig.CurrentStatus.XIT := TempVFO.XIT;
@@ -2849,7 +2849,7 @@ begin
       rig.CurrentStatus.Band := TempVFO.Band;
       rig.CurrentStatus.Mode := TempVFO.Mode;
       rig.CurrentStatus.ExtendedMode := TempVFO.ExtendedMode;
-      //    Windows.SetWindowText(tr4whandle, inttopchar(integer(rig.CurrentStatus.Mode)));
+      //    Windows.SetWindowTextA(tr4whandle, inttopchar(integer(rig.CurrentStatus.Mode)));
       rig.CurrentStatus.RITFreq := TempVFO.RITFreq;
       rig.CurrentStatus.RIT := TempVFO.RIT;
       rig.CurrentStatus.XIT := TempVFO.XIT;
@@ -2942,7 +2942,7 @@ begin
       rig.CurrentStatus.Band := TempVFO.Band;
       rig.CurrentStatus.Mode := TempVFO.Mode;
       rig.CurrentStatus.ExtendedMode := TempVFO.ExtendedMode;
-      //    Windows.SetWindowText(tr4whandle, inttopchar(integer(rig.CurrentStatus.Mode)));
+      //    Windows.SetWindowTextA(tr4whandle, inttopchar(integer(rig.CurrentStatus.Mode)));
       rig.CurrentStatus.RITFreq := TempVFO.RITFreq;
       rig.CurrentStatus.RIT := TempVFO.RIT;
       rig.CurrentStatus.XIT := TempVFO.XIT;
@@ -2991,12 +2991,12 @@ begin
 end;
 
 procedure WriteToDebugFile(port: PortType; MessageType: DebugFileMessagetype; p:
-   PChar; Count: Cardinal);
+   PAnsiChar; Count: Cardinal);
 var
    DirectionChar: PAnsiChar;
    i, lpNumberOfBytesWritten: Cardinal;
    P1: PAnsiChar;
-   tChar: Char;
+   tChar: AnsiChar;
    bgColor: PChar;
    h: HWND;
 
@@ -3033,13 +3033,13 @@ begin
    sWriteFile(h, '</TD></TR>'#13#10, 12);
 end;
 
-function GetFrequencyForYaesu3(p: PChar): Cardinal;
+function GetFrequencyForYaesu3(p: PAnsiChar): Cardinal;
 {p ????????? ?? ?????? ???????? ????}
 begin
    Result := (Ord(p[0]) * 65536 + Ord(p[1]) * 256 + Ord(p[2])) * 10;
 end;
 
-function GetFrequencyForYaesu4(p: PChar): Cardinal;
+function GetFrequencyForYaesu4(p: PAnsiChar): Cardinal;
 {p ????????? ?? ?????? ???????? ????}
 begin
 
@@ -3051,7 +3051,7 @@ begin
 
 end;
 
-function GetFrequencyFromBCD(Count: Cardinal; Addr: PChar): Cardinal;
+function GetFrequencyFromBCD(Count: Cardinal; Addr: PAnsiChar): Cardinal;
 
 var
    F1: Cardinal;
@@ -3325,7 +3325,7 @@ begin
       begin
       SendRadioInfoToUDP(rig); // ny4i 4.44.9 // Broadcast Radio Info if set
       end;
-   //Windows.SetWindowText(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
+   //Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
    h := rig.tRadioInterfaceWndHandle;
    //if h = 0 then Exit;
    //tSetWindowRedraw(h,false);
@@ -3355,9 +3355,9 @@ begin
       begin
       if h <> 0 then
          begin
-         SetDlgItemText(h, 102, FreqToPChar(fa));
+         SetDlgItemTextA(h, 102, FreqToPChar(fa));
          end;
-      Windows.SetWindowText(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
+      Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
       end
    else
       begin
@@ -3377,7 +3377,7 @@ begin
                SetDlgItemTextA(h, 104,
                   FreqToPChar(rig.CurrentStatus.VFO[VFOB].Frequency));
             end;
-         //Windows.SetWindowText(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
+         //Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
       end
    else
       begin
@@ -3451,7 +3451,7 @@ begin
       (rig.CurrentStatus.VFO[VFOA].ExtendedMode <>
        rig.CurrentStatus.previousVFO[VFOA].ExtendedMode) then
       begin
-      Windows.SetWindowText(rig.ModeVFOAWndHandle,
+      Windows.SetWindowTextA(rig.ModeVFOAWndHandle,
          PChar(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOA].ExtendedMode]));
       rig.CurrentStatus.previousVFO[VFOA].ExtendedMode :=
          rig.CurrentStatus.VFO[VFOA].ExtendedMode;
@@ -3462,7 +3462,7 @@ begin
       (rig.CurrentStatus.VFO[VFOB].ExtendedMode <>
        rig.CurrentStatus.previousVFO[VFOB].ExtendedMode) then
       begin
-      Windows.SetWindowText(rig.ModeVFOBWndHandle,
+      Windows.SetWindowTextA(rig.ModeVFOBWndHandle,
          PChar(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOB].ExtendedMode]));
       rig.CurrentStatus.previousVFO[VFOB].ExtendedMode :=
          rig.CurrentStatus.VFO[VFOB].ExtendedMode;
@@ -3717,7 +3717,7 @@ begin
    Result := ReadFromCOMPort(b, rig);
 end;
 
-function BufferToInt(buf: PChar; StartPos, EndPos: integer): integer;
+function BufferToInt(buf: PAnsiChar; StartPos, EndPos: integer): integer;
 var
    i: integer;
    negative: boolean;
@@ -3740,7 +3740,7 @@ begin
       Result := Result * -1;
 end;
 
-procedure GetVFOInfoForFT2000(buf: PChar; var VFO: VFOStatusType;
+procedure GetVFOInfoForFT2000(buf: PAnsiChar; var VFO: VFOStatusType;
    FrequencyAdder: integer);
 var
    TempMode: ModeType;
@@ -3770,7 +3770,7 @@ end;
 //-----
 // Issue 218 added this procedure NY4I
 
-procedure GetVFOInfoForYaesuType3(buf: PChar; var VFO: VFOStatusType;
+procedure GetVFOInfoForYaesuType3(buf: PAnsiChar; var VFO: VFOStatusType;
    FrequencyAdder: integer);
 var
    TempMode: ModeType;
@@ -3866,7 +3866,7 @@ begin
 
 end;
 //------
-procedure GetVFOInfoForYaesuType5(buf: PChar; var VFO: VFOStatusType;
+procedure GetVFOInfoForYaesuType5(buf: PAnsiChar; var VFO: VFOStatusType;
    FrequencyAdder: integer);               // FTDX10 because YAESU USES THE SAME MODE CHARACTER FOR c4fm AND psk ON DIFFERENT RADIOS./ dumb!!!!
 var
    TempMode: ModeType;
@@ -3967,7 +3967,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-procedure GetVFOInfoForYaesuFTX1(buf: PChar; var VFO: VFOStatusType;
+procedure GetVFOInfoForYaesuFTX1(buf: PAnsiChar; var VFO: VFOStatusType;
    FrequencyAdder: integer);
    // FTX-1F/FTX-1R IF response layout (30 bytes total, Issue #817):
    //   Pos 1-2:   "IF"
@@ -4287,7 +4287,7 @@ begin
    SendStationStatus(sstPTT);
 end;
 
-function GetFrequencyForYaesuFT747(a: PChar): Cardinal;
+function GetFrequencyForYaesuFT747(a: PAnsiChar): Cardinal;
 var
    c: integer;
 begin

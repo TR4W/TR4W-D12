@@ -181,9 +181,9 @@ type
       //    lpOverlapped: TOverlapped;
       //    pOver: POverlapped;
 
-      CommandsBuffer:        array[0..7] of array[0..{19}40] of char;
+      CommandsBuffer:        array[0..7] of array[0..{19}40] of AnsiChar;
       CommandsBufferPointer: cardinal;
-      CommandsTempBuffer:    array[0..{19}40] of char; // ny4i extended for icom cw  // 4.44.5
+      CommandsTempBuffer:    array[0..{19}40] of AnsiChar; // ny4i extended for icom cw  // 4.44.5
 
       //    ICOM_COMMAND_B1: Str80;
       //    ICOM_COMMAND_SET_MODE: string[8];
@@ -272,10 +272,10 @@ type
       tIcom11Bytes: array[0..10] of byte; //ny4i
       tIcomFilterWidth: integer;
 
-      tKenwood14Bytes: array[0..14] of char;
+      tKenwood14Bytes: array[0..14] of AnsiChar;
 
-      tOrionFreq:   array[0..15] of char;
-      tOrionMode:   array[0..07] of char;
+      tOrionFreq:   array[0..15] of AnsiChar;
+      tOrionMode:   array[0..07] of AnsiChar;
       CommandPause: integer;
       saveMode : integer;
       nextExtendedMode : ExtendedModeType;
@@ -318,7 +318,7 @@ type
       procedure CheckAndInitializePorts_ForThisRadio;
       function WriteToCATPort(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
       function WritePollRequest(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
-      function AddToOutputBuffer(Buffer: PChar; nNumberOfBytesToWrite: DWORD): longbool;
+      function AddToOutputBuffer(Buffer: PAnsiChar; nNumberOfBytesToWrite: DWORD): longbool;
       procedure WriteBufferToCATPort(const Buffer);
       procedure OnCWByCATTimeEvent(Sender :TObject);
       procedure EnableCWBYCATTimer(ms: integer);
@@ -1438,7 +1438,7 @@ begin
 end;
 
 
-function RadioObject.AddToOutputBuffer(Buffer: PChar;
+function RadioObject.AddToOutputBuffer(Buffer: PAnsiChar;
    nNumberOfBytesToWrite: DWORD): longbool;
 begin
    //  TLogger.GetInstance.Debug('In AddToOutputBuffer');
@@ -1792,7 +1792,7 @@ begin
 end;
 
 function RadioObject.MemoryKeyer(mem: integer): boolean;
-var localMsg:string;
+var localMsg:AnsiString;   // CAT command bytes -> AddToOutputBuffer(PAnsiChar) (D12)
     hiMem: integer;
 begin
    if Self.tNetObject <> nil then
@@ -2352,7 +2352,7 @@ end;
 //------------------------------------------------------------------------------
 procedure RadioObject.SendCW(Msg: Str160);
 var
-   localMsg: string;
+   localMsg: AnsiString;   // CAT command bytes -> AddToOutputBuffer(PAnsiChar) (D12)
    i: integer;
    msgLen: integer;
    len: integer;
@@ -2763,7 +2763,7 @@ begin
                end;
             K3, KX3, K4:
                begin
-              AddToOutputBuffer('KY ' + Chr(4) + ';RX;', 8); // Chr(4) stops the K3 // ny4i Issue 157
+              AddToOutputBuffer('KY '#4';RX;', 8); // #4 stops the K3 // ny4i Issue 157
                end;
             TS480, TS570, TS590, TS890, TS950, TS990, TS2000, TS850:
                begin

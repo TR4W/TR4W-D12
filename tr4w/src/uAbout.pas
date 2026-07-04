@@ -44,7 +44,7 @@ var
   theta                                 : single;
   delta                                 : single = 0.4;
   delta2                                : single = -1;
-  txtIntro                              : array[0..3] of Char = (#32, #30, #0, #35);
+  txtIntro                              : array[0..3] of AnsiChar = (#32, #30, #0, #35);
   tid                                   : Cardinal;
 
 const
@@ -64,7 +64,7 @@ begin
       begin
         AboutHWND := hwnddlg;
         CreateThread(nil, 0, @MainProc, nil, 0, tid);
-        Windows.SetDlgItemText(hwnddlg, 102, tAboutText);
+        Windows.SetDlgItemTextA(hwnddlg, 102, tAboutText);
       end;
     WM_COMMAND: if wParam = 2 then goto 1;
     WM_CLOSE:

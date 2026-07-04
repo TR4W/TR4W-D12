@@ -52,7 +52,7 @@ procedure RunPOSTGetScoresThread;
 //function MakePOSTRequest: integer;
 //function MakePOSTRequestForRDXC2010: integer;
 function MakePOSTRequestNew: integer;
-procedure ShowGetScoresStatus(Status: PChar);
+procedure ShowGetScoresStatus(Status: PAnsiChar);
 procedure CheckServerAnswer(AnswerLength: integer);
 
 // Issue #783 -- HamScore RTC support reuses the dynamicresults fragment
@@ -66,10 +66,10 @@ var
   GetScoresPostingID                    : integer;
   GetScoresSeverPostingAddress          : ShortString {= 'https://post.contestonlinescore.com/post/'};
   GetScoresSeverReadingAddress          : ShortString {= 'https://contestonlinescore.com/scoreboard/'};
-  GetScoresBuffer                       : array[0..4096 - 1] of Char;
+  GetScoresBuffer                       : array[0..4096 - 1] of AnsiChar;
   GetScoresThreadID                     : Cardinal;
   GetScoresThreadHandle                 : Cardinal;
-  GetScoresAnswerFileName               : array[0..255] of Char;
+  GetScoresAnswerFileName               : array[0..255] of AnsiChar;
 const
 
   GSCR                                  = ''; //#13#10;
@@ -105,7 +105,7 @@ begin
         SetTimer(hwnddlg, 1, 1000 * 60 * 5 {minutes}, nil);
         Format(GetScoresAnswerFileName, '%sscoresserveranswer.html', TR4W_LOG_PATH_NAME);
 
-//        windows.SetWindowText(hwnddlg,'asdasd')
+//        windows.SetWindowTextA(hwnddlg,'asdasd')
 
       end;
     WM_TIMER: RunPOSTGetScoresThread;
@@ -182,7 +182,7 @@ begin
          // Save the server response for diagnostics
          if tOpenFileForWrite(h, GetScoresAnswerFileName) then
             begin
-            sWriteFile(h, GetScoresBuffer, lstrlen(GetScoresBuffer));
+            sWriteFile(h, GetScoresBuffer, lstrlenA(GetScoresBuffer));
             CloseHandle(h);
             end;
          ShowGetScoresStatus(TC_UPLOADEDSUCCESSFULLY);
@@ -244,7 +244,7 @@ begin
   end;
 
   Windows.lstrcat(GetScoresBuffer, GetScoresXMLBuffer);
-  Result := Windows.lstrlen(GetScoresBuffer);
+  Result := Windows.lstrlenA(GetScoresBuffer);
 
 end;
 
@@ -362,17 +362,17 @@ begin
   end;
 
   Windows.lstrcat(GetScoresBuffer, GetScoresXMLBuffer);
-  Result := Windows.lstrlen(GetScoresBuffer);
+  Result := Windows.lstrlenA(GetScoresBuffer);
 
 end;
 }
 
-procedure ShowGetScoresStatus(Status: PChar);
+procedure ShowGetScoresStatus(Status: PAnsiChar);
 var
-  tempbuffer                            : array[0..255] of Char;
+  tempbuffer                            : array[0..255] of AnsiChar;
 begin
   Format(tempbuffer, '%s : %s', GetTimeString, Status);
-  Windows.SetDlgItemText(tr4w_WindowsArray[tw_POSTSCORESWINDOW_INDEX].WndHandle, 105, tempbuffer);
+  Windows.SetDlgItemTextA(tr4w_WindowsArray[tw_POSTSCORESWINDOW_INDEX].WndHandle, 105, tempbuffer);
 end;
 
 procedure CheckServerAnswer(AnswerLength: integer);
@@ -380,7 +380,7 @@ label
   1;
 var
   i                                     : integer;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
 begin
   p := nil;
   if AnswerLength < 1 then
@@ -425,9 +425,9 @@ var
    sBody: AnsiString;
    begin
    sBody := AnsiString('xml=<?xml version="1.0"?>') + BuildDynamicResultsXml;
-   lstrcpy(GetScoresBuffer, PChar(string(sBody)));
+   lstrcpyA(GetScoresBuffer, PAnsiChar(AnsiString(sBody)));
    logger.Debug('[MakePOSTRequestNew] %s', [GetScoresBuffer]);
-   Result := Windows.lstrlen(GetScoresBuffer);
+   Result := Windows.lstrlenA(GetScoresBuffer);
    end;
 
 // ---------------------------------------------------------------------------
@@ -445,12 +445,12 @@ var
 // Issue #930 -- read a Cabrillo-summary field from tr4w.ini [REPORT].
 // Used for <club> (key=_CLUB) and <overlay> (key=_CATEGORY-OVERLAY) which the
 // user enters in the Cabrillo summary dialog (uCbrSum) rather than in a CFG.
-function ReadCabrilloSummaryField(const Key: PChar): string;
+function ReadCabrilloSummaryField(const Key: PAnsiChar): string;
 var
-   buf: array[0..255] of Char;
+   buf: array[0..255] of AnsiChar;
    n:   Cardinal;
    begin
-   n := GetPrivateProfileString(CABRILLOSECTION, Key, nil, buf, SizeOf(buf), TR4W_INI_FILENAME);
+   n := GetPrivateProfileStringA(CABRILLOSECTION, Key, nil, buf, SizeOf(buf), TR4W_INI_FILENAME);
    if n = 0 then
       Result := ''
    else

@@ -103,7 +103,7 @@ var
   c                                     : integer;
 
   G4, { R, M,} L4                       : REAL;
-  m1, m2, m3, m4, m5, m6                : Char;
+  m1, m2, m3, m4, m5, m6                : AnsiChar;
 //  GR                                    : GridRec;
 begin
   { First we do the longitude stuff - chars 1 3 and 5 }
@@ -111,34 +111,34 @@ begin
   G4 := 180 - Lon;
 
   c := Trunc(G4 / 20); { Get first letter of Grid }
-  m1 := CHR(c + Ord('A'));
+  m1 := AnsiChar(c + Ord('A'));
 
   G4 := G4 - c * 20; { Remove that compoenent }
 
   c := Trunc(G4 / 2); { Get third letter of Grid}
-  m3 := CHR(c + Ord('0'));
+  m3 := AnsiChar(c + Ord('0'));
 
   G4 := G4 - c * 2; { Remove that component }
 
   c := Trunc(G4 / (2 / 24)); { Get fifth letter }
-  m5 := CHR(c + Ord('A'));
+  m5 := AnsiChar(c + Ord('A'));
 
   { Similar process for longitude }
 
   L4 := Lat + 90;
 
   c := Trunc(L4 / 10);
-  m2 := CHR(c + Ord('A'));
+  m2 := AnsiChar(c + Ord('A'));
 
   L4 := L4 - c * 10;
 
   c := Trunc(L4);
-  m4 := CHR(c + Ord('0'));
+  m4 := AnsiChar(c + Ord('0'));
 
   L4 := L4 - c;
 
   c := Trunc(L4 / (1 / 24));
-  m6 := CHR(c + Ord('A'));
+  m6 := AnsiChar(c + Ord('A'));
 {
   GR[1] := m1;
   GR[2] := m2;

@@ -59,7 +59,7 @@ begin
   case Msg of
     WM_INITDIALOG:
       begin
-        Windows.SetWindowText(hwnddlg, RC_WINCONTROL2);
+        Windows.SetWindowTextA(hwnddlg, RC_WINCONTROL2);
         Manager := CreateListBox(0, 0, 300, 200, hwnddlg, 101);
         CreateOKCancelButtons(hwnddlg);
 

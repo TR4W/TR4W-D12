@@ -29,7 +29,7 @@ uses
 type
 
   MenuRecord = record
-    mrText: PChar;
+    mrText: PAnsiChar;
     mrId: Word;
   end;
 
@@ -464,14 +464,14 @@ begin
       CurrMenu := CreatePopupMenu;
       LatestMenu := CurrMenu;
 
-      Windows.AppendMenu(Result, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
+      Windows.AppendMenuA(Result, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
       Continue;
     end;
 
     if TempMenuRecord.mrId = MAXWORD - 1 then
     begin
       CurrMenu := CreatePopupMenu;
-      Windows.AppendMenu(LatestMenu, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
+      Windows.AppendMenuA(LatestMenu, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
       Continue;
     end;
     if TempMenuRecord.mrId = MAXWORD - 2 then
@@ -479,7 +479,7 @@ begin
       CurrMenu := LatestMenu;
       Continue;
     end;
-    Windows.AppendMenu(CurrMenu, uFlags, TempMenuRecord.mrId, TempMenuRecord.mrText);
+    Windows.AppendMenuA(CurrMenu, uFlags, TempMenuRecord.mrId, TempMenuRecord.mrText);
   end;
 
 

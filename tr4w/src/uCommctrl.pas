@@ -1415,7 +1415,7 @@ type
     uId: integer;
     rect: TRect;
     hInst: THandle;
-    lpszText: PChar; //PWideChar;
+    lpszText: PAnsiChar; //PWideChar;
 //    lParam: Integer;
   end;
   PTRTOOLINFO = ^TOOLINFO;

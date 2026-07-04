@@ -58,7 +58,7 @@ begin
         if HiWord(wParam) = EN_CHANGE then
 
         begin
-          for I := 108 to 109 do Windows.SetDlgItemText(hwnddlg, I, nil);
+          for I := 108 to 109 do Windows.SetDlgItemTextA(hwnddlg, I, nil);
 
           Grid1 := GetDialogItemText(hwnddlg, 103);
           if Grid1 = '' then Exit;
@@ -67,8 +67,11 @@ begin
           if Grid2 = '' then Exit;
 
           I := GetDistanceBetweenGrids(Grid1, Grid2);
-          // Issue #997: asm-push wsprintf -> SysUtils.Format (single %u arg = I).
-          Windows.SetDlgItemText(hwnddlg, 108, PChar(SysUtils.Format('%u km', [I])));
+          // Issue #997: asm-push wsprintf -> TF.Format (single %u arg = I).
+          // Uses the ANSI wsprintfBuffer so the result stays PAnsiChar for the
+          // ANSI SetDlgItemTextA (no wide->ansi round-trip).
+          TF.Format(wsprintfBuffer, '%u km', I);
+          Windows.SetDlgItemTextA(hwnddlg, 108, wsprintfBuffer);
 
           TR4W_WM_SetTest(hwnddlg, 108, IntToStr(GetDistanceBetweenGrids(Grid1, Grid2)) + ' km');
           TR4W_WM_SetTest(hwnddlg, 109, IntToStr(GetEuropeanDistanceBetweenGrids(Grid1, Grid2)) + ' km');

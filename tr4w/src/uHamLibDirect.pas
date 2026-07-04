@@ -289,7 +289,7 @@ const
 procedure rig_set_debug(debug_level: rig_debug_level_e); cdecl; external HAMLIB_DLL;
 // rig_set_debug_file is loaded dynamically at runtime (may not exist in all builds)
 // Use MSVCRT fopen to obtain a C FILE* compatible with HamLib's debug stream
-function msvcrt_fopen(filename: PChar; mode: PChar): Pointer; cdecl; external 'msvcrt.dll' name 'fopen';
+function msvcrt_fopen(filename: PAnsiChar; mode: PAnsiChar): Pointer; cdecl; external 'msvcrt.dll' name 'fopen';
 
 // Initialization and cleanup
 function rig_init(rig_model: Integer): PRIG; cdecl; external HAMLIB_DLL;
@@ -298,9 +298,9 @@ function rig_close(rig: PRIG): Integer; cdecl; external HAMLIB_DLL;
 function rig_cleanup(rig: PRIG): Integer; cdecl; external HAMLIB_DLL;
 
 // Configuration
-function rig_set_conf(rig: PRIG; token: hamlib_token_t; const val: PChar): Integer; cdecl; external HAMLIB_DLL;
-function rig_get_conf(rig: PRIG; token: hamlib_token_t; val: PChar): Integer; cdecl; external HAMLIB_DLL;
-function rig_token_lookup(rig: PRIG; const name: PChar): hamlib_token_t; cdecl; external HAMLIB_DLL;
+function rig_set_conf(rig: PRIG; token: hamlib_token_t; const val: PAnsiChar): Integer; cdecl; external HAMLIB_DLL;
+function rig_get_conf(rig: PRIG; token: hamlib_token_t; val: PAnsiChar): Integer; cdecl; external HAMLIB_DLL;
+function rig_token_lookup(rig: PRIG; const name: PAnsiChar): hamlib_token_t; cdecl; external HAMLIB_DLL;
 
 {-----------------------------------------------------------------------------
   Frequency Control
@@ -453,7 +453,7 @@ implementation
 function GetHamLibVersion: string;
 var
   hLib: HMODULE;
-  pVersion: ^PChar;
+  pVersion: ^PAnsiChar;
 begin
   Result := 'unknown';
   hLib := GetModuleHandle(HAMLIB_DLL);
@@ -604,8 +604,9 @@ procedure RigSetPathname(rig: PRIG; const pathname: string);
 const
   PATHNAME_OFFSET = 32;  // Offset of pathname field from start of RIG structure
 var
-  pathnamePtr: PChar;
-  sourceBytes: PChar;
+  pathnamePtr: PAnsiChar;
+  sourceBytes: PAnsiChar;
+  pathnameA: AnsiString;   // ANSI copy: pathname is a wide string device path (ASCII)
   bytesToCopy: Integer;
   i: Integer;
 begin
@@ -613,11 +614,12 @@ begin
     Exit;
 
   // Calculate pointer to pathname field
-  pathnamePtr := PChar(Integer(rig) + PATHNAME_OFFSET);
+  pathnamePtr := PAnsiChar(Integer(rig) + PATHNAME_OFFSET);
 
   // Copy pathname string (similar to strncpy)
-  sourceBytes := PChar(pathname);
-  bytesToCopy := Length(pathname);
+  pathnameA := AnsiString(pathname);
+  sourceBytes := PAnsiChar(pathnameA);
+  bytesToCopy := Length(pathnameA);
   if bytesToCopy > HAMLIB_FILPATHLEN - 1 then
     bytesToCopy := HAMLIB_FILPATHLEN - 1;
 
@@ -633,14 +635,14 @@ function RigGetPathname(rig: PRIG): string;
 const
   PATHNAME_OFFSET = 32;
 var
-  pathnamePtr: PChar;
+  pathnamePtr: PAnsiChar;
 begin
   Result := '';
   if rig = nil then
     Exit;
 
   // Calculate pointer to pathname field
-  pathnamePtr := PChar(Integer(rig) + PATHNAME_OFFSET);
+  pathnamePtr := PAnsiChar(Integer(rig) + PATHNAME_OFFSET);
 
   // Read null-terminated string
   Result := string(pathnamePtr);

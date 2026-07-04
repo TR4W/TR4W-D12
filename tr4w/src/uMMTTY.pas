@@ -120,7 +120,7 @@ const
 type
 
   TCallSignProcessObject = record
-    cpBuffer: array[0..15] of Char;
+    cpBuffer: array[0..15] of AnsiChar;
     cpEnable: boolean;
     cpPos: integer;
     cpPos1: integer;
@@ -135,7 +135,7 @@ type
     mmttyEngine: HWND;
     mmttyRichEdit: HWND;
     mmttyTXIsOn: boolean;
-    mmttyTwoBytes: array[0..1] of Char;
+    mmttyTwoBytes: array[0..1] of AnsiChar;
     mmttyCF: TCharFormatA;
     mmttyCallProcess: TCallSignProcessObject;
     mmttyLastCallsign: CallString;
@@ -270,7 +270,7 @@ begin
   SendMessage(MMTTY.MMTTYRichEdit, EM_SETCHARFORMAT, SCF_SELECTION, integer(@MMTTY.mmttyCF));
 end;
 
-procedure mmttyProcessChar(c: Char);
+procedure mmttyProcessChar(c: AnsiChar);
 var
   isDupe                                : boolean;
 begin
@@ -284,11 +284,11 @@ begin
         if MMTTY.mmttyCallProcess.cpContainN then
           if MMTTY.mmttyCallProcess.cpContainA then
           begin
-            Windows.SetWindowText(tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndHandle, MMTTY.mmttyCallProcess.cpBuffer);
+            Windows.SetWindowTextA(tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndHandle, MMTTY.mmttyCallProcess.cpBuffer);
 
             Windows.ZeroMemory(@MMTTY.mmttyLastCallsign, SizeOf(MMTTY.mmttyLastCallsign));
             Windows.CopyMemory(@MMTTY.mmttyLastCallsign[1], @MMTTY.mmttyCallProcess.cpBuffer, MMTTY.mmttyCallProcess.cpPos);
-            MMTTY.mmttyLastCallsign[0] := Char(MMTTY.mmttyCallProcess.cpPos);
+            MMTTY.mmttyLastCallsign[0] := AnsiChar(MMTTY.mmttyCallProcess.cpPos);
             isDupe := VisibleLog.CallIsADupe(MMTTY.mmttyLastCallsign, ActiveBand, ActiveMode);
 //            PutCallToCallWindow(MMTTY.mmttyLastCallsign);
 
@@ -376,12 +376,12 @@ begin
 
     TXM_CHAR:
       begin
-        MMTTY.mmttyTwoBytes[0] := Char(lp);
+        MMTTY.mmttyTwoBytes[0] := AnsiChar(lp);
         h := MMTTY.MMTTYRichEdit;
         SendMessage(h, EM_SETSEL, -1, -1);
 //        SendMessage(h, EM_SCROLLCARET, 0, 0);
         SendMessage(h, EM_REPLACESEL, integer(False), integer(@MMTTY.mmttyTwoBytes));
-        mmttyProcessChar(Char(lp));
+        mmttyProcessChar(AnsiChar(lp));
         inc(MMTTY.mmttyCurrentPos);
       end;
   end;

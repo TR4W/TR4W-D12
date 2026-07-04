@@ -876,7 +876,7 @@ begin
 
             tAdifPRECEDENCE:
                if Length(fieldValue) > 0 then
-                  exch.Precedence := fieldValue[1];
+                  exch.Precedence := AnsiChar(fieldValue[1]);
 
             tAdifQSO_DATE:
                ADIFDateStringToQSOTime(fieldValue, exch.tSysTime);

@@ -174,13 +174,13 @@ function SelectColor(hWin: HWND; FullOpen: boolean): TColorRef;
 
 //�������� ������� ��� ������ �����
 //OpenFileDlg(Handle, Memo1.Handle, '��������� �������� (*.txt)'#0'*.txt'#0+'��� ����� (*.*)'#0'*.*'#0#0);
-function OpenFileDlg(Title: PChar; hOpenFileOwner: HWND; FilterString: PChar; var fname: FileNameType; Flags: Cardinal): BOOL;
+function OpenFileDlg(Title: PAnsiChar; hOpenFileOwner: HWND; FilterString: PAnsiChar; var fname: FileNameType; Flags: Cardinal): BOOL;
 
 //procedure OpenPathDlg(hOpenFile: HWND; hControl: HWND; FilterString: PChar);
 
 //�������� ������� ��� ���������� �����
 //SaveFileDlg(Handle, Memo1.Handle, '��������� �������� (*.txt)'#0'*.txt'#0#0)
-procedure SaveFileDlg(hSaveFile: HWND; hControl: HWND; FilterString: PChar);
+procedure SaveFileDlg(hSaveFile: HWND; hControl: HWND; FilterString: PAnsiChar);
 
 //����� ������� Windows "��������..."
 //ShowProperties(Handle, 'C:\windows\regedit.exe');
@@ -228,7 +228,7 @@ procedure SelectFolder(Parent: HWND; var Folder: FileNameType);
 type
 
   TSHBrowseForFolder = function(var lpbi: TBrowseInfo): PItemIDList; stdcall;
-  TSHGetPathFromIDList = function(pidl: PItemIDList; pszPath: PChar): BOOL; stdcall;
+  TSHGetPathFromIDList = function(pidl: PItemIDList; pszPath: PAnsiChar): BOOL; stdcall;
 
   POpenFilenameA = ^TOpenFilenameA;
   POpenFilenameW = ^TOpenFilenameW;
@@ -488,14 +488,14 @@ const
 
 var
 
-  CurrentDir                            : PChar;
+  CurrentDir                            : PAnsiChar;
   hDlg                                  : DWORD;
   hWndMenu                              : THandle;
   ofn                                   : TOpenFileName; // = (lStructSize: SizeOf(TOpenFileName); nMaxFile: MAXSIZE; lpstrInitialDir: nil);
-  sFile                                 : PChar;
-  sFilePath                             : PChar;
+  sFile                                 : PAnsiChar;
+  sFilePath                             : PAnsiChar;
   // s              : String;
-  Lenin_Buffer                          : array[0..MAXSIZE - 1] of Char;
+  Lenin_Buffer                          : array[0..MAXSIZE - 1] of AnsiChar;
   hFile                                 : THandle;
   hMemory                               : THandle;
   pMemory                               : Pointer;
@@ -569,7 +569,7 @@ const
     OFN_HIDEREADONLY;
 
 var
-  szFile                                : array[0..2048] of Char {= ''};
+  szFile                                : array[0..2048] of AnsiChar {= ''};
   //   tr4w_opencfgfile_dialog_but_hwnd: array[0..2] of HWND;
 
 implementation
@@ -848,7 +848,7 @@ begin
         p := GetParent(wnd);
         //EnumChildWindows(p, @EnumWindowsProc, 0);
         HelpButton := GetDlgItem(p, 1038);
-        Windows.SetWindowText(HelpButton, '&Start a new contest');
+        Windows.SetWindowTextA(HelpButton, '&Start a new contest');
         Windows.SetWindowLong(HelpButton, GWL_STYLE, $50012000);
         Windows.GetWindowRect(HelpButton, rec);
         MapWindowPoints(0, p, rec, 2);
@@ -867,7 +867,7 @@ begin
 
 end;
 
-function OpenFileDlg(Title: PChar; hOpenFileOwner: HWND; FilterString: PChar; var fname: FileNameType; Flags: Cardinal): BOOL;
+function OpenFileDlg(Title: PAnsiChar; hOpenFileOwner: HWND; FilterString: PAnsiChar; var fname: FileNameType; Flags: Cardinal): BOOL;
 label
   1;
 var
@@ -904,7 +904,7 @@ begin
 end;
 
 
-procedure SaveFileDlg(hSaveFile: HWND; hControl: {THandle wli} HWND; FilterString: PChar);
+procedure SaveFileDlg(hSaveFile: HWND; hControl: {THandle wli} HWND; FilterString: PAnsiChar);
 begin
   ofn.lStructSize := SizeOf(TOpenFileName);
   ofn.hwndOwner := hSaveFile;
@@ -924,7 +924,7 @@ begin
     tWriteFile(hFile, pMemory^, SizeReadWrite, SizeReadWrite);
     SendMessage(hControl, EM_SETSEL, 0, 0);
     sFilePath := ofn.lpstrFile;
-    sFile := PChar(@ofn.lpstrFile[ofn.nFileOffset]);
+    sFile := PAnsiChar(@ofn.lpstrFile[ofn.nFileOffset]);
     CloseHandle(hFile);
     GlobalUnlock(DWORD(pMemory));
     GlobalFree(hMemory);
@@ -937,7 +937,7 @@ procedure SelectFolder(Parent: HWND; var Folder: FileNameType);
 var
   lpItemID                              : PItemIDList;
   BrowseInfo                            : TBrowseInfo;
-  DisplayName                           : array[0..MAX_PATH] of Char;
+  DisplayName                           : array[0..MAX_PATH] of AnsiChar;
   SHBrowseForFolder                     : TSHBrowseForFolder;
   SHGetPathFromIDList                   : TSHGetPathFromIDList;
 begin

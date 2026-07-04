@@ -132,7 +132,7 @@ procedure DisplayMixWConnection;
 begin
 {$IF MIXWMODE}
   if MixWLoaded = True then p := TC_MIXW_CONNECTED else p := TC_MIXW_DISCONNECTED;
-  Windows.SetWindowText(MixWConnectionStatusWnd, p);
+  Windows.SetWindowTextA(MixWConnectionStatusWnd, p);
 {$IFEND}
 end;
 

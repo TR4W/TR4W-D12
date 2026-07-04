@@ -61,7 +61,7 @@ function SaveQSOToEditableLog: boolean;
 function CheckSystemTimeRecord(Time: TQSOTime): boolean;
 procedure ShowNote(CE: ContestExchange);
 procedure MakeEditWindows;
-procedure MakeEditWindow(Caption: PChar; FType: CFGType; ValueAdr: Pointer);
+procedure MakeEditWindow(Caption: PAnsiChar; FType: CFGType; ValueAdr: Pointer);
 //procedure ShowSysMonthCal32(show: integer);
 
 const
@@ -222,7 +222,7 @@ begin
         for extMode := Low(ExtendedModeType) to High(ExtendedModeType) do
         begin
           tCB_ADDSTRING_PCHAR(hwnddlg, FLD_MODE,
-            PChar(ExtendedModeStringArray[extMode]));
+            PAnsiChar(AnsiString(ExtendedModeStringArray[extMode])));
         end;
         if EditableQSORXData.ExtMode = eNoMode then
         begin
@@ -257,7 +257,7 @@ begin
           integer(@TempSysTime));
 
         CID_TWO_BYTES[0] := EditableQSORXData.ceComputerID;
-        Windows.SetDlgItemText(hwnddlg, FLD_COMPUTERID, @CID_TWO_BYTES);
+        Windows.SetDlgItemTextA(hwnddlg, FLD_COMPUTERID, @CID_TWO_BYTES);
 
         Windows.SetDlgItemInt(hwnddlg, FLD_QSOPOINTS,
           Cardinal(EditableQSORXData.QSOPoints), True);
@@ -297,11 +297,11 @@ begin
 
         SetDlgItemTextA(hwnddlg, 148, @EditableQSORXData.DXQTH[1]);
 
-        //Windows.SetDlgItemText(hwnddlg, 150, @EditableQSORXData.DomMultQTH[1]);
+        //Windows.SetDlgItemTextA(hwnddlg, 150, @EditableQSORXData.DomMultQTH[1]);
         SetDlgItemTextA(hwnddlg, FLD_DOMMULTQTH,
           @EditableQSORXData.DomMultQTH[1]);
 
-        //Windows.SetDlgItemText(hwnddlg, 152, @EditableQSORXData.Prefix[1]);
+        //Windows.SetDlgItemTextA(hwnddlg, 152, @EditableQSORXData.Prefix[1]);
         SetDlgItemTextA(hwnddlg, FLD_PREFIX, @EditableQSORXData.Prefix[1]);
 
         if EditableQSORXData.Zone <> DUMMYZONE then
@@ -311,16 +311,16 @@ begin
         Windows.SetDlgItemTextA(hwnddlg, FLD_NAME, @EditableQSORXData.Name[1]);
         //tSetDlgItemTypText(hwnddlg, FLD_NAME, @EditableQSORXData.Name);
 
-        //Windows.SetDlgItemText(hwnddlg, 160, PChar(string(EditableQSORXData.QTHString)));
+        //Windows.SetDlgItemTextA(hwnddlg, 160, PAnsiChar(AnsiString(EditableQSORXData.QTHString)));
         SetDlgItemTextA(hwnddlg, FLD_QTHSTRING, @EditableQSORXData.QTHString[1]);
 
-        //Windows.SetDlgItemText(hwnddlg, 162, @EditableQSORXData.PostalCode[1]);
+        //Windows.SetDlgItemTextA(hwnddlg, 162, @EditableQSORXData.PostalCode[1]);
         //SetDlgItemText(hwnddlg, FLD_POSTALCODE, @EditableQSORXData.PostalCode[1]);
 
         SetDlgItemTextA(hwnddlg, FLD_POWER, @EditableQSORXData.Power[1]);
 
         CID_TWO_BYTES[0] := EditableQSORXData.Precedence;
-        Windows.SetDlgItemText(hwnddlg, FLD_PRECEDENCE, @CID_TWO_BYTES);
+        Windows.SetDlgItemTextA(hwnddlg, FLD_PRECEDENCE, @CID_TWO_BYTES);
 
         if EditableQSORXData.Prefecture <> MAXBYTE then
           Windows.SetDlgItemTextA(hwnddlg, FLD_PREFECTURE,
@@ -493,7 +493,7 @@ begin
     {Callsign}
   //  EditableQSORXData.Callsign := GetDialogItemText(eq_handle, 118);
   Windows.ZeroMemory(@EditableQSORXData.Callsign, SizeOf(CallString));
-  EditableQSORXData.Callsign[0] := Char(Windows.GetDlgItemTextA(eq_handle,
+  EditableQSORXData.Callsign[0] := AnsiChar(Windows.GetDlgItemTextA(eq_handle,
     FLD_CALLSIGN, @EditableQSORXData.Callsign[1], 12));
 
   if not GoodCallSyntax(EditableQSORXData.Callsign) then
@@ -536,8 +536,8 @@ begin
   EditableQSORXData.Frequency := lpNumberOfBytesWritten;
 
   {ComputerID}
-  Windows.GetDlgItemText(eq_handle, FLD_COMPUTERID, @TempInteger, 2);
-  EditableQSORXData.ceComputerID := PChar(@TempInteger)[0];
+  Windows.GetDlgItemTextA(eq_handle, FLD_COMPUTERID, @TempInteger, 2);
+  EditableQSORXData.ceComputerID := PAnsiChar(@TempInteger)[0];
   if not (EditableQSORXData.ceComputerID in ['A'..'Z']) then
     EditableQSORXData.ceComputerID := #0;
 
@@ -579,7 +579,7 @@ begin
 
   {DomMultQTH}
 //  EditableQSORXData.DomMultQTH := GetDialogItemText(eq_handle, FLD_DOMMULTQTH);
-//  EditableQSORXData.DomMultQTH[0] := Char(Windows.GetDlgItemText(eq_handle, FLD_DOMMULTQTH, @EditableQSORXData.DomMultQTH[1], SizeOf(EditableQSORXData.DomMultQTH) - 1));
+//  EditableQSORXData.DomMultQTH[0] := AnsiChar(Windows.GetDlgItemTextA(eq_handle, FLD_DOMMULTQTH, @EditableQSORXData.DomMultQTH[1], SizeOf(EditableQSORXData.DomMultQTH) - 1));
 
   {Prefix}
   ZeroMemory(@EditableQSORXData.Prefix, SizeOf(EditableQSORXData.Prefix));
@@ -605,14 +605,14 @@ begin
 
   {Name}
   ZeroMemory(@EditableQSORXData.Name, SizeOf(EditableQSORXData.Name));
-  EditableQSORXData.Name[0] := Char(Windows.GetDlgItemTextA(eq_handle, FLD_NAME,
+  EditableQSORXData.Name[0] := AnsiChar(Windows.GetDlgItemTextA(eq_handle, FLD_NAME,
     @EditableQSORXData.Name[1], SizeOf(EditableQSORXData.Name) - 1));
 
   {QTHString}
   // The next line was commented out - so test this well ny4i Issue112
   Windows.ZeroMemory(@EditableQSORXData.QTHString,
     SizeOf(EditableQSORXData.QTHString));
-  EditableQSORXData.QTHString[0] := Char(Windows.GetDlgItemTextA(eq_handle,
+  EditableQSORXData.QTHString[0] := AnsiChar(Windows.GetDlgItemTextA(eq_handle,
     FLD_QTHSTRING, @EditableQSORXData.QTHString[1],
     SizeOf(EditableQSORXData.QTHString) - 1));
   if DoingDomesticMults then
@@ -624,7 +624,7 @@ begin
 
   {Postal Code}
 //  EditableQSORXData.PostalCode := GetDialogItemText(eq_handle, FLD_POSTALCODE);
-  //windows.GetDlgItemText(eq_handle,FLD_POSTALCODE,EditableQSORXData.PostalCode,sizeof(PostalCodeString));
+  //windows.GetDlgItemTextA(eq_handle,FLD_POSTALCODE,EditableQSORXData.PostalCode,sizeof(PostalCodeString));
 
   {Power}
   ZeroMemory(@EditableQSORXData.Power, SizeOf(EditableQSORXData.Power));
@@ -632,7 +632,7 @@ begin
     {Windows.GetDlgItemInt(eq_handle, FLD_POWER, lpTranslated, True);}GetDialogItemText(eq_handle, FLD_POWER);
 
   {Precedence}
-  Windows.GetDlgItemText(eq_handle, FLD_PRECEDENCE, CID_TWO_BYTES, 2);
+  Windows.GetDlgItemTextA(eq_handle, FLD_PRECEDENCE, CID_TWO_BYTES, 2);
   ZeroMemory(@EditableQSORXData.Precedence,
     SizeOf(EditableQSORXData.Precedence));
   EditableQSORXData.Precedence := CID_TWO_BYTES[0];
@@ -681,11 +681,11 @@ begin
   Windows.ZeroMemory(@EditableQSORXData.ceOperator,Windows.lstrlenA(EditableQSORXData.ceOperator));
   tempOperator := GetDialogItemText(eq_handle, FLD_OPERATOR);
   Move(tempOperator[1], EditableQSORXData.ceOperator[0], length(TempOperator) * sizeof(char));
-  //EditableQSORXData.ceOperator[1] := Char(Windows.GetDlgItemText(eq_handle,
+  //EditableQSORXData.ceOperator[1] := Char(Windows.GetDlgItemTextA(eq_handle,
   //  FLD_OPERATOR, @EditableQSORXData.ceOperator,
   //  Windows.lstrlen(EditableQSORXData.ceOperator) - 1));
 
-  //EditableQSORXData.ceOperator[0] := Char(Windows.GetDlgItemText(eq_handle,
+  //EditableQSORXData.ceOperator[0] := AnsiChar(Windows.GetDlgItemTextA(eq_handle,
   //  FLD_OPERATOR, @EditableQSORXData.ceOperator[1],
    // Windows.lstrlen(EditableQSORXData.ceOperator) - 1));
 
@@ -824,12 +824,12 @@ begin
   end;
 end;
 
-procedure MakeEditWindow(Caption: PChar; FType: CFGType; ValueAdr: Pointer);
+procedure MakeEditWindow(Caption: PAnsiChar; FType: CFGType; ValueAdr: Pointer);
 var
-  Value: PChar;
+  Value: PAnsiChar;
   w: integer;
 begin
-  Value := PChar(ValueAdr);
+  Value := PAnsiChar(ValueAdr);
   if FType in [ctWord, ctInteger] then
   begin
     if FType = ctWord then

@@ -42,7 +42,7 @@ uses MainUnit;
 
 function RemainingMultsDXDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 var
-  p                           : PChar;
+  p                           : PAnsiChar;
   DS                          : PDrawItemStruct;
   I                           : integer;
   Index                       : integer;
@@ -62,7 +62,7 @@ begin
 
         Index := SendMessage(DS^.hwndItem, LB_GETITEMDATA, DS^.ItemID, 0);
         p := CountryTable.RemainingDXMultTemplate^[Index];
-        I := Windows.lstrlen(p);
+        I := Windows.lstrlenA(p);
         if RemainingMultDisplayMode = HiLight then
 
           if not RemainingMultsDX^[Index] then
@@ -76,7 +76,7 @@ begin
           end;
 
         SetBkMode(DS^.HDC, TRANSPARENT);
-        Windows.TextOut(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, I);
+        Windows.TextOutA(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, I);
 
       end;
 

@@ -110,9 +110,9 @@ begin
       begin
         ErmakWindow := hwnddlg;
         Left := FIRSTLEFT;
-//        Windows.SetDlgItemText(hwnddlg, 73, KIR_);
+//        Windows.SetDlgItemTextA(hwnddlg, 73, KIR_);
 
-        Windows.SetWindowText(hwnddlg, '������ ��� ������ � ������� �����');
+        Windows.SetWindowTextA(hwnddlg, '������ ��� ������ � ������� �����');
         CreateOKCancelButtons(hwnddlg);
 
         for TempErmakField := Low(TErmakFields) to High(TErmakFields) do
@@ -132,7 +132,7 @@ begin
 
             Format(TempBuffer2, OPERATORINFO, ControlID);
 
-            TempInteger := GetPrivateProfileString(ERMAKSECTION, TempBuffer2, nil, TempBuffer1, SizeOf(TempBuffer1), TR4W_INI_FILENAME);
+            TempInteger := GetPrivateProfileStringA(ERMAKSECTION, TempBuffer2, nil, TempBuffer1, SizeOf(TempBuffer1), TR4W_INI_FILENAME);
 
             case TempErmakField of
               efOp:
@@ -222,7 +222,7 @@ begin
                   Format(TempBuffer1, OPERATORINFO, ControlID);
 
                   if wsprintfBuffer[0] <> #0 then
-                    WritePrivateProfileString(ERMAKSECTION, TempBuffer1, wsprintfBuffer, TR4W_INI_FILENAME);
+                    WritePrivateProfileStringA(ERMAKSECTION, TempBuffer1, wsprintfBuffer, TR4W_INI_FILENAME);
 
                 end;
 

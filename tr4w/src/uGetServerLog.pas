@@ -122,16 +122,16 @@ begin
   for counter := 1 to 1000 do
   begin
     Format(TempBuffer2, '%sLOGBACKUP_%03d.TRW', TR4W_LOG_PATH_NAME, counter);
-    if Windows.CopyFile(TR4W_LOG_FILENAME, TempBuffer2, True) = True then
+    if Windows.CopyFileA(TR4W_LOG_FILENAME, TempBuffer2, True) = True then
     begin
       Format(TempBuffer2, '%sRSTBACKUP_%03d.RST', TR4W_LOG_PATH_NAME, counter);
-      Windows.CopyFile(TR4W_RST_FILENAME, TempBuffer2, False);
+      Windows.CopyFileA(TR4W_RST_FILENAME, TempBuffer2, False);
       Break;
     end;
   end;
   if Replace then
   begin
-    Windows.CopyFile(TR4W_SYN_FILENAME, TR4W_LOG_FILENAME, False);
+    Windows.CopyFileA(TR4W_SYN_FILENAME, TR4W_LOG_FILENAME, False);
     LoadinLog;
   end;
   SendStationStatus(sstQSOs);

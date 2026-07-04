@@ -420,9 +420,9 @@ const
 
   HexChars                              : array[0..$F] of Char = '0123456789ABCDEF';
 
-  OpModeString                          : array[OpModeType] of PChar {string[3]} = ('CQ', 'SP');
+  OpModeString                          : array[OpModeType] of PAnsiChar {string[3]} = ('CQ', 'SP');
 
-  PTTStatusString                       : array[PTTStatusType] of PChar {string[7]} = ('OFF', 'ON ');
+  PTTStatusString                       : array[PTTStatusType] of PAnsiChar {string[7]} = ('OFF', 'ON ');
 
   BufferLength                          = 2048;
 
@@ -752,7 +752,7 @@ procedure DecrementASCIIInteger(var ASCIIString: Str80);
 procedure DelayOrKeyPressed(DelayTime: integer);
 function DeleteMult(var LogString: Str80; MultString: Str20): boolean;
 
-function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): PChar {Str20};
+function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): PAnsiChar {Str20};
 function ElaspedSec100(StartTime: Cardinal {TimeRecord}): LONGINT;
 
 function ExpandedString(Input: FourBytes): Str80;
@@ -1714,7 +1714,7 @@ begin
   StartTime := GetTickCount;
 end;
 
-function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): PChar {Str20};
+function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): PAnsiChar {Str20};
 
 { Returns a string in the format HH:MM:SS with how long it has been }
 

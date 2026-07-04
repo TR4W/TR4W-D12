@@ -52,7 +52,7 @@ utils_text,
 
 type
   TsCommandsArrayType = packed record
-    caCommand: PChar;
+    caCommand: PAnsiChar;
     caAddress: Pointer;
   end;
 
@@ -249,7 +249,7 @@ begin
    
     for i := 0 to sCommands - 1 do
     begin
-      if StrComp(sCommandsArray[i].caCommand, @CommandString[1]) = 0 then
+      if utils_text.StrComp(sCommandsArray[i].caCommand, @CommandString[1]) = 0 then
       begin
         // Issue #997: asm `call p` (untyped Pointer command handler,
         // parameterless) -> typed call, guarded against a nil entry in the
@@ -259,7 +259,7 @@ begin
            cmdProc;
 
         // Issue #997: asm wsprintf-push -> TF.Format.
-        Format(QuickDisplayBuffer, '"%s" command is executed.', PChar(sCommandsArray[i].caCommand));
+        Format(QuickDisplayBuffer, '"%s" command is executed.', PAnsiChar(sCommandsArray[i].caCommand));
         QuickDisplay(QuickDisplayBuffer);
 
         Break;
@@ -411,7 +411,7 @@ begin
 //    ActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName;
 //    ActiveRadioPtr.CommandsTempBuffer
       Windows.CopyMemory(@ActiveRadioPtr.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
-      ActiveRadioPtr.CommandsTempBuffer[0] := CHR(length(scFileName));
+      ActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
       ActiveRadioPtr.AddCommandToBuffer;
       end
    else
@@ -428,7 +428,7 @@ begin
   else if InActiveRadioPtr.RadioModel in [IC78..IC9700, OMNI6] then
     begin
     Windows.CopyMemory(@InActiveRadioPtr.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
-    InActiveRadioPtr.CommandsTempBuffer[0] := CHR(length(scFileName));
+    InActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
     InActiveRadioPtr.AddCommandToBuffer;
     end
 //    InActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName
@@ -446,7 +446,7 @@ begin
   else if Radio1.RadioModel in [IC78..IC9700, OMNI6] then
   begin
     Windows.CopyMemory(@Radio1.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
-    Radio1.CommandsTempBuffer[0] := CHR(length(scFileName));
+    Radio1.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
     Radio1.AddCommandToBuffer;
   end
 //    Radio1.ICOM_COMMAND_CUSTOM := scFileName
@@ -464,7 +464,7 @@ begin
   else if Radio2.RadioModel in [IC78..IC9700, OMNI6] then
   begin
     Windows.CopyMemory(@Radio2.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
-    Radio2.CommandsTempBuffer[0] := CHR(length(scFileName));
+    Radio2.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
     Radio2.AddCommandToBuffer;
   end
 //    Radio2.ICOM_COMMAND_CUSTOM := scFileName
@@ -631,7 +631,8 @@ var
   cmdProc                               : procedure;   // Issue #997: typed call of a Pointer change-handler
 begin
   for i := 1 to CommandsArraySize do
-    if StrComp(@scFileName[1], CFGCA[i].crCommand) = 0 then
+    if utils_text.StrComp(@scFileName[1], CFGCA[i].crCommand) = 0 then
+      begin
       if CFGCA[i].crType = ctBoolean then
       begin
         PBoolean(CFGCA[i].crAddress)^ := not PBoolean(CFGCA[i].crAddress)^;
@@ -646,6 +647,7 @@ begin
           QuickDisplay(QuickDisplayBuffer);
         end;
         Break;
+      end;
       end;
 end;
 

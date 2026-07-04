@@ -261,12 +261,12 @@ begin
     if TWindows[w].mweI = 1 then
       SetMainWindowText(w, nil);
   {
-    Windows.SetWindowText(w h[mweCountryName], nil);
-    Windows.SetWindowText(w h[mweBeamHeading], nil);
-    Windows.SetWindowText(w h[mweLocator], nil);
-    Windows.SetWindowText(w h[mweName], nil);
-    Windows.SetWindowText(w h[mweUserInfo], nil);
-    Windows.SetWindowText(w h[mweLocalTime], nil);
+    Windows.SetWindowTextA(w h[mweCountryName], nil);
+    Windows.SetWindowTextA(w h[mweBeamHeading], nil);
+    Windows.SetWindowTextA(w h[mweLocator], nil);
+    Windows.SetWindowTextA(w h[mweName], nil);
+    Windows.SetWindowTextA(w h[mweUserInfo], nil);
+    Windows.SetWindowTextA(w h[mweLocalTime], nil);
   }
   DisplayNamePercentage;
 
@@ -443,7 +443,7 @@ begin
       dec(CharValue);
 
       if CharValue >= Ord('0') then
-        Grid[3] := CHR(CharValue)
+        Grid[3] := AnsiChar(CharValue)
       else
       begin
         Grid[3] := '9';
@@ -452,7 +452,7 @@ begin
         dec(CharValue);
 
         if CharValue >= Ord('A') then
-          Grid[1] := CHR(CharValue)
+          Grid[1] := AnsiChar(CharValue)
         else
           Grid[1] := 'R';
       end;
@@ -467,7 +467,7 @@ begin
       inc(CharValue);
 
       if CharValue <= Ord('9') then
-        Grid[3] := CHR(CharValue)
+        Grid[3] := AnsiChar(CharValue)
       else
       begin
         Grid[3] := '0';
@@ -476,7 +476,7 @@ begin
         inc(CharValue);
 
         if CharValue <= Ord('R') then
-          Grid[1] := CHR(CharValue)
+          Grid[1] := AnsiChar(CharValue)
         else
           Grid[1] := 'A';
       end;
@@ -490,7 +490,7 @@ begin
       dec(CharValue);
 
       if CharValue >= Ord('0') then
-        Grid[4] := CHR(CharValue)
+        Grid[4] := AnsiChar(CharValue)
       else
       begin
         Grid[4] := '9';
@@ -499,7 +499,7 @@ begin
         dec(CharValue);
 
         if CharValue >= Ord('A') then
-          Grid[2] := CHR(CharValue)
+          Grid[2] := AnsiChar(CharValue)
         else
           Grid[2] := 'R';
       end;
@@ -514,7 +514,7 @@ begin
       inc(CharValue);
 
       if CharValue <= Ord('9') then
-        Grid[4] := CHR(CharValue)
+        Grid[4] := AnsiChar(CharValue)
       else
       begin
         Grid[4] := '0';
@@ -523,7 +523,7 @@ begin
         inc(CharValue);
 
         if CharValue <= Ord('R') then
-          Grid[2] := CHR(CharValue)
+          Grid[2] := AnsiChar(CharValue)
         else
           Grid[2] := 'A';
       end;
@@ -564,10 +564,10 @@ begin
     DownArrow:
       begin
         if GridMapCenter[4] <> '0' then
-          GridMapCenter := Copy(GridMapCenter, 1, 3) + CHR(Ord(GridMapCenter[4])
+          GridMapCenter := Copy(GridMapCenter, 1, 3) + AnsiChar(Ord(GridMapCenter[4])
             - 1)
         else
-          GridMapCenter := GridMapCenter[1] + CHR(Ord(GridMapCenter[2]) - 1) +
+          GridMapCenter := GridMapCenter[1] + AnsiChar(Ord(GridMapCenter[2]) - 1) +
             GridMapCenter[3] + '9';
       end;
 
@@ -576,22 +576,22 @@ begin
     ControlLeftArrow:
       begin
         if GridMapCenter[3] <> '0' then
-          GridMapCenter := Copy(GridMapCenter, 1, 2) + CHR(Ord(GridMapCenter[3])
+          GridMapCenter := Copy(GridMapCenter, 1, 2) + AnsiChar(Ord(GridMapCenter[3])
             - 1) +
             GridMapCenter[4]
         else
-          GridMapCenter := CHR(Ord(GridMapCenter[1]) - 1) + GridMapCenter[2] +
+          GridMapCenter := AnsiChar(Ord(GridMapCenter[1]) - 1) + GridMapCenter[2] +
             '9' + GridMapCenter[4];
       end;
 
     ControlRightArrow:
       begin
         if GridMapCenter[3] <> '9' then
-          GridMapCenter := Copy(GridMapCenter, 1, 2) + CHR(Ord(GridMapCenter[3])
+          GridMapCenter := Copy(GridMapCenter, 1, 2) + AnsiChar(Ord(GridMapCenter[3])
             + 1) +
             GridMapCenter[4]
         else
-          GridMapCenter := CHR(Ord(GridMapCenter[1]) + 1) + GridMapCenter[2] +
+          GridMapCenter := AnsiChar(Ord(GridMapCenter[1]) + 1) + GridMapCenter[2] +
             '0' + GridMapCenter[4];
       end;
   end;
@@ -800,7 +800,7 @@ begin
      end;
   DomesticQTHtemp := DomesticQTH;
 
-  Format(wsprintfBuffer, TC_MULTNEEDSFOR, PChar(DomesticQTHtemp));
+  Format(wsprintfBuffer, TC_MULTNEEDSFOR, PAnsiChar(AnsiString(DomesticQTHtemp)));
 
   logger.debug('[ShowDomesticMultiplierStatus] MultNeedsHeader field set to %s',[DomesticQTHtemp]);
   SetMainWindowText(mweMultNeedsHeader, wsprintfBuffer);
@@ -823,7 +823,7 @@ begin
       push eax
     end;
   }
-  Format(wsprintfBuffer, TC_MULTNEEDSFOR, PChar(integer(Call) + 1));
+  Format(wsprintfBuffer, TC_MULTNEEDSFOR, PAnsiChar(integer(Call) + 1));
   logger.debug('[ShowMultiplierStatus] MultNeedsHeader field set to %s',[Call^]);
   SetMainWindowText(mweMultNeedsHeader, wsprintfBuffer);
   SetMultStatus(Call^, '');
@@ -1106,7 +1106,7 @@ begin
   if length(Call) < 3 then
     Exit;
 
-  Format(wsprintfBuffer, TC_QSONEEDSFOR, PChar(integer(Call)));
+  Format(wsprintfBuffer, TC_QSONEEDSFOR, PAnsiChar(AnsiString(Call)));
   SetMainWindowText(mweQSONeedsHeader, wsprintfBuffer);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
@@ -1147,7 +1147,7 @@ begin
   if length(Call^) < 3 then
     Exit;
 
-  Format(wsprintfBuffer, TC_QSONEEDSFOR, PChar(integer(Call) + 1));
+  Format(wsprintfBuffer, TC_QSONEEDSFOR, PAnsiChar(integer(Call) + 1));
   SetMainWindowText(mweQSONeedsHeader, wsprintfBuffer);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
@@ -1349,7 +1349,7 @@ begin
 
   i := ListView_GetItemText(wh[mweEditableLog], Entry,
     Ord(ColumnsArray[logColName].pos), @Result[1], 100);
-  Result[0] := CHR(i);
+  Result[0] := AnsiChar(i);
 
   {
     TempString := GetLogEntryExchangeString(LogEntries[Entry]);
@@ -1778,7 +1778,7 @@ begin
         begin
           if length(InputString) > 0 then
           begin
-            InputString[0] := CHR(length(InputString) - 1);
+            InputString[0] := AnsiChar(length(InputString) - 1);
             {                    GoToXY (WhereX - 1, WhereY);
                                 ClrEol;
             }

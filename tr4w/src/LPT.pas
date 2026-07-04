@@ -62,7 +62,7 @@ begin
       begin
 
         CreateOKCancelButtons(hwnddlg);
-        Windows.SetWindowText(hwnddlg, 'LPT');
+        Windows.SetWindowTextA(hwnddlg, 'LPT');
 
         for c := 1 to 3 do
         begin
@@ -115,7 +115,7 @@ begin
 
             ID := GetDialogItemText(hwnddlg, c);
             CMD := GetDialogItemText(hwnddlg, c + 100);
-            Windows.WritePrivateProfileString(_COMMANDS, @ID[1], @CMD[1], TR4W_INI_FILENAME);
+            Windows.WritePrivateProfileStringA(_COMMANDS, @ID[1], @CMD[1], TR4W_INI_FILENAME);
             CheckCommand(@ID, CMD);
 
             tDoingFootSwitchEnable := ActiveFootSwitchPort <> NoPort;

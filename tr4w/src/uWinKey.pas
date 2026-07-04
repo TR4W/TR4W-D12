@@ -53,7 +53,7 @@ procedure wkDispayState;
 procedure wkReadThreadProc;
 procedure wkReadThreadProc1;
 procedure wkAddCWMessageToInternalBuffer(Msg: Str160);
-procedure wkAddCharToHostBuffer(c: Char);
+procedure wkAddCharToHostBuffer(c: AnsiChar);
 procedure wkSetKeyerOutput(r: RadioPtr);
 function wkSendNextByteFromHostBuffer: boolean;
 procedure wkSwapTune;
@@ -196,7 +196,7 @@ var
   wkBuffer                              : array[0..7] of Byte;
   wkREADBuffer                          : array[0..32] of Byte;
   wkThreadReadBuffer                    : array[0..15] of Byte;
-  wkInternalCWBuffer                    : array[0..SizeOfHostBuffer - 1] of Char;
+  wkInternalCWBuffer                    : array[0..SizeOfHostBuffer - 1] of AnsiChar;
 
   wkHostBufferIndex                     : integer;
   wkHostBufferSendIndex                 : integer;
@@ -317,7 +317,7 @@ begin
     else
       family := 1;
     msg := Format('WK%d v%d', [family, versionByte]);
-    SetMainWindowText(mweWinKey, PChar(msg));
+    SetMainWindowText(mweWinKey, PAnsiChar(AnsiString(msg)));
   end;
   logger.Info('Calling tCreateThread from WkOpen');
   tCreateThread(@wkReadThreadProc, wkThreadID);
@@ -749,7 +749,7 @@ begin
 
           {it?s a status byte. (Host may or may not have asked for it.)process status change, note that it could be a pushbutton change}
 {$IF WINKEYDEBUG}
-            AddStringToTelnetConsole(PChar(string('status byte ' + IntToStr(wkThreadReadBuffer[i]))), tstSend);
+            AddStringToTelnetConsole(PAnsiChar(AnsiString('status byte ' + IntToStr(wkThreadReadBuffer[i]))), tstSend);
 //            sWriteFile(wkDebugFileRX, wkThreadReadBuffer[I], 1);
 {$IFEND}
     {(*}
@@ -802,7 +802,7 @@ begin
                 if wkWaitingBytesInWK > 0 then dec(wkWaitingBytesInWK);
               end;
 {$IF WINKEYDEBUG}
-//              AddStringToTelnetConsole(PChar(string('> RX ' + CHR(wkThreadReadBuffer[I]))));
+//              AddStringToTelnetConsole(PAnsiChar(AnsiString('> RX ' + CHR(wkThreadReadBuffer[I]))));
 {$IFEND}
             end;
         end;
@@ -843,7 +843,7 @@ begin
         if wkThreadReadBuffer[i] < $C0 then
         begin
 {$IF WINKEYDEBUG}
-//          AddStringToTelnetConsole(PChar(string('> RX ' + CHR(wkThreadReadBuffer[i]))));
+//          AddStringToTelnetConsole(PAnsiChar(AnsiString('> RX ' + CHR(wkThreadReadBuffer[i]))));
 {$IFEND}
           if wkWaitingBytesInWK > 0 then dec(wkWaitingBytesInWK);
 //        wkSendNextByteFromHostBuffer;
@@ -852,7 +852,7 @@ begin
         else
         begin
 {$IF WINKEYDEBUG}
-//          AddStringToTelnetConsole(PChar(string('> C0 ' + IntToStr(wkThreadReadBuffer[i]))));
+//          AddStringToTelnetConsole(PAnsiChar(AnsiString('> C0 ' + IntToStr(wkThreadReadBuffer[i]))));
 {$IFEND}
         end;
 
@@ -901,7 +901,7 @@ begin
         end;
     end;
 {$IF WINKEYDEBUG}
-//    Windows.SetWindowText(InsertWindowHandle, inttopchar(wkWaitingBytesInWK));
+//    Windows.SetWindowTextA(InsertWindowHandle, inttopchar(wkWaitingBytesInWK));
 {$IFEND}
     1:
     Sleep(0);
@@ -913,11 +913,11 @@ begin
   Windows.EnableWindow(wh[mweWinKey], wkActive);
 end;
 
-procedure wkAddCharToHostBuffer(c: Char);
+procedure wkAddCharToHostBuffer(c: AnsiChar);
 begin
 
 {$IF WINKEYDEBUG}
-//  AddStringToTelnetConsole(PChar(string(c)));
+//  AddStringToTelnetConsole(PAnsiChar(AnsiString(c)));
 {$IFEND}
   logger.Trace('[wkAddCharToHostBuffer] char=%s (ord=%d $%s)',
               [string(c), Ord(c), IntToHex(Ord(c), 2)]);
@@ -936,7 +936,7 @@ procedure wkAddCWMessageToInternalBuffer(Msg: Str160);
     begin
       wkCWSpeed := round(wkCWSpeed * (1 + (0.06 * wkSpeedUp)));
       wkAddCharToHostBuffer(wkCMD_CHANGESPEEDBUFFERED);
-      wkAddCharToHostBuffer(CHR(wkCWSpeed));
+      wkAddCharToHostBuffer(AnsiChar(wkCWSpeed));
       wkSpeedUp := 0;
     end;
 
@@ -944,7 +944,7 @@ procedure wkAddCWMessageToInternalBuffer(Msg: Str160);
     begin
       wkCWSpeed := round(wkCWSpeed * (1 - (0.06 * wkSpeedDown)));
       wkAddCharToHostBuffer(wkCMD_CHANGESPEEDBUFFERED);
-      wkAddCharToHostBuffer(CHR(wkCWSpeed));
+      wkAddCharToHostBuffer(AnsiChar(wkCWSpeed));
       wkSpeedDown := 0;
     end;
   end;
@@ -998,7 +998,7 @@ begin
   // Issue #997: asm wsprintf-push -> TF.Format (_COM = '\\.\COM%u', same as
   // tree.pas). wksWinKey2Port is a PortType enum -> Ord = the port number.
   Format(@wkREADBuffer, _COM, Ord(WinKeySettings.wksWinKey2Port));
-  WinKeyHandle := CreateFile(@wkREADBuffer, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL {FILE_FLAG_OVERLAPPED}, 0);
+  WinKeyHandle := CreateFileA(@wkREADBuffer, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL {FILE_FLAG_OVERLAPPED}, 0);
   if WinKeyHandle = INVALID_HANDLE_VALUE then
   begin
     // SysErrorMessage returns an AnsiString via a hidden var-parameter, not in
@@ -1007,7 +1007,7 @@ begin
     msg := Format('Winkeyer port COM%d: %s',
                   [Integer(WinKeySettings.wksWinKey2Port),
                    SysErrorMessage(GetLastError)]);
-    showwarning(PChar(msg));
+    showwarning(PAnsiChar(AnsiString(msg)));
     Exit;
   end;
   GetCommState(WinKeyHandle, wkDCB);

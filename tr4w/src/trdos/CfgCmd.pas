@@ -115,7 +115,7 @@ begin
       if Result = 0 then
       begin
         Delete(TempString, Count, 4);
-        Insert(CHR(NumericValue), TempString, Count);
+        Insert(AnsiChar(NumericValue), TempString, Count);
       end;
     end;
 

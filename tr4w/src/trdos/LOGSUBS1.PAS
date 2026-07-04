@@ -121,7 +121,7 @@ function SendCrypticMessage(Message: Str160): boolean;
 
 var
 
-  TempChar: Char;
+  TempChar: AnsiChar;
 label
   DontCheckPTT;
 

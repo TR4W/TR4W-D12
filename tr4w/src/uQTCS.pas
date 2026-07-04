@@ -93,7 +93,7 @@ var
   I                                     : integer;
   Time                                  : integer;
   Number                                : integer;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
   TempString                            : Str160;
 
 begin
@@ -101,7 +101,7 @@ begin
   case Msg of
     WM_INITDIALOG:
       begin
-//        P2 := PChar(string(QTCCallsign));
+//        P2 := PAnsiChar(AnsiString(QTCCallsign));
         // Issue #997: asm wsprintf-push -> TF.Format. TC_QTC_FOR = '%s for %s';
         // cdecl-reverse pushes -> arg1=QRVString, arg2=QTCCallsign.
         TF.Format(wsprintfBuffer, TC_QTC_FOR, @QRVString[1], @QTCCallsign[1]);
@@ -175,7 +175,7 @@ begin
             hwnddlg,
             I + 200);
         end;
-        SetDlgItemText(hwnddlg, 310, '1&0');
+        SetDlgItemTextA(hwnddlg, 310, '1&0');
 
         ArrowWindow :=
           tCreateStaticWindow
@@ -314,8 +314,8 @@ var
   TempString                            : Str160;
   Time                                  : integer;
   Number                                : integer;
-  p                                     : PChar;
-  Format                                : PChar;
+  p                                     : PAnsiChar;
+  Format                                : PAnsiChar;
   TempQTCMinutes                        : boolean;
 const
   FormatArray                           : array[boolean, boolean, boolean] of PAnsiChar =
@@ -362,7 +362,7 @@ begin
   SetLength(TempString, 160);
   // Issue #997: asm wsprintf-push -> TF.Format (QUALIFIED -- the local var
   // `Format` shadows TF.Format). Runtime format `Format`; cdecl-reverse -> Time, p, Number.
-  TempString[0] := CHR(TF.Format(@TempString[1], Format, Time, p, Number));
+  TempString[0] := AnsiChar(TF.Format(@TempString[1], Format, Time, p, Number));
   SendStringAndStop(TempString);
 end;
 

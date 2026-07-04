@@ -153,7 +153,7 @@ begin
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowText(hwnddlg, RC_AUTOCQ2);
+        Windows.SetWindowTextA(hwnddlg, RC_AUTOCQ2);
 
         CreateStatic(RC_PRESSMKYWTR, 5, 5, 220, hwnddlg, 103);
         CreateStatic(RC_NUMBEROSOLT, 5, 45, 220, hwnddlg, 105);
@@ -185,7 +185,7 @@ begin
             if hibyte(code) = HOTKEYF_ALT then TempByte := TempByte + 24;
             AutoCQMemory := Char(TempByte);
             AutoCQDelayTime := GetDlgItemInt(hwnddlg, 106, lpTranslated, False) {* 1000};
-            Windows.WritePrivateProfileString(_COMMANDS, 'AUTO-CQ DELAY TIME', inttopchar(AutoCQDelayTime), TR4W_INI_FILENAME);
+            Windows.WritePrivateProfileStringA(_COMMANDS, 'AUTO-CQ DELAY TIME', inttopchar(AutoCQDelayTime), TR4W_INI_FILENAME);
             RunAutoCQ;
             goto 1;
           end;

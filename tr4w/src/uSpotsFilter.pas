@@ -92,7 +92,7 @@ var
   elvc                             : tagLVCOLUMNA;
   I                                : integer;
   Selected                         : boolean;
-  p                                : PChar;
+  p                                : PAnsiChar;
 begin
   RESULT := False;
   case Msg of
@@ -137,7 +137,7 @@ begin
               else
                 p := 'SET/FILTER DXBANDMODE/PASS ';
               Windows.ZeroMemory(@wsprintfBuffer, SizeOf(wsprintfBuffer));
-              Windows.lstrcat(wsprintfBuffer, p);
+              Windows.lstrcatA(wsprintfBuffer, p);
 
               for I := 0 to SpotsFiltersCount - 1 do
               begin
@@ -151,7 +151,7 @@ begin
               end;
               if Selected then
               begin
-                wsprintfBuffer[StrLen(wsprintfBuffer) - 1] := #0;
+                wsprintfBuffer[Windows.lstrlenA(wsprintfBuffer) - 1] := #0;
                 SendViaSocket(wsprintfBuffer);
               end;
 

@@ -60,7 +60,7 @@ begin
   case Msg of
     WM_INITDIALOG:
       begin
-        Windows.SetWindowText(hwnddlg, RC_SENDINGCW);
+        Windows.SetWindowTextA(hwnddlg, RC_SENDINGCW);
         tWM_SETFONT(CreateEdit(ES_LEFT or ES_AUTOHSCROLL or ES_UPPERCASE, 5, 5, 380, 26, hwnddlg, 101), MainWindowEditFont);
         CreateButton(BS_DEFPUSHBUTTON, CLOSE_WORD, 390, 5, 60, hwnddlg, 102);
 
@@ -69,8 +69,8 @@ begin
         SendDlgItemMessage(hwnddlg, 101, EM_LIMITTEXT, 255, 0);
         OldSendKeyboardEditProc := Pointer(Windows.SetWindowLong(Get101Window(hwnddlg), GWL_WNDPROC, integer(@NewSendKeyboardEditProc)));
         ControlAMode := True;
-        if ActiveMode = Phone then Windows.SetWindowText(hwnddlg, TC_SENDINGSSBWAVFILENAME);
-//        Windows.SetDlgItemText(hwnddlg, 101, CHR(153));
+        if ActiveMode = Phone then Windows.SetWindowTextA(hwnddlg, TC_SENDINGSSBWAVFILENAME);
+//        Windows.SetDlgItemTextA(hwnddlg, 101, CHR(153));
       end;
 
     WM_COMMAND:
@@ -78,7 +78,7 @@ begin
         if HiWord(wParam) = EN_CHANGE then
         begin
 //          s := GetDialogItemText(hwnddlg, 101);
-          s[0] := Char(Windows.GetDlgItemTextA(hwnddlg, 101, @s[1], SizeOf(s) - 1));
+          s[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @s[1], SizeOf(s) - 1));
           if ActiveMode <> Phone then
           begin
             if s <> '' then

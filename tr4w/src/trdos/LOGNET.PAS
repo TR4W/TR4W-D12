@@ -69,7 +69,7 @@ procedure SendMultiMessage(Message: string);
 var
   CharPointer                           : integer;
   wassend                               : integer;
-  NET_Buffer                            : array[1..90] of Char;
+  NET_Buffer                            : array[1..90] of AnsiChar;
 begin
   if length(Message) > 0 then
   begin
@@ -108,11 +108,11 @@ begin
     for CharPointer := 1 to length(Message) do
     begin
           //               CPUKeyer.SerialPortOutputBuffer[ActiveMultiPort].AddEntry(Ord(Message[CharPointer]));
-      NET_Buffer[CharPointer] := Message[CharPointer];
+      NET_Buffer[CharPointer] := AnsiChar(Message[CharPointer]);
 
       if NetDebug then
       begin
-        BlockWrite(NetDebugBinaryOutput, Message[CharPointer], 1);
+        BlockWrite(NetDebugBinaryOutput, NET_Buffer[CharPointer], 1);
 
         if (Message[CharPointer] >= ' ') and
           (Message[CharPointer] <= 'z') then

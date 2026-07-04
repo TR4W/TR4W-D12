@@ -182,7 +182,7 @@ var
   Inact_Freq: Cardinal = 0;
   Inact_Band: BandType;
   so2r_swap: boolean = false;
-function CreateToolTip(Control: HWND; Text: PChar): HWND;
+function CreateToolTip(Control: HWND; Text: PAnsiChar): HWND;
 
 function DeviceIoControlHandler
   (
@@ -205,16 +205,16 @@ procedure RenameCommands();
 procedure RichEditOperation(Load: boolean);
 function GetAddMultBand(Mult: TAdditionalMultByBand; Band: BandType): BandType;
 procedure scWK_RESET; // n4af 4.43.10
-procedure SetCommand(c: PChar);
-procedure ChangeFocus(Text: PChar);
+procedure SetCommand(c: PAnsiChar);
+procedure ChangeFocus(Text: PAnsiChar);
 procedure ImportFromADIF;
 procedure StartNewContest;
 procedure CheckQuestionMark;
 function Get101Window(h: HWND): HWND;
 function TelnetWantsClipboardKey(const aMsg: TMsg): boolean;   // Issue #23
 procedure InvertBooleanCommand(Command: PBoolean);
-procedure RunExplorer(Command: PChar);
-procedure OpenInDefaultTextEditor(FileName: PChar);   // Issue #986
+procedure RunExplorer(Command: PAnsiChar);
+procedure OpenInDefaultTextEditor(FileName: PAnsiChar);   // Issue #986
 procedure RunOptionsDialog(f: CFGFunc);
 procedure OpenUrl(url: PChar);
 function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
@@ -242,13 +242,13 @@ function CreateEditableLog(Parent: HWND; X, Y, Width, Height: integer;
 procedure CreateListView(Parent: WindowsType; Window: TMainWindowElement; Style:
   integer);
 
-procedure GenerateCallsignsList(FileName: PChar);
+procedure GenerateCallsignsList(FileName: PAnsiChar);
 procedure MakeAllCallsignsList;
 
 procedure showint(Num: integer);
-procedure ShowMessage(Text: PChar);
-procedure ShowMessage2(Text: PChar);
-procedure ShowMessageParent(Text: PChar; Parent: HWND);
+procedure ShowMessage(Text: PAnsiChar);
+procedure ShowMessage2(Text: PAnsiChar);
+procedure ShowMessageParent(Text: PAnsiChar; Parent: HWND);
 procedure ShowSyserror(ErrorCode: Cardinal);
 procedure FilePreview;
 
@@ -260,8 +260,8 @@ procedure InitializeQSO;
 function CreateCallOrExchangeWin(Top, ID: integer): HWND;
 procedure TimeApplet(i: Cardinal);
 
-function YesOrNo(h: HWND; Text: PChar): integer;
-function YesOrNo2(h: HWND; Text: PChar): integer;
+function YesOrNo(h: HWND; Text: PAnsiChar): integer;
+function YesOrNo2(h: HWND; Text: PAnsiChar): integer;
 procedure PTTOffWhenStopWAV(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
   stdcall;
 procedure OneSecTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
@@ -374,7 +374,7 @@ function CreateTR4WStaticWindow(X: Word; Y: Word; w: Word; Style: Cardinal):
   HWND;
 function CreateTR4WStaticWindowID(X: Word; Y: Word; w: Word; Style: Cardinal;
   ID: HMENU): HWND;
-function nfCreateTR4WStaticWindow(Text: PChar; X: Word; Y: Word; w: Word; Style:
+function nfCreateTR4WStaticWindow(Text: PAnsiChar; X: Word; Y: Word; w: Word; Style:
   Cardinal): HWND;
 
 procedure EditSetSelLength(h: HWND; Value: integer);
@@ -422,14 +422,14 @@ procedure tWinHelp(WindowHelpID: Byte);
 
 function AskConvertLog(sVersion: string): boolean; // ny4i
 
-function tCreateStaticWindow(lpWindowName: PChar;
+function tCreateStaticWindow(lpWindowName: PAnsiChar;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
-function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: PChar;
+function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: PAnsiChar;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 
-function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: PChar;
+function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: PAnsiChar;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 procedure CreateOKCancelButtons(nWidthhwndParent: HWND);
@@ -453,8 +453,8 @@ procedure WagCheck;
 
 type
   Tmain = procedure(
-    LogFileName: PChar;
-    var CreatedReport: PChar;
+    LogFileName: PAnsiChar;
+    var CreatedReport: PAnsiChar;
     var ReLoadLog: boolean;
     var MakeRescore: boolean;
     ExchangeInformation: ExchangeInformationRecord;
@@ -464,7 +464,7 @@ type
     reserved3: integer
     ) stdcall;
 
-  Ttr4wGetPlugin = function(): PChar; stdcall;
+  Ttr4wGetPlugin = function(): PAnsiChar; stdcall;
 
 // TADIF_Fields enum moved to uADIF.pas (Issue #887).
 
@@ -733,7 +733,7 @@ begin
   if not DetectRoverSlashInCall(RoverCounty) then
      Exit;
   ExchangeWindowString := RoverCounty;
-  Windows.SetWindowText(wh[mweExchange], PChar(string(ExchangeWindowString)));
+  Windows.SetWindowTextA(wh[mweExchange], PAnsiChar(AnsiString(ExchangeWindowString)));
   // Move focus to exchange.  The caller's existing focus-move logic only
   // fires when ExchangeWindowString is empty (which won't be true after
   // we just populated it), so we have to do it ourselves here.
@@ -1197,7 +1197,7 @@ begin
   else
   begin
     if WindowDupeCheck then //RemoveWindow(ExchangeWindow);
-      // Windows.SetWindowText(ExchangeWindowHandle, '');
+      // Windows.SetWindowTextA(ExchangeWindowHandle, '');
       SetMainWindowText(mweExchange, nil);
     // RestorePreviousWindow;
 
@@ -2054,8 +2054,8 @@ begin
   UpdateTimeAndRateDisplays(True, True);
 
 {$IF tDebugMode}
-  // Windows.SetWindowText(tr4whandle, inttopchar({GetHeapStatus.TotalFree}AllocMemSize));
- // Windows.SetWindowText(InsertWindowHandle, inttopchar(FreeMemCount));
+  // Windows.SetWindowTextA(tr4whandle, inttopchar({GetHeapStatus.TotalFree}AllocMemSize));
+ // Windows.SetWindowTextA(InsertWindowHandle, inttopchar(FreeMemCount));
 {$IFEND}
 end;
 
@@ -2110,21 +2110,21 @@ end;
 
 procedure ShowSyserror(ErrorCode: Cardinal);
 begin
-  MessageBox(0, TF.SysErrorMessage(ErrorCode), tr4w_ClassName, MB_OK or
+  MessageBoxA(0, TF.SysErrorMessage(ErrorCode), 'TR4W', MB_OK or
     MB_ICONERROR or MB_TASKMODAL);
 end;
 
-function YesOrNo(h: HWND; Text: PChar): integer;
+function YesOrNo(h: HWND; Text: PAnsiChar): integer;
 begin
   // DoABeep(PromptBeep);
   // Windows.MessageBeep(MB_ICONASTERISK);
-  Result := MessageBox(h, Text, tr4w_ClassName, MB_YESNO or MB_ICONQUESTION or
+  Result := MessageBoxA(h, Text, 'TR4W', MB_YESNO or MB_ICONQUESTION or
     MB_TOPMOST or MB_DEFBUTTON2);
 end;
 
-function YesOrNo2(h: HWND; Text: PChar): integer;
+function YesOrNo2(h: HWND; Text: PAnsiChar): integer;
 begin
-  Result := MessageBox(h, Text, tr4w_ClassName, MB_OKCANCEL or MB_ICONQUESTION
+  Result := MessageBoxA(h, Text, 'TR4W', MB_OKCANCEL or MB_ICONQUESTION
     or
     MB_TOPMOST or MB_DEFBUTTON1);
 end;
@@ -2159,7 +2159,7 @@ begin
   if TempString[length(TempString)] = 'B' then
   begin
     TempVFO := 'B';
-    TempString[0] := Char(Ord(TempString[0]) - 1);
+    TempString[0] := AnsiChar(Ord(TempString[0]) - 1);
   end;
 
   if StringIsAllNumbersOrDecimal(TempString) = False then
@@ -2213,8 +2213,8 @@ begin
     tCleareCallWindow; // 4.139.2
     Result := True;
     logger.debug('[TuneOnFreqFromCallWindow] Clearing Mults and QSO Needs Headers');
-    SetMainWindowText(mweMultNeedsHeader, PChar(''));
-    SetMainWindowText(mweQSONeedsHeader, PChar(''));
+    SetMainWindowText(mweMultNeedsHeader, PAnsiChar(''));
+    SetMainWindowText(mweQSONeedsHeader, PAnsiChar(''));
   end;
 
   {
@@ -2240,7 +2240,7 @@ end;
 {
 procedure TR4W_WM_SetTest(h: HWND; Control: Byte; Text: string);
 begin
- Windows.SetDlgItemText(h, integer(Control), PChar(Text));
+ Windows.SetDlgItemTextA(h, integer(Control), PChar(Text));
 end;
 }
 
@@ -2680,7 +2680,7 @@ var
   TempExchange: ContestExchange;
   DQTH: boolean;
 begin
-  ExchangeWindowString[0] := Char(Windows.GetWindowTextA(wh[mweExchange],
+  ExchangeWindowString[0] := AnsiChar(Windows.GetWindowTextA(wh[mweExchange],
     @ExchangeWindowString[1], SizeOf(ExchangeWindowString)));
   if VHFBandsEnabled then
     ShowBeamAndHeadingInVHFContest(ExchangeWindowString);
@@ -2730,7 +2730,7 @@ begin
            begin
            if GetPOTAParkName(TestString) <> '' then
               begin
-              QuickDisplay(PChar(GetPOTAParkName(TestString)));
+              QuickDisplay(PAnsiChar(AnsiString(GetPOTAParkName(TestString))));
               Exit;
               end;
            end;
@@ -2810,7 +2810,7 @@ begin
   if Contest = WAG then //n4af 4.31.4
     WagCheck; //n4af
 
-  CallWindowString[0] := Char(Windows.SendMessage(wh[mweCall], WM_GETTEXT,
+  CallWindowString[0] := AnsiChar(Windows.SendMessageA(wh[mweCall], WM_GETTEXT,
     CallstringLength, integer(@CallWindowString[1])));
 
   CallWindowEmpty := CallWindowString[0] = #0;
@@ -2888,7 +2888,7 @@ begin
   end;
   QSONeedWindowHandle1 := CreateTR4WStaticWindow(MainWindowChildsWidth -
     RightTopWidth, ws, w, QSOMULTSMODEWINDOWSTYLE);
-  Windows.SetWindowText(QSONeedWindowHandle1, nil);
+  Windows.SetWindowTextA(QSONeedWindowHandle1, nil);
 
   if QSOByMode then
   begin
@@ -2901,8 +2901,8 @@ begin
     end;
     QSONeedWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
       RightTopWidth, ws * 2, w, QSOMULTSMODEWINDOWSTYLE);
-    Windows.SetWindowText(QSONeedWindowHandle1, 'CW:');
-    Windows.SetWindowText(QSONeedWindowHandle2, 'SSB:');
+    Windows.SetWindowTextA(QSONeedWindowHandle1, 'CW:');
+    Windows.SetWindowTextA(QSONeedWindowHandle2, 'SSB:');
   end;
 end;
 
@@ -2921,7 +2921,7 @@ begin
   end;
   MultWindowHandle1 := CreateTR4WStaticWindow(MainWindowChildsWidth -
     RightTopWidth, ws * 4, w, QSOMULTSMODEWINDOWSTYLE);
-  Windows.SetWindowText(MultWindowHandle1, 'Both:');
+  Windows.SetWindowTextA(MultWindowHandle1, 'Both:');
 
   if MultByMode then
   begin
@@ -2935,8 +2935,8 @@ begin
     end;
     MultWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
       RightTopWidth, ws * 5, w, QSOMULTSMODEWINDOWSTYLE);
-    Windows.SetWindowText(MultWindowHandle1, 'CW:');
-    Windows.SetWindowText(MultWindowHandle2, 'SSB:');
+    Windows.SetWindowTextA(MultWindowHandle1, 'CW:');
+    Windows.SetWindowTextA(MultWindowHandle2, 'SSB:');
   end;
 end;
 
@@ -4048,8 +4048,8 @@ begin
 
     menu_download_latest_cty_dat:
       begin
-      QuickDisplay(PChar('Downloading CTY.DAT...'));
-      DownloadCTYAsync(string(PChar(@TR4W_CTY_FILENAME)), tr4whandle);
+      QuickDisplay(PAnsiChar('Downloading CTY.DAT...'));
+      DownloadCTYAsync(string(PAnsiChar(@TR4W_CTY_FILENAME)), tr4whandle);
       end;
 
     menu_download_pota_parks:
@@ -4197,7 +4197,7 @@ begin
         Format(TempBuffer1, 'http://www.qrz.ru/contest/detail/%d.html',
           ContestsArray[Contest].QRZRUID);
         // OpenUrl(TempBuffer1);
-        Shellexecute(0, 'open', TempBuffer1, nil, nil, SW_NORMAL); // 4.75.3
+        ShellexecuteA(0, 'open', TempBuffer1, nil, nil, SW_NORMAL); // 4.75.3
       end;
 
     menu_WA7BNM_calendar:
@@ -4206,7 +4206,7 @@ begin
           'https://contestcalendar.com/contestdetails.php?ref=%u', // 4.127.1',
           ContestsArray[Contest].WA7BNM);
         //   OpenUrl(TempBuffer1);
-        Shellexecute(0, 'open', tempbuffer1, nil, nil, SW_NORMAL); // 4.127.1
+        ShellexecuteA(0, 'open', tempbuffer1, nil, nil, SW_NORMAL); // 4.127.1
 
       end;
 
@@ -4847,7 +4847,7 @@ begin
   tWM_SETFONT(Result, MainFont);
 end;
 
-function nfCreateTR4WStaticWindow(Text: PChar; X: Word; Y: Word; w: Word; Style:
+function nfCreateTR4WStaticWindow(Text: PAnsiChar; X: Word; Y: Word; w: Word; Style:
   Cardinal): HWND;
 begin
   Result := tCreateStaticWindow(Text, Style, X, Y, w, ws, tr4whandle, 0);
@@ -4892,8 +4892,8 @@ begin
   //GetLastError = Cannot create a file when that file already exist s.
 
   for i := 0 to length(DirArray) - 1 do
-    Windows.CreateDirectory(DirArray[i], nil);
-  // Windows.CreateDirectory(GetYearString, nil);
+    Windows.CreateDirectoryA(DirArray[i], nil);
+  // Windows.CreateDirectoryA(GetYearString, nil);
 
 end;
 
@@ -5479,15 +5479,15 @@ end;
 procedure tCleareCallWindow;
 begin
   logger.debug('Clearing main call window');
-  Windows.SetWindowText(wh[mweCall], nil);
+  Windows.SetWindowTextA(wh[mweCall], nil);
 
 end;
 
 procedure tCleareExchangeWindow;
 begin
-  // Windows.SetWindowText(ExchangeWindowHandle, nil);
+  // Windows.SetWindowTextA(ExchangeWindowHandle, nil);
   // SetMainWindowText(mweExchange, nil);
-  Windows.SetWindowText(wh[mweExchange], nil);
+  Windows.SetWindowTextA(wh[mweExchange], nil);
   
 end;
 
@@ -5509,7 +5509,7 @@ procedure HandleRepeatPOTAParks;
 // The call window is left blank — the operator types the second op's call.
 var
   ExchStr : string;
-  ExchBuf : array[0..80] of Char;
+  ExchBuf : array[0..80] of AnsiChar;
 begin
   ExchStr := GetLastPOTAExchange;
   if ExchStr = '' then
@@ -5522,10 +5522,10 @@ begin
   Windows.ZeroMemory(@ExchBuf[0], SizeOf(ExchBuf));
   Move(ExchStr[1], ExchBuf[0], Length(ExchStr));
   ExchangeWindowString := ExchStr;
-  Windows.SetWindowText(wh[mweExchange], ExchBuf);
+  Windows.SetWindowTextA(wh[mweExchange], ExchBuf);
 
   tCallWindowSetFocus;
-  QuickDisplay(PChar('2nd op: type callsign, verify exchange, then Enter - ' + ExchStr));
+  QuickDisplay(PAnsiChar(AnsiString('2nd op: type callsign, verify exchange, then Enter - ' + ExchStr)));
 end;
 
 procedure tListBoxClientAlign(Parent: HWND);
@@ -5550,7 +5550,7 @@ begin
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function tCreateStaticWindow(lpWindowName: PChar;
+function tCreateStaticWindow(lpWindowName: PAnsiChar;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 //var
@@ -5564,25 +5564,25 @@ begin
   y3 := 3;
   }
   //Result := CreateRoundRectRgn(x1,y1,x2,y2,x3,y3);
-  Result := CreateWindowEx(0 {WS_EX_DLGMODALFRAME}, StaticPChar, lpWindowName,
+  Result := CreateWindowExA(0 {WS_EX_DLGMODALFRAME}, 'Static', lpWindowName,
     dwStyle, X, Y, nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: PChar;
+function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: PAnsiChar;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowEx(dwxStyle, ButtonPChar, lpWindowName, dwStyle, X, Y,
+  Result := CreateWindowExA(dwxStyle, 'Button', lpWindowName, dwStyle, X, Y,
     nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: PChar;
+function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: PAnsiChar;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowEx(dwxStyle, EditPChar, lpWindowName, dwStyle, X, Y,
+  Result := CreateWindowExA(dwxStyle, 'Edit', lpWindowName, dwStyle, X, Y,
     nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
@@ -5625,25 +5625,25 @@ begin
   //ShowMessage(wsprintfBuffer);
 end;
 
-procedure ShowMessageParent(Text: PChar; Parent: HWND);
+procedure ShowMessageParent(Text: PAnsiChar; Parent: HWND);
 begin
   logger.Info('Sending to MessageBox: ' + Text);
-  MessageBox(Parent, Text, tr4w_ClassName, MB_OK or MB_ICONINFORMATION
+  MessageBoxA(Parent, Text, 'TR4W', MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 end;
 
-procedure ShowMessage2(Text: PChar);
+procedure ShowMessage2(Text: PAnsiChar);
 begin
   logger.Info('Sending to MessageBox: ' + Text);
-  MessageBox(tr4whandle, Text, nil, MB_OK or MB_ICONINFORMATION
+  MessageBoxA(tr4whandle, Text, nil, MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 end;
 
-procedure ShowMessage(Text: PChar);
+procedure ShowMessage(Text: PAnsiChar);
 //var MsgInfo : TMsgBoxParams;
 begin
   logger.Info('Sending to MessageBox: ' + Text);
-  MessageBox(tr4whandle, Text, tr4w_ClassName, MB_OK or MB_ICONINFORMATION
+  MessageBoxA(tr4whandle, Text, 'TR4W', MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 
 end;
@@ -5668,7 +5668,7 @@ begin
   begin
     // ChangeFocus('call');
     Windows.SetFocus(wh[mweCall]);
-    // Windows.SetWindowText(InsertWindowHandle, inttopchar(Windows.GetTickCount));
+    // Windows.SetWindowTextA(InsertWindowHandle, inttopchar(Windows.GetTickCount));
 
 {$IF MORSERUNNER}
     // Windows.SendMessage(MorseRunner_Callsign, WM_SETFOCUS, 0, 0);
@@ -5785,7 +5785,7 @@ begin
   T1 := Windows.GetTickCount;
   // m :=0;
 {$IFEND}
-  LogHandle := CreateFile
+  LogHandle := CreateFileA
     (
     TR4W_LOG_FILENAME,
     GENERIC_WRITE or GENERIC_READ,
@@ -5820,11 +5820,11 @@ begin
          logger.Fatal('Log file version ' + StrPas(TempBuffer1) +
             ' is newer than this program (' + LOGVERSION + ').' +
             ' Upgrade TR4W to open this log.');
-         ShowMessage(PChar(
+         ShowMessage(PAnsiChar(AnsiString(
             'This log file was created by a newer version of TR4W (' +
             StrPas(TempBuffer1) + ').' + #13#10 +
             'This program understands up to version ' + LOGVERSION + '.' + #13#10 +
-            'Please upgrade TR4W to open this log.'));
+            'Please upgrade TR4W to open this log.')));
          CloseLogFile;
          Halt;
          end;
@@ -6095,7 +6095,7 @@ label
 var
   elvi: TLVItem;
   Mults: Cardinal;
-  MultString: array[0..7] of Char;
+  MultString: array[0..7] of AnsiChar;
 begin
 
   elvi.Mask := LVIF_TEXT;
@@ -6429,7 +6429,7 @@ begin
     ListView_EnsureVisible(wh[mweEditableLog], tLogIndex - 1, True);
 end;
 
-procedure GenerateCallsignsList(FileName: PChar);
+procedure GenerateCallsignsList(FileName: PAnsiChar);
 var
   h: HWND;
   i: integer;
@@ -7025,7 +7025,7 @@ end;
 
 procedure ClearLog;
 begin
-  // Windows.CopyFile(NewLogFileName, 'NewLogFileName', False);
+  // Windows.CopyFileA(NewLogFileName, 'NewLogFileName', False);
   ReplaceLogByServerLog(False);
   if not OpenLogFile then
     Exit;
@@ -7178,7 +7178,7 @@ begin
     GetSystemTime(UTC);
 {$IF tDebugMode}
   // inc(GetSystemTimeCounter);
-  // Windows.SetWindowText(tr4whandle, inttopchar(GetSystemTimeCounter));
+  // Windows.SetWindowTextA(tr4whandle, inttopchar(GetSystemTimeCounter));
 {$IFEND}
 end;
 
@@ -7357,7 +7357,7 @@ begin
             KeyName[Ord(KeyName[0]) + 1] := #0;
             Str(NewWidth, WidthStr);
             WidthStr[Ord(WidthStr[0]) + 1] := #0;
-            Windows.WritePrivateProfileString('COMMANDS', @KeyName[1], @WidthStr[1], @TR4W_CFG_FILENAME);
+            Windows.WritePrivateProfileStringA('COMMANDS', @KeyName[1], @WidthStr[1], @TR4W_CFG_FILENAME);
             end;
          Exit;
          end;
@@ -7399,7 +7399,7 @@ begin
       asm
  push PreviousProcAddress
       end;
-      wsprintf(wsprintfBuffer,
+      wsprintfA(wsprintfBuffer,
         'If you see this message, please send this code: '#13#10#13#10'GM-%X'#13#10#13#10'to ny4i@ny4i.com.');
       asm add esp,12
       end;
@@ -7425,7 +7425,7 @@ begin
     asm
  push PreviousProcAddress
     end;
-    wsprintf(wsprintfBuffer,
+    wsprintfA(wsprintfBuffer,
       'If you see this message, please send this code: '#13#10#13#10'FM-%X'#13#10#13#10'to tr4w@qrz.ru.');
     asm add esp,12
     end;
@@ -7670,7 +7670,7 @@ begin
         tKeyerDebugWindowHandle := hwnddlg;
         Windows.SetWindowPos(hwnddlg, HWND_TOP, 0, 0, 200, 200, SWP_SHOWWINDOW);
 
-        Windows.SetWindowText(hwnddlg, 'TWO RADIO debug');
+        Windows.SetWindowTextA(hwnddlg, 'TWO RADIO debug');
 
         CreateButton(BS_CHECKBOX, 'RTS1', 10, 10, 50, hwnddlg, 102);
         CreateButton(BS_CHECKBOX, 'DTR1', 10, 30, 50, hwnddlg, 103);
@@ -8402,7 +8402,7 @@ procedure StartNewContest;
 begin
   // ReleaseMutex(tMutex);
   CloseHandle(tMutex);
-  Windows.SetCurrentDirectory(TR4W_PATH_NAME);
+  Windows.SetCurrentDirectoryA(TR4W_PATH_NAME);
   Windows.WinExec('D:\TR4W_WinAPI\out\tr4w.exe', 0);
   ExitProgram(False);
 end;
@@ -8423,7 +8423,7 @@ begin
   end;
 end;
 
-procedure ChangeFocus(Text: PChar);
+procedure ChangeFocus(Text: PAnsiChar);
 var
   h: HWND;
   t: Cardinal;
@@ -8441,7 +8441,7 @@ begin
   // AddStringToTelnetConsole(Text, tstSend);
 end;
 
-procedure SetCommand(c: PChar);
+procedure SetCommand(c: PAnsiChar);
 begin
   Format(TempBuffer1, TC_SET_VALUE_OF_SET_NOW, c);
   if YesOrNo(tr4whandle, TempBuffer1) = IDno then
@@ -8464,7 +8464,7 @@ begin
     if CFGCA[i].crAddress = Command then
     begin
       InvertBoolean(Command^);
-      Windows.WritePrivateProfileString(_COMMANDS, CFGCA[i].crCommand,
+      Windows.WritePrivateProfileStringA(_COMMANDS, CFGCA[i].crCommand,
         BA[Command^], TR4W_INI_FILENAME);
       // Issue #997: asm `call p` (untyped Pointer change-handler) -> typed call,
       // nil-guarded against a nil entry in the CommandsProcArray definition.
@@ -8487,9 +8487,9 @@ begin
 {$IFEND}
 end;
 
-procedure RunExplorer(Command: PChar);
+procedure RunExplorer(Command: PAnsiChar);
 var
-  TempPchar: PChar;
+  TempPchar: PAnsiChar;
 begin
 
   if strpos(Command, '.') <> nil then
@@ -8509,7 +8509,7 @@ const
 // extension (here, ".txt").  Declared directly because Delphi 7's ShlwApi
 // import unit does not expose it.
 function AssocQueryStringA(flags: DWORD; str: DWORD; pszAssoc, pszExtra,
-  pszOut: PChar; pcchOut: PDWORD): HRESULT; stdcall;
+  pszOut: PAnsiChar; pcchOut: PDWORD): HRESULT; stdcall;
   external 'shlwapi.dll' name 'AssocQueryStringA';
 
 // Issue #986 -- open FileName in the user's default text editor (the program
@@ -8517,10 +8517,10 @@ function AssocQueryStringA(flags: DWORD; str: DWORD; pszAssoc, pszExtra,
 // by every "open in editor" path (the file-preview window, history.txt, ...).
 // Falls back to Notepad if no .txt association can be resolved or the editor
 // fails to launch, so the behavior never regresses on a misconfigured system.
-procedure OpenInDefaultTextEditor(FileName: PChar);
+procedure OpenInDefaultTextEditor(FileName: PAnsiChar);
 var
-  editor   : array[0..1023] of Char;
-  cmdBuf   : array[0..1279] of Char;   // local: caller may pass wsprintfBuffer
+  editor   : array[0..1023] of AnsiChar;
+  cmdBuf   : array[0..1279] of AnsiChar;   // local: caller may pass wsprintfBuffer
   len      : DWORD;
   launched : boolean;
 begin
@@ -8534,7 +8534,7 @@ begin
         begin
         // The file path may contain spaces, so pass it as a quoted argument.
         Format(cmdBuf, '"%s"', FileName);
-        if ShellExecute(0, nil, editor, cmdBuf, nil,
+        if ShellExecuteA(0, nil, editor, cmdBuf, nil,
               SW_SHOWNORMAL) > 32 then
            begin
            launched := True;
@@ -8795,7 +8795,7 @@ jmp @@all
   end;
 end;
 
-function CreateToolTip(Control: HWND; Text: PChar): HWND;
+function CreateToolTip(Control: HWND; Text: PAnsiChar): HWND;
 const
   TOOLTIPS_CLASS = 'tooltips_class32';
   TTS_ALWAYSTIP = $01;
@@ -8867,14 +8867,14 @@ end;
 
 procedure RunPlugin(PluginNumber: integer);
 var
-  CreatedReport: PChar;
+  CreatedReport: PAnsiChar;
   MakeRescore, ReLoadLog: boolean;
   module: HWND;
   TempFunc: Tmain;
 begin
   Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME, PluginsArray[PluginNumber
     - 10700]);
-  module := LoadLibrary(TempBuffer1);
+  module := LoadLibraryA(TempBuffer1);
   TempFunc := GetProcAddress(module, 'main');
   CreatedReport := nil;
   ReLoadLog := False;
@@ -8898,7 +8898,7 @@ procedure LoadInPlugins();
 label
   1, Next;
 var
-  lpFindFileData: TWIN32FindData;
+  lpFindFileData: TWin32FindDataA;
   hFindFile: HWND;
   module: HWND;
   TempFunc: Ttr4wGetPlugin;
@@ -8908,39 +8908,39 @@ const
 begin
   Format(TempBuffer1, '%sPlugins\tr4w*.dll', TR4W_PATH_NAME);
 
-  hFindFile := Windows.FindFirstFile(TempBuffer1, lpFindFileData);
+  hFindFile := Windows.FindFirstFileA(TempBuffer1, lpFindFileData);
   if hFindFile <> INVALID_HANDLE_VALUE then
     goto 1
   else
     Exit;
 
   Next:
-  if FindNextFile(hFindFile, lpFindFileData) then
+  if FindNextFileA(hFindFile, lpFindFileData) then
   begin
     1:
     Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME,
       lpFindFileData.cFileName);
 
-    module := LoadLibrary(TempBuffer1);
+    module := LoadLibraryA(TempBuffer1);
     TempFunc := GetProcAddress(module, 'tr4wGetPlugin');
     if @TempFunc <> nil then
     begin
       if LoadedPlugins = 0 then
       begin
         pop := CreatePopupMenu;
-        Windows.InsertMenu(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_POPUP,
+        Windows.InsertMenuA(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_POPUP,
           pop, 'Plugins');
       end;
       inc(LoadedPlugins);
-      Windows.AppendMenu(pop, MF_STRING, 10700 + LoadedPlugins, TempFunc());
-      Windows.lstrcat(PluginsArray[LoadedPlugins], lpFindFileData.cFileName);
+      Windows.AppendMenuA(pop, MF_STRING, 10700 + LoadedPlugins, TempFunc());
+      Windows.lstrcatA(PluginsArray[LoadedPlugins], lpFindFileData.cFileName);
     end;
     FreeLibrary(module);
     goto Next;
   end;
   Windows.FindClose(hFindFile);
   if LoadedPlugins > 0 then
-    Windows.InsertMenu(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_SEPARATOR,
+    Windows.InsertMenuA(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_SEPARATOR,
       0, nil);
 
 end;
@@ -8978,13 +8978,13 @@ begin
   CreateModalDialog(397, 177, tr4whandle, @AltPDlgProc, 0);
 end;
 
-procedure RenameCommand(Old, New: PChar);
+procedure RenameCommand(Old, New: PAnsiChar);
 begin
-  if GetPrivateProfileString(_COMMANDS, Old, nil, TempBuffer1,
+  if GetPrivateProfileStringA(_COMMANDS, Old, nil, TempBuffer1,
     SizeOf(TempBuffer1), TR4W_INI_FILENAME) = 0 then
     Exit;
-  Windows.WritePrivateProfileString(_COMMANDS, Old, nil, TR4W_INI_FILENAME);
-  Windows.WritePrivateProfileString(_COMMANDS, New, TempBuffer1,
+  Windows.WritePrivateProfileStringA(_COMMANDS, Old, nil, TR4W_INI_FILENAME);
+  Windows.WritePrivateProfileStringA(_COMMANDS, New, TempBuffer1,
     TR4W_INI_FILENAME);
 end;
 
@@ -9206,20 +9206,20 @@ begin
       bytesToWrite := min(length(s), 60);
       if first then
       begin
-        AddStringToTelnetConsole(PChar('[' + ' ' + '] ' +
-          AnsiLeftStr(s, bytesToWrite)), tstSend);
+        AddStringToTelnetConsole(PAnsiChar(AnsiString('[' + ' ' + '] ' +
+          AnsiLeftStr(s, bytesToWrite))), tstSend);
         first := false;
       end
       else
       begin
-        AddStringToTelnetConsole(PChar('[' + formattedDate + '] ' +
-          AnsiLeftStr(s, bytesToWrite)), tstSend);
+        AddStringToTelnetConsole(PAnsiChar(AnsiString('[' + formattedDate + '] ' +
+          AnsiLeftStr(s, bytesToWrite))), tstSend);
       end;
       s := AnsiRightStr(s, length(s) - bytesToWrite);
     end;
   end;
 
-  AddStringToTelnetConsole(PChar('[' + formattedDate + '] ' + s), tstSend);
+  AddStringToTelnetConsole(PAnsiChar(AnsiString('[' + formattedDate + '] ' + s)), tstSend);
 {$IFEND}
 
 end;
@@ -9441,6 +9441,7 @@ function AskConvertLog(sVersion: string): boolean;
   The id field is left blank after conversion. }
 var
   OldFile, NewFile, fName, sVersionTag: string;
+  ansiMsg: AnsiString;   // D12: hold the ANSI text alive across the PAnsiChar display call
   fileSetCode, attrs: integer;
   oldFH_v1_6: file of ContestExchangev1_6;
   oldFH_v1_5: file of ContestExchangev1_5;
@@ -9456,7 +9457,8 @@ begin
 
   if (sVersion <> 'v1.5') and (sVersion <> 'v1.6') then
      begin
-     ShowMessage(PChar('Cannot convert log version ' + sVersion + ' to ' + LOGVERSION + '. Unknown source version.'));
+     ansiMsg := AnsiString('Cannot convert log version ' + sVersion + ' to ' + LOGVERSION + '. Unknown source version.');
+     ShowMessage(PAnsiChar(ansiMsg));
      logger.Fatal('AskConvertLog: unknown source version: ' + sVersion);
      Exit;
      end;
@@ -9465,7 +9467,8 @@ begin
     Read the log header and confirm the version differs from current.
     If the user agrees to convert, back up the original file, then
     rename it with a version-tagged extension so the conversion reads it. }
-  if YesOrNo(0, PChar('This log is version ' + sVersion + '. Would you like to convert it to ' + LOGVERSION + '?')) = mrNo then
+  ansiMsg := AnsiString('This log is version ' + sVersion + '. Would you like to convert it to ' + LOGVERSION + '?');
+  if YesOrNo(0, PAnsiChar(ansiMsg)) = mrNo then
      begin
      logger.Fatal('User opted to not upgrade log format');
      Halt;
@@ -9474,27 +9477,27 @@ begin
   NewFile := StrPas(TR4W_LOG_FILENAME) + '-' + sVersion + '.bkup';
   if not FileExists(TR4W_LOG_FILENAME) then
      begin
-     ShowMessage(PChar(TC_LOGFILENOTFOUND));
+     ShowMessage(PAnsiChar(TC_LOGFILENOTFOUND));
      Exit;
      end;
 
-  if FileExists(PChar(NewFile)) then
+  if FileExists(PAnsiChar(AnsiString(NewFile))) then
      begin
      attrs := FileGetAttr(NewFile);
      if attrs and faReadOnly > 0 then
         begin
-        ShowMessage(PChar(TC_CANNOTCOPYLOGREADONLY));
+        ShowMessage(PAnsiChar(TC_CANNOTCOPYLOGREADONLY));
         Exit;
         end;
      end;
 
-  if not CopyFile(TR4W_LOG_FILENAME, PChar(NewFile), false) then
+  if not CopyFileA(TR4W_LOG_FILENAME, PAnsiChar(AnsiString(NewFile)), false) then
      begin
-     ShowMessage(PChar(TC_CANNOTBACKUPLOG + StrPas(TR4W_LOG_FILENAME)));
+     ShowMessage(PAnsiChar(TC_CANNOTBACKUPLOG + StrPas(TR4W_LOG_FILENAME)));
      Exit;
      end;
 
-  ShowMessage(PChar(TC_BACKUPCREATED));
+  ShowMessage(PAnsiChar(TC_BACKUPCREATED));
   fileSetCode := FileSetAttr(NewFile, faReadOnly);
   if fileSetCode = 0 then
      begin
@@ -9512,7 +9515,7 @@ begin
   fName := StrPas(TR4W_LOG_FILENAME);
   if not RenameFile(fName, OldFile) then
      begin
-     ShowMessage(PChar(TC_CANNOTRENAME + ' ' + fName + ' >>> ' + OldFile));
+     ShowMessage(PAnsiChar(AnsiString(TC_CANNOTRENAME + ' ' + fName + ' >>> ' + OldFile)));
      Exit;
      end;
 

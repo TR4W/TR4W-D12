@@ -62,7 +62,7 @@ begin
         tWM_SETFONT(CreateStatic(nil, 5, 75, 180, hwnddlg, 130), MainFixedFont);
 
 //        if lParam = tr4w_RADIOINTERFACEWINDOW1_INDEX then p := Radio1AsPchar else p := Radio2AsPchar;
-//        Windows.SetWindowText(hwnddlg, p);
+//        Windows.SetWindowTextA(hwnddlg, p);
       end;
 
     WM_CLOSE:

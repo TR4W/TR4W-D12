@@ -376,7 +376,7 @@ end;
 
 function TCallsignsList.CompareStrings(const s1 {edx}, s2 {ecx}: CallString): integer {eax};
 begin
-  Result := CompareString(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, @s1[1], length(s1), @s2[1], length(s2)) - 2;
+  Result := CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, @s1[1], length(s1), @s2[1], length(s2)) - 2;
 
 {
   Result := 0;
@@ -499,10 +499,10 @@ var
 
   Band                                  : BandType;
   Mode                                  : ModeType;
-  TempChar                              : Char;
+  TempChar                              : AnsiChar;
   Item                                  : integer;
-  p1                                    : pchar;
-  p2                                    : pchar;
+  p1                                    : PAnsiChar;
+  p2                                    : PAnsiChar;
 begin
 //  if not Sheet.DupeSheetEnable then Exit;
   TempDSHandle := Radio.tDupeSheetWnd;// tr4w_WindowsArray[tw_DUPESHEETWINDOW1_INDEX].WndHandle;
@@ -562,9 +562,13 @@ begin
   // that consumed these pushes, and the matching `add esp,16` was already
   // commented out, so the pushes fed nothing (absorbed by the stack frame).
 
-  // Issue #997 - wsprintf-push formatting converted to SysUtils.Format
-  StrPCopy(wsprintfBuffer, SysUtils.Format(TC_DUPESHEET+' - %s',
-    [string(BandStringsArray[Band]), string(ModeStringArray[Mode]), string(PChar(@Radio.RadioName[1]))]));
+  // Issue #997 - wsprintf-push formatting converted to ANSI TF.Format
+  // (wsprintfA).  TC_DUPESHEET already carries two %s specs (band, mode); the
+  // appended ' - %s' adds the radio name -> three PAnsiChar args.  Writing
+  // straight into the ANSI wsprintfBuffer avoids the D12 wide StrPCopy /
+  // SysUtils.Format round-trip (dest is PAnsiChar).
+  TF.Format(wsprintfBuffer, TC_DUPESHEET + ' - %s',
+    BandStringsArray[Band], ModeStringArray[Mode], PAnsiChar(@Radio.RadioName[1]));
 //  asm add esp,16  end;
   Windows.SetWindowTextA(Radio.tDupeSheetWnd, wsprintfBuffer);
 end;

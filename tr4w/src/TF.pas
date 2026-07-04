@@ -110,18 +110,18 @@ function CreateRichEdit(hwndParent: HWND): HWND;
 function Createmsctls_progress32(X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 
 function CreateOwnerDrawListBox(dwStyle: DWORD; hwndParent: HWND): HWND;
-function EnumerateLinesInFile(FileName: PChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
-function EnumerateLinesInFile_old(FileName: PChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+function EnumerateLinesInFile_old(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 procedure UnableToFindFileMessage(FileName: PChar);
-function DeleteSlashes(p: PChar): PChar;
+function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
-function GetValueFromArray(PCharArrayAddress: PChar; ArraySize: Byte; CMD: PChar): Byte;
+function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; CMD: PAnsiChar): Byte;
 function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 function GetDialogItemText(h: HWND; Control: integer): ShortString;
-function GetNumberFromCharBuffer(p: PChar): integer;
+function GetNumberFromCharBuffer(p: PAnsiChar): integer;
 procedure tLoadKeyboardLayout;
 function StrComp_JOH_IA32_6(const Str1, Str2: PChar): integer;
 function GetContestFromString(ContestString: ShortString): ContestType;
@@ -130,11 +130,11 @@ function RealToStr(Num: REAL): string;
 function RealToStr2(Num: REAL): string;
 function IntToStr(Num: integer): ShortString;
 function StrToInt(s: ShortString): integer;
-function PCharToInt(p: PChar): integer;
+function PCharToInt(p: PAnsiChar): integer;
 function BooleanToStr(b: boolean): string;
 //function CenterString(s: string; count: byte): string;
 procedure strU(var Str: ShortString);
-procedure SetMainWindowText(Window: TMainWindowElement; Text: PChar);
+procedure SetMainWindowText(Window: TMainWindowElement; Text: PAnsiChar);
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 
 function ValExt(Source: PChar; var code: integer): extended;
@@ -149,8 +149,8 @@ function tLB_GETCURSEL(h: HWND): integer;
 function tLB_SETCURSEL(h: HWND; pos: wParam): integer;
 procedure tCB_SETCURSEL(ParentHandle: HWND; Control: integer; pos: Cardinal);
 procedure tCB_ADDSTRING(ParentHandle: HWND; Control: integer; s: string);
-procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: PChar);
-function tLB_ADDSTRING(h: HWND; Text: PChar): integer;
+procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: PAnsiChar);
+function tLB_ADDSTRING(h: HWND; Text: PAnsiChar): integer;
 function tLB_RESETCONTENT(h: HWND): integer;
 function tCB_GETCURSEL(ParentHandle: HWND; Control: integer): integer;
 
@@ -168,8 +168,8 @@ procedure tEnableMenuItem(uIDEnableItem: UINT; uEnable: UINT);
 
 
 function SysErrorMessage(ErrorCode: Cardinal): PAnsiChar;
-procedure showwarning(Text: PChar);
-procedure ShowSysErrorMessage(ID: PChar);
+procedure showwarning(Text: PAnsiChar);
+procedure ShowSysErrorMessage(ID: PAnsiChar);
 
 
 //function tr4w_GetTimeString: PChar;
@@ -200,8 +200,8 @@ function tSetDlgItemIntFalse(hDlg: HWND; nIDDlgItem: integer; uValue: UINT): BOO
 function tSetDlgItemIntSigned(hDlg: HWND; nIDDlgItem: integer; uValue: integer): BOOL; stdcall;
 function CreateModalDialog(Width, Height: integer; ParentHWND: HWND; lpDialogFunc: TFNDlgProc; dwInitParam: lParam): integer;
 function CreateListBox(X, Y, nWidth, nHeight: Word; hwndParent: HWND; HMENU: HMENU): HWND;
-function CreateButton(dwStyle: Cardinal; lpWindowName: PChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
-function CreateStatic(lpWindowName: PChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
+function CreateButton(dwStyle: Cardinal; lpWindowName: PAnsiChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
+function CreateStatic(lpWindowName: PAnsiChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 function CreateEdit(dwStyle: Cardinal; X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 function CreateListView2(X, Y, nWidth, nHeight: Word; hwndParent: HWND): HWND;
 function CreateComboBox(hwndParent: HWND; HMENU: HMENU): HWND;
@@ -279,10 +279,10 @@ begin
   Result := SYSERRORBUFFER;
 end;
 
-procedure showwarning(Text: PChar);
+procedure showwarning(Text: PAnsiChar);
 begin
   logger.Warn(Text);
-  MessageBox(0, Text, tr4w_ClassName, MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
+  MessageBoxA(0, Text, 'TR4W', MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
 end;
 
 function FreqToPChar2(i: integer): PAnsiChar;
@@ -453,12 +453,12 @@ begin
   Windows.SendDlgItemMessage(ParentHandle, integer(Control), CB_ADDSTRING, 0, integer(PChar(s)));
 end;
 
-procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: PChar);
+procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: PAnsiChar);
 begin
-  Windows.SendDlgItemMessage(ParentHandle, integer(Control), CB_ADDSTRING, 0, integer(s));
+  Windows.SendDlgItemMessageA(ParentHandle, integer(Control), CB_ADDSTRING, 0, integer(s));
 end;
 
-function tLB_ADDSTRING(h: HWND; Text: PChar): integer;
+function tLB_ADDSTRING(h: HWND; Text: PAnsiChar): integer;
 begin
   Result := -1;
   if h = 0 then Exit;
@@ -522,7 +522,7 @@ begin
   Result := i1;
 end;
 
-function PCharToInt(p: PChar): integer;
+function PCharToInt(p: PAnsiChar): integer;
 label
   1, 2;
 var
@@ -711,7 +711,7 @@ end;
 
 procedure tSetWindowText(WindowHandle: HWND; s: string);
 begin
-  Windows.SetWindowText(WindowHandle, PChar(s));
+  Windows.SetWindowTextA(WindowHandle, PChar(s));
 end;
 
 procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
@@ -758,7 +758,7 @@ procedure tSetDlgItemTypText(hDlg: HWND; nIDDlgItem: integer; lpString: PChar);
 begin
   Windows.CopyMemory(@SetDlgItemTextBuffer, lpString + 1, Cardinal(lpString^));
   SetDlgItemTextBuffer[Cardinal(lpString^)] := #0;
-  Windows.SetDlgItemText(hDlg, nIDDlgItem, SetDlgItemTextBuffer);
+  Windows.SetDlgItemTextA(hDlg, nIDDlgItem, SetDlgItemTextBuffer);
 end;
 }
 
@@ -792,7 +792,7 @@ begin
   if Len <> 0 then Windows.SendMessage(TempHWND, WM_GETTEXT, Len + 1, LONGINT(Pointer(@Result[1])));
 end;
 
-function GetNumberFromCharBuffer(p: PChar): integer;
+function GetNumberFromCharBuffer(p: PAnsiChar): integer;
 label
   1;
 var
@@ -874,7 +874,7 @@ begin
   Result := uStrSearch.StrPos(Str1, Str2);
 end;
 
-function GetValueFromArray(PCharArrayAddress: PChar; ArraySize: Byte; CMD: PChar): Byte;
+function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; CMD: PAnsiChar): Byte;
 var
   b                                     : Byte;
   p                                     : Pointer;
@@ -903,15 +903,7 @@ begin
   for b := 0 to ArrayLength do
   begin
 
-    if PInteger(PChar(ArrayPtr) + (b * 4))^ = ValueToSet then
-{
-      asm
-    mov eax, ArrayPtr
-    add eax, b
-    mov p, eax
-      end;
-    if p^ = ValueToSet then
-}
+    if PInteger(PAnsiChar(ArrayPtr) + (b * 4))^ = ValueToSet then
     begin
       aVar^ := ValueToSet;
       Result := True;
@@ -951,7 +943,7 @@ begin
   showwarning(wsprintfBuffer);
 end;
 
-function DeleteSlashes(p: PChar): PChar;
+function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 var
   TempInteger                           : integer;
 begin
@@ -963,7 +955,7 @@ begin
   end;
 end;
 
-procedure ShowSysErrorMessage(ID: PChar);
+procedure ShowSysErrorMessage(ID: PAnsiChar);
 begin
   Format(wsprintfBuffer, '%s: %s', ID, SysErrorMessage(Windows.GetLastError));
   showwarning(wsprintfBuffer);
@@ -996,7 +988,7 @@ begin
   //  SendMessage(Result, WM_SETICON, ICON_BIG, LoadIcon(thInstance, 'MAINICON'));
 end;
 
-procedure SetMainWindowText(Window: TMainWindowElement; Text: PChar);
+procedure SetMainWindowText(Window: TMainWindowElement; Text: PAnsiChar);
 begin
 
 //  if Window = mweUserInfo then
@@ -1008,7 +1000,7 @@ begin
 //      inttopchar(integer(Window));
       Exit;
     end;
-  Windows.SetWindowText(wh[Window], Text);
+  Windows.SetWindowTextA(wh[Window], Text);
 
   if Text = nil then
     TWindows[Window].mweE := True
@@ -1391,7 +1383,7 @@ asm
       JMP    @@exit
 end;
 
-function EnumerateLinesInFile(FileName: PChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 label
   2, 3, LastLine;
 var
@@ -1482,7 +1474,7 @@ begin
   CloseHandle(h);
 end;
 
-function EnumerateLinesInFile_old(FileName: PChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
+function EnumerateLinesInFile_old(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 label
   2, 3, LastLine;
 var
@@ -1654,15 +1646,15 @@ begin
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function CreateStatic(lpWindowName: PChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
+function CreateStatic(lpWindowName: PAnsiChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  Result := CreateWindow(StaticPChar, lpWindowName, SS_SUNKEN or SS_center or WS_CHILD or WS_VISIBLE, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
+  Result := CreateWindowA('Static', lpWindowName, SS_SUNKEN or SS_center or WS_CHILD or WS_VISIBLE, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function CreateButton(dwStyle: Cardinal; lpWindowName: PChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
+function CreateButton(dwStyle: Cardinal; lpWindowName: PAnsiChar; X, Y, nWidth: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowEx(0, ButtonPChar, lpWindowName, dwStyle or WS_CHILD or BS_TEXT or WS_VISIBLE or WS_TABSTOP, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
+  Result := CreateWindowExA(0, 'Button', lpWindowName, dwStyle or WS_CHILD or BS_TEXT or WS_VISIBLE or WS_TABSTOP, X, Y, nWidth, 23 {nHeight}, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 

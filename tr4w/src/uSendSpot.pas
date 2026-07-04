@@ -46,7 +46,7 @@ function SendSpotDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lPara
 var
   i                                     : integer;
   Hz100                                 : integer;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
   LastCallsign                          : CallString;
 const
   l                                     : array[1..3] of PAnsiChar = (RC_CALLSIGN, RC_FREQUENCY, RC_COMMENT);
@@ -58,7 +58,7 @@ begin
 //    WM_HELP: tWinHelp(59);
     WM_INITDIALOG:
       begin
-        Windows.SetWindowText(hwnddlg, RC_SENDSPOT);
+        Windows.SetWindowTextA(hwnddlg, RC_SENDSPOT);
         for i := 1 to 3 do
         begin
           CreateStatic(l[i], 10, i * 30 - 20, 100, hwnddlg, 100 + i);
@@ -107,7 +107,7 @@ begin
             p := nil;
             tContestNameInComment := False;
           end;
-          SetDlgItemText(hwnddlg, 109, p);
+          SetDlgItemTextA(hwnddlg, 109, p);
         end;
 
         case wParam of

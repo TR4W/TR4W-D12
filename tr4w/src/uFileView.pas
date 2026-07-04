@@ -161,7 +161,7 @@ const
 
 function FullLogDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 function OpenCallback(dwCookie: LONGINT; pbBuff: PByte; cb: LONGINT; var pcb: LONGINT): LONGINT; stdcall;
-procedure SendMail(Address: PChar; BugReport: boolean);
+procedure SendMail(Address: PAnsiChar; BugReport: boolean);
 
 var
   MAPISendDocuments                     : TMAPISendDocuments;
@@ -217,7 +217,7 @@ begin
            // AppendMenu(Menu, MF_STRING, 106, 'Contribute log for SCP database');
         end;
 //        RichEditViewer := Get101Window(hwnddlg);
-        SetWindowText(hwnddlg, PreviewFileNameAddress);
+        SetWindowTextA(hwnddlg, PreviewFileNameAddress);
         Windows.SetTimer(hwnddlg, 1, 50, nil);
       end;
 
@@ -273,14 +273,14 @@ begin
   end;
 end;
 
-procedure SendMail(Address: PChar; BugReport: boolean);
+procedure SendMail(Address: PAnsiChar; BugReport: boolean);
 var
   module                                : HWND;
   lpMessage                             : TMapiMessage;
   Files                                 : array[0..3] of MapiFileDesc;
 
   lpRecips                              : TMapiRecipDesc;
-  TempBuffer                            : array[0..63] of Char;
+  TempBuffer                            : array[0..63] of AnsiChar;
   MapiResult                            : Cardinal;
 begin
   module := LoadLibrary('Mapi32.dll');

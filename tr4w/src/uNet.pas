@@ -58,7 +58,7 @@ uses
 type
   TNetWindowColumnsInfo = record
     Width: integer;
-    Text: PChar;
+    Text: PAnsiChar;
     fmt: integer;
   end;
 
@@ -94,7 +94,7 @@ procedure CreateNetworkListView;
 function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
 function NetDlgProc(hwnddlg: HWND; Msg: UINT; wp: wParam; lp: lParam): BOOL; stdcall;
 //procedure SendEditedQSOToNetwork(var CE: ContestExchange);
-procedure ShowConnectionStatus(Operation: PChar);
+procedure ShowConnectionStatus(Operation: PAnsiChar);
 procedure AddNewClient(ClientID: integer);
 procedure ConnectThread;
 procedure DisplayClientStatus(Index: integer);
@@ -316,9 +316,9 @@ begin
               ParameterToNetworkPtr := @NetBuffer[Bufindex];
               if CheckCommand(@ParameterToNetworkPtr^.pnCommand, ParameterToNetworkPtr^.pnValue) then
               begin
-                Windows.WritePrivateProfileString(_COMMANDS, @ParameterToNetworkPtr^.pnCommand[1], @ParameterToNetworkPtr^.pnValue[1], TR4W_INI_FILENAME);
+                Windows.WritePrivateProfileStringA(_COMMANDS, @ParameterToNetworkPtr^.pnCommand[1], @ParameterToNetworkPtr^.pnValue[1], TR4W_INI_FILENAME);
 //                ShowTrayTips();
-                QuickDisplay(PChar(ParameterToNetworkPtr^.pnCommand + ' was changed by other station in network'));
+                QuickDisplay(PAnsiChar(AnsiString(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network'));
               end;
               Bufindex := Bufindex + SizeOf(ParameterToNetwork);
               if Bufindex - 1 >= i then Exit;
@@ -556,7 +556,7 @@ begin
     sstCallsign:
       begin
         SetStatusByte;
-        Windows.GetWindowText(wh[mweCall], @MyStationState.ssCallsign, SizeOf(MyStationState.ssCallsign));
+        Windows.GetWindowTextA(wh[mweCall], @MyStationState.ssCallsign, SizeOf(MyStationState.ssCallsign));
       end;
 
     sstOperator:
@@ -686,7 +686,7 @@ begin
     NetQSOInfoToSend.qiComputerID := Windows.GetTickCount;
 
 //    sCIDMESSAGE[4] := Char(Ord(ComputerID) - Ord('A') + 1);
-    ComputerNetID.ciComputerID := Char(Ord(ComputerID) - Ord('A') + 1);
+    ComputerNetID.ciComputerID := AnsiChar(Ord(ComputerID) - Ord('A') + 1);
     SendToNet(ComputerNetID, SizeOf(ComputerNetID));
     SendFullStationStatus;
     SendClientStatus;
@@ -746,7 +746,7 @@ var
   i, i2                                 : integer;
   h                                     : HWND;
 //  p                                     : PChar;
-  TempBuffer                            : array[0..31] of Char;
+  TempBuffer                            : array[0..31] of AnsiChar;
 const
   da                                    : array[boolean] of PAnsiChar = (nil, 'D');
 begin
@@ -965,7 +965,7 @@ begin
   Result := True;
 end;
 
-procedure ShowConnectionStatus(Operation: PChar);
+procedure ShowConnectionStatus(Operation: PAnsiChar);
 begin
   Format(@NetBuffer, TC_NETWORK, Operation, @ServerAddress[1], ServerPort);
   Windows.SetWindowTextA(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer);
@@ -976,7 +976,7 @@ var
   elvi                                  : TLVItem;
   i                                     : integer;
   h                                     : HWND;
-  ProgressBarArray                      : array[0..25] of Char;
+  ProgressBarArray                      : array[0..25] of AnsiChar;
   ProgressBarPos                        : integer;
 begin
   Windows.FillMemory(@ProgressBarArray[0], SizeOf(ProgressBarArray), Byte('|'));

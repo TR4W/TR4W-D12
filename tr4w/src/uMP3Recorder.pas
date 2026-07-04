@@ -25,6 +25,7 @@ uses
 //  spectrum_vis,
   LogK1EA,
   SysUtils, // Issue #997 (StrPCopy/Format for asm-block removal; placed before TF so unqualified Format still resolves to TF.Format)
+  System.AnsiStrings, // D12: ANSI StrPCopy (before TF so unqualified Format still resolves to TF.Format)
   TF,
   Version,
   VC,
@@ -41,12 +42,12 @@ type
   TMP3RecorderDuration = (rdEachQSO, rdEachHour, rdNonStop);
   {(*}
   TID3Rec = packed record
-    Tag     : array[0..2] of Char;
-    Title   : array[0..29] of Char;
-    Artist  : array[0..29] of Char;
-    Album   : array[0..29] of Char;
-    Year    : array[0..3] of Char;
-    comment : array[0..29] of Char;
+    Tag     : array[0..2] of AnsiChar;
+    Title   : array[0..29] of AnsiChar;
+    Artist  : array[0..29] of AnsiChar;
+    Album   : array[0..29] of AnsiChar;
+    Year    : array[0..3] of AnsiChar;
+    comment : array[0..29] of AnsiChar;
     Genre   : Byte;
   end;
 {*)}
@@ -287,7 +288,7 @@ var
 
   hLame                                 : THBE_STREAM;
 
-  pMP3OutputBuffer                      : array[0..8640 - 1] of Char;
+  pMP3OutputBuffer                      : array[0..8640 - 1] of AnsiChar;
 
   MP3InputBufferIndex                   : Cardinal;
 
@@ -376,7 +377,7 @@ begin
         else
         begin
           // Issue #997 (asm push/wsprintf/add esp -> StrPCopy + SysUtils.Format)
-          SysUtils.StrPCopy(TR4W_TEMP_MP3_FILENAME,
+          System.AnsiStrings.StrPCopy(TR4W_TEMP_MP3_FILENAME,
             SysUtils.Format('LAME_ENC.DLL: %s ' + TC_LAME_ERROR + ':' + #13#10#13#10' http://www.tr4w.com/files/',
               [SysErrorMessage(GetLastError)]));
           showwarning(TR4W_TEMP_MP3_FILENAME);
@@ -389,7 +390,7 @@ begin
 
         Windows.SetWindowTextA(hwnddlg, TR4W_TEMP_MP3_FILENAME);
 
-        Windows.CreateDirectory(TR4W_MP3PATH, nil);
+        Windows.CreateDirectoryA(TR4W_MP3PATH, nil);
 
         if RecorderEnable then
         begin
@@ -556,7 +557,7 @@ begin
   waveinreset(hwi);
   for i := 0 to 1 do waveinunprepareheader(hwi, @whead[i], SizeOf(whead[i]));
   waveinclose(hwi);
-  Windows.SetDlgItemText(MP3RECWNDHND, 102, nil);
+  Windows.SetDlgItemTextA(MP3RECWNDHND, 102, nil);
   SendDlgItemMessage(MP3RECWNDHND, 103, PBM_SETPOS, 0, 0);
   mp3recProgressBarPosition := 0;
 end;
@@ -619,9 +620,9 @@ begin
   Format(ID3TAG.Year, '%u', CE.tSysTime.qtYear + 2000);
   Format(ID3TAG.Artist, 'QSO with %s', @CE.Callsign[1]);
 
-  Windows.lstrcpy(@ID3TAG.Album, ContestTypeSA[Contest]);
-  Windows.lstrcpy(@ID3TAG.comment, TR4W_CURRENTVERSION);
-  Windows.lstrcpy(@ID3TAG.Title, @MyCall[1]);
+  Windows.lstrcpyA(@ID3TAG.Album, ContestTypeSA[Contest]);
+  Windows.lstrcpyA(@ID3TAG.comment, TR4W_CURRENTVERSION);
+  Windows.lstrcpyA(@ID3TAG.Title, @MyCall[1]);
   ID3TAG.Genre := $1C;
 
   SetFilePointer(TempMP3FileHandle, 0, nil, FILE_END);
@@ -629,7 +630,7 @@ begin
 
   CloseTempMP3File;
 
-  Windows.CopyFile(TR4W_TEMP_MP3_FILENAME, DeleteSlashes(MakeMP3Filename(CE)), True);
+  Windows.CopyFileA(TR4W_TEMP_MP3_FILENAME, DeleteSlashes(MakeMP3Filename(CE)), True);
   OpenTempMP3File;
   Result := True;
 end;
@@ -637,7 +638,7 @@ end;
 procedure CheckMMError(ErrorCode: Cardinal);
 begin
   if ErrorCode = MMSYSERR_NOERROR then Exit;
-  waveInGetErrorText(ErrorCode, @wsprintfBuffer, SizeOf(wsprintfBuffer));
+  waveInGetErrorTextA(ErrorCode, @wsprintfBuffer, SizeOf(wsprintfBuffer));
   showwarning(wsprintfBuffer);
 end;
 

@@ -164,7 +164,7 @@ begin
    // auto-clears after ~30s.  (The bare SetTextInQuickCommandWindow used
    // before had no persistence, so the next status write overwrote it
    // before it could be seen.)
-   QuickDisplayError(PChar(msg));
+   QuickDisplayError(PAnsiChar(AnsiString(msg)));
    logger.Warn('[uWSJTX] ' + msg);
 end;
 
@@ -279,7 +279,7 @@ begin
             on E: Exception do
                begin
                logger.Error('[WSJT-X] Exception binding UDP port ' + IntToStr(FUDPPort) + ': ' + E.Message);
-               QuickDisplay(PChar('WSJT-X bind error port ' + IntToStr(FUDPPort) + ': ' + E.Message));
+               QuickDisplay(PAnsiChar(AnsiString('WSJT-X bind error port ' + IntToStr(FUDPPort) + ': ' + E.Message)));
                end;
          end;
 
@@ -1052,8 +1052,8 @@ var
 
 begin
   // ... get message from client
-  saveDecimalSeparator := DecimalSeparator;
-  saveThousandSeparator := ThousandSeparator;
+  saveDecimalSeparator := FormatSettings.DecimalSeparator;
+  saveThousandSeparator := FormatSettings.ThousandSeparator;
   try
     AContext.Connection.IOHandler.ReadBytes(buffer, -1, true);
     sBuffer := BytesToString(buffer);
@@ -1114,11 +1114,11 @@ begin
         else
         begin
           // Commander interface forces . as decimal for Get
-          saveDecimalSeparator := DecimalSeparator;
-          saveThousandSeparator := ThousandSeparator;
+          saveDecimalSeparator := FormatSettings.DecimalSeparator;
+          saveThousandSeparator := FormatSettings.ThousandSeparator;
           try
-             DecimalSeparator := '.';
-             ThousandSeparator := ',';
+             FormatSettings.DecimalSeparator := '.';
+             FormatSettings.ThousandSeparator := ',';
              sFreq := SysUtils.FormatFloat(',0.000',
              radio1.CurrentStatus.VFO[VFOA].Frequency / 1000);
              logger.Trace('[uWSJTX] Sending VFOA frequency: ' +
@@ -1126,8 +1126,8 @@ begin
              AContext.Connection.IOHandler.Write(SysUtils.Format('<CmdFreq:%u>%s',
                                                  [length(sFreq), sFreq]));
           finally
-             DecimalSeparator := SaveDecimalSeparator;
-             ThousandSeparator := saveThousandSeparator;
+             FormatSettings.DecimalSeparator := SaveDecimalSeparator;
+             FormatSettings.ThousandSeparator := saveThousandSeparator;
           end;
         end;
       end

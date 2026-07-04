@@ -38,13 +38,13 @@ function RemainingMultsZoneDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lPa
 var
   RemainingMultsZoneWindowHandle: HWND;
 var
-  RemMultsBuf                 : array[0..7] of Char;
+  RemMultsBuf                 : array[0..7] of AnsiChar;
 implementation
 uses MainUnit;
 
 function RemainingMultsZoneDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 var
-  p                           : PChar;
+  p                           : PAnsiChar;
   DS                          : PDrawItemStruct;
   I                           : integer;
   Index                       : integer;
@@ -71,7 +71,7 @@ begin
            Format(RemMultsBuf, '%02u', Index + 1);
         p := @RemMultsBuf;
 
-        I := Windows.lstrlen(p);
+        I := Windows.lstrlenA(p);
         if RemainingMultDisplayMode = HiLight then
 
           if not RemainingMultsZone^[Index] then
@@ -85,7 +85,7 @@ begin
           end;
 
         SetBkMode(DS^.HDC, TRANSPARENT);
-        Windows.TextOut(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, I);
+        Windows.TextOutA(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, I);
 
       end;
 

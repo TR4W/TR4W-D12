@@ -1,3 +1,19 @@
+﻿{
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+ This file is part of TR4W  (SRC)
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+}
 unit uIcomCIV;
 
 {
@@ -35,15 +51,15 @@ function IcomBCDToByte(bcd: Byte): Byte;
 // Frequency BCD encoding (5 bytes, LSB first — CI-V $03/$05 format)
 // ---------------------------------------------------------------------------
 
-function IcomFreqToBCD(freq: LongInt): string;
-function IcomBCDToFreq(bcd: string): LongInt;
+function IcomFreqToBCD(freq: LongInt): AnsiString;
+function IcomBCDToFreq(bcd: AnsiString): LongInt;
 
 // ---------------------------------------------------------------------------
 // RIT/XIT offset BCD encoding (2 bytes, LSB first, magnitude only)
 // The sign byte is appended separately by the caller.
 // ---------------------------------------------------------------------------
 
-function IcomOffsetToBCD(offset: Integer): string;
+function IcomOffsetToBCD(offset: Integer): AnsiString;
 
 // ---------------------------------------------------------------------------
 // CW speed conversion  (CI-V $14 $0C format)
@@ -69,7 +85,7 @@ begin
    Result := ((bcd shr 4) * 10) + (bcd and $0F);
 end;
 
-function IcomFreqToBCD(freq: LongInt): string;
+function IcomFreqToBCD(freq: LongInt): AnsiString;
 var
    i       : Integer;
    freqStr : string;
@@ -83,11 +99,11 @@ begin
    for i := 5 downto 1 do
       begin
       bcdByte := IcomByteToBCD(StrToInt(Copy(freqStr, i * 2 - 1, 2)));
-      Result  := Result + Chr(bcdByte);
+      Result  := Result + AnsiChar(bcdByte);
       end;
 end;
 
-function IcomBCDToFreq(bcd: string): LongInt;
+function IcomBCDToFreq(bcd: AnsiString): LongInt;
 var
    i       : Integer;
    freqStr : string;
@@ -99,7 +115,7 @@ begin
    Result := StrToInt64Def(freqStr, 0);
 end;
 
-function IcomOffsetToBCD(offset: Integer): string;
+function IcomOffsetToBCD(offset: Integer): AnsiString;
 var
    absOffset : Integer;
    offsetStr : string;
@@ -112,7 +128,7 @@ begin
    for i := 2 downto 1 do
       begin
       bcdByte := IcomByteToBCD(StrToInt(Copy(offsetStr, i * 2 - 1, 2)));
-      Result  := Result + Chr(bcdByte);
+      Result  := Result + AnsiChar(bcdByte);
       end;
 end;
 

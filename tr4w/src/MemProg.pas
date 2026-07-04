@@ -70,7 +70,7 @@ var
   I                                     : Cardinal;
   Left                                  : integer;
   Top                                   : integer;
-  ButtonText                            : PChar;
+  ButtonText                            : AnsiString;
 const
   LineHeight                            = 18;
   ValueLeft                             = 130;
@@ -88,13 +88,13 @@ begin
           if MesWindow = OtherMsgWin then
           begin
             if I < VK_F10 then
-              ButtonText := PChar('&' + IntToStr(I - 111))
+              ButtonText := '&' + IntToStr(I - 111)
             else
             begin
-              ButtonText := PChar(string('&' + CHR(I - 56)));
+              ButtonText := AnsiString('&' + CHR(I - 56));
               if ActiveMode = Phone then goto 3;
             end;
-            tCreateButtonWindow(WS_EX_STATICEDGE, ButtonText, BS_PUSHLIKE + BS_NOTIFY + WS_CHILD + WS_VISIBLE,
+            tCreateButtonWindow(WS_EX_STATICEDGE, PAnsiChar(ButtonText), BS_PUSHLIKE + BS_NOTIFY + WS_CHILD + WS_VISIBLE,
               10, Top, 25, LineHeight, hwnddlg, I);
             3:
             Left := 40;
@@ -188,7 +188,7 @@ begin
               begin
                 if Windows.GetWindowTextA(MsgEditHWND, TempBuffer2, 255) <> 0 then
                 begin
-                  Windows.SetWindowText(MsgEditHWND, nil);
+                  Windows.SetWindowTextA(MsgEditHWND, nil);
                   Exit;
                 end;
                 2:
@@ -205,7 +205,7 @@ begin
     WM_HOTKEY:
       begin
         //         windows.Beep(200,200);
- //  windows.SetWindowText(hwnddlg,inttopchar(wParam));
+ //  windows.SetWindowTextA(hwnddlg,inttopchar(wParam));
 
         if MesWindow = OtherMsgWin then Exit;
         if Windows.IsWindowVisible(MsgEditHWND) then Exit;
@@ -219,13 +219,13 @@ begin
         if MesWindow = CQMsgWin then
         begin
           ShowCQFunctionKeyStatus;
-          Windows.SetWindowText(MsgEditHWND, PChar(string(GetCQMemoryString(ActiveMode, Char(wParam)))));
+          Windows.SetWindowTextA(MsgEditHWND, PAnsiChar(AnsiString(GetCQMemoryString(ActiveMode, Char(wParam)))));
         end;
         if MesWindow = ExMsgWin then
         begin
           if (wParam = VK_F1) or (wParam = VK_F2) then Exit;
           ShowExFunctionKeyStatus;
-          Windows.SetWindowText(MsgEditHWND, PChar(string(GetEXMemoryString(ActiveMode, Char(wParam)))));
+          Windows.SetWindowTextA(MsgEditHWND, PAnsiChar(AnsiString(GetEXMemoryString(ActiveMode, Char(wParam)))));
         end;
         Windows.ShowWindow(MsgEditHWND, SW_SHOW);
         Windows.ShowWindow(MsgEditLabelHWND, SW_SHOW);
@@ -416,7 +416,7 @@ begin
   if Windows.IsWindowVisible(h) then Exit;
   Windows.ShowWindow(h, SW_SHOW);
   Windows.ShowWindow(MsgEditLabelHWND, SW_SHOW);
-  Windows.SetWindowText(h, PChar(s));
+  Windows.SetWindowTextA(h, PChar(s));
   Windows.SetFocus(h);
   PlaceCaretToTheEnd(h);
 end;

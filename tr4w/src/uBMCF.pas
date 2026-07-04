@@ -58,7 +58,7 @@ begin
   case Msg of
     WM_INITDIALOG:
       begin
-        Windows.SetWindowText(hwnddlg, RC_BANDPLAN);
+        Windows.SetWindowTextA(hwnddlg, RC_BANDPLAN);
         CreateOKCancelButtons( hwnddlg);
 
         tCreateStaticWindow('Band', defStyle, 10, 5, 40, itemHeight2, hwnddlg, 0);
@@ -132,7 +132,7 @@ begin
 
           end;
 
-          WritePrivateProfileSection('BAND PLAN', wsprintfBuffer, TR4W_INI_FILENAME);
+          WritePrivateProfileSectionA('BAND PLAN', wsprintfBuffer, TR4W_INI_FILENAME);
           goto ExitAndClose;
         end;
 

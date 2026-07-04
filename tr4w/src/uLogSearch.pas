@@ -72,7 +72,7 @@ begin
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowText(hwnddlg, RC_SEARCHLOG);
+        Windows.SetWindowTextA(hwnddlg, RC_SEARCHLOG);
 
         for i := 0 to 3 do
         begin
@@ -112,7 +112,7 @@ begin
             begin
               SearchStart:
 
-              TempString[0] := Char(Windows.GetDlgItemTextA(hwnddlg, 200, @TempString[1], CallstringLength - 1));
+              TempString[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 200, @TempString[1], CallstringLength - 1));
               Windows.GetDlgItemTextA(hwnddlg, 203, TempOperator, SizeOf(OperatorType));
               if (TempString[0] = #0) and (TempOperator[0] = #0) then Exit;
 

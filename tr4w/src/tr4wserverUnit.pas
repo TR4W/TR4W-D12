@@ -70,8 +70,8 @@ type
   TClientEntry = packed record
     clSerialNumber: integer;
     clSocket: Cardinal;
-    clIPAdr: array[0..15] of Char;
-    clName: array[0..31] of Char;
+    clIPAdr: array[0..15] of AnsiChar;
+    clName: array[0..31] of AnsiChar;
 
     clSerialNumberStatus: TSerialNumberType;
     clConnectedToTelnet: boolean;
@@ -153,8 +153,8 @@ var
   ServerNewQSOPtr                       : NetQSOInformationPtr;
   ServerLogFileInformation              : TLogFileInformation = (liID: NET_LOGCOMPARE_ID);
 
-  SENDTR4W                              : array[0..3] of Char = 'TR4W';
-  PASSTR4W                              : array[0..3] of Char = 'PASS';
+  SENDTR4W                              : array[0..3] of AnsiChar = 'TR4W';
+  PASSTR4W                              : array[0..3] of AnsiChar = 'PASS';
 
   ContestExchangesBuffer                : array[1..MaxContestExchangesBufferSize] of ContestExchange;
 
@@ -167,16 +167,16 @@ var
   TempLongBool                          : LongBool;
   CorrectPortNumber                     : LongBool;
 
-  answer                                : array[1..2] of Char;
+  answer                                : array[1..2] of AnsiChar;
   ClientsSoocketsArray                  : array[1..MAXCLIENTS] of TClientEntry;
-  ServerBuffer                          : array[0..4096 - 1] of Char;
-  tr4wServerPassword                    : array[0..010] of Char;
-  ServerLogFileName                     : array[0..255] of Char;
+  ServerBuffer                          : array[0..4096 - 1] of AnsiChar;
+  tr4wServerPassword                    : array[0..010] of AnsiChar;
+  ServerLogFileName                     : array[0..255] of AnsiChar;
 {$IF SERVERDEBUG}
   ServerDebugFileName                   : array[0..255] of Char;
 {$IFEND}
 //  MultsFrequenciesFileName              : array[0..255] of Char;
-  DisplayBuffer                         : array[0..063] of Char;
+  DisplayBuffer                         : array[0..063] of AnsiChar;
 
   client_addr                           : sockaddr_in;
   mysaddr                               : sockaddr_in;
@@ -236,10 +236,10 @@ procedure RunServer;
 procedure GetServerLogCRC32;
 function sSend(s: TSocket; var buf; Len: integer; mt: DebugMessageType): integer;
 function sRecv(s: TSocket; var buf; Len: integer): integer;
-function ServerMessageBox(Text: PChar; uType: UINT): integer;
+function ServerMessageBox(Text: PAnsiChar; uType: UINT): integer;
 procedure ScanLogForSerialsNumbers;
 procedure StopServer;
-procedure AddSocketToArray(soc: Cardinal; IP: PChar; Name: PChar);
+procedure AddSocketToArray(soc: Cardinal; IP: PAnsiChar; Name: PAnsiChar);
 procedure DeleteSocketFromArray(soc: Cardinal);
 procedure SendMessageToClients(From: Cardinal; Count: integer; ToAll: boolean; mt: DebugMessageType);
 procedure DisplayRCVDBytes;
@@ -306,7 +306,7 @@ begin
 //  Windows.ZeroMemory(@ClientsSoocketsArray, SizeOf(ClientsSoocketsArray));
   Gethostname(@ServerBuffer, 128);
   myhostent := WinSock2.gethostbyname(@ServerBuffer);
-  Windows.SendDlgItemMessage(ApplicationHandle, tsIPADDRESS, WM_SETTEXT, 0, integer(iNet_ntoa(PInAddr(myhostent^.h_addr_list^)^)));
+  Windows.SendDlgItemMessageA(ApplicationHandle, tsIPADDRESS, WM_SETTEXT, 0, integer(iNet_ntoa(PInAddr(myhostent^.h_addr_list^)^)));
   ServerSocket := socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if ServerSocket = INVALID_SOCKET then Exit;
   mysaddr.sin_family := AF_INET;
@@ -360,7 +360,7 @@ begin
     end;
 end;
 
-procedure AddSocketToArray(soc: Cardinal; IP: PChar; Name: PChar);
+procedure AddSocketToArray(soc: Cardinal; IP: PAnsiChar; Name: PAnsiChar);
 var
   i                                     : integer;
 begin
@@ -369,8 +369,8 @@ begin
     begin
       Windows.ZeroMemory(@ClientsSoocketsArray[i].clSocket, SizeOf(TClientEntry) - 4); //skip clSerialNumber
       ClientsSoocketsArray[i].clSocket := soc;
-      lstrcpy(@ClientsSoocketsArray[i].clIPAdr[0], IP);
-      lstrcpy(@ClientsSoocketsArray[i].clName[0], Name);
+      lstrcpyA(@ClientsSoocketsArray[i].clIPAdr[0], IP);
+      lstrcpyA(@ClientsSoocketsArray[i].clName[0], Name);
       if Name = nil then ClientsSoocketsArray[i].clName[0] := '?';
       inc(nclients);
       Break;
@@ -415,11 +415,11 @@ begin
     if ClientsSoocketsArray[i].clSocket <> 0 then
     begin
       Format(DisplayBuffer, '%s: %s', ClientsSoocketsArray[i].clIPAdr, ClientsSoocketsArray[i].clName);
-      Windows.SendDlgItemMessage(ApplicationHandle, 109, LB_ADDSTRING, 0, integer(@DisplayBuffer));
+      Windows.SendDlgItemMessageA(ApplicationHandle, 109, LB_ADDSTRING, 0, integer(@DisplayBuffer));
     end;
 
   Format(DisplayBuffer, 'TR4WSERVER [%d]', nclients);
-  Windows.SetWindowText(ApplicationHandle, DisplayBuffer);
+  Windows.SetWindowTextA(ApplicationHandle, DisplayBuffer);
   Windows.SetDlgItemInt(ApplicationHandle, tsCLIENTS, nclients, False);
 end;
 
@@ -464,7 +464,7 @@ var
   QSO                              : integer;
 begin
   Windows.GetSystemTime(syst);
-  //   Windows.SetWindowText(ApplicationHandle, PChar(IntToStr(SendLogTo)));
+  //   Windows.SetWindowTextA(ApplicationHandle, PChar(IntToStr(SendLogTo)));
      //   SetFilePointer(ServerLogHandle, 4, nil, FILE_BEGIN);
   FilePointer := 0;
   QSO := 0;
@@ -691,7 +691,7 @@ function OpenServerLog(dwCreationDistribution: DWORD): boolean;
 begin
   Result := False;
   if ServerLogOpened then Exit;
-  ServerLogHandle := CreateFile(@ServerLogFileName, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, dwCreationDistribution, FILE_ATTRIBUTE_ARCHIVE, 0);
+  ServerLogHandle := CreateFileA(@ServerLogFileName, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, dwCreationDistribution, FILE_ATTRIBUTE_ARCHIVE, 0);
   Result := ServerLogHandle <> INVALID_HANDLE_VALUE;
   ServerLogOpened := Result;
 
@@ -1022,9 +1022,9 @@ begin
   sSend(s, ServerMessage, SizeOf(ServerMessage), dmROLQ);
 end;
 
-function ServerMessageBox(Text: PChar; uType: UINT): integer;
+function ServerMessageBox(Text: PAnsiChar; uType: UINT): integer;
 begin
-  Result := MessageBox(ApplicationHandle, Text, _TR4WSERVER, uType);
+  Result := MessageBoxA(ApplicationHandle, Text, _TR4WSERVER, uType);
 end;
 
 procedure ScanLogForSerialsNumbers;

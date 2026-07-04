@@ -61,7 +61,7 @@ begin
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowText(hwnddlg, RC_DUPECHECKOAR);
+        Windows.SetWindowTextA(hwnddlg, RC_DUPECHECKOAR);
 
         Format(TempBuffer1, TC_ENTERCALLTOBECHECKEDON, BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
           CreateStatic(TempBuffer1, 15, 3, 250, hwnddlg, 102);
@@ -99,7 +99,7 @@ begin
         if HiWord(wParam) = EN_CHANGE then
         begin
       //    tClearDupeInfoCall;   4.39.4
-          DupeInfoCall[0] := CHR(Windows.GetDlgItemTextA(hwnddlg, 101, @DupeInfoCall[1], SizeOf(DupeInfoCall) - 1));
+          DupeInfoCall[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @DupeInfoCall[1], SizeOf(DupeInfoCall) - 1));
 //          DupeInfoCall := GetDialogItemText(hwnddlg, 101);
           if SCPMinimumLetters > 0 then
           begin

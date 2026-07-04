@@ -64,7 +64,7 @@ begin
         if tInputDialogInteger then dwNewLong := dwNewLong + ES_NUMBER;
 
 //        SetDlgItemText(hwnddlg, 102, IQPrompt);
-        Windows.SetWindowText(hwnddlg, 'TR4W');
+        Windows.SetWindowTextA(hwnddlg, 'TR4W');
         SendDlgItemMessage(hwnddlg, 101, EM_LIMITTEXT, IQMaxInputLength, 0);
 {
         TempPchar := IDI_QUESTION;
@@ -72,7 +72,12 @@ begin
         iqicon := LoadIcon(0, TempPchar);
         SendDlgItemMessage(hwnddlg, 106, STM_SETIMAGE, IMAGE_ICON, iqicon);
 }
-        SendDlgItemMessage(hwnddlg, 106, STM_SETIMAGE, IMAGE_ICON, LoadIcon(0, integer(IDI_QUESTION) + PChar(integer(tInputDialogWarning))));
+        // D12: IDI_QUESTION/IDI_WARNING are consecutive MAKEINTRESOURCE
+        // ordinals.  The original expression abused PChar pointer arithmetic
+        // to compute the ordinal; under a 2-byte PWideChar that stride doubles
+        // and selects the wrong icon.  Compute the ordinal in integer space,
+        // then cast to a resource pointer (LoadIconW accepts the ordinal form).
+        SendDlgItemMessage(hwnddlg, 106, STM_SETIMAGE, IMAGE_ICON, LoadIcon(0, PChar(integer(IDI_QUESTION) + integer(tInputDialogWarning))));
 
         Windows.SetWindowLong(Get101Window(hwnddlg), GWL_STYLE, dwNewLong);
         SetDlgItemTextA(hwnddlg, 101, @tInputDialogPreviousValue[1]);

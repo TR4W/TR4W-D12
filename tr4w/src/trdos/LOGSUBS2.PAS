@@ -510,7 +510,7 @@ procedure DeleteLastContact;
 var
   TempRXData                            : ContestExchange;
   lpNumberOfBytesRead                   : Cardinal;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
 
 begin
   if not OpenLogFile then Exit;
@@ -935,7 +935,8 @@ begin
 end;
 procedure AutoCQResume(SkipFirstMessage: boolean);
 var
-  CQMemory, SendChar      : Char;
+  CQMemory                : Char;
+  SendChar                : AnsiChar;
   CharacterCount                        : integer;
   FileName, TempString                  : ShortString;
   QSONumberString                       : Str20;
@@ -2744,7 +2745,7 @@ var
     TempBand                              : BandType;
     TempMode                              : ModeType;
     m                                     : RemainingMultiplierType;
-    BandPchar                             : PChar;
+    BandPchar                             : PAnsiChar;
     nQSOs                                 : integer;
     nTotal                                : integer;
     sContestName                          : string;
@@ -3223,7 +3224,7 @@ begin
       Exit;
       end;
 
-   saveDecimalSeparator := DecimalSeparator;
+   saveDecimalSeparator := FormatSettings.DecimalSeparator;
    try
       //DecimalSeparator := '.'; // Set this so we use . as reqired by ADIF and not localized separator ny4i
 
@@ -3254,16 +3255,16 @@ begin
       Format(QuickDisplayBuffer, '%d log records sent to UDP', nCount);
       QuickDisplay(QuickDisplayBuffer);
    finally
-      DecimalSeparator := SaveDecimalSeparator;
+      FormatSettings.DecimalSeparator := SaveDecimalSeparator;
    end;
 end;
 
 function ConvertBandTypeToUDPContactBand(band: BandType): string;
 begin
-   if DecimalSeparator <> '.' then
+   if FormatSettings.DecimalSeparator <> '.' then
       begin
       // Convert the . in BandTypeToUDPContactBand to the DecimalSeperator
-      result := StringReplace(BandTypeToUDPContactBand[band],'.',DecimalSeparator,[rfReplaceAll]);
+      result := StringReplace(BandTypeToUDPContactBand[band],'.',FormatSettings.DecimalSeparator,[rfReplaceAll]);
       end
    else
       begin

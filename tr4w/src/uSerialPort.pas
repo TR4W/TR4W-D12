@@ -327,7 +327,7 @@ end;
 
 function TSerialPort.ReadString(MaxLen: Integer): string;
 var
-  Buffer: array[0..1023] of Char;
+  Buffer: array[0..1023] of AnsiChar;
   BytesRead: DWORD;
   Len: Integer;
 begin

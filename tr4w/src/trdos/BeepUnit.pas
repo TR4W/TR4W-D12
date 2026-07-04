@@ -42,9 +42,9 @@ type
 
 const
   IOCTL_BEEP_SET                        = $10000;
-  FileNameStr                           : array[0..9] of Char = '\\.\tr4w'#0;
-  BeepFileName                          : PChar = @FileNameStr[0];
-  DevName                               : PChar = @FileNameStr[3];
+  FileNameStr                           : array[0..9] of AnsiChar = '\\.\tr4w'#0;
+  BeepFileName                          : PAnsiChar = @FileNameStr[0];
+  DevName                               : PAnsiChar = @FileNameStr[3];
 var
   hBeep                                 : HWND = INVALID_HANDLE_VALUE;
   OwnDevName                            : LongBool;
@@ -143,14 +143,14 @@ begin
   OwnDevName := False;
 
   if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then Exit;
-  if QueryDosDevice(DevName, wsprintfBuffer, MAX_PATH) = 0 then
+  if Windows.QueryDosDeviceA(DevName, wsprintfBuffer, MAX_PATH) = 0 then
   begin
     //if not
-    DefineDosDevice(DDD_RAW_TARGET_PATH, DevName, '\Device\Beep');
+    Windows.DefineDosDeviceA(DDD_RAW_TARGET_PATH, DevName, '\Device\Beep');
     //then ShowSysErrorMessage('GET SPEAKER');
     OwnDevName := True;
 
-    hBeep := CreateFile(BeepFileName, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
+    hBeep := Windows.CreateFileA(BeepFileName, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
 //    if hBeep = INVALID_HANDLE_VALUE then ShowSysErrorMessage('COMPUTER SPEAKER');
     ntBeep(32767 - 1, 1);
   end;
@@ -158,7 +158,7 @@ end;
 
 procedure ntBeepClose;
 begin
-  if OwnDevName then DefineDosDevice(DDD_REMOVE_DEFINITION, DevName, nil);
+  if OwnDevName then Windows.DefineDosDeviceA(DDD_REMOVE_DEFINITION, DevName, nil);
   if hBeep <> INVALID_HANDLE_VALUE then CloseHandle(hBeep);
 end;
 

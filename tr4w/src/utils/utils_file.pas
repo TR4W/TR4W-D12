@@ -4,7 +4,7 @@ interface
 
 uses SysUtils, Windows;
 
-function FileExists(FileName: PChar): boolean;
+function FileExists(FileName: PAnsiChar): boolean;
 
 function sWriteFile(hFile: THandle; const Buffer; nNumberOfBytesToWrite: DWORD): BOOL;
 function sWriteFileFromString(hFile: THandle; sBuffer: AnsiString): BOOL;
@@ -17,15 +17,15 @@ function OpenFileForWrite(var FileHandle: Text; FileName: string): boolean;
 implementation
 
 var
-  tr4w_FIND_DATA                        : WIN32_FIND_DATA;
+  tr4w_FIND_DATA                        : WIN32_FIND_DATAA;
 
-function FileExists(FileName: PChar): boolean;
+function FileExists(FileName: PAnsiChar): boolean;
 { This function will return TRUE if the filename specified exists. }
 var
   h                                     : HWND;
 begin
   Result := False;
-  h := Windows.FindFirstFile(FileName, tr4w_FIND_DATA);
+  h := Windows.FindFirstFileA(FileName, tr4w_FIND_DATA);
   if h <> INVALID_HANDLE_VALUE then
   begin
     FindClose(h);

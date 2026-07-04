@@ -135,12 +135,12 @@ type
     uCallbackMessage: UINT;
     HICON: HICON;
   //Version 5.0 is 128 chars, old ver is 64 chars
-    szTip: array[0..127] of Char;
+    szTip: array[0..127] of AnsiChar;
     dwState: DWORD; //Version 5.0
     dwStateMask: DWORD; //Version 5.0
-    szInfo: array[0..255] of Char; //Version 5.0
+    szInfo: array[0..255] of AnsiChar; //Version 5.0
     DUMMYUNIONNAME: TDUMMYUNIONNAME;
-    szInfoTitle: array[0..63] of Char; //Version 5.0
+    szInfoTitle: array[0..63] of AnsiChar; //Version 5.0
     dwInfoFlags: DWORD; //Version 5.0
   end;
 

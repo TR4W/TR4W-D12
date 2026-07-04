@@ -157,7 +157,7 @@ var
   da                                    : TDupesArray;
   QSOB4                                 : boolean;
   TempMode                              : ModeType;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
   h                                     : HWND;
   TempIndex                             : integer;
 begin

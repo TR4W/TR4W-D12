@@ -45,9 +45,9 @@ uses
 // separator (searching from position 1 so that "  = = BT" yields "=").
 // Trailing spaces are also stripped.
 
-function GetInsertableCommand(src: PChar): String;
+function GetInsertableCommand(src: PAnsiChar): String;
 var
-  start, p, eqStart: PChar;
+  start, p, eqStart: PAnsiChar;
   len: Integer;
 begin
   Result := '';
@@ -83,7 +83,7 @@ begin
     end
   else
     begin
-    p := start + Windows.lstrlen(start);
+    p := start + Windows.lstrlenA(start);
     while (p > start) and (p[-1] = ' ') do
       Dec(p);
     len := p - start;
@@ -103,7 +103,7 @@ function TryCaptureSelectedCommand(hwnddlg: HWND): Boolean;
 var
   lb: HWND;
   sel, textLen: Integer;
-  buf: array[0..255] of Char;
+  buf: array[0..255] of AnsiChar;
 begin
   Result := False;
   lb := GetDlgItem(hwnddlg, 90);
@@ -137,7 +137,7 @@ begin
       begin
 //        CreateButton('OK', 180, 305, 70, hwnddlg, 1);
         CreateOKCancelButtons( hwnddlg);
-        Windows.SetWindowText(hwnddlg, TC_LIST_OF_COMMAND);
+        Windows.SetWindowTextA(hwnddlg, TC_LIST_OF_COMMAND);
         TempHWND := CreateListBox(5, 5, 440, 280, hwnddlg, 90);
 
         for i := 0 to sCommands - 1 do

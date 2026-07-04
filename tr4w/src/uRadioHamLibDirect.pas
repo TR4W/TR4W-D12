@@ -1,3 +1,19 @@
+﻿{
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+ This file is part of TR4W  (SRC)
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+}
 unit uRadioHamLibDirect;
 
 {
@@ -279,7 +295,7 @@ var
   tracePath: string;
 begin
   tracePath := ExtractFilePath(ParamStr(0)) + 'hamlib_trace.log';
-  traceFile := msvcrt_fopen(PChar(tracePath), 'w');
+  traceFile := msvcrt_fopen(PAnsiChar(AnsiString(tracePath)), 'w');
   if traceFile = nil then
      begin
      logger.Warn('[EnableHamLibTrace] Could not open %s for writing', [tracePath]);
@@ -415,7 +431,7 @@ begin
       portStr := Format('%s:%d', [IPAddress, IPPort]);
       logger.Debug('[THamLibDirect.Connect] Configuring network: %s', [portStr]);
 
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PChar(portStr));
+      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(AnsiString(portStr)));
       if err <> RIG_OK then
       begin
         logger.Error('[THamLibDirect.Connect] rig_set_conf(rig_pathname) failed: %s (code %d)',
@@ -434,7 +450,7 @@ begin
                   [COMPortName, BaudRate]);
 
       // Use token lookup like rigctl does
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PChar(COMPortName));
+      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(AnsiString(COMPortName)));
       if err <> RIG_OK then
       begin
         logger.Error('[THamLibDirect.Connect] Error setting serial port: %s',
@@ -446,7 +462,7 @@ begin
       end;
 
       baudStr := IntToStr(BaudRate);
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'serial_speed'), PChar(baudStr));
+      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'serial_speed'), PAnsiChar(AnsiString(baudStr)));
       if err <> RIG_OK then
         logger.Warn('[THamLibDirect.Connect] Error setting baud rate: %s',
                     [RigErrorToString(err)]);
@@ -462,7 +478,7 @@ begin
     if Length(FCIVAddress) > 0 then
     begin
       logger.Info('[THamLibDirect.Connect] Setting CI-V address: 0x%s', [FCIVAddress]);
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'civaddr'), PChar(FCIVAddress));
+      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'civaddr'), PAnsiChar(AnsiString(FCIVAddress)));
       if err <> RIG_OK then
         logger.Warn('[THamLibDirect.Connect] Warning setting CI-V address: %s', [RigErrorToString(err)]);
     end;

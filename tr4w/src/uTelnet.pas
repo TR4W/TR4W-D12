@@ -81,8 +81,8 @@ procedure StartTelnetConnect;                                // Issue #23 -- mai
 procedure Disconnect;
 function TestSocketBuffer: Integer; // Gav 4.44.6
 procedure TelnetConnectionError(wsaErr: integer);            // Issue #23 -- explicit code (marshaled)
-function SendViaTelnetSocket(p: PChar): integer;
-procedure AddStringToTelnetConsole(p: PChar; c: TelnetStringType);
+function SendViaTelnetSocket(p: PAnsiChar): integer;
+procedure AddStringToTelnetConsole(p: PAnsiChar; c: TelnetStringType);
 procedure SaveTelnetWindowSpots;
 procedure EnableTelnetToolbatButtons(b: boolean);
 procedure ProcessTelnetString(const ByteReceived: integer);
@@ -91,7 +91,7 @@ function ProcessDX(DX: integer; InListBox: boolean; var Stringtype:
 procedure tCreateAndAddNewSpot(Call: CallString; Dupe: boolean; Radio:
   RadioPtr);
 procedure CheckClusterType(ByteReceived: integer);
-procedure AppendTelnetPopupMenu(MenuText: PChar);
+procedure AppendTelnetPopupMenu(MenuText: PAnsiChar);
 procedure EmunTRCLUSTERDAT(FileString: PShortString);
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
 procedure EnumCLUSTERCOMMANDSTXT(FileString: PShortString);
@@ -252,11 +252,11 @@ type
   PTelnetChunk = ^TTelnetChunk;
   TTelnetChunk = record
     Len:  integer;
-    Data: array[0..8192] of Char;
+    Data: array[0..8192] of AnsiChar;
   end;
 
 var
-  PendingTelnetHost: array[0..255] of Char;   // set on the main thread before the I/O thread starts
+  PendingTelnetHost: array[0..255] of AnsiChar;   // set on the main thread before the I/O thread starts
   PendingTelnetPort: Word;
 
 // ---------------------------------------------------------------------------
@@ -271,14 +271,14 @@ var
 
 var
   TelCmdTooltip: HWND = 0;                   // tracking tooltip for the preview
-  ClusterTooltipText: array[0..511] of Char; // stable storage for the tip text
+  ClusterTooltipText: array[0..511] of AnsiChar; // stable storage for the tip text
 
 // Trim surrounding spaces and upper-case A..Z so token matching is
 // case-insensitive and tolerant of '{ MY_CALL }'.
 function NormalizeClusterToken(const S: AnsiString): AnsiString;
 var
    i, First, Last: integer;
-   c: Char;
+   c: AnsiChar;
 begin
    First := 1;
    Last := Length(S);
@@ -296,7 +296,7 @@ begin
       c := S[i];
       if (c >= 'a') and (c <= 'z') then
          begin
-         c := Chr(Ord(c) - 32);
+         c := AnsiChar(Ord(c) - 32);
          end;
       Result := Result + c;
       end;
@@ -355,7 +355,7 @@ end;
 
 // Expands every {TOKEN} in Src. Pure transform - no global state is mutated -
 // so it is safe to call both from the send path and from the menu-hover proc.
-function ExpandClusterTokens(Src: PChar): AnsiString;
+function ExpandClusterTokens(Src: PAnsiChar): AnsiString;
 var
    S, Token, Value: AnsiString;
    i, Len, j: integer;
@@ -423,7 +423,7 @@ const
 var
    ti: TOOLINFO;
 begin
-   Result := CreateWindowEx(0, 'tooltips_class32', nil,
+   Result := CreateWindowExA(0, 'tooltips_class32', nil,
       WS_POPUP or TTS_NOPREFIX or TTS_ALWAYSTIP,
       0, 0, 0, 0, Owner, 0, hInstance, nil);
    if Result = 0 then
@@ -486,7 +486,7 @@ begin
       HideClusterCommandTooltip;
       Exit;
       end;
-   lstrcpyn(ClusterTooltipText, PChar(Expanded), SizeOf(ClusterTooltipText));
+   lstrcpynA(ClusterTooltipText, PAnsiChar(Expanded), SizeOf(ClusterTooltipText));
    Windows.ZeroMemory(@ti, SizeOf(ti));
    ti.cbSize := SizeOf(ti);
    ti.HWND := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
@@ -516,7 +516,7 @@ var
   TempTextColor: Cardinal;
   TempPoint: TPoint;
   TDIS: PDrawItemStruct;
-  InfoBuffer: array[0..1023] of Char;   // Issue #23 -- LB_GETTEXT has no size limit; must hold the
+  InfoBuffer: array[0..1023] of AnsiChar;   // Issue #23 -- LB_GETTEXT has no size limit; must hold the
                                         // longest list item (error messages run ~230 chars, far past
                                         // the old 128, overrunning the stack).  AddStringToTelnetConsole
                                         // caps items to this size so this read can never overrun.
@@ -557,7 +557,7 @@ begin
           Windows.SetTextColor(TDIS^.HDC,
             tr4wColorsArray[TelnetStringColor[StringType]]);
           SetBkMode(TDIS^.HDC, TRANSPARENT);
-          Windows.TextOut(TDIS^.HDC, TDIS^.rcItem.Left + 5
+          Windows.TextOutA(TDIS^.HDC, TDIS^.rcItem.Left + 5
             {TelnetStringOffset[StringType]}, TDIS^.rcItem.Top, InfoBuffer, i);
           Result := True;
         end;
@@ -574,7 +574,7 @@ begin
             begin
               if TR4W_TELNET_DEBUG then
                  begin
-                 logger.Info('[Telnet] Connected to %s:%d', [PChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+                 logger.Info('[Telnet] Connected to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
                  end;
               Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
@@ -595,7 +595,7 @@ begin
               // diagnostics, but show the operator a short message naming the
               // host they tried to reach (the raw message is long and unwrapped).
               logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
-                [PChar(@PendingTelnetHost[0]), PendingTelnetPort, lParam,
+                [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, lParam,
                  TF.SysErrorMessage(lParam)]);   // Issue #997: keep TF's PChar version (SysUtils in uses returns a trimmed string)
               Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
@@ -680,7 +680,7 @@ begin
           TELNETBUTTONS, 0, 0, 0, 0, SizeOf(TTBButton));
 
         SendMessage(TelToolbar, TB_ADDSTRING, 0,
-          integer(PChar(TC_TELNET{$IF LANG = 'RUS'} + '?'#0#0{$IFEND})));
+          integer(PAnsiChar(TC_TELNET{$IF LANG = 'RUS'} + '?'#0#0{$IFEND})));
         EnableTelnetToolbatButtons(False);
 
         TelnetListBox := Get101Window(hwnddlg);
@@ -736,7 +736,7 @@ begin
     WM_COMMAND:
       begin
         if HiWord(wParam) = LBN_SELCHANGE then
-          DlgDirSelectEx(hwnddlg, wsprintfBuffer, SizeOf(wsprintfBuffer), 101);
+          DlgDirSelectExA(hwnddlg, wsprintfBuffer, SizeOf(wsprintfBuffer), 101);
 
         if HiWord(wParam) = LBN_DBLCLK then
         begin
@@ -765,7 +765,7 @@ begin
             ExpandedClusterCommand := ExpandClusterTokens(wsprintfBuffer);
             if Length(ExpandedClusterCommand) > 250 then
               SetLength(ExpandedClusterCommand, 250);
-            SendViaTelnetSocket(PChar(ExpandedClusterCommand));
+            SendViaTelnetSocket(PAnsiChar(ExpandedClusterCommand));
           end;
 
         case wParam of
@@ -801,12 +801,14 @@ begin
               if TempBuffer1[0] = #0 then
                 Exit;
               SendViaTelnetSocket(TempBuffer1);
-              Windows.SetWindowText(TelnetCommandWindow, nil);
+              Windows.SetWindowTextA(TelnetCommandWindow, nil);
               if
                 SendMessage(TelnetCommandWindow, CB_FINDSTRING, -1,
-                integer(PChar(@TempBuffer1))) = CB_ERR then
+                integer(PAnsiChar(@TempBuffer1))) = CB_ERR then
                 //  SendMessage(TelnetCommandWindow, CB_FINDSTRINGEXACT, -1, integer(PChar(@TempBuffer1))) = CB_ERR then
+                begin
                 tCB_ADDSTRING_PCHAR(hwnddlg, 106, TempBuffer1);
+                end;
 
             end
 
@@ -884,14 +886,14 @@ var
   n:         integer;
   wnd:       HWND;
   chunk:     PTelnetChunk;
-  recvBuf:   array[0..8191] of Char;
+  recvBuf:   array[0..8191] of AnsiChar;
 begin
   Result := 0;
   wnd := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
 
   if TR4W_TELNET_DEBUG then
      begin
-     logger.Info('[Telnet] Connecting to %s:%d', [PChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+     logger.Info('[Telnet] Connecting to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
      end;
 
   if not GetConnection(localSock, PendingTelnetHost, PendingTelnetPort, SOCK_STREAM) then
@@ -929,7 +931,7 @@ begin
      chunk^.Data[n] := #0;
      if TR4W_TELNET_DEBUG then
         begin
-        logger.Info('[Telnet RX %d] %s', [n, PChar(@chunk^.Data[0])]);
+        logger.Info('[Telnet RX %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
         end;
      PostMessage(wnd, WM_TELNET_MSG, TELNET_DATA, LPARAM(chunk));
      end;
@@ -968,7 +970,7 @@ begin
      dec(i);
      end;
 
-  Windows.lstrcpyn(PendingTelnetHost, TempBuffer1, SizeOf(PendingTelnetHost));
+  Windows.lstrcpynA(PendingTelnetHost, TempBuffer1, SizeOf(PendingTelnetHost));
 
   // Issue #23 -- immediate visual feedback so connect is not a black box:
   // show the attempt in the window and switch the toolbar to the connected
@@ -1038,7 +1040,7 @@ end;
 
 procedure TelnetConnectionError(wsaErr: integer);
 var
-  msg: PChar;
+  msg: PAnsiChar;
 begin
   // Issue #23 -- log the WinSock error to the general error log always
   // (independent of TELNET DEBUG) and show it in the telnet window.  The code is
@@ -1049,7 +1051,7 @@ begin
   AddStringToTelnetConsole(msg, tstError);
 end;
 
-function SendViaTelnetSocket(p: PChar): integer;
+function SendViaTelnetSocket(p: PAnsiChar): integer;
 var
   sent: integer;
 begin
@@ -1076,10 +1078,10 @@ begin
   end;
 end;
 
-procedure AddStringToTelnetConsole(p: PChar; c: TelnetStringType);
+procedure AddStringToTelnetConsole(p: PAnsiChar; c: TelnetStringType);
 var
   Handle: HWND;
-  buf: array[0..1023] of Char;   // Issue #23 -- bound the list item to InfoBuffer's size
+  buf: array[0..1023] of AnsiChar;   // Issue #23 -- bound the list item to InfoBuffer's size
 begin
   if TR4W_TELNET_DEBUG then   // Issue #23 -- every line written to the telnet window
      begin
@@ -1091,7 +1093,7 @@ begin
   // Issue #23 -- copy into a bounded buffer first.  The owner-draw handler reads
   // each item back via LB_GETTEXT (which has no size limit) into a same-sized
   // stack buffer; capping here guarantees that read can never overrun the stack.
-  Windows.lstrcpyn(buf, p, SizeOf(buf));
+  Windows.lstrcpynA(buf, p, SizeOf(buf));
 
   SendMessage(Handle, LB_SETITEMDATA, SendMessage(Handle, LB_ADDSTRING, 0,
     integer(@buf)), integer(c));
@@ -1107,7 +1109,7 @@ var
 
   i, Lines: integer;
   LineLength: longword;
-  TimeString: PChar;
+  TimeString: PAnsiChar;
   TelnetLogHandle: HWND;
 begin
   if not tWindowsExist(tw_TELNETWINDOW_INDEX) then
@@ -1121,7 +1123,7 @@ begin
   TimeString[2] := '-';
   // Issue #997: asm wsprintf -> Format
   StrPCopy(wsprintfBuffer, SysUtils.Format('%sDXCluster\dxcluster %s %s.txt',
-    [string(PChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]));
+    [string(PAnsiChar(@TR4W_PATH_NAME)), string(GetDateString), string(TimeString)]));
 
   TelnetLogHandle := CreateFileA(wsprintfBuffer, GENERIC_WRITE, FILE_SHARE_WRITE,
     nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
@@ -1263,7 +1265,7 @@ var
 
   f: integer;
   QSXPos: integer;
-  TempChar: Char;
+  TempChar: AnsiChar;
   Hertz: integer;
   DivHertz: boolean;
   QSXBand: BandType;
@@ -1296,7 +1298,7 @@ begin
     begin
       if TelnetBuffer[i + 1] <> ' ' then // 4.92.6
         SetLength(TempSpot.FSourceCall, i - DX - 6);
-      Windows.lstrcpyn(@TempSpot.FSourceCall[1], @TelnetBuffer[DX + 6], i - DX -
+      Windows.lstrcpynA(@TempSpot.FSourceCall[1], @TelnetBuffer[DX + 6], i - DX -
         5);
       i1 := i;
       Break;
@@ -1310,7 +1312,7 @@ begin
       if TelnetBuffer[i + 1] <> ' ' then
 
       begin
-        Windows.lstrcpyn(@TempSpot.FFreqString[0], @TelnetBuffer[i + 1], DX + 24
+        Windows.lstrcpynA(@TempSpot.FFreqString[0], @TelnetBuffer[i + 1], DX + 24
           - i + Offset);
 
         TempFrequency := 0;
@@ -1369,7 +1371,7 @@ begin
       if TelnetBuffer[i + 1] = ' ' then // 4.92.7
       begin
         SetLength(TempSpot.FCall, i - (DX + 25 + Offset));
-        Windows.lstrcpyn(@TempSpot.FCall[1], @TelnetBuffer[DX + 26 + Offset], i
+        Windows.lstrcpynA(@TempSpot.FCall[1], @TelnetBuffer[DX + 26 + Offset], i
           - (DX + 24 + Offset));
         if not GoodCallSyntax(TempSpot.FCall) then
           Exit;
@@ -1381,7 +1383,7 @@ begin
   if TelnetBuffer[DX + 39 + Offset] <> '                              ' then
     // This is not right as the extensions can be at the end so check if th ewhole comment (30 bytes) is blank // ny4i
   begin
-    Windows.lstrcpyn(@TempSpot.FNotes[0], @TelnetBuffer[DX + 39 + Offset], 31);
+    Windows.lstrcpynA(@TempSpot.FNotes[0], @TelnetBuffer[DX + 39 + Offset], 31);
     //was 31 but allow for null ny4i
     StrUpper(@TelnetBuffer[DX + 39 + Offset]);
     for i := DX + 39 to DX + 65 do
@@ -1517,7 +1519,7 @@ begin
 
   if telnet_callsign_alert_list_loaded then
     if Windows.SendMessage(TelnetCallsignAlertList, LB_FINDSTRINGEXACT, -1,
-      integer(PChar(@TempSpot.FCall[1]))) <> LB_ERR then
+      integer(PAnsiChar(@TempSpot.FCall[1]))) <> LB_ERR then
     begin
       Stringtype := tstAlert;
 
@@ -1557,7 +1559,7 @@ begin
       Call[length(Call) + 1] := #0;
       // Issue #997: asm wsprintf -> Format
       StrPCopy(wsprintfBuffer, SysUtils.Format(TC_FREQUENCYFORCALLINKHZ,
-        [string(PChar(@Call[1]))]));
+        [string(PAnsiChar(@Call[1]))]));
       TempFrequency := QuickEditFreq(wsprintfBuffer, 10);
     end;
   if TempFrequency <= 0 then
@@ -1624,7 +1626,7 @@ begin
   SendToNet(ClientStatus, SizeOf(ClientStatus));
 end;
 
-procedure AppendTelnetPopupMenu(MenuText: PChar);
+procedure AppendTelnetPopupMenu(MenuText: PAnsiChar);
 var
   Flag: Cardinal;
   Offset: integer;
@@ -1661,7 +1663,7 @@ begin
   if MenuText[0] = '>' then
   begin
     TelLastPopMemu := CreatePopupMenu;
-    Windows.AppendMenu(TelPopMemu, MF_STRING + MF_POPUP, TelLastPopMemu,
+    Windows.AppendMenuA(TelPopMemu, MF_STRING + MF_POPUP, TelLastPopMemu,
       @MenuText[1]);
     inc(ItemsInTelnetPopupMenu);
     Exit;
@@ -1673,7 +1675,7 @@ begin
     Offset := 1;
   end;
 
-  Windows.AppendMenu(TelLastPopMemu, Flag, 1000 + ItemsInTelnetPopupMenu,
+  Windows.AppendMenuA(TelLastPopMemu, Flag, 1000 + ItemsInTelnetPopupMenu,
     @MenuText[Offset]);
 
   inc(ItemsInTelnetPopupMenu);
@@ -1688,7 +1690,7 @@ end;
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
 begin
   if telnet_callsign_alert_list_loaded = False then
-    TelnetCallsignAlertList := CreateWindow(LISTBOX, nil, $50210003, 0, 0, 0, 0,
+    TelnetCallsignAlertList := CreateWindowA('LISTBOX', nil, $50210003, 0, 0, 0, 0,
       tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 0, hInstance, nil);
 
   tLB_ADDSTRING(TelnetCallsignAlertList, @FileString^[1]);

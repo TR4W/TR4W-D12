@@ -69,7 +69,7 @@ var
   QTCNumber                             : integer;
   NumberMessagesToBeSentString {, QTCNumberString}: string;
 
-  QRVString                             : array[0..160] of Char;
+  QRVString                             : array[0..160] of AnsiChar;
 
   //  QTCBuffer                        : LogEntryArray;
   {MaxQTCString, }QTCCallsign           : CallString;
@@ -387,7 +387,7 @@ label
   SaveQTC, StopQTC, KeepGoing;
 
 var
-    p                                     : PChar;
+    p                                     : PAnsiChar;
 begin
 
 
@@ -542,7 +542,7 @@ begin
     push QTCNumber
     end;
 }
-    QRVString[0] := Char(Format(@QRVString[1], 'QTC %u/%u', QTCNumber, NumberMessagesToBeSent));
+    QRVString[0] := AnsiChar(Format(@QRVString[1], 'QTC %u/%u', QTCNumber, NumberMessagesToBeSent));
 //    asm add esp,16 end;
 
     // Issue #997: asm `lea eax,[QRVString]; call SendStringAndStop` -> direct call.

@@ -71,8 +71,8 @@ type
     function GetDomQTH(InputString: Str20; var Multiplier: Str10; var QTH: Str10): boolean;
     function GetStandardDomesticQTH(InputString: Str20): Str20;
 //    procedure EnumDOMFILE(FileString: PShortString);
-    function LoadInDomQTHFile(FileName: PChar): boolean;
-    function ReadDomQTHFile(FileName: PChar; IncludedFile: boolean): boolean;
+    function LoadInDomQTHFile(FileName: PAnsiChar): boolean;
+    function ReadDomQTHFile(FileName: PAnsiChar; IncludedFile: boolean): boolean;
     function RecordPointerIndex(FirstLetter: Char): integer;
   end;
 
@@ -126,7 +126,7 @@ begin
 
 end;
 
-function DomQTHTableObject.LoadInDomQTHFile(FileName: PChar): boolean;
+function DomQTHTableObject.LoadInDomQTHFile(FileName: PAnsiChar): boolean;
 
 begin
 
@@ -462,7 +462,7 @@ begin
   GetNextPrefix := PrefixString <> '';
 end;
 
-function DomQTHTableObject.ReadDomQTHFile(FileName: PChar; IncludedFile: boolean): boolean;
+function DomQTHTableObject.ReadDomQTHFile(FileName: PAnsiChar; IncludedFile: boolean): boolean;
 
 label
   AlreadyInList;
@@ -501,11 +501,11 @@ begin
       LastPrefixRecord[RecordPointer] := nil;
     end;
 
-  if not EnumerateLinesInFile(PChar(FileName), EnumDOMFILE, False) then
+  if not EnumerateLinesInFile(FileName, EnumDOMFILE, False) then
 
 //  if not OpenFileForRead(FileRead, FileName) then
   begin
-    UnableToFindFileMessage(PChar(FileName));
+    UnableToFindFileMessage(PChar(string(FileName)));
     Exit;
   end;
 
@@ -654,5 +654,5 @@ begin
 end;
 
 //begin
-  //  DomQTHInit;//можно обойтись без этого
+  //  DomQTHInit;//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 end.

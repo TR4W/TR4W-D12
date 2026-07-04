@@ -77,7 +77,7 @@ var
   Height                                : integer;
   LengthOfTheString                     : integer;
   VDDRAWITEMSTRUCT                      : PDrawItemStruct;
-  CallsBuf                              : array[0..63] of Char;
+  CallsBuf                              : array[0..63] of AnsiChar;
   bgColor                               : integer;
   Left                                  : integer;
 
@@ -148,10 +148,10 @@ begin
              Result := BOOL(tr4wBrushArray[trWhite]);
            bgColor := $FFFFFF;
              SetTextColor(HDC(wParam), $3333FF);
-                Windows.TextOut(VDDRAWITEMSTRUCT^.HDC, VDDRAWITEMSTRUCT^.rcItem.Left, VDDRAWITEMSTRUCT^.rcItem.Top + 1, @CallsBuf, Left);
+                Windows.TextOutA(VDDRAWITEMSTRUCT^.HDC, VDDRAWITEMSTRUCT^.rcItem.Left, VDDRAWITEMSTRUCT^.rcItem.Top + 1, @CallsBuf, Left);
           }
 
-        Windows.DrawText(VDDRAWITEMSTRUCT^.HDC, @CallsBuf, LengthOfTheString, VDDRAWITEMSTRUCT^.rcItem, DT_END_ELLIPSIS + DT_SINGLELINE + DT_CENTER + DT_VCENTER);
+        Windows.DrawTextA(VDDRAWITEMSTRUCT^.HDC, @CallsBuf, LengthOfTheString, VDDRAWITEMSTRUCT^.rcItem, DT_END_ELLIPSIS + DT_SINGLELINE + DT_CENTER + DT_VCENTER);
       end;
 
     WM_SIZE:

@@ -35,7 +35,7 @@ uses
   Messages;
 
 function IntercomDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-procedure AddMessageToIntercomWindow(mes: PChar; Sender: Char);
+procedure AddMessageToIntercomWindow(mes: PAnsiChar; Sender: AnsiChar);
 procedure FlashIntercomListBox;
 procedure EnumINTERCOMTXT(FileString: PShortString);
 
@@ -76,7 +76,7 @@ begin
           TextColor := $00FFFFFF - Color;
           Windows.SetTextColor(IntercomDIS^.HDC, TextColor);
           SetBkMode(IntercomDIS^.HDC, TRANSPARENT);
-          Windows.TextOut(IntercomDIS^.HDC, IntercomDIS^.rcItem.Left + 2, IntercomDIS^.rcItem.Top, MessageBuf, i);
+          Windows.TextOutA(IntercomDIS^.HDC, IntercomDIS^.rcItem.Left + 2, IntercomDIS^.rcItem.Top, MessageBuf, i);
           Result := True;
         end;
       end;
@@ -114,7 +114,7 @@ begin
   end;
 end;
 
-procedure AddMessageToIntercomWindow(mes: PChar; Sender: Char);
+procedure AddMessageToIntercomWindow(mes: PAnsiChar; Sender: AnsiChar);
 var
   stored                           : integer;
   h                                : HWND;
@@ -164,7 +164,7 @@ var
   begin
     SendMessage(h, LB_SETSEL, counter mod 2, LastItemInIntercomListBox);
 
-//    Windows.TextOut(DC, 0, r.Top, inttopchar(counter), 2);
+//    Windows.TextOutA(DC, 0, r.Top, inttopchar(counter), 2);
 //Windows.InvertRect(DC, r);
 //    InvalidateRect(h, @r, true);
     Sleep(150);

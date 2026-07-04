@@ -96,7 +96,7 @@ var
 
   LastRSTSent                           : Word;
   LeadingZeros                          : integer = 3;
-  LeadingZeroCharacter                  : Char = 'T';
+  LeadingZeroCharacter                  : AnsiChar = 'T';
 
   NeedToSetCQMode                       : boolean; {KK1L: 6.69 This variable is used to leap around some AutoS&PMode code.}
 
@@ -112,10 +112,10 @@ var
   SendingOnRadioOne                     : boolean; {KK1L: 6.72 Moved from local (IMPLIMENTATION section) for use in LOGSUBS}
   SendingOnRadioTwo                     : boolean; {KK1L: 6.72 Moved from local (IMPLIMENTATION section) for use in LOGSUBS}
 
-  Short0                                : Char = 'T';
-  Short1                                : Char = 'A';
-  Short2                                : Char = '2';
-  Short9                                : Char = 'N';
+  Short0                                : AnsiChar = 'T';
+  Short1                                : AnsiChar = 'A';
+  Short2                                : AnsiChar = '2';
+  Short9                                : AnsiChar = 'N';
 
 procedure AddStringToBuffer(Msg: Str160; Tone: integer);
 procedure BeginCWCapture;   // '=' repeat-last-CW-message
@@ -313,7 +313,7 @@ begin
     //     wkSendAdminCommand(wkRESET);
         //   ExitFromCWThread                               := False;
     //    inc(CWThreadCounter);
-    //   windows.SetWindowText(tr4whandle,inttopchar(CWThreadCounter));
+    //   windows.SetWindowTextA(tr4whandle,inttopchar(CWThreadCounter));
 
       logger.Info('Calling tCreateThread from AddStringToBuffer');
       CWThreadHandle                                        := tCreateThread(@CWThreadProc, CWThreadID);
@@ -834,8 +834,8 @@ var
 
 begin
   //    GoToXY (1, 1);
-//  Windows.SetDlgItemText(MemProgHWND, 102, TC_PRESSCQFUNCTIONKEYTOPROGRAM);
-//  Windows.SetWindowText(MemProgHWND, TC_CQFUNCTIONKEYMEMORYSTATUS);
+//  Windows.SetDlgItemTextA(MemProgHWND, 102, TC_PRESSCQFUNCTIONKEYTOPROGRAM);
+//  Windows.SetWindowTextA(MemProgHWND, TC_CQFUNCTIONKEYMEMORYSTATUS);
   case KeyStatus of
     NormalKeys:
       begin
@@ -858,7 +858,7 @@ begin
 
           if length(TempString) > 79 then
             TempString                                      := Copy(TempString, 1, 78) + '+';
-//          Windows.SetWindowText(MessagesValues[Ord(Key)], PChar(string(TempString)));
+//          Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
             //                ClrEol;
             //                WriteLn (TempString);
         end;
@@ -878,7 +878,7 @@ begin
 
           if length(TempString) > 79 then
             TempString                                      := Copy(TempString, 1, 78) + '+';
-//          Windows.SetWindowText(MessagesValues[Ord(Key) - 24], PChar(string(TempString)));
+//          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 24], PAnsiChar(AnsiString(TempString)));
             //                ClrEol;
             //                WriteLn (TempString);
         end;
@@ -898,7 +898,7 @@ begin
 
           if length(TempString) > 79 then
             TempString                                      := Copy(TempString, 1, 78) + '+';
-//          Windows.SetWindowText(MessagesValues[Ord(Key) - 12], PChar(string(TempString)));
+//          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 12], PAnsiChar(AnsiString(TempString)));
             //                ClrEol;
             //                WriteLn (TempString);
         end;
@@ -914,8 +914,8 @@ var
 
 begin
   //    GoToXY (1, 1);
-//  Windows.SetDlgItemText(MemProgHWND, 102, TC_PRESSEXFUNCTIONKEYTOPROGRAM);
-//  Windows.SetWindowText(MemProgHWND, TC_EXCHANGEFUNCTIONKEYMEMORYSTATUS);
+//  Windows.SetDlgItemTextA(MemProgHWND, 102, TC_PRESSEXFUNCTIONKEYTOPROGRAM);
+//  Windows.SetWindowTextA(MemProgHWND, TC_EXCHANGEFUNCTIONKEYMEMORYSTATUS);
   case KeyStatus of
     NormalKeys:
       begin
@@ -923,8 +923,8 @@ begin
 
         if ActiveMode = CW then
         begin
-//          Windows.SetWindowText(MessagesValues[VK_F1], 'F1 - Set by the MY CALL statement in config file' {TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG});
-//          Windows.SetWindowText(MessagesValues[VK_F2], 'F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE' {TC_F2SETBYSPEXCHANGEANDREPEATSP});
+//          Windows.SetWindowTextA(MessagesValues[VK_F1], 'F1 - Set by the MY CALL statement in config file' {TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG});
+//          Windows.SetWindowTextA(MessagesValues[VK_F2], 'F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE' {TC_F2SETBYSPEXCHANGEANDREPEATSP});
             //                  WriteLn('F1 - Set by the MY CALL statement in config file');
             //                  WriteLn('F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE');
 
@@ -939,7 +939,7 @@ begin
 
             if length(TempString) > 79 then
               TempString                                    := Copy(TempString, 1, 78) + '+';
-//            Windows.SetWindowText(MessagesValues[Ord(Key)], PChar(string(TempString)));
+//            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
                 //                    ClrEol;
                 //                    WriteLn (TempString);
           end;
@@ -956,7 +956,7 @@ begin
 
             if length(TempString) > 79 then
               TempString                                    := Copy(TempString, 1, 78) + '+';
-//            Windows.SetWindowText(MessagesValues[Ord(Key)], PChar(string(TempString)));
+//            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
               //                    ClrEol;
               //                    WriteLn (TempString);
           end;
@@ -1010,70 +1010,70 @@ procedure ShowOtherMemoryStatus;
   TempString                            : Str160;
 }
 begin
-//  Windows.SetDlgItemText(MemProgHWND, 102, TC_NUMBERORLETTEROFMESSAGETOBEPROGRAM);
+//  Windows.SetDlgItemTextA(MemProgHWND, 102, TC_NUMBERORLETTEROFMESSAGETOBEPROGRAM);
 
   if (ActiveMode = CW) or (ActiveMode = Digital) then
   begin
       //         GoToXY(1, 1);
       //         WriteLnCenter('OTHER CW MESSAGE MEMORY STATUS');
 
-//    Windows.SetWindowText(MemProgHWND, TC_OTHERCWMESSAGEMEMORYSTATUS);
+//    Windows.SetWindowTextA(MemProgHWND, TC_OTHERCWMESSAGEMEMORYSTATUS);
 
       //         ClrEol;
 //         TempString                                       := ' 1. Call Okay Now - ' + CorrectedCallMessage;
 //         if length(TempString) > 79 then TempString       := Copy(TempString, 1, 78) + '+';
 //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[112], PChar(string('Call Okay Now - ' + CorrectedCallMessage)));
+//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(AnsiString('Call Okay Now - ' + CorrectedCallMessage)));
       //         ClrEol;
       //         TempString                                 := ' 2. CQ Exchange   - ' + CQExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[113], PChar(string('CQ Exchange   - ' + CQExchange)));
+//    Windows.SetWindowTextA(MessagesValues[113], PAnsiChar(AnsiString('CQ Exchange   - ' + CQExchange)));
 
       //         ClrEol;
       //         TempString                                 := ' 3. CQ Ex Name    - ' + CQExchangeNameKnown;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[114], PChar(string('CQ Ex Name    - ' + CQExchangeNameKnown)));
+//    Windows.SetWindowTextA(MessagesValues[114], PAnsiChar(AnsiString('CQ Ex Name    - ' + CQExchangeNameKnown)));
 
       //         ClrEol;
       //         TempString                                 := ' 4. QSL Message   - ' + QSLMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[115], PChar(string('QSL Message   - ' + QSLMessage)));
+//    Windows.SetWindowTextA(MessagesValues[115], PAnsiChar(AnsiString('QSL Message   - ' + QSLMessage)));
       //         ClrEol;
       //         TempString                                 := ' 5. QSO Before    - ' + QSOBeforeMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[116], PChar(string('QSO Before    - ' + QSOBeforeMessage)));
+//    Windows.SetWindowTextA(MessagesValues[116], PAnsiChar(AnsiString('QSO Before    - ' + QSOBeforeMessage)));
 
       //         ClrEol;
       //         TempString                                 := ' 6. Quick QSL     - ' + QuickQSLMessage1;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[117], PChar(string('Quick QSL     - ' + QuickQSLMessage1)));
+//    Windows.SetWindowTextA(MessagesValues[117], PAnsiChar(AnsiString('Quick QSL     - ' + QuickQSLMessage1)));
 
       //         ClrEol;
       //         TempString                                 := ' 7. Repeat S&P Ex - ' + RepeatSearchAndPounceExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[118], PChar(string('Repeat S&P Ex - ' + RepeatSearchAndPounceExchange)));
+//    Windows.SetWindowTextA(MessagesValues[118], PAnsiChar(AnsiString('Repeat S&P Ex - ' + RepeatSearchAndPounceExchange)));
 
       //         ClrEol;
       //         TempString                                 := ' 8. S&P Exchange  - ' + SearchAndPounceExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[119], PChar(string('S&P Exchange  - ' + SearchAndPounceExchange)));
+//    Windows.SetWindowTextA(MessagesValues[119], PAnsiChar(AnsiString('S&P Exchange  - ' + SearchAndPounceExchange)));
 
       //         ClrEol;
       //         TempString                                 := ' 9. Tail end msg  - ' + TailEndMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[120], PChar(string('Tail end msg  - ' + TailEndMessage)));
+//    Windows.SetWindowTextA(MessagesValues[120], PAnsiChar(AnsiString('Tail end msg  - ' + TailEndMessage)));
 
-//    Windows.SetWindowText(MessagesValues[121], PChar(string('Short 0       - ' + Short0)));
-//    Windows.SetWindowText(MessagesValues[122], PChar(string('Short 1       - ' + Short1)));
-//    Windows.SetWindowText(MessagesValues[123], PChar(string('Short 9       - ' + Short9)));
+//    Windows.SetWindowTextA(MessagesValues[121], PAnsiChar(AnsiString('Short 0       - ' + Short0)));
+//    Windows.SetWindowTextA(MessagesValues[122], PAnsiChar(AnsiString('Short 1       - ' + Short1)));
+//    Windows.SetWindowTextA(MessagesValues[123], PAnsiChar(AnsiString('Short 9       - ' + Short9)));
 
       //         ClrEol;
       //         Write('A. Short 0 = ', Short0, '   ',
@@ -1085,53 +1085,53 @@ begin
   begin
       //         GoToXY(1, 1);
       //         WriteLnCenter('OTHER SSB MESSAGE MEMORY STATUS');
-//    Windows.SetWindowText(MemProgHWND, TC_OTHERSSBMESSAGEMEMORYSTATUS);
+//    Windows.SetWindowTextA(MemProgHWND, TC_OTHERSSBMESSAGEMEMORYSTATUS);
       //         ClrEol;
       //         TempString                                 := ' 1. Call Okay Now - ' + DVPPath + CorrectedCallPhoneMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[112], PChar(string('Call Okay Now - ' + CorrectedCallPhoneMessage)));
+//    Windows.SetWindowTextA(MessagesValues[112], PAnsiChar(AnsiString('Call Okay Now - ' + CorrectedCallPhoneMessage)));
 
       //         ClrEol;
       //         TempString                                 := ' 2. CQ Exchange   - ' + DVPPath + CQPhoneExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[113], PChar(string('CQ Exchange   - ' + CQPhoneExchange)));
+//    Windows.SetWindowTextA(MessagesValues[113], PAnsiChar(AnsiString('CQ Exchange   - ' + CQPhoneExchange)));
       //         ClrEol;
       //         TempString                                 := ' 3. CQ Ex Name    - ' + DVPPath + CQPhoneExchangeNameKnown;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[114], PChar(string('CQ Ex Name    - ' + CQPhoneExchangeNameKnown)));
+//    Windows.SetWindowTextA(MessagesValues[114], PAnsiChar(AnsiString('CQ Ex Name    - ' + CQPhoneExchangeNameKnown)));
       //         ClrEol;
       //         TempString                                 := ' 4. QSL Message   - ' + DVPPath + QSLPhoneMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[115], PChar(string('QSL Message   - ' + QSLPhoneMessage)));
+//    Windows.SetWindowTextA(MessagesValues[115], PAnsiChar(AnsiString('QSL Message   - ' + QSLPhoneMessage)));
       //         ClrEol;
       //         TempString                                 := ' 5. QSO Before    - ' + DVPPath + QSOBeforePhoneMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[116], PChar(string('QSO Before    - ' + QSOBeforePhoneMessage)));
+//    Windows.SetWindowTextA(MessagesValues[116], PAnsiChar(AnsiString('QSO Before    - ' + QSOBeforePhoneMessage)));
       //         ClrEol;
       //         TempString                                 := ' 6. Quick QSL     - ' + DVPPath + QuickQSLPhoneMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[117], PChar(string('Quick QSL     - ' + QuickQSLPhoneMessage)));
+//    Windows.SetWindowTextA(MessagesValues[117], PAnsiChar(AnsiString('Quick QSL     - ' + QuickQSLPhoneMessage)));
       //         ClrEol;
       //         TempString                                 := ' 7. Repeat S&P Ex - ' + DVPPath + RepeatSearchAndPouncePhoneExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[118], PChar(string('Repeat S&P Ex - ' + RepeatSearchAndPouncePhoneExchange)));
+//    Windows.SetWindowTextA(MessagesValues[118], PAnsiChar(AnsiString('Repeat S&P Ex - ' + RepeatSearchAndPouncePhoneExchange)));
       //         ClrEol;
       //         TempString                                 := ' 8. S&P Exchange  - ' + DVPPath + SearchAndPouncePhoneExchange;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[119], PChar(string('S&P Exchange  - ' + SearchAndPouncePhoneExchange)));
+//    Windows.SetWindowTextA(MessagesValues[119], PAnsiChar(AnsiString('S&P Exchange  - ' + SearchAndPouncePhoneExchange)));
       //         ClrEol;
       //         TempString                                 := ' 9. Tail end msg  - ' + DVPPath + TailEndPhoneMessage;
       //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
       //         WriteLn(TempString);
-//    Windows.SetWindowText(MessagesValues[120], PChar(string('Tail end msg  - ' + TailEndPhoneMessage)));
+//    Windows.SetWindowTextA(MessagesValues[120], PAnsiChar(AnsiString('Tail end msg  - ' + TailEndPhoneMessage)));
       //         ClrEol;
   end;
 end;

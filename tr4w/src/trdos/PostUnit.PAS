@@ -160,7 +160,7 @@ function GenerateZoneMultiplierTotals: boolean;
 procedure PrintFirstZoneMultiplierCallsigns;
 procedure ZoneReport;
 procedure BandChangeReport;
-procedure MakeReportFileName(ShortFileName: PChar);
+procedure MakeReportFileName(ShortFileName: PAnsiChar);
 procedure MakeNotesList;
 function GoodLookingQSO: boolean;
 function GetStateFromSection(section: string) : string;
@@ -183,7 +183,7 @@ var
 
   tReportsFilename                      : FileNameType;
   tReportFileWrite                      : HWND;
-  PreviewFileNameAddress                : PChar;
+  PreviewFileNameAddress                : PAnsiChar;
   PreviewFileIsCabrillo                 : boolean;
 
   CountryMultTotals                     : CountryMultiplierArrayPointer;
@@ -443,6 +443,7 @@ const
 implementation
 
 uses
+  System.AnsiStrings,  // AnsiStrings.StrPCopy for ANSI (PAnsiChar) buffers under D12
   uCbrSum,
   MainUnit,
   uCFG;
@@ -590,7 +591,7 @@ var
    bandMults                             : integer;
    sumCW, sumPh, sumDig, sumBandMults    : integer;
    cwMults, phMults, digMults, totalMults: integer;
-   iniBuf                                : array[0..255] of Char;
+   iniBuf                                : array[0..255] of AnsiChar;
    operatorsStr, classStr, powerStr      : string;
 
    function CalcBandMults(b: BandType): integer;
@@ -629,13 +630,13 @@ begin
    // Metadata from the Cabrillo Summary fields the operator saved (read
    // silently from tr4w.ini [REPORT] - no dialog popup).  Empty values
    // emit blank lines so the operator types them directly on 3830's form.
-   if GetPrivateProfileString('REPORT', '_OPERATORS',
+   if GetPrivateProfileStringA('REPORT', '_OPERATORS',
          nil, iniBuf, SizeOf(iniBuf), TR4W_INI_FILENAME) > 0
    then operatorsStr := string(iniBuf) else operatorsStr := '';
-   if GetPrivateProfileString('REPORT', '_CATEGORY-OPERATOR',
+   if GetPrivateProfileStringA('REPORT', '_CATEGORY-OPERATOR',
          nil, iniBuf, SizeOf(iniBuf), TR4W_INI_FILENAME) > 0
    then classStr := string(iniBuf) else classStr := '';
-   if GetPrivateProfileString('REPORT', '_CATEGORY-POWER',
+   if GetPrivateProfileStringA('REPORT', '_CATEGORY-POWER',
          nil, iniBuf, SizeOf(iniBuf), TR4W_INI_FILENAME) > 0
    then powerStr := string(iniBuf) else powerStr := '';
 
@@ -811,8 +812,8 @@ var
   Band                                  : BandType;
   Mode                                  : ModeType;
   TempMode                              : ModeType;
-  BString                               : PChar;
-  MString                               : PChar;
+  BString                               : PAnsiChar;
+  MString                               : PAnsiChar;
   SumInteger                            : integer;
   m                                     : RemainingMultiplierType;
   TotalLine                             : boolean;
@@ -1651,8 +1652,8 @@ var
   Count, CountryIndex                   : integer;
   FileWrite                             : Text;
 
-  tCountryName                          : PChar;
-  tCountryID                            : PChar;
+  tCountryName                          : PAnsiChar;
+  tCountryID                            : PAnsiChar;
   TotalCountryQSOs                      : LONGINT;
   TempBand                              : BandType;
 begin
@@ -1768,13 +1769,13 @@ begin
     'PAdr1=%s'#13#10 +
     'PSect=%s'#13#10 +
     '[QSORecords;%u]'#13#10,
-    [string(PChar(@ContestName[1])),
-     string(PChar(@MyCall[1])),
-     string(PChar(@MyGrid[1])),
+    [string(PAnsiChar(@ContestName[1])),
+     string(PAnsiChar(@MyCall[1])),
+     string(PAnsiChar(@MyGrid[1])),
      string(EDIFBANDSTRINGSARRAY[Band]),
-     string(PChar(@TempBuffer1)),
-     string(PChar(@wsprintfBuffer)),
-     string(PChar(@TempBuffer2)),
+     string(PAnsiChar(@TempBuffer1)),
+     string(PAnsiChar(@wsprintfBuffer)),
+     string(PAnsiChar(@TempBuffer2)),
      QSOTotals[Band, Both]]));
 
   ReadVersionBlock;
@@ -1818,13 +1819,13 @@ begin
          TempRXData.tSysTime.qtDay,
          TempRXData.tSysTime.qtHour,
          TempRXData.tSysTime.qtMinute,
-         string(PChar(@TempRXData.Callsign[1])),
+         string(PAnsiChar(@TempRXData.Callsign[1])),
          EDI_ModeCodes[TempRXData.Mode],
          TempRXData.RSTSent,
          3 - Ord(TempRXData.NumberSent < 0), TempRXData.NumberSent,
          TempRXData.RSTReceived,
          3 - Ord(TempRXData.NumberReceived < 0), TempRXData.NumberReceived,
-         string(PChar(@TempRXData.QTHString[1])),
+         string(PAnsiChar(@TempRXData.QTHString[1])),
          TempRXData.QSOPoints,
          string(EDI_NewArray[TempRXData.DomesticMult]),
          string(EDI_NewArray[TempRXData.DXMult]),
@@ -2049,9 +2050,9 @@ var
    adifStr      : string;
 begin
    dtReportTime := Now;
-   lstrcpy(tReportsFilename, TR4W_LOG_FILENAME);
-   tReportsFilename[Windows.lstrlen(tReportsFilename) - 3] := #0;
-   lstrcat(tReportsFilename, 'ADI');
+   lstrcpyA(tReportsFilename, TR4W_LOG_FILENAME);
+   tReportsFilename[Windows.lstrlenA(tReportsFilename) - 3] := #0;
+   lstrcatA(tReportsFilename, 'ADI');
    if not tOpenFileForWrite(tReportFileWrite, tReportsFilename) then Exit;
 
    if not OpenLogFile then
@@ -2103,9 +2104,9 @@ label
 
 begin
 
-  lstrcpy(tReportsFilename, TR4W_LOG_FILENAME);
-  tReportsFilename[Windows.lstrlen(tReportsFilename) - 3] := #0;
-  lstrcat(tReportsFilename, 'CSV');
+  lstrcpyA(tReportsFilename, TR4W_LOG_FILENAME);
+  tReportsFilename[Windows.lstrlenA(tReportsFilename) - 3] := #0;
+  lstrcatA(tReportsFilename, 'CSV');
   if not tOpenFileForWrite(tReportFileWrite, tReportsFilename) then Exit;
 
   if not OpenLogFile then
@@ -2134,7 +2135,7 @@ begin
       // hour, minute, second, rst-sent, rst-rcvd, contest name.  %02d -> %.2d.
       sWriteFileFromString(tReportFileWrite, SysUtils.Format(
         '%s,%s,%s,%u%.2d%.2d,%.2d%.2d%.2d,%u,%u,%s'#13#10,
-        [string(PChar(@TempRXData.Callsign[1])),
+        [string(PAnsiChar(@TempRXData.Callsign[1])),
          string(ADIFBANDSTRINGSARRAY[TempRXData.Band]),
          string(ADIFModeString[TempRXData.Mode]),
          TempRXData.tSysTime.qtYear + 2000,
@@ -2167,10 +2168,10 @@ end;
 
 function tGenerateSummaryPortionOfCabrilloFile: boolean;
 var
-  T2                                    : PChar;
+  T2                                    : PAnsiChar;
   T3                                    : String;
   TempTag                               : CabrilloTags;
-  TempPchar                             : PChar;
+  TempPchar                             : PAnsiChar;
   Operator                              : integer;
   ControlID                             : integer;
   TempErmakField                        : TErmakFields;
@@ -2237,11 +2238,11 @@ begin
     TempPchar := @CabrilloTagsArray[TempTag].ctrTag[1];
     if TempTag = ctOperators then
        begin
-       StrPCopy(TempBuffer2, GetOperatorsFromLog);   // Issue #998 (was custom Format '%s')
+       System.AnsiStrings.StrPCopy(TempBuffer2, GetOperatorsFromLog);   // Issue #998 (was custom Format '%s')
        end;
     // Issue #998: %s=tag(TempPchar), %s=value(TempBuffer2).
     sWriteFileFromString(tReportFileWrite, SysUtils.Format('%s: %s'#13#10,
-      [string(TempPchar), string(PChar(@TempBuffer2))]));
+      [string(TempPchar), string(PAnsiChar(@TempBuffer2))]));
   end;
 
   if MyGrid <> '' then
@@ -2256,8 +2257,8 @@ begin
         ControlID := integer(TempErmakField) + (Operator) * 100;
         // Issue #998: builds the INI key into TempBuffer2 (not file output).
         // OPERATORINFO is C '_OP_INFO_%03u' (zero-pad); Delphi Format uses '%.3u'.
-        StrPCopy(TempBuffer2, SysUtils.Format('_OP_INFO_%.3u', [ControlID]));
-        TempInteger := GetPrivateProfileString(ERMAKSECTION, TempBuffer2, '?', TempBuffer1, SizeOf(TempBuffer1), TR4W_INI_FILENAME);
+        System.AnsiStrings.StrPCopy(TempBuffer2, SysUtils.Format('_OP_INFO_%.3u', [ControlID]));
+        TempInteger := GetPrivateProfileStringA(ERMAKSECTION, TempBuffer2, '?', TempBuffer1, SizeOf(TempBuffer1), TR4W_INI_FILENAME);
         TempPchar := @TempBuffer1[0];
         if TempErmakField = efOp then
         begin
@@ -2270,7 +2271,7 @@ begin
           if TempBuffer1[0] in ['0'..'7'] then
           begin
             TempPchar := ZVANIYA[Ord(TempBuffer1[0]) - Ord('0')];
-            TempInteger := Windows.lstrlen(TempPchar);
+            TempInteger := Windows.lstrlenA(TempPchar);
           end;
 
         if TempErmakField = efTrainer then
@@ -2306,12 +2307,12 @@ function tGenerateLogPortionOfCabrilloFile: boolean;
 label
   1;
 var
-  HisCallsign                           : PChar;
+  HisCallsign                           : PAnsiChar;
   RSTSent                               : PChar;
   RSTReceived                           : PChar;
-  Freq                                  : PChar;
-  ModeString                            : PChar;
-  csQTHString                           : PChar;
+  Freq                                  : PAnsiChar;
+  ModeString                            : PAnsiChar;
+  csQTHString                           : PAnsiChar;
   nrReceived                            : integer;
   nrSent                                : integer;
   //tempcategoryoperator                  : tcategoryoperator;
@@ -2323,8 +2324,8 @@ var
   sCall1                                : string;     // Issue #998: QTC from-call (QTCR/QTCS swap)
   sCall2                                : string;     // Issue #998: QTC to-call (QTCR/QTCS swap)
   myStationEx                           : TMyStationExchange;  // #998 capstone: My-station fields for FormatCabrilloExchange
-  cRandomCharsReceived                  : PChar;
-  cKids                                 : PChar;
+  cRandomCharsReceived                  : PAnsiChar;
+  cKids                                 : PAnsiChar;
   previousqsonr                         : integer;
   TransmitterIDPos                      : integer;
   contacts                              : integer;
@@ -2515,7 +2516,7 @@ if TempRXData.DomMultQTH = '' then
          TempRXData.tSysTime.qtDay,
          TempRXData.tSysTime.qtHour,
          TempRXData.tSysTime.qtMinute,
-         string(PChar(@MyCall[1]))]);
+         string(PAnsiChar(@MyCall[1]))]);
 {
       ActiveExchange := RSTQSONumberExchange;
       nrReceived := StrToInt(TempRXData.ceClass);
@@ -2540,7 +2541,7 @@ if TempRXData.DomMultQTH = '' then
       FormatCabrilloExchange(ActiveExchange, Contest, ContestTitle, ContestName,
         TempRXData, myStationEx,
         string(RSTSent), string(RSTReceived), string(csQTHString),
-        string(PChar(@PreviousQTHString[1])),
+        string(PAnsiChar(@PreviousQTHString[1])),
         contacts, pnr, CABRILLO_MYEX, CABRILLO_HISEX);
 //----------------------------
 
@@ -2591,13 +2592,13 @@ if TempRXData.DomMultQTH = '' then
       // %02d -> %.2d (date/time), %04u -> %.4u (sent number).
       if TempRXData.ceRecordKind = rkQTCR then
          begin
-         sCall1 := string(PChar(@MyCall[1]));
+         sCall1 := string(PAnsiChar(@MyCall[1]));
          sCall2 := string(HisCallsign);
          end
       else
          begin
          sCall1 := string(HisCallsign);
-         sCall2 := string(PChar(@MyCall[1]));
+         sCall2 := string(PAnsiChar(@MyCall[1]));
          end;
       sWriteFileFromString(tReportFileWrite, SysUtils.Format(
         'QTC: %5s %s %d-%.2d-%.2d %.2d%.2d %-14s%-11s%-14s%.4u %-14s%u'#13#10,
@@ -2694,12 +2695,12 @@ begin
       // %-6s=Prefix, then the FirstCall for bands 160/80/40/20/15/10.
       WriteLn(FileWrite, SysUtils.Format('%-6s %-11s %-11s %-11s %-11s %-11s %-11s',
         [Prefix,
-         string(PChar(@CountryMultTotals^[Band160, CountryIndex].FirstCall[1])),
-         string(PChar(@CountryMultTotals^[Band80,  CountryIndex].FirstCall[1])),
-         string(PChar(@CountryMultTotals^[Band40,  CountryIndex].FirstCall[1])),
-         string(PChar(@CountryMultTotals^[Band20,  CountryIndex].FirstCall[1])),
-         string(PChar(@CountryMultTotals^[Band15,  CountryIndex].FirstCall[1])),
-         string(PChar(@CountryMultTotals^[Band10,  CountryIndex].FirstCall[1]))]));
+         string(PAnsiChar(@CountryMultTotals^[Band160, CountryIndex].FirstCall[1])),
+         string(PAnsiChar(@CountryMultTotals^[Band80,  CountryIndex].FirstCall[1])),
+         string(PAnsiChar(@CountryMultTotals^[Band40,  CountryIndex].FirstCall[1])),
+         string(PAnsiChar(@CountryMultTotals^[Band20,  CountryIndex].FirstCall[1])),
+         string(PAnsiChar(@CountryMultTotals^[Band15,  CountryIndex].FirstCall[1])),
+         string(PAnsiChar(@CountryMultTotals^[Band10,  CountryIndex].FirstCall[1]))]));
       inc(Lines);
     end;
 
@@ -2813,12 +2814,12 @@ begin
     // %-4u=ZoneIndex, then the FirstCall for bands 160/80/40/20/15/10.
     TempString := SysUtils.Format('%-4u %-11s %-11s %-11s %-11s %-11s %-11s',
       [ZoneIndex,
-       string(PChar(@CountryMultTotals^[Band160, ZoneIndex].FirstCall[1])),
-       string(PChar(@CountryMultTotals^[Band80,  ZoneIndex].FirstCall[1])),
-       string(PChar(@CountryMultTotals^[Band40,  ZoneIndex].FirstCall[1])),
-       string(PChar(@CountryMultTotals^[Band20,  ZoneIndex].FirstCall[1])),
-       string(PChar(@CountryMultTotals^[Band15,  ZoneIndex].FirstCall[1])),
-       string(PChar(@CountryMultTotals^[Band10,  ZoneIndex].FirstCall[1]))]);
+       string(PAnsiChar(@CountryMultTotals^[Band160, ZoneIndex].FirstCall[1])),
+       string(PAnsiChar(@CountryMultTotals^[Band80,  ZoneIndex].FirstCall[1])),
+       string(PAnsiChar(@CountryMultTotals^[Band40,  ZoneIndex].FirstCall[1])),
+       string(PAnsiChar(@CountryMultTotals^[Band20,  ZoneIndex].FirstCall[1])),
+       string(PAnsiChar(@CountryMultTotals^[Band15,  ZoneIndex].FirstCall[1])),
+       string(PAnsiChar(@CountryMultTotals^[Band10,  ZoneIndex].FirstCall[1]))]);
       {
                Str(ZoneIndex: 3, TempString);
 
@@ -3039,15 +3040,15 @@ begin
   Result := True;
 end;
 
-procedure MakeReportFileName(ShortFileName: PChar);
+procedure MakeReportFileName(ShortFileName: PAnsiChar);
 var
-  p                                     : PChar;
+  p                                     : PAnsiChar;
 begin
   p := @ReportsFilename[1];
   Windows.ZeroMemory(@ReportsFilename, SizeOf(ReportsFilename));
-  lstrcpy(p, TR4W_LOG_PATH_NAME);
-  lstrcat(p, ShortFileName);
-  ReportsFilename[0] := CHR(Windows.lstrlen(p));
+  lstrcpyA(p, TR4W_LOG_PATH_NAME);
+  lstrcatA(p, ShortFileName);
+  ReportsFilename[0] := AnsiChar(Windows.lstrlenA(p));
   PreviewFileNameAddress := p;
 end;
 
@@ -3055,7 +3056,7 @@ procedure MakeNotesList;
 label
   1;
 var
-  Note                                  : PChar;
+  Note                                  : PAnsiChar;
   Minutes, Hour                         : integer;
 begin
   MakeReportFileName('Notes.txt');
@@ -3098,16 +3099,16 @@ var
   cMyZone                               : integer;
   cMyState                              : string;
   cMyPark                               : string;
-  cMyName                               : PChar;
+  cMyName                               : PAnsiChar;
   //csName                                : PChar;
-  cMyFOCNumber                          : PChar;
-  cMyCheck                              : PChar;
+  cMyFOCNumber                          : PAnsiChar;
+  cMyCheck                              : PAnsiChar;
   //csCheck                               : integer {PChar};
-  crFOCNr                               : PChar;
-  cMyGrid                               : PChar;
-  csPower                               : PChar;
+  crFOCNr                               : PAnsiChar;
+  cMyGrid                               : PAnsiChar;
+  csPower                               : PAnsiChar;
   //hisAge                                : Integer;
-  csQTHString                           : PChar;
+  csQTHString                           : PAnsiChar;
   //str1                                  : widestring;
   //nrReceived                            : integer;
   nrSent                                : integer;

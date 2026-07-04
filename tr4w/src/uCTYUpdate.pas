@@ -160,7 +160,7 @@ var
    Digits: string;
 begin
    Result := 0;
-   AssignFile(F, string(PChar(@TR4W_CTY_FILENAME)));
+   AssignFile(F, string(PAnsiChar(@TR4W_CTY_FILENAME)));
    {$I-}
    Reset(F);
    {$I+}

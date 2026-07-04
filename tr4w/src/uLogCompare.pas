@@ -61,7 +61,7 @@ begin
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowText(hwnddlg, RC_DIFFINLOG);
+        Windows.SetWindowTextA(hwnddlg, RC_DIFFINLOG);
 
         LogCompareListView := tWM_SETFONT(CreateListView2(0, 0, 440, 150, hwnddlg), MainFixedFont);
 

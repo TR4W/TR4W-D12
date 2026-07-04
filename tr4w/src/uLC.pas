@@ -68,7 +68,7 @@ begin
               TempByte := 104;
               if I = 104 then TempByte := 103;
 
-              SetDlgItemText(hwnddlg, TempByte, nil);
+              SetDlgItemTextA(hwnddlg, TempByte, nil);
               c := GetDlgItemInt(hwnddlg, integer(I), lb, lb);
               if c = 0 then Exit;
               l := f * c;

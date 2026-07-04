@@ -76,7 +76,7 @@ var
   QTCRCallsignWndHandle                 : HWND;
   QTCNrWndHandle                        : HWND;
   OldQTCREditProc                       : Pointer;
-  QTCBuffer                             : array[0..63] of Char;
+  QTCBuffer                             : array[0..63] of AnsiChar;
   QTCsInCurrentGroup                    : integer;
   CurrentGroup                          : integer;
 
@@ -105,14 +105,14 @@ begin
 
     WM_INITDIALOG:
       begin
-        Windows.SetWindowText(hwnddlg, RC_RECVQTC);
+        Windows.SetWindowTextA(hwnddlg, RC_RECVQTC);
   //      CreateStatic(nil, 5, 285, 325, hwnddlg, 106);
  //  CreateStatic(nil, 5, 325, 325, hwnddlg, 106);
  CreateStatic(nil, 5, 325, 325, hwnddlg, 106);
         QTCRWindow := hwnddlg;
         SendStringAndStop('QTC?');
         tCreateStaticWindow(TC_QTC_CALLSIGN, WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE, QTCLEFT, 5, QTCWIDTHARRAY[1] + QTCROWSDIS + QTCWIDTHARRAY[2], 18, hwnddlg, 10);
-        QTCRCallsignWndHandle := tCreateEditWindow(WS_EX_STATICEDGE, PChar(string(QTCCallsign)), WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE or ES_UPPERCASE, QTCLEFT + QTCWIDTHARRAY[1] + QTCROWSDIS + QTCWIDTHARRAY[2] + QTCROWSDIS, 5, 120, 18, hwnddlg, 88);
+        QTCRCallsignWndHandle := tCreateEditWindow(WS_EX_STATICEDGE, PAnsiChar(AnsiString(QTCCallsign)), WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE or ES_UPPERCASE, QTCLEFT + QTCWIDTHARRAY[1] + QTCROWSDIS + QTCWIDTHARRAY[2] + QTCROWSDIS, 5, 120, 18, hwnddlg, 88);
         OldQTCREditProc := Pointer(Windows.SetWindowLong(QTCRCallsignWndHandle, GWL_WNDPROC, integer(@NewQTCREditProc)));
         // Issue #997: asm wsprintf-push -> TF.Format (MaxQTCsThisStation is integer).
         Format(wsprintfBuffer, TC_ENTERQTCMAXOF, MaxQTCsThisStation);
@@ -305,13 +305,13 @@ begin
   NumbreinCallsign := False;
   for c := 1 to i - 2 do
   begin
-    if not tCharIsNumbers(s[c]) then if tCharIsNumbers(s[c + 1]) then NumbreinCallsign := True;
+    if not tCharIsNumbers(AnsiChar(s[c])) then if tCharIsNumbers(AnsiChar(s[c + 1])) then NumbreinCallsign := True;
     if s[c] = '/' then NumbreinCallsign := False;
   end;
   if s[i - 1] = '/' then NumbreinCallsign := False;
   if NumbreinCallsign = False then Exit;
 
-  if not tCharIsNumbers(s[i]) then Exit;
+  if not tCharIsNumbers(AnsiChar(s[i])) then Exit;
   Result := True;
 end;
 
@@ -362,7 +362,7 @@ begin
               SendStringAndStop('QRV');
             end
             else
-              Windows.SetDlgItemText(QTCRWindow, 106, TC_CHECKQTCNUMBER);
+              Windows.SetDlgItemTextA(QTCRWindow, 106, TC_CHECKQTCNUMBER);
             Exit;
           end;
 
@@ -382,7 +382,7 @@ begin
             end;
 
           end;
-//          Windows.SetWindowText(QTCRWindow, inttopchar(integer(TryParseQTCBuffer(hwnddlg))));
+//          Windows.SetWindowTextA(QTCRWindow, inttopchar(integer(TryParseQTCBuffer(hwnddlg))));
         end;
 
       end;
@@ -441,9 +441,9 @@ var
   i                                     : integer;
   SlashPos                              : integer;
 begin
-//  Windows.SetDlgItemText(QTCRWindow, 106, nil);
+//  Windows.SetDlgItemTextA(QTCRWindow, 106, nil);
   Result := False;
-  l := Windows.GetWindowText(QTCNrWndHandle, QTCBuffer, SizeOf(QTCBuffer));
+  l := Windows.GetWindowTextA(QTCNrWndHandle, QTCBuffer, SizeOf(QTCBuffer));
   if l <= 2 then Exit;
   if QTCBuffer[l - 1] = '/' then Exit;
   SlashPos := -1;
@@ -471,14 +471,14 @@ begin
   Time := Windows.GetDlgItemInt(QTCRWindow, 200 + Item, lpTranslated, False);
   if (lpTranslated = False) or ((Time mod 100) > 59) or (Time div 100 > 23) {or ((Item = 1) and (Time < 100))} then
   begin
-    Windows.SetDlgItemText(QTCRWindow, 106, TC_CHECKTIME);
+    Windows.SetDlgItemTextA(QTCRWindow, 106, TC_CHECKTIME);
     Windows.SetFocus(Windows.GetDlgItem(QTCRWindow, 200 + Item));
     Exit;
   end;
   Call := GetDialogItemText(QTCRWindow, 300 + Item);
   if not GoodCallSyntax(Call) then
   begin
-    if Call <> '' then Windows.SetDlgItemText(QTCRWindow, 106, TC_CHECKCALLSIGN);
+    if Call <> '' then Windows.SetDlgItemTextA(QTCRWindow, 106, TC_CHECKCALLSIGN);
     Windows.SetFocus(Windows.GetDlgItem(QTCRWindow, 300 + Item));
     Exit;
   end;
@@ -486,11 +486,11 @@ begin
 {  Number := }Windows.GetDlgItemInt(QTCRWindow, 400 + Item, lpTranslated, False);
   if lpTranslated = False then
   begin
-//    Windows.SetDlgItemText(QTCRWindow, 106, 'Check number');
+//    Windows.SetDlgItemTextA(QTCRWindow, 106, 'Check number');
     Windows.SetFocus(Windows.GetDlgItem(QTCRWindow, 400 + Item));
     Exit;
   end;
-  Windows.SetDlgItemText(QTCRWindow, 106, nil);
+  Windows.SetDlgItemTextA(QTCRWindow, 106, nil);
   Result := True;
 end;
 

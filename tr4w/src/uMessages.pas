@@ -55,7 +55,7 @@ begin
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowText(hwnddlg, RC_MEMPROGFUNC);
+        Windows.SetWindowTextA(hwnddlg, RC_MEMPROGFUNC);
 
         for i := 1 to 3 do
         begin

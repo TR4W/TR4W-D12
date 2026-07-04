@@ -661,7 +661,7 @@ begin
   //  else
   RSTString := ' ' + IntToStr(Exchange.RSTSent) + '     ';
 
-  RSTString[0] := CHR(5);
+  RSTString[0] := AnsiChar(5);
   RSTString := Copy(RSTString, 1, 5);
   LogString := LogString + RSTString;
 
@@ -672,8 +672,8 @@ procedure BandModeDateTimeNumberCallNameSentStamp(Exchange: ContestExchange; var
 
 var
   TimeString, QSONumberString: Str20;
-  TempChar: Char;
-  MonthString: PChar;
+  TempChar: AnsiChar;
+  MonthString: PAnsiChar;
   Year: Word;
 begin
   {
@@ -881,7 +881,7 @@ var
 begin
 
   RSTString := ' ' + IntToStr(Exchange.RSTReceived) + '     ';
-  RSTString[0] := CHR(5);
+  RSTString[0] := AnsiChar(5);
   RSTString := Copy(RSTString, 1, 5);
   LogString := LogString + RSTString;
 

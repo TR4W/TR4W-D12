@@ -86,7 +86,7 @@ type
 
    CFGRecord = record
     {(*}
-    {04}crCommand : PChar;
+    {04}crCommand : PAnsiChar;
     {04}crAddress : Pointer;
 
     {02}crMin     : Word;
@@ -918,7 +918,7 @@ var
    //  TempString                            : Str10;
    TempElement: TMainWindowElement;
    TempColumn: LogColumnsType;
-   ColumnToken: string;   // language-neutral column token from COLUMN WIDTH line
+   ColumnToken: AnsiString;   // language-neutral column token from COLUMN WIDTH line
 begin
 {$IF MAKE_DEFAULT_VALUES = TRUE}
    Result := True;
@@ -994,7 +994,7 @@ begin
       ColumnToken := Copy(pshortstring(Command)^, 14, 255);
       for TempColumn := Low(LogColumnsType) to High(LogColumnsType) do
          begin
-         if (StrComp(ColumnCanonicalName[TempColumn], PChar(ColumnToken)) = 0)
+         if (StrComp(ColumnCanonicalName[TempColumn], PAnsiChar(ColumnToken)) = 0)
          or (UpperCase(ColumnsArray[TempColumn].Text) = ColumnToken) then
             begin
             Val(CustomCMD, TempInteger, code);
@@ -1145,7 +1145,7 @@ begin
                            PShortString(CFGCA[i].crAddress)^[length(CustomCMD) +
                               1] := #0;
                            if CFGCA[i].crType = ctURL then
-                              Windows.CharLower(PChar(CFGCA[i].crAddress) + 1);
+                              Windows.CharLowerA(PAnsiChar(CFGCA[i].crAddress) + 1);
                         end;
 
                      ctPortLPT:
@@ -1153,12 +1153,12 @@ begin
                            GetLPTPortFromChar(CustomCMD);
 
                      ctChar:
-                        PChar(CFGCA[i].crAddress)^ := CustomCMD[1];
+                        PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1];
 
                      ctAlphaChar:
                         begin
                            if CustomCMD[1] in ['A'..'Z'] then
-                              PChar(CFGCA[i].crAddress)^ := CustomCMD[1]
+                              PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1]
                            else
                               Exit;
                         end;
@@ -1884,13 +1884,13 @@ const
       );
 var
    i: integer;
-   p: pchar;
+   p: PAnsiChar;
 begin
    for i := 1 to SAS do
       begin
          Windows.lstrcat(PChar(integer(SA[i].isString) + 1),
             SA[i].isPcharString);
-         SA[i].isString^[0] := Char(lstrlen(SA[i].isPcharString));
+         SA[i].isString^[0] := AnsiChar(lstrlen(SA[i].isPcharString));
       end;
    p := 'logback.tr4w';
    Windows.lstrcatA(TR4W_FLOPPY_FILENAME, p); // 4.56.13

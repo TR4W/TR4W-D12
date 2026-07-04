@@ -237,7 +237,7 @@ end;
 
 function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): Str20;
 var
-  NumberChar                            : Char;
+  NumberChar                            : AnsiChar;
 begin
   Result := '';
   if QTH.Continent = Europe then Exit;
@@ -416,7 +416,7 @@ begin
 }
 end;
 
-function GetNumber(Call: CallString): Char;
+function GetNumber(Call: CallString): AnsiChar;
 
 { This function will look at the callsign passed to it and return the
   single number that is in it.  If the call is portable, the number from
@@ -436,7 +436,7 @@ begin
       GetNumber := Call[CharPtr];
       Exit;
     end;
-  GetNumber := CHR(0);
+  GetNumber := #0;
 end;
 {
 procedure LocateCall(Call: CallString; var QTH: QTHRecord; UseStandardCallFormat: boolean);

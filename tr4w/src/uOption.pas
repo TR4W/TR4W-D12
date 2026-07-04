@@ -49,7 +49,7 @@ const
 var
   SomeCommandWasChanged                 : boolean;
   CommandsFilter                        : CFGFunc;
-  CommandToSet                          : PChar;
+  CommandToSet                          : PAnsiChar;
   PreviousHelpRow                       : integer;
   settingswindowhandle                  : HWND;
   OldSLVProc                            : Pointer;
@@ -83,7 +83,7 @@ const
   // Issue #783 -- ctPassword fields display as this fixed mask in the
   // settings listview unless the operator ticks the "Show passwords"
   // checkbox.  Fixed length so we don't leak the actual password length.
-  PASSWORD_MASK: PChar = '********';
+  PASSWORD_MASK: PAnsiChar = '********';
   ID_SHOWPASSWORDS_CB = 210;   // free in this dialog (200..204 are buttons)
 
 var
@@ -108,7 +108,7 @@ begin
 //    WM_HELP: tWinHelp(61);
     WM_INITDIALOG:
       begin
-        Windows.SetWindowText(hwnddlg, RC_OPTIONS);
+        Windows.SetWindowTextA(hwnddlg, RC_OPTIONS);
 
         SettingshLV := tWM_SETFONT(CreateListView2(0, 0, 548, 432, hwnddlg), MainFixedFont);
 
@@ -255,7 +255,7 @@ end;
 procedure RefreshPasswordRows(hwnddlg: HWND);
 var
   rowCount, row, cmd: Integer;
-  buf:                array[0..63] of Char;
+  buf:                array[0..63] of AnsiChar;
 begin
   if SettingshLV = 0 then Exit;
   rowCount := ListView_GetItemCount(SettingshLV);
@@ -270,7 +270,7 @@ begin
       // Skip the leading length byte of the ShortString at crAddress.
       // ListView_SetItemText needs a writable PChar; copy into a local buffer.
       Windows.ZeroMemory(@buf, SizeOf(buf));
-      Windows.lstrcpyn(buf, PChar(Integer(CFGCA[cmd].crAddress) + 1), SizeOf(buf));
+      Windows.lstrcpynA(buf, PAnsiChar(Integer(CFGCA[cmd].crAddress) + 1), SizeOf(buf));
       ListView_SetItemText(SettingshLV, row, VALUE_FIELD, buf);
       end
     else
@@ -433,7 +433,7 @@ begin
             ctBoolean: Settingslvi.pszText := BA[PBoolean(CFGCA[Command].crAddress)^];
 
             ctReal:
-              Settingslvi.pszText := PChar(RealToStr2(PDouble(CFGCA[Command].crAddress)^));
+              Settingslvi.pszText := PAnsiChar(AnsiString(RealToStr2(PDouble(CFGCA[Command].crAddress)^)));
 
             ctInteger:
               Settingslvi.pszText := inttopchar(PInteger(CFGCA[Command].crAddress)^);
@@ -446,7 +446,7 @@ begin
 
             ctChar, ctAlphaChar:
               begin
-                CID_TWO_BYTES[0] := PChar(CFGCA[Command].crAddress)^;
+                CID_TWO_BYTES[0] := PAnsiChar(CFGCA[Command].crAddress)^;
                 Settingslvi.pszText := CID_TWO_BYTES;
                 if CID_TWO_BYTES[0] = ' ' then
                   Settingslvi.pszText := 'SPACE';
@@ -457,9 +457,9 @@ begin
           if CFGCA[Command].crKind = ckList then
           begin
             TempInteger := integer(CFGCA[Command].crAddress);
-            p := PChar(ListParamArray[TempInteger].lpArray) + (ListParamArray[TempInteger].lpVar^ * 4);
+            p := PAnsiChar(ListParamArray[TempInteger].lpArray) + (ListParamArray[TempInteger].lpVar^ * 4);
             p := Pointer(p^);
-            Settingslvi.pszText := PChar(p);
+            Settingslvi.pszText := PAnsiChar(p);
           end;
 
         end;
@@ -558,9 +558,9 @@ begin
     Index2 := integer(CFGCA[Index].crAddress);
     if ListParamArray[Index2].lpVar^ = High(tr4wColors) then
       ListParamArray[Index2].lpVar^ := 0 else inc(ListParamArray[Index2].lpVar^);
-    p := PChar(ListParamArray[Index2].lpArray) + (ListParamArray[Index2].lpVar^ * 4);
+    p := PAnsiChar(ListParamArray[Index2].lpArray) + (ListParamArray[Index2].lpVar^ * 4);
     p := Pointer(p^);
-    ListView_SetItemText(SettingshLV, Row, 1, PChar(p));
+    ListView_SetItemText(SettingshLV, Row, 1, PAnsiChar(p));
 }
     goto EnableButtons;
   end;
@@ -579,9 +579,9 @@ begin
       Index2 := integer(CFGCA[Index].crAddress);
       if ListParamArray[Index2].lpVar^ = ListParamArray[Index2].lpLength then
         ListParamArray[Index2].lpVar^ := 0 else inc(ListParamArray[Index2].lpVar^);
-      p := PChar(ListParamArray[Index2].lpArray) + (ListParamArray[Index2].lpVar^ * 4);
+      p := PAnsiChar(ListParamArray[Index2].lpArray) + (ListParamArray[Index2].lpVar^ * 4);
       p := Pointer(p^);
-      ListView_SetItemText(SettingshLV, Row, 1, PChar(p));
+      ListView_SetItemText(SettingshLV, Row, 1, PAnsiChar(p));
       goto Change;
     end;
 
@@ -596,7 +596,7 @@ begin
       end;
 
       if (c) = ArrayRecordArray[Index2].arArrayLength - 0 then c := 0 else inc(c);
-      ArrayRecordArray[Index2].arVar^ := PInteger(PChar(ArrayRecordArray[Index2].arArrayPtr) + (c * 4))^;
+      ArrayRecordArray[Index2].arVar^ := PInteger(PAnsiChar(ArrayRecordArray[Index2].arArrayPtr) + (c * 4))^;
       ListView_SetItemText(SettingshLV, Row, 1, inttopchar(ArrayRecordArray[Index2].arVar^));
       goto Change;
     end;
@@ -688,7 +688,7 @@ begin
           ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
           if CheckCommand(@TempBuffer1, TempString) then
           begin
-            PChar(CFGCA[Index].crAddress)^ := TempString[1];
+            PAnsiChar(CFGCA[Index].crAddress)^ := TempString[1];
             if TempString[1] = ' ' then
             begin
               Windows.ZeroMemory(@TempString, SizeOf(TempString));
@@ -702,13 +702,13 @@ begin
         begin
           SelectFolder(settingswindowhandle, FileNameType(CFGCA[Index].crAddress^));
           SetFocus(settingswindowhandle);
-          ListView_SetItemText(SettingshLV, Row, 1, PChar(CFGCA[Index].crAddress));
+          ListView_SetItemText(SettingshLV, Row, 1, PAnsiChar(CFGCA[Index].crAddress));
         end;
 
       ctFileName:
         begin
           if not OpenFileDlg(nil, settingswindowhandle, nil, FileNameType(CFGCA[Index].crAddress^), OFN_HideReadOnly) then Exit;   // issue 289
-          ListView_SetItemText(SettingshLV, Row, 1, PChar(CFGCA[Index].crAddress));
+          ListView_SetItemText(SettingshLV, Row, 1, PAnsiChar(CFGCA[Index].crAddress));
         end;
 
       ctFreqList:
@@ -791,8 +791,8 @@ label
   NoText;
 var
   Index                                 : integer;
-  p                                     : PChar;
-  lpAppName                             : PChar;
+  p                                     : PAnsiChar;
+  lpAppName                             : PAnsiChar;
 begin
   Changed[Row] := False;
   Index := IndexArray[Row + 1];
@@ -823,7 +823,7 @@ begin
   else
     lpAppName := 'COLORS';
 }
-  Windows.WritePrivateProfileString(lpAppName, TempBuffer1, TempBuffer2, p);
+  Windows.WritePrivateProfileStringA(lpAppName, TempBuffer1, TempBuffer2, p);
   NoText:
 end;
 
@@ -885,8 +885,8 @@ begin
 
   // Changes here are Issue 610 to show if parameter is sent to network or not
   ListView_GetItemText(SettingshLV, Row, COMMAND_FIELD, @TempBuffer1, SizeOf(TempBuffer1));
-  //GetPrivateProfileString(TempBuffer1, 'DESCRIPTION', nil, wsprintfBuffer, SizeOf(wsprintfBuffer), TR4W_COMM_HELP_FILENAME);
-  GetPrivateProfileString(TempBuffer1, 'DESCRIPTION', nil, tempprintfBuffer, SizeOf(tempprintfBuffer), TR4W_COMM_HELP_FILENAME);
+  //GetPrivateProfileStringA(TempBuffer1, 'DESCRIPTION', nil, wsprintfBuffer, SizeOf(wsprintfBuffer), TR4W_COMM_HELP_FILENAME);
+  GetPrivateProfileStringA(TempBuffer1, 'DESCRIPTION', nil, tempprintfBuffer, SizeOf(tempprintfBuffer), TR4W_COMM_HELP_FILENAME);
 
   if CFGCA[Index].crNetwork = 0 then
      begin
@@ -897,7 +897,7 @@ begin
      Format(wsprintfBuffer, '%s %s %s', tempprintfBuffer, #13#10#13#10, 'Sent to Network');
      end;
   Windows.SetDlgItemTextA(settingswindowhandle, 105, wsprintfBuffer);
-  GetPrivateProfileString(TempBuffer1, 'DEFAULT', nil, wsprintfBuffer, SizeOf(wsprintfBuffer), TR4W_COMM_HELP_FILENAME);
+  GetPrivateProfileStringA(TempBuffer1, 'DEFAULT', nil, wsprintfBuffer, SizeOf(wsprintfBuffer), TR4W_COMM_HELP_FILENAME);
   Windows.SetDlgItemTextA(settingswindowhandle, 104, wsprintfBuffer);
 
 end;
@@ -918,8 +918,8 @@ begin
      end;
   Windows.ZeroMemory(@ParameterToNetwork.pnCommand, SizeOf(ParameterToNetwork.pnCommand) + SizeOf(ParameterToNetwork.pnValue));
 {(*}
-  ParameterToNetwork.pnCommand[0] := Char(ListView_GetItemText(SettingshLV, Row, COMMAND_FIELD, @ParameterToNetwork.pnCommand[1], SizeOf(ParameterToNetwork.pnCommand)));
-  ParameterToNetwork.pnValue[0]   := Char(ListView_GetItemText(SettingshLV, Row, VALUE_FIELD,   @ParameterToNetwork.pnValue[1],   SizeOf(ParameterToNetwork.pnValue)));
+  ParameterToNetwork.pnCommand[0] := AnsiChar(ListView_GetItemText(SettingshLV, Row, COMMAND_FIELD, @ParameterToNetwork.pnCommand[1], SizeOf(ParameterToNetwork.pnCommand)));
+  ParameterToNetwork.pnValue[0]   := AnsiChar(ListView_GetItemText(SettingshLV, Row, VALUE_FIELD,   @ParameterToNetwork.pnValue[1],   SizeOf(ParameterToNetwork.pnValue)));
 {*)}
   SendToNet(ParameterToNetwork, SizeOf(ParameterToNetwork));
 end;

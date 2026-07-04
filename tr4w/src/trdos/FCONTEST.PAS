@@ -273,8 +273,8 @@ var
 
   TempWord: Word;
 
-  TempDomesticQTHDataFileName: PChar;
-  TmpBuf: array[0..255] of Char;
+  TempDomesticQTHDataFileName: PAnsiChar;
+  TmpBuf: array[0..255] of AnsiChar;
   TempOblast: Str2;
   // i,j                                   : integer;
   // k                                     : str10;

@@ -50,7 +50,7 @@ var
 //  DVPPath                               : ShortString;
 
   PlayWAVThread, PlayWAVThreadID        : Cardinal;
-  WAVFileToPlay                         : array[0..255] of Char;
+  WAVFileToPlay                         : array[0..255] of AnsiChar;
   DVPMessagesArray                      : array[1..DVPArraySize] of Str40;
   DVPMessagesArrayIndex                 : integer = 1;
   DVPThreadID                           : Cardinal;
@@ -79,14 +79,14 @@ procedure DVPStopPlayback;
 procedure SetMicGain(Gain: Byte);
 procedure SetOutGain(Gain: Byte);
 
-function tGetWAVDurationFromHeader(FileName: PChar; var Duration: Cardinal; DisplayError: boolean): boolean;
+function tGetWAVDurationFromHeader(FileName: PAnsiChar; var Duration: Cardinal; DisplayError: boolean): boolean;
 procedure tDVPPlayThreadproc;
-procedure tWriteCallsignToMissingCallsignsFile(Callsign: PChar);
+procedure tWriteCallsignToMissingCallsignsFile(Callsign: PAnsiChar);
 
 procedure EnumMISSINGCALLSIGNSTXT(FileString: PShortString);
 
-function tsndPlaySound(lpszSoundName: PChar): BOOL;
-function PlayWAVFile(f: PChar; DisplayError: boolean): PlayResult;
+function tsndPlaySound(lpszSoundName: PAnsiChar): BOOL;
+function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
 
 implementation
 uses
@@ -145,7 +145,7 @@ const
 
 type
   DVPSharedMemory = record
-    FileName: array[1..64] of Char;
+    FileName: array[1..64] of AnsiChar;
     FileOpen: integer; { + 40h bytes }
     Command: integer; { + 42h bytes }
     Handle: integer; { + 44h bytes }
@@ -347,7 +347,7 @@ begin
   }
 end;
 
-function tGetWAVDurationFromHeader(FileName: PChar; var Duration: Cardinal; DisplayError: boolean): boolean;
+function tGetWAVDurationFromHeader(FileName: PAnsiChar; var Duration: Cardinal; DisplayError: boolean): boolean;
 label
   1;
 var
@@ -400,11 +400,11 @@ label
 var
   Index                                 : integer;
   i                                     : integer;
-  WAVFile                               : array[0..255] of Char;
+  WAVFile                               : array[0..255] of AnsiChar;
   //Duration                              : Cardinal;
-  TempChar                              : Char;
+  TempChar                              : AnsiChar;
   Pauselenght                           : Cardinal;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
   TempPlayResult                        : PlayResult;
 const
   DOTWAVASINTEGER                       = 1447122734;
@@ -520,11 +520,11 @@ begin
 //  inc(MissedWAVCallsigns);
 end;
 
-procedure tWriteCallsignToMissingCallsignsFile(Callsign: PChar);
+procedure tWriteCallsignToMissingCallsignsFile(Callsign: PAnsiChar);
 label
   1, CallsignFound, NextRead;
 var
-  TempBuffer                            : array[0..1024 - 1] of Char;
+  TempBuffer                            : array[0..1024 - 1] of AnsiChar;
   h                                     : HWND;
   lpNumberOfBytesRead                   : Cardinal;
   p                                     : PAnsiChar;
@@ -548,14 +548,14 @@ begin
     if lpNumberOfBytesRead = SizeOf(TempBuffer) then goto NextRead;
   end;
 
-  swriteFile(h, Callsign^, lstrlen(Callsign));
+  swriteFile(h, Callsign^, lstrlenA(Callsign));
   swriteFile(h, #13#10, 2);
 
   CallsignFound:
   CloseHandle(h);
 end;
 
-function tsndPlaySound(lpszSoundName: PChar): BOOL;
+function tsndPlaySound(lpszSoundName: PAnsiChar): BOOL;
 begin
   Result := False;
 {
@@ -570,13 +570,13 @@ begin
 }
   if not FileExists(lpszSoundName {WAVFileToPlay}) then Exit;
   if ActiveRadioPtr.tPTTStatus = PTT_OFF then PTTOn;
-  Result := sndPlaySound(lpszSoundName {WAVFileToPlay}, SND_ASYNC or SND_NODEFAULT);
+  Result := sndPlaySoundA(lpszSoundName {WAVFileToPlay}, SND_ASYNC or SND_NODEFAULT);
 end;
 
-function PlayWAVFile(f: PChar; DisplayError: boolean): PlayResult;
+function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
 var
   Duration                              : Cardinal;
-  WAVFile                               : PChar;
+  WAVFile                               : PAnsiChar;
   countrtyId                            : DXMultiplierString;
   //tempBuffer                            : array[0..255 + 64] of Char;
 begin

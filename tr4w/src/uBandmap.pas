@@ -58,7 +58,7 @@ const
 type
   TBandMapButtons = record
     Menu: HMENU;
-    Text: PChar;
+    Text: PAnsiChar;
   end;
   {
   const
@@ -81,7 +81,7 @@ procedure DeleteSpotFromBandmap;
 procedure ShowSpotInfo;
 procedure ClearSpotInfo;
 procedure KillFocus; // Gav 4.47.4 #141
-procedure SetTextInBMSB(Index: integer; Text: PChar);
+procedure SetTextInBMSB(Index: integer; Text: PAnsiChar);
 function GetBMSelItemData: integer;
 function NEWBMLBPROC(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam):
   integer; stdcall;
@@ -133,7 +133,7 @@ var
   TempInt: integer;
   memDC: HDC;
   Spot: TSpotRecord;
-  p: PChar;
+  p: PAnsiChar;
   Size: TSIZE;
   //  TempHDC                               : HDC;
 const
@@ -275,7 +275,7 @@ begin
           {Draw Frequency}
           Windows.SetTextColor(memDC, CursorFontColor);
 
-          Windows.DrawText
+          Windows.DrawTextA
             (memDC,
             FreqToPChar2(Spot.FFrequency),
             -1,
@@ -302,7 +302,7 @@ begin
           if p <> nil then
           begin
             Windows.SetTextColor(memDC, 0);
-            Windows.DrawText(memDC, p, 1, CheckRect, DT_END_ELLIPSIS +
+            Windows.DrawTextA(memDC, p, 1, CheckRect, DT_END_ELLIPSIS +
               DT_SINGLELINE + DT_CENTER + DT_VCENTER);
           end;
 
@@ -329,7 +329,7 @@ begin
 
           DrawCallsign:
           CallsignRect.Left := CallsignRect.Left + 2;
-          Windows.DrawText(
+          Windows.DrawTextA(
             memDC,
             @Spot.FCall[1],
             length(Spot.FCall),
@@ -349,7 +349,7 @@ begin
         DisplayBandMap;
       end;
 
-    //WM_ERASEBKGND:WINDOWS.TextOut(hdc(WPARAM),50,50,'aaaaaa',6);
+    //WM_ERASEBKGND:WINDOWS.TextOutA(hdc(WPARAM),50,50,'aaaaaa',6);
     WM_INITDIALOG:
       begin
         BandMapListBox := CreateOwnerDrawListBox(LB_STYLE_1, hwnddlg);
@@ -358,7 +358,7 @@ begin
 
         BandMapStatusBar := Windows.GetDlgItem(hwnddlg, 102);
 
-        BandMapStatusBar := tWM_SETFONT(CreateWindow(STATUSCLASSNAME, nil,
+        BandMapStatusBar := tWM_SETFONT(CreateWindowA(STATUSCLASSNAME, nil,
           {SBT_NOBORDERS or}CCS_TOP or CCS_NOMOVEY or WS_CHILD or WS_VISIBLE,
           100,
           100, 100, 100, hwnddlg, 101, hInstance, nil), MainFixedFont);
@@ -648,7 +648,7 @@ begin
   DisplayBandMap;
 end;
 
-procedure SetTextInBMSB(Index: integer; Text: PChar);
+procedure SetTextInBMSB(Index: integer; Text: PAnsiChar);
 begin
   SendMessage(BandMapStatusBar, SB_SETTEXT, Index, integer(Text));
 end;
@@ -724,8 +724,8 @@ begin
 
 end;
 
-function NEWBMLBPROC(hwnddlg: HWND; Msg: UINT; wParam: LONGINT; lParam:
-  LONGINT): integer; stdcall;
+function NEWBMLBPROC(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
+  lParam): integer; stdcall;
 
 begin
   //WM_ERASEBKGND WM_PAINT WM_SETREDRAW WM_NCPAINT

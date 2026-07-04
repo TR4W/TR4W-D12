@@ -44,9 +44,9 @@ function NewContestDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lPa
 procedure BeginNewContest(h: HWND);
 procedure ClearFields;
 procedure SaveNewContest(h: HWND);
-procedure DisplayCheckBox(Text: PChar);
-procedure SetCommentAndEnableEditControl(comment: PChar; EditControl: InitialCommands);
-procedure EnterCountyOrState(State: PChar);
+procedure DisplayCheckBox(Text: PAnsiChar);
+procedure SetCommentAndEnableEditControl(comment: PAnsiChar; EditControl: InitialCommands);
+procedure EnterCountyOrState(State: PAnsiChar);
 procedure StartContestFromListbox();
 function NewSelectContestListBoxProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): integer; stdcall;
 procedure ChangeDir;
@@ -154,7 +154,7 @@ begin
          {LISTBOX}
         CreateListBox(5, 35, 250, 370, hwnddlg, NC_LISTBOX);
 
-        GetPrivateProfileString(_COMMANDS, LATEST_CONFIG_FILE, nil, TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType), TR4W_INI_FILENAME);
+        GetPrivateProfileStringA(_COMMANDS, LATEST_CONFIG_FILE, nil, TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType), TR4W_INI_FILENAME);
         if TR4W_LATESTCFG_FILENAME[0] <> #0 then
         begin
 
@@ -192,13 +192,13 @@ begin
         {I AM IN}
          Windows.ShowWindow(CreateButton(BS_AUTOCHECKBOX or BS_LEFT or BS_TOP or BS_MULTILINE or WS_CHILD or WS_TABSTOP, nil, 420, 60, 430, hwnddlg, NC_CHECKBOX_IAMIN), SW_HIDE); // 4.76.3
 
-        Windows.SetWindowText(hwnddlg, TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE);
+        Windows.SetWindowTextA(hwnddlg, TR4W_CURRENTVERSION + TC_OPENCONFIGURATIONFILE);
 
         NewContestListBoxHandle := GetDlgItem(hwnddlg, NC_LISTBOX);
 
         Format(wsprintfBuffer, '%s*.CFG', TR4W_PATH_NAME);
 
-        DlgDirList(hwnddlg, wsprintfBuffer, NC_LISTBOX, 445, sfFLAG + DDL_DRIVES);
+        Windows.DlgDirListA(hwnddlg, wsprintfBuffer, NC_LISTBOX, 445, sfFLAG + DDL_DRIVES);
         SelectParentDir(NewContestListBoxHandle);
         OldSelectContestListBoxProc := Pointer(Windows.SetWindowLong(NewContestListBoxHandle, GWL_WNDPROC, integer(@NewSelectContestListBoxProc)));
         tWM_SETFONT(NewContestListBoxHandle, MainFixedFont);
@@ -245,7 +245,7 @@ begin
         for TempCardinal := 4 to CSAS do
           SendMessage(InitialCommandsHWNDArray[TempCardinal, 2], CB_SETCURSEL, 0, 0);
 
-        MainCallsign[0] := CHR(GetPrivateProfileString(_COMMANDS, MAIN_CALLSIGN, nil, @MainCallsign[1], SizeOf(MainCallsign), TR4W_INI_FILENAME));
+        MainCallsign[0] := AnsiChar(GetPrivateProfileStringA(_COMMANDS, MAIN_CALLSIGN, nil, @MainCallsign[1], SizeOf(MainCallsign), TR4W_INI_FILENAME));
         if MainCallsign <> '' then
           Windows.SetDlgItemTextA(hwnddlg, NC_CALL_EDIT, @MainCallsign[1]);
 
@@ -280,7 +280,7 @@ begin
           begin
             ClearFields;
 
-            Windows.SetWindowText(NewContestCommentWndHandle, nil);
+            Windows.SetWindowTextA(NewContestCommentWndHandle, nil);
              if Windows.SendMessage(NewContestCheckBox, BM_GETCHECK, 0, 0) = BST_UNCHECKED then
 
 
@@ -370,7 +370,7 @@ begin
           begin
             SelectedContest := GetContestFromString(GetDialogItemText(hwnddlg, NC_CONTEST_COMBOBOX));
             ClearFields;
-            Windows.SetWindowText(NewContestCommentWndHandle, nil);
+            Windows.SetWindowTextA(NewContestCommentWndHandle, nil);
             Windows.ShowWindow(NewContestCheckBox, SW_HIDE);
             Windows.SendMessage(NewContestCheckBox, BM_SETCHECK, BST_UNCHECKED, 0);
 
@@ -461,7 +461,7 @@ begin
               BSCI, IARU: DisplayCheckBox(TC_HQ_OR_MEMBER);
               IOTA:
                 begin
-                  Windows.SetWindowText(NewContestCheckBox, TC_ISLANDSTATION);
+                  Windows.SetWindowTextA(NewContestCheckBox, TC_ISLANDSTATION);
                   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
                 end;
 
@@ -498,7 +498,7 @@ begin
 
              POTA:
                 begin
-                 Windows.SetWindowText(NewContestCheckBox, 'Activator');
+                 Windows.SetWindowTextA(NewContestCheckBox, 'Activator');
                  Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
                 end;
              WINTERFIELDDAY:
@@ -574,7 +574,7 @@ begin
   begin
     ShowWindow(InitialCommandsHWNDArray[i, 1], SW_HIDE);
     ShowWindow(InitialCommandsHWNDArray[i, 2], SW_HIDE);
-    Windows.SetWindowText(InitialCommandsHWNDArray[i, 2], nil);
+    Windows.SetWindowTextA(InitialCommandsHWNDArray[i, 2], nil);
   end;
 end;
 
@@ -588,7 +588,7 @@ begin
   if tCB_GETCURSEL(h, NC_CONTEST_COMBOBOX) = -1 then res := False;
   i := GetDlgItemTextA(h, NC_CALL_EDIT, @Call[1], SizeOf(CallString));
   if i < 3 then res := False;
-  Call[0] := CHR(i);
+  Call[0] := AnsiChar(i);
   if not GoodCallSyntax(Call) then res := False;
 
   for i := 1 to NewContestDisplayedCommands do
@@ -609,9 +609,9 @@ begin
     i := Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
     if MainCallsign = '' then
     begin
-      MainCallsign[0] := CHR(i);
+      MainCallsign[0] := AnsiChar(i);
       Windows.CopyMemory(@MainCallsign[1], @TempBuffer1, i);
-      Windows.WritePrivateProfileString(_COMMANDS, MAIN_CALLSIGN, TempBuffer1, TR4W_INI_FILENAME);
+      Windows.WritePrivateProfileStringA(_COMMANDS, MAIN_CALLSIGN, TempBuffer1, TR4W_INI_FILENAME);
     end;
     DeleteSlashes(TempBuffer1);
 
@@ -627,7 +627,7 @@ begin
        Format(wsprintfBuffer, '%s%s %s %s\', TR4W_PATH_NAME, GetYearString, TempBuffer2, TempBuffer1);
        end;
 
-    Windows.CreateDirectory(wsprintfBuffer, nil);
+    Windows.CreateDirectoryA(wsprintfBuffer, nil);
   end;
 
   {CFGFileName}
@@ -666,11 +666,11 @@ begin
     // existing .TRW log file.  LoadinLog fatally halts if the file size
     // is not an exact multiple of SizeOf(ContestExchange), which will be
     // true of any .TRW from a previous (different) contest.
-    lstrcpy(TempBuffer1, TR4W_CFG_FILENAME);
+    Windows.lstrcpyA(TempBuffer1, TR4W_CFG_FILENAME);
     TempBuffer1[lstrlenA(TempBuffer1) - 3] := 'T';
     TempBuffer1[lstrlenA(TempBuffer1) - 2] := 'R';
     TempBuffer1[lstrlenA(TempBuffer1) - 1] := 'W';
-    Windows.DeleteFile(TempBuffer1); // no-op (returns False) if no .TRW exists
+    Windows.DeleteFileA(TempBuffer1); // no-op (returns False) if no .TRW exists
 
     DestroyWindow(h);
   end
@@ -679,7 +679,7 @@ begin
 
 end;
 
-procedure DisplayCheckBox(Text: PChar);
+procedure DisplayCheckBox(Text: PAnsiChar);
 begin
   // Issue #997: asm-push wsprintf -> Format (TC_IAMIN = '&I am in %s').
   Format(wsprintfBuffer, TC_IAMIN, Text);
@@ -687,14 +687,14 @@ begin
   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
 end;
 
-procedure SetCommentAndEnableEditControl(comment: PChar; EditControl: InitialCommands);
+procedure SetCommentAndEnableEditControl(comment: PAnsiChar; EditControl: InitialCommands);
 begin
   DisplayInitialCommand(EditControl);
-  Windows.SetWindowText(NewContestCommentWndHandle, comment);
+  Windows.SetWindowTextA(NewContestCommentWndHandle, comment);
 end;
 
 
-procedure EnterCountyOrState(State: PChar);
+procedure EnterCountyOrState(State: PAnsiChar);
 begin
   DisplayInitialCommand(icmyState);
   // Issue #997: asm-push wsprintf -> Format. TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX
@@ -705,11 +705,11 @@ end;
 
 procedure StartContestFromListbox();
 var
-  p                                     : PChar;
+  p                                     : PAnsiChar;
 begin
   p := TR4W_CFG_FILENAME;
   GetDlgItemTextA(NewContestDlgWndHandle, 445, TR4W_CFG_FILENAME, SizeOf(TR4W_CFG_FILENAME));
-  Windows.GetFullPathName(@TempBuffer1, 256, @TR4W_CFG_FILENAME, p);
+  Windows.GetFullPathNameA(@TempBuffer1, 256, @TR4W_CFG_FILENAME, p);
   DestroyWindow(NewContestDlgWndHandle);
 end;
 
@@ -723,13 +723,13 @@ end;
 
 procedure ChangeDir;
 begin
-  if DlgDirSelectEx(NewContestDlgWndHandle, TempBuffer1, SizeOf(TempBuffer1), NC_LISTBOX) = False then
+  if Windows.DlgDirSelectExA(NewContestDlgWndHandle, TempBuffer1, SizeOf(TempBuffer1), NC_LISTBOX) = False then
   begin
     StartContestFromListbox;
     Exit;
   end;
   Windows.lstrcatA(TempBuffer1, '*.CFG');
-  DlgDirList(NewContestDlgWndHandle, TempBuffer1, NC_LISTBOX, 445, sfFLAG);
+  Windows.DlgDirListA(NewContestDlgWndHandle, TempBuffer1, NC_LISTBOX, 445, sfFLAG);
 
   SelectParentDir(NewContestListBoxHandle);
 end;

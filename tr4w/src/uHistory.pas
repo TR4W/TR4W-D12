@@ -41,11 +41,11 @@ type
 
   HistoryRecord = record
     hrFeature: FeatureType;
-    hrDescription: PChar;
+    hrDescription: PAnsiChar;
   end;
 
   VersionRecord = record
-    hrVersion: PChar;
+    hrVersion: PAnsiChar;
     hrYear: Word;
     hrMonth: Byte;
     hrDay: Byte;

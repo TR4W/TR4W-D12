@@ -82,7 +82,7 @@ begin
 
     WM_INITDIALOG:
       begin
-        Windows.SetWindowText(hwnddlg, RC_SYNPCTIME);
+        Windows.SetWindowTextA(hwnddlg, RC_SYNPCTIME);
         for i := 0 to 3 do
           CreateButton(0, b[i], 270, 5 + i * 35, 190, hwnddlg, 200 + i);
 
@@ -94,7 +94,7 @@ begin
 
         CreateStatic(nil, 0, 157, 470, hwnddlg, 106);
 
-        Windows.SetDlgItemText(hwnddlg, 100, NTP_SERVER);
+        Windows.SetDlgItemTextA(hwnddlg, 100, NTP_SERVER);
 
         st_window_handle := hwnddlg;
         Windows.SetTimer(hwnddlg, local_time_timer_handle, 1000, nil);
@@ -147,7 +147,7 @@ begin
               IncSystemTime(T2, Offset);
               if not Windows.SetSystemTime(T2) then
               begin
-                SetDlgItemText(st_window_handle, 106, PChar(SysErrorMessage(GetLastError)));
+                SetDlgItemTextA(st_window_handle, 106, TF.SysErrorMessage(GetLastError));
               end;
               EnableWindowFalse(hwnddlg, 201);
             end;
@@ -229,11 +229,10 @@ label
   1, Unsuccessful;
 var
   i                                     : integer;
-  p                                     : string;
 begin
 
   EnableWindowFalse(st_window_handle, 201);
-  for i := 102 to 106 do Windows.SetDlgItemText(st_window_handle, i, nil);
+  for i := 102 to 106 do Windows.SetDlgItemTextA(st_window_handle, i, nil);
   Windows.ZeroMemory(@ST_Buffer, SizeOf(ST_Buffer));
   ST_Buffer[1] := 27;
   if ST_SOCKET = INVALID_SOCKET then
@@ -261,8 +260,7 @@ begin
   Unsuccessful:
   ST_SOCKET := INVALID_SOCKET;
   1:
-  p := SysErrorMessage(WSAGetLastError);
-  SetDlgItemText(st_window_handle, 106, PChar(p));
+  SetDlgItemTextA(st_window_handle, 106, TF.SysErrorMessage(WSAGetLastError));
   NTPThreadID := 0;
 end;
 
@@ -321,7 +319,7 @@ begin
    ntpServer := GetWindowsNTPServer;
    logger.Info('[NTP] Startup time check against %s', [ntpServer]);
 
-   if not GetConnection(sock, PChar(ntpServer), 123, SOCK_DGRAM) then
+   if not GetConnection(sock, PAnsiChar(AnsiString(ntpServer)), 123, SOCK_DGRAM) then
       begin
       logger.Warn('[NTP] Could not connect to NTP server %s', [ntpServer]);
       NTPStartupThreadID := 0;
@@ -330,7 +328,7 @@ begin
 
    // 2-second receive timeout — avoids blocking startup if server is unreachable
    timeoutMs := 2000;
-   setsockopt(sock, SOL_SOCKET_C, SO_RCVTIMEO, PChar(@timeoutMs), SizeOf(timeoutMs));
+   setsockopt(sock, SOL_SOCKET_C, SO_RCVTIMEO, PAnsiChar(@timeoutMs), SizeOf(timeoutMs));
 
    ZeroMemory(@recvBuf, SizeOf(recvBuf));
    recvBuf[1] := 27;  // LI=0, VN=3, Mode=3 (NTP client request)

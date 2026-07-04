@@ -88,7 +88,7 @@ begin
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowText(hwnddlg, RC_BEACONSM);
+        Windows.SetWindowTextA(hwnddlg, RC_BEACONSM);
 
         SetBeaconFreq(hwnddlg, 101);
 

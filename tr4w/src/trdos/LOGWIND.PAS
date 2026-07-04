@@ -535,7 +535,7 @@ var
   BandMapEnable                         : boolean;
   BandMapNeedsRefresh                   : boolean = False;
   BandMapEntryInCallWindow              : boolean;
-  BandMapFileVersion                    : Char = '1';
+  BandMapFileVersion                    : AnsiChar = '1';
   {KK1L: 6.65 Expanded array to cover all cases to keep BM from going whacko when tuning out of band}
   BandMapFirstEntryList                 : array[Band160..NoBand, CW..FM] of BandMapEntryPointer;
   BandMapGuardBand                      : integer; // = 200;
@@ -956,16 +956,16 @@ procedure OutputQSOorMultStatusString(OutputString_Milt: ShortString {Str160});
 //procedure PutUpCQMenu;
 //procedure PutUpExchangeWindow;
 
-procedure SetTextInQuickCommandWindow(Text: PChar);
+procedure SetTextInQuickCommandWindow(Text: PAnsiChar);
 procedure ClearQuickDisplayText;
-procedure QuickDisplay(Prompt: PChar);
+procedure QuickDisplay(Prompt: PAnsiChar);
 
-procedure QuickDisplayError(Prompt: PChar);
+procedure QuickDisplayError(Prompt: PAnsiChar);
 
-function QuickEditInteger(Prompt: PChar {str80}; MaxInputLength: integer): LONGINT;
-function QuickEditFreq(Prompt: PChar {str80}; MaxInputLength: integer): LONGINT;
-function QuickEditReal(Prompt: PChar {str80}; MaxInputLength: integer): REAL;
-function QuickEditResponse(Prompt: PChar {str80}; MaxInputLength: Byte): ShortString;
+function QuickEditInteger(Prompt: PAnsiChar {str80}; MaxInputLength: integer): LONGINT;
+function QuickEditFreq(Prompt: PAnsiChar {str80}; MaxInputLength: integer): LONGINT;
+function QuickEditReal(Prompt: PAnsiChar {str80}; MaxInputLength: integer): REAL;
+function QuickEditResponse(Prompt: PAnsiChar {str80}; MaxInputLength: Byte): ShortString;
 
 //procedure RemoveAndRestorePreviousWindow;
 //procedure RemoveWindow(WindowName: WindowType);
@@ -992,7 +992,7 @@ var
 procedure UpdateBlinkingBandMapCall;
 
 procedure UpdateK1EAStationInfo(Field: K1EAStationInfoFieldType;
-  StationIDChar: Char;
+  StationIDChar: AnsiChar;
   MessageString: ShortString {Str20});
 
 procedure UpdateTenMinuteDate(Band: BandType; Mode: ModeType);
@@ -1339,7 +1339,7 @@ procedure DisplayFrequency(RSR: RadioStatusRecord {Freq: LONGINT}; Radio: RadioT
 var
   TempFreq                              : REAL;
   TempString                            : string[40];
-  ch                                    : Char;
+  ch                                    : AnsiChar;
 
 begin
   ch := '.';
@@ -1557,7 +1557,7 @@ end;
 
 procedure DisplayCodeSpeed {(WPM: integer; SendingEnabled: boolean; DVPEnabled: boolean; Mode: ModeType)};
 var
-  tPChar                                : PChar;
+  tPChar                                : PAnsiChar;
 begin
   DisplayedCodeSpeed := CodeSpeed;
   if ActiveMode = CW then
@@ -1829,7 +1829,7 @@ end;
 
 procedure DisplayQSOsWithThisStation(QSOs: integer);
 var
-  p                                     : PChar;
+  p                                     : PAnsiChar;
 begin
 //  if tQSOsWithThisStationPrevState = QSOs then Exit;
   tQSOsWithThisStationPrevState := QSOs;
@@ -1958,7 +1958,7 @@ begin
 
 end;
 
-procedure QuickDisplay(Prompt: PChar);
+procedure QuickDisplay(Prompt: PAnsiChar);
 begin
   SetTextInQuickCommandWindow(Prompt);
   logger.Info('[QuickDisplay] (' + Prompt + ')');
@@ -1977,7 +1977,7 @@ begin
      end;
 end;
 
-procedure SetTextInQuickCommandWindow(Text: PChar);
+procedure SetTextInQuickCommandWindow(Text: PAnsiChar);
 begin
   SetMainWindowText(mweQuickCommand, Text);
 end;
@@ -1990,13 +1990,13 @@ begin
   ClearQuickDisplayTimer := 0;
 end;
 
-procedure QuickDisplayError(Prompt: PChar);
+procedure QuickDisplayError(Prompt: PAnsiChar);
 begin
   QuickDisplay(Prompt);
   DoABeep(Warning);
 end;
 
-function QuickEditResponse(Prompt: PChar; MaxInputLength: Byte): ShortString;
+function QuickEditResponse(Prompt: PAnsiChar; MaxInputLength: Byte): ShortString;
 var
   h                                     : HWND;
  // Window                                : Byte;
@@ -2014,7 +2014,7 @@ begin
   Result := IQresult;
 end;
 
-function QuickEditInteger(Prompt: PChar {str80}; MaxInputLength: integer): LONGINT;
+function QuickEditInteger(Prompt: PAnsiChar {str80}; MaxInputLength: integer): LONGINT;
 
 { This function will put up the prompt specified and get the numeric input
   that is put in.  Only integers will be processed and if the number of
@@ -2038,7 +2038,7 @@ begin
   end;
 end;
 
-function QuickEditFreq(Prompt: PChar {str80}; MaxInputLength: integer): LONGINT;
+function QuickEditFreq(Prompt: PAnsiChar {str80}; MaxInputLength: integer): LONGINT;
 
 { This function will put up the prompt specified and get the numeric input
   that is put in.  Only integers will be processed and if the number of
@@ -2109,7 +2109,7 @@ begin
   QuickEditFreq := InputValue;
 end;
 
-function QuickEditReal(Prompt: PChar {str80}; MaxInputLength: integer): REAL;
+function QuickEditReal(Prompt: PAnsiChar {str80}; MaxInputLength: integer): REAL;
 
 { This function will put up the prompt specified and get the numeric input
   that is put in.  Only integers will be processed and if the number of
@@ -2396,7 +2396,7 @@ var
   Hour, Minute{, Second, Hundredths}      : Word;
   AlarmInteger, RecordNumber, IntegerTime {, RateMinute}: integer;
 //  TempBand                              : BandType;
-  TempPchar                             : PChar;
+  TempPchar                             : PAnsiChar;
 begin
 
   if DoRadios then
@@ -2418,7 +2418,7 @@ begin
       TempPchar := ElaspedTimeString(TenMinuteTime.Time)
     else
       TempPchar := nil;
-//    Windows.SetWindowText(TenMinutsWindow, TempPchar);
+//    Windows.SetWindowTextA(TenMinutsWindow, TempPchar);
     SetMainWindowText(mweTenMinuts, TempPchar);
   end;
 
@@ -2865,7 +2865,7 @@ begin
       TempCallsign := BandMapExpandedString(Call);
       if CQLabel(TempCallsign) then
       begin
-        Windows.SetWindowText(wh[mweCall], nil);
+        Windows.SetWindowTextA(wh[mweCall], nil);
         SetOpMode(CQOpMode);
       end
       else
@@ -3671,7 +3671,7 @@ procedure LoadBandMap;
 label
   1;
 var
-  TempChar                              : Char;
+  TempChar                              : AnsiChar;
   i                                     : integer;
   c                                     : integer;
   Spot                                  : TSpotRecord;
@@ -4338,7 +4338,7 @@ begin
 end;
 
 procedure UpdateK1EAStationInfo(Field: K1EAStationInfoFieldType;
-  StationIDChar: Char;
+  StationIDChar: AnsiChar;
   MessageString: ShortString {Str20});
 
 var
@@ -4750,8 +4750,8 @@ begin
     h := tRadioInterfaceWndHandle;
     if h <> 0 then
     begin
-          //          Windows.SetWindowText(InsertWindowHandle, inttopchar(CurrentStatus.PrevRITFreq));
-          //          Windows.SetWindowText(OpModeWindowHandle, inttopchar(CurrentStatus.RITFreq));
+          //          Windows.SetWindowTextA(InsertWindowHandle, inttopchar(CurrentStatus.PrevRITFreq));
+          //          Windows.SetWindowTextA(OpModeWindowHandle, inttopchar(CurrentStatus.RITFreq));
 
       if CurrentStatus.PrevRITFreq <> CurrentStatus.RITFreq then
       begin
@@ -5213,8 +5213,8 @@ begin
         begin
                 //          if WhereX > 1 then WriteLn;
                 //          Write(FileString);
-                //          SendDlgItemMessage(tr4w_WindowsArray[tr4w_LAST5WINDOW_INDEX].tr4w_WndHandle, 101, LB_ADDSTRING, 0, integer(PChar(string(FileString))));
-                //          SendMessage(_EditableLogWindow, LB_ADDSTRING, 0, integer(PChar(string(FileString))));
+                //          SendDlgItemMessage(tr4w_WindowsArray[tr4w_LAST5WINDOW_INDEX].tr4w_WndHandle, 101, LB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(FileString))));
+                //          SendMessage(_EditableLogWindow, LB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(FileString))));
           inc(WhereY);
         end;
 
@@ -5256,7 +5256,7 @@ begin
 
   Format(TempBuffer2, TC_NEWTOUR, IntegerTime, TourDuration);
 
-//  Windows.SetDlgItemText(ReminderDlgHandle, 102, TempBuffer2);
+//  Windows.SetDlgItemTextA(ReminderDlgHandle, 102, TempBuffer2);
   Windows.SetWindowTextA(TorDurationWindow, TempBuffer2);
 
   if IntegerTime = 1 then

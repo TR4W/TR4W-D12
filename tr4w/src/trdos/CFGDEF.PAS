@@ -489,7 +489,7 @@ begin
 
   for c := F1 to F12 do
   begin
-    TempString[0] := CHR(Format(@TempString[1], 'CQF%u.WAV', Ord(c) - 111));
+    TempString[0] := AnsiChar(Format(@TempString[1], 'CQF%u.WAV', Ord(c) - 111));
     SetCQMemoryString(Phone, c, TempString);
 //    SetCQMemoryString(Phone, c, 'CQF' + IntToStr(Ord(c) - 111) + '.WAV');
   end;
@@ -498,14 +498,14 @@ begin
 
   for c := F3 to F12 do
   begin
-    TempString[0] := CHR(Format(@TempString[1], 'EXF%u.WAV', Ord(c) - 111));
+    TempString[0] := AnsiChar(Format(@TempString[1], 'EXF%u.WAV', Ord(c) - 111));
     SetEXMemoryString(Phone, c, TempString);
 //    SetEXMemoryString(Phone, c, 'EXF' + IntToStr(Ord(c) - 111) + '.WAV');
   end;
 
   for c := AltF1 to AltF12 do
   begin
-    TempString[0] := CHR(Format(@TempString[1], 'ALTEXF%u.WAV', Ord(c) - 135));
+    TempString[0] := AnsiChar(Format(@TempString[1], 'ALTEXF%u.WAV', Ord(c) - 135));
     SetEXMemoryString(Phone, c, TempString);
     //SetEXMemoryString(Phone, c, 'ALTEXF' + IntToStr(Ord(c) - 135) + '.WAV');
   end;

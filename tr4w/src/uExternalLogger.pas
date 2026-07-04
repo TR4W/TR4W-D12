@@ -326,13 +326,13 @@ This is all we need to send as we DO NOT want to send every contact to any of th
                + AddADIFField('RST_RCVD',ce.RSTReceived);
   if ce.Frequency <> 0 then //14149280  or 7025000
      begin
-     saveDecimalSeparator := DecimalSeparator;
+     saveDecimalSeparator := FormatSettings.DecimalSeparator;
         try
-           DecimalSeparator := '.';
+           FormatSettings.DecimalSeparator := '.';
            sTemp := FloatToStr((ce.Frequency/1000000));
            sCoreADIF := sCoreADIF + AddADIFField('FREQ',sTemp);
         finally
-           DecimalSeparator := saveDecimalSeparator;
+           FormatSettings.DecimalSeparator := saveDecimalSeparator;
         end;
      end;
      sCoreADIF :=   sCoreADIF

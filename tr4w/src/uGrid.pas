@@ -52,7 +52,7 @@ begin
         if HiWord(wParam) = EN_CHANGE then
 
         begin
-          Windows.SetDlgItemText(hwnddlg, 108, nil);
+          Windows.SetDlgItemTextA(hwnddlg, 108, nil);
           Val(GetDialogItemText(hwnddlg, 103), Lat, Resul);
           if Resul <> 0 then Exit;
 

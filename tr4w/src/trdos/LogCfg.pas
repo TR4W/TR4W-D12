@@ -77,7 +77,7 @@ procedure InitializeOtherLPTPorts;
 procedure EnmuCFGFile(FileString: PShortString);
 
 const
-  CFGFilesArray                         : array[TCFGType] of PChar = (@TR4W_CFG_FILENAME, @TR4W_INI_FILENAME, @TR4W_INPUT_CFG_FILENAME, @TR4W_DEFMESSAGES_FILENAME);
+  CFGFilesArray                         : array[TCFGType] of PAnsiChar = (@TR4W_CFG_FILENAME, @TR4W_INI_FILENAME, @TR4W_INPUT_CFG_FILENAME, @TR4W_DEFMESSAGES_FILENAME);
 
 var
   LineNumberInConfigFile                : integer;
@@ -86,6 +86,7 @@ var
 implementation
 
 uses
+  AnsiStrings,   // D12: StrComp/StrPLCopy over PAnsiChar (SysUtils variants are PWideChar)
   uCFG,
   MainUnit,
   uRadioPolling;
@@ -127,7 +128,7 @@ begin
    for I := 1 to CommandsArraySize do
       begin
       if CFGCA[I].crType in [ctCaseSensitive, ctPassword] then
-         if StrComp(CFGCA[I].crCommand, @ID[1]) = 0 then
+         if AnsiStrings.StrComp(CFGCA[I].crCommand, @ID[1]) = 0 then
             begin
             PShortString(CFGCA[I].crAddress)^ := CMD;
             PShortString(CFGCA[I].crAddress)^[Length(CMD) + 1] := #0;
@@ -374,7 +375,7 @@ begin
 
   if CurrentOperator[0] = #0 then  // ny4i Issue #97
      begin
-     StrPLCopy(CurrentOperator, MyCall, High(CurrentOperator)); // This copies the string MyCall to char array CurrentOperator (I love mixed types :) ) // ny4i
+     AnsiStrings.StrPLCopy(CurrentOperator, MyCall, High(CurrentOperator)); // This copies the string MyCall to char array CurrentOperator (I love mixed types :) ) // ny4i
      end;
 
   CheckAndInitializeSerialPorts;

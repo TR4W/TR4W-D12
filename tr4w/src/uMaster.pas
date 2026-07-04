@@ -54,7 +54,7 @@ function MasterDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam)
 label
   1;
 var
-  CallsBuf                              : array[0..15] of Char;
+  CallsBuf                              : array[0..15] of AnsiChar;
   MDIS                                  : PDrawItemStruct;
   i                                     : integer;
   TempColor                             : tr4wColors;
@@ -103,7 +103,7 @@ begin
 
           Windows.SetTextColor(MDIS^.HDC, tr4wColorsArray[TempColor]);
           SetBkMode(MDIS^.HDC, TRANSPARENT);
-          Windows.TextOut(MDIS^.HDC, MDIS^.rcItem.Left + 2, MDIS^.rcItem.Top, CallsBuf, i);
+          Windows.TextOutA(MDIS^.HDC, MDIS^.rcItem.Left + 2, MDIS^.rcItem.Top, CallsBuf, i);
           Result := True;
         end;
       end;

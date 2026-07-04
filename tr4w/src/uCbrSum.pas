@@ -65,12 +65,12 @@ type
     );
 
   TCategoriesValuesRecord = record
-    cvrStart: PChar;
+    cvrStart: PAnsiChar;
     cvrCount: integer;
   end;
 
   TCabrilloTagRecord = record
-    ctrTag: PChar;
+    ctrTag: PAnsiChar;
     ctrCFG: boolean; //do not used
     ctrSave: boolean;
     ctrList: boolean;
@@ -126,7 +126,7 @@ const
 var
 
   CabrilloSummaryProc                   : Pointer;
-  FormatSpecification                   : PChar;
+  FormatSpecification                   : PAnsiChar;
 const
   siCreate                              = 1;
   siCancel                              = 2;
@@ -187,7 +187,7 @@ begin
         CreateCabrilloWindow := hwnddlg;
         FormatSpecification := CABRILLOSECTION;
 
-        Windows.SetWindowText(hwnddlg, RC_STATIONINFO);
+        Windows.SetWindowTextA(hwnddlg, RC_STATIONINFO);
         CreateOKCancelButtons(hwnddlg);
 
         if ErmakSpecification then
@@ -223,7 +223,7 @@ begin
               // Issue #976: restore the saved value into ctrSave drop-downs
               // that are outside the index-based range above (e.g.
               // CATEGORY-STATION).  GetDlgItemText on exit saves it back.
-              if GetPrivateProfileString(FormatSpecification,
+              if GetPrivateProfileStringA(FormatSpecification,
                   CabrilloTagSArray[TempTag].ctrTag, nil, TempBuffer1,
                   SizeOf(TempBuffer1), TR4W_INI_FILENAME) > 0 then
                 SendMessage(TempHWND, CB_SELECTSTRING, -1, integer(@TempBuffer1));
@@ -236,7 +236,7 @@ begin
 
             if CabrilloTagSArray[TempTag].ctrSave then
             begin
-              TempCardinal := GetPrivateProfileString(FormatSpecification,
+              TempCardinal := GetPrivateProfileStringA(FormatSpecification,
                 CabrilloTagSArray[TempTag].ctrTag,
                 nil,
                 TempBuffer1,
@@ -273,7 +273,7 @@ begin
           begin
             if Windows.GetDlgItemTextA(hwnddlg, integer(TempTag) + 200, TempBuffer1, SizeOf(TempBuffer1)) > 0 then
                begin
-               WritePrivateProfileString(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1, TR4W_INI_FILENAME);
+               WritePrivateProfileStringA(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1, TR4W_INI_FILENAME);
                end;
 
           end;

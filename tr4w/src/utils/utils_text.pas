@@ -25,8 +25,8 @@ function PrecedingString(LongString: ShortString; Deliminator: ShortString): Sho
 function tPos(s: ShortString; c: AnsiChar): integer; //wli
 function pPos(c: Char; p: PChar): integer;
 
-function StrComp(const Str1, Str2: PChar): integer;
-procedure StrUpper(Str: PChar);
+function StrComp(const Str1, Str2: PAnsiChar): integer;
+procedure StrUpper(Str: PAnsiChar);
 
 implementation
 
@@ -295,7 +295,7 @@ begin
     end;
 end;
 
-function StrComp(const Str1, Str2: PChar): integer; assembler;
+function StrComp(const Str1, Str2: PAnsiChar): integer; assembler;
 asm
         PUSH    EDI
         PUSH    ESI
@@ -315,7 +315,7 @@ asm
         POP     EDI
 end;
 
-procedure StrUpper(Str: PChar); assembler;
+procedure StrUpper(Str: PAnsiChar); assembler;
 asm
 //        PUSH    ECX
 //        XOR     ECX , ECX

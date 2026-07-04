@@ -45,10 +45,10 @@ procedure CheckLatestVersion;
 label 1;
 var
  
-  p                                     : PChar;
+  p                                     : PAnsiChar;
   TempSocket                            : Cardinal;
 const
-  checkVersionRequest                   : PChar =
+  checkVersionRequest                   : PAnsiChar =
     'GET /include_pages/version.txt HTTP/1.1'#13#10 +
     'User-Agent: ' + TR4W_CURRENTVERSION + '_%s_%s_%s_%s' + #13#10 +
     'Host: www.tr4w.net'#13#10 +
@@ -75,7 +75,7 @@ begin
     inc(p, 4);
 //    ShowMessage(@TR4W_CURRENTVERSION[8]);
 
-    if StrComp(p, @TR4W_CURRENTVERSION[8]) <= 0 then
+    if StrComp(p, @AnsiString(TR4W_CURRENTVERSION)[8]) <= 0 then
     begin
       ShowMessage(TC_YOU_ARE_USING_THE_LATEST_VERSION + ' - ' + TR4W_CURRENTVERSION_NUMBER + '.');
       goto 1;

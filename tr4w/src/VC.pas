@@ -137,7 +137,7 @@ const
 
 const
   tr4w_ClassName                        : array[0..4] of Char = ('T', 'R', '4', 'W', #0);
-  CQPChar                               : array[0..2] of Char = ('C', 'Q', #0);
+  CQPChar                               : array[0..2] of AnsiChar = ('C', 'Q', #0);
   MASKEVENT                             = False;
   OGLVERSION                            = False;
   K6VVA_WK_DEBUG                        = False;
@@ -358,7 +358,7 @@ const
 
 const
 
-  TWO_STRINGS                           : PChar = '%s%s';
+  TWO_STRINGS                           : PAnsiChar = '%s%s';
   BA                                    : array[boolean] of PAnsiChar = ('FALSE', 'TRUE');
   BAl                                   : array[boolean] of PAnsiChar = ('false', 'true');
   BAHTML                                : array[boolean] of PAnsiChar = ('FALSE', 'TRUE');
@@ -399,10 +399,10 @@ var
 type
 
   WavHeader = record
-    Marker1: array[0..3] of Char;
+    Marker1: array[0..3] of AnsiChar;
     BytesFollowing: LONGINT;
-    Marker2: array[0..3] of Char;
-    Marker3: array[0..3] of Char;
+    Marker2: array[0..3] of AnsiChar;
+    Marker3: array[0..3] of AnsiChar;
     Fixed1: LONGINT;
     FormatTag: Word;
     Channels: Word;
@@ -410,7 +410,7 @@ type
     BytesPerSecond: LONGINT;
     BytesPerSample: Word;
     BitsPerSample: Word;
-    Marker4: array[0..3] of Char;
+    Marker4: array[0..3] of AnsiChar;
     DataBytes: LONGINT;
   end;
 
@@ -419,8 +419,8 @@ type
   TMessageState = packed record
     {2}msID: Word;
     {2}msCWElements: Word;
-    {1}msComputerId: Char;
-    {59}msCWMessage: array[0..CWMessageToNetworkLength] of Char;
+    {1}msComputerId: AnsiChar;
+    {59}msCWMessage: array[0..CWMessageToNetworkLength] of AnsiChar;
   end;
 
   TMessageStatePtr = ^TMessageState;
@@ -518,9 +518,9 @@ var
 type
   TMainWindowElementInfo = record
 {(*}
-    mweName   : Pchar;
+    mweName   : PAnsiChar;
     mweiStyle : Cardinal;
-    mweText   : PChar;
+    mweText   : PAnsiChar;
 
     mweColor  : tr4wColors;
     mweBackG  : tr4wColors;
@@ -1381,16 +1381,16 @@ type
     {02}ssID: Word;
     {02}ssQSOTotals: Word;
 
-    {01}ssComputerID: Char;
+    {01}ssComputerID: AnsiChar;
     {01}ssCurrentBand: BandType;
     {01}ssCurrentMode: ModeType;
     {01}ssStatusByte: Byte;
 
     {04}ssFreq: integer;
 
-    {13}ssCallsign: array[0..CallstringLength - 1] of Char;
+    {13}ssCallsign: array[0..CallstringLength - 1] of AnsiChar;
 
-    {09}ssName: array[0..8] of Char;
+    {09}ssName: array[0..8] of AnsiChar;
 
     {01}ssType: StationStatusType;
 
@@ -1498,7 +1498,7 @@ type
 type
   TSendSpotViaNetwork = packed record
     vnID: Word;
-    vnMessage: array[0..45] of Char;
+    vnMessage: array[0..45] of AnsiChar;
   end;
 
   TSendSpotViaNetworkPtr = ^TSendSpotViaNetwork;
@@ -1506,7 +1506,7 @@ type
 type
   TComputerNetID = packed record
     ciID: Word;
-    ciComputerID: Char;
+    ciComputerID: AnsiChar;
     ciReserved: Byte;
   end;
 
@@ -1550,7 +1550,7 @@ type
 {04}  Frequency:           LONGINT;
 
 {01}  ceQSO_Deleted:       boolean;
-{01}  ceComputerID:        Char;
+{01}  ceComputerID:        AnsiChar;
 {01}  ceOperatorID:        Byte;
 {01}  ceRecordKind:        LogRecordKind;
 
@@ -1580,7 +1580,7 @@ type
 {04}  ceClass:             string[3]{10}; { Field day class }
 
 {01}  ZERO_04:             DummyByte;
-{01}  Precedence:          Char;
+{01}  Precedence:          AnsiChar;
 {01}  ceRadio:             RadioType;
 {01}  Check:               Byte;           {The CHECK is two numbers (year)}
 
@@ -1684,7 +1684,7 @@ type
 {04}  Frequency:           LONGINT;
 
 {01}  ceQSO_Deleted:       boolean;
-{01}  ceComputerID:        Char;
+{01}  ceComputerID:        AnsiChar;
 {01}  ceOperatorID:        Byte;
 {01}  ceRecordKind:        LogRecordKind;
 
@@ -1714,7 +1714,7 @@ type
 {04}  ceClass:             string[3]{10}; { Field day class }
 
 {01}  ZERO_04:             DummyByte;
-{01}  Precedence:          Char;
+{01}  Precedence:          AnsiChar;
 {01}  ceRadio:             RadioType;
 {01}  Check:               Byte;           {The CHECK is two numbers (year)}
 
@@ -1822,7 +1822,7 @@ type
 {04}  Frequency:           LONGINT;
 
 {01}  ceQSO_Deleted:       boolean;
-{01}  ceComputerID:        Char;
+{01}  ceComputerID:        AnsiChar;
 {01}  ceOperatorID:        Byte;
 {01}  ceRecordKind:        LogRecordKind;
 
@@ -1850,7 +1850,7 @@ type
 {04}  ceClass:             string[3]{10}; { Field day class }
 
 {01}  ZERO_04:             DummyByte;
-{01}  Precedence:          Char;
+{01}  Precedence:          AnsiChar;
 {01}  ceRadio:             RadioType;
 {01}  Check:               Byte;           {The CHECK is two numbers (year)}
 
@@ -1973,13 +1973,13 @@ type
     {01}FBand: BandType; { The band of the spot }
     {01}FMode: ModeType; { The mode of the spot }
 
-    {32}FNotes: array[0..31] of Char; { Any notes }
+    {32}FNotes: array[0..31] of AnsiChar; { Any notes }
 
     {14}FSourceCall: CallString; { Callsign of station making the post }
     {01}FSpotMode: SpotModeType; { NormalSpot or SHDXSpot }
     {01}FMult: boolean;
 
-    {12}FFreqString: array[0..11] of Char; //Str10;
+    {12}FFreqString: array[0..11] of AnsiChar; //Str10;
 
     {04}FMinutesLeft: integer;
 
@@ -2036,7 +2036,7 @@ type
 type
   TIntercomMessage = packed record
     imID: Word;
-    imSender: Char;
+    imSender: AnsiChar;
     imMessage: Str80;
   end;
 
@@ -2052,16 +2052,16 @@ type
 const
 
   _RESTARTBIN                           : PChar = 'RESTART.BIN';
-  _LOGFILE                              : PChar = 'LOG file';
+  _LOGFILE                              : PAnsiChar = 'LOG file';
 
-  _COMMANDS                             : PChar = 'COMMANDS';
+  _COMMANDS                             : PAnsiChar = 'COMMANDS';
 
 
   OPERATORINFO                          : PChar = '_OP_INFO_%03u';
 
   ERMAK_                                : PChar = 'ERMAK';
-  ERMAKSECTION                          : PChar = 'ERMAKREPORT';
-  CABRILLOSECTION                       : PChar = 'REPORT';
+  ERMAKSECTION                          : PAnsiChar = 'ERMAKREPORT';
+  CABRILLOSECTION                       : PAnsiChar = 'REPORT';
 
 //  TRAINER                          = 'TRAINER';
 
@@ -2176,7 +2176,7 @@ type
 
 type
   TLogColumnsInfo = record
-    Text: PChar;
+    Text: PAnsiChar;
     Width: Byte;
     Align: Byte;
     Enable: boolean;
@@ -2502,7 +2502,7 @@ const
 var
   LogBadQSOString                       : Str80;
   LoadedPlugins                         : integer;
-  PluginsArray                          : array[1..16] of array[0..31] of Char;
+  PluginsArray                          : array[1..16] of array[0..31] of AnsiChar;
   MultBand                              : BandType;
   MultMode                              : ModeType;
 //  tNTPServer                            : ShortString = 'pool.ntp.org';
@@ -2680,11 +2680,11 @@ var
   StationsCallsignsMask                 : CallString;
 //  tLV_ITEM                              : TLVItem;
   LogHandle                             : HWND;
-  CID_TWO_BYTES                         : array[0..1] of Char = (#73, #0);
+  CID_TWO_BYTES                         : array[0..1] of AnsiChar = (#73, #0);
 
 //  NET_CLEARLOG_MESSAGE                  : DWORD = 3030001000;
   NET_LOGINFO_MESSAGE                   : DWORD = 3030002000;
-  _COM                                  : PChar = '\\.\COM%u';
+  _COM                                  : PAnsiChar = '\\.\COM%u';
 
   ErmakSpecification                    : boolean;
 //  sDISMESSAGE                           : array[0..4] of Char = ('D', 'I', 'S', 'C', #0);
@@ -3328,9 +3328,9 @@ const
 type
   TUSQSOPartyRecord = record
 {(*}
-    InsideStateDOMFile  : PChar;
+    InsideStateDOMFile  : PAnsiChar;
 //    OutsideStateDOMFile : PChar;
-    StateName           : Pchar;
+    StateName           : PAnsiChar;
   end;
 
 const
@@ -3366,8 +3366,8 @@ QSOPartiesCount = 20;
     TContestInfo = record
 {(*}
     {01}Name    : Pchar;
-    {04}Email   : PChar;
-    {04}DF      : PChar;
+    {04}Email   : PAnsiChar;
+    {04}DF      : PAnsiChar;
     {02}WA7BNM  : WORD;
 //    {04}SK3BG   : PChar;
 
@@ -4053,10 +4053,10 @@ QSOPartiesCount = 20;
   const SizeOfLHValid = (SizeOfLHVersionString + SizeOfLHFileDesc + SizeOfLHWarningString);
 
   type TLogHeader = record
-      lhVersionString: array[0..(SizeOfLHVersionString-1)] of Char;
-      lhFileDesc: array[0..(SizeOfLHFileDesc-1)] of Char;
-      lhWarningString: array[0..(SizeOfLHWarningString-1)] of Char;
-      lhDummy: array[0..(SizeOfContestExchange-SizeOfLHValid-1)] of Char;  // three fields above are 60 bytes
+      lhVersionString: array[0..(SizeOfLHVersionString-1)] of AnsiChar;
+      lhFileDesc: array[0..(SizeOfLHFileDesc-1)] of AnsiChar;
+      lhWarningString: array[0..(SizeOfLHWarningString-1)] of AnsiChar;
+      lhDummy: array[0..(SizeOfContestExchange-SizeOfLHValid-1)] of AnsiChar;  // three fields above are 60 bytes
    //   lhDummy: array[0..(SizeOfContestExchange-SizeOfTLogHeader-1)] of Char;  // three fields above are 60 bytes
 
     end;

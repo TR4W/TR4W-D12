@@ -920,7 +920,7 @@ const
 
 procedure SetTextSafe(hwnddlg: HWND; ctrlId: Integer; const s: string);
 begin
-  Windows.SetDlgItemText(hwnddlg, ctrlId, PChar(s));
+  Windows.SetDlgItemTextA(hwnddlg, ctrlId, PAnsiChar(AnsiString(s)));
 end;
 
 // Anchor-based layout for the HamScore status dialog.  Called from
@@ -1018,11 +1018,11 @@ end;
 // nothing has changed.
 procedure SetTextIfChanged(hwnddlg: HWND; ctrlId: Integer; const s: string);
 var
-  buf: array[0..1023] of Char;
+  buf: array[0..1023] of AnsiChar;
 begin
-  Windows.GetDlgItemText(hwnddlg, ctrlId, buf, SizeOf(buf));
+  Windows.GetDlgItemTextA(hwnddlg, ctrlId, buf, SizeOf(buf));
   if string(buf) = s then Exit;
-  Windows.SetDlgItemText(hwnddlg, ctrlId, PChar(s));
+  Windows.SetDlgItemTextA(hwnddlg, ctrlId, PAnsiChar(AnsiString(s)));
 end;
 
 procedure HamScoreRefreshStatus(hwnddlg: HWND);

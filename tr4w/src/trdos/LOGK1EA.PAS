@@ -2446,7 +2446,7 @@ begin
       end;
     end;
 {$IF tDebugMode}
-//  Windows.SetWindowText(InsertWindowHandle, inttopchar({CWBufferEnd - }CWBufferStart));
+//  Windows.SetWindowTextA(InsertWindowHandle, inttopchar({CWBufferEnd - }CWBufferStart));
 {$IFEND}
 end;
 
@@ -2653,7 +2653,7 @@ begin
   TempChar := AutoCQMemory;
   if (AutoCQMemory = F1) and RandomCQMode then TempChar := Char(Random(4) + 112);
   if GetCQMemoryString(ActiveMode, TempChar) = '' then TempChar := AutoCQMemory;
-  //   Windows.SetWindowText(VC.InsertWindowHandle, inttopchar(ord(TempChar)));
+  //   Windows.SetWindowTextA(VC.InsertWindowHandle, inttopchar(ord(TempChar)));
   tDisplayAutoCQStatus;
   SendFunctionKeyMessage(TempChar, OpMode);
 end;
@@ -2715,7 +2715,7 @@ begin
       begin
             {LPT}
         TempByte := GetPortByte(tFootSwitchPortBaseAddress, otState);
-//        Windows.SetWindowText(wh[mweUserInfo], inttopchar(TempByte));
+//        Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));
         if TempByte and 8 = 8 then
         begin
           if tFootSwitchPressed = True then
@@ -2761,7 +2761,7 @@ begin
         if tPaddlePortBaseAddress <> INVALID_HANDLE_VALUE then
         begin
           TempByte := GetPortByte(tPaddlePortBaseAddress, otState);
-//          Windows.SetWindowText(wh[mweUserInfo], inttopchar(TempByte));
+//          Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));
           if TempByte and 32 = 0 then DitContact := True;
           if TempByte and 16 = 0 then DahContact := True;
         end;

@@ -65,7 +65,7 @@ var
   MyCo: string[14];
 
 const
-  SSPrec: set of Char = ['A', 'B', 'Q', 'U', 'M', 'S'];
+  SSPrec: set of AnsiChar = ['A', 'B', 'Q', 'U', 'M', 'S'];
 
   { Control Byte Constants for Multi-Multi communications }
 
@@ -239,7 +239,7 @@ type
     Number: string[4];
     Check: string[2];
     Section: Str10;
-    Prec: Char;
+    Prec: AnsiChar;
   end;
 
   RememberRecord = record
@@ -334,7 +334,7 @@ type
     prTotalNumbers: Cardinal;
     prTotalStrings: Cardinal;
     prNumbers: array[0..3] of Cardinal;
-    prStrings: array[0..3] of array[0..31] of Char;
+    prStrings: array[0..3] of array[0..31] of AnsiChar;
   end;
 
   // PaserArrayStatusType = array[0..3] of Byte;
@@ -409,7 +409,7 @@ var
   CheckLogFileSize: boolean;
   ColumnDupeSheetColor: boolean;
   ColumnDupeSheetEnable: boolean = False;
-  ComputerID: Char { = CHR(0)};
+  ComputerID: AnsiChar { = CHR(0)};
   ComputerName: Str10 = 'New';
   ControlBreakStatus: boolean;
   CountryInformationFile: ShortString;
@@ -431,7 +431,7 @@ var
   EscapeDeletedExchangeEntry: Str40;
   EscapeExitsSearchAndPounce: boolean = True;
   ExchangeHasBeenSent: boolean;
-  ExchangeErrorMessage: PChar;
+  ExchangeErrorMessage: PAnsiChar;
   ExchangeErrorToken: Str40;   // Issue #1010: the offending exchange token, so the caller can place the caret right after it
   ExchangeMemoryFileEnable: boolean;
   ExchangeWindowString: Str40;
@@ -532,7 +532,7 @@ var
   RandomCQMode: boolean;
   RandomNameEnable: boolean;
   ReadInCallsign: CallString;
-  ReadInLogComputerID: Char;
+  ReadInLogComputerID: AnsiChar;
   //  ReadInLog                        : boolean;
   ReadInLogBand: BandType;
   ReadInLogDateString: Str10;
@@ -921,7 +921,7 @@ begin
   QTCDataArray^[NumberQTCStations].Call := Call;
   QTCDataArray^[NumberQTCStations].NumberQTCs := 1;
   inc(NumberQTCStations);
-  //  Windows.SetWindowText(tr4whandle, inttopchar(NumberQTCStations));
+  //  Windows.SetWindowTextA(tr4whandle, inttopchar(NumberQTCStations));
 end;
 
 function ProperSalutation(Call: CallString): Str80;
@@ -1145,7 +1145,7 @@ procedure ShowName(Call: CallString);
 
 var
   Name: CallString;
-  p: PChar;
+  p: PAnsiChar;
 begin
   Call := RootCall(Call);
 
@@ -2272,7 +2272,7 @@ var
   bInField: boolean;
   aps: array[0..3] of pShortString;
   ps: pShortString;
-  c: Char;
+  c: AnsiChar;
 
 begin
 
@@ -5048,7 +5048,7 @@ end;
 
 procedure SaveLogFileToFloppy;
 var
-  ErrorMsg: string;
+  ErrorMsg: AnsiString;
 begin
   if TR4W_FLOPPY_FILENAME[0] = #0 then
      Exit;
@@ -5056,10 +5056,10 @@ begin
   Format(QuickDisplayBuffer, TC_SAVINGTO, TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
   QuickDisplay(QuickDisplayBuffer);
 
-  if not Windows.CopyFile(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
+  if not Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
      begin
-     ErrorMsg := SysErrorMessage(GetLastError);
-     Format(QuickDisplayBuffer, '%s: %s', TR4W_FLOPPY_FILENAME, PChar(ErrorMsg));
+     ErrorMsg := TF.SysErrorMessage(GetLastError);
+     Format(QuickDisplayBuffer, '%s: %s', TR4W_FLOPPY_FILENAME, PAnsiChar(ErrorMsg));
      QuickDisplay(QuickDisplayBuffer);
      DoABeep(Warning);
      end
@@ -5087,7 +5087,7 @@ begin
     asm add esp,16  end;
     QuickDisplay(QuickDisplayBuffer);
 
-    if not Windows.CopyFile(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
+    if not Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
     begin
       SysErrorMessage(GetLastError);
       asm
@@ -8317,7 +8317,7 @@ end;
 procedure RotorControl(Heading: integer);
 var
   nNumberOfBytesToWrite: Cardinal;
-  TempPchar: PChar;
+  TempPchar: PAnsiChar;
 begin
   if UDPBroadcastRotor then
     // Even if there is no rotator set, if the UDP option is requested, send the command // ny4i 4.44.9
@@ -8363,7 +8363,7 @@ begin
 
   logger.Trace('[RotorControl] serial rotor (%s) on %s, %u bytes: %s',   // Issue #989
     [RotatorTypeSA[ActiveRotatorType], PortTypeSA[ActiveRotatorPort],
-     nNumberOfBytesToWrite, PChar(@wsprintfBuffer)]);
+     nNumberOfBytesToWrite, PAnsiChar(@wsprintfBuffer)]);
 end;
 
 function MarineOrAirMobileStation(Call: CallString): boolean;
@@ -8531,7 +8531,7 @@ end;
 function ParseArray(e: Str80): boolean;
 var
   i: integer;
-  TmpBuf: array[0..31] of Char;
+  TmpBuf: array[0..31] of AnsiChar;
   St: Cardinal;
   en: Cardinal;
   copyCounter: Cardinal;

@@ -47,7 +47,7 @@ begin
     WM_INITDIALOG:
       begin
         FullLogEditHandle := hwnddlg;
-        Windows.SetWindowText(hwnddlg, RC_VIEWEDITLOG2);
+        Windows.SetWindowTextA(hwnddlg, RC_VIEWEDITLOG2);
         LogEditListView := CreateEditableLog(hwnddlg, 0, 0, 790, 420, True);
         i := 0;
         //        if not Tree.tOpenFileForRead(h, TR4W_LOG_FILENAME) then Exit;

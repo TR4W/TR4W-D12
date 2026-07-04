@@ -82,7 +82,7 @@ var
   ID                                    : Str80;
   CMD                                   : ShortString;
   h                                     : HWND;
-  p                                     : PChar;
+  p                                     : PAnsiChar;
 //  HDS                                   : PDrawItemStruct;
 //  Color1                                : Cardinal;
 const
@@ -111,15 +111,15 @@ begin
         end;
         SetBkMode(HDS^.HDC, TRANSPARENT);
         Windows.SetTextColor(HDS^.HDC, Color2);
-        Windows.TextOut(HDS^.HDC, HDS^.rcItem.Left + 120, HDS^.rcItem.Top, HintMessageArray[Index].hmComment, StrLen(HintMessageArray[Index].hmComment));
+        Windows.TextOutA(HDS^.HDC, HDS^.rcItem.Left + 120, HDS^.rcItem.Top, HintMessageArray[Index].hmComment, StrLen(HintMessageArray[Index].hmComment));
         Windows.SetTextColor(HDS^.HDC, Color1);
-        Windows.TextOut(HDS^.HDC, HDS^.rcItem.Left + 005, HDS^.rcItem.Top, HintMessageArray[Index].hmVisibleCommand, StrLen(HintMessageArray[Index].hmVisibleCommand));
+        Windows.TextOutA(HDS^.HDC, HDS^.rcItem.Left + 005, HDS^.rcItem.Top, HintMessageArray[Index].hmVisibleCommand, StrLen(HintMessageArray[Index].hmVisibleCommand));
       end;
 }
     WM_INITDIALOG:
       begin
 
-        Windows.SetWindowText(hwnddlg, RC_PROGRMESS);
+        Windows.SetWindowTextA(hwnddlg, RC_PROGRMESS);
 
         CreateStatic(nil, 5, 5, 450 + 40, hwnddlg, 101);
         CreateStatic(RC_MESSAGE, 5, 35, 60, hwnddlg, 107);
@@ -183,7 +183,7 @@ begin
             if CreateModalDialog(225, 170, EditMessageWnd, @MessagesListDlgProc, 0) = 1 then
               begin
               Windows.SendMessage(MsgEditHWND, EM_SETSEL, SelPos[102], SelPos[102]);
-              Windows.SendMessage(MsgEditHWND, EM_REPLACESEL, 1, Integer(PChar(LastSelectedCommand)));
+              Windows.SendMessage(MsgEditHWND, EM_REPLACESEL, 1, Integer(PAnsiChar(AnsiString(LastSelectedCommand))));
               SetFocus(MsgEditHWND);
               end;
             end;
@@ -230,10 +230,10 @@ begin
           2: goto 1;
           1: //if not PutCommandFromHintListBox then
             begin
-              ID[0] := Char(Windows.GetDlgItemTextA(hwnddlg, 101, @ID[1], 80));
-              CMD[0] := Char(Windows.GetDlgItemTextA(hwnddlg, 102, @CMD[1], 255));
+              ID[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @ID[1], 80));
+              CMD[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 102, @CMD[1], 255));
               DeleteEscapeChars(CMD);
-              Windows.WritePrivateProfileString(m, @ID[1], @CMD[1], @TR4W_CFG_FILENAME);
+              Windows.WritePrivateProfileStringA(m, @ID[1], @CMD[1], @TR4W_CFG_FILENAME);
               CheckCommand(@ID, CMD);
 
               if MesWindow <> OtherMsgWin then
@@ -241,12 +241,12 @@ begin
                 i := Windows.GetDlgItemTextA(hwnddlg, 103, @CMD[1], 255);
 //              if I <> 0 then
                 begin
-                  CMD[0] := CHR(i);
+                  CMD[0] := AnsiChar(i);
                   Windows.lstrcatA(@ID[1], ' CAPTION');
                   inc(Byte(ID[0]), 8);
                   p := @CMD[1];
                   if CMD = '' then p := nil;
-                  Windows.WritePrivateProfileString(m, @ID[1], p, @TR4W_CFG_FILENAME);
+                  Windows.WritePrivateProfileStringA(m, @ID[1], p, @TR4W_CFG_FILENAME);
                   CheckCommand(@ID, CMD);
                 end;
               end;
@@ -294,7 +294,7 @@ begin
 
   if Msg = WM_KEYDOWN then
   begin
-//    Windows.SetWindowText(EditMessageWnd, inttopchar(wParam));
+//    Windows.SetWindowTextA(EditMessageWnd, inttopchar(wParam));
     if HintListBoxCreated then
       if wParam in [VK_UP, VK_DOWN, VK_HOME, VK_END, VK_PRIOR, VK_NEXT] then
       begin
@@ -328,7 +328,7 @@ begin
         if c <> 0 then
           for i := c - 1 downto Selection.EndPos do
             TempBuffer1[i + 1] := TempBuffer1[i];
-        TempBuffer1[Selection.StartPos] := CHR(wParam - 64);
+        TempBuffer1[Selection.StartPos] := AnsiChar(wParam - 64);
 
         Windows.SetWindowTextA(MsgEditHWND, TempBuffer1);
         Windows.SendMessage(MsgEditHWND, EM_SETSEL, Selection.StartPos + 1, Selection.EndPos + 1);
@@ -455,7 +455,7 @@ end;
 
 procedure DeleteEscapeChars(var s: ShortString);
 const
-  HexChars                              : array[0..$F] of Char = '0123456789ABCDEF';
+  HexChars                              : array[0..$F] of AnsiChar = '0123456789ABCDEF';
 var
   TempString                            : ShortString;
   i                                     : integer;
@@ -478,7 +478,7 @@ begin
       inc(l, 3);
     end;
   end;
-  TempString[0] := Char(l);
+  TempString[0] := AnsiChar(l);
   s := TempString;
   s[l + 1] := #0;
 end;

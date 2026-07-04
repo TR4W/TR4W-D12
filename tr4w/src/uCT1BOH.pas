@@ -52,7 +52,7 @@ begin
   case Msg of
     WM_INITDIALOG:
       begin
-        Windows.SetWindowText(hwnddlg, RC_CT1BOHIS2);
+        Windows.SetWindowTextA(hwnddlg, RC_CT1BOHIS2);
         hLV := CreateListView2(0, 0, 655+20, 132+20, hwnddlg);
 //        hLV := Get101Window(hwnddlg);
         // Issue #997: asm tWM_SETFONT -> TF helper (EAX = hLV above).
