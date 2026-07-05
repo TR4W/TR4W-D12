@@ -430,14 +430,14 @@ Use `{$IF condition}...{$IFEND}` for conditional code blocks.
    TR4W_CURRENTVERSIONDATE = 'Month, Year';
    ```
 
-7. **Testing:** No automated test framework exists. Testing is manual and typically done during actual contests. Be especially careful with changes to scoring, multiplier tracking, and exchange parsing.
+7. **Testing:** An automated unit-test project exists — `tr4w/test/unit/tr4w_unit_tests.dpr` (minimal DUnit-compatible `uTR4WTestFramework`, no external deps). It covers the pure/leaf units: ADIF, Cabrillo formatting, callsign routines, multipliers, CTY.DAT, band lookup, CRC32, grid/distance, text/file/math utils, Icom CI-V, FlexRadio, freq/time. It links only leaf `src` units, so the TRDOS contest engine (`ProcessExchange`/scoring/dupe) is **not** unit-covered (those need the app's global state booted). For log-level regression there is `tr4w/test/logdump/` (binary `.dat` → JSONL via the canonical `ContestExchange`) and `tr4w/test/python/verify_adif_export.py` (cross-checks ADIF export against the canonical log). Still be especially careful with scoring, multiplier, and exchange-parsing changes — the engine itself has no direct test, so real-contest testing remains the final check.
 
-8. **Multi-language support:** When adding UI strings, add entries to ALL language resource files in `res/`, not just English.
+8. **Multi-language support:** UI strings are `const` literals in `src/lang/tr4w_consts_<LANG>.pas` — one file per language (selected by `LANG` in `VC.pas`); non-English files are legacy CP1251, no BOM. Add new strings to every language file, not just English. **D12 caveat:** under UTF-16 the *compiler* transcodes these literals using the source-file codepage, so the non-English files need a `{$CODEPAGE 1251}` directive or their text silently corrupts on a non-1251 build machine (see `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`).
 
 ## Version Information
 
 Current versions are defined in `src/Version.pas`:
-- **TR4W:** v4.143.2 (October 2025)
+- **TR4W:** ~v4.149 (2026) — see `src/Version.pas` for the exact current value
 - **Log format:** v1.6
 - **Server:** Check `TR4WSERVER_CURRENTVERSION`
 
