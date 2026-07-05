@@ -851,7 +851,7 @@ begin
         begin
           if TotalLine then Continue;
           sWriteFile(tReportFileWrite, breakline, length(breakline));
-          sWriteFile(tReportFileWrite, #13#10, 2);
+          sWriteFileFromString(tReportFileWrite, #13#10);
           TempMode := Both;
           TotalLine := True;
           BString := 'Total';   // 4.97.8
@@ -2065,7 +2065,7 @@ begin
    // consumers that expect the "Created by TR4W..." comment).
    sWriteFileFromString(tReportFileWrite, 'ADIF File'#13#10);
    sWriteFileFromString(tReportFileWrite,
-      'Created by TR4W version ' + TR4W_CURRENTVERSION +
+      'Created by TR4W version ' + TR4W_CURRENTVERSION + '-D12' +
       ' on ' + FormatDateTime('mmm-dd-yyyy hh:mm:ss', dtReportTime) +
       #13#10);
 
@@ -2209,7 +2209,7 @@ begin
   // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString.
   // %s=CALLSIGN(T2), %s=CONTEST(T3), %d=CLAIMED-SCORE(TotalScore).
   sWriteFileFromString(tReportFileWrite, SysUtils.Format(
-    'START-OF-LOG: 3.0'#13#10'CREATED-BY: ' + TR4W_CURRENTVERSION + #13#10'CALLSIGN: %s'#13#10'CONTEST: %s'#13#10'CLAIMED-SCORE: %d'#13#10,
+    'START-OF-LOG: 3.0'#13#10'CREATED-BY: ' + TR4W_CURRENTVERSION + '-D12' + #13#10'CALLSIGN: %s'#13#10'CONTEST: %s'#13#10'CLAIMED-SCORE: %d'#13#10,
     [string(T2), T3, TotalScore]));
 
   for TempTag := Low(CabrilloTags) to High(CabrilloTags) do
@@ -2291,9 +2291,9 @@ begin
 
         sWriteFile(tReportFileWrite, TempPchar^, TempInteger);
         if TempErmakField <> High(TErmakFields) then
-          sWriteFile(tReportFileWrite, ', ', 2)
+          sWriteFileFromString(tReportFileWrite, ', ')
         else
-          sWriteFile(tReportFileWrite, #13#10, 2);
+          sWriteFileFromString(tReportFileWrite, #13#10);
       end;
 
   Result := True;
@@ -2618,7 +2618,7 @@ if TempRXData.DomMultQTH = '' then
     end;
     goto 1;
   end;
-  sWriteFile(tReportFileWrite, 'END-OF-LOG: ', 12);
+  sWriteFileFromString(tReportFileWrite, 'END-OF-LOG: ');
 
   CloseLogFile;
   Result := True;

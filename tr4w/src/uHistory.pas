@@ -996,14 +996,14 @@ begin
     nNumberOfBytesToWrite := Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-    sWriteFile(h, '<ul>', 4);
+    sWriteFileFromString(h, '<ul>');
     for Feature := 0 to MAXFEATURES - 1 do
     begin
       if V[Version].hrV[Feature].hrFeature = ftUndef then Continue;
       nNumberOfBytesToWrite := Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
       sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
     end;
-    sWriteFile(h, '</ul>', 5);
+    sWriteFileFromString(h, '</ul>');
   end;
 
   nNumberOfBytesToWrite := Format(wsprintfBuffer, '%s', ']]></content></cms>');
@@ -1082,7 +1082,7 @@ begin
     nNumberOfBytesToWrite := Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-    sWriteFile(h, '<ul>', 4);
+    sWriteFileFromString(h, '<ul>');
     for Feature := 0 to MAXFEATURES - 1 do
     begin
       if V[Version].hrV[Feature].hrFeature = ftUndef then Continue;
@@ -1090,7 +1090,7 @@ begin
       sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
       inc(InsertedFeatures);
     end;
-    sWriteFile(h, '</ul>', 5);
+    sWriteFileFromString(h, '</ul>');
 
     if InsertedFeatures > FEATURES_IN_COLUMN * 2 then
       Break;

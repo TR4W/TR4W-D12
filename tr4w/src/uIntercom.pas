@@ -137,7 +137,7 @@ begin
     begin
       SetFilePointer(h, 0, nil, FILE_END);
       sWriteFile(h, wsprintfBuffer, stored);
-      sWriteFile(h, #13#10, 2);
+      sWriteFileFromString(h, #13#10);
       CloseHandle(h);
     end;
   end;

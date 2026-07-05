@@ -6440,7 +6440,7 @@ begin
   // MakeReportFileName('CUSTOM_INITIAL.EX');
   if not tOpenFileForWrite(h, FileName {@ReportsFilename[1]}) then
     Exit;
-  sWriteFile(h, ';callsign exchange'#13#10#13#10, 29);
+  sWriteFileFromString(h, ';callsign exchange'#13#10#13#10);
   for i := 0 to CallsignsList.Count - 1 do
   begin
     Windows.ZeroMemory(@InitialExchange, SizeOf(InitialExchange));

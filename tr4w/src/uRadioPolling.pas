@@ -3030,7 +3030,7 @@ begin
                sWriteFile(h, TempBuffer1, lpNumberOfBytesWritten);
             end;
       end;
-   sWriteFile(h, '</TD></TR>'#13#10, 12);
+   sWriteFileFromString(h, '</TD></TR>'#13#10);
 end;
 
 function GetFrequencyForYaesu3(p: PAnsiChar): Cardinal;
