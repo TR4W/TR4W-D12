@@ -203,8 +203,8 @@ const
   CURRENTVERSIONASINTEGER               = Ord(LOGVERSION1) + Ord(LOGVERSION2) * 256 + Ord(LOGVERSION3) * $10000 + Ord(LOGVERSION4) * $1000000;
   TR4W_DOWNLOAD_LINK                    : PChar = 'http://www.tr4w.net/download/?' + TR4W_CURRENTVERSION_NUMBER;
 
-  LATEST_CONFIG_FILE                    : PChar = 'LATEST CONFIG FILE';
-  MAIN_CALLSIGN                         : PChar = 'MAIN CALLSIGN';
+  LATEST_CONFIG_FILE                    : PAnsiChar = 'LATEST CONFIG FILE';
+  MAIN_CALLSIGN                         : PAnsiChar = 'MAIN CALLSIGN';
 
  // ' TR4W_DOWNLOAD_LINK_WITH_VER           = 'http://tr4w.net/4.42/tr4w_setup_4_42.1.exe';
 
@@ -2051,13 +2051,13 @@ type
 
 const
 
-  _RESTARTBIN                           : PChar = 'RESTART.BIN';
+  _RESTARTBIN                           : PAnsiChar = 'RESTART.BIN';
   _LOGFILE                              : PAnsiChar = 'LOG file';
 
   _COMMANDS                             : PAnsiChar = 'COMMANDS';
 
 
-  OPERATORINFO                          : PChar = '_OP_INFO_%03u';
+  OPERATORINFO                          : PAnsiChar = '_OP_INFO_%03u';
 
   ERMAK_                                : PChar = 'ERMAK';
   ERMAKSECTION                          : PAnsiChar = 'ERMAKREPORT';

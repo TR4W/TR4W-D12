@@ -23,7 +23,7 @@ function PostcedingString(LongString: ShortString; Deliminator: ShortString): Sh
 function PrecedingString(LongString: ShortString; Deliminator: ShortString): ShortString;
 
 function tPos(s: ShortString; c: AnsiChar): integer; //wli
-function pPos(c: Char; p: PChar): integer;
+function pPos(c: AnsiChar; p: PAnsiChar): integer;
 
 function StrComp(const Str1, Str2: PAnsiChar): integer;
 procedure StrUpper(Str: PAnsiChar);
@@ -265,7 +265,7 @@ begin
     PrecedingString := '';
 end;
 
-function pPos(c: Char; p: PChar): integer;
+function pPos(c: AnsiChar; p: PAnsiChar): integer;
 var
   i                                     : Cardinal;
 begin

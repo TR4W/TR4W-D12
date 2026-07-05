@@ -730,7 +730,7 @@ begin
   Exchange.ceContest := Contest;
 end;
 
-function GetNumber(Call: CallString): Char;
+function GetNumber(Call: CallString): AnsiChar;
 
 var
   TempString, NumberString              : CallString;
@@ -1065,7 +1065,7 @@ begin
     if TempString[2] = 'Z' then
     begin
       TempString[2] := '0';
-      TempString[1] := CHR(Ord(TempString[1]) + 1);
+      TempString[1] := AnsiChar(Ord(TempString[1]) + 1);
           {
                     if TempString[1] > 'Z' then
                       LastAddress := NumberPartialCalls
@@ -1075,7 +1075,7 @@ begin
     end
     else
     begin
-      TempString[2] := CHR(Ord(TempString[2]) + 1);
+      TempString[2] := AnsiChar(Ord(TempString[2]) + 1);
           //          LastAddress := FindProperPartialCallAddress(TempString);
     end;
 
@@ -1105,7 +1105,8 @@ procedure DupeAndMultSheet.AddCallToVisibleDupeSheet(Callsign: CallString);
 
 var
   SuffixString, NumberString            : CallString;
-  NumberChar, Character                 : Char;
+  NumberChar                            : AnsiChar;
+  Character                             : Char;
   NextRecord, {Remember,} ActiveVDEntry : VDEntryPointer;
   Count                                 : integer;
 

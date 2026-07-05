@@ -1490,7 +1490,7 @@ begin
         if RussianID(MyCountry) then
         begin
           TempOblast := GetOblast(MyCall);
-          if not (GetRussiaOblastByTwoChars(TempOblast[1], TempOblast[2]) in
+          if not (GetRussiaOblastByTwoChars(Char(TempOblast[1]), Char(TempOblast[2])) in
             [rtUA1A, rtUA1C]) then
           begin
             ActiveDXMult := NoDXMults;
@@ -1737,7 +1737,7 @@ end;
 
 procedure SetContestTitle;
 begin
-  ContestTitle[0] := CHR(Format(@ContestTitle[1], '%s %s %s', GetYearString,
+  ContestTitle[0] := AnsiChar(Format(@ContestTitle[1], '%s %s %s', GetYearString,
     @ContestName[1], @MyCall[1]));
 end;
 

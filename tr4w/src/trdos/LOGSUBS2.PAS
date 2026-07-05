@@ -1136,7 +1136,7 @@ begin
       if Key = BackSpace then
         if length(TempString) > 0 then
         begin
-          TempString[0] := CHR(length(TempString) - 1);
+          TempString[0] := AnsiChar(length(TempString) - 1);
             //{WLI}                     GoToXY (WhereX - 1, WhereY);
             //{WLI}                     ClrEol;
         end;
@@ -1659,7 +1659,8 @@ begin
 end;
 procedure GetInitialCall;
 var
-  Key, TempKey   : Char;
+  Key            : Char;
+  TempKey        : AnsiChar;
   SearchAndPounceStatus, SpecialRadioSwap {, StationCalled}: boolean;
 //  MTotals                               : MultTotalArrayType;
   EditingCallsignSent                   : boolean;
@@ -1742,7 +1743,7 @@ begin
                   Sleep(Random(400));
                 end;
               end
-              else TempKey := UpCase(NewReadKey);
+              else TempKey := AnsiChar(UpCase(NewReadKey));
               case TempKey of
                 BackSpace:
                   if EditingCallsignSent then
@@ -2475,7 +2476,7 @@ end;
 procedure OperateContest;
 var
 //MTotals                               : MultTotalArrayType;
-  TempKey                               : Char;
+  TempKey                               : AnsiChar;
   RememberInactiveCQ                    : boolean;
   RememberTime                          : Cardinal {TimeRecord};
   begin
@@ -2635,7 +2636,7 @@ var
       //    if MessageEnable then AddStringToBuffer(TailEndMessage + ' ', CWTone);
           repeat
             repeat until NewKeyPressed;
-            TempKey := UpCase(NewReadKey);
+            TempKey := AnsiChar(UpCase(NewReadKey));
             if TempKey <> CarriageReturn then
               if ValidCallCharacter(TempKey) or (TempKey = '?') then
               begin

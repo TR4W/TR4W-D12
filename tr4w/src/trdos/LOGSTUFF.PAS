@@ -6019,16 +6019,16 @@ begin
         if RussianID(MyCountry) then
         begin
           TempOblast := GetOblast(MyCall);
-          russianRegion1 := GetRussiaOblastByTwoChars(TempOblast[1],
-            TempOblast[2]);
+          russianRegion1 := GetRussiaOblastByTwoChars(Char(TempOblast[1]),
+            Char(TempOblast[2]));
         end;
 
         Windows.ZeroMemory(@TempOblast, SizeOf(TempOblast));
         if RussianID(RXData.Callsign) then
         begin
           TempOblast := GetOblast(RXData.Callsign);
-          russianRegion2 := GetRussiaOblastByTwoChars(TempOblast[1],
-            TempOblast[2]);
+          russianRegion2 := GetRussiaOblastByTwoChars(Char(TempOblast[1]),
+            Char(TempOblast[2]));
         end;
 
         if (russianRegion1 in [rtUA1A, rtUA1C]) then
@@ -6064,7 +6064,7 @@ begin
         GetDistanceBetweenGrids
           Oblast := GetOblast(Call);
           if length(Oblast) < 2 then Exit;
-          reg := GetRussiaOblastByTwoChars(Oblast[1], Oblast[2]);
+          reg := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
           }
       end;
 
@@ -8423,11 +8423,11 @@ begin
   if HisOblast = '' then
     Exit;
 
-  o1 := GetOkrugByOblast(GetRussiaOblastByTwoChars(MyOBlast[1], MyOBlast[2]));
+  o1 := GetOkrugByOblast(GetRussiaOblastByTwoChars(Char(MyOBlast[1]), Char(MyOBlast[2])));
   if o1 = foUnKnownOkrug then
     Exit;
 
-  o2 := GetOkrugByOblast(GetRussiaOblastByTwoChars(HisOblast[1], HisOblast[2]));
+  o2 := GetOkrugByOblast(GetRussiaOblastByTwoChars(Char(HisOblast[1]), Char(HisOblast[2])));
   if o2 = foUnKnownOkrug then
     Exit;
 
@@ -8627,7 +8627,7 @@ begin
       if PositionCounter = 0 then
         Continue;
 
-      ParserArray.paElements[Element].prString[0] := CHR(PositionCounter);
+      ParserArray.paElements[Element].prString[0] := AnsiChar(PositionCounter);
 
       inc(ParserArray.paCount);
 
@@ -8721,13 +8721,13 @@ begin
 
     Windows.ZeroMemory(@Oblast, SizeOf(Oblast));
     Oblast := Tree.GetOblast(RXData.Callsign);
-    RussianRegionHis := GetRussiaOblastByTwoChars(Oblast[1], Oblast[2]);
+    RussianRegionHis := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
     RXData.DomesticQTH := RXData.QTHString;
     if (RussianID(MyCall)) then
     begin
       Windows.ZeroMemory(@Oblast, SizeOf(Oblast));
       Oblast := Tree.GetOblast(MyCall);
-      RussianRegionMy := GetRussiaOblastByTwoChars(Oblast[1], Oblast[2]);
+      RussianRegionMy := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
       if not (RussianRegionMy in [rtUA1A, rtUA1C]) then
       begin
         if RussianRegionHis in [rtUA1A, rtUA1C] then

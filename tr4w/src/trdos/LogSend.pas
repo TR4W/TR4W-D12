@@ -116,7 +116,8 @@ procedure SendCrypticCWString(SendString: Str160);
 var
   CharPointer, NumberCharsBeingSent, CharacterCount, QSONumber: integer;
   Result, Offset                 : integer;
-  Key, SendChar, TempChar               : Char;
+  Key                                   : Char;
+  SendChar, TempChar                    : AnsiChar;
   CommandMode, WarningSounded           : boolean;
   TempCall                              : CallString;
   TempString                            : Str80;

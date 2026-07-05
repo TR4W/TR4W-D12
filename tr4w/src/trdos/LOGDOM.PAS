@@ -73,7 +73,7 @@ type
 //    procedure EnumDOMFILE(FileString: PShortString);
     function LoadInDomQTHFile(FileName: PAnsiChar): boolean;
     function ReadDomQTHFile(FileName: PAnsiChar; IncludedFile: boolean): boolean;
-    function RecordPointerIndex(FirstLetter: Char): integer;
+    function RecordPointerIndex(FirstLetter: AnsiChar): integer;
   end;
 
 procedure EnumDOMFILE(FileString: PShortString);
@@ -378,7 +378,7 @@ begin
 
 end;
 
-function DomQTHTableObject.RecordPointerIndex(FirstLetter: Char): integer;
+function DomQTHTableObject.RecordPointerIndex(FirstLetter: AnsiChar): integer;
 
 var
   TempInt, Result1                      : integer;
@@ -505,7 +505,7 @@ begin
 
 //  if not OpenFileForRead(FileRead, FileName) then
   begin
-    UnableToFindFileMessage(PChar(string(FileName)));
+    UnableToFindFileMessage(PAnsiChar(AnsiString(FileName)));
     Exit;
   end;
 

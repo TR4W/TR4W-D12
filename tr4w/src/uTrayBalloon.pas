@@ -192,9 +192,13 @@ begin
     if @tShell_NotifyIcon <> nil then
     begin
       if TrayBallonDisplayed then Balloon_DeleteTrayIcon;
-      if Balloon_AddTrayIcon(tr4whandle, 11, tr4w_WinClass.HICON, WM_TRAYBALLON, tr4w_ClassName) then
-        if Balloon_ShowTrayTips(TipInfo) then
-          TrayBallonDisplayed := True;
+      if Balloon_AddTrayIcon(tr4whandle, 11, tr4w_WinClass.HICON, WM_TRAYBALLON, 'TR4W') then
+         begin
+         if Balloon_ShowTrayTips(TipInfo) then
+            begin
+            TrayBallonDisplayed := True;
+            end;
+         end;
     end;
   end;
 end;

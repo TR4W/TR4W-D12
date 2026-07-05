@@ -228,7 +228,7 @@ type
       UseHamLib:       boolean;
       WideCWFilter:    boolean;
       IcomFilterByte:  byte;
-      IDCharacter:     char;
+      IDCharacter:     AnsiChar;
       IPAddress:       str50;
       NetworkUsername: str50;  // Network radio username (Icom CI-V/IP, Kenwood TS-890, etc.) -- Issue #904
       NetworkPassword: str50;  // Network radio password -- Issue #904
@@ -347,7 +347,7 @@ var
     ICOM_COMMAND_PTT: #255;
     tRadioInterfaceWndHandle: 0;
     FT1000MPCWReverse: False;
-    IDCharacter: CHR(0);
+    IDCharacter: #0;
     //    PollTimeout: 500;
     PollingEnable: True;
     PollStatus: NoPollStatus;
@@ -385,7 +385,7 @@ var
     ICOM_COMMAND_PTT: #255;
     tRadioInterfaceWndHandle: 0;
     FT1000MPCWReverse: False;
-    IDCharacter: CHR(0);
+    IDCharacter: #0;
     //    PollTimeout: 500;
     PollingEnable: True;
     PollStatus: NoPollStatus;
@@ -1758,33 +1758,33 @@ end; // SendRITFreqCommand;
 procedure RadioObject.SetICOMRITFrequency(hz: integer);
 
 begin
-   {CommandsTempBuffer[0] := Chr(11);
+   {CommandsTempBuffer[0] := AnsiChar(11);
    CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
    CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-   CommandsTempBuffer[3] := Chr(ReceiverAddress);
+   CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
    CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
    CommandsTempBuffer[5] := ICOM_GET_RIT_FREQ;
-   CommandsTempBuffer[6] := Chr(0);
+   CommandsTempBuffer[6] := AnsiChar(0);
    {absHz := abs(hz);
    foo := Integer4ToBCD(absHz);
    newFreq := ((absHz mod 100) * 100) + absHz div 100;
 
-   CommandsTempBuffer[7] := Chr(absHz mod 100);// Put frequency here
-   CommandsTempBuffer[8] := Chr(absHz div 100);
-   CommandsTempBuffer[7] := Chr(absHz div 1000 mod 10);
-   CommandsTempBuffer[8] := Chr(absHz div 100 mod 10);
-   CommandsTempBuffer[7] := Chr(foo div 100);
-   CommandsTempBuffer[8] := Chr(foo mod 100);
+   CommandsTempBuffer[7] := AnsiChar(absHz mod 100);// Put frequency here
+   CommandsTempBuffer[8] := AnsiChar(absHz div 100);
+   CommandsTempBuffer[7] := AnsiChar(absHz div 1000 mod 10);
+   CommandsTempBuffer[8] := AnsiChar(absHz div 100 mod 10);
+   CommandsTempBuffer[7] := AnsiChar(foo div 100);
+   CommandsTempBuffer[8] := AnsiChar(foo mod 100);
 
 
 
     if hz < 0 then
       begin
-      CommandsTempBuffer[9] := Chr(1);
+      CommandsTempBuffer[9] := AnsiChar(1);
       end
    else
       begin
-      CommandsTempBuffer[9] := Chr(0);
+      CommandsTempBuffer[9] := AnsiChar(0);
       end;
    CommandsTempBuffer[10] := ICOM_END_OF_MESSAGE_CODE;
    AddCommandToBuffer;
@@ -1868,14 +1868,14 @@ begin
          if IntegerBetween(mem,0,8) then
             begin
             logger.debug('[Icom-MemoryKeyer] Playing memory %d',[mem]);
-            CommandsTempBuffer[0] := CHR(9);
+            CommandsTempBuffer[0] := AnsiChar(9);
             CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
             CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[3] := CHR(ReceiverAddress);
+            CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
             CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
             CommandsTempBuffer[5] := ICOM_SET_DVK;
-            CommandsTempBuffer[6] := CHR(0);  // sub command
-            CommandsTempBuffer[7] := Chr(mem);
+            CommandsTempBuffer[6] := AnsiChar(0);  // sub command
+            CommandsTempBuffer[7] := AnsiChar(mem);
             CommandsTempBuffer[8] := ICOM_END_OF_MESSAGE_CODE;
             AddCommandToBuffer;
             Result := false;
@@ -2070,13 +2070,13 @@ begin
       IC78..IC9700, OMNI6: { KK1L: 6.73 Added OMNI6 }
          begin
 
-         CommandsTempBuffer[0] := CHR(8);
+         CommandsTempBuffer[0] := AnsiChar(8);
          CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
          CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-         CommandsTempBuffer[3] := CHR(ReceiverAddress);
+         CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
          CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
          CommandsTempBuffer[5] := ICOM_SET_SPLIT_MODE;
-         CommandsTempBuffer[6] := CHR(1);
+         CommandsTempBuffer[6] := AnsiChar(1);
          CommandsTempBuffer[7] := ICOM_END_OF_MESSAGE_CODE;
          AddCommandToBuffer;
 
@@ -2135,13 +2135,13 @@ begin
       IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6}
          begin
          // TLogger.GetInstance.Debug('Sending commands to take Icom out of Split');
-         CommandsTempBuffer[0] := CHR(8);
+         CommandsTempBuffer[0] := AnsiChar(8);
          CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
          CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-         CommandsTempBuffer[3] := CHR(ReceiverAddress);
+         CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
          CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
          CommandsTempBuffer[5] := ICOM_SET_SPLIT_MODE;
-         CommandsTempBuffer[6] := CHR(0);
+         CommandsTempBuffer[6] := AnsiChar(0);
          CommandsTempBuffer[7] := ICOM_END_OF_MESSAGE_CODE;
          AddCommandToBuffer;
          end;
@@ -2659,15 +2659,15 @@ begin
                   begin
                   // Legacy serial path: build raw CI-V frame
                   DebugMsg('Sending to Icom[' + IntToStr(len) + ' bytes]=' + localMsg);
-                  CommandsTempBuffer[0] := Chr(7 + len);
+                  CommandsTempBuffer[0] := AnsiChar(7 + len);
                   CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
                   CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-                  CommandsTempBuffer[3] := CHR(ReceiverAddress);
+                  CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
                   CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
                   CommandsTempBuffer[5] := ICOM_SEND_CW;
                   for i := 1 to len do
                      begin
-                     CommandsTempBuffer[5 + i] := Chr(Ord(Msg[i]));
+                     CommandsTempBuffer[5 + i] := AnsiChar(Ord(Msg[i]));
                      end;
                   CommandsTempBuffer[6 + len] := ICOM_END_OF_MESSAGE_CODE;
                   AddCommandToBuffer;
@@ -2788,14 +2788,14 @@ begin
          begin   // This was missing for Icom ny4i Issue 100 4.45.4
          if RadioModel in RadioSupportsCWByCAT then     // ny4i
             begin
-            CommandsTempBuffer[0] := CHR(8);
+            CommandsTempBuffer[0] := AnsiChar(8);
             // Number of items used in this array for command ny4i Issue 100 4.45.4
             CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
             CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[3] := CHR(ReceiverAddress);
+            CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
             CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
             CommandsTempBuffer[5] := ICOM_SEND_CW;
-            CommandsTempBuffer[6] := CHR(255);
+            CommandsTempBuffer[6] := AnsiChar(255);
             // Documented in Icom manuals. FF in the subcode terminates CW  ny4i
             CommandsTempBuffer[7] := ICOM_END_OF_MESSAGE_CODE;
             AddCommandToBuffer;
@@ -3233,19 +3233,19 @@ begin
             //speed := ((icom_dec_value * (42/255) + 6)
             // icom_dec_value = (speed - 6) * 255/42);
 
-            CommandsTempBuffer[0] := CHR(10);
+            CommandsTempBuffer[0] := AnsiChar(10);
             CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
             CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[3] := CHR(ReceiverAddress);
+            CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
             CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
             CommandsTempBuffer[5] := ICOM_SET_SLIDERS;
             CommandsTempBuffer[6] := ICOM_SET_CW_SPEED;
             i := Round((speed - 6) * (255 / 42));
-            CommandsTempBuffer[7] := Chr(i div 100);  // Puts 00,01 or 02 into first byte
+            CommandsTempBuffer[7] := AnsiChar(i div 100);  // Puts 00,01 or 02 into first byte
             i := i mod 100; // remove the hundreds part and BCD the remainder
             //AddStringToTelnetConsole(PChar('dec='+IntToStr(i) + ', bcd = ' + IntToStr(IntegerToBCD(i))),tstAlert);
             //AddStringToTelnetConsole(PChar('bcd='+IntToStr(n)),tstAlert);
-            CommandsTempBuffer[8] := CHR(IntegerToBCD(i));
+            CommandsTempBuffer[8] := AnsiChar(IntegerToBCD(i));
             // 20 wpm returns 85 which in BCD makes 131 which makes hex 85 when used with Chr()
             CommandsTempBuffer[9] := ICOM_END_OF_MESSAGE_CODE;
 
@@ -3505,7 +3505,7 @@ begin
                Format(@tKenwood14Bytes, 'FA%08u;', Freq);
                nBytesToWrite := 11;
                end;
-            tKenwood14Bytes[1] := VFO;
+            tKenwood14Bytes[1] := AnsiChar(VFO);
             WriteToCATPort(tKenwood14Bytes, nBytesToWrite);
 
             if Freq < 10000000 then
@@ -3551,7 +3551,7 @@ begin
                tKenwood14Bytes[0] := 'M';
                tKenwood14Bytes[1] := 'D';
                tKenwood14Bytes[2] := '0'; //Ord(VFO) - 17;
-               tKenwood14Bytes[3] := TempChar;
+               tKenwood14Bytes[3] := AnsiChar(TempChar);
                tKenwood14Bytes[4] := ';';
                WriteToCATPort(tKenwood14Bytes, 5);
                end;
@@ -3561,7 +3561,7 @@ begin
             begin
             logger.trace ('In SetRadioFreq, rtKenwood branch');
             Format(@tKenwood14Bytes, 'FA%011u;', Freq);
-            tKenwood14Bytes[1] := VFO;
+            tKenwood14Bytes[1] := AnsiChar(VFO);
             AddToOutputBuffer {WriteToCATPort}(tKenwood14Bytes, 14);
 
             //if VFO = 'B' then
@@ -3603,7 +3603,7 @@ begin
                begin
                tKenwood14Bytes[0] := 'M';
                tKenwood14Bytes[1] := 'D';
-               tKenwood14Bytes[2] := CHR(TempByte);
+               tKenwood14Bytes[2] := AnsiChar(TempByte);
                tKenwood14Bytes[3] := ';';
                AddToOutputBuffer {WriteToCATPort}(tKenwood14Bytes, 4);
                end
@@ -3631,10 +3631,10 @@ begin
                begin
                if not (RadioModel in IcomRadiosThatSupportVFOB) then   // For old radios, swap the VFOs  ny4i
                   begin
-                  CommandsTempBuffer[0] := CHR(8);
+                  CommandsTempBuffer[0] := AnsiChar(8);
                   CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
                   CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-                  CommandsTempBuffer[3] := CHR(ReceiverAddress);
+                  CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
                   CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
                   CommandsTempBuffer[5] := ICOM_SET_VFO_COMMAND;
                   CommandsTempBuffer[6] := ICOM_SET_VFO_B_COMMAND;
@@ -3700,74 +3700,74 @@ begin
                if not skipMode then
                   begin   // Build VFO and frequency into Command $25, mode and filter byte into command $26
                   // Mode - Command $26
-                  CommandsTempBuffer[0] := CHR(11);
+                  CommandsTempBuffer[0] := AnsiChar(11);
                   CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
                   CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-                  CommandsTempBuffer[3] := CHR(ReceiverAddress);
+                  CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
                   CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
                   CommandsTempBuffer[5] := ICOM_GET_EXTENDEDMODE;  // Sets too...
                   if VFO = 'A' then
                      begin
-                     CommandsTempBuffer[6] := Chr(0);
+                     CommandsTempBuffer[6] := AnsiChar(0);
                      end
                   else
                      begin
-                     CommandsTempBuffer[6] := Chr(1);
+                     CommandsTempBuffer[6] := AnsiChar(1);
                      end;
                   if Mode = FM then
                      begin
-                     CommandsTempBuffer[7] := Chr(5); //TempChar := #5;
+                     CommandsTempBuffer[7] := AnsiChar(5); //TempChar := #5;
                      end
                   else if Mode = CW then
                      begin
-                     CommandsTempBuffer[7] := Chr(3); //TempChar := #3;
+                     CommandsTempBuffer[7] := AnsiChar(3); //TempChar := #3;
                      end
                   else if Mode = Digital then
                      begin
-                     CommandsTempBuffer[7] := Chr(1); //TempChar := #4;  // Icom uses mode USB with Digital flag enabled.
+                     CommandsTempBuffer[7] := AnsiChar(1); //TempChar := #4;  // Icom uses mode USB with Digital flag enabled.
                      end
                   else
                      begin      //must be phone
                      if Freq < 10000000 then
                         begin
-                        CommandsTempBuffer[7] := Chr(0); //TempChar := #0;
+                        CommandsTempBuffer[7] := AnsiChar(0); //TempChar := #0;
                         end
                      else
                         begin
-                        CommandsTempBuffer[7] := Chr(1); //TempChar := #1;
+                        CommandsTempBuffer[7] := AnsiChar(1); //TempChar := #1;
                         end;
                      end;
 
-                 // CommandsTempBuffer[7] := Chr(TempByte);
+                 // CommandsTempBuffer[7] := AnsiChar(TempByte);
 
                   if mode = Digital then                  // Sets Data mode setting field
                      begin
-                     CommandsTempBuffer[8] := Chr(1);
+                     CommandsTempBuffer[8] := AnsiChar(1);
                      end
                   else
                      begin
-                     CommandsTempBuffer[8] := Chr(0);
+                     CommandsTempBuffer[8] := AnsiChar(0);
                      end;
 
-                  CommandsTempBuffer[9] := CHR(CalculateIcomFilterWidth);
+                  CommandsTempBuffer[9] := AnsiChar(CalculateIcomFilterWidth);
                   CommandsTempBuffer[10] := ICOM_END_OF_MESSAGE_CODE;
                   AddCommandToBuffer;
                   end;
                   // Now send frequency for selected VFO
 
-                  CommandsTempBuffer[0]  := CHR(13);
+                  CommandsTempBuffer[0]  := AnsiChar(13);
                   CommandsTempBuffer[1]  := ICOM_PREAMBLE_CODE;
                   CommandsTempBuffer[2]  := ICOM_PREAMBLE_CODE;
-                  CommandsTempBuffer[3]  := CHR(ReceiverAddress);
+                  CommandsTempBuffer[3]  := AnsiChar(ReceiverAddress);
                   CommandsTempBuffer[4]  := ICOM_CONTROLLER_ADDRESS;
                   CommandsTempBuffer[5]  := ICOM_GET_EXTENDEDVFO;
                   if VFO = 'A' then
                      begin
-                     CommandsTempBuffer[6] := Chr(0);
+                     CommandsTempBuffer[6] := AnsiChar(0);
                      end
                   else
                      begin
-                     CommandsTempBuffer[6] := Chr(1);
+                     CommandsTempBuffer[6] := AnsiChar(1);
                      end;
 
 
@@ -3780,7 +3780,7 @@ begin
                         Inc(i);
                         TempByte := Ord(wsprintfBuffer[CharPointer]) - $30;
                         SendByte := SendByte or (TempByte shl 4);
-                        CommandsTempBuffer[i] := CHR(SendByte);
+                        CommandsTempBuffer[i] := AnsiChar(SendByte);
                         end
                      else
                         begin
@@ -3796,13 +3796,13 @@ begin
                   begin              // For older Icom radios that do not support VFOB selection (Commands 25 and 26)
                   if not skipMode then
                      begin
-                     CommandsTempBuffer[0] := CHR(9);
+                     CommandsTempBuffer[0] := AnsiChar(9);
                      CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
                      CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-                     CommandsTempBuffer[3] := CHR(ReceiverAddress);
+                     CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
                      CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
                      CommandsTempBuffer[5] := ICOM_SET_MODE;
-                     CommandsTempBuffer[6] := TempChar;
+                     CommandsTempBuffer[6] := AnsiChar(TempChar);
 
                   // ny4i: I'm trying to understand this logic   // 4.43.4
                   // The way Dave indicated this is supposed to work is that
@@ -3811,15 +3811,15 @@ begin
                   // If the value is 1, 2 or 3, then we want to send that when we change
                   // mode.
                   // tIcomFilterWidth is the value from the CFG file
-                  //     if Mode = Phone then  CommandsTempBuffer[7] := CHR(tIcomFilterWidth);
+                  //     if Mode = Phone then  CommandsTempBuffer[7] := AnsiChar(tIcomFilterWidth);
                      if (RadioModel = OMNI6) and (Mode = CW) then      // n4af 4.43.3
                         begin
-                        CommandsTempBuffer[0] := Chr(8); // Have to update since we are not adding filter Byte  // ny4i
+                        CommandsTempBuffer[0] := AnsiChar(8); // Have to update since we are not adding filter Byte  // ny4i
                         CommandsTempBuffer[7] := ICOM_END_OF_MESSAGE_CODE;   // n4af 4.43.3
                         end
                      else
                         begin // ny4i 4.43.6
-                        CommandsTempBuffer[7] := CHR(CalculateIcomFilterWidth);
+                        CommandsTempBuffer[7] := AnsiChar(CalculateIcomFilterWidth);
                         // ny4i // n4af 4.43.4  set icom filter
                         CommandsTempBuffer[8] := ICOM_END_OF_MESSAGE_CODE;
                         end;
@@ -3827,14 +3827,14 @@ begin
 
                      if bStateDataModeRequired then
                         begin
-                        CommandsTempBuffer[0]  := CHR(9);
+                        CommandsTempBuffer[0]  := AnsiChar(9);
                         CommandsTempBuffer[1]  := ICOM_PREAMBLE_CODE;
                         CommandsTempBuffer[2]  := ICOM_PREAMBLE_CODE;
-                        CommandsTempBuffer[3]  := CHR(ReceiverAddress);
+                        CommandsTempBuffer[3]  := AnsiChar(ReceiverAddress);
                         CommandsTempBuffer[4]  := ICOM_CONTROLLER_ADDRESS;
                         CommandsTempBuffer[5]  := ICOM_STATE;
                         CommandsTempBuffer[6]  := ICOM_STATE_DATA_MODE;
-                        CommandsTempBuffer[7]  := CHR(1);
+                        CommandsTempBuffer[7]  := AnsiChar(1);
                         CommandsTempBuffer[8]  := ICOM_END_OF_MESSAGE_CODE;
                         AddCommandToBuffer;
                         bStateDataModeRequired := false;
@@ -3842,10 +3842,10 @@ begin
                      end; // if not skipMode
 
 
-                  CommandsTempBuffer[0]  := CHR(12);
+                  CommandsTempBuffer[0]  := AnsiChar(12);
                   CommandsTempBuffer[1]  := ICOM_PREAMBLE_CODE;
                   CommandsTempBuffer[2]  := ICOM_PREAMBLE_CODE;
-                  CommandsTempBuffer[3]  := CHR(ReceiverAddress);
+                  CommandsTempBuffer[3]  := AnsiChar(ReceiverAddress);
                   CommandsTempBuffer[4]  := ICOM_CONTROLLER_ADDRESS;
                   CommandsTempBuffer[5]  := ICOM_SET_FREQ;
                   CommandsTempBuffer[11] := ICOM_END_OF_MESSAGE_CODE;
@@ -3859,7 +3859,7 @@ begin
                         Inc(i);
                         TempByte := Ord(wsprintfBuffer[CharPointer]) - $30;
                         SendByte := SendByte or (TempByte shl 4);
-                        CommandsTempBuffer[i] := CHR(SendByte);
+                        CommandsTempBuffer[i] := AnsiChar(SendByte);
                         end
                      else
                         begin
@@ -3869,7 +3869,7 @@ begin
 
                   if RadioModel = IC735 then
                      begin
-                     CommandsTempBuffer[0]  := CHR(11);
+                     CommandsTempBuffer[0]  := AnsiChar(11);
                      CommandsTempBuffer[10] := ICOM_END_OF_MESSAGE_CODE;
                      end;
 
@@ -3877,10 +3877,10 @@ begin
 
                   if VFO = 'B' then
                      begin
-                     CommandsTempBuffer[0] := CHR(8);
+                     CommandsTempBuffer[0] := AnsiChar(8);
                      CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
                      CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-                     CommandsTempBuffer[3] := CHR(ReceiverAddress);
+                     CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
                      CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
                      CommandsTempBuffer[5] := ICOM_SET_VFO_COMMAND;
                      CommandsTempBuffer[6] := ICOM_SET_VFO_A_COMMAND;
@@ -3895,7 +3895,7 @@ begin
             i := Format(tOrionFreq, '*AF%02u.%05u'#13, Freq div 1000000,
                (Freq div 10) mod 100000);
 
-            tOrionFreq[1] := VFO; // Changed AF to BF if VFO 2.
+            tOrionFreq[1] := AnsiChar(VFO); // Changed AF to BF if VFO 2.
             WriteToCATPort(tOrionFreq, i);
             
             case Mode of
@@ -3931,8 +3931,8 @@ begin
                   end;
                end;
             Windows.ZeroMemory(@tOrionMode, SizeOf(tOrionMode));
-            Windows.lstrcat(tOrionMode, '*RMM?'#13);    // The ? is replaced with the tempChar for mode.
-            tOrionMode[4] := TempChar;
+            Windows.lstrcatA(tOrionMode, '*RMM?'#13);    // The ? is replaced with the tempChar for mode.
+            tOrionMode[4] := AnsiChar(TempChar);
             if VFO = 'B' then
                begin
                tOrionMode[2] := 'S';                  // If VFO B, the first M changes to S to become *RS...
@@ -4202,11 +4202,11 @@ begin
 
     IC78..IC9700:
        begin
-          TempString := CHR($FE) + CHR($FE) + CHR(Radio1.ReceiverAddress) + CHR($E0) + CHR($1C) + CHR($00) + CHR($00) + CHR($FD);
+          TempString := AnsiChar($FE) + CHR($FE) + CHR(Radio1.ReceiverAddress) + CHR($E0) + CHR($1C) + CHR($00) + CHR($00) + CHR($FD);
           if PTTOn then
              begin
              logger.debug('Setting Icom to TX');
-             TempString[7] := CHR($01);
+             TempString[7] := AnsiChar($01);
              end
           else
              begin

@@ -662,7 +662,7 @@ begin
         EnumerateLinesInFile('TRCLUSTER.DAT', EmunTRCLUSTERDAT, False);
         EmunTRCLUSTERDAT(@TelnetServer);
         // Issue 392 ny4i - This adds the value in the config for telnet server to the drop-down
-        i := SendDlgItemMessage(hwnddlg, 102, CB_FINDSTRING, -1,
+        i := SendDlgItemMessage(hwnddlg, 102, CB_FINDSTRING, Cardinal(-1),
           integer(@TelnetServer[1])); //n4af 4.35.1
         //     i := SendDlgItemMessage(hwnddlg, 102, CB_FINDSTRINGEXACT, -1,integer(@TelnetServer[1]));
         if i <> CB_ERR then
@@ -1385,7 +1385,7 @@ begin
   begin
     Windows.lstrcpynA(@TempSpot.FNotes[0], @TelnetBuffer[DX + 39 + Offset], 31);
     //was 31 but allow for null ny4i
-    StrUpper(@TelnetBuffer[DX + 39 + Offset]);
+    StrUpper(PAnsiChar(@TelnetBuffer[DX + 39 + Offset]));
     for i := DX + 39 to DX + 65 do
     begin
       //        i1:=

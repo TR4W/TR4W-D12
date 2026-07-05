@@ -762,7 +762,7 @@ begin
     begin
       OutputArray^[OutputAddress] := ControlH;
       inc(OutputAddress);
-      OutputArray^[OutputAddress] := CHR(Hits);
+      OutputArray^[OutputAddress] := AnsiChar(Hits);
       inc(OutputAddress);
     end;
 
@@ -842,7 +842,7 @@ begin
     begin
       OutputArray^[OutputAddress] := ControlS;
       inc(OutputAddress);
-      OutputArray^[OutputAddress] := CHR(Speed);
+      OutputArray^[OutputAddress] := AnsiChar(Speed);
       inc(OutputAddress);
     end;
 

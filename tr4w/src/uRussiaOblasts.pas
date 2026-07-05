@@ -136,7 +136,7 @@ type
 
 const
 
-  RussianRegionsTypeIdArray             : array[RussianRegionType] of array[0..1] of Char =
+  RussianRegionsTypeIdArray             : array[RussianRegionType] of array[0..1] of AnsiChar =
     (
     #0#0,
     'SP',

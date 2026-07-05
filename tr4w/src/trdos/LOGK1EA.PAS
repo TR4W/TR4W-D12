@@ -1894,7 +1894,7 @@ begin
         ControlLeftBracket: CommandState := True;
 
       else
-        AddCharacterToCWBuffer(UpCase(Msg[Character]));
+        AddCharacterToCWBuffer(Char(UpCase(Msg[Character])));
       end;
 
     end;

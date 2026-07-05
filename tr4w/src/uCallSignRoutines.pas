@@ -400,7 +400,7 @@ function GetRussiaOblastID(Call: CallString): Str2; //
 var
 
   Oblast                                : Str2;
-  r                                     : PChar;
+  r                                     : PAnsiChar;
   reg                                   : RussianRegionType;
 begin
   Result := '';

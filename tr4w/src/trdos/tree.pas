@@ -734,7 +734,7 @@ function BracketedString(LongString: Str160; StartString: Str80; StopString: Str
 //{WLI}    FUNCTION  BYTSTOCR (List: Pointer; Start: INTEGER): INTEGER;
 
 procedure CalculateBandMode(Freq: Cardinal; var Band: BandType; var Mode: ModeType);
-function KeyboardCallsignChar(var Key: integer; ExChWin: boolean): boolean;
+function KeyboardCallsignChar(var Key: wParam; ExChWin: boolean): boolean;
 
 function CallFitsFormat(Format: Str20; Call: Str20): boolean;
 function CallSortValue(Call: CallString): LONGINT;
@@ -795,13 +795,13 @@ function GetLogEntryTimeString(LogEntry: Str160): Str160;
 function GetKey(Prompt: Str80): Char;
 function GetKeyResponse(Prompt: string): Char;
 
-function GetReal(Prompt: PChar): REAL;
-function GetResponse(Prompt: PChar {string}): ShortString;
+function GetReal(Prompt: PAnsiChar): REAL;
+function GetResponse(Prompt: PAnsiChar {string}): ShortString;
 procedure GetRidOfCarriageReturnLineFeeds(var s: string);
 procedure GetRidOfPostcedingSpaces(var s: ShortString);
 procedure GetRidOfPrecedingSpaces(var s: ShortString);
 function GetSCPCharFromInteger(Index: integer): Char;
-function GetSCPIntegerFromChar(InputChar: Char): integer;
+function GetSCPIntegerFromChar(InputChar: AnsiChar): integer;
 function GetStateFromSection(Section: Str20): Str20;
 function GetSuffix(Call: CallString): CallString;
 function GetTimeString: PAnsiChar {str80};
@@ -819,7 +819,7 @@ procedure HexToWord(InputString: Str80; var OutputWord: Word; var Result: intege
 
 procedure IncrementASCIIInteger(var ASCIIString: Str80);
 procedure IncrementMinute(var DateString: Str20; var TimeString: Str80);
-function WordValueFromCharacter(Character: Char): Word;
+function WordValueFromCharacter(Character: AnsiChar): Word;
 
 //procedure DecodeDate(const DateTime: TDateTime; var Year, Month, Day: word);
 //function DecodeDateFully(const DateTime: TDateTime; var Year, Month, Day, DOW: word): boolean;
@@ -883,7 +883,7 @@ function NewReadKey: Char;
 //{WLI}    FUNCTION  NUMBYTES (Call1: Pointer; Call2: Pointer): INTEGER;
 function NumberPartOfString(InputString: Str160): Str80;
 
-function OkayToDeleteExistingFile(FileName: PChar): boolean;
+function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 function OkayToProceed: boolean;
 function OpenDupeFileForRead(var FileHandle: Text; FileName: Str80): boolean;
 function OpenFileForAppend(var FileHandle: Text; FileName: string): boolean;
@@ -1106,7 +1106,7 @@ begin
   }
 end;
 
-function WordValueFromCharacter(Character: Char): Word;
+function WordValueFromCharacter(Character: AnsiChar): Word;
 
 //var   TempInteger                     : Word;
 
@@ -1850,7 +1850,7 @@ begin
   TempString := Copy(InputString, 1, 1);
 
   if length(TempString) > 0 then
-    FirstLetter := TempString[1]
+    FirstLetter := Char(TempString[1])
   else
     FirstLetter := CHR(0);
 end;
@@ -1863,7 +1863,7 @@ var
 begin
   TempString := Copy(InputString, length(InputString), 1);
   if length(TempString) > 0 then
-    LastLetter := TempString[1]
+    LastLetter := Char(TempString[1])
   else
     LastLetter := CHR(0);
 end;
@@ -2155,7 +2155,7 @@ begin
   if TempString = '' then
     GetLogEntryComputerID := CHR(0)
   else
-    GetLogEntryComputerID := TempString[1];
+    GetLogEntryComputerID := Char(TempString[1]);
 end;
 
 function GetLogEntryDateString(LogEntry: Str160): Str160;
@@ -2351,7 +2351,7 @@ begin
   until False;
 end;
 
-function GetResponse(Prompt: PChar {string}): ShortString;
+function GetResponse(Prompt: PAnsiChar {string}): ShortString;
 
 //var
 //  InputString                 : string;
@@ -2487,7 +2487,7 @@ begin
 
 end;
 
-function GetReal(Prompt: PChar): REAL;
+function GetReal(Prompt: PAnsiChar): REAL;
 
 var
   TempValue                             : REAL;
@@ -2823,7 +2823,7 @@ begin
   DCB.Parity := Parity_byte;
   DCB.BaudRate := BaudRate;
   DCB.ByteSize := Bits;
-  DCB.EvtChar := EvtChar;
+  DCB.EvtChar := AnsiChar(EvtChar);
 
   WinAPIstopBits := ONESTOPBIT;
   if StopBits = 2 then WinAPIstopBits := TWOSTOPBITS;
@@ -3111,7 +3111,7 @@ begin
         begin
         if GridString[i] > 'Z' then
            begin
-           GridString[i] := CHR(Ord(GridString[i]) - Ord('a') + Ord('A'));
+           GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
            end;
         end;
      LooksLikeAGrid := True;
@@ -3162,7 +3162,7 @@ begin
      begin
      if GridString[i] > 'Z' then
         begin
-        GridString[i] := CHR(Ord(GridString[i]) - Ord('a') + Ord('A'));
+        GridString[i] := AnsiChar(Ord(GridString[i]) - Ord('a') + Ord('A'));
         end;
      end;
 
@@ -3331,10 +3331,10 @@ begin
   NumberPartOfString := TempString;
 end;
 
-function OkayToDeleteExistingFile(FileName: PChar): boolean;
+function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 begin
   Format(wsprintfBuffer, TC_ALREADYEXISTSOKAYTODELETE, FileName);
-  Result := MessageBox(0, wsprintfBuffer, tr4w_ClassName, MB_YESNO or MB_ICONWARNING) = IDYES;
+  Result := MessageBoxA(0, wsprintfBuffer, 'TR4W', MB_YESNO or MB_ICONWARNING) = IDYES;
 end;
 
 function OkayToProceed: boolean;
@@ -3445,7 +3445,7 @@ begin
 
   if length(TempString) = 1 then
   begin
-    TempChar := TempString[1];
+    TempChar := Char(TempString[1]);
     if ((TempChar >= '0') and (TempChar <= '9')) or (TempChar = 'P') or (TempChar = 'M') then
       PortableStation := True;
   end;
@@ -4491,7 +4491,7 @@ begin
 end;
 
 
-function GetSCPIntegerFromChar(InputChar: Char): integer;
+function GetSCPIntegerFromChar(InputChar: AnsiChar): integer;
 
 begin
   GetSCPIntegerFromChar := -1;
@@ -5095,7 +5095,7 @@ begin
   Result := GETREALPATHBUFFER;
 end;
 
-function KeyboardCallsignChar(var Key: integer; ExChWin: boolean): boolean;
+function KeyboardCallsignChar(var Key: wParam; ExChWin: boolean): boolean;
 begin
   Result := False;
 
@@ -5126,8 +5126,8 @@ end;
 function GetOblast(Call: CallString): Str2;
 var
   i                                     : integer;
-  c1                                    : Char;
-  c2                                    : Char;
+  c1                                    : AnsiChar;
+  c2                                    : AnsiChar;
 begin
   Call := StandardCallFormat(Call, False);
 

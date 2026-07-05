@@ -387,7 +387,7 @@ procedure CPUButtonProc;
 procedure TREscapeCommFunction(hFile: THandle; dwFunc: Byte);
 function Get_Ctl_Code(nr: integer): Cardinal;
 procedure DebugMsg(s: string); // ny4i
-procedure DebugRadioTempBuffer(sDecorator: string; var bRay: array of char);
+procedure DebugRadioTempBuffer(sDecorator: string; var bRay: array of AnsiChar);
 // ny4i Issue 145
 function IsCWByCATActive(theRadio: RadioPtr): boolean; overload;
 // ny4i Issue # 111
@@ -9133,7 +9133,7 @@ begin
   end;
 end;
 
-procedure DebugRadioTempBuffer(sDecorator: string; var bRay: array of char);
+procedure DebugRadioTempBuffer(sDecorator: string; var bRay: array of AnsiChar);
 // ny4i Added in Issue 145
 {$IF NEWER_DEBUG}
 var

@@ -113,7 +113,7 @@ function CreateOwnerDrawListBox(dwStyle: DWORD; hwndParent: HWND): HWND;
 function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function EnumerateLinesInFile_old(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
-procedure UnableToFindFileMessage(FileName: PChar);
+procedure UnableToFindFileMessage(FileName: PAnsiChar);
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
@@ -123,7 +123,7 @@ function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 function GetDialogItemText(h: HWND; Control: integer): ShortString;
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
 procedure tLoadKeyboardLayout;
-function StrComp_JOH_IA32_6(const Str1, Str2: PChar): integer;
+function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
 function GetContestFromString(ContestString: ShortString): ContestType;
 function STToInt64(St: SYSTEMTIME): int64;
 function RealToStr(Num: REAL): string;
@@ -252,7 +252,7 @@ function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer; ext
 
 function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer; external user32 Name 'wsprintfA';
 function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar): integer; external user32 Name 'wsprintfA';
-function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar; p5: pChar): integer; external user32 Name 'wsprintfA';
+function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; p4: PAnsiChar; p5: PAnsiChar): integer; external user32 Name 'wsprintfA';
 function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar): integer; external user32 Name 'wsprintfA';
 function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer): integer; external user32 Name 'wsprintfA';
 function Format(Output: PAnsiChar; Format: PAnsiChar; p: PAnsiChar; P2: PAnsiChar; p3: PAnsiChar; i: integer; i2: integer): integer; external user32 Name 'wsprintfA';
@@ -605,7 +605,7 @@ begin
   i := 0;
   sign := Val < 0;
   repeat
-    d[i] := CHR(Abs(Val mod 10) + Ord('0'));
+    d[i] := AnsiChar(Abs(Val mod 10) + Ord('0'));
     inc(i);
     Val := Val div 10;
   until Val = 0;
@@ -725,7 +725,7 @@ begin
   Result := uFreqTimeFormat.SystemTimeToString(SysTime);
 end;
 
-function StrComp_JOH_IA32_6(const Str1, Str2: PChar): integer;
+function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
 begin
   // Issue #997: extracted to uStrSearch (golden-master tested).
   Result := uStrSearch.StrComp_JOH_IA32_6(Str1, Str2);
@@ -885,7 +885,7 @@ begin
     p := PCharArrayAddress + (b * 4);
     p := Pointer(p^);
 //    showmessage(p);
-    if StrComp(@CMD[1], p) = 0 then
+    if StrComp(PAnsiChar(@CMD[1]), PAnsiChar(p)) = 0 then
     begin
       Result := b;
       Exit;
@@ -936,7 +936,7 @@ begin
   Result := GetDateFormatBuffer;
 end;
 
-procedure UnableToFindFileMessage(FileName: PChar);
+procedure UnableToFindFileMessage(FileName: PAnsiChar);
 begin
   Format(wsprintfBuffer, '%s'#13#13'%s', SysErrorMessage(GetLastError), FileName);
 
@@ -1438,7 +1438,7 @@ begin
         if LineSize > 0 then
         begin
           Windows.ZeroMemory(@TempString, SizeOf(TempString));
-          TempString[0] := CHR(LineSize);
+          TempString[0] := AnsiChar(LineSize);
           Windows.CopyMemory(@TempString[1], @MapBase[StartPos], LineSize);
           if UpperCase then strU(TempString);
           //logger.debug('[TF.EnumerateLinesInFile] Reading config line %s',[TempString]);
@@ -1529,7 +1529,7 @@ begin
         if LineSize > 0 then
         begin
           Windows.ZeroMemory(@TempString, SizeOf(TempString));
-          TempString[0] := CHR(LineSize);
+          TempString[0] := AnsiChar(LineSize);
           Windows.CopyMemory(@TempString[1], @MapBase[StartPos], LineSize);
           if UpperCase then strU(TempString);
           Func(@TempString);

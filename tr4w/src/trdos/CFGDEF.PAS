@@ -380,7 +380,7 @@ begin
   {
     Radio1.CommandPause := 0;
     Radio1.FT1000MPCWReverse := False;
-    Radio1.IDCharacter := CHR(0);
+    Radio1.IDCharacter := #0;
     Radio1.PollTimeout := 500; // one half second
     Radio1.RadioBaudRate := 4800;
     Radio1.RadioModel := NoInterfacedRadio;
@@ -398,7 +398,7 @@ begin
      //   radio2.FilterRadioMessageLength := False;
 
     Radio2.FT1000MPCWReverse := False;
-    Radio2.IDCharacter := CHR(0);
+    Radio2.IDCharacter := #0;
     Radio2.PollTimeout := 500; // one half second
 
     Radio2.RadioBaudRate := 4800;

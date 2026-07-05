@@ -181,7 +181,6 @@ uses
   //uMultsFrequencies in 'src\uMultsFrequencies.pas',
   uMakeHelpFile in 'src\uMakeHelpFile.pas',
   uTrayBalloon in 'src\uTrayBalloon.pas',
-  uVariants in 'src\uVariants.pas',
   uPOTAParks in 'src\uPOTAParks.pas',
   uPendingCounties in 'src\uPendingCounties.pas',
   uCTYUpdate in 'src\uCTYUpdate.pas';
@@ -413,12 +412,12 @@ begin
       if wParam = 1 then
          begin
          if LoadPOTAParks(POTAParksFilePath) > 0 then
-            QuickDisplay(PChar('POTA parks loaded'))
+            QuickDisplay(PAnsiChar('POTA parks loaded'))
          else
-            QuickDisplay(PChar('POTA parks file could not be loaded'));
+            QuickDisplay(PAnsiChar('POTA parks file could not be loaded'));
          end
       else
-         QuickDisplay(PChar('POTA parks download failed'));
+         QuickDisplay(PAnsiChar('POTA parks download failed'));
       end;
 
     WM_POTA_LOAD_DONE:
@@ -444,15 +443,15 @@ begin
       begin
       if wParam = 1 then
          begin
-         QuickDisplay(PChar('CTY.DAT downloaded. Reloading...'));
+         QuickDisplay(PAnsiChar('CTY.DAT downloaded. Reloading...'));
          // Reload on main thread — CTY tables have no locking, so background
          // reload would race with callsign lookups. Message handler is a safe
          // quiescent point.
          ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
-         QuickDisplay(PChar('CTY.DAT reloaded successfully.'));
+         QuickDisplay(PAnsiChar('CTY.DAT reloaded successfully.'));
          end
       else
-         QuickDisplay(PChar('CTY.DAT download failed.'));
+         QuickDisplay(PAnsiChar('CTY.DAT download failed.'));
       end;
 
     WM_CTLCOLORLISTBOX, WM_CTLCOLOREDIT, WM_CTLCOLORSTATIC:
@@ -874,7 +873,7 @@ begin
 {$IF not tDebugMode}
   Windows.CopyMemory(@TR4W_LATESTCFG_FILENAME, @TR4W_CFG_FILENAME, SizeOf(FileNameType));
 //  Windows.CharLower(TR4W_LATESTCFG_FILENAME);
-  Windows.WritePrivateProfileString(_COMMANDS, LATEST_CONFIG_FILE, TR4W_LATESTCFG_FILENAME, TR4W_INI_FILENAME);
+  Windows.WritePrivateProfileStringA(_COMMANDS, LATEST_CONFIG_FILE, TR4W_LATESTCFG_FILENAME, TR4W_INI_FILENAME);
 {$IFEND}
 
 {$IF NEWER_DEBUG}
