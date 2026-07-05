@@ -91,7 +91,7 @@ begin
    // (CheckDupe=False, LoadRemainingMults=False) -- the country/continent/
    // zone tables come from the main parse; remaining-mults data is not
    // needed for entity lookups and avoids extra file dependencies.
-   CheckTrue(ctyLoadInCountryFile(PChar(path), False, False),
+   CheckTrue(ctyLoadInCountryFile(PAnsiChar(AnsiString(path)), False, False),
              'ctyLoadInCountryFile succeeded');
    FLoaded := True;
 end;

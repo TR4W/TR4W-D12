@@ -137,11 +137,11 @@ procedure strU(var Str: ShortString);
 procedure SetMainWindowText(Window: TMainWindowElement; Text: PAnsiChar);
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 
-function ValExt(Source: PChar; var code: integer): extended;
+function ValExt(Source: PAnsiChar; var code: integer): extended;
 
 function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean = False): THandle;
 
-//function tgethostbyname(h_Name: PChar): PChar;
+//function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
 function tDialogBox(WindowID: Byte; WinProcAdr: Pointer): integer;
 function tWM_SETFONT(h: HWND; Font: HFONT): HWND;
 procedure tLB_SETCOLUMNWIDTH(h: HWND; Width: integer);
@@ -699,7 +699,7 @@ begin
   Result := round(Result / 10000);
 end;
 {
-function tgethostbyname(h_Name: PChar): PChar;
+function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
 var
   myhostent                        : Phostent;
 begin
@@ -1192,7 +1192,7 @@ end;
 // (precision, the `code` semantics, leading/trailing whitespace) needs a
 // dedicated golden harness, and a lat/lon parse regression silently corrupts
 // beam-heading/distance math.
-function ValExt(Source: PChar; var code: integer): extended;
+function ValExt(Source: PAnsiChar; var code: integer): extended;
 //function _ValExt( s: AnsiString; VAR code: Integer ) : Extended;
 //procedure _ValExt;
 asm

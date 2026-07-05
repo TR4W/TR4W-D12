@@ -1510,7 +1510,7 @@ begin
          if true then //not (nNumberOfBytesToWrite in [3,6,7]) then
             begin
             logger.trace('>>>>Enter WriteToCATPort');
-            SetString(debugStr,PChar(@Buffer),nNumberOfBytesToWrite);
+            SetString(debugStr,PAnsiChar(@Buffer),nNumberOfBytesToWrite);
             nLen := nNumberOfBytesToWrite; //Ord(Buffer[0]);
             if Self.RadioModel in IcomRadios then
                begin
@@ -2306,7 +2306,7 @@ begin
    // TLogger.GetInstance.Debug('Entering AddCommandToBuffer');
    if not PollingEnable then
       begin
-      WriteToCATPort(PChar(@CommandsTempBuffer[1])^, Ord(CommandsTempBuffer[0]) - 1);
+      WriteToCATPort(PAnsiChar(@CommandsTempBuffer[1])^, Ord(CommandsTempBuffer[0]) - 1);
       // TLogger.GetInstance.Debug('Entering sleep(250)');
       Sleep(250);
       // TLogger.GetInstance.Debug('Returning from sleep(250)');

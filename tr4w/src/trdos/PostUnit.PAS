@@ -2317,7 +2317,7 @@ var
   nrSent                                : integer;
   //tempcategoryoperator                  : tcategoryoperator;
 
-  T4                                    : PChar;      // 4.73.6
+  T4                                    : PAnsiChar;      // 4.73.6
   sFirstPart                            : string;     // Issue #998: replaces CABRILLO_FIRST_PART
   sPrefix                               : string;     // Issue #998: QSO:/X-QSO: line prefix
   sFmt                                  : string;     // Issue #998: assembly format string
@@ -2941,7 +2941,7 @@ var
   FirstQSO                              : boolean;
   QSONumber, NumberBandChanges, NumberTwoXmtrQSOs, LastBandChangeQSO: integer;
   FileWrite                             : HWND;
-  sr                                    : PChar;
+  sr                                    : PAnsiChar;
 begin
   if not OpenLogFile then Exit;
   MakeReportFileName('BandChange.txt');

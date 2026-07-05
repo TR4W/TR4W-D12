@@ -231,7 +231,7 @@ type
 //  RemainingDXMultTemplatePointer = ^RemainingDXMultTemplateType;
 
 function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
-//function ctyInit(ctyFilename: PChar): boolean;
+//function ctyInit(ctyFilename: PAnsiChar): boolean;
 function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
 function ctyFindCallsign(const s: PAnsiChar; var Index: integer): boolean;
 function ctyGetGrid(Call: CallString; var ID: DXMultiplierString): GridString;
@@ -295,7 +295,7 @@ function ctyDbgFmt(Output: PChar; Format: PChar; i1: integer; s: PChar; i2: inte
 
 // Lifted from TF.PCharToInt: parse a leading (optionally '-') integer from a
 // PChar, stopping at the first non-digit.
-function PCharToInt(p: PChar): integer;
+function PCharToInt(p: PAnsiChar): integer;
 label
   1, 2;
 var
@@ -774,7 +774,7 @@ begin
   Index := l;
 end;
 {
-function ctyInit(ctyFilename: PChar): boolean;
+function ctyInit(ctyFilename: PAnsiChar): boolean;
 begin
   Result := False;
   if ctyLoadInCountryFile(ctyFilename) then

@@ -95,7 +95,13 @@ implementation
 
 procedure Unpack(const AData: TIdBytes; var index: Integer; var AValue: LongInt);
 begin
-  AValue := {GStack.HostToNetwork}htonl(BytesToLongInt(AData, index));
+  // D12 {$R+}: BytesToLongInt (IdGlobal) returns a signed Integer, which for a
+  // high-bit value (e.g. WSJT-X magic $ADBCCBDA) is NEGATIVE.  Passing that to
+  // htonl's unsigned u_long (Cardinal) parameter range-checks, and assigning the
+  // unsigned result back to a signed LongInt range-checks too.  Hard-cast both
+  // ends to keep the bit pattern (what callers compare against, e.g. uWSJTX:
+  // magic = LongInt($ADBCCBDA)).  In D7 htonl was already signed, so neither hit.
+  AValue := LongInt({GStack.HostToNetwork}htonl(Cardinal(BytesToLongInt(AData, index))));
   index := index + SizeOf(AValue);
 end;
 
@@ -134,7 +140,9 @@ end;
 
 procedure Unpack(const AData: TIdBytes; var index: Integer; var AValue: Longword);
 begin
-  AValue := Longword({GStack.HostToNetwork}htonl(BytesToLongInt(AData, index)));
+  // Same D12 {$R+} guard as the LongInt overload: cast the signed Integer from
+  // BytesToLongInt to Cardinal before htonl's unsigned parameter.
+  AValue := Longword({GStack.HostToNetwork}htonl(Cardinal(BytesToLongInt(AData, index))));
   index := index + SizeOf(AValue);
 end;
 

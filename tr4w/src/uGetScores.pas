@@ -169,7 +169,7 @@ begin
       http.Request.UserAgent    := TR4W_CURRENTVERSION;
       http.Request.ContentType  := 'application/x-www-form-urlencoded';
 
-      PostBody := TStringStream.Create(string(PChar(@GetScoresBuffer)));
+      PostBody := TStringStream.Create(string(PAnsiChar(@GetScoresBuffer)));
       try
          logger.Debug('Score post: URL = %s', [sURL]);
          http.Post(sURL, PostBody);
@@ -250,13 +250,13 @@ end;
 
 function MakePOSTRequest: integer;
 var
-  pContest                              : PChar;
-  pCall                                 : PChar;
+  pContest                              : PAnsiChar;
+  pCall                                 : PAnsiChar;
   stored                                : integer;
   TempBand                              : BandType;
   TempMode                              : ModeType;
   m                                     : RemainingMultiplierType;
-  BandPchar                             : PChar;
+  BandPchar                             : PAnsiChar;
 const
   GetScoresMults                        : array[RemainingMultiplierType] of PAnsiChar = (nil, 'state', 'country', 'zone', 'prefix');
   GetScoresModesArray                   : array[ModeType] of PAnsiChar = ('CW', 'DIG', 'PH', 'ALL', nil, nil);

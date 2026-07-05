@@ -2997,7 +2997,7 @@ var
    i, lpNumberOfBytesWritten: Cardinal;
    P1: PAnsiChar;
    tChar: AnsiChar;
-   bgColor: PChar;
+   bgColor: PAnsiChar;
    h: HWND;
 
 const
@@ -4431,7 +4431,7 @@ end;
 function ArrayToString(const a: array of AnsiChar): string;
 begin
   if Length(a)>0 then
-    SetString(Result, PChar(@a[0]), Length(a))
+    SetString(Result, PAnsiChar(@a[0]), Length(a))
   else
     Result := '';
 end;

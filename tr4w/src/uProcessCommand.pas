@@ -58,7 +58,7 @@ type
 
   type
   TsCWCharsArrayType = packed record
-    CWChars: PChar;
+    CWChars: PAnsiChar;
     CWAddress: Pointer;
   end;
   

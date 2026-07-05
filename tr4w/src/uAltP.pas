@@ -42,7 +42,7 @@ type
 
   TOtherShortMessageType = packed record
     osmCommand: PAnsiChar;
-    osmMessage: PChar;
+    osmMessage: PAnsiChar;
   end;
 
 function AltPDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
