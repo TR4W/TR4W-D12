@@ -12,3 +12,8 @@
 !*.ADI
 !*.cbr
 !*.CBR
+
+# D12 candidate exports are transient golden_diff inputs, regenerated each
+# run from the D12 build -- outputs to compare, not fixtures to track.
+cand.adi
+cand.cbr

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# run-golden-diff.sh
+#
+# The CENTRAL Phase-1 check: for every corpus set that has a D12 candidate
+# export (cand.adi / cand.cbr), byte-diff it against the frozen D7 reference
+# (ref.adi / ref.cbr) via golden_diff.py, which normalizes only the version
+# string + export timestamp.  A PASS means D12 reproduces D7 output exactly.
+#
+# Populate candidates first, e.g.:
+#   bash tr4w/test/corpus/import-candidate.sh "/c/radio/TR4w/2026 ARRL-FD NY4I" arrl_fd_2026_ny4i
+GD="tr4w/test/python/golden_diff.py"
+pass=0; fail=0; skip=0
+for d in tr4w/test/corpus/*/; do
+   slug=$(basename "$d")
+   for kind in adi cbr; do
+      ref="${d}ref.$kind"; cand="${d}cand.$kind"
+      [ -f "$ref" ] || continue
+      if [ ! -f "$cand" ]; then
+         printf '  ....  %-26s %-3s (no D12 candidate yet)\n' "$slug" "$kind"
+         skip=$((skip+1)); continue
+      fi
+      if out=$(python "$GD" "$ref" "$cand" 2>&1); then
+         printf '  PASS  %-26s %s\n' "$slug" "$kind"; pass=$((pass+1))
+      else
+         printf '  FAIL  %-26s %s\n' "$slug" "$kind"
+         echo "$out" | grep -E '^[-+@]' | head -8 | sed 's/^/        /'
+         fail=$((fail+1))
+      fi
+   done
+done
+echo "=== $pass passed, $fail failed, $skip awaiting-candidate ==="
+[ "$fail" -eq 0 ]

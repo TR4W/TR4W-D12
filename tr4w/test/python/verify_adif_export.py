@@ -5,8 +5,9 @@ TR4W ADIF Export Verifier (Phase 1)
 Cross-checks the ADIF file produced by TR4W's File -> Export to ADIF against
 the canonical binary log (.TRW) file.  Verifies the fields that come from
 the ContestExchange record itself; the contest-specific tail fields
-(STX_STRING, CNTY, CQZ, STATION_CALLSIGN, MY_POTA_REF, CLASS) depend on
-MainUnit globals and are out of scope for Phase 1.
+(STATE, ARRL_SECT, STX_STRING, CNTY, CQZ, STATION_CALLSIGN, MY_POTA_REF,
+CLASS) depend on contest tables / MainUnit globals and are out of scope
+for Phase 1 -- they are verified instead by the D7<->D12 byte diff.
 
 Pipeline:
     log.TRW  --[ logdump.exe ]-->  records.jsonl
@@ -384,13 +385,20 @@ def cross_check(log_records, adif_records):
         if log["TenTenNum"] not in (0, 65535):
             chk.expect_int(i, "TEN_TEN", log["TenTenNum"], adif.get("TEN_TEN"))
 
-        # QTH / STATE -- QTH is always emitted when QTHString is non-empty.
-        # STATE is emitted when QTHString is a 2-letter postal code.
+        # QTH -- always emitted when QTHString is non-empty (record-derived).
         if log["QTHString"]:
             chk.expect(i, "QTH", log["QTHString"], adif.get("QTH"))
-            qs = log["QTHString"]
-            if len(qs) == 2 and not any(c.isdigit() for c in qs):
-                chk.expect(i, "STATE", qs, adif.get("STATE"))
+
+        # STATE is deliberately NOT checked here.  uADIF emits STATE only for
+        # the 13 single-state QSO parties (GetStateForContest -> the HOST
+        # state, e.g. Michigan QP => 'MI' for every QSO -- NOT the worked
+        # station's QTHString); every other contest emits no base STATE, and
+        # Field-Day section->state is added by the PostUnit tail (MainUnit
+        # globals).  A "2-letter QTHString => STATE" heuristic mislabels
+        # section-based contests -- ARRL section 'EB' is not the state 'EB'
+        # (uADIF.pas:1342, Issue #1050).  STATE is thus a contest-specific /
+        # tail field, out of scope for record-level self-consistency and
+        # covered exactly by the D7<->D12 byte-diff tier.
 
     print(f"  {chk.checks} field comparisons performed.")
     return chk.report()
