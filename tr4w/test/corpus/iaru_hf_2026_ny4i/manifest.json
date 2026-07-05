@@ -1,0 +1,13 @@
+{
+  "slug": "iaru_hf_2026_ny4i",
+  "source_dir": "/c/radio/TR4w/2026 IARU-HF NY4I",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 2,
+  "claimed_score": "12",
+  "orig": {
+    "log": "IARU-HF.TRW",
+    "cfg": "IARU-HF.CFG",
+    "adi": "IARU-HF.ADI",
+    "cbr": "NY4I.LOG"
+  }
+}

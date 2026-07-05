@@ -1,0 +1,13 @@
+{
+  "slug": "arrl_dx_cw_2025_ny4i",
+  "source_dir": "/c/radio/TR4w/2025 ARRL-DX-CW NY4I",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 66,
+  "claimed_score": "12474",
+  "orig": {
+    "log": "ARRL-DX-CW.TRW",
+    "cfg": "ARRL-DX-CW.CFG",
+    "adi": "ARRL-DX-CW.ADI",
+    "cbr": "NY4I.LOG"
+  }
+}

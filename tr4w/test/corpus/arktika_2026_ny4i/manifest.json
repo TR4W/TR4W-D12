@@ -1,0 +1,13 @@
+{
+  "slug": "arktika_2026_ny4i",
+  "source_dir": "/c/radio/TR4w/2026 ARKTIKA-SPRING NY4I",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 1,
+  "claimed_score": "0",
+  "orig": {
+    "log": "ARKTIKA-SPRING.TRW",
+    "cfg": "ARKTIKA-SPRING.CFG",
+    "adi": "ARKTIKA-SPRING.ADI",
+    "cbr": "NY4I.LOG"
+  }
+}

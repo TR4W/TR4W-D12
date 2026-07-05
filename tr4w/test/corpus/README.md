@@ -63,7 +63,12 @@ Ground truth is the log record, read by `../logdump/logdump.exe` (canonical `Con
 | `winter_fd_2025_w4ta` | Winter Field Day (W4TA) | **volume stress**, multi-op | 1316 | 42364 |
 | `cqww_ssb_2025_ny4i` | CQ WW SSB | **zone / DXCC mults** | 101 | 30912 |
 | `arrl_ss_ssb_2024_w4ta` | ARRL Sweepstakes SSB | full serial+prec+**check+section** | 206 | 30192 |
+| `arrl_dx_cw_2025_ny4i` | ARRL DX CW | **asymmetric** exchange (state/pwr ↔ DXCC) | 66 | 12474 |
+| `iaru_hf_2026_ny4i` | IARU HF | ITU-zone / HQ mults | 2 | 12 |
+| `na_sprint_cw_2026_ny4i` | NA Sprint CW | sprint (num + name + state) | 2 | 4 |
+| `arktika_2026_ny4i` | Arktika Spring | international contest | 1 | 0 |
 
-Gaps still worth adding (distinct engine paths, when regenerated at v4.149): ARRL-DX-CW
-(asymmetric exchange: state/pwr ↔ DXCC), IARU-HF (HQ/zone), NA-Sprint-CW (sprint format),
-an international/Cyrillic contest (Unicode path — e.g. ARKTIKA / AS-CHAMP).
+The major distinct engine paths are now covered. Note: every ref exports as **pure
+ASCII** — even ARKTIKA (a Russian contest) has 0 non-ASCII bytes. Contest log data
+(calls/zones/sections/RST) does not exercise the UTF-16 path; that risk lives in config
+parsing + UI strings and needs its own coverage, not this log oracle.
