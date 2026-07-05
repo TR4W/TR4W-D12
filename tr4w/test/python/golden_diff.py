@@ -1,35 +1,35 @@
 #!/usr/bin/env python3
 """
-TR4W golden-master diff (D7 vs D12) -- the CENTRAL Phase-1 oracle.
+TR4W golden-master check (D7 vs D12) -- two gates, per NY4I's guidance.
 
-The D7 export is ground truth.  The one question that matters for the D12
-port is: does the D12 build's .adi / .cbr match the D7 reference
-BYTE-FOR-BYTE, after normalizing away the only legitimately volatile bits
-(program version string + export timestamp)?  A passing diff means the
-whole pipeline -- record read, field derivation, exchange formatting,
-score summation, tag ordering, spacing, line endings -- is unchanged.
-Any real difference (a changed field, a dropped QSO, a scoring delta)
-shows up in the diff without modeling a single contest rule.
+These files exist to be CONSUMED: Cabrillo goes to contest sponsors, ADIF
+goes to other loggers.  Both must be plain ASCII, and the log-derived
+records must be reproduced exactly by the D12 build.  So we run two gates:
 
-Volatile surface (normalized to a placeholder in BOTH files, nothing else):
-  ADIF     - "Created by TR4W version <ver> on <timestamp>" comment line
-           - <CREATED_TIMESTAMP:NN>VALUE          (export time)
-           - <PROGRAMVERSION:NN>VALUE             (version; NN also shifts)
-  Cabrillo - "CREATED-BY: <ver>" line
+  1. VALIDITY (the file's purpose): is it well-formed 7-bit ASCII, no NUL /
+     control bytes?  This catches D12 wide-string ("UTF-16 written as bytes")
+     corruption -- e.g. END-OF-LOG emitted as 45 00 4E 00 ... -- with no
+     reference at all.  A sponsor's robot / an ADIF importer would choke on it.
 
-Files are read as latin-1 (byte-preserving) so CRLF/LF and any stray
-high-bit byte differences remain visible -- they are signal, not noise.
+  2. FIDELITY (D7 == D12): do the log-derived records match byte-for-byte?
+       ADIF     - whole file minus the volatile header bits (version +
+                  export timestamp).  ADIF_VER / PROGRAMID stay as signal.
+       Cabrillo - ONLY the QSO: / X-QSO: records.  The header is entrant /
+                  settings metadata (CATEGORY-*, OPERATORS, ADDRESS, ...) that
+                  legitimately varies between exports, so it is ignored
+                  ("ignore the header; the QSO/X-QSO records should be the
+                  same" -- NY4I).
+
+Files are read latin-1 (byte-preserving) so NUL/CRLF/high-bit stay visible.
 
 Usage:
-    golden_diff.py <ref_file> <candidate_file>        # diff one pair
-    golden_diff.py --selftest <corpus_dir>            # validate the
-                                                        normalizer on the
-                                                        D7 refs (no D12
-                                                        export needed)
+    golden_diff.py <ref_file> <candidate_file>
+    golden_diff.py --selftest <corpus_dir>
 Exit codes:
-    0  identical after normalization  (or all self-tests passed)
-    1  differences found              (or a self-test failed)
+    0  valid AND identical (or all self-tests passed)
+    1  fidelity differences
     2  usage / file error
+    3  validity failure (non-ASCII / corruption)
 """
 
 import argparse
@@ -41,6 +41,30 @@ from pathlib import Path
 PLACEHOLDER = "<NORMALIZED>"
 
 
+# --- gate 1: validity -------------------------------------------------------
+
+def check_ascii_clean(text):
+    """Return (ok, offset, byte, kind).  NUL and non-tab/CR/LF control bytes
+    are hard failures (the wide-write corruption signature); a high-bit byte
+    (>=0x80) is also flagged since sponsors/Cabrillo want ASCII."""
+    for i, ch in enumerate(text):
+        c = ord(ch)
+        if c == 0:
+            return False, i, c, "NUL byte (wide-string-as-bytes corruption)"
+        if c < 0x20 and c not in (0x09, 0x0A, 0x0D):
+            return False, i, c, "control byte"
+        if c >= 0x80:
+            return False, i, c, "non-ASCII byte (sponsors/importers want ASCII)"
+    return True, -1, -1, ""
+
+
+def _context(text, offset, span=30):
+    lo, hi = max(0, offset - span), min(len(text), offset + span)
+    return text[lo:hi].replace("\r", "\\r").replace("\n", "\\n").replace("\0", "\\0")
+
+
+# --- gate 2: fidelity -------------------------------------------------------
+
 def normalize_adif(text):
     text = re.sub(r"Created by TR4W version [^\r\n]*",
                   "Created by TR4W version " + PLACEHOLDER, text)
@@ -51,8 +75,15 @@ def normalize_adif(text):
     return text
 
 
-def normalize_cabrillo(text):
-    return re.sub(r"CREATED-BY:[^\r\n]*", "CREATED-BY: " + PLACEHOLDER, text)
+def cabrillo_records(text):
+    """Keep only QSO: / X-QSO: lines -- the records a sponsor scores.  The
+    header varies with entrant settings and is intentionally dropped."""
+    out = []
+    for line in text.splitlines():
+        u = line.lstrip().upper()
+        if u.startswith("QSO:") or u.startswith("X-QSO:"):
+            out.append(line)
+    return "\n".join(out)
 
 
 def kind_for(path):
@@ -61,44 +92,53 @@ def kind_for(path):
         return "adif"
     if ext in (".cbr", ".log"):
         return "cabrillo"
-    # Fall back on content sniff.
     head = Path(path).read_text(encoding="latin-1")[:64]
     return "cabrillo" if head.startswith("START-OF-LOG") else "adif"
 
 
-def normalize(path, text):
+def fidelity_view(path, text):
     return normalize_adif(text) if kind_for(path) == "adif" \
-        else normalize_cabrillo(text)
+        else cabrillo_records(text)
 
 
 def read_latin1(path):
     return Path(path).read_bytes().decode("latin-1")
 
 
-def diff_pair(ref_path, cand_path):
-    """Return (identical, unified_diff_text)."""
-    ref_n = normalize(ref_path, read_latin1(ref_path))
-    cand_n = normalize(cand_path, read_latin1(cand_path))
-    if ref_n == cand_n:
-        return True, ""
-    diff = difflib.unified_diff(
-        ref_n.splitlines(keepends=True),
-        cand_n.splitlines(keepends=True),
-        fromfile=f"D7-ref  {Path(ref_path).name}",
-        tofile=f"D12-cand {Path(cand_path).name}",
-        n=2,
-    )
-    return False, "".join(diff)
+# --- driver -----------------------------------------------------------------
+
+def check_pair(ref_path, cand_path):
+    """Return (validity_ok, fidelity_ok, report_text)."""
+    ref = read_latin1(ref_path)
+    cand = read_latin1(cand_path)
+    lines = []
+
+    # Gate 1 -- validity of the candidate (the D12 output under scrutiny).
+    v_ok, off, byte, kind = check_ascii_clean(cand)
+    if not v_ok:
+        lines.append(
+            f"VALIDITY FAIL: {kind} 0x{byte:02x} at offset {off}\n"
+            f"    ...{_context(cand, off)}...")
+
+    # Gate 2 -- fidelity of the log-derived records.
+    ref_v = fidelity_view(ref_path, ref)
+    cand_v = fidelity_view(cand_path, cand)
+    f_ok = ref_v == cand_v
+    if not f_ok:
+        scope = "QSO/X-QSO records" if kind_for(ref_path) == "cabrillo" \
+            else "records (header normalized)"
+        lines.append(f"FIDELITY FAIL: {scope} differ:")
+        lines.append("".join(difflib.unified_diff(
+            ref_v.splitlines(keepends=True), cand_v.splitlines(keepends=True),
+            fromfile=f"D7-ref  {Path(ref_path).name}",
+            tofile=f"D12-cand {Path(cand_path).name}", n=2)))
+
+    return v_ok, f_ok, "\n".join(lines)
 
 
-# ---------------------------------------------------------------------------
-# Self-test: prove the normalizer absorbs EXACTLY version+timestamp and
-# nothing else, using only the D7 references (no D12 export required).
-# ---------------------------------------------------------------------------
+# --- self-test --------------------------------------------------------------
 
 def _fake_other_build(text, kind):
-    """Simulate the same log exported by a different build at a different
-    time: rewrite version + timestamp only."""
     t = text.replace("4.149.0", "4.201.3")
     if kind == "adif":
         t = t.replace("20260705 141459", "20250101 000000")
@@ -107,83 +147,68 @@ def _fake_other_build(text, kind):
     return t
 
 
-def _mutate_body(text, kind):
-    """Change one byte of actual QSO content (after the header) so a real
-    difference MUST be detected."""
-    if kind == "adif":
-        marker = "<EOH>"
-        idx = text.upper().find(marker)
-        cut = idx + len(marker) if idx >= 0 else 0
-    else:
-        cut = text.find("QSO:")
-        cut = cut if cut >= 0 else 0
+def _mutate_record(text, kind):
+    """Change one byte of an actual QSO record so fidelity MUST fail."""
+    anchor = ("QSO:" if kind == "cabrillo" else "<EOH>")
+    idx = text.upper().find(anchor)
+    cut = idx + len(anchor) if idx >= 0 else 0
     head, body = text[:cut], text[cut:]
-    # Flip the first ASCII letter in the body to a digit-safe different letter.
     for i, ch in enumerate(body):
         if ch.isalpha():
-            repl = "Z" if ch.upper() != "Z" else "Q"
-            return head + body[:i] + repl + body[i + 1:]
-    return text  # nothing to mutate (shouldn't happen)
+            return head + body[:i] + ("Z" if ch.upper() != "Z" else "Q") + body[i + 1:]
+    return text
 
 
 def selftest(corpus_dir):
-    d = Path(corpus_dir)
-    refs = sorted(list(d.glob("*/ref.adi")) + list(d.glob("*/ref.cbr")))
+    refs = sorted(list(Path(corpus_dir).glob("*/ref.adi"))
+                  + list(Path(corpus_dir).glob("*/ref.cbr")))
     if not refs:
         sys.stderr.write(f"no ref.adi/ref.cbr under {corpus_dir}\n")
         return 2
-    failures = 0
+    fails = 0
     for ref in refs:
         kind = kind_for(ref)
         orig = read_latin1(ref)
-        norm = normalize(ref, orig)
+        view = fidelity_view(ref, orig)
 
-        # B: version/timestamp invariance -- must normalize equal.
-        fake = _fake_other_build(orig, kind)
-        assert fake != orig, f"fixture unchanged for {ref}"
-        b_ok = normalize(ref, fake) == norm
-
-        # C: content sensitivity -- must normalize UNequal.
-        mut = _mutate_body(orig, kind)
-        c_ok = (mut != orig) and (normalize(ref, mut) != norm)
+        # validity: clean ref passes; a NUL injected into it fails.
+        clean = check_ascii_clean(orig)[0]
+        corrupt = not check_ascii_clean(orig[:20] + "\0" + orig[20:])[0]
+        # fidelity: version/timestamp change stays equal; record change differs.
+        inv = fidelity_view(ref, _fake_other_build(orig, kind)) == view
+        sens = fidelity_view(ref, _mutate_record(orig, kind)) != view
 
         tag = f"{ref.parent.name}/{ref.name}"
-        if b_ok and c_ok:
-            print(f"  OK    {tag:<34} (version-invariant + content-sensitive)")
+        if clean and corrupt and inv and sens:
+            print(f"  OK    {tag:<34} (valid + version-invariant + record-sensitive)")
         else:
-            failures += 1
-            why = []
-            if not b_ok:
-                why.append("version/timestamp NOT absorbed")
-            if not c_ok:
-                why.append("content change NOT detected")
-            print(f"  FAIL  {tag:<34} {'; '.join(why)}")
-    print(f"\n{len(refs) - failures}/{len(refs)} self-tests passed.")
-    return 0 if failures == 0 else 1
+            fails += 1
+            bad = [n for n, ok in (("valid-clean", clean), ("catches-NUL", corrupt),
+                                   ("version-invariant", inv), ("record-sensitive", sens)) if not ok]
+            print(f"  FAIL  {tag:<34} {', '.join(bad)}")
+    print(f"\n{len(refs) - fails}/{len(refs)} self-tests passed.")
+    return 0 if fails == 0 else 1
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.strip().splitlines()[0])
     ap.add_argument("a", help="ref file, OR corpus dir with --selftest")
     ap.add_argument("b", nargs="?", help="candidate file")
-    ap.add_argument("--selftest", action="store_true",
-                    help="validate the normalizer against the D7 refs")
+    ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args()
 
     if args.selftest:
         sys.exit(selftest(args.a))
-
     if not args.b:
         sys.stderr.write("need two files (or --selftest <dir>)\n")
         sys.exit(2)
 
-    identical, diff = diff_pair(args.a, args.b)
-    if identical:
-        print(f"IDENTICAL (after normalization): {Path(args.a).name}")
+    v_ok, f_ok, report = check_pair(args.a, args.b)
+    if v_ok and f_ok:
+        print(f"PASS: {Path(args.a).name} -- valid ASCII and records identical.")
         sys.exit(0)
-    sys.stdout.write(diff)
-    sys.stderr.write(f"\nDIFFERENCES found in {Path(args.a).name}\n")
-    sys.exit(1)
+    sys.stdout.write(report + "\n")
+    sys.exit(3 if not v_ok else 1)
 
 
 if __name__ == "__main__":
