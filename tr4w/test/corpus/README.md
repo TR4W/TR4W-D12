@@ -61,7 +61,9 @@ Ground truth is the log record, read by `../logdump/logdump.exe` (canonical `Con
 | `general_qso_2026_w1aw4` | General QSO (W1AW/4) | plain logging | 79 | 79 |
 | `michigan_qp_2026_ny4i` | Michigan QSO Party | county/state | 4 | 32 |
 | `winter_fd_2025_w4ta` | Winter Field Day (W4TA) | **volume stress**, multi-op | 1316 | 42364 |
+| `cqww_ssb_2025_ny4i` | CQ WW SSB | **zone / DXCC mults** | 101 | 30912 |
+| `arrl_ss_ssb_2024_w4ta` | ARRL Sweepstakes SSB | full serial+prec+**check+section** | 206 | 30192 |
 
-Gaps still worth adding (distinct engine paths, when regenerated at v4.149): CQ-WW-CW
-(zones), ARRL-DX-CW (asymmetric exchange), IARU-HF (HQ/zone), ARRL-SS-CW (full
-serial+prec+check+section), NA-Sprint-CW, an international/Cyrillic contest (Unicode path).
+Gaps still worth adding (distinct engine paths, when regenerated at v4.149): ARRL-DX-CW
+(asymmetric exchange: state/pwr ↔ DXCC), IARU-HF (HQ/zone), NA-Sprint-CW (sprint format),
+an international/Cyrillic contest (Unicode path — e.g. ARKTIKA / AS-CHAMP).
