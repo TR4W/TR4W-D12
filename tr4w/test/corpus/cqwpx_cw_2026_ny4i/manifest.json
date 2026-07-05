@@ -1,0 +1,13 @@
+{
+  "slug": "cqwpx_cw_2026_ny4i",
+  "source_dir": "/c/radio/TR4w/2026 CQ-WPX-CW NY4I",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 6,
+  "claimed_score": "78",
+  "orig": {
+    "log": "CQ-WPX-CW.TRW",
+    "cfg": "CQ-WPX-CW.CFG",
+    "adi": "CQ-WPX-CW.ADI",
+    "cbr": "NY4I.LOG"
+  }
+}

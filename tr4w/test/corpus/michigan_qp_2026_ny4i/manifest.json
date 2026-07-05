@@ -1,0 +1,13 @@
+{
+  "slug": "michigan_qp_2026_ny4i",
+  "source_dir": "/c/radio/TR4w/2026 MICHIGAN QSO PARTY NY4I",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 4,
+  "claimed_score": "32",
+  "orig": {
+    "log": "MICHIGAN QSO PARTY.TRW",
+    "cfg": "MICHIGAN QSO PARTY.CFG",
+    "adi": "MICHIGAN QSO PARTY.ADI",
+    "cbr": "NY4I.LOG"
+  }
+}

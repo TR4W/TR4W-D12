@@ -1,0 +1,13 @@
+{
+  "slug": "cqww_ssb_2025_ny4i",
+  "source_dir": "/c/radio/TR4w/2025 CQ-WW-SSB NY4I",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 101,
+  "claimed_score": "30912",
+  "orig": {
+    "log": "CQ-WW-SSB.TRW",
+    "cfg": "CQ-WW-SSB.CFG",
+    "adi": "CQ-WW-SSB.ADI",
+    "cbr": "NY4I.LOG"
+  }
+}

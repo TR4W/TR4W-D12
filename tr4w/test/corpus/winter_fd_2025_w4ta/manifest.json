@@ -1,0 +1,13 @@
+{
+  "slug": "winter_fd_2025_w4ta",
+  "source_dir": "/c/radio/TR4w/2025 WINTER FIELD DAY W4TA",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 1316,
+  "claimed_score": "42364",
+  "orig": {
+    "log": "WINTER FIELD DAY.TRW",
+    "cfg": "WINTER FIELD DAY.CFG",
+    "adi": "WINTER FIELD DAY.ADI",
+    "cbr": "W4TA.LOG"
+  }
+}

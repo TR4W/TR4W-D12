@@ -1,0 +1,13 @@
+{
+  "slug": "arrl_ss_ssb_2024_w4ta",
+  "source_dir": "/c/radio/TR4w/2024 ARRL-SS-SSB W4TA",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 206,
+  "claimed_score": "30192",
+  "orig": {
+    "log": "ARRL-SS-SSB.TRW",
+    "cfg": "ARRL-SS-SSB.CFG",
+    "adi": "ARRL-SS-SSB.ADI",
+    "cbr": "W4TA.LOG"
+  }
+}

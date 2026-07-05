@@ -1,0 +1,13 @@
+{
+  "slug": "arrl_digi_2026_ny4i",
+  "source_dir": "/c/radio/TR4w/2026 ARRL-DIGI NY4I",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 32,
+  "claimed_score": "231",
+  "orig": {
+    "log": "ARRL-DIGI.TRW",
+    "cfg": "ARRL-DIGI.CFG",
+    "adi": "ARRL-DIGI.ADI",
+    "cbr": "NY4I.LOG"
+  }
+}

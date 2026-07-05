@@ -1,0 +1,13 @@
+{
+  "slug": "general_qso_2026_w1aw4",
+  "source_dir": "/c/radio/TR4w/2026 GENERAL QSO W1AW_4",
+  "d7_version": "TR4W v.4.149.0",
+  "qso_count": 79,
+  "claimed_score": "79",
+  "orig": {
+    "log": "GENERAL QSO.TRW",
+    "cfg": "GENERAL QSO.CFG",
+    "adi": "GENERAL QSO.ADI",
+    "cbr": "W1AW_4.LOG"
+  }
+}

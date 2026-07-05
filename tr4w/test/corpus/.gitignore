@@ -1,0 +1,14 @@
+# Reserved golden-master TEST-DATA folder (authorized by NY4I, 2026-07-05).
+#
+# The repo root ignores *.TRW / *.CFG and log exports on purpose, so nobody
+# ever commits real operating logs. The curated regression fixtures HERE are the
+# one sanctioned exception: re-include them for this subtree only. Everywhere
+# else in the repo, the root ignores still apply unchanged.
+!*.trw
+!*.TRW
+!*.cfg
+!*.CFG
+!*.adi
+!*.ADI
+!*.cbr
+!*.CBR
