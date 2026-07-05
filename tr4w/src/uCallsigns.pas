@@ -534,9 +534,9 @@ begin
               if FList^[Index].FCall[i] = TempChar then
               begin
             if ColumnDupeSheetEnable then
-             SendDlgItemMessage(TempDSHandle, Ord(FList^[Index].FCall[i]), LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]))
+             SendDlgItemMessageA(TempDSHandle, Ord(FList^[Index].FCall[i]), LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]))
            else
-                Item := SendMessage(VDListBox, LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]));
+                Item := SendMessageA(VDListBox, LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]));
                 SendMessage(VDListBox, LB_SETITEMDATA, Item, Ord(TempChar));
               end;
               Break;

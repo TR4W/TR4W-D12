@@ -544,7 +544,7 @@ begin
 
         if TDIS^.itemAction = ODA_DRAWENTIRE then
         begin
-          i := SendMessage(TDIS^.hwndItem, LB_GETTEXT, TDIS^.ItemID,
+          i := SendMessageA(TDIS^.hwndItem, LB_GETTEXT, TDIS^.ItemID,
             integer(@InfoBuffer));
 
           StringType := TelnetStringType(SendMessage(TDIS^.hwndItem,
@@ -662,7 +662,7 @@ begin
         EnumerateLinesInFile('TRCLUSTER.DAT', EmunTRCLUSTERDAT, False);
         EmunTRCLUSTERDAT(@TelnetServer);
         // Issue 392 ny4i - This adds the value in the config for telnet server to the drop-down
-        i := SendDlgItemMessage(hwnddlg, 102, CB_FINDSTRING, Cardinal(-1),
+        i := SendDlgItemMessageA(hwnddlg, 102, CB_FINDSTRING, Cardinal(-1),
           integer(@TelnetServer[1])); //n4af 4.35.1
         //     i := SendDlgItemMessage(hwnddlg, 102, CB_FINDSTRINGEXACT, -1,integer(@TelnetServer[1]));
         if i <> CB_ERR then
@@ -746,7 +746,7 @@ begin
           i := SendMessage(TelnetListBox, LB_GETCURSEL, 0, 0);
           if i = LB_ERR then
             Exit;
-          SendMessage(TelnetListBox, LB_GETTEXT, i, integer(@TelnetBuffer[0]));
+          SendMessageA(TelnetListBox, LB_GETTEXT, i, integer(@TelnetBuffer[0]));
           if PInteger(@TelnetBuffer[0])^ = $64205844 {DX D} then
             if ProcessDX(0, True, StringType) then
               TuneRadioToSpot(TempSpot, RadioOne);
@@ -803,7 +803,7 @@ begin
               SendViaTelnetSocket(TempBuffer1);
               Windows.SetWindowTextA(TelnetCommandWindow, nil);
               if
-                SendMessage(TelnetCommandWindow, CB_FINDSTRING, -1,
+                SendMessageA(TelnetCommandWindow, CB_FINDSTRING, -1,
                 integer(PAnsiChar(@TempBuffer1))) = CB_ERR then
                 //  SendMessage(TelnetCommandWindow, CB_FINDSTRINGEXACT, -1, integer(PChar(@TempBuffer1))) = CB_ERR then
                 begin
@@ -1095,7 +1095,7 @@ begin
   // stack buffer; capping here guarantees that read can never overrun the stack.
   Windows.lstrcpynA(buf, p, SizeOf(buf));
 
-  SendMessage(Handle, LB_SETITEMDATA, SendMessage(Handle, LB_ADDSTRING, 0,
+  SendMessage(Handle, LB_SETITEMDATA, SendMessageA(Handle, LB_ADDSTRING, 0,
     integer(@buf)), integer(c));
 
   if TelnetFreezeMode then
@@ -1133,7 +1133,7 @@ begin
     for i := 0 to Lines - 1 do
     begin
       LineLength :=
-        SendDlgItemMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+        SendDlgItemMessageA(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
         101, LB_GETTEXT, i, lParam(@wsprintfBuffer));
       wsprintfBuffer[LineLength + 0] := #13;
       wsprintfBuffer[LineLength + 1] := #10;
@@ -1518,7 +1518,7 @@ begin
     SpotsList.AddSpot(TempSpot, True);
 
   if telnet_callsign_alert_list_loaded then
-    if Windows.SendMessage(TelnetCallsignAlertList, LB_FINDSTRINGEXACT, -1,
+    if Windows.SendMessageA(TelnetCallsignAlertList, LB_FINDSTRINGEXACT, -1,
       integer(PAnsiChar(@TempSpot.FCall[1]))) <> LB_ERR then
     begin
       Stringtype := tstAlert;

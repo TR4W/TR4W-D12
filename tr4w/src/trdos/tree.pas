@@ -90,7 +90,7 @@ type
   ParallelPortTypeSA                    : array[ParallelPortType] of PChar = ('NONE', '1', '2', '3');
 }
 const
-  PortTypeSA                            : array[PortType] of PChar =
+  PortTypeSA                            : array[PortType] of PAnsiChar =
 
   (
     'NONE',

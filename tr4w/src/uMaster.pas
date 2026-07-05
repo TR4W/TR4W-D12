@@ -89,7 +89,7 @@ begin
 
         if MDIS^.itemAction = ODA_DRAWENTIRE then
         begin
-          i := SendMessage(MDIS^.hwndItem, LB_GETTEXT, MDIS^.ItemID, integer(@CallsBuf));
+          i := SendMessageA(MDIS^.hwndItem, LB_GETTEXT, MDIS^.ItemID, integer(@CallsBuf));
 
           if SendMessage(MDIS^.hwndItem, LB_GETITEMDATA, MDIS^.ItemID, 0) = 1 then
           begin

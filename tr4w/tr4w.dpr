@@ -180,6 +180,7 @@ uses
   // uMultsFrequencies: never referenced (commented out in MainUnit and uNet) - orphaned code
   //uMultsFrequencies in 'src\uMultsFrequencies.pas',
   uMakeHelpFile in 'src\uMakeHelpFile.pas',
+  uLogConfig in 'src\uLogConfig.pas',
   uTrayBalloon in 'src\uTrayBalloon.pas',
   uPOTAParks in 'src\uPOTAParks.pas',
   uPendingCounties in 'src\uPendingCounties.pas',
@@ -579,12 +580,12 @@ begin
       Exit;
       end;
 
-   TR4W_PATH_NAME[Windows.GetCurrentDirectory(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
+   TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
    Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
    iniFile := TINIFile.create(TR4W_INI_FILENAME);
    try
    appender := TLogRollingFileAppender.Create('name','tr4w.log');
-   appender.Layout := TLogPatternLayout.Create('%d ' + TTCCPattern);
+   appender.Layout := CreateTR4WLogLayout;
    TLogBasicConfigurator.Configure(appender);
    logger := TLogLogger.GetLogger('TR4WDebugLog');
    sDebugLevel := iniFile.ReadString('COMMANDS','DEBUG LOG LEVEL', 'ERROR');
@@ -604,7 +605,7 @@ begin
 
 
 
-  TR4W_PATH_NAME[Windows.GetCurrentDirectory(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
+  TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
 
  Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
   LuconSZLoadded := AddFontResource(TR4W_LC_FILENAME) <> 0;

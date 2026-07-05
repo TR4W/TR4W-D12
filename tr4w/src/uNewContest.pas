@@ -225,22 +225,22 @@ begin
         end;
 
         for TempCategoryAssisted := Low(tCategoryAssisted) to High(tCategoryAssisted) do
-          SendMessage(InitialCommandsHWNDArray[4, 2], CB_ADDSTRING, 0, integer(tCategoryAssistedSA[TempCategoryAssisted]));
+          SendMessageA(InitialCommandsHWNDArray[4, 2], CB_ADDSTRING, 0, integer(tCategoryAssistedSA[TempCategoryAssisted]));
 
         for TempCategoryBand := Low(tCategoryBand) to High(tCategoryBand) do
-          SendMessage(InitialCommandsHWNDArray[5, 2], CB_ADDSTRING, 0, integer(tCategoryBandSA[TempCategoryBand]));
+          SendMessageA(InitialCommandsHWNDArray[5, 2], CB_ADDSTRING, 0, integer(tCategoryBandSA[TempCategoryBand]));
 
         for TempCategoryMode := Low(tCategoryMode) to High(tCategoryMode) do
-          SendMessage(InitialCommandsHWNDArray[6, 2], CB_ADDSTRING, 0, integer(tCategoryModeSA[TempCategoryMode]));
+          SendMessageA(InitialCommandsHWNDArray[6, 2], CB_ADDSTRING, 0, integer(tCategoryModeSA[TempCategoryMode]));
 
         for TempCategoryOperator := Low(tCategoryOperator) to High(tCategoryOperator) do
-          SendMessage(InitialCommandsHWNDArray[7, 2], CB_ADDSTRING, 0, integer(tCategoryOperatorSA[TempCategoryOperator]));
+          SendMessageA(InitialCommandsHWNDArray[7, 2], CB_ADDSTRING, 0, integer(tCategoryOperatorSA[TempCategoryOperator]));
 
         for TempCategoryPower := Low(tCategoryPower) to High(tCategoryPower) do
-          SendMessage(InitialCommandsHWNDArray[8, 2], CB_ADDSTRING, 0, integer(tCategoryPowerSA[TempCategoryPower]));
+          SendMessageA(InitialCommandsHWNDArray[8, 2], CB_ADDSTRING, 0, integer(tCategoryPowerSA[TempCategoryPower]));
 
         for TempCategoryTransmitter := Low(tCategoryTransmitter) to High(tCategoryTransmitter) do
-          SendMessage(InitialCommandsHWNDArray[9, 2], CB_ADDSTRING, 0, integer(tCategoryTransmitterSA[TempCategoryTransmitter]));
+          SendMessageA(InitialCommandsHWNDArray[9, 2], CB_ADDSTRING, 0, integer(tCategoryTransmitterSA[TempCategoryTransmitter]));
 
         for TempCardinal := 4 to CSAS do
           SendMessage(InitialCommandsHWNDArray[TempCardinal, 2], CB_SETCURSEL, 0, 0);

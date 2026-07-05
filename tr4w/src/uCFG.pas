@@ -881,7 +881,7 @@ const
  (crCommand: 'ZONE MULTIPLIER';               crAddress: pointer(23);                                     crMin:0;  crMax:0;         crS: csOld; crA: 2; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier)
     {*)}
       );
-function CheckCommand(Command: PChar; CustomCMD: ShortString): boolean;
+function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString): boolean;
 function ProcessMessage(ID, CMD: ShortString): boolean;
 procedure ProcessReminder(ID, CMD: ShortString);
 procedure ProcessTotalScoreMessage(ID, CMD: ShortString);
@@ -899,7 +899,7 @@ var
 
    Result1: integer;
 
-function CheckCommand(Command: PChar; CustomCMD: ShortString): boolean;
+function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString): boolean;
 label
    AdditionalProc;
 type
@@ -950,25 +950,33 @@ begin
          Exit;
       end;
 
-   if StrPos(@Command[1], ' WINDOW ') <> nil then
+   // D12: @Command[1] is an untyped Pointer ({$TYPEDADDRESS OFF}), which makes
+   // StrPos resolve to the WIDE (PWideChar) overload and misread the ANSI bytes
+   // as UTF-16 -- so it never matches.  Cast to PAnsiChar to force the ANSI
+   // overload (same guard GetValueFromArray already uses for @CMD[1]).
+   if StrPos(PAnsiChar(@Command[1]), ' WINDOW ') <> nil then
       begin
          for TempElement := Low(TMainWindowElement) to High(TMainWindowElement)
             do
             begin
 
-               if StrPos(@Command[1], TWindows[TempElement].mweName) =
-                  @Command[1] then
+               if StrPos(PAnsiChar(@Command[1]), TWindows[TempElement].mweName) =
+                  PAnsiChar(@Command[1]) then
                   begin
                      TempByte := GetValueFromArray(@tr4wColorsSA,
                         Byte(High(tr4wColors)), @CustomCMD);
                      if TempByte <> UNKNOWNTYPE then
                         begin
-                           if StrPos(@Command[1], ' COLOR') <> nil then
+                           if StrPos(PAnsiChar(@Command[1]), ' COLOR') <> nil then
+                              begin
                               TWindows[TempElement].mweColor :=
                                  tr4wColors(TempByte)
+                              end
                            else
+                              begin
                               TWindows[TempElement].mweBackG :=
                                  tr4wColors(TempByte);
+                              end;
                            Result := True;
                            Exit;
                         end
@@ -980,7 +988,7 @@ begin
             end;
       end;
 
-   if StrPos(@Command[1], 'COLUMN WIDTH ') = @Command[1] then
+   if StrPos(PAnsiChar(@Command[1]), 'COLUMN WIDTH ') = PAnsiChar(@Command[1]) then
       begin
       // Match against the canonical (language-neutral) column name first.
       // Fall back to UpperCase(Text) so CFGs written before the canonical
@@ -1849,7 +1857,7 @@ procedure InitializeStrings;
 type
    IniStringRecord = record
       isString: PShortString;
-      isPcharString: PChar;
+      isPcharString: PAnsiChar;
    end;
 const
    SAS = 16;
@@ -1888,9 +1896,9 @@ var
 begin
    for i := 1 to SAS do
       begin
-         Windows.lstrcat(PChar(integer(SA[i].isString) + 1),
+         Windows.lstrcatA(PAnsiChar(integer(SA[i].isString) + 1),
             SA[i].isPcharString);
-         SA[i].isString^[0] := AnsiChar(lstrlen(SA[i].isPcharString));
+         SA[i].isString^[0] := AnsiChar(lstrlenA(SA[i].isPcharString));
       end;
    p := 'logback.tr4w';
    Windows.lstrcatA(TR4W_FLOPPY_FILENAME, p); // 4.56.13

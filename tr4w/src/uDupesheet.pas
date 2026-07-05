@@ -110,7 +110,7 @@ begin
           Exit;
         end;
 
-        LengthOfTheString := SendMessage(VDDRAWITEMSTRUCT^.hwndItem, LB_GETTEXT, VDDRAWITEMSTRUCT^.ItemID, integer(@CallsBuf));
+        LengthOfTheString := SendMessageA(VDDRAWITEMSTRUCT^.hwndItem, LB_GETTEXT, VDDRAWITEMSTRUCT^.ItemID, integer(@CallsBuf));
 {
         while LengthOfTheString < 6 do
         begin

@@ -2739,7 +2739,7 @@ begin
 
 {$IF MORSERUNNER}
   if MorseRunnerWindow <> 0 then
-    Windows.SendMessage(MorseRunner_Number, WM_SETTEXT, 0,
+    Windows.SendMessageA(MorseRunner_Number, WM_SETTEXT, 0,
       integer(@ExchangeWindowString[1]));
 {$IFEND}
 end;
@@ -2867,7 +2867,7 @@ begin
 
 {$IF MORSERUNNER}
   if MorseRunnerWindow <> 0 then
-    Windows.SendMessage(MorseRunner_Callsign, WM_SETTEXT, 0,
+    Windows.SendMessageA(MorseRunner_Callsign, WM_SETTEXT, 0,
       integer(@CallWindowString[1]));
 {$IFEND}
 
@@ -7635,7 +7635,7 @@ begin
   if (not Success) and (GetLastError = ERROR_INSUFFICIENT_BUFFER) then
   begin
   Windows.ZeroMemory(@wsprintfBuffer, SizeOf(wsprintfBuffer));
-  Windows.lstrcat(wsprintfBuffer, 'Available ports: '#13#10);
+  Windows.lstrcatA(wsprintfBuffer, 'Available ports: '#13#10);
 
   GetMem(PortsPtr, BytesNeeded);
   try
@@ -7647,8 +7647,8 @@ begin
   InfoPtr := PPortInfo1(DWORD(PortsPtr) + I * SizeOf(InfoPtr));
   if InfoPtr^.pName[0] in ['C', 'L'] then
   begin
-  Windows.lstrcat(wsprintfBuffer, InfoPtr^.pName);
-  Windows.lstrcat(wsprintfBuffer, ' ');
+  Windows.lstrcatA(wsprintfBuffer, InfoPtr^.pName);
+  Windows.lstrcatA(wsprintfBuffer, ' ');
   end;
 
   end;
@@ -8158,7 +8158,7 @@ begin
  inc(StartPos);
 
  Windows.CopyMemory(@TempBuffer, CurrentPos, 8);
- StrUpper(@TempBuffer);
+ StrUpper(PAnsiChar(@TempBuffer));   // D12: untyped @ would bind the wide StrUpper; force ANSI
 
  if PInteger(@TempBuffer)^ = ADIF_CALL then
  begin
@@ -8846,7 +8846,7 @@ end;
 
 function EnumMorseRunnerChildProc(wnd: HWND; l: lParam): BOOL; stdcall;
 begin
-  Windows.GetClassName(wnd, wsprintfBuffer, SizeOf(wsprintfBuffer));
+  Windows.GetClassNameA(wnd, wsprintfBuffer, SizeOf(wsprintfBuffer));
   if Windows.lstrcmpA(wsprintfBuffer, 'TEdit') = 0 then
   begin
     if MorseRunnerWindowsCounter = 0 then

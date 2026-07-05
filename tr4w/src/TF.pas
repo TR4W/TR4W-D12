@@ -450,7 +450,7 @@ end;
 
 procedure tCB_ADDSTRING(ParentHandle: HWND; Control: integer; s: string);
 begin
-  Windows.SendDlgItemMessage(ParentHandle, integer(Control), CB_ADDSTRING, 0, integer(PChar(s)));
+  Windows.SendDlgItemMessageA(ParentHandle, integer(Control), CB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(s))));
 end;
 
 procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: PAnsiChar);
@@ -462,7 +462,7 @@ function tLB_ADDSTRING(h: HWND; Text: PAnsiChar): integer;
 begin
   Result := -1;
   if h = 0 then Exit;
-  Result := SendMessage(h, LB_ADDSTRING, 0, integer(Text));
+  Result := SendMessageA(h, LB_ADDSTRING, 0, integer(Text));
 end;
 
 function tLB_RESETCONTENT(h: HWND): integer;
@@ -786,10 +786,10 @@ begin
     TempHWND := h
   else
     TempHWND := Windows.GetDlgItem(h, Control);
-  Len := Windows.SendMessage(TempHWND, WM_GETTEXTLENGTH, 0, 0);
+  Len := Windows.SendMessageA(TempHWND, WM_GETTEXTLENGTH, 0, 0);
   Windows.ZeroMemory(@Result, SizeOf(Result));
   SetLength(Result, Len);
-  if Len <> 0 then Windows.SendMessage(TempHWND, WM_GETTEXT, Len + 1, LONGINT(Pointer(@Result[1])));
+  if Len <> 0 then Windows.SendMessageA(TempHWND, WM_GETTEXT, Len + 1, LONGINT(Pointer(@Result[1])));
 end;
 
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
@@ -967,11 +967,11 @@ var
 const
   c                                     = '[..]';
 begin
-  i := Windows.SendMessage(h, LB_FINDSTRING, -1, integer(PChar(c)));
+  i := Windows.SendMessageA(h, LB_FINDSTRING, -1, integer(PAnsiChar(c)));
   if i <> LB_ERR then
   begin
     Windows.SendMessage(h, LB_DELETESTRING, i, 0);
-    Windows.SendMessage(h, LB_INSERTSTRING, 0, integer(PChar(c)));
+    Windows.SendMessageA(h, LB_INSERTSTRING, 0, integer(PAnsiChar(c)));
   end;
   tLB_SETCURSEL(h, 0);
 end;

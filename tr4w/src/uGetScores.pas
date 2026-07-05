@@ -243,7 +243,7 @@ begin
   asm add esp,20
   end;
 
-  Windows.lstrcat(GetScoresBuffer, GetScoresXMLBuffer);
+  Windows.lstrcatA(GetScoresBuffer, GetScoresXMLBuffer);
   Result := Windows.lstrlenA(GetScoresBuffer);
 
 end;
@@ -282,7 +282,7 @@ begin
         GetScoresModesArray[TempMode],
         QSOTotals[TempBand, TempMode]);
 
-      Windows.lstrcat(GetScoresQsoByBandArray, GetScoresXMLBuffer);
+      Windows.lstrcatA(GetScoresQsoByBandArray, GetScoresXMLBuffer);
 
     end;
 
@@ -303,7 +303,7 @@ begin
           GetScoresMults[m],
           mo.MTotals[TempBand, TempMode, m]
           );
-        Windows.lstrcat(GetScoresQsoByBandArray, GetScoresXMLBuffer);
+        Windows.lstrcatA(GetScoresQsoByBandArray, GetScoresXMLBuffer);
       end;
   ShowMessage(GetScoresQsoByBandArray);
   tGetSystemTime;
@@ -361,7 +361,7 @@ begin
   asm add esp,20
   end;
 
-  Windows.lstrcat(GetScoresBuffer, GetScoresXMLBuffer);
+  Windows.lstrcatA(GetScoresBuffer, GetScoresXMLBuffer);
   Result := Windows.lstrlenA(GetScoresBuffer);
 
 end;

@@ -213,7 +213,7 @@ begin
             for TempByte := 0 to CategoriesArray[TempTag].cvrCount do
             begin
               TempPointer := CategoriesArray[TempTag].cvrStart + TempByte * 4;
-              SendMessage(TempHWND, CB_ADDSTRING, 0, integer(TempPointer^));
+              SendMessageA(TempHWND, CB_ADDSTRING, 0, integer(TempPointer^));
             end;
 
             if TempTag in [ctCategoryAssisted..ctCategoryPower] then
@@ -226,7 +226,7 @@ begin
               if GetPrivateProfileStringA(FormatSpecification,
                   CabrilloTagSArray[TempTag].ctrTag, nil, TempBuffer1,
                   SizeOf(TempBuffer1), TR4W_INI_FILENAME) > 0 then
-                SendMessage(TempHWND, CB_SELECTSTRING, -1, integer(@TempBuffer1));
+                SendMessageA(TempHWND, CB_SELECTSTRING, -1, integer(@TempBuffer1));
             end;
           end
           else

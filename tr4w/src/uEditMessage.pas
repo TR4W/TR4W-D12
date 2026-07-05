@@ -183,7 +183,7 @@ begin
             if CreateModalDialog(225, 170, EditMessageWnd, @MessagesListDlgProc, 0) = 1 then
               begin
               Windows.SendMessage(MsgEditHWND, EM_SETSEL, SelPos[102], SelPos[102]);
-              Windows.SendMessage(MsgEditHWND, EM_REPLACESEL, 1, Integer(PAnsiChar(AnsiString(LastSelectedCommand))));
+              Windows.SendMessageA(MsgEditHWND, EM_REPLACESEL, 1, Integer(PAnsiChar(AnsiString(LastSelectedCommand))));
               SetFocus(MsgEditHWND);
               end;
             end;

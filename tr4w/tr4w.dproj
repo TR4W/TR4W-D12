@@ -245,6 +245,7 @@
         <DCCReference Include="src\uHardWare.pas"/>
         <DCCReference Include="src\uReminder.pas"/>
         <DCCReference Include="src\uMakeHelpFile.pas"/>
+        <DCCReference Include="src\uLogConfig.pas"/>
         <DCCReference Include="src\uTrayBalloon.pas"/>
         <DCCReference Include="src\uPOTAParks.pas"/>
         <DCCReference Include="src\uPendingCounties.pas"/>

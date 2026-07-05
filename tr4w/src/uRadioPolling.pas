@@ -3117,8 +3117,11 @@ begin
    //  CompareString(LOCALE_SYSTEM_DEFAULT, 0, @rig.CurrentStatus, SizeOf(RadioStatusRecord), @rig.PreviousStatus, SizeOf(RadioStatusRecord)) <> 2;
    for TempInteger := 0 to SizeOf(RadioStatusRecord) - 1 do
       begin
-         if PChar(@rig.CurrentStatus)[TempInteger] <>
-            PChar(@rig.PreviousStatus)[TempInteger] then
+         // D12: PChar is PWideChar, so PChar(...)[i] would step 2 bytes and read
+         // past the record (spuriously "changed" every poll -> UDP/display flood).
+         // PByte walks one byte at a time, matching SizeOf(RadioStatusRecord).
+         if PByte(@rig.CurrentStatus)[TempInteger] <>
+            PByte(@rig.PreviousStatus)[TempInteger] then
             begin
                StatusChanged := True;
                Break;

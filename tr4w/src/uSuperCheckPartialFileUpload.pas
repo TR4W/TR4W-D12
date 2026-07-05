@@ -19,7 +19,7 @@ unit uSuperCheckPartialFileUpload;
 interface
 
 
-uses Classes, SysUtils, IdSSLOpenSSLHeaders, IdHashSHA, IdHttp, IdGlobal, Log4D,
+uses Classes, SysUtils, IdSSLOpenSSLHeaders, IdHashSHA, IdHttp, IdGlobal, Log4D, uLogConfig,
      IdCoderMIME, IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdLogFile, DateUtils, Windows;
 
 
@@ -79,7 +79,7 @@ begin
    if FLogger = nil then
       begin
       appender := TLogRollingFileAppender.Create('name','scp.log');
-      appender.Layout := TLogPatternLayout.Create('%d ' + TTCCPattern);
+      appender.Layout := CreateTR4WLogLayout;
       TLogBasicConfigurator.Configure(appender);
       //logLevels := llError; // For after we load config so we can set the value.
       //TLogLogger.GetRootLogger.Level := Error;

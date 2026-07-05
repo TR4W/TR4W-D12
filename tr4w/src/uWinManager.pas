@@ -47,7 +47,7 @@ begin
     begin
       Windows.GetWindowTextA(wnd, wsprintfBuffer, 100);
 //      if wnd = tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndHandle then Exit;
-      Windows.SendMessage(Manager, LB_SETITEMDATA, Windows.SendMessage(Manager, LB_ADDSTRING, 0, integer(@wsprintfBuffer)), wnd);
+      Windows.SendMessage(Manager, LB_SETITEMDATA, Windows.SendMessageA(Manager, LB_ADDSTRING, 0, integer(@wsprintfBuffer)), wnd);
     end;
 end;
 

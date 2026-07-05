@@ -380,7 +380,7 @@ begin
         h := MMTTY.MMTTYRichEdit;
         SendMessage(h, EM_SETSEL, -1, -1);
 //        SendMessage(h, EM_SCROLLCARET, 0, 0);
-        SendMessage(h, EM_REPLACESEL, integer(False), integer(@MMTTY.mmttyTwoBytes));
+        SendMessageA(h, EM_REPLACESEL, integer(False), integer(@MMTTY.mmttyTwoBytes));
         mmttyProcessChar(AnsiChar(lp));
         inc(MMTTY.mmttyCurrentPos);
       end;

@@ -920,7 +920,7 @@ begin
       FILE_SHARE_WRITE, nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
     hMemory := GlobalAlloc(GMEM_MOVEABLE or GMEM_ZEROINIT, MemSize);
     pMemory := GlobalLock(hMemory);
-    SizeReadWrite := SendMessage(hControl, WM_GETTEXT, MemSize - 1, integer(pMemory));
+    SizeReadWrite := SendMessageA(hControl, WM_GETTEXT, MemSize - 1, integer(pMemory));
     tWriteFile(hFile, pMemory^, SizeReadWrite, SizeReadWrite);
     SendMessage(hControl, EM_SETSEL, 0, 0);
     sFilePath := ofn.lpstrFile;

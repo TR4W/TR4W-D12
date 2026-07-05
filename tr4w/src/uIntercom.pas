@@ -66,7 +66,7 @@ begin
 
         if IntercomDIS^.itemAction = ODA_DRAWENTIRE then
         begin
-          i := SendMessage(IntercomDIS^.hwndItem, LB_GETTEXT, IntercomDIS^.ItemID, integer(@MessageBuf));
+          i := SendMessageA(IntercomDIS^.hwndItem, LB_GETTEXT, IntercomDIS^.ItemID, integer(@MessageBuf));
           Color := tr4wColorsArray[tr4wColors(((Ord(MessageBuf[6]) - Ord('A')) mod integer(High(tr4wColors))))];
 
 //          Color := clgreen;

@@ -113,7 +113,7 @@ begin
   textLen := SendMessage(lb, LB_GETTEXTLEN, sel, 0);
   if (textLen < 0) or (textLen >= SizeOf(buf)) then
     Exit;
-  SendMessage(lb, LB_GETTEXT, sel, Integer(@buf));
+  SendMessageA(lb, LB_GETTEXT, sel, Integer(@buf));
   LastSelectedCommand := GetInsertableCommand(@buf);
   Result := True;
 end;

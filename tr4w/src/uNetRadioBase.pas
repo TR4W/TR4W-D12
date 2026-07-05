@@ -20,7 +20,7 @@ interface
 
 uses
    Windows, IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
-   Classes, StrUtils, Log4D, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand;
+   Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 Type TBinary = (bOn, bOff);
@@ -309,7 +309,7 @@ Constructor TNetRadioBase.Create(ProcRef: TProcessMsgRef);
 var iVFO: TVFO;
 begin
    {appender := TLogRollingFileAppender.Create('name','K4Test.log');
-   appender.Layout := TLogPatternLayout.Create('%d ' + TTCCPattern);
+   appender.Layout := CreateTR4WLogLayout;
 
    TLogBasicConfigurator.Configure(appender);
    TLogLogger.GetRootLogger.Level := Trace;

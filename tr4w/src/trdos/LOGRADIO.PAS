@@ -1416,7 +1416,7 @@ end;
 
 procedure RadioObject.WriteBufferToCATPort(const Buffer);
 begin
-   WriteToCATPort(Buffer, lstrlen(@Buffer));
+   WriteToCATPort(Buffer, lstrlenA(@Buffer));
 end;
 
 function RadioObject.WritePollRequest(const Buffer;

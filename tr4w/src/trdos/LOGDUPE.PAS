@@ -622,7 +622,7 @@ begin
     begin
       CallIndex := SendMessage(IntitialExCallsignsList, LB_GETITEMDATA, CallIndex, 0);
       SetLength(Result, 12);
-      CallIndex := SendMessage(IntitialExExchangesList, LB_GETTEXT, CallIndex, integer(@Result[1]));
+      CallIndex := SendMessageA(IntitialExExchangesList, LB_GETTEXT, CallIndex, integer(@Result[1]));
       if CallIndex = LB_ERR then
         SetLength(Result, CallIndex);
     end
