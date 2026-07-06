@@ -847,7 +847,7 @@ begin
           (RXData.QTH.CountryID = 'K') or (RXData.QTH.CountryID = 'VK') or
           (RXData.QTH.CountryID = 'ZS') or (RXData.QTH.CountryID = 'ZL') then
         begin
-          RXData.DXQTH := RXData.QTH.CountryID + GetNumber(RXData.Callsign);
+          RXData.DXQTH := RXData.QTH.CountryID + AnsiChar(GetNumber(RXData.Callsign));
           Exit;
         end;
 

@@ -252,7 +252,7 @@ begin
     (QTH.CountryID = 'PY') or
     (QTH.CountryID = 'UA9') then
   begin
-    NumberChar := GetNumber(QTH.StandardCall);
+    NumberChar := AnsiChar(GetNumber(QTH.StandardCall));
     Result := QTH.CountryID + NumberChar;
   end;
 

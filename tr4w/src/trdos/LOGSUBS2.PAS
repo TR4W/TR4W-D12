@@ -1811,7 +1811,7 @@ begin
                     end;
                   end;
               else
-                if (ValidCallCharacter(TempKey)) or (TempKey = '?') then
+                if (ValidCallCharacter(Char(TempKey))) or (TempKey = '?') then
                 begin
                   EditingCallsignSent := False;
                   CallWindowString := CallWindowString + TempKey;
@@ -2111,7 +2111,7 @@ begin
                        if (ActiveMode = cw) or (ActiveDVKPort <> NoPort) or DVPEnable then
                        begin
                          AutoCQResume(False);
-                         if ValidCallCharacter(UpCase(KeyPressedMemory)) then
+                         if ValidCallCharacter(Char(UpCase(KeyPressedMemory))) then
                          begin
                            CallWindowString := UpCase(KeyPressedMemory);
                            Write(CallWindowString);
@@ -2125,7 +2125,7 @@ begin
                                         //                        RemoveWindow(PossibleCallWindow);
                                         //                        ClearWindow(CallWindow);
                          ;
-                         if ValidCallCharacter(UpCase(KeyPressedMemory)) then
+                         if ValidCallCharacter(Char(UpCase(KeyPressedMemory))) then
                          begin
                            CallWindowString := UpCase(KeyPressedMemory);
                            Write(CallWindowString);
@@ -2638,7 +2638,7 @@ var
             repeat until NewKeyPressed;
             TempKey := AnsiChar(UpCase(NewReadKey));
             if TempKey <> CarriageReturn then
-              if ValidCallCharacter(TempKey) or (TempKey = '?') then
+              if ValidCallCharacter(Char(TempKey)) or (TempKey = '?') then
               begin
                 if MessageEnable then
                   AddStringToBuffer(TempKey, CWTone);

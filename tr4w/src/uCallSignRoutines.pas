@@ -10,18 +10,35 @@
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
  You should have received a copy of the GNU General
-     Public License along with TR4W in  GPL_License.TXT. 
-If not, ref: 
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uCallSignRoutines;
 {$IMPORTEDDATA OFF}
+{
+  Phase 2.5 (D12 string modernization PoC): this leaf, ASCII-only callsign
+  parser is the first module flipped from the ANSI byte core to native Delphi
+  `string`/`Char`.  Callsigns are ASCII, so UTF-16 `pos`/`Copy`/comparison are
+  semantically identical.  Three ANSI byte-level idioms were rewritten to
+  provably-equivalent char logic (they would misbehave on a wide `string`):
+    * GetOblast / GetRussiaOblastID: `Result[0]:=#2; Result[1]:=..` ShortString
+      length-byte writes -> `Result := c1 + c2` string build.
+    * StandardCallFormat: `PWORD(@Call[l-2])^ = $412F` ("/A") and
+      `PInteger(@Call[l-3])^ = $5052512F` ("/QRP") byte-pattern reads ->
+      explicit char comparisons.
+    * GoodCallSyntax: `uStrSearch.StrU(Call)` (var ShortString) -> `UpperCase`
+      (ASCII-only in the RTL; identical for callsigns), dropping uStrSearch.
+  Callers pass ContestExchange.Callsign (ShortString) into the `string` params;
+  Delphi auto-converts ShortString<->string at the call site -- lossless for
+  ASCII callsigns.  Behavior is byte-identical (proven by uTestCallSignRoutines
+  + the golden-master oracle).
+}
 interface
 uses
-  uStrSearch,   // Issue #1033: was TF (needed only for StrU, which #997 moved to the light uStrSearch) -- drops TF -> MainUnit -> LogStuff coupling
   uRussiaOblasts,
   // Tree,
-  utils_text,
+  utils_text,      // UpperCase (ANSI ShortString) -- also replaces uStrSearch.StrU (var ShortString)
   VC,
   Windows;
 const
@@ -31,63 +48,63 @@ const
   UBAEuroCountryString                  = ' 5B 9A 9H CT CT3 CU DL EA EA6 EA8 EI ES F FG FM FR FY  HA I IS LX LY LZ OE OH OH0 OJ0 OK OM OZ PA S5 SM SP SV SV/A SV5 SV9 SY TK YL YO ';   // 4.106.5
   ScandinavianCountries                 = ' LA JW JX OH OH0 OJ0 OX OY OZ SM TF ';
   IndonesianCountries                   = ' YB YC YD YE YF ';           // 4.64.1
-function ARRLSectionCountry(CountryID: Str20): boolean;
-function BlackSeaRegionCountry(CountryID: Str20): boolean;
-function CISCountry(CountryID: Str20): boolean;
-function UBACountry(CountryID: Str20): boolean;
-function ScandinavianCountry(CountryID: Str20): boolean;
-function IndonesianCountry(CountryID: Str20): boolean;
-function GetNumber(Call: CallString): AnsiChar;
-function GetFirstSuffixLetter(Call: CallString): AnsiChar;
-function RussianID(ID: ShortString): boolean;
-function FrenchID(ID: ShortString): boolean;
-function SpanishStation(ID: ShortString): boolean;
-function OKOMStation(ID: ShortString): boolean;
-function UKEIStation(ID: ShortString): boolean;
-function GetPrefix(Call: CallString): PrefixString;
-function GetOblast(Call: CallString): Str2;
-function MobileCall(Call: CallString): boolean;  //n4af 4.41.8
-//function IsUA1AStation(Call: CallString): boolean;
-function StandardCallFormat(Call: CallString; Complete: boolean): CallString;
-function GetRussiaOblastID(Call: CallString): Str2; //
-function CaliforniaCall(Call: CallString): boolean;
-function RootCall(Call: CallString): CallString;
-function RoverCall(Call: CallString): boolean;
-function SimilarCall(Call1: CallString; Call2: CallString): boolean;
-function GoodCallSyntax(Call: CallString): boolean;
-function ValidCallCharacter(CallChar: AnsiChar): boolean;
+function ARRLSectionCountry(CountryID: string): boolean;
+function BlackSeaRegionCountry(CountryID: string): boolean;
+function CISCountry(CountryID: string): boolean;
+function UBACountry(CountryID: string): boolean;
+function ScandinavianCountry(CountryID: string): boolean;
+function IndonesianCountry(CountryID: string): boolean;
+function GetNumber(Call: string): Char;
+function GetFirstSuffixLetter(Call: string): Char;
+function RussianID(ID: string): boolean;
+function FrenchID(ID: string): boolean;
+function SpanishStation(ID: string): boolean;
+function OKOMStation(ID: string): boolean;
+function UKEIStation(ID: string): boolean;
+function GetPrefix(Call: string): string;
+function GetOblast(Call: string): string;
+function MobileCall(Call: string): boolean;  //n4af 4.41.8
+//function IsUA1AStation(Call: string): boolean;
+function StandardCallFormat(Call: string; Complete: boolean): string;
+function GetRussiaOblastID(Call: string): string; //
+function CaliforniaCall(Call: string): boolean;
+function RootCall(Call: string): string;
+function RoverCall(Call: string): boolean;
+function SimilarCall(Call1: string; Call2: string): boolean;
+function GoodCallSyntax(Call: string): boolean;
+function ValidCallCharacter(CallChar: Char): boolean;
 implementation
 uses uCTYDAT;
-function ARRLSectionCountry(CountryID: Str20): boolean;
+function ARRLSectionCountry(CountryID: string): boolean;
 begin
   Result := False;
   if pos(' ' + CountryID + ' ', ARRLSectionCountryString) <> 0 then Result := True;
 end;
-function BlackSeaRegionCountry(CountryID: Str20): boolean;
+function BlackSeaRegionCountry(CountryID: string): boolean;
 begin
   Result := False;
   if pos(' ' + CountryID + ' ', BlackSeaCountriesString) <> 0 then Result := True;
 end;
-function CISCountry(CountryID: Str20): boolean;
+function CISCountry(CountryID: string): boolean;
 begin
   Result := False;
   if pos(' ' + CountryID + ' ', CISCountries) <> 0 then Result := True;
 end;
-function UBACountry(CountryID: Str20): boolean;
+function UBACountry(CountryID: string): boolean;
 begin
   Result := pos(' ' + CountryID + ' ', UBAEuroCountryString) <> 0;
 end;
-function ScandinavianCountry(CountryID: Str20): boolean;
+function ScandinavianCountry(CountryID: string): boolean;
 begin
   Result := False;
   if pos(' ' + CountryID + ' ', ScandinavianCountries) <> 0 then Result := True;
 end;
-function IndonesianCountry(CountryID: Str20): boolean;         // 4.64.1
+function IndonesianCountry(CountryID: string): boolean;         // 4.64.1
 begin
   Result := False;
   if pos(' ' + CountryID + ' ', IndonesianCountries) <> 0 then Result := True;
 end;
-function GetNumber(Call: CallString): AnsiChar;
+function GetNumber(Call: string): Char;
 { This function will look at the callsign passed to it and return the
   single number that is in it.  If the call is portable, the number from
   the portable designator will be given if there is one.  If the call
@@ -104,14 +121,14 @@ begin
     end ;
   GetNumber := #0;
 end;
-function GetFirstSuffixLetter(Call: CallString): AnsiChar;
+function GetFirstSuffixLetter(Call: string): Char;
 { This function will get the first letter after the last number in the
   callsign or portable designator.  If the call does not have a letter
   after the last number, or if the portable designator does not have
   it, a null character will be returned.                             }
 var
   CharPtr                               : integer;
-  TempString                            : Str80;
+  TempString                            : string;
 begin
   if StringHas(Call, '/') then
   begin
@@ -129,32 +146,32 @@ begin
   GetFirstSuffixLetter := #0;
   end;
 end;
-function OKOMStation(ID: ShortString): boolean;
+function OKOMStation(ID: string): boolean;
 begin
   Result := False;
   if length(ID) > 1 then
     if ID[1] = 'O' then if
       ID[2] in ['K', 'M'] then Result := True;
 end;
-function UKEIStation(ID: ShortString): boolean;  // 4.58.2
+function UKEIStation(ID: string): boolean;  // 4.58.2
 begin
   Result := False;
 //  if length(ID) > 1 then
     if ((ID[1] = 'G') or (ID[1] = 'M') or ((ID[1] = 'E') and (ID[2] = 'I')) or (ID[1] = '2')) then
      Result := True;
 end;
-function SpanishStation(ID: ShortString): boolean;
+function SpanishStation(ID: string): boolean;
 begin
   Result := False;
   if length(ID) > 1 then
     if ID[1] = 'E' then if
       ID[2] = 'A' then Result := True;
 end;
-function FrenchID(ID: ShortString): boolean;
+function FrenchID(ID: string): boolean;
 begin
   Result := (ID[1] = 'F') or (ID = 'TM') or (ID = 'TK');
 end;
-function RussianID(ID: ShortString): boolean;
+function RussianID(ID: string): boolean;
 begin
   Result := False;
   if length(ID) > 1 then
@@ -175,7 +192,7 @@ begin
   end;
 end;
 }
-function StandardCallFormat(Call: CallString; Complete: boolean): CallString;
+function StandardCallFormat(Call: string; Complete: boolean): string;
 { This fucntion will take the call passed to it and put it into a
   standard format with the country indicator as the first part of
   the call.  It is intended to convert calls as they would be sent
@@ -192,8 +209,8 @@ label
   1;
 var
 
-  FirstPart, SecondPart                 : Str80;
-  TempPrefixString                      : PrefixString;
+  FirstPart, SecondPart                 : string;
+  TempPrefixString                      : string;
   l                                     : integer;
 begin
   if not StringHas(Call, '/') then
@@ -208,14 +225,14 @@ begin
         SetLength(Call, l - 2);
         goto 1;
       end;
-  {/AG /AA /AE}
-  if l > 3 then if PWORD(@Call[l - 2])^ = $412F then if Call[l] in ['A', 'G', 'E'] then
+  {/AG /AA /AE}  // was PWORD(@Call[l-2])^ = $412F ("/A"); rewritten for `string`
+  if l > 3 then if (Call[l - 2] = '/') and (Call[l - 1] = 'A') then if Call[l] in ['A', 'G', 'E'] then
       begin
         SetLength(Call, l - 3);
         goto 1;
       end;
-  {/QRP}
-  if l > 4 then if PInteger(@Call[l - 3])^ = $5052512F then
+  {/QRP}  // was PInteger(@Call[l-3])^ = $5052512F ("/QRP"); rewritten for `string`
+  if l > 4 then if (Call[l - 3] = '/') and (Call[l - 2] = 'Q') and (Call[l - 1] = 'R') and (Call[l] = 'P') then
     begin
       SetLength(Call, l - 4);
       goto 1;
@@ -281,12 +298,12 @@ begin
     Exit;
   end;
 end;
-function GetPrefix(Call: CallString): PrefixString;
+function GetPrefix(Call: string): string;
 { This function will return the prefix for the call passed to it. This is
     a new and improved version that will handle calls as they are usaully
     sent on the air.                                                          }
 var
-    FirstPart, SecondPart, TempString     : Str80;
+    FirstPart, SecondPart, TempString     : string;
     CallPointer, Count                    : Integer;
 begin
   for CallPointer := 1 to length(Call) do
@@ -350,11 +367,11 @@ begin
   end;
   GetPrefix := ''; { We have no idea what the prefix is }
 end;
-function GetOblast(Call: CallString): Str2;
+function GetOblast(Call: string): string;
 var
   i                                     : integer;
-  c1                                    : AnsiChar;
-  c2                                    : AnsiChar;
+  c1                                    : Char;
+  c2                                    : Char;
 begin
   Call := StandardCallFormat(Call, False);
   if StringHas(Call, '/') then Call := PrecedingString(Call, '/');
@@ -377,30 +394,13 @@ begin
   if (c1 = #0) or (c2 = #0) then
     Result := ''
   else
-  begin
-    Result[0] := #2;
-    Result[1] := c1;
-    Result[2] := c2;
-//    Result := c1 + c2;
-  end;
-{
-  while Copy(Call, 1, 1) >= 'A' do
-  begin
-    Delete(Call, 1, 1);
-    if Call = '' then
-    begin
-      GetOblast := '';
-      Exit;
-    end;
-  end;
-  GetOblast := Copy(Call, 1, 2);
-}
+    Result := c1 + c2;   // was Result[0]:=#2; Result[1]:=c1; Result[2]:=c2; (ShortString length-byte)
 end;
-function GetRussiaOblastID(Call: CallString): Str2; //
+function GetRussiaOblastID(Call: string): string; //
 var
 
-  Oblast                                : Str2;
-  r                                     : PAnsiChar;
+  Oblast                                : string;
+  r                                     : PAnsiChar;   // boundary: indexes RussianRegionsTypeIdArray (ANSI)
   reg                                   : RussianRegionType;
 begin
   Result := '';
@@ -410,11 +410,9 @@ begin
   reg := GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]));
   if reg = rtUnknownRegion then Exit;
   r := RussianRegionsTypeIdArray[GetRussiaOblastByTwoChars(Char(Oblast[1]), Char(Oblast[2]))];
-  Result[0] := #2;
-  Result[1] := AnsiChar(r[0]);
-  Result[2] := AnsiChar(r[1]);
+  Result := Char(r[0]) + Char(r[1]);   // was Result[0]:=#2; Result[1]:=AnsiChar(r[0]); Result[2]:=AnsiChar(r[1]);
 end;
-function CaliforniaCall(Call: CallString): boolean;
+function CaliforniaCall(Call: string): boolean;
 begin
   CaliforniaCall := False;
   if not StringHas(Call, '6') then Exit;
@@ -424,9 +422,9 @@ begin
   if Call[2] = 'H' then Exit;
   CaliforniaCall := True;
 end;
-function RootCall(Call: CallString): CallString;
+function RootCall(Call: string): string;
 var
-  TempCall                              : CallString;
+  TempCall                              : string;
 begin
   TempCall := StandardCallFormat(Call, True);
   if StringHas(TempCall, '/') then
@@ -445,20 +443,20 @@ begin
   {   IF Length (TempCall) > 6 THEN TempCall [0] := Chr (6); }
   RootCall := TempCall;
 end;
-function RoverCall(Call: CallString): boolean;
+function RoverCall(Call: string): boolean;
 begin
   RoverCall := UpperCase(Copy(Call, length(Call) - 1, 2)) = '/R';
 end;
-function MobileCall(Call: CallString): boolean;      //n4af 4.41.8
+function MobileCall(Call: string): boolean;      //n4af 4.41.8
 begin
   MobileCall := UpperCase(Copy(Call, length(Call) - 1, 2)) = '/M';
 end;
-function SimilarCall(Call1: CallString; Call2: CallString): boolean;
+function SimilarCall(Call1: string; Call2: string): boolean;
 { This function will return true if the two calls only differ in one
     character position.         }
 var
   NumberDifferentChars, NumberTestChars, TestChar: integer;
-  c1, c2                                : string[1];
+  c1, c2                                : string;
 begin
   if pos('/', Call1) > 0 then Call1 := RootCall(Call1);
   if pos('/', Call2) > 0 then Call2 := RootCall(Call2);
@@ -487,7 +485,7 @@ begin
   if (pos(Call1, Call2) = 0) and (pos(Call2, Call1) = 0) then Exit;
   SimilarCall := True;
 end;
-function GoodCallSyntax(Call: CallString): boolean;
+function GoodCallSyntax(Call: string): boolean;
 { This function will look at the callsign passed to it and see if it
     looks like a real callsign.                                           }
 var
@@ -495,7 +493,7 @@ var
 begin
   GoodCallSyntax := False;
   if length(Call) < 3 then Exit;
-  uStrSearch.StrU(Call);
+  Call := UpperCase(Call);   // was uStrSearch.StrU(Call) (var ShortString); ASCII-uppercase, identical for callsigns
   if not StringHasLetters(Call) then Exit;
   case length(Call) of
     8:
@@ -545,7 +543,7 @@ begin
   }
   GoodCallSyntax := True;
 end;
-function ValidCallCharacter(CallChar: AnsiChar): boolean;
+function ValidCallCharacter(CallChar: Char): boolean;
 begin
   Result := CallChar in ['/', '0'..'9', 'A'..'Z'];
 end;
