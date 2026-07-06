@@ -144,7 +144,7 @@ end;
 
 procedure TIcomCIVTests.Test_FreqToBCD_20m;
 var
-   bcd: string;
+   bcd: AnsiString;   // CI-V BCD is a binary byte stream (bytes may be >=$80); AnsiString keeps 1 byte/elem
 begin
    BeginTest('FreqToBCD(14000000) is 5 bytes');
    bcd := IcomFreqToBCD(14000000);
@@ -153,7 +153,7 @@ end;
 
 procedure TIcomCIVTests.Test_FreqToBCD_40m;
 var
-   bcd: string;
+   bcd: AnsiString;   // CI-V BCD is a binary byte stream (bytes may be >=$80); AnsiString keeps 1 byte/elem
 begin
    BeginTest('FreqToBCD(7000000) is 5 bytes');
    bcd := IcomFreqToBCD(7000000);
@@ -162,7 +162,7 @@ end;
 
 procedure TIcomCIVTests.Test_FreqToBCD_6m;
 var
-   bcd: string;
+   bcd: AnsiString;   // CI-V BCD is a binary byte stream (bytes may be >=$80); AnsiString keeps 1 byte/elem
 begin
    BeginTest('FreqToBCD(50125000) is 5 bytes');
    bcd := IcomFreqToBCD(50125000);
@@ -171,7 +171,7 @@ end;
 
 procedure TIcomCIVTests.Test_FreqToBCD_Zero;
 var
-   bcd: string;
+   bcd: AnsiString;   // CI-V BCD is a binary byte stream (bytes may be >=$80); AnsiString keeps 1 byte/elem
    i  : Integer;
 begin
    BeginTest('FreqToBCD(0) is all $00 bytes');
@@ -223,7 +223,7 @@ end;
 
 procedure TIcomCIVTests.Test_OffsetToBCD_Zero;
 var
-   bcd: string;
+   bcd: AnsiString;   // CI-V BCD is a binary byte stream (bytes may be >=$80); AnsiString keeps 1 byte/elem
 begin
    BeginTest('OffsetToBCD(0): 2 bytes, both $00');
    bcd := IcomOffsetToBCD(0);
@@ -232,7 +232,7 @@ end;
 
 procedure TIcomCIVTests.Test_OffsetToBCD_100Hz;
 var
-   bcd: string;
+   bcd: AnsiString;   // CI-V BCD is a binary byte stream (bytes may be >=$80); AnsiString keeps 1 byte/elem
 begin
    BeginTest('OffsetToBCD(100): byte[0]=$00, byte[1]=$01');
    bcd := IcomOffsetToBCD(100);
@@ -243,7 +243,7 @@ end;
 
 procedure TIcomCIVTests.Test_OffsetToBCD_NegativeUsesAbs;
 var
-   bcd_pos, bcd_neg: string;
+   bcd_pos, bcd_neg: AnsiString;
 begin
    BeginTest('OffsetToBCD(-100) = OffsetToBCD(100) (magnitude only)');
    bcd_pos := IcomOffsetToBCD(100);
@@ -253,7 +253,7 @@ end;
 
 procedure TIcomCIVTests.Test_OffsetToBCD_9999Hz;
 var
-   bcd: string;
+   bcd: AnsiString;   // CI-V BCD is a binary byte stream (bytes may be >=$80); AnsiString keeps 1 byte/elem
 begin
    BeginTest('OffsetToBCD(9999): 2 bytes');
    bcd := IcomOffsetToBCD(9999);
