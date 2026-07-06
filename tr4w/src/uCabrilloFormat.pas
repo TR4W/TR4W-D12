@@ -108,7 +108,7 @@ const
 // label string for above-30-MHz).
 // ---------------------------------------------------------------------------
 function FormatCabrilloFreq(band: BandType; freqHz: LongInt;
-                            showFreqInLog: Boolean): AnsiString;
+                            showFreqInLog: Boolean): string;
 
 // ---------------------------------------------------------------------------
 // FormatCabrilloMode
@@ -125,39 +125,39 @@ function FormatCabrilloFreq(band: BandType; freqHz: LongInt;
 //                                      (may be empty for slots set to nil)
 // ---------------------------------------------------------------------------
 function FormatCabrilloMode(mode: ModeType; extMode: ExtendedModeType;
-                            modeOverridesToPhone: Boolean): AnsiString;
+                            modeOverridesToPhone: Boolean): string;
 
 implementation
 
 uses SysUtils;
 
 function FormatCabrilloFreq(band: BandType; freqHz: LongInt;
-                            showFreqInLog: Boolean): AnsiString;
+                            showFreqInLog: Boolean): string;
 begin
    if showFreqInLog then
       begin
       if freqHz = 0 then
          begin
-         Result := AnsiString(tCabrilloFreqString[band]);
+         Result := string(tCabrilloFreqString[band]);   // boundary: table stays PAnsiChar (shared w/ PostUnit/UDP)
          end
       else if (freqHz > 0) and (freqHz < 30000000) then
          begin
-         Result := AnsiString(IntToStr(freqHz div 1000));
+         Result := IntToStr(freqHz div 1000);
          end
       else
          begin
          // freqHz >= 30 MHz -- Cabrillo spec: use band default
-         Result := AnsiString(tCabrilloFreqString[band]);
+         Result := string(tCabrilloFreqString[band]);   // boundary: table stays PAnsiChar (shared w/ PostUnit/UDP)
          end;
       end
    else
       begin
-      Result := AnsiString(tCabrilloFreqString[band]);
+      Result := string(tCabrilloFreqString[band]);   // boundary: table stays PAnsiChar (shared w/ PostUnit/UDP)
       end;
 end;
 
 function FormatCabrilloMode(mode: ModeType; extMode: ExtendedModeType;
-                            modeOverridesToPhone: Boolean): AnsiString;
+                            modeOverridesToPhone: Boolean): string;
 begin
    if mode = Digital then
       begin
@@ -176,7 +176,7 @@ begin
       end
    else
       begin
-      Result := AnsiString(tCabrilloModeString[mode]);
+      Result := string(tCabrilloModeString[mode]);   // boundary: table stays PAnsiChar
       end;
 end;
 
