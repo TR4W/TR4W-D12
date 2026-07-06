@@ -840,6 +840,7 @@ var
   Zone: Byte;
 begin
   Result := 0;
+  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
 
   if DoingDXMults or DoingZoneMults or DoingPrefixMults then
   begin

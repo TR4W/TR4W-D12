@@ -92,14 +92,22 @@ end;
 function TSSL.AddString(const s: Str10; Band: BandType; Mode: ModeType; JustAdd: boolean): integer;
 label
   Add;
+var
+  TempMode                              : ModeType;
 begin
   if FindMult(s, Result) then goto Add;
   InsertMult(Result, s, Band, Mode);
   Add:
   if JustAdd then Exit;
-  FList^[Result].FArray[Mode] := FList^[Result].FArray[Mode] or (1 shl Ord(Band));
+  // FM shares the Phone dupe/mult slot.  FArray is array[CW..NoMode]; FM
+  // (ordinal 5) is OUTSIDE it, so FArray[FM] is out of bounds -- a range
+  // error under D12 range-checking (a silent past-the-array write in D7).
+  // StringIsDupe already remaps FM->Phone; mirror it here.
+  TempMode := Mode;
+  if TempMode = FM then TempMode := Phone;
+  FList^[Result].FArray[TempMode] := FList^[Result].FArray[TempMode] or (1 shl Ord(Band));
   FList^[Result].FArray[Both] := FList^[Result].FArray[Both] or (1 shl Ord(Band));
-  FList^[Result].FArray[Mode] := FList^[Result].FArray[Mode] or (1 shl Ord(AllBands));
+  FList^[Result].FArray[TempMode] := FList^[Result].FArray[TempMode] or (1 shl Ord(AllBands));
   FList^[Result].FArray[Both] := FList^[Result].FArray[Both] or (1 shl Ord(AllBands));
 end;
 
@@ -124,8 +132,14 @@ begin
 end;
 
 function TSSL.StringIsDupeByIndex(IndexInList: integer; Band: BandType; Mode: ModeType): boolean;
+var
+  TempMode                              : ModeType;
 begin
-  Result := (FList^[IndexInList].FArray[Mode] and (1 shl Ord(Band))) <> 0;
+  // FM shares the Phone slot (see AddString): FArray is array[CW..NoMode] and
+  // FM is outside it, so remap before indexing to avoid an out-of-bounds read.
+  TempMode := Mode;
+  if TempMode = FM then TempMode := Phone;
+  Result := (FList^[IndexInList].FArray[TempMode] and (1 shl Ord(Band))) <> 0;
 end;
 
 function TSSL.StringIsDupe(const s: CallString; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
@@ -209,7 +223,12 @@ end;
 
 function TSSL.CompareStrings(const s1, s2: Str10): integer;
 begin
-  Result := CompareString(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, @s1[1], length(s1), @s2[1], length(s2)) - 2;
+  // CompareStringA (not the unsuffixed CompareString, which is CompareStringW
+  // under D12): s1/s2 are ANSI ShortStrings (Str10).  Passing ANSI bytes to
+  // the wide API compared them as UTF-16 -> garbage ordering in the mult/dupe
+  // binary search -> unbounded list growth + range error (WFD range error at
+  // FArray[Mode]), and silent multiplier miscounts on logs that don't crash.
+  Result := CompareStringA(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, @s1[1], length(s1), @s2[1], length(s2)) - 2;
 //  RESULT := StrComp(@s1[1], @s2[1]);
 end;
 

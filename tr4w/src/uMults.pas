@@ -82,6 +82,9 @@ var
 
 procedure MultsObject.IncrementTotals(Band: BandType; Mode: ModeType; m: RemainingMultiplierType);
 begin
+  // MTotals mode dim is CW..Both; FM (ordinal 5) is outside it -> remap to
+  // Phone (FM counts as Phone) so MTotals[Band, FM, m] is not out of bounds.
+  if Mode = FM then Mode := Phone;
   inc(MTotals[Band, Mode, m]);
 
   if Mode <> Both then
@@ -105,6 +108,7 @@ end;
 
 procedure MultsObject.SetZnMult(Zone: Word; Band: BandType; Mode: ModeType);
 begin
+  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if not (Zone in [0..ZoneMultArraySize]) then Exit;
   ZoneMultsArray[Zone][Mode] := ZoneMultsArray[Zone][Mode] or (1 shl Ord(Band));
   ZoneMultsArray[Zone][Both] := ZoneMultsArray[Zone][Both] or (1 shl Ord(Band));
@@ -115,6 +119,7 @@ end;
 
 procedure MultsObject.SetDXMult(Cntr: Word; Band: BandType; Mode: ModeType);
 begin
+  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Cntr >= CTY.ctyNumberCountries then Exit;
 
   DXMultsArray[Cntr][Mode] := DXMultsArray[Cntr][Mode] or (1 shl Ord(Band));
@@ -140,6 +145,7 @@ end;
 
 function MultsObject.IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
 begin
+  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Zone in [0..ZoneMultArraySize] then
     Result := (ZoneMultsArray[Zone][Mode] and (1 shl Ord(Band))) = 0
   else
@@ -148,6 +154,7 @@ end;
 
 function MultsObject.IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
 begin
+  if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Country < MaxCountries then
      Result := (DXMultsArray[Country][Mode] and (1 shl Ord(Band))) = 0
     else
