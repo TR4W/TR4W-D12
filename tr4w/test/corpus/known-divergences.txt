@@ -1,0 +1,14 @@
+# Corpus sets whose D7<->D12 golden diff is a KNOWN, tracked behavior
+# difference -- NOT a D12 conversion regression. run-golden-diff.sh reports
+# these as KNOWN instead of FAIL.  Format:  <slug>  <reason>
+#
+# Event-source issue (tracked in the TR4W issues, deferred to a later fix):
+# the SENT exchange is rebuilt from MY-station globals at export time (e.g.
+# MyZone), NOT stored per QSO.  When MyZone is 0/unset in the session, the
+# ADIF/Cabrillo formatter falls back to MY STATE.  The D7 refs were exported
+# with the zone set; these D12 exports were not, so the sent exchange shows
+# the state (FL) instead of the ITU zone.  logdump confirmed the log RECORD is
+# faithful (received Zone=8/27 read correctly) -- the difference is purely the
+# session global, not the conversion.
+iaru_hf_2026_ny4i       event-source: sent zone -> MY STATE fallback (MyZone 0 in session)
+general_qso_2026_w1aw4  event-source: MY STATE appended to sent exchange

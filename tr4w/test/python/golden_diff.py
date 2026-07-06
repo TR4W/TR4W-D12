@@ -76,12 +76,16 @@ def normalize_adif(text):
 
 
 def cabrillo_records(text):
-    """Keep only QSO: / X-QSO: lines -- the records a sponsor scores.  The
-    header varies with entrant settings and is intentionally dropped."""
+    """Keep the QSO: / X-QSO: records (what a sponsor scores) PLUS
+    CLAIMED-SCORE -- the latter is log/multiplier-derived, so a D12 mult
+    regression (e.g. the CompareStringW dupe/mult bug) shows up here.  The
+    rest of the header is entrant/settings metadata that legitimately varies
+    between exports, so it is dropped."""
     out = []
     for line in text.splitlines():
         u = line.lstrip().upper()
-        if u.startswith("QSO:") or u.startswith("X-QSO:"):
+        if (u.startswith("QSO:") or u.startswith("X-QSO:")
+                or u.startswith("CLAIMED-SCORE:")):
             out.append(line)
     return "\n".join(out)
 

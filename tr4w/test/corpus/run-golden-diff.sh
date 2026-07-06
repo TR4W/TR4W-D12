@@ -9,7 +9,11 @@
 # Populate candidates first, e.g.:
 #   bash tr4w/test/corpus/import-candidate.sh "/c/radio/TR4w/2026 ARRL-FD NY4I" arrl_fd_2026_ny4i
 GD="tr4w/test/python/golden_diff.py"
-pass=0; fail=0; skip=0
+KNOWN="tr4w/test/corpus/known-divergences.txt"
+# A set listed in known-divergences.txt diffs for a tracked, non-conversion
+# reason (see that file); report it as KNOWN, not FAIL.
+is_known(){ grep -qiE "^$1[[:space:]]" "$KNOWN" 2>/dev/null; }
+pass=0; fail=0; skip=0; known=0
 for d in tr4w/test/corpus/*/; do
    slug=$(basename "$d")
    for kind in adi cbr; do
@@ -21,6 +25,8 @@ for d in tr4w/test/corpus/*/; do
       fi
       if out=$(python "$GD" "$ref" "$cand" 2>&1); then
          printf '  PASS  %-26s %s\n' "$slug" "$kind"; pass=$((pass+1))
+      elif is_known "$slug"; then
+         printf '  KNOWN %-26s %-3s (event-source issue, deferred)\n' "$slug" "$kind"; known=$((known+1))
       else
          printf '  FAIL  %-26s %s\n' "$slug" "$kind"
          echo "$out" | grep -E '^[-+@]' | head -8 | sed 's/^/        /'
@@ -28,5 +34,5 @@ for d in tr4w/test/corpus/*/; do
       fi
    done
 done
-echo "=== $pass passed, $fail failed, $skip awaiting-candidate ==="
+echo "=== $pass passed, $fail failed, $known known-divergence, $skip awaiting-candidate ==="
 [ "$fail" -eq 0 ]
