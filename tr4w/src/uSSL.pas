@@ -60,13 +60,13 @@ type
 //    destructor Destroy; override;
     constructor Init;
     function StringIsDupeByIndex(IndexInList: integer; Band: BandType; Mode: ModeType): boolean;
-    function StringIsDupe(const s: CallString; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
-    function Get(Index: integer): Str10;
-    function AddString(const s: Str10; Band: BandType; Mode: ModeType; JustAdd: boolean): integer;
+    function StringIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
+    function Get(Index: integer): string;
+    function AddString(const s: string; Band: BandType; Mode: ModeType; JustAdd: boolean): integer;
     procedure Clear;
     procedure Delete(Index: integer);
     procedure ClearDupes;
-    function FindMult(const s: Str10; var Index: integer): boolean; virtual;
+    function FindMult(const s: string; var Index: integer): boolean; virtual;
     property Count: integer read FCount;
 //    property TotalMults: integer read FTotalMults;
 
@@ -89,7 +89,7 @@ begin
 end;
 }
 
-function TSSL.AddString(const s: Str10; Band: BandType; Mode: ModeType; JustAdd: boolean): integer;
+function TSSL.AddString(const s: string; Band: BandType; Mode: ModeType; JustAdd: boolean): integer;
 label
   Add;
 var
@@ -142,7 +142,7 @@ begin
   Result := (FList^[IndexInList].FArray[TempMode] and (1 shl Ord(Band))) <> 0;
 end;
 
-function TSSL.StringIsDupe(const s: CallString; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
+function TSSL.StringIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
 var
   Index                                 : integer;
   TempMode                              : ModeType;
@@ -159,7 +159,7 @@ begin
     IndexInList := -1;
 end;
 
-function TSSL.FindMult(const s: Str10; var Index: integer): boolean;
+function TSSL.FindMult(const s: string; var Index: integer): boolean;
 var
   l, h, i, c                            : integer;
 begin
@@ -183,7 +183,7 @@ begin
   Index := l;
 end;
 
-function TSSL.Get(Index: integer): Str10;
+function TSSL.Get(Index: integer): string;
 begin
   Result := FList^[Index].FMult;
 end;
