@@ -5650,6 +5650,7 @@ end;
 
 procedure FilePreview;
 begin
+  if tSilentExport then Exit;   // batch /EXPORT: no modal preview window
   // TryToLoadRICHED32DLL;
   // if RICHED32DLLHANDLE = 0 then RICHED32DLLHANDLE := Windows.LoadLibrary('RICHED32.DLL');
   RichEditOperation(True);

@@ -521,7 +521,7 @@ begin
   PreviewFileIsCabrillo := True;
   FilePreview;
   // Ask if user wants to upload the Cabrillo file to SCP
-  If YesOrNo(0,'Do you want to upload your Cabrillo file to SuperChecklPartial?' {TC_WANTTOCONVERTLOG}) = IDYES then
+  If (not tSilentExport) and (YesOrNo(0,'Do you want to upload your Cabrillo file to SuperChecklPartial?' {TC_WANTTOCONVERTLOG}) = IDYES) then
      begin
      scp := TSCPUpload.Create(true,logger);
      try

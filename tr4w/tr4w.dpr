@@ -621,7 +621,12 @@ begin
   s := ParamStr(1);
   if s <> '' then
   begin
-    Windows.CopyMemory(@TR4W_CFG_FILENAME, @s[1], length(s));
+    // D12: ParamStr returns a wide UnicodeString.  The old
+    // CopyMemory(@buf, @s[1], length(s)) copied WIDE bytes into the ANSI
+    // FileNameType buffer using a CHARACTER count -> "C",#0,":",#0,... ->
+    // the cfg path was truncated to "C", config never loaded, and startup
+    // died with "No callsign specified".  Copy the ANSI form instead.
+    Windows.lstrcpyA(TR4W_CFG_FILENAME, PAnsiChar(AnsiString(s)));
     goto CommandLine;
   end;
 
@@ -775,6 +780,22 @@ begin
 
   Windows.ShowWindow(wh[mweWSJTX], SW_HIDE);
   SetUpGlobalsAndInitialize;
+
+  // Golden-master automation: launched as  tr4w.exe "<contest>.CFG" /EXPORT
+  // the config + log + mults are loaded now, so run the SAME export procs the
+  // File->Export menu uses (identical output, incl. the -D12 banner) and exit
+  // BEFORE the GUI message loop + radio/network init.  ExportToADIF and
+  // CreateCabrilloFile each derive their own filename and, called directly,
+  // pop no dialog.  (Contests that show a startup dialog -- e.g. IARU call
+  // history -- must be excluded by the driver, since that would block batch.)
+  if SameText(ParamStr(2), '/EXPORT') then
+     begin
+     tSilentExport := True;   // suppress the modal preview + SCP-upload prompt
+     ExportToADIF;
+     CreateCabrilloFile;
+     Halt(0);
+     end;
+
   if SayHiEnable then
      DisplayNamePercentage;
   SetStereoPin(StereoControlPin, StereoPinState);
