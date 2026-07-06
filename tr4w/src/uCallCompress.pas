@@ -16,10 +16,13 @@ unit uCallCompress;
   CompressFormat / BigCompressFormat here, so the ~13 existing callers (dupe
   checking, binary log format, ...) run this code unchanged.
 
-  Bodies moved verbatim, with two deliberate, behavior-preserving edits:
-    * strU(Call) -> uStrSearch.StrU(Call): tree's strU was TF.strU, which #997
-      relocated to the light uStrSearch. Same routine; this drops the TF
-      (-> MainUnit) dependency so this unit stays link-light.
+  Bodies moved verbatim, with these deliberate, behavior-preserving edits:
+    * D12 string flip: the interior is native `string`/`Char` (was
+      CallString/Str80/AnsiChar); the packed-byte outputs
+      (TwoBytes/FourBytes/EightBytes) stay -- boundary: fixed compression layout.
+    * strU(Call): tree's strU was TF.strU (#997 relocated it to uStrSearch).
+      The flip inlines the ASCII a..z upcase directly on the string, so this
+      unit now has no uStrSearch dependency (leaf below VC). Byte-identical.
     * The one extended-char branch in WordValueFromCharacter is written as the
       explicit byte sequence #$EF#$BF#$BD instead of a source literal -- see the
       comment there. That keeps it byte-identical without an encoding-fragile
@@ -31,17 +34,14 @@ interface
 uses
    VC;
 
-function WordValueFromCharacter(Character: AnsiChar): Word;
-procedure CompressThreeCharacters(Input: Str80; var Output: TwoBytes);
-procedure CompressFormat(Call: CallString; var Output: FourBytes);
-procedure BigCompressFormat(Call: CallString; var CompressedBigCall: EightBytes);
+function WordValueFromCharacter(Character: Char): Word;
+procedure CompressThreeCharacters(const Input: string; var Output: TwoBytes);
+procedure CompressFormat(Call: string; var Output: FourBytes);
+procedure BigCompressFormat(Call: string; var CompressedBigCall: EightBytes);
 
 implementation
 
-uses
-   uStrSearch;
-
-function WordValueFromCharacter(Character: AnsiChar): Word;
+function WordValueFromCharacter(Character: Char): Word;
 begin
   if (Character = CHR(0)) or (Character = ' ') or
     (Character = '/') or (Character = '?') then
@@ -82,7 +82,7 @@ begin
   WordValueFromCharacter := 0;
 end;
 
-procedure CompressThreeCharacters(Input: Str80; var Output: TwoBytes);
+procedure CompressThreeCharacters(const Input: string; var Output: TwoBytes);
 
 { This procedure will compress a string of up to 3 characters to 2 bytes. }
 
@@ -115,13 +115,14 @@ begin
   Output[1] := Hi(Sum);
 end;
 
-procedure CompressFormat(Call: CallString; var Output: FourBytes);
+procedure CompressFormat(Call: string; var Output: FourBytes);
 
 { This function will give the compressed representation for the string
     passed to it.  The string must be no longer than 6 characters.  }
 
 var
   TempBytes                             : TwoBytes;
+  i                                     : integer;
 
 begin
   if Call = '' then
@@ -133,7 +134,12 @@ begin
     Exit;
   end;
 
-  uStrSearch.StrU(Call);   // was TF.strU (relocated to uStrSearch in #997)
+  // Upcase ASCII 'a'..'z' in place (native string).  Was uStrSearch.StrU on a
+  // ShortString; inlined here as the same a..z/$20 rule so the unit needs no
+  // uStrSearch dependency.  Byte-identical; frozen by uTestCallCompress.
+  for i := 1 to Length(Call) do
+    if (Call[i] >= 'a') and (Call[i] <= 'z') then
+      Call[i] := Char(Ord(Call[i]) - $20);
 
   while length(Call) < 6 do Call := ' ' + Call;
 
@@ -145,12 +151,12 @@ begin
   Output[4] := TempBytes[2];
 end;
 
-procedure BigCompressFormat(Call: CallString; var CompressedBigCall: EightBytes);
+procedure BigCompressFormat(Call: string; var CompressedBigCall: EightBytes);
 
 var
   CompressedCall                        : FourBytes;
   Byte                                  : integer;
-  ShortCall                             : Str20;
+  ShortCall                             : string;
 
 begin
   while length(Call) < 12 do
