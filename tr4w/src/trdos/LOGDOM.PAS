@@ -412,23 +412,6 @@ begin
       RecordPointerIndex := -1;
 end;
 
-function RemoveDomQTHName(var FileString: ShortString {Str160}): Str80;
-
-begin
-  RemoveDomQTHName := PrecedingString(FileString, ':');
-  FileString := PostcedingString(FileString, ':');
-  GetRidOfPrecedingSpaces(FileString);
-end;
-
-function RemoveDomQTHID(var FileString: ShortString {Str160}): Str80;
-
-begin
-  RemoveDomQTHID := PrecedingString(FileString, ':');
-  FileString := PostcedingString(FileString, ':');
-  GetRidOfPrecedingSpaces(FileString);
-  GetRidOfPostcedingSpaces(FileString);
-end;
-
 function GetNextPrefix(var FileString: ShortString {Str160};
   var PrefixString: ShortString {Str20}): boolean;
 

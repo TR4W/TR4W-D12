@@ -719,7 +719,6 @@ function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
 function AddBand(Band: BandType): Char;
 function AddMode(Mode: ModeType): Char;
 
-function AlphaPartOfString(InputString: Str160): Str80;
 
 //function ArcCos(X: REAL): REAL;
 //function ATan2(Y, X: REAL): REAL;
@@ -746,7 +745,6 @@ function CheckSumWord(InputString: string): Word;
 procedure CompressFormat(Call: CallString; var Output: FourBytes);
 
 //function ControlKeyPressed: boolean;
-function CopyWord(LongString: string; Index: integer): Str80;
 
 procedure DecrementASCIIInteger(var ASCIIString: Str80);
 procedure DelayOrKeyPressed(DelayTime: integer);
@@ -869,7 +867,6 @@ function Lpt1BaseAddress: Word;
 function Lpt2BaseAddress: Word;
 function Lpt3BaseAddress: Word;
 
-function MakeDupeFilename(Band: BandType; Mode: ModeType): Str80;
 procedure MarkTime(var StartTime: Cardinal {TimeRecord});
 function MicroTimeElapsed(StartTime: Cardinal {TimeRecord}): LONGINT;
 function MinutesToTimeString(Minutes: integer): Str20;
@@ -1293,28 +1290,6 @@ begin
   AddMode := TempChar;
 end;
 
-function AlphaPartOfString(InputString: Str160): Str80;
-
-var
-  TempString                            : Str80;
-  CharPointer                           : integer;
-
-begin
-  if InputString = '' then
-  begin
-    AlphaPartOfString := '';
-    Exit;
-  end;
-
-  TempString := '';
-
-  for CharPointer := 1 to length(InputString) do
-    if (InputString[CharPointer] >= 'A') and (InputString[CharPointer] <= 'Z') then
-      TempString := TempString + InputString[CharPointer];
-
-  AlphaPartOfString := TempString;
-end;
-
 function BigCompressedCallsAreEqual(Call1, Call2: EightBytes): boolean;
 begin
   Result := int64(Call1) = int64(Call2);
@@ -1642,18 +1617,6 @@ procedure CompressFormat(Call: CallString; var Output: FourBytes);
 
 begin
   uCallCompress.CompressFormat(Call, Output);
-end;
-
-function CopyWord(LongString: string; Index: integer): Str80;
-
-begin
-  CopyWord := '';
-
-  if Index = 0 then Exit;
-
-  Delete(LongString, 1, Index - 1);
-
-  CopyWord := GetFirstString(LongString);
 end;
 
 procedure DecrementASCIIInteger(var ASCIIString: Str80);
@@ -3230,15 +3193,6 @@ begin
       ELSE
           Lpt3BaseAddress := Address;
  }
-end;
-
-function MakeDupeFilename(Band: BandType; Mode: ModeType): Str80;
-
-{ This procedure will generate the duping filename for the band and mode
-    specified.                                                                }
-
-begin
-  MakeDupeFilename := 'L' + ModeStringArray[Mode] + BandStringsArray[Band];
 end;
 
 function MicroTimeElapsed(StartTime: Cardinal {TimeRecord}): LONGINT;

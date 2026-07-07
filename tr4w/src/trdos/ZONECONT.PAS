@@ -188,53 +188,6 @@ begin
   FirstDomesticCountryRecord := nil;
 end;
 
-function CallDistrict(Call: CallString): Str20;
-
-var
-  TempString                            : Str20;
-  FoundLetter, FoundNumber              : boolean;
-  CharacterCount                        : integer;
-
-begin
-  Call := StandardCallFormat(Call, True);
-
-  if StringHas(Call, '/') then Call := PrecedingString(Call, '/');
-
-  CallDistrict := '';
-  TempString := '';
-
-  if Call = '' then Exit;
-
-  FoundLetter := False;
-  FoundNumber := False;
-
-  for CharacterCount := 1 to length(Call) do
-    if not FoundLetter then
-    begin
-      if (Call[CharacterCount] >= 'A') and (Call[CharacterCount] <= 'Z') then
-        FoundLetter := True;
-    end
-    else
-      if not FoundNumber then
-      begin
-        if (Call[CharacterCount] >= '0') and (Call[CharacterCount] <= '9') then
-        begin
-          TempString := Call[CharacterCount];
-          FoundNumber := True;
-        end;
-      end
-      else
-        if Call[CharacterCount] > '9' then
-        begin
-          CallDistrict := TempString;
-          Exit;
-        end
-        else
-          TempString := TempString + Call[CharacterCount];
-
-  CallDistrict := TempString;
-end;
-
 function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): Str20;
 var
   NumberChar                            : AnsiChar;
