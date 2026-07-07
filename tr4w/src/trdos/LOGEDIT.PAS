@@ -164,7 +164,7 @@ procedure CleanUpDisplay;
 function DetermineQTCNumberAndQuanity(InputString: Str80; var QTCNumber:
   integer; var Quantity: integer): boolean;
 procedure TimeAndDateSet;
-function InitialExchangeEntry(Call: CallString): Str80;
+function InitialExchangeEntry(Call: CallString): string;
 procedure MoveGridMap(Key: Char);
 function QuickEditResponseWithPartials(Prompt: Str80; MaxInputLength: integer):
   Str80;
@@ -2274,7 +2274,7 @@ begin
   //  RestorePreviousWindow;
 end;
 
-function InitialExchangeEntry(Call: CallString): Str80;
+function InitialExchangeEntry(Call: CallString): string;
 
 { This function will give you an initial exchange window entry if it
   thinks it knows what the guy will send.                            }

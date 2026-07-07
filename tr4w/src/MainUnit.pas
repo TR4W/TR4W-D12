@@ -5492,12 +5492,10 @@ begin
 end;
 
 procedure tSetExchWindInitExchangeEntry;
-var
-  ie: Str80;
 begin
-  Windows.ZeroMemory(@ie, SizeOf(ie));
-  ie := InitialExchangeEntry(CallWindowString);
-  SetMainWindowText(mweExchange, string(PAnsiChar(@ie[1])));
+  // D12: InitialExchangeEntry + SetMainWindowText are native string now, so the
+  // Str80 local, its ZeroMemory, and the @ie[1] ASCIIZ view are all gone.
+  SetMainWindowText(mweExchange, InitialExchangeEntry(CallWindowString));
   if LeaveCursorInCallWindow then
     tCallWindowSetFocus;
 end;
