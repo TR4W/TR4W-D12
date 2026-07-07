@@ -44,7 +44,7 @@ function GetDistanceBetweenGrids(Grid1, Grid2: GridString): integer;
 function GetEuropeanDistanceBetweenGrids(Grid1, Grid2: GridString): integer;
 function RTCGridDistance(Grid1, Grid2: GridString): Double; // Issue #902 -- RTC contest Haversine
 procedure GetLatLon(Grid: GridString; var Lat, Lon: REAL);
-function GetSunriseSunsetString(Lat: REAL; Lon: REAL): Str80;
+function GetSunriseSunsetString(Lat: REAL; Lon: REAL): string;
 function LooksLikeAGeoCoordinates(Coordinates: Str40; var LatValue, LongValue: integer): boolean;
 //function LooksLikeRadio160Square(Square: Str20): boolean;
 
@@ -559,7 +559,7 @@ begin
   Result := True; //wli
 end;
 
-function GetSunriseSunsetString(Lat: REAL; Lon: REAL): Str80;
+function GetSunriseSunsetString(Lat: REAL; Lon: REAL): string;
 
 var
   Year, Month, Day, DayOfWeek           : Word;
