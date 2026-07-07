@@ -27,6 +27,10 @@ SKIP=" iaru_hf_2026_ny4i "
 towin(){ cygpath -d "$1"; }   # DOS 8.3 short path -- NO spaces, so Git-Bash->exe
                               # arg passing can't split the contest dir name.
 
+# Fail-loud prep: clear prior candidates so a set whose export aborts/produces
+# nothing can't keep passing on a stale file (run-golden-diff.sh runs below in
+# GOLDEN_STRICT mode -- a set with a ref but no FRESH candidate is a FAIL).
+rm -f "$here"/*/cand.adi "$here"/*/cand.cbr 2>/dev/null
 n=0
 for m in "$here"/*/manifest.json; do
    slug=$(python -c "import json,sys;print(json.load(open(sys.argv[1]))['slug'])" "$m")
@@ -37,6 +41,14 @@ for m in "$here"/*/manifest.json; do
    cfg=$(ls "$d12"/*.CFG "$d12"/*.cfg 2>/dev/null | grep -vi backup | head -1)
    [ -n "$cfg" ] || { printf '  MISS   %-26s (no cfg in %s)\n' "$slug" "$d12"; continue; }
    printf '  export %-26s\n' "$slug"
+   # Fail-loud: delete this set's prior export outputs (ADIF + the Cabrillo .LOG,
+   # identified by its START-OF-LOG header) so an aborted export leaves NO stale
+   # candidate. A missing candidate then surfaces as a strict FAIL, not a pass.
+   rm -f "$d12"/*.ADI "$d12"/*.adi 2>/dev/null
+   for lg in "$d12"/*.LOG "$d12"/*.log; do
+      [ -f "$lg" ] || continue
+      head -1 "$lg" 2>/dev/null | grep -qi 'START-OF-LOG' && rm -f "$lg"
+   done
    # run from target/ so the app resolves CTY.DAT + support files as usual
    # MSYS_NO_PATHCONV: stop Git Bash from mangling the /EXPORT flag into a path.
    # per-set timeout: a stray load dialog can't hang the whole run
@@ -46,7 +58,7 @@ done
 echo "exported $n set(s)"; echo
 
 if [ -z "$ONLY" ]; then
-   bash "$here/pull-d12-candidates.sh" "$D12_ROOT"
+   GOLDEN_STRICT=1 bash "$here/pull-d12-candidates.sh" "$D12_ROOT"
 else
    echo "(single-set smoke test -- run with no args for the full export + sweep)"
 fi
