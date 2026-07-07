@@ -121,7 +121,6 @@ function GetMyExchangeForExport: string;
 procedure ExportToEDI;
 procedure ExportToEDIByBand(Band: BandType);
 procedure ExportToADIF;
-procedure ExportToTRLogFormat;
 procedure ExportToCSV;   //n4af 04.30.3
 procedure ExportTo3830Scores;
 procedure PrintQSOsByCountry;
@@ -2157,14 +2156,6 @@ begin
   FilePreview;
 end;
 
-
-procedure ExportToTRLogFormat;
-label
-  1;
-
-begin
-
-end;
 
 function tGenerateSummaryPortionOfCabrilloFile: boolean;
 var
