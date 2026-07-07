@@ -767,8 +767,6 @@ procedure TestRadioInterface;
 function GetRadioParameters(Radio: RadioType; RadioInfoString: string;
    var Freq: longint; var Band: BandType; var Mode: ModeType;
    Polling: boolean; Debug: boolean): boolean;
-//wli
-function GenerateStatusString(var StatusRecord: RadioStatusRecord): Str80;
 procedure PutRadioIntoSplit(Radio: RadioType);
 procedure PutRadioOutOfSplit(Radio: RadioType);
 procedure SetRadioFreq(Radio: RadioType; Freq: longint; Mode: ModeType; VFO: char);
@@ -3954,76 +3952,6 @@ begin
       end;
 end;
 
-function GenerateStatusString(var StatusRecord: RadioStatusRecord): Str80;
-
-{ This function will generate a string with the complete status of a
-  RadioStatusRecord. }
-
-var
-   StatusString, TempString: string;
-   TempValue: real;
-
-begin
-   StatusString := '';
-
-   with StatusRecord do
-      begin
-      TempValue := Freq;
-      TempValue := TempValue / 1000; { Convert to kHz }
-      Str(TempValue: 5: 1, TempString);
-      StatusString := StatusString + TempString + ' ';
-
-      StatusString := StatusString + BandStringsArray[Band] + ' ';
-      StatusString := StatusString + ModeStringArray[Mode] + ' ';
-
-      if Split = True then
-         begin
-         StatusString := StatusString + 'Split      ';
-         end
-      else
-         begin
-         StatusString := StatusString + 'Transceive ';
-         end;
-
-      StatusString := StatusString + 'VFOA= ';
-
-      TempValue := VFO[VFOA].Frequency;
-      TempValue := TempValue / 1000; { Convert to kHz }
-      Str(TempValue: 5: 1, TempString);
-      StatusString := StatusString + TempString + ' ';
-
-      StatusString := StatusString + BandStringsArray[VFO[VFOA].Band] + ' ';
-      StatusString := StatusString + ModeStringArray[VFO[VFOA].Mode] + ' ';
-      {
-               case VFOA.TXRX of
-                  VFODisabled: StatusString := StatusString + 'Off ';
-                  RXOnly: StatusString := StatusString + 'RX  ';
-                  TXOnly: StatusString := StatusString + 'TX  ';
-                  Transceive: StatusString := StatusString + 'T/R ';
-                  UnknownTXRX: StatusString := StatusString + '??? ';
-               end;
-      }
-      StatusString := StatusString + 'VFOB= ';
-
-      TempValue := VFO[VFOB].Frequency;
-      TempValue := TempValue / 1000; { Convert to kHz }
-      Str(TempValue: 5: 1, TempString);
-      StatusString := StatusString + TempString + ' ';
-
-      StatusString := StatusString + ModeStringArray[VFO[VFOB].Mode] + ' ';
-      {
-               case VFOB.TXRX of
-                  VFODisabled: StatusString := StatusString + 'Off';
-                  RXOnly: StatusString := StatusString + 'RX ';
-                  TXOnly: StatusString := StatusString + 'TX ';
-                  Transceive: StatusString := StatusString + 'T/R';
-                  UnknownTXRX: StatusString := StatusString + '???';
-               end;
-              }
-      end;
-
-   Result := StatusString;
-end;
 
 procedure TestRadioInterface;
 

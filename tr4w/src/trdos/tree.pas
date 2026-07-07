@@ -870,7 +870,6 @@ function Lpt2BaseAddress: Word;
 function Lpt3BaseAddress: Word;
 
 function MakeDupeFilename(Band: BandType; Mode: ModeType): Str80;
-function MakeTitle(Band: BandType; Mode: ModeType; Contest: Str80; CallUsed: Str80): Str80;
 procedure MarkTime(var StartTime: Cardinal {TimeRecord});
 function MicroTimeElapsed(StartTime: Cardinal {TimeRecord}): LONGINT;
 function MinutesToTimeString(Minutes: integer): Str20;
@@ -3240,12 +3239,6 @@ function MakeDupeFilename(Band: BandType; Mode: ModeType): Str80;
 
 begin
   MakeDupeFilename := 'L' + ModeStringArray[Mode] + BandStringsArray[Band];
-end;
-
-function MakeTitle(Band: BandType; Mode: ModeType; Contest: Str80; CallUsed: Str80): Str80;
-
-begin
-  MakeTitle := Contest + '   ' + CallUsed + '   ' + BandStringsArray[Band] + ' ' + ModeStringArray[Mode];
 end;
 
 function MicroTimeElapsed(StartTime: Cardinal {TimeRecord}): LONGINT;

@@ -123,7 +123,6 @@ uses
   utils_text in 'src\utils\utils_text.pas',
   utils_math in 'src\utils\utils_math.pas',
   utils_file in 'src\utils\utils_file.pas',
-  exportto_trlog in 'src\exportto_trlog.pas',
   uWSJTX in 'src\uWSJTX.pas',
   uHamScore in 'src\uHamScore.pas',
   uExchangeBuilder in 'src\uExchangeBuilder.pas',
