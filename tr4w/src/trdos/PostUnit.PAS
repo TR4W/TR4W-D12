@@ -2178,11 +2178,45 @@ var
   TempInteger                           : integer;
 const
   op                                    = 'OPERATORS: ';
+
+   // Fetch a Cabrillo summary tag's text into TempBuffer2, returning its length
+   // (0 = empty) so every existing "= 0" / "[0] = #0" check keeps working.
+   //
+   // In the GUI these fields live in the CreateCabrilloWindow dialog, which
+   // both loads them from and saves them to tr4w.ini [REPORT] (see uCbrSum).
+   // Headless /EXPORT (tr4w.exe "<cfg>" /EXPORT) never creates that dialog, so
+   // the old GetDlgItemTextA(CreateCabrilloWindow, ...) read a null window and
+   // returned empty: the LOCATION guard below then aborted every WFD/ARRL10
+   // batch export, and the header dropped NAME/CLUB/ADDRESS/etc.  When no dialog
+   // exists, read the SAME ini key the dialog would have loaded, so the batch
+   // file is the valid, complete Cabrillo a sponsor expects.
+   function GetCabrilloTagText(Tag: CabrilloTags): integer;
+   var
+      Section                            : PAnsiChar;
+   begin
+      if CreateCabrilloWindow <> 0 then
+         begin
+         Result := Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(Tag) + 200, @TempBuffer2, SizeOf(TempBuffer2));
+         end
+      else
+         begin
+         if ErmakSpecification then
+            begin
+            Section := ERMAKSECTION;
+            end
+         else
+            begin
+            Section := CABRILLOSECTION;
+            end;
+         Result := GetPrivateProfileStringA(Section, CabrilloTagsArray[Tag].ctrTag, nil, @TempBuffer2, SizeOf(TempBuffer2), TR4W_INI_FILENAME);
+         end;
+   end;
+
 begin
   Result := False;
 
   if (Contest = ARRL10) or (Contest = WINTERFIELDDAY) then
-    if Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(ctLocation) + 200, @TempBuffer2, SizeOf(TempBuffer2)) = 0 then
+    if GetCabrilloTagText(ctLocation) = 0 then
     begin
       showwarning('LOCATION field is empty.');
       Exit;
@@ -2216,7 +2250,7 @@ begin
   begin
     if ErmakSpecification then if TempTag = ctOperators then Continue;
 
-    Windows.GetDlgItemTextA(CreateCabrilloWindow, integer(TempTag) + 200, @TempBuffer2, SizeOf(TempBuffer2));
+    GetCabrilloTagText(TempTag);
     //if TempBuffer2[0] = #0 then Continue;
     if TempTag = ctOperators then
        begin
