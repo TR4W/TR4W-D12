@@ -1634,7 +1634,7 @@ begin
 
   for i := 1 to length(Exchange) - 1 do
   begin
-    if (tCharIsNumbers(Exchange[i]) <> tCharIsNumbers(Exchange[i + 1])) or
+    if (tCharIsNumbers(Char(Exchange[i])) <> tCharIsNumbers(Char(Exchange[i + 1]))) or
       (Exchange[i + 1] = ' ') then
     begin
       Str1 := Copy(Exchange, 1, i);
@@ -1644,7 +1644,7 @@ begin
 
   for i := length(Exchange) downto 2 do
   begin
-    if (tCharIsNumbers(Exchange[i]) <> tCharIsNumbers(Exchange[i - 1])) or
+    if (tCharIsNumbers(Char(Exchange[i])) <> tCharIsNumbers(Char(Exchange[i - 1]))) or
       (Exchange[i - 1] = ' ') then
     begin
       Str2 := Copy(Exchange, i, 80);

@@ -3,60 +3,49 @@ unit utils_text;
 interface
 uses VC, SysUtils;
 
-function UpperCase(const s: ShortString): ShortString;
+function UpperCase(const s: string): string;
 
-function tCharIsNumbers(c: AnsiChar): boolean;
-function tCharIsAlphaNumericOrDash(c: AnsiChar): boolean;
+function tCharIsNumbers(c: Char): boolean;
+function tCharIsAlphaNumericOrDash(c: Char): boolean;
 
-function safeFloat(sStringFloat : AnsiString) : double;
-function StringHas(LongString: Str160; SearchString: Str80): boolean;
-function StringHasNumber(Prompt: Str80): boolean;
-function StringHasLowerCase(InputString: Str160): boolean;
-function StringIsAllNumbers(InputString: Str160): boolean;
-function StringIsAllNumbersOrSpaces(InputString: Str160): boolean;
-function StringIsAllNumbersOrDecimal(InputString: Str160): boolean;
-function StringIsAllAlphanumericOrDash(InputString: Str160; bNoCase: boolean = false): boolean;
-function StringHasLetters(InputString: Str160): boolean;
-function StringWithFirstWordDeleted(InputString: Str160): Str160;
+function safeFloat(sStringFloat : string) : double;
+function StringHas(LongString: string; SearchString: string): boolean;
+function StringHasNumber(Prompt: string): boolean;
+function StringHasLowerCase(InputString: string): boolean;
+function StringIsAllNumbers(InputString: string): boolean;
+function StringIsAllNumbersOrSpaces(InputString: string): boolean;
+function StringIsAllNumbersOrDecimal(InputString: string): boolean;
+function StringIsAllAlphanumericOrDash(InputString: string; bNoCase: boolean = false): boolean;
+function StringHasLetters(InputString: string): boolean;
+function StringWithFirstWordDeleted(InputString: string): string;
 
-function PostcedingString(LongString: ShortString; Deliminator: ShortString): ShortString;
-function PrecedingString(LongString: ShortString; Deliminator: ShortString): ShortString;
+function PostcedingString(LongString: string; Deliminator: string): string;
+function PrecedingString(LongString: string; Deliminator: string): string;
 
-function tPos(s: ShortString; c: AnsiChar): integer; //wli
-function pPos(c: AnsiChar; p: PAnsiChar): integer;
+function tPos(s: ShortString; c: AnsiChar): integer; //wli  boundary: byte-char search (legacy ShortString callers)
+function pPos(c: AnsiChar; p: PAnsiChar): integer;         // boundary: raw PAnsiChar scan
 
-function StrComp(const Str1, Str2: PAnsiChar): integer;
-procedure StrUpper(Str: PAnsiChar);
+function StrComp(const Str1, Str2: PAnsiChar): integer;    // boundary: PAnsiChar (asm)
+procedure StrUpper(Str: PAnsiChar);                        // boundary: PAnsiChar (asm)
 
 implementation
 
-function UpperCase(const s: ShortString): ShortString;
+function UpperCase(const s: string): string;
 var
-  ch                                    : AnsiChar;
-  l                                     : integer;
-  Source, Dest                          : PAnsiChar;
+  i                                     : integer;
 begin
-//  inc(tempshowcty);
-  //      Result := UpperCase_JOH_IA32_5(s);
-//  RESULT := s;
-//  Exit;
-  l := length(s);
-  SetLength(Result, l);
-  Source := @s[1];
-  Dest := @Result[1];
-  while l <> 0 do
-  begin
-    ch := Source^;
-    if (ch >= 'a') and (ch <= 'z') then dec(ch, 32);
-    Dest^ := ch;
-    inc(Source);
-    inc(Dest);
-    dec(l);
-  end;
-
+  // ASCII-only upcase (a..z -> A..Z), byte-stable for callsign/contest text --
+  // deliberately NOT System.SysUtils.UpperCase (which does full Unicode casing).
+  // Was a PAnsiChar pointer loop; now a plain native-string loop.
+  SetLength(Result, Length(s));
+  for i := 1 to Length(s) do
+    if (s[i] >= 'a') and (s[i] <= 'z') then
+      Result[i] := Char(Ord(s[i]) - 32)
+    else
+      Result[i] := s[i];
 end;
 
-function StringHas(LongString: Str160; SearchString: Str80): boolean;
+function StringHas(LongString: string; SearchString: string): boolean;
 
 { This function will return TRUE if the SearchString is contained in the
     LongString.                                                                }
@@ -67,7 +56,7 @@ end;
 
 
 
-function StringIsAllAlphanumericOrDash(InputString: Str160; bNoCase: boolean = false): boolean;
+function StringIsAllAlphanumericOrDash(InputString: string; bNoCase: boolean = false): boolean;
 var
   CharPos                               : integer;
 begin
@@ -91,7 +80,7 @@ end;
 
 
 
-function StringHasLetters(InputString: Str160): boolean;
+function StringHasLetters(InputString: string): boolean;
 
 var
   CharPos                               : integer;
@@ -108,7 +97,7 @@ begin
   StringHasLetters := False;
 end;
 
-function StringHasLowerCase(InputString: Str160): boolean;
+function StringHasLowerCase(InputString: string): boolean;
 
 var
   CharPos                               : integer;
@@ -124,7 +113,7 @@ begin
   StringHasLowerCase := False;
 end;
 
-function StringHasNumber(Prompt: Str80): boolean;
+function StringHasNumber(Prompt: string): boolean;
 
 var
   ChrPtr                                : integer;
@@ -142,7 +131,7 @@ begin
     end;
 end;
 
-function StringIsAllNumbers(InputString: Str160): boolean;
+function StringIsAllNumbers(InputString: string): boolean;
 
 var
   CharPos                               : integer;
@@ -158,19 +147,19 @@ begin
   StringIsAllNumbers := True;
 end;
 
-function tCharIsNumbers(c: AnsiChar): boolean;
+function tCharIsNumbers(c: Char): boolean;
 begin
   Result := c in ['0'..'9'];
 end;
 
-function tCharIsAlphaNumericOrDash(c: AnsiChar): boolean;
+function tCharIsAlphaNumericOrDash(c: Char): boolean;
 begin
    Result := (c in ['0'..'9']) or
              (c in ['A'..'Z']) or
              (c in ['-']);
 end;
 
-function StringIsAllNumbersOrSpaces(InputString: Str160): boolean;
+function StringIsAllNumbersOrSpaces(InputString: string): boolean;
 
 var
   CharPos                               : integer;
@@ -187,7 +176,7 @@ begin
   StringIsAllNumbersOrSpaces := True;
 end;
 
-function StringIsAllNumbersOrDecimal(InputString: Str160): boolean;
+function StringIsAllNumbersOrDecimal(InputString: string): boolean;
 
 var
   CharPos                               : integer;
@@ -204,13 +193,13 @@ begin
   StringIsAllNumbersOrDecimal := True;
 end;
 
-function StringWithFirstWordDeleted(InputString: Str160): Str160;
+function StringWithFirstWordDeleted(InputString: string): string;
 
 { This function performs a wordstar like control-T operation on the
     string passed to it.                                                   }
 
 var
-  DeletedChar                           : AnsiChar;
+  DeletedChar                           : Char;
 
 begin
   if (InputString = '') or (not StringHas(InputString, ' ')) then
@@ -233,7 +222,7 @@ begin
   StringWithFirstWordDeleted := InputString;
 end;
 
-function PostcedingString(LongString: ShortString; Deliminator: ShortString): ShortString;
+function PostcedingString(LongString: string; Deliminator: string): string;
 
 var
   Position                              : integer;
@@ -250,7 +239,7 @@ begin
     PostcedingString := '';
 end;
 
-function PrecedingString(LongString: ShortString; Deliminator: ShortString): ShortString;
+function PrecedingString(LongString: string; Deliminator: string): string;
 
 var
   Position                              : integer;
@@ -343,7 +332,7 @@ end;
 
   Strips many bad characters from a string and returns it as a double.
 }
-function safeFloat(sStringFloat : AnsiString) : double;
+function safeFloat(sStringFloat : string) : double;
 var
   dReturn : double;
 
