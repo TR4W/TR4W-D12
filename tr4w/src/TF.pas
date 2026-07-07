@@ -111,7 +111,6 @@ function Createmsctls_progress32(X, Y, Width, Height: integer; hwndParent: HWND;
 
 function CreateOwnerDrawListBox(dwStyle: DWORD; hwndParent: HWND): HWND;
 function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
-function EnumerateLinesInFile_old(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
 procedure UnableToFindFileMessage(FileName: PAnsiChar);
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
@@ -179,8 +178,6 @@ function FreqToPChar2(i: integer): string;
 function FreqToPCharWithoutHZ(i: integer): string;
 function kHzToPChar(Freq: Word): string;
 //function InitSysMonthCal32: boolean;
-function BitmapFromIcon(Handle: HWND; i: HICON): HBITMAP;
-function ExtractBigIcon(IconIndex: integer): HICON;
 function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): string;
 
 //function Pos(Substr: string; S: string): Integer;
@@ -190,7 +187,6 @@ function inttopchar(i: integer): PAnsiChar;
 function inttopcharHEX(i: integer): PAnsiChar;
 procedure DragWindow(h: HWND);
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
-function SetLink(HWindow: HWND; Link: PChar): BOOL;
 procedure EnableWindowTrue(h: HWND; nIDDlgItem: integer);
 procedure EnableWindowFalse(h: HWND; nIDDlgItem: integer);
 function _StrInt64(Val: int64; Width: integer): ShortString;
@@ -337,14 +333,6 @@ begin
 end;
 
 {
-function InitSysMonthCal32: boolean;
-var
-  icex                                  : TInitCommonControlsEx;
-begin
-  icex.dwSize := SizeOf(icex);
-  icex.dwICC := ICC_DATE_CLASSES;
-  Result := INITCOMMONCONTROLSEX(icex);
-end;
 }
 
 function GetGUID: string;   // Returns 32-char lowercase hex, no dashes or braces
@@ -366,31 +354,7 @@ begin
 end;
 
 
-function BitmapFromIcon(Handle: HWND; i: HICON): HBITMAP;
-var
-  winDC, srcdc, destdc                  : HDC;
-  OldBitmap                             : HBITMAP;
-  iinfo                                 : TICONINFO;
-begin
-  GetIconInfo(i, iinfo);
-  winDC := GetDC(Handle);
-  srcdc := CreateCompatibleDC(winDC);
-  destdc := CreateCompatibleDC(winDC);
-  OldBitmap := SelectObject(srcdc, iinfo.hbmMask);
-  BitBlt(destdc, 11, 1, 16, 16, srcdc, 0, 0, SRCPAINT);
-  Result := SelectObject(destdc, OldBitmap);
-  DeleteDC(destdc);
-  DeleteDC(srcdc);
-  DeleteDC(winDC);
-end;
 
-function ExtractBigIcon(IconIndex: integer): HICON;
-var
-  BigIcon                               : HICON;
-begin
-  //     ExtractIconEx('shell32.dll', IconIndex, BigIcon, SmallIcon, 1);
-  Result := BigIcon {SmallIcon};
-end;
 
 function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): string;
 begin
@@ -481,12 +445,6 @@ end;
 {  Function to convert int to string. (No sys utils = smaller EXE)  }
 {------------------------------------------------------------------}
 {
-function RealToInt(Num: REAL): integer;
-
-begin
-
-   Result := StrToInt(RealToStr(Num));
-end;
 }
 
 function RealToStr(Num: REAL): string;
@@ -555,36 +513,12 @@ begin
 end;
 
 {
-function CenterString(s: string; count: byte): string;
-begin
-  RESULT := s;
-  while length(RESULT) < count do
-    RESULT := ' ' + RESULT + ' ';
-end;
 }
 
 {
-procedure AddStringsToComoBox(a: array);
-begin
-
-end;
 }
 {
-procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
-var
-  FileHandle                            : HWND;
-begin
-  FileHandle := CreateFile(PChar(FileName), GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
-  if FileHandle = INVALID_HANDLE_VALUE then
-    FileHandle := CreateFile(PChar(FileName), GENERIC_WRITE, FILE_SHARE_WRITE, nil, OPEN_EXISTING, FILE_ATTRIBUTE_ARCHIVE, 0);
-  sWriteFile(FileHandle, Address, Count);
-  CloseHandle(FileHandle);
-end;
 }
-function SetLink(HWindow: HWND; Link: PChar): BOOL;
-begin
-  Result := SetProp(HWindow, 'LINKCURSOR', LONGINT(Link));
-end;
 
 procedure EnableWindowTrue(h: HWND; nIDDlgItem: integer);
 begin
@@ -681,19 +615,6 @@ end;
 //function Shellexecute; EXTERNAL shell32 Name 'ShellExecuteA';
 //function ExtractIconEx; EXTERNAL shell32 Name 'ExtractIconExA';
 {
-function tShellexecute(HWND: HWND; Operation, FileName, Parameters, Directory: PChar; showCmd: integer): hInst;
-var
-  SF                                    : TShellexecuteFunc;
-begin
-  if Shell32LibHandle = 0 then Shell32LibHandle := LoadLibrary('shell32.dll');
-  if Shell32LibHandle <> 0 then
-  begin
-    @SF := GetProcAddress(Shell32LibHandle, 'ShellExecuteA');
-    if @SF <> nil then
-      RESULT := SF(HWND, Operation, FileName, Parameters, Directory, showCmd);
-//    FreeLibrary(Shell32LibHandle);
-  end;
-end;
 }
 
 function STToInt64(St: SYSTEMTIME): int64;
@@ -1468,91 +1389,6 @@ begin
   CloseHandle(h);
 end;
 
-function EnumerateLinesInFile_old(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
-label
-  2, 3, LastLine;
-var
-  h                                     : HWND;
-  FileSize                              : Cardinal;
-  MapFin                                : Cardinal;
-  MapBase                               : PAnsiChar;
-  StartPos, FilePos                     : Cardinal;
-  TempString                            : ShortString;
-  LineSize                              : integer;
-  TempBuffer                            : array[0..255] of AnsiChar;
-  NewLine                               : boolean;
-begin
-  Result := False;
-
-  if strpos(FileName, '\') <> nil then
-    tOpenFileForRead(h, FileName)
-  else
-  begin
-    Format(TempBuffer, '%s%s', TR4W_LOG_PATH_NAME, FileName);
-    if not tOpenFileForRead(h, TempBuffer) then
-    begin
-      Format(TempBuffer, '%s%s', TR4W_PATH_NAME, FileName);
-      tOpenFileForRead(h, TempBuffer);
-    end;
-  end;
-
-  if h = INVALID_HANDLE_VALUE then Exit;
-
-  FileSize := Windows.GetFileSize(h, nil);
-  MapFin := Windows.CreateFileMapping(h, nil, PAGE_READONLY, 0, 0, nil);
-  if MapFin = 0 then goto 2;
-
-  MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_READ, 0, 0, 0);
-
-  Result := True;
-
-  StartPos := 0;
-  NewLine := False;
-  FilePos := 0;
-
-  while FilePos < FileSize do
-  begin
-    if (MapBase[FilePos] in [#13, #10]) then
-    begin
-
-      if not NewLine then
-      begin
-        LastLine:
-
-        LineSize := FilePos - StartPos;
-        if LineSize > 0 then
-        begin
-          Windows.ZeroMemory(@TempString, SizeOf(TempString));
-          TempString[0] := AnsiChar(LineSize);
-          Windows.CopyMemory(@TempString[1], @MapBase[StartPos], LineSize);
-          if UpperCase then strU(TempString);
-          Func(@TempString);
-        end;
-      end;
-
-      NewLine := True;
-
-    end
-    else
-    begin
-      if NewLine then
-      begin
-        NewLine := False;
-        StartPos := FilePos;
-      end;
-    end;
-
-    inc(FilePos);
-  end;
-
-  if not NewLine then goto LastLine;
-
-  Windows.UnmapViewOfFile(MapBase);
-  3:
-  CloseHandle(MapFin);
-  2:
-  CloseHandle(h);
-end;
 
 
 

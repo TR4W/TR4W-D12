@@ -746,7 +746,6 @@ procedure CompressFormat(Call: CallString; var Output: FourBytes);
 
 //function ControlKeyPressed: boolean;
 
-procedure DecrementASCIIInteger(var ASCIIString: Str80);
 procedure DelayOrKeyPressed(DelayTime: integer);
 function DeleteMult(var LogString: Str80; MultString: Str20): boolean;
 
@@ -759,9 +758,7 @@ function ExpandTwoBytes(Input: TwoBytes): Str80;
 //wli
 
 function FirstLetter(InputString: Str80): Char;
-procedure FormFeed;
 
-function GetChecksum8(Call: FourBytes): integer;
 function GetColorInteger(ColorString: Str80): tr4wColors;
 function GetDateString: PAnsiChar;
 function GetDayString: Str80;
@@ -785,7 +782,6 @@ function GetLogEntryMultString(LogEntry: Str160): Str160;
 function GetLogEntryQSONumber(LogEntry: Str160): integer;
 function GetLogEntryQSOPoints(LogEntry: Str160): integer;
 function GetLogEntryRSTString(LogEntry: Str160): string;
-function tGetLogEntryRcvdRSTString(LogEntry: Str160): string;
 function GoodLookingRDA(RDA: Str20): boolean;
 function GetOblast(Call: CallString): Str2;
 function GetLogEntryTimeString(LogEntry: Str160): Str160;
@@ -795,7 +791,6 @@ function GetKeyResponse(Prompt: string): Char;
 
 function GetReal(Prompt: PAnsiChar): REAL;
 function GetResponse(Prompt: PAnsiChar {string}): ShortString;
-procedure GetRidOfCarriageReturnLineFeeds(var s: string);
 procedure GetRidOfPostcedingSpaces(var s: ShortString);
 procedure GetRidOfPrecedingSpaces(var s: ShortString);
 function GetSCPCharFromInteger(Index: integer): Char;
@@ -803,7 +798,6 @@ function GetSCPIntegerFromChar(InputChar: AnsiChar): integer;
 function GetStateFromSection(Section: Str20): Str20;
 function GetSuffix(Call: CallString): CallString;
 function GetTimeString: PAnsiChar {str80};
-function GetTimeString4Digit: PAnsiChar;
 function GetTomorrowString: Str80;
 
 function GetYearString: PAnsiChar {Str20};
@@ -813,9 +807,7 @@ function GoodLookingGrid2(Grid: Str20): boolean;
 function GoodLookingGrid3(Grid: Str20): boolean;
 procedure HexToInteger(InputString: Str80; var OutputInteger: integer; var Result: integer);
 procedure HexToLongInteger(InputString: Str80; var OutputInteger: LONGINT; var Result: integer);
-procedure HexToWord(InputString: Str80; var OutputWord: Word; var Result: integer);
 
-procedure IncrementASCIIInteger(var ASCIIString: Str80);
 procedure IncrementMinute(var DateString: Str20; var TimeString: Str80);
 function WordValueFromCharacter(Character: AnsiChar): Word;
 
@@ -888,7 +880,6 @@ function OpenFileForRead_old(var FileHandle: Text; FileName: string {Str80}): bo
 function OperatorEscape: boolean;
 
 function PacketCharReady(SerialPort: PortType; var CIn: Char): boolean;
-procedure PacketSendChar(SerialPort: PortType; CharToSend: Char);
 function PartialCall(Pattern: CallString; Call: CallString): boolean;
 function PortableStation(Call: CallString): boolean;
 
@@ -909,7 +900,6 @@ procedure SendChar(SerialPort: PortType; CharToSend: Char);
 
 function SlipMessage(Message: string): string;
 
-function UpperCase_old(const s: string): string;
 
 //function UpperCase(const s: string): string;
 
@@ -997,7 +987,6 @@ const
 
 procedure WriteLnCenter(Prompt: Str80);
 procedure WriteLnVarCenter(var FileWrite: Text; Prompt: Str80);
-procedure WriteLnLstCenter(Prompt: Str80);
 function FoundDirectory(FileName: string; Path: string; var Directory: string): boolean;
 function FindDirectory(FileName: Str80): Str80;
 function String2Hex(const Buffer: Ansistring): string;
@@ -1238,17 +1227,6 @@ begin
   //  NoSound;
 end;
 
-procedure QuarterNote(Pitch: integer);
-
-begin
-  if Pitch > 0 then
-    SpeakerBeep(Pitch, Beat);
-  //  begin
-  //    Sound(Pitch);
-  //  end;
-  //  Sleep(Beat);
-  //  NoSound;
-end;
 
 procedure Dit;
 
@@ -1619,21 +1597,6 @@ begin
   uCallCompress.CompressFormat(Call, Output);
 end;
 
-procedure DecrementASCIIInteger(var ASCIIString: Str80);
-
-var
-  TempValue, Result                     : integer;
-
-begin
-  Val(ASCIIString, TempValue, Result);
-  if Result <> 0 then
-  begin
-    ASCIIString := '';
-    Exit;
-  end;
-  dec(TempValue);
-  Str(TempValue, ASCIIString);
-end;
 
 procedure DelayOrKeyPressed(DelayTime: integer);
 
@@ -1830,21 +1793,7 @@ begin
     LastLetter := CHR(0);
 end;
 
-procedure FormFeed;
 
-begin
-  //{WLI}     Write (Lst, Chr (12));
-end;
-
-function GetChecksum8(Call: FourBytes): integer;
-
-var
-  Sum                                   : integer;
-
-begin
-  Sum := Call[1] + Call[2] + Call[3] + Call[4];
-  Sum := Sum and 7;
-end;
 
 function GetColorInteger(ColorString: Str80): tr4wColors;
 
@@ -1926,31 +1875,6 @@ begin
   GetDayString := DayTags[UTC.wDayOfWeek];
 end;
 {
-procedure GetFileNames(Path: Str80;
-  Mask: Str80;
-  var FileNames: FileNameRecord);
-
-// This function will get files names for you until all of them have been
-//  returned.  When this happens, you will get a null string as a result.
-
-var
-  DirInfo                     : TSearchRec;
-
-begin
-  FileNames.NumberFiles := 0;
-
-  if (Path <> '') and (Path[length(Path)] <> '\') then
-    Path := Path + '\';
-
-  FindFirst(Path + Mask, faArchive, DirInfo);
-
-  while (IORESULT  = 0) and (FileNames.NumberFiles < MaximumFileNames) do
-  begin
-    FileNames.List[FileNames.NumberFiles] := DirInfo.Name;
-    inc(FileNames.NumberFiles);
-    FindNext(DirInfo);
-  end;
-end;
 }
 
 function GetIntegerTime: integer;
@@ -2239,13 +2163,6 @@ begin
   GetLogEntryRSTString := NumberPartOfString(TempString);
 end;
 
-function tGetLogEntryRcvdRSTString(LogEntry: Str160): string;
-var
-  TempString                            : Str80;
-begin
-  TempString := Copy(LogEntry, LogEntryRcvdRSTAddress, 4);
-  Result := NumberPartOfString(TempString);
-end;
 
 function GetLogEntryIntegerTime(LogEntry: Str160): integer;
 
@@ -2364,15 +2281,6 @@ begin
     }
 end;
 
-procedure GetRidOfCarriageReturnLineFeeds(var s: string);
-
-begin
-  while pos(CarriageReturn, s) > 0 do
-    s[pos(CarriageReturn, s)] := ' ';
-
-  while pos(LineFeed, s) > 0 do
-    Delete(s, pos(LineFeed, s), 1);
-end;
 
 procedure GetRidOfPostcedingSpaces(var s: ShortString);
 
@@ -2433,12 +2341,6 @@ begin
   Result := GetTimeStringBuffer;
 end;
 
-function GetTimeString4Digit: PAnsiChar;
-begin
-  tGetSystemTime;
-  Format(GetTimeStringBuffer, '%.2hu%.2hu', UTC.wHour, UTC.wMinute);
-  Result := GetTimeStringBuffer;
-end;
 
 function GetTomorrowString: Str80;
 { This function will look at the DOS clock and generate a nice looking
@@ -2530,52 +2432,6 @@ begin
   Result := 0;
 end;
 
-procedure HexToWord(InputString: Str80; var OutputWord: Word; var Result: integer);
-
-var
-  Multiplier                            : Word;
-
-begin
-  Result := 1;
-  Multiplier := 1;
-  OutputWord := 0;
-  if InputString = '' then Exit;
-
-  Result := 0;
-
-  while length(InputString) > 0 do
-  begin
-    case UpCase(InputString[length(InputString)]) of
-      '0': OutputWord := OutputWord + Multiplier * 0;
-      '1': OutputWord := OutputWord + Multiplier * 1;
-      '2': OutputWord := OutputWord + Multiplier * 2;
-      '3': OutputWord := OutputWord + Multiplier * 3;
-      '4': OutputWord := OutputWord + Multiplier * 4;
-      '5': OutputWord := OutputWord + Multiplier * 5;
-      '6': OutputWord := OutputWord + Multiplier * 6;
-      '7': OutputWord := OutputWord + Multiplier * 7;
-      '8': OutputWord := OutputWord + Multiplier * 8;
-      '9': OutputWord := OutputWord + Multiplier * 9;
-      'A': OutputWord := OutputWord + Multiplier * 10;
-      'B': OutputWord := OutputWord + Multiplier * 11;
-      'C': OutputWord := OutputWord + Multiplier * 12;
-      'D': OutputWord := OutputWord + Multiplier * 13;
-      'E': OutputWord := OutputWord + Multiplier * 14;
-      'F': OutputWord := OutputWord + Multiplier * 15;
-
-    else
-      begin
-        Result := 1;
-        Exit;
-      end;
-    end;
-
-    Delete(InputString, length(InputString), 1);
-    Multiplier := Multiplier * 16;
-  end;
-
-  Result := 0;
-end;
 
 procedure HexToLongInteger(InputString: Str80; var OutputInteger: LONGINT; var Result: integer);
 
@@ -2624,21 +2480,6 @@ begin
   Result := 0;
 end;
 
-procedure IncrementASCIIInteger(var ASCIIString: Str80);
-
-var
-  TempValue, Result                     : integer;
-
-begin
-  Val(ASCIIString, TempValue, Result);
-  if Result <> 0 then
-  begin
-    ASCIIString := '';
-    Exit;
-  end;
-  inc(TempValue);
-  Str(TempValue, ASCIIString);
-end;
 
 function KeyId(Key: Char): Str10;
 
@@ -3667,37 +3508,6 @@ begin
   SendChar(SerialPort, CHR(ByteToSend));
 end;
 
-procedure PacketSendChar(SerialPort: PortType; CharToSend: Char);
-
-
-  //{WLI}    Regs: REGISTERS;
-
-begin
-  {    PortAddress := 0;
-
-      CASE SerialPort OF
-          Serial1: PortAddress := Com1PortBaseAddress;
-          Serial2: PortAddress := Com2PortBaseAddress;
-          Serial3: PortAddress := Com3PortBaseAddress;
-          Serial4: PortAddress := Com4PortBaseAddress;
-          Serial5: PortAddress := Com5PortBaseAddress;
-          Serial6: PortAddress := Com6PortBaseAddress;
-
-          DRSI: BEGIN
-                Regs.AH := 1;
-                Regs.AL := Ord (CharToSend);
-                Intr ($FF, Regs);
-                Exit;
-                END;
-          END;
-
-      IF PortAddress = 0 THEN Exit;
-
-  //    REPEAT UNTIL (Port [PortAddress + 5] AND $20) = $20;
-
-      Port [PortAddress] := Ord (CharToSend);
- }
-end;
 
 procedure SendChar(SerialPort: PortType; CharToSend: Char);
 
@@ -3743,66 +3553,6 @@ begin
  }
 end;
 
-function UpperCase_old(const s: string): string;
-{
-From FastcodeUpperCaseUnit
-�������� � 2 ���� �������.
-}
-asm {Size = 134 Bytes}
-  push    ebx
-  push    edi
-  push    esi
-  test    eax, eax               {Test for S = NIL}
-  mov     esi, eax               {@S}
-  mov     edi, edx               {@Result}
-  mov     eax, edx               {@Result}
-  jz      @@Null                 {S = NIL}
-  mov     edx, [esi-4]           {Length(S)}
-  test    edx, edx
-  je      @@Null                 {Length(S) = 0}
-  mov     ebx, edx
-  call    system.@LStrSetLength  {Create Result String}
-  mov     edi, [edi]             {@Result}
-  mov     eax, [esi+ebx-4]       {Convert the Last 4 Characters of String}
-  mov     ecx, eax               {4 Original Bytes}
-  or      eax, $80808080         {Set High Bit of each Byte}
-  mov     edx, eax               {Comments Below apply to each Byte...}
-  sub     eax, $7B7B7B7B         {Set High Bit if Original <= Ord('z')}
-  xor     edx, ecx               {80h if Original < 128 else 00h}
-  or      eax, $80808080         {Set High Bit}
-  sub     eax, $66666666         {Set High Bit if Original >= Ord('a')}
-  and     eax, edx               {80h if Orig in 'a'..'z' else 00h}
-  shr     eax, 2                 {80h > 20h ('a'-'A')}
-  sub     ecx, eax               {Clear Bit 5 if Original in 'a'..'z'}
-  mov     [edi+ebx-4], ecx
-  sub     ebx, 1
-  and     ebx, -4
-  jmp     @@CheckDone
-@@Null:
-  pop     esi
-  pop     edi
-  pop     ebx
-  jmp     System.@LStrClr
-@@Loop:                          {Loop converting 4 Character per Loop}
-  mov     eax, [esi+ebx]
-  mov     ecx, eax               {4 Original Bytes}
-  or      eax, $80808080         {Set High Bit of each Byte}
-  mov     edx, eax               {Comments Below apply to each Byte...}
-  sub     eax, $7B7B7B7B         {Set High Bit if Original <= Ord('z')}
-  xor     edx, ecx               {80h if Original < 128 else 00h}
-  or      eax, $80808080         {Set High Bit}
-  sub     eax, $66666666         {Set High Bit if Original >= Ord('a')}
-  and     eax, edx               {80h if Orig in 'a'..'z' else 00h}
-  shr     eax, 2                 {80h > 20h ('a'-'A')}
-  sub     ecx, eax               {Clear Bit 5 if Original in 'a'..'z'}
-  mov     [edi+ebx], ecx
-@@CheckDone:
-  sub     ebx, 4
-  jnc     @@Loop
-  pop     esi
-  pop     edi
-  pop     ebx
-end;
 
 //function UpperCase(const s: string): string;
 
@@ -4797,15 +4547,6 @@ begin
   WriteLn(FileWrite, Prompt);
 end;
 
-procedure WriteLnLstCenter(Prompt: Str80);
-
-
-begin
-  {    CenterSpaces := 40 - (Length (Prompt) DIV 2);
-      IF CenterSpaces > 0 THEN FOR Space := 1 TO CenterSpaces DO Write (Lst, ' ');
-      WriteLn (Lst, Prompt);
-     }
-end;
 
 function FoundDirectory(FileName: string; Path: string; var Directory: string): boolean;
 
