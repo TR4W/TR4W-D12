@@ -681,14 +681,37 @@ begin
             Chr(command) + data + CIV_EOM;
 end;
 
+// Byte-faithful conversions between a CI-V byte carried in a `string` (each Char's
+// codepoint is 0..255 == one CI-V byte, exactly as BuildCIVCommand's Chr() produces)
+// and the AnsiString byte buffers the uIcomCIV BCD helpers use. These copy bytes
+// verbatim; unlike `s := AnsiStr` / `AnsiStr := s`, they do NOT run the ANSI codepage
+// (which turns BCD byte $99 into U+2122 and back into '?').
+function CivRawToStr(const a: AnsiString): string;
+var
+  i: Integer;
+begin
+   SetLength(Result, Length(a));
+   for i := 1 to Length(a) do
+      Result[i] := Char(Ord(a[i]));
+end;
+
+function CivStrToRaw(const s: string): AnsiString;
+var
+  i: Integer;
+begin
+   SetLength(Result, Length(s));
+   for i := 1 to Length(s) do
+      Result[i] := AnsiChar(Ord(s[i]));
+end;
+
 function TIcomRadio.FreqToBCD(freq: LongInt): string;
 begin
-   Result := IcomFreqToBCD(freq);
+   Result := CivRawToStr(IcomFreqToBCD(freq));
 end;
 
 function TIcomRadio.BCDToFreq(bcd: string): LongInt;
 begin
-   Result := IcomBCDToFreq(bcd);
+   Result := IcomBCDToFreq(CivStrToRaw(bcd));
 end;
 
 // FreqToRadioBand is defined in uRadioBand (implementation uses above).
@@ -1835,7 +1858,7 @@ procedure TIcomRadio.SetRITFreq(vfo: TVFO; hz: integer);
 var
   bcdOffset: string;
 begin
-  bcdOffset := IcomOffsetToBCD(hz);
+  bcdOffset := CivRawToStr(IcomOffsetToBCD(hz));
   SendToRadio(BuildCIVCommand($21, CIV_SUBCMD_RIT_FREQ + bcdOffset));
   logger.debug('[%s.SetRITFreq] Set RIT offset to %d Hz', [radioModel, hz]);
 end;
@@ -1845,7 +1868,7 @@ var
   bcdOffset: string;
 begin
   // RIT/XIT share the same offset register on modern Icom radios ($21 $00)
-  bcdOffset := IcomOffsetToBCD(hz);
+  bcdOffset := CivRawToStr(IcomOffsetToBCD(hz));
   SendToRadio(BuildCIVCommand($21, CIV_SUBCMD_RIT_FREQ + bcdOffset));
   logger.debug('[%s.SetXITFreq] Set XIT offset to %d Hz', [radioModel, hz]);
 end;
