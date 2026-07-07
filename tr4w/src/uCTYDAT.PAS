@@ -234,7 +234,7 @@ function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
 //function ctyInit(ctyFilename: PAnsiChar): boolean;
 function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
 function ctyFindCallsign(const s: PAnsiChar; var Index: integer): boolean;
-function ctyGetGrid(Call: CallString; var ID: DXMultiplierString): GridString;
+function ctyGetGrid(const Call: string; var ID: DXMultiplierString): string;
 function ctyGetContinent(const Call: string): ContinentType;
 function ctyGetCountry(const Call: string): Word;
 function ctyGetCountryUTCOffset(Country: Word): Smallint;
@@ -244,8 +244,8 @@ function ctyGetCQZone(const Call: string): Byte;
 
 function ctyGetDefaultITUZone(Country: Word): Byte;
 function ctyGetDefaultCQZone(Country: Word): Byte;
-function ctyGetDefaultGrid(Country: Word): GridString;
-function ctyGetCountryIdByIndex(Country: Word): DXMultiplierString;
+function ctyGetDefaultGrid(Country: Word): string;
+function ctyGetCountryIdByIndex(Country: Word): string;
 function ctyGetContinentByIndex(Country: Word): ContinentType;
 function ctyGetTotalCountries: integer;
 function ctyGetVersion: PAnsiChar;
@@ -254,7 +254,7 @@ procedure ctySetCountryMode(CountryMode: CountryModeType);
 
 function ctyGetCountryNamePchar(Index: Word): PAnsiChar;
 function ctyGetCountryIdPchar(Index: Word): PAnsiChar;
-function ctyGetCountryName(Index: Word): ShortString;
+function ctyGetCountryName(Index: Word): string;
 function ctyGetCountryID(const Call: string): string;
 
 procedure ctyShellSort;
@@ -923,7 +923,7 @@ begin
   CTY.ctyLastLocatedRecord := QTH;
 end;
 
-function ctyGetGrid(Call: CallString; var ID: DXMultiplierString): GridString;
+function ctyGetGrid(const Call: string; var ID: DXMultiplierString): string;
 var
   TempInteger                           : integer;
   TempChar                              : Char;
@@ -984,9 +984,9 @@ begin
     Result := UNKNOWN_COUNTRY;
 end;
 
-function ctyGetCountryIdByIndex(Country: Word): DXMultiplierString;
+function ctyGetCountryIdByIndex(Country: Word): string;
 begin
-  Windows.ZeroMemory(@Result, SizeOf(Result));
+  // Result is '' by default (native string); no ZeroMemory buffer-clear needed.
   if Country = UNKNOWN_COUNTRY then Exit;
   Result := CTY.ctyTable[Country].ID;
 end;
@@ -999,9 +999,9 @@ begin
     Result := CTY.ctyTable[Country].DefaultContinent;
 end;
 
-function ctyGetDefaultGrid(Country: Word): GridString;
+function ctyGetDefaultGrid(Country: Word): string;
 begin
-  Windows.ZeroMemory(@Result, SizeOf(Result));
+  // Result is '' by default (native string); no ZeroMemory buffer-clear needed.
   if Country = UNKNOWN_COUNTRY then Exit;
   Result := CTY.ctyTable[Country].DefaultGrid;
 end;
@@ -1277,9 +1277,9 @@ begin
     Result := nil;
 end;
 
-function ctyGetCountryName(Index: Word): ShortString;
+function ctyGetCountryName(Index: Word): string;
 begin
-  Windows.ZeroMemory(@Result, SizeOf(Result));
+  // Result is '' by default (native string); no ZeroMemory buffer-clear needed.
   if (Index >= 0) and (Index < CTY.ctyNumberCountries) then
     Result := CTY.ctyTable[Index].Name;
 end;
