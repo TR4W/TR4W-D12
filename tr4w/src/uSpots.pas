@@ -81,7 +81,7 @@ type
     procedure SetCursor;
     procedure DecrementSpotsTimes;
     procedure UpdateSpotsMultiplierStatus;
-    procedure UpdateSpotsDupeStatus(RXCall: CallString; RXBand: BandType;
+    procedure UpdateSpotsDupeStatus(const RXCall: string; RXBand: BandType;
       RXMode: ModeType);
     procedure Display;
     procedure Delete(Index: integer);
@@ -527,7 +527,7 @@ begin
   goto NextSpot;
 end;
 
-procedure TDXSpotsList.UpdateSpotsDupeStatus(RXCall: CallString; RXBand:
+procedure TDXSpotsList.UpdateSpotsDupeStatus(const RXCall: string; RXBand:
   BandType; RXMode: ModeType);
 var
   i: integer;
