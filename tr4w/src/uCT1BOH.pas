@@ -41,6 +41,7 @@ var
   hLV                                   : HWND;
   lvi                                   : TLVItem;
   lvc                                   : tagLVCOLUMNA;
+  TimeAnsi                              : AnsiString;   // D12: persistent buffer for pszText (see below)
 //  TotalTimeOn                           : integer;
   Percent                               : integer;
   BandTotals                            : array[Band160..Band10] of integer;
@@ -93,7 +94,12 @@ begin
           lvi.iItem := 0;
           lvi.iSubItem := Band;
 //          lvi.pszText := CT1BOHInfoString(TimeSpentByBand[Band], Percent);
-          lvi.pszText := MillisecondsToFormattedString(TimeSpentByBand[ca[Band]] * 1000, False);
+          // boundary: this ListView is still LV_ITEMA; hold the time text in a
+          // function-scoped AnsiString so pszText stays valid through
+          // ListView_SetItem (the string result is a statement-scoped temporary).
+          // W-flip tracked with the ListView A->W surface.
+          TimeAnsi := AnsiString(MillisecondsToFormattedString(TimeSpentByBand[ca[Band]] * 1000, False));
+          lvi.pszText := PAnsiChar(TimeAnsi);
           ListView_SetItem(hLV, lvi);
           BandTotals[ca[Band]] := 0;
 //          for Continent := NorthAmerica to Oceania do

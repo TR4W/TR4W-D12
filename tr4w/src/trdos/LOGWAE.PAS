@@ -446,7 +446,7 @@ begin
           until TempString <> EscapeKey;
       }
 
-    SetMainWindowText(mweCall, @QTCCallsign[1]);
+    SetMainWindowText(mweCall, string(PAnsiChar(@QTCCallsign[1])));
       {
           QTCHeaderString := QuickEditResponse(PChar('Enter QTC #/# (max of ' + MaxQTCString + ') or RETURN if QRU'), 8);
 

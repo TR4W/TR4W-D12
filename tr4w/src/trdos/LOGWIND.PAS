@@ -1398,7 +1398,7 @@ end;
 procedure DispalyGrid(Grid: GridString);
 begin
   Grid[5] := #0;
-  SetMainWindowText(mweLocator, @Grid[1]);
+  SetMainWindowText(mweLocator, string(PAnsiChar(@Grid[1])));
 //windows.CopyMemory(@TempBuffer1,
 {  asm
   mov eax,Grid
@@ -1479,7 +1479,7 @@ begin
       //        WHILE Length (TempString) < (BeamHeadingWindowRX - BeamHeadingWindowLX) DO
       //            TempString := ' ' + TempString;
 
-    SetMainWindowText(mweBeamHeading, @TempString[1]);
+    SetMainWindowText(mweBeamHeading, string(PAnsiChar(@TempString[1])));
       //        Showmessage (TempString);
       //        RestorePreviousWindow;
   end;
@@ -1726,7 +1726,7 @@ procedure DisplayNameSent(Name: Str80);
 
 begin
 
-  SetMainWindowText(mweName, @Name[1]);
+  SetMainWindowText(mweName, string(PAnsiChar(@Name[1])));
   {    IF Name = '' THEN
           BEGIN
           SaveSetAndClearActiveWindow (NameSentWindow);
@@ -1842,8 +1842,8 @@ end;
 
 procedure DisplayRadio(Radio: RadioType);
 begin
-  SetMainWindowText(mweRadioOne, @Radio1.RadioName[1]);
-  SetMainWindowText(mweRadioTwo, @Radio2.RadioName[1]);
+  SetMainWindowText(mweRadioOne, string(PAnsiChar(@Radio1.RadioName[1])));
+  SetMainWindowText(mweRadioTwo, string(PAnsiChar(@Radio2.RadioName[1])));
 end;
 
 procedure DisplayQSOsByOpMode;
@@ -2414,12 +2414,12 @@ begin
 
     if tElapsedTimeFromLastQSO <> 0 then tDispalyTimeFromLastQSO;
 
+    // D12: ElaspedTimeString + SetMainWindowText are both native string now,
+    // so the PAnsiChar TempPchar intermediary is gone; '' is the empty signal.
     if TenMinuteRule <> NoTenMinuteRule then
-      TempPchar := ElaspedTimeString(TenMinuteTime.Time)
+      SetMainWindowText(mweTenMinuts, ElaspedTimeString(TenMinuteTime.Time))
     else
-      TempPchar := nil;
-//    Windows.SetWindowTextA(TenMinutsWindow, TempPchar);
-    SetMainWindowText(mweTenMinuts, TempPchar);
+      SetMainWindowText(mweTenMinuts, '');
   end;
 
   {reminder}
@@ -4255,12 +4255,12 @@ begin
       //         while length(InfoString) < 32 do
       //            InfoString := ' ' + InfoString + ' ';
 
-    SetMainWindowText(mweUserInfo, @InfoString[1]);
+    SetMainWindowText(mweUserInfo, string(PAnsiChar(@InfoString[1])));
 
       //         Write(InfoString);
   end
   else
-    SetMainWindowText(mweUserInfo, nil);
+    SetMainWindowText(mweUserInfo, '');
 
   //  RestorePreviousWindow;
 end;
@@ -4757,7 +4757,7 @@ begin
       begin
 {$RANGECHECKS OFF}
        //SetDlgItemInt(h, 120, CurrentStatus.RITFreq, CurrentStatus.RITFreq < 0);
-       SetDlgItemTextA(h, 120, RITFreqToPChar(CurrentStatus.RITFreq)); //FreqToPChar(CurrentStatus.RITFreq));
+       SetDlgItemTextW(h, 120, PChar(RITFreqToPChar(CurrentStatus.RITFreq))); //FreqToPChar(CurrentStatus.RITFreq));
 {$RANGECHECKS ON}
         CurrentStatus.PrevRITFreq := CurrentStatus.RITFreq;
       end;
@@ -4781,8 +4781,8 @@ begin
         CurrentStatus.PrevVFOStatus := CurrentStatus.VFOStatus;
       end;
 
-      SetDlgItemTextA(h, 102, FreqToPChar(CurrentStatus.VFO[VFOA].Frequency));
-      SetDlgItemTextA(h, 104, FreqToPChar(CurrentStatus.VFO[VFOB].Frequency));
+      SetDlgItemTextW(h, 102, PChar(FreqToPChar(CurrentStatus.VFO[VFOA].Frequency)));
+      SetDlgItemTextW(h, 104, PChar(FreqToPChar(CurrentStatus.VFO[VFOB].Frequency)));
 
           //              if (CurrentStatus.VFOA.Frequency = 0) or (CurrentStatus.VFOB.Frequency = 0) then SetDlgItemText(h, 120, nil)
 
@@ -4791,7 +4791,7 @@ begin
       Windows.EnableWindow(Windows.GetDlgItem(h, 123), CurrentStatus.Split);
     end;
 
-    Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(CurrentStatus.Freq));
+    Windows.SetWindowTextW(rig^.FreqWindowHandle, PChar(FreqToPChar(CurrentStatus.Freq)));
 //    rig.CurrentBand := rig.CurrentStatus.Band;
 //    rig.CurrentMode := rig.CurrentStatus.Mode;
 
@@ -5107,7 +5107,7 @@ end;
 procedure tDispalyMyComputerID;
 begin
   CID_TWO_BYTES[0] := ComputerID;
-  SetMainWindowText(mweComputerID, @CID_TWO_BYTES);
+  SetMainWindowText(mweComputerID, string(PAnsiChar(@CID_TWO_BYTES)));
 end;
 
 procedure tDispalyPaddleAndFootSwitchStatus;

@@ -789,7 +789,10 @@ begin
 
         ListView_SetItemText(h, i, 2, TempBuffer);
 
-        ListView_SetItemText(h, i, 3, FreqToPChar{WithoutHZ}(StatusArray[Index].ssFreq));        // 4.61.7
+        // boundary: station-list ListView is still LV_ITEMA; ListView_SetItemText
+        // sends the message within this call, so the AnsiString temporary is valid
+        // for its duration.  W-flip tracked with the ListView A->W surface.
+        ListView_SetItemText(h, i, 3, PAnsiChar(AnsiString(FreqToPChar{WithoutHZ}(StatusArray[Index].ssFreq))));        // 4.61.7
 {
         ListView_SetItemText(h, i, 2, BandStringsArray[StatusArray[Index].ssCurrentBand]);
         ListView_SetItemText(h, i, 3, ModeString[StatusArray[Index].ssCurrentMode]);

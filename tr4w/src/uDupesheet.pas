@@ -61,7 +61,7 @@ procedure ClearAltD;
 
 begin
 DupeInfoCallWindowState := diNone;
-SetMainWindowText(mweDupeInfoCall, nil);
+SetMainWindowText(mweDupeInfoCall, '');
 DupeInfoCallWindowCleared := True;
 Windows.ShowWindow(wh[mweDupeInfoCall], SW_RESTORE);
 

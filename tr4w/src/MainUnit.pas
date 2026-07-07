@@ -795,7 +795,7 @@ var
       // n4af issue 158
     begin
       DupeInfoCallWindowState := diNone;
-      SetMainWindowText(mweDupeInfoCall, nil);
+      SetMainWindowText(mweDupeInfoCall, '');
     end;
     // showint(1);
     tCleareCallWindow;
@@ -1198,7 +1198,7 @@ begin
   begin
     if WindowDupeCheck then //RemoveWindow(ExchangeWindow);
       // Windows.SetWindowTextA(ExchangeWindowHandle, '');
-      SetMainWindowText(mweExchange, nil);
+      SetMainWindowText(mweExchange, '');
     // RestorePreviousWindow;
 
   end;
@@ -5497,7 +5497,7 @@ var
 begin
   Windows.ZeroMemory(@ie, SizeOf(ie));
   ie := InitialExchangeEntry(CallWindowString);
-  SetMainWindowText(mweExchange, @ie[1]);
+  SetMainWindowText(mweExchange, string(PAnsiChar(@ie[1])));
   if LeaveCursorInCallWindow then
     tCallWindowSetFocus;
 end;
@@ -6097,6 +6097,7 @@ var
   elvi: TLVItem;
   Mults: Cardinal;
   MultString: array[0..7] of AnsiChar;
+  FreqAnsi: AnsiString;   // D12: persistent buffer for pszText (see freq column below)
 begin
 
   elvi.Mask := LVIF_TEXT;
@@ -6400,7 +6401,12 @@ begin
   if RXData.Frequency <> 0 then
   begin
     elvi.iSubItem := ColumnsArray[logColFreq].pos; //Ord(logColFreq);
-    elvi.pszText := FreqToPChar {FreqToPCharWithoutHZ}(RXData.Frequency);
+    // boundary: log ListView is still LV_ITEMA; hold the freq text in a
+    // function-scoped AnsiString so pszText stays valid through ListView_SetItem
+    // (FreqToPChar now returns a managed string temporary that dies at statement
+    // end).  W-flip tracked with the ListView A->W surface.
+    FreqAnsi := AnsiString(FreqToPChar {FreqToPCharWithoutHZ}(RXData.Frequency));
+    elvi.pszText := PAnsiChar(FreqAnsi);
     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
   end;
 

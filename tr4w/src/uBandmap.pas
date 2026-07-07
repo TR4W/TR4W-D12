@@ -275,9 +275,9 @@ begin
           {Draw Frequency}
           Windows.SetTextColor(memDC, CursorFontColor);
 
-          Windows.DrawTextA
+          Windows.DrawTextW
             (memDC,
-            FreqToPChar2(Spot.FFrequency),
+            PChar(FreqToPChar2(Spot.FFrequency)),
             -1,
             FrequencyRect,
             DT_END_ELLIPSIS + DT_SINGLELINE + DT_RIGHT + DT_VCENTER);

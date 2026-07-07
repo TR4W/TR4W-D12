@@ -259,7 +259,7 @@ begin
 
   for w := Low(TMainWindowElement) to High(TMainWindowElement) do
     if TWindows[w].mweI = 1 then
-      SetMainWindowText(w, nil);
+      SetMainWindowText(w, '');
   {
     Windows.SetWindowTextA(w h[mweCountryName], nil);
     Windows.SetWindowTextA(w h[mweBeamHeading], nil);
