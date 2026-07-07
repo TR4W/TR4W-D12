@@ -854,23 +854,7 @@ procedure ActivateExchangeWindow;
 
 procedure AddBandMapModeCutoffFrequency(Freq: LONGINT);
 
-procedure AddBandMapEntry(Call: CallString;
-  Frequency: LONGINT;
-  QSXFrequency: LONGINT;
-  Mode: ModeType;
-  Dupe: boolean;
-  Mult: boolean;
-  MinutesLeft: Byte;
-  Source: CallString);
 
-procedure AddBandMapEntry_old(Call: CallString;
-  Frequency: LONGINT;
-  QSXFrequency: LONGINT;
-  Mode: ModeType;
-  Dupe: boolean;
-  Mult: boolean;
-  MinutesLeft: Byte;
-  Source: CallString);
 
 procedure AddBandMapPlaceHolder; {KK1L: 6.65}
 
@@ -878,16 +862,11 @@ procedure AddBandMapPlaceHolder; {KK1L: 6.65}
 
 function BandMapExpandedString(Call: EightBytes): CallString;
 
-procedure CalculateNumberVisibleBandMapEntries(var NumberVisibleBandMapEntries: integer;
-  var CursorEntryNumber: integer;
-  StartAtTop: boolean);
 
 procedure ClearAutoSendDisplay;
 procedure DecrementQTCCount(Call: CallString; Count: integer);
-procedure DeleteBandMapEntry(var Entry: BandMapEntryPointer);
 procedure DisplayAutoSendCharacterCount;
 
-procedure DisplayBandMap_proc;
 procedure DisplayBandMap;
 procedure DisplayLocalTime(Country: Word);
 //procedure DisplayQuickMemoryMode;
@@ -911,7 +890,6 @@ procedure DisplayQSOsWithThisStation(QSOs: integer);
 procedure DisplayFrequency(RSR: RadioStatusRecord {Freq: LONGINT}; Radio: RadioType);
 procedure DisplayInsertMode;
 procedure DisplayMultiMessages;
-procedure DisplayNameSent(Name: Str80);
 procedure DisplayNamePercentage({TotalNamesSent: integer; QSONumber: integer});
 procedure DisplayNextQSONumber {(QSONumber: integer)};
 //procedure DisplayPossibleCalls(Call: CallString);
@@ -928,7 +906,6 @@ procedure DisplayTotalScore {(Score: LONGINT)};
 procedure DisplayUserInfo(Call: CallString);
 
 {KK1L: 6.64 Created procedure because I needed to get this info more than once}
-procedure GetBandMapDisplayInfo(var MaxEntriesPerPage: integer; var NumberBandMapRows: integer);
 procedure GetBandMapBandModeFromFrequency(Frequency: LONGINT;
   var Band: BandType;
   var Mode: ModeType);
@@ -949,7 +926,6 @@ function NextMultiplierEntryInBandMap(Band: BandType; Mode: ModeType): boolean; 
 function NextNonDupeEntryInDisplayedBandMap(Band: BandType; Mode: ModeType): boolean;
 function NextMultiplierEntryInDisplayedBandMap(Band: BandType; Mode: ModeType): boolean; {KK1L: 6.68}
 
-procedure OutputQSOorMultStatusString(OutputString_Milt: ShortString {Str160});
 
 //function PopNextQTCToBeSent(var FullString: string; tQTCNR: integer): Str80;
 
@@ -1006,8 +982,6 @@ procedure DispalayDupe;
 procedure DispalayNewMult(nCmndShow: integer);
 procedure tDisplayAutoCQStatus;
 
-procedure old_UpadateRadioStatus(RadioPointer: RadioPtr);
-procedure UpadateRadioStatus(rig: RadioPtr);
 procedure tDispalyPaddleAndFootSwitchStatus;
 procedure tDisplayCQTotal;
 procedure tDispalyOnAirTime;
@@ -1722,24 +1696,6 @@ begin
  }
 end;
 
-procedure DisplayNameSent(Name: Str80);
-
-begin
-
-  SetMainWindowText(mweName, string(PAnsiChar(@Name[1])));
-  {    IF Name = '' THEN
-          BEGIN
-          SaveSetAndClearActiveWindow (NameSentWindow);
-          RemoveAndRestorePreviousWindow;
-          END
-      ELSE
-          BEGIN
-          SaveSetAndClearActiveWindow (NameSentWindow);
-          Write (' ', Name);
-          RestorePreviousWindow;
-          END;
- }
-end;
 
 procedure DisplayInsertMode;
 const
@@ -1783,31 +1739,6 @@ begin
   SetMainWindowText(mweQSONumber, wsprintfBuffer);
 end;
 
-procedure SortPossibleCalls(var PossibleCalls: PossibleCallRecord);
-
-var
-  Change                                : boolean;
-  Range, CallAddress                    : integer;
-  temp                                  : PossibleCallEntry;
-
-begin
-  Range := PossibleCalls.NumberPossibleCalls - 1;
-
-  repeat
-    Change := False;
-    for CallAddress := 1 to Range do
-      with PossibleCalls do
-        if List[CallAddress].Call < List[CallAddress + 1].Call then
-        begin
-          temp := List[CallAddress];
-          List[CallAddress] := List[CallAddress + 1];
-          List[CallAddress + 1] := temp;
-          Change := True;
-        end;
-
-    dec(Range);
-  until (not Change) or (Range < 1);
-end;
 
 procedure DisplayQTCNumber(QTCNumber: integer);
 begin
@@ -2166,112 +2097,9 @@ begin
  }
 end;
 {  REMOVECANDIDATE
-procedure DisplayRemainingMults(RemMultDisplay: RemainingMultiplierType);
-label
-  AddMult, AddMultDX, AddMultDOM, AddMultZone, 1;
-var
-  NumberRemaining, RemainingMult        : integer;
-begin
-  CleanSweep := RemainingMultDisplayMode = Erase;
-
-  case RemMultDisplay of
-    rmDomestic: NumberRemaining := DomQTHTable.NumberRemainingMults;
-    rmDX: NumberRemaining := CountryTable.NumberRemainingCountries;
-    rmZone: NumberRemaining := MaxNumberOfZones;
-  end;
-
-  for RemainingMult := 0 to mo.PrfList.Count - 1 do
-  begin
-    SendMessage(RemainingMultsWindowHandle, LB_ADDSTRING, 0, RemainingMult);
-  end;
-  goto 1;
-
-  for RemainingMult := 0 to NumberRemaining - 1 do
-    if RemainingMults[RemainingMult] then
-    begin
-      CleanSweep := False;
-      Break;
-    end;
-
-  if CleanSweep then
-  begin
-    SendDlgItemMessage(tr4w_WindowsArray[tw_REMMULTSWINDOW_INDEX].WndHandle, 101, LB_ADDSTRING, 0, 0);
-    goto 1;
-  end;
-
-  for RemainingMult := 0 to NumberRemaining - 1 do
-    case RemainingMultDisplayMode of
-      Erase:
-        if RemainingMults[RemainingMult] then goto AddMult;
-      HiLight:
-        begin
-          AddMult:
-          SendMessage(RemainingMultsWindowHandle, LB_ADDSTRING, 0, RemainingMult);
-        end;
-    end;
-
-  1:
-  tSetWindowRedraw(RemainingMultsWindowHandle, True);
-end;
 }
 
 {
-procedure DisplayAdditionalRemainingMults;
-label
-  AddMult, AddMultDX, AddMultDOM, AddMultZone, 1;
-var
-  NumberRemaining, RemainingMult        : integer;
-begin
-
-  if tWindowsExist(tw_STATIONS_RM_DX) then
-  begin
-    if RemainingMultsDX <> nil then
-      for RemainingMult := 0 to CountryTable.NumberRemainingCountries - 1 do
-        case RemainingMultDisplayMode of
-          Erase:
-            if RemainingMultsDX^[RemainingMult] then goto AddMultDX;
-          HiLight:
-            begin
-              AddMultDX:
-              SendMessage(RemainingMultsDXWindowHandle, LB_ADDSTRING, 0, RemainingMult);
-            end;
-        end;
-    tSetWindowRedraw(RemainingMultsDXWindowHandle, True);
-  end;
-
-  if tWindowsExist(tw_STATIONS_RM_DOM) then
-  begin
-    if RemainingMultsDOM <> nil then
-      for RemainingMult := 0 to DomQTHTable.NumberRemainingMults - 1 do
-        case RemainingMultDisplayMode of
-          Erase:
-            if RemainingMultsDOM^[RemainingMult] then goto AddMultDOM;
-          HiLight:
-            begin
-              AddMultDOM:
-              SendMessage(RemainingMultsDOMWindowHandle, LB_ADDSTRING, 0, RemainingMult);
-            end;
-        end;
-    tSetWindowRedraw(RemainingMultsDOMWindowHandle, True);
-  end;
-
-  if tWindowsExist(tw_STATIONS_RM_ZONE) then
-  begin
-    if RemainingMultsZone <> nil then
-      for RemainingMult := 0 to MaxNumberOfZones - 1 do
-        case RemainingMultDisplayMode of
-          Erase:
-            if RemainingMultsZone^[RemainingMult] then goto AddMultZone;
-          HiLight:
-            begin
-              AddMultZone:
-              SendMessage(RemainingMultsZoneWindowHandle, LB_ADDSTRING, 0, RemainingMult);
-            end;
-        end;
-    tSetWindowRedraw(RemainingMultsZoneWindowHandle, True);
-  end;
-
-end;
 }
 
 procedure DecrementBandMapTimes;
@@ -2747,64 +2575,6 @@ begin
   Windows.ShowWindow(h, nCmdShow);
 end;
 
-procedure DeleteBandMapEntry(var Entry: BandMapEntryPointer);
-
-var
-  BandMapEntryRecord, PreviousBandEntryRecord: BandMapEntryPointer;
-  //CompressedDeleteCall                  : EightBytes;
-  {  StartBand, StopBand, }Band         : BandType;
-  {  StartMode, StopMode, }Mode         : ModeType;
-
-begin
-  if not BandMapEnable then Exit;
-  tSetStartStopBandMode;
-
-  for Band := StartBand to StopBand do
-    for Mode := StartMode to StopMode do
-    begin
-
-      if (not WARCBandsEnabled) and
-        ({(Band = Band60) or} (Band = Band30) or (Band = Band17) or (Band = Band12)) then
-        Continue; {KK1L: 6.64 Keep band map within contest limits}
-
-      PreviousBandEntryRecord := nil;
-      BandMapEntryRecord := BandMapFirstEntryList[Band, Mode];
-
-      while BandMapEntryRecord <> nil do
-      begin
-        if BigCompressedCallsAreEqual(Entry^.Call, BandMapEntryRecord^.Call) then
-          if Abs(Entry^.Frequency - BandMapEntryRecord^.Frequency) <= BandMapGuardBand then
-          begin
-
-                  { We have found the entry to delete }
-
-            if PreviousBandEntryRecord = nil then { This is the first entry }
-            begin
-              BandMapFirstEntryList[Band, Mode] := BandMapEntryRecord^.NextEntry;
-              Entry := BandMapEntryRecord^.NextEntry;
-              Dispose(BandMapEntryRecord);
-              Exit;
-            end;
-
-                  { Not the first record }
-
-            PreviousBandEntryRecord^.NextEntry := BandMapEntryRecord^.NextEntry;
-            Entry := BandMapEntryRecord^.NextEntry;
-
-                  { Was it the last one?  If so, make the active entry
-                    the previous record }
-
-            if Entry = nil then
-              Entry := PreviousBandEntryRecord;
-            Dispose(BandMapEntryRecord);
-            Exit;
-          end;
-
-        PreviousBandEntryRecord := BandMapEntryRecord;
-        BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-      end;
-    end;
-end;
 
 procedure SetUpBandMapEntry(BandMapData: BandMapEntryPointer; Radio: RadioType); {KK1L: 6.73 Added Radio}
 
@@ -3273,372 +3043,7 @@ begin
   DisplayBandMap;
 end;
 
-procedure AddBandMapEntry(Call: CallString;
-  Frequency: LONGINT;
-  QSXFrequency: LONGINT;
-  Mode: ModeType;
-  Dupe: boolean;
-  Mult: boolean;
-  MinutesLeft: Byte;
-  Source: CallString);
-begin
-  TempSpot.FCall := Call;
-  TempSpot.FFrequency := Frequency;
-  TempSpot.FQSXFrequency := QSXFrequency;
-  TempSpot.FMode := Mode;
-  TempSpot.FDupe := Dupe;
-  TempSpot.FMult := Mult;
-  TempSpot.FMinutesLeft := 0; //MinutesLeft;
-  TempSpot.FSourceCall := Source;
-  TempSpot.FSysTime := UTC.wMinute + UTC.wHour * 60 + UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24 * 30;
-  SpotsList.AddSpot(TempSpot, True);
-end;
 
-procedure AddBandMapEntry_old(Call: CallString;
-  Frequency: LONGINT;
-  QSXFrequency: LONGINT;
-  Mode: ModeType;
-  Dupe: boolean;
-  Mult: boolean;
-  MinutesLeft: Byte;
-  Source: CallString);
-
-{KK1L: 6.64 Added QSXOffset scaling to make range within INTEGER}
-
-var
-  LastBandMapEntryRecord, NextBandMapEntryRecord: BandMapEntryPointer;
-  TempBandMapEntryRecord, BandMapEntryRecord: BandMapEntryPointer;
-  StatusByte                            : Byte;
-  QSXOffset                             : LONGINT; {KK1L: 6.64 Tried INTEGER, but no joy.}
-  CompressedCall                        : EightBytes;
-  EntryAdded                            : boolean;
-  Band                                  : BandType;
-
-begin
-  if not BandMapEnable then Exit;
-
-  { The band map seemed to be crashing with SHF frequencies }
-
-  if Frequency > 150000000 then Exit;
-  if Frequency < 10 then Exit;
-
-  BigCompressFormat(Call, CompressedCall);
-
-  { Fix up status byte }
-
-  StatusByte := MinutesLeft and $3F;
-  if Dupe then StatusByte := StatusByte or $40;
-  if Mult then StatusByte := StatusByte or $80;
-
-  { Compute QSX offset value - zero means none }
-
-  if QSXFrequency = 0 then
-    QSXOffset := 0
-  else
-    if Abs(QSXFrequency - Frequency) < 327670 then
-      {KK1L: 6.64 Scaling added to keep offset within INTEGER range.}
-      {SXOffset := (QSXFrequency - Frequency) DIV 10}
-      {KK1L: 6.64 Not needed. Only LONGINT seems to work as QSXOffset type}
-      QSXOffset := (QSXFrequency - Frequency)
-    else
-      QSXOffset := 0; { Unexpected result }
-
-  GetBandMapBandModeFromFrequency(Frequency, Band, Mode);
-
-  if Band = NoBand then Exit;
-
-  { See if the list of entries for this band mode is empty }
-
-  if BandMapFirstEntryList[Band, Mode] = nil then { Nothing in bandmap yet }
-  begin
-    New(BandMapFirstEntryList[Band, Mode]);
-    BandMapFirstEntryList[Band, Mode]^.Call := CompressedCall;
-    BandMapFirstEntryList[Band, Mode]^.Frequency := Frequency;
-    BandMapFirstEntryList[Band, Mode]^.QSXOffset := QSXOffset;
-    BandMapFirstEntryList[Band, Mode]^.StatusByte := StatusByte;
-    BandMapFirstEntryList[Band, Mode]^.bmBand := Band;
-    BandMapFirstEntryList[Band, Mode]^.bmMode := Mode;
-    BandMapFirstEntryList[Band, Mode]^.Source := Source;
-    BandMapFirstEntryList[Band, Mode]^.NextEntry := nil;
-    Exit;
-  end;
-
-  { There are some entries for this band/mode.  Get setup to look
-    through the list }
-
-  LastBandMapEntryRecord := nil;
-  BandMapEntryRecord := BandMapFirstEntryList[Band, Mode];
-
-  { Search through the bandmap to find the right place for this entry.
-    We keep the frequencies in order, so we need to step through the
-    linked list until we find a record with a higher frequency than
-    the one being added.  We squeeze this new entry in before that one,
-    but check to see if the frequency is nearly the same first. }
-
-  EntryAdded := False;
-
-  while BandMapEntryRecord <> nil do
-  begin
-
-      { See if the frequency is nearly the same - and if so, we will
-        use this record. }
-
-    if Abs(Frequency - BandMapEntryRecord^.Frequency) <= BandMapGuardBand then
-    begin
-      if EntryAdded then { Already added it - so delete this one }
-      begin
-
-              { We should not be able to be here without
-                LastBandMapEntryRecord being setup to something...
-
-                We are going to set the .NextEntry pointer of the
-                previous record to point to the NextEntry as indicated
-                in the .NextEntry value of the current record }
-
-        LastBandMapEntryRecord^.NextEntry := BandMapEntryRecord^.NextEntry;
-        TempBandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-
-              { Delete the current record. Runtime 204 here? }
-
-              { Runtime 204 here when SPACE entered for frequency }
-
-        Dispose(BandMapEntryRecord);
-
-              { Setup current entry with this next entry.
-                LastBandMapEntryRecord is fine the way it is }
-
-        BandMapEntryRecord := LastBandMapEntryRecord^.NextEntry;
-        Continue;
-      end;
-
-          { Entry not yet added - take over this record }
-
-      BandMapEntryRecord^.Call := CompressedCall;
-      BandMapEntryRecord^.Frequency := Frequency;
-      BandMapEntryRecord^.QSXOffset := QSXOffset;
-      BandMapEntryRecord^.StatusByte := StatusByte;
-      BandMapEntryRecord^.bmBand := Band;
-      BandMapEntryRecord^.bmMode := Mode;
-      BandMapEntryRecord^.Source := Source;
-      EntryAdded := True;
-
-          { Setup to examine next record and then continue }
-
-      LastBandMapEntryRecord := BandMapEntryRecord;
-      BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-      Continue;
-    end;
-
-    if BigCompressedCallsAreEqual(CompressedCall, BandMapEntryRecord^.Call) then
-    begin
-          { We have found the same call in the band map.  If the frequency
-            was close enough - we would have already used it.  Therefore,
-            we can probably delete this call. }
-
-          { However, we need to check for the special case that this is the
-            first entry in the list - and therefore wouldn't have been
-            added yet }
-
-      if LastBandMapEntryRecord = nil then { This is the 1st entry }
-      begin
-
-              { New for 6.50 - if there are no other entries - just use
-                this one again }
-
-        if BandMapEntryRecord^.NextEntry = nil then { no next entry }
-        begin
-          BandMapEntryRecord^.Call := CompressedCall;
-          BandMapEntryRecord^.Frequency := Frequency;
-          BandMapEntryRecord^.QSXOffset := QSXOffset;
-          BandMapEntryRecord^.StatusByte := StatusByte;
-          BandMapEntryRecord^.bmBand := Band;
-          BandMapEntryRecord^.bmMode := Mode;
-          BandMapEntryRecord^.Source := Source;
-          Exit;
-        end;
-
-              { New for 6.50 - if the frequency is less than the next
-                bandmap entries, we should also just use this one }
-
-        NextBandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-
-        if Frequency < BandMapEntryRecord^.Frequency then
-        begin
-          BandMapEntryRecord^.Call := CompressedCall;
-          BandMapEntryRecord^.Frequency := Frequency;
-          BandMapEntryRecord^.QSXOffset := QSXOffset;
-          BandMapEntryRecord^.StatusByte := StatusByte;
-          BandMapEntryRecord^.bmBand := Band;
-          BandMapEntryRecord^.bmMode := Mode;
-          BandMapEntryRecord^.Source := Source;
-          Exit;
-        end;
-
-              { Okay - we have found a record with the same call, but we
-                can't leave it here because the frequency indicates that
-                it should be furthur in the list somewhere.
-
-                Delete the active record and do the splice so the list
-                still works.  This is a unique way of deleting an entry
-                as we have to worry about the BandMapFirstEntry entry. }
-
-        BandMapFirstEntryList[Band, Mode] := BandMapEntryRecord^.NextEntry;
-        TempBandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-        Dispose(BandMapEntryRecord);
-
-        BandMapEntryRecord := BandMapFirstEntryList[Band, Mode];
-        Continue;
-      end;
-
-          { Found an entry with the same callsign - it isn't the first
-            entry of the list.  The frequencies aren't close enough that
-            we would have already used this record. }
-
-          { New in 6.50 - See if the frequency is still less than the
-            next entry - or perhaps that the next entry does not exist.
-            In either case, we can still use this record. }
-
-          { See if there are no other entries }
-
-      if not EntryAdded then
-      begin
-        if BandMapEntryRecord^.NextEntry = nil then
-        begin
-          BandMapEntryRecord^.Call := CompressedCall;
-          BandMapEntryRecord^.Frequency := Frequency;
-          BandMapEntryRecord^.QSXOffset := QSXOffset;
-          BandMapEntryRecord^.StatusByte := StatusByte;
-          BandMapEntryRecord^.bmBand := Band;
-          BandMapEntryRecord^.bmMode := Mode;
-          BandMapEntryRecord^.Source := Source;
-          Exit;
-        end;
-
-              { See if the frequency is less than the next entry }
-
-        NextBandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-
-        if Frequency < BandMapEntryRecord^.Frequency then
-        begin
-          BandMapEntryRecord^.Call := CompressedCall;
-          BandMapEntryRecord^.Frequency := Frequency;
-          BandMapEntryRecord^.QSXOffset := QSXOffset;
-          BandMapEntryRecord^.StatusByte := StatusByte;
-          BandMapEntryRecord^.bmBand := Band;
-          BandMapEntryRecord^.bmMode := Mode;
-          BandMapEntryRecord^.Source := Source;
-          Exit;
-        end;
-      end;
-
-          { Okay - we can't use this record, so we will delete it and
-            splice the pointers. }
-
-      LastBandMapEntryRecord^.NextEntry := BandMapEntryRecord^.NextEntry;
-      TempBandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-
-      Dispose(BandMapEntryRecord);
-      BandMapEntryRecord := LastBandMapEntryRecord^.NextEntry;
-      Continue;
-    end;
-
-      { See if the frequency is less than the next record.  If so, this
-        is where we want to put it }
-
-    if (not EntryAdded) and
-      (Frequency < BandMapEntryRecord^.Frequency) then
-    begin
-
-          { New for 6.50 }
-
-      if LastBandMapEntryRecord = nil then { This is the first entry }
-      begin
-        BandMapEntryRecord := New(BandMapEntryPointer);
-
-              { Do the splice }
-
-        BandMapEntryRecord^.NextEntry := BandMapFirstEntryList[Band, Mode];
-
-        BandMapFirstEntryList[Band, Mode] := BandMapEntryRecord;
-
-              { Save the data }
-
-        BandMapEntryRecord^.Call := CompressedCall;
-        BandMapEntryRecord^.Frequency := Frequency;
-        BandMapEntryRecord^.QSXOffset := QSXOffset;
-        BandMapEntryRecord^.StatusByte := StatusByte;
-        BandMapEntryRecord^.bmBand := Band;
-        BandMapEntryRecord^.bmMode := Mode;
-        BandMapEntryRecord^.Source := Source;
-        EntryAdded := True;
-
-              { Setup to go through the rest of the list }
-
-        LastBandMapEntryRecord := BandMapEntryRecord;
-        BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-        Continue;
-      end;
-
-          { We need to squeeze an new entry in here }
-
-      TempBandMapEntryRecord := BandMapEntryRecord; { Remember }
-
-      BandMapEntryRecord := New(BandMapEntryPointer);
-
-          { Do the splice }
-
-      LastBandMapEntryRecord^.NextEntry := BandMapEntryRecord;
-
-      BandMapEntryRecord^.NextEntry := TempBandMapEntryRecord;
-
-          { Fill in the data for the new record }
-
-      BandMapEntryRecord^.Call := CompressedCall;
-      BandMapEntryRecord^.Frequency := Frequency;
-      BandMapEntryRecord^.QSXOffset := QSXOffset;
-      BandMapEntryRecord^.StatusByte := StatusByte;
-      BandMapEntryRecord^.bmBand := Band;
-      BandMapEntryRecord^.bmMode := Mode;
-      BandMapEntryRecord^.Source := Source;
-      EntryAdded := True;
-
-          { Setup to continue looking at the rest of the entries.  We
-            need to do this in case there is an entry on this band/mode
-            later on with the same callsign that needs to be deleted. }
-
-      LastBandMapEntryRecord := BandMapEntryRecord;
-      BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-      Continue;
-    end;
-
-      { Point to the next entry in the list }
-
-    LastBandMapEntryRecord := BandMapEntryRecord;
-    BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-  end;
-
-  if EntryAdded then
-  begin
-    Exit;
-  end;
-
-  { We got to the end of the list without finding the call or a place to
-    add it.  Add to end of list. }
-
-  BandMapEntryRecord := New(BandMapEntryPointer);
-
-  LastBandMapEntryRecord^.NextEntry := BandMapEntryRecord;
-
-  BandMapEntryRecord^.Call := CompressedCall;
-  BandMapEntryRecord^.Frequency := Frequency;
-  BandMapEntryRecord^.QSXOffset := QSXOffset;
-  BandMapEntryRecord^.StatusByte := StatusByte;
-  BandMapEntryRecord^.bmBand := Band;
-  BandMapEntryRecord^.bmMode := Mode;
-  BandMapEntryRecord^.Source := Source;
-  BandMapEntryRecord^.NextEntry := nil;
-
-end;
 
 procedure SaveBandMap;
 
@@ -3694,45 +3099,6 @@ begin
   1: CloseHandle(h);
 end;
 
-procedure GetBandMapDisplayInfo(var MaxEntriesPerPage: integer; var NumberBandMapRows: integer);
-
-begin
-
-  NumberBandMapRows := 1000; //(bf.ClientHeight - 5) div 15 ;
-  MaxEntriesPerPage := 1000; //((bf.Width - 0) div 125) * NumberBandMapRows;
-  Exit;
-  {
-        if BandMapWindowRY = 43 then //KK1L: 6.64 43 line screen I assume?
-           begin
-              if (MultiInfoMessage = '') then
-                 begin
-                    MaxEntriesPerPage := 85;
-                    NumberBandMapRows := 17;
-                 end
-              else
-                 begin
-                    MaxEntriesPerPage := 65;
-                    NumberBandMapRows := 13;
-                 end
-           end
-
-        else //KK1L: 6.64 50 line screen
-
-           begin
-              if (MultiInfoMessage = '') then
-                 begin
-
-                    NumberBandMapRows := bf.Height div 19;
-                    MaxEntriesPerPage := ((bf.Width - 30) div 130) * NumberBandMapRows;
-                 end
-              else
-                 begin
-                    MaxEntriesPerPage := 100;
-                    NumberBandMapRows := 20;
-                 end;
-           end;
-  }
-end;
 
 procedure UpdateBlinkingBandMapCall;
 
@@ -3762,113 +3128,6 @@ begin
 end;
 
 
-procedure CalculateNumberVisibleBandMapEntries(var NumberVisibleBandMapEntries: integer;
-  var CursorEntryNumber: integer;
-  StartAtTop: boolean);
-
-{ New in 6.49 }
-{ Compute number of band map entries and which entry number the
-  BandMapCursorData (global variable) resides at. }
-
-var
-  Band, StartBand, StopBand             : BandType;
-  Mode, StartMode, StopMode             : ModeType;
-  BandMapEntryRecord                    : BandMapEntryPointer;
-
-begin
-  if BandMapAllBands then
-  begin
-    if VHFBandsEnabled then {KK1L: 6.64 Keep band map within contest limits}
-    begin
-      StartBand := Band160;
-      StopBand := Band2;
-    end
-    else
-    begin
-      StartBand := Band160;
-      StopBand := Band12; {KK1L: 6.65 fixes WARC display enable}
-    end;
-  end
-  else
-  begin
-    StartBand := BandMapBand;
-    StopBand := BandMapBand;
-  end;
-
-  if BandMapAllModes then
-  begin
-    StartMode := CW;
-    StopMode := Phone;
-  end
-  else
-  begin
-    StartMode := BandMapMode;
-    StopMode := BandMapMode;
-  end;
-
-  NumberVisibleBandMapEntries := 0;
-  CursorEntryNumber := 0;
-
-  if StartAtTop then
-    BandMapCursorData := BandMapFirstEntryList[StartBand, StartMode];
-
-  FoundCursor := False;
-
-  for Band := StartBand to StopBand do
-    for Mode := StartMode to StopMode do
-    begin
-      if (not WARCBandsEnabled) and
-        ((Band = Band30) or (Band = Band17) or (Band = Band12)) then
-        Continue; {KK1L: 6.64 Keep band map within contest limits}
-
-      BandMapEntryRecord := BandMapFirstEntryList[Band, Mode];
-
-      while BandMapEntryRecord <> nil do
-      begin
-        if ((BandMapEntryRecord^.StatusByte and $40) <> 0) and BandMapDupeDisplay then
-        begin {entry is a dupe and we are displaying dupes }
-
-                {wli ???????? ?? nil BandMapCursorData}
-          if BandMapCursorData <> nil then
-            if BandMapEntryRecord^.Frequency = BandMapCursorData^.Frequency then
-            begin
-              BandMapCursorData := BandMapEntryRecord;
-              FoundCursor := True;
-            end;
-          if not FoundCursor then
-            inc(CursorEntryNumber);
-          inc(NumberVisibleBandMapEntries);
-        end
-
-        else
-          if ((BandMapEntryRecord^.StatusByte and $40) = 0) then
-          begin {KK1L: 6.64 entry is not a dupe so just check it}
-
-                  {wli ???????? ?? nil BandMapCursorData}
-            if BandMapCursorData <> nil then
-              if BandMapEntryRecord^.Frequency = BandMapCursorData^.Frequency then
-              begin
-                BandMapCursorData := BandMapEntryRecord;
-                FoundCursor := True;
-              end;
-            if not FoundCursor then
-              inc(CursorEntryNumber);
-            inc(NumberVisibleBandMapEntries);
-          end;
-        BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-      end;
-    end;
-
-  if not FoundCursor then
-    {KK1L: 6.64 covers the case of the cursor on a dupe when BandMapDupeDisplay is toggled FALSE}
-    {      Really it just finds the first appropriate entry to display at entry zero}
-    {      It covers cases of single band, all bands, all modes, all bands and modes}
-  begin
-    CursorEntryNumber := 0;
-    GetRecordForBandMapCursor(BandMapCursorData, CursorEntryNumber);
-  end;
-
-end;
 
 function GetRecordForBandMapCursor(var Entry: BandMapEntryPointer; CursorEntryNumber: integer): boolean;
 { KK1L: 6.64 Rewritten as function for possible multiple use. Code updated to work properly }
@@ -4008,19 +3267,6 @@ begin
 end;
 
 
-procedure OutputQSOorMultStatusString(OutputString_Milt: ShortString {Str160});
-
-//var
- // Cursor                                : integer;
-
-begin
-  GetRidOfPostcedingSpaces(OutputString_Milt);
-
-  //   FRM.MultiplierInformationWindow.Lines.Add(OutputString_Milt);
-
-  //{WLI}    IF WhereX > 1 THEN WriteLn;     { Added in 6.28 }
-
-end;
 
 
 procedure DisplayUserInfo(Call: CallString);
@@ -4624,109 +3870,6 @@ begin
 
 end;
 
-procedure DisplayBandMap_proc;
-var
-
-  BandMapEntryRecord                    : BandMapEntryPointer;
-  NumberEntriesDisplayed                : integer;
-  Band                                  : BandType;
-  Mode                                  : ModeType;
-  CurrentCursorPos                      : integer;
-  CurCursorPosData                      : integer;
-  Caption                               : string;
-  //  CallSignString                   : CallString;
-
-begin
-
-  if not BandMapEnable then Exit;
-  if (not DisplayBandMapEnable) then Exit;
-
-  //  tr4w_NeedToBlink := False;         //n4af  4.93.4
-
-
-  CurCursorPosData := GetBMSelItemData;
-  // Delphi 7 does not zero stack-allocated locals. Without this default,
-  // CurrentCursorPos was only assigned inside the band/mode/entry loops
-  // when an entry matched CurCursorPosData -- and was then passed to
-  // tLB_SETCURSEL unconditionally at the bottom of the procedure. If no
-  // entry matched (bandmap repopulated, prior selection expired, dupe
-  // filter toggled, frequency walked off) the listbox cursor landed on
-  // whatever was on the stack. -1 is the LB_SETCURSEL convention for
-  // "no selection".
-  CurrentCursorPos := -1;
-
-  //  if not DoNotAddToBandMap then
-  begin
-    tSetWindowRedraw(BandMapListBox, False);
-    SendMessage(BandMapListBox, LB_RESETCONTENT, 0, 0);
-    SendMessage(BandMapListBox, LB_INITSTORAGE, 50, 0);
-  end;
-  BandMapBlinkingCall := '';
-  tSetStartStopBandMode;
-
-  NumberEntriesDisplayed := 0;
-
-  Caption := 'Bandmap ' + BandStringsArray[StartBand] + ModeStringArray[StartMode] + ' - ';
-
-  if (not WARCBandsEnabled) and (StopBand = Band12) then
-    Caption := Caption + BandStringsArray[Band10] + ModeStringArray[StopMode]
-  else
-    Caption := Caption + BandStringsArray[StopBand] + ModeStringArray[StopMode];
-
-  if BandMapDupeDisplay then
-    Caption := Caption + ' DUPES ON '
-  else
-    Caption := Caption + ' DUPES OFF';
-
-  tSetWindowText(tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndHandle, Caption);
-
-  for Band := StartBand to StopBand do
-    for Mode := StartMode to StopMode do
-    begin
-
-      if ((not WARCBandsEnabled)  or (Band = Band30) or (Band = Band17) or (Band = Band12)) then Continue;
-
-      BandMapEntryRecord := BandMapFirstEntryList[Band, Mode];
-
-      while BandMapEntryRecord <> nil do
-      begin
-        with BandMapEntryRecord^ do
-        begin
-          if (not BandMapDupeDisplay) and ((BandMapEntryRecord^.StatusByte and $40) <> 0) then
-          begin
-            BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-            Continue;
-          end;
-                //                if not DoNotAddToBandMap then
-          SendMessage(BandMapListBox, LB_ADDSTRING, 0, integer(BandMapEntryRecord));
-
-          if (Abs(BandMapEntryRecord^.Frequency - BandMapCursorFrequency) <= BandMapGuardBand) then
-          begin
-            if not CQLabel(BandMapExpandedString(BandMapEntryRecord^.Call)) then
-            begin
-            SendMessage(BandMapListBox, LB_GETITEMRECT, wParam(NumberEntriesDisplayed), lParam(@tBlinkerRect));
-      //         tr4w_NeedToBlink := False;     //n4af 4.93.4
-            end;
-          end;
-
-          if BandMapEntryPointer(CurCursorPosData) = BandMapEntryRecord then
-            CurrentCursorPos := NumberEntriesDisplayed;
-
-          inc(NumberEntriesDisplayed);
-        end;
-        BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-      end;
-    end;
-  //  if (not DoNotAddToBandMap) or (tIvertedBlinker)  then
-  begin
-    tSetWindowRedraw(BandMapListBox, True);
-    tLB_SETCURSEL(BandMapListBox, CurrentCursorPos);
-    Windows.InvalidateRect(BandMapListBox, 0, False);
-    tIvertedBlinker := False;
-  end;
-  NeedToSynchBandMap := False;
-  //  DoNotAddToBandMap := False;
-end;
 
 procedure tDisplayAutoCQStatus;
 var
@@ -4738,278 +3881,6 @@ begin
   SetTextInQuickCommandWindow(QuickDisplayBuffer);
 end;
 
-procedure UpadateRadioStatus(rig: RadioPtr);
-var
-  //TempInt                               : integer;
-  h                                     : HWND;
-  dif                                   : integer;
-begin
-
-  with rig^ do
-  begin
-    h := tRadioInterfaceWndHandle;
-    if h <> 0 then
-    begin
-          //          Windows.SetWindowTextA(InsertWindowHandle, inttopchar(CurrentStatus.PrevRITFreq));
-          //          Windows.SetWindowTextA(OpModeWindowHandle, inttopchar(CurrentStatus.RITFreq));
-
-      if CurrentStatus.PrevRITFreq <> CurrentStatus.RITFreq then
-      begin
-{$RANGECHECKS OFF}
-       //SetDlgItemInt(h, 120, CurrentStatus.RITFreq, CurrentStatus.RITFreq < 0);
-       SetDlgItemTextW(h, 120, PChar(RITFreqToPChar(CurrentStatus.RITFreq))); //FreqToPChar(CurrentStatus.RITFreq));
-{$RANGECHECKS ON}
-        CurrentStatus.PrevRITFreq := CurrentStatus.RITFreq;
-      end;
-      if CurrentStatus.PrevVFOStatus <> CurrentStatus.VFOStatus then
-      begin
-        if CurrentStatus.VFOStatus = VFOA then
-        begin
-          EnableWindowTrue(h, 102);
-          EnableWindowFalse(h, 104);
-        end;
-        if CurrentStatus.VFOStatus = VFOB then
-        begin
-          EnableWindowTrue(h, 104);
-          EnableWindowFalse(h, 102);
-        end;
-        if CurrentStatus.VFOStatus = vfoUnknown then
-        begin
-          EnableWindowTrue(h, 104);
-          EnableWindowTrue(h, 102);
-        end;
-        CurrentStatus.PrevVFOStatus := CurrentStatus.VFOStatus;
-      end;
-
-      SetDlgItemTextW(h, 102, PChar(FreqToPChar(CurrentStatus.VFO[VFOA].Frequency)));
-      SetDlgItemTextW(h, 104, PChar(FreqToPChar(CurrentStatus.VFO[VFOB].Frequency)));
-
-          //              if (CurrentStatus.VFOA.Frequency = 0) or (CurrentStatus.VFOB.Frequency = 0) then SetDlgItemText(h, 120, nil)
-
-      Windows.EnableWindow(Windows.GetDlgItem(h, 121), CurrentStatus.RIT);
-      Windows.EnableWindow(Windows.GetDlgItem(h, 122), CurrentStatus.XIT);
-      Windows.EnableWindow(Windows.GetDlgItem(h, 123), CurrentStatus.Split);
-    end;
-
-    Windows.SetWindowTextW(rig^.FreqWindowHandle, PChar(FreqToPChar(CurrentStatus.Freq)));
-//    rig.CurrentBand := rig.CurrentStatus.Band;
-//    rig.CurrentMode := rig.CurrentStatus.Mode;
-
-    if rig = ActiveRadioPtr then
-    begin
-      dif := Abs(CurrentStatus.Freq - LastDisplayedFreq);
-      if LastDisplayedFreq <> 0 then
-        if dif > AutoSAPEnableRate then
-          if dif <= 10000 then
-            if AutoSAPEnable and (OpMode = CQOpMode) then
-             SetOpMode(SearchAndPounceOpMode);
-               
-                //      if tStatusEqualityCounter = StatusEquality then
-//        if FilteredStatus.Freq <> 0 then
-//          if (FilteredStatus.Band <> BandMemory[ActiveRadio {RadioOne}])
-//            or (FilteredStatus.Mode <> ModeMemory[ActiveRadio {RadioOne}])
-//            then
-      begin
-            //BandMapCursorFrequency := FilteredStatus.Freq;
-        ActiveBand := FilteredStatus.Band;
-        ActiveMode := FilteredStatus.Mode;
-
-        DisplayBandMode(ActiveBand, ActiveMode, False);
-        VisibleDupeSheetChanged := True;
-
-        DisplayCodeSpeed;
-        DisplayAutoSendCharacterCount;
-        VisibleLog.ShowRemainingMultipliers; //wli
-        ShowFMessages(0);
-            //DoNotAddToBandMap := False;
-      end;
-
-    end;
-
-    Exit;
-      //      DoNotAddToBandMap := True;
-    if ((ActiveRadio = RadioOne) and (rig = @Radio1)) or ((ActiveRadio = RadioTwo) and (rig = @Radio2)) then
-    begin
-      dif := Abs(CurrentStatus.Freq - LastDisplayedFreq);
-      if LastDisplayedFreq <> 0 then
-        if dif > AutoSAPEnableRate then
-          if dif <= 10000 then
-          begin
-            if AutoSAPEnable and (OpMode = CQOpMode) then
-              SetOpMode(SearchAndPounceOpMode);
-          end;
-
-//      if tStatusEqualityCounter = StatusEquality then
-//        if FilteredStatus.Freq <> 0 then
-//          if (FilteredStatus.Band <> BandMemory[ActiveRadio {RadioOne}])
-//            or (FilteredStatus.Mode <> ModeMemory[ActiveRadio {RadioOne}])
-//            then
-      begin
-            //BandMapCursorFrequency := FilteredStatus.Freq;
-        ActiveBand := FilteredStatus.Band;
-        ActiveMode := FilteredStatus.Mode;
-
-        DisplayBandMode(ActiveBand, ActiveMode, False);
-        VisibleDupeSheetChanged := True;
-
-        DisplayCodeSpeed;
-        DisplayAutoSendCharacterCount;
-        VisibleLog.ShowRemainingMultipliers; //wli
-        ShowFMessages(0);
-            //DoNotAddToBandMap := False;
-      end;
-
-      if (({CurrentStatus}FilteredStatus.Freq <> BandMapCursorFrequency) or
-        (BandMapMode <> ActiveMode)) and ({CurrentStatus}FilteredStatus.Freq <> 0) then
-      begin
-        BandMapCursorFrequency := {CurrentStatus} FilteredStatus.Freq;
-        BandMapBand := ActiveBand;
-        BandMapMode := ActiveMode;
-        DisplayBandMap;
-      end;
-
-      if FrequencyMemoryEnable then
-        FreqMemory[FilteredStatus.Band, FilteredStatus.Mode] := FilteredStatus.Freq;
-    end;
-  (*  start   REMOVECANDIDATE
-//    LastDisplayedFreq[ActiveRadio] := FilteredStatus.Freq;
-
-      {
-          RadioOnTheMove[radioone] := False;
-          RadioMovingInBandMode[radioone] := False;
-
-          if FilteredStatus.Freq <> 0 then
-             if (FilteredStatus.Freq <> LastDisplayedFreq[radioone]) or
-                (FilteredStatus.Mode <> LastDisplayedMode) then //wli
-                begin
-                   if Abs(FilteredStatus.Freq - LastDisplayedFreq[radioone]) > AutoSAPEnableRate then
-                      begin
-                         RadioOnTheMove[radioone] := LastDisplayedFreq[radioone] <> 0;
-                         //          if RadioOnTheMove[radioone] then if (AutoSAPEnable) and (OpMode = CQOpMode) then FRM.SetSAP;
-
-                         RadioMovingInBandMode[radioone] := (FilteredStatus.Band = BandMemory[radioone]) and
-                            (FilteredStatus.Mode = ModeMemory[radioone]) and (LastDisplayedFreq[radioone] <> 0);
-
-                         //                        if RadioMovingInBandMode[radioone] then
-                         //                           begin
-                         //                              if (AutoSAPEnable) and (OpMode = CQOpMode) then SetOpMode(SearchAndPounceOpMode);
-
-                         //                                          if ClearCallWindowAtSPMove then
-                         //                                            if opmode = SearchAndPounceOpMode then if callwindowstring <> '' then
-                         //                                              begin
-                         //                                                tCleareCallWindow;
-                         //                                                tCleareExchangeWindow;
-                         //                                                setfocus(CallWindowHandle);
-                         //                                                ExchangeHasBeenSent := False;
-                         //                                                ClearCallWindowAtSPMove := true;
-                         //                                              end;
-
-                         //                           end;
-
-                      end;
-
-                   //         If this is the ActiveRadio, then I have some more things to do.
-
-                   if ActiveRadio = radioone then
-                      begin
-                         if (FilteredStatus.Band <> BandMemory[radioone])
-                            or (FilteredStatus.Mode <> ModeMemory[radioone])
-                            then
-                            if Radio1.TrackingEnable then
-                               begin
-                                  //            IF FilteredStatus.Band <> NoBand THEN
-                                  ActiveBand := FilteredStatus.Band;
-                                  //            IF FilteredStatus.Mode <> NoMode THEN
-                                  ActiveMode := FilteredStatus.Mode;
-
-                                  DisplayBandMode(ActiveBand, ActiveMode, False);
-                                  VisibleDupeSheetChanged := True;
-
-                                  DisplayCodeSpeed ;
-                                  DisplayAutoSendCharacterCount;
-                                  VisibleLog.ShowRemainingMultipliers; //wli
-                                  ShowFMessages(0);
-                               end;
-
-                         //                     See what radio two might be up to
-
-                         if TwoRadioState = TwoRadiosDisabled then // No 2nd radio
-                            begin
-                               if ((FilteredStatus.Freq <> BandMapCursorFrequency) or
-                                  (BandMapMode <> ActiveMode)) and (FilteredStatus.Freq <> 0) then
-                                  begin
-                                     BandMapCursorFrequency := FilteredStatus.Freq;
-                                     BandMapBand := ActiveBand;
-                                     BandMapMode := ActiveMode;
-                                     DisplayBandMap;
-                                  end;
-                            end
-                         else
-                            begin
-                               if BandMapEnable then
-                                  if ((FilteredStatus.Band = BandMapBand) and
-                                     (FilteredStatus.Freq <> BandMapCursorFrequency) and
-                                     (FilteredStatus.Freq <> 0)) or
-                                     (RadioOnTheMove[radioone]) then //KK1L: 6.73 Consolidated logic
-                                     begin
-                                        BandMapCursorFrequency := FilteredStatus.Freq;
-                                        BandMapBand := ActiveBand;
-                                        BandMapMode := ActiveMode;
-                                        DisplayBandMap;
-                                     end;
-                            end;
-                      end
-                   else
-                      begin
-
-                         //                  Okay, this isn't the active radio, but we might have
-                         //                  something to do if the band map is active.  If we are
-                         //                  tuning to new frequencies on this radio, then we are
-                         //                  going to assume that it is appropriate for the band
-                         //                  map on this band to be displayed!
-
-                         // Guard: don't follow the inactive radio if it has not yet
-                         // reported a real band/mode (NoBand/NoMode are uninitialized
-                         // sentinels). Same defect as uRadioPolling.pas inactive branch.
-                         if (TwoRadioState <> TwoRadiosDisabled) and BandMapEnable and
-                            RadioOnTheMove[radioone] and
-                            (FilteredStatus.Band <> NoBand) and
-                            (FilteredStatus.Mode <> NoMode) then
-                            begin
-                               logger.Trace('[BMWriter LOGWIND:4935 inactive-FS] ' +
-                                            'BandMapBand:=FS.Band=%d, BandMapMode:=FS.Mode=%d, FS.Freq=%d, ' +
-                                            'TwoRadioState=%d, RadioOnTheMove[1]=%d',
-                                            [Ord(FilteredStatus.Band), Ord(FilteredStatus.Mode),
-                                             FilteredStatus.Freq, Ord(TwoRadioState),
-                                             Ord(RadioOnTheMove[radioone])]);
-                               BandMapBand := FilteredStatus.Band;
-                               BandMapMode := FilteredStatus.Mode;
-                               BandMapCursorFrequency := FilteredStatus.Freq;
-                               DisplayBandMap;
-                            end;
-                      end;
-
-                   //       DisplayFrequency(FilteredStatus, RadioOne);
- //                  LastDisplayedFreq[radioone] := FilteredStatus.Freq;
-
-                   BandMemory[radioone] := FilteredStatus.Band;
-                   ModeMemory[radioone] := FilteredStatus.Mode;
-
-                   //wli -  what is 'freq'?!
-
-                   //       IF FrequencyMemoryEnable THEN
-                   //        FreqMemory[FilteredStatus.Band, FilteredStatus.Mode] := Freq;
-
-                   //maybe?
-                   if FrequencyMemoryEnable then
-                      FreqMemory[FilteredStatus.Band, FilteredStatus.Mode] := FilteredStatus.Freq;
-
-                end;
-          LastDisplayedFreq[radioone] := FilteredStatus.Freq;
-         }
-         *)
-  end;
-end;
 
 procedure tDispalyOnAirTime;
 var
@@ -5135,12 +4006,6 @@ begin
   if (Callsign[1] = 'C') and (Callsign[2] = 'Q') and (Callsign[3] = '/') then Result := True;
 end;
 
-procedure old_UpadateRadioStatus(RadioPointer: RadioPtr);
-//var
- // TempInt                               : integer;
-  //h                                     : HWND;
-begin
-end;
 
 procedure tSetStartStopBandMode;
 begin
