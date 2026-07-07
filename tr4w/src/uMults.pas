@@ -58,13 +58,13 @@ type
 
     procedure SetZnMult(Zone: Word; Band: BandType; Mode: ModeType);
     procedure SetDXMult(Cntr: Word; Band: BandType; Mode: ModeType);
-    procedure SetPxMult(Prfx: CallString; Band: BandType; Mode: ModeType);
-    procedure SetDmMult(Dom: CallString; Band: BandType; Mode: ModeType);
+    procedure SetPxMult(const Prfx: string; Band: BandType; Mode: ModeType);
+    procedure SetDmMult(const Dom: string; Band: BandType; Mode: ModeType);
 
     function IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boolean;
     function IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
-    function IsPxMult(Prfx: CallString; Band: BandType; Mode: ModeType): boolean;
-    function IsDmMult(Dom: CallString; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
+    function IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
+    function IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
     procedure FillVisibleBytes;
   end;
 
@@ -129,16 +129,17 @@ begin
   IncrementTotals(Band, Mode, rmDX);
 end;
 
-procedure MultsObject.SetPxMult(Prfx: CallString; Band: BandType; Mode: ModeType);
+procedure MultsObject.SetPxMult(const Prfx: string; Band: BandType; Mode: ModeType);
 begin
-  Prfx[Ord(Prfx[0]) + 1] := #0;
+  // (dropped the ShortString null-terminator Prfx[Ord(Prfx[0])+1]:=#0 -- a native
+  //  string carries its own length, and uSSL.AddString now takes a string.)
   PrfList.AddString(Prfx, Band, Mode, False);
   IncrementTotals(Band, Mode, rmPrefix);
 end;
 
-procedure MultsObject.SetDmMult(Dom: CallString; Band: BandType; Mode: ModeType);
+procedure MultsObject.SetDmMult(const Dom: string; Band: BandType; Mode: ModeType);
 begin
-  Dom[Ord(Dom[0]) + 1] := #0;
+  // (dropped the ShortString null-terminator; native string + uSSL.AddString(string).)
   DomList.AddString(Dom, Band, Mode, False);
   IncrementTotals(Band, Mode, rmDomestic);
 end;
@@ -161,11 +162,10 @@ begin
        Result := False;
 end;
 
-function MultsObject.IsPxMult(Prfx: CallString; Band: BandType; Mode: ModeType): boolean;
+function MultsObject.IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
 var
   Index                                 : integer;
 begin
-  Prfx[Ord(Prfx[0]) + 1] := #0;
   Result := not PrfList.StringIsDupe(Prfx, Band, Mode, Index);
   if Index = -1 then
      begin
@@ -174,14 +174,13 @@ begin
      end;
 end;
 
-function MultsObject.IsDmMult(Dom: CallString; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
+function MultsObject.IsDmMult(const Dom: string; Band: BandType; Mode: ModeType; DomMultType: DomesticMultType): boolean;
 var
   Index                                 : integer;
   InsertPos                             : integer;
-  StoredKey                             : Str10;
-  FieldKey                              : Str10;
+  StoredKey                             : string;
+  FieldKey                              : string;
 begin
-  Dom[Ord(Dom[0]) + 1] := #0;
 
   // For GridFields the mult unit is the 2-char field ("FN"), not the full
   // 4-char grid square ("FN20" or "FN25"). Truncate the query to 2 chars so
