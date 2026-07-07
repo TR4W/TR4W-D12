@@ -361,7 +361,7 @@ type
   // TX sequence buffer entry — stores sent packets for radio's retransmit requests
   TSeqBufEntry = record
     Seq:              Word;
-    Data:             string;       // Raw packet bytes
+    Data:             AnsiString;   // Raw packet bytes (byte-exact wire framing; not UTF-16)
     SendTime:         LongWord;     // GetTickCount when sent
     RetransmitCount:  Byte;
   end;

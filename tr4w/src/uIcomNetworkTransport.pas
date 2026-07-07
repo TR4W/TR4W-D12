@@ -171,12 +171,12 @@ type
     procedure OnLoginTimer;
 
     // Internal - tracked send (central path for all sequenced sends)
-    procedure SendTrackedPacket(Socket: TIdUDPServer; const Data: string;
+    procedure SendTrackedPacket(Socket: TIdUDPServer; const Data: AnsiString;
       TargetAddr: string; TargetPort: Word; var SeqCounter: Word);
 
     // Internal - buffer management
-    procedure AddToTxBuffer(BufList: TList; Seq: Word; const Data: string);
-    function FindInTxBuffer(BufList: TList; Seq: Word): string;
+    procedure AddToTxBuffer(BufList: TList; Seq: Word; const Data: AnsiString);
+    function FindInTxBuffer(BufList: TList; Seq: Word): AnsiString;
     procedure ClearTxBuffer(BufList: TList);
     procedure ClearAllBuffers;
 
@@ -462,7 +462,8 @@ end;
 procedure TIcomNetworkTransport.SendCivData(const CivFrame: string);
 var
   Pkt: TDataPacket;
-  FullPacket: string;
+  FullPacket: AnsiString;
+  i: Integer;
 begin
   if not FCivStreamOpen then
   begin
@@ -483,11 +484,14 @@ begin
   Pkt.SendSeq := SwapWord(FCivInnerSeq);
   Inc(FCivInnerSeq);
 
-  // Combine header + CI-V data into single packet string
+  // Combine header + CI-V data into one byte-exact packet. CivFrame is a string
+  // of faithful codepoints (each Char 0..255 == one CI-V byte). Copy the header
+  // record verbatim, then the payload byte-faithfully (Ord -> byte). Never Move
+  // the string (that would copy UTF-16 code units, not the CI-V bytes).
   SetLength(FullPacket, SizeOf(Pkt) + Length(CivFrame));
   Move(Pkt, FullPacket[1], SizeOf(Pkt));
-  if Length(CivFrame) > 0 then
-    Move(CivFrame[1], FullPacket[SizeOf(Pkt) + 1], Length(CivFrame));
+  for i := 1 to Length(CivFrame) do
+    FullPacket[SizeOf(Pkt) + i] := AnsiChar(Ord(CivFrame[i]));
 
   SendTrackedPacket(FCivSocket, FullPacket, FRadioAddress, FCivPort, FCivSeq);
 
@@ -1042,12 +1046,15 @@ begin
   begin
     Move(Data[Offset], RadioCap, SizeOf(TRadioCapPacket));
 
-    // Extract radio name (null-terminated string)
-    SetLength(NameStr, 32);
-    Move(RadioCap.RadioName[0], NameStr[1], 32);
-    I := Pos(#0, NameStr);
-    if I > 0 then
-      SetLength(NameStr, I - 1);
+    // Extract radio name (null-terminated ASCII) byte-faithfully -- building it
+    // Char-by-Char, not Move-ing raw bytes into a UTF-16 buffer (which garbled it
+    // to "???0").
+    NameStr := '';
+    for I := 0 to 31 do
+    begin
+      if RadioCap.RadioName[I] = 0 then Break;
+      NameStr := NameStr + Char(RadioCap.RadioName[I]);
+    end;
     FRadioName := Trim(NameStr);
 
     // Save CI-V address and MAC
@@ -1149,7 +1156,7 @@ end;
 procedure TIcomNetworkTransport.ExtractCivFrames(
   const Data: array of Byte; DataLen: Integer);
 var
-  I, FrameStart, FrameEnd: Integer;
+  I, J, FrameStart, FrameEnd: Integer;
   Frame: string;
 begin
   // Search for FE FE ... FD patterns in raw packet data
@@ -1176,12 +1183,15 @@ begin
 
       if FrameEnd > FrameStart then
       begin
-        // Extract frame as string (FE FE ... FD inclusive)
+        // Extract frame (FE FE ... FD inclusive) as a faithful-codepoint string:
+        // each Char's codepoint IS the CI-V byte. Build it byte-faithfully -- never
+        // Move raw bytes into a UTF-16 string buffer.
         SetLength(Frame, FrameEnd - FrameStart + 1);
-        Move(Data[FrameStart], Frame[1], Length(Frame));
+        for J := 1 to Length(Frame) do
+          Frame[J] := Char(Data[FrameStart + J - 1]);
 
         if logger.IsTraceEnabled then
-           logger.Trace('[IcomTransport:' + FRadioName + '] CIV RX: %s', [BytesToHexStr(Frame[1], Length(Frame))]);
+           logger.Trace('[IcomTransport:' + FRadioName + '] CIV RX: %s', [BytesToHexStr(Data[FrameStart], FrameEnd - FrameStart + 1)]);
 
         // Forward to callback
         if Assigned(FOnCivData) then
@@ -1279,7 +1289,7 @@ procedure TIcomNetworkTransport.SendLoginPacket;
 var
   Pkt: TLoginPacket;
   I: Integer;
-  PktStr: string;
+  PktStr: AnsiString;
 begin
   FillChar(Pkt, SizeOf(Pkt), 0);
   Pkt.Len := ICOM_LOGIN_PKT_SIZE;
@@ -1322,7 +1332,7 @@ end;
 procedure TIcomNetworkTransport.SendTokenAck;
 var
   Pkt: TTokenPacket;
-  PktStr: string;
+  PktStr: AnsiString;
 begin
   FillChar(Pkt, SizeOf(Pkt), 0);
   Pkt.Len := ICOM_TOKEN_PKT_SIZE;
@@ -1354,7 +1364,7 @@ end;
 procedure TIcomNetworkTransport.SendTokenRenew;
 var
   Pkt: TTokenPacket;
-  PktStr: string;
+  PktStr: AnsiString;
 begin
   FillChar(Pkt, SizeOf(Pkt), 0);
   Pkt.Len := ICOM_TOKEN_PKT_SIZE;
@@ -1387,7 +1397,7 @@ var
   Pkt: TConnInfoPacket;
   I: Integer;
   NameBytes: string;
-  PktStr: string;
+  PktStr: AnsiString;
 begin
   FillChar(Pkt, SizeOf(Pkt), 0);
   Pkt.Len := ICOM_CONNINFO_PKT_SIZE;
@@ -1454,7 +1464,7 @@ end;
 procedure TIcomNetworkTransport.SendCivOpen;
 var
   Pkt: TOpenClosePacket;
-  PktStr: string;
+  PktStr: AnsiString;
 begin
   FillChar(Pkt, SizeOf(Pkt), 0);
   Pkt.Len := ICOM_OPENCLOSE_PKT_SIZE;
@@ -1477,7 +1487,7 @@ end;
 procedure TIcomNetworkTransport.SendCivClose;
 var
   Pkt: TOpenClosePacket;
-  PktStr: string;
+  PktStr: AnsiString;
 begin
   FillChar(Pkt, SizeOf(Pkt), 0);
   Pkt.Len := ICOM_OPENCLOSE_PKT_SIZE;
@@ -1500,7 +1510,7 @@ end;
 procedure TIcomNetworkTransport.SendIdlePacket;
 var
   Pkt: TControlPacket;
-  PktStr: string;
+  PktStr: AnsiString;
 begin
   // Send idle (type=0, 16-byte) on CONTROL SOCKET ONLY (matches wfview)
   if FControlSocket = nil then Exit;
@@ -1738,10 +1748,10 @@ end;
 // ============================================================================
 
 procedure TIcomNetworkTransport.SendTrackedPacket(Socket: TIdUDPServer;
-  const Data: string; TargetAddr: string; TargetPort: Word;
+  const Data: AnsiString; TargetAddr: string; TargetPort: Word;
   var SeqCounter: Word);
 var
-  Packet: string;
+  Packet: AnsiString;
   TxBuf: TList;
 begin
   Packet := Data;
@@ -1749,8 +1759,8 @@ begin
   // Patch bytes [7..8] (1-indexed string) = offset 6..7 with current SeqCounter (LE)
   if Length(Packet) >= 8 then
   begin
-    Packet[7] := Chr(SeqCounter and $FF);
-    Packet[8] := Chr((SeqCounter shr 8) and $FF);
+    Packet[7] := AnsiChar(SeqCounter and $FF);
+    Packet[8] := AnsiChar((SeqCounter shr 8) and $FF);
   end;
 
   // Store in TX buffer for radio's retransmit requests
@@ -1788,7 +1798,7 @@ end;
 // TX Buffer Management
 // ============================================================================
 
-procedure TIcomNetworkTransport.AddToTxBuffer(BufList: TList; Seq: Word; const Data: string);
+procedure TIcomNetworkTransport.AddToTxBuffer(BufList: TList; Seq: Word; const Data: AnsiString);
 var
   Entry: PSeqBufEntry;
 begin
@@ -1807,7 +1817,7 @@ begin
   end;
 end;
 
-function TIcomNetworkTransport.FindInTxBuffer(BufList: TList; Seq: Word): string;
+function TIcomNetworkTransport.FindInTxBuffer(BufList: TList; Seq: Word): AnsiString;
 var
   I: Integer;
   Entry: PSeqBufEntry;
@@ -1854,7 +1864,7 @@ procedure TIcomNetworkTransport.HandleRetransmitRequest(
 var
   Pkt: TControlPacket;
   TxBuf: TList;
-  StoredPkt: string;
+  StoredPkt: AnsiString;
   Socket: TIdUDPServer;
   TargetAddr: string;
   TargetPort: Word;
