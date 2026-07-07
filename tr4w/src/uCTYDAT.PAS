@@ -254,12 +254,10 @@ procedure ctySetCountryMode(CountryMode: CountryModeType);
 
 function ctyGetCountryNamePchar(Index: Word): PAnsiChar;
 function ctyGetCountryIdPchar(Index: Word): PAnsiChar;
-function ctyGetCountryName(Index: Word): string;
 function ctyGetCountryID(const Call: string): string;
 
 procedure ctyShellSort;
 procedure ctyAddNewPrefixRecord(pr: PrefixRecPtr; CheckDupe: boolean);
-procedure ctyMakeDefaultRemainingCountryList;
 procedure ctyLoadInRFOblList;   // n4af 4.42.6
 procedure ctyLoadInRemainingMults(p: PAnsiChar);
 procedure ctyLoadInR150SList;
@@ -774,15 +772,6 @@ begin
   Index := l;
 end;
 {
-function ctyInit(ctyFilename: PAnsiChar): boolean;
-begin
-  Result := False;
-  if ctyLoadInCountryFile(ctyFilename) then
-  begin
-
-    Result := True;
-  end;
-end;
 }
 
 function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
@@ -1277,12 +1266,6 @@ begin
     Result := nil;
 end;
 
-function ctyGetCountryName(Index: Word): string;
-begin
-  // Result is '' by default (native string); no ZeroMemory buffer-clear needed.
-  if (Index >= 0) and (Index < CTY.ctyNumberCountries) then
-    Result := CTY.ctyTable[Index].Name;
-end;
 
 function ctyGetCountryID(const Call: string): string;
 begin
@@ -1292,10 +1275,6 @@ begin
     Result := '';
 end;
 
-procedure ctyMakeDefaultRemainingCountryList;
-begin
-
-end;
 
 procedure ctyLoadInRemainingMults(p: PAnsiChar);
 var

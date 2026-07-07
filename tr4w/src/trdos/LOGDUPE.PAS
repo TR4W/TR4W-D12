@@ -341,7 +341,6 @@ function BigEntryAddress(Entry: FourBytes): integer;
 function CallNotInPossibleCallList(Call: CallString; PossCallList: PossibleCallRecord): boolean;
 
 procedure ClearContestExchange(var Exchange: ContestExchange);
-procedure ConvertBigEntryAddressToFourBytes(EntryPointer: integer; var BigEntry: FourBytes);
 procedure CreateGridSquareList(Call: CallString; Band: BandType);
 
 procedure DupeInit;
@@ -362,9 +361,6 @@ function ParseExchangeIntoContestExchange(LogEntry: string;
 
 function PointsToBigCall(Entry: FourBytes): boolean;
 
-procedure PutPartialCallInList(Call: CallString;
-  InitialExchange: CallString;
-  CallAddress: integer);
 
 procedure SetUpExchangeInformation(ActiveExchange: ExchangeType;
   var ExchangeInformation: ExchangeInformationRecord
@@ -691,14 +687,6 @@ begin
   PointsToBigCall := (Entry[1] = 255) and (Entry[4] = 255);
 end;
 
-procedure ConvertBigEntryAddressToFourBytes(EntryPointer: integer; var BigEntry: FourBytes);
-
-begin
-  BigEntry[1] := 255;
-  BigEntry[2] := EntryPointer mod 256;
-  BigEntry[3] := EntryPointer div 256;
-  BigEntry[4] := 255;
-end;
 
 function BigEntryAddress(Entry: FourBytes): integer;
 
@@ -1411,16 +1399,21 @@ begin
 end;
 
 procedure LoadInitialExchangeFile;
-var
-  TempInteger                           : integer;
 begin
 
-  if not EnumerateLinesInFile(TR4W_INITIALEX_FILENAME, EnumInitialEx, True) then Exit;
-  TempInteger := Format(wsprintfBuffer, '%s:'#13#10 + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
-{$IF LANG = 'ENG'}
-  if InitialExDupes = 0 then wsprintfBuffer[TempInteger - 11] := #0;
-{$IFEND}
-  ShowMessage(wsprintfBuffer);
+  if not EnumerateLinesInFile(TR4W_INITIALEX_FILENAME, EnumInitialEx, True) then
+     begin
+     Exit;
+     end;
+
+   { Changed this from the MessageBox to a QuickDisplay - Much less intrusive - NY4I 2026JUL07 }
+  //TempInteger := Format(wsprintfBuffer, '%s:'#13#10 + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
+  if InitialExCallsigns > 0 then
+     begin
+     Format(wsprintfBuffer, '%s:' + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
+     QuickDisplay(wsprintfBuffer);
+     end;
+ // ShowMessage(wsprintfBuffer);
 end;
 
 procedure DupeAndMultSheet.MakePossibleCallList(Call: CallString; var PossCallList: PossibleCallRecord);
@@ -1520,46 +1513,6 @@ begin
 end;
 }
 
-procedure PutPartialCallInList(Call: CallString;
-  InitialExchange: CallString;
-  CallAddress: integer);
-
-var
-  BlockNumber, BlockAddress             : integer;
-  CompressedCall                        : FourBytes;
-  Index                                 : Byte;
-
-begin
-  BlockNumber := CallAddress div FourByteBlockSize + 1;
-  BlockAddress := CallAddress mod FourByteBlockSize;
-
-  if BlockNumber > LastPartialCallBlock then
-  begin
-      {WLI}
-      {        IF MaxAvail < SizeOf (FourByteBlockArray) THEN
-                  BEGIN
-                  DoABeep (Single);
-                  QuickDisplay ('Not enough memory for FourByteBlockArray!!');
-                  ReminderPostedCount := 30;
-                  Exit;
-                  END;
-      }
-//      if PartialCallList[BlockNumber] = nil then        New(PartialCallList[BlockNumber]);
-
-    LastPartialCallBlock := BlockNumber;
-  end;
-
-  CompressFormat(Call, CompressedCall);
-  //  PartialCallList[BlockNumber]^[BlockAddress].Call := CompressedCall;
-
-  if ExchangeMemoryEnable then
-  begin
-    Index := GetInitialExchangeIndex(InitialExchange);
-    //         PartialCallList[BlockNumber]^[BlockAddress].InitialExchangeIndex := Index;
-  end
-  else
-    //    PartialCallList[BlockNumber]^[BlockAddress].InitialExchangeIndex := 0;
-end;
 
 function DupeAndMultSheet.IsADomesticMult(Mult: Str10; Band: BandType; Mode: ModeType): boolean;
 
