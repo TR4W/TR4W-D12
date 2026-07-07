@@ -631,7 +631,6 @@ procedure CreateAndSendCQMultiInfoMessage;
 procedure CreateAndSendSAPMultiInfoMessage;
 
 procedure DisplayGridSquareStatus(Call: CallString);
-procedure DisplayMultiMessageBuffer;
 function DomStringParse(InputString: Str14): Str14; //Gav 4.44.8
 
 function DVKRecentlyStarted(MaxElaspedSec100: LONGINT): boolean;
@@ -663,7 +662,6 @@ function LooksLikeACallSign(Call: Str40): boolean;
 function MarineOrAirMobileStation(Call: CallString): boolean;
 {KK1L: 6.68 Used in WRTC 2002}
 
-procedure NextPage;
 {
 procedure NewBandMapEntry(Call: CallString;
   Frequency: LONGINT;
@@ -696,7 +694,6 @@ function ProperSalutation(Call: CallString): string;
 
 procedure PushMultiMessageBuffer(Message: Str80);
 
-procedure RestoreRadioFrequency(Radio: RadioType);
 
 procedure ReviewBackCopyFiles;
 procedure RotorControl(Heading: integer);
@@ -3311,49 +3308,6 @@ begin
   end; { of case Length (Exchange) }
 end;
 
-function ProcessRSTAgeAndQSONumberExchange(Exchange: ShortString; var RXData:
-  ContestExchange): boolean; // 4.55.4
-var
-  firststring, secondstring, thirdstring: str10;
-begin
-  ColumnsArray[logColNumberSent].Enable := True;
-  ColumnsArray[logColNumberReceive].Enable := True;
-  ColumnsArray[logColCheck].Enable := True;
-  ParseExchange(exchange, FirstString, SecondString, ThirdString);
-  if SecondString = '' then
-    exit;
-  if thirdstring <> '' then
-  begin
-    if ActiveMode = CW then
-      if (length(FirstString) <> 3) then
-        exit;
-    if ActiveMode = Phone then
-      if length(FirstString) <> 2 then
-        exit;
-    case ActiveMode of
-      CW: RXData.RSTReceived := StrToInt(Copy(Exchange, 1, 3));
-      Phone: Rxdata.RSTReceived := StrToInt(Copy(Exchange, 1, 2));
-    end;
-  end;
-  if thirdstring = '' then
-  begin
-
-    case ActiveMode of
-      CW: RXData.RSTReceived := 599;
-      Phone: RXData.RSTReceived := 59;
-    end;
-    RXData.Age := StrToInt(FirstString);
-    RXData.NumberReceived := StrToInt(SecondString);
-  end
-  else
-  begin
-    RXData.Age := StrToInt(SecondString);
-    RXData.NumberReceived := StrToInt(ThirdString);
-  end;
-
-  Result := True;
-
-end;
 
 function ProcessAgeAndQSONumberExchange(Exchange: ShortString; var RXData:
   ContestExchange): boolean;
@@ -5134,13 +5088,6 @@ begin
   }
 end;
 
-procedure RestoreRadioFrequency(Radio: RadioType);
-
-begin
-  {    IF Remember [Radio].Frequency = 0 THEN Exit;
-      WITH Remember [Radio] DO SetRadioFreq (Radio, Frequency, Mode, 'A');
-     }
-end;
 
 procedure ReviewBackCopyFiles;
 
@@ -5565,28 +5512,6 @@ begin
   GetMultiPortCommand := TempString;
 end;
 
-procedure RememberSentMessage(MultMessage: string);
-
-{ This procedure will take the message that was sent and remember it along
-  with a time stamp, so that if it doesn't get QSLed after a certain amount
-  of time, the message can be resent. }
-
-begin
-  with MultiRememberBuffer^[FirstMultiMessage] do
-  begin
-    Message := MultMessage;
-    MarkTime(TimeMark);
-    RetryCount := 0;
-    QSL := False;
-    Warnings := 0;
-  end;
-
-  FirstMultiMessage := (FirstMultiMessage + 1) mod MultiMessageBufferSize;
-
-  if FirstMultiMessage = LastMultiMessage then
-    LastMultiMessage := (LastMultiMessage + 1) mod MultiMessageBufferSize;
-
-end;
 
 procedure SendMultiCommand(Source: Byte; Destination: Byte; ControlByte: Byte;
   Message: string);
@@ -5674,14 +5599,6 @@ begin
 
 end;
 
-procedure DisplayMultiMessageBuffer;
-
-begin
-  //   if ActiveMultiPort <> NoPort then
-  begin
-
-  end;
-end;
 
 procedure DisplayGridSquareStatus(Call: CallString);
 
@@ -5756,19 +5673,6 @@ begin
   
 end;
 
-procedure NextPage;
-
-begin
-
-  //W_L_I  if PrinterEnabled then
-  //W_L_I  begin
-{$I-}
-  //{WLI}        Write (Lst, ControlL);
-  //{WLI}        IF IOResult <> 0 THEN SendMorse ('     PRINTER FAILURE');
-{$I+}
-  //W_L_I  end;
-
-end;
 
 procedure CalculateQSOPoints(var RXData: ContestExchange);
 
@@ -8407,18 +8311,6 @@ begin
   }
 end;
 {
-function IsR150Country(OblastDigit, OblastChar: Char): boolean;
-begin
-  Result := True;
-  case OblastDigit of
-    '0': if OblastChar in ['F', 'O', 'Q', 'Y', 'W'] then Exit;
-    '1': if OblastChar = 'N' then Exit;
-    '4': if OblastChar in ['P', 'S', 'U', 'W', 'Y'] then Exit;
-    '6': if OblastChar in ['E', 'I', 'J', 'W', 'X', 'Y'] then Exit;
-    '9': if OblastChar in ['W', 'X', 'Z'] then Exit;
-  end;
-  Result := False;
-end;
 }
 
 function InSameFederalOkrug(HisCallsign: CallString): boolean;
@@ -8450,42 +8342,6 @@ begin
   Result := o1 = o2;
 end;
 {
-function GetFederalOkrug(OblastDigit, OblastChar: Char): FederalOkrugs;
-
-begin
-  Result := UnKnownOkrug;
-  case OblastDigit of
-    '1', '2': Result := SeveroZapadniy;
-    '3':
-      begin
-        if OblastChar = 'T' then Result := Privolzhskiy else
-          Result := Centralniy;
-      end;
-    '4':
-      begin
-        if OblastChar = 'A' then Result := Yuzhniy else
-          Result := Privolzhskiy;
-      end;
-    '6': Result := Yuzhniy;
-    '8': Result := Sibirskiy;
-    '9':
-      begin
-        if OblastChar = 'X' then Result := SeveroZapadniy
-        else
-          if OblastChar in ['F', 'T', 'S', 'W'] then Result := Privolzhskiy
-          else
-            if OblastChar in ['A', 'C', 'D', 'J', 'L', 'K', 'Q'] then Result := Uralskiy
-            else
-              Result := Sibirskiy;
-      end;
-    '0':
-      begin
-        if OblastChar in ['A', 'B', 'H', 'O', 'S', 'U', 'W', 'Y'] then Result := Sibirskiy
-        else
-          Result := DalneVostochnyiy;
-      end;
-  end;
-end;
 }
 
 function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
