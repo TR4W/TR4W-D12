@@ -235,12 +235,12 @@ function ctyLocateCall(Call: CallString; var QTH: QTHRecord): boolean;
 function ctyLoadInCountryFile(ctyFilename: PAnsiChar; CheckDupe: boolean; LoadRemainingMults: boolean): boolean;
 function ctyFindCallsign(const s: PAnsiChar; var Index: integer): boolean;
 function ctyGetGrid(Call: CallString; var ID: DXMultiplierString): GridString;
-function ctyGetContinent(Call: CallString): ContinentType;
-function ctyGetCountry(Call: CallString): Word;
+function ctyGetContinent(const Call: string): ContinentType;
+function ctyGetCountry(const Call: string): Word;
 function ctyGetCountryUTCOffset(Country: Word): Smallint;
-function ctyGetZone(Call: CallString): Byte;
-function ctyGetITUZone(Call: CallString): Byte;
-function ctyGetCQZone(Call: CallString): Byte;
+function ctyGetZone(const Call: string): Byte;
+function ctyGetITUZone(const Call: string): Byte;
+function ctyGetCQZone(const Call: string): Byte;
 
 function ctyGetDefaultITUZone(Country: Word): Byte;
 function ctyGetDefaultCQZone(Country: Word): Byte;
@@ -255,7 +255,7 @@ procedure ctySetCountryMode(CountryMode: CountryModeType);
 function ctyGetCountryNamePchar(Index: Word): PAnsiChar;
 function ctyGetCountryIdPchar(Index: Word): PAnsiChar;
 function ctyGetCountryName(Index: Word): ShortString;
-function ctyGetCountryID(Call: CallString): DXMultiplierString;
+function ctyGetCountryID(const Call: string): string;
 
 procedure ctyShellSort;
 procedure ctyAddNewPrefixRecord(pr: PrefixRecPtr; CheckDupe: boolean);
@@ -964,7 +964,7 @@ begin
     Result := '';
 end;
 
-function ctyGetContinent(Call: CallString): ContinentType;
+function ctyGetContinent(const Call: string): ContinentType;
 begin
   if ctyLocateCall(Call, CTY.ctyTempQTHRecord) then
     Result := CTY.ctyTable[CTY.ctyTempQTHRecord.Country].DefaultContinent
@@ -972,7 +972,7 @@ begin
     Result := UnknownContinent;
 end;
 
-function ctyGetCountry(Call: CallString): Word;
+function ctyGetCountry(const Call: string): Word;
 begin
   if ctyLocateCall(Call, CTY.ctyTempQTHRecord) then
   begin
@@ -1027,7 +1027,7 @@ begin
   Result := CTY.ctyTable[Country].UTCOffset;
 end;
 
-function ctyGetZone(Call: CallString): Byte;
+function ctyGetZone(const Call: string): Byte;
 var
   TempPrefixRec                         : PrefixRecPtr;
 begin
@@ -1241,7 +1241,7 @@ begin
     Result := DUMMYZONE;
 end;
 
-function ctyGetITUZone(Call: CallString): Byte;
+function ctyGetITUZone(const Call: string): Byte;
 var
   TempZoneModeType                      : ZoneModeType;
 begin
@@ -1251,7 +1251,7 @@ begin
   CTY.ctyZoneMode := TempZoneModeType;
 end;
 
-function ctyGetCQZone(Call: CallString): Byte;
+function ctyGetCQZone(const Call: string): Byte;
 var
   TempZoneModeType                      : ZoneModeType;
 begin
@@ -1284,7 +1284,7 @@ begin
     Result := CTY.ctyTable[Index].Name;
 end;
 
-function ctyGetCountryID(Call: CallString): DXMultiplierString;
+function ctyGetCountryID(const Call: string): string;
 begin
   if ctyLocateCall(Call, CTY.ctyTempQTHRecord) then
     Result := CTY.ctyTempQTHRecord.CountryID
