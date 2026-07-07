@@ -282,6 +282,11 @@ end;
 procedure showwarning(Text: PAnsiChar);
 begin
   logger.Warn(Text);
+  // Silent/batch export (/EXPORT) runs headless with no operator to dismiss a
+  // modal -- a MessageBox would block the run indefinitely (e.g. the ARRL10 /
+  // Winter Field Day "LOCATION field is empty" check in PostUnit). The warning
+  // is already in the log above; skip the modal in that mode.
+  if tSilentExport then Exit;
   MessageBoxA(0, Text, 'TR4W', MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
 end;
 
