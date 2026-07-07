@@ -752,7 +752,7 @@ procedure DecrementASCIIInteger(var ASCIIString: Str80);
 procedure DelayOrKeyPressed(DelayTime: integer);
 function DeleteMult(var LogString: Str80; MultString: Str20): boolean;
 
-function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): PAnsiChar {Str20};
+function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): string {Str20};
 function ElaspedSec100(StartTime: Cardinal {TimeRecord}): LONGINT;
 
 function ExpandedString(Input: FourBytes): Str80;
@@ -770,7 +770,7 @@ function GetDayString: Str80;
 //procedure GetFileNames(Path: Str80; Mask: Str80; var FileNames: FileNameRecord);
 
 function GetFirstString(LongString: string): Str80;
-function GetFullTimeString(WithMilliseconds: boolean): PAnsiChar {str80};
+function GetFullTimeString(WithMilliseconds: boolean): string {str80};
 function GetIntegerTime: integer;
 
 function GetLastString(LongString: ShortString): Str80;
@@ -1714,7 +1714,7 @@ begin
   StartTime := GetTickCount;
 end;
 
-function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): PAnsiChar {Str20};
+function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): string {Str20};
 
 { Returns a string in the format HH:MM:SS with how long it has been }
 
@@ -2450,7 +2450,7 @@ begin
   GetSuffix := TempString;
 end;
 
-function GetFullTimeString(WithMilliseconds: boolean): PAnsiChar;
+function GetFullTimeString(WithMilliseconds: boolean): string;
 
 { This function will look at the DOS clock and generate a nice looking
   ASCII string showing the time using the format 23:42:32.  It will take

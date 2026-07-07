@@ -24,59 +24,57 @@ interface
 
 uses Windows;
 
-function FreqToPChar(i: integer): PAnsiChar;
-function FreqToPCharWithoutHZ(i: integer): PAnsiChar;
-function kHzToPChar(Freq: Word): PAnsiChar;
-function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): PAnsiChar;
-function SystemTimeToString(SysTime: SYSTEMTIME): PAnsiChar;
-function FormatFullTime(Hour, Minute, Second, Milliseconds: Word; WithMilliseconds: boolean): PAnsiChar;
+{ D12 modernization: these return native `string` (UTF-16).  They produce pure
+  ASCII numeric/time text for the display layer.  The prior PAnsiChar returns
+  pointed into shared static buffers -- two calls to any of FreqToPChar /
+  FreqToPCharWithoutHZ / kHzToPChar in one expression aliased the SAME buffer.
+  A managed `string` result removes that hazard entirely.  Callers that feed a
+  Win32 A-API convert explicitly at that boundary (W-API preferred).
+  Empty-input signal: FreqToPChar/FreqToPCharWithoutHZ return '' (was nil). }
+function FreqToPChar(i: integer): string;
+function FreqToPCharWithoutHZ(i: integer): string;
+function kHzToPChar(Freq: Word): string;
+function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): string;
+function SystemTimeToString(SysTime: SYSTEMTIME): string;
+function FormatFullTime(Hour, Minute, Second, Milliseconds: Word; WithMilliseconds: boolean): string;
 
 implementation
 
-uses SysUtils, System.AnsiStrings;
+uses SysUtils;
 
-var
-  FreqToPCharBuffer        : array[0..15] of AnsiChar;
-  MillisecondsBuffer       : array[0..31] of AnsiChar;
-  SystemTimeToStringBuffer : array[0..31] of AnsiChar;
-  FullTimeBuffer           : array[0..31] of AnsiChar;
-
-function FreqToPChar(i: integer): PAnsiChar;
+function FreqToPChar(i: integer): string;
 var
   hz                                    : integer;
 begin
   if i = 0 then
   begin
-    Result := nil;
+    Result := '';
     Exit;
   end;
   hz := (i mod 1000) div 10;
   // Issue #997: asm wsprintf-push -> SysUtils.Format. khz = i div 1000.
-  System.AnsiStrings.StrPCopy(FreqToPCharBuffer, SysUtils.Format('%u.%.2u', [i div 1000, hz]));
-  Result := FreqToPCharBuffer;
+  Result := SysUtils.Format('%u.%.2u', [i div 1000, hz]);
 end;
 
-function FreqToPCharWithoutHZ(i: integer): PAnsiChar;
+function FreqToPCharWithoutHZ(i: integer): string;
 begin
   if i = 0 then
   begin
-    Result := nil;
+    Result := '';
     Exit;
   end;
 
   // Issue #997: asm wsprintf-push -> SysUtils.Format. khz = i div 1000.
-  System.AnsiStrings.StrPCopy(FreqToPCharBuffer, SysUtils.Format('%6u', [i div 1000]));
-  Result := FreqToPCharBuffer;
+  Result := SysUtils.Format('%6u', [i div 1000]);
 end;
 
-function kHzToPChar(Freq: Word): PAnsiChar;
+function kHzToPChar(Freq: Word): string;
 begin
   // Issue #997: asm wsprintf-push -> SysUtils.Format.
-  System.AnsiStrings.StrPCopy(FreqToPCharBuffer, SysUtils.Format('%6u', [Freq]));
-  Result := FreqToPCharBuffer;
+  Result := SysUtils.Format('%6u', [Freq]);
 end;
 
-function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): PAnsiChar;
+function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): string;
 var
   Value                                 : Cardinal;
   minuts                                : Word;
@@ -97,23 +95,20 @@ begin
   // (Value = hours; a Cardinal msecs caps hours at ~1193, so it always fits the
   // 16-bit truncation the old asm did.)
   if WithMsec then
-    System.AnsiStrings.StrPCopy(MillisecondsBuffer, SysUtils.Format('%.2u:%.2u:%.2u:%.3u', [Value, minuts, Seconds, milliseconds]))
+    Result := SysUtils.Format('%.2u:%.2u:%.2u:%.3u', [Value, minuts, Seconds, milliseconds])
   else
-    System.AnsiStrings.StrPCopy(MillisecondsBuffer, SysUtils.Format('%.2u:%.2u:%.2u', [Value, minuts, Seconds]));
-  Result := MillisecondsBuffer;
+    Result := SysUtils.Format('%.2u:%.2u:%.2u', [Value, minuts, Seconds]);
 end;
 
-function SystemTimeToString(SysTime: SYSTEMTIME): PAnsiChar;
+function SystemTimeToString(SysTime: SYSTEMTIME): string;
 begin
   // Issue #997: asm wsprintf-push -> SysUtils.Format. YYYY-MM-DD HH:MM:SS.
-  System.AnsiStrings.StrPCopy(SystemTimeToStringBuffer,
-    SysUtils.Format('%.2u-%.2u-%.2u %.2u:%.2u:%.2u',
-      [SysTime.wYear, SysTime.wMonth, SysTime.wDay,
-       SysTime.wHour, SysTime.wMinute, SysTime.wSecond]));
-  Result := SystemTimeToStringBuffer;
+  Result := SysUtils.Format('%.2u-%.2u-%.2u %.2u:%.2u:%.2u',
+    [SysTime.wYear, SysTime.wMonth, SysTime.wDay,
+     SysTime.wHour, SysTime.wMinute, SysTime.wSecond]);
 end;
 
-function FormatFullTime(Hour, Minute, Second, Milliseconds: Word; WithMilliseconds: boolean): PAnsiChar;
+function FormatFullTime(Hour, Minute, Second, Milliseconds: Word; WithMilliseconds: boolean): string;
 { Pure formatting extracted VERBATIM (asm intact) from tree.GetFullTimeString so
   it can be golden-master tested before/after asm removal. tree forwards the UTC
   fields. Local copies (h/m/s/ms) keep the asm operands in memory (the original
@@ -122,10 +117,9 @@ begin
   // Issue #997: asm wsprintf-push -> SysUtils.Format (proven byte-identical to
   // the asm baseline by uTestFreqTimeFormat). %.2hu/%.3hu -> %.2u/%.3u.
   if WithMilliseconds then
-    System.AnsiStrings.StrPCopy(FullTimeBuffer, SysUtils.Format('%.2u:%.2u:%.2u:%.3u', [Hour, Minute, Second, Milliseconds]))
+    Result := SysUtils.Format('%.2u:%.2u:%.2u:%.3u', [Hour, Minute, Second, Milliseconds])
   else
-    System.AnsiStrings.StrPCopy(FullTimeBuffer, SysUtils.Format('%.2u:%.2u:%.2u', [Hour, Minute, Second]));
-  Result := FullTimeBuffer;
+    Result := SysUtils.Format('%.2u:%.2u:%.2u', [Hour, Minute, Second]);
 end;
 
 end.

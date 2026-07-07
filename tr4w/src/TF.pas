@@ -134,7 +134,7 @@ function PCharToInt(p: PAnsiChar): integer;
 function BooleanToStr(b: boolean): string;
 //function CenterString(s: string; count: byte): string;
 procedure strU(var Str: ShortString);
-procedure SetMainWindowText(Window: TMainWindowElement; Text: PAnsiChar);
+procedure SetMainWindowText(Window: TMainWindowElement; Text: string);
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 
 function ValExt(Source: PAnsiChar; var code: integer): extended;
@@ -156,7 +156,7 @@ function tCB_GETCURSEL(ParentHandle: HWND; Control: integer): integer;
 
 procedure tSetWindowText(WindowHandle: HWND; s: string);
 procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
-function SystemTimeToString(SysTime: SYSTEMTIME): PAnsiChar;
+function SystemTimeToString(SysTime: SYSTEMTIME): string;
 procedure SelectParentDir(h: HWND);
 
 //function StrLen(const Str: PChar): Cardinal;
@@ -173,15 +173,15 @@ procedure ShowSysErrorMessage(ID: PAnsiChar);
 
 
 //function tr4w_GetTimeString: PChar;
-function RITFreqToPchar(i: integer): PAnsiChar;
-function FreqToPChar(i: integer): PAnsiChar;
-function FreqToPChar2(i: integer): PAnsiChar;
-function FreqToPCharWithoutHZ(i: integer): PAnsiChar;
-function kHzToPChar(Freq: Word): PAnsiChar;
+function RITFreqToPchar(i: integer): string;
+function FreqToPChar(i: integer): string;
+function FreqToPChar2(i: integer): string;
+function FreqToPCharWithoutHZ(i: integer): string;
+function kHzToPChar(Freq: Word): string;
 //function InitSysMonthCal32: boolean;
 function BitmapFromIcon(Handle: HWND; i: HICON): HBITMAP;
 function ExtractBigIcon(IconIndex: integer): HICON;
-function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): PAnsiChar;
+function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): string;
 
 //function Pos(Substr: string; S: string): Integer;
 function ArrayToString(const a: array of Char): string;
@@ -290,39 +290,40 @@ begin
   MessageBoxA(0, Text, 'TR4W', MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
 end;
 
-function FreqToPChar2(i: integer): PAnsiChar;
+function FreqToPChar2(i: integer): string;
 begin
-  Format(FreqToPCharBuffer, '%u.%u', i div 1000, (i mod 1000) div 100);
-  Result := FreqToPCharBuffer;
+  // D12: returns native string; same %u.%u digits the wsprintf path produced.
+  Result := SysUtils.Format('%u.%u', [i div 1000, (i mod 1000) div 100]);
 end;
 
-function RITFreqToPchar(i: integer): PAnsiChar;
+function RITFreqToPchar(i: integer): string;
 var absI: integer;
 begin  // This does not handle negative numbers very well.
+   // D12: returns native string; format specs unchanged (%2u space-pad width 2)
+   // so the display is byte-identical to the wsprintf path, quirk and all.
    if i < 0 then
       begin
       absI := i * -1;
-      Format(FreqToPCharBuffer, '-%u.%2u', absI div 1000, (absI mod 1000) div 10); // Make 190 appear as 0.19
+      Result := SysUtils.Format('-%u.%2u', [absI div 1000, (absI mod 1000) div 10]); // Make 190 appear as 0.19
       end
    else
       begin
-      Format(FreqToPCharBuffer, '%d.%2u', i div 1000, (abs(i) mod 1000) div 10); // Make 190 appear as 0.19
+      Result := SysUtils.Format('%d.%2u', [i div 1000, (abs(i) mod 1000) div 10]); // Make 190 appear as 0.19
       end;
-   Result := FreqToPCharBuffer;
 end;
 
-function FreqToPChar(i: integer): PAnsiChar;
+function FreqToPChar(i: integer): string;
 begin
   // Issue #997: extracted to uFreqTimeFormat (golden-master tested).
   Result := uFreqTimeFormat.FreqToPChar(i);
 end;
 
-function FreqToPCharWithoutHZ(i: integer): PAnsiChar;
+function FreqToPCharWithoutHZ(i: integer): string;
 begin
   Result := uFreqTimeFormat.FreqToPCharWithoutHZ(i);   // Issue #997: extracted
 end;
 
-function kHzToPChar(Freq: Word): PAnsiChar;
+function kHzToPChar(Freq: Word): string;
 begin
   Result := uFreqTimeFormat.kHzToPChar(Freq);   // Issue #997: extracted
 end;
@@ -391,7 +392,7 @@ begin
   Result := BigIcon {SmallIcon};
 end;
 
-function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): PAnsiChar;
+function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): string;
 begin
   // Issue #997: extracted to uFreqTimeFormat (golden-master tested).
   Result := uFreqTimeFormat.MillisecondsToFormattedString(msecs, WithMsec);
@@ -724,7 +725,7 @@ begin
   SendMessage(wnd, WM_SETREDRAW, integer(Redraw), 0);
 end;
 
-function SystemTimeToString(SysTime: SYSTEMTIME): PAnsiChar;
+function SystemTimeToString(SysTime: SYSTEMTIME): string;
 begin
   // Issue #997: extracted to uFreqTimeFormat (golden-master tested).
   Result := uFreqTimeFormat.SystemTimeToString(SysTime);
@@ -993,30 +994,18 @@ begin
   //  SendMessage(Result, WM_SETICON, ICON_BIG, LoadIcon(thInstance, 'MAINICON'));
 end;
 
-procedure SetMainWindowText(Window: TMainWindowElement; Text: PAnsiChar);
+procedure SetMainWindowText(Window: TMainWindowElement; Text: string);
 begin
-
-//  if Window = mweUserInfo then
-//    asm nop end;
-
-  if ((Text = nil) or (Text[0] = #0)) then
+  // D12: Text is native string; empty ('') is the "clear" signal that nil/#0
+  // used to be.  Write via the W-API so the whole path is Unicode.
+  if (Text = '') then
     if TWindows[Window].mweE then
     begin
-//      inttopchar(integer(Window));
       Exit;
     end;
-  Windows.SetWindowTextA(wh[Window], Text);
+  Windows.SetWindowTextW(wh[Window], PChar(Text));
 
-  if Text = nil then
-    TWindows[Window].mweE := True
-  else
-  begin
-    if Text[0] = #0 then
-      TWindows[Window].mweE := True
-    else
-      TWindows[Window].mweE := False;
-  end;
-
+  TWindows[Window].mweE := (Text = '');
 end;
 
 function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean): THandle;

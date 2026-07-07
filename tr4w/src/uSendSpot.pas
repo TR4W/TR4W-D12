@@ -82,7 +82,7 @@ begin
         i := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]} - Hz100;
         if Hz100 >= 50 then i := i + 100;
 
-        SetDlgItemTextA(hwnddlg, 108, FreqToPChar(i));
+        SetDlgItemTextW(hwnddlg, 108, PChar(FreqToPChar(i)));
 
         if tContestNameInComment then
         begin

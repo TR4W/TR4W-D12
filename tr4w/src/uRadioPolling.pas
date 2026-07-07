@@ -2995,7 +2995,7 @@ procedure WriteToDebugFile(port: PortType; MessageType: DebugFileMessagetype; p:
 var
    DirectionChar: PAnsiChar;
    i, lpNumberOfBytesWritten: Cardinal;
-   P1: PAnsiChar;
+   P1: string;   // D12: GetFullTimeString returns native string
    tChar: AnsiChar;
    bgColor: PAnsiChar;
    h: HWND;
@@ -3342,11 +3342,11 @@ begin
                 rig.CurrentStatus.VFO[VFOA].Frequency]);
          if h <> 0 then
             begin
-               SetDlgItemTextA(h, 102,
-                  FreqToPChar(rig.CurrentStatus.VFO[VFOA].Frequency));
+               SetDlgItemTextW(h, 102,
+                  PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOA].Frequency)));
             end;
-         Windows.SetWindowTextA(rig^.FreqWindowHandle,
-            FreqToPChar(rig.CurrentStatus.Freq));
+         Windows.SetWindowTextW(rig^.FreqWindowHandle,
+            PChar(FreqToPChar(rig.CurrentStatus.Freq)));
       end
    else
       begin
@@ -3377,8 +3377,8 @@ begin
                 rig.CurrentStatus.VFO[VFOB].Frequency]);
          if h <> 0 then
             begin
-               SetDlgItemTextA(h, 104,
-                  FreqToPChar(rig.CurrentStatus.VFO[VFOB].Frequency));
+               SetDlgItemTextW(h, 104,
+                  PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOB].Frequency)));
             end;
          //Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
       end
@@ -3403,7 +3403,7 @@ begin
       begin
          { $ R A NGECHECKS OFF}
              //SetDlgItemInt(h, 120, Cardinal(rig.CurrentStatus.RITFreq), rig.CurrentStatus.RITFreq < 0);
-         SetDlgItemTextA(h, 120, RITFreqToPchar(rig.CurrentStatus.RITFreq));
+         SetDlgItemTextW(h, 120, PChar(RITFreqToPchar(rig.CurrentStatus.RITFreq)));
          { $ R A NGECHECKS ON}
          rig.CurrentStatus.PrevRITFreq := rig.CurrentStatus.RITFreq;
       end;

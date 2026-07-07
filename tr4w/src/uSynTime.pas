@@ -182,7 +182,7 @@ end;
 
 procedure ShowTime(Control: integer; LocalTime: SYSTEMTIME);
 begin
-  SetDlgItemTextA(st_window_handle, Control, TF.SystemTimeToString(LocalTime));
+  SetDlgItemTextW(st_window_handle, Control, PChar(TF.SystemTimeToString(LocalTime)));
 end;
 
 procedure GetServerAnswerOffset;

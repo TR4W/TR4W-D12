@@ -519,7 +519,7 @@ begin
 //              Windows.SetDlgItemInt(tr4whandle, 88, Temp576BufferPos, False);
           end;
 
-          Windows.SetDlgItemTextA(MP3RECWNDHND, 102, MillisecondsToFormattedString(Windows.GetTickCount - RecorderStartTime, False));
+          Windows.SetDlgItemTextW(MP3RECWNDHND, 102, PChar(MillisecondsToFormattedString(Windows.GetTickCount - RecorderStartTime, False)));
           MaxAmplitude := 0;
 
           for t := 0 to Freq - 1 do
