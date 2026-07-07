@@ -73,23 +73,23 @@ type
   public
 //  destructor Destroy; override;
     constructor Init;
-    function Get(Index: integer): CallString;
+    function Get(Index: integer): string;
     function GetQSOs(Index: integer): Byte;
     function GetDupesArray(Index: integer; var da: TDupesArray): boolean;
 
     function GetTotalWorkedStations: integer;
-    function AddCallsign(const s: CallString; Mode: ModeType; Band: BandType; JustAddToList: boolean): integer;
-    function AddIniitialExchange(const Call:CallString; InitialExchangeString: Str14): boolean;
-    function GetIniitialExchange(const Call: CallString): Str14;
-    function GetIniitialExchangeByIndex(Index: integer): CallString;
-    function CallsignIsDupe(const s: CallString; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
+    function AddCallsign(const s: string; Mode: ModeType; Band: BandType; JustAddToList: boolean): integer;
+    function AddIniitialExchange(const Call: string; const InitialExchangeString: string): boolean;
+    function GetIniitialExchange(const Call: string): string;
+    function GetIniitialExchangeByIndex(Index: integer): string;
+    function CallsignIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
 //    procedure Clear;
 //    procedure Delete(Index: integer);
     procedure ClearDupes;
     procedure DisplayDupeSheet(Radio: RadioPtr {dBand: BandType; dMode: ModeType});
-    function CreatePartialsList(Call: CallString): integer;
-    function FindCallsign(const s: CallString; var Index: integer): boolean; virtual;
-    function FindNumber(s: CallString): boolean; virtual;  // n4af 4.42.2
+    function CreatePartialsList(const Call: string): integer;
+    function FindCallsign(const s: string; var Index: integer): boolean; virtual;
+    function FindNumber(const s: string): boolean; virtual;  // n4af 4.42.2
 
     property Count: integer read FCount;
   end;
@@ -123,12 +123,12 @@ begin
 end;
 }
 
-function TCallsignsList.GetIniitialExchangeByIndex(Index: integer): CallString;
+function TCallsignsList.GetIniitialExchangeByIndex(Index: integer): string;
 begin
   Result := FList^[Index].FInExchange
 end;
 
-function TCallsignsList.GetIniitialExchange(const Call: CallString): Str14;
+function TCallsignsList.GetIniitialExchange(const Call: string): string;
 var
   Index                                 : integer;
 begin
@@ -138,7 +138,7 @@ begin
       Result := '';
 end;
 
-function TCallsignsList.AddIniitialExchange(const Call:CallString; InitialExchangeString: Str14): boolean;
+function TCallsignsList.AddIniitialExchange(const Call: string; const InitialExchangeString: string): boolean;
 label
   Add;
 var
@@ -165,7 +165,7 @@ begin
     if FList^[i].FQSOs > 0 then inc(Result);
 end;
 
-function TCallsignsList.AddCallsign(const s: CallString; Mode: ModeType; Band: BandType; JustAddToList: boolean): integer;
+function TCallsignsList.AddCallsign(const s: string; Mode: ModeType; Band: BandType; JustAddToList: boolean): integer;
 label
   Add;
 var
@@ -196,7 +196,7 @@ begin
 
 end;
 
-function TCallsignsList.CallsignIsDupe(const s: CallString; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
+function TCallsignsList.CallsignIsDupe(const s: string; Band: BandType; Mode: ModeType; var IndexInList: integer): boolean;
 var
   Index                                 : integer;
   TempMode                              : ModeType;
@@ -258,7 +258,7 @@ begin
 end;
 }
 
-function TCallsignsList.FindCallsign(const s: CallString; var Index: integer): boolean;
+function TCallsignsList.FindCallsign(const s: string; var Index: integer): boolean;
 var
   l, h, i, c                            : integer;
 
@@ -286,7 +286,7 @@ var
 end;
 
 
-function TCallsignsList.FindNumber( s: CallString): boolean;         // n4af 4.42.2 reverse lookup member #
+function TCallsignsList.FindNumber(const s: string): boolean;        // n4af 4.42.2 reverse lookup member #
 var
  i, {l,} h, c                             : integer;
  lstr                                    : string;
@@ -310,7 +310,7 @@ begin
   end;
 
 
-function TCallsignsList.Get(Index: integer): CallString;
+function TCallsignsList.Get(Index: integer): string;
 begin
   //  if (Index < 0) or (Index >= FCount) then Exit; //ERROR(@SListIndexError, Index);
   Result := FList^[Index].FCall;
@@ -460,7 +460,7 @@ begin
 
 end;
 
-function TCallsignsList.CreatePartialsList(Call: CallString): integer;
+function TCallsignsList.CreatePartialsList(const Call: string): integer;
 label
   1;
 var
