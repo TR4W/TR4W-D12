@@ -305,13 +305,13 @@ begin
   NumbreinCallsign := False;
   for c := 1 to i - 2 do
   begin
-    if not tCharIsNumbers(AnsiChar(s[c])) then if tCharIsNumbers(AnsiChar(s[c + 1])) then NumbreinCallsign := True;
+    if not tCharIsNumbers(s[c]) then if tCharIsNumbers(s[c + 1]) then NumbreinCallsign := True;
     if s[c] = '/' then NumbreinCallsign := False;
   end;
   if s[i - 1] = '/' then NumbreinCallsign := False;
   if NumbreinCallsign = False then Exit;
 
-  if not tCharIsNumbers(AnsiChar(s[i])) then Exit;
+  if not tCharIsNumbers(s[i]) then Exit;
   Result := True;
 end;
 
