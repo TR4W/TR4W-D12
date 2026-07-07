@@ -49,6 +49,12 @@ type
     function Write(const Buffer; Count: DWORD): DWORD;
     function ReadString(MaxLen: Integer): string;
     procedure WriteString(const S: string);
+    // Byte-exact I/O for binary protocols (e.g. Icom CI-V). A serial port is a
+    // byte stream: text goes through WriteString (encoded to ASCII bytes here),
+    // binary goes through WriteBytes/ReadBytes. Never write a UTF-16 string's
+    // code units as if they were wire bytes.
+    procedure WriteBytes(const Data: TBytes);
+    function ReadBytes(MaxLen: Integer): TBytes;
 
     property Handle: THandle read FHandle;
     property PortName: string read FPortName;
@@ -346,8 +352,34 @@ end;
 
 procedure TSerialPort.WriteString(const S: string);
 begin
-  if Length(S) > 0 then
-    Write(S[1], Length(S));
+  // Serial is a byte stream. Encode the (ASCII CAT) text to its wire bytes
+  // rather than writing UTF-16 code units. D12: Length(S) is a code-unit
+  // count, not a byte count -- the old Write(S[1], Length(S)) sent
+  // "F<00>A<00>..." for "FA...", breaking every serial radio.
+  WriteBytes(TEncoding.ASCII.GetBytes(S));
+end;
+
+procedure TSerialPort.WriteBytes(const Data: TBytes);
+begin
+  if Length(Data) > 0 then
+    Write(Data[0], Length(Data));
+end;
+
+function TSerialPort.ReadBytes(MaxLen: Integer): TBytes;
+var
+  Buffer: array[0..1023] of Byte;
+  BytesRead: DWORD;
+  Len: Integer;
+begin
+  if MaxLen > SizeOf(Buffer) then
+    Len := SizeOf(Buffer)
+  else
+    Len := MaxLen;
+
+  BytesRead := Read(Buffer, Len);
+  SetLength(Result, BytesRead);
+  if BytesRead > 0 then
+    Move(Buffer[0], Result[0], BytesRead);
 end;
 
 end.
