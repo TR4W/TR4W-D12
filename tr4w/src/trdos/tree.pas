@@ -861,7 +861,7 @@ function Lpt3BaseAddress: Word;
 
 procedure MarkTime(var StartTime: Cardinal {TimeRecord});
 function MicroTimeElapsed(StartTime: Cardinal {TimeRecord}): LONGINT;
-function MinutesToTimeString(Minutes: integer): Str20;
+function MinutesToTimeString(Minutes: integer): string;
 function MultiMessageSourceBand(Source: Byte): BandType;
 
 function NewKeyPressed: boolean;
@@ -3042,7 +3042,7 @@ begin
   Result := GetTickCount - StartTime;
 end;
 
-function MinutesToTimeString(Minutes: integer): Str20;
+function MinutesToTimeString(Minutes: integer): string;
 var
   Hours                                 : integer;
   HourString, MinuteString              : Str20;
