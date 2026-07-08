@@ -988,7 +988,7 @@ const
 procedure WriteLnCenter(Prompt: Str80);
 procedure WriteLnVarCenter(var FileWrite: Text; Prompt: Str80);
 function FoundDirectory(FileName: string; Path: string; var Directory: string): boolean;
-function FindDirectory(FileName: Str80): Str80;
+function FindDirectory(FileName: Str80): string;
 function String2Hex(const Buffer: Ansistring): string;
 
 var
@@ -4580,7 +4580,7 @@ begin
 
 end;
 
-function FindDirectory(FileName: Str80): Str80;
+function FindDirectory(FileName: Str80): string;
 
 { This procedure will attempt to find the directory for the filename
   passed to it.  It will first check the current working directory, the
