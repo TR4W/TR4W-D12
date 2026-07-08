@@ -125,7 +125,6 @@ procedure tLoadKeyboardLayout;
 function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
 function GetContestFromString(ContestString: ShortString): ContestType;
 function STToInt64(St: SYSTEMTIME): int64;
-function RealToStr(Num: REAL): string;
 function RealToStr2(Num: REAL): string;
 function PCharToInt(p: PAnsiChar): integer;
 function BooleanToStr(b: boolean): string;
@@ -444,12 +443,6 @@ end;
 {------------------------------------------------------------------}
 {
 }
-
-function RealToStr(Num: REAL): string;
-begin
-  //procedure Str(X [: Width [: Decimals ]]; var S);
-  Str(Num: 0: 0, Result);
-end;
 
 function RealToStr2(Num: REAL): string;
 begin
