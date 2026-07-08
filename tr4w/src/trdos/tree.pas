@@ -764,11 +764,11 @@ function GetDateString: PAnsiChar;
 function GetDayString: Str80;
 //procedure GetFileNames(Path: Str80; Mask: Str80; var FileNames: FileNameRecord);
 
-function GetFirstString(LongString: string): Str80;
+function GetFirstString(LongString: string): string;
 function GetFullTimeString(WithMilliseconds: boolean): string {str80};
 function GetIntegerTime: integer;
 
-function GetLastString(LongString: ShortString): Str80;
+function GetLastString(LongString: ShortString): string;
 
 function GetLogEntryBand(LogEntry: Str160): BandType;
 function GetLogEntryCall(LogEntry: Str160): {Call} string {Str160};
@@ -3371,7 +3371,7 @@ begin
     RemoveFirstReal := 0;
 end;
 
-function GetFirstString(LongString: string): Str80;
+function GetFirstString(LongString: string): string;
 
 var
   CharCount                             : integer;
@@ -3478,7 +3478,7 @@ begin
     RemoveLastString := '';
 end;
 
-function GetLastString(LongString: ShortString): Str80;
+function GetLastString(LongString: ShortString): string;
 
 var
   CharPos                               : integer;
