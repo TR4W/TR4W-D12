@@ -636,7 +636,7 @@ begin
         begin
           // Issue #997: asm wsprintf-push -> TF.Format (c is the integer loop var).
           Format(@wkREADBuffer, 'SERIAL %u', c);
-          tCB_ADDSTRING_PCHAR(hwnddlg, PORT_CB, @wkREADBuffer[0]);
+          tCB_ADDSTRING_PCHAR(hwnddlg, PORT_CB, string(PAnsiChar(@wkREADBuffer[0])));
         end;
         tCB_SETCURSEL(hwnddlg, PORT_CB, Cardinal(WinKeySettings.wksWinKey2Port));
 

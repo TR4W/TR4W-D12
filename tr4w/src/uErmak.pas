@@ -166,7 +166,7 @@ begin
 
               efTrainer:
                 begin
-                  tCreateButtonWindow(0, nil, BS_RIGHTBUTTON + BS_AUTORADIOBUTTON + WS_DISABLED + WS_CHILD + WS_VISIBLE + WS_TABSTOP, Left, Top, eOpFieldsLength[TempErmakField], FIELDHEIGTH, hwnddlg, ControlID);
+                  tCreateButtonWindow(0, '', BS_RIGHTBUTTON + BS_AUTORADIOBUTTON + WS_DISABLED + WS_CHILD + WS_VISIBLE + WS_TABSTOP, Left, Top, eOpFieldsLength[TempErmakField], FIELDHEIGTH, hwnddlg, ControlID);
                   Windows.SendDlgItemMessage(hwnddlg, ControlID, BM_SETCHECK, integer(TempBuffer1[0] = '1'), 0);
                 end;
             end;

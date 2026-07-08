@@ -422,10 +422,10 @@ procedure tWinHelp(WindowHelpID: Byte);
 
 function AskConvertLog(sVersion: string): boolean; // ny4i
 
-function tCreateStaticWindow(lpWindowName: PAnsiChar;
+function tCreateStaticWindow(lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
-function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: PAnsiChar;
+function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 
@@ -3032,7 +3032,7 @@ begin
     // Result := tCreateStaticWindow(nil, Style, X, Y, w, StaticWindowHeight, tr4whandle, 0);
 
     tCreateStaticWindow(
-      nil,
+      '',
       TWindows[e].mweiStyle and (not (Cardinal(NoBorder) * SS_SUNKEN))
       {or SS_ETCHEDFRAME},
       TWindows[e].mweiX * ws,
@@ -4836,14 +4836,14 @@ end;
 function CreateTR4WStaticWindow(X: Word; Y: Word; w: Word; Style: Cardinal):
   HWND;
 begin
-  Result := tCreateStaticWindow(nil, Style, X, Y, w, ws, tr4whandle, 0);
+  Result := tCreateStaticWindow('', Style, X, Y, w, ws, tr4whandle, 0);
   tWM_SETFONT(Result, MainFont);
 end;
 
 function CreateTR4WStaticWindowID(X: Word; Y: Word; w: Word; Style: Cardinal;
   ID: HMENU): HWND;
 begin
-  Result := tCreateStaticWindow(nil, Style, X, Y, w, ws, tr4whandle, ID);
+  Result := tCreateStaticWindow('', Style, X, Y, w, ws, tr4whandle, ID);
   tWM_SETFONT(Result, MainFont);
 end;
 
@@ -5342,7 +5342,7 @@ begin
     X := Right + c * (round(ws * w) {+ 2});
     if c = 7 then
       TotWinheadHandles[7] :=
-        tCreateStaticWindow(nil,
+        tCreateStaticWindow('',
         (defStyle + SS_CENTERIMAGE) and (not (Cardinal(NoBorder) * SS_SUNKEN))
         , X, 0, round(ws * 3) {ws2 * 10}, ws * 2, tr4whandle, 0)
     else
@@ -5351,7 +5351,7 @@ begin
 
       tCreateStaticWindow(
 
-        nil,
+        '',
         (defStyle + SS_CENTERIMAGE) and (not (Cardinal(NoBorder) * SS_SUNKEN)),
         X,
         0,
@@ -5381,7 +5381,7 @@ begin
   }
 {$IF tDebugMode}
   X := X + round(ws * 3) {ws2 * 10};
-  CPUButtonHandle := tCreateButtonWindow(0, nil, BS_FLAT + WS_CHILD or BS_TEXT
+  CPUButtonHandle := tCreateButtonWindow(0, '', BS_FLAT + WS_CHILD or BS_TEXT
     or
     BS_PUSHLIKE or WS_VISIBLE, X, ws * 4, MainWindowChildsWidth - RightTopWidth
     -
@@ -5548,7 +5548,7 @@ begin
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function tCreateStaticWindow(lpWindowName: PAnsiChar;
+function tCreateStaticWindow(lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 //var
@@ -5562,16 +5562,16 @@ begin
   y3 := 3;
   }
   //Result := CreateRoundRectRgn(x1,y1,x2,y2,x3,y3);
-  Result := CreateWindowExA(0 {WS_EX_DLGMODALFRAME}, 'Static', lpWindowName,
+  Result := CreateWindowExW(0 {WS_EX_DLGMODALFRAME}, 'Static', PChar(lpWindowName),
     dwStyle, X, Y, nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: PAnsiChar;
+function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowExA(dwxStyle, 'Button', lpWindowName, dwStyle, X, Y,
+  Result := CreateWindowExW(dwxStyle, 'Button', PChar(lpWindowName), dwStyle, X, Y,
     nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
