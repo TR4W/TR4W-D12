@@ -774,11 +774,11 @@ function GetLogEntryBand(LogEntry: Str160): BandType;
 function GetLogEntryCall(LogEntry: Str160): {Call} string {Str160};
 function GetLogEntryComputerID(LogEntry: Str160): Char;
 function GetLogEntryDateString(LogEntry: Str160): string;
-function GetLogEntryExchangeString(LogEntry: Str160): Str160;
+function GetLogEntryExchangeString(LogEntry: Str160): string;
 function GetLogEntryHour(LogEntry: Str160): integer;
 function GetLogEntryIntegerTime(LogEntry: Str160): integer;
 function GetLogEntryMode(LogEntry: string {160}): ModeType;
-function GetLogEntryMultString(LogEntry: Str160): Str160;
+function GetLogEntryMultString(LogEntry: Str160): string;
 function GetLogEntryQSONumber(LogEntry: Str160): integer;
 function GetLogEntryQSOPoints(LogEntry: Str160): integer;
 function GetLogEntryRSTString(LogEntry: Str160): string;
@@ -2050,7 +2050,7 @@ begin
   GetLogEntryDateString := Copy(LogEntry, LogEntryDayAddress, 9);
 end;
 
-function GetLogEntryExchangeString(LogEntry: Str160): Str160;
+function GetLogEntryExchangeString(LogEntry: Str160): string;
 
 var
   TempString                            : ShortString {Str80} {WLI};
@@ -2093,7 +2093,7 @@ begin
         GetLogEntryMode := NoMode;
 end;
 
-function GetLogEntryMultString(LogEntry: Str160): Str160;
+function GetLogEntryMultString(LogEntry: Str160): string;
 
 var
   TempString                            : ShortString {Str80} {WLI};
