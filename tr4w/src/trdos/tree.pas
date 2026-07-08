@@ -773,7 +773,7 @@ function GetLastString(LongString: ShortString): Str80;
 function GetLogEntryBand(LogEntry: Str160): BandType;
 function GetLogEntryCall(LogEntry: Str160): {Call} string {Str160};
 function GetLogEntryComputerID(LogEntry: Str160): Char;
-function GetLogEntryDateString(LogEntry: Str160): Str160;
+function GetLogEntryDateString(LogEntry: Str160): string;
 function GetLogEntryExchangeString(LogEntry: Str160): Str160;
 function GetLogEntryHour(LogEntry: Str160): integer;
 function GetLogEntryIntegerTime(LogEntry: Str160): integer;
@@ -784,7 +784,7 @@ function GetLogEntryQSOPoints(LogEntry: Str160): integer;
 function GetLogEntryRSTString(LogEntry: Str160): string;
 function GoodLookingRDA(RDA: Str20): boolean;
 function GetOblast(Call: CallString): Str2;
-function GetLogEntryTimeString(LogEntry: Str160): Str160;
+function GetLogEntryTimeString(LogEntry: Str160): string;
 
 function GetKey(Prompt: Str80): Char;
 function GetKeyResponse(Prompt: string): Char;
@@ -2044,7 +2044,7 @@ begin
     GetLogEntryComputerID := Char(TempString[1]);
 end;
 
-function GetLogEntryDateString(LogEntry: Str160): Str160;
+function GetLogEntryDateString(LogEntry: Str160): string;
 
 begin
   GetLogEntryDateString := Copy(LogEntry, LogEntryDayAddress, 9);
@@ -2182,7 +2182,7 @@ begin
     GetLogEntryIntegerTime := -1;
 end;
 
-function GetLogEntryTimeString(LogEntry: Str160): Str160;
+function GetLogEntryTimeString(LogEntry: Str160): string;
 
 begin
   GetLogEntryTimeString := Copy(LogEntry, LogEntryHourAddress, 5);
