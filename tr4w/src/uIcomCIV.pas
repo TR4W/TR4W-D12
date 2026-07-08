@@ -98,7 +98,7 @@ begin
    Result := '';
    for i := 5 downto 1 do
       begin
-      bcdByte := IcomByteToBCD(StrToInt(Copy(freqStr, i * 2 - 1, 2)));
+      bcdByte := IcomByteToBCD(StrToIntDef(Copy(freqStr, i * 2 - 1, 2), 0));
       Result  := Result + AnsiChar(bcdByte);
       end;
 end;
@@ -127,7 +127,7 @@ begin
    Result := '';
    for i := 2 downto 1 do
       begin
-      bcdByte := IcomByteToBCD(StrToInt(Copy(offsetStr, i * 2 - 1, 2)));
+      bcdByte := IcomByteToBCD(StrToIntDef(Copy(offsetStr, i * 2 - 1, 2), 0));
       Result  := Result + AnsiChar(bcdByte);
       end;
 end;

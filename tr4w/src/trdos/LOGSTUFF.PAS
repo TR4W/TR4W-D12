@@ -1489,7 +1489,7 @@ begin
         end;
       end
       else
-        RXData.RSTReceived := StrToInt(TempString)
+        RXData.RSTReceived := StrToIntDef(TempString, 0)
     end
     else if not QTHFound then
     begin
@@ -1659,12 +1659,12 @@ begin
 
   if StringIsAllNumbers(Str1) then
   begin
-    RXData.NumberReceived := StrToInt(Str1);
+    RXData.NumberReceived := StrToIntDef(Str1, 0);
     RXData.QTHString := Str2;
   end
   else if StringIsAllNumbers(Str2) then
   begin
-    RXData.NumberReceived := StrToInt(Str2);
+    RXData.NumberReceived := StrToIntDef(Str2, 0);
     RXData.QTHString := Str1;
   end
   else
@@ -1848,8 +1848,8 @@ begin
     ParseExchange(Exchange, string1, string2, string3);
     if string2 <> '' then
     begin
-      RXData.Zone := StrToInt(string1);
-      RXData.NumberReceived := StrToInt(string2);
+      RXData.Zone := StrToIntDef(string1, 0);
+      RXData.NumberReceived := StrToIntDef(string2, 0);
       Result := True;
       Exit;
     end;
@@ -1865,14 +1865,14 @@ begin
     Exit;
 
   RXData.Zone := Ord(Exchange[1]) - 48;
-  RXData.NumberReceived := StrToInt(Copy(Exchange, 2, 4));
+  RXData.NumberReceived := StrToIntDef(Copy(Exchange, 2, 4), 0);
   {
     if (Contest = UA4N) then
     begin
       if length(Exchange) > 4 then
       begin
-        RXData.Zone := StrToInt(Copy(Exchange, 1, 2));
-        RXData.NumberReceived := StrToInt(Copy(Exchange, 3, 4));
+        RXData.Zone := StrToIntDef(Copy(Exchange, 1, 2), 0);
+        RXData.NumberReceived := StrToIntDef(Copy(Exchange, 3, 4), 0);
       end
       else
         Exit;
@@ -2026,7 +2026,7 @@ begin
         end;
       end
       else
-        RXData.RSTReceived := StrToInt(TestString);
+        RXData.RSTReceived := StrToIntDef(TestString, 0);
 
       ProcessRSTAndOrGridSquareExchange := True;
     end;
@@ -2107,7 +2107,7 @@ begin
   end
   else
   begin
-    RXData.RSTReceived := StrToInt(FirstString);
+    RXData.RSTReceived := StrToIntDef(FirstString, 0);
     Exchange := SecondString;
   end;
 
@@ -2156,7 +2156,7 @@ begin
         end;
       end
       else
-        RXData.RSTReceived := StrToInt(TestString);
+        RXData.RSTReceived := StrToIntDef(TestString, 0);
 
     end;
   end;
@@ -2476,7 +2476,7 @@ begin
 
   if StringIsAllNumbers(FirstString) then
   begin
-    RXData.Check := StrToInt(FirstString);
+    RXData.Check := StrToIntDef(FirstString, 0);
 
     if SecondString <> '' then
     begin
@@ -2803,7 +2803,7 @@ begin
         Exit;
 
       RXData.Precedence := SSEx.Prec;
-      RXData.Check := StrToInt(SSEx.Check);
+      RXData.Check := StrToIntDef(SSEx.Check, 0);
 
       if (length(SSEx.Check) <> 2) or not StringIsAllNumbers(SSEx.Check) then
         Exit;
@@ -2841,7 +2841,7 @@ begin
       (((Ex[3] >= '1') and (Ex[3] <= '9')) or (UpCase(Ex[3]) = 'A')) then
     begin
       LooksLikeRST := True;
-      RST := StrToInt(Ex);
+      RST := StrToIntDef(Ex, 0);
     end;
     Exit;
   end
@@ -2853,7 +2853,7 @@ begin
           (Ex[2] >= '1') and (Ex[2] <= '9') then
         begin
           LooksLikeRST := True;
-          RST := StrToInt(Ex);
+          RST := StrToIntDef(Ex, 0);
         end;
 
       3:
@@ -2863,7 +2863,7 @@ begin
               (Ex[2] >= '1') and (Ex[2] <= '9') then
             begin
               LooksLikeRST := True;
-              RST := StrToInt(Ex);
+              RST := StrToIntDef(Ex, 0);
             end;
     end;
 
@@ -3128,7 +3128,7 @@ begin
     // 4.99.3
     2)) then
   begin
-    TempInt := StrToInt(Entries[0]);
+    TempInt := StrToIntDef(Entries[0], 0);
     if TempInt > 255 then
       Exit;
     RXData.Age := Byte(TempInt);
@@ -3139,11 +3139,11 @@ begin
   if NumberEntries = 2 then
   begin
     if LooksLikeRST(Entries[0], RXData.RSTReceived, ActiveMode) then
-      RXData.Age := StrToInt(Entries[1])
+      RXData.Age := StrToIntDef(Entries[1], 0)
     else if LooksLikeRST(Entries[1], RXData.RSTReceived, ActiveMode) then
-      RXData.Age := StrToInt(Entries[0])
+      RXData.Age := StrToIntDef(Entries[0], 0)
     else
-      RXData.Age := StrToInt(Entries[1]);
+      RXData.Age := StrToIntDef(Entries[1], 0);
 
     ProcessRSTAndAgeExchange := RXData.Age <> 0 {length(RXData.Age) = 2};
     Exit;
@@ -3152,11 +3152,11 @@ begin
   if NumberEntries = 3 then
   begin
     if LooksLikeRST(Entries[1], RXData.RSTReceived, ActiveMode) then
-      RXData.Age := StrToInt(Entries[2])
+      RXData.Age := StrToIntDef(Entries[2], 0)
     else if LooksLikeRST(Entries[2], RXData.RSTReceived, ActiveMode) then
-      RXData.Age := StrToInt(Entries[1])
+      RXData.Age := StrToIntDef(Entries[1], 0)
     else
-      RXData.Age := StrToInt(Entries[2]);
+      RXData.Age := StrToIntDef(Entries[2], 0);
 
     ProcessRSTAndAgeExchange := RXData.Age <> 0 {length(RXData.Age) = 2};
     Exit;
@@ -3165,7 +3165,7 @@ begin
   case length(Exchange) of
     2:
       begin
-        RXData.Age := StrToInt(Exchange);
+        RXData.Age := StrToIntDef(Exchange, 0);
         ProcessRSTAndAgeExchange := True;
       end;
 
@@ -3175,7 +3175,7 @@ begin
         //        Insert(Exchange[1], DefaultRST, 2);
         //        RXData.RSTReceived := DefaultRST;
         Delete(Exchange, 1, 1);
-        RXData.Age := StrToInt(Exchange);
+        RXData.Age := StrToIntDef(Exchange, 0);
         ProcessRSTAndAgeExchange := RXData.Age <> 0 {length(RXData.Age) = 2};
       end;
 
@@ -3184,7 +3184,7 @@ begin
         if ActiveMode <> Phone then
           Exit;
         //        RXData.RSTReceived := Copy(Exchange, 1, 2);
-        RXData.Age := StrToInt(Copy(Exchange, 3, 2));
+        RXData.Age := StrToIntDef(Copy(Exchange, 3, 2), 0);
         ProcessRSTAndAgeExchange := True;
       end;
 
@@ -3193,7 +3193,7 @@ begin
         if ActiveMode <> CW then
           Exit;
         //        RXData.RSTReceived := Copy(Exchange, 1, 3);
-        RXData.Age := StrToInt(Copy(Exchange, 4, 2));
+        RXData.Age := StrToIntDef(Copy(Exchange, 4, 2), 0);
         ProcessRSTAndAgeExchange := True;
       end;
   end; { of case Length (Exchange) }
@@ -3323,15 +3323,15 @@ begin
     Exit;
   if not StringIsAllNumbers(FirstString) then
     Exit;
-  RXData.Age := StrToInt(FirstString);
+  RXData.Age := StrToIntDef(FirstString, 0);
   if ThirdString <> '' then
   begin
     RXData.DomesticQTH := SecondString;
-    RXData.NumberReceived := StrToInt(ThirdString)
+    RXData.NumberReceived := StrToIntDef(ThirdString, 0)
   end
   else
   begin
-    RXData.NumberReceived := StrToInt(SecondString);
+    RXData.NumberReceived := StrToIntDef(SecondString, 0);
     RXData.DomesticQTH := '';
   end;
   { if (ActiveMode = CW) or (ActiveMode = Digital) then  // 4.1193
@@ -3362,8 +3362,8 @@ begin
   if (not StringIsAllNumbers(FirstString)) or (not
     StringIsAllNumbers(SecondString)) then
     Exit;
-  RXData.NumberReceived := StrToInt(FirstString);
-  RXData.Age := StrToInt(SecondString);
+  RXData.NumberReceived := StrToIntDef(FirstString, 0);
+  RXData.Age := StrToIntDef(SecondString, 0);
   if (ActiveMode = CW) or (ActiveMode = Digital) then
   begin
     RXData.RSTReceived := 599;
@@ -3474,7 +3474,7 @@ begin
           end;
         end
         else
-          RXData.RSTReceived := StrToInt(TempString);
+          RXData.RSTReceived := StrToIntDef(TempString, 0);
       end
       else
       begin
@@ -3557,7 +3557,7 @@ begin
         end;
       end
       else
-        RXData.RSTReceived := StrToInt(TempString)
+        RXData.RSTReceived := StrToIntDef(TempString, 0)
 
     end
     else if not QTHFound then
@@ -3600,7 +3600,7 @@ begin
 
   if StringIsAllNumbersOrSpaces(RSTString) then
   begin
-    RXData.RSTReceived := StrToInt(RSTString);
+    RXData.RSTReceived := StrToIntDef(RSTString, 0);
     RXData.QTHString := PostcedingString(Exchange, ' ');
   end
   else
@@ -3612,7 +3612,7 @@ begin
 
     if StringIsAllNumbersOrSpaces(RSTString) then
     begin
-      RXData.RSTReceived := StrToInt(RSTString);
+      RXData.RSTReceived := StrToIntDef(RSTString, 0);
       RXData.QTHString := Copy(Exchange, 1, length(Exchange) - length(RSTString)
         - 1);
     end
@@ -3641,12 +3641,12 @@ RXData.FOCNumber := EntryList[1];
 else
 if ((EntryList[2][1] = '5') and (EntryList[2][3] = '9'))     then
 begin
-RXData.RSTReceived := StrToInt(EntryList[2]);
+RXData.RSTReceived := StrToIntDef(EntryList[2], 0);
 RXData.FOCNumber := EntryList[1];
 end
 else
 begin
-RXData.RSTReceived := StrToInt(EntryList[1]);
+RXData.RSTReceived := StrToIntDef(EntryList[1], 0);
 RXData.FOCNumber := EntryList[2];
 end;
 RXData.FOCNumber := Exchange;
@@ -3657,18 +3657,18 @@ end;
 }
 {
 if StringIsAllNumbers(FirstString) then
-FirstString := StrToInt(FirstString);
+FirstString := StrToIntDef(FirstString, 0);
 else
 FirstString := DefaultRST;
 
  SecondString := RXData.Name;
 if StringIsAllNumbers(ThirdString)  then
-  ThirdString := StrToInt(ThirdString);
+  ThirdString := StrToIntDef(ThirdString, 0);
 
  if ThirdString <> '' then
  begin
    if StringIsAllNumbers(ThirdString) then
-   RXData.NumberReceived := StrToInt(ThirdString);
+   RXData.NumberReceived := StrToIntDef(ThirdString, 0);
  end
  else
    RXData.NumberReceived := ' ';
@@ -3757,7 +3757,7 @@ begin
 
   if StringIsAllNumbers(FirstString) then
   begin
-    RXData.RSTReceived := StrToInt(FirstString);
+    RXData.RSTReceived := StrToIntDef(FirstString, 0);
     if ThirdString <> '' then
     begin
       RXData.QTHString := ThirdString;
@@ -3780,7 +3780,7 @@ begin
   begin
     RXData.Name := FirstString;
     RXData.QTHString := SecondString;
-    RXData.RSTReceived := StrToInt(ThirdString);
+    RXData.RSTReceived := StrToIntDef(ThirdString, 0);
     Exit;
   end;
 
@@ -3989,8 +3989,8 @@ begin
   end;
   if not StringIsAllNumbers(Exchange) then
     Exit;
-  temprxdata.NumberReceived := StrToInt(Exchange);
-  rxdata.NumberReceived := StrToInt(Exchange);
+  temprxdata.NumberReceived := StrToIntDef(Exchange, 0);
+  rxdata.NumberReceived := StrToIntDef(Exchange, 0);
   PrevNr := Copy(Exchange, 1, 3); // 4.53.2
 
   Result := True;
@@ -4136,7 +4136,7 @@ begin
   if not StringIsAllNumbers(FirstString) then // n4af 4.42.7
   begin
     RXData.QTHString := FirstString;
-    RXData.NumberReceived := StrToInt(SecondString);
+    RXData.NumberReceived := StrToIntDef(SecondString, 0);
     ProcessRSTQSONumberOrDomesticQTHExchange := FoundDomesticQTH(RXData);
     Result := True;
     exit;
@@ -4231,7 +4231,7 @@ begin
     then // n4af 4.42.7
   begin
     RXData.QTHString := FirstString;
-    RXData.NumberReceived := StrToInt(SecondString);
+    RXData.NumberReceived := StrToIntDef(SecondString, 0);
     ProcessRSTQSONumberAndPossibleDomesticQTHExchange :=
       FoundDomesticQTH(RXData);
     Result := True;
@@ -4318,7 +4318,7 @@ begin
 
   if Result = True then
   begin
-    RXData.NumberReceived := StrToInt(NumberString);
+    RXData.NumberReceived := StrToIntDef(NumberString, 0);
   end;
 end;
 
@@ -4362,13 +4362,13 @@ begin
     begin
       if length(ThirdString) > 2 then
         Exit;
-      RXData.Zone := StrToInt(ThirdString);
+      RXData.Zone := StrToIntDef(ThirdString, 0);
     end
     else
     begin
       if (SecondString = '') or (length(SecondString) > 2) then
         Exit;
-      RXData.Zone := StrToInt(SecondString);
+      RXData.Zone := StrToIntDef(SecondString, 0);
       //      if length(RXData.Zone) = 1 then RXData.Zone := '0' + RXData.Zone;
     end;
 
@@ -4410,7 +4410,7 @@ begin
 
   if StringIsAllNumbers(EntryList[1]) then
   begin
-    RXData.RSTReceived := StrToInt(EntryList[1]);
+    RXData.RSTReceived := StrToIntDef(EntryList[1], 0);
 
     { Remove the RST from the entry list }
 
@@ -4538,7 +4538,7 @@ begin
   if not StringIsAllNumbers(FirstString) then
   begin
     RXData.QTHString {PostalCode} := FirstString + ' ' + SecondString;
-    RXData.RSTReceived := StrToInt(ThirdString);
+    RXData.RSTReceived := StrToIntDef(ThirdString, 0);
 
     if RXData.RSTReceived = 0 then
       RXData.RSTReceived := DefaultRST;
@@ -4547,7 +4547,7 @@ begin
   else
   begin
     RXData.QTHString {PostalCode} := SecondString + ' ' + ThirdString;
-    RXData.RSTReceived := StrToInt(FirstString);
+    RXData.RSTReceived := StrToIntDef(FirstString, 0);
     Result := True;
   end;
 
@@ -4863,7 +4863,7 @@ begin
     FirstStringRST := FirstString;
     if not ValidRST(FirstStringRST, RXData.RSTReceived, ActiveMode) then
       Exit;
-    RXData.Zone := StrToInt(SecondString);
+    RXData.Zone := StrToIntDef(SecondString, 0);
     RXData.QTHString := ThirdString;
   end
   else if SecondString <> '' then
@@ -4871,14 +4871,14 @@ begin
     if IsAlpha(SecondString) then
     begin
       RXData.RSTReceived := DefaultRST;
-      RXData.Zone := StrToInt(FirstString);
+      RXData.Zone := StrToIntDef(FirstString, 0);
       RXData.QTHString := SecondString;
     end
     else
     begin
       if not ValidRST(FirstStringRST, RXData.RSTReceived, ActiveMode) then
         Exit;
-      RXData.Zone := StrToInt(SecondString);
+      RXData.Zone := StrToIntDef(SecondString, 0);
     end;
   end;
 
@@ -4890,7 +4890,7 @@ begin
   else if (SecondString = '') and (ThirdString = '') then // 4.52.5
   begin
     RXData.RSTReceived := DefaultRST;
-    RXData.Zone := StrToInt(Exchange);
+    RXData.Zone := StrToIntDef(Exchange, 0);
   end;
 
   if RXData.QTHString <> '' then
@@ -4963,8 +4963,8 @@ begin
 
       if (length(SecondString) = 3) and (length(FirstString) < 3) then
       begin
-        RXData.RSTReceived := StrToInt(SecondString);
-        RXData.Zone := StrToInt(FirstString);
+        RXData.RSTReceived := StrToIntDef(SecondString, 0);
+        RXData.Zone := StrToIntDef(FirstString, 0);
         //        if length(RXData.Zone) = 1 then          Insert('0', RXData.Zone, 1);
         ProcessRSTAndZoneExchange := True;
         ExchangeErrorMessage := nil;
@@ -4980,14 +4980,14 @@ begin
   case length(Exchange) of
     1:
       begin
-        RXData.Zone := StrToInt(Exchange);
+        RXData.Zone := StrToIntDef(Exchange, 0);
         ProcessRSTAndZoneExchange := True;
         ExchangeErrorMessage := nil;
       end;
 
     2:
       begin
-        RXData.Zone := StrToInt(Exchange);
+        RXData.Zone := StrToIntDef(Exchange, 0);
 
         if ActiveZoneMult = EUHFCYear then
         begin
@@ -7033,7 +7033,7 @@ begin
         else
           RXData.QSOPoints := 10;
 
-        if RXData.Zone = StrToInt(MyZone) then
+        if RXData.Zone = StrToIntDef(MyZone, 0) then
           RXData.ZoneMult := False;
 
       end;
@@ -7797,7 +7797,7 @@ begin
 
     OldNewYearQSOPointMethod:
       begin
-        RXData.QSOPoints := StrToInt(RXData.Power);
+        RXData.QSOPoints := StrToIntDef(RXData.Power, 0);
       end;
 
     YouthChampionshipRFMethod:
@@ -7819,11 +7819,11 @@ begin
       if (MyState <> '') and (RXData.QTHString { .DomesticQTH} <> '') then
         if StringIsAllNumbers(MyState) then
         begin
-          la1 := StrToInt(RXData.QTHString[1]);
-          lo1 := StrToInt(Copy(RXData.QTHString, 2, 2));
+          la1 := StrToIntDef(RXData.QTHString[1], 0);
+          lo1 := StrToIntDef(Copy(RXData.QTHString, 2, 2), 0);
 
-          la2 := StrToInt(MyState[1]);
-          lo2 := StrToInt(Copy(MyState, 2, 2));
+          la2 := StrToIntDef(MyState[1], 0);
+          lo2 := StrToIntDef(Copy(MyState, 2, 2), 0);
           RXData.QSOPoints := Abs(la1 - la2) + Abs(lo1 - lo2) + 5;
           if RXData.Mode = CW then
             RXData.QSOPoints := RXData.QSOPoints + 5;
@@ -7904,7 +7904,7 @@ begin
           TheirID := Copy(RXData.QTHString, Result + 1, 3);
 
           if StringIsAllNumbers(TheirID) then
-            inc(RXData.QSOPoints, StrToInt(TheirID));
+            inc(RXData.QSOPoints, StrToIntDef(TheirID, 0));
         end;
       end;
 
@@ -8512,7 +8512,7 @@ begin
 
       if ParserArray.paElements[Element].prType = eetNumber then
         ParserArray.paElements[Element].prInteger :=
-          StrToInt(ParserArray.paElements[Element].prString);
+          StrToIntDef(ParserArray.paElements[Element].prString, 0);
 
       ParserArray.paStatus[Element] := ParserArray.paElements[Element].prType;
 
@@ -8574,7 +8574,7 @@ begin
         end;
       end
       else
-        RXData.RSTReceived := StrToInt(TestString);
+        RXData.RSTReceived := StrToIntDef(TestString, 0);
 
     end;
   end;
@@ -9316,7 +9316,7 @@ begin
     end;
   end;
   if (length(sXmit) = 0) or
-    (not (StrToInt(sXmit) in [1..99])) then
+    (not (StrToIntDef(sXmit, 0) in [1..99])) then
   begin
     ExchangeErrorMessage := TC_IMPROPERTRANSMITTERCOUNT;
   end

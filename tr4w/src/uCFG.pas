@@ -1718,7 +1718,7 @@ begin
 
        if StringIsAllNumbers(ID) then
        begin
-         TempLongInt := StrToInt(ID);
+         TempLongInt := StrToIntDef(ID, 0);
          if (TempLongInt > 0) and (TempLongInt < 13) then
          begin
            if CQMessage then
@@ -1732,7 +1732,7 @@ begin
          if StringHas(ID, ' CAPTION') then
          begin
 
-           TempLongInt := StrToInt(Copy(ID, 1, pos(' CAPTION', ID)));
+           TempLongInt := StrToIntDef(Copy(ID, 1, pos(' CAPTION', ID)), 0);
            if (TempLongInt > 0) and (TempLongInt < 13) then
            begin
              if CQMessage then

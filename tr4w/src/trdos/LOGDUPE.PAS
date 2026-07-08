@@ -1612,7 +1612,7 @@ begin
          end;
       end;
     if (Contest = NZFIELDDAY) then
-    if (RXData.Zone = StrToInt(MyZone)) or (RXData.Zone = 00) then   exit;  //n4af 4.41.6
+    if (RXData.Zone = StrToIntDef(MyZone, 0)) or (RXData.Zone = 00) then   exit;  //n4af 4.41.6
 
 
   if (RXData.Zone <> DUMMYZONE) and DoingZoneMults then              // n4af 4.42.1
@@ -2159,13 +2159,13 @@ begin
 
   if ExchangeInformation.RST then
   begin
-    RXData.RSTSent := StrToInt(RemoveFirstString(ExchangeString));
+    RXData.RSTSent := StrToIntDef(RemoveFirstString(ExchangeString), 0);
 
       { Sometimes the received RST is optional, so I only pull it
         off if it appears to be all there (numbers only). }
 
     if StringIsAllNumbers(GetFirstString(ExchangeString)) then
-      RXData.RSTReceived := StrToInt(RemoveFirstString(ExchangeString));
+      RXData.RSTReceived := StrToIntDef(RemoveFirstString(ExchangeString), 0);
   end;
 
 
@@ -2204,7 +2204,7 @@ begin
       RXData.Power := RemoveFirstString(ExchangeString);
 
     if ExchangeInformation.Age then
-      RXData.Age := StrToInt(RemoveFirstString(ExchangeString));
+      RXData.Age := StrToIntDef(RemoveFirstString(ExchangeString), 0);
 
     if ExchangeInformation.Name then
       RXData.Name := RemoveFirstString(ExchangeString);
@@ -2216,10 +2216,10 @@ begin
       RXData.Precedence := RemoveFirstString(ExchangeString)[1];
 
     if ExchangeInformation.Check then
-      RXData.Check := StrToInt(RemoveFirstString(ExchangeString));
+      RXData.Check := StrToIntDef(RemoveFirstString(ExchangeString), 0);
 
     if ExchangeInformation.Zone and StringIsAllNumbersOrSpaces(ExchangeString) then
-      RXData.Zone := StrToInt(RemoveFirstString(ExchangeString));
+      RXData.Zone := StrToIntDef(RemoveFirstString(ExchangeString), 0);
 
     if ExchangeInformation.QTH then
     begin
@@ -2334,7 +2334,7 @@ begin
         (ActiveExchange = RSTAndQSONumberOrDomesticQTHExchange) or
         (ActiveExchange = RSTAndOrGridExchange)) then
 }
-      if (TempString = '') or (StrToInt(TempString) = 255) then   // 4.85.6
+      if (TempString = '') or (StrToIntDef(TempString, 0) = 255) then   // 4.85.6
         TempString := QString
       else
         TempString := TempString + ' ' + QString;

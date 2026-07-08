@@ -362,7 +362,7 @@ begin
          s1                                                 := slElements.Values[s];
          if length(s1) > 0 then
             begin
-            Result                                          := Result + StrToInt(s1);
+            Result                                          := Result + StrToIntDef(s1, 0);
             logger.trace('CW Element %s = %s elements',[s, s1]);
             end
          else

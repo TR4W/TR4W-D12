@@ -2544,7 +2544,7 @@ if TempRXData.DomMultQTH = '' then
          string(PAnsiChar(@MyCall[1]))]);
 {
       ActiveExchange := RSTQSONumberExchange;
-      nrReceived := StrToInt(TempRXData.ceClass);
+      nrReceived := StrToIntDef(TempRXData.ceClass, 0);
       Windows.ZeroMemory(@CABRILLO_RST_RCVD, SizeOf(CABRILLO_RST_RCVD));
       Windows.lstrcat(CABRILLO_RST_RCVD, '599');
 }
@@ -3165,7 +3165,7 @@ begin
 
    cMyName := @MyName[1];
 
-   cMyZone := StrToInt(MyZone);
+   cMyZone := StrToIntDef(MyZone, 0);
    cMyState := MyState;
    cMyPark := MyPark;
 
@@ -3462,7 +3462,7 @@ begin
          while ReadLogFile do
             begin
             //slOperators.Add(TempRXData.ceOperator);
-            slOperators.Values[TempRXData.ceOperator] := IntToStr(StrToInt(slOperators.Values[TempRXData.ceOperator]) + 1);
+            slOperators.Values[TempRXData.ceOperator] := IntToStr(StrToIntDef(slOperators.Values[TempRXData.ceOperator], 0) + 1);
             end;
          CloseLogFile;
          logger.debug('Before operators sort');
@@ -3495,8 +3495,8 @@ function SLOperatorsSortProc(List: TStringList; Index1, Index2: Integer): Intege
 var
   i1, i2: Integer;
 begin
-  i1 := StrToInt(List.ValueFromIndex[Index1]);
-  i2 := StrToInt(List.ValueFromIndex[Index2]);
+  i1 := StrToIntDef(List.ValueFromIndex[Index1], 0);
+  i2 := StrToIntDef(List.ValueFromIndex[Index2], 0);
   Result := i2 - i1;    // This sorts in ascending count order
   /////Result := i1 - i2;    // This sorts in descendiong count order
 end;
