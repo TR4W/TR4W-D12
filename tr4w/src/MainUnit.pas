@@ -2314,7 +2314,7 @@ begin
     Windows.KillTimer(tr4whandle, AUTOCQ_TIMER_HANDLE);
     tAutoCQMode := False;
     SetMainWindowText(mweOpMode, 'CQ');
-    QuickDisplay(nil);
+    QuickDisplay('');
     Result := True;
   end;
 
