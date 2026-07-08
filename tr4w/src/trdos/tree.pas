@@ -726,8 +726,8 @@ function AddMode(Mode: ModeType): Char;
 function BigCompressedCallsAreEqual(Call1, Call2: EightBytes): boolean;
 procedure BigCompressFormat(Call: CallString; var CompressedBigCall: EightBytes);
 //procedure BigCursor;
-function BigExpandedString(Input: EightBytes): Str80;
-function BracketedString(LongString: Str160; StartString: Str80; StopString: Str80): Str80;
+function BigExpandedString(Input: EightBytes): string;
+function BracketedString(LongString: Str160; StartString: Str80; StopString: Str80): string;
 //{WLI}    FUNCTION  BYTADDR  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): INTEGER;
 //{WLI}    FUNCTION  BYTDUPE  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): BOOLEAN;
 //{WLI}    FUNCTION  BYTSTOCR (List: Pointer; Start: INTEGER): INTEGER;
@@ -869,7 +869,7 @@ function NewReadKey: Char;
 
 //procedure NoCursor;
 //{WLI}    FUNCTION  NUMBYTES (Call1: Pointer; Call2: Pointer): INTEGER;
-function NumberPartOfString(InputString: Str160): Str80;
+function NumberPartOfString(InputString: Str160): string;
 
 function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 function OkayToProceed: boolean;
@@ -1281,7 +1281,7 @@ begin
   uCallCompress.BigCompressFormat(Call, CompressedBigCall);
 end;
 
-function BigExpandedString(Input: EightBytes): Str80;
+function BigExpandedString(Input: EightBytes): string;
 
 var
   TempBytes                             : TwoBytes;
@@ -1305,7 +1305,7 @@ begin
   BigExpandedString := TempString;
 end;
 
-function BracketedString(LongString: Str160; StartString: Str80; StopString: Str80): Str80;
+function BracketedString(LongString: Str160; StartString: Str80; StopString: Str80): string;
 
 { This function will return any string sits between the StartString and the
   StopString.  The shortest possible string to meet this criteria is
@@ -3100,7 +3100,7 @@ end;
 }
 //end;
 
-function NumberPartOfString(InputString: Str160): Str80;
+function NumberPartOfString(InputString: Str160): string;
 
 var
   TempString                            : Str80;
