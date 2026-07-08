@@ -748,7 +748,7 @@ begin
                    begin
                    if ActiveRadioPtr.LastDisplayedFreq = 0 then // No connected radio so use default for band
                       begin
-                      tempFreq := StrToInt(tCabrilloFreqString[TempRXData.Band]) * 1000; //14000 in array but needs to be 14000000
+                      tempFreq := StrToIntDef(tCabrilloFreqString[TempRXData.Band], 0) * 1000; //14000 in array but needs to be 14000000
                       end
                    else
                       begin
@@ -1454,7 +1454,7 @@ begin
   end
   else
   begin
-    DataLen := StrToInt(slen);
+    DataLen := StrToIntDef(slen, 0);
   end;
   //logger.Trace('[uWSJTX] Got length:' + IntToStr(DataLen));
 

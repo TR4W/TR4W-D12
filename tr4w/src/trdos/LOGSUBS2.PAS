@@ -2949,7 +2949,7 @@ begin
       end
    else
       begin // ny4i Issue 82 The Cabrillo reference is just because this array was declared in Cabrillo.
-      freq := StrToInt(tCabrilloFreqString[RxData.Band]) * 1000; //14000 in array but needs to be 14000000
+      freq := StrToIntDef(tCabrilloFreqString[RxData.Band], 0) * 1000; //14000 in array but needs to be 14000000
       txFreq := freq;
       end;
    if RXData.ExtMode <> eNoMode then

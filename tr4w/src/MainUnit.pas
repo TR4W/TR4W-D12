@@ -2187,7 +2187,7 @@ begin
     end;
   end;
 
-  TempFreq := StrToInt(TempString);
+  TempFreq := StrToIntDef(TempString, 0);
   //3500
   // 620
   // 34
@@ -3373,10 +3373,10 @@ begin
       (
       (length(CallWindowString) in [2, 3]) and
       (StringIsAllNumbers(CallWindowString)) and
-      ((StrToInt(CallWindowString) div 2) in [0..180])
+      ((StrToIntDef(CallWindowString, 0) div 2) in [0..180])
       ) then
       begin
-      heading := StrToInt(CallWindowString);
+      heading := StrToIntDef(CallWindowString, 0);
       tCleareCallWindow;
       end
    else

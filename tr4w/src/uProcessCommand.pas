@@ -481,7 +481,7 @@ begin
       begin
       if StrToIntDef(scFileName,-1) <> -1 then
          begin
-         bError := ActiveRadioPtr.tNetObject.MemoryKeyer(StrToInt(scFileName));
+         bError := ActiveRadioPtr.tNetObject.MemoryKeyer(StrToIntDef(scFileName, 0));
          end
       else
          begin
@@ -497,7 +497,7 @@ begin
       begin
       if StrToIntDef(scFileName,-1) <> -1 then
          begin
-         bError := ActiveRadioPtr.MemoryKeyer(StrToInt(scFileName));
+         bError := ActiveRadioPtr.MemoryKeyer(StrToIntDef(scFileName, 0));
          end
       else
          begin
@@ -520,7 +520,7 @@ begin
       begin
       if StrToIntDef(scFileName,-1) <> -1 then
          begin
-         bError := InActiveRadioPtr.tNetObject.MemoryKeyer(StrToInt(scFileName));
+         bError := InActiveRadioPtr.tNetObject.MemoryKeyer(StrToIntDef(scFileName, 0));
          end
       else
          begin
@@ -536,7 +536,7 @@ begin
       begin
       if StrToIntDef(scFileName,-1) <> -1 then
          begin
-         bError := InActiveRadioPtr.MemoryKeyer(StrToInt(scFileName));
+         bError := InActiveRadioPtr.MemoryKeyer(StrToIntDef(scFileName, 0));
          end
       else
          begin

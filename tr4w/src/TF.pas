@@ -127,7 +127,6 @@ function GetContestFromString(ContestString: ShortString): ContestType;
 function STToInt64(St: SYSTEMTIME): int64;
 function RealToStr(Num: REAL): string;
 function RealToStr2(Num: REAL): string;
-function StrToInt(s: ShortString): integer;
 function PCharToInt(p: PAnsiChar): integer;
 function BooleanToStr(b: boolean): string;
 //function CenterString(s: string; count: byte): string;
@@ -473,15 +472,9 @@ end;
 {  Function to convert string to int. (No sys utils = smaller EXE)  }
 {------------------------------------------------------------------}
 
-function StrToInt(s: ShortString): integer;
-var
-  i1, i2                                : integer;
-begin
-  //   Result := StrToInt32_JOH_IA32_7(s);
-
-  Val(s, i1, i2);
-  Result := i1;
-end;
+// StrToInt removed (D12): callers now use SysUtils.StrToIntDef(s, 0), which
+// preserves the old lenient "invalid -> 0" behavior (TF's version ran Val and
+// discarded the error code). SysUtils.StrToInt is NOT equivalent -- it raises.
 
 function PCharToInt(p: PAnsiChar): integer;
 label

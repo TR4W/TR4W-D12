@@ -625,9 +625,9 @@ begin
    try
       if Length(sDate) = 8 then
          begin
-         qsoTime.qtYear  := Ord(StrToInt(MidStr(sDate, 1, 4)) mod 100);
-         qsoTime.qtMonth := Ord(StrToInt(MidStr(sDate, 5, 2)));
-         qsoTime.qtDay   := Ord(StrToInt(MidStr(sDate, 7, 2)));
+         qsoTime.qtYear  := Ord(StrToIntDef(MidStr(sDate, 1, 4), 0) mod 100);
+         qsoTime.qtMonth := Ord(StrToIntDef(MidStr(sDate, 5, 2), 0));
+         qsoTime.qtDay   := Ord(StrToIntDef(MidStr(sDate, 7, 2), 0));
          Result := True;
          end;
    except
@@ -642,10 +642,10 @@ begin
    if Length(sTime) in [4, 6] then
       begin
       try
-         qsoTime.qtHour   := Ord(StrToInt(MidStr(sTime, 1, 2)));
-         qsoTime.qtMinute := Ord(StrToInt(MidStr(sTime, 3, 2)));
+         qsoTime.qtHour   := Ord(StrToIntDef(MidStr(sTime, 1, 2), 0));
+         qsoTime.qtMinute := Ord(StrToIntDef(MidStr(sTime, 3, 2), 0));
          if Length(sTime) = 6 then
-            qsoTime.qtSecond := Ord(StrToInt(MidStr(sTime, 5, 2)))
+            qsoTime.qtSecond := Ord(StrToIntDef(MidStr(sTime, 5, 2), 0))
          else
             qsoTime.qtSecond := 0;
          Result := True;
@@ -819,13 +819,13 @@ begin
                end;
 
             tAdifCHECK:
-               exch.Check := StrToInt(fieldValue);
+               exch.Check := StrToIntDef(fieldValue, 0);
 
             tAdifCLASS:
                exch.ceClass := AnsiUpperCase(fieldValue);
 
             tAdifCQ_Z:
-               exch.Zone := StrToInt(fieldValue);
+               exch.Zone := StrToIntDef(fieldValue, 0);
 
             tAdifCONTEST_ID:
                begin
@@ -858,7 +858,7 @@ begin
                end;
 
             tAdifITUZ:
-               exch.Zone := StrToInt(fieldValue);
+               exch.Zone := StrToIntDef(fieldValue, 0);
 
             tAdifMODE:
                if exch.Mode = NoMode then
@@ -908,7 +908,7 @@ begin
                exch.Power := fieldValue;
 
             tAdifSRX:
-               exch.NumberReceived := StrToInt(fieldValue);
+               exch.NumberReceived := StrToIntDef(fieldValue, 0);
 
             tAdifSRX_STRING:
                temps.SRX_String := fieldValue;
@@ -917,7 +917,7 @@ begin
                temps.State := fieldValue;
 
             tAdifSTX:
-               exch.NumberSent := StrToInt(fieldValue);
+               exch.NumberSent := StrToIntDef(fieldValue, 0);
 
             tAdifSTX_STRING:
                temps.STX_String := fieldValue;
@@ -930,7 +930,7 @@ begin
                end;
 
             tAdifTEN_TEN:
-               exch.TenTenNum := StrToInt(fieldValue);
+               exch.TenTenNum := StrToIntDef(fieldValue, 0);
 
             tAdifVE_PROV:
                temps.VE_Prov := fieldValue;
