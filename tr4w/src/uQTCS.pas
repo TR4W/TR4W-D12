@@ -23,6 +23,7 @@ unit uQTCS;
 interface
 
 uses
+  SysUtils,
   TF,
   VC,
   utils_file,

@@ -22,6 +22,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 interface
 
 uses
+  SysUtils,
   uBMCF,
   uWinKey,
   uDialogs,

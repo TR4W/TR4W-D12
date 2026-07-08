@@ -23,6 +23,7 @@ unit uMakeHelpFile;
 interface
 
 uses
+  SysUtils,
   TF,
   VC,
   Tree, Windows

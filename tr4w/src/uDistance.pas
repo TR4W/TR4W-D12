@@ -23,6 +23,7 @@ unit uDistance; {Distance WinAPI}
 interface
 
 uses
+  SysUtils,
   TF,
   VC,
   Windows,

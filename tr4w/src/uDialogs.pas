@@ -23,6 +23,7 @@ unit uDialogs;
 interface
 
 uses
+  SysUtils,
 //  shellapi,
   TF,
   Version,

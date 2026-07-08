@@ -22,6 +22,7 @@ unit LogWind;
 {$IMPORTEDDATA OFF}
 interface
 uses
+  SysUtils,
 utils_text,
   uWinKey,
   uMults,
