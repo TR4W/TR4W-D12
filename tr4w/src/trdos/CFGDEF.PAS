@@ -22,6 +22,7 @@ unit CFGDEF;
 interface
 
 uses
+  SysUtils,
   Windows,
   LogDom,
   TF,

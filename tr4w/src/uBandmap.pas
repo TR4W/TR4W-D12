@@ -23,6 +23,7 @@ unit uBandmap;
 interface
 
 uses
+  SysUtils,
   uMenu,
   uCommctrl,
   uCTYDAT,

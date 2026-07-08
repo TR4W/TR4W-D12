@@ -3,6 +3,7 @@ unit tr4wserverUnit;
 interface
 
 uses
+  SysUtils,
   Windows,
   WinSock2,
   VC,

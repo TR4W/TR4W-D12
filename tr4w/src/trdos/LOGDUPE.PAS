@@ -26,6 +26,7 @@ unit LogDupe;
 interface
 
 uses
+  SysUtils,
 utils_text,
   uCallSignRoutines,
   uMults,

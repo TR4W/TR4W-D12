@@ -25,6 +25,7 @@ unit uFunctionKeys;
 interface
 
 uses
+  SysUtils,
   uGradient,
   TF,
   VC,

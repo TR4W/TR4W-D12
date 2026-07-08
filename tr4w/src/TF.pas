@@ -127,7 +127,6 @@ function GetContestFromString(ContestString: ShortString): ContestType;
 function STToInt64(St: SYSTEMTIME): int64;
 function RealToStr(Num: REAL): string;
 function RealToStr2(Num: REAL): string;
-function IntToStr(Num: integer): ShortString;
 function StrToInt(s: ShortString): integer;
 function PCharToInt(p: PAnsiChar): integer;
 function BooleanToStr(b: boolean): string;
@@ -459,10 +458,8 @@ begin
   Str(Num: 2: 2, Result);
 end;
 
-function IntToStr(Num: integer): ShortString;
-begin
-  Str(Num, Result);
-end;
+// IntToStr removed (D12): use SysUtils.IntToStr -- the custom ShortString
+// version existed only to avoid linking SysUtils ("smaller EXE"), obsolete now.
 
 function BooleanToStr(b: boolean): string;
 begin

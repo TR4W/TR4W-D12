@@ -23,6 +23,7 @@ unit LPT;
 interface
 
 uses
+  SysUtils,
   uCFG,
   TF,
   VC,

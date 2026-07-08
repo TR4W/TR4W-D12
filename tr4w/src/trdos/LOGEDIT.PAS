@@ -25,6 +25,7 @@ unit LogEdit;
 interface
 
 uses
+  SysUtils,
   utils_text,
   uCallSignRoutines,
   uCTYDAT,

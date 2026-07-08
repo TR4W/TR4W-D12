@@ -23,6 +23,7 @@ unit MemProg;
 interface
 
 uses
+  SysUtils,
   LogCW,
   TF,
   VC,
