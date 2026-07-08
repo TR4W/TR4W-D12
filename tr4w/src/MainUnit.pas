@@ -246,9 +246,9 @@ procedure GenerateCallsignsList(FileName: PAnsiChar);
 procedure MakeAllCallsignsList;
 
 procedure showint(Num: integer);
-procedure ShowMessage(Text: PAnsiChar);
-procedure ShowMessage2(Text: PAnsiChar);
-procedure ShowMessageParent(Text: PAnsiChar; Parent: HWND);
+procedure ShowMessage(Text: string);
+procedure ShowMessage2(Text: string);
+procedure ShowMessageParent(Text: string; Parent: HWND);
 procedure ShowSyserror(ErrorCode: Cardinal);
 procedure FilePreview;
 
@@ -5623,25 +5623,25 @@ begin
   //ShowMessage(wsprintfBuffer);
 end;
 
-procedure ShowMessageParent(Text: PAnsiChar; Parent: HWND);
+procedure ShowMessageParent(Text: string; Parent: HWND);
 begin
   logger.Info('Sending to MessageBox: ' + Text);
-  MessageBoxA(Parent, Text, 'TR4W', MB_OK or MB_ICONINFORMATION
+  MessageBoxW(Parent, PChar(Text), 'TR4W', MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 end;
 
-procedure ShowMessage2(Text: PAnsiChar);
+procedure ShowMessage2(Text: string);
 begin
   logger.Info('Sending to MessageBox: ' + Text);
-  MessageBoxA(tr4whandle, Text, nil, MB_OK or MB_ICONINFORMATION
+  MessageBoxW(tr4whandle, PChar(Text), nil, MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 end;
 
-procedure ShowMessage(Text: PAnsiChar);
+procedure ShowMessage(Text: string);
 //var MsgInfo : TMsgBoxParams;
 begin
   logger.Info('Sending to MessageBox: ' + Text);
-  MessageBoxA(tr4whandle, Text, 'TR4W', MB_OK or MB_ICONINFORMATION
+  MessageBoxW(tr4whandle, PChar(Text), 'TR4W', MB_OK or MB_ICONINFORMATION
     {or MB_RTLREADING } or MB_TASKMODAL);
 
 end;
