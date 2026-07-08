@@ -349,7 +349,7 @@ function FoundDomesticQTH(var RXData: ContestExchange): boolean;
 
 procedure GetDXQTH(var RXData: ContestExchange);
 //function GetInitialExchange(Call: CallString): CallString;
-function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): Str14;
+function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
 procedure GetMultsFromLogEntry(LogEntry: Str80; var RXData: ContestExchange);
 //function GetPartialCall(CallAddress: integer): CallString;
 
@@ -2250,7 +2250,7 @@ begin
   end;
 end;
 
-function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): Str14;
+function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
 
 var
   QString                               : ShortString; {STR40} {WLI}
