@@ -56,20 +56,20 @@ function DomesticCountryCall(Call: CallString): boolean;
 
 function ClubCall(Call: CallString): boolean;
 
-function GetVEInitialExchange(Call: CallString): Str20;
+function GetVEInitialExchange(Call: CallString): string;
 
 //procedure LocateCall(Call: VC.CallString; var QTH: VC.QTHRecord; UseStandardCallFormat: boolean);
 
 function GetContinentName(Cont: ContinentType): Str20;
 function GetContinentFromString(Cont: ShortString): ContinentType;
-function SACDistrict(QTH: QTHRecord): Str20;
+function SACDistrict(QTH: QTHRecord): string;
 function IndonesianDistrict(QTH: QTHRecord): Str20;
 function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): Str20;
 
 implementation
 uses LogWind;
 
-function GetVEInitialExchange(Call: CallString): Str20;
+function GetVEInitialExchange(Call: CallString): string;
 
 var
   CountryID                             : Str20;
@@ -211,7 +211,7 @@ begin
 
 end;
 
-function SACDistrict(QTH: QTHRecord): Str20;
+function SACDistrict(QTH: QTHRecord): string;
 var
   Oblast                                : Str2;
 begin
