@@ -46,12 +46,13 @@ procedure ClearTotals(StartColumn: integer);
 
 implementation
 
-procedure TotalTextOut(s: PAnsiChar; X, Y: integer);
+procedure TotalTextOut(s: string; X, Y: integer);
 begin
-  if s = nil then
+  // D12: s is native string; '' is the "clear" signal nil used to be.
+  if s = '' then
     if TotWinHandlesFilled[X, Y] = False then Exit;
-  Windows.SetWindowTextA(TotWinHandles[X, Y], s);
-  TotWinHandlesFilled[X, Y] := s <> nil;
+  Windows.SetWindowTextW(TotWinHandles[X, Y], PChar(s));
+  TotWinHandlesFilled[X, Y] := s <> '';
 end;
 
 procedure WriteLeftColumnText(Text: PAnsiChar);
@@ -381,7 +382,7 @@ var
 begin
    for c := StartColumn to 7 do
      for r := 0 to 3 do
-      TotalTextOut(nil, c , r);
+      TotalTextOut('', c , r);
 end;
 
 end.
