@@ -145,7 +145,7 @@ function tLB_GETCURSEL(h: HWND): integer;
 function tLB_SETCURSEL(h: HWND; pos: wParam): integer;
 procedure tCB_SETCURSEL(ParentHandle: HWND; Control: integer; pos: Cardinal);
 procedure tCB_ADDSTRING(ParentHandle: HWND; Control: integer; s: string);
-procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: PAnsiChar);
+procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: string);
 function tLB_ADDSTRING(h: HWND; Text: PAnsiChar): integer;
 function tLB_RESETCONTENT(h: HWND): integer;
 function tCB_GETCURSEL(ParentHandle: HWND; Control: integer): integer;
@@ -420,9 +420,9 @@ begin
   Windows.SendDlgItemMessageA(ParentHandle, integer(Control), CB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(s))));
 end;
 
-procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: PAnsiChar);
+procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: string);
 begin
-  Windows.SendDlgItemMessageA(ParentHandle, integer(Control), CB_ADDSTRING, 0, integer(s));
+  Windows.SendDlgItemMessageW(ParentHandle, integer(Control), CB_ADDSTRING, 0, LPARAM(PChar(s)));
 end;
 
 function tLB_ADDSTRING(h: HWND; Text: PAnsiChar): integer;

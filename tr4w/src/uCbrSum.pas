@@ -199,7 +199,7 @@ begin
         for TempTag := Low(CabrilloTags) to High(CabrilloTags) do
         begin
           Top := 30 + integer(TempTag) * (TagHeight + 2);
-          tCreateStaticWindow(@CabrilloTagSArray[TempTag].ctrTag[1], LeftStyle, 10, Top, 160, TagHeight, hwnddlg, integer(TempTag) + 100);
+          tCreateStaticWindow(string(PAnsiChar(@CabrilloTagSArray[TempTag].ctrTag[1])), LeftStyle, 10, Top, 160, TagHeight, hwnddlg, integer(TempTag) + 100);
           if ErmakSpecification and (TempTag = ctOperators) then
           begin
             tCreateButtonWindow(WS_EX_STATICEDGE, '������� ...', WS_TABSTOP or WS_CHILD or WS_VISIBLE, 173, Top, 190, TagHeight, hwnddlg, 3);

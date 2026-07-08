@@ -1684,7 +1684,7 @@ end;
 procedure EmunTRCLUSTERDAT(FileString: PShortString);
 begin
   tCB_ADDSTRING_PCHAR(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 102,
-    @FileString^[1]);
+    string(PAnsiChar(@FileString^[1])));
 end;
 
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);

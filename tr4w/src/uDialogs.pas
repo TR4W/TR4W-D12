@@ -855,7 +855,7 @@ begin
         MapWindowPoints(0, p, rec, 2);
         SetWindowPos(HelpButton, 0, rec.Left, rec.Top + 30, 75, 33, SWP_DRAWFRAME or SWP_NOACTIVATE or SWP_NOZORDER);
 
-        HelpButton := tCreateStaticWindow(nil, WS_CHILD or SS_ICON or WS_VISIBLE, 10, rec.Top + 30, 0, 0, p, 0);
+        HelpButton := tCreateStaticWindow('', WS_CHILD or SS_ICON or WS_VISIBLE, 10, rec.Top + 30, 0, 0, p, 0);
         SendMessage(HelpButton, STM_SETIMAGE, IMAGE_ICON, LoadIcon(hInstance, 'MAINICON'));
         tCreateStaticWindow(TR4W_CURRENTVERSION, WS_CHILD or WS_VISIBLE, 50, rec.Top + 50, 200, 20, p, 0);
         Windows.GetWindowRect(p, rec);

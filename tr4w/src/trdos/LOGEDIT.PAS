@@ -1547,7 +1547,7 @@ begin
       if Hits > 3 then
         TempParametr := WS_BORDER;
       TempHWND :=
-        tCreateStaticWindow(@ID[1], WS_CHILD or TempParametr or SS_center or
+        tCreateStaticWindow(string(PAnsiChar(@ID[1])), WS_CHILD or TempParametr or SS_center or
           WS_VISIBLE, TempColumn, TempRow, 40, 14, h, 0);
 
       //               TempString := ID;
