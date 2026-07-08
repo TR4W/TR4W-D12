@@ -933,11 +933,11 @@ function NextMultiplierEntryInDisplayedBandMap(Band: BandType; Mode: ModeType): 
 //procedure PutUpCQMenu;
 //procedure PutUpExchangeWindow;
 
-procedure SetTextInQuickCommandWindow(Text: PAnsiChar);
+procedure SetTextInQuickCommandWindow(Text: string);
 procedure ClearQuickDisplayText;
-procedure QuickDisplay(Prompt: PAnsiChar);
+procedure QuickDisplay(Prompt: string);
 
-procedure QuickDisplayError(Prompt: PAnsiChar);
+procedure QuickDisplayError(Prompt: string);
 
 function QuickEditInteger(Prompt: PAnsiChar {str80}; MaxInputLength: integer): LONGINT;
 function QuickEditFreq(Prompt: PAnsiChar {str80}; MaxInputLength: integer): LONGINT;
@@ -1880,7 +1880,7 @@ begin
 //          if WindowsOSversion = 2 then
 //            ShowTrayTips(TotalScoreMessages[i].MessageString)
 //          else
-         QuickDisplay(@TotalScoreMessages[i].MessageString[1]);
+         QuickDisplay(string(PAnsiChar(@TotalScoreMessages[i].MessageString[1])));
             //          ShowAlarmWakeUpWindow(TotalScoreMessages[message].MessageString);
           DoABeep(Congrats);
 
@@ -1890,7 +1890,7 @@ begin
 
 end;
 
-procedure QuickDisplay(Prompt: PAnsiChar);
+procedure QuickDisplay(Prompt: string);
 begin
   SetTextInQuickCommandWindow(Prompt);
   logger.Info('[QuickDisplay] (' + Prompt + ')');
@@ -1909,20 +1909,20 @@ begin
      end;
 end;
 
-procedure SetTextInQuickCommandWindow(Text: PAnsiChar);
+procedure SetTextInQuickCommandWindow(Text: string);
 begin
   SetMainWindowText(mweQuickCommand, Text);
 end;
 
 procedure ClearQuickDisplayText;
 begin
-  SetTextInQuickCommandWindow(nil);
+  SetTextInQuickCommandWindow('');
 //  Windows.AnimateWindow(wh[mweQuickCommand], 500, AW_HIDE or AW_HOR_POSITIVE);
   Windows.KillTimer(tr4whandle, ClearQuickDisplayTimer);
   ClearQuickDisplayTimer := 0;
 end;
 
-procedure QuickDisplayError(Prompt: PAnsiChar);
+procedure QuickDisplayError(Prompt: string);
 begin
   QuickDisplay(Prompt);
   DoABeep(Warning);
@@ -2307,7 +2307,7 @@ begin
 //            if WindowsOSversion = 2 then
 //              ShowTrayTips(Reminders^[RecordNumber].RemMessage)
 //            else
-            QuickDisplay(@Reminders^[RecordNumber].RemMessage[1]);
+            QuickDisplay(string(PAnsiChar(@Reminders^[RecordNumber].RemMessage[1])));
           end;
     end;
 

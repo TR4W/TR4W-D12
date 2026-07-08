@@ -3446,7 +3446,7 @@ begin
       if rig.CurrentStatus.Split then
          QuickDisplay(TC_SPLIT_WARN)
       else
-         QuickDisplay(nil);
+         QuickDisplay('');
       end;
 
    // Update VFO A mode label when mode changes (Issue #566)

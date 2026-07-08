@@ -2177,7 +2177,7 @@ begin
       begin
       CWEnable  := True;
       CWEnabled := True;
-      QuickDisplay(nil);
+      QuickDisplay('');
       end
    else
       begin
@@ -2211,7 +2211,7 @@ begin
          end
       else
          begin
-         SetTextInQuickCommandWindow(nil);
+         SetTextInQuickCommandWindow('');
          end;
       InvertBoolean(DVKEnable);
       DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
