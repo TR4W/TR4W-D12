@@ -317,7 +317,7 @@ begin
     else
       family := 1;
     msg := Format('WK%d v%d', [family, versionByte]);
-    SetMainWindowText(mweWinKey, PAnsiChar(AnsiString(msg)));
+    SetMainWindowText(mweWinKey, msg);
   end;
   logger.Info('Calling tCreateThread from WkOpen');
   tCreateThread(@wkReadThreadProc, wkThreadID);

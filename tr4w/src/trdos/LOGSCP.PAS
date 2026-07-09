@@ -2144,7 +2144,7 @@ begin
         if CellSize > BufferArraySize * 3 then
         begin
 
-          ShowMessage(PAnsiChar(AnsiString(GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y) + ' cell is too large - 3!!')));
+          ShowMessage(GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y) + ' cell is too large - 3!!');
           halt;
         end;
 

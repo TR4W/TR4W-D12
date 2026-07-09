@@ -211,7 +211,7 @@ begin
      else
         begin
         // Fill the IP edit (130) from the first (or only) radio found.
-        Windows.SetDlgItemTextA(hwnddlg, 130, PAnsiChar(AnsiString(found[0])));
+        Windows.SetDlgItemTextW(hwnddlg, 130, PChar(found[0]));
         // Issue #968 -- discovery gives us the IP but not the port; fill the
         // model default (K4=9200, Icom=50001, ...) so the radio is connectable.
         ApplyDefaultNetworkPort(hwnddlg);
@@ -557,12 +557,12 @@ begin
         {freq adder}
 
 //        Windows.SetDlgItemInt(hwnddlg, 129, TempRadio^.FrequencyAdder, False);
-        Windows.SetDlgItemTextA(hwnddlg, 129, PAnsiChar(AnsiString(CATWTR^.RadioName)));
+        Windows.SetDlgItemTextW(hwnddlg, 129, PChar(CATWTR^.RadioName));
 
-        Windows.SetDlgItemTextA(hwnddlg, 130, PAnsiChar(AnsiString(CATWTR^.IPAddress)));
+        Windows.SetDlgItemTextW(hwnddlg, 130, PChar(CATWTR^.IPAddress));
         Windows.SetDlgItemInt(hwnddlg, 131, CATWTR^.RadioTCPPort, False);
-        Windows.SetDlgItemTextA(hwnddlg, 132, PAnsiChar(AnsiString(CATWTR^.NetworkUsername)));
-        Windows.SetDlgItemTextA(hwnddlg, 133, PAnsiChar(AnsiString(CATWTR^.NetworkPassword)));
+        Windows.SetDlgItemTextW(hwnddlg, 132, PChar(CATWTR^.NetworkUsername));
+        Windows.SetDlgItemTextW(hwnddlg, 133, PChar(CATWTR^.NetworkPassword));
         hamLibCheckBoxWind := GetDlgItem(hwnddlg, 1000);
 
         if RadioType in HAMLibONLYRadios then

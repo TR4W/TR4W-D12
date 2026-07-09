@@ -220,13 +220,13 @@ begin
         if MesWindow = CQMsgWin then
         begin
           ShowCQFunctionKeyStatus;
-          Windows.SetWindowTextA(MsgEditHWND, PAnsiChar(AnsiString(GetCQMemoryString(ActiveMode, Char(wParam)))));
+          Windows.SetWindowTextW(MsgEditHWND, PChar(GetCQMemoryString(ActiveMode, Char(wParam))));
         end;
         if MesWindow = ExMsgWin then
         begin
           if (wParam = VK_F1) or (wParam = VK_F2) then Exit;
           ShowExFunctionKeyStatus;
-          Windows.SetWindowTextA(MsgEditHWND, PAnsiChar(AnsiString(GetEXMemoryString(ActiveMode, Char(wParam)))));
+          Windows.SetWindowTextW(MsgEditHWND, PChar(GetEXMemoryString(ActiveMode, Char(wParam))));
         end;
         Windows.ShowWindow(MsgEditHWND, SW_SHOW);
         Windows.ShowWindow(MsgEditLabelHWND, SW_SHOW);

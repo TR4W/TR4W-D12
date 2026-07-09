@@ -374,7 +374,7 @@ begin
      caption := Copy(caption, 1, p - 1) + keyName + Copy(caption, p + 2, Length(caption));
 
   hMenu := Windows.CreatePopupMenu;
-  Windows.AppendMenuA(hMenu, MF_STRING, ID_EDITFKEY, PAnsiChar(AnsiString(caption)));
+  Windows.AppendMenuW(hMenu, MF_STRING, ID_EDITFKEY, PChar(caption));
   Windows.GetCursorPos(pt);
   // NB: do NOT SetForegroundWindow here -- it fires WM_SETFOCUS, whose handler
   // calls ShowFMessages(0) and reverts the function-key window to the plain
