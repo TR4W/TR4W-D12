@@ -23,6 +23,7 @@ unit uLogCompare;
 interface
 
 uses
+  SysUtils,
   VC,
   TF,
 
@@ -101,36 +102,17 @@ begin
         else}
 //        elvi.State := LVIS_SELECTED;
 
-        elvi.iItem := 0;
-        elvi.iSubItem := 0;
-        elvi.pszText := TC_SIZEBYTES;
-        ListView_InsertItem(LogCompareListView, elvi);
-
-        elvi.iSubItem := 1;
-        elvi.pszText := inttopchar(s^.liServerLogSize);
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
-
-        elvi.iSubItem := 2;
-        elvi.pszText := inttopchar(s^.liLocalLogSize);
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
+        // D12: native-string ListView helpers (Unicode). No PChar/AnsiString at
+        // the call site; the value flows as string, logged at TRACE for validation.
+        tLVInsertRow(LogCompareListView, 0, TC_SIZEBYTES);
+        tLVSetText(LogCompareListView, 0, 1, IntToStr(s^.liServerLogSize));
+        tLVSetText(LogCompareListView, 0, 2, IntToStr(s^.liLocalLogSize));
 
         //----------------------------------------------------
 
-        elvi.iItem := 1;
-        elvi.iSubItem := 0;
-        elvi.pszText := TC_RECORDS;
-        ListView_InsertItem(LogCompareListView, elvi);
-
-        elvi.iSubItem := 1;
-
-//        I := s^.liServerLogSize - s^.liLocalLogSize;
-
-        elvi.pszText := inttopchar(s^.liServerLogSize div SizeOf(ContestExchange) - 1);
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
-
-        elvi.iSubItem := 2;
-        elvi.pszText := inttopchar(s^.liLocalLogSize div SizeOf(ContestExchange) - 1);
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
+        tLVInsertRow(LogCompareListView, 1, TC_RECORDS);
+        tLVSetText(LogCompareListView, 1, 1, IntToStr(s^.liServerLogSize div SizeOf(ContestExchange) - 1));
+        tLVSetText(LogCompareListView, 1, 2, IntToStr(s^.liLocalLogSize div SizeOf(ContestExchange) - 1));
 
         //----------------------------------------------------
 {
@@ -139,18 +121,9 @@ begin
         else
           elvi.State := LVIS_SELECTED;
 }
-        elvi.iItem := 2;
-        elvi.iSubItem := 0;
-        elvi.pszText := 'CRC32';
-        ListView_InsertItem(LogCompareListView, elvi);
-
-        elvi.iSubItem := 1;
-        elvi.pszText := inttopcharHEX(integer(s^.liSeverCRC32));
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
-
-        elvi.iSubItem := 2;
-        elvi.pszText := inttopcharHEX(integer(s^.liLocalCRC32));
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
+        tLVInsertRow(LogCompareListView, 2, 'CRC32');
+        tLVSetText(LogCompareListView, 2, 1, '0x' + LowerCase(Format('%x', [integer(s^.liSeverCRC32)])));
+        tLVSetText(LogCompareListView, 2, 2, '0x' + LowerCase(Format('%x', [integer(s^.liLocalCRC32)])));
 
         //----------------------------------------------------
 {
@@ -203,14 +176,8 @@ begin
         else
           elvi.State := LVIS_SELECTED;
 }
-        elvi.iItem := 3;
-        elvi.iSubItem := 0;
-        elvi.pszText := 'USQ';
-        ListView_InsertItem(LogCompareListView, elvi);
-
-        elvi.iSubItem := 2;
-        elvi.pszText := inttopchar(tUSQ);
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
+        tLVInsertRow(LogCompareListView, 3, 'USQ');
+        tLVSetText(LogCompareListView, 3, 2, IntToStr(tUSQ));
         //----------------------------------------------------
 {
         if tUSQE <> 0 then
@@ -218,14 +185,8 @@ begin
         else
           elvi.State := LVIS_SELECTED;
 }
-        elvi.iItem := 4;
-        elvi.iSubItem := 0;
-        elvi.pszText := 'USQE';
-        ListView_InsertItem(LogCompareListView, elvi);
-
-        elvi.iSubItem := 2;
-        elvi.pszText := inttopchar(tUSQE);
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
+        tLVInsertRow(LogCompareListView, 4, 'USQE');
+        tLVSetText(LogCompareListView, 4, 2, IntToStr(tUSQE));
         //----------------------------------------------------
 {
         if s^.liContest <> Contest then
@@ -233,18 +194,9 @@ begin
         else
           elvi.State := LVIS_SELECTED;
 }
-        elvi.iItem := 5;
-        elvi.iSubItem := 0;
-        elvi.pszText := 'Contest';
-        ListView_InsertItem(LogCompareListView, elvi);
-
-        elvi.iSubItem := 1;
-        elvi.pszText := ContestTypeSA[s^.liContest];
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
-
-        elvi.iSubItem := 2;
-        elvi.pszText := ContestTypeSA[Contest];
-        ListView_SetItem(LogCompareListView, elvi);   // Issue #997: was asm call setitem
+        tLVInsertRow(LogCompareListView, 5, 'Contest');
+        tLVSetText(LogCompareListView, 5, 1, string(ContestTypeSA[s^.liContest]));   // boundary: ANSI contest-name -> string
+        tLVSetText(LogCompareListView, 5, 2, string(ContestTypeSA[Contest]));
 
         DifferentContests := s^.liContest <> Contest;
         if s^.liContest = DUMMYCONTEST then DifferentContests := False;
