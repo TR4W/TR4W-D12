@@ -202,7 +202,7 @@ begin
          'bundled with TR4W. Download it from http://www.highrez.co.uk/ and place'#13#10 +
          'inpout32.dll in the same folder as tr4w.exe. LPT features are disabled'#13#10 +
          'until then; the rest of TR4W is unaffected.';
-  showwarning(PAnsiChar(AnsiString(msg)));
+  showwarning(msg);
 end;
 
 

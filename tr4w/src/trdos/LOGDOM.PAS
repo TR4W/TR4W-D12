@@ -488,7 +488,7 @@ begin
 
 //  if not OpenFileForRead(FileRead, FileName) then
   begin
-    UnableToFindFileMessage(PAnsiChar(AnsiString(FileName)));
+    UnableToFindFileMessage(FileName);
     Exit;
   end;
 

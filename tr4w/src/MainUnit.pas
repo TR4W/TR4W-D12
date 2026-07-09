@@ -2110,7 +2110,7 @@ end;
 
 procedure ShowSyserror(ErrorCode: Cardinal);
 begin
-  MessageBoxA(0, TF.SysErrorMessage(ErrorCode), 'TR4W', MB_OK or
+  MessageBoxW(0, PChar(SysUtils.SysErrorMessage(ErrorCode)), 'TR4W', MB_OK or
     MB_ICONERROR or MB_TASKMODAL);
 end;
 
@@ -5819,11 +5819,11 @@ begin
          logger.Fatal('Log file version ' + StrPas(TempBuffer1) +
             ' is newer than this program (' + LOGVERSION + ').' +
             ' Upgrade TR4W to open this log.');
-         ShowMessage(PAnsiChar(AnsiString(
+         ShowMessage(
             'This log file was created by a newer version of TR4W (' +
             StrPas(TempBuffer1) + ').' + #13#10 +
             'This program understands up to version ' + LOGVERSION + '.' + #13#10 +
-            'Please upgrade TR4W to open this log.')));
+            'Please upgrade TR4W to open this log.');
          CloseLogFile;
          Halt;
          end;
@@ -9211,20 +9211,20 @@ begin
       bytesToWrite := min(length(s), 60);
       if first then
       begin
-        AddStringToTelnetConsole(PAnsiChar(AnsiString('[' + ' ' + '] ' +
+        AddStringToTelnetConsole('[' + ' ' + '] ' +
           AnsiLeftStr(s, bytesToWrite))), tstSend);
         first := false;
       end
       else
       begin
-        AddStringToTelnetConsole(PAnsiChar(AnsiString('[' + formattedDate + '] ' +
+        AddStringToTelnetConsole('[' + formattedDate + '] ' +
           AnsiLeftStr(s, bytesToWrite))), tstSend);
       end;
       s := AnsiRightStr(s, length(s) - bytesToWrite);
     end;
   end;
 
-  AddStringToTelnetConsole(PAnsiChar(AnsiString('[' + formattedDate + '] ' + s)), tstSend);
+  AddStringToTelnetConsole('[' + formattedDate + '] ' + s, tstSend);
 {$IFEND}
 
 end;

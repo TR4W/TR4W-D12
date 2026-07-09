@@ -5028,7 +5028,7 @@ begin
 
   if not Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
      begin
-     ErrorMsg := TF.SysErrorMessage(GetLastError);
+     ErrorMsg := SysUtils.SysErrorMessage(GetLastError);
      Format(QuickDisplayBuffer, '%s: %s', TR4W_FLOPPY_FILENAME, PAnsiChar(ErrorMsg));
      QuickDisplay(QuickDisplayBuffer);
      DoABeep(Warning);

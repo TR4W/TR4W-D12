@@ -112,7 +112,7 @@ function Createmsctls_progress32(X, Y, Width, Height: integer; hwndParent: HWND;
 function CreateOwnerDrawListBox(dwStyle: DWORD; hwndParent: HWND): HWND;
 function EnumerateLinesInFile(FileName: PAnsiChar; Func: TEnumLinesFunc; UpperCase: boolean): boolean;
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
-procedure UnableToFindFileMessage(FileName: PAnsiChar);
+procedure UnableToFindFileMessage(FileName: string);
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
@@ -163,8 +163,7 @@ function GetWindowByHandle(h: HWND): WindowsType;
 procedure tEnableMenuItem(uIDEnableItem: UINT; uEnable: UINT);
 
 
-function SysErrorMessage(ErrorCode: Cardinal): PAnsiChar;
-procedure showwarning(Text: PAnsiChar);
+procedure showwarning(Text: string);
 procedure ShowSysErrorMessage(ID: PAnsiChar);
 
 
@@ -265,13 +264,11 @@ function Format(Output: PAnsiChar; Format: PAnsiChar; i: integer; p: PAnsiChar; 
 function Format(Output: PAnsiChar; Format: PAnsiChar; P1, P2, p3, p4, p5, p6, p7: PAnsiChar): integer; external user32 Name 'wsprintfA';
 //uses mainunit;
 
-function SysErrorMessage(ErrorCode: Cardinal): PAnsiChar;
-begin
-  FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM or FORMAT_MESSAGE_ARGUMENT_ARRAY, nil, ErrorCode, 0, SYSERRORBUFFER, SizeOf(SYSERRORBUFFER), nil);
-  Result := SYSERRORBUFFER;
-end;
+// SysErrorMessage removed (D12): use SysUtils.SysErrorMessage (returns a
+// trimmed string). TF's version was a duplicate that returned PAnsiChar into a
+// static buffer, untrimmed; the trailing-CRLF difference is cosmetic.
 
-procedure showwarning(Text: PAnsiChar);
+procedure showwarning(Text: string);
 begin
   logger.Warn(Text);
   // Silent/batch export (/EXPORT) runs headless with no operator to dismiss a
@@ -279,7 +276,7 @@ begin
   // Winter Field Day "LOCATION field is empty" check in PostUnit). The warning
   // is already in the log above; skip the modal in that mode.
   if tSilentExport then Exit;
-  MessageBoxA(0, Text, 'TR4W', MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
+  MessageBoxW(0, PChar(Text), 'TR4W', MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
 end;
 
 function FreqToPChar2(i: integer): string;
@@ -411,7 +408,7 @@ end;
 
 procedure tCB_ADDSTRING(ParentHandle: HWND; Control: integer; s: string);
 begin
-  Windows.SendDlgItemMessageA(ParentHandle, integer(Control), CB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(s))));
+  Windows.SendDlgItemMessageW(ParentHandle, integer(Control), CB_ADDSTRING, 0, LPARAM(PChar(s)));
 end;
 
 procedure tCB_ADDSTRING_PCHAR(ParentHandle: HWND; Control: integer; s: string);
@@ -840,11 +837,11 @@ begin
   Result := GetDateFormatBuffer;
 end;
 
-procedure UnableToFindFileMessage(FileName: PAnsiChar);
+procedure UnableToFindFileMessage(FileName: string);
 begin
-  Format(wsprintfBuffer, '%s'#13#13'%s', SysErrorMessage(GetLastError), FileName);
-
-  showwarning(wsprintfBuffer);
+  // SysUtils.SysErrorMessage returns a (trimmed) string directly -- no cast.
+  // (TF's own SysErrorMessage shadows it here and returns PAnsiChar untrimmed.)
+  showwarning(SysUtils.Format('%s'#13#13'%s', [SysUtils.SysErrorMessage(GetLastError), FileName]));
 end;
 
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
@@ -861,8 +858,7 @@ end;
 
 procedure ShowSysErrorMessage(ID: PAnsiChar);
 begin
-  Format(wsprintfBuffer, '%s: %s', ID, SysErrorMessage(Windows.GetLastError));
-  showwarning(wsprintfBuffer);
+  showwarning(SysUtils.Format('%s: %s', [string(ID), SysUtils.SysErrorMessage(Windows.GetLastError)]));
 end;
 
 procedure SelectParentDir(h: HWND);

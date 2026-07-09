@@ -23,6 +23,7 @@ unit LOGDVP;
 interface
 
 uses
+  SysUtils,
   TF,
   VC,
   LogK1EA,
@@ -389,8 +390,7 @@ begin
   1:
   if DisplayError then
   begin
-    Format(QuickDisplayBuffer, '%s : %s', FileName, SysErrorMessage(GetLastError));
-    QuickDisplay(QuickDisplayBuffer);
+    QuickDisplay(SysUtils.Format('%s : %s', [string(FileName), SysUtils.SysErrorMessage(GetLastError)]));
   end;
 end;
 

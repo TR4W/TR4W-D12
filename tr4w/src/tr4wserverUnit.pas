@@ -315,7 +315,8 @@ begin
   mysaddr.sin_addr.S_addr := 0;
   if WinSock2.bind(ServerSocket, @mysaddr, SizeOf(mysaddr)) <> 0 then
   begin
-    ServerMessageBox(TF.SysErrorMessage(GetLastError), MB_OK or MB_ICONWARNING or MB_TOPMOST);
+    // boundary: server-side ServerMessageBox is ANSI (PAnsiChar); temp lives through the call.
+    ServerMessageBox(PAnsiChar(AnsiString(SysUtils.SysErrorMessage(GetLastError))), MB_OK or MB_ICONWARNING or MB_TOPMOST);
 //    tf.ShowSysErrorMessage('BIND');
     goto UnSucc;
   end;
