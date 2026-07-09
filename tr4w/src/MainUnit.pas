@@ -733,7 +733,7 @@ begin
   if not DetectRoverSlashInCall(RoverCounty) then
      Exit;
   ExchangeWindowString := RoverCounty;
-  Windows.SetWindowTextA(wh[mweExchange], PAnsiChar(AnsiString(ExchangeWindowString)));
+  Windows.SetWindowTextW(wh[mweExchange], PChar(ExchangeWindowString));
   // Move focus to exchange.  The caller's existing focus-move logic only
   // fires when ExchangeWindowString is empty (which won't be true after
   // we just populated it), so we have to do it ourselves here.
@@ -2730,7 +2730,7 @@ begin
            begin
            if GetPOTAParkName(TestString) <> '' then
               begin
-              QuickDisplay(PAnsiChar(AnsiString(GetPOTAParkName(TestString))));
+              QuickDisplay(GetPOTAParkName(TestString));
               Exit;
               end;
            end;
@@ -5523,7 +5523,7 @@ begin
   Windows.SetWindowTextA(wh[mweExchange], ExchBuf);
 
   tCallWindowSetFocus;
-  QuickDisplay(PAnsiChar(AnsiString('2nd op: type callsign, verify exchange, then Enter - ' + ExchStr)));
+  QuickDisplay('2nd op: type callsign, verify exchange, then Enter - ' + ExchStr);
 end;
 
 procedure tListBoxClientAlign(Parent: HWND);
@@ -9520,7 +9520,7 @@ begin
   fName := StrPas(TR4W_LOG_FILENAME);
   if not RenameFile(fName, OldFile) then
      begin
-     ShowMessage(PAnsiChar(AnsiString(TC_CANNOTRENAME + ' ' + fName + ' >>> ' + OldFile)));
+     ShowMessage(string(TC_CANNOTRENAME) + ' ' + fName + ' >>> ' + OldFile);
      Exit;
      end;
 

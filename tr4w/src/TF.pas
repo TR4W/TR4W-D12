@@ -181,7 +181,6 @@ function MillisecondsToFormattedString(msecs: Cardinal; WithMsec: boolean): stri
 function ArrayToString(const a: array of Char): string;
 procedure InvertBoolean(var b: boolean);
 function inttopchar(i: integer): PAnsiChar;
-function inttopcharHEX(i: integer): PAnsiChar;
 procedure DragWindow(h: HWND);
 //procedure SaveStructure(Address: Pointer; Count: integer; FileName: string);
 procedure EnableWindowTrue(h: HWND; nIDDlgItem: integer);
@@ -372,11 +371,6 @@ begin
   Result := IntToPCharBuffer;
 end;
 
-function inttopcharHEX(i: integer): PAnsiChar;
-begin
-  Format(IntToPCharBuffer, '%#x', i);
-  Result := IntToPCharBuffer;
-end;
 
 procedure DragWindow(h: HWND);
 begin

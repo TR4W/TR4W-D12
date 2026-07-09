@@ -164,7 +164,7 @@ begin
    // auto-clears after ~30s.  (The bare SetTextInQuickCommandWindow used
    // before had no persistence, so the next status write overwrote it
    // before it could be seen.)
-   QuickDisplayError(PAnsiChar(AnsiString(msg)));
+   QuickDisplayError(msg);
    logger.Warn('[uWSJTX] ' + msg);
 end;
 
@@ -279,7 +279,7 @@ begin
             on E: Exception do
                begin
                logger.Error('[WSJT-X] Exception binding UDP port ' + IntToStr(FUDPPort) + ': ' + E.Message);
-               QuickDisplay(PAnsiChar(AnsiString('WSJT-X bind error port ' + IntToStr(FUDPPort) + ': ' + E.Message)));
+               QuickDisplay('WSJT-X bind error port ' + IntToStr(FUDPPort) + ': ' + E.Message);
                end;
          end;
 

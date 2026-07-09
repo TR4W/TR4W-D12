@@ -319,7 +319,7 @@ begin
               begin
                 Windows.WritePrivateProfileStringA(_COMMANDS, @ParameterToNetworkPtr^.pnCommand[1], @ParameterToNetworkPtr^.pnValue[1], TR4W_INI_FILENAME);
 //                ShowTrayTips();
-                QuickDisplay(PAnsiChar(AnsiString(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network'));
+                QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
               end;
               Bufindex := Bufindex + SizeOf(ParameterToNetwork);
               if Bufindex - 1 >= i then Exit;
