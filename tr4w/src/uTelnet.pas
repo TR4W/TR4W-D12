@@ -1200,6 +1200,9 @@ begin
         (PInteger(@TelnetBuffer[pr + 2])^ = $20656420) { DE } then
           AddedSpot := ProcessDX(pr, False, StringType);
 
+        // boundary: TelnetBuffer is the raw socket receive buffer, parsed in
+        // place by byte offset (PInteger "DX D"/"DE " matches, in-place #0 terminators).
+        // Decode the parsed ANSI line to string here, at the wire->display edge.
         AddStringToTelnetConsole(string(PAnsiChar(@TelnetBuffer[pr])), StringType);
 
         //     SetUpBandMapEntry(@BandMapEntryRecord, ActiveRadio);   // remove hh

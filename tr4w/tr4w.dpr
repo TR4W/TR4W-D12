@@ -183,7 +183,17 @@ uses
   uTrayBalloon in 'src\uTrayBalloon.pas',
   uPOTAParks in 'src\uPOTAParks.pas',
   uPendingCounties in 'src\uPendingCounties.pas',
-  uCTYUpdate in 'src\uCTYUpdate.pas';
+  uCTYUpdate in 'src\uCTYUpdate.pas',
+  // D12: transitively-compiled units added so project-wide file searches see them
+  // (they were pulled in via other units' uses clauses but never listed here).
+  uADIF in 'src\uADIF.pas',
+  uCabrillo in 'src\uCabrillo.pas',
+  uCallCompress in 'src\uCallCompress.pas',
+  uFlexRadioUtils in 'src\uFlexRadioUtils.pas',
+  uGridDistance in 'src\uGridDistance.pas',
+  uK4Discovery in 'src\uK4Discovery.pas',
+  uStrSearch in 'src\uStrSearch.pas',
+  NetworkMessageUtils in 'src\utils\NetworkMessageUtils.pas';
   //cty in 'src\cty.pas';  // Excluded: unit name 'cty' conflicts with global variable 'CTY' from uCTYDAT
 
 {$IF LANG = 'ENG'}{$R res\tr4w_eng.res}{$IFEND}
