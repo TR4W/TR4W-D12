@@ -221,8 +221,7 @@ begin
         // Add new modes from extended modes
         for extMode := Low(ExtendedModeType) to High(ExtendedModeType) do
         begin
-          tCB_ADDSTRING_PCHAR(hwnddlg, FLD_MODE,
-            PAnsiChar(AnsiString(ExtendedModeStringArray[extMode])));
+          tCB_ADDSTRING_PCHAR(hwnddlg, FLD_MODE, ExtendedModeStringArray[extMode]);
         end;
         if EditableQSORXData.ExtMode = eNoMode then
         begin

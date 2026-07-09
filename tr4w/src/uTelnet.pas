@@ -82,7 +82,7 @@ procedure Disconnect;
 function TestSocketBuffer: Integer; // Gav 4.44.6
 procedure TelnetConnectionError(wsaErr: integer);            // Issue #23 -- explicit code (marshaled)
 function SendViaTelnetSocket(p: PAnsiChar): integer;
-procedure AddStringToTelnetConsole(p: PAnsiChar; c: TelnetStringType);
+procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);
 procedure SaveTelnetWindowSpots;
 procedure EnableTelnetToolbatButtons(b: boolean);
 procedure ProcessTelnetString(const ByteReceived: integer);
@@ -596,7 +596,7 @@ begin
               // host they tried to reach (the raw message is long and unwrapped).
               logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
                 [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, lParam,
-                 TF.SysErrorMessage(lParam)]);   // Issue #997: keep TF's PChar version (SysUtils in uses returns a trimmed string)
+                 SysUtils.SysErrorMessage(lParam)]);
               Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
               AddStringToTelnetConsole(wsprintfBuffer, tstError);
@@ -1040,13 +1040,13 @@ end;
 
 procedure TelnetConnectionError(wsaErr: integer);
 var
-  msg: PAnsiChar;
+  msg: string;
 begin
   // Issue #23 -- log the WinSock error to the general error log always
   // (independent of TELNET DEBUG) and show it in the telnet window.  The code is
   // passed in (not read from WSAGetLastError) because it may have been captured
   // on the I/O thread and marshaled here -- WSAGetLastError is per-thread.
-  msg := TF.SysErrorMessage(wsaErr);   // Issue #997: keep TF's PChar version (SysUtils added to uses returns string)
+  msg := SysUtils.SysErrorMessage(wsaErr);
   logger.Error('[Telnet] WinSock error %d: %s', [wsaErr, msg]);
   AddStringToTelnetConsole(msg, tstError);
 end;
@@ -1078,7 +1078,7 @@ begin
   end;
 end;
 
-procedure AddStringToTelnetConsole(p: PAnsiChar; c: TelnetStringType);
+procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);
 var
   Handle: HWND;
   buf: array[0..1023] of AnsiChar;   // Issue #23 -- bound the list item to InfoBuffer's size
@@ -1093,7 +1093,8 @@ begin
   // Issue #23 -- copy into a bounded buffer first.  The owner-draw handler reads
   // each item back via LB_GETTEXT (which has no size limit) into a same-sized
   // stack buffer; capping here guarantees that read can never overrun the stack.
-  Windows.lstrcpynA(buf, p, SizeOf(buf));
+  // boundary: the telnet console listbox is ANSI (LB_ADDSTRING via SendMessageA).
+  Windows.lstrcpynA(buf, PAnsiChar(AnsiString(p)), SizeOf(buf));
 
   SendMessage(Handle, LB_SETITEMDATA, SendMessageA(Handle, LB_ADDSTRING, 0,
     integer(@buf)), integer(c));
@@ -1199,7 +1200,7 @@ begin
         (PInteger(@TelnetBuffer[pr + 2])^ = $20656420) { DE } then
           AddedSpot := ProcessDX(pr, False, StringType);
 
-        AddStringToTelnetConsole(@TelnetBuffer[pr], StringType);
+        AddStringToTelnetConsole(string(PAnsiChar(@TelnetBuffer[pr])), StringType);
 
         //     SetUpBandMapEntry(@BandMapEntryRecord, ActiveRadio);   // remove hh
         pr := -1;

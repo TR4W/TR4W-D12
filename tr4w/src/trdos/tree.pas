@@ -2601,8 +2601,7 @@ begin
   Result := TryToOpenCOMPort(com_port_name, dwFlagsAndAttributes);
   if Result = INVALID_HANDLE_VALUE then
   begin
-    Format(wsprintfBuffer, 'COM%d:'#13'%s', com_port_name, SysErrorMessage(GetLastError));
-    showwarning(wsprintfBuffer);
+    showwarning(SysUtils.Format('COM%d:'#13'%s', [com_port_name, SysUtils.SysErrorMessage(GetLastError)]));
     Exit;
   end;
 

@@ -147,7 +147,7 @@ begin
               IncSystemTime(T2, Offset);
               if not Windows.SetSystemTime(T2) then
               begin
-                SetDlgItemTextA(st_window_handle, 106, TF.SysErrorMessage(GetLastError));
+                SetDlgItemTextW(st_window_handle, 106, PChar(SysUtils.SysErrorMessage(GetLastError)));
               end;
               EnableWindowFalse(hwnddlg, 201);
             end;
@@ -260,7 +260,7 @@ begin
   Unsuccessful:
   ST_SOCKET := INVALID_SOCKET;
   1:
-  SetDlgItemTextA(st_window_handle, 106, TF.SysErrorMessage(WSAGetLastError));
+  SetDlgItemTextW(st_window_handle, 106, PChar(SysUtils.SysErrorMessage(WSAGetLastError)));
   NTPThreadID := 0;
 end;
 

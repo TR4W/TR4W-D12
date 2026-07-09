@@ -749,7 +749,7 @@ begin
 
           {it?s a status byte. (Host may or may not have asked for it.)process status change, note that it could be a pushbutton change}
 {$IF WINKEYDEBUG}
-            AddStringToTelnetConsole(PAnsiChar(AnsiString('status byte ' + IntToStr(wkThreadReadBuffer[i]))), tstSend);
+            AddStringToTelnetConsole('status byte ' + IntToStr(wkThreadReadBuffer[i]), tstSend);
 //            sWriteFile(wkDebugFileRX, wkThreadReadBuffer[I], 1);
 {$IFEND}
     {(*}
@@ -802,7 +802,7 @@ begin
                 if wkWaitingBytesInWK > 0 then dec(wkWaitingBytesInWK);
               end;
 {$IF WINKEYDEBUG}
-//              AddStringToTelnetConsole(PAnsiChar(AnsiString('> RX ' + CHR(wkThreadReadBuffer[I]))));
+//              AddStringToTelnetConsole('> RX ' + CHR(wkThreadReadBuffer[I]));
 {$IFEND}
             end;
         end;
@@ -843,7 +843,7 @@ begin
         if wkThreadReadBuffer[i] < $C0 then
         begin
 {$IF WINKEYDEBUG}
-//          AddStringToTelnetConsole(PAnsiChar(AnsiString('> RX ' + CHR(wkThreadReadBuffer[i]))));
+//          AddStringToTelnetConsole('> RX ' + CHR(wkThreadReadBuffer[i]));
 {$IFEND}
           if wkWaitingBytesInWK > 0 then dec(wkWaitingBytesInWK);
 //        wkSendNextByteFromHostBuffer;
@@ -852,7 +852,7 @@ begin
         else
         begin
 {$IF WINKEYDEBUG}
-//          AddStringToTelnetConsole(PAnsiChar(AnsiString('> C0 ' + IntToStr(wkThreadReadBuffer[i]))));
+//          AddStringToTelnetConsole('> C0 ' + IntToStr(wkThreadReadBuffer[i]));
 {$IFEND}
         end;
 
@@ -917,7 +917,7 @@ procedure wkAddCharToHostBuffer(c: AnsiChar);
 begin
 
 {$IF WINKEYDEBUG}
-//  AddStringToTelnetConsole(PAnsiChar(AnsiString(c)));
+//  AddStringToTelnetConsole(c);
 {$IFEND}
   logger.Trace('[wkAddCharToHostBuffer] char=%s (ord=%d $%s)',
               [string(c), Ord(c), IntToHex(Ord(c), 2)]);
@@ -1007,7 +1007,7 @@ begin
     msg := Format('Winkeyer port COM%d: %s',
                   [Integer(WinKeySettings.wksWinKey2Port),
                    SysErrorMessage(GetLastError)]);
-    showwarning(PAnsiChar(AnsiString(msg)));
+    showwarning(msg);
     Exit;
   end;
   GetCommState(WinKeyHandle, wkDCB);

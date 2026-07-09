@@ -887,8 +887,7 @@ begin
 
   if not CD.MasterFileExists then
   begin
-    Format(QuickDisplayBuffer, 'TRMASTER.DTA : %s', SysErrorMessage(GetLastError));
-    QuickDisplay(QuickDisplayBuffer);
+    QuickDisplay(SysUtils.Format('TRMASTER.DTA : %s', [SysUtils.SysErrorMessage(GetLastError)]));
   end;
 
 {$IF not tDebugMode}

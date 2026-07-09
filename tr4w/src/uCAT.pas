@@ -223,7 +223,7 @@ begin
               begin
               msg := msg + #13#10 + found[i];
               end;
-           showwarning(PAnsiChar(AnsiString(msg)));
+           showwarning(msg);
            end;
         end;
   finally
