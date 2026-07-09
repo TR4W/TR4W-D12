@@ -2683,6 +2683,15 @@ function ListView_SetItemTextW(hwndLV: HWND; i, iSubItem: integer;
 function ListView_SetItemText(hwndLV: HWND; i, iSubItem: integer;
   pszText: PAnsiChar): BOOL;
 
+// D12: string-based, Unicode ListView text helpers. Callers pass a native
+// string (even a temporary -- the const param keeps it alive through the
+// synchronous SendMessage), so NO PChar/PAnsiChar and NO buffer management at
+// the call site; the single Win32 PWideChar boundary is isolated inside these.
+// Each logs its value (TRACE) so the A->W flip can be validated from the log
+// without opening the window.
+procedure tLVInsertRow(hLV: HWND; iItem: integer; const Text: string);
+procedure tLVSetText(hLV: HWND; iItem, iSubItem: integer; const Text: string);
+
 const
   LVM_SETITEMCOUNT                      = LVM_FIRST + 47;
 
@@ -4208,14 +4217,44 @@ As of Windows Vista, this function is merely an alias for PFNDACOMPARE.
 
 implementation
 
+uses
+  Log4D;   // D12: TRACE logging for the string ListView helpers (validation trail)
+
 const
   cctrl                                 = 'comctl32.dll';
 
 var
   ComCtl32DLL                           : THandle;
   _InitCommonControlsEx                 : function(var ICC: TInitCommonControlsEx): BOOL stdcall;
+  logger                                : TLogLogger;
 
 procedure InitCommonControls; external cctrl Name 'InitCommonControls';
+
+procedure tLVInsertRow(hLV: HWND; iItem: integer; const Text: string);
+var
+  lvi                                   : TLVItemW;
+begin
+  logger.Trace('[LV %d] insert row %d = "%s"', [hLV, iItem, Text]);
+  FillChar(lvi, SizeOf(lvi), 0);
+  lvi.Mask := LVIF_TEXT;
+  lvi.iItem := iItem;
+  lvi.iSubItem := 0;
+  lvi.pszText := PWideChar(Text);   // boundary: the sole PWideChar; Text (const) outlives the synchronous send
+  ListView_InsertItemW(hLV, lvi);
+end;
+
+procedure tLVSetText(hLV: HWND; iItem, iSubItem: integer; const Text: string);
+var
+  lvi                                   : TLVItemW;
+begin
+  logger.Trace('[LV %d] item %d col %d = "%s"', [hLV, iItem, iSubItem, Text]);
+  FillChar(lvi, SizeOf(lvi), 0);
+  lvi.Mask := LVIF_TEXT;
+  lvi.iItem := iItem;
+  lvi.iSubItem := iSubItem;
+  lvi.pszText := PWideChar(Text);   // boundary: the sole PWideChar; Text (const) outlives the synchronous send
+  ListView_SetItemW(hLV, lvi);
+end;
 
 procedure initcomctl;
 begin
@@ -4582,7 +4621,9 @@ end;
 
 function ListView_SetItemW(HWND: HWND; const pItem: TLVItemW): BOOL;
 begin
-  Result := BOOL(SendMessage(HWND, LVM_SETITEM, 0, LONGINT(@pItem)));
+  // D12 fix: must send the W message (was LVM_SETITEM = LVM_SETITEMA, which made
+  // comctl32 read the wide pszText as ANSI -> garbage). Dormant: had no callers.
+  Result := BOOL(SendMessage(HWND, LVM_SETITEMW, 0, LONGINT(@pItem)));
 end;
 
 function ListView_SetItem(HWND: HWND; const pItem: TLVItem): BOOL;
@@ -4628,7 +4669,8 @@ end;
 
 function ListView_InsertItemW(HWND: HWND; const pItem: TLVItemW): integer;
 begin
-  Result := integer(SendMessage(HWND, LVM_INSERTITEM, 0, LONGINT(@pItem)));
+  // D12 fix: send the W message (was LVM_INSERTITEM = LVM_INSERTITEMA). Dormant.
+  Result := integer(SendMessage(HWND, LVM_INSERTITEMW, 0, LONGINT(@pItem)));
 end;
 
 function ListView_InsertItem(HWND: HWND; const pItem: TLVItem): integer;
@@ -5072,7 +5114,8 @@ var
 begin
   Item.iSubItem := iSubItem;
   Item.pszText := pszText;
-  Result := BOOL(SendMessage(hwndLV, LVM_SETITEMTEXT, i, LONGINT(@Item)));
+  // D12 fix: send the W message (was LVM_SETITEMTEXT = LVM_SETITEMTEXTA). Dormant.
+  Result := BOOL(SendMessage(hwndLV, LVM_SETITEMTEXTW, i, LONGINT(@Item)));
 end;
 
 function ListView_SetItemText(hwndLV: HWND; i, iSubItem: integer;
@@ -5786,6 +5829,7 @@ DSA_Sort                  6.10 and higher	documented
 6.10 - Windows Vista>
 }
 initialization
+  logger := TLogLogger.GetLogger('uCommctrl');
   InitCommonControls;
 end.
 
