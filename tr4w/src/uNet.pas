@@ -759,7 +759,7 @@ begin
   if StatusArray[Index].ssComputerID = #0 then
   begin
     for i2 := 0 to 7 do
-      ListView_SetItemText(h, i, i2, nil);
+      tLVSetText(h, i, i2, '');
     Exit;
   end;
 
@@ -769,8 +769,8 @@ begin
     sstComputerNameAndID:
       begin
         CID_TWO_BYTES[0] := StatusArray[Index].ssComputerID;
-        ListView_SetItemText(h, i, 0, StatusArray[Index].ssName);
-        ListView_SetItemText(h, i, 1, CID_TWO_BYTES);
+        tLVSetText(h, i, 0, string(StatusArray[Index].ssName));
+        tLVSetText(h, i, 1, string(PAnsiChar(@CID_TWO_BYTES)));
       end;
     sstBandModeFreq:
       begin
@@ -788,12 +788,11 @@ begin
 }
         Format(@TempBuffer, '%s%s', BandStringsArrayWithOutSpaces[StatusArray[Index].ssCurrentBand], ModeStringArray[StatusArray[Index].ssCurrentMode]);
 
-        ListView_SetItemText(h, i, 2, TempBuffer);
+        tLVSetText(h, i, 2, string(PAnsiChar(@TempBuffer)));
 
-        // boundary: station-list ListView is still LV_ITEMA; ListView_SetItemText
-        // sends the message within this call, so the AnsiString temporary is valid
-        // for its duration.  W-flip tracked with the ListView A->W surface.
-        ListView_SetItemText(h, i, 3, PAnsiChar(AnsiString(FreqToPChar{WithoutHZ}(StatusArray[Index].ssFreq))));        // 4.61.7
+        // D12: FreqToPChar returns native string; flows straight through tLVSetText
+        // (this replaced an earlier PAnsiChar(AnsiString(...)) LV_ITEMA hack).
+        tLVSetText(h, i, 3, FreqToPChar{WithoutHZ}(StatusArray[Index].ssFreq));        // 4.61.7
 {
         ListView_SetItemText(h, i, 2, BandStringsArray[StatusArray[Index].ssCurrentBand]);
         ListView_SetItemText(h, i, 3, ModeString[StatusArray[Index].ssCurrentMode]);
@@ -803,25 +802,25 @@ begin
 
     sstPTT:
       begin
-        ListView_SetItemText(h, i, 6 - 1, PTTStatusString[PTTStatusType((StatusArray[Index].ssStatusByte and (1 shl 0)) <> 0)]);
+        tLVSetText(h, i, 6 - 1, string(PTTStatusString[PTTStatusType((StatusArray[Index].ssStatusByte and (1 shl 0)) <> 0)]));
         //ListView_Update(h, I);
         ListView_RedrawItems(h, i, i);
       end;
 
     sstOpMode:
-      ListView_SetItemText(h, i, 5 - 1, OpModeString[OpModeType((StatusArray[Index].ssStatusByte and (1 shl 1)) <> 0)]);
+      tLVSetText(h, i, 5 - 1, string(OpModeString[OpModeType((StatusArray[Index].ssStatusByte and (1 shl 1)) <> 0)]));
 
     sstQSOs:
-      ListView_SetItemText(h, i, 7 - 1, inttopchar(StatusArray[Index].ssQSOTotals));
+      tLVSetText(h, i, 7 - 1, IntToStr(StatusArray[Index].ssQSOTotals));
 
     sstCallsign:
       begin
-        ListView_SetItemText(h, i, 8 - 1, StatusArray[Index].ssCallsign);
-        ListView_SetItemText(h, i, 9 - 1, da[(StatusArray[Index].ssStatusByte and (1 shl 2)) <> 0]);
+        tLVSetText(h, i, 8 - 1, string(StatusArray[Index].ssCallsign));
+        tLVSetText(h, i, 9 - 1, string(da[(StatusArray[Index].ssStatusByte and (1 shl 2)) <> 0]));
       end;
 
     sstOperator:
-      ListView_SetItemText(h, i, 9, StatusArray[Index].ssOperator);
+      tLVSetText(h, i, 9, string(StatusArray[Index].ssOperator));
   end;
 
   //  ListView_SetItemText(h, I, 8, inttopchar(StatusArray[Index].ssCWElements));
@@ -990,8 +989,8 @@ begin
   i := PosInClientsList[Index] - 1;
   elvi.Mask := LVIF_TEXT;
   h := wh[mweNetwork];
-  ListView_SetItemText(h, i, 10, ProgressBarArray {inttopchar(Msg.msCWElements)});
-  ListView_SetItemText(h, i, 11, Msg.msCWMessage);
+  tLVSetText(h, i, 10, string(PAnsiChar(@ProgressBarArray)));
+  tLVSetText(h, i, 11, string(Msg.msCWMessage));
 end;
 
 function SendToNet(var buf; Len: integer): integer;
