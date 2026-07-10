@@ -237,7 +237,7 @@ procedure RunServer;
 procedure GetServerLogCRC32;
 function sSend(s: TSocket; var buf; Len: integer; mt: DebugMessageType): integer;
 function sRecv(s: TSocket; var buf; Len: integer): integer;
-function ServerMessageBox(Text: PAnsiChar; uType: UINT): integer;
+function ServerMessageBox(const Text: string; uType: UINT): integer;
 procedure ScanLogForSerialsNumbers;
 procedure StopServer;
 procedure AddSocketToArray(soc: Cardinal; IP: PAnsiChar; Name: PAnsiChar);
@@ -316,7 +316,7 @@ begin
   if WinSock2.bind(ServerSocket, @mysaddr, SizeOf(mysaddr)) <> 0 then
   begin
     // boundary: server-side ServerMessageBox is ANSI (PAnsiChar); temp lives through the call.
-    ServerMessageBox(PAnsiChar(AnsiString(SysUtils.SysErrorMessage(GetLastError))), MB_OK or MB_ICONWARNING or MB_TOPMOST);
+    ServerMessageBox(SysUtils.SysErrorMessage(GetLastError), MB_OK or MB_ICONWARNING or MB_TOPMOST);
 //    tf.ShowSysErrorMessage('BIND');
     goto UnSucc;
   end;
@@ -1024,9 +1024,9 @@ begin
   sSend(s, ServerMessage, SizeOf(ServerMessage), dmROLQ);
 end;
 
-function ServerMessageBox(Text: PAnsiChar; uType: UINT): integer;
+function ServerMessageBox(const Text: string; uType: UINT): integer;
 begin
-  Result := MessageBoxA(ApplicationHandle, Text, _TR4WSERVER, uType);
+  Result := MessageBoxW(ApplicationHandle, PChar(Text), _TR4WSERVER, uType);
 end;
 
 procedure ScanLogForSerialsNumbers;
