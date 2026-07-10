@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## MANDATORY: Git command form
+
+Run **every** git command as `git -C /c/tr4w-d12 <subcommand>` (e.g. `git -C /c/tr4w-d12 commit ...`,
+`git -C /c/tr4w-d12 push d12 delphi12`). **NEVER** prepend `cd /c/tr4w-d12` (or any `cd`) as the first
+command in a shell block. A `cd` to the already-current directory triggers a permission prompt every
+time — the `-C` flag targets the repo explicitly with no `cd` and no prompt. (A PreToolUse hook in
+`.claude/settings.json` enforces this; if it warns you, fix the command — don't work around it.)
+
 ## Overview
 
 TR4W is a free amateur radio contest logging application for Windows, written in Delphi 7 (Object Pascal). It's a feature-rich logging program supporting 120+ contests with multi-user networking, extensive radio control, and digital mode integration. The codebase is approximately 109,000 lines across 117 units.
