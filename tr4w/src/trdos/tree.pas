@@ -783,7 +783,7 @@ function GetLogEntryQSONumber(LogEntry: Str160): integer;
 function GetLogEntryQSOPoints(LogEntry: Str160): integer;
 function GetLogEntryRSTString(LogEntry: Str160): string;
 function GoodLookingRDA(RDA: Str20): boolean;
-function GetOblast(Call: CallString): Str2;
+function GetOblast(Call: CallString): string;
 function GetLogEntryTimeString(LogEntry: Str160): string;
 
 function GetKey(Prompt: Str80): Char;
@@ -4810,7 +4810,7 @@ begin
 
 end;
 
-function GetOblast(Call: CallString): Str2;
+function GetOblast(Call: CallString): string;
 var
   i                                     : integer;
   c1                                    : AnsiChar;
@@ -4841,12 +4841,8 @@ begin
   if (c1 = #0) or (c2 = #0) then
     Result := ''
   else
-  begin
-    Result[0] := #2;
-    Result[1] := c1;
-    Result[2] := c2;
-//    Result := c1 + c2;
-  end;
+    // D12: native string; was ShortString length-byte + indexed chars
+    Result := Char(c1) + Char(c2);
 {
   while Copy(Call, 1, 1) >= 'A' do
   begin
