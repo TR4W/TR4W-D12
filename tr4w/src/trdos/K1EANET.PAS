@@ -34,7 +34,7 @@ uses {Dos, }
 
 //var  K1EAStationID                         : Char;
 
-function ConvertUnixToDateAndTimeString(UnixDate: LONGINT): Str40;
+function ConvertUnixToDateAndTimeString(UnixDate: LONGINT): string;
 
 function ConvertN6TRLogStringToK1EANetworkFormat(N6TRLogString: string): string;
 
@@ -527,7 +527,7 @@ begin
   ConvertN6TRLogStringToK1EANetworkFormat := K1EAString;
 end;
 
-function ConvertUnixToDateAndTimeString(UnixDate: LONGINT): Str40;
+function ConvertUnixToDateAndTimeString(UnixDate: LONGINT): string;
 
 var
   Year, Month, Day, Hour, Minute, Second: Word;
@@ -639,7 +639,7 @@ begin
 
   if ActiveExchange = RSTZoneExchange then
   begin
-      {переделать}
+      {пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ}
     case BandInteger of
       1: N6TRLogString := '160';
       2: N6TRLogString := ' 80';

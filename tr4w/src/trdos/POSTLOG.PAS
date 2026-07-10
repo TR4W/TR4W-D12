@@ -290,7 +290,7 @@ begin
   end;
 end;
 
-function EditLine(InitialString: Str160): Str160;
+function EditLine(InitialString: Str160): string;
 
 var
   Key: Char;
@@ -1592,7 +1592,7 @@ begin
 
 end;
 
-function CheckGetPrefix(Call: CallString): Str20;
+function CheckGetPrefix(Call: CallString): string;
 
 var
   Prefix, StandardCall: CallString;
