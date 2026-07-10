@@ -4,6 +4,13 @@ This document captures recommendations for the phased migration of TR4W from Del
 to a modern Delphi version, and the testing strategy that supports it.
 Read alongside `tr4w-analysis.md` (upstream architectural analysis).
 
+> **Status update (2026-07-09):** This was written pre-freeze under D7. TR4W now
+> **compiles and runs under Delphi 12** on branch `delphi12`; **Phase 1 is complete**
+> and **Phase 2 (Unicode / `string` modernization) is largely done** — see
+> `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md` §"Progress — as of 2026-07-09" for the
+> authoritative status. Completed items below are struck through. Phase 3 (64-bit) and
+> Phase 4 (VCL) have not started; the `ContestExchange`→SQLite work is deferred.
+
 ---
 
 ## Overview
@@ -201,36 +208,45 @@ Test scope after extraction:
 
 ## Phase-by-Phase Guidance
 
-### Phase 1 — Compile D12 32-bit (Remove Blockers)
+### Phase 1 — Compile D12 32-bit (Remove Blockers) — ✅ COMPLETE
 
 **Goal:** `tr4w.dpr` compiles under Delphi 12 in 32-bit ANSI-compatible mode
-with zero behavior change.
+with zero behavior change. **Achieved** — the app builds clean (Win32) and the
+golden-master corpus passes.
 
 **Critical blockers** (from `tr4w-analysis.md`):
 
-1. **Custom RTL shadow units** — `src/` contains a copy of `SysUtils.pas` (16K lines).
-   D12 will reject it. Action: rename or remove; verify no custom extensions were added.
+1. ~~**Custom RTL shadow units** — `src/` contains a copy of `SysUtils.pas`.~~
+   **Done** — the shadow `SysUtils.pas` is gone (the SysUtils-clone survives, renamed
+   `MySU.pas`, and is not in the tr4w build path).
 
-2. **Bundled Indy** — `include/Indy/` must be removed and replaced with the D12
-   Indy package. API is largely compatible but import paths differ.
+2. **Bundled Indy** — `include/` still ships a vendored Indy 10.6.3 tree that wins on
+   the search path over D12's Indy. **Not done** — compiles fine as-is; RTL-replacement
+   deferred (needs live network/SSL testing). Same situation for vendored `src\MMSystem.pas`.
 
-3. **`TF.pas` `wsprintf` wrappers** — 73 `wsprintf` calls wrap Win32 formatting.
-   These are safe in 32-bit but must be audited before Phase 2 (Unicode strings
-   passed to `wsprintf` will silently produce garbage).
+3. **`TF.pas` `wsprintf` wrappers** — *(corrected count: 172 calls / 37 files, not 73.)*
+   **Largely addressed** — the asm/`wsprintf` display path is being converted to
+   `SysUtils.Format` + W-APIs as part of the string modernization (see the D12 plan's
+   Progress section). Remaining `wsprintf` sites are non-string-hazard.
 
-4. **477 inline assembly blocks** — Inaccessible in 64-bit (Phase 3). In Phase 1
-   they compile fine; catalog them now using `grep -r 'asm' src/` so Phase 3 has
-   a clear list.
+4. ~~**477 inline assembly blocks** — catalog now for Phase 3.~~ *(corrected: ~600 blocks
+   / 74 files.)* **Cataloged** (`PHASE_INVENTORIES.md`) and **actively being eradicated**
+   per project directive during the string work (many already gone).
 
-5. **`IsMultiThread := True`** — Already fixed. Must stay as first statement in
-   `tr4w.dpr` (added March 2026 to fix random startup AVs).
+5. ~~**`IsMultiThread := True`** — Already fixed; must stay first statement in `tr4w.dpr`.~~
+   **Done** (present in `tr4w.dpr`).
 
 **Win32 API calls:** Leave as-is. Win32 API works identically in D12 32-bit.
 There is no benefit to wrapping it in Phase 1; defer to Phase 4 (VCL forms).
 
-### Phase 2 — Unicode Correctness
+### Phase 2 — Unicode Correctness — 🟡 LARGELY DONE
 
 **Goal:** Replace implicit `string = AnsiString` assumptions with explicit types.
+**Status:** the bulk is done — leaf/UI interior flipped to native `string`, the Win32
+display + ListView surfaces flipped to W-APIs, duplicative TF conversion shims removed,
+and the CI-V/wire byte-buffers made byte-faithful `AnsiString`. Remaining: the MainUnit
+log renderer (with SQLite), telnet socket-I/O centralization, and a few low-value shims.
+See `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md` §Progress.
 
 **Key rules:**
 - CI-V / serial / network byte buffers: `AnsiString` or `TBytes` — never `string`
@@ -238,9 +254,10 @@ There is no benefit to wrapping it in Phase 1; defer to Phase 4 (VCL forms).
 - File I/O: explicit `TEncoding.Default` or `TEncoding.ANSI` for legacy `.dat`/`.cfg` files
 - `PChar` → `PAnsiChar` for Win32 API calls that take byte strings (most radio protocol code)
 
-The `uIcomCIV.pas` BCD functions return `string` (= `AnsiString` in D7). These
-**must** be changed to `AnsiString` in Phase 2. The D12 migration note is already
-in the unit header.
+~~The `uIcomCIV.pas` BCD functions return `string` (= `AnsiString` in D7). These
+**must** be changed to `AnsiString` in Phase 2.~~ **Done** — `IcomFreqToBCD`/
+`IcomBCDToFreq`/`IcomOffsetToBCD` now return/take `AnsiString`; the whole Icom CI-V
+byte path (network + serial) is byte-faithful and hardware-validated.
 
 ### Phase 3 — 64-bit
 
@@ -383,13 +400,13 @@ The TR4QT SQLite implementation at `C:\projects\TR4QT` is the reference schema.
 
 ## Quick Reference — Files to Act on First
 
-| File | Issue | Phase |
-|------|-------|-------|
-| `src/SysUtils.pas` (shadow) | Conflicts with RTL | Phase 1 |
-| `include/Indy/` | Replace with D12 Indy package | Phase 1 |
-| `src/TF.pas` | 73 `wsprintf` calls | Phase 1 audit, Phase 2 fix |
-| `src/uIcomCIV.pas` | `string` → `AnsiString` for BCD | Phase 2 |
-| `src/uRadioIcomBase.pas` | Same — delegates to uIcomCIV | Phase 2 |
-| All `asm` blocks | Catalog Phase 1, replace Phase 3 | Phase 1/3 |
-| `tr4w.dpr` `IsMultiThread` | Already fixed | Done |
-| `test/unit/tr4w_unit_tests.dpr` | Add DUnitX runner | Phase 4 |
+| File | Issue | Phase | Status |
+|------|-------|-------|--------|
+| ~~`src/SysUtils.pas` (shadow)~~ | Conflicts with RTL | Phase 1 | ✅ removed |
+| `include/Indy/` | Replace with D12 Indy package | Phase 1 | ⏸ deferred (vendored, compiles) |
+| `src/TF.pas` | `wsprintf` calls (172, not 73) | Phase 1/2 | 🟡 largely converted to SysUtils.Format/W |
+| ~~`src/uIcomCIV.pas`~~ | `string` → `AnsiString` for BCD | Phase 2 | ✅ done (byte-faithful) |
+| ~~`src/uRadioIcomBase.pas`~~ | delegates to uIcomCIV | Phase 2 | ✅ done |
+| All `asm` blocks | Catalog Phase 1, replace Phase 3 | Phase 1/3 | 🟡 cataloged; eradication in progress |
+| ~~`tr4w.dpr` `IsMultiThread`~~ | Already fixed | Done | ✅ |
+| `test/unit/tr4w_unit_tests.dpr` | Add DUnitX runner | Phase 4 | ⏳ not started |

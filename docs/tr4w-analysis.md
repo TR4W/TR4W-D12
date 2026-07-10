@@ -6,6 +6,16 @@
 **Migration Target:** Delphi 12 Athens (RAD Studio)
 **License:** GPL v2+
 
+> **Status update (2026-07-09):** This is the original pre-migration analysis (D7
+> baseline). Migration is well underway on branch `delphi12`: TR4W **compiles and runs
+> under Delphi 12**, Phase 1 blockers are cleared, and Phase 2 (Unicode / `string`
+> modernization) is **largely complete**. For live status — including what's done,
+> deferred (MainUnit log renderer + `ContestExchange`→SQLite, telnet socket I/O,
+> vendored Indy/MMSystem), and the golden-master regression oracle — see
+> `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md` §"Progress" and `docs/tr4w-migration-strategy.md`.
+> The specific figures below (asm-block and `wsprintf` counts, etc.) were early
+> estimates; corrected tallies live in `docs/PHASE_INVENTORIES.md`.
+
 ---
 
 ## Table of Contents
