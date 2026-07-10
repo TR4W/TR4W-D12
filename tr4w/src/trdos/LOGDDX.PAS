@@ -89,7 +89,7 @@ procedure DDXSendSAndPExchange(SendingStation: CallString;
   Tone: integer);
 function GetNextCallFromReadInLog: CallString;
 function GetRandomDDXCallsign(Exchange: ExchangeType): CallString;
-function GetRandomDomesticQTH(Call: CallString): Str80;
+function GetRandomDomesticQTH(Call: CallString): string;
 
 implementation
 
@@ -393,7 +393,7 @@ begin
     Call := '';
 end;
 
-function GetRandomDomesticQTH(Call: CallString): Str80;
+function GetRandomDomesticQTH(Call: CallString): string;
 
 var
   TempString                            : Str80;

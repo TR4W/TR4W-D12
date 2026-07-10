@@ -631,7 +631,7 @@ procedure CreateAndSendCQMultiInfoMessage;
 procedure CreateAndSendSAPMultiInfoMessage;
 
 procedure DisplayGridSquareStatus(Call: CallString);
-function DomStringParse(InputString: Str14): Str14; //Gav 4.44.8
+function DomStringParse(InputString: Str14): string; //Gav 4.44.8
 
 function DVKRecentlyStarted(MaxElaspedSec100: LONGINT): boolean;
 procedure DVKStamp;
@@ -8979,7 +8979,7 @@ begin
   }
 end;
 
-function DomStringParse(InputString: Str14): Str14;
+function DomStringParse(InputString: Str14): string;
 //Gav 4.44.8     Formats DOM from Initial Exchange to be used for Mult Needed display. Most DOM pass through untouched
 
 var

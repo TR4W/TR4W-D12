@@ -752,9 +752,9 @@ function DeleteMult(var LogString: Str80; MultString: Str20): boolean;
 function ElaspedTimeString(StartTime: Cardinal {TimeRecord}): string {Str20};
 function ElaspedSec100(StartTime: Cardinal {TimeRecord}): LONGINT;
 
-function ExpandedString(Input: FourBytes): Str80;
+function ExpandedString(Input: FourBytes): string;
 procedure ExpandTabs(var InputString: string);
-function ExpandTwoBytes(Input: TwoBytes): Str80;
+function ExpandTwoBytes(Input: TwoBytes): string;
 //wli
 
 function FirstLetter(InputString: Str80): Char;
@@ -840,7 +840,7 @@ function InitializeSerialPort(
   dwFlagsAndAttributes: DWORD;
   EvtChar: Char): HWND;
 
-function KeyId(Key: Char): Str10;
+function KeyId(Key: Char): string;
 
 function LastLetter(InputString: Str160): Char;
 function LastString(InputString: ShortString {Str160} {WLI}): Str160;
@@ -1172,7 +1172,7 @@ begin
   Output[1] := Hi(Sum);
 end;
 
-function ExpandTwoBytes(Input: TwoBytes): Str80;
+function ExpandTwoBytes(Input: TwoBytes): string;
 
 var
   Sum                                   : LONGINT;
@@ -1682,7 +1682,7 @@ begin
   Result := (GetTickCount - StartTime) mod 1000;
 end;
 
-function ExpandedString(Input: FourBytes): Str80;
+function ExpandedString(Input: FourBytes): string;
 
 { Returns the expanded string for the compressed integer passed to it. }
 
@@ -2481,7 +2481,7 @@ begin
 end;
 
 
-function KeyId(Key: Char): Str10;
+function KeyId(Key: Char): string;
 
 begin
   case Key of
