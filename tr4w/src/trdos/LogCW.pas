@@ -146,7 +146,7 @@ function GetEXMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 
 procedure MemoryProgram;
 
 //procedure PTTForceOn;
-function QSONumberString(QSONumber: integer): Str80;
+function QSONumberString(QSONumber: integer): string;
 function TimeString: Str10;
 
 procedure SendKeyboardInput;
@@ -806,7 +806,7 @@ begin
   Result[0]                                                 := #4;
 end;
 
-function QSONumberString(QSONumber: integer): Str80;
+function QSONumberString(QSONumber: integer): string;
 var
   TempString                            : Str80;
 begin
