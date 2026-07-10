@@ -1,818 +1,818 @@
-  { %s =	A string.}
+п»ї  { %s =	A string.}
   { %c =	A single character.}
   { %d =	A signed decimal integer argument.}
   { %u =	An unsigned integer argument.}
 const
   TC_TRANSLATION_LANGUAGE               = 'RUSSIAN';
   TC_TRANSLATION_AUTHOR                 = 'UR7QM, R8TR';
-  TC_EnterYourDistrictCode              = 'Введите ваш код района';
+  TC_EnterYourDistrictCode              = 'Р’РІРµРґРёС‚Рµ РІР°С€ РєРѕРґ СЂР°Р№РѕРЅР°';
   TC_UKEI                               = 'UK/EI';
-  TC_2RADIO_WARN                        = 'ОШИБКА: 2 трансивера на одном диапазоне';
-  TC_WAGWarn                            = 'Внимание: Вне разрешенного диапазона частот WAG';
-  RC_BACKUPLOG                         = 'Резервное копирование лога';
-  TC_IMPROPERWINTERFIELDDAYCLASS = 'Классы в Winter Field Day должны быть H, I, M или O.';
-  TC_INVALID                            = 'Неверный ввод';
-  TC_FREQ_ZERO                          = 'ОШИБКА: недопустимое значение частоты для регистрации';
-  TC_FREQ_OFF                           = 'Запись значения частоты САТ в лог отключена';
-  RC_3830                               = 'Отправить результат на 3830';
-  RC_3830_ARRL                          =  'Отправить лог ARRL';  // 4.53.3
-  TC_CALLSIGN                           = 'Позывной';
-  TC_BAND                               = 'Диапазон';
-  TC_FREQ                               = 'Частота';
-  TC_DATE                               = 'Дата';
-  TC_POINTS                             = 'Оч.';
-  TC_OP                                 = 'Оператор';
-  TC_NAME                               = 'Имя';
-  TC_YUGOSLAVIA                         = 'Югославия';
-  TC_CHECKCALLSIGN                      = 'Проверить позывной';
-  TC_FREQUENCYFORCALLINKHZ              = 'частоту в кГц для %s';
-  TC_DIFVERSION                         = '%s из другой версии программы.'#13'TR4W ожидает версию %s.'#13'Файл, который вы пытаетесь открыть имеет версию %s.';
-  TC_FILE                               = 'Файл';
+  TC_2RADIO_WARN                        = 'РћРЁРР‘РљРђ: 2 С‚СЂР°РЅСЃРёРІРµСЂР° РЅР° РѕРґРЅРѕРј РґРёР°РїР°Р·РѕРЅРµ';
+  TC_WAGWarn                            = 'Р’РЅРёРјР°РЅРёРµ: Р’РЅРµ СЂР°Р·СЂРµС€РµРЅРЅРѕРіРѕ РґРёР°РїР°Р·РѕРЅР° С‡Р°СЃС‚РѕС‚ WAG';
+  RC_BACKUPLOG                         = 'Р РµР·РµСЂРІРЅРѕРµ РєРѕРїРёСЂРѕРІР°РЅРёРµ Р»РѕРіР°';
+  TC_IMPROPERWINTERFIELDDAYCLASS = 'РљР»Р°СЃСЃС‹ РІ Winter Field Day РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ H, I, M РёР»Рё O.';
+  TC_INVALID                            = 'РќРµРІРµСЂРЅС‹Р№ РІРІРѕРґ';
+  TC_FREQ_ZERO                          = 'РћРЁРР‘РљРђ: РЅРµРґРѕРїСѓСЃС‚РёРјРѕРµ Р·РЅР°С‡РµРЅРёРµ С‡Р°СЃС‚РѕС‚С‹ РґР»СЏ СЂРµРіРёСЃС‚СЂР°С†РёРё';
+  TC_FREQ_OFF                           = 'Р—Р°РїРёСЃСЊ Р·РЅР°С‡РµРЅРёСЏ С‡Р°СЃС‚РѕС‚С‹ РЎРђРў РІ Р»РѕРі РѕС‚РєР»СЋС‡РµРЅР°';
+  RC_3830                               = 'РћС‚РїСЂР°РІРёС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚ РЅР° 3830';
+  RC_3830_ARRL                          =  'РћС‚РїСЂР°РІРёС‚СЊ Р»РѕРі ARRL';  // 4.53.3
+  TC_CALLSIGN                           = 'РџРѕР·С‹РІРЅРѕР№';
+  TC_BAND                               = 'Р”РёР°РїР°Р·РѕРЅ';
+  TC_FREQ                               = 'Р§Р°СЃС‚РѕС‚Р°';
+  TC_DATE                               = 'Р”Р°С‚Р°';
+  TC_POINTS                             = 'РћС‡.';
+  TC_OP                                 = 'РћРїРµСЂР°С‚РѕСЂ';
+  TC_NAME                               = 'РРјСЏ';
+  TC_YUGOSLAVIA                         = 'Р®РіРѕСЃР»Р°РІРёСЏ';
+  TC_CHECKCALLSIGN                      = 'РџСЂРѕРІРµСЂРёС‚СЊ РїРѕР·С‹РІРЅРѕР№';
+  TC_FREQUENCYFORCALLINKHZ              = 'С‡Р°СЃС‚РѕС‚Сѓ РІ РєР“С† РґР»СЏ %s';
+  TC_DIFVERSION                         = '%s РёР· РґСЂСѓРіРѕР№ РІРµСЂСЃРёРё РїСЂРѕРіСЂР°РјРјС‹.'#13'TR4W РѕР¶РёРґР°РµС‚ РІРµСЂСЃРёСЋ %s.'#13'Р¤Р°Р№Р», РєРѕС‚РѕСЂС‹Р№ РІС‹ РїС‹С‚Р°РµС‚РµСЃСЊ РѕС‚РєСЂС‹С‚СЊ РёРјРµРµС‚ РІРµСЂСЃРёСЋ %s.';
+  TC_FILE                               = 'Р¤Р°Р№Р»';
 
-  TC_M                                  = 'м'; //minute
-  TC_S                                  = 'с'; //second
+  TC_M                                  = 'Рј'; //minute
+  TC_S                                  = 'СЃ'; //second
 
-  TC_RADIO1                             = 'Радио 1';
-  TC_RADIO2                             = 'Радио 2';
+  TC_RADIO1                             = 'Р Р°РґРёРѕ 1';
+  TC_RADIO2                             = 'Р Р°РґРёРѕ 2';
 
-  TC_DISBALE_CIV                        = 'Отключите режим "CI-V Transceive" в трансивере ICOM.';
+  TC_DISBALE_CIV                        = 'РћС‚РєР»СЋС‡РёС‚Рµ СЂРµР¶РёРј "CI-V Transceive" РІ С‚СЂР°РЅСЃРёРІРµСЂРµ ICOM.';
 
   {MAIN}
-  TC_ENTERYOURISTRICTIFINVE7            = 'Введите свой федеральный округ, если вы в Британской Колумбии, или свой штат/провинцию';  // 4.97.6
-  TC_IRTS                               = 'EI/GI, введите ваше графство';
-  TC_YOU_ARE_USING_THE_LATEST_VERSION   = 'Вы используете последнюю версию';
-  TC_SET_VALUE_OF_SET_NOW               = 'Необходимо установить значение команды %s. Установить сейчас?';
-  TC_CONFIGURATION_FILE                 = 'Файл конфигурации';
-  TC_CURRENT_OPERATOR_CALLSIGN          = 'Позывной текущего оператора';
-  TC_APPENDIMPORTEDQSOSTOCURRENTLOG     = 'Добавить импортированные связи к текущему логу?';
-  TC_QSO_IMPORTED                       = 'связи(ей) импортированно.'; // - '345 Qs imported.'
-  TC_ISADUPE                            = 'Связь с %s уже была!!';
-  TC_ERRORINLOGFILE                     = 'Ошибка в файле лога!';
-  TC_HASIMPROPERSYNTAX                  = 'Позывной %s имеет неправильный синтаксис!!';
-  TC_PREF_OR_CQZONE                     = 'Введите вашу CQ ZONE или JA Префектуру';
-  TC_SORRYNOLOG                         = 'Извините!! Параметр NO LOG = TRUE запрещает вводить связи на этом компьютере';
-  TC_SETCOMPUTERIDVALUE                 = 'Установите значение команды COMPUTER ID.';
-  TC_CLEARALLLOGS                       = '"CLEARALLLOGS" для очистки всех логов в сети';
-  TC_CLEAR_DUPESHEET_NET                = '"CLEARDUPESHEET" для очистки листов повторов на всех компьютерах';
-  TC_CLEAR_MULTSHEET_NET                = '"CLEARMULTSHEET" для очистки листов множителей на всех компьютерах';
-  TC_ENTERYOURFOCNUMBER                 = 'Введите ваш членский номер FOC ';
-  TC_REALLYWANTTOCLEARTHELOG            = 'Вы уверены, что хотите очистить текущий лог?';
-  TC_MESSAGETOSENDVIANETWORK            = 'сообщение для отправки по сети';
-  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Вы на действительно хотите послать время по сети?';
-  TC_RULESONSM3CER                      = 'Положение %s на сайте WA7BNM Contest Calendar';
-  TC_RULESONQRZRU                       = 'Положение %s на сайте QRZ.RU';
-  TC_NOTE                               = 'Заметка';
-  TC_DUPESHEETCLEARED                   = 'Таблица повторов очищена!';
-  TC_MULTSHEETCLEARED                   = 'Таблица множителей очищена!';
-  TC_YESTOCLEARTHEDUPESHEET             = 'слово "YES" для очистки таблицы повторов';
-  TC_CLEARMULTTOCLEARMULTSHEET          = 'слово "CLEARMULT" для очистки таблицы множителей';
+  TC_ENTERYOURISTRICTIFINVE7            = 'Р’РІРµРґРёС‚Рµ СЃРІРѕР№ С„РµРґРµСЂР°Р»СЊРЅС‹Р№ РѕРєСЂСѓРі, РµСЃР»Рё РІС‹ РІ Р‘СЂРёС‚Р°РЅСЃРєРѕР№ РљРѕР»СѓРјР±РёРё, РёР»Рё СЃРІРѕР№ С€С‚Р°С‚/РїСЂРѕРІРёРЅС†РёСЋ';  // 4.97.6
+  TC_IRTS                               = 'EI/GI, РІРІРµРґРёС‚Рµ РІР°С€Рµ РіСЂР°С„СЃС‚РІРѕ';
+  TC_YOU_ARE_USING_THE_LATEST_VERSION   = 'Р’С‹ РёСЃРїРѕР»СЊР·СѓРµС‚Рµ РїРѕСЃР»РµРґРЅСЋСЋ РІРµСЂСЃРёСЋ';
+  TC_SET_VALUE_OF_SET_NOW               = 'РќРµРѕР±С…РѕРґРёРјРѕ СѓСЃС‚Р°РЅРѕРІРёС‚СЊ Р·РЅР°С‡РµРЅРёРµ РєРѕРјР°РЅРґС‹ %s. РЈСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРµР№С‡Р°СЃ?';
+  TC_CONFIGURATION_FILE                 = 'Р¤Р°Р№Р» РєРѕРЅС„РёРіСѓСЂР°С†РёРё';
+  TC_CURRENT_OPERATOR_CALLSIGN          = 'РџРѕР·С‹РІРЅРѕР№ С‚РµРєСѓС‰РµРіРѕ РѕРїРµСЂР°С‚РѕСЂР°';
+  TC_APPENDIMPORTEDQSOSTOCURRENTLOG     = 'Р”РѕР±Р°РІРёС‚СЊ РёРјРїРѕСЂС‚РёСЂРѕРІР°РЅРЅС‹Рµ СЃРІСЏР·Рё Рє С‚РµРєСѓС‰РµРјСѓ Р»РѕРіСѓ?';
+  TC_QSO_IMPORTED                       = 'СЃРІСЏР·Рё(РµР№) РёРјРїРѕСЂС‚РёСЂРѕРІР°РЅРЅРѕ.'; // - '345 Qs imported.'
+  TC_ISADUPE                            = 'РЎРІСЏР·СЊ СЃ %s СѓР¶Рµ Р±С‹Р»Р°!!';
+  TC_ERRORINLOGFILE                     = 'РћС€РёР±РєР° РІ С„Р°Р№Р»Рµ Р»РѕРіР°!';
+  TC_HASIMPROPERSYNTAX                  = 'РџРѕР·С‹РІРЅРѕР№ %s РёРјРµРµС‚ РЅРµРїСЂР°РІРёР»СЊРЅС‹Р№ СЃРёРЅС‚Р°РєСЃРёСЃ!!';
+  TC_PREF_OR_CQZONE                     = 'Р’РІРµРґРёС‚Рµ РІР°С€Сѓ CQ ZONE РёР»Рё JA РџСЂРµС„РµРєС‚СѓСЂСѓ';
+  TC_SORRYNOLOG                         = 'РР·РІРёРЅРёС‚Рµ!! РџР°СЂР°РјРµС‚СЂ NO LOG = TRUE Р·Р°РїСЂРµС‰Р°РµС‚ РІРІРѕРґРёС‚СЊ СЃРІСЏР·Рё РЅР° СЌС‚РѕРј РєРѕРјРїСЊСЋС‚РµСЂРµ';
+  TC_SETCOMPUTERIDVALUE                 = 'РЈСЃС‚Р°РЅРѕРІРёС‚Рµ Р·РЅР°С‡РµРЅРёРµ РєРѕРјР°РЅРґС‹ COMPUTER ID.';
+  TC_CLEARALLLOGS                       = '"CLEARALLLOGS" РґР»СЏ РѕС‡РёСЃС‚РєРё РІСЃРµС… Р»РѕРіРѕРІ РІ СЃРµС‚Рё';
+  TC_CLEAR_DUPESHEET_NET                = '"CLEARDUPESHEET" РґР»СЏ РѕС‡РёСЃС‚РєРё Р»РёСЃС‚РѕРІ РїРѕРІС‚РѕСЂРѕРІ РЅР° РІСЃРµС… РєРѕРјРїСЊСЋС‚РµСЂР°С…';
+  TC_CLEAR_MULTSHEET_NET                = '"CLEARMULTSHEET" РґР»СЏ РѕС‡РёСЃС‚РєРё Р»РёСЃС‚РѕРІ РјРЅРѕР¶РёС‚РµР»РµР№ РЅР° РІСЃРµС… РєРѕРјРїСЊСЋС‚РµСЂР°С…';
+  TC_ENTERYOURFOCNUMBER                 = 'Р’РІРµРґРёС‚Рµ РІР°С€ С‡Р»РµРЅСЃРєРёР№ РЅРѕРјРµСЂ FOC ';
+  TC_REALLYWANTTOCLEARTHELOG            = 'Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ РѕС‡РёСЃС‚РёС‚СЊ С‚РµРєСѓС‰РёР№ Р»РѕРі?';
+  TC_MESSAGETOSENDVIANETWORK            = 'СЃРѕРѕР±С‰РµРЅРёРµ РґР»СЏ РѕС‚РїСЂР°РІРєРё РїРѕ СЃРµС‚Рё';
+  TC_SENDTIMETOCOMPUTERSONTHENETWORK    = 'Р’С‹ РЅР° РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РїРѕСЃР»Р°С‚СЊ РІСЂРµРјСЏ РїРѕ СЃРµС‚Рё?';
+  TC_RULESONSM3CER                      = 'РџРѕР»РѕР¶РµРЅРёРµ %s РЅР° СЃР°Р№С‚Рµ WA7BNM Contest Calendar';
+  TC_RULESONQRZRU                       = 'РџРѕР»РѕР¶РµРЅРёРµ %s РЅР° СЃР°Р№С‚Рµ QRZ.RU';
+  TC_NOTE                               = 'Р—Р°РјРµС‚РєР°';
+  TC_DUPESHEETCLEARED                   = 'РўР°Р±Р»РёС†Р° РїРѕРІС‚РѕСЂРѕРІ РѕС‡РёС‰РµРЅР°!';
+  TC_MULTSHEETCLEARED                   = 'РўР°Р±Р»РёС†Р° РјРЅРѕР¶РёС‚РµР»РµР№ РѕС‡РёС‰РµРЅР°!';
+  TC_YESTOCLEARTHEDUPESHEET             = 'СЃР»РѕРІРѕ "YES" РґР»СЏ РѕС‡РёСЃС‚РєРё С‚Р°Р±Р»РёС†С‹ РїРѕРІС‚РѕСЂРѕРІ';
+  TC_CLEARMULTTOCLEARMULTSHEET          = 'СЃР»РѕРІРѕ "CLEARMULT" РґР»СЏ РѕС‡РёСЃС‚РєРё С‚Р°Р±Р»РёС†С‹ РјРЅРѕР¶РёС‚РµР»РµР№';
 
-  TC_WANTTOCONVERTLOG                   = 'Хотите конвертировать этот лог в новейший формат?';
-  TC_LOGFILENOTFOUND                    = 'Файл лога не найден';
-  TC_CANNOTBACKUPLOG                    = 'Не удалось создать резервную копию ';
-  TC_CANNOTCOPYLOGREADONLY              = 'Невозможно скопировать файл лога -- целевой файл существует и доступен только для чтения';
-  TC_BACKUPCREATED                      = 'Резервная копия лога создана';
-  TC_CANNOTRENAME                       = 'Невозможно переименовать';
+  TC_WANTTOCONVERTLOG                   = 'РҐРѕС‚РёС‚Рµ РєРѕРЅРІРµСЂС‚РёСЂРѕРІР°С‚СЊ СЌС‚РѕС‚ Р»РѕРі РІ РЅРѕРІРµР№С€РёР№ С„РѕСЂРјР°С‚?';
+  TC_LOGFILENOTFOUND                    = 'Р¤Р°Р№Р» Р»РѕРіР° РЅРµ РЅР°Р№РґРµРЅ';
+  TC_CANNOTBACKUPLOG                    = 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ СЂРµР·РµСЂРІРЅСѓСЋ РєРѕРїРёСЋ ';
+  TC_CANNOTCOPYLOGREADONLY              = 'РќРµРІРѕР·РјРѕР¶РЅРѕ СЃРєРѕРїРёСЂРѕРІР°С‚СЊ С„Р°Р№Р» Р»РѕРіР° -- С†РµР»РµРІРѕР№ С„Р°Р№Р» СЃСѓС‰РµСЃС‚РІСѓРµС‚ Рё РґРѕСЃС‚СѓРїРµРЅ С‚РѕР»СЊРєРѕ РґР»СЏ С‡С‚РµРЅРёСЏ';
+  TC_BACKUPCREATED                      = 'Р РµР·РµСЂРІРЅР°СЏ РєРѕРїРёСЏ Р»РѕРіР° СЃРѕР·РґР°РЅР°';
+  TC_CANNOTRENAME                       = 'РќРµРІРѕР·РјРѕР¶РЅРѕ РїРµСЂРµРёРјРµРЅРѕРІР°С‚СЊ';
 
-  TC_TRANSMITFREQUENCYKILOHERTZ         = 'передаваемую частоту (в кГц):';
-  TC_SPRINTQSYRULE                      = 'Правило SPRINT QSY!!!';
-  TC_PADDLE                             = 'Манипулятор';
-  TC_FOOTSW                             = 'Педаль';
-  TC_LOG_NOTE                           = 'заметку';
-  TC_LOG_DELETED                        = 'Удалена';
+  TC_TRANSMITFREQUENCYKILOHERTZ         = 'РїРµСЂРµРґР°РІР°РµРјСѓСЋ С‡Р°СЃС‚РѕС‚Сѓ (РІ РєР“С†):';
+  TC_SPRINTQSYRULE                      = 'РџСЂР°РІРёР»Рѕ SPRINT QSY!!!';
+  TC_PADDLE                             = 'РњР°РЅРёРїСѓР»СЏС‚РѕСЂ';
+  TC_FOOTSW                             = 'РџРµРґР°Р»СЊ';
+  TC_LOG_NOTE                           = 'Р·Р°РјРµС‚РєСѓ';
+  TC_LOG_DELETED                        = 'РЈРґР°Р»РµРЅР°';
 
-  TC_SUN                                = 'Вск';
-  TC_MON                                = 'Пнд';
-  TC_TUE                                = 'Втр';
-  TC_WED                                = 'Срд';
-  TC_THU                                = 'Чтв';
-  TC_FRI                                = 'Птн';
-  TC_SAT                                = 'Сбт';
+  TC_SUN                                = 'Р’СЃРє';
+  TC_MON                                = 'РџРЅРґ';
+  TC_TUE                                = 'Р’С‚СЂ';
+  TC_WED                                = 'РЎСЂРґ';
+  TC_THU                                = 'Р§С‚РІ';
+  TC_FRI                                = 'РџС‚РЅ';
+  TC_SAT                                = 'РЎР±С‚';
 
   {uMP3Recorder}
 
-  TC_LAME_ERROR                         = 'Вы можете скачать этот файл по адресу';
+  TC_LAME_ERROR                         = 'Р’С‹ РјРѕР¶РµС‚Рµ СЃРєР°С‡Р°С‚СЊ СЌС‚РѕС‚ С„Р°Р№Р» РїРѕ Р°РґСЂРµСЃСѓ';
 
-  {Эта версия TR4W v.4.009 beta создана 2 December 2008. Вы хотите проверить последнюю версию на сайте программы?}
-  TC_THISVERSION                        = 'Эта версия ';
-  TC_WASBUILDIN                         = ' была создана ';
-  TC_DOYOUWANTTOCHECKTHELATESTVERSION   = 'Вы хотите проверить последнюю версию на сайте программы?';
+  {Р­С‚Р° РІРµСЂСЃРёСЏ TR4W v.4.009 beta СЃРѕР·РґР°РЅР° 2 December 2008. Р’С‹ С…РѕС‚РёС‚Рµ РїСЂРѕРІРµСЂРёС‚СЊ РїРѕСЃР»РµРґРЅСЋСЋ РІРµСЂСЃРёСЋ РЅР° СЃР°Р№С‚Рµ РїСЂРѕРіСЂР°РјРјС‹?}
+  TC_THISVERSION                        = 'Р­С‚Р° РІРµСЂСЃРёСЏ ';
+  TC_WASBUILDIN                         = ' Р±С‹Р»Р° СЃРѕР·РґР°РЅР° ';
+  TC_DOYOUWANTTOCHECKTHELATESTVERSION   = 'Р’С‹ С…РѕС‚РёС‚Рµ РїСЂРѕРІРµСЂРёС‚СЊ РїРѕСЃР»РµРґРЅСЋСЋ РІРµСЂСЃРёСЋ РЅР° СЃР°Р№С‚Рµ РїСЂРѕРіСЂР°РјРјС‹?';
 
   {NEW CONTEST}
-  TC_LABRE                              = 'Введите 2-символьный ID QTH';
-  TC_EUDX                               = 'Страна ЕС, введите ваш 4-символьный код страны';
-  TC_LATEST_CONFIG_FILE                 = 'Последний файл конфигурации';
-  TC_OPENCONFIGURATIONFILE              = ' - Открыть файл конфигурации или начать новый контест';
-  TC_FOLDERALREADYEXISTSOVERWRITE       = 'Каталог "%s" уже существует.'#13' Переписать его?';
-  TC_NEWENGLANDSTATEABREVIATION         = 'Введите сокращения для штатов в Новой Англии (New England)'#13'(ME, NH, VT, MA, CT, RI):';
-  TC_ENTERTHEQTHTHATYOUWANTTOSEND       = 'Введите QTH который Вы хотите передать:';
-  TC_ENTERSTATEFORUSPROVINCEFORCANADA   = 'Введите штат для США, провинцию для Канады:';
-  TC_ENTERYOUROBLASTID                  = 'Введите идентификатор Вашей области:';
-  TC_ENTERYOURPROVINCEID                = 'Введите идентификатор вашей провинции:';
-  TC_ENTERYOURCOUNTYCODE                = 'Введите код вашей области (района):';
-  TC_ENTERYOURDOK                       = 'Введите ваш DOK:';
-  TC_ENTERYOURDISTRICTABBREVIATION      = 'Введите сокращение вашего района:';
-  TC_ENTERYOURRDAID                     = 'Введите Ваш номер RDA:';
-  TC_ENTERYOURIOTAREFERENCEDESIGNATOR   = 'Введите номер острова IOTA:';
-  TC_ENTERYOURPARKREFERENCEDESIGNATOR   = 'Введите номер острова POTA:';
-  TC_ENTERYOURCITYIDENTIFIER            = 'Введите идентификатор вашего города:';
-  TC_ENTERYOURNAME                      = 'Ввведите Ваше имя:';
-  TC_ENTERTHELASTTWODIGITSOFTHEYEAR     = 'Введите последние 2 знака года, когда вы впервые получили радиолюбительскую лицензию:';
-  TC_ENTERYOURZONE                      = 'Введите вашу зону:';
-  TC_ENTERYOURGEOGRAPHICALCOORDINATES   = 'Введите ваши географические координаты'#13'(например: 55N37O для Москвы):';
-  TC_ENTERSUMOFYOURAGEANDAMOUNT         = 'Введите сумму вашего возраста и количества лет, прошедших с момента Вашей первой радиосвязи (например: 28+14=42):';
-  TC_OZCR                               = 'Введите трехбуквенный контрольный номер:';
-  TC_ENTERYOURSTATECODE                 = 'Введите код вашего штата:';
-  TC_ENTERYOURFOURDIGITGRIDSQUARE       = 'Введите 4 знака вашего локатора:';
-  TC_RFAS                               = 'Введите ваши географические координаты (широта и долгота), округленные до десятков градусов:';
-  TC_ENTERYOURSIXDIGITGRIDSQUARE        = 'Введите шестизначный номер вашего локатора:';
-  TC_ISLANDSTATION                      = 'Островная станция';
-  TC_ENTERYOURNAMEANDSTATE              = 'Введите ваше имя (и штат если вы в Северной Америке):';
-  TC_ENTERYOURNAMEANDQTH                = 'Введите ваше имя и QTH (штат США, Канадскую провинцию или страну DX):';
+  TC_LABRE                              = 'Р’РІРµРґРёС‚Рµ 2-СЃРёРјРІРѕР»СЊРЅС‹Р№ ID QTH';
+  TC_EUDX                               = 'РЎС‚СЂР°РЅР° Р•РЎ, РІРІРµРґРёС‚Рµ РІР°С€ 4-СЃРёРјРІРѕР»СЊРЅС‹Р№ РєРѕРґ СЃС‚СЂР°РЅС‹';
+  TC_LATEST_CONFIG_FILE                 = 'РџРѕСЃР»РµРґРЅРёР№ С„Р°Р№Р» РєРѕРЅС„РёРіСѓСЂР°С†РёРё';
+  TC_OPENCONFIGURATIONFILE              = ' - РћС‚РєСЂС‹С‚СЊ С„Р°Р№Р» РєРѕРЅС„РёРіСѓСЂР°С†РёРё РёР»Рё РЅР°С‡Р°С‚СЊ РЅРѕРІС‹Р№ РєРѕРЅС‚РµСЃС‚';
+  TC_FOLDERALREADYEXISTSOVERWRITE       = 'РљР°С‚Р°Р»РѕРі "%s" СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.'#13' РџРµСЂРµРїРёСЃР°С‚СЊ РµРіРѕ?';
+  TC_NEWENGLANDSTATEABREVIATION         = 'Р’РІРµРґРёС‚Рµ СЃРѕРєСЂР°С‰РµРЅРёСЏ РґР»СЏ С€С‚Р°С‚РѕРІ РІ РќРѕРІРѕР№ РђРЅРіР»РёРё (New England)'#13'(ME, NH, VT, MA, CT, RI):';
+  TC_ENTERTHEQTHTHATYOUWANTTOSEND       = 'Р’РІРµРґРёС‚Рµ QTH РєРѕС‚РѕСЂС‹Р№ Р’С‹ С…РѕС‚РёС‚Рµ РїРµСЂРµРґР°С‚СЊ:';
+  TC_ENTERSTATEFORUSPROVINCEFORCANADA   = 'Р’РІРµРґРёС‚Рµ С€С‚Р°С‚ РґР»СЏ РЎРЁРђ, РїСЂРѕРІРёРЅС†РёСЋ РґР»СЏ РљР°РЅР°РґС‹:';
+  TC_ENTERYOUROBLASTID                  = 'Р’РІРµРґРёС‚Рµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ Р’Р°С€РµР№ РѕР±Р»Р°СЃС‚Рё:';
+  TC_ENTERYOURPROVINCEID                = 'Р’РІРµРґРёС‚Рµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РІР°С€РµР№ РїСЂРѕРІРёРЅС†РёРё:';
+  TC_ENTERYOURCOUNTYCODE                = 'Р’РІРµРґРёС‚Рµ РєРѕРґ РІР°С€РµР№ РѕР±Р»Р°СЃС‚Рё (СЂР°Р№РѕРЅР°):';
+  TC_ENTERYOURDOK                       = 'Р’РІРµРґРёС‚Рµ РІР°С€ DOK:';
+  TC_ENTERYOURDISTRICTABBREVIATION      = 'Р’РІРµРґРёС‚Рµ СЃРѕРєСЂР°С‰РµРЅРёРµ РІР°С€РµРіРѕ СЂР°Р№РѕРЅР°:';
+  TC_ENTERYOURRDAID                     = 'Р’РІРµРґРёС‚Рµ Р’Р°С€ РЅРѕРјРµСЂ RDA:';
+  TC_ENTERYOURIOTAREFERENCEDESIGNATOR   = 'Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ РѕСЃС‚СЂРѕРІР° IOTA:';
+  TC_ENTERYOURPARKREFERENCEDESIGNATOR   = 'Р’РІРµРґРёС‚Рµ РЅРѕРјРµСЂ РѕСЃС‚СЂРѕРІР° POTA:';
+  TC_ENTERYOURCITYIDENTIFIER            = 'Р’РІРµРґРёС‚Рµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РІР°С€РµРіРѕ РіРѕСЂРѕРґР°:';
+  TC_ENTERYOURNAME                      = 'Р’РІРІРµРґРёС‚Рµ Р’Р°С€Рµ РёРјСЏ:';
+  TC_ENTERTHELASTTWODIGITSOFTHEYEAR     = 'Р’РІРµРґРёС‚Рµ РїРѕСЃР»РµРґРЅРёРµ 2 Р·РЅР°РєР° РіРѕРґР°, РєРѕРіРґР° РІС‹ РІРїРµСЂРІС‹Рµ РїРѕР»СѓС‡РёР»Рё СЂР°РґРёРѕР»СЋР±РёС‚РµР»СЊСЃРєСѓСЋ Р»РёС†РµРЅР·РёСЋ:';
+  TC_ENTERYOURZONE                      = 'Р’РІРµРґРёС‚Рµ РІР°С€Сѓ Р·РѕРЅСѓ:';
+  TC_ENTERYOURGEOGRAPHICALCOORDINATES   = 'Р’РІРµРґРёС‚Рµ РІР°С€Рё РіРµРѕРіСЂР°С„РёС‡РµСЃРєРёРµ РєРѕРѕСЂРґРёРЅР°С‚С‹'#13'(РЅР°РїСЂРёРјРµСЂ: 55N37O РґР»СЏ РњРѕСЃРєРІС‹):';
+  TC_ENTERSUMOFYOURAGEANDAMOUNT         = 'Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ РІР°С€РµРіРѕ РІРѕР·СЂР°СЃС‚Р° Рё РєРѕР»РёС‡РµСЃС‚РІР° Р»РµС‚, РїСЂРѕС€РµРґС€РёС… СЃ РјРѕРјРµРЅС‚Р° Р’Р°С€РµР№ РїРµСЂРІРѕР№ СЂР°РґРёРѕСЃРІСЏР·Рё (РЅР°РїСЂРёРјРµСЂ: 28+14=42):';
+  TC_OZCR                               = 'Р’РІРµРґРёС‚Рµ С‚СЂРµС…Р±СѓРєРІРµРЅРЅС‹Р№ РєРѕРЅС‚СЂРѕР»СЊРЅС‹Р№ РЅРѕРјРµСЂ:';
+  TC_ENTERYOURSTATECODE                 = 'Р’РІРµРґРёС‚Рµ РєРѕРґ РІР°С€РµРіРѕ С€С‚Р°С‚Р°:';
+  TC_ENTERYOURFOURDIGITGRIDSQUARE       = 'Р’РІРµРґРёС‚Рµ 4 Р·РЅР°РєР° РІР°С€РµРіРѕ Р»РѕРєР°С‚РѕСЂР°:';
+  TC_RFAS                               = 'Р’РІРµРґРёС‚Рµ РІР°С€Рё РіРµРѕРіСЂР°С„РёС‡РµСЃРєРёРµ РєРѕРѕСЂРґРёРЅР°С‚С‹ (С€РёСЂРѕС‚Р° Рё РґРѕР»РіРѕС‚Р°), РѕРєСЂСѓРіР»РµРЅРЅС‹Рµ РґРѕ РґРµСЃСЏС‚РєРѕРІ РіСЂР°РґСѓСЃРѕРІ:';
+  TC_ENTERYOURSIXDIGITGRIDSQUARE        = 'Р’РІРµРґРёС‚Рµ С€РµСЃС‚РёР·РЅР°С‡РЅС‹Р№ РЅРѕРјРµСЂ РІР°С€РµРіРѕ Р»РѕРєР°С‚РѕСЂР°:';
+  TC_ISLANDSTATION                      = 'РћСЃС‚СЂРѕРІРЅР°СЏ СЃС‚Р°РЅС†РёСЏ';
+  TC_ENTERYOURNAMEANDSTATE              = 'Р’РІРµРґРёС‚Рµ РІР°С€Рµ РёРјСЏ (Рё С€С‚Р°С‚ РµСЃР»Рё РІС‹ РІ РЎРµРІРµСЂРЅРѕР№ РђРјРµСЂРёРєРµ):';
+  TC_ENTERYOURNAMEANDQTH                = 'Р’РІРµРґРёС‚Рµ РІР°С€Рµ РёРјСЏ Рё QTH (С€С‚Р°С‚ РЎРЁРђ, РљР°РЅР°РґСЃРєСѓСЋ РїСЂРѕРІРёРЅС†РёСЋ РёР»Рё СЃС‚СЂР°РЅСѓ DX):';
 
-  TC_ENTERYOURPRECEDENCECHECKSECTION    = 'Введите  вашу  подгруппу (MY PREC: A, B, M, Q, S или U),  число - последние две цифры года выдачи вашей лицензии и ARRL секцию:';
-  TC_ENTERYOURQTHANDTHENAME             = 'Введите ваш QTH, который вы хотите передавать'#13'и Ваше имя:';
-  TC_ENTERFIRSTTWODIGITSOFYOURQTH       = 'Введите первые две буквы вашего QTH:';
-  TC_ENTERYOURAGEINMYSTATEFIELD         = 'Введите ваш возраст в поле MY STATE:';
-  TC_ENTERYOURQTHORPOWER                = 'Введите ваш QTH, который вы хотите передавать если вы находитесь в Северной Америке или вашу мощность как MY STATE, если вы вне SA:';
-  TC_ENTERFIRSTTWOLETTERSOFYOURGRID     = 'Введите две первые буквы вашего локатора:';
-  TC_ENTERYOURSQUAREID                  = 'Введите идентификатор вашего квадрата:';
-  TC_ENTERYOURMEMBERSHIPNUMBER          = 'Введите ваш членский номер';
-  TC_ENTERYOURCONTINENT                 = 'Введите ваш континент (и возможный доп. идентификатор, например SAYL или NAQRP)';
-  TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX  = 'Введите ваш COUNTY если вы находитесь в штате %s. Введите ваш штат, провинцию или "DX" если вы находитесь вне штата %s:';
-  TC_PREFECTURE                         = 'Введите вашу префектуру:';
-  TC_STATIONCLASS                       = 'Введите вашу категорию:';
-  TC_AGECALLSIGNAGE                     = 'Введите ваш возраст (а также позывной и возраст SK):';
-  TC_DEPARTMENT                         = 'Введите ваш департамент:';
-  TC_ENTERYOURRDAIDORGRID               = 'Введите ваш номер RDA ID (для UA1A станций) или 4-х значный локатор:';
-  TC_ENTERYOURBRANCHNUMBER              = 'Введите ваш Branch номер:';
-  TC_ENTERYOURPOSTCODE                  = 'Введите ваш почтовый индекс:';
-  TC_GC                                 = 'Вам необходим ввод специального двухбуквенного сочетания?'  ;
+  TC_ENTERYOURPRECEDENCECHECKSECTION    = 'Р’РІРµРґРёС‚Рµ  РІР°С€Сѓ  РїРѕРґРіСЂСѓРїРїСѓ (MY PREC: A, B, M, Q, S РёР»Рё U),  С‡РёСЃР»Рѕ - РїРѕСЃР»РµРґРЅРёРµ РґРІРµ С†РёС„СЂС‹ РіРѕРґР° РІС‹РґР°С‡Рё РІР°С€РµР№ Р»РёС†РµРЅР·РёРё Рё ARRL СЃРµРєС†РёСЋ:';
+  TC_ENTERYOURQTHANDTHENAME             = 'Р’РІРµРґРёС‚Рµ РІР°С€ QTH, РєРѕС‚РѕСЂС‹Р№ РІС‹ С…РѕС‚РёС‚Рµ РїРµСЂРµРґР°РІР°С‚СЊ'#13'Рё Р’Р°С€Рµ РёРјСЏ:';
+  TC_ENTERFIRSTTWODIGITSOFYOURQTH       = 'Р’РІРµРґРёС‚Рµ РїРµСЂРІС‹Рµ РґРІРµ Р±СѓРєРІС‹ РІР°С€РµРіРѕ QTH:';
+  TC_ENTERYOURAGEINMYSTATEFIELD         = 'Р’РІРµРґРёС‚Рµ РІР°С€ РІРѕР·СЂР°СЃС‚ РІ РїРѕР»Рµ MY STATE:';
+  TC_ENTERYOURQTHORPOWER                = 'Р’РІРµРґРёС‚Рµ РІР°С€ QTH, РєРѕС‚РѕСЂС‹Р№ РІС‹ С…РѕС‚РёС‚Рµ РїРµСЂРµРґР°РІР°С‚СЊ РµСЃР»Рё РІС‹ РЅР°С…РѕРґРёС‚РµСЃСЊ РІ РЎРµРІРµСЂРЅРѕР№ РђРјРµСЂРёРєРµ РёР»Рё РІР°С€Сѓ РјРѕС‰РЅРѕСЃС‚СЊ РєР°Рє MY STATE, РµСЃР»Рё РІС‹ РІРЅРµ SA:';
+  TC_ENTERFIRSTTWOLETTERSOFYOURGRID     = 'Р’РІРµРґРёС‚Рµ РґРІРµ РїРµСЂРІС‹Рµ Р±СѓРєРІС‹ РІР°С€РµРіРѕ Р»РѕРєР°С‚РѕСЂР°:';
+  TC_ENTERYOURSQUAREID                  = 'Р’РІРµРґРёС‚Рµ РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РІР°С€РµРіРѕ РєРІР°РґСЂР°С‚Р°:';
+  TC_ENTERYOURMEMBERSHIPNUMBER          = 'Р’РІРµРґРёС‚Рµ РІР°С€ С‡Р»РµРЅСЃРєРёР№ РЅРѕРјРµСЂ';
+  TC_ENTERYOURCONTINENT                 = 'Р’РІРµРґРёС‚Рµ РІР°С€ РєРѕРЅС‚РёРЅРµРЅС‚ (Рё РІРѕР·РјРѕР¶РЅС‹Р№ РґРѕРї. РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ, РЅР°РїСЂРёРјРµСЂ SAYL РёР»Рё NAQRP)';
+  TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX  = 'Р’РІРµРґРёС‚Рµ РІР°С€ COUNTY РµСЃР»Рё РІС‹ РЅР°С…РѕРґРёС‚РµСЃСЊ РІ С€С‚Р°С‚Рµ %s. Р’РІРµРґРёС‚Рµ РІР°С€ С€С‚Р°С‚, РїСЂРѕРІРёРЅС†РёСЋ РёР»Рё "DX" РµСЃР»Рё РІС‹ РЅР°С…РѕРґРёС‚РµСЃСЊ РІРЅРµ С€С‚Р°С‚Р° %s:';
+  TC_PREFECTURE                         = 'Р’РІРµРґРёС‚Рµ РІР°С€Сѓ РїСЂРµС„РµРєС‚СѓСЂСѓ:';
+  TC_STATIONCLASS                       = 'Р’РІРµРґРёС‚Рµ РІР°С€Сѓ РєР°С‚РµРіРѕСЂРёСЋ:';
+  TC_AGECALLSIGNAGE                     = 'Р’РІРµРґРёС‚Рµ РІР°С€ РІРѕР·СЂР°СЃС‚ (Р° С‚Р°РєР¶Рµ РїРѕР·С‹РІРЅРѕР№ Рё РІРѕР·СЂР°СЃС‚ SK):';
+  TC_DEPARTMENT                         = 'Р’РІРµРґРёС‚Рµ РІР°С€ РґРµРїР°СЂС‚Р°РјРµРЅС‚:';
+  TC_ENTERYOURRDAIDORGRID               = 'Р’РІРµРґРёС‚Рµ РІР°С€ РЅРѕРјРµСЂ RDA ID (РґР»СЏ UA1A СЃС‚Р°РЅС†РёР№) РёР»Рё 4-С… Р·РЅР°С‡РЅС‹Р№ Р»РѕРєР°С‚РѕСЂ:';
+  TC_ENTERYOURBRANCHNUMBER              = 'Р’РІРµРґРёС‚Рµ РІР°С€ Branch РЅРѕРјРµСЂ:';
+  TC_ENTERYOURPOSTCODE                  = 'Р’РІРµРґРёС‚Рµ РІР°С€ РїРѕС‡С‚РѕРІС‹Р№ РёРЅРґРµРєСЃ:';
+  TC_GC                                 = 'Р’Р°Рј РЅРµРѕР±С…РѕРґРёРј РІРІРѕРґ СЃРїРµС†РёР°Р»СЊРЅРѕРіРѕ РґРІСѓС…Р±СѓРєРІРµРЅРЅРѕРіРѕ СЃРѕС‡РµС‚Р°РЅРёСЏ?'  ;
     
-  TC_IAMIN                              = '&Я нахожусь в %s';
+  TC_IAMIN                              = '&РЇ РЅР°С…РѕР¶СѓСЃСЊ РІ %s';
 
-  TC_NEWENGLAND                         = 'штате New England';
-  TC_CALIFORNIA                         = 'штате California';
-  TC_FLORIDA                            = 'штате Florida';
-  TC_MICHIGAN                           = 'штате Michigan';
-  TC_MINNESOTA                          = 'штате Minnesota';
-  TC_OHIO                               = 'штате Ohio';
-  TC_WASHINGTON                         = 'штате Washington';
-  TC_WISCONSIN                          = 'штате Wisconsin';
-  TC_TEXAS                              = 'штате Texas';
+  TC_NEWENGLAND                         = 'С€С‚Р°С‚Рµ New England';
+  TC_CALIFORNIA                         = 'С€С‚Р°С‚Рµ California';
+  TC_FLORIDA                            = 'С€С‚Р°С‚Рµ Florida';
+  TC_MICHIGAN                           = 'С€С‚Р°С‚Рµ Michigan';
+  TC_MINNESOTA                          = 'С€С‚Р°С‚Рµ Minnesota';
+  TC_OHIO                               = 'С€С‚Р°С‚Рµ Ohio';
+  TC_WASHINGTON                         = 'С€С‚Р°С‚Рµ Washington';
+  TC_WISCONSIN                          = 'С€С‚Р°С‚Рµ Wisconsin';
+  TC_TEXAS                              = 'С€С‚Р°С‚Рµ Texas';
 
-  TC_NORTHAMERICA                       = 'Северной Америке';
-  TC_RUSSIA                             = 'России';
-  TC_UKRAINE                            = 'Украине';
-  TC_CZECHREPUBLICORINSLOVAKIA          = 'Чехии или Словакии';
-  TC_BULGARIA                           = 'Болгарии';
-  TC_ROMANIA                            = 'Румынии';
-  TC_HUNGARY                            = 'Венгрии';
-  TC_BELGIUM                            = 'Бельгии';
-  TC_NETHERLANDS                        = 'Нидерландах';
-  TC_STPETERSBURGOBLAST                 = 'Санкт-Петербурге / области';
-  TC_GERMANY                            = 'Германии';
-  TC_UK                                 = 'Великобритании';
-  TC_ARKTIKACLUB                        = 'клубе (член клуба)';
-  TC_POLAND                             = 'Польше';
-  TC_KAZAKHSTAN                         = 'Казахстане';
-  TC_ITALY                              = 'Италии';
-  TC_SWITZERLAND                        = 'Швейцарии';
-  TC_HQ                                 = 'HQ (HQ станция)';
-  TC_CIS                                = 'СНГ';
-  TC_SPAIN                              = 'Испании';
-  TC_JAPAN                              = 'Японии';
-  TC_CANADA                             = 'Канаде';
-  TC_FRANCE                             = 'Франции';
-  TC_HQ_OR_MEMBER                       = 'HQ или член клуба';
-  TC_GAGARIN                            = 'Введите две буквы';
+  TC_NORTHAMERICA                       = 'РЎРµРІРµСЂРЅРѕР№ РђРјРµСЂРёРєРµ';
+  TC_RUSSIA                             = 'Р РѕСЃСЃРёРё';
+  TC_UKRAINE                            = 'РЈРєСЂР°РёРЅРµ';
+  TC_CZECHREPUBLICORINSLOVAKIA          = 'Р§РµС…РёРё РёР»Рё РЎР»РѕРІР°РєРёРё';
+  TC_BULGARIA                           = 'Р‘РѕР»РіР°СЂРёРё';
+  TC_ROMANIA                            = 'Р СѓРјС‹РЅРёРё';
+  TC_HUNGARY                            = 'Р’РµРЅРіСЂРёРё';
+  TC_BELGIUM                            = 'Р‘РµР»СЊРіРёРё';
+  TC_NETHERLANDS                        = 'РќРёРґРµСЂР»Р°РЅРґР°С…';
+  TC_STPETERSBURGOBLAST                 = 'РЎР°РЅРєС‚-РџРµС‚РµСЂР±СѓСЂРіРµ / РѕР±Р»Р°СЃС‚Рё';
+  TC_GERMANY                            = 'Р“РµСЂРјР°РЅРёРё';
+  TC_UK                                 = 'Р’РµР»РёРєРѕР±СЂРёС‚Р°РЅРёРё';
+  TC_ARKTIKACLUB                        = 'РєР»СѓР±Рµ (С‡Р»РµРЅ РєР»СѓР±Р°)';
+  TC_POLAND                             = 'РџРѕР»СЊС€Рµ';
+  TC_KAZAKHSTAN                         = 'РљР°Р·Р°С…СЃС‚Р°РЅРµ';
+  TC_ITALY                              = 'РС‚Р°Р»РёРё';
+  TC_SWITZERLAND                        = 'РЁРІРµР№С†Р°СЂРёРё';
+  TC_HQ                                 = 'HQ (HQ СЃС‚Р°РЅС†РёСЏ)';
+  TC_CIS                                = 'РЎРќР“';
+  TC_SPAIN                              = 'РСЃРїР°РЅРёРё';
+  TC_JAPAN                              = 'РЇРїРѕРЅРёРё';
+  TC_CANADA                             = 'РљР°РЅР°РґРµ';
+  TC_FRANCE                             = 'Р¤СЂР°РЅС†РёРё';
+  TC_HQ_OR_MEMBER                       = 'HQ РёР»Рё С‡Р»РµРЅ РєР»СѓР±Р°';
+  TC_GAGARIN                            = 'Р’РІРµРґРёС‚Рµ РґРІРµ Р±СѓРєРІС‹';
   
   {UTELNET}
 
-  TC_TELNET                             = 'Соединение'#0'Отключение'#0'Команды'#0'Заморозить'#0'Очистить'#0'100'#0;
-  TC_YOURNOTCONNECTEDTOTHEINTERNET      = 'ВЫ НЕ ПОДКЛЮЧЕНЫ К ИНТЕРНЕТУ!';
-  TC_GETHOST                            = 'ОПРЕДЕЛЕНИЕ ХОСТА..';
-  TC_SERVER                             = 'СЕРВЕР: %s';
-  TC_HOST                               = 'ХОСТ  : %s';
-  TC_CONNECT                            = 'СОЕДИНЕНИЕ..';
-  TC_CONNECTED                          = 'СОЕДИНЕНИЕ УСТАНОВЛЕНО';
-  TC_YOUARESPOTTEDBYANOTHERSTATION      = 'Вас проспотила другая станция.';
+  TC_TELNET                             = 'РЎРѕРµРґРёРЅРµРЅРёРµ'#0'РћС‚РєР»СЋС‡РµРЅРёРµ'#0'РљРѕРјР°РЅРґС‹'#0'Р—Р°РјРѕСЂРѕР·РёС‚СЊ'#0'РћС‡РёСЃС‚РёС‚СЊ'#0'100'#0;
+  TC_YOURNOTCONNECTEDTOTHEINTERNET      = 'Р’Р« РќР• РџРћР”РљР›Р®Р§Р•РќР« Рљ РРќРўР•Р РќР•РўРЈ!';
+  TC_GETHOST                            = 'РћРџР Р•Р”Р•Р›Р•РќРР• РҐРћРЎРўРђ..';
+  TC_SERVER                             = 'РЎР•Р Р’Р•Р : %s';
+  TC_HOST                               = 'РҐРћРЎРў  : %s';
+  TC_CONNECT                            = 'РЎРћР•Р”РРќР•РќРР•..';
+  TC_CONNECTED                          = 'РЎРћР•Р”РРќР•РќРР• РЈРЎРўРђРќРћР’Р›Р•РќРћ';
+  TC_YOUARESPOTTEDBYANOTHERSTATION      = 'Р’Р°СЃ РїСЂРѕСЃРїРѕС‚РёР»Р° РґСЂСѓРіР°СЏ СЃС‚Р°РЅС†РёСЏ.';
 
   {UNET}
 
-  TC_CONNECTIONTOTR4WSERVERLOST         = 'Соединение с TR4WSERVER %s:%d потеряно.';
-  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'Компьютерное время синхронизировано.';
-  TC_CONNECTINGTO                       = 'Соединение с ';
-  TC_CONNECTTOTR4WSERVERFAILED          = 'Соединение с TR4WSERVER не удалось. Проверьте значение команды SERVER PASSWORD!!';
-  TC_CONNECTEDTO                        = 'Соединено с ';
-  TC_DISCONNECTEDFROM                   = '** ОТКЛЮЧЕНО от ';
-  TC_AUTOSYNCHRONIZINGLOG               = 'Авто-синхронизация лога с сервера.';
-  TC_FAILEDTOCONNECTTO                  = 'Не удалось соединиться с ';
-  TC_SERVERANDLOCALLOGSAREIDENTICAL     = 'Серверный и локальный логи одинаковы.';
-  TC_NETWORK                            = 'Сеть : %s %s:%d';
-  TC_SERVER_LOG_CHANGED                 = 'Серверный лог был изменен. Информация о %u связях была обновлена. Сделайте синхронизацию логов (Ctrl+Alt+S).';
-  TC_ALL_LOGS_NETWORK_CLEARED           = 'Логи на всех компьютерах в сети TR4W очищены';
+  TC_CONNECTIONTOTR4WSERVERLOST         = 'РЎРѕРµРґРёРЅРµРЅРёРµ СЃ TR4WSERVER %s:%d РїРѕС‚РµСЂСЏРЅРѕ.';
+  TC_COMPUTERCLOCKISSYNCHRONIZED        = 'РљРѕРјРїСЊСЋС‚РµСЂРЅРѕРµ РІСЂРµРјСЏ СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°РЅРѕ.';
+  TC_CONNECTINGTO                       = 'РЎРѕРµРґРёРЅРµРЅРёРµ СЃ ';
+  TC_CONNECTTOTR4WSERVERFAILED          = 'РЎРѕРµРґРёРЅРµРЅРёРµ СЃ TR4WSERVER РЅРµ СѓРґР°Р»РѕСЃСЊ. РџСЂРѕРІРµСЂСЊС‚Рµ Р·РЅР°С‡РµРЅРёРµ РєРѕРјР°РЅРґС‹ SERVER PASSWORD!!';
+  TC_CONNECTEDTO                        = 'РЎРѕРµРґРёРЅРµРЅРѕ СЃ ';
+  TC_DISCONNECTEDFROM                   = '** РћРўРљР›Р®Р§Р•РќРћ РѕС‚ ';
+  TC_AUTOSYNCHRONIZINGLOG               = 'РђРІС‚Рѕ-СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ Р»РѕРіР° СЃ СЃРµСЂРІРµСЂР°.';
+  TC_FAILEDTOCONNECTTO                  = 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕРµРґРёРЅРёС‚СЊСЃСЏ СЃ ';
+  TC_SERVERANDLOCALLOGSAREIDENTICAL     = 'РЎРµСЂРІРµСЂРЅС‹Р№ Рё Р»РѕРєР°Р»СЊРЅС‹Р№ Р»РѕРіРё РѕРґРёРЅР°РєРѕРІС‹.';
+  TC_NETWORK                            = 'РЎРµС‚СЊ : %s %s:%d';
+  TC_SERVER_LOG_CHANGED                 = 'РЎРµСЂРІРµСЂРЅС‹Р№ Р»РѕРі Р±С‹Р» РёР·РјРµРЅРµРЅ. РРЅС„РѕСЂРјР°С†РёСЏ Рѕ %u СЃРІСЏР·СЏС… Р±С‹Р»Р° РѕР±РЅРѕРІР»РµРЅР°. РЎРґРµР»Р°Р№С‚Рµ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЋ Р»РѕРіРѕРІ (Ctrl+Alt+S).';
+  TC_ALL_LOGS_NETWORK_CLEARED           = 'Р›РѕРіРё РЅР° РІСЃРµС… РєРѕРјРїСЊСЋС‚РµСЂР°С… РІ СЃРµС‚Рё TR4W РѕС‡РёС‰РµРЅС‹';
 
   {UGETSCORES}
 
-  TC_FAILEDTOCONNECTTOGETSCORESORG      = 'Не удалось соединиться с сервером';
-  TC_NOANSWERFROMSERVER                 = 'Нет ответа от сервера';
-    TC_UPLOADEDSUCCESSFULLY               = 'Загружено успешно.';
-//  TC_FAILEDTOLOAD                       = 'НЕ УДАЛОСЬ ЗАГРУЗИТЬ. Смотрите GETSCORESANSWER.HTML для уточнения.';
+  TC_FAILEDTOCONNECTTOGETSCORESORG      = 'РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕРµРґРёРЅРёС‚СЊСЃСЏ СЃ СЃРµСЂРІРµСЂРѕРј';
+  TC_NOANSWERFROMSERVER                 = 'РќРµС‚ РѕС‚РІРµС‚Р° РѕС‚ СЃРµСЂРІРµСЂР°';
+    TC_UPLOADEDSUCCESSFULLY               = 'Р—Р°РіСЂСѓР¶РµРЅРѕ СѓСЃРїРµС€РЅРѕ.';
+//  TC_FAILEDTOLOAD                       = 'РќР• РЈР”РђР›РћРЎР¬ Р—РђР“Р РЈР—РРўР¬. РЎРјРѕС‚СЂРёС‚Рµ GETSCORESANSWER.HTML РґР»СЏ СѓС‚РѕС‡РЅРµРЅРёСЏ.';
 
   {UBANDMAP}
 
-  TC_SOURCE                             = 'Источник: %s';
-  TC_MIN                                = '%u мин.';
+  TC_SOURCE                             = 'РСЃС‚РѕС‡РЅРёРє: %s';
+  TC_MIN                                = '%u РјРёРЅ.';
 
   {LOGWIND}
 
-  TC_CQTOTAL                            = 'Всего CQ: %u';
-  TC_REPEATING                          = 'Повторение %s  Время прослушивания = %u миллисек - PgUp/Dn для настройки или ESC для выхода';
-  TC_NEWTOUR                            = 'Новый тур %d/%d';
-  TC_ENTER                              = 'Введите %s :';
-  TC_PTS                                = '%d очков';
-  TC_RATE                               = 'Темп = %u';
-  TC_LAST60                             = 'Посл.60 = %d';
-  TC_THISHR                             = 'Час = %d';
-  TC_HAVEQTCS                           = 'У вас %u QTC';
-  TC_BAND_CHANGES                       = 'См. диап. = %d';
+  TC_CQTOTAL                            = 'Р’СЃРµРіРѕ CQ: %u';
+  TC_REPEATING                          = 'РџРѕРІС‚РѕСЂРµРЅРёРµ %s  Р’СЂРµРјСЏ РїСЂРѕСЃР»СѓС€РёРІР°РЅРёСЏ = %u РјРёР»Р»РёСЃРµРє - PgUp/Dn РґР»СЏ РЅР°СЃС‚СЂРѕР№РєРё РёР»Рё ESC РґР»СЏ РІС‹С…РѕРґР°';
+  TC_NEWTOUR                            = 'РќРѕРІС‹Р№ С‚СѓСЂ %d/%d';
+  TC_ENTER                              = 'Р’РІРµРґРёС‚Рµ %s :';
+  TC_PTS                                = '%d РѕС‡РєРѕРІ';
+  TC_RATE                               = 'РўРµРјРї = %u';
+  TC_LAST60                             = 'РџРѕСЃР».60 = %d';
+  TC_THISHR                             = 'Р§Р°СЃ = %d';
+  TC_HAVEQTCS                           = 'РЈ РІР°СЃ %u QTC';
+  TC_BAND_CHANGES                       = 'РЎРј. РґРёР°Рї. = %d';
 
-  TC_INSERT                             = 'ВСТАВКА';
-  TC_OVERRIDE                           = 'ЗАМЕНА';
-  TC_UNKNOWNCOUNTRY                     = 'Неизвестная страна';
+  TC_INSERT                             = 'Р’РЎРўРђР’РљРђ';
+  TC_OVERRIDE                           = 'Р—РђРњР•РќРђ';
+  TC_UNKNOWNCOUNTRY                     = 'РќРµРёР·РІРµСЃС‚РЅР°СЏ СЃС‚СЂР°РЅР°';
 
   {UCALLSIGNS}
 
-  TC_DUPESHEET                          = 'Лист повторов - %sm-%s';
+  TC_DUPESHEET                          = 'Р›РёСЃС‚ РїРѕРІС‚РѕСЂРѕРІ - %sm-%s';
 
   {LOGEDIT}
 
-  TC_QSONEEDSFOR                        = ' Связь с %s :';
-  TC_MULTNEEDSFOR                       = ' Множители для %s :';
-  TC_MISSINGMULTSREPORT                 = 'Информация по множителям: %u стран на %u, но не на всех диапазонах.';
+  TC_QSONEEDSFOR                        = ' РЎРІСЏР·СЊ СЃ %s :';
+  TC_MULTNEEDSFOR                       = ' РњРЅРѕР¶РёС‚РµР»Рё РґР»СЏ %s :';
+  TC_MISSINGMULTSREPORT                 = 'РРЅС„РѕСЂРјР°С†РёСЏ РїРѕ РјРЅРѕР¶РёС‚РµР»СЏРј: %u СЃС‚СЂР°РЅ РЅР° %u, РЅРѕ РЅРµ РЅР° РІСЃРµС… РґРёР°РїР°Р·РѕРЅР°С….';
 
   {LOGDUPE}
 
-  TC_THEREWERECALLS                     = 'Найдено %u позывных в файле начальных обменных номеров.'#13'+%u повторов';
-  TC_RESTARTBINISFORADIFFERENTCONTEST   = 'Файл RESTART.BIN от другого соревнования.';
+  TC_THEREWERECALLS                     = 'РќР°Р№РґРµРЅРѕ %u РїРѕР·С‹РІРЅС‹С… РІ С„Р°Р№Р»Рµ РЅР°С‡Р°Р»СЊРЅС‹С… РѕР±РјРµРЅРЅС‹С… РЅРѕРјРµСЂРѕРІ.'#13'+%u РїРѕРІС‚РѕСЂРѕРІ';
+  TC_RESTARTBINISFORADIFFERENTCONTEST   = 'Р¤Р°Р№Р» RESTART.BIN РѕС‚ РґСЂСѓРіРѕРіРѕ СЃРѕСЂРµРІРЅРѕРІР°РЅРёСЏ.';
 
   {LOGSTUFF}
-  TC_IMPROPERZONENUMBER                 = 'Неправильный номер зоны';
-  TC_NOTENOUGHINFOINEXCHANGE            = 'Недостаточно информации в обменном номере!!';
-  TC_IMPROPERDOMESITCQTH                = 'Неправильный внутренний QTH!!';
-  TC_IMPROPERDOMESITCQTHORMISSINGNAME   = 'Неправильный внутренний QTH или пропущено имя!!';
-  TC_MISSINGQTHANDORNAME                = 'Пропущены QTH и/или имя!!';
-  TC_NOQSONUMBERFOUND                   = 'Не найден номер QSO!!';
-  TC_SAVINGTO                           = 'Копирование %s в %s';
-  TC_FILESAVEDTOFLOPPYSUCCESSFULLY      = 'Файл успешно сохранен на флоппи диске';
-  TC_FILESAVEDTOSUCCESSFULLY            = 'Файл %s успешно сохранен';
-  TC_IMPROPERTRANSMITTERCOUNT           = 'FD передатчики должны быть между 1 and 99.';
-  TC_IMPROPERARRLFIELDDAYCLASS          = 'Field Day класс должен быть A, B, C, D, E или F.';
-  TC_ARRLFIELDDAYIMPROPERDXEXCHANGE     = 'Обмен DX станции должен быть "DX".';
+  TC_IMPROPERZONENUMBER                 = 'РќРµРїСЂР°РІРёР»СЊРЅС‹Р№ РЅРѕРјРµСЂ Р·РѕРЅС‹';
+  TC_NOTENOUGHINFOINEXCHANGE            = 'РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РёРЅС„РѕСЂРјР°С†РёРё РІ РѕР±РјРµРЅРЅРѕРј РЅРѕРјРµСЂРµ!!';
+  TC_IMPROPERDOMESITCQTH                = 'РќРµРїСЂР°РІРёР»СЊРЅС‹Р№ РІРЅСѓС‚СЂРµРЅРЅРёР№ QTH!!';
+  TC_IMPROPERDOMESITCQTHORMISSINGNAME   = 'РќРµРїСЂР°РІРёР»СЊРЅС‹Р№ РІРЅСѓС‚СЂРµРЅРЅРёР№ QTH РёР»Рё РїСЂРѕРїСѓС‰РµРЅРѕ РёРјСЏ!!';
+  TC_MISSINGQTHANDORNAME                = 'РџСЂРѕРїСѓС‰РµРЅС‹ QTH Рё/РёР»Рё РёРјСЏ!!';
+  TC_NOQSONUMBERFOUND                   = 'РќРµ РЅР°Р№РґРµРЅ РЅРѕРјРµСЂ QSO!!';
+  TC_SAVINGTO                           = 'РљРѕРїРёСЂРѕРІР°РЅРёРµ %s РІ %s';
+  TC_FILESAVEDTOFLOPPYSUCCESSFULLY      = 'Р¤Р°Р№Р» СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅРµРЅ РЅР° С„Р»РѕРїРїРё РґРёСЃРєРµ';
+  TC_FILESAVEDTOSUCCESSFULLY            = 'Р¤Р°Р№Р» %s СѓСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅРµРЅ';
+  TC_IMPROPERTRANSMITTERCOUNT           = 'FD РїРµСЂРµРґР°С‚С‡РёРєРё РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РјРµР¶РґСѓ 1 and 99.';
+  TC_IMPROPERARRLFIELDDAYCLASS          = 'Field Day РєР»Р°СЃСЃ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ A, B, C, D, E РёР»Рё F.';
+  TC_ARRLFIELDDAYIMPROPERDXEXCHANGE     = 'РћР±РјРµРЅ DX СЃС‚Р°РЅС†РёРё РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ "DX".';
 
   {LOGSEND}
 
-  TC_WAITINGFORYOUENTERSTRENGTHOFRST    = 'Ожидание ввода силы сигнала (S) в RST (один знак)!!';
+  TC_WAITINGFORYOUENTERSTRENGTHOFRST    = 'РћР¶РёРґР°РЅРёРµ РІРІРѕРґР° СЃРёР»С‹ СЃРёРіРЅР°Р»Р° (S) РІ RST (РѕРґРёРЅ Р·РЅР°Рє)!!';
 
   {COUNTRY9}
 
-  TC_C9_NORTHAMERICA                    = 'Северная Америка';
-  TC_C9_SOUTHAMERICA                    = 'Южная Америка';
-  TC_C9_EUROPE                          = 'Европа';
-  TC_C9_AFRICA                          = 'Африка';
-  TC_C9_OCEANIA                         = 'Океания';
-  TC_C9_ANTARTICA                 		= 'Антарктида';
-  TC_C9_ASIA                            = 'Азия';
-  TC_C9_UNKNOWN                         = 'Неизвестный континент';
+  TC_C9_NORTHAMERICA                    = 'РЎРµРІРµСЂРЅР°СЏ РђРјРµСЂРёРєР°';
+  TC_C9_SOUTHAMERICA                    = 'Р®Р¶РЅР°СЏ РђРјРµСЂРёРєР°';
+  TC_C9_EUROPE                          = 'Р•РІСЂРѕРїР°';
+  TC_C9_AFRICA                          = 'РђС„СЂРёРєР°';
+  TC_C9_OCEANIA                         = 'РћРєРµР°РЅРёСЏ';
+  TC_C9_ANTARTICA                 		= 'РђРЅС‚Р°СЂРєС‚РёРґР°';
+  TC_C9_ASIA                            = 'РђР·РёСЏ';
+  TC_C9_UNKNOWN                         = 'РќРµРёР·РІРµСЃС‚РЅС‹Р№ РєРѕРЅС‚РёРЅРµРЅС‚';
 
   {USTATIONS}
 
-  TC_STATIONSINMODE                     = 'Станции в %s режиме';
+  TC_STATIONSINMODE                     = 'РЎС‚Р°РЅС†РёРё РІ %s СЂРµР¶РёРјРµ';
 
   {USPOTS}
 
-  TC_SPOTS                              = '%d спот(ов)';
+  TC_SPOTS                              = '%d СЃРїРѕС‚(РѕРІ)';
 
   {uSendKeyboard}
 
-  TC_SENDINGSSBWAVFILENAME              = 'Воспроизведение .wav файла. Enter - воспроизведение, Esc/F10 - выход';
+  TC_SENDINGSSBWAVFILENAME              = 'Р’РѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ .wav С„Р°Р№Р»Р°. Enter - РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ, Esc/F10 - РІС‹С…РѕРґ';
 
   {QTC}
 
-  TC_WASMESSAGENUMBERCONFIRMED          = 'Какой номер сообщенния %u вы подтверждаете?';
-  TC_DOYOUREALLYWANTSTOPNOW             = 'Вы действительно хотите остановить сейчас?';
-  TC_QTCABORTEDBYOPERATOR               = 'QTC удалено оператором.';
-  TC_DOYOUREALLYWANTTOABORTTHISQTC      = 'Вы действительно хотите удалить это QTC?';
-  TC_NEXT                               = '< Следующий';
-  TC_QTC_FOR                            = '%s для %s';
-  TC_QTC_CALLSIGN                       = 'Позывной :';
-  TC_ENTERQTCMAXOF                      = 'Введите QTC #/# (максимум из %d) :';
-  TC_DOYOUREALLYWANTTOSAVETHISQTC       = 'Вы хотите сохранить этот QTC?';
-  TC_EDITQTCPRESSYESTOEDITQTCORNOTOLOG  = 'Редактировать QTC? Нажмите Yes для редактирования QTC или NO для ввода ';
-  TC_CHECKQTCNUMBER                     = 'Проверка номера QTC';
-  TC_CHECKTIME                          = 'Проверка времени';
+  TC_WASMESSAGENUMBERCONFIRMED          = 'РљР°РєРѕР№ РЅРѕРјРµСЂ СЃРѕРѕР±С‰РµРЅРЅРёСЏ %u РІС‹ РїРѕРґС‚РІРµСЂР¶РґР°РµС‚Рµ?';
+  TC_DOYOUREALLYWANTSTOPNOW             = 'Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РѕСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРµР№С‡Р°СЃ?';
+  TC_QTCABORTEDBYOPERATOR               = 'QTC СѓРґР°Р»РµРЅРѕ РѕРїРµСЂР°С‚РѕСЂРѕРј.';
+  TC_DOYOUREALLYWANTTOABORTTHISQTC      = 'Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ СЌС‚Рѕ QTC?';
+  TC_NEXT                               = '< РЎР»РµРґСѓСЋС‰РёР№';
+  TC_QTC_FOR                            = '%s РґР»СЏ %s';
+  TC_QTC_CALLSIGN                       = 'РџРѕР·С‹РІРЅРѕР№ :';
+  TC_ENTERQTCMAXOF                      = 'Р’РІРµРґРёС‚Рµ QTC #/# (РјР°РєСЃРёРјСѓРј РёР· %d) :';
+  TC_DOYOUREALLYWANTTOSAVETHISQTC       = 'Р’С‹ С…РѕС‚РёС‚Рµ СЃРѕС…СЂР°РЅРёС‚СЊ СЌС‚РѕС‚ QTC?';
+  TC_EDITQTCPRESSYESTOEDITQTCORNOTOLOG  = 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ QTC? РќР°Р¶РјРёС‚Рµ Yes РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ QTC РёР»Рё NO РґР»СЏ РІРІРѕРґР° ';
+  TC_CHECKQTCNUMBER                     = 'РџСЂРѕРІРµСЂРєР° РЅРѕРјРµСЂР° QTC';
+  TC_CHECKTIME                          = 'РџСЂРѕРІРµСЂРєР° РІСЂРµРјРµРЅРё';
 
   {UOPTION}
 
-  TC_COMMAND                            = 'Команда';
-  TC_VALUE                              = 'Значение';
-  TC_INFO                               = 'Пояснение к команде';
-//  TC_YOUCANCHANGETHISINYOURCONFIGFILE   = 'Вы можете изменить это только в конфигурационном файле.';
+  TC_COMMAND                            = 'РљРѕРјР°РЅРґР°';
+  TC_VALUE                              = 'Р—РЅР°С‡РµРЅРёРµ';
+  TC_INFO                               = 'РџРѕСЏСЃРЅРµРЅРёРµ Рє РєРѕРјР°РЅРґРµ';
+//  TC_YOUCANCHANGETHISINYOURCONFIGFILE   = 'Р’С‹ РјРѕР¶РµС‚Рµ РёР·РјРµРЅРёС‚СЊ СЌС‚Рѕ С‚РѕР»СЊРєРѕ РІ РєРѕРЅС„РёРіСѓСЂР°С†РёРѕРЅРЅРѕРј С„Р°Р№Р»Рµ.';
 
   {UEDITQSO}
 
-  TC_CHECKDATETIME                      = 'Проверьте Дату/Время!!';
-  TC_SAVECHANGES                        = 'Сохранить изменения?';
+  TC_CHECKDATETIME                      = 'РџСЂРѕРІРµСЂСЊС‚Рµ Р”Р°С‚Сѓ/Р’СЂРµРјСЏ!!';
+  TC_SAVECHANGES                        = 'РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ?';
 
   {LOGCW}
 
-  TC_WPMCODESPEED                       = 'скорость, слов/мин.';
+  TC_WPMCODESPEED                       = 'СЃРєРѕСЂРѕСЃС‚СЊ, СЃР»РѕРІ/РјРёРЅ.';
 
   TC_CWMENU                             =
-    '# Номер QSO   % Имя из базы данных  ~ GM/GA/GE     : Передача CW с клавиатуры'#13 +
-    '[ Запрос RST  ^ Полпаузы            ] Повтор RST   @ Содержимое окна позывного'#13 +
-    '$ GM + имя    | Принятое имя        \ Мой позывной } Частично исправл. позывной'#13 +
-    '^F WPM+2  ^S WPM-2  + AR  < SK  = BT  ! SN  & AS   ) Позывной последней связи'#13 +
-    'Для программирования спец. знаков, нажмите сочетание Control-P перед спецсимволом.';
+    '# РќРѕРјРµСЂ QSO   % РРјСЏ РёР· Р±Р°Р·С‹ РґР°РЅРЅС‹С…  ~ GM/GA/GE     : РџРµСЂРµРґР°С‡Р° CW СЃ РєР»Р°РІРёР°С‚СѓСЂС‹'#13 +
+    '[ Р—Р°РїСЂРѕСЃ RST  ^ РџРѕР»РїР°СѓР·С‹            ] РџРѕРІС‚РѕСЂ RST   @ РЎРѕРґРµСЂР¶РёРјРѕРµ РѕРєРЅР° РїРѕР·С‹РІРЅРѕРіРѕ'#13 +
+    '$ GM + РёРјСЏ    | РџСЂРёРЅСЏС‚РѕРµ РёРјСЏ        \ РњРѕР№ РїРѕР·С‹РІРЅРѕР№ } Р§Р°СЃС‚РёС‡РЅРѕ РёСЃРїСЂР°РІР». РїРѕР·С‹РІРЅРѕР№'#13 +
+    '^F WPM+2  ^S WPM-2  + AR  < SK  = BT  ! SN  & AS   ) РџРѕР·С‹РІРЅРѕР№ РїРѕСЃР»РµРґРЅРµР№ СЃРІСЏР·Рё'#13 +
+    'Р”Р»СЏ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ СЃРїРµС†. Р·РЅР°РєРѕРІ, РЅР°Р¶РјРёС‚Рµ СЃРѕС‡РµС‚Р°РЅРёРµ Control-P РїРµСЂРµРґ СЃРїРµС†СЃРёРјРІРѕР»РѕРј.';
 
-  TC_CQFUNCTIONKEYMEMORYSTATUS          = 'СОДЕРЖИМОЕ ПАМЯТИ ФУНКЦИОНАЛЬНЫХ КЛАВИШ В РЕЖИМЕ CQ';
-  TC_EXCHANGEFUNCTIONKEYMEMORYSTATUS    = 'СОДЕРЖИМОЕ ПАМЯТИ ФУНКЦИОНАЛЬНЫХ КЛАВИШ В РЕЖИМЕ S&P';
-  TC_OTHERCWMESSAGEMEMORYSTATUS         = 'Содержимое памяти других CW сообщенний';
-  TC_OTHERSSBMESSAGEMEMORYSTATUS        = 'Содержимое памяти других SSB сообщенний';
-  TC_PRESSCQFUNCTIONKEYTOPROGRAM        = 'Нажми функциональную клавишу (F1, AltF1, CtrlF1) для программирования режима "CQ" или ESCAPE для выхода) : ';
-  TC_PRESSEXFUNCTIONKEYTOPROGRAM        = 'Нажми функциональную клавишу (F3-F12, Alt/Ctrl F1-F12) для программирования обмена в режиме "S&&P" или ESCAPE для выхода:';
+  TC_CQFUNCTIONKEYMEMORYSTATUS          = 'РЎРћР”Р•Р Р–РРњРћР• РџРђРњРЇРўР Р¤РЈРќРљР¦РРћРќРђР›Р¬РќР«РҐ РљР›РђР’РРЁ Р’ Р Р•Р–РРњР• CQ';
+  TC_EXCHANGEFUNCTIONKEYMEMORYSTATUS    = 'РЎРћР”Р•Р Р–РРњРћР• РџРђРњРЇРўР Р¤РЈРќРљР¦РРћРќРђР›Р¬РќР«РҐ РљР›РђР’РРЁ Р’ Р Р•Р–РРњР• S&P';
+  TC_OTHERCWMESSAGEMEMORYSTATUS         = 'РЎРѕРґРµСЂР¶РёРјРѕРµ РїР°РјСЏС‚Рё РґСЂСѓРіРёС… CW СЃРѕРѕР±С‰РµРЅРЅРёР№';
+  TC_OTHERSSBMESSAGEMEMORYSTATUS        = 'РЎРѕРґРµСЂР¶РёРјРѕРµ РїР°РјСЏС‚Рё РґСЂСѓРіРёС… SSB СЃРѕРѕР±С‰РµРЅРЅРёР№';
+  TC_PRESSCQFUNCTIONKEYTOPROGRAM        = 'РќР°Р¶РјРё С„СѓРЅРєС†РёРѕРЅР°Р»СЊРЅСѓСЋ РєР»Р°РІРёС€Сѓ (F1, AltF1, CtrlF1) РґР»СЏ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ СЂРµР¶РёРјР° "CQ" РёР»Рё ESCAPE РґР»СЏ РІС‹С…РѕРґР°) : ';
+  TC_PRESSEXFUNCTIONKEYTOPROGRAM        = 'РќР°Р¶РјРё С„СѓРЅРєС†РёРѕРЅР°Р»СЊРЅСѓСЋ РєР»Р°РІРёС€Сѓ (F3-F12, Alt/Ctrl F1-F12) РґР»СЏ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ РѕР±РјРµРЅР° РІ СЂРµР¶РёРјРµ "S&&P" РёР»Рё ESCAPE РґР»СЏ РІС‹С…РѕРґР°:';
 
-  TC_NUMBERORLETTEROFMESSAGETOBEPROGRAM = 'Цифра или буква сообщения для программирования (1-9, A-C, или ESCAPE для выхода):';
-//  TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG  = 'F1 - Установлено параметром MY CALL в конфигурационном файле';
-//  TC_F2SETBYSPEXCHANGEANDREPEATSP       = 'F2 - Установлено параметрами S&P EXCHANGE и REPEAT S&P EXCHANGE';
-  TC_CWDISABLEDWITHALTK                 = 'CW-манипуляция отключена с помошью Alt-K!!  Для включения снова нажмите Alt-K.';
-  TC_VOICEKEYERDISABLEDWITHALTK         = 'Голосовой ключ отключен с помощью Alt-K!!  Для включения снова нажмите Alt-K.';
+  TC_NUMBERORLETTEROFMESSAGETOBEPROGRAM = 'Р¦РёС„СЂР° РёР»Рё Р±СѓРєРІР° СЃРѕРѕР±С‰РµРЅРёСЏ РґР»СЏ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ (1-9, A-C, РёР»Рё ESCAPE РґР»СЏ РІС‹С…РѕРґР°):';
+//  TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG  = 'F1 - РЈСЃС‚Р°РЅРѕРІР»РµРЅРѕ РїР°СЂР°РјРµС‚СЂРѕРј MY CALL РІ РєРѕРЅС„РёРіСѓСЂР°С†РёРѕРЅРЅРѕРј С„Р°Р№Р»Рµ';
+//  TC_F2SETBYSPEXCHANGEANDREPEATSP       = 'F2 - РЈСЃС‚Р°РЅРѕРІР»РµРЅРѕ РїР°СЂР°РјРµС‚СЂР°РјРё S&P EXCHANGE Рё REPEAT S&P EXCHANGE';
+  TC_CWDISABLEDWITHALTK                 = 'CW-РјР°РЅРёРїСѓР»СЏС†РёСЏ РѕС‚РєР»СЋС‡РµРЅР° СЃ РїРѕРјРѕС€СЊСЋ Alt-K!!  Р”Р»СЏ РІРєР»СЋС‡РµРЅРёСЏ СЃРЅРѕРІР° РЅР°Р¶РјРёС‚Рµ Alt-K.';
+  TC_VOICEKEYERDISABLEDWITHALTK         = 'Р“РѕР»РѕСЃРѕРІРѕР№ РєР»СЋС‡ РѕС‚РєР»СЋС‡РµРЅ СЃ РїРѕРјРѕС‰СЊСЋ Alt-K!!  Р”Р»СЏ РІРєР»СЋС‡РµРЅРёСЏ СЃРЅРѕРІР° РЅР°Р¶РјРёС‚Рµ Alt-K.';
 
   {LOGCFG}
 
-  TC_NOCALLSIGNSPECIFIED                = 'Не указан позывной!!';
-  TC_NOFLOPPYFILESAVENAMESPECIFIED      = 'Не указано имя сохраняемого на диск файла!!';
-  TC_UNABLETOFIND                       = 'Невозможно найти %s !!';
-  TC_INVALIDSTATEMENTIN                 = 'Ошибка синтаксиса команды %s !!'#13#13'строка %u'#13'%s';
-  TC_UNABLETOFINDCTYDAT                 = 'Невозможно найти файл стран CTY.DAT!!'#13'Убедитесь, что этот файл находится в директории программы.';
-  TC_INVALIDSTATEMENTINCONFIGFILE       = '%s:'#13'Ошибка синтаксиса команды!!'#13#13'строка %u:'#13'%s';
-  TC_PARAMETERHASNOVALUE                = 'Параметр «%s» не имеет значения в файле конфигурации — оставлено значение по умолчанию.';
-  TC_THIS_FILE_DOES_NOT_EXIST           = 'Данный файл отсутствует. Создать пустой файл для последующего редактирования?';
+  TC_NOCALLSIGNSPECIFIED                = 'РќРµ СѓРєР°Р·Р°РЅ РїРѕР·С‹РІРЅРѕР№!!';
+  TC_NOFLOPPYFILESAVENAMESPECIFIED      = 'РќРµ СѓРєР°Р·Р°РЅРѕ РёРјСЏ СЃРѕС…СЂР°РЅСЏРµРјРѕРіРѕ РЅР° РґРёСЃРє С„Р°Р№Р»Р°!!';
+  TC_UNABLETOFIND                       = 'РќРµРІРѕР·РјРѕР¶РЅРѕ РЅР°Р№С‚Рё %s !!';
+  TC_INVALIDSTATEMENTIN                 = 'РћС€РёР±РєР° СЃРёРЅС‚Р°РєСЃРёСЃР° РєРѕРјР°РЅРґС‹ %s !!'#13#13'СЃС‚СЂРѕРєР° %u'#13'%s';
+  TC_UNABLETOFINDCTYDAT                 = 'РќРµРІРѕР·РјРѕР¶РЅРѕ РЅР°Р№С‚Рё С„Р°Р№Р» СЃС‚СЂР°РЅ CTY.DAT!!'#13'РЈР±РµРґРёС‚РµСЃСЊ, С‡С‚Рѕ СЌС‚РѕС‚ С„Р°Р№Р» РЅР°С…РѕРґРёС‚СЃСЏ РІ РґРёСЂРµРєС‚РѕСЂРёРё РїСЂРѕРіСЂР°РјРјС‹.';
+  TC_INVALIDSTATEMENTINCONFIGFILE       = '%s:'#13'РћС€РёР±РєР° СЃРёРЅС‚Р°РєСЃРёСЃР° РєРѕРјР°РЅРґС‹!!'#13#13'СЃС‚СЂРѕРєР° %u:'#13'%s';
+  TC_PARAMETERHASNOVALUE                = 'РџР°СЂР°РјРµС‚СЂ В«%sВ» РЅРµ РёРјРµРµС‚ Р·РЅР°С‡РµРЅРёСЏ РІ С„Р°Р№Р»Рµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё вЂ” РѕСЃС‚Р°РІР»РµРЅРѕ Р·РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ.';
+  TC_THIS_FILE_DOES_NOT_EXIST           = 'Р”Р°РЅРЅС‹Р№ С„Р°Р№Р» РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚. РЎРѕР·РґР°С‚СЊ РїСѓСЃС‚РѕР№ С„Р°Р№Р» РґР»СЏ РїРѕСЃР»РµРґСѓСЋС‰РµРіРѕ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ?';
 
   {LOGSUBS1}
 
-  TC_RECORDDVPPRESSESCAPEORRETURNTOSTOP = 'Запись DVP. Нажмите ESCAPE или RETURN для остановки.';
-  TC_ALTRCOMMANDDISABLED                = 'Команда Alt-R требует TWO RADIO MODE = TRUE';
-  TC_NOCQMESPROGRAMMEDINTOCQMEMORYALTF1 = 'Нет запрограммированного CQ сообщения в CQ MEMORY AltF1.';
+  TC_RECORDDVPPRESSESCAPEORRETURNTOSTOP = 'Р—Р°РїРёСЃСЊ DVP. РќР°Р¶РјРёС‚Рµ ESCAPE РёР»Рё RETURN РґР»СЏ РѕСЃС‚Р°РЅРѕРІРєРё.';
+  TC_ALTRCOMMANDDISABLED                = 'РљРѕРјР°РЅРґР° Alt-R С‚СЂРµР±СѓРµС‚ TWO RADIO MODE = TRUE';
+  TC_NOCQMESPROGRAMMEDINTOCQMEMORYALTF1 = 'РќРµС‚ Р·Р°РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРЅРѕРіРѕ CQ СЃРѕРѕР±С‰РµРЅРёСЏ РІ CQ MEMORY AltF1.';
 
   {LOGSUBS2}
 
-  TC_WASADUPE                           = 'Связь с %s уже была.';
-  TC_ALTDCOMMANDDISABLED                = 'Команда Alt-D требует TWO RADIO MODE = TRUE';
-  TC_YOUHAVERESTOREDTHELASTDELETED      = 'Вы восстановили последнюю удаленную связь!!';
-  TC_YOUHAVEDELETEDTHELASTLOGENTRY      = 'Вы удалили последнюю связь!! Используйте Alt-Y для ее восстановления.';
-  TC_DOYOUREALLYWANTTOEXITTHEPROGRAM    = 'Вы действительно хотите выйти из программы?';
-  TC_YOUARENOWTALKINGTOYOURPACKETPORT   = 'Сейчас вы беседуете с портом пакетной связи.  Используйте Control-B для выхода.';
-  TC_YOUALREADYWORKEDIN                 = 'Вы уже работали с %s из %s!!';
-  TC_ISADUPEANDWILLBELOGGEDWITHZERO     = 'Связь с %s - повтор. Связь будет занесена в лог без начисления очков.';
-  TC_LOGFILESIZECHECKFAILED             = 'НЕ УДАЛОСЬ ПРОВЕРИТЬ РАЗМЕР ФАЙЛА ЛОГА!!!!';
+  TC_WASADUPE                           = 'РЎРІСЏР·СЊ СЃ %s СѓР¶Рµ Р±С‹Р»Р°.';
+  TC_ALTDCOMMANDDISABLED                = 'РљРѕРјР°РЅРґР° Alt-D С‚СЂРµР±СѓРµС‚ TWO RADIO MODE = TRUE';
+  TC_YOUHAVERESTOREDTHELASTDELETED      = 'Р’С‹ РІРѕСЃСЃС‚Р°РЅРѕРІРёР»Рё РїРѕСЃР»РµРґРЅСЋСЋ СѓРґР°Р»РµРЅРЅСѓСЋ СЃРІСЏР·СЊ!!';
+  TC_YOUHAVEDELETEDTHELASTLOGENTRY      = 'Р’С‹ СѓРґР°Р»РёР»Рё РїРѕСЃР»РµРґРЅСЋСЋ СЃРІСЏР·СЊ!! РСЃРїРѕР»СЊР·СѓР№С‚Рµ Alt-Y РґР»СЏ РµРµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ.';
+  TC_DOYOUREALLYWANTTOEXITTHEPROGRAM    = 'Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РІС‹Р№С‚Рё РёР· РїСЂРѕРіСЂР°РјРјС‹?';
+  TC_YOUARENOWTALKINGTOYOURPACKETPORT   = 'РЎРµР№С‡Р°СЃ РІС‹ Р±РµСЃРµРґСѓРµС‚Рµ СЃ РїРѕСЂС‚РѕРј РїР°РєРµС‚РЅРѕР№ СЃРІСЏР·Рё.  РСЃРїРѕР»СЊР·СѓР№С‚Рµ Control-B РґР»СЏ РІС‹С…РѕРґР°.';
+  TC_YOUALREADYWORKEDIN                 = 'Р’С‹ СѓР¶Рµ СЂР°Р±РѕС‚Р°Р»Рё СЃ %s РёР· %s!!';
+  TC_ISADUPEANDWILLBELOGGEDWITHZERO     = 'РЎРІСЏР·СЊ СЃ %s - РїРѕРІС‚РѕСЂ. РЎРІСЏР·СЊ Р±СѓРґРµС‚ Р·Р°РЅРµСЃРµРЅР° РІ Р»РѕРі Р±РµР· РЅР°С‡РёСЃР»РµРЅРёСЏ РѕС‡РєРѕРІ.';
+  TC_LOGFILESIZECHECKFAILED             = 'РќР• РЈР”РђР›РћРЎР¬ РџР РћР’Р•Р РРўР¬ Р РђР—РњР•Р  Р¤РђР™Р›Рђ Р›РћР“Рђ!!!!';
 
   {JCTRL2}
 
-  TC_NEWAUTOSAPENABLESENSITIVITYINHZSEC = 'новое значение чувствительности команды AUTO S&P ENABLE в Гц/сек)';
-  TC_NEWBANDMAPDECAYTIMEMINUTES         = 'новое время обновления карты диапазона (в минутах)';
-  TC_NEWBANDMAPGUARDBANDHERTZ           = 'новую границу захвата карты диапазона (в Герцах)';
-  TC_COMMANDWHICHWILLBESENDATTELNETCON  = 'команду, которая будет отправлена при установлении telnet соединения';
-  TC_COMPUTERNAME                       = 'имя компьютера (макимум 7 знаков)';
-  TC_YOUCANONLYCHANGETHISWHENCLIENTDISC = 'Вы можете изменить значение этой команды только тогда, когда клиент отключен от сервера TR4W.';
-  TC_COMPUTERIDAZRETURNNONE             = 'идентификатор компьютера (A-Z или RETURN если нет)';
-  TC_NEWCOUNTRYINFORMATIONFILENAME      = 'новое название файла с информацией о новых странах';
+  TC_NEWAUTOSAPENABLESENSITIVITYINHZSEC = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ С‡СѓРІСЃС‚РІРёС‚РµР»СЊРЅРѕСЃС‚Рё РєРѕРјР°РЅРґС‹ AUTO S&P ENABLE РІ Р“С†/СЃРµРє)';
+  TC_NEWBANDMAPDECAYTIMEMINUTES         = 'РЅРѕРІРѕРµ РІСЂРµРјСЏ РѕР±РЅРѕРІР»РµРЅРёСЏ РєР°СЂС‚С‹ РґРёР°РїР°Р·РѕРЅР° (РІ РјРёРЅСѓС‚Р°С…)';
+  TC_NEWBANDMAPGUARDBANDHERTZ           = 'РЅРѕРІСѓСЋ РіСЂР°РЅРёС†Сѓ Р·Р°С…РІР°С‚Р° РєР°СЂС‚С‹ РґРёР°РїР°Р·РѕРЅР° (РІ Р“РµСЂС†Р°С…)';
+  TC_COMMANDWHICHWILLBESENDATTELNETCON  = 'РєРѕРјР°РЅРґСѓ, РєРѕС‚РѕСЂР°СЏ Р±СѓРґРµС‚ РѕС‚РїСЂР°РІР»РµРЅР° РїСЂРё СѓСЃС‚Р°РЅРѕРІР»РµРЅРёРё telnet СЃРѕРµРґРёРЅРµРЅРёСЏ';
+  TC_COMPUTERNAME                       = 'РёРјСЏ РєРѕРјРїСЊСЋС‚РµСЂР° (РјР°РєРёРјСѓРј 7 Р·РЅР°РєРѕРІ)';
+  TC_YOUCANONLYCHANGETHISWHENCLIENTDISC = 'Р’С‹ РјРѕР¶РµС‚Рµ РёР·РјРµРЅРёС‚СЊ Р·РЅР°С‡РµРЅРёРµ СЌС‚РѕР№ РєРѕРјР°РЅРґС‹ С‚РѕР»СЊРєРѕ С‚РѕРіРґР°, РєРѕРіРґР° РєР»РёРµРЅС‚ РѕС‚РєР»СЋС‡РµРЅ РѕС‚ СЃРµСЂРІРµСЂР° TR4W.';
+  TC_COMPUTERIDAZRETURNNONE             = 'РёРґРµРЅС‚РёС„РёРєР°С‚РѕСЂ РєРѕРјРїСЊСЋС‚РµСЂР° (A-Z РёР»Рё RETURN РµСЃР»Рё РЅРµС‚)';
+  TC_NEWCOUNTRYINFORMATIONFILENAME      = 'РЅРѕРІРѕРµ РЅР°Р·РІР°РЅРёРµ С„Р°Р№Р»Р° СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ Рѕ РЅРѕРІС‹С… СЃС‚СЂР°РЅР°С…';
 
-  TC_NEWCWINCREMENT                     = 'новое значение шага изменения CW скорости (от 1 до 10 WPM)';
-  TC_NEWCWMONITORTONE                   = 'новое значение тона звучания самопрослушивания CW (0 – звука нет)';
-  TC_NEWFARNSWORTHSPEEDCUTINVALUE       = 'новое значение скорости замедления передачи';
-  TC_NEWFLOPPYFILESAVEFREQUENCY         = 'новое значение частоты записи файла';
-  TC_SELECTNEWFLOPPYFILESAVENAME        = 'Выбрать новое имя файла автосохранения';
-  TC_FREQPOLLRATEINMS                   = 'частоту опроса трансивера в миллисек (10-1000)';
-  TC_NEWCENTERFORGRIDMAP                = 'новый центр для карты квадратов';
-  TC_RSTOSHOWASSENTINLOG                = 'RS, который будет отображаться в логе';
-  TC_RSTTOSHOWASSENTINLOG               = 'RST, который будет отображаться в логе';
-  TC_FIELDDAYCLASS                      = 'класс полевой станции';
-  TC_NEWGRIDSQUARE                      = 'новое значение квадрата';
-  TC_NEWVALUEFORMYIOTA                  = 'новое значение для MY IOTA';
-  TC_NEWMULTIINFOMESSAGE15CHARSMAX      = 'новое сообщение по сети (15 знаков макс.)';
-  TC_ACOMMENTTOSENDWITHEACHSPOT         = 'комментарий, передаваемый с каждым спотом';
-  TC_NEWPTTHOLDCOUNT                    = 'новое время задержки отключения TX';
-  TC_NEWPADDLEMONITORTONE               = 'новое значение тона манипулятора (Гц)';
-  TC_NEWPADDLESPEED0TODISABLE           = 'новую скорость манипулятора (0 - отключено)';
-  TC_PTTDELAYCOUNT                      = 'время задержки PTT';
-  TC_KEYBOARDCHARACTERTOUSEFORQUESTION  = 'клавиатурный символ для передачи знака "?"';
-  TC_RADIO1FREQUENCYADDER               = 'смещение частоты Радио 1';
-  TC_RADIO2FREQUENCYADDER               = 'смещение частоты Радио 2';
-  TC_NEWSAYHIRATECUTOFF                 = 'новое значение скорости передачи приветствия в зависимости от рейтинга';
-  TC_NEWSCPCOUNTRYSTRING                = 'новое значение ограничителя стран в подсказке';
-  TC_KEYBOARDCHARACTERTOSTARTSENDING    = 'клавишу начала передачи';
-  TC_NETWORKSERVERADDRESS               = 'адрес сервера сети';
-  TC_NEWSERVERPASSWORD10CHARS           = 'новый пароль сервера (10 знаков)';
-  TC_NETWORKSERVERPORT                  = 'сетевой порт сервера';
-  TC_KEYBOARDCHARACTERTOUSEFORSLASH     = 'клавиатурный символ для знака /';
-  TC_NEWOFFTIMEVALUEMINUTES             = 'новое значение времени отдыха (в минутах)';
-  TC_NEWVALUEFORWAKEUPTIMEOUT           = 'новое значение  времени задержки будильника';
-  TC_NEWWEIGHTVALUE                     = 'значение веса передаваемого знака (.5 - 1.5)';
-  TC_NEWVALUE                           = 'новое значение';
+  TC_NEWCWINCREMENT                     = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ С€Р°РіР° РёР·РјРµРЅРµРЅРёСЏ CW СЃРєРѕСЂРѕСЃС‚Рё (РѕС‚ 1 РґРѕ 10 WPM)';
+  TC_NEWCWMONITORTONE                   = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ С‚РѕРЅР° Р·РІСѓС‡Р°РЅРёСЏ СЃР°РјРѕРїСЂРѕСЃР»СѓС€РёРІР°РЅРёСЏ CW (0 вЂ“ Р·РІСѓРєР° РЅРµС‚)';
+  TC_NEWFARNSWORTHSPEEDCUTINVALUE       = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё Р·Р°РјРµРґР»РµРЅРёСЏ РїРµСЂРµРґР°С‡Рё';
+  TC_NEWFLOPPYFILESAVEFREQUENCY         = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ С‡Р°СЃС‚РѕС‚С‹ Р·Р°РїРёСЃРё С„Р°Р№Р»Р°';
+  TC_SELECTNEWFLOPPYFILESAVENAME        = 'Р’С‹Р±СЂР°С‚СЊ РЅРѕРІРѕРµ РёРјСЏ С„Р°Р№Р»Р° Р°РІС‚РѕСЃРѕС…СЂР°РЅРµРЅРёСЏ';
+  TC_FREQPOLLRATEINMS                   = 'С‡Р°СЃС‚РѕС‚Сѓ РѕРїСЂРѕСЃР° С‚СЂР°РЅСЃРёРІРµСЂР° РІ РјРёР»Р»РёСЃРµРє (10-1000)';
+  TC_NEWCENTERFORGRIDMAP                = 'РЅРѕРІС‹Р№ С†РµРЅС‚СЂ РґР»СЏ РєР°СЂС‚С‹ РєРІР°РґСЂР°С‚РѕРІ';
+  TC_RSTOSHOWASSENTINLOG                = 'RS, РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ РѕС‚РѕР±СЂР°Р¶Р°С‚СЊСЃСЏ РІ Р»РѕРіРµ';
+  TC_RSTTOSHOWASSENTINLOG               = 'RST, РєРѕС‚РѕСЂС‹Р№ Р±СѓРґРµС‚ РѕС‚РѕР±СЂР°Р¶Р°С‚СЊСЃСЏ РІ Р»РѕРіРµ';
+  TC_FIELDDAYCLASS                      = 'РєР»Р°СЃСЃ РїРѕР»РµРІРѕР№ СЃС‚Р°РЅС†РёРё';
+  TC_NEWGRIDSQUARE                      = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РєРІР°РґСЂР°С‚Р°';
+  TC_NEWVALUEFORMYIOTA                  = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РґР»СЏ MY IOTA';
+  TC_NEWMULTIINFOMESSAGE15CHARSMAX      = 'РЅРѕРІРѕРµ СЃРѕРѕР±С‰РµРЅРёРµ РїРѕ СЃРµС‚Рё (15 Р·РЅР°РєРѕРІ РјР°РєСЃ.)';
+  TC_ACOMMENTTOSENDWITHEACHSPOT         = 'РєРѕРјРјРµРЅС‚Р°СЂРёР№, РїРµСЂРµРґР°РІР°РµРјС‹Р№ СЃ РєР°Р¶РґС‹Рј СЃРїРѕС‚РѕРј';
+  TC_NEWPTTHOLDCOUNT                    = 'РЅРѕРІРѕРµ РІСЂРµРјСЏ Р·Р°РґРµСЂР¶РєРё РѕС‚РєР»СЋС‡РµРЅРёСЏ TX';
+  TC_NEWPADDLEMONITORTONE               = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ С‚РѕРЅР° РјР°РЅРёРїСѓР»СЏС‚РѕСЂР° (Р“С†)';
+  TC_NEWPADDLESPEED0TODISABLE           = 'РЅРѕРІСѓСЋ СЃРєРѕСЂРѕСЃС‚СЊ РјР°РЅРёРїСѓР»СЏС‚РѕСЂР° (0 - РѕС‚РєР»СЋС‡РµРЅРѕ)';
+  TC_PTTDELAYCOUNT                      = 'РІСЂРµРјСЏ Р·Р°РґРµСЂР¶РєРё PTT';
+  TC_KEYBOARDCHARACTERTOUSEFORQUESTION  = 'РєР»Р°РІРёР°С‚СѓСЂРЅС‹Р№ СЃРёРјРІРѕР» РґР»СЏ РїРµСЂРµРґР°С‡Рё Р·РЅР°РєР° "?"';
+  TC_RADIO1FREQUENCYADDER               = 'СЃРјРµС‰РµРЅРёРµ С‡Р°СЃС‚РѕС‚С‹ Р Р°РґРёРѕ 1';
+  TC_RADIO2FREQUENCYADDER               = 'СЃРјРµС‰РµРЅРёРµ С‡Р°СЃС‚РѕС‚С‹ Р Р°РґРёРѕ 2';
+  TC_NEWSAYHIRATECUTOFF                 = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё РїРµСЂРµРґР°С‡Рё РїСЂРёРІРµС‚СЃС‚РІРёСЏ РІ Р·Р°РІРёСЃРёРјРѕСЃС‚Рё РѕС‚ СЂРµР№С‚РёРЅРіР°';
+  TC_NEWSCPCOUNTRYSTRING                = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РѕРіСЂР°РЅРёС‡РёС‚РµР»СЏ СЃС‚СЂР°РЅ РІ РїРѕРґСЃРєР°Р·РєРµ';
+  TC_KEYBOARDCHARACTERTOSTARTSENDING    = 'РєР»Р°РІРёС€Сѓ РЅР°С‡Р°Р»Р° РїРµСЂРµРґР°С‡Рё';
+  TC_NETWORKSERVERADDRESS               = 'Р°РґСЂРµСЃ СЃРµСЂРІРµСЂР° СЃРµС‚Рё';
+  TC_NEWSERVERPASSWORD10CHARS           = 'РЅРѕРІС‹Р№ РїР°СЂРѕР»СЊ СЃРµСЂРІРµСЂР° (10 Р·РЅР°РєРѕРІ)';
+  TC_NETWORKSERVERPORT                  = 'СЃРµС‚РµРІРѕР№ РїРѕСЂС‚ СЃРµСЂРІРµСЂР°';
+  TC_KEYBOARDCHARACTERTOUSEFORSLASH     = 'РєР»Р°РІРёР°С‚СѓСЂРЅС‹Р№ СЃРёРјРІРѕР» РґР»СЏ Р·РЅР°РєР° /';
+  TC_NEWOFFTIMEVALUEMINUTES             = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РІСЂРµРјРµРЅРё РѕС‚РґС‹С…Р° (РІ РјРёРЅСѓС‚Р°С…)';
+  TC_NEWVALUEFORWAKEUPTIMEOUT           = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ  РІСЂРµРјРµРЅРё Р·Р°РґРµСЂР¶РєРё Р±СѓРґРёР»СЊРЅРёРєР°';
+  TC_NEWWEIGHTVALUE                     = 'Р·РЅР°С‡РµРЅРёРµ РІРµСЃР° РїРµСЂРµРґР°РІР°РµРјРѕРіРѕ Р·РЅР°РєР° (.5 - 1.5)';
+  TC_NEWVALUE                           = 'РЅРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ';
 
   {TREE}
 
-  TC_ALREADYEXISTSOKAYTODELETE          = '%s уже существует.'#13#13'Удалить?';
+  TC_ALREADYEXISTSOKAYTODELETE          = '%s СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.'#13#13'РЈРґР°Р»РёС‚СЊ?';
 
   {UWINKEY}
 
-  TC_WINKEYERENABLE                     = 'Включен Winkeyer';
-  TC_AUTOSPACE                          = 'Длительность паузы';
-  TC_CTSPACING                          = 'CT интервал';
-  TC_SIDETONE                           = 'Самопрослушивание';
-  TC_PADDLESWAP                         = 'Работа на манипуляторе правой или левой рукой';
-  TC_IGNORESPEEDPOT                     = 'Игнорировать скорость установленную потенциометром';
-  TC_PADDLEONLYSIDETONE                 = 'Манипулятор в режиме самопрослушивания';
+  TC_WINKEYERENABLE                     = 'Р’РєР»СЋС‡РµРЅ Winkeyer';
+  TC_AUTOSPACE                          = 'Р”Р»РёС‚РµР»СЊРЅРѕСЃС‚СЊ РїР°СѓР·С‹';
+  TC_CTSPACING                          = 'CT РёРЅС‚РµСЂРІР°Р»';
+  TC_SIDETONE                           = 'РЎР°РјРѕРїСЂРѕСЃР»СѓС€РёРІР°РЅРёРµ';
+  TC_PADDLESWAP                         = 'Р Р°Р±РѕС‚Р° РЅР° РјР°РЅРёРїСѓР»СЏС‚РѕСЂРµ РїСЂР°РІРѕР№ РёР»Рё Р»РµРІРѕР№ СЂСѓРєРѕР№';
+  TC_IGNORESPEEDPOT                     = 'РРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ СЃРєРѕСЂРѕСЃС‚СЊ СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅСѓСЋ РїРѕС‚РµРЅС†РёРѕРјРµС‚СЂРѕРј';
+  TC_PADDLEONLYSIDETONE                 = 'РњР°РЅРёРїСѓР»СЏС‚РѕСЂ РІ СЂРµР¶РёРјРµ СЃР°РјРѕРїСЂРѕСЃР»СѓС€РёРІР°РЅРёСЏ';
 
-  TC_WINKEYERPORT                       = 'Порт подключения Winkeyer';
-  TC_KEYERMODE                          = 'Режим работы ключа';
-  TC_SIDETONEFREQ                       = 'Разница тона';
-  TC_HANGTIME                           = 'Задержка времени';
+  TC_WINKEYERPORT                       = 'РџРѕСЂС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Winkeyer';
+  TC_KEYERMODE                          = 'Р РµР¶РёРј СЂР°Р±РѕС‚С‹ РєР»СЋС‡Р°';
+  TC_SIDETONEFREQ                       = 'Р Р°Р·РЅРёС†Р° С‚РѕРЅР°';
+  TC_HANGTIME                           = 'Р—Р°РґРµСЂР¶РєР° РІСЂРµРјРµРЅРё';
 
-  TC_IAMBICB                            = 'РежимIambic B';
-  TC_IAMBICA                            = 'Режим Iambic A';
-  TC_ULTIMATIC                          = 'Режим Ultimatic';
-  TC_BUGMODE                            = 'Режим Bug mode';
+  TC_IAMBICB                            = 'Р РµР¶РёРјIambic B';
+  TC_IAMBICA                            = 'Р РµР¶РёРј Iambic A';
+  TC_ULTIMATIC                          = 'Р РµР¶РёРј Ultimatic';
+  TC_BUGMODE                            = 'Р РµР¶РёРј Bug mode';
 
-  TC_WEIGHTING                          = 'Изменение соотношение точки к тире';
-  TC_DITDAHRATIO                        = 'Изменение соотношение точки и тире ';
-  TC_LEADIN                             = 'Время между сигналом PTT и началом манипуляции (*10 ms)';
-  TC_TAIL                               = 'Время между окончанием манипуляции и отключением PTT(*10 ms)';
-  TC_FIRSTEXTENSION                     = 'Увеличение первого элемента';
-  TC_KEYCOMP                            = 'Корректировка работы манипулятора';
-  TC_PADDLESWITCHPOINT                  = 'Переключение манипулятора';
+  TC_WEIGHTING                          = 'РР·РјРµРЅРµРЅРёРµ СЃРѕРѕС‚РЅРѕС€РµРЅРёРµ С‚РѕС‡РєРё Рє С‚РёСЂРµ';
+  TC_DITDAHRATIO                        = 'РР·РјРµРЅРµРЅРёРµ СЃРѕРѕС‚РЅРѕС€РµРЅРёРµ С‚РѕС‡РєРё Рё С‚РёСЂРµ ';
+  TC_LEADIN                             = 'Р’СЂРµРјСЏ РјРµР¶РґСѓ СЃРёРіРЅР°Р»РѕРј PTT Рё РЅР°С‡Р°Р»РѕРј РјР°РЅРёРїСѓР»СЏС†РёРё (*10 ms)';
+  TC_TAIL                               = 'Р’СЂРµРјСЏ РјРµР¶РґСѓ РѕРєРѕРЅС‡Р°РЅРёРµРј РјР°РЅРёРїСѓР»СЏС†РёРё Рё РѕС‚РєР»СЋС‡РµРЅРёРµРј PTT(*10 ms)';
+  TC_FIRSTEXTENSION                     = 'РЈРІРµР»РёС‡РµРЅРёРµ РїРµСЂРІРѕРіРѕ СЌР»РµРјРµРЅС‚Р°';
+  TC_KEYCOMP                            = 'РљРѕСЂСЂРµРєС‚РёСЂРѕРІРєР° СЂР°Р±РѕС‚С‹ РјР°РЅРёРїСѓР»СЏС‚РѕСЂР°';
+  TC_PADDLESWITCHPOINT                  = 'РџРµСЂРµРєР»СЋС‡РµРЅРёРµ РјР°РЅРёРїСѓР»СЏС‚РѕСЂР°';
 
   {UTOTAL}
 
-  TC_QTCPENDING                         = 'QTC на передачу';
-  TC_ZONE                               = 'Зон';
-  TC_PREFIX                             = 'Префиксов';
-  TC_DXMULTS                            = 'DX множ.';
-  TC_OBLASTS                            = 'Областей';
-  TC_HQMULTS                            = 'HQ множ.';
-  TC_DOMMULTS                           = 'Внутр. множ.';
-  TC_QSOS                               = 'Связей';
-  TC_CWQSOS                             = 'CW связей';
-  TC_SSBQSOS                            = 'SSB связей';
-  TC_DIGQSOS                            = 'DIG связей';
+  TC_QTCPENDING                         = 'QTC РЅР° РїРµСЂРµРґР°С‡Сѓ';
+  TC_ZONE                               = 'Р—РѕРЅ';
+  TC_PREFIX                             = 'РџСЂРµС„РёРєСЃРѕРІ';
+  TC_DXMULTS                            = 'DX РјРЅРѕР¶.';
+  TC_OBLASTS                            = 'РћР±Р»Р°СЃС‚РµР№';
+  TC_HQMULTS                            = 'HQ РјРЅРѕР¶.';
+  TC_DOMMULTS                           = 'Р’РЅСѓС‚СЂ. РјРЅРѕР¶.';
+  TC_QSOS                               = 'РЎРІСЏР·РµР№';
+  TC_CWQSOS                             = 'CW СЃРІСЏР·РµР№';
+  TC_SSBQSOS                            = 'SSB СЃРІСЏР·РµР№';
+  TC_DIGQSOS                            = 'DIG СЃРІСЏР·РµР№';
 
   {UALTD}
 
-  TC_ENTERCALLTOBECHECKEDON             = 'Введите позывной для проверки на %s%s:';
+  TC_ENTERCALLTOBECHECKEDON             = 'Р’РІРµРґРёС‚Рµ РїРѕР·С‹РІРЅРѕР№ РґР»СЏ РїСЂРѕРІРµСЂРєРё РЅР° %s%s:';
 
   {LOGGRID}
 
-  TC_ALLSUN                             = 'День';
-  TC_ALLDARK                            = 'Ночь';
+  TC_ALLSUN                             = 'Р”РµРЅСЊ';
+  TC_ALLDARK                            = 'РќРѕС‡СЊ';
 
   {UMIXW}
 
-  TC_MIXW_CONNECTED                     = 'Соединен';
-  TC_MIXW_DISCONNECTED                  = 'Отключен';
+  TC_MIXW_CONNECTED                     = 'РЎРѕРµРґРёРЅРµРЅ';
+  TC_MIXW_DISCONNECTED                  = 'РћС‚РєР»СЋС‡РµРЅ';
 
   {LOGWAE}
 
-  TC_INVALIDCALLSIGNINCALLWINDOW        = 'Неверный позывной в окне ввода!!';
-  TC_SORRYYOUALREADYHAVE10QTCSWITH      = 'Извините, у вас уже есть 10 QTC с %s';
-  TC_NOQTCSPENDINGQRU                   = 'Нет ожидания QTCs, QRU.';
-  TC_ISQRVFOR                           = '%s QRV для %s?';
+  TC_INVALIDCALLSIGNINCALLWINDOW        = 'РќРµРІРµСЂРЅС‹Р№ РїРѕР·С‹РІРЅРѕР№ РІ РѕРєРЅРµ РІРІРѕРґР°!!';
+  TC_SORRYYOUALREADYHAVE10QTCSWITH      = 'РР·РІРёРЅРёС‚Рµ, Сѓ РІР°СЃ СѓР¶Рµ РµСЃС‚СЊ 10 QTC СЃ %s';
+  TC_NOQTCSPENDINGQRU                   = 'РќРµС‚ РѕР¶РёРґР°РЅРёСЏ QTCs, QRU.';
+  TC_ISQRVFOR                           = '%s QRV РґР»СЏ %s?';
 
   {UREMMULTS}
 
-  TC_CLEANSWEEPCONGRATULATIONS          = 'ПОЛНАЯ ПОБЕДА!! ПОЗДРАВЛЯЮ!!';
+  TC_CLEANSWEEPCONGRATULATIONS          = 'РџРћР›РќРђРЇ РџРћР‘Р•Р”Рђ!! РџРћР—Р”Р РђР’Р›РЇР®!!';
 
   {UGETSERVERLOG}
-  TC_FAILEDTORECEIVESERVERLOG           = 'Не удалось получить серверный лог.';
+  TC_FAILEDTORECEIVESERVERLOG           = 'РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ СЃРµСЂРІРµСЂРЅС‹Р№ Р»РѕРі.';
 
   {POSTUNIT}
-  TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'Более чем 50 различных часов в логе!!';
-  TC_TOOMANYCONTESTDATES                = 'Слишком много дат!!';
+  TC_MORETHAN50DIFFERENTHOURSINTHISLOG  = 'Р‘РѕР»РµРµ С‡РµРј 50 СЂР°Р·Р»РёС‡РЅС‹С… С‡Р°СЃРѕРІ РІ Р»РѕРіРµ!!';
+  TC_TOOMANYCONTESTDATES                = 'РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ РґР°С‚!!';
 
   {DLPORTIO}
-  TC_DLPORTIODRIVERISNOTINSTALLED       = 'Драйвер DLPortIO не установлен.';
+  TC_DLPORTIODRIVERISNOTINSTALLED       = 'Р”СЂР°Р№РІРµСЂ DLPortIO РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ.';
 
   {CFGCMD}
 
-  TC_NETWORKTEST                        = 'Режим тестирования сети';
-  TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'Максимальное число напоминаний исчерпано!!';
-  TC_INVALIDREMINDERTIME                = 'Неправильное время напоминания!!';
-  TC_INVALIDREMINDERDATE                = 'Неправильная дата напоминания!!';
-  TC_TOOMANYTOTALSCOREMESSAGES          = 'Слишком много сообщений TOTAL SCORE MESSAGE!!';
-  TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'Первая строка в файле конфигурации должна быть MY CALL !!';
+  TC_NETWORKTEST                        = 'Р РµР¶РёРј С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ СЃРµС‚Рё';
+  TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED   = 'РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ С‡РёСЃР»Рѕ РЅР°РїРѕРјРёРЅР°РЅРёР№ РёСЃС‡РµСЂРїР°РЅРѕ!!';
+  TC_INVALIDREMINDERTIME                = 'РќРµРїСЂР°РІРёР»СЊРЅРѕРµ РІСЂРµРјСЏ РЅР°РїРѕРјРёРЅР°РЅРёСЏ!!';
+  TC_INVALIDREMINDERDATE                = 'РќРµРїСЂР°РІРёР»СЊРЅР°СЏ РґР°С‚Р° РЅР°РїРѕРјРёРЅР°РЅРёСЏ!!';
+  TC_TOOMANYTOTALSCOREMESSAGES          = 'РЎР»РёС€РєРѕРј РјРЅРѕРіРѕ СЃРѕРѕР±С‰РµРЅРёР№ TOTAL SCORE MESSAGE!!';
+  TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE  = 'РџРµСЂРІР°СЏ СЃС‚СЂРѕРєР° РІ С„Р°Р№Р»Рµ РєРѕРЅС„РёРіСѓСЂР°С†РёРё РґРѕР»Р¶РЅР° Р±С‹С‚СЊ MY CALL !!';
 
   {UCT1BOH}
-  TC_TIMEON                             = 'Время в эфире';
+  TC_TIMEON                             = 'Р’СЂРµРјСЏ РІ СЌС„РёСЂРµ';
 
   {USYNTIME}
-  TC_MS                                 = ' мс'; //milliseconds
+  TC_MS                                 = ' РјСЃ'; //milliseconds
 
   {ULOGSEARCH}
-  TC_ENTRIESPERMS                       = 'Найдено %u записи(ей) за %u мс';
+  TC_ENTRIESPERMS                       = 'РќР°Р№РґРµРЅРѕ %u Р·Р°РїРёСЃРё(РµР№) Р·Р° %u РјСЃ';
 
   {ULOGCOMPARE}
-  TC_SIZEBYTES                          = 'Размер, байт';
-  TC_RECORDS                            = 'Записей';
-  TC_MODIFIED                           = 'Изменен';
-  TC_TIMEDIFF                           = 'Вр. разница';
+  TC_SIZEBYTES                          = 'Р Р°Р·РјРµСЂ, Р±Р°Р№С‚';
+  TC_RECORDS                            = 'Р—Р°РїРёСЃРµР№';
+  TC_MODIFIED                           = 'РР·РјРµРЅРµРЅ';
+  TC_TIMEDIFF                           = 'Р’СЂ. СЂР°Р·РЅРёС†Р°';
 
   {ULOGCOMPARE}
-  TC_SERVERLOG                          = 'СЕРВЕРНЫЙ ЛОГ';
-  TC_LOCALLOG                           = 'ЛОКАЛЬНЫЙ ЛОГ';
+  TC_SERVERLOG                          = 'РЎР•Р Р’Р•Р РќР«Р™ Р›РћР“';
+  TC_LOCALLOG                           = 'Р›РћРљРђР›Р¬РќР«Р™ Р›РћР“';
 
   {UCHECKLATESTVERSION}
-  TC_VERSIONONSERVER                    = 'Версия на сервере';
-  TC_THISVERSION2                       = 'Эта версия';
-  TC_DOWNLOADIT                         = 'Скачать последнюю версию?';
+  TC_VERSIONONSERVER                    = 'Р’РµСЂСЃРёСЏ РЅР° СЃРµСЂРІРµСЂРµ';
+  TC_THISVERSION2                       = 'Р­С‚Р° РІРµСЂСЃРёСЏ';
+  TC_DOWNLOADIT                         = 'РЎРєР°С‡Р°С‚СЊ РїРѕСЃР»РµРґРЅСЋСЋ РІРµСЂСЃРёСЋ?';
 
-  TC_LIST_OF_COMMAND                    = 'Список команд';
+  TC_LIST_OF_COMMAND                    = 'РЎРїРёСЃРѕРє РєРѕРјР°РЅРґ';
 
-  CLOSE_WORD                            = 'Закрыть';
-  CANCEL_WORD                           = 'Отмена';
-  HELP_WORD                             = 'Помощь';
+  CLOSE_WORD                            = 'Р—Р°РєСЂС‹С‚СЊ';
+  CANCEL_WORD                           = 'РћС‚РјРµРЅР°';
+  HELP_WORD                             = 'РџРѕРјРѕС‰СЊ';
   OK_WORD                               = 'OK';
-  EXIT_WORD                             = 'Выход';
-  RC_CALLSIGN                           = 'Позывной';
-  RC_OPERATOR                           = 'Оператор';
-  RC_MODE                               = 'Вид изл.';
-  RC_BAND                               = 'Диап.';
-  RC_FREQUENCY                          = 'Частота';
-  RC_APPLY                              = 'Применить';
-  RC_RESET                              = 'Сброс';
-  RC_START                              = 'Старт';
-  RC_SHOW                               = 'Показать';
-  RC_SAVE                               = 'Сохр.';
-  RC_CREATE                             = 'Создать';
-  RC_EDIT_WORD                          = 'Редактировать';
-  RC_POSTSCORETOGS                      = 'Отправить результат';
-  RC_POSTNOW                            = 'Отправить сейчас';
-  RC_GOTOGS                             = 'Показать результаты';
-  RC_FILE                               = 'Файл';
-  RC_NEWCONTEST                         = 'Новый контест';
-  RC_CLEARLOG                           = 'Очистить лог';
-  RC_OPENLOGDIR                         = 'Открыть папку контеста';
-  RC_EXPORT                             = 'Экспорт';
-  RC_INIEXLIST                          = 'Список обменных номеров';
-  RC_TRLOGFORM                          = 'Формат TR Log';
-  RC_REPORTS                            = 'Статистика';
-  RC_IMPORT                             = 'Импорт';
-  RC_ALLCALLS                           = 'Все позывные';
-  RC_BANDCHANGES                        = 'Смены диапазонов';
-  RC_CONTLIST                           = 'Список континентов';
-  RC_FCC                                = 'Первый позывной в каждой стране';
-  RC_FCZ                                = 'Первый позывной в каждой зоне';
-  RC_POSSBADZONE                        = 'Возможные неправильные зоны';
-  RC_QSOBYCOUNTRY                       = 'Связи по странам и диапазонам';
-  RC_SCOREBYHOUR                        = 'Очки по часам';
-  RC_SUMMARY                            = 'Итоговый результат';
-  RC_EXIT                               = 'Выход из программы';
-  RC_SETTINGS                           = 'Настройки';
-  RC_OPTIONS                            = 'Команды конфигурации';
-//  RC_CFG_COMMANDS                       = 'Команды конфигурации';
-  RC_PROGRAMMES                         = 'Программирование сообщений';
-  RC_CATANDCW                           = 'CAT и CW манипуляция';
-  RC_RADIOONE                           = 'Радио 1';
-  RC_RADIOTWO                           = 'Радио 2';
-  RC_WINDOWS                            = 'Окна';
-  RC_BANDMAP                            = 'Карта диапазона';
-  RC_DUPESHEET                          = 'Лист повторов';
-  RC_FKEYS                              = 'Функциональные клавиши';
+  EXIT_WORD                             = 'Р’С‹С…РѕРґ';
+  RC_CALLSIGN                           = 'РџРѕР·С‹РІРЅРѕР№';
+  RC_OPERATOR                           = 'РћРїРµСЂР°С‚РѕСЂ';
+  RC_MODE                               = 'Р’РёРґ РёР·Р».';
+  RC_BAND                               = 'Р”РёР°Рї.';
+  RC_FREQUENCY                          = 'Р§Р°СЃС‚РѕС‚Р°';
+  RC_APPLY                              = 'РџСЂРёРјРµРЅРёС‚СЊ';
+  RC_RESET                              = 'РЎР±СЂРѕСЃ';
+  RC_START                              = 'РЎС‚Р°СЂС‚';
+  RC_SHOW                               = 'РџРѕРєР°Р·Р°С‚СЊ';
+  RC_SAVE                               = 'РЎРѕС…СЂ.';
+  RC_CREATE                             = 'РЎРѕР·РґР°С‚СЊ';
+  RC_EDIT_WORD                          = 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ';
+  RC_POSTSCORETOGS                      = 'РћС‚РїСЂР°РІРёС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚';
+  RC_POSTNOW                            = 'РћС‚РїСЂР°РІРёС‚СЊ СЃРµР№С‡Р°СЃ';
+  RC_GOTOGS                             = 'РџРѕРєР°Р·Р°С‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚С‹';
+  RC_FILE                               = 'Р¤Р°Р№Р»';
+  RC_NEWCONTEST                         = 'РќРѕРІС‹Р№ РєРѕРЅС‚РµСЃС‚';
+  RC_CLEARLOG                           = 'РћС‡РёСЃС‚РёС‚СЊ Р»РѕРі';
+  RC_OPENLOGDIR                         = 'РћС‚РєСЂС‹С‚СЊ РїР°РїРєСѓ РєРѕРЅС‚РµСЃС‚Р°';
+  RC_EXPORT                             = 'Р­РєСЃРїРѕСЂС‚';
+  RC_INIEXLIST                          = 'РЎРїРёСЃРѕРє РѕР±РјРµРЅРЅС‹С… РЅРѕРјРµСЂРѕРІ';
+  RC_TRLOGFORM                          = 'Р¤РѕСЂРјР°С‚ TR Log';
+  RC_REPORTS                            = 'РЎС‚Р°С‚РёСЃС‚РёРєР°';
+  RC_IMPORT                             = 'РРјРїРѕСЂС‚';
+  RC_ALLCALLS                           = 'Р’СЃРµ РїРѕР·С‹РІРЅС‹Рµ';
+  RC_BANDCHANGES                        = 'РЎРјРµРЅС‹ РґРёР°РїР°Р·РѕРЅРѕРІ';
+  RC_CONTLIST                           = 'РЎРїРёСЃРѕРє РєРѕРЅС‚РёРЅРµРЅС‚РѕРІ';
+  RC_FCC                                = 'РџРµСЂРІС‹Р№ РїРѕР·С‹РІРЅРѕР№ РІ РєР°Р¶РґРѕР№ СЃС‚СЂР°РЅРµ';
+  RC_FCZ                                = 'РџРµСЂРІС‹Р№ РїРѕР·С‹РІРЅРѕР№ РІ РєР°Р¶РґРѕР№ Р·РѕРЅРµ';
+  RC_POSSBADZONE                        = 'Р’РѕР·РјРѕР¶РЅС‹Рµ РЅРµРїСЂР°РІРёР»СЊРЅС‹Рµ Р·РѕРЅС‹';
+  RC_QSOBYCOUNTRY                       = 'РЎРІСЏР·Рё РїРѕ СЃС‚СЂР°РЅР°Рј Рё РґРёР°РїР°Р·РѕРЅР°Рј';
+  RC_SCOREBYHOUR                        = 'РћС‡РєРё РїРѕ С‡Р°СЃР°Рј';
+  RC_SUMMARY                            = 'РС‚РѕРіРѕРІС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚';
+  RC_EXIT                               = 'Р’С‹С…РѕРґ РёР· РїСЂРѕРіСЂР°РјРјС‹';
+  RC_SETTINGS                           = 'РќР°СЃС‚СЂРѕР№РєРё';
+  RC_OPTIONS                            = 'РљРѕРјР°РЅРґС‹ РєРѕРЅС„РёРіСѓСЂР°С†РёРё';
+//  RC_CFG_COMMANDS                       = 'РљРѕРјР°РЅРґС‹ РєРѕРЅС„РёРіСѓСЂР°С†РёРё';
+  RC_PROGRAMMES                         = 'РџСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёРµ СЃРѕРѕР±С‰РµРЅРёР№';
+  RC_CATANDCW                           = 'CAT Рё CW РјР°РЅРёРїСѓР»СЏС†РёСЏ';
+  RC_RADIOONE                           = 'Р Р°РґРёРѕ 1';
+  RC_RADIOTWO                           = 'Р Р°РґРёРѕ 2';
+  RC_WINDOWS                            = 'РћРєРЅР°';
+  RC_BANDMAP                            = 'РљР°СЂС‚Р° РґРёР°РїР°Р·РѕРЅР°';
+  RC_DUPESHEET                          = 'Р›РёСЃС‚ РїРѕРІС‚РѕСЂРѕРІ';
+  RC_FKEYS                              = 'Р¤СѓРЅРєС†РёРѕРЅР°Р»СЊРЅС‹Рµ РєР»Р°РІРёС€Рё';
   RC_TRMASTER                           = 'SCP';
-  RC_REMMULTS                           = 'Оставшиеся множители';
-  RC_RM_DEFAULT                         = 'По умолчанию';
-  RC_RADIO1                             = 'Радио 1';
-  RC_RADIO2                             = 'Радио 2';
-  RC_TELNET                             = 'DX Кластер';
-  RC_NETWORK                            = 'Сеть';
-  RC_INTERCOM                           = 'Внутренняя связь';
-  RC_GETSCORES                          = 'Отправка результата онлайн на WEB сервер';
-  RC_STATIONS                           = 'Станции';
-  RC_MP3REC                             = 'MP3 рекордер';
-  RC_MULTSFREQ                          = 'Частоты для взятия множителей';
-  RC_ALARM                              = 'Тревога';
-  RC_AUTOCQRESUME                       = 'Продолжить Авто-CQ';
-  RC_DUPECHECK                          = 'Проверка повторов';
-  RC_EDIT                               = 'Редактирование';
-  RC_SAVETOFLOPPY                       = 'Сохранить лог на диск';
-  RC_SWAPMULTVIEW                       = 'Переключить вид множителей';
-  RC_INCNUMBER                          = 'Увеличить номер';
-  RC_TOOGLEMB                           = 'Переключить звук при новом множителе';
-  RC_KILLCW                             = 'Переключение CW';
-  RC_SEARCHLOG                          = 'Поиск по логу';
-  RC_TRANSFREQ                          = 'Ввод частоты передачи';
-  RC_REMINDER                           = 'Напоминания';
-  RC_AUTOCQ                             = 'Авто-CQ';
-  RC_TOOGLERIGS                         = 'Переключение радио';
-  RC_CWSPEED                            = 'Скорость CW';
-  RC_SETSYSDT                           = 'Установить системные дату/время';
-  RC_INITIALIZE                         = 'Очистить данные о связи';
-  RC_RESETWAKEUP                        = 'Сброс будильника';
-  RC_DELETELASTQSO                      = 'Удалить последнюю связь';
-  RC_INITIALEX                          = 'Подстановка обменного номера';
-  RC_TOOGLEST                           = 'Вкл./Выкл. передачу тона';
-  RC_TOOGLEAS                           = 'Вкл./Выкл. автопередачу';
-  RC_BANDUP                             = 'Диапазон вверх';
-  RC_BANDDOWN                           = 'Диапазон вниз';
-  RC_SSBCWMODE                          = 'Переключить вид излучения';
-  RC_SENDKEYBOARD                       = 'Передача с клавиатуры';
-  RC_COMMWITHPP                         = 'Соединение с портом пакетной связи';
-  RC_CLEARDUPES                         = 'Очистить лист повторов';
-  RC_VIEWEDITLOG                        = 'Просмотр - редактирование лога';
-  RC_NOTE                               = 'Заметка';
-  RC_MISSMULTSREP                       = 'Отчет о недостающих множителях';
-  RC_REDOPOSSCALLS                      = 'Информация о возможных позывных';
-  RC_QTCFUNCTIONS                       = 'Функция QTC';
-  RC_RECALLLASTENT                      = 'Вернуть удаленное по ESC';
-  RC_VIEWPAKSPOTS                       = 'Показать пакетные сообщения';
-  RC_EXECONFIGFILE                      = 'Загрузить файл конфигурации';
-  RC_REFRESHBM                          = 'Обновить карту диапазона';
-  RC_DUALINGCQ                          = 'Поочередное CQ на двух радио';
-  RC_CURSORINBM                         = 'Курсор в окно "Карты диапазона"';
-  RC_CURSORTELNET                       = 'Курсор в окно "DX Кластера"';
-  RC_QSOWITHNOCW                        = 'Ввод связи без передачи';
-  RC_CT1BOHIS                           = 'Информационное окно CT1BOH';
-  RC_ADDBANDMAPPH                       = 'Добавить в карту пустой спот';
-  RC_COMMANDS                           = 'Команды';
-  RC_FOCUSINMW                          = 'Фокус в главное окно программы';
-  RC_TOGGLEINSERT                       = 'Режим вставки/замены';
-  RC_ESCAPE                             = 'Выход';
-  RC_CWSPEEDUP                          = 'Увеличение скорости передачи CW';
-  RC_CWSPEEDDOWN                        = 'Уменьшение скорости передачи CW';
-  RC_CWSPUPIR                           = 'Увеличение скорости на неактивном радио';
-  RC_CWSPDNIR                           = 'Уменьшение скорости на неактивном радио';
-  RC_CQMODE                             = 'Режим CQ';
-  RC_SEARCHPOUNCE                       = 'Режим поиска (S&&P)';
-  RC_SENDSPOT                           = 'Отправить спот';
-  RC_RESCORE                            = 'Пересчет очков';
-  RC_TOOLS                              = 'Инструменты';
-  RC_SYNPCTIME                          = 'Синхронизировать время компьютера';
-  RC_BEACONSM                           = 'Монитор маяков';
-  RC_WINCONTROL                         = 'Управление окнами';
-  RC_SETTIMEZONE                        = 'Установка часового пояса';
-  RC_PING                               = 'Пропинговать TR4WSERVER';
-  RC_RUNSERVER                          = 'Запуск TR4WSERVER';
-  RC_DVPVOLCONTROL                      = 'Контроль уровня звукового процессора';
-  RC_RECCONTROL                         = 'Контроль уровня записи';
-  RC_SOUNDRECORDER                      = 'Магнитофон';
-  RC_DISTANCE                           = 'Расстояние';
-  RC_GRID                               = 'Квадрат';
-  RC_CALCULATOR                         = 'Калькулятор';
-  RC_LC                                 = 'Расчет LC-контура';
-  RC_RESET_RADIO_PORTS                  = 'Сбросить порты трансиверов';
-  RC_NET                                = 'Сеть';
-  RC_TIMESYN                            = 'Синхр. время на всех компьютерах';
-  RC_SENDMESSAGE                        = 'Послать сообщение';
-  RC_SYNLOG                             = 'Сравнить и синхронизировать логи';
-  RC_CLEARALLLOGS                       = 'Очистить все логи в сети';
-  RC_DOWNLOAD                           = 'Проверить последнюю версию на сервере';
-  RC_CONTENTS                           = 'Руководство пользователя';
-  RC_ABOUT                              = 'О программе';
-  RC_CONFFILE                           = 'Файл конфигурации';
-  RC_EDITQSO                            = 'Редактирование связи';
-  TC_EDITFUNCTIONKEY                    = 'Редактирование %s Сообщение';
-  RC_DELETED                            = '&Удалена';
-  RC_DUPE                               = 'Повтор';
-  RC_LOGSEARCH                          = 'Поиск в логе';
-  RC_SEARCH                             = 'Поиск';
-  RC_GETOFFSET                          = 'Получить разницу';
-  RC_LOCALOFFSET                        = 'Разница во времени';
-  RC_NTPSERVER                          = 'NTP сервер';
-  RC_SERVERANSWER                       = 'Ответ сервера';
-  RC_SYNCLOCK                           = 'Синхр. часы';
-  RC_LOCALTIME                          = 'Местное время';
-  RC_DUPESHEET2                         = 'Таблица повторов';
-  RC_SENDSPOT2                          = 'Отправить спот';
-  RC_CONTESTNAMEIC                      = 'Название контеста в комментарии';
-  RC_SEND                               = 'Отправить';
-  RC_COMMENT                            = 'Комментарий';
-  RC_SENDINGCW                          = 'Передача CW с клавиатуры. Используйте ENTER/Escape/F10 для выхода.';
-  RC_RETURNTOMOD                        = 'Изменить';
-  RC_ARROWTOSELIT                       = 'Вверх/Вниз/PageUp/PageDown или ввод первых букв для выделения команды.';
-  RC_ALTW                               = 'Сохранить (Alt-&W)';
-  RC_ALTN                               = 'В сеть (Alt-&N)';
-  RC_ALTG                               = 'Сохр. все (Alt-&G)';
-  RC_BANDMAP2                           = 'Карта диапазона';
-  RC_AUTOCQ2                            = 'Авто-CQ';
-  RC_PRESSMKYWTR                        = 'Функц. клавиша, которую нужно повторять';
-  RC_NUMBEROSOLT                        = 'Пауза, мс.';
-  RC_DELETESELSPOT                      = 'Удалить выделенный спот';
-  RC_REMOVEALLSP                        = 'Удалить все споты';
-  RC_SENDINRIG                          = 'Настроить неактивное радио на эту частоту';
-  RC_COAX                               = 'Расчет длины коаксиала';
-  RC_ENTERTNHINIK                       = 'Введите высшее значение частоты в кГц для расчета сопротивления:';
-  RC_ENTERALIFIK                        = 'Введите нижнюю частоту в кГц для расчета сопротивления:';
-  RC_DISTANCEBTGS                       = 'Расстояние между двумя квадратами';
-  RC_SECONDGRID                         = 'Второй квадрат';
-  RC_FIRSTGRID                          = 'Первый квадрат';
-  RC_EURVHFDIST                         = 'Квадраты в Европейском УКВ контесте:';
-  RC_GRIDOFAGLL                         = 'Определить квадрат по широте/долготе';
-  RC_LONGMIE                            = 'Долгота (минус для востока)';
-  RC_LATMIS                             = 'Широта (минус для юга)';
-  RC_CALCOFCORI                         = 'Расчет емкости или индуктивности';
-  RC_INDUCANCE                          = 'Индуктивность, uH';
-  RC_CAPACITANCE                        = 'Емкость, pf';
-  RC_FREQOFRES                          = 'Частота резонанса, кГц';
-  RC_WINCONTROL2                        = 'Управление окнами';
-  RC_SHOWMENU                           = 'Показать меню';
-  RC_RECVQTC                            = 'Прием QTC';
-  RC_MIXWINTERFACE                      = 'Интерфейс с MixW';
-  RC_CONNECTTOMIXW                      = 'Подключиться к MixW';
-  RC_MEMPROGFUNC                        = 'Программирование сообщений';
-  RC_PRESS_C                            = 'Нажмите &C для программирования CQ сообщений';
-  RC_PRESS_E                            = 'Нажмите &E для программирования S&&P сообщений';
-  RC_PRESS_O                            = 'Нажмите &O для программирования других сообщений';
-  RC_SYNLOG2                            = 'Синхронизировать лог';
-  RC_GETSERVLOG                         = 'Получить серверный лог';
-  RC_RECVRECORDS                        = 'Получено записей:';
-  RC_SENDRECORDS                        = 'Отправлено записей:';
-  RC_CREATEAUNL                         = 'Создать и использовать новый лог';
-  RC_RECVBYTES                          = 'Получено байт:';
-  RC_RECVQSOS                           = 'Получено связей:';
-  RC_SHOWSERVLOGC                       = 'Показать содержимое серверного лога';
-  RC_VIEWEDITLOG2                       = 'Просмотр / Редактирование лога';
-  RC_INTERCOM2                          = 'Внутренняя связь';
-  RC_DIFFINLOG                          = 'Различие в логах';
-  RC_SYNCHRONIZE                        = 'Синхронизировать';
-  RC_ARCFILTER                          = 'Фильтр спотов диапазон-модуляция на ARC';
-  RC_DXSFILTER                          = 'Фильтр спотов диапазон-модуляция на DXSpider';
-  RC_CLEARFILTER                        = 'Очистить фильтр';
-  RC_STATIONS2                          = 'Станции';
-  RC_C_EDITQSO                          = 'Редактировать связь';
-  RC_C_DELETEQSO                        = 'Удалить связь';
-  RC_COPYTOCLIP                         = 'Копировать в буфер';
-  RC_DUPECHECKOAR                       = 'Проверка на повтор на неактивном радио';
-  RC_WINKEYSET                          = 'Настройки Winkeyer';
-  RC_CT1BOHIS2                          = 'Информационное окно CT1BOH';
-  RC_DATE                               = 'Дата';
-  RC_NUMBERSENT                         = 'Перед. номер';
-  RC_NUMBERRCVD                         = 'Приним. номер';
-  RC_RSTSENT                            = 'Перед. RST';
-  RC_RSTRECEIVED                        = 'Приним. RST';
-  RC_QSOPOINTS                          = 'Очков за QSO';
-  RC_AGE                                = 'Возраст';
-  RC_FREQUENCYHZ                        = 'Частота, Гц';
-  RC_PREFIX                             = 'Префикс';
-  RC_ZONE                               = 'Зона';
-  RC_NAME                               = 'Имя';
-  RC_POSTALCODE                         = 'Почтовый код';
-  RC_POWER                              = 'Мощность';
-  RC_PROGRMESS                          = 'Редактирование сообщения';
-  RC_MESSAGE                            = 'Сообщение';
-  RC_CAPTION                            = 'Надпись на кнопке';
-  RC_IAQSLINT                           = 'Увеличить Auto QSL Interval';
-  RC_DAQSLINT                           = 'Уменьшить Auto QSL Interval';
-  RC_ADDINFO                            = 'Дополнительная информация';
-  RC_AI_QSONUMBER                       = 'Номер QSO';
-  RC_AI_CALLSIGN                        = 'Позывной';
-  RC_AI_CWSPEED                         = 'Скорость CW';
-  RC_AI_BAND                            = 'Диапазон';
-  RC_CLEARMSHEET                        = 'Очистить таблицу множителей';
-  RC_WIKI                               = 'Документация к программе на сайте TR4W';
-  RC_NET_CLDUPE                         = 'Сбросить таблицы повторов на всех компьютерах';
-  RC_NET_CLMULT                         = 'Сбросить таблицы множителей на всех компьютерах';
-  RC_INC_TIME                           = 'Увеличить время';
-  RC_NOTES                              = 'Заметки';
-  RC_DEFAULT                            = 'Значение по умолчанию:';
-  RC_DESCRIPTION                        = 'Описание:';
-  RC_DEVICEMANAGER                      = 'Диспетчер устройств';
-  RC_SHDX_CALLSIGN                      = 'SH/DX [позывной]';
-  RC_STATIONINFO                        = 'Информация о станции';
-  RC_MP3_RECENABLE                      = 'Вкл.';
-  RC_PLAY                               = '&Воспр.';
-  RC_LISTOFMESS                         = 'Список сообщений';
-  RC_LOGIN                              = 'Залогиниться';
-  RC_GET_OFFSET                         = 'Получить разницу во времени';
-  RC_COLORS                             = 'Цвета';
-  RC_APPEARANCE                         = 'Внешний вид';
-  RC_BANDPLAN                           = 'Частотный план';
-  RC_WA7BNM_CALENDAR                    = 'Контест-календарь WA7BNM';
-  RC_SEND_BUG                           = 'Отправить сообщение об ошибке в программе';
-  RC_HOMEPAGE                           = 'Домашняя страница TR4W';
+  RC_REMMULTS                           = 'РћСЃС‚Р°РІС€РёРµСЃСЏ РјРЅРѕР¶РёС‚РµР»Рё';
+  RC_RM_DEFAULT                         = 'РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ';
+  RC_RADIO1                             = 'Р Р°РґРёРѕ 1';
+  RC_RADIO2                             = 'Р Р°РґРёРѕ 2';
+  RC_TELNET                             = 'DX РљР»Р°СЃС‚РµСЂ';
+  RC_NETWORK                            = 'РЎРµС‚СЊ';
+  RC_INTERCOM                           = 'Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ СЃРІСЏР·СЊ';
+  RC_GETSCORES                          = 'РћС‚РїСЂР°РІРєР° СЂРµР·СѓР»СЊС‚Р°С‚Р° РѕРЅР»Р°Р№РЅ РЅР° WEB СЃРµСЂРІРµСЂ';
+  RC_STATIONS                           = 'РЎС‚Р°РЅС†РёРё';
+  RC_MP3REC                             = 'MP3 СЂРµРєРѕСЂРґРµСЂ';
+  RC_MULTSFREQ                          = 'Р§Р°СЃС‚РѕС‚С‹ РґР»СЏ РІР·СЏС‚РёСЏ РјРЅРѕР¶РёС‚РµР»РµР№';
+  RC_ALARM                              = 'РўСЂРµРІРѕРіР°';
+  RC_AUTOCQRESUME                       = 'РџСЂРѕРґРѕР»Р¶РёС‚СЊ РђРІС‚Рѕ-CQ';
+  RC_DUPECHECK                          = 'РџСЂРѕРІРµСЂРєР° РїРѕРІС‚РѕСЂРѕРІ';
+  RC_EDIT                               = 'Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ';
+  RC_SAVETOFLOPPY                       = 'РЎРѕС…СЂР°РЅРёС‚СЊ Р»РѕРі РЅР° РґРёСЃРє';
+  RC_SWAPMULTVIEW                       = 'РџРµСЂРµРєР»СЋС‡РёС‚СЊ РІРёРґ РјРЅРѕР¶РёС‚РµР»РµР№';
+  RC_INCNUMBER                          = 'РЈРІРµР»РёС‡РёС‚СЊ РЅРѕРјРµСЂ';
+  RC_TOOGLEMB                           = 'РџРµСЂРµРєР»СЋС‡РёС‚СЊ Р·РІСѓРє РїСЂРё РЅРѕРІРѕРј РјРЅРѕР¶РёС‚РµР»Рµ';
+  RC_KILLCW                             = 'РџРµСЂРµРєР»СЋС‡РµРЅРёРµ CW';
+  RC_SEARCHLOG                          = 'РџРѕРёСЃРє РїРѕ Р»РѕРіСѓ';
+  RC_TRANSFREQ                          = 'Р’РІРѕРґ С‡Р°СЃС‚РѕС‚С‹ РїРµСЂРµРґР°С‡Рё';
+  RC_REMINDER                           = 'РќР°РїРѕРјРёРЅР°РЅРёСЏ';
+  RC_AUTOCQ                             = 'РђРІС‚Рѕ-CQ';
+  RC_TOOGLERIGS                         = 'РџРµСЂРµРєР»СЋС‡РµРЅРёРµ СЂР°РґРёРѕ';
+  RC_CWSPEED                            = 'РЎРєРѕСЂРѕСЃС‚СЊ CW';
+  RC_SETSYSDT                           = 'РЈСЃС‚Р°РЅРѕРІРёС‚СЊ СЃРёСЃС‚РµРјРЅС‹Рµ РґР°С‚Сѓ/РІСЂРµРјСЏ';
+  RC_INITIALIZE                         = 'РћС‡РёСЃС‚РёС‚СЊ РґР°РЅРЅС‹Рµ Рѕ СЃРІСЏР·Рё';
+  RC_RESETWAKEUP                        = 'РЎР±СЂРѕСЃ Р±СѓРґРёР»СЊРЅРёРєР°';
+  RC_DELETELASTQSO                      = 'РЈРґР°Р»РёС‚СЊ РїРѕСЃР»РµРґРЅСЋСЋ СЃРІСЏР·СЊ';
+  RC_INITIALEX                          = 'РџРѕРґСЃС‚Р°РЅРѕРІРєР° РѕР±РјРµРЅРЅРѕРіРѕ РЅРѕРјРµСЂР°';
+  RC_TOOGLEST                           = 'Р’РєР»./Р’С‹РєР». РїРµСЂРµРґР°С‡Сѓ С‚РѕРЅР°';
+  RC_TOOGLEAS                           = 'Р’РєР»./Р’С‹РєР». Р°РІС‚РѕРїРµСЂРµРґР°С‡Сѓ';
+  RC_BANDUP                             = 'Р”РёР°РїР°Р·РѕРЅ РІРІРµСЂС…';
+  RC_BANDDOWN                           = 'Р”РёР°РїР°Р·РѕРЅ РІРЅРёР·';
+  RC_SSBCWMODE                          = 'РџРµСЂРµРєР»СЋС‡РёС‚СЊ РІРёРґ РёР·Р»СѓС‡РµРЅРёСЏ';
+  RC_SENDKEYBOARD                       = 'РџРµСЂРµРґР°С‡Р° СЃ РєР»Р°РІРёР°С‚СѓСЂС‹';
+  RC_COMMWITHPP                         = 'РЎРѕРµРґРёРЅРµРЅРёРµ СЃ РїРѕСЂС‚РѕРј РїР°РєРµС‚РЅРѕР№ СЃРІСЏР·Рё';
+  RC_CLEARDUPES                         = 'РћС‡РёСЃС‚РёС‚СЊ Р»РёСЃС‚ РїРѕРІС‚РѕСЂРѕРІ';
+  RC_VIEWEDITLOG                        = 'РџСЂРѕСЃРјРѕС‚СЂ - СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ Р»РѕРіР°';
+  RC_NOTE                               = 'Р—Р°РјРµС‚РєР°';
+  RC_MISSMULTSREP                       = 'РћС‚С‡РµС‚ Рѕ РЅРµРґРѕСЃС‚Р°СЋС‰РёС… РјРЅРѕР¶РёС‚РµР»СЏС…';
+  RC_REDOPOSSCALLS                      = 'РРЅС„РѕСЂРјР°С†РёСЏ Рѕ РІРѕР·РјРѕР¶РЅС‹С… РїРѕР·С‹РІРЅС‹С…';
+  RC_QTCFUNCTIONS                       = 'Р¤СѓРЅРєС†РёСЏ QTC';
+  RC_RECALLLASTENT                      = 'Р’РµСЂРЅСѓС‚СЊ СѓРґР°Р»РµРЅРЅРѕРµ РїРѕ ESC';
+  RC_VIEWPAKSPOTS                       = 'РџРѕРєР°Р·Р°С‚СЊ РїР°РєРµС‚РЅС‹Рµ СЃРѕРѕР±С‰РµРЅРёСЏ';
+  RC_EXECONFIGFILE                      = 'Р—Р°РіСЂСѓР·РёС‚СЊ С„Р°Р№Р» РєРѕРЅС„РёРіСѓСЂР°С†РёРё';
+  RC_REFRESHBM                          = 'РћР±РЅРѕРІРёС‚СЊ РєР°СЂС‚Сѓ РґРёР°РїР°Р·РѕРЅР°';
+  RC_DUALINGCQ                          = 'РџРѕРѕС‡РµСЂРµРґРЅРѕРµ CQ РЅР° РґРІСѓС… СЂР°РґРёРѕ';
+  RC_CURSORINBM                         = 'РљСѓСЂСЃРѕСЂ РІ РѕРєРЅРѕ "РљР°СЂС‚С‹ РґРёР°РїР°Р·РѕРЅР°"';
+  RC_CURSORTELNET                       = 'РљСѓСЂСЃРѕСЂ РІ РѕРєРЅРѕ "DX РљР»Р°СЃС‚РµСЂР°"';
+  RC_QSOWITHNOCW                        = 'Р’РІРѕРґ СЃРІСЏР·Рё Р±РµР· РїРµСЂРµРґР°С‡Рё';
+  RC_CT1BOHIS                           = 'РРЅС„РѕСЂРјР°С†РёРѕРЅРЅРѕРµ РѕРєРЅРѕ CT1BOH';
+  RC_ADDBANDMAPPH                       = 'Р”РѕР±Р°РІРёС‚СЊ РІ РєР°СЂС‚Сѓ РїСѓСЃС‚РѕР№ СЃРїРѕС‚';
+  RC_COMMANDS                           = 'РљРѕРјР°РЅРґС‹';
+  RC_FOCUSINMW                          = 'Р¤РѕРєСѓСЃ РІ РіР»Р°РІРЅРѕРµ РѕРєРЅРѕ РїСЂРѕРіСЂР°РјРјС‹';
+  RC_TOGGLEINSERT                       = 'Р РµР¶РёРј РІСЃС‚Р°РІРєРё/Р·Р°РјРµРЅС‹';
+  RC_ESCAPE                             = 'Р’С‹С…РѕРґ';
+  RC_CWSPEEDUP                          = 'РЈРІРµР»РёС‡РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё РїРµСЂРµРґР°С‡Рё CW';
+  RC_CWSPEEDDOWN                        = 'РЈРјРµРЅСЊС€РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё РїРµСЂРµРґР°С‡Рё CW';
+  RC_CWSPUPIR                           = 'РЈРІРµР»РёС‡РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё РЅР° РЅРµР°РєС‚РёРІРЅРѕРј СЂР°РґРёРѕ';
+  RC_CWSPDNIR                           = 'РЈРјРµРЅСЊС€РµРЅРёРµ СЃРєРѕСЂРѕСЃС‚Рё РЅР° РЅРµР°РєС‚РёРІРЅРѕРј СЂР°РґРёРѕ';
+  RC_CQMODE                             = 'Р РµР¶РёРј CQ';
+  RC_SEARCHPOUNCE                       = 'Р РµР¶РёРј РїРѕРёСЃРєР° (S&&P)';
+  RC_SENDSPOT                           = 'РћС‚РїСЂР°РІРёС‚СЊ СЃРїРѕС‚';
+  RC_RESCORE                            = 'РџРµСЂРµСЃС‡РµС‚ РѕС‡РєРѕРІ';
+  RC_TOOLS                              = 'РРЅСЃС‚СЂСѓРјРµРЅС‚С‹';
+  RC_SYNPCTIME                          = 'РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ РІСЂРµРјСЏ РєРѕРјРїСЊСЋС‚РµСЂР°';
+  RC_BEACONSM                           = 'РњРѕРЅРёС‚РѕСЂ РјР°СЏРєРѕРІ';
+  RC_WINCONTROL                         = 'РЈРїСЂР°РІР»РµРЅРёРµ РѕРєРЅР°РјРё';
+  RC_SETTIMEZONE                        = 'РЈСЃС‚Р°РЅРѕРІРєР° С‡Р°СЃРѕРІРѕРіРѕ РїРѕСЏСЃР°';
+  RC_PING                               = 'РџСЂРѕРїРёРЅРіРѕРІР°С‚СЊ TR4WSERVER';
+  RC_RUNSERVER                          = 'Р—Р°РїСѓСЃРє TR4WSERVER';
+  RC_DVPVOLCONTROL                      = 'РљРѕРЅС‚СЂРѕР»СЊ СѓСЂРѕРІРЅСЏ Р·РІСѓРєРѕРІРѕРіРѕ РїСЂРѕС†РµСЃСЃРѕСЂР°';
+  RC_RECCONTROL                         = 'РљРѕРЅС‚СЂРѕР»СЊ СѓСЂРѕРІРЅСЏ Р·Р°РїРёСЃРё';
+  RC_SOUNDRECORDER                      = 'РњР°РіРЅРёС‚РѕС„РѕРЅ';
+  RC_DISTANCE                           = 'Р Р°СЃСЃС‚РѕСЏРЅРёРµ';
+  RC_GRID                               = 'РљРІР°РґСЂР°С‚';
+  RC_CALCULATOR                         = 'РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ';
+  RC_LC                                 = 'Р Р°СЃС‡РµС‚ LC-РєРѕРЅС‚СѓСЂР°';
+  RC_RESET_RADIO_PORTS                  = 'РЎР±СЂРѕСЃРёС‚СЊ РїРѕСЂС‚С‹ С‚СЂР°РЅСЃРёРІРµСЂРѕРІ';
+  RC_NET                                = 'РЎРµС‚СЊ';
+  RC_TIMESYN                            = 'РЎРёРЅС…СЂ. РІСЂРµРјСЏ РЅР° РІСЃРµС… РєРѕРјРїСЊСЋС‚РµСЂР°С…';
+  RC_SENDMESSAGE                        = 'РџРѕСЃР»Р°С‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ';
+  RC_SYNLOG                             = 'РЎСЂР°РІРЅРёС‚СЊ Рё СЃРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ Р»РѕРіРё';
+  RC_CLEARALLLOGS                       = 'РћС‡РёСЃС‚РёС‚СЊ РІСЃРµ Р»РѕРіРё РІ СЃРµС‚Рё';
+  RC_DOWNLOAD                           = 'РџСЂРѕРІРµСЂРёС‚СЊ РїРѕСЃР»РµРґРЅСЋСЋ РІРµСЂСЃРёСЋ РЅР° СЃРµСЂРІРµСЂРµ';
+  RC_CONTENTS                           = 'Р СѓРєРѕРІРѕРґСЃС‚РІРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ';
+  RC_ABOUT                              = 'Рћ РїСЂРѕРіСЂР°РјРјРµ';
+  RC_CONFFILE                           = 'Р¤Р°Р№Р» РєРѕРЅС„РёРіСѓСЂР°С†РёРё';
+  RC_EDITQSO                            = 'Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ СЃРІСЏР·Рё';
+  TC_EDITFUNCTIONKEY                    = 'Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ %s РЎРѕРѕР±С‰РµРЅРёРµ';
+  RC_DELETED                            = '&РЈРґР°Р»РµРЅР°';
+  RC_DUPE                               = 'РџРѕРІС‚РѕСЂ';
+  RC_LOGSEARCH                          = 'РџРѕРёСЃРє РІ Р»РѕРіРµ';
+  RC_SEARCH                             = 'РџРѕРёСЃРє';
+  RC_GETOFFSET                          = 'РџРѕР»СѓС‡РёС‚СЊ СЂР°Р·РЅРёС†Сѓ';
+  RC_LOCALOFFSET                        = 'Р Р°Р·РЅРёС†Р° РІРѕ РІСЂРµРјРµРЅРё';
+  RC_NTPSERVER                          = 'NTP СЃРµСЂРІРµСЂ';
+  RC_SERVERANSWER                       = 'РћС‚РІРµС‚ СЃРµСЂРІРµСЂР°';
+  RC_SYNCLOCK                           = 'РЎРёРЅС…СЂ. С‡Р°СЃС‹';
+  RC_LOCALTIME                          = 'РњРµСЃС‚РЅРѕРµ РІСЂРµРјСЏ';
+  RC_DUPESHEET2                         = 'РўР°Р±Р»РёС†Р° РїРѕРІС‚РѕСЂРѕРІ';
+  RC_SENDSPOT2                          = 'РћС‚РїСЂР°РІРёС‚СЊ СЃРїРѕС‚';
+  RC_CONTESTNAMEIC                      = 'РќР°Р·РІР°РЅРёРµ РєРѕРЅС‚РµСЃС‚Р° РІ РєРѕРјРјРµРЅС‚Р°СЂРёРё';
+  RC_SEND                               = 'РћС‚РїСЂР°РІРёС‚СЊ';
+  RC_COMMENT                            = 'РљРѕРјРјРµРЅС‚Р°СЂРёР№';
+  RC_SENDINGCW                          = 'РџРµСЂРµРґР°С‡Р° CW СЃ РєР»Р°РІРёР°С‚СѓСЂС‹. РСЃРїРѕР»СЊР·СѓР№С‚Рµ ENTER/Escape/F10 РґР»СЏ РІС‹С…РѕРґР°.';
+  RC_RETURNTOMOD                        = 'РР·РјРµРЅРёС‚СЊ';
+  RC_ARROWTOSELIT                       = 'Р’РІРµСЂС…/Р’РЅРёР·/PageUp/PageDown РёР»Рё РІРІРѕРґ РїРµСЂРІС‹С… Р±СѓРєРІ РґР»СЏ РІС‹РґРµР»РµРЅРёСЏ РєРѕРјР°РЅРґС‹.';
+  RC_ALTW                               = 'РЎРѕС…СЂР°РЅРёС‚СЊ (Alt-&W)';
+  RC_ALTN                               = 'Р’ СЃРµС‚СЊ (Alt-&N)';
+  RC_ALTG                               = 'РЎРѕС…СЂ. РІСЃРµ (Alt-&G)';
+  RC_BANDMAP2                           = 'РљР°СЂС‚Р° РґРёР°РїР°Р·РѕРЅР°';
+  RC_AUTOCQ2                            = 'РђРІС‚Рѕ-CQ';
+  RC_PRESSMKYWTR                        = 'Р¤СѓРЅРєС†. РєР»Р°РІРёС€Р°, РєРѕС‚РѕСЂСѓСЋ РЅСѓР¶РЅРѕ РїРѕРІС‚РѕСЂСЏС‚СЊ';
+  RC_NUMBEROSOLT                        = 'РџР°СѓР·Р°, РјСЃ.';
+  RC_DELETESELSPOT                      = 'РЈРґР°Р»РёС‚СЊ РІС‹РґРµР»РµРЅРЅС‹Р№ СЃРїРѕС‚';
+  RC_REMOVEALLSP                        = 'РЈРґР°Р»РёС‚СЊ РІСЃРµ СЃРїРѕС‚С‹';
+  RC_SENDINRIG                          = 'РќР°СЃС‚СЂРѕРёС‚СЊ РЅРµР°РєС‚РёРІРЅРѕРµ СЂР°РґРёРѕ РЅР° СЌС‚Сѓ С‡Р°СЃС‚РѕС‚Сѓ';
+  RC_COAX                               = 'Р Р°СЃС‡РµС‚ РґР»РёРЅС‹ РєРѕР°РєСЃРёР°Р»Р°';
+  RC_ENTERTNHINIK                       = 'Р’РІРµРґРёС‚Рµ РІС‹СЃС€РµРµ Р·РЅР°С‡РµРЅРёРµ С‡Р°СЃС‚РѕС‚С‹ РІ РєР“С† РґР»СЏ СЂР°СЃС‡РµС‚Р° СЃРѕРїСЂРѕС‚РёРІР»РµРЅРёСЏ:';
+  RC_ENTERALIFIK                        = 'Р’РІРµРґРёС‚Рµ РЅРёР¶РЅСЋСЋ С‡Р°СЃС‚РѕС‚Сѓ РІ РєР“С† РґР»СЏ СЂР°СЃС‡РµС‚Р° СЃРѕРїСЂРѕС‚РёРІР»РµРЅРёСЏ:';
+  RC_DISTANCEBTGS                       = 'Р Р°СЃСЃС‚РѕСЏРЅРёРµ РјРµР¶РґСѓ РґРІСѓРјСЏ РєРІР°РґСЂР°С‚Р°РјРё';
+  RC_SECONDGRID                         = 'Р’С‚РѕСЂРѕР№ РєРІР°РґСЂР°С‚';
+  RC_FIRSTGRID                          = 'РџРµСЂРІС‹Р№ РєРІР°РґСЂР°С‚';
+  RC_EURVHFDIST                         = 'РљРІР°РґСЂР°С‚С‹ РІ Р•РІСЂРѕРїРµР№СЃРєРѕРј РЈРљР’ РєРѕРЅС‚РµСЃС‚Рµ:';
+  RC_GRIDOFAGLL                         = 'РћРїСЂРµРґРµР»РёС‚СЊ РєРІР°РґСЂР°С‚ РїРѕ С€РёСЂРѕС‚Рµ/РґРѕР»РіРѕС‚Рµ';
+  RC_LONGMIE                            = 'Р”РѕР»РіРѕС‚Р° (РјРёРЅСѓСЃ РґР»СЏ РІРѕСЃС‚РѕРєР°)';
+  RC_LATMIS                             = 'РЁРёСЂРѕС‚Р° (РјРёРЅСѓСЃ РґР»СЏ СЋРіР°)';
+  RC_CALCOFCORI                         = 'Р Р°СЃС‡РµС‚ РµРјРєРѕСЃС‚Рё РёР»Рё РёРЅРґСѓРєС‚РёРІРЅРѕСЃС‚Рё';
+  RC_INDUCANCE                          = 'РРЅРґСѓРєС‚РёРІРЅРѕСЃС‚СЊ, uH';
+  RC_CAPACITANCE                        = 'Р•РјРєРѕСЃС‚СЊ, pf';
+  RC_FREQOFRES                          = 'Р§Р°СЃС‚РѕС‚Р° СЂРµР·РѕРЅР°РЅСЃР°, РєР“С†';
+  RC_WINCONTROL2                        = 'РЈРїСЂР°РІР»РµРЅРёРµ РѕРєРЅР°РјРё';
+  RC_SHOWMENU                           = 'РџРѕРєР°Р·Р°С‚СЊ РјРµРЅСЋ';
+  RC_RECVQTC                            = 'РџСЂРёРµРј QTC';
+  RC_MIXWINTERFACE                      = 'РРЅС‚РµСЂС„РµР№СЃ СЃ MixW';
+  RC_CONNECTTOMIXW                      = 'РџРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ Рє MixW';
+  RC_MEMPROGFUNC                        = 'РџСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёРµ СЃРѕРѕР±С‰РµРЅРёР№';
+  RC_PRESS_C                            = 'РќР°Р¶РјРёС‚Рµ &C РґР»СЏ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ CQ СЃРѕРѕР±С‰РµРЅРёР№';
+  RC_PRESS_E                            = 'РќР°Р¶РјРёС‚Рµ &E РґР»СЏ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ S&&P СЃРѕРѕР±С‰РµРЅРёР№';
+  RC_PRESS_O                            = 'РќР°Р¶РјРёС‚Рµ &O РґР»СЏ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ РґСЂСѓРіРёС… СЃРѕРѕР±С‰РµРЅРёР№';
+  RC_SYNLOG2                            = 'РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ Р»РѕРі';
+  RC_GETSERVLOG                         = 'РџРѕР»СѓС‡РёС‚СЊ СЃРµСЂРІРµСЂРЅС‹Р№ Р»РѕРі';
+  RC_RECVRECORDS                        = 'РџРѕР»СѓС‡РµРЅРѕ Р·Р°РїРёСЃРµР№:';
+  RC_SENDRECORDS                        = 'РћС‚РїСЂР°РІР»РµРЅРѕ Р·Р°РїРёСЃРµР№:';
+  RC_CREATEAUNL                         = 'РЎРѕР·РґР°С‚СЊ Рё РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РЅРѕРІС‹Р№ Р»РѕРі';
+  RC_RECVBYTES                          = 'РџРѕР»СѓС‡РµРЅРѕ Р±Р°Р№С‚:';
+  RC_RECVQSOS                           = 'РџРѕР»СѓС‡РµРЅРѕ СЃРІСЏР·РµР№:';
+  RC_SHOWSERVLOGC                       = 'РџРѕРєР°Р·Р°С‚СЊ СЃРѕРґРµСЂР¶РёРјРѕРµ СЃРµСЂРІРµСЂРЅРѕРіРѕ Р»РѕРіР°';
+  RC_VIEWEDITLOG2                       = 'РџСЂРѕСЃРјРѕС‚СЂ / Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ Р»РѕРіР°';
+  RC_INTERCOM2                          = 'Р’РЅСѓС‚СЂРµРЅРЅСЏСЏ СЃРІСЏР·СЊ';
+  RC_DIFFINLOG                          = 'Р Р°Р·Р»РёС‡РёРµ РІ Р»РѕРіР°С…';
+  RC_SYNCHRONIZE                        = 'РЎРёРЅС…СЂРѕРЅРёР·РёСЂРѕРІР°С‚СЊ';
+  RC_ARCFILTER                          = 'Р¤РёР»СЊС‚СЂ СЃРїРѕС‚РѕРІ РґРёР°РїР°Р·РѕРЅ-РјРѕРґСѓР»СЏС†РёСЏ РЅР° ARC';
+  RC_DXSFILTER                          = 'Р¤РёР»СЊС‚СЂ СЃРїРѕС‚РѕРІ РґРёР°РїР°Р·РѕРЅ-РјРѕРґСѓР»СЏС†РёСЏ РЅР° DXSpider';
+  RC_CLEARFILTER                        = 'РћС‡РёСЃС‚РёС‚СЊ С„РёР»СЊС‚СЂ';
+  RC_STATIONS2                          = 'РЎС‚Р°РЅС†РёРё';
+  RC_C_EDITQSO                          = 'Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ СЃРІСЏР·СЊ';
+  RC_C_DELETEQSO                        = 'РЈРґР°Р»РёС‚СЊ СЃРІСЏР·СЊ';
+  RC_COPYTOCLIP                         = 'РљРѕРїРёСЂРѕРІР°С‚СЊ РІ Р±СѓС„РµСЂ';
+  RC_DUPECHECKOAR                       = 'РџСЂРѕРІРµСЂРєР° РЅР° РїРѕРІС‚РѕСЂ РЅР° РЅРµР°РєС‚РёРІРЅРѕРј СЂР°РґРёРѕ';
+  RC_WINKEYSET                          = 'РќР°СЃС‚СЂРѕР№РєРё Winkeyer';
+  RC_CT1BOHIS2                          = 'РРЅС„РѕСЂРјР°С†РёРѕРЅРЅРѕРµ РѕРєРЅРѕ CT1BOH';
+  RC_DATE                               = 'Р”Р°С‚Р°';
+  RC_NUMBERSENT                         = 'РџРµСЂРµРґ. РЅРѕРјРµСЂ';
+  RC_NUMBERRCVD                         = 'РџСЂРёРЅРёРј. РЅРѕРјРµСЂ';
+  RC_RSTSENT                            = 'РџРµСЂРµРґ. RST';
+  RC_RSTRECEIVED                        = 'РџСЂРёРЅРёРј. RST';
+  RC_QSOPOINTS                          = 'РћС‡РєРѕРІ Р·Р° QSO';
+  RC_AGE                                = 'Р’РѕР·СЂР°СЃС‚';
+  RC_FREQUENCYHZ                        = 'Р§Р°СЃС‚РѕС‚Р°, Р“С†';
+  RC_PREFIX                             = 'РџСЂРµС„РёРєСЃ';
+  RC_ZONE                               = 'Р—РѕРЅР°';
+  RC_NAME                               = 'РРјСЏ';
+  RC_POSTALCODE                         = 'РџРѕС‡С‚РѕРІС‹Р№ РєРѕРґ';
+  RC_POWER                              = 'РњРѕС‰РЅРѕСЃС‚СЊ';
+  RC_PROGRMESS                          = 'Р РµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ СЃРѕРѕР±С‰РµРЅРёСЏ';
+  RC_MESSAGE                            = 'РЎРѕРѕР±С‰РµРЅРёРµ';
+  RC_CAPTION                            = 'РќР°РґРїРёСЃСЊ РЅР° РєРЅРѕРїРєРµ';
+  RC_IAQSLINT                           = 'РЈРІРµР»РёС‡РёС‚СЊ Auto QSL Interval';
+  RC_DAQSLINT                           = 'РЈРјРµРЅСЊС€РёС‚СЊ Auto QSL Interval';
+  RC_ADDINFO                            = 'Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅР°СЏ РёРЅС„РѕСЂРјР°С†РёСЏ';
+  RC_AI_QSONUMBER                       = 'РќРѕРјРµСЂ QSO';
+  RC_AI_CALLSIGN                        = 'РџРѕР·С‹РІРЅРѕР№';
+  RC_AI_CWSPEED                         = 'РЎРєРѕСЂРѕСЃС‚СЊ CW';
+  RC_AI_BAND                            = 'Р”РёР°РїР°Р·РѕРЅ';
+  RC_CLEARMSHEET                        = 'РћС‡РёСЃС‚РёС‚СЊ С‚Р°Р±Р»РёС†Сѓ РјРЅРѕР¶РёС‚РµР»РµР№';
+  RC_WIKI                               = 'Р”РѕРєСѓРјРµРЅС‚Р°С†РёСЏ Рє РїСЂРѕРіСЂР°РјРјРµ РЅР° СЃР°Р№С‚Рµ TR4W';
+  RC_NET_CLDUPE                         = 'РЎР±СЂРѕСЃРёС‚СЊ С‚Р°Р±Р»РёС†С‹ РїРѕРІС‚РѕСЂРѕРІ РЅР° РІСЃРµС… РєРѕРјРїСЊСЋС‚РµСЂР°С…';
+  RC_NET_CLMULT                         = 'РЎР±СЂРѕСЃРёС‚СЊ С‚Р°Р±Р»РёС†С‹ РјРЅРѕР¶РёС‚РµР»РµР№ РЅР° РІСЃРµС… РєРѕРјРїСЊСЋС‚РµСЂР°С…';
+  RC_INC_TIME                           = 'РЈРІРµР»РёС‡РёС‚СЊ РІСЂРµРјСЏ';
+  RC_NOTES                              = 'Р—Р°РјРµС‚РєРё';
+  RC_DEFAULT                            = 'Р—РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ:';
+  RC_DESCRIPTION                        = 'РћРїРёСЃР°РЅРёРµ:';
+  RC_DEVICEMANAGER                      = 'Р”РёСЃРїРµС‚С‡РµСЂ СѓСЃС‚СЂРѕР№СЃС‚РІ';
+  RC_SHDX_CALLSIGN                      = 'SH/DX [РїРѕР·С‹РІРЅРѕР№]';
+  RC_STATIONINFO                        = 'РРЅС„РѕСЂРјР°С†РёСЏ Рѕ СЃС‚Р°РЅС†РёРё';
+  RC_MP3_RECENABLE                      = 'Р’РєР».';
+  RC_PLAY                               = '&Р’РѕСЃРїСЂ.';
+  RC_LISTOFMESS                         = 'РЎРїРёСЃРѕРє СЃРѕРѕР±С‰РµРЅРёР№';
+  RC_LOGIN                              = 'Р—Р°Р»РѕРіРёРЅРёС‚СЊСЃСЏ';
+  RC_GET_OFFSET                         = 'РџРѕР»СѓС‡РёС‚СЊ СЂР°Р·РЅРёС†Сѓ РІРѕ РІСЂРµРјРµРЅРё';
+  RC_COLORS                             = 'Р¦РІРµС‚Р°';
+  RC_APPEARANCE                         = 'Р’РЅРµС€РЅРёР№ РІРёРґ';
+  RC_BANDPLAN                           = 'Р§Р°СЃС‚РѕС‚РЅС‹Р№ РїР»Р°РЅ';
+  RC_WA7BNM_CALENDAR                    = 'РљРѕРЅС‚РµСЃС‚-РєР°Р»РµРЅРґР°СЂСЊ WA7BNM';
+  RC_SEND_BUG                           = 'РћС‚РїСЂР°РІРёС‚СЊ СЃРѕРѕР±С‰РµРЅРёРµ РѕР± РѕС€РёР±РєРµ РІ РїСЂРѕРіСЂР°РјРјРµ';
+  RC_HOMEPAGE                           = 'Р”РѕРјР°С€РЅСЏСЏ СЃС‚СЂР°РЅРёС†Р° TR4W';
 
-  RC_DVKVOLCONTROL                      = 'Контроль уровня воспроизведения DVK';
-  TC_IMPROPERCONTINENT                  = 'Неверно указан континент!!';
-  TC_IRELAND                            = 'Ирландии';
-  RC_QUICKMEM                           = 'Оперативная память';
-  RC_ALTP                               = 'Открыть окно программирования макросов';
-  RC_ALTX                               = 'Выйти из программы';
-  RC_CTRLJ                              = 'Окно конфигурирования команд Ctrl-J';
-  RC_SPLITOFF                           = 'Режим работы на разнесенных частотах ВКЛ/ВЫКЛ';
-  TC_SPLIT_WARN                         = 'ПРЕДУПРЕЖДЕНИЕ: Вы работаете в режиме РАБОТА НА РАЗНЕСЕННЫХ ЧАСТОТАХ!!!';
-  TC_RUNWARN                            = 'Программа TR4W на вашем компьютере уже работает ';
-  RC_wkMode                             = 'Реинициализация WinKeyer';      // 4.60.1
-  TC_SHOW_PASSWORDS                     = 'Показать пароль';
-  TC_TOOLTIP_DISCOVERY                  = 'Откройте для себя радио в сети';  
+  RC_DVKVOLCONTROL                      = 'РљРѕРЅС‚СЂРѕР»СЊ СѓСЂРѕРІРЅСЏ РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ DVK';
+  TC_IMPROPERCONTINENT                  = 'РќРµРІРµСЂРЅРѕ СѓРєР°Р·Р°РЅ РєРѕРЅС‚РёРЅРµРЅС‚!!';
+  TC_IRELAND                            = 'РСЂР»Р°РЅРґРёРё';
+  RC_QUICKMEM                           = 'РћРїРµСЂР°С‚РёРІРЅР°СЏ РїР°РјСЏС‚СЊ';
+  RC_ALTP                               = 'РћС‚РєСЂС‹С‚СЊ РѕРєРЅРѕ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЏ РјР°РєСЂРѕСЃРѕРІ';
+  RC_ALTX                               = 'Р’С‹Р№С‚Рё РёР· РїСЂРѕРіСЂР°РјРјС‹';
+  RC_CTRLJ                              = 'РћРєРЅРѕ РєРѕРЅС„РёРіСѓСЂРёСЂРѕРІР°РЅРёСЏ РєРѕРјР°РЅРґ Ctrl-J';
+  RC_SPLITOFF                           = 'Р РµР¶РёРј СЂР°Р±РѕС‚С‹ РЅР° СЂР°Р·РЅРµСЃРµРЅРЅС‹С… С‡Р°СЃС‚РѕС‚Р°С… Р’РљР›/Р’Р«РљР›';
+  TC_SPLIT_WARN                         = 'РџР Р•Р”РЈРџР Р•Р–Р”Р•РќРР•: Р’С‹ СЂР°Р±РѕС‚Р°РµС‚Рµ РІ СЂРµР¶РёРјРµ Р РђР‘РћРўРђ РќРђ Р РђР—РќР•РЎР•РќРќР«РҐ Р§РђРЎРўРћРўРђРҐ!!!';
+  TC_RUNWARN                            = 'РџСЂРѕРіСЂР°РјРјР° TR4W РЅР° РІР°С€РµРј РєРѕРјРїСЊСЋС‚РµСЂРµ СѓР¶Рµ СЂР°Р±РѕС‚Р°РµС‚ ';
+  RC_wkMode                             = 'Р РµРёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ WinKeyer';      // 4.60.1
+  TC_SHOW_PASSWORDS                     = 'РџРѕРєР°Р·Р°С‚СЊ РїР°СЂРѕР»СЊ';
+  TC_TOOLTIP_DISCOVERY                  = 'РћС‚РєСЂРѕР№С‚Рµ РґР»СЏ СЃРµР±СЏ СЂР°РґРёРѕ РІ СЃРµС‚Рё';  
   TC_DISCOVER_NOT_AVAILABLE             = 'Network discovery is not available for radio %s';
   TC_DISCOVER_NONE_FOUND                = 'No radio of type %s found on the network';
   TC_DISCOVER_MULTI_FOUND               = 'More than one %s found; filled in the first.  All found:';
