@@ -795,7 +795,7 @@ procedure GetRidOfPostcedingSpaces(var s: ShortString);
 procedure GetRidOfPrecedingSpaces(var s: ShortString);
 function GetSCPCharFromInteger(Index: integer): Char;
 function GetSCPIntegerFromChar(InputChar: AnsiChar): integer;
-function GetStateFromSection(Section: Str20): Str20;
+function GetStateFromSection(Section: Str20): string;
 function GetSuffix(Call: CallString): CallString;
 function GetTimeString: PAnsiChar {str80};
 function GetTomorrowString: Str80;
@@ -843,7 +843,7 @@ function InitializeSerialPort(
 function KeyId(Key: Char): string;
 
 function LastLetter(InputString: Str160): Char;
-function LastString(InputString: ShortString {Str160} {WLI}): Str160;
+function LastString(InputString: ShortString {Str160} {WLI}): string;
 function LineInput(Prompt: Str160;
   InitialString: Str160;
   OverwriteEnable: boolean;
@@ -2553,7 +2553,7 @@ begin
 end;
 }
 
-function LastString(InputString: ShortString {Str160} {WLI}): Str160;
+function LastString(InputString: ShortString {Str160} {WLI}): string;
 
 var
   CharPointer                           : integer;
@@ -4317,7 +4317,7 @@ begin
   CallSortValue := round(Total - 2147483648.0);
 end;
 
-function GetStateFromSection(Section: Str20): Str20;
+function GetStateFromSection(Section: Str20): string;
 
 begin
   Section := UpperCase(Section);
