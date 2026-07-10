@@ -64,7 +64,7 @@ function GetContinentName(Cont: ContinentType): string;
 function GetContinentFromString(Cont: ShortString): ContinentType;
 function SACDistrict(QTH: QTHRecord): string;
 function IndonesianDistrict(QTH: QTHRecord): Str20;
-function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): Str20;
+function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
 
 implementation
 uses LogWind;
@@ -188,7 +188,7 @@ begin
   FirstDomesticCountryRecord := nil;
 end;
 
-function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): Str20;
+function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
 var
   NumberChar                            : AnsiChar;
 begin
