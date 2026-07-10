@@ -624,7 +624,7 @@ begin
         begin
           Top := c * CC + length(WK2ComboSettingsNamesArray) * CC + w4 * CC;
           tCreateStaticWindow(WK2SliderLabelArray[c], LeftVisNoSunStyle, o, Top, w, 17, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + c);
-          TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, nil, ES_CENTER + ES_NUMBER + WS_CHILD or WS_TABSTOP or WS_VISIBLE, o * 2 + w, Top, w3, 20, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c);
+          TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, '', ES_CENTER + ES_NUMBER + WS_CHILD or WS_TABSTOP or WS_VISIBLE, o * 2 + w, Top, w3, 20, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c);
           CreateUpDownControl(UpDownControlStyle, 0, 0, 0, 0, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c, hInstance, TempHWND, WK2UpDownUpperValue[c], WK2UpDownLowerValue[c], integer(WK2UpDownValue[c]^));
         end;
 

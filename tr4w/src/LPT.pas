@@ -72,7 +72,7 @@ begin
           Format(wsprintfBuffer, 'LPT%u BASE ADDRESS', c);
 
           tCreateStaticWindow(wsprintfBuffer, LeftVisNoSunStyle, 10, Top, 180, 17, hwnddlg, 100 + c);
-          tCreateEditWindow(WS_EX_STATICEDGE, nil, ES_UPPERCASE or ES_NUMBER or WS_TABSTOP or WS_CHILD or SS_center or WS_VISIBLE, 200, Top, 80, 17, hwnddlg, 200 + c);
+          tCreateEditWindow(WS_EX_STATICEDGE, '', ES_UPPERCASE or ES_NUMBER or WS_TABSTOP or WS_CHILD or SS_center or WS_VISIBLE, 200, Top, 80, 17, hwnddlg, 200 + c);
         end;
         tSetDlgItemIntFalse(hwnddlg, 201, LPTBaseAA[Parallel1]);
         tSetDlgItemIntFalse(hwnddlg, 202, LPTBaseAA[Parallel2]);

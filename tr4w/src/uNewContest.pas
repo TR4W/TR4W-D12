@@ -219,7 +219,7 @@ begin
           // clipping.  Was: x=300, w=128+20 (=148).  Now: x=270, w=158+20.
           InitialCommandsHWNDArray[TempCardinal, 1] := tCreateStaticWindow(InitialCommandsSA2[TempCardinal], WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE, 270, Top, 158 + 20, h, hwnddlg, 0);
           if TempCardinal < 4 then
-            InitialCommandsHWNDArray[TempCardinal, 2] := tCreateEditWindow(WS_EX_STATICEDGE, nil, WS_TABSTOP or WS_CHILD or ES_UPPERCASE, 435 + 20, Top, 173 - 20, h, hwnddlg, 0)
+            InitialCommandsHWNDArray[TempCardinal, 2] := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_TABSTOP or WS_CHILD or ES_UPPERCASE, 435 + 20, Top, 173 - 20, h, hwnddlg, 0)
           else
             InitialCommandsHWNDArray[TempCardinal, 2] := tCreateComboBoxWindow({CBS_SORT + }CBS_UPPERCASE + CBS_DROPDOWNLIST or WS_CHILD or {WS_VSCROLL or } WS_VISIBLE or WS_TABSTOP, 435 + 20, Top, 173 - 20, hwnddlg, 0);
         end;

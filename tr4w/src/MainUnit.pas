@@ -429,7 +429,7 @@ function tCreateButtonWindow(dwxStyle: DWORD; lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 
-function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: PAnsiChar;
+function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 procedure CreateOKCancelButtons(nWidthhwndParent: HWND);
@@ -5576,11 +5576,11 @@ begin
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
-function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: PAnsiChar;
+function tCreateEditWindow(dwxStyle: DWORD; lpWindowName: string;
   dwStyle: DWORD; X, Y, nWidth, nHeight: integer; hwndParent: HWND;
   HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowExA(dwxStyle, 'Edit', lpWindowName, dwStyle, X, Y,
+  Result := CreateWindowExW(dwxStyle, 'Edit', PChar(lpWindowName), dwStyle, X, Y,
     nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
@@ -9486,7 +9486,7 @@ begin
      Exit;
      end;
 
-  if FileExists(PAnsiChar(AnsiString(NewFile))) then
+  if FileExists(NewFile) then
      begin
      attrs := FileGetAttr(NewFile);
      if attrs and faReadOnly > 0 then

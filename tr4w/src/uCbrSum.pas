@@ -231,7 +231,7 @@ begin
           end
           else
           begin
-            TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, nil, WS_TABSTOP or WS_CHILD or SS_LEFT or WS_VISIBLE or ES_AUTOHSCROLL, 173, Top, 190, 20, hwnddlg, integer(TempTag) + 200);
+            TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_TABSTOP or WS_CHILD or SS_LEFT or WS_VISIBLE or ES_AUTOHSCROLL, 173, Top, 190, 20, hwnddlg, integer(TempTag) + 200);
             ;
 
             if CabrilloTagSArray[TempTag].ctrSave then
