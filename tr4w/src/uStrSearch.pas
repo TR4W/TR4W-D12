@@ -49,7 +49,6 @@ unit uStrSearch;
 
 interface
 
-function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
 procedure StrU(var Str: ShortString);
@@ -125,12 +124,9 @@ begin
     end;
 end;
 
-function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
-begin
-  // TF's original asm body was Borland's classic StrPos verbatim, so the RTL
-  // is bit-equivalent (including empty-pattern / over-length / nil -> nil).
-  Result := System.AnsiStrings.StrPos(Str1, Str2);
-end;
+// StrPos removed (D12): it was a pure System.AnsiStrings.StrPos forwarder;
+// callers use the RTL directly now. StrPosPartial (?-wildcard) stays -- it is
+// genuine custom logic, not an RTL duplicate.
 
 procedure StrU(var Str: ShortString);
 var

@@ -117,7 +117,6 @@ function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
 function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; CMD: PAnsiChar): Byte;
-function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 function GetDialogItemText(h: HWND; Control: integer): ShortString;
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
@@ -769,11 +768,8 @@ begin
   Result := uStrSearch.StrPosPartial(Str1, Str2);
 end;
 
-function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
-begin
-  // Issue #997: extracted to uStrSearch (golden-master tested).
-  Result := uStrSearch.StrPos(Str1, Str2);
-end;
+// StrPos removed (D12): callers use System.AnsiStrings.StrPos directly -- the
+// TF -> uStrSearch -> RTL forwarding was asm-eradication scaffolding, obsolete now.
 
 function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; CMD: PAnsiChar): Byte;
 var
