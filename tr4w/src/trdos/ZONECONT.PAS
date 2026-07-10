@@ -60,7 +60,7 @@ function GetVEInitialExchange(Call: CallString): string;
 
 //procedure LocateCall(Call: VC.CallString; var QTH: VC.QTHRecord; UseStandardCallFormat: boolean);
 
-function GetContinentName(Cont: ContinentType): Str20;
+function GetContinentName(Cont: ContinentType): string;
 function GetContinentFromString(Cont: ShortString): ContinentType;
 function SACDistrict(QTH: QTHRecord): string;
 function IndonesianDistrict(QTH: QTHRecord): Str20;
@@ -456,7 +456,7 @@ begin
 end;
 }
 
-function GetContinentName(Cont: ContinentType): Str20;
+function GetContinentName(Cont: ContinentType): string;
 begin
   case Cont of
     NorthAmerica: GetContinentName := 'NA';
