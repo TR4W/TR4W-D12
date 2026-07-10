@@ -1,4 +1,4 @@
-const
+ï»¿const
   { %s =	A string.}
   { %c =	A single character.}
   { %d =	A signed decimal integer argument.}
@@ -346,19 +346,19 @@ const
   TC_INVALIDSTATEMENTIN                 = 'COMANDA INVALIDA IN %s !!'#13#13'Linia %u'#13'%s';
   TC_UNABLETOFINDCTYDAT                 = 'Lipsa fisierul cu entitati CTY.DAT !!'#13'Verifica daca fisierul este in directorul programului.';
   TC_INVALIDSTATEMENTINCONFIGFILE       = '%s:'#13'COMANDA INVALIDA IN FISIERUL DE CONFIGURARE !!'#13#13' in linia %u'#13'%s';
-  TC_PARAMETERHASNOVALUE                = 'Parametrul ?%s? nu are nicio valoare în fioierul de configurare -- este lasat la valoarea implicita.';
+  TC_PARAMETERHASNOVALUE                = 'Parametrul ?%s? nu are nicio valoare Ã®n fioierul de configurare -- este lasat la valoarea implicita.';
 
   {LOGSUBS1}
 
   TC_RECORDDVPPRESSESCAPEORRETURNTOSTOP = 'Inregistrare DVP. Apasa ESCAPE sau RETURN la oprire.';
-  TC_ALTRCOMMANDDISABLED                = 'Comanda Alt-R necesitã TWO RADIO MODE = TRUE';
+  TC_ALTRCOMMANDDISABLED                = 'Comanda Alt-R necesitÄƒ TWO RADIO MODE = TRUE';
   TC_NOCQMESPROGRAMMEDINTOCQMEMORYALTF1 = 'Nu exista mesaj programat in memoria CQ activata cu AltF1.';
   TC_THIS_FILE_DOES_NOT_EXIST           = 'Acest fisier nu exista. Facem un fisier nou ptr editare?';
 
   {LOGSUBS2}
 
   TC_WASADUPE                           = '%s a fost o dubla.';
-  TC_ALTDCOMMANDDISABLED                = 'Comanda Alt-D necesitã TWO RADIO MODE = TRUE';
+  TC_ALTDCOMMANDDISABLED                = 'Comanda Alt-D necesitÄƒ TWO RADIO MODE = TRUE';
   TC_YOUHAVERESTOREDTHELASTDELETED      = 'Ai refacut ultimul QSO inscris in log !!';
   TC_YOUHAVEDELETEDTHELASTLOGENTRY      = 'Ai sters ultimul QSO inscris in log !! Cu Alt-Y il poti readuce !'; 
   TC_DOYOUREALLYWANTTOEXITTHEPROGRAM    = 'Doresti SIGUR sa parasesti programul ?';
@@ -825,7 +825,7 @@ const
   RC_wkMode                     = 'Re-initialize WinKeyer';      // 4.60.1
   
   TC_SHOW_PASSWORDS                     = 'Show password';
-  TC_TOOLTIP_DISCOVERY                  = 'Descoperiþi radiouri în reþea';
+  TC_TOOLTIP_DISCOVERY                  = 'DescoperiÅ£i radiouri Ã®n reÅ£ea';
   TC_DISCOVER_NOT_AVAILABLE             = 'Network discovery is not available for radio %s';
   TC_DISCOVER_NONE_FOUND                = 'No radio of type %s found on the network';
   TC_DISCOVER_MULTI_FOUND               = 'More than one %s found; filled in the first.  All found:';

@@ -1,4 +1,4 @@
-
+ï»¿
   { %s =	A string.}
   { %c =	A single character.}
   { %d =	A signed decimal integer argument.}
@@ -8,21 +8,21 @@ const
   TC_TRANSLATION_AUTHOR                 = 'Dragan Acimovic YT3W';
   TC_TRANSLATOR_EMAIL                   = 'dragan.acimovic@gmail.com';
   TC_EnterYourDistrictCode              = 'IF in UK/EI, enter your district code';
-  TC_PREF_OR_CQZONE                     = 'Unesite vašu CQ ZONU ili JA PREFEKTURU';
-  TC_2RADIO_WARN                        = 'GREŠKA: 2 radio ureðaja na istom opsegu';
+  TC_PREF_OR_CQZONE                     = 'Unesite vaÑ™u CQ ZONU ili JA PREFEKTURU';
+  TC_2RADIO_WARN                        = 'GREÐ‰KA: 2 radio ureÑ€aja na istom opsegu';
   TC_UKEI                               = 'Check IF you are within UK/EI';
   TC_YUGOSLAVIA                         = 'Jugoslavija';
   RC_BACKUPLOG                         = 'Rezervna kopija loga';
   TC_IMPROPERWINTERFIELDDAYCLASS = 'Winter Field Day klasa mora biti H, I, O ili M.';
-  TC_INVALID                            = 'Nevažeæi unos';
-  TC_FREQ_ZERO                          = 'GREŠKA: Logovana nevažeæa frekvencija';
-  TC_FREQ_OFF                           = 'PRIKAZ FREKVENCIJE U LOGU je iskljuèen';
+  TC_INVALID                            = 'NevaÑ›eÐ¶i unos';
+  TC_FREQ_ZERO                          = 'GREÐ‰KA: Logovana nevaÑ›eÐ¶a frekvencija';
+  TC_FREQ_OFF                           = 'PRIKAZ FREKVENCIJE U LOGU je iskljuÐ¸en';
   RC_3830                               =  '3830 slanje rezultata';
-  RC_3830_ARRL                          =  'Pošalji ARRL log';  // 4.53.3
+  RC_3830_ARRL                          =  'PoÑ™alji ARRL log';  // 4.53.3
   TC_FREQ                               = 'Freq';
   TC_POINTS                             = 'Pts';
   TC_OP                                 = 'Op';
-  TC_WagWarn                            = ' Upozorenje: izašli ste van WAG dozvoljenog frekventnog opsega ';
+  TC_WagWarn                            = ' Upozorenje: izaÑ™li ste van WAG dozvoljenog frekventnog opsega ';
   TC_CANNOTOPENLOG                      = 'Ne mogu da otvorim LOG datoteku';
   TC_LOGNOTPRESENT                      = 'Izabrana LOG datoteka ne postoji';
   TC_IMPORTFILENOTFOUND                 = 'Datoteka za uvoz nije dostupna' ;
@@ -42,7 +42,7 @@ const
   TC_DISBALE_CIV                        = 'Iskljuci "CI-V Transceive" mod u svom ICOM uredjaju. Pogledaj u uputstvu za taj uredjaj.';
 
   {MAIN}
-  TC_ENTERYOURISTRICTIFINVE7            = 'Unesite federalni distrikt ako ste u British Columbia, ili državu/provinciju';  // 4.97.6
+  TC_ENTERYOURISTRICTIFINVE7            = 'Unesite federalni distrikt ako ste u British Columbia, ili drÑ›avu/provinciju';  // 4.97.6
   TC_YOU_ARE_USING_THE_LATEST_VERSION   = 'Koristis poslednju verziju';
   TC_SET_VALUE_OF_SET_NOW               = 'Podesi vrednost za %s. Podesiti sada?';
   TC_CONFIGURATION_FILE                 = 'Konfiguraciona datoteka';
@@ -55,12 +55,12 @@ const
   TC_SORRYNOLOG                         = 'Parametar NO LOG = TRUE zabranjuje upis veza na ovom racunaru';
   TC_SETCOMPUTERIDVALUE                 = 'Podesite vrednost COMPUTER ID';
 
-  TC_WANTTOCONVERTLOG                   = 'Da li želite da konvertujete ovaj log u najnoviji format?';
-  TC_LOGFILENOTFOUND                    = 'Log fajl nije pronaðen';
-  TC_CANNOTBACKUPLOG                    = 'Nije moguæe napraviti rezervnu kopiju ';
-  TC_CANNOTCOPYLOGREADONLY              = 'Nije moguæe kopirati log fajl -- ciljni fajl postoji i samo je za èitanje';
+  TC_WANTTOCONVERTLOG                   = 'Da li Ñ›elite da konvertujete ovaj log u najnoviji format?';
+  TC_LOGFILENOTFOUND                    = 'Log fajl nije pronaÑ€en';
+  TC_CANNOTBACKUPLOG                    = 'Nije moguÐ¶e napraviti rezervnu kopiju ';
+  TC_CANNOTCOPYLOGREADONLY              = 'Nije moguÐ¶e kopirati log fajl -- ciljni fajl postoji i samo je za Ð¸itanje';
   TC_BACKUPCREATED                      = 'Rezervna kopija log fajla napravljena';
-  TC_CANNOTRENAME                       = 'Nije moguæe preimenovati';
+  TC_CANNOTRENAME                       = 'Nije moguÐ¶e preimenovati';
 
   TC_CLEARALLLOGS                       = '"CLEARALLLOGS" ocisti sve dnevnike u mrezi';
   TC_CLEAR_DUPESHEET_NET                = '"CLEARDUPESHEET" ocisti sve litse duplih veza na mrezi';
@@ -103,7 +103,7 @@ const
 
   {NEW CONTEST}
   TC_LABRE                              = 'Unesite QTH ID od 2 znaka';
-  TC_EUDX                               = 'EU zemlja, unesite èetvoroznakovni kod zemlje';
+  TC_EUDX                               = 'EU zemlja, unesite Ð¸etvoroznakovni kod zemlje';
   TC_LATEST_CONFIG_FILE                 = 'Poslednja konfiguraciona datoteka';
   TC_OPENCONFIGURATIONFILE              = ' - Otvori konfiguracionu datoteku ili kreiraj konfiguraciju za novo takmicenje';
   TC_FOLDERALREADYEXISTSOVERWRITE       = 'Direktorijum "%s" vec postoji.'#13' Presnimiti ga?';
@@ -348,7 +348,7 @@ const
   TC_INVALIDSTATEMENTIN                 = 'Neispravna instrukcija u %s !!'#13#13'linija %u'#13'%s';
   TC_UNABLETOFINDCTYDAT                 = 'Nemoguce naci CTY fajl CTY.DAT!!'#13'Proveri da li se taj fajl nalazi u direktorijumu programa.';
   TC_INVALIDSTATEMENTINCONFIGFILE       = '%s:'#13'Neispravna istrukcija u konfiguracionom fajlu!!'#13#13'linija %u'#13'%s';
-  TC_PARAMETERHASNOVALUE                = 'Parametar „%s“ nema vrednost u konfiguracionom fajlu -- ostavljen je na podrazumevanoj vrednosti.';
+  TC_PARAMETERHASNOVALUE                = 'Parametar â€ž%sâ€œ nema vrednost u konfiguracionom fajlu -- ostavljen je na podrazumevanoj vrednosti.';
 
   {LOGSUBS1}
 
@@ -824,7 +824,7 @@ const
 
   RC_WA7BNM_CALENDAR                    = 'WA7BNM''s kontest kalendar';
   RC_SEND_BUG                           = 'Posalji raport o gresci';
-  RC_HOMEPAGE                           = 'TR4W poèetna stranica';
+  RC_HOMEPAGE                           = 'TR4W poÐ¸etna stranica';
   RC_FREQUENCY                          = 'Frekvencija';
   TC_SPLIT_WARN                         = 'Paznja: u SPLIT MODU si!!!';
 {FD Additions NY4I}

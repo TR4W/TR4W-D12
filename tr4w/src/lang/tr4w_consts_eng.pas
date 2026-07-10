@@ -1,4 +1,4 @@
-
+ï»¿
   { %s =	A string.}
   { %c =	A single character.}
   { %d =	A signed decimal integer argument.}
@@ -529,7 +529,7 @@
   TC_SENDSXXTOTHERADIO2                 = 'Sends xx to the Radio 2';
   TC_SENDSXXTOTHEINACTIVERADIO          = 'Sends xx to the inactive radio';
   TC_SWAPSTHEACTIVEANDINACTIVERIGS      = 'Swaps the active and inactive rigs';
-  TC_TOGGLESSENDINGSENDING              = 'Toggles sending — sending, not monitoring — of CW';
+  TC_TOGGLESSENDINGSENDING              = 'Toggles sending â€” sending, not monitoring â€” of CW';
   TC_TOGGLESMODEBETWEENCWANDSSB         = 'Toggles mode between CW and SSB';
   TC_RUNXXAPPLICATION                   = 'Run xx application';
 }
