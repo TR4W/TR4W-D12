@@ -4,6 +4,68 @@ Status: **v2, post architecture-review** (2026-07-05). Branch: `delphi12`.
 Verdict from independent adversarial review: **GO-WITH-CHANGES** — phases re-drawn, three
 pre-start decisions added, two blind spots (wire==disk==DTO; CP1251 source literals) folded in.
 
+---
+
+## Progress — as of 2026-07-09
+
+The plan below is the design; this section is **where we actually are**. Every item
+here landed with a clean Win32 build + golden-master corpus (22 pass / 0 fail / 4
+known-divergence) and was committed on `delphi12`.
+
+**Done**
+
+- **Phase 0/1 — running D12 build + oracle.** Compiles under D12 command-line
+  (`msbuild /t:Make`) and IDE. The golden-master corpus (`tr4w.exe "<cfg>" /EXPORT`
+  → byte-diff ADIF + Cabrillo + CLAIMED-SCORE vs frozen D7 refs) is the regression
+  oracle for every change; fail-loud (`GOLDEN_STRICT`) so a stale/aborted export
+  can't mask a gap.
+- **Radio byte-path (CI-V).** Icom network + serial CI-V made byte-faithful
+  (`AnsiString` framing, `Char(byte)`/`AnsiChar(Ord())` at edges, never CP1252).
+  Hardware-validated (freq/mode/RIT/XIT/split).
+- **Leaf-first interior `string` flips (Phase 4).** utils_text, uCabrilloFormat,
+  uCallSignRoutines, uMults, uCallsigns, uSpots, uSSL, uCTYDAT (param + return),
+  uFreqTimeFormat (killed a shared-static-buffer aliasing bug class), and the
+  tree.pas string producers (GetLogEntry*String, GetFirst/LastString,
+  Number/Bracketed/BigExpandedString, MinutesToTimeString, …), InitialExchangeEntry,
+  GetSunriseSunsetString, ProperSalutation, GetVEInitialExchange, SACDistrict,
+  FindDirectory, GetInitialExchangeStringFromContestExchange.
+- **Win32 A→W display chain.** freq/time formatters → `string` + `SetWindowTextW`/
+  `SetDlgItemTextW`; `SetMainWindowText`, `ShowMessage`/`ShowMessage2`/`ShowMessageParent`
+  (→ `MessageBoxW`), `QuickDisplay`/`QuickDisplayError`, `showwarning`, `TotalTextOut`,
+  `AddStringToTelnetConsole`, window-creation helpers (`tCreateStaticWindow`/
+  `tCreateButtonWindow` → `CreateWindowExW`), `tCB_ADDSTRING(_PCHAR)` → W.
+- **ListView A→W (Unicode).** New `uCommctrl` string helpers `tLVInsertRow`/`tLVSetText`
+  (single `PWideChar` boundary isolated inside; TRACE-log each value for UI-less
+  validation) — and fixed 3 latent bugs where `ListView_SetItemW/InsertItemW/SetItemTextW`
+  sent the **A** messages with wide structs. Converted: **uLogCompare, uNet, uOption**.
+  (uMultsFrequencies was dead.)
+- **Duplicative-TF-shim elimination** (RTL now used directly): `IntToStr`, `RealToStr`,
+  `SysErrorMessage`, and the `StrPos` indirection removed; `StrToInt` → `StrToIntDef(x,0)`
+  (behavior-preserving); `inttopcharHEX` deleted. `showwarning`/`UnableToFindFileMessage`
+  flipped to `string`.
+- **Done-criterion census.** `PAnsiChar(AnsiString(...))` double-casts reduced to genuine,
+  tagged boundaries (`inet_addr`, `rig_set_conf`, `msvcrt_fopen`, `lstrcpyA`, INI files,
+  the raw telnet socket buffer).
+- **Housekeeping.** ~1,400 lines of dead code removed (compiler-verified); 8
+  transitively-compiled units added to `tr4w.dpr` for project-search visibility.
+
+**Deferred / queued (intentional)**
+
+- **MainUnit editable-log renderer** (`tAddContestExchangeToLog`) — the one ListView
+  deeply entangled with ~15 ANSI `ContestExchange` DTO reads. Left on the A-path
+  (renders fine on the Unicode control); to be converted **with** the SQLite /
+  `ContestExchange`-as-object work so `RXData` is already `string`s. Consequence:
+  `inttopchar` keeps a few consumers and one tagged freq-column cast until then.
+- **Telnet socket I/O** — centralize byte↔string at the socket layer (one decode after
+  `recv`, one encode before send) and make `ProcessTelnetString`/`ProcessDX` string-based.
+  A parser rewrite (byte-offset/`PInteger` DX-spot matching), not a cast tweak.
+- **`ContestExchange` → object + SQLite** (Phase 5). The frozen v1.7 DTO stays the
+  save/send boundary until then.
+- **Vendored-RTL replacement** — bundled Indy tree and `src\MMSystem.pas` still shadow
+  the D12 RTL (search-path wins). Needs live network/SSL testing to swap; own effort.
+- **Lower-value shims** — `StrComp_JOH_IA32_6` (clamps to −1/0/1, semantic diff),
+  `BooleanToStr`, `RealToStr2`, `tCreateEditWindow`, file-op `CopyFileA`/`FileExists`.
+
 ## 1. Goal & guiding principle
 
 Standard Delphi **`string` (UTF-16 `UnicodeString`) is the default** for all text in the
