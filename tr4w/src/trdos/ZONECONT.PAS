@@ -63,7 +63,7 @@ function GetVEInitialExchange(Call: CallString): string;
 function GetContinentName(Cont: ContinentType): string;
 function GetContinentFromString(Cont: ShortString): ContinentType;
 function SACDistrict(QTH: QTHRecord): string;
-function IndonesianDistrict(QTH: QTHRecord): Str20;
+function IndonesianDistrict(QTH: QTHRecord): string;
 function EuropeanCountriesAndWAECallRegions(QTH: QTHRecord): string;
 
 implementation
@@ -225,7 +225,7 @@ begin
   end;
 end;
 
-function IndonesianDistrict(QTH: QTHRecord): Str20;        // 4.64.1
+function IndonesianDistrict(QTH: QTHRecord): string;        // 4.64.1
 
 begin
   IndonesianDistrict := '';
