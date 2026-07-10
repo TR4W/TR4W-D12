@@ -10,6 +10,13 @@ TR4W is a free amateur radio contest logging application for Windows, written in
 
 ## Build System
 
+> **D12 (branch `delphi12`):** the app now builds under **Delphi 12 Athens** via `msbuild`, NOT the
+> DCC32 command below (that's the legacy D7 recipe). Use the working recipe in
+> **[`tr4w/docs/D12_BUILD.md`](tr4w/docs/D12_BUILD.md)**: `call rsvars.bat` (Studio 23.0) →
+> `msbuild tr4w.dproj /t:Make /p:Config=Debug /p:Platform=Win32`, then the golden-master corpus
+> `bash tr4w/test/corpus/export-d12-corpus.sh` (baseline: 22 passed / 0 failed / 4 known-divergence;
+> guard `Get-Process -Name tr4w` first — it collides if TR4W is running).
+
 ### Requirements
 - **Borland Delphi 7** (32-bit compiler) - Required for compilation
 - Windows development environment
