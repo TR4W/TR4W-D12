@@ -8482,13 +8482,13 @@ end;
 procedure ShowHelp(Topic: PChar);
 {$IF LANG = 'RUS'}
 var
-  HelpBuffer: array[0..127] of Char;
+  HelpBuffer: string;
 {$IFEND}
 begin
 {$IF LANG = 'RUS'}
-  Format(HelpBuffer, '%str4w_manual_' + LANG + '.chm::/%s.html', TR4W_PATH_NAME,
-    Topic);
-  HtmlHelp.hh(tr4whandle {GetDesktopWindow()}, HelpBuffer, HH_DISPLAY_TOPIC, 0);
+  HelpBuffer := SysUtils.Format('%str4w_manual_' + LANG + '.chm::/%s.html',
+    [string(TR4W_PATH_NAME), string(Topic)]);
+  HtmlHelp.hh(tr4whandle {GetDesktopWindow()}, PChar(HelpBuffer), HH_DISPLAY_TOPIC, 0);
 {$IFEND}
 end;
 
