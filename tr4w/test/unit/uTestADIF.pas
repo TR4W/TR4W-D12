@@ -81,6 +81,7 @@ type
       procedure Test_ADIFTimeStringToQSOTime_HHMM;
       procedure Test_ADIFTimeStringToQSOTime_HHMMSS;
       procedure Test_ADIFTimeStringToQSOTime_InvalidLength;
+      procedure Test_ADIFTimeStringToQSOTime_NonNumeric;
       procedure Test_IsValidGUID_Hyphenated;
       procedure Test_IsValidGUID_Unhyphenated;
       procedure Test_IsValidGUID_Braced;
@@ -878,6 +879,16 @@ begin
    CheckFalse(ADIFTimeStringToQSOTime('',        t), 'empty');
 end;
 
+procedure TADIFHelperTests.Test_ADIFTimeStringToQSOTime_NonNumeric;
+var
+   t : TQSOTime;
+begin
+   BeginTest('Test_ADIFTimeStringToQSOTime_NonNumeric');
+   FillChar(t, SizeOf(t), 0);
+   CheckFalse(ADIFTimeStringToQSOTime('15XX', t),
+              'non-numeric chars rejected');
+end;
+
 // ---------------------------------------------------------------------------
 // IsValidGUID
 // ---------------------------------------------------------------------------
@@ -961,6 +972,7 @@ begin
    Test_ADIFTimeStringToQSOTime_HHMM;
    Test_ADIFTimeStringToQSOTime_HHMMSS;
    Test_ADIFTimeStringToQSOTime_InvalidLength;
+   Test_ADIFTimeStringToQSOTime_NonNumeric;
 
    Test_IsValidGUID_Hyphenated;
    Test_IsValidGUID_Unhyphenated;
