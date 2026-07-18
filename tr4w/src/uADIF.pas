@@ -625,9 +625,14 @@ begin
    try
       if Length(sDate) = 8 then
          begin
-         qsoTime.qtYear  := Ord(StrToIntDef(MidStr(sDate, 1, 4), 0) mod 100);
-         qsoTime.qtMonth := Ord(StrToIntDef(MidStr(sDate, 5, 2), 0));
-         qsoTime.qtDay   := Ord(StrToIntDef(MidStr(sDate, 7, 2), 0));
+         // Strict StrToInt (raises on non-numeric) is intentional: the enclosing
+         // try/except converts the raise into a False return, which is this
+         // function's contract -- reject a malformed date rather than silently
+         // parsing 'XX' as 0. (StrToIntDef would defeat that; see the D12
+         // TF.StrToInt->StrToIntDef sweep, which regressed this site.)
+         qsoTime.qtYear  := Ord(SysUtils.StrToInt(MidStr(sDate, 1, 4)) mod 100);
+         qsoTime.qtMonth := Ord(SysUtils.StrToInt(MidStr(sDate, 5, 2)));
+         qsoTime.qtDay   := Ord(SysUtils.StrToInt(MidStr(sDate, 7, 2)));
          Result := True;
          end;
    except
@@ -642,10 +647,14 @@ begin
    if Length(sTime) in [4, 6] then
       begin
       try
-         qsoTime.qtHour   := Ord(StrToIntDef(MidStr(sTime, 1, 2), 0));
-         qsoTime.qtMinute := Ord(StrToIntDef(MidStr(sTime, 3, 2), 0));
+         // Strict StrToInt (raises on non-numeric) is intentional -- the
+         // try/except turns the raise into a False return, rejecting a malformed
+         // time instead of silently parsing e.g. '15XX' as 0. Same regression the
+         // D12 TF.StrToInt->StrToIntDef sweep introduced in the date parser above.
+         qsoTime.qtHour   := Ord(SysUtils.StrToInt(MidStr(sTime, 1, 2)));
+         qsoTime.qtMinute := Ord(SysUtils.StrToInt(MidStr(sTime, 3, 2)));
          if Length(sTime) = 6 then
-            qsoTime.qtSecond := Ord(StrToIntDef(MidStr(sTime, 5, 2), 0))
+            qsoTime.qtSecond := Ord(SysUtils.StrToInt(MidStr(sTime, 5, 2)))
          else
             qsoTime.qtSecond := 0;
          Result := True;
