@@ -17,9 +17,18 @@ param(
     # Override for CI / scripted invocations.
     [string]$ProjectRoot = (Split-Path $PSScriptRoot -Parent),
 
-    # Delphi 7 bin directory (contains DCC32.EXE). One-time per-machine
-    # setting -- set $env:DELPHI7_BIN if your install differs from the
-    # default below, or pass -Delphi7Bin explicitly.
+    # RAD Studio 23.0 (Delphi 12 Athens) bin directory -- contains rsvars.bat
+    # (sets up the msbuild command-line environment) and brcc32.exe (VERSIONINFO
+    # resource compiler). This is the primary toolchain: the app + unit tests +
+    # per-language variants all build via `msbuild tr4w.dproj` after `call
+    # rsvars.bat`. Override with $env:STUDIO_BIN or -StudioBin.
+    [string]$StudioBin = $(if ($env:STUDIO_BIN) { $env:STUDIO_BIN } else { "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin" }),
+
+    # Delphi 7 bin directory (contains DCC32.EXE). LEGACY -- retained only for
+    # the tr4wserver build (tr4wserver.dpr has no .dproj yet) until that is
+    # migrated to msbuild. The main app can no longer be built by D7: its
+    # src\lang\*.pas files are UTF-8+BOM, which D7 cannot decode. Override with
+    # $env:DELPHI7_BIN or -Delphi7Bin.
     [string]$Delphi7Bin = $(if ($env:DELPHI7_BIN) { $env:DELPHI7_BIN } else { "C:\Program Files (x86)\Borland\Delphi7\Bin" }),
 
     # Indy 10 Lib root (the directory containing Core / System / Protocols
@@ -96,12 +105,17 @@ $DIST_DIR      = Join-Path $EXE_DIR     "dist"
 $LANG_OUT      = Join-Path $DIST_DIR    "lang-test"
 $DCU_CACHE_DIR = Join-Path $EXE_DIR     "dcu-cache"
 $TEST_DIR      = Join-Path $TR4W_DIR    "test\unit"
-$TEST_DPR      = Join-Path $TEST_DIR    "tr4w_unit_tests.dpr"
-$TEST_DCU_DIR  = Join-Path $env:TEMP    "tr4w-test"
+$TEST_DPROJ    = Join-Path $TEST_DIR    "tr4w_unit_tests.dproj"
 $SERVER_PS1    = Join-Path $TR4W_DIR    "tr4wserver\BuildServer.ps1"
 $VERSION_PAS   = Join-Path $SRC_DIR     "Version.pas"
-$PROJECT       = Join-Path $TR4W_DIR    "tr4w.dpr"
+$PROJECT_DPROJ = Join-Path $TR4W_DIR    "tr4w.dproj"
+$RSVARS        = Join-Path $StudioBin   "rsvars.bat"
+# Legacy D7 compiler + Indy search path -- the tr4wserver build (BuildServer.ps1)
+# still uses DCC32, and the not-yet-migrated language loop still passes $LIB/$PROJECT.
+# Both go away once Stages 3-4 finish. The main app + unit tests build via msbuild
+# (search paths baked into the .dproj), so they need neither.
 $DCC32         = Join-Path $Delphi7Bin  "DCC32.EXE"
+$PROJECT       = Join-Path $TR4W_DIR    "tr4w.dpr"
 $LIB           = "$IndyRoot\Core;$IndyRoot\System;$TR4W_DIR\include;$IndyRoot\Protocols"
 # Installer paths (only used when -BuildInstallers is set).
 $BUILD_DIR     = Join-Path $TR4W_DIR    "build"
@@ -111,7 +125,8 @@ $MAKENSIS      = Join-Path $NSISBin     "makensis.exe"
 
 # Validate the toolchain paths up front so a typo in env vars / params
 # fails loudly instead of in the middle of a 15-minute build.
-if (-not (Test-Path $DCC32))    { Write-Host "DCC32.EXE not found at: $DCC32" -ForegroundColor Red; exit 2 }
+if (-not (Test-Path $RSVARS))   { Write-Host "rsvars.bat not found at: $RSVARS (set STUDIO_BIN or pass -StudioBin)" -ForegroundColor Red; exit 2 }
+if (-not (Test-Path $DCC32))    { Write-Host "DCC32.EXE not found at: $DCC32 (still required for the tr4wserver build)" -ForegroundColor Red; exit 2 }
 if (-not (Test-Path $IndyRoot)) { Write-Host "Indy lib root not found at: $IndyRoot" -ForegroundColor Red; exit 2 }
 if (-not (Test-Path $TR4W_DIR)) { Write-Host "tr4w project dir not found at: $TR4W_DIR" -ForegroundColor Red; exit 2 }
 if ($BuildInstallers) {
@@ -174,6 +189,49 @@ if ($BuildInstallers) {
 function Clear-SrcDcus {
     Get-ChildItem -Path $SRC_DIR -Filter *.dcu -Recurse -File `
         | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+
+# Run `msbuild <dproj>` under the RAD Studio command-line environment. rsvars.bat
+# (a batch file) must be `call`ed first to put msbuild + the compiler on PATH, so
+# the whole thing runs under cmd.exe -- exactly the documented D12 recipe
+# (tr4w/docs/D12_BUILD.md). Returns msbuild's exit code (0 = success): the &&
+# chain means msbuild only runs if rsvars succeeded, and cmd /c yields the exit
+# code of the last command it ran.
+#
+#   -Dproj    full path to the .dproj to build
+#   -Target   MSBuild target: 'Make' (incremental, default) or 'Build' (full -B)
+#   -Defines  symbols injected via the $(ExtraDefines) slot in the .dproj, e.g.
+#             @('LANG_RUS','VERSIONINFO_RES') -> /p:ExtraDefines="LANG_RUS;VERSIONINFO_RES"
+#   -DcuOutput  optional per-build DCU dir (msbuild /p:DCC_DcuOutput; the D12
+#               equivalent of D7's /N -- keeps a language's DCUs out of src\)
+#   -ExtraProps any additional raw /p:Name=Value strings
+function Invoke-MSBuild {
+    param(
+        [Parameter(Mandatory=$true)][string]$Dproj,
+        [ValidateSet('Make','Build')][string]$Target = 'Make',
+        [string[]]$Defines = @(),
+        [string]$DcuOutput = '',
+        [string[]]$ExtraProps = @()
+    )
+    $projDir  = Split-Path $Dproj -Parent
+    $projName = Split-Path $Dproj -Leaf
+
+    $props = @("/p:Config=Debug", "/p:Platform=Win32")
+    if ($Defines.Count -gt 0) { $props += "/p:ExtraDefines=`"$($Defines -join ';')`"" }
+    if ($DcuOutput)           { $props += "/p:DCC_DcuOutput=`"$DcuOutput`"" }
+    foreach ($p in $ExtraProps) { $props += "/p:$p" }
+
+    # Build the cmd line: call rsvars, cd to the project dir (matches the recipe;
+    # keeps any relative project paths anchored), then msbuild.
+    $mb = "msbuild `"$projName`" /t:$Target " + ($props -join ' ') + " /v:minimal /nologo"
+    $cmdLine = "call `"$RSVARS`" && cd /d `"$projDir`" && $mb"
+    # Stream msbuild output to the console via Out-Host so it does NOT land in
+    # this function's output stream. Otherwise `$rc = Invoke-MSBuild ...` would
+    # capture every build line as well as the code, and `$rc -eq 0` would compare
+    # against an array. $LASTEXITCODE still reflects cmd.exe (the last native
+    # command), so the returned code is correct.
+    & cmd.exe /c $cmdLine 2>&1 | Out-Host
+    return $LASTEXITCODE
 }
 
 # Generate tr4w_versioninfo.rc + .res with the right language LANGID and
@@ -280,7 +338,9 @@ function Write-VersionInfoResource {
     $resPath = Join-Path $Tr4wDir "tr4w_versioninfo.res"
     Set-Content -Path $rcPath -Value $rc -Encoding ASCII
 
-    $brcc32 = Join-Path $Delphi7Bin "brcc32.exe"
+    # brcc32 (Borland Resource Compiler) ships with RAD Studio too -- use the D12
+    # copy so VERSIONINFO generation does not depend on a Delphi 7 install.
+    $brcc32 = Join-Path $StudioBin "brcc32.exe"
     if (-not (Test-Path $brcc32)) {
         Write-Host "    brcc32.exe not found at $brcc32 -- VERSIONINFO will be blank in this build" -ForegroundColor Yellow
         return $false
@@ -653,13 +713,10 @@ function Invoke-ParallelLangBuilds {
 Write-Host "=== Compiling Unit Tests ===" -ForegroundColor Cyan
 Write-Host ""
 
-New-Item -ItemType Directory -Force -Path $TEST_DCU_DIR | Out-Null
-
-Push-Location $TEST_DIR
-# /U includes src\ so VC.pas (and Log4D.dcu within it) resolve correctly
-& $DCC32 $TEST_DPR -`$D+ -`$L+ -`$Y+ "-N$TEST_DCU_DIR" "/E$TEST_DIR" "/U$SRC_DIR"
-$testBuildResult = $LASTEXITCODE
-Pop-Location
+# Search paths (src\, src\trdos, src\utils) are baked into tr4w_unit_tests.dproj,
+# so msbuild needs no /U. Incremental (/t:Make). The exe lands in test\unit\
+# (the .dproj sets no DCC_ExeOutput), same path the run step below invokes.
+$testBuildResult = Invoke-MSBuild -Dproj $TEST_DPROJ -Target Make
 
 if ($testBuildResult -ne 0) {
     Write-Host ""
@@ -690,7 +747,7 @@ Write-Host ""
 # ---------------------------------------------------------------------------
 
 Write-Host "=== Building TR4W Project ===" -ForegroundColor Cyan
-Write-Host "Project: $PROJECT" -ForegroundColor Yellow
+Write-Host "Project: $PROJECT_DPROJ" -ForegroundColor Yellow
 Write-Host "Output: $EXE_DIR" -ForegroundColor Yellow
 Write-Host ""
 
@@ -732,28 +789,24 @@ if (-not (Test-Path $DCU_MANAGED_MARKER)) {
 # Properties dialog), no build failure.
 Write-Host "Generating VERSIONINFO resource (ENG, $TR4W_VERSION)..." -ForegroundColor DarkGray
 $viOk = Write-VersionInfoResource -Lang 'ENG' -VersionString $TR4W_VERSION
-$viFlag = if ($viOk) { '-DVERSIONINFO_RES' } else { '' }
+# VERSIONINFO_RES gates the {$R tr4w_versioninfo.res} directive in tr4w.dpr; it
+# flows in through the .dproj's $(ExtraDefines) slot. Empty if brcc32 failed, so
+# the compiler never fatals on a missing {$R} file (matches historic behaviour).
+$mainDefines = if ($viOk) { @('VERSIONINFO_RES') } else { @() }
 
-# -VerboseCompile: -B forces a full rebuild so EVERY unit recompiles and re-emits
-# its diagnostics (an incremental build stays silent for units it doesn't touch).
-# -H+ -W+ re-enable the hints/warnings that tr4w.cfg turns off (-H- / -W-);
-# command-line flags are processed after the .cfg, so these win. Empty array in
-# the default case so the splat contributes nothing. Splat mirrors the proven
-# @extraFlags pattern used by the language loop below.
-$verboseFlags = if ($VerboseCompile) { @('-B', '-H+', '-W+') } else { @() }
+# -VerboseCompile: a full rebuild (/t:Build) so EVERY unit recompiles and re-emits
+# its diagnostics (an incremental /t:Make stays silent for units it doesn't touch),
+# with hints + warnings turned on via DCC_Hints/DCC_Warnings. Default build is
+# incremental with the .dproj's normal diagnostic settings.
+$mainTarget = if ($VerboseCompile) { 'Build' } else { 'Make' }
+$mainProps  = if ($VerboseCompile) { @('DCC_Hints=true', 'DCC_Warnings=true') } else { @() }
 if ($VerboseCompile) {
-    Write-Host "Verbose compile ON: full rebuild (-B) with hints (-H+) and warnings (-W+) enabled." -ForegroundColor Yellow
+    Write-Host "Verbose compile ON: full rebuild (/t:Build) with hints + warnings enabled." -ForegroundColor Yellow
     Write-Host ""
 }
 
-Push-Location $TR4W_DIR
-if ($viFlag) {
-    & $DCC32 $PROJECT -`$D+ -`$L+ -`$Y+ $viFlag @verboseFlags "/U$LIB" "/I$LIB" "/E$EXE_DIR"
-} else {
-    & $DCC32 $PROJECT -`$D+ -`$L+ -`$Y+ @verboseFlags "/U$LIB" "/I$LIB" "/E$EXE_DIR"
-}
-$result = $LASTEXITCODE
-Pop-Location
+# Search paths + exe output (target\) are baked into tr4w.dproj, so no /U or /E.
+$result = Invoke-MSBuild -Dproj $PROJECT_DPROJ -Target $mainTarget -Defines $mainDefines -ExtraProps $mainProps
 
 Write-Host ""
 if ($result -eq 0) {
