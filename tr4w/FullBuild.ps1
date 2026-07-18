@@ -173,18 +173,20 @@ if ($BuildInstallers) {
 
 # DCU cache architecture (used when -AllLanguages is set):
 #   src\*.dcu     -- canonical ENG state. Written by Step 2 (main build).
-#                    Never touched by the lang loop. The Delphi 7 IDE
+#                    Never touched by the lang loop. The RAD Studio IDE
 #                    reads/writes DCUs here by default, so leaving src\
 #                    pristine means the IDE doesn't have to rebuild
 #                    after a script build.
 #   dcu-cache\<lang>\
 #                 -- per-language DCU cache. The lang loop passes
-#                    /N$DCU_CACHE_DIR\<lang> to DCC32 so DCC32 writes
-#                    that language's DCUs there, leaving src\ alone.
-# First lang build (cache empty): -B forces a full recompile so DCC32
-# doesn't accidentally use the ENG DCUs that exist in src\ via the -U
-# search path. Subsequent runs read the lang's own cache first (DCC32
-# /N takes search precedence over -U), so -B is unnecessary.
+#                    /p:DCC_DcuOutput=dcu-cache\<lang> to msbuild so the
+#                    compiler writes that language's DCUs there, leaving
+#                    src\ alone.
+# First lang build (cache empty): a full /t:Build recompiles every unit
+# under LANG_<lang> into the isolated DCU dir (src\ ENG DCUs are neither
+# read nor written -- DCC_DcuOutput redirects output, and a full build
+# ignores any existing DCU). Subsequent runs use incremental /t:Make
+# against the lang's own cache.
 
 function Clear-SrcDcus {
     Get-ChildItem -Path $SRC_DIR -Filter *.dcu -Recurse -File `
@@ -896,42 +898,40 @@ if ($result -eq 0) {
                 Write-Host ""
                 Write-Host "=== Building LANG_$lang ===" -ForegroundColor Cyan
 
+                # Per-language DCUs go to dcu-cache\<lang> via msbuild
+                # /p:DCC_DcuOutput (the D12 equivalent of D7's /N). This keeps the
+                # canonical ENG DCUs in src\ untouched, so the post-loop ENG relink
+                # is a fast incremental. First build of a lang (empty cache) uses a
+                # full /t:Build so every unit recompiles under LANG_<lang> into the
+                # isolated dir; subsequent runs use incremental /t:Make against that
+                # cache. (Validated: RUS full build leaves src\VC.dcu byte-identical.)
                 $langCache = Join-Path $DCU_CACHE_DIR $lang.ToLower()
                 $cacheHasDcus = (Test-Path $langCache) -and `
                     ((Get-ChildItem -Path $langCache -Filter *.dcu -Recurse -ErrorAction SilentlyContinue).Count -gt 0)
-                if (-not $cacheHasDcus) {
-                    New-Item -ItemType Directory -Force -Path $langCache | Out-Null
-                    Write-Host "  Cache empty -- forcing full rebuild (-B) so DCC32 ignores ENG DCUs in src\" -ForegroundColor DarkGray
-                    $extraFlags = @("-B")
+                if ($cacheHasDcus) {
+                    Write-Host "  Cache populated -- incremental (/t:Make) against $langCache" -ForegroundColor DarkGray
+                    $langTarget = 'Make'
                 } else {
-                    Write-Host "  Cache populated -- incremental compile against $langCache" -ForegroundColor DarkGray
-                    $extraFlags = @()
+                    Write-Host "  Cache empty -- full rebuild (/t:Build) into $langCache" -ForegroundColor DarkGray
+                    $langTarget = 'Build'
                 }
+                New-Item -ItemType Directory -Force -Path $langCache | Out-Null
 
-                # Both modes write tr4w.exe to target\ (per tr4w.cfg -E"target").
-                # Clear any stale target\tr4w.exe so failed builds don't look
+                # msbuild writes tr4w.exe to target\ (per the .dproj DCC_ExeOutput).
+                # Clear any stale target\tr4w.exe so a failed build doesn't look
                 # successful by leaving a previous run's exe in place.
                 $builtExe = Join-Path $EXE_DIR "tr4w.exe"
                 if (Test-Path $builtExe) { Remove-Item $builtExe -Force }
 
-                # Regenerate VERSIONINFO for this language so the Properties
-                # dialog reports the correct LANGID (e.g. Russian for RUS).
-                # Skip -DVERSIONINFO_RES if generation failed so DCC32 doesn't
-                # fatal on the missing {$R} file. Inline conditional rather
-                # than @viFlags splat: PowerShell mis-parses the splat when
-                # combined with the other inline args here, splitting tokens
-                # in a way DCC32 ultimately sees as a phantom "D.dpr" project.
+                # Regenerate VERSIONINFO for this language so the Properties dialog
+                # reports the correct LANGID (e.g. Russian for RUS). Drop
+                # VERSIONINFO_RES if generation failed so the compiler doesn't fatal
+                # on the missing {$R} file.
                 $viOk = Write-VersionInfoResource -Lang $lang -VersionString $TR4W_VERSION
+                $langDefines = if ($viOk) { @("LANG_$lang", "VERSIONINFO_RES") } else { @("LANG_$lang") }
 
-                Write-Host "  DCC32 -DLANG_$lang /N$langCache -> $EXE_DIR\tr4w.exe" -ForegroundColor DarkGray
-                Push-Location $TR4W_DIR
-                if ($viOk) {
-                    & $DCC32 $PROJECT -`$D+ -`$L+ -`$Y+ @extraFlags "-DLANG_$lang" "-DVERSIONINFO_RES" "/U$LIB" "/I$LIB" "/N$langCache" "/E$EXE_DIR"
-                } else {
-                    & $DCC32 $PROJECT -`$D+ -`$L+ -`$Y+ @extraFlags "-DLANG_$lang" "/U$LIB" "/I$LIB" "/N$langCache" "/E$EXE_DIR"
-                }
-                $langRc = $LASTEXITCODE
-                Pop-Location
+                Write-Host "  msbuild /t:$langTarget ExtraDefines=$($langDefines -join ';') DcuOutput=$langCache -> $EXE_DIR\tr4w.exe" -ForegroundColor DarkGray
+                $langRc = Invoke-MSBuild -Dproj $PROJECT_DPROJ -Target $langTarget -Defines $langDefines -DcuOutput $langCache
 
                 if ($langRc -eq 0 -and (Test-Path $builtExe)) {
                     $info = Get-Item $builtExe
@@ -972,23 +972,17 @@ if ($result -eq 0) {
             Write-Host "$totalOk built, $totalFail failed, $unique unique binaries" `
                 -ForegroundColor $(if ($totalFail -eq 0 -and $unique -eq $totalOk) {"Green"} else {"Yellow"})
             # src\*.dcu has been untouched all along (lang builds wrote to
-            # dcu-cache\<lang>\ via /N). The only thing the loop left in a
-            # non-ENG state is target\tr4w.exe -- last iteration's lang.
-            # Quick DCC32 relink with the existing ENG src\*.dcu produces
-            # target\tr4w.exe = ENG in ~5 sec. No file shuffling required.
+            # dcu-cache\<lang>\ via /p:DCC_DcuOutput). The only thing the loop left
+            # in a non-ENG state is target\tr4w.exe -- the last iteration's lang. A
+            # plain incremental /t:Make (no DcuOutput override -> src\ ENG DCUs)
+            # relinks target\tr4w.exe = ENG in a few seconds. No file shuffling.
             Write-Host ""
             Write-Host "Relinking target\tr4w.exe = ENG (src\*.dcu untouched throughout)..." -ForegroundColor DarkGray
             # Regenerate ENG VERSIONINFO so the final target\tr4w.exe Properties
             # dialog reports English, not whichever language the loop ended on.
             $viOk = Write-VersionInfoResource -Lang 'ENG' -VersionString $TR4W_VERSION
-            Push-Location $TR4W_DIR
-            if ($viOk) {
-                & $DCC32 $PROJECT -`$D+ -`$L+ -`$Y+ "-DVERSIONINFO_RES" "/U$LIB" "/I$LIB" "/E$EXE_DIR" | Out-Null
-            } else {
-                & $DCC32 $PROJECT -`$D+ -`$L+ -`$Y+ "/U$LIB" "/I$LIB" "/E$EXE_DIR" | Out-Null
-            }
-            $engRelinkRc = $LASTEXITCODE
-            Pop-Location
+            $engDefines = if ($viOk) { @('VERSIONINFO_RES') } else { @() }
+            $engRelinkRc = Invoke-MSBuild -Dproj $PROJECT_DPROJ -Target Make -Defines $engDefines
             if ($engRelinkRc -eq 0) {
                 Write-Host "  target\tr4w.exe = ENG" -ForegroundColor Green
             } else {
