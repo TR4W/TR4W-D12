@@ -58,6 +58,15 @@
         <DCC_K>false</DCC_K>
         <DCC_N>true</DCC_N>
         <DCC_S>false</DCC_S>
+        <!-- Pin the binary record/enum layout that the .dat log format and the
+             network wire protocol depend on. The legacy D7 tr4w.cfg carried these
+             as -$A8 (record field alignment = 8) and -$Z1 (minimum enum size = 1);
+             tr4w.cfg has been removed, so set them explicitly here rather than rely
+             on compiler defaults (which a future toolchain/IDE re-save could change
+             out from under the wire format). Verified byte-compatible with the D7
+             refs by the golden-master corpus. -->
+        <DCC_Alignment>8</DCC_Alignment>
+        <DCC_MinimumEnumSize>1</DCC_MinimumEnumSize>
         <DCC_ImageBase>00400000</DCC_ImageBase>
         <DCC_AssertionsAtRuntime>false</DCC_AssertionsAtRuntime>
         <DCC_DebugInformation>1</DCC_DebugInformation>
