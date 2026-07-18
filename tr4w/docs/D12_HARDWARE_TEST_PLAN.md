@@ -23,6 +23,46 @@ So the untested surface is: **serial CAT (all radios), Icom CI-V over serial,
 every non-Icom-7760 radio, CW/keyer/DVK, WSJT-X UDP, live telnet/SSL, and the
 two-station D7↔D12 wire.**
 
+## Your station — device matrix & priority (NY4I)
+
+Your gear falls onto TR4W's two radio-control paths. The **serial CAT** path
+(legacy `LOGRADIO.PAS`, or a native Icom driver run over a COM/USB-serial port)
+is the one the `8e0bb61` byte-write fix touched and is the **least validated** —
+it also covers the most of your radios, so it's the priority. The **network**
+path splits into Icom LAN CI-V (`df0017a`, only the 7760 was proven) and non-Icom
+TCP CAT (K4, Flex, TS-890 — all unproven).
+
+| # (priority) | Device | Transport you use | TR4W driver | Risk it covers |
+|---|---|---|---|---|
+| **0 — baseline** | **IC-7760** | LAN | native (factory) | the one path already proven — run it first to confirm no regression |
+| **1** | **IC-7100** | serial CI-V (USB) — *serial-only radio* | native, serial | `8e0bb61` serial write + CI-V BCD |
+| **1** | **IC-718** | serial CI-V | legacy CI-V (`LOGRADIO`) | `8e0bb61`, older CI-V |
+| **1** | **Elecraft K3** | serial CAT | legacy (Kenwood-type) | `8e0bb61` serial |
+| **1** | **Kenwood TS-570** | serial CAT | legacy (Kenwood-type) | `8e0bb61` serial |
+| **1** | **Yaesu FT1000MP** | serial CAT | legacy Yaesu **5-byte binary** | `8e0bb61` + the binary Yaesu path (most exotic — high value) |
+| **1** | **WinKeyer 3** | serial (COM) | `uWinKey` | `8e0bb61` on the keyer, CW timing |
+| **2** | **IC-7610** | LAN (or USB CI-V) | native | `df0017a` LAN CI-V on a non-7760 |
+| **2** | **IC-9700** | LAN (or USB CI-V) | native | `df0017a` LAN + VHF/UHF/1296 high BCD bytes |
+| **2** | **IC-705** | WiFi/USB CI-V | native | `df0017a` LAN CI-V, addr $A4 |
+| **3** | **Elecraft K4** | network | native `uRadioElecraftK4` | non-Icom TCP CAT under D12 |
+| **3** | **FlexRadio 6300** | SmartSDR TCP | native `uFlexRadio6000` | non-Icom TCP CAT (Flex 6000-series) |
+| **3** | **Kenwood TS-890** | **TCP over VPN** (N2SKH) | native, `##CN`/`##ID` auth | TCP CAT + auth + VPN latency — bonus network stress |
+| **4** | **YCCC SO2R box** | USB HID / **OTRSP** | `uYCCCSO2R` | SO2R switch + OTRSP CW buffer (string→bytes) |
+| **4** | **Green Heron RT-21** | via **PSTRotator over UDP** | `PSTROTATOR IP/UDP` (#732) | TR4W sends beam heading as UDP text |
+
+Notes:
+- **Radios you can connect two ways** (705/7610/9700 LAN-or-USB; K4/Flex native-or-serial): test the
+  transport you actually contest on. If you use USB CI-V for any Icom, that moves it into priority 1
+  (serial path) as well.
+- **FT1000MP is the highest-value single serial test** — it's the only Yaesu-style 5-byte binary CAT
+  path in your kit, the most different from everything else, and completely unexercised under D12.
+- The YCCC box is **USB HID**, not a COM port, so it's off the `8e0bb61` serial path — but its OTRSP
+  **CW buffer** (`YCCCAddCWMessageToBuffer`) is a string→byte path, so watch the keyed text.
+
+**Recommended order:** 0 (confirm 7760) → the whole priority-1 serial sweep (this is where a D12
+byte bug is most likely and least tested) → priority 2 Icom LAN → priority 3 network CAT → 4 SO2R +
+rotator → then the mode/network groups E–G below.
+
 ## Setup (do once)
 
 1. **Confirm you are testing the D12 binary.** Right-click `tr4w.exe` → Properties
@@ -48,10 +88,11 @@ answer — only test what your station actually uses.
 
 ## Group A — Serial CAT radio control  (P1-8 · risk: `8e0bb61`)
 
-Do this for **every radio you connect over a serial/USB-serial port** (Icom via
-CI-V serial, Kenwood TS-890, Elecraft K4, anything through HamLib on a COM port).
-This is the single highest-value group: the serial-write fix touches all of them
-and none have been hardware-checked.
+**Your priority-1 radios (serial/COM):** IC-7100 (serial-only), IC-718, Elecraft
+K3, Kenwood TS-570, **Yaesu FT1000MP** (do this one carefully — 5-byte binary CAT),
+plus any Icom you drive over USB CI-V instead of LAN. This is the single
+highest-value group: the serial-write fix touches all of them and none have been
+hardware-checked under D12.
 
 For each radio:
 
@@ -69,17 +110,26 @@ For each radio:
   the right split and offset. *(RIT/XIT was in the `df0017a` corruption set.)*
 - **A6 — Soak.** Leave it connected 15+ minutes with the VFO moving. No drift into
   garbage, no disconnect, `tr4w.log` shows clean CAT exchanges throughout.
+- **A7 — FT1000MP only.** It uses a Yaesu 5-byte binary CAT protocol (its own path
+  in `LOGRADIO.PAS`, with a `FT1000MPCWReverse` quirk). Verify freq/mode set+read
+  *and* that CW normal/reverse is correct — this is the byte path most unlike the
+  rest of your kit, so it's the most likely to surface a D12 boundary bug.
 
 **Pass:** every set/read is byte-accurate and stable over the soak.
 **On any FAIL:** capture the `tr4w.log` hex and (if possible) the serial-sniffer
 bytes — that pins whether it's the write path, the read path, or framing.
 
-## Group B — Icom CI-V, both transports  (P1-8 · risk: `df0017a`, `2089924`)
+## Group B — Icom CI-V over LAN, non-7760  (P1-8 · risk: `df0017a`, `2089924`)
 
-Only the **IC-7760 over LAN** was validated. Re-run A1–A6 above for **each Icom
-you own** (705, 7100, 7300, 7300MK2, 7600, 7610, 7760, 7850, 905, 9700), and:
+The **IC-7760 over LAN** is the one path already validated — run it first (step 0)
+to confirm no regression. Then re-run A1–A6 over **LAN** for your other network
+Icoms: **IC-7610, IC-9700, IC-705**.
 
-- **B1 — Serial CI-V.** Every Icom on a **serial/USB** CI-V connection (not LAN).
+- **B0 — IC-7760 baseline.** Confirm login completes and freq/mode/RIT/XIT/split
+  all work — the known-good reference.
+- **B1 — Serial CI-V.** Any Icom you run over **serial/USB** CI-V (IC-7100 is
+  serial-only; 705/7610/9700 if you use USB rather than LAN). Covered in Group A;
+  listed here because CI-V BCD is where high bytes (≥ $80) live.
   This path is completely unvalidated under D12. Watch especially frequencies
   above a byte boundary — CI-V BCD encodes digits in bytes ≥ $80, exactly what
   corrupted before.
@@ -90,15 +140,23 @@ you own** (705, 7100, 7300, 7300MK2, 7600, 7610, 7760, 7850, 905, 9700), and:
 
 **Pass:** serial and LAN CI-V both byte-accurate on every Icom you use.
 
-## Group C — SO2R / dual radio  (P1-8 · `uRadio12`)
+## Group C — SO2R via the YCCC SO2R box  (P1-8 · `uYCCCSO2R`, OTRSP over USB HID)
 
-If you run SO2R:
+Your YCCC SO2R+ box is native (`YCCC SO2R ENABLE = TRUE`), driven by **OTRSP over
+USB HID** — so it's *off* the serial-byte path, but its OTRSP command and CW
+buffers are string→byte paths worth watching.
 
-- **C1 —** Both radios connected simultaneously; confirm Radio 1 and Radio 2 each
-  read/set frequency independently (repeat A1/A2 per radio).
-- **C2 —** Focus switching moves CAT + CW to the correct radio; no cross-talk
-  (a command meant for R1 never lands on R2).
-- **C3 —** Transmit on one while the other is receiving; no interference in CAT.
+- **C1 — Two radios up.** Radio 1 and Radio 2 each read/set frequency independently
+  (repeat A1/A2 per radio).
+- **C2 — Focus switching.** TX focus + CW route to the correct radio via the box;
+  no cross-talk (a command/CW meant for R1 never lands on R2).
+- **C3 — RX audio routing.** RX1 / RX2 / stereo (both ears) switch correctly from
+  TR4W (`YCCCSetRxMode`/`YCCCSetStereo`).
+- **C4 — OTRSP CW through the box.** Send CW routed through the YCCC box's keyer
+  (`YCCCAddCWMessageToBuffer`); verify the keyed text is correct and speed changes
+  take effect — this is the string→byte path in the OTRSP driver.
+- **C5 — Soak.** A few minutes of realistic SO2R switching; no stuck focus, no
+  dropped commands, `tr4w.log` clean.
 
 ## Group D — CW, keyer, and voice keyer  (P1-8)
 
@@ -128,6 +186,19 @@ If you run SO2R:
 - **E2 — RTTY via MMTTY** (if used). RX text decodes, TX sends the right text,
   QSO logs correctly.
 - **E3 — MixW** (if used). Same: RX/TX/log.
+
+## Group E2 — Rotator (Green Heron RT-21 via PSTRotator)  (control/UDP path)
+
+TR4W drives your rotator by sending the beam heading to **PSTRotator over UDP**
+(`PSTROTATOR IP ADDRESS` / `PSTROTATOR UDP PORT`, Issue #732), which relays to the
+Green Heron RT-21. The heading is sent as text over UDP, so a string-boundary bug
+would send a wrong/garbled azimuth.
+
+- **E2a — Turn to a callsign/spot.** Trigger "turn rotator" for a DX call or a
+  band-map spot; PSTRotator receives the **correct azimuth** and the RT-21 turns
+  there. Confirm the degrees match the beam heading TR4W shows.
+- **E2b — A few different headings** across 0–360° (including one past 180° and one
+  near 0/360 wrap) to be sure no value is corrupted.
 
 ## Group F — Telnet / DX cluster / SSL  (P1-6)
 
