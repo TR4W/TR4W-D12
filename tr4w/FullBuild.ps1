@@ -212,6 +212,17 @@ function Write-VersionInfoResource {
     # Format used by VERSIONINFO's StringFileInfo block name and the
     # VarFileInfo / Translation pair. CP1252 = Western Latin-1,
     # CP1251 = Cyrillic, CP1250 = Central European.
+    #
+    # SCOPE: this CodePage declares the charset of the VERSIONINFO *resource
+    # strings* only. It is NOT the source encoding of src/lang/tr4w_consts_<LANG>.pas
+    # -- those are UTF-8 with a BOM (D12 reads the BOM; see docs/D12_BUILD.md).
+    # Do not consult this table to decode a source file. It is metadata about
+    # the version resource, nothing else.
+    #
+    # SER is Serbian *Latin* (LANGID 0x081A) -> CP1250, not CP1251. This entry
+    # said 1251 and contradicted its own Name field; the wrong value was
+    # harmless here (all VERSIONINFO strings below are ASCII, identical in
+    # 1250/1251) but it was read as authoritative and caused a bad transcode.
     $langMap = @{
         'ENG' = @{ LangId = 0x0409; CodePage = 1252; Name = 'English (United States)' }
         'RUS' = @{ LangId = 0x0419; CodePage = 1251; Name = 'Russian' }
@@ -220,7 +231,7 @@ function Write-VersionInfoResource {
         'CZE' = @{ LangId = 0x0405; CodePage = 1250; Name = 'Czech' }
         'ROM' = @{ LangId = 0x0418; CodePage = 1250; Name = 'Romanian' }
         'UKR' = @{ LangId = 0x0422; CodePage = 1251; Name = 'Ukrainian' }
-        'SER' = @{ LangId = 0x081A; CodePage = 1251; Name = 'Serbian (Latin)' }
+        'SER' = @{ LangId = 0x081A; CodePage = 1250; Name = 'Serbian (Latin)' }
         'MNG' = @{ LangId = 0x0450; CodePage = 1251; Name = 'Mongolian (Cyrillic)' }
     }
     $info = $langMap[$Lang.ToUpper()]
