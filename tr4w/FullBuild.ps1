@@ -126,10 +126,13 @@ $MAKENSIS      = Join-Path $NSISBin     "makensis.exe"
 # Validate the toolchain paths up front so a typo in env vars / params
 # fails loudly instead of in the middle of a 15-minute build.
 if (-not (Test-Path $RSVARS))   { Write-Host "rsvars.bat not found at: $RSVARS (set STUDIO_BIN or pass -StudioBin)" -ForegroundColor Red; exit 2 }
-if (-not (Test-Path $DCC32))    { Write-Host "DCC32.EXE not found at: $DCC32 (still required for the tr4wserver build)" -ForegroundColor Red; exit 2 }
 if (-not (Test-Path $IndyRoot)) { Write-Host "Indy lib root not found at: $IndyRoot" -ForegroundColor Red; exit 2 }
 if (-not (Test-Path $TR4W_DIR)) { Write-Host "tr4w project dir not found at: $TR4W_DIR" -ForegroundColor Red; exit 2 }
+# Delphi 7 is now only used by the tr4wserver build, which runs solely under
+# -BuildInstallers. A default build (app + languages) is fully D7-free, so the
+# DCC32 check lives inside the -BuildInstallers guard below rather than up here.
 if ($BuildInstallers) {
+    if (-not (Test-Path $DCC32))    { Write-Host "DCC32.EXE not found at: $DCC32 (required for the tr4wserver build bundled by the installer)" -ForegroundColor Red; exit 2 }
     if (-not (Test-Path $MAKENSIS)) { Write-Host "makensis.exe not found at: $MAKENSIS (set NSIS_BIN or pass -NSISBin)" -ForegroundColor Red; exit 2 }
     if (-not (Test-Path $NSI_FILE)) { Write-Host "Installer script not found at: $NSI_FILE" -ForegroundColor Red; exit 2 }
 
@@ -514,15 +517,15 @@ function Invoke-Packaging {
 # tr4w.dpr -- so ALL builds in one tree share that single .res. Two concurrent
 # builds would race on it (and on target\tr4w.exe). Giving each concurrent
 # compile its own detached git worktree isolates BOTH files for free, and lets
-# us reuse Write-VersionInfoResource + the DCC32 invocation unchanged.
+# us reuse Write-VersionInfoResource + the msbuild invocation unchanged.
 #
 # Strategy:
 #   1. Create a pool of $Throttle worktrees, all detached at the main build's
 #      HEAD (so they compile byte-identical source).
 #   2. Feed the languages through the pool, $Throttle compiling at once. Each
 #      slot: gen that language's .res into ITS worktree (serial/fast, isolated),
-#      then launch DCC32 async in that worktree (the expensive, parallel part).
-#      On exit, copy the worktree's tr4w.exe to a collection dir.
+#      then launch msbuild (via cmd.exe + rsvars) async in that worktree (the
+#      expensive, parallel part). On exit, copy the worktree's tr4w.exe out.
 #   3. Package SERIALLY back in the main tree (which already has tr4wserver.exe
 #      + all the runtime DLLs/data NSIS bundles) -- packaging is ~3s/lang, not
 #      worth parallelizing and avoids any shared-path issues in build\release\.
@@ -615,22 +618,23 @@ function Invoke-ParallelLangBuilds {
             $builtExe = Join-Path $exeDir "tr4w.exe"
             if (Test-Path $builtExe) { Remove-Item $builtExe -Force }
 
-            # Per-worktree Indy/library search paths -- keep the whole compile
-            # self-contained in this worktree (no cross-tree DCU mixing).
-            $wtLib = "$wtTr4w\include\Core;$wtTr4w\include\System;$wtTr4w\include;$wtTr4w\include\Protocols"
-
             # VERSIONINFO into THIS worktree's tr4w\ (serial, ~1s; isolated).
             $viOk = Write-VersionInfoResource -Lang $lang -VersionString $Version -Tr4wDir $wtTr4w
+            $wtDefines = if ($viOk) { "LANG_$lang;VERSIONINFO_RES" } else { "LANG_$lang" }
 
-            # -B = cold full rebuild (fresh worktree src\ has no DCUs anyway;
-            # -B makes that explicit and matches the serial path's behaviour).
-            $dccArgs = @("tr4w.dpr", '-$D+', '-$L+', '-$Y+', '-B', "-DLANG_$lang")
-            if ($viOk) { $dccArgs += "-DVERSIONINFO_RES" }
-            $dccArgs += @("/U$wtLib", "/I$wtLib", "/E$exeDir")
+            # Full /t:Build in this worktree. The worktree isolates src\ (no DCUs),
+            # target\, and tr4w_versioninfo.res, so no DcuOutput override is needed
+            # and concurrent builds can't collide. Search paths + exe output come
+            # from the worktree's own tr4w.dproj. msbuild needs the rsvars env, so
+            # launch it via cmd.exe async (one per slot); $LASTEXITCODE isn't
+            # meaningful for a backgrounded Start-Process, so exe-presence is the
+            # success gate (checked on exit below).
+            $mbLine = "call `"$RSVARS`" && cd /d `"$wtTr4w`" && msbuild tr4w.dproj /t:Build " +
+                      "/p:Config=Debug /p:Platform=Win32 /p:ExtraDefines=`"$wtDefines`" /v:minimal /nologo"
 
             $outLog = Join-Path $collect "$lang.compile.out.log"
             $errLog = Join-Path $collect "$lang.compile.err.log"
-            $proc = Start-Process -FilePath $DCC32 -ArgumentList $dccArgs `
+            $proc = Start-Process -FilePath 'cmd.exe' -ArgumentList '/c', $mbLine `
                         -WorkingDirectory $wtTr4w -NoNewWindow -PassThru `
                         -RedirectStandardOutput $outLog -RedirectStandardError $errLog
             # Cache the handle so .ExitCode is readable after exit (PowerShell
@@ -833,13 +837,28 @@ if ($result -eq 0) {
         }
 
         # ---------------------------------------------------------------
-        # Step 2b: Build tr4wserver.exe (required by the NSIS installer).
+        # Step 2b: Build tr4wserver.exe (bundled by the NSIS installer).
+        # Only needed for -BuildInstallers, so skip it otherwise -- the app +
+        # language builds don't depend on it.
+        #
+        # KNOWN-BROKEN in this checkout (tracked for resurrection): the server
+        # project has stale .dpr paths (it was moved under tr4w\ but still uses
+        # '..\tr4w\src\...'), no .dproj, and pulls in VC.pas -> the UTF-8+BOM lang
+        # files D7 can't read. Until it's fixed a failure here is a WARNING, not a
+        # build-abort, so the rest of the build still completes. (If -BuildInstallers
+        # is set, the later installer dependency check will still fail loudly on the
+        # missing tr4wserver.exe -- you can't ship an installer without it.)
         # ---------------------------------------------------------------
-        & $SERVER_PS1 -ProjectRoot $ProjectRoot -Delphi7Bin $Delphi7Bin -IndyRoot $IndyRoot
-        $serverResult = $LASTEXITCODE
-        if ($serverResult -ne 0) {
-            Write-Host "=== TR4W SERVER BUILD FAILED -- aborting ===" -ForegroundColor Red
-            exit $serverResult
+        if ($BuildInstallers) {
+            Write-Host "--- Step 2b: tr4wserver (bundled by the installer) ---" -ForegroundColor Cyan
+            & $SERVER_PS1 -ProjectRoot $ProjectRoot -Delphi7Bin $Delphi7Bin -IndyRoot $IndyRoot
+            $serverResult = $LASTEXITCODE
+            if ($serverResult -ne 0) {
+                Write-Host "  WARNING: tr4wserver build failed (exit $serverResult)." -ForegroundColor Yellow
+                Write-Host "  The server project is known-broken in this checkout; app + language builds continue." -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "Skipping tr4wserver build (only needed with -BuildInstallers)." -ForegroundColor DarkGray
         }
         Write-Host ""
 
