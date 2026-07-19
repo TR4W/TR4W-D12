@@ -379,6 +379,7 @@ begin
   FCIVBuffer := '';
   FCWBuffer := '';
   readTerminator := CIV_EOM;  // CI-V frames end with FD
+  SerialProtocolIsBinary := True;  // CI-V is binary: serial TX/RX must be byte-exact (bytes >= $80 like FE/88/FD), not ASCII/codepage-encoded
 
   // Initialize band memory with typical calling frequencies
   FillChar(FBandMemory, SizeOf(FBandMemory), 0);

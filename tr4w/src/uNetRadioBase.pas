@@ -80,6 +80,7 @@ Type TReadingThread = class(TThread)
   public
     radioWasDisconnected: boolean;
     radioName: string;  // Set after creation for radio-identified trace messages
+    binaryProtocol: Boolean;  // Set from the radio's SerialProtocolIsBinary after creation; True = read raw bytes (Icom CI-V), not a codepage-decoded string
     constructor Create(AConn: TIdTCPConnection; proc: TProcessMsgRef; ASocketLock: TCriticalSection; ADisconnecting: PBoolean); reintroduce; overload;
     constructor Create(ASerialPort: TSerialPort; proc: TProcessMsgRef; ASocketLock: TCriticalSection; ADisconnecting: PBoolean); reintroduce; overload;
     procedure ClearSerialBuffer;  // Clear accumulated serial buffer data
@@ -198,6 +199,7 @@ Type TNetRadioBase = class(TObject)
       autoUpdateCommand: string;       // Command to enable push updates (e.g., 'AI5;')
       pollingInterval: Integer;        // Milliseconds between polls (default 100)
       bAddTermination: Boolean;        // True (default): SendToRadio appends CR/LF (WriteLn). Kenwood TS-890 LAN sets this False -- its CAT parser rejects a trailing CR/LF; the K4 tolerates/ignores it, so it stays True.
+      SerialProtocolIsBinary: Boolean; // False (default): serial CAT is ASCII text -> WriteString/ReadString. True (Icom CI-V, set in TIcomRadio): the frame is raw bytes (Ord 0..255 per Char, incl. >= $80 like FE/88/FD) -> byte-exact WriteBytes/ReadBytes, so D12's UTF-16/ASCII encoding can't corrupt them.
 
       constructor Create(ProcRef: TProcessMsgRef); overload;
       constructor Create(address: string; port: integer;ProcRef: TProcessMsgRef); overload;
@@ -303,6 +305,30 @@ implementation
 //Uses Unit1;
 Uses MainUnit, LogRadio;
 
+// Byte-exact conversions for binary serial protocols (Icom CI-V). In a CI-V
+// frame string each Char carries exactly one wire byte (Ord 0..255, including
+// bytes >= $80 like the FE FE preamble, the $88 radio address, and the $FD EOM).
+// These move the frame to/from TBytes with NO codepage or ASCII encoding -- the
+// D12 default of WriteString(TEncoding.ASCII)/ReadString(SetString) replaces any
+// byte >= $80 with '?' ($3F), which is what broke serial CI-V.
+function WireBytesFromString(const s: string): TBytes;
+var
+   i: Integer;
+begin
+   SetLength(Result, Length(s));
+   for i := 1 to Length(s) do
+      Result[i - 1] := Byte(Ord(s[i]) and $FF);
+end;
+
+function WireStringFromBytes(const b: TBytes): string;
+var
+   i: Integer;
+begin
+   SetLength(Result, Length(b));
+   for i := 0 to High(b) do
+      Result[i + 1] := Char(b[i]);
+end;
+
 //var
 //   rt: TReadingThread = nil;
 Constructor TNetRadioBase.Create(ProcRef: TProcessMsgRef);
@@ -319,6 +345,7 @@ begin
    }
    baseProcMsg := ProcRef;
    bAddTermination := True;   // default: append CR/LF; radios that must not (e.g. TS-890 LAN) set this False in their own constructor
+   SerialProtocolIsBinary := False;  // default: serial CAT is ASCII text; TIcomRadio sets True for byte-exact CI-V
    FActiveVFO := nrVFOA;      // default swap-model (active VFO always A); selectable-model radios update via SetActiveVFO
    for iVFO := Low(TVFO) to High(TVFO) do
       begin
@@ -638,6 +665,7 @@ begin
             rt := TReadingThread.Create(serialPortObj, baseProcMsg, SocketLock, @Disconnecting);
             rt.readTerminator := Self.readTerminator;
             rt.radioName := Self.rigLabel + ' ' + Self.radioModel;
+            rt.binaryProtocol := Self.SerialProtocolIsBinary;  // Icom CI-V: read raw bytes, not a codepage-decoded string
             logger.Info('[TNetRadioBase.Connect] Created serial reading thread');
             end;
 
@@ -798,7 +826,12 @@ begin
             begin
             // Serial connection
             logger.Trace('[%s %s TX] (%s) Hex:[%s]',[Self.rigLabel, Self.radioModel, s, String2Hex(s)]);
-            serialPortObj.WriteString(s + #13);  // K4 expects CR terminator
+            if SerialProtocolIsBinary then
+               // Icom CI-V: raw frame, already terminated by $FD -- write byte-exact,
+               // no ASCII encoding and no CR (a stray #13 is not part of a CI-V frame).
+               serialPortObj.WriteBytes(WireBytesFromString(s))
+            else
+               serialPortObj.WriteString(s + #13);  // K4 expects CR terminator
             end
          else if socket.Connected then
             begin
@@ -1132,9 +1165,16 @@ begin
                   Self.radioWasDisconnected := False;
                   end;
 
-               // Read data from serial port and buffer it
+               // Read data from serial port and buffer it. Binary protocols
+               // (Icom CI-V) must be read byte-exact -- ReadString decodes the
+               // AnsiChar buffer through the ANSI codepage and mangles bytes
+               // >= $80, so a CI-V reply never matches its $FD terminator or
+               // radio address. Text CAT (K4/Kenwood) keeps ReadString.
                try
-                  cmd := FSerialPort.ReadString(1024);
+                  if binaryProtocol then
+                     cmd := WireStringFromBytes(FSerialPort.ReadBytes(1024))
+                  else
+                     cmd := FSerialPort.ReadString(1024);
                   if Length(cmd) > 0 then
                      begin
                      // Add to buffer
