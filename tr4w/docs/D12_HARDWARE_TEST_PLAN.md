@@ -260,6 +260,24 @@ data. If you build/run a non-English variant (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP):
 - **H3 — Config parsing** of a `.cfg` containing non-ASCII exchange/message text
   round-trips correctly (edit, save, reload).
 
+## Known anomalies (tracked, NOT release blockers)
+
+Behaviors found during bench testing that are pre-existing (present in the D7
+build too) and therefore not D12 regressions. Logged so they aren't re-diagnosed
+as migration bugs. *(NY4I to fill in specifics — radio settings, exact values,
+D7 vs D12 comparison, severity.)*
+
+- **A-1 — IC-7100, split mode: VFO B display goes stale.** In split, the program's
+  VFO B (Radio 2 / VFO B) shows the frequency VFO B held **at connect**, not the
+  current VFO B frequency; changing VFO B on the radio does not update the display.
+  Confirmed present in **D7 as well** (2026-07-19, NY4I) → pre-existing, not a D12
+  regression. Root cause: the IC-7100 has no `$07 $D2` active-VFO query, so TR4W
+  tracks only the **active** VFO (A) — its frequency arrives via CI-V `$00`
+  transceive pushes — while VFO B is read only once at connect and never re-polled
+  (`PollRadioState` polls RIT/XIT/split/TX, not frequency). Potential fix if
+  revisited: add a ~1 s poll of the inactive VFO's frequency (`$25 $01`) to
+  `PollRadioState`, gated on `FDirectFreqRoute`. *(details: )*
+
 ## Reporting
 
 For each group, note PASS / FAIL / N-A and, on any FAIL, attach the relevant
