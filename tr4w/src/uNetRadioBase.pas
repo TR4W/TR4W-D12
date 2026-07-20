@@ -196,6 +196,7 @@ Type TNetRadioBase = class(TObject)
 
       // Polling configuration
       requiresPolling: Boolean;        // True for most radios, False for K4 with AI5
+      honorsFreqPollRate: Boolean;     // True (default): the serial poll loop may set pollingInterval to the user's FREQUENCY POLL RATE (fast, e.g. 10ms) -- correct for radios that poll frequency directly (K4). False (Icom): keep the radio's own pollingInterval (1s) -- its PollRadioState is a heavy multi-command CI-V state query (RIT/XIT/split/TX) and freq comes from transceive, so a 10ms cadence floods the rate-limited CI-V send queue.
       autoUpdateCommand: string;       // Command to enable push updates (e.g., 'AI5;')
       pollingInterval: Integer;        // Milliseconds between polls (default 100)
       bAddTermination: Boolean;        // True (default): SendToRadio appends CR/LF (WriteLn). Kenwood TS-890 LAN sets this False -- its CAT parser rejects a trailing CR/LF; the K4 tolerates/ignores it, so it stays True.
@@ -317,7 +318,9 @@ var
 begin
    SetLength(Result, Length(s));
    for i := 1 to Length(s) do
+      begin
       Result[i - 1] := Byte(Ord(s[i]) and $FF);
+      end;
 end;
 
 function WireStringFromBytes(const b: TBytes): string;
@@ -326,7 +329,24 @@ var
 begin
    SetLength(Result, Length(b));
    for i := 0 to High(b) do
+      begin
       Result[i + 1] := Char(b[i]);
+      end;
+end;
+
+// Byte-exact hex for a wire frame carried in a Unicode string (one byte per Char).
+// Use this for CI-V/serial trace lines instead of tree.String2Hex, whose AnsiString
+// param forces a CP1252 conversion that renders bytes >= $80 (FE/88/FD) as '?' ($3F)
+// -- making a correct frame look corrupted in the log.
+function WireHex(const s: string): string;
+var
+   i: Integer;
+begin
+   Result := '';
+   for i := 1 to Length(s) do
+      begin
+      Result := Result + IntToHex(Ord(s[i]) and $FF, 2) + ' ';
+      end;
 end;
 
 //var
@@ -371,6 +391,7 @@ begin
 
    // Default polling settings (radios override as needed)
    requiresPolling := True;        // Most radios need polling
+   honorsFreqPollRate := True;     // default: serial poll loop may use FREQUENCY POLL RATE; TIcomRadio sets False (heavy CI-V state poll + transceive)
    autoUpdateCommand := '';        // No auto-update by default
    pollingInterval := 100;         // 100ms default poll interval
 
@@ -825,18 +846,22 @@ begin
          if (Self.serialPort <> NoPort) and Assigned(serialPortObj) and serialPortObj.IsOpen then
             begin
             // Serial connection
-            logger.Trace('[%s %s TX] (%s) Hex:[%s]',[Self.rigLabel, Self.radioModel, s, String2Hex(s)]);
+            logger.Trace('[%s %s TX] (%s) Hex:[%s]',[Self.rigLabel, Self.radioModel, s, WireHex(s)]);
             if SerialProtocolIsBinary then
+               begin
                // Icom CI-V: raw frame, already terminated by $FD -- write byte-exact,
                // no ASCII encoding and no CR (a stray #13 is not part of a CI-V frame).
-               serialPortObj.WriteBytes(WireBytesFromString(s))
+               serialPortObj.WriteBytes(WireBytesFromString(s));
+               end
             else
+               begin
                serialPortObj.WriteString(s + #13);  // K4 expects CR terminator
+               end;
             end
          else if socket.Connected then
             begin
             // Network connection
-            logger.Trace('[%s %s TX] (%s) Hex:[%s]',[Self.rigLabel, Self.radioModel, s, String2Hex(s)]);
+            logger.Trace('[%s %s TX] (%s) Hex:[%s]',[Self.rigLabel, Self.radioModel, s, WireHex(s)]);
             nLen := length(s);
             // Most network radios accept or simply ignore a trailing CR/LF, so
             // by default we append one (WriteLn). The Kenwood TS-890 LAN CAT
@@ -1172,14 +1197,18 @@ begin
                // radio address. Text CAT (K4/Kenwood) keeps ReadString.
                try
                   if binaryProtocol then
-                     cmd := WireStringFromBytes(FSerialPort.ReadBytes(1024))
+                     begin
+                     cmd := WireStringFromBytes(FSerialPort.ReadBytes(1024));
+                     end
                   else
+                     begin
                      cmd := FSerialPort.ReadString(1024);
+                     end;
                   if Length(cmd) > 0 then
                      begin
                      // Add to buffer
                      FSerialBuffer := FSerialBuffer + cmd;
-                     logger.trace('[%s RX] Serial received: (%s) Hex:[%s], Buffer now %d chars',[Self.radioName, cmd, String2Hex(cmd), Length(FSerialBuffer)]);
+                     logger.trace('[%s RX] Serial received: (%s) Hex:[%s], Buffer now %d chars',[Self.radioName, cmd, WireHex(cmd), Length(FSerialBuffer)]);
 
                      // Process complete commands (terminated by readTerminator)
                      while Pos(Self.readTerminator, FSerialBuffer) > 0 do
@@ -1190,7 +1219,7 @@ begin
 
                         if Length(completeCmd) > 0 then
                            begin
-                           logger.trace('[%s RX] Command: (%s) Hex:[%s]',[Self.radioName, completeCmd, String2Hex(completeCmd)]);
+                           logger.trace('[%s RX] Command: (%s) Hex:[%s]',[Self.radioName, completeCmd, WireHex(completeCmd)]);
                            if Assigned(Self.msgHandler) then
                               begin
                               try

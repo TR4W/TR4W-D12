@@ -870,10 +870,14 @@ begin
             // off during reconnect even when the radio is unreachable.
             SetRadioAlertState(not ro.IsOperational);
 
-            // For serial radios that require active polling, honour the user-configurable
-            // FREQUENCY POLL RATE setting (FreqPollRate, default 10ms, range 10-1000ms).
-            // This keeps serial K4 poll latency consistent with legacy K3 behaviour.
-            if ro.requiresPolling and (ro.serialPort <> NoPort) then
+            // For serial radios that poll frequency directly (K4/K3-style), honour the
+            // user-configurable FREQUENCY POLL RATE (FreqPollRate, default 10ms, range
+            // 10-1000ms). NOT for the Icom (honorsFreqPollRate=False): its PollRadioState
+            // is a heavy multi-command CI-V state query (RIT/XIT/split/TX) and frequency
+            // arrives via CI-V transceive, so a 10ms cadence enqueues ~500 CI-V cmds/sec
+            // and permanently floods the rate-limited send queue (25ms/command) -- keep
+            // the Icom's own 1s pollingInterval.
+            if ro.requiresPolling and (ro.serialPort <> NoPort) and ro.honorsFreqPollRate then
                begin
                ro.pollingInterval := FreqPollRate;
                logger.Debug('[pNetworkRadio] Serial polling interval set to %dms (FREQUENCY POLL RATE)',
