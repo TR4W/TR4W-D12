@@ -51,6 +51,11 @@ begin
   radioModel := 'Icom IC-7100';
   // IC-7100 CI-V transceive is at menu item $0095 (1A 05 00 95)
   FTransceiveMenuBytes := #$00 + #$95;
+  // The IC-7100 has no $07 $D2 active-VFO query, so route the $00 transceive
+  // frequency push straight to the active VFO instead of firing a $25 $00/$01
+  // query pair per push. Without this, fast VFO spins lag: each push triggers a
+  // query round-trip and intermediate pushes are skipped while it's in flight.
+  FDirectFreqRoute := True;
   logger.Info('[TIcom7100Radio.Create] Created IC-7100 instance with CI-V address $88');
 end;
 
