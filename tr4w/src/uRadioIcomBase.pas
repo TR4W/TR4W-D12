@@ -380,6 +380,7 @@ begin
   FCWBuffer := '';
   readTerminator := CIV_EOM;  // CI-V frames end with FD
   SerialProtocolIsBinary := True;  // CI-V is binary: serial TX/RX must be byte-exact (bytes >= $80 like FE/88/FD), not ASCII/codepage-encoded
+  honorsFreqPollRate := False;  // keep pollingInterval at 1s: PollRadioState is a heavy multi-command CI-V state query and freq arrives via transceive -- a 10ms FREQUENCY POLL RATE would flood the CI-V send queue
 
   // Initialize band memory with typical calling frequencies
   FillChar(FBandMemory, SizeOf(FBandMemory), 0);
