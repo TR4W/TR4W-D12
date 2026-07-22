@@ -1750,6 +1750,7 @@ var
    FDPos: integer;
    DummyMode: ModeType;
    freq: Cardinal;
+   sawResponse: boolean;   // True if any frame addressed to us ($E0) arrived this call (a real response OR a NAK) -- drives the serial liveness/magenta indicator.
    //  p                                     : pchar;
 const
    FD_NOT_FOUND = 12;
@@ -1757,6 +1758,7 @@ const
 begin
 
    Result := False;
+   sawResponse := False;   // no radio answer seen yet this call
 
    NewCheck:
    counter := 0;
@@ -1770,7 +1772,11 @@ begin
          if counter < 3 then
             goto NextLongCheck
          else
+            begin
+            // No bytes at all this call -> radio silent (non-echoing interface).
+            MarkSerialRead(rig, sawResponse);
             Exit;
+            end;
       end;
 
    BytesInFuffer := stat.cbInQue;
@@ -1805,7 +1811,11 @@ begin
                   if rig.tBuf[i + 2] in [ICOM_CONTROLLER_ADDRESS,
                      ICOM_OTHER_RADIOS_ADDRESS] then
                      begin
-
+                        // A frame addressed to us ($E0 controller) means the radio
+                        // answered (a real response OR a NAK) -- it is alive. Echoes
+                        // of our own commands are addressed to the radio ($5E) and
+                        // never reach here, so this cleanly drives the serial liveness.
+                        sawResponse := True;
                         for FDPos := 6 to FD_NOT_FOUND do
                            if rig.tBuf[i + FDPos] = #$FD then
                               Break;
@@ -2027,6 +2037,10 @@ begin
          if stat.cbInQue >= ICOM_MAX_IN_BUFFER then
             goto NewCheck;
       end;
+   // Serial liveness: if bytes arrived but were only echoes of our own commands
+   // (radio off), sawResponse stayed False -> MarkSerialRead raises the magenta
+   // alert after its grace period; a real response/NAK keeps it green.
+   MarkSerialRead(rig, sawResponse);
 end;
 
 procedure pIcomNew(rig: RadioPtr); // This is now called for all ICOM radios
