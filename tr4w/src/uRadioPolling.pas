@@ -1916,8 +1916,17 @@ begin
                                     //FE.FE.ra.E0.04.FD.FE.FE.E0.ra.04.00.00.FD + IF passband width data (06)
                                     //FE.FE.ra.E0.04.FD.FE.FE.E0.ra.04.00.FD
                                     rig.saveMode := Ord(rig.tBuf[i + 5]);
-                                    //rig.ProcessIcomMode(Ord(rig.tBuf[i + 5]));
-
+                                    // Commit the mode straight from the standard $04 read
+                                    // for radios that have NO data mode (e.g. IC-718, older
+                                    // Icoms): they never answer $1A06, so the $1A06 handler
+                                    // that would otherwise apply the mode never runs, leaving
+                                    // it NON. Once a radio proves it speaks $1A06, we set
+                                    // icomHasDataMode and defer to that handler instead, so
+                                    // the base mode doesn't flicker against the DATA overlay.
+                                    if not rig.icomHasDataMode then
+                                       begin
+                                       rig.ProcessIcomMode(rig.saveMode);
+                                       end;
 
                                     if (Ord(rig.tBuf[i + 6]) > 0) then
                                        // n4af 4.43.4
@@ -1928,6 +1937,10 @@ begin
                            ICOM_STATE:
                               if rig.tBuf[i + 5] = ICOM_STATE_DATA_MODE then
                                  begin
+                                 // A valid $1A06 response proves this radio supports data
+                                 // mode; from now on let this handler govern the mode and
+                                 // stop the $04 handler from committing it directly.
+                                 rig.icomHasDataMode := True;
                                  if Ord(rig.tBuf[i + 6]) = 1 then  // Only set Digital if it is on as we would not know what mode is when data mode is reported off. ny4i
                                     begin
                                     if rig.currentStatus.Mode <> Digital then
@@ -1940,11 +1953,14 @@ begin
                                     end
                                  else
                                     begin
-                                    if rig.saveMode > 0 then
-                                       begin
-                                       rig.ProcessIcomMode(rig.saveMode);
-                                       UpdateStatus(rig);
-                                       end;
+                                    // Data mode is off -> restore the base mode last read
+                                    // by the $04 poll (stashed in saveMode). The old
+                                    // `if saveMode > 0` guard silently dropped LSB, whose
+                                    // Icom mode code is 0, so LSB radios (e.g. IC-718 on
+                                    // 40m) showed NON. saveMode is an Ord(byte) mode code
+                                    // (0=LSB..8), never negative, so it is always applied.
+                                    rig.ProcessIcomMode(rig.saveMode);
+                                    UpdateStatus(rig);
                                     end;
                                  end;
                            ICOM_XMIT_SETTINGS:
