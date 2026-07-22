@@ -3229,13 +3229,14 @@ begin
          if (True) or (RadioModel in [IC7800, IC7850, IC7851]) then
             // ny4i 4.45.2. This looks odd because the 7800..7851 calculate speed differently but I have not added this yet. When added, just remove this if so we try this for all Icom radios.
             begin
-            // Calculate Icom speed of WPM to 000-255.
-            //001 = 6wpm, 254 = 48 wpm. Each extra wpm is 6 decimal higher
-            //Speed (in icom decimal) = ((speed(wpm) * (42/255)) + 6)
-
-            //speed := ((icom_dec_value * (42/255) + 6)
-            // icom_dec_value = (speed - 6) * 255/42);
-
+            // Calculate the Icom CW keyer speed as a 000-255 level ($14 0C).
+            // These legacy-path Icoms span 6..60 wpm (verified on an IC-718:
+            // bench + the IC-718 CI-V manual, $14 0C 00 00 = 6 wpm .. 02 55 =
+            // 60 wpm), i.e. 54 wpm across 255 steps:
+            //   level = (wpm - 6) * 255 / 54     (0 = 6 wpm, 255 = 60 wpm)
+            // Previously this used 255/42 (a 6..48 range), which sent a level
+            // ~29% too high and drove the radio faster than the set speed
+            // (e.g. 20 wpm -> the radio ran 24 wpm).
             CommandsTempBuffer[0] := AnsiChar(10);
             CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
             CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
@@ -3243,7 +3244,24 @@ begin
             CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
             CommandsTempBuffer[5] := ICOM_SET_SLIDERS;
             CommandsTempBuffer[6] := ICOM_SET_CW_SPEED;
-            i := Round((speed - 6) * (255 / 42));
+            if speed < 6 then
+               begin
+               speed := 6;
+               end;
+            if speed > 60 then
+               begin
+               speed := 60;
+               end;
+            // Ceiling, NOT round-to-nearest: the radio decodes the level with
+            // truncation (wpm = 6 + floor(level * 54 / 255)), so round-nearest can
+            // land one wpm low (20 wpm -> level 66 -> radio decodes 19). Ceiling
+            // encodes exactly. Same technique as the modern factory path
+            // TIcomRadio.SetCWSpeed (which uses 6..48; these legacy Icoms are 6..60).
+            i := ((speed - 6) * 255 + 53) div 54;   // ceil((speed-6)*255/54)
+            if i > 255 then
+               begin
+               i := 255;
+               end;
             CommandsTempBuffer[7] := AnsiChar(i div 100);  // Puts 00,01 or 02 into first byte
             i := i mod 100; // remove the hundreds part and BCD the remainder
             //AddStringToTelnetConsole(PChar('dec='+IntToStr(i) + ', bcd = ' + IntToStr(IntegerToBCD(i))),tstAlert);
