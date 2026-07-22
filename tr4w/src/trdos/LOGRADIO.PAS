@@ -421,6 +421,7 @@ var
    IcomRadiosSplitSetOnly: InterfacedRadioTypeSet;  // $0F is write-only (set split); the read NAKs (FA). Skip the split read-poll for these.
    IcomRadiosModeSetNoFilter: InterfacedRadioTypeSet;  // $06 set-mode takes the mode byte only; appending a filter byte makes the radio NAK the whole frame.
    IcomRadiosTXStatusUnreadable: InterfacedRadioTypeSet;  // Cannot read TX/RX status over CI-V ($1C read NAKs on any sub-command, no transceive PTT). Skip the poll.
+   IcomRadios6to60WPMKeyer: InterfacedRadioTypeSet;  // CW keyer speed spans 6..60 wpm (not the default 6..48). IC-718. Others stay 6..48 (the long-standing mapping).
    ICOMRadios:       ICOMRadioTypes;
    KenwoodRadios:    KenwoodRadioTypes;
    YaesuRadios:      YaesuRadioTypes;
@@ -3232,14 +3233,13 @@ begin
          if (True) or (RadioModel in [IC7800, IC7850, IC7851]) then
             // ny4i 4.45.2. This looks odd because the 7800..7851 calculate speed differently but I have not added this yet. When added, just remove this if so we try this for all Icom radios.
             begin
-            // Calculate the Icom CW keyer speed as a 000-255 level ($14 0C).
-            // These legacy-path Icoms span 6..60 wpm (verified on an IC-718:
-            // bench + the IC-718 CI-V manual, $14 0C 00 00 = 6 wpm .. 02 55 =
-            // 60 wpm), i.e. 54 wpm across 255 steps:
-            //   level = (wpm - 6) * 255 / 54     (0 = 6 wpm, 255 = 60 wpm)
-            // Previously this used 255/42 (a 6..48 range), which sent a level
-            // ~29% too high and drove the radio faster than the set speed
-            // (e.g. 20 wpm -> the radio ran 24 wpm).
+            // Calculate the Icom CW keyer speed as a 000-255 level ($14 0C). The
+            // wpm range is per-model: the IC-718 family is 6..60 wpm (verified on an
+            // IC-718: bench + CI-V manual, $14 0C 00 00 = 6 wpm .. 02 55 = 60 wpm),
+            // while every other legacy Icom is 6..48 -- the long-standing default that
+            // matches the modern factory path. Forcing 6..60 on a 6..48 radio runs it
+            // ~11% slow, so only the confirmed 6..60 radios (IcomRadios6to60WPMKeyer)
+            // get the wider span.
             CommandsTempBuffer[0] := AnsiChar(10);
             CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
             CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
@@ -3247,23 +3247,32 @@ begin
             CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
             CommandsTempBuffer[5] := ICOM_SET_SLIDERS;
             CommandsTempBuffer[6] := ICOM_SET_CW_SPEED;
-            if speed < 6 then
+            if RadioModel in IcomRadios6to60WPMKeyer then
                begin
-               speed := 6;
-               end;
-            if speed > 60 then
+               // 6..60 wpm (IC-718). Ceiling, NOT round: the radio truncation-decodes
+               // (wpm = 6 + floor(level*54/255)), so round-nearest lands one wpm low
+               // (20 wpm -> 66 -> decodes 19). Ceiling encodes exactly, as the modern
+               // factory TIcomRadio.SetCWSpeed does.
+               if speed < 6 then
+                  begin
+                  speed := 6;
+                  end;
+               if speed > 60 then
+                  begin
+                  speed := 60;
+                  end;
+               i := ((speed - 6) * 255 + 53) div 54;   // ceil((speed-6)*255/54)
+               if i > 255 then
+                  begin
+                  i := 255;
+                  end;
+               end
+            else
                begin
-               speed := 60;
-               end;
-            // Ceiling, NOT round-to-nearest: the radio decodes the level with
-            // truncation (wpm = 6 + floor(level * 54 / 255)), so round-nearest can
-            // land one wpm low (20 wpm -> level 66 -> radio decodes 19). Ceiling
-            // encodes exactly. Same technique as the modern factory path
-            // TIcomRadio.SetCWSpeed (which uses 6..48; these legacy Icoms are 6..60).
-            i := ((speed - 6) * 255 + 53) div 54;   // ceil((speed-6)*255/54)
-            if i > 255 then
-               begin
-               i := 255;
+               // 6..48 wpm: the original long-standing mapping, restored EXACTLY
+               // (Round, divisor 42) so radios that were already correct (746/756/
+               // 910/7200) stay bit-for-bit unchanged.
+               i := Round((speed - 6) * (255 / 42));
                end;
             CommandsTempBuffer[7] := AnsiChar(i div 100);  // Puts 00,01 or 02 into first byte
             i := i mod 100; // remove the hundreds part and BCD the remainder
@@ -4261,6 +4270,10 @@ begin
    // its manual lists "1C 01" as read/write but the firmware only honors the write).
    // Skip the TX-status poll for these. Add other older Icoms as confirmed on the bench.
    IcomRadiosTXStatusUnreadable := [IC718];
+   // Icoms whose CW keyer speed spans 6..60 wpm. Every OTHER legacy Icom is 6..48 --
+   // the long-standing mapping that matches the modern factory path; forcing 6..60 on
+   // a 6..48 radio runs it ~11% slow. Only the bench-confirmed IC-718 is 6..60 so far.
+   IcomRadios6to60WPMKeyer := [IC718];
    ICOMRadios := [IC78..IC9700];
    KenwoodRadios := [TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850,
                      TS870, TS890, TS940, TS950, TS990, TS2000, FLEX];  // TS890 -- Issue #436
