@@ -75,6 +75,7 @@ function ArrayToString(const a: array of AnsiChar): string;
 
 procedure pIcom(rig: RadioPtr);
 procedure pIcomNew(rig: RadioPtr);
+function icomCheckBufferRaw(rig: RadioPtr; out radioResponded: boolean): boolean;
 function icomCheckBuffer(rig: RadioPtr): boolean;
 procedure SetVFOModeExtendedMode(rig: RadioPtr; which: Cardinal; mode: ModeType;
    em: ExtendedModeType);
@@ -1738,7 +1739,7 @@ begin
    until rig.tPollCount < 0;
 end;
 
-function icomCheckBuffer(rig: RadioPtr): boolean;
+function icomCheckBufferRaw(rig: RadioPtr; out radioResponded: boolean): boolean;
 label
    NextLongCheck, NextShortCheck, NewCheck;
 var
@@ -1750,7 +1751,6 @@ var
    FDPos: integer;
    DummyMode: ModeType;
    freq: Cardinal;
-   sawResponse: boolean;   // True if any frame addressed to us ($E0) arrived this call (a real response OR a NAK) -- drives the serial liveness/magenta indicator.
    //  p                                     : pchar;
 const
    FD_NOT_FOUND = 12;
@@ -1758,7 +1758,7 @@ const
 begin
 
    Result := False;
-   sawResponse := False;   // no radio answer seen yet this call
+   radioResponded := False;   // set True below if a frame addressed to us arrives
 
    NewCheck:
    counter := 0;
@@ -1772,11 +1772,7 @@ begin
          if counter < 3 then
             goto NextLongCheck
          else
-            begin
-            // No bytes at all this call -> radio silent (non-echoing interface).
-            MarkSerialRead(rig, sawResponse);
-            Exit;
-            end;
+            Exit;   // no bytes at all -> radioResponded stays False; wrapper marks liveness
       end;
 
    BytesInFuffer := stat.cbInQue;
@@ -1815,7 +1811,7 @@ begin
                         // answered (a real response OR a NAK) -- it is alive. Echoes
                         // of our own commands are addressed to the radio ($5E) and
                         // never reach here, so this cleanly drives the serial liveness.
-                        sawResponse := True;
+                        radioResponded := True;
                         for FDPos := 6 to FD_NOT_FOUND do
                            if rig.tBuf[i + FDPos] = #$FD then
                               Break;
@@ -2037,10 +2033,21 @@ begin
          if stat.cbInQue >= ICOM_MAX_IN_BUFFER then
             goto NewCheck;
       end;
-   // Serial liveness: if bytes arrived but were only echoes of our own commands
-   // (radio off), sawResponse stayed False -> MarkSerialRead raises the magenta
-   // alert after its grace period; a real response/NAK keeps it green.
-   MarkSerialRead(rig, sawResponse);
+end;
+
+function icomCheckBuffer(rig: RadioPtr): boolean;
+var
+   radioResponded: boolean;
+begin
+   Result := icomCheckBufferRaw(rig, radioResponded);
+   // Serial liveness decorator: the legacy Icom path reads through icomCheckBuffer
+   // -- NOT ReadFromCOMPort -- so without this it never maintained RadioDisconnected
+   // (the magenta "radio lost" color). Drive liveness off radioResponded (a genuine
+   // reply addressed to the controller, incl. a NAK), NOT Result: on a CI-V bus that
+   // echoes the controller's own commands Result is True even with the radio off, so
+   // the echo would keep the indicator falsely "connected". A real reply clears the
+   // alert; sustained silence turns it on. Decorator only -- reconnect handled elsewhere.
+   MarkSerialRead(rig, radioResponded);
 end;
 
 procedure pIcomNew(rig: RadioPtr); // This is now called for all ICOM radios
