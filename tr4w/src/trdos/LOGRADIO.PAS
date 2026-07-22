@@ -418,6 +418,8 @@ var
    IcomRadiosThatSupportRIT: InterfacedRadioTypeSet;
    IcomRadiosThatSupportVFOB: InterfacedRadioTypeSet;
    IcomRadiosThatSupportPSKMode: InterfacedRadioTypeSet;  // For data, radio uses PSK mode instead of USB-D.
+   IcomRadiosSplitSetOnly: InterfacedRadioTypeSet;  // $0F is write-only (set split); the read NAKs (FA). Skip the split read-poll for these.
+   IcomRadiosModeSetNoFilter: InterfacedRadioTypeSet;  // $06 set-mode takes the mode byte only; appending a filter byte makes the radio NAK the whole frame.
    ICOMRadios:       ICOMRadioTypes;
    KenwoodRadios:    KenwoodRadioTypes;
    YaesuRadios:      YaesuRadioTypes;
@@ -3833,7 +3835,8 @@ begin
                   // mode.
                   // tIcomFilterWidth is the value from the CFG file
                   //     if Mode = Phone then  CommandsTempBuffer[7] := AnsiChar(tIcomFilterWidth);
-                     if (RadioModel = OMNI6) and (Mode = CW) then      // n4af 4.43.3
+                     if ((RadioModel = OMNI6) and (Mode = CW)) or
+                        (RadioModel in IcomRadiosModeSetNoFilter) then      // n4af 4.43.3; 718 etc: $06 takes mode only
                         begin
                         CommandsTempBuffer[0] := AnsiChar(8); // Have to update since we are not adding filter Byte  // ny4i
                         CommandsTempBuffer[7] := ICOM_END_OF_MESSAGE_CODE;   // n4af 4.43.3
@@ -4243,6 +4246,15 @@ begin
    IcomRadiosThatSupportRIT := [IC705, IC7100, IC7300, IC7800, IC7850, IC7851, IC7600, IC7610, IC7700, IC7760, IC9700, IC905, IC7300MK2];
    IcomRadiosThatSupportVFOB := [IC705, IC7100, IC7300, IC7800, IC7850, IC7851, IC7600, IC7610, IC7700, IC7760, IC9700, IC905, IC7300MK2];
    IcomRadiosThatSupportPSKMode := [IC7600, IC7610, IC7760];
+   // Icoms whose $0F is set-only (no readable split status; the read NAKs with FA).
+   // Confirmed on the IC-718 (bench + CI-V manual). Add other older Icoms here as
+   // each is confirmed on the bench.
+   IcomRadiosSplitSetOnly := [IC718];
+   // Icoms whose $06 set-mode takes the mode byte ONLY (no trailing filter byte).
+   // The IC-718 NAKs a "06 <mode> <filter>" frame (confirmed on the bench + its
+   // CI-V manual: the set-mode frame is "FE FE ra E0 06 <mode> FD"). Add other
+   // older Icoms here as each is confirmed on the bench.
+   IcomRadiosModeSetNoFilter := [IC718];
    ICOMRadios := [IC78..IC9700];
    KenwoodRadios := [TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850,
                      TS870, TS890, TS940, TS950, TS990, TS2000, FLEX];  // TS890 -- Issue #436
