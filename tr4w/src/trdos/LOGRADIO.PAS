@@ -420,6 +420,7 @@ var
    IcomRadiosThatSupportPSKMode: InterfacedRadioTypeSet;  // For data, radio uses PSK mode instead of USB-D.
    IcomRadiosSplitSetOnly: InterfacedRadioTypeSet;  // $0F is write-only (set split); the read NAKs (FA). Skip the split read-poll for these.
    IcomRadiosModeSetNoFilter: InterfacedRadioTypeSet;  // $06 set-mode takes the mode byte only; appending a filter byte makes the radio NAK the whole frame.
+   IcomRadiosTXStatusUnreadable: InterfacedRadioTypeSet;  // Cannot read TX/RX status over CI-V ($1C read NAKs on any sub-command, no transceive PTT). Skip the poll.
    ICOMRadios:       ICOMRadioTypes;
    KenwoodRadios:    KenwoodRadioTypes;
    YaesuRadios:      YaesuRadioTypes;
@@ -4255,6 +4256,11 @@ begin
    // CI-V manual: the set-mode frame is "FE FE ra E0 06 <mode> FD"). Add other
    // older Icoms here as each is confirmed on the bench.
    IcomRadiosModeSetNoFilter := [IC718];
+   // Icoms that cannot report TX/RX status over CI-V. The IC-718 NAKs the $1C read on
+   // BOTH sub-command 00 and 01 and never broadcasts PTT via transceive (bench-confirmed;
+   // its manual lists "1C 01" as read/write but the firmware only honors the write).
+   // Skip the TX-status poll for these. Add other older Icoms as confirmed on the bench.
+   IcomRadiosTXStatusUnreadable := [IC718];
    ICOMRadios := [IC78..IC9700];
    KenwoodRadios := [TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850,
                      TS870, TS890, TS940, TS950, TS990, TS2000, FLEX];  // TS890 -- Issue #436
