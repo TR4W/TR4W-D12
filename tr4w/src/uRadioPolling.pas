@@ -2169,14 +2169,20 @@ begin
                goto NextPoll;
             end;
       end;
-   rig.SendXMITStatusCommand;
-   if not icomCheckBuffer(rig) then
+   // Radios that can't report TX/RX status over CI-V (e.g. IC-718: the $1C read NAKs
+   // on any sub-command, and it never broadcasts PTT via transceive) -- skip the poll
+   // instead of NAKing every cycle. Radios that answer the read still poll it.
+   if not (rig^.RadioModel in IcomRadiosTXStatusUnreadable) then
       begin
+      rig.SendXMITStatusCommand;
+      if not icomCheckBuffer(rig) then
+         begin
          ClearRadioStatus(rig);
          UpdateStatus(rig);
          Sleep(1000);
          goto NextPoll;
             // Argh....a damn GoTo...what the hell?!? // ny4i // 4.44.5
+         end;
       end;
 
    goto NextPoll;
