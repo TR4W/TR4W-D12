@@ -2135,13 +2135,19 @@ begin
                goto NextPoll;
             end;
       end;
-   rig.SendIcomCommand(Ord(ICOM_SPLIT_MODE));
-   if not icomCheckBuffer(rig) then
+   // Set-only radios (e.g. IC-718) treat $0F as write-only and NAK a split READ
+   // with FA every poll -- there is no readable split status. Skip the pointless
+   // read for them; radios that answer the read still poll it normally.
+   if not (rig^.RadioModel in IcomRadiosSplitSetOnly) then
       begin
+      rig.SendIcomCommand(Ord(ICOM_SPLIT_MODE));
+      if not icomCheckBuffer(rig) then
+         begin
          ClearRadioStatus(rig);
          UpdateStatus(rig);
          Sleep(1000);
          goto NextPoll;
+         end;
       end;
    if rig^.RadioModel in IcomRadiosThatSupportRIT then
       begin
