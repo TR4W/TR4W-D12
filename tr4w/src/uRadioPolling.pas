@@ -1926,6 +1926,17 @@ begin
                                     if not rig.icomHasDataMode then
                                        begin
                                        rig.ProcessIcomMode(rig.saveMode);
+                                       // ProcessIcomMode sets only the top-level
+                                       // Mode/ExtendedMode. Mirror it into VFO A so the
+                                       // per-VFO mode label next to the frequency
+                                       // (Issue #566) updates -- this legacy path tracks
+                                       // the radio's freq in VFO A too, so the mode
+                                       // belongs there. Matches SetVFOModeExtendedMode
+                                       // (which=0) used by the data-mode Icom path.
+                                       rig.CurrentStatus.VFO[VFOA].Mode :=
+                                          rig.CurrentStatus.Mode;
+                                       rig.CurrentStatus.VFO[VFOA].ExtendedMode :=
+                                          rig.CurrentStatus.ExtendedMode;
                                        end;
 
                                     if (Ord(rig.tBuf[i + 6]) > 0) then
