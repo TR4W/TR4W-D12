@@ -278,6 +278,7 @@ type
       tOrionMode:   array[0..07] of AnsiChar;
       CommandPause: integer;
       saveMode : integer;
+      icomHasDataMode : boolean;   // True once this Icom answers a valid $1A06 (data-mode) query. Gates whether the standard $04 mode read is applied directly: old Icoms (IC-718, IC-706, non-Pro 746/756, etc.) have no data mode and never send $1A06, so their mode must be committed from $04.
       nextExtendedMode : ExtendedModeType;
       tmrCWByCAT: TTimer;
       EventHandlers : TEventHandlers;
@@ -1554,6 +1555,10 @@ end;
 { The initializtion of BeginPolling is in this procedure so if we are not using serial ports, it has to be setup somewhere else.}
 procedure RadioObject.CheckAndInitializePorts_ForThisRadio;
 begin
+   // Reset data-mode capability for this connection: assume no data mode until
+   // the radio proves it by answering a valid $1A06. This lets an old Icom put
+   // on a slot previously held by a data-mode radio commit its mode via $04.
+   Self.icomHasDataMode := False;
    if RadioModel = NoInterfacedRadio then
       begin
       Exit;
