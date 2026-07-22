@@ -289,14 +289,18 @@ var absI: integer;
 begin  // This does not handle negative numbers very well.
    // D12: returns native string; format specs unchanged (%2u space-pad width 2)
    // so the display is byte-identical to the wsprintf path, quirk and all.
+   // %.2u zero-pads the hundredths (min 2 digits) so 2060 -> "2.06" and -1080 ->
+   // "-1.08". The old %2u space-padded to width 2, so a leading-zero hundredths
+   // digit rendered as a space ("2. 6", "-1. 8"); it only surfaced once positive
+   // RIT started displaying. (190 -> "0.19" is unchanged.)
    if i < 0 then
       begin
       absI := i * -1;
-      Result := SysUtils.Format('-%u.%2u', [absI div 1000, (absI mod 1000) div 10]); // Make 190 appear as 0.19
+      Result := SysUtils.Format('-%u.%.2u', [absI div 1000, (absI mod 1000) div 10]);
       end
    else
       begin
-      Result := SysUtils.Format('%d.%2u', [i div 1000, (abs(i) mod 1000) div 10]); // Make 190 appear as 0.19
+      Result := SysUtils.Format('%d.%.2u', [i div 1000, (abs(i) mod 1000) div 10]);
       end;
 end;
 
