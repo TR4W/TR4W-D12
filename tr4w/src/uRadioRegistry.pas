@@ -36,9 +36,9 @@ unit uRadioRegistry;
   `... begin Result := TIcomRadio.CreateConfigured(caps) end` -- same entry type,
   no rework.  The registry never needs to know which of the two it is.
 
-  networkPort/discoverable are carried now but consumed in a later increment,
-  when TRadioModel's DefaultNetworkPort/IsDiscoverable are re-pointed here and
-  that enum is retired.
+  networkPort/discoverable feed TRadioFactory's DefaultNetworkPort /
+  IsNetworkModel / IsDiscoverable (keyed on InterfacedRadioType); the old
+  TRadioModel enum has been retired.
 }
 
 interface
@@ -74,8 +74,7 @@ function SupportsNetwork(model: InterfacedRadioType): Boolean;
 function CreateInstance(model: InterfacedRadioType): TFactoryRadioBase;
 function DisplayName(model: InterfacedRadioType): string;
 
-// Consumed in the next increment (DefaultNetworkPort / IsNetworkModel /
-// IsDiscoverable move off TRadioModel and read these).
+// Read by TRadioFactory's DefaultNetworkPort / IsNetworkModel / IsDiscoverable.
 function RegisteredNetworkPort(model: InterfacedRadioType): integer;
 function RegisteredDiscoverable(model: InterfacedRadioType): Boolean;
 

@@ -307,8 +307,6 @@ type
       procedure SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char; extendedMode: ExtendedModeType); overload;
       procedure SendCW(Msg: Str160);
       procedure SetUpRadioInterface;
-      function DetermineNetworkRadioModel: TRadioModel;
-      function MapRadioModelToFactory: TRadioModel;
       procedure StopSendingCW;
       //    procedure StartNextPoll;
       //    function TimeToGiveUp: boolean;
@@ -901,8 +899,7 @@ begin
       // function Result was left UNINITIALIZED -> garbage TRadioMode (often
       // rmData), which made a band change shove the radio into DATA. Return the
       // "none" mode so the caller sends no mode command and the radio keeps its
-      // mode. (Use Low(TRadioMode), which is rmNone; the bare identifier rmNone
-      // is ambiguous in LOGRADIO -- it also exists in TRadioModel, which wins.)
+      // mode. (Use Low(TRadioMode), which is rmNone.)
       Result := Low(TRadioMode);
    end;
  //  ModeType = (CW, Digital, Phone, Both, NoMode, FM); { Use for TR }
@@ -2820,48 +2817,12 @@ begin
       end;
 end;
 //------------------------------------------------------------------------------
-function RadioObject.DetermineNetworkRadioModel: TRadioModel;
-begin
-   // This is only called for network radios (tCATPortType = Network)
-   Result := rmNone;
-
-   logger.Info('[%s.DetermineNetworkRadioModel] RadioModel=%d, UseHamLib=%s',
-               [Self.RadioName, Ord(Self.RadioModel), BoolToStr(Self.UseHamLib, True)]);
-
-   // Check if this radio should use HamLib Direct DLL
-   if Self.UseHamLib then
-   begin
-      Result := rmHamLibDirect;
-      logger.Info('[%s] Using HamLib Direct (DLL mode)', [Self.RadioName]);
-      Exit;
-   end;
-
-   // Otherwise, determine specific network radio model
-   Result := Self.MapRadioModelToFactory;
-   if Result <> rmNone then
-      logger.Info('[%s] Using factory model: %s', [Self.RadioName, TRadioFactory.ModelToString(Result)])
-   else
-      begin
-      logger.warn('[%s] Unknown network radio model %d, no factory mapping', [Self.RadioName, Ord(Self.RadioModel)]);
-      end;
-end;
-//------------------------------------------------------------------------------
-function RadioObject.MapRadioModelToFactory: TRadioModel;
-begin
-   // Issue #1028 -- the InterfacedRadioType -> TRadioModel mapping now lives on
-   // the radio factory (single source of truth, alongside the per-model network
-   // metadata).  Delegate to it.
-   Result := TRadioFactory.ModelForInterfacedType(Self.RadioModel);
-end;
-//------------------------------------------------------------------------------
 procedure RadioObject.SetUpRadioInterface;
 var
    hand: HWND;
 //   TempCardinal: cardinal;
    dwFlagsAndAttributes: DWORD;
    EvtChar: char;
-   networkRadioModel: TRadioModel;
-   factoryModel: TRadioModel;
 begin
    // If a radio object already exists, stop the polling thread and free it before creating a new one.
    // This prevents the old thread from accessing freed memory (dangling pointer AV).

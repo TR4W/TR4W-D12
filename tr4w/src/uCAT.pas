@@ -56,11 +56,11 @@ uses
   MainUnit;
 
 // Issue #968 / #1028 -- the default network port is a property of the radio
-// MODEL, now owned by the radio factory (single source of truth, keyed by
-// TRadioModel).  Returns 0 for a radio that has no network port (serial-only).
+// model, owned by the radio registry (single source of truth, keyed by
+// InterfacedRadioType).  Returns 0 for a radio that has no network port (serial-only).
 function DefaultNetworkPortForRadio(rt: InterfacedRadioType): Integer;
 begin
-   Result := TRadioFactory.DefaultNetworkPort(TRadioFactory.ModelForInterfacedType(rt));
+   Result := TRadioFactory.DefaultNetworkPort(rt);
 end;
 
 // Issue #1028 -- True if `port` is the default network port of SOME network
@@ -185,7 +185,7 @@ begin
 
   // Issue #1028 -- discoverability is now a radio-factory property (network
   // radios with LAN auto-discovery: K4, the network Icoms, FLEX).
-  if not TRadioFactory.IsDiscoverable(TRadioFactory.ModelForInterfacedType(rt)) then
+  if not TRadioFactory.IsDiscoverable(rt) then
      begin
      Format(wsprintfBuffer, TC_DISCOVER_NOT_AVAILABLE, PAnsiChar(radioName));
      showwarning(wsprintfBuffer);
