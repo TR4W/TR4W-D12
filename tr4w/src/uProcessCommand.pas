@@ -402,9 +402,9 @@ end;
 
 procedure scSRS;
 begin
-   if ActiveRadioPtr.tNetObject <> nil then
+   if ActiveRadioPtr.tFactoryObject <> nil then
       begin
-      ActiveRadioPtr.tNetObject.SendToRadio(scFileName);
+      ActiveRadioPtr.tFactoryObject.SendToRadio(scFileName);
       end
    else if ActiveRadioPtr.RadioModel in [IC78..IC9700, OMNI6] then
       begin
@@ -421,9 +421,9 @@ end;
 
 procedure scSRSI;
 begin
-  if InActiveRadioPtr.tNetObject <> nil then
+  if InActiveRadioPtr.tFactoryObject <> nil then
     begin
-    InActiveRadioPtr.tNetObject.SendToRadio(scFileName);
+    InActiveRadioPtr.tFactoryObject.SendToRadio(scFileName);
     end
   else if InActiveRadioPtr.RadioModel in [IC78..IC9700, OMNI6] then
     begin
@@ -439,9 +439,9 @@ end;
 
 procedure scSRS1;
 begin
-  if Radio1.tNetObject <> nil then
+  if Radio1.tFactoryObject <> nil then
     begin
-    Radio1.tNetObject.SendToRadio(scFileName);
+    Radio1.tFactoryObject.SendToRadio(scFileName);
     end
   else if Radio1.RadioModel in [IC78..IC9700, OMNI6] then
   begin
@@ -457,9 +457,9 @@ end;
 
 procedure scSRS2;
 begin
-  if Radio2.tNetObject <> nil then
+  if Radio2.tFactoryObject <> nil then
     begin
-    Radio2.tNetObject.SendToRadio(scFileName);
+    Radio2.tFactoryObject.SendToRadio(scFileName);
     end
   else if Radio2.RadioModel in [IC78..IC9700, OMNI6] then
   begin
@@ -477,11 +477,11 @@ procedure scPlayMessageActive;
 var bError: boolean;
    // nMemoryNum: integer;
 begin
-   if ActiveRadioPtr.tNetObject <> nil then
+   if ActiveRadioPtr.tFactoryObject <> nil then
       begin
       if StrToIntDef(scFileName,-1) <> -1 then
          begin
-         bError := ActiveRadioPtr.tNetObject.MemoryKeyer(StrToIntDef(scFileName, 0));
+         bError := ActiveRadioPtr.tFactoryObject.MemoryKeyer(StrToIntDef(scFileName, 0));
          end
       else
          begin
@@ -516,11 +516,11 @@ procedure scPlayMessageInActive;
 var bError: boolean;
    // nMemoryNum: integer;
 begin
-   if InActiveRadioPtr.tNetObject <> nil then
+   if InActiveRadioPtr.tFactoryObject <> nil then
       begin
       if StrToIntDef(scFileName,-1) <> -1 then
          begin
-         bError := InActiveRadioPtr.tNetObject.MemoryKeyer(StrToIntDef(scFileName, 0));
+         bError := InActiveRadioPtr.tFactoryObject.MemoryKeyer(StrToIntDef(scFileName, 0));
          end
       else
          begin

@@ -654,14 +654,14 @@ begin
   // Without this, the radio never receives disconnect packets and keeps
   // the session alive, blocking reconnection on next program start.
   logger.Info('[ExitProgram] Step 3: Disconnecting Radio1');
-  if Radio1.tNetObject <> nil then
+  if Radio1.tFactoryObject <> nil then
      begin
-     Radio1.tNetObject.Disconnect;
+     Radio1.tFactoryObject.Disconnect;
      end;
   logger.Info('[ExitProgram] Step 4: Disconnecting Radio2');
-  if Radio2.tNetObject <> nil then
+  if Radio2.tFactoryObject <> nil then
      begin
-     Radio2.tNetObject.Disconnect;
+     Radio2.tFactoryObject.Disconnect;
      end;
   logger.Info('[ExitProgram] Step 5: WSACleanup');
 

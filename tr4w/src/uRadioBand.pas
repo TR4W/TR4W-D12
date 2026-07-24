@@ -22,7 +22,7 @@ unit uRadioBand;
   No dependencies on radio hardware, protocols, or UI — fully testable
   in isolation with the console test runner.
 
-  TRadioBand is the canonical definition.  uNetRadioBase includes this unit
+  TRadioBand is the canonical definition.  uFactoryRadioBase includes this unit
   in its interface uses clause so all existing consumers see TRadioBand
   unchanged — no other files need updating.
 
@@ -35,7 +35,7 @@ unit uRadioBand;
 interface
 
 // ---------------------------------------------------------------------------
-// Band enum — canonical definition (moved from uNetRadioBase).
+// Band enum — canonical definition (moved from uFactoryRadioBase).
 // Order matters: routines in this unit rely on the enum ordinal values only
 // indirectly (via case statements), so the order is stable.
 // ---------------------------------------------------------------------------

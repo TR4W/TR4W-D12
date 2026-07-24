@@ -740,9 +740,9 @@ begin
      end
   else if CATWTR^.tCATPortType = Network then
      begin
-     if (CATWTR^.tNetObject <> nil) and CATWTR^.tNetObject.IsConnected then
+     if (CATWTR^.tFactoryObject <> nil) and CATWTR^.tFactoryObject.IsConnected then
         begin
-        CATWTR^.tNetObject.Disconnect;
+        CATWTR^.tFactoryObject.Disconnect;
         end;
      end;
   CATWTR^.tCATPortHandle := INVALID_HANDLE_VALUE;

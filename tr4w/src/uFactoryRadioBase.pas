@@ -14,7 +14,7 @@
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
-unit uNetRadioBase;
+unit uFactoryRadioBase;
 
 interface
 
@@ -108,7 +108,7 @@ function BoolToString(b: boolean): string;
 // Add property for IP address, port, type (tcp or udp but just implement tcp right now).
 // Add a connect and disconnect method
 
-Type TNetRadioBase = class(TObject)
+Type TFactoryRadioBase = class(TObject)
    private
       //socket: TIdTCPClient;
       //idThreadComponent   : TIdThreadComponent;
@@ -248,7 +248,7 @@ Type TNetRadioBase = class(TObject)
       // Active (RX/operating) VFO. Default nrVFOA = "swap" model (K4: A/B
       // exchanges contents, so the active VFO is always A). Selectable-model
       // radios (Kenwood FR, Flex slice) call SetActiveVFO so the aggregate
-      // main-window status (in pNetworkRadio) follows the receiving VFO.
+      // main-window status (in pFactoryRadio) follows the receiving VFO.
       function GetActiveVFO: TVFO;
       procedure SetActiveVFO(vfo: TVFO);
 
@@ -351,7 +351,7 @@ end;
 
 //var
 //   rt: TReadingThread = nil;
-Constructor TNetRadioBase.Create(ProcRef: TProcessMsgRef);
+Constructor TFactoryRadioBase.Create(ProcRef: TProcessMsgRef);
 var iVFO: TVFO;
 begin
    {appender := TLogRollingFileAppender.Create('name','K4Test.log');
@@ -360,7 +360,7 @@ begin
    TLogBasicConfigurator.Configure(appender);
    TLogLogger.GetRootLogger.Level := Trace;
    logger := TLogLogger.GetLogger('K4TestDebugLog');
-   logger.info('******************** uNetRadioBase STARTUP ******************');
+   logger.info('******************** uFactoryRadioBase STARTUP ******************');
    logger.Trace('trace output');
    }
    baseProcMsg := ProcRef;
@@ -400,13 +400,13 @@ begin
    FLastValidResponse := Now;  // Initialize to current time
 end;
 
-{Constructor TNetRadioBase.Create(ProcRef: TProcessMsgRef);
+{Constructor TFactoryRadioBase.Create(ProcRef: TProcessMsgRef);
 begin
    baseProcMsg := ProcRef;
    inherited Create;
 end;}
 
-Constructor TNetRadioBase.Create(address: string; port: integer; ProcRef: TProcessMsgRef);
+Constructor TFactoryRadioBase.Create(address: string; port: integer; ProcRef: TProcessMsgRef);
 begin
    Self.radioAddress := address;
    Self.radioPort := port;
@@ -414,62 +414,62 @@ begin
 end;
 
 // Default polling method implementations - radios override as needed
-procedure TNetRadioBase.QueryVFOAFrequency;
+procedure TFactoryRadioBase.QueryVFOAFrequency;
 begin
   // Default: do nothing - radio classes override
 end;
 
-procedure TNetRadioBase.QueryVFOBFrequency;
+procedure TFactoryRadioBase.QueryVFOBFrequency;
 begin
   // Default: do nothing - radio classes override
 end;
 
-procedure TNetRadioBase.QueryVFOAMode;
+procedure TFactoryRadioBase.QueryVFOAMode;
 begin
   // Default: do nothing - Icom overrides with $26 $00
 end;
 
-procedure TNetRadioBase.QueryVFOBMode;
+procedure TFactoryRadioBase.QueryVFOBMode;
 begin
   // Default: do nothing - Icom overrides with $26 $01
 end;
 
-procedure TNetRadioBase.QueryActiveVFO;
+procedure TFactoryRadioBase.QueryActiveVFO;
 begin
   // Default: do nothing - Icom overrides with $07 $D2 where supported
 end;
 
-procedure TNetRadioBase.QueryMode;
+procedure TFactoryRadioBase.QueryMode;
 begin
   // Default: do nothing - radio classes override
 end;
 
-procedure TNetRadioBase.QueryTXStatus;
+procedure TFactoryRadioBase.QueryTXStatus;
 begin
   // Default: do nothing - radio classes override
 end;
 
-procedure TNetRadioBase.QueryRITState;
+procedure TFactoryRadioBase.QueryRITState;
 begin
   // Default: do nothing - radio classes override
 end;
 
-procedure TNetRadioBase.QueryXITState;
+procedure TFactoryRadioBase.QueryXITState;
 begin
   // Default: do nothing - radio classes override
 end;
 
-procedure TNetRadioBase.QueryBand;
+procedure TFactoryRadioBase.QueryBand;
 begin
   // Default: do nothing - radio classes override
 end;
 
-procedure TNetRadioBase.QuerySplitState;
+procedure TFactoryRadioBase.QuerySplitState;
 begin
   // Default: do nothing - radio classes override
 end;
 
-procedure TNetRadioBase.PollRadioState;
+procedure TFactoryRadioBase.PollRadioState;
 begin
   // Default implementation - query all radio state
   QueryVFOAFrequency;
@@ -482,7 +482,7 @@ begin
   QuerySplitState;
 end;
 
-Destructor TNetRadioBase.Destroy;
+Destructor TFactoryRadioBase.Destroy;
 var iVFO: TVFO;
 begin
    // For serial: close the port FIRST so the reading thread's ReadString
@@ -528,7 +528,7 @@ end;
 
 // Events
 
-procedure TNetRadioBase.OnRadioConnected(Sender: TObject);
+procedure TFactoryRadioBase.OnRadioConnected(Sender: TObject);
 begin
    logger.Info('Network Radio connected');
 
@@ -557,7 +557,7 @@ begin
    // to be the first byte).
 end;
 
-procedure TNetRadioBase.OnRadioDisconnected(Sender: TObject);
+procedure TFactoryRadioBase.OnRadioDisconnected(Sender: TObject);
 begin
    logger.Info('<<<<<<<<<<<<<< Network Radio disconnected');
    {if rt <> nil then
@@ -568,12 +568,12 @@ begin
       end;  }
 end;
 
-procedure TNetRadioBase.OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: string);
+procedure TFactoryRadioBase.OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: string);
 begin
    logger.trace('Received text from radio: [%s]',[AStatusText]);
 end;
 
-{procedure TNetRadioBase.IdThreadComponentRun(Sender: TIdThreadComponent);
+{procedure TFactoryRadioBase.IdThreadComponentRun(Sender: TIdThreadComponent);
 var
     msgFromServer : string;
 begin
@@ -586,53 +586,53 @@ end;
 // .............................................................................
 }
 
-function TNetRadioBase.GetRadioPort: integer;
+function TFactoryRadioBase.GetRadioPort: integer;
 begin
    Result := Self.localPort;
 end;
 
-procedure TNetRadioBase.SetRadioPort(Value: Integer);
+procedure TFactoryRadioBase.SetRadioPort(Value: Integer);
 begin
    Self.localPort := Value;
    // Since the port was changed, disconnect? Or just wait until next time?
 
 end;
 
-function TNetRadioBase.GetSerialPort: portType;
+function TFactoryRadioBase.GetSerialPort: portType;
 begin
    Result := Self.localSerialPort;
 end;
 
-procedure TNetRadioBase.SetSerialPort(Value: portType);
+procedure TFactoryRadioBase.SetSerialPort(Value: portType);
 begin
    Self.localSerialPort := Value;
    // Since the port was changed, disconnect? Or just wait until next time?
 
 end;
 
-function TNetRadioBase.GetPTTviaCAT: boolean;
+function TFactoryRadioBase.GetPTTviaCAT: boolean;
 begin
    Result := Self.PTTviaCAT;
    logger.trace('[GetPTTviaCAT] Returning %s for PTTviaCAT',[BoolToStr(Result)]);
 end;
 
-procedure TNetRadioBase.SetPTTviaCAT(Value: boolean);
+procedure TFactoryRadioBase.SetPTTviaCAT(Value: boolean);
 begin
    Self.PTTviaCAT := Value;
    logger.Debug('[SetPTTviaCAT] Setting PTTviaCAT to %s',[BoolToStr(Value)]);
 end;
 
-function TNetRadioBase.GetRadioAddress: string;
+function TFactoryRadioBase.GetRadioAddress: string;
 begin
    Result := Self.localAddress;
 end;
 
-procedure TNetRadioBase.SetRadioAddress(Value: string);
+procedure TFactoryRadioBase.SetRadioAddress(Value: string);
 begin
   Self.localAddress := Value;
 end;
 
-function TNetRadioBase.Connect: integer;
+function TFactoryRadioBase.Connect: integer;
 var
    comPortName: string;
    portNum: Integer;
@@ -646,7 +646,7 @@ begin
       portNum := Ord(Self.serialPort);  // Serial1=1, Serial2=2, etc.
       comPortName := Format('COM%d', [portNum]);
 
-      logger.Info('[TNetRadioBase.Connect] Connecting to serial radio on %s', [comPortName]);
+      logger.Info('[TFactoryRadioBase.Connect] Connecting to serial radio on %s', [comPortName]);
 
       try
          // Create serial port if needed
@@ -657,7 +657,7 @@ begin
          // This prevents race conditions during reconnection attempts
          if serialPortObj.IsOpen and (rt <> nil) then
             begin
-            logger.Debug('[TNetRadioBase.Connect] Serial port already open with reading thread, keeping connection alive');
+            logger.Debug('[TFactoryRadioBase.Connect] Serial port already open with reading thread, keeping connection alive');
             // Clear any accumulated garbage from the buffer
             rt.ClearSerialBuffer;
             Result := 0;
@@ -667,13 +667,13 @@ begin
          // Close if already open (for initial setup or error recovery)
          if serialPortObj.IsOpen then
             begin
-            logger.Debug('[TNetRadioBase.Connect] Serial port already open, closing first');
+            logger.Debug('[TFactoryRadioBase.Connect] Serial port already open, closing first');
             serialPortObj.Close;
             end;
 
          // Open with configured port settings
          serialPortObj.OpenRaw(serialBaudRate, serialDataBits, serialStopBits, serialParity, serialRts, serialDtr);
-         logger.Info('[TNetRadioBase.Connect] Serial port %s opened: %d baud, %d data bits, parity %d, %d stop bits, RTS=%s, DTR=%s',
+         logger.Info('[TFactoryRadioBase.Connect] Serial port %s opened: %d baud, %d data bits, parity %d, %d stop bits, RTS=%s, DTR=%s',
                      [comPortName, serialBaudRate, serialDataBits, serialParity, serialStopBits,
                       BoolToStr(serialRts, True), BoolToStr(serialDtr, True)]);
 
@@ -687,14 +687,14 @@ begin
             rt.readTerminator := Self.readTerminator;
             rt.radioName := Self.rigLabel + ' ' + Self.radioModel;
             rt.binaryProtocol := Self.SerialProtocolIsBinary;  // Icom CI-V: read raw bytes, not a codepage-decoded string
-            logger.Info('[TNetRadioBase.Connect] Created serial reading thread');
+            logger.Info('[TFactoryRadioBase.Connect] Created serial reading thread');
             end;
 
          Result := 0;
       except
          on E: Exception do
             begin
-            logger.Error('[TNetRadioBase.Connect] Exception opening serial port %s: %s', [comPortName, E.Message]);
+            logger.Error('[TFactoryRadioBase.Connect] Exception opening serial port %s: %s', [comPortName, E.Message]);
             Result := -1;
             end;
       end;
@@ -702,7 +702,7 @@ begin
    else
       begin
       // Network connection
-      logger.Info('[TNetRadioBase.Connect] Connecting to network radio at address %s, port = %d',[Self.radioAddress,Self.radioPort]);
+      logger.Info('[TFactoryRadioBase.Connect] Connecting to network radio at address %s, port = %d',[Self.radioAddress,Self.radioPort]);
 
       if Self.radioPort = 0 then
          begin
@@ -720,7 +720,7 @@ begin
 
       if not Assigned(socket) then
          begin
-         logger.fatal('In TNetRadioBase.Connect, socket is NUL');
+         logger.fatal('In TFactoryRadioBase.Connect, socket is NUL');
          end;
 
       socket.Port := Self.radioPort;
@@ -739,13 +739,13 @@ begin
           try
              if socket.Connected then
                 begin
-                logger.Debug('[TNetRadioBase.Connect] Socket already connected, disconnecting first');
+                logger.Debug('[TFactoryRadioBase.Connect] Socket already connected, disconnecting first');
                 socket.Disconnect;
                 end;
           except
              on E: Exception do
                 begin
-                logger.Debug('[TNetRadioBase.Connect] Exception during disconnect check: %s - forcing disconnect', [E.Message]);
+                logger.Debug('[TFactoryRadioBase.Connect] Exception during disconnect check: %s - forcing disconnect', [E.Message]);
                 // Force disconnect even if Connected check fails
                 try
                    socket.Disconnect;
@@ -757,12 +757,12 @@ begin
 
           Sleep(100);  // Brief delay to ensure cleanup
 
-          logger.Debug('[TNetRadioBase.Connect] Attempting to connect to %s:%d', [socket.Host, socket.Port]);
+          logger.Debug('[TFactoryRadioBase.Connect] Attempting to connect to %s:%d', [socket.Host, socket.Port]);
           socket.Connect;
-          logger.Info('[TNetRadioBase.Connect] Connected successfully to network radio');
+          logger.Info('[TFactoryRadioBase.Connect] Connected successfully to network radio');
       except
           on E: Exception do begin
-             logger.Error('[TNetRadioBase.Connect] Exception when connecting to radio (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
+             logger.Error('[TFactoryRadioBase.Connect] Exception when connecting to radio (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
              // Try to disconnect to clear bad state for next attempt
              try
                 socket.Disconnect;
@@ -774,14 +774,14 @@ begin
       end;
 end;
 
-function TNetRadioBase.Connect(address: string; port: integer): integer;
+function TFactoryRadioBase.Connect(address: string; port: integer): integer;
 begin
    Self.radioAddress := address;
    Self.radioPort := port;
    Result := Self.Connect;
 end;
 
-procedure TNetRadioBase.Disconnect;
+procedure TFactoryRadioBase.Disconnect;
 begin
    if socket.Connected then
       begin
@@ -805,7 +805,7 @@ begin
    else if (serialPortObj <> nil) and serialPortObj.IsOpen then
       begin
       try
-         logger.debug('[TNetRadioBase.Disconnect] Closing serial port and terminating reading thread');
+         logger.debug('[TFactoryRadioBase.Disconnect] Closing serial port and terminating reading thread');
          // Close serial port first so ReadString in reading thread returns immediately
          serialPortObj.Close;
          if rt <> nil then
@@ -817,19 +817,19 @@ begin
       except
          on E: Exception do
             begin
-            logger.Error('[TNetRadioBase.Disconnect] Exception when disconnecting serial radio: %s', [E.Message]);
+            logger.Error('[TFactoryRadioBase.Disconnect] Exception when disconnecting serial radio: %s', [E.Message]);
             end;
       end;
       end;
 end;
 
-procedure TNetRadioBase.UpdateLastValidResponse;
+procedure TFactoryRadioBase.UpdateLastValidResponse;
 begin
    FLastValidResponse := Now;
    logger.Trace('[UpdateLastValidResponse] Updated last valid response timestamp');
 end;
 
-procedure TNetRadioBase.SendToRadio(s: string);
+procedure TFactoryRadioBase.SendToRadio(s: string);
 var nLen: integer;
 begin
    // Don't try to send if we're disconnecting
@@ -884,7 +884,7 @@ begin
       except
          on E: Exception do
             begin
-            logger.error('Exception caught on TNetRadioBase.SendToRadio - Command was (%s) - Exception: %s - %s',[s, E.ClassName, E.Message]);
+            logger.error('Exception caught on TFactoryRadioBase.SendToRadio - Command was (%s) - Exception: %s - %s',[s, E.ClassName, E.Message]);
             end;
       end;
    finally
@@ -892,44 +892,44 @@ begin
    end;
 end;
 
-function TNetRadioBase.GetIsTransmitting: boolean;
+function TFactoryRadioBase.GetIsTransmitting: boolean;
 begin
    Result := (Self.radioState = rsTransmit);
 end;
 
-function TNetRadioBase.GetIsReceiving: boolean;
+function TFactoryRadioBase.GetIsReceiving: boolean;
 begin
    Result := (Self.radioState = rsReceive);
 end;
 
-function TNetRadioBase.GetCWSpeed: integer;
+function TFactoryRadioBase.GetCWSpeed: integer;
 begin
    Result := Self.localCWSpeed;
 end;
 
-function TNetRadioBase.GetIsRITOn(whichVFO: TVFO): boolean;
+function TFactoryRadioBase.GetIsRITOn(whichVFO: TVFO): boolean;
 begin
    Result := Self.vfo[whichVFO].RITState;
    //logger.debug('In GetIsRITON, result = %s',[BoolToString(Result)]);
 end;
 
-function TNetRadioBase.GetRITOffset(whichVFO: TVFO): integer;
+function TFactoryRadioBase.GetRITOffset(whichVFO: TVFO): integer;
 begin
    Result := Self.vfo[whichVFO].RITOffset;
 end;
 
 
-function TNetRadioBase.GetIsXITOn(whichVFO: TVFO): boolean;
+function TFactoryRadioBase.GetIsXITOn(whichVFO: TVFO): boolean;
 begin
    Result := Self.vfo[whichVFO].XITState;
 end;
 
-function TNetRadioBase.GetXITOffset(whichVFO: TVFO): integer;
+function TFactoryRadioBase.GetXITOffset(whichVFO: TVFO): integer;
 begin
    Result := Self.vfo[whichVFO].XITOffset;
 end;
 
-function TNetRadioBase.GetIsConnected: boolean;
+function TFactoryRadioBase.GetIsConnected: boolean;
 begin
    // If we're disconnecting, immediately return false
    if Disconnecting then
@@ -977,19 +977,19 @@ begin
       end
    else
       begin
-      logger.debug('In TNetRadioBase.GetIsConnected, socket is nil');
+      logger.debug('In TFactoryRadioBase.GetIsConnected, socket is nil');
       Result := false;
       end;
 end;
 
-function TNetRadioBase.GetIsOperational: boolean;
+function TFactoryRadioBase.GetIsOperational: boolean;
 begin
    // Default: connected = operational.
    // Radios with richer state (e.g. Flex slices) override this.
    Result := True;
 end;
 
-function TNetRadioBase.GetCanRecycleOnStuckHandshake: boolean;
+function TFactoryRadioBase.GetCanRecycleOnStuckHandshake: boolean;
 begin
    // Default False: don't force a Disconnect+Connect cycle when stuck in
    // IsConnected=True/IsOperational=False.  Radios where the two states
@@ -999,58 +999,58 @@ begin
    Result := False;
 end;
 
-function TNetRadioBase.GetAuthFailed: boolean;
+function TFactoryRadioBase.GetAuthFailed: boolean;
 begin
    Result := False;
 end;
 
-function TNetRadioBase.GetFrequency(whichVFO: TVFO) : integer;
+function TFactoryRadioBase.GetFrequency(whichVFO: TVFO) : integer;
 begin
 
    Result := Self.vfo[whichVFO].frequency;
 end;
 
-function TNetRadioBase.BandToFreq(band: TRadioBand): LongInt;
+function TFactoryRadioBase.BandToFreq(band: TRadioBand): LongInt;
 begin
    Result := RadioBandToFreq(band);
 end;
 
-function TNetRadioBase.GetBand(whichVFO: TVFO): TRadioBand;
+function TFactoryRadioBase.GetBand(whichVFO: TVFO): TRadioBand;
 begin
    Result := Self.vfo[whichVFO].band;
 end;
 
-function TNetRadioBase.GetMode(whichVFO: TVFO): TRadioMode;
+function TFactoryRadioBase.GetMode(whichVFO: TVFO): TRadioMode;
 begin
    Result := Self.vfo[whichVFO].mode;
 end;
 
-function TNetRadioBase.GetActiveVFO: TVFO;
+function TFactoryRadioBase.GetActiveVFO: TVFO;
 begin
    Result := FActiveVFO;
 end;
 
-procedure TNetRadioBase.SetActiveVFO(vfo: TVFO);
+procedure TFactoryRadioBase.SetActiveVFO(vfo: TVFO);
 begin
    FActiveVFO := vfo;
 end;
 
-function TNetRadioBase.GetDataMode(whichVFO: TVFO): TRadioMode;
+function TFactoryRadioBase.GetDataMode(whichVFO: TVFO): TRadioMode;
 begin
    Result := Self.vfo[whichVFO].dataMode;
 end;
 
-function TNetRadioBase.GetIFShift(whichVFO: TVFO): integer;
+function TFactoryRadioBase.GetIFShift(whichVFO: TVFO): integer;
 begin
    Result := Self.vfo[whichVFO].IFShift;
 end;
 
-function TNetRadioBase.GetFilter(whichVFO: TVFO): integer;
+function TFactoryRadioBase.GetFilter(whichVFO: TVFO): integer;
 begin
    Result := Self.vfo[whichVFO].filter;
 end;
 
-function TNetRadioBase.GetSplitEnabled: boolean;
+function TFactoryRadioBase.GetSplitEnabled: boolean;
 begin
    Result := Self.localSplitEnabled;
 end;
@@ -1060,7 +1060,7 @@ end;
 // the per-radio value regardless of which VFO the window queries. (RIT/XIT/Split
 // are per-radio on the rigs we support; a future per-VFO radio can still write
 // vfo[].RITState directly.)
-procedure TNetRadioBase.SetRITOn(value: boolean);
+procedure TFactoryRadioBase.SetRITOn(value: boolean);
 var
    v: TVFO;
 begin
@@ -1071,7 +1071,7 @@ begin
       end;
 end;
 
-procedure TNetRadioBase.SetXITOn(value: boolean);
+procedure TFactoryRadioBase.SetXITOn(value: boolean);
 var
    v: TVFO;
 begin
@@ -1082,12 +1082,12 @@ begin
       end;
 end;
 
-procedure TNetRadioBase.SetSplitOn(value: boolean);
+procedure TFactoryRadioBase.SetSplitOn(value: boolean);
 begin
    Self.localSplitEnabled := value;
 end;
 
-procedure TNetRadioBase.SetTransmitting(value: boolean);
+procedure TFactoryRadioBase.SetTransmitting(value: boolean);
 begin
    if value then
       Self.radioState := rsTransmit
@@ -1095,7 +1095,7 @@ begin
       Self.radioState := rsReceive;
 end;
 
-function TNetRadioBase.GetVFO(whichVFO: TVFO): TRadioVFO;
+function TFactoryRadioBase.GetVFO(whichVFO: TVFO): TRadioVFO;
 begin
    if Assigned(Self.vfo[whichVFO]) then
       begin
@@ -1104,12 +1104,12 @@ begin
   
 end;
 
-function TNetRadioBase.VFOToString(whichVFO: TVFO): string;
+function TFactoryRadioBase.VFOToString(whichVFO: TVFO): string;
 begin
    Result := vfoNames[whichVFO];
 end;
 
-function TNetRadioBase.ModeToString(mode: TRadioMode): string;
+function TFactoryRadioBase.ModeToString(mode: TRadioMode): string;
 begin
    case mode of
       rmNone: Result := 'mode not set';
@@ -1170,8 +1170,8 @@ var
    termPos: Integer;
    completeCmd: string;
 begin
-   logger.trace('[TNetRadioBase.TReadingThread.Execute] Entered');
-   logger.info('[TNetRadioBase.TReadingThread.Execute] readTerminator is [%s]',[Self.readTerminator]);
+   logger.trace('[TFactoryRadioBase.TReadingThread.Execute] Entered');
+   logger.info('[TFactoryRadioBase.TReadingThread.Execute] readTerminator is [%s]',[Self.readTerminator]);
 
    wasConnected := False;
 
@@ -1185,7 +1185,7 @@ begin
                // Serial port reading
                if not wasConnected then
                   begin
-                  logger.Info('[TNetRadioBase.TReadingThread] Serial port open, starting to read');
+                  logger.Info('[TFactoryRadioBase.TReadingThread] Serial port open, starting to read');
                   wasConnected := True;
                   Self.radioWasDisconnected := False;
                   end;
@@ -1227,7 +1227,7 @@ begin
                               except
                                  on E: Exception do
                                     begin
-                                    logger.Error('[TNetRadioBase.TReadingThread] Exception in message handler: %s - %s', [E.ClassName, E.Message]);
+                                    logger.Error('[TFactoryRadioBase.TReadingThread] Exception in message handler: %s - %s', [E.ClassName, E.Message]);
                                     end;
                               end;
                               end;
@@ -1239,7 +1239,7 @@ begin
                except
                   on E: Exception do
                      begin
-                     logger.Debug('[TNetRadioBase.TReadingThread] Exception during serial read: %s - %s', [E.ClassName, E.Message]);
+                     logger.Debug('[TFactoryRadioBase.TReadingThread] Exception during serial read: %s - %s', [E.ClassName, E.Message]);
                      Sleep(100);
                      end;
                end;
@@ -1249,7 +1249,7 @@ begin
                // Network socket reading
                if not wasConnected then
                   begin
-                  logger.Info('[TNetRadioBase.TReadingThread] Radio connected, starting to read');
+                  logger.Info('[TFactoryRadioBase.TReadingThread] Radio connected, starting to read');
                   wasConnected := True;
                   Self.radioWasDisconnected := False;
                   end;
@@ -1266,28 +1266,28 @@ begin
                except
                   on E: Exception do
                      begin
-                     logger.Error('[TNetRadioBase.TReadingThread] Exception in message handler: %s - %s', [E.ClassName, E.Message]);
+                     logger.Error('[TFactoryRadioBase.TReadingThread] Exception in message handler: %s - %s', [E.ClassName, E.Message]);
                      // Continue reading despite handler error
                      end;
                end;
             except
                on EIdNotConnected do
                   begin
-                  logger.Warn('[TNetRadioBase.TReadingThread] Lost connection while reading');
+                  logger.Warn('[TFactoryRadioBase.TReadingThread] Lost connection while reading');
                   wasConnected := False;
                   Self.radioWasDisconnected := True;
                   FDisconnecting^ := True;  // Set disconnecting flag
                   end;
                on EIdConnClosedGracefully do
                   begin
-                  logger.Info('[TNetRadioBase.TReadingThread] Radio closed connection gracefully');
+                  logger.Info('[TFactoryRadioBase.TReadingThread] Radio closed connection gracefully');
                   wasConnected := False;
                   Self.radioWasDisconnected := True;
                   FDisconnecting^ := True;  // Set disconnecting flag
                   end;
                on E: Exception do
                   begin
-                  logger.Debug('[TNetRadioBase.TReadingThread] Exception during read: %s - %s', [E.ClassName, E.Message]);
+                  logger.Debug('[TFactoryRadioBase.TReadingThread] Exception during read: %s - %s', [E.ClassName, E.Message]);
                   wasConnected := False;
                   Self.radioWasDisconnected := True;
                   FDisconnecting^ := True;  // Set disconnecting flag
@@ -1299,7 +1299,7 @@ begin
             // Not connected - wait for polling thread to reconnect
             if wasConnected then
                begin
-               logger.Warn('[TNetRadioBase.TReadingThread] Radio disconnected, waiting for reconnection');
+               logger.Warn('[TFactoryRadioBase.TReadingThread] Radio disconnected, waiting for reconnection');
                wasConnected := False;
                Self.radioWasDisconnected := True;
                FDisconnecting^ := True;  // Set disconnecting flag
@@ -1312,7 +1312,7 @@ begin
             on E: EIdSocketError do
                begin
                // Socket in corrupted state - treat as disconnected
-               logger.Debug('[TNetRadioBase.TReadingThread] Socket error during connection check: %s - treating as disconnected', [E.Message]);
+               logger.Debug('[TFactoryRadioBase.TReadingThread] Socket error during connection check: %s - treating as disconnected', [E.Message]);
                if wasConnected then
                   begin
                   wasConnected := False;
@@ -1324,14 +1324,14 @@ begin
             on E: Exception do
                begin
                // Other exception during connection check
-               logger.Debug('[TNetRadioBase.TReadingThread] Exception during connection check: %s - %s', [E.ClassName, E.Message]);
+               logger.Debug('[TFactoryRadioBase.TReadingThread] Exception during connection check: %s - %s', [E.ClassName, E.Message]);
                Sleep(500);
                end;
          end;
       except
          on E: Exception do
             begin
-            logger.Error('[TNetRadioBase.TReadingThread] Unexpected exception in main loop: %s - %s',
+            logger.Error('[TFactoryRadioBase.TReadingThread] Unexpected exception in main loop: %s - %s',
                          [E.ClassName, E.Message]);
             Sleep(1000);  // Brief pause before continuing
             end;

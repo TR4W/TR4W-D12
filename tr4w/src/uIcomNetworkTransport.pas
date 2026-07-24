@@ -50,7 +50,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, SyncObjs, StrUtils,
   IdUDPServer, IdSocketHandle, IdGlobal, IdComponent,
-  uIcomNetworkTypes, uNetRadioBase, Log4D;
+  uIcomNetworkTypes, uFactoryRadioBase, Log4D;
 
 // Direct WinSock sendto declaration using const/untyped params to avoid
 // type conflicts with Windows unit's TSockAddr vs WinSock2.TSockAddr.

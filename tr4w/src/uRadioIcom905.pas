@@ -58,7 +58,7 @@ end;
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom905');
   RegisterRadio(IC905,
-     function: TNetRadioBase begin Result := TIcom905Radio.Create end,
+     function: TFactoryRadioBase begin Result := TIcom905Radio.Create end,
      'Icom IC-905', [rlSerial, rlNetwork], 50001, True);
 
 end.

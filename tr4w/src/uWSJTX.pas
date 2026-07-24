@@ -449,7 +449,7 @@ begin
               // actual change).  GoToBand applies the same multi-band gate
               // and display refresh as an Alt-B band change.
               if (ActiveRadioPtr.RadioModel = NoInterfacedRadio) and
-                 (ActiveRadioPtr.tNetObject = nil) then
+                 (ActiveRadioPtr.tFactoryObject = nil) then
                 begin
                 GetBandMapBandModeFromFrequency(frequency, TempBand, TempMode);
                 if (TempBand <> NoBand) and (TempBand <> ActiveBand) then

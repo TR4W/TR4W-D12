@@ -46,7 +46,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 interface
 
 uses
-  uRadioIcomBase, uNetRadioBase, VC, uRadioRegistry;
+  uRadioIcomBase, uFactoryRadioBase, VC, uRadioRegistry;
 
 type
   TIcom9700Radio = class(TIcomRadio)
@@ -146,7 +146,7 @@ end;
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom9700');
   RegisterRadio(IC9700,
-     function: TNetRadioBase begin Result := TIcom9700Radio.Create end,
+     function: TFactoryRadioBase begin Result := TIcom9700Radio.Create end,
      'Icom IC-9700', [rlSerial, rlNetwork], 50001, True);
 
 end.

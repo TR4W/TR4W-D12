@@ -46,7 +46,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 }
 
 interface
-uses uNetRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry;
+uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry;
 
 type
    TTS890AuthState = (
@@ -58,7 +58,7 @@ type
       ksAuthFailed       // Auth was rejected; connection unusable
    );
 
-type TKenwoodTS890Radio = class(TNetRadioBase)
+type TKenwoodTS890Radio = class(TFactoryRadioBase)
    private
       CWBuffer: string;
       FAuthState: TTS890AuthState;
@@ -156,7 +156,7 @@ begin
    // The TS-890 LAN CAT parser rejects a trailing CR/LF (responds '?;') once
    // authenticated, so send bare ';'-terminated commands. (Proven via telnet:
    // the K4 ignores a trailing CR/LF; the TS-890 does not. The default is set
-   // in uNetRadioBase.Create -- see SendToRadio / bAddTermination.)
+   // in uFactoryRadioBase.Create -- see SendToRadio / bAddTermination.)
    Self.bAddTermination := False;
 
    // TS-890 uses AI2 for state push, but the LAN protocol REQUIRES
@@ -546,7 +546,7 @@ end;
 
 // Format: FT<0|1>;  -- 0 = VFO A is TX, 1 = VFO B is TX.
 // We don't track an explicit TX VFO field today; surface it in the log so the
-// state is at least visible. Wire it into TNetRadioBase when split-VFO support
+// state is at least visible. Wire it into TFactoryRadioBase when split-VFO support
 // gets fleshed out.
 procedure TKenwoodTS890Radio.ParseFTResponse(const sMessage: string);
 begin
@@ -572,7 +572,7 @@ begin
 
    // TS-890 is a selectable-RX-VFO radio: FR moves the RX pointer (FR0=A, FR1=B)
    // without swapping VFO contents. Drive the base FActiveVFO so BOTH the main-
-   // window display (via pNetworkRadio / GetActiveVFO) and the operating-relative
+   // window display (via pFactoryRadio / GetActiveVFO) and the operating-relative
    // OM mode mapping follow the receiving VFO.
    if sMessage[3] = '1' then
       begin
@@ -998,10 +998,10 @@ initialization
   // The TS-990 shares this class (same Kenwood CAT-over-TCP + ##CN/##ID auth);
   // register both keys with their own display name and default network port.
   RegisterRadio(TS890,
-     function: TNetRadioBase begin Result := TKenwoodTS890Radio.Create end,
+     function: TFactoryRadioBase begin Result := TKenwoodTS890Radio.Create end,
      'Kenwood TS-890S', [rlNetwork], 60000, False);
   RegisterRadio(TS990,
-     function: TNetRadioBase begin Result := TKenwoodTS890Radio.Create end,
+     function: TFactoryRadioBase begin Result := TKenwoodTS890Radio.Create end,
      'Kenwood TS-990S', [rlNetwork], 50000, False);
 
 end.

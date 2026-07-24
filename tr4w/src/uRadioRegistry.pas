@@ -22,7 +22,7 @@ unit uRadioRegistry;
   Each factory radio unit registers itself here in its `initialization` section:
 
       RegisterRadio(IC718,
-         function: TNetRadioBase begin Result := TIcom718Radio.Create end,
+         function: TFactoryRadioBase begin Result := TIcom718Radio.Create end,
          'Icom IC-718', [rlSerial], 0, False);
 
   The factory (uRadioFactory) and the connect path (LOGRADIO) then look a radio
@@ -44,16 +44,16 @@ unit uRadioRegistry;
 interface
 
 uses
-   uNetRadioBase, VC;
+   uFactoryRadioBase, VC;
 
 type
    // Re-export the factory radio base type so a registrant unit needs only
    // `uses uRadioRegistry` to name the constructor's return type -- it does not
-   // also have to pull in uNetRadioBase just to spell the closure signature.
-   TNetRadioBase = uNetRadioBase.TNetRadioBase;
+   // also have to pull in uFactoryRadioBase just to spell the closure signature.
+   TFactoryRadioBase = uFactoryRadioBase.TFactoryRadioBase;
 
    // A factory radio is created by invoking its registered constructor function.
-   TRadioCtor = reference to function: TNetRadioBase;
+   TRadioCtor = reference to function: TFactoryRadioBase;
 
    // Which transports the factory can build this radio for.  A radio configured
    // on the "wrong" transport (e.g. a network-only Kenwood on a serial port)
@@ -71,7 +71,7 @@ procedure RegisterRadio(model: InterfacedRadioType;
 function IsRegistered(model: InterfacedRadioType): Boolean;
 function SupportsSerial(model: InterfacedRadioType): Boolean;
 function SupportsNetwork(model: InterfacedRadioType): Boolean;
-function CreateInstance(model: InterfacedRadioType): TNetRadioBase;
+function CreateInstance(model: InterfacedRadioType): TFactoryRadioBase;
 function DisplayName(model: InterfacedRadioType): string;
 
 // Consumed in the next increment (DefaultNetworkPort / IsNetworkModel /
@@ -132,7 +132,7 @@ begin
    Result := gRegistry.TryGetValue(model, reg) and (rlNetwork in reg.links);
 end;
 
-function CreateInstance(model: InterfacedRadioType): TNetRadioBase;
+function CreateInstance(model: InterfacedRadioType): TFactoryRadioBase;
 var
    reg: TRadioReg;
 begin
