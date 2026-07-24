@@ -1113,6 +1113,30 @@ begin
             reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on new disconnect
             end;
 
+         // Serial radio recovery.  A serial radio "disconnects" only because it
+         // stopped answering (powered off, cable bump) -- the COM port is still
+         // open, so there is nothing to reconnect the way a dropped TCP socket
+         // needs ro.Connect (and the network reconnect below is skipped for serial
+         // by the RadioTCPPort=0 guard anyway).  The keep-alive poll lives in the
+         // connected branch above, so once liveness lapses it would never run
+         // again and the radio window would stay "lost" forever.  Keep polling
+         // here, throttled to pollingInterval: when the radio comes back its reply
+         // re-stamps liveness via the reading thread, the next iteration re-enters
+         // the connected branch, and the alert clears.  This restores the recovery
+         // the legacy serial path had (MarkSerialRead) that the factory path lost.
+         // Network radios (serialPort = NoPort) fall through to the reconnect path.
+         if Assigned(ro) and (ro.serialPort <> NoPort) then
+            begin
+            if ro.requiresPolling and
+               (GetTickCount - lastPollTick >= LongWord(ro.pollingInterval)) then
+               begin
+               ro.PollRadioState;
+               lastPollTick := GetTickCount;
+               end;
+            Sleep(100);   // cadence + CPU-friendly; recovery seen on next IsConnected check
+            Continue;
+            end;
+
          // If auth failed, show error and stop reconnecting
          if Assigned(ro) and ro.AuthFailed then
             begin
