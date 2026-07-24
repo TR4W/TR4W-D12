@@ -10,7 +10,7 @@ unit uTestDefinitions;
 interface
 
 uses
-  SysUtils, Classes, uNetRadioBase;
+  SysUtils, Classes, uFactoryRadioBase;
 
 type
   // Test categories
@@ -40,7 +40,7 @@ type
   TRadioTest = class;
 
   // Test execution delegate
-  TTestExecuteProc = procedure(Test: TRadioTest; Radio: TNetRadioBase) of object;
+  TTestExecuteProc = procedure(Test: TRadioTest; Radio: TFactoryRadioBase) of object;
 
   // Individual test case
   TRadioTest = class
@@ -60,7 +60,7 @@ type
     destructor Destroy; override;
 
     procedure Reset;
-    procedure Execute(Radio: TNetRadioBase);
+    procedure Execute(Radio: TFactoryRadioBase);
     procedure AddCommandSent(Cmd: string);
     procedure AddResponse(Resp: string);
 
@@ -80,7 +80,7 @@ type
   TTestSuite = class
   private
     FTests: TList;
-    FRadio: TNetRadioBase;
+    FRadio: TFactoryRadioBase;
     function GetTest(Index: Integer): TRadioTest;
     function GetCount: Integer;
   public
@@ -90,8 +90,8 @@ type
     procedure AddTest(Test: TRadioTest);
     procedure Clear;
     procedure LoadStandardTests;  // Load all standard radio tests
-    procedure ExecuteAll(Radio: TNetRadioBase);
-    procedure ExecuteCategory(Category: TTestCategory; Radio: TNetRadioBase);
+    procedure ExecuteAll(Radio: TFactoryRadioBase);
+    procedure ExecuteCategory(Category: TTestCategory; Radio: TFactoryRadioBase);
 
     property Tests[Index: Integer]: TRadioTest read GetTest; default;
     property Count: Integer read GetCount;
@@ -137,7 +137,7 @@ begin
   FTimestamp := 0;
 end;
 
-procedure TRadioTest.Execute(Radio: TNetRadioBase);
+procedure TRadioTest.Execute(Radio: TFactoryRadioBase);
 begin
   Reset;
   FStatus := tsRunning;
@@ -343,7 +343,7 @@ begin
   AddTest(Test);
 end;
 
-procedure TTestSuite.ExecuteAll(Radio: TNetRadioBase);
+procedure TTestSuite.ExecuteAll(Radio: TFactoryRadioBase);
 var
   i: Integer;
 begin
@@ -352,7 +352,7 @@ begin
     TRadioTest(FTests[i]).Execute(Radio);
 end;
 
-procedure TTestSuite.ExecuteCategory(Category: TTestCategory; Radio: TNetRadioBase);
+procedure TTestSuite.ExecuteCategory(Category: TTestCategory; Radio: TFactoryRadioBase);
 var
   i: Integer;
   Test: TRadioTest;
