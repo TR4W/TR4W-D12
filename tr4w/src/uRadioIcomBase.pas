@@ -127,6 +127,15 @@ type
     FActiveVFOInverted: Boolean;             // True → $07 $D2 response byte semantics are inverted:
                                              //   $00 = VFO B active, $01 = VFO A active (IC-9700).
                                              //   IC-7610/IC-7760 use $00 = VFO A active (default False).
+    FModeSetIncludesFilter: Boolean;         // True → $06 set-mode carries a trailing filter byte ($06 <mode> <filter>).
+                                             //   False → mode byte only ($06 <mode>); old Icoms (IC-718) NAK the filter byte.
+    FCWSpeedMin: Integer;                    // CW keyer speed range (wpm) for the $14 0C 000-255 level encode.
+    FCWSpeedMax: Integer;                    //   Default 6..48 (modern Icoms); IC-718 is 6..60.
+    FSplitStateReadable: Boolean;            // True → radio reports split back ($0F read or $0F transceive push),
+                                             //   so leave localSplitEnabled to the radio (source of truth).
+                                             //   False → set-only split (IC-718: $0F read NAKs, no push); Split()
+                                             //   must track the commanded state locally or the split warning
+                                             //   would never appear. Default True; IC-718 overrides to False.
     // Frequency BCD helpers — delegate to standalone functions in uIcomCIV
     function BuildCIVCommand(command: Byte; data: string): string;
     function FreqToBCD(freq: LongInt): string;
@@ -400,6 +409,10 @@ begin
   FSupportsExtendedVFOBCommands := True;  // All modern Icoms support $25 $01 <freq> for direct VFO B freq set
   FSupportsActiveVFOQuery := False;       // Overridden True by radios that support $07 $D2 (e.g. IC-7760)
   FActiveVFO := nrVFOA;                  // Safe default; updated by $07 $D2 response on connect
+  FModeSetIncludesFilter := True;        // Modern Icoms take $06 <mode> <filter>; IC-718 overrides to False
+  FCWSpeedMin := 6;                      // CW keyer 6..48 wpm (modern Icoms); IC-718 overrides max to 60
+  FCWSpeedMax := 48;
+  FSplitStateReadable := True;           // Modern Icoms report split back; IC-718 overrides to False (set-only)
 
   radioModel := 'Icom';  // Will be overridden by derived classes
 end;
@@ -729,7 +742,7 @@ end;
 
 procedure TIcomRadio.ProcessCIVMessage(msg: string);
 var
-  frameStart, frameEnd: Integer;
+  frameStart, frameEnd, nextPreamble: Integer;
   frame: string;
 begin
   logger.trace('[%s.ProcessCIVMessage] CALLED with msg length: %d', [radioModel, Length(msg)]);  // Removed String2Hex to avoid circular dependency
@@ -764,6 +777,28 @@ begin
       // EOM before preamble - remove garbage
       Delete(FCIVBuffer, 1, frameEnd);
       Continue;
+    end;
+
+    // A half-duplex CI-V bus collision can eat a frame's EOM (FD). The reading
+    // thread splits only on FD, so it then hands us two frames merged into one
+    // blob with a single trailing FD -- and the extract below would swallow the
+    // collision filler and the next frame as one garbage frame (e.g. a $03 reply
+    // mis-decoded to a 747-MHz "frequency"). Guard: if another preamble appears
+    // before this frame's EOM, the frame at frameStart lost its terminator.
+    // Discard it and resync on the later, intact preamble. On a clean stream no
+    // second preamble precedes the FD, so this never fires (modern Icoms unaffected).
+    nextPreamble := Pos(CIV_PREAMBLE1 + CIV_PREAMBLE2,
+                        Copy(FCIVBuffer, frameStart + 2, Length(FCIVBuffer)));
+    if nextPreamble > 0 then
+    begin
+      nextPreamble := nextPreamble + frameStart + 1;  // -> absolute buffer index
+      if nextPreamble < frameEnd then
+      begin
+        logger.trace('[%s.ProcessCIVMessage] Truncated frame at %d (lost EOM), resyncing on preamble at %d',
+          [radioModel, frameStart, nextPreamble]);
+        Delete(FCIVBuffer, 1, nextPreamble - 1);
+        Continue;
+      end;
     end;
 
     // Extract complete frame including preamble and EOM
@@ -1552,11 +1587,19 @@ begin
      // True; set to False in a subclass constructor for older radios that lack it.
      SendToRadio(BuildCIVCommand($25, CIV_SUBCMD_VFO_B + bcdFreq));
      end
+  else if vfo = nrVFOB then
+     begin
+     // No $25 extended VFO-B support (e.g. IC-718): $05 only sets the ACTIVE VFO,
+     // so select VFO B ($07 $01), set its frequency, then restore VFO A ($07 $00).
+     // Without the swap the split TX frequency lands on VFO A -- the radio changes
+     // frequency but never goes into a meaningful split.
+     SendToRadio(BuildCIVCommand($07, #$01));   // select VFO B
+     SendToRadio(BuildCIVCommand($05, bcdFreq));
+     SendToRadio(BuildCIVCommand($07, #$00));   // restore VFO A
+     end
   else
      begin
-     // $05 sets the active VFO frequency. For VFO A this is always correct.
-     // For VFO B on radios that lack $25 extended support, the caller must have
-     // already selected VFO B before calling here (pre-existing limitation).
+     // VFO A: $05 sets the active VFO directly.
      SendToRadio(BuildCIVCommand($05, bcdFreq));
      end;
   logger.debug('[%s.SetFrequency] Set VFO %s to %d Hz', [radioModel, IfThen(vfo = nrVFOA, 'A', 'B'), freq]);
@@ -1633,8 +1676,17 @@ begin
      if vfo = nrVFOB then
         SendToRadio(BuildCIVCommand($07, #$01));
 
-     logger.Debug('[%s.SetMode] Sending $06 modeCmd=$%.2x filterCmd=$%.2x', [radioModel, modeCmd, filterCmd]);
-     SendToRadio(BuildCIVCommand($06, Chr(modeCmd) + Chr(filterCmd)));
+     if FModeSetIncludesFilter then
+        begin
+        logger.Debug('[%s.SetMode] Sending $06 modeCmd=$%.2x filterCmd=$%.2x', [radioModel, modeCmd, filterCmd]);
+        SendToRadio(BuildCIVCommand($06, Chr(modeCmd) + Chr(filterCmd)));
+        end
+     else
+        begin
+        // Old Icoms (IC-718) take the mode byte only; a trailing filter byte makes them NAK the frame.
+        logger.Debug('[%s.SetMode] Sending $06 modeCmd=$%.2x (no filter byte)', [radioModel, modeCmd]);
+        SendToRadio(BuildCIVCommand($06, Chr(modeCmd)));
+        end;
 
      // Set or clear the Icom data sub-mode flag ($1A $06):
      //   Entering data mode  → turn flag ON  ($1A $06 D1/D2/D3) via FDataModeID
@@ -1773,16 +1825,24 @@ var
   icomValue: Integer;
   bcdHigh, bcdLow: Byte;
 begin
-  // Icom CW speed: 6–48 WPM maps linearly to CI-V value 0–255
-  // Encode formula: value = ceil((WPM - 6) * 255 / 42)
-  // We use ceiling, NOT round-to-nearest, because the radio decodes with
-  // truncation: WPM = 6 + floor(value * 42 / 255).  Round-nearest gives value 18
-  // for 9 WPM, which the radio truncation-decodes back as 8 WPM.  Ceiling gives
-  // value 19, which decodes correctly as 9 WPM.
-  if speed < 6 then speed := 6;
-  if speed > 48 then speed := 48;
-  icomValue := ((speed - 6) * 255 + 41) div 42;
-  if icomValue > 255 then icomValue := 255;
+  // Icom CW keyer speed: FCWSpeedMin..FCWSpeedMax WPM maps linearly to CI-V value
+  // 0-255 (default 6..48 for modern Icoms; the IC-718 is 6..60). We use ceiling,
+  // NOT round-to-nearest, because the radio decodes with truncation
+  // (WPM = min + floor(value * span / 255)); round-nearest can land one WPM low,
+  // ceiling encodes exactly. For 6..48 this is identical to the old ((s-6)*255+41) div 42.
+  if speed < FCWSpeedMin then
+     begin
+     speed := FCWSpeedMin;
+     end;
+  if speed > FCWSpeedMax then
+     begin
+     speed := FCWSpeedMax;
+     end;
+  icomValue := ((speed - FCWSpeedMin) * 255 + (FCWSpeedMax - FCWSpeedMin - 1)) div (FCWSpeedMax - FCWSpeedMin);
+  if icomValue > 255 then
+     begin
+     icomValue := 255;
+     end;
 
   // Encode 0-255 value as 2 BCD bytes: hundreds|tens, ones
   bcdHigh := IcomByteToBCD(icomValue div 100);    // 0-2
@@ -1853,6 +1913,16 @@ begin
     SendToRadio(BuildCIVCommand($0F, CIV_SUBCMD_SPLIT_ON))
   else
     SendToRadio(BuildCIVCommand($0F, CIV_SUBCMD_SPLIT_OFF));
+  // A set-only-split radio (IC-718) never reports split back -- $0F read NAKs and
+  // it emits no $0F transceive push -- so localSplitEnabled (which drives the
+  // "You are in SPLIT MODE" warning via CurrentStatus.Split) would never reflect
+  // the command. When the radio can't be read back, track the commanded state
+  // locally. Readable radios leave localSplitEnabled to the $0F poll/push so the
+  // radio stays the source of truth (front-panel split changes still win there).
+  if not FSplitStateReadable then
+     begin
+     SetSplitOn(splitOn);
+     end;
   logger.debug('[%s.Split] Split %s', [radioModel, IfThen(splitOn, 'enabled', 'disabled')]);
 end;
 
