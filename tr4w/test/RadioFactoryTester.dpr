@@ -12,7 +12,7 @@ uses
   uTestMain in 'test\uTestMain.pas' {frmTestMain},
   uTestDefinitions in 'test\uTestDefinitions.pas',
   uRadioFactory in 'src\uRadioFactory.pas',
-  uNetRadioBase in 'src\uNetRadioBase.pas',
+  uFactoryRadioBase in 'src\uFactoryRadioBase.pas',
   uRadioElecraftK4 in 'src\uRadioElecraftK4.pas',
   uRadioIcomBase in 'src\uRadioIcomBase.pas',
   uRadioIcom9700 in 'src\uRadioIcom9700.pas',

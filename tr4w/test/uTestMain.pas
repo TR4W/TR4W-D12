@@ -11,7 +11,7 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, ExtCtrls, Grids,
-  uTestDefinitions, uRadioFactory, uNetRadioBase, TF, Log4D, VC;
+  uTestDefinitions, uRadioFactory, uFactoryRadioBase, TF, Log4D, VC;
 
 type
   TfrmTestMain = class(TForm)
@@ -78,7 +78,7 @@ type
 
   private
     FTestSuite: TTestSuite;
-    FRadio: TNetRadioBase;
+    FRadio: TFactoryRadioBase;
     FCurrentTest: TRadioTest;
 
     procedure InitializeUI;
@@ -89,15 +89,15 @@ type
     procedure UpdateConnectionUI(Connected: Boolean);
 
     // Test execution procedures
-    procedure ExecuteFrequencyTest(Test: TRadioTest; Radio: TNetRadioBase);
-    procedure ExecuteModeTest(Test: TRadioTest; Radio: TNetRadioBase);
-    procedure ExecuteRITTest(Test: TRadioTest; Radio: TNetRadioBase);
-    procedure ExecuteXITTest(Test: TRadioTest; Radio: TNetRadioBase);
-    procedure ExecuteSplitTest(Test: TRadioTest; Radio: TNetRadioBase);
-    procedure ExecuteFilterTest(Test: TRadioTest; Radio: TNetRadioBase);
-    procedure ExecuteBandTest(Test: TRadioTest; Radio: TNetRadioBase);
-    procedure ExecuteTXTest(Test: TRadioTest; Radio: TNetRadioBase);
-    procedure ExecuteCWTest(Test: TRadioTest; Radio: TNetRadioBase);
+    procedure ExecuteFrequencyTest(Test: TRadioTest; Radio: TFactoryRadioBase);
+    procedure ExecuteModeTest(Test: TRadioTest; Radio: TFactoryRadioBase);
+    procedure ExecuteRITTest(Test: TRadioTest; Radio: TFactoryRadioBase);
+    procedure ExecuteXITTest(Test: TRadioTest; Radio: TFactoryRadioBase);
+    procedure ExecuteSplitTest(Test: TRadioTest; Radio: TFactoryRadioBase);
+    procedure ExecuteFilterTest(Test: TRadioTest; Radio: TFactoryRadioBase);
+    procedure ExecuteBandTest(Test: TRadioTest; Radio: TFactoryRadioBase);
+    procedure ExecuteTXTest(Test: TRadioTest; Radio: TFactoryRadioBase);
+    procedure ExecuteCWTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 
   public
   end;
@@ -597,7 +597,7 @@ end;
 
 { Test Execution Procedures }
 
-procedure TfrmTestMain.ExecuteFrequencyTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteFrequencyTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
@@ -627,7 +627,7 @@ begin
   end;
 end;
 
-procedure TfrmTestMain.ExecuteModeTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteModeTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
@@ -657,7 +657,7 @@ begin
   end;
 end;
 
-procedure TfrmTestMain.ExecuteRITTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteRITTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
@@ -693,7 +693,7 @@ begin
   end;
 end;
 
-procedure TfrmTestMain.ExecuteXITTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteXITTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
@@ -723,7 +723,7 @@ begin
   end;
 end;
 
-procedure TfrmTestMain.ExecuteSplitTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteSplitTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
@@ -741,7 +741,7 @@ begin
   end;
 end;
 
-procedure TfrmTestMain.ExecuteFilterTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteFilterTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
@@ -759,7 +759,7 @@ begin
   end;
 end;
 
-procedure TfrmTestMain.ExecuteBandTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteBandTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
@@ -783,7 +783,7 @@ begin
   end;
 end;
 
-procedure TfrmTestMain.ExecuteTXTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteTXTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
@@ -801,7 +801,7 @@ begin
   end;
 end;
 
-procedure TfrmTestMain.ExecuteCWTest(Test: TRadioTest; Radio: TNetRadioBase);
+procedure TfrmTestMain.ExecuteCWTest(Test: TRadioTest; Radio: TFactoryRadioBase);
 begin
   Test.AddCommandSent('Executing: ' + Test.Name);
 
