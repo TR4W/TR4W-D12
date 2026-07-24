@@ -2938,7 +2938,7 @@ begin
    else if tCATPortType in [Serial1..Serial20] then
       begin
       // Check if we should use modern radio class (e.g., K4, Icom) or legacy serial code
-      if (Self.RadioModel in [K4, IC7610, IC7300, IC9700, IC705, IC7300MK2, IC7600, IC7760, IC7850, IC7851, IC905, IC7100]) then
+      if (Self.RadioModel in [K4, IC7610, IC7300, IC9700, IC705, IC7300MK2, IC7600, IC7760, IC7850, IC7851, IC905, IC7100, IC718]) then
          begin
          factoryModel := Self.MapRadioModelToFactory;
 

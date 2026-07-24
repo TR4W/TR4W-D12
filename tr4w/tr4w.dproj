@@ -261,6 +261,7 @@
         <DCCReference Include="src\uRadioBand.pas"/>
         <DCCReference Include="src\uBandLookup.pas"/>
         <DCCReference Include="src\uRadioIcom7100.pas"/>
+        <DCCReference Include="src\uRadioIcom718.pas"/>
         <DCCReference Include="src\uIcomCIV.pas"/>
         <DCCReference Include="src\uAbout.pas"/>
         <DCCReference Include="src\uHardWare.pas"/>

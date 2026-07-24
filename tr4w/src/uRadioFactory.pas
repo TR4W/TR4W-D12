@@ -49,6 +49,7 @@ type
       rmIcomIC7850,
       rmIcomIC905,
       rmIcomIC7100,
+      rmIcomIC718,      // IC-718 serial CI-V (addr $5E) -- minimal older Icom
       rmFlexRadio6000,
       rmKenwoodTS890,   // Issue #436 -- TS-890 network (Kenwood CAT over TCP + ##CN/##ID auth)
       rmKenwoodTS990,   // TS-990 network (reuses the TS-890 CAT/auth path)
@@ -96,6 +97,7 @@ uses Log4D, uRadioHamLibDirect, uRadioIcomBase,
      uRadioIcom7300, uRadioIcom7610, uRadioIcom9700,
      uRadioIcom705, uRadioIcom7300MK2, uRadioIcom7600,
      uRadioIcom7760, uRadioIcom7850, uRadioIcom905, uRadioIcom7100,
+     uRadioIcom718,
      uRadioKenwoodTS890;  // Issue #436
 
 var
@@ -437,6 +439,19 @@ begin
          logger.Info('[RadioFactory] Created Icom IC-7100 instance for serial connection');
          end;
 
+      rmIcomIC718:
+         begin
+         Result := TIcom718Radio.Create;
+         Result.serialPort := serialPort;
+         Result.serialBaudRate := baudRate;
+         Result.serialDataBits := dataBits;
+         Result.serialStopBits := stopBits;
+         Result.serialParity := parity;
+         Result.serialRts := rts;
+         Result.serialDtr := dtr;
+         logger.Info('[RadioFactory] Created Icom IC-718 instance for serial connection');
+         end;
+
       rmFlexRadio6000:
          begin
          // FlexRadio 6000 serial is not handled by the factory — the caller's
@@ -478,6 +493,7 @@ begin
       rmIcomIC7850:     Result := 'Icom IC-7850';
       rmIcomIC905:      Result := 'Icom IC-905';
       rmIcomIC7100:     Result := 'Icom IC-7100';
+      rmIcomIC718:      Result := 'Icom IC-718';
       rmFlexRadio6000:  Result := 'FlexRadio 6000';
       rmKenwoodTS890:   Result := 'Kenwood TS-890S';
       rmKenwoodTS990:   Result := 'Kenwood TS-990S';
@@ -522,6 +538,7 @@ begin
              (model = rmIcomIC7850) or
              (model = rmIcomIC905) or
              (model = rmIcomIC7100) or
+             (model = rmIcomIC718) or
              (model = rmFlexRadio6000) or
              (model = rmKenwoodTS890) or
              (model = rmKenwoodTS990) or
@@ -545,6 +562,7 @@ begin
       IC7850, IC7851: Result := rmIcomIC7850;
       IC905:          Result := rmIcomIC905;
       IC7100:         Result := rmIcomIC7100;
+      IC718:          Result := rmIcomIC718;
       FLEX:           Result := rmFlexRadio6000;
       TS890:          Result := rmKenwoodTS890;
       TS990:          Result := rmKenwoodTS990;
