@@ -29,7 +29,7 @@ unit uRadioIcom7850;
 interface
 
 uses
-  uRadioIcomBase, VC;
+  uRadioIcomBase, VC, uRadioRegistry;
 
 type
   TIcom7850Radio = class(TIcomRadio)
@@ -56,5 +56,12 @@ end;
 
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom7850');
+  // The 7851 shares this class (same CI-V dialect); register both keys.
+  RegisterRadio(IC7850,
+     function: TNetRadioBase begin Result := TIcom7850Radio.Create end,
+     'Icom IC-7850', [rlSerial, rlNetwork], 50001, True);
+  RegisterRadio(IC7851,
+     function: TNetRadioBase begin Result := TIcom7850Radio.Create end,
+     'Icom IC-7850', [rlSerial, rlNetwork], 50001, True);
 
 end.

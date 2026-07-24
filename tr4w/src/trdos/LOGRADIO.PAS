@@ -41,7 +41,8 @@ uses
    ExtCtrls,
    uNetRadioBase,
    uRadioElecraftK4,
-   uRadioFactory;
+   uRadioFactory,
+   uRadioRegistry;
 
 var
    Icom_Filter_Width: integer;     // n4af 4.43.4
@@ -2888,12 +2889,7 @@ begin
       logger.Info('[%s.SetUpRadioInterface] Using HamLib Direct', [Self.RadioName]);
 
       // Create HamLib Direct radio via factory
-      Self.tNetObject := TRadioFactory.CreateRadioNetwork(
-         rmHamLibDirect,
-         '',  // Address will be set below based on port type
-         0,   // Port will be set below based on port type
-         nil  // msgCallback
-      );
+      Self.tNetObject := TRadioFactory.CreateHamLibDirect(nil);
 
       if Self.tNetObject <> nil then
       begin
@@ -2938,60 +2934,57 @@ begin
    else if tCATPortType in [Serial1..Serial20] then
       begin
       // Check if we should use modern radio class (e.g., K4, Icom) or legacy serial code
-      if (Self.RadioModel in [K4, IC7610, IC7300, IC9700, IC705, IC7300MK2, IC7600, IC7760, IC7850, IC7851, IC905, IC7100, IC718]) then
+      if uRadioRegistry.IsRegistered(Self.RadioModel) and
+         uRadioRegistry.SupportsSerial(Self.RadioModel) then
          begin
-         factoryModel := Self.MapRadioModelToFactory;
-
-         if factoryModel <> rmNone then
+         // Registered serial-capable radio -> build it through the factory.
+         logger.Info('[%s.SetUpRadioInterface] Setting up %s serial via factory: Port=%d, Baud=%d, DataBits=%d, Parity=%d, StopBits=%d',
+                     [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel), Ord(tCATPortType),
+                      RadioBaudRate, RadioNumberBits, Ord(RadioParity), RadioStopBits]);
+         Self.tNetObject := TRadioFactory.CreateRadioSerial(
+            Self.RadioModel,
+            tCATPortType,
+            RadioBaudRate,
+            RadioNumberBits,
+            RadioStopBits,
+            Ord(RadioParity),
+            tr4w_cat_rts_state = RtsDtr_ON,
+            tr4w_cat_dtr_state = RtsDtr_ON
+         );
+         if Self.tNetObject <> nil then
             begin
-            // Use factory for modern radios (K4, Icom, etc.)
-            logger.Info('[%s.SetUpRadioInterface] Setting up %s serial via factory: Port=%d, Baud=%d, DataBits=%d, Parity=%d, StopBits=%d',
-                        [Self.RadioName, TRadioFactory.ModelToString(factoryModel), Ord(tCATPortType),
-                         RadioBaudRate, RadioNumberBits, Ord(RadioParity), RadioStopBits]);
-            Self.tNetObject := TRadioFactory.CreateRadioSerial(
-               factoryModel,
-               tCATPortType,
-               RadioBaudRate,
-               RadioNumberBits,
-               RadioStopBits,
-               Ord(RadioParity),
-               nil,
-               tr4w_cat_rts_state = RtsDtr_ON,
-               tr4w_cat_dtr_state = RtsDtr_ON
-            );
+            Self.tNetObject.Connect;
+            logger.Info('[%s.SetUpRadioInterface] %s serial radio connected via factory',
+                       [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+            end
+         else
+            begin
+            logger.Error('[%s.SetUpRadioInterface] Failed to create %s serial radio',
+                        [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+            end;
+
+         // Initialize timer and event handlers — must happen for all radio paths
+         Self.EventHandlers := EventHandlers;
+         Self.tmrCWByCAT := TTimer.Create(nil);
+         Self.tmrCWByCAT.Enabled := false;
+         Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
+         // Reset filtered status
+         with FilteredStatus do
+            begin
+            Band := NoBand;
+            Mode := NoMode;
+            Freq := 0;
+            end;
+         // Send startup command if configured
+         if length(Self.StartupCommand) > 0 then
+            begin
             if Self.tNetObject <> nil then
                begin
-               Self.tNetObject.Connect;
-               logger.Info('[%s.SetUpRadioInterface] %s serial radio connected via factory',
-                          [Self.RadioName, TRadioFactory.ModelToString(factoryModel)]);
-               end
-            else
-               logger.Error('[%s.SetUpRadioInterface] Failed to create %s serial radio',
-                           [Self.RadioName, TRadioFactory.ModelToString(factoryModel)]);
-
-            // Initialize timer and event handlers — must happen for all radio paths
-            Self.EventHandlers := EventHandlers;
-            Self.tmrCWByCAT := TTimer.Create(nil);
-            Self.tmrCWByCAT.Enabled := false;
-            Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
-            // Reset filtered status
-            with FilteredStatus do
-               begin
-               Band := NoBand;
-               Mode := NoMode;
-               Freq := 0;
+               Self.tNetObject.SendToRadio(Self.StartupCommand);
                end;
-            // Send startup command if configured
-            if length(Self.StartupCommand) > 0 then
-               begin
-               if Self.tNetObject <> nil then
-                  begin
-                  Self.tNetObject.SendToRadio(Self.StartupCommand);
-                  end;
-               end;
-            // Exit to prevent any legacy serial code from executing
-            Exit;
             end;
+         // Exit to prevent any legacy serial code from executing
+         Exit;
          end
       else
          begin
@@ -3077,17 +3070,16 @@ begin
       logger.Info('[%s.SetUpRadioInterface] Setting up non-HamLib network radio: IP=%s, Port=%d',
                   [Self.RadioName, Self.IPAddress, Self.RadioTCPPort]);
 
-      // Determine which network radio model to use
-      factoryModel := Self.MapRadioModelToFactory;
-      if factoryModel <> rmNone then
+      // Build the radio through the factory if it is registered network-capable.
+      if uRadioRegistry.IsRegistered(Self.RadioModel) and
+         uRadioRegistry.SupportsNetwork(Self.RadioModel) then
          begin
          Self.tNetObject := TRadioFactory.CreateRadioNetwork(
-            factoryModel,
+            Self.RadioModel,
             Self.IPAddress,
-            Self.RadioTCPPort,
-            nil
+            Self.RadioTCPPort
          );
-         logger.Info('[%s] Using %s network protocol', [Self.RadioName, TRadioFactory.ModelToString(factoryModel)]);
+         logger.Info('[%s] Using %s network protocol', [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
          end
       else
          begin

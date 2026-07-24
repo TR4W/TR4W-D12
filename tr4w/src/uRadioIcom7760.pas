@@ -30,7 +30,7 @@ unit uRadioIcom7760;
 interface
 
 uses
-  uRadioIcomBase, VC;
+  uRadioIcomBase, VC, uRadioRegistry;
 
 type
   TIcom7760Radio = class(TIcomRadio)
@@ -58,5 +58,8 @@ end;
 
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom7760');
+  RegisterRadio(IC7760,
+     function: TNetRadioBase begin Result := TIcom7760Radio.Create end,
+     'Icom IC-7760', [rlSerial, rlNetwork], 50001, True);
 
 end.

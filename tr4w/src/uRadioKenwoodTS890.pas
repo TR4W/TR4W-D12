@@ -46,7 +46,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 }
 
 interface
-uses uNetRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC;
+uses uNetRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry;
 
 type
    TTS890AuthState = (
@@ -993,5 +993,15 @@ begin
    if FAuthState <> ksAuthenticated then Exit;
    Self.SendToRadio('UP;');
 end;
+
+initialization
+  // The TS-990 shares this class (same Kenwood CAT-over-TCP + ##CN/##ID auth);
+  // register both keys with their own display name and default network port.
+  RegisterRadio(TS890,
+     function: TNetRadioBase begin Result := TKenwoodTS890Radio.Create end,
+     'Kenwood TS-890S', [rlNetwork], 60000, False);
+  RegisterRadio(TS990,
+     function: TNetRadioBase begin Result := TKenwoodTS890Radio.Create end,
+     'Kenwood TS-990S', [rlNetwork], 50000, False);
 
 end.

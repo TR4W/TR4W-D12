@@ -93,7 +93,7 @@ type TFlexRadio6000 = class(TNetRadioBase)
 
 implementation
 
-uses MainUnit;
+uses MainUnit, uRadioRegistry, VC;
 
 // ---------------------------------------------------------------------------
 
@@ -1096,5 +1096,10 @@ begin
    logger.Warn('[FlexRadio6000.MemoryKeyer] Not supported on FlexRadio 6000 via TCP API');
    Result := True;  // True = error (fail-closed, matching K4 convention)
 end;
+
+initialization
+  RegisterRadio(FLEX,
+     function: TNetRadioBase begin Result := TFlexRadio6000.Create end,
+     'FlexRadio 6000', [rlNetwork], 4992, True);
 
 end.
