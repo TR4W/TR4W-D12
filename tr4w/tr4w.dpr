@@ -162,6 +162,7 @@ uses
   uBandLookup in 'src\uBandLookup.pas',
   uRadioIcom7100 in 'src\uRadioIcom7100.pas',
   uRadioIcom718 in 'src\uRadioIcom718.pas',
+  uRadioRegistry in 'src\uRadioRegistry.pas',
   uIcomCIV in 'src\uIcomCIV.pas',
   // uRadioManager uses Generics.Collections (Delphi 2009+) - not Delphi 7 IDE compatible
   //uRadioManager in 'src\uRadioManager.pas',

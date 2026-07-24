@@ -36,7 +36,7 @@ unit uRadioIcom7300;
 interface
 
 uses
-  uRadioIcomBase, VC;
+  uRadioIcomBase, VC, uRadioRegistry;
 
 type
   TIcom7300Radio = class(TIcomRadio)
@@ -67,5 +67,9 @@ end;
 
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom7300');
+  // The IC-7300 (unlike the 7300MK2) is serial/USB-CAT only -- no network.
+  RegisterRadio(IC7300,
+     function: TNetRadioBase begin Result := TIcom7300Radio.Create end,
+     'Icom IC-7300', [rlSerial], 0, False);
 
 end.

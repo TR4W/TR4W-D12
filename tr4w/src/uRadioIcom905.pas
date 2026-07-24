@@ -29,7 +29,7 @@ unit uRadioIcom905;
 interface
 
 uses
-  uRadioIcomBase, VC;
+  uRadioIcomBase, VC, uRadioRegistry;
 
 type
   TIcom905Radio = class(TIcomRadio)
@@ -57,5 +57,8 @@ end;
 
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom905');
+  RegisterRadio(IC905,
+     function: TNetRadioBase begin Result := TIcom905Radio.Create end,
+     'Icom IC-905', [rlSerial, rlNetwork], 50001, True);
 
 end.

@@ -61,21 +61,25 @@ type
    TRadioFactory = class
    public
       class function ModelToString(model: TRadioModel): string;
-      // Network connection
-      class function CreateRadioNetwork(model: TRadioModel;
+      // Network connection.  Keyed on InterfacedRadioType -- the class, display
+      // name and transport come from the radio registry (each radio unit
+      // self-registers), so there is no per-model case to maintain here.
+      class function CreateRadioNetwork(model: InterfacedRadioType;
                                          address: string;
-                                         port: integer;
-                                         msgCallback: TProcessMsgRef): TNetRadioBase;
-      // Serial connection
-      class function CreateRadioSerial(model: TRadioModel;
+                                         port: integer): TNetRadioBase;
+      // Serial connection.  Returns nil for a model whose factory class is not
+      // serial-capable, so the caller falls back to the legacy serial path.
+      class function CreateRadioSerial(model: InterfacedRadioType;
                                         serialPort: PortType;
                                         baudRate: DWORD;
                                         dataBits: Byte;
                                         stopBits: Byte;
                                         parity: Byte;
-                                        msgCallback: TProcessMsgRef;
                                         rts: Boolean = False;
                                         dtr: Boolean = False): TNetRadioBase;
+      // HamLib Direct is not an InterfacedRadioType model -- any radio can select
+      // it via its UseHamLib flag -- so it has its own constructor.
+      class function CreateHamLibDirect(msgCallback: TProcessMsgRef): TNetRadioBase;
       class function GetSupportedModels: string;
       class function IsModelSupported(model: TRadioModel): boolean;
 
@@ -93,386 +97,90 @@ type
 
 implementation
 
-uses Log4D, uRadioHamLibDirect, uRadioIcomBase,
+uses Log4D, uRadioRegistry, uRadioHamLibDirect, uRadioIcomBase,
      uRadioIcom7300, uRadioIcom7610, uRadioIcom9700,
      uRadioIcom705, uRadioIcom7300MK2, uRadioIcom7600,
      uRadioIcom7760, uRadioIcom7850, uRadioIcom905, uRadioIcom7100,
      uRadioIcom718,
      uRadioKenwoodTS890;  // Issue #436
+     // The uRadioIcom*/uRadioKenwood* units above are listed so their
+     // initialization sections run and self-register in uRadioRegistry, even
+     // though the factory no longer references their classes directly.
 
 var
    logger: TLogLogger;
 
-class function TRadioFactory.CreateRadioNetwork(model: TRadioModel;
+class function TRadioFactory.CreateRadioNetwork(model: InterfacedRadioType;
                                                  address: string;
-                                                 port: integer;
-                                                 msgCallback: TProcessMsgRef): TNetRadioBase;
+                                                 port: integer): TNetRadioBase;
 begin
    Result := nil;
 
-   logger.Info('[RadioFactory] Creating radio: Model=%s, Address=%s, Port=%d',
-               [ModelToString(model), address, port]);
+   if not (uRadioRegistry.IsRegistered(model) and uRadioRegistry.SupportsNetwork(model)) then
+      begin
+      logger.Warn('[RadioFactory] %s is not a factory network radio',
+                  [uRadioRegistry.DisplayName(model)]);
+      Exit;
+      end;
 
-   case model of
-      rmElecraftK4:
-         begin
-         Result := TK4Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         Result.radioModel := 'Elecraft K4';
-         logger.Info('[RadioFactory] Created Elecraft K4 instance');
-         end;
+   Result := uRadioRegistry.CreateInstance(model);
+   if Result = nil then
+      begin
+      Exit;
+      end;
 
-      rmElecraftK3:
-         begin
-         raise ERadioFactoryException.Create('Elecraft K3 not yet implemented');
-         end;
-
-      rmYaesuFTdx101:
-         begin
-         raise ERadioFactoryException.Create('Yaesu FTdx101 not yet implemented');
-         end;
-
-      rmYaesuFT991:
-         begin
-         raise ERadioFactoryException.Create('Yaesu FT991 not yet implemented');
-         end;
-
-      rmIcomIC7610:
-         begin
-         Result := TIcom7610Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         Result.radioModel := 'Icom IC-7610';
-         logger.Info('[RadioFactory] Created Icom IC-7610 instance');
-         end;
-
-      rmIcomIC7300:
-         begin
-         Result := TIcom7300Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         Result.radioModel := 'Icom IC-7300';
-         logger.Info('[RadioFactory] Created Icom IC-7300 instance');
-         end;
-
-      rmIcomIC9700:
-         begin
-         Result := TIcom9700Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         Result.radioModel := 'Icom IC-9700';
-         logger.Info('[RadioFactory] Created Icom IC-9700 instance');
-         end;
-
-      rmIcomIC705:
-         begin
-         Result := TIcom705Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         logger.Info('[RadioFactory] Created Icom IC-705 instance');
-         end;
-
-      rmIcomIC7300MK2:
-         begin
-         Result := TIcom7300MK2Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         logger.Info('[RadioFactory] Created Icom IC-7300MK2 instance');
-         end;
-
-      rmIcomIC7600:
-         begin
-         Result := TIcom7600Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         logger.Info('[RadioFactory] Created Icom IC-7600 instance');
-         end;
-
-      rmIcomIC7760:
-         begin
-         Result := TIcom7760Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         logger.Info('[RadioFactory] Created Icom IC-7760 instance');
-         end;
-
-      rmIcomIC7850:
-         begin
-         Result := TIcom7850Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         logger.Info('[RadioFactory] Created Icom IC-7850 instance');
-         end;
-
-      rmIcomIC905:
-         begin
-         Result := TIcom905Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         logger.Info('[RadioFactory] Created Icom IC-905 instance');
-         end;
-
-      rmFlexRadio6000:
-         begin
-         Result := TFlexRadio6000.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         Result.radioModel := 'FlexRadio 6000';
-         logger.Info('[RadioFactory] Created FlexRadio 6000 instance');
-         end;
-
-      rmKenwoodTS890:
-         begin
-         Result := TKenwoodTS890Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         Result.radioModel := 'Kenwood TS-890S';
-         logger.Info('[RadioFactory] Created Kenwood TS-890 instance (Issue #436)');
-         logger.Info('[RadioFactory] Remember to set NetworkUsername/NetworkPassword before Connect');
-         end;
-
-      rmKenwoodTS990:
-         begin
-         // Reuses the TS-890 network class (shared Kenwood CAT-over-TCP + ##CN/##ID auth).
-         Result := TKenwoodTS890Radio.Create;
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         Result.radioModel := 'Kenwood TS-990S';
-         logger.Info('[RadioFactory] Created Kenwood TS-990 instance (via TS-890 class)');
-         logger.Info('[RadioFactory] Remember to set NetworkUsername/NetworkPassword before Connect');
-         end;
-
-      rmHamLibDirect:
-         begin
-         Result := THamLibDirect.Create(msgCallback);
-         Result.radioAddress := address;
-         Result.radioPort := port;
-         Result.radioModel := 'HamLib Direct';
-         logger.Info('[RadioFactory] Created HamLib Direct instance');
-         logger.Info('[RadioFactory] Direct DLL mode - no rigctld process needed');
-         logger.Info('[RadioFactory] Remember to set HamLibModelID and serial port before connecting');
-         end;
-
-      else
-         begin
-         raise ERadioFactoryException.CreateFmt('Unknown radio model: %d', [Ord(model)]);
-         end;
-   end;
+   Result.radioAddress := address;
+   Result.radioPort := port;
+   Result.radioModel := uRadioRegistry.DisplayName(model);
+   logger.Info('[RadioFactory] Created %s (network): Address=%s, Port=%d',
+               [Result.radioModel, address, port]);
 end;
 
-class function TRadioFactory.CreateRadioSerial(model: TRadioModel;
+class function TRadioFactory.CreateRadioSerial(model: InterfacedRadioType;
                                                 serialPort: PortType;
                                                 baudRate: DWORD;
                                                 dataBits: Byte;
                                                 stopBits: Byte;
                                                 parity: Byte;
-                                                msgCallback: TProcessMsgRef;
                                                 rts: Boolean;
                                                 dtr: Boolean): TNetRadioBase;
 begin
    Result := nil;
 
-   logger.Info('[RadioFactory] Creating radio for serial: Model=%s, Port=%d, Baud=%d, %dN%d',
-               [ModelToString(model), Ord(serialPort), baudRate, dataBits, stopBits]);
+   // A model whose factory class is network-only (FlexRadio, the Kenwoods) is
+   // not built here -- returning nil sends the caller to the legacy serial path,
+   // exactly as before the registry.
+   if not (uRadioRegistry.IsRegistered(model) and uRadioRegistry.SupportsSerial(model)) then
+      begin
+      logger.Warn('[RadioFactory] %s is not a factory serial radio',
+                  [uRadioRegistry.DisplayName(model)]);
+      Exit;
+      end;
 
-   case model of
-      rmElecraftK4:
-         begin
-         Result := TK4Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         Result.radioModel := 'Elecraft K4 (Serial)';
-         logger.Info('[RadioFactory] Created Elecraft K4 instance for serial connection');
-         end;
+   Result := uRadioRegistry.CreateInstance(model);
+   if Result = nil then
+      begin
+      Exit;
+      end;
 
-      rmElecraftK3:
-         begin
-         raise ERadioFactoryException.Create('Elecraft K3 serial not yet implemented');
-         end;
+   Result.serialPort := serialPort;
+   Result.serialBaudRate := baudRate;
+   Result.serialDataBits := dataBits;
+   Result.serialStopBits := stopBits;
+   Result.serialParity := parity;
+   Result.serialRts := rts;
+   Result.serialDtr := dtr;
+   Result.radioModel := uRadioRegistry.DisplayName(model);
+   logger.Info('[RadioFactory] Created %s (serial): Port=%d, Baud=%d, %dN%d',
+               [Result.radioModel, Ord(serialPort), baudRate, dataBits, stopBits]);
+end;
 
-      rmYaesuFTdx101:
-         begin
-         raise ERadioFactoryException.Create('Yaesu FTdx101 serial not yet implemented');
-         end;
-
-      rmYaesuFT991:
-         begin
-         raise ERadioFactoryException.Create('Yaesu FT991 serial not yet implemented');
-         end;
-
-      rmIcomIC7610:
-         begin
-         Result := TIcom7610Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         Result.radioModel := 'Icom IC-7610 (Serial)';
-         logger.Info('[RadioFactory] Created Icom IC-7610 instance for serial connection');
-         end;
-
-      rmIcomIC7300:
-         begin
-         Result := TIcom7300Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         Result.radioModel := 'Icom IC-7300 (Serial)';
-         logger.Info('[RadioFactory] Created Icom IC-7300 instance for serial connection');
-         end;
-
-      rmIcomIC9700:
-         begin
-         Result := TIcom9700Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         Result.radioModel := 'Icom IC-9700 (Serial)';
-         logger.Info('[RadioFactory] Created Icom IC-9700 instance for serial connection');
-         end;
-
-      rmIcomIC705:
-         begin
-         Result := TIcom705Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         logger.Info('[RadioFactory] Created Icom IC-705 instance for serial connection');
-         end;
-
-      rmIcomIC7300MK2:
-         begin
-         Result := TIcom7300MK2Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         logger.Info('[RadioFactory] Created Icom IC-7300MK2 instance for serial connection');
-         end;
-
-      rmIcomIC7600:
-         begin
-         Result := TIcom7600Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         logger.Info('[RadioFactory] Created Icom IC-7600 instance for serial connection');
-         end;
-
-      rmIcomIC7760:
-         begin
-         Result := TIcom7760Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         logger.Info('[RadioFactory] Created Icom IC-7760 instance for serial connection');
-         end;
-
-      rmIcomIC7850:
-         begin
-         Result := TIcom7850Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         logger.Info('[RadioFactory] Created Icom IC-7850 instance for serial connection');
-         end;
-
-      rmIcomIC905:
-         begin
-         Result := TIcom905Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         logger.Info('[RadioFactory] Created Icom IC-905 instance for serial connection');
-         end;
-
-      rmIcomIC7100:
-         begin
-         Result := TIcom7100Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         logger.Info('[RadioFactory] Created Icom IC-7100 instance for serial connection');
-         end;
-
-      rmIcomIC718:
-         begin
-         Result := TIcom718Radio.Create;
-         Result.serialPort := serialPort;
-         Result.serialBaudRate := baudRate;
-         Result.serialDataBits := dataBits;
-         Result.serialStopBits := stopBits;
-         Result.serialParity := parity;
-         Result.serialRts := rts;
-         Result.serialDtr := dtr;
-         logger.Info('[RadioFactory] Created Icom IC-718 instance for serial connection');
-         end;
-
-      rmFlexRadio6000:
-         begin
-         // FlexRadio 6000 serial is not handled by the factory — the caller's
-         // legacy serial path handles it directly.  Return nil to signal this.
-         logger.Warn('[RadioFactory] FlexRadio 6000 serial not handled by factory — use legacy serial path');
-         Result := nil;
-         end;
-
-      rmHamLibDirect:
-         begin
-         Result := THamLibDirect.Create(msgCallback);
-         Result.serialPort := serialPort;
-         Result.radioModel := 'HamLib Direct (Serial)';
-         logger.Info('[RadioFactory] Created HamLib Direct instance for serial connection');
-         end;
-
-      else
-         begin
-         raise ERadioFactoryException.CreateFmt('Unknown radio model for serial: %d', [Ord(model)]);
-         end;
-   end;
+class function TRadioFactory.CreateHamLibDirect(msgCallback: TProcessMsgRef): TNetRadioBase;
+begin
+   Result := THamLibDirect.Create(msgCallback);
+   Result.radioModel := 'HamLib Direct';
+   logger.Info('[RadioFactory] Created HamLib Direct instance');
+   logger.Info('[RadioFactory] Remember to set HamLibModelID and connection before connecting');
 end;
 
 class function TRadioFactory.ModelToString(model: TRadioModel): string;

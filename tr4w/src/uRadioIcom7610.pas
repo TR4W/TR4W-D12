@@ -37,7 +37,7 @@ unit uRadioIcom7610;
 interface
 
 uses
-  uRadioIcomBase, VC;
+  uRadioIcomBase, VC, uRadioRegistry;
 
 type
   TIcom7610Radio = class(TIcomRadio)
@@ -69,5 +69,8 @@ end;
 
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom7610');
+  RegisterRadio(IC7610,
+     function: TNetRadioBase begin Result := TIcom7610Radio.Create end,
+     'Icom IC-7610', [rlSerial, rlNetwork], 50001, True);
 
 end.

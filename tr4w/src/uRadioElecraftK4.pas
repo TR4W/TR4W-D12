@@ -17,7 +17,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uRadioElecraftK4;
 
 interface
-uses uNetRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC;
+uses uNetRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry;
 
 
 Type TK4Radio = class(TNetRadioBase)
@@ -969,5 +969,10 @@ begin
    Result := mode in [rmData,rmDataRev];
 end;
 }
+
+initialization
+  RegisterRadio(K4,
+     function: TNetRadioBase begin Result := TK4Radio.Create end,
+     'Elecraft K4', [rlSerial, rlNetwork], 9200, True);
 
 end.
