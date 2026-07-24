@@ -19,7 +19,7 @@ unit uRadioHamLibDirect;
 {
   Direct HamLib DLL Integration for TR4W
 
-  Purpose: Implements TNetRadioBase using direct libhamlib-4.dll calls
+  Purpose: Implements TFactoryRadioBase using direct libhamlib-4.dll calls
            instead of rigctld TCP/IP daemon.
 
   Advantages over THamLib (rigctld):
@@ -41,7 +41,7 @@ unit uRadioHamLibDirect;
 interface
 
 uses
-  uNetRadioBase, uRadioBand, uHamLibDirect, StrUtils, SysUtils, Math, Classes, Log4D, TF, VC, Tree, Windows;
+  uFactoryRadioBase, uRadioBand, uHamLibDirect, StrUtils, SysUtils, Math, Classes, Log4D, TF, VC, Tree, Windows;
 
 {-----------------------------------------------------------------------------
   Send queue — command types posted from the main thread, executed on the
@@ -70,7 +70,7 @@ type
   PHLCommand = ^THLCommand;
 
 type
-  THamLibDirect = class(TNetRadioBase)
+  THamLibDirect = class(TFactoryRadioBase)
   private
     FRig: PRIG;  // HamLib rig handle
     FModelID: Integer;
@@ -137,7 +137,7 @@ type
     function Connect: Integer; override;
     procedure Disconnect; override;
 
-    // Required TNetRadioBase implementations
+    // Required TFactoryRadioBase implementations
     procedure ProcessMsg(msg: string); override;
     procedure Transmit; override;
     procedure Receive; override;
@@ -944,7 +944,7 @@ begin
     logger.Debug('[GetSplitFromRig] Error getting split: %s', [RigErrorToString(err)]);
 end;
 
-// TNetRadioBase required implementations
+// TFactoryRadioBase required implementations
 
 procedure THamLibDirect.ProcessMsg(msg: string);
 begin

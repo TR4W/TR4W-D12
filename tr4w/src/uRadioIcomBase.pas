@@ -51,7 +51,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 interface
 
 uses
-  Windows, uNetRadioBase, uRadioBand, uIcomNetworkTransport, uIcomNetworkTypes, SysUtils, StrUtils, VC, Log4D,
+  Windows, uFactoryRadioBase, uRadioBand, uIcomNetworkTransport, uIcomNetworkTypes, SysUtils, StrUtils, VC, Log4D,
   uIcomCIV, Classes, SyncObjs;
 
 type
@@ -78,7 +78,7 @@ type
     procedure Stop;
   end;
 
-  TIcomRadio = class(TNetRadioBase)
+  TIcomRadio = class(TFactoryRadioBase)
   private
     FRadioAddress: Byte;          // CI-V address of radio (e.g., 0x94 for IC-7300)
     FControllerAddress: Byte;     // CI-V address of controller (usually 0xE0)
@@ -451,10 +451,10 @@ end;
 function TIcomRadio.IsNetworkConnection: boolean;
 begin
   // Network connection when serial port is not set and IP address is provided
-  // Use TNetRadioBase() cast to access base class radioAddress (string),
+  // Use TFactoryRadioBase() cast to access base class radioAddress (string),
   // not TIcomRadio.RadioAddress which is the CI-V address (Byte)
   Result := (serialPort = NoPort) and
-            (Length(TNetRadioBase(Self).radioAddress) > 0) and
+            (Length(TFactoryRadioBase(Self).radioAddress) > 0) and
             (radioPort > 0);
 end;
 
@@ -475,7 +475,7 @@ begin
   if IsNetworkConnection then
   begin
     logger.Info('[TIcomRadio.Connect] Connecting via Icom network protocol to %s:%d',
-                [TNetRadioBase(Self).radioAddress, radioPort]);
+                [TFactoryRadioBase(Self).radioAddress, radioPort]);
 
     // Create transport if needed
     if FNetworkTransport = nil then
@@ -495,12 +495,12 @@ begin
     pollingInterval := 1000;  // Poll every 1s; PollRadioState queries RIT/XIT/split/TX only
     FTransceiveChecked := False;
 
-    Result := FNetworkTransport.Connect(TNetRadioBase(Self).radioAddress,
+    Result := FNetworkTransport.Connect(TFactoryRadioBase(Self).radioAddress,
                                          radioPort,
                                          FNetworkUsername, FNetworkPassword);
     if Result = 0 then
       logger.Info('[TIcomRadio.Connect] Network connection initiated to %s:%d',
-                  [TNetRadioBase(Self).radioAddress, radioPort])
+                  [TFactoryRadioBase(Self).radioAddress, radioPort])
     else
       logger.Error('[TIcomRadio.Connect] Network connection failed: %d', [Result]);
   end
@@ -679,7 +679,7 @@ begin
   begin
     // CI-V stream is now open. Send Icom-specific one-shot queries.
     // Freq/mode/RIT/XIT/split/TX are handled by the polling thread's connected
-    // block (pNetworkRadio), which owns the display-update path.
+    // block (pFactoryRadio), which owns the display-update path.
     // Queries here are for state that the polling thread doesn't know about.
     SendToRadio(BuildCIVCommand($1A, #$05 + FTransceiveMenuBytes));  // Transceive state
     if SupportsDataMode then

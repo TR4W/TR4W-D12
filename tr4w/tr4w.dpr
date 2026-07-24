@@ -128,7 +128,7 @@ uses
   uExchangeBuilder in 'src\uExchangeBuilder.pas',
   uGridLookup in 'src\uGridLookup.pas',
   Log4D in 'src\Log4D.pas',
-  uNetRadioBase in 'src\uNetRadioBase.pas',
+  uFactoryRadioBase in 'src\uFactoryRadioBase.pas',
   uSerialPort in 'src\uSerialPort.pas',
   uRadioFactory in 'src\uRadioFactory.pas',
   uRadioElecraftK4 in 'src\uRadioElecraftK4.pas',

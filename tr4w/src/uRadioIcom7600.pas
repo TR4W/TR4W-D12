@@ -57,7 +57,7 @@ end;
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom7600');
   RegisterRadio(IC7600,
-     function: TNetRadioBase begin Result := TIcom7600Radio.Create end,
+     function: TFactoryRadioBase begin Result := TIcom7600Radio.Create end,
      'Icom IC-7600', [rlSerial, rlNetwork], 50001, True);
 
 end.

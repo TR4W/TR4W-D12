@@ -17,10 +17,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uRadioElecraftK4;
 
 interface
-uses uNetRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry;
+uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry;
 
 
-Type TK4Radio = class(TNetRadioBase)
+Type TK4Radio = class(TFactoryRadioBase)
    private
       CWBuffer: string;
       firstProcessMessage: boolean;
@@ -104,7 +104,7 @@ begin
          // Use periodic polling instead (same approach as legacy K3 code).
          Self.SetAIMode(0);
          Self.requiresPolling := True;
-         Self.pollingInterval  := 100; // Default; overridden by FREQUENCY POLL RATE in pNetworkRadio
+         Self.pollingInterval  := 100; // Default; overridden by FREQUENCY POLL RATE in pFactoryRadio
          end
       else
          begin
@@ -972,7 +972,7 @@ end;
 
 initialization
   RegisterRadio(K4,
-     function: TNetRadioBase begin Result := TK4Radio.Create end,
+     function: TFactoryRadioBase begin Result := TK4Radio.Create end,
      'Elecraft K4', [rlSerial, rlNetwork], 9200, True);
 
 end.

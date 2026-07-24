@@ -47,7 +47,7 @@ uses
    StrUtils,
    Math,
    DateUtils,
-   uNetRadioBase,
+   uFactoryRadioBase,
    uRadioElecraftK4,
    uRadioHamLibDirect;
 
@@ -59,7 +59,7 @@ function ReadFromCOMPort(b: Cardinal; rig: RadioPtr): boolean;
 function ReadFromCOMPortRaw(b: Cardinal; rig: RadioPtr): boolean;
 procedure SetSerialRadioAlertState(rig: RadioPtr; alertOn: boolean);
 procedure MarkSerialRead(rig: RadioPtr; success: boolean);
-procedure pNetworkRadio(rig: RadioPtr);
+procedure pFactoryRadio(rig: RadioPtr);
 procedure pKenwood2(rig: RadioPtr);
 procedure pKenwoodNew(rig: RadioPtr);
 procedure pFT990_FT1000(rig: RadioPtr);
@@ -775,9 +775,9 @@ begin
    until rig^.tPollCount < 0;
 end;
 
-procedure pNetworkRadio(rig: RadioPtr); // Network classes (K4 network, Flex 6000 series network, etc)
+procedure pFactoryRadio(rig: RadioPtr); // Network classes (K4 network, Flex 6000 series network, etc)
 var
-   ro: TNetRadioBase;
+   ro: TFactoryRadioBase;
    wasConnected: Boolean;
    loggedNoConnInfo: Boolean;   // Issue #968 -- log the "no IP/port" skip once, not every cycle
    reconnectDelay: Integer;
@@ -801,9 +801,9 @@ const
          Exit;   // No change � do not call InvalidateRect unnecessarily
       rig^.RadioDisconnected := alertOn;
       if alertOn then
-         logger.Info('[pNetworkRadio] %s � alert color ON', [rig^.RadioName])
+         logger.Info('[pFactoryRadio] %s � alert color ON', [rig^.RadioName])
       else
-         logger.Info('[pNetworkRadio] %s � alert color OFF', [rig^.RadioName]);
+         logger.Info('[pFactoryRadio] %s � alert color OFF', [rig^.RadioName]);
       if rig^.FreqWindowHandle <> 0 then
          Windows.InvalidateRect(rig^.FreqWindowHandle, nil, False);
       if rig^.RadioNameWndHandle <> 0 then
@@ -820,8 +820,8 @@ begin
      timer so the net effect it appears that the network class just "has" the info.
      NY4I 27-Nov-2021
    }
-   logger.Trace('[pNetworkRadio] Entering polling procedure');
-   ro := rig^.tNetObject;
+   logger.Trace('[pFactoryRadio] Entering polling procedure');
+   ro := rig^.tFactoryObject;
    wasConnected := False;
    lastPollTick := 0;
    lastHeartbeatTick := 0;
@@ -856,14 +856,14 @@ begin
                handshakeStuckSinceTick := GetTickCount
             else if (GetTickCount - handshakeStuckSinceTick) > HANDSHAKE_STUCK_MS then
                begin
-               logger.Warn('[pNetworkRadio] %s handshake stuck (IsConnected but not IsOperational) for >%d ms; forcing Disconnect for retry',
+               logger.Warn('[pFactoryRadio] %s handshake stuck (IsConnected but not IsOperational) for >%d ms; forcing Disconnect for retry',
                   [rig^.RadioName, HANDSHAKE_STUCK_MS]);
                handshakeStuckSinceTick := 0;
                try
                   ro.Disconnect;
                except
                   on E: Exception do
-                     logger.Debug('[pNetworkRadio] Forced Disconnect raised: %s - %s', [E.ClassName, E.Message]);
+                     logger.Debug('[pFactoryRadio] Forced Disconnect raised: %s - %s', [E.ClassName, E.Message]);
                end;
                // Brief sleep so the next iteration sees the new state cleanly,
                // then loop -- the else-branch will reset wasConnected and
@@ -878,7 +878,7 @@ begin
          // Radio is connected - poll status
          if not wasConnected then
             begin
-            logger.trace('[pNetworkRadio] Radio connected � querying initial freq/mode/state');
+            logger.trace('[pFactoryRadio] Radio connected � querying initial freq/mode/state');
             wasConnected := True;
             reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on successful connection
             // Don't unconditionally clear the alert here -- IsConnected is
@@ -900,7 +900,7 @@ begin
             if ro.requiresPolling and (ro.serialPort <> NoPort) and ro.honorsFreqPollRate then
                begin
                ro.pollingInterval := FreqPollRate;
-               logger.Debug('[pNetworkRadio] Serial polling interval set to %dms (FREQUENCY POLL RATE)',
+               logger.Debug('[pFactoryRadio] Serial polling interval set to %dms (FREQUENCY POLL RATE)',
                             [ro.pollingInterval]);
                end;
 
@@ -911,7 +911,7 @@ begin
             // updates on every connect/reconnect without the user needing to touch the VFO.
             if Assigned(ro) then
                begin
-               logger.Debug('[pNetworkRadio] Querying initial freq/mode');
+               logger.Debug('[pFactoryRadio] Querying initial freq/mode');
                ro.QueryActiveVFO;      // $07 $D2 � must be first so FActiveVFO is set before mode routing
                ro.QueryVFOAFrequency;
                ro.QueryVFOBFrequency;
@@ -923,7 +923,7 @@ begin
             // Poll the remaining states that transceive does not push
             if Assigned(ro) and ro.requiresPolling then
                begin
-               logger.Debug('[pNetworkRadio] Querying initial RIT/XIT/split/TX');
+               logger.Debug('[pFactoryRadio] Querying initial RIT/XIT/split/TX');
                ro.PollRadioState;
                end;
 
@@ -935,7 +935,7 @@ begin
             //   first cycle that sees a valid response.
             if not rig^.CWSpeedSync and (CodeSpeed >= 6) and Assigned(ro) then
                begin
-               logger.Debug('[pNetworkRadio] CWSpeedSync off � pushing program speed %d WPM to radio', [CodeSpeed]);
+               logger.Debug('[pFactoryRadio] CWSpeedSync off � pushing program speed %d WPM to radio', [CodeSpeed]);
                ro.SetCWSpeed(CodeSpeed);
                end;
 
@@ -947,7 +947,7 @@ begin
             // command fires again on the next first connect.  Issue #436.
             if (not rig^.StartupCommandSent) and (Length(rig^.StartupCommand) > 0) and Assigned(ro) then
                begin
-               logger.Info('[pNetworkRadio] Sending StartupCommand for %s: %s',
+               logger.Info('[pFactoryRadio] Sending StartupCommand for %s: %s',
                            [rig^.RadioName, rig^.StartupCommand]);
                ro.SendToRadio(rig^.StartupCommand);
                rig^.StartupCommandSent := True;
@@ -966,7 +966,7 @@ begin
          // (Indy self-deadlock), so check AuthFailed explicitly.
          if Assigned(ro) and ro.AuthFailed then
             begin
-            logger.Warn('[pNetworkRadio] Auth failed for %s - stopping', [rig^.RadioName]);
+            logger.Warn('[pFactoryRadio] Auth failed for %s - stopping', [rig^.RadioName]);
             StrPCopy(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
             QuickDisplayError(authErrBuf);
             if rig^.tRadioInterfaceWndHandle <> 0 then
@@ -987,7 +987,7 @@ begin
             if InterlockedExchange(THamLibDirect(ro).FNeedsPoll, 0) <> 0 then
                begin
                if TR4W_HAMLIB_DEBUG then
-                  logger.Info('[pNetworkRadio] HamLib poll triggered by ASYNC callback');
+                  logger.Info('[pFactoryRadio] HamLib poll triggered by ASYNC callback');
                THamLibDirect(ro).SendPollRequests;
                lastHeartbeatTick := GetTickCount;
                end
@@ -995,7 +995,7 @@ begin
                     (GetTickCount - lastHeartbeatTick >= LongWord(ro.pollingInterval)) then
                begin
                if TR4W_HAMLIB_DEBUG then
-                  logger.Info('[pNetworkRadio] HamLib poll triggered by HEARTBEAT (%dms)',
+                  logger.Info('[pFactoryRadio] HamLib poll triggered by HEARTBEAT (%dms)',
                               [ro.pollingInterval]);
                THamLibDirect(ro).SendPollRequests;
                lastHeartbeatTick := GetTickCount;
@@ -1062,14 +1062,14 @@ begin
          if rig^.CWSpeedSync and (ro.CWSpeed > 0) and (ro.CWSpeed <> CodeSpeed)
             and (rig = ActiveRadioPtr) then
             begin
-            logger.Info('[pNetworkRadio] CWSpeedSync: radio speed %d WPM -> CodeSpeed', [ro.CWSpeed]);
+            logger.Info('[pFactoryRadio] CWSpeedSync: radio speed %d WPM -> CodeSpeed', [ro.CWSpeed]);
             CodeSpeed := ro.CWSpeed;
             DisplayCodeSpeed;  // Refreshes display and persists to SpeedMemory
             end;
 
          // HamLib Direct skips this � SendPollRequests already logs individual values.
          if TR4W_HAMLIB_DEBUG and not (ro is THamLibDirect) then
-            logger.Info('[pNetworkRadio:%s] pre-UpdateStatus: VFOA=%d VFOB=%d split=%s VFOStatus=%d',
+            logger.Info('[pFactoryRadio:%s] pre-UpdateStatus: VFOA=%d VFOB=%d split=%s VFOStatus=%d',
                [rig^.RadioName,
                 rig.CurrentStatus.VFO[VFOA].Frequency,
                 rig.CurrentStatus.VFO[VFOB].Frequency,
@@ -1088,7 +1088,7 @@ begin
          SetRadioAlertState(True);  // TCP disconnected
          if wasConnected then
             begin
-            logger.Info('[pNetworkRadio] Radio disconnected, will attempt reconnection');
+            logger.Info('[pFactoryRadio] Radio disconnected, will attempt reconnection');
             wasConnected := False;
             // Zero freq in both Current and Previous status.
             // Current: so the display shows blank, not a stale reading.
@@ -1140,7 +1140,7 @@ begin
          // If auth failed, show error and stop reconnecting
          if Assigned(ro) and ro.AuthFailed then
             begin
-            logger.Warn('[pNetworkRadio] Authentication failed for %s - not retrying', [rig^.RadioName]);
+            logger.Warn('[pFactoryRadio] Authentication failed for %s - not retrying', [rig^.RadioName]);
             StrPCopy(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
             QuickDisplayError(authErrBuf);
             if rig^.tRadioInterfaceWndHandle <> 0 then
@@ -1173,14 +1173,14 @@ begin
 
          // Issue #968 -- a network radio with no IP address or a 0 TCP port has
          // nothing to connect to.  ro.Connect would just return -1 every cycle
-         // (the port=0 / address=0 guards in TNetRadioBase.Connect) and flood the
+         // (the port=0 / address=0 guards in TFactoryRadioBase.Connect) and flood the
          // log once per second.  Idle quietly until the operator supplies the
          // connection info; log the reason once so it is still discoverable.
          if (rig^.RadioTCPPort = 0) or (Length(rig^.IPAddress) = 0) then
             begin
             if not loggedNoConnInfo then
                begin
-               logger.Warn('[pNetworkRadio] %s has no IP address/TCP port configured -- not attempting to connect until set',
+               logger.Warn('[pFactoryRadio] %s has no IP address/TCP port configured -- not attempting to connect until set',
                   [rig^.RadioName]);
                loggedNoConnInfo := True;
                end;
@@ -1189,7 +1189,7 @@ begin
          loggedNoConnInfo := False;
 
          try
-            logger.Info('[pNetworkRadio] Reconnection attempt (delay: %dms)', [reconnectDelay]);
+            logger.Info('[pFactoryRadio] Reconnection attempt (delay: %dms)', [reconnectDelay]);
             ro.Connect;
 
             // Connect only initiates the handshake (sends AYH for Icom, opens TCP for K4).
@@ -1198,7 +1198,7 @@ begin
          except
             on E: Exception do
                begin
-               logger.Debug('[pNetworkRadio] Reconnection failed: %s - %s', [E.ClassName, E.Message]);
+               logger.Debug('[pFactoryRadio] Reconnection failed: %s - %s', [E.ClassName, E.Message]);
                // Exponential backoff: double the delay, cap at max
                reconnectDelay := reconnectDelay * 2;
                if reconnectDelay > RECONNECT_MAX_DELAY then
@@ -1209,13 +1209,13 @@ begin
       except
          on E: EAbstractError do
             begin
-            logger.Error('[pNetworkRadio] ABSTRACT ERROR: %s at address %p', [E.Message, ExceptAddr]);
-            logger.Error('[pNetworkRadio] This indicates a missing method implementation in the radio class');
+            logger.Error('[pFactoryRadio] ABSTRACT ERROR: %s at address %p', [E.Message, ExceptAddr]);
+            logger.Error('[pFactoryRadio] This indicates a missing method implementation in the radio class');
             raise;  // Re-raise so user sees the dialog
             end;
          on E: Exception do
             begin
-            logger.Error('[pNetworkRadio] Exception in polling loop: %s - %s', [E.ClassName, E.Message]);
+            logger.Error('[pFactoryRadio] Exception in polling loop: %s - %s', [E.ClassName, E.Message]);
             Sleep(1000);  // Avoid tight loop on repeated errors
             end;
       end;  // end of try-except
@@ -1225,7 +1225,7 @@ end;
 
 procedure pHamLib(rig: RadioPtr);
 var
-   ro: TNetRadioBase;
+   ro: TFactoryRadioBase;
    wasConnected: Boolean;
 begin
 
@@ -1247,7 +1247,7 @@ begin
    }
 
    logger.Trace('[pHamLib] Entering polling procedure');
-   ro := rig^.tNetObject;
+   ro := rig^.tFactoryObject;
    wasConnected := False;
 
    // Keep polling thread alive until stop is requested (e.g. on Reset Radio Ports)
@@ -1262,7 +1262,7 @@ begin
             wasConnected := True;
             end;
 
-         // rig^.tNetObject.SendPollRequests; // Removed - rigctld no longer supported
+         // rig^.tFactoryObject.SendPollRequests; // Removed - rigctld no longer supported
          Sleep(FreqPollRate);
          rig^.CurrentStatus.Freq := ro.frequency[nrVFOA];
          rig^.CurrentStatus.Band := GetTR4WBandFromNetworkBand(ro.band[nrVFOA]);
@@ -3582,7 +3582,7 @@ end;
 
 // Serial liveness indicator: set/clear RadioDisconnected for a serial radio and
 // repaint the freq/name windows, only on a state transition.  Deliberately
-// mirrors the network-side SetRadioAlertState nested in pNetworkRadio -- kept
+// mirrors the network-side SetRadioAlertState nested in pFactoryRadio -- kept
 // separate so this change does not touch the (battle-tested) network polling
 // path; unifying the two is a post-Field-Day cleanup.
 procedure SetSerialRadioAlertState(rig: RadioPtr; alertOn: boolean);
@@ -3747,9 +3747,9 @@ begin
      This BeginPolling procedure is fired up as a thread so it may cause some
      strange issues since we have a thread in the network class. TBD
    }
-   if rig.tNetObject <> nil then
+   if rig.tFactoryObject <> nil then
       begin
-      pNetworkRadio(rig);
+      pFactoryRadio(rig);
       Exit;   // Nothing else is done here so exit
       end;
 
@@ -4491,7 +4491,7 @@ begin
       #9 + '<FunctionKeyCaption>' + '' + '</FunctionKeyCaption>' + sLineBreak +
       #9 + '<RadioName>' + rig.RadioName + '</RadioName>' + sLineBreak +
       // N1MM RadioInfo IsConnected (Issue #917).  Source: rig.RadioDisconnected,
-      // which is maintained by pNetworkRadio's SetRadioAlertState for network
+      // which is maintained by pFactoryRadio's SetRadioAlertState for network
       // radios (Icom CI-V/IP, K4 TCP, FlexRadio, HamLib Direct, TS-890 LAN).
       // The legacy serial polling threads (pYaesu/pIcom/pKenwood/pK3/etc.)
       // do not currently update RadioDisconnected, so this reports True for

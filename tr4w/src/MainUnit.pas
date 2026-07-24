@@ -141,7 +141,7 @@ uses
   Math,
   Log4D,
   Controls,
-  uNetRadioBase,
+  uFactoryRadioBase,
   uRadioBand,
   uExternalLogger,
   IdURI
@@ -2633,14 +2633,14 @@ begin
     FreeAndNil(externalLogger);
   end;
 
-  if Radio1.tNetObject <> nil then
+  if Radio1.tFactoryObject <> nil then
   begin
-    FreeAndNil(Radio1.tNetObject);
+    FreeAndNil(Radio1.tFactoryObject);
   end;
 
-  if Radio2.tNetObject <> nil then
+  if Radio2.tFactoryObject <> nil then
   begin
-    FreeAndNil(Radio2.tNetObject);
+    FreeAndNil(Radio2.tFactoryObject);
   end;
 
 
@@ -3918,25 +3918,25 @@ begin
       begin
         ResetRadioPorts;
         {logger.info('Resetting radio ports');
-        if ActiveRadioPtr.tNetObject <> nil then
+        if ActiveRadioPtr.tFactoryObject <> nil then
            begin
-           ActiveRadioPtr.tNetObject.Disconnect;
-           ActiveRadioPtr.tNetObject.Connect;
+           ActiveRadioPtr.tFactoryObject.Disconnect;
+           ActiveRadioPtr.tFactoryObject.Connect;
         end;
 
         ActiveRadioPtr.CheckAndInitializePorts_ForThisRadio;
         //
         // Handle radio two
         //
-        if InActiveRadioPtr.tNetObject <> nil then
+        if InActiveRadioPtr.tFactoryObject <> nil then
            begin
-           InActiveRadioPtr.tNetObject.Disconnect;
-           InActiveRadioPtr.tNetObject.Connect;
+           InActiveRadioPtr.tFactoryObject.Disconnect;
+           InActiveRadioPtr.tFactoryObject.Connect;
            end
-         else if InActiveRadioPtr.tNetObject <> nil then
+         else if InActiveRadioPtr.tFactoryObject <> nil then
             begin
-            InActiveRadioPtr.tNetObject.Disconnect;
-            InActiveRadioPtr.tNetObject.Connect;
+            InActiveRadioPtr.tFactoryObject.Disconnect;
+            InActiveRadioPtr.tFactoryObject.Connect;
             end;
 
          InActiveRadioPtr.CheckAndInitializePorts_ForThisRadio;

@@ -22,7 +22,7 @@ unit uRadioFactory;
   Purpose: Centralized creation of radio instances based on model type
 
   Usage:
-    var radio: TNetRadioBase;
+    var radio: TFactoryRadioBase;
     radio := TRadioFactory.CreateRadio(rmElecraftK4, '192.168.1.100', 7373, @MyProcessMsg);
     radio.Connect;
 }
@@ -30,7 +30,7 @@ unit uRadioFactory;
 interface
 
 uses
-   Windows, uNetRadioBase, uRadioElecraftK4, uFlexRadio6000, SysUtils, VC;
+   Windows, uFactoryRadioBase, uRadioElecraftK4, uFlexRadio6000, SysUtils, VC;
 
 type
    TRadioModel = (
@@ -66,7 +66,7 @@ type
       // self-registers), so there is no per-model case to maintain here.
       class function CreateRadioNetwork(model: InterfacedRadioType;
                                          address: string;
-                                         port: integer): TNetRadioBase;
+                                         port: integer): TFactoryRadioBase;
       // Serial connection.  Returns nil for a model whose factory class is not
       // serial-capable, so the caller falls back to the legacy serial path.
       class function CreateRadioSerial(model: InterfacedRadioType;
@@ -76,10 +76,10 @@ type
                                         stopBits: Byte;
                                         parity: Byte;
                                         rts: Boolean = False;
-                                        dtr: Boolean = False): TNetRadioBase;
+                                        dtr: Boolean = False): TFactoryRadioBase;
       // HamLib Direct is not an InterfacedRadioType model -- any radio can select
       // it via its UseHamLib flag -- so it has its own constructor.
-      class function CreateHamLibDirect(msgCallback: TProcessMsgRef): TNetRadioBase;
+      class function CreateHamLibDirect(msgCallback: TProcessMsgRef): TFactoryRadioBase;
       class function GetSupportedModels: string;
       class function IsModelSupported(model: TRadioModel): boolean;
 
@@ -112,7 +112,7 @@ var
 
 class function TRadioFactory.CreateRadioNetwork(model: InterfacedRadioType;
                                                  address: string;
-                                                 port: integer): TNetRadioBase;
+                                                 port: integer): TFactoryRadioBase;
 begin
    Result := nil;
 
@@ -143,7 +143,7 @@ class function TRadioFactory.CreateRadioSerial(model: InterfacedRadioType;
                                                 stopBits: Byte;
                                                 parity: Byte;
                                                 rts: Boolean;
-                                                dtr: Boolean): TNetRadioBase;
+                                                dtr: Boolean): TFactoryRadioBase;
 begin
    Result := nil;
 
@@ -175,7 +175,7 @@ begin
                [Result.radioModel, Ord(serialPort), baudRate, dataBits, stopBits]);
 end;
 
-class function TRadioFactory.CreateHamLibDirect(msgCallback: TProcessMsgRef): TNetRadioBase;
+class function TRadioFactory.CreateHamLibDirect(msgCallback: TProcessMsgRef): TFactoryRadioBase;
 begin
    Result := THamLibDirect.Create(msgCallback);
    Result.radioModel := 'HamLib Direct';

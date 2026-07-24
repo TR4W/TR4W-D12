@@ -39,7 +39,7 @@ uses
    Windows,
    utils_text,
    ExtCtrls,
-   uNetRadioBase,
+   uFactoryRadioBase,
    uRadioElecraftK4,
    uRadioFactory,
    uRadioRegistry;
@@ -170,14 +170,14 @@ type
       SpeedMemory:       integer;
       BandMemory:        BandType;
       ModeMemory:        ModeType;
-      tNetObject:          TNetRadioBase;  // Factory creates K4 or HamLibDirect
+      tFactoryObject:          TFactoryRadioBase;  // Factory creates K4 or HamLibDirect
       FreqWindowHandle:    HWND;
       RadioNameWndHandle:  HWND;
       RadioDisconnected:   Boolean;
       tLastValidResponse:  Cardinal;   // GetTickCount of last good serial read; drives the serial liveness indicator
       RadioName:        Str20;
       StartupCommand  : Str50;
-      StartupCommandSent: Boolean;  // One-shot guard: set True after pNetworkRadio sends StartupCommand on first connect (Issue #436)
+      StartupCommandSent: Boolean;  // One-shot guard: set True after pFactoryRadio sends StartupCommand on first connect (Issue #436)
       HamLibID:          integer;
       //    lpOverlapped: TOverlapped;
       //    pOver: POverlapped;
@@ -951,9 +951,9 @@ begin
 
    if ActiveRadio = RadioOne then
       begin
-      if Radio1.tNetObject <> nil then
+      if Radio1.tFactoryObject <> nil then
          begin
-         Radio1.tNetObject.RITClear(nrVFOA);
+         Radio1.tFactoryObject.RITClear(nrVFOA);
          Exit;
          end;
       IntRadioType := Radio1.RadioModel;
@@ -961,9 +961,9 @@ begin
       end
    else
       begin
-      if Radio2.tNetObject <> nil then
+      if Radio2.tFactoryObject <> nil then
          begin
-         Radio2.tNetObject.RITClear(nrVFOA);
+         Radio2.tFactoryObject.RITClear(nrVFOA);
          Exit;
          end;
       IntRadioType := Radio2.RadioModel;
@@ -1016,14 +1016,14 @@ procedure RITBumpUp;
 
 var
    IntRadioType: InterfacedRadioType;
-   ActiveNetObj: TNetRadioBase;
+   ActiveNetObj: TFactoryRadioBase;
 //   SerialPort: PortType;
 
 begin
    if ActiveRadio = RadioOne then
-      ActiveNetObj := Radio1.tNetObject
+      ActiveNetObj := Radio1.tFactoryObject
    else
-      ActiveNetObj := Radio2.tNetObject;
+      ActiveNetObj := Radio2.tFactoryObject;
 
    if ActiveNetObj <> nil then
       begin
@@ -1081,14 +1081,14 @@ procedure RITBumpDown;
 
 var
    IntRadioType: InterfacedRadioType;
-   ActiveNetObj: TNetRadioBase;
+   ActiveNetObj: TFactoryRadioBase;
 //   SerialPort: PortType;
 
 begin
    if ActiveRadio = RadioOne then
-      ActiveNetObj := Radio1.tNetObject
+      ActiveNetObj := Radio1.tFactoryObject
    else
-      ActiveNetObj := Radio2.tNetObject;
+      ActiveNetObj := Radio2.tFactoryObject;
 
    if ActiveNetObj <> nil then
       begin
@@ -1152,9 +1152,9 @@ begin
 
    if ActiveRadio = RadioOne then
       begin
-      if Radio1.tNetObject <> nil then
+      if Radio1.tFactoryObject <> nil then
          begin
-         Radio1.tNetObject.VFOBumpUp(nrVFOA);
+         Radio1.tFactoryObject.VFOBumpUp(nrVFOA);
          Exit;
          end;
       IntRadioType := Radio1.RadioModel;
@@ -1162,9 +1162,9 @@ begin
       end
    else
       begin
-      if Radio2.tNetObject <> nil then
+      if Radio2.tFactoryObject <> nil then
          begin
-         Radio2.tNetObject.VFOBumpUp(nrVFOA);
+         Radio2.tFactoryObject.VFOBumpUp(nrVFOA);
          Exit;
          end;
       IntRadioType := Radio2.RadioModel;
@@ -1229,9 +1229,9 @@ var
 begin
    if ActiveRadio = RadioOne then
       begin
-      if Radio1.tNetObject <> nil then
+      if Radio1.tFactoryObject <> nil then
          begin
-         Radio1.tNetObject.VFOBumpDown(nrVFOA);
+         Radio1.tFactoryObject.VFOBumpDown(nrVFOA);
          Exit;
          end;
       IntRadioType := Radio1.RadioModel;
@@ -1239,9 +1239,9 @@ begin
       end
    else
       begin
-      if Radio2.tNetObject <> nil then
+      if Radio2.tFactoryObject <> nil then
          begin
-         Radio2.tNetObject.VFOBumpDown(nrVFOA);
+         Radio2.tFactoryObject.VFOBumpDown(nrVFOA);
          Exit;
          end;
       IntRadioType := Radio2.RadioModel;
@@ -1453,10 +1453,10 @@ begin
       nNumberOfBytesToWrite);
    Inc(CommandsBufferPointer, nNumberOfBytesToWrite);
 {$ELSE}
-  if Self.tNetObject <> nil then
+  if Self.tFactoryObject <> nil then
      begin
      logger.Trace('[AddToOutputBuffer-Network] %s',[Buffer]);
-     Self.tNetObject.SendToRadio(Buffer);
+     Self.tFactoryObject.SendToRadio(Buffer);
      end
   else
      begin
@@ -1579,7 +1579,7 @@ begin
    SetUpRadioInterface;
 
    if (tCATPortHandle <> INVALID_HANDLE_VALUE) or
-      (Self.tNetObject <> nil)                 then
+      (Self.tFactoryObject <> nil)                 then
       begin
       if PollingEnable then
          begin
@@ -1803,9 +1803,9 @@ function RadioObject.MemoryKeyer(mem: integer): boolean;
 var localMsg:AnsiString;   // CAT command bytes -> AddToOutputBuffer(PAnsiChar) (D12)
     hiMem: integer;
 begin
-   if Self.tNetObject <> nil then
+   if Self.tFactoryObject <> nil then
       begin
-      Result := Self.tNetObject.MemoryKeyer(mem);
+      Result := Self.tFactoryObject.MemoryKeyer(mem);
       Exit;
       end;
 
@@ -2055,9 +2055,9 @@ procedure RadioObject.PutRadioIntoSplit;
 
 begin
    //TLogger.GetInstance.Debug(Format('      In PutRadioIntoSplit: %s',[RadioName]));
-   if Self.tNetObject <> nil then
+   if Self.tFactoryObject <> nil then
       begin
-      Self.tNetObject.Split(true);
+      Self.tFactoryObject.Split(true);
       Exit;
       end;
 
@@ -2124,9 +2124,9 @@ procedure RadioObject.PutRadioOutOfSplit;
 
 begin
    //TLogger.GetInstance.Debug(Format('      In PutRadioOutOfSplit: %s',[RadioName]));
-   if Self.tNetObject <> nil then
+   if Self.tFactoryObject <> nil then
       begin
-      Self.tNetObject.Split(false);
+      Self.tFactoryObject.Split(false);
       Exit;
       end;
 
@@ -2395,9 +2395,9 @@ begin
    localMsg := Msg;
 
    (* Removed network code as AddToOutputBuffer will send to net radio // ny4i  This is a bad kludge. We should call a new procedure to handle CW for networked radios
-   if Self.tNetObject <> nil then
+   if Self.tFactoryObject <> nil then
       begin
-      Self.tNetObject.SendCW(msg);
+      Self.tFactoryObject.SendCW(msg);
       Exit;
       end;
    *)
@@ -2586,16 +2586,16 @@ begin
                logger.trace('Self.CWByCAT_Sending set to TRUE - Elecraft/Kenwood/Flex');
                // Flex over TCP: delegate to the factory object's cwx API.
                // Flex over serial falls through to the legacy KY path below.
-               if (RadioModel = FLEX) and (Self.tNetObject <> nil) and (Self.tCATPortType = Network) then
+               if (RadioModel = FLEX) and (Self.tFactoryObject <> nil) and (Self.tCATPortType = Network) then
                   begin
-                  Self.tNetObject.BufferCW(sMsg);
-                  Self.tNetObject.SendCW;
+                  Self.tFactoryObject.BufferCW(sMsg);
+                  Self.tFactoryObject.SendCW;
                   end
                else
                   begin
                   localMsg := Format(formatStr, [sMsg]);
-                  if Self.tNetObject <> nil then
-                     Self.tNetObject.SendToRadio(localMsg)
+                  if Self.tFactoryObject <> nil then
+                     Self.tFactoryObject.SendToRadio(localMsg)
                   else
                      AddToOutputBuffer(addr(localMsg[1]), length(localMsg));
                   end;
@@ -2656,12 +2656,12 @@ begin
                DebugMsg('Total CW Elements for ' + Msg + ' = ' + IntToStr(elements));
                Self.EnableCWBYCATTimer(Round(( (1200 / DisplayedCodeSpeed) * elements) * 1.25)); //ny4i Issue153 When timer fires, reset CWBYCAT_Sending
 
-               if Self.tNetObject <> nil then
+               if Self.tFactoryObject <> nil then
                   begin
                   // Network path: route through TIcomRadio.BufferCW/SendCW
                   DebugMsg('SendCW for Icom network[' + IntToStr(len) + ' bytes]=' + localMsg);
-                  Self.tNetObject.BufferCW(Copy(Msg, 1, len));
-                  Self.tNetObject.SendCW;
+                  Self.tFactoryObject.BufferCW(Copy(Msg, 1, len));
+                  Self.tFactoryObject.SendCW;
                   end
                else
                   begin
@@ -2755,9 +2755,9 @@ procedure RadioObject.StopSendingCW;
 
 //   localMsg: string;
 begin
-   if Self.tNetObject <> nil then
+   if Self.tFactoryObject <> nil then
       begin
-      Self.tNetObject.StopCW;
+      Self.tFactoryObject.StopCW;
       Exit;
       end;
    case RadioParametersArray[RadioModel].rt of
@@ -2865,7 +2865,7 @@ var
 begin
    // If a radio object already exists, stop the polling thread and free it before creating a new one.
    // This prevents the old thread from accessing freed memory (dangling pointer AV).
-   if Self.tNetObject <> nil then
+   if Self.tFactoryObject <> nil then
       begin
       logger.Info('[%s.SetUpRadioInterface] Stopping polling thread before reinit', [Self.RadioName]);
       Self.PollingStopRequested := True;
@@ -2878,9 +2878,9 @@ begin
          end;
       Self.PollingStopRequested := False;
       logger.Info('[%s.SetUpRadioInterface] Freeing existing radio object before reinit', [Self.RadioName]);
-      Self.tNetObject.Disconnect;
-      Self.tNetObject.Free;
-      Self.tNetObject := nil;
+      Self.tFactoryObject.Disconnect;
+      Self.tFactoryObject.Free;
+      Self.tFactoryObject := nil;
       end;
 
    // Check if we should use HamLib Direct (works with both serial and network)
@@ -2889,13 +2889,13 @@ begin
       logger.Info('[%s.SetUpRadioInterface] Using HamLib Direct', [Self.RadioName]);
 
       // Create HamLib Direct radio via factory
-      Self.tNetObject := TRadioFactory.CreateHamLibDirect(nil);
+      Self.tFactoryObject := TRadioFactory.CreateHamLibDirect(nil);
 
-      if Self.tNetObject <> nil then
+      if Self.tFactoryObject <> nil then
       begin
-         if Self.tNetObject is THamLibDirect then
+         if Self.tFactoryObject is THamLibDirect then
          begin
-            with THamLibDirect(Self.tNetObject) do
+            with THamLibDirect(Self.tFactoryObject) do
             begin
                HamLibModelID := RadioParametersArray[Self.RadioModel].hamlibID;
 
@@ -2925,7 +2925,7 @@ begin
          end;
 
          // Connect the radio
-         Self.tNetObject.Connect;
+         Self.tFactoryObject.Connect;
          logger.Info('[%s.SetUpRadioInterface] HamLib Direct connected', [Self.RadioName]);
       end
       else
@@ -2941,7 +2941,7 @@ begin
          logger.Info('[%s.SetUpRadioInterface] Setting up %s serial via factory: Port=%d, Baud=%d, DataBits=%d, Parity=%d, StopBits=%d',
                      [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel), Ord(tCATPortType),
                       RadioBaudRate, RadioNumberBits, Ord(RadioParity), RadioStopBits]);
-         Self.tNetObject := TRadioFactory.CreateRadioSerial(
+         Self.tFactoryObject := TRadioFactory.CreateRadioSerial(
             Self.RadioModel,
             tCATPortType,
             RadioBaudRate,
@@ -2951,9 +2951,9 @@ begin
             tr4w_cat_rts_state = RtsDtr_ON,
             tr4w_cat_dtr_state = RtsDtr_ON
          );
-         if Self.tNetObject <> nil then
+         if Self.tFactoryObject <> nil then
             begin
-            Self.tNetObject.Connect;
+            Self.tFactoryObject.Connect;
             logger.Info('[%s.SetUpRadioInterface] %s serial radio connected via factory',
                        [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
             end
@@ -2978,9 +2978,9 @@ begin
          // Send startup command if configured
          if length(Self.StartupCommand) > 0 then
             begin
-            if Self.tNetObject <> nil then
+            if Self.tFactoryObject <> nil then
                begin
-               Self.tNetObject.SendToRadio(Self.StartupCommand);
+               Self.tFactoryObject.SendToRadio(Self.StartupCommand);
                end;
             end;
          // Exit to prevent any legacy serial code from executing
@@ -3074,7 +3074,7 @@ begin
       if uRadioRegistry.IsRegistered(Self.RadioModel) and
          uRadioRegistry.SupportsNetwork(Self.RadioModel) then
          begin
-         Self.tNetObject := TRadioFactory.CreateRadioNetwork(
+         Self.tFactoryObject := TRadioFactory.CreateRadioNetwork(
             Self.RadioModel,
             Self.IPAddress,
             Self.RadioTCPPort
@@ -3087,40 +3087,40 @@ begin
                     [Self.RadioName, Ord(Self.RadioModel)]);
          end;
 
-      if Self.tNetObject <> nil then
+      if Self.tFactoryObject <> nil then
       begin
-         Self.tNetObject.rigLabel := Self.RadioName;  // "Rig 1" / "Rig 2"
+         Self.tFactoryObject.rigLabel := Self.RadioName;  // "Rig 1" / "Rig 2"
 
          // If this is an Icom radio, set network credentials before connecting
-         if Self.tNetObject is TIcomRadio then
+         if Self.tFactoryObject is TIcomRadio then
          begin
-            TIcomRadio(Self.tNetObject).NetworkUsername := Self.NetworkUsername;
-            TIcomRadio(Self.tNetObject).NetworkPassword := Self.NetworkPassword;
+            TIcomRadio(Self.tFactoryObject).NetworkUsername := Self.NetworkUsername;
+            TIcomRadio(Self.tFactoryObject).NetworkPassword := Self.NetworkPassword;
             logger.Info('[%s.SetUpRadioInterface] Set Icom network credentials (user=%s, pass=*******)',
                         [Self.RadioName, Self.NetworkUsername]);
             if Self.IcomDataModeID in [1..3] then
                begin
-               TIcomRadio(Self.tNetObject).DataModeID := Self.IcomDataModeID;
+               TIcomRadio(Self.tFactoryObject).DataModeID := Self.IcomDataModeID;
                logger.Info('[%s.SetUpRadioInterface] Icom data mode ID set to D%d',
                            [Self.RadioName, Self.IcomDataModeID]);
                end;
          end;
 
          // Kenwood TS-890 also requires LAN credentials (Issue #436).
-         if Self.tNetObject is TKenwoodTS890Radio then
+         if Self.tFactoryObject is TKenwoodTS890Radio then
          begin
-            TKenwoodTS890Radio(Self.tNetObject).NetworkUsername := Self.NetworkUsername;
-            TKenwoodTS890Radio(Self.tNetObject).NetworkPassword := Self.NetworkPassword;
+            TKenwoodTS890Radio(Self.tFactoryObject).NetworkUsername := Self.NetworkUsername;
+            TKenwoodTS890Radio(Self.tFactoryObject).NetworkPassword := Self.NetworkPassword;
             logger.Info('[%s.SetUpRadioInterface] Set Kenwood TS-890 LAN credentials (user=%s, pass=*******)',
                         [Self.RadioName, Self.NetworkUsername]);
          end;
 
-         // Connect is deferred to the polling thread (pNetworkRadio).  Running
+         // Connect is deferred to the polling thread (pFactoryRadio).  Running
          // it synchronously here blocked the main thread for up to 10 s
          // (Indy ConnectTimeout) whenever the radio was off or unreachable.
          // The polling thread's existing reconnect-with-backoff path now
          // handles the very first connect as well.  Issue #436.
-         Self.StartupCommandSent := False;  // pNetworkRadio sends StartupCommand once after first connect
+         Self.StartupCommandSent := False;  // pFactoryRadio sends StartupCommand once after first connect
          logger.Info('[%s.SetUpRadioInterface] Network radio %s:%d configured; Connect deferred to polling thread (main thread not blocked)',
                      [Self.RadioName, Self.IPAddress, Self.RadioTCPPort]);
       end
@@ -3162,9 +3162,9 @@ begin
    logger.debug('[RadioObject.SetUpRadioInterface] Startup command length = %d, startup command = %s',[length(Self.StartupCommand),Self.StartupCommand]);
    if length(Self.StartupCommand) > 0 then
       begin
-      if Self.tNetObject <> nil then
+      if Self.tFactoryObject <> nil then
          begin
-         // Network radios: pNetworkRadio sends StartupCommand on first
+         // Network radios: pFactoryRadio sends StartupCommand on first
          // successful connect.  Sending here would race the deferred
          // Connect (Issue #436).
          end
@@ -3199,9 +3199,9 @@ begin
       exit;
       end;
 
-   if Self.tNetObject <> nil then
+   if Self.tFactoryObject <> nil then
       begin
-      Self.tNetObject.SetCWSpeed(speed);
+      Self.tFactoryObject.SetCWSpeed(speed);
       Exit;
       end;
 
@@ -3351,17 +3351,17 @@ begin
    if VFO = 'A' then
       Self.tCommandedQSYFreq := Freq;
 
-   if Self.tNetObject <> nil then
+   if Self.tFactoryObject <> nil then
       begin
       if VFO = 'B' then
          begin
          tNetMode := AdjustSSBModeForFreq(ModeTypeToNetMode(mode), freq);
-         Self.tNetObject.SetFrequency(freq,nrVFOB,tNetMode);
+         Self.tFactoryObject.SetFrequency(freq,nrVFOB,tNetMode);
          end
       else
          begin
          tNetMode := AdjustSSBModeForFreq(ModeTypeToNetMode(mode), freq);
-         Self.tNetObject.SetFrequency(freq,nrVFOA,tNetMode);
+         Self.tFactoryObject.SetFrequency(freq,nrVFOA,tNetMode);
          end;
       Exit;
       end;
@@ -4046,7 +4046,7 @@ function tPTTVIACAT(PTTOn: boolean): boolean;
 
 var
    IntRadioType: InterfacedRadioType;
-   ro: TNetRadioBase;
+   ro: TFactoryRadioBase;
 //   SerialPort: PortType;
    TempString: Str80;
    WaitAnswer: cardinal;
@@ -4077,13 +4077,13 @@ begin
    if ActiveRadio = RadioOne then
       begin
       IntRadioType := Radio1.RadioModel;
-      ro := Radio1.tNetObject;
+      ro := Radio1.tFactoryObject;
 //      SerialPort := Radio1.tCATPortType;
       end
    else
       begin
       IntRadioType := Radio2.RadioModel;
-      ro := Radio2.tNetObject;
+      ro := Radio2.tFactoryObject;
  //     SerialPort := Radio2.tCATPortType;
       end;
    if ro <> nil then

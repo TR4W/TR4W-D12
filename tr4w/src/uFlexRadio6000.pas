@@ -25,9 +25,9 @@ unit uFlexRadio6000;
 interface
 
 uses
-   uNetRadioBase, uRadioBand, StrUtils, SysUtils, Log4D;
+   uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Log4D;
 
-type TFlexRadio6000 = class(TNetRadioBase)
+type TFlexRadio6000 = class(TFactoryRadioBase)
    private
       FCmdSeq:        integer;   // Monotonically-increasing command sequence counter (C<n>|)
       FClientHandle:  string;    // Hex handle assigned by radio in 'H<hex>' line
@@ -717,7 +717,7 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-// SendToRadio — VFO-aware override (satisfies abstract contract from TNetRadioBase).
+// SendToRadio — VFO-aware override (satisfies abstract contract from TFactoryRadioBase).
 // Maps (whichVFO, key, value) to a slice set command.
 // Most methods call SendFlexCmd directly for cleaner formatting.
 // ---------------------------------------------------------------------------
@@ -1099,7 +1099,7 @@ end;
 
 initialization
   RegisterRadio(FLEX,
-     function: TNetRadioBase begin Result := TFlexRadio6000.Create end,
+     function: TFactoryRadioBase begin Result := TFlexRadio6000.Create end,
      'FlexRadio 6000', [rlNetwork], 4992, True);
 
 end.

@@ -16,23 +16,23 @@ unit uRadioManager;
 interface
 
 uses
-   uNetRadioBase, SysUtils, Classes, Generics.Collections;
+   uFactoryRadioBase, SysUtils, Classes, Generics.Collections;
 
 type
    TRadioManager = class
    private
-      FRadios: TDictionary<string, TNetRadioBase>;
+      FRadios: TDictionary<string, TFactoryRadioBase>;
       FActiveRadioId: string;
-      function GetActiveRadio: TNetRadioBase;
+      function GetActiveRadio: TFactoryRadioBase;
       procedure SetActiveRadioId(const Value: string);
    public
       constructor Create;
       destructor Destroy; override;
 
       // Radio management
-      function AddRadio(const radioId: string; radio: TNetRadioBase): boolean;
+      function AddRadio(const radioId: string; radio: TFactoryRadioBase): boolean;
       function RemoveRadio(const radioId: string): boolean;
-      function GetRadio(const radioId: string): TNetRadioBase;
+      function GetRadio(const radioId: string): TFactoryRadioBase;
       function HasRadio(const radioId: string): boolean;
       function GetRadioCount: integer;
       function GetRadioList: TArray<string>;
@@ -45,7 +45,7 @@ type
 
       // Active radio management
       property ActiveRadioId: string read FActiveRadioId write SetActiveRadioId;
-      property ActiveRadio: TNetRadioBase read GetActiveRadio;
+      property ActiveRadio: TFactoryRadioBase read GetActiveRadio;
 
       // Utility methods
       procedure ClearAll;
@@ -64,7 +64,7 @@ var
 constructor TRadioManager.Create;
 begin
    inherited Create;
-   FRadios := TDictionary<string, TNetRadioBase>.Create;
+   FRadios := TDictionary<string, TFactoryRadioBase>.Create;
    FActiveRadioId := '';
    logger.Info('[RadioManager] Created');
 end;
@@ -77,7 +77,7 @@ begin
    inherited;
 end;
 
-function TRadioManager.AddRadio(const radioId: string; radio: TNetRadioBase): boolean;
+function TRadioManager.AddRadio(const radioId: string; radio: TFactoryRadioBase): boolean;
 begin
    Result := False;
 
@@ -114,7 +114,7 @@ end;
 
 function TRadioManager.RemoveRadio(const radioId: string): boolean;
 var
-   radio: TNetRadioBase;
+   radio: TFactoryRadioBase;
 begin
    Result := False;
 
@@ -148,7 +148,7 @@ begin
    Result := True;
 end;
 
-function TRadioManager.GetRadio(const radioId: string): TNetRadioBase;
+function TRadioManager.GetRadio(const radioId: string): TFactoryRadioBase;
 begin
    if not FRadios.TryGetValue(radioId, Result) then
       begin
@@ -175,7 +175,7 @@ end;
 procedure TRadioManager.ConnectAll;
 var
    radioId: string;
-   radio: TNetRadioBase;
+   radio: TFactoryRadioBase;
    connected: integer;
    failed: integer;
 begin
@@ -230,7 +230,7 @@ end;
 procedure TRadioManager.DisconnectAll;
 var
    radioId: string;
-   radio: TNetRadioBase;
+   radio: TFactoryRadioBase;
 begin
    logger.Info('[RadioManager.DisconnectAll] Disconnecting %d radios', [FRadios.Count]);
 
@@ -262,7 +262,7 @@ end;
 
 function TRadioManager.ConnectRadio(const radioId: string): boolean;
 var
-   radio: TNetRadioBase;
+   radio: TFactoryRadioBase;
 begin
    Result := False;
 
@@ -303,7 +303,7 @@ end;
 
 function TRadioManager.DisconnectRadio(const radioId: string): boolean;
 var
-   radio: TNetRadioBase;
+   radio: TFactoryRadioBase;
 begin
    Result := False;
 
@@ -342,7 +342,7 @@ begin
    end;
 end;
 
-function TRadioManager.GetActiveRadio: TNetRadioBase;
+function TRadioManager.GetActiveRadio: TFactoryRadioBase;
 begin
    if FActiveRadioId = '' then
       begin
@@ -380,7 +380,7 @@ end;
 procedure TRadioManager.ClearAll;
 var
    radioId: string;
-   radio: TNetRadioBase;
+   radio: TFactoryRadioBase;
 begin
    logger.Info('[RadioManager.ClearAll] Clearing all radios');
 
@@ -405,7 +405,7 @@ end;
 function TRadioManager.GetStatusReport: string;
 var
    radioId: string;
-   radio: TNetRadioBase;
+   radio: TFactoryRadioBase;
    sl: TStringList;
 begin
    sl := TStringList.Create;

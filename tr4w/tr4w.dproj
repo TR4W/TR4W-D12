@@ -230,7 +230,7 @@
         <DCCReference Include="src\uExchangeBuilder.pas"/>
         <DCCReference Include="src\uGridLookup.pas"/>
         <DCCReference Include="src\Log4D.pas"/>
-        <DCCReference Include="src\uNetRadioBase.pas"/>
+        <DCCReference Include="src\uFactoryRadioBase.pas"/>
         <DCCReference Include="src\uSerialPort.pas"/>
         <DCCReference Include="src\uRadioFactory.pas"/>
         <DCCReference Include="src\uRadioElecraftK4.pas"/>

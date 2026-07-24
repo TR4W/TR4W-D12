@@ -33,7 +33,7 @@ unit uRadioIcom705;
 interface
 
 uses
-  uRadioIcomBase, uNetRadioBase, uRadioBand, VC, uRadioRegistry;
+  uRadioIcomBase, uFactoryRadioBase, uRadioBand, VC, uRadioRegistry;
 
 type
   TIcom705Radio = class(TIcomRadio)
@@ -97,7 +97,7 @@ end;
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom705');
   RegisterRadio(IC705,
-     function: TNetRadioBase begin Result := TIcom705Radio.Create end,
+     function: TFactoryRadioBase begin Result := TIcom705Radio.Create end,
      'Icom IC-705', [rlSerial, rlNetwork], 50001, True);
 
 end.
