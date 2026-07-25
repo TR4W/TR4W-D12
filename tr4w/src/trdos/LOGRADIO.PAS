@@ -2915,6 +2915,14 @@ begin
          if Self.tFactoryObject <> nil then
             begin
             Self.tFactoryObject.Connect;
+            end
+         else
+            begin
+            // A factory radio has no legacy fallback -- if the factory could not
+            // build it, surface it to the operator and do NOT connect.
+            logger.Error('[%s.SetUpRadioInterface] Factory could not create serial radio "%s" (id) -- not connecting',
+                        [Self.RadioName, uRadioRegistry.DisplayNameId(string(Self.FactoryId))]);
+            QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
             end;
          Self.EventHandlers := EventHandlers;
          Self.tmrCWByCAT := TTimer.Create(nil);
@@ -2960,8 +2968,11 @@ begin
             end
          else
             begin
-            logger.Error('[%s.SetUpRadioInterface] Failed to create %s serial radio',
+            // A factory radio has no legacy fallback -- if the factory could not
+            // build it, surface it to the operator and do NOT connect.
+            logger.Error('[%s.SetUpRadioInterface] Factory could not create serial radio "%s" -- not connecting',
                         [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+            QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
             end;
 
          // Initialize timer and event handlers — must happen for all radio paths
@@ -3137,7 +3148,12 @@ begin
                      [Self.RadioName, Self.IPAddress, Self.RadioTCPPort]);
       end
       else
-         logger.error('[%s.SetUpRadioInterface] Failed to create network radio', [Self.RadioName]);
+         begin
+         // A factory radio has no legacy fallback -- if the factory could not
+         // build it, surface it to the operator and do NOT connect.
+         logger.Error('[%s.SetUpRadioInterface] Factory could not create the network radio -- not connecting', [Self.RadioName]);
+         QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
+         end;
       end;
 
    { Initialize the radio variables }
