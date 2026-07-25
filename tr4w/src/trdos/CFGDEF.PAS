@@ -385,6 +385,7 @@ begin
     Radio1.PollTimeout := 500; // one half second
     Radio1.RadioBaudRate := 4800;
     Radio1.RadioModel := NoInterfacedRadio;
+    Radio1.FactoryId := '';
     Radio1.RadioNumberBits := 8;
     Radio1.tr4w_CATPort := NoPort;
     Radio1.RadioStopBits := 2;
@@ -404,6 +405,7 @@ begin
 
     Radio2.RadioBaudRate := 4800;
     Radio2.RadioModel := NoInterfacedRadio;
+    Radio2.FactoryId := '';
     Radio2.RadioNumberBits := 8;
     Radio2.tr4w_CATPort := NoPort;
     Radio2.RadioStopBits := 2;

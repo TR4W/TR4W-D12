@@ -56,6 +56,19 @@ type
       // HamLib Direct is not an InterfacedRadioType model -- any radio can select
       // it via its UseHamLib flag -- so it has its own constructor.
       class function CreateHamLibDirect(msgCallback: TProcessMsgRef): TFactoryRadioBase;
+      // String-id variants -- for a factory radio with no InterfacedRadioType
+      // member (registered via RegisterRadioById).  Mirror the enum versions.
+      class function CreateRadioNetworkById(const id: string;
+                                             address: string;
+                                             port: integer): TFactoryRadioBase;
+      class function CreateRadioSerialById(const id: string;
+                                            serialPort: PortType;
+                                            baudRate: DWORD;
+                                            dataBits: Byte;
+                                            stopBits: Byte;
+                                            parity: Byte;
+                                            rts: Boolean = False;
+                                            dtr: Boolean = False): TFactoryRadioBase;
       class function GetSupportedModels: string;
 
       // Network metadata (Issue #1028) -- default TCP/UDP port, "is this a network
@@ -146,6 +159,58 @@ begin
    Result.serialDtr := dtr;
    Result.radioModel := uRadioRegistry.DisplayName(model);
    logger.Info('[RadioFactory] Created %s (serial): Port=%d, Baud=%d, %dN%d',
+               [Result.radioModel, Ord(serialPort), baudRate, dataBits, stopBits]);
+end;
+
+class function TRadioFactory.CreateRadioNetworkById(const id: string;
+                                                     address: string;
+                                                     port: integer): TFactoryRadioBase;
+begin
+   Result := nil;
+   if not (uRadioRegistry.IsRegisteredId(id) and uRadioRegistry.SupportsNetworkId(id)) then
+      begin
+      Exit;
+      end;
+   Result := uRadioRegistry.CreateInstanceId(id);
+   if Result = nil then
+      begin
+      Exit;
+      end;
+   Result.radioAddress := address;
+   Result.radioPort := port;
+   Result.radioModel := uRadioRegistry.DisplayNameId(id);
+   logger.Info('[RadioFactory] Created %s (network id): Address=%s, Port=%d',
+               [Result.radioModel, address, port]);
+end;
+
+class function TRadioFactory.CreateRadioSerialById(const id: string;
+                                                    serialPort: PortType;
+                                                    baudRate: DWORD;
+                                                    dataBits: Byte;
+                                                    stopBits: Byte;
+                                                    parity: Byte;
+                                                    rts: Boolean;
+                                                    dtr: Boolean): TFactoryRadioBase;
+begin
+   Result := nil;
+   if not (uRadioRegistry.IsRegisteredId(id) and uRadioRegistry.SupportsSerialId(id)) then
+      begin
+      Exit;
+      end;
+   Result := uRadioRegistry.CreateInstanceId(id);
+   if Result = nil then
+      begin
+      Exit;
+      end;
+   Result.serialPort := serialPort;
+   Result.serialBaudRate := baudRate;
+   Result.serialDataBits := dataBits;
+   Result.serialStopBits := stopBits;
+   Result.serialParity := parity;
+   Result.serialRts := rts;
+   Result.serialDtr := dtr;
+   Result.radioModel := uRadioRegistry.DisplayNameId(id);
+   logger.Info('[RadioFactory] Created %s (serial id): Port=%d, Baud=%d, %dN%d',
                [Result.radioModel, Ord(serialPort), baudRate, dataBits, stopBits]);
 end;
 
