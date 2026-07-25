@@ -267,6 +267,7 @@
         <DCCReference Include="src\uRadioRegistry.pas"/>
         <DCCReference Include="src\uRadioKenwoodSerial.pas"/>
         <DCCReference Include="src\uRadioKenwoodTS570.pas"/>
+        <DCCReference Include="src\uRadioKenwoodModels.pas"/>
         <DCCReference Include="src\uIcomCIV.pas"/>
         <DCCReference Include="src\uAbout.pas"/>
         <DCCReference Include="src\uHardWare.pas"/>
