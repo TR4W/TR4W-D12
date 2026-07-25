@@ -132,6 +132,8 @@ uses
   uSerialPort in 'src\uSerialPort.pas',
   uRadioFactory in 'src\uRadioFactory.pas',
   uRadioElecraftK4 in 'src\uRadioElecraftK4.pas',
+  uRadioElecraftSerial in 'src\uRadioElecraftSerial.pas',
+  uRadioElecraftK3 in 'src\uRadioElecraftK3.pas',
   uRadioKenwoodTS890 in 'src\uRadioKenwoodTS890.pas',
   uIcomNetworkTypes in 'src\uIcomNetworkTypes.pas',
   uIcomNetworkTransport in 'src\uIcomNetworkTransport.pas',
