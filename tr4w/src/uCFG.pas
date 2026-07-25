@@ -885,6 +885,13 @@ const
     {*)}
       );
 function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString): boolean;
+// True when Command names a single-valued (overwrite) config command, i.e. one
+// for which a duplicate line is a misconfiguration.  Accumulating commands
+// (frequency lists, band lists, ADD DOMESTIC COUNTRY, indexed arrays) legitimately
+// repeat and return False, as do pattern-matched commands not in CFGCA
+// (COLUMN WIDTH, "* WINDOW *", messages) and unknown commands.  Used by the config
+// loader to flag hand-edited duplicate keys.  See uCFG implementation for details.
+function CommandIsSingleValued(Command: PAnsiChar): boolean;
 function ProcessMessage(ID, CMD: ShortString): boolean;
 procedure ProcessReminder(ID, CMD: ShortString);
 procedure ProcessTotalScoreMessage(ID, CMD: ShortString);
@@ -901,6 +908,34 @@ var
    TempFreq: integer;
 
    Result1: integer;
+
+// See the interface declaration for the contract.  "Single-valued" means the
+// command overwrites a scalar target, so a second line for the same key is a
+// misconfiguration -- the line-based loader applies every occurrence (last wins)
+// while the Win32 profile API used by the config dialog reads/writes the first
+// (first wins), so the two silently disagree.  The gate is conservative: a
+// command qualifies only when it is ckNormal, is not a frequency-list type, and
+// carries no additional accumulate proc (crA = 0).  Every accumulating command
+// (ctFreqList, ckList/ckArray, ADD DOMESTIC COUNTRY, ...) fails at least one of
+// those and is correctly treated as repeatable.  A command not found in CFGCA
+// (pattern-matched or unknown) returns False.
+function CommandIsSingleValued(Command: PAnsiChar): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   Command[Ord(Command[0]) + 1] := #0;   // null-terminate the key for StrComp (as CheckCommand does)
+   for i := 1 to CommandsArraySize do
+      begin
+      if System.AnsiStrings.StrComp(@Command[1], CFGCA[i].crCommand) = 0 then
+         begin
+         Result := (CFGCA[i].crKind = ckNormal) and
+                   (CFGCA[i].crType <> ctFreqList) and
+                   (CFGCA[i].crA = 0);
+         Exit;
+         end;
+      end;
+end;
 
 function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString): boolean;
 label
