@@ -64,6 +64,32 @@ Type TRadioVFO = class(TObject)
      // Notch: integer;
 end;
 
+// Radio capabilities -- what a rig can do, OWNED BY THE RADIO OBJECT.  This is the
+// factory replacement for the global IcomRadiosThatSupport* enum-keyed sets in
+// LOGRADIO: each radio class declares its own set in its constructor, and callers
+// ask the object (radio.Supports(rcReadVFOB), radio.SupportsCWByCAT) rather than a
+// global table -- which is also what makes it work for non-enum string-id radios.
+// Boolean traits live in a set (compact, enumerable -> a HamLib `rigctl -u`-style
+// capability dump falls right out, see CapabilitiesAsText); ranged traits (CW speed)
+// are discrete fields.  Extend TRadioCapability as new traits are modelled.
+Type
+   TRadioCapability = (
+      rcReadVFOB,      // can read the UNSELECTED VFO's freq+mode (Icom $25/$26, Kenwood FR-flip)
+      rcReadRIT,       // can read RIT/XIT state+offset back (else set-only / not reported)
+      rcReadSplit,     // reports split back ($0F read/push) vs set-only
+      rcReadTXStatus,  // can read TX/RX (PTT) state back over CAT
+      rcDataMode,      // has a data sub-mode (Icom $1A06 USB-D); NOT plain RTTY, which is a mode byte
+      rcCWByCAT        // can key CW over CAT -- DECLARATION ONLY; keying stays on the legacy path
+                       //   / future CW Keyer Factory (see [[cw-keyer-factory-direction]])
+   );
+   TRadioCapabilitySet = set of TRadioCapability;
+
+   TRadioCapabilities = record
+      Flags: TRadioCapabilitySet;  // boolean traits
+      CWSpeedMin: integer;         // CW keyer wpm range (ranged traits a set can't hold; default 6..48)
+      CWSpeedMax: integer;
+   end;
+
 Type TSimpleEventProc = procedure(const aStrParam:string) of object;
 Type PBoolean = ^Boolean;  // Pointer to Boolean type
 Type TReadingThread = class(TThread)
@@ -156,6 +182,7 @@ Type TFactoryRadioBase = class(TObject)
       socket: TIdTCPClient;
       serialPortObj: TSerialPort;
       localCWSpeed: integer;
+      FCapabilities: TRadioCapabilities;   // what this rig can do (see TRadioCapabilities); set in the subclass ctor
       RITState: boolean;
       XITState: boolean;
       vfo: array[Low(TVFO)..High(TVFO)] of TRadioVFO;
@@ -201,6 +228,12 @@ Type TFactoryRadioBase = class(TObject)
       pollingInterval: Integer;        // Milliseconds between polls (default 100)
       bAddTermination: Boolean;        // True (default): SendToRadio appends CR/LF (WriteLn). Kenwood TS-890 LAN sets this False -- its CAT parser rejects a trailing CR/LF; the K4 tolerates/ignores it, so it stays True.
       SerialProtocolIsBinary: Boolean; // False (default): serial CAT is ASCII text -> WriteString/ReadString. True (Icom CI-V, set in TIcomRadio): the frame is raw bytes (Ord 0..255 per Char, incl. >= $80 like FE/88/FD) -> byte-exact WriteBytes/ReadBytes, so D12's UTF-16/ASCII encoding can't corrupt them.
+
+      // ---- Capabilities: ask the radio what it can do (see TRadioCapabilities). ----
+      property Capabilities: TRadioCapabilities read FCapabilities;
+      function Supports(cap: TRadioCapability): Boolean;   // = cap in FCapabilities.Flags
+      function SupportsCWByCAT: Boolean;                    // named facade (the user-facing example)
+      function CapabilitiesAsText: string;                 // HamLib `rigctl -u`-style dump for the log
 
       constructor Create(ProcRef: TProcessMsgRef); overload;
       constructor Create(address: string; port: integer;ProcRef: TProcessMsgRef); overload;
@@ -1055,6 +1088,45 @@ end;
 function TFactoryRadioBase.GetSplitEnabled: boolean;
 begin
    Result := Self.localSplitEnabled;
+end;
+
+// ---- Capabilities: callers ask the object what it can do (see TRadioCapabilities). ----
+function TFactoryRadioBase.Supports(cap: TRadioCapability): Boolean;
+begin
+   Result := cap in FCapabilities.Flags;
+end;
+
+function TFactoryRadioBase.SupportsCWByCAT: Boolean;
+begin
+   Result := rcCWByCAT in FCapabilities.Flags;
+end;
+
+// HamLib `rigctl -m <model> -u`-style one-line dump of what this rig can do.
+function TFactoryRadioBase.CapabilitiesAsText: string;
+const
+   CapabilityNames: array[TRadioCapability] of string =
+      ('ReadVFOB', 'ReadRIT', 'ReadSplit', 'ReadTXStatus', 'DataMode', 'CWByCAT');
+var
+   c: TRadioCapability;
+begin
+   Result := '';
+   for c := Low(TRadioCapability) to High(TRadioCapability) do
+      begin
+      if c in FCapabilities.Flags then
+         begin
+         if Result <> '' then
+            begin
+            Result := Result + ', ';
+            end;
+         Result := Result + CapabilityNames[c];
+         end;
+      end;
+   if Result = '' then
+      begin
+      Result := '(none)';
+      end;
+   Result := Format('%s [CW %d-%d wpm]',
+                    [Result, FCapabilities.CWSpeedMin, FCapabilities.CWSpeedMax]);
 end;
 
 // ---- Per-radio state setters: one place owns where each flag is stored. ----
