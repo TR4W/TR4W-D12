@@ -146,7 +146,10 @@ type
     function GetCanRecycleOnStuckHandshake: boolean; override; // True for network -- fresh AYH is the recovery
     function GetAuthFailed: boolean; override;
     function IsNetworkConnection: boolean;
-    function SupportsDataMode: Boolean; virtual;  // Override to True on radios that support $1A $06
+    function SupportsDataMode: Boolean; virtual;  // now = rcDataMode in FCapabilities.Flags
+    // Declare this radio's capability set. Base = modern-Icom default; older/minimal
+    // radios override to declare fewer. Called from TIcomRadio.Create (virtual dispatch).
+    procedure DefineCapabilities; virtual;
 
   public
     constructor Create; reintroduce;
@@ -406,15 +409,33 @@ begin
   FActiveVFOInverted        := False;  // Override True for IC-9700 ($00=$B active, $01=$A active)
   FPollPhase := 0;
   FTransceiveMenuBytes := #$01 + #$50;  // Default: IC-7610/IC-7760 menu item; IC-9700 overrides to $01 $28
-  FSupportsExtendedVFOBCommands := True;  // All modern Icoms support $25 $01 <freq> for direct VFO B freq set
   FSupportsActiveVFOQuery := False;       // Overridden True by radios that support $07 $D2 (e.g. IC-7760)
   FActiveVFO := nrVFOA;                  // Safe default; updated by $07 $D2 response on connect
   FModeSetIncludesFilter := True;        // Modern Icoms take $06 <mode> <filter>; IC-718 overrides to False
-  FCWSpeedMin := 6;                      // CW keyer 6..48 wpm (modern Icoms); IC-718 overrides max to 60
-  FCWSpeedMax := 48;
-  FSplitStateReadable := True;           // Modern Icoms report split back; IC-718 overrides to False (set-only)
+
+  // Capabilities: each radio declares its own set in DefineCapabilities (virtual,
+  // so it dispatches to the actual subclass even from this base ctor).  The
+  // hot-path CI-V fields below are a CACHE derived from it -- FCapabilities is the
+  // single source of truth (the factory replacement for LOGRADIO's global
+  // IcomRadiosThatSupport* typesets).
+  DefineCapabilities;
+  FSupportsExtendedVFOBCommands := rcReadVFOB in FCapabilities.Flags;
+  FSplitStateReadable          := rcReadSplit in FCapabilities.Flags;
+  FCWSpeedMin                  := FCapabilities.CWSpeedMin;
+  FCWSpeedMax                  := FCapabilities.CWSpeedMax;
 
   radioModel := 'Icom';  // Will be overridden by derived classes
+end;
+
+// Modern-Icom default capabilities.  Older/minimal radios (IC-718, the legacy CI-V
+// rigs) override this to declare a smaller set.  Mirrors the legacy sets: the modern
+// 13 support VFO-B read ($25/$26), RIT read ($21), split read, TX-status read, and
+// data mode ($1A06); older radios do not.
+procedure TIcomRadio.DefineCapabilities;
+begin
+  FCapabilities.Flags := [rcReadVFOB, rcReadRIT, rcReadSplit, rcReadTXStatus, rcDataMode];
+  FCapabilities.CWSpeedMin := 6;
+  FCapabilities.CWSpeedMax := 48;
 end;
 
 destructor TIcomRadio.Destroy;
@@ -444,8 +465,9 @@ end;
 
 function TIcomRadio.SupportsDataMode: Boolean;
 begin
-  Result := True;  // Most Icom radios made in last ~12 years support $1A $06 data mode
-                   // Override to False in derived class for older radios that do not
+  // Now derived from the capability set (declared per radio in DefineCapabilities);
+  // no subclass override needed -- a radio without $1A06 simply omits rcDataMode.
+  Result := rcDataMode in FCapabilities.Flags;
 end;
 
 function TIcomRadio.IsNetworkConnection: boolean;

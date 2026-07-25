@@ -42,7 +42,7 @@ uses
 type
   TIcom718Radio = class(TIcomRadio)
   protected
-    function SupportsDataMode: Boolean; override;
+    procedure DefineCapabilities; override;
     // The 718 has no $25/$26 extended-VFO commands (the base sends them from the
     // first-message init query + $00/$04 handlers). Override the VFO queries to
     // speak the 718's dialect: read the ACTIVE VFO's freq via $03, and no-op the
@@ -68,30 +68,24 @@ begin
   inherited Create;
   RadioAddress := $5E;                    // IC-718 default CI-V address
   radioModel := 'Icom IC-718';
-  // No $07 $D2 active-VFO query -- route the $00 transceive frequency push
-  // straight to the active VFO (same as the IC-7100/IC-9700).
+  // ---- CI-V mechanics (the "how"; capabilities are declared in DefineCapabilities) ----
+  // No $07 $D2 active-VFO query -- route the $00 transceive frequency push straight
+  // to the active VFO (same as the IC-7100/IC-9700).
   FDirectFreqRoute := True;
-  // No $25/$26 extended VFO commands -- disable them so the base does not fire
-  // $25/$26 VFO-B queries (which the 718 NAKs) off its mode responses.
-  FSupportsExtendedVFOBCommands := False;
   // Set-mode ($06) takes the mode byte only; a trailing filter byte -> NAK.
   FModeSetIncludesFilter := False;
-  // CW keyer speed range is 6..60 wpm (the modern default of 6..48 is too fast).
-  FCWSpeedMax := 60;
-  // Split is SET-ONLY on the 718 ($0F read NAKs, no $0F transceive push), so the
-  // radio never reports split back. Track the commanded state locally in Split()
-  // -- otherwise CurrentStatus.Split never flips and the "You are in SPLIT MODE"
-  // warning never appears.
-  FSplitStateReadable := False;
   logger.Info('[TIcom718Radio.Create] Created IC-718 instance with CI-V address $5E');
 end;
 
-function TIcom718Radio.SupportsDataMode: Boolean;
+procedure TIcom718Radio.DefineCapabilities;
 begin
-  // The IC-718 has no $1A 06 data-mode command -- it NAKs it. Returning False
-  // disables every data-mode send AND parse in the base (the $1A06 send in
-  // SetMode and the $04 handler, and the $1A06 parse, are all gated on this).
-  Result := False;
+  // Minimal Icom: no VFO-B read ($25/$26 NAK), no RIT read ($21 NAK), split
+  // SET-ONLY ($0F read NAKs -> tracked locally so the "SPLIT MODE" warning still
+  // fires), no TX-status read ($1C NAK), and no data mode ($1A06 NAK; RTTY is a
+  // mode byte).  CW keyer is 6..60 wpm (not the modern 6..48).
+  FCapabilities.Flags := [];
+  FCapabilities.CWSpeedMin := 6;
+  FCapabilities.CWSpeedMax := 60;
 end;
 
 procedure TIcom718Radio.PollRadioState;
