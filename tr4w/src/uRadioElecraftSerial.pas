@@ -508,15 +508,20 @@ begin
       Exit;
       end;
 
-   Self.localRITOffset := (ritOffset * ritMultiplier);
-   Self.localXITOffset := (Self.localRITOffset); // shared register on Elecraft
+   // Base setter writes the per-VFO RITOffset the window reads, not just the scalar.
+   Self.SetRITOffset(ritOffset * ritMultiplier);
+   Self.SetXITOffset(Self.localRITOffset); // shared register on Elecraft
    logger.trace('[ParseIFCommand] RITOffset = %d',[Self.localRITOffset]);
 
    Delete(s,1,4);                      // rx*00tmvspbd1*;
-   Self.RITState := AnsiLeftStr(s,1) = '1';
+   // Use the base setter so the per-VFO RITState the radio window reads is
+   // updated, not just the legacy scalar.  On a serial Elecraft (AI0 + poll)
+   // this IF poll is the ONLY ongoing RIT/XIT source -- writing just the scalar
+   // left the window indicator stuck off.
+   Self.SetRITOn(AnsiLeftStr(s,1) = '1');
 
    Delete(s,1,1);                      // x*00tmvspbd1*;
-   Self.XITState := AnsiLeftStr(s,1) = '1';
+   Self.SetXITOn(AnsiLeftStr(s,1) = '1');
 
    Delete(s,1,1);
    Delete(s,1,1); // Skip space        // *00tmvspbd1*;
@@ -732,12 +737,12 @@ begin
             end;
          end;
       11:begin                                     // RT
-         vfo.RITState := AnsiLeftStr(sData,1) = '1';
+         Self.SetRITOn(AnsiLeftStr(sData,1) = '1');   // per-radio; write every VFO copy the window reads
          end;
       12:Self.radioState := rsReceive;             // RX
       13:Self.radioState := rsTransmit;            // TX
       14:begin                                     // XT
-         vfo.XITState := AnsiLeftStr(sData,1) = '1';
+         Self.SetXITOn(AnsiLeftStr(sData,1) = '1');   // per-radio; write every VFO copy the window reads
          end;
       15:begin                                     // RO
          RITSign := IfThen(AnsiLeftStr(sData,1) = '-',-1,1);
@@ -750,8 +755,8 @@ begin
          else
             begin
             ritHz := ritHz * ritSign;
-            vfo.RITOffset := ritHz;
-            vfo.XITOffset := ritHz;
+            Self.SetRITOffset(ritHz);   // per-radio; write every VFO copy the window reads
+            Self.SetXITOffset(ritHz);
             end;
          end;
       16:begin                                     // FP
