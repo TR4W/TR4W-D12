@@ -91,8 +91,28 @@ uses
   MainUnit,
   uRadioPolling;
 
+type
+  // One single-valued tr4w.ini key already applied this load pass, plus the raw
+  // source-line number of its first occurrence (see gRawLineNumber).
+  TSeenINICmd = record
+    Name: string;
+    Line: integer;
+  end;
+
 var
   logger: TLogLogger;
+
+  // Single-valued tr4w.ini keys already applied in the current load pass, used to
+  // flag hand-edited duplicates (see EnmuCFGFile).  Managed array -> reset with
+  // SetLength(...,0) in ReadInConfigFile; no create/free needed.
+  gSeenINICmds: array of TSeenINICmd;
+
+  // Raw source-line counter for the current load pass: incremented once per
+  // NON-EMPTY line the enumerator yields (comments and section headers included;
+  // EnumerateLinesInFile drops blank lines before the callback).  Equals the
+  // physical file line number except where blank lines precede -- close enough to
+  // locate a hand-edited duplicate, and it needs no change to the shared enumerator.
+  gRawLineNumber: integer;
 
 { Callback for the ctPassword fixup second pass (see ReadInConfigFile).
   Called by EnumerateLinesInFile with UpperCase=False so CMD retains original
@@ -523,7 +543,10 @@ procedure ReadInConfigFile(ConfigFileName: TCFGType);
 begin
   if ConfigFileName = cfgCFG then ClearDomesticCountryList;
   LineNumberInConfigFile := 0;
+  gRawLineNumber := 0;
   CurrentConfigFile := ConfigFileName;
+  // Reset the duplicate-key tracker per load; only tr4w.ini is checked (see EnmuCFGFile).
+  if ConfigFileName = cfgINI then SetLength(gSeenINICmds, 0);
   // Issue #965 -- reset per file so TWO RADIO MODE "wins" only within a single
   // file; a later-loaded contest .cfg can still override the mode set by the ini.
   TwoRadioModeWasSet := False;
@@ -739,7 +762,13 @@ procedure EnmuCFGFile(FileString: PShortString);
 var
   ID                                    : ShortString;
   CMD                                   : ShortString;
+  k                                     : integer;
+  firstLine                             : integer;
  begin
+
+  // Count every non-empty source line the enumerator yields (comments and section
+  // headers included) so a duplicate can be reported at ~its physical file line.
+  inc(gRawLineNumber);
 
   // Lines whose FIRST character (column 1, before any spaces are stripped) is a
   // comment/section marker are ignored:  ;  and  #  are comments,  [  is a
@@ -794,6 +823,39 @@ var
        Format(wsprintfBuffer, TC_INVALIDSTATEMENTINCONFIGFILE, CFGFilesArray[CurrentConfigFile], LineNumberInConfigFile, @FileString^[1]);
        showwarning(wsprintfBuffer);
 //    halt;
+       end;
+  end
+  else
+  begin
+    // Flag a hand-edited duplicate single-valued key in tr4w.ini.  The line-based
+    // loader applies every occurrence (last wins) while the Win32 profile API used
+    // by the config dialog reads/writes the first (first wins) -- so a duplicate
+    // silently reverts on restart.  Only tr4w.ini scalars qualify; accumulating
+    // commands (freq/band lists, ADD DOMESTIC COUNTRY) legitimately repeat.
+    if (CurrentConfigFile = cfgINI) and CommandIsSingleValued(@ID) then
+       begin
+       firstLine := -1;
+       for k := 0 to High(gSeenINICmds) do
+          begin
+          if gSeenINICmds[k].Name = string(ID) then
+             begin
+             firstLine := gSeenINICmds[k].Line;
+             Break;
+             end;
+          end;
+       if firstLine >= 0 then
+          begin
+          logger.Warn('[Config] Duplicate key "%s" in tr4w.ini: first at line %d, ' +
+             'repeated at line %d -- startup uses the last occurrence, the config ' +
+             'dialog uses the first; remove one.',
+             [ID, firstLine, gRawLineNumber]);
+          end
+       else
+          begin
+          SetLength(gSeenINICmds, Length(gSeenINICmds) + 1);
+          gSeenINICmds[High(gSeenINICmds)].Name := string(ID);
+          gSeenINICmds[High(gSeenINICmds)].Line := gRawLineNumber;
+          end;
        end;
   end;
 end;
