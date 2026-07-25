@@ -241,6 +241,7 @@ type
       PollStatus:      PollingStatusType;
       PollTime:        cardinal {TimeRecord};
       RadioModel:      InterfacedRadioType;
+      FactoryId:       Str50;   // non-empty => a string-id factory radio (RadioModel is NoInterfacedRadio)
       RadioBaudRate:   cardinal;
       RadioNumberBits: integer;
       RadioStopBits:   integer;
@@ -2895,7 +2896,46 @@ begin
    else if tCATPortType in [Serial1..Serial20] then
       begin
       // Check if we should use modern radio class (e.g., K4, Icom) or legacy serial code
-      if uRadioRegistry.IsRegistered(Self.RadioModel) and
+      // A string-id factory radio (no InterfacedRadioType member) takes precedence.
+      if (Self.FactoryId <> '') and uRadioRegistry.IsRegisteredId(string(Self.FactoryId)) and
+         uRadioRegistry.SupportsSerialId(string(Self.FactoryId)) then
+         begin
+         logger.Info('[%s.SetUpRadioInterface] Setting up %s serial via factory id: Port=%d, Baud=%d',
+                     [Self.RadioName, uRadioRegistry.DisplayNameId(string(Self.FactoryId)), Ord(tCATPortType), RadioBaudRate]);
+         Self.tFactoryObject := TRadioFactory.CreateRadioSerialById(
+            string(Self.FactoryId),
+            tCATPortType,
+            RadioBaudRate,
+            RadioNumberBits,
+            RadioStopBits,
+            Ord(RadioParity),
+            tr4w_cat_rts_state = RtsDtr_ON,
+            tr4w_cat_dtr_state = RtsDtr_ON
+         );
+         if Self.tFactoryObject <> nil then
+            begin
+            Self.tFactoryObject.Connect;
+            end;
+         Self.EventHandlers := EventHandlers;
+         Self.tmrCWByCAT := TTimer.Create(nil);
+         Self.tmrCWByCAT.Enabled := false;
+         Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
+         with FilteredStatus do
+            begin
+            Band := NoBand;
+            Mode := NoMode;
+            Freq := 0;
+            end;
+         if length(Self.StartupCommand) > 0 then
+            begin
+            if Self.tFactoryObject <> nil then
+               begin
+               Self.tFactoryObject.SendToRadio(Self.StartupCommand);
+               end;
+            end;
+         Exit;
+         end
+      else if uRadioRegistry.IsRegistered(Self.RadioModel) and
          uRadioRegistry.SupportsSerial(Self.RadioModel) then
          begin
          // Registered serial-capable radio -> build it through the factory.
@@ -3031,8 +3071,19 @@ begin
       logger.Info('[%s.SetUpRadioInterface] Setting up non-HamLib network radio: IP=%s, Port=%d',
                   [Self.RadioName, Self.IPAddress, Self.RadioTCPPort]);
 
-      // Build the radio through the factory if it is registered network-capable.
-      if uRadioRegistry.IsRegistered(Self.RadioModel) and
+      // Build the radio through the factory.  A string-id factory radio (no
+      // InterfacedRadioType member) takes precedence over the enum gate.
+      if (Self.FactoryId <> '') and uRadioRegistry.IsRegisteredId(string(Self.FactoryId)) and
+         uRadioRegistry.SupportsNetworkId(string(Self.FactoryId)) then
+         begin
+         Self.tFactoryObject := TRadioFactory.CreateRadioNetworkById(
+            string(Self.FactoryId),
+            Self.IPAddress,
+            Self.RadioTCPPort
+         );
+         logger.Info('[%s] Using %s network protocol (id)', [Self.RadioName, uRadioRegistry.DisplayNameId(string(Self.FactoryId))]);
+         end
+      else if uRadioRegistry.IsRegistered(Self.RadioModel) and
          uRadioRegistry.SupportsNetwork(Self.RadioModel) then
          begin
          Self.tFactoryObject := TRadioFactory.CreateRadioNetwork(
