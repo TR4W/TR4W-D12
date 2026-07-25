@@ -212,6 +212,8 @@ Type TFactoryRadioBase = class(TObject)
       // reflect on/off state into the field the matching display getter reads.
       procedure SetRITOn(value: boolean);
       procedure SetXITOn(value: boolean);
+      procedure SetRITOffset(value: integer);    // Hz; mirrors on/off setters (scalar + every VFO copy)
+      procedure SetXITOffset(value: integer);
       procedure SetSplitOn(value: boolean);
       procedure SetTransmitting(value: boolean);
       function ModeToString(mode: TRadioMode): string;
@@ -1079,6 +1081,31 @@ begin
    for v := Low(TVFO) to High(TVFO) do
       begin
       Self.vfo[v].XITState := value;
+      end;
+end;
+
+// RIT/XIT offset (Hz) -- same ownership rule as the on/off setters: write the
+// legacy scalar plus every VFO copy the per-VFO display getter (GetRITOffset,
+// read by the poll loop into CurrentStatus.RITFreq) returns.
+procedure TFactoryRadioBase.SetRITOffset(value: integer);
+var
+   v: TVFO;
+begin
+   Self.localRITOffset := value;   // legacy scalar, kept in sync
+   for v := Low(TVFO) to High(TVFO) do
+      begin
+      Self.vfo[v].RITOffset := value;
+      end;
+end;
+
+procedure TFactoryRadioBase.SetXITOffset(value: integer);
+var
+   v: TVFO;
+begin
+   Self.localXITOffset := value;
+   for v := Low(TVFO) to High(TVFO) do
+      begin
+      Self.vfo[v].XITOffset := value;
       end;
 end;
 
