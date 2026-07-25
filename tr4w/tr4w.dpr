@@ -167,6 +167,7 @@ uses
   uRadioRegistry in 'src\uRadioRegistry.pas',
   uRadioKenwoodSerial in 'src\uRadioKenwoodSerial.pas',
   uRadioKenwoodTS570 in 'src\uRadioKenwoodTS570.pas',
+  uRadioKenwoodModels in 'src\uRadioKenwoodModels.pas',
   uIcomCIV in 'src\uIcomCIV.pas',
   // uRadioManager uses Generics.Collections (Delphi 2009+) - not Delphi 7 IDE compatible
   //uRadioManager in 'src\uRadioManager.pas',
