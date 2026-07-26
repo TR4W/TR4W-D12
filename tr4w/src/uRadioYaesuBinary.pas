@@ -43,10 +43,11 @@ unit uRadioYaesuBinary;
 
   WRITE: set-freq is packed BCD of (Freq div 10), byte-swapped (SW=1), with
   opcode $0A last.  Set-mode uses opcode $0C with the mode byte at byte[3]
-  (mb=3); VFO B ORs +$80 into the opcode/mode byte.  Split is SET-ONLY here (tracked
-  locally, like the
-  minimal Icoms) -- the legacy split-read came from a separate 6-byte $FA poll,
-  which we skip to keep ONE frame length.
+  (mb=3); VFO B ORs +$80 into the opcode/mode byte.  Split is opcode $01 (T = $01
+  on / $00 off) and IS read back: each poll cycle appends the legacy third request
+  ($00 $00 $00 $01 $FA -> 6 bytes) to the 32-byte status request, so the two replies
+  concatenate into ONE 38-byte fixed frame.  Split therefore reflects front-panel
+  changes too, and is not tracked locally.
 
   RIT/XIT: the READ path is bench-derived and certain (see the const block).  The
   SET path (CLAR, opcode $09) is implemented from the FT-1000MP CAT manual, which
@@ -87,6 +88,22 @@ const
    // The clarifier is reported in the VFO A record ONLY (pos 22,23,26 never moved),
    // which matches the radio having a single shared clarifier -- see
    // rcSharedRITXITOffset on the capability set.
+   // ---- Frame composition ----
+   // Each poll cycle sends TWO requests back to back and the radio answers in the
+   // order asked, so the combined reply is still ONE deterministically-delimited
+   // fixed frame: the 32-byte dual-VFO status block followed by the 6-byte $FA
+   // status block.  This is how D7's pFT1000MP gets split (it polls $FA inside its
+   // repeat loop, every cycle -- there is no separate "startup read"), and polling
+   // it continuously also catches split thrown at the front panel mid-contest.
+   YB_STATUS_LEN      = 32;    // answer to $00 00 00 03 10
+   YB_FA_LEN          = 6;     // answer to $00 00 00 01 FA
+   YB_FRAME_LEN       = YB_STATUS_LEN + YB_FA_LEN;   // 38
+   YB_SPLIT_POS       = YB_STATUS_LEN + 1;   // $FA byte 1
+   YB_SPLIT_BIT       = $01;
+   // $FA byte 2 bit 2 is the ACTIVE VFO.  Decoded but NOT applied -- see ProcessMsg.
+   YB_ACTIVE_VFO_POS  = YB_STATUS_LEN + 2;
+   YB_ACTIVE_VFO_BIT  = $04;
+
    YB_CLAR_OFFSET_POS = 6;     // 2 bytes, SIGNED 16-bit big-endian, * 0.625 Hz
    YB_CLAR_FLAGS_POS  = 10;    // clarifier on/off bits
    YB_CLAR_RX_BIT     = $02;   // RX CLAR = TR4W RIT
@@ -183,7 +200,7 @@ begin
 
    SerialProtocolIsBinary  := True;    // byte-exact 5-byte frames, no codepage decode
    bAddTermination         := False;   // NO CR/LF on binary CAT
-   SerialFixedFrameLength  := 32;      // dual-VFO status block; reading thread hands over 32-byte frames
+   SerialFixedFrameLength  := YB_FRAME_LEN;  // 32-byte status block + 6-byte $FA block, polled together
    requiresPolling         := True;
    pollingInterval         := 150;     // BR4800; give the 32-byte answer time
    honorsFreqPollRate      := False;
@@ -199,10 +216,9 @@ begin
    //                           block (bench-derived 2026-07-26); this beats the D7
    //                           legacy path, which never decoded RIT for the FT1000MP.
    //   rcSharedRITXITOffset -- one clarifier register feeds both RIT and XIT.
-   //   NOT rcReadSplit      -- split is SET-ONLY here.  The legacy path read it from
-   //                           a third 6-byte $FA poll, which we skip to keep a single
-   //                           fixed frame length; declaring it would be a lie.
-   FCapabilities.Flags := [rcReadRIT, rcSharedRITXITOffset];
+   //   rcReadSplit          -- split IS read back, from the 6-byte $FA block appended
+   //                           to each poll frame (as D7's pFT1000MP does).
+   FCapabilities.Flags := [rcReadRIT, rcReadSplit, rcSharedRITXITOffset];
    FCapabilities.CWSpeedMin := 4;
    FCapabilities.CWSpeedMax := 60;
 end;
@@ -221,9 +237,11 @@ end;
 
 procedure TYaesuBinary.PollRadioState;
 begin
-   // Dual-VFO status: $00 $00 $00 $03 $10 -> 32-byte block (both VFOs).  Also the
-   // keep-alive that drives serial power-cycle recovery.
-   Self.SendBytes($00, $00, $00, $03, $10);
+   // Two requests per cycle, ALWAYS in this order -- the radio answers in order, so
+   // the replies concatenate into one YB_FRAME_LEN frame the fixed-frame reader can
+   // delimit.  Also the keep-alive that drives serial power-cycle recovery.
+   Self.SendBytes($00, $00, $00, $03, $10);   // -> 32-byte dual-VFO status block
+   Self.SendBytes($00, $00, $00, $01, $FA);   // -> 6-byte status flags (split)
 end;
 
 // 4-byte big-endian binary frequency at 1-based position pos1, * 0.625.
@@ -315,9 +333,9 @@ var
    clarHz: integer;
 begin
    UpdateLastValidResponse;   // any frame proves the radio is answering
-   if Length(msg) < 32 then
+   if Length(msg) < YB_FRAME_LEN then
       begin
-      logger.Warn('[ProcessMsg] short frame (%d bytes)',[Length(msg)]);
+      logger.Warn('[ProcessMsg] short frame (%d bytes, expected %d)',[Length(msg), YB_FRAME_LEN]);
       Exit;
       end;
    // VFO A: freq bytes 2-5, mode byte 8.
@@ -340,6 +358,17 @@ begin
    Self.SetXITOn((clarFlags and YB_CLAR_TX_BIT) <> 0);
    Self.SetRITOffset(clarHz);
    Self.SetXITOffset(clarHz);
+   // Split, from the appended $FA block (D7 pFT1000MP reads the same bit).
+   Self.SetSplitOn((Ord(msg[YB_SPLIT_POS]) and YB_SPLIT_BIT) <> 0);
+   // The active VFO lives in the next byte (bit 2), but it is NOT applied here.
+   // D7 decodes it as ActiveVFOStatusType((b and $04) + 1), which yields 1 or *5* --
+   // and ActiveVFOStatusType only runs 0..3 (vfoUnknown,VFOA,VFOB,vfoMem), so the
+   // VFO-B case has always produced an out-of-range value there (it then indexes
+   // VFPLETTERARRAY[5] out of bounds).  The intent is clear but the code path was
+   // never correct, so the bit's polarity is UNVERIFIED.  Applying it would change
+   // a display that currently works; enable it only after a bench check that
+   // switching VFO A/B moves this bit as expected.  Correct form would be
+   // ((b and $04) shr 2) -> 0 = A, 1 = B.
    Self.SetActiveVFO(nrVFOA);
 end;
 
@@ -491,8 +520,9 @@ end;
 
 procedure TYaesuBinary.Split(splitOn: boolean);
 begin
-   // Split is SET-ONLY (no readback in this poll).  Track locally so the window
-   // reflects the commanded state (like the minimal Icoms / IC-718).
+   // Split IS read back now (rcReadSplit), so the poll is the single source of truth
+   // and we do NOT set it locally -- same rule as RIT/XIT here and in the Kenwood
+   // serial driver.  Manual: opcode $01, T = $01 on / $00 off.
    if splitOn then
       begin
       Self.SendBytes($00, $00, $00, $01, $01);
@@ -501,7 +531,6 @@ begin
       begin
       Self.SendBytes($00, $00, $00, $00, $01);
       end;
-   Self.SetSplitOn(splitOn);
 end;
 
 // Exact offset set.  C4 repeats the state we currently believe is active so the
