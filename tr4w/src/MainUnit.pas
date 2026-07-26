@@ -2479,7 +2479,17 @@ var
 begin
   begin
 
-    if InSplit then
+    // "-" is a TOGGLE, but InSplit only records split that TR4W ITSELF set -- it is
+    // assigned nowhere except in this routine.  When the RADIO is already in split
+    // (set at the front panel, or still in split when the program starts), InSplit
+    // is False while the radio window's split indicator and the TC_SPLIT_WARN banner
+    // are both on, because those are driven from rig.CurrentStatus.Split
+    // (uRadioPolling DisplayCurrentStatus).  "-" then fell through to the "enter a
+    // transmit frequency" branch and the operator had to press it twice to get out.
+    // Consult the radio's state as well: CurrentStatus.Split is read back on radios
+    // that report split and mirrors the commanded state on those that don't, so this
+    // is a superset of InSplit and cannot regress a radio that worked before.
+    if InSplit or ActiveRadioPtr.CurrentStatus.Split then
     begin
       PutRadioOutOfSplit(ActiveRadio); // n4af 4.47.5
       PutRadioOutOfSplit(InActiveRadio);
