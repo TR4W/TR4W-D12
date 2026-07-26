@@ -79,8 +79,16 @@ Type
       rcReadSplit,     // reports split back ($0F read/push) vs set-only
       rcReadTXStatus,  // can read TX/RX (PTT) state back over CAT
       rcDataMode,      // has a data sub-mode (Icom $1A06 USB-D); NOT plain RTTY, which is a mode byte
-      rcCWByCAT        // can key CW over CAT -- DECLARATION ONLY; keying stays on the legacy path
+      rcCWByCAT,       // can key CW over CAT -- DECLARATION ONLY; keying stays on the legacy path
                        //   / future CW Keyer Factory (see [[cw-keyer-factory-direction]])
+      rcSharedRITXITOffset
+                       // ONE offset register shared by RIT and XIT (Yaesu FT-1000MP
+                       // "clarifier", Elecraft K4): the two on/off states are still
+                       // independent, but there is a single offset value -- setting
+                       // RIT's offset moves XIT's too.  Radios WITHOUT this flag have
+                       // independent offsets (the common case, e.g. Icom $21).
+                       // Phrased positively because a set can only express presence:
+                       // absent = independent, which is the safe default.
    );
    TRadioCapabilitySet = set of TRadioCapability;
 
@@ -107,6 +115,7 @@ Type TReadingThread = class(TThread)
     radioWasDisconnected: boolean;
     radioName: string;  // Set after creation for radio-identified trace messages
     binaryProtocol: Boolean;  // Set from the radio's SerialProtocolIsBinary after creation; True = read raw bytes (Icom CI-V), not a codepage-decoded string
+    fixedFrameLength: integer;  // >0: responses are FIXED-LENGTH with no terminator (Yaesu FT1000MP binary) -> hand over N-byte frames. 0 (default) = terminator-delimited (unchanged).
     constructor Create(AConn: TIdTCPConnection; proc: TProcessMsgRef; ASocketLock: TCriticalSection; ADisconnecting: PBoolean); reintroduce; overload;
     constructor Create(ASerialPort: TSerialPort; proc: TProcessMsgRef; ASocketLock: TCriticalSection; ADisconnecting: PBoolean); reintroduce; overload;
     procedure ClearSerialBuffer;  // Clear accumulated serial buffer data
@@ -228,6 +237,7 @@ Type TFactoryRadioBase = class(TObject)
       pollingInterval: Integer;        // Milliseconds between polls (default 100)
       bAddTermination: Boolean;        // True (default): SendToRadio appends CR/LF (WriteLn). Kenwood TS-890 LAN sets this False -- its CAT parser rejects a trailing CR/LF; the K4 tolerates/ignores it, so it stays True.
       SerialProtocolIsBinary: Boolean; // False (default): serial CAT is ASCII text -> WriteString/ReadString. True (Icom CI-V, set in TIcomRadio): the frame is raw bytes (Ord 0..255 per Char, incl. >= $80 like FE/88/FD) -> byte-exact WriteBytes/ReadBytes, so D12's UTF-16/ASCII encoding can't corrupt them.
+      SerialFixedFrameLength: integer;  // >0: serial responses are fixed-length binary with NO terminator (Yaesu FT1000MP: 32-byte status block). Default 0 = terminator-delimited. Implies SerialProtocolIsBinary.
 
       // ---- Capabilities: ask the radio what it can do (see TRadioCapabilities). ----
       property Capabilities: TRadioCapabilities read FCapabilities;
@@ -722,6 +732,7 @@ begin
             rt.readTerminator := Self.readTerminator;
             rt.radioName := Self.rigLabel + ' ' + Self.radioModel;
             rt.binaryProtocol := Self.SerialProtocolIsBinary;  // Icom CI-V: read raw bytes, not a codepage-decoded string
+            rt.fixedFrameLength := Self.SerialFixedFrameLength; // Yaesu FT1000MP: fixed-length binary, no terminator
             logger.Info('[TFactoryRadioBase.Connect] Created serial reading thread');
             end;
 
@@ -1105,7 +1116,8 @@ end;
 function TFactoryRadioBase.CapabilitiesAsText: string;
 const
    CapabilityNames: array[TRadioCapability] of string =
-      ('ReadVFOB', 'ReadRIT', 'ReadSplit', 'ReadTXStatus', 'DataMode', 'CWByCAT');
+      ('ReadVFOB', 'ReadRIT', 'ReadSplit', 'ReadTXStatus', 'DataMode', 'CWByCAT',
+       'SharedRITXITOffset');
 var
    c: TRadioCapability;
 begin
@@ -1309,16 +1321,16 @@ begin
                      FSerialBuffer := FSerialBuffer + cmd;
                      logger.trace('[%s RX] Serial received: (%s) Hex:[%s], Buffer now %d chars',[Self.radioName, cmd, WireHex(cmd), Length(FSerialBuffer)]);
 
-                     // Process complete commands (terminated by readTerminator)
-                     while Pos(Self.readTerminator, FSerialBuffer) > 0 do
+                     // Hand over complete responses.  fixedFrameLength > 0 = the
+                     // radio's replies are fixed-length binary with NO terminator
+                     // (Yaesu FT1000MP); otherwise the default terminator split.
+                     if fixedFrameLength > 0 then
                         begin
-                        termPos := Pos(Self.readTerminator, FSerialBuffer);
-                        completeCmd := Copy(FSerialBuffer, 1, termPos - 1);  // Get command without terminator
-                        Delete(FSerialBuffer, 1, termPos);  // Remove from buffer including terminator
-
-                        if Length(completeCmd) > 0 then
+                        while Length(FSerialBuffer) >= fixedFrameLength do
                            begin
-                           logger.trace('[%s RX] Command: (%s) Hex:[%s]',[Self.radioName, completeCmd, WireHex(completeCmd)]);
+                           completeCmd := Copy(FSerialBuffer, 1, fixedFrameLength);
+                           Delete(FSerialBuffer, 1, fixedFrameLength);
+                           logger.trace('[%s RX] Frame(%d) Hex:[%s]',[Self.radioName, fixedFrameLength, WireHex(completeCmd)]);
                            if Assigned(Self.msgHandler) then
                               begin
                               try
@@ -1329,6 +1341,32 @@ begin
                                     logger.Error('[TFactoryRadioBase.TReadingThread] Exception in message handler: %s - %s', [E.ClassName, E.Message]);
                                     end;
                               end;
+                              end;
+                           end;
+                        end
+                     else
+                        begin
+                        // Process complete commands (terminated by readTerminator)
+                        while Pos(Self.readTerminator, FSerialBuffer) > 0 do
+                           begin
+                           termPos := Pos(Self.readTerminator, FSerialBuffer);
+                           completeCmd := Copy(FSerialBuffer, 1, termPos - 1);  // Get command without terminator
+                           Delete(FSerialBuffer, 1, termPos);  // Remove from buffer including terminator
+
+                           if Length(completeCmd) > 0 then
+                              begin
+                              logger.trace('[%s RX] Command: (%s) Hex:[%s]',[Self.radioName, completeCmd, WireHex(completeCmd)]);
+                              if Assigned(Self.msgHandler) then
+                                 begin
+                                 try
+                                    Self.msgHandler(completeCmd);
+                                 except
+                                    on E: Exception do
+                                       begin
+                                       logger.Error('[TFactoryRadioBase.TReadingThread] Exception in message handler: %s - %s', [E.ClassName, E.Message]);
+                                       end;
+                                 end;
+                                 end;
                               end;
                            end;
                         end;
