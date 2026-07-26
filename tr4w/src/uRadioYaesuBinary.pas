@@ -100,7 +100,9 @@ const
    YB_FRAME_LEN       = YB_STATUS_LEN + YB_FA_LEN;   // 38
    YB_SPLIT_POS       = YB_STATUS_LEN + 1;   // $FA byte 1
    YB_SPLIT_BIT       = $01;
-   // $FA byte 2 bit 2 is the ACTIVE VFO.  Decoded but NOT applied -- see ProcessMsg.
+   // $FA byte 2 bit 2 is what D7 reads as the ACTIVE VFO.  BENCH-DISPROVED: this
+   // byte is constant ($20) across front-panel VFO switches.  Kept only to document
+   // what was ruled out -- selection is conveyed by RECORD ORDER.  See ProcessMsg.
    YB_ACTIVE_VFO_POS  = YB_STATUS_LEN + 2;
    YB_ACTIVE_VFO_BIT  = $04;
 
@@ -360,15 +362,20 @@ begin
    Self.SetXITOffset(clarHz);
    // Split, from the appended $FA block (D7 pFT1000MP reads the same bit).
    Self.SetSplitOn((Ord(msg[YB_SPLIT_POS]) and YB_SPLIT_BIT) <> 0);
-   // The active VFO lives in the next byte (bit 2), but it is NOT applied here.
-   // D7 decodes it as ActiveVFOStatusType((b and $04) + 1), which yields 1 or *5* --
-   // and ActiveVFOStatusType only runs 0..3 (vfoUnknown,VFOA,VFOB,vfoMem), so the
-   // VFO-B case has always produced an out-of-range value there (it then indexes
-   // VFPLETTERARRAY[5] out of bounds).  The intent is clear but the code path was
-   // never correct, so the bit's polarity is UNVERIFIED.  Applying it would change
-   // a display that currently works; enable it only after a bench check that
-   // switching VFO A/B moves this bit as expected.  Correct form would be
-   // ((b and $04) shr 2) -> 0 = A, 1 = B.
+   // Active VFO: SetActiveVFO(nrVFOA) is CORRECT here and is not a placeholder.
+   // BENCH-RESOLVED 2026-07-26 (four front-panel A/B switches captured):
+   //  - D7 reads the active VFO as ActiveVFOStatusType((tBuf[2] and $04) + 1) from
+   //    the $FA block, i.e. our YB_ACTIVE_VFO_POS/BIT.  That byte NEVER CHANGED --
+   //    $20 in every frame, bit 2 always clear, across all four switches.  So the
+   //    D7 decode reads a bit that does not track selection, on top of yielding 1
+   //    or *5* for an enum that only runs 0..3 (it then indexes VFPLETTERARRAY[5]
+   //    out of bounds).  DO NOT implement it; the constants stay only to document
+   //    what was tested and ruled out.
+   //  - What actually indicates selection is the RECORD ORDER: the two 16-byte
+   //    records swap wholesale when the operator changes VFO, so record 1 is always
+   //    the SELECTED VFO.  Parsing record 1 as vfo[nrVFOA] and declaring VFO A
+   //    active is therefore exactly TR4W's swap model (as used for the K4), and the
+   //    frequency/mode/clarifier we report always belong to the operating VFO.
    Self.SetActiveVFO(nrVFOA);
 end;
 
