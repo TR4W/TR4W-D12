@@ -48,11 +48,16 @@ unit uRadioYaesuBinary;
   minimal Icoms) -- the legacy split-read came from a separate 6-byte $FA poll,
   which we skip to keep ONE frame length.
 
-  RIT/XIT is READ-ONLY here: the clarifier is decoded from the status block and
-  displayed, but the RITOn/XITOn/SetRITFreq/RITClear SETTERS remain inert stubs.
-  The read side is bench-derived and certain; the clarifier SET opcodes are not
-  documented anywhere in this repo and would be guesswork -- do not fill those
-  stubs in without a capture or the CAT manual.
+  RIT/XIT: the READ path is bench-derived and certain (see the const block).  The
+  SET path (CLAR, opcode $09) is implemented from the FT-1000MP CAT manual, which
+  NY4I supplied -- read side proven on air, set side NOT yet bench-confirmed.  The
+  one thing the manual page leaves open is whether a single $09 carries both the
+  offset and the on/off action or whether C4 selects between two forms; see
+  SendClarifier for the encoding chosen to be safe under either reading, and for
+  the one-step bench check that settles it.
+  RITBumpUp/Down stay stubs: this radio has no bump command (the offset would have
+  to be re-sent), and the caller does not define a step size -- the Icom base
+  leaves them unimplemented for the same reason.
 
   CW keying: inert stubs (legacy path / future CW Keyer Factory).
 
@@ -87,6 +92,26 @@ const
    YB_CLAR_RX_BIT     = $02;   // RX CLAR = TR4W RIT
    YB_CLAR_TX_BIT     = $01;   // TX CLAR = TR4W XIT
 
+   // ---- CLAR command (opcode $09), per the FT-1000MP CAT manual ----
+   //   [C1 C2 C3 C4 $09]
+   //   C1 = Hz offset, packed BCD 00-99  -- in units of 10 Hz (see below)
+   //   C2 = kHz offset, BCD 00-09
+   //   C3 = direction: $00 = +, $FF = -
+   //   C4 = action: RX CLAR off/on $00/$01, TX CLAR off/on $80/$81, CLAR CLEAR $FF
+   // C1 is 10 Hz per count, not 1 Hz: that is the only reading under which C1+C2
+   // span the radio's documented +/-9.99 kHz clarifier range (99*10 + 9*1000 =
+   // 9990 Hz), and it matches the manual's note that resolution below 10 Hz
+   // cannot be displayed.
+   YB_CLAR_OPCODE     = $09;
+   YB_CLAR_RX_OFF     = $00;
+   YB_CLAR_RX_ON      = $01;
+   YB_CLAR_TX_OFF     = $80;
+   YB_CLAR_TX_ON      = $81;
+   YB_CLAR_CLEAR      = $FF;
+   YB_CLAR_DIR_PLUS   = $00;
+   YB_CLAR_DIR_MINUS  = $FF;
+   YB_CLAR_MAX_HZ     = 9990;  // +/- 9.99 kHz, in 10 Hz steps
+
 type
   TYaesuBinary = class(TFactoryRadioBase)
   protected
@@ -96,6 +121,7 @@ type
     function  StatusModeToMode(b: Byte): TRadioMode;
     function  YaesuFreqRead(const frame: string; pos1: integer): integer;
     function  ClarifierOffsetRead(const frame: string; pos1: integer): integer;
+    procedure SendClarifier(offsetHz: integer; action: Byte);
   public
     constructor Create; reintroduce;
 
@@ -223,6 +249,49 @@ begin
       raw := raw - $10000;   // two's complement -> negative clarifier
       end;
    Result := Round(raw * 0.625);
+end;
+
+// Emit one CLAR command.  BOTH halves are always populated -- the offset in
+// C1..C3 and the on/off/clear action in C4 -- because the manual page documents
+// the two halves of opcode $09 without stating whether a single command carries
+// both or whether C4 selects between an "offset" form and an "on/off" form.
+// Filling both is the only encoding that is correct under EITHER reading:
+//   - if one command carries both, callers pass the offset they want preserved
+//     (or changed) and the state they want, and nothing is clobbered;
+//   - if C4 selects the form, the ignored half is simply redundant.
+// Worst case under the second reading is that an exact-offset set is a no-op,
+// which is benign and immediately visible in the log via the decoded readback.
+// BENCH CHECK to settle it: with RX CLAR on and a non-zero offset, call RITOn --
+// if the offset survives, both halves apply; if it zeroes, C4 selects the form.
+procedure TYaesuBinary.SendClarifier(offsetHz: integer; action: Byte);
+var
+   magnitude: integer;
+   steps10: integer;
+   kHzDigit: integer;
+   hzPart: integer;
+   c1, c2, c3: Byte;
+begin
+   magnitude := Abs(offsetHz);
+   if magnitude > YB_CLAR_MAX_HZ then
+      begin
+      logger.Warn('[SendClarifier] offset %d Hz exceeds the +/-%d Hz clarifier range; clamping',
+                  [offsetHz, YB_CLAR_MAX_HZ]);
+      magnitude := YB_CLAR_MAX_HZ;
+      end;
+   steps10  := magnitude div 10;          // radio resolution is 10 Hz
+   kHzDigit := steps10 div 100;           // 0..9  -> C2
+   hzPart   := steps10 mod 100;           // 0..99 -> C1, packed BCD
+   c2 := Byte(kHzDigit);
+   c1 := Byte(((hzPart div 10) shl 4) or (hzPart mod 10));
+   if offsetHz < 0 then
+      begin
+      c3 := YB_CLAR_DIR_MINUS;
+      end
+   else
+      begin
+      c3 := YB_CLAR_DIR_PLUS;
+      end;
+   Self.SendBytes(c1, c2, c3, action, YB_CLAR_OPCODE);
 end;
 
 function TYaesuBinary.StatusModeToMode(b: Byte): TRadioMode;
@@ -375,12 +444,16 @@ begin
    logger.Warn('[SetCWSpeed] not implemented for Yaesu binary (%d)',[speed]);
 end;
 
+// The radio has ONE clarifier (rcSharedRITXITOffset), so CLAR CLEAR is a single
+// action -- RITClear and XITClear are necessarily the same command.
 procedure TYaesuBinary.RITClear(whichVFO: TVFO);
 begin
+   Self.SendClarifier(0, YB_CLAR_CLEAR);
 end;
 
 procedure TYaesuBinary.XITClear(whichVFO: TVFO);
 begin
+   Self.RITClear(whichVFO);
 end;
 
 procedure TYaesuBinary.RITBumpDown;
@@ -391,20 +464,29 @@ procedure TYaesuBinary.RITBumpUp;
 begin
 end;
 
+// On/off carry the CURRENT offset so that, if a single CLAR command sets both
+// halves, merely switching RIT on does not zero the operator's offset.
+// State is NOT written locally: this radio reports RIT/XIT back (rcReadRIT), so
+// the status poll is the single source of truth -- same rule the Kenwood serial
+// driver follows.
 procedure TYaesuBinary.RITOn(whichVFO: TVFO);
 begin
+   Self.SendClarifier(Self.localRITOffset, YB_CLAR_RX_ON);
 end;
 
 procedure TYaesuBinary.RITOff(whichVFO: TVFO);
 begin
+   Self.SendClarifier(Self.localRITOffset, YB_CLAR_RX_OFF);
 end;
 
 procedure TYaesuBinary.XITOn(whichVFO: TVFO);
 begin
+   Self.SendClarifier(Self.localXITOffset, YB_CLAR_TX_ON);
 end;
 
 procedure TYaesuBinary.XITOff(whichVFO: TVFO);
 begin
+   Self.SendClarifier(Self.localXITOffset, YB_CLAR_TX_OFF);
 end;
 
 procedure TYaesuBinary.Split(splitOn: boolean);
@@ -422,12 +504,34 @@ begin
    Self.SetSplitOn(splitOn);
 end;
 
+// Exact offset set.  C4 repeats the state we currently believe is active so the
+// command cannot switch the clarifier on or off as a side effect: whichever of
+// RX/TX CLAR is on keeps its action byte, and if neither is on we address RX
+// CLAR with its OFF byte (a pure offset write).  Offsets are quantised to the
+// radio's 10 Hz step and clamped to +/-9.99 kHz inside SendClarifier.
 procedure TYaesuBinary.SetRITFreq(whichVFO: TVFO; hz: integer);
+var
+   action: Byte;
 begin
+   if Self.RITState then
+      begin
+      action := YB_CLAR_RX_ON;
+      end
+   else if Self.XITState then
+      begin
+      action := YB_CLAR_TX_ON;
+      end
+   else
+      begin
+      action := YB_CLAR_RX_OFF;
+      end;
+   Self.SendClarifier(hz, action);
 end;
 
+// One shared clarifier -- setting "XIT" offset is the same register.
 procedure TYaesuBinary.SetXITFreq(whichVFO: TVFO; hz: integer);
 begin
+   Self.SetRITFreq(whichVFO, hz);
 end;
 
 procedure TYaesuBinary.SetBand(band: TRadioBand; vfo: TVFO = nrVFOA);
