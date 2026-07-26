@@ -891,8 +891,18 @@ begin
          // Check if using serial or network
          if (Self.serialPort <> NoPort) and Assigned(serialPortObj) and serialPortObj.IsOpen then
             begin
-            // Serial connection
-            logger.Trace('[%s %s TX] (%s) Hex:[%s]',[Self.rigLabel, Self.radioModel, s, WireHex(s)]);
+            // Serial connection.  On a BINARY protocol the frame is raw bytes, so it
+            // must NOT be echoed through %s: any $0A/$0D in it (the Yaesu FT-1000MP
+            // set-frequency opcode IS $0A) breaks the log line and takes the Hex:[]
+            // dump with it -- losing exactly the diagnostic we want.  Log hex only.
+            if SerialProtocolIsBinary then
+               begin
+               logger.Trace('[%s %s TX] Hex:[%s]',[Self.rigLabel, Self.radioModel, WireHex(s)]);
+               end
+            else
+               begin
+               logger.Trace('[%s %s TX] (%s) Hex:[%s]',[Self.rigLabel, Self.radioModel, s, WireHex(s)]);
+               end;
             if SerialProtocolIsBinary then
                begin
                // Icom CI-V: raw frame, already terminated by $FD -- write byte-exact,
@@ -1319,7 +1329,16 @@ begin
                      begin
                      // Add to buffer
                      FSerialBuffer := FSerialBuffer + cmd;
-                     logger.trace('[%s RX] Serial received: (%s) Hex:[%s], Buffer now %d chars',[Self.radioName, cmd, WireHex(cmd), Length(FSerialBuffer)]);
+                     // Same rule as the TX side: never echo a binary frame through
+                     // %s -- an embedded $0A/$0D truncates the line and loses the hex.
+                     if binaryProtocol then
+                        begin
+                        logger.trace('[%s RX] Serial received: Hex:[%s], Buffer now %d chars',[Self.radioName, WireHex(cmd), Length(FSerialBuffer)]);
+                        end
+                     else
+                        begin
+                        logger.trace('[%s RX] Serial received: (%s) Hex:[%s], Buffer now %d chars',[Self.radioName, cmd, WireHex(cmd), Length(FSerialBuffer)]);
+                        end;
 
                      // Hand over complete responses.  fixedFrameLength > 0 = the
                      // radio's replies are fixed-length binary with NO terminator
