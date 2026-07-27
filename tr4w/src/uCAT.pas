@@ -78,17 +78,129 @@ var
 // the wrong one.  Item data removes the whole class of bug.
 // ---------------------------------------------------------------------------
 
+const
+   // Item data = the PortType ordinal, OR'd with this flag when the port is not
+   // currently present.  High(PortType) is well under $100, so the flag cannot
+   // collide with a port value.  The flag drives ONLY the grey painting in
+   // DrawPortComboItem -- the row stays fully selectable.
+   PORTITEM_ABSENT = $1000;
+   PORTITEM_MASK   = $0FFF;
+
 procedure ComboAddPort(hwnddlg: HWND; ctl: integer; const caption: AnsiString;
-   port: PortType);
+   port: PortType; absent: Boolean = False);
 var
    idx: integer;
+   data: NativeInt;
 begin
    idx := SendDlgItemMessageA(hwnddlg, ctl, CB_ADDSTRING, 0,
                               LPARAM(PAnsiChar(caption)));
    if idx >= 0 then
       begin
-      SendDlgItemMessageA(hwnddlg, ctl, CB_SETITEMDATA, idx, LPARAM(Ord(port)));
+      data := Ord(port);
+      if absent then
+         begin
+         data := data or PORTITEM_ABSENT;
+         end;
+      SendDlgItemMessageA(hwnddlg, ctl, CB_SETITEMDATA, idx, LPARAM(data));
       end;
+end;
+
+// Paint one row of an owner-draw port combo.  The ONLY difference from the
+// default look is that a port Windows is not currently reporting is drawn in the
+// system's grey-text colour -- matching how Windows' own Sound applet shows a
+// disconnected device: faded, but still selectable.  Selection highlight and
+// focus rectangle are drawn normally so the control behaves like any other combo.
+procedure DrawPortComboItem(const dis: TDrawItemStruct);
+var
+   buf: array[0..511] of AnsiChar;
+   len: integer;
+   isAbsent: Boolean;
+   isSelected: Boolean;
+   textColour: COLORREF;
+   backColour: COLORREF;
+   r: TRect;
+begin
+   if integer(dis.itemID) < 0 then
+      begin
+      // Empty combo -- just paint the focus rectangle if asked.
+      if (dis.itemAction and ODA_FOCUS) <> 0 then
+         begin
+         Windows.DrawFocusRect(dis.hDC, dis.rcItem);
+         end;
+      Exit;
+      end;
+
+   len := SendMessageA(dis.hwndItem, CB_GETLBTEXT, dis.itemID, LPARAM(@buf[0]));
+   if len < 0 then
+      begin
+      len := 0;
+      end;
+   buf[len] := #0;
+
+   isAbsent := (dis.itemData and PORTITEM_ABSENT) <> 0;
+   isSelected := (dis.itemState and ODS_SELECTED) <> 0;
+
+   if isSelected then
+      begin
+      backColour := GetSysColor(COLOR_HIGHLIGHT);
+      textColour := GetSysColor(COLOR_HIGHLIGHTTEXT);
+      end
+   else
+      begin
+      backColour := GetSysColor(COLOR_WINDOW);
+      textColour := GetSysColor(COLOR_WINDOWTEXT);
+      end;
+   // Grey ONLY when not highlighted.  Grey text on the system highlight blue is
+   // barely legible -- the very low-contrast pairing the grey was meant to avoid.
+   // Nothing is lost: the row still carries its "(not connected)" text in both
+   // states, so the meaning never depended on the colour, and a highlighted row
+   // is the one the operator is already looking at.
+   if isAbsent and not isSelected then
+      begin
+      textColour := GetSysColor(COLOR_GRAYTEXT);
+      end;
+
+   Windows.SetBkColor(dis.hDC, backColour);
+   Windows.SetTextColor(dis.hDC, textColour);
+   r := dis.rcItem;
+   Windows.ExtTextOutA(dis.hDC, r.Left + 2,
+      r.Top + ((r.Bottom - r.Top) - 14) div 2,
+      ETO_OPAQUE, @r, @buf[0], len, nil);
+
+   if (dis.itemState and ODS_FOCUS) <> 0 then
+      begin
+      Windows.DrawFocusRect(dis.hDC, dis.rcItem);
+      end;
+end;
+
+// Replace a resource-defined combo with an owner-draw one of the same id,
+// position and size.  CBS_OWNERDRAWFIXED can only be set at CREATION, and these
+// combos come from the binary .RES, so the control has to be rebuilt.
+// CBS_HASSTRINGS is essential: it keeps CB_ADDSTRING/CB_GETLBTEXT working, which
+// the width measuring and the rest of the dialog rely on.
+procedure MakePortComboOwnerDraw(hwnddlg: HWND; ctl: integer);
+var
+   old: HWND;
+   r: TRect;
+   pt: TPoint;
+   w: integer;
+begin
+   old := GetDlgItem(hwnddlg, ctl);
+   if old = 0 then
+      begin
+      Exit;
+      end;
+   Windows.GetWindowRect(old, r);
+   pt.x := r.Left;
+   pt.y := r.Top;
+   Windows.ScreenToClient(hwnddlg, pt);
+   w := r.Right - r.Left;
+   Windows.DestroyWindow(old);
+   // tCreateComboBoxWindow supplies the dropped height (340) and the dialog font.
+   tCreateComboBoxWindow(
+      WS_CHILD or WS_VISIBLE or WS_TABSTOP or WS_VSCROLL or
+      CBS_DROPDOWNLIST or CBS_OWNERDRAWFIXED or CBS_HASSTRINGS,
+      pt.x, pt.y, w, hwnddlg, HMENU(ctl));
 end;
 
 // The port a combo is showing, from its item data.  NoPort when nothing is
@@ -105,6 +217,7 @@ begin
       Exit;
       end;
    data := SendDlgItemMessageA(hwnddlg, ctl, CB_GETITEMDATA, idx, 0);
+   data := data and PORTITEM_MASK;   // strip PORTITEM_ABSENT
    if (data >= 0) and (data <= Ord(High(PortType))) then
       begin
       Result := PortType(data);
@@ -119,7 +232,8 @@ begin
    count := SendDlgItemMessageA(hwnddlg, ctl, CB_GETCOUNT, 0, 0);
    for i := 0 to count - 1 do
       begin
-      if SendDlgItemMessageA(hwnddlg, ctl, CB_GETITEMDATA, i, 0) = Ord(port) then
+      if (SendDlgItemMessageA(hwnddlg, ctl, CB_GETITEMDATA, i, 0) and PORTITEM_MASK)
+         = Ord(port) then
          begin
          tCB_SETCURSEL(hwnddlg, ctl, i);
          Exit;
@@ -367,8 +481,13 @@ begin
                         [info.PortName, MAX_SERIAL_PORT]);
             Continue;
             end;
+         // friendly[] is filled for every port Windows KNOWS -- including
+         // unplugged ones -- so an absent port can still say which radio it was.
          friendly[info.PortNumber] := info.Describe;
-         Include(present, Byte(info.PortNumber));
+         if info.Present then
+            begin
+            Include(present, Byte(info.PortNumber));
+            end;
          end;
    finally
       ports.Free;
@@ -384,11 +503,23 @@ begin
       for i := 1 to MAX_SERIAL_PORT do
          begin
          caption := AnsiString('SERIAL ' + IntToStr(i));
-         if Byte(i) in present then
+         if friendly[i] <> '' then
             begin
+            // Named whether present or not -- an unplugged adapter keeps its
+            // registry entry, so we can still say WHICH radio was on that port.
             caption := caption + AnsiString(' - ' + friendly[i]);
             end;
-         ComboAddPort(hwnddlg, ctl, caption, PortType(i));
+         if not (Byte(i) in present) then
+            begin
+            // Marked in TEXT rather than greyed.  Greying an item needs an
+            // owner-draw combo (CBS_OWNERDRAWFIXED, set at CREATION -- these come
+            // from the binary .RES), and grey conventionally reads as "cannot be
+            // selected" -- which is the opposite of what Show All is for, since
+            // choosing a port Windows is not reporting IS the whole point.
+            caption := caption + AnsiString(' ' + TC_PORT_NOT_CONNECTED);
+            end;
+         // absent -> painted grey by DrawPortComboItem, still selectable.
+         ComboAddPort(hwnddlg, ctl, caption, PortType(i), not (Byte(i) in present));
          Include(listed, Byte(i));
          end;
       end
@@ -414,8 +545,13 @@ begin
       // is now POSSIBLE for the first time (the commit path takes the canonical
       // name from item data rather than the displayed text), but it would divorce
       // the dialog from the config file, so it is a deliberate non-change.
-      caption := AnsiString('SERIAL ' + IntToStr(Ord(configured)) + ' ' + TC_PORT_NOT_CONNECTED);
-      ComboAddPort(hwnddlg, ctl, caption, configured);
+      caption := AnsiString('SERIAL ' + IntToStr(Ord(configured)));
+      if (Ord(configured) <= MAX_SERIAL_PORT) and (friendly[Ord(configured)] <> '') then
+         begin
+         caption := caption + AnsiString(' - ' + friendly[Ord(configured)]);
+         end;
+      caption := caption + AnsiString(' ' + TC_PORT_NOT_CONNECTED);
+      ComboAddPort(hwnddlg, ctl, caption, configured, True);
       end;
 
    if ctl = 122 then
@@ -644,6 +780,10 @@ var
   Rect111, Rect131, HamLibCheckRect, RectIP : TRect;
   ptTemp                                : TPoint;
   DlgWindowRect                         : TRect;
+  ShowAllRect                           : TRect;    // SHOW ALL SERIAL PORTS row
+  ptGroup                               : TPoint;
+  ShowAllRowH                           : Integer;
+  SavedCATPort, SavedKeyerPort          : PortType; // preserved across a re-populate
   hDiscoverBmp                          : HBITMAP;
   hDiscoverBtn                          : HWND;
 
@@ -729,6 +869,29 @@ begin
 
   Result := False;
   case Msg of
+    // Owner-draw plumbing for the two port combos.  MEASUREITEM must be answered
+    // or an owner-draw combo gets a zero-height list; DRAWITEM does the painting
+    // (grey text for a port Windows is not reporting -- see DrawPortComboItem).
+    WM_MEASUREITEM:
+      begin
+      if (PMeasureItemStruct(lParam)^.CtlID = 122) or
+         (PMeasureItemStruct(lParam)^.CtlID = 123) then
+         begin
+         PMeasureItemStruct(lParam)^.itemHeight := 16;
+         Result := True;
+         end;
+      end;
+
+    WM_DRAWITEM:
+      begin
+      if (PDrawItemStruct(lParam)^.CtlID = 122) or
+         (PDrawItemStruct(lParam)^.CtlID = 123) then
+         begin
+         DrawPortComboItem(PDrawItemStruct(lParam)^);
+         Result := True;
+         end;
+      end;
+
     WM_INITDIALOG:
 
       begin
@@ -766,6 +929,12 @@ begin
               gComboFactoryIds.Add(fid);
               end;
            end;
+
+        // Rebuild both port combos as OWNER-DRAW before filling them, so a port
+        // that is not present can be drawn grey while staying selectable.  Must
+        // happen before PopulatePortCombo -- DestroyWindow would discard the items.
+        MakePortComboOwnerDraw(hwnddlg, 122);
+        MakePortComboOwnerDraw(hwnddlg, 123);
 
         // Port combos are filtered to what Windows reports (plus the configured
         // port when it is unplugged) and carry their PortType as item data --
@@ -897,6 +1066,60 @@ begin
         MoveCtrlDown(118, 56);
         MoveCtrlDown(119, 56);
 
+        // "Show all serial ports" (ID 150).  Inserted as one more row using the
+        // same technique as the credential rows above: it takes the USE HAMLIB
+        // checkbox's slot, USE HAMLIB and everything below shift down by a row,
+        // and the CAT group box grows so the new row stays framed.
+        // Created at RUNTIME for the same reason the dialog is widened at runtime
+        // -- the eleven per-language .RES files are checked-in binaries and
+        // nothing in the build compiles res\Tr4w.rc.
+        GetWindowRect(GetDlgItem(hwnddlg, 1000), ShowAllRect);
+        ptTemp.x := ShowAllRect.Left;
+        ptTemp.y := ShowAllRect.Top;
+        Windows.ScreenToClient(hwnddlg, ptTemp);
+        ShowAllRowH := (ShowAllRect.Bottom - ShowAllRect.Top) + 4;
+
+        GetWindowRect(hwnddlg, DlgWindowRect);
+        SetWindowPos(hwnddlg, 0,
+           DlgWindowRect.Left, DlgWindowRect.Top,
+           DlgWindowRect.Right - DlgWindowRect.Left,
+           (DlgWindowRect.Bottom - DlgWindowRect.Top) + ShowAllRowH,
+           SWP_NOZORDER);
+
+        GetWindowRect(GetDlgItem(hwnddlg, 90), ShowAllRect);
+        ptGroup.x := ShowAllRect.Left;
+        ptGroup.y := ShowAllRect.Top;
+        Windows.ScreenToClient(hwnddlg, ptGroup);
+        SetWindowPos(GetDlgItem(hwnddlg, 90), 0,
+           ptGroup.x, ptGroup.y,
+           ShowAllRect.Right - ShowAllRect.Left,
+           (ShowAllRect.Bottom - ShowAllRect.Top) + ShowAllRowH,
+           SWP_NOZORDER);
+
+        MoveCtrlDown(1000, ShowAllRowH);
+        MoveCtrlDown(91,  ShowAllRowH);
+        MoveCtrlDown(103, ShowAllRowH);
+        MoveCtrlDown(123, ShowAllRowH);
+        MoveCtrlDown(106, ShowAllRowH);
+        MoveCtrlDown(126, ShowAllRowH);
+        MoveCtrlDown(107, ShowAllRowH);
+        MoveCtrlDown(127, ShowAllRowH);
+        MoveCtrlDown(109, ShowAllRowH);
+        MoveCtrlDown(129, ShowAllRowH);
+        MoveCtrlDown(116, ShowAllRowH);
+        MoveCtrlDown(117, ShowAllRowH);
+        MoveCtrlDown(118, ShowAllRowH);
+        MoveCtrlDown(119, ShowAllRowH);
+
+        tCreateButtonWindow(0, TC_SHOW_ALL_SERIAL_PORTS,
+           WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTOCHECKBOX,
+           ptTemp.x, ptTemp.y,
+           GetSystemMetrics(SM_CXVSCROLL) * 12, 20, hwnddlg, HMENU(150));
+        if tShowAllSerialPorts then
+           begin
+           Windows.SendDlgItemMessage(hwnddlg, 150, BM_SETCHECK, BST_CHECKED, 0);
+           end;
+
         for i := 101 to 111 do
            begin
            tCB_SETCURSEL(hwnddlg, i + 20, 0);
@@ -1004,10 +1227,38 @@ begin
         // edit-commit semantics explicit.  Done at runtime to cover all
         // languages without touching the per-language resources.
         Windows.SetDlgItemTextA(hwnddlg, 119, CANCEL_WORD);
+
+        // Everything above moved, resized or recreated controls at runtime (the
+        // credential rows, the Show-all row, the widening for port names, the
+        // owner-draw combos).  Moving a child with SetWindowPos does not reliably
+        // repaint the area it left behind or the control's own frame, which shows
+        // up as clipped button captions.  One repaint of the whole dialog at the
+        // end of layout is cheaper than reasoning about which rectangles are stale.
+        Windows.InvalidateRect(hwnddlg, nil, True);
+        Windows.UpdateWindow(hwnddlg);
       end;
 
     WM_COMMAND:
       begin
+        // Re-enumerate just before a port list drops.  Without this the combos
+        // hold whatever was true when the dialog opened, so unplugging or
+        // plugging a USB adapter while the dialog is up shows stale information
+        // until it is closed and reopened -- and the port dialog is exactly where
+        // someone plugs a radio in to see it appear.
+        // CBN_DROPDOWN fires BEFORE the list is shown, so rebuilding here is safe.
+        // The selection is preserved by PORT, never by index: a port that vanished
+        // is re-added by PopulatePortCombo as "(not connected)" rather than
+        // silently changing what the radio is configured with.
+        if (HiWord(wParam) = CBN_DROPDOWN) and
+           ((LoWord(wParam) = 122) or (LoWord(wParam) = 123)) then
+           begin
+           SavedCATPort := ComboSelectedPort(hwnddlg, LoWord(wParam));
+           PopulatePortCombo(hwnddlg, LoWord(wParam), SavedCATPort);
+           ComboSelectPort(hwnddlg, LoWord(wParam), SavedCATPort);
+           // List width only -- NOT WidenDialogForPortNames, which is cumulative.
+           ComboFitDroppedWidth(hwnddlg, LoWord(wParam));
+           end;
+
         if (HiWord(wParam) = CBN_SELCHANGE)
           or (HiWord(wParam) = EN_CHANGE)
           then
@@ -1109,6 +1360,30 @@ begin
 
           140: {Discover -- Issue #853}
             RunNetworkDiscoveryForRadio(hwnddlg);
+
+          150: {Show all serial ports}
+             begin
+             // A VIEW toggle, not a setting the dialog commits: it changes which
+             // rows are offered, not what the radio is configured with.  Rebuild
+             // both combos and restore each selection by PORT (its index will have
+             // moved), so toggling never silently changes the operator's choice.
+             tShowAllSerialPorts :=
+                boolean(TF.SendDlgItemMessage(hwnddlg, 150, BM_GETCHECK));
+             SavedCATPort := ComboSelectedPort(hwnddlg, 122);
+             SavedKeyerPort := ComboSelectedPort(hwnddlg, 123);
+             PopulatePortCombo(hwnddlg, 122, SavedCATPort);
+             PopulatePortCombo(hwnddlg, 123, SavedKeyerPort);
+             ComboSelectPort(hwnddlg, 122, SavedCATPort);
+             ComboSelectPort(hwnddlg, 123, SavedKeyerPort);
+             // Deliberately NOT WidenDialogForPortNames here.  That routine grows
+             // the dialog and slides the button row right by its delta; calling it
+             // again on every toggle is CUMULATIVE, so the buttons would walk
+             // rightwards each time the box is ticked.  The dialog is sized once at
+             // init; only the drop-down list needs re-fitting for the new captions,
+             // and its width is independent of the control.
+             ComboFitDroppedWidth(hwnddlg, 122);
+             ComboFitDroppedWidth(hwnddlg, 123);
+             end;
 
           1000:
              begin
