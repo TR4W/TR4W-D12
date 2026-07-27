@@ -11,9 +11,8 @@ Run this from the tools directory (or with tools on PYTHONPATH).
 
 Models are the ones already migrated to the radio factory, since the point is to
 exercise the factory.  A simulator for a radio still on the legacy path would test
-code we are replacing.  Network-only radios (TS-890, TS-990) are absent
-deliberately: they cannot be driven over a COM port and their auth handshake is
-better proven against real hardware.
+code we are replacing.  The TS-890/TS-990 are here for their SERIAL port only; their LAN auth handshake
+is deliberately not simulated, being better proven against real hardware.
 """
 
 import sys
@@ -42,6 +41,11 @@ MODELS = {
     'TS2000': (_kenwood('Kenwood TS-2000'), 4800),
     'TS480':  (_kenwood('Kenwood TS-480'),  4800),
     'TS570':  (_kenwood('Kenwood TS-570'),  4800),
+    # TS-890/TS-990 speak the same Kenwood ASCII CAT over their serial/USB port.
+    # The LAN login (##CN;/##ID0...;) does not exist on serial, so nothing extra
+    # is needed here -- the driver skips auth when the transport is serial.
+    'TS890':  (_kenwood('Kenwood TS-890S'), 115200),
+    'TS990':  (_kenwood('Kenwood TS-990S'), 115200),
     'K4':     (_elecraft('Elecraft K4'),    38400),
     'K3':     (_elecraft('Elecraft K3'),    38400),
     'IC7300': (_icom('Icom IC-7300', 0x94),                       19200),

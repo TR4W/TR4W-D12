@@ -117,6 +117,12 @@ type
 
 implementation
 
+const
+   // Smallest IF response ParseIFCommand can consume: 'IF' plus 33 positional
+   // characters.  Derived from the parse itself, not from a wire length -- see
+   // the guard in ParseIFCommand for why the wire length is the wrong measure.
+   IF_MIN_PARSED_LENGTH = 35;
+
 constructor TElecraftSerial.Create;
 begin
    inherited Create(ProcessMessage);
@@ -470,9 +476,28 @@ begin
    Result := false;
    ritMultiplier := 1;
    xitMultiplier := 1;
-   if not length(cmd) in [36,38] then
+   // Guard against a short/garbled IF.  Two things were wrong with the original
+   // "if not length(cmd) in [36,38]":
+   //
+   //   1. PRECEDENCE.  Pascal binds `not` tighter than `in`, so it evaluated
+   //      (not Length(cmd)) in [36,38] -- a BITWISE NOT of the length, always
+   //      negative, never in the set.  The guard never fired, so it rejected
+   //      nothing and the "not 36 or 38 bytes" error could never appear.
+   //   2. THE LENGTHS.  Fixing the precedence alone would have been worse than
+   //      the bug: the reading thread strips the ';' before the driver sees the
+   //      command, so what arrives here is 37 characters, which is in neither 36
+   //      nor 38 -- every valid response would suddenly be rejected.
+   //
+   // So test what the PARSE actually needs.  Walking the Delete/AnsiLeftStr
+   // sequence below, it consumes 'IF' plus 33 positional characters (11 freq,
+   // 5 blanks, sign, 4 offset, RIT, XIT, space, "00", TX, mode, VFO+scan,
+   // split, b, data) = 35.  Longer is fine and deliberately tolerated: the
+   // fields are read from the FRONT, so a firmware that appends fields must not
+   // break a radio that works.
+   if Length(cmd) < IF_MIN_PARSED_LENGTH then
       begin
-      logger.Error('[ParseIFCommand] length of IF command not 36 or 38 bytes - %s',[cmd]);
+      logger.Error('[ParseIFCommand] IF response too short: %d chars, need at least %d - %s',
+                   [Length(cmd), IF_MIN_PARSED_LENGTH, cmd]);
       Exit;
       end;
 

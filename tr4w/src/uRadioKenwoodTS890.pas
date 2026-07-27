@@ -185,11 +185,16 @@ function TKenwoodTS890Radio.Connect: integer;
 begin
    Self.readTerminator := ';';
 
-   // Set initial auth state BEFORE TCP connect: when the socket is up and
-   // ProcessMessage starts receiving bytes, we already know we are in the
-   // auth phase. If the operator never set credentials (empty NetworkUsername),
-   // skip auth entirely and go straight to initialization.
-   if Length(NetworkUsername) > 0 then
+   // Set initial auth state BEFORE connecting: once bytes start arriving we must
+   // already know whether we are in the auth phase.
+   //
+   // The ##CN;/##ID0...; handshake is a LAN-ONLY login.  A TS-890/TS-990 reached
+   // over its serial/USB CAT port has no login at all, so gate on the TRANSPORT
+   // and not merely on whether credentials happen to be set -- otherwise an
+   // operator who previously used the radio over the network, and still has the
+   // Admin ID stored, would connect by serial and sit in ksWaitingForCN waiting
+   // for a ##CN1; that a serial radio will never send.
+   if (Self.serialPort = NoPort) and (Length(NetworkUsername) > 0) then
       begin
       FAuthState := ksWaitingForCN;
       end
@@ -210,8 +215,16 @@ begin
          end
       else
          begin
-         logger.Info('[%s.Connect] TCP connected; no credentials set, skipping auth',
-                     [Self.rigLabel]);
+         if Self.serialPort <> NoPort then
+            begin
+            logger.Info('[%s.Connect] serial connected; no LAN auth on this transport',
+                        [Self.rigLabel]);
+            end
+         else
+            begin
+            logger.Info('[%s.Connect] TCP connected; no credentials set, skipping auth',
+                        [Self.rigLabel]);
+            end;
          InitializeAfterAuth;
          end;
       end;
@@ -997,11 +1010,15 @@ end;
 initialization
   // The TS-990 shares this class (same Kenwood CAT-over-TCP + ##CN/##ID auth);
   // register both keys with their own display name and default network port.
+  // Both transports.  These radios have a serial/USB CAT port as well as LAN, and
+  // registering serial-only-as-network made the serial port unreachable through
+  // the factory.  The LAN login (##CN;/##ID0...;) is skipped on serial -- see
+  // Connect, which gates on the transport rather than on stored credentials.
   RegisterRadio(TS890,
      function: TFactoryRadioBase begin Result := TKenwoodTS890Radio.Create end,
-     'Kenwood TS-890S', [rlNetwork], 60000, False);
+     'Kenwood TS-890S', [rlSerial, rlNetwork], 60000, False);
   RegisterRadio(TS990,
      function: TFactoryRadioBase begin Result := TKenwoodTS890Radio.Create end,
-     'Kenwood TS-990S', [rlNetwork], 50000, False);
+     'Kenwood TS-990S', [rlSerial, rlNetwork], 50000, False);
 
 end.
