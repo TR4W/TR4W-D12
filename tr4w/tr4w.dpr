@@ -166,6 +166,7 @@ uses
   uFlexRadio6000 in 'src\uFlexRadio6000.pas',
   uRadioBand in 'src\uRadioBand.pas',
   uBandLookup in 'src\uBandLookup.pas',
+  ComPortEnumerator in 'src\ComPortEnumerator.pas',
   uRadioIcom7100 in 'src\uRadioIcom7100.pas',
   uRadioIcom718 in 'src\uRadioIcom718.pas',
   uRadioIcomLegacy in 'src\uRadioIcomLegacy.pas',

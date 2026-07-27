@@ -272,6 +272,7 @@
         <DCCReference Include="src\uFlexRadio6000.pas"/>
         <DCCReference Include="src\uRadioBand.pas"/>
         <DCCReference Include="src\uBandLookup.pas"/>
+        <DCCReference Include="src\ComPortEnumerator.pas"/>
         <DCCReference Include="src\uRadioIcom7100.pas"/>
         <DCCReference Include="src\uRadioIcom718.pas"/>
         <DCCReference Include="src\uRadioIcomLegacy.pas"/>
