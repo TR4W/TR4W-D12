@@ -187,6 +187,9 @@ const
    DIREG_DEV        = $00000001;
 
 type
+   // Named because Delphi will not accept an anonymous set as a var parameter.
+   TPortNumberSet = set of Byte;
+
    HDEVINFO = Pointer;
 
    SP_DEVINFO_DATA = record
@@ -390,6 +393,90 @@ begin
    end;
 end;
 
+// Merge the ports listed in HKLM\HARDWARE\DEVICEMAP\SERIALCOMM into the array
+// built from the SetupAPI passes, skipping any port number already found.
+// Value name = device path (\Device\VSerial7_0), value data = port name (COM36).
+procedure AddDeviceMapPorts(var AFound: TComPortInfoArray; var AUsed: Integer;
+   var APresent: TPortNumberSet);
+var
+   key: HKEY;
+   index: DWORD;
+   nameLen: DWORD;
+   dataLen: DWORD;
+   valueType: DWORD;
+   nameBuf: array[0..255] of WideChar;
+   dataBuf: array[0..255] of WideChar;
+   portNum: Integer;
+   duplicate: Boolean;
+   i: Integer;
+   info: TComPortInfo;
+begin
+   if RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                    'HARDWARE\DEVICEMAP\SERIALCOMM', 0, KEY_READ, key) <> ERROR_SUCCESS then
+      begin
+      Exit;   // key absent on a machine with no serial ports at all
+      end;
+   try
+      index := 0;
+      while True do
+         begin
+         nameLen := Length(nameBuf);
+         dataLen := SizeOf(dataBuf);
+         FillChar(nameBuf, SizeOf(nameBuf), 0);
+         FillChar(dataBuf, SizeOf(dataBuf), 0);
+         if RegEnumValueW(key, index, @nameBuf[0], nameLen, nil, @valueType,
+                          PByte(@dataBuf[0]), @dataLen) <> ERROR_SUCCESS then
+            begin
+            Break;
+            end;
+         Inc(index);
+         if valueType <> REG_SZ then
+            begin
+            Continue;
+            end;
+
+         portNum := ComPortNumber(dataBuf);
+         if portNum <= 0 then
+            begin
+            Continue;
+            end;
+
+         duplicate := False;
+         for i := 0 to AUsed - 1 do
+            begin
+            if AFound[i].PortNumber = portNum then
+               begin
+               duplicate := True;
+               Break;
+               end;
+            end;
+         if duplicate then
+            begin
+            Continue;
+            end;
+
+         info := Default(TComPortInfo);
+         info.PortName    := dataBuf;
+         info.PortNumber  := portNum;
+         info.DeviceDesc  := nameBuf;    // '\Device\VSerial7_0' -- better than blank
+         info.Addressable := portNum <= MAX_ADDRESSABLE_COM_PORT;
+         info.Present     := True;       // this key lists ports that exist NOW
+         if AUsed = Length(AFound) then
+            begin
+            SetLength(AFound, AUsed + 16);
+            end;
+         AFound[AUsed] := info;
+         Inc(AUsed);
+         if portNum <= High(Byte) then
+            begin
+            Include(APresent, Byte(portNum));
+            end;
+         end;
+   finally
+      RegCloseKey(key);
+   end;
+end;
+
 { TComPortEnumerator }
 
 constructor TComPortEnumerator.Create;
@@ -409,7 +496,7 @@ var
    i: Integer;
    j: Integer;
    swap: TComPortInfo;
-   presentPorts: set of Byte;   // port numbers reported by the DIGCF_PRESENT pass
+   presentPorts: TPortNumberSet;   // port numbers reported by the DIGCF_PRESENT pass
 begin
    SetLength(FPorts, 0);
    SetLength(found, 0);
@@ -484,6 +571,16 @@ begin
    finally
       SetupDiDestroyDeviceInfoList(deviceInfoSet);
    end;
+
+   // PASS 3 -- HKLM\HARDWARE\DEVICEMAP\SERIALCOMM.  Not every serial port is a PnP
+   // device: virtual-port software (VSPMGR, com0com, Eltima and friends) commonly
+   // registers a port ONLY here, so it never appears in the Ports device class and
+   // is invisible to the two SetupAPI passes above -- and to Device Manager.
+   // Bench-found: VSPMGR's COM36/COM37 pair was absent from the class enumeration
+   // while sitting plainly in this key.  Anything found here is by definition
+   // present (the key lists live ports), and carries the device name (e.g.
+   // \Device\VSerial7_0) as its description, since there is no friendly name.
+   AddDeviceMapPorts(found, used, presentPorts);
 
    SetLength(found, used);
 
