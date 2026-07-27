@@ -129,9 +129,9 @@ type
   end;
 
   K1EAKeyer = object
-    tDebugFile: array[Serial1..Serial20] of HWND {Text};
+    tDebugFile: array[TSerialPortRange] of HWND {Text};
 
-    tr4w_PortDebug: array[Serial1..Serial20] of boolean;
+    tr4w_PortDebug: array[TSerialPortRange] of boolean;
     NumberInterruptConstant: integer;
 
 //    CurtisModeA: boolean;
@@ -142,7 +142,7 @@ type
     OldInt0BVector, OldInt0CVector: Pointer;
 
     //wli      SerialPortConfigured: array[Serial1..Serial9] of boolean;
-    SerialPortConfigured_Handle: array[Serial1..Serial20] of HWND;
+    SerialPortConfigured_Handle: array[TSerialPortRange] of HWND;
     SerialPortDebug: boolean;
 
     //    SerialPortOutputBuffer: array[Serial1..Serial9] of CharacterBuffer;
@@ -277,7 +277,7 @@ var
 //    CurtisModeA: False;
     CodeSpeed: 35;
     KeyerInitialized: False;
-    SerialPortConfigured_Handle: (INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE)
+    SerialPortConfigured_Handle: (INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE)
     );
 
   CQRITEnabled                          : boolean = True;
@@ -661,7 +661,7 @@ begin
   if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
 //  ActivePortOn := (PTTAsserted or PTTForcedOn or PTTFootSwitch) and PTTEnable;
 
-   if ActiveRadioPtr.tKeyerPort in [Serial1..Serial20] then
+   if ActiveRadioPtr.tKeyerPort in SerialPorts then
   begin
     SerialOff := 0;
     if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_CW then SerialOff := CLRDTR;
@@ -763,7 +763,7 @@ begin
 //  ActivePortOn := True;
 //  CountsSinceLastCW := 0;
 
-  if ActiveRadioPtr.tKeyerPort in [Serial1..Serial20] then
+  if ActiveRadioPtr.tKeyerPort in SerialPorts then
   begin
     SerialOn := 0;
     if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_CW then SerialOn := SETDTR;
@@ -2257,7 +2257,7 @@ begin
   PTTDelayCount := 0;
 //  TurnOffActivePort;
 
-  if Radio1.tKeyerPort in [Serial1..Serial20] then
+  if Radio1.tKeyerPort in SerialPorts then
   begin
     hand := CPUKeyer.SerialPortConfigured_Handle[Radio1.tKeyerPort {ActiveKeyerPort}];
     if hand = INVALID_HANDLE_VALUE then
@@ -2902,7 +2902,7 @@ end;
 function tGetPortType(port: PortType): PortInterface;
 begin
   Result := NoInterface;
-  if port in [Serial1..Serial20] then Result := SerialInterface
+  if port in SerialPorts then Result := SerialInterface
   else
     if port in [Parallel1..Parallel3] then Result := ParallelInterface;
 end;

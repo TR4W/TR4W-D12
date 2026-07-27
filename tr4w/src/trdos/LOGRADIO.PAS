@@ -2871,7 +2871,7 @@ begin
                   IPAddress := Self.IPAddress;
                   IPPort := Self.RadioTCPPort;
                end
-               else if tCATPortType in [Serial1..Serial20] then
+               else if tCATPortType in SerialPorts then
                begin
                   // Serial connection
                   COMPortName := ConvertPortTypeToCOMString(Self.tCATPortType);
@@ -2893,7 +2893,7 @@ begin
       else
          logger.error('[%s.SetUpRadioInterface] Failed to create HamLib Direct radio', [Self.RadioName]);
    end
-   else if tCATPortType in [Serial1..Serial20] then
+   else if tCATPortType in SerialPorts then
       begin
       // Check if we should use modern radio class (e.g., K4, Icom) or legacy serial code
       // A string-id factory radio (no InterfacedRadioType member) takes precedence.

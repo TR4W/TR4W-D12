@@ -9786,20 +9786,27 @@ begin
   end;
 end;
 
+// Written in terms of the ENUM MEMBERS, not raw ordinals.  The previous version
+// hard-coded 1..20 = COM, 21 = socket, 22..25 = LPT, which silently encoded the
+// old port ceiling in a third place and had to be edited in lockstep with the
+// enum -- exactly the kind of coupling that breaks when someone widens the range.
+// (It was also already wrong at the top end: it claimed 22..25 were LPT1..LPT4,
+// but only Parallel1..Parallel3 exist, so ordinal 25 was unreachable.)
 function ConvertPortTypeToCOMString(port: PortType): string;
 begin
   Result := '';
-  if IntegerBetween(Ord(port), 1, 20) then
+  if port in SerialPorts then
   begin
+    // Serial1 is ordinal 1, so the COM number IS the ordinal.
     Result := 'COM' + IntToStr(Ord(port));
   end
-  else if Ord(port) = 21 then
+  else if port = Network then
   begin
     Result := 'socket';
   end
-  else if IntegerBetween(Ord(port), 22, 25) then
+  else if port in [Parallel1, Parallel2, Parallel3] then
   begin
-    Result := 'LPT' + IntToStr(Ord(port) - 21);
+    Result := 'LPT' + IntToStr(Ord(port) - Ord(Parallel1) + 1);
   end;
 end;
 {
