@@ -1113,17 +1113,22 @@ begin
             reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on new disconnect
             end;
 
-         // Serial radio recovery.  A serial radio "disconnects" only because it
-         // stopped answering (powered off, cable bump) -- the COM port is still
-         // open, so there is nothing to reconnect the way a dropped TCP socket
-         // needs ro.Connect (and the network reconnect below is skipped for serial
-         // by the RadioTCPPort=0 guard anyway).  The keep-alive poll lives in the
-         // connected branch above, so once liveness lapses it would never run
-         // again and the radio window would stay "lost" forever.  Keep polling
-         // here, throttled to pollingInterval: when the radio comes back its reply
-         // re-stamps liveness via the reading thread, the next iteration re-enters
-         // the connected branch, and the alert clears.  This restores the recovery
-         // the legacy serial path had (MarkSerialRead) that the factory path lost.
+         // Serial radio recovery.  A serial radio "disconnects" because it stopped
+         // answering (powered off, cable bump).  Keep the keep-alive poll running
+         // -- it lives in the connected branch above, so without this the radio
+         // window would stay "lost" forever -- and when the radio replies the
+         // reading thread re-stamps liveness and the next iteration clears the
+         // alert.  This restores what the legacy serial path had (MarkSerialRead).
+         //
+         // BUT polling alone is not enough, and the original comment here claimed
+         // it was: "the COM port is still open, so there is nothing to reconnect".
+         // Bench-disproven on the FT-1000MP (2026-07-27) -- power-cycle the radio
+         // and the port stays perfectly healthy (no read exception, every write
+         // accepted, polls going out) while the radio answers NOTHING, because a
+         // CAT interface that lost power with the radio is only re-initialised
+         // when the port is OPENED.  So after a spell of silence, reopen it.
+         // Throttled with a backoff: a radio that is simply switched off must not
+         // cause the port to be hammered open and closed.
          // Network radios (serialPort = NoPort) fall through to the reconnect path.
          if Assigned(ro) and (ro.serialPort <> NoPort) then
             begin
@@ -1133,6 +1138,13 @@ begin
                ro.PollRadioState;
                lastPollTick := GetTickCount;
                end;
+
+            // The RADIO owns its link recovery -- throttle, backoff and the
+            // decision to reopen all live in TFactoryRadioBase.MaintainSerialLink.
+            // This loop only ticks it, so no recovery state leaks into the legacy
+            // polling unit.
+            ro.MaintainSerialLink;
+
             Sleep(100);   // cadence + CPU-friendly; recovery seen on next IsConnected check
             Continue;
             end;

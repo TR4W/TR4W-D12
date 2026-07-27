@@ -160,6 +160,8 @@ Type TFactoryRadioBase = class(TObject)
       baseProcMsg: TProcessMsgRef;
       SocketLock: TCriticalSection;
       FLastValidResponse: TDateTime;  // Track last valid response for timeout detection
+      FLastSerialReopenTick: LongWord;  // MaintainSerialLink throttle
+      FSerialReopenDelay: Integer;      // grows to RECONNECT_MAX_DELAY while silent
       FActiveVFO: TVFO;  // RX/operating VFO; nrVFOA = swap model (K4: A/B swaps contents so A is always active), selectable-model radios (Kenwood FR, Flex slice) drive it via SetActiveVFO
 
       function GetRadioPort: integer;
@@ -255,6 +257,15 @@ Type TFactoryRadioBase = class(TObject)
       // The BASE returns True: no validation, byte-for-byte the original behaviour,
       // so a radio that does not override is completely unaffected.
       function ValidateFrame(const frame: string): Boolean; virtual;
+
+      // Close and reopen the serial port, discarding buffered bytes.  See the
+      // implementation for why continuing to poll an open port is not enough.
+      function ReopenSerialPort: Boolean;
+
+      // Called every poll iteration while a SERIAL radio is not answering.  The
+      // radio owns its own link recovery -- the timing, the backoff and the
+      // decision to reopen all live here, so the poll loop only has to tick it.
+      procedure MaintainSerialLink;
 
       // ---- Capabilities: ask the radio what it can do (see TRadioCapabilities). ----
       property Capabilities: TRadioCapabilities read FCapabilities;
@@ -460,6 +471,8 @@ begin
    SocketLock := TCriticalSection.Create;
    Disconnecting := False;
    FLastValidResponse := Now;  // Initialize to current time
+   FLastSerialReopenTick := GetTickCount;
+   FSerialReopenDelay := RECONNECT_INITIAL_DELAY;
 end;
 
 {Constructor TFactoryRadioBase.Create(ProcRef: TProcessMsgRef);
@@ -894,9 +907,100 @@ begin
    Result := True;
 end;
 
+// Close and reopen the serial port, discarding anything buffered.
+//
+// Needed because "the port is still open" does NOT mean "the link still works".
+// Bench-proven on NY4I's FT-1000MP (2026-07-27): power the radio off and back on
+// and the port stays healthy -- no read exception, every write accepted, polls
+// going out -- yet the radio answers NOTHING until the port is reopened.  Opening
+// a port is the only moment the control lines are driven and the interface is
+// re-initialised; a CAT interface that lost power with the radio never comes back
+// without it.  Merely continuing to poll, which is what the recovery path did,
+// polls into a void forever.
+//
+// It also drops any PARTIAL FRAME left over from the outage.  The same capture
+// ended with 36 of 38 bytes stuck in the reader: without clearing, the first two
+// bytes from the revived radio would have completed a garbage frame and every
+// frame after would have been offset -- silently, on a radio with no ValidateFrame.
+function TFactoryRadioBase.ReopenSerialPort: Boolean;
+begin
+   Result := False;
+   if (Self.serialPort = NoPort) or (not Assigned(serialPortObj)) then
+      begin
+      Exit;
+      end;
+   try
+      // Clear FIRST: the reading thread may be mid-read, and closing the port
+      // makes its next read fail harmlessly (it catches, sleeps and retries).
+      if Assigned(rt) then
+         begin
+         rt.ClearSerialBuffer;
+         end;
+      if serialPortObj.IsOpen then
+         begin
+         serialPortObj.Close;
+         end;
+      serialPortObj.OpenRaw(serialBaudRate, serialDataBits, serialStopBits,
+                            serialParity, serialRts, serialDtr);
+      Result := serialPortObj.IsOpen;
+      if Result then
+         begin
+         logger.Info('[ReopenSerialPort] %s reopened COM%d after prolonged silence',
+                     [Self.radioModel, Ord(Self.serialPort)]);
+         end
+      else
+         begin
+         logger.Warn('[ReopenSerialPort] %s could not reopen COM%d',
+                     [Self.radioModel, Ord(Self.serialPort)]);
+         end;
+   except
+      on E: Exception do
+         begin
+         logger.Error('[ReopenSerialPort] %s failed to reopen COM%d: %s - %s',
+                      [Self.radioModel, Ord(Self.serialPort), E.ClassName, E.Message]);
+         Result := False;
+         end;
+   end;
+end;
+
+// Link maintenance for a serial radio that has stopped answering.  Ticked by the
+// poll loop; all the policy lives here so recovery belongs to the radio rather
+// than to the legacy polling unit.
+//
+// The reopen is throttled and backs off, because "not answering" is usually just
+// a radio switched off: the first retry is prompt (off-and-straight-back-on is
+// the common case) and the interval then doubles to RECONNECT_MAX_DELAY so a rig
+// left off overnight costs one reopen every 30s rather than a tight loop.
+// FSerialReopenDelay resets in UpdateLastValidResponse, i.e. the moment the radio
+// speaks again -- there is no separate "we are healthy" bookkeeping to get wrong.
+procedure TFactoryRadioBase.MaintainSerialLink;
+begin
+   if Self.serialPort = NoPort then
+      begin
+      Exit;      // network radios reconnect via the socket path
+      end;
+   if GetTickCount - FLastSerialReopenTick < LongWord(FSerialReopenDelay) then
+      begin
+      Exit;
+      end;
+   logger.Info('[MaintainSerialLink] %s silent for %d ms - reopening the port',
+               [Self.radioModel, FSerialReopenDelay]);
+   ReopenSerialPort;
+   FLastSerialReopenTick := GetTickCount;
+   FSerialReopenDelay := FSerialReopenDelay * RECONNECT_BACKOFF_MULTIPLIER;
+   if FSerialReopenDelay > RECONNECT_MAX_DELAY then
+      begin
+      FSerialReopenDelay := RECONNECT_MAX_DELAY;
+      end;
+end;
+
 procedure TFactoryRadioBase.UpdateLastValidResponse;
 begin
    FLastValidResponse := Now;
+   // The radio is talking, so any reopen backoff has served its purpose.
+   // Resetting HERE means the recovery bookkeeping cannot drift out of step
+   // with liveness -- there is no separate we-are-healthy flag to forget.
+   FSerialReopenDelay := RECONNECT_INITIAL_DELAY;
    logger.Trace('[UpdateLastValidResponse] Updated last valid response timestamp');
 end;
 
