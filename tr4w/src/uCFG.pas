@@ -332,7 +332,8 @@ var
 
 const
 
-   CommandsArraySize = 415 {RadioOneCWSpeedSync} + 1 {RadioTwoCWSpeedSync} + 2 {Radio1/Radio2 FactoryId}     // 4.91.3
+   CommandsArraySize = 415 {RadioOneCWSpeedSync} + 1 {RadioTwoCWSpeedSync} + 2 {Radio1/Radio2 FactoryId}
+                       + 1 {ShowAllSerialPorts}     // 4.91.3
    + 1 {RadioOneCWByCAT} + 1 {RadioTwoCWByCAT} //ny4i // 4.44.5
    + 9 {UDPBroadcast Variables} + 4 {New UDP Broadcasst Ports}
    + 1 {ServerAutoSynchronizeLogOnConnect - Issue #912}
@@ -791,6 +792,7 @@ const
  (crCommand: 'SHORT 2';                       crAddress: @Short2;                         crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'SHORT 9';                       crAddress: @Short9;                         crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
  (crCommand: 'SHORT INTEGERS';                crAddress: @ShortIntegers;                  crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
+ (crCommand: 'SHOW ALL SERIAL PORTS';         crAddress: @tShowAllSerialPorts;            crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW DOMESTIC MULTIPLIER NAME'; crAddress: @tShowDomesticMultiplierName;    crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:9; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW FREQUENCY IN LOG';         crAddress: @tShowFrequencyinLog;            crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'SHOW GRIDLINES';                crAddress: @tShowGridlines;                 crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:3; crJ: 0; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),

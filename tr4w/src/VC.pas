@@ -2772,6 +2772,13 @@ var
 
   tLogIndex                             : integer;
   tShowGridlines                        : boolean;
+  // SHOW ALL SERIAL PORTS.  The radio dialog's port list normally shows only the
+  // ports Windows is reporting (plus the one already configured, even if absent).
+  // Set this True to list SERIAL 1..MAX_SERIAL_PORT instead, for ports that exist
+  // but do not enumerate -- com0com pairs, Bluetooth SPP that appears only when
+  // the device connects, or configuring a station before the hardware is plugged
+  // in.  Default False: the filtered list is what an operator wants day to day.
+  tShowAllSerialPorts                   : boolean = False;
   tWorkingAreaRect                      : TRect;
 
 //  tr4w_CallWindowActive                 : boolean;
