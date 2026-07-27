@@ -133,6 +133,7 @@ uses
   uRadioFactory in 'src\uRadioFactory.pas',
   uRadioElecraftK4 in 'src\uRadioElecraftK4.pas',
   uRadioElecraftSerial in 'src\uRadioElecraftSerial.pas',
+  uRadioYaesuFTDX10 in 'src\uRadioYaesuFTDX10.pas',
   uRadioYaesuBinary in 'src\uRadioYaesuBinary.pas',
   uRadioYaesuFT1000MP in 'src\uRadioYaesuFT1000MP.pas',
   uRadioYaesuFT817 in 'src\uRadioYaesuFT817.pas',
@@ -167,6 +168,7 @@ uses
   uBandLookup in 'src\uBandLookup.pas',
   uRadioIcom7100 in 'src\uRadioIcom7100.pas',
   uRadioIcom718 in 'src\uRadioIcom718.pas',
+  uRadioIcomLegacy in 'src\uRadioIcomLegacy.pas',
   uRadioRegistry in 'src\uRadioRegistry.pas',
   uRadioKenwoodSerial in 'src\uRadioKenwoodSerial.pas',
   uRadioKenwoodTS570 in 'src\uRadioKenwoodTS570.pas',
@@ -607,7 +609,11 @@ begin
    appender.Layout := CreateTR4WLogLayout;
    TLogBasicConfigurator.Configure(appender);
    logger := TLogLogger.GetLogger('TR4WDebugLog');
-   sDebugLevel := iniFile.ReadString('COMMANDS','DEBUG LOG LEVEL', 'ERROR');
+   // Default TRACE (was ERROR) when the key is absent from tr4w.ini.  Radio-driver
+   // bring-up is diagnosed almost entirely from the TX/RX frame trace, and asking a
+   // volunteer tester to hand-edit tr4w.ini before their first run is a poor trade
+   // for log volume.  Only affects a MISSING key: anyone who has set a level keeps it.
+   sDebugLevel := iniFile.ReadString('COMMANDS','DEBUG LOG LEVEL', 'TRACE');
    for i := Low(tLogLevelsSA) to High(tLogLevelsSA) do
       begin
       if sDebugLevel = tLogLevelsSA[i] then
