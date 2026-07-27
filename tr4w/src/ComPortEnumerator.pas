@@ -82,7 +82,13 @@ type
       FriendlyName: string;   // 'Silicon Labs CP210x USB to UART Bridge (COM14)'
       DeviceDesc: string;     // 'USB Serial Port' -- fallback when no friendly name
       InstanceID: string;     // stable-ish device identity, e.g. 'FTDIBUS\VID_0403...'
-      Addressable: Boolean;   // False when PortNumber is outside 1..20 (see note 1)
+      Addressable: Boolean;   // False when PortNumber is outside 1..MAX (see note 1)
+      Present: Boolean;       // False = Windows still KNOWS this port (it is in the
+                              // registry, and Device Manager shows it under "show
+                              // hidden devices") but the hardware is unplugged.
+                              // Its friendly name is still available, which is what
+                              // lets the UI say WHICH radio used to be on that port
+                              // instead of an anonymous "not connected".
       function Describe: string;   // 'COM14 - Silicon Labs CP210x...'
    end;
 
@@ -328,12 +334,45 @@ var
    i: Integer;
    j: Integer;
    swap: TComPortInfo;
+   presentPorts: set of Byte;   // port numbers reported by the DIGCF_PRESENT pass
 begin
    SetLength(FPorts, 0);
    SetLength(found, 0);
    used := 0;
+   presentPorts := [];
 
+   // PASS 1 -- DIGCF_PRESENT: which ports are physically here right now.
+   // Only the port NUMBERS are needed; pass 2 collects the detail.
    deviceInfoSet := SetupDiGetClassDevsW(@GUID_DEVCLASS_PORTS, nil, 0, DIGCF_PRESENT);
+   if deviceInfoSet <> Pointer(INVALID_HANDLE_VALUE) then
+      begin
+      try
+         index := 0;
+         FillChar(deviceInfoData, SizeOf(deviceInfoData), 0);
+         deviceInfoData.cbSize := SizeOf(SP_DEVINFO_DATA);
+         while SetupDiEnumDeviceInfo(deviceInfoSet, index, deviceInfoData) do
+            begin
+            Inc(index);
+            i := ComPortNumber(DevicePortName(deviceInfoSet, deviceInfoData));
+            if (i > 0) and (i <= High(Byte)) then
+               begin
+               Include(presentPorts, Byte(i));
+               end;
+            FillChar(deviceInfoData, SizeOf(deviceInfoData), 0);
+            deviceInfoData.cbSize := SizeOf(SP_DEVINFO_DATA);
+            end;
+      finally
+         SetupDiDestroyDeviceInfoList(deviceInfoSet);
+      end;
+      end;
+
+   // PASS 2 -- no DIGCF_PRESENT: every port Windows KNOWS, including devices that
+   // are currently unplugged.  This is what Device Manager shows under "show
+   // hidden devices", and it is why an absent port can still be named: the
+   // friendly name lives in the registry and outlives the cable.  Without this
+   // pass an unplugged adapter degrades to an anonymous "not connected" and the
+   // operator cannot tell WHICH radio used to be there.
+   deviceInfoSet := SetupDiGetClassDevsW(@GUID_DEVCLASS_PORTS, nil, 0, 0);
    if deviceInfoSet = Pointer(INVALID_HANDLE_VALUE) then
       begin
       Exit;
@@ -355,6 +394,8 @@ begin
             info.DeviceDesc   := DeviceRegistryString(deviceInfoSet, deviceInfoData, SPDRP_DEVICEDESC);
             info.InstanceID   := DeviceInstanceID(deviceInfoSet, deviceInfoData);
             info.Addressable  := info.PortNumber <= MAX_ADDRESSABLE_COM_PORT;
+            info.Present      := (info.PortNumber <= High(Byte)) and
+                                 (Byte(info.PortNumber) in presentPorts);
             if used = Length(found) then
                begin
                SetLength(found, used + 16);

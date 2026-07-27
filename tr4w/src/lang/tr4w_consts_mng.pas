@@ -742,3 +742,4 @@
   TC_DISCOVER_NONE_FOUND                = 'No radio of type %s found on the network';
   TC_DISCOVER_MULTI_FOUND               = 'More than one %s found; filled in the first.  All found:';
 TC_PORT_NOT_CONNECTED = '(холбогдоогүй)';
+TC_SHOW_ALL_SERIAL_PORTS = 'Бүх сериал портыг харуулах';

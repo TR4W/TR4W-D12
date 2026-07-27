@@ -819,3 +819,4 @@ TC_TELNET                             = 'Connect'#0'Disconnect'#0'Commands'#0'Fr
   TC_DISCOVER_NONE_FOUND                = 'No radio of type %s found on the network';
   TC_DISCOVER_MULTI_FOUND               = 'More than one %s found; filled in the first.  All found:';
 TC_PORT_NOT_CONNECTED = '(не підключено)';
+TC_SHOW_ALL_SERIAL_PORTS = 'Показати всі COM-порти';
