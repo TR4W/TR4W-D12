@@ -106,7 +106,10 @@ var
    def     : Integer;
    ok      : BOOL;
 begin
-   if tCB_GETCURSEL(hwnddlg, 122) <> 21 then   // 21 = Network
+   // Ord(Network), never a literal: combo 122 is NONE + SERIAL 1..MAX_SERIAL_PORT
+   // + TCP/IP, so TCP/IP's index tracks the enum and the old hard-coded 21 became
+   // "SERIAL 21" the moment the port ceiling was raised.
+   if tCB_GETCURSEL(hwnddlg, 122) <> Ord(Network) then
       begin
       Exit;
       end;
@@ -306,7 +309,7 @@ var
   begin
      RadioIdx := tCB_GETCURSEL(hwnddlg, 121);
      PortIdx   := tCB_GETCURSEL(hwnddlg, 122);
-     if (PortIdx = 21) and  // 21 = TCP/IP in the port combo
+     if (PortIdx = Ord(Network)) and  // TCP/IP in the port combo; see the note at ApplyDefaultNetworkPort
         (RadioIdx < Ord(High(InterfacedRadioType)) + 1) and  // enum radios only (guard the cast)
         (InterfacedRadioType(RadioIdx) in
          [IC705, IC7300MK2, IC7600, IC7610,
@@ -398,7 +401,13 @@ begin
         for I2 := 122 to 123 do
         begin
           tCB_ADDSTRING(hwnddlg, I2, 'NONE');
-          for i := 1 to 20 do
+          // MAX_SERIAL_PORT, not a literal 20 -- this loop was a SEPARATE copy of
+          // the port ceiling, independent of the enum, so the two could drift.
+          // NOTE: this still lists every port whether or not it exists.  Filtering
+          // to ports Windows actually reports (plus the configured one, even when
+          // unplugged) is Part B and needs the combo to carry item data, because
+          // the selection is currently read back by INDEX and committed by TEXT.
+          for i := 1 to MAX_SERIAL_PORT do
           begin
             Format(@TempBuffer1, 'SERIAL %u',i);
             tCB_ADDSTRING_PCHAR(hwnddlg, I2, TempBuffer1);
@@ -653,7 +662,7 @@ begin
           if LoWord(wParam) = 122 then   // 122 is port type (serial, network, etc).
              begin
              i := tCB_GETCURSEL(hwnddlg, 122);
-             if i = 21 then     // Network
+             if i = Ord(Network) then
                 begin
                 EnableWindowTrue(hwnddlg, 130);
                 EnableWindowTrue(hwnddlg, 140);
@@ -791,7 +800,7 @@ procedure CloseCATAndKeyerForThisRadio;
 begin
   IcomResponseTimeout := 0;
   {Close CAT Port}
-  if CATWTR^.tCATPortType in [Serial1..Serial20] then
+  if CATWTR^.tCATPortType in SerialPorts then
      begin
      if CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tCATPortType] <> INVALID_HANDLE_VALUE then
         begin
@@ -809,12 +818,14 @@ begin
   CATWTR^.tCATPortHandle := INVALID_HANDLE_VALUE;
 
   {Close Keyer Port}
-  if CATWTR^.tKeyerPort in [Serial1..Serial20] then
-    if CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort] <> INVALID_HANDLE_VALUE then
-    begin
-      Windows.CloseHandle(CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort]);
-      CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort] := INVALID_HANDLE_VALUE;
-    end;
+  if CATWTR^.tKeyerPort in SerialPorts then
+     begin
+     if CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort] <> INVALID_HANDLE_VALUE then
+        begin
+        Windows.CloseHandle(CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort]);
+        CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tKeyerPort] := INVALID_HANDLE_VALUE;
+        end;
+     end;
   CATWTR^.tKeyerPortHandle := INVALID_HANDLE_VALUE;
 
   //  if (RadioToClose^.tr4w_KeyerPort >= Parallel1) and (RadioToClose^.tr4w_KeyerPort <= Parallel3) then    DestroyDlPortio;

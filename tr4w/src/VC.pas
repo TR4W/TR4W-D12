@@ -64,11 +64,71 @@ type
     Serial18,
     Serial19,
     Serial20,
+    Serial21,
+    Serial22,
+    Serial23,
+    Serial24,
+    Serial25,
+    Serial26,
+    Serial27,
+    Serial28,
+    Serial29,
+    Serial30,
+    Serial31,
+    Serial32,
+    Serial33,
+    Serial34,
+    Serial35,
+    Serial36,
+    Serial37,
+    Serial38,
+    Serial39,
+    Serial40,
+    Serial41,
+    Serial42,
+    Serial43,
+    Serial44,
+    Serial45,
+    Serial46,
+    Serial47,
+    Serial48,
+    Serial49,
+    Serial50,
+    Serial51,
+    Serial52,
+    Serial53,
+    Serial54,
+    Serial55,
+    Serial56,
+    Serial57,
+    Serial58,
+    Serial59,
+    Serial60,
+    Serial61,
+    Serial62,
+    Serial63,
+    Serial64,
     Network,
     Parallel1,
     Parallel2,
     Parallel3
     );
+
+  // Arrays indexed by a serial port use this subrange, so widening the port
+  // ceiling is a one-line change here rather than an archaeology exercise.
+  TSerialPortRange = Serial1..Serial64;
+
+const
+  // Highest COM port TR4W can address.  Bounded by the config plumbing, NOT
+  // by Windows: GetValueFromArray (TF.pas) returns a Byte index and uses 255
+  // (UNKNOWNTYPE) as its not-found sentinel, so High(PortType) must stay <= 254.
+  MAX_SERIAL_PORT = 64;
+
+  // Use this instead of writing [Serial1..SerialN] at call sites.
+  SerialPorts = [Serial1..Serial64];
+
+type
+
 
   CountryModeType =
     (
