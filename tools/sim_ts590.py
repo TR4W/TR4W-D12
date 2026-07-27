@@ -75,15 +75,22 @@ class TS590:
     def build_if(self):
         """The IF response, built to satisfy TR4W's ParseIF offsets.
 
-        TR4W indexes from the END of the string (L = length, 1-based):
+        TR4W indexes from the END (L = length, 1-based):
             3..13   11-digit RX frequency
             L-18    RIT/XIT sign          L-17..L-14  4-digit magnitude
             L-13    RIT on                L-12        XIT on
             L-8     TX/RX                 L-7         mode digit
             L-6     FR (1 = VFO B)        L-4         split
-        With the standard 38-character Kenwood IF (including ';') those land on
-        the field positions below.  Anything TR4W does not read is filled with
-        plausible constants.
+
+        CRITICAL: the reading thread STRIPS the ';' before dispatching
+        (uFactoryRadioBase: "Copy(FSerialBuffer, 1, termPos - 1)"), so ParseIF
+        sees L = 37, NOT the 38 characters on the wire.  Getting this wrong shifts
+        every field by one -- mode is read out of the TX/RX position and the radio
+        window shows no mode at all, which is exactly how this was found.  The
+        offsets below are therefore computed for the 37-character string, and the
+        self-test at the bottom of this file checks them WITHOUT the terminator.
+
+        Anything TR4W does not read is filled with plausible constants.
         """
         mag = min(abs(self.offset), 9999)
         sign = '-' if self.offset < 0 else '+'
@@ -92,24 +99,25 @@ class TS590:
         out = (
             'IF'                                   # 1-2
             + '%011d' % self.rx_freq               # 3-13   frequency
-            + ' ' * 6                              # 14-19  (ignored)
-            + sign                                 # 20     RIT sign
-            + '%04d' % mag                         # 21-24  RIT magnitude
-            + ('1' if self.rit_on else '0')        # 25     RIT on
-            + ('1' if self.xit_on else '0')        # 26     XIT on
-            + '0'                                  # 27     memory bank
-            + '00'                                 # 28-29  memory channel
-            + ('1' if self.transmitting else '0')  # 30     TX/RX
-            + str(self.mode)                       # 31     mode
-            + str(self.rx_vfo)                     # 32     FR / active VFO
-            + '0'                                  # 33     scan
-            + split                                # 34     split
-            + '0'                                  # 35     tone
-            + '00'                                 # 36-37  tone frequency
-            + ';'                                  # 38
+            + ' ' * 5                              # 14-18  (ignored)
+            + sign                                 # 19     RIT sign      (L-18)
+            + '%04d' % mag                         # 20-23  RIT magnitude (L-17..L-14)
+            + ('1' if self.rit_on else '0')        # 24     RIT on        (L-13)
+            + ('1' if self.xit_on else '0')        # 25     XIT on        (L-12)
+            + '0'                                  # 26     memory bank
+            + '00'                                 # 27-28  memory channel
+            + ('1' if self.transmitting else '0')  # 29     TX/RX         (L-8)
+            + str(self.mode)                       # 30     mode          (L-7)
+            + str(self.rx_vfo)                     # 31     FR            (L-6)
+            + '0'                                  # 32     scan
+            + split                                # 33     split         (L-4)
+            + '0'                                  # 34     tone
+            + '00'                                 # 35-36  tone frequency
+            + '0'                                  # 37     shift
         )
-        assert len(out) == 38, 'IF must be 38 chars, got %d' % len(out)
-        return out
+        # 37 WITHOUT the terminator -- that is the length TR4W parses against.
+        assert len(out) == 37, 'IF body must be 37 chars, got %d' % len(out)
+        return out + ';'
 
     # -- command dispatch -------------------------------------------------
     def handle(self, cmd):
