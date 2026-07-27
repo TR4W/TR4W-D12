@@ -235,6 +235,7 @@
         <DCCReference Include="src\uRadioFactory.pas"/>
         <DCCReference Include="src\uRadioElecraftK4.pas"/>
         <DCCReference Include="src\uRadioElecraftSerial.pas"/>
+        <DCCReference Include="src\uRadioYaesuFTDX10.pas"/>
         <DCCReference Include="src\uRadioYaesuBinary.pas"/>
         <DCCReference Include="src\uRadioYaesuFT1000MP.pas"/>
         <DCCReference Include="src\uRadioYaesuFT817.pas"/>
@@ -267,6 +268,7 @@
         <DCCReference Include="src\uBandLookup.pas"/>
         <DCCReference Include="src\uRadioIcom7100.pas"/>
         <DCCReference Include="src\uRadioIcom718.pas"/>
+        <DCCReference Include="src\uRadioIcomLegacy.pas"/>
         <DCCReference Include="src\uRadioRegistry.pas"/>
         <DCCReference Include="src\uRadioKenwoodSerial.pas"/>
         <DCCReference Include="src\uRadioKenwoodTS570.pas"/>
