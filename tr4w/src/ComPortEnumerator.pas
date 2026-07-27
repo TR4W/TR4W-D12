@@ -140,6 +140,31 @@ type
 // what makes a port unaddressable rather than accidentally selectable.
 function ComPortNumber(const APortName: string): Integer;
 
+// ---------------------------------------------------------------------------
+// Serial-port arrival/removal notification.
+//
+// Wrapped here rather than in the dialog so the Win32 detail (the DBT_* codes
+// and the DEV_BROADCAST_DEVICEINTERFACE filter, none of which Delphi 12 declares)
+// stays with the rest of the COM-port knowledge.  A caller needs three lines:
+// register on open, test the message, unregister on close.
+//
+// The window handle must belong to a thread that pumps messages -- which is why
+// this is offered to the DIALOG and not used inside the enumerator itself.
+// ---------------------------------------------------------------------------
+
+// Ask Windows to tell AWnd when a serial port appears or disappears.
+// Returns nil on failure; notifications are simply not delivered in that case,
+// which degrades to the previous refresh-on-drop-down behaviour.
+function RegisterComPortNotification(AWnd: HWND): Pointer;
+
+// Safe to call with nil; clears the handle.
+procedure UnregisterComPortNotification(var AHandle: Pointer);
+
+// True when a WM_DEVICECHANGE wParam means a device ARRIVED or was REMOVED.
+// Other WM_DEVICECHANGE events (query-remove, config changes) are deliberately
+// ignored -- acting on them would churn the list for no visible benefit.
+function IsComPortArrivalOrRemoval(AWParam: WPARAM): Boolean;
+
 implementation
 
 // `delayed` raises W1002 (platform-specific symbol) on every import below.  That
@@ -200,6 +225,56 @@ function SetupDiOpenDevRegKey(DeviceInfoSet: HDEVINFO;
    external SetupApiDll name 'SetupDiOpenDevRegKey' delayed;
 
 // ---------------------------------------------------------------------------
+
+// Not declared by Delphi 12: the device-notification constants and filter struct.
+// RegisterDeviceNotification / HDEVNOTIFY themselves DO come from Winapi.Windows.
+const
+   DBT_DEVICEARRIVAL          = $8000;
+   DBT_DEVICEREMOVECOMPLETE   = $8004;
+   DBT_DEVTYP_DEVICEINTERFACE = $00000005;
+
+   // The serial-port device interface class.
+   GUID_DEVINTERFACE_COMPORT: TGUID = '{86E0D1E0-8089-11D0-9CE4-08003E301F73}';
+
+type
+   DEV_BROADCAST_DEVICEINTERFACE_W = record
+      dbcc_size: DWORD;
+      dbcc_devicetype: DWORD;
+      dbcc_reserved: DWORD;
+      dbcc_classguid: TGUID;
+      dbcc_name: array[0..0] of WideChar;
+   end;
+
+function RegisterComPortNotification(AWnd: HWND): Pointer;
+var
+   filter: DEV_BROADCAST_DEVICEINTERFACE_W;
+begin
+   Result := nil;
+   if AWnd = 0 then
+      begin
+      Exit;
+      end;
+   FillChar(filter, SizeOf(filter), 0);
+   filter.dbcc_size       := SizeOf(filter);
+   filter.dbcc_devicetype := DBT_DEVTYP_DEVICEINTERFACE;
+   filter.dbcc_classguid  := GUID_DEVINTERFACE_COMPORT;
+   Result := Pointer(Winapi.Windows.RegisterDeviceNotification(AWnd, @filter,
+                                                DEVICE_NOTIFY_WINDOW_HANDLE));
+end;
+
+procedure UnregisterComPortNotification(var AHandle: Pointer);
+begin
+   if AHandle <> nil then
+      begin
+      Winapi.Windows.UnregisterDeviceNotification(HDEVNOTIFY(AHandle));
+      AHandle := nil;
+      end;
+end;
+
+function IsComPortArrivalOrRemoval(AWParam: WPARAM): Boolean;
+begin
+   Result := (AWParam = DBT_DEVICEARRIVAL) or (AWParam = DBT_DEVICEREMOVECOMPLETE);
+end;
 
 function ComPortNumber(const APortName: string): Integer;
 var

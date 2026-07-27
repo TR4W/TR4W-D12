@@ -63,6 +63,10 @@ var
   // Rebuilt on each dialog populate; read by the commit in RestartPollingThread.
   gComboFactoryIds: TStringList = nil;
 
+  // Serial-port arrival/removal notification handle for the open radio dialog.
+  // nil when not registered.  Released in WM_DESTROY.
+  gPortNotify: Pointer = nil;
+
 // ---------------------------------------------------------------------------
 // Port combos (122 = CAT, 123 = keyer)
 //
@@ -446,6 +450,29 @@ end;
 // should not have their saved choice silently vanish from the dialog, which
 // would look like TR4W forgetting the setting (docs\COMPort_Persistence.md).
 // It is labelled so the list never claims a missing device is available.
+procedure PopulatePortCombo(hwnddlg: HWND; ctl: integer; configured: PortType); forward;
+
+// Rebuild a port combo in place, keeping the current selection.  Used by the
+// drop-down refresh and by the device-arrival/removal handler.
+//
+// SKIPS a combo whose list is currently DROPPED.  Repopulating under an open list
+// would yank it out from under the mouse -- the thing NY4I explicitly did not
+// want.  Nothing is lost: CBN_DROPDOWN rebuilds the list every time it opens, so
+// a change that arrives while the list is down is picked up the next time it is.
+procedure RefreshPortCombo(hwnddlg: HWND; ctl: integer);
+var
+   current: PortType;
+begin
+   if SendDlgItemMessageA(hwnddlg, ctl, CB_GETDROPPEDSTATE, 0, 0) <> 0 then
+      begin
+      Exit;
+      end;
+   current := ComboSelectedPort(hwnddlg, ctl);
+   PopulatePortCombo(hwnddlg, ctl, current);
+   ComboSelectPort(hwnddlg, ctl, current);
+   ComboFitDroppedWidth(hwnddlg, ctl);
+end;
+
 procedure PopulatePortCombo(hwnddlg: HWND; ctl: integer; configured: PortType);
 var
    ports: TComPortEnumerator;
@@ -892,6 +919,25 @@ begin
          end;
       end;
 
+    // A serial port appeared or disappeared while the dialog is open.  Update
+    // both lists so the CLOSED combo stops claiming an unplugged port is present
+    // -- refresh-on-drop-down alone cannot fix the collapsed control.
+    // RefreshPortCombo skips a combo whose list is dropped, so nothing is ever
+    // pulled out from under the mouse.
+    WM_DEVICECHANGE:
+      begin
+      if IsComPortArrivalOrRemoval(wParam) then
+         begin
+         RefreshPortCombo(hwnddlg, 122);
+         RefreshPortCombo(hwnddlg, 123);
+         end;
+      end;
+
+    WM_DESTROY:
+      begin
+      UnregisterComPortNotification(gPortNotify);
+      end;
+
     WM_INITDIALOG:
 
       begin
@@ -1236,6 +1282,15 @@ begin
         // end of layout is cheaper than reasoning about which rectangles are stale.
         Windows.InvalidateRect(hwnddlg, nil, True);
         Windows.UpdateWindow(hwnddlg);
+
+        // Ask Windows to tell us when a serial port arrives or disappears, so an
+        // adapter unplugged while this dialog is open stops being shown as
+        // present.  Registered LAST: it targets this window, which must already
+        // be built.  If it fails we simply never get the messages and behaviour
+        // falls back to refresh-on-drop-down, which is not a failure worth
+        // reporting to the operator.
+        UnregisterComPortNotification(gPortNotify);   // paranoia: no leak on re-init
+        gPortNotify := RegisterComPortNotification(hwnddlg);
       end;
 
     WM_COMMAND:
