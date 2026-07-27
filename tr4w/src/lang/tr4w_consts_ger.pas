@@ -836,3 +836,4 @@ RC_wkMode                     = 'Neu-Initialisierung WinKeyer';      // 4.60.1
   TC_DISCOVER_NOT_AVAILABLE = 'Network discovery is not available for radio %s';
   TC_DISCOVER_NONE_FOUND = 'No radio of type %s found on the network';
   TC_DISCOVER_MULTI_FOUND = 'More than one %s found; filled in the first.  All found:';
+TC_PORT_NOT_CONNECTED = '(nicht verbunden)';

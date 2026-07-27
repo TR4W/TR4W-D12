@@ -54,6 +54,7 @@ uses
   uRadioPolling,
   uRadioFactory,   // Issue #1028 -- network metadata (port / is-network / discoverable)
   uRadioRegistry,  // string-id factory radios in the drop-down
+  ComPortEnumerator,
   MainUnit;
 
 var
@@ -61,6 +62,375 @@ var
   // are string-id factory radios (no enum member).  Index -> registry id.
   // Rebuilt on each dialog populate; read by the commit in RestartPollingThread.
   gComboFactoryIds: TStringList = nil;
+
+// ---------------------------------------------------------------------------
+// Port combos (122 = CAT, 123 = keyer)
+//
+// These used to list SERIAL 1..N unconditionally, so a row's INDEX happened to
+// equal its PortType ordinal and the code read the selection as a raw index.
+// They are now FILTERED -- only the ports Windows actually reports, plus the
+// configured one when it is unplugged -- so that coincidence is gone.  Every row
+// therefore carries its PortType in the combo's ITEM DATA, and every read goes
+// through ComboSelectedPort.  Do not reintroduce index arithmetic here.
+//
+// This also fixes a long-standing off-by-one: combo 123 omits TCP/IP, so its
+// PARALLEL rows never sat at Ord(Parallel1..3) and SETCURSEL by ordinal selected
+// the wrong one.  Item data removes the whole class of bug.
+// ---------------------------------------------------------------------------
+
+procedure ComboAddPort(hwnddlg: HWND; ctl: integer; const caption: AnsiString;
+   port: PortType);
+var
+   idx: integer;
+begin
+   idx := SendDlgItemMessageA(hwnddlg, ctl, CB_ADDSTRING, 0,
+                              LPARAM(PAnsiChar(caption)));
+   if idx >= 0 then
+      begin
+      SendDlgItemMessageA(hwnddlg, ctl, CB_SETITEMDATA, idx, LPARAM(Ord(port)));
+      end;
+end;
+
+// The port a combo is showing, from its item data.  NoPort when nothing is
+// selected, which is the safe reading of "no answer".
+function ComboSelectedPort(hwnddlg: HWND; ctl: integer): PortType;
+var
+   idx: integer;
+   data: LRESULT;
+begin
+   Result := NoPort;
+   idx := tCB_GETCURSEL(hwnddlg, ctl);
+   if idx < 0 then
+      begin
+      Exit;
+      end;
+   data := SendDlgItemMessageA(hwnddlg, ctl, CB_GETITEMDATA, idx, 0);
+   if (data >= 0) and (data <= Ord(High(PortType))) then
+      begin
+      Result := PortType(data);
+      end;
+end;
+
+procedure ComboSelectPort(hwnddlg: HWND; ctl: integer; port: PortType);
+var
+   count: integer;
+   i: integer;
+begin
+   count := SendDlgItemMessageA(hwnddlg, ctl, CB_GETCOUNT, 0, 0);
+   for i := 0 to count - 1 do
+      begin
+      if SendDlgItemMessageA(hwnddlg, ctl, CB_GETITEMDATA, i, 0) = Ord(port) then
+         begin
+         tCB_SETCURSEL(hwnddlg, ctl, i);
+         Exit;
+         end;
+      end;
+   tCB_SETCURSEL(hwnddlg, ctl, 0);   // not offered -- fall back to NONE
+end;
+
+// Widen the DROP-DOWN LIST to fit its longest entry.  A Win32 combo sizes its
+// list to the CONTROL's width, not its content, so the friendly names added here
+// ('SERIAL 18 - Icom IC-7100') get clipped to 'SERIAL 18 - Icon IC...' -- which
+// truncates exactly the text that makes the list worth having.  Measured in the
+// combo's own font rather than guessed from character counts.
+procedure ComboFitDroppedWidth(hwnddlg: HWND; ctl: integer);
+var
+   ctlWnd: HWND;
+   dc: HDC;
+   comboFont: HFONT;
+   oldFont: HFONT;
+   count: integer;
+   i: integer;
+   len: integer;
+   widest: integer;
+   buf: array[0..511] of AnsiChar;
+   extent: TSize;
+begin
+   ctlWnd := GetDlgItem(hwnddlg, ctl);
+   if ctlWnd = 0 then
+      begin
+      Exit;
+      end;
+   dc := GetDC(ctlWnd);
+   if dc = 0 then
+      begin
+      Exit;
+      end;
+   try
+      comboFont := HFONT(SendMessage(ctlWnd, WM_GETFONT, 0, 0));
+      oldFont := 0;
+      if comboFont <> 0 then
+         begin
+         oldFont := SelectObject(dc, comboFont);
+         end;
+      widest := 0;
+      count := SendDlgItemMessageA(hwnddlg, ctl, CB_GETCOUNT, 0, 0);
+      for i := 0 to count - 1 do
+         begin
+         len := SendDlgItemMessageA(hwnddlg, ctl, CB_GETLBTEXT, i, LPARAM(@buf[0]));
+         if len > 0 then
+            begin
+            if GetTextExtentPoint32A(dc, @buf[0], len, extent) then
+               begin
+               if extent.cx > widest then
+                  begin
+                  widest := extent.cx;
+                  end;
+               end;
+            end;
+         end;
+      if oldFont <> 0 then
+         begin
+         SelectObject(dc, oldFont);
+         end;
+   finally
+      ReleaseDC(ctlWnd, dc);
+   end;
+   if widest > 0 then
+      begin
+      // Room for the scroll bar plus a little padding, so the text is not flush
+      // against the frame.
+      SendDlgItemMessageA(hwnddlg, ctl, CB_SETDROPPEDWIDTH,
+         widest + GetSystemMetrics(SM_CXVSCROLL) + 8, 0);
+      end;
+end;
+
+// Widen the DIALOG ITSELF so the port combos can show a friendly name in their
+// CLOSED state, not just in the drop-down list.
+//
+// Done at runtime rather than in res\Tr4w.rc because the eleven per-language
+// .RES files are pre-built binaries checked into the repo -- nothing in the build
+// compiles Tr4w.rc, and it carries language conditionals -- so a resource edit
+// would mean hand-rebuilding eleven resources for languages that cannot be tested
+// here.  Sizing at runtime also adapts to the longest name on THIS machine, which
+// a fixed resource width cannot.
+//
+// Grows the dialog, the two group boxes, every combo and the name edit by one
+// delta, and slides the button row across so it stays at the right edge.
+procedure WidenDialogForPortNames(hwnddlg: HWND);
+const
+   GROW_CONTROLS: array[0..10] of integer =
+      (90, 91, 121, 122, 123, 124, 125, 126, 127, 128, 129);
+   SLIDE_CONTROLS: array[0..3] of integer = (116, 117, 118, 119);
+   MAX_GROWTH = 320;   // sanity bound; a pathological device name must not
+                       // produce a dialog wider than the screen
+var
+   ctlWnd: HWND;
+   dc: HDC;
+   comboFont: HFONT;
+   oldFont: HFONT;
+   i: integer;
+   c: integer;
+   len: integer;
+   widest: integer;
+   needed: integer;
+   delta: integer;
+   buf: array[0..511] of AnsiChar;
+   extent: TSize;
+   r: TRect;
+   dlgRect: TRect;
+begin
+   ctlWnd := GetDlgItem(hwnddlg, 122);
+   if ctlWnd = 0 then
+      begin
+      Exit;
+      end;
+
+   // Widest caption across BOTH port combos, measured in the combo's own font.
+   widest := 0;
+   dc := GetDC(ctlWnd);
+   if dc = 0 then
+      begin
+      Exit;
+      end;
+   try
+      comboFont := HFONT(SendMessage(ctlWnd, WM_GETFONT, 0, 0));
+      oldFont := 0;
+      if comboFont <> 0 then
+         begin
+         oldFont := SelectObject(dc, comboFont);
+         end;
+      for c := 122 to 123 do
+         begin
+         for i := 0 to SendDlgItemMessageA(hwnddlg, c, CB_GETCOUNT, 0, 0) - 1 do
+            begin
+            len := SendDlgItemMessageA(hwnddlg, c, CB_GETLBTEXT, i, LPARAM(@buf[0]));
+            if len > 0 then
+               begin
+               if GetTextExtentPoint32A(dc, @buf[0], len, extent) then
+                  begin
+                  if extent.cx > widest then
+                     begin
+                     widest := extent.cx;
+                     end;
+                  end;
+               end;
+            end;
+         end;
+      if oldFont <> 0 then
+         begin
+         SelectObject(dc, oldFont);
+         end;
+   finally
+      ReleaseDC(ctlWnd, dc);
+   end;
+
+   if widest = 0 then
+      begin
+      Exit;
+      end;
+
+   // Room for the drop-down arrow and the frame.
+   needed := widest + GetSystemMetrics(SM_CXVSCROLL) + 12;
+
+   Windows.GetWindowRect(ctlWnd, r);
+   delta := needed - (r.Right - r.Left);
+   if delta <= 0 then
+      begin
+      Exit;      // already wide enough -- leave the dialog alone
+      end;
+   if delta > MAX_GROWTH then
+      begin
+      delta := MAX_GROWTH;
+      end;
+
+   Windows.GetWindowRect(hwnddlg, dlgRect);
+   Windows.SetWindowPos(hwnddlg, 0, 0, 0,
+      (dlgRect.Right - dlgRect.Left) + delta, dlgRect.Bottom - dlgRect.Top,
+      SWP_NOMOVE or SWP_NOZORDER or SWP_NOACTIVATE);
+
+   for i := Low(GROW_CONTROLS) to High(GROW_CONTROLS) do
+      begin
+      ctlWnd := GetDlgItem(hwnddlg, GROW_CONTROLS[i]);
+      if ctlWnd <> 0 then
+         begin
+         Windows.GetWindowRect(ctlWnd, r);
+         Windows.MapWindowPoints(0, hwnddlg, r, 2);
+         Windows.SetWindowPos(ctlWnd, 0, 0, 0,
+            (r.Right - r.Left) + delta, r.Bottom - r.Top,
+            SWP_NOMOVE or SWP_NOZORDER or SWP_NOACTIVATE);
+         end;
+      end;
+
+   for i := Low(SLIDE_CONTROLS) to High(SLIDE_CONTROLS) do
+      begin
+      ctlWnd := GetDlgItem(hwnddlg, SLIDE_CONTROLS[i]);
+      if ctlWnd <> 0 then
+         begin
+         Windows.GetWindowRect(ctlWnd, r);
+         Windows.MapWindowPoints(0, hwnddlg, r, 2);
+         Windows.SetWindowPos(ctlWnd, 0, r.Left + delta, r.Top, 0, 0,
+            SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE);
+         end;
+      end;
+end;
+
+// Fill a port combo: NONE, the serial ports Windows reports right now, the
+// configured port when it is NOT present, then the non-serial options.
+//
+// The configured-but-absent entry matters: someone who unplugs a USB adapter
+// should not have their saved choice silently vanish from the dialog, which
+// would look like TR4W forgetting the setting (docs\COMPort_Persistence.md).
+// It is labelled so the list never claims a missing device is available.
+procedure PopulatePortCombo(hwnddlg: HWND; ctl: integer; configured: PortType);
+var
+   ports: TComPortEnumerator;
+   i: integer;
+   info: TComPortInfo;
+   listed: set of Byte;          // port numbers added to the combo
+   present: set of Byte;         // port numbers Windows is reporting
+   friendly: array[1..MAX_SERIAL_PORT] of string;
+   caption: AnsiString;
+begin
+   SendDlgItemMessageA(hwnddlg, ctl, CB_RESETCONTENT, 0, 0);
+   present := [];
+   ComboAddPort(hwnddlg, ctl, 'NONE', NoPort);
+   listed := [];
+
+   // Describe[n] is the friendly name of the port with that number, when present.
+   for i := Low(friendly) to High(friendly) do
+      begin
+      friendly[i] := '';
+      end;
+
+   ports := TComPortEnumerator.Create;
+   try
+      for i := 0 to ports.Count - 1 do
+         begin
+         info := ports.Ports[i];
+         if not info.Addressable then
+            begin
+            // Present, but outside PortType's range.  Logged rather than listed:
+            // offering a row that cannot be stored would be worse than omitting
+            // it, and the log answers "why isn't my COM port in the list?".
+            logger.Warn('[PopulatePortCombo] %s is present but above COM%d, which TR4W cannot address',
+                        [info.PortName, MAX_SERIAL_PORT]);
+            Continue;
+            end;
+         friendly[info.PortNumber] := info.Describe;
+         Include(present, Byte(info.PortNumber));
+         end;
+   finally
+      ports.Free;
+   end;
+
+   if tShowAllSerialPorts then
+      begin
+      // SHOW ALL SERIAL PORTS = TRUE.  Escape hatch for ports that exist but do
+      // not enumerate: com0com pairs, Bluetooth SPP that only appears once the
+      // device connects, or setting a station up before the hardware is plugged
+      // in.  Present ports still get their friendly name so the list stays
+      // useful; the rest are bare so it is obvious which is which.
+      for i := 1 to MAX_SERIAL_PORT do
+         begin
+         caption := AnsiString('SERIAL ' + IntToStr(i));
+         if Byte(i) in present then
+            begin
+            caption := caption + AnsiString(' - ' + friendly[i]);
+            end;
+         ComboAddPort(hwnddlg, ctl, caption, PortType(i));
+         Include(listed, Byte(i));
+         end;
+      end
+   else
+      begin
+      for i := 1 to MAX_SERIAL_PORT do
+         begin
+         if Byte(i) in present then
+            begin
+            caption := AnsiString('SERIAL ' + IntToStr(i) + ' - ' + friendly[i]);
+            ComboAddPort(hwnddlg, ctl, caption, PortType(i));   // Serial1 is ordinal 1
+            Include(listed, Byte(i));
+            end;
+         end;
+      end;
+
+   if (configured in SerialPorts) and not (Byte(Ord(configured)) in listed) then
+      begin
+      // TC_PORT_NOT_CONNECTED, not a literal: this is new user-visible text and
+      // TR4W localises UI strings (src\lang\tr4w_consts_<LANG>.pas).
+      // NOTE the 'SERIAL n' part stays English on purpose -- it mirrors PortTypeSA,
+      // which is what the operator sees in tr4w.ini.  Localising the whole caption
+      // is now POSSIBLE for the first time (the commit path takes the canonical
+      // name from item data rather than the displayed text), but it would divorce
+      // the dialog from the config file, so it is a deliberate non-change.
+      caption := AnsiString('SERIAL ' + IntToStr(Ord(configured)) + ' ' + TC_PORT_NOT_CONNECTED);
+      ComboAddPort(hwnddlg, ctl, caption, configured);
+      end;
+
+   if ctl = 122 then
+      begin
+      ComboAddPort(hwnddlg, ctl, 'TCP/IP', Network);
+      end
+   else
+      begin
+      ComboAddPort(hwnddlg, ctl, 'PARALLEL 1', Parallel1);
+      ComboAddPort(hwnddlg, ctl, 'PARALLEL 2', Parallel2);
+      ComboAddPort(hwnddlg, ctl, 'PARALLEL 3', Parallel3);
+      end;
+
+   ComboFitDroppedWidth(hwnddlg, ctl);
+end;
 
 // Issue #968 / #1028 -- the default network port is a property of the radio
 // model, owned by the radio registry (single source of truth, keyed by
@@ -106,10 +476,10 @@ var
    def     : Integer;
    ok      : BOOL;
 begin
-   // Ord(Network), never a literal: combo 122 is NONE + SERIAL 1..MAX_SERIAL_PORT
-   // + TCP/IP, so TCP/IP's index tracks the enum and the old hard-coded 21 became
-   // "SERIAL 21" the moment the port ceiling was raised.
-   if tCB_GETCURSEL(hwnddlg, 122) <> Ord(Network) then
+   // Read the PORT, not a combo index: the list is filtered, so index means
+   // nothing.  (This was a hard-coded 21 until the port ceiling moved Network to
+   // ordinal 65 and turned it into "SERIAL 21".)
+   if ComboSelectedPort(hwnddlg, 122) <> Network then
       begin
       Exit;
       end;
@@ -305,11 +675,10 @@ var
   // Kenwood TS-890 (Issue #436) and any future credentialed network radio.
   procedure UpdateNetworkCredentialsVisibility;
   var
-     RadioIdx, PortIdx, ShowCmd: Integer;
+     RadioIdx, ShowCmd: Integer;
   begin
      RadioIdx := tCB_GETCURSEL(hwnddlg, 121);
-     PortIdx   := tCB_GETCURSEL(hwnddlg, 122);
-     if (PortIdx = Ord(Network)) and  // TCP/IP in the port combo; see the note at ApplyDefaultNetworkPort
+     if (ComboSelectedPort(hwnddlg, 122) = Network) and
         (RadioIdx < Ord(High(InterfacedRadioType)) + 1) and  // enum radios only (guard the cast)
         (InterfacedRadioType(RadioIdx) in
          [IC705, IC7300MK2, IC7600, IC7610,
@@ -398,30 +767,15 @@ begin
               end;
            end;
 
-        for I2 := 122 to 123 do
-        begin
-          tCB_ADDSTRING(hwnddlg, I2, 'NONE');
-          // MAX_SERIAL_PORT, not a literal 20 -- this loop was a SEPARATE copy of
-          // the port ceiling, independent of the enum, so the two could drift.
-          // NOTE: this still lists every port whether or not it exists.  Filtering
-          // to ports Windows actually reports (plus the configured one, even when
-          // unplugged) is Part B and needs the combo to carry item data, because
-          // the selection is currently read back by INDEX and committed by TEXT.
-          for i := 1 to MAX_SERIAL_PORT do
-          begin
-            Format(@TempBuffer1, 'SERIAL %u',i);
-            tCB_ADDSTRING_PCHAR(hwnddlg, I2, TempBuffer1);
-          end;
-
-        end;
-       // Format(@TempBuffer1, 'TCP/IP');
-        tCB_AddSTRING_PCHAR(hwnddlg,122,'TCP/IP');
-        for i := 1 to 3 do
-          begin
-            Format(@TempBuffer1, 'PARALLEL %u',i);
-            tCB_ADDSTRING_PCHAR(hwnddlg, 123, TempBuffer1);
-          end;
-//          tCB_ADDSTRING(hwnddlg, 123, 'PARALLEL ' + IntToStr(i));
+        // Port combos are filtered to what Windows reports (plus the configured
+        // port when it is unplugged) and carry their PortType as item data --
+        // see PopulatePortCombo.  The configured port must be passed in so it can
+        // still be offered when the device is absent.
+        PopulatePortCombo(hwnddlg, 122, CATWTR^.tCATPortType);
+        PopulatePortCombo(hwnddlg, 123, TempKeyerPortType);
+        // Both combos are filled, so the widest caption is now known -- size the
+        // dialog to it (the drop-down list is sized inside PopulatePortCombo).
+        WidenDialogForPortNames(hwnddlg);
 
         for I2 := 124 to 125 do
           for i := 1 to 2 do
@@ -574,10 +928,10 @@ begin
            end;
 
         {keyer port}
-        tCB_SETCURSEL(hwnddlg, 123, Ord(TempKeyerPortType));
+        ComboSelectPort(hwnddlg, 123, TempKeyerPortType);
 
         {cat port}
-        tCB_SETCURSEL(hwnddlg, 122, Ord(CATWTR^.tCATPortType));
+        ComboSelectPort(hwnddlg, 122, CATWTR^.tCATPortType);
         if (CATWTR^.tCATPortType = NETWORK) then
            begin
            EnableWindowTrue(hwnddlg, 130);
@@ -661,8 +1015,7 @@ begin
           ButtonsEnable;
           if LoWord(wParam) = 122 then   // 122 is port type (serial, network, etc).
              begin
-             i := tCB_GETCURSEL(hwnddlg, 122);
-             if i = Ord(Network) then
+             if ComboSelectedPort(hwnddlg, 122) = Network then
                 begin
                 EnableWindowTrue(hwnddlg, 130);
                 EnableWindowTrue(hwnddlg, 140);
@@ -866,6 +1219,24 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
     Windows.ZeroMemory(@CMD, SizeOf(CMD));
     ID := GetDialogItemText(CATWndHWND, i);
     CMD := GetDialogItemText(CATWndHWND, i + 20);
+    // Controls 122 (CAT port) and 123 (keyer port) show FRIENDLY text such as
+    // 'SERIAL 14 - Silicon Labs CP210x' or 'SERIAL 23 (not connected)', none of
+    // which is a valid config value -- CheckCommand matches against PortTypeSA.
+    // Emit the canonical name from the row's item data instead of what is drawn.
+    if (i = 102) or (i = 103) then
+       begin
+       // ZeroMemory FIRST -- this is not belt-and-braces, it is required.
+       // CMD is a ShortString, and the line below is written out by
+       // WritePrivateProfileStringA as @CMD[1], i.e. as a NULL-TERMINATED
+       // PAnsiChar.  Assigning a SHORTER value only updates the length byte and
+       // the leading characters; the tail of the previous, longer value survives.
+       // So 'SERIAL 17' assigned over 'SERIAL 17 - USB-CI-V (COM17)' logs as
+       // 'SERIAL 17' (logger honours the length byte) while the ini receives the
+       // whole leftover string -- which is exactly the corruption seen in
+       // testing, and why the trace and the file disagreed.
+       Windows.ZeroMemory(@CMD, SizeOf(CMD));
+       CMD := ShortString(StrPas(PortTypeSA[ComboSelectedPort(CATWndHWND, i + 20)]));
+       end;
     logger.Trace('[RestartPollingThread] ID = %s, CMD = %s',[ID, CMD]);
     Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
 //    if not
