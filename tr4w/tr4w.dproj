@@ -237,6 +237,7 @@
         <DCCReference Include="src\uRadioElecraftSerial.pas"/>
         <DCCReference Include="src\uRadioYaesuBinary.pas"/>
         <DCCReference Include="src\uRadioYaesuFT1000MP.pas"/>
+        <DCCReference Include="src\uRadioYaesuFT817.pas"/>
         <DCCReference Include="src\uRadioElecraftK3.pas"/>
         <DCCReference Include="src\uRadioKenwoodTS890.pas"/>
         <DCCReference Include="src\uIcomNetworkTypes.pas"/>

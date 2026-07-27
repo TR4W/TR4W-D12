@@ -23,6 +23,10 @@ uses
    Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand;
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
+// Optional per-radio frame check for FIXED-LENGTH framing.  Returns True if the
+// candidate bytes look like a genuine frame at this alignment.  See
+// TFactoryRadioBase.ValidateFrame for why this exists.
+Type TFrameValidator = function (const frame: string): Boolean of Object;
 Type TBinary = (bOn, bOff);
 Type TVFO = (nrVFOA, nrVFOB);  // Keep in sync with vfoNames in var section below
 
@@ -116,6 +120,8 @@ Type TReadingThread = class(TThread)
     radioName: string;  // Set after creation for radio-identified trace messages
     binaryProtocol: Boolean;  // Set from the radio's SerialProtocolIsBinary after creation; True = read raw bytes (Icom CI-V), not a codepage-decoded string
     fixedFrameLength: integer;  // >0: responses are FIXED-LENGTH with no terminator (Yaesu FT1000MP binary) -> hand over N-byte frames. 0 (default) = terminator-delimited (unchanged).
+    frameValidator: TFrameValidator;  // Optional, fixed-frame mode only. nil (default) = accept every frame at face value, exactly as before. When supplied, a candidate frame that fails validation causes ONE byte to be dropped and alignment retried -- a self-syncing recovery for a protocol with no terminator. See TFactoryRadioBase.ValidateFrame.
+    pendingResyncDrops: integer;      // Bytes discarded since the last good frame; reported once on recovery instead of per byte.
     constructor Create(AConn: TIdTCPConnection; proc: TProcessMsgRef; ASocketLock: TCriticalSection; ADisconnecting: PBoolean); reintroduce; overload;
     constructor Create(ASerialPort: TSerialPort; proc: TProcessMsgRef; ASocketLock: TCriticalSection; ADisconnecting: PBoolean); reintroduce; overload;
     procedure ClearSerialBuffer;  // Clear accumulated serial buffer data
@@ -238,6 +244,17 @@ Type TFactoryRadioBase = class(TObject)
       bAddTermination: Boolean;        // True (default): SendToRadio appends CR/LF (WriteLn). Kenwood TS-890 LAN sets this False -- its CAT parser rejects a trailing CR/LF; the K4 tolerates/ignores it, so it stays True.
       SerialProtocolIsBinary: Boolean; // False (default): serial CAT is ASCII text -> WriteString/ReadString. True (Icom CI-V, set in TIcomRadio): the frame is raw bytes (Ord 0..255 per Char, incl. >= $80 like FE/88/FD) -> byte-exact WriteBytes/ReadBytes, so D12's UTF-16/ASCII encoding can't corrupt them.
       SerialFixedFrameLength: integer;  // >0: serial responses are fixed-length binary with NO terminator (Yaesu FT1000MP: 32-byte status block). Default 0 = terminator-delimited. Implies SerialProtocolIsBinary.
+
+      // Frame check for FIXED-LENGTH framing (ignored when SerialFixedFrameLength = 0).
+      // Fixed-length framing has no terminator to re-synchronise on, so a single
+      // unexpected byte -- a set-command ACK the manual never documented, or a byte
+      // dropped on a noisy link -- would misalign EVERY later frame permanently.
+      // A radio whose frames are self-identifying can override this to say "these
+      // bytes are not a frame at this alignment"; the reading thread then discards
+      // one byte and retries, which re-synchronises within a frame or two.
+      // The BASE returns True: no validation, byte-for-byte the original behaviour,
+      // so a radio that does not override is completely unaffected.
+      function ValidateFrame(const frame: string): Boolean; virtual;
 
       // ---- Capabilities: ask the radio what it can do (see TRadioCapabilities). ----
       property Capabilities: TRadioCapabilities read FCapabilities;
@@ -733,6 +750,7 @@ begin
             rt.radioName := Self.rigLabel + ' ' + Self.radioModel;
             rt.binaryProtocol := Self.SerialProtocolIsBinary;  // Icom CI-V: read raw bytes, not a codepage-decoded string
             rt.fixedFrameLength := Self.SerialFixedFrameLength; // Yaesu FT1000MP: fixed-length binary, no terminator
+            rt.frameValidator := Self.ValidateFrame;  // virtual: resolves to the radio's override, or the base's accept-all
             logger.Info('[TFactoryRadioBase.Connect] Created serial reading thread');
             end;
 
@@ -867,6 +885,13 @@ begin
             end;
       end;
       end;
+end;
+
+// Accept every candidate frame -- the behaviour before validation existed.  Radios
+// with self-identifying frames override this; see uRadioYaesuFT817.
+function TFactoryRadioBase.ValidateFrame(const frame: string): Boolean;
+begin
+   Result := True;
 end;
 
 procedure TFactoryRadioBase.UpdateLastValidResponse;
@@ -1348,7 +1373,41 @@ begin
                         while Length(FSerialBuffer) >= fixedFrameLength do
                            begin
                            completeCmd := Copy(FSerialBuffer, 1, fixedFrameLength);
+                           // Optional per-radio frame check.  Fixed-length framing
+                           // has no terminator, so without this ONE unexpected byte
+                           // (an undocumented set-command ACK, or a byte lost on a
+                           // noisy link) would misalign every later frame forever.
+                           // Drop a single byte and retry: alignment recovers within
+                           // a frame or two.  Radios without a validator take the
+                           // accept-all base implementation and are unaffected.
+                           if Assigned(Self.frameValidator) and
+                              (not Self.frameValidator(completeCmd)) then
+                              begin
+                              Delete(FSerialBuffer, 1, 1);
+                              Inc(Self.pendingResyncDrops);
+                              Continue;   // loop still terminates: 1 byte consumed
+                              end;
                            Delete(FSerialBuffer, 1, fixedFrameLength);
+                           if Self.pendingResyncDrops > 0 then
+                              begin
+                              // A SINGLE dropped byte is the expected, benign case:
+                              // some radios acknowledge each set command with one
+                              // byte (confirmed for the Yaesu FT-817 by hamlib's
+                              // driver, which reads exactly one ack byte after every
+                              // set), so one QSY costs one byte.  Anything larger is
+                              // a genuine stream problem worth shouting about.
+                              if Self.pendingResyncDrops = 1 then
+                                 begin
+                                 logger.Debug('[%s RX] Frame resync: dropped 1 byte (expected after a set command on radios that ack).',
+                                             [Self.radioName]);
+                                 end
+                              else
+                                 begin
+                                 logger.Warn('[%s RX] Frame resync: discarded %d byte(s) before a valid frame -- the stream was shifted by more than an ack.',
+                                             [Self.radioName, Self.pendingResyncDrops]);
+                                 end;
+                              Self.pendingResyncDrops := 0;
+                              end;
                            logger.trace('[%s RX] Frame(%d) Hex:[%s]',[Self.radioName, fixedFrameLength, WireHex(completeCmd)]);
                            if Assigned(Self.msgHandler) then
                               begin

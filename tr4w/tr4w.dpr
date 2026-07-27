@@ -135,6 +135,7 @@ uses
   uRadioElecraftSerial in 'src\uRadioElecraftSerial.pas',
   uRadioYaesuBinary in 'src\uRadioYaesuBinary.pas',
   uRadioYaesuFT1000MP in 'src\uRadioYaesuFT1000MP.pas',
+  uRadioYaesuFT817 in 'src\uRadioYaesuFT817.pas',
   uRadioElecraftK3 in 'src\uRadioElecraftK3.pas',
   uRadioKenwoodTS890 in 'src\uRadioKenwoodTS890.pas',
   uIcomNetworkTypes in 'src\uIcomNetworkTypes.pas',
