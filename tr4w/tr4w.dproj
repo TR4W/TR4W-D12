@@ -13,6 +13,12 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
+        <!-- Pre-build gate: radio-registry collisions are a STATIC property of the
+             source and are invisible both at compile time and at run time (see
+             build\Lint-RadioRegistry.ps1).  A non-zero exit fails the build. -->
+        <!-- $(MSBuildProjectDirectory), not $(PROJECTDIR): the latter is an IDE-only
+             macro and expands to empty under msbuild, which broke the command. -->
+        <PreBuildEvent><![CDATA[powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-RadioRegistry.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"]]></PreBuildEvent>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
         <Base_Win32>true</Base_Win32>
