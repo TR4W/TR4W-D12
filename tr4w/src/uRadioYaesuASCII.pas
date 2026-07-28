@@ -109,6 +109,13 @@ type
     firstProcessMessage: boolean;
     FCWSpeedMin: integer;
     FCWSpeedMax: integer;
+    // Mode character 'E' is the ONE map entry the ASCII Yaesus disagree on:
+    // PSK31 on the FTDX-10 generation (legacy Type5), C4FM on the System
+    // Fusion radios (legacy Type3, FT-991/FT-891).  That is DATA about the
+    // radio, not behaviour, so a model states it in its constructor rather
+    // than overriding a method -- and the base still never asks which radio
+    // it is.  Defaults to the Type5 meaning.
+    FModeCharE: TRadioMode;
     // The four protocol seams a per-model subclass may need.  Virtual so a
     // deviating model overrides one instead of this unit growing a model test.
     procedure ParseIFResponse(const msg: string; whichVFO: TVFO); virtual;
@@ -178,6 +185,7 @@ begin
 
    FCWSpeedMin := 4;              // Yaesu keyer range (per-model overridable)
    FCWSpeedMax := 60;
+   FModeCharE  := rmPSK;          // Type5 default; Fusion radios set rmFM
 end;
 
 function TYaesuSerial.Connect: integer;
@@ -442,15 +450,14 @@ begin
       'B': Result := rmFM;       // FM-N
       'C': Result := rmData;     // DATA-USB
       'D': Result := rmAM;       // AM-N
-      'E': Result := rmPSK;      // PSK31 (Type5)
+      'E': Result := FModeCharE; // PSK31 here; C4FM on the Fusion radios
       'F': Result := rmData;     // DATA-FM
       // 'B' and 'F' were missing from the original port of this map and would
       // have logged "unmapped mode char" on a real FM-N or DATA-FM QSO; both are
       // present in the legacy GetVFOInfoForYaesuType5 this was ported from.
       //
-      // NOTE for subclasses: 'E' is the ONLY entry the rtYaesu3 radios disagree
-      // with (C4FM there, not PSK31) -- see uRadioYaesuFT991, which overrides
-      // exactly that one character and defers the rest here.
+      // 'E' is the only entry that varies across the family; it comes from
+      // FModeCharE, which each model sets.  See uRadioYaesuFT991.
    else
       begin
       logger.Warn('[ModeCharToMode] unmapped mode char "%s"',[c]);
