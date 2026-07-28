@@ -969,21 +969,27 @@ end;
 procedure TKenwoodTS890Radio.Split(splitOn: boolean);
 begin
    if FAuthState <> ksAuthenticated then Exit;
-   // TB is the split command on this radio -- "TB  Split.  P1: 0 = Split OFF,
-   // 1 = Split ON" (Kenwood TS-890S PC Command Reference, linked in the header).
+   // FT1 = TX on VFO B, FT0 = TX on VFO A.  UNCHANGED from the D7
+   // implementation, which is reported working against a real radio.
    //
-   // This used to send FT1;/FT0;, but per the same reference FT is "Transmitter
-   // Function (VFO A / VFO B)": it chooses WHICH VFO transmits and says nothing
-   // about split.  So asking for split moved the TX VFO and left split off, and
-   // since the radio reports split through TB, TR4W never saw split turn on --
-   // the indicator and the "You are in SPLIT MODE" warning stayed dark.
+   // Note the command reference lists TB as the explicit split flag ("TB  Split.
+   // P1: 0 = Split OFF, 1 = Split ON") and FT as "Transmitter Function (VFO A /
+   // VFO B)", so on paper TB looks like the command to send.  It was changed to
+   // TB here and changed BACK, because a manual reading is not a reason to alter
+   // a path that works on hardware: a TX VFO differing from the RX VFO IS split,
+   // and the radio then reports TB1 of its own accord, which is what
+   // ParseTBResponse already consumes.
+   //
+   // OPEN QUESTION for the bench: does FT1; alone make a real TS-890 report TB1?
+   // If it does, this is correct as-is.  If it does NOT, split has never worked
+   // on this radio and the fix is to send TB1;/TB0; here.
    if splitOn then
       begin
-      Self.SendToRadio('TB1;');
+      Self.SendToRadio('FT1;');   // TX = VFO B
       end
    else
       begin
-      Self.SendToRadio('TB0;');
+      Self.SendToRadio('FT0;');  // TX = VFO A (split off)
       end;
 end;
 
