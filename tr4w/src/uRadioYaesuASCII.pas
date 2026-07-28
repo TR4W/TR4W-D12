@@ -57,8 +57,10 @@ unit uRadioYaesuASCII;
                       uRadioYaesuFT991.
     ModeToYaesuDigit  write side of the same map.
 
-  Worked example -- Yaesu ships a new radio, near-identical to the FTDX-10, except
-  it finally supports KY; for CW text the way Kenwood and Elecraft do:
+  Worked example.  THE "FTDX-1234" BELOW IS HYPOTHETICAL -- no such radio exists,
+  it is a stand-in for whatever Yaesu ships next.  Say it is near-identical to the
+  FTDX-10 except that it finally supports KY; for CW text the way Kenwood and
+  Elecraft do:
 
       unit uRadioYaesuFTDX1234;
       TYaesuFTDX1234Radio = class(TYaesuSerial)
