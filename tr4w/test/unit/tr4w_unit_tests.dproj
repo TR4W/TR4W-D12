@@ -87,7 +87,7 @@
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <DCC_UnitSearchPath>..\..\src;..\..\src\trdos;..\..\src\utils;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\src;..\..\src\lang;..\..\src\trdos;..\..\src\utils;..\..\Include;..\..\include\Core;..\..\include\System;..\..\include\Protocols;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
         <Manifest_File>(None)</Manifest_File>
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
@@ -137,6 +137,11 @@
         <DCCReference Include="uTestMults.pas"/>
         <DCCReference Include="..\..\src\uCallSignRoutines.pas"/>
         <DCCReference Include="uTestCallSignRoutines.pas"/>
+        <DCCReference Include="..\..\src\uFactoryRadioBase.pas"/>
+        <DCCReference Include="..\..\src\uRadioYaesuASCII.pas"/>
+        <DCCReference Include="..\..\src\uRadioYaesuFTDX10.pas"/>
+        <DCCReference Include="..\..\src\uRadioYaesuFT991.pas"/>
+        <DCCReference Include="uTestYaesuASCII.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

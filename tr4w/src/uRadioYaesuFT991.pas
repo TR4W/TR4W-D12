@@ -46,6 +46,24 @@ unit uRadioYaesuFT991;
   C4FM there; the FTDX-10 has no C4FM and uses 'E' for PSK31.  Decoding one as the
   other would put the wrong mode in the log on an FM QSO.
 
+  CONFIRMED AGAINST THE MANUFACTURER (NY4I supplied the FT-991 CAT manual page for
+  the MD command).  Yaesu's own table reads:
+
+      1 LSB   2 USB   3 CW-U   4 FM    5 AM     6 RTTY-LSB   7 CW-L
+      8 DATA-LSB      9 RTTY-USB       A DATA-FM             B FM-N
+      C DATA-USB      D AM-N           E C4FM
+
+  which matches this driver's map entry for entry: 'E' really is C4FM, 'B' really
+  is FM-N, 3/7 are CW-U/CW-L (rmCW/rmCWRev), 6/9 are RTTY-LSB/RTTY-USB
+  (rmFSK/rmFSKRev -- LSB being the conventional RTTY sense), and 8/A/C are the
+  three DATA variants.  NOTE ALSO: the FT-991 table has NO 'F'.  The inherited base
+  map defines 'F' as DATA-FM, which comes from the FTDX-10 side; harmless here
+  because this radio never sends it.
+
+  Scope of that evidence: the page documents the MD command, not IF.  The IF
+  response's mode field at position 22 uses the same code set -- that part rests on
+  the legacy parser, which is bench-proven, rather than on the page itself.
+
   C4FM maps to rmFM, NOT rmDV, matching the legacy Type3 map (TempMode := FM,
   ExtendedMode := eC4FM).  rmDV looks like the better fit by name, but it is
   D-STAR-specific downstream: MainUnit's mode conversion turns rmDV into
@@ -63,15 +81,14 @@ unit uRadioYaesuFT991;
 
   ****  NOT YET BENCH-VALIDATED -- keep on the tester list  ****
 
-  BENCH NOTES (what to actually check on a real FT-991):
-    - Mode readout on C4FM: the radio should report FM, not an "unmapped mode
-      char" warning in the log.
-    - The less-common DATA/RTTY chars ('6' '8' '9' 'A' 'C') against the mode shown
-      on the radio's own display -- these come from the legacy map and have not
-      been verified one by one.
+  BENCH NOTES (what to actually check on a real FT-991).  The mode map no longer
+  belongs on this list -- Yaesu's own MD table settles it, above -- so what remains
+  is the part no document can answer:
     - Split: engage split at the radio and confirm TR4W shows it at startup;
       also toggle it from TR4W in both directions.
     - Clarifier: confirm positions 15-19 return sign + 4 digits ("+0000"/"-0000").
+    - That the IF response really is 28 bytes with the mode at position 22, since
+      that offset comes from the legacy parser rather than from the manual page.
 }
 
 interface
