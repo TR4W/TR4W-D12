@@ -67,7 +67,6 @@ procedure pFT747GX(rig: RadioPtr);
 procedure pFT840_FT890_FT900(rig: RadioPtr);
 procedure pFT920(rig: RadioPtr);
 procedure pFT767(rig: RadioPtr);
-procedure pFT736R(rig: RadioPtr);
 procedure pFT817_FT847_FT857_FT897(rig: RadioPtr);
 procedure pFT1000MP(rig: RadioPtr);
 procedure pFT100(rig: RadioPtr);
@@ -2708,12 +2707,11 @@ begin
    until rig.tPollCount < 0;
 end;
 
-procedure pFT736R(rig: RadioPtr);
-begin
-   //  WriteToSerialCATPort(FT767CATEnablePollingString, rig.tCATPortHandle)
-   rig.WritePollRequest(FT767CATEnablePollingString,
-      length(FT767CATEnablePollingString));
-end;
+// pFT736R removed -- the FT-736R is now a HamLib-only radio (HamLibONLYRadios in
+// LOGRADIO.InitRadios), so this serial path is unreachable.  It never worked: it
+// wrote one CAT-enable frame (the FT-767 one, apparently copy-pasted from pFT767
+// below) and returned, with no ReadFromCOMPort and no `repeat` loop, so the polling
+// thread exited immediately and no frequency or mode ever reached the log window.
 
 procedure pFT767(rig: RadioPtr);
 label
@@ -3786,8 +3784,8 @@ begin
          end;
       FT767:
          pFT767(rig);
-      FT736R:
-         pFT736R(rig);
+      // FT736R has no case here: it is HamLib-only, so SetUpRadioInterface routes
+      // it to HamLib Direct and this serial dispatch is never reached.
       FT747GX:
          pFT747GX(rig);
       FT817, FT818, FT847, FT857, FT897:

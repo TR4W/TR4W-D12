@@ -1257,6 +1257,17 @@ begin
               logger.Info('Setting UseHamLib to true because radioModel is a Hamlib only radio');
               CATWTR^.UseHamLib := true;
               end;
+           // These radios have no native CAT path in TR4W at all, so unchecking
+           // the box does not select an alternative -- it silently leaves the
+           // operator with no radio control.  Grey it out rather than let them
+           // reach a state that cannot work.  (Same treatment as the COM port
+           // drop-down, which greys ports that cannot be selected.)
+           //
+           // This is NOT the whole guard: 'RADIO ONE USE HAMLIB' is also a
+           // config-file command, so a .cfg can clear the flag without this
+           // dialog ever opening.  RadioObject.SetUpRadioInterface enforces the
+           // same invariant on the runtime path.
+           EnableWindowFalse(hwnddlg, 1000);
            end;
 
         if CATWTR^.UseHamLib then
