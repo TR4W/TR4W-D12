@@ -67,6 +67,18 @@ Grounding rank used throughout (best first):
 | D1 | TR4W never had a working read path for it | `pFT736R` has no `ReadFromCOMPort` and no `repeat` loop; identical in D7 | — | CONFIRMED (code-verified both trees) |
 | D2 | The **HamLib** path works for this radio | hamlibID 1010 present; never exercised | Radio still does not work, now via a different route | OPEN — needs an operator with an FT-736R |
 
+## F. FlexRadio (bench: NY4I has a FLEX-6000 on SmartSDR CAT, 2026-07-28)
+
+Source: SmartSDR CAT User Guide v4.1.5 (proprietary — cite sections, do not copy tables).
+
+| # | Finding | Basis | Status |
+|---|---|---|---|
+| F1 | The `ZZxx` command set works on the **serial** CAT port, not only TCP | §2.2.2.1 — the CAT port speaks Kenwood 2-char **plus** Flex 4-char `ZZxx` | **CONFIRMED** — so ONE driver serves serial and TCP 5002; no protocol branching by transport. My earlier "serial = TS-2000 emulation only" was wrong |
+| F2 | SmartSDR CAT exposes **TCP 5002** speaking the same CAT protocol; **4992** is the separate Ethernet API | §2.2 / existing `TFlexRadio6000` registration | **CONFIRMED** — matches NY4I's rule: one radio type, CAT Port setting picks transport |
+| F3 | VFO B reads blank | §1.2 — a Split Slice does not exist until a **CAT** split (`FT1;`/`ZZSW1;`) creates it; earlier VFO B commands return `?;`. A split made in the SmartSDR UI does not count. `?;` is 2 bytes where `pKenwood2` demands 14, so it is discarded | **CONFIRMED — NOT A TR4W BUG** |
+| F4 | Only one RIT/XIT offset is displayed | The Kenwood subset has `RT`/`XT` states and `RC`/`RD`/`RU`, but **no command to read either offset**; the only offset over Kenwood is the single `IF;` field. Separate offsets need `ZZRG` (A RIT), `ZZXG` (A XIT), `ZZRW` (B RIT) | **CONFIRMED** — the two-offset display needs the `ZZ` commands |
+| F5 | `TFlexRadioCAT` on the `ZZ` set should replace the Kenwood path for Flex | `ZZFB`, `ZZRG`/`ZZXG`, `ZZIF` have no Kenwood-subset equivalent | OPEN — next session's first task |
+
 ## E. Design / cross-cutting
 
 | # | Assumption | Basis | Risk if wrong | Status |
