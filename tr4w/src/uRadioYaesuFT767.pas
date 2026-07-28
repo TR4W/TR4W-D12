@@ -103,7 +103,7 @@ type
   TFT767Radio = class(TYaesuBinary)
   protected
     FCycle: integer;
-    function  StatusModeToMode(b: Byte): TRadioMode;
+    function  StatusModeToMode(b: Byte; hz: integer): TRadioMode;
     function  BCDFreqRead(const frame: string; pos1: integer): integer;
     procedure ExpectFrameLength(n: integer);
   public
@@ -172,14 +172,16 @@ begin
    Result := integer(acc * 10);
 end;
 
-function TFT767Radio.StatusModeToMode(b: Byte): TRadioMode;
+function TFT767Radio.StatusModeToMode(b: Byte; hz: integer): TRadioMode;
 begin
    case b mod 8 of
       2: Result := rmCW;
       4: Result := rmFM;
       5: Result := rmData;
    else
-      Result := rmUSB;   // 0, 1, 3 -- legacy collapsed these to "Phone"
+      // 0, 1, 3 -- reported at the ROLL-UP level only ("Phone"); sideband by
+      // frequency convention, not asserted.
+      Result := PhoneModeForFreq(hz);
    end;
 end;
 
@@ -209,7 +211,8 @@ begin
 
    // One mode byte, describing the current VFO.  Legacy assigns it to the
    // radio-level mode; nothing here says which VFO is operating, so VFO A.
-   Self.vfo[nrVFOA].mode := StatusModeToMode(Ord(msg[FT767_MODE_POS]));
+   Self.vfo[nrVFOA].mode := StatusModeToMode(Ord(msg[FT767_MODE_POS]),
+                                             Self.vfo[nrVFOA].frequency);
    Self.SetActiveVFO(nrVFOA);
 
    // Back to waiting for the next handshake.

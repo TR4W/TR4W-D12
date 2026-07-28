@@ -66,6 +66,25 @@ type
     logger: TLogLogger;
     // Send one 5-byte Yaesu command byte-exact (opcode last).
     procedure SendBytes(b0, b1, b2, b3, b4: Byte);
+
+    // Sideband for a mode byte that says only "phone".
+    //
+    // TR4W keeps modes at two levels: a ROLL-UP (ModeType -- CW / Phone /
+    // Digital / FM, what the main window shows) and the actual mode
+    // (ExtendedModeType, which has eSSB for exactly this case and is what the
+    // ContestExchange record carries).  The legacy pollers for several of these
+    // old radios only ever set the roll-up: their mode byte reports "phone" and
+    // nothing distinguishes LSB from USB.
+    //
+    // TRadioMode has no neutral phone member, so a driver must pick one.
+    // Picking a fixed sideband would ASSERT something the radio never said and
+    // put it in the log; deriving it from frequency uses the universal amateur
+    // convention (LSB below 10 MHz, USB above) and gives the answer an operator
+    // expects on every band.
+    //
+    // This is a CONVENTION, not a radio report.  A radio that actually tells us
+    // the sideband must map it directly and never call this.
+    function PhoneModeForFreq(hz: integer): TRadioMode;
   public
     constructor Create; reintroduce;
 
@@ -129,6 +148,20 @@ function TYaesuBinary.Connect: integer;
 begin
    Result := Inherited Connect;
    // No prime needed -- PollRadioState pulls status each cycle.
+end;
+
+function TYaesuBinary.PhoneModeForFreq(hz: integer): TRadioMode;
+const
+   SIDEBAND_CROSSOVER_HZ = 10000000;   // 10 MHz: below = LSB, above = USB
+begin
+   if hz < SIDEBAND_CROSSOVER_HZ then
+      begin
+      Result := rmLSB;
+      end
+   else
+      begin
+      Result := rmUSB;
+      end;
 end;
 
 procedure TYaesuBinary.SendBytes(b0, b1, b2, b3, b4: Byte);

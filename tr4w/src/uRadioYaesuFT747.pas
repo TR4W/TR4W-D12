@@ -92,7 +92,7 @@ const
 type
   TFT747GXRadio = class(TYaesuBinary)
   protected
-    function  StatusModeToMode(b: Byte): TRadioMode;
+    function  StatusModeToMode(b: Byte; hz: integer): TRadioMode;
     function  BCDFreqRead(const frame: string; pos1: integer): integer;
   public
     constructor Create; reintroduce;
@@ -145,16 +145,19 @@ begin
    Result := integer(acc);
 end;
 
-function TFT747GXRadio.StatusModeToMode(b: Byte): TRadioMode;
+function TFT747GXRadio.StatusModeToMode(b: Byte; hz: integer): TRadioMode;
 begin
    // One-hot bitmask.  rmNone for anything unrecognised so ProcessMsg can leave
    // the previous mode alone, matching legacy's case-without-else.
+   // 2 / 8 / 16 are three distinct radio modes that legacy reports at the
+   // ROLL-UP level only ("Phone"), so the sideband is derived from frequency
+   // rather than asserted -- see TYaesuBinary.PhoneModeForFreq.
    case b of
       FT747_MODE_FM:    Result := rmFM;
       FT747_MODE_CW:    Result := rmCW;
-      FT747_MODE_SSB_A: Result := rmUSB;
-      FT747_MODE_SSB_B: Result := rmUSB;
-      FT747_MODE_SSB_C: Result := rmUSB;
+      FT747_MODE_SSB_A: Result := PhoneModeForFreq(hz);
+      FT747_MODE_SSB_B: Result := PhoneModeForFreq(hz);
+      FT747_MODE_SSB_C: Result := PhoneModeForFreq(hz);
    else
       Result := rmNone;
    end;
@@ -183,9 +186,9 @@ begin
 
    // Only ONE mode byte exists, describing the current VFO.  Apply it to
    // whichever VFO byte 1 says is active rather than assuming VFO A.
-   m := StatusModeToMode(Ord(msg[FT747_MODE_POS]));
    if (flags and FT747_VFOB_BIT) <> 0 then
       begin
+      m := StatusModeToMode(Ord(msg[FT747_MODE_POS]), Self.vfo[nrVFOB].frequency);
       Self.SetActiveVFO(nrVFOB);
       if m <> rmNone then
          begin
@@ -194,6 +197,7 @@ begin
       end
    else
       begin
+      m := StatusModeToMode(Ord(msg[FT747_MODE_POS]), Self.vfo[nrVFOA].frequency);
       Self.SetActiveVFO(nrVFOA);
       if m <> rmNone then
          begin

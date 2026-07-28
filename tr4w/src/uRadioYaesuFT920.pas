@@ -87,7 +87,10 @@ const
 type
   TFT920Radio = class(TYaesuBinary)
   protected
-    function  StatusModeToMode(b: Byte): TRadioMode;
+    // hz is needed because this radio's mode byte reports only "phone" for
+    // several values; the sideband comes from the frequency (see
+    // TYaesuBinary.PhoneModeForFreq).
+    function  StatusModeToMode(b: Byte; hz: integer): TRadioMode;
     function  FreqRead(const frame: string; pos1: integer): integer;
   public
     constructor Create; reintroduce;
@@ -131,11 +134,12 @@ begin
              Ord(frame[pos1 + 3]);
 end;
 
-function TFT920Radio.StatusModeToMode(b: Byte): TRadioMode;
+function TFT920Radio.StatusModeToMode(b: Byte; hz: integer): TRadioMode;
 begin
-   // FT-920 numbering -- NOT the sibling map.  See the unit header: legacy's
-   // `else -> Phone` means LSB and USB are indistinguishable in the source we
-   // are porting from, so both land on rmUSB until a bench says otherwise.
+   // FT-920 numbering -- NOT the sibling map.  Legacy's `else -> Phone` is the
+   // ROLL-UP level (ModeType); it does not distinguish LSB from USB, and the
+   // legacy poller never sets ExtendedMode for this radio either.  So the
+   // sideband is derived from frequency by convention rather than asserted.
    case b and $07 of
       1: Result := rmCW;
       3: Result := rmFM;
@@ -143,7 +147,7 @@ begin
       5: Result := rmData;
       6: Result := rmData;
    else
-      Result := rmUSB;
+      Result := PhoneModeForFreq(hz);
    end;
 end;
 
@@ -162,11 +166,13 @@ begin
 
    Self.vfo[nrVFOA].frequency := FreqRead(msg, s2 + FT920_S2_VFOA_FREQ);
    Self.vfo[nrVFOA].band      := FreqToRadioBand(Self.vfo[nrVFOA].frequency);
-   Self.vfo[nrVFOA].mode      := StatusModeToMode(Ord(msg[s2 + FT920_S2_VFOA_MODE]));
+   Self.vfo[nrVFOA].mode      := StatusModeToMode(Ord(msg[s2 + FT920_S2_VFOA_MODE]),
+                                                  Self.vfo[nrVFOA].frequency);
 
    Self.vfo[nrVFOB].frequency := FreqRead(msg, s2 + FT920_S2_VFOB_FREQ);
    Self.vfo[nrVFOB].band      := FreqToRadioBand(Self.vfo[nrVFOB].frequency);
-   Self.vfo[nrVFOB].mode      := StatusModeToMode(Ord(msg[s2 + FT920_S2_VFOB_MODE]));
+   Self.vfo[nrVFOB].mode      := StatusModeToMode(Ord(msg[s2 + FT920_S2_VFOB_MODE]),
+                                                  Self.vfo[nrVFOB].frequency);
 
    flags := Ord(msg[FT920_S1_FLAGS_POS]);
    Self.SetXITOn((flags and $01) <> 0);   // bit 0
