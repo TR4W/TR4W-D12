@@ -117,12 +117,12 @@ def test_ts890():
     # radio.  It is absent from the TS-990S command set, which rejects it.
     body = r.handle(b'IF')[:-1]
     check('TS-890 answers legacy IF, 37-char body', len(body), 37)
-    r.split_flag = True
-    check('IF split field tracks TB', r.handle(b'IF')[:-1][-5], '1')
-    r.split_flag = False
+    r.handle(b'TB1')
+    check('IF split field tracks split state', r.handle(b'IF')[:-1][-5], '1')
+    r.handle(b'TB0')
     check('TS-990 rejects IF', KenwoodTS890(ident='022', legacy_if=False).handle(b'IF'), '?;')
     # TB is the split command per the Kenwood PC Command Reference, NOT FT.
-    check('TB1 sets split', (r.handle(b'TB1'), r.split_flag)[1], True)
+    check('TB1 sets split', (r.handle(b'TB1'), r.state.split)[1], True)
     check('TB reports split', r.handle(b'TB'), 'TB1;')
     r.handle(b'TB0')
 
@@ -135,8 +135,10 @@ def test_ts890():
     p.state.vfo_a = 14200000
     check('frequency change is pushed', p.pending(), ['FA00014200000;'])
     p.state.rx_vfo = 1
-    check('VFO change pushes FR and BOTH relative modes',
-          p.pending(), ['FR1;', 'OM02;', 'OM13;'])
+    # TB rides along because split is derived: moving the RX VFO away from the TX
+    # VFO IS split, and a real radio would report that too.
+    check('VFO change pushes FR, BOTH relative modes, and the new split',
+          p.pending(), ['FR1;', 'OM02;', 'OM13;', 'TB1;'])
     check('nothing pushed when nothing changed', p.pending(), [])
 
 

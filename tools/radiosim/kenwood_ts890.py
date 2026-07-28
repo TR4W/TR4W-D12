@@ -59,6 +59,8 @@ class KenwoodTS890(object):
         # IF is UNDOCUMENTED on the TS-890S -- supplanted by SF -- but still
         # answered for legacy software (hamlib's TS-890 simulator documents the
         # format and notes it reflects a real radio).  NY4I confirmed it is absent
+        # from the TS-990S command set, so that model rejects it instead.
+        self.legacy_if = legacy_if
         self.ai_level = 0            # set by AI<n>; the driver sends AI2
         self._last_push = None       # snapshot for change detection
 
