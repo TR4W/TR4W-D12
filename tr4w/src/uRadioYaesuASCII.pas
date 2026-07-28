@@ -451,7 +451,7 @@ begin
       'C': Result := rmData;     // DATA-USB
       'D': Result := rmAM;       // AM-N
       'E': Result := FModeCharE; // PSK31 here; C4FM on the Fusion radios
-      'F': Result := rmData;     // DATA-FM
+      'F': Result := rmData;     // DATA-FM-N (per the FTX-1F P6 table; 'A' is DATA-FM)
       // 'B' and 'F' were missing from the original port of this map and would
       // have logged "unmapped mode char" on a real FM-N or DATA-FM QSO; both are
       // present in the legacy GetVFOInfoForYaesuType5 this was ported from.

@@ -119,6 +119,21 @@ var
          end;
    end;
 
+const
+   // BENCH-PROVEN DIVERGENCES -- radios where the HARDWARE contradicts the legacy
+   // sets, so the factory is deliberately right and the sets are stale.
+   //
+   // NY4I's testers established on real IC-706 / IC-706MkII / IC-706MkIIG / IC-7000
+   // that split is NOT readable and TX status is NOT readable, even though none of
+   // them appears in IcomRadiosSplitSetOnly or IcomRadiosTXStatusUnreadable (both
+   // of which contain only the IC-718).  A bench beats the code it contradicts, so
+   // these are excluded rather than the test being weakened.
+   //
+   // Do NOT add a model here to silence a failure.  A row belongs here only when
+   // someone has had that radio on a bench.  Anything else is the migration
+   // dropping behaviour, which is exactly what this test exists to catch.
+   BenchProvenDivergences = [IC706, IC706II, IC706IIG, IC7000];
+
 begin
    // Walks the WHOLE registry against LOGRADIO's sets.  Checking a representative
    // model instead would only confirm that one radio agreed with someone's
@@ -139,8 +154,17 @@ begin
          end;
       try
          Inc(checked);
+         // All FOUR sets, not two.  An earlier version checked only RIT and VFOB
+         // and passed while 26 radios were silently missing split and TX-status
+         // reads that D7 performs -- the deny-lists below contain the IC-718 and
+         // nothing else, so for every other model the answer is "yes".
          Compare(rcReadRIT, m in IcomRadiosThatSupportRIT, 'RIT');
          Compare(rcReadVFOB, m in IcomRadiosThatSupportVFOB, 'VFOB');
+         if not (m in BenchProvenDivergences) then
+            begin
+            Compare(rcReadSplit, not (m in IcomRadiosSplitSetOnly), 'Split');
+            Compare(rcReadTXStatus, not (m in IcomRadiosTXStatusUnreadable), 'TXStatus');
+            end;
       finally
          r.Free;
       end;

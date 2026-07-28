@@ -92,6 +92,37 @@ type
     // FT-950 / FT-2000 / FTDX-9000 poll FR; to learn which VFO is receiving.
     // The others do not answer it, so asking would just cost a timeout.
     FReadsActiveVFO: boolean;
+
+    // ---- THE TWO TRAITS THAT DO NOT AGREE ON A GROUPING ----------------------
+    // These three radios divide DIFFERENTLY depending on which command you look
+    // at, which is why both are flags and neither is a class split (manuals via
+    // NY4I):
+    //
+    //             FT values                      FR values
+    //   FT-950    0,1 toggle + 2,3 absolute      0,1,4,5   ('4' = VFO-B RX)
+    //   FT-2000   0,1 ONLY                       0,1,2,3   (no '4' at all)
+    //   FTDX-9000 0,1 toggle + 2,3 absolute      0,1,2,3   (no '4' at all)
+    //
+    // By FT the odd one out is the FT-2000; by FR it is the FT-950.  No single
+    // hierarchy expresses that, so the model sets two independent flags and this
+    // base never asks which radio it is.
+
+    // True  -> split with FT3;/FT2;  (absolute "VFO-B TX" / "VFO-A TX")
+    // False -> split with FT1;/FT0;  (the FT-2000, whose FT has only 0 and 1)
+    // Note the FT-950/FTDX-9000 DO have 0/1 -- but there they are TOGGLES, which
+    // cannot set a definite state.  That is what LOGRADIO Issue #166 was fixing
+    // when it moved the whole group from FT1;/FT0; to FT3;/FT2; -- correct for
+    // those two, but it left the FT-2000 sending a parameter it does not define.
+    FSplitAbsoluteTwoThree: boolean;
+
+    // Which FR replies mean "VFO B is the receiving VFO".
+    //   FT-950              ['4','5']  -- 4 = B RX, 5 = B muted (still the RX VFO)
+    //   FT-2000 / FTDX-9000 ['3']      -- 3 = Main muted, Sub RX
+    // '2' on the latter two means BOTH receivers are live (true dual receive).
+    // TR4W has a single "operating VFO", so '2' deliberately stays VFO A: with
+    // both live, Main is the primary.  A judgement call, not a manual statement.
+    FVFOBReceivingChars: TSysCharSet;
+
     procedure ParseIFResponse(const msg: string; whichVFO: TVFO); override;
   public
     constructor Create; reintroduce;
@@ -108,9 +139,23 @@ begin
    inherited Create;
    radioModel := 'Yaesu (rtYaesu2 generation)';   // models override
    FReadsActiveVFO := False;
-   // No rcReadSplit and no rcReadTXStatus: this generation genuinely cannot
-   // report either.  Saying so in the capability set is how the rest of the
-   // program can tell "off" from "unknown".
+   // Defaults = the legacy behaviour for the models NOT yet verified against a
+   // manual (FT-450, FT-1200, FTDX-3000, FTDX-5000).  Each verified model sets
+   // these explicitly in its own constructor, so the defaults never silently
+   // stand in for a checked value.
+   FSplitAbsoluteTwoThree := True;      // FT3;/FT2;, as legacy sends
+   FVFOBReceivingChars    := ['4'];     // as legacy tests
+   // No rcReadSplit and no rcReadTXStatus -- because TR4W DOES NOT POLL THEM,
+   // not because the radios cannot report them.  State it that way round: an
+   // earlier version of this comment claimed the generation "genuinely cannot"
+   // and that is false.  The FTDX-9000 FT command has a documented Read form
+   // whose answer P2 is 0 = TX on Main (VFO-A), 1 = TX on Sub (VFO-B) (NY4I,
+   // manual) -- i.e. split readback exists and we simply never ask.  The legacy
+   // poll cycle this was ported from (pFTDX9000) sends IF; OI; FR; and stops.
+   //
+   // Declaring the absence is still right: a caller can distinguish "split off"
+   // from "we do not know".  But adding an FT; poll would be an IMPROVEMENT over
+   // D7, not a port fix, and wants a bench before it ships.
    FCapabilities.Flags := [rcReadVFOB, rcReadRIT];
    FCapabilities.CWSpeedMin := FCWSpeedMin;
    FCapabilities.CWSpeedMax := FCWSpeedMax;
@@ -168,9 +213,10 @@ procedure TYaesuASCIILegacy.ProcessMessage(sMessage: string);
 begin
    if (Length(sMessage) >= 3) and SameText(AnsiLeftStr(sMessage, 2), 'FR') then
       begin
-      // FR reports the RECEIVE VFO, not split.  '4' means VFO B is operating.
+      // FR reports the RECEIVE VFO, NOT split -- FT is what indicates split.
+      // Which replies mean "VFO B" is per-model; see FVFOBReceivingChars.
       UpdateLastValidResponse;
-      if sMessage[3] = '4' then
+      if CharInSet(sMessage[3], FVFOBReceivingChars) then
          begin
          Self.SetActiveVFO(nrVFOB);
          end
@@ -188,13 +234,31 @@ procedure TYaesuASCIILegacy.Split(splitOn: boolean);
 begin
    // FR0; first (receive on VFO A), then the transmit VFO.  Both commands, in
    // this order -- LOGRADIO Issue #166.
-   if splitOn then
+   //
+   // The transmit-VFO parameter is per-model: FT3;/FT2; are the ABSOLUTE forms
+   // on radios that have them, but the FT-2000's FT accepts only 0 and 1.  See
+   // FSplitAbsoluteTwoThree.
+   if FSplitAbsoluteTwoThree then
       begin
-      Self.SendToRadio('FR0;FT3;');
+      if splitOn then
+         begin
+         Self.SendToRadio('FR0;FT3;');
+         end
+      else
+         begin
+         Self.SendToRadio('FR0;FT2;');
+         end;
       end
    else
       begin
-      Self.SendToRadio('FR0;FT2;');
+      if splitOn then
+         begin
+         Self.SendToRadio('FR0;FT1;');
+         end
+      else
+         begin
+         Self.SendToRadio('FR0;FT0;');
+         end;
       end;
 end;
 
