@@ -35,9 +35,9 @@ unit uRadioKenwoodModels;
   here -- their serial config still uses the legacy path.
 
   MIGRATION SAFETY: only the models with real hardware behind them (TS-590,
-  TS-2000 via NY4I's testers) are registered so far.  The blind siblings
-  (TS-140/440/450/480/690/850/870/940/950) are held until these two pass on
-  hardware, so the legacy path stays the live fallback for the unproven ones.
+  TS-2000, TS-480 via NY4I's testers/volunteers) are registered so far.  The blind
+  siblings (TS-140/440/450/690/850/870/940/950) are held until they have a tester,
+  so the legacy path stays the live fallback for the unproven ones.
 }
 
 interface
@@ -55,5 +55,9 @@ initialization
   RegisterRadio(TS2000,
      function: TFactoryRadioBase begin Result := TKenwoodSerial.Create end,
      'Kenwood TS-2000', [rlSerial], 0, False);
+  // TS-480: added -- a volunteer has hardware to bench it.
+  RegisterRadio(TS480,
+     function: TFactoryRadioBase begin Result := TKenwoodSerial.Create end,
+     'Kenwood TS-480', [rlSerial], 0, False);
 
 end.
