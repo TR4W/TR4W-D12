@@ -20,6 +20,7 @@ Two quirks that matter for a faithful double:
 """
 
 from .core import RadioState, TerminatorFramer
+from .kenwood import build_kenwood_if
 
 MODE_TO_NUM = {'LSB': '1', 'USB': '2', 'CW': '3', 'FM': '4', 'AM': '5',
                'FSK': '6', 'CWR': '7', 'FSKR': '9'}
@@ -40,11 +41,64 @@ class KenwoodTS890(object):
         self.state = state or RadioState()
         self.framer = TerminatorFramer(b';')
         self.mode_b = 'USB'          # the VFOs can carry different modes
+        self.ai_level = 0            # set by AI<n>; the driver sends AI2
+        self._last_push = None       # snapshot for change detection
 
     def show(self, frame):
         if isinstance(frame, bytes):
             frame = frame.decode('ascii', 'replace')
         return frame if frame.endswith(';') else frame + ';'
+
+    # -- AI2 auto-information push ----------------------------------------
+    # This radio is PUSH-driven, and getting that wrong makes the simulator
+    # useless: TKenwoodTS890Radio.PollRadioState sends nothing but PS; as a
+    # keepalive ("AI2 pushes everything else, so this is keepalive only -- no
+    # real polling"), so without unsolicited output the operator could change
+    # frequency here all day and TR4W's display would never move.
+    #
+    # Only the messages the driver actually PARSES are pushed.  IF is answered
+    # when asked (below) but deliberately NOT pushed: the driver has no IF branch
+    # at all, so pushing it would only produce "Unhandled reply" noise, and I
+    # cannot confirm from here whether real hardware pushes it.  That question is
+    # worth settling on the radio -- if it does push IF, the DRIVER should learn
+    # to read it rather than the simulator learn to stay quiet.
+    def _snapshot(self):
+        st = self.state
+        return (st.vfo_a, st.vfo_b, st.rx_vfo, st.tx_vfo, st.mode, self.mode_b,
+                st.rit_on, st.xit_on, st.transmitting)
+
+    def pending(self):
+        if self.ai_level < 1:
+            return []
+        now = self._snapshot()
+        if now == self._last_push:
+            return []
+        was = self._last_push
+        self._last_push = now
+        st = self.state
+        out = []
+        if was is None:
+            return []                       # first call just establishes a baseline
+        if now[0] != was[0]:
+            out.append('FA%011d;' % st.vfo_a)
+        if now[1] != was[1]:
+            out.append('FB%011d;' % st.vfo_b)
+        if now[2] != was[2]:
+            out.append('FR%d;' % st.rx_vfo)
+        if now[3] != was[3]:
+            out.append('FT%d;' % st.tx_vfo)
+        if now[4] != was[4] or now[5] != was[5] or now[2] != was[2]:
+            # Modes are reported RELATIVE to the operating VFO -- same quirk as
+            # the OM query, so a VFO change re-reports both.
+            out.append('OM0%s;' % MODE_TO_NUM.get(self._mode_of(st.rx_vfo), '3'))
+            out.append('OM1%s;' % MODE_TO_NUM.get(self._mode_of(1 - st.rx_vfo), '3'))
+        if now[6] != was[6]:
+            out.append('RT%d;' % (1 if st.rit_on else 0))
+        if now[7] != was[7]:
+            out.append('XT%d;' % (1 if st.xit_on else 0))
+        if now[8] != was[8]:
+            out.append('TX0;' if st.transmitting else 'RX0;')
+        return out
 
     def _mode_of(self, vfo):
         return self.state.mode if vfo == 0 else self.mode_b
@@ -64,6 +118,14 @@ class KenwoodTS890(object):
 
         if head == 'PS':                       # keepalive -- MUST be answered
             return 'PS1;'
+
+        if head == 'IF':
+            # A real TS-890 supports IF, so the double answers it.  Note that
+            # TKenwoodTS890Radio has NO IF branch -- it reads state from the
+            # discrete replies instead -- so nothing in TR4W consumes this today.
+            # It is here so the simulator is faithful to the radio rather than to
+            # one driver's subset, and so an IF-based driver could be tested.
+            return build_kenwood_if(self.state)
 
         if head == 'ID':
             return ('ID%s;' % self.ident) if self.ident else ''
@@ -149,7 +211,13 @@ class KenwoodTS890(object):
         #   AI2   auto-information level        FL0n  roofing filter selection
         #   KY    CW keying text                TB    text buffer (RTTY/PSK)
         #   ##KN / ##VP  LAN-only control       RF    RF-related query
-        if head in ('AI', 'FL', 'KY', 'TB', 'RF') or cmd.startswith('##'):
+        if head == 'AI':
+            # Record the level: AI2 turns on the push that this radio relies on.
+            self.ai_level = int(arg[0]) if arg and arg[0].isdigit() else 0
+            self._last_push = self._snapshot()
+            return ''
+
+        if head in ('FL', 'KY', 'TB', 'RF') or cmd.startswith('##'):
             return ''
 
         return None

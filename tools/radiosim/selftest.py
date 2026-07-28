@@ -91,6 +91,20 @@ def test_ts890():
     check('OM1 with B operating -> A mode (CW)', r.handle(b'OM1'), 'OM13;')
     check('TS-990 stays silent on ID', KenwoodTS890(ident=None).handle(b'ID'), '')
     check('unknown command reported', r.handle(b'ZZ'), None)
+    check('IF matches the shared Kenwood builder', r.handle(b'IF'), Kenwood(state=r.state).build_if())
+
+    # AI2 PUSH -- this radio is push-driven (PollRadioState sends only PS;), so a
+    # simulator that merely answers queries would never move TR4W's display.
+    p = KenwoodTS890()
+    check('no push before AI is enabled', p.pending(), [])
+    p.handle(b'AI2')
+    check('AI2 establishes a baseline, no push yet', p.pending(), [])
+    p.state.vfo_a = 14200000
+    check('frequency change is pushed', p.pending(), ['FA00014200000;'])
+    p.state.rx_vfo = 1
+    check('VFO change pushes FR and BOTH relative modes',
+          p.pending(), ['FR1;', 'OM02;', 'OM13;'])
+    check('nothing pushed when nothing changed', p.pending(), [])
 
 
 def test_icom():

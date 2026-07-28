@@ -12,6 +12,41 @@ MODE_TO_NUM = {'LSB': '1', 'USB': '2', 'CW': '3', 'FM': '4', 'AM': '5',
 NUM_TO_MODE = dict((v, k) for k, v in MODE_TO_NUM.items())
 
 
+def build_kenwood_if(st, mode_to_num=MODE_TO_NUM):
+    """The Kenwood IF status string, shared by every Kenwood personality.
+
+    Laid out for TKenwoodSerial.ParseIF, which indexes from the END (L = length,
+    1-based): L-18 RIT sign, L-17..L-14 magnitude, L-13 RIT, L-12 XIT, L-8 TX,
+    L-7 mode, L-6 FR, L-4 split.  Frequency is at the fixed 3..13.
+
+    CRITICAL: TR4W's reading thread strips the ';' before the driver sees the
+    command, so ParseIF parses a 37-character BODY, not the 38 bytes on the wire.
+    Sizing this for 38 shifts every end-relative field by one -- and because
+    frequency is at a FIXED offset it keeps working perfectly, which makes the
+    mistake look like a driver bug.  That cost a debugging session the first time;
+    the assertion pins the body length so it cannot recur.
+    """
+    mag = min(abs(st.offset), 9999)
+    out = (
+        'IF'                                            # 1-2
+        + '%011d' % st.rx_freq                          # 3-13   frequency
+        + ' ' * 5                                       # 14-18  filler
+        + ('-' if st.offset < 0 else '+')               # 19     RIT sign   L-18
+        + '%04d' % mag                                  # 20-23  magnitude  L-17
+        + ('1' if st.rit_on else '0')                   # 24     RIT        L-13
+        + ('1' if st.xit_on else '0')                   # 25     XIT        L-12
+        + '0' + '00'                                    # 26-28  memory
+        + ('1' if st.transmitting else '0')             # 29     TX         L-8
+        + mode_to_num.get(st.mode, '3')                 # 30     mode       L-7
+        + str(st.rx_vfo)                                # 31     FR         L-6
+        + '0'                                           # 32     scan
+        + ('1' if st.split else '0')                    # 33     split      L-4
+        + '0' + '00' + '0'                              # 34-37  tone etc
+    )
+    assert len(out) == 37, 'IF body must be 37 chars, got %d' % len(out)
+    return out + ';'
+
+
 class Kenwood(object):
     """TS-590 / TS-2000 / TS-480 family as TR4W drives them."""
 
@@ -28,39 +63,7 @@ class Kenwood(object):
 
     # -- the IF response ---------------------------------------------------
     def build_if(self):
-        """IF status, laid out for TKenwoodSerial.ParseIF.
-
-        ParseIF indexes from the END (L = length, 1-based): L-18 RIT sign,
-        L-17..L-14 magnitude, L-13 RIT, L-12 XIT, L-8 TX, L-7 mode, L-6 FR,
-        L-4 split.  Frequency is at the fixed 3..13.
-
-        CRITICAL: TR4W's reading thread strips the ';' before the driver sees the
-        command, so ParseIF parses a 37-character BODY, not the 38 bytes on the
-        wire.  Sizing this for 38 shifts every end-relative field by one -- and
-        because frequency is at a FIXED offset it keeps working perfectly, which
-        makes the mistake look like a driver bug.  That cost a debugging session
-        the first time; the assertion below pins the body length.
-        """
-        st = self.state
-        mag = min(abs(st.offset), 9999)
-        out = (
-            'IF'                                            # 1-2
-            + '%011d' % st.rx_freq                          # 3-13   frequency
-            + ' ' * 5                                       # 14-18  filler
-            + ('-' if st.offset < 0 else '+')               # 19     RIT sign   L-18
-            + '%04d' % mag                                  # 20-23  magnitude  L-17
-            + ('1' if st.rit_on else '0')                   # 24     RIT        L-13
-            + ('1' if st.xit_on else '0')                   # 25     XIT        L-12
-            + '0' + '00'                                    # 26-28  memory
-            + ('1' if st.transmitting else '0')             # 29     TX         L-8
-            + MODE_TO_NUM.get(st.mode, '3')                 # 30     mode       L-7
-            + str(st.rx_vfo)                                # 31     FR         L-6
-            + '0'                                           # 32     scan
-            + ('1' if st.split else '0')                    # 33     split      L-4
-            + '0' + '00' + '0'                              # 34-37  tone etc
-        )
-        assert len(out) == 37, 'IF body must be 37 chars, got %d' % len(out)
-        return out + ';'
+        return build_kenwood_if(self.state)
 
     # -- command dispatch --------------------------------------------------
     def handle(self, frame):

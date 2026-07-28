@@ -174,6 +174,16 @@ def _reader(transport, personality, stop):
             if not stop.is_set():
                 print('\n[read error] %s' % exc)
             return
+        # Unsolicited output.  Some radios do not wait to be asked: the Kenwood
+        # TS-890 under AI2 PUSHES state changes and TR4W polls it only with a PS;
+        # keepalive, so a simulator that merely answers queries would never make
+        # the display move.  A personality opts in by defining pending().
+        pending = getattr(personality, 'pending', None)
+        if pending is not None and personality.state.answering:
+            for frame in pending():
+                transport.write(personality.framer.render(frame))
+                print('  -> %-22s (pushed)' % personality.show(frame))
+
         if not data:
             continue
         for frame in personality.framer.feed(data):
