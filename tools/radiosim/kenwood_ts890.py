@@ -2,9 +2,15 @@
 
 DELIBERATELY SEPARATE from kenwood.Kenwood.  These radios are driven by a
 different TR4W class (TKenwoodTS890Radio, not TKenwoodSerial) whose command set
-barely overlaps: it never sends or parses IF at all, using discrete queries
-instead -- FA, FB, FR, FT, OM, RT, XT, PS, ID, KS, RF, TB.  Reusing the TS-590
-personality produced nothing but "PS; (unhandled)", which is what prompted this.
+barely overlaps: it uses discrete queries -- FA, FB, FR, FT, OM, RT, XT, PS, ID,
+KS, RF, TB.  Reusing the TS-590 personality produced nothing but "PS; (unhandled)",
+which is what prompted this.
+
+IF DOES NOT EXIST ON THESE RADIOS.  It is absent from the TS-990S command set
+(confirmed by NY4I) and the TS-890 driver neither sends nor parses it.  The
+simulator answers '?;' -- Kenwood's rejection for an unsupported command -- rather
+than fabricating a status string, so a driver that wrongly sends IF here fails the
+way it would against real hardware.
 
 Two quirks that matter for a faithful double:
 
@@ -56,12 +62,8 @@ class KenwoodTS890(object):
     # real polling"), so without unsolicited output the operator could change
     # frequency here all day and TR4W's display would never move.
     #
-    # Only the messages the driver actually PARSES are pushed.  IF is answered
-    # when asked (below) but deliberately NOT pushed: the driver has no IF branch
-    # at all, so pushing it would only produce "Unhandled reply" noise, and I
-    # cannot confirm from here whether real hardware pushes it.  That question is
-    # worth settling on the radio -- if it does push IF, the DRIVER should learn
-    # to read it rather than the simulator learn to stay quiet.
+    # Only the messages the driver actually PARSES are pushed.  IF is not among
+    # them and never will be: it is not in these radios' command set at all.
     def _snapshot(self):
         st = self.state
         return (st.vfo_a, st.vfo_b, st.rx_vfo, st.tx_vfo, st.mode, self.mode_b,
@@ -120,12 +122,15 @@ class KenwoodTS890(object):
             return 'PS1;'
 
         if head == 'IF':
-            # A real TS-890 supports IF, so the double answers it.  Note that
-            # TKenwoodTS890Radio has NO IF branch -- it reads state from the
-            # discrete replies instead -- so nothing in TR4W consumes this today.
-            # It is here so the simulator is faithful to the radio rather than to
-            # one driver's subset, and so an IF-based driver could be tested.
-            return build_kenwood_if(self.state)
+            # IF is NOT in this radio's command set -- confirmed absent from the
+            # TS-990S list by NY4I, and the TS-890 driver never sends or parses it
+            # either.  An earlier version ANSWERED IF here on my assumption that
+            # "a real TS-890 supports IT", which was unfounded: a simulator that
+            # invents a command the radio does not have makes a driver bug
+            # (sending IF to a radio that cannot answer) look like it works.
+            # '?;' is Kenwood's own rejection for an unsupported command, so a
+            # driver that tries gets the same answer the hardware would give.
+            return '?;'
 
         if head == 'ID':
             return ('ID%s;' % self.ident) if self.ident else ''
