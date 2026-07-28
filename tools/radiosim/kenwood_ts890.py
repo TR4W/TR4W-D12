@@ -50,6 +50,11 @@ class KenwoodTS890(object):
         self.ai_level = 0            # set by AI<n>; the driver sends AI2
         self._last_push = None       # snapshot for change detection
 
+    def is_heartbeat(self, frame):
+        # PS; every 5 seconds, forever.  Answered and counted, never printed --
+        # otherwise it scrolls the interesting traffic off the screen.
+        return frame.strip().upper().startswith(b'PS')
+
     def show(self, frame):
         if isinstance(frame, bytes):
             frame = frame.decode('ascii', 'replace')

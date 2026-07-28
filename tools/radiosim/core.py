@@ -39,6 +39,14 @@ class RadioState(object):
         self.offset = 0          # RIT/XIT offset in Hz
         self.transmitting = False
         self.answering = True    # 'd'/'u' -- simulate a rig that stops replying
+        # Traffic counters.  Heartbeats are counted rather than printed: the
+        # TS-890 sends PS; every 5 seconds forever, which scrolls anything
+        # interesting off the screen within a minute.  's' prints the tally.
+        self.rx_count = 0
+        self.tx_count = 0
+        self.push_count = 0
+        self.quiet_count = 0     # frames suppressed from the log (heartbeats)
+        self.unhandled = {}      # command -> times seen
 
     @property
     def rx_freq(self):
@@ -50,6 +58,15 @@ class RadioState(object):
 
     def toggle_split(self):
         self.tx_vfo = (1 - self.rx_vfo) if not self.split else self.rx_vfo
+
+    def stats(self):
+        parts = ['rx=%d tx=%d pushed=%d' % (self.rx_count, self.tx_count, self.push_count)]
+        if self.quiet_count:
+            parts.append('heartbeats=%d (not logged)' % self.quiet_count)
+        if self.unhandled:
+            parts.append('unhandled: ' + ', '.join(
+                '%s x%d' % (k, v) for k, v in sorted(self.unhandled.items())))
+        return '  |  '.join(parts)
 
     def summary(self):
         return ('A=%d B=%d rx=%s mode=%s split=%s rit=%s xit=%s off=%d tx=%s'
@@ -161,6 +178,7 @@ COMMON_KEYS = """\
   b <hz>   VFO B frequency        x        toggle XIT
   m <name> mode (CW/USB/LSB/...)  o <hz>   RIT/XIT offset, e.g. o -1200
   s        toggle split           t        toggle TX
+  n        traffic stats (incl. heartbeats, which are not logged)
   d        drop the link (stop answering)  u  resume
   ?        show state             q        quit
 """
@@ -182,24 +200,44 @@ def _reader(transport, personality, stop):
         if pending is not None and personality.state.answering:
             for frame in pending():
                 transport.write(personality.framer.render(frame))
+                personality.state.push_count += 1
                 print('  -> %-22s (pushed)' % personality.show(frame))
 
         if not data:
             continue
         for frame in personality.framer.feed(data):
             shown = personality.show(frame)
+            st = personality.state
+            st.rx_count += 1
+
+            # A personality can mark routine traffic as not worth printing --
+            # the TS-890's PS; keepalive every 5s, for example.  It is still
+            # answered and counted, just not logged.
+            is_quiet = getattr(personality, 'is_heartbeat', None)
+            quiet = bool(is_quiet and is_quiet(frame))
+
             reply = personality.handle(frame)
             if reply is None:
+                key = shown.rstrip(';')
+                st.unhandled[key] = st.unhandled.get(key, 0) + 1
                 print('  <- %-22s (unhandled)' % shown)
                 continue
-            if not personality.state.answering:
-                print('  <- %-22s [link down]' % shown)
+            if not st.answering:
+                if not quiet:
+                    print('  <- %-22s [link down]' % shown)
                 continue
             if reply:
                 transport.write(personality.framer.render(reply))
-                print('  <- %-22s -> %s' % (shown, personality.show(reply)))
+                st.tx_count += 1
+                if quiet:
+                    st.quiet_count += 1
+                else:
+                    print('  <- %-22s -> %s' % (shown, personality.show(reply)))
             else:
-                print('  <- %-22s (accepted)' % shown)
+                if quiet:
+                    st.quiet_count += 1
+                else:
+                    print('  <- %-22s (accepted)' % shown)
 
 
 def run(personality, transport):
@@ -230,6 +268,9 @@ def run(personality, transport):
                 st.mode = val.upper()
             elif key == 'o' and val:
                 st.offset = int(val)
+            elif key == 'n':
+                print('   %s' % st.stats())
+                continue
             elif key == 's':
                 st.toggle_split()
             elif key == 'r':

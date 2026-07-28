@@ -67,6 +67,9 @@ type TKenwoodTS890Radio = class(TFactoryRadioBase)
       // ID022 = TS-990S.  One class serves both radios, so the
       // registration sets this per model.
       FExpectedIdent: string;
+      // TX VFO from the last FT reply.  Split is FT <> FR, so BOTH must be
+      // remembered -- see UpdateSplitState.
+      FTxVFO: TVFO;
       logger: TLogLogger;
 
       procedure SendAuthCredentials;
@@ -84,6 +87,7 @@ type TKenwoodTS890Radio = class(TFactoryRadioBase)
       procedure ParseXTResponse(const sMessage: string);
       procedure ParseRFResponse(const sMessage: string);
       procedure ParseFRResponse(const sMessage: string);
+      procedure UpdateSplitState;
 
    public
       NetworkUsername: ShortString;   // Set by LOGRADIO before Connect; "Admin ID" on the radio
@@ -157,6 +161,7 @@ begin
    FAuthState   := ksNone;
    FInitialized := False;
    FExpectedIdent := 'ID024';   // TS-890S; the TS-990 registration overrides
+   FTxVFO := nrVFOA;
    CWBuffer     := '';
    NetworkUsername := '';
    NetworkPassword := '';
@@ -577,14 +582,38 @@ end;
 // We don't track an explicit TX VFO field today; surface it in the log so the
 // state is at least visible. Wire it into TFactoryRadioBase when split-VFO support
 // gets fleshed out.
+// Split is not a command on this radio -- it is the RELATIONSHIP between the
+// transmit VFO (FT) and the receive VFO (FR).  Recomputed whenever either
+// moves, which is why both parsers call it.
+procedure TKenwoodTS890Radio.UpdateSplitState;
+begin
+   Self.SetSplitOn(FTxVFO <> Self.GetActiveVFO);
+end;
+
 procedure TKenwoodTS890Radio.ParseFTResponse(const sMessage: string);
 begin
    if Length(sMessage) < 3 then
       begin
       Exit;
       end;
-   logger.Trace('[%s.ParseFTResponse] TX VFO = %s',
-                [Self.rigLabel, IfThen(sMessage[3] = '1', 'B', 'A')]);
+
+   // This used to LOG the transmit VFO and nothing else, so split state was
+   // never derived AT ALL: the radio could be in split and TR4W would never
+   // show it, and the "You are in SPLIT MODE" warning could not fire.  Found
+   // with the TS-890 simulator -- FT1; arrived, was parsed, and changed nothing.
+   if sMessage[3] = '1' then
+      begin
+      FTxVFO := nrVFOB;
+      end
+   else
+      begin
+      FTxVFO := nrVFOA;
+      end;
+   UpdateSplitState;
+
+   logger.Trace('[%s.ParseFTResponse] TX VFO = %s, split = %s',
+                [Self.rigLabel, IfThen(sMessage[3] = '1', 'B', 'A'),
+                 BoolToStr(FTxVFO <> Self.GetActiveVFO, True)]);
 end;
 
 // Format: FR<0|1>;  -- 0 = VFO A is the operating (RX) VFO, 1 = VFO B. The radio
@@ -611,6 +640,9 @@ begin
       begin
       Self.SetActiveVFO(nrVFOA);
       end;
+
+   // Moving the RX VFO can create or clear split without FT changing at all.
+   UpdateSplitState;
 
    logger.Trace('[%s.ParseFRResponse] operating (RX) VFO = %s',
                 [Self.rigLabel, VFOToString(Self.GetActiveVFO)]);
