@@ -168,9 +168,21 @@ class KenwoodTS890(object):
                 return ''
             return 'FR%d;' % st.rx_vfo
 
-        if head == 'FT':                       # transmit VFO -> split
+        if head == 'FT':                       # transmit VFO
             if arg:
                 st.tx_vfo = int(arg[0])
+                # A TX VFO different from the RX VFO IS split, and the radio
+                # engages split itself and reports it via TB -- it does not wait
+                # to be told.  TR4W's Split() sends only FT (the D7 behaviour,
+                # reported working on hardware), so WITHOUT this the simulator
+                # would never report split and would make a working driver look
+                # broken.  That is exactly how it misled me once already.
+                #
+                # UNVERIFIED against a real TS-890: the command reference gives TB
+                # as the explicit split flag and says nothing about FT implying
+                # it.  If the bench shows FT alone does NOT set split, then this
+                # line is wrong AND TR4W's Split() needs to send TB.
+                self.split_flag = (st.tx_vfo != st.rx_vfo)
                 return ''
             return 'FT%d;' % st.tx_vfo
 
