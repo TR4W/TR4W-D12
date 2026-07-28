@@ -26,13 +26,21 @@ unit uRadioIcomLegacyModels;
   set-only, no TX-status read.
 
   WHY THESE 26 AND NOT OTHERS.  Not a judgement call -- LOGRADIO's own capability
-  table decides it.  IcomRadiosThatSupportRIT and IcomRadiosThatSupportVFOB list
-  exactly which Icoms can read RIT and VFO B, and of the radios still to migrate
-  only the IC-7700 and IC-7800 appear in them (they get their own units).  Every
-  other CI-V model in the legacy table is absent from both sets, which is precisely
-  the minimal profile TIcomLegacyRadio implements.  Those sets were built up from
-  bench work over years, so they are better evidence than anything I could infer
-  from model numbers.
+  table decides it.  IcomRadiosThatSupportRIT and IcomRadiosThatSupportVFOB name
+  the thirteen Icoms that can read RIT and VFO B:
+
+     IC-705, IC-7100, IC-7300, IC-7300MK2, IC-7600, IC-7610, IC-7700, IC-7760,
+     IC-7800, IC-7850, IC-7851, IC-905, IC-9700
+
+  Eleven of those thirteen already had their own units before this batch; the two
+  that did not, IC-7700 and IC-7800, got units here.  So EVERY model left for this
+  table is absent from both sets -- which is precisely the minimal profile
+  TIcomLegacyRadio implements.  Those sets were built up from bench work over
+  years, so they are better evidence than anything inferred from model numbers.
+
+  That correspondence is not left to prose: uTestIcomRegistry walks every
+  registered CI-V radio and asserts its rcReadRIT / rcReadVFOB flags agree with
+  those two sets, so adding a model here that belongs in a set fails the build.
 
   CI-V ADDRESSES AND BAUD RATES are copied from RadioParametersArray in LOGRADIO
   (the RA and BR fields), one per model.  They are transcribed here rather than
