@@ -240,7 +240,7 @@ begin
              '  - HamLib Direct via DLL (implemented)'#13#10 +
              '  - Elecraft K3 (planned)'#13#10 +
              '  - Yaesu FTdx101 (planned)'#13#10 +
-             '  - Yaesu FT-991 (planned)'#13#10 +
+             '  - Yaesu FT-991 (implemented)'#13#10 +
              '  - FlexRadio 6000 (implemented)';
 end;
 

@@ -67,7 +67,9 @@ type
     FCWSpeedMin: integer;
     FCWSpeedMax: integer;
     procedure ParseIFResponse(const msg: string; whichVFO: TVFO);
-    function  ModeCharToMode(c: Char): TRadioMode;
+    // virtual: the rtYaesu3 radios (FT-991) override the one character that
+    // differs between the Type3 and Type5 legacy maps.
+    function  ModeCharToMode(c: Char): TRadioMode; virtual;
     function  ModeToYaesuDigit(mode: TRadioMode): integer;
     procedure Initialize;
   public
@@ -403,9 +405,18 @@ begin
       '8': Result := rmData;     // DATA-LSB
       '9': Result := rmFSKRev;   // RTTY-USB
       'A': Result := rmData;     // DATA-FM
+      'B': Result := rmFM;       // FM-N
       'C': Result := rmData;     // DATA-USB
       'D': Result := rmAM;       // AM-N
       'E': Result := rmPSK;      // PSK31 (Type5)
+      'F': Result := rmData;     // DATA-FM
+      // 'B' and 'F' were missing from the original port of this map and would
+      // have logged "unmapped mode char" on a real FM-N or DATA-FM QSO; both are
+      // present in the legacy GetVFOInfoForYaesuType5 this was ported from.
+      //
+      // NOTE for subclasses: 'E' is the ONLY entry the rtYaesu3 radios disagree
+      // with (C4FM there, not PSK31) -- see uRadioYaesuFT991, which overrides
+      // exactly that one character and defers the rest here.
    else
       begin
       logger.Warn('[ModeCharToMode] unmapped mode char "%s"',[c]);
