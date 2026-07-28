@@ -91,7 +91,8 @@ def test_ts890():
     check('OM1 with B operating -> A mode (CW)', r.handle(b'OM1'), 'OM13;')
     check('TS-990 stays silent on ID', KenwoodTS890(ident=None).handle(b'ID'), '')
     check('unknown command reported', r.handle(b'ZZ'), None)
-    check('IF matches the shared Kenwood builder', r.handle(b'IF'), Kenwood(state=r.state).build_if())
+    # IF is not in the TS-890/990 command set; Kenwood rejects with '?;'
+    check('IF is rejected, not answered', r.handle(b'IF'), '?;')
 
     # AI2 PUSH -- this radio is push-driven (PollRadioState sends only PS;), so a
     # simulator that merely answers queries would never move TR4W's display.
