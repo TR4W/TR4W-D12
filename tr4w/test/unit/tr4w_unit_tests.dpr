@@ -71,6 +71,8 @@ uses
    uRadioYaesuFT710     in '..\..\src\uRadioYaesuFT710.pas',
    uRadioYaesuFTX1F     in '..\..\src\uRadioYaesuFTX1F.pas',
    uRadioYaesuFT891     in '..\..\src\uRadioYaesuFT891.pas',
+   uRadioYaesuASCIILegacy  in '..\..\src\uRadioYaesuASCIILegacy.pas',
+   uRadioYaesuFT2000Models in '..\..\src\uRadioYaesuFT2000Models.pas',
    uTestYaesuASCII      in 'uTestYaesuASCII.pas';
 
 begin
