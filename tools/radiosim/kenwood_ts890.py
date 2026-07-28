@@ -59,13 +59,6 @@ class KenwoodTS890(object):
         # IF is UNDOCUMENTED on the TS-890S -- supplanted by SF -- but still
         # answered for legacy software (hamlib's TS-890 simulator documents the
         # format and notes it reflects a real radio).  NY4I confirmed it is absent
-        # from the TS-990S command set, so that model rejects it.
-        self.legacy_if = legacy_if
-        # Split is its own flag on this radio: "TB  Split.  P1: 0 = Split OFF,
-        # 1 = Split ON" (Kenwood TS-890S PC Command Reference).  It is NOT the
-        # FT/FR relationship -- FT is "Transmitter Function (VFO A / VFO B)" and
-        # only chooses which VFO transmits.
-        self.split_flag = False
         self.ai_level = 0            # set by AI<n>; the driver sends AI2
         self._last_push = None       # snapshot for change detection
 
@@ -91,7 +84,7 @@ class KenwoodTS890(object):
     def _snapshot(self):
         st = self.state
         return (st.vfo_a, st.vfo_b, st.rx_vfo, st.tx_vfo, st.mode, self.mode_b,
-                st.rit_on, st.xit_on, st.transmitting, self.split_flag)
+                st.rit_on, st.xit_on, st.transmitting, st.split)
 
     def pending(self):
         if self.ai_level < 1:
@@ -125,7 +118,7 @@ class KenwoodTS890(object):
         if now[8] != was[8]:
             out.append('TX0;' if st.transmitting else 'RX0;')
         if now[9] != was[9]:
-            out.append('TB%d;' % (1 if self.split_flag else 0))
+            out.append('TB%d;' % (1 if st.split else 0))
         return out
 
     def _mode_of(self, vfo):
@@ -153,7 +146,7 @@ class KenwoodTS890(object):
             # Legacy-but-real on the TS-890S.  Same field layout as the rest of
             # the Kenwood family, which hamlib's own TS-890 simulator corroborates
             # independently -- 37-character body once the ';' is stripped.
-            return build_kenwood_if(self.state, split=self.split_flag)
+            return build_kenwood_if(self.state)
 
         if head == 'ID':
             return ('ID%s;' % self.ident) if self.ident else ''
@@ -179,18 +172,22 @@ class KenwoodTS890(object):
         if head == 'FT':                       # transmit VFO
             if arg:
                 st.tx_vfo = int(arg[0])
-                # A TX VFO different from the RX VFO IS split, and the radio
-                # engages split itself and reports it via TB -- it does not wait
-                # to be told.  TR4W's Split() sends only FT (the D7 behaviour,
-                # reported working on hardware), so WITHOUT this the simulator
-                # would never report split and would make a working driver look
-                # broken.  That is exactly how it misled me once already.
+                # Split needs NO assignment here: RadioState.split is DERIVED,
+                # tx_vfo != rx_vfo.  A TX VFO different from the RX VFO IS split,
+                # so the radio reports it via TB on the next push and TR4W's
+                # Split() -- which sends only FT, the D7 behaviour reported
+                # working on hardware -- is seen.
+                #
+                # This was once a second, hand-maintained boolean sitting beside
+                # the derived one.  It drifted immediately: the console 's' key
+                # moves tx_vfo through RadioState, so the status line read
+                # split=True while the duplicate stayed False and no TB was ever
+                # pushed.  NY4I hit it within minutes.  One fact, one place.
                 #
                 # UNVERIFIED against a real TS-890: the command reference gives TB
                 # as the explicit split flag and says nothing about FT implying
-                # it.  If the bench shows FT alone does NOT set split, then this
-                # line is wrong AND TR4W's Split() needs to send TB.
-                self.split_flag = (st.tx_vfo != st.rx_vfo)
+                # it.  If the bench shows FT alone does NOT set split, this model
+                # is wrong AND TR4W's Split() needs to send TB.
                 return ''
             return 'FT%d;' % st.tx_vfo
 
@@ -259,9 +256,12 @@ class KenwoodTS890(object):
 
         if head == 'TB':                       # SPLIT on this radio
             if arg:
-                self.split_flag = (arg[0] == '1')
+                # Setting split moves the TX VFO -- same fact, same storage,
+                # rather than a parallel boolean that can disagree with it.
+                if (arg[0] == '1') != st.split:
+                    st.toggle_split()
                 return ''
-            return 'TB%d;' % (1 if self.split_flag else 0)
+            return 'TB%d;' % (1 if st.split else 0)
 
         if head in ('FL', 'KY', 'RF') or cmd.startswith('##'):
             return ''

@@ -89,6 +89,27 @@ def test_ts890():
     r.state.rx_vfo = 1
     check('OM0 with B operating -> B mode (USB)', r.handle(b'OM0'), 'OM02;')
     check('OM1 with B operating -> A mode (CW)', r.handle(b'OM1'), 'OM13;')
+
+    # Split is ONE fact with ONE home: RadioState.split, derived from
+    # tx_vfo != rx_vfo.  It briefly had a second, hand-maintained copy on the
+    # personality, and the two disagreed the first time NY4I touched the console:
+    # 's' moved tx_vfo, the status line said split=True, the duplicate stayed
+    # False, and no TB was ever pushed -- so TR4W's indicator never cleared.
+    # These check the three ways split can change all agree and all report TB.
+    r2 = KenwoodTS890()
+    r2.handle(b'AI2')
+    r2.pending()                                   # establish the push baseline
+    r2.state.toggle_split()                        # the operator, at the radio
+    check("operator 's' pushes FT and TB", r2.pending(), ['FT1;', 'TB1;'])
+    check("operator 's' -> split on", r2.state.split, True)
+    r2.state.toggle_split()
+    check("operator 's' again -> split off", r2.pending(), ['FT0;', 'TB0;'])
+
+    r2.handle(b'FT1')                              # TR4W's Split(), D7 style
+    check('FT1; alone reports split', r2.pending(), ['FT1;', 'TB1;'])
+    r2.handle(b'TB0')                              # split cleared explicitly
+    check('TB0; moves the TX VFO back', r2.pending(), ['FT0;', 'TB0;'])
+    check('TB query agrees with state', r2.handle(b'TB'), 'TB0;')
     check('TS-990 stays silent on ID', KenwoodTS890(ident=None).handle(b'ID'), '')
     check('unknown command reported', r.handle(b'ZZ'), None)
     # IF on the TS-890 is UNDOCUMENTED but real (supplanted by SF, kept for legacy
