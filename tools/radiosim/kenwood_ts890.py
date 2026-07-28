@@ -35,7 +35,8 @@ NUM_TO_MODE = dict((v, k) for k, v in MODE_TO_NUM.items())
 
 class KenwoodTS890(object):
 
-    def __init__(self, name='Kenwood TS-890S', ident='024', state=None):
+    def __init__(self, name='Kenwood TS-890S', ident='024', state=None,
+                 legacy_if=True):
         self.name = name
         # ID024 = TS-890S, ID022 = TS-990S (the latter supplied by NY4I).
         # NOTE: TKenwoodTS890Radio only recognises ID024 and logs
@@ -47,6 +48,16 @@ class KenwoodTS890(object):
         self.state = state or RadioState()
         self.framer = TerminatorFramer(b';')
         self.mode_b = 'USB'          # the VFOs can carry different modes
+        # IF is UNDOCUMENTED on the TS-890S -- supplanted by SF -- but still
+        # answered for legacy software (hamlib's TS-890 simulator documents the
+        # format and notes it reflects a real radio).  NY4I confirmed it is absent
+        # from the TS-990S command set, so that model rejects it.
+        self.legacy_if = legacy_if
+        # Split is its own flag on this radio: "TB  Split.  P1: 0 = Split OFF,
+        # 1 = Split ON" (Kenwood TS-890S PC Command Reference).  It is NOT the
+        # FT/FR relationship -- FT is "Transmitter Function (VFO A / VFO B)" and
+        # only chooses which VFO transmits.
+        self.split_flag = False
         self.ai_level = 0            # set by AI<n>; the driver sends AI2
         self._last_push = None       # snapshot for change detection
 
@@ -72,7 +83,7 @@ class KenwoodTS890(object):
     def _snapshot(self):
         st = self.state
         return (st.vfo_a, st.vfo_b, st.rx_vfo, st.tx_vfo, st.mode, self.mode_b,
-                st.rit_on, st.xit_on, st.transmitting)
+                st.rit_on, st.xit_on, st.transmitting, self.split_flag)
 
     def pending(self):
         if self.ai_level < 1:
@@ -105,6 +116,8 @@ class KenwoodTS890(object):
             out.append('XT%d;' % (1 if st.xit_on else 0))
         if now[8] != was[8]:
             out.append('TX0;' if st.transmitting else 'RX0;')
+        if now[9] != was[9]:
+            out.append('TB%d;' % (1 if self.split_flag else 0))
         return out
 
     def _mode_of(self, vfo):
@@ -127,15 +140,12 @@ class KenwoodTS890(object):
             return 'PS1;'
 
         if head == 'IF':
-            # IF is NOT in this radio's command set -- confirmed absent from the
-            # TS-990S list by NY4I, and the TS-890 driver never sends or parses it
-            # either.  An earlier version ANSWERED IF here on my assumption that
-            # "a real TS-890 supports IT", which was unfounded: a simulator that
-            # invents a command the radio does not have makes a driver bug
-            # (sending IF to a radio that cannot answer) look like it works.
-            # '?;' is Kenwood's own rejection for an unsupported command, so a
-            # driver that tries gets the same answer the hardware would give.
-            return '?;'
+            if not self.legacy_if:
+                return '?;'          # TS-990S: not in the command set
+            # Legacy-but-real on the TS-890S.  Same field layout as the rest of
+            # the Kenwood family, which hamlib's own TS-890 simulator corroborates
+            # independently -- 37-character body once the ';' is stripped.
+            return build_kenwood_if(self.state, split=self.split_flag)
 
         if head == 'ID':
             return ('ID%s;' % self.ident) if self.ident else ''
@@ -227,7 +237,13 @@ class KenwoodTS890(object):
             self._last_push = self._snapshot()
             return ''
 
-        if head in ('FL', 'KY', 'TB', 'RF') or cmd.startswith('##'):
+        if head == 'TB':                       # SPLIT on this radio
+            if arg:
+                self.split_flag = (arg[0] == '1')
+                return ''
+            return 'TB%d;' % (1 if self.split_flag else 0)
+
+        if head in ('FL', 'KY', 'RF') or cmd.startswith('##'):
             return ''
 
         return None

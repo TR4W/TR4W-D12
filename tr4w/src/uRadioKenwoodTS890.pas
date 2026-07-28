@@ -67,8 +67,8 @@ type TKenwoodTS890Radio = class(TFactoryRadioBase)
       // ID022 = TS-990S.  One class serves both radios, so the
       // registration sets this per model.
       FExpectedIdent: string;
-      // TX VFO from the last FT reply.  Split is FT <> FR, so BOTH must be
-      // remembered -- see UpdateSplitState.
+      // TX VFO from the last FT reply.  Informational only: on this radio split
+      // is its own flag (TB), NOT the FT/FR relationship -- see Split().
       FTxVFO: TVFO;
       logger: TLogLogger;
 
@@ -87,7 +87,6 @@ type TKenwoodTS890Radio = class(TFactoryRadioBase)
       procedure ParseXTResponse(const sMessage: string);
       procedure ParseRFResponse(const sMessage: string);
       procedure ParseFRResponse(const sMessage: string);
-      procedure UpdateSplitState;
 
    public
       NetworkUsername: ShortString;   // Set by LOGRADIO before Connect; "Admin ID" on the radio
@@ -578,18 +577,6 @@ begin
                 [Self.rigLabel, BoolToStr(Self.localSplitEnabled, True)]);
 end;
 
-// Format: FT<0|1>;  -- 0 = VFO A is TX, 1 = VFO B is TX.
-// We don't track an explicit TX VFO field today; surface it in the log so the
-// state is at least visible. Wire it into TFactoryRadioBase when split-VFO support
-// gets fleshed out.
-// Split is not a command on this radio -- it is the RELATIONSHIP between the
-// transmit VFO (FT) and the receive VFO (FR).  Recomputed whenever either
-// moves, which is why both parsers call it.
-procedure TKenwoodTS890Radio.UpdateSplitState;
-begin
-   Self.SetSplitOn(FTxVFO <> Self.GetActiveVFO);
-end;
-
 procedure TKenwoodTS890Radio.ParseFTResponse(const sMessage: string);
 begin
    if Length(sMessage) < 3 then
@@ -597,10 +584,9 @@ begin
       Exit;
       end;
 
-   // This used to LOG the transmit VFO and nothing else, so split state was
-   // never derived AT ALL: the radio could be in split and TR4W would never
-   // show it, and the "You are in SPLIT MODE" warning could not fire.  Found
-   // with the TS-890 simulator -- FT1; arrived, was parsed, and changed nothing.
+   // FT selects the transmit VFO; it is NOT split (that is TB).  Remembered for
+   // the log and for future split-VFO work, deliberately without touching split
+   // state -- deriving split from FT vs FR contradicts the command reference.
    if sMessage[3] = '1' then
       begin
       FTxVFO := nrVFOB;
@@ -609,11 +595,9 @@ begin
       begin
       FTxVFO := nrVFOA;
       end;
-   UpdateSplitState;
 
-   logger.Trace('[%s.ParseFTResponse] TX VFO = %s, split = %s',
-                [Self.rigLabel, IfThen(sMessage[3] = '1', 'B', 'A'),
-                 BoolToStr(FTxVFO <> Self.GetActiveVFO, True)]);
+   logger.Trace('[%s.ParseFTResponse] TX VFO = %s',
+                [Self.rigLabel, IfThen(sMessage[3] = '1', 'B', 'A')]);
 end;
 
 // Format: FR<0|1>;  -- 0 = VFO A is the operating (RX) VFO, 1 = VFO B. The radio
@@ -641,8 +625,6 @@ begin
       Self.SetActiveVFO(nrVFOA);
       end;
 
-   // Moving the RX VFO can create or clear split without FT changing at all.
-   UpdateSplitState;
 
    logger.Trace('[%s.ParseFRResponse] operating (RX) VFO = %s',
                 [Self.rigLabel, VFOToString(Self.GetActiveVFO)]);
@@ -987,13 +969,21 @@ end;
 procedure TKenwoodTS890Radio.Split(splitOn: boolean);
 begin
    if FAuthState <> ksAuthenticated then Exit;
+   // TB is the split command on this radio -- "TB  Split.  P1: 0 = Split OFF,
+   // 1 = Split ON" (Kenwood TS-890S PC Command Reference, linked in the header).
+   //
+   // This used to send FT1;/FT0;, but per the same reference FT is "Transmitter
+   // Function (VFO A / VFO B)": it chooses WHICH VFO transmits and says nothing
+   // about split.  So asking for split moved the TX VFO and left split off, and
+   // since the radio reports split through TB, TR4W never saw split turn on --
+   // the indicator and the "You are in SPLIT MODE" warning stayed dark.
    if splitOn then
       begin
-      Self.SendToRadio('FT1;');   // TX = VFO B
+      Self.SendToRadio('TB1;');
       end
    else
       begin
-      Self.SendToRadio('FT0;');  // TX = VFO A (split off)
+      Self.SendToRadio('TB0;');
       end;
 end;
 
