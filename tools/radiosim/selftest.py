@@ -10,6 +10,7 @@ strips the terminator first, exactly as uFactoryRadioBase's reading thread does.
 """
 
 from .kenwood import Kenwood
+from .kenwood_ts890 import KenwoodTS890
 from .elecraft import Elecraft
 from .icom import Icom, freq_to_bcd, bcd_to_freq
 
@@ -71,6 +72,27 @@ def test_elecraft():
     check('mode digit', s[11], '3')
 
 
+def test_ts890():
+    print('')
+    print('TS-890 -- discrete queries, no IF; PS is a keepalive')
+    r = KenwoodTS890()
+    r.state.vfo_a, r.state.vfo_b = 14025000, 7010000
+    r.state.mode, r.mode_b = 'CW', 'USB'
+    check('PS keepalive answered', r.handle(b'PS'), 'PS1;')
+    check('ID identifies TS-890S', r.handle(b'ID'), 'ID024;')
+    check('FA', r.handle(b'FA'), 'FA00014025000;')
+    check('FB', r.handle(b'FB'), 'FB00007010000;')
+    # OM's VFO byte is OPERATING-VFO-RELATIVE, not fixed A/B.
+    r.state.rx_vfo = 0
+    check('OM0 with A operating -> A mode (CW)', r.handle(b'OM0'), 'OM03;')
+    check('OM1 with A operating -> B mode (USB)', r.handle(b'OM1'), 'OM12;')
+    r.state.rx_vfo = 1
+    check('OM0 with B operating -> B mode (USB)', r.handle(b'OM0'), 'OM02;')
+    check('OM1 with B operating -> A mode (CW)', r.handle(b'OM1'), 'OM13;')
+    check('TS-990 stays silent on ID', KenwoodTS890(ident=None).handle(b'ID'), '')
+    check('unknown command reported', r.handle(b'ZZ'), None)
+
+
 def test_icom():
     print('\nIcom CI-V -- packed BCD, LSB first (uIcomCIV.IcomBCDToFreq)')
     # 14025000 -> '0014025000' -> LSB-first pairs 00 50 02 14 00
@@ -99,6 +121,7 @@ def test_icom():
 def main():
     test_kenwood()
     test_elecraft()
+    test_ts890()
     test_icom()
     print()
     if FAILED:

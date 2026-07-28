@@ -19,12 +19,17 @@ import sys
 
 from .core import SerialTransport, RadioState, run
 from .kenwood import Kenwood
+from .kenwood_ts890 import KenwoodTS890
 from .elecraft import Elecraft
 from .icom import Icom
 
 
 def _kenwood(name):
     return lambda: Kenwood(name)
+
+
+def _ts890(name, ident):
+    return lambda: KenwoodTS890(name, ident)
 
 
 def _elecraft(name):
@@ -41,11 +46,11 @@ MODELS = {
     'TS2000': (_kenwood('Kenwood TS-2000'), 4800),
     'TS480':  (_kenwood('Kenwood TS-480'),  4800),
     'TS570':  (_kenwood('Kenwood TS-570'),  4800),
-    # TS-890/TS-990 speak the same Kenwood ASCII CAT over their serial/USB port.
-    # The LAN login (##CN;/##ID0...;) does not exist on serial, so nothing extra
-    # is needed here -- the driver skips auth when the transport is serial.
-    'TS890':  (_kenwood('Kenwood TS-890S'), 115200),
-    'TS990':  (_kenwood('Kenwood TS-990S'), 115200),
+    # NOT the Kenwood personality above: TR4W drives these with a different class
+    # (TKenwoodTS890Radio) that never sends IF and uses discrete queries plus a
+    # PS; keepalive.  See kenwood_ts890.py.
+    'TS890':  (_ts890('Kenwood TS-890S', '024'), 115200),
+    'TS990':  (_ts890('Kenwood TS-990S', None),  115200),
     'K4':     (_elecraft('Elecraft K4'),    38400),
     'K3':     (_elecraft('Elecraft K3'),    38400),
     'IC7300': (_icom('Icom IC-7300', 0x94),                       19200),
