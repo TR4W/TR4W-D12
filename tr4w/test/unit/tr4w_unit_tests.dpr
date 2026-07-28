@@ -21,6 +21,8 @@
 
 uses
    SysUtils,
+   Log4D,
+   MainUnit,
    uTR4WTestFramework   in 'uTR4WTestFramework.pas',
    uIcomCIV             in '..\..\src\uIcomCIV.pas',
    uTestIcomCIV         in 'uTestIcomCIV.pas',
@@ -60,10 +62,25 @@ uses
    uMults               in '..\..\src\uMults.pas',
    uTestMults           in 'uTestMults.pas',
    uCallSignRoutines    in '..\..\src\uCallSignRoutines.pas',
-   uTestCallSignRoutines in 'uTestCallSignRoutines.pas';
+   uTestCallSignRoutines in 'uTestCallSignRoutines.pas',
+   uFactoryRadioBase    in '..\..\src\uFactoryRadioBase.pas',
+   uRadioYaesuASCII     in '..\..\src\uRadioYaesuASCII.pas',
+   uRadioYaesuFTDX10    in '..\..\src\uRadioYaesuFTDX10.pas',
+   uRadioYaesuFT991     in '..\..\src\uRadioYaesuFT991.pas',
+   uTestYaesuASCII      in 'uTestYaesuASCII.pas';
 
 begin
    IsMultiThread := True;  // Match main application setting
+
+   // The radio-factory classes log through MainUnit's GLOBAL `logger`,
+   // which tr4w.dpr assigns during startup.  A test EXE never runs that
+   // startup, so the global stays nil and the first radio call that logs
+   // -- UpdateLastValidResponse, on every received frame -- dies with an
+   // access violation.  Assign it here the same way the app does.
+   //
+   // No appender is configured: the loggers then discard output, which is
+   // what a test run wants.  This is ONLY about the global being non-nil.
+   logger := TLogLogger.GetLogger('TR4WUnitTests');
 
    WriteLn('=== TR4W Unit Tests ===');
    WriteLn('');
@@ -90,6 +107,7 @@ begin
    RegisterSuite(TCTYDATTests.Create('CTYDAT'));
    RegisterSuite(TMultsTests.Create('Mults'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
+   RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));
 
    if RunAllSuites then
       begin
