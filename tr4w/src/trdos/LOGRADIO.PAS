@@ -516,7 +516,10 @@ const
     ({Name: 'FTX1F';      } BR:BR4800;  P: 1; C: 1; S: 1; T:1; RA: $00; SW: 1; SFOC: $00; SMOC: $00; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $00;  LSB: $00; USB: $00; FM: $00; AM: $00; DIGL: $00; DIGU: $00; hamlibID: 1051; rt: rtYaesu4),  // FTX-1F/FTX-1R — Issue #817
     ({Name: 'FT450';      } BR:BR4800;  P: 1; C: 1; S: 1; T:1; RA: $00; SW: 1; SFOC: $00; SMOC: $00; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $00;  LSB: $00; USB: $00; FM: $00; AM: $00; DIGL: $00; DIGU: $00; hamlibID: 1027; rt: rtYaesu2),
     ({Name: 'FT710';      } BR:BR4800;  P: 1; C: 1; S: 1; T:1; RA: $00; SW: 1; SFOC: $00; SMOC: $00; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $00;  LSB: $00; USB: $00; FM: $00; AM: $00; DIGL: $00; DIGU: $00; rt: rtYaesu4),   // Issue 640 ny4i
-    ({Name: 'FT736R';     } BR:BR4800;  P: 0; C: 0; S: 0; T:0; RA: $00; SW: 0; SFOC: $01; SMOC: $07; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $02;  LSB: $00; USB: $01; FM: $08; AM: $00; DIGL: $00; DIGU: $00; hamlibID: 1010; rt: rtYaesu1),
+    // HamLib-only (see HamLibONLYRadios in InitRadios): no native read path ever existed.
+    // Baud stays 4800 -- the FT-736R is a real 4800-baud rig and rigctld opens the
+    // actual serial port, unlike the software bridges here which are TCP at 57600.
+    ({Name: 'FT736R';     } BR:BR4800;  P: 0; C: 0; S: 0; T:0; RA: $00; SW: 0; SFOC: $01; SMOC: $07; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $02;  LSB: $00; USB: $01; FM: $08; AM: $00; DIGL: $00; DIGU: $00; hamlibID: 1010; rt: rtHamlib),
     ({Name: 'FT747GX';    } BR:BR4800;  P: 1; C: 0; S: 0; T:1; RA: $00; SW: 1; SFOC: $0A; SMOC: $0C; SPOC: $00; RX: $00; TX: $00; MB: 3; CW: $03;  LSB: $00; USB: $01; FM: $06; AM: $05; DIGL: $00; DIGU: $00; hamlibID: 1005; rt: rtYaesu1),
     ({Name: 'FT767';      } BR:BR4800;  P: 1; C: 1; S: 1; T:0; RA: $00; SW: 1; SFOC: $08; SMOC: $0A; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $12;  LSB: $10; USB: $11; FM: $14; AM: $13; DIGL: $15; DIGU: $15; hamlibID: 1009; rt: rtYaesu1),
     ({Name: 'FT817';      } BR:BR4800;  P: 1; C: 0; S: 0; T:1; RA: $00; SW: 0; SFOC: $01; SMOC: $07; SPOC: $00; RX: $88; TX: $08; MB: 0; CW: $02;  LSB: $00; USB: $01; FM: $08; AM: $04; DIGL: $0C; DIGU: $0A; hamlibID: 1020; rt: rtYaesu1),
@@ -2845,6 +2848,25 @@ begin
       Self.tFactoryObject := nil;
       end;
 
+   // INVARIANT: a HamLib-only radio always uses HamLib.  TR4W has no native CAT
+   // implementation for these models, so the serial path would start a polling
+   // thread that can never read anything.
+   //
+   // The CAT dialog already forces the flag and greys the checkbox, but that only
+   // covers configs that went through the dialog.  'RADIO ONE USE HAMLIB' is a
+   // config-file command (uCFG), so a hand-edited .cfg -- or one written before a
+   // model joined HamLibONLYRadios -- can arrive here with the flag clear.
+   // Enforce it where the interface is actually chosen, not only where it is edited.
+   if Self.RadioModel in HamLibONLYRadios then
+      begin
+      if not Self.UseHamLib then
+         begin
+         logger.Info('[%s.SetUpRadioInterface] Forcing UseHamLib -- this radio has no native CAT support in TR4W',
+            [Self.RadioName]);
+         Self.UseHamLib := True;
+         end;
+      end;
+
    // Check if we should use HamLib Direct (works with both serial and network)
    if Self.UseHamLib then
    begin
@@ -4301,7 +4323,14 @@ begin
                    FT818, FT840, FT847, FT857, FT890, FT891, FT897, FT900, FT920,
                    FT950, FT990, FT991, FT1000, FT1000MP, FT1200, FT2000,
                    FTDX3000, FTDX5000, FTDX9000];
-   HamLibONLYRadios := [FLRIG,TRXMANAGER,FT757GXII,EXPERTTCI,ACLOG,HAMLIBANY];  // TS890 removed -- now has native serial via rtKenwood (Issue #436)
+   // FT736R added: TR4W never had a read path for it. pFT736R wrote one 5-byte
+   // CAT-enable frame and returned -- no ReadFromCOMPort, and no repeat loop, so
+   // the polling thread exited immediately and no frequency or mode ever arrived.
+   // (Identical in the D7 tree, so this is an unfinished driver, not a port
+   // regression; it also wrote the FT-767 enable string, apparently copy-pasted.)
+   // HamLib supports the radio properly (hamlibID 1010), so route it there rather
+   // than carry a stub forward into the factory.
+   HamLibONLYRadios := [FLRIG,TRXMANAGER,FT757GXII,EXPERTTCI,ACLOG,HAMLIBANY,FT736R];  // TS890 removed -- now has native serial via rtKenwood (Issue #436)
    for i := 1 to 2 do
       begin
       TempRadio := ra[i];
