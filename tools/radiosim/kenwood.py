@@ -12,7 +12,7 @@ MODE_TO_NUM = {'LSB': '1', 'USB': '2', 'CW': '3', 'FM': '4', 'AM': '5',
 NUM_TO_MODE = dict((v, k) for k, v in MODE_TO_NUM.items())
 
 
-def build_kenwood_if(st, mode_to_num=MODE_TO_NUM):
+def build_kenwood_if(st, mode_to_num=MODE_TO_NUM, split=None):
     """The Kenwood IF status string, shared by every Kenwood personality.
 
     Laid out for TKenwoodSerial.ParseIF, which indexes from the END (L = length,
@@ -40,7 +40,7 @@ def build_kenwood_if(st, mode_to_num=MODE_TO_NUM):
         + mode_to_num.get(st.mode, '3')                 # 30     mode       L-7
         + str(st.rx_vfo)                                # 31     FR         L-6
         + '0'                                           # 32     scan
-        + ('1' if st.split else '0')                    # 33     split      L-4
+        + ('1' if (st.split if split is None else split) else '0')  # 33 split L-4
         + '0' + '00' + '0'                              # 34-37  tone etc
     )
     assert len(out) == 37, 'IF body must be 37 chars, got %d' % len(out)

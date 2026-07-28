@@ -91,8 +91,19 @@ def test_ts890():
     check('OM1 with B operating -> A mode (CW)', r.handle(b'OM1'), 'OM13;')
     check('TS-990 stays silent on ID', KenwoodTS890(ident=None).handle(b'ID'), '')
     check('unknown command reported', r.handle(b'ZZ'), None)
-    # IF is not in the TS-890/990 command set; Kenwood rejects with '?;'
-    check('IF is rejected, not answered', r.handle(b'IF'), '?;')
+    # IF on the TS-890 is UNDOCUMENTED but real (supplanted by SF, kept for legacy
+    # software) -- hamlib's TS-890 simulator documents the format from a real
+    # radio.  It is absent from the TS-990S command set, which rejects it.
+    body = r.handle(b'IF')[:-1]
+    check('TS-890 answers legacy IF, 37-char body', len(body), 37)
+    r.split_flag = True
+    check('IF split field tracks TB', r.handle(b'IF')[:-1][-5], '1')
+    r.split_flag = False
+    check('TS-990 rejects IF', KenwoodTS890(ident='022', legacy_if=False).handle(b'IF'), '?;')
+    # TB is the split command per the Kenwood PC Command Reference, NOT FT.
+    check('TB1 sets split', (r.handle(b'TB1'), r.split_flag)[1], True)
+    check('TB reports split', r.handle(b'TB'), 'TB1;')
+    r.handle(b'TB0')
 
     # AI2 PUSH -- this radio is push-driven (PollRadioState sends only PS;), so a
     # simulator that merely answers queries would never move TR4W's display.
