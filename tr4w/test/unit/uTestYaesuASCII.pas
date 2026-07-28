@@ -63,7 +63,8 @@ uses
    SysUtils, uTR4WTestFramework, uFactoryRadioBase, uRadioBand,
    uRadioYaesuASCII, uRadioYaesuFTDX10, uRadioYaesuFT991,
    uRadioYaesuFTDX101, uRadioYaesuFT710, uRadioYaesuFTX1F, uRadioYaesuFT891,
-   uRadioYaesuASCIILegacy, uRadioYaesuFT2000Models;
+   uRadioYaesuASCIILegacy, uRadioYaesuFT950, uRadioYaesuFT2000,
+   uRadioYaesuFTDX9000;
 
 type
    // Test doubles.  They add ONE thing: a record of what the driver transmitted.
@@ -125,7 +126,10 @@ type
       procedure SendToRadio(s: string); overload; override;
    end;
 
-   TY2ActiveVFOProbe = class(TYaesuFT2000ActiveVFO)
+   // Was TYaesuFT2000ActiveVFO, an intermediate class that no longer exists:
+   // every model now declares FReadsActiveVFO itself, so there is no half-family
+   // class to subclass.  The FT-950 stands in for the FR-polling behaviour.
+   TY2ActiveVFOProbe = class(TYaesuFT950Radio)
    public
       sent: string;
       procedure SendToRadio(s: string); overload; override;

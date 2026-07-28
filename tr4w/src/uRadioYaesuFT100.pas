@@ -86,7 +86,7 @@ const
 type
   TFT100Radio = class(TYaesuBinary)
   protected
-    function  StatusModeToMode(b: Byte): TRadioMode;
+    function  StatusModeToMode(b: Byte; hz: integer): TRadioMode;
     function  FreqRead(const frame: string; pos1: integer): integer;
     function  ClarifierRead(const frame: string; pos1: integer): integer;
   public
@@ -144,7 +144,7 @@ begin
                            Ord(frame[pos1 + 1])));
 end;
 
-function TFT100Radio.StatusModeToMode(b: Byte): TRadioMode;
+function TFT100Radio.StatusModeToMode(b: Byte; hz: integer): TRadioMode;
 begin
    // FT-100 numbering: note 2 AND 3 are both CW (the FT-990 uses 3 for AM).
    case b and $07 of
@@ -154,7 +154,9 @@ begin
       6: Result := rmFM;
       7: Result := rmFM;
    else
-      Result := rmUSB;   // 0, 1, 4 -- legacy collapsed these to "Phone"
+      // 0, 1, 4 -- legacy reports these only at the ROLL-UP level ("Phone"), so
+      // the sideband is a frequency-based convention, not a radio report.
+      Result := PhoneModeForFreq(hz);
    end;
 end;
 
@@ -172,7 +174,8 @@ begin
 
    Self.vfo[nrVFOA].frequency := FreqRead(msg, FT100_FREQ_POS);
    Self.vfo[nrVFOA].band      := FreqToRadioBand(Self.vfo[nrVFOA].frequency);
-   Self.vfo[nrVFOA].mode      := StatusModeToMode(Ord(msg[FT100_MODE_POS]));
+   Self.vfo[nrVFOA].mode      := StatusModeToMode(Ord(msg[FT100_MODE_POS]),
+                                                  Self.vfo[nrVFOA].frequency);
    Self.SetRITOffset(ClarifierRead(msg, FT100_CLAR_POS));
 
    Self.SetSplitOn((Ord(msg[fa + FT100_FA_SPLIT_POS]) and $01) <> 0);

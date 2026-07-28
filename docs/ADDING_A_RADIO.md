@@ -32,6 +32,29 @@ inherited commands it does not implement.
   group from `FT1;/FT0;` to `FT3;/FT2;`. Correct for the FT-950 and FTDX-9000
   (whose `0`/`1` are *toggles*), undefined on the FT-2000.
 
+### ONE `RegisterRadio` PER UNIT
+
+Hard rule (NY4I). One model, one file, one registration. No "models" or "family
+table" units holding several radios.
+
+There is **no technical reason** to group — the compiler does not charge by the
+unit, and a 40-line unit costs nothing to build or link. Grouping only ever saves
+the *author* typing, and it costs every later reader:
+
+> A developer supporting a new FTDX-class radio has no reason to open a file
+> called `uRadioYaesuFT2000Models.pas`. The FTDX-9000 is not an FT-2000.
+
+That is the same "similar command set, so treat them together" reasoning that
+produced the FT-847, FTX-1F and FT-2000 defects. A file named after one model
+that silently drives six others is that reasoning baked into the tree layout.
+
+Corollary: a shared base class lives in its own unit and registers **nothing**
+(`uRadioYaesuASCIILegacy`, `uRadioIcomReadLimited`, `uRadioYaesuBinary`).
+
+The `.dpr` lists get long. That is the correct trade — explicit listing is what
+stops a unit silently vanishing when a `uses` chain changes, which has already
+happened once (the IC-706 family fell out of the test EXE).
+
 ### Why one class per model, even when two models are identical today
 
 The FT-950, FT-2000 and FTDX-9000 look like one group. They are not:
@@ -127,6 +150,40 @@ Ranged traits are fields, not flags: `CWSpeedMin` / `CWSpeedMax`.
 | `ModeToYaesuDigit` | virtual | |
 | `ProcessMessage` | virtual | handle your command, `inherited` for the rest (FT-891 `ST`) |
 | `Split` | virtual | override for a different dialect (FT-710 / FTX-1F `FT1;`/`FT0;`; FT-891 `ST1;`/`ST0;`) |
+
+### Modes — know which level you are at
+
+TR4W keeps modes at **two** levels, and a driver must not confuse them:
+
+| level | type | values | used for |
+|---|---|---|---|
+| roll-up | `ModeType` | `CW`, `Phone`, `Digital`, `FM` | the main window, scoring, band/mode categories |
+| actual | `ExtendedModeType` | `eCW`, `eUSB`, `eLSB`, `eSSB`, `eRTTY`, `eData`, `eC4FM`, … | the `ContestExchange` record and the log |
+
+Note `eSSB` — "phone, sideband unspecified". The roll-up saying `Phone` is **not**
+information loss; it is that layer doing its job.
+
+The factory's `TRadioMode` is the *actual* level and has **no neutral phone
+member**. So when a radio's mode byte reports only "phone":
+
+- **Do not pick a fixed sideband.** That asserts something the radio never said
+  and writes it to the log.
+- Use `TYaesuBinary.PhoneModeForFreq(hz)` — LSB below 10 MHz, USB above. It is a
+  **convention**, and the comment says so.
+- A radio that *does* report the sideband must map it directly and never call
+  this.
+
+Affected today: FT-920, FT-100, FT-747GX, FT-767 — their legacy pollers set only
+the roll-up and never touch `ExtendedMode`.
+
+Two further traps in mode handling:
+
+- **Read and write encodings differ on the same radio.** The FT-990 reads mode
+  from a status byte (0=LSB…6=PKT) but *sets* it with the row's own values
+  (CW `$03`, LSB `$00`, USB `$01`, FM `$06`, AM `$05`). Do not unify them.
+- **The numbering is per-model.** The FT-920 uses `1`=CW where the FT-990 uses
+  `2`; the FT-747GX's mode byte is a one-hot **bitmask**, not an ordinal. Never
+  copy a sibling's map without checking.
 
 ### Icom (`uRadioIcomBase.pas`, `uRadioIcomLegacy.pas`)
 
