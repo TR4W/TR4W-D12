@@ -50,7 +50,7 @@ MODELS = {
     # (TKenwoodTS890Radio) that never sends IF and uses discrete queries plus a
     # PS; keepalive.  See kenwood_ts890.py.
     'TS890':  (_ts890('Kenwood TS-890S', '024'), 115200),
-    'TS990':  (_ts890('Kenwood TS-990S', None),  115200),
+    'TS990':  (_ts890('Kenwood TS-990S', '022'), 115200),
     'K4':     (_elecraft('Elecraft K4'),    38400),
     'K3':     (_elecraft('Elecraft K3'),    38400),
     'IC7300': (_icom('Icom IC-7300', 0x94),                       19200),

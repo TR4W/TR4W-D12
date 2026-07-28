@@ -63,6 +63,10 @@ type TKenwoodTS890Radio = class(TFactoryRadioBase)
       CWBuffer: string;
       FAuthState: TTS890AuthState;
       FInitialized: Boolean;
+      // Identifier this model must answer to: ID024 = TS-890S,
+      // ID022 = TS-990S.  One class serves both radios, so the
+      // registration sets this per model.
+      FExpectedIdent: string;
       logger: TLogLogger;
 
       procedure SendAuthCredentials;
@@ -87,6 +91,9 @@ type TKenwoodTS890Radio = class(TFactoryRadioBase)
 
       Constructor Create;
       Destructor  Destroy; override;
+
+      // Set by the registration so one class can serve both models honestly.
+      property ExpectedIdent: string read FExpectedIdent write FExpectedIdent;
 
       function  Connect: integer; override;
       procedure ProcessMessage(sMessage: string);
@@ -149,6 +156,7 @@ begin
 
    FAuthState   := ksNone;
    FInitialized := False;
+   FExpectedIdent := 'ID024';   // TS-890S; the TS-990 registration overrides
    CWBuffer     := '';
    NetworkUsername := '';
    NetworkPassword := '';
@@ -413,15 +421,23 @@ begin
       logger.Trace('[%s.ProcessMessage] Keepalive ack: %s', [Self.rigLabel, sMessage])
    else if AnsiStartsStr('ID', sMessage) then
       begin
-      // ID024 = TS-890S. Anything else means we connected to the wrong radio.
-      if AnsiStartsStr('ID024', sMessage) then
+      // This class serves BOTH radios, so it must accept both identifiers:
+      // ID024 = TS-890S, ID022 = TS-990S.  Checking only for ID024 meant a
+      // perfectly healthy TS-990 logged "Unexpected ID response" on every
+      // connect -- a warning that would send someone looking for a cabling or
+      // model-selection fault that does not exist.
+      // FExpectedIdent is set per model by the registration, so a genuine
+      // mismatch (a TS-890 selected in the dialog but a TS-990 on the wire) is
+      // still reported, which is what the check is actually for.
+      if AnsiStartsStr(FExpectedIdent, sMessage) then
          begin
-         logger.Info('[%s.ProcessMessage] Confirmed TS-890S (ID024)', [Self.rigLabel]);
+         logger.Info('[%s.ProcessMessage] Confirmed %s (%s)',
+                     [Self.rigLabel, Self.radioModel, FExpectedIdent]);
          end
       else
          begin
-         logger.Warn('[%s.ProcessMessage] Unexpected ID response: %s',
-                     [Self.rigLabel, sMessage]);
+         logger.Warn('[%s.ProcessMessage] Unexpected ID response: %s (expected %s for %s)',
+                     [Self.rigLabel, sMessage, FExpectedIdent, Self.radioModel]);
          end;
       end
    else

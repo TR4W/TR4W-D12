@@ -31,12 +31,12 @@ class KenwoodTS890(object):
 
     def __init__(self, name='Kenwood TS-890S', ident='024', state=None):
         self.name = name
-        # ID024 = TS-890S; the driver checks for exactly that and warns otherwise.
-        # ident=None means "do not answer ID" -- used for the TS-990, whose real
-        # identifier is not documented anywhere in this repo.  Inventing one would
-        # either fake a TS-890 or produce a confidently wrong log line; staying
-        # silent is the honest option and costs nothing, since the driver only
-        # logs the reply.
+        # ID024 = TS-890S, ID022 = TS-990S (the latter supplied by NY4I).
+        # NOTE: TKenwoodTS890Radio only recognises ID024 and logs
+        # "Unexpected ID response" for anything else, so a TS-990 answering
+        # honestly WILL produce that warning.  That is the point -- it surfaces a
+        # real gap in the driver rather than hiding it behind a simulator that
+        # impersonates a TS-890.  ident=None suppresses the reply entirely.
         self.ident = ident
         self.state = state or RadioState()
         self.framer = TerminatorFramer(b';')
