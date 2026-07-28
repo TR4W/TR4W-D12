@@ -9,8 +9,10 @@ passed and the radio window still showed no mode.  Every assertion below therefo
 strips the terminator first, exactly as uFactoryRadioBase's reading thread does.
 """
 
+from .core import RadioState
 from .kenwood import Kenwood
 from .kenwood_ts890 import KenwoodTS890
+from .yaesu import Yaesu
 from .elecraft import Elecraft
 from .icom import Icom, freq_to_bcd, bcd_to_freq
 
@@ -70,6 +72,45 @@ def test_elecraft():
     # order after the sign is: yyyy r x <space> 00 t m -- mode is 11, not 10
     check('TX flag', s[10], '0')
     check('mode digit', s[11], '3')
+
+
+def test_yaesu():
+    print()
+    print('Yaesu ASCII -- 27-char IF body, OI for VFO B, FT3/FT2 split')
+    r = Yaesu(state=RadioState(vfo_a=14025000, vfo_b=7010000, mode='CW'))
+    body = r.handle(b'IF')[:-1]
+    # The driver strips ';' before parsing, so what it sees is 27 chars, and the
+    # legacy poller reads 28 bytes off the wire.  Both are pinned.
+    check('IF body the driver parses', len(body), 27)
+    check('IF bytes on the wire', len(r.handle(b'IF')), 28)
+    check('freq Copy(msg,6,9)', int(body[5:14]), 14025000)
+    check('clarifier sign msg[15]', body[14], '+')
+    check('RIT on msg[20]', body[19], '0')
+    check('XIT on msg[21]', body[20], '0')
+    check('mode msg[22] = CW', body[21], '3')
+    check('OI answers VFO B', int(r.handle(b'OI')[5:14]), 7010000)
+
+    # The one character that separates the FT-991 from the FTDX-10.  Getting this
+    # backwards would log an FM QSO as PSK31, or vice versa.
+    r991 = Yaesu(state=RadioState(mode='C4FM'))
+    check('FT-991 reports C4FM as E', r991.handle(b'IF')[:-1][21], 'E')
+    rdx = Yaesu(type5=True, state=RadioState(mode='PSK31'))
+    check('FTDX-10 reports PSK31 as E', rdx.handle(b'IF')[:-1][21], 'E')
+    check('FT-991 map has no PSK31', 'PSK31' in r991.to_char, False)
+    check('FTDX-10 map has no C4FM', 'C4FM' in rdx.to_char, False)
+
+    # Split: SET is FT3/FT2, QUERY returns the TX VFO.
+    r.handle(b'FT3')
+    check('FT3; engages split', r.state.split, True)
+    check('FT; query reports TX VFO', r.handle(b'FT'), 'FT1;')
+    r.handle(b'FT2')
+    check('FT2; clears split', r.state.split, False)
+    check('FT; query back to VFO A', r.handle(b'FT'), 'FT0;')
+
+    # Yaesu MD carries an extra VFO byte -- MD0n;, not Kenwood's MDn;.
+    r.handle(b'MD02')
+    check('MD0n; sets mode', r.state.mode, 'USB')
+    check('MD0; queries mode', r.handle(b'MD0'), 'MD02;')
 
 
 def test_ts890():
@@ -170,6 +211,7 @@ def test_icom():
 def main():
     test_kenwood()
     test_elecraft()
+    test_yaesu()
     test_ts890()
     test_icom()
     print()

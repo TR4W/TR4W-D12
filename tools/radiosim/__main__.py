@@ -22,6 +22,7 @@ from .kenwood import Kenwood
 from .kenwood_ts890 import KenwoodTS890
 from .elecraft import Elecraft
 from .icom import Icom
+from .yaesu import Yaesu
 
 
 def _kenwood(name):
@@ -34,6 +35,10 @@ def _ts890(name, ident):
 
 def _elecraft(name):
     return lambda: Elecraft(name)
+
+
+def _yaesu(name, type5=False):
+    return lambda: Yaesu(name, type5=type5)
 
 
 def _icom(name, address, supports_vfo_b=True):
@@ -51,6 +56,11 @@ MODELS = {
     # PS; keepalive.  See kenwood_ts890.py.
     'TS890':  (_ts890('Kenwood TS-890S', '024'), 115200),
     'TS990':  (_ts890('Kenwood TS-990S', '022'), 115200),
+    # Yaesu ASCII CAT.  FT991 and FTDX10 differ ONLY in the mode-char map
+    # ('E' = C4FM vs PSK31), which is the whole reason TR4W has a separate
+    # FT-991 class -- so the pairing is worth testing both ways.
+    'FT991':  (_yaesu('Yaesu FT-991'),               4800),
+    'FTDX10': (_yaesu('Yaesu FTDX-10', type5=True),  4800),
     'K4':     (_elecraft('Elecraft K4'),    38400),
     'K3':     (_elecraft('Elecraft K3'),    38400),
     'IC7300': (_icom('Icom IC-7300', 0x94),                       19200),
