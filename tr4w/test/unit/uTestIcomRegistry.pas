@@ -21,8 +21,11 @@ unit uTestIcomRegistry;
 
   The capability assertions are the other half.  The split between the
   read-limited profile and the full one comes from LOGRADIO's own
-  IcomRadiosThatSupportRIT / IcomRadiosThatSupportVFOB sets, so those are checked
-  against the same source rather than against my reading of it.
+  IcomRadiosThatSupportRIT / IcomRadiosThatSupportVFOB sets.  The test reads THOSE
+  SETS DIRECTLY and compares them, model by model, with what each factory radio
+  declares -- rather than spot-checking a representative, which would only prove
+  that one radio matched somebody's summary of the sets.  Both directions fail:
+  claiming a capability the sets withhold, and withholding one they grant.
 }
 
 interface
@@ -35,8 +38,7 @@ type
    TIcomRegistryTests = class(TTestCase)
    protected
       procedure Test_EveryRegisteredIcom_MatchesLegacyAddress;
-      procedure Test_ReadLimitedModels_DeclareNoVFOBOrRIT;
-      procedure Test_CapableModels_DeclareVFOBAndRIT;
+      procedure Test_EveryRegisteredIcom_MatchesLegacyCapabilities;
       procedure Test_RegistryCoversEveryCIVModel;
    public
       procedure RunAllTests; override;
@@ -97,44 +99,54 @@ begin
              Format('checked %d radios; mismatches: %s', [checked, mismatches]));
 end;
 
-procedure TIcomRegistryTests.Test_ReadLimitedModels_DeclareNoVFOBOrRIT;
+procedure TIcomRegistryTests.Test_EveryRegisteredIcom_MatchesLegacyCapabilities;
 var
+   m: InterfacedRadioType;
    r: TFactoryRadioBase;
-begin
-   // A representative of the conservative profile.  Asking a radio for something
-   // it NAKs is worse than not asking, so these capabilities must stay absent.
-   BeginTest('a read-limited Icom (IC-735) declares no VFO-B and no RIT read');
-   r := Build(IC735);
-   try
-      CheckTrue(r <> nil, 'IC-735 is not registered');
-      if r <> nil then
-         begin
-         CheckFalse(rcReadVFOB in r.Capabilities.Flags);
-         CheckFalse(rcReadRIT in r.Capabilities.Flags);
-         end;
-   finally
-      r.Free;
-   end;
-end;
+   wrong: string;
+   checked: integer;
 
-procedure TIcomRegistryTests.Test_CapableModels_DeclareVFOBAndRIT;
-var
-   r: TFactoryRadioBase;
-begin
-   // IC-7700 and IC-7800 are the only two radios in this batch that LOGRADIO's
-   // IcomRadiosThatSupportRIT / ...VFOB sets include.
-   BeginTest('IC-7700 declares VFO-B and RIT reads');
-   r := Build(IC7700);
-   try
-      CheckTrue(r <> nil, 'IC-7700 is not registered');
-      if r <> nil then
+   // Report both directions.  Claiming a capability the radio lacks costs a
+   // timeout (or a NAK) on every poll cycle; withholding one it has silently
+   // drops RIT and VFO-B from the radio window.
+   procedure Compare(cap: TRadioCapability; legacy: boolean; const what: string);
+   begin
+      if (cap in r.Capabilities.Flags) <> legacy then
          begin
-         CheckTrue(rcReadVFOB in r.Capabilities.Flags);
-         CheckTrue(rcReadRIT in r.Capabilities.Flags);
+         wrong := wrong + Format('%s: %s factory=%s legacy=%s; ',
+            [InterfacedRadioTypeSA[m], what,
+             BoolToStr(cap in r.Capabilities.Flags, True), BoolToStr(legacy, True)]);
          end;
-   finally
-      r.Free;
    end;
+
+begin
+   // Walks the WHOLE registry against LOGRADIO's sets.  Checking a representative
+   // model instead would only confirm that one radio agreed with someone's
+   // summary of the sets -- and a summary is exactly what tends to be wrong.
+   BeginTest('every registered CI-V radio''s RIT/VFO-B flags match LOGRADIO''s sets');
+   wrong := '';
+   checked := 0;
+   for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
+      begin
+      if (not IsRegistered(m)) or (RadioParametersArray[m].rt <> rtICOM) then
+         begin
+         Continue;
+         end;
+      r := Build(m);
+      if r = nil then
+         begin
+         Continue;
+         end;
+      try
+         Inc(checked);
+         Compare(rcReadRIT, m in IcomRadiosThatSupportRIT, 'RIT');
+         Compare(rcReadVFOB, m in IcomRadiosThatSupportVFOB, 'VFOB');
+      finally
+         r.Free;
+      end;
+      end;
+   CheckTrue((checked > 20) and (wrong = ''),
+             Format('checked %d radios; disagreements: %s', [checked, wrong]));
 end;
 
 procedure TIcomRegistryTests.Test_RegistryCoversEveryCIVModel;
@@ -158,8 +170,7 @@ end;
 procedure TIcomRegistryTests.RunAllTests;
 begin
    Test_EveryRegisteredIcom_MatchesLegacyAddress;
-   Test_ReadLimitedModels_DeclareNoVFOBOrRIT;
-   Test_CapableModels_DeclareVFOBAndRIT;
+   Test_EveryRegisteredIcom_MatchesLegacyCapabilities;
    Test_RegistryCoversEveryCIVModel;
 end;
 
