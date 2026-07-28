@@ -99,8 +99,6 @@ type
   // FT-991 / FT-991A -- rtYaesu3.  Same wire protocol as the FTDX-10; differs
   // only in the mode-character map (see the unit header).
   TYaesuFT991Radio = class(TYaesuSerial)
-  protected
-    function ModeCharToMode(c: Char): TRadioMode; override;
   public
     constructor Create; reintroduce;
   end;
@@ -116,21 +114,13 @@ begin
    FCapabilities.Flags := [rcReadVFOB, rcReadRIT, rcReadSplit, rcReadTXStatus];
    FCapabilities.CWSpeedMin := FCWSpeedMin;
    FCapabilities.CWSpeedMax := FCWSpeedMax;
-end;
 
-function TYaesuFT991Radio.ModeCharToMode(c: Char): TRadioMode;
-begin
-   // The ONE character where the rtYaesu3 map differs from the inherited
-   // rtYaesu4/Type5 one.  Everything else is identical, so defer upward rather
-   // than duplicating the whole table -- a second copy would drift.
-   if c = 'E' then
-      begin
-      Result := rmFM;        // C4FM (System Fusion).  See the header on rmDV.
-      end
-   else
-      begin
-      Result := inherited ModeCharToMode(c);
-      end;
+   // The ONE map entry that differs from the FTDX-10 generation.  Declared as
+   // DATA rather than a method override: it is a fact about this radio, not a
+   // behaviour, and stating it here keeps the FT-891 -- which shares the same
+   // Type3 map -- from having to descend from the FT-991's unit just to inherit
+   // one character.
+   FModeCharE := rmFM;       // C4FM (System Fusion).  See the header on rmDV.
 end;
 
 initialization

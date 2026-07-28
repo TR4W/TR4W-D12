@@ -61,7 +61,8 @@ interface
 
 uses
    SysUtils, uTR4WTestFramework, uFactoryRadioBase, uRadioBand,
-   uRadioYaesuASCII, uRadioYaesuFTDX10, uRadioYaesuFT991;
+   uRadioYaesuASCII, uRadioYaesuFTDX10, uRadioYaesuFT991,
+   uRadioYaesuFTDX101, uRadioYaesuFT710, uRadioYaesuFTX1F, uRadioYaesuFT891;
 
 type
    // Test doubles.  They add ONE thing: a record of what the driver transmitted.
@@ -73,6 +74,26 @@ type
    end;
 
    TFTDX10Probe = class(TFTDX10Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   // One probe per model whose behaviour differs.  Each is the production class
+   // plus a capture of what it transmitted.
+   TFT710Probe = class(TFT710Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   TFT891Probe = class(TFT891Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   TFTX1FProbe = class(TFTX1FRadio)
    public
       sent: string;
       procedure SendToRadio(s: string); overload; override;
@@ -106,6 +127,17 @@ type
       procedure Test_ShortMessageIgnored;
       procedure Test_NonNumericFrequencyIgnored;
 
+      // Per-model deviations across the family
+      procedure Test_FT710_Split_Uses_FT1_FT0;
+      procedure Test_FT891_Split_Uses_ST;
+      procedure Test_FT891_Polls_ST_Not_FT;
+      procedure Test_FT891_Parses_ST_Response;
+      procedure Test_FT891_StillHandlesSharedCommands;
+      procedure Test_FTX1F_Offsets_AreShiftedByTwo;
+      procedure Test_FTX1F_FTDX10Layout_WouldMisparse;
+      procedure Test_FTX1F_C4FM_Chars;
+      procedure Test_FTX1F_E_StaysPSK;
+
       // Write path
       procedure Test_Split_On_Sends_FT3;
       procedure Test_Split_Off_Sends_FT2;
@@ -126,6 +158,21 @@ begin
 end;
 
 procedure TFTDX10Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFT710Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFT891Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFTX1FProbe.SendToRadio(s: string);
 begin
    sent := sent + s;
 end;
@@ -455,6 +502,188 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// Per-model deviations
+//
+// Each of these is a place where one model in the family does something the
+// others do not.  They are the reason each model has its own unit, and they are
+// the assertions most likely to catch a bad refactor of the shared base.
+// ---------------------------------------------------------------------------
+
+procedure TYaesuASCIITests.Test_FT710_Split_Uses_FT1_FT0;
+var
+   r: TFT710Probe;
+begin
+   // The FT-710 takes the OLDER two-value form.  FT3; would be ignored by the
+   // radio and split would silently never engage.
+   BeginTest('FT-710 splits with FT1;/FT0;, not FT3;/FT2;');
+   r := TFT710Probe.Create;
+   try
+      r.sent := '';
+      r.Split(True);
+      r.Split(False);
+      CheckEquals('FT1;FT0;', r.sent);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_FT891_Split_Uses_ST;
+var
+   r: TFT891Probe;
+begin
+   // The FT-891 has no FT command at all.
+   BeginTest('FT-891 splits with ST1;/ST0;');
+   r := TFT891Probe.Create;
+   try
+      r.sent := '';
+      r.Split(True);
+      r.Split(False);
+      CheckEquals('ST1;ST0;', r.sent);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_FT891_Polls_ST_Not_FT;
+var
+   r: TFT891Probe;
+begin
+   // Asking FT; would get no answer, so split would never update -- and nothing
+   // else would look wrong, which is what makes it worth pinning.
+   BeginTest('FT-891 poll cycle asks ST; where the family asks FT;');
+   r := TFT891Probe.Create;
+   try
+      r.sent := '';
+      r.PollRadioState;
+      CheckEquals('IF;OI;ST;TX;', r.sent);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_FT891_Parses_ST_Response;
+var
+   r: TFT891Probe;
+begin
+   BeginTest('FT-891 reads split from the ST; reply');
+   r := TFT891Probe.Create;
+   try
+      r.ProcessMessage('ST1');
+      CheckTrue(r.IsSplitEnabled);
+      r.ProcessMessage('ST0');
+      CheckFalse(r.IsSplitEnabled);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_FT891_StillHandlesSharedCommands;
+var
+   r: TFT891Probe;
+begin
+   // Its ProcessMessage override must DELEGATE, not replace.  If someone
+   // copy-pasted the base dispatcher instead of calling inherited, IF; would
+   // keep working here but stop tracking any later fix to the shared version --
+   // so assert the shared path still runs through the override.
+   BeginTest('FT-891 still parses IF; through the inherited dispatcher');
+   r := TFT891Probe.Create;
+   try
+      r.ProcessMessage(IFMsg('IF', '007025000', '+0000', '0', '0', '3'));
+      CheckEquals(7025000, r.vfo[nrVFOA].frequency);
+      CheckEquals(r.ModeToString(rmCW), r.ModeToString(r.vfo[nrVFOA].mode));
+   finally
+      r.Free;
+   end;
+end;
+
+// FTX-1F fixture: 29-char body (30 on the wire).  Every field sits two
+// characters later than on the FTDX-10.
+function FTX1FMsg(const head, freq, clar, rit, xit, mode: string): string;
+begin
+   Result := head + '00000' + freq + clar + rit + xit + mode + '00000';
+   if Length(Result) <> 29 then
+      begin
+      raise Exception.CreateFmt(
+         'FTX-1F fixture is %d chars, must be 29', [Length(Result)]);
+      end;
+end;
+
+procedure TYaesuASCIITests.Test_FTX1F_Offsets_AreShiftedByTwo;
+var
+   r: TFTX1FProbe;
+begin
+   BeginTest('FTX-1F reads its own +2 field offsets');
+   r := TFTX1FProbe.Create;
+   try
+      r.ProcessMessage(FTX1FMsg('IF', '014025000', '-0250', '1', '1', '3'));
+      CheckEquals(14025000, r.vfo[nrVFOA].frequency);
+      CheckEquals(-250, r.vfo[nrVFOA].RITOffset);
+      CheckTrue(r.IsRITOn[nrVFOA]);
+      CheckTrue(r.IsXITOn[nrVFOA]);
+      CheckEquals(r.ModeToString(rmCW), r.ModeToString(r.vfo[nrVFOA].mode));
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_FTX1F_FTDX10Layout_WouldMisparse;
+var
+   r: TFTX1FProbe;
+   d: TFTDX10Probe;
+   body: string;
+begin
+   // The two layouts must actually DISAGREE.  If a future edit quietly gave the
+   // FTX-1F the FTDX-10 offsets, every other FTX-1F test above would still pass
+   // as long as the fixture matched the driver -- both would just be wrong
+   // together.  Feeding one radio's frame to the other proves they differ.
+   BeginTest('an FTX-1F frame read with FTDX-10 offsets gives a DIFFERENT frequency');
+   r := TFTX1FProbe.Create;
+   d := TFTDX10Probe.Create;
+   try
+      body := FTX1FMsg('IF', '014025000', '+0000', '0', '0', '3');
+      r.ProcessMessage(body);
+      d.ProcessMessage(body);
+      CheckEquals(14025000, r.vfo[nrVFOA].frequency);
+      CheckFalse(d.vfo[nrVFOA].frequency = 14025000);
+   finally
+      d.Free;
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_FTX1F_C4FM_Chars;
+var
+   r: TFTX1FProbe;
+begin
+   // This radio reports C4FM as 'H'/'I' -- NOT by reusing 'E' the way the
+   // FT-991 does.
+   BeginTest('FTX-1F maps H and I to C4FM (rmFM)');
+   r := TFTX1FProbe.Create;
+   try
+      r.ProcessMessage(FTX1FMsg('IF', '014025000', '+0000', '0', '0', 'H'));
+      CheckEquals(r.ModeToString(rmFM), r.ModeToString(r.vfo[nrVFOA].mode));
+      r.ProcessMessage(FTX1FMsg('IF', '014025000', '+0000', '0', '0', 'I'));
+      CheckEquals(r.ModeToString(rmFM), r.ModeToString(r.vfo[nrVFOA].mode));
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_FTX1F_E_StaysPSK;
+var
+   r: TFTX1FProbe;
+begin
+   BeginTest('FTX-1F keeps E as PSK31 even though it has C4FM');
+   r := TFTX1FProbe.Create;
+   try
+      r.ProcessMessage(FTX1FMsg('IF', '014025000', '+0000', '0', '0', 'E'));
+      CheckEquals(r.ModeToString(rmPSK), r.ModeToString(r.vfo[nrVFOA].mode));
+   finally
+      r.Free;
+   end;
+end;
+
+// ---------------------------------------------------------------------------
 // Write path
 // ---------------------------------------------------------------------------
 
@@ -580,6 +809,17 @@ begin
    // Robustness
    Test_ShortMessageIgnored;
    Test_NonNumericFrequencyIgnored;
+
+   // Per-model deviations
+   Test_FT710_Split_Uses_FT1_FT0;
+   Test_FT891_Split_Uses_ST;
+   Test_FT891_Polls_ST_Not_FT;
+   Test_FT891_Parses_ST_Response;
+   Test_FT891_StillHandlesSharedCommands;
+   Test_FTX1F_Offsets_AreShiftedByTwo;
+   Test_FTX1F_FTDX10Layout_WouldMisparse;
+   Test_FTX1F_C4FM_Chars;
+   Test_FTX1F_E_StaysPSK;
 
    // Write path
    Test_Split_On_Sends_FT3;

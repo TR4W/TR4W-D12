@@ -67,6 +67,10 @@ uses
    uRadioYaesuASCII     in '..\..\src\uRadioYaesuASCII.pas',
    uRadioYaesuFTDX10    in '..\..\src\uRadioYaesuFTDX10.pas',
    uRadioYaesuFT991     in '..\..\src\uRadioYaesuFT991.pas',
+   uRadioYaesuFTDX101   in '..\..\src\uRadioYaesuFTDX101.pas',
+   uRadioYaesuFT710     in '..\..\src\uRadioYaesuFT710.pas',
+   uRadioYaesuFTX1F     in '..\..\src\uRadioYaesuFTX1F.pas',
+   uRadioYaesuFT891     in '..\..\src\uRadioYaesuFT891.pas',
    uTestYaesuASCII      in 'uTestYaesuASCII.pas';
 
 begin
