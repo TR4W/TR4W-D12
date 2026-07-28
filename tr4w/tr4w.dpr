@@ -133,6 +133,7 @@ uses
   uRadioFactory in 'src\uRadioFactory.pas',
   uRadioElecraftK4 in 'src\uRadioElecraftK4.pas',
   uRadioElecraftSerial in 'src\uRadioElecraftSerial.pas',
+  uRadioYaesuASCII in 'src\uRadioYaesuASCII.pas',
   uRadioYaesuFTDX10 in 'src\uRadioYaesuFTDX10.pas',
   uRadioYaesuBinary in 'src\uRadioYaesuBinary.pas',
   uRadioYaesuFT1000MP in 'src\uRadioYaesuFT1000MP.pas',
