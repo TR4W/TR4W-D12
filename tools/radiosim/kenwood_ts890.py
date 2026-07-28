@@ -6,11 +6,19 @@ barely overlaps: it uses discrete queries -- FA, FB, FR, FT, OM, RT, XT, PS, ID,
 KS, RF, TB.  Reusing the TS-590 personality produced nothing but "PS; (unhandled)",
 which is what prompted this.
 
-IF DOES NOT EXIST ON THESE RADIOS.  It is absent from the TS-990S command set
-(confirmed by NY4I) and the TS-890 driver neither sends nor parses it.  The
-simulator answers '?;' -- Kenwood's rejection for an unsupported command -- rather
-than fabricating a status string, so a driver that wrongly sends IF here fails the
-way it would against real hardware.
+IF differs BETWEEN the two models, and this docstring used to claim flatly that it
+"does not exist on these radios" -- half right, and the half that was wrong was
+mine, not evidence.  What is actually established:
+
+  * TS-990S: absent from the command set (confirmed by NY4I).  The simulator
+    answers '?;' -- Kenwood's rejection for an unsupported command -- rather than
+    fabricating a status string.
+  * TS-890S: undocumented and supplanted by SF, but still ANSWERED for legacy
+    software.  hamlib's own TS-890 simulator implements it under #if LEGACY and
+    documents the field layout (source supplied by NY4I).
+
+Either way TR4W's TKenwoodTS890Radio neither sends nor parses IF, so this only
+matters if a future driver change reaches for it.
 
 Two quirks that matter for a faithful double:
 
