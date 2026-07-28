@@ -62,7 +62,8 @@ interface
 uses
    SysUtils, uTR4WTestFramework, uFactoryRadioBase, uRadioBand,
    uRadioYaesuASCII, uRadioYaesuFTDX10, uRadioYaesuFT991,
-   uRadioYaesuFTDX101, uRadioYaesuFT710, uRadioYaesuFTX1F, uRadioYaesuFT891;
+   uRadioYaesuFTDX101, uRadioYaesuFT710, uRadioYaesuFTX1F, uRadioYaesuFT891,
+   uRadioYaesuASCIILegacy, uRadioYaesuFT2000Models;
 
 type
    // Test doubles.  They add ONE thing: a record of what the driver transmitted.
@@ -94,6 +95,19 @@ type
    end;
 
    TFTX1FProbe = class(TFTX1FRadio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   // rtYaesu2 generation -- 27-byte IF, 8-digit frequency, no split/TX readback.
+   TY2Probe = class(TYaesuASCIILegacy)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   TY2ActiveVFOProbe = class(TYaesuFT2000ActiveVFO)
    public
       sent: string;
       procedure SendToRadio(s: string); overload; override;
@@ -138,6 +152,17 @@ type
       procedure Test_FTX1F_C4FM_Chars;
       procedure Test_FTX1F_E_StaysPSK;
 
+      // rtYaesu2 generation (FT-450 .. FTDX-9000)
+      procedure Test_Y2_Parses_8DigitFrequency;
+      procedure Test_Y2_ClarifierAndFlags;
+      procedure Test_Y2_LayoutDiffersFromNewerGeneration;
+      procedure Test_Y2_SetFrequency_Uses8Digits;
+      procedure Test_Y2_Split_Uses_FR0_FT3;
+      procedure Test_Y2_PollCycle_HasNoFTorTX;
+      procedure Test_Y2_ActiveVFO_PollsFR;
+      procedure Test_Y2_FR4_SelectsVFOB;
+      procedure Test_Y2_DeclaresNoSplitOrTXReadback;
+
       // Write path
       procedure Test_Split_On_Sends_FT3;
       procedure Test_Split_Off_Sends_FT2;
@@ -173,6 +198,16 @@ begin
 end;
 
 procedure TFTX1FProbe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TY2Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TY2ActiveVFOProbe.SendToRadio(s: string);
 begin
    sent := sent + s;
 end;
@@ -684,6 +719,186 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// rtYaesu2 generation -- FT-450, FT-950, FT-1200, FT-2000, FTDX-3000/5000/9000
+//
+// A 27-byte IF with an EIGHT-digit frequency, every field one position earlier
+// than the newer radios.  The failure mode is quiet: a 9-digit read against a
+// 27-byte frame swallows the next character and mis-scales everything after it.
+// ---------------------------------------------------------------------------
+
+// 26-char body (27 on the wire).  Positions per GetVFOInfoForFT2000:
+//   1-2 head | 3-5 memory | 6-13 freq (8) | 14-18 clarifier | 19 RIT | 20 XIT
+//   21 mode | 22-26 filler
+function Y2Msg(const head, freq, clar, rit, xit, mode: string): string;
+begin
+   Result := head + '000' + freq + clar + rit + xit + mode + '00000';
+   if Length(Result) <> 26 then
+      begin
+      raise Exception.CreateFmt('rtYaesu2 fixture is %d chars, must be 26',
+                                [Length(Result)]);
+      end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_Parses_8DigitFrequency;
+var
+   r: TY2Probe;
+begin
+   BeginTest('rtYaesu2 reads an 8-digit frequency');
+   r := TY2Probe.Create;
+   try
+      r.ProcessMessage(Y2Msg('IF', '14025000', '+0000', '0', '0', '3'));
+      CheckEquals(14025000, r.vfo[nrVFOA].frequency);
+      CheckEquals(r.ModeToString(rmCW), r.ModeToString(r.vfo[nrVFOA].mode));
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_ClarifierAndFlags;
+var
+   r: TY2Probe;
+begin
+   BeginTest('rtYaesu2 clarifier and RIT/XIT flags sit one position earlier');
+   r := TY2Probe.Create;
+   try
+      r.ProcessMessage(Y2Msg('IF', '14025000', '-0250', '1', '1', '3'));
+      CheckEquals(-250, r.vfo[nrVFOA].RITOffset);
+      CheckTrue(r.IsRITOn[nrVFOA]);
+      CheckTrue(r.IsXITOn[nrVFOA]);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_LayoutDiffersFromNewerGeneration;
+var
+   r: TY2Probe;
+   d: TFTDX10Probe;
+   body: string;
+begin
+   // Same guard as the FTX-1F pair: if someone gave this generation the newer
+   // offsets, fixture and driver would just be wrong together and every other
+   // assertion here would still pass.
+   BeginTest('a 27-byte frame read with 28-byte offsets gives a DIFFERENT frequency');
+   r := TY2Probe.Create;
+   d := TFTDX10Probe.Create;
+   try
+      body := Y2Msg('IF', '14025000', '+0000', '0', '0', '3');
+      r.ProcessMessage(body);
+      d.ProcessMessage(body);
+      CheckEquals(14025000, r.vfo[nrVFOA].frequency);
+      CheckFalse(d.vfo[nrVFOA].frequency = 14025000);
+   finally
+      d.Free;
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_SetFrequency_Uses8Digits;
+var
+   r: TY2Probe;
+begin
+   BeginTest('rtYaesu2 sets frequency with 8 digits, not 9');
+   r := TY2Probe.Create;
+   try
+      r.sent := '';
+      r.SetFrequency(14025000, nrVFOA, rmNone);
+      CheckEquals('FA14025000;', r.sent);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_Split_Uses_FR0_FT3;
+var
+   r: TY2Probe;
+begin
+   // Two commands, in this order (LOGRADIO Issue #166 -- it was FR0;FT1; once).
+   BeginTest('rtYaesu2 splits with FR0;FT3; and FR0;FT2;');
+   r := TY2Probe.Create;
+   try
+      r.sent := '';
+      r.Split(True);
+      r.Split(False);
+      CheckEquals('FR0;FT3;FR0;FT2;', r.sent);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_PollCycle_HasNoFTorTX;
+var
+   r: TY2Probe;
+begin
+   // This generation answers neither.  Asking would add a timeout per cycle on
+   // a 4800 baud link.
+   BeginTest('rtYaesu2 poll cycle is IF;OI; only');
+   r := TY2Probe.Create;
+   try
+      r.sent := '';
+      r.PollRadioState;
+      CheckEquals('IF;OI;', r.sent);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_ActiveVFO_PollsFR;
+var
+   r: TY2ActiveVFOProbe;
+begin
+   BeginTest('FT-950/FT-2000/FTDX-9000 also poll FR;');
+   r := TY2ActiveVFOProbe.Create;
+   try
+      r.sent := '';
+      r.PollRadioState;
+      CheckEquals('IF;OI;FR;', r.sent);
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_FR4_SelectsVFOB;
+var
+   r: TY2ActiveVFOProbe;
+begin
+   // FR reports the RECEIVE VFO, NOT split -- a reply of '4' means VFO B is
+   // operating.  Treating it as a split flag would light the split indicator
+   // every time the operator selected VFO B.
+   BeginTest('FR4 means VFO B is the operating VFO (not split)');
+   r := TY2ActiveVFOProbe.Create;
+   try
+      r.ProcessMessage('FR4');
+      CheckEquals(Ord(nrVFOB), Ord(r.GetActiveVFO));
+      CheckFalse(r.IsSplitEnabled);
+      r.ProcessMessage('FR0');
+      CheckEquals(Ord(nrVFOA), Ord(r.GetActiveVFO));
+   finally
+      r.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_DeclaresNoSplitOrTXReadback;
+var
+   r: TY2Probe;
+   d: TFTDX10Probe;
+begin
+   // The absence is DECLARED, so callers can tell "off" from "cannot know".
+   // These radios genuinely never report split or TX state.
+   BeginTest('rtYaesu2 declares it cannot read split or TX state');
+   r := TY2Probe.Create;
+   d := TFTDX10Probe.Create;
+   try
+      CheckFalse(rcReadSplit in r.Capabilities.Flags);
+      CheckFalse(rcReadTXStatus in r.Capabilities.Flags);
+      CheckTrue(rcReadSplit in d.Capabilities.Flags);
+   finally
+      d.Free;
+      r.Free;
+   end;
+end;
+
+// ---------------------------------------------------------------------------
 // Write path
 // ---------------------------------------------------------------------------
 
@@ -820,6 +1035,17 @@ begin
    Test_FTX1F_FTDX10Layout_WouldMisparse;
    Test_FTX1F_C4FM_Chars;
    Test_FTX1F_E_StaysPSK;
+
+   // rtYaesu2 generation
+   Test_Y2_Parses_8DigitFrequency;
+   Test_Y2_ClarifierAndFlags;
+   Test_Y2_LayoutDiffersFromNewerGeneration;
+   Test_Y2_SetFrequency_Uses8Digits;
+   Test_Y2_Split_Uses_FR0_FT3;
+   Test_Y2_PollCycle_HasNoFTorTX;
+   Test_Y2_ActiveVFO_PollsFR;
+   Test_Y2_FR4_SelectsVFOB;
+   Test_Y2_DeclaresNoSplitOrTXReadback;
 
    // Write path
    Test_Split_On_Sends_FT3;

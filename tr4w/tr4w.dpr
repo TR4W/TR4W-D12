@@ -143,6 +143,8 @@ uses
   uRadioYaesuFT710 in 'src\uRadioYaesuFT710.pas',
   uRadioYaesuFTX1F in 'src\uRadioYaesuFTX1F.pas',
   uRadioYaesuFT891 in 'src\uRadioYaesuFT891.pas',
+  uRadioYaesuASCIILegacy in 'src\uRadioYaesuASCIILegacy.pas',
+  uRadioYaesuFT2000Models in 'src\uRadioYaesuFT2000Models.pas',
   uRadioElecraftK3 in 'src\uRadioElecraftK3.pas',
   uRadioKenwoodTS890 in 'src\uRadioKenwoodTS890.pas',
   uIcomNetworkTypes in 'src\uIcomNetworkTypes.pas',
