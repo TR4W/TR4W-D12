@@ -20,7 +20,7 @@ unit uRadioYaesuFT991;
   Yaesu FT-991 / FT-991A -- lead model of the legacy rtYaesu3 group (FT-891,
   FT-991), migrated from uRadioPolling.pFT891_FT991.
 
-  It is a SUBCLASS of TYaesuSerial (uRadioYaesuFTDX10), not a new family base,
+  It is a SUBCLASS of TYaesuSerial (uRadioYaesuASCII), not a new family base,
   because the wire protocol is the same one:
 
     IF; / OI;   28 bytes, identical field offsets -- frequency at 6 (9 digits,
@@ -76,7 +76,7 @@ unit uRadioYaesuFT991;
 
 interface
 
-uses uFactoryRadioBase, uRadioYaesuFTDX10, uRadioRegistry, VC;
+uses uFactoryRadioBase, uRadioYaesuASCII, uRadioRegistry, VC;
 
 type
   // FT-991 / FT-991A -- rtYaesu3.  Same wire protocol as the FTDX-10; differs
