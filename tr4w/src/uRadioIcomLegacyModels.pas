@@ -84,17 +84,56 @@ unit uRadioIcomLegacyModels;
 
 interface
 
-uses uFactoryRadioBase, uRadioIcomBase, uRadioIcomLegacy, uRadioRegistry, VC;
+uses uFactoryRadioBase, uRadioIcomBase, uRadioRegistry, VC;
+
+type
+  // ---------------------------------------------------------------------------
+  // The profile for these 26: the FULL Icom profile MINUS the two reads that
+  // LOGRADIO's sets say these radios do not have.  Nothing else is removed.
+  //
+  // WHY NOT TIcomLegacyRadio.  That class carries the conservative profile NY4I's
+  // testers BENCH-PROVED on the IC-706 family and the IC-7000 -- its own header
+  // says the siblings "fan out as more subclasses here ONCE THESE VALIDATE".
+  // Attaching 26 unvalidated models to a profile derived empirically from four
+  // OTHER radios silently withheld three things D7 does (NY4I caught this):
+  //
+  //     $0F split read     D7 polls it     -- IcomRadiosSplitSetOnly       = [IC718]
+  //     $1C TX status      D7 polls it     -- IcomRadiosTXStatusUnreadable = [IC718]
+  //     $06 filter byte    D7 sends it     -- IcomRadiosModeSetNoFilter    = [IC718]
+  //
+  // Every one of those deny-lists contains the IC-718 and nothing else, so for
+  // these 26 radios D7's answer is "yes" in all three cases.  Data mode likewise:
+  // D7 does not gate $1A06 on a list at all, it PROBES (icomHasDataMode, LOGRADIO
+  // :283/:1565), so it sends $1A06 to every Icom -- meaning rcDataMode in, not out.
+  //
+  // The only two traits the sets genuinely withhold are VFO-B and RIT reads
+  // (IcomRadiosThatSupportVFOB / ...RIT -- NY4I confirms those lists are accurate).
+  //
+  // uTestIcomRegistry now checks all FOUR sets against these flags, not two; the
+  // two-set version passed this file while it was wrong.
+  // ---------------------------------------------------------------------------
+  TIcomReadLimitedRadio = class(TIcomRadio)
+  protected
+    procedure DefineCapabilities; override;
+  end;
 
 implementation
+
+procedure TIcomReadLimitedRadio.DefineCapabilities;
+begin
+  inherited;   // full modern profile
+  // These two, and ONLY these two, per LOGRADIO's capability sets.
+  Exclude(FCapabilities.Flags, rcReadVFOB);
+  Exclude(FCapabilities.Flags, rcReadRIT);
+end;
 
 // One constructor for all of them: identity only.  Anything beyond identity means
 // the model has earned its own class -- see the promotion path in the header.
 function MakeLegacyIcom(addr: Byte; const name: string): TFactoryRadioBase;
 var
-   r: TIcomLegacyRadio;
+   r: TIcomReadLimitedRadio;
 begin
-   r := TIcomLegacyRadio.Create;
+   r := TIcomReadLimitedRadio.Create;
    r.RadioAddress := addr;
    r.radioModel := name;
    Result := r;

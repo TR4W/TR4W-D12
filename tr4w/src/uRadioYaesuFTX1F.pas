@@ -20,9 +20,31 @@ unit uRadioYaesuFTX1F;
   Yaesu FTX-1F / FTX-1R -- rtYaesu4 (Issue #817), migrated from
   uRadioPolling.pFTX1F + GetVFOInfoForYaesuFTX1.
 
-  Same ASCII CAT family as the FTDX-10, and the same FT3;/FT2; split, but Yaesu
-  MOVED EVERY FIELD IN THE IF/OI RESPONSE and made it longer.  This is the model
-  that justified making ParseIFResponse a virtual seam:
+  IDENTIFICATION: the ID command answers ID0840; (NY4I).  Recorded for a future
+  ident check; TR4W does not currently poll ID for this family.  (FT-2000 is
+  0251, in uRadioYaesuFT2000Models.)
+
+  SPLIT USES FT1;/FT0; -- A BUG FIX, NOT A STRAIGHT PORT.  Legacy sends FT3;/FT2;
+  here, because LOGRADIO :2109/:2173 group FTX1F with FTDX10/FTDX101/FT991.  The
+  FTX-1F manual's FT table defines P1 as exactly TWO values -- 0 = MAIN-side
+  transmitter, 1 = SUB-side transmitter (i.e. split), confirmed by NY4I.  3 and 2
+  are not among them, so the legacy command is undefined for this radio and split
+  probably never engaged.
+
+  What makes this convincing rather than a guess: TR4W already READS the answer as
+  0/1 (SetSplitOn(msg[3] <> '0'), matching the manual) while WRITING 3/2.  A driver
+  that reads a field one way and writes it another has usually had the write copied
+  from a neighbouring model -- here the FTDX-10 branch, which the FTX-1F was added
+  to when it was new (Issue #817).  The FT-710 already uses the two-value form and
+  the FTX-1F is newer still.
+
+  LOGRADIO :2109/:2173 carry the same defect and are corrected alongside this.
+  That path is now only a fallback -- PutRadioIntoSplit returns early when a
+  factory object exists -- but a wrong fallback is still wrong.
+
+  Otherwise the same ASCII CAT family as the FTDX-10, but Yaesu MOVED EVERY FIELD
+  IN THE IF/OI RESPONSE and made it longer.  This is the model that justified
+  making ParseIFResponse a virtual seam:
 
                        FTDX-10 / FT-991      FTX-1F
       response length  28 bytes              30 bytes
@@ -77,6 +99,7 @@ type
     function  ModeCharToMode(c: Char): TRadioMode; override;
   public
     constructor Create; reintroduce;
+    procedure Split(splitOn: boolean); override;
   end;
 
 implementation
@@ -137,6 +160,21 @@ begin
    else
       begin
       Result := inherited ModeCharToMode(c);
+      end;
+end;
+
+// FT P1: 0 = MAIN-side transmitter, 1 = SUB-side transmitter (split).  Only those
+// two values exist on this radio -- see the unit header for why the inherited
+// FT3;/FT2; is wrong here.  Same form the FT-710 uses.
+procedure TFTX1FRadio.Split(splitOn: boolean);
+begin
+   if splitOn then
+      begin
+      Self.SendToRadio('FT1;');
+      end
+   else
+      begin
+      Self.SendToRadio('FT0;');
       end;
 end;
 

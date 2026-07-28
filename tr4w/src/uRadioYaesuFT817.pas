@@ -152,14 +152,41 @@ const
 
    FT817_MAX_FREQ_HZ = 999999990;  // 8 BCD digits at 10 Hz resolution
 
+   // FT-847 CAT-enable preamble (legacy TurnOn847CATString): the 5-byte frame with
+   // opcode $00.  The FT-847 ignores all other CAT traffic until it receives this.
+   FT847_CAT_ON_OPCODE = $00;
+
 type
+  // ---------------------------------------------------------------------------
+  // GROUP TRAITS.  Three models in this group deviate from the FT-817, and each
+  // deviation is a FLAG a subclass sets -- never a test of the model here.  A new
+  // small-rig Yaesu is added by subclassing and setting flags, not by editing this
+  // class.  Defaults are the FT-817's own behaviour, so a subclass that sets
+  // nothing behaves exactly like an FT-817.
+  //
+  //   FCATEnableOnConnect  FT-847     needs the $00 CAT-ON frame before it answers
+  //   FModeDIGU/FModeDIGL  FT-847     no data modes; FT-857/897 have DIG but no DIG-L
+  //   FHasSplit            FT-847     no SPLIT command exists on that radio
+  //   FHasClarifier        FT-847     no CLAR command exists on that radio
+  //
+  // Field values follow the legacy RadioParametersArray convention: $FF means the
+  // radio does not have that mode, which is exactly how the DIGL/DIGU row fields
+  // already express it.
+  // ---------------------------------------------------------------------------
   TYaesuFT817Radio = class(TYaesuBinary)
   protected
+    FCATEnableOnConnect: Boolean;
+    FModeDIGU: Byte;        // rmData  ($FF = radio has no DIG mode)
+    FModeDIGL: Byte;        // rmFSK   ($FF = radio has no DIG-L / PKT mode)
+    FHasSplit: Boolean;
+    FHasClarifier: Boolean;
+
     function  StatusModeToMode(b: Byte): TRadioMode;
     function  BCDFreqRead(const frame: string; pos1: integer): integer;
   public
     constructor Create; reintroduce;
 
+    function  Connect: integer; override;
     procedure ProcessMsg(msg: string); override;
     procedure PollRadioState; override;
     function  ValidateFrame(const frame: string): Boolean; override;
@@ -206,7 +233,51 @@ begin
    FCapabilities.Flags := [rcReadSplit];
    FCapabilities.CWSpeedMin := 0;
    FCapabilities.CWSpeedMax := 0;
+
+   // Group-trait defaults = plain FT-817 behaviour (see the header on the class).
+   FCATEnableOnConnect := False;
+   FModeDIGU           := FT817_MODE_DIGU;   // $0A
+   FModeDIGL           := FT817_MODE_DIGL;   // $0C
+   FHasSplit           := True;
+   FHasClarifier       := True;
 end;
+
+function TYaesuFT817Radio.Connect: integer;
+begin
+   Result := inherited Connect;
+   // The FT-847 answers nothing until CAT is enabled (its chart: P1=00 CAT ON,
+   // P1=80 CAT OFF).  Legacy sent this from the top of the poll procedure, i.e.
+   // once per thread start; connect is the same moment, named honestly.
+   if (Result = 0) and FCATEnableOnConnect then
+      begin
+      logger.Info('[Connect] Sending CAT-enable frame');
+      Self.SendBytes($00, $00, $00, $00, FT847_CAT_ON_OPCODE);
+      end;
+end;
+
+// NOTE ON DEFERRED WRITES -- deliberately NOT ported.
+//
+// Legacy queued set-freq/set-mode for the FT-857/897 alone and emitted them from
+// inside the poll loop, each followed by Sleep(100) + PurgeComm(PURGE_RXCLEAR):
+//
+//     if RadioModel in [FT857, FT897] then tYaesuSendFreq := True
+//     else WriteToCATPort(tYaesuFreq5Bytes, 5);     (LOGRADIO :3508, :3532)
+//
+// The FT-857D CAT manual (pages 115-118) gives no basis for it: the data protocol,
+// the 5-byte structure and every opcode used here are identical to the FT-817's,
+// and nothing is said about write timing or a settle delay.  NY4I reached the same
+// reading of the manual.
+//
+// The factory also handles the underlying problem better than a timed purge:
+// ValidateFrame discards a byte and resyncs when a frame fails to validate, which
+// self-corrects whether or not a unit replies to a set command -- see the ack
+// discussion in the unit header.  A Sleep(100) per write would additionally stall
+// the poll thread on every QSY.
+//
+// BENCH WATCH-ITEM: on a real FT-857, watch for repeated "Frame resync: discarded
+// N byte(s)" WARNINGS with N > 1 after a QSY.  A single discarded byte is the
+// expected ack and is healthy; a persistent pattern would mean the legacy deferral
+// was compensating for something real, and this decision should be revisited.
 
 constructor TYaesuFT818Radio.Create;
 begin
@@ -333,7 +404,12 @@ begin
    // Split, from the appended TX-status byte.  INVERTED per manual Note 4: bit 5
    // clear means SPLIT ON.  Because this IS read back, Split() does not track it
    // locally -- unlike RIT below, which has no readback at all.
-   Self.SetSplitOn((Ord(msg[FT817_TX_STATUS_POS]) and FT817_TXST_SPLIT_BIT) = 0);
+   // Guarded: the FT-847 has no split at all, and its Note 2 layout is not the
+   // FT-817's, so that bit must not be interpreted as split there.
+   if FHasSplit then
+      begin
+      Self.SetSplitOn((Ord(msg[FT817_TX_STATUS_POS]) and FT817_TXST_SPLIT_BIT) = 0);
+      end;
    // PTT is bit 7 of the same byte, but Note 4 does not state its polarity (it
    // gives 0/1 meanings for SPLIT and HI SWR and omits them for PTT).  Not decoded:
    // guessing wrong would report the radio permanently transmitting.  To enable it,
@@ -378,15 +454,23 @@ begin
       rmCWRev: modeByte := FT817_MODE_CWR;
       rmAM:    modeByte := FT817_MODE_AM;
       rmFM:    modeByte := FT817_MODE_FM;
-      rmData:  modeByte := FT817_MODE_DIGU;
-      rmFSK:   modeByte := FT817_MODE_DIGL;   // no separate RTTY mode; DIG-L is the
-                                              // closest the radio offers
+      rmData:  modeByte := FModeDIGU;
+      rmFSK:   modeByte := FModeDIGL;   // no separate RTTY mode; DIG-L/PKT is the
+                                        // closest the radio offers
    else
       begin
       logger.Error('[SetMode] unsupported mode %d', [Ord(mode)]);
       Exit;
       end;
    end;
+   // $FF marks a mode the radio does not have (the legacy DIGL/DIGU row convention).
+   // Refuse rather than transmit $FF, which is not a defined mode byte on any of
+   // these radios and would leave the rig in an unpredictable state.
+   if modeByte = $FF then
+      begin
+      logger.Error('[SetMode] %s has no mode %d', [radioModel, Ord(mode)]);
+      Exit;
+      end;
    // MB=0: mode byte FIRST, opcode $07 last (the FT-1000MP puts it at [3]).
    Self.SendBytes(modeByte, $00, $00, $00, FT817_SET_MODE_OPCODE);
 end;
@@ -421,6 +505,14 @@ end;
 
 procedure TYaesuFT817Radio.Split(splitOn: boolean);
 begin
+   // The FT-847 has no SPLIT command in its opcode chart at all (it is a satellite
+   // radio -- it uses SAT RX/TX VFOs instead of an A/B split).  Sending $02/$82
+   // there would be an undefined opcode.
+   if not FHasSplit then
+      begin
+      logger.Warn('[Split] %s has no CAT split command -- ignored', [radioModel]);
+      Exit;
+      end;
    if splitOn then
       begin
       Self.SendBytes($00, $00, $00, $00, FT817_SPLIT_ON_OPCODE);
@@ -434,14 +526,27 @@ begin
    // are therefore picked up here too.
 end;
 
+// The FT-847's chart has no CLAR rows at all, so all four clarifier entry points
+// are guarded.  Guarding here rather than in a subclass override keeps the four
+// checks in one place next to the commands they protect.
 procedure TYaesuFT817Radio.RITOn(whichVFO: TVFO);
 begin
+   if not FHasClarifier then
+      begin
+      logger.Warn('[RITOn] %s has no CAT clarifier command -- ignored', [radioModel]);
+      Exit;
+      end;
    Self.SendBytes($00, $00, $00, $00, FT817_CLAR_ON_OPCODE);
    Self.SetRITOn(True);
 end;
 
 procedure TYaesuFT817Radio.RITOff(whichVFO: TVFO);
 begin
+   if not FHasClarifier then
+      begin
+      logger.Warn('[RITOff] %s has no CAT clarifier command -- ignored', [radioModel]);
+      Exit;
+      end;
    Self.SendBytes($00, $00, $00, $00, FT817_CLAR_OFF_OPCODE);
    Self.SetRITOn(False);
 end;
@@ -460,6 +565,11 @@ var
    subKHz: integer;
    p1, p3, p4: Byte;
 begin
+   if not FHasClarifier then
+      begin
+      logger.Warn('[SetRITFreq] %s has no CAT clarifier command -- ignored', [radioModel]);
+      Exit;
+      end;
    magnitude := Abs(hz);
    if magnitude > FT817_CLAR_MAX_HZ then
       begin

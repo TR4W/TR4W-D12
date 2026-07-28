@@ -247,6 +247,19 @@ Type TFactoryRadioBase = class(TObject)
       SerialProtocolIsBinary: Boolean; // False (default): serial CAT is ASCII text -> WriteString/ReadString. True (Icom CI-V, set in TIcomRadio): the frame is raw bytes (Ord 0..255 per Char, incl. >= $80 like FE/88/FD) -> byte-exact WriteBytes/ReadBytes, so D12's UTF-16/ASCII encoding can't corrupt them.
       SerialFixedFrameLength: integer;  // >0: serial responses are fixed-length binary with NO terminator (Yaesu FT1000MP: 32-byte status block). Default 0 = terminator-delimited. Implies SerialProtocolIsBinary.
 
+      // Change the expected fixed frame length AFTER the reading thread is running.
+      // Needed by radios whose exchange has more than one answer size -- the
+      // Yaesu FT-767 replies to a poll with a 5-byte handshake and, only after an
+      // ACK, an 86-byte status block, so the delimiter has to change mid-stream.
+      //
+      // Safe ONLY from ProcessMsg, which runs ON the reading thread: that thread
+      // re-reads its fixedFrameLength on each pass of its loop, so the new value
+      // takes effect on the next frame with no cross-thread write and no lock.
+      // Calling it from another thread would race the reader mid-frame.
+      //
+      // Exists because `rt` is private; a driver must not reach into the thread.
+      procedure SetExpectedFrameLength(n: integer);
+
       // Frame check for FIXED-LENGTH framing (ignored when SerialFixedFrameLength = 0).
       // Fixed-length framing has no terminator to re-synchronise on, so a single
       // unexpected byte -- a set-command ACK the manual never documented, or a byte
@@ -1241,6 +1254,17 @@ begin
 end;
 
 // ---- Capabilities: callers ask the object what it can do (see TRadioCapabilities). ----
+procedure TFactoryRadioBase.SetExpectedFrameLength(n: integer);
+begin
+   // Keep both in step: the field is what a later reconnect copies from, the
+   // thread's copy is what actually delimits the stream right now.
+   SerialFixedFrameLength := n;
+   if rt <> nil then
+      begin
+      rt.fixedFrameLength := n;
+      end;
+end;
+
 function TFactoryRadioBase.Supports(cap: TRadioCapability): Boolean;
 begin
    Result := cap in FCapabilities.Flags;

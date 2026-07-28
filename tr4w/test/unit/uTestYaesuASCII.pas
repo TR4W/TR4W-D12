@@ -107,6 +107,24 @@ type
       procedure SendToRadio(s: string); overload; override;
    end;
 
+   TFT950Probe = class(TYaesuFT950Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   TFT2000Probe = class(TYaesuFT2000Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   TFTDX9000Probe = class(TYaesuFTDX9000Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
    TY2ActiveVFOProbe = class(TYaesuFT2000ActiveVFO)
    public
       sent: string;
@@ -151,6 +169,7 @@ type
       procedure Test_FTX1F_FTDX10Layout_WouldMisparse;
       procedure Test_FTX1F_C4FM_Chars;
       procedure Test_FTX1F_E_StaysPSK;
+      procedure Test_FTX1F_Split_Uses_FT1_FT0;
 
       // rtYaesu2 generation (FT-450 .. FTDX-9000)
       procedure Test_Y2_Parses_8DigitFrequency;
@@ -161,6 +180,9 @@ type
       procedure Test_Y2_PollCycle_HasNoFTorTX;
       procedure Test_Y2_ActiveVFO_PollsFR;
       procedure Test_Y2_FR4_SelectsVFOB;
+      procedure Test_Y2_PerModel_SplitDialects;
+      procedure Test_Y2_PerModel_FRDialects;
+      procedure Test_Y2_TraitsDoNotShareAGrouping;
       procedure Test_Y2_DeclaresNoSplitOrTXReadback;
 
       // Write path
@@ -210,6 +232,132 @@ end;
 procedure TY2ActiveVFOProbe.SendToRadio(s: string);
 begin
    sent := sent + s;
+end;
+
+procedure TFT950Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFT2000Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFTDX9000Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+// ---------------------------------------------------------------------------
+// Per-model FT / FR dialects inside the rtYaesu2 generation.
+//
+// These three radios divide DIFFERENTLY depending on the command (manuals via
+// NY4I), which is the whole reason both traits are flags rather than a class
+// split:
+//
+//             FT                             FR
+//   FT-950    0,1 toggle + 2,3 absolute      0,1,4,5
+//   FT-2000   0,1 ONLY                       0,1,2,3
+//   FTDX-9000 0,1 toggle + 2,3 absolute      0,1,2,3
+//
+// Every assertion below is paired with its opposite on a sibling, so a future
+// "cleanup" that re-merges them fails instead of silently regressing.
+// ---------------------------------------------------------------------------
+
+procedure TYaesuASCIITests.Test_Y2_PerModel_SplitDialects;
+var
+   a: TFT950Probe;
+   b: TFT2000Probe;
+   c: TFTDX9000Probe;
+begin
+   // The FT-2000's FT accepts only 0 and 1.  LOGRADIO Issue #166 moved the whole
+   // group to FT3;/FT2; -- right for the other two (whose 0/1 are toggles), but
+   // undefined on the FT-2000.
+   BeginTest('FT-2000 splits with FR0;FT1;/FR0;FT0;, the other two with FT3;/FT2;');
+   a := TFT950Probe.Create;
+   b := TFT2000Probe.Create;
+   c := TFTDX9000Probe.Create;
+   try
+      b.sent := '';
+      b.Split(True);
+      b.Split(False);
+      CheckEquals('FR0;FT1;FR0;FT0;', b.sent);
+
+      // Paired opposites: these two genuinely need the absolute 2/3 form.
+      a.sent := '';
+      a.Split(True);
+      CheckEquals('FR0;FT3;', a.sent);
+      c.sent := '';
+      c.Split(True);
+      CheckEquals('FR0;FT3;', c.sent);
+   finally
+      c.Free;
+      b.Free;
+      a.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_PerModel_FRDialects;
+var
+   a: TFT950Probe;
+   b: TFT2000Probe;
+begin
+   // FR splits the group the OTHER way: '4' is the FT-950's VFO-B value and does
+   // not exist on the FT-2000, whose VFO-B value is '3'.
+   BeginTest('FT-950 reads VFO B from FR4/FR5; the FT-2000 reads it from FR3');
+   a := TFT950Probe.Create;
+   b := TFT2000Probe.Create;
+   try
+      a.ProcessMessage('FR4');
+      CheckEquals(Ord(nrVFOB), Ord(a.GetActiveVFO));
+      // '5' = VFO-A OFF, VFO-B muted -- B is still the receive VFO.  Legacy
+      // tested only '4', so this state reported VFO A.
+      a.ProcessMessage('FR5');
+      CheckEquals(Ord(nrVFOB), Ord(a.GetActiveVFO));
+
+      b.ProcessMessage('FR3');
+      CheckEquals(Ord(nrVFOB), Ord(b.GetActiveVFO));
+      // '4' never occurs on an FT-2000; if it somehow arrives it is not VFO B.
+      b.ProcessMessage('FR4');
+      CheckEquals(Ord(nrVFOA), Ord(b.GetActiveVFO));
+   finally
+      b.Free;
+      a.Free;
+   end;
+end;
+
+procedure TYaesuASCIITests.Test_Y2_TraitsDoNotShareAGrouping;
+var
+   a: TFT950Probe;
+   b: TFT2000Probe;
+   c: TFTDX9000Probe;
+begin
+   // The point of the design, asserted directly: by FT the odd one out is the
+   // FT-2000; by FR it is the FT-950.  If someone ever "simplifies" these into
+   // one class, one of these two halves must fail.
+   BeginTest('the FT and FR traits partition these three radios differently');
+   a := TFT950Probe.Create;
+   b := TFT2000Probe.Create;
+   c := TFTDX9000Probe.Create;
+   try
+      // By FT: FT-950 and FTDX-9000 agree, FT-2000 differs.
+      a.sent := ''; b.sent := ''; c.sent := '';
+      a.Split(True); b.Split(True); c.Split(True);
+      CheckEquals(a.sent, c.sent);
+      CheckFalse(a.sent = b.sent);
+
+      // By FR: FT-2000 and FTDX-9000 agree, FT-950 differs.
+      b.ProcessMessage('FR3');
+      c.ProcessMessage('FR3');
+      CheckEquals(Ord(b.GetActiveVFO), Ord(c.GetActiveVFO));
+      a.ProcessMessage('FR3');
+      CheckEquals(Ord(nrVFOA), Ord(a.GetActiveVFO));   // '3' is not VFO B here
+   finally
+      c.Free;
+      b.Free;
+      a.Free;
+   end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -543,6 +691,34 @@ end;
 // others do not.  They are the reason each model has its own unit, and they are
 // the assertions most likely to catch a bad refactor of the shared base.
 // ---------------------------------------------------------------------------
+
+procedure TYaesuASCIITests.Test_FTX1F_Split_Uses_FT1_FT0;
+var
+   r: TFTX1FProbe;
+   d: TFTDX10Probe;
+begin
+   // BUG FIX, not a port: legacy sent FT3;/FT2; here because FTX1F was grouped
+   // with the FTDX-10.  The FTX-1F FT table has only P1 = 0 (MAIN TX) and
+   // 1 (SUB TX), so FT3; was undefined and split probably never engaged.
+   // Confirmed by NY4I against the manual.
+   BeginTest('FTX-1F splits with FT1;/FT0; (manual: P1 is 0=MAIN, 1=SUB only)');
+   r := TFTX1FProbe.Create;
+   d := TFTDX10Probe.Create;
+   try
+      r.sent := '';
+      r.Split(True);
+      r.Split(False);
+      CheckEquals('FT1;FT0;', r.sent);
+      // Guard the guard: the FTDX-10 genuinely does take the three-value form, so
+      // this must NOT be "fixed" family-wide.
+      d.sent := '';
+      d.Split(True);
+      CheckEquals('FT3;', d.sent);
+   finally
+      d.Free;
+      r.Free;
+   end;
+end;
 
 procedure TYaesuASCIITests.Test_FT710_Split_Uses_FT1_FT0;
 var
@@ -1035,6 +1211,7 @@ begin
    Test_FTX1F_FTDX10Layout_WouldMisparse;
    Test_FTX1F_C4FM_Chars;
    Test_FTX1F_E_StaysPSK;
+   Test_FTX1F_Split_Uses_FT1_FT0;
 
    // rtYaesu2 generation
    Test_Y2_Parses_8DigitFrequency;
@@ -1045,6 +1222,9 @@ begin
    Test_Y2_PollCycle_HasNoFTorTX;
    Test_Y2_ActiveVFO_PollsFR;
    Test_Y2_FR4_SelectsVFOB;
+   Test_Y2_PerModel_SplitDialects;
+   Test_Y2_PerModel_FRDialects;
+   Test_Y2_TraitsDoNotShareAGrouping;
    Test_Y2_DeclaresNoSplitOrTXReadback;
 
    // Write path

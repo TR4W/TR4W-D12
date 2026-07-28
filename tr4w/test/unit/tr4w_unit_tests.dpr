@@ -73,7 +73,29 @@ uses
    uRadioYaesuFT891     in '..\..\src\uRadioYaesuFT891.pas',
    uRadioYaesuASCIILegacy  in '..\..\src\uRadioYaesuASCIILegacy.pas',
    uRadioYaesuFT2000Models in '..\..\src\uRadioYaesuFT2000Models.pas',
+   // Old-binary family, listed EXPLICITLY -- see the note on uRadioIcomLegacy
+   // above.  These were reaching this EXE only through uTestYaesuBinary's uses
+   // clause, so any change there would have silently dropped their registrations.
+   uRadioYaesuBinary    in '..\..\src\uRadioYaesuBinary.pas',
+   uRadioYaesuFT1000MP  in '..\..\src\uRadioYaesuFT1000MP.pas',
+   uRadioYaesuFT817     in '..\..\src\uRadioYaesuFT817.pas',
+   uRadioYaesuFT847     in '..\..\src\uRadioYaesuFT847.pas',
+   uRadioYaesuFT857     in '..\..\src\uRadioYaesuFT857.pas',
+   uRadioYaesuFT990     in '..\..\src\uRadioYaesuFT990.pas',
+   uRadioYaesuFT840     in '..\..\src\uRadioYaesuFT840.pas',
+   uRadioYaesuFT920     in '..\..\src\uRadioYaesuFT920.pas',
+   uRadioYaesuFT100     in '..\..\src\uRadioYaesuFT100.pas',
+   uRadioYaesuFT747     in '..\..\src\uRadioYaesuFT747.pas',
+   uRadioYaesuFT767     in '..\..\src\uRadioYaesuFT767.pas',
    uTestYaesuASCII      in 'uTestYaesuASCII.pas',
+   uTestYaesuBinary     in 'uTestYaesuBinary.pas',
+   // Listed EXPLICITLY, not reached through another unit's uses clause: radios
+   // self-register from their unit's initialization, so a unit that is only
+   // linked transitively vanishes the moment that chain changes -- and its
+   // radios silently disappear from the registry with no compile error.
+   // Exactly that happened: uRadioIcomLegacyModels stopped using
+   // uRadioIcomLegacy, and the IC-706 family fell out of this EXE.
+   uRadioIcomLegacy in '..\..\src\uRadioIcomLegacy.pas',
    uRadioIcomLegacyModels in '..\..\src\uRadioIcomLegacyModels.pas',
    uRadioIcom7700         in '..\..\src\uRadioIcom7700.pas',
    uRadioIcom7800         in '..\..\src\uRadioIcom7800.pas',
@@ -118,6 +140,7 @@ begin
    RegisterSuite(TMultsTests.Create('Mults'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));
+   RegisterSuite(TYaesuBinaryTests.Create('YaesuBinary'));
    RegisterSuite(TIcomRegistryTests.Create('IcomRegistry'));
 
    if RunAllSuites then
