@@ -73,7 +73,11 @@ uses
    uRadioYaesuFT891     in '..\..\src\uRadioYaesuFT891.pas',
    uRadioYaesuASCIILegacy  in '..\..\src\uRadioYaesuASCIILegacy.pas',
    uRadioYaesuFT2000Models in '..\..\src\uRadioYaesuFT2000Models.pas',
-   uTestYaesuASCII      in 'uTestYaesuASCII.pas';
+   uTestYaesuASCII      in 'uTestYaesuASCII.pas',
+   uRadioIcomLegacyModels in '..\..\src\uRadioIcomLegacyModels.pas',
+   uRadioIcom7700         in '..\..\src\uRadioIcom7700.pas',
+   uRadioIcom7800         in '..\..\src\uRadioIcom7800.pas',
+   uTestIcomRegistry    in 'uTestIcomRegistry.pas';
 
 begin
    IsMultiThread := True;  // Match main application setting
@@ -114,6 +118,7 @@ begin
    RegisterSuite(TMultsTests.Create('Mults'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));
+   RegisterSuite(TIcomRegistryTests.Create('IcomRegistry'));
 
    if RunAllSuites then
       begin
