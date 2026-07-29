@@ -165,9 +165,26 @@ dropped the fix. `FR0;` also sets RX to VFO A, making `FR0;FT1;` a complete
 FIXED for `TKenwoodSerial` (restores shipping behaviour for twelve radios, only
 one of which — TS-570 — has been benched in the factory).
 
-NOT changed for `TElecraftSerial` / `TK4Radio`: the K4 is the most bench-proven
-factory radio there is, and `FR0;` moves the RX VFO, which is a visible side
-effect on a radio someone operates. Needs NY4I's call.
+**RESOLVED 2026-07-29 — no change to `TElecraftSerial` / `TK4Radio`.** NY4I
+tested the K4 directly against its command-set manual: `FT1;` alone is all that
+is needed to set split, tried both ways.
+
+The reason is structural, not luck, and it was already written down in
+`uFactoryRadioBase.pas:165`:
+
+> `nrVFOA = swap model (K4: A/B swaps contents so A is always active),`
+> `selectable-model radios (Kenwood FR, Flex slice) drive it via SetActiveVFO`
+
+- **Selectable-model** (Kenwood, Flex): `FR` *chooses* which VFO receives, so
+  setting it cancels split. Hence `FR0;FT1;`, and hence a bare `FR` being
+  destructive (G-section above, commit `a01d050`).
+- **Swap-model** (K3/K4): VFO A is always RX — A and B swap contents rather than
+  RX being pointed at one of them. `FR` has nothing to select, so `FR0;` is
+  meaningless and `FT1;` alone is both necessary and sufficient.
+
+So the Kenwood fix does not generalise to the Elecrafts, and applying it would
+have added a pointless command to a bench-proven radio. NY4I: *"The RX is always
+VFO A on a K4 and K3."*
 
 **NOT ACTED ON.** No driver behaviour was changed. This is pre-existing: the
 legacy path sent `FT1;` to these radios too, so it is not a migration regression,
