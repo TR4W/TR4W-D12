@@ -98,6 +98,16 @@ const
    // Write opcodes (row: SFOC $08, SMOC $0A -- NOT the $0A/$0C the rest of the
    // family uses; the FT-767 is the only model with this pair).
    FT767_SET_FREQ_OPCODE = $08;
+   FT767_SET_MODE_OPCODE = $0A;   // SMOC, LOGRADIO radio table row 'FT767'
+
+   // Set-mode bytes from the same table row.  Note these are a DIFFERENT
+   // encoding from the status-frame mode byte read at FT767_MODE_POS.
+   FT767_SETMODE_LSB  = $10;
+   FT767_SETMODE_USB  = $11;
+   FT767_SETMODE_CW   = $12;
+   FT767_SETMODE_AM   = $13;
+   FT767_SETMODE_FM   = $14;
+   FT767_SETMODE_DIG  = $15;   // row lists the SAME value for DIGL and DIGU
 
 type
   TFT767Radio = class(TYaesuBinary)
@@ -111,6 +121,7 @@ type
     procedure ProcessMsg(msg: string); override;
     procedure PollRadioState; override;
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
+    procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
   end;
 
 implementation
@@ -243,6 +254,31 @@ begin
       begin
       Self.SetMode(mode, vfo);
       end;
+end;
+
+// SetMode is ABSTRACT in TFactoryRadioBase and TYaesuBinary supplies none, so
+// leaving it out is an EAbstractError the first time a mode is set -- not a
+// missing feature.  (W1020 on a full rebuild; an incremental build is silent.)
+procedure TFT767Radio.SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA);
+var
+   modeByte: Byte;
+begin
+   case mode of
+      rmLSB:  modeByte := FT767_SETMODE_LSB;
+      rmUSB:  modeByte := FT767_SETMODE_USB;
+      rmCW:   modeByte := FT767_SETMODE_CW;
+      rmAM:   modeByte := FT767_SETMODE_AM;
+      rmFM:   modeByte := FT767_SETMODE_FM;
+      rmData: modeByte := FT767_SETMODE_DIG;
+      rmFSK:  modeByte := FT767_SETMODE_DIG;   // row gives DIGL and DIGU the same value
+   else
+      begin
+      logger.Error('[SetMode] FT-767 has no mode %d', [Ord(mode)]);
+      Exit;
+      end;
+   end;
+   // Row MB=0: mode byte FIRST, opcode last.
+   Self.SendBytes(modeByte, $00, $00, $00, FT767_SET_MODE_OPCODE);
 end;
 
 initialization
