@@ -270,6 +270,7 @@ uses
   uFlexRadioUtils in 'src\uFlexRadioUtils.pas',
   uGridDistance in 'src\uGridDistance.pas',
   uK4Discovery in 'src\uK4Discovery.pas',
+  uFlexDiscovery in 'src\uFlexDiscovery.pas',
   uStrSearch in 'src\uStrSearch.pas',
   NetworkMessageUtils in 'src\utils\NetworkMessageUtils.pas';
   //cty in 'src\cty.pas';  // Excluded: unit name 'cty' conflicts with global variable 'CTY' from uCTYDAT

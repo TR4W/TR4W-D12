@@ -60,6 +60,11 @@ initialization
    RegisterRadio(FLEX,
       function: TFactoryRadioBase begin Result := TFlexAPI.Create end,   // network: 4992 Ethernet API
       function: TFactoryRadioBase begin Result := TFlexCAT.Create end,   // serial:  ZZ CAT
+      // discoverable = True, and now backed by a real implementation:
+      // uFlexDiscovery listens for the radio's 1 Hz VITA-49 broadcast on UDP
+      // 4992, dispatched from uCAT.DiscoverNetworkRadios.  Before that existed
+      // this flag was True with nothing behind it, so the dialog offered a
+      // Discover button that could only ever report "no Flex radios found".
       'FlexRadio 6000', [rlSerial, rlNetwork], 4992, True);
 
 end.

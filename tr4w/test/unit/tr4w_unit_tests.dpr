@@ -138,6 +138,8 @@ uses
    uRadioFlexCAT        in '..\..\src\uRadioFlexCAT.pas',
    uRadioFlex6000       in '..\..\src\uRadioFlex6000.pas',
    uTestFlexRegistry    in 'uTestFlexRegistry.pas',
+   uFlexDiscovery       in '..\..\src\uFlexDiscovery.pas',
+   uTestFlexDiscovery   in 'uTestFlexDiscovery.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
    // and registry coverage tests.
@@ -201,6 +203,7 @@ begin
    RegisterSuite(TYaesuBinaryTests.Create('YaesuBinary'));
    RegisterSuite(TIcomRegistryTests.Create('IcomRegistry'));
    RegisterSuite(TFlexRegistryTests.Create('FlexRegistry'));
+   RegisterSuite(TFlexDiscoveryTests.Create('FlexDiscovery'));
 
    if RunAllSuites then
       begin
