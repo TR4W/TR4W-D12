@@ -65,6 +65,8 @@ initialization
   logger := TLogLogger.GetLogger('uRadioIcom7300MK2');
   RegisterRadio(IC7300MK2,
      function: TFactoryRadioBase begin Result := TIcom7300MK2Radio.Create end,
-     'Icom IC-7300MK2', [rlSerial, rlNetwork], 50001, True);
+     'Icom IC-7300MK2', [rlSerial, rlNetwork], 50001, True,
+     SerialParams(19200, 8, PARITY_NONE, 1)
+     );
 
 end.

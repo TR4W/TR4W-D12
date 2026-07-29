@@ -231,6 +231,8 @@ end;
 initialization
   RegisterRadio(FT100,
      function: TFactoryRadioBase begin Result := TFT100Radio.Create end,
-     'Yaesu FT-100', [rlSerial], 0, False);
+     'Yaesu FT-100', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 1)
+     );
 
 end.

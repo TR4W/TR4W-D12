@@ -98,6 +98,8 @@ initialization
   logger := TLogLogger.GetLogger('uRadioIcom705');
   RegisterRadio(IC705,
      function: TFactoryRadioBase begin Result := TIcom705Radio.Create end,
-     'Icom IC-705', [rlSerial, rlNetwork], 50001, True);
+     'Icom IC-705', [rlSerial, rlNetwork], 50001, True,
+     SerialParams(19200, 8, PARITY_NONE, 1)
+     );
 
 end.

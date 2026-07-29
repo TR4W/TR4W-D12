@@ -60,6 +60,8 @@ end;
 initialization
   RegisterRadio(FTDX9000,
      function: TFactoryRadioBase begin Result := TYaesuFTDX9000Radio.Create end,
-     'Yaesu FTDX-9000', [rlSerial], 0, False);
+     'Yaesu FTDX-9000', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

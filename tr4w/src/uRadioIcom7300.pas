@@ -70,6 +70,8 @@ initialization
   // The IC-7300 (unlike the 7300MK2) is serial/USB-CAT only -- no network.
   RegisterRadio(IC7300,
      function: TFactoryRadioBase begin Result := TIcom7300Radio.Create end,
-     'Icom IC-7300', [rlSerial], 0, False);
+     'Icom IC-7300', [rlSerial], 0, False,
+     SerialParams(19200, 8, PARITY_NONE, 1)
+     );
 
 end.

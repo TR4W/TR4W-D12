@@ -57,6 +57,8 @@ end;
 initialization
   RegisterRadio(IC735,
      function: TFactoryRadioBase begin Result := TIcom735Radio.Create end,
-     'Icom IC-735', [rlSerial], 0, False);
+     'Icom IC-735', [rlSerial], 0, False,
+     SerialParams(1200, 8, PARITY_NONE, 1)
+     );
 
 end.

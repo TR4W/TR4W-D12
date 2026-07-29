@@ -55,6 +55,8 @@ end;
 initialization
   RegisterRadio(K3,
      function: TFactoryRadioBase begin Result := TK3Radio.Create end,
-     'Elecraft K3', [rlSerial], 0, False);
+     'Elecraft K3', [rlSerial], 0, False,
+     SerialParams(38400, 8, PARITY_NONE, 2)
+     );
 
 end.

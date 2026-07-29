@@ -61,6 +61,8 @@ end;
 initialization
   RegisterRadio(OMNI6,
      function: TFactoryRadioBase begin Result := TTenTecOmni6Radio.Create end,
-     'Ten-Tec Omni VI (CI-V)', [rlSerial], 0, False);
+     'Ten-Tec Omni VI (CI-V)', [rlSerial], 0, False,
+     SerialParams(9600, 8, PARITY_NONE, 1)
+     );
 
 end.

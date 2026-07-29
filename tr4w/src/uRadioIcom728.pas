@@ -57,6 +57,8 @@ end;
 initialization
   RegisterRadio(IC728,
      function: TFactoryRadioBase begin Result := TIcom728Radio.Create end,
-     'Icom IC-728', [rlSerial], 0, False);
+     'Icom IC-728', [rlSerial], 0, False,
+     SerialParams(1200, 8, PARITY_NONE, 1)
+     );
 
 end.

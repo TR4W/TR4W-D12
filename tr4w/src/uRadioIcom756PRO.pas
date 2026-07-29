@@ -57,6 +57,8 @@ end;
 initialization
   RegisterRadio(IC756PRO,
      function: TFactoryRadioBase begin Result := TIcom756PRORadio.Create end,
-     'Icom IC-756PRO', [rlSerial], 0, False);
+     'Icom IC-756PRO', [rlSerial], 0, False,
+     SerialParams(9600, 8, PARITY_NONE, 1)
+     );
 
 end.

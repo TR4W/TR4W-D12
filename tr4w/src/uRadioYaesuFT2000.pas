@@ -61,6 +61,8 @@ end;
 initialization
   RegisterRadio(FT2000,
      function: TFactoryRadioBase begin Result := TYaesuFT2000Radio.Create end,
-     'Yaesu FT-2000', [rlSerial], 0, False);
+     'Yaesu FT-2000', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

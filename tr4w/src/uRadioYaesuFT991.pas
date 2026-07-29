@@ -127,6 +127,8 @@ initialization
   // FT-991 and FT-991A are the same radio to CAT; TR4W's enum has one member.
   RegisterRadio(FT991,
      function: TFactoryRadioBase begin Result := TYaesuFT991Radio.Create end,
-     'Yaesu FT-991', [rlSerial], 0, False);
+     'Yaesu FT-991', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

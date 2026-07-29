@@ -50,6 +50,8 @@ end;
 initialization
   RegisterRadio(KX3,
      function: TFactoryRadioBase begin Result := TKX3Radio.Create end,
-     'Elecraft KX3', [rlSerial], 0, False);
+     'Elecraft KX3', [rlSerial], 0, False,
+     SerialParams(38400, 8, PARITY_NONE, 2)
+     );
 
 end.

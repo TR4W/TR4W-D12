@@ -1072,9 +1072,13 @@ initialization
   // Connect, which gates on the transport rather than on stored credentials.
   RegisterRadio(TS890,
      function: TFactoryRadioBase begin Result := TKenwoodTS890Radio.Create end,
-     'Kenwood TS-890S', [rlSerial, rlNetwork], 60000, False);
+     'Kenwood TS-890S', [rlSerial, rlNetwork], 60000, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
   RegisterRadio(TS990,
      function: TFactoryRadioBase begin Result := TKenwoodTS890Radio.Create end,
-     'Kenwood TS-990S', [rlSerial, rlNetwork], 50000, False);
+     'Kenwood TS-990S', [rlSerial, rlNetwork], 50000, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

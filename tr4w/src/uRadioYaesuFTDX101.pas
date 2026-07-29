@@ -65,6 +65,8 @@ end;
 initialization
   RegisterRadio(FTDX101,
      function: TFactoryRadioBase begin Result := TFTDX101Radio.Create end,
-     'Yaesu FTDX-101', [rlSerial], 0, False);
+     'Yaesu FTDX-101', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.
