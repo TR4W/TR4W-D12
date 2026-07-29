@@ -183,6 +183,18 @@ begin
    // is ever parsed and the radio window stays empty -- which is exactly what
    // happened on NY4I's bench the first time this driver ran.
    Self.readTerminator := ';';
+
+   // POLL CADENCE.  PollRadioState sends FOUR commands (ZZIF;ZZFB;ZZRG;ZZXG;),
+   // so this is the Icom case, not the K4 case: it is a heavy state query, not a
+   // single frequency read.
+   //
+   // honorsFreqPollRate MUST be False or uRadioPolling overwrites pollingInterval
+   // with the user's FREQUENCY POLL RATE (default 10ms) the moment the radio
+   // connects -- see uRadioPolling.pas, "Serial polling interval set to %dms".
+   // With it left True the bench saw a poll every ~20ms: ~48 cycles/sec x 4
+   // commands, which is the same flooding the legacy Kenwood poller did and the
+   // thing this migration exists to stop.
+   honorsFreqPollRate := False;
    pollingInterval := 200;
 
    // What this driver actually reads:
