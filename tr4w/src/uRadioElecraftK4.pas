@@ -90,6 +90,14 @@ begin
    requiresPolling := False;
    autoUpdateCommand := 'AI5;';     // Enable auto-info mode level 5
    pollingInterval := 0;            // Not used for K4
+
+   // INTENTIONALLY True (the base default, stated here so it is not mistaken for
+   // an oversight).  On serial this radio polls 'IF;FB;' -- a direct frequency
+   // read -- which is exactly the case FREQUENCY POLL RATE exists to control, so
+   // uRadioPolling SHOULD overwrite pollingInterval with the user's setting.
+   // Contrast the Icom, Flex and TS-890, which set it False because their poll
+   // is a heavy state query or a keepalive rather than a frequency read.
+   honorsFreqPollRate := True;
 end;
 
 function TK4Radio.Connect: integer;
