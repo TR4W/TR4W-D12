@@ -29,7 +29,8 @@ interface
 
 uses
    SysUtils, uTR4WTestFramework, uFactoryRadioBase, uRadioKenwoodSerial,
-   uRadioKenwoodTS570, uRadioKenwoodTS950, uRadioRegistry, VC;
+   uRadioKenwoodTS570, uRadioKenwoodTS950, uRadioKenwoodTS440,
+   uRadioRegistry, VC;
 
 type
    TKenwoodSerialTests = class(TTestCase)
@@ -40,6 +41,7 @@ type
       procedure Test_ModelsShareTheBaseSplit;
       procedure Test_NoVFOSeedFlipWhileSplitIsOn;
       procedure Test_VFOSeedFlipHappensWhenSplitIsOff;
+      procedure Test_TS440UsesIC10SplitCommand;
    public
       procedure RunAllTests; override;
    end;
@@ -64,6 +66,12 @@ type
       procedure SendToRadio(s: string); overload; override;
    end;
 
+   TTS440Probe = class(TKenwoodTS440Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
 procedure TKenwoodProbe.SendToRadio(s: string);
 begin
    sent := sent + s;
@@ -75,6 +83,11 @@ begin
 end;
 
 procedure TTS950Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TTS440Probe.SendToRadio(s: string);
 begin
    sent := sent + s;
 end;
@@ -196,6 +209,46 @@ begin
    end;
 end;
 
+// The TS-440 uses the older Kenwood IC-10 interface, where split is its own flag
+// rather than a consequence of the FR/FT relationship: SP1;/SP0;, not FR0;FT1;.
+// Confirmed by NY4I from the command reference, and independently by HamLib,
+// which routes this radio through ic10.c (ic10_set_split_vfo sends exactly that).
+//
+// Paired with a TS-950 assertion so the test cannot pass by the BASE having been
+// changed -- the whole point is that this is ONE model diverging while its eleven
+// siblings keep FR0;FT1;.
+//
+// It must also NOT move the active VFO: no FR is sent, so claiming RX moved would
+// put the driver out of step with the radio and misfile the next IF frequency.
+procedure TKenwoodSerialTests.Test_TS440UsesIC10SplitCommand;
+var
+   r440: TTS440Probe;
+   r950: TTS950Probe;
+begin
+   BeginTest('TS-440 splits with SP1;/SP0; while its siblings still use FR0;FT1;');
+   r440 := TTS440Probe.Create;
+   r950 := TTS950Probe.Create;
+   try
+      r440.SetActiveVFO(nrVFOB);
+      r440.Split(True);
+      CheckEquals('SP1;', r440.sent, 'TS-440 split on is the IC-10 SP command');
+      CheckEquals(Ord(nrVFOB), Ord(r440.GetActiveVFO),
+                  'no FR was sent, so the active VFO must NOT have moved');
+
+      r440.sent := '';
+      r440.Split(False);
+      CheckEquals('SP0;', r440.sent, 'TS-440 split off is SP0;');
+
+      // The base must be untouched.
+      r950.Split(True);
+      CheckEquals('FR0;FT1;', r950.sent,
+                  'the TS-440 override must not have changed the family default');
+   finally
+      r440.Free;
+      r950.Free;
+   end;
+end;
+
 procedure TKenwoodSerialTests.RunAllTests;
 begin
    Test_SplitOnSendsFRThenFT;
@@ -204,6 +257,7 @@ begin
    Test_ModelsShareTheBaseSplit;
    Test_NoVFOSeedFlipWhileSplitIsOn;
    Test_VFOSeedFlipHappensWhenSplitIsOff;
+   Test_TS440UsesIC10SplitCommand;
 end;
 
 end.
