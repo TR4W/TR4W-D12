@@ -122,6 +122,18 @@ begin
    inherited Create;
    logger := TLogLogger.GetLogger('TR4WDebugLog.FT840');
    radioModel := 'Yaesu FT-840';
+
+   // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
+   // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
+   FSetModeOpcode := $0C;
+   FModeByteIndex := 3;
+   FModeCW   := $03;
+   FModeLSB  := $00;
+   FModeUSB  := $01;
+   FModeAM   := $05;
+   FModeFM   := $06;
+   FModeDIGL := MODEBYTE_NONE;
+   FModeDIGU := MODEBYTE_NONE;
    SerialFixedFrameLength := FT840_FRAME_LEN;
    pollingInterval := 200;
 
@@ -140,6 +152,18 @@ begin
    inherited Create;
    logger := TLogLogger.GetLogger('TR4WDebugLog.FT890');
    radioModel := 'Yaesu FT-890';
+
+   // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
+   // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
+   FSetModeOpcode := $0C;
+   FModeByteIndex := 3;
+   FModeCW   := $03;
+   FModeLSB  := $00;
+   FModeUSB  := $01;
+   FModeAM   := $04;
+   FModeFM   := $06;
+   FModeDIGL := MODEBYTE_NONE;
+   FModeDIGU := MODEBYTE_NONE;
 end;
 
 constructor TFT900Radio.Create;
@@ -147,6 +171,18 @@ begin
    inherited Create;
    logger := TLogLogger.GetLogger('TR4WDebugLog.FT900');
    radioModel := 'Yaesu FT-900';
+
+   // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
+   // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
+   FSetModeOpcode := $0C;
+   FModeByteIndex := 3;
+   FModeCW   := $03;
+   FModeLSB  := $00;
+   FModeUSB  := $01;
+   FModeAM   := $05;
+   FModeFM   := $06;
+   FModeDIGL := MODEBYTE_NONE;
+   FModeDIGU := MODEBYTE_NONE;
 end;
 
 procedure TFT840Radio.PollRadioState;

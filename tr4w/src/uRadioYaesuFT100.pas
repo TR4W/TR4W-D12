@@ -103,6 +103,18 @@ begin
    inherited Create;
    logger := TLogLogger.GetLogger('TR4WDebugLog.FT100');
    radioModel := 'Yaesu FT-100';
+
+   // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
+   // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
+   FSetModeOpcode := $0C;
+   FModeByteIndex := 3;
+   FModeCW   := $02;
+   FModeLSB  := $00;
+   FModeUSB  := $01;
+   FModeAM   := $04;
+   FModeFM   := $06;
+   FModeDIGL := $05;
+   FModeDIGU := $05;
    SerialFixedFrameLength := FT100_FRAME_LEN;
    pollingInterval := 200;
 
