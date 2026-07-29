@@ -77,9 +77,13 @@ initialization
   // Register each model under its OWN name -- see TIcom7851Radio.
   RegisterRadio(IC7850,
      function: TFactoryRadioBase begin Result := TIcom7850Radio.Create end,
-     'Icom IC-7850', [rlSerial, rlNetwork], 50001, True);
+     'Icom IC-7850', [rlSerial, rlNetwork], 50001, True,
+     SerialParams(19200, 8, PARITY_NONE, 1)
+     );
   RegisterRadio(IC7851,
      function: TFactoryRadioBase begin Result := TIcom7851Radio.Create end,
-     'Icom IC-7851', [rlSerial, rlNetwork], 50001, True);
+     'Icom IC-7851', [rlSerial, rlNetwork], 50001, True,
+     SerialParams(19200, 8, PARITY_NONE, 1)
+     );
 
 end.

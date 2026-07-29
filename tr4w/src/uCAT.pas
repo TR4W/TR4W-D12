@@ -682,6 +682,25 @@ end;
 // discovered IP addresses into Found.  Keeps the per-engine record types
 // (PK4DiscoveredRadio vs PDiscoveredRadio) out of the dialog flow.  The caller
 // has already confirmed rt is discoverable (K4 or an Icom network model).
+// Index of a baud rate in the dialog's baud combo (populated from
+// CAT_BAUDRATE_ARRAY at uCAT:1026).  The registry states a real baud rate --
+// 4800, 19200 -- while the combo wants its position, so this converts.  An
+// unknown rate falls back to 4800's slot rather than leaving the combo blank.
+function BaudRateComboIndex(baud: Integer): Integer;
+var
+   i: Integer;
+begin
+   Result := 2;   // CAT_BAUDRATE_ARRAY[2] = 4800
+   for i := Low(CAT_BAUDRATE_ARRAY) to High(CAT_BAUDRATE_ARRAY) do
+      begin
+      if CAT_BAUDRATE_ARRAY[i] = baud then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
 procedure DiscoverNetworkRadios(rt: InterfacedRadioType; Found: TStringList);
 var
   list : TList;
@@ -1382,9 +1401,16 @@ begin
           if LoWord(wParam) = 121 then
           begin
             i := tCB_GETCURSEL(hwnddlg, 121);
+            // Baud default comes from the RADIO REGISTRY, not the legacy
+            // RadioParametersArray.br.  The registry is where every radio now
+            // states its full serial defaults (baud/data/parity/stop), so the
+            // array's br column can retire with the rest of it.  A model the
+            // registry does not know still falls back to 4800.
             if i < Ord(High(InterfacedRadioType)) + 1 then
                begin
-               tCB_SETCURSEL(hwnddlg, 128, Cardinal(RadioParametersArray[InterfacedRadioType(i)].br));
+               tCB_SETCURSEL(hwnddlg, 128,
+                  Cardinal(BaudRateComboIndex(
+                     uRadioRegistry.SerialParamsFor(InterfacedRadioType(i)).baud)));
                end
             else
                begin

@@ -83,6 +83,8 @@ end;
 initialization
   RegisterRadio(FT710,
      function: TFactoryRadioBase begin Result := TFT710Radio.Create end,
-     'Yaesu FT-710', [rlSerial], 0, False);
+     'Yaesu FT-710', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

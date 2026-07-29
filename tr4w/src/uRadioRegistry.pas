@@ -23,7 +23,9 @@ unit uRadioRegistry;
 
       RegisterRadio(IC718,
          function: TFactoryRadioBase begin Result := TIcom718Radio.Create end,
-         'Icom IC-718', [rlSerial], 0, False);
+         'Icom IC-718', [rlSerial], 0, False,
+     SerialParams(1200, 8, PARITY_NONE, 1)
+     );
 
   The registration is a CONSTRUCTOR FUNCTION, not a class reference, on purpose:
   a per-model subclass registers `... begin Result := TIcom718Radio.Create end`,
@@ -65,6 +67,43 @@ type
    TRadioLink = (rlSerial, rlNetwork);
    TRadioLinks = set of TRadioLink;
 
+   // ---- SERIAL PORT DEFAULTS -----------------------------------------------
+   // Every radio states ALL FOUR values explicitly, even when they match the
+   // common 4800/8/N/2.  Stating only the deviations would hide the obvious:
+   // a reader could not tell "this radio wants the common settings" from
+   // "nobody has looked this up yet", and the ones that DO deviate would be
+   // invisible until something misbehaved on the wire.
+   //
+   // These are DEFAULTS, not the values used.  The dialog seeds its controls
+   // from them when the operator picks a radio, and whatever ends up in the
+   // config is what CreateRadioSerial actually applies.
+   //
+   // They live here, not on the radio class, because the dialog must show them
+   // for a model the operator is SELECTING -- before any radio object exists.
+   // Keeping all four in one place beats splitting them between the registry
+   // and the constructors.
+   //
+   // Replaces LOGRADIO's `if RadioModel in [IC78..IC9700, FT100, Orion] then 1
+   // else 2`.  That construct was correct (the range means "the Icoms", with
+   // non-Icom exceptions named explicitly), but membership of a set is a poor
+   // way to carry a per-radio hardware fact: the Omni VI needs 1 stop bit per
+   // its manual and was simply never added to the exception list.  A radio that
+   // states its own parameters cannot be forgotten in that way.
+   TSerialParams = record
+      baud:     Integer;
+      dataBits: Byte;
+      parity:   Byte;    // Win32 values; serialParity on the radio is a Byte too
+      stopBits: Byte;
+   end;
+
+const
+   PARITY_NONE = 0;
+   PARITY_ODD  = 1;
+   PARITY_EVEN = 2;
+
+// Reads as SerialParams(4800, 8, PARITY_NONE, 2) at each registration.
+function SerialParams(baud: Integer; dataBits, parity, stopBits: Byte): TSerialParams;
+
 // Enum-based registration -- for radios that still carry an InterfacedRadioType
 // member.  The string id is derived from the enum member name.
 procedure RegisterRadio(model: InterfacedRadioType;
@@ -72,7 +111,8 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         const displayName: string;
                         links: TRadioLinks;
                         networkPort: integer;
-                        discoverable: Boolean); overload;
+                        discoverable: Boolean;
+                        const serial: TSerialParams); overload;
 
 // Two-constructor registration -- ONE radio in the list, but a different driver
 // class per transport.  Needed only when the two links speak genuinely different
@@ -93,7 +133,8 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         const displayName: string;
                         links: TRadioLinks;
                         networkPort: integer;
-                        discoverable: Boolean); overload;
+                        discoverable: Boolean;
+                        const serial: TSerialParams); overload;
 
 // String-id registration -- for a NEW factory radio with no InterfacedRadioType
 // member.  Its RadioModel is the sentinel NoInterfacedRadio.
@@ -102,7 +143,8 @@ procedure RegisterRadioById(const id: string;
                             const displayName: string;
                             links: TRadioLinks;
                             networkPort: integer;
-                            discoverable: Boolean);
+                            discoverable: Boolean;
+                            const serial: TSerialParams);
 
 // Enum-facing lookups (used by the factory + LOGRADIO connect path).
 function IsRegistered(model: InterfacedRadioType): Boolean;
@@ -116,6 +158,10 @@ function CreateInstanceForLinkId(const id: string; link: TRadioLink): TFactoryRa
 function DisplayName(model: InterfacedRadioType): string;
 function RegisteredNetworkPort(model: InterfacedRadioType): integer;
 function RegisteredDiscoverable(model: InterfacedRadioType): Boolean;
+// Default serial port settings for a model.  The radio dialog seeds its baud /
+// data / parity / stop controls from these when the operator picks a radio.
+function SerialParamsFor(model: InterfacedRadioType): TSerialParams;
+function SerialParamsForId(const id: string): TSerialParams;
 
 // Id-facing lookups (used by the drop-down + config).
 function IsRegisteredId(const id: string): Boolean;
@@ -146,6 +192,7 @@ type
       links: TRadioLinks;
       networkPort: integer;
       discoverable: Boolean;
+      serial: TSerialParams;
    end;
 
 var
@@ -153,12 +200,21 @@ var
    gByModel: TDictionary<InterfacedRadioType, string>;   // enum -> id (bridge)
    gOrder: TList<string>;                       // ids in registration order (drop-down)
 
+function SerialParams(baud: Integer; dataBits, parity, stopBits: Byte): TSerialParams;
+begin
+   Result.baud     := baud;
+   Result.dataBits := dataBits;
+   Result.parity   := parity;
+   Result.stopBits := stopBits;
+end;
+
 // ---- registration ----------------------------------------------------------
 
 procedure DoRegister(const id: string; model: InterfacedRadioType;
                      const ctor: TRadioCtor; const serialCtor: TRadioCtor;
                      const displayName: string;
-                     links: TRadioLinks; networkPort: integer; discoverable: Boolean);
+                     links: TRadioLinks; networkPort: integer; discoverable: Boolean;
+                     const serial: TSerialParams);
 var
    reg: TRadioReg;
 begin
@@ -170,6 +226,7 @@ begin
    reg.links := links;
    reg.networkPort := networkPort;
    reg.discoverable := discoverable;
+   reg.serial := serial;
    if not gById.ContainsKey(id) then
       begin
       gOrder.Add(id);
@@ -186,11 +243,12 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         const displayName: string;
                         links: TRadioLinks;
                         networkPort: integer;
-                        discoverable: Boolean);
+                        discoverable: Boolean;
+                        const serial: TSerialParams);
 begin
    // Derive the string id from the enum member name (IC718 -> 'IC718').
    DoRegister(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)), model,
-              ctor, nil, displayName, links, networkPort, discoverable);
+              ctor, nil, displayName, links, networkPort, discoverable, serial);
 end;
 
 procedure RegisterRadio(model: InterfacedRadioType;
@@ -199,10 +257,11 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         const displayName: string;
                         links: TRadioLinks;
                         networkPort: integer;
-                        discoverable: Boolean);
+                        discoverable: Boolean;
+                        const serial: TSerialParams);
 begin
    DoRegister(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)), model,
-              networkCtor, serialCtor, displayName, links, networkPort, discoverable);
+              networkCtor, serialCtor, displayName, links, networkPort, discoverable, serial);
 end;
 
 procedure RegisterRadioById(const id: string;
@@ -210,9 +269,10 @@ procedure RegisterRadioById(const id: string;
                             const displayName: string;
                             links: TRadioLinks;
                             networkPort: integer;
-                            discoverable: Boolean);
+                            discoverable: Boolean;
+                            const serial: TSerialParams);
 begin
-   DoRegister(id, NoInterfacedRadio, ctor, nil, displayName, links, networkPort, discoverable);
+   DoRegister(id, NoInterfacedRadio, ctor, nil, displayName, links, networkPort, discoverable, serial);
 end;
 
 // ---- lookup helpers ---------------------------------------------------------
@@ -399,6 +459,30 @@ begin
    else
       begin
       Result := 0;
+      end;
+end;
+
+function SerialParamsForId(const id: string): TSerialParams;
+var
+   reg: TRadioReg;
+begin
+   // A model with no registration falls back to what LOGRADIO's else-branch gave
+   // every non-Icom: 4800 8 N 2.
+   Result := SerialParams(4800, 8, PARITY_NONE, 2);
+   if RegById(id, reg) then
+      begin
+      Result := reg.serial;
+      end;
+end;
+
+function SerialParamsFor(model: InterfacedRadioType): TSerialParams;
+var
+   reg: TRadioReg;
+begin
+   Result := SerialParams(4800, 8, PARITY_NONE, 2);
+   if RegByModel(model, reg) then
+      begin
+      Result := reg.serial;
       end;
 end;
 

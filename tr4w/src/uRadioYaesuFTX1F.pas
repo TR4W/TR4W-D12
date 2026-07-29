@@ -181,6 +181,8 @@ end;
 initialization
   RegisterRadio(FTX1F,
      function: TFactoryRadioBase begin Result := TFTX1FRadio.Create end,
-     'Yaesu FTX-1F', [rlSerial], 0, False);
+     'Yaesu FTX-1F', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

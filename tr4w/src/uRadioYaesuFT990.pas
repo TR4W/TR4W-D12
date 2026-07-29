@@ -294,9 +294,13 @@ end;
 initialization
   RegisterRadio(FT990,
      function: TFactoryRadioBase begin Result := TFT990Radio.Create end,
-     'Yaesu FT-990', [rlSerial], 0, False);
+     'Yaesu FT-990', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
   RegisterRadio(FT1000,
      function: TFactoryRadioBase begin Result := TFT1000Radio.Create end,
-     'Yaesu FT-1000', [rlSerial], 0, False);
+     'Yaesu FT-1000', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

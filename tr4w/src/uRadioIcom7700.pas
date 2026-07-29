@@ -69,6 +69,8 @@ initialization
   logger := TLogLogger.GetLogger('uRadioIcom7700');
   RegisterRadio(IC7700,
      function: TFactoryRadioBase begin Result := TIcom7700Radio.Create end,
-     'Icom IC-7700', [rlSerial], 0, False);
+     'Icom IC-7700', [rlSerial], 0, False,
+     SerialParams(19200, 8, PARITY_NONE, 1)
+     );
 
 end.

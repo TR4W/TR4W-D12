@@ -102,9 +102,13 @@ end;
 initialization
   RegisterRadio(FT857,
      function: TFactoryRadioBase begin Result := TYaesuFT857Radio.Create end,
-     'Yaesu FT-857', [rlSerial], 0, False);
+     'Yaesu FT-857', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
   RegisterRadio(FT897,
      function: TFactoryRadioBase begin Result := TYaesuFT897Radio.Create end,
-     'Yaesu FT-897', [rlSerial], 0, False);
+     'Yaesu FT-897', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

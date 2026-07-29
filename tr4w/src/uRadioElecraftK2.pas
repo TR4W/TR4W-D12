@@ -52,6 +52,8 @@ end;
 initialization
   RegisterRadio(K2,
      function: TFactoryRadioBase begin Result := TK2Radio.Create end,
-     'Elecraft K2', [rlSerial], 0, False);
+     'Elecraft K2', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

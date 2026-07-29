@@ -61,6 +61,8 @@ end;
 initialization
   RegisterRadio(FT950,
      function: TFactoryRadioBase begin Result := TYaesuFT950Radio.Create end,
-     'Yaesu FT-950', [rlSerial], 0, False);
+     'Yaesu FT-950', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

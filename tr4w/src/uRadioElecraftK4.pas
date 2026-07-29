@@ -981,6 +981,8 @@ end;
 initialization
   RegisterRadio(K4,
      function: TFactoryRadioBase begin Result := TK4Radio.Create end,
-     'Elecraft K4', [rlSerial, rlNetwork], 9200, True);
+     'Elecraft K4', [rlSerial, rlNetwork], 9200, True,
+     SerialParams(38400, 8, PARITY_NONE, 2)
+     );
 
 end.

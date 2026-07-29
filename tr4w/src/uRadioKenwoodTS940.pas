@@ -49,6 +49,8 @@ end;
 initialization
   RegisterRadio(TS940,
      function: TFactoryRadioBase begin Result := TKenwoodTS940Radio.Create end,
-     'Kenwood TS-940', [rlSerial], 0, False);
+     'Kenwood TS-940', [rlSerial], 0, False,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

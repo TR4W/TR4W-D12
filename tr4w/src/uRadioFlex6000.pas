@@ -65,6 +65,8 @@ initialization
       // 4992, dispatched from uCAT.DiscoverNetworkRadios.  Before that existed
       // this flag was True with nothing behind it, so the dialog offered a
       // Discover button that could only ever report "no Flex radios found".
-      'FlexRadio 6000', [rlSerial, rlNetwork], 4992, True);
+      'FlexRadio 6000', [rlSerial, rlNetwork], 4992, True,
+     SerialParams(4800, 8, PARITY_NONE, 2)
+     );
 
 end.

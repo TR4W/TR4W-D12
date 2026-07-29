@@ -57,6 +57,8 @@ end;
 initialization
   RegisterRadio(IC970D,
      function: TFactoryRadioBase begin Result := TIcom970DRadio.Create end,
-     'Icom IC-970D', [rlSerial], 0, False);
+     'Icom IC-970D', [rlSerial], 0, False,
+     SerialParams(9600, 8, PARITY_NONE, 1)
+     );
 
 end.
