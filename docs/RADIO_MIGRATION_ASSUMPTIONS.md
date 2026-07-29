@@ -105,20 +105,69 @@ declares `if_len = 37`: TS-440 states it explicitly, the rest inherit
 `TKenwoodSerial.ParseIF` parses, and it is the assumption everything else rests
 on, because ParseIF indexes its fields from the END of the string.
 
-**THREE MODELS DIVERGE.** HamLib does not treat these as TS-570 clones:
+**~~THREE MODELS DIVERGE~~ — RETRACTED 2026-07-29, see below.**
 
-| # | model | HamLib says | TR4W does | risk |
-|---|---|---|---|---|
-| G1 | **TS-440** | Split is `SP1;` / `SP0;` via the **IC-10** protocol (`ic10.c`, `ic10_set_split_vfo`). One of only three backends in the tree using IC-10 at all. | `TKenwoodSerial.Split` sends `FT1;` / `FT0;` | Undefined command; split silently does nothing |
-| G2 | **TS-140** | **No split functions at all** in its caps table — HamLib believes it cannot split over CAT | Sends `FT1;` / `FT0;` | Undefined command |
-| G3 | **TS-950** | **No split functions at all** | Sends `FT1;` / `FT0;` | Undefined command |
+I recorded G1–G3 below claiming HamLib showed the TS-440, TS-140 and TS-950
+could not do split the way TR4W does it. **All three were wrong**, and wrong in
+the same way as the Icom deny-list mistake: treating an implementation's SILENCE
+as a statement about the HARDWARE. HamLib omitting `.set_split_vfo` says
+something about HamLib, not about the radio.
 
-`ic10.c` also carries TWO documented IF layouts and an `ic10_cmd_trim` that
-strips embedded spaces, so the IC-10-era `IF` is not laid out like the modern
-one. Since ParseIF indexes from the end, a differently-padded `IF` would put mode
-/ FR / split on their neighbours **while frequency, at a fixed offset, kept
-working perfectly** — the exact failure signature already recorded twice in this
-document.
+NY4I: *"The TS950 does support the FR and FT commands. Just because the sim may
+not does not mean you can infer the radio doesn't. Challenge those assumptions by
+reading the TR4W legacy code."*
+
+`LOGRADIO.PAS:2066` and `:2135` settle it. TR4W has shipped this for years:
+
+```pascal
+TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
+TS950, TS990, TS2000, FLEX, K2, K3, K4:
+   AddToOutputBuffer('FR0;FT1;', 8);      // split on   (FR0;FT0; for off)
+```
+
+TS-140, TS-440 and TS-950 are all in that list. `FR`/`FT` is exactly what TR4W
+sends them today.
+
+| # | claim | verdict |
+|---|---|---|
+| G1 | TS-440 needs `SP1;`/`SP0;`, not `FT` | **UNSUPPORTED.** HamLib routes it through IC-10, but that is HamLib's choice. It does not make `FT` undefined, and TR4W ships `FR0;FT1;` to this radio. |
+| G2 | TS-140 cannot split over CAT | **WRONG.** TR4W ships `FR0;FT1;` to it. |
+| G3 | TS-950 cannot split over CAT | **WRONG.** Ships `FR0;FT1;`; NY4I confirms FR/FT are supported. |
+
+The `if_len = 37` confirmation above still stands — that was HamLib *asserting*
+something, not omitting it. **An independent implementation is evidence when it
+STATES something and weak-to-worthless when it OMITS something.** Presence is
+evidence; absence is not.
+
+### G4. Factory `Split` dropped the `FR0;` prefix — REAL, found by reading legacy
+
+Reading the legacy to check G1–G3 turned up an actual defect. Legacy sends TWO
+commands; every factory driver sends one:
+
+| | split on | split off |
+|---|---|---|
+| legacy `LOGRADIO:2066/2135` | `FR0;FT1;` | `FR0;FT0;` |
+| `TKenwoodSerial.Split` | `FT1;` | `FT0;` |
+| `TElecraftSerial.Split` | `FT1;` | `FT0;` |
+| `TK4Radio.Split` | `FT1;` | `FT0;` |
+
+And the legacy carries a warning from a maintainer who hit the failure:
+
+```pascal
+{KK1L: 6.71 For some reason needed this to get the FT1; command to take.
+            Started when I added setting mode of B VFO to set freq. }
+```
+
+So `FT1;` alone was known NOT to take on at least some radios, and the migration
+dropped the fix. `FR0;` also sets RX to VFO A, making `FR0;FT1;` a complete
+"RX on A, TX on B" split rather than a TX-side-only change.
+
+FIXED for `TKenwoodSerial` (restores shipping behaviour for twelve radios, only
+one of which — TS-570 — has been benched in the factory).
+
+NOT changed for `TElecraftSerial` / `TK4Radio`: the K4 is the most bench-proven
+factory radio there is, and `FR0;` moves the RX VFO, which is a visible side
+effect on a radio someone operates. Needs NY4I's call.
 
 **NOT ACTED ON.** No driver behaviour was changed. This is pre-existing: the
 legacy path sent `FT1;` to these radios too, so it is not a migration regression,
