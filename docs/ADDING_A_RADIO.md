@@ -55,6 +55,73 @@ The `.dpr` lists get long. That is the correct trade — explicit listing is wha
 stops a unit silently vanishing when a `uses` chain changes, which has already
 happened once (the IC-706 family fell out of the test EXE).
 
+### A radio on two transports: one class, unless the PROTOCOLS differ
+
+Most dual-transport radios need **nothing special**. An IC-7610 speaks CI-V
+whether the bytes arrive over a COM port or TCP 50001 — the protocol is the same
+and only the pipe changes. So it registers one constructor:
+
+```pascal
+RegisterRadio(IC7610, <ctor>, 'Icom IC-7610', [rlSerial, rlNetwork], 50001, True);
+```
+
+and the **base class** owns the transport. There are exactly two places that
+branch, and no driver subclass ever does:
+
+| what | where |
+|---|---|
+| open a COM port or a socket | `uFactoryRadioBase.Connect` |
+| write to `serialPortObj` or `socket` | `uFactoryRadioBase.SendToRadio` |
+
+The driver just declares its traits (`readTerminator`, `SerialProtocolIsBinary`,
+`SerialFixedFrameLength`) and the base applies them to whichever link is live.
+This is the same rule as the family bases: **a driver never asks what it is
+plugged into**, just as a base never asks which model it is.
+
+**The exception — two constructors.** Only when a radio's two links speak
+genuinely *different protocols* does it register a constructor per transport:
+
+```pascal
+RegisterRadio(FLEX,
+   function: TFactoryRadioBase begin Result := TFlexAPI.Create end,   // network
+   function: TFactoryRadioBase begin Result := TFlexCAT.Create end,   // serial
+   'FlexRadio 6000', [rlSerial, rlNetwork], 4992, True);
+```
+
+FlexRadio is the **only** radio in the tree that needs this. TCP 4992 is the
+SmartSDR Ethernet API — command sequence numbers, a client handle, pushed status
+subscriptions. The serial / TCP-5002 CAT port speaks `;`-terminated Kenwood +
+`ZZxx` commands that must be polled. Those are two protocols, not one protocol on
+two pipes.
+
+The alternative was one class branching on `serialPort <> NoPort` in a dozen
+methods — which would have made it the only driver in the tree that switches
+protocol on transport, for no gain. Instead `CreateInstanceForLink` picks the
+constructor and each driver stays single-protocol and branch-free.
+
+Still **one entry in the radio list**. NY4I:
+
+> The radio type should be the standard 'Flex' entry. There should not be a new
+> one of FlexRadio (SmartSDR CAT). When selecting Flex as the radio, the simple
+> question is if the control port is TCP, then use the network code. If not, use
+> the serial code with the ZZ commands.
+
+Layout follows the one-registration-per-unit rule — the two protocol drivers
+register nothing, and a **model unit** holds the single `RegisterRadio`:
+
+| unit | role |
+|---|---|
+| `uRadioFlexAPI.pas` | `TFlexAPI` — protocol driver, registers nothing |
+| `uRadioFlexCAT.pas` | `TFlexCAT` — protocol driver, registers nothing |
+| `uRadioFlex6000.pas` | the model: one `RegisterRadio`, names both |
+
+A later Flex that diverges on only one side subclasses just that driver
+(`TFlex8000CAT = class(TFlexCAT)`) and gets its own model unit. Neither protocol
+driver ever learns which model it is serving.
+
+Guarded by `test/unit/uTestFlexRegistry.pas`, including a single-ctor control
+radio — otherwise the test would pass even if the link argument were ignored.
+
 ### Why one class per model, even when two models are identical today
 
 The FT-950, FT-2000 and FTDX-9000 look like one group. They are not:

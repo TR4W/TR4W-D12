@@ -269,7 +269,9 @@
         <DCCReference Include="src\uExternalLoggerFactory.pas"/>
         <DCCReference Include="src\uDXLabPathfinder.pas"/>
         <DCCReference Include="src\uYCCCSO2R.pas"/>
-        <DCCReference Include="src\uFlexRadio6000.pas"/>
+        <DCCReference Include="src\uRadioFlexAPI.pas"/>
+        <DCCReference Include="src\uRadioFlexCAT.pas"/>
+        <DCCReference Include="src\uRadioFlex6000.pas"/>
         <DCCReference Include="src\uRadioBand.pas"/>
         <DCCReference Include="src\uBandLookup.pas"/>
         <DCCReference Include="src\ComPortEnumerator.pas"/>

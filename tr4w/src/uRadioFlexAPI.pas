@@ -1,7 +1,15 @@
-unit uFlexRadio6000;
+unit uRadioFlexAPI;
 
 {
-  FlexRadio 6000-Series Direct TCP/IP Integration for TR4W
+  SmartSDR Ethernet API driver (TCP 4992) -- one of TWO Flex protocol drivers.
+
+    uRadioFlexAPI (this unit)  TCP 4992          SmartSDR Ethernet API
+    uRadioFlexCAT              serial / TCP 5002 CAT: Kenwood 2-char + Flex ZZxx
+
+  These are different PROTOCOLS, not one protocol on two pipes, which is why Flex
+  is the only radio in the tree registered with two constructors.  See the header
+  of uRadioFlexCAT.pas and docs/ADDING_A_RADIO.md.
+
   Covers FLEX-6300, 6400, 6600, 6700, 6800 and Aurora — all use the same SmartSDR TCP/IP API.
 
   Protocol:
@@ -27,7 +35,7 @@ interface
 uses
    uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Log4D;
 
-type TFlexRadio6000 = class(TFactoryRadioBase)
+type TFlexAPI = class(TFactoryRadioBase)
    private
       FCmdSeq:        integer;   // Monotonically-increasing command sequence counter (C<n>|)
       FClientHandle:  string;    // Hex handle assigned by radio in 'H<hex>' line
@@ -97,7 +105,7 @@ uses MainUnit, uRadioRegistry, VC;
 
 // ---------------------------------------------------------------------------
 
-constructor TFlexRadio6000.Create;
+constructor TFlexAPI.Create;
 begin
    inherited Create(ProcessMsg);
    logger            := TLogLogger.GetLogger('TR4WDebugLog.Flex6000-Radio');
@@ -115,7 +123,7 @@ begin
    FCWBuffer         := '';
 end;
 
-function TFlexRadio6000.Connect: integer;
+function TFlexAPI.Connect: integer;
 begin
    // Reset handshake state on every connect so reconnection works cleanly.
    Self.readTerminator := #10;   // Indy ReadLn stops at LF; ProcessMsg trims trailing CR
@@ -130,7 +138,7 @@ begin
    // subscriptions are sent from ProcessMsg once the H line arrives.
    if Self.IsConnected then
       begin
-      logger.trace('[FlexRadio6000.Connect] TCP connected to %s:%d — awaiting radio handshake',
+      logger.trace('[FlexAPI.Connect] TCP connected to %s:%d — awaiting radio handshake',
                   [Self.radioAddress, Self.radioPort]);
       end;
 end;
@@ -147,7 +155,7 @@ end;
 // Returns the Nth (0-based) field of <s> split by <delimiter>.
 // Returns '' if the field index is out of range.
 // ---------------------------------------------------------------------------
-function TFlexRadio6000.SplitDelimiter(const s: string; delimiter: Char; index: integer): string;
+function TFlexAPI.SplitDelimiter(const s: string; delimiter: Char; index: integer): string;
 var
    current:  integer;
    startPos: integer;
@@ -183,7 +191,7 @@ end;
 // key=value string.  Returns '' if the key is not present.
 // Example: ParseKeyValue('RF_frequency=14.156400 mode=USB tx=1', 'mode') = 'USB'
 // ---------------------------------------------------------------------------
-function TFlexRadio6000.ParseKeyValue(const s: string; const key: string): string;
+function TFlexAPI.ParseKeyValue(const s: string; const key: string): string;
 var
    searchKey: string;
    keyPos:    integer;
@@ -211,7 +219,7 @@ end;
 
 // ---------------------------------------------------------------------------
 
-function TFlexRadio6000.NextSeq: integer;
+function TFlexAPI.NextSeq: integer;
 begin
    // NOTE: Called only from the main (UI) thread via SendFlexCmd.
    // If SendFlexCmd is ever called from the reading thread, add a lock here.
@@ -219,23 +227,23 @@ begin
    Result := FCmdSeq;
 end;
 
-procedure TFlexRadio6000.SendFlexCmd(cmd: string);
+procedure TFlexAPI.SendFlexCmd(cmd: string);
 var
    fullCmd: string;
 begin
    fullCmd := Format('C%d|%s', [NextSeq, cmd]);
-   logger.trace('[FlexRadio6000 TX] %s', [fullCmd]);
+   logger.trace('[FlexAPI TX] %s', [fullCmd]);
    inherited SendToRadio(fullCmd);
 end;
 
-function TFlexRadio6000.SliceForVFO(whichVFO: TVFO): integer;
+function TFlexAPI.SliceForVFO(whichVFO: TVFO): integer;
 begin
    case whichVFO of
       nrVFOA: Result := 0;
       nrVFOB: Result := 1;
    else
       begin
-      logger.Error('[FlexRadio6000.SliceForVFO] Unknown VFO ordinal %d — defaulting to slice 0',
+      logger.Error('[FlexAPI.SliceForVFO] Unknown VFO ordinal %d — defaulting to slice 0',
                    [Ord(whichVFO)]);
       Result := 0;
       end;
@@ -244,9 +252,9 @@ end;
 
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.SendSubscriptions;
+procedure TFlexAPI.SendSubscriptions;
 begin
-   logger.trace('[FlexRadio6000] Sending subscription sequence');
+   logger.trace('[FlexAPI] Sending subscription sequence');
    // sub slice all: frequency, mode, RIT/XIT, split — core VFO state
    // sub tx all:    TX/interlock status (transmitting, PTT)
    // keepalive disable: prevents the radio from disconnecting us on a keepalive timeout
@@ -266,7 +274,7 @@ end;
 // ---------------------------------------------------------------------------
 // ProcessMsg: main entry point called by the reading thread for each received line.
 // ---------------------------------------------------------------------------
-procedure TFlexRadio6000.ProcessMsg(msg: string);
+procedure TFlexAPI.ProcessMsg(msg: string);
 var
    line:   string;
    prefix: Char;
@@ -279,21 +287,21 @@ begin
       Exit;
       end;
 
-   logger.Trace('[FlexRadio6000.ProcessMsg] RX: (%s)', [line]);
+   logger.Trace('[FlexAPI.ProcessMsg] RX: (%s)', [line]);
 
    prefix := line[1];
    case prefix of
       'V':
          begin
          // V1.4.0.0 — radio firmware version
-         logger.trace('[FlexRadio6000] Radio firmware: %s', [line]);
+         logger.trace('[FlexAPI] Radio firmware: %s', [line]);
          end;
 
       'H':
          begin
          // H<hex> — client handle assigned by the radio
          FClientHandle := Copy(line, 2, Length(line) - 1);
-         logger.trace('[FlexRadio6000] Client handle: %s', [FClientHandle]);
+         logger.trace('[FlexAPI] Client handle: %s', [FClientHandle]);
          if not FHandshakeDone then
             begin
             FHandshakeDone := True;
@@ -304,7 +312,7 @@ begin
       'M':
          begin
          // M<code>|<text> — informational message from radio
-         logger.trace('[FlexRadio6000] Server message: %s', [line]);
+         logger.trace('[FlexAPI] Server message: %s', [line]);
          end;
 
       'R':
@@ -321,13 +329,13 @@ begin
 
    else
       begin
-      logger.Warn('[FlexRadio6000.ProcessMsg] Unrecognised message prefix "%s": %s',
+      logger.Warn('[FlexAPI.ProcessMsg] Unrecognised message prefix "%s": %s',
                   [prefix, line]);
       end;
    end;
 end;
 
-procedure TFlexRadio6000.ParseResponseLine(const line: string);
+procedure TFlexAPI.ParseResponseLine(const line: string);
 var
    resultStr: string;
    resultInt: integer;
@@ -337,11 +345,11 @@ begin
    resultInt := StrToIntDef(resultStr, -1);
    if resultInt <> 0 then
       begin
-      logger.Debug('[FlexRadio6000] Command error response: %s', [line]);
+      logger.Debug('[FlexAPI] Command error response: %s', [line]);
       end;
 end;
 
-procedure TFlexRadio6000.ParseStatusLine(const line: string);
+procedure TFlexAPI.ParseStatusLine(const line: string);
 var
    payload:  string;
    typeWord: string;
@@ -351,7 +359,7 @@ begin
    payload := SplitDelimiter(line, '|', 1);
    if payload = '' then
       begin
-      logger.Warn('[FlexRadio6000.ParseStatusLine] Missing payload in S-line: %s', [line]);
+      logger.Warn('[FlexAPI.ParseStatusLine] Missing payload in S-line: %s', [line]);
       Exit;
       end;
 
@@ -381,18 +389,18 @@ begin
       end
    else
       begin
-      logger.Debug('[FlexRadio6000.ParseStatusLine] Ignoring status type: %s', [typeWord]);
+      logger.Debug('[FlexAPI.ParseStatusLine] Ignoring status type: %s', [typeWord]);
       end;
 end;
 
-function TFlexRadio6000.GetIsOperational: boolean;
+function TFlexAPI.GetIsOperational: boolean;
 begin
    // Flex is operational only when slice 0 is valid (in_use=1).
    // TCP may be connected while SmartSDR is gone and slices have been torn down.
    Result := FSlice0Valid;
 end;
 
-procedure TFlexRadio6000.ProcessSliceStatus(const payload: string);
+procedure TFlexAPI.ProcessSliceStatus(const payload: string);
 var
    sliceNumStr: string;
    sliceNum:    integer;
@@ -428,14 +436,14 @@ begin
          if FSlice0Valid then
             begin
             FSlice0Valid := False;
-            logger.trace('[FlexRadio6000] Slice 0 removed (in_use=0) — radio not operational');
+            logger.trace('[FlexAPI] Slice 0 removed (in_use=0) — radio not operational');
             end;
          Exit;
          end;
       if not FSlice0Valid then
          begin
          FSlice0Valid := True;
-         logger.TRACE('[FlexRadio6000] Slice 0 confirmed in-use — radio operational');
+         logger.TRACE('[FlexAPI] Slice 0 confirmed in-use — radio operational');
          end;
       end
    else if sliceNum = 1 then
@@ -453,20 +461,20 @@ begin
             Self.localSplitEnabled := False;
             Self.vfo[nrVFOB].frequency := 0;
             Self.vfo[nrVFOB].band      := rbNone;
-            logger.trace('[FlexRadio6000] Slice 1 removed — split cleared, VFO B reset');
+            logger.trace('[FlexAPI] Slice 1 removed — split cleared, VFO B reset');
             end;
          Exit;
          end;
       if not FSlice1Exists then
          begin
          FSlice1Exists := True;
-         logger.trace('[FlexRadio6000] Slice 1 detected — split available');
+         logger.trace('[FlexAPI] Slice 1 detected — split available');
          end;
       end
    else
       begin
       // Slices 2+ are used in advanced multi-slice setups; ignore silently
-      logger.Debug('[FlexRadio6000.ProcessSliceStatus] Ignoring slice %d (only 0 and 1 handled)',
+      logger.Debug('[FlexAPI.ProcessSliceStatus] Ignoring slice %d (only 0 and 1 handled)',
                    [sliceNum]);
       Exit;
       end;
@@ -491,18 +499,18 @@ begin
          if (mhzInt >= 0) and (mhzFrac >= 0) then
             begin
             freqHz           := (mhzInt * 1000000) + mhzFrac;
-            logger.trace('[FlexRadio6000] RF_frequency push: slice %d → %d Hz', [sliceNum, freqHz]);
+            logger.trace('[FlexAPI] RF_frequency push: slice %d → %d Hz', [sliceNum, freqHz]);
             vfoObj.frequency := freqHz;
             vfoObj.band      := FreqToRadioBand(freqHz);
             end
          else
             begin
-            logger.Warn('[FlexRadio6000.ProcessSliceStatus] Bad RF_frequency value: %s', [freqStr]);
+            logger.Warn('[FlexAPI.ProcessSliceStatus] Bad RF_frequency value: %s', [freqStr]);
             end;
          end
       else
          begin
-         logger.Warn('[FlexRadio6000.ProcessSliceStatus] RF_frequency missing decimal: %s', [freqStr]);
+         logger.Warn('[FlexAPI.ProcessSliceStatus] RF_frequency missing decimal: %s', [freqStr]);
          end;
       end;
 
@@ -559,7 +567,9 @@ begin
          // FSlice0TX may be stale (e.g. split was enabled externally via SmartSDR
          // without TR4W setting FSlice0TX := False), so force it here.
          if not FSlice1TX then
+            begin
             FSlice0TX := True;
+            end;
          end;
       Self.localSplitEnabled := not FSlice0TX;
       end;
@@ -571,12 +581,12 @@ begin
       if (panStr <> '') and (panStr <> '0x00000000') then
          begin
          FPanHandle := panStr;
-         logger.Debug('[FlexRadio6000.ProcessSliceStatus] Pan handle: %s', [FPanHandle]);
+         logger.Debug('[FlexAPI.ProcessSliceStatus] Pan handle: %s', [FPanHandle]);
          end;
       end;
 end;
 
-procedure TFlexRadio6000.ProcessInterlockStatus(const payload: string);
+procedure TFlexAPI.ProcessInterlockStatus(const payload: string);
 var
    stateStr: string;
 begin
@@ -584,16 +594,16 @@ begin
    if stateStr = 'TRANSMITTING' then
       begin
       Self.radioState := rsTransmit;
-      logger.Debug('[FlexRadio6000] TX active');
+      logger.Debug('[FlexAPI] TX active');
       end
    else if (stateStr = 'READY') or (stateStr = 'RECEIVE') then
       begin
       Self.radioState := rsReceive;
-      logger.Debug('[FlexRadio6000] RX active');
+      logger.Debug('[FlexAPI] RX active');
       end
    else if stateStr <> '' then
       begin
-      logger.Debug('[FlexRadio6000.ProcessInterlockStatus] Interlock state: %s', [stateStr]);
+      logger.Debug('[FlexAPI.ProcessInterlockStatus] Interlock state: %s', [stateStr]);
       end;
 end;
 
@@ -606,7 +616,7 @@ end;
 // which may not yet reflect the new state if this push arrives before the
 // corresponding 'slice N tx=' push (e.g. when SmartSDR disables split).
 // ---------------------------------------------------------------------------
-procedure TFlexRadio6000.ProcessTransmitStatus(const payload: string);
+procedure TFlexAPI.ProcessTransmitStatus(const payload: string);
 var
    freqStr:  string;
    dotPos:   integer;
@@ -625,7 +635,7 @@ begin
    dotPos := Pos('.', freqStr);
    if dotPos = 0 then
       begin
-      logger.Warn('[FlexRadio6000.ProcessTransmitStatus] freq value missing decimal: %s', [freqStr]);
+      logger.Warn('[FlexAPI.ProcessTransmitStatus] freq value missing decimal: %s', [freqStr]);
       Exit;
       end;
 
@@ -644,17 +654,21 @@ begin
       // FSlice0TX is set optimistically in Split() before the radio confirms,
       // so it is always current by the time this push arrives.
       if FSlice0TX then
-         txVFO := nrVFOA
+         begin
+         txVFO := nrVFOA;
+         end
       else
+         begin
          txVFO := nrVFOB;
-      logger.Trace('[FlexRadio6000] transmit freq push: %d Hz → updating VFO %s',
+         end;
+      logger.Trace('[FlexAPI] transmit freq push: %d Hz → updating VFO %s',
                   [freqHz, VFOToString(txVFO)]);
       Self.vfo[txVFO].frequency := freqHz;
       Self.vfo[txVFO].band      := FreqToRadioBand(freqHz);
       end
    else
       begin
-      logger.Warn('[FlexRadio6000.ProcessTransmitStatus] Bad freq value: %s', [freqStr]);
+      logger.Warn('[FlexAPI.ProcessTransmitStatus] Bad freq value: %s', [freqStr]);
       end;
 end;
 
@@ -662,7 +676,7 @@ end;
 // Mode mapping
 // ---------------------------------------------------------------------------
 
-function TFlexRadio6000.FlexModeToRadioMode(const sMode: string): TRadioMode;
+function TFlexAPI.FlexModeToRadioMode(const sMode: string): TRadioMode;
 begin
    // AnsiIndexText is case-insensitive, which makes this robust to firmware variations
    case AnsiIndexText(sMode, ['USB', 'LSB', 'CW', 'CWL', 'AM', 'SAM',
@@ -683,18 +697,18 @@ begin
       12:
          begin
          // OFF = slice disabled or transitioning — do not overwrite last good mode
-         logger.Debug('[FlexRadio6000.FlexModeToRadioMode] Slice mode is OFF (transitioning)');
+         logger.Debug('[FlexAPI.FlexModeToRadioMode] Slice mode is OFF (transitioning)');
          Result := rmNone;
          end;
    else
       begin
-      logger.Warn('[FlexRadio6000.FlexModeToRadioMode] Unknown Flex mode string: "%s"', [sMode]);
+      logger.Warn('[FlexAPI.FlexModeToRadioMode] Unknown Flex mode string: "%s"', [sMode]);
       Result := rmNone;
       end;
    end;
 end;
 
-function TFlexRadio6000.RadioModeToFlexMode(mode: TRadioMode): string;
+function TFlexAPI.RadioModeToFlexMode(mode: TRadioMode): string;
 begin
    case mode of
       rmUSB:     Result := 'USB';
@@ -709,7 +723,7 @@ begin
       rmFSKRev:  Result := 'RTTY';
    else
       begin
-      logger.Warn('[FlexRadio6000.RadioModeToFlexMode] No Flex mapping for mode ordinal %d — defaulting to USB',
+      logger.Warn('[FlexAPI.RadioModeToFlexMode] No Flex mapping for mode ordinal %d — defaulting to USB',
                   [Ord(mode)]);
       Result := 'USB';
       end;
@@ -721,7 +735,7 @@ end;
 // Maps (whichVFO, key, value) to a slice set command.
 // Most methods call SendFlexCmd directly for cleaner formatting.
 // ---------------------------------------------------------------------------
-procedure TFlexRadio6000.SendToRadio(whichVFO: TVFO; sCmd: string; sData: string);
+procedure TFlexAPI.SendToRadio(whichVFO: TVFO; sCmd: string; sData: string);
 begin
    SendFlexCmd(Format('slice set %d %s=%s', [SliceForVFO(whichVFO), sCmd, sData]));
 end;
@@ -730,12 +744,12 @@ end;
 // Transmit / Receive
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.Transmit;
+procedure TFlexAPI.Transmit;
 begin
    SendFlexCmd('xmit 1');
 end;
 
-procedure TFlexRadio6000.Receive;
+procedure TFlexAPI.Receive;
 begin
    SendFlexCmd('xmit 0');
 end;
@@ -744,7 +758,7 @@ end;
 // Frequency
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
+procedure TFlexAPI.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
 var
    fracStr: string;
 begin
@@ -764,7 +778,7 @@ begin
    // frequency will be applied by Split(True) when it creates the slice.
    if (vfo = nrVFOB) and (not FSlice1Exists) then
       begin
-      logger.trace('[FlexRadio6000.SetFrequency] VFO B freq %d Hz stored — slice 1 not yet created, will apply on Split', [freq]);
+      logger.trace('[FlexAPI.SetFrequency] VFO B freq %d Hz stored — slice 1 not yet created, will apply on Split', [freq]);
       Exit;
       end;
 
@@ -781,14 +795,14 @@ end;
 // Mode
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA);
+procedure TFlexAPI.SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA);
 begin
    SendFlexCmd(Format('slice set %d mode=%s', [SliceForVFO(vfo), RadioModeToFlexMode(mode)]));
 end;
 
-function TFlexRadio6000.ToggleMode(vfo: TVFO = nrVFOA): TRadioMode;
+function TFlexAPI.ToggleMode(vfo: TVFO = nrVFOA): TRadioMode;
 begin
-   logger.Warn('[FlexRadio6000.ToggleMode] Not yet implemented');
+   logger.Warn('[FlexAPI.ToggleMode] Not yet implemented');
    Result := rmNone;
 end;
 
@@ -814,21 +828,21 @@ end;
 // stays within 5–60 WPM, well inside that range.
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.BufferCW(cwChars: string);
+procedure TFlexAPI.BufferCW(cwChars: string);
 begin
    FCWBuffer := FCWBuffer + cwChars;
-   logger.trace('[FlexRadio6000.BufferCW] Buffered: "%s"  total: "%s"',
+   logger.trace('[FlexAPI.BufferCW] Buffered: "%s"  total: "%s"',
                [cwChars, FCWBuffer]);
 end;
 
-procedure TFlexRadio6000.SendCW;
+procedure TFlexAPI.SendCW;
 var
    encoded: string;
    i:       integer;
 begin
    if FCWBuffer = '' then
       begin
-      logger.Warn('[FlexRadio6000.SendCW] Buffer empty — nothing to send');
+      logger.Warn('[FlexAPI.SendCW] Buffer empty — nothing to send');
       Exit;
       end;
 
@@ -846,18 +860,18 @@ begin
          end;
       end;
 
-   logger.trace('[FlexRadio6000.SendCW] Sending CW: "%s"', [FCWBuffer]);
+   logger.trace('[FlexAPI.SendCW] Sending CW: "%s"', [FCWBuffer]);
    SendFlexCmd('cwx send "' + encoded + '"');
    FCWBuffer := '';
 end;
 
-procedure TFlexRadio6000.StopCW;
+procedure TFlexAPI.StopCW;
 begin
    FCWBuffer := '';
    SendFlexCmd('cwx clear');
 end;
 
-procedure TFlexRadio6000.SetCWSpeed(speed: integer);
+procedure TFlexAPI.SetCWSpeed(speed: integer);
 begin
    Self.localCWSpeed := speed;
    SendFlexCmd(Format('cwx wpm %d', [speed]));
@@ -867,27 +881,27 @@ end;
 // RIT
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.RITOn(whichVFO: TVFO);
+procedure TFlexAPI.RITOn(whichVFO: TVFO);
 begin
    SendFlexCmd(Format('slice set %d rit_on=1', [SliceForVFO(whichVFO)]));
 end;
 
-procedure TFlexRadio6000.RITOff(whichVFO: TVFO);
+procedure TFlexAPI.RITOff(whichVFO: TVFO);
 begin
    SendFlexCmd(Format('slice set %d rit_on=0', [SliceForVFO(whichVFO)]));
 end;
 
-procedure TFlexRadio6000.RITClear(whichVFO: TVFO);
+procedure TFlexAPI.RITClear(whichVFO: TVFO);
 begin
    SendFlexCmd(Format('slice set %d rit_on=0 rit_freq=0', [SliceForVFO(whichVFO)]));
 end;
 
-procedure TFlexRadio6000.SetRITFreq(whichVFO: TVFO; hz: integer);
+procedure TFlexAPI.SetRITFreq(whichVFO: TVFO; hz: integer);
 begin
    SendFlexCmd(Format('slice set %d rit_freq=%d', [SliceForVFO(whichVFO), hz]));
 end;
 
-procedure TFlexRadio6000.RITBumpDown;
+procedure TFlexAPI.RITBumpDown;
 begin
    // Update local state immediately — the Flex does not reliably echo rit_freq
    // back after a slice set command, so we cannot wait for feedback to advance
@@ -896,7 +910,7 @@ begin
    SetRITFreq(nrVFOA, Self.vfo[nrVFOA].RITOffset);
 end;
 
-procedure TFlexRadio6000.RITBumpUp;
+procedure TFlexAPI.RITBumpUp;
 begin
    Self.vfo[nrVFOA].RITOffset := Self.vfo[nrVFOA].RITOffset + 10;
    SetRITFreq(nrVFOA, Self.vfo[nrVFOA].RITOffset);
@@ -906,22 +920,22 @@ end;
 // XIT
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.XITOn(whichVFO: TVFO);
+procedure TFlexAPI.XITOn(whichVFO: TVFO);
 begin
    SendFlexCmd(Format('slice set %d xit_on=1', [SliceForVFO(whichVFO)]));
 end;
 
-procedure TFlexRadio6000.XITOff(whichVFO: TVFO);
+procedure TFlexAPI.XITOff(whichVFO: TVFO);
 begin
    SendFlexCmd(Format('slice set %d xit_on=0', [SliceForVFO(whichVFO)]));
 end;
 
-procedure TFlexRadio6000.XITClear(whichVFO: TVFO);
+procedure TFlexAPI.XITClear(whichVFO: TVFO);
 begin
    SendFlexCmd(Format('slice set %d xit_on=0 xit_freq=0', [SliceForVFO(whichVFO)]));
 end;
 
-procedure TFlexRadio6000.SetXITFreq(whichVFO: TVFO; hz: integer);
+procedure TFlexAPI.SetXITFreq(whichVFO: TVFO; hz: integer);
 begin
    SendFlexCmd(Format('slice set %d xit_freq=%d', [SliceForVFO(whichVFO), hz]));
 end;
@@ -930,7 +944,7 @@ end;
 // Split
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.Split(splitOn: boolean);
+procedure TFlexAPI.Split(splitOn: boolean);
 var
    fracStr: string;
 begin
@@ -942,17 +956,17 @@ begin
          begin
          if FPanHandle = '' then
             begin
-            logger.Warn('[FlexRadio6000.Split] Pan handle not yet known — cannot create slice 1');
+            logger.Warn('[FlexAPI.Split] Pan handle not yet known — cannot create slice 1');
             Exit;
             end;
-         logger.trace('[FlexRadio6000] Creating slice 1 for split on pan %s', [FPanHandle]);
+         logger.trace('[FlexAPI] Creating slice 1 for split on pan %s', [FPanHandle]);
          SendFlexCmd(Format('slice create pan=%s mode=CW', [FPanHandle]));
          // FSlice1Exists will be set True when the radio pushes the slice 1 status.
          // If a VFO B frequency was stored before the slice existed, apply it now.
          if Self.vfo[nrVFOB].frequency > 0 then
             begin
             fracStr := Copy(IntToStr(1000000 + (Self.vfo[nrVFOB].frequency mod 1000000)), 2, 6);
-            logger.trace('[FlexRadio6000.Split] Applying stored VFO B freq %d Hz to new slice 1', [Self.vfo[nrVFOB].frequency]);
+            logger.trace('[FlexAPI.Split] Applying stored VFO B freq %d Hz to new slice 1', [Self.vfo[nrVFOB].frequency]);
             SendFlexCmd(Format('slice tune 1 %d.%s',
                         [Self.vfo[nrVFOB].frequency div 1000000, fracStr]));
             end;
@@ -984,7 +998,7 @@ end;
 // Band
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.SetBand(band: TRadioBand; vfo: TVFO = nrVFOA);
+procedure TFlexAPI.SetBand(band: TRadioBand; vfo: TVFO = nrVFOA);
 var
    bandStr: string;
 begin
@@ -1004,14 +1018,14 @@ begin
       rb70cm: bandStr := '70cm';
    else
       begin
-      logger.Error('[FlexRadio6000.SetBand] Unsupported band ordinal: %d', [Ord(band)]);
+      logger.Error('[FlexAPI.SetBand] Unsupported band ordinal: %d', [Ord(band)]);
       Exit;
       end;
    end;
 
    if FPanHandle = '' then
       begin
-      logger.Warn('[FlexRadio6000.SetBand] Pan handle not yet received from radio — band change ignored');
+      logger.Warn('[FlexAPI.SetBand] Pan handle not yet received from radio — band change ignored');
       Exit;
       end;
 
@@ -1020,9 +1034,9 @@ begin
    SendFlexCmd(Format('display pan set %s band=%s', [FPanHandle, bandStr]));
 end;
 
-function TFlexRadio6000.ToggleBand(vfo: TVFO = nrVFOA): TRadioBand;
+function TFlexAPI.ToggleBand(vfo: TVFO = nrVFOA): TRadioBand;
 begin
-   logger.Warn('[FlexRadio6000.ToggleBand] Not yet implemented');
+   logger.Warn('[FlexAPI.ToggleBand] Not yet implemented');
    Result := rbNone;
 end;
 
@@ -1030,7 +1044,7 @@ end;
 // Filter
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.SetFilter(filter: TRadioFilter; vfo: TVFO = nrVFOA);
+procedure TFlexAPI.SetFilter(filter: TRadioFilter; vfo: TVFO = nrVFOA);
 var
    sliceNum: integer;
    loHz:     integer;
@@ -1062,7 +1076,7 @@ begin
    SendFlexCmd(Format('slice set %d filt_lo=%d filt_hi=%d', [sliceNum, loHz, hiHz]));
 end;
 
-function TFlexRadio6000.SetFilterHz(hz: integer; vfo: TVFO = nrVFOA): integer;
+function TFlexAPI.SetFilterHz(hz: integer; vfo: TVFO = nrVFOA): integer;
 var
    sliceNum: integer;
    halfHz:   integer;
@@ -1077,12 +1091,12 @@ end;
 // VFO tuning steps — Flex has no single-step bump command, so we read/increment
 // ---------------------------------------------------------------------------
 
-procedure TFlexRadio6000.VFOBumpDown(whichVFO: TVFO);
+procedure TFlexAPI.VFOBumpDown(whichVFO: TVFO);
 begin
    SetFrequency(Self.vfo[whichVFO].frequency - 10, whichVFO, rmNone);
 end;
 
-procedure TFlexRadio6000.VFOBumpUp(whichVFO: TVFO);
+procedure TFlexAPI.VFOBumpUp(whichVFO: TVFO);
 begin
    SetFrequency(Self.vfo[whichVFO].frequency + 10, whichVFO, rmNone);
 end;
@@ -1091,15 +1105,15 @@ end;
 // Memory keyer — not applicable via TCP API
 // ---------------------------------------------------------------------------
 
-function TFlexRadio6000.MemoryKeyer(mem: integer): boolean;
+function TFlexAPI.MemoryKeyer(mem: integer): boolean;
 begin
-   logger.Warn('[FlexRadio6000.MemoryKeyer] Not supported on FlexRadio 6000 via TCP API');
+   logger.Warn('[FlexAPI.MemoryKeyer] Not supported on FlexRadio 6000 via TCP API');
    Result := True;  // True = error (fail-closed, matching K4 convention)
 end;
 
-initialization
-  RegisterRadio(FLEX,
-     function: TFactoryRadioBase begin Result := TFlexRadio6000.Create end,
-     'FlexRadio 6000', [rlNetwork], 4992, True);
+// NOTE: this unit registers nothing.  It is a PROTOCOL driver, not a model.
+// The FLEX registration lives in uRadioFlex6000.pas, which names this class for
+// the network transport and TFlexCAT for serial.  A future Flex whose Ethernet
+// API differs subclasses TFlexAPI and only its own model unit changes.
 
 end.
