@@ -131,7 +131,13 @@ uses
    uRadioTenTecOmni6 in '..\..\src\uRadioTenTecOmni6.pas',
    uRadioIcom7700         in '..\..\src\uRadioIcom7700.pas',
    uRadioIcom7800         in '..\..\src\uRadioIcom7800.pas',
-   uTestIcomRegistry    in 'uTestIcomRegistry.pas';
+   uTestIcomRegistry    in 'uTestIcomRegistry.pas',
+   // Flex is the only two-constructor registration; list its three units
+   // explicitly so their initialization sections self-register in this EXE.
+   uRadioFlexAPI        in '..\..\src\uRadioFlexAPI.pas',
+   uRadioFlexCAT        in '..\..\src\uRadioFlexCAT.pas',
+   uRadioFlex6000       in '..\..\src\uRadioFlex6000.pas',
+   uTestFlexRegistry    in 'uTestFlexRegistry.pas';
 
 begin
    IsMultiThread := True;  // Match main application setting
@@ -174,6 +180,7 @@ begin
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));
    RegisterSuite(TYaesuBinaryTests.Create('YaesuBinary'));
    RegisterSuite(TIcomRegistryTests.Create('IcomRegistry'));
+   RegisterSuite(TFlexRegistryTests.Create('FlexRegistry'));
 
    if RunAllSuites then
       begin

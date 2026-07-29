@@ -30,7 +30,7 @@ unit uRadioFactory;
 interface
 
 uses
-   Windows, uFactoryRadioBase, uRadioElecraftK4, uFlexRadio6000, SysUtils, VC;
+   Windows, uFactoryRadioBase, uRadioElecraftK4, uRadioFlexAPI, SysUtils, VC;
 
 type
    TConnectionType = (ctNetwork, ctSerial);
@@ -110,7 +110,7 @@ begin
       Exit;
       end;
 
-   Result := uRadioRegistry.CreateInstance(model);
+   Result := uRadioRegistry.CreateInstanceForLink(model, rlNetwork);
    if Result = nil then
       begin
       Exit;
@@ -144,7 +144,7 @@ begin
       Exit;
       end;
 
-   Result := uRadioRegistry.CreateInstance(model);
+   Result := uRadioRegistry.CreateInstanceForLink(model, rlSerial);
    if Result = nil then
       begin
       Exit;
@@ -171,7 +171,7 @@ begin
       begin
       Exit;
       end;
-   Result := uRadioRegistry.CreateInstanceId(id);
+   Result := uRadioRegistry.CreateInstanceForLinkId(id, rlNetwork);
    if Result = nil then
       begin
       Exit;
@@ -197,7 +197,7 @@ begin
       begin
       Exit;
       end;
-   Result := uRadioRegistry.CreateInstanceId(id);
+   Result := uRadioRegistry.CreateInstanceForLinkId(id, rlSerial);
    if Result = nil then
       begin
       Exit;

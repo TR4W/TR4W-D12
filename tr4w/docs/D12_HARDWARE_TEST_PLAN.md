@@ -45,7 +45,7 @@ TCP CAT (K4, Flex, TS-890 — all unproven).
 | **2** | **IC-9700** | LAN (or USB CI-V) | native | `df0017a` LAN + VHF/UHF/1296 high BCD bytes |
 | **2** | **IC-705** | WiFi/USB CI-V | native | `df0017a` LAN CI-V, addr $A4 |
 | **3** | **Elecraft K4** | network | native `uRadioElecraftK4` | non-Icom TCP CAT under D12 |
-| **3** | **FlexRadio 6300** | SmartSDR TCP | native `uFlexRadio6000` | non-Icom TCP CAT (Flex 6000-series) |
+| **3** | **FlexRadio 6300** | SmartSDR TCP | native `uRadioFlexAPI` | non-Icom TCP CAT (Flex 6000-series) |
 | **3** | **Kenwood TS-890** | **TCP over VPN** (N2SKH) | native, `##CN`/`##ID` auth | TCP CAT + auth + VPN latency — bonus network stress |
 | **4** | **YCCC SO2R box** | USB HID / **OTRSP** | `uYCCCSO2R` | SO2R switch + OTRSP CW buffer (string→bytes) |
 | **4** | **Green Heron RT-21** | via **PSTRotator over UDP** | `PSTROTATOR IP/UDP` (#732) | TR4W sends beam heading as UDP text |

@@ -72,7 +72,28 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         const displayName: string;
                         links: TRadioLinks;
                         networkPort: integer;
-                        discoverable: Boolean);
+                        discoverable: Boolean); overload;
+
+// Two-constructor registration -- ONE radio in the list, but a different driver
+// class per transport.  Needed only when the two links speak genuinely different
+// PROTOCOLS, not merely different pipes.
+//
+// Almost no radio needs this.  An IC-7610 speaks CI-V whether the bytes arrive
+// over a COM port or TCP 50001, so it registers one ctor and the base class picks
+// the transport (uFactoryRadioBase.Connect / SendToRadio).  That is the rule:
+// one class = one protocol, the base owns the transport.
+//
+// FlexRadio is the exception: TCP 4992 is the SmartSDR Ethernet API (sequence
+// numbers, client handle, status subscriptions) while the serial/5002 CAT port
+// speaks Kenwood-style ZZ commands.  Two protocols, so two classes -- rather than
+// one class that switches protocol on transport, which no other driver does.
+procedure RegisterRadio(model: InterfacedRadioType;
+                        const networkCtor: TRadioCtor;
+                        const serialCtor: TRadioCtor;
+                        const displayName: string;
+                        links: TRadioLinks;
+                        networkPort: integer;
+                        discoverable: Boolean); overload;
 
 // String-id registration -- for a NEW factory radio with no InterfacedRadioType
 // member.  Its RadioModel is the sentinel NoInterfacedRadio.
@@ -88,6 +109,10 @@ function IsRegistered(model: InterfacedRadioType): Boolean;
 function SupportsSerial(model: InterfacedRadioType): Boolean;
 function SupportsNetwork(model: InterfacedRadioType): Boolean;
 function CreateInstance(model: InterfacedRadioType): TFactoryRadioBase;
+// Transport-aware construction.  Identical to CreateInstance for every radio
+// registered with a single ctor; only a two-ctor registration differs.
+function CreateInstanceForLink(model: InterfacedRadioType; link: TRadioLink): TFactoryRadioBase;
+function CreateInstanceForLinkId(const id: string; link: TRadioLink): TFactoryRadioBase;
 function DisplayName(model: InterfacedRadioType): string;
 function RegisteredNetworkPort(model: InterfacedRadioType): integer;
 function RegisteredDiscoverable(model: InterfacedRadioType): Boolean;
@@ -115,7 +140,8 @@ type
    TRadioReg = record
       id: string;
       model: InterfacedRadioType;   // NoInterfacedRadio for id-only (non-enum) radios
-      ctor: TRadioCtor;
+      ctor: TRadioCtor;             // the default/network constructor
+      serialCtor: TRadioCtor;       // nil => serial uses ctor as well (the normal case)
       displayName: string;
       links: TRadioLinks;
       networkPort: integer;
@@ -130,7 +156,8 @@ var
 // ---- registration ----------------------------------------------------------
 
 procedure DoRegister(const id: string; model: InterfacedRadioType;
-                     const ctor: TRadioCtor; const displayName: string;
+                     const ctor: TRadioCtor; const serialCtor: TRadioCtor;
+                     const displayName: string;
                      links: TRadioLinks; networkPort: integer; discoverable: Boolean);
 var
    reg: TRadioReg;
@@ -138,6 +165,7 @@ begin
    reg.id := id;
    reg.model := model;
    reg.ctor := ctor;
+   reg.serialCtor := serialCtor;
    reg.displayName := displayName;
    reg.links := links;
    reg.networkPort := networkPort;
@@ -162,7 +190,19 @@ procedure RegisterRadio(model: InterfacedRadioType;
 begin
    // Derive the string id from the enum member name (IC718 -> 'IC718').
    DoRegister(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)), model,
-              ctor, displayName, links, networkPort, discoverable);
+              ctor, nil, displayName, links, networkPort, discoverable);
+end;
+
+procedure RegisterRadio(model: InterfacedRadioType;
+                        const networkCtor: TRadioCtor;
+                        const serialCtor: TRadioCtor;
+                        const displayName: string;
+                        links: TRadioLinks;
+                        networkPort: integer;
+                        discoverable: Boolean);
+begin
+   DoRegister(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)), model,
+              networkCtor, serialCtor, displayName, links, networkPort, discoverable);
 end;
 
 procedure RegisterRadioById(const id: string;
@@ -172,7 +212,7 @@ procedure RegisterRadioById(const id: string;
                             networkPort: integer;
                             discoverable: Boolean);
 begin
-   DoRegister(id, NoInterfacedRadio, ctor, displayName, links, networkPort, discoverable);
+   DoRegister(id, NoInterfacedRadio, ctor, nil, displayName, links, networkPort, discoverable);
 end;
 
 // ---- lookup helpers ---------------------------------------------------------
@@ -218,6 +258,52 @@ begin
    if RegById(id, reg) and Assigned(reg.ctor) then
       begin
       Result := reg.ctor();
+      end;
+end;
+
+// Pick the constructor for a transport.  serialCtor is nil for every radio whose
+// two links speak the same protocol, so this collapses to reg.ctor.
+function CtorForLink(const reg: TRadioReg; link: TRadioLink): TRadioCtor;
+begin
+   if (link = rlSerial) and Assigned(reg.serialCtor) then
+      begin
+      Result := reg.serialCtor;
+      end
+   else
+      begin
+      Result := reg.ctor;
+      end;
+end;
+
+function CreateInstanceForLinkId(const id: string; link: TRadioLink): TFactoryRadioBase;
+var
+   reg: TRadioReg;
+   ctor: TRadioCtor;
+begin
+   Result := nil;
+   if RegById(id, reg) then
+      begin
+      ctor := CtorForLink(reg, link);
+      if Assigned(ctor) then
+         begin
+         Result := ctor();
+         end;
+      end;
+end;
+
+function CreateInstanceForLink(model: InterfacedRadioType; link: TRadioLink): TFactoryRadioBase;
+var
+   reg: TRadioReg;
+   ctor: TRadioCtor;
+begin
+   Result := nil;
+   if RegByModel(model, reg) then
+      begin
+      ctor := CtorForLink(reg, link);
+      if Assigned(ctor) then
+         begin
+         Result := ctor();
+         end;
       end;
 end;
 
