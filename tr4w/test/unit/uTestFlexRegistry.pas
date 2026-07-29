@@ -40,6 +40,7 @@ type
       procedure Test_FlexNetworkBuildsAPIDriver;
       procedure Test_FlexIsOneEntrySupportingBothLinks;
       procedure Test_SingleCtorRadioIsSameClassOnBothLinks;
+      procedure Test_EveryRegisteredRadioRunsTheBaseConstructor;
    public
       procedure RunAllTests; override;
    end;
@@ -99,12 +100,71 @@ begin
                'a one-protocol radio must not vary its class by transport');
 end;
 
+// Every registered radio, on every transport it claims to support, must actually
+// run TFactoryRadioBase.Create(ProcRef).
+//
+// This is not Flex-specific -- it lives here because the Flex is what exposed it.
+// TFlexCAT was written with `inherited Create;` instead of
+// `inherited Create(ProcessMsg);`.  Because the base constructor is `overload`ed
+// that compiles cleanly and silently resolves to TObject.Create, so the radio got
+// no baseProcMsg (every received frame discarded), FLastValidResponse = 0 (so it
+// declared ~126 years of silence and reopened COM16 in a loop forever) and no
+// SocketLock.  The compiler emits NO warning -- verified by building at /v:normal
+// before and after the fix.
+//
+// So the only defence is to construct each radio and check.  A future radio that
+// makes the same slip fails here instead of on someone's bench.
+procedure TFlexRegistryTests.Test_EveryRegisteredRadioRunsTheBaseConstructor;
+var
+   ids: TArray<string>;
+   id, bad: string;
+   r: TFactoryRadioBase;
+   link: TRadioLink;
+   checked: integer;
+begin
+   BeginTest('every registered radio runs the base constructor on every link');
+   bad := '';
+   checked := 0;
+   ids := uRadioRegistry.RegisteredIds;
+   for id in ids do
+      begin
+      for link := Low(TRadioLink) to High(TRadioLink) do
+         begin
+         // Only build the transports the radio actually claims.
+         if ((link = rlSerial) and not uRadioRegistry.SupportsSerialId(id)) or
+            ((link = rlNetwork) and not uRadioRegistry.SupportsNetworkId(id)) then
+            begin
+            Continue;
+            end;
+         r := uRadioRegistry.CreateInstanceForLinkId(id, link);
+         if r = nil then
+            begin
+            bad := bad + id + '(nil) ';
+            Continue;
+            end;
+         try
+            Inc(checked);
+            if not r.BaseConstructorRan then
+               begin
+               bad := bad + id + '/' + r.ClassName + ' ';
+               end;
+         finally
+            r.Free;
+         end;
+         end;
+      end;
+   // Guard against the loop silently checking nothing.
+   CheckTrue(checked > 50, Format('expected to construct many radios, built only %d', [checked]));
+   CheckEquals('', bad, 'radios whose base constructor did not run: ' + bad);
+end;
+
 procedure TFlexRegistryTests.RunAllTests;
 begin
    Test_FlexSerialBuildsCATDriver;
    Test_FlexNetworkBuildsAPIDriver;
    Test_FlexIsOneEntrySupportingBothLinks;
    Test_SingleCtorRadioIsSameClassOnBothLinks;
+   Test_EveryRegisteredRadioRunsTheBaseConstructor;
 end;
 
 end.

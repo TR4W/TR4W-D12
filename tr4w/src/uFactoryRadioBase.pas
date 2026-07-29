@@ -310,6 +310,16 @@ Type TFactoryRadioBase = class(TObject)
       function Connect (address: string; port: integer): integer; overload;
       function VFOToString(whichVFO: TVFO): string;
       procedure UpdateLastValidResponse;  // Call when valid radio response received
+      // True only if the base constructor actually ran.  Exists because it can
+      // silently NOT run: Create(ProcRef) is `overload`ed, so a subclass writing
+      // `inherited Create;` instead of `inherited Create(ProcessMsg);` compiles
+      // cleanly and resolves to TObject.Create.  The radio then has no
+      // baseProcMsg (received frames go nowhere), FLastValidResponse = 0 (so it
+      // reports ~126 years of silence and reopens its port forever) and no
+      // SocketLock.  There is no compiler warning for this -- it cost a full
+      // bench session on the Flex.  Asserted for every registered radio by
+      // test/unit/uTestFlexRegistry.pas.
+      function BaseConstructorRan: Boolean;
       procedure Disconnect; overload; virtual;
       property IsTransmitting: boolean read GetIsTransmitting;
       property IsReceiving: boolean read GetIsReceiving;
@@ -1005,6 +1015,12 @@ begin
       begin
       FSerialReopenDelay := RECONNECT_MAX_DELAY;
       end;
+end;
+
+function TFactoryRadioBase.BaseConstructorRan: Boolean;
+begin
+   // Witnesses set only in Create(ProcRef); see the declaration for why.
+   Result := Assigned(baseProcMsg) and Assigned(SocketLock) and (FLastValidResponse > 0);
 end;
 
 procedure TFactoryRadioBase.UpdateLastValidResponse;
