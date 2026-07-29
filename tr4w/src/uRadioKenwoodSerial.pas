@@ -424,15 +424,33 @@ end;
 
 procedure TKenwoodSerial.Split(splitOn: boolean);
 begin
-  // FT selects the TX VFO: FT1; = TX on VFO B (split), FT0; = TX on VFO A.
+  // FR0; FIRST, then FT.  FT alone selects the TX VFO, but the legacy path has
+  // always sent BOTH (LOGRADIO.PAS:2066 / :2135, 'FR0;FT1;' and 'FR0;FT0;') and
+  // carries a maintainer's warning about exactly this:
+  //
+  //   {KK1L: 6.71 For some reason needed this to get the FT1; command to take.
+  //               Started when I added setting mode of B VFO to set freq. }
+  //
+  // So FT alone was known NOT to take on at least some radios in this family,
+  // and the factory migration dropped the fix.  Sending FR0; also puts RX on
+  // VFO A, which makes this a complete "RX on A, TX on B" split rather than a
+  // TX-side-only change -- and that is what every Kenwood here has received from
+  // TR4W for years.
+  //
+  // Restored deliberately: of the twelve Kenwoods now on this base, only the
+  // TS-570 has been benched through the factory, so matching the shipping
+  // behaviour is the safe default rather than an improvement on it.
   if splitOn then
     begin
-    Self.SendToRadio('FT1;');
+    Self.SendToRadio('FR0;FT1;');
     end
   else
     begin
-    Self.SendToRadio('FT0;');
+    Self.SendToRadio('FR0;FT0;');
     end;
+  // FR0; moved the RX pointer to VFO A; keep the driver's own idea of the
+  // active VFO in step or the next IF parse will disagree with the radio.
+  Self.SetActiveVFO(nrVFOA);
 end;
 
 procedure TKenwoodSerial.SetRITFreq(whichVFO: TVFO; hz: integer);
