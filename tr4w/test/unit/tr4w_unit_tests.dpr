@@ -137,7 +137,27 @@ uses
    uRadioFlexAPI        in '..\..\src\uRadioFlexAPI.pas',
    uRadioFlexCAT        in '..\..\src\uRadioFlexCAT.pas',
    uRadioFlex6000       in '..\..\src\uRadioFlex6000.pas',
-   uTestFlexRegistry    in 'uTestFlexRegistry.pas';
+   uTestFlexRegistry    in 'uTestFlexRegistry.pas',
+   // Kenwood + Elecraft model units: listed so their initialization sections
+   // self-register here, which is what puts them under the base-constructor
+   // and registry coverage tests.
+   uRadioKenwoodSerial  in '..\..\src\uRadioKenwoodSerial.pas',
+   uRadioKenwoodTS570   in '..\..\src\uRadioKenwoodTS570.pas',
+   uRadioKenwoodTS140    in '..\..\src\uRadioKenwoodTS140.pas',
+   uRadioKenwoodTS440    in '..\..\src\uRadioKenwoodTS440.pas',
+   uRadioKenwoodTS450    in '..\..\src\uRadioKenwoodTS450.pas',
+   uRadioKenwoodTS480    in '..\..\src\uRadioKenwoodTS480.pas',
+   uRadioKenwoodTS590    in '..\..\src\uRadioKenwoodTS590.pas',
+   uRadioKenwoodTS690    in '..\..\src\uRadioKenwoodTS690.pas',
+   uRadioKenwoodTS850    in '..\..\src\uRadioKenwoodTS850.pas',
+   uRadioKenwoodTS870    in '..\..\src\uRadioKenwoodTS870.pas',
+   uRadioKenwoodTS940    in '..\..\src\uRadioKenwoodTS940.pas',
+   uRadioKenwoodTS950    in '..\..\src\uRadioKenwoodTS950.pas',
+   uRadioKenwoodTS2000   in '..\..\src\uRadioKenwoodTS2000.pas',
+   uRadioElecraftSerial in '..\..\src\uRadioElecraftSerial.pas',
+   uRadioElecraftK3     in '..\..\src\uRadioElecraftK3.pas',
+   uRadioElecraftK2     in '..\..\src\uRadioElecraftK2.pas',
+   uRadioElecraftKX3    in '..\..\src\uRadioElecraftKX3.pas';
 
 begin
    IsMultiThread := True;  // Match main application setting

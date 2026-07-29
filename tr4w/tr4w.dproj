@@ -246,6 +246,8 @@
         <DCCReference Include="src\uRadioYaesuFT1000MP.pas"/>
         <DCCReference Include="src\uRadioYaesuFT817.pas"/>
         <DCCReference Include="src\uRadioElecraftK3.pas"/>
+        <DCCReference Include="src\uRadioElecraftK2.pas"/>
+        <DCCReference Include="src\uRadioElecraftKX3.pas"/>
         <DCCReference Include="src\uRadioKenwoodTS890.pas"/>
         <DCCReference Include="src\uIcomNetworkTypes.pas"/>
         <DCCReference Include="src\uIcomNetworkTransport.pas"/>
@@ -281,7 +283,17 @@
         <DCCReference Include="src\uRadioRegistry.pas"/>
         <DCCReference Include="src\uRadioKenwoodSerial.pas"/>
         <DCCReference Include="src\uRadioKenwoodTS570.pas"/>
-        <DCCReference Include="src\uRadioKenwoodModels.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS140.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS440.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS450.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS480.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS590.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS690.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS850.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS870.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS940.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS950.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS2000.pas"/>
         <DCCReference Include="src\uIcomCIV.pas"/>
         <DCCReference Include="src\uAbout.pas"/>
         <DCCReference Include="src\uHardWare.pas"/>
