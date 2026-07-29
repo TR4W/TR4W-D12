@@ -130,7 +130,7 @@ sends them today.
 
 | # | claim | verdict |
 |---|---|---|
-| G1 | TS-440 needs `SP1;`/`SP0;`, not `FT` | **UNSUPPORTED.** HamLib routes it through IC-10, but that is HamLib's choice. It does not make `FT` undefined, and TR4W ships `FR0;FT1;` to this radio. |
+| G1 | TS-440 needs `SP1;`/`SP0;`, not `FT` | **CONFIRMED — and I should not have retracted it.** See below. |
 | G2 | TS-140 cannot split over CAT | **WRONG.** TR4W ships `FR0;FT1;` to it. |
 | G3 | TS-950 cannot split over CAT | **WRONG.** Ships `FR0;FT1;`; NY4I confirms FR/FT are supported. |
 
@@ -138,6 +138,36 @@ The `if_len = 37` confirmation above still stands — that was HamLib *asserting
 something, not omitting it. **An independent implementation is evidence when it
 STATES something and weak-to-worthless when it OMITS something.** Presence is
 evidence; absence is not.
+
+### G1 CONFIRMED — the TS-440 really does use `SP1;`/`SP0;` (2026-07-29)
+
+NY4I, from the command reference: *"The TS440 does indeed use SP1; to enable
+split and SP0 to turn it off. RadioObject.PutRadioIntoSplit has it wrong for the
+440."*
+
+So HamLib was right about this radio, and my blanket retraction of G1-G3 was an
+**over-correction**. Three findings were lumped together and dismissed as one
+because two of them were wrong; G1 was correct the whole time. The lesson is
+narrower than the one I drew: an implementation's SILENCE proves nothing (G2/G3,
+where HamLib merely omitted a function), but an implementation's POSITIVE CHOICE
+is evidence worth keeping (G1, where HamLib deliberately routes this radio
+through a different protocol module). I had already written that distinction down
+and then failed to apply it when withdrawing the finding.
+
+FIXED in the factory: `TKenwoodTS440Radio.Split` sends `SP1;`/`SP0;` and
+deliberately does NOT chain to `TKenwoodSerial.Split`, because the base sends
+`FR0;FT1;` and follows it with `SetActiveVFO(nrVFOA)` — correct on a modern
+Kenwood where FR moves the receive VFO, wrong here where no FR is sent at all.
+Claiming the VFO moved would misfile the next `IF` frequency.
+
+**The legacy is left wrong on purpose.** `PutRadioIntoSplit` (LOGRADIO:2066)
+still sends `FR0;FT1;` to the TS-440 with every other Kenwood. Not patched: the
+legacy radio path is being deleted, so a fix there is throwaway work. Recorded in
+the unit header so the next reader does not "helpfully" mirror it back.
+
+Guarded by a test paired against the TS-950, so it cannot pass by the family
+default having been changed — the point is that ONE model diverges while eleven
+siblings keep `FR0;FT1;`. Not bench-tested.
 
 ### G4. Factory `Split` dropped the `FR0;` prefix — REAL, found by reading legacy
 
