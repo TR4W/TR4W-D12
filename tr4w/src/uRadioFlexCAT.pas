@@ -165,7 +165,17 @@ implementation
 
 constructor TFlexCAT.Create;
 begin
-   inherited Create;
+   // MUST pass ProcessMsg.  The base constructor is `overload`ed, so a bare
+   // `inherited Create` compiles cleanly and silently resolves to TObject.Create,
+   // skipping ALL base initialisation: baseProcMsg stays nil (so the reading
+   // thread has nowhere to deliver a frame and nothing is ever parsed),
+   // FLastValidResponse stays 0 (so GetIsConnected reports ~126 years of silence
+   // and MaintainSerialLink reopens the port forever), and SocketLock/socket stay
+   // nil.  That was the "COM16 will not connect" reopen loop.
+   //
+   // The reading thread dispatches through baseProcMsg, NOT through the virtual
+   // ProcessMsg -- same note as TYaesuBinary's constructor.
+   inherited Create(ProcessMsg);
    logger := TLogLogger.GetLogger('TR4WDebugLog.FlexCAT');
    radioModel := 'FlexRadio (SmartSDR CAT)';
    // SEMICOLON-DELIMITED, on both transports.  This is NOT the factory default

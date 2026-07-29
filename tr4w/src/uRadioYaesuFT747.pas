@@ -88,6 +88,16 @@ const
    FT747_MODE_SSB_C = 16;
 
    FT747_SET_FREQ_OPCODE = $0A;
+   FT747_SET_MODE_OPCODE = $0C;   // SMOC, LOGRADIO radio table row 'FT747GX'
+
+   // Set-mode bytes, from the same table row (CW $03 / LSB $00 / USB $01 /
+   // AM $05 / FM $06).  These are the SET values and are NOT the status-frame
+   // mode bits above (FT747_MODE_*), which are a different encoding.
+   FT747_SETMODE_LSB = $00;
+   FT747_SETMODE_USB = $01;
+   FT747_SETMODE_CW  = $03;
+   FT747_SETMODE_AM  = $05;
+   FT747_SETMODE_FM  = $06;
 
 type
   TFT747GXRadio = class(TYaesuBinary)
@@ -99,6 +109,7 @@ type
     procedure ProcessMsg(msg: string); override;
     procedure PollRadioState; override;
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
+    procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
   end;
 
 implementation
@@ -229,6 +240,33 @@ begin
       begin
       Self.SetMode(mode, vfo);
       end;
+end;
+
+// SetMode is ABSTRACT in TFactoryRadioBase and TYaesuBinary does not supply one,
+// so omitting it here is not a missing feature -- it is an EAbstractError the
+// first time anyone selects this radio and changes mode.  (Caught by W1020 on a
+// full rebuild; an incremental build does not recompile this unit and stays
+// silent, which is how it was missed.)
+procedure TFT747GXRadio.SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA);
+var
+   modeByte: Byte;
+begin
+   case mode of
+      rmLSB: modeByte := FT747_SETMODE_LSB;
+      rmUSB: modeByte := FT747_SETMODE_USB;
+      rmCW:  modeByte := FT747_SETMODE_CW;
+      rmAM:  modeByte := FT747_SETMODE_AM;
+      rmFM:  modeByte := FT747_SETMODE_FM;
+   else
+      begin
+      // The table row carries no DIGL/DIGU value for this radio, and it has no
+      // CW-reverse.  Refuse rather than send a byte the radio never defined.
+      logger.Error('[SetMode] FT-747GX has no mode %d', [Ord(mode)]);
+      Exit;
+      end;
+   end;
+   // Row MB=3: the mode byte sits at index 3, opcode last.
+   Self.SendBytes($00, $00, $00, modeByte, FT747_SET_MODE_OPCODE);
 end;
 
 initialization
