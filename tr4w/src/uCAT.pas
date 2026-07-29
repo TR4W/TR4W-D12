@@ -37,6 +37,7 @@ uses
   Tree,
   Classes,
   uK4Discovery,
+  uFlexDiscovery,
   uIcomNetworkDiscovery,
   uIcomNetworkTypes;
 
@@ -698,6 +699,27 @@ begin
         for i := 0 to list.Count - 1 do
            begin
            Dispose(PK4DiscoveredRadio(list[i]));
+           end;
+        list.Free;
+     end;
+     end
+  else if rt = FLEX then
+     begin
+     // Flex discovery is PASSIVE -- the radio broadcasts to UDP 4992 once a
+     // second and we listen.  It must be tested BEFORE the rtICOM branch only in
+     // the sense that FLEX is rt:rtKenwood and would otherwise match nothing:
+     // before this branch existed the search fell through and always reported
+     // "no Flex radios found".
+     list := TFlexDiscovery.DiscoverRadios(FLEX_DISCOVERY_TIMEOUT_MS);
+     try
+        for i := 0 to list.Count - 1 do
+           begin
+           Found.Add(PFlexDiscoveredRadio(list[i])^.IPAddress);
+           end;
+     finally
+        for i := 0 to list.Count - 1 do
+           begin
+           Dispose(PFlexDiscoveredRadio(list[i]));
            end;
         list.Free;
      end;

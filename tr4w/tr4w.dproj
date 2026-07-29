@@ -179,6 +179,7 @@
         <DCCReference Include="src\uFileView.pas"/>
         <DCCReference Include="src\uAutoCQ.pas"/>
         <DCCReference Include="src\uCAT.pas"/>
+        <DCCReference Include="src\uFlexDiscovery.pas"/>
         <DCCReference Include="src\uDialogs.pas"/>
         <DCCReference Include="src\Version.pas"/>
         <DCCReference Include="src\VC.pas"/>
