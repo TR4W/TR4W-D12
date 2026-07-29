@@ -225,9 +225,23 @@ begin
    // ONE of them (XIT when XIT is on, else RIT -- guide 3.3.14), so a driver
    // that trusted it could never show both at once.
    //
-   // ZZFB is asked every cycle so VFO B tracks; when no split Slice exists the
-   // radio answers "?;", which ProcessMsg discards quietly (guide 1.2).
-   Self.SendToRadio('ZZIF;ZZFB;ZZRG;ZZXG;');
+   // ZZFB is asked ONLY while split is on.  VFO B maps to the split Slice, and
+   // that Slice does not exist until a CAT split command creates it (guide 1.2),
+   // so asking before then earns a "?;" every single cycle -- pure noise in the
+   // CAT log and a wasted command on the wire.  ZZIF P12 already tells us whether
+   // split is on, so use it.
+   //
+   // Cost: after split is engaged, VFO B first appears one cycle later (the ZZIF
+   // that reports split arrives in the same batch that lacked ZZFB).  At 200 ms
+   // that is not observable.
+   if Self.localSplitEnabled then
+      begin
+      Self.SendToRadio('ZZIF;ZZFB;ZZRG;ZZXG;');
+      end
+   else
+      begin
+      Self.SendToRadio('ZZIF;ZZRG;ZZXG;');
+      end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -320,6 +334,7 @@ end;
 procedure TFlexCAT.ParseZZIF(const msg: string);
 var
    hz: integer;
+   splitNow: boolean;
 begin
    if Length(msg) < FLEXCAT_IF_LEN then
       begin
@@ -344,7 +359,17 @@ begin
    Self.SetRITOn(msg[FLEXCAT_IF_RIT_POS] = '1');
    Self.SetXITOn(msg[FLEXCAT_IF_XIT_POS] = '1');
 
-   Self.SetSplitOn(msg[FLEXCAT_IF_SPLIT_POS] = '1');
+   // Split off means the split Slice is gone, so VFO B no longer refers to
+   // anything.  Clear it on the transition -- PollRadioState stops asking for
+   // ZZFB once split drops, so a stale VFO B would otherwise sit in the radio
+   // window forever with no poll left to correct it.
+   splitNow := msg[FLEXCAT_IF_SPLIT_POS] = '1';
+   if Self.localSplitEnabled and (not splitNow) then
+      begin
+      Self.vfo[nrVFOB].frequency := 0;
+      Self.vfo[nrVFOB].band      := rbNone;
+      end;
+   Self.SetSplitOn(splitNow);
 
    if msg[FLEXCAT_IF_MOX_POS] = '1' then
       begin
