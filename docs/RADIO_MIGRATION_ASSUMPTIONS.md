@@ -89,6 +89,55 @@ Source: SmartSDR CAT User Guide v4.1.5 (proprietary — cite sections, do not co
 
 ---
 
+## G. Kenwood remainder — cross-checked against HamLib backends (2026-07-29)
+
+Commit `135e601` registered eight never-benched Kenwoods (TS-140/440/450/690/850/
+870/940/950) plus TS-480/590/2000, all as thin `TKenwoodSerial` subclasses. The
+sole basis was TR4W's own radio table, where **all eleven rows are byte-identical
+apart from `hamlibID`**. That is a single source agreeing with itself, so the rows
+were cross-checked against HamLib's Kenwood backends (`rigs/kenwood`, rev
+`c7fb0fa`, tree at `C:\Users\toms\projects\Hamlib`) — an independent
+implementation written from the same manuals.
+
+**CONFIRMED — the load-bearing assumption holds.** Every one of the twelve
+declares `if_len = 37`: TS-440 states it explicitly, the rest inherit
+`kenwood.c:897`'s default. That is the same 37-character body
+`TKenwoodSerial.ParseIF` parses, and it is the assumption everything else rests
+on, because ParseIF indexes its fields from the END of the string.
+
+**THREE MODELS DIVERGE.** HamLib does not treat these as TS-570 clones:
+
+| # | model | HamLib says | TR4W does | risk |
+|---|---|---|---|---|
+| G1 | **TS-440** | Split is `SP1;` / `SP0;` via the **IC-10** protocol (`ic10.c`, `ic10_set_split_vfo`). One of only three backends in the tree using IC-10 at all. | `TKenwoodSerial.Split` sends `FT1;` / `FT0;` | Undefined command; split silently does nothing |
+| G2 | **TS-140** | **No split functions at all** in its caps table — HamLib believes it cannot split over CAT | Sends `FT1;` / `FT0;` | Undefined command |
+| G3 | **TS-950** | **No split functions at all** | Sends `FT1;` / `FT0;` | Undefined command |
+
+`ic10.c` also carries TWO documented IF layouts and an `ic10_cmd_trim` that
+strips embedded spaces, so the IC-10-era `IF` is not laid out like the modern
+one. Since ParseIF indexes from the end, a differently-padded `IF` would put mode
+/ FR / split on their neighbours **while frequency, at a fixed offset, kept
+working perfectly** — the exact failure signature already recorded twice in this
+document.
+
+**NOT ACTED ON.** No driver behaviour was changed. This is pre-existing: the
+legacy path sent `FT1;` to these radios too, so it is not a migration regression,
+and "HamLib omits a function" can mean the radio lacks it OR that nobody
+implemented it. Fixing it would mean per-model overrides (a TS-440 split via
+`SP`, `rcReadSplit` cleared on TS-140/950) written from a second-hand source with
+no manual and no hardware — which is how the Icom deny-list mistake happened.
+
+Needs NY4I's call: adopt HamLib's view, or leave as-is pending a manual/tester.
+
+**METHOD NOTE — the simulators are not the reference; the backends are.**
+The original plan was to port HamLib's `simulators/*.c`. `simts450.c` turned out
+to emit a **41-byte** `IF` (40-char body) against its own library's `if_len = 37`.
+HamLib's simulator contradicts HamLib's driver — exactly what `radiosim/core.py`
+already warns about for the FT-817. Porting it as a "reference" would have
+manufactured a false failure in a TR4W driver that is in fact correct. The port
+was kept (`tools/radiosim/hamlib/simts450.py`, faithful, quirks and all) but the
+GROUNDING above comes from `rigs/kenwood/*.c`.
+
 ## Corrected assumptions (kept as a record of failure modes)
 
 | Was assumed | Reality | Root cause |
