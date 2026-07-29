@@ -23,6 +23,7 @@ from .kenwood_ts890 import KenwoodTS890
 from .elecraft import Elecraft
 from .icom import Icom
 from .yaesu import Yaesu
+from .hamlib.simts450 import HamlibTS450
 
 
 def _kenwood(name):
@@ -47,6 +48,15 @@ def _icom(name, address, supports_vfo_b=True):
 
 # CI-V addresses are the ones the matching TR4W radio class sets.
 MODELS = {
+    # HAMLIB-DERIVED, kept deliberately distinct from the TR4W-authored models
+    # below: this one is a port of hamlib simulators/simts450.c, so agreement
+    # with a TR4W driver is independent evidence rather than self-confirmation.
+    # Read tools/radiosim/hamlib/__init__.py before trusting or editing it.
+    # KNOWN: its IF response is 41 bytes where hamlib's OWN backend declares
+    # if_len = 37, so TR4W will (correctly) reject it as malformed.  That makes
+    # it a useful NEGATIVE test -- does the driver reject a bad IF gracefully?
+    'HL-TS450': (lambda: HamlibTS450(), 4800),
+
     'TS590':  (_kenwood('Kenwood TS-590'),  4800),
     'TS2000': (_kenwood('Kenwood TS-2000'), 4800),
     'TS480':  (_kenwood('Kenwood TS-480'),  4800),
