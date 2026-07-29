@@ -28,7 +28,8 @@ interface
 
 uses
    SysUtils, uTR4WTestFramework, uFactoryRadioBase, uRadioYaesuFT817,
-   uRadioYaesuFT847, uRadioYaesuFT857, uRadioRegistry, VC;
+   uRadioYaesuFT847, uRadioYaesuFT857, uRadioYaesuFT990, uRadioYaesuFT840,
+   uRadioYaesuFT920, uRadioYaesuBinary, uRadioRegistry, VC;
 
 type
    TYaesuBinaryTests = class(TTestCase)
@@ -40,6 +41,8 @@ type
       procedure Test_FT857_HasDIGButNotPKT;
       procedure Test_FT847_DeclaresNoSplitCapability;
       procedure Test_GroupModelsAreRegistered;
+      procedure Test_TraitDrivenSetMode_PerModelModeBytes;
+      procedure Test_TraitDrivenSetMode_RefusesUndefinedMode;
    public
       procedure RunAllTests; override;
    end;
@@ -66,6 +69,31 @@ type
       procedure SendToRadio(s: string); overload; override;
    end;
 
+   // Trait-driven SetMode probes -- these four take TYaesuBinary.SetMode as-is.
+   TFT990Probe = class(TFT990Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   TFT1000Probe = class(TFT1000Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   TFT840Probe = class(TFT840Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
+   TFT920Probe = class(TFT920Radio)
+   public
+      sent: string;
+      procedure SendToRadio(s: string); overload; override;
+   end;
+
 procedure TFT847Probe.SendToRadio(s: string);
 begin
    sent := sent + s;
@@ -77,6 +105,26 @@ begin
 end;
 
 procedure TFT857Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFT990Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFT1000Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFT840Probe.SendToRadio(s: string);
+begin
+   sent := sent + s;
+end;
+
+procedure TFT920Probe.SendToRadio(s: string);
 begin
    sent := sent + s;
 end;
@@ -221,6 +269,60 @@ begin
    CheckEquals('', missing, 'unregistered models: ' + missing);
 end;
 
+// The seven rtYaesu1 models below share TYaesuBinary.SetMode and differ ONLY in
+// the trait bytes they declare.  A shared implementation is the right design --
+// a base must never ask which model it is -- but it has a failure mode: if the
+// traits were lost, mistyped, or quietly defaulted, every model would still
+// "work" while sending the SAME byte.  So assert two models that must DIFFER.
+//
+// FT-990 AM = $05, FT-1000 AM = $04 (LOGRADIO rows 536 and 538).  Identical in
+// every other mode, so AM is the discriminator.
+procedure TYaesuBinaryTests.Test_TraitDrivenSetMode_PerModelModeBytes;
+var
+   r990: TFT990Probe;
+   r1000: TFT1000Probe;
+begin
+   BeginTest('trait SetMode: FT-990 AM is $05 and FT-1000 AM is $04');
+   r990 := TFT990Probe.Create;
+   r1000 := TFT1000Probe.Create;
+   try
+      r990.SetMode(rmAM);
+      r1000.SetMode(rmAM);
+      // 5-byte frame, mode byte at index 3 (MB=3), opcode $0C last.
+      CheckEquals(#$00#$00#$00#$05#$0C, r990.sent, 'FT-990 AM frame');
+      CheckEquals(#$00#$00#$00#$04#$0C, r1000.sent, 'FT-1000 AM frame');
+      CheckTrue(r990.sent <> r1000.sent,
+                'the two models must not send the same AM byte -- traits collapsed');
+   finally
+      r990.Free;
+      r1000.Free;
+   end;
+end;
+
+// MODEBYTE_NONE ($FF) is the table's "this radio has no such mode".  It must be
+// REFUSED, not transmitted -- $FF is not a defined mode byte on any of these
+// radios.  Paired with a model that DOES define the mode, so the test cannot
+// pass by SetMode simply never sending anything.
+procedure TYaesuBinaryTests.Test_TraitDrivenSetMode_RefusesUndefinedMode;
+var
+   r840: TFT840Probe;
+   r920: TFT920Probe;
+begin
+   BeginTest('trait SetMode: FT-840 refuses data mode, FT-920 sends DIGU $0A');
+   r840 := TFT840Probe.Create;
+   r920 := TFT920Probe.Create;
+   try
+      r840.SetMode(rmData);   // FT-840 row: DIGL/DIGU are $FF
+      r920.SetMode(rmData);   // FT-920 row: DIGU $0A
+      CheckEquals('', r840.sent,
+                  'FT-840 has no data mode; it must send nothing rather than $FF');
+      CheckEquals(#$00#$00#$00#$0A#$0C, r920.sent, 'FT-920 DIGU frame');
+   finally
+      r840.Free;
+      r920.Free;
+   end;
+end;
+
 procedure TYaesuBinaryTests.RunAllTests;
 begin
    Test_FT847_DoesNotSendSplit;
@@ -230,6 +332,8 @@ begin
    Test_FT857_HasDIGButNotPKT;
    Test_FT847_DeclaresNoSplitCapability;
    Test_GroupModelsAreRegistered;
+   Test_TraitDrivenSetMode_PerModelModeBytes;
+   Test_TraitDrivenSetMode_RefusesUndefinedMode;
 end;
 
 end.

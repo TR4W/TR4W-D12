@@ -122,6 +122,18 @@ begin
    inherited Create;
    logger := TLogLogger.GetLogger('TR4WDebugLog.FT990');
    radioModel := 'Yaesu FT-990';
+
+   // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
+   // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
+   FSetModeOpcode := $0C;
+   FModeByteIndex := 3;
+   FModeCW   := $03;
+   FModeLSB  := $00;
+   FModeUSB  := $01;
+   FModeAM   := $05;
+   FModeFM   := $06;
+   FModeDIGL := $08;
+   FModeDIGU := $09;
    FStatus1Len := 32;          // FT-990; the FT-1000 subclass sets 16
    RecomputeFrameLength;
    pollingInterval := 200;
@@ -141,6 +153,18 @@ begin
    inherited Create;
    logger := TLogLogger.GetLogger('TR4WDebugLog.FT1000');
    radioModel := 'Yaesu FT-1000';
+
+   // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
+   // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
+   FSetModeOpcode := $0C;
+   FModeByteIndex := 3;
+   FModeCW   := $03;
+   FModeLSB  := $00;
+   FModeUSB  := $01;
+   FModeAM   := $04;
+   FModeFM   := $06;
+   FModeDIGL := $08;
+   FModeDIGU := $09;
    FStatus1Len := 16;          // legacy: `if RadioModel = FT1000 then F1 := 16`
    RecomputeFrameLength;
 end;

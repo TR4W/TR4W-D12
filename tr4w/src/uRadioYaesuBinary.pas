@@ -60,10 +60,43 @@ interface
 
 uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC;
 
+const
+   // "This radio has no such mode" -- the convention already used by the DIGL /
+   // DIGU columns of LOGRADIO's radio table.  SetMode refuses instead of putting
+   // $FF on the wire, which is not a defined mode byte on any of these radios.
+   MODEBYTE_NONE    = $FF;
+   // A model that has not declared its set-mode row.  Distinct from a real
+   // opcode so the base can tell "not declared" from "declared as 0".
+   MODEOPCODE_UNSET = $00;
+
 type
   TYaesuBinary = class(TFactoryRadioBase)
   protected
     logger: TLogLogger;
+    // ---- SET-MODE TRAITS ----------------------------------------------------
+    // Every rtYaesu1 model sets mode with the same 5-byte shape and differs only
+    // in the opcode, which byte slot the mode goes in, and the mode byte values.
+    // Those three things come straight from the model's row in LOGRADIO's radio
+    // table (SMOC, MB, and the CW/LSB/USB/AM/FM/DIGL/DIGU columns), so a model
+    // declares its row here and the base does the work.
+    //
+    // $FF means "this radio has no such mode" -- the existing convention in that
+    // table -- and SetMode refuses rather than transmitting $FF, which is not a
+    // defined mode byte on any of these radios.
+    //
+    // A model that leaves FSetModeOpcode at MODEOPCODE_UNSET either overrides
+    // SetMode itself (the FT-817 group, FT-1000MP) or genuinely cannot set mode;
+    // either way the base refuses loudly instead of sending a bogus frame.
+    FSetModeOpcode: Byte;    // SMOC
+    FModeByteIndex: Integer; // MB: which of the 4 payload slots holds the mode byte
+    FModeCW:   Byte;
+    FModeLSB:  Byte;
+    FModeUSB:  Byte;
+    FModeAM:   Byte;
+    FModeFM:   Byte;
+    FModeDIGL: Byte;
+    FModeDIGU: Byte;
+
     // Send one 5-byte Yaesu command byte-exact (opcode last).
     procedure SendBytes(b0, b1, b2, b3, b4: Byte);
 
@@ -85,8 +118,13 @@ type
     // This is a CONVENTION, not a radio report.  A radio that actually tells us
     // the sideband must map it directly and never call this.
     function PhoneModeForFreq(hz: integer): TRadioMode;
+
   public
     constructor Create; reintroduce;
+
+    // Trait-driven; see the fields above.  Models with a different frame shape
+    // override it (FT-747GX, FT-767, FT-817 group, FT-1000MP).
+    procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
 
     function  Connect: integer; override;
 
@@ -142,6 +180,72 @@ begin
    honorsFreqPollRate     := False;  // these answers are fixed-length; keep our cadence
    pollingInterval        := 150;    // conservative BR4800 default; models may lower it
    // SerialFixedFrameLength is intentionally NOT set here -- see the unit header.
+
+   // Set-mode traits default to "this model has not declared its row", so a model
+   // that forgets gets a logged refusal instead of a frame built from zeroes.
+   FSetModeOpcode := MODEOPCODE_UNSET;
+   FModeByteIndex := 3;      // MB=3 is the common case in the table
+   FModeCW   := MODEBYTE_NONE;
+   FModeLSB  := MODEBYTE_NONE;
+   FModeUSB  := MODEBYTE_NONE;
+   FModeAM   := MODEBYTE_NONE;
+   FModeFM   := MODEBYTE_NONE;
+   FModeDIGL := MODEBYTE_NONE;
+   FModeDIGU := MODEBYTE_NONE;
+end;
+
+// Trait-driven SetMode shared by the rtYaesu1 family.  A base must never ask
+// which model it is; it reads the traits the model declared and acts on them.
+procedure TYaesuBinary.SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA);
+var
+   modeByte: Byte;
+   b: array[0..3] of Byte;
+   i: Integer;
+begin
+   if FSetModeOpcode = MODEOPCODE_UNSET then
+      begin
+      logger.Error('[SetMode] %s did not declare its set-mode traits and does not override SetMode',
+                   [radioModel]);
+      Exit;
+      end;
+
+   case mode of
+      rmCW:    modeByte := FModeCW;
+      rmCWRev: modeByte := FModeCW;    // no separate CW-reverse byte in this family
+      rmLSB:   modeByte := FModeLSB;
+      rmUSB:   modeByte := FModeUSB;
+      rmAM:    modeByte := FModeAM;
+      rmFM:    modeByte := FModeFM;
+      rmData:  modeByte := FModeDIGU;
+      rmFSK:   modeByte := FModeDIGL;
+   else
+      begin
+      logger.Error('[SetMode] %s: unsupported mode %d', [radioModel, Ord(mode)]);
+      Exit;
+      end;
+   end;
+
+   // $FF is the table's "this radio has no such mode".  Refuse rather than send
+   // it -- $FF is not a defined mode byte and would leave the rig unpredictable.
+   if modeByte = MODEBYTE_NONE then
+      begin
+      logger.Error('[SetMode] %s has no mode %d', [radioModel, Ord(mode)]);
+      Exit;
+      end;
+
+   if (FModeByteIndex < 0) or (FModeByteIndex > 3) then
+      begin
+      logger.Error('[SetMode] %s declared an out-of-range mode byte index %d',
+                   [radioModel, FModeByteIndex]);
+      Exit;
+      end;
+
+   for i := 0 to 3 do
+      begin
+      b[i] := $00;
+      end;
+   b[FModeByteIndex] := modeByte;
+   Self.SendBytes(b[0], b[1], b[2], b[3], FSetModeOpcode);
 end;
 
 function TYaesuBinary.Connect: integer;
