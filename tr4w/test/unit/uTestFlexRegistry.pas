@@ -41,6 +41,7 @@ type
       procedure Test_FlexIsOneEntrySupportingBothLinks;
       procedure Test_SingleCtorRadioIsSameClassOnBothLinks;
       procedure Test_EveryRegisteredRadioRunsTheBaseConstructor;
+      procedure Test_FlexCATKeepsItsOwnPollCadence;
    public
       procedure RunAllTests; override;
    end;
@@ -158,6 +159,33 @@ begin
    CheckEquals('', bad, 'radios whose base constructor did not run: ' + bad);
 end;
 
+// TFlexCAT.PollRadioState sends four commands per cycle, so it must NOT run at
+// the user's FREQUENCY POLL RATE.  uRadioPolling overwrites pollingInterval with
+// that rate (default 10ms) for any serial radio with honorsFreqPollRate = True,
+// which on the bench produced a poll every ~20ms -- ~48 cycles/sec x 4 commands,
+// the same flooding the legacy Kenwood poller did.
+//
+// The flag is the documented opt-out (the Icom uses it for the same reason), so
+// assert it rather than the interval alone: setting pollingInterval without
+// clearing the flag looks correct in the constructor and is silently undone at
+// connect.
+procedure TFlexRegistryTests.Test_FlexCATKeepsItsOwnPollCadence;
+var
+   r: TFactoryRadioBase;
+begin
+   BeginTest('serial Flex keeps its own poll cadence, not FREQUENCY POLL RATE');
+   r := uRadioRegistry.CreateInstanceForLink(FLEX, rlSerial);
+   CheckTrue(r <> nil, 'serial Flex must be constructible');
+   try
+      CheckFalse(r.honorsFreqPollRate,
+                 'TFlexCAT must not honour FREQUENCY POLL RATE -- its poll is a 4-command state query');
+      CheckTrue(r.pollingInterval >= 100,
+                Format('poll interval %d ms is too aggressive for a 4-command cycle', [r.pollingInterval]));
+   finally
+      r.Free;
+   end;
+end;
+
 procedure TFlexRegistryTests.RunAllTests;
 begin
    Test_FlexSerialBuildsCATDriver;
@@ -165,6 +193,7 @@ begin
    Test_FlexIsOneEntrySupportingBothLinks;
    Test_SingleCtorRadioIsSameClassOnBothLinks;
    Test_EveryRegisteredRadioRunsTheBaseConstructor;
+   Test_FlexCATKeepsItsOwnPollCadence;
 end;
 
 end.
