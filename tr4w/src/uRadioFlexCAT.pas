@@ -109,6 +109,7 @@ type
   TFlexCAT = class(TFactoryRadioBase)
   protected
     logger: TLogLogger;
+    FCWBuffer: string;   // network (cwx) path only -- on CAT, LOGRADIO keys via KY
     function  ModeNumToMode(const s: string): TRadioMode;
     function  ModeToFlexNum(mode: TRadioMode): string;
     function  OffsetToFlex(hz: integer): string;
@@ -134,6 +135,30 @@ type
     procedure XITClear(whichVFO: TVFO); override;
     procedure SetRITFreq(whichVFO: TVFO; hz: integer); override;
     procedure SetXITFreq(whichVFO: TVFO; hz: integer); override;
+
+    // ---- remaining TFactoryRadioBase abstracts -----------------------------
+    // These are ABSTRACT in the base, so leaving any of them out is not a
+    // missing feature -- it is an EAbstractError the moment TR4W calls it.
+    // That is exactly what happened the first time this class was instantiated:
+    // LogCW.SetUpToSendOnActiveRadio -> FlushCWBufferAndClearPTT -> StopCW
+    // killed the program at startup.  Every abstract is therefore implemented
+    // here, even where the honest implementation is "this protocol has no such
+    // command".
+    procedure SendToRadio(whichVFO: TVFO; sCmd: string; sData: string); overload; override;
+    procedure BufferCW(cwChars: string); override;
+    procedure SendCW; override;
+    procedure StopCW; override;
+    procedure SetCWSpeed(speed: integer); override;
+    function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; override;
+    procedure RITBumpDown; override;
+    procedure RITBumpUp; override;
+    procedure SetBand(band: TRadioBand; vfo: TVFO = nrVFOA); override;
+    function  ToggleBand(vfo: TVFO = nrVFOA): TRadioBand; override;
+    procedure SetFilter(filter: TRadioFilter; vfo: TVFO = nrVFOA); override;
+    function  SetFilterHz(hz: integer; vfo: TVFO = nrVFOA): integer; override;
+    function  MemoryKeyer(mem: integer): boolean; override;
+    procedure VFOBumpDown(whichVFO: TVFO); override;
+    procedure VFOBumpUp(whichVFO: TVFO); override;
   end;
 
 implementation
@@ -155,9 +180,15 @@ begin
    //   rcReadSplit    -- ZZIF P12
    //   rcReadTXStatus -- ZZIF P8 (MOX)
    //   rcReadRIT      -- ZZRT/ZZXS states AND ZZRG/ZZXG offsets, separately
+   //   rcCWByCAT      -- KY, the Kenwood-subset CW command, which SmartSDR CAT
+   //                     accepts on this port.  LOGRADIO already keys this radio
+   //                     that way (its KY branch covers FLEX, padding to 24 when
+   //                     the port is not Network), so the capability must be
+   //                     declared or the driver would contradict what TR4W does.
    // NOT rcSharedRITXITOffset: this radio has INDEPENDENT offset registers, which
    // is the whole reason for reading ZZRG and ZZXG rather than trusting ZZIF P3.
-   FCapabilities.Flags := [rcReadVFOB, rcReadSplit, rcReadTXStatus, rcReadRIT];
+   FCapabilities.Flags := [rcReadVFOB, rcReadSplit, rcReadTXStatus, rcReadRIT,
+                           rcCWByCAT];
    FCapabilities.CWSpeedMin := 5;
    FCapabilities.CWSpeedMax := 60;
 end;
@@ -480,6 +511,153 @@ end;
 procedure TFlexCAT.SetXITFreq(whichVFO: TVFO; hz: integer);
 begin
    Self.SendToRadio('ZZXG' + OffsetToFlex(hz) + ';');
+end;
+
+// ---------------------------------------------------------------------------
+// Remaining TFactoryRadioBase abstracts.
+//
+// GROUNDING.  Only commands the SmartSDR CAT User Guide actually NAMES are sent.
+// Where the ZZ set has no such command, the method logs and does nothing rather
+// than emit an invented one -- an undefined command is answered with "?;" at
+// best, and at worst does something unintended to the radio.
+// ---------------------------------------------------------------------------
+
+procedure TFlexCAT.SendToRadio(whichVFO: TVFO; sCmd: string; sData: string);
+begin
+   // Same shape as the Kenwood serial base: CAT commands are '<cmd><data>;'.
+   Self.SendToRadio(Format('%s%s;', [sCmd, sData]));
+end;
+
+// ---- CW ---------------------------------------------------------------------
+// THIS RADIO DOES SUPPORT CW BY CAT.  SmartSDR CAT accepts the Kenwood KY
+// command on the CAT port, and TR4W already drives it: LOGRADIO puts FLEX in the
+// Kenwood/Elecraft KY branch (maxLen 24, padded when the port is NOT Network)
+// and writes the formatted 'KY...' string through tFactoryObject.SendToRadio.
+// So on serial, CW keying flows through SendToRadio -- NOT through the three
+// methods below.
+//
+// BufferCW/SendCW are the NETWORK path's shape (TFlexAPI uses the cwx API, which
+// has no length limit and needs no padding -- LOGRADIO 2588-2594 delegates to
+// them only when tCATPortType = Network).  On the CAT port they are placeholders,
+// consistent with TKenwoodSerial, pending the CW Keyer Factory that will own CW
+// keying as its own domain rather than folding it into radio control.
+//
+// StopCW is the one that must exist regardless: it is called during radio setup
+// via LogCW.SetUpToSendOnActiveRadio -> FlushCWBufferAndClearPTT, before any CW
+// is sent.  Leaving it abstract killed the program at startup.
+
+procedure TFlexCAT.BufferCW(cwChars: string);
+begin
+   FCWBuffer := FCWBuffer + cwChars;
+end;
+
+procedure TFlexCAT.SendCW;
+begin
+   // On the CAT port LOGRADIO formats and sends KY itself; if anything does route
+   // here, say so rather than silently dropping the text.
+   if FCWBuffer <> '' then
+      begin
+      logger.Debug('[FlexCAT.SendCW] CW on the CAT port is keyed via LOGRADIO''s KY path, not here; %d char(s) not sent',
+                   [Length(FCWBuffer)]);
+      FCWBuffer := '';
+      end;
+end;
+
+procedure TFlexCAT.StopCW;
+begin
+   FCWBuffer := '';
+end;
+
+procedure TFlexCAT.SetCWSpeed(speed: integer);
+begin
+   // KS is a Kenwood-subset command and FLEX is rt:rtKenwood in LOGRADIO's radio
+   // table, so SetRadioCWSpeed already sends 'KS%003u;' to this radio today.
+   // Same command, same 3-digit form.
+   if (speed >= 4) and (speed <= 60) then
+      begin
+      Self.localCWSpeed := speed;
+      Self.SendToRadio(Format('KS%.3d;', [speed]));
+      end
+   else
+      begin
+      logger.Debug('[FlexCAT.SetCWSpeed] %d WPM out of range 4-60; ignoring', [speed]);
+      end;
+end;
+
+function TFlexCAT.MemoryKeyer(mem: integer): boolean;
+begin
+   // True = "error / unsupported", the convention used across the factory.
+   Result := True;
+end;
+
+// ---- mode / band ------------------------------------------------------------
+
+
+function TFlexCAT.ToggleMode(vfo: TVFO = nrVFOA): TRadioMode;
+begin
+   // No toggle command; a caller that wants a specific mode uses SetMode.
+   Result := Self.vfo[vfo].mode;
+end;
+
+procedure TFlexCAT.SetBand(band: TRadioBand; vfo: TVFO = nrVFOA);
+var
+   freq: LongInt;
+begin
+   // No band command in the ZZ set -- change band by tuning, as the Kenwood
+   // serial base does.
+   freq := BandToFreq(band);
+   if freq > 0 then
+      begin
+      Self.SetFrequency(freq, vfo, Self.vfo[vfo].mode);
+      end;
+end;
+
+function TFlexCAT.ToggleBand(vfo: TVFO = nrVFOA): TRadioBand;
+begin
+   Result := Self.vfo[vfo].band;
+end;
+
+// ---- filter -----------------------------------------------------------------
+// ZZFI (VFO A) and ZZFJ (VFO B) are named in the guide (3.3.9/3.3.10), but this
+// copy carries no parameter detail and the filter codes are radio-dependent.
+// Left as a no-op until the encoding can be grounded rather than guessed.
+
+procedure TFlexCAT.SetFilter(filter: TRadioFilter; vfo: TVFO = nrVFOA);
+begin
+   logger.Debug('[FlexCAT.SetFilter] ZZFI/ZZFJ parameter encoding not yet grounded; ignoring');
+end;
+
+function TFlexCAT.SetFilterHz(hz: integer; vfo: TVFO = nrVFOA): integer;
+begin
+   Result := 0;   // 0 = not supported
+end;
+
+// ---- RIT / VFO nudges -------------------------------------------------------
+
+procedure TFlexCAT.RITBumpDown;
+begin
+   // ZZRD -- "Decrement the RIT Frequency" (guide 3.3.29).  Sent without a
+   // parameter, matching the Kenwood RD;/RU; usage this replaces.  UNVERIFIED:
+   // the guide names the command but this copy does not give its parameter form.
+   Self.SendToRadio('ZZRD;');
+end;
+
+procedure TFlexCAT.RITBumpUp;
+begin
+   // ZZRU -- "Increment VFO A RIT Frequency" (guide 3.3.32).  Same caveat.
+   Self.SendToRadio('ZZRU;');
+end;
+
+procedure TFlexCAT.VFOBumpDown(whichVFO: TVFO);
+begin
+   // The ZZ set has no VFO up/down command.  The Kenwood subset's UP;/DN; might
+   // work here, but nothing in the guide says so -- not guessed.
+   logger.Debug('[FlexCAT.VFOBumpDown] No VFO step command in the ZZ set; ignoring');
+end;
+
+procedure TFlexCAT.VFOBumpUp(whichVFO: TVFO);
+begin
+   logger.Debug('[FlexCAT.VFOBumpUp] No VFO step command in the ZZ set; ignoring');
 end;
 
 // THIS UNIT REGISTERS NOTHING -- it is a protocol driver, not a model.
