@@ -182,6 +182,18 @@ begin
    requiresPolling := True;
    autoUpdateCommand := 'AI2;';
    pollingInterval := 5000;
+
+   // MUST be False, and specifically because pollingInterval above is a
+   // KEEPALIVE, not a data poll -- AI2 pushes the actual state.
+   //
+   // uRadioPolling overwrites pollingInterval with the user's FREQUENCY POLL
+   // RATE (default 10ms) for any SERIAL radio that leaves this True.  This radio
+   // registers [rlSerial, rlNetwork], so on a COM port the 5-second heartbeat
+   // silently became a 10ms one -- 500x the intended rate, sending PS; ~100
+   // times a second for a reply that is discarded.  The network path was never
+   // affected (the override only applies when serialPort <> NoPort), which is
+   // why the LAN bench never showed it.
+   honorsFreqPollRate := False;
 end;
 
 Destructor TKenwoodTS890Radio.Destroy;
