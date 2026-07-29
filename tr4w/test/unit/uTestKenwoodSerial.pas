@@ -38,6 +38,8 @@ type
       procedure Test_SplitOffSendsFRThenFT;
       procedure Test_SplitTracksActiveVFO;
       procedure Test_ModelsShareTheBaseSplit;
+      procedure Test_NoVFOSeedFlipWhileSplitIsOn;
+      procedure Test_VFOSeedFlipHappensWhenSplitIsOff;
    public
       procedure RunAllTests; override;
    end;
@@ -49,6 +51,11 @@ type
    public
       sent: string;
       procedure SendToRadio(s: string); overload; override;
+      // Connect arms the one-shot VFO-mode seed, but Connect needs a real port.
+      // Arm it directly so the seeding path is actually reachable in a test --
+      // without this both seed tests pass VACUOUSLY, which is exactly what
+      // happened on the first run.
+      procedure ArmVFOModeSeed;
    end;
 
    TTS950Probe = class(TKenwoodTS950Radio)
@@ -60,6 +67,11 @@ type
 procedure TKenwoodProbe.SendToRadio(s: string);
 begin
    sent := sent + s;
+end;
+
+procedure TKenwoodProbe.ArmVFOModeSeed;
+begin
+   FSeedOtherVFOMode := True;
 end;
 
 procedure TTS950Probe.SendToRadio(s: string);
@@ -136,12 +148,62 @@ begin
    end;
 end;
 
+// Real IF responses captured from NY4I's TS-570 (tr4w.log, 2026-07-29 12:35:13).
+// 37-character bodies -- the terminator is stripped before the driver sees them.
+// They differ in ONE character, at L-4, which is the split field.
+const
+   IF_SPLIT_ON  = 'IF00021300000     -051000 0002001008 ';
+   IF_SPLIT_OFF = 'IF00021300000     -051000 0002000008 ';
+
+// A bare FR CANCELS SPLIT on this radio. The driver used to seed the other VFO's
+// mode with FR1;IF;FR0;IF; at connect, which silently dropped the operator's
+// split seconds after startup -- observed on the bench, and visible in that log
+// as the split field going 1 -> 0 on the IF immediately after the flip.
+//
+// LOGRADIO never sends a bare FR: every occurrence pairs it with an FT in the
+// same write, so split is always re-asserted. The flip had no legacy precedent.
+procedure TKenwoodSerialTests.Test_NoVFOSeedFlipWhileSplitIsOn;
+var
+   r: TKenwoodProbe;
+begin
+   BeginTest('no FR seed flip while split is on -- a bare FR cancels split');
+   r := TKenwoodProbe.Create;
+   try
+      r.ArmVFOModeSeed;
+      r.ProcessMsg(IF_SPLIT_ON);
+      CheckEquals('', r.sent,
+                  'must send NOTHING: an FR flip here cancels the operator''s split');
+   finally
+      r.Free;
+   end;
+end;
+
+// Paired opposite. Without this the test above would pass if the seeding were
+// deleted outright, or never armed -- neither of which is the intended fix.
+procedure TKenwoodSerialTests.Test_VFOSeedFlipHappensWhenSplitIsOff;
+var
+   r: TKenwoodProbe;
+begin
+   BeginTest('the FR seed flip still runs when split is off');
+   r := TKenwoodProbe.Create;
+   try
+      r.ArmVFOModeSeed;
+      r.ProcessMsg(IF_SPLIT_OFF);
+      CheckEquals('FR1;IF;FR0;IF;', r.sent,
+                  'with split off the flip is safe and should still seed VFO B''s mode');
+   finally
+      r.Free;
+   end;
+end;
+
 procedure TKenwoodSerialTests.RunAllTests;
 begin
    Test_SplitOnSendsFRThenFT;
    Test_SplitOffSendsFRThenFT;
    Test_SplitTracksActiveVFO;
    Test_ModelsShareTheBaseSplit;
+   Test_NoVFOSeedFlipWhileSplitIsOn;
+   Test_VFOSeedFlipHappensWhenSplitIsOff;
 end;
 
 end.

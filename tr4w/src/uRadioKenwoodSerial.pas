@@ -265,16 +265,43 @@ begin
   // learn the OTHER VFO's mode we briefly flip RX to it (its IF then carries its
   // mode, filed by ParseIF's own FR field) and immediately restore the operator's
   // VFO.  Runs once per connect; the flipped-to IF does not re-arm this.
+  //
+  // NEVER WHILE SPLIT IS ON.  On this radio a bare FR CANCELS SPLIT.  Observed on
+  // NY4I's TS-570 (tr4w.log 2026-07-29 12:35:13): the radio was in split, TR4W
+  // connected, sent FR1;IF;FR0;IF; and the very next IF came back with the split
+  // field (L-4) flipped from '1' to '0'.  The operator watched split drop off the
+  // rig seconds after starting the program.
+  //
+  // That is a migration regression, not inherited behaviour: LOGRADIO NEVER sends
+  // a bare FR.  Every occurrence there pairs it with an FT in the same write --
+  // 'FR0;FT1;', 'FR0;FT0;', 'FR0;FT3;', 'FR0;FT2;' (LOGRADIO 2069/2101/2139/2165)
+  // -- so the split state is always re-asserted by the same command.  This
+  // standalone flip had no such precedent.
+  //
+  // Destroying an operator's split to populate a display field is not a trade
+  // worth making, so the seeding is simply skipped while split is on.  The cost
+  // is VFO B's mode label, which the legacy path never had either.
   if FSeedOtherVFOMode then
     begin
-    FSeedOtherVFOMode := False;
-    if activeVFO = nrVFOA then
+    if Self.localSplitEnabled then
       begin
-      Self.SendToRadio('FR1;IF;FR0;IF;');   // read VFO B, restore VFO A
+      // Do not re-arm: retrying on a later poll would just wait for the operator
+      // to drop split and then yank it again at a random moment.
+      FSeedOtherVFOMode := False;
+      logger.Debug('[%s.ParseIF] Split is on -- skipping the VFO-mode seed, ' +
+                   'because a bare FR cancels split on this radio', [Self.rigLabel]);
       end
     else
       begin
-      Self.SendToRadio('FR0;IF;FR1;IF;');   // read VFO A, restore VFO B
+      FSeedOtherVFOMode := False;
+      if activeVFO = nrVFOA then
+        begin
+        Self.SendToRadio('FR1;IF;FR0;IF;');   // read VFO B, restore VFO A
+        end
+      else
+        begin
+        Self.SendToRadio('FR0;IF;FR1;IF;');   // read VFO A, restore VFO B
+        end;
       end;
     end;
 end;
