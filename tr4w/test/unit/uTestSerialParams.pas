@@ -41,6 +41,8 @@ type
       procedure Test_OmniVIDivergesPerItsManual;
       procedure Test_EveryRadioStatesEightDataBitsAndNoParity;
       procedure Test_BaudIsAlwaysAValidRate;
+      procedure Test_SerialFormatRoundTrip;
+      procedure Test_SerialFormatRejectsGarbage;
    public
       procedure RunAllTests; override;
    end;
@@ -164,12 +166,73 @@ begin
    CheckEquals('', bad, 'radios with an unselectable baud rate: ' + bad);
 end;
 
+// Every one of the 12 frames the dialog offers must survive
+// string -> fields -> string unchanged, and lower case must parse (the config
+// file is hand-editable).
+procedure TSerialParamsTests.Test_SerialFormatRoundTrip;
+const
+   Frames: array[0..11] of string =
+      ('8N1', '8N2', '8E1', '8E2', '8O1', '8O2',
+       '7N1', '7N2', '7E1', '7E2', '7O1', '7O2');
+var
+   i: integer;
+   db, par, sb: Byte;
+   bad: string;
+begin
+   BeginTest('every dialog frame string round-trips through parse/format');
+   bad := '';
+   for i := Low(Frames) to High(Frames) do
+      begin
+      if not TryParseSerialFormat(Frames[i], db, par, sb) then
+         begin
+         bad := bad + Frames[i] + ' (no parse); ';
+         Continue;
+         end;
+      if SerialFormatToString(db, par, sb) <> Frames[i] then
+         begin
+         bad := bad + Format('%s -> %s; ', [Frames[i], SerialFormatToString(db, par, sb)]);
+         end;
+      // Lower case parses to the same fields.
+      if not TryParseSerialFormat(LowerCase(Frames[i]), db, par, sb) then
+         begin
+         bad := bad + LowerCase(Frames[i]) + ' (lowercase no parse); ';
+         end;
+      end;
+   CheckEquals('', bad, bad);
+end;
+
+procedure TSerialParamsTests.Test_SerialFormatRejectsGarbage;
+const
+   Garbage: array[0..6] of string =
+      ('', '8N', '8N21', '9N1', '8X1', '8N3', '6E1');
+var
+   i: integer;
+   db, par, sb: Byte;
+   bad: string;
+begin
+   // An invalid 'RADIO n SERIAL FORMAT' must FAIL to parse, so the connect
+   // path falls back to the radio's registered defaults instead of opening the
+   // port with a half-parsed frame.
+   BeginTest('invalid serial format strings are rejected');
+   bad := '';
+   for i := Low(Garbage) to High(Garbage) do
+      begin
+      if TryParseSerialFormat(Garbage[i], db, par, sb) then
+         begin
+         bad := bad + '''' + Garbage[i] + ''' accepted; ';
+         end;
+      end;
+   CheckEquals('', bad, bad);
+end;
+
 procedure TSerialParamsTests.RunAllTests;
 begin
    Test_StopBitsMatchTheLegacyRule;
    Test_OmniVIDivergesPerItsManual;
    Test_EveryRadioStatesEightDataBitsAndNoParity;
    Test_BaudIsAlwaysAValidRate;
+   Test_SerialFormatRoundTrip;
+   Test_SerialFormatRejectsGarbage;
 end;
 
 end.

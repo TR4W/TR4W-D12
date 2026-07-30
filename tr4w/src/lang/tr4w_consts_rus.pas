@@ -36,6 +36,7 @@ const
   TC_RADIO2                             = 'Радио 2';
 
   TC_DISBALE_CIV                        = 'Отключите режим "CI-V Transceive" в трансивере ICOM.';
+  TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
 
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Введите свой федеральный округ, если вы в Британской Колумбии, или свой штат/провинцию';  // 4.97.6

@@ -217,6 +217,17 @@ function IsHamLibOnly(model: InterfacedRadioType): Boolean;
 // here; callers that care about those must handle '' explicitly.
 function ManufacturerOf(model: InterfacedRadioType): string;
 
+// ---- SERIAL FRAME FORMAT ('8N2') -------------------------------------------
+// The compact terminal-program notation for data bits / parity / stop bits:
+// digit 7 or 8, parity letter N/O/E, digit 1 or 2.  Used by the radio dialog's
+// DATA/PARITY/STOP combo and the 'RADIO ONE/TWO SERIAL FORMAT' config command.
+// The parity byte is the Win32 value (PARITY_NONE/ODD/EVEN above) -- callers on
+// the legacy path must convert to/from Tree.ParityType, whose ordinals differ
+// (legacy 1 = even, 2 = odd; Win32 1 = odd, 2 = even).
+function SerialFormatToString(dataBits, parity, stopBits: Byte): string;
+function TryParseSerialFormat(const s: string;
+                              out dataBits, parity, stopBits: Byte): Boolean;
+
 // Id-facing lookups (used by the drop-down + config).
 function IsRegisteredId(const id: string): Boolean;
 function SupportsSerialId(const id: string): Boolean;
@@ -526,6 +537,52 @@ begin
          Result := reg.displayName;
          end;
       end;
+end;
+
+function SerialFormatToString(dataBits, parity, stopBits: Byte): string;
+const
+   ParityLetter: array[PARITY_NONE..PARITY_EVEN] of Char = ('N', 'O', 'E');
+begin
+   if (dataBits in [7, 8]) and (parity <= PARITY_EVEN) and (stopBits in [1, 2]) then
+      begin
+      Result := Chr(Ord('0') + dataBits) + ParityLetter[parity] +
+                Chr(Ord('0') + stopBits);
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
+function TryParseSerialFormat(const s: string;
+                              out dataBits, parity, stopBits: Byte): Boolean;
+begin
+   Result := False;
+   dataBits := 0;
+   parity := 0;
+   stopBits := 0;
+   if Length(s) <> 3 then
+      begin
+      Exit;
+      end;
+   if (s[1] <> '7') and (s[1] <> '8') then
+      begin
+      Exit;
+      end;
+   if (s[3] <> '1') and (s[3] <> '2') then
+      begin
+      Exit;
+      end;
+   case UpCase(s[2]) of
+      'N': parity := PARITY_NONE;
+      'O': parity := PARITY_ODD;
+      'E': parity := PARITY_EVEN;
+   else
+      Exit;
+   end;
+   dataBits := Ord(s[1]) - Ord('0');
+   stopBits := Ord(s[3]) - Ord('0');
+   Result := True;
 end;
 
 function RegisteredNetworkPort(model: InterfacedRadioType): integer;

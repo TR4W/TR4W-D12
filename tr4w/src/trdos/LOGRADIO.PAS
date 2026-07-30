@@ -247,6 +247,8 @@ type
       RadioStopBits:   integer;
       RadioKeyerStopBits: integer;
       RadioParity:     ParityType;
+      SerialFormat:    Str50;   // 'RADIO n SERIAL FORMAT' ('8N2'); '' = use the
+                                // radio's registered defaults (SerialParamsFor)
       RadioTCPPort:    integer;
       RadioTimeout:    integer;
       ReceiverAddress: integer; { Used for Icom interfaces }
@@ -316,6 +318,7 @@ type
       function ConvertBCDStringToFreq(BCDString: Str20): longint;
 
       procedure FreqToBCD(Freq: longint; Swap: boolean; OpCode: byte);
+      procedure ResolveSerialFrameSettings;
       procedure CheckAndInitializePorts_ForThisRadio;
       function WriteToCATPort(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
       function WritePollRequest(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
@@ -831,6 +834,42 @@ uses
    uRadioHamLibDirect,
    uRadioIcomBase,
    uRadioKenwoodLAN;  // Issue #436 -- TKenwoodLAN base (TS-890S / TS-990S)
+
+// ---------------------------------------------------------------------------
+// Parity ordinal conversion.  Tree.ParityType and the Win32 DCB (which the
+// registry's TSerialParams.parity and the factory's serialParity use) disagree
+// on the middle ordinals:
+//
+//     Tree.ParityType:  tNoParity = 0,  EvenParity = 1,  OddParity = 2
+//     Win32 / registry:  NOPARITY = 0,  ODDPARITY  = 1,  EVENPARITY = 2
+//
+// Passing Ord() straight across therefore SWAPS odd and even.  Unobservable
+// for as long as every radio ran no-parity, but 'RADIO n SERIAL FORMAT' makes
+// parity configurable, so the conversion is now explicit in both directions.
+// ---------------------------------------------------------------------------
+// NOTE the Tree. qualification throughout: the Windows unit declares ODDPARITY
+// and EVENPARITY as INTEGER constants (1 and 2), and Pascal's case-insensitive
+// scope resolution makes a bare OddParity/EvenParity here resolve to THOSE, not
+// to Tree.ParityType's members -- E2010 at best, a silent wrong ordinal at worst.
+function Win32ParityToParityType(w: Byte): ParityType;
+begin
+   case w of
+      uRadioRegistry.PARITY_ODD:  Result := Tree.OddParity;
+      uRadioRegistry.PARITY_EVEN: Result := Tree.EvenParity;
+   else
+      Result := Tree.tNoParity;
+   end;
+end;
+
+function ParityTypeToWin32(p: ParityType): Byte;
+begin
+   case p of
+      Tree.OddParity:  Result := uRadioRegistry.PARITY_ODD;
+      Tree.EvenParity: Result := uRadioRegistry.PARITY_EVEN;
+   else
+      Result := uRadioRegistry.PARITY_NONE;
+   end;
+end;
 
 
 
@@ -1564,6 +1603,52 @@ begin
 {$IFEND}
 end;
 
+// Effective data bits / parity / stop bits for this connection, in priority:
+//   1. 'RADIO n SERIAL FORMAT' (e.g. 8N2) when configured and valid;
+//   2. else the radio's registered defaults (uRadioRegistry.SerialParamsFor) --
+//      the same values the dialog shows when the model is picked;
+//   3. else (an unregistered, HamLib-only model) 8-N-2 -- exactly what the old
+//      hardcoded test produced for those models.
+//
+// This replaces `if RadioModel in [IC78..IC9700, FT100, Orion] then 1 else 2`,
+// which ran on EVERY connect and so silently clobbered any configured stop
+// bits -- and disagreed with the radio's own documentation in one case: the
+// Omni VI (Model 563 manual section 5.2: 1 stop bit) sits outside the range
+// and was forced to 2.  The registered default now takes effect.
+// The BAUD RATE is deliberately not touched here: it has been config-driven
+// ('RADIO n BAUD RATE') all along.
+procedure RadioObject.ResolveSerialFrameSettings;
+var
+   db, par, sb: Byte;
+   sp: uRadioRegistry.TSerialParams;
+begin
+   if uRadioRegistry.TryParseSerialFormat(string(SerialFormat), db, par, sb) then
+      begin
+      RadioNumberBits := db;
+      RadioParity     := Win32ParityToParityType(par);
+      RadioStopBits   := sb;
+      Exit;
+      end;
+   if SerialFormat <> '' then
+      begin
+      logger.Warn('[%s] SERIAL FORMAT ''%s'' is not valid (expected e.g. 8N2) -- using the radio''s defaults',
+         [RadioName, SerialFormat]);
+      end;
+   if uRadioRegistry.IsRegistered(RadioModel) then
+      begin
+      sp := uRadioRegistry.SerialParamsFor(RadioModel);
+      RadioNumberBits := sp.dataBits;
+      RadioParity     := Win32ParityToParityType(sp.parity);
+      RadioStopBits   := sp.stopBits;
+      end
+   else
+      begin
+      RadioNumberBits := 8;
+      RadioParity     := tNoParity;
+      RadioStopBits   := 2;
+      end;
+end;
+
 { The initializtion of BeginPolling is in this procedure so if we are not using serial ports, it has to be setup somewhere else.}
 procedure RadioObject.CheckAndInitializePorts_ForThisRadio;
 begin
@@ -1575,14 +1660,7 @@ begin
       begin
       Exit;
       end;
-   if RadioModel in [IC78..IC9700, FT100, Orion] then
-      begin
-      RadioStopBits := 1;
-      end
-   else
-      begin
-      RadioStopBits := 2;
-      end;
+   ResolveSerialFrameSettings;
    SetUpRadioInterface;
 
    if (tCATPortHandle <> INVALID_HANDLE_VALUE) or
@@ -2938,7 +3016,7 @@ begin
             RadioBaudRate,
             RadioNumberBits,
             RadioStopBits,
-            Ord(RadioParity),
+            ParityTypeToWin32(RadioParity),   // serialParity is the Win32 value; Ord() would swap odd/even
             tr4w_cat_rts_state = RtsDtr_ON,
             tr4w_cat_dtr_state = RtsDtr_ON
          );
@@ -2986,7 +3064,7 @@ begin
             RadioBaudRate,
             RadioNumberBits,
             RadioStopBits,
-            Ord(RadioParity),
+            ParityTypeToWin32(RadioParity),   // serialParity is the Win32 value; Ord() would swap odd/even
             tr4w_cat_rts_state = RtsDtr_ON,
             tr4w_cat_dtr_state = RtsDtr_ON
          );

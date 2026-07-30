@@ -28,6 +28,7 @@
   TC_RADIO2                             = 'Radio 2';
 
   TC_DISBALE_CIV                        = 'Disable "CI-V Transceive" Mode in deiner ICOM Rig. Im Benutzerhandbuch zu deinem Transceiver nachsehen.';
+  TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
 
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Gib deinen Bundesbezirk ein, wenn du in British Columbia bist, oder deinen Staat/Provinz';  // 4.97.6

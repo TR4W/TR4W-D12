@@ -27,6 +27,7 @@ const
   TC_RADIO2                             = 'Radio 2';
 
   TC_DISBALE_CIV                        = 'Disable "CI-V Transceive" mode in your ICOM rig.';
+  TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
 
   {MAIN}
   TC_YOU_ARE_USING_THE_LATEST_VERSION   = 'U¿ywasz najnowszej wersji';
