@@ -10,7 +10,7 @@ if errorlevel 1 goto error
 echo.
 echo === First unit compiled successfully ===
 echo.
-"c:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" src\uRadioHamLibDirect.pas -$D+ -$L+ -$Y+ -NC:\Temp /U%LIB%;c:\tr4w\tr4w\src /I%LIB%;c:\tr4w\tr4w\src /E%EXE%
+"c:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" src\radioFactory\uRadioHamLibDirect.pas -$D+ -$L+ -$Y+ -NC:\Temp /U%LIB%;c:\tr4w\tr4w\src /I%LIB%;c:\tr4w\tr4w\src /E%EXE%
 if errorlevel 1 goto error
 echo.
 echo === Second unit compiled successfully ===
