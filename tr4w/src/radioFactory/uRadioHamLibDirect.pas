@@ -628,22 +628,24 @@ begin
           end;
        end;
 
-    // Probe whether VFO B (or Sub) can be read directly without a VFO swap.
-    // On radios with targetable VFO support HamLib routes the query without
-    // touching the front-panel selection; on others it physically swaps VFOs,
-    // causing display flicker. If the read succeeds here we know it is safe
-    // to poll VFO B unconditionally.
-    err := rig_get_freq(FRig, TR4WVFOToHamLibVFO(nrVFOB), freq);
-    if err = RIG_OK then
+    // Whether VFO B (or Sub) can be read WITHOUT a physical VFO swap comes from
+    // the backend's own capability table (caps->targetable_vfo), NOT from a
+    // probe.  An earlier version probed with rig_get_freq(RIG_VFO_B) and took
+    // success as proof -- but on a non-targetable rig HamLib EMULATES the read
+    // by physically swapping VFOs, so the probe always "succeeded" and the
+    // per-cycle VFO B poll then flipped the rig's front panel once a second.
+    // Bench symptom (NY4I, IC-718): radio display switching A/B continuously,
+    // program band flapping between the two VFOs' bands.
+    if (rig_get_caps_int(HamLibModelID, RIG_CAPS_TARGETABLE_VFO)
+        and RIG_TARGETABLE_FREQ) <> 0 then
        begin
        FHasTargetableVFO := True;
-       logger.Info('[THamLibDirect.Initialize] VFO B targetable — will poll VFO B every cycle (freq=%.0f Hz)', [freq]);
+       logger.Info('[THamLibDirect.Initialize] Backend declares targetable VFO freq — will poll VFO B every cycle');
        end
     else
        begin
        FHasTargetableVFO := False;
-       logger.Warn('[THamLibDirect.Initialize] VFO B not targetable (%s) — will only poll VFO B when split is active',
-                   [RigErrorToString(err)]);
+       logger.Info('[THamLibDirect.Initialize] Backend has no targetable VFO — will only poll VFO B when split is active (a targeted read would physically swap VFOs)');
        end;
   except
     on E: Exception do

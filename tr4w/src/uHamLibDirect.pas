@@ -138,6 +138,15 @@ type
 -----------------------------------------------------------------------------}
 
 const
+  // enum rig_caps_int_e selectors for rig_get_caps_int (hamlib 4.4+)
+  RIG_CAPS_TARGETABLE_VFO = 0;
+
+  // caps->targetable_vfo bits (rig.h): which operations HamLib can address to
+  // a specific VFO WITHOUT physically switching the rig's front-panel selection.
+  RIG_TARGETABLE_NONE = 0;
+  RIG_TARGETABLE_FREQ = 1;       // (1 shl 0)
+
+const
   RIG_VFO_NONE     = $00000000;  // VFO unknown
   RIG_VFO_A        = $00000001;  // VFO A
   RIG_VFO_B        = $00000002;  // VFO B
@@ -293,6 +302,13 @@ function msvcrt_fopen(filename: PAnsiChar; mode: PAnsiChar): Pointer; cdecl; ext
 
 // Initialization and cleanup
 function rig_init(rig_model: Integer): PRIG; cdecl; external HAMLIB_DLL;
+// Model-level capability lookup (no open rig needed).  With
+// RIG_CAPS_TARGETABLE_VFO it returns the backend's caps->targetable_vfo
+// bitmask -- the AUTHORITATIVE answer to "can VFO B be read without physically
+// switching the rig".  Probing with rig_get_freq(RIG_VFO_B) cannot answer
+// that: on a non-targetable rig HamLib EMULATES the read by swapping VFOs, so
+// the probe succeeds and the swap is exactly the side effect being probed for.
+function rig_get_caps_int(rig_model: Integer; rig_caps: Integer): UInt64; cdecl; external HAMLIB_DLL;
 function rig_open(rig: PRIG): Integer; cdecl; external HAMLIB_DLL;
 function rig_close(rig: PRIG): Integer; cdecl; external HAMLIB_DLL;
 function rig_cleanup(rig: PRIG): Integer; cdecl; external HAMLIB_DLL;

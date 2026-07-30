@@ -1441,7 +1441,15 @@ begin
         Windows.SetDlgItemTextW(hwnddlg, 133, PChar(CATWTR^.NetworkPassword));
         hamLibCheckBoxWind := GetDlgItem(hwnddlg, 1000);
 
-        if uRadioRegistry.IsHamLibOnly(RadioType) then
+        // Test the CONFIGURED radio -- NOT the RadioType variable, which at this
+        // point is a STALE LOOP COUNTER: the combo-population loop above leaves
+        // it at High(InterfacedRadioType) = HAMLIBANY, which is HamLib-only, so
+        // the old test was true for EVERY radio.  Bench symptom (NY4I, IC-718):
+        // the checkbox came up force-checked and greyed for a native radio, and
+        // Apply then persisted USE HAMLIB=TRUE -- silently routing a native
+        // radio through HamLib (whose emulated VFO-B poll flips the rig's VFO
+        // selection once a second on non-targetable rigs).
+        if uRadioRegistry.IsHamLibOnly(CATWTR^.RadioModel) then
            begin
            if not CATWTR^.UseHamLib then
               begin
@@ -1571,6 +1579,21 @@ begin
                begin
                tCB_SETCURSEL(hwnddlg, 128, 2);   // 4800 default for a string-id factory radio
                SelectSerialFormat(hwnddlg, '8N2');
+               end;
+            // The USE HAMLIB checkbox follows the selected model: forced ON and
+            // greyed for a HamLib-only model (unchecking it would leave the
+            // operator with no radio control at all), operator-controlled for
+            // everything else -- including recovering from a greyed state after
+            // switching AWAY from a HamLib-only model.
+            if (i < Ord(High(InterfacedRadioType)) + 1) and
+               uRadioRegistry.IsHamLibOnly(InterfacedRadioType(i)) then
+               begin
+               Windows.SendDlgItemMessage(hwnddlg, 1000, BM_SETCHECK, BST_CHECKED, 0);
+               EnableWindowFalse(hwnddlg, 1000);
+               end
+            else
+               begin
+               EnableWindowTrue(hwnddlg, 1000);
                end;
             UpdateNetworkCredentialsVisibility;
             ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port when the radio type changes
