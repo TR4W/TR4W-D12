@@ -76,11 +76,11 @@ unit uRadioYaesuFT847;
 
 interface
 
-uses uFactoryRadioBase, uRadioYaesuBinary, uRadioYaesuFT817, uRadioRegistry, VC,
+uses uFactoryRadioBase, uRadioYaesuBinary, uRadioYaesuFT817Group, uRadioRegistry, VC,
      Log4D;
 
 type
-  TYaesuFT847Radio = class(TYaesuFT817Radio)
+  TYaesuFT847Radio = class(TYaesuFT817Group)
   public
     constructor Create; reintroduce;
   end;
@@ -93,14 +93,21 @@ begin
    logger := TLogLogger.GetLogger('TR4WDebugLog.FT847');
    radioModel := 'Yaesu FT-847';
 
-   FCATEnableOnConnect := True;    // chart: CAT ON/OFF, P1 = 00
-   FHasSplit           := False;   // no SPLIT row in the chart
-   FHasClarifier       := False;   // no CLAR rows in the chart
-   FModeDIGU           := $FF;     // no DIG mode
-   FModeDIGL           := $FF;     // no PKT mode
+   // The ONE thing this radio adds: it answers nothing until CAT is enabled
+   // (chart: CAT ON/OFF, P1 = 00).
+   FCATEnableOnConnect := True;
 
-   // Split is neither settable nor readable here, so drop the FT-817's claim.
-   FCapabilities.Flags := [];
+   // Everything else stays at the base's restrictive default, stated here so the
+   // absence is deliberate rather than forgotten:
+   //   FHasSplit     False -- no SPLIT row in the chart
+   //   FHasClarifier False -- no CLAR rows in the chart
+   //   FModeDIGU/L   MODEBYTE_NONE -- no DIG, no PKT
+   //   FCapabilities.Flags []  -- split is neither settable nor readable
+   //
+   // This used to be five lines of SUBTRACTION, undoing an [rcReadSplit] and four
+   // traits inherited from TYaesuFT817Radio.  With the group base promising
+   // nothing, there is nothing left to undo -- which is the whole reason the base
+   // was extracted.
 end;
 
 initialization

@@ -14,15 +14,19 @@
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
-unit uRadioYaesuFT817;
+unit uRadioYaesuFT818;
 
 {
-  Yaesu FT-817.
+  Yaesu FT-818.
 
   A thin model on TYaesuFT817Group (uRadioYaesuFT817Group.pas), shared with the
   FT-817, FT-818, FT-847, FT-857 and FT-897.
 
-  The group exemplar: split, clarifier, DIG ($0A) and DIG-L/PKT ($0C) all present.
+  The FT-817's successor and, per NY4I, a HARDWARE refresh only -- the CAT protocol
+  is unchanged.  LOGRADIO's rows agree: the FT-818 row is identical to the FT-817's
+  in every protocol field, differing only in hamlibID.  So it is a name, not a
+  behaviour -- but it states its traits itself rather than inheriting them from a
+  sibling model.
 
   Every trait is stated explicitly, even where it matches another model in the
   group.  The base promises nothing, so a trait left unsaid means the feature is
@@ -38,18 +42,18 @@ uses
   SysUtils, Log4D, VC, uRadioRegistry;
 
 type
-  TYaesuFT817Radio = class(TYaesuFT817Group)
+  TYaesuFT818Radio = class(TYaesuFT817Group)
   public
     constructor Create; reintroduce;
   end;
 
 implementation
 
-constructor TYaesuFT817Radio.Create;
+constructor TYaesuFT818Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT817');
-   radioModel := 'Yaesu FT-817';
+   logger := TLogLogger.GetLogger('TR4WDebugLog.FT818');
+   radioModel := 'Yaesu FT-818';
 
    // Group traits.
    FCATEnableOnConnect := False;              // answers without a CAT preamble
@@ -65,9 +69,9 @@ begin
 end;
 
 initialization
-  RegisterRadio(FT817,
-     function: TFactoryRadioBase begin Result := TYaesuFT817Radio.Create end,
-     'Yaesu FT-817', [rlSerial], 0, False,
+  RegisterRadio(FT818,
+     function: TFactoryRadioBase begin Result := TYaesuFT818Radio.Create end,
+     'Yaesu FT-818', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      );
 
