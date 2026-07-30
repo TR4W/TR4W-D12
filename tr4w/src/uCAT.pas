@@ -1774,11 +1774,11 @@ end;
 // insertion position is fixed at first creation -- so a key added to TR4W
 // after a user's ini was first written lands stranded at the bottom, away
 // from its radio's block (NY4I bench: RADIO ONE SERIAL FORMAT after all the
-// RADIO TWO keys).  This pass moves each SERIAL FORMAT line to sit directly
-// after its radio's BAUD RATE line, editing the FILE TEXT so every other
-// line -- including comment lines like '#RADIO ONE TYPE=K4' -- keeps its
-// exact place.
-procedure GroupSerialFormatIniKeys;
+// RADIO TWO keys, KEYER RADIO ONE OUTPUT PORT after the RADIO TWO block).
+// This pass moves the known strays back beside their anchors, editing the
+// FILE TEXT so every other line -- including comment lines like
+// '#RADIO ONE TYPE=K4' -- keeps its exact place.
+procedure GroupRadioIniKeys;
 var
    lines: TStringList;
    i, sectStart, sectEnd: integer;
@@ -1789,37 +1789,51 @@ var
       Result := SameText(Copy(Trim(lines[lineIdx]), 1, Length(key) + 1), key + '=');
    end;
 
-   procedure MoveFormatAfterBaud(const radio: string);
+   // Move `key` to sit directly after (afterAnchor=True) or directly before
+   // (afterAnchor=False) `anchor`.  A missing key or anchor is a no-op.  One
+   // delete + one insert inside the section leaves its length unchanged, so
+   // sectStart/sectEnd stay valid across successive moves.
+   procedure MoveKey(const key, anchor: string; afterAnchor: Boolean);
    var
-      fmtIdx, baudIdx, j: integer;
+      keyIdx, anchorIdx, j: integer;
       s: string;
    begin
-      fmtIdx := -1;
-      baudIdx := -1;
+      keyIdx := -1;
+      anchorIdx := -1;
       for j := sectStart to sectEnd do
          begin
-         if KeyLine(radio + ' SERIAL FORMAT', j) then
+         if KeyLine(key, j) then
             begin
-            fmtIdx := j;
+            keyIdx := j;
             end;
-         if KeyLine(radio + ' BAUD RATE', j) then
+         if KeyLine(anchor, j) then
             begin
-            baudIdx := j;
+            anchorIdx := j;
             end;
          end;
-      if (fmtIdx < 0) or (baudIdx < 0) or (fmtIdx = baudIdx + 1) then
+      if (keyIdx < 0) or (anchorIdx < 0) then
          begin
          Exit;
          end;
-      s := lines[fmtIdx];
-      lines.Delete(fmtIdx);
-      if fmtIdx < baudIdx then
+      if (afterAnchor and (keyIdx = anchorIdx + 1)) or
+         ((not afterAnchor) and (keyIdx = anchorIdx - 1)) then
          begin
-         Dec(baudIdx);
+         Exit;   // already in place
          end;
-      // One delete + one insert inside the section: its length is unchanged,
-      // so sectEnd stays valid for the second radio's pass.
-      lines.Insert(baudIdx + 1, s);
+      s := lines[keyIdx];
+      lines.Delete(keyIdx);
+      if keyIdx < anchorIdx then
+         begin
+         Dec(anchorIdx);
+         end;
+      if afterAnchor then
+         begin
+         lines.Insert(anchorIdx + 1, s);
+         end
+      else
+         begin
+         lines.Insert(anchorIdx, s);
+         end;
       changed := True;
    end;
 
@@ -1853,8 +1867,13 @@ begin
          Exit;
          end;
       changed := False;
-      MoveFormatAfterBaud('RADIO ONE');
-      MoveFormatAfterBaud('RADIO TWO');
+      // SERIAL FORMAT belongs with the port settings, right after the baud.
+      MoveKey('RADIO ONE SERIAL FORMAT', 'RADIO ONE BAUD RATE', True);
+      MoveKey('RADIO TWO SERIAL FORMAT', 'RADIO TWO BAUD RATE', True);
+      // The keyer output port heads its radio's keyer group, mirroring the
+      // dialog's CW/PTT section order (output port, keyer RTS, keyer DTR).
+      MoveKey('KEYER RADIO ONE OUTPUT PORT', 'RADIO ONE KEYER RTS', False);
+      MoveKey('KEYER RADIO TWO OUTPUT PORT', 'RADIO TWO KEYER RTS', False);
       if changed then
          begin
          lines.SaveToFile(string(PAnsiChar(@TR4W_INI_FILENAME)), TEncoding.ANSI);
@@ -2042,7 +2061,7 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
   logger.Trace('[RestartPollingThread] ID = %s, CMD = %s', [ID, CMD]);
   Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
-  GroupSerialFormatIniKeys;
+  GroupRadioIniKeys;
 
   CATWTR^.CheckAndInitializePorts_ForThisRadio;
   InitializeKeyer;
