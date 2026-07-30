@@ -262,6 +262,7 @@
         <DCCReference Include="src\uRadioIcom7600.pas"/>
         <DCCReference Include="src\uRadioIcom7760.pas"/>
         <DCCReference Include="src\uRadioIcom7850.pas"/>
+        <DCCReference Include="src\uRadioIcom7851.pas"/>
         <DCCReference Include="src\uRadioIcom905.pas"/>
         <DCCReference Include="src\GetWinVersionInfo.pas"/>
         <DCCReference Include="src\uSuperCheckPartialFileUpload.pas"/>

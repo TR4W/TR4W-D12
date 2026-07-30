@@ -17,9 +17,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uRadioIcom7850;
 
 {
-  Icom IC-7850/IC-7851 Radio Implementation
+  Icom IC-7850.
 
-  The IC-7850 and IC-7851 are identical from a protocol perspective.
+  The IC-7851 is protocol-identical but lives in uRadioIcom7851.pas with its own
+  class deriving from TIcomRadio -- NOT from this one.  See that unit's header for
+  why a model is never another model's base.
+
   CI-V address: 0x8E
   Controller address: 0xE0 (standard)
   Network capable: Yes
@@ -37,16 +40,6 @@ type
     constructor Create; reintroduce;
   end;
 
-  // The IC-7851 is protocol-identical to the IC-7850, but it gets its OWN class and
-  // its OWN registry entry so the operator sees THEIR radio in the selection list.
-  // Listing one model as a stand-in for two is counter-intuitive: a 7851 owner finds
-  // no 7851 and reasonably concludes the build does not support it.  It also keeps
-  // radioModel honest, so that operator's log says IC-7851 and their bug report
-  // reads correctly.  Same rule as the Yaesu FT-817/FT-818 pair.
-  TIcom7851Radio = class(TIcom7850Radio)
-  public
-    constructor Create; reintroduce;
-  end;
 
 implementation
 
@@ -65,24 +58,12 @@ begin
   logger.Info('[TIcom7850Radio.Create] Created IC-7850 instance with CI-V address $8E');
 end;
 
-constructor TIcom7851Radio.Create;
-begin
-  inherited Create;
-  radioModel := 'Icom IC-7851';   // identical protocol; only the identity differs
-  logger.Info('[TIcom7851Radio.Create] Created IC-7851 instance with CI-V address $8E');
-end;
 
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom7850');
-  // Register each model under its OWN name -- see TIcom7851Radio.
   RegisterRadio(IC7850,
      function: TFactoryRadioBase begin Result := TIcom7850Radio.Create end,
      'Icom IC-7850', [rlSerial, rlNetwork], 50001, True,
-     SerialParams(19200, 8, PARITY_NONE, 1)
-     );
-  RegisterRadio(IC7851,
-     function: TFactoryRadioBase begin Result := TIcom7851Radio.Create end,
-     'Icom IC-7851', [rlSerial, rlNetwork], 50001, True,
      SerialParams(19200, 8, PARITY_NONE, 1)
      );
 

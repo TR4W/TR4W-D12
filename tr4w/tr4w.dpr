@@ -177,6 +177,7 @@ uses
   uRadioIcom7600 in 'src\uRadioIcom7600.pas',
   uRadioIcom7760 in 'src\uRadioIcom7760.pas',
   uRadioIcom7850 in 'src\uRadioIcom7850.pas',
+  uRadioIcom7851 in 'src\uRadioIcom7851.pas',
   uRadioIcom905 in 'src\uRadioIcom905.pas',
   GetWinVersionInfo in 'src\GetWinVersionInfo.pas',
   uSuperCheckPartialFileUpload in 'src\uSuperCheckPartialFileUpload.pas',
