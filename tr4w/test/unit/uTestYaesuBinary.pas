@@ -29,6 +29,7 @@ interface
 uses
    SysUtils, uTR4WTestFramework, uFactoryRadioBase, uRadioYaesuFT817,
    uRadioYaesuFT847, uRadioYaesuFT857, uRadioYaesuFT990, uRadioYaesuFT1000, uRadioYaesuFT840,
+   uRadioYaesuFT890, uRadioYaesuFT900,
    uRadioYaesuFT920, uRadioYaesuBinary, uRadioRegistry, VC;
 
 type
