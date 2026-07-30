@@ -7,6 +7,15 @@ items 10 and 11 in the Pre-Migration Interim Roadmap.
 Generated 2026-05-19. Counts come from a static `grep` over `tr4w/src/`,
 excluding `~`, `.bakup`, and `.bad` working files.
 
+> **2026-07-30 note:** the radio-factory migration is complete (92 radios in
+> `tr4w/src/radioFactory/`), and the **legacy radio driver path is scheduled for
+> deletion** — `uRadioPolling.pas` driver bodies and the `LOGRADIO.PAS` protocol
+> code. That deletion retires those files' remaining Phase-2/3 entries below
+> (e.g. `uRadioPolling`'s and `LOGRADIO`'s rows, and a slice of `LOGK1EA`'s once
+> the CW keyer factory — `docs/CW_Keyer_Factory_Plan.md` — absorbs the CPU
+> keyer). Prefer deleting legacy code over converting its `asm`/`wsprintf`
+> remnants.
+
 ---
 
 ## Phase 3 — Inline `asm` Block Inventory

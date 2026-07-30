@@ -10,6 +10,27 @@ Read alongside `tr4w-analysis.md` (upstream architectural analysis).
 > `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md` §"Progress — as of 2026-07-09" for the
 > authoritative status. Completed items below are struck through. Phase 3 (64-bit) and
 > Phase 4 (VCL) have not started; the `ContestExchange`→SQLite work is deferred.
+>
+> **Status update (2026-07-30):** The **radio factory** — scope this plan filed under
+> Phase 4 ("contest factory"-style class hierarchies) — was pulled forward and is
+> **complete for radio control**: all **92 native radios** have their own
+> `TFactoryRadioBase` subclass (one class per model, one unit per model/family) in
+> `tr4w/src/radioFactory/`, self-registering into `uRadioRegistry` with per-radio
+> serial defaults, a declared capability set (`TRadioCapability`, restrictive
+> defaults), and registry-derived taxonomy (`IsHamLibOnly`, `ManufacturerOf`) that
+> retired the last hand-maintained radio sets in `InitRadios`. HamLib-only radios
+> route through `THamLibDirect`, which now derives per-rig capabilities at runtime
+> from the backend's own answers. The **legacy driver path** (`uRadioPolling.pas`
+> driver bodies + `LOGRADIO.PAS` protocol code) is scheduled for **deletion**, not
+> maintenance — the `src/` vs `src/radioFactory/` folder boundary *is* the
+> factory/legacy boundary. See `docs/LEGACY_DEPENDENCY_AUDIT.md`,
+> `docs/ADDING_A_RADIO.md`, `docs/RADIO_MIGRATION_ASSUMPTIONS.md`.
+> The unit-test suite has grown to **~1,300 passing checks** across 25+ suites
+> (registry/capability/serial-params invariants are test-pinned against the legacy
+> tables). The **CW keyer factory** is the next strangler seam, planned in
+> `docs/CW_Keyer_Factory_Plan.md` (Phases A/B, not started). Remaining
+> infrastructure debt tracked outside this doc: the tr4wserver build (still D7-only),
+> release.yml msbuild migration, and the deferred string-producer flips.
 
 ---
 
@@ -285,6 +306,16 @@ byte path (network + serial) is byte-faithful and hardware-validated.
 4. Move TRDOS windows to VCL forms incrementally (one window at a time) — see **Dialog Migration** below
 5. Replace `PChar` / `wsprintf` with Delphi string formatting throughout
 
+> **2026-07-30 note:** two factory patterns originally imagined here were pulled
+> ahead of Phase 4 and executed under the strangler pattern instead of waiting
+> for VCL: the **radio factory** (complete — see the top status block) and the
+> **CW keyer factory** (planned — `docs/CW_Keyer_Factory_Plan.md`). The *contest*
+> factory (item 3) remains genuinely Phase 4: it needs the stable class
+> hierarchies and the SQLite log. The proven approach for all of these is the
+> same: new classes in `src/`, legacy left untouched as the authority until the
+> new path is bench-verified, then the legacy path is deleted rather than kept in
+> sync.
+
 **Contest factory:** The TR4QT C++ pattern (`C:\projects\TR4QT`) is the reference.
 Do not attempt to add this before Phase 4 — it requires stable class hierarchies
 that don't exist yet in the TRDOS layer.
@@ -304,6 +335,16 @@ TR4W has three categories of windows, each with a different migration path:
 
 These can be decompiled to `.dfm` now. The `DlgProc` logic maps directly to
 `TForm` event handlers. Start here — lowest risk, immediate payoff.
+
+> **2026-07-30 note on dialog 66 (Radio/CAT setup):** this dialog has grown a
+> substantial RUNTIME layer on top of its binary template — credential rows,
+> Discover button, Show-all checkbox, the DATA/PARITY/STOP row, dialog widening,
+> row shifting, and dialog-font stamping (`ApplyDialogFont`) — because the eleven
+> per-language `.RES` templates are sourceless binaries (`res/Tr4w.rc` cannot even
+> compile; `DEF.H` is not in the repo) and cannot be edited per feature. When this
+> dialog moves to a VCL form, ALL of that runtime construction in `uCAT.pas`
+> `WM_INITDIALOG` folds into the `.dfm` — budget for it; it is now a significant
+> share of the dialog's code.
 
 **Track 2 — Resource dialogs in non-English `.RES` only (~38 dialogs)**
 
