@@ -39,7 +39,7 @@ unit uRadioYaesuFT1000MP;
   legacy tBuf[] indexing:
     - freq: bytes 2-5 (record 1) / 18-21 (record 2), 4-byte BIG-ENDIAN, * 0.625
     - mode: byte 8 / 24, low 3 bits (0=LSB 1=USB 2=CW 3=AM 4=FM 5=RTTY 6=Data)
-    - clarifier: offset bytes 6-7 signed BE * 0.625, flags byte 10 -- record 1 only
+    - RIT offset: offset bytes 6-7 signed BE * 0.625, flags byte 10 -- record 1 only
   RECORD ORDER conveys VFO selection: the two records swap wholesale when the
   operator changes VFO, so record 1 is ALWAYS the selected VFO.  Parsing record 1
   as vfo[nrVFOA] is therefore TR4W's swap model (as used for the K4) and is
@@ -49,7 +49,7 @@ unit uRadioYaesuFT1000MP;
   $0A last -- confirmed on air (14020 kHz went out as 00 20 40 01 0A).  Set-mode is
   opcode $0C with the mode byte at byte[3] (MB=3); VFO B ORs +$80 into it.  Split is
   opcode $01 (T = $01 on / $00 off) and is READ BACK, so it is not tracked locally.
-  RIT/XIT use CLAR (opcode $09) -- see SendClarifier.
+  RIT/XIT use CLAR (opcode $09) -- see SendRITOffset.
 
   CW keying: inert (base stubs) -- legacy path / future CW Keyer Factory.
 }
@@ -72,15 +72,15 @@ const
    FT1KMP_ACTIVE_VFO_POS = FT1KMP_STATUS_LEN + 2;
    FT1KMP_ACTIVE_VFO_BIT = $04;
 
-   // ---- Clarifier field map, 1-based positions in the 32-byte block ----
+   // ---- RIT offset field map, 1-based positions in the 32-byte block ----
    // DERIVED FROM A CONTROLLED BENCH CAPTURE (2026-07-26): with frequency, mode and
-   // split held fixed and only the clarifier exercised, exactly three byte positions
+   // split held fixed and only the RIT offset exercised, exactly three byte positions
    // moved -- 6, 7 and 10.  Settle points were exact:
    //   +1.00 kHz -> pos 6,7 = $06 $40 =  1600 * 0.625 =  1000 Hz
    //   -1.00 kHz -> pos 6,7 = $F9 $C0 = -1600 * 0.625 = -1000 Hz
-   // RX CLAR alone set pos 10 = $02; TX CLAR alone set pos 10 = $01.  The clarifier
+   // RX CLAR alone set pos 10 = $02; TX CLAR alone set pos 10 = $01.  The RIT offset
    // appears in the VFO A record ONLY (pos 22,23,26 never moved), matching a single
-   // shared clarifier -- see rcSharedRITXITOffset.
+   // shared RIT offset -- see rcSharedRITXITOffset.
    FT1KMP_CLAR_OFFSET_POS = 6;    // 2 bytes, SIGNED 16-bit big-endian, * 0.625 Hz
    FT1KMP_CLAR_FLAGS_POS  = 10;
    FT1KMP_CLAR_RX_BIT     = $02;  // RX CLAR = TR4W RIT
@@ -93,7 +93,7 @@ const
    //   C3 = direction: $00 = +, $FF = -
    //   C4 = action: RX CLAR off/on $00/$01, TX CLAR off/on $80/$81, CLAR CLEAR $FF
    // C1 is 10 Hz per count, not 1 Hz: that is the only reading under which C1+C2
-   // span the radio's documented +/-9.99 kHz clarifier range (99*10 + 9*1000 =
+   // span the radio's documented +/-9.99 kHz RIT offset range (99*10 + 9*1000 =
    // 9990 Hz), and it matches the manual's note that resolution below 10 Hz cannot
    // be displayed.  Confirmed on air.
    FT1KMP_CLAR_OPCODE     = $09;
@@ -120,8 +120,8 @@ type
     FCWReverse: boolean;   // CW mode byte $03 (reverse) vs $02; default off
     function  StatusModeToMode(b: Byte): TRadioMode;
     function  YaesuFreqRead(const frame: string; pos1: integer): integer;
-    function  ClarifierOffsetRead(const frame: string; pos1: integer): integer;
-    procedure SendClarifier(offsetHz: integer; action: Byte);
+    function  RITOffsetRead(const frame: string; pos1: integer): integer;
+    procedure SendRITOffset(offsetHz: integer; action: Byte);
   public
     constructor Create; reintroduce;
 
@@ -155,10 +155,10 @@ begin
 
    // Capabilities (declarative -- Yaesu does not consume FCapabilities yet), stated
    // as what THIS DRIVER actually does, not what the radio could do:
-   //   rcReadRIT            -- clarifier state+offset ARE decoded (bench-derived);
+   //   rcReadRIT            -- RIT offset state+offset ARE decoded (bench-derived);
    //                           this beats D7, which never decoded FT-1000MP RIT.
    //   rcReadSplit          -- split IS read back, from the appended $FA block.
-   //   rcSharedRITXITOffset -- one clarifier register feeds both RIT and XIT.
+   //   rcSharedRITXITOffset -- one RIT offset register feeds both RIT and XIT.
    FCapabilities.Flags := [rcReadRIT, rcReadSplit, rcSharedRITXITOffset];
    FCapabilities.CWSpeedMin := 4;
    FCapabilities.CWSpeedMax := 60;
@@ -184,16 +184,16 @@ begin
    Result := Round(raw * 0.625);
 end;
 
-// Clarifier offset: SIGNED 16-bit big-endian at 1-based position pos1, * 0.625 Hz
+// RIT offset: SIGNED 16-bit big-endian at 1-based position pos1, * 0.625 Hz
 // (the same scaling the frequency field uses).  Bench-verified at +/-1.00 kHz.
-function TFT1000MPRadio.ClarifierOffsetRead(const frame: string; pos1: integer): integer;
+function TFT1000MPRadio.RITOffsetRead(const frame: string; pos1: integer): integer;
 var
    raw: integer;
 begin
    raw := (Ord(frame[pos1]) shl 8) or Ord(frame[pos1 + 1]);
    if raw >= $8000 then
       begin
-      raw := raw - $10000;   // two's complement -> negative clarifier
+      raw := raw - $10000;   // two's complement -> negative RIT offset
       end;
    Result := Round(raw * 0.625);
 end;
@@ -232,14 +232,14 @@ begin
    Self.vfo[nrVFOB].frequency := YaesuFreqRead(msg, 18);
    Self.vfo[nrVFOB].band      := FreqToRadioBand(Self.vfo[nrVFOB].frequency);
    Self.vfo[nrVFOB].mode      := StatusModeToMode(Ord(msg[24]));
-   // Clarifier -> RIT/XIT.  Routed through the BASE setters, never Self.<scalar>:
+   // RIT/XIT.  Routed through the BASE setters, never Self.<scalar>:
    // the radio window reads the PER-VFO copies, which only the setters write (the
    // K3 serial-display bug, commit 1b205ce).  One shared offset feeds both RIT and
    // XIT here -- see rcSharedRITXITOffset.  The radio keeps reporting the offset
-   // while the clarifier is switched off, and we report it faithfully; the display
+   // while the RIT offset is switched off, and we report it faithfully; the display
    // gates on the on/off state.
    clarFlags := Ord(msg[FT1KMP_CLAR_FLAGS_POS]);
-   clarHz    := ClarifierOffsetRead(msg, FT1KMP_CLAR_OFFSET_POS);
+   clarHz    := RITOffsetRead(msg, FT1KMP_CLAR_OFFSET_POS);
    Self.SetRITOn((clarFlags and FT1KMP_CLAR_RX_BIT) <> 0);
    Self.SetXITOn((clarFlags and FT1KMP_CLAR_TX_BIT) <> 0);
    Self.SetRITOffset(clarHz);
@@ -259,7 +259,7 @@ begin
    //    records swap wholesale when the operator changes VFO, so record 1 is always
    //    the SELECTED VFO.  Parsing record 1 as vfo[nrVFOA] and declaring VFO A
    //    active is therefore exactly TR4W's swap model (as used for the K4), and the
-   //    frequency/mode/clarifier we report always belong to the operating VFO.
+   //    frequency/mode/RIT offset we report always belong to the operating VFO.
    Self.SetActiveVFO(nrVFOA);
 end;
 
@@ -356,7 +356,7 @@ end;
 // which is benign and immediately visible in the log via the decoded readback.
 // BENCH CHECK to settle it: with RX CLAR on and a non-zero offset, call RITOn --
 // if the offset survives, both halves apply; if it zeroes, C4 selects the form.
-procedure TFT1000MPRadio.SendClarifier(offsetHz: integer; action: Byte);
+procedure TFT1000MPRadio.SendRITOffset(offsetHz: integer; action: Byte);
 var
    magnitude: integer;
    steps10: integer;
@@ -367,7 +367,7 @@ begin
    magnitude := Abs(offsetHz);
    if magnitude > FT1KMP_CLAR_MAX_HZ then
       begin
-      logger.Warn('[SendClarifier] offset %d Hz exceeds the +/-%d Hz clarifier range; clamping',
+      logger.Warn('[SendRITOffset] offset %d Hz exceeds the +/-%d Hz RIT offset range; clamping',
                   [offsetHz, FT1KMP_CLAR_MAX_HZ]);
       magnitude := FT1KMP_CLAR_MAX_HZ;
       end;
@@ -387,11 +387,11 @@ begin
    Self.SendBytes(c1, c2, c3, action, FT1KMP_CLAR_OPCODE);
 end;
 
-// The radio has ONE clarifier (rcSharedRITXITOffset), so CLAR CLEAR is a single
+// The radio has ONE RIT offset (rcSharedRITXITOffset), so CLAR CLEAR is a single
 // action -- RITClear and XITClear are necessarily the same command.
 procedure TFT1000MPRadio.RITClear(whichVFO: TVFO);
 begin
-   Self.SendClarifier(0, FT1KMP_CLAR_CLEAR);
+   Self.SendRITOffset(0, FT1KMP_CLAR_CLEAR);
 end;
 
 procedure TFT1000MPRadio.XITClear(whichVFO: TVFO);
@@ -406,29 +406,29 @@ end;
 // driver follows.
 procedure TFT1000MPRadio.RITOn(whichVFO: TVFO);
 begin
-   Self.SendClarifier(Self.localRITOffset, FT1KMP_CLAR_RX_ON);
+   Self.SendRITOffset(Self.localRITOffset, FT1KMP_CLAR_RX_ON);
 end;
 
 procedure TFT1000MPRadio.RITOff(whichVFO: TVFO);
 begin
-   Self.SendClarifier(Self.localRITOffset, FT1KMP_CLAR_RX_OFF);
+   Self.SendRITOffset(Self.localRITOffset, FT1KMP_CLAR_RX_OFF);
 end;
 
 procedure TFT1000MPRadio.XITOn(whichVFO: TVFO);
 begin
-   Self.SendClarifier(Self.localXITOffset, FT1KMP_CLAR_TX_ON);
+   Self.SendRITOffset(Self.localXITOffset, FT1KMP_CLAR_TX_ON);
 end;
 
 procedure TFT1000MPRadio.XITOff(whichVFO: TVFO);
 begin
-   Self.SendClarifier(Self.localXITOffset, FT1KMP_CLAR_TX_OFF);
+   Self.SendRITOffset(Self.localXITOffset, FT1KMP_CLAR_TX_OFF);
 end;
 
 // Exact offset set.  C4 repeats the state we currently believe is active so the
-// command cannot switch the clarifier on or off as a side effect: whichever of
+// command cannot switch the RIT offset on or off as a side effect: whichever of
 // RX/TX CLAR is on keeps its action byte, and if neither is on we address RX
 // CLAR with its OFF byte (a pure offset write).  Offsets are quantised to the
-// radio's 10 Hz step and clamped to +/-9.99 kHz inside SendClarifier.
+// radio's 10 Hz step and clamped to +/-9.99 kHz inside SendRITOffset.
 procedure TFT1000MPRadio.SetRITFreq(whichVFO: TVFO; hz: integer);
 var
    action: Byte;
@@ -445,10 +445,10 @@ begin
       begin
       action := FT1KMP_CLAR_RX_OFF;
       end;
-   Self.SendClarifier(hz, action);
+   Self.SendRITOffset(hz, action);
 end;
 
-// One shared clarifier -- setting "XIT" offset is the same register.
+// One shared RIT offset -- setting "XIT" offset is the same register.
 procedure TFT1000MPRadio.SetXITFreq(whichVFO: TVFO; hz: integer);
 begin
    Self.SetRITFreq(whichVFO, hz);

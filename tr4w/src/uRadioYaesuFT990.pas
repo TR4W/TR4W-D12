@@ -65,7 +65,7 @@ begin
    // Capabilities = what this driver actually reads:
    //   rcReadVFOB  -- the $03 $10 block carries both VFOs
    //   rcReadSplit -- the $FA block reports it
-   //   rcReadRIT   -- the short status carries the clarifier and its flags
+   //   rcReadRIT   -- the short status carries the RIT offset and its flags
    // NOT rcReadTXStatus: nothing in these three answers reports PTT.
    FCapabilities.Flags := [rcReadVFOB, rcReadSplit, rcReadRIT];
    FCapabilities.CWSpeedMin := 0;

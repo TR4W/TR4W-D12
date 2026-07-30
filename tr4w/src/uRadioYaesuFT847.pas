@@ -38,9 +38,10 @@ unit uRadioYaesuFT847;
     TX-status bit 5 as split: the FT-847's Note 2 layout is its own, and reading
     the FT-817's bit positions into it would be a guess.
 
-    NO CLARIFIER.  No CLAR ON/OFF and no CLAR Frequency row, so RIT over CAT does
-    not exist on this radio.  FHasClarifier := False makes all four RIT entry
-    points log and return instead of sending undefined opcodes.
+    NO RIT OVER CAT.  The chart has no CLAR ON/OFF and no CLAR Frequency row
+    ("CLAR", clarifier, being Yaesu's name for RIT/XIT), so RIT does not exist over
+    CAT on this radio.  Leaving FHasRIT at the base's False makes all four RIT
+    entry points log and return instead of sending undefined opcodes.
 
     NO DATA MODES.  The mode chart is LSB/USB/CW/CW-R/AM/FM plus the narrow
     variants CW-N $82, CW-R-N $83, AM-N $84, FM-N $88.  There is no DIG and no
@@ -100,7 +101,7 @@ begin
    // Everything else stays at the base's restrictive default, stated here so the
    // absence is deliberate rather than forgotten:
    //   FHasSplit     False -- no SPLIT row in the chart
-   //   FHasClarifier False -- no CLAR rows in the chart
+   //   FHasRIT False -- no CLAR rows in the chart
    //   FModeDIGU/L   MODEBYTE_NONE -- no DIG, no PKT
    //   FCapabilities.Flags []  -- split is neither settable nor readable
    //

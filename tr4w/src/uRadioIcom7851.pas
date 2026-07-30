@@ -41,7 +41,7 @@ unit uRadioIcom7851;
 
     3. RESTRICTION IS NOT SPECIALIZATION.  This is the one that settles it.
        Elsewhere in the tree TYaesuFT847Radio descends from TYaesuFT817Radio and
-       then has to set FHasSplit := False, FHasClarifier := False,
+       then has to set FHasSplit := False, FHasRIT := False,
        FModeDIGU := $FF -- flags whose ONLY purpose is to undo inherited
        behaviour the radio does not have.  A child that withdraws its parent's
        promises is not a subtype of it.  Deriving from the family base and adding

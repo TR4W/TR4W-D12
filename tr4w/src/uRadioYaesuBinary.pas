@@ -52,6 +52,12 @@ unit uRadioYaesuBinary;
   true for every old-binary Yaesu: the 5-byte frame, byte-exact transport with no
   terminator, and neutral "this family cannot do that" defaults.
 
+  TERMINOLOGY.  Yaesu's manuals and command charts say "clarifier" -- RX clarifier
+  for what everyone else calls RIT, TX clarifier for XIT.  TR4W uses RIT and XIT
+  throughout, including for the Yaesus, because those are the recognised terms.
+  Where a chart ROW NAME is quoted the original spelling is kept ("CLAR ON/OFF"),
+  since that is what a reader will be looking for in the manual.
+
   In particular SerialFixedFrameLength is deliberately NOT set here -- the answer
   length is per-model, and a wrong value silently mis-delimits every frame.
 }

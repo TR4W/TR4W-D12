@@ -30,7 +30,7 @@ unit uRadioYaesuFT100;
 
   POLL CYCLE -- two requests, concatenating into one frame:
 
-      $00 $00 $00 $00 $10  -> 32 bytes : frequency, mode, clarifier
+      $00 $00 $00 $00 $10  -> 32 bytes : frequency, mode, RIT offset
       $00 $00 $00 $01 $FA  ->  8 bytes : split + active VFO
 
   MODE NUMBERING is its own again -- 2 AND 3 are both CW here, where the
@@ -55,8 +55,8 @@ unit uRadioYaesuFT100;
     - Mode: 0, 1 and 4 all report USB today. Cycle LSB/USB/AM and record which
       byte is which -- the legacy code collapsed them and the information is not
       recoverable from it.
-    - The clarifier carries the same suspected x255 quirk as the FT-990; see
-      ClarifierRead.
+    - The RIT offset carries the same suspected x255 quirk as the FT-990; see
+      RITOffsetRead.
 }
 
 interface
@@ -88,7 +88,7 @@ type
   protected
     function  StatusModeToMode(b: Byte; hz: integer): TRadioMode;
     function  FreqRead(const frame: string; pos1: integer): integer;
-    function  ClarifierRead(const frame: string; pos1: integer): integer;
+    function  RITOffsetRead(const frame: string; pos1: integer): integer;
   public
     constructor Create; reintroduce;
     procedure ProcessMsg(msg: string); override;
@@ -120,7 +120,7 @@ begin
 
    // rcReadSplit -- the $FA block reports it.
    // NOT rcReadVFOB: only the current VFO's frequency is in the frame.
-   // NOT rcReadRIT: the offset is present but nothing reports clarifier on/off.
+   // NOT rcReadRIT: the offset is present but nothing reports RIT offset on/off.
    // NOT rcReadTXStatus.
    FCapabilities.Flags := [rcReadSplit];
    FCapabilities.CWSpeedMin := 0;
@@ -150,7 +150,7 @@ end;
 // 255 is almost certainly meant to be 256 -- with 256 these two bytes are a
 // plain signed 16-bit value. Not "fixed" here because nobody has the radio to
 // confirm, and swapping one unverified answer for another is not progress.
-function TFT100Radio.ClarifierRead(const frame: string; pos1: integer): integer;
+function TFT100Radio.RITOffsetRead(const frame: string; pos1: integer): integer;
 begin
    Result := Round(1.25 * (SmallInt(ShortInt(Ord(frame[pos1]))) * 255 +
                            Ord(frame[pos1 + 1])));
@@ -188,7 +188,7 @@ begin
    Self.vfo[nrVFOA].band      := FreqToRadioBand(Self.vfo[nrVFOA].frequency);
    Self.vfo[nrVFOA].mode      := StatusModeToMode(Ord(msg[FT100_MODE_POS]),
                                                   Self.vfo[nrVFOA].frequency);
-   Self.SetRITOffset(ClarifierRead(msg, FT100_CLAR_POS));
+   Self.SetRITOffset(RITOffsetRead(msg, FT100_CLAR_POS));
 
    Self.SetSplitOn((Ord(msg[fa + FT100_FA_SPLIT_POS]) and $01) <> 0);
    // Legacy: ActiveVFOStatusType((Ord(tBuf[2]) and (1 shl 2)) + 1) -- bit 2 set

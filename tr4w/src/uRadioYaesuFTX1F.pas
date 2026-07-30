@@ -49,7 +49,7 @@ unit uRadioYaesuFTX1F;
                        FTDX-10 / FT-991      FTX-1F
       response length  28 bytes              30 bytes
       frequency        pos 6, 9 digits       pos 8, 9 digits
-      clarifier        pos 15, sign + 4      pos 17, sign + 4
+      RIT offset        pos 15, sign + 4      pos 17, sign + 4
       RIT on           pos 20                pos 22
       XIT on           pos 21                pos 23
       mode             pos 22                pos 24

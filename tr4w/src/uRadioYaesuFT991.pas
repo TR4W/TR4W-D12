@@ -24,7 +24,7 @@ unit uRadioYaesuFT991;
   because the wire protocol is the same one:
 
     IF; / OI;   28 bytes, identical field offsets -- frequency at 6 (9 digits,
-                Issue #218), clarifier 15-19, RIT-on 20, XIT-on 21, mode 22
+                Issue #218), RIT offset 15-19, RIT-on 20, XIT-on 21, mode 22
     split       read with FT;, set with FT3; on / FT2; off
     TX state    TX;, '1'/'2' = transmitting
     poll cycle  IF;OI;FT;TX;
@@ -86,7 +86,7 @@ unit uRadioYaesuFT991;
   is the part no document can answer:
     - Split: engage split at the radio and confirm TR4W shows it at startup;
       also toggle it from TR4W in both directions.
-    - Clarifier: confirm positions 15-19 return sign + 4 digits ("+0000"/"-0000").
+    - RIT offset: confirm positions 15-19 return sign + 4 digits ("+0000"/"-0000").
     - That the IF response really is 28 bytes with the mode at position 22, since
       that offset comes from the legacy parser rather than from the manual page.
 }
@@ -109,7 +109,7 @@ constructor TYaesuFT991Radio.Create;
 begin
    inherited Create;
    radioModel := 'Yaesu FT-991';
-   // Same capability set as the FTDX-10: VFO B via OI;, clarifier, split via FT;,
+   // Same capability set as the FTDX-10: VFO B via OI;, RIT offset, split via FT;,
    // TX state via TX;.
    FCapabilities.Flags := [rcReadVFOB, rcReadRIT, rcReadSplit, rcReadTXStatus];
    FCapabilities.CWSpeedMin := FCWSpeedMin;

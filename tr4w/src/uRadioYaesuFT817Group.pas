@@ -33,7 +33,7 @@ unit uRadioYaesuFT817Group;
   THE ARGUMENT THAT SETTLED IT was that these were RESTRICTIONS, not
   specializations.  The FT-847 had to write
 
-      FHasSplit := False; FHasClarifier := False;
+      FHasSplit := False; FHasRIT := False;
       FModeDIGU := $FF;   FModeDIGL := $FF;
       FCapabilities.Flags := [];        <- undoing the FT-817's [rcReadSplit]
 
@@ -49,7 +49,7 @@ unit uRadioYaesuFT817Group;
   THE FOUR GROUP TRAITS -- per-model facts this base acts on:
     FCATEnableOnConnect  the FT-847 answers nothing until a CAT-enable frame
     FHasSplit            the FT-847's chart has no SPLIT row
-    FHasClarifier        the FT-847's chart has no CLAR rows
+    FHasRIT        the FT-847's chart has no CLAR rows
     FModeDIGU/FModeDIGL  $FF (MODEBYTE_NONE) where the radio has no such mode
 
   NONE OF THE FIVE HAS EVER BEEN BENCHED.  uTestYaesuBinary's FT-847 guard tests
@@ -93,7 +93,7 @@ const
    FT817_PTT_ON_OPCODE   = $08;   // row TX: $08  (legacy FT817PTTOn)
    FT817_PTT_OFF_OPCODE  = $88;   // row RX: $88  (legacy FT817PTTOff)
 
-   // ---- Clarifier and split, from the FT-817 CAT manual command table.
+   // ---- RIT and split, from the FT-817 CAT manual command table.
    // The manual shows all four parameter bytes as "don't care" for these; we send
    // $00.  Note the on/off pairing by bit 7, the same shape as PTT $08/$88. ----
    FT817_CLAR_ON_OPCODE  = $05;
@@ -111,7 +111,7 @@ const
    FT817_CLAR_DIR_PLUS    = $00;
    FT817_CLAR_DIR_MINUS   = $01;   // manual only requires "not $00"
    // Largest value the two BCD bytes can express (99.99 kHz).  This is an ENCODING
-   // limit, not a claim about the radio's clarifier range -- the manual's own
+   // limit, not a claim about the radio's RIT offset range -- the manual's own
    // example (12.34 kHz) already exceeds the +/-9.99 kHz the FT-1000MP allows, so
    // we do not invent a tighter radio limit here.
    FT817_CLAR_MAX_HZ      = 99990;
@@ -142,7 +142,7 @@ type
     FModeDIGU: Byte;        // rmData  ($FF = radio has no DIG mode)
     FModeDIGL: Byte;        // rmFSK   ($FF = radio has no DIG-L / PKT mode)
     FHasSplit: Boolean;
-    FHasClarifier: Boolean;
+    FHasRIT: Boolean;
 
     function  StatusModeToMode(b: Byte): TRadioMode;
     function  BCDFreqRead(const frame: string; pos1: integer): integer;
@@ -168,7 +168,7 @@ type
 implementation
 
 // Transport + framing defaults, and RESTRICTIVE trait defaults.  This base makes
-// no claim about split, the clarifier or data modes; each model adds what it has.
+// no claim about split, the RIT offset or data modes; each model adds what it has.
 constructor TYaesuFT817Group.Create;
 begin
    inherited Create;
@@ -190,7 +190,7 @@ begin
    FModeDIGU           := MODEBYTE_NONE;
    FModeDIGL           := MODEBYTE_NONE;
    FHasSplit           := False;
-   FHasClarifier       := False;
+   FHasRIT       := False;
 end;
 
 function TYaesuFT817Group.Connect: integer;
@@ -430,20 +430,20 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-// Clarifier (RIT) and split.  These differ in a way worth keeping straight:
+// RIT offset (RIT) and split.  These differ in a way worth keeping straight:
 //
 //   SPLIT is READ BACK (TX-status bit 5), so the poll is the single source of
 //   truth and Split() must NOT write local state -- the FT-1000MP rule.
 //
-//   RIT is SET-ONLY: nothing in either poll answer reports the clarifier, so we
+//   RIT is SET-ONLY: nothing in either poll answer reports the RIT offset, so we
 //   MUST track it locally (SetRITOn / SetRITOffset) or the radio window would never
 //   show what the operator just asked for.  The usual set-only caveat applies -- a
-//   clarifier change made at the FRONT PANEL goes unnoticed, and TR4W shows what it
+//   RIT offset change made at the FRONT PANEL goes unnoticed, and TR4W shows what it
 //   commanded rather than what the radio is doing.  Same trade as the IC-718.
 //
 // XIT is NOT implemented: the manual's table has a single CLAR ON/OFF with no TX
 // counterpart, so there is nothing to send.  Mapping XIT onto CLAR would be a guess
-// about whether the clarifier shifts transmit, so the base's inert stubs stand.
+// about whether the RIT offset shifts transmit, so the base's inert stubs stand.
 // ---------------------------------------------------------------------------
 
 procedure TYaesuFT817Group.Split(splitOn: boolean);
@@ -469,14 +469,14 @@ begin
    // are therefore picked up here too.
 end;
 
-// The FT-847's chart has no CLAR rows at all, so all four clarifier entry points
+// The FT-847's chart has no CLAR rows at all, so all four RIT offset entry points
 // are guarded.  Guarding here rather than in a subclass override keeps the four
 // checks in one place next to the commands they protect.
 procedure TYaesuFT817Group.RITOn(whichVFO: TVFO);
 begin
-   if not FHasClarifier then
+   if not FHasRIT then
       begin
-      logger.Warn('[RITOn] %s has no CAT clarifier command -- ignored', [radioModel]);
+      logger.Warn('[RITOn] %s has no CAT RIT offset command -- ignored', [radioModel]);
       Exit;
       end;
    Self.SendBytes($00, $00, $00, $00, FT817_CLAR_ON_OPCODE);
@@ -485,16 +485,16 @@ end;
 
 procedure TYaesuFT817Group.RITOff(whichVFO: TVFO);
 begin
-   if not FHasClarifier then
+   if not FHasRIT then
       begin
-      logger.Warn('[RITOff] %s has no CAT clarifier command -- ignored', [radioModel]);
+      logger.Warn('[RITOff] %s has no CAT RIT offset command -- ignored', [radioModel]);
       Exit;
       end;
    Self.SendBytes($00, $00, $00, $00, FT817_CLAR_OFF_OPCODE);
    Self.SetRITOn(False);
 end;
 
-// No "clarifier clear" command exists in the table, so clearing is a zero offset.
+// No "RIT offset clear" command exists in the table, so clearing is a zero offset.
 procedure TYaesuFT817Group.RITClear(whichVFO: TVFO);
 begin
    Self.SetRITFreq(whichVFO, 0);
@@ -508,9 +508,9 @@ var
    subKHz: integer;
    p1, p3, p4: Byte;
 begin
-   if not FHasClarifier then
+   if not FHasRIT then
       begin
-      logger.Warn('[SetRITFreq] %s has no CAT clarifier command -- ignored', [radioModel]);
+      logger.Warn('[SetRITFreq] %s has no CAT RIT offset command -- ignored', [radioModel]);
       Exit;
       end;
    magnitude := Abs(hz);

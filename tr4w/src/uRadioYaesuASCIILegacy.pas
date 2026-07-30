@@ -28,7 +28,7 @@ unit uRadioYaesuASCIILegacy;
                             newer (uRadioYaesuASCII)   THIS generation
       IF;/OI; length        28 bytes                   27 bytes
       frequency            pos 6, NINE digits          pos 6, EIGHT digits
-      clarifier            pos 15                      pos 14
+      RIT offset            pos 15                      pos 14
       RIT on               pos 20                      pos 19
       XIT on               pos 21                      pos 20
       mode                 pos 22                      pos 21

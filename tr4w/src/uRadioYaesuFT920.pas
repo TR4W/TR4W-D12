@@ -123,7 +123,7 @@ begin
 
    // rcReadVFOB -- block 2 carries both VFOs.
    // rcReadRIT  -- block 1 byte 9 reports RIT and XIT on/off.  NOTE: the OFFSET
-   //               is not in either answer, so TR4W knows the clarifier is on
+   //               is not in either answer, so TR4W knows the RIT offset is on
    //               but not by how much.
    // NOT rcReadSplit, NOT rcReadTXStatus: neither answer carries them.
    FCapabilities.Flags := [rcReadVFOB, rcReadRIT];

@@ -119,7 +119,7 @@ Type
                        //   family), so the two are independent flags.
       rcSharedRITXITOffset
                        // ONE offset register shared by RIT and XIT (Yaesu FT-1000MP
-                       // "clarifier"): the two on/off states are still independent,
+                       // "RIT offset"): the two on/off states are still independent,
                        // but there is a single offset value -- setting RIT's offset
                        // moves XIT's too.
                        //
