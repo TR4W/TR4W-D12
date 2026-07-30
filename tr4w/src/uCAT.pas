@@ -1942,7 +1942,53 @@ var
   i                                     : integer;
   ID, CMD                               : ShortString;
   sel, enumCount                        : integer;
+  otherRadio                            : RadioPtr;
+  otherPrefix                           : string;
+
+  // Warn -- do not block -- when a port chosen in THIS dialog is already
+  // configured on the OTHER radio (its CAT control port or its keyer output
+  // port).  Two devices cannot share a COM port, so the second one would
+  // just look dead.  Sharing CAT and keyer on the SAME radio is legitimate
+  // (keying DTR/RTS on the CAT port) and is deliberately not flagged.
+  // Non-blocking on purpose: an operator swapping ports between the radios
+  // has to pass through a conflicting state, and a hard stop would trap them.
+  procedure WarnIfPortConflict(chosen: PortType);
+  var
+     othersUse: string;
+  begin
+     if not (chosen in SerialPorts) then
+        begin
+        Exit;
+        end;
+     othersUse := '';
+     if chosen = otherRadio^.tCATPortType then
+        begin
+        othersUse := otherPrefix + ' CONTROL PORT';
+        end
+     else if chosen = otherRadio^.tKeyerPort then
+        begin
+        othersUse := 'KEYER ' + otherPrefix + ' OUTPUT PORT';
+        end;
+     if othersUse <> '' then
+        begin
+        showwarning(SysUtils.Format(TC_PORT_CONFLICT_DIALOG,
+           [string(AnsiString(PortTypeSA[chosen])), othersUse]));
+        end;
+  end;
+
 begin
+  if CATWTR = @Radio1 then
+     begin
+     otherRadio := @Radio2;
+     otherPrefix := 'RADIO TWO';
+     end
+  else
+     begin
+     otherRadio := @Radio1;
+     otherPrefix := 'RADIO ONE';
+     end;
+  WarnIfPortConflict(ComboSelectedPort(CATWndHWND, 122));
+  WarnIfPortConflict(ComboSelectedPort(CATWndHWND, 123));
 
 { TODO: The radio settings changed so restart the thread. If there was a network connection, we have to disconnect and clean that up.
 Otherwise, we have to start that up.

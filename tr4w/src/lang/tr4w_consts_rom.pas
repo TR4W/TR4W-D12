@@ -42,6 +42,8 @@
 
   TC_DISBALE_CIV                        = 'Anulez modul "CI-V Transceive" din statia ICOM. Vezi manualul de operare al statiei.';
   TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
+  TC_PORT_CONFLICT_STARTUP            = 'RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio''s CONTROL PORT is changed.';
+  TC_PORT_CONFLICT_DIALOG             = '%s is already configured as %s. Two devices cannot share a serial port.';
 
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Introduceti districtul federal daca sunteti in British Columbia, sau Statul/Provincia';  // 4.97.6

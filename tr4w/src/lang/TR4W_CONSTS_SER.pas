@@ -41,6 +41,8 @@ const
 
   TC_DISBALE_CIV                        = 'Iskljuci "CI-V Transceive" mod u svom ICOM uredjaju. Pogledaj u uputstvu za taj uredjaj.';
   TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
+  TC_PORT_CONFLICT_STARTUP            = 'RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio''s CONTROL PORT is changed.';
+  TC_PORT_CONFLICT_DIALOG             = '%s is already configured as %s. Two devices cannot share a serial port.';
 
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Unesite federalni distrikt ako ste u British Columbia, ili državu/provinciju';  // 4.97.6

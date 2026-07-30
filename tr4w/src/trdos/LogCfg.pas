@@ -292,6 +292,20 @@ begin
   end;
  
 
+  // A hand-edited config can point BOTH radios at the same serial port; the
+  // second open would just fail and that radio would look dead ("bad cable").
+  // Make the outcome deterministic and SAY it: RADIO ONE keeps the port,
+  // RADIO TWO's CAT is disabled for this session, and the operator is told
+  // which port collided.  (The radio dialog also warns at Apply time --
+  // uCAT.WarnIfPortConflict -- so this only fires for configs edited by hand.)
+  if (Radio1.tCATPortType in SerialPorts) and
+     (Radio1.tCATPortType = Radio2.tCATPortType) then
+     begin
+     showwarning(SysUtils.Format(TC_PORT_CONFLICT_STARTUP,
+        [string(AnsiString(PortTypeSA[Radio1.tCATPortType]))]));
+     Radio2.tCATPortType := NoPort;
+     end;
+
   Radio1.CheckAndInitializePorts_ForThisRadio;
   Radio2.CheckAndInitializePorts_ForThisRadio;
 
