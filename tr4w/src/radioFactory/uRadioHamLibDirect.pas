@@ -89,6 +89,18 @@ type
     // gate VFO B polling on split being active for those.
     FHasTargetableVFO: Boolean;
 
+    // Runtime capability latches, derived from the backend's own answers: a
+    // backend that returns ENAVAIL/ENIMPL for a function once will return it
+    // forever, so after the first such answer the poll is SKIPPED for the rest
+    // of the connection -- one INFO line replaces a Debug line every cycle,
+    // and the bus/daemon stops carrying queries that cannot succeed.  This is
+    // how HamLib-driven radios (including models unknown to TR4W, via
+    // HAMLIBANY) get per-rig capabilities without a hand-maintained table.
+    FRITUnavailable: Boolean;
+    FXITUnavailable: Boolean;
+    FPTTUnavailable: Boolean;
+    FSplitUnavailable: Boolean;
+
     // Send queue — protects FUrgentQueue for cross-thread access
     FUrgentQueue: TList;
     FCritSect: TRTLCriticalSection;
@@ -599,6 +611,13 @@ var
   err: Integer;
   freq: freq_t;
 begin
+  // Fresh connection, fresh capability latches -- a reconnect may be a
+  // different physical rig (HAMLIBANY, rigctld pointing somewhere new).
+  FRITUnavailable := False;
+  FXITUnavailable := False;
+  FPTTUnavailable := False;
+  FSplitUnavailable := False;
+
   logger.Info('[THamLibDirect.Initialize] Probing VFO naming convention');
 
   try
@@ -881,6 +900,12 @@ begin
     logger.Debug('[GetModeFromRig] Error getting mode: %s', [RigErrorToString(err)]);
 end;
 
+// The four pollable-state getters share the latching pattern (see the
+// F*Unavailable field comment): ENAVAIL/ENIMPL from the backend means "this
+// rig/backend cannot do this, ever", so the first such answer disables the
+// poll for the rest of the connection with ONE INFO line.  Any other error
+// (timeout, protocol) stays a per-cycle Debug line -- those are transient.
+
 function THamLibDirect.GetRITFromRig(vfo: TVFO): Integer;
 var
   err: Integer;
@@ -888,12 +913,18 @@ var
   hlVFO: vfo_t;
 begin
   Result := 0;
-  if FRig = nil then Exit;
+  if (FRig = nil) or FRITUnavailable then Exit;
 
   hlVFO := TR4WVFOToHamLibVFO(vfo);
   err := rig_get_rit(FRig, hlVFO, rit);
   if err = RIG_OK then
     Result := rit
+  else if (err = RIG_ENAVAIL) or (err = RIG_ENIMPL) then
+    begin
+    FRITUnavailable := True;
+    logger.Info('[GetRITFromRig] Backend does not implement RIT read (%s) — RIT polling disabled for this connection',
+                [RigErrorToString(err)]);
+    end
   else
     logger.Debug('[GetRITFromRig] Error getting RIT: %s', [RigErrorToString(err)]);
 end;
@@ -905,12 +936,18 @@ var
   hlVFO: vfo_t;
 begin
   Result := 0;
-  if FRig = nil then Exit;
+  if (FRig = nil) or FXITUnavailable then Exit;
 
   hlVFO := TR4WVFOToHamLibVFO(vfo);
   err := rig_get_xit(FRig, hlVFO, xit);
   if err = RIG_OK then
     Result := xit
+  else if (err = RIG_ENAVAIL) or (err = RIG_ENIMPL) then
+    begin
+    FXITUnavailable := True;
+    logger.Info('[GetXITFromRig] Backend does not implement XIT read (%s) — XIT polling disabled for this connection',
+                [RigErrorToString(err)]);
+    end
   else
     logger.Debug('[GetXITFromRig] Error getting XIT: %s', [RigErrorToString(err)]);
 end;
@@ -921,11 +958,17 @@ var
   ptt: ptt_t;
 begin
   Result := False;
-  if FRig = nil then Exit;
+  if (FRig = nil) or FPTTUnavailable then Exit;
 
   err := rig_get_ptt(FRig, RIG_VFO_CURR, ptt);
   if err = RIG_OK then
     Result := (ptt = RIG_PTT_ON)
+  else if (err = RIG_ENAVAIL) or (err = RIG_ENIMPL) then
+    begin
+    FPTTUnavailable := True;
+    logger.Info('[GetPTTFromRig] Backend does not implement PTT read (%s) — TX-status polling disabled for this connection',
+                [RigErrorToString(err)]);
+    end
   else
     logger.Debug('[GetPTTFromRig] Error getting PTT: %s', [RigErrorToString(err)]);
 end;
@@ -937,11 +980,20 @@ var
   tx_vfo: vfo_t;
 begin
   Result := False;
-  if FRig = nil then Exit;
+  if (FRig = nil) or FSplitUnavailable then Exit;
 
   err := rig_get_split_vfo(FRig, RIG_VFO_CURR, split, tx_vfo);
   if err = RIG_OK then
     Result := (split = RIG_SPLIT_ON)
+  else if (err = RIG_ENAVAIL) or (err = RIG_ENIMPL) then
+    begin
+    FSplitUnavailable := True;
+    // NOTE: with split unreadable, VFO B is only polled when the backend has a
+    // targetable VFO (SendPollRequests) -- same information-loss the native
+    // set-only-split radios (IC-718) live with.
+    logger.Info('[GetSplitFromRig] Backend does not implement split read (%s) — split polling disabled for this connection',
+                [RigErrorToString(err)]);
+    end
   else
     logger.Debug('[GetSplitFromRig] Error getting split: %s', [RigErrorToString(err)]);
 end;
