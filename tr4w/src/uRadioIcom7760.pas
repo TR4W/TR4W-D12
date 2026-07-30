@@ -54,6 +54,10 @@ begin
   radioModel := 'Icom IC-7760';
   FSupportsActiveVFOQuery := True;  // IC-7760 supports $07 $D2 to read active VFO
   logger.Info('[TIcom7760Radio.Create] Created IC-7760 instance, CI-V=$B2, Controller=$E1');
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
 end;
 
 initialization

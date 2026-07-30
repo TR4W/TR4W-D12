@@ -52,6 +52,10 @@ begin
    inherited Create;
    RadioAddress := $56;
    radioModel := 'Icom IC-746';
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWSpeedSync];
 end;
 
 initialization

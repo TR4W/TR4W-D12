@@ -58,6 +58,10 @@ begin
   // IC-705 CI-V transceive is at menu item $0131, not the default $0150 (IC-7610/IC-7760)
   FTransceiveMenuBytes := #$01 + #$31;
   logger.Info('[TIcom705Radio.Create] Created IC-705 instance with CI-V address $A4');
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
 end;
 
 function TIcom705Radio.ToggleBand(vfo: TVFO = nrVFOA): TRadioBand;

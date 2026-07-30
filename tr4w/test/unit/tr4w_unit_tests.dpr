@@ -144,6 +144,7 @@ uses
    uTestFlexDiscovery   in 'uTestFlexDiscovery.pas',
    uTestKenwoodSerial   in 'uTestKenwoodSerial.pas',
    uTestSerialParams    in 'uTestSerialParams.pas',
+   uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
    // and registry coverage tests.
@@ -210,6 +211,7 @@ begin
    RegisterSuite(TFlexDiscoveryTests.Create('FlexDiscovery'));
    RegisterSuite(TKenwoodSerialTests.Create('KenwoodSerial'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
+   RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
 
    if RunAllSuites then
       begin
