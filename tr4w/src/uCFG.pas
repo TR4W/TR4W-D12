@@ -365,6 +365,7 @@ const
    + 1 {MY ITU ZONE}  // Issue #930 -- explicit override of CTY.DAT default for multi-zone countries
    + 2 {PSTROTATOR IP ADDRESS + PSTROTATOR UDP PORT}  // Issue #732
    + 1 {TELNET DEBUG}  // Issue #23
+   + 2 {Radio1 and Radio2 SERIAL FORMAT}  // dialog-exposed data bits / parity / stop bits
    ;
 
    // crS (CFGStatus): csNew / csOld = active -- the command's value IS applied.
@@ -718,6 +719,10 @@ const
  (crCommand: 'RADIO ONE USE HAMLIB';          crAddress: @Radio1.UseHamLib;               crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO ONE WIDE CW FILTER';      crAddress: @Radio1.WideCWFilter;            crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO ONE STARTUP COMMAND';     crAddress: @Radio1.StartupCommand;          crMin:0;  crMax:50;      crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 0),
+ // Serial frame format 'dps' (data bits 7/8, parity N/O/E, stop bits 1/2), e.g.
+ // 8N2.  Empty = use the radio's registered defaults (SerialParamsFor).  Parsed
+ // at connect time by RadioObject.ResolveSerialFrameSettings.
+ (crCommand: 'RADIO ONE SERIAL FORMAT';       crAddress: @Radio1.SerialFormat;            crMin:0;  crMax:3;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctString; crNetwork: 0),
  (crCommand: 'RADIO TWO BAND OUTPUT PORT';    crAddress: @Radio2.BandOutputPort;          crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfRadio2; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'RADIO TWO BAUD RATE';           crAddress: pointer(12);                     crMin:0;  crMax:57600;   crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckArray; cfFunc: cfRadio2; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO TWO CAT DTR';             crAddress: pointer(33);                     crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;   cfFunc: cfRadio2; crType: ctOther; crNetwork: 0),
@@ -750,6 +755,7 @@ const
  (crCommand: 'RADIO TWO USE HAMLIB';          crAddress: @Radio2.UseHamLib;               crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO TWO WIDE CW FILTER';      crAddress: @Radio2.WideCWFilter;            crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO TWO STARTUP COMMAND';     crAddress: @Radio2.StartupCommand;          crMin:0;  crMax:50;      crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 0),
+ (crCommand: 'RADIO TWO SERIAL FORMAT';       crAddress: @Radio2.SerialFormat;            crMin:0;  crMax:3;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctString; crNetwork: 0),
  (crCommand: 'RADIUS OF EARTH';               crAddress: @RadiusOfEarth;                  crMin:0;  crMax:MAXWORD;   crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
  (crCommand: 'RANDOM CQ MODE';                crAddress: @RandomCQMode;                   crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'RATE DISPLAY';                  crAddress: pointer(0);                      crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),

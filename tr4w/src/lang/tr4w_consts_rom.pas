@@ -41,6 +41,7 @@
   TC_RADIO2                             = 'Statia 2';
 
   TC_DISBALE_CIV                        = 'Anulez modul "CI-V Transceive" din statia ICOM. Vezi manualul de operare al statiei.';
+  TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
 
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Introduceti districtul federal daca sunteti in British Columbia, sau Statul/Provincia';  // 4.97.6

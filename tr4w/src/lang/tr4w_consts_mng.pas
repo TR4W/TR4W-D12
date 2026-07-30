@@ -36,6 +36,7 @@
   TC_RADIO1                             = '1-р трансивер';
   TC_RADIO2                             = '2-р трансивер';
   TC_DISBALE_CIV                        = 'ICOM-ын Ci-V (CAT)-г салгах';
+  TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Enter your federal district if in British Columbia, or your State/Province';  // 4.97.6
   TC_YOU_ARE_USING_THE_LATEST_VERSION   = 'Та TR4W-ийн шинэ хувилбарыг хэрэглэж байна';

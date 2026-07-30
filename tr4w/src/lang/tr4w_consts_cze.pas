@@ -35,6 +35,7 @@ const
   TC_RADIO2                             = 'RIG 2';
 
   TC_DISBALE_CIV                        = 'vypnout "CI-V Transceive" mód v transceiveru ICOM';
+  TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
 
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Zadejte svůj federální okres, pokud jste v British Columbia, nebo svůj stát/provincii';  // 4.97.6

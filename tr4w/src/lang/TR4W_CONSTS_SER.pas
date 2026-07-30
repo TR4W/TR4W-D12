@@ -40,6 +40,7 @@ const
   TC_RADIO2                             = 'Stanica 2';
 
   TC_DISBALE_CIV                        = 'Iskljuci "CI-V Transceive" mod u svom ICOM uredjaju. Pogledaj u uputstvu za taj uredjaj.';
+  TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
 
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Unesite federalni distrikt ako ste u British Columbia, ili državu/provinciju';  // 4.97.6

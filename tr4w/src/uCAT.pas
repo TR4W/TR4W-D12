@@ -701,6 +701,134 @@ begin
       end;
 end;
 
+// ---------------------------------------------------------------------------
+// DATA/PARITY/STOP row (label 151, combo 152) -- created at RUNTIME, like the
+// credential rows: the per-language dialog templates are sourceless binary
+// .res files, so adding a control to the TEMPLATE would mean hand-editing
+// eleven of them.  A runtime row covers every language; only the label caption
+// (TC_SERIAL_FORMAT_LABEL) is per-language.
+// ---------------------------------------------------------------------------
+const
+   SERIALFMT_LABEL_ID = 151;
+   SERIALFMT_COMBO_ID = 152;
+
+   // Every frame the dialog offers: data bits 7/8, parity N/O/E, stop bits 1/2.
+   SerialFormatChoices: array[0..11] of PAnsiChar =
+      ('8N1', '8N2', '8E1', '8E2', '8O1', '8O2',
+       '7N1', '7N2', '7E1', '7E2', '7O1', '7O2');
+
+// The frame string the combo should show for a model: its registered defaults,
+// or 8N2 -- the long-standing program default -- when the registry does not
+// know the model (HamLib-only radios, string-id radios).
+function SerialFormatDefaultFor(model: InterfacedRadioType): string;
+var
+   sp: uRadioRegistry.TSerialParams;
+begin
+   Result := '8N2';
+   if uRadioRegistry.IsRegistered(model) then
+      begin
+      sp := uRadioRegistry.SerialParamsFor(model);
+      if uRadioRegistry.SerialFormatToString(sp.dataBits, sp.parity, sp.stopBits) <> '' then
+         begin
+         Result := uRadioRegistry.SerialFormatToString(sp.dataBits, sp.parity, sp.stopBits);
+         end;
+      end;
+end;
+
+procedure SelectSerialFormat(hwnddlg: HWND; const fmt: string);
+begin
+   // The choices are all exactly 3 characters, so CB_SELECTSTRING's prefix
+   // match is an exact match here.
+   SendDlgItemMessageA(hwnddlg, SERIALFMT_COMBO_ID, CB_SELECTSTRING,
+      WPARAM(-1), LPARAM(PAnsiChar(AnsiString(fmt))));
+end;
+
+// Push every control below the BAUD RATE row down by one row pitch, grow the
+// CAT groupbox and the dialog to match, then create the DATA/PARITY/STOP label
+// and combo one pitch below BAUD RATE.  ALL geometry is measured from existing
+// controls -- the eleven per-language dialogs are binary clones whose absolute
+// layout must not be assumed (the checked-in Tr4w.rc is stale: the shipped
+// dialogs contain controls it does not show).
+procedure AddSerialFormatRow(hwnddlg: HWND);
+var
+   r104, r105, r108, r128, rGroup, rDlg, rChild: TRect;
+   pt: TPoint;
+   rowH, threshold: integer;
+   labelX, labelY, labelW: integer;
+   comboX, comboY, comboW: integer;
+   child: HWND;
+   i: integer;
+begin
+   // Row pitch measured from the CAT RTS / CAT DTR rows.
+   GetWindowRect(GetDlgItem(hwnddlg, 104), r104);
+   GetWindowRect(GetDlgItem(hwnddlg, 105), r105);
+   rowH := r105.Top - r104.Top;
+   if rowH <= 0 then
+      begin
+      // A template without the expected rows -- leave the layout alone rather
+      // than wreck it; the radio still works, only the combo is missing.
+      Exit;
+      end;
+
+   GetWindowRect(GetDlgItem(hwnddlg, 108), r108);
+   pt.x := r108.Left;
+   pt.y := r108.Top;
+   Windows.ScreenToClient(hwnddlg, pt);
+   labelX := pt.x;
+   labelY := pt.y + rowH;
+   labelW := r108.Right - r108.Left;
+
+   GetWindowRect(GetDlgItem(hwnddlg, 128), r128);
+   pt.x := r128.Left;
+   pt.y := r128.Top;
+   Windows.ScreenToClient(hwnddlg, pt);
+   comboX := pt.x;
+   comboY := pt.y + rowH;
+   comboW := r128.Right - r128.Left;
+   threshold := pt.y + (rowH div 2);   // anything starting below the BAUD row
+
+   // Generic child walk so per-language extras shift too.
+   child := GetWindow(hwnddlg, GW_CHILD);
+   while child <> 0 do
+      begin
+      GetWindowRect(child, rChild);
+      pt.x := rChild.Left;
+      pt.y := rChild.Top;
+      Windows.ScreenToClient(hwnddlg, pt);
+      if pt.y > threshold then
+         begin
+         SetWindowPos(child, 0, pt.x, pt.y + rowH, 0, 0,
+            SWP_NOSIZE or SWP_NOZORDER);
+         end;
+      child := GetWindow(child, GW_HWNDNEXT);
+      end;
+
+   // The CAT groupbox starts above the threshold so the walk did not move it;
+   // grow it to keep the new row inside its frame.
+   child := GetDlgItem(hwnddlg, 90);
+   if child <> 0 then
+      begin
+      GetWindowRect(child, rGroup);
+      SetWindowPos(child, 0, 0, 0,
+         rGroup.Right - rGroup.Left, rGroup.Bottom - rGroup.Top + rowH,
+         SWP_NOMOVE or SWP_NOZORDER);
+      end;
+
+   GetWindowRect(hwnddlg, rDlg);
+   SetWindowPos(hwnddlg, 0, rDlg.Left, rDlg.Top,
+      rDlg.Right - rDlg.Left, rDlg.Bottom - rDlg.Top + rowH, SWP_NOZORDER);
+
+   CreateStatic(TC_SERIAL_FORMAT_LABEL, labelX, labelY, labelW, hwnddlg,
+      SERIALFMT_LABEL_ID);
+   tCreateComboBoxWindow(
+      WS_CHILD or WS_VISIBLE or WS_TABSTOP or WS_VSCROLL or CBS_DROPDOWNLIST,
+      comboX, comboY, comboW, hwnddlg, HMENU(SERIALFMT_COMBO_ID));
+   for i := Low(SerialFormatChoices) to High(SerialFormatChoices) do
+      begin
+      tCB_ADDSTRING_PCHAR(hwnddlg, SERIALFMT_COMBO_ID, SerialFormatChoices[i]);
+      end;
+end;
+
 procedure DiscoverNetworkRadios(rt: InterfacedRadioType; Found: TStringList);
 var
   list : TList;
@@ -854,6 +982,7 @@ var
   SavedCATPort, SavedKeyerPort          : PortType; // preserved across a re-populate
   hDiscoverBmp                          : HBITMAP;
   hDiscoverBtn                          : HWND;
+  fmtDb, fmtPar, fmtSb                  : Byte;     // parsed SERIAL FORMAT fields
 
   procedure ButtonsEnable;
   begin
@@ -1043,6 +1172,12 @@ begin
 
         for BRT := BR1200 to BR115200 do
           tCB_ADDSTRING_PCHAR(hwnddlg, 128, inttopchar(CAT_BAUDRATE_ARRAY[integer(BRT)]));
+
+        // DATA/PARITY/STOP row, one pitch below BAUD RATE.  Must run BEFORE
+        // the credential rows below: it shifts everything under the CAT
+        // groupbox down one row, and the credential code measures control 131
+        // to place itself.
+        AddSerialFormatRow(hwnddlg);
 
         // Create NETWORK USERNAME (label 112, edit 132) and NETWORK PASSWORD
         // (label 113, edit 133) dynamically. Positioned below control 131
@@ -1252,12 +1387,14 @@ begin
            EnableWindowFalse(hwnddlg, 124);
            EnableWindowFalse(hwnddlg, 125);
            EnableWindowFalse(hwnddlg, 128);
+           EnableWindowFalse(hwnddlg, SERIALFMT_COMBO_ID);
            end
         else
            begin
            EnableWindowTrue(hwnddlg, 124);
            EnableWindowTrue(hwnddlg, 125);
            EnableWindowTrue(hwnddlg, 128);
+           EnableWindowTrue(hwnddlg, SERIALFMT_COMBO_ID);
            EnableWindowFalse(hwnddlg, 130);
            EnableWindowFalse(hwnddlg, 140);
            EnableWindowFalse(hwnddlg, 131);
@@ -1280,6 +1417,19 @@ begin
         for BRT := BR1200 to BR115200 do
           if CATWTR^.RadioBaudRate = CAT_BAUDRATE_ARRAY[integer(BRT)] then
             tCB_SETCURSEL(hwnddlg, 128, Cardinal(brt));
+
+        {data/parity/stop: the configured SERIAL FORMAT if valid, else the
+         model's registered defaults (what the connect path will actually use)}
+        if uRadioRegistry.TryParseSerialFormat(string(CATWTR^.SerialFormat),
+              fmtDb, fmtPar, fmtSb) then
+           begin
+           SelectSerialFormat(hwnddlg,
+              uRadioRegistry.SerialFormatToString(fmtDb, fmtPar, fmtSb));
+           end
+        else
+           begin
+           SelectSerialFormat(hwnddlg, SerialFormatDefaultFor(CATWTR^.RadioModel));
+           end;
         {freq adder}
 
 //        Windows.SetDlgItemInt(hwnddlg, 129, TempRadio^.FrequencyAdder, False);
@@ -1383,6 +1533,7 @@ begin
                 EnableWindowFalse(hwnddlg,124);
                 EnableWindowFalse(hwnddlg,125);
                 EnableWindowFalse(hwnddlg,128);
+                EnableWindowFalse(hwnddlg, SERIALFMT_COMBO_ID);
                 ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port on switch to Network
                 end
              else
@@ -1390,6 +1541,7 @@ begin
                 EnableWindowTrue(hwnddlg, 124);
                 EnableWindowTrue(hwnddlg, 125);
                 EnableWindowTrue(hwnddlg, 128);
+                EnableWindowTrue(hwnddlg, SERIALFMT_COMBO_ID);
                 EnableWindowFalse(hwnddlg,130);
                 EnableWindowFalse(hwnddlg,140);
                 EnableWindowFalse(hwnddlg,131);
@@ -1411,10 +1563,14 @@ begin
                tCB_SETCURSEL(hwnddlg, 128,
                   Cardinal(BaudRateComboIndex(
                      uRadioRegistry.SerialParamsFor(InterfacedRadioType(i)).baud)));
+               // DATA/PARITY/STOP follows the model, exactly like the baud rate.
+               SelectSerialFormat(hwnddlg,
+                  SerialFormatDefaultFor(InterfacedRadioType(i)));
                end
             else
                begin
                tCB_SETCURSEL(hwnddlg, 128, 2);   // 4800 default for a string-id factory radio
+               SelectSerialFormat(hwnddlg, '8N2');
                end;
             UpdateNetworkCredentialsVisibility;
             ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port when the radio type changes
@@ -1450,6 +1606,7 @@ begin
               // (RTS_DTR_Values_Array = OFF/ON/CW/PTT), so they end up OFF.
               for i := 121 to 128 do tCB_SETCURSEL(hwnddlg, i, 0);
               tCB_SETCURSEL(hwnddlg, 128, 2);   // baud rate -> 4800 (default)
+              SelectSerialFormat(hwnddlg, '8N2');   // frame -> the program default
 
               // Reset the network edits to defaults.  IP ADDRESS is a string
               // and may be blank.  TCP PORT is an integer (ctInteger): a blank
@@ -1734,6 +1891,24 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
   else
      ID := 'RADIO TWO ICOM NETWORK PASSWORD';
   Windows.WritePrivateProfileStringA('Radio', @ID[1], nil, TR4W_INI_FILENAME);
+
+  // Save the DATA/PARITY/STOP combo (runtime-created, so outside the 101..111
+  // label loop) explicitly.  CheckAndInitializePorts below re-runs
+  // ResolveSerialFrameSettings, which applies the new value to the connection.
+  Windows.ZeroMemory(@ID, SizeOf(ID));
+  Windows.ZeroMemory(@CMD, SizeOf(CMD));
+  if CATWTR = @Radio1 then
+     begin
+     ID := 'RADIO ONE SERIAL FORMAT';
+     end
+  else
+     begin
+     ID := 'RADIO TWO SERIAL FORMAT';
+     end;
+  CMD := GetDialogItemText(CATWndHWND, SERIALFMT_COMBO_ID);
+  logger.Trace('[RestartPollingThread] ID = %s, CMD = %s', [ID, CMD]);
+  Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
+  CheckCommand(@ID, CMD);
 
   CATWTR^.CheckAndInitializePorts_ForThisRadio;
   InitializeKeyer;
