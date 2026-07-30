@@ -101,6 +101,26 @@ const
    PARITY_ODD  = 1;
    PARITY_EVEN = 2;
 
+   // ---- CAPABILITY MEMBERS, RE-EXPORTED ------------------------------------
+   // A radio unit needs only `uses uRadioRegistry` to declare its capabilities.
+   //
+   // Delphi does NOT re-export enum MEMBERS through a type alias: aliasing
+   // TRadioCapability makes the type nameable but leaves rcCWByCAT undefined in
+   // the using unit.  Every Icom model unit uses `uRadioIcomBase, VC,
+   // uRadioRegistry` and none of them uses uFactoryRadioBase directly, so a first
+   // attempt at declaring capabilities in those units failed with
+   // "E2003 Undeclared identifier: 'rcCWByCAT'".  Aliasing the members as typed
+   // constants fixes it in ONE place instead of editing 25 unit headers.
+   rcReadVFOB           = uFactoryRadioBase.rcReadVFOB;
+   rcReadRIT            = uFactoryRadioBase.rcReadRIT;
+   rcReadSplit          = uFactoryRadioBase.rcReadSplit;
+   rcReadTXStatus       = uFactoryRadioBase.rcReadTXStatus;
+   rcDataMode           = uFactoryRadioBase.rcDataMode;
+   rcCWByCAT            = uFactoryRadioBase.rcCWByCAT;
+   rcPlayDVK            = uFactoryRadioBase.rcPlayDVK;
+   rcCWSpeedSync        = uFactoryRadioBase.rcCWSpeedSync;
+   rcSharedRITXITOffset = uFactoryRadioBase.rcSharedRITXITOffset;
+
 // Reads as SerialParams(4800, 8, PARITY_NONE, 2) at each registration.
 function SerialParams(baud: Integer; dataBits, parity, stopBits: Byte): TSerialParams;
 
