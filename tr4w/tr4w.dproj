@@ -249,7 +249,9 @@
         <DCCReference Include="src\uRadioElecraftK3.pas"/>
         <DCCReference Include="src\uRadioElecraftK2.pas"/>
         <DCCReference Include="src\uRadioElecraftKX3.pas"/>
+        <DCCReference Include="src\uRadioKenwoodLAN.pas"/>
         <DCCReference Include="src\uRadioKenwoodTS890.pas"/>
+        <DCCReference Include="src\uRadioKenwoodTS990.pas"/>
         <DCCReference Include="src\uIcomNetworkTypes.pas"/>
         <DCCReference Include="src\uIcomNetworkTransport.pas"/>
         <DCCReference Include="src\uIcomNetworkDiscovery.pas"/>
