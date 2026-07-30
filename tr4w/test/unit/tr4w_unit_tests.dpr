@@ -137,6 +137,7 @@ uses
    uRadioIcom7410 in '..\..\src\uRadioIcom7410.pas',
    uRadioIcom9100 in '..\..\src\uRadioIcom9100.pas',
    uRadioTenTecOmni6 in '..\..\src\uRadioTenTecOmni6.pas',
+   uRadioTenTecOrion in '..\..\src\uRadioTenTecOrion.pas',
    uRadioIcom7700         in '..\..\src\uRadioIcom7700.pas',
    uRadioIcom7800         in '..\..\src\uRadioIcom7800.pas',
    uRadioIcom7850         in '..\..\src\uRadioIcom7850.pas',
