@@ -26,9 +26,9 @@ TR4W is a free amateur radio contest logging application for Windows, written in
 > guard `Get-Process -Name tr4w` first — it collides if TR4W is running).
 
 ### Requirements
-- **Borland Delphi 7** (32-bit compiler) - Required for compilation
+- **Borland Delphi 12** - Required for compilation
 - Windows development environment
-- Delphi command-line compiler (DCC32.EXE) or Delphi 7 IDE
+- Delphi command-line compiler (DCC32.EXE) or Delphi 12 IDE **Note The Community Edition of Delphi 12 does not allow command line building with dcc. NY4I has a licensed version of D12 to allow automated building**
 
 ### Compilation
 
