@@ -79,6 +79,7 @@ implementation
 
 uses
   uRadioPolling,
+  uRadioRegistry,   // SupportsFor -- capabilities by model, no instance needed
   LOGSUBS2,
   MainUnit;
 
@@ -298,10 +299,18 @@ begin
       else if pos(ControlD, Message) = 0 then
       begin
         //          wkWaitForChainablemessage := True;
+        // Skip the flush only when CW-by-CAT is in progress AND flushing would
+        // wreck this radio's timing.  Was `RadioModel in ICOMRadios`; the radio
+        // now declares the property itself (rcCWFlushDisruptsTiming), named for
+        // the MECHANISM -- the rate-limited CI-V send queue -- rather than the
+        // vendor, so a future non-Icom with a queued keyer can say so honestly.
+        // ny4i Issue 145: "Don't do this for Icom radios. It messes up the times
+        // of CW Messages."
         if not (IsCWByCATActive and
-          (ActiveRadioPtr^.RadioModel in ICOMRadios)) then
+          uRadioRegistry.SupportsFor(ActiveRadioPtr^.RadioModel,
+                                     rcCWFlushDisruptsTiming)) then
         begin
-          FlushCWBuffer; // ny4i Issue 145 - Don;t dothis for Icom radios. It messes up the times of CW Messages
+          FlushCWBuffer;
         end;
       end;
     end;

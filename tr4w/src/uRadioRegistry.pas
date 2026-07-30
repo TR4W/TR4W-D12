@@ -118,6 +118,7 @@ const
    rcDataMode           = uFactoryRadioBase.rcDataMode;
    rcCWByCAT            = uFactoryRadioBase.rcCWByCAT;
    rcPlayDVK            = uFactoryRadioBase.rcPlayDVK;
+   rcCWFlushDisruptsTiming = uFactoryRadioBase.rcCWFlushDisruptsTiming;
    rcCWSpeedSync        = uFactoryRadioBase.rcCWSpeedSync;
    rcSharedRITXITOffset = uFactoryRadioBase.rcSharedRITXITOffset;
 
@@ -180,6 +181,23 @@ function RegisteredNetworkPort(model: InterfacedRadioType): integer;
 function RegisteredDiscoverable(model: InterfacedRadioType): Boolean;
 // Default serial port settings for a model.  The radio dialog seeds its baud /
 // data / parity / stop controls from these when the operator picks a radio.
+// ---- CAPABILITIES BY MODEL, WITHOUT AN INSTANCE ----------------------------
+// Capabilities live on the radio OBJECT (set in its constructor, possibly via the
+// DefineCapabilities virtual), so the class stays the single source of truth.  But
+// the callers that need them hold a LEGACY RadioObject, not a factory object:
+// MainUnit's IsCWByCATActive, MainUnit's DVK check, LOGSUBS1's CW-flush guard.  A
+// radio still on the legacy path has no factory object at all.
+//
+// So this builds ONE throwaway instance per model, on first ask, and remembers the
+// answer.  Constructing a factory radio is side-effect free -- the constructor
+// opens no port; Connect does -- and the cache means it happens at most once per
+// model for the life of the process.  That matters: LOGSUBS1's caller is
+// FlushCWBuffer, which runs on every function-key press.
+function CapabilitiesFor(model: InterfacedRadioType): TRadioCapabilitySet;
+// Convenience: `SupportsFor(m, rcCWByCAT)`.  False for an unregistered model,
+// which is correct -- a radio the factory does not know cannot promise anything.
+function SupportsFor(model: InterfacedRadioType; cap: TRadioCapability): Boolean;
+
 function SerialParamsFor(model: InterfacedRadioType): TSerialParams;
 function SerialParamsForId(const id: string): TSerialParams;
 
@@ -200,7 +218,7 @@ function RegisteredIds: TArray<string>;                       // all ids, in reg
 implementation
 
 uses
-   Generics.Collections, TypInfo;
+   Generics.Collections, TypInfo, SyncObjs;
 
 type
    TRadioReg = record
@@ -482,6 +500,49 @@ begin
       end;
 end;
 
+// Cache, indexed by the enum: 100-odd members, so an array beats a dictionary.
+// Guarded because the first ask can come from the main thread (a function key) or
+// the polling thread, and two threads constructing the same radio at once would
+// race on the ctor's allocations.
+var
+   gCapCache: array[InterfacedRadioType] of TRadioCapabilitySet;
+   gCapKnown: array[InterfacedRadioType] of Boolean;
+   gCapLock: TCriticalSection;
+
+function CapabilitiesFor(model: InterfacedRadioType): TRadioCapabilitySet;
+var
+   r: TFactoryRadioBase;
+begin
+   gCapLock.Enter;
+   try
+      if not gCapKnown[model] then
+         begin
+         gCapCache[model] := [];
+         if IsRegistered(model) then
+            begin
+            r := CreateInstance(model);
+            if r <> nil then
+               begin
+               try
+                  gCapCache[model] := r.Capabilities.Flags;
+               finally
+                  r.Free;
+               end;
+               end;
+            end;
+         gCapKnown[model] := True;
+         end;
+      Result := gCapCache[model];
+   finally
+      gCapLock.Leave;
+   end;
+end;
+
+function SupportsFor(model: InterfacedRadioType; cap: TRadioCapability): Boolean;
+begin
+   Result := cap in CapabilitiesFor(model);
+end;
+
 function SerialParamsForId(const id: string): TSerialParams;
 var
    reg: TRadioReg;
@@ -543,6 +604,7 @@ begin
 end;
 
 initialization
+   gCapLock := TCriticalSection.Create;
    gById := TDictionary<string, TRadioReg>.Create;
    gByModel := TDictionary<InterfacedRadioType, string>.Create;
    gOrder := TList<string>.Create;

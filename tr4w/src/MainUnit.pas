@@ -505,6 +505,7 @@ uses
 {$IFEND}
 
   uRadioPolling,
+  uRadioRegistry,   // SupportsFor -- capabilities by model, no instance needed
   uHamScore,        // Issue #783 -- HamScoreResyncFromScratch (Tools menu)
   LogCfg,
   LogCW,
@@ -844,7 +845,7 @@ begin
 
   if ActiveMode in [Phone, FM] then
   begin
-    if (ActiveRadioPtr^.RadioModel in RadioSupportsPlayDVK) { and
+    if uRadioRegistry.SupportsFor(ActiveRadioPtr^.RadioModel, rcPlayDVK) { and
     (ActiveRadioPtr^.tPTTStatus = PTT_ON) } then
     begin
       ActiveRadioPtr^.MemoryKeyer(0); // Playing memory 0 stops the message.
@@ -9255,8 +9256,12 @@ begin
   begin
     ptr := theRadio;
   end;
+  // TWO INDEPENDENT FACTS, both required.  ptr.CWByCAT is the OPERATOR's config
+  // setting -- what they want.  rcCWByCAT is what the RADIO can do.  A user can
+  // switch the option on for a radio that cannot key CW over CAT, and the
+  // capability is what stops that.  (Was `RadioModel in RadioSupportsCWByCAT`.)
   Result := (ptr.CWByCAT) and
-    (ptr.RadioModel in RadioSupportsCWByCAT);
+    uRadioRegistry.SupportsFor(ptr.RadioModel, rcCWByCAT);
 end;
 
 function IsCWByCATActive: boolean; // ny4i Issue # 111
