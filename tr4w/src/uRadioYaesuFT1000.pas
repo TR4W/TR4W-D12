@@ -14,15 +14,15 @@
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
-unit uRadioYaesuFT990;
+unit uRadioYaesuFT1000;
 
 {
-  Yaesu FT-990.
+  Yaesu FT-1000.
 
   A thin model on TYaesuFT990Group (uRadioYaesuFT990Group.pas), which holds
-  everything this radio and the FT-1000 share.
+  everything this radio and the FT-990 share.
 
-  Short status is 32 bytes; AM is $05.
+  Short status is 16 bytes, not the FT-990's 32; AM is $04, not $05.
 
   NOT BENCH-TESTED.
 }
@@ -34,18 +34,18 @@ uses
   uRadioBand, SysUtils, Log4D, VC, uRadioRegistry;
 
 type
-  TFT990Radio = class(TYaesuFT990Group)
+  TFT1000Radio = class(TYaesuFT990Group)
   public
     constructor Create; reintroduce;
   end;
 
 implementation
 
-constructor TFT990Radio.Create;
+constructor TFT1000Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT990');
-   radioModel := 'Yaesu FT-990';
+   logger := TLogLogger.GetLogger('TR4WDebugLog.FT1000');
+   radioModel := 'Yaesu FT-1000';
 
    // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
    // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
@@ -54,28 +54,18 @@ begin
    FModeCW   := $03;
    FModeLSB  := $00;
    FModeUSB  := $01;
-   FModeAM   := $05;
+   FModeAM   := $04;
    FModeFM   := $06;
    FModeDIGL := $08;
    FModeDIGU := $09;
-   FStatus1Len := 32;          // FT-990; the FT-1000 subclass sets 16
+   FStatus1Len := 16;          // legacy: `if RadioModel = FT1000 then F1 := 16`
    RecomputeFrameLength;
-   pollingInterval := 200;
-
-   // Capabilities = what this driver actually reads:
-   //   rcReadVFOB  -- the $03 $10 block carries both VFOs
-   //   rcReadSplit -- the $FA block reports it
-   //   rcReadRIT   -- the short status carries the clarifier and its flags
-   // NOT rcReadTXStatus: nothing in these three answers reports PTT.
-   FCapabilities.Flags := [rcReadVFOB, rcReadSplit, rcReadRIT];
-   FCapabilities.CWSpeedMin := 0;
-   FCapabilities.CWSpeedMax := 0;
 end;
 
 initialization
-  RegisterRadio(FT990,
-     function: TFactoryRadioBase begin Result := TFT990Radio.Create end,
-     'Yaesu FT-990', [rlSerial], 0, False,
+  RegisterRadio(FT1000,
+     function: TFactoryRadioBase begin Result := TFT1000Radio.Create end,
+     'Yaesu FT-1000', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      );
 
