@@ -854,13 +854,15 @@ begin
    // showed only 'RADIO ONE' (bench screenshot).  Ask the DIALOG for its own
    // font (WM_GETFONT) and stamp that on both new controls -- by definition
    // the same font every template control uses, in every language.
+   // AnsiUpperCase for style consistency with the dialog's all-caps captions
+   // (display-only; the lang const itself stays as the translator wrote it).
    if CATWTR = @Radio1 then
       begin
-      caption := 'RADIO ONE ' + TC_SERIAL_FORMAT_LABEL;
+      caption := 'RADIO ONE ' + AnsiUpperCase(TC_SERIAL_FORMAT_LABEL);
       end
    else
       begin
-      caption := 'RADIO TWO ' + TC_SERIAL_FORMAT_LABEL;
+      caption := 'RADIO TWO ' + AnsiUpperCase(TC_SERIAL_FORMAT_LABEL);
       end;
    // Single line (no wrap), and let the label run to the combo's edge rather
    // than stopping at label 108's width -- this caption is the longest in the
@@ -1393,7 +1395,12 @@ begin
         MoveCtrlDown(118, ShowAllRowH);
         MoveCtrlDown(119, ShowAllRowH);
 
-        tCreateButtonWindow(0, TC_SHOW_ALL_SERIAL_PORTS,
+        // AnsiUpperCase: every caption in this dialog is ALL-CAPS ('RADIO ONE
+        // USE HAMLIB', ...), and after the fonts were unified the sentence-case
+        // caption still read as "smaller" (bench: NY4I).  Uppercasing at the
+        // point of DISPLAY keeps the translated lang consts untouched and is
+        // locale-aware (Cyrillic, diacritics).
+        tCreateButtonWindow(0, AnsiUpperCase(TC_SHOW_ALL_SERIAL_PORTS),
            WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTOCHECKBOX,
            ptTemp.x, ptTemp.y,
            GetSystemMetrics(SM_CXVSCROLL) * 12, 20, hwnddlg, HMENU(150));
