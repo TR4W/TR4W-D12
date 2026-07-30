@@ -14,15 +14,16 @@
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
-unit uRadioYaesuFT817;
+unit uRadioYaesuFT897;
 
 {
-  Yaesu FT-817.
+  Yaesu FT-897.
 
   A thin model on TYaesuFT817Group (uRadioYaesuFT817Group.pas), shared with the
   FT-817, FT-818, FT-847, FT-857 and FT-897.
 
-  The group exemplar: split, clarifier, DIG ($0A) and DIG-L/PKT ($0C) all present.
+  Same CAT set as the FT-857, including DIGL $FF.  It used to descend FROM the
+  FT-857, making it three models deep off the FT-817.
 
   Every trait is stated explicitly, even where it matches another model in the
   group.  The base promises nothing, so a trait left unsaid means the feature is
@@ -38,25 +39,25 @@ uses
   SysUtils, Log4D, VC, uRadioRegistry;
 
 type
-  TYaesuFT817Radio = class(TYaesuFT817Group)
+  TYaesuFT897Radio = class(TYaesuFT817Group)
   public
     constructor Create; reintroduce;
   end;
 
 implementation
 
-constructor TYaesuFT817Radio.Create;
+constructor TYaesuFT897Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT817');
-   radioModel := 'Yaesu FT-817';
+   logger := TLogLogger.GetLogger('TR4WDebugLog.FT897');
+   radioModel := 'Yaesu FT-897';
 
    // Group traits.
    FCATEnableOnConnect := False;              // answers without a CAT preamble
    FHasSplit           := True;
    FHasClarifier       := True;
    FModeDIGU           := FT817_MODE_DIGU;    // $0A
-   FModeDIGL           := FT817_MODE_DIGL;    // $0C
+   FModeDIGL           := MODEBYTE_NONE;      // no PKT-as-RTTY
    // Split IS read back, from the appended TX-status byte.
    //   NOT rcReadRIT      -- the clarifier is set-only; nothing reports it.
    //   NOT rcReadTXStatus -- the PTT bit exists but Note 4 omits its polarity.
@@ -65,9 +66,9 @@ begin
 end;
 
 initialization
-  RegisterRadio(FT817,
-     function: TFactoryRadioBase begin Result := TYaesuFT817Radio.Create end,
-     'Yaesu FT-817', [rlSerial], 0, False,
+  RegisterRadio(FT897,
+     function: TFactoryRadioBase begin Result := TYaesuFT897Radio.Create end,
+     'Yaesu FT-897', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      );
 
