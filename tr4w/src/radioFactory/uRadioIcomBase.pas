@@ -102,12 +102,17 @@ type
     FActiveVFO: TVFO;             // Which VFO is currently active (main); updated via $07 $D2 query/push
     FInitialQueryPending: Boolean; // True after $19 sent; triggers $03/$04 on $19 response
     FFirstMessage: Boolean;        // True until first valid frame received; triggers initial VFO/mode queries
+    FTransceiverIDQueried: Boolean; // True once $19 $00 has been sent for this connection (see QueryTransceiverIDOnce)
     FPollPhase: Integer;            // Rotates through query groups to avoid flooding radio
     FLastSetCWSpeedTick: DWORD;   // GetTickCount at last SetCWSpeed call — suppresses stale echoes
     FDataModeID: Byte;            // Icom data sub-mode: $01=D1 (default), $02=D2, $03=D3 — configurable via RADIO x ICOM DATA MODE ID
 
     // Actual UDP send — only called by TCIVSendThread.DrainQueues
     procedure DoSendDirect(const s: string);
+
+    // One-shot $19 $00 transceiver-ID query, triggered by the FIRST mode
+    // response of the connection rather than the connect burst itself.
+    procedure QueryTransceiverIDOnce;
 
 
     procedure ProcessCIVMessage(msg: string);
@@ -408,6 +413,7 @@ begin
   FDataModeID := $01;  // Default to D1; override via RADIO x ICOM DATA MODE ID config command
   FInitialQueryPending := False;
   FFirstMessage        := True;
+  FTransceiverIDQueried := False;
   FDirectFreqRoute          := False;  // Override True in subclass for radios where $07 $D2 is unreliable
   FMainBandProcessingOnly   := False;  // Override True for IC-9700, IC-9100 (satellite-mode $25 returns FA)
   FActiveVFOInverted        := False;  // Override True for IC-9700 ($00=$B active, $01=$A active)
@@ -492,6 +498,28 @@ begin
       Result := Result + ' ';
     Result := Result + IntToHex(Ord(s[i]), 2);
     end;
+end;
+
+// Read the transceiver ID ($19 $00) ONCE per connection.  The reply carries one
+// byte: the radio's DEFAULT CI-V address (bench-proven on the IC-718: reply
+// FE FE E0 5E 19 00 5E FD) -- a fixed per-model code, so the INFO log shows
+// what model is REALLY on the wire even when the operator has reconfigured the
+// rig's bus address or selected the wrong radio TYPE.
+//
+// Triggered by the FIRST MODE RESPONSE, deliberately NOT queued into the
+// connect burst: CI-V is half-duplex, and appending $19 to the burst put its
+// TX on the wire while the radio was still transmitting its $04 mode response
+// -- the bench log showed the corrupted echo (7E FE ...), the FC FC FC FC FC
+// collision jam, and a dead mode display (NON) as the mode response was
+// destroyed.  By the first mode response the burst is finished and the bus has
+// a quiet second before the next poll.
+procedure TIcomRadio.QueryTransceiverIDOnce;
+begin
+  if FTransceiverIDQueried then
+    Exit;
+  FTransceiverIDQueried := True;
+  SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TRANSCEIVER_ID),
+                              CIV_SUBCMD_TRANSCEIVER_ID_READ));
 end;
 
 function TIcomRadio.SupportsDataMode: Boolean;
@@ -931,13 +959,8 @@ begin
         QueryMode;            // $04 → active VFO mode (other radios)
         end;
      QueryActiveVFO;  // No-op unless FSupportsActiveVFOQuery = True
-     // Read the transceiver ID ($19 $00) once per connection.  The reply
-     // carries ONE byte: the radio's DEFAULT CI-V address (bench-proven on the
-     // IC-718: reply FE FE E0 5E 19 00 5E FD) -- a fixed per-model code, so the
-     // INFO log shows what model is REALLY on the wire even when the operator
-     // has reconfigured the rig's bus address or selected the wrong radio TYPE.
-     SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TRANSCEIVER_ID),
-                                 CIV_SUBCMD_TRANSCEIVER_ID_READ));
+     // The $19 $00 transceiver-ID read is deliberately NOT part of this burst
+     // -- see QueryTransceiverIDOnce, which fires on the first mode response.
      end;
 
   if logger.IsTraceEnabled then
@@ -1165,6 +1188,7 @@ begin
 
     $04:  // Read mode response
       begin
+        QueryTransceiverIDOnce;   // first mode response = connect burst done, bus quiet
         // IC-9700 (FMainBandProcessingOnly): the radio pushes mode changes as $04 transceive.
         // The $04 data covers only the active VFO and cannot distinguish A from B.
         // Use its arrival as a trigger to refresh both VFOs via explicit $25/$26 queries.
@@ -1285,6 +1309,7 @@ begin
       // IC-7760 format (FSupportsExtendedVFOBCommands): $01 <freq5> <mode> <filter>
       // Standard format: <freq5> <mode> <filter>
       begin
+        QueryTransceiverIDOnce;   // first mode response = connect burst done, bus quiet
         logger.Debug('[%s] $26 response received, data len=%d, extended=%s',
            [radioModel, Length(data), BoolToStr(FSupportsExtendedVFOBCommands, True)]);
         if FSupportsExtendedVFOBCommands then

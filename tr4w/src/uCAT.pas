@@ -754,10 +754,11 @@ var
    r104, r105, r108, r128, rGroup, rDlg, rChild: TRect;
    pt: TPoint;
    rowH, threshold: integer;
-   labelX, labelY, labelW: integer;
+   labelX, labelY, labelW, labelH: integer;
    comboX, comboY, comboW: integer;
    child: HWND;
    i: integer;
+   caption: string;
 begin
    // Row pitch measured from the CAT RTS / CAT DTR rows.
    GetWindowRect(GetDlgItem(hwnddlg, 104), r104);
@@ -777,6 +778,7 @@ begin
    labelX := pt.x;
    labelY := pt.y + rowH;
    labelW := r108.Right - r108.Left;
+   labelH := r108.Bottom - r108.Top;
 
    GetWindowRect(GetDlgItem(hwnddlg, 128), r128);
    pt.x := r128.Left;
@@ -818,8 +820,21 @@ begin
    SetWindowPos(hwnddlg, 0, rDlg.Left, rDlg.Top,
       rDlg.Right - rDlg.Left, rDlg.Bottom - rDlg.Top + rowH, SWP_NOZORDER);
 
-   CreateStatic(TC_SERIAL_FORMAT_LABEL, labelX, labelY, labelW, hwnddlg,
-      SERIALFMT_LABEL_ID);
+   // Match the template's label rows exactly: PLAIN left-aligned static, the
+   // measured height of the BAUD RATE label, and the same RADIO ONE/TWO prefix
+   // the 101..111 label loop gives every other row.  (TF.CreateStatic is NOT
+   // used here on purpose -- it hardcodes SS_SUNKEN + SS_CENTER + 23px, which
+   // is the boxed look NY4I flagged on the bench.)
+   if CATWTR = @Radio1 then
+      begin
+      caption := 'RADIO ONE ' + TC_SERIAL_FORMAT_LABEL;
+      end
+   else
+      begin
+      caption := 'RADIO TWO ' + TC_SERIAL_FORMAT_LABEL;
+      end;
+   tCreateStaticWindow(caption, SS_LEFT or WS_CHILD or WS_VISIBLE,
+      labelX, labelY, labelW, labelH, hwnddlg, SERIALFMT_LABEL_ID);
    tCreateComboBoxWindow(
       WS_CHILD or WS_VISIBLE or WS_TABSTOP or WS_VSCROLL or CBS_DROPDOWNLIST,
       comboX, comboY, comboW, hwnddlg, HMENU(SERIALFMT_COMBO_ID));
@@ -1754,6 +1769,101 @@ begin
 
 end;
 
+// Keep each radio's keys grouped in the ini.  WritePrivateProfileString can
+// only UPDATE a key in place or APPEND a new one at the end of the section --
+// insertion position is fixed at first creation -- so a key added to TR4W
+// after a user's ini was first written lands stranded at the bottom, away
+// from its radio's block (NY4I bench: RADIO ONE SERIAL FORMAT after all the
+// RADIO TWO keys).  This pass moves each SERIAL FORMAT line to sit directly
+// after its radio's BAUD RATE line, editing the FILE TEXT so every other
+// line -- including comment lines like '#RADIO ONE TYPE=K4' -- keeps its
+// exact place.
+procedure GroupSerialFormatIniKeys;
+var
+   lines: TStringList;
+   i, sectStart, sectEnd: integer;
+   changed: Boolean;
+
+   function KeyLine(const key: string; lineIdx: integer): Boolean;
+   begin
+      Result := SameText(Copy(Trim(lines[lineIdx]), 1, Length(key) + 1), key + '=');
+   end;
+
+   procedure MoveFormatAfterBaud(const radio: string);
+   var
+      fmtIdx, baudIdx, j: integer;
+      s: string;
+   begin
+      fmtIdx := -1;
+      baudIdx := -1;
+      for j := sectStart to sectEnd do
+         begin
+         if KeyLine(radio + ' SERIAL FORMAT', j) then
+            begin
+            fmtIdx := j;
+            end;
+         if KeyLine(radio + ' BAUD RATE', j) then
+            begin
+            baudIdx := j;
+            end;
+         end;
+      if (fmtIdx < 0) or (baudIdx < 0) or (fmtIdx = baudIdx + 1) then
+         begin
+         Exit;
+         end;
+      s := lines[fmtIdx];
+      lines.Delete(fmtIdx);
+      if fmtIdx < baudIdx then
+         begin
+         Dec(baudIdx);
+         end;
+      // One delete + one insert inside the section: its length is unchanged,
+      // so sectEnd stays valid for the second radio's pass.
+      lines.Insert(baudIdx + 1, s);
+      changed := True;
+   end;
+
+begin
+   // Flush the profile cache so the file reflects every write made above.
+   Windows.WritePrivateProfileStringA(nil, nil, nil, TR4W_INI_FILENAME);
+   lines := TStringList.Create;
+   try
+      try
+         lines.LoadFromFile(string(PAnsiChar(@TR4W_INI_FILENAME)), TEncoding.ANSI);
+      except
+         Exit;   // unreadable ini -- grouping is cosmetic, never fatal
+      end;
+      // Find the [Radio] section bounds.
+      sectStart := -1;
+      sectEnd := lines.Count - 1;
+      for i := 0 to lines.Count - 1 do
+         begin
+         if SameText(Trim(lines[i]), '[Radio]') then
+            begin
+            sectStart := i + 1;
+            end
+         else if (sectStart >= 0) and (Copy(Trim(lines[i]), 1, 1) = '[') then
+            begin
+            sectEnd := i - 1;
+            Break;
+            end;
+         end;
+      if sectStart < 0 then
+         begin
+         Exit;
+         end;
+      changed := False;
+      MoveFormatAfterBaud('RADIO ONE');
+      MoveFormatAfterBaud('RADIO TWO');
+      if changed then
+         begin
+         lines.SaveToFile(string(PAnsiChar(@TR4W_INI_FILENAME)), TEncoding.ANSI);
+         end;
+   finally
+      lines.Free;
+   end;
+end;
+
 procedure RestartPollingThread(CATWndHWND: HWND);
 var
   lpExitCode                            : DWORD;
@@ -1932,6 +2042,7 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
   logger.Trace('[RestartPollingThread] ID = %s, CMD = %s', [ID, CMD]);
   Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
+  GroupSerialFormatIniKeys;
 
   CATWTR^.CheckAndInitializePorts_ForThisRadio;
   InitializeKeyer;
