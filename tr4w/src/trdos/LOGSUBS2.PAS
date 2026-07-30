@@ -1612,7 +1612,6 @@ begin
   DisplayBandMap;
   //   if ActiveMultiPort <> NoPort then CreateAndSendSAPMultiInfoMessage;
 //wli  LogBadQSOString := '';
-  CQRITEnabled := False;
   ClearAutoSendDisplay;
   //????????   FRM.ExchangeWindow.Color := clyellow;
      //  FRM.CallWindow . SetFocus;
@@ -1929,12 +1928,6 @@ begin
                   ClearContestExchange(ReceivedData); { To try and fix a problem
                       with Two Radio mode and DX
                       mults showing up in next QSO }
-                  if ActiveRadio = RadioOne then
-                  begin
-                    CQRITEnabled := Radio1.RadioModel in KenwoodRadios;
-                  end
-                  else
-                    CQRITEnabled := Radio2.RadioModel in KenwoodRadios;
                   if (TwoRadioState = SendingExchange) then
                         //wli                            CheckTwoRadioState (ContactDone)
                   else
@@ -1985,12 +1978,6 @@ begin
                     ExchangeHasBeenSent := False;
                   until not SearchAndPounce;
                   ClearContestExchange(ReceivedData);
-                  if ActiveRadio = RadioOne then
-                  begin
-                    CQRITEnabled := Radio1.RadioModel in KenwoodRadios;
-                  end
-                  else
-                    CQRITEnabled := Radio2.RadioModel in KenwoodRadios;
                     //                  RemoveWindow(ExchangeWindow);
                   DisplayAutoSendCharacterCount;
                   EscapeDeletedCallEntry := CallWindowString;
@@ -2010,12 +1997,6 @@ begin
                   ExchangeHasBeenSent := False;
                 until not SearchAndPounce;
                 ClearContestExchange(ReceivedData);
-                if ActiveRadio = RadioOne then
-                begin
-                  CQRITEnabled := Radio1.RadioModel in KenwoodRadios;
-                end
-                else
-                  CQRITEnabled := Radio2.RadioModel in KenwoodRadios;
                 DisplayAutoSendCharacterCount;
                 {
                 if CallWindowString = '' then
@@ -2063,12 +2044,6 @@ begin
                        ExchangeHasBeenSent := False;
                      until not SearchAndPounce;
                      ClearContestExchange(ReceivedData);
-                     if ActiveRadio = radioone then
-                     begin
-                       CQRITEnabled := Radio1.RadioModel = TS850;
-                     end
-                     else
-                       CQRITEnabled := Radio2.RadioModel = TS850;
                      DisplayAutoSendCharacterCount;
                      if CallWindowString = '' then
                      begin

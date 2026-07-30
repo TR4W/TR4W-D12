@@ -1144,11 +1144,7 @@ type
 
 
     
-  ICOMRadioTypes = set of InterfacedRadioType;
-  KenwoodRadioTypes = set of InterfacedRadioType;
-  YaesuRadioTypes = set of InterfacedRadioType;
   InterfacedRadioTypeSet = set of InterfacedRadioType;
-  HamLib_ONLY_RadioTypes = set of InterfacedRadioType;
     
   BandType = (
     Band160,
