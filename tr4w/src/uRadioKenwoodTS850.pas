@@ -44,6 +44,10 @@ constructor TKenwoodTS850Radio.Create;
 begin
   inherited Create;
   radioModel := 'Kenwood TS-850';
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
 end;
 
 initialization

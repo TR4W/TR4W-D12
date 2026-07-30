@@ -39,6 +39,10 @@ begin
    inherited Create;
    radioModel := 'Yaesu FTDX-3000';
    // Base defaults kept deliberately -- see the header.
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWSpeedSync, rcPlayDVK];
 end;
 
 initialization

@@ -63,6 +63,10 @@ begin
   RadioAddress := $6A;
   radioModel := 'Icom IC-7800';
   logger.Info('[TIcom7800Radio.Create] Created IC-7800 instance with CI-V address $6A');
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
 end;
 
 initialization

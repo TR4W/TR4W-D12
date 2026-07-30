@@ -59,6 +59,10 @@ begin
   // IC-7300MK2 CI-V transceive is at menu item $0089, not the default $0150 (IC-7610/IC-7760)
   FTransceiveMenuBytes := #$00 + #$89;
   logger.Info('[TIcom7300MK2Radio.Create] Created IC-7300MK2 instance with CI-V address $B6');
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
 end;
 
 initialization

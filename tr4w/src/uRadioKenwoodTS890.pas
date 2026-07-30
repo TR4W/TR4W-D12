@@ -194,6 +194,10 @@ begin
    // affected (the override only applies when serialPort <> NoPort), which is
    // why the LAN bench never showed it.
    honorsFreqPollRate := False;
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
 end;
 
 Destructor TKenwoodTS890Radio.Destroy;

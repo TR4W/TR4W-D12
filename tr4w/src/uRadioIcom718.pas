@@ -75,6 +75,10 @@ begin
   // Set-mode ($06) takes the mode byte only; a trailing filter byte -> NAK.
   FModeSetIncludesFilter := False;
   logger.Info('[TIcom718Radio.Create] Created IC-718 instance with CI-V address $5E');
+   // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
+   // RADIO can do; the operator's config setting says what they WANT.  Both
+   // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWSpeedSync];
 end;
 
 procedure TIcom718Radio.DefineCapabilities;
