@@ -29,6 +29,8 @@ const
 
   TC_DISBALE_CIV                        = 'Disable "CI-V Transceive" mode in your ICOM rig. Refer to instruction manual of your radio.';
   TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
+  TC_PORT_CONFLICT_STARTUP            = 'RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio''s CONTROL PORT is changed.';
+  TC_PORT_CONFLICT_DIALOG             = '%s is already configured as %s. Two devices cannot share a serial port.';
 
   {MAIN}
   TC_YOU_ARE_USING_THE_LATEST_VERSION   = 'You are using the latest version';

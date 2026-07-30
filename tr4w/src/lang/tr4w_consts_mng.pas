@@ -37,6 +37,8 @@
   TC_RADIO2                             = '2-р трансивер';
   TC_DISBALE_CIV                        = 'ICOM-ын Ci-V (CAT)-г салгах';
   TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
+  TC_PORT_CONFLICT_STARTUP            = 'RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio''s CONTROL PORT is changed.';
+  TC_PORT_CONFLICT_DIALOG             = '%s is already configured as %s. Two devices cannot share a serial port.';
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Enter your federal district if in British Columbia, or your State/Province';  // 4.97.6
   TC_YOU_ARE_USING_THE_LATEST_VERSION   = 'Та TR4W-ийн шинэ хувилбарыг хэрэглэж байна';

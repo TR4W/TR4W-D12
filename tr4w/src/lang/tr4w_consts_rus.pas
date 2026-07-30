@@ -37,6 +37,8 @@ const
 
   TC_DISBALE_CIV                        = 'Отключите режим "CI-V Transceive" в трансивере ICOM.';
   TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
+  TC_PORT_CONFLICT_STARTUP            = 'RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio''s CONTROL PORT is changed.';
+  TC_PORT_CONFLICT_DIALOG             = '%s is already configured as %s. Two devices cannot share a serial port.';
 
   {MAIN}
   TC_ENTERYOURISTRICTIFINVE7            = 'Введите свой федеральный округ, если вы в Британской Колумбии, или свой штат/провинцию';  // 4.97.6
