@@ -68,6 +68,10 @@ var
   // nil when not registered.  Released in WM_DESTROY.
   gPortNotify: Pointer = nil;
 
+// Defined below RestartPollingThread; called from CATDlgProc's Apply/OK
+// handlers, which appear earlier in the file.
+function ConfirmPortConflicts(hwnddlg: HWND): Boolean; forward;
+
 // ---------------------------------------------------------------------------
 // Port combos (122 = CAT, 123 = keyer)
 //
@@ -1679,14 +1683,23 @@ begin
           2, 119: goto 1;   // Cancel / Escape -- discard immediately (per Win32 dialog convention)
           117: {Apply}
             begin
-              EnableWindowFalse(hwnddlg, 117);
-              EnableWindowFalse(hwnddlg, 118);
-              RestartPollingThread(hwnddlg);
+              // Conflict check BEFORE committing: a No answer aborts the apply
+              // and leaves the dialog open (buttons still enabled) so the port
+              // can be corrected right here.
+              if ConfirmPortConflicts(hwnddlg) then
+                 begin
+                 EnableWindowFalse(hwnddlg, 117);
+                 EnableWindowFalse(hwnddlg, 118);
+                 RestartPollingThread(hwnddlg);
+                 end;
             end;
           118: {OK}
             begin
-              RestartPollingThread(hwnddlg);
-              goto 1;
+              if ConfirmPortConflicts(hwnddlg) then
+                 begin
+                 RestartPollingThread(hwnddlg);
+                 goto 1;
+                 end;
             end;
 
           116: {Reset -- form only; nothing is persisted until OK/Apply}
@@ -1936,59 +1949,83 @@ begin
    end;
 end;
 
+// Cross-radio serial port conflict check, run BEFORE the dialog commits.
+// Returns True when the ports chosen in the dialog may be applied: either they
+// do not collide with the OTHER radio's ports, or the operator saw the named
+// conflict and chose to apply anyway (swapping ports between the radios has to
+// pass through a conflicting state, so a hard block would trap them).
+// Returning False cancels the commit AND KEEPS THE DIALOG OPEN so the port can
+// be corrected on the spot -- the first version warned from inside the commit
+// path, after which OK closed the dialog with the conflict already applied
+// (NY4I bench).  Sharing CAT and keyer on the SAME radio is legitimate
+// (keying DTR/RTS on the CAT port) and is deliberately not flagged.
+function ConfirmPortConflicts(hwnddlg: HWND): Boolean;
+var
+   otherRadio: RadioPtr;
+   otherPrefix: string;
+   conflicts: string;
+
+   procedure CheckPort(chosen: PortType);
+   var
+      othersUse: string;
+   begin
+      if not (chosen in SerialPorts) then
+         begin
+         Exit;
+         end;
+      othersUse := '';
+      if chosen = otherRadio^.tCATPortType then
+         begin
+         othersUse := otherPrefix + ' CONTROL PORT';
+         end
+      else if chosen = otherRadio^.tKeyerPort then
+         begin
+         othersUse := 'KEYER ' + otherPrefix + ' OUTPUT PORT';
+         end;
+      if othersUse <> '' then
+         begin
+         if conflicts <> '' then
+            begin
+            conflicts := conflicts + #13#10;
+            end;
+         conflicts := conflicts + SysUtils.Format(TC_PORT_CONFLICT_DIALOG,
+            [string(AnsiString(PortTypeSA[chosen])), othersUse]);
+         end;
+   end;
+
+begin
+   Result := True;
+   if CATWTR = @Radio1 then
+      begin
+      otherRadio := @Radio2;
+      otherPrefix := 'RADIO TWO';
+      end
+   else
+      begin
+      otherRadio := @Radio1;
+      otherPrefix := 'RADIO ONE';
+      end;
+   conflicts := '';
+   CheckPort(ComboSelectedPort(hwnddlg, 122));
+   CheckPort(ComboSelectedPort(hwnddlg, 123));
+   if conflicts = '' then
+      begin
+      Exit;
+      end;
+   logger.Warn('[ConfirmPortConflicts] ' + conflicts);
+   Result := MessageBoxA(hwnddlg,
+      PAnsiChar(AnsiString(conflicts + #13#10#13#10 + TC_PORT_CONFLICT_PROCEED)),
+      'TR4W',
+      MB_YESNO or MB_ICONWARNING or MB_DEFBUTTON2) = IDYES;
+end;
+
 procedure RestartPollingThread(CATWndHWND: HWND);
 var
   lpExitCode                            : DWORD;
   i                                     : integer;
   ID, CMD                               : ShortString;
   sel, enumCount                        : integer;
-  otherRadio                            : RadioPtr;
-  otherPrefix                           : string;
-
-  // Warn -- do not block -- when a port chosen in THIS dialog is already
-  // configured on the OTHER radio (its CAT control port or its keyer output
-  // port).  Two devices cannot share a COM port, so the second one would
-  // just look dead.  Sharing CAT and keyer on the SAME radio is legitimate
-  // (keying DTR/RTS on the CAT port) and is deliberately not flagged.
-  // Non-blocking on purpose: an operator swapping ports between the radios
-  // has to pass through a conflicting state, and a hard stop would trap them.
-  procedure WarnIfPortConflict(chosen: PortType);
-  var
-     othersUse: string;
-  begin
-     if not (chosen in SerialPorts) then
-        begin
-        Exit;
-        end;
-     othersUse := '';
-     if chosen = otherRadio^.tCATPortType then
-        begin
-        othersUse := otherPrefix + ' CONTROL PORT';
-        end
-     else if chosen = otherRadio^.tKeyerPort then
-        begin
-        othersUse := 'KEYER ' + otherPrefix + ' OUTPUT PORT';
-        end;
-     if othersUse <> '' then
-        begin
-        showwarning(SysUtils.Format(TC_PORT_CONFLICT_DIALOG,
-           [string(AnsiString(PortTypeSA[chosen])), othersUse]));
-        end;
-  end;
-
 begin
-  if CATWTR = @Radio1 then
-     begin
-     otherRadio := @Radio2;
-     otherPrefix := 'RADIO TWO';
-     end
-  else
-     begin
-     otherRadio := @Radio1;
-     otherPrefix := 'RADIO ONE';
-     end;
-  WarnIfPortConflict(ComboSelectedPort(CATWndHWND, 122));
-  WarnIfPortConflict(ComboSelectedPort(CATWndHWND, 123));
 
 { TODO: The radio settings changed so restart the thread. If there was a network connection, we have to disconnect and clean that up.
 Otherwise, we have to start that up.
