@@ -117,7 +117,6 @@ implementation
 constructor TFT747GXRadio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT747GX');
    radioModel := 'Yaesu FT-747GX';
    SerialFixedFrameLength := FT747_FRAME_LEN;
    // 344 bytes at 4800 baud is ~720 ms of wire time, so a fast cadence would

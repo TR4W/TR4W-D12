@@ -146,7 +146,6 @@ implementation
 constructor TFT1000MPRadio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT1000MP');
    radioModel := 'Yaesu FT-1000MP';
    FCWReverse := False;
 

@@ -24,7 +24,6 @@ Type TK4Radio = class(TFactoryRadioBase)
    private
       CWBuffer: string;
       firstProcessMessage: boolean;
-      logger: TLogLogger;  // Per-instance logger; shadows MainUnit.logger so all log calls in this class are radio-identified
       function ParseIFCommand(cmd: string): boolean;
       function ModeStrToMode(sMode: string; sDataMode: string): TRadioMode;
       function BandNumToBand(sBand: string): TRadioBand;
@@ -83,7 +82,6 @@ begin
    inherited Create(ProcessMessage);
 
    // Generic logger until rigLabel is set by LOGRADIO after creation
-   logger := TLogLogger.GetLogger('TR4WDebugLog.K4-Radio');
 
    firstProcessMessage := true;  // Call Initialize on first message received
    // K4 supports auto-info mode - no polling needed

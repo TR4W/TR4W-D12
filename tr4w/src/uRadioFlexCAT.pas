@@ -108,7 +108,6 @@ const
 type
   TFlexCAT = class(TFactoryRadioBase)
   protected
-    logger: TLogLogger;
     FCWBuffer: string;   // network (cwx) path only -- on CAT, LOGRADIO keys via KY
     function  ModeNumToMode(const s: string): TRadioMode;
     function  ModeToFlexNum(mode: TRadioMode): string;
@@ -176,7 +175,6 @@ begin
    // The reading thread dispatches through baseProcMsg, NOT through the virtual
    // ProcessMsg -- same note as TYaesuBinary's constructor.
    inherited Create(ProcessMsg);
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FlexCAT');
    radioModel := 'FlexRadio (SmartSDR CAT)';
    // SEMICOLON-DELIMITED, on both transports.  This is NOT the factory default
    // and omitting it means the reading thread never frames a reply, so nothing

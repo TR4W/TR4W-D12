@@ -242,6 +242,21 @@ Type TFactoryRadioBase = class(TObject)
       socket: TIdTCPClient;
       serialPortObj: TSerialPort;
       localCWSpeed: integer;
+      FRadioModel: string;   // backing field for the radioModel property
+
+      // ONE logger for every factory radio, owned by the base and derived from the
+      // model name (see SetRadioModel).
+      //
+      // Before this, 17 model classes assigned their own category and 74 inherited
+      // their family's, so most radios logged as TR4WDebugLog.IcomBase /
+      // .YaesuSerial / .KenwoodSerial while a handful logged as .K4-Radio.  Two
+      // costs: a reader could not tell a deliberate omission from an oversight, and
+      // per-model log filtering was impossible for the 74 -- enabling
+      // TR4WDebugLog.FTDX10 matched nothing, because no such category existed.
+      //
+      // Family bases used to declare their own `logger` field; those are gone, so
+      // every driver now resolves to this one.
+      logger: TLogLogger;
       FCapabilities: TRadioCapabilities;   // what this rig can do (see TRadioCapabilities); set in the subclass ctor
       RITState: boolean;
       XITState: boolean;
@@ -272,7 +287,6 @@ Type TFactoryRadioBase = class(TObject)
 
 
    public
-      radioModel: string;
       rigLabel: string;           // "Rig 1" / "Rig 2" — set by LOGRADIO after creation
       serialBaudRate: DWORD;
       serialDataBits: Byte;
@@ -436,6 +450,23 @@ Type TFactoryRadioBase = class(TObject)
       procedure VFOBumpDown(whichVFO: TVFO); Virtual; Abstract;
       procedure VFOBumpUp(whichVFO: TVFO); Virtual; Abstract;
 
+      // radioModel is a PROPERTY so that assigning it re-points the log category.
+      // Assignment syntax is unchanged at all 92 call sites.
+      //
+      // WHY A SETTER AND NOT THE CONSTRUCTOR: nearly every subclass assigns
+      // radioModel AFTER `inherited Create`, so the base ctor cannot read it.  The
+      // setter also catches uRadioFactory's final
+      // `Result.radioModel := DisplayName(model)`, so the category ends up matching
+      // the name the operator picked in the radio list.
+
+      // 'Icom IC-7610' -> 'TR4WDebugLog.IcomIC-7610'.  Log4D treats '.' as its
+      // category separator, so a model name containing one would silently create a
+      // child category; spaces make a category awkward to type in a log filter.
+      class function LogCategoryFor(const model: string): string;
+      procedure SetRadioModel(const value: string);
+
+      property radioModel: string read FRadioModel write SetRadioModel;
+
 
 end;
 
@@ -502,6 +533,9 @@ begin
    logger.info('******************** uFactoryRadioBase STARTUP ******************');
    logger.Trace('trace output');
    }
+   // Default category, in force until a subclass sets radioModel.  Assigned FIRST
+   // so nothing can log through a nil logger during construction.
+   logger := TLogLogger.GetLogger('TR4WDebugLog.Radio');
    baseProcMsg := ProcRef;
    bAddTermination := True;   // default: append CR/LF; radios that must not (e.g. TS-890 LAN) set this False in their own constructor
    SerialProtocolIsBinary := False;  // default: serial CAT is ASCII text; TIcomRadio sets True for byte-exact CI-V
@@ -1064,6 +1098,33 @@ function TFactoryRadioBase.BaseConstructorRan: Boolean;
 begin
    // Witnesses set only in Create(ProcRef); see the declaration for why.
    Result := Assigned(baseProcMsg) and Assigned(SocketLock) and (FLastValidResponse > 0);
+end;
+
+class function TFactoryRadioBase.LogCategoryFor(const model: string): string;
+var
+   i: Integer;
+begin
+   Result := '';
+   for i := 1 to Length(model) do
+      begin
+      if not (model[i] in [' ', '.', #9]) then
+         begin
+         Result := Result + model[i];
+         end;
+      end;
+   if Result = '' then
+      begin
+      Result := 'Radio';
+      end;
+   Result := 'TR4WDebugLog.' + Result;
+end;
+
+procedure TFactoryRadioBase.SetRadioModel(const value: string);
+begin
+   FRadioModel := value;
+   // Log4D hands back the SAME logger for a repeated category, so re-assigning on
+   // every name change is cheap and leaves no orphans.
+   logger := TLogLogger.GetLogger(LogCategoryFor(value));
 end;
 
 procedure TFactoryRadioBase.UpdateLastValidResponse;

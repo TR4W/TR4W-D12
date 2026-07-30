@@ -52,7 +52,6 @@ implementation
 constructor TYaesuFT818Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT818');
    radioModel := 'Yaesu FT-818';
 
    // Group traits.
