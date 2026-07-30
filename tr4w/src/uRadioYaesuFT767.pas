@@ -129,7 +129,6 @@ implementation
 constructor TFT767Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT767');
    radioModel := 'Yaesu FT-767';
    SerialFixedFrameLength := FT767_HANDSHAKE_LEN;   // first frame expected
    pollingInterval := 500;

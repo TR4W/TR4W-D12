@@ -57,7 +57,6 @@ uses
 type
   TKenwoodSerial = class(TFactoryRadioBase)
   protected
-    logger: TLogLogger;
     CWBuffer: string;
     FSeedOtherVFOMode: boolean;   // one-shot: probe the non-operating VFO's mode at connect
     function  ModeNumToMode(ch: Char): TRadioMode;
@@ -109,7 +108,6 @@ implementation
 constructor TKenwoodSerial.Create;
 begin
   inherited Create(ProcessMsg);
-  logger := TLogLogger.GetLogger('TR4WDebugLog.KenwoodSerial');
   CWBuffer := '';
   // Standard Kenwood serial radios have no reliable auto-info push we can lean
   // on across the whole family, so poll IF;FA;FB; and rely on the poll (not AI).

@@ -44,7 +44,6 @@ implementation
 constructor TFT990Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT990');
    radioModel := 'Yaesu FT-990';
 
    // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).

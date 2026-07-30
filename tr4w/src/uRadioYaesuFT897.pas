@@ -49,7 +49,6 @@ implementation
 constructor TYaesuFT897Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT897');
    radioModel := 'Yaesu FT-897';
 
    // Group traits.

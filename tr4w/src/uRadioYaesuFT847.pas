@@ -91,7 +91,6 @@ implementation
 constructor TYaesuFT847Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT847');
    radioModel := 'Yaesu FT-847';
 
    // The ONE thing this radio adds: it answers nothing until CAT is enabled

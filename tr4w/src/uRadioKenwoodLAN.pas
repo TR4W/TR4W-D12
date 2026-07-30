@@ -85,7 +85,6 @@ type TKenwoodLAN = class(TFactoryRadioBase)
       // TX VFO from the last FT reply.  Informational only: on this radio split
       // is its own flag (TB), NOT the FT/FR relationship -- see Split().
       FTxVFO: TVFO;
-      logger: TLogLogger;
 
       procedure SendAuthCredentials;
       procedure SendPostLoginSetup;
@@ -175,7 +174,6 @@ Constructor TKenwoodLAN.Create;
 begin
    inherited Create(ProcessMessage);
 
-   logger := TLogLogger.GetLogger('TR4WDebugLog.KenwoodLAN');
 
    FAuthState   := ksNone;
    FInitialized := False;

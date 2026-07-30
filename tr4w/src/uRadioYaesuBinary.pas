@@ -78,7 +78,6 @@ const
 type
   TYaesuBinary = class(TFactoryRadioBase)
   protected
-    logger: TLogLogger;
     // ---- SET-MODE TRAITS ----------------------------------------------------
     // Every rtYaesu1 model sets mode with the same 5-byte shape and differs only
     // in the opcode, which byte slot the mode goes in, and the mode byte values.
@@ -178,7 +177,6 @@ begin
    // liveness watchdog (fed by UpdateLastValidResponse inside ProcessMsg) would keep
    // declaring the radio dead.  Wire the virtual ProcessMsg, as every radio does.
    inherited Create(ProcessMsg);
-   logger := TLogLogger.GetLogger('TR4WDebugLog.YaesuBinary');
 
    SerialProtocolIsBinary := True;   // byte-exact 5-byte frames, no codepage decode
    bAddTermination        := False;  // NO CR/LF on binary CAT

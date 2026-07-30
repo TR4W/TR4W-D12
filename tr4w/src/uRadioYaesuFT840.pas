@@ -44,7 +44,6 @@ implementation
 constructor TFT840Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT840');
    radioModel := 'Yaesu FT-840';
    // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
    // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".

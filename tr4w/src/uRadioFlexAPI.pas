@@ -46,7 +46,6 @@ type TFlexAPI = class(TFactoryRadioBase)
       FSlice0Valid:   boolean;   // True once slice 0 is confirmed in-use; False on in_use=0
       FSlice1Exists:  boolean;   // True once a slice 1 status push has been received
       FCWBuffer:      string;    // Accumulates characters until SendCW flushes them
-      logger:         TLogLogger;
 
       function  NextSeq: integer;
       procedure SendFlexCmd(cmd: string);
@@ -108,7 +107,6 @@ uses MainUnit, uRadioRegistry, VC;
 constructor TFlexAPI.Create;
 begin
    inherited Create(ProcessMsg);
-   logger            := TLogLogger.GetLogger('TR4WDebugLog.Flex6000-Radio');
    requiresPolling   := False;
    autoUpdateCommand := '';
    pollingInterval   := 0;

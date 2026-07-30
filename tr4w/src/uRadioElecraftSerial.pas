@@ -64,7 +64,6 @@ uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC;
 type
   TElecraftSerial = class(TFactoryRadioBase)
   protected
-    logger: TLogLogger;
     firstProcessMessage: boolean;
     FCWSpeedMin: integer;   // KS range; K3/KX3 keyer is 8..50 wpm (per-model overridable)
     FCWSpeedMax: integer;
@@ -128,7 +127,6 @@ begin
    inherited Create(ProcessMessage);
 
    // Generic logger until rigLabel is set by LOGRADIO after creation.
-   logger := TLogLogger.GetLogger('TR4WDebugLog.ElecraftSerial');
 
    firstProcessMessage := True;   // call Initialize on first message received
 

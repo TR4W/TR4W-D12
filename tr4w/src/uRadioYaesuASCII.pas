@@ -105,7 +105,6 @@ uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRa
 type
   TYaesuSerial = class(TFactoryRadioBase)
   protected
-    logger: TLogLogger;
     firstProcessMessage: boolean;
     FCWSpeedMin: integer;
     FCWSpeedMax: integer;
@@ -175,7 +174,6 @@ implementation
 constructor TYaesuSerial.Create;
 begin
    inherited Create(ProcessMessage);
-   logger := TLogLogger.GetLogger('TR4WDebugLog.YaesuSerial');
    firstProcessMessage := True;
 
    requiresPolling    := True;

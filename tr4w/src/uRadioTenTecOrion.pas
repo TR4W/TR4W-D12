@@ -113,7 +113,6 @@ const
 type
   TTenTecOrionRadio = class(TFactoryRadioBase)
   protected
-    logger: TLogLogger;
     FCWBuffer: string;
     function  ModeDigitToMode(c: Char): TRadioMode;
     function  ModeToModeDigit(mode: TRadioMode; out digit: Char): Boolean;
@@ -167,7 +166,6 @@ begin
    // leaving baseProcMsg nil so nothing is ever parsed.  That cost a bench
    // session on the Flex.
    inherited Create(ProcessMsg);
-   logger := TLogLogger.GetLogger('TR4WDebugLog.Orion');
    radioModel := 'Ten-Tec Orion';
 
    // Replies are '@'-framed and CR-terminated.
