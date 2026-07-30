@@ -338,6 +338,7 @@ const
   CIV_CMD_TX_RX = #$1C;
   CIV_CMD_RIT_XIT = #$21;
   CIV_CMD_VFO_SELECT = #$25;
+  CIV_CMD_TRANSCEIVER_ID = #$19;
 
   // CI-V Sub-commands for TX/RX
   CIV_SUBCMD_TX = #$00;
@@ -373,6 +374,9 @@ const
 
   // CI-V Sub-commands for Levels ($14)
   CIV_SUBCMD_CW_SPEED = #$0C;
+
+  // Read: $19 $00 = read the transceiver ID (the model's factory-default CI-V address)
+  CIV_SUBCMD_TRANSCEIVER_ID_READ = #$00;
 
 constructor TIcomRadio.Create;
 begin
@@ -927,6 +931,13 @@ begin
         QueryMode;            // $04 → active VFO mode (other radios)
         end;
      QueryActiveVFO;  // No-op unless FSupportsActiveVFOQuery = True
+     // Read the transceiver ID ($19 $00) once per connection.  The reply
+     // carries ONE byte: the radio's DEFAULT CI-V address (bench-proven on the
+     // IC-718: reply FE FE E0 5E 19 00 5E FD) -- a fixed per-model code, so the
+     // INFO log shows what model is REALLY on the wire even when the operator
+     // has reconfigured the rig's bus address or selected the wrong radio TYPE.
+     SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TRANSCEIVER_ID),
+                                 CIV_SUBCMD_TRANSCEIVER_ID_READ));
      end;
 
   if logger.IsTraceEnabled then
@@ -1492,16 +1503,34 @@ begin
         end;
       end;
 
-    $19:  // Transceiver ID response (diagnostic — $19 broadcast sent on connect for address confirmation)
+    Ord(CIV_CMD_TRANSCEIVER_ID):  // $19 -- ID response ($19 $00 sent once on first valid frame)
       begin
-        // Radio replies: FE FE [ctrl] [radio] 19 00 [addr] FD
-        // data[1] = $00 (sub-command echo), data[2] = CI-V address
-        // Initial state queries are sent directly by the polling thread on connect —
-        // this response is logged for diagnostics only.
+        // Radio replies: FE FE [ctrl] [radio] 19 00 [id] FD.
+        // data[1] = $00 (sub-command echo), data[2] = the radio's DEFAULT CI-V
+        // address -- a fixed per-model code (IC-718 = $5E, bench-proven), NOT
+        // the address the operator may have reconfigured on the rig.  Logged at
+        // INFO so a log shows when the configured radio TYPE and the physical
+        // radio disagree.
         if Length(data) >= 2 then
-          logger.Debug('[%s] Transceiver ID confirmed, CI-V address=$%.2x', [radioModel, Ord(data[2])])
+          begin
+          if Ord(data[2]) = FRadioAddress then
+             begin
+             logger.Info('[%s] Transceiver ID ($19 $00): $%.2x — matches the configured CI-V address',
+                         [radioModel, Ord(data[2])]);
+             end
+          else
+             begin
+             logger.Info('[%s] Transceiver ID ($19 $00): $%.2x — configured CI-V address is $%.2x. '
+                       + 'The ID byte is the model''s factory-default bus address, so a difference means '
+                       + 'either the rig''s address was changed by the operator or the selected radio '
+                       + 'type does not match the radio on the wire.',
+                         [radioModel, Ord(data[2]), FRadioAddress]);
+             end;
+          end
         else
-          logger.Debug('[%s] Transceiver ID response received (no address byte)', [radioModel]);
+          begin
+          logger.Info('[%s] Transceiver ID response received (no ID byte)', [radioModel]);
+          end;
       end;
 
     $FB:  // Command OK (ACK)
