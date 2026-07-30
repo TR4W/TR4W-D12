@@ -2707,8 +2707,9 @@ begin
    until rig.tPollCount < 0;
 end;
 
-// pFT736R removed -- the FT-736R is now a HamLib-only radio (HamLibONLYRadios in
-// LOGRADIO.InitRadios), so this serial path is unreachable.  It never worked: it
+// pFT736R removed -- the FT-736R is now a HamLib-only radio (no factory
+// registration: uRadioRegistry.IsHamLibOnly), so this serial path is
+// unreachable.  It never worked: it
 // wrote one CAT-enable frame (the FT-767 one, apparently copy-pasted from pFT767
 // below) and returned, with no ReadFromCOMPort and no `repeat` loop, so the polling
 // thread exited immediately and no frequency or mode ever reached the log window.
@@ -3635,6 +3636,18 @@ begin
       SetSerialRadioAlertState(rig, True);
       end;
 end;
+
+const
+   // Local, verbatim copy of the retired global KenwoodRadios taxonomy set
+   // (LOGRADIO.InitRadios, deleted 2026-07-30).  This legacy polling path is
+   // slated for deletion with the rest of the pre-factory driver code, so it
+   // keeps its exact historical membership rather than a registry-derived
+   // approximation: the ';' frame-resync check below deliberately covered the
+   // Kenwood-CAT TS models plus the FLEX and NOT the Elecrafts, and a protocol
+   // (rt = rtKenwood) test would silently add K2/K3/KX3/K4 to it.
+   KenwoodRadios: InterfacedRadioTypeSet =
+      [TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850,
+       TS870, TS890, TS940, TS950, TS990, TS2000, FLEX];
 
 function ReadFromCOMPortRaw(b: Cardinal; rig: RadioPtr): boolean;
 label

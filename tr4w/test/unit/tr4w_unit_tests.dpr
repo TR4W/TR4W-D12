@@ -144,6 +144,7 @@ uses
    uRadioIcom7850         in '..\..\src\radioFactory\uRadioIcom7850.pas',
    uRadioIcom7851         in '..\..\src\radioFactory\uRadioIcom7851.pas',
    uTestIcomRegistry    in 'uTestIcomRegistry.pas',
+   uTestRegistryTaxonomy in 'uTestRegistryTaxonomy.pas',
    // Flex is the only two-constructor registration; list its three units
    // explicitly so their initialization sections self-register in this EXE.
    uRadioFlexAPI        in '..\..\src\radioFactory\uRadioFlexAPI.pas',
@@ -220,6 +221,7 @@ begin
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));
    RegisterSuite(TYaesuBinaryTests.Create('YaesuBinary'));
    RegisterSuite(TIcomRegistryTests.Create('IcomRegistry'));
+   RegisterSuite(TRegistryTaxonomyTests.Create('RegistryTaxonomy'));
    RegisterSuite(TFlexRegistryTests.Create('FlexRegistry'));
    RegisterSuite(TFlexDiscoveryTests.Create('FlexDiscovery'));
    RegisterSuite(TKenwoodSerialTests.Create('KenwoodSerial'));

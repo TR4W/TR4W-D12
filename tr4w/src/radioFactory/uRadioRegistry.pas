@@ -201,6 +201,22 @@ function SupportsFor(model: InterfacedRadioType; cap: TRadioCapability): Boolean
 function SerialParamsFor(model: InterfacedRadioType): TSerialParams;
 function SerialParamsForId(const id: string): TSerialParams;
 
+// ---- TAXONOMY, DERIVED FROM THE REGISTRY -----------------------------------
+// These replace the InitRadios taxonomy sets (HamLibONLYRadios, YaesuRadios).
+// The registry is the single source of truth for "what has a native driver":
+// every model TR4W can drive natively is registered, so a real model that is
+// NOT registered has no native CAT path and can only be driven through HamLib.
+// A new HamLib-only model needs no list edit -- not registering it is the fact.
+// (uTestRegistryTaxonomy pins this equivalence against the historical set.)
+function IsHamLibOnly(model: InterfacedRadioType): Boolean;
+
+// First word of the registered display name ('Yaesu FT-817' -> 'Yaesu').  The
+// display names already state the manufacturer once per radio, so no separate
+// per-registration manufacturer field is needed.  '' for an unregistered model
+// -- a HamLib-only radio has no registration and therefore no manufacturer
+// here; callers that care about those must handle '' explicitly.
+function ManufacturerOf(model: InterfacedRadioType): string;
+
 // Id-facing lookups (used by the drop-down + config).
 function IsRegisteredId(const id: string): Boolean;
 function SupportsSerialId(const id: string): Boolean;
@@ -483,6 +499,32 @@ begin
    else
       begin
       Result := 'Unknown';
+      end;
+end;
+
+function IsHamLibOnly(model: InterfacedRadioType): Boolean;
+begin
+   // NoInterfacedRadio is "no radio configured", not a radio that needs HamLib.
+   Result := (model <> NoInterfacedRadio) and (not IsRegistered(model));
+end;
+
+function ManufacturerOf(model: InterfacedRadioType): string;
+var
+   reg: TRadioReg;
+   spacePos: integer;
+begin
+   Result := '';
+   if RegByModel(model, reg) then
+      begin
+      spacePos := Pos(' ', reg.displayName);
+      if spacePos > 0 then
+         begin
+         Result := Copy(reg.displayName, 1, spacePos - 1);
+         end
+      else
+         begin
+         Result := reg.displayName;
+         end;
       end;
 end;
 

@@ -422,10 +422,11 @@ var
    IcomRadiosModeSetNoFilter: InterfacedRadioTypeSet;  // $06 set-mode takes the mode byte only; appending a filter byte makes the radio NAK the whole frame.
    IcomRadiosTXStatusUnreadable: InterfacedRadioTypeSet;  // Cannot read TX/RX status over CI-V ($1C read NAKs on any sub-command, no transceive PTT). Skip the poll.
    IcomRadios6to60WPMKeyer: InterfacedRadioTypeSet;  // CW keyer speed spans 6..60 wpm (not the default 6..48). IC-718. Others stay 6..48 (the long-standing mapping).
-   ICOMRadios:       ICOMRadioTypes;
-   KenwoodRadios:    KenwoodRadioTypes;
-   YaesuRadios:      YaesuRadioTypes;
-   HAMLIbONLYRadios: HamLib_ONLY_RadioTypes;
+   // The manufacturer/transport taxonomy sets (ICOMRadios, KenwoodRadios,
+   // YaesuRadios, HamLibONLYRadios) are RETIRED.  The registry answers those
+   // questions now: uRadioRegistry.IsHamLibOnly (native = registered),
+   // uRadioRegistry.ManufacturerOf (first word of the display name), and the
+   // legacy table's own rt field for protocol grouping.
 
 const
    RTS_DTR_Values_Array: array[1..4] of PAnsiChar =
@@ -516,7 +517,8 @@ const
     ({Name: 'FTX1F';      } BR:BR4800;  P: 1; C: 1; S: 1; T:1; RA: $00; SW: 1; SFOC: $00; SMOC: $00; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $00;  LSB: $00; USB: $00; FM: $00; AM: $00; DIGL: $00; DIGU: $00; hamlibID: 1051; rt: rtYaesu4),  // FTX-1F/FTX-1R — Issue #817
     ({Name: 'FT450';      } BR:BR4800;  P: 1; C: 1; S: 1; T:1; RA: $00; SW: 1; SFOC: $00; SMOC: $00; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $00;  LSB: $00; USB: $00; FM: $00; AM: $00; DIGL: $00; DIGU: $00; hamlibID: 1027; rt: rtYaesu2),
     ({Name: 'FT710';      } BR:BR4800;  P: 1; C: 1; S: 1; T:1; RA: $00; SW: 1; SFOC: $00; SMOC: $00; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $00;  LSB: $00; USB: $00; FM: $00; AM: $00; DIGL: $00; DIGU: $00; rt: rtYaesu4),   // Issue 640 ny4i
-    // HamLib-only (see HamLibONLYRadios in InitRadios): no native read path ever existed.
+    // HamLib-only (unregistered in the factory -- uRadioRegistry.IsHamLibOnly):
+    // no native read path ever existed.
     // Baud stays 4800 -- the FT-736R is a real 4800-baud rig and rigctld opens the
     // actual serial port, unlike the software bridges here which are TCP at 57600.
     ({Name: 'FT736R';     } BR:BR4800;  P: 0; C: 0; S: 0; T:0; RA: $00; SW: 0; SFOC: $01; SMOC: $07; SPOC: $00; RX: $00; TX: $00; MB: 0; CW: $02;  LSB: $00; USB: $01; FM: $08; AM: $00; DIGL: $00; DIGU: $00; hamlibID: 1010; rt: rtHamlib),
@@ -1517,7 +1519,11 @@ begin
             logger.trace('>>>>Enter WriteToCATPort');
             SetString(debugStr,PAnsiChar(@Buffer),nNumberOfBytesToWrite);
             nLen := nNumberOfBytesToWrite; //Ord(Buffer[0]);
-            if Self.RadioModel in IcomRadios then
+            // Binary CI-V traffic traces as hex only (text would be garbage).
+            // rt = rtICOM is the legacy table's own protocol marker; unlike the
+            // retired ICOMRadios range [IC78..IC9700] it also covers the OMNI6,
+            // which is a CI-V rig and belongs on the hex path.
+            if RadioParametersArray[Self.RadioModel].rt = rtICOM then
                begin
                BinToHex(@Buffer,Buf,nLen);
                Buf[(nLen*2) - 2] := #0;
@@ -2855,9 +2861,11 @@ begin
    // The CAT dialog already forces the flag and greys the checkbox, but that only
    // covers configs that went through the dialog.  'RADIO ONE USE HAMLIB' is a
    // config-file command (uCFG), so a hand-edited .cfg -- or one written before a
-   // model joined HamLibONLYRadios -- can arrive here with the flag clear.
+   // model became HamLib-only -- can arrive here with the flag clear.
    // Enforce it where the interface is actually chosen, not only where it is edited.
-   if Self.RadioModel in HamLibONLYRadios then
+   // "HamLib-only" is now derived from the registry: a real model with no factory
+   // registration has no native driver (uRadioRegistry.IsHamLibOnly).
+   if uRadioRegistry.IsHamLibOnly(Self.RadioModel) then
       begin
       if not Self.UseHamLib then
          begin
@@ -4319,21 +4327,11 @@ begin
    // the long-standing mapping that matches the modern factory path; forcing 6..60 on
    // a 6..48 radio runs it ~11% slow. Only the bench-confirmed IC-718 is 6..60 so far.
    IcomRadios6to60WPMKeyer := [IC718];
-   ICOMRadios := [IC78..IC9700];
-   KenwoodRadios := [TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850,
-                     TS870, TS890, TS940, TS950, TS990, TS2000, FLEX];  // TS890 -- Issue #436
-   YaesuRadios := [FTDX10, FTDX101, FTX1F, FT450, FT710, FT736R, FT747GX, FT767, FT817,
-                   FT818, FT840, FT847, FT857, FT890, FT891, FT897, FT900, FT920,
-                   FT950, FT990, FT991, FT1000, FT1000MP, FT1200, FT2000,
-                   FTDX3000, FTDX5000, FTDX9000];
-   // FT736R added: TR4W never had a read path for it. pFT736R wrote one 5-byte
-   // CAT-enable frame and returned -- no ReadFromCOMPort, and no repeat loop, so
-   // the polling thread exited immediately and no frequency or mode ever arrived.
-   // (Identical in the D7 tree, so this is an unfinished driver, not a port
-   // regression; it also wrote the FT-767 enable string, apparently copy-pasted.)
-   // HamLib supports the radio properly (hamlibID 1010), so route it there rather
-   // than carry a stub forward into the factory.
-   HamLibONLYRadios := [FLRIG,TRXMANAGER,FT757GXII,EXPERTTCI,ACLOG,HAMLIBANY,FT736R];  // TS890 removed -- now has native serial via rtKenwood (Issue #436)
+   // The taxonomy sets that were initialized here (ICOMRadios, KenwoodRadios,
+   // YaesuRadios, HamLibONLYRadios) are retired -- see the note at their old
+   // declaration site.  The FT736R history (an unfinished driver in both trees,
+   // routed to HamLib instead of carrying the stub into the factory) is
+   // preserved in uTestRegistryTaxonomy alongside the pinned HamLib-only list.
    for i := 1 to 2 do
       begin
       TempRadio := ra[i];

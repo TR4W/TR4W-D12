@@ -1291,7 +1291,7 @@ begin
         Windows.SetDlgItemTextW(hwnddlg, 133, PChar(CATWTR^.NetworkPassword));
         hamLibCheckBoxWind := GetDlgItem(hwnddlg, 1000);
 
-        if RadioType in HAMLibONLYRadios then
+        if uRadioRegistry.IsHamLibOnly(RadioType) then
            begin
            if not CATWTR^.UseHamLib then
               begin
@@ -1508,7 +1508,7 @@ begin
              if boolean(TF.SendDlgItemMessage(hwnddlg, 1000, BM_GETCHECK)) then
                 begin
                 if (tCB_GETCURSEL(hwnddlg, 121) >= Ord(High(InterfacedRadioType)) + 1) or
-                   not (InterfacedRadioType(tCB_GETCURSEL(hwnddlg, 121)) in HAMLibONLYRadios) then
+                   not uRadioRegistry.IsHamLibOnly(InterfacedRadioType(tCB_GETCURSEL(hwnddlg, 121))) then
                    begin
                    MessageBox(hwnddlg,
                      'This radio has native TR4W support. Using HamLib is not recommended.' + #13#10 +

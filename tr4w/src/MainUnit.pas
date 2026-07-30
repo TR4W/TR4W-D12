@@ -1073,12 +1073,6 @@ begin
       ExchangeHasBeenSent := False;
       SetOpMode(SearchAndPounceOpMode);
 
-      if ActiveRadio = RadioOne then
-      begin
-        CQRITEnabled := Radio1.RadioModel in KenwoodRadios;
-      end
-      else
-        CQRITEnabled := Radio2.RadioModel in KenwoodRadios;
       DisplayAutoSendCharacterCount;
       EscapeDeletedCallEntry := CallWindowString;
     end
@@ -1132,12 +1126,6 @@ begin
       ClearContestExchange(ReceivedData);
       ExchangeHasBeenSent := False;
 
-      if ActiveRadio = RadioOne then
-      begin
-        CQRITEnabled := Radio1.RadioModel in KenwoodRadios;
-      end
-      else
-        CQRITEnabled := Radio2.RadioModel in KenwoodRadios;
       DisplayAutoSendCharacterCount;
     end;
   end
@@ -1179,13 +1167,6 @@ begin
     // until not SearchAndPounce;
     SetOpMode(SearchAndPounceOpMode);
     ClearContestExchange(ReceivedData);
-
-    if ActiveRadio = RadioOne then
-    begin
-      CQRITEnabled := Radio1.RadioModel in KenwoodRadios;
-    end
-    else
-      CQRITEnabled := Radio2.RadioModel in KenwoodRadios;
 
     // RemoveWindow(ExchangeWindow);
 

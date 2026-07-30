@@ -280,8 +280,6 @@ var
     SerialPortConfigured_Handle: (INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE, INVALID_HANDLE_VALUE)
     );
 
-  CQRITEnabled                          : boolean = True;
-
   DVKDelay                              : integer;
   DVKPortAddress                        : Word;
   DVPOn                                 : boolean;
@@ -404,6 +402,7 @@ uses
   uProcessCommand,
   uTelnet,
   LOGSUBS2,
+  uRadioRegistry,
   uRadioPolling,
   LogCW,
   MainUnit,
@@ -2264,7 +2263,7 @@ begin
        begin
        if logger.IsErrorEnabled then
           begin
-          if (radio1.RadioModel in YaesuRadios) and (radio1.RadioKeyerStopBits <> 0) then
+          if (uRadioRegistry.ManufacturerOf(radio1.RadioModel) = 'Yaesu') and (radio1.RadioKeyerStopBits <> 0) then
              begin
              logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
              end;
@@ -2299,7 +2298,7 @@ begin
        begin
        if logger.IsErrorEnabled then
           begin
-          if (radio2.RadioModel in YaesuRadios) and (radio2.RadioKeyerStopBits <> 0) then
+          if (uRadioRegistry.ManufacturerOf(radio2.RadioModel) = 'Yaesu') and (radio2.RadioKeyerStopBits <> 0) then
              begin
              logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
              end;
