@@ -14,10 +14,10 @@
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
-unit uRadioYaesuFT840;
+unit uRadioYaesuFT900;
 
 {
-  Yaesu FT-840.
+  Yaesu FT-900.
 
   A thin model on TYaesuFT840Group (uRadioYaesuFT840Group.pas), shared with the
   FT-840, FT-890 and FT-900.  Stated here: the display name and the set-mode row.
@@ -34,18 +34,19 @@ uses
   SysUtils, Log4D, VC, uRadioRegistry;
 
 type
-  TFT840Radio = class(TYaesuFT840Group)
+  TFT900Radio = class(TYaesuFT840Group)
   public
     constructor Create; reintroduce;
   end;
 
 implementation
 
-constructor TFT840Radio.Create;
+constructor TFT900Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT840');
-   radioModel := 'Yaesu FT-840';
+   logger := TLogLogger.GetLogger('TR4WDebugLog.FT900');
+   radioModel := 'Yaesu FT-900';
+
    // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
    // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
    FSetModeOpcode := $0C;
@@ -60,9 +61,9 @@ begin
 end;
 
 initialization
-  RegisterRadio(FT840,
-     function: TFactoryRadioBase begin Result := TFT840Radio.Create end,
-     'Yaesu FT-840', [rlSerial], 0, False,
+  RegisterRadio(FT900,
+     function: TFactoryRadioBase begin Result := TFT900Radio.Create end,
+     'Yaesu FT-900', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      );
 

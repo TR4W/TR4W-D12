@@ -14,15 +14,15 @@
 If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
-unit uRadioYaesuFT840;
+unit uRadioYaesuFT890;
 
 {
-  Yaesu FT-840.
+  Yaesu FT-890.
 
   A thin model on TYaesuFT840Group (uRadioYaesuFT840Group.pas), shared with the
   FT-840, FT-890 and FT-900.  Stated here: the display name and the set-mode row.
 
-  AM is $05; no data mode.
+  AM is $04, unlike the FT-840 and FT-900; no data mode.
 
   NOT BENCH-TESTED.
 }
@@ -34,18 +34,19 @@ uses
   SysUtils, Log4D, VC, uRadioRegistry;
 
 type
-  TFT840Radio = class(TYaesuFT840Group)
+  TFT890Radio = class(TYaesuFT840Group)
   public
     constructor Create; reintroduce;
   end;
 
 implementation
 
-constructor TFT840Radio.Create;
+constructor TFT890Radio.Create;
 begin
    inherited Create;
-   logger := TLogLogger.GetLogger('TR4WDebugLog.FT840');
-   radioModel := 'Yaesu FT-840';
+   logger := TLogLogger.GetLogger('TR4WDebugLog.FT890');
+   radioModel := 'Yaesu FT-890';
+
    // Set-mode row from LOGRADIO's radio table (SMOC $0C, MB 3).
    // MODEBYTE_NONE = the table's $FF, "this radio has no such mode".
    FSetModeOpcode := $0C;
@@ -53,16 +54,16 @@ begin
    FModeCW   := $03;
    FModeLSB  := $00;
    FModeUSB  := $01;
-   FModeAM   := $05;
+   FModeAM   := $04;
    FModeFM   := $06;
    FModeDIGL := MODEBYTE_NONE;
    FModeDIGU := MODEBYTE_NONE;
 end;
 
 initialization
-  RegisterRadio(FT840,
-     function: TFactoryRadioBase begin Result := TFT840Radio.Create end,
-     'Yaesu FT-840', [rlSerial], 0, False,
+  RegisterRadio(FT890,
+     function: TFactoryRadioBase begin Result := TFT890Radio.Create end,
+     'Yaesu FT-890', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      );
 
