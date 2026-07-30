@@ -149,6 +149,9 @@ uses
    // self-register here, which is what puts them under the base-constructor
    // and registry coverage tests.
    uRadioKenwoodSerial  in '..\..\src\uRadioKenwoodSerial.pas',
+   uRadioKenwoodLAN     in '..\..\src\uRadioKenwoodLAN.pas',
+   uRadioKenwoodTS890   in '..\..\src\uRadioKenwoodTS890.pas',
+   uRadioKenwoodTS990   in '..\..\src\uRadioKenwoodTS990.pas',
    uRadioKenwoodTS570   in '..\..\src\uRadioKenwoodTS570.pas',
    uRadioKenwoodTS140    in '..\..\src\uRadioKenwoodTS140.pas',
    uRadioKenwoodTS440    in '..\..\src\uRadioKenwoodTS440.pas',

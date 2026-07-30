@@ -89,7 +89,7 @@ uses Log4D, uRadioRegistry, uRadioHamLibDirect, uRadioIcomBase,
      uRadioIcom705, uRadioIcom7300MK2, uRadioIcom7600,
      uRadioIcom7760, uRadioIcom7850, uRadioIcom905, uRadioIcom7100,
      uRadioIcom718,
-     uRadioKenwoodTS890;  // Issue #436
+     uRadioKenwoodLAN, uRadioKenwoodTS890, uRadioKenwoodTS990;  // Issue #436
      // The uRadioIcom*/uRadioKenwood* units above are listed so their
      // initialization sections run and self-register in uRadioRegistry, even
      // though the factory no longer references their classes directly.

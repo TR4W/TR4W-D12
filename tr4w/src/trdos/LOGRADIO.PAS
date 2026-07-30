@@ -828,7 +828,7 @@ uses
    LogCW,
    uRadioHamLibDirect,
    uRadioIcomBase,
-   uRadioKenwoodTS890;  // Issue #436
+   uRadioKenwoodLAN;  // Issue #436 -- TKenwoodLAN base (TS-890S / TS-990S)
 
 
 
@@ -3152,10 +3152,13 @@ begin
          end;
 
          // Kenwood TS-890 also requires LAN credentials (Issue #436).
-         if Self.tFactoryObject is TKenwoodTS890Radio then
+         // TKenwoodLAN, the BASE -- not a model class.  Both the TS-890S and the
+         // TS-990S need LAN credentials, and testing a model class here would
+         // silently leave the other one unauthenticated.
+         if Self.tFactoryObject is TKenwoodLAN then
          begin
-            TKenwoodTS890Radio(Self.tFactoryObject).NetworkUsername := Self.NetworkUsername;
-            TKenwoodTS890Radio(Self.tFactoryObject).NetworkPassword := Self.NetworkPassword;
+            TKenwoodLAN(Self.tFactoryObject).NetworkUsername := Self.NetworkUsername;
+            TKenwoodLAN(Self.tFactoryObject).NetworkPassword := Self.NetworkPassword;
             logger.Info('[%s.SetUpRadioInterface] Set Kenwood TS-890 LAN credentials (user=%s, pass=*******)',
                         [Self.RadioName, Self.NetworkUsername]);
          end;
