@@ -131,6 +131,8 @@ uses
    uRadioTenTecOmni6 in '..\..\src\uRadioTenTecOmni6.pas',
    uRadioIcom7700         in '..\..\src\uRadioIcom7700.pas',
    uRadioIcom7800         in '..\..\src\uRadioIcom7800.pas',
+   uRadioIcom7850         in '..\..\src\uRadioIcom7850.pas',
+   uRadioIcom7851         in '..\..\src\uRadioIcom7851.pas',
    uTestIcomRegistry    in 'uTestIcomRegistry.pas',
    // Flex is the only two-constructor registration; list its three units
    // explicitly so their initialization sections self-register in this EXE.
