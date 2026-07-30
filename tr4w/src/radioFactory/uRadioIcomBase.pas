@@ -103,6 +103,7 @@ type
     FInitialQueryPending: Boolean; // True after $19 sent; triggers $03/$04 on $19 response
     FFirstMessage: Boolean;        // True until first valid frame received; triggers initial VFO/mode queries
     FTransceiverIDQueried: Boolean; // True once $19 $00 has been sent for this connection (see QueryTransceiverIDOnce)
+    FLastRxByteTick: DWORD;        // GetTickCount when serial RX bytes last arrived (bus-quiet gating)
     FPollPhase: Integer;            // Rotates through query groups to avoid flooding radio
     FLastSetCWSpeedTick: DWORD;   // GetTickCount at last SetCWSpeed call — suppresses stale echoes
     FDataModeID: Byte;            // Icom data sub-mode: $01=D1 (default), $02=D2, $03=D3 — configurable via RADIO x ICOM DATA MODE ID
@@ -113,6 +114,10 @@ type
     // One-shot $19 $00 transceiver-ID query, triggered by the FIRST mode
     // response of the connection rather than the connect burst itself.
     procedure QueryTransceiverIDOnce;
+
+    // Serial bus discipline -- called only by TCIVSendThread.DrainQueues.
+    procedure WaitForBusQuiet;
+    function SerialInterCommandDelayMs: integer;
 
 
     procedure ProcessCIVMessage(msg: string);
@@ -224,7 +229,20 @@ var
 
 // CI-V send queue tuning
 const
-  CIV_INTER_COMMAND_DELAY_MS = 25;  // Minimum gap between outbound CI-V commands.
+  CIV_INTER_COMMAND_DELAY_MS = 25;  // Minimum gap between outbound CI-V commands (network; serial adds a baud-scaled term).
+
+  // Serial CI-V is a shared HALF-DUPLEX bus: transmitting while the radio is
+  // answering an earlier command destroys BOTH frames (the rigs jam the bus
+  // with FC bytes).  Bench-proven on the IC-718 at 4800 baud: a fixed 25ms gap
+  // put the $04 mode query inside the radio's $03 response window on every
+  // connect, so the mode display stayed NON.  Two defences, both serial-only:
+  //   1. a baud-scaled inter-command gap -- see SerialInterCommandDelayMs;
+  //   2. WaitForBusQuiet -- do not start a TX until the RX line has been
+  //      silent for CIV_BUS_QUIET_MS (a frame gap), so a response already in
+  //      flight is never trampled.  Capped so heavy transceive traffic can
+  //      only delay a command, never starve it.
+  CIV_BUS_QUIET_MS     = 20;
+  CIV_BUS_QUIET_CAP_MS = 250;
                                     // Icom CI-V over network needs ~20-30ms between
                                     // commands to avoid overflowing the radio's input buffer.
   CIV_QUEUE_MAX_NORMAL       = 50;  // Safety cap: drop normal items beyond this depth.
@@ -289,9 +307,10 @@ begin
 
      if hasItem then
         begin
+        FOwner.WaitForBusQuiet;   // serial only: never start a TX over an RX in flight
         FOwner.DoSendDirect(cmd);
         if not Terminated then
-           Sleep(CIV_INTER_COMMAND_DELAY_MS);
+           Sleep(FOwner.SerialInterCommandDelayMs);
         end;
   until (not hasItem) or Terminated;
 end;
@@ -414,6 +433,7 @@ begin
   FInitialQueryPending := False;
   FFirstMessage        := True;
   FTransceiverIDQueried := False;
+  FLastRxByteTick      := 0;   // "long ago" -- the first send is never gated
   FDirectFreqRoute          := False;  // Override True in subclass for radios where $07 $D2 is unreliable
   FMainBandProcessingOnly   := False;  // Override True for IC-9700, IC-9100 (satellite-mode $25 returns FA)
   FActiveVFOInverted        := False;  // Override True for IC-9700 ($00=$B active, $01=$A active)
@@ -816,9 +836,44 @@ end;
 
 procedure TIcomRadio.ProcessMsg(msg: string);
 begin
+  // Stamp the RX clock FIRST -- WaitForBusQuiet in the send thread reads this
+  // to avoid transmitting over a response that is still arriving.
+  FLastRxByteTick := GetTickCount;
   logger.trace('[%s.ProcessMsg] CALLED with length: %d', [radioModel, Length(msg)]);
   // Forward to ProcessCIVMessage to maintain compatibility
   ProcessCIVMessage(msg);
+end;
+
+// Serial CI-V bus discipline (see the constants block for the bench story).
+procedure TIcomRadio.WaitForBusQuiet;
+var
+   waited: integer;
+begin
+   if IsNetworkConnection then
+      begin
+      Exit;
+      end;
+   waited := 0;
+   while (DWORD(GetTickCount - FLastRxByteTick) < CIV_BUS_QUIET_MS) and
+         (waited < CIV_BUS_QUIET_CAP_MS) do
+      begin
+      Sleep(5);
+      Inc(waited, 5);
+      end;
+end;
+
+// Gap between outbound commands.  Network: the fixed 25ms.  Serial: add the
+// time the bus is occupied by the command's own echo plus a typical response
+// (~25 bytes of frames at 10 bits/byte) -- at 4800 baud that is ~52ms extra,
+// at 19200 ~13ms, vanishing at USB-CAT rates.  Together with WaitForBusQuiet
+// this keeps the next command out of the current command's response window.
+function TIcomRadio.SerialInterCommandDelayMs: integer;
+begin
+   Result := CIV_INTER_COMMAND_DELAY_MS;
+   if (not IsNetworkConnection) and (serialBaudRate > 0) then
+      begin
+      Result := Result + (250000 div integer(serialBaudRate));
+      end;
 end;
 
 procedure TIcomRadio.ProcessCIVMessage(msg: string);
