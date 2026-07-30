@@ -759,6 +759,8 @@ var
    child: HWND;
    i: integer;
    caption: string;
+   dlgFont: LRESULT;
+   created: HWND;
 begin
    // Row pitch measured from the CAT RTS / CAT DTR rows.
    GetWindowRect(GetDlgItem(hwnddlg, 104), r104);
@@ -825,6 +827,14 @@ begin
    // the 101..111 label loop gives every other row.  (TF.CreateStatic is NOT
    // used here on purpose -- it hardcodes SS_SUNKEN + SS_CENTER + 23px, which
    // is the boxed look NY4I flagged on the bench.)
+   //
+   // FONT: the runtime helpers stamp MSSansSerifFont, which is created at
+   // 15px -- BIGGER than the ~13px the dialog manager derives from the
+   // template's 'FONT 8, MS Sans Serif'.  At 15px the caption wrapped inside
+   // the one-row-high static and the second line was clipped, so the label
+   // showed only 'RADIO ONE' (bench screenshot).  Ask the DIALOG for its own
+   // font (WM_GETFONT) and stamp that on both new controls -- by definition
+   // the same font every template control uses, in every language.
    if CATWTR = @Radio1 then
       begin
       caption := 'RADIO ONE ' + TC_SERIAL_FORMAT_LABEL;
@@ -833,11 +843,25 @@ begin
       begin
       caption := 'RADIO TWO ' + TC_SERIAL_FORMAT_LABEL;
       end;
-   tCreateStaticWindow(caption, SS_LEFT or WS_CHILD or WS_VISIBLE,
+   dlgFont := Windows.SendMessage(hwnddlg, WM_GETFONT, 0, 0);
+   // Single line (no wrap), and let the label run to the combo's edge rather
+   // than stopping at label 108's width -- this caption is the longest in the
+   // column.
+   labelW := comboX - labelX - 5;
+   created := tCreateStaticWindow(caption,
+      SS_LEFTNOWORDWRAP or WS_CHILD or WS_VISIBLE,
       labelX, labelY, labelW, labelH, hwnddlg, SERIALFMT_LABEL_ID);
-   tCreateComboBoxWindow(
+   if dlgFont <> 0 then
+      begin
+      Windows.SendMessage(created, WM_SETFONT, WPARAM(dlgFont), 1);
+      end;
+   created := tCreateComboBoxWindow(
       WS_CHILD or WS_VISIBLE or WS_TABSTOP or WS_VSCROLL or CBS_DROPDOWNLIST,
       comboX, comboY, comboW, hwnddlg, HMENU(SERIALFMT_COMBO_ID));
+   if dlgFont <> 0 then
+      begin
+      Windows.SendMessage(created, WM_SETFONT, WPARAM(dlgFont), 1);
+      end;
    for i := Low(SerialFormatChoices) to High(SerialFormatChoices) do
       begin
       tCB_ADDSTRING_PCHAR(hwnddlg, SERIALFMT_COMBO_ID, SerialFormatChoices[i]);
