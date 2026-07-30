@@ -178,6 +178,27 @@ begin
       end;
 end;
 
+// Stamp the DIALOG's own font (WM_GETFONT -- what the dialog manager gave every
+// template control) on a runtime-created control.  The generic creation helpers
+// (CreateStatic/CreateEdit/CreateButton/tCreate*Window) stamp MSSansSerifFont,
+// which tr4w.dpr creates at 15px -- LARGER than the ~13px derived from the
+// template's 'FONT 8, MS Sans Serif' -- so runtime controls sat subtly oversized
+// next to template ones, and a long one-row caption could wrap and clip
+// (the DATA/PARITY/STOP label bench finding).  Call this after every runtime
+// control creation in this dialog.
+procedure ApplyDialogFont(hwnddlg: HWND; ctl: integer);
+var
+   f: LRESULT;
+   w: HWND;
+begin
+   f := Windows.SendMessage(hwnddlg, WM_GETFONT, 0, 0);
+   w := GetDlgItem(hwnddlg, ctl);
+   if (f <> 0) and (w <> 0) then
+      begin
+      Windows.SendMessage(w, WM_SETFONT, WPARAM(f), 1);
+      end;
+end;
+
 // Replace a resource-defined combo with an owner-draw one of the same id,
 // position and size.  CBS_OWNERDRAWFIXED can only be set at CREATION, and these
 // combos come from the binary .RES, so the control has to be rebuilt.
@@ -759,8 +780,6 @@ var
    child: HWND;
    i: integer;
    caption: string;
-   dlgFont: LRESULT;
-   created: HWND;
 begin
    // Row pitch measured from the CAT RTS / CAT DTR rows.
    GetWindowRect(GetDlgItem(hwnddlg, 104), r104);
@@ -843,25 +862,18 @@ begin
       begin
       caption := 'RADIO TWO ' + TC_SERIAL_FORMAT_LABEL;
       end;
-   dlgFont := Windows.SendMessage(hwnddlg, WM_GETFONT, 0, 0);
    // Single line (no wrap), and let the label run to the combo's edge rather
    // than stopping at label 108's width -- this caption is the longest in the
    // column.
    labelW := comboX - labelX - 5;
-   created := tCreateStaticWindow(caption,
+   tCreateStaticWindow(caption,
       SS_LEFTNOWORDWRAP or WS_CHILD or WS_VISIBLE,
       labelX, labelY, labelW, labelH, hwnddlg, SERIALFMT_LABEL_ID);
-   if dlgFont <> 0 then
-      begin
-      Windows.SendMessage(created, WM_SETFONT, WPARAM(dlgFont), 1);
-      end;
-   created := tCreateComboBoxWindow(
+   ApplyDialogFont(hwnddlg, SERIALFMT_LABEL_ID);
+   tCreateComboBoxWindow(
       WS_CHILD or WS_VISIBLE or WS_TABSTOP or WS_VSCROLL or CBS_DROPDOWNLIST,
       comboX, comboY, comboW, hwnddlg, HMENU(SERIALFMT_COMBO_ID));
-   if dlgFont <> 0 then
-      begin
-      Windows.SendMessage(created, WM_SETFONT, WPARAM(dlgFont), 1);
-      end;
+   ApplyDialogFont(hwnddlg, SERIALFMT_COMBO_ID);
    for i := Low(SerialFormatChoices) to High(SerialFormatChoices) do
       begin
       tCB_ADDSTRING_PCHAR(hwnddlg, SERIALFMT_COMBO_ID, SerialFormatChoices[i]);
@@ -1190,6 +1202,10 @@ begin
         // happen before PopulatePortCombo -- DestroyWindow would discard the items.
         MakePortComboOwnerDraw(hwnddlg, 122);
         MakePortComboOwnerDraw(hwnddlg, 123);
+        // Font BEFORE populating: ComboFitDroppedWidth measures entries in the
+        // combo's own font, so the width math must see the final font.
+        ApplyDialogFont(hwnddlg, 122);
+        ApplyDialogFont(hwnddlg, 123);
 
         // Port combos are filtered to what Windows reports (plus the configured
         // port when it is unplugged) and carry their PortType as item data --
@@ -1251,6 +1267,10 @@ begin
         CreateStatic('NETWORK PASSWORD', LabelX, NewY + 28, LabelW, hwnddlg, 113);
         // ES_PASSWORD masks the text with bullets
         CreateEdit(ES_AUTOHSCROLL or ES_PASSWORD, EditX, NewY + 28, EditW, 22, hwnddlg, 133);
+        ApplyDialogFont(hwnddlg, 112);
+        ApplyDialogFont(hwnddlg, 132);
+        ApplyDialogFont(hwnddlg, 113);
+        ApplyDialogFont(hwnddlg, 133);
 
         // Issue #853: dynamic "Discover" button (ID 140), placed just to the
         // left of the IP-address edit (control 130, which lives in the dialog
@@ -1276,6 +1296,7 @@ begin
            begin
            hDiscoverBtn := CreateButton(BS_PUSHBUTTON, '?', ptTemp.x - 26, ptTemp.y, 22, hwnddlg, 140);
            end;
+        ApplyDialogFont(hwnddlg, 140);   // only visible on the '?' fallback, but keep every runtime control uniform
 
         // Hover tooltip for the Discover button (hardcoded for now -- a
         // TC_TOOLTIP_DISCOVERY resource string can replace the literal later).
@@ -1376,6 +1397,7 @@ begin
            WS_CHILD or WS_VISIBLE or WS_TABSTOP or BS_AUTOCHECKBOX,
            ptTemp.x, ptTemp.y,
            GetSystemMetrics(SM_CXVSCROLL) * 12, 20, hwnddlg, HMENU(150));
+        ApplyDialogFont(hwnddlg, 150);
         if tShowAllSerialPorts then
            begin
            Windows.SendDlgItemMessage(hwnddlg, 150, BM_SETCHECK, BST_CHECKED, 0);
