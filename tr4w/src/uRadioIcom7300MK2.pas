@@ -35,10 +35,10 @@ unit uRadioIcom7300MK2;
 interface
 
 uses
-  uRadioIcomBase, VC, uRadioRegistry;
+  uRadioIcomBase, uRadioIcomModern, VC, uRadioRegistry;
 
 type
-  TIcom7300MK2Radio = class(TIcomRadio)
+  TIcom7300MK2Radio = class(TIcomModernRadio)
   public
     constructor Create; reintroduce;
   end;

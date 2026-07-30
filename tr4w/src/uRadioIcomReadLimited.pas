@@ -20,11 +20,16 @@ unit uRadioIcomReadLimited;
   Shared base for the CI-V radios that read everything a modern Icom does EXCEPT
   the unselected VFO and the RIT offset.  Registers nothing -- one model per unit.
 
-  THE PROFILE, AND WHY IT IS THIS AND NOT LESS.  It is the FULL TIcomRadio profile
-  minus exactly two flags:
+  THE PROFILE, AND WHY IT IS THIS AND NOT LESS.  It is the modern profile
+  (TIcomModernRadio) minus exactly two flags:
 
       rcReadVFOB   -- absent from LOGRADIO's IcomRadiosThatSupportVFOB
       rcReadRIT    -- absent from IcomRadiosThatSupportRIT
+
+  Stated here as the three flags these radios HAVE (split, TX status, data mode)
+  rather than inherit-modern-and-Exclude: since the base class default went
+  restrictive, every family base declares its full set explicitly -- no
+  subtraction, so what a radio claims is readable in one place.
 
   Nothing else is removed, and that precision matters: an earlier version of this
   migration attached these radios to TIcomLegacyRadio instead -- the conservative
@@ -62,10 +67,11 @@ implementation
 
 procedure TIcomReadLimitedRadio.DefineCapabilities;
 begin
-  inherited;   // full modern profile
-  // These two, and ONLY these two, per LOGRADIO's capability sets.
-  Exclude(FCapabilities.Flags, rcReadVFOB);
-  Exclude(FCapabilities.Flags, rcReadRIT);
+  // The modern profile minus rcReadVFOB and rcReadRIT -- those two, and ONLY
+  // those two, per LOGRADIO's capability sets (see the unit header).
+  FCapabilities.Flags := [rcReadSplit, rcReadTXStatus, rcDataMode];
+  FCapabilities.CWSpeedMin := 6;
+  FCapabilities.CWSpeedMax := 48;
 end;
 
 end.

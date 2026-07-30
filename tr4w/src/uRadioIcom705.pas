@@ -33,10 +33,10 @@ unit uRadioIcom705;
 interface
 
 uses
-  uRadioIcomBase, uFactoryRadioBase, uRadioBand, VC, uRadioRegistry;
+  uRadioIcomBase, uRadioIcomModern, uFactoryRadioBase, uRadioBand, VC, uRadioRegistry;
 
 type
-  TIcom705Radio = class(TIcomRadio)
+  TIcom705Radio = class(TIcomModernRadio)
   public
     constructor Create; reintroduce;
     function ToggleBand(vfo: TVFO = nrVFOA): TRadioBand; override;

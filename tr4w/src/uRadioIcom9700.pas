@@ -46,10 +46,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 interface
 
 uses
-  uRadioIcomBase, uFactoryRadioBase, VC, uRadioRegistry;
+  uRadioIcomBase, uRadioIcomModern, uFactoryRadioBase, VC, uRadioRegistry;
 
 type
-  TIcom9700Radio = class(TIcomRadio)
+  TIcom9700Radio = class(TIcomModernRadio)
   public
     constructor Create; reintroduce;
     procedure PollRadioState; override;

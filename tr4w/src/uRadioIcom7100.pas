@@ -28,10 +28,10 @@ unit uRadioIcom7100;
 interface
 
 uses
-  uRadioIcomBase, VC, uRadioRegistry;
+  uRadioIcomBase, uRadioIcomModern, VC, uRadioRegistry;
 
 type
-  TIcom7100Radio = class(TIcomRadio)
+  TIcom7100Radio = class(TIcomModernRadio)
   public
     constructor Create; reintroduce;
   end;

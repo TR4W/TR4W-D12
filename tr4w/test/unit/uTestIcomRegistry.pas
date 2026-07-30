@@ -160,6 +160,14 @@ begin
          // nothing else, so for every other model the answer is "yes".
          Compare(rcReadRIT, m in IcomRadiosThatSupportRIT, 'RIT');
          Compare(rcReadVFOB, m in IcomRadiosThatSupportVFOB, 'VFOB');
+         // Family-wide, expected TRUE for every CI-V radio (deliberately
+         // including the Omni VI, which is CI-V by mechanism but outside the
+         // ICOMRadios enum range).  This assertion exists because the flag was
+         // once Include'd BEFORE DefineCapabilities in TIcomRadio.Create, and
+         // the `Flags := [...]` full replacement there silently wiped it --
+         // every Icom answered False and the LOGSUBS1 Issue-145 guard never
+         // fired.  No test covered it, so nothing failed.
+         Compare(rcCWFlushDisruptsTiming, True, 'CWFlush');
          if not (m in BenchProvenDivergences) then
             begin
             Compare(rcReadSplit, not (m in IcomRadiosSplitSetOnly), 'Split');

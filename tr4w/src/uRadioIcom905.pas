@@ -29,10 +29,10 @@ unit uRadioIcom905;
 interface
 
 uses
-  uRadioIcomBase, VC, uRadioRegistry;
+  uRadioIcomBase, uRadioIcomModern, VC, uRadioRegistry;
 
 type
-  TIcom905Radio = class(TIcomRadio)
+  TIcom905Radio = class(TIcomModernRadio)
   public
     constructor Create; reintroduce;
   end;

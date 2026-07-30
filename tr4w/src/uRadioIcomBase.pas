@@ -378,19 +378,6 @@ constructor TIcomRadio.Create;
 begin
   inherited Create(ProcessMsg);
 
-  // FAMILY-WIDE: flushing the CW buffer mid-message wrecks CW timing on a CI-V
-  // radio, because CW-by-CAT goes out on the rate-limited send queue and an
-  // abort-and-requeue mangles the inter-element spacing.  Replaces LOGRADIO's
-  // `RadioModel in ICOMRadios` test at LOGSUBS1:302 (ny4i Issue 145).
-  //
-  // Declared on the BASE, so all 28 Icoms inherit it -- which matches ICOMRadios
-  // (IC78..IC9700) exactly, with one harmless difference: TTenTecOmni6Radio
-  // descends from TIcomRadio and so inherits the flag, while OMNI6 sits one enum
-  // slot past IC9700 and is NOT in ICOMRadios.  Unobservable either way -- the
-  // flag is only consulted while CW-by-CAT is active, and the Omni VI has no
-  // CW-by-CAT -- and it is right by mechanism, the Omni VI being a CI-V radio.
-  Include(FCapabilities.Flags, rcCWFlushDisruptsTiming);
-
   // Icom radios require polling
   requiresPolling := True;
   autoUpdateCommand := '';
@@ -432,6 +419,25 @@ begin
   // single source of truth (the factory replacement for LOGRADIO's global
   // IcomRadiosThatSupport* typesets).
   DefineCapabilities;
+
+  // FAMILY-WIDE: flushing the CW buffer mid-message wrecks CW timing on a CI-V
+  // radio, because CW-by-CAT goes out on the rate-limited send queue and an
+  // abort-and-requeue mangles the inter-element spacing.  Replaces LOGRADIO's
+  // `RadioModel in ICOMRadios` test at LOGSUBS1:302 (ny4i Issue 145).
+  //
+  // Declared on the BASE, so all 28 Icoms inherit it -- which matches ICOMRadios
+  // (IC78..IC9700) exactly, with one harmless difference: TTenTecOmni6Radio
+  // descends from TIcomRadio and so inherits the flag, while OMNI6 sits one enum
+  // slot past IC9700 and is NOT in ICOMRadios.  Unobservable either way -- the
+  // flag is only consulted while CW-by-CAT is active, and the Omni VI has no
+  // CW-by-CAT -- and it is right by mechanism, the Omni VI being a CI-V radio.
+  //
+  // This MUST run AFTER DefineCapabilities: every DefineCapabilities assigns
+  // `FCapabilities.Flags := [...]` (a full replacement), so an Include placed
+  // earlier in this constructor is silently wiped -- which is exactly the bug
+  // this line used to have, and why uTestIcomRegistry now asserts the flag.
+  Include(FCapabilities.Flags, rcCWFlushDisruptsTiming);
+
   FSupportsExtendedVFOBCommands := rcReadVFOB in FCapabilities.Flags;
   FSplitStateReadable          := rcReadSplit in FCapabilities.Flags;
   FCWSpeedMin                  := FCapabilities.CWSpeedMin;
@@ -440,13 +446,21 @@ begin
   radioModel := 'Icom';  // Will be overridden by derived classes
 end;
 
-// Modern-Icom default capabilities.  Older/minimal radios (IC-718, the legacy CI-V
-// rigs) override this to declare a smaller set.  Mirrors the legacy sets: the modern
-// 13 support VFO-B read ($25/$26), RIT read ($21), split read, TX-status read, and
-// data mode ($1A06); older radios do not.
+// RESTRICTIVE default: the base promises NOTHING.  Every read capability must be
+// declared by the radio's own class (or its family base: TIcomModernRadio,
+// TIcomReadLimitedRadio, TIcomLegacyRadio).  This is deliberate fail-safe design:
+// a new Icom subclass whose author forgets DefineCapabilities gets a radio with a
+// visibly missing feature, NOT one that silently sends $25/$21/$0F/$1C/$1A06
+// queries the rig NAKs -- bus collisions that look like a bad cable on the bench.
+// (The modern full profile used to live HERE as the default; it moved to
+// TIcomModernRadio in uRadioIcomModern.pas.)
 procedure TIcomRadio.DefineCapabilities;
 begin
-  FCapabilities.Flags := [rcReadVFOB, rcReadRIT, rcReadSplit, rcReadTXStatus, rcDataMode];
+  FCapabilities.Flags := [];
+  // The CW speed range is an ENCODING PARAMETER for $14 $0C, not a capability
+  // claim -- and SetCWSpeed divides by (max - min), so an empty 0..0 range here
+  // would trade a mild clamp error for a division by zero.  6..48 is the family
+  // norm; the IC-718 (6..60) overrides it.
   FCapabilities.CWSpeedMin := 6;
   FCapabilities.CWSpeedMax := 48;
 end;

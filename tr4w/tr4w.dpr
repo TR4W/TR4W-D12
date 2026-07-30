@@ -208,6 +208,7 @@ uses
   uRadioIcom718 in 'src\uRadioIcom718.pas',
   uRadioIcomLegacy in 'src\uRadioIcomLegacy.pas',
   uRadioIcomReadLimited in 'src\uRadioIcomReadLimited.pas',
+  uRadioIcomModern in 'src\uRadioIcomModern.pas',
   uRadioIcom78 in 'src\uRadioIcom78.pas',
   uRadioIcom707 in 'src\uRadioIcom707.pas',
   uRadioIcom725 in 'src\uRadioIcom725.pas',

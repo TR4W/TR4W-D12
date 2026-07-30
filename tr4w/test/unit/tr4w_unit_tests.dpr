@@ -111,6 +111,7 @@ uses
    // uRadioIcomLegacy, and the IC-706 family fell out of this EXE.
    uRadioIcomLegacy in '..\..\src\uRadioIcomLegacy.pas',
    uRadioIcomReadLimited in '..\..\src\uRadioIcomReadLimited.pas',
+   uRadioIcomModern in '..\..\src\uRadioIcomModern.pas',
    uRadioIcom78 in '..\..\src\uRadioIcom78.pas',
    uRadioIcom707 in '..\..\src\uRadioIcom707.pas',
    uRadioIcom725 in '..\..\src\uRadioIcom725.pas',
