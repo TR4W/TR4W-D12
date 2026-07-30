@@ -83,16 +83,43 @@ Type
       rcReadSplit,     // reports split back ($0F read/push) vs set-only
       rcReadTXStatus,  // can read TX/RX (PTT) state back over CAT
       rcDataMode,      // has a data sub-mode (Icom $1A06 USB-D); NOT plain RTTY, which is a mode byte
-      rcCWByCAT,       // can key CW over CAT -- DECLARATION ONLY; keying stays on the legacy path
-                       //   / future CW Keyer Factory (see [[cw-keyer-factory-direction]])
+      rcCWByCAT,       // can key CW over CAT.  Replaces LOGRADIO's
+                       //   RadioSupportsCWByCAT.  DISTINCT FROM THE OPERATOR'S
+                       //   CONFIG SETTING: `CW BY CAT = TRUE` says what the user
+                       //   WANTS, this says what the radio CAN do, and
+                       //   IsCWByCATActive requires BOTH -- a user can switch the
+                       //   option on for a radio that cannot do it, and the
+                       //   capability is what stops that.  Keying itself still
+                       //   runs on the legacy path / the future CW Keyer Factory
+                       //   (see [[cw-keyer-factory-direction]]).
+      rcPlayDVK,       // can play a recorded voice message (DVK) over CAT.
+                       //   Replaces LOGRADIO's RadioSupportsPlayDVK.  Same
+                       //   config-versus-capability split as rcCWByCAT.
+      rcCWSpeedSync,   // CW keyer speed can be pushed to the radio so its own
+                       //   keyer follows TR4W's speed.  Replaces LOGRADIO's
+                       //   RadioSupportsCWSpeedSync -- a WIDER set than
+                       //   rcCWByCAT: a radio can accept a speed without being
+                       //   able to key text (the older Icoms and the FTDX
+                       //   family), so the two are independent flags.
       rcSharedRITXITOffset
                        // ONE offset register shared by RIT and XIT (Yaesu FT-1000MP
-                       // "clarifier", Elecraft K4): the two on/off states are still
-                       // independent, but there is a single offset value -- setting
-                       // RIT's offset moves XIT's too.  Radios WITHOUT this flag have
-                       // independent offsets (the common case, e.g. Icom $21).
-                       // Phrased positively because a set can only express presence:
-                       // absent = independent, which is the safe default.
+                       // "clarifier"): the two on/off states are still independent,
+                       // but there is a single offset value -- setting RIT's offset
+                       // moves XIT's too.
+                       //
+                       // ABSENCE MEANS "NOBODY HAS CHECKED", NOT "INDEPENDENT".
+                       // An earlier comment here claimed absent = independent = the
+                       // safe default.  That is backwards, and NY4I set the rule:
+                       // "let's assume they are a single offset unless we either
+                       // know for sure they are not or I confirm."  Only the
+                       // FT-1000MP declares this today, so 90 radios read as
+                       // independent on no evidence -- treat them as shared.
+                       //
+                       // Evidence so far: the Flex 6000 IS genuinely independent
+                       // (bench-proven, ZZRG and ZZXG returning different values at
+                       // once), and HamLib models every rig it implements as shared
+                       // (65 of 65 classified -- its Kenwood set_xit literally just
+                       // calls set_rit).  Nothing consumes this flag yet.
    );
    TRadioCapabilitySet = set of TRadioCapability;
 
@@ -1294,9 +1321,13 @@ end;
 // HamLib `rigctl -m <model> -u`-style one-line dump of what this rig can do.
 function TFactoryRadioBase.CapabilitiesAsText: string;
 const
+   // One name per TRadioCapability member, in declaration order.  Adding a
+   // capability without adding its name here is a COMPILE error (E2072), which is
+   // the intent -- the dump would otherwise silently mislabel every flag after
+   // the new one.
    CapabilityNames: array[TRadioCapability] of string =
       ('ReadVFOB', 'ReadRIT', 'ReadSplit', 'ReadTXStatus', 'DataMode', 'CWByCAT',
-       'SharedRITXITOffset');
+       'PlayDVK', 'CWSpeedSync', 'SharedRITXITOffset');
 var
    c: TRadioCapability;
 begin
