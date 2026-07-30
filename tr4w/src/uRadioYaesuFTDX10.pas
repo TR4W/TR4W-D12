@@ -34,7 +34,7 @@ unit uRadioYaesuFTDX10;
   BENCH NOTES (flag for validation on real FTDX-10 hardware):
     - The full mode-char map at IF pos 22 is the common Yaesu set; verify the
       less-common chars (DATA/PSK variants) on the radio.
-    - The clarifier (RIT offset) field at pos 15-19 is parsed as sign + 4 digits;
+    - The RIT offset (RIT offset) field at pos 15-19 is parsed as sign + 4 digits;
       confirm the FTDX-10 returns "+0000"/"-0000" there.
 }
 
@@ -57,7 +57,7 @@ begin
    inherited Create;
    radioModel := 'Yaesu FTDX-10';
    // Capabilities (declarative -- Yaesu does not consume FCapabilities yet; drives
-   // the '-u' dump).  FTDX10 reads VFO B (OI;), RIT/clarifier, split (FT;), TX (TX;).
+   // the '-u' dump).  FTDX10 reads VFO B (OI;), RIT/RIT offset, split (FT;), TX (TX;).
    FCapabilities.Flags := [rcReadVFOB, rcReadRIT, rcReadSplit, rcReadTXStatus];
    FCapabilities.CWSpeedMin := FCWSpeedMin;
    FCapabilities.CWSpeedMax := FCWSpeedMax;

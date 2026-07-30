@@ -22,7 +22,7 @@ unit uRadioYaesuFT990Group;
   The models live in uRadioYaesuFT990.pas and uRadioYaesuFT1000.pas.  Each states
   only its logger name, its display name, its set-mode row, and the length of its
   short-status answer.  Everything else -- the three-block poll, frame reassembly,
-  the BCD frequency and clarifier readers, the mode map -- is here and is identical
+  the BCD frequency and RIT offset readers, the mode map -- is here and is identical
   between the two radios.
 
   WHY A BASE RATHER THAN MODEL-ON-MODEL.  TFT1000Radio used to descend from
@@ -81,7 +81,7 @@ type
     FStatus1Len: integer;
     function  StatusModeToMode(b: Byte): TRadioMode;
     function  FreqRead(const frame: string; pos1: integer): integer;
-    function  ClarifierRead(const frame: string; pos1: integer): integer;
+    function  RITOffsetRead(const frame: string; pos1: integer): integer;
     procedure RecomputeFrameLength;
   public
     constructor Create; reintroduce;
@@ -102,7 +102,7 @@ begin
    // What this driver actually reads -- the same on both radios:
    //   rcReadVFOB  -- the $03 $10 block carries both VFOs
    //   rcReadSplit -- the $FA block reports it
-   //   rcReadRIT   -- the short status carries the clarifier and its flags
+   //   rcReadRIT   -- the short status carries the RIT offset and its flags
    // NOT rcReadTXStatus: nothing in these three answers reports PTT.
    FCapabilities.Flags := [rcReadVFOB, rcReadSplit, rcReadRIT];
    FCapabilities.CWSpeedMin := 0;
@@ -138,7 +138,7 @@ end;
 // offset drift by one step per 256 Hz of magnitude.  It is preserved because
 // nobody here has an FT-990 to prove the corrected form: swapping one unverified
 // answer for another is not an improvement.  See the bench note in the header.
-function TYaesuFT990Group.ClarifierRead(const frame: string; pos1: integer): integer;
+function TYaesuFT990Group.RITOffsetRead(const frame: string; pos1: integer): integer;
 begin
    Result := 10 * (SmallInt(ShortInt(Ord(frame[pos1]))) * 255 +
                    Ord(frame[pos1 + 1]));
@@ -177,7 +177,7 @@ begin
    fa := FStatus1Len + FT990_STATUS2_LEN;
 
    // ---- Block 2 ($03 $10): both VFOs.  Written first because it is the
-   // authoritative per-VFO state; block 1 only adds the clarifier. ----
+   // authoritative per-VFO state; block 1 only adds the RIT offset. ----
    Self.vfo[nrVFOA].frequency := FreqRead(msg, s2 + FT990_S2_VFOA_FREQ);
    Self.vfo[nrVFOA].band      := FreqToRadioBand(Self.vfo[nrVFOA].frequency);
    Self.vfo[nrVFOA].mode      := StatusModeToMode(Ord(msg[s2 + FT990_S2_VFOA_MODE]));
@@ -186,11 +186,11 @@ begin
    Self.vfo[nrVFOB].band      := FreqToRadioBand(Self.vfo[nrVFOB].frequency);
    Self.vfo[nrVFOB].mode      := StatusModeToMode(Ord(msg[s2 + FT990_S2_VFOB_MODE]));
 
-   // ---- Block 1 ($02 $10): clarifier and its on/off flags ----
+   // ---- Block 1 ($02 $10): RIT offset and its on/off flags ----
    flags := Ord(msg[FT990_S1_FLAGS]);
    Self.SetRITOn((flags and $02) <> 0);        // bit 1
    Self.SetXITOn((flags and $01) <> 0);        // bit 0
-   Self.SetRITOffset(ClarifierRead(msg, FT990_S1_CLAR_POS));
+   Self.SetRITOffset(RITOffsetRead(msg, FT990_S1_CLAR_POS));
 
    // ---- Block 3 ($01 $FA): split and which VFO is operating ----
    flags := Ord(msg[fa + FT990_FA_FLAGS]);

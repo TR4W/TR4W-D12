@@ -6,7 +6,7 @@ unit uTestYaesuBinary;
 
   WHY THIS EXISTS.  The FT-847 shares the FT-817's transport and its MAIN-VFO
   opcodes, so it is a subclass -- but its opcode chart (FT-847 manual p.92) has
-  NO split row, NO clarifier rows and NO data modes.  Inheriting those methods
+  NO split row, NO RIT offset rows and NO data modes.  Inheriting those methods
   unguarded would send opcodes the radio does not define, and would read
   TX-status bit 5 as split when that radio's Note 2 layout is its own.
 
@@ -38,7 +38,7 @@ type
    protected
       procedure Test_FT847_DoesNotSendSplit;
       procedure Test_FT817_DoesSendSplit;
-      procedure Test_FT847_DoesNotSendClarifier;
+      procedure Test_FT847_DoesNotSendRITOffset;
       procedure Test_FT847_RefusesDataModes;
       procedure Test_FT857_HasDIGButNotPKT;
       procedure Test_FT847_DeclaresNoSplitCapability;
@@ -166,7 +166,7 @@ begin
    end;
 end;
 
-procedure TYaesuBinaryTests.Test_FT847_DoesNotSendClarifier;
+procedure TYaesuBinaryTests.Test_FT847_DoesNotSendRITOffset;
 var
    r: TFT847Probe;
 begin
@@ -179,7 +179,7 @@ begin
       r.RITOff(nrVFOA);
       r.SetRITFreq(nrVFOA, 500);
       r.RITClear(nrVFOA);
-      CheckEquals('', r.sent, 'FT-847 emitted a clarifier command');
+      CheckEquals('', r.sent, 'FT-847 emitted a RIT offset command');
    finally
       r.Free;
    end;
@@ -329,7 +329,7 @@ procedure TYaesuBinaryTests.RunAllTests;
 begin
    Test_FT847_DoesNotSendSplit;
    Test_FT817_DoesSendSplit;
-   Test_FT847_DoesNotSendClarifier;
+   Test_FT847_DoesNotSendRITOffset;
    Test_FT847_RefusesDataModes;
    Test_FT857_HasDIGButNotPKT;
    Test_FT847_DeclaresNoSplitCapability;

@@ -4093,8 +4093,8 @@ procedure GetVFOInfoForYaesuFTX1(buf: PAnsiChar; var VFO: VFOStatusType;
    //   Pos 1-2:   "IF"
    //   Pos 3-7:   P1  VFO/memory channel (5 bytes � 2 longer than FTDX10's 3-byte P1)
    //   Pos 8-16:  P2  VFO frequency Hz (9 bytes)
-   //   Pos 17:    P3  Clarifier direction (+/-)
-   //   Pos 18-21: P3  Clarifier offset 0000-9990 Hz (4 bytes)
+   //   Pos 17:    P3  RIT offset sign (+/-)
+   //   Pos 18-21: P3  RIT offset 0000-9990 Hz (4 bytes)
    //   Pos 22:    P4  RX CLAR on/off
    //   Pos 23:    P5  TX CLAR on/off
    //   Pos 24:    P6  Mode

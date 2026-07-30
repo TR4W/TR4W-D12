@@ -55,11 +55,11 @@ begin
    // Group traits.
    FCATEnableOnConnect := False;              // answers without a CAT preamble
    FHasSplit           := True;
-   FHasClarifier       := True;
+   FHasRIT       := True;
    FModeDIGU           := FT817_MODE_DIGU;    // $0A
    FModeDIGL           := MODEBYTE_NONE;      // no PKT-as-RTTY
    // Split IS read back, from the appended TX-status byte.
-   //   NOT rcReadRIT      -- the clarifier is set-only; nothing reports it.
+   //   NOT rcReadRIT      -- the RIT offset is set-only; nothing reports it.
    //   NOT rcReadTXStatus -- the PTT bit exists but Note 4 omits its polarity.
    //   NOT rcReadVFOB     -- only one VFO is reported.
    FCapabilities.Flags := [rcReadSplit];

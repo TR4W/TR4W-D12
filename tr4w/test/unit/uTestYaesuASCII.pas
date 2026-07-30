@@ -49,7 +49,7 @@ unit uTestYaesuASCII;
   message is a trap; ModeToString removes it.
 
   Covers:
-    - IF; / OI; parse: frequency, band, mode, clarifier, RIT/XIT flags
+    - IF; / OI; parse: frequency, band, mode, RIT offset, RIT/XIT flags
     - the mode-character map, including the ONE character where the FT-991
       (C4FM) and the FTDX-10 (PSK31) disagree
     - split from FT;, TX state from TX;
@@ -144,8 +144,8 @@ type
       procedure Test_OI_GoesToVFOB;
       procedure Test_IF_RITOn;
       procedure Test_IF_XITOn;
-      procedure Test_IF_ClarifierPositive;
-      procedure Test_IF_ClarifierNegative;
+      procedure Test_IF_RITOffsetPositive;
+      procedure Test_IF_RITOffsetNegative;
 
       // The one character that separates the two families
       procedure Test_FT991_E_IsC4FM_NotPSK;
@@ -177,7 +177,7 @@ type
 
       // rtYaesu2 generation (FT-450 .. FTDX-9000)
       procedure Test_Y2_Parses_8DigitFrequency;
-      procedure Test_Y2_ClarifierAndFlags;
+      procedure Test_Y2_RITOffsetAndFlags;
       procedure Test_Y2_LayoutDiffersFromNewerGeneration;
       procedure Test_Y2_SetFrequency_Uses8Digits;
       procedure Test_Y2_Split_Uses_FR0_FT3;
@@ -368,7 +368,7 @@ end;
 // Fixture builder
 //
 // Field positions are the legacy ones (GetVFOInfoForYaesuType3/Type5):
-//   1-2 head | 3-5 memory ch | 6-14 freq | 15-19 clarifier | 20 RIT | 21 XIT
+//   1-2 head | 3-5 memory ch | 6-14 freq | 15-19 RIT offset | 20 RIT | 21 XIT
 //   22 mode | 23-27 filler
 // NO trailing ';' -- see the note at the top of this unit.
 // ---------------------------------------------------------------------------
@@ -477,11 +477,11 @@ begin
    end;
 end;
 
-procedure TYaesuASCIITests.Test_IF_ClarifierPositive;
+procedure TYaesuASCIITests.Test_IF_RITOffsetPositive;
 var
    r: TFT991Probe;
 begin
-   BeginTest('IF; clarifier +0250 = +250 Hz');
+   BeginTest('IF; RIT offset +0250 = +250 Hz');
    r := TFT991Probe.Create;
    try
       r.ProcessMessage(IFMsg('IF', '014025000', '+0250', '1', '0', '3'));
@@ -491,13 +491,13 @@ begin
    end;
 end;
 
-procedure TYaesuASCIITests.Test_IF_ClarifierNegative;
+procedure TYaesuASCIITests.Test_IF_RITOffsetNegative;
 var
    r: TFT991Probe;
 begin
    // The sign is its own character ahead of the magnitude; a driver that parsed
    // all 5 characters as one integer would read -0250 as 250.
-   BeginTest('IF; clarifier -0250 = -250 Hz');
+   BeginTest('IF; RIT offset -0250 = -250 Hz');
    r := TFT991Probe.Create;
    try
       r.ProcessMessage(IFMsg('IF', '014025000', '-0250', '1', '0', '3'));
@@ -907,7 +907,7 @@ end;
 // ---------------------------------------------------------------------------
 
 // 26-char body (27 on the wire).  Positions per GetVFOInfoForFT2000:
-//   1-2 head | 3-5 memory | 6-13 freq (8) | 14-18 clarifier | 19 RIT | 20 XIT
+//   1-2 head | 3-5 memory | 6-13 freq (8) | 14-18 RIT offset | 19 RIT | 20 XIT
 //   21 mode | 22-26 filler
 function Y2Msg(const head, freq, clar, rit, xit, mode: string): string;
 begin
@@ -934,11 +934,11 @@ begin
    end;
 end;
 
-procedure TYaesuASCIITests.Test_Y2_ClarifierAndFlags;
+procedure TYaesuASCIITests.Test_Y2_RITOffsetAndFlags;
 var
    r: TY2Probe;
 begin
-   BeginTest('rtYaesu2 clarifier and RIT/XIT flags sit one position earlier');
+   BeginTest('rtYaesu2 RIT offset and RIT/XIT flags sit one position earlier');
    r := TY2Probe.Create;
    try
       r.ProcessMessage(Y2Msg('IF', '14025000', '-0250', '1', '1', '3'));
@@ -1186,8 +1186,8 @@ begin
    Test_OI_GoesToVFOB;
    Test_IF_RITOn;
    Test_IF_XITOn;
-   Test_IF_ClarifierPositive;
-   Test_IF_ClarifierNegative;
+   Test_IF_RITOffsetPositive;
+   Test_IF_RITOffsetNegative;
 
    // The family-defining mode character
    Test_FT991_E_IsC4FM_NotPSK;
@@ -1219,7 +1219,7 @@ begin
 
    // rtYaesu2 generation
    Test_Y2_Parses_8DigitFrequency;
-   Test_Y2_ClarifierAndFlags;
+   Test_Y2_RITOffsetAndFlags;
    Test_Y2_LayoutDiffersFromNewerGeneration;
    Test_Y2_SetFrequency_Uses8Digits;
    Test_Y2_Split_Uses_FR0_FT3;

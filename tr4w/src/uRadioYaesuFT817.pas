@@ -22,7 +22,7 @@ unit uRadioYaesuFT817;
   A thin model on TYaesuFT817Group (uRadioYaesuFT817Group.pas), shared with the
   FT-817, FT-818, FT-847, FT-857 and FT-897.
 
-  The group exemplar: split, clarifier, DIG ($0A) and DIG-L/PKT ($0C) all present.
+  The group exemplar: split, RIT offset, DIG ($0A) and DIG-L/PKT ($0C) all present.
 
   Every trait is stated explicitly, even where it matches another model in the
   group.  The base promises nothing, so a trait left unsaid means the feature is
@@ -54,11 +54,11 @@ begin
    // Group traits.
    FCATEnableOnConnect := False;              // answers without a CAT preamble
    FHasSplit           := True;
-   FHasClarifier       := True;
+   FHasRIT       := True;
    FModeDIGU           := FT817_MODE_DIGU;    // $0A
    FModeDIGL           := FT817_MODE_DIGL;    // $0C
    // Split IS read back, from the appended TX-status byte.
-   //   NOT rcReadRIT      -- the clarifier is set-only; nothing reports it.
+   //   NOT rcReadRIT      -- the RIT offset is set-only; nothing reports it.
    //   NOT rcReadTXStatus -- the PTT bit exists but Note 4 omits its polarity.
    //   NOT rcReadVFOB     -- only one VFO is reported.
    FCapabilities.Flags := [rcReadSplit];

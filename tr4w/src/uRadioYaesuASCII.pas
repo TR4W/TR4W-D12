@@ -81,7 +81,7 @@ unit uRadioYaesuASCII;
     - Split is read with FT; and set with FT3;/FT2; (not FR;/FT1;/FT0;).
     - Mode is set with the 5-char MD0n; (extra VFO/"0" byte) vs Kenwood's MDn;.
     - The IF;/OI; response is 28 bytes, parsed by FIXED offsets from the START
-      (freq pos 6-14, clarifier pos 15-19, RIT-on pos 20, XIT-on pos 21, mode
+      (freq pos 6-14, RIT offset pos 15-19, RIT-on pos 20, XIT-on pos 21, mode
       pos 22) -- NOT end-relative like the Kenwood base.
 
   Poll, do not push: PollRadioState queries IF;OI;FT;TX; each cycle at a fixed
@@ -278,7 +278,7 @@ end;
 
 procedure TYaesuSerial.RITClear(whichVFO: TVFO);
 begin
-   Self.SendToRadio('RC;');   // clarifier clear
+   Self.SendToRadio('RC;');   // RIT offset clear
 end;
 
 procedure TYaesuSerial.XITClear(whichVFO: TVFO);
@@ -336,8 +336,8 @@ begin
       begin
       if hz >= 0 then s := '+' else s := '-';
       s := s + Format('%.4d',[Abs(hz)]);
-      // Yaesu clarifier-offset set command (RU/RD steps or a direct set); the
-      // direct form varies by model -- confirm on bench.  Using the clarifier
+      // Yaesu RIT offset-offset set command (RU/RD steps or a direct set); the
+      // direct form varies by model -- confirm on bench.  Using the RIT offset
       // offset command form here.
       Self.SendToRadio('RO' + s + ';');
       end
@@ -397,10 +397,10 @@ end;
 // which VFO this response describes (IF; -> A, OI; -> B).
 //   pos 1-2  "IF"/"OI"
 //   pos 6-14 frequency (9 ASCII digits, Hz)
-//   pos 15   clarifier sign (+/-)
-//   pos 16-19 clarifier offset (4 digits)
-//   pos 20   RIT (clarifier RX) on/off
-//   pos 21   XIT (clarifier TX) on/off
+//   pos 15   RIT offset sign (+/-)
+//   pos 16-19 RIT offset (4 digits)
+//   pos 20   RIT (RIT offset RX) on/off
+//   pos 21   XIT (RIT offset TX) on/off
 //   pos 22   mode char
 procedure TYaesuSerial.ParseIFResponse(const msg: string; whichVFO: TVFO);
 var
