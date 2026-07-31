@@ -113,6 +113,8 @@ uses
    uRadioIcomReadLimited in '..\..\src\radioFactory\uRadioIcomReadLimited.pas',
    uRadioIcomModern in '..\..\src\radioFactory\uRadioIcomModern.pas',
    uRadioHamLibOnly in '..\..\src\radioFactory\uRadioHamLibOnly.pas',
+   uCWFraming in '..\..\src\radioFactory\uCWFraming.pas',
+   uTestCWFraming in 'uTestCWFraming.pas',
    // CW keyer factory -- listed EXPLICITLY (same rule as the radio units:
    // adapters self-install from initialization; a transitive-only link path
    // would silently drop them from this EXE).
@@ -238,6 +240,7 @@ begin
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
+   RegisterSuite(TCWFramingTests.Create('CWFraming'));
 
    if RunAllSuites then
       begin
