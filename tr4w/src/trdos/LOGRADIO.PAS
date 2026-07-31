@@ -840,7 +840,8 @@ uses
    uRadioHamLibDirect,
    uRadioIcomBase,
    uRadioKenwoodLAN,  // Issue #436 -- TKenwoodLAN base (TS-890S / TS-990S)
-   uCWFraming;        // per-model CW length/padding rules (shared with the factory)
+   uCWFraming,        // per-model CW length/padding rules (shared with the factory)
+   uCWKeyerBase;      // KeyerCAT -- owns the cross-radio CW-by-CAT interlock
 
 // ---------------------------------------------------------------------------
 // Parity ordinal conversion.  Tree.ParityType and the Win32 DCB (which the
@@ -2588,25 +2589,11 @@ begin
                      sMsg := sMsg + ' ';
                      end;
                   end;
-               if Self.active then
-                  begin
-                  DebugMsg('Sending on ACTIVE radio ' + Self.RadioName + ' (' + InterfacedRadioTypeSA[Self.RadioModel] + ')');
-                  if InactiveRadioPtr.CWByCAT_Sending then
-                     begin
-                     DebugMsg('Stopping sending CW on INACTIVE ' + Self.RadioName + ' (' + InterfacedRadioTypeSA[Self.RadioModel] + ')');
-                     InactiveRadioPtr.StopSendingCW;
-                     sleep(500); // Give command chance to complete
-                     end;
-                  end
-               else // Inactive
-                  begin
-                  DebugMsg('Sending on INACTIVE radio ' + Self.RadioName + ' (' + InterfacedRadioTypeSA[Self.RadioModel] + ')');
-                  if ActiveRadioPtr.CWByCAT_Sending then
-                     begin
-                     DebugMsg('Stopping sending CW on ACTIVE ' + Self.RadioName + ' (' + InterfacedRadioTypeSA[Self.RadioModel] + ')');
-                     ActiveRadioPtr.StopSendingCW;
-                     end;
-                  end;
+               // CAT repoint step 2: the cross-radio interlock now lives in
+               // TCWKeyerCAT.  It coordinates BOTH radios, so a per-family radio
+               // driver is the wrong home -- each driver would have to know about
+               // InactiveRadioPtr, and the policy would be duplicated per family.
+               KeyerCAT.EnsureSoleTransmitter(Self.active);
                if sendNow then
                   begin
                   formatStr := 'KYW%s;'

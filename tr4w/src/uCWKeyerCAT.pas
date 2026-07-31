@@ -46,6 +46,7 @@ type
       function DeleteLastChar: boolean; override;
       procedure Flush; override;
       procedure StopSending; override;
+      procedure EnsureSoleTransmitter(sendingOnActiveRadio: boolean); override;
       // SetSpeed: inherited no-op.  Radio speed-sync is orthogonal to which
       // keyer keys (it must fire even when the WinKeyer keys), so it stays in
       // the LogCW facade, not here.
@@ -54,6 +55,7 @@ type
 implementation
 
 uses
+   Windows,    // Sleep -- the interlock's settle delay
    MainUnit,   // IsCWByCATActive, CWByCATBufferTerminator, DebugMsg
    LogRadio,   // ActiveRadioPtr / InactiveRadioPtr (typed consts), RadioObject
    LogCW;      // KeyersSwapped
@@ -95,6 +97,49 @@ end;
 function TCWKeyerCAT.DeleteLastChar: boolean;
 begin
    Result := ActiveRadioPtr.DeleteLastCWCharacter;
+end;
+
+procedure TCWKeyerCAT.EnsureSoleTransmitter(sendingOnActiveRadio: boolean);
+begin
+   // Moved VERBATIM from LOGRADIO.RadioObject.SendCW's chunk loop.  Unlike every
+   // other keyer, CW-by-CAT drives two INDEPENDENT transmitters, so both radios
+   // really can key at once -- this is what stops that.
+   //
+   // The log text names the SENDING radio in both messages, including the
+   // "Stopping sending CW on ..." line, which reads as though the sender is the
+   // one being stopped.  Preserved as-is: operators and old logs depend on the
+   // wording, and this move is meant to be behaviour-identical.
+   //
+   // ASYMMETRY PRESERVED, NOT ENDORSED: the active branch sleeps 500 ms after
+   // stopping the other radio; the inactive branch does not sleep at all.  The
+   // 2026-07-31 SO2R bench run never reached either branch (TR4W's SO2R swaps
+   // which radio is ACTIVE, so sends always take the active path and the other
+   // radio's CW is stopped by SWAPRADIOS instead).  This code belongs to the
+   // SetUpToSendOnInactiveRadio / dueling-CQ flow and is therefore UNTESTED --
+   // N4AF owns validating it.  Do not "tidy" the sleep without a two-radio test.
+   if sendingOnActiveRadio then
+      begin
+      DebugMsg('Sending on ACTIVE radio ' + ActiveRadioPtr.RadioName + ' (' +
+               InterfacedRadioTypeSA[ActiveRadioPtr.RadioModel] + ')');
+      if InactiveRadioPtr.CWByCAT_Sending then
+         begin
+         DebugMsg('Stopping sending CW on INACTIVE ' + ActiveRadioPtr.RadioName +
+                  ' (' + InterfacedRadioTypeSA[ActiveRadioPtr.RadioModel] + ')');
+         InactiveRadioPtr.StopSendingCW;
+         Sleep(500); // Give command chance to complete
+         end;
+      end
+   else
+      begin
+      DebugMsg('Sending on INACTIVE radio ' + InactiveRadioPtr.RadioName + ' (' +
+               InterfacedRadioTypeSA[InactiveRadioPtr.RadioModel] + ')');
+      if ActiveRadioPtr.CWByCAT_Sending then
+         begin
+         DebugMsg('Stopping sending CW on ACTIVE ' + InactiveRadioPtr.RadioName +
+                  ' (' + InterfacedRadioTypeSA[InactiveRadioPtr.RadioModel] + ')');
+         ActiveRadioPtr.StopSendingCW;
+         end;
+      end;
 end;
 
 procedure TCWKeyerCAT.Flush;
