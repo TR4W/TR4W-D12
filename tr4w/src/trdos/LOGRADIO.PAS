@@ -305,6 +305,7 @@ type
       procedure ProcessIcomMode(mode: integer);
       procedure SendIcomClearRITCommand;
       function CalculateIcomFilterWidth: integer;
+      function HasCapability(cap: TRadioCapability): boolean;
       procedure SetRadioCWSpeed(speed: longint);
       procedure SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char); overload;
       procedure SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char; extendedMode: ExtendedModeType); overload;
@@ -415,9 +416,14 @@ var
    //  RITCommandTimeStamp              : Cardinal {TimeRecord};
    ActiveRadioPtr:   RadioPtr = @Radio1;
    InActiveRadioPtr: RadioPtr = @Radio2;
-   RadioSupportsCWByCAT: InterfacedRadioTypeSet;
-   RadioSupportsCWSpeedSync: InterfacedRadioTypeSet;
-   RadioSupportsPlayDVK: InterfacedRadioTypeSet;
+   // RadioSupportsCWByCAT / RadioSupportsCWSpeedSync / RadioSupportsPlayDVK are
+   // GONE.  They were hand-maintained model lists competing with the registry's
+   // rcCWByCAT / rcCWSpeedSync / rcPlayDVK, and two sources of truth for "can
+   // this radio do X" is a bug generator: it produced the Q9 CW-by-CAT split,
+   // and the same style of list in this file silently omitted the KX3 from the
+   // Elecraft prosign table.  Ask the radio instead -- RadioObject.HasCapability.
+   // The equivalence is pinned by test/unit/uTestRadioSupportsCaps.pas, which
+   // still carries all three legacy sets transcribed independently.
    IcomRadiosThatSupportRIT: InterfacedRadioTypeSet;
    IcomRadiosThatSupportVFOB: InterfacedRadioTypeSet;
    IcomRadiosThatSupportPSKMode: InterfacedRadioTypeSet;  // For data, radio uses PSK mode instead of USB-D.
@@ -1895,7 +1901,13 @@ begin
       Exit;
       end;
 
-   if not (RadioModel in RadioSupportsPlayDVK) then
+   // Was `RadioModel in RadioSupportsPlayDVK`, whose declaration even carried a
+   // question mark about the KX2/KX3 being left out -- the same hand-maintained
+   // model list that omitted the KX3 from the prosign table in this file.  The
+   // registry's rcPlayDVK says it replaces this typeset; now it actually does.
+   // (Reached only for radios with no factory object -- the delegation above
+   // exits first -- so this asks the registry.)
+   if not Self.HasCapability(rcPlayDVK) then
       begin
       logger.Warn('Radio does not support playing a voice keyer memory');
       Result := true;
@@ -3279,11 +3291,37 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+// Does THIS radio have a capability?  ONE place asks, so a hand-maintained
+// model list can never disagree with what the radio itself declares -- the
+// defect that produced the Q9 CW-by-CAT split and, in the same file, a
+// prosign table that silently omitted the KX3.
+//
+// The live factory object is preferred over the registry because it also
+// answers for STRING-ID radios: those have RadioModel = NoInterfacedRadio, so
+// the enum-keyed registry lookup can never find them and would report every
+// capability as absent.
+function RadioObject.HasCapability(cap: TRadioCapability): boolean;
+begin
+   if Self.tFactoryObject <> nil then
+      begin
+      Result := Self.tFactoryObject.Supports(cap);
+      end
+   else
+      begin
+      Result := uRadioRegistry.SupportsFor(Self.RadioModel, cap);
+      end;
+end;
+
 procedure RadioObject.SetRadioCWSpeed(speed: longint);
 var
    i: integer;
 begin
-   if not (RadioModel in RadioSupportsCWSpeedSync) then
+   // Was `RadioModel in RadioSupportsCWSpeedSync` -- a hand-maintained typeset
+   // competing with the registry's rcCWSpeedSync, whose own comment says it
+   // replaces exactly this.  The typeset ran BEFORE the factory delegation
+   // below, so a radio the factory knows can sync speed but that was missing
+   // from the list exited here and never synced at all.
+   if not Self.HasCapability(rcCWSpeedSync) then
       begin
       DebugMsg('Current radio model does not support CWSpeedSync');
       exit;
@@ -4320,21 +4358,10 @@ var
 const
    ra: array[1..2] of RadioPtr = (@Radio1, @Radio2);
 begin
-   RadioSupportsCWByCAT := [TS850, K2, K3, KX3, K4, TS480, TS570, TS590, TS890, TS990, TS2000,
-                            FLEX, IC705, IC7100, IC7300, IC7410, IC7600, IC7610, IC7700, IC7760,
-                            IC7800, IC7850, IC7851, IC9100, IC9700, IC905, IC7300MK2, Orion];  // TS890 -- Issue #436
-   // ny4i Issue 119
-   RadioSupportsCWSpeedSync :=
-      [TS850, K2, K3, K4, TS480, TS570, TS590, TS890, TS990, TS2000, FLEX, FTDX10, FTDX101, FTX1F, FT450, FT710, FT891, FT950, FT991,
-      FT1200, FT2000, FTDX3000, FTDX5000, FTDX9000, IC718, IC746, IC746PRO, IC756PROII,
-      IC756PROIII, IC910, IC705, IC7100, IC7200, IC7300, IC7410, IC7600, IC7610,
-      IC7700, IC7760, IC7800, IC7850, IC7851, IC9100, IC9700, IC905, IC7300MK2, Orion];  // ny4i Issue 120; TS890 -- Issue #436
-
-   RadioSupportsPlayDVK := [ K2, K3, K4 // We do not support the KX2 and KX3? I guess not a lot of call for it.
-                            ,IC705, IC7300, IC7610, IC7760, IC7850, IC7851, IC9100, IC9700, IC905, IC7300MK2
-                            ,FT710, FT991, FT1200, FTDX3000, FTDX5000, FTDX9000, FTDX10, FTDX101, FTX1F
-                            ,TS480, TS570, TS590, TS850, TS890, TS950, TS990, TS2000
-                            ]; // NY4I Issue 639; TS890 -- Issue #436
+   // The three RadioSupports* typesets that were built here are retired -- the
+   // radios declare rcCWByCAT / rcCWSpeedSync / rcPlayDVK themselves.  See the
+   // note at their old declarations, and uTestRadioSupportsCaps for the proof
+   // that the capabilities cover exactly the models these lists did.
    IcomRadiosThatSupportRIT := [IC705, IC7100, IC7300, IC7800, IC7850, IC7851, IC7600, IC7610, IC7700, IC7760, IC9700, IC905, IC7300MK2];
    IcomRadiosThatSupportVFOB := [IC705, IC7100, IC7300, IC7800, IC7850, IC7851, IC7600, IC7610, IC7700, IC7760, IC9700, IC905, IC7300MK2];
    IcomRadiosThatSupportPSKMode := [IC7600, IC7610, IC7760];
