@@ -833,7 +833,8 @@ uses
    LogCW,
    uRadioHamLibDirect,
    uRadioIcomBase,
-   uRadioKenwoodLAN;  // Issue #436 -- TKenwoodLAN base (TS-890S / TS-990S)
+   uRadioKenwoodLAN,  // Issue #436 -- TKenwoodLAN base (TS-890S / TS-990S)
+   uCWFraming;        // per-model CW length/padding rules (shared with the factory)
 
 // ---------------------------------------------------------------------------
 // Parity ordinal conversion.  Tree.ParityType and the Win32 DCB (which the
@@ -2461,6 +2462,7 @@ var
 //   debugStr: string;
    charProcessed: boolean;
    elements: integer;
+   frameRule: uCWFraming.TCWFrameRule;
 begin
    // Q9 (CW keyer factory plan): this guard used the LEGACY
    // `RadioModel in RadioSupportsCWByCAT` typeset while the keyer factory
@@ -2587,48 +2589,16 @@ begin
             Msg := CWByCATBuffer;               // ny4i 4.44.5
 //            msgLen := length(Msg);              //length(Msg);
             //len := Min(msgLen, 24);             // 24 max for Kenwood
-            case RadioModel of
-               TS890:
-                  begin
-                  // TS-890 accepts the space-prefixed KY form with a variable-length
-                  // P2 (KY <space><text>;), so no 24-byte padding -- and never KY2
-                  // (P1='2' would key the fill spaces as dead air). The other Kenwoods
-                  // reject a short P2 under P1=space, so they keep the fixed-24 fill.
-                  maxLen := 24;
-                  pad := false;
-                  end;
-               TS480, TS570, TS590, TS950, TS990, TS2000:
-                  begin
-                  maxLen := 24;
-                  pad := true;
-                  end;
-               FLEX:
-                  begin
-                  // cwx send has no length limit and no padding requirement.
-                  // Flex serial (KY path) uses 24/pad like Kenwood — handled below.
-                  maxLen := 24;
-                  pad := (Self.tCATPortType <> Network);
-                  end;
-               K2:
-                  begin
-                  maxLen := 22; //28;
-                  pad := false;
-                  end;
-               K3, KX3, K4:
-                  begin
-                  maxLen := 22; //28;
-                  // A short KY fails on the K3/KX3/K4 ONLY when it follows the
-                  // keyer-abort TR4W sends before every message ('KY <04>;RX;',
-                  // from StopSendingCW): the abort/RX transition swallows a short
-                  // following message, while >=8 chars survives it.  (tr4w.log
-                  // 2026-06-18: 'KY AGN4567;' silent, 'KY AGN45678;' keys; a
-                  // standalone 'KY ?;' from the K3 utility keys fine -- so this is
-                  // the abort window, not a radio length floor.)  Padding to maxLen
-                  // gives every message enough runway to survive the abort; under
-                  // P1=space the radio trims the trailing fill instead of keying it.
-                  pad := true;
-                  end;
-               end; // case
+            // The per-model length/padding facts (including the K3/K4
+            // abort-window rule bench-proven 2026-06-18) moved VERBATIM to
+            // uCWFraming.CWFrameRuleFor, so this legacy path and the factory
+            // drivers cannot drift apart while the CW-by-CAT migration is
+            // half-done -- and so they can be unit-tested, which they could
+            // never be while buried here (uTestCWFraming).
+            frameRule := uCWFraming.CWFrameRuleFor(RadioModel,
+                                                   Self.tCATPortType = Network);
+            maxLen := frameRule.maxLen;
+            pad := frameRule.pad;
             Msg := CWByCATBuffer;
             tempLen := length(Msg);
             while tempLen > 0 do

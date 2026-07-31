@@ -215,6 +215,7 @@ uses
   uRadioIcomReadLimited in 'src\radioFactory\uRadioIcomReadLimited.pas',
   uRadioIcomModern in 'src\radioFactory\uRadioIcomModern.pas',
   uRadioHamLibOnly in 'src\radioFactory\uRadioHamLibOnly.pas',
+  uCWFraming in 'src\radioFactory\uCWFraming.pas',
   uRadioIcom78 in 'src\radioFactory\uRadioIcom78.pas',
   uRadioIcom707 in 'src\radioFactory\uRadioIcom707.pas',
   uRadioIcom725 in 'src\radioFactory\uRadioIcom725.pas',
