@@ -59,9 +59,10 @@ uses
   MainUnit;
 
 var
-  // Radio-type combo entries appended PAST the InterfacedRadioType list -- these
-  // are string-id factory radios (no enum member).  Index -> registry id.
-  // Rebuilt on each dialog populate; read by the commit in RestartPollingThread.
+  // String-id factory radios (no enum member) offered in the radio-type combo.
+  // Their combo rows carry RADIOITEM_FACTORYID_FLAG or <index into this list>
+  // as item data; the commit in RestartPollingThread maps the index back to
+  // the registry id.  Rebuilt on each dialog populate.
   gComboFactoryIds: TStringList = nil;
 
   // Serial-port arrival/removal notification handle for the open radio dialog.
@@ -337,6 +338,146 @@ begin
       SendDlgItemMessageA(hwnddlg, ctl, CB_SETDROPPEDWIDTH,
          widest + GetSystemMetrics(SM_CXVSCROLL) + 8, 0);
       end;
+end;
+
+// ---------------------------------------------------------------------------
+// Radio-type combo (121) -- registry-built, DISPLAY names, model in ITEM DATA.
+//
+// Until 2026-07-30 this combo showed raw enum names (IC7300MK2) in enum order,
+// because the commit path wrote 'RADIO n TYPE = <combo text>' and the config
+// parser matches enum names.  It is now built from the radio registry: friendly
+// display names ('Icom IC-7300MK2'), sorted, with NONE pinned first -- and each
+// row carries its identity in the combo ITEM DATA (the port combos' pattern:
+// never index arithmetic, never display text as data).  The commit path maps
+// item data back to the enum name, so the INI grammar is unchanged.
+//
+// Item data encoding: Ord(model) for an enum radio; RADIOITEM_FACTORYID_FLAG
+// or <index into gComboFactoryIds> for a string-id factory radio (no enum
+// member; identified by FACTORY ID instead of TYPE).
+// ---------------------------------------------------------------------------
+const
+   RADIOITEM_FACTORYID_FLAG = $10000;   // far above Ord(High(InterfacedRadioType))
+   RADIOITEM_MASK           = $FFFF;
+
+procedure ComboAddRadio(hwnddlg: HWND; const caption: AnsiString; data: NativeInt);
+var
+   idx: integer;
+begin
+   idx := SendDlgItemMessageA(hwnddlg, 121, CB_ADDSTRING, 0,
+                              LPARAM(PAnsiChar(caption)));
+   if idx >= 0 then
+      begin
+      SendDlgItemMessageA(hwnddlg, 121, CB_SETITEMDATA, idx, LPARAM(data));
+      end;
+end;
+
+function ComboSelectedRadioData(hwnddlg: HWND): NativeInt;
+var
+   idx: integer;
+begin
+   Result := -1;
+   idx := tCB_GETCURSEL(hwnddlg, 121);
+   if idx < 0 then
+      begin
+      Exit;
+      end;
+   Result := SendDlgItemMessageA(hwnddlg, 121, CB_GETITEMDATA, idx, 0);
+end;
+
+// The selected ENUM radio.  NoInterfacedRadio when nothing is selected, when
+// NONE is selected, or when the selection is a string-id factory radio -- the
+// safe reading in every consumer (not discoverable, no serial defaults, not
+// HamLib-only).
+function ComboSelectedRadioModel(hwnddlg: HWND): InterfacedRadioType;
+var
+   data: NativeInt;
+begin
+   Result := NoInterfacedRadio;
+   data := ComboSelectedRadioData(hwnddlg);
+   if (data >= 0) and (data <= Ord(High(InterfacedRadioType))) then
+      begin
+      Result := InterfacedRadioType(data);
+      end;
+end;
+
+// Index into gComboFactoryIds when the selection is a string-id factory radio;
+// -1 otherwise.
+function ComboSelectedFactoryIdIndex(hwnddlg: HWND): integer;
+var
+   data: NativeInt;
+begin
+   Result := -1;
+   data := ComboSelectedRadioData(hwnddlg);
+   if (data >= 0) and ((data and RADIOITEM_FACTORYID_FLAG) <> 0) then
+      begin
+      Result := data and RADIOITEM_MASK;
+      end;
+end;
+
+// Select the row whose item data equals `data`; falls back to NONE (index 0)
+// when no row matches, so the combo never sits empty.
+procedure ComboSelectRadioByData(hwnddlg: HWND; data: NativeInt);
+var
+   count, i: integer;
+begin
+   count := SendDlgItemMessageA(hwnddlg, 121, CB_GETCOUNT, 0, 0);
+   for i := 0 to count - 1 do
+      begin
+      if SendDlgItemMessageA(hwnddlg, 121, CB_GETITEMDATA, i, 0) = LRESULT(data) then
+         begin
+         tCB_SETCURSEL(hwnddlg, 121, i);
+         Exit;
+         end;
+      end;
+   tCB_SETCURSEL(hwnddlg, 121, 0);
+end;
+
+// Build the radio list from the REGISTRY: every registered enum radio plus the
+// string-id factory radios, sorted by display name, NONE pinned first.
+procedure PopulateRadioTypeCombo(hwnddlg: HWND);
+var
+   names: TStringList;
+   m: InterfacedRadioType;
+   i, idx: integer;
+   fid: string;
+begin
+   SendDlgItemMessageA(hwnddlg, 121, CB_RESETCONTENT, 0, 0);
+   if gComboFactoryIds = nil then
+      begin
+      gComboFactoryIds := TStringList.Create;
+      end;
+   gComboFactoryIds.Clear;
+   names := TStringList.Create;
+   try
+      for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
+         begin
+         if (m <> NoInterfacedRadio) and uRadioRegistry.IsRegistered(m) then
+            begin
+            names.AddObject(uRadioRegistry.DisplayName(m), TObject(Ord(m)));
+            end;
+         end;
+      for fid in uRadioRegistry.RegisteredIds do
+         begin
+         if uRadioRegistry.ModelForId(fid) = NoInterfacedRadio then
+            begin
+            idx := gComboFactoryIds.Add(fid);
+            names.AddObject(uRadioRegistry.DisplayNameId(fid),
+                            TObject(RADIOITEM_FACTORYID_FLAG or idx));
+            end;
+         end;
+      names.Sort;   // case-insensitive; groups manufacturers naturally
+      ComboAddRadio(hwnddlg, AnsiString(InterfacedRadioTypeSA[NoInterfacedRadio]),
+                    Ord(NoInterfacedRadio));
+      for i := 0 to names.Count - 1 do
+         begin
+         ComboAddRadio(hwnddlg, AnsiString(names[i]), NativeInt(names.Objects[i]));
+         end;
+   finally
+      names.Free;
+   end;
+   // The display names are longer than the raw enum names the drop-list was
+   // sized for -- fit the LIST (the control keeps its dialog width).
+   ComboFitDroppedWidth(hwnddlg, 121);
 end;
 
 // Widen the DIALOG ITSELF so the port combos can show a friendly name in their
@@ -673,21 +814,19 @@ begin
       Exit;
       end;
 
-   typeIdx := tCB_GETCURSEL(hwnddlg, 121);
-   if typeIdx < 0 then                          // CB_ERR -- no selection
+   // Selection identity comes from ITEM DATA, never the row index -- the list
+   // is registry-built and sorted, so index means nothing (same rule as the
+   // port combos).
+   typeIdx := ComboSelectedFactoryIdIndex(hwnddlg);
+   if (typeIdx >= 0) and Assigned(gComboFactoryIds) and
+      (typeIdx < gComboFactoryIds.Count) then
       begin
-      Exit;
-      end;
-
-   if (typeIdx >= Ord(High(InterfacedRadioType)) + 1) and Assigned(gComboFactoryIds) and
-      (typeIdx - (Ord(High(InterfacedRadioType)) + 1) < gComboFactoryIds.Count) then
-      begin
-      def := uRadioRegistry.RegisteredNetworkPortId(
-         gComboFactoryIds[typeIdx - (Ord(High(InterfacedRadioType)) + 1)]);
+      def := uRadioRegistry.RegisteredNetworkPortId(gComboFactoryIds[typeIdx]);
       end
    else
       begin
-      def := DefaultNetworkPortForRadio(InterfacedRadioType(typeIdx));
+      // No selection / NONE resolves to NoInterfacedRadio -> port 0 -> Exit.
+      def := DefaultNetworkPortForRadio(ComboSelectedRadioModel(hwnddlg));
       end;
    if def = 0 then                              // not a network radio -> no default
       begin
@@ -958,16 +1097,9 @@ var
   radioName    : AnsiString;
   rt           : InterfacedRadioType;
 begin
-  // A string-id factory radio (appended past the enum list) has no InterfacedRadioType;
-  // treat it as not auto-discoverable here rather than casting an out-of-range ordinal.
-  if tCB_GETCURSEL(hwnddlg, 121) >= Ord(High(InterfacedRadioType)) + 1 then
-     begin
-     rt := NoInterfacedRadio;
-     end
-  else
-     begin
-     rt := InterfacedRadioType(tCB_GETCURSEL(hwnddlg, 121));
-     end;
+  // Item-data read: a string-id factory radio resolves to NoInterfacedRadio,
+  // which is "not auto-discoverable" -- same outcome as before, no index math.
+  rt := ComboSelectedRadioModel(hwnddlg);
   radioName := InterfacedRadioTypeSA[rt];
 
   // Issue #1028 -- discoverability is now a radio-factory property (network
@@ -1027,7 +1159,6 @@ var
   TempKeyerPortType                     : PortType;
 //  TempByte                              : Byte;
   TempPchar                             : PAnsiChar;
-  RadioType                             : InterfacedRadioType;
   hamLibCheckBoxWind                    : HWnd;
   LabelX, LabelW, EditX, EditW, NewY   : Integer;
   Rect111, Rect131, HamLibCheckRect, RectIP : TRect;
@@ -1040,6 +1171,7 @@ var
   hDiscoverBmp                          : HBITMAP;
   hDiscoverBtn                          : HWND;
   fmtDb, fmtPar, fmtSb                  : Byte;     // parsed SERIAL FORMAT fields
+  selRadioModel                         : InterfacedRadioType; // radio-type combo item-data reads
 
   procedure ButtonsEnable;
   begin
@@ -1069,12 +1201,12 @@ var
   // Kenwood TS-890 (Issue #436) and any future credentialed network radio.
   procedure UpdateNetworkCredentialsVisibility;
   var
-     RadioIdx, ShowCmd: Integer;
+     ShowCmd: Integer;
   begin
-     RadioIdx := tCB_GETCURSEL(hwnddlg, 121);
+     // Item-data read (string-id factory radios resolve to NoInterfacedRadio,
+     // which is not in the credentialed set -- fields hidden, as before).
      if (ComboSelectedPort(hwnddlg, 122) = Network) and
-        (RadioIdx < Ord(High(InterfacedRadioType)) + 1) and  // enum radios only (guard the cast)
-        (InterfacedRadioType(RadioIdx) in
+        (ComboSelectedRadioModel(hwnddlg) in
          [IC705, IC7300MK2, IC7600, IC7610,
           IC7760, IC7850, IC7851, IC9700, IC905,
           TS890])  // Issue #436 -- TS-890 LAN requires Admin ID/Password
@@ -1182,26 +1314,8 @@ begin
         end;
         SetWindowTextA(hwnddlg, TempPchar);
 
-        {radio}
-		for RadioType := Low(InterfacedRadioType) to High(InterfacedRadioType) do
-        //for RadioType := NoInterfacedRadio to Orion do
-          tCB_ADDSTRING(hwnddlg, 121, InterfacedRadioTypeSA[RadioType]);
-        // Append string-id factory radios (no InterfacedRadioType member) at combo
-        // indices >= enumCount.  The ENUM entries above keep their SA-name text so
-        // the text-based config commit (RestartPollingThread) still matches.
-        if gComboFactoryIds = nil then
-           begin
-           gComboFactoryIds := TStringList.Create;
-           end;
-        gComboFactoryIds.Clear;
-        for var fid in uRadioRegistry.RegisteredIds do
-           begin
-           if uRadioRegistry.ModelForId(fid) = NoInterfacedRadio then
-              begin
-              tCB_ADDSTRING(hwnddlg, 121, uRadioRegistry.DisplayNameId(fid));
-              gComboFactoryIds.Add(fid);
-              end;
-           end;
+        {radio -- registry-built: display names, sorted, identity in item data}
+        PopulateRadioTypeCombo(hwnddlg);
 
         // Rebuild both port combos as OWNER-DRAW before filling them, so a port
         // that is not present can be drawn grey while staying selectable.  Must
@@ -1430,18 +1544,16 @@ begin
         Windows.SetDlgItemTextA(hwnddlg, i, wsprintfBuffer);
 
 
-        {radio type}
-        // A string-id factory radio was appended past the enum list -- select it
-        // there; otherwise the enum radio sits at index = its ordinal.
+        {radio type -- select by ITEM DATA (the sorted list makes index useless)}
         if (CATWTR^.FactoryId <> '') and Assigned(gComboFactoryIds) and
            (gComboFactoryIds.IndexOf(string(CATWTR^.FactoryId)) >= 0) then
            begin
-           tCB_SETCURSEL(hwnddlg, 121,
-              (Ord(High(InterfacedRadioType)) + 1) + gComboFactoryIds.IndexOf(string(CATWTR^.FactoryId)));
+           ComboSelectRadioByData(hwnddlg,
+              RADIOITEM_FACTORYID_FLAG or gComboFactoryIds.IndexOf(string(CATWTR^.FactoryId)));
            end
         else
            begin
-           tCB_SETCURSEL(hwnddlg, 121, Ord(CATWTR^.RadioModel));
+           ComboSelectRadioByData(hwnddlg, Ord(CATWTR^.RadioModel));
            end;
 
         {keyer port}
@@ -1632,24 +1744,24 @@ begin
              end;
           if LoWord(wParam) = 121 then
           begin
-            i := tCB_GETCURSEL(hwnddlg, 121);
+            // Identity from ITEM DATA -- the registry-built list is sorted, so
+            // the row index is meaningless.  A string-id factory radio (and
+            // NONE) resolves to NoInterfacedRadio here.
+            selRadioModel := ComboSelectedRadioModel(hwnddlg);
             // Baud default comes from the RADIO REGISTRY, not the legacy
-            // RadioParametersArray.br.  The registry is where every radio now
-            // states its full serial defaults (baud/data/parity/stop), so the
-            // array's br column can retire with the rest of it.  A model the
-            // registry does not know still falls back to 4800.
-            if i < Ord(High(InterfacedRadioType)) + 1 then
+            // RadioParametersArray.br.  A model the registry does not know
+            // (NONE, string-id radios) still falls back to 4800 / 8N2.
+            if uRadioRegistry.IsRegistered(selRadioModel) then
                begin
                tCB_SETCURSEL(hwnddlg, 128,
                   Cardinal(BaudRateComboIndex(
-                     uRadioRegistry.SerialParamsFor(InterfacedRadioType(i)).baud)));
+                     uRadioRegistry.SerialParamsFor(selRadioModel).baud)));
                // DATA/PARITY/STOP follows the model, exactly like the baud rate.
-               SelectSerialFormat(hwnddlg,
-                  SerialFormatDefaultFor(InterfacedRadioType(i)));
+               SelectSerialFormat(hwnddlg, SerialFormatDefaultFor(selRadioModel));
                end
             else
                begin
-               tCB_SETCURSEL(hwnddlg, 128, 2);   // 4800 default for a string-id factory radio
+               tCB_SETCURSEL(hwnddlg, 128, 2);   // 4800 default
                SelectSerialFormat(hwnddlg, '8N2');
                end;
             // The USE HAMLIB checkbox follows the selected model: forced ON and
@@ -1657,8 +1769,7 @@ begin
             // operator with no radio control at all), operator-controlled for
             // everything else -- including recovering from a greyed state after
             // switching AWAY from a HamLib-only model.
-            if (i < Ord(High(InterfacedRadioType)) + 1) and
-               uRadioRegistry.IsHamLibOnly(InterfacedRadioType(i)) then
+            if uRadioRegistry.IsHamLibOnly(selRadioModel) then
                begin
                Windows.SendDlgItemMessage(hwnddlg, 1000, BM_SETCHECK, BST_CHECKED, 0);
                EnableWindowFalse(hwnddlg, 1000);
@@ -1669,13 +1780,6 @@ begin
                end;
             UpdateNetworkCredentialsVisibility;
             ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port when the radio type changes
-{
-            I := tCB_GETCURSEL(hwnddlg, 121);
-            TempByte := 2;
-            if (I >= Ord(IC706)) and (I <= Ord(IC7800)) then TempByte := 0;
-            if I = Ord(Orion) then TempByte := 6;
-            tCB_SETCURSEL(hwnddlg, 128, TempByte);
-}
           end;
 
         end;
@@ -1768,8 +1872,7 @@ begin
              // that interferes with front-panel operation. Allow it but make the tradeoff clear.
              if boolean(TF.SendDlgItemMessage(hwnddlg, 1000, BM_GETCHECK)) then
                 begin
-                if (tCB_GETCURSEL(hwnddlg, 121) >= Ord(High(InterfacedRadioType)) + 1) or
-                   not uRadioRegistry.IsHamLibOnly(InterfacedRadioType(tCB_GETCURSEL(hwnddlg, 121))) then
+                if not uRadioRegistry.IsHamLibOnly(ComboSelectedRadioModel(hwnddlg)) then
                    begin
                    MessageBox(hwnddlg,
                      'This radio has native TR4W support. Using HamLib is not recommended.' + #13#10 +
@@ -2024,7 +2127,7 @@ var
   lpExitCode                            : DWORD;
   i                                     : integer;
   ID, CMD                               : ShortString;
-  sel, enumCount                        : integer;
+  sel                                   : integer;
 begin
 
 { TODO: The radio settings changed so restart the thread. If there was a network connection, we have to disconnect and clean that up.
@@ -2053,10 +2156,19 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
     Windows.ZeroMemory(@CMD, SizeOf(CMD));
     ID := GetDialogItemText(CATWndHWND, i);
     CMD := GetDialogItemText(CATWndHWND, i + 20);
-    // Controls 122 (CAT port) and 123 (keyer port) show FRIENDLY text such as
-    // 'SERIAL 14 - Silicon Labs CP210x' or 'SERIAL 23 (not connected)', none of
-    // which is a valid config value -- CheckCommand matches against PortTypeSA.
-    // Emit the canonical name from the row's item data instead of what is drawn.
+    // Controls whose DISPLAYED text is friendly rather than canonical emit
+    // their config value from the row's ITEM DATA instead of what is drawn:
+    //   101/121 radio type -- shows 'Icom IC-7300MK2', config wants 'IC7300MK2'
+    //   102/122, 103/123 ports -- show 'SERIAL 14 - Silicon Labs CP210x',
+    //     config wants 'SERIAL 14' (CheckCommand matches against PortTypeSA).
+    if i = 101 then
+       begin
+       // For a string-id factory radio ComboSelectedRadioModel resolves to
+       // NoInterfacedRadio => TYPE=NONE, matching the FACTORY ID block below.
+       Windows.ZeroMemory(@CMD, SizeOf(CMD));
+       CMD := ShortString(AnsiString(
+          InterfacedRadioTypeSA[ComboSelectedRadioModel(CATWndHWND)]));
+       end;
     if (i = 102) or (i = 103) then
        begin
        // ZeroMemory FIRST -- this is not belt-and-braces, it is required.
@@ -2079,13 +2191,11 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
     ;
   end;
 
-  // Radio identity (Stage 2 string-id factory radios).  The loop above wrote
-  // RADIO ONE/TWO TYPE from the combo TEXT -- correct for an enum radio (whose
-  // combo text is its SA name).  For a string-id factory radio (appended past the
-  // enum list) force RADIO ONE/TWO TYPE=NONE and write RADIO ONE/TWO FACTORY ID;
-  // for an enum radio delete any stale FACTORY ID key and clear it in memory.
-  sel := tCB_GETCURSEL(CATWndHWND, 121);
-  enumCount := Ord(High(InterfacedRadioType)) + 1;
+  // Radio identity (Stage 2 string-id factory radios).  The TYPE row already
+  // committed the canonical enum name from item data (NONE for a string-id
+  // radio).  Here: write FACTORY ID for a string-id selection, or delete any
+  // stale FACTORY ID key for an enum radio.
+  sel := ComboSelectedFactoryIdIndex(CATWndHWND);
   Windows.ZeroMemory(@ID, SizeOf(ID));
   Windows.ZeroMemory(@CMD, SizeOf(CMD));
   if CATWTR = @Radio1 then
@@ -2096,24 +2206,9 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
      begin
      ID := 'RADIO TWO FACTORY ID';
      end;
-  if (sel >= enumCount) and Assigned(gComboFactoryIds) and
-     (sel - enumCount < gComboFactoryIds.Count) then
+  if (sel >= 0) and Assigned(gComboFactoryIds) and (sel < gComboFactoryIds.Count) then
      begin
-     CMD := gComboFactoryIds[sel - enumCount];
-     Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
-     CheckCommand(@ID, CMD);
-     // The loop wrote RADIO ONE/TWO TYPE = <display name>; force it to NONE.
-     Windows.ZeroMemory(@ID, SizeOf(ID));
-     Windows.ZeroMemory(@CMD, SizeOf(CMD));
-     if CATWTR = @Radio1 then
-        begin
-        ID := 'RADIO ONE TYPE';
-        end
-     else
-        begin
-        ID := 'RADIO TWO TYPE';
-        end;
-     CMD := 'NONE';
+     CMD := gComboFactoryIds[sel];
      Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
      CheckCommand(@ID, CMD);
      end
