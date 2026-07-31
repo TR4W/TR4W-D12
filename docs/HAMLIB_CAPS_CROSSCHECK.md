@@ -49,57 +49,20 @@ every CI-V radio carries it by design).
 
 ## Section A -- STRONG leads (HamLib STATES it, TR4W denies it)
 
+> **Before acting on ANY row: does a code path exist to honour the flag?**
+> A capability is a PROMISE TR4W then keeps.  A read capability
+> (rcReadVFOB / rcReadRIT / rcReadTXStatus) makes TR4W POLL something; if the
+> rig NAKs it the result is bus noise and mis-parsed frames -- the IC-718
+> lesson.  rcCWByCAT makes the keyer factory SELECT the CAT keyer, and if the
+> radio has no protocol arm the message is lost silently AND the CPU keyer
+> never sees it -- the failure quirk Q9 was fixed to prevent.  Bench first.
+> Adjudicated disagreements live in Section A2, not here.
+
 Sorted with genuine functional leads first (rows without an "under-declared
 family" note), then the flags-not-declared documentation gaps.
 
-> ### DANGER -- the `rcCWByCAT` rows are NOT flag flips (verified 2026-07-31)
->
-> The largest cluster below is "the eleven modern ASCII Yaesus lack
-> `rcCWByCAT`, and HamLib implements `newcat_send_morse` (the `KY` command) for
-> every one of them". HamLib is almost certainly right about the RADIOS. But
-> **adding the flag today would silently destroy CW on those radios**, because
-> TR4W has no Yaesu CW-by-CAT implementation to route to:
->
-> * `RadioObject.SendCW` dispatches on `case RadioParametersArray[..].rt` and
->   handles exactly three arms: `rtKenwood`, `rtYaesu1`, `rtIcom`.
-> * The `rtYaesu1` arm is an explicit **no-op**, commented *"Yaesu does not
->   support sending free-form text via CAT"* -- true of those 1990s radios.
-> * The modern ASCII Yaesus are `rtYaesu2` / `rtYaesu4`. **Neither has an arm
->   at all**, so a CW message falls straight through and nothing is sent.
-> * TR4W's own legacy `RadioSupportsCWByCAT` set contains **no Yaesu**, which
->   is TR4W stating, in its own shipping code, that it cannot do this.
->
-> Sequence if the flag were flipped: `IsCWByCATActive` -> True, the keyer
-> factory selects `KeyerCAT`, `SendCW` finds no arm and returns, and because
-> CAT is now the selected keyer **the CPU keyer and WinKeyer never see the
-> message either**. Total, silent loss of CW -- the exact failure mode quirk Q9
-> was fixed to prevent.
->
-> So these rows are a **feature request** ("implement Yaesu `KY` CW-by-CAT"),
-> not a capability correction, and the implementation belongs in the factory
-> Yaesu ASCII driver alongside the per-model framing the Kenwood/Elecraft path
-> already has. See `docs/CW_Keyer_Factory_Plan.md` (CAT repoint) -- the two
-> pieces of work are the same piece of work.
->
-> The same test applies to every other row here before acting on it:
-> **does a code path exist to honour the flag once it is set?** A read
-> capability (`rcReadVFOB`, `rcReadRIT`, `rcReadTXStatus`) makes TR4W POLL
-> something; if the rig NAKs it, the result is bus noise and mis-parsed frames
-> -- the IC-718 lesson. Bench first, always.
-
 | TR4W radio | flag TR4W lacks | HamLib evidence | HamLib citation | note |
 |---|---|---|---|---|
-| FT1200 (Yaesu FT-1200) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft1200.c:165 (RIG_MODEL_FTDX1200) |  |
-| FT2000 (Yaesu FT-2000) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft2000.c:151 (RIG_MODEL_FT2000) |  |
-| FT450 (Yaesu FT-450) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft450.c:37 (RIG_MODEL_FT450) |  |
-| FT891 (Yaesu FT-891) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft891.c:135 (RIG_MODEL_FT891) |  |
-| FT950 (Yaesu FT-950) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft950.c:99 (RIG_MODEL_FT950) |  |
-| FT991 (Yaesu FT-991) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft991.c:194 (RIG_MODEL_FT991) |  |
-| FTDX10 (Yaesu FTDX-10) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ftdx10.c:135 (RIG_MODEL_FTDX10) |  |
-| FTDX101 (Yaesu FTDX-101) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ftdx101.c:187 (RIG_MODEL_FTDX101D) |  |
-| FTDX3000 (Yaesu FTDX-3000) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft3000.c:245 (RIG_MODEL_FTDX3000) |  |
-| FTDX5000 (Yaesu FTDX-5000) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft5000.c:148 (RIG_MODEL_FTDX5000) |  |
-| FTDX9000 (Yaesu FTDX-9000) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft9000.c:43 (RIG_MODEL_FT9000) |  |
 | IC7000 (Icom IC-7000) | rcCWSpeedSync | RIG_LEVEL_KEYSPD in has_get/set_level | rigs/icom/ic7000.c:209 (RIG_MODEL_IC7000) |  |
 | IC756PRO (Icom IC-756PRO) | rcCWSpeedSync | RIG_LEVEL_KEYSPD in has_get/set_level | rigs/icom/ic756.c:312 (RIG_MODEL_IC756PRO) |  |
 | FT891 (Yaesu FT-891) | rcPlayDVK | .send_voice_mem implemented (`newcat_send_voice_mem`) | rigs/yaesu/ft891.c:135 (RIG_MODEL_FT891) |  |
@@ -213,6 +176,28 @@ family" note), then the flags-not-declared documentation gaps.
 | TS940 (Kenwood TS-940) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts940.c:77 (RIG_MODEL_TS940) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS950 (Kenwood TS-950) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts950.c:66 (RIG_MODEL_TS950S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS990 (Kenwood TS-990S) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ | RIG_TARGETABLE_MODE`) | rigs/kenwood/ts990s.c:133 (RIG_MODEL_TS990S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
+
+## Section A2 -- DECIDED disagreements (NOT leads)
+
+HamLib states these capabilities and TR4W denies them, but the
+disagreement has been ADJUDICATED and TR4W is deliberately right.
+They are listed here, out of Section A, so they stop competing for
+attention with real leads.  Encoded in `crosscheck.py` (DECIDED), so
+a re-run keeps reporting them as settled.
+
+| TR4W radio | flag | HamLib citation | why TR4W is right |
+|---|---|---|---|
+| FT1200 (Yaesu FT-1200) | rcCWByCAT | rigs/yaesu/ft1200.c:165 (RIG_MODEL_FTDX1200) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FT2000 (Yaesu FT-2000) | rcCWByCAT | rigs/yaesu/ft2000.c:151 (RIG_MODEL_FT2000) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FT450 (Yaesu FT-450) | rcCWByCAT | rigs/yaesu/ft450.c:37 (RIG_MODEL_FT450) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FT891 (Yaesu FT-891) | rcCWByCAT | rigs/yaesu/ft891.c:135 (RIG_MODEL_FT891) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FT950 (Yaesu FT-950) | rcCWByCAT | rigs/yaesu/ft950.c:99 (RIG_MODEL_FT950) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FT991 (Yaesu FT-991) | rcCWByCAT | rigs/yaesu/ft991.c:194 (RIG_MODEL_FT991) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FTDX10 (Yaesu FTDX-10) | rcCWByCAT | rigs/yaesu/ftdx10.c:135 (RIG_MODEL_FTDX10) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FTDX101 (Yaesu FTDX-101) | rcCWByCAT | rigs/yaesu/ftdx101.c:187 (RIG_MODEL_FTDX101D) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FTDX3000 (Yaesu FTDX-3000) | rcCWByCAT | rigs/yaesu/ft3000.c:245 (RIG_MODEL_FTDX3000) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FTDX5000 (Yaesu FTDX-5000) | rcCWByCAT | rigs/yaesu/ft5000.c:148 (RIG_MODEL_FTDX5000) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
+| FTDX9000 (Yaesu FTDX-9000) | rcCWByCAT | rigs/yaesu/ft9000.c:43 (RIG_MODEL_FT9000) | Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  HamLib's newcat_send_morse therefore has to program a memory slot and then trigger it -- workable for HamLib's API contract, not practical for contest CW, where the text differs every call.  TR4W deliberately reports no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap. |
 
 ## Section B -- WEAK leads (TR4W claims it, HamLib omits it)
 
