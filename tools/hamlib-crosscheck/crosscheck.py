@@ -668,6 +668,9 @@ JOIN_ALLOWLIST = {
    ("IC7851", "IC785X"),
    ("IC706II", "IC706MKII"),
    ("IC706IIG", "IC706MKIIG"),
+   ("FLEX", "F6K"),               # hamlib names the FlexRadio 6000 series F6K
+                                  # (2036; NY4I 2026-07-30 -- 2048/POWERSDR is
+                                  # the OLD Flex-5000 backend, not this radio)
 }
 
 
