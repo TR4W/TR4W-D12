@@ -52,6 +52,41 @@ every CI-V radio carries it by design).
 Sorted with genuine functional leads first (rows without an "under-declared
 family" note), then the flags-not-declared documentation gaps.
 
+> ### DANGER -- the `rcCWByCAT` rows are NOT flag flips (verified 2026-07-31)
+>
+> The largest cluster below is "the eleven modern ASCII Yaesus lack
+> `rcCWByCAT`, and HamLib implements `newcat_send_morse` (the `KY` command) for
+> every one of them". HamLib is almost certainly right about the RADIOS. But
+> **adding the flag today would silently destroy CW on those radios**, because
+> TR4W has no Yaesu CW-by-CAT implementation to route to:
+>
+> * `RadioObject.SendCW` dispatches on `case RadioParametersArray[..].rt` and
+>   handles exactly three arms: `rtKenwood`, `rtYaesu1`, `rtIcom`.
+> * The `rtYaesu1` arm is an explicit **no-op**, commented *"Yaesu does not
+>   support sending free-form text via CAT"* -- true of those 1990s radios.
+> * The modern ASCII Yaesus are `rtYaesu2` / `rtYaesu4`. **Neither has an arm
+>   at all**, so a CW message falls straight through and nothing is sent.
+> * TR4W's own legacy `RadioSupportsCWByCAT` set contains **no Yaesu**, which
+>   is TR4W stating, in its own shipping code, that it cannot do this.
+>
+> Sequence if the flag were flipped: `IsCWByCATActive` -> True, the keyer
+> factory selects `KeyerCAT`, `SendCW` finds no arm and returns, and because
+> CAT is now the selected keyer **the CPU keyer and WinKeyer never see the
+> message either**. Total, silent loss of CW -- the exact failure mode quirk Q9
+> was fixed to prevent.
+>
+> So these rows are a **feature request** ("implement Yaesu `KY` CW-by-CAT"),
+> not a capability correction, and the implementation belongs in the factory
+> Yaesu ASCII driver alongside the per-model framing the Kenwood/Elecraft path
+> already has. See `docs/CW_Keyer_Factory_Plan.md` (CAT repoint) -- the two
+> pieces of work are the same piece of work.
+>
+> The same test applies to every other row here before acting on it:
+> **does a code path exist to honour the flag once it is set?** A read
+> capability (`rcReadVFOB`, `rcReadRIT`, `rcReadTXStatus`) makes TR4W POLL
+> something; if the rig NAKs it, the result is bus noise and mis-parsed frames
+> -- the IC-718 lesson. Bench first, always.
+
 | TR4W radio | flag TR4W lacks | HamLib evidence | HamLib citation | note |
 |---|---|---|---|---|
 | FT1200 (Yaesu FT-1200) | rcCWByCAT | .send_morse implemented (`newcat_send_morse`) | rigs/yaesu/ft1200.c:165 (RIG_MODEL_FTDX1200) |  |
