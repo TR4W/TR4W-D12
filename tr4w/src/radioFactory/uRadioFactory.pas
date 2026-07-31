@@ -241,7 +241,7 @@ begin
              '  - Elecraft K3 (planned)'#13#10 +
              '  - Yaesu FTdx101 (planned)'#13#10 +
              '  - Yaesu FT-991 (implemented)'#13#10 +
-             '  - FlexRadio 6000 (implemented)';
+             '  - Flex 6000+ (6000/8000/Aurora 500 series) (implemented)';
 end;
 
 // Network metadata now lives in the radio registry -- each radio unit
