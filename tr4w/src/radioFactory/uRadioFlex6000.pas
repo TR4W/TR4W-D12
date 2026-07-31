@@ -17,7 +17,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uRadioFlex6000;
 
 {
-  MODEL unit for the FlexRadio 6000 series (FLEX-6300/6400/6600/6700/6800, Aurora).
+  MODEL unit for the FlexRadio SmartSDR rigs: the 6000 series
+  (FLEX-6300/6400/6600/6700/6800), the 8000 series, and the Aurora 500 series --
+  hence the display name "Flex 6000+" (NY4I 2026-07-30).
 
   This unit declares no class of its own.  It exists to hold the single
   RegisterRadio call for FLEX and to name which protocol driver serves each
@@ -29,7 +31,7 @@ unit uRadioFlex6000;
                                     (Kenwood 2-char + Flex ZZxx) over the
                                     SmartSDR CAT virtual serial port
 
-  ONE radio type in the radio list ("FlexRadio 6000").  The operator picks the
+  ONE radio type in the radio list ("Flex 6000+").  The operator picks the
   transport by setting the control port, exactly as for every other radio that
   offers both -- the difference here is invisible to them.
 
@@ -65,7 +67,7 @@ initialization
       // 4992, dispatched from uCAT.DiscoverNetworkRadios.  Before that existed
       // this flag was True with nothing behind it, so the dialog offered a
       // Discover button that could only ever report "no Flex radios found".
-      'FlexRadio 6000', [rlSerial, rlNetwork], 4992, True,
+      'Flex 6000+', [rlSerial, rlNetwork], 4992, True,
      SerialParams(4800, 8, PARITY_NONE, 2)
      );
 
