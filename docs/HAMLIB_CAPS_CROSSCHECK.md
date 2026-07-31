@@ -45,7 +45,7 @@ every CI-V radio carries it by design).
 | ... with a hamlibID in RadioParametersArray | 89 |
 | ... joined to a parsed HamLib caps struct | 87 |
 | HamLib caps structs parsed (all rigs/) | 321 |
-| Flag comparisons in agreement | 411 |
+| Flag comparisons in agreement | 424 |
 
 ## Section A -- STRONG leads (HamLib STATES it, TR4W denies it)
 
@@ -115,10 +115,12 @@ family" note), then the flags-not-declared documentation gaps.
 | K4 (Elecraft K4) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/k3.c:519 (RIG_MODEL_K4) | TK4Radio parses the K4's IF;/auto-info stream; flags not declared. |
 | KX3 (Elecraft KX3) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/k3.c:692 (RIG_MODEL_KX3) | TElecraftSerial parses the K2/K3 IF; response (RIT/XIT, TX, split); flags not declared for this family. |
 | TS140 (Kenwood TS-140) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/ts140.c:79 (RIG_MODEL_TS140S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
+| TS2000 (Kenwood TS-2000) | rcReadRIT | .get_rit implemented (`ts2000_get_rit`) | rigs/kenwood/ts2000.c:1685 (RIG_MODEL_TS2000) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS440 (Kenwood TS-440) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/ts440.c:57 (RIG_MODEL_TS440) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS450 (Kenwood TS-450) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/ts450s.c:120 (RIG_MODEL_TS450S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS480 (Kenwood TS-480) | rcReadRIT | .get_rit implemented (`ts480_get_rit`) | rigs/kenwood/ts480.c:1321 (RIG_MODEL_TS480) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS570 (Kenwood TS-570) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/ts570.c:912 (RIG_MODEL_TS570S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
+| TS590 (Kenwood TS-590) | rcReadRIT | .get_rit implemented (`ts590_get_rit`) | rigs/kenwood/ts590.c:1714 (RIG_MODEL_TS590S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS690 (Kenwood TS-690) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/ts690.c:69 (RIG_MODEL_TS690S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS850 (Kenwood TS-850) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/ts850.c:99 (RIG_MODEL_TS850) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS870 (Kenwood TS-870) | rcReadRIT | .get_rit implemented (`kenwood_get_rit`) | rigs/kenwood/ts870s.c:537 (RIG_MODEL_TS870S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
@@ -130,10 +132,12 @@ family" note), then the flags-not-declared documentation gaps.
 | K3 (Elecraft K3) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/k3.c:196 (RIG_MODEL_K3) | TElecraftSerial parses the K2/K3 IF; response (RIT/XIT, TX, split); flags not declared for this family. |
 | K4 (Elecraft K4) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/k3.c:519 (RIG_MODEL_K4) | TK4Radio parses the K4's IF;/auto-info stream; flags not declared. |
 | KX3 (Elecraft KX3) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/k3.c:692 (RIG_MODEL_KX3) | TElecraftSerial parses the K2/K3 IF; response (RIT/XIT, TX, split); flags not declared for this family. |
+| TS2000 (Kenwood TS-2000) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/ts2000.c:1685 (RIG_MODEL_TS2000) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS440 (Kenwood TS-440) | rcReadSplit | .get_split_vfo implemented (`ic10_get_split_vfo`) | rigs/kenwood/ts440.c:57 (RIG_MODEL_TS440) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS450 (Kenwood TS-450) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/ts450s.c:120 (RIG_MODEL_TS450S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS480 (Kenwood TS-480) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/ts480.c:1321 (RIG_MODEL_TS480) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS570 (Kenwood TS-570) | rcReadSplit | .get_split_vfo implemented (`ts570_get_split_vfo`) | rigs/kenwood/ts570.c:912 (RIG_MODEL_TS570S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
+| TS590 (Kenwood TS-590) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/ts590.c:1714 (RIG_MODEL_TS590S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS690 (Kenwood TS-690) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/ts690.c:69 (RIG_MODEL_TS690S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS850 (Kenwood TS-850) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/ts850.c:99 (RIG_MODEL_TS850) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS870 (Kenwood TS-870) | rcReadSplit | .get_split_vfo implemented (`kenwood_get_split_vfo_if`) | rigs/kenwood/ts870s.c:537 (RIG_MODEL_TS870S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
@@ -144,10 +148,12 @@ family" note), then the flags-not-declared documentation gaps.
 | K3 (Elecraft K3) | rcReadTXStatus | .get_ptt implemented (`k4_get_ptt`) | rigs/kenwood/k3.c:196 (RIG_MODEL_K3) | TElecraftSerial parses the K2/K3 IF; response (RIT/XIT, TX, split); flags not declared for this family. |
 | K4 (Elecraft K4) | rcReadTXStatus | .get_ptt implemented (`k4_get_ptt`) | rigs/kenwood/k3.c:519 (RIG_MODEL_K4) | TK4Radio parses the K4's IF;/auto-info stream; flags not declared. |
 | KX3 (Elecraft KX3) | rcReadTXStatus | .get_ptt implemented (`k4_get_ptt`) | rigs/kenwood/k3.c:692 (RIG_MODEL_KX3) | TElecraftSerial parses the K2/K3 IF; response (RIT/XIT, TX, split); flags not declared for this family. |
+| TS2000 (Kenwood TS-2000) | rcReadTXStatus | .get_ptt implemented (`kenwood_get_ptt`) | rigs/kenwood/ts2000.c:1685 (RIG_MODEL_TS2000) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS440 (Kenwood TS-440) | rcReadTXStatus | .get_ptt implemented (`ic10_get_ptt`) | rigs/kenwood/ts440.c:57 (RIG_MODEL_TS440) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS450 (Kenwood TS-450) | rcReadTXStatus | .get_ptt implemented (`kenwood_get_ptt`) | rigs/kenwood/ts450s.c:120 (RIG_MODEL_TS450S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS480 (Kenwood TS-480) | rcReadTXStatus | .get_ptt implemented (`kenwood_get_ptt`) | rigs/kenwood/ts480.c:1321 (RIG_MODEL_TS480) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS570 (Kenwood TS-570) | rcReadTXStatus | .get_ptt implemented (`kenwood_get_ptt`) | rigs/kenwood/ts570.c:912 (RIG_MODEL_TS570S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
+| TS590 (Kenwood TS-590) | rcReadTXStatus | .get_ptt implemented (`kenwood_get_ptt`) | rigs/kenwood/ts590.c:1714 (RIG_MODEL_TS590S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS690 (Kenwood TS-690) | rcReadTXStatus | .get_ptt implemented (`kenwood_get_ptt`) | rigs/kenwood/ts690.c:69 (RIG_MODEL_TS690S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS850 (Kenwood TS-850) | rcReadTXStatus | .get_ptt implemented (`kenwood_get_ptt`) | rigs/kenwood/ts850.c:99 (RIG_MODEL_TS850) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS870 (Kenwood TS-870) | rcReadTXStatus | .get_ptt implemented (`kenwood_get_ptt`) | rigs/kenwood/ts870s.c:537 (RIG_MODEL_TS870S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
@@ -159,10 +165,12 @@ family" note), then the flags-not-declared documentation gaps.
 | K4 (Elecraft K4) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ | RIG_TARGETABLE_MODE`) | rigs/kenwood/k3.c:519 (RIG_MODEL_K4) | TK4Radio parses the K4's IF;/auto-info stream; flags not declared. |
 | KX3 (Elecraft KX3) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ | RIG_TARGETABLE_MODE`) | rigs/kenwood/k3.c:692 (RIG_MODEL_KX3) | TElecraftSerial parses the K2/K3 IF; response (RIT/XIT, TX, split); flags not declared for this family. |
 | TS140 (Kenwood TS-140) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts140.c:79 (RIG_MODEL_TS140S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
+| TS2000 (Kenwood TS-2000) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts2000.c:1685 (RIG_MODEL_TS2000) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS440 (Kenwood TS-440) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts440.c:57 (RIG_MODEL_TS440) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS450 (Kenwood TS-450) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts450s.c:120 (RIG_MODEL_TS450S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS480 (Kenwood TS-480) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts480.c:1321 (RIG_MODEL_TS480) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS570 (Kenwood TS-570) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts570.c:912 (RIG_MODEL_TS570S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
+| TS590 (Kenwood TS-590) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts590.c:1714 (RIG_MODEL_TS590S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS690 (Kenwood TS-690) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts690.c:69 (RIG_MODEL_TS690S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS850 (Kenwood TS-850) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts850.c:99 (RIG_MODEL_TS850) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
 | TS870 (Kenwood TS-870) | rcReadVFOB | .targetable_vfo includes RIG_TARGETABLE_FREQ (`RIG_TARGETABLE_FREQ`) | rigs/kenwood/ts870s.c:537 (RIG_MODEL_TS870S) | TKenwoodSerial/TKenwoodLAN parse RIT/XIT state+offset, TX, split and the unselected VFO from IF;/FA;/FB; (uRadioKenwoodSerial.pas) -- the flags are simply not declared for this family. |
@@ -263,8 +271,10 @@ reference) are the ones most worth a bench/manual check.
 | IC707 (Icom IC-707) | 1200,8,NONE,1 stop | stop bits 1 vs hamlib 2 | rigs/icom/ic707.c:57 (RIG_MODEL_IC707) |
 | IC728 (Icom IC-728) | 1200,8,NONE,1 stop | stop bits 1 vs hamlib 2 | rigs/icom/ic728.c:57 (RIG_MODEL_IC728) |
 | IC729 (Icom IC-729) | 1200,8,NONE,1 stop | stop bits 1 vs hamlib 2 | rigs/icom/ic728.c:176 (RIG_MODEL_IC729) |
+| TS2000 (Kenwood TS-2000) | 4800,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/ts2000.c:1685 (RIG_MODEL_TS2000) |
 | TS480 (Kenwood TS-480) | 4800,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/ts480.c:1321 (RIG_MODEL_TS480) |
 | TS570 (Kenwood TS-570) | 4800,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/ts570.c:912 (RIG_MODEL_TS570S) |
+| TS590 (Kenwood TS-590) | 4800,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/ts590.c:1714 (RIG_MODEL_TS590S) |
 | TS870 (Kenwood TS-870) | 4800,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/ts870s.c:537 (RIG_MODEL_TS870S) |
 | TS890 (Kenwood TS-890S) | 4800,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/ts890s.c:536 (RIG_MODEL_TS890S) |
 | TS990 (Kenwood TS-990S) | 4800,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/ts990s.c:133 (RIG_MODEL_TS990S) |
@@ -300,16 +310,7 @@ riglist of the HamLib version TR4W actually ships (`libhamlib-4.dll`) before
 changing anything -- IDs are stable in HamLib, but the shipped list is the
 authority.
 
-| TR4W enum | hamlibID in LOGRADIO | resolves to | name-matching candidates in riglist.h |
-|---|---|---|---|
-| FLEX (FlexRadio 6000) | 2048 | POWERSDR (rigs/kenwood/flex6xxx.c:1478) | (none by name) |
-| TS2000 (Kenwood TS-2000) | 2041 | TS890S (rigs/kenwood/ts890s.c:536) | TS2000 = 2014 |
-| TS590 (Kenwood TS-590) | 2004 | TS570D (rigs/kenwood/ts570.c:1098) | TS590S = 2031, TS590SG = 2037 |
-
-FLEX = 2048 is RIG_MODEL_POWERSDR (the PowerSDR/Flex-5000-era backend).
-The factory registration is 'FlexRadio 6000'; HamLib's 6000-series model is
-RIG_MODEL_F6K = 2036 (rigs/kenwood/flex6xxx.c). Possibly deliberate --
-the ID predates the 6000 driver -- but worth a decision on record.
+None found.
 
 ## Appendix -- unmappable / unresolved / limitations
 
@@ -365,7 +366,7 @@ K=KEYSPD level, D=send_voice_mem. '-' = not stated / not present.
 | K3 | 2029 | K3 | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y Y Y Y | 8..50 |
 | K4 | 2047 | K4 | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y Y Y Y | 8..50 |
 | KX3 | 2045 | KX3 | rcCWByCAT | - | Y Y Y Y Y Y Y | 8..50 |
-| FLEX | 2048 | POWERSDR **(SUSPECT JOIN -- see Section E)** | rcCWByCAT, rcCWSpeedSync, rcReadRIT, rcReadSplit, rcReadTXStatus, rcReadVFOB | 5..60 | Y - Y Y Y Y - | 5..60 |
+| FLEX | 2036 | F6K | rcCWByCAT, rcCWSpeedSync, rcReadRIT, rcReadSplit, rcReadTXStatus, rcReadVFOB | 5..60 | Y Y Y Y Y Y - | 5..60 |
 | IC705 | 3085 | IC705 | rcCWByCAT, rcCWSpeedSync, rcDataMode, rcPlayDVK, rcReadRIT, rcReadSplit, rcReadTXStatus, rcReadVFOB | 6..48 | Y Y Y Y Y Y Y | 6..48 |
 | IC707 | 3012 | IC707 | rcDataMode, rcReadSplit, rcReadTXStatus | 6..48 | - - - - - - - | - |
 | IC7100 | 3070 | IC7100 | rcCWByCAT, rcCWSpeedSync, rcDataMode, rcReadRIT, rcReadSplit, rcReadTXStatus, rcReadVFOB | 6..48 | Y - Y Y Y Y - | 6..48 |
@@ -410,12 +411,12 @@ K=KEYSPD level, D=send_voice_mem. '-' = not stated / not present.
 | IC706IIG | 3011 | IC706MKIIG | (none) | 6..48 | - - Y - - - - | 4..60 |
 | IC7000 | 3060 | IC7000 | (none) | 6..48 | - - - Y - Y - | 6..48 |
 | TS140 | 2025 | TS140S | (none) | - | Y Y - - - - - | - |
-| TS2000 | 2041 | TS890S **(SUSPECT JOIN -- see Section E)** | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y Y Y Y | 4..60 |
+| TS2000 | 2014 | TS2000 | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y Y Y Y | 10..60 |
 | TS440 | 2002 | TS440 | (none) | - | Y Y Y Y - - - | - |
 | TS450 | 2003 | TS450S | (none) | - | Y Y Y Y - - - | 4..60 |
 | TS480 | 2028 | TS480 | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y Y Y Y | 10..60 |
 | TS570 | 2016 | TS570S | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y Y Y - | 4..60 |
-| TS590 | 2004 | TS570D **(SUSPECT JOIN -- see Section E)** | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y Y Y - | 4..60 |
+| TS590 | 2031 | TS590S | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y Y Y Y | 4..60 |
 | TS690 | 2005 | TS690S | (none) | - | Y Y Y Y - - - | 4..60 |
 | TS850 | 2009 | TS850 | rcCWByCAT, rcCWSpeedSync, rcPlayDVK | - | Y Y Y Y - - - | 4..60 |
 | TS870 | 2010 | TS870S | (none) | - | Y Y Y Y Y - - | 4..60 |
