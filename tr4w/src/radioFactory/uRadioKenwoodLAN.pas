@@ -130,6 +130,7 @@ type TKenwoodLAN = class(TFactoryRadioBase)
       procedure BufferCW(cwChars: string); override;
       procedure SendCW; override;
       procedure StopCW; override;
+      function CWIsFactoryOwned: Boolean; override;   // The LAN Kenwoods key CW themselves over the TCP link.
 
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
       procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
@@ -824,6 +825,12 @@ begin
    if Self.CWBuffer = '' then Exit;
    Self.SendToRadio('KY ' + Self.CWBuffer + ';');
    Self.CWBuffer := '';
+end;
+
+function TKenwoodLAN.CWIsFactoryOwned: Boolean;
+begin
+   // The LAN Kenwoods key CW themselves over the TCP link.
+   Result := True;
 end;
 
 procedure TKenwoodLAN.StopCW;

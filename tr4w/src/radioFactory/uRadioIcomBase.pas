@@ -190,6 +190,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+      function CWIsFactoryOwned: Boolean; override;   // The CI-V drivers key CW themselves ($17 / buffered send).
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
     procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
     function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; override;
@@ -1907,6 +1908,12 @@ begin
 
   // Clear buffer after sending
   FCWBuffer := '';
+end;
+
+function TIcomRadio.CWIsFactoryOwned: Boolean;
+begin
+   // The CI-V drivers key CW themselves ($17 / buffered send).
+   Result := True;
 end;
 
 procedure TIcomRadio.StopCW;

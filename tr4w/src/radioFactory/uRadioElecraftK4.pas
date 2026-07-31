@@ -41,6 +41,7 @@ Type TK4Radio = class(TFactoryRadioBase)
       procedure BufferCW(cwChars: string); overload; override;
       procedure SendCW; override;
       procedure StopCW; override;
+      function CWIsFactoryOwned: Boolean; override;   // The K4 keys CW itself: StopCW sends Chr(4)+";RX;".
 
       // Base class overrides with VFO parameters
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
@@ -141,6 +142,12 @@ end;
 procedure TK4Radio.Receive;
 begin
    Self.SendToRadio('RX;');
+end;
+
+function TK4Radio.CWIsFactoryOwned: Boolean;
+begin
+   // The K4 keys CW itself: StopCW sends Chr(4)+";RX;".
+   Result := True;
 end;
 
 procedure TK4Radio.StopCW;

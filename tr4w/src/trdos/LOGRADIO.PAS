@@ -2825,7 +2825,14 @@ procedure RadioObject.StopSendingCW;
 
 //   localMsg: string;
 begin
-   if Self.tFactoryObject <> nil then
+   // Delegate ONLY to a driver that really keys CW.  This used to delegate to
+   // ANY factory object, and most of them have an INERT StopCW -- Elecraft
+   // serial (K2/K3/KX3) is an empty method by design, Kenwood serial and Flex
+   // CAT only clear a local buffer -- so Escape was swallowed: CW STARTED
+   // through the legacy path below and could never be STOPPED, because the
+   // legacy abort ('KY '#4';RX;' for the K3) was never reached.
+   // Bench: NY4I, K3 with CW BY CAT, 2026-07-31.
+   if (Self.tFactoryObject <> nil) and Self.tFactoryObject.CWIsFactoryOwned then
       begin
       Self.tFactoryObject.StopCW;
       Exit;
