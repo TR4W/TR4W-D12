@@ -336,6 +336,25 @@ TR4W has three categories of windows, each with a different migration path:
 These can be decompiled to `.dfm` now. The `DlgProc` logic maps directly to
 `TForm` event handlers. Start here — lowest risk, immediate payoff.
 
+> **2026-07-31 — FIRST FMX FORM: the WinKeyer settings dialog, not dialog 66.**
+> NY4I's reasoning, recorded so it is not relitigated: the first form exists to
+> **prove the toolchain**, not to deliver value. The questions it must answer are
+> all infrastructural — does an FMX form coexist with `tr4w.dpr`'s hand-rolled
+> `GetMessage`/`TranslateAccelerator` loop; what does FMX do to a build that is
+> currently Win32-only with no VCL at all; does modal behaviour work with a raw
+> `HWND` parent; how do the eleven per-language string constants map onto it —
+> and **any** form answers them. The WinKeyer dialog (`uWinKey.pas`,
+> `WinKeyer2SettingsDlgProc`) is the right pathfinder: self-contained, one
+> operator-visible job, no radio hardware in the loop to confuse a failure, and
+> cheap to discard if the approach is wrong. Dialog 66 is where the *value* is
+> (see the note below) but it is the worst place to discover a toolchain
+> incompatibility — you would be debugging FMX and a 600-line dialog at once.
+> Deferred deliberately to the FMX form rather than retrofitted into the old
+> dialog: the filtered/friendly-name/greyed COM-port list. That combo is read
+> back by INDEX today (index must equal `Ord(PortType)`), so filtering it first
+> requires the item-data rework — throwaway work on a dialog about to be
+> replaced. The raw list simply goes to `MAX_SERIAL_PORT` (8b4609c).
+>
 > **2026-07-30 note on dialog 66 (Radio/CAT setup):** this dialog has grown a
 > substantial RUNTIME layer on top of its binary template — credential rows,
 > Discover button, Show-all checkbox, the DATA/PARITY/STOP row, dialog widening,
