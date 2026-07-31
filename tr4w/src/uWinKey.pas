@@ -344,10 +344,6 @@ begin
     msg := Format('WK%d v%d', [family, versionByte]);
     SetMainWindowText(mweWinKey, msg);
   end;
-  logger.Info('Calling tCreateThread from WkOpen');
-  tCreateThread(@wkReadThreadProc, wkThreadID);
-  logger.Info('Created WK thread with id %d',[wkThreadId]);
-
   wklpCommTimeouts.ReadTotalTimeoutConstant := 10 - 0;
 //  wklpCommTimeouts.WriteTotalTimeoutConstant := 1;
   SetCommTimeouts(WinKeyHandle, wklpCommTimeouts);
@@ -377,6 +373,28 @@ begin
   wkSetKeyerOutput(ActiveRadioPtr);
   wkClearBuffer;
 //  wkSetLeadInTail;
+
+  // Start the reader ONLY after the device is fully configured.
+  //
+  // The port is opened WITHOUT FILE_FLAG_OVERLAPPED, so Windows serializes
+  // reads and writes on this handle: a write queues behind any in-flight read.
+  // wkReadThreadProc loops on ReadFile at ~100% duty, so starting it first made
+  // every configuration write above fight the reader for the handle.  Measured
+  // on NY4I's bench 2026-07-31: the wkClearBuffer immediately above took 424.9
+  // ms (5 bytes, ~42 ms of line time at 1200 baud) with the reader already
+  // running, against 13.6 ms for the identical call later in the same session.
+  // Earlier runs reached 1978.7 ms.
+  //
+  // It was also an ordering bug in its own right -- the thread used to be
+  // created ABOVE the SetCommTimeouts call, so its first read blocked on the
+  // old 250 ms timeout instead of the intended 10 ms.
+  //
+  // Nothing above needs the reader: the two synchronous wkRead calls (echo test
+  // and HOST OPEN) both run earlier, and the GETPOT response simply waits in the
+  // driver's receive buffer until the thread starts.
+  logger.Info('Calling tCreateThread from WkOpen');
+  tCreateThread(@wkReadThreadProc, wkThreadID);
+  logger.Info('Created WK thread with id %d',[wkThreadId]);
 end;
 
 function wkSend(const Buffer; nNumberOfBytesToWrite: DWORD): Cardinal;
