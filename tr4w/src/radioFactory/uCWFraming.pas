@@ -68,6 +68,23 @@ function CWChunk(const text: string; const rule: TCWFrameRule; index: integer): 
 // 165 elements gave a bogus ~8 s CWByCAT_Sending window).  Issue 153.
 function CWChunkUnpadded(const text: string; const rule: TCWFrameRule; index: integer): string;
 
+type
+   // What a radio should key for one of TR4W's prosign tokens.
+   TCWProsign = record
+      handled: boolean;   // True: this token IS a prosign; do not treat it as text
+      text: string;       // what to append ('' = token consumed, key nothing)
+   end;
+
+// Translate one TR4W prosign token for a model.  The tokens are TR4W's own
+// notation (^ half-space, ! SN, + AR, < SK, = BT); Elecraft and Kenwood spell
+// the same prosigns with different characters in a KY string, which is why this
+// is per-model DATA rather than protocol.
+//
+// `handled` and `text` are separate on purpose: Elecraft has no SN, so '!' is
+// consumed and keys NOTHING -- which is not the same as an unrecognised token
+// the caller should pass through as literal text.
+function CWProsignFor(model: InterfacedRadioType; const token: string): TCWProsign;
+
 implementation
 
 uses
@@ -154,6 +171,80 @@ begin
       end;
    startPos := ((index - 1) * rule.maxLen) + 1;
    Result := Copy(text, startPos, rule.maxLen);
+end;
+
+function CWProsignFor(model: InterfacedRadioType; const token: string): TCWProsign;
+var
+   elecraft: boolean;
+begin
+   Result.handled := False;
+   Result.text := '';
+
+   // DELIBERATE DIVERGENCE FROM LEGACY: LOGRADIO.SendCW tested
+   // `RadioModel in [K2, K3, K4]`, omitting the KX3 -- so a KX3 was given the
+   // KENWOOD prosign spellings and would key the wrong characters for AR, SK,
+   // BT and SN.  The KX3 shares the K3's CAT command set (see uRadioElecraftKX3)
+   // and CWFrameRuleFor above already groups K3/KX3/K4 together, so the omission
+   // is a gap, not a decision.  Unverified on hardware -- NY4I has no KX3.
+   elecraft := model in [K2, K3, KX3, K4];
+
+   if token = '^' then
+      begin
+      // Neither vendor's KY string has a half space; use a whole one.
+      Result.handled := True;
+      Result.text := ' ';
+      end
+   else if token = '!' then        // SN
+      begin
+      Result.handled := True;
+      if not elecraft then
+         begin
+         Result.text := '%';
+         end;
+      // Elecraft: no SN.  Consumed, keys nothing (legacy behaviour).
+      end
+   else if token = '+' then        // AR
+      begin
+      Result.handled := True;
+      if elecraft then
+         begin
+         Result.text := '+';
+         end
+      else
+         begin
+         Result.text := '_';
+         end;
+      end
+   else if token = '<' then        // SK
+      begin
+      Result.handled := True;
+      if elecraft then
+         begin
+         Result.text := '*';
+         end
+      else
+         begin
+         Result.text := '>';
+         end;
+      end
+   else if token = '=' then        // BT
+      begin
+      Result.handled := True;
+      if elecraft then
+         begin
+         Result.text := '=';
+         end
+      else
+         begin
+         Result.text := '[';
+         end;
+      end;
+
+   // NOT handled, deliberately: '&' (AS).  LOGRADIO carried a commented-out arm
+   // mapping it to '%' on Elecraft and '<' on Kenwood, disabled because in TR4W
+   // '&' is really MYSTATE and only documented as AS.  Recorded here so the
+   // spellings are not lost if AS is ever given its own token; do not enable it
+   // without deciding what '&' means first.
 end;
 
 function CWChunk(const text: string; const rule: TCWFrameRule;
