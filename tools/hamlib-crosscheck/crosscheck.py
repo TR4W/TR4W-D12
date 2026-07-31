@@ -699,6 +699,36 @@ UNDERDECLARED_NOTE = {
 }
 
 
+# ---------------------------------------------------------------------------
+# DECIDED DISAGREEMENTS -- adjudicated by NY4I, NOT pending bench leads.
+#
+# The evidence-asymmetry rule says a capability HamLib STATES is strong
+# evidence.  These are the cases where that rule needs a third answer: HamLib
+# states the capability truthfully at its own API level, but the underlying
+# RADIO COMMAND does something different enough that TR4W's denial is correct.
+# Encoded here so a re-run reports them as settled instead of re-raising them
+# every time.
+# ---------------------------------------------------------------------------
+YAESU_KY_REASON = (
+   "Yaesu's KY is NOT a free-text CW send.  On a K3/K4/Kenwood, `KY <text>;` "
+   "keys the characters; on these Yaesus `KY <n>;` PLAYS PRESET MEMORY n.  "
+   "HamLib's newcat_send_morse therefore has to program a memory slot and then "
+   "trigger it -- workable for HamLib's API contract, not practical for "
+   "contest CW, where the text differs every call.  TR4W deliberately reports "
+   "no CW-by-CAT for these radios (NY4I, 2026-07-31).  Decision, not a gap."
+)
+
+# (enum, flag) -> reason
+DECIDED = {}
+for _m in ("FTDX10", "FTDX101", "FTX1F", "FT450", "FT710", "FT891", "FT950",
+           "FT991", "FT1200", "FT2000", "FTDX3000", "FTDX5000", "FTDX9000"):
+   DECIDED[(_m, "rcCWByCAT")] = YAESU_KY_REASON
+
+
+def decided_reason(enum, flag):
+   return DECIDED.get((enum, flag))
+
+
 def underdeclared_note_for(unit):
    for prefix, txt in UNDERDECLARED_NOTE.items():
       if unit.startswith(prefix):
@@ -798,6 +828,7 @@ def main():
 
    # ---- Compare -------------------------------------------------------------
    strong, weak, serial_findings, cw_findings, agreements = [], [], [], [], 0
+   decided = []
    unmapped, no_caps, suspect_joins = [], [], []
    for enum, info in registered.items():
       hid = hamlib_ids.get(enum)
@@ -824,7 +855,14 @@ def main():
       for flag, key, desc in FLAG_MAP:
          hl = bool(cap.get(key))
          tr = flag in info["flags"]
-         if hl and not tr:
+         if hl and not tr and decided_reason(enum, flag):
+            # A disagreement NY4I has already adjudicated -- reported in its
+            # own section so it stops competing for attention with real leads.
+            decided.append({
+               "enum": enum, "display": info["display"], "flag": flag,
+               "cite": cite, "reason": decided_reason(enum, flag),
+            })
+         elif hl and not tr:
             strong.append({
                "enum": enum, "display": info["display"], "flag": flag, "desc": desc,
                "cite": cite, "value": cap.get(key) if key != "targetable_freq" else cap.get("targetable_raw"),
@@ -870,7 +908,7 @@ def main():
    enums_not_registered = [e for e in enum_names
                            if e not in registered and e != "NoInterfacedRadio"]
 
-   write_report(registered, strong, weak, serial_findings, cw_findings, agreements,
+   write_report(registered, strong, weak, serial_findings, cw_findings, agreements, decided,
                 unmapped, no_caps, suspect_joins, enums_not_registered, hamlib_ids,
                 caps_by_id)
 
@@ -881,6 +919,7 @@ def main():
          % sum(1 for e in registered if hamlib_ids.get(e) in caps_by_id))
    print("HamLib caps structs parsed        : %d" % len(caps_by_id))
    print("Section A strong leads            : %d" % len(strong))
+   print("Decided (not leads)               : %d" % len(decided))
    print("Section B weak leads              : %d" % len(weak))
    print("Section C serial disagreements    : %d" % len(serial_findings))
    print("Section D CW-speed disagreements  : %d" % len(cw_findings))
@@ -892,7 +931,7 @@ def main():
       print("Limitations noted: %d (see appendix)" % len(LIMITATIONS))
 
 
-def write_report(registered, strong, weak, serial_findings, cw_findings, agreements,
+def write_report(registered, strong, weak, serial_findings, cw_findings, agreements, decided,
                  unmapped, no_caps, suspect_joins, enums_not_registered, hamlib_ids,
                  caps_by_id):
    commit, cdate = hamlib_commit()
@@ -954,6 +993,15 @@ def write_report(registered, strong, weak, serial_findings, cw_findings, agreeme
    # ---- Section A ----
    L.append("## Section A -- STRONG leads (HamLib STATES it, TR4W denies it)")
    L.append("")
+   L.append("> **Before acting on ANY row: does a code path exist to honour the flag?**")
+   L.append("> A capability is a PROMISE TR4W then keeps.  A read capability")
+   L.append("> (rcReadVFOB / rcReadRIT / rcReadTXStatus) makes TR4W POLL something; if the")
+   L.append("> rig NAKs it the result is bus noise and mis-parsed frames -- the IC-718")
+   L.append("> lesson.  rcCWByCAT makes the keyer factory SELECT the CAT keyer, and if the")
+   L.append("> radio has no protocol arm the message is lost silently AND the CPU keyer")
+   L.append("> never sees it -- the failure quirk Q9 was fixed to prevent.  Bench first.")
+   L.append("> Adjudicated disagreements live in Section A2, not here.")
+   L.append("")
    if strong:
       L.append("Sorted with genuine functional leads first (rows without an \"under-declared")
       L.append("family\" note), then the flags-not-declared documentation gaps.")
@@ -974,6 +1022,25 @@ def write_report(registered, strong, weak, serial_findings, cw_findings, agreeme
    L.append("")
 
    # ---- Section B ----
+   # ---- decided, not leads -------------------------------------------------
+   L.append("## Section A2 -- DECIDED disagreements (NOT leads)")
+   L.append("")
+   L.append("HamLib states these capabilities and TR4W denies them, but the")
+   L.append("disagreement has been ADJUDICATED and TR4W is deliberately right.")
+   L.append("They are listed here, out of Section A, so they stop competing for")
+   L.append("attention with real leads.  Encoded in `crosscheck.py` (DECIDED), so")
+   L.append("a re-run keeps reporting them as settled.")
+   L.append("")
+   if decided:
+      L.append("| TR4W radio | flag | HamLib citation | why TR4W is right |")
+      L.append("|---|---|---|---|")
+      for d in decided:
+         L.append("| %s (%s) | %s | %s | %s |"
+                  % (d["enum"], d["display"], d["flag"], d["cite"], d["reason"]))
+   else:
+      L.append("_None._")
+   L.append("")
+
    L.append("## Section B -- WEAK leads (TR4W claims it, HamLib omits it)")
    L.append("")
    L.append("HamLib omission may simply mean \"unimplemented in HamLib\"; these rank far")
