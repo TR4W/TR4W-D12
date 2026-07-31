@@ -2355,7 +2355,9 @@ end;
 
 procedure RadioObject.OnCWByCATTimeEvent(Sender :TObject);
 begin
-   if Self.CWByCAT and (Self.RadioModel in RadioSupportsCWByCAT) then
+   // Q9: registry capability, not the legacy typeset (see SendCW).
+   if Self.CWByCAT and
+      uRadioRegistry.SupportsFor(Self.RadioModel, rcCWByCAT) then
       begin
       if Self.CWBYCAT_Sending then
          begin
@@ -2460,7 +2462,19 @@ var
    charProcessed: boolean;
    elements: integer;
 begin
-   if not ( Self.CWByCAT and (Self.RadioModel in RadioSupportsCWByCAT) ) then
+   // Q9 (CW keyer factory plan): this guard used the LEGACY
+   // `RadioModel in RadioSupportsCWByCAT` typeset while the keyer factory
+   // decides with the REGISTRY capability (IsCWByCATActive =
+   // CWByCAT and SupportsFor(model, rcCWByCAT)).  Two sources of truth for the
+   // same question can disagree about a radio, which would show up as the
+   // factory selecting the CAT keyer and this method then silently exiting --
+   // CW that simply never goes out.  Both now ask the registry.
+   //
+   // The guard is KEPT rather than deleted: SendCW is also reachable from
+   // LogCW.SendStringAndStop (which is deliberately not routed through the
+   // factory -- quirk Q7), so it cannot assume the caller already decided.
+   if not ( Self.CWByCAT and
+            uRadioRegistry.SupportsFor(Self.RadioModel, rcCWByCAT) ) then
       begin
       exit;   // No need to be here if radio does not support CWBYCAT and not active
       end;
@@ -2709,7 +2723,8 @@ begin
 
       rtIcom:
          begin
-         if RadioModel in RadioSupportsCWByCAT then
+         // Q9: registry capability, not the legacy typeset (see SendCW).
+         if uRadioRegistry.SupportsFor(RadioModel, rcCWByCAT) then
             begin
             if Msg[1] = CWByCATBufferTerminator then // Flush if Msg = CWByCATBufferTerminator
                begin
@@ -2879,7 +2894,8 @@ begin
 
       rtIcom:
          begin   // This was missing for Icom ny4i Issue 100 4.45.4
-         if RadioModel in RadioSupportsCWByCAT then     // ny4i
+         // Q9: registry capability, not the legacy typeset (see SendCW).
+         if uRadioRegistry.SupportsFor(RadioModel, rcCWByCAT) then     // ny4i
             begin
             CommandsTempBuffer[0] := AnsiChar(8);
             // Number of items used in this array for command ny4i Issue 100 4.45.4
