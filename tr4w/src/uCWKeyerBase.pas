@@ -63,6 +63,24 @@ type
       function DeleteLastChar: boolean; virtual;        // default False
       procedure Flush; virtual;                         // this keyer's arm of FlushCWBuffer
       procedure StopSending; virtual;                   // Escape stop; default no-op
+      // Make the radio that is about to key the ONLY one keying.  Cross-radio
+      // policy, so it belongs to the keyer rather than to a radio driver: a
+      // driver would have to know about the other radio to enforce it.
+      // Takes a bool, not a RadioPtr, to keep LogRadio out of this interface.
+      //
+      // Default no-op, and NOT because the other keyers are single-radio -- the
+      // WinKeyer and the YCCC box both have TWO keying outputs and switch
+      // between them (wkSetKeyerOutput's WK_RADIO_ONE/WK_RADIO_TWO,
+      // YCCCSetActiveRadio).  The difference is that each has ONE keying engine
+      // and ONE buffer behind those outputs, so it keys whichever output is
+      // currently selected -- routing, not two simultaneous transmissions.  Its
+      // two-radio safety is the buffer flush before the output is switched
+      // (LogCW.SetUpToSendOnActiveRadio), not an interlock.
+      //
+      // CW-by-CAT is different in kind: two independent radios, each with its
+      // own keyer and its own buffer, so both really can be keying at the same
+      // instant.  That is the case this exists for.
+      procedure EnsureSoleTransmitter(sendingOnActiveRadio: boolean); virtual;
       procedure SetSpeed(wpm: integer); virtual;
       procedure ToggleTune; virtual;                    // default no-op
       function Supports(cap: TCWKeyerCapability): boolean;
@@ -135,6 +153,12 @@ end;
 procedure TCWKeyer.StopSending;
 begin
    // Default: no-op.
+end;
+
+procedure TCWKeyer.EnsureSoleTransmitter(sendingOnActiveRadio: boolean);
+begin
+   // Default: nothing to do.  One keying engine feeding a switched output can
+   // only ever key one radio at a time; see the note on the declaration.
 end;
 
 procedure TCWKeyer.SetSpeed(wpm: integer);
