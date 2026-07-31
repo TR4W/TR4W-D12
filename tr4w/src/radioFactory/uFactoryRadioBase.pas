@@ -427,6 +427,22 @@ Type TFactoryRadioBase = class(TObject)
       procedure BufferCW(msg: string); Virtual; Abstract;
       procedure SendCW; Virtual; Abstract;
       procedure StopCW; Virtual; Abstract;
+      // Does THIS driver actually key CW itself?
+      //
+      // False (the default) means CW-by-CAT for this radio runs on the legacy
+      // path -- LOGRADIO.RadioObject.SendCW builds the command and hands it to
+      // AddToOutputBuffer, which routes to this object's SendToRadio.  The CW
+      // methods above are then inert stubs that exist only to satisfy the
+      // abstract contract (see uRadioElecraftSerial's header).
+      //
+      // This MUST be answered honestly, because RadioObject.StopSendingCW asks
+      // it before delegating.  It used to delegate unconditionally, so on every
+      // radio whose StopCW is an inert stub -- Elecraft serial (K2/K3/KX3),
+      // Kenwood serial, Flex CAT, Orion -- Escape was swallowed: CW STARTED via
+      // the legacy path and could never be STOPPED, because the legacy abort
+      // ('KY '#4';RX;' for the K3) was never reached.  Bench: NY4I, K3,
+      // 2026-07-31.
+      function CWIsFactoryOwned: Boolean; Virtual;
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); Virtual; Abstract;
       procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); Virtual; Abstract;
       function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; Virtual; Abstract;
@@ -642,6 +658,15 @@ end;
 procedure TFactoryRadioBase.QuerySplitState;
 begin
   // Default: do nothing - radio classes override
+end;
+
+function TFactoryRadioBase.CWIsFactoryOwned: Boolean;
+begin
+  // Default NO: CW-by-CAT runs on the legacy path for most radios, and this
+  // object's CW methods are inert stubs.  See the declaration for why an
+  // honest answer matters (Escape was being swallowed).  A driver that really
+  // keys CW overrides this to True.
+  Result := False;
 end;
 
 procedure TFactoryRadioBase.PollRadioState;

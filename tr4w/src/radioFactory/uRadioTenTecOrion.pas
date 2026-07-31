@@ -128,6 +128,9 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    // True: this driver keys the Orion's CW itself ('/c<cr>' per character,
+    // '*TU<cr>' to unkey).  The legacy rtOrion arms are buggy/empty.
+    function CWIsFactoryOwned: Boolean; override;
 
     // ---- remaining TFactoryRadioBase abstracts ------------------------------
     // Abstract in the base, so an omission is an EAbstractError the first time
@@ -374,26 +377,65 @@ begin
    Self.SendToRadio(Format('*CS%.2d', [wpm]) + ORION_CR);
 end;
 
-// ---- CW: '/<text>' + a REAL carriage return -----------------------------
-// The legacy line emitted a literal '#13' instead of a CR -- see the unit header.
+// ---- CW send: ONE COMMAND PER CHARACTER ---------------------------------
+// Per the Orion 565/566 manual, "CW Character Send" (firmware 1.367+):
+//
+//     /c<cr>   Send the CW character or Procedural Symbol indicated by 'c'
+//     example: /b<cr> sends 'b',  /w<cr> sends 'w'
+//
+// It is a SINGLE-CHARACTER command -- there is no string form.  This code
+// previously emitted '/' + the whole buffer + CR, which the manual does not
+// define; the legacy path is worse still, emitting a literal '#13' instead of
+// a carriage return (Format('/%s#13', [Msg]) -- '#13' inside a Pascal string
+// literal is three characters, not CR).  Both are corrected here: one command
+// per character, with a real CR.
+//
+// The manual also notes the INTERNAL KEYER MUST BE ENABLED or the Send CW
+// command is ignored -- worth checking first if a bench test shows silence.
 procedure TTenTecOrionRadio.BufferCW(cwChars: string);
 begin
    FCWBuffer := FCWBuffer + cwChars;
 end;
 
 procedure TTenTecOrionRadio.SendCW;
+var
+   i: integer;
 begin
    if FCWBuffer = '' then
       begin
       Exit;
       end;
-   Self.SendToRadio('/' + FCWBuffer + ORION_CR);
+   for i := 1 to Length(FCWBuffer) do
+      begin
+      Self.SendToRadio('/' + FCWBuffer[i] + ORION_CR);
+      end;
    FCWBuffer := '';
 end;
 
 procedure TTenTecOrionRadio.StopCW;
 begin
+   // Drop anything we have not sent yet...
    FCWBuffer := '';
+   // ...then UNKEY THE TRANSMITTER.  Manual, "Keying Command":
+   //     *TK<cr> keys the transmitter, *TU<cr> unkeys it.
+   // This is the Orion's equivalent of the 'RX;' half of the abort TR4W sends
+   // to a K3/Kenwood, and NY4I (Orion owner) identified it as the stop.
+   //
+   // VERIFIED: *TU is documented and unkeys the transmitter.
+   // NOT VERIFIED: whether it also DISCARDS characters already accepted by the
+   // radio's CW buffer, or merely drops the carrier while the buffer drains.
+   // If a bench test shows CW resuming after Escape, that is the reason, and
+   // the fix is an additional buffer-clear command -- not more *TU.
+   Self.SendToRadio('*TU' + ORION_CR);
+end;
+
+function TTenTecOrionRadio.CWIsFactoryOwned: Boolean;
+begin
+   // This driver owns the Orion's CW: SendCW issues the per-character '/c<cr>'
+   // commands and StopCW issues '*TU<cr>'.  The legacy path must NOT be used --
+   // its rtOrion send arm has the literal-'#13' bug and its rtOrion stop arm is
+   // EMPTY (commented-out code only), so Escape there does nothing at all.
+   Result := True;
 end;
 
 // ---------------------------------------------------------------------------

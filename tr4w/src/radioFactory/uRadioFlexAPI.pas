@@ -74,6 +74,8 @@ type TFlexAPI = class(TFactoryRadioBase)
       procedure BufferCW(cwChars: string); override;
       procedure SendCW; override;
       procedure StopCW; override;
+      // True: this transport keys CW itself (cwx send / cwx clear).
+      function CWIsFactoryOwned: Boolean; override;
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
       procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
       function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; override;
@@ -865,6 +867,17 @@ begin
    logger.trace('[FlexAPI.SendCW] Sending CW: "%s"', [FCWBuffer]);
    SendFlexCmd('cwx send "' + encoded + '"');
    FCWBuffer := '';
+end;
+
+function TFlexAPI.CWIsFactoryOwned: Boolean;
+begin
+   // The SmartSDR Ethernet API owns CW for this transport END TO END: SendCW
+   // issues 'cwx send' and StopCW issues 'cwx clear'.  LOGRADIO's legacy CW
+   // case has NO arm for a network Flex, so answering False here would send
+   // Escape nowhere at all (the same fault the K3 hit on 2026-07-31).
+   // NOTE this is per-TRANSPORT, not per-model: TFlexCAT answers False,
+   // because on the CAT port LOGRADIO formats and sends KY itself.
+   Result := True;
 end;
 
 procedure TFlexAPI.StopCW;
