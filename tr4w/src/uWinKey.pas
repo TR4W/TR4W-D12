@@ -133,15 +133,31 @@ type
 
 const
   wkDebugFileHeader                     = '<HTML><STYLE>.RX {BACKGROUND:#00FF00} .ST{BACKGROUND:#FFFF00}</STYLE><BODY><TABLE BORDER=1 WIDTH=40% ALIGN=LEFT>';
-  wkCALIBRATE                           = #$00#$00;
-  wkRESET                               = #$00#$01;
-  wkHOSTOPEN                            = #$00#$02;
-  wkHOSTCLOSE                           = #$00#$03;
-  wkECHOTEST                            = #$00#$04;
-  wkGETVALUES                           = #$00#$07;
+  // ADMIN COMMANDS -- two RAW BYTES on the wire ($00 + sub-command), passed to
+  // wkSendAdminCommand's untyped `const Buffer` and written verbatim.
+  //
+  // These MUST be typed as bytes, not written as character literals.  They used
+  // to read `wkECHOTEST = #$00#$04;`, which under Delphi 7 was an AnsiString --
+  // exactly the two bytes 00 04.  Under Delphi 12 the same literal is a
+  // UnicodeString, so its bytes are 00 00 04 00, and the `array[0..1] of Byte
+  // absolute Buffer` view inside wkSendAdminCommand read the first two of those:
+  // $00 $00.  EVERY admin command therefore went out as CALIBRATE.  The keyer
+  // never saw an ECHO TEST, never answered, and wkOpen failed on every attempt
+  // -- the WinKeyer simply would not connect under D12 (NY4I bench, COM20,
+  // 2026-07-31; the log showed the handshake bytes going out and nothing
+  // coming back, with [wkSendAdminCommand] B1=$00 B2=$00).
+  //
+  // A byte array cannot silently change width, so this class of bug cannot
+  // recur here.
+  wkCALIBRATE   : array[0..1] of Byte = ($00, $00);
+  wkRESET       : array[0..1] of Byte = ($00, $01);
+  wkHOSTOPEN    : array[0..1] of Byte = ($00, $02);
+  wkHOSTCLOSE   : array[0..1] of Byte = ($00, $03);
+  wkECHOTEST    : array[0..1] of Byte = ($00, $04);
+  wkGETVALUES   : array[0..1] of Byte = ($00, $07);
 
-  wkSETWK1MODE                          = #$00#$0A;
-  wkSETWK2MODE                          = #$00#$0B;
+  wkSETWK1MODE  : array[0..1] of Byte = ($00, $0A);
+  wkSETWK2MODE  : array[0..1] of Byte = ($00, $0B);
 
   wkECHOTESTBYTE                        = $55;
 
