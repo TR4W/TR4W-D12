@@ -2463,6 +2463,7 @@ var
    charProcessed: boolean;
    elements: integer;
    frameRule: uCWFraming.TCWFrameRule;
+   prosign: uCWFraming.TCWProsign;
 begin
    // Q9 (CW keyer factory plan): this guard used the LEGACY
    // `RadioModel in RadioSupportsCWByCAT` typeset while the keyer factory
@@ -2521,66 +2522,23 @@ begin
             sendNow := true;
             charProcessed := true;
             end
-         else if Msg = '^' then
-            begin // There is no half space in Kenwood/Elecraft CW strings
-            Self.CWByCATBuffer := Self.CWByCATBuffer + ' '; // Use a whole space
-            charProcessed := true;
-            end
-         else if Msg = '!' then   // SN
+         else
             begin
-            if not (RadioModel in [K2, K3, K4]) then   // No SN on Elecraft
+            // Prosign translation moved VERBATIM to uCWFraming.CWProsignFor.
+            // It is per-model DATA -- Elecraft and Kenwood spell the same
+            // prosigns with different characters in a KY string -- so it belongs
+            // with the framing rules the factory drivers will need, and it is
+            // now unit-testable instead of buried in this case arm.
+            //
+            // ONE deliberate difference: this chain tested [K2, K3, K4] and
+            // omitted the KX3, which therefore keyed Kenwood prosigns on an
+            // Elecraft.  CWProsignFor includes it.  See the note there.
+            prosign := uCWFraming.CWProsignFor(RadioModel, Msg);
+            if prosign.handled then
                begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '%';
+               Self.CWByCATBuffer := Self.CWByCATBuffer + prosign.text;
+               charProcessed := true;
                end;
-            charProcessed := true;
-            end
-         {else if Msg = '&' then // AS      // & is really MYSTATE but documented as AS
-            begin
-            if RadioModel in [K2, K3, K4] then
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '%'; //Elecraft AS
-               end
-            else
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '<'; //Kenwood AS
-               end;
-            charProcessed := true;
-            end}
-         else if Msg = '+' then // AR
-            begin
-            if RadioModel in [K2, K3, K4] then
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '+'; //Elecraft AR
-               end
-            else
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '_'; //Kenwood AR
-               end;
-            charProcessed := true;
-            end
-         else if Msg = '<' then // SK
-            begin
-            if RadioModel in [K2, K3, K4] then
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '*'; //Elecraft SK
-               end
-            else
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '>'; //Kenwood SK
-               end;
-            charProcessed := true;
-            end
-         else if Msg = '=' then // BT
-            begin
-            if RadioModel in [K2, K3, K4] then
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '='; //Elecraft BT
-               end
-            else
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + '['; //Kenwood BT
-               end;
-            charProcessed := true;
             end;
          // Now process the string is not already processed   
          if (Msg = CWByCATBufferTerminator) or sendNow then // Do nothing

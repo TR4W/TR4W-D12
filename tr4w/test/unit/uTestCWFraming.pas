@@ -24,6 +24,7 @@ type
       procedure Test_ChunkingAndPadding;
       procedure Test_ElementCountUsesUnpaddedText;
       procedure Test_EdgeCases;
+      procedure Test_ProsignsDifferByVendor;
    public
       procedure RunAllTests; override;
    end;
@@ -134,6 +135,46 @@ begin
                'no-limit chunk is the whole text, unpadded');
 end;
 
+procedure TCWFramingTests.Test_ProsignsDifferByVendor;
+var
+   p: TCWProsign;
+begin
+   BeginTest('prosigns are spelled differently on Elecraft and Kenwood');
+
+   // AR / SK / BT: same prosign, different character per vendor.
+   CheckEquals('+', CWProsignFor(K3, '+').text, 'Elecraft AR');
+   CheckEquals('_', CWProsignFor(TS570, '+').text, 'Kenwood AR');
+   CheckEquals('*', CWProsignFor(K3, '<').text, 'Elecraft SK');
+   CheckEquals('>', CWProsignFor(TS570, '<').text, 'Kenwood SK');
+   CheckEquals('=', CWProsignFor(K3, '=').text, 'Elecraft BT');
+   CheckEquals('[', CWProsignFor(TS570, '=').text, 'Kenwood BT');
+
+   // Half space: neither vendor has one, so both key a whole space.
+   CheckEquals(' ', CWProsignFor(K3, '^').text, 'Elecraft half space -> space');
+   CheckEquals(' ', CWProsignFor(TS570, '^').text, 'Kenwood half space -> space');
+
+   // SN exists on Kenwood only.  On Elecraft the token is still HANDLED (it must
+   // not fall through and be keyed as a literal '!') but produces no text.
+   CheckEquals('%', CWProsignFor(TS570, '!').text, 'Kenwood SN');
+   p := CWProsignFor(K3, '!');
+   CheckTrue(p.handled, 'Elecraft SN token is consumed, not passed through');
+   CheckEquals('', p.text, 'Elecraft has no SN, so nothing is keyed');
+
+   // The KX3 is an ELECRAFT.  LOGRADIO tested [K2, K3, K4] and omitted it, so a
+   // KX3 keyed Kenwood spellings; this pins the corrected grouping.
+   CheckEquals('+', CWProsignFor(KX3, '+').text, 'KX3 gets Elecraft AR, not _');
+   CheckEquals('*', CWProsignFor(KX3, '<').text, 'KX3 gets Elecraft SK, not >');
+   CheckEquals('=', CWProsignFor(KX3, '=').text, 'KX3 gets Elecraft BT, not [');
+   CheckEquals('', CWProsignFor(KX3, '!').text, 'KX3 has no SN, like the K3');
+   CheckEquals('+', CWProsignFor(K2, '+').text, 'K2 is an Elecraft too');
+
+   // Anything else is not a prosign: the caller must treat it as literal text.
+   CheckFalse(CWProsignFor(K3, 'A').handled, 'a letter is not a prosign');
+   CheckFalse(CWProsignFor(K3, '&').handled, 'AS is deliberately not handled');
+   CheckFalse(CWProsignFor(K3, '').handled, 'empty token is not a prosign');
+   CheckFalse(CWProsignFor(K3, 'CQ').handled, 'a whole word is not a prosign');
+end;
+
 procedure TCWFramingTests.RunAllTests;
 begin
    Test_PerModelRules;
@@ -141,6 +182,7 @@ begin
    Test_ChunkingAndPadding;
    Test_ElementCountUsesUnpaddedText;
    Test_EdgeCases;
+   Test_ProsignsDifferByVendor;
 end;
 
 end.
