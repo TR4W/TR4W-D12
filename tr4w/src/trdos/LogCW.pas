@@ -185,6 +185,15 @@ uses
   uTelnet,
   CFGCMD,
   uNet,
+  // CW keyer factory: the four adapters are listed so their initialization
+  // sections run (they self-install into the KeyerXXX slots).  This unit is
+  // now a FACADE over uCWKeyerBase.ActiveCWKeyer rather than a place where the
+  // 4-way keyer dispatch is re-implemented per procedure.
+  uCWKeyerBase,
+  uCWKeyerCAT,
+  uCWKeyerWinKey,
+  uCWKeyerYCCC,
+  uCWKeyerCPU,
   MainUnit; {KK1L: 6.72 Allows use of SniffOutControlCharacters}
 
 type
@@ -232,15 +241,10 @@ begin
    if ( (Msg = CWByCATBufferTerminator) or
         ((CWEnable and CWEnabled and IsCWByCATActive )) ) then   // ny4i 4.44.5    + Issue 111
       begin
-      // We have to see if the KeyersSwapped is set and if so, SendCW on the INACTIVE radio!
-      if KeyersSwapped then                         // ny4i 4.
-         begin
-         InactiveRadioPtr.SendCW(Msg);
-         end
-      else
-         begin
-         ActiveRadioPtr.SendCW(Msg);
-         end;
+      // Gate expression unchanged (note the terminator BYPASSES the enable
+      // gates on purpose).  The arm body moved verbatim into
+      // TCWKeyerCAT.SendString, including the KeyersSwapped resolution.
+      KeyerCAT.SendString(Msg, Tone);
    //   tStartAutoCQ;   This was a test but it cannot work like this in CWBYCAT.
    { In CWByCat, we need to know when the radio actually stops sending so we can start the timer then.
     The radio has to support a way to interrogate if it is transmitting after we send a cw string.
@@ -286,51 +290,12 @@ begin
     CWMessageToNetwork                                      := CWMessageToNetwork + Msg;
 {$IFEND}
 
-    if wkActive then
-    begin
-   //  if not WKbusy then flushcwbuffer;  // ny4i winkeyer
-      wkAddCWMessageToInternalBuffer(Msg);
-   //   wkBUSY                                              := True;   // 4.88.2      remove 4.90.5
-     Exit;
-    end;
-
-    if ycccActive then
-    begin
-      YCCCAddCWMessageToBuffer(Msg);
-      Exit;
-    end;
-
-   if ActiveRadioPtr.tPTTStatus = PTT_OFF then
-      begin
-       PTTOn;
-      end;
-   CPUKeyer.AddStringToCWBuffer(Msg, Tone);
-//    CountsSinceLastCW                                     := 0;
-
-    if CWThreadID = 0 then
-    begin
-         wkBusy                                             := False;            //  4.90.5
-    //     wkSendAdminCommand(wkRESET);
-        //   ExitFromCWThread                               := False;
-    //    inc(CWThreadCounter);
-    //   windows.SetWindowTextA(tr4whandle,inttopchar(CWThreadCounter));
-
-      logger.Info('Calling tCreateThread from AddStringToBuffer');
-      CWThreadHandle                                        := tCreateThread(@CWThreadProc, CWThreadID);
-      logger.Info('Created CW thread with threadid of %d',[CWThreadID] );
-     //                  THREAD_PRIORITY_ABOVE_NORMAL
-      // Issue #997: asm SetThreadPriority -> Pascal call. The old `push eax`
-      // pushed a STALE EAX -- the preceding logger.Info clobbered the thread
-      // handle -- so this priority was never actually applied. Now set it on the
-      // real handle (CWThreadHandle). BEHAVIOR CHANGE: CW thread now actually
-      // runs TIME_CRITICAL; verify CW keying timing.
-      SetThreadPriority(CWThreadHandle, THREAD_PRIORITY_TIME_CRITICAL);
-
-{$IF OZCR2008}
-      if tMessagesExhangeEnable then SetTimer(tr4whandle, UPDATE_NET_CW_MESSAGE, 250, @SendMessageStatus);
-{$IFEND}
-
-    end;
+    // The WinKeyer / YCCC / CPU arms that stood here are now the adapters'
+    // SendString bodies, selected by ActiveCWKeyer in the same precedence.
+    // (ActiveCWKeyer cannot return KeyerCAT here in practice -- IsCWByCATActive
+    // was just tested False above; a mid-call flip harmlessly routes to the CAT
+    // adapter, which is the correct destination anyway.)
+    ActiveCWKeyer.SendString(Msg, Tone);
   end;
 end;
 
@@ -377,68 +342,30 @@ end;
 //------------------------------------------------------------------------------
 function CWStillBeingSent: boolean;
 begin
-  if ISCWByCATActive then
-     begin
-     Result                                                 := ActiveRadioPtr.CWByCAT_Sending;
-     end
-  else if wkActive then
-     begin
-     Result                                                 := wkBUSY;
-     end
-  else if ycccActive then
-     begin
-     Result                                                 := YCCCCWBusy;
-     end
-  else
-     begin
-     Result                                                 := CPUKeyer.CWStillBeingSent;   // ny4i Issue 149 With CWBC, it was possible to miss we were still sending
-     end;
+  // Was an if/else chain in exactly ActiveCWKeyer's precedence.
+  // ny4i Issue 149: with CWBC it was possible to miss that we were still sending.
+  Result := ActiveCWKeyer.StillBeingSent;
 end;
 
 function DeleteLastCharacter: boolean;
 begin
-  if ISCWByCATActive then
-     begin
-     Result                                                 := ActiveRadioPtr.DeleteLastCWCharacter; // ny4i Added Issue 149 (general stability of CWBC)
-     end
-  else if wkActive then
-  begin
-    wkSendByte(wkCMD_BACKSPACE);   // ny4i Just a note...Result is not set here...
-    Exit;
-  end
-  else if ycccActive then
-  begin
-    Result := YCCCDeleteLastChar;
-    Exit;
-  end;
-  DeleteLastCharacter                                       := CPUKeyer.DeleteLastCharacter;
+  // ny4i Issue 149 (general stability of CWBC).  NOTE the WinKeyer arm here
+  // used to fall out WITHOUT setting Result (garbage); the adapter pins True.
+  Result := ActiveCWKeyer.DeleteLastChar;
 end;
 
 procedure FlushCWBuffer;
 
 begin
 //  CPUKeyer.PTTUnForce;
-  if ActiveRadioPtr.CurrentStatus.Mode = CW then
-  if IsCWByCATActive(ActiveRadioPtr) then
-     begin
-     DebugMsg('Flushing CWBuffer - Stop Sending on ActiveRadio CWBC');
-     ActiveRadioPtr.CWByCATBuffer                           := '';
-     ActiveRadioPtr.StopSendingCW;
-     end;
-  if InactiveRadioPtr.CurrentStatus.Mode = CW then
-  if IsCWByCATActive(InactiveRadioPtr) then
-     begin
-     DebugMsg('Flushing CWBuffer - Stop Sending on InactiveRadio CWBC');
-     InactiveRadioPtr.CWByCATBuffer                         := '';
-     InactiveRadioPtr.StopSendingCW;
-     end;
-
+  // BROADCAST, not routed -- every backend is flushed, in the historical order
+  // (CAT first, then the CPU keyer, the WinKeyer busy latch, and the YCCC box).
+  // Each arm's body, and its guards, moved verbatim into that keyer's Flush.
+  KeyerCAT.Flush;
   tAutoSendMode                                             := False;
-  CPUKeyer.FlushCWBuffer;
-  WKBusy                                                    := False; // 4.90.5
-//  if wkActive then wkClearBuffer;    // Gav    remove
-  if ycccActive then
-     YCCCFlushCWBuffer;
+  KeyerCPU.Flush;
+  KeyerWinKey.Flush;   // resets the busy latch only -- wkClearBuffer still NOT called (Q1)
+  KeyerYCCC.Flush;
 end;
 
 procedure FlushCWBufferAndClearPTT;
@@ -600,14 +527,19 @@ begin
   if Speed > 0 then
   begin
     CodeSpeed                                               := Speed;
-    CPUKeyer.SetSpeed(Speed);
+    KeyerCPU.SetSpeed(Speed);
+    // Radio speed-sync stays HERE, not in the CAT adapter: it is orthogonal to
+    // which keyer keys (it must fire even while the WinKeyer is keying).
     if ActiveRadioPtr.CWSpeedSync then
        begin
        ActiveRadioPtr.SetRadioCWSpeed(Speed);
        end;
     tSetPaddleElementLength;
-    wkSetSpeed(Speed);
- //   YCCCSetSpeed(Speed);
+    // Broadcast, same order as before.  KeyerWinKey.SetSpeed calls wkSetSpeed
+    // unconditionally (Q5, handle-guarded internally); KeyerYCCC.SetSpeed is a
+    // no-op, preserving the commented-out YCCCSetSpeed (Q2).
+    KeyerWinKey.SetSpeed(Speed);
+    KeyerYCCC.SetSpeed(Speed);
   end;
 end;
 
@@ -2003,6 +1935,10 @@ begin
 //  ActiveKeyerPort                                         := Radio1.tKeyerPort;
   SerialInvert                                              := Radio1SerialInvert;
   CPUKeyer.InitializeKeyer;
+  // Runs after the config is loaded (LogCfg calls this), so the warning can
+  // see the final keyer settings: one Warn per conflicting combination, rather
+  // than the operator discovering the precedence by experiment.
+  WarnIfKeyerConfigsConflict;
 end;
 
 procedure UnInitializeKeyer;
