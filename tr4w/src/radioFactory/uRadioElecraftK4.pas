@@ -513,16 +513,22 @@ if applicable (0=DATA A, 1=AFSK A, 2= FSK D, 3=PSK D)
       Exit;
       end;
 
-   Self.localRITOffset := (ritOffset * ritMultiplier);
-   Self.localXITOffset := (Self.localRITOffset); // Because on K4, these are the same
+   // Base setters, not the raw scalars: they also write the per-VFO RITOffset
+   // the radio window reads (uFactoryRadioBase.GetRITOffset).  On a SERIAL K4
+   // (AI off, IF;FB; polling) this IF response is the only ongoing RIT/XIT
+   // source -- the network AI path at RT/XT/RO writes vfo[] itself -- so
+   // writing just the scalar left the window offset blank.  Same defect and
+   // same fix as the K3 in uRadioElecraftSerial.ParseIFCommand.
+   Self.SetRITOffset(ritOffset * ritMultiplier);
+   Self.SetXITOffset(Self.localRITOffset); // Because on K4, these are the same
    logger.trace('[ParseIFCommand] RITOffset = %d',[Self.localRITOffset]);
    
    Delete(s,1,4);                      // rx*00tmvspbd1*;
-   Self.RITState := AnsiLeftStr(s,1) = '1';
+   Self.SetRITOn(AnsiLeftStr(s,1) = '1');   // per-VFO copy, not just the scalar
    logger.trace('In IF processor, RIT is %s',[AnsiLeftStr(s,1)]);
 
    Delete(s,1,1);                      // x*00tmvspbd1*;
-   Self.XITState := AnsiLeftStr(s,1) = '1';
+   Self.SetXITOn(AnsiLeftStr(s,1) = '1');   // per-VFO copy, not just the scalar
    logger.trace('In IF processor, XIT is %s',[AnsiLeftStr(s,1)]);
 
    Delete(s,1,1);
