@@ -49,11 +49,13 @@ if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
 # A registration looks like:
 #   RegisterRadio(<enumMember>, <ctor>, '<displayName>', [links], port, flag);
 #   RegisterRadioById('<id>',   <ctor>, '<displayName>', [links], port, flag);
-# The ctor is an anonymous function containing no string literals, so the
-# quoted literals appear in a predictable order: for the ById form the FIRST is
-# the id and the SECOND is the display name; for the enum form the FIRST is the
-# display name.
-$callPattern = [regex] '(?s)RegisterRadio(?<byId>ById)?\s*\(\s*(?<args>.*?)\)\s*;'
+#   RegisterHamLibOnlyRadio(<enumMember>, <ctor>, '<displayName>', hamlibID, serial);
+# The ctor is an anonymous function containing no string literals (the HamLib-
+# only closures pass the enum member, not a name, for exactly this reason), so
+# the quoted literals appear in a predictable order: for the ById form the
+# FIRST is the id and the SECOND is the display name; for the enum forms the
+# FIRST is the display name.
+$callPattern = [regex] '(?s)Register(?:HamLibOnly)?Radio(?<byId>ById)?\s*\(\s*(?<args>.*?)\)\s*;'
 
 $registrations = @()
 
@@ -77,8 +79,10 @@ foreach ($file in Get-ChildItem -LiteralPath $SourceDir -Recurse -Filter *.pas) 
       $isById = $m.Groups['byId'].Success
 
       # Skip the declarations/forwards in uRadioRegistry itself and any
-      # commented-out example: a real call has a bracketed link set.
-      if ($args -notmatch '\[') { continue }
+      # commented-out example: every real call passes an anonymous constructor
+      # closure.  (The old test required a bracketed link set, which silently
+      # excluded the RegisterHamLibOnlyRadio form -- it has no links argument.)
+      if ($args -notmatch 'function\s*:') { continue }
 
       # @() is load-bearing: with a SINGLE literal, ForEach-Object returns a bare
       # string and $literals[0] would index its first CHARACTER, not the literal.

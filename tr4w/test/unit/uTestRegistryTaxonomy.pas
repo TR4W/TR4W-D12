@@ -46,6 +46,7 @@ type
       procedure Test_IsHamLibOnly_MatchesRetiredSet;
       procedure Test_ManufacturerOf_YaesuMatchesRetiredSet;
       procedure Test_ManufacturerOf_EmptyForUnregistered;
+      procedure Test_HamLibOnlyRegistrations;
    public
       procedure RunAllTests; override;
    end;
@@ -62,8 +63,15 @@ const
        FT818, FT840, FT847, FT857, FT890, FT891, FT897, FT900, FT920,
        FT950, FT990, FT991, FT1000, FT1000MP, FT1200, FT2000,
        FTDX3000, FTDX5000, FTDX9000];
-   // See the unit header for why each of these two diverges.
-   KnownYaesuDivergences: InterfacedRadioTypeSet = [FT736R, FT100];
+   // Knowing divergences from the retired YaesuRadios set (see unit header):
+   // - FT100: a Yaesu the old set simply omitted -- the keyer warning now
+   //   correctly covers it.
+   // - FT757GXII: a Yaesu the old set omitted because it was HamLib-only;
+   //   since the bridges registered (2026-07-30) its display name declares
+   //   the manufacturer, so the warning covers it too.
+   // (FT736R left this list the same day: once registered as
+   // 'Yaesu FT-736R (via HamLib)' it AGREES with the retired set again.)
+   KnownYaesuDivergences: InterfacedRadioTypeSet = [FT100, FT757GXII];
 
 procedure TRegistryTaxonomyTests.Test_IsHamLibOnly_MatchesRetiredSet;
 var
@@ -121,11 +129,54 @@ end;
 
 procedure TRegistryTaxonomyTests.Test_ManufacturerOf_EmptyForUnregistered;
 begin
-   // An unregistered (HamLib-only) model has no display name to derive from.
-   // Callers must treat '' as "unknown", never as a manufacturer.
-   BeginTest('ManufacturerOf is '''' for an unregistered model');
-   CheckEquals('', ManufacturerOf(FLRIG), 'FLRIG has no registration');
+   // Since the bridges registered (2026-07-30) every real model has a display
+   // name; only the not-a-radio sentinel derives nothing.
+   BeginTest('ManufacturerOf is '''' only for NoInterfacedRadio');
    CheckEquals('', ManufacturerOf(NoInterfacedRadio), 'NoInterfacedRadio is not a radio');
+   CheckEquals('FLRig', ManufacturerOf(FLRIG), 'bridges carry display names now');
+end;
+
+procedure TRegistryTaxonomyTests.Test_HamLibOnlyRegistrations;
+var
+   m: InterfacedRadioType;
+   bad: string;
+
+   procedure CheckID(model: InterfacedRadioType; want: Integer; const why: string);
+   begin
+      if RegisteredHamLibID(model) <> want then
+         begin
+         bad := bad + Format('%s: hamlibID %d, want %d (%s); ',
+            [InterfacedRadioTypeSA[model], RegisteredHamLibID(model), want, why]);
+         end;
+   end;
+
+begin
+   // The seven HamLib-only rows registered by uRadioHamLibOnly: each must be
+   // registered, flagged, and carry its riglist.h default rig_model verbatim
+   // from the legacy RadioParametersArray (HAMLIBANY's 1 is a placeholder --
+   // the RADIO n HAMLIB ID config supplies the real one at connect).
+   BeginTest('the seven HamLib-only models register with their default rig_models');
+   bad := '';
+   for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
+      begin
+      if (m in RetiredHamLibONLYRadios) and (not IsRegistered(m)) then
+         begin
+         bad := bad + InterfacedRadioTypeSA[m] + ': not registered; ';
+         end;
+      end;
+   CheckID(FLRIG, 4, 'RIG_MODEL_FLRIG');
+   CheckID(TRXMANAGER, 5, 'RIG_MODEL_TRXMANAGER_RIG');
+   CheckID(EXPERTTCI, 7, 'RIG_MODEL_TCI1X');
+   CheckID(ACLOG, 8, 'RIG_MODEL_ACLOG');
+   CheckID(HAMLIBANY, 1, 'placeholder; config supplies the real ID');
+   CheckID(FT736R, 1010, 'RIG_MODEL_FT736R');
+   CheckID(FT757GXII, 1007, 'RIG_MODEL_FT757GX2');
+   // And a native radio must NOT carry a hamlib-only registration.
+   if IsHamLibOnly(IC7300) then
+      begin
+      bad := bad + 'IC7300 flagged hamlibOnly; ';
+      end;
+   CheckEquals('', bad, bad);
 end;
 
 procedure TRegistryTaxonomyTests.RunAllTests;
@@ -133,6 +184,7 @@ begin
    Test_IsHamLibOnly_MatchesRetiredSet;
    Test_ManufacturerOf_YaesuMatchesRetiredSet;
    Test_ManufacturerOf_EmptyForUnregistered;
+   Test_HamLibOnlyRegistrations;
 end;
 
 end.

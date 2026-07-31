@@ -144,6 +144,11 @@ type
     FNeedsPoll: Integer;
 
     constructor Create(ProcRef: TProcessMsgRef); overload;
+    // Registry-closure constructor: HamLib Direct's ProcessMsg is a no-op
+    // (direct DLL mode has no inbound byte stream), so the parameterless
+    // creation path used by uRadioHamLibOnly's registrations wires the
+    // callback to the object itself, like every native radio does.
+    constructor Create; reintroduce; overload;
     destructor Destroy; override;
 
     function Connect: Integer; override;
@@ -339,6 +344,11 @@ begin
 end;
 
 { THamLibDirect }
+
+constructor THamLibDirect.Create;
+begin
+  Create(ProcessMsg);
+end;
 
 constructor THamLibDirect.Create(ProcRef: TProcessMsgRef);
 begin

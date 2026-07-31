@@ -167,6 +167,18 @@ procedure RegisterRadioById(const id: string;
                             discoverable: Boolean;
                             const serial: TSerialParams);
 
+// HamLib-only registration -- a model with NO native TR4W driver, driven
+// through THamLibDirect (the software bridges FLRig/TRXManager/TCI/ACLog/
+// rigctl-any, plus real rigs whose only driver is a HamLib backend).  The
+// ctor should return a THamLibDirect preconfigured with hamlibID; the row is
+// flagged hamlibOnly, which IsHamLibOnly and the CAT dialog read.  Links are
+// fixed [rlSerial, rlNetwork]: HamLib itself decides transport per rig.
+procedure RegisterHamLibOnlyRadio(model: InterfacedRadioType;
+                                  const ctor: TRadioCtor;
+                                  const displayName: string;
+                                  hamlibID: Integer;
+                                  const serial: TSerialParams);
+
 // Enum-facing lookups (used by the factory + LOGRADIO connect path).
 function IsRegistered(model: InterfacedRadioType): Boolean;
 function SupportsSerial(model: InterfacedRadioType): Boolean;
@@ -203,12 +215,20 @@ function SerialParamsForId(const id: string): TSerialParams;
 
 // ---- TAXONOMY, DERIVED FROM THE REGISTRY -----------------------------------
 // These replace the InitRadios taxonomy sets (HamLibONLYRadios, YaesuRadios).
-// The registry is the single source of truth for "what has a native driver":
-// every model TR4W can drive natively is registered, so a real model that is
-// NOT registered has no native CAT path and can only be driven through HamLib.
-// A new HamLib-only model needs no list edit -- not registering it is the fact.
-// (uTestRegistryTaxonomy pins this equivalence against the historical set.)
+// The registry is the single source of truth.  HamLib-only models (no native
+// TR4W driver -- the software bridges, plus rigs whose only driver is a HamLib
+// backend) REGISTER like every other radio, via RegisterHamLibOnlyRadio in
+// uRadioHamLibOnly.pas, carrying their default HamLib rig_model; IsHamLibOnly
+// reads that registration FLAG.  (Before 2026-07-30 the derivation was "not
+// registered = HamLib-only"; registering the bridges so the radio drop-down
+// can be built from the registry required the explicit flag.
+// uTestRegistryTaxonomy still pins the answer against the historical set.)
 function IsHamLibOnly(model: InterfacedRadioType): Boolean;
+
+// The registration's default HamLib rig_model (riglist.h numbering).  0 when
+// the model is not registered or carries no ID; for HAMLIBANY the meaningful
+// ID always comes from the RADIO n HAMLIB ID config command instead.
+function RegisteredHamLibID(model: InterfacedRadioType): Integer;
 
 // First word of the registered display name ('Yaesu FT-817' -> 'Yaesu').  The
 // display names already state the manufacturer once per radio, so no separate
@@ -258,6 +278,9 @@ type
       networkPort: integer;
       discoverable: Boolean;
       serial: TSerialParams;
+      hamlibOnly: Boolean;          // True => no native TR4W driver; driven through HamLib
+      hamlibID: Integer;            // default HamLib rig_model for hamlibOnly rows
+                                    // (the RADIO n HAMLIB ID config command overrides at connect)
    end;
 
 var
@@ -292,6 +315,8 @@ begin
    reg.networkPort := networkPort;
    reg.discoverable := discoverable;
    reg.serial := serial;
+   reg.hamlibOnly := False;   // RegisterHamLibOnlyRadio patches these after the call
+   reg.hamlibID := 0;
    if not gById.ContainsKey(id) then
       begin
       gOrder.Add(id);
@@ -338,6 +363,26 @@ procedure RegisterRadioById(const id: string;
                             const serial: TSerialParams);
 begin
    DoRegister(id, NoInterfacedRadio, ctor, nil, displayName, links, networkPort, discoverable, serial);
+end;
+
+procedure RegisterHamLibOnlyRadio(model: InterfacedRadioType;
+                                  const ctor: TRadioCtor;
+                                  const displayName: string;
+                                  hamlibID: Integer;
+                                  const serial: TSerialParams);
+var
+   id: string;
+   reg: TRadioReg;
+begin
+   id := GetEnumName(TypeInfo(InterfacedRadioType), Ord(model));
+   DoRegister(id, model, ctor, nil, displayName, [rlSerial, rlNetwork], 0, False, serial);
+   // Patch the hamlib fields onto the stored row (DoRegister defaults them off).
+   if gById.TryGetValue(id, reg) then
+      begin
+      reg.hamlibOnly := True;
+      reg.hamlibID := hamlibID;
+      gById.AddOrSetValue(id, reg);
+      end;
 end;
 
 // ---- lookup helpers ---------------------------------------------------------
@@ -514,9 +559,24 @@ begin
 end;
 
 function IsHamLibOnly(model: InterfacedRadioType): Boolean;
+var
+   reg: TRadioReg;
 begin
-   // NoInterfacedRadio is "no radio configured", not a radio that needs HamLib.
-   Result := (model <> NoInterfacedRadio) and (not IsRegistered(model));
+   // Registration flag (see the interface note): a HamLib-only model registers
+   // with RegisterHamLibOnlyRadio and carries hamlibOnly = True.  Everything
+   // else -- native radios, NoInterfacedRadio, anything unregistered -- is False.
+   Result := RegByModel(model, reg) and reg.hamlibOnly;
+end;
+
+function RegisteredHamLibID(model: InterfacedRadioType): Integer;
+var
+   reg: TRadioReg;
+begin
+   Result := 0;
+   if RegByModel(model, reg) then
+      begin
+      Result := reg.hamlibID;
+      end;
 end;
 
 function ManufacturerOf(model: InterfacedRadioType): string;
