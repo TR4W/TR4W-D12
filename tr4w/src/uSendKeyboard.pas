@@ -32,6 +32,7 @@ uses
   Tree,
   LOGSend,
   LogCW,
+  uCWKeyerBase,   // KeyerCPU -- CPU-keyer-only flush (B3)
   LogWind,
   LogK1EA,
   Messages
@@ -185,7 +186,11 @@ begin
   // aware (CWByCAT / WinKeyer / YCCC / CPU keyer). Issue #1006.
   if StopSending and CWStillBeingSent then
   begin
-    CPUKeyer.FlushCWBuffer;
+    // B3: KeyerCPU.Flush is CPUKeyer.FlushCWBuffer, unchanged.  Deliberately
+    // NOT "upgraded" to the LogCW.FlushCWBuffer facade -- that would ALSO stop
+    // CAT sending, reset the WinKeyer busy latch and flush the YCCC box, which
+    // this site never did.
+    KeyerCPU.Flush;
   end;
 {$IF MMTTYMODE}
   PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);
