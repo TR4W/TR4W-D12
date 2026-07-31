@@ -41,6 +41,7 @@ const
 
   TC_DISBALE_CIV                        = 'Iskljuci "CI-V Transceive" mod u svom ICOM uredjaju. Pogledaj u uputstvu za taj uredjaj.';
   TC_SERIAL_FORMAT_LABEL              = 'DATA/PARITY/STOP';
+  TC_HAMLIB_ID_LABEL                  = 'HAMLIB ID';
   TC_PORT_CONFLICT_STARTUP            = 'RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio''s CONTROL PORT is changed.';
   TC_PORT_CONFLICT_DIALOG             = '%s is already configured as %s. Two devices cannot share a serial port.';
   TC_PORT_CONFLICT_PROCEED            = 'Apply anyway?';

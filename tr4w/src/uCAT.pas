@@ -1025,6 +1025,131 @@ begin
       end;
 end;
 
+// ---------------------------------------------------------------------------
+// HAMLIB ID row (label 153, edit 154) -- one pitch below DATA/PARITY/STOP.
+// 'RADIO n HAMLIB ID' has been a config command all along, but selecting
+// 'HamLib (any supported rig)' in the drop-down gave the operator no way to
+// SET the rig model from the dialog (NY4I bench).  Same runtime-row technique
+// as AddSerialFormatRow (which must run FIRST -- this row anchors on it).
+// The edit is enabled only for HAMLIBANY; for every other selection it greys
+// and shows the model's fixed registered rig_model as information (blank for
+// native radios).
+// ---------------------------------------------------------------------------
+const
+   HAMLIBID_LABEL_ID = 153;
+   HAMLIBID_EDIT_ID  = 154;
+
+procedure AddHamLibIDRow(hwnddlg: HWND);
+var
+   r104, r105, rAnchorLabel, rAnchorCtl, rGroup, rDlg, rChild: TRect;
+   pt: TPoint;
+   rowH, threshold: integer;
+   labelX, labelY, labelW, labelH: integer;
+   editX, editY, editW: integer;
+   child: HWND;
+   caption: string;
+begin
+   // Same row pitch and shift technique as AddSerialFormatRow; anchored on the
+   // serial-format row it just created.
+   GetWindowRect(GetDlgItem(hwnddlg, 104), r104);
+   GetWindowRect(GetDlgItem(hwnddlg, 105), r105);
+   rowH := r105.Top - r104.Top;
+   if rowH <= 0 then
+      begin
+      Exit;
+      end;
+
+   GetWindowRect(GetDlgItem(hwnddlg, SERIALFMT_LABEL_ID), rAnchorLabel);
+   pt.x := rAnchorLabel.Left;
+   pt.y := rAnchorLabel.Top;
+   Windows.ScreenToClient(hwnddlg, pt);
+   labelX := pt.x;
+   labelY := pt.y + rowH;
+   labelH := rAnchorLabel.Bottom - rAnchorLabel.Top;
+
+   GetWindowRect(GetDlgItem(hwnddlg, SERIALFMT_COMBO_ID), rAnchorCtl);
+   pt.x := rAnchorCtl.Left;
+   pt.y := rAnchorCtl.Top;
+   Windows.ScreenToClient(hwnddlg, pt);
+   editX := pt.x;
+   editY := pt.y + rowH;
+   editW := rAnchorCtl.Right - rAnchorCtl.Left;
+   threshold := pt.y + (rowH div 2);
+   labelW := editX - labelX - 5;
+
+   child := GetWindow(hwnddlg, GW_CHILD);
+   while child <> 0 do
+      begin
+      GetWindowRect(child, rChild);
+      pt.x := rChild.Left;
+      pt.y := rChild.Top;
+      Windows.ScreenToClient(hwnddlg, pt);
+      if pt.y > threshold then
+         begin
+         SetWindowPos(child, 0, pt.x, pt.y + rowH, 0, 0,
+            SWP_NOSIZE or SWP_NOZORDER);
+         end;
+      child := GetWindow(child, GW_HWNDNEXT);
+      end;
+
+   child := GetDlgItem(hwnddlg, 90);
+   if child <> 0 then
+      begin
+      GetWindowRect(child, rGroup);
+      SetWindowPos(child, 0, 0, 0,
+         rGroup.Right - rGroup.Left, rGroup.Bottom - rGroup.Top + rowH,
+         SWP_NOMOVE or SWP_NOZORDER);
+      end;
+
+   GetWindowRect(hwnddlg, rDlg);
+   SetWindowPos(hwnddlg, 0, rDlg.Left, rDlg.Top,
+      rDlg.Right - rDlg.Left, rDlg.Bottom - rDlg.Top + rowH, SWP_NOZORDER);
+
+   if CATWTR = @Radio1 then
+      begin
+      caption := 'RADIO ONE ' + AnsiUpperCase(TC_HAMLIB_ID_LABEL);
+      end
+   else
+      begin
+      caption := 'RADIO TWO ' + AnsiUpperCase(TC_HAMLIB_ID_LABEL);
+      end;
+   tCreateStaticWindow(caption,
+      SS_LEFTNOWORDWRAP or WS_CHILD or WS_VISIBLE,
+      labelX, labelY, labelW, labelH, hwnddlg, HAMLIBID_LABEL_ID);
+   ApplyDialogFont(hwnddlg, HAMLIBID_LABEL_ID);
+   CreateEdit(ES_NUMBER or ES_AUTOHSCROLL, editX, editY, editW, 22,
+      hwnddlg, HAMLIBID_EDIT_ID);
+   ApplyDialogFont(hwnddlg, HAMLIBID_EDIT_ID);
+end;
+
+// Seed + enable state for the HAMLIB ID edit, driven by the radio-type combo:
+// editable config value for HAMLIBANY; greyed informational rig_model for the
+// other HamLib-only rows; greyed blank for native radios.
+procedure UpdateHamLibIDRow(hwnddlg: HWND);
+var
+   model: InterfacedRadioType;
+begin
+   model := ComboSelectedRadioModel(hwnddlg);
+   if model = HAMLIBANY then
+      begin
+      EnableWindowTrue(hwnddlg, HAMLIBID_EDIT_ID);
+      Windows.SetDlgItemInt(hwnddlg, HAMLIBID_EDIT_ID, CATWTR^.HamLibID, False);
+      end
+   else
+      begin
+      EnableWindowFalse(hwnddlg, HAMLIBID_EDIT_ID);
+      if uRadioRegistry.RegisteredHamLibID(model) > 0 then
+         begin
+         Windows.SetDlgItemInt(hwnddlg, HAMLIBID_EDIT_ID,
+            uRadioRegistry.RegisteredHamLibID(model), False);
+         end
+      else
+         begin
+         Windows.SetDlgItemTextA(hwnddlg, HAMLIBID_EDIT_ID, '');
+         end;
+      end;
+end;
+
 procedure DiscoverNetworkRadios(rt: InterfacedRadioType; Found: TStringList);
 var
   list : TList;
@@ -1353,6 +1478,8 @@ begin
         // groupbox down one row, and the credential code measures control 131
         // to place itself.
         AddSerialFormatRow(hwnddlg);
+        // HAMLIB ID row, one pitch below that (anchors on the row above).
+        AddHamLibIDRow(hwnddlg);
 
         // Create NETWORK USERNAME (label 112, edit 132) and NETWORK PASSWORD
         // (label 113, edit 133) dynamically. Positioned below control 131
@@ -1555,6 +1682,7 @@ begin
            begin
            ComboSelectRadioByData(hwnddlg, Ord(CATWTR^.RadioModel));
            end;
+        UpdateHamLibIDRow(hwnddlg);
 
         {keyer port}
         ComboSelectPort(hwnddlg, 123, TempKeyerPortType);
@@ -1778,6 +1906,7 @@ begin
                begin
                EnableWindowTrue(hwnddlg, 1000);
                end;
+            UpdateHamLibIDRow(hwnddlg);
             UpdateNetworkCredentialsVisibility;
             ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port when the radio type changes
           end;
@@ -2039,6 +2168,9 @@ begin
       // SERIAL FORMAT belongs with the port settings, right after the baud.
       MoveKey('RADIO ONE SERIAL FORMAT', 'RADIO ONE BAUD RATE', True);
       MoveKey('RADIO TWO SERIAL FORMAT', 'RADIO TWO BAUD RATE', True);
+      // HAMLIB ID follows the serial format (both are per-radio link settings).
+      MoveKey('RADIO ONE HAMLIB ID', 'RADIO ONE SERIAL FORMAT', True);
+      MoveKey('RADIO TWO HAMLIB ID', 'RADIO TWO SERIAL FORMAT', True);
       // The keyer output port heads its radio's keyer group, mirroring the
       // dialog's CW/PTT section order (output port, keyer RTS, keyer DTR).
       MoveKey('KEYER RADIO ONE OUTPUT PORT', 'RADIO ONE KEYER RTS', False);
@@ -2292,6 +2424,27 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
   logger.Trace('[RestartPollingThread] ID = %s, CMD = %s', [ID, CMD]);
   Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
+
+  // Save the HAMLIB ID edit only when it is the OPERATOR'S value -- i.e. the
+  // selection is HamLib-any.  For every other selection the edit shows a
+  // greyed informational number that must not overwrite the config.
+  if ComboSelectedRadioModel(CATWndHWND) = HAMLIBANY then
+     begin
+     Windows.ZeroMemory(@ID, SizeOf(ID));
+     Windows.ZeroMemory(@CMD, SizeOf(CMD));
+     if CATWTR = @Radio1 then
+        begin
+        ID := 'RADIO ONE HAMLIB ID';
+        end
+     else
+        begin
+        ID := 'RADIO TWO HAMLIB ID';
+        end;
+     CMD := GetDialogItemText(CATWndHWND, HAMLIBID_EDIT_ID);
+     logger.Trace('[RestartPollingThread] ID = %s, CMD = %s', [ID, CMD]);
+     Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
+     CheckCommand(@ID, CMD);
+     end;
   GroupRadioIniKeys;
 
   CATWTR^.CheckAndInitializePorts_ForThisRadio;
