@@ -45,6 +45,7 @@ utils_text,
   MainUnit,
   LogEdit,
   LogCW,
+  uCWKeyerBase,   // KeyerWinKey -- tune is pinned to the WinKeyer (B4)
   LogK1EA,
   CFGCMD,
   LogStuff,
@@ -671,8 +672,12 @@ end;
 
 procedure scWK_SWAPTUNE;
 begin
-  if wkSendTwoBytes($0B, Byte(not wkTune)) = 2 then
-    TF.InvertBoolean(wkTune);
+  // B4: PINNED to the WinKeyer, deliberately NOT ActiveCWKeyer -- tune reaches
+  // the WinKeyer today even when CW-by-CAT is the selected keyer, and only the
+  // WinKeyer declares ckTune.  The body (KEYIMMEDIATE with the inverted tune
+  // state) moved verbatim into TCWKeyerWinKey.ToggleTune; note it is NOT
+  // uWinKey.wkSwapTune, which sends `not wkBUSY` -- a pre-existing divergence.
+  KeyerWinKey.ToggleTune;
 end;
 
 procedure scEXCHANGERADIOS;

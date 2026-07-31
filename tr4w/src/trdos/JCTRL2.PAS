@@ -684,6 +684,12 @@ begin
         if TempInt <> -1 then
         begin
           PaddleSpeed := TempInt;
+          // STAYS a direct CPUKeyer call (not the keyer factory): paddle speed
+          // is a CPU-keyer-only concept.  Routing it through LogCW.SetSpeed
+          // would clobber CodeSpeed/DisplayedCodeSpeed -- the operator's
+          // keyboard-CW speed -- and push the paddle speed at the radio and
+          // WinKeyer.  When paddles join the factory this becomes a
+          // SetPaddleSpeed virtual.
           CPUKeyer.SetSpeed(PaddleSpeed);
           tSetPaddleElementLength;
         end;

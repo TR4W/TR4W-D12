@@ -509,6 +509,7 @@ uses
   uHamScore,        // Issue #783 -- HamScoreResyncFromScratch (Tools menu)
   LogCfg,
   LogCW,
+  uCWKeyerBase,     // ActiveCWKeyer -- autosend routing (B2)
   uCT1BOH,
   CFGCMD,
   CFGDEF,
@@ -854,12 +855,9 @@ begin
   if (ActiveMode = CW) then
     // ny4i Issue 130 and (IsCWByCATActive) then // n4af 4.45.5 proposed to allow
   begin
-    if IsCWByCatActive(ActiveRadioPtr) then // Esc always stops sending
-      ActiveRadioPtr^.StopSendingCW
-    else if ISCWByCATActive(InactiveRadioPtr) then
-    begin
-      InactiveRadioPtr^.StopSendingCW;
-    end;
+    // B5: Esc always stops a radio that is CAT-sending.  The active/inactive
+    // pair that stood here is the CAT adapter's StopSending body, verbatim.
+    KeyerCAT.StopSending;
   end;
 
   // SetOpMode(CQOpMode); // n4af 4.46.12
@@ -4489,36 +4487,12 @@ begin
     begin
       if Key <> StartSendingNowKey then
       begin
-        if IsCWByCATActive then
-        begin // Send the character now - No buffering
-          if true then
-            // (length(CallWindowString) = AutosendCharacterCount) then //n4af 4.46.12
-          begin
-            logger.trace('[CallWindowKeyDownProc] Call RadioObject.SendCW with '
-              + Key);
-            //ActiveRadioPtr.AddTimeToCWByCATTimer(Round(1200 / DisplayedCodeSpeed) * 5); // Give us more time but this does not work yet.
-            ActiveRadioPtr.SendCW(Key); // start sending if = autosend cc
-            ActiveRadioPtr.SendCW(CWByCATBufferTerminator);
-            // ny4i If we are sending (timer is enabled), add this element time to the timer. ny4i. That is a bit scary if it works :)
-
-            // end;
-          end;
-
-        end
-        else if wkActive then
-        begin
-          logger.trace('[CallWindowKeyDownProc] Calling wsSendByte with ' +
-            key);
-          wkSendByte(Ord(UpCase(Key)));
-        end
-        else
-        begin
-
-          //localMsg := Format('After AutoChar - key = %s;', [key]);
-          //AddStringToTelnetConsole(PChar(localMsg),tstAlert);
-
-          CPUKeyer.AddCharacterToCWBuffer(Key); //
-        end;
+        // B2: the three-way keyer branch that stood here (CAT sends the char
+        // plus its terminator, WinKeyer sends UpCase'd, CPU buffers the raw
+        // char) is now the adapters' SendChar bodies, each preserved verbatim
+        // -- including the YCCC oddity that autosend chars go to the CPU keyer
+        // because no YCCC arm ever existed here (quirk Q4).
+        ActiveCWKeyer.SendChar(Key);
       end;
       EditingCallsignSent := False;
     end;
