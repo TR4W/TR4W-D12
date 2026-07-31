@@ -57,7 +57,10 @@ initialization
   RegisterRadio(K2,
      function: TFactoryRadioBase begin Result := TK2Radio.Create end,
      'Elecraft K2', [rlSerial], 0, False,
-     SerialParams(4800, 8, PARITY_NONE, 2)
+     // 1 stop bit: Elecraft serial is 8N1 (NY4I 2026-07-30, corroborated by the
+     // Elecraft docs and HamLib's kenwood/elecraft backends).  The old 2 came
+     // from the legacy blanket "everything non-CI-V gets 2 stop bits" rule.
+     SerialParams(4800, 8, PARITY_NONE, 1)
      );
 
 end.

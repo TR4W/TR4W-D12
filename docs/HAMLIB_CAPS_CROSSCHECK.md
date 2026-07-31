@@ -259,9 +259,7 @@ reference) are the ones most worth a bench/manual check.
 
 | TR4W radio | TR4W default | disagreement(s) | HamLib citation |
 |---|---|---|---|
-| K3 (Elecraft K3) | 38400,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/k3.c:196 (RIG_MODEL_K3) |
-| K4 (Elecraft K4) | 38400,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/k3.c:519 (RIG_MODEL_K4) |
-| KX3 (Elecraft KX3) | 38400,8,NONE,2 stop | stop bits 2 vs hamlib 1 | rigs/kenwood/k3.c:692 (RIG_MODEL_KX3) |
+| K2 (Elecraft K2) | 4800,8,NONE,1 stop | stop bits 1 vs hamlib 2 | rigs/kenwood/k2.c:118 (RIG_MODEL_K2) |
 | IC707 (Icom IC-707) | 1200,8,NONE,1 stop | stop bits 1 vs hamlib 2 | rigs/icom/ic707.c:57 (RIG_MODEL_IC707) |
 | IC728 (Icom IC-728) | 1200,8,NONE,1 stop | stop bits 1 vs hamlib 2 | rigs/icom/ic728.c:57 (RIG_MODEL_IC728) |
 | IC729 (Icom IC-729) | 1200,8,NONE,1 stop | stop bits 1 vs hamlib 2 | rigs/icom/ic728.c:176 (RIG_MODEL_IC729) |

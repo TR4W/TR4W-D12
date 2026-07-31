@@ -75,6 +75,10 @@ begin
          begin
          Continue;   // asserted separately, with its manual as the reason
          end;
+      if (m = K2) or (m = K3) or (m = KX3) or (m = K4) then
+         begin
+         Continue;   // asserted separately -- Elecraft is 8N1
+         end;
       sp := uRadioRegistry.SerialParamsFor(m);
       if LegacyWantsOneStopBit(m) then
          begin
@@ -105,6 +109,15 @@ begin
                'Ten-Tec Model 563 manual 5.2: NO parity, 8 data bits and 1 stop bit');
    CheckFalse(LegacyWantsOneStopBit(OMNI6),
               'the legacy rule really does NOT cover OMNI6 -- that is the point of this test');
+
+   // Same shape of knowing divergence, second instance: Elecraft serial is 8N1
+   // (NY4I 2026-07-30; Elecraft docs; HamLib elecraft backends).  The legacy 2
+   // came from the blanket "everything non-CI-V gets 2 stop bits" rule.
+   BeginTest('Elecraft K2/K3/KX3/K4 declare 1 stop bit, diverging from the legacy 2');
+   CheckEquals(1, uRadioRegistry.SerialParamsFor(K2).stopBits, 'K2 is 8N1');
+   CheckEquals(1, uRadioRegistry.SerialParamsFor(K3).stopBits, 'K3 is 8N1');
+   CheckEquals(1, uRadioRegistry.SerialParamsFor(KX3).stopBits, 'KX3 is 8N1');
+   CheckEquals(1, uRadioRegistry.SerialParamsFor(K4).stopBits, 'K4 is 8N1');
 end;
 
 procedure TSerialParamsTests.Test_EveryRadioStatesEightDataBitsAndNoParity;
