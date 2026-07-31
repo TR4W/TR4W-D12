@@ -647,8 +647,19 @@ begin
         for c := 1 to 4 do tCB_ADDSTRING(hwnddlg, MODE_CB, WK2KeyerModesArray[c]);
         tCB_SETCURSEL(hwnddlg, MODE_CB, Cardinal(WinKeySettings.wksKeyerMode));
 
+        // SERIAL 1..MAX_SERIAL_PORT.  This list was hard-coded to 20 -- the OLD
+        // serial ceiling -- and was missed when the ceiling rose to COM64
+        // (171bc72), so a WinKeyer on COM21 or above simply could not be
+        // selected here (NY4I bench, 2026-07-31).
+        //
+        // The list stays UNFILTERED and contiguous from 1 on purpose: this combo
+        // is read back by INDEX (PortType(tCB_GETCURSEL) below), so index must
+        // equal Ord(PortType).  The radio dialog's filtered/friendly-name port
+        // list carries each row's PortType in item data instead; doing the same
+        // here belongs with the planned FMX rewrite of this dialog, not with a
+        // ceiling fix.
         tCB_ADDSTRING(hwnddlg, PORT_CB, 'NONE');
-        for c := 1 to 20 do
+        for c := 1 to MAX_SERIAL_PORT do
         begin
           // Issue #997: asm wsprintf-push -> TF.Format (c is the integer loop var).
           Format(@wkREADBuffer, 'SERIAL %u', c);
