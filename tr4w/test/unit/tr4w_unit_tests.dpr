@@ -113,6 +113,15 @@ uses
    uRadioIcomReadLimited in '..\..\src\radioFactory\uRadioIcomReadLimited.pas',
    uRadioIcomModern in '..\..\src\radioFactory\uRadioIcomModern.pas',
    uRadioHamLibOnly in '..\..\src\radioFactory\uRadioHamLibOnly.pas',
+   // CW keyer factory -- listed EXPLICITLY (same rule as the radio units:
+   // adapters self-install from initialization; a transitive-only link path
+   // would silently drop them from this EXE).
+   uCWKeyerBase in '..\..\src\uCWKeyerBase.pas',
+   uCWKeyerCAT in '..\..\src\uCWKeyerCAT.pas',
+   uCWKeyerWinKey in '..\..\src\uCWKeyerWinKey.pas',
+   uCWKeyerYCCC in '..\..\src\uCWKeyerYCCC.pas',
+   uCWKeyerCPU in '..\..\src\uCWKeyerCPU.pas',
+   uTestCWKeyer in 'uTestCWKeyer.pas',
    uRadioIcom78 in '..\..\src\radioFactory\uRadioIcom78.pas',
    uRadioIcom707 in '..\..\src\radioFactory\uRadioIcom707.pas',
    uRadioIcom725 in '..\..\src\radioFactory\uRadioIcom725.pas',
@@ -228,6 +237,7 @@ begin
    RegisterSuite(TKenwoodSerialTests.Create('KenwoodSerial'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
+   RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
 
    if RunAllSuites then
       begin
