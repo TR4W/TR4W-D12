@@ -225,8 +225,17 @@ begin
         if HiWord(wParam) = BN_CLICKED then
           if LoWord(wParam) in [112..123] then
           begin
+            // FIRST instruction after Windows tells us the button was clicked.
+            // Timestamp this against the '[ <radio> TX]' / '[wkSendByte]' trace
+            // to measure the click -> CW latency NY4I reported (2026-07-31);
+            // FrmSetFocus and ProcessFuntionKeys both run after this point, so
+            // anything between the two timestamps is ours, not Windows'.
+            logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d received',
+                         [LoWord(wParam) - 111]);
             FrmSetFocus;
             ProcessFuntionKeys(LoWord(wParam));
+            logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d dispatched',
+                         [LoWord(wParam) - 111]);
           end;
       end;
   end;
