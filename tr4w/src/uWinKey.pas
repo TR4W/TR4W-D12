@@ -44,6 +44,8 @@ procedure wkSetSpeed(Speed: integer);
 function wkRead(nNumberOfBytesToRead: DWORD): boolean;
 procedure wkClose;
 procedure wkClearBuffer;
+function wkHasPendingOutput: boolean;
+procedure wkSendCWChar(c: AnsiChar);
 procedure wkSetupSpeedPot;
 function WinKeyer2SettingsDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 //procedure wkSaveSettings;
@@ -51,6 +53,13 @@ function WinKeyer2SettingsDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lPar
 function wkTurnPTT(Turn: boolean): boolean;
 procedure wkDispayState;
 procedure wkReadThreadProc;
+// DEAD CODE.  Nothing starts this thread -- wkInit creates wkReadThreadProc
+// (tCreateThread(@wkReadThreadProc, ...)) and wkReadThreadProc1 is referenced
+// nowhere else.  Kept only as the older parsing variant.  Beware: its status
+// handling DIFFERS from the live one -- it sets wkBUSY True for ANY byte below
+// $C0 and detects end-of-buffer with byte = 192, where the live parser uses the
+// status byte's busy BIT.  Editing this procedure has no effect at run time; it
+// cost a bench cycle on 2026-07-31.
 procedure wkReadThreadProc1;
 procedure wkAddCWMessageToInternalBuffer(Msg: Str160);
 procedure wkAddCharToHostBuffer(c: AnsiChar);
@@ -386,11 +395,60 @@ begin
   sWriteFile(WinKeyHandle, Buffer, 2);
 end;
 
+var
+   // Summed WriteFile time (ms) since the last bracket reset.  Added to by
+   // wkSendByte / wkSendTwoBytes; reset and read by the bracketed callers.
+   wkWriteMsAccum: Double = 0;
+
+   // Last pin configuration actually written to the device; -1 = unknown, which
+   // forces the next write.  Invalidated on port open and close.
+   wkLastPinConfig: integer = -1;
+
+   // True from the moment TR4W hands the WinKeyer a CW character until the
+   // device reports end-of-buffer ($C0).  This is the ONLY trustworthy "we have
+   // CW outstanding" signal -- see wkHasPendingOutput for why wkBUSY and the
+   // byte counters each fail on their own.
+   wkCWOutstanding: boolean = False;
+
+// ---- Diagnostic timing (task #22) -------------------------------------------
+// The function-key -> CW latency trace (2026-07-31) showed ~370 ms elapsing
+// inside the WinKeyer calls below while CW was going by CAT.  The gaps between
+// successive bytes were 15/46/122 ms, which does NOT match 1200-baud serial
+// time (~9 ms a byte), so the cost is NOT yet explained.  These brackets report
+// the true wall time of each device call and how much of it is inside
+// WriteFile, so the next change optimises a measured thing rather than a guess.
+// Note the existing logger.Trace in wkSendByte is OUTSIDE the measured region:
+// if total >> WriteFile, the logging itself is a prime suspect.
+function wkPerfNow: Int64;
+begin
+   QueryPerformanceCounter(Result);
+end;
+
+function wkPerfMs(const StartTick: Int64): Double;
+var
+   nowTick, freq: Int64;
+begin
+   QueryPerformanceCounter(nowTick);
+   QueryPerformanceFrequency(freq);
+   if freq = 0 then
+      begin
+      Result := 0;
+      end
+   else
+      begin
+      Result := ((nowTick - StartTick) * 1000.0) / freq;
+      end;
+end;
+
 function wkSendByte(b: Byte): Cardinal;
+var
+  t0: Int64;
 begin
   logger.Trace('[wkSendByte] b=%s ($%s)', [string(Char(b)), IntToHex(b, 2)]);
   if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  t0 := wkPerfNow;
   sWriteFile(WinKeyHandle, b, 1);
+  wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
 {$IF K6VVA_WK_DEBUG}
   wkWriteToDebugFile(Char(b), True);
 {$IFEND}
@@ -403,13 +461,16 @@ end;
 function wkSendTwoBytes(B1, B2: Byte): Cardinal;
 var
   TwoBytesBuffer                        : array[0..1] of Byte;
+  t0                                    : Int64;
 begin
   logger.Trace('[wkSendTwoBytes] B1=%s ($%s) B2=%s ($%s)',
                [string(Char(B1)), IntToHex(B1, 2), string(Char(B2)), IntToHex(B2, 2)]);
   if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
   TwoBytesBuffer[0] := B1;
   TwoBytesBuffer[1] := B2;
+  t0 := wkPerfNow;
   tWriteFile(WinKeyHandle, TwoBytesBuffer, 2, Result);
+  wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
 {$IF K6VVA_WK_DEBUG}
   wkWriteToDebugFile(Char(B1), True);
   wkWriteToDebugFile(Char(B2), True);
@@ -456,6 +517,7 @@ end;
 procedure wkClose;
 begin
   wkActive := False;
+  wkLastPinConfig := -1;   // device state is no longer ours to assume
   wkDispayState;
   if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
   wkClearBuffer;
@@ -464,14 +526,48 @@ begin
   WinKeyHandle := INVALID_HANDLE_VALUE;
 end;
 
+function wkHasPendingOutput: boolean;
+begin
+   // True when the device can actually be holding CW worth clearing.
+   //
+   // NOT wkBUSY: that flag is set by ANY byte below $C0 arriving from the
+   // device (see the read thread), which includes character echoes and speed-pot
+   // reports, and it is only cleared by a $C0 end-of-buffer.  Routine chatter
+   // therefore latches it True -- measured on the bench 2026-07-31, where it
+   // made this guard fire with the WinKeyer sending nothing.
+   //
+   // NOT the byte counters alone: they only count what goes through the host
+   // buffer, and TCWKeyerWinKey.SendChar (autosend) writes a character straight
+   // out with wkSendByte, which touches neither counter.
+   //
+   // wkCWOutstanding covers both paths and is cleared by the device's own
+   // end-of-buffer report.  Deliberately inclusive: any doubt reports True and
+   // the caller still clears.
+   Result := wkCWOutstanding or (wkWaitingBytesInWK > 0) or (wkWaitingBytesInHost > 0);
+end;
+
+procedure wkSendCWChar(c: AnsiChar);
+begin
+   // The direct (autosend) CW path.  Goes out immediately rather than through
+   // the host buffer, so it must flag the outstanding CW itself -- otherwise a
+   // flush would decline to clear a device that is actively keying.
+   wkCWOutstanding := True;
+   wkSendByte(Ord(c));
+end;
+
 procedure wkClearBuffer;            // 4.36.13 GM0GAV
+var
+  t0: Int64;
 begin
   if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
+  wkWriteMsAccum := 0;
+  t0 := wkPerfNow;
   wkSendByte(wkCMD_CLEARBUFFER);
 //  wkHostBufferIndex := 0;
 
   wkWaitingBytesInHost := 0;
   wkWaitingBytesInWK := 0;
+  wkCWOutstanding := False;   // whatever was queued is being discarded
 
   wkHostBufferIndex := 0; //
   wkHostBufferSendIndex := 0; //
@@ -481,6 +577,8 @@ begin
   wkSendByte(wkCMD_NULLIMM);                                //Gav    4.36.13
  wkSendByte(wkCMD_CLEARBUFFER);                           //Gav     4.36.13
 
+  logger.Debug('[wkClearBuffer] 5 bytes: total %.1f ms, of which WriteFile %.1f ms',
+               [wkPerfMs(t0), wkWriteMsAccum]);
 
 {$IF WINKEYDEBUG}
 //  AddStringToTelnetConsole('CLEAR');
@@ -802,6 +900,11 @@ begin
             begin
               logger.debug('PTTStatus=WK-NOT-BUSY');
               wkWaitingBytesInWK := 0;
+              // The device has stopped keying, so nothing of ours is
+              // outstanding.  This is the LIVE end-of-send edge: only
+              // wkReadThreadProc is ever started (see wkInit), so the
+              // byte = 192 branch in wkReadThreadProc1 never executes.
+              wkCWOutstanding := False;
 //              wkHostBufferIndex := 0;
 //              wkHostBufferSendIndex := 0;
 //              wkWaitingBytesInHost := 0;
@@ -892,6 +995,8 @@ begin
         wkWaitingBytesInWK := 0;
 //        wkHostBufferIndex := 0;
         wkWaitingBytesInHost := 0;
+        wkCWOutstanding := False;   // device says the buffer drained
+
         if tr4w_PTTStartTime <> 0 then tRestartInfo.riPTTOnTotalTime := tRestartInfo.riPTTOnTotalTime + GetTickCount - tr4w_PTTStartTime;
         tDispalyOnAirTime;
         wkPTTOn := False;
@@ -952,6 +1057,7 @@ begin
   inc(wkHostBufferIndex);
   if wkHostBufferIndex = SizeOfHostBuffer then wkHostBufferIndex := 0;
   inc(wkWaitingBytesInHost);
+  wkCWOutstanding := True;
  
 end;
 
@@ -1003,6 +1109,7 @@ end;
 procedure wkSetKeyerOutput(r: RadioPtr);
 var
   TempByte                              : Byte;
+  t0                                    : Int64;
 const
   WK_RADIO_ONE                          = 4;
   WK_RADIO_TWO                          = 8;
@@ -1014,7 +1121,24 @@ begin
 
  // if r = RadioOne then TempByte := 4 {+ 1} else TempByte := 8 {+ 1};
   TempByte := TempByte + Byte(WinKeySettings.wksSideTEnable) * 2;
+
+  // The device already holds this pin configuration, so re-sending it buys
+  // nothing.  There are three call sites (LogCW.SetUpToSendOnActiveRadio,
+  // LOGSUBS1, LOGWIND), so it fires on routine band/mode/radio updates as well
+  // as on every function key -- and the write is not free (task #22).  The
+  // cache is invalidated on port open and close, so a device that was reset
+  // behind our back is always reconfigured.
+  if TempByte = wkLastPinConfig then
+     begin
+     Exit;
+     end;
+
+  wkWriteMsAccum := 0;
+  t0 := wkPerfNow;
   wkSendTwoBytes(wkCMD_SETPINCONFIG, TempByte);
+  wkLastPinConfig := TempByte;
+  logger.Debug('[wkSetKeyerOutput] pin config $%s: total %.1f ms, of which WriteFile %.1f ms',
+               [IntToHex(TempByte, 2), wkPerfMs(t0), wkWriteMsAccum]);
 end;
 
 function wkOpenPort: boolean;
@@ -1053,6 +1177,7 @@ begin
   SetCommTimeouts(WinKeyHandle, wklpCommTimeouts);
   Sleep(200);
   PurgeComm(WinKeyHandle, PURGE_RXCLEAR);
+  wkLastPinConfig := -1;   // freshly opened device: nothing configured yet
   Result := True;
 end;
 
