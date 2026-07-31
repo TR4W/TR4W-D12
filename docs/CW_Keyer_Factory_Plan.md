@@ -11,6 +11,39 @@ Repo: `c:\tr4w-d12`, branch `delphi12`, Delphi 12, raw Win32 (no VCL). Build: `c
 > unit suite (now 1335), and the golden corpus at 22/0/4.
 > **No consumer outside the factory branches on keyer type any more.**
 >
+> **CAT REPOINT — step 1 done (`898c53d`), the rest is bench-gated.**
+> The per-model length/padding rules are extracted into `uCWFraming`
+> (`CWFrameRuleFor` + pure chunking helpers) and unit-tested offline —
+> `uTestCWFraming`, 29 checks pinning the Kenwood 24/pad split and the TS-890
+> exception, the Elecraft 22 with K2-no-pad vs K3/KX3/K4-pad, Flex differing by
+> transport, chunk boundaries, and the Issue 153 unpadded-element-count rule.
+> LOGRADIO now *calls* that unit instead of carrying its own copy, so the legacy
+> path and the factory drivers cannot drift while the migration is half-done.
+> **What remains for the repoint:** move the chunking LOOP and the send itself
+> (busy timer, active/inactive interlock, inline `ControlF`/`ControlS` speed
+> handling) into the factory drivers, then point `TCWKeyerCAT` at
+> `tFactoryObject`. That is live CW timing code — bench with a K3/K4.
+>
+> **NOT in scope, decided 2026-07-31:** implementing Yaesu CW-by-CAT. Yaesu's
+> `KY <n>;` plays a *preset memory slot*, not free text, so HamLib's
+> `newcat_send_morse` has to program a memory before each send — impractical
+> when the text changes every call. TR4W correctly reports no CW-by-CAT for
+> Yaesu; see Section A2 of `docs/HAMLIB_CAPS_CROSSCHECK.md`.
+>
+> **OPEN DESIGN QUESTION (NY4I, 2026-07-31): explicit CW-interface selection.**
+> `ActiveCWKeyer`'s precedence chain (CAT → WinKeyer → YCCC → CPU) is an
+> ARTIFACT — it reproduces the order the original `if/else` arms happened to be
+> written in, not a decision anyone made. An explicit "CW INTERFACE" setting
+> would make `ActiveCWKeyer` a lookup, delete `WarnIfKeyerConfigsConflict`
+> outright (no conflict is possible when you pick one), and deliberately end
+> the one real fallback in today's behaviour — test T2's case, where an enabled
+> WinKeyer that fails to open silently drops to keying DTR/RTS. That silent
+> downgrade becomes a reported error instead. The per-keyer capability set
+> (`ckTune`, `ckDeleteLastChar`, `ckMessageChaining`) already supports greying
+> what the chosen interface cannot do, exactly as the radio dialog does.
+> TR4QT's keyer design is the likely reference. Note this is a config-surface
+> change (new command + dialog), so it is a designed change, not a refactor.
+>
 > **STILL OPEN — the CAT repoint, and it is a PROJECT, not a one-liner.**
 > This plan assumed `TCWKeyerCAT` could later be repointed from
 > `RadioObject.SendCW` to the factory radio object. Inspection on 2026-07-31
