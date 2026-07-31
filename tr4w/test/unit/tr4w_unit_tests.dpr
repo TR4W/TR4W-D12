@@ -112,6 +112,7 @@ uses
    uRadioIcomLegacy in '..\..\src\radioFactory\uRadioIcomLegacy.pas',
    uRadioIcomReadLimited in '..\..\src\radioFactory\uRadioIcomReadLimited.pas',
    uRadioIcomModern in '..\..\src\radioFactory\uRadioIcomModern.pas',
+   uRadioHamLibOnly in '..\..\src\radioFactory\uRadioHamLibOnly.pas',
    uRadioIcom78 in '..\..\src\radioFactory\uRadioIcom78.pas',
    uRadioIcom707 in '..\..\src\radioFactory\uRadioIcom707.pas',
    uRadioIcom725 in '..\..\src\radioFactory\uRadioIcom725.pas',
