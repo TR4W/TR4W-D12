@@ -361,10 +361,17 @@ begin
   // BROADCAST, not routed -- every backend is flushed, in the historical order
   // (CAT first, then the CPU keyer, the WinKeyer busy latch, and the YCCC box).
   // Each arm's body, and its guards, moved verbatim into that keyer's Flush.
+  // Still a broadcast, but each arm now guards its OWN device: the CAT arm was
+  // already gated per radio on IsCWByCATActive, and the WinKeyer arm is gated on
+  // wkHasPendingOutput.  A keyer that is not sending therefore costs no device
+  // I/O.  It stays a broadcast on purpose -- selection is per-message and
+  // per-radio (uCWKeyerBase.ActiveCWKeyer), so routing to the active keyer alone
+  // would strand buffered state on whichever keyer sent the PREVIOUS message,
+  // and would miss the CAT arm's inactive-radio case entirely.
   KeyerCAT.Flush;
   tAutoSendMode                                             := False;
   KeyerCPU.Flush;
-  KeyerWinKey.Flush;   // resets the busy latch only -- wkClearBuffer still NOT called (Q1)
+  KeyerWinKey.Flush;   // Q1 resolved: this arm now owns the wkClearBuffer (task #22)
   KeyerYCCC.Flush;
 end;
 

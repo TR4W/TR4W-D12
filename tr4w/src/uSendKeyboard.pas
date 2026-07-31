@@ -188,9 +188,14 @@ begin
   begin
     // B3: KeyerCPU.Flush is CPUKeyer.FlushCWBuffer, unchanged.  Deliberately
     // NOT "upgraded" to the LogCW.FlushCWBuffer facade -- that would ALSO stop
-    // CAT sending, reset the WinKeyer busy latch and flush the YCCC box, which
-    // this site never did.
+    // CAT sending and flush the YCCC box, which this site never did.
     KeyerCPU.Flush;
+    // The WinKeyer clear used to reach this site THROUGH the CPU keyer's flush;
+    // it now lives in the WinKeyer's own adapter (task #22), so it has to be
+    // asked for explicitly or closing this dialog would stop keying the CPU
+    // port while leaving a sending WinKeyer running.  Self-guarded: a WinKeyer
+    // with nothing outstanding does no I/O.
+    KeyerWinKey.Flush;
   end;
 {$IF MMTTYMODE}
   PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);

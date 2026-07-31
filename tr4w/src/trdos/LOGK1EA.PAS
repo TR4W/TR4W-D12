@@ -1949,7 +1949,12 @@ begin
 
   TurnOffActivePort;
   PortBeingUsed := NoPort;
-  wkClearBuffer;
+  // The WinKeyer buffer is deliberately NOT cleared from here.  This is the CPU
+  // (port) keyer, and commanding another keyer's hardware meant that
+  // LogCW.FlushCWBuffer -- which broadcasts to EVERY keyer -- issued five
+  // blocking WinKeyer writes on every function key even when CW was going by
+  // CAT and the WinKeyer was sending nothing (task #22).  The clear now lives
+  // with the device, in TCWKeyerWinKey.Flush, guarded by wkHasPendingOutput.
 end;
 
 procedure K1EAKeyer.SetSpeed(Speed: integer {byte});

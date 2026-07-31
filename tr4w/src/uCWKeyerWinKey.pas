@@ -65,7 +65,9 @@ end;
 procedure TCWKeyerWinKey.SendChar(ch: Char);
 begin
    // Verbatim from MainUnit's autosend WinKeyer arm -- UpCase preserved.
-   wkSendByte(Ord(UpCase(ch)));
+   // wkSendCWChar, not wkSendByte: this is CW going out, so it must register as
+   // outstanding or a later flush would decline to clear a keying device.
+   wkSendCWChar(AnsiChar(UpCase(ch)));
 end;
 
 function TCWKeyerWinKey.StillBeingSent: boolean;
@@ -83,8 +85,18 @@ end;
 
 procedure TCWKeyerWinKey.Flush;
 begin
-   // Q1 preserved: reset the busy latch only; the device buffer is NOT cleared
-   // (wkClearBuffer deliberately not called -- matches shipping behavior).
+   // Q1 RESOLVED (task #22).  The device clear was never actually missing -- it
+   // was being issued by the CPU keyer's flush (LOGK1EA.K1EAKeyer.FlushCWBuffer)
+   // on behalf of a device it does not own.  Because LogCW.FlushCWBuffer
+   // broadcasts to every keyer, that put five blocking WinKeyer writes in the
+   // path of every function key even when CW was going by CAT.  The clear now
+   // lives here, with the device, and is issued only when the WinKeyer can
+   // actually be holding something -- so a keyer that is not sending costs
+   // nothing.  Order matters: test BEFORE dropping the busy latch.
+   if wkHasPendingOutput then
+      begin
+      wkClearBuffer;
+      end;
    wkBUSY := False;
 end;
 
