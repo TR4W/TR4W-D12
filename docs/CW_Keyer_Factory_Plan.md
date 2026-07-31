@@ -2,7 +2,37 @@
 
 Repo: `c:\tr4w-d12`, branch `delphi12`, Delphi 12, raw Win32 (no VCL). Build: `call rsvars.bat` (Studio 23.0) → `msbuild tr4w.dproj /t:Build /p:Config=Debug /p:Platform=Win32`. Follow the user's Pascal style: 3-space indent, `begin` on its own line indented from the control statement, code at the same level as `begin`/`end`, no single-line ifs. Pascal identifiers are case-insensitive — every verification grep must use `-i`.
 
-> **Status (2026-07-30): NOT STARTED.** Plan reviewed and still current, with two
+> **Status (2026-07-31): PHASES A AND B ARE COMPLETE.**
+> A1 `7ceb884` (base + four adapters + T1-T3,T8) · A2 `b939c7f` (LogCW facade
+> rewire + conflict warning + T4-T7) · B1 `aad5265` (six busy predicates) ·
+> B2-B5 `a540e61` (autosend, direct CPUKeyer calls, tune, Escape CAT stop) ·
+> Q9 `369630a` (CW-by-CAT eligibility asks the registry everywhere).
+> Every commit gated on a full `/t:Build` of both projects with no W1020, the
+> unit suite (now 1335), and the golden corpus at 22/0/4.
+> **No consumer outside the factory branches on keyer type any more.**
+>
+> **STILL OPEN — the CAT repoint, and it is a PROJECT, not a one-liner.**
+> This plan assumed `TCWKeyerCAT` could later be repointed from
+> `RadioObject.SendCW` to the factory radio object. Inspection on 2026-07-31
+> shows the two are NOT equivalent: `RadioObject.SendCW` carries per-model
+> length limits and padding (24 bytes Kenwood/TS-890/Flex-serial, 22 for
+> K3/KX3/K4), CHUNKING of the message into those sizes, the bench-derived
+> K3/K4 padding quirk (a short `KY` goes silent when it follows the
+> keyer-abort — NY4I 2026-06-18), inline `ControlF`/`ControlS` speed changes,
+> and the `tmrCWByCAT` busy timer that `CWByCAT_Sending` depends on. The
+> factory drivers' `BufferCW`/`SendCW` implement none of it — the K4 driver is
+> `SendToRadio('KY ' + buffer + ';')`. Repointing today would regress CW-by-CAT
+> on exactly the radios in use, intermittently, in a way that looks like a
+> radio fault. **That framing is radio-protocol knowledge and belongs in the
+> drivers: move it there first (naturally part of the legacy radio removal),
+> then repoint.**
+>
+> **BENCH STILL OWED** for what is committed — plan items 1-5: CPU keyer,
+> WinKeyer (including the enabled-but-unplugged fallback), CW-by-CAT (chaining,
+> Escape in both swap states), YCCC, and the B1 SO2R paths (SwitchNext CQ
+> advance, CheckInactiveRigCallingCQ, bandmap same-band spot tune).
+>
+> Plan reviewed and still current, with two
 > post-plan updates from the 2026-07-30 session:
 > 1. **Line-number drift:** `LOGRADIO.PAS`, `LOGSUBS1/2.PAS`, and `uCAT.pas` were
 >    edited after this plan's references were taken (taxonomy-set retirement,
