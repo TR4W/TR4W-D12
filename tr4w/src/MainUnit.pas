@@ -832,10 +832,9 @@ begin
   InActiveRadioPtr.CheckAndInitializePorts_ForThisRadio;
 end;
 
+// (The local pRadio was removed with B1 -- its only live use was the CW busy
+//  predicate, which is now LogCW.CWStillBeingSent.)
 procedure Escape_proc;
-var
-  pRadio: RadioPtr;
-  // ny4i used to make code cleaner Issue 94. Moved here with Issue #111
 begin
 
   if CallWindowString <> '' then
@@ -884,27 +883,16 @@ begin
     end;
 {$IFEND}
 
-  pRadio := ActiveRadioPtr;
-  if (ActiveMode = CW) then
-  begin
-    if KeyersSwapped then // ny4i Issue 94
-    begin
-      pRadio := InactiveRadioPtr;
-    end
-    else
-    begin
-      pRadio := ActiveRadioPtr;
-    end;
-    {if IsCWByCATActive(pRadio) then
-    begin
-    pRadio^.StopSendingCW;
-    PTTOff;
-    // Exit;
-    end;}
-  end;
-
-  if ((ActiveMode = CW) and
-    ((CWThreadID <> 0) or wkBUSY or pRadio.CWByCAT_Sending)) or
+  // B1: the busy test is now the facade's -- CWStillBeingSent asks exactly the
+  // ACTIVE keyer, instead of OR-ing three backends' latches together.  The
+  // pRadio swap-resolution block that stood here existed only to feed
+  // `pRadio.CWByCAT_Sending` into that OR (its other use was already commented
+  // out), so it goes with it.  Behaviour deltas, deliberate: the CAT arm now
+  // follows ActiveRadioPtr rather than the swap-resolved radio (matching every
+  // other CAT busy test -- plan quirk Q6), the YCCC box is now included, and a
+  // stale latch on an UNSELECTED backend can no longer make Escape think CW is
+  // still going out.
+  if ((ActiveMode = CW) and CWStillBeingSent) or
     ((ActiveMode in [Phone, FM]) and (DVPOn = True)) then
   begin
     if tAutoSendMode then
@@ -4360,7 +4348,10 @@ begin
       begin
         SwitchNext := False; // 4.92.2
         Switch := False;
-        if ((WKBusy) or (CWThreadID <> 0)) then // 4.52.4 issue 192
+        // B1: ask the ACTIVE keyer (was WKBusy or CWThreadID -- CAT and YCCC
+        // were simply missing here, so a CQ advance could interrupt CW they
+        // were still sending).  4.52.4 issue 192
+        if CWStillBeingSent then
         begin
           FlushCWBuffer;
           ReturnInCQOpMode;
@@ -4532,9 +4523,10 @@ begin
       EditingCallsignSent := False;
     end;
   end;
-  if (SwitchNext {and (CallWindowString<>'')} and
-    ((CWThreadID <> 0) or wkBUSY or ActiveRadioPtr.CWByCAT_Sending)) then
-    // 4.52.10
+  if (SwitchNext {and (CallWindowString<>'')} and CWStillBeingSent) then
+    // B1: was (CWThreadID <> 0) or wkBUSY or ActiveRadioPtr.CWByCAT_Sending;
+    // now the active keyer only -- adds YCCC, and a stale latch on an
+    // unselected backend no longer blocks the swap.  4.52.10
   begin
     FlushCWBuffer;
     SwapRadios;
@@ -4546,8 +4538,8 @@ begin
   c := wh[mweCall];
   if not InsertMode then
     EditSetSelLength(c, 1);
-  if ((CWThreadID <> 0) or wkBUSY or ActiveRadioPtr.CWByCAT_Sending) then
-    //4.52.10
+  if CWStillBeingSent then
+    // B1: same substitution as above.  4.52.10
   begin
     Switch := False;
     SwitchNext := False;
@@ -7687,8 +7679,11 @@ procedure CheckInactiveRigCallingCQ;
 
 begin
   if SwitchNext then //n4af 4.30.1
-    if ((length(CallWindowString) > 0) {or (InactiveSwapRadio)}) and ((not
-      WKBusy) and (not (CWThreadID <> 0))) then // n4af 4.52.6
+    // B1: was (not WKBusy) and (not (CWThreadID <> 0)) -- CAT and YCCC were
+    // missing, so the inactive rig could be swapped to while they were still
+    // keying.  n4af 4.52.6
+    if ((length(CallWindowString) > 0) {or (InactiveSwapRadio)}) and
+       (not CWStillBeingSent) then
     begin
       InactiveRigCallingCQ := False;
       scWk_Reset;

@@ -547,7 +547,10 @@ begin
     InBandLock := False;
   end;
   if BandMapSO2RDisplay then
-    if (ActiveBand = Spot.FBand) and (not WKBusy) then // 4.105.15
+    // B1: was (not WKBusy).  This is the WIDEST of the B1 substitutions -- CPU,
+    // CAT and YCCC keying now also block a same-band SO2R spot tune, where
+    // before only the WinKeyer did.  4.105.15
+    if (ActiveBand = Spot.FBand) and (not CWStillBeingSent) then
     begin
       Radio := ActiveRadio;
       QSYInactiveRadio := False;
