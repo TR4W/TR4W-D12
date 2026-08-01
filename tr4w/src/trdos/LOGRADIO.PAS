@@ -2248,6 +2248,7 @@ var
    elements: integer;
    frameRule: uCWFraming.TCWFrameRule;
    prosign: uCWFraming.TCWProsign;
+   chunkIx: integer;
 begin
    // Q9 (CW keyer factory plan): this guard used the LEGACY
    // `RadioModel in RadioSupportsCWByCAT` typeset while the keyer factory
@@ -2427,10 +2428,15 @@ begin
             if Msg[1] = CWByCATBufferTerminator then // Flush if Msg = CWByCATBufferTerminator
                begin
                Msg := CWByCATBuffer;               // ny4i 4.44.5
-               msgLen := length(CWByCATBuffer);    //length(Msg);
-               len := Min(msgLen, 28);
-               // Max for Icom radio. TODO Optimally, this should be sent in multiple batches
-               localMsg := Format('%s', [Msg]);
+               // The 28-character limit is now a FRAME RULE, shared with the
+               // factory drivers and unit-tested (uCWFraming).  This used to be
+               //     len := Min(msgLen, 28);
+               // which sent the first 28 characters and DISCARDED THE REST --
+               // silently, with a TODO admitting it ("Optimally, this should be
+               // sent in multiple batches").  A CQ longer than 28 characters
+               // lost its tail with nothing in the log.  It now loops.
+               frameRule := uCWFraming.CWFrameRuleFor(RadioModel,
+                                                      Self.tCATPortType = Network);
 
                // SO2R: stop the other radio's CW if it is sending
                if Self.active then
@@ -2450,36 +2456,53 @@ begin
                      end;
                   end;
 
-               elements := CalculateElements(Msg);  // ny4i Issue 153
-               DebugMsg('Total CW Elements for ' + Msg + ' = ' + IntToStr(elements));
-               Self.EnableCWBYCATTimer(Round(( (1200 / DisplayedCodeSpeed) * elements) * 1.25)); //ny4i Issue153 When timer fires, reset CWBYCAT_Sending
+               for chunkIx := 1 to uCWFraming.CWChunkCount(Msg, frameRule) do
+                  begin
+                  sMsg := uCWFraming.CWChunk(Msg, frameRule, chunkIx);
+                  len := length(sMsg);
+                  // Count on the UNPADDED text: pad spaces are trimmed by the
+                  // radio and never keyed, so counting them inflates the busy
+                  // window (Issue 153).  The Icom rule does not pad today, but
+                  // asking for the unpadded form keeps this correct if it ever
+                  // does -- and matches the Elecraft/Kenwood loop above.
+                  elements := CalculateElements(
+                                 uCWFraming.CWChunkUnpadded(Msg, frameRule, chunkIx));
+                  DebugMsg('Total CW Elements for ' + sMsg + ' = ' + IntToStr(elements));
+                  // EnableCWBYCATTimer ADDS to a running interval, so a message
+                  // split across chunks accumulates one busy window covering all
+                  // of them rather than resetting per chunk.
+                  Self.EnableCWBYCATTimer(Round(( (1200 / DisplayedCodeSpeed) * elements) * 1.25)); //ny4i Issue153 When timer fires, reset CWBYCAT_Sending
+                  // Set before the write: the poll thread must pause before the
+                  // command reaches the wire, or an interleaved read can step on
+                  // a short message (same rule as the Elecraft/Kenwood arm).
+                  Self.CWByCAT_Sending := true;
 
-               if Self.tFactoryObject <> nil then
-                  begin
-                  // Network path: route through TIcomRadio.BufferCW/SendCW
-                  DebugMsg('SendCW for Icom network[' + IntToStr(len) + ' bytes]=' + localMsg);
-                  Self.tFactoryObject.BufferCW(Copy(Msg, 1, len));
-                  Self.tFactoryObject.SendCW;
-                  end
-               else
-                  begin
-                  // Legacy serial path: build raw CI-V frame
-                  DebugMsg('Sending to Icom[' + IntToStr(len) + ' bytes]=' + localMsg);
-                  CommandsTempBuffer[0] := AnsiChar(7 + len);
-                  CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
-                  CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-                  CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
-                  CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
-                  CommandsTempBuffer[5] := ICOM_SEND_CW;
-                  for i := 1 to len do
+                  if Self.tFactoryObject <> nil then
                      begin
-                     CommandsTempBuffer[5 + i] := AnsiChar(Ord(Msg[i]));
+                     // Network path: route through TIcomRadio.BufferCW/SendCW
+                     DebugMsg('SendCW for Icom network[' + IntToStr(len) + ' bytes]=' + sMsg);
+                     Self.tFactoryObject.BufferCW(sMsg);
+                     Self.tFactoryObject.SendCW;
+                     end
+                  else
+                     begin
+                     // Legacy serial path: build raw CI-V frame
+                     DebugMsg('Sending to Icom[' + IntToStr(len) + ' bytes]=' + sMsg);
+                     CommandsTempBuffer[0] := AnsiChar(7 + len);
+                     CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
+                     CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
+                     CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
+                     CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
+                     CommandsTempBuffer[5] := ICOM_SEND_CW;
+                     for i := 1 to len do
+                        begin
+                        CommandsTempBuffer[5 + i] := AnsiChar(Ord(sMsg[i]));
+                        end;
+                     CommandsTempBuffer[6 + len] := ICOM_END_OF_MESSAGE_CODE;
+                     AddCommandToBuffer;
                      end;
-                  CommandsTempBuffer[6 + len] := ICOM_END_OF_MESSAGE_CODE;
-                  AddCommandToBuffer;
                   end;
 
-               Self.CWByCAT_Sending := true;
                logger.trace('Self.CWByCAT_Sending set to TRUE - Icom');
                CWByCATBuffer := '';
                end
@@ -2499,49 +2522,46 @@ begin
                   //sendNow := true;
 //                  charProcessed := true;
                   end
-               else if Msg = '^' then           // ny4i Issue131 Added Special CW Characters
-                  begin // There is no half space in Icom CW strings
-                  Self.CWByCATBuffer := Self.CWByCATBuffer + ' '; // Use a whole space
-//                  charProcessed := true;
-                  end
-               else if Msg = '!' then   // SN
-                  begin
-                  Self.CWByCATBuffer := Self.CWByCATBuffer + '^SN';
-//                  charProcessed := true;
-                  end
-               {else if Msg = '&' then // AS      // & is really MYSTATE but documented as AS
-                  begin
-                  Self.CWByCATBuffer := Self.CWByCATBuffer + '^AS';
-                  charProcessed := true;
-                  end}
-               else if Msg = '+' then // AR
-                  begin
-                  Self.CWByCATBuffer := Self.CWByCATBuffer + '^AR';
-//                  charProcessed := true;
-                  end
-               else if Msg = '<' then // SK
-                  begin
-                  Self.CWByCATBuffer := Self.CWByCATBuffer + '^SK';
-//                  charProcessed := true;
-                  end
-               else if Msg = '=' then // BT
-                  begin
-                  Self.CWByCATBuffer := Self.CWByCATBuffer + '^BT';
-//                  charProcessed := true;
-                  end
                else
                   begin
-                  CWByCATBuffer := CWByCATBuffer + Msg;    // ny4i 4.44.5
+                  // ny4i Issue 131.  The Icom prosign spellings moved to
+                  // uCWFraming.CWProsignFor, beside the Elecraft and Kenwood
+                  // ones -- Icom is a third dialect, spelling prosigns by name
+                  // ('^AR') where the others substitute a single character.
+                  // One table, unit-tested, instead of three chains in this file
+                  // that could drift apart (the KX3 already had).
+                  prosign := uCWFraming.CWProsignFor(RadioModel, Msg);
+                  if prosign.handled then
+                     begin
+                     Self.CWByCATBuffer := Self.CWByCATBuffer + prosign.text;
+                     end
+                  else
+                     begin
+                     CWByCATBuffer := CWByCATBuffer + Msg;    // ny4i 4.44.5
+                     end;
                   end;
                end;
             end;
          end;
-      rtOrion:     // Add special character processing to Orion routines.
+      rtOrion:
          begin
-         localMsg := Format('/%s#13', [Msg]);   // ny4i Issue 112
-         WriteToCATPort(localMsg[1], length(localMsg));
-         Self.CWByCAT_Sending := true;
-         logger.trace('Self.CWByCAT_Sending set to TRUE - Orion');
+         // Delegated to TTenTecOrionRadio, which sends '/<char>' + CR for each
+         // character of the message.
+         //
+         // The legacy line here was BROKEN and had been since Issue 112:
+         //     localMsg := Format('/%s#13', [Msg]);
+         // #13 INSIDE A QUOTED STRING is the three literal characters '#', '1'
+         // and '3' -- not a carriage return.  The Orion therefore received
+         // '/X#13' with no terminator and never keyed.  The driver builds the
+         // real CR (ORION_CR) instead, so delegating fixes it rather than
+         // repairing a line that is about to be deleted anyway.
+         if Self.tFactoryObject <> nil then
+            begin
+            Self.tFactoryObject.BufferCW(Msg);
+            Self.tFactoryObject.SendCW;
+            Self.CWByCAT_Sending := true;
+            logger.trace('Self.CWByCAT_Sending set to TRUE - Orion');
+            end;
          end;
       else
          begin
