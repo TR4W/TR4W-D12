@@ -2336,7 +2336,35 @@ begin
          begin
             with THamLibDirect(Self.tFactoryObject) do
             begin
-               HamLibModelID := RadioParametersArray[Self.RadioModel].hamlibID;
+               // THE OPERATOR'S OVERRIDE NOW ACTUALLY WORKS.  RADIO n HAMLIB ID
+               // has had a config command and a dialog row, but NOTHING read it
+               // at connect -- this line always took the table value -- so
+               // typing a rig number for a generic HamLib radio was silently
+               // ignored and HAMLIBANY always came up as rig_model 1.
+               //
+               // Honoured only for HAMLIBANY, matching the dialog, which enables
+               // the field for that model alone and shows a read-only registry
+               // value otherwise.  A stale HamLibID left in the config from an
+               // earlier setup must not be allowed to beat a real model's ID.
+               if (Self.RadioModel = HAMLIBANY) and (Self.HamLibID > 0) then
+                  begin
+                  HamLibModelID := Self.HamLibID;
+                  logger.Info('[%s] HamLib rig_model %d (operator override)',
+                              [Self.RadioName, HamLibModelID]);
+                  end
+               else
+                  begin
+                  // STILL the legacy table, deliberately.  uRadioRegistry has a
+                  // hamlibID field and RegisteredHamLibID to read it, but only
+                  // RegisterHamLibOnlyRadio populates it -- plain RegisterRadio
+                  // leaves it 0.  Switching this line to the registry today
+                  // would hand HamLib rig_model 0 for every ordinary radio
+                  // (K3, TS-570, IC-718...) whose operator ticks "Use HamLib".
+                  // Populating the registry rows comes first; see task #28.
+                  HamLibModelID := RadioParametersArray[Self.RadioModel].hamlibID;
+                  logger.Info('[%s] HamLib rig_model %d (per-model default)',
+                              [Self.RadioName, HamLibModelID]);
+                  end;
 
                // Check if using network or serial connection
                if tCATPortType = Network then
