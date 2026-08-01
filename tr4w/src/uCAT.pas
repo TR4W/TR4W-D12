@@ -1221,11 +1221,32 @@ var
   savedCursor  : HCURSOR;
   radioName    : AnsiString;
   rt           : InterfacedRadioType;
+  fidIdx       : Integer;
 begin
   // Item-data read: a string-id factory radio resolves to NoInterfacedRadio,
   // which is "not auto-discoverable" -- same outcome as before, no index math.
   rt := ComboSelectedRadioModel(hwnddlg);
-  radioName := InterfacedRadioTypeSA[rt];
+
+  // User-facing text takes the REGISTRY's display name ('Elecraft K4'), not the
+  // raw enum spelling ('K4') this used to show.  Three distinct cases, and the
+  // old single line got two of them wrong: a STRING-ID factory radio resolves to
+  // NoInterfacedRadio, so the warning named the radio 'NONE'; and asking the
+  // registry blindly would say 'Unknown', since DisplayName returns that for any
+  // unregistered model -- including the NONE sentinel itself.
+  fidIdx := ComboSelectedFactoryIdIndex(hwnddlg);
+  if (fidIdx >= 0) and Assigned(gComboFactoryIds) and
+     (fidIdx < gComboFactoryIds.Count) then
+     begin
+     radioName := AnsiString(uRadioRegistry.DisplayNameId(gComboFactoryIds[fidIdx]));
+     end
+  else if rt = NoInterfacedRadio then
+     begin
+     radioName := AnsiString(InterfacedRadioTypeSA[NoInterfacedRadio]);
+     end
+  else
+     begin
+     radioName := AnsiString(uRadioRegistry.DisplayName(rt));
+     end;
 
   // Issue #1028 -- discoverability is now a radio-factory property (network
   // radios with LAN auto-discovery: K4, the network Icoms, FLEX).
