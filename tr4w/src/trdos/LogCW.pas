@@ -504,7 +504,9 @@ begin
       AddStringToBuffer(Msg, CWTone);
       if IsCWByCATActive then
          begin
-         ActiveRadioPtr.SendCW(CWByCATBufferTerminator); // ny4i Issue 149 This closes and sends the buffer
+         // Q7 no longer bypasses the factory: the terminator goes through the
+         // CAT keyer like everything else now that the send logic lives there.
+         uCWKeyerCAT.CWByCATSend(ActiveRadioPtr, CWByCATBufferTerminator); // ny4i Issue 149 This closes and sends the buffer
          end;
     end;
     Exit;
