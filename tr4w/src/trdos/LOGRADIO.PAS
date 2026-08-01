@@ -2154,133 +2154,32 @@ procedure RadioObject.PutRadioIntoSplit;
 
 begin
    //TLogger.GetInstance.Debug(Format('      In PutRadioIntoSplit: %s',[RadioName]));
+   // The per-model `case RadioModel of` that used to follow is DELETED
+   // (2026-07-31).  Every selectable model has a factory driver -- the enum was
+   // diffed against the registry and only NoInterfacedRadio is unregistered --
+   // so this arm was reachable only when construction failed, which
+   // SetUpRadioInterface now reports as an ERROR instead of silently running a
+   // second implementation here.  The split commands live in each driver's
+   // Split(), where they are per-family and bench-tested.  (Kenwood especially:
+   // a bare FR CANCELS SPLIT on a TS-570, which is why the old line wrote
+   // 'FR0;FT1;' as ONE command -- a fact now owned by the Kenwood driver.)
    if Self.tFactoryObject <> nil then
       begin
       Self.tFactoryObject.Split(true);
-      Exit;
       end;
-
-   case RadioModel of
-      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940, TS950, TS990,
-      TS2000, FLEX, K2, K3, K4:
-         begin
-         AddToOutputBuffer('FR0;FT1;', 8);
-
-         {KK1L: 6.71 For some reason needed this to get the FT1; }
-         {           command to take. Started when I added setting }
-         {           mode of B VFO to set freq.                    }
-
-         //        ActiveRadioPtr.WriteBufferToCATPort('FA;');
-         //        ActiveRadioPtr.WriteBufferToCATPort('FT1;');//vfo b = tx
-         end;
-
-      IC78..IC9700, OMNI6: { KK1L: 6.73 Added OMNI6 }
-         begin
-
-         CommandsTempBuffer[0] := AnsiChar(8);
-         CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
-         CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-         CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
-         CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
-         CommandsTempBuffer[5] := ICOM_SET_SPLIT_MODE;
-         CommandsTempBuffer[6] := AnsiChar(1);
-         CommandsTempBuffer[7] := ICOM_END_OF_MESSAGE_CODE;
-         AddCommandToBuffer;
-
-         end;
-
-      FT747GX, FT100, FT890, FT900, FT920, FT990, FT1000, FT1000MP:
-         begin
-         ActiveRadioPtr.WriteToCATPort(CHR(0) + CHR(0) + CHR(0) + CHR(1) + CHR(1), 5);
-         end;
-
-      FT450, FT950, FT1200, FT2000, FTDX3000, FTDX5000, FTDX9000:
-         begin
-         ActiveRadioPtr.WriteToCATPort('FR0;FT3;', 8);  // ny4i Was 'FR0;FT1;. Changed for Issue166
-         end;
-      FT891:
-         begin
-         ActiveRadioPtr.WriteToCATPort('ST1;', 4);
-         end;
-      FTDX10, FTDX101, FTX1F, FT991:
-         begin
-         ActiveRadioPtr.WriteToCATPort('FT3;', 4);
-         end;
-      FT710:
-         begin
-         ActiveRadioPtr.WriteToCATPort('FT1;', 4);
-         end;
-      Orion:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('*KVABB' + CarriageReturn);
-         end;
-
-      end;
-   // TLogger.GetInstance.Debug(Format('      Leaving PutRadioIntoSplit: %s',[RadioName]));
 end;
 
 procedure RadioObject.PutRadioOutOfSplit;
 
 begin
    //TLogger.GetInstance.Debug(Format('      In PutRadioOutOfSplit: %s',[RadioName]));
+   // Per-model `case RadioModel of` DELETED -- see PutRadioIntoSplit above for
+   // why (every model has a driver; this arm was the silent fallback for a
+   // failed construction, which is now an ERROR from SetUpRadioInterface).
    if Self.tFactoryObject <> nil then
       begin
       Self.tFactoryObject.Split(false);
-      Exit;
       end;
-
-   case RadioModel of
-      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940, TS950, TS990,
-      TS2000, FLEX, K2, K3, K4:
-         begin
-         //ActiveRadioPtr.AddToOutputBuffer {WriteBufferToCATPort}('FR0;FT0;', 8);
-         AddToOutputBuffer('FR0;FT0;', 8);
-
-         //        ActiveRadioPtr.WriteBufferToCATPort('FT0;');
-         end;
-
-      IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6}
-         begin
-         // TLogger.GetInstance.Debug('Sending commands to take Icom out of Split');
-         CommandsTempBuffer[0] := AnsiChar(8);
-         CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
-         CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-         CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
-         CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
-         CommandsTempBuffer[5] := ICOM_SET_SPLIT_MODE;
-         CommandsTempBuffer[6] := AnsiChar(0);
-         CommandsTempBuffer[7] := ICOM_END_OF_MESSAGE_CODE;
-         AddCommandToBuffer;
-         end;
-
-      FT747GX, FT100, FT890, FT900, FT920, FT990, FT1000, FT1000MP: { QSL }
-         begin
-         ActiveRadioPtr.WriteToCATPort(CHR(0) + CHR(0) + CHR(0) + CHR(0) + CHR(1), 5);
-         end;
-
-      FT450, FT950, FT1200, FT2000, FTDX3000, FTDX5000, FTDX9000:
-         begin
-         ActiveRadioPtr.WriteToCATPort('FR0;FT2;', 8);       // ny4i Issue 166 Was FR0;FT0;
-         end;
-      FT891:
-         begin
-          ActiveRadioPtr.WriteToCATPort('ST0;', 4);
-         end;
-      FTDX10, FTDX101, FTX1F, FT991:
-         begin
-         ActiveRadioPtr.WriteToCATPort('FT2;', 4);
-         end;
-      FT710:
-         begin
-         ActiveRadioPtr.WriteToCATPort('FT0;', 4);
-         end;
-      Orion:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('*KVABA' + CarriageReturn);
-         end;
-
-      end;
-   //TLogger.GetInstance.Debug(Format('      Leaving PutRadioOutOfSplit: %s',[RadioName]));
 end;
 
 procedure RadioObject.UpdateRadioStatus;
