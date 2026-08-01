@@ -440,7 +440,7 @@ begin
 
     if CWTone = 0 then
     begin
-      FlushCWBufferAndClearPTT;
+      FlushCWBufferAndClearPTT('LogCfg: config reload');
       CWEnabled := False;
     end;
   end;
