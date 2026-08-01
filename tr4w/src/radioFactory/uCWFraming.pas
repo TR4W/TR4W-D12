@@ -105,10 +105,15 @@ function CWVendorOf(model: InterfacedRadioType): TCWVendor;
 // Elecraft, Kenwood and Flex-over-CAT, which is why it lives here instead of
 // being written out in each of those three drivers.
 //
-// `immediate` selects the KYW form.  LOGRADIO used it only when a speed change
-// (Ctrl-F / Ctrl-S) forced the buffer out mid-message.  Preserved verbatim
-// rather than reasoned about: it is not in the K3 command reference, so its
-// behaviour on real hardware is not something to infer from documentation.
+// `immediate` selects the KYW form, which IS documented (K3 command reference,
+// KY): the SET format is KY*[text] where * is normally a blank, and a 'W' there
+// means WAIT -- processing of any following host commands is delayed until the
+// current message has been sent.  LOGRADIO used it when a speed change
+// (Ctrl-F / Ctrl-S) forced the buffer out mid-message, which is consistent: the
+// KS that follows must not be acted on until the text has gone.
+//
+// (An earlier version of this comment said KYW was undocumented.  It is not --
+// NY4I supplied the manual page 2026-08-01.)
 function CWKYCommand(const text: string; immediate: boolean): string;
 
 implementation
