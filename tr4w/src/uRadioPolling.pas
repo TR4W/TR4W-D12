@@ -3272,7 +3272,23 @@ begin
    if rig.CurrentStatus.Mode = CW then
       if IsCWByCATActive(rig) then
          begin
-            if not rig.FilteredStatus.TXOn then
+            // Latch that the radio really is transmitting.  Without this, the
+            // TX-off test below races the rig: the keyer abort TR4W sends before
+            // a message is 'KY <abort>;RX;', which puts the radio in RECEIVE, and
+            // the message follows within milliseconds -- so a poll arriving
+            // before the rig keys up reports TX off and the message is declared
+            // finished before it began.  Bench, NY4I 2026-08-01: an F4 armed a
+            // 4622 ms window at 38.298 and the poll thread cleared it at 38.466,
+            // 168 ms later, firing tStartAutoCQ and resuming polling straight
+            // into the keying.  The operator heard no CW.
+            if rig.FilteredStatus.TXOn then
+               begin
+               rig.CWByCAT_SawTX := True;
+               end;
+            // Only believe "TX off means done" once we have SEEN it transmit.
+            // A radio that cannot report TX status never sets the latch and is
+            // ended by tmrCWByCAT instead -- which is what it already relied on.
+            if (not rig.FilteredStatus.TXOn) and rig.CWByCAT_SawTX then
                begin
                if rig.CWByCAT_Sending then
                   // ny4i Moved under this If to only perform when we are sending
