@@ -147,6 +147,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    function  CWIsFactoryOwned: Boolean; override;
     procedure SetCWSpeed(speed: integer); override;
     function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; override;
     procedure RITBumpDown; override;
@@ -612,9 +613,19 @@ begin
       end;
 end;
 
+function TFlexCAT.CWIsFactoryOwned: Boolean;
+begin
+   // StopCW below really aborts the keyer, so StopSendingCW may delegate here.
+   Result := True;
+end;
+
 procedure TFlexCAT.StopCW;
 begin
+   // Moved from LOGRADIO.StopSendingCW's rtKenwood arm.  ZZSS is a PowerSDR/
+   // SmartSDR extended command with no Kenwood-subset equivalent -- the plain
+   // KY0;/RX; pair the other Kenwood-protocol radios use does not stop a Flex.
    FCWBuffer := '';
+   Self.SendToRadio('ZZSS;');
 end;
 
 procedure TFlexCAT.SetCWSpeed(speed: integer);

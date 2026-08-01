@@ -152,7 +152,15 @@ end;
 
 procedure TK4Radio.StopCW;
 begin
-   Self.SendToRadio(Chr(4) + ';RX;');
+   // The 'KY ' PREFIX IS REQUIRED and was MISSING here: this sent a bare
+   // Chr(4)+';RX;', which is not a command the radio recognises.  The abort is a
+   // KY command carrying the abort character.  LOGRADIO's legacy arm -- the
+   // authority -- sends the same bytes for K3, KX3 and K4 alike, and the wire
+   // form is bench-confirmed on a K3 (tr4w.log 2026-07-31):
+   //     KY <04> ; R X ;   ->  4B 59 20 04 3B 52 58 3B
+   // Never noticed because Escape was only ever tested on the K3, which is not
+   // CWIsFactoryOwned and therefore took the legacy path instead of this one.
+   Self.SendToRadio('KY ' + Chr(4) + ';RX;');
 end;
 
 procedure TK4Radio.SendCW;
