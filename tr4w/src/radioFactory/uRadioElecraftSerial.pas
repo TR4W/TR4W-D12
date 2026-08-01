@@ -59,7 +59,7 @@ unit uRadioElecraftSerial;
 
 interface
 
-uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uCWFraming;
+uses Windows, uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uCWFraming;
 
 type
   TElecraftSerial = class(TFactoryRadioBase)
@@ -127,6 +127,13 @@ const
    // characters.  Derived from the parse itself, not from a wire length -- see
    // the guard in ParseIFCommand for why the wire length is the wrong measure.
    IF_MIN_PARSED_LENGTH = 35;
+
+   // How long to let the rig finish the RX transition after a keyer abort
+   // before the next KY is sent.  EMPIRICAL -- start here and tune on the
+   // bench; the failing case is a ONE-character message ('?') following an
+   // abort, which was silent at a 1-2 ms gap while a 12-character message
+   // survived.  Paid only when a message is actually interrupted.
+   CW_ABORT_SETTLE_MS = 75;
 
 constructor TElecraftSerial.Create;
 begin
@@ -223,20 +230,29 @@ begin
    // The 'KY ' PREFIX IS REQUIRED -- the abort is a KY command carrying the
    // abort character, not a bare control byte.
    //
-   // NO TRAILING 'RX;'.  Legacy sent 'KY <04>;RX;', and that RX is what made an
-   // interrupting message vanish: it is a SEPARATE command that drops the rig
-   // out of transmit, and a short message arriving in the window that opens
-   // never keyed.  Bench, NY4I 2026-08-01: F9 ('?') was silent every time when
-   // it followed an abort, while a 12-character message survived the same 1-2 ms
-   // gap.  Padding does not rescue it -- under P1=blank the K3 TRIMS the
-   // trailing fill instead of keying it, so a padded '?' is still a
-   // one-character message by the time the radio decides.
+   // THE 'RX;' IS WHAT ACTUALLY STOPS THE TRANSMISSION.  Briefly removed on
+   // 2026-08-01 because the K3 command reference calls ^D (EOT, ASCII 04) a
+   // command that "quickly terminates transmission" -- but the same line ends
+   // "use with CW-to-DATA", and that qualifier is load-bearing.  In plain CW
+   // ^D does not stop the keyer: with the RX gone, NY4I's next function key no
+   // longer interrupted at all -- the new message simply queued behind the
+   // running one and played after it finished.  Restored.
    //
-   // The RX is also redundant: the K3 command reference says ^D (EOT, ASCII 04)
-   // "quickly terminates transmission" on its own (manual page, NY4I
-   // 2026-08-01).  Terminating is the whole job of an abort; forcing receive as
-   // well was belt-and-braces that cost more than it bought.
-   Self.SendToRadio('KY ' + Self.CWAbortChar + ';');
+   // So both halves are now known from the bench, and they conflict:
+   //   - RX stops the transmission (required), AND
+   //   - RX opens a window in which a SHORT following message never keys.
+   // '?' was silent every time behind an abort; a 12-character message survived
+   // the same 1-2 ms gap.  Padding cannot rescue it, because under P1=blank the
+   // K3 TRIMS the trailing fill instead of keying it -- the very property that
+   // makes the pad inaudible -- so a padded '?' is still one character when the
+   // radio decides what to key.
+   //
+   // Hence the settle delay: let the RX transition complete before the caller
+   // sends the next KY.  It costs latency ONLY on the interrupt path (a flush
+   // with CW actually in progress), which is already the slow path -- the guard
+   // in TCWKeyerCAT.Flush means an idle radio never gets here at all.
+   Self.SendToRadio('KY ' + Self.CWAbortChar + ';RX;');
+   Sleep(CW_ABORT_SETTLE_MS);
 end;
 
 procedure TElecraftSerial.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
