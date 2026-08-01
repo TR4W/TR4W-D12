@@ -220,12 +220,23 @@ end;
 
 procedure TElecraftSerial.StopCW;
 begin
-   // Moved from LOGRADIO.StopSendingCW's rtKenwood arm, which sent this for the
-   // K2/K3/KX3/K4.  The 'KY ' PREFIX IS REQUIRED -- the abort is a KY command
-   // carrying the abort character, not a bare control byte.  Bench-confirmed
-   // wire form on a K3 (tr4w.log 2026-07-31):
-   //     KY <04> ; R X ;   ->  4B 59 20 04 3B 52 58 3B
-   Self.SendToRadio('KY ' + Self.CWAbortChar + ';RX;');
+   // The 'KY ' PREFIX IS REQUIRED -- the abort is a KY command carrying the
+   // abort character, not a bare control byte.
+   //
+   // NO TRAILING 'RX;'.  Legacy sent 'KY <04>;RX;', and that RX is what made an
+   // interrupting message vanish: it is a SEPARATE command that drops the rig
+   // out of transmit, and a short message arriving in the window that opens
+   // never keyed.  Bench, NY4I 2026-08-01: F9 ('?') was silent every time when
+   // it followed an abort, while a 12-character message survived the same 1-2 ms
+   // gap.  Padding does not rescue it -- under P1=blank the K3 TRIMS the
+   // trailing fill instead of keying it, so a padded '?' is still a
+   // one-character message by the time the radio decides.
+   //
+   // The RX is also redundant: the K3 command reference says ^D (EOT, ASCII 04)
+   // "quickly terminates transmission" on its own (manual page, NY4I
+   // 2026-08-01).  Terminating is the whole job of an abort; forcing receive as
+   // well was belt-and-braces that cost more than it bought.
+   Self.SendToRadio('KY ' + Self.CWAbortChar + ';');
 end;
 
 procedure TElecraftSerial.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
