@@ -18,7 +18,7 @@ This table is the gate on that decision.
 | Radio | Enum | Tested | By | Notes |
 |---|---|---|---|---|
 | Elecraft K2 | K2 | - | - |  |
-| Elecraft K3 | K3 | 2026-07-31 | NY4I | CW-by-CAT send verified (KY padded to 22). Escape-stops-CW failed, fixed 163723a, RETESTED OK. WinKeyer keying verified same day; function-key latency 383 ms -> 25 ms after 3b93fb6. |
+| Elecraft K3 | K3 | 2026-07-31 | NY4I | CW-by-CAT send verified (KY padded to 22). Escape-stops-CW failed, fixed 163723a, RETESTED OK. WinKeyer keying verified same day; function-key latency 383 ms -> 25 ms after 3b93fb6. 2026-08-01: StopCW moved out of LOGRADIO into TElecraftSerial ('KY <04>;RX;') and re-verified, Escape included. |
 | Elecraft K4 | K4 | 2026-07-31 | NY4I | Split: FT1; alone is sufficient (RX always VFO A). CW-by-CAT in use. SERIAL: RIT/XIT indicators and offset were blank (ParseIFCommand wrote only the legacy scalars, not the per-VFO copy the window reads) -- fixed and retested OK. CW by serial port (COM6, K4 serial 2) verified via the CPU keyer. NETWORK retested same day and unaffected, confirming the AI push path (RT/XT/RO) writes the per-VFO fields itself. |
 | Elecraft KX3 | KX3 | - | - |  |
 | Expert TCI (HamLib bridge) | EXPERTTCI | - | - |  |
