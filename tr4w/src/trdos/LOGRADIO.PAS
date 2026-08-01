@@ -2332,10 +2332,24 @@ begin
       elements := CalculateElements(
                      uCWFraming.CWChunkUnpadded(text, frameRule, chunkIx));
       logger.trace('Total CW Elements (unpadded) = %d', [elements]);
-      // EnableCWBYCATTimer ADDS to a running interval, so a message split
-      // across chunks gets one window covering all of them.
-      Self.EnableCWBYCATTimer(
-         Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
+      // The busy window must cover the WHOLE message, not just the last chunk.
+      // EnableCWBYCATTimer always SETS the interval -- its "add to a running
+      // timer" branch is commented out with the note that updating a live timer
+      // "does not work properly" -- so calling it per chunk would leave a
+      // multi-chunk message with a window sized to its final chunk, expiring
+      // early and letting the poll thread step on CW still being keyed.
+      // AddTimeToCWByCATTimer exists for exactly this: arm on the first chunk,
+      // extend on the rest.
+      if chunkIx = 1 then
+         begin
+         Self.EnableCWBYCATTimer(
+            Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
+         end
+      else
+         begin
+         Self.AddTimeToCWByCATTimer(
+            Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
+         end;
       Self.CWByCAT_Sending := True;
       logger.trace('Self.CWByCAT_Sending set to TRUE');
 

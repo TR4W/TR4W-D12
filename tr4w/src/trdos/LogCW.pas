@@ -131,7 +131,13 @@ procedure DVKRecordMessage(MemoryString: Str20);
 function ElementLength(dots: integer; dashes: integer): integer;
 procedure FinishRTTYTransmission(Msg: Str160);
 procedure FlushCWBuffer;
-procedure FlushCWBufferAndClearPTT;
+// `fromWhere` is DIAGNOSTIC ONLY and defaulted, so every existing call site
+// compiles unchanged.  It exists because a bench run on 2026-08-01 showed CW
+// being cut off 3.1 s into an 8.98 s message with NO operator action -- NY4I
+// confirmed he pressed only two mouse buttons -- and this procedure has a dozen
+// callers, several of which fire on display state rather than a keypress.  Tag
+// the suspicious ones so the log names the culprit instead of us guessing.
+procedure FlushCWBufferAndClearPTT(const fromWhere: string = '');
 
 procedure InitializeKeyer;
 procedure LoadElements(sl: TStringList);
@@ -375,9 +381,24 @@ begin
   KeyerYCCC.Flush;
 end;
 
-procedure FlushCWBufferAndClearPTT;
+procedure FlushCWBufferAndClearPTT(const fromWhere: string = '');
 
 begin
+  // Log BEFORE flushing: if this turns out to be aborting CW that should still
+  // be running, the caller is the thing we need named.
+  if fromWhere <> '' then
+     begin
+     logger.Debug('[FlushCWBufferAndClearPTT] called from %s (CW-by-CAT sending: active=%s inactive=%s)',
+                  [fromWhere,
+                   BoolToStr(ActiveRadioPtr.CWByCAT_Sending, True),
+                   BoolToStr(InactiveRadioPtr.CWByCAT_Sending, True)]);
+     end
+  else
+     begin
+     logger.Debug('[FlushCWBufferAndClearPTT] called from an UNTAGGED site (CW-by-CAT sending: active=%s inactive=%s)',
+                  [BoolToStr(ActiveRadioPtr.CWByCAT_Sending, True),
+                   BoolToStr(InactiveRadioPtr.CWByCAT_Sending, True)]);
+     end;
   FlushCWBuffer;
   PTTOff;
 end;
@@ -1979,7 +2000,7 @@ begin
   begin
     if not SendingOnRadioOne then
     begin
-      FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
+      FlushCWBufferAndClearPTT('LogCW: SetUpToSendOn*Radio - clear CW on the radio being left');
 //      ActiveKeyerPort                                     := Radio1.tKeyerPort;
 //      tActiveKeyerHandle                                  := Radio1.tKeyerPortHandle;
       SerialInvert                                          := Radio1SerialInvert;
@@ -2007,7 +2028,7 @@ begin
 
     if not SendingOnRadioTwo then
     begin
-      FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
+      FlushCWBufferAndClearPTT('LogCW: SetUpToSendOn*Radio - clear CW on the radio being left');
 
 //      ActiveKeyerPort                                     := Radio2.tKeyerPort;
 //      tActiveKeyerHandle                                  := Radio2.tKeyerPortHandle;
@@ -2070,7 +2091,7 @@ begin
   begin
     if not SendingOnRadioTwo then
     begin
-      FlushCWBufferAndClearPTT; { Clear CW being sent on Active Radio}
+      FlushCWBufferAndClearPTT('LogCW: SetUpToSendOnInactiveRadio - clear CW on the active radio');
 //      ActiveKeyerPort                                     := Radio2.tKeyerPort;
 //      tActiveKeyerHandle                                  := Radio2.tKeyerPortHandle;
       SerialInvert                                          := Radio2SerialInvert;
@@ -2089,7 +2110,7 @@ begin
 
     if not SendingOnRadioOne then
     begin
-      FlushCWBufferAndClearPTT; { Clear CW being sent on Active Radio}
+      FlushCWBufferAndClearPTT('LogCW: SetUpToSendOnInactiveRadio - clear CW on the active radio');
 //      ActiveKeyerPort                                     := Radio1.tKeyerPort;
 //      tActiveKeyerHandle                                  := Radio1.tKeyerPortHandle;
       SerialInvert                                          := Radio1SerialInvert;

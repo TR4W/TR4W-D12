@@ -896,7 +896,7 @@ begin
     if tAutoSendMode then
       EditingCallsignSent := True;
     tAutoSendMode := False;
-    FlushCWBufferAndClearPTT; //n4af 4.33.3
+    FlushCWBufferAndClearPTT('MainUnit: typing while CW still being sent'); //n4af 4.33.3
 
     if DVPOn then
     begin
@@ -1084,7 +1084,7 @@ begin
   if (DupeInfoCall <> '') and (CallWindowString = '') then
   begin
 
-    FlushCWBufferAndClearPTT;
+    FlushCWBufferAndClearPTT('MainUnit: DupeInfoCall set with an empty call window');
 
     if (TwoRadioState = CallReady) then
       CheckTwoRadioState(SpaceBarPressed)
@@ -7469,7 +7469,7 @@ begin
         if CWEnabled or CWEnable then
         begin
           QuickDisplay('CW Off');
-          FlushCWBufferAndClearPTT;
+          FlushCWBufferAndClearPTT('MainUnit: CW turned Off');
           CWEnabled := False;
           CWEnable := false;
           DisplayCodeSpeed;

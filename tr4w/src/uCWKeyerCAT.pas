@@ -146,22 +146,43 @@ procedure TCWKeyerCAT.Flush;
 begin
    // Verbatim from LogCW.FlushCWBuffer's CAT blocks: BOTH radios, each gated
    // by mode = CW and per-radio CW-by-CAT eligibility.
+   // The CWByCAT_Sending test is NEW and load-bearing.  Without it this fired a
+   // keyer abort before EVERY function-key message, including when the radio was
+   // sitting idle -- and then the message went out 3 ms behind it.  On a K3 the
+   // abort/RX transition swallows what follows that closely, so the message
+   // simply never keyed.  Bench, NY4I 2026-08-01: F1 keyed with a 10 ms gap
+   // between abort and message; F4 did not, with a 3 ms gap.  Both were
+   // identically formed and padded to 22 on the wire.
+   //
+   // Intermittent by nature, which is why it read as "sometimes no CW": whether
+   // the radio swallows the message depends on how tightly the two land.
+   //
+   // Same defect class as the WinKeyer flush fixed the day before -- doing
+   // device I/O on behalf of a keyer that is not sending.  The buffer is still
+   // cleared unconditionally; only the ABORT is conditional, because an abort
+   // is only meaningful against CW that is actually going out.
    if ActiveRadioPtr.CurrentStatus.Mode = CW then
       begin
       if IsCWByCATActive(ActiveRadioPtr) then
          begin
-         DebugMsg('Flushing CWBuffer - Stop Sending on ActiveRadio CWBC');
          ActiveRadioPtr.CWByCATBuffer := '';
-         ActiveRadioPtr.StopSendingCW;
+         if ActiveRadioPtr.CWByCAT_Sending then
+            begin
+            DebugMsg('Flushing CWBuffer - Stop Sending on ActiveRadio CWBC');
+            ActiveRadioPtr.StopSendingCW;
+            end;
          end;
       end;
    if InactiveRadioPtr.CurrentStatus.Mode = CW then
       begin
       if IsCWByCATActive(InactiveRadioPtr) then
          begin
-         DebugMsg('Flushing CWBuffer - Stop Sending on InactiveRadio CWBC');
          InactiveRadioPtr.CWByCATBuffer := '';
-         InactiveRadioPtr.StopSendingCW;
+         if InactiveRadioPtr.CWByCAT_Sending then
+            begin
+            DebugMsg('Flushing CWBuffer - Stop Sending on InactiveRadio CWBC');
+            InactiveRadioPtr.StopSendingCW;
+            end;
          end;
       end;
 end;
