@@ -3272,6 +3272,43 @@ begin
          end;
       end;
       end;
+   // ------------------------------------------------------------------
+   // NO FACTORY DRIVER WAS BUILT for a radio the operator actually selected.
+   //
+   // Every model in InterfacedRadioType has a factory registration (verified
+   // 2026-07-31: the only unregistered member is NoInterfacedRadio, the "no
+   // radio" sentinel).  So reaching here with a configured radio does not mean
+   // "this rig has no driver" -- it means construction was REFUSED or FAILED:
+   // the transport guards above require IsRegisteredId/IsRegistered AND
+   // SupportsSerial/SupportsNetwork, so a radio configured on a transport it
+   // does not support lands here, as does a driver that failed to build.
+   //
+   // Until now that was SILENT, and the legacy `case RadioModel of` tails
+   // scattered through this unit quietly became the implementation -- a
+   // different code path from the one every other user of that rig runs, with
+   // no clue in the log.  Legacy was acting as the error handler.  Say so
+   // instead: this is the diagnostic that has to exist BEFORE those tails can
+   // be deleted, or removing them would replace a silent fallback with silence.
+   if (Self.tFactoryObject = nil) and
+      ( (Self.RadioModel <> NoInterfacedRadio) or (Self.FactoryId <> '') ) then
+      begin
+      if Self.FactoryId <> '' then
+         begin
+         logger.Error('[%s] NO FACTORY DRIVER built for factory id "%s" on port %d ' +
+                      '- falling back to the legacy radio path. The radio may not ' +
+                      'support this connection type.',
+                      [Self.RadioName, string(Self.FactoryId), Ord(Self.tCATPortType)]);
+         end
+      else
+         begin
+         logger.Error('[%s] NO FACTORY DRIVER built for %s on port %d ' +
+                      '- falling back to the legacy radio path. The radio may not ' +
+                      'support this connection type.',
+                      [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel),
+                       Ord(Self.tCATPortType)]);
+         end;
+      end;
+
    { Enable polling }
 
    //  PollingEnable := True;
