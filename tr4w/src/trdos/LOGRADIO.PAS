@@ -1893,151 +1893,23 @@ begin
 end;
 
 function RadioObject.MemoryKeyer(mem: integer): boolean;
-var localMsg:AnsiString;   // CAT command bytes -> AddToOutputBuffer(PAnsiChar) (D12)
-    hiMem: integer;
 begin
+   // The per-model `case RadioModel of` that played DVK memories here is DELETED
+   // (2026-07-31): every selectable model has a factory driver, so it was the
+   // silent fallback for a construction failure, which SetUpRadioInterface now
+   // reports as an ERROR.  Each driver's MemoryKeyer owns its own commands.
    if Self.tFactoryObject <> nil then
       begin
       Result := Self.tFactoryObject.MemoryKeyer(mem);
       Exit;
       end;
 
-   // Was `RadioModel in RadioSupportsPlayDVK`, whose declaration even carried a
-   // question mark about the KX2/KX3 being left out -- the same hand-maintained
-   // model list that omitted the KX3 from the prosign table in this file.  The
-   // registry's rcPlayDVK says it replaces this typeset; now it actually does.
-   // (Reached only for radios with no factory object -- the delegation above
-   // exits first -- so this asks the registry.)
-   if not Self.HasCapability(rcPlayDVK) then
-      begin
-      logger.Warn('Radio does not support playing a voice keyer memory');
-      Result := true;
-      Exit;
-      end;
-
-   case RadioModel of
-      K3:
-         begin
-         if IntegerBetween(mem,0,4) then
-            begin
-            if logger.IsDebugEnabled then
-               begin
-               if mem = 0 then
-                  begin
-                  logger.debug('[K3-MemoryKeyer] Stopping playback of DVK message');
-                  end
-               else
-                  begin
-                  logger.debug('[K3-MemoryKeyer] Playing memory %d',[mem]);
-                  end;
-               end;
-            case mem of
-            0: localMsg := 'SWT37;'; // RECD button to cancel playback
-            1: localMsg := 'SWT21;';
-            2: localMsg := 'SWT31;';
-            3: localMsg := 'SWT35;';
-            4: localMsg := 'SWT39;';
-            end;
-            AddToOutputBuffer(addr(localMsg[1]),length(localMsg));
-            Result := false;
-            end
-         else
-            begin
-            logger.error('Memory value (%d) out of range for a K3 in MemoryKeyer',[mem]);
-            Result := true;
-            end;
-         end;
-      K4:
-         begin
-         if mem = 0 then
-            begin
-            logger.debug('[K4-Serial-MemoryKeyer] Stopping DVK');
-            localMsg := 'DA0;';  // DA0; Stops all DVK activity
-            AddToOutputBuffer(addr(localMsg[1]),length(localMsg));
-            Result := false;
-            end
-         else if IntegerBetween(mem,1,8) then
-            begin
-            logger.debug('[K4-MemoryKeyer] Playing memory %d',[mem]);
-            localMsg := Format('DAMP%d00000;',[mem]);  // DAMPmnnnnn; where m is mem number and nnnnn is repeat in ms (set to 00000)
-            AddToOutputBuffer(addr(localMsg[1]),length(localMsg));
-            Result := false;
-            end
-         else
-            begin
-            logger.error('Memory value (%d) out of range for a K4 in MemoryKeyer',[mem]);
-            Result := true;
-            end;
-         end;
-
-      IC705, IC7100, IC7300, IC7610, IC7760, IC7850, IC7851, IC9100, IC9700, IC905, IC7300MK2:
-         begin
-         if IntegerBetween(mem,0,8) then
-            begin
-            logger.debug('[Icom-MemoryKeyer] Playing memory %d',[mem]);
-            CommandsTempBuffer[0] := AnsiChar(9);
-            CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
-            CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
-            CommandsTempBuffer[5] := ICOM_SET_DVK;
-            CommandsTempBuffer[6] := AnsiChar(0);  // sub command
-            CommandsTempBuffer[7] := AnsiChar(mem);
-            CommandsTempBuffer[8] := ICOM_END_OF_MESSAGE_CODE;
-            AddCommandToBuffer;
-            Result := false;
-            end
-         else
-            begin
-            logger.error('Memory value (%d) out of range for an Icom in MemoryKeyer',[mem]);
-            Result := true;
-            end;
-         end;
-      TS480, TS570, TS590, TS850, TS890, TS950, TS990, TS2000:
-         begin
-         case RadioModel of
-            TS590: hiMem := 3;
-            TS890: hiMem := 6;  // Issue #436 -- TS-890 PB memories 1..6
-            TS990: hiMem := 6;
-            else hiMem := 3;
-         end;
-         if IntegerBetween(mem,0,hiMem) then
-            begin
-            logger.debug('[Kenwood-MemoryKeyer] Playing memory %d',[mem]);
-            localMsg := Format('PB%d;',[mem]);
-
-            ActiveRadioPtr.WriteToCATPort(localMsg[1],length(localMsg));
-            Result := false;
-            end
-         else
-            begin
-            logger.error('Memory value (%d) out of range for a Kenwood in MemoryKeyer',[mem]);
-            Result := true;
-            end;
-         end;
-      FT710, FT991, FTDX10, FTDX101, FT1200, FTDX3000, FTDX5000, FTDX9000: 
-         begin
-         if IntegerBetween(mem,0,5) then
-            begin
-            logger.debug('[Yaesu-MemoryKeyer] Playing memory %d',[mem]);
-            localMsg := Format('PB0%d;',[mem]);
-
-            ActiveRadioPtr.WriteToCATPort(localMsg[1],length(localMsg));
-            Result := false;
-            end
-         else
-            begin
-            logger.error('Memory value (%d) out of range for a Yaesu in MemoryKeyer',[mem]);
-            Result := true;
-            end;
-         end;
-      else
-         begin
-         logger.Warn('[MemoryKeyer] Memory playbacdk not yet implemented for this radio');
-         Result := true;
-         end;
-      end;
-   //TLogger.GetInstance.Debug(Format('      Leaving PutRadioOutOfSplit: %s',[RadioName]));
+   // No factory object: the radio is misconfigured (already logged at setup).
+   // True is the answer the deleted code gave for "nothing was keyed" -- both
+   // its unsupported-radio guard and its else arm returned True -- so callers
+   // see no change.
+   logger.Warn('[MemoryKeyer] No factory driver for this radio; memory %d not played', [mem]);
+   Result := True;
 end;
 
 
@@ -3236,8 +3108,6 @@ begin
 end;
 
 procedure RadioObject.SetRadioCWSpeed(speed: longint);
-var
-   i: integer;
 begin
    // Was `RadioModel in RadioSupportsCWSpeedSync` -- a hand-maintained typeset
    // competing with the registry's rcCWSpeedSync, whose own comment says it
@@ -3250,92 +3120,14 @@ begin
       exit;
       end;
 
+   // The per-model `case rt of` that formatted KS/CI-V speed commands here is
+   // DELETED (2026-07-31) -- unreachable for any correctly constructed radio,
+   // and each driver's SetCWSpeed owns its own encoding (which matters: the
+   // Icom wpm->level mapping is per-model, 6..60 on the IC-718 family against
+   // 6..48 elsewhere, and that fact belongs with the radio, not here).
    if Self.tFactoryObject <> nil then
       begin
       Self.tFactoryObject.SetCWSpeed(speed);
-      Exit;
-      end;
-
-   case RadioParametersArray[RadioModel].rt of
-      rtKenwood:
-         begin
-         // Format(@tKenwood14Bytes, 'KS%003u;', speed);
-         // AddToOutputBuffer (tKenwood14Bytes, 6);
-         Format(@tKenwood14Bytes, 'KS%003u;', speed);
-         AddToOutputBuffer {WriteToCATPort}(tKenwood14Bytes, 6);
-         end;
-      rtYaesu2,
-      rtYaesu3,
-      rtYaesu4:  // Yaesu1 does not support this command
-         begin
-         Format(@tKenwood14Bytes, 'KS%003u;', speed);
-         AddToOutputBuffer(tKenwood14Bytes, 6);
-         end;
-      rtIcom:
-         begin
-         if (True) or (RadioModel in [IC7800, IC7850, IC7851]) then
-            // ny4i 4.45.2. This looks odd because the 7800..7851 calculate speed differently but I have not added this yet. When added, just remove this if so we try this for all Icom radios.
-            begin
-            // Calculate the Icom CW keyer speed as a 000-255 level ($14 0C). The
-            // wpm range is per-model: the IC-718 family is 6..60 wpm (verified on an
-            // IC-718: bench + CI-V manual, $14 0C 00 00 = 6 wpm .. 02 55 = 60 wpm),
-            // while every other legacy Icom is 6..48 -- the long-standing default that
-            // matches the modern factory path. Forcing 6..60 on a 6..48 radio runs it
-            // ~11% slow, so only the confirmed 6..60 radios (IcomRadios6to60WPMKeyer)
-            // get the wider span.
-            CommandsTempBuffer[0] := AnsiChar(10);
-            CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
-            CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
-            CommandsTempBuffer[5] := ICOM_SET_SLIDERS;
-            CommandsTempBuffer[6] := ICOM_SET_CW_SPEED;
-            if RadioModel in IcomRadios6to60WPMKeyer then
-               begin
-               // 6..60 wpm (IC-718). Ceiling, NOT round: the radio truncation-decodes
-               // (wpm = 6 + floor(level*54/255)), so round-nearest lands one wpm low
-               // (20 wpm -> 66 -> decodes 19). Ceiling encodes exactly, as the modern
-               // factory TIcomRadio.SetCWSpeed does.
-               if speed < 6 then
-                  begin
-                  speed := 6;
-                  end;
-               if speed > 60 then
-                  begin
-                  speed := 60;
-                  end;
-               i := ((speed - 6) * 255 + 53) div 54;   // ceil((speed-6)*255/54)
-               if i > 255 then
-                  begin
-                  i := 255;
-                  end;
-               end
-            else
-               begin
-               // 6..48 wpm: the original long-standing mapping, restored EXACTLY
-               // (Round, divisor 42) so radios that were already correct (746/756/
-               // 910/7200) stay bit-for-bit unchanged.
-               i := Round((speed - 6) * (255 / 42));
-               end;
-            CommandsTempBuffer[7] := AnsiChar(i div 100);  // Puts 00,01 or 02 into first byte
-            i := i mod 100; // remove the hundreds part and BCD the remainder
-            //AddStringToTelnetConsole(PChar('dec='+IntToStr(i) + ', bcd = ' + IntToStr(IntegerToBCD(i))),tstAlert);
-            //AddStringToTelnetConsole(PChar('bcd='+IntToStr(n)),tstAlert);
-            CommandsTempBuffer[8] := AnsiChar(IntegerToBCD(i));
-            // 20 wpm returns 85 which in BCD makes 131 which makes hex 85 when used with Chr()
-            CommandsTempBuffer[9] := ICOM_END_OF_MESSAGE_CODE;
-
-            AddCommandToBuffer;
-            end;
-         end;
-      rtOrion:
-         begin
-         i := Format(tOrionFreq, '*CS%02u'#13, speed);
-         WriteToCATPort(tOrionFreq, i);
-         end;
-      else
-         begin
-         end;
       end;
 end;
 //------------------------------------------------------------------------------
