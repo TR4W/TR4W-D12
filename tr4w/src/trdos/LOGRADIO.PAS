@@ -319,7 +319,6 @@ type
       procedure SetRadioCWSpeed(speed: longint);
       procedure SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char); overload;
       procedure SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char; extendedMode: ExtendedModeType); overload;
-      procedure SendCW(Msg: Str160);
       procedure SetUpRadioInterface;
       procedure StopSendingCW;
       //    procedure StartNextPoll;
@@ -2255,127 +2254,6 @@ end;
 // BEFORE the driver writes, so the poll thread pauses before the command
 // reaches the wire.  Set it after and a short message can be stepped on by an
 // interleaved IF; poll and never key.
-procedure RadioObject.SendCW(Msg: Str160);
-var
-   frameRule: uCWFraming.TCWFrameRule;
-   prosign: uCWFraming.TCWProsign;
-   chunkIx: integer;
-   chunk: string;
-   text: string;
-   elements: integer;
-   sendNow: boolean;
-begin
-   // Q9: registry capability, not the legacy typeset -- the keyer factory
-   // decides with the same question, and two sources of truth disagreeing shows
-   // up as CW that simply never goes out.  KEPT rather than deleted because
-   // SendCW is also reachable from LogCW.SendStringAndStop, which is
-   // deliberately not routed through the factory (quirk Q7), so this cannot
-   // assume the caller already decided.
-   if not ( Self.CWByCAT and
-            uRadioRegistry.SupportsFor(Self.RadioModel, rcCWByCAT) ) then
-      begin
-      Exit;
-      end;
-
-   // No driver means construction was refused or failed, which
-   // SetUpRadioInterface has already reported as an ERROR.  There is no longer
-   // a legacy path to fall back to, and silently doing nothing here is better
-   // than half-keying through code nobody else runs.
-   if Self.tFactoryObject = nil then
-      begin
-      Exit;
-      end;
-
-   sendNow := False;
-
-   if Msg = ControlF then          // speed up 6%, and flush what is buffered
-      begin
-      CodeSpeed := CodeSpeed + Round(CodeSpeed * 0.06);
-      sendNow := True;
-      end
-   else if Msg = ControlS then     // speed down 6%
-      begin
-      CodeSpeed := CodeSpeed - Round(CodeSpeed * 0.06);
-      sendNow := True;
-      end
-   else if Msg <> CWByCATBufferTerminator then
-      begin
-      prosign := uCWFraming.CWProsignFor(Self.RadioModel, Msg);
-      if prosign.handled then
-         begin
-         Self.CWByCATBuffer := Self.CWByCATBuffer + prosign.text;
-         end
-      else
-         begin
-         Self.CWByCATBuffer := Self.CWByCATBuffer + Msg;
-         end;
-      end;
-
-   // Still collecting: nothing goes out until the terminator arrives or a speed
-   // change forces the buffer.
-   if not ( (Msg = CWByCATBufferTerminator) or sendNow ) then
-      begin
-      Exit;
-      end;
-
-   text := Self.CWByCATBuffer;
-   Self.CWByCATBuffer := '';
-   if text = '' then
-      begin
-      Exit;
-      end;
-
-   DebugMsg('Assembling CW message to send');
-   frameRule := uCWFraming.CWFrameRuleFor(Self.RadioModel,
-                                          Self.tCATPortType = Network);
-
-   // Only one radio may key at a time; the keyer owns that policy because it
-   // spans BOTH radios (see TCWKeyerCAT.EnsureSoleTransmitter).
-   KeyerCAT.EnsureSoleTransmitter(Self.active);
-
-   for chunkIx := 1 to uCWFraming.CWChunkCount(text, frameRule) do
-      begin
-      chunk := uCWFraming.CWChunk(text, frameRule, chunkIx);
-      // Count elements on the UNPADDED text: the radio trims trailing pad
-      // spaces instead of keying them, so counting them inflates the busy
-      // window (a 1-char '?' padded to 22 once gave a bogus ~8 s). Issue 153.
-      elements := CalculateElements(
-                     uCWFraming.CWChunkUnpadded(text, frameRule, chunkIx));
-      logger.trace('Total CW Elements (unpadded) = %d', [elements]);
-      // The busy window must cover the WHOLE message, not just the last chunk.
-      // EnableCWBYCATTimer always SETS the interval -- its "add to a running
-      // timer" branch is commented out with the note that updating a live timer
-      // "does not work properly" -- so calling it per chunk would leave a
-      // multi-chunk message with a window sized to its final chunk, expiring
-      // early and letting the poll thread step on CW still being keyed.
-      // AddTimeToCWByCATTimer exists for exactly this: arm on the first chunk,
-      // extend on the rest.
-      if chunkIx = 1 then
-         begin
-         Self.EnableCWBYCATTimer(
-            Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
-         end
-      else
-         begin
-         Self.AddTimeToCWByCATTimer(
-            Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
-         end;
-      Self.CWByCAT_Sending := True;
-      // Fresh message: we have not seen this one transmit yet.  Until we do, a
-      // TX-off poll must not be read as "finished" (see CWByCAT_SawTX).
-      Self.CWByCAT_SawTX := False;
-      logger.trace('Self.CWByCAT_Sending set to TRUE');
-
-      Self.tFactoryObject.SendCWImmediate := sendNow;
-      Self.tFactoryObject.BufferCW(chunk);
-      Self.tFactoryObject.SendCW;
-      end;
-
-   if sendNow then
-      begin
-      SetRadioCWSpeed(CodeSpeed);
-      end;
-end;
 //------------------------------------------------------------------------------
 procedure RadioObject.StopSendingCW;
 begin

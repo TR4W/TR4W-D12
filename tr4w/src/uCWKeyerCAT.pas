@@ -34,7 +34,26 @@ unit uCWKeyerCAT;
 interface
 
 uses
-   VC, uCWKeyerBase;
+   VC, uCWKeyerBase,
+   // RadioPtr.  This is the CAT repoint: the CW-by-CAT send logic lives HERE
+   // now, not in RadioObject.SendCW, so this unit's interface has to name the
+   // radio type.  Legal because LogRadio takes uCWKeyerCAT in its
+   // IMPLEMENTATION -- Delphi only forbids a cycle when both sides are in the
+   // interface.
+   LogRadio;
+
+// Send one CW-by-CAT token to a specific radio.
+//
+// This IS RadioObject.SendCW, moved.  It buffers until the terminator arrives
+// (or a speed change forces the buffer out), frames the text per the radio's
+// rules, arms the busy window and hands each chunk to the driver.  None of that
+// is radio-driver work and none of it is contest-logging work -- it is what a
+// CAT keyer does, so it belongs to the CAT keyer.
+//
+// Takes the radio explicitly rather than assuming ActiveRadioPtr: SendString
+// resolves the SO2R swap itself, and the interrupt/interlock paths need to act
+// on a nominated radio.
+procedure CWByCATSend(radio: RadioPtr; const Msg: Str160);
 
 type
    TCWKeyerCAT = class(TCWKeyer)
@@ -56,9 +75,136 @@ implementation
 
 uses
    Windows,    // Sleep -- the interlock's settle delay
-   MainUnit,   // IsCWByCATActive, CWByCATBufferTerminator, DebugMsg
-   LogRadio,   // ActiveRadioPtr / InactiveRadioPtr (typed consts), RadioObject
-   LogCW;      // KeyersSwapped
+   SysUtils,
+   Log4D,
+   MainUnit,   // IsCWByCATActive, CWByCATBufferTerminator, DebugMsg, logger
+   LogCW,      // KeyersSwapped, CalculateElements
+   Tree,       // CodeSpeed -- the operator's current WPM
+   LogWind,    // DisplayedCodeSpeed -- what the CW timing estimate is based on
+   uRadioRegistry,
+   uCWFraming;
+
+procedure CWByCATSend(radio: RadioPtr; const Msg: Str160);
+var
+   frameRule: uCWFraming.TCWFrameRule;
+   prosign: uCWFraming.TCWProsign;
+   chunkIx: integer;
+   chunk: string;
+   text: string;
+   elements: integer;
+   sendNow: boolean;
+begin
+   // Q9: registry capability, not the legacy typeset -- two sources of truth
+   // for "can this radio key over CAT" disagreeing shows up as CW that simply
+   // never goes out.  Kept here rather than assumed of the caller: this is
+   // reachable from SendStringAndStop as well as from the keyer's own methods.
+   if not ( radio.CWByCAT and
+            uRadioRegistry.SupportsFor(radio.RadioModel, rcCWByCAT) ) then
+      begin
+      Exit;
+      end;
+
+   // No driver means construction was refused or failed, which
+   // SetUpRadioInterface has already reported as an ERROR.  There is no legacy
+   // path left to fall back to, and doing nothing beats half-keying through
+   // code nobody else runs.
+   if radio.tFactoryObject = nil then
+      begin
+      Exit;
+      end;
+
+   sendNow := False;
+
+   if Msg = ControlF then          // speed up 6%, and flush what is buffered
+      begin
+      CodeSpeed := CodeSpeed + Round(CodeSpeed * 0.06);
+      sendNow := True;
+      end
+   else if Msg = ControlS then     // speed down 6%
+      begin
+      CodeSpeed := CodeSpeed - Round(CodeSpeed * 0.06);
+      sendNow := True;
+      end
+   else if Msg <> CWByCATBufferTerminator then
+      begin
+      prosign := uCWFraming.CWProsignFor(radio.RadioModel, Msg);
+      if prosign.handled then
+         begin
+         radio.CWByCATBuffer := radio.CWByCATBuffer + prosign.text;
+         end
+      else
+         begin
+         radio.CWByCATBuffer := radio.CWByCATBuffer + Msg;
+         end;
+      end;
+
+   // Still collecting: nothing goes out until the terminator arrives or a speed
+   // change forces the buffer.
+   if not ( (Msg = CWByCATBufferTerminator) or sendNow ) then
+      begin
+      Exit;
+      end;
+
+   text := radio.CWByCATBuffer;
+   radio.CWByCATBuffer := '';
+   if text = '' then
+      begin
+      Exit;
+      end;
+
+   DebugMsg('Assembling CW message to send');
+   frameRule := uCWFraming.CWFrameRuleFor(radio.RadioModel,
+                                          radio.tCATPortType = Network);
+
+   // Only one radio may key at a time.  Note this ALSO issues the keyer abort
+   // when the other radio is mid-message, and TElecraftSerial.StopCW carries a
+   // settle delay after its RX -- without which a short following message
+   // never keys (bench, 2026-08-01).
+   KeyerCAT.EnsureSoleTransmitter(radio.active);
+
+   for chunkIx := 1 to uCWFraming.CWChunkCount(text, frameRule) do
+      begin
+      chunk := uCWFraming.CWChunk(text, frameRule, chunkIx);
+      // Count elements on the UNPADDED text: the radio trims trailing pad
+      // spaces instead of keying them, so counting them inflates the busy
+      // window (a 1-char '?' padded to 22 once gave a bogus ~8 s). Issue 153.
+      elements := CalculateElements(
+                     uCWFraming.CWChunkUnpadded(text, frameRule, chunkIx));
+      logger.trace('Total CW Elements (unpadded) = %d', [elements]);
+      // The busy window must cover the WHOLE message, not just the last chunk.
+      // EnableCWBYCATTimer always SETS the interval -- its "add to a running
+      // timer" branch is commented out with the note that updating a live timer
+      // "does not work properly" -- so calling it per chunk would leave a
+      // multi-chunk message with a window sized to its final chunk, expiring
+      // early and letting the poll thread step on CW still being keyed.
+      // AddTimeToCWByCATTimer exists for exactly this: arm on the first chunk,
+      // extend on the rest.
+      if chunkIx = 1 then
+         begin
+         radio.EnableCWBYCATTimer(
+            Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
+         end
+      else
+         begin
+         radio.AddTimeToCWByCATTimer(
+            Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
+         end;
+      radio.CWByCAT_Sending := True;
+      // Fresh message: we have not seen this one transmit yet.  Until we do, a
+      // TX-off or PTT-off poll must not be read as "finished" (CWByCAT_SawTX).
+      radio.CWByCAT_SawTX := False;
+      logger.trace('Self.CWByCAT_Sending set to TRUE');
+
+      radio.tFactoryObject.SendCWImmediate := sendNow;
+      radio.tFactoryObject.BufferCW(chunk);
+      radio.tFactoryObject.SendCW;
+      end;
+
+   if sendNow then
+      begin
+      radio.SetRadioCWSpeed(CodeSpeed);
+      end;
+end;
 
 constructor TCWKeyerCAT.Create;
 begin
@@ -73,11 +219,11 @@ begin
    // concept and is ignored.
    if KeyersSwapped then
       begin
-      InactiveRadioPtr.SendCW(Msg);
+      CWByCATSend(InactiveRadioPtr, Msg);
       end
    else
       begin
-      ActiveRadioPtr.SendCW(Msg);
+      CWByCATSend(ActiveRadioPtr, Msg);
       end;
 end;
 
@@ -85,8 +231,8 @@ procedure TCWKeyerCAT.SendChar(ch: Char);
 begin
    // Verbatim from MainUnit.CallWindowKeyDownProc's CAT arm: ACTIVE radio, no
    // swap resolution, no UpCase (Q6), terminator closes the one-char message.
-   ActiveRadioPtr.SendCW(ch);
-   ActiveRadioPtr.SendCW(CWByCATBufferTerminator);
+   CWByCATSend(ActiveRadioPtr, ch);
+   CWByCATSend(ActiveRadioPtr, CWByCATBufferTerminator);
 end;
 
 function TCWKeyerCAT.StillBeingSent: boolean;
