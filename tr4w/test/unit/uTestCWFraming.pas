@@ -25,6 +25,7 @@ type
       procedure Test_ElementCountUsesUnpaddedText;
       procedure Test_EdgeCases;
       procedure Test_ProsignsDifferByVendor;
+      procedure Test_IcomIsAThirdDialect;
    public
       procedure RunAllTests; override;
    end;
@@ -175,6 +176,47 @@ begin
    CheckFalse(CWProsignFor(K3, 'CQ').handled, 'a whole word is not a prosign');
 end;
 
+procedure TCWFramingTests.Test_IcomIsAThirdDialect;
+var
+   p: TCWProsign;
+begin
+   BeginTest('Icom uses NAMED prosigns, not substitute characters');
+
+   // Elecraft and Kenwood swap ONE character; Icom spells the prosign out.
+   CheckEquals('^AR', CWProsignFor(IC7300, '+').text, 'Icom AR');
+   CheckEquals('^SK', CWProsignFor(IC7300, '<').text, 'Icom SK');
+   CheckEquals('^BT', CWProsignFor(IC7300, '=').text, 'Icom BT');
+
+   // Icom HAS an SN, where Elecraft consumes the token and keys nothing.
+   CheckEquals('^SN', CWProsignFor(IC7300, '!').text, 'Icom SN exists');
+   CheckEquals('', CWProsignFor(K3, '!').text, 'Elecraft SN does not');
+   CheckEquals('%', CWProsignFor(TS570, '!').text, 'Kenwood SN is a character');
+
+   // Half space is a whole space on all three.
+   CheckEquals(' ', CWProsignFor(IC7300, '^').text, 'Icom half space -> space');
+
+   // The dialect boundaries: the Icom block is contiguous IC78..IC9700.
+   CheckTrue(CWVendorOf(IC78) = cvIcom, 'IC78 is the first Icom');
+   CheckTrue(CWVendorOf(IC9700) = cvIcom, 'IC9700 is the last Icom');
+   CheckTrue(CWVendorOf(IC718) = cvIcom, 'IC718 sits inside the block');
+   CheckTrue(CWVendorOf(K3) = cvElecraft, 'K3 is Elecraft');
+   CheckTrue(CWVendorOf(KX3) = cvElecraft, 'KX3 is Elecraft, not Kenwood');
+   CheckTrue(CWVendorOf(TS570) = cvKenwood, 'TS-570 is Kenwood');
+   CheckTrue(CWVendorOf(FLEX) = cvKenwood, 'FLEX speaks the Kenwood subset');
+   CheckTrue(CWVendorOf(ORION) = cvKenwood, 'ORION falls to the default');
+
+   // An unhandled token must still report handled=False for Icom, or the caller
+   // would key the raw token as text.
+   p := CWProsignFor(IC7300, 'A');
+   CheckFalse(p.handled, 'a letter is not a prosign on Icom either');
+
+   // Icom's own length limit, previously a truncation at 28 in LOGRADIO.
+   CheckEquals(28, CWFrameRuleFor(IC7300, False).maxLen, 'Icom KY limit');
+   CheckFalse(CWFrameRuleFor(IC7300, False).pad, 'Icom does not pad');
+   CheckEquals(2, CWChunkCount(StringOfChar('A', 40), CWFrameRuleFor(IC7300, False)),
+               '40 chars is two Icom commands, not a silent truncation');
+end;
+
 procedure TCWFramingTests.RunAllTests;
 begin
    Test_PerModelRules;
@@ -183,6 +225,7 @@ begin
    Test_ElementCountUsesUnpaddedText;
    Test_EdgeCases;
    Test_ProsignsDifferByVendor;
+   Test_IcomIsAThirdDialect;
 end;
 
 end.

@@ -69,6 +69,12 @@ function CWChunk(const text: string; const rule: TCWFrameRule; index: integer): 
 function CWChunkUnpadded(const text: string; const rule: TCWFrameRule; index: integer): string;
 
 type
+   // Which CW dialect a radio speaks.  Three real ones, not two: Elecraft and
+   // Kenwood substitute a single character per prosign but disagree on which,
+   // and Icom uses NAMED prosigns ('^AR').  Exposed so callers can be tested
+   // against the classification rather than re-deriving it from model lists.
+   TCWVendor = (cvElecraft, cvKenwood, cvIcom);
+
    // What a radio should key for one of TR4W's prosign tokens.
    TCWProsign = record
       handled: boolean;   // True: this token IS a prosign; do not treat it as text
@@ -84,6 +90,9 @@ type
 // consumed and keys NOTHING -- which is not the same as an unrecognised token
 // the caller should pass through as literal text.
 function CWProsignFor(model: InterfacedRadioType; const token: string): TCWProsign;
+
+// Which dialect a model speaks.  Public so the mapping itself is testable.
+function CWVendorOf(model: InterfacedRadioType): TCWVendor;
 
 implementation
 
@@ -119,6 +128,17 @@ begin
       K2:
          begin
          Result.maxLen := 22;
+         Result.pad := False;
+         end;
+      IC78..IC9700:
+         begin
+         // From LOGRADIO.SendCW's rtIcom arm: `len := Min(msgLen, 28)`.  Note
+         // the legacy code TRUNCATED at 28 and dropped the rest -- it never
+         // looped -- so a longer message lost its tail silently.  Expressing it
+         // as a frame rule means CWChunkCount/CWChunk now split it instead,
+         // which is the behaviour the comment there asked for ("TODO Optimally,
+         // this should be sent in multiple batches").
+         Result.maxLen := 28;
          Result.pad := False;
          end;
       K3, KX3, K4:
@@ -173,20 +193,72 @@ begin
    Result := Copy(text, startPos, rule.maxLen);
 end;
 
+function CWVendorOf(model: InterfacedRadioType): TCWVendor;
+begin
+   case model of
+      // DELIBERATE DIVERGENCE FROM LEGACY: LOGRADIO.SendCW tested
+      // `RadioModel in [K2, K3, K4]`, omitting the KX3 -- so a KX3 was given the
+      // KENWOOD spellings and keyed the wrong characters for AR, SK, BT and SN.
+      // The KX3 shares the K3's CAT command set (see uRadioElecraftKX3) and
+      // CWFrameRuleFor already groups K3/KX3/K4, so the omission is a gap, not a
+      // decision.  Unverified on hardware -- NY4I has no KX3.
+      K2, K3, KX3, K4:
+         begin
+         Result := cvElecraft;
+         end;
+      IC78..IC9700:
+         begin
+         Result := cvIcom;
+         end;
+   else
+      // Kenwood is the DEFAULT because that is what the legacy code did: the
+      // prosign chain lived inside the rtKenwood arm and treated "not Elecraft"
+      // as Kenwood.  Radios with no CW-by-CAT at all (the Yaesus) never reach
+      // here, so the fall-through costs nothing.
+      Result := cvKenwood;
+   end;
+end;
+
 function CWProsignFor(model: InterfacedRadioType; const token: string): TCWProsign;
 var
-   elecraft: boolean;
+   vendor: TCWVendor;
 begin
    Result.handled := False;
    Result.text := '';
+   vendor := CWVendorOf(model);
 
-   // DELIBERATE DIVERGENCE FROM LEGACY: LOGRADIO.SendCW tested
-   // `RadioModel in [K2, K3, K4]`, omitting the KX3 -- so a KX3 was given the
-   // KENWOOD prosign spellings and would key the wrong characters for AR, SK,
-   // BT and SN.  The KX3 shares the K3's CAT command set (see uRadioElecraftKX3)
-   // and CWFrameRuleFor above already groups K3/KX3/K4 together, so the omission
-   // is a gap, not a decision.  Unverified on hardware -- NY4I has no KX3.
-   elecraft := model in [K2, K3, KX3, K4];
+   // The Icom spellings are NAMED prosigns ('^AR'), not single substitute
+   // characters, and Icom has an SN where Elecraft does not -- a third dialect,
+   // taken from LOGRADIO.SendCW's rtIcom arm.
+   if vendor = cvIcom then
+      begin
+      if token = '^' then
+         begin
+         Result.handled := True;
+         Result.text := ' ';    // no half space in an Icom CW string either
+         end
+      else if token = '!' then
+         begin
+         Result.handled := True;
+         Result.text := '^SN';
+         end
+      else if token = '+' then
+         begin
+         Result.handled := True;
+         Result.text := '^AR';
+         end
+      else if token = '<' then
+         begin
+         Result.handled := True;
+         Result.text := '^SK';
+         end
+      else if token = '=' then
+         begin
+         Result.handled := True;
+         Result.text := '^BT';
+         end;
+      Exit;
+      end;
 
    if token = '^' then
       begin
@@ -197,7 +269,7 @@ begin
    else if token = '!' then        // SN
       begin
       Result.handled := True;
-      if not elecraft then
+      if vendor <> cvElecraft then
          begin
          Result.text := '%';
          end;
@@ -206,7 +278,7 @@ begin
    else if token = '+' then        // AR
       begin
       Result.handled := True;
-      if elecraft then
+      if vendor = cvElecraft then
          begin
          Result.text := '+';
          end
@@ -218,7 +290,7 @@ begin
    else if token = '<' then        // SK
       begin
       Result.handled := True;
-      if elecraft then
+      if vendor = cvElecraft then
          begin
          Result.text := '*';
          end
@@ -230,7 +302,7 @@ begin
    else if token = '=' then        // BT
       begin
       Result.handled := True;
-      if elecraft then
+      if vendor = cvElecraft then
          begin
          Result.text := '=';
          end
