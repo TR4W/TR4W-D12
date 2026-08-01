@@ -47,6 +47,13 @@ type
    TCWFrameRule = record
       maxLen: integer;    // longest text the radio accepts in one command
       pad: boolean;       // pad the last chunk out to maxLen with spaces?
+      // Safety factor on the CW-busy window (tmrCWByCAT).  The window is an
+      // ESTIMATE -- elements x dot time -- and if it expires early the poll
+      // thread resumes and can step on CW still being keyed.  LOGRADIO used
+      // 1.0 for the KY radios and 1.25 for Icom, whose rate-limited CI-V send
+      // queue makes the estimate optimistic.  Per-model data, so it lives with
+      // the other per-model data rather than as a conditional at the call site.
+      busyFactor: double;
    end;
 
 // The rule for a model.  `network` distinguishes the two Flex transports (the
@@ -94,6 +101,16 @@ function CWProsignFor(model: InterfacedRadioType; const token: string): TCWProsi
 // Which dialect a model speaks.  Public so the mapping itself is testable.
 function CWVendorOf(model: InterfacedRadioType): TCWVendor;
 
+// The Kenwood-protocol KY command carrying one chunk of CW text.  Identical on
+// Elecraft, Kenwood and Flex-over-CAT, which is why it lives here instead of
+// being written out in each of those three drivers.
+//
+// `immediate` selects the KYW form.  LOGRADIO used it only when a speed change
+// (Ctrl-F / Ctrl-S) forced the buffer out mid-message.  Preserved verbatim
+// rather than reasoned about: it is not in the K3 command reference, so its
+// behaviour on real hardware is not something to infer from documentation.
+function CWKYCommand(const text: string; immediate: boolean): string;
+
 implementation
 
 uses
@@ -103,6 +120,7 @@ function CWFrameRuleFor(model: InterfacedRadioType; network: boolean): TCWFrameR
 begin
    Result.maxLen := 0;      // "no limit / not a CW-by-CAT radio"
    Result.pad := False;
+   Result.busyFactor := 1.0;
    case model of
       TS890:
          begin
@@ -140,6 +158,10 @@ begin
          // this should be sent in multiple batches").
          Result.maxLen := 28;
          Result.pad := False;
+         // 1.25 from LOGRADIO's rtIcom arm.  The CI-V send queue is rate
+         // limited (~25 ms a command), so a purely element-based estimate runs
+         // short on this family.
+         Result.busyFactor := 1.25;
          end;
       K3, KX3, K4:
          begin
@@ -191,6 +213,21 @@ begin
       end;
    startPos := ((index - 1) * rule.maxLen) + 1;
    Result := Copy(text, startPos, rule.maxLen);
+end;
+
+function CWKYCommand(const text: string; immediate: boolean): string;
+begin
+   // Note the space in the normal form ('KY ') and its ABSENCE in the immediate
+   // one ('KYW') -- that is how LOGRADIO built them, and on the K3 the space is
+   // the P1 field, so it is load-bearing rather than cosmetic.
+   if immediate then
+      begin
+      Result := 'KYW' + text + ';';
+      end
+   else
+      begin
+      Result := 'KY ' + text + ';';
+      end;
 end;
 
 function CWVendorOf(model: InterfacedRadioType): TCWVendor;

@@ -52,7 +52,7 @@ unit uRadioKenwoodSerial;
 interface
 
 uses
-  uFactoryRadioBase, uRadioBand, VC, SysUtils, StrUtils, Log4D;
+  uFactoryRadioBase, uRadioBand, VC, SysUtils, StrUtils, Log4D, uCWFraming;
 
 type
   TKenwoodSerial = class(TFactoryRadioBase)
@@ -555,18 +555,27 @@ end;
 
 procedure TKenwoodSerial.BufferCW(cwChars: string);
 begin
-  // The TS-570 does not accept keyed CW text over CAT; buffer is inert.
   Self.CWBuffer := Self.CWBuffer + cwChars;
 end;
 
 procedure TKenwoodSerial.SendCW;
 begin
-  // No CW-over-CAT on the TS-570 -- use the radio's keyer/paddle jack.
-  if Self.CWBuffer <> '' then
+  // This used to log "CW-over-CAT not supported" and DISCARD the text, which
+  // was never true of the family: LOGRADIO's rtKenwood arm has always sent KY
+  // to TS480/570/590/850/890/950/990/2000, and the registry gives them
+  // rcCWByCAT.  The comment described the buffer being unused because LOGRADIO
+  // formatted the command itself, not a radio limitation.  Now it emits.
+  //
+  // A model that genuinely cannot key over CAT is expressed by NOT declaring
+  // rcCWByCAT, which stops the caller before it reaches here -- not by a driver
+  // silently dropping text.
+  if Self.CWBuffer = '' then
     begin
-    logger.Debug('[%s.SendCW] CW-over-CAT not supported on Kenwood serial base', [Self.rigLabel]);
-    Self.CWBuffer := '';
+    Exit;
     end;
+  Self.SendToRadio(uCWFraming.CWKYCommand(Self.CWBuffer, Self.CWSendImmediate));
+  Self.CWBuffer := '';
+  Self.CWSendImmediate := False;
 end;
 
 function TKenwoodSerial.CWIsFactoryOwned: Boolean;

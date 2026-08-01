@@ -59,11 +59,12 @@ unit uRadioElecraftSerial;
 
 interface
 
-uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC;
+uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uCWFraming;
 
 type
   TElecraftSerial = class(TFactoryRadioBase)
   protected
+    CWBuffer: string;       // text accumulated by BufferCW, emitted by SendCW
     firstProcessMessage: boolean;
     FCWSpeedMin: integer;   // KS range; K3/KX3 keyer is 8..50 wpm (per-model overridable)
     FCWSpeedMax: integer;
@@ -185,13 +186,23 @@ end;
 // unit header.  These stubs satisfy the abstract contract without duplicating it.
 procedure TElecraftSerial.BufferCW(cwChars: string);
 begin
-   // Inert: CW-by-CAT keys through RadioObject.SendCW -> AddToOutputBuffer ->
-   // tFactoryObject.SendToRadio, not through the factory CW methods.
+   Self.CWBuffer := Self.CWBuffer + cwChars;
 end;
 
 procedure TElecraftSerial.SendCW;
 begin
-   // Inert -- see BufferCW / unit header.
+   // No longer inert.  LOGRADIO used to format the KY command itself and push it
+   // through SendToRadio; it now hands the driver a chunk and this emits it, so
+   // the command form belongs to the radio that speaks it.  The chunking and the
+   // 22-character limit stay in uCWFraming -- they are per-model DATA, shared
+   // with the legacy path while the migration finishes.
+   if Self.CWBuffer = '' then
+      begin
+      Exit;
+      end;
+   Self.SendToRadio(uCWFraming.CWKYCommand(Self.CWBuffer, Self.CWSendImmediate));
+   Self.CWBuffer := '';
+   Self.CWSendImmediate := False;
 end;
 
 function TElecraftSerial.CWAbortChar: Char;
