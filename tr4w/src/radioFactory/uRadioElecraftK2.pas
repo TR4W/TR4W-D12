@@ -39,6 +39,7 @@ type
   TK2Radio = class(TElecraftSerial)
   public
     constructor Create; reintroduce;
+    function CWAbortChar: Char; override;
   end;
 
 implementation
@@ -51,6 +52,13 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+end;
+
+function TK2Radio.CWAbortChar: Char;
+begin
+   // The K2 aborts the keyer with '@', where the K3/KX3/K4 use #4.  From
+   // LOGRADIO.StopSendingCW, which sent 'KY @;RX;' for the K2 alone (Issue 157).
+   Result := '@';
 end;
 
 initialization

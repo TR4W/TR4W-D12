@@ -2550,79 +2550,21 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure RadioObject.StopSendingCW;
-
-//   localMsg: string;
 begin
-   // Delegate ONLY to a driver that really keys CW.  This used to delegate to
-   // ANY factory object, and most of them have an INERT StopCW -- Elecraft
-   // serial (K2/K3/KX3) is an empty method by design, Kenwood serial and Flex
-   // CAT only clear a local buffer -- so Escape was swallowed: CW STARTED
-   // through the legacy path below and could never be STOPPED, because the
-   // legacy abort ('KY '#4';RX;' for the K3) was never reached.
-   // Bench: NY4I, K3 with CW BY CAT, 2026-07-31.
+   // Every per-model abort is now in its own driver's StopCW: the Elecraft
+   // 'KY <abort>;RX;' (TElecraftSerial, with TK2Radio overriding the abort
+   // character), the Kenwood 'KY0;'+'RX;', the Flex 'ZZSS;' and the Icom CI-V
+   // $17 $FF.  Nothing here knows what radio it is talking to.
+   //
+   // The CWIsFactoryOwned test stays and is NOT redundant: it asks "does this
+   // driver really key CW", and for a radio that does not, StopCW is a no-op we
+   // should skip rather than a command to send.  It also earns its keep as the
+   // guard that caught a real bug -- delegating to ANY factory object once
+   // swallowed Escape entirely, because most drivers' StopCW was inert and the
+   // legacy abort below was never reached (NY4I, K3, 2026-07-31).
    if (Self.tFactoryObject <> nil) and Self.tFactoryObject.CWIsFactoryOwned then
       begin
       Self.tFactoryObject.StopCW;
-      Exit;
-      end;
-   case RadioParametersArray[RadioModel].rt of
-      rtKenwood:
-         begin
-         // localMsg := Format('KY %s;', [Msg]);
-         case RadioModel of
-            K2:
-               begin
-               AddToOutputBuffer('KY @;RX;', 8);   // Stops the K2 // ny4i Issue 157
-               end;
-            K3, KX3, K4:
-               begin
-              AddToOutputBuffer('KY '#4';RX;', 8); // #4 stops the K3 // ny4i Issue 157
-               end;
-            TS480, TS570, TS590, TS890, TS950, TS990, TS2000, TS850:
-               begin
-               AddToOutputBuffer('KY0;', 4);
-               AddToOutputBuffer('RX;', 3);
-               end;
-            FLEX:
-               begin
-               AddToOutputBuffer('ZZSS;', 5);
-               end; // PowerSDR command-no Kenwood equivilent
-            end; // case RadioModel
-         end;
-      rtYaesu1:
-         begin
-         if RadioModel in [FT100, FT920, FT1000, FT1000MP] then
-            begin
-            ;
-            end;
-         end;
-
-      rtIcom:
-         begin   // This was missing for Icom ny4i Issue 100 4.45.4
-         // Q9: registry capability, not the legacy typeset (see SendCW).
-         if uRadioRegistry.SupportsFor(RadioModel, rcCWByCAT) then     // ny4i
-            begin
-            CommandsTempBuffer[0] := AnsiChar(8);
-            // Number of items used in this array for command ny4i Issue 100 4.45.4
-            CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-            CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
-            CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
-            CommandsTempBuffer[5] := ICOM_SEND_CW;
-            CommandsTempBuffer[6] := AnsiChar(255);
-            // Documented in Icom manuals. FF in the subcode terminates CW  ny4i
-            CommandsTempBuffer[7] := ICOM_END_OF_MESSAGE_CODE;
-            AddCommandToBuffer;
-            end;
-         end;
-      rtOrion:
-         begin
-         //i := Format(tOrionFreq, '*CS%02u'#13, speed);
-         //WriteToCATPort(tOrionFreq, i);
-         end;
-      else
-         begin
-         end;
       end;
 end;
 //------------------------------------------------------------------------------

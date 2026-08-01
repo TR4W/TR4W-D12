@@ -86,6 +86,11 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    function  CWIsFactoryOwned: Boolean; override;
+    // The character that aborts the keyer inside a KY command: #4 on the
+    // K3/KX3/K4, '@' on the K2.  A VIRTUAL, not a model test -- this base must
+    // never ask which radio it is (see the K2 override).
+    function  CWAbortChar: Char; virtual;
 
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
     procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
@@ -189,9 +194,27 @@ begin
    // Inert -- see BufferCW / unit header.
 end;
 
+function TElecraftSerial.CWAbortChar: Char;
+begin
+   Result := Chr(4);
+end;
+
+function TElecraftSerial.CWIsFactoryOwned: Boolean;
+begin
+   // StopCW below really aborts the keyer, so StopSendingCW may delegate here.
+   // (It checks this flag precisely because most drivers' StopCW is inert; a
+   // blanket delegation once swallowed Escape entirely -- NY4I, K3, 2026-07-31.)
+   Result := True;
+end;
+
 procedure TElecraftSerial.StopCW;
 begin
-   // Inert -- see BufferCW / unit header.
+   // Moved from LOGRADIO.StopSendingCW's rtKenwood arm, which sent this for the
+   // K2/K3/KX3/K4.  The 'KY ' PREFIX IS REQUIRED -- the abort is a KY command
+   // carrying the abort character, not a bare control byte.  Bench-confirmed
+   // wire form on a K3 (tr4w.log 2026-07-31):
+   //     KY <04> ; R X ;   ->  4B 59 20 04 3B 52 58 3B
+   Self.SendToRadio('KY ' + Self.CWAbortChar + ';RX;');
 end;
 
 procedure TElecraftSerial.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);

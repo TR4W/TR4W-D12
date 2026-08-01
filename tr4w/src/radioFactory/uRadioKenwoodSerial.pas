@@ -76,6 +76,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    function  CWIsFactoryOwned: Boolean; override;
 
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
     procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
@@ -568,9 +569,22 @@ begin
     end;
 end;
 
+function TKenwoodSerial.CWIsFactoryOwned: Boolean;
+begin
+   // StopCW below really aborts the keyer, so StopSendingCW may delegate here.
+   Result := True;
+end;
+
 procedure TKenwoodSerial.StopCW;
 begin
-  Self.CWBuffer := '';
+   // Moved from LOGRADIO.StopSendingCW's rtKenwood arm, which sent these two
+   // commands for TS480/570/590/850/890/950/990/2000.  KY0 empties the keyer
+   // buffer; RX then drops the radio out of transmit -- the buffer alone would
+   // leave it keyed down with nothing to send.  Two separate writes, as the
+   // legacy code sent them.
+   Self.CWBuffer := '';
+   Self.SendToRadio('KY0;');
+   Self.SendToRadio('RX;');
 end;
 
 end.
