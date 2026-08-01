@@ -71,7 +71,7 @@ unit uRadioFlexCAT;
 interface
 
 uses uFactoryRadioBase, uRadioBand, SysUtils, StrUtils, Math, Log4D, VC,
-     uRadioRegistry;
+     uRadioRegistry, uCWFraming;
 
 const
    // ---- ZZIF answer layout (guide 3.3.14).  1-based positions in the body AFTER
@@ -603,14 +603,17 @@ end;
 
 procedure TFlexCAT.SendCW;
 begin
-   // On the CAT port LOGRADIO formats and sends KY itself; if anything does route
-   // here, say so rather than silently dropping the text.
-   if FCWBuffer <> '' then
+   // LOGRADIO no longer formats KY itself, so this is the CAT-port keying path
+   // rather than a place text goes to die.  (The Ethernet API path is separate
+   // and uses cwx -- see uRadioFlexAPI; this unit is the Kenwood-subset CAT
+   // port, where KY is the right command.)
+   if FCWBuffer = '' then
       begin
-      logger.Debug('[FlexCAT.SendCW] CW on the CAT port is keyed via LOGRADIO''s KY path, not here; %d char(s) not sent',
-                   [Length(FCWBuffer)]);
-      FCWBuffer := '';
+      Exit;
       end;
+   Self.SendToRadio(uCWFraming.CWKYCommand(FCWBuffer, Self.CWSendImmediate));
+   FCWBuffer := '';
+   Self.CWSendImmediate := False;
 end;
 
 function TFlexCAT.CWIsFactoryOwned: Boolean;

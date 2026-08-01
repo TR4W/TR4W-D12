@@ -17,7 +17,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uRadioElecraftK4;
 
 interface
-uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry;
+uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry, uCWFraming;
 
 
 Type TK4Radio = class(TFactoryRadioBase)
@@ -173,7 +173,10 @@ begin
       end;
 
    logger.Info('[K4Radio.SendCW] Sending CW: "%s"', [Self.CWBuffer]);
-   Self.SendToRadio('KY ' + Self.CWBuffer + ';');
+   // Shared formatter so the K4 cannot drift from the other KY radios, and so
+   // it honours the immediate (KYW) form the speed-change path uses.
+   Self.SendToRadio(uCWFraming.CWKYCommand(Self.CWBuffer, Self.CWSendImmediate));
+   Self.CWSendImmediate := False;
    Self.CWBuffer := '';
 end;
 

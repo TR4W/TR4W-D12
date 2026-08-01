@@ -268,6 +268,7 @@ Type TFactoryRadioBase = class(TObject)
       localRITOffset: integer;
       localXITOffset: integer;
       bandIndependence: boolean;
+      CWSendImmediate: boolean;   // see the public property of the same idea
       procRef: TProcessMsgRef;
 
       function GetISConnected: boolean; virtual;
@@ -315,6 +316,15 @@ Type TFactoryRadioBase = class(TObject)
       // Calling it from another thread would race the reader mid-frame.
       //
       // Exists because `rt` is private; a driver must not reach into the thread.
+      // Set by the caller BEFORE SendCW to request the immediate (KYW) form of
+      // the KY command instead of the normal buffered one; the driver clears it
+      // after use.  A flag rather than a SendCW parameter because SendCW is
+      // overridden by every registered radio -- ~100 of them -- and changing the
+      // signature would touch all of them to serve a case only the KY drivers
+      // care about.  Exposed as a property because the backing field sits in the
+      // protected block and LOGRADIO sets it from outside.
+      property SendCWImmediate: boolean read CWSendImmediate write CWSendImmediate;
+
       procedure SetExpectedFrameLength(n: integer);
 
       // Frame check for FIXED-LENGTH framing (ignored when SerialFixedFrameLength = 0).

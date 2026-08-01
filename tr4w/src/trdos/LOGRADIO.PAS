@@ -2230,342 +2230,123 @@ begin
    SetLength(Self.CWByCATBuffer,0);    // ny4i Issue 149 Added (general cleanup)
 end;
 //------------------------------------------------------------------------------
+// CW-by-CAT send.  ONE path for every radio -- the `case rt of` with separate
+// Kenwood/Elecraft, Icom and Orion arms is gone.  What differed between them is
+// now owned by whoever should own it:
+//
+//   prosign spellings   uCWFraming.CWProsignFor   (three dialects, unit-tested)
+//   length + padding    uCWFraming.CWFrameRuleFor
+//   busy-window factor  the frame rule (Icom needs 1.25, the KY radios 1.0)
+//   the command itself  the driver's BufferCW/SendCW (KY, CI-V, Orion per-char)
+//   two-radio interlock TCWKeyerCAT.EnsureSoleTransmitter
+//
+// What stays here is the part that is genuinely NOT per-radio: the buffer, the
+// terminator/speed-change trigger, and the busy flag -- which must be set
+// BEFORE the driver writes, so the poll thread pauses before the command
+// reaches the wire.  Set it after and a short message can be stepped on by an
+// interleaved IF; poll and never key.
 procedure RadioObject.SendCW(Msg: Str160);
 var
-   localMsg: AnsiString;   // CAT command bytes -> AddToOutputBuffer(PAnsiChar) (D12)
-   i: integer;
-   msgLen: integer;
-   len: integer;
-   maxLen: integer;
-   pad: boolean;
-   tempLen: integer;
-   sLen: integer;
-   sMsg: string;
-   sendNow : boolean;
-   formatStr: string;
-//   debugStr: string;
-   charProcessed: boolean;
-   elements: integer;
    frameRule: uCWFraming.TCWFrameRule;
    prosign: uCWFraming.TCWProsign;
    chunkIx: integer;
+   chunk: string;
+   text: string;
+   elements: integer;
+   sendNow: boolean;
 begin
-   // Q9 (CW keyer factory plan): this guard used the LEGACY
-   // `RadioModel in RadioSupportsCWByCAT` typeset while the keyer factory
-   // decides with the REGISTRY capability (IsCWByCATActive =
-   // CWByCAT and SupportsFor(model, rcCWByCAT)).  Two sources of truth for the
-   // same question can disagree about a radio, which would show up as the
-   // factory selecting the CAT keyer and this method then silently exiting --
-   // CW that simply never goes out.  Both now ask the registry.
-   //
-   // The guard is KEPT rather than deleted: SendCW is also reachable from
-   // LogCW.SendStringAndStop (which is deliberately not routed through the
-   // factory -- quirk Q7), so it cannot assume the caller already decided.
+   // Q9: registry capability, not the legacy typeset -- the keyer factory
+   // decides with the same question, and two sources of truth disagreeing shows
+   // up as CW that simply never goes out.  KEPT rather than deleted because
+   // SendCW is also reachable from LogCW.SendStringAndStop, which is
+   // deliberately not routed through the factory (quirk Q7), so this cannot
+   // assume the caller already decided.
    if not ( Self.CWByCAT and
             uRadioRegistry.SupportsFor(Self.RadioModel, rcCWByCAT) ) then
       begin
-      exit;   // No need to be here if radio does not support CWBYCAT and not active
-      end;
-   // Delphi 7 does NOT initialize stack-allocated locals. Without these two
-   // explicit defaults, `charProcessed` and `sendNow` carried whatever bytes
-   // happened to be on the stack from prior calls. If `charProcessed`
-   // was non-zero on entry, the `if not charProcessed` guard near the bottom
-   // of the rtKenwood block would short-circuit and the letter would never
-   // be appended to CWByCATBuffer -- so by the time the terminator arrived
-   // the buffer was empty, the assembly path ran on a zero-length string,
-   // and no KY command was emitted. Per-char debug output ("Adding (N)...")
-   // appeared because that log happens BEFORE the buffer append.
-   charProcessed := False;
-   sendNow       := False;
-
-   //scWK_Reset;    // n4af 4.46.3  // ny4i This would not be necessary as this code is in the radio object. It is ONLY used by CWByCAT.
-   localMsg := Msg;
-
-   (* Removed network code as AddToOutputBuffer will send to net radio // ny4i  This is a bad kludge. We should call a new procedure to handle CW for networked radios
-   if Self.tFactoryObject <> nil then
-      begin
-      Self.tFactoryObject.SendCW(msg);
       Exit;
       end;
-   *)
-   case RadioParametersArray[RadioModel].rt of
-      rtKenwood:
+
+   // No driver means construction was refused or failed, which
+   // SetUpRadioInterface has already reported as an ERROR.  There is no longer
+   // a legacy path to fall back to, and silently doing nothing here is better
+   // than half-keying through code nobody else runs.
+   if Self.tFactoryObject = nil then
+      begin
+      Exit;
+      end;
+
+   sendNow := False;
+
+   if Msg = ControlF then          // speed up 6%, and flush what is buffered
+      begin
+      CodeSpeed := CodeSpeed + Round(CodeSpeed * 0.06);
+      sendNow := True;
+      end
+   else if Msg = ControlS then     // speed down 6%
+      begin
+      CodeSpeed := CodeSpeed - Round(CodeSpeed * 0.06);
+      sendNow := True;
+      end
+   else if Msg <> CWByCATBufferTerminator then
+      begin
+      prosign := uCWFraming.CWProsignFor(Self.RadioModel, Msg);
+      if prosign.handled then
          begin
-         // This whould really be changed to a queue where we send the CW speed command, send the KY coommand and then send the KS command as consecutive commands for the Kenwood.
-         // It also illustrates that we should have a branch in this case just for ELecraft and not lump it into Kenwood. The K3 and K4 handle this but now Kenwood.     NY4I 2026 June 1
-         if Msg = ControlF then// increase speed
-            begin
-            CodeSpeed := CodeSpeed + Round(CodeSpeed * 0.06); // increase 6 %
-            //SetRadioCWSpeed(CodeSpeed);
-            sendNow := true;
-            charProcessed := true;
-            end
-         else if Msg = ControlS then
-            begin       // Speed down by 6 %
-            CodeSpeed := CodeSpeed - Round(CodeSpeed * 0.06); // increase 6 %
-            //SetRadioCWSpeed(CodeSpeed);
-            sendNow := true;
-            charProcessed := true;
-            end
-         else
-            begin
-            // Prosign translation moved VERBATIM to uCWFraming.CWProsignFor.
-            // It is per-model DATA -- Elecraft and Kenwood spell the same
-            // prosigns with different characters in a KY string -- so it belongs
-            // with the framing rules the factory drivers will need, and it is
-            // now unit-testable instead of buried in this case arm.
-            //
-            // ONE deliberate difference: this chain tested [K2, K3, K4] and
-            // omitted the KX3, which therefore keyed Kenwood prosigns on an
-            // Elecraft.  CWProsignFor includes it.  See the note there.
-            prosign := uCWFraming.CWProsignFor(RadioModel, Msg);
-            if prosign.handled then
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + prosign.text;
-               charProcessed := true;
-               end;
-            end;
-         // Now process the string is not already processed   
-         if (Msg = CWByCATBufferTerminator) or sendNow then // Do nothing
-            begin
-            DebugMsg('Assembling CW message to send');
-            Msg := CWByCATBuffer;               // ny4i 4.44.5
-//            msgLen := length(Msg);              //length(Msg);
-            //len := Min(msgLen, 24);             // 24 max for Kenwood
-            // The per-model length/padding facts (including the K3/K4
-            // abort-window rule bench-proven 2026-06-18) moved VERBATIM to
-            // uCWFraming.CWFrameRuleFor, so this legacy path and the factory
-            // drivers cannot drift apart while the CW-by-CAT migration is
-            // half-done -- and so they can be unit-tested, which they could
-            // never be while buried here (uTestCWFraming).
-            frameRule := uCWFraming.CWFrameRuleFor(RadioModel,
-                                                   Self.tCATPortType = Network);
-            maxLen := frameRule.maxLen;
-            pad := frameRule.pad;
-            Msg := CWByCATBuffer;
-            tempLen := length(Msg);
-            while tempLen > 0 do
-               begin  // Loop around to to process the message in maxLen chunks;
-               sLen := min(tempLen,maxLen);
-               sMsg := Copy(msg,1,sLen); // Move sLen chars into sMsg;
-               Delete(Msg,1,sLen); // Delete sLen characters from start of Msg
-               // Count elements on the REAL text, BEFORE any padding is appended.
-               // The trailing pad spaces are trimmed by the radio and never keyed,
-               // so counting them inflates tmrCWByCAT (a 1-char '?' padded to 22
-               // counted as 165 elements -> a bogus ~8 s CWByCAT_Sending window).
-               elements := CalculateElements(sMsg);  // ny4i Issue 153
-               if pad then
-                  begin
-                  while length(sMsg) < maxLen do
-                     begin
-                     sMsg := sMsg + ' ';
-                     end;
-                  end;
-               // CAT repoint step 2: the cross-radio interlock now lives in
-               // TCWKeyerCAT.  It coordinates BOTH radios, so a per-family radio
-               // driver is the wrong home -- each driver would have to know about
-               // InactiveRadioPtr, and the policy would be duplicated per family.
-               KeyerCAT.EnsureSoleTransmitter(Self.active);
-               if sendNow then
-                  begin
-                  formatStr := 'KYW%s;'
-                  end
-               else
-                  begin
-                  formatStr := 'KY %s;';
-                  end;
-               logger.trace('Total CW Elements (unpadded) = %d',[elements]);
-               Self.EnableCWBYCATTimer( Round(1200 / DisplayedCodeSpeed) * elements); //ny4i Issue153 When timer fires, reset CWBYCAT_Sending
-               // Set CWByCAT_Sending BEFORE the KY command is written, so the poll
-               // thread (pKenwood2) pauses before the command goes on the wire.  Set
-               // after the write, a short message could be stepped on by an IF; poll
-               // fired in the gap and never key.
-               Self.CWByCAT_Sending := true;
-               logger.trace('Self.CWByCAT_Sending set to TRUE - Elecraft/Kenwood/Flex');
-               // Flex over TCP: delegate to the factory object's cwx API.
-               // Flex over serial falls through to the legacy KY path below.
-               if (RadioModel = FLEX) and (Self.tFactoryObject <> nil) and (Self.tCATPortType = Network) then
-                  begin
-                  Self.tFactoryObject.BufferCW(sMsg);
-                  Self.tFactoryObject.SendCW;
-                  end
-               else
-                  begin
-                  localMsg := Format(formatStr, [sMsg]);
-                  if Self.tFactoryObject <> nil then
-                     Self.tFactoryObject.SendToRadio(localMsg)
-                  else
-                     AddToOutputBuffer(addr(localMsg[1]), length(localMsg));
-                  end;
-               logger.trace('Adding K/E/F radio CW string to buffer');
-               tempLen := length(Msg);
-               end;
-            CWByCATBuffer := ''; // Clear the buffer
-            if sendNow then
-               begin
-//               sendNow := false;
-               SetRadioCWSpeed(CodeSpeed);
-               end;
-            end
-         else
-            begin
-            if not charProcessed then    // ny4i Do not add if we handled this above
-               begin
-               Self.CWByCATBuffer := Self.CWByCATBuffer + Msg; // Just add Msg to the buffer - Issue 131 ny4i
-               end;
-            end;
-         end; // case Kenwood...
-      rtYaesu1:
-         begin    // Yaesu does not support sending free-form text via CAT.
-         ;     // You can send memories that are previously programmed though.
-         end;     // This is not applicable to this program however.
-
-      rtIcom:
-         begin
-         // Q9: registry capability, not the legacy typeset (see SendCW).
-         if uRadioRegistry.SupportsFor(RadioModel, rcCWByCAT) then
-            begin
-            if Msg[1] = CWByCATBufferTerminator then // Flush if Msg = CWByCATBufferTerminator
-               begin
-               Msg := CWByCATBuffer;               // ny4i 4.44.5
-               // The 28-character limit is now a FRAME RULE, shared with the
-               // factory drivers and unit-tested (uCWFraming).  This used to be
-               //     len := Min(msgLen, 28);
-               // which sent the first 28 characters and DISCARDED THE REST --
-               // silently, with a TODO admitting it ("Optimally, this should be
-               // sent in multiple batches").  A CQ longer than 28 characters
-               // lost its tail with nothing in the log.  It now loops.
-               frameRule := uCWFraming.CWFrameRuleFor(RadioModel,
-                                                      Self.tCATPortType = Network);
-
-               // SO2R: stop the other radio's CW if it is sending
-               if Self.active then
-                  begin
-                  if InactiveRadioPtr.CWByCAT_Sending then
-                     begin
-                     InactiveRadioPtr.StopSendingCW;
-                     DEBUGMSG('Stopping Sending in SendCW - Inactive');
-                     end;
-                  end
-               else // Inactive
-                  begin
-                  if ActiveRadioPtr.CWByCAT_Sending then
-                     begin
-                     ActiveRadioPtr.StopSendingCW;
-                     DEBUGMSG('Stopping Sending in SendCW - ACTIVE');
-                     end;
-                  end;
-
-               for chunkIx := 1 to uCWFraming.CWChunkCount(Msg, frameRule) do
-                  begin
-                  sMsg := uCWFraming.CWChunk(Msg, frameRule, chunkIx);
-                  len := length(sMsg);
-                  // Count on the UNPADDED text: pad spaces are trimmed by the
-                  // radio and never keyed, so counting them inflates the busy
-                  // window (Issue 153).  The Icom rule does not pad today, but
-                  // asking for the unpadded form keeps this correct if it ever
-                  // does -- and matches the Elecraft/Kenwood loop above.
-                  elements := CalculateElements(
-                                 uCWFraming.CWChunkUnpadded(Msg, frameRule, chunkIx));
-                  DebugMsg('Total CW Elements for ' + sMsg + ' = ' + IntToStr(elements));
-                  // EnableCWBYCATTimer ADDS to a running interval, so a message
-                  // split across chunks accumulates one busy window covering all
-                  // of them rather than resetting per chunk.
-                  Self.EnableCWBYCATTimer(Round(( (1200 / DisplayedCodeSpeed) * elements) * 1.25)); //ny4i Issue153 When timer fires, reset CWBYCAT_Sending
-                  // Set before the write: the poll thread must pause before the
-                  // command reaches the wire, or an interleaved read can step on
-                  // a short message (same rule as the Elecraft/Kenwood arm).
-                  Self.CWByCAT_Sending := true;
-
-                  if Self.tFactoryObject <> nil then
-                     begin
-                     // Network path: route through TIcomRadio.BufferCW/SendCW
-                     DebugMsg('SendCW for Icom network[' + IntToStr(len) + ' bytes]=' + sMsg);
-                     Self.tFactoryObject.BufferCW(sMsg);
-                     Self.tFactoryObject.SendCW;
-                     end
-                  else
-                     begin
-                     // Legacy serial path: build raw CI-V frame
-                     DebugMsg('Sending to Icom[' + IntToStr(len) + ' bytes]=' + sMsg);
-                     CommandsTempBuffer[0] := AnsiChar(7 + len);
-                     CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
-                     CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-                     CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
-                     CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
-                     CommandsTempBuffer[5] := ICOM_SEND_CW;
-                     for i := 1 to len do
-                        begin
-                        CommandsTempBuffer[5 + i] := AnsiChar(Ord(sMsg[i]));
-                        end;
-                     CommandsTempBuffer[6 + len] := ICOM_END_OF_MESSAGE_CODE;
-                     AddCommandToBuffer;
-                     end;
-                  end;
-
-               logger.trace('Self.CWByCAT_Sending set to TRUE - Icom');
-               CWByCATBuffer := '';
-               end
-            else
-               begin // Add to CWBYCATBuffer
-               if Msg = ControlF then// increase speed
-                  begin
-                  //CodeSpeed := CodeSpeed + Round(CodeSpeed * 0.06); // increase 6 %
-                  //SetRadioCWSpeed(CodeSpeed);
-                  //sendNow := true;
-//                  charProcessed := true;
-                  end
-               else if Msg = ControlS then
-                  begin       // Speed down by 6 %
-                  //CodeSpeed := CodeSpeed - Round(CodeSpeed * 0.06); // increase 6 %
-                  //SetRadioCWSpeed(CodeSpeed);
-                  //sendNow := true;
-//                  charProcessed := true;
-                  end
-               else
-                  begin
-                  // ny4i Issue 131.  The Icom prosign spellings moved to
-                  // uCWFraming.CWProsignFor, beside the Elecraft and Kenwood
-                  // ones -- Icom is a third dialect, spelling prosigns by name
-                  // ('^AR') where the others substitute a single character.
-                  // One table, unit-tested, instead of three chains in this file
-                  // that could drift apart (the KX3 already had).
-                  prosign := uCWFraming.CWProsignFor(RadioModel, Msg);
-                  if prosign.handled then
-                     begin
-                     Self.CWByCATBuffer := Self.CWByCATBuffer + prosign.text;
-                     end
-                  else
-                     begin
-                     CWByCATBuffer := CWByCATBuffer + Msg;    // ny4i 4.44.5
-                     end;
-                  end;
-               end;
-            end;
-         end;
-      rtOrion:
-         begin
-         // Delegated to TTenTecOrionRadio, which sends '/<char>' + CR for each
-         // character of the message.
-         //
-         // The legacy line here was BROKEN and had been since Issue 112:
-         //     localMsg := Format('/%s#13', [Msg]);
-         // #13 INSIDE A QUOTED STRING is the three literal characters '#', '1'
-         // and '3' -- not a carriage return.  The Orion therefore received
-         // '/X#13' with no terminator and never keyed.  The driver builds the
-         // real CR (ORION_CR) instead, so delegating fixes it rather than
-         // repairing a line that is about to be deleted anyway.
-         if Self.tFactoryObject <> nil then
-            begin
-            Self.tFactoryObject.BufferCW(Msg);
-            Self.tFactoryObject.SendCW;
-            Self.CWByCAT_Sending := true;
-            logger.trace('Self.CWByCAT_Sending set to TRUE - Orion');
-            end;
-         end;
+         Self.CWByCATBuffer := Self.CWByCATBuffer + prosign.text;
+         end
       else
          begin
+         Self.CWByCATBuffer := Self.CWByCATBuffer + Msg;
          end;
+      end;
+
+   // Still collecting: nothing goes out until the terminator arrives or a speed
+   // change forces the buffer.
+   if not ( (Msg = CWByCATBufferTerminator) or sendNow ) then
+      begin
+      Exit;
+      end;
+
+   text := Self.CWByCATBuffer;
+   Self.CWByCATBuffer := '';
+   if text = '' then
+      begin
+      Exit;
+      end;
+
+   DebugMsg('Assembling CW message to send');
+   frameRule := uCWFraming.CWFrameRuleFor(Self.RadioModel,
+                                          Self.tCATPortType = Network);
+
+   // Only one radio may key at a time; the keyer owns that policy because it
+   // spans BOTH radios (see TCWKeyerCAT.EnsureSoleTransmitter).
+   KeyerCAT.EnsureSoleTransmitter(Self.active);
+
+   for chunkIx := 1 to uCWFraming.CWChunkCount(text, frameRule) do
+      begin
+      chunk := uCWFraming.CWChunk(text, frameRule, chunkIx);
+      // Count elements on the UNPADDED text: the radio trims trailing pad
+      // spaces instead of keying them, so counting them inflates the busy
+      // window (a 1-char '?' padded to 22 once gave a bogus ~8 s). Issue 153.
+      elements := CalculateElements(
+                     uCWFraming.CWChunkUnpadded(text, frameRule, chunkIx));
+      logger.trace('Total CW Elements (unpadded) = %d', [elements]);
+      // EnableCWBYCATTimer ADDS to a running interval, so a message split
+      // across chunks gets one window covering all of them.
+      Self.EnableCWBYCATTimer(
+         Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
+      Self.CWByCAT_Sending := True;
+      logger.trace('Self.CWByCAT_Sending set to TRUE');
+
+      Self.tFactoryObject.SendCWImmediate := sendNow;
+      Self.tFactoryObject.BufferCW(chunk);
+      Self.tFactoryObject.SendCW;
+      end;
+
+   if sendNow then
+      begin
+      SetRadioCWSpeed(CodeSpeed);
       end;
 end;
 //------------------------------------------------------------------------------
