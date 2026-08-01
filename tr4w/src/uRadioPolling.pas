@@ -4410,12 +4410,27 @@ procedure PTTStatusChanged;
 begin
    if ActiveRadioPtr.tPTTStatus = PTT_ON then
       begin
-         tr4w_PTTStartTime := GetTickCount
+         tr4w_PTTStartTime := GetTickCount;
+         // PTT ON is a genuine transmit sighting -- latch it, so the PTT-OFF
+         // arm below can tell "the message finished" from "the radio has not
+         // keyed up yet".  Same latch ProcessFilteredStatus uses; both doors
+         // into "CW is over" must agree or the race just moves to the other one
+         // (it did: 08d6eb2 fixed only ProcessFilteredStatus and the failure
+         // reappeared here -- NY4I, 2026-08-01 16:54).
+         ActiveRadioPtr.CWByCAT_SawTX := True;
       end
    else //n4af 04.30.3
       begin
          if ActiveRadioPtr.CurrentStatus.Mode = CW then
-            if IsCWByCATActive then
+            // Only believe PTT-OFF means "done" once the radio has actually been
+            // SEEN transmitting this message.  The keyer abort TR4W sends ahead
+            // of every interrupting message is 'KY <abort>;RX;' -- the RX drops
+            // the rig out of transmit -- and the message follows within
+            // milliseconds.  A PTT-off observed in that window ended a message
+            // that had not started: an F9 armed an 800 ms window at 15.876 and
+            // this cleared it 272 ms later, firing tStartAutoCQ.  The operator
+            // heard no CW.
+            if IsCWByCATActive and ActiveRadioPtr.CWByCAT_SawTX then
                begin
                   ActiveRadioPtr.CWByCAT_Sending := false;
                      // If we were sending but the PTT goes off, now reset this.
