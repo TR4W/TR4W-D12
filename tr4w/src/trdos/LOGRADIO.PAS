@@ -225,6 +225,16 @@ type
       CWByCAT:         boolean;                    // ny4i 4.44.5
       CWSpeedSync:     boolean;
       CWByCAT_Sending: boolean;                    // ny4i Issue 129
+      // True once a poll has actually SEEN this radio transmitting since the
+      // current CW-by-CAT message was handed over.  uRadioPolling treats
+      // "TX off" as end-of-message, which races the radio: the keyer abort we
+      // send first is 'KY <abort>;RX;' -- it puts the radio in RECEIVE -- and the
+      // message follows within milliseconds, before the rig has keyed up.  A
+      // poll landing in that gap sees TX off and declares a message finished
+      // that has not started.  Requiring a TX-ON sighting first closes it.
+      // Radios that cannot report TX status (no rcReadTXStatus) never set this
+      // and fall back to tmrCWByCAT, which is what they already relied on.
+      CWByCAT_SawTX: boolean;
       CATSerialLock:   TRTLCriticalSection;        // serialize a poll cycle vs a CW-by-CAT write on this radio's serial port
       UseHamLib:       boolean;
       WideCWFilter:    boolean;
@@ -2351,6 +2361,9 @@ begin
             Round( (1200 / DisplayedCodeSpeed) * elements * frameRule.busyFactor));
          end;
       Self.CWByCAT_Sending := True;
+      // Fresh message: we have not seen this one transmit yet.  Until we do, a
+      // TX-off poll must not be read as "finished" (see CWByCAT_SawTX).
+      Self.CWByCAT_SawTX := False;
       logger.trace('Self.CWByCAT_Sending set to TRUE');
 
       Self.tFactoryObject.SendCWImmediate := sendNow;
