@@ -11,6 +11,23 @@ are, come first.
 Run with `DEBUG LOG LEVEL = DEBUG` throughout — several checks below are read
 off the log rather than the front panel.
 
+## Already verified by NY4I — do not repeat
+
+Tested against builds up to and including `d26ff31`:
+
+- **§4 Escape / keyer abort, K3** — CW stops, Escape included, from the driver's
+  new `StopCW`.
+- **§5 WinKeyer latency and startup** — 383 ms → 25 ms, startup 1978 ms → 0.4 ms,
+  plus the F1/F4/Escape/interrupt regression set.
+- **§7 Serial K4 RIT and XIT**, and network K4 confirmed unaffected.
+- **§6 for the K4 specifically** — `SetRadioFreq` after the legacy deletion.
+- CW by serial port (CPU keyer) on the K4, COM6.
+
+**What that testing does NOT cover.** The `SendCW` collapse landed in `d3aa5e1`,
+*after* the last build NY4I ran. Every CW-by-CAT **send** path is therefore
+unverified, including on radios whose *abort* is confirmed. §1, §2 and §3 are
+untouched by the earlier testing; §4 stays open for the **K4** only.
+
 ---
 
 ## 1. CW-by-CAT send — EVERY radio you have
@@ -75,7 +92,7 @@ Each family's abort moved out of LOGRADIO into its driver.
 
 | Radio | Command now sent by | Expected |
 |---|---|---|
-| K3 / KX3 | `TElecraftSerial.StopCW` | `KY <04>;RX;` — **verified 2026-08-01** |
+| K3 / KX3 | `TElecraftSerial.StopCW` | `KY <04>;RX;` — **VERIFIED**, no retest needed |
 | K2 | same, `'@'` instead of `#4` | `KY @;RX;` |
 | **K4** | `TK4Radio.StopCW` | `KY <04>;RX;` — **see below** |
 | TS-570 etc. | `TKenwoodSerial.StopCW` | `KY0;` then `RX;` |
