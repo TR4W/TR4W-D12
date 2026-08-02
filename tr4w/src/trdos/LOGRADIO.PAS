@@ -2354,14 +2354,18 @@ begin
                   end
                else
                   begin
-                  // STILL the legacy table, deliberately.  uRadioRegistry has a
-                  // hamlibID field and RegisteredHamLibID to read it, but only
-                  // RegisterHamLibOnlyRadio populates it -- plain RegisterRadio
-                  // leaves it 0.  Switching this line to the registry today
-                  // would hand HamLib rig_model 0 for every ordinary radio
-                  // (K3, TS-570, IC-718...) whose operator ticks "Use HamLib".
-                  // Populating the registry rows comes first; see task #28.
-                  HamLibModelID := RadioParametersArray[Self.RadioModel].hamlibID;
+                  // The REGISTRY owns the HamLib rig_model now.  Every enum
+                  // registration carries its own, transcribed from the legacy
+                  // table and pinned by test/unit/uTestHamLibIDs -- because a
+                  // wrong number here does not fail to compile or to connect,
+                  // it just makes the rig behave as some OTHER radio.
+                  //
+                  // RadioParametersArray keeps the values for historic
+                  // reference; nothing reads them for this any more.  That
+                  // matters: two live sources for one fact is what put three
+                  // WRONG hamlibIDs in the table (TS-590, TS-2000, FLEX) until
+                  // task #16 went looking for them.
+                  HamLibModelID := uRadioRegistry.RegisteredHamLibID(Self.RadioModel);
                   logger.Info('[%s] HamLib rig_model %d (per-model default)',
                               [Self.RadioName, HamLibModelID]);
                   end;

@@ -63,6 +63,8 @@ initialization
      function: TFactoryRadioBase begin Result := TFT840Radio.Create end,
      'Yaesu FT-840', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     1011
      );
 
 end.

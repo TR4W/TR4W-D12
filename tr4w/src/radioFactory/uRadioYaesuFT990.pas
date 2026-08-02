@@ -76,6 +76,8 @@ initialization
      function: TFactoryRadioBase begin Result := TFT990Radio.Create end,
      'Yaesu FT-990', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     1016
      );
 
 end.

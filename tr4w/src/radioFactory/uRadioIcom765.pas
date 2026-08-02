@@ -59,6 +59,8 @@ initialization
      function: TFactoryRadioBase begin Result := TIcom765Radio.Create end,
      'Icom IC-765', [rlSerial], 0, False,
      SerialParams(9600, 8, PARITY_NONE, 1)
+     ,
+     3029
      );
 
 end.

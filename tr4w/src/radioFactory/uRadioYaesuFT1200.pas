@@ -51,6 +51,8 @@ initialization
      function: TFactoryRadioBase begin Result := TYaesuFT1200Radio.Create end,
      'Yaesu FT-1200', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     1034
      );
 
 end.

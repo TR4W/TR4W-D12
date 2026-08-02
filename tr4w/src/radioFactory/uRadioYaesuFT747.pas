@@ -273,6 +273,8 @@ initialization
      function: TFactoryRadioBase begin Result := TFT747GXRadio.Create end,
      'Yaesu FT-747GX', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     1005
      );
 
 end.

@@ -69,6 +69,8 @@ initialization
      // Elecraft docs and HamLib's kenwood/elecraft backends).  The old 2 came
      // from the legacy blanket "everything non-CI-V gets 2 stop bits" rule.
      SerialParams(4800, 8, PARITY_NONE, 1)
+     ,
+     2021
      );
 
 end.

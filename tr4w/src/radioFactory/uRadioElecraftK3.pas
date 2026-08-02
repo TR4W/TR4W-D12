@@ -62,6 +62,8 @@ initialization
      'Elecraft K3', [rlSerial], 0, False,
      // 1 stop bit: Elecraft serial is 8N1 (NY4I 2026-07-30) -- see uRadioElecraftK2.
      SerialParams(38400, 8, PARITY_NONE, 1)
+     ,
+     2029
      );
 
 end.

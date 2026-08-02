@@ -72,6 +72,8 @@ initialization
      function: TFactoryRadioBase begin Result := TFTDX10Radio.Create end,
      'Yaesu FTDX-10', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     1042
      );
 
 end.

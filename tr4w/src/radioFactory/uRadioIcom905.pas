@@ -65,6 +65,8 @@ initialization
      function: TFactoryRadioBase begin Result := TIcom905Radio.Create end,
      'Icom IC-905', [rlSerial, rlNetwork], 50001, True,
      SerialParams(19200, 8, PARITY_NONE, 1)
+     ,
+     0
      );
 
 end.

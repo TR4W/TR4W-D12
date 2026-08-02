@@ -65,6 +65,8 @@ initialization
      function: TFactoryRadioBase begin Result := TKenwoodTS990Radio.Create end,
      'Kenwood TS-990S', [rlSerial, rlNetwork], 50000, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     2039
      );
 
 end.
