@@ -43,7 +43,13 @@ begin
 {$IF SERVERDEBUG}
         ServerDebugMode := GetPrivateProfileInt(_TR4WSERVER, 'DEBUG', 0, _TR4WSERVERINIFILE) = 1;
 {$IFEND}
-        GetPrivateProfileString(_TR4WSERVER, 'SERVER PASSWORD', _TR4WSERVER, @tr4wServerPassword, 11, _TR4WSERVERINIFILE);
+        // MUST be the ...A variant.  tr4wServerPassword is array[0..10] of AnsiChar
+        // and is compared byte-for-byte against what the client sends, but under D12
+        // the generic name binds to GetPrivateProfileStringW, which filled the buffer
+        // with UTF-16 ('T'#0'R'#0'4'#0...).  The compare then matched byte 0 and failed
+        // on the #0 at byte 1, so EVERY client was rejected -- including with no INI
+        // file present, because the DEFAULT value goes through the same call.
+        GetPrivateProfileStringA(_TR4WSERVER, 'SERVER PASSWORD', _TR4WSERVER, @tr4wServerPassword, 11, _TR4WSERVERINIFILE);
 
         //if not Load_MSWSOCK then goto Exit2;
         MSWSOCKLoaded := Load_MSWSOCK;
