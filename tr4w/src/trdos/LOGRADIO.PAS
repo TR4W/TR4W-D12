@@ -333,6 +333,10 @@ type
 
       procedure FreqToBCD(Freq: longint; Swap: boolean; OpCode: byte);
       procedure ResolveSerialFrameSettings;
+      // Dumps this radio's operator-settable configuration to the log at DEBUG.
+      // Called before anything can bail out, so a radio that is NOT set up still
+      // says so and says why.
+      procedure LogRadioConfiguration;
       procedure CheckAndInitializePorts_ForThisRadio;
       function WriteToCATPort(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
       function WritePollRequest(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
@@ -1601,13 +1605,105 @@ begin
 end;
 
 { The initializtion of BeginPolling is in this procedure so if we are not using serial ports, it has to be setup somewhere else.}
+// Issue: a misconfigured radio used to fail in silence -- no setup, no thread,
+// nothing in the log to say which radio the program thought it was driving.
+// NY4I 2026-08-02: dump what we believe, at DEBUG, so an operator can compare
+// it against what they intended, and so a user bug report carries it.
+procedure RadioObject.LogRadioConfiguration;
+var
+   what:   string;
+   how:    string;
+   parity: string;
+
+   function OrElse(const s, fallback: string): string;
+   begin
+      if s = '' then
+         begin
+         Result := fallback;
+         end
+      else
+         begin
+         Result := s;
+         end;
+   end;
+
+begin
+   // No IsEnabledFor guard: logger.Debug already no-ops below DEBUG, and this
+   // runs twice at startup (and on Reset Radio Ports), so the string building
+   // is not worth a level test that could go stale.
+
+   // WHICH radio.  A string-id radio has NO enum member, so report whichever
+   // actually identifies it -- that distinction is what hid the TCI bug.
+   if Self.FactoryId <> '' then
+      begin
+      what := 'factory-id ' + string(Self.FactoryId) + ' (' +
+              uRadioRegistry.DisplayNameId(string(Self.FactoryId)) + ')';
+      end
+   else if Self.RadioModel = NoInterfacedRadio then
+      begin
+      what := 'NONE (no RADIO n TYPE and no RADIO n FACTORY ID configured)';
+      end
+   else
+      begin
+      what := uRadioRegistry.DisplayName(Self.RadioModel);
+      end;
+
+   // HOW it is wired.
+   if Self.UseHamLib then
+      begin
+      how := Format('HamLib (rig_model %d)', [Self.HamLibID]);
+      end
+   else if Self.tCATPortType = Network then
+      begin
+      how := Format('network %s:%d', [string(Self.IPAddress), Self.RadioTCPPort]);
+      end
+   else if Self.tCATPortType = NoPort then
+      begin
+      how := 'NO PORT SET';
+      end
+   else
+      begin
+      case Self.RadioParity of
+         Tree.OddParity:   parity := 'O';
+         Tree.EvenParity:  parity := 'E';
+      else
+         parity := 'N';
+      end;
+      how := Format('COM%d %d baud %d%s%d',
+                    [Ord(Self.tCATPortType), Self.RadioBaudRate,
+                     Self.RadioNumberBits, parity, Self.RadioStopBits]);
+      end;
+
+   logger.Debug('[%s config] radio=%s  connection=%s',
+                [string(Self.RadioName), what, how]);
+   logger.Debug('[%s config] polling=%s  CW-speed-sync=%s  serial-format=%s  startup-command=%s',
+                [string(Self.RadioName),
+                 BoolToStr(Self.PollingEnable, True),
+                 BoolToStr(Self.CWSpeedSync, True),
+                 OrElse(string(Self.SerialFormat), '(radio default)'),
+                 OrElse(string(Self.StartupCommand), '(none)')]);
+   // Credentials: report only WHETHER one is set, never the value.
+   logger.Debug('[%s config] network-username=%s  Icom-data-mode=D%d',
+                [string(Self.RadioName),
+                 OrElse(string(Self.NetworkUsername), '(none)'),
+                 Self.IcomDataModeID]);
+end;
+
 procedure RadioObject.CheckAndInitializePorts_ForThisRadio;
 begin
+   LogRadioConfiguration;
    // Reset data-mode capability for this connection: assume no data mode until
    // the radio proves it by answering a valid $1A06. This lets an old Icom put
    // on a slot previously held by a data-mode radio commit its mode via $04.
    Self.icomHasDataMode := False;
-   if RadioModel = NoInterfacedRadio then
+   // "No radio configured" is NOT the same as "RadioModel = NoInterfacedRadio".
+   // A STRING-ID radio (RegisterRadioById) has no InterfacedRadioType member at
+   // all, so its RadioModel IS NoInterfacedRadio by design -- see the note in
+   // SetUpRadioInterface.  Testing the enum alone silently skipped setup for the
+   // entire string-id mechanism: no SetUpRadioInterface, no polling thread, and
+   // not one line in the log to say why.  TCI was the first such radio, so this
+   // path had never been exercised until 2026-08-02.
+   if (RadioModel = NoInterfacedRadio) and (Self.FactoryId = '') then
       begin
       Exit;
       end;
