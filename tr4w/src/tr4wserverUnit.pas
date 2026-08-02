@@ -1,3 +1,23 @@
+{
+ Copyright Dmitriy Gulyaev UA4WLI 2015.
+
+ This file is part of TR4W  (SRC)
+
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT. 
+If not, ref: 
+http://www.gnu.org/licenses/gpl-3.0.txt
+ }
 unit tr4wserverUnit;
 {$IMPORTEDDATA OFF}
 interface
@@ -7,6 +27,8 @@ uses
   Windows,
   WinSock2,
   VC,
+  Log4D,        // server logging: InitServerLogger / logger, restored from the fork
+  Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
   TF,
   uCRC32,
   Messages;
@@ -76,7 +98,7 @@ type
 
     clSerialNumberStatus: TSerialNumberType;
     clConnectedToTelnet: boolean;
-    clID: Char;
+    clID: AnsiChar;
   end;
 
 type
@@ -112,6 +134,11 @@ type
 const
   DebugMessagesArray                    : array[DebugMessageType] of PAnsiChar =
     ('SVN', 'RX ', 'TX ', 'RUN', 'DSC', 'MF ', 'RXD', 'QSO', 'LST', 'ACC', 'TF ', 'LI ', 'PAS', 'SS ', 'DXS', 'TS ', 'PAR', 'INT', 'EQ ', 'CLL', 'CLD', 'SLC', 'MES', 'TR ', 'OLQ');
+
+  // TransmitFile flag from MSWSOCK.  Was supplied by the vendored WinSock2.pas;
+  // the RTL's Winapi.WinSock2 does not declare the MSWSOCK extensions, and
+  // TransmitFile itself is already loaded here as a function pointer.
+  TF_DISCONNECT                         = $01;
 
   _TR4WSERVER                           = 'TR4WSERVER';
   _TR4WSERVERINIFILE                    = 'TR4WSERVER.INI';
@@ -204,6 +231,9 @@ var
 //  SetPointerEvent                       : Cardinal;
   BytesWritten                          : Cardinal;
 
+  logger                                : TLogLogger;
+  appender                              : TLogRollingFileAppender;
+
   LastDisplayedBytesRCVD                : Cardinal = 0;
   LastDisplayedBytesSEND                : Cardinal = 0;
 
@@ -238,6 +268,7 @@ procedure GetServerLogCRC32;
 function sSend(s: TSocket; var buf; Len: integer; mt: DebugMessageType): integer;
 function sRecv(s: TSocket; var buf; Len: integer): integer;
 function ServerMessageBox(const Text: string; uType: UINT): integer;
+procedure InitServerLogger;
 procedure ScanLogForSerialsNumbers;
 procedure StopServer;
 procedure AddSocketToArray(soc: Cardinal; IP: PAnsiChar; Name: PAnsiChar);
@@ -259,8 +290,8 @@ procedure WriteContestExchangesBufferToServerLog;
 procedure SendLogFileInformation(s: TSocket);
 function ClearServerLog: boolean;
 procedure WriteToServerDebugFile(Count: Cardinal; s: TSocket; comment: PChar; mt: DebugMessageType);
-procedure SendDisconnectMessage(Client: Char);
-procedure SetComputerID(ID: Char; s: TSocket);
+procedure SendDisconnectMessage(Client: AnsiChar);
+procedure SetComputerID(ID: AnsiChar; s: TSocket);
 procedure SetStatus(Status: TClientStatus; s: TSocket);
 procedure SendSpotViaNet(Status: TSendSpotViaNetwork; s: TSocket);
 function CorrectPassword(s: TSocket; BytesReceived: integer): boolean;
@@ -280,7 +311,11 @@ begin
   mysaddr.sin_family := AF_INET;
   mysaddr.sin_port := htons(PortNumber + 1);
   mysaddr.sin_addr.S_addr := 0;
-  if WinSock2.bind(ListenerSocket, @mysaddr, SizeOf(mysaddr)) <> 0 then goto UnSucc;
+  // D12 RTL: bind takes `var name: TSockAddr` where the vendored D7 WinSock2
+  // took `const Addr: PSockAddr`, so the old @mysaddr is now wrong.  TSockAddr
+  // is `sockaddr` and mysaddr is `sockaddr_in` -- both 16 bytes -- and a var
+  // parameter demands an EXACT type match, hence the cast.
+  if WinSock2.bind(ListenerSocket, TSockAddr(mysaddr), SizeOf(mysaddr)) <> 0 then goto UnSucc;
   if listen(ListenerSocket, maxclients) <> 0 then goto UnSucc;
 
   WSAAsyncSelect(ListenerSocket, ApplicationHandle, WM_SOCK_NET_SYNLISTNER, FD_ACCEPT);
@@ -294,6 +329,20 @@ procedure RunServerThread;
 begin
   //  ServerThread := CreateThread(nil, 0, @RunServer, nil, 0, ServerThreadID);
   RunServer;
+end;
+
+// Restored from the tr4wserver/src fork (commit 60620b2, "TR4WServer logging").
+// The D12 string work branched from a copy that predated it, so this and the
+// two logging sites below were absent from the copy being modernized -- and
+// tr4wserver.dpr calls this at WM_INITDIALOG.
+procedure InitServerLogger;
+begin
+  appender := TLogRollingFileAppender.Create('name', 'tr4wserver.log');
+  appender.Layout := TLogPatternLayout.Create('%d ' + TTCCPattern);
+  TLogBasicConfigurator.Configure(appender);
+  logger := TLogLogger.GetLogger('TR4WServer');
+  logger.Level := All;
+  logger.Info('TR4WServer starting');
 end;
 
 procedure RunServer;
@@ -313,10 +362,17 @@ begin
   mysaddr.sin_family := AF_INET;
   mysaddr.sin_port := htons(PortNumber);
   mysaddr.sin_addr.S_addr := 0;
-  if WinSock2.bind(ServerSocket, @mysaddr, SizeOf(mysaddr)) <> 0 then
+  // D12 RTL: bind takes `var name: TSockAddr` where the vendored D7 WinSock2
+  // took `const Addr: PSockAddr`, so the old @mysaddr is now wrong.  TSockAddr
+  // is `sockaddr` and mysaddr is `sockaddr_in` -- both 16 bytes -- and a var
+  // parameter demands an EXACT type match, hence the cast.
+  if WinSock2.bind(ServerSocket, TSockAddr(mysaddr), SizeOf(mysaddr)) <> 0 then
   begin
-    // boundary: server-side ServerMessageBox is ANSI (PAnsiChar); temp lives through the call.
-    ServerMessageBox(SysUtils.SysErrorMessage(GetLastError), MB_OK or MB_ICONWARNING or MB_TOPMOST);
+    logger.Error('bind() failed on port ' + IntToStr(PortNumber) + ', error ' + IntToStr(GetLastError));
+    ServerMessageBox('bind() failed. Check that the port is not already in use. '
+                     + 'See tr4wserver.log for details.' + sLineBreak + sLineBreak
+                     + SysUtils.SysErrorMessage(GetLastError),
+                     MB_OK or MB_ICONWARNING or MB_TOPMOST);
 //    tf.ShowSysErrorMessage('BIND');
     goto UnSucc;
   end;
@@ -796,7 +852,7 @@ begin
 {$IFEND}
 end;
 
-procedure SendDisconnectMessage(Client: Char);
+procedure SendDisconnectMessage(Client: AnsiChar);
 var
   i                                     : Cardinal;
 begin
@@ -810,7 +866,7 @@ begin
     end;
 end;
 
-procedure SetComputerID(ID: Char; s: TSocket);
+procedure SetComputerID(ID: AnsiChar; s: TSocket);
 var
   i                                     : integer;
 begin
@@ -949,10 +1005,23 @@ begin
 end;
 
 function sRecv(s: TSocket; var buf; Len: integer): integer;
+var
+  i    : integer;
+  sHex : string;
 begin
   Result := recv(s, buf, Len, 0);
   BytesRCVD := BytesRCVD + DWORD(Result);
   DisplayRCVDBytes;
+  logger.Debug('sRecv: ' + IntToStr(Result) + ' bytes received');
+  if logger.IsEnabledFor(Trace) and (Result > 0) then
+     begin
+     sHex := '';
+     for i := 0 to Result - 1 do
+        begin
+        sHex := sHex + IntToHex(PByteArray(@buf)^[i], 2) + ' ';
+        end;
+     logger.Trace('sRecv data: ' + sHex);
+     end;
 end;
 
 function tUpdateServerLog(UpdAction: UpadateAction): boolean;

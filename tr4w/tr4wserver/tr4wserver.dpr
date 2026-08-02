@@ -1,4 +1,4 @@
-program tr4wserver;
+﻿program tr4wserver;
 
 {$DEFINE LINUX}
 
@@ -7,11 +7,11 @@ uses
   Windows,
   Messages,
   SysUtils,
-  tr4wserverUnit in 'src\tr4wserverUnit.pas',
-  uCRC32 in '..\tr4w\src\uCRC32.pas',
-  winsock2 in '..\include\WinSock2.pas',
-  //TF in '..\tr4w\src\TF.pas',
-  VC in '..\tr4w\src\vc.pas';
+  tr4wserverUnit in '..\src\tr4wserverUnit.pas',
+  uCRC32 in '..\src\uCRC32.pas',
+  WinSock2,     // Winapi.WinSock2 from the RTL -- the vendored D7 WinSock2.pas is retired
+  Log4D,        // the dialog proc logs through tr4wserverUnit's logger
+  VC in '..\src\vc.pas';
 
 {$R res\tr4wserver.res}
 
@@ -330,7 +330,7 @@ begin
     WM_SOCK_NET_SYNLISTNER:
       begin
 
-        client_socket := WinSock2.Accept(ListenerSocket, client_addr, addrlen);
+        client_socket := WinSock2.accept(ListenerSocket, PSockAddr(@client_addr), @addrlen);
         if client_socket <> INVALID_SOCKET then
         begin
 
@@ -385,7 +385,7 @@ begin
     WM_SOCK_NET_ACCEPT:
       begin
 //        AcceptEx(ListenerSocket, client_socket, ServerBuffer, 10, 10, 10, lpdwBytesReceived, nil);
-        client_socket := WinSock2.Accept(ServerSocket, client_addr, addrlen);
+        client_socket := WinSock2.accept(ServerSocket, PSockAddr(@client_addr), @addrlen);
         if client_socket <> INVALID_SOCKET then
         begin
           Sleep(200);
