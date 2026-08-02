@@ -220,6 +220,9 @@ type
     property NetworkUsername: string read FNetworkUsername write FNetworkUsername;
     property NetworkPassword: string read FNetworkPassword write FNetworkPassword;
     property DataModeID: Byte read FDataModeID write FDataModeID;
+    // E-2: LOGRADIO used to type-test this class and poke the properties above.
+    procedure ApplyNetworkCredentials(const user, pass: string); override;
+    procedure ApplyDataModeID(id: integer); override;
     property NetworkTransport: TIcomNetworkTransport read FNetworkTransport;
   end;
 
@@ -2176,6 +2179,23 @@ procedure TIcomRadio.SendToRadio(whichVFO: TVFO; sCmd: string; sData: string);
 begin
   // For Icom, commands are built differently - this is mainly for compatibility
   SendToRadio(sCmd + sData);
+end;
+
+procedure TIcomRadio.ApplyNetworkCredentials(const user, pass: string);
+begin
+   FNetworkUsername := user;
+   FNetworkPassword := pass;
+   logger.Info('[%s] network credentials set (user=%s, pass=*******)', [radioModel, user]);
+end;
+
+procedure TIcomRadio.ApplyDataModeID(id: integer);
+begin
+   // Only D1..D3 are meaningful; anything else leaves the constructor default.
+   if (id >= 1) and (id <= 3) then
+      begin
+      FDataModeID := Byte(id);
+      logger.Info('[%s] Icom data mode ID set to D%d', [radioModel, id]);
+      end;
 end;
 
 initialization

@@ -113,6 +113,8 @@ type TKenwoodLAN = class(TFactoryRadioBase)
    public
       NetworkUsername: ShortString;   // Set by LOGRADIO before Connect; "Admin ID" on the radio
       NetworkPassword: ShortString;   // "Admin Password" on the radio
+      // E-2: LOGRADIO used to type-test this class and poke the two fields above.
+      procedure ApplyNetworkCredentials(const user, pass: string); override;
 
       Constructor Create;
       Destructor  Destroy; override;
@@ -1097,5 +1099,12 @@ end;
 
 // This unit registers NOTHING -- it is the shared base.  See
 // uRadioKenwoodTS890.pas and uRadioKenwoodTS990.pas.
+
+procedure TKenwoodLAN.ApplyNetworkCredentials(const user, pass: string);
+begin
+   NetworkUsername := ShortString(user);
+   NetworkPassword := ShortString(pass);
+   logger.Info('[%s] LAN credentials set (user=%s, pass=*******)', [radioModel, user]);
+end;
 
 end.

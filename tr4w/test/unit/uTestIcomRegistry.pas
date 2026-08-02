@@ -46,6 +46,21 @@ type
 
 implementation
 
+function InModelList(m: InterfacedRadioType; const arr: array of InterfacedRadioType): Boolean;
+var
+   i: Integer;
+begin
+   Result := False;
+   for i := Low(arr) to High(arr) do
+      begin
+      if arr[i] = m then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 // Build through the registry -- the same path the application uses -- so this
 // also proves the registration closure works, not just that a class exists.
 function Build(model: InterfacedRadioType): TFactoryRadioBase;
@@ -132,6 +147,20 @@ const
    // Do NOT add a model here to silence a failure.  A row belongs here only when
    // someone has had that radio on a bench.  Anything else is the migration
    // dropping behaviour, which is exactly what this test exists to catch.
+   // The four LOGRADIO typesets these assertions used to read, transcribed here
+   // ONCE.  The sets themselves were retired when the last live reader moved to
+   // the radio's own rcReadRIT capability -- but the test must keep asserting
+   // the same model lists, and transcribing them makes it INDEPENDENT of the
+   // code under test (same rule as uTestRadioSupportsCaps).
+   LEGACY_RIT_MODELS: array[0..12] of InterfacedRadioType = (
+      IC705, IC7100, IC7300, IC7800, IC7850, IC7851, IC7600, IC7610, IC7700,
+      IC7760, IC9700, IC905, IC7300MK2);
+   LEGACY_VFOB_MODELS: array[0..12] of InterfacedRadioType = (
+      IC705, IC7100, IC7300, IC7800, IC7850, IC7851, IC7600, IC7610, IC7700,
+      IC7760, IC9700, IC905, IC7300MK2);
+   LEGACY_SPLIT_SET_ONLY: array[0..0] of InterfacedRadioType = (IC718);
+   LEGACY_TXSTATUS_UNREADABLE: array[0..0] of InterfacedRadioType = (IC718);
+
    BenchProvenDivergences = [IC706, IC706II, IC706IIG, IC7000];
 
 begin
@@ -158,8 +187,8 @@ begin
          // and passed while 26 radios were silently missing split and TX-status
          // reads that D7 performs -- the deny-lists below contain the IC-718 and
          // nothing else, so for every other model the answer is "yes".
-         Compare(rcReadRIT, m in IcomRadiosThatSupportRIT, 'RIT');
-         Compare(rcReadVFOB, m in IcomRadiosThatSupportVFOB, 'VFOB');
+         Compare(rcReadRIT, InModelList(m, LEGACY_RIT_MODELS), 'RIT');
+         Compare(rcReadVFOB, InModelList(m, LEGACY_VFOB_MODELS), 'VFOB');
          // Family-wide, expected TRUE for every CI-V radio (deliberately
          // including the Omni VI, which is CI-V by mechanism but outside the
          // ICOMRadios enum range).  This assertion exists because the flag was
@@ -170,8 +199,8 @@ begin
          Compare(rcCWFlushDisruptsTiming, True, 'CWFlush');
          if not (m in BenchProvenDivergences) then
             begin
-            Compare(rcReadSplit, not (m in IcomRadiosSplitSetOnly), 'Split');
-            Compare(rcReadTXStatus, not (m in IcomRadiosTXStatusUnreadable), 'TXStatus');
+            Compare(rcReadSplit, not (InModelList(m, LEGACY_SPLIT_SET_ONLY)), 'Split');
+            Compare(rcReadTXStatus, not (InModelList(m, LEGACY_TXSTATUS_UNREADABLE)), 'TXStatus');
             end;
       finally
          r.Free;
