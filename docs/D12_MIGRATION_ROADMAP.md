@@ -1,6 +1,6 @@
 # TR4W — Delphi 12 Migration Roadmap (what remains)
 
-**Date:** 2026-08-02 (updated late 2026-08-02: Track A-1/A-4 and C-1 closed) · **Branch:** `delphi12` · **Purpose:** one place that answers
+**Date:** 2026-08-02 (updated overnight: **Track A complete except the CI runner**; C-1 closed) · **Branch:** `delphi12` · **Purpose:** one place that answers
 "what is left before we call the D12 migration *done*".
 
 This document does not restate designs. It reconciles the existing plans —
@@ -56,10 +56,10 @@ release ships, and §6 treats it as its own track.
 | # | Item | Evidence | Status |
 |---|---|---|---|
 | A-1 | **`tr4wserver.exe` under D12** — was the last Delphi 7 dependency in the project. | `16412f1`, `1bea7af` | ✅ **DONE 2026-08-02.** Builds via msbuild, 0 errors / 0 warnings with hints+warnings ON; NY4I connected a client and logged a record. The two copies were a **two-way fork**, not a stale copy — see the note below. |
-| A-2 | **Installer packaging.** `full.nsi:154` hard-requires `tr4wserver.exe`. Then verify the packaged exe carries `Embarcadero` markers and all runtime deps ship. | readiness checklist item 2 | 🟢 **UNBLOCKED** — A-1 done, and the EXE already lands exactly where `full.nsi` expects it. Not yet run. |
-| A-3 | **`release.yml` still references Delphi 7** — `DELPHI7_BIN` at 25-26/70, a DCC32.EXE *existence check* at 153, and `-Delphi7Bin` passed at 182 and 201. **Nothing it invokes needs D7 any more**, so this is now pure cleanup: drop the check and the two arguments. Still needs RAD Studio on the runner. | `.github/workflows/release.yml` | 🟢 **UNBLOCKED** by `76de84c` |
+| A-2 | **Installer packaging.** | `e610aa2` | DONE 2026-08-02. `FullBuild.ps1 -BuildInstallers` runs end to end: 1489 tests -> app -> **step 2b tr4wserver** -> 116 source files verified -> `tr4w_setup_4.149.0.exe` (6,883,849 bytes) -> VirusTotal 5/71, below the CI threshold. First complete installer producible since the migration began. **Payload caveat:** those are DEBUG binaries with UPX skipped -- packaging is proven, the artifact is not shippable until built Release + `-UseUpx`. |
+| A-3 | **`release.yml` on msbuild.** | `e1c1f48` | DONE 2026-08-02. `DELPHI7_BIN` -> `STUDIO_BIN`, the DCC32.EXE presence check -> `rsvars.bat`, both `-Delphi7Bin` arguments dropped, runner docs updated. `FullBuild.ps1` also lost the dead `$DCC32` / `$PROJECT` / `$LIB`. **Still needs RAD Studio installed on the self-hosted runner** -- that is now the only prerequisite. |
 | A-4 | **`BuildServer.ps1`** repointed to msbuild; `FullBuild.ps1` calls `Invoke-MSBuild` on the `.dproj` directly and no longer treats a server failure as expected breakage. The DCC32 existence check is gone from `-BuildInstallers`, so **`FullBuild.ps1` is D7-free end to end**. | `76de84c` | ✅ **DONE 2026-08-02** |
-| A-5 | **Packaging/doc staleness.** `pota_parks.csv` (9 MB, live feature data) is not referenced in `full.nsi`; `full.nsi:5` default version `4.148.1` vs `Version.pas` `4.149.0`; **`tr4w/CLAUDE.md` still describes Delphi 7 / `BatchCompile.cmd` / v4.143.2** and the pre-factory radio architecture — confirmed still stale today. | P2-11 | 🟢 Open, cheap |
+| A-5 | **Packaging/doc staleness.** | `e610aa2` | Partly done 2026-08-02. Version skew fixed at the root: `full.nsi` no longer carries a hardcoded fallback (it had drifted to 4.148.1 vs Version.pas 4.149.0) and now `!error`s if `/DTR4WVERSION` is absent; the dead `make_setup_file.bat` (pointing at a non-existent `D:\...\NSIS`) is now a shim onto FullBuild. **`pota_parks.csv` was a FALSE ALARM** -- `uPOTAParks` downloads it on demand from pota.app, so shipping a 9 MB stale copy would be wrong. **Still open:** `tr4w/CLAUDE.md` describes Delphi 7 / `BatchCompile.cmd` / v4.143.2 and the pre-factory radio architecture. |
 
 
 ### A-1 postscript — the two copies were a two-way fork
@@ -234,17 +234,21 @@ mean the migration never finishes. Each is a **post-D12 project**.
 
 ## 9. Critical path
 
-*Updated 2026-08-02: A-1, A-4 and C-1 are done; C-2's premise changed.*
+*Updated 2026-08-02 (late): **Track A is complete except the runner**. A-1/A-2/A-3/A-4 and C-1 done; C-2 rescoped.*
 
 ```
-   A-1 tr4wserver on D12  ✅ ──►  A-2 installer  ──────────────►┐
-   A-3 release.yml on msbuild (now pure cleanup) ──────────────►├──►  ENGLISH D12 RELEASE
-   C-1 telnet/cluster/SSL  ✅ ─────────────────────────────────►│
-   C-3..C-8 CW + radios (one verified radio per family) ───────►┘
-                                                                │
-   B-2 per-language UI eyeball ─────────────────────────────────►├──►  LANGUAGE RELEASES (8)
-                                                                │
-   E-1 ✅ (already done)  ►  E-2 credentials  ►  E-3 caps  ►  E-4 delete legacy
+   A-1 tr4wserver on D12       DONE (16412f1, 1bea7af)
+   A-2 installer packaging     DONE (e610aa2)  tr4w_setup_4.149.0.exe builds end to end
+   A-3 release.yml on msbuild  DONE (e1c1f48)  -- needs RAD Studio on the runner
+   A-4 build scripts           DONE (76de84c)  -- no DCC32 anywhere
+   C-1 telnet/cluster/SSL      DONE
+                                                    |
+   C-3..C-8 CW + radios (one verified radio per family)  ==>  ENGLISH D12 RELEASE
+   A-5 tr4w/CLAUDE.md staleness (cheap)                  ==>
+                                                    |
+   B-2 per-language UI eyeball  ==>  LANGUAGE RELEASES (8)
+
+   E-1 DONE  >  E-2 credentials  >  E-3 Icom quirk sets  >  E-4 delete legacy
 ```
 
 **C-2 is retired as written.** Per NY4I, all stations on a network run the same build by
@@ -264,11 +268,14 @@ names and IPs, drop one, confirm the other is told cleanly. That exercises every
 
 **Shortest honest path to "migration done" from here:**
 
-1. **A-2** — installer packaging. Unblocked, and the EXE already lands where `full.nsi` wants it.
-2. **A-3** — release.yml cleanup. Now just dropping a DCC32 check and two `-Delphi7Bin`
-   arguments; still gated on RAD Studio being available on the runner, which is lead time.
-3. **C-4 / C-6** — one verified radio per protocol family. Four families unproven
-   (Icom LAN, Yaesu binary, Yaesu ASCII, HamLib). This is calendar-bound, not effort-bound.
-4. **A-5** — version/doc staleness, including `tr4w/CLAUDE.md`, which still describes D7.
+1. **Provision RAD Studio on the self-hosted CI runner.** This is now the *only* thing
+   standing between the tree and an automated D12 release, and it is procurement/setup
+   lead time rather than engineering. Everything else in Track A is done.
+2. **C-4 / C-6** — one verified radio per protocol family. Four unproven: Icom LAN,
+   Yaesu binary, Yaesu ASCII, HamLib. Calendar-bound, not effort-bound.
+3. **A-5 remainder** — rewrite `tr4w/CLAUDE.md`, which still describes Delphi 7 and the
+   pre-factory radio architecture and so misleads every new agent session.
+4. **Build a Release-configuration installer** (`-UseUpx`) and confirm the payload, not
+   just the packaging.
 
-Everything above except item 3 can proceed with no hardware at all.
+Items 3 and 4 need no hardware. Item 2 is the long pole; item 1 is the blocker.
