@@ -143,8 +143,10 @@ def main():
         print("   Either the id is wrong, OR the backend exists in riglist.h but is")
         print("   not compiled into the installed library -- which matters just as")
         print("   much, because that is the library TR4W loads.  Check riglist.h to")
-        print("   tell the two apart.  (EXPERTTCI/7 is the second kind: riglist.h")
-        print("   defines RIG_MODEL_TCI1X = 7, but HamLib 4.7.0 does not list it.)")
+        print("   tell the two apart.")
+        print("   KNOWN AND EXPECTED: EXPERTTCI/7.  TCI is NOT a HamLib protocol --")
+        print("   it is Expert Electronics' own -- and that row is a placeholder")
+        print("   awaiting a native TCI driver.  It will flag every run until then.")
         for enum, disp, hid in unknown:
             print("   %-13s %-30s %d" % (enum, disp, hid))
         print()
