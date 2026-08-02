@@ -176,6 +176,8 @@ uses
    // and registry coverage tests.
    uRadioKenwoodSerial  in '..\..\src\radioFactory\uRadioKenwoodSerial.pas',
    uRadioKenwoodLAN     in '..\..\src\radioFactory\uRadioKenwoodLAN.pas',
+   uWebSocketClient     in '..\..\src\uWebSocketClient.pas',
+   uRadioTCI            in '..\..\src\radioFactory\uRadioTCI.pas',
    uRadioKenwoodTS890   in '..\..\src\radioFactory\uRadioKenwoodTS890.pas',
    uRadioKenwoodTS990   in '..\..\src\radioFactory\uRadioKenwoodTS990.pas',
    uRadioKenwoodTS570   in '..\..\src\radioFactory\uRadioKenwoodTS570.pas',
