@@ -2466,81 +2466,20 @@ begin
          end
       else
          begin
-         // Legacy serial port code (non-HamLib, non-K4)
-         logger.Info('[%s.SetUpRadioInterface] Using legacy serial port code: Port=%d, Baud=%d, DataBits=%d, Parity=%d, StopBits=%d',
-                     [Self.RadioName, Ord(tCATPortType), RadioBaudRate, RadioNumberBits, Ord(RadioParity), RadioStopBits]);
-
-      dwFlagsAndAttributes := FILE_ATTRIBUTE_NORMAL;
-      EvtChar := #0;
-{$IF MASKEVENT}
-
-      if RadioModel in [Orion] then
-         begin
-         dwFlagsAndAttributes := FILE_FLAG_OVERLAPPED;
-         EvtChar := #13;
+         // NO LEGACY FALLBACK.  This used to open the COM port by hand and let
+         // BeginPolling dispatch to a per-model poller in uRadioPolling.  Every
+         // selectable radio is now built by the factory (100 registrations; the
+         // only enum member without one is NoInterfacedRadio), so reaching here
+         // means the operator put a radio on a transport it does not support --
+         // a hand-edited .cfg, since the dialog will not offer it.
+         //
+         // Opening a port we cannot then poll is worse than not opening it: the
+         // rig looks connected and silently does nothing.  Fail loudly instead,
+         // exactly as the by-id branch above already does.
+         logger.Error('[%s.SetUpRadioInterface] %s does not support a serial connection -- not connecting. Check RADIO n TYPE / PORT.',
+                      [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+         QuickDisplayError('Radio "' + string(Self.RadioName) + '" is not a serial radio -- not connected. Check its configuration.');
          end;
-      if RadioModel in [KenwoodRadios, K2, K3, KX3, K4] then
-         begin
-         dwFlagsAndAttributes := FILE_FLAG_OVERLAPPED;
-         EvtChar := ';';
-         end;
-{$IFEND}
-
-      hand := CPUKeyer.SerialPortConfigured_Handle[tCATPortType];
-      if hand = INVALID_HANDLE_VALUE then
-         begin
-         hand := InitializeSerialPort(tCATPortType, RadioBaudRate, RadioNumberBits,
-            RadioParity, RadioStopBits, dwFlagsAndAttributes, EvtChar);
-         end;
-      GetMem(TimeoutBuffer, sizeof(COMMTIMEOUTS));
-
-      GetCommTimeouts(hand, TimeoutBuffer^);
-      TimeoutBuffer.ReadIntervalTimeout := 3;
-      TimeoutBuffer.ReadTotalTimeoutMultiplier := 3;
-      TimeoutBuffer.ReadTotalTimeoutConstant := 2;
-      TimeoutBuffer.WriteTotalTimeoutMultiplier := 3;
-      TimeoutBuffer.WriteTotalTimeoutConstant := 2;
-      SetCommTimeouts(hand, TimeoutBuffer^);
-
-      FreeMem(TimeoutBuffer, sizeof(COMMTIMEOUTS));
-{$IF MASKEVENT}
-
-      if RadioModel in [KenwoodRadios, K2, K3, KX3, K4, Orion] then
-         begin
-         if SetCommMask(hand, EV_RXFLAG) then
-            begin
-            lpOverlapped.hEvent := CreateEvent(nil, False, False, nil);
-            pOver := @lpOverlapped;
-            end;
-         end;
-{$IFEND}
-
-      if hand <> INVALID_HANDLE_VALUE then
-         begin
-         CPUKeyer.SerialPortConfigured_Handle[tCATPortType] := hand;
-         tCATPortHandle := hand;
-
-         if tr4w_cat_dtr_state = RtsDtr_ON then
-            begin
-            TREscapeCommFunction(hand, SETDTR);
-            end;
-         if tr4w_cat_dtr_state = RtsDtr_OFF then
-            begin
-            TREscapeCommFunction(hand, CLRDTR);
-            end;
-         if tr4w_cat_rts_state = RtsDtr_ON then
-            begin
-            TREscapeCommFunction(hand, SETRTS);
-            end;
-         if tr4w_cat_rts_state = RtsDtr_OFF then
-            begin
-            TREscapeCommFunction(hand, CLRRTS);
-            end;
-
-         //      OpenCATDebugFile(tCATPortType);
-         end;
-
-         end; // end legacy serial port code else block
       end
    else if tCATPortType = Network then
       begin
