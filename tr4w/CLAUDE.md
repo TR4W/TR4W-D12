@@ -4,26 +4,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TR4W is a Windows-based ham radio contest logging application written in Delphi/Pascal (Delphi 7). It supports multi-station networking, various radio interfaces, CW/digital modes, and integration with external applications like WSJT-X and DXKeeper.
+TR4W is a Windows-based ham radio contest logging application written in Delphi/Pascal. It **builds under Delphi 12 Athens** on the `delphi12` branch (the Delphi 7 era ended 2026-08-02, when tr4wserver -- the last DCC32 consumer -- moved to msbuild). It supports multi-station networking, various radio interfaces, CW/digital modes, and integration with external applications like WSJT-X and DXKeeper.
 
-**Current Version:** 4.143.2 (October 2025)
+**Current Version:** see `src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) -- 4.149.0 as of 2026-08-02
 **License:** GPL v2+
 
 ## Building the Project
 
-### Compilation
-Use the provided batch script to compile:
-```bash
-BatchCompile.cmd
+### Compilation (Delphi 12 Athens)
+
+**Do not use `BatchCompile.cmd` or DCC32** -- that is the retired Delphi 7 recipe.
+The full, current recipe is in [`docs/D12_BUILD.md`](docs/D12_BUILD.md).
+
+One-off build:
+
+```bat
+call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+msbuild tr4w.dproj /t:Build /p:Config=Debug /p:Platform=Win32
 ```
 
-This script uses Delphi 7's command-line compiler (DCC32.EXE):
-- Main project file: `tr4w.dpr`
-- Output directory: `target/`
-- Temp directory: `C:\Temp`
-- Dependencies: Indy library components (networking)
+`rsvars.bat` is a batch file and must be `call`ed first to put msbuild and the
+compiler on PATH. Use `/t:Build`, not `/t:Make`: Make skips up-to-date units and
+will hide a W1020 missing-abstract-method warning.
 
-**Note:** The BatchCompile.cmd script has hardcoded paths that may need adjustment for your environment.
+Everything (tests, app, tr4wserver, language variants, installers):
+
+```powershell
+.\FullBuild.ps1                     # unit tests + ENG app
+.\FullBuild.ps1 -AllLanguages       # + the 8 non-ENG variants
+.\FullBuild.ps1 -BuildInstallers    # + tr4wserver + NSIS installers
+```
+
+`FullBuild.ps1` is the single packaging path and derives the version from
+`src/Version.pas`. `full.nsi` refuses to build without `/DTR4WVERSION`, so an
+installer cannot be silently mis-versioned.
+
+- Output: `target/`
+- Compiler options live in `tr4w.dproj` (the `.cfg`/`.dof` are D7 leftovers)
+- Indy is vendored under `include/Core`, `include/System`, `include/Protocols`
 
 ### Language Variants
 The project supports multiple languages controlled by the `LANG` compiler directive:
@@ -49,8 +67,17 @@ Language-specific resources are loaded from `res/tr4w_{lang}.res`
 ### Core Subsystems
 
 #### 1. Radio Control (`src/trdos/LogRadio.pas`, `src/uRadio*.pas`)
-- **Factory Pattern:** `uRadioFactory.pas` - Centralized radio instance creation
-- **Base Class:** `uNetRadioBase.pas` - Abstract base for network-connected radios
+- **All radios go through the factory.** `src/radioFactory/` holds one unit per
+  family base and one per model; `uRadioRegistry.pas` is the single source of
+  truth (each unit self-registers from its `initialization`). 100 registrations
+  as of 2026-08-02, covering every selectable `InterfacedRadioType` except
+  `NoInterfacedRadio`.
+- **Base Class:** `src/radioFactory/uFactoryRadioBase.pas` (`TFactoryRadioBase`).
+  `uNetRadioBase.pas` and `src/uRadioFactory.pas` no longer exist.
+- **Adding one:** read [`../docs/ADDING_A_RADIO.md`](../docs/ADDING_A_RADIO.md).
+  Adding a radio should touch only its own unit(s), `tr4w.dpr` and the unit-test
+  `.dpr` -- verified 2026-08-02 by adding TCI, a WebSocket radio, with no change
+  to any shared file.
 - **Implementations:**
   - `uRadioElecraftK4.pas` - Elecraft K4 support (fully implemented)
   - `uRadioHamLib.pas` - HamLib generic radio support (fully implemented)
@@ -97,7 +124,7 @@ Language-specific resources are loaded from `res/tr4w_{lang}.res`
 - Paddle input handling
 - CW message memories and function keys
 - **CAT Control:** `src/uCAT.pas` - Computer-aided transceiver control (legacy serial/CAT interface)
-- **Distinction:** CAT control (`uCAT.pas`) handles legacy serial radios; network radios use the new factory pattern (`uRadioFactory.pas`)
+- **Distinction:** this split is HISTORICAL. Every radio -- serial and network -- now goes through the factory. The legacy `LOGRADIO`/`uRadioPolling` per-model code is unreachable for any selectable radio and is scheduled for deletion.
 
 #### 7. External Integrations
 - **WSJT-X:** `uWSJTX.pas` - UDP protocol, colorization support
@@ -180,21 +207,21 @@ Test files exist but are minimal:
 - `src/TestRadioFactory.pas` - Radio factory tests
 - `src/TestExternalLoggerFactory.pas` - External logger factory tests
 
-No automated test framework is currently in place.
+**This is out of date.** There are ~1489 unit tests (`test/unit/tr4w_unit_tests.dpr`, minimal DUnit-compatible, no external deps), a golden-master export corpus (`test/corpus/export-d12-corpus.sh`, baseline 22 passed / 0 failed / 4 known-divergence) that reads real D7-written binary logs, and radio integration tests under `test/integration/`. `FullBuild.ps1` runs the unit tests before it builds anything. `src/TestRadioFactory.pas` no longer exists.
 
 ## Common Issues & Solutions
 
 ### Compilation Errors
 - **Missing Indy exception types:** If you see `Undeclared identifier: 'EIdConnClosedGracefully'` or `'EIdSocketError'`, add `IdException, IdStack` to the uses clause
-- **Missing Indy units:** Ensure the Indy library paths are correctly set in BatchCompile.cmd
+- **Missing Indy units:** the vendored Indy search path lives in `tr4w.dproj` (`DCC_UnitSearchPath`), not in a batch file.
 
 ## Important Notes
 
-- This is a legacy Delphi 7 codebase with roots in the DOS-era TR Log
+- Roots in the DOS-era TR Log, but the build is Delphi 12 Athens.
 - `src/trdos/` contains the original TR-DOS Pascal code (heavy use of global variables and procedural programming)
 - Modern OOP patterns (factories, base classes) are being introduced gradually (see recent commits on `feature/radio-factory` branch)
 - The codebase uses inline assembly in a few places (thread event creation, low-level I/O)
 - Heavy use of Windows API directly (no VCL forms, manual window creation)
 - Configuration uses a custom command parser, not standard INI libraries for CFG files
-- **Dual radio interfaces:** Legacy serial radios use `uCAT.pas`; modern network radios use the factory pattern (`uRadioFactory.pas`, `uNetRadioBase.pas`)
+- **Dual radio interfaces: NO LONGER TRUE.** Serial and network radios share `TFactoryRadioBase`; see `src/radioFactory/`.
 
