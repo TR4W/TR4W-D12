@@ -269,6 +269,7 @@ Type TFactoryRadioBase = class(TObject)
       localXITOffset: integer;
       bandIndependence: boolean;
       CWSendImmediate: boolean;   // see the public property of the same idea
+      FStartupCommandSent: boolean;   // guard for the public StartupCommand
       procRef: TProcessMsgRef;
 
       function GetISConnected: boolean; virtual;
@@ -289,6 +290,11 @@ Type TFactoryRadioBase = class(TObject)
 
    public
       rigLabel: string;           // "Rig 1" / "Rig 2" — set by LOGRADIO after creation
+      // The operator's RADIO n STARTUP COMMAND, handed over right after
+      // construction so the radio owns it before it ever connects.  Sent by
+      // SendStartupCommand once the link is actually up -- see there for why
+      // the caller cannot simply send it when Connect returns.
+      StartupCommand: string;
       serialBaudRate: DWORD;
       serialDataBits: Byte;
       serialStopBits: Byte;
@@ -324,6 +330,12 @@ Type TFactoryRadioBase = class(TObject)
       // care about.  Exposed as a property because the backing field sits in the
       // protected block and LOGRADIO sets it from outside.
       property SendCWImmediate: boolean read CWSendImmediate write CWSendImmediate;
+
+      // Send the operator's startup command, ONCE per radio object, when the
+      // link is established.  Safe to call repeatedly: it self-guards, which is
+      // what lets both transports use the same call without agreeing on who
+      // owns the "already sent" state.
+      procedure SendStartupCommand; virtual;
 
       procedure SetExpectedFrameLength(n: integer);
 
@@ -668,6 +680,23 @@ end;
 procedure TFactoryRadioBase.QuerySplitState;
 begin
   // Default: do nothing - radio classes override
+end;
+
+procedure TFactoryRadioBase.SendStartupCommand;
+begin
+   // Once per radio object.  The two transports reach "connected" at different
+   // moments -- serial is up when Connect returns, network is not, and is only
+   // known to be up when the poll loop sees a good response -- so both call
+   // this and the guard decides.  Before this existed the serial path re-sent
+   // the command on every SetUpRadioInterface while the network path sent it
+   // once ever, which is the same setting behaving differently per transport.
+   if FStartupCommandSent or (StartupCommand = '') then
+      begin
+      Exit;
+      end;
+   logger.Info('[%s] Sending startup command: %s', [rigLabel, StartupCommand]);
+   Self.SendToRadio(StartupCommand);
+   FStartupCommandSent := True;
 end;
 
 function TFactoryRadioBase.CWIsFactoryOwned: Boolean;

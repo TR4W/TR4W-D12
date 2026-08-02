@@ -938,18 +938,17 @@ begin
                ro.SetCWSpeed(CodeSpeed);
                end;
 
-            // StartupCommand: configured per-radio in the .cfg file.  Sent
-            // once, after the first successful connect (not on every reconnect)
-            // to match the legacy semantic from when SetUpRadioInterface sent
-            // it synchronously.  Reset Radio Ports frees and rebuilds the radio
-            // object, which sets StartupCommandSent back to False so the
-            // command fires again on the next first connect.  Issue #436.
-            if (not rig^.StartupCommandSent) and (Length(rig^.StartupCommand) > 0) and Assigned(ro) then
+            // StartupCommand: configured per-radio in the .cfg file, handed to
+            // the radio object at construction and sent ONCE, here, because
+            // this is where a network radio is first known to be connected --
+            // its Connect returns before the link is up.  The once-only guard
+            // now lives on the RADIO (TFactoryRadioBase.FStartupCommandSent),
+            // not on the legacy RadioObject, so both transports share one
+            // implementation and Reset Radio Ports still re-arms it by
+            // rebuilding the radio.  Issue #436.
+            if Assigned(ro) then
                begin
-               logger.Info('[pFactoryRadio] Sending StartupCommand for %s: %s',
-                           [rig^.RadioName, rig^.StartupCommand]);
-               ro.SendToRadio(rig^.StartupCommand);
-               rig^.StartupCommandSent := True;
+               ro.SendStartupCommand;
                end;
             end;
 
