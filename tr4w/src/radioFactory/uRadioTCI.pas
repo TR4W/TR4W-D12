@@ -27,8 +27,8 @@ unit uRadioTCI;
       THamLibDirect also bypasses the base socket.  uWebSocketClient does the
       RFC 6455 work and knows nothing about radios.
     - The protocol is PUSH.  After the server's init burst ends with `ready;`,
-      every state change arrives unsolicited.  requiresPolling is False and
-      PollRadioState is empty -- the K4's AI5 precedent.
+      every state change arrives unsolicited.  PollRadioState is a once-a-
+      second REPAIR tick (liveness ping + rit/xit_offset GETs), not a state poll.
     - Commands and notifications share one grammar: `name:arg,arg,...;` with a
       few no-argument forms (`ready;`, `start;`, `stop;`).
     - There is NO per-model fan-out.  TCI *is* the model: the server abstracts
@@ -146,7 +146,13 @@ begin
 
    // Push, not poll -- the K4 AI5 precedent.  PollRadioState is empty; the
    // interval is only an idle tick for the factory poll loop.
-   requiresPolling   := False;
+   // TRUE, despite TCI being a push protocol.  PollRadioState is NOT a state
+   // poll here -- it is a once-a-second repair tick (liveness ping, and the
+   // rit/xit_offset GETs below).  The factory poll loop only calls
+   // PollRadioState for radios with requiresPolling = True, so leaving this
+   // False meant the tick never ran at all -- the idle ping added earlier
+   // had never once fired.
+   requiresPolling   := True;
    pollingInterval   := 1000;
    autoUpdateCommand := '';
 
@@ -254,11 +260,41 @@ end;
 
 procedure TTCIRadio.PollRadioState;
 begin
-   // Intentionally empty -- TCI is push.  Used only as a liveness probe when
-   // the link has gone quiet, so a dead peer is noticed rather than assumed live.
-   if GetISConnected and (MilliSecondsBetween(Now, FLastRx) > TCI_IDLE_PING_MS) then
+   if not GetISConnected then
+      begin
+      Exit;
+      end;
+
+   // Liveness: the server is silent by design when nothing changes, so probe
+   // rather than assume a quiet link is a live one.
+   if MilliSecondsBetween(Now, FLastRx) > TCI_IDLE_PING_MS then
       begin
       FWS.Ping;
+      end;
+
+   if not FReady then
+      begin
+      Exit;
+      end;
+
+   // RIT/XIT OFFSET REPAIR.  AetherSDR broadcasts rit_enable on every change but
+   // NEVER broadcasts rit_offset from its own UI -- verified in their source:
+   // TciServer.cpp wires only the *_enable family to change signals and its
+   // comment says 'sql_level/rit_offset/xit_offset are out of scope', while
+   // TciProtocol.cpp cmdRitOffset emits a notification ONLY on a client SET.
+   // So an operator turning the RIT knob leaves every client's offset stale.
+   //
+   // The same function answers a GET (args without a value returns
+   // 'rit_offset:<trx>,<hz>;'), so ask once a second while the offset can
+   // actually be showing.  Costs one short frame per second only while RIT/XIT
+   // is engaged, and self-heals whether or not upstream ever changes.
+   if Self.IsRITOn[nrVFOA] then
+      begin
+      SendToRadio(Format('rit_offset:%s;', [TCI_TRX]));
+      end;
+   if Self.IsXITOn[nrVFOA] then
+      begin
+      SendToRadio(Format('xit_offset:%s;', [TCI_TRX]));
       end;
 end;
 
@@ -508,14 +544,7 @@ begin
 
    if (name = 'rit_offset') and (Length(args) >= 2) then
       begin
-      // HOP 1 of the RIT-offset trace (2026-08-02).  Temporary instrumentation:
-      // the value arrives, but does not reach the radio window.  Log what we
-      // parsed and what the object holds afterwards, so the broken hop is
-      // identified by data instead of by reading code.
       Self.SetRITOffset(StrToIntDef(Trim(args[1]), 0));
-      logger.Debug('[RIT trace 1/3 driver] parsed=%d  vfo[A].RITOffset=%d  RITOn(A)=%s',
-                   [StrToIntDef(Trim(args[1]), 0), Self.vfo[nrVFOA].RITOffset,
-                    BoolToStr(Self.IsRITOn[nrVFOA], True)]);
       Exit;
       end;
 
