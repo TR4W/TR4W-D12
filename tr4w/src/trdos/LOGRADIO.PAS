@@ -318,6 +318,11 @@ type
       procedure SetRadioCWSpeed(speed: longint);
       procedure SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char); overload;
       procedure SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char; extendedMode: ExtendedModeType); overload;
+      // Hand a newly built factory radio everything it needs to own about
+      // itself, in ONE place.  Call immediately after construction and BEFORE
+      // Connect: the drivers re-key their logger from rigLabel during
+      // Initialize, which runs on the reading thread once Connect starts.
+      procedure AdoptFactoryObject;
       procedure SetUpRadioInterface;
       procedure StopSendingCW;
       //    procedure StartNextPoll;
@@ -2208,6 +2213,21 @@ begin
       end;
 end;
 //------------------------------------------------------------------------------
+procedure RadioObject.AdoptFactoryObject;
+begin
+   // Five construction sites (HamLib, serial x2, network x2) all need the same
+   // two facts handed over.  StartupCommand was already duplicated at all five;
+   // rigLabel was set at exactly ONE of them -- inside the network branch --
+   // which is why every serial radio logged "[]" instead of its name.  One
+   // helper so a sixth construction site cannot reintroduce the same gap.
+   if Self.tFactoryObject = nil then
+      begin
+      Exit;
+      end;
+   Self.tFactoryObject.rigLabel := Self.RadioName;          // e.g. "K3S-15"
+   Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
+end;
+
 procedure RadioObject.SetUpRadioInterface;
 var
    hand: HWND;
@@ -2263,12 +2283,9 @@ begin
 
       // Create HamLib Direct radio via factory
       Self.tFactoryObject := TRadioFactory.CreateHamLibDirect(nil);
-         // The radio owns its startup command from birth; SendStartupCommand
-         // fires it once the link is actually up.
-         if Self.tFactoryObject <> nil then
-            begin
-            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
-            end;
+      // The radio owns its name and startup command from birth;
+      // SendStartupCommand fires the latter once the link is actually up.
+      Self.AdoptFactoryObject;
 
       if Self.tFactoryObject <> nil then
       begin
@@ -2361,12 +2378,9 @@ begin
             tr4w_cat_rts_state = RtsDtr_ON,
             tr4w_cat_dtr_state = RtsDtr_ON
          );
-         // The radio owns its startup command from birth; SendStartupCommand
-         // fires it once the link is actually up.
-         if Self.tFactoryObject <> nil then
-            begin
-            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
-            end;
+         // The radio owns its name and startup command from birth;
+         // SendStartupCommand fires the latter once the link is actually up.
+         Self.AdoptFactoryObject;
          if Self.tFactoryObject <> nil then
             begin
             Self.tFactoryObject.Connect;
@@ -2412,12 +2426,9 @@ begin
             tr4w_cat_rts_state = RtsDtr_ON,
             tr4w_cat_dtr_state = RtsDtr_ON
          );
-         // The radio owns its startup command from birth; SendStartupCommand
-         // fires it once the link is actually up.
-         if Self.tFactoryObject <> nil then
-            begin
-            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
-            end;
+         // The radio owns its name and startup command from birth;
+         // SendStartupCommand fires the latter once the link is actually up.
+         Self.AdoptFactoryObject;
          if Self.tFactoryObject <> nil then
             begin
             Self.tFactoryObject.Connect;
@@ -2547,12 +2558,9 @@ begin
             Self.IPAddress,
             Self.RadioTCPPort
          );
-         // The radio owns its startup command from birth; SendStartupCommand
-         // fires it once the link is actually up.
-         if Self.tFactoryObject <> nil then
-            begin
-            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
-            end;
+         // The radio owns its name and startup command from birth;
+         // SendStartupCommand fires the latter once the link is actually up.
+         Self.AdoptFactoryObject;
          logger.Info('[%s] Using %s network protocol (id)', [Self.RadioName, uRadioRegistry.DisplayNameId(string(Self.FactoryId))]);
          end
       else if uRadioRegistry.IsRegistered(Self.RadioModel) and
@@ -2563,12 +2571,9 @@ begin
             Self.IPAddress,
             Self.RadioTCPPort
          );
-         // The radio owns its startup command from birth; SendStartupCommand
-         // fires it once the link is actually up.
-         if Self.tFactoryObject <> nil then
-            begin
-            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
-            end;
+         // The radio owns its name and startup command from birth;
+         // SendStartupCommand fires the latter once the link is actually up.
+         Self.AdoptFactoryObject;
          logger.Info('[%s] Using %s network protocol', [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
          end
       else
@@ -2579,7 +2584,9 @@ begin
 
       if Self.tFactoryObject <> nil then
       begin
-         Self.tFactoryObject.rigLabel := Self.RadioName;  // "Rig 1" / "Rig 2"
+         // rigLabel and StartupCommand are handed over by AdoptFactoryObject at
+         // each construction site above, so the network path no longer sets
+         // rigLabel here -- it was the only path that ever did.
 
          // If this is an Icom radio, set network credentials before connecting
          if Self.tFactoryObject is TIcomRadio then
