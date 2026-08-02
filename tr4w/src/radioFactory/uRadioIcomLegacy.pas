@@ -176,27 +176,27 @@ initialization
      SerialParams(1200, 8, PARITY_NONE, 1)
      ,
      3009
-     );
+     , 72);
   RegisterRadio(IC706II,
      function: TFactoryRadioBase begin Result := TIcom706MkIIRadio.Create end,
      'Icom IC-706MkII', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
      ,
      3010
-     );
+     , 78);
   RegisterRadio(IC706IIG,
      function: TFactoryRadioBase begin Result := TIcom706MkIIGRadio.Create end,
      'Icom IC-706MkIIG', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
      ,
      3011
-     );
+     , 88);
   RegisterRadio(IC7000,
      function: TFactoryRadioBase begin Result := TIcom7000Radio.Create end,
      'Icom IC-7000', [rlSerial], 0, False,
      SerialParams(9600, 8, PARITY_NONE, 1)
      ,
      3060
-     );
+     , 112);
 
 end.

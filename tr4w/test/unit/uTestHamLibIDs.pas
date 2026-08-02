@@ -57,6 +57,7 @@ type
       procedure Test_EnumRadiosCarryTheirHamLibID;
       procedure Test_TheThreeThatHadDrifted;
       procedure Test_UnregisteredIsZero;
+      procedure Test_IcomCIVAddresses;
    public
       procedure RunAllTests; override;
    end;
@@ -114,11 +115,35 @@ begin
                'the NONE sentinel has no rig_model');
 end;
 
+procedure THamLibIDTests.Test_IcomCIVAddresses;
+begin
+   BeginTest('Icom CI-V receiver addresses come from the registry');
+
+   // Populated from RadioParametersArray's RA column by script, 44 of them.  A
+   // wrong CI-V address is the same class of silent fault as a wrong rig_model:
+   // it compiles, it connects, and the radio simply ignores commands addressed
+   // to somebody else.  Spread across the range so a block-shift cannot hide.
+   CheckEquals($5E, RegisteredCIVAddress(IC718),  'IC-718');
+   CheckEquals($94, RegisteredCIVAddress(IC7300), 'IC-7300');
+   CheckEquals($98, RegisteredCIVAddress(IC7610), 'IC-7610');
+   CheckEquals($A4, RegisteredCIVAddress(IC705),  'IC-705');
+   CheckEquals($04, RegisteredCIVAddress(IC735),  'IC-735 (lowest)');
+   CheckEquals($70, RegisteredCIVAddress(IC7000), 'IC-7000');
+   CheckEquals($88, RegisteredCIVAddress(IC7100), 'IC-7100');
+
+   // A non-CI-V radio must report 0, not a neighbour's address -- this is what
+   // uCFG seeds Radio.ReceiverAddress from for EVERY model, Icom or not.
+   CheckEquals(0, RegisteredCIVAddress(K3),    'the K3 is not a CI-V radio');
+   CheckEquals(0, RegisteredCIVAddress(TS570), 'the TS-570 is not a CI-V radio');
+   CheckEquals(0, RegisteredCIVAddress(NoInterfacedRadio), 'the NONE sentinel');
+end;
+
 procedure THamLibIDTests.RunAllTests;
 begin
    Test_EnumRadiosCarryTheirHamLibID;
    Test_TheThreeThatHadDrifted;
    Test_UnregisteredIsZero;
+   Test_IcomCIVAddresses;
 end;
 
 end.

@@ -73,6 +73,6 @@ initialization
      SerialParams(19200, 8, PARITY_NONE, 1)
      ,
      0
-     );
+     , 182);
 
 end.

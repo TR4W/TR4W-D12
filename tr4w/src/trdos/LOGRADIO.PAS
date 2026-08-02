@@ -1575,11 +1575,22 @@ begin
             logger.trace('>>>>Enter WriteToCATPort');
             SetString(debugStr,PAnsiChar(@Buffer),nNumberOfBytesToWrite);
             nLen := nNumberOfBytesToWrite; //Ord(Buffer[0]);
-            // Binary CI-V traffic traces as hex only (text would be garbage).
-            // rt = rtICOM is the legacy table's own protocol marker; unlike the
-            // retired ICOMRadios range [IC78..IC9700] it also covers the OMNI6,
-            // which is a CI-V rig and belongs on the hex path.
-            if RadioParametersArray[Self.RadioModel].rt = rtICOM then
+            // Binary traffic traces as hex only (text would be garbage).
+            //
+            // Was `RadioParametersArray[...].rt = rtICOM`, which asked the wrong
+            // question: the property that matters here is whether the bytes are
+            // BINARY, not who made the radio.  The driver already states that --
+            // SerialProtocolIsBinary, set True by TIcomRadio for CI-V -- so ask
+            // it instead of a table.
+            //
+            // SLIGHT BEHAVIOUR CHANGE, and an improvement: any driver that
+            // declares a binary protocol now hex-traces, not just the CI-V ones.
+            // The Yaesu FT-1000MP is the case in point -- its 32-byte status
+            // block is binary (SerialFixedFrameLength implies it) and used to be
+            // logged as text, which is exactly the garbage this branch exists to
+            // avoid.
+            if (Self.tFactoryObject <> nil) and
+               Self.tFactoryObject.SerialProtocolIsBinary then
                begin
                BinToHex(@Buffer,Buf,nLen);
                Buf[(nLen*2) - 2] := #0;
