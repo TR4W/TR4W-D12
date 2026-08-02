@@ -22,6 +22,16 @@ Tested against builds up to and including `d26ff31`:
 - **§7 Serial K4 RIT and XIT**, and network K4 confirmed unaffected.
 - **§6 for the K4 specifically** — `SetRadioFreq` after the legacy deletion.
 - CW by serial port (CPU keyer) on the K4, COM6.
+- **Startup command, both required cases** (after `6a23299` moved it onto the
+  radio class as `SendStartupCommand`). NY4I started TR4W and confirmed the
+  command took effect on the rig, put the rig back to its original state by
+  hand, ran Reset Radio Ports, and confirmed it took effect again. That is the
+  whole specified semantic: once at startup, once per port reset.
+
+  NOT tested, and deliberately a lower-stakes case: whether it correctly does
+  NOT re-fire on a mid-session power-cycle recovery. That path reuses the same
+  radio object, so the guard should hold — but a spurious extra send is a much
+  milder fault than a missing one.
 
 **What that testing does NOT cover.** The `SendCW` collapse landed in `d3aa5e1`,
 *after* the last build NY4I ran. Every CW-by-CAT **send** path is therefore
