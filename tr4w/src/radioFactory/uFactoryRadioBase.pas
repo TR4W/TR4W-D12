@@ -179,6 +179,16 @@ const
    RECONNECT_MAX_DELAY = 30000;       // 30 seconds max delay
    RECONNECT_BACKOFF_MULTIPLIER = 2;  // Double delay each retry
 
+   // How long the link must stay good before the startup command goes out.
+   // A radio that has just been powered on answers CAT well before the rest
+   // of it is ready: an Elecraft K3 replies to IF; within a few hundred ms of
+   // its first byte, and a startup command sent in that window is accepted by
+   // the serial port and then quietly dropped by the radio.  Bench-proven on
+   // 2026-08-01 -- the identical command took effect on a Reset Radio Ports a
+   // moment later.  This is a settle, NOT a retry: the command still goes out
+   // exactly once per link-up.
+   STARTUP_COMMAND_SETTLE_MS = 2000;
+
    // Serial disconnect detection
    SERIAL_RESPONSE_TIMEOUT = 5.0;     // 5 seconds - consider disconnected if no valid response
 {var
@@ -270,6 +280,11 @@ Type TFactoryRadioBase = class(TObject)
       bandIndependence: boolean;
       CWSendImmediate: boolean;   // see the public property of the same idea
       FStartupCommandSent: boolean;   // guard for the public StartupCommand
+      // Settle window for the startup command -- see STARTUP_COMMAND_SETTLE_MS.
+      // FStartupArmed says the link has been seen up at least once since the
+      // last arm; FStartupArmTick is when.  Both cleared by RearmStartupCommand.
+      FStartupArmed: boolean;
+      FStartupArmTick: LongWord;
       procRef: TProcessMsgRef;
 
       function GetISConnected: boolean; virtual;
@@ -692,11 +707,13 @@ end;
 procedure TFactoryRadioBase.RearmStartupCommand;
 begin
    FStartupCommandSent := False;
+   FStartupArmed := False;
 end;
 
 procedure TFactoryRadioBase.SendStartupCommand;
 begin
-   // Once per radio object.  The two transports reach "connected" at different
+   // Once per link-up (RearmStartupCommand re-arms it when the link drops, so
+   // a power-cycled radio gets it again).  The two transports reach "connected" at different
    // moments -- serial is up when Connect returns, network is not, and is only
    // known to be up when the poll loop sees a good response -- so both call
    // this and the guard decides.  Before this existed the serial path re-sent
@@ -706,6 +723,25 @@ begin
       begin
       Exit;
       end;
+
+   // Called on EVERY poll cycle while connected, not once at the connect
+   // transition, so the settle below can actually elapse.  The guard above
+   // still makes it one send per link-up; everything here is just "not yet".
+   if not FStartupArmed then
+      begin
+      FStartupArmed := True;
+      FStartupArmTick := GetTickCount;
+      logger.Debug('[%s] Link up - holding startup command %d ms for the radio to settle',
+                   [rigLabel, STARTUP_COMMAND_SETTLE_MS]);
+      Exit;
+      end;
+
+   // LongWord subtraction, so a GetTickCount wrap is handled correctly.
+   if GetTickCount - FStartupArmTick < LongWord(STARTUP_COMMAND_SETTLE_MS) then
+      begin
+      Exit;
+      end;
+
    logger.Info('[%s] Sending startup command: %s', [rigLabel, StartupCommand]);
    Self.SendToRadio(StartupCommand);
    FStartupCommandSent := True;

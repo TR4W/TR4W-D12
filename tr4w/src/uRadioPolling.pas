@@ -946,10 +946,19 @@ begin
             // not on the legacy RadioObject, so both transports share one
             // implementation and Reset Radio Ports still re-arms it by
             // rebuilding the radio.  Issue #436.
-            if Assigned(ro) then
-               begin
-               ro.SendStartupCommand;
-               end;
+            end;
+
+         // Deliberately OUTSIDE the "not wasConnected" block above.  The radio
+         // holds the command for STARTUP_COMMAND_SETTLE_MS after the link comes
+         // up, because a just-powered-on rig answers CAT before it is ready to
+         // act on anything (bench-proven on a K3, 2026-08-01: sent at the first
+         // good response and silently dropped, accepted on a Reset Radio Ports
+         // seconds later).  That settle can only elapse if we keep asking, so
+         // this runs every poll cycle.  SendStartupCommand self-guards, so it
+         // is one boolean test once the command has gone out.
+         if Assigned(ro) then
+            begin
+            ro.SendStartupCommand;
             end;
 
          // HamLib Direct: short sleep so FNeedsPoll is checked promptly when
