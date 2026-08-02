@@ -125,7 +125,7 @@ type
 implementation
 
 uses
-   MainUnit;
+   MainUnit, LogWind;   // logger; QuickDisplayError
 
 const
    // TR4W drives receiver 0 only.  TCI supports several ("trx"), but a contest
@@ -600,9 +600,33 @@ begin
 end;
 
 procedure TTCIRadio.Split(splitOn: boolean);
+var
+   opTrx: integer;
 begin
-   // Order matters: enable split BEFORE programming VFO B.  Doing it the other
-   // way round loses the VFO B write on real servers (JTDX-proven).
+   opTrx := StrToIntDef(TCI_TRX, 0);
+
+   // TURNING SPLIT OFF WHEN THE RADIO OWNS THE SLICE.
+   // TCI expresses split two different ways, and only one of them is ours to
+   // undo.  If the transmitting receiver is not the one we operate, the split
+   // is a SECOND RECEIVER -- created on the radio, not by us -- and
+   // split_enable cannot touch it.  Proven on the bench 2026-08-02: TR4W sent
+   // split_enable:0,false, the server echoed it (already false) and left
+   // tx_enable:1,true standing, so the rig kept transmitting on VFO B.
+   //
+   // Say so instead of pretending.  The RADIO is the source of truth: TR4W must
+   // never show 'not split' while the rig is still in split.  See AetherSDR
+   // issue #3715 -- per-slice ownership with unified teardown is PROPOSED, not
+   // implemented, so today there is no client-side way to close it.
+   if (not splitOn) and (FTxTrx <> opTrx) then
+      begin
+      logger.Warn('[TCI] cannot leave split: transmit receiver is trx %d, a slice created on the radio. ' +
+                  'split_enable addresses only VFO A/B split within trx %d.', [FTxTrx, opTrx]);
+      QuickDisplayError('Cannot disable split -- the transmit slice was created on the radio. Turn it off in the SDR.');
+      Exit;   // do NOT send a command that would silently do nothing
+      end;
+
+   // Ordering matters for the ON case: enable split BEFORE programming VFO B.
+   // The other order loses the VFO B write on real servers (JTDX-proven).
    if splitOn then
       begin
       SendToRadio(Format('split_enable:%s,true;', [TCI_TRX]));

@@ -2461,7 +2461,19 @@ begin
     begin
       PutRadioOutOfSplit(ActiveRadio); // n4af 4.47.5
       PutRadioOutOfSplit(InActiveRadio);
-      InSplit := False;
+      // THE RADIO IS THE SOURCE OF TRUTH.  Only assert 'not split' for a radio
+      // that cannot report split -- there, the commanded state is the only
+      // state there is.  A radio that DOES report it clears InSplit from its own
+      // broadcast (uRadioPolling.DisplayCurrentStatus), so TR4W can never show
+      // 'not split' while the rig is still transmitting split.
+      //
+      // Bench-proven on TCI 2026-08-02: a split slice created on the radio
+      // cannot be closed by the client at all, and TR4W used to report success.
+      // The driver now says why; this stops the display from contradicting it.
+      if not ActiveRadioPtr.HasCapability(rcReadSplit) then
+         begin
+         InSplit := False;
+         end;
       exit;
     end;
 
