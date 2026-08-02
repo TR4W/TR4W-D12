@@ -165,8 +165,30 @@ the next command you implement may divide them differently.
 
 ### Capabilities — `TRadioCapability` (`uFactoryRadioBase.pas`)
 
-Declared per radio in `DefineCapabilities`, a virtual called from the base
-constructor. Callers ask `radio.Supports(rcX)`.
+**There are TWO idioms, and the common one is not the documented one.** This
+page previously said capabilities are declared in `DefineCapabilities`, "a
+virtual called from the base constructor". That is **Icom-family only** —
+`DefineCapabilities` is declared `virtual` in `uRadioIcomBase.pas:162`, not in
+`TFactoryRadioBase`, and 5 Icom units override it. **68 drivers instead set the
+flags directly in their own constructor**, which is what you want for anything
+that is not an Icom:
+
+```pascal
+constructor TMyRadio.Create;
+begin
+   inherited Create(ProcessMsg);      // NOTE: `inherited Create` alone is a trap
+   radioModel := 'My Radio';
+   FCapabilities.Flags := FCapabilities.Flags + [rcReadVFOB, rcCWByCAT];
+   FCapabilities.CWSpeedMin := 5;
+   FCapabilities.CWSpeedMax := 100;
+end;
+```
+
+Writing `procedure DefineCapabilities; override;` on a non-Icom radio fails with
+*E2137 Method 'DefineCapabilities' not found in base class* — verified 2026-08-02
+while adding TCI. Loud, at least, rather than silent.
+
+Callers ask `radio.Supports(rcX)`.
 
 | flag | meaning |
 |---|---|
@@ -269,6 +291,42 @@ Two profiles exist and choosing wrongly is a silent regression:
   and IC-7000 only. Do not attach a radio to it without hardware: it also
   withholds split read, TX-status read and the set-mode filter byte, which D7
   performs for every Icom except the IC-718.
+
+---
+
+## 3b. Validated by adding a radio with a brand-new transport (TCI, 2026-08-02)
+
+This page was checked by using it: `uRadioTCI.pas` + `uWebSocketClient.pas` were
+written against it, for a radio whose transport (WebSocket) did not exist in TR4W.
+
+**The isolation claim held.** Adding it required changes to exactly two project
+files — `tr4w.dpr` and `test/unit/tr4w_unit_tests.dpr` — plus the two new units.
+**No edit to `TFactoryRadioBase`, `uRadioRegistry`, `uRadioPolling`, `LOGRADIO`,
+`VC.pas`, or any dialog.** A new radio with a new transport, a new protocol and a
+new framing did not perturb the shared code at all. Registry lint went 99 → 100
+registrations with no collisions; 1489 unit tests unchanged.
+
+**Three things this page got wrong**, each a compile error on the first build
+(loud, not silent — which is the system working):
+
+| assumed | actual |
+|---|---|
+| `DefineCapabilities` is a base virtual | Icom-family only; 68 drivers use the constructor (fixed above) |
+| `FLastValidResponse` is readable by a driver | **private**; the base exposes a WRITER (`UpdateLastValidResponse`) and no reader |
+| `CWSpeed` can be assigned | read-only property; write the `localCWSpeed` field |
+
+**Known gap worth fixing:** a driver that owns its transport (TCI, and
+`THamLibDirect`) cannot read the base's liveness timestamp, so it must keep its
+own. A protected read accessor on `TFactoryRadioBase` would remove the
+duplication. TCI works around it with a driver-local `FLastRx`.
+
+**If your radio's transport is neither serial nor line-delimited TCP**, follow
+TCI: own the transport, override `Connect`/`Disconnect`/`SendToRadio` and both
+`GetISConnected` (link up) and `GetIsOperational` (link up AND the radio has
+proved it is talking), do **not** start the base reading thread, and feed
+reassembled commands to `ProcessMsg` so state still lands through the normal
+base setters. Do not add a third framing mode to the shared reading thread for
+one driver.
 
 ---
 
