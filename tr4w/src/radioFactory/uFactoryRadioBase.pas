@@ -350,6 +350,18 @@ Type TFactoryRadioBase = class(TObject)
       // link is established.  Safe to call repeatedly: it self-guards, which is
       // what lets both transports use the same call without agreeing on who
       // owns the "already sent" state.
+      // Hand the radio whatever the operator configured that only SOME radios
+      // need.  Default no-ops.  These exist so SetUpRadioInterface does not have
+      // to type-test the object it just built: it used to say
+      //     if tFactoryObject is TIcomRadio then TIcomRadio(...).NetworkUsername := ...
+      // which put per-family knowledge back in the construction site the factory
+      // exists to keep clean, and silently skipped any future radio that also
+      // needed credentials.
+      procedure ApplyNetworkCredentials(const user, pass: string); virtual;
+      // Icom's data sub-mode (D1/D2/D3).  Named for the CONCEPT, not the vendor,
+      // so a future radio with the same idea can implement it honestly.
+      procedure ApplyDataModeID(id: integer); virtual;
+
       procedure SendStartupCommand; virtual;
 
       // Forget that the startup command was sent, so the next
@@ -708,6 +720,17 @@ procedure TFactoryRadioBase.RearmStartupCommand;
 begin
    FStartupCommandSent := False;
    FStartupArmed := False;
+end;
+
+procedure TFactoryRadioBase.ApplyNetworkCredentials(const user, pass: string);
+begin
+   // Default: this radio does not authenticate.  Overridden by TIcomRadio and
+   // TKenwoodLAN.
+end;
+
+procedure TFactoryRadioBase.ApplyDataModeID(id: integer);
+begin
+   // Default: this radio has no data sub-mode selector.
 end;
 
 procedure TFactoryRadioBase.SendStartupCommand;

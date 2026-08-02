@@ -437,13 +437,6 @@ var
    // Elecraft prosign table.  Ask the radio instead -- RadioObject.HasCapability.
    // The equivalence is pinned by test/unit/uTestRadioSupportsCaps.pas, which
    // still carries all three legacy sets transcribed independently.
-   IcomRadiosThatSupportRIT: InterfacedRadioTypeSet;
-   IcomRadiosThatSupportVFOB: InterfacedRadioTypeSet;
-   IcomRadiosThatSupportPSKMode: InterfacedRadioTypeSet;  // For data, radio uses PSK mode instead of USB-D.
-   IcomRadiosSplitSetOnly: InterfacedRadioTypeSet;  // $0F is write-only (set split); the read NAKs (FA). Skip the split read-poll for these.
-   IcomRadiosModeSetNoFilter: InterfacedRadioTypeSet;  // $06 set-mode takes the mode byte only; appending a filter byte makes the radio NAK the whole frame.
-   IcomRadiosTXStatusUnreadable: InterfacedRadioTypeSet;  // Cannot read TX/RX status over CI-V ($1C read NAKs on any sub-command, no transceive PTT). Skip the poll.
-   IcomRadios6to60WPMKeyer: InterfacedRadioTypeSet;  // CW keyer speed spans 6..60 wpm (not the default 6..48). IC-718. Others stay 6..48 (the long-standing mapping).
    // The manufacturer/transport taxonomy sets (ICOMRadios, KenwoodRadios,
    // YaesuRadios, HamLibONLYRadios) are RETIRED.  The registry answers those
    // questions now: uRadioRegistry.IsHamLibOnly (native = registered),
@@ -1051,7 +1044,9 @@ begin
 
       IC78..IC9700:
          begin
-         if IntRadioType in IcomRadiosThatSupportRIT then
+         // Ask the RADIO, not a table keyed by model.  rcReadRIT is the same
+         // fact IcomRadiosThatSupportRIT encoded, but owned by the radio object.
+         if ActiveRadioPtr.HasCapability(rcReadRIT) then
             begin
             ActiveRadioPtr.SendIcomClearRITCommand;
             end;
@@ -1118,12 +1113,12 @@ begin
 
       IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6}    // This does not work for all Icom radios.
          begin
-         if IntRadioType in IcomRadiosThatSupportRIT then
-            begin
+         // NOTE: nothing here is implemented -- the guard that used to wrap
+         // these comments (IntRadioType in IcomRadiosThatSupportRIT) protected
+         // no code at all, so it is gone rather than translated.
          // Have to know what RIT is set to now and then increase it by a bit. RIT should be in radio poll so we always know
          // Not implemented yet due to issues converting the hz to BCD
          //ActiveRadioPtr.SetICOMRITFrequency(ActiveRadioPtr.CurrentStatus.RITFreq + 10);
-            end;
          Exit;
          end;
 
@@ -1184,11 +1179,11 @@ begin
 
       IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6} // Add code somewhere tohandle radios that do not support 21 code.
          begin
-         if IntRadioType in IcomRadiosThatSupportRIT then
-            begin
-            // Not implemented yet due to issues converting the hz to BCD
-            //ActiveRadioPtr.SetICOMRITFrequency(ActiveRadioPtr.CurrentStatus.RITFreq - 10);
-            end;
+         // NOTE: nothing here is implemented -- the guard that used to wrap
+         // these comments (IntRadioType in IcomRadiosThatSupportRIT) protected
+         // no code at all, so it is gone rather than translated.
+         // Not implemented yet due to issues converting the hz to BCD
+         //ActiveRadioPtr.SetICOMRITFrequency(ActiveRadioPtr.CurrentStatus.RITFreq - 10);
          Exit;
          end;
 
@@ -2527,32 +2522,15 @@ begin
          // each construction site above, so the network path no longer sets
          // rigLabel here -- it was the only path that ever did.
 
-         // If this is an Icom radio, set network credentials before connecting
-         if Self.tFactoryObject is TIcomRadio then
-         begin
-            TIcomRadio(Self.tFactoryObject).NetworkUsername := Self.NetworkUsername;
-            TIcomRadio(Self.tFactoryObject).NetworkPassword := Self.NetworkPassword;
-            logger.Info('[%s.SetUpRadioInterface] Set Icom network credentials (user=%s, pass=*******)',
-                        [Self.RadioName, Self.NetworkUsername]);
-            if Self.IcomDataModeID in [1..3] then
-               begin
-               TIcomRadio(Self.tFactoryObject).DataModeID := Self.IcomDataModeID;
-               logger.Info('[%s.SetUpRadioInterface] Icom data mode ID set to D%d',
-                           [Self.RadioName, Self.IcomDataModeID]);
-               end;
-         end;
-
-         // Kenwood TS-890 also requires LAN credentials (Issue #436).
-         // TKenwoodLAN, the BASE -- not a model class.  Both the TS-890S and the
-         // TS-990S need LAN credentials, and testing a model class here would
-         // silently leave the other one unauthenticated.
-         if Self.tFactoryObject is TKenwoodLAN then
-         begin
-            TKenwoodLAN(Self.tFactoryObject).NetworkUsername := Self.NetworkUsername;
-            TKenwoodLAN(Self.tFactoryObject).NetworkPassword := Self.NetworkPassword;
-            logger.Info('[%s.SetUpRadioInterface] Set Kenwood TS-890 LAN credentials (user=%s, pass=*******)',
-                        [Self.RadioName, Self.NetworkUsername]);
-         end;
+         // E-2: ASK THE RADIO, do not type-test it.  This used to be two
+         // `if tFactoryObject is TIcomRadio / TKenwoodLAN` blocks that reached in
+         // and set properties -- per-family knowledge in the construction site
+         // the factory exists to keep clean, and a silent gap for any future
+         // radio that also needs credentials.  Both are no-ops on a radio that
+         // does not authenticate.
+         Self.tFactoryObject.ApplyNetworkCredentials(string(Self.NetworkUsername),
+                                                     string(Self.NetworkPassword));
+         Self.tFactoryObject.ApplyDataModeID(Self.IcomDataModeID);
 
          // Connect is deferred to the polling thread (pFactoryRadio).  Running
          // it synchronously here blocked the main thread for up to 10 s
@@ -3032,27 +3010,20 @@ begin
    // radios declare rcCWByCAT / rcCWSpeedSync / rcPlayDVK themselves.  See the
    // note at their old declarations, and uTestRadioSupportsCaps for the proof
    // that the capabilities cover exactly the models these lists did.
-   IcomRadiosThatSupportRIT := [IC705, IC7100, IC7300, IC7800, IC7850, IC7851, IC7600, IC7610, IC7700, IC7760, IC9700, IC905, IC7300MK2];
-   IcomRadiosThatSupportVFOB := [IC705, IC7100, IC7300, IC7800, IC7850, IC7851, IC7600, IC7610, IC7700, IC7760, IC9700, IC905, IC7300MK2];
-   IcomRadiosThatSupportPSKMode := [IC7600, IC7610, IC7760];
    // Icoms whose $0F is set-only (no readable split status; the read NAKs with FA).
    // Confirmed on the IC-718 (bench + CI-V manual). Add other older Icoms here as
    // each is confirmed on the bench.
-   IcomRadiosSplitSetOnly := [IC718];
    // Icoms whose $06 set-mode takes the mode byte ONLY (no trailing filter byte).
    // The IC-718 NAKs a "06 <mode> <filter>" frame (confirmed on the bench + its
    // CI-V manual: the set-mode frame is "FE FE ra E0 06 <mode> FD"). Add other
    // older Icoms here as each is confirmed on the bench.
-   IcomRadiosModeSetNoFilter := [IC718];
    // Icoms that cannot report TX/RX status over CI-V. The IC-718 NAKs the $1C read on
    // BOTH sub-command 00 and 01 and never broadcasts PTT via transceive (bench-confirmed;
    // its manual lists "1C 01" as read/write but the firmware only honors the write).
    // Skip the TX-status poll for these. Add other older Icoms as confirmed on the bench.
-   IcomRadiosTXStatusUnreadable := [IC718];
    // Icoms whose CW keyer speed spans 6..60 wpm. Every OTHER legacy Icom is 6..48 --
    // the long-standing mapping that matches the modern factory path; forcing 6..60 on
    // a 6..48 radio runs it ~11% slow. Only the bench-confirmed IC-718 is 6..60 so far.
-   IcomRadios6to60WPMKeyer := [IC718];
    // The taxonomy sets that were initialized here (ICOMRadios, KenwoodRadios,
    // YaesuRadios, HamLibONLYRadios) are retired -- see the note at their old
    // declaration site.  The FT736R history (an unfinished driver in both trees,
