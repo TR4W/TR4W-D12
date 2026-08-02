@@ -59,7 +59,8 @@ unit uRadioElecraftSerial;
 
 interface
 
-uses Windows, uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uCWFraming;
+uses Windows, uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uCWFraming,
+     uElecraftIF;   // shared IF decode -- the K4 uses the same one
 
 type
   TElecraftSerial = class(TFactoryRadioBase)
@@ -123,10 +124,8 @@ type
 implementation
 
 const
-   // Smallest IF response ParseIFCommand can consume: 'IF' plus 33 positional
-   // characters.  Derived from the parse itself, not from a wire length -- see
-   // the guard in ParseIFCommand for why the wire length is the wrong measure.
-   IF_MIN_PARSED_LENGTH = 35;
+   // (The IF length guard moved to uElecraftIF.IF_PARSED_LENGTH, where it is
+   // stated in terms of what the parse consumes rather than the wire length.)
 
    // How long to let the rig finish the RX transition after a keyer abort
    // before the next KY is sent.  EMPIRICAL -- start here and tune on the
@@ -522,96 +521,34 @@ end;
 // guard, to preserve bench-proven behavior.)
 function TElecraftSerial.ParseIFCommand(cmd: string): boolean;
 var
-   s: string;
-   hz: integer;
-   ritMultiplier: integer;
-   xitMultiplier: integer;
-   ritOffset: integer;
-   sVFO: string;
-   sMode: string;
-   sDataMode: string;
+   info: TElecraftIF;
+   err: TElecraftIFError;
    vfo: TRadioVFO;
 begin
    Result := false;
-   ritMultiplier := 1;
-   xitMultiplier := 1;
-   // Guard against a short/garbled IF.  Two things were wrong with the original
-   // "if not length(cmd) in [36,38]":
-   //
-   //   1. PRECEDENCE.  Pascal binds `not` tighter than `in`, so it evaluated
-   //      (not Length(cmd)) in [36,38] -- a BITWISE NOT of the length, always
-   //      negative, never in the set.  The guard never fired, so it rejected
-   //      nothing and the "not 36 or 38 bytes" error could never appear.
-   //   2. THE LENGTHS.  Fixing the precedence alone would have been worse than
-   //      the bug: the reading thread strips the ';' before the driver sees the
-   //      command, so what arrives here is 37 characters, which is in neither 36
-   //      nor 38 -- every valid response would suddenly be rejected.
-   //
-   // So test what the PARSE actually needs.  Walking the Delete/AnsiLeftStr
-   // sequence below, it consumes 'IF' plus 33 positional characters (11 freq,
-   // 5 blanks, sign, 4 offset, RIT, XIT, space, "00", TX, mode, VFO+scan,
-   // split, b, data) = 35.  Longer is fine and deliberately tolerated: the
-   // fields are read from the FRONT, so a firmware that appends fields must not
-   // break a radio that works.
-   if Length(cmd) < IF_MIN_PARSED_LENGTH then
+
+   // Decoding lives in uElecraftIF so the K3 and K4 cannot drift apart again;
+   // APPLYING the decoded state stays here, because that is where they legitimately
+   // differ (this radio selects between VFOs, the K4 swaps them).
+   err := ParseElecraftIF(cmd, info);
+   if err <> ifeNone then
       begin
-      logger.Error('[ParseIFCommand] IF response too short: %d chars, need at least %d - %s',
-                   [Length(cmd), IF_MIN_PARSED_LENGTH, cmd]);
+      logger.Error('[ParseIFCommand] %s', [ElecraftIFErrorText(err, cmd)]);
       Exit;
       end;
 
-   s := cmd;
-   if AnsiLeftStr(s,2) = 'IF' then
-      begin
-      Delete(s,1,2);
-      end;
-   hz := StrToIntDef(AnsiLeftStr(s,11),-999);   // [f]*****+yyyyrx*00tmvspbd1*;
-   if hz = -999 then
-      begin
-      logger.Error('[ParseIFCommand] frequency returned in IF command was not a number %s',[AnsiLeftStr(s,11)]);
-      Exit;
-      end;
+   // Base setters, not the raw scalars: they also write the per-VFO values the
+   // radio window reads.  On a serial Elecraft (AI0 + poll) this IF poll is the
+   // ONLY ongoing RIT/XIT source -- writing just the scalar left the window
+   // indicator stuck off.
+   Self.SetRITOffset(info.RITXITOffsetHz);
+   Self.SetXITOffset(Self.localRITOffset);   // shared register on Elecraft
+   logger.trace('[ParseIFCommand] RITOffset = %d', [Self.localRITOffset]);
 
-   Delete(s,1,11); // Remove frequency
-   Delete(s,1,5);  // Remove 5 blanks          // *****+yyyyrx*00tmvspbd1*;
-   if AnsiLeftStr(s,1) = '-' then
-      begin
-      ritMultiplier := -1;
-      xitMultiplier := -1;
-      end
-   else if AnsiLeftStr(s,1) = '+' then
-      begin
-      ritMultiplier := 1;
-      xitMultiplier := 1;
-      end;
-   Delete(s,1,1);                      // yyyyrx*00tmvspbd1*;
-   ritOffset := StrToIntDef(AnsiLeftStr(s,4),-999);
-   if ritOffset = -999 then
-      begin
-      logger.Error('[ParseIFCommand] RIT offset returned in IF command was not a number %s',[AnsiLeftStr(s,4)]);
-      Exit;
-      end;
+   Self.SetRITOn(info.RITOn);
+   Self.SetXITOn(info.XITOn);
 
-   // Base setter writes the per-VFO RITOffset the window reads, not just the scalar.
-   Self.SetRITOffset(ritOffset * ritMultiplier);
-   Self.SetXITOffset(Self.localRITOffset); // shared register on Elecraft
-   logger.trace('[ParseIFCommand] RITOffset = %d',[Self.localRITOffset]);
-
-   Delete(s,1,4);                      // rx*00tmvspbd1*;
-   // Use the base setter so the per-VFO RITState the radio window reads is
-   // updated, not just the legacy scalar.  On a serial Elecraft (AI0 + poll)
-   // this IF poll is the ONLY ongoing RIT/XIT source -- writing just the scalar
-   // left the window indicator stuck off.
-   Self.SetRITOn(AnsiLeftStr(s,1) = '1');
-
-   Delete(s,1,1);                      // x*00tmvspbd1*;
-   Self.SetXITOn(AnsiLeftStr(s,1) = '1');
-
-   Delete(s,1,1);
-   Delete(s,1,1); // Skip space        // *00tmvspbd1*;
-   Delete(s,1,2); // Skip 00           // 00tmvspbd1*;
-
-   if AnsiLeftStr(s,1) = '1' then      // tmvspbd1*;
+   if info.Transmitting then
       begin
       Self.RadioState := rsTransmit;
       end
@@ -619,22 +556,11 @@ begin
       begin
       Self.RadioState := rsReceive;
       end;
-   Delete(s,1,1);
-   sMode := AnsiLeftStr(s,1);          // mvspbd1*;
 
-   Delete(s,1,1);
-   sVFO := AnsiLeftStr(s,1);           // vspbd1*;
-
-   Delete(s,1,2); // Skip s (scanning) // spbd1*;
-   Self.SetSplitOn(AnsiLeftStr(s,1) = '1');           // pbd1*;
-
-   Delete(s,1,1);
-   Delete(s,1,1); // Skip the b        // bd1*;
-
-   sDataMode := AnsiLeftStr(s,1);      // (0=DATA A, 1=AFSK A, 2=FSK D, 3=PSK D)
+   Self.SetSplitOn(info.SplitOn);
 
    // Route to the RX (operating) VFO reported by the IF 'v' field.
-   if sVFO = '0' then
+   if not info.RXVFOIsB then
       begin
       vfo := Self.vfo[nrVFOA];
       Self.SetActiveVFO(nrVFOA);
@@ -645,53 +571,26 @@ begin
       Self.SetActiveVFO(nrVFOB);
       end;
 
-   vfo.frequency := hz;
-   vfo.band := FreqToRadioBand(hz);
-      // Serial polling does not deliver BN on a band change, so derive band from
-      // frequency here (as every other modern radio class does).
-   vfo.mode := ModeStrToMode(sMode, sDataMode);
+   vfo.frequency := info.FrequencyHz;
+   // Serial polling does not deliver BN on a band change, so derive band from
+   // frequency here (as every other modern radio class does).
+   vfo.band := FreqToRadioBand(info.FrequencyHz);
+   vfo.mode := ModeStrToMode(info.ModeChar, info.DataModeChar);
+   Result := true;
 end;
 
 // Helper: Elecraft MD byte (+ DT sub-mode) -> TRadioMode.
 function TElecraftSerial.ModeStrToMode(sMode: string; sDataMode: string): TRadioMode;
-var iMode: integer;
+var
+   problem: string;
 begin
-   iMode := StrToIntDef(sMode,-999);
-   case iMode of
-      0: Result := rmNone;
-      1: Result := rmLSB;
-      2: Result := rmUSB;
-      3: Result := rmCW;
-      4: Result := rmFM;
-      5: Result := rmAM;
-      6: begin
-            case StrToIntDef(sDataMode,-9) of
-            0: Result := rmData;
-            1: Result := rmAFSK;
-            2: Result := rmFSK;
-            3: Result := rmPSK;
-            -9:begin
-               logger.Error('[ModeStrToMode] Non-numeric string passed for sDataMode (%s)',[sDataMode]);
-               Result := rmData;
-               end;
-            else
-               begin
-               logger.Error('[ModeStrToMode] Unexpected string passed for sDataMode (%s)',[sDataMode]);
-               Result := rmData;
-               end;
-            end;
-         end;
-      7: Result := rmCWRev;
-      9: Result := rmDataRev;
-      -999: begin
-            logger.error('[ModeStrToMode] Non-numeric string passed for sMode (%s)',[sMode]);
-            Result := rmNone;
-            end;
-      else
-         begin
-         logger.error('[ModeStrToMode] Unexpected string passed for sMode (%s)',[sMode]);
-         Result := rmNone;
-         end;
+   // Mapping lives in uElecraftIF alongside the IF decode -- the K4 had a
+   // character-for-character copy of this same case statement.  Logging stays
+   // here so each radio still reports in its own category.
+   Result := ElecraftModeToRadioMode(sMode, sDataMode, problem);
+   if problem <> '' then
+      begin
+      logger.Error('[ModeStrToMode] %s', [problem]);
       end;
 end;
 
