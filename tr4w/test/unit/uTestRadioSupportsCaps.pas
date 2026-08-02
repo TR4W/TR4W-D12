@@ -68,6 +68,50 @@ const
       IC7600, IC7610, IC7700, IC7760, IC7800, IC7850, IC7851, IC9100, IC9700,
       IC905, IC7300MK2, ORION);
 
+// DELIBERATE divergences from the legacy sets.  Each entry is a legacy BUG that
+// NY4I has ruled on, not a porting slip -- the factory is right and LOGRADIO's
+// list was wrong.  Note these still ASSERT: the expected value is checked, so
+// reverting the factory back to the legacy answer fails this test rather than
+// quietly passing.  Anything NOT listed here must match legacy exactly.
+type
+   TCapDivergence = record
+      cap:         TRadioCapability;
+      model:       InterfacedRadioType;
+      factorySays: Boolean;
+      why:         string;
+   end;
+
+const
+   KNOWN_DIVERGENCES: array[0..0] of TCapDivergence = (
+      (cap: rcCWSpeedSync; model: KX3; factorySays: True;
+       why: 'NY4I: the KX3 differs from the K3 ONLY in the memory keyer. It ' +
+            'takes the same KS keyer-speed command through ' +
+            'TElecraftSerial.SetCWSpeed, so its absence from ' +
+            'RadioSupportsCWSpeedSync was a legacy omission -- the same class ' +
+            'of gap as the KX3 missing from the Elecraft prosign set, where it ' +
+            'silently keyed Kenwood spellings.')
+   );
+
+// True when this (cap, model) pair is a sanctioned divergence; expected returns
+// what the FACTORY must say.
+function IsKnownDivergence(cap: TRadioCapability; m: InterfacedRadioType;
+                           out expected: Boolean): Boolean;
+var
+   i: Integer;
+begin
+   Result := False;
+   expected := False;
+   for i := Low(KNOWN_DIVERGENCES) to High(KNOWN_DIVERGENCES) do
+      begin
+      if (KNOWN_DIVERGENCES[i].cap = cap) and (KNOWN_DIVERGENCES[i].model = m) then
+         begin
+         expected := KNOWN_DIVERGENCES[i].factorySays;
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 function InLegacy(m: InterfacedRadioType; const arr: array of InterfacedRadioType): Boolean;
 var
    i: Integer;
@@ -113,7 +157,10 @@ begin
          end;
       try
          Inc(checked);
-         want := InLegacy(m, arr);
+         if not IsKnownDivergence(cap, m, want) then
+            begin
+            want := InLegacy(m, arr);
+            end;
          got  := r.Supports(cap);
          if want <> got then
             begin

@@ -48,7 +48,16 @@ begin
    // Capabilities from LOGRADIO's RadioSupports* lists.  These say what the
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
-   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT];
+   //
+   // Per NY4I: the KX3 differs from the K3 ONLY in the memory keyer.  So it
+   // gets the K3's rcCWSpeedSync -- it accepts the same KS keyer-speed command
+   // through TElecraftSerial.SetCWSpeed, and was missing the flag purely
+   // because the legacy RadioSupports* lists never included it.
+   //
+   // It does NOT get rcPlayDVK, and that omission is deliberate: the KX3 has no
+   // DVK voice recorder, and the base's MemoryKeyer drives a K3 by emulating
+   // front-panel MSG/REC buttons (SWT21/31/35/39) this radio does not have.
+   FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
 end;
 
 initialization

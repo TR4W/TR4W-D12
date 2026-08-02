@@ -492,9 +492,11 @@ end;
 
 function TElecraftSerial.MemoryKeyer(mem: integer): boolean;
 begin
-   // K3/KX3 DVK is driven by emulating the front-panel MSG/REC buttons over CAT
+   // K3 DVK is driven by emulating the front-panel MSG/REC buttons over CAT
    // (SWT<nn>;), matching the legacy K3 path in LOGRADIO.MemoryKeyer.  This is a
    // per-family deviation from the K4's DAMP command.
+   // NOT the KX3: it has no DVK and none of these front-panel buttons, so it
+   // does not declare rcPlayDVK and never reaches here.
    // Result True = "error / unsupported" (fail closed).
    Result := True;
    if IntegerBetween(mem, 0, 4) then
