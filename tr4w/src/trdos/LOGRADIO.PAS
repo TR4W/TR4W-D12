@@ -177,7 +177,6 @@ type
       tLastValidResponse:  Cardinal;   // GetTickCount of last good serial read; drives the serial liveness indicator
       RadioName:        Str20;
       StartupCommand  : Str50;
-      StartupCommandSent: Boolean;  // One-shot guard: set True after pFactoryRadio sends StartupCommand on first connect (Issue #436)
       HamLibID:          integer;
       //    lpOverlapped: TOverlapped;
       //    pOver: POverlapped;
@@ -1230,53 +1229,15 @@ begin
 //      SerialPort := Radio2.tCATPortType;
       end;
 
-   case IntRadioType of
-
-      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
-      TS950, TS990, TS2000:
-         begin
-         ActiveRadioPtr.AddToOutputBuffer {WriteBufferToCATPort}('UP;', 3);
-         end;
-
-      FTDX10, FT450, FT891, FT991, FT950, FT2000, FTDX9000, K2, K3, K4:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('UP;');
-         end;
-
-      FT890, {FT920,} FT990, FT1000, FT1000MP:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort(
-            CHR($8E) + CHR(0) + CHR(0) + CHR(0) + CHR(0));
-         end;
-
-      FT767:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort(
-            CHR(0) + CHR(0) + CHR(0) + CHR(0) + CHR($02));
-         end;
-
-      IC78..IC9700, OMNI6, FLEX:
-         begin
-         if ActiveRadioPtr.CurrentStatus.Freq = 0 then
-            begin
-            Exit;
-            end;
-         ActiveRadioPtr.SetRadioFreq(ActiveRadioPtr.CurrentStatus.Freq + 20,
-            ActiveRadioPtr.CurrentStatus.Mode, 'A');
-         Exit;
-         end;
-
-      Orion:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('*AS+1' + CarriageReturn);
-         Exit;
-         end;
-
-      else
-         begin
-         Exit;
-         end;
-      end;
+   // The per-model `case IntRadioType of` that sent 'UP;' here is DELETED.
+   // Both branches above delegate to the driver and Exit, so this was only
+   // reachable when construction failed -- already a logged ERROR from
+   // SetUpRadioInterface.  Each driver's VFOBumpUp owns its own command.
+   //
+   // This also retires the LAST callers of RadioObject.AddToOutputBuffer,
+   // whose (PAnsiChar, length) signature is the shape NY4I wants gone from
+   // the main data path: the program should hand around strings and let the
+   // transport worry about bytes.
 end;
 
 procedure VFOBumpDown;
@@ -1307,53 +1268,15 @@ begin
 //      SerialPort := Radio2.tCATPortType;
       end;
 
-   case IntRadioType of
-
-      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
-      TS950, TS990, TS2000:
-         begin
-         ActiveRadioPtr.AddToOutputBuffer {WriteBufferToCATPort}('DN;', 3);
-         end;
-
-      FT450, FT891, FT991, FT950, FT2000, FTDX9000, K2, K3, K4:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('DN;');
-         end;
-
-      FT890, {FT920,} FT990, FT1000, FT1000MP:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort(
-            CHR($8E) + CHR(1) + CHR(0) + CHR(0) + CHR(0));
-         end;
-
-      FT767:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort(
-            CHR(0) + CHR(0) + CHR(0) + CHR(0) + CHR($03));
-         end;
-
-      IC78..IC9700, OMNI6, FLEX:
-         begin
-         if ActiveRadioPtr.CurrentStatus.Freq = 0 then
-            begin
-            Exit;
-            end;
-         ActiveRadioPtr.SetRadioFreq(ActiveRadioPtr.CurrentStatus.Freq - 20,
-            ActiveRadioPtr.CurrentStatus.Mode, 'A');
-         Exit;
-         end;
-
-      Orion:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('*AS-1' + CarriageReturn);
-         Exit;
-         end;
-
-      else
-         begin
-         Exit;
-         end;
-      end;
+   // The per-model `case IntRadioType of` that sent 'DN;' here is DELETED.
+   // Both branches above delegate to the driver and Exit, so this was only
+   // reachable when construction failed -- already a logged ERROR from
+   // SetUpRadioInterface.  Each driver's VFOBumpDown owns its own command.
+   //
+   // This also retires the LAST callers of RadioObject.AddToOutputBuffer,
+   // whose (PAnsiChar, length) signature is the shape NY4I wants gone from
+   // the main data path: the program should hand around strings and let the
+   // transport worry about bytes.
 end;
 
 
@@ -2340,6 +2263,12 @@ begin
 
       // Create HamLib Direct radio via factory
       Self.tFactoryObject := TRadioFactory.CreateHamLibDirect(nil);
+         // The radio owns its startup command from birth; SendStartupCommand
+         // fires it once the link is actually up.
+         if Self.tFactoryObject <> nil then
+            begin
+            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
+            end;
 
       if Self.tFactoryObject <> nil then
       begin
@@ -2432,6 +2361,12 @@ begin
             tr4w_cat_rts_state = RtsDtr_ON,
             tr4w_cat_dtr_state = RtsDtr_ON
          );
+         // The radio owns its startup command from birth; SendStartupCommand
+         // fires it once the link is actually up.
+         if Self.tFactoryObject <> nil then
+            begin
+            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
+            end;
          if Self.tFactoryObject <> nil then
             begin
             Self.tFactoryObject.Connect;
@@ -2454,12 +2389,9 @@ begin
             Mode := NoMode;
             Freq := 0;
             end;
-         if length(Self.StartupCommand) > 0 then
+         if Self.tFactoryObject <> nil then
             begin
-            if Self.tFactoryObject <> nil then
-               begin
-               Self.tFactoryObject.SendToRadio(Self.StartupCommand);
-               end;
+            Self.tFactoryObject.SendStartupCommand;
             end;
          Exit;
          end
@@ -2480,6 +2412,12 @@ begin
             tr4w_cat_rts_state = RtsDtr_ON,
             tr4w_cat_dtr_state = RtsDtr_ON
          );
+         // The radio owns its startup command from birth; SendStartupCommand
+         // fires it once the link is actually up.
+         if Self.tFactoryObject <> nil then
+            begin
+            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
+            end;
          if Self.tFactoryObject <> nil then
             begin
             Self.tFactoryObject.Connect;
@@ -2508,12 +2446,9 @@ begin
             Freq := 0;
             end;
          // Send startup command if configured
-         if length(Self.StartupCommand) > 0 then
+         if Self.tFactoryObject <> nil then
             begin
-            if Self.tFactoryObject <> nil then
-               begin
-               Self.tFactoryObject.SendToRadio(Self.StartupCommand);
-               end;
+            Self.tFactoryObject.SendStartupCommand;
             end;
          // Exit to prevent any legacy serial code from executing
          Exit;
@@ -2612,6 +2547,12 @@ begin
             Self.IPAddress,
             Self.RadioTCPPort
          );
+         // The radio owns its startup command from birth; SendStartupCommand
+         // fires it once the link is actually up.
+         if Self.tFactoryObject <> nil then
+            begin
+            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
+            end;
          logger.Info('[%s] Using %s network protocol (id)', [Self.RadioName, uRadioRegistry.DisplayNameId(string(Self.FactoryId))]);
          end
       else if uRadioRegistry.IsRegistered(Self.RadioModel) and
@@ -2622,6 +2563,12 @@ begin
             Self.IPAddress,
             Self.RadioTCPPort
          );
+         // The radio owns its startup command from birth; SendStartupCommand
+         // fires it once the link is actually up.
+         if Self.tFactoryObject <> nil then
+            begin
+            Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
+            end;
          logger.Info('[%s] Using %s network protocol', [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
          end
       else
@@ -2666,7 +2613,6 @@ begin
          // (Indy ConnectTimeout) whenever the radio was off or unreachable.
          // The polling thread's existing reconnect-with-backoff path now
          // handles the very first connect as well.  Issue #436.
-         Self.StartupCommandSent := False;  // pFactoryRadio sends StartupCommand once after first connect
          logger.Info('[%s.SetUpRadioInterface] Network radio %s:%d configured; Connect deferred to polling thread (main thread not blocked)',
                      [Self.RadioName, Self.IPAddress, Self.RadioTCPPort]);
       end
@@ -2711,29 +2657,15 @@ begin
       Freq := 0;
       end;
    logger.debug('[RadioObject.SetUpRadioInterface] Startup command length = %d, startup command = %s',[length(Self.StartupCommand),Self.StartupCommand]);
-   if length(Self.StartupCommand) > 0 then
-      begin
-      if Self.tFactoryObject <> nil then
-         begin
-         // Network radios: pFactoryRadio sends StartupCommand on first
-         // successful connect.  Sending here would race the deferred
-         // Connect (Issue #436).
-         end
-      else
-         begin
-         case RadioParametersArray[RadioModel].rt of
-         rtKenwood: AddToOutputBuffer (addr(Self.StartupCommand[1]), length(Self.StartupCommand));
-         rtYaesu2,
-         rtYaesu3,
-         rtYaesu4:  AddToOutputBuffer (addr(Self.StartupCommand[1]), length(Self.StartupCommand));
-         rtIcom: logger.Warn('Startup command not yet implemented for Icom');
-         //rtOrion: WriteToCATPort(addr(Self.StartupCommand[1]), length(Self.StartupCommand));
-         else
-            begin
-            end;
-         end;
-      end;
-      end;
+   // The startup command is the RADIO's business now: it is handed the string at
+   // construction and sends it from SendStartupCommand once the link is up.
+   // Nothing to do here.
+   //
+   // The per-model `case rt of` that used to sit in the no-factory branch is
+   // DELETED, and with it the LAST read of RadioParametersArray.  It was
+   // reachable only when construction failed -- already a logged ERROR -- and
+   // it never worked for Icom anyway: that arm was
+   //     logger.Warn('Startup command not yet implemented for Icom').
    // ------------------------------------------------------------------
    // NO FACTORY DRIVER WAS BUILT for a radio the operator actually selected.
    //
