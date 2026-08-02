@@ -306,9 +306,9 @@ begin
       Exit;
       end;
 
-   logger.Trace('[TCI RX] %s', [Cmd]);
+   // Liveness first: even telemetry we discard proves the server is alive.
    FLastRx := Now;
-   UpdateLastValidResponse;   // any frame proves the server is alive
+   UpdateLastValidResponse;
 
    p := Pos(':', Cmd);
    if p = 0 then
@@ -322,6 +322,20 @@ begin
       argsPart := Copy(Cmd, p + 1, Length(Cmd));
       end;
    args := SplitString(argsPart, ',');
+
+   // HIGH-RATE TELEMETRY WE NEVER USE.  Measured on NY4I's 2026-08-02 capture:
+   // 68 of 129 commands (53%) were rx_smeter alone.  TCI has no client-side
+   // subscription filter that we know of -- the server broadcasts to every
+   // client -- so the most a client can do is drop it cheaply.  Bailing out
+   // BEFORE the trace log is the point: otherwise half the log is S-meter
+   // readings and a real protocol problem is invisible in it.
+   if (name = 'rx_smeter') or (name = 'tx_swr') or (name = 'tx_power') or
+      (name = 'tx_meter') or (name = 'rx_sensors') or (name = 'tx_sensors') then
+      begin
+      Exit;
+      end;
+
+   logger.Trace('[TCI RX] %s', [Cmd]);
 
    // ---- no-argument forms -------------------------------------------------
    if name = 'ready' then
