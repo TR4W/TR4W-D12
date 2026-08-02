@@ -1717,12 +1717,39 @@ begin
   // second would overwrite VFO A with physical VFO A when VFO B is active, fighting
   // the transceive push. Leave VFO A entirely to the transceive mechanism.
   // VFO B freq/mode are polled via $26 since transceive only pushes the active VFO.
+  // Ask only for what this radio can actually answer.  A radio that NAKs a
+  // query gains nothing from being asked once a second, and the NAK is noise
+  // in the log when someone is trying to read a real fault.
+  //
+  // NOTE this is DEFENCE, not a fix for a live bug: every radio that reaches
+  // this base inherits rcReadSplit/rcReadTXStatus from TIcomModern or
+  // TIcomReadLimited, and the one radio that denies them (the IC-718, which
+  // NAKs $21/$0F/$1C/$07) already overrides PollRadioState entirely.  The
+  // gates exist so the NEXT radio to declare a capability off is respected
+  // without also having to override the poll.
+  //
+  // rcReadRIT deliberately gates only the RIT/XIT queries: per
+  // docs/ADDING_A_RADIO.md a missing flag can mean 'TR4W does not read it'
+  // rather than 'the radio cannot report it', so absence is NOT proof of
+  // inability -- but asking a radio we would not parse the answer from is
+  // pointless either way.
   logger.trace('[%s.PollRadioState] Polling RIT/XIT/Split/TX/ActiveVFO', [radioModel]);
-  QueryRITState;          // $21 $01
-  QueryXITState;          // $21 $02
-  QuerySplitState;        // $0F
-  QueryTXStatus;          // $1C $00
-  QueryActiveVFO;         // $07 $D2 — keep FActiveVFO current; triggers refresh only on change
+  if Supports(rcReadRIT) then
+     begin
+     QueryRITState;          // $21 $01
+     QueryXITState;          // $21 $02
+     end;
+  if Supports(rcReadSplit) then
+     begin
+     QuerySplitState;        // $0F
+     end;
+  if Supports(rcReadTXStatus) then
+     begin
+     QueryTXStatus;          // $1C $00
+     end;
+  QueryActiveVFO;         // $07 $D2 -- no capability covers this; every radio
+                          // reaching this base answers it (the IC-718 does not,
+                          // and does not use this poll).
 end;
 
 // Radio control methods - basic implementations
