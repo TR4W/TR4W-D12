@@ -111,11 +111,9 @@ $SERVER_DPROJ  = Join-Path $TR4W_DIR    "tr4wserver\tr4wserver.dproj"
 $VERSION_PAS   = Join-Path $SRC_DIR     "Version.pas"
 $PROJECT_DPROJ = Join-Path $TR4W_DIR    "tr4w.dproj"
 $RSVARS        = Join-Path $StudioBin   "rsvars.bat"
-# $DCC32 is DEAD -- kept only because the not-yet-migrated language loop still
-# references $LIB/$PROJECT alongside it. Nothing invokes DCC32.EXE any more.
-$DCC32         = Join-Path $Delphi7Bin  "DCC32.EXE"
-$PROJECT       = Join-Path $TR4W_DIR    "tr4w.dpr"
-$LIB           = "$IndyRoot\Core;$IndyRoot\System;$TR4W_DIR\include;$IndyRoot\Protocols"
+# NOTE: $DCC32 / $PROJECT / $LIB used to live here for the Delphi 7 command line.
+# All three are gone -- nothing in this script invokes DCC32.EXE, and the language
+# loop builds through msbuild like everything else.
 # Installer paths (only used when -BuildInstallers is set).
 $BUILD_DIR     = Join-Path $TR4W_DIR    "build"
 $NSI_FILE      = Join-Path $BUILD_DIR   "full.nsi"
