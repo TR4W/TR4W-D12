@@ -1088,6 +1088,19 @@ begin
             begin
             logger.Info('[pFactoryRadio] Radio disconnected, will attempt reconnection');
             wasConnected := False;
+            // Re-arm the startup command.  The reconnect below comes back
+            // through the `if not wasConnected` transition, which calls
+            // SendStartupCommand -- and that self-guards, so without this the
+            // command would never be re-sent for the life of the radio object.
+            //
+            // Re-armed HERE, at the drop, rather than at the reconnect: this is
+            // the one place both transports agree the link went away, and doing
+            // it here cannot double-send at startup, where there is no prior
+            // drop to react to.
+            if Assigned(ro) then
+               begin
+               ro.RearmStartupCommand;
+               end;
             // Zero freq in both Current and Previous status.
             // Current: so the display shows blank, not a stale reading.
             // Previous: so UpdateStatus detects a real change when reconnect brings the

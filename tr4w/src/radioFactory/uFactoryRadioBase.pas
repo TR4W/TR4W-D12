@@ -337,6 +337,13 @@ Type TFactoryRadioBase = class(TObject)
       // owns the "already sent" state.
       procedure SendStartupCommand; virtual;
 
+      // Forget that the startup command was sent, so the next
+      // SendStartupCommand fires again.  Called when the LINK DROPS: a radio
+      // that went away may have been power-cycled, and a power-cycled radio has
+      // lost whatever the startup command configured.  NY4I, 2026-08-01:
+      // "resend it after power up."
+      procedure RearmStartupCommand;
+
       procedure SetExpectedFrameLength(n: integer);
 
       // Frame check for FIXED-LENGTH framing (ignored when SerialFixedFrameLength = 0).
@@ -680,6 +687,11 @@ end;
 procedure TFactoryRadioBase.QuerySplitState;
 begin
   // Default: do nothing - radio classes override
+end;
+
+procedure TFactoryRadioBase.RearmStartupCommand;
+begin
+   FStartupCommandSent := False;
 end;
 
 procedure TFactoryRadioBase.SendStartupCommand;
