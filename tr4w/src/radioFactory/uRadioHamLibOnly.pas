@@ -82,6 +82,16 @@ initialization
       function: TFactoryRadioBase begin Result := MakeHamLibRadio(TRXMANAGER, 5) end,
       'TRX-Manager (HamLib bridge)', 5,
       SerialParams(57600, 8, PARITY_NONE, 2));
+   // TCI IS NOT A HAMLIB PROTOCOL, and this row is a placeholder, not a design.
+   // NY4I (2026-08-01): "It is not a hamlib thing... we will have a new radio
+   // class called TCI shortly."  TCI is Expert Electronics' own WebSocket-based
+   // control protocol; driving it through HamLib was a stopgap.
+   //
+   // The rig_model 7 here is RIG_MODEL_TCI1X in riglist.h, but the shipped
+   // HamLib 4.7.0 does not compile that backend in -- `rigctl -l` jumps from 6
+   // to 8 -- so this cannot work today even on its own terms.  Left as-is
+   // deliberately: it will be replaced by a native TCI driver, not repaired.
+   // See tools/hamlib-crosscheck/check_rig_models.py, which flags it every run.
    RegisterHamLibOnlyRadio(EXPERTTCI,
       function: TFactoryRadioBase begin Result := MakeHamLibRadio(EXPERTTCI, 7) end,
       'Expert TCI (HamLib bridge)', 7,
