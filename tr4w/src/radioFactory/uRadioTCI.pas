@@ -63,6 +63,17 @@ type
       // way to READ it, so a driver that owns its transport (this one, and
       // THamLibDirect) cannot implement its own idle logic without this.
       FLastRx:        TDateTime;
+      // SPLIT is expressed by TCI as a second RECEIVER carrying tx_enable:true --
+      // NOT as split_enable on receiver 0.  From NY4I's 2026-08-02 capture, with
+      // the AetherSDR UI in split the server sent:
+      //     split_enable:0,false   (VFO A/B split within RX0 -- honestly off)
+      //     tx_enable:0,false
+      //     tx_enable:1,true       <-- receiver 1 is the transmitter
+      //     vfo:1,0,7114000        <-- and it sits on the TX frequency
+      // Note the ASYMMETRY: setting split still goes out as split_enable (the
+      // server maps that to creating a slice).  Only the READ path needs this.
+      FTxTrx:         integer;                  // receiver currently flagged tx_enable
+      FRxVfoA:        array[0..7] of integer;   // VFO A per receiver, for the TX freq
 
       function  GetISConnected: boolean; override;
       function  GetIsOperational: boolean; override;
@@ -72,6 +83,7 @@ type
       procedure WSDisconnected;
 
       procedure DispatchCommand(const Cmd: string);
+      procedure RecomputeSplitFromTx;
       function  TCIModeToRadioMode(const s: string): TRadioMode;
       function  RadioModeToTCIMode(mode: TRadioMode): string;
       function  TrxIndexOf(const s: string): integer;
@@ -146,6 +158,7 @@ begin
    FRxBuffer := '';
    FCWBuffer := '';
    FLastRx := Now;
+   FTxTrx := 0;
    FModulations := TStringList.Create;
    FModulations.CaseSensitive := False;
 
@@ -291,6 +304,24 @@ begin
    Result := StrToIntDef(Trim(s), -1);
 end;
 
+// Split is DERIVED, not received: it is ON when the transmitting receiver is not
+// the one we operate.  Recomputed whenever either input changes, because the init
+// burst sends vfo:1,0 BEFORE tx_enable:1,true and neither order is promised.
+procedure TTCIRadio.RecomputeSplitFromTx;
+var
+   opTrx: integer;
+begin
+   opTrx := StrToIntDef(TCI_TRX, 0);
+   Self.SetSplitOn(FTxTrx <> opTrx);
+   if (FTxTrx <> opTrx) and (FTxTrx >= Low(FRxVfoA)) and (FTxTrx <= High(FRxVfoA)) then
+      begin
+      // TR4W's model is VFO A = RX, VFO B = TX, so publish the transmitting
+      // receiver's frequency as VFO B -- that is what the radio window shows.
+      Self.vfo[nrVFOB].frequency := FRxVfoA[FTxTrx];
+      Self.vfo[nrVFOB].band := FreqToRadioBand(FRxVfoA[FTxTrx]);
+      end;
+end;
+
 procedure TTCIRadio.DispatchCommand(const Cmd: string);
 var
    name: string;
@@ -367,6 +398,35 @@ begin
       begin
       logger.Debug('[TCI] init %s = %s', [name, argsPart]);
       Exit;
+      end;
+
+   // ---- CROSS-RECEIVER state, handled BEFORE the trx-0 gate below ---------
+   // These two are the ONLY commands we care about from other receivers, and
+   // they are exactly what carries split.  Discarding them (as this driver
+   // originally did) is why a radio already in split read as not-split.
+   if (name = 'tx_enable') and (Length(args) >= 2) then
+      begin
+      if SameText(Trim(args[1]), 'true') then
+         begin
+         FTxTrx := TrxIndexOf(args[0]);
+         RecomputeSplitFromTx;
+         end;
+      Exit;
+      end;
+
+   if (name = 'vfo') and (Length(args) >= 3) and
+      (StrToIntDef(Trim(args[1]), -1) = 0) then
+      begin
+      vfoIdx := TrxIndexOf(args[0]);   // here: the RECEIVER index, not the VFO
+      if (vfoIdx >= Low(FRxVfoA)) and (vfoIdx <= High(FRxVfoA)) then
+         begin
+         FRxVfoA[vfoIdx] := StrToIntDef(Trim(args[2]), FRxVfoA[vfoIdx]);
+         if vfoIdx = FTxTrx then
+            begin
+            RecomputeSplitFromTx;
+            end;
+         end;
+      // fall through: receiver 0 still needs its normal VFO A handling below
       end;
 
    // Everything below is addressed to a receiver; ignore other receivers.
