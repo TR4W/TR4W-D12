@@ -222,6 +222,8 @@ initialization
      function: TFactoryRadioBase begin Result := TFT920Radio.Create end,
      'Yaesu FT-920', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     1014
      );
 
 end.

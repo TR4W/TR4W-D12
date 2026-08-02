@@ -69,6 +69,8 @@ initialization
       // Discover button that could only ever report "no Flex radios found".
       'Flex 6000+', [rlSerial, rlNetwork], 4992, True,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     2036
      );
 
 end.

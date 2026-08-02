@@ -25,6 +25,8 @@ unit uRadioRegistry;
          function: TFactoryRadioBase begin Result := TIcom718Radio.Create end,
          'Icom IC-718', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
+     ,
+     3013
      );
 
   The registration is a CONSTRUCTOR FUNCTION, not a class reference, on purpose:
@@ -133,7 +135,8 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         links: TRadioLinks;
                         networkPort: integer;
                         discoverable: Boolean;
-                        const serial: TSerialParams); overload;
+                        const serial: TSerialParams;
+                        hamlibID: Integer = 0); overload;
 
 // Two-constructor registration -- ONE radio in the list, but a different driver
 // class per transport.  Needed only when the two links speak genuinely different
@@ -155,7 +158,8 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         links: TRadioLinks;
                         networkPort: integer;
                         discoverable: Boolean;
-                        const serial: TSerialParams); overload;
+                        const serial: TSerialParams;
+                        hamlibID: Integer = 0); overload;
 
 // String-id registration -- for a NEW factory radio with no InterfacedRadioType
 // member.  Its RadioModel is the sentinel NoInterfacedRadio.
@@ -302,7 +306,8 @@ procedure DoRegister(const id: string; model: InterfacedRadioType;
                      const ctor: TRadioCtor; const serialCtor: TRadioCtor;
                      const displayName: string;
                      links: TRadioLinks; networkPort: integer; discoverable: Boolean;
-                     const serial: TSerialParams);
+                     const serial: TSerialParams;
+                     hamlibID: Integer = 0);
 var
    reg: TRadioReg;
 begin
@@ -315,8 +320,12 @@ begin
    reg.networkPort := networkPort;
    reg.discoverable := discoverable;
    reg.serial := serial;
-   reg.hamlibOnly := False;   // RegisterHamLibOnlyRadio patches these after the call
-   reg.hamlibID := 0;
+   reg.hamlibOnly := False;   // RegisterHamLibOnlyRadio patches this after the call
+   // The HamLib rig_model for THIS radio, used when the operator drives an
+   // ordinary rig through HamLib ("Use HamLib").  0 means "not stated"; every
+   // enum radio should state one, and uTestHamLibIDs pins them against the
+   // legacy RadioParametersArray so a transcription slip cannot pass.
+   reg.hamlibID := hamlibID;
    if not gById.ContainsKey(id) then
       begin
       gOrder.Add(id);
@@ -334,11 +343,13 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         links: TRadioLinks;
                         networkPort: integer;
                         discoverable: Boolean;
-                        const serial: TSerialParams);
+                        const serial: TSerialParams;
+                        hamlibID: Integer = 0);
 begin
    // Derive the string id from the enum member name (IC718 -> 'IC718').
    DoRegister(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)), model,
-              ctor, nil, displayName, links, networkPort, discoverable, serial);
+              ctor, nil, displayName, links, networkPort, discoverable, serial,
+              hamlibID);
 end;
 
 procedure RegisterRadio(model: InterfacedRadioType;
@@ -348,10 +359,12 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         links: TRadioLinks;
                         networkPort: integer;
                         discoverable: Boolean;
-                        const serial: TSerialParams);
+                        const serial: TSerialParams;
+                        hamlibID: Integer = 0);
 begin
    DoRegister(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)), model,
-              networkCtor, serialCtor, displayName, links, networkPort, discoverable, serial);
+              networkCtor, serialCtor, displayName, links, networkPort, discoverable, serial,
+              hamlibID);
 end;
 
 procedure RegisterRadioById(const id: string;

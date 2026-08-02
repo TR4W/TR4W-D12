@@ -458,6 +458,8 @@ initialization
      function: TFactoryRadioBase begin Result := TFT1000MPRadio.Create end,
      'Yaesu FT-1000MP', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     1024
      );
 
 end.

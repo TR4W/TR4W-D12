@@ -542,6 +542,8 @@ initialization
      function: TFactoryRadioBase begin Result := TTenTecOrionRadio.Create end,
      'Ten-Tec Orion', [rlSerial], 0, False,
      SerialParams(57600, 8, PARITY_NONE, 1)
+     ,
+     16008
      );
 
 end.

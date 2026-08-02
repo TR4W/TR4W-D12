@@ -72,6 +72,8 @@ initialization
      function: TFactoryRadioBase begin Result := TYaesuFT818Radio.Create end,
      'Yaesu FT-818', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
+     ,
+     1041
      );
 
 end.

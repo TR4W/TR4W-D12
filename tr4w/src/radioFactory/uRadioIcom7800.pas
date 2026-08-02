@@ -75,6 +75,8 @@ initialization
      function: TFactoryRadioBase begin Result := TIcom7800Radio.Create end,
      'Icom IC-7800', [rlSerial], 0, False,
      SerialParams(9600, 8, PARITY_NONE, 1)
+     ,
+     3056
      );
 
 end.

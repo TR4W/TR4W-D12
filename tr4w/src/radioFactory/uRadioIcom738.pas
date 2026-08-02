@@ -59,6 +59,8 @@ initialization
      function: TFactoryRadioBase begin Result := TIcom738Radio.Create end,
      'Icom IC-738', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
+     ,
+     3022
      );
 
 end.

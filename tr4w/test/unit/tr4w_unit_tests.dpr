@@ -168,6 +168,7 @@ uses
    uTestKenwoodSerial   in 'uTestKenwoodSerial.pas',
    uTestSerialParams    in 'uTestSerialParams.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
+   uTestHamLibIDs       in 'uTestHamLibIDs.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
    // and registry coverage tests.
@@ -239,6 +240,7 @@ begin
    RegisterSuite(TKenwoodSerialTests.Create('KenwoodSerial'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
+   RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
 
