@@ -319,6 +319,16 @@ begin
       // receiver's frequency as VFO B -- that is what the radio window shows.
       Self.vfo[nrVFOB].frequency := FRxVfoA[FTxTrx];
       Self.vfo[nrVFOB].band := FreqToRadioBand(FRxVfoA[FTxTrx]);
+      end
+   else
+      begin
+      // Split is OFF -- there is no transmit VFO, so VFO B must go BLANK rather
+      // than keep the frequency of a slice that no longer exists.  Frequency 0
+      // is this program's established 'blank' convention (see uRadioPolling's
+      // disconnect path, which zeroes VFO A/B for exactly this reason: a stale
+      // reading is more misleading than an empty field).
+      Self.vfo[nrVFOB].frequency := 0;
+      Self.vfo[nrVFOB].band := rbNone;
       end;
 end;
 
@@ -409,8 +419,17 @@ begin
       if SameText(Trim(args[1]), 'true') then
          begin
          FTxTrx := TrxIndexOf(args[0]);
-         RecomputeSplitFromTx;
+         end
+      else if TrxIndexOf(args[0]) = FTxTrx then
+         begin
+         // The receiver that WAS transmitting has given it up -- e.g. the
+         // operator closed the split slice.  Fall back to the receiver we
+         // operate.  Without this we would only ever notice a slice being
+         // CREATED (tx_enable:n,true) and never one going away, leaving a stale
+         // split indication and a stale VFO B on screen.
+         FTxTrx := StrToIntDef(TCI_TRX, 0);
          end;
+      RecomputeSplitFromTx;
       Exit;
       end;
 
