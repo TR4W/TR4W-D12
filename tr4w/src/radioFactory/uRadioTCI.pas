@@ -1,0 +1,645 @@
+{
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+ This file is part of TR4W  (SRC)
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+}
+unit uRadioTCI;
+
+{
+  TCI (Transceiver Control Interface) -- ExpertSDR2 / Thetis / AetherSDR.
+
+  See docs/TCI_Radio_Implementation_Plan.md for the protocol write-up this
+  implements.  Short version:
+
+    - The transport is WEBSOCKET, not raw TCP and not serial, so this driver
+      owns its transport instead of using the base reading thread.  Precedent:
+      THamLibDirect also bypasses the base socket.  uWebSocketClient does the
+      RFC 6455 work and knows nothing about radios.
+    - The protocol is PUSH.  After the server's init burst ends with `ready;`,
+      every state change arrives unsolicited.  requiresPolling is False and
+      PollRadioState is empty -- the K4's AI5 precedent.
+    - Commands and notifications share one grammar: `name:arg,arg,...;` with a
+      few no-argument forms (`ready;`, `start;`, `stop;`).
+    - There is NO per-model fan-out.  TCI *is* the model: the server abstracts
+      whatever hardware is behind it, so one registration covers all of them.
+
+  WHAT IS NOT DONE HERE, deliberately:
+    - Spot push (`spot:` / `spot_delete:` / `spot_clear;`) and the
+      `clicked_on_spot` pair.  That is bandmap integration, a later phase.
+    - Audio.  We never subscribe; the WS layer discards binary frames.
+
+  EVERYTHING MARKED [VERIFY] NEEDS A REAL SERVER.  This driver has never been
+  run against ExpertSDR2, Thetis or AetherSDR -- it is written from the protocol
+  contract only.
+}
+
+interface
+
+uses
+   Windows, SysUtils, Classes, StrUtils, Math, DateUtils,
+   uFactoryRadioBase, uRadioBand, uRadioRegistry, uWebSocketClient, Log4D, VC;
+
+type
+   TTCIRadio = class(TFactoryRadioBase)
+   protected
+      FWS:            TWebSocketClient;
+      FRxBuffer:      string;      // partial command remainder between frames
+      FReady:         boolean;     // server sent `ready;`
+      FCWBuffer:      string;      // text accumulated by BufferCW
+      FModulations:   TStringList; // what THIS server said it supports
+      // Driver-local liveness clock.  The base's FLastValidResponse is
+      // PRIVATE and it exposes UpdateLastValidResponse to WRITE it but no
+      // way to READ it, so a driver that owns its transport (this one, and
+      // THamLibDirect) cannot implement its own idle logic without this.
+      FLastRx:        TDateTime;
+
+      function  GetISConnected: boolean; override;
+      function  GetIsOperational: boolean; override;
+
+      // WebSocket callbacks (raised on the WS reader thread).
+      procedure WSText(const Text: string);
+      procedure WSDisconnected;
+
+      procedure DispatchCommand(const Cmd: string);
+      function  TCIModeToRadioMode(const s: string): TRadioMode;
+      function  RadioModeToTCIMode(mode: TRadioMode): string;
+      function  TrxIndexOf(const s: string): integer;
+   public
+      constructor Create; reintroduce;
+      destructor  Destroy; override;
+
+      function  Connect: integer; override;
+      procedure Disconnect; override;
+      procedure ProcessMsg(msg: string); override;
+      procedure PollRadioState; override;
+      procedure SendToRadio(s: string); overload; override;
+
+      procedure Transmit; override;
+      procedure Receive; override;
+
+      procedure BufferCW(cwChars: string); override;
+      procedure SendCW; override;
+      procedure StopCW; override;
+      function  CWIsFactoryOwned: Boolean; override;
+      procedure SetCWSpeed(speed: integer); override;
+
+      procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
+      procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
+
+      procedure Split(splitOn: boolean); override;
+      procedure RITOn(whichVFO: TVFO); override;
+      procedure RITOff(whichVFO: TVFO); override;
+      procedure XITOn(whichVFO: TVFO); override;
+      procedure XITOff(whichVFO: TVFO); override;
+      procedure RITClear(whichVFO: TVFO); override;
+      procedure XITClear(whichVFO: TVFO); override;
+      procedure SetRITFreq(whichVFO: TVFO; hz: integer); override;
+      procedure SetXITFreq(whichVFO: TVFO; hz: integer); override;
+
+      function  SetFilterHz(hz: integer; vfo: TVFO = nrVFOA): integer; override;
+   end;
+
+implementation
+
+uses
+   MainUnit;
+
+const
+   // TR4W drives receiver 0 only.  TCI supports several ("trx"), but a contest
+   // logger has one operating receiver per radio slot; SO2R is two TR4W radios.
+   TCI_TRX = '0';
+
+   // How long the link may be silent before we probe with a WS ping.
+   // EMPIRICAL -- no server has been observed yet.  [VERIFY on bench]
+   TCI_IDLE_PING_MS = 15000;
+
+{ ------------------------------------------------------------- lifecycle -- }
+
+constructor TTCIRadio.Create;
+begin
+   inherited Create(ProcessMsg);
+
+   radioModel := 'TCI';
+
+   // Push, not poll -- the K4 AI5 precedent.  PollRadioState is empty; the
+   // interval is only an idle tick for the factory poll loop.
+   requiresPolling   := False;
+   pollingInterval   := 1000;
+   autoUpdateCommand := '';
+
+   // TCI commands carry their own ';'.  A trailing CR/LF is exactly the
+   // TS-890-LAN class of bug, so never append one.
+   bAddTermination := False;
+
+   FReady := False;
+   FRxBuffer := '';
+   FCWBuffer := '';
+   FLastRx := Now;
+   FModulations := TStringList.Create;
+   FModulations.CaseSensitive := False;
+
+   // Capabilities are set HERE, in the constructor.  NOTE: DefineCapabilities
+   // is an ICOM-FAMILY virtual (declared in uRadioIcomBase), NOT a factory-base
+   // one -- 68 drivers use this constructor idiom, 5 Icom units use the virtual.
+   FCapabilities.Flags := FCapabilities.Flags +
+      [rcReadVFOB,       // vfo:<trx>,1,<hz> notifications
+       rcReadRIT,        // rit_enable + rit_offset are both readable
+       rcReadSplit,      // split_enable is broadcast
+       rcReadTXStatus,   // trx:<trx>,<bool> is broadcast
+       rcCWByCAT,        // cw_macros
+       rcCWSpeedSync];   // cw_macros_speed
+   // AetherSDR accepts 5..100 wpm.  ExpertSDR2/Thetis ranges [VERIFY].
+   FCapabilities.CWSpeedMin := 5;
+   FCapabilities.CWSpeedMax := 100;
+   // Deliberately absent: rcSharedRITXITOffset.  TCI carries rit_offset and
+   // xit_offset separately, so they are independent. [VERIFY on hardware]
+
+   FWS := TWebSocketClient.Create;
+   FWS.OnTextMessage  := WSText;
+   FWS.OnDisconnected := WSDisconnected;
+end;
+
+destructor TTCIRadio.Destroy;
+begin
+   if Assigned(FWS) then
+      begin
+      FWS.OnTextMessage  := nil;
+      FWS.OnDisconnected := nil;
+      FreeAndNil(FWS);
+      end;
+   FreeAndNil(FModulations);
+   inherited Destroy;
+end;
+
+function TTCIRadio.Connect: integer;
+begin
+   Result := 0;
+   FReady := False;
+   FRxBuffer := '';
+
+   if radioAddress = '' then
+      begin
+      logger.Error('[TCI] no address configured');
+      Result := 1;
+      Exit;
+      end;
+
+   logger.Info('[TCI] connecting to ws://%s:%d/', [radioAddress, radioPort]);
+   if not FWS.Connect(radioAddress, radioPort, '/') then
+      begin
+      logger.Error('[TCI] WebSocket connect failed: %s', [FWS.LastError]);
+      Result := 1;
+      Exit;
+      end;
+
+   // Nothing to request: the server sends its whole init burst unprompted and
+   // terminates it with `ready;`.  Until then IsOperational stays False.
+end;
+
+procedure TTCIRadio.Disconnect;
+begin
+   FReady := False;
+   if Assigned(FWS) then
+      begin
+      FWS.Disconnect;
+      end;
+end;
+
+function TTCIRadio.GetISConnected: boolean;
+begin
+   Result := Assigned(FWS) and FWS.Connected;
+end;
+
+function TTCIRadio.GetIsOperational: boolean;
+begin
+   // "Connected" is the socket; "operational" additionally means the server
+   // finished its init burst.  Sending before `ready;` is the documented way
+   // to have commands silently ignored.
+   Result := GetISConnected and FReady;
+end;
+
+procedure TTCIRadio.SendToRadio(s: string);
+begin
+   if not GetISConnected then
+      begin
+      Exit;
+      end;
+   logger.Trace('[TCI TX] %s', [s]);
+   FWS.SendText(s);
+end;
+
+procedure TTCIRadio.PollRadioState;
+begin
+   // Intentionally empty -- TCI is push.  Used only as a liveness probe when
+   // the link has gone quiet, so a dead peer is noticed rather than assumed live.
+   if GetISConnected and (MilliSecondsBetween(Now, FLastRx) > TCI_IDLE_PING_MS) then
+      begin
+      FWS.Ping;
+      end;
+end;
+
+{ -------------------------------------------------------------- inbound -- }
+
+procedure TTCIRadio.WSDisconnected;
+begin
+   FReady := False;
+   logger.Info('[TCI] WebSocket link dropped');
+end;
+
+procedure TTCIRadio.WSText(const Text: string);
+var
+   i: integer;
+   ch: Char;
+begin
+   // Frames do not align with commands: one frame may carry several `...;`
+   // commands, or half of one.  Keep the remainder.
+   FRxBuffer := FRxBuffer + Text;
+   i := Pos(';', FRxBuffer);
+   while i > 0 do
+      begin
+      DispatchCommand(Trim(Copy(FRxBuffer, 1, i - 1)));
+      Delete(FRxBuffer, 1, i);
+      i := Pos(';', FRxBuffer);
+      end;
+
+   // Guard against a peer that never sends ';' -- do not grow without bound.
+   if Length(FRxBuffer) > 8192 then
+      begin
+      logger.Warn('[TCI] discarding %d unterminated characters', [Length(FRxBuffer)]);
+      FRxBuffer := '';
+      end;
+end;
+
+procedure TTCIRadio.ProcessMsg(msg: string);
+begin
+   DispatchCommand(msg);
+end;
+
+function TTCIRadio.TrxIndexOf(const s: string): integer;
+begin
+   Result := StrToIntDef(Trim(s), -1);
+end;
+
+procedure TTCIRadio.DispatchCommand(const Cmd: string);
+var
+   name: string;
+   argsPart: string;
+   args: TArray<string>;
+   p: integer;
+   hz: integer;
+   b: boolean;
+   vfoIdx: integer;
+begin
+   if Cmd = '' then
+      begin
+      Exit;
+      end;
+
+   logger.Trace('[TCI RX] %s', [Cmd]);
+   FLastRx := Now;
+   UpdateLastValidResponse;   // any frame proves the server is alive
+
+   p := Pos(':', Cmd);
+   if p = 0 then
+      begin
+      name := LowerCase(Trim(Cmd));
+      argsPart := '';
+      end
+   else
+      begin
+      name := LowerCase(Trim(Copy(Cmd, 1, p - 1)));
+      argsPart := Copy(Cmd, p + 1, Length(Cmd));
+      end;
+   args := SplitString(argsPart, ',');
+
+   // ---- no-argument forms -------------------------------------------------
+   if name = 'ready' then
+      begin
+      FReady := True;
+      logger.Info('[TCI] server ready -- init burst complete');
+      Exit;
+      end;
+   if (name = 'start') or (name = 'stop') then
+      begin
+      // Audio stream markers; we never subscribe.
+      Exit;
+      end;
+
+   // ---- init burst --------------------------------------------------------
+   if name = 'modulations_list' then
+      begin
+      FModulations.Clear;
+      for p := 0 to High(args) do
+         begin
+         FModulations.Add(LowerCase(Trim(args[p])));
+         end;
+      logger.Debug('[TCI] server supports %d modulations', [FModulations.Count]);
+      Exit;
+      end;
+   if (name = 'device') or (name = 'protocol') or (name = 'receive_only') or
+      (name = 'trx_count') or (name = 'channels_count') or (name = 'vfo_limits') or
+      (name = 'if_limits') or (name = 'rx_only') then
+      begin
+      logger.Debug('[TCI] init %s = %s', [name, argsPart]);
+      Exit;
+      end;
+
+   // Everything below is addressed to a receiver; ignore other receivers.
+   if (Length(args) > 0) and (TrxIndexOf(args[0]) <> StrToIntDef(TCI_TRX, 0)) then
+      begin
+      Exit;
+      end;
+
+   // ---- state notifications ----------------------------------------------
+   if (name = 'vfo') and (Length(args) >= 3) then
+      begin
+      vfoIdx := StrToIntDef(Trim(args[1]), 0);
+      hz := StrToIntDef(Trim(args[2]), -1);
+      if hz >= 0 then
+         begin
+         if vfoIdx = 0 then
+            begin
+            Self.vfo[nrVFOA].frequency := hz;
+            Self.vfo[nrVFOA].band := FreqToRadioBand(hz);
+            end
+         else
+            begin
+            Self.vfo[nrVFOB].frequency := hz;
+            Self.vfo[nrVFOB].band := FreqToRadioBand(hz);
+            end;
+         end;
+      Exit;
+      end;
+
+   if (name = 'modulation') and (Length(args) >= 2) then
+      begin
+      Self.vfo[nrVFOA].mode := TCIModeToRadioMode(Trim(args[1]));
+      Exit;
+      end;
+
+   if (name = 'trx') and (Length(args) >= 2) then
+      begin
+      b := SameText(Trim(args[1]), 'true');
+      Self.SetTransmitting(b);
+      Exit;
+      end;
+
+   if (name = 'split_enable') and (Length(args) >= 2) then
+      begin
+      Self.SetSplitOn(SameText(Trim(args[1]), 'true'));
+      Exit;
+      end;
+
+   if (name = 'rit_enable') and (Length(args) >= 2) then
+      begin
+      Self.SetRITOn(SameText(Trim(args[1]), 'true'));
+      Exit;
+      end;
+
+   if (name = 'xit_enable') and (Length(args) >= 2) then
+      begin
+      Self.SetXITOn(SameText(Trim(args[1]), 'true'));
+      Exit;
+      end;
+
+   if (name = 'rit_offset') and (Length(args) >= 2) then
+      begin
+      Self.SetRITOffset(StrToIntDef(Trim(args[1]), 0));
+      Exit;
+      end;
+
+   if (name = 'xit_offset') and (Length(args) >= 2) then
+      begin
+      Self.SetXITOffset(StrToIntDef(Trim(args[1]), 0));
+      Exit;
+      end;
+
+   if (name = 'cw_macros_speed') and (Length(args) >= 1) then
+      begin
+      // Speed notifications are NOT receiver-addressed on every server, so this
+      // arrives with the wpm in args[0]. [VERIFY]
+      Self.localCWSpeed := StrToIntDef(Trim(args[0]), Self.localCWSpeed);
+      Exit;
+      end;
+
+   // tx_enable: notification-only.  Never send it as a SET -- servers ignore it
+   // from clients, which looks like a driver bug when it is protocol.
+end;
+
+{ ---------------------------------------------------------------- modes -- }
+
+function TTCIRadio.TCIModeToRadioMode(const s: string): TRadioMode;
+var
+   m: string;
+begin
+   m := LowerCase(Trim(s));
+   if m = 'cw' then Result := rmCW
+   else if m = 'cwr' then Result := rmCWRev
+   else if m = 'usb' then Result := rmUSB
+   else if m = 'lsb' then Result := rmLSB
+   else if (m = 'fm') or (m = 'nfm') or (m = 'wfm') then Result := rmFM
+   else if (m = 'am') or (m = 'sam') then Result := rmAM
+   else if m = 'digu' then Result := rmData
+   else if m = 'digl' then Result := rmDataRev
+   else if m = 'rtty' then Result := rmFSK
+   else
+      begin
+      logger.Debug('[TCI] unmapped modulation "%s" -- treating as DATA', [m]);
+      Result := rmData;
+      end;
+end;
+
+function TTCIRadio.RadioModeToTCIMode(mode: TRadioMode): string;
+begin
+   case mode of
+      rmCW:      Result := 'cw';
+      rmCWRev:   Result := 'cwr';
+      rmUSB:     Result := 'usb';
+      rmLSB:     Result := 'lsb';
+      rmFM:      Result := 'nfm';
+      rmAM:      Result := 'am';
+      rmFSK:     Result := 'rtty';
+      rmData:    Result := 'digu';
+      rmDataRev: Result := 'digl';
+   else
+      Result := 'digu';
+   end;
+
+   // Refuse to send a modulation this server never advertised: an unknown
+   // string is silently ignored, which presents as "mode changes do nothing".
+   if (FModulations.Count > 0) and (FModulations.IndexOf(Result) < 0) then
+      begin
+      logger.Warn('[TCI] server does not list modulation "%s" -- falling back to digu', [Result]);
+      Result := 'digu';
+      end;
+end;
+
+{ -------------------------------------------------------------- outbound -- }
+
+procedure TTCIRadio.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
+var
+   idx: string;
+begin
+   if vfo = nrVFOB then
+      begin
+      idx := '1';
+      end
+   else
+      begin
+      idx := '0';
+      end;
+   SendToRadio(Format('vfo:%s,%s,%d;', [TCI_TRX, idx, freq]));
+   if mode <> rmNone then
+      begin
+      SetMode(mode, vfo);
+      end;
+end;
+
+procedure TTCIRadio.SetMode(mode: TRadioMode; vfo: TVFO);
+begin
+   // TCI modulation is per receiver, not per VFO -- there is no vfo argument.
+   SendToRadio(Format('modulation:%s,%s;', [TCI_TRX, RadioModeToTCIMode(mode)]));
+end;
+
+procedure TTCIRadio.Transmit;
+begin
+   // Third argument is the TX AUDIO SOURCE.  TR4W does not send audio over TCI,
+   // so it is omitted -- passing ',tci' would tell the server to expect an
+   // audio stream that never arrives.
+   SendToRadio(Format('trx:%s,true;', [TCI_TRX]));
+end;
+
+procedure TTCIRadio.Receive;
+begin
+   SendToRadio(Format('trx:%s,false;', [TCI_TRX]));
+end;
+
+procedure TTCIRadio.Split(splitOn: boolean);
+begin
+   // Order matters: enable split BEFORE programming VFO B.  Doing it the other
+   // way round loses the VFO B write on real servers (JTDX-proven).
+   if splitOn then
+      begin
+      SendToRadio(Format('split_enable:%s,true;', [TCI_TRX]));
+      end
+   else
+      begin
+      SendToRadio(Format('split_enable:%s,false;', [TCI_TRX]));
+      end;
+end;
+
+procedure TTCIRadio.RITOn(whichVFO: TVFO);
+begin
+   SendToRadio(Format('rit_enable:%s,true;', [TCI_TRX]));
+end;
+
+procedure TTCIRadio.RITOff(whichVFO: TVFO);
+begin
+   SendToRadio(Format('rit_enable:%s,false;', [TCI_TRX]));
+end;
+
+procedure TTCIRadio.XITOn(whichVFO: TVFO);
+begin
+   SendToRadio(Format('xit_enable:%s,true;', [TCI_TRX]));
+end;
+
+procedure TTCIRadio.XITOff(whichVFO: TVFO);
+begin
+   SendToRadio(Format('xit_enable:%s,false;', [TCI_TRX]));
+end;
+
+procedure TTCIRadio.SetRITFreq(whichVFO: TVFO; hz: integer);
+begin
+   SendToRadio(Format('rit_offset:%s,%d;', [TCI_TRX, hz]));
+end;
+
+procedure TTCIRadio.SetXITFreq(whichVFO: TVFO; hz: integer);
+begin
+   SendToRadio(Format('xit_offset:%s,%d;', [TCI_TRX, hz]));
+end;
+
+procedure TTCIRadio.RITClear(whichVFO: TVFO);
+begin
+   SetRITFreq(whichVFO, 0);
+end;
+
+procedure TTCIRadio.XITClear(whichVFO: TVFO);
+begin
+   SetXITFreq(whichVFO, 0);
+end;
+
+function TTCIRadio.SetFilterHz(hz: integer; vfo: TVFO): integer;
+var
+   half: integer;
+begin
+   // TCI takes the two filter EDGES relative to the carrier, not a width.
+   half := Max(1, hz div 2);
+   SendToRadio(Format('rx_filter_band:%s,%d,%d;', [TCI_TRX, -half, half]));
+   Result := hz;
+end;
+
+{ -------------------------------------------------------------------- CW -- }
+
+function TTCIRadio.CWIsFactoryOwned: Boolean;
+begin
+   // MUST be True: otherwise StopSendingCW never delegates here and Escape
+   // cannot abort a message.  That was the K3 bench lesson of 2026-07-31.
+   Result := True;
+end;
+
+procedure TTCIRadio.BufferCW(cwChars: string);
+begin
+   FCWBuffer := FCWBuffer + cwChars;
+end;
+
+procedure TTCIRadio.SendCW;
+begin
+   if FCWBuffer = '' then
+      begin
+      Exit;
+      end;
+   // Grammar varies between servers -- AetherSDR takes the raw text.  Whether
+   // ExpertSDR2/Thetis want a receiver index or an escaped payload is [VERIFY].
+   SendToRadio(Format('cw_macros:%s;', [FCWBuffer]));
+   FCWBuffer := '';
+end;
+
+procedure TTCIRadio.StopCW;
+begin
+   FCWBuffer := '';
+   SendToRadio('cw_macros_stop;');
+end;
+
+procedure TTCIRadio.SetCWSpeed(speed: integer);
+begin
+   speed := Max(FCapabilities.CWSpeedMin, Min(FCapabilities.CWSpeedMax, speed));
+   SendToRadio(Format('cw_macros_speed:%d;', [speed]));
+end;
+
+initialization
+   // String id, NOT the EXPERTTCI enum: that enum stays bound to the HamLib
+   // bridge registration until this driver is bench-proven, so an operator can
+   // fall back.  Two entries, two DISTINCT display names -- a duplicate display
+   // name hides a model, which is a hard rule in this project.
+   //
+   // discoverable = False: per the TCI discovery contract, _tci._tcp mDNS
+   // advertises PERIPHERALS, not radios.  Shipping a Discover button with
+   // nothing behind it was the pre-implementation Flex mistake.
+   RegisterRadioById('TCI',
+      function: TFactoryRadioBase begin Result := TTCIRadio.Create end,
+      'TCI (ExpertSDR / Thetis / AetherSDR)', [rlNetwork], 50001, False,
+      SerialParams(0, 0, PARITY_NONE, 0)   // network-only; the serial row is unused
+   );
+
+end.
