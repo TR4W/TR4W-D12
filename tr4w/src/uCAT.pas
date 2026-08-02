@@ -1192,7 +1192,16 @@ begin
         list.Free;
      end;
      end
-  else if RadioParametersArray[rt].rt = rtICOM then
+  // Was `RadioParametersArray[rt].rt = rtICOM`.  This branch picks a DISCOVERY
+  // MECHANISM, and it sits beside explicit K4 and FLEX branches doing the same,
+  // so the honest question is who made the radio -- the registry's display name
+  // already carries that and ManufacturerOf reads it, with no radio instance
+  // needed (this runs in the dialog, before anything is connected).
+  //
+  // Note this is NARROWER than the old test in one harmless way: rt = rtICOM
+  // also covered the Ten-Tec OMNI6, a CI-V rig -- but the OMNI6 is serial-only
+  // and has no network discovery to run, so it never reached here meaningfully.
+  else if SameText(uRadioRegistry.ManufacturerOf(rt), 'Icom') then
      begin
      list := TIcomNetworkDiscovery.DiscoverRadios(3000);
      try

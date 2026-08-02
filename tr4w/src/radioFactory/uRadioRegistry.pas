@@ -136,7 +136,8 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         networkPort: integer;
                         discoverable: Boolean;
                         const serial: TSerialParams;
-                        hamlibID: Integer = 0); overload;
+                        hamlibID: Integer = 0;
+                        civAddress: Byte = 0); overload;
 
 // Two-constructor registration -- ONE radio in the list, but a different driver
 // class per transport.  Needed only when the two links speak genuinely different
@@ -159,7 +160,8 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         networkPort: integer;
                         discoverable: Boolean;
                         const serial: TSerialParams;
-                        hamlibID: Integer = 0); overload;
+                        hamlibID: Integer = 0;
+                        civAddress: Byte = 0); overload;
 
 // String-id registration -- for a NEW factory radio with no InterfacedRadioType
 // member.  Its RadioModel is the sentinel NoInterfacedRadio.
@@ -234,6 +236,11 @@ function IsHamLibOnly(model: InterfacedRadioType): Boolean;
 // ID always comes from the RADIO n HAMLIB ID config command instead.
 function RegisteredHamLibID(model: InterfacedRadioType): Integer;
 
+// The model's default Icom CI-V receiver address; 0 for anything that is not a
+// CI-V radio.  The operator can still override it with RADIO n RECEIVER
+// ADDRESS -- this is only the default that command starts from.
+function RegisteredCIVAddress(model: InterfacedRadioType): Byte;
+
 // First word of the registered display name ('Yaesu FT-817' -> 'Yaesu').  The
 // display names already state the manufacturer once per radio, so no separate
 // per-registration manufacturer field is needed.  '' for an unregistered model
@@ -283,6 +290,7 @@ type
       discoverable: Boolean;
       serial: TSerialParams;
       hamlibOnly: Boolean;          // True => no native TR4W driver; driven through HamLib
+      civAddress: Byte;             // default CI-V receiver address (Icom); 0 = not a CI-V radio
       hamlibID: Integer;            // default HamLib rig_model for hamlibOnly rows
                                     // (the RADIO n HAMLIB ID config command overrides at connect)
    end;
@@ -307,7 +315,8 @@ procedure DoRegister(const id: string; model: InterfacedRadioType;
                      const displayName: string;
                      links: TRadioLinks; networkPort: integer; discoverable: Boolean;
                      const serial: TSerialParams;
-                     hamlibID: Integer = 0);
+                     hamlibID: Integer = 0;
+                     civAddress: Byte = 0);
 var
    reg: TRadioReg;
 begin
@@ -326,6 +335,9 @@ begin
    // enum radio should state one, and uTestHamLibIDs pins them against the
    // legacy RadioParametersArray so a transcription slip cannot pass.
    reg.hamlibID := hamlibID;
+   // Icom CI-V receiver address.  Per-model DATA -- every CI-V rig has its own
+   // default -- so it lives on the registration, not in a table LOGRADIO owns.
+   reg.civAddress := civAddress;
    if not gById.ContainsKey(id) then
       begin
       gOrder.Add(id);
@@ -344,12 +356,13 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         networkPort: integer;
                         discoverable: Boolean;
                         const serial: TSerialParams;
-                        hamlibID: Integer = 0);
+                        hamlibID: Integer = 0;
+                        civAddress: Byte = 0);
 begin
    // Derive the string id from the enum member name (IC718 -> 'IC718').
    DoRegister(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)), model,
               ctor, nil, displayName, links, networkPort, discoverable, serial,
-              hamlibID);
+              hamlibID, civAddress);
 end;
 
 procedure RegisterRadio(model: InterfacedRadioType;
@@ -360,11 +373,12 @@ procedure RegisterRadio(model: InterfacedRadioType;
                         networkPort: integer;
                         discoverable: Boolean;
                         const serial: TSerialParams;
-                        hamlibID: Integer = 0);
+                        hamlibID: Integer = 0;
+                        civAddress: Byte = 0);
 begin
    DoRegister(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)), model,
               networkCtor, serialCtor, displayName, links, networkPort, discoverable, serial,
-              hamlibID);
+              hamlibID, civAddress);
 end;
 
 procedure RegisterRadioById(const id: string;
@@ -589,6 +603,17 @@ begin
    if RegByModel(model, reg) then
       begin
       Result := reg.hamlibID;
+      end;
+end;
+
+function RegisteredCIVAddress(model: InterfacedRadioType): Byte;
+var
+   reg: TRadioReg;
+begin
+   Result := 0;
+   if RegByModel(model, reg) then
+      begin
+      Result := reg.civAddress;
       end;
 end;
 

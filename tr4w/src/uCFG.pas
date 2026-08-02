@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -695,7 +695,7 @@ const
  (crCommand: 'RADIO ONE CONTROL PORT';        crAddress: pointer(36);                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;  cfFunc: cfRadio1; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO ONE CW BY CAT';           crAddress: @Radio1.CWByCAT;                 crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),   // ny4i 4.44.5
  (crCommand: 'RADIO ONE CW SPEED SYNC';       crAddress: @Radio1.CWSpeedSync;             crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'RADIO ONE FACTORY ID';          crAddress: @Radio1.FactoryId;               crMin:0;  crMax:48;      crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'RADIO ONE FACTORY ID';          crAddress: @Radio1.FactoryId;               crMin:0;  crMax:48;      crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 0),
  (crCommand: 'RADIO ONE FREQUENCY ADDER';     crAddress: @Radio1.FrequencyAdder;          crMin:0;  crMax:MAXWORD; crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO ONE FT1000MP CW REVERSE'; crAddress: @Radio1.FT1000MPCWReverse;       crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'RADIO ONE HAMLIB ID';           crAddress: @Radio1.HamLibID;                crMin:0;  crMax:MAXWORD; crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctInteger; crNetwork: 0),
@@ -864,23 +864,23 @@ const
  (crCommand: 'WEIGHT';                        crAddress: @Weight;                                         crMin:5;  crMax:15;        crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
  (crCommand: 'WIDE FREQUENCY DISPLAY';        crAddress: nil;                                             crMin:0;  crMax:0;         crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WILDCARD PARTIALS';             crAddress: @WildCardPartials;                               crMin:0;  crMax:0;         crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK AUTOSPACE';                  crAddress: @WinKeySettings.wksAutospace;                    crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK CT SPACING';                 crAddress: @WinKeySettings.wksCTSpacing;                    crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK DIT DAH RATIO';              crAddress: @WinKeySettings.wksValueList.vlDitDahRatio;      crMin:33; crMax:66;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 1),
- (crCommand: 'WK ENABLE';                     crAddress: @WinKeySettings.wksWinKey2Enable;                crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK FIRST EXTENSION';            crAddress: @WinKeySettings.wksValueList.vl1stExtension;     crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 1),
- (crCommand: 'WK IGNORE SPEED POT';           crAddress: @WinKeySettings.wksIgnoreSpeedSpot;              crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK KEYER COMPENSATION';         crAddress: @WinKeySettings.wksValueList.vlKeyCompensation;  crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 1),
- (crCommand: 'WK KEYER MODE';                 crAddress: pointer(47);                                     crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 1),
- (crCommand: 'WK LEADIN TIME';                crAddress: @WinKeySettings.wksValueList.vlLeadInTime;       crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 1),
- (crCommand: 'WK PADDLE ONLY SIDETONE';       crAddress: @WinKeySettings.wksPadOnlySideT;                 crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK PADDLE SWAP';                crAddress: @WinKeySettings.wksPaddleSwap;                   crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK PADDLE SWITCHPOINT';         crAddress: @WinKeySettings.wksValueList.vlPaddleSWPoint;    crMin:10; crMax:90;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 1),
+ (crCommand: 'WK AUTOSPACE';                  crAddress: @WinKeySettings.wksAutospace;                    crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK CT SPACING';                 crAddress: @WinKeySettings.wksCTSpacing;                    crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK DIT DAH RATIO';              crAddress: @WinKeySettings.wksValueList.vlDitDahRatio;      crMin:33; crMax:66;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK ENABLE';                     crAddress: @WinKeySettings.wksWinKey2Enable;                crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK FIRST EXTENSION';            crAddress: @WinKeySettings.wksValueList.vl1stExtension;     crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK IGNORE SPEED POT';           crAddress: @WinKeySettings.wksIgnoreSpeedSpot;              crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK KEYER COMPENSATION';         crAddress: @WinKeySettings.wksValueList.vlKeyCompensation;  crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK KEYER MODE';                 crAddress: pointer(47);                                     crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
+ (crCommand: 'WK LEADIN TIME';                crAddress: @WinKeySettings.wksValueList.vlLeadInTime;       crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK PADDLE ONLY SIDETONE';       crAddress: @WinKeySettings.wksPadOnlySideT;                 crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK PADDLE SWAP';                crAddress: @WinKeySettings.wksPaddleSwap;                   crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK PADDLE SWITCHPOINT';         crAddress: @WinKeySettings.wksValueList.vlPaddleSWPoint;    crMin:10; crMax:90;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
  (crCommand: 'WK PORT';                       crAddress: pointer(46);                                     crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
- (crCommand: 'WK SIDETONE FREQUENCY';         crAddress: pointer(48);                                     crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 1),
- (crCommand: 'WK SIDETONE ENABLE';            crAddress: @WinKeySettings.wksSideTEnable;                  crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK TAIL TIME';                  crAddress: @WinKeySettings.wksValueList.vlTailTime;         crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 1),
- (crCommand: 'WK WEIGHT';                     crAddress: @WinKeySettings.wksValueList.vlWeight;           crMin:10; crMax:90;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 1),
+ (crCommand: 'WK SIDETONE FREQUENCY';         crAddress: pointer(48);                                     crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
+ (crCommand: 'WK SIDETONE ENABLE';            crAddress: @WinKeySettings.wksSideTEnable;                  crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK TAIL TIME';                  crAddress: @WinKeySettings.wksValueList.vlTailTime;         crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK WEIGHT';                     crAddress: @WinKeySettings.wksValueList.vlWeight;           crMin:10; crMax:90;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
  (crCommand: 'WINDOW SIZE';                   crAddress: pointer(5);                                      crMin:1;  crMax:15;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAppearance; crType: ctInteger; crNetwork: 1),
  (crCommand: 'WSJT-X BROADCAST PORT';         crAddress: @WSJTXUDPPort;                                   crMin:1;  crMax:65535;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i
  (crCommand: 'WSJT-X MULTICAST GROUP';        crAddress: @WSJTXMulticastGroup;                            crMin:0;  crMax:16;        crS: csNew; crA: 25; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctString;  crNetwork: 0),   // Issue 443
@@ -909,7 +909,8 @@ var
    Changed: array[0..CommandsArraySize - 1] of boolean;
 
 implementation
-uses MainUnit, SysUtils;   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
+uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
+     uRadioRegistry;       // RegisteredCIVAddress -- the per-model Icom CI-V default
 var
    TempBand: BandType;
    TempMode: ModeType;
@@ -1489,13 +1490,16 @@ end;
 
 function F_RADIO_ONE_TYPE: boolean;
 begin
-   Radio1.ReceiverAddress := RadioParametersArray[Radio1.RadioModel].RA;
+   // The REGISTRY owns the default CI-V address now, not RadioParametersArray.
+   // This only seeds the default -- RADIO n RECEIVER ADDRESS still overrides it,
+   // and is applied after this by the normal config load.
+   Radio1.ReceiverAddress := uRadioRegistry.RegisteredCIVAddress(Radio1.RadioModel);
    Result := True;
 end;
 
 function F_RADIO_TWO_TYPE: boolean;
 begin
-   Radio2.ReceiverAddress := RadioParametersArray[Radio2.RadioModel].RA;
+   Radio2.ReceiverAddress := uRadioRegistry.RegisteredCIVAddress(Radio2.RadioModel);
    Result := True;
 end;
 
