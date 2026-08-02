@@ -22,8 +22,11 @@
 # (so both v4.147.17 and v4.147.17-all must match Version.pas = 4.147.17).
 #
 # Runner setup (one-time on self-hosted win-ci runner):
-#   - Delphi 7 (DCC32.EXE) -- default C:\Program Files (x86)\Borland\Delphi7\Bin\.
-#     Override per-runner by setting repo variable DELPHI7_BIN.
+#   - RAD Studio 23.0 (Delphi 12 Athens) -- rsvars.bat + msbuild + brcc32.
+#     Default C:\Program Files (x86)\Embarcadero\Studio\23.0\bin.
+#     Override per-runner by setting repo variable STUDIO_BIN.
+#     Delphi 7 is NO LONGER required: tr4wserver was the last DCC32 consumer
+#     and now builds under D12 via msbuild (16412f1 / 76de84c).
 #   - NSIS (makensis.exe)  -- default C:\Program Files (x86)\NSIS\. Override with NSIS_BIN.
 #   - Indy 10 lib          -- bundled in tr4w\include (no install needed).
 #                             Override with $INDY_ROOT only if you want to point
@@ -67,7 +70,7 @@ env:
   # Indy is bundled in tr4w\include -- no external install needed; the
   # FullBuild.ps1 script defaults to the bundled tree when $env:INDY_ROOT
   # is unset.
-  DELPHI7_BIN: ${{ vars.DELPHI7_BIN || 'C:\Program Files (x86)\Borland\Delphi7\Bin' }}
+  STUDIO_BIN:  ${{ vars.STUDIO_BIN  || 'C:\Program Files (x86)\Embarcadero\Studio\23.0\bin' }}
   NSIS_BIN:    ${{ vars.NSIS_BIN    || 'C:\Program Files (x86)\NSIS' }}
   # VirusTotal: max malicious detections before blocking the release.
   # TR4W's NSIS + UPX --lzma + bundled inpout32.dll consistently trips
@@ -150,7 +153,7 @@ jobs:
           # (see param doc in FullBuild.ps1).  Only Delphi + NSIS need an
           # external presence check here.
           $tools = [ordered]@{
-            'DCC32 (Delphi 7)' = Join-Path $env:DELPHI7_BIN 'DCC32.EXE'
+            'RAD Studio msbuild' = Join-Path $env:STUDIO_BIN 'rsvars.bat'
             'NSIS makensis'    = Join-Path $env:NSIS_BIN    'makensis.exe'
           }
           $missing = @()
@@ -179,7 +182,6 @@ jobs:
           .\FullBuild.ps1 `
             -BuildInstallers `
             -ProjectRoot $env:GITHUB_WORKSPACE `
-            -Delphi7Bin  $env:DELPHI7_BIN `
             -NSISBin     $env:NSIS_BIN
           if ($LASTEXITCODE -ne 0) { throw "FullBuild.ps1 failed with exit code $LASTEXITCODE" }
 
@@ -198,7 +200,6 @@ jobs:
             -ParallelLanguages `
             -BuildInstallers `
             -ProjectRoot $env:GITHUB_WORKSPACE `
-            -Delphi7Bin  $env:DELPHI7_BIN `
             -NSISBin     $env:NSIS_BIN
           if ($LASTEXITCODE -ne 0) { throw "FullBuild.ps1 -AllLanguages failed with exit code $LASTEXITCODE" }
 
