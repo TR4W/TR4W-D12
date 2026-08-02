@@ -1,8 +1,12 @@
-; TR4WVERSION is the full version (e.g. '4.147.16') and the single source of
-; truth for both the displayed name and the installer filename. CI passes it
-; via /DTR4WVERSION; local builds use the default below.
+; TR4WVERSION is the full version (e.g. '4.149.0') and the single source of
+; truth for both the displayed name and the installer filename.  It MUST be
+; passed in with /DTR4WVERSION, derived from src\Version.pas by FullBuild.ps1.
+;
+; There is deliberately NO default.  There used to be one, and it had drifted to
+; 4.148.1 while Version.pas said 4.149.0 -- a silently mis-versioned installer is
+; far worse than a build that stops.  Fail loudly instead.
 !ifndef TR4WVERSION
-  !define TR4WVERSION  '4.148.1'
+  !error "TR4WVERSION is not defined.  Build installers with FullBuild.ps1 -BuildInstallers (it derives the version from src\Version.pas and passes /DTR4WVERSION), not by running makensis on this script directly."
 !endif
 !define TR4WINSTFOLDER 'Software\TR4W'
 !define TR4WDRVREG     'SYSTEM\CurrentControlSet\Services\TR4WIO'
