@@ -237,7 +237,24 @@ const
 
 implementation
 
-uses MainUnit, uFreqTimeFormat, uStrSearch;   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+uses Log4D, uFreqTimeFormat, uStrSearch;   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+
+// Own Log4D logger (initialized at the foot of this unit), replacing the former
+// MainUnit.logger borrow.  MainUnit was used for NOTHING ELSE here -- three
+// logger calls were the whole dependency -- and it is the heaviest edge in the
+// program: TF -> MainUnit -> LOGRADIO -> uFactoryRadioBase -> the entire radio
+// factory.  Anything wanting TF's formatting helpers had to link all of that.
+//
+// Same treatment, and the same reason, as uMults (Issue #1034).  It is what
+// lets TR4WServer -- which needs exactly three TF routines (STToInt64,
+// ShowSysErrorMessage, tOpenFileForRead) and no radio code whatsoever -- build
+// as a standalone D12 EXE.
+//
+// Log4D hands back a logger for the category, wired to the same appenders, so
+// these lines still land in tr4w.log; they now carry their own category name
+// instead of the generic one, exactly as the radio drivers do.
+var
+  logger: TLogLogger;
 function Format(Output: PAnsiChar; Format: PAnsiChar; c: AnsiChar): integer; external user32 Name 'wsprintfA';
 
 function Format(Output: PAnsiChar; Format: PAnsiChar; s1: PAnsiChar; u1: integer; u2: integer; u3: integer; u4: integer; u5: integer; u6: integer; s2: PAnsiChar; s3: PAnsiChar): integer; external user32 Name 'wsprintfA';
@@ -1536,5 +1553,6 @@ asm
         NOT     ECX
 end;
 }
+begin
+  logger := TLogLogger.GetLogger('TR4WDebugLog.TF');   // own logger (was MainUnit.logger)
 end.
-
