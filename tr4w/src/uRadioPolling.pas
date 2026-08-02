@@ -342,6 +342,14 @@ begin
          rig^.CurrentStatus.Band := GetTR4WBandFromNetworkBand(ro.band[actVFO]);
          GetTRModeAndExtendedModeFromNetworkMode(ro.mode[actVFO],rig^.CurrentStatus.Mode,rig^.CurrentStatus.ExtendedMode);
          rig^.CurrentStatus.RITFreq :=  ro.RITOffset[actVFO];
+         // HOP 2 of the RIT-offset trace (2026-08-02, temporary).  actVFO is the
+         // suspect here: if it is not nrVFOA the aggregate reads a different VFO.
+         if rig^.CurrentStatus.RITFreq <> rig^.PreviousStatus.RITFreq then
+            begin
+            logger.Debug('[RIT trace 2/3 poll] actVFO=%d  ro.RITOffset[actVFO]=%d  Current=%d  Previous=%d',
+                         [Ord(actVFO), ro.RITOffset[actVFO],
+                          rig^.CurrentStatus.RITFreq, rig^.PreviousStatus.RITFreq]);
+            end;
          rig^.CurrentStatus.Split := ro.IsSplitEnabled;
          rig^.CurrentStatus.RIT := ro.IsRITOn[actVFO];
          rig^.CurrentStatus.XIT := ro.IsXITOn[actVFO];
@@ -905,6 +913,12 @@ begin
          ActiveRadioPtr.tPTTStatus := PTT_OFF;
       end;
 
+   // HOP 3 of the RIT-offset trace (2026-08-02, temporary).  Logged BEFORE the
+   // test so we can see the case where DisplayCurrentStatus runs but the values
+   // are already equal -- i.e. something synced Prev before we got here.
+   logger.Debug('[RIT trace 3/3 display] PrevRITFreq=%d  RITFreq=%d  willRepaint=%s',
+                [rig.CurrentStatus.PrevRITFreq, rig.CurrentStatus.RITFreq,
+                 BoolToStr(rig.CurrentStatus.PrevRITFreq <> rig.CurrentStatus.RITFreq, True)]);
    if rig.CurrentStatus.PrevRITFreq <> rig.CurrentStatus.RITFreq then
       begin
          { $ R A NGECHECKS OFF}

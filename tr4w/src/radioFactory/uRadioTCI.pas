@@ -508,7 +508,14 @@ begin
 
    if (name = 'rit_offset') and (Length(args) >= 2) then
       begin
+      // HOP 1 of the RIT-offset trace (2026-08-02).  Temporary instrumentation:
+      // the value arrives, but does not reach the radio window.  Log what we
+      // parsed and what the object holds afterwards, so the broken hop is
+      // identified by data instead of by reading code.
       Self.SetRITOffset(StrToIntDef(Trim(args[1]), 0));
+      logger.Debug('[RIT trace 1/3 driver] parsed=%d  vfo[A].RITOffset=%d  RITOn(A)=%s',
+                   [StrToIntDef(Trim(args[1]), 0), Self.vfo[nrVFOA].RITOffset,
+                    BoolToStr(Self.IsRITOn[nrVFOA], True)]);
       Exit;
       end;
 
