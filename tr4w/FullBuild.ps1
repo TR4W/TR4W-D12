@@ -1,4 +1,4 @@
-param(
+﻿param(
     # When set, after the default ENG build, loop through every other
     # supported LANG_xxx (RUS, SER, MNG, CZE, ROM, GER, UKR, ESP) and rebuild
     # against each. Excludes POL/CHN (broken constants, issue #925).
@@ -24,11 +24,11 @@ param(
     # rsvars.bat`. Override with $env:STUDIO_BIN or -StudioBin.
     [string]$StudioBin = $(if ($env:STUDIO_BIN) { $env:STUDIO_BIN } else { "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin" }),
 
-    # Delphi 7 bin directory (contains DCC32.EXE). LEGACY -- retained only for
-    # the tr4wserver build (tr4wserver.dpr has no .dproj yet) until that is
-    # migrated to msbuild. The main app can no longer be built by D7: its
-    # src\lang\*.pas files are UTF-8+BOM, which D7 cannot decode. Override with
-    # $env:DELPHI7_BIN or -Delphi7Bin.
+    # Delphi 7 bin directory. DEPRECATED and UNUSED -- nothing in this script
+    # invokes DCC32 any more. tr4wserver was the last D7 holdout and now builds
+    # under D12 via msbuild (16412f1). Retained ONLY so callers that still pass
+    # -Delphi7Bin (.github/workflows/release.yml) do not fail. Safe to delete once
+    # release.yml stops passing it.
     [string]$Delphi7Bin = $(if ($env:DELPHI7_BIN) { $env:DELPHI7_BIN } else { "C:\Program Files (x86)\Borland\Delphi7\Bin" }),
 
     # Indy 10 Lib root (the directory containing Core / System / Protocols
@@ -106,14 +106,13 @@ $LANG_OUT      = Join-Path $DIST_DIR    "lang-test"
 $DCU_CACHE_DIR = Join-Path $EXE_DIR     "dcu-cache"
 $TEST_DIR      = Join-Path $TR4W_DIR    "test\unit"
 $TEST_DPROJ    = Join-Path $TEST_DIR    "tr4w_unit_tests.dproj"
-$SERVER_PS1    = Join-Path $TR4W_DIR    "tr4wserver\BuildServer.ps1"
+$SERVER_PS1    = Join-Path $TR4W_DIR    "tr4wserver\BuildServer.ps1"   # standalone entry point; FullBuild calls msbuild directly
+$SERVER_DPROJ  = Join-Path $TR4W_DIR    "tr4wserver\tr4wserver.dproj"
 $VERSION_PAS   = Join-Path $SRC_DIR     "Version.pas"
 $PROJECT_DPROJ = Join-Path $TR4W_DIR    "tr4w.dproj"
 $RSVARS        = Join-Path $StudioBin   "rsvars.bat"
-# Legacy D7 compiler + Indy search path -- the tr4wserver build (BuildServer.ps1)
-# still uses DCC32, and the not-yet-migrated language loop still passes $LIB/$PROJECT.
-# Both go away once Stages 3-4 finish. The main app + unit tests build via msbuild
-# (search paths baked into the .dproj), so they need neither.
+# $DCC32 is DEAD -- kept only because the not-yet-migrated language loop still
+# references $LIB/$PROJECT alongside it. Nothing invokes DCC32.EXE any more.
 $DCC32         = Join-Path $Delphi7Bin  "DCC32.EXE"
 $PROJECT       = Join-Path $TR4W_DIR    "tr4w.dpr"
 $LIB           = "$IndyRoot\Core;$IndyRoot\System;$TR4W_DIR\include;$IndyRoot\Protocols"
@@ -128,11 +127,12 @@ $MAKENSIS      = Join-Path $NSISBin     "makensis.exe"
 if (-not (Test-Path $RSVARS))   { Write-Host "rsvars.bat not found at: $RSVARS (set STUDIO_BIN or pass -StudioBin)" -ForegroundColor Red; exit 2 }
 if (-not (Test-Path $IndyRoot)) { Write-Host "Indy lib root not found at: $IndyRoot" -ForegroundColor Red; exit 2 }
 if (-not (Test-Path $TR4W_DIR)) { Write-Host "tr4w project dir not found at: $TR4W_DIR" -ForegroundColor Red; exit 2 }
-# Delphi 7 is now only used by the tr4wserver build, which runs solely under
-# -BuildInstallers. A default build (app + languages) is fully D7-free, so the
-# DCC32 check lives inside the -BuildInstallers guard below rather than up here.
+# Delphi 7 is no longer used ANYWHERE in this script. tr4wserver was the last
+# holdout and now builds under D12 via msbuild like everything else (16412f1).
+# $Delphi7Bin / $DCC32 survive only as ignored back-compat for callers that still
+# pass -Delphi7Bin -- notably .github/workflows/release.yml, which also still
+# CHECKS for DCC32.EXE on the runner and should be cleaned up next.
 if ($BuildInstallers) {
-    if (-not (Test-Path $DCC32))    { Write-Host "DCC32.EXE not found at: $DCC32 (required for the tr4wserver build bundled by the installer)" -ForegroundColor Red; exit 2 }
     if (-not (Test-Path $MAKENSIS)) { Write-Host "makensis.exe not found at: $MAKENSIS (set NSIS_BIN or pass -NSISBin)" -ForegroundColor Red; exit 2 }
     if (-not (Test-Path $NSI_FILE)) { Write-Host "Installer script not found at: $NSI_FILE" -ForegroundColor Red; exit 2 }
 
@@ -841,21 +841,20 @@ if ($result -eq 0) {
         # Only needed for -BuildInstallers, so skip it otherwise -- the app +
         # language builds don't depend on it.
         #
-        # KNOWN-BROKEN in this checkout (tracked for resurrection): the server
-        # project has stale .dpr paths (it was moved under tr4w\ but still uses
-        # '..\tr4w\src\...'), no .dproj, and pulls in VC.pas -> the UTF-8+BOM lang
-        # files D7 can't read. Until it's fixed a failure here is a WARNING, not a
-        # build-abort, so the rest of the build still completes. (If -BuildInstallers
-        # is set, the later installer dependency check will still fail loudly on the
-        # missing tr4wserver.exe -- you can't ship an installer without it.)
+        # RESURRECTED 2026-08-02: the server builds under D12 (16412f1). The stale
+        # .dpr paths are fixed, it has a .dproj, and it no longer drags in the whole
+        # app (TF's MainUnit edge was cut in fedffa8). A failure here is therefore a
+        # REAL failure, not the expected-broken warning it used to be -- but it stays
+        # non-fatal so a broken server does not cost you the app + language builds;
+        # the installer dependency check below still fails loudly on a missing EXE.
         # ---------------------------------------------------------------
         if ($BuildInstallers) {
             Write-Host "--- Step 2b: tr4wserver (bundled by the installer) ---" -ForegroundColor Cyan
-            & $SERVER_PS1 -ProjectRoot $ProjectRoot -Delphi7Bin $Delphi7Bin -IndyRoot $IndyRoot
-            $serverResult = $LASTEXITCODE
+            $serverResult = Invoke-MSBuild -Dproj $SERVER_DPROJ -Target Build
             if ($serverResult -ne 0) {
-                Write-Host "  WARNING: tr4wserver build failed (exit $serverResult)." -ForegroundColor Yellow
-                Write-Host "  The server project is known-broken in this checkout; app + language builds continue." -ForegroundColor Yellow
+                Write-Host "  ERROR: tr4wserver build FAILED (exit $serverResult)." -ForegroundColor Red
+                Write-Host "  This is a real failure -- the server builds cleanly under D12 as of 16412f1." -ForegroundColor Red
+                Write-Host "  App + language builds continue; the installer check below fails on the missing EXE." -ForegroundColor Yellow
             }
         } else {
             Write-Host "Skipping tr4wserver build (only needed with -BuildInstallers)." -ForegroundColor DarkGray
