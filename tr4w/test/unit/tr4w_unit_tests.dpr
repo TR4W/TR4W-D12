@@ -115,6 +115,8 @@ uses
    uRadioHamLibOnly in '..\..\src\radioFactory\uRadioHamLibOnly.pas',
    uCWFraming in '..\..\src\radioFactory\uCWFraming.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
+   uElecraftIF in '..\..\src\radioFactory\uElecraftIF.pas',
+   uTestElecraftIF in 'uTestElecraftIF.pas',
    // CW keyer factory -- listed EXPLICITLY (same rule as the radio units:
    // adapters self-install from initialization; a transitive-only link path
    // would silently drop them from this EXE).
@@ -243,6 +245,7 @@ begin
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
+   RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
 
    if RunAllSuites then
       begin

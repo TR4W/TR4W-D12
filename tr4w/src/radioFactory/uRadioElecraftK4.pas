@@ -17,7 +17,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uRadioElecraftK4;
 
 interface
-uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry, uCWFraming;
+uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry, uCWFraming,
+     uElecraftIF;   // shared IF decode -- the K3 uses the same one
 
 
 Type TK4Radio = class(TFactoryRadioBase)
@@ -452,75 +453,19 @@ end;
 
 function TK4Radio.ParseIFCommand(cmd: string): boolean;
 var
-   s: string;
-   hz: integer;
-   ritMultiplier: integer;
-   xitMultiplier: integer;
-   ritOffset: integer;
-   //xitOffset: integer;
-   sVFO: string;
-   sMode: string;
-   sDataMode: string;
+   info: TElecraftIF;
+   err: TElecraftIFError;
    vfo: TRadioVFO;
 begin
-{
-IF (Transceiver Information; GET only)
-RSP format: IF[f]*****+yyyyrx*00tmvspbd1*; where the fields are defined as follows:
-[f] Operating frequency, excluding any RIT/XIT offset (11 digits; see FA command format)
-* represents a space (BLANK, or ASCII 0x20)
-+ either "+" or "-" (sign of RIT/XIT offset)
-yyyy RIT/XIT offset in Hz (range is -9999 to +9999 Hz when computer-controlled)
-r 1 if RIT is on, 0 if off
-x 1 if XIT is on, 0 if off
-t 1 if the K3 is in transmit mode, 0 if receive
-m operating mode (see MD command)
-v receive-mode VFO selection, 0 for VFO A, 1 for VFO B
-s 1 if scan is in progress, 0 otherwise
-p 1 if the transceiver is in split mode, 0 otherwise
-b Basic RSP format: always 0; K2 Extended RSP format (K22): 1 if present IF response
-is due to a band change; 0 otherwise
-d Basic RSP format: always 0; K3 Extended RSP format (K31): DATA sub-mode,
-if applicable (0=DATA A, 1=AFSK A, 2= FSK D, 3=PSK D)
-}
    Result := false;
-   ritMultiplier := 1;
-   xitMultiplier := 1;
-   if not length(cmd) in [36,38] then
-      begin
-      logger.Error('[ParseIFCommand] length of IF command not 36 or 38 bytes - %s',[cmd]);
-      Exit;
-      end;
 
-   s := cmd;
-   if AnsiLeftStr(s,2) = 'IF' then
+   // Decoding lives in uElecraftIF so the K3 and K4 cannot drift apart again;
+   // APPLYING the decoded state stays here, because that is where they legitimately
+   // differ -- see the VFO note below.
+   err := ParseElecraftIF(cmd, info);
+   if err <> ifeNone then
       begin
-      Delete(s,1,2);
-      end;
-   hz := StrToIntDef(AnsiLeftStr(s,11),-999);   //[f]*****+yyyyrx*00tmvspbd1*;
-   if hz = -999 then
-      begin
-      logger.Error('[ParseIFCommand] frequency returned in IF command was not a number %s',[AnsiLeftStr(s,11)]);
-      Exit;
-      end;
-   
-
-   Delete(s,1,11); // Remove frequency
-   Delete(s,1,5); // Remove 5 blanks          // *****+yyyyrx*00tmvspbd1*;
-   if AnsiLeftStr(s,1) = '-' then
-      begin
-      ritMultiplier := -1;
-      xitMultiplier := -1;
-      end
-   else if AnsiLeftStr(s,1) = '+' then
-      begin
-      ritMultiplier := 1;
-      xitMultiplier := 1;
-      end;
-   Delete(s,1,1);                      // yyyyrx*00tmvspbd1*;
-   ritOffset := StrToIntDef(AnsiLeftStr(s,4),-999);
-   if ritOffset = -999 then
-      begin
-      logger.Error('[ParseIFCommand] RIT offset returned in IF command was not a number %s',[AnsiLeftStr(s,4)]);
+      logger.Error('[ParseIFCommand] %s', [ElecraftIFErrorText(err, cmd)]);
       Exit;
       end;
 
@@ -528,25 +473,17 @@ if applicable (0=DATA A, 1=AFSK A, 2= FSK D, 3=PSK D)
    // the radio window reads (uFactoryRadioBase.GetRITOffset).  On a SERIAL K4
    // (AI off, IF;FB; polling) this IF response is the only ongoing RIT/XIT
    // source -- the network AI path at RT/XT/RO writes vfo[] itself -- so
-   // writing just the scalar left the window offset blank.  Same defect and
-   // same fix as the K3 in uRadioElecraftSerial.ParseIFCommand.
-   Self.SetRITOffset(ritOffset * ritMultiplier);
-   Self.SetXITOffset(Self.localRITOffset); // Because on K4, these are the same
-   logger.trace('[ParseIFCommand] RITOffset = %d',[Self.localRITOffset]);
-   
-   Delete(s,1,4);                      // rx*00tmvspbd1*;
-   Self.SetRITOn(AnsiLeftStr(s,1) = '1');   // per-VFO copy, not just the scalar
-   logger.trace('In IF processor, RIT is %s',[AnsiLeftStr(s,1)]);
+   // writing just the scalar left the window offset blank.
+   Self.SetRITOffset(info.RITXITOffsetHz);
+   Self.SetXITOffset(Self.localRITOffset);   // Because on K4, these are the same
+   logger.trace('[ParseIFCommand] RITOffset = %d', [Self.localRITOffset]);
 
-   Delete(s,1,1);                      // x*00tmvspbd1*;
-   Self.SetXITOn(AnsiLeftStr(s,1) = '1');   // per-VFO copy, not just the scalar
-   logger.trace('In IF processor, XIT is %s',[AnsiLeftStr(s,1)]);
+   Self.SetRITOn(info.RITOn);
+   Self.SetXITOn(info.XITOn);
+   logger.trace('In IF processor, RIT is %s, XIT is %s',
+                [BoolToStr(info.RITOn, True), BoolToStr(info.XITOn, True)]);
 
-   Delete(s,1,1);
-   Delete(s,1,1); // Skip space       // *00tmvspbd1*;
-   Delete(s,1,2); // Skip 00          // 00tmvspbd1*;
-
-   if AnsiLeftStr(s,1) = '1' then     // tmvspbd1*;
+   if info.Transmitting then
       begin
       Self.RadioState := rsTransmit;
       end
@@ -554,29 +491,15 @@ if applicable (0=DATA A, 1=AFSK A, 2= FSK D, 3=PSK D)
       begin
       Self.RadioState := rsReceive;
       end;
-   Delete(s,1,1);
-   logger.trace('[ParseIFCommand] string at mode = %s',[s]);
-   sMode := AnsiLeftStr(s,1);          // mvspbd1*;
 
-   Delete(s,1,1);
-   logger.trace('[ParseIFCommand] string at vfo = %s',[s]);
-   sVFO := AnsiLeftStr(s,1);           // vspbd1*;
+   Self.SetSplitOn(info.SplitOn);
 
-   Delete(s,1,2); // Skip s as we do not care if scanning  // spbd1*;
-   logger.trace('[ParseIFComand] Checking split command in %s',[s]);
-   Self.localSplitEnabled := AnsiLeftStr(s,1) = '1';           // pbd1*;
-
-
-   Delete(s,1,1);
-
-   Delete(s,1,1); // Skip the b // bd1*;
-
-   // (0=DATA A, 1=AFSK A, 2= FSK D, 3=PSK D)
-
-   sDataMode := AnsiLeftStr(s,1);
-
-   // Post processing from gathered variables to the right VFO
-   if sVFO = '0' then // VFO A
+   // Post processing from gathered variables to the right VFO.
+   // NOTE the deliberate difference from the K3: the K4 uses the SWAP VFO model
+   // (A/B exchange contents, so A is always the operating VFO), so this radio
+   // must NOT call SetActiveVFO.  That is a real per-model behaviour, which is
+   // exactly why the shared code is a pure decoder and not a base class.
+   if not info.RXVFOIsB then
       begin
       vfo := Self.vfo[nrVFOA];
       end
@@ -585,16 +508,14 @@ if applicable (0=DATA A, 1=AFSK A, 2= FSK D, 3=PSK D)
       vfo := Self.vfo[nrVFOB];
       end;
 
-   vfo.frequency := hz;
-   vfo.band := FreqToRadioBand(hz);
-      // Serial polling only sends IF;FB; (AI off), so BN never arrives on a
-      // band change -- derive band from frequency here, as every other modern
-      // radio class does (Icom/Flex/TS-890).  Keeps the band label in sync when
-      // the operator changes bands on the radio over a serial connection.
-   vfo.mode := ModeStrToMode(sMode,sDataMode);
-
-
-
+   vfo.frequency := info.FrequencyHz;
+   // Serial polling only sends IF;FB; (AI off), so BN never arrives on a band
+   // change -- derive band from frequency here, as every other modern radio
+   // class does (Icom/Flex/TS-890).  Keeps the band label in sync when the
+   // operator changes bands on the radio over a serial connection.
+   vfo.band := FreqToRadioBand(info.FrequencyHz);
+   vfo.mode := ModeStrToMode(info.ModeChar, info.DataModeChar);
+   Result := true;
 end;
 
 {
@@ -605,46 +526,19 @@ Type TRadioMode = (rmNone,rmCW, rmCWRev, rmLSB, rmUSB, rmFM, rmAM,
 
 // Helper functions
 function TK4Radio.ModeStrToMode(sMode: string; sDataMode: string): TRadioMode;
-var iMode: integer;
+var
+   problem: string;
 begin
-   iMode := StrToIntDef(sMode,-999);
-   case iMode of
-      0: Result := rmNone;
-      1: Result := rmLSB;
-      2: Result := rmUSB;
-      3: Result := rmCW;
-      4: Result := rmFM;
-      5: Result := rmAM;
-      6: begin
-            case StrToIntDef(sDataMode,-9) of
-            0: Result := rmData;
-            1: Result := rmAFSK;
-            2: Result := rmFSK;
-            3: Result := rmPSK;
-            -9:begin
-               logger.Error('[ModeStrToMode] Non-numeric string passed for sDataMode (%s)',[sDataMode]);
-               Result := rmData;
-               end;
-            else
-               begin
-               logger.Error('[ModeStrToMode] Unexpected string passed for sDataMode (%s)',[sDataMode]);
-               Result := rmData;
-               end;
-            end;
-         end;
-      7: Result := rmCWRev;
-      9: Result := rmDataRev;
-      -999: begin
-            logger.error('[ModeStrToMode] Non-numeric string passed for sMode (%s)',[sMode]);
-            Result := rmNone;
-            end;
-      else
-         begin
-         logger.error('[ModeStrToMode] Unexpected string passed for sMode (%s)',[sMode]);
-         Result := rmNone;
-         end;
-      end; // case
+   // Mapping lives in uElecraftIF alongside the IF decode -- the K3 had a
+   // character-for-character copy of this same case statement.  Logging stays
+   // here so each radio still reports in its own category.
+   Result := ElecraftModeToRadioMode(sMode, sDataMode, problem);
+   if problem <> '' then
+      begin
+      logger.Error('[ModeStrToMode] %s', [problem]);
+      end;
 end;
+
 procedure TK4Radio.ProcessMsg(msg: string);
 begin
    // Forward to ProcessMessage to maintain compatibility
