@@ -2461,15 +2461,18 @@ begin
     begin
       PutRadioOutOfSplit(ActiveRadio); // n4af 4.47.5
       PutRadioOutOfSplit(InActiveRadio);
-      // THE RADIO IS THE SOURCE OF TRUTH.  Only assert 'not split' for a radio
-      // that cannot report split -- there, the commanded state is the only
-      // state there is.  A radio that DOES report it clears InSplit from its own
-      // broadcast (uRadioPolling.DisplayCurrentStatus), so TR4W can never show
-      // 'not split' while the rig is still transmitting split.
+      // THE RADIO IS THE SOURCE OF TRUTH.  For a radio that REPORTS split,
+      // InSplit is not maintained at all -- the condition above already reads
+      // ActiveRadioPtr.CurrentStatus.Split, so the radio's own broadcast drives
+      // everything and the program cannot show a state the rig is not in.
       //
-      // Bench-proven on TCI 2026-08-02: a split slice created on the radio
-      // cannot be closed by the client at all, and TR4W used to report success.
-      // The driver now says why; this stops the display from contradicting it.
+      // Only a radio that CANNOT report split needs the shadow flag, because
+      // there the commanded state is the only state there is.
+      //
+      // Do NOT simply skip the clear for reporting radios: NOTHING else in the
+      // program writes InSplit (it is assigned in exactly three places, all
+      // here), so leaving it True stranded the flag and every later '-' re-ran
+      // this branch and appeared to do nothing.
       if not ActiveRadioPtr.HasCapability(rcReadSplit) then
          begin
          InSplit := False;
@@ -2500,7 +2503,12 @@ begin
         Band15: Freq := Freq + 21000000;
         Band10: Freq := Freq + 28000000;
       end;
-    InSplit := True;
+    // Same rule as the exit branch: a reporting radio's split state comes
+    // from the radio, so do not shadow it here either.
+    if not RadioToSet.HasCapability(rcReadSplit) then
+       begin
+       InSplit := True;
+       end;
     if Freq > 1000000 then
     begin
       // SetRadioFreq(ActiveRadio, Freq, ActiveMode, 'B');
@@ -2509,7 +2517,12 @@ begin
       // PutRadioIntoSplit(RadioToSet); {KK1L: 6.73}
       RadioToSet.PutRadioIntoSplit;
       SplitFreq := Freq;
-      InSplit := True;
+      // Same rule as the exit branch: a reporting radio's split state comes
+      // from the radio, so do not shadow it here either.
+      if not RadioToSet.HasCapability(rcReadSplit) then
+         begin
+         InSplit := True;
+         end;
     end;
     BandMapCursorFrequency := Freq; {KK1L: 6.68 Band map tracks transmit freq}
     DisplayBandMap;
