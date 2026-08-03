@@ -2179,9 +2179,8 @@ end;
 
 procedure RadioObject.OnCWByCATTimeEvent(Sender :TObject);
 begin
-   // Q9: registry capability, not the legacy typeset (see SendCW).
-   if Self.CWByCAT and
-      uRadioRegistry.SupportsFor(Self.RadioModel, rcCWByCAT) then
+   // Q9: the radio's own capability, not the legacy typeset (see SendCW).
+   if Self.CWByCAT and Self.HasCapability(rcCWByCAT) then
       begin
       if Self.CWBYCAT_Sending then
          begin

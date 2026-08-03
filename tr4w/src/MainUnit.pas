@@ -505,7 +505,7 @@ uses
 {$IFEND}
 
   uRadioPolling,
-  uRadioRegistry,   // SupportsFor -- capabilities by model, no instance needed
+  uRadioRegistry,   // the rc* capability members (re-exported for using units)
   uHamScore,        // Issue #783 -- HamScoreResyncFromScratch (Tools menu)
   LogCfg,
   LogCW,
@@ -845,7 +845,7 @@ begin
 
   if ActiveMode in [Phone, FM] then
   begin
-    if uRadioRegistry.SupportsFor(ActiveRadioPtr^.RadioModel, rcPlayDVK) { and
+    if ActiveRadioPtr^.HasCapability(rcPlayDVK) { and
     (ActiveRadioPtr^.tPTTStatus = PTT_ON) } then
     begin
       ActiveRadioPtr^.MemoryKeyer(0); // Playing memory 0 stops the message.
@@ -9235,8 +9235,11 @@ begin
   // setting -- what they want.  rcCWByCAT is what the RADIO can do.  A user can
   // switch the option on for a radio that cannot key CW over CAT, and the
   // capability is what stops that.  (Was `RadioModel in RadioSupportsCWByCAT`.)
-  Result := (ptr.CWByCAT) and
-    uRadioRegistry.SupportsFor(ptr.RadioModel, rcCWByCAT);
+  // Asked of the RADIO OBJECT (HasCapability), not of a model-keyed table: a
+  // string-id factory radio has RadioModel = NoInterfacedRadio, so the enum
+  // lookup reported every capability as absent and CW-by-CAT was silently
+  // skipped for it (TCI keyed nothing -- NY4I, 2026-08-03).
+  Result := (ptr.CWByCAT) and ptr.HasCapability(rcCWByCAT);
 end;
 
 function IsCWByCATActive: boolean; // ny4i Issue # 111
