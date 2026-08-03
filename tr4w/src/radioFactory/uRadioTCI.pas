@@ -184,8 +184,42 @@ begin
        rcReadRIT,        // rit_enable + rit_offset are both readable
        rcReadSplit,      // split_enable is broadcast
        rcReadTXStatus,   // trx:<trx>,<bool> is broadcast
-       rcCWByCAT,        // cw_macros
-       rcCWSpeedSync];   // cw_macros_speed
+       rcCWByCAT];       // cw_macros
+
+   // ---- rcCWSpeedSync WITHDRAWN 2026-08-03 ---------------------------------
+   // Not because TCI lacks the command -- because the server on the other end
+   // will not honour it, and a capability is a promise about what actually
+   // happens on the wire.  Claiming it made TR4W send a speed on every PgUp
+   // that changed nothing, which is worse than not offering the feature: the
+   // operator sees TR4W's speed move and the radio's stay put.
+   //
+   // EVIDENCE, not inference.  tr4w.log 2026-08-03 03:52:02-10: ten PgUp/PgDn
+   // presses, ten `cw_macros_speed:NN;` sent (25,23,21,19,17,15,13,15,17,19),
+   // and ten replies of `cw_macros_speed:30` -- the server's own unchanged
+   // value, every time.  AetherSDR src/core/TciProtocol.cpp:454 says why:
+   //
+   //     bool isSet = (args.size() >= 2);
+   //
+   // Set-versus-get by ARGUMENT COUNT, which assumes every command is
+   // receiver-addressed (`rit_offset:0,500;`).  cw_macros_speed is a GLOBAL
+   // taking one argument, so our correctly-formed `cw_macros_speed:25;` is one
+   // arg, reads as a GET, and cmdCwMacrosSpeed returns the current speed.  The
+   // set path is unreachable for ANY client.  Our grammar is right -- it is the
+   // string AetherSDR itself emits (same file, lines 974/985).
+   //
+   // This is an AETHERSDR limitation, not a TCI-protocol one.  We withdraw the
+   // capability for every TCI server anyway: TR4W cannot tell which server it
+   // is talking to, and NY4I chose the honest blanket answer over guessing.
+   // AetherSDR issues #1677 (CW-over-TCI, closed with its "CW speed is
+   // reflected on the radio" criterion never wire-tested) and #1764 (same root
+   // cause for DRIVE/VOLUME; its own analysis prescribed the fix, which was
+   // then applied only to `volume`).
+   //
+   // TO RESTORE: put rcCWSpeedSync back in the set above.  Nothing else needs
+   // to change -- SetCWSpeed below is correct and stays, and the CWSpeedMin/Max
+   // range is still used to clamp.  Retest by watching for a `cw_macros_speed`
+   // reply that carries OUR number instead of the server's.
+   //
    // AetherSDR accepts 5..100 wpm.  ExpertSDR2/Thetis ranges [VERIFY].
    FCapabilities.CWSpeedMin := 5;
    FCapabilities.CWSpeedMax := 100;
@@ -814,6 +848,11 @@ end;
 
 procedure TTCIRadio.SetCWSpeed(speed: integer);
 begin
+   // UNREACHABLE while rcCWSpeedSync is withdrawn (see the constructor):
+   // RadioObject.SetRadioCWSpeed checks the capability before delegating here.
+   // Kept, and kept correct, because the command itself is right -- the server
+   // is what cannot accept it.  Restoring the capability restores this path
+   // with no edit here.
    speed := Max(FCapabilities.CWSpeedMin, Min(FCapabilities.CWSpeedMax, speed));
    SendToRadio(Format('cw_macros_speed:%d;', [speed]));
 end;
