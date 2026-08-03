@@ -73,6 +73,12 @@ type
       // Note the ASYMMETRY: setting split still goes out as split_enable (the
       // server maps that to creating a slice).  Only the READ path needs this.
       FTxTrx:         integer;                  // receiver currently flagged tx_enable
+      // Did WE turn split on?  AetherSDR will remove the slice IT created for a
+      // client, but not one the operator created -- so ownership, not 'which
+      // receiver transmits', decides whether we can turn split off.  Inferring
+      // it from FTxTrx was wrong: a TR4W-created split ALSO moves the
+      // transmitter to the new receiver, so the refusal fired on our own slice.
+      FWeEnabledSplit: boolean;
       FRxVfoA:        array[0..7] of integer;   // VFO A per receiver, for the TX freq
 
       function  GetISConnected: boolean; override;
@@ -165,6 +171,7 @@ begin
    FCWBuffer := '';
    FLastRx := Now;
    FTxTrx := 0;
+   FWeEnabledSplit := False;
    FModulations := TStringList.Create;
    FModulations.CaseSensitive := False;
 
@@ -303,6 +310,7 @@ end;
 procedure TTCIRadio.WSDisconnected;
 begin
    FReady := False;
+   FWeEnabledSplit := False;   // link gone -- any split we owned is not ours now
    logger.Info('[TCI] WebSocket link dropped');
 end;
 
@@ -365,6 +373,10 @@ begin
       // reading is more misleading than an empty field).
       Self.vfo[nrVFOB].frequency := 0;
       Self.vfo[nrVFOB].band := rbNone;
+      // Split ended by ANY route (we cleared it, the operator closed the slice,
+      // the server moved TX back).  Ownership dies with it, so a later split we
+      // did not create is correctly refused.
+      FWeEnabledSplit := False;
       end;
 end;
 
@@ -672,7 +684,7 @@ begin
    // never show 'not split' while the rig is still in split.  See AetherSDR
    // issue #3715 -- per-slice ownership with unified teardown is PROPOSED, not
    // implemented, so today there is no client-side way to close it.
-   if (not splitOn) and (FTxTrx <> opTrx) then
+   if (not splitOn) and (FTxTrx <> opTrx) and (not FWeEnabledSplit) then
       begin
       logger.Warn('[TCI] cannot leave split: transmit receiver is trx %d, a slice created on the radio. ' +
                   'split_enable addresses only VFO A/B split within trx %d.', [FTxTrx, opTrx]);
@@ -685,10 +697,12 @@ begin
    if splitOn then
       begin
       SendToRadio(Format('split_enable:%s,true;', [TCI_TRX]));
+      FWeEnabledSplit := True;
       end
    else
       begin
       SendToRadio(Format('split_enable:%s,false;', [TCI_TRX]));
+      FWeEnabledSplit := False;
       end;
 end;
 
