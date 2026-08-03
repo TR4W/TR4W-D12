@@ -84,6 +84,7 @@ This table is the gate on that decision.
 | Kenwood TS-990S | TS990 | - | - |  |
 | N3FJP ACLog (HamLib bridge) | ACLOG | - | - |  |
 | Ten-Tec Omni VI (CI-V) | OMNI6 | - | - |  |
+| TCI (ExpertSDR / Thetis / AetherSDR) | TCI (string id) | 2026-08-03 | NY4I | **First native TCI radio; also the factory's proof-of-concept for a wholly new radio type.** Tested against AetherSDR. WORKING: connect + init burst, frequency/mode tracking, RIT offset (after the poll repair), split detection at startup, split on/off/on cycle, and the refusal path for an operator-created split. THREE SERVER-SIDE GAPS FOUND, none ours: (a) split is expressed as a second RECEIVER carrying tx_enable:true, NOT split_enable -- set and read use different fields; (b) rit_offset is broadcast ONLY on a client SET and in the init burst, never when changed on the radio's own UI (confirmed in AetherSDR's source: TciServer.cpp wires only the *_enable family, comment says rit_offset is 'out of scope') -- worked around by GETting it once a second while RIT/XIT is on; (c) a client cannot remove an operator-created split slice at all (AetherSDR issue #3715, per-slice ownership is proposed not implemented) -- TR4W now says so instead of pretending. NOT TESTED: CW-by-CAT (cw_macros grammar is [VERIFY]), the independence of rit/xit offsets, ExpertSDR2 and Thetis (only AetherSDR was available). |
 | Ten-Tec Orion | ORION | - | - |  |
 | TRX-Manager (HamLib bridge) | TRXMANAGER | - | - |  |
 | Yaesu FT-100 | FT100 | - | - |  |
