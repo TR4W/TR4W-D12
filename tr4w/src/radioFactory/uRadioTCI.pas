@@ -48,7 +48,8 @@ interface
 
 uses
    Windows, SysUtils, Classes, StrUtils, Math, DateUtils,
-   uFactoryRadioBase, uRadioBand, uRadioRegistry, uWebSocketClient, Log4D, VC;
+   uFactoryRadioBase, uRadioBand, uRadioRegistry, uWebSocketClient, Log4D, VC,
+   uCWFraming;
 
 type
    TTCIRadio = class(TFactoryRadioBase)
@@ -188,6 +189,19 @@ begin
    // AetherSDR accepts 5..100 wpm.  ExpertSDR2/Thetis ranges [VERIFY].
    FCapabilities.CWSpeedMin := 5;
    FCapabilities.CWSpeedMax := 100;
+   // ---- CW-by-CAT framing --------------------------------------------------
+   // cw_macros:<trx>,<text>; states no length limit, so no chunking and no
+   // padding.  [VERIFY on hardware -- if a long message is truncated, give this
+   // a real maxLen; the keyer will then split it with no other change.]
+   FCapabilities.CWFrame := CWFrameRule(0, False);
+   // pdNone -- pass prosign tokens through as literal text.  TCI is not a KY
+   // radio, and nobody has established what its cw_macros does with a prosign,
+   // so substituting a Kenwood '_' for AR would be inventing a fact.  Passing
+   // the token through at least fails visibly.  [VERIFY]
+   //
+   // Until 2026-08-03 this radio got NO CW at all: the framing and the gate were
+   // looked up by InterfacedRadioType, which a string-id radio does not have.
+   FCapabilities.CWProsignDialect := pdNone;
    // Deliberately absent: rcSharedRITXITOffset.  TCI carries rit_offset and
    // xit_offset separately, so they are independent. [VERIFY on hardware]
 

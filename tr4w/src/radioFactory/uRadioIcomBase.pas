@@ -52,7 +52,7 @@ interface
 
 uses
   Windows, uFactoryRadioBase, uRadioBand, uIcomNetworkTransport, uIcomNetworkTypes, SysUtils, StrUtils, VC, Log4D,
-  uIcomCIV, Classes, SyncObjs;
+  uIcomCIV, Classes, SyncObjs, uCWFraming;
 
 type
   TIcomRadio = class; // forward — TCIVSendThread holds a back-reference
@@ -472,6 +472,29 @@ begin
   // this line used to have, and why uTestIcomRegistry now asserts the flag.
   Include(FCapabilities.Flags, rcCWFlushDisruptsTiming);
 
+  // ---- CW-by-CAT framing, FAMILY-WIDE (was uCWFraming's `IC78..IC9700:` arm) --
+  // 28 bytes per $17 send.  The legacy code TRUNCATED at 28 and dropped the rest
+  // -- it never looped -- so a longer message lost its tail silently; stating it
+  // as a frame rule means the keyer SPLITS instead, which is what the old comment
+  // there asked for ("TODO Optimally, this should be sent in multiple batches").
+  //
+  // busyFactor 1.25: the CI-V send queue is rate limited (~25 ms a command), so a
+  // purely element-based estimate of the message duration runs short on this
+  // family, and the poll thread can step on CW still being keyed.
+  //
+  // Icom spells prosigns as NAMED tokens ('^AR') and has an SN where Elecraft
+  // does not -- a third dialect, not a variant of the Kenwood one.
+  //
+  // SAME "MUST RUN AFTER DefineCapabilities" HAZARD as the flag above, and it bit
+  // in exactly the same way: written inside the base DefineCapabilities, every
+  // subclass override replaced the record wholesale and all 14 keying Icoms came
+  // out with maxLen 0 -- "no limit", a legal and silent answer that would have
+  // sent a 40-character message as one 40-byte $17.  Caught by the CW_PINS test,
+  // not by the compiler.  A per-model deviation goes in that model's OWN ctor,
+  // which runs after this one.
+  FCapabilities.CWFrame := CWFrameRule(28, False, 1.25);
+  FCapabilities.CWProsignDialect := pdIcom;
+
   FSupportsExtendedVFOBCommands := rcReadVFOB in FCapabilities.Flags;
   FSplitStateReadable          := rcReadSplit in FCapabilities.Flags;
   FCWSpeedMin                  := FCapabilities.CWSpeedMin;
@@ -497,6 +520,10 @@ begin
   // norm; the IC-718 (6..60) overrides it.
   FCapabilities.CWSpeedMin := 6;
   FCapabilities.CWSpeedMax := 48;
+  // The CW FRAME RULE and prosign dialect are deliberately NOT set here.  This
+  // method is replaced wholesale by every subclass override, so a family-wide
+  // value must be assigned in the CONSTRUCTOR, after DefineCapabilities returns
+  // -- same hazard as rcCWFlushDisruptsTiming.  See the note there.
 end;
 
 destructor TIcomRadio.Destroy;

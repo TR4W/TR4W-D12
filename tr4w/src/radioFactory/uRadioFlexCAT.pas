@@ -216,6 +216,14 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
+   // ---- CW-by-CAT framing --------------------------------------------------
+   // Over CAT the Flex keys with the Kenwood-subset KY, so it takes the Kenwood
+   // rule: 24 bytes, last chunk filled.  This half of the old `FLEX:` arm was
+   // selected by `pad := not network` -- a transport test that only existed
+   // because ONE model enum covered two protocols.  TFlexCAT and TFlexAPI are
+   // separate classes, so each simply states its own rule and the test is gone.
+   FCapabilities.CWFrame := CWFrameRule(24, True);
+   FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 // ---------------------------------------------------------------------------

@@ -132,7 +132,8 @@ begin
       end
    else if Msg <> CWByCATBufferTerminator then
       begin
-      prosign := uCWFraming.CWProsignFor(radio.RadioModel, Msg);
+      prosign := uCWFraming.CWProsignFor(
+                    radio.tFactoryObject.Capabilities.CWProsignDialect, Msg);
       if prosign.handled then
          begin
          radio.CWByCATBuffer := radio.CWByCATBuffer + prosign.text;
@@ -158,8 +159,12 @@ begin
       end;
 
    DebugMsg('Assembling CW message to send');
-   frameRule := uCWFraming.CWFrameRuleFor(radio.RadioModel,
-                                          radio.tCATPortType = Network);
+   // The RADIO states how its CW command must be cut up.  This was a lookup by
+   // RadioModel plus a `tCATPortType = Network` test -- the transport test being
+   // there only because ONE model enum (FLEX) covered two protocols.  TFlexCAT
+   // and TFlexAPI are separate classes and each states its own rule, so both the
+   // table and the transport test are gone.
+   frameRule := radio.tFactoryObject.Capabilities.CWFrame;
 
    // Only one radio may key at a time.  Note this ALSO issues the keyer abort
    // when the other radio is mid-message, and TElecraftSerial.StopCW carries a

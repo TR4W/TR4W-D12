@@ -87,7 +87,7 @@ interface
 
 uses
   uFactoryRadioBase, uRadioBand, SysUtils, StrUtils, Math, Log4D, VC,
-  uRadioRegistry;
+  uRadioRegistry, uCWFraming;
 
 const
   ORION_CR = #13;
@@ -184,6 +184,18 @@ begin
    FCapabilities.Flags := [rcReadVFOB, rcCWByCAT, rcCWSpeedSync];
    FCapabilities.CWSpeedMin := ORION_CW_MIN_WPM;
    FCapabilities.CWSpeedMax := ORION_CW_MAX_WPM;
+   // ---- CW-by-CAT framing --------------------------------------------------
+   // No length limit and no padding: the Orion keys with '/<text>', not a KY,
+   // and uCWFraming's model table never named it -- it fell to the default arm,
+   // which is exactly this.  Stated explicitly now that the default is on the
+   // radio: a rule left unstated is indistinguishable from a zeroed record.
+   FCapabilities.CWFrame := CWFrameRule(0, False);
+   // Kenwood spellings, preserving the legacy fall-through: uCWFraming's
+   // CWVendorOf had no ORION arm and returned cvKenwood for anything that was
+   // not Elecraft or Icom, so this is what the Orion has always been keyed.
+   // NOT verified against a Ten-Tec manual -- inherited behaviour, recorded as
+   // such rather than dressed up as a protocol fact.
+   FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 // ---------------------------------------------------------------------------
