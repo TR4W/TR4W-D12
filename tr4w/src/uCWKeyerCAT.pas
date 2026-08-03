@@ -94,12 +94,17 @@ var
    elements: integer;
    sendNow: boolean;
 begin
-   // Q9: registry capability, not the legacy typeset -- two sources of truth
-   // for "can this radio key over CAT" disagreeing shows up as CW that simply
-   // never goes out.  Kept here rather than assumed of the caller: this is
-   // reachable from SendStringAndStop as well as from the keyer's own methods.
-   if not ( radio.CWByCAT and
-            uRadioRegistry.SupportsFor(radio.RadioModel, rcCWByCAT) ) then
+   // Q9: the RADIO's own capability, not a model-keyed table -- two sources of
+   // truth for "can this radio key over CAT" disagreeing shows up as CW that
+   // simply never goes out.  Kept here rather than assumed of the caller: this
+   // is reachable from SendStringAndStop as well as from the keyer's own
+   // methods.
+   //
+   // HasCapability asks the factory object first.  The model-keyed form that
+   // stood here could not see a string-id radio at all (RadioModel =
+   // NoInterfacedRadio by design), so TCI reached this gate and exited -- CW
+   // was configured, speed sync worked, and not one cw_macros ever went out.
+   if not ( radio.CWByCAT and radio.HasCapability(rcCWByCAT) ) then
       begin
       Exit;
       end;

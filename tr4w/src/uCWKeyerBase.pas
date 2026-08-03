@@ -211,8 +211,8 @@ begin
                 + 'The WinKeyer wins when it opens; the YCCC box will not key CW.');
       end;
    catConfigured :=
-      (Radio1.CWByCAT and uRadioRegistry.SupportsFor(Radio1.RadioModel, rcCWByCAT)) or
-      (Radio2.CWByCAT and uRadioRegistry.SupportsFor(Radio2.RadioModel, rcCWByCAT));
+      (Radio1.CWByCAT and Radio1.HasCapability(rcCWByCAT)) or
+      (Radio2.CWByCAT and Radio2.HasCapability(rcCWByCAT));
    if catConfigured and
       (WinKeySettings.wksWinKey2Enable or YCCCSo2rEnable) then
       begin

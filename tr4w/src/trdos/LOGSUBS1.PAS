@@ -79,7 +79,7 @@ implementation
 
 uses
   uRadioPolling,
-  uRadioRegistry,   // SupportsFor -- capabilities by model, no instance needed
+  uRadioRegistry,   // the rc* capability members (re-exported for using units)
   LOGSUBS2,
   MainUnit;
 
@@ -307,8 +307,7 @@ begin
         // ny4i Issue 145: "Don't do this for Icom radios. It messes up the times
         // of CW Messages."
         if not (IsCWByCATActive and
-          uRadioRegistry.SupportsFor(ActiveRadioPtr^.RadioModel,
-                                     rcCWFlushDisruptsTiming)) then
+          ActiveRadioPtr^.HasCapability(rcCWFlushDisruptsTiming)) then
         begin
           FlushCWBuffer;
         end;
