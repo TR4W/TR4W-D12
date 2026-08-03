@@ -373,10 +373,15 @@ begin
       // reading is more misleading than an empty field).
       Self.vfo[nrVFOB].frequency := 0;
       Self.vfo[nrVFOB].band := rbNone;
-      // Split ended by ANY route (we cleared it, the operator closed the slice,
-      // the server moved TX back).  Ownership dies with it, so a later split we
-      // did not create is correctly refused.
-      FWeEnabledSplit := False;
+      // NOTE: ownership is deliberately NOT cleared here.  Turning split ON
+      // produces a transient that lands in this branch: the server sends
+      // tx_enable:0,false (TX leaving receiver 0) ~19 ms BEFORE
+      // tx_enable:1,true (TX arriving at receiver 1), so for one dispatch the
+      // transmitter is receiver 0 and split reads OFF.  Clearing here threw
+      // away ownership of a split we had just created, and the next '-' was
+      // refused.  Ownership is cleared on an explicit split_enable:<trx>,false
+      // from the server, on Disconnect, and in the constructor -- never on a
+      // tx_enable transient.
       end;
 end;
 
@@ -539,6 +544,11 @@ begin
    if (name = 'split_enable') and (Length(args) >= 2) then
       begin
       Self.SetSplitOn(SameText(Trim(args[1]), 'true'));
+      if not SameText(Trim(args[1]), 'true') then
+         begin
+         // Server confirms split is off -- whoever owned it, nobody does now.
+         FWeEnabledSplit := False;
+         end;
       Exit;
       end;
 
