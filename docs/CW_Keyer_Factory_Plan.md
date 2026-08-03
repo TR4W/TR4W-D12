@@ -44,7 +44,31 @@ Repo: `c:\tr4w-d12`, branch `delphi12`, Delphi 12, raw Win32 (no VCL). Build: `c
 > TR4QT's keyer design is the likely reference. Note this is a config-surface
 > change (new command + dialog), so it is a designed change, not a refactor.
 >
-> **STILL OPEN — the CAT repoint, and it is a PROJECT, not a one-liner.**
+> **THE CAT REPOINT IS DONE (2026-08-03).** The paragraph below is kept because
+> its diagnosis was right and explains the shape of the result; only its status
+> has changed. It ran in three steps, not one:
+>
+> 1. `edc9cbf2` moved the send itself out of `RadioObject.SendCW` into
+>    `uCWKeyerCAT.CWByCATSend`, and DELETED `RadioObject.SendCW`. The framing
+>    came along as `uCWFraming`, still keyed on `InterfacedRadioType` —
+>    a deliberate staging step, not the destination.
+> 2. `a9e77155` repointed the capability GATES at the radio object
+>    (`RadioObject.HasCapability`). The model-keyed form could not see a
+>    string-id radio, so TCI silently got no CW at all.
+> 3. `4a7f9833` moved the DATA to where this plan said it belonged: the frame
+>    rule and prosign dialect are now `TRadioCapabilities.CWFrame` /
+>    `.CWProsignDialect`, declared by each family base. `uCWFraming` keeps only
+>    the mechanism and no longer knows what a radio model is.
+>
+> Two defects surfaced on the way, neither visible to the compiler: the TS-850
+> was never in the model table despite declaring `rcCWByCAT` (unchunked in D12,
+> undefined in D7 — an uninitialised `maxLen`), and the Icom values were first
+> written into `DefineCapabilities`, which every Icom subclass replaces
+> wholesale, leaving all fourteen keying Icoms with "no limit". Both were caught
+> by the exhaustive pin test in `test/unit/uTestCWFraming.pas`, which now fails
+> if any radio declares `rcCWByCAT` without stating its frame rule.
+>
+> **The original diagnosis, 2026-07-31:**
 > This plan assumed `TCWKeyerCAT` could later be repointed from
 > `RadioObject.SendCW` to the factory radio object. Inspection on 2026-07-31
 > shows the two are NOT equivalent: `RadioObject.SendCW` carries per-model
