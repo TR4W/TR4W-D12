@@ -157,6 +157,25 @@ begin
    // K3/KX3 keyer speed range.  Overridable per model.
    FCWSpeedMin := 8;
    FCWSpeedMax := 50;
+
+   // ---- CW-by-CAT framing (was uCWFraming's `K3, KX3, K4:` arm) ------------
+   // A short KY fails on the K3/KX3 ONLY when it follows the keyer abort TR4W
+   // sends before every message ('KY <04>;RX;', from StopCW): the abort/RX
+   // transition swallows a short following message, while >= 8 chars survives
+   // it.  (tr4w.log 2026-06-18: 'KY AGN4567;' silent, 'KY AGN45678;' keys; a
+   // standalone 'KY ?;' from the K3 utility keys fine -- so this is the ABORT
+   // WINDOW, not a radio length floor.)  Padding to maxLen gives every message
+   // enough runway to survive the abort; under P1=space the radio trims the
+   // trailing fill instead of keying it.  The K2 overrides pad -- see TK2Radio.
+   FCapabilities.CWFrame := CWFrameRule(22, True);
+
+   // DELIBERATE DIVERGENCE FROM LEGACY, carried over from uCWFraming: LOGRADIO
+   // tested `RadioModel in [K2, K3, K4]`, omitting the KX3, so a KX3 was given
+   // the KENWOOD spellings and keyed the wrong characters for AR, SK, BT and
+   // SN.  The KX3 shares the K3's CAT command set and is a TElecraftSerial, so
+   // it now inherits the Elecraft dialect here -- the omission was a gap, not a
+   // decision.  Still unverified on hardware; NY4I has no KX3.
+   FCapabilities.CWProsignDialect := pdElecraft;
 end;
 
 function TElecraftSerial.Connect: integer;

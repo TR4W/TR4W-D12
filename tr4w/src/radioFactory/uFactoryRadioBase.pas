@@ -20,7 +20,8 @@ interface
 
 uses
    Windows, IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
-   Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand;
+   Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand,
+   uCWFraming;   // TCWFrameRule / TCWProsignDialect -- the CW traits a radio declares
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 // Optional per-radio frame check for FIXED-LENGTH framing.  Returns True if the
@@ -143,6 +144,18 @@ Type
       Flags: TRadioCapabilitySet;  // boolean traits
       CWSpeedMin: integer;         // CW keyer wpm range (ranged traits a set can't hold; default 6..48)
       CWSpeedMax: integer;
+      // ---- CW-by-CAT framing, for the radios that declare rcCWByCAT ---------
+      // How this rig's CW command must be cut up, and which prosign dialect it
+      // speaks.  Both were `case model of` tables in uCWFraming until
+      // 2026-08-03; they are facts about ONE radio, so they belong here beside
+      // CWSpeedMin/Max rather than in a table the radio cannot participate in
+      // (a string-id radio has no InterfacedRadioType to be a case label).
+      //
+      // Declared by the family base and overridden per model -- the K2 and the
+      // TS-890 differ from their families only in `pad`.  A base must never
+      // test model identity to decide these; the model unit overrides the field.
+      CWFrame: TCWFrameRule;
+      CWProsignDialect: TCWProsignDialect;
    end;
 
 Type TSimpleEventProc = procedure(const aStrParam:string) of object;
@@ -546,7 +559,7 @@ end;
 implementation
 
 //Uses Unit1;
-Uses MainUnit, LogRadio;
+Uses MainUnit, LogRadio, TypInfo;   // TypInfo: GetEnumName, for CapabilitiesAsText
 
 // Byte-exact conversions for binary serial protocols (Icom CI-V). In a CI-V
 // frame string each Char carries exactly one wire byte (Ord 0..255, including
@@ -639,6 +652,16 @@ begin
    honorsFreqPollRate := True;     // default: serial poll loop may use FREQUENCY POLL RATE; TIcomRadio sets False (heavy CI-V state poll + transceive)
    autoUpdateCommand := '';        // No auto-update by default
    pollingInterval := 100;         // 100ms default poll interval
+
+   // CW-by-CAT framing default: no length limit, no padding, no prosign
+   // substitution.  Correct as-is for the great majority of radios, which do not
+   // declare rcCWByCAT at all and never reach the keyer.  A radio that DOES key
+   // must state its own rule -- this default is indistinguishable from a zeroed
+   // record, so a family base that forgets simply stops chunking, in silence.
+   // Stated here rather than left implicit so that intent is on the page, and
+   // pinned per keying radio by test/unit/uTestCWFraming.
+   FCapabilities.CWFrame := uCWFraming.CWFrameRule(0, False);
+   FCapabilities.CWProsignDialect := pdNone;
 
    SocketLock := TCriticalSection.Create;
    Disconnecting := False;
@@ -1562,6 +1585,19 @@ begin
       end;
    Result := Format('%s [CW %d-%d wpm]',
                     [Result, FCapabilities.CWSpeedMin, FCapabilities.CWSpeedMax]);
+   // The CW-by-CAT framing, dumped only for a radio that actually keys.  Worth
+   // having in the log: "the message went out unchunked and unpadded" is
+   // otherwise invisible, and an undeclared rule looks exactly like a zeroed one.
+   if rcCWByCAT in FCapabilities.Flags then
+      begin
+      Result := Result +
+         Format(' [CW frame: maxLen %d, pad %s, busy x%.2f, dialect %s]',
+                [FCapabilities.CWFrame.maxLen,
+                 BoolToStr(FCapabilities.CWFrame.pad, True),
+                 FCapabilities.CWFrame.busyFactor,
+                 GetEnumName(TypeInfo(TCWProsignDialect),
+                             Ord(FCapabilities.CWProsignDialect))]);
+      end;
 end;
 
 // ---- Per-radio state setters: one place owns where each flag is stored. ----

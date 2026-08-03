@@ -33,7 +33,7 @@ unit uRadioElecraftK2;
 interface
 
 uses
-  uRadioElecraftSerial, uFactoryRadioBase, uRadioRegistry, VC;
+  uRadioElecraftSerial, uFactoryRadioBase, uRadioRegistry, VC, uCWFraming;
 
 type
   TK2Radio = class(TElecraftSerial)
@@ -52,6 +52,11 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   // 22 like the rest of the family, but NOT padded -- the only K2 deviation
+   // from TElecraftSerial's frame rule (uCWFraming gave K2 its own arm for this
+   // one field).  Overriding the field is how a model differs from its base;
+   // the base must never ask which model it is.
+   FCapabilities.CWFrame.pad := False;
 end;
 
 function TK2Radio.CWAbortChar: Char;

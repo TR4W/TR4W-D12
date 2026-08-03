@@ -121,6 +121,22 @@ begin
   // Kenwood link and its rate-limited send queue (same reason the Icom keeps
   // honorsFreqPollRate=False).  A faster-baud Kenwood model may override True.
   honorsFreqPollRate := False;
+
+   // ---- CW-by-CAT framing (was uCWFraming's `TS480, TS570, ...:` arm) ------
+   // The Kenwood KY takes 24 bytes and REJECTS a short P2 under P1=space, so
+   // the last chunk is filled to 24.  (The TS-890 is the exception and is a
+   // TKenwoodLAN, which states its own rule.)
+   //
+   // NOTE, a deliberate change of behaviour: the model list this replaces named
+   // TS480/570/590/950/990/2000 and omitted the TS-850, which DOES declare
+   // rcCWByCAT.  The TS-850 therefore fell to "no limit, no padding".  In D7 it
+   // was worse than that -- LOGRADIO.SendCW's `maxLen` was an uninitialised
+   // local with no arm for the TS-850, and its chunk loop is
+   // `sLen := min(tempLen, maxLen)`, which cannot drain when maxLen <= 0.  A
+   // TS-850 keying CW by CAT was undefined in D7 and unchunked in D12; as a
+   // TKenwoodSerial it now gets the family rule, which is what its KY wants.
+  FCapabilities.CWFrame := CWFrameRule(24, True);
+  FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 function TKenwoodSerial.Connect: integer;

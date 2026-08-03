@@ -33,7 +33,7 @@ unit uRadioFlexAPI;
 interface
 
 uses
-   uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Log4D;
+   uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Log4D, uCWFraming;
 
 type TFlexAPI = class(TFactoryRadioBase)
    private
@@ -125,6 +125,15 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
+   // ---- CW-by-CAT framing --------------------------------------------------
+   // The SmartSDR Ethernet API keys with `cwx send`, which has no length limit
+   // and no padding requirement -- so no chunking and no fill.  (The serial/CAT
+   // side of the same radio is TFlexCAT and DOES pad; see the note there.)
+   // Prosign dialect is still Kenwood: cwx carries the same substituted
+   // characters the KY path uses, which is what the legacy code did for FLEX on
+   // both transports.
+   FCapabilities.CWFrame := CWFrameRule(0, False);
+   FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 function TFlexAPI.Connect: integer;

@@ -102,6 +102,15 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   // ---- CW-by-CAT framing --------------------------------------------------
+   // Same 22-and-pad rule as the serial Elecrafts: a short KY is swallowed when
+   // it follows the keyer abort TR4W sends before every message, and padding
+   // gives it enough runway to survive that window (the radio trims the fill
+   // rather than keying it).  Stated here rather than inherited because the K4
+   // is deliberately NOT a TElecraftSerial -- it is a network+serial radio with
+   // an AI push model (see this unit's header).
+   FCapabilities.CWFrame := CWFrameRule(22, True);
+   FCapabilities.CWProsignDialect := pdElecraft;
 end;
 
 function TK4Radio.Connect: integer;

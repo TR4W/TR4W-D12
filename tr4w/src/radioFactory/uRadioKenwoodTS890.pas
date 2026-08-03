@@ -59,6 +59,12 @@ begin
   inherited Create;
   radioModel     := 'Kenwood TS-890S';
   FExpectedIdent := 'ID024';
+   // The TS-890 accepts the space-prefixed KY form with a VARIABLE-length P2
+   // (KY <space><text>;), so no 24-byte fill -- and never KY2, since P1='2'
+   // would key the fill spaces as dead air.  The other Kenwoods reject a short
+   // P2 under P1=space, which is why the family base pads and this model does
+   // not.  (Was uCWFraming's `TS890:` arm, the one model it named on its own.)
+   FCapabilities.CWFrame.pad := False;
 end;
 
 initialization

@@ -64,7 +64,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 }
 
 interface
-uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry;
+uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry,
+     uCWFraming;
 
 type
    TTS890AuthState = (
@@ -222,6 +223,12 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   // ---- CW-by-CAT framing --------------------------------------------------
+   // The family rule is the ordinary Kenwood one: KY takes 24 bytes and rejects
+   // a short P2 under P1=space, so the last chunk is filled.  This is the
+   // TS-990's rule; the TS-890 overrides `pad` -- see TKenwoodTS890Radio.
+   FCapabilities.CWFrame := CWFrameRule(24, True);
+   FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 Destructor TKenwoodLAN.Destroy;
