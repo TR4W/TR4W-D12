@@ -24,15 +24,25 @@
    One line per violation:  <file>:<line>: <message>
    Exit code 0 = clean, 1 = at least one violation (handy for CI).
 #>
-[CmdletBinding()]
+# Two INVOCATION MODES, kept apart by explicit parameter sets:
+#
+#   Lint-PCharAnsi.ps1 a.pas b.pas       <- Files (default): the PostToolUse
+#                                           hook and ad-hoc calls, bare paths
+#   Lint-PCharAnsi.ps1 -SourceDir src    <- Tree: the msbuild PreBuildEvent
+#
+# Parameter SETS, not declaration order.  A ValueFromRemainingArguments
+# parameter is never given a position, so simply listing $Path first does NOT
+# make it positional -- $SourceDir claimed position 0 either way, and
+# `Lint-PCharAnsi.ps1 foo.pas` bound foo.pas to -SourceDir and failed with
+# "source directory not found".  That broke the pre-existing lint hook.
+[CmdletBinding(DefaultParameterSetName = 'Files')]
 param(
-   # Whole-tree mode, matching Lint-RadioRegistry / Lint-PollRadioState so the
-   # build wires all three the same way.  Enumerating here rather than globbing
-   # in the PreBuildEvent also keeps ~250 paths off the command line.
-   [string] $SourceDir,
+   [Parameter(ParameterSetName = 'Files', Position = 0,
+              ValueFromRemainingArguments = $true)]
+   [string[]] $Path,
 
-   [Parameter(ValueFromRemainingArguments = $true)]
-   [string[]] $Path
+   [Parameter(ParameterSetName = 'Tree', Mandatory = $true)]
+   [string] $SourceDir
 )
 
 if ($SourceDir) {

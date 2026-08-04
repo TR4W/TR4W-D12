@@ -4300,9 +4300,13 @@ begin
   TempHWND := Windows.GetFocus;
   if {TempHWND}Windows.GetParent(TempHWND) = TelnetCommandWindow then
   begin
-    if TelnetSock <> 0 then
-      PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-        WM_COMMAND, 104, TempHWND);
+    // Was `TelnetSock <> 0`.  The raw socket handle is gone; ask uTelnet
+    // whether the cluster link is up (uDXClusterClient owns the socket).
+    if TelnetIsConnected then
+       begin
+       PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+         WM_COMMAND, 104, TempHWND);
+       end;
     Exit;
   end;
 

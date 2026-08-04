@@ -127,8 +127,13 @@ begin
                 Windows.GetDlgItemTextA(hwnddlg, i, @TempBuffer1[1], SizeOf(TempBuffer1) - 1);
                 Windows.lstrcatA(TempBuffer2, TempBuffer1);
               end;
-              if TelnetSock <> 0 then
-                SendViaTelnetSocket(TempBuffer2)
+              // Was `TelnetSock <> 0`: spot straight up the cluster link when
+              // it is up, otherwise hand it to the TR4W network.  The raw
+              // socket handle is gone; uTelnet answers for the link now.
+              if TelnetIsConnected then
+                 begin
+                 SendViaTelnetSocket(TempBuffer2);
+                 end
               else
               begin
                 Windows.ZeroMemory(@SendSpotViaNetwork.vnMessage, SizeOf(SendSpotViaNetwork.vnMessage));
