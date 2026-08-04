@@ -176,6 +176,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
         <DCCReference Include="src\uRadio12.pas"/>
         <DCCReference Include="src\uFunctionKeys.pas"/>
         <DCCReference Include="src\uinet.pas"/>
+        <DCCReference Include="src\uDXClusterClient.pas"/>
         <DCCReference Include="src\uTelnet.pas"/>
         <DCCReference Include="src\uBandmap.pas"/>
         <DCCReference Include="src\uFileView.pas"/>

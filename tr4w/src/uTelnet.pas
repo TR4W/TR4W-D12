@@ -79,9 +79,12 @@ function TelnetWndDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
 function TelnetThreadProc(Param: Pointer): DWORD; stdcall;   // Issue #23 -- DX cluster I/O thread
 procedure StartTelnetConnect;                                // Issue #23 -- main-thread launcher
 procedure Disconnect;
-function TestSocketBuffer: Integer; // Gav 4.44.6
 procedure TelnetConnectionError(wsaErr: integer);            // Issue #23 -- explicit code (marshaled)
 function SendViaTelnetSocket(p: PAnsiChar): integer;
+// Is the DX cluster link up?  Exported because MainUnit asks (it used to test
+// the raw `TelnetSock <> 0`); the client object itself stays private to this
+// unit so nothing outside can drive the socket behind the UI's back.
+function TelnetIsConnected: boolean;
 procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);
 procedure SaveTelnetWindowSpots;
 procedure EnableTelnetToolbatButtons(b: boolean);
@@ -214,7 +217,10 @@ var
   TelThreadHandle: THandle;     // Issue #23 -- kept so we can join the I/O thread before teardown
   TelnetStopRequested: boolean; // Issue #23 -- set by Disconnect so a thread that is still
                                 // connecting bails out after connect instead of orphaning
-  TelnetSock: Cardinal;
+  // TelnetSock is GONE -- the socket now lives inside TDXClusterClient, and
+  // "are we connected" is ClusterClient.IsConnected.  It was doubling as a
+  // connected-flag in four places, which is exactly the two-sources-of-truth
+  // shape that lets a stale handle read as a live link.
   TelToolbar: HWND;
   TelnetListBox: HWND;
   TelnetCommandWindow: HWND;
@@ -227,6 +233,7 @@ var
   TelnetCallsignAlertList: HWND;
 implementation
 uses uNet,
+  uDXClusterClient,   // the socket half, extracted so it can be tested headless
   uBandmap,
   LogGrid,
   SysUtils,   // Issue #997: provides SysUtils.Format/StrPCopy for asm removal.
@@ -255,7 +262,24 @@ type
     Data: array[0..8192] of AnsiChar;
   end;
 
+  // Cluster events arrive on the client's READER THREAD.  Every one of these
+  // does nothing but package the news and PostMessage it -- identical
+  // marshaling to the old recv loop, and for the same reason: the handler
+  // touches the bandmap, the log and the UI, none of which is thread-safe.
+  //
+  // A class only because the event types are `of object`; it holds no state.
+  TClusterEvents = class
+    procedure Line(const L: AnsiString);
+    procedure Connected;
+    procedure Disconnected(const Text: string; Code: Integer);
+  end;
+
 var
+  // Declared HERE, above the window procedure, because Pascal needs the
+  // declaration before the first use and the WM_TELNET_MSG handler asks
+  // IsConnected long before the event methods are implemented.
+  ClusterClient: TDXClusterClient;
+  ClusterEvents: TClusterEvents;
   PendingTelnetHost: array[0..255] of AnsiChar;   // set on the main thread before the I/O thread starts
   PendingTelnetPort: Word;
 
@@ -620,9 +644,9 @@ begin
 
           TELNET_CLOSED:
             begin
-              // Ignore if the user already disconnected (TelnetSock cleared);
-              // otherwise this is a server-initiated / network close.
-              if TelnetSock <> 0 then
+              // Ignore if the user already disconnected; otherwise this is a
+              // server-initiated / network close.
+              if ClusterClient.IsConnected then
                  begin
                  if lParam <> 0 then
                     begin
@@ -880,60 +904,77 @@ end;
 // blocking recv, posting each chunk to the telnet window.  Posts CONNECTED /
 // CONNECT_FAILED / CLOSED for lifecycle.  Does NO UI and touches NO shared
 // contest/bandmap state -- that all happens on the main thread in the handler.
-function TelnetThreadProc(Param: Pointer): DWORD; stdcall;
+procedure TClusterEvents.Line(const L: AnsiString);
 var
-  localSock: DWORD;
-  n:         integer;
-  wnd:       HWND;
-  chunk:     PTelnetChunk;
-  recvBuf:   array[0..8191] of AnsiChar;
+  chunk: PTelnetChunk;
+  n:     integer;
+begin
+  n := Length(L);
+  if n > SizeOf(chunk^.Data) - 3 then
+     begin
+     n := SizeOf(chunk^.Data) - 3;   // room for CR + NUL
+     end;
+  New(chunk);
+  if n > 0 then
+     begin
+     Move(L[1], chunk^.Data[0], n);
+     end;
+  // ProcessTelnetString scans for a char <= #13 to END a line, so a bare line
+  // with the terminator already stripped would never be emitted.  Put the CR
+  // back.  This keeps that 494-line column parser byte-for-byte unchanged --
+  // it now simply always receives exactly one whole line, which is the point.
+  chunk^.Data[n] := #13;
+  chunk^.Data[n + 1] := #0;
+  chunk^.Len := n + 1;
+  if TR4W_TELNET_DEBUG then
+     begin
+     logger.Info('[Telnet RX %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
+     end;
+  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+              WM_TELNET_MSG, TELNET_DATA, LPARAM(chunk));
+end;
+
+procedure TClusterEvents.Connected;
+begin
+  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+              WM_TELNET_MSG, TELNET_CONNECTED, 0);
+end;
+
+procedure TClusterEvents.Disconnected(const Text: string; Code: Integer);
+begin
+  // Connect failure and mid-session close are the same message to the user; the
+  // handler distinguishes them, as before, by which one it receives.
+  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+              WM_TELNET_MSG, TELNET_CLOSED, Code);
+end;
+
+// Runs on its own thread purely because Connect BLOCKS (10 s timeout) and must
+// not freeze the UI.  Once connected, the client's own reader thread takes over
+// and this one exits -- there is no recv loop here any more.
+function TelnetThreadProc(Param: Pointer): DWORD; stdcall;
 begin
   Result := 0;
-  wnd := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
 
   if TR4W_TELNET_DEBUG then
      begin
      logger.Info('[Telnet] Connecting to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
      end;
 
-  if not GetConnection(localSock, PendingTelnetHost, PendingTelnetPort, SOCK_STREAM) then
+  if not ClusterClient.Connect(string(AnsiString(PAnsiChar(@PendingTelnetHost[0]))),
+                               PendingTelnetPort) then
      begin
-     PostMessage(wnd, WM_TELNET_MSG, TELNET_CONNECT_FAILED, WSAGetLastError);
+     // Reason already reported through OnDisconnected; tell the window the
+     // ATTEMPT failed so it prints "failed to connect" rather than "closed".
+     PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+                 WM_TELNET_MSG, TELNET_CONNECT_FAILED, 0);
      Exit;
      end;
 
-  // Issue #23 -- if Disconnect/window-close happened while we were blocked in
-  // connect, bail out now (closing the freshly-connected socket) instead of
-  // publishing it and entering the recv loop -- avoids an orphaned thread/socket.
+  // Issue #23 -- Disconnect/window-close while we were blocked in connect: drop
+  // the link we just made instead of leaving it orphaned.
   if TelnetStopRequested then
      begin
-     closesocket(localSock);
-     Exit;
-     end;
-
-  TelnetSock := localSock;   // publish for the send path (main thread); recv uses localSock
-  PostMessage(wnd, WM_TELNET_MSG, TELNET_CONNECTED, 0);
-
-  while True do
-     begin
-     n := recv(localSock, recvBuf, SizeOf(recvBuf) - 1, 0);
-     if n < 1 then
-        begin
-        // 0 = graceful close, < 0 = error (incl. a Disconnect that closed the
-        // socket out from under us).  Report and end the thread.
-        PostMessage(wnd, WM_TELNET_MSG, TELNET_CLOSED, WSAGetLastError);
-        Break;
-        end;
-
-     New(chunk);
-     chunk^.Len := n;
-     Move(recvBuf[0], chunk^.Data[0], n);
-     chunk^.Data[n] := #0;
-     if TR4W_TELNET_DEBUG then
-        begin
-        logger.Info('[Telnet RX %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
-        end;
-     PostMessage(wnd, WM_TELNET_MSG, TELNET_DATA, LPARAM(chunk));
+     ClusterClient.Disconnect;
      end;
 end;
 
@@ -999,14 +1040,15 @@ var
 begin
   if TR4W_TELNET_DEBUG then   // Issue #23 -- log every disconnect
      begin
-     logger.Info('[Telnet] Disconnecting (socket %d)', [TelnetSock]);
+     logger.Info('[Telnet] Disconnecting (connected=%s)',
+                 [BoolToStr(ClusterClient.IsConnected, True)]);
      end;
   StackTelHandle := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
 
-  // Issue #23 -- show a disconnect message only if we were actually connected
-  // (TelnetSock <> 0).  A failed connect routes through here too but never
-  // connected, so "DISCONNECTED from" would be wrong there.
-  if TelnetSock <> 0 then
+  // Issue #23 -- show a disconnect message only if we were actually connected.
+  // A failed connect routes through here too but never connected, so
+  // "DISCONNECTED from" would be wrong there.
+  if ClusterClient.IsConnected then
      begin
      Format(wsprintfBuffer, '%s%s:%u', TC_DISCONNECTEDFROM, @PendingTelnetHost[0],
        PendingTelnetPort);
@@ -1014,15 +1056,15 @@ begin
      end;
 
   // Tell a still-connecting thread to bail (it checks this after connect, since
-  // we can't unblock its in-progress connect via the socket).
+  // we can't unblock an in-progress connect).
   TelnetStopRequested := True;
 
-  // Close the socket first -- this unblocks the I/O thread's recv so it can
-  // exit -- then JOIN the thread before any teardown.  Without the join the
-  // main thread tore down (and kept allocating/logging) while the raw I/O
-  // thread was still terminating, which corrupted state and crashed.
-  closesocket(TelnetSock);
-  TelnetSock := 0;
+  // Drop the link first -- this unblocks the client's reader so it can exit --
+  // then JOIN the connect thread before any teardown.  Without the join the
+  // main thread tore down (and kept allocating/logging) while the I/O thread
+  // was still terminating, which corrupted state and crashed.  Disconnect
+  // itself joins the reader, so both threads are gone before we return.
+  ClusterClient.Disconnect;
   if TelThreadHandle <> 0 then
      begin
      WaitForSingleObject(TelThreadHandle, 5000);
@@ -1056,25 +1098,29 @@ var
   sent: integer;
 begin
   Result := 0;
-  if TelnetSock = 0 then
+  if not ClusterClient.IsConnected then
     Exit;
   if TR4W_TELNET_DEBUG then   // Issue #23
      begin
      logger.Info('[Telnet TX] %s', [p]);
      end;
   AddStringToTelnetConsole(p, tstSend);
-  // Issue #23 -- key off the send() return, not WSAGetLastError (which is only
-  // meaningful after SOCKET_ERROR and can read stale after a successful send,
-  // wrongly tearing down a healthy link).  Always runs on the main thread now,
-  // so a real failure can tear the dead socket down directly (closing it also
-  // unblocks the I/O thread's recv).
-  sent := WinSock2.Send(TelnetSock, wsprintfBuffer,
-    Format(wsprintfBuffer, '%s'#13#10, p), 0);
-  if sent = SOCKET_ERROR then
-  begin
-    Result := WSAGetLastError;
-    TelnetConnectionError(Result);
-    Disconnect;
+  // The CRLF the old code appended by hand is now SendLine's job, and the
+  // shared wsprintfBuffer it formatted through is gone with it -- that global
+  // was only ever safe because this runs on the main thread.
+  //
+  // Failure is an exception from Indy rather than a SOCKET_ERROR return, so the
+  // teardown that used to follow a bad send() lives in the handler below.  Same
+  // outcome: report, then drop the dead link.
+  try
+    ClusterClient.SendLine(AnsiString(p));
+  except
+    on E: Exception do
+      begin
+      Result := -1;
+      AddStringToTelnetConsole(PAnsiChar(AnsiString(E.Message)), tstError);
+      Disconnect;
+      end;
   end;
 end;
 
@@ -1248,15 +1294,6 @@ begin
 {$ENDIF}
   end;
 
-end;
-
-function TestSocketBuffer: Integer; // Gav 4.44.6
-begin
-  ioctlsocket(TelnetSock, FIONREAD, u_long(Result));
-  if TelnetSock <> SOCKET_ERROR then
-    ioctlsocket(TelnetSock, FIONREAD, u_long(Result))
-  else
-    result := 1;
 end;
 
 function ProcessDX(DX: integer; InListBox: boolean; var Stringtype:
@@ -1624,9 +1661,14 @@ begin
 
 end;
 
+function TelnetIsConnected: boolean;
+begin
+  Result := (ClusterClient <> nil) and ClusterClient.IsConnected;
+end;
+
 procedure SendClientStatus;
 begin
-  ClientStatus.csTelnet := TelnetSock <> 0;
+  ClientStatus.csTelnet := ClusterClient.IsConnected;
   SendToNet(ClientStatus, SizeOf(ClientStatus));
 end;
 
@@ -1707,6 +1749,19 @@ begin
     Exit;
   AppendTelnetPopupMenu(@FileString^[1]);
 end;
+
+initialization
+  ClusterEvents := TClusterEvents.Create;
+  ClusterClient := TDXClusterClient.Create;
+  ClusterClient.OnLine         := ClusterEvents.Line;
+  ClusterClient.OnConnected    := ClusterEvents.Connected;
+  ClusterClient.OnDisconnected := ClusterEvents.Disconnected;
+
+finalization
+  // Destroy stops the reader and closes the socket; do it before the events
+  // object goes, or a line arriving during teardown would call into freed code.
+  ClusterClient.Free;
+  ClusterEvents.Free;
 
 end.
 

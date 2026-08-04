@@ -67,6 +67,7 @@ uses
   uRadio12 in 'src\uRadio12.pas',
   uFunctionKeys in 'src\uFunctionKeys.pas',
   uinet in 'src\uinet.pas',
+  uDXClusterClient in 'src\uDXClusterClient.pas',
   uTelnet in 'src\uTelnet.pas',
   uBandmap in 'src\uBandmap.pas',
   uFileView in 'src\uFileView.pas',
