@@ -283,6 +283,12 @@ var
   // Scratch for one received line, main thread only (the window procedure and
   // the list-box re-decode).  Replaces the 20 KB TelnetBuffer global in TF.pas.
   TelnetLine: AnsiString;
+  // "A session was established and has not been torn down yet" -- the UI's own
+  // state, NOT the socket's.  These are different facts the moment the far end
+  // hangs up: the socket is gone while the toolbar still shows a live session.
+  // This is what `TelnetSock <> 0` actually meant before the socket moved into
+  // TDXClusterClient.  Main thread only.
+  TelnetSessionActive: boolean;
   PendingTelnetHost: array[0..255] of AnsiChar;   // set on the main thread before the I/O thread starts
   PendingTelnetPort: Word;
 
@@ -603,6 +609,7 @@ begin
                  begin
                  logger.Info('[Telnet] Connected to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
                  end;
+              TelnetSessionActive := True;   // there is now something to tear down
               Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
               AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
@@ -647,9 +654,20 @@ begin
 
           TELNET_CLOSED:
             begin
-              // Ignore if the user already disconnected; otherwise this is a
-              // server-initiated / network close.
-              if ClusterClient.IsConnected then
+              // Guard on the SESSION, not on the socket.  This asks "is there a
+              // session still to tear down", which is exactly what the old
+              // `TelnetSock <> 0` meant -- that handle was cleared only by our
+              // own Disconnect.
+              //
+              // Asking ClusterClient.IsConnected here was WRONG and shipped
+              // broken: on a SERVER-initiated close the socket is already down
+              // by the time this posted message is handled, so the guard was
+              // False precisely in the case it exists to handle.  Disconnect
+              // never ran, so the toolbar kept showing a live session -- Connect
+              // greyed, Disconnect enabled -- and TelThreadID was never cleared,
+              // which also blocked reconnecting.  (NY4I: sent `bye` to the
+              // simulator, 2026-08-04.)
+              if TelnetSessionActive then
                  begin
                  if lParam <> 0 then
                     begin
@@ -1053,7 +1071,11 @@ begin
   // Issue #23 -- show a disconnect message only if we were actually connected.
   // A failed connect routes through here too but never connected, so
   // "DISCONNECTED from" would be wrong there.
-  if ClusterClient.IsConnected then
+  //
+  // Guarded on the SESSION for the same reason as the TELNET_CLOSED handler: on
+  // a server-initiated close the socket is already gone, so IsConnected would
+  // suppress the very message the operator most needs to see.
+  if TelnetSessionActive then
      begin
      Format(wsprintfBuffer, '%s%s:%u', TC_DISCONNECTEDFROM, @PendingTelnetHost[0],
        PendingTelnetPort);
@@ -1077,6 +1099,9 @@ begin
      TelThreadHandle := 0;
      end;
   TelThreadID := 0;
+  // Session is over: the next TELNET_CLOSED (a late one from the reader, say)
+  // must not run this teardown a second time.
+  TelnetSessionActive := False;
 
   EnableWindowFalse(StackTelHandle, 104);
   EnableWindowTrue(StackTelHandle, 102);
