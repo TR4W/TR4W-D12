@@ -299,18 +299,38 @@ begin
       else if pos(ControlD, Message) = 0 then
       begin
         //          wkWaitForChainablemessage := True;
-        // Skip the flush only when CW-by-CAT is in progress AND flushing would
-        // wreck this radio's timing.  Was `RadioModel in ICOMRadios`; the radio
-        // now declares the property itself (rcCWFlushDisruptsTiming), named for
-        // the MECHANISM -- the rate-limited CI-V send queue -- rather than the
-        // vendor, so a future non-Icom with a queued keyer can say so honestly.
-        // ny4i Issue 145: "Don't do this for Icom radios. It messes up the times
-        // of CW Messages."
-        if not (IsCWByCATActive and
-          ActiveRadioPtr^.HasCapability(rcCWFlushDisruptsTiming)) then
-        begin
-          FlushCWBuffer;
-        end;
+        // A new function-key message must first stop whatever is still going
+        // out.  BENCH THIS -- see below; it is the change under test.
+        //
+        // This used to skip the flush entirely when the active radio declared
+        // rcCWFlushDisruptsTiming, which every Icom does (uRadioIcomBase.Create,
+        // family-wide).  ny4i Issue 145: "Don't do this for Icom radios.  It
+        // messes up the times of CW Messages."
+        //
+        // The cost of that skip was measured on an IC-7100 (NY4I, 2026-08-04):
+        // F9 pressed 1.05 s into an F1 message did not stop it, and then keyed
+        // AFTER it finished.  The log shows why -- no StopCW between the two
+        // sends, because FlushCWBuffer never ran:
+        //
+        //   54.767  Setting tmrCWByCAT timer to 7429 ms
+        //   54.767  [Icom IC-7100.SendCW] Sending CW: "TU W8UH TEST"
+        //   55.818  [FunctionKeysWindow] MOUSE CLICK on F9 received
+        //   55.823  [Icom IC-7100.SendCW] Sending CW: "?"
+        //
+        // WHY THE SKIP LOOKS OBSOLETE.  It predates the 2026-08-01 K3 fix in
+        // TCWKeyerCAT.Flush.  Until then Flush fired a keyer abort before EVERY
+        // function-key message, including when the radio was sitting idle -- and
+        // on a rate-limited CI-V send queue that is exactly what would "mess up
+        // the times of CW Messages".  Flush now aborts ONLY when
+        // CWByCAT_Sending is true, so the mechanism Issue 145 was working around
+        // is gone at its source, and the skip costs only the abort.
+        //
+        // rcCWFlushDisruptsTiming is deliberately still DECLARED and still
+        // asserted by uTestIcomRegistry, but is no longer consulted anywhere: if
+        // the bench shows Issue 145's timing problem returning, restoring the
+        // condition here is the one-line revert.  If it does not, the capability
+        // goes with a follow-up commit.
+        FlushCWBuffer;
       end;
     end;
 
