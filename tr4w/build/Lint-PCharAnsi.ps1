@@ -26,9 +26,98 @@
 #>
 [CmdletBinding()]
 param(
+   # Whole-tree mode, matching Lint-RadioRegistry / Lint-PollRadioState so the
+   # build wires all three the same way.  Enumerating here rather than globbing
+   # in the PreBuildEvent also keeps ~250 paths off the command line.
+   [string] $SourceDir,
+
    [Parameter(ValueFromRemainingArguments = $true)]
    [string[]] $Path
 )
+
+if ($SourceDir) {
+   if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
+      Write-Error "Lint-PCharAnsi: source directory not found: $SourceDir"
+      exit 2
+   }
+   # Filter on the EXTENSION, not -Include.  With an absolute -LiteralPath,
+   # `-Include *.pas` also matches `uTelnet.pas.bad` and
+   # `SysUtils.pas.d7-shadow` -- retired files that are not compiled and never
+   # will be -- so the first wired build failed on dead code.  (It does not
+   # match them with a RELATIVE path, which is why this passed when run by hand
+   # and failed under msbuild.)  `.Extension` is exact and has no such quirk.
+   #
+   # include\ is VENDORED (Indy, pcre): third-party code we do not own and will
+   # not annotate.  Everything under src\ is ours and is linted.
+   $Path = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File |
+                Where-Object { $_.Extension -ieq '.pas' -and
+                               $_.FullName -notmatch '\\include\\' } |
+                Select-Object -ExpandProperty FullName)
+}
+
+# Blank out everything that is not live code, carrying block-comment state
+# across lines, and return the code-only text.
+#
+# The previous version stripped only TRAILING single-line comments, so it could
+# not see a `{ ... }` block spanning lines -- and reported four "violations"
+# inside a commented-out TS-850 block in LOGRADIO.PAS.  A linter that fires on
+# commented-out code is one people learn to ignore, which is worse than no
+# linter, so this scans properly.
+#
+# Three things it must NOT get wrong:
+#   * `{$IFDEF}` / `(*$...*)` are DIRECTIVES, not comments -- the code they
+#     guard is live and must still be linted.
+#   * a brace inside a string literal ('{') opens nothing.
+#   * `//` inside a string literal ('http://...') comments out nothing.
+function Get-CodeOnly {
+   param([string] $Line, [ref] $State)   # State: '' | '{' | '(*'
+
+   $out = New-Object System.Text.StringBuilder
+   $i = 0
+   $inStr = $false
+
+   while ($i -lt $Line.Length) {
+      $c  = $Line[$i]
+      $c2 = if ($i + 1 -lt $Line.Length) { $Line[$i + 1] } else { "`0" }
+
+      switch ($State.Value) {
+         '{' {
+            if ($c -eq '}') { $State.Value = '' }
+            $i++
+            continue
+         }
+         '(*' {
+            if ($c -eq '*' -and $c2 -eq ')') { $State.Value = ''; $i += 2 } else { $i++ }
+            continue
+         }
+      }
+
+      if ($inStr) {
+         if ($c -eq "'") { $inStr = $false }
+         [void]$out.Append($c)
+         $i++
+         continue
+      }
+
+      if ($c -eq "'") { $inStr = $true; [void]$out.Append($c); $i++; continue }
+      if ($c -eq '/' -and $c2 -eq '/') { break }                      # rest of line
+      if ($c -eq '{') {
+         if ($c2 -eq '$') { [void]$out.Append($c); $i++; continue }   # directive: live code
+         $State.Value = '{'; $i++; continue
+      }
+      if ($c -eq '(' -and $c2 -eq '*') {
+         if (($i + 2 -lt $Line.Length) -and $Line[$i + 2] -eq '$') {
+            [void]$out.Append($c); $i++; continue                     # directive: live code
+         }
+         $State.Value = '(*'; $i += 2; continue
+      }
+
+      [void]$out.Append($c)
+      $i++
+   }
+
+   return $out.ToString()
+}
 
 $violations = 0
 
@@ -36,19 +125,20 @@ foreach ($file in $Path) {
    if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { continue }
 
    $lines = Get-Content -LiteralPath $file
+   $state = ''
    for ($i = 0; $i -lt $lines.Count; $i++) {
 
       $raw = $lines[$i]
 
+      # Sanitize FIRST and unconditionally -- the state machine has to see every
+      # line, including ones we go on to skip, or a `{` on a skipped line leaves
+      # the scanner out of step for the rest of the file.
+      $ref  = [ref] $state
+      $code = (Get-CodeOnly -Line $raw -State $ref).TrimEnd()
+      $state = $ref.Value
+
       # Explicit opt-out for a genuinely-wide site.
       if ($raw -match 'lint:wide-ok') { continue }
-
-      # Strip trailing comments, then trim (same approach as the begin/end linter).
-      $code = $raw
-      $code = $code -replace '//.*$', ''
-      $code = $code -replace '\{[^}]*\}\s*$', ''
-      $code = $code -replace '\(\*.*?\*\)\s*$', ''
-      $code = $code.TrimEnd()
       if ($code -eq '') { continue }
 
       # Rule A: PChar(...)[  -- indexing a PChar cast is a byte-walk (2-byte stride in D12).
@@ -66,4 +156,11 @@ foreach ($file in $Path) {
    }
 }
 
-if ($violations -gt 0) { exit 1 } else { exit 0 }
+if ($violations -gt 0) { exit 1 }
+
+# Say so on success, like the other two wired lints -- a gate that prints
+# nothing when it passes is indistinguishable from one that never ran.
+if ($SourceDir) {
+   Write-Output ("Lint-PCharAnsi: {0} source files checked, no D12 PChar hazards." -f $Path.Count)
+}
+exit 0
