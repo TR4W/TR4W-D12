@@ -65,8 +65,45 @@ type
 
       // Rejection and degenerate input
       procedure Test_BadCallSyntaxRejected;
-      procedure Test_TruncatedLineAccepted_KNOWN_DEFECT;
-      procedure Test_EmptyLineAccepted_KNOWN_DEFECT;
+      procedure Test_TruncatedLineRejected;
+      procedure Test_EmptyLineRejected;
+
+      // ParseSplitHint -- the comment grammar, tested on comments directly
+      procedure CheckHint(const Comment: string; BaseHz: integer; Mode: ModeType;
+                          ExpectHz: integer; const ctx: string);
+      procedure Test_Hint_QSX_Kilohertz;
+      procedure Test_Hint_QSX_Megahertz;
+      procedure Test_Hint_QSX_DottedMegahertz;
+      procedure Test_Hint_QSX_SpelledUnit;
+      procedure Test_Hint_QSX_SmallValueIsAnOffset;
+      procedure Test_Hint_QSX_WithDirection;
+      procedure Test_Hint_CaseInsensitive;
+      procedure Test_Hint_Listening_Absolute;
+      procedure Test_Hint_Listening_Synonyms;
+      procedure Test_Hint_RX_Absolute;
+      procedure Test_Hint_Split_UpAndDown;
+      procedure Test_Hint_Down_Synonyms;
+      procedure Test_Hint_Range_TakesLowEnd;
+      procedure Test_Hint_Postfix;
+      procedure Test_Hint_FractionalOffset;
+      procedure Test_Hint_AbsoluteAfterDirection;
+      procedure Test_Hint_AutoSplit_CW;
+      procedure Test_Hint_AutoSplit_Phone;
+      procedure Test_Hint_AutoSplit_BareSplit;
+      procedure Test_Hint_AutoSplit_CommentModeWins;
+      procedure Test_Hint_AutoSplit_NotOnDigital;
+      procedure Test_Hint_AutoSplit_NotWhenModeUnknown;
+      procedure Test_Hint_ExplicitBeatsAutoSplit;
+      procedure Test_Hint_Reject_NoKeyword;
+      procedure Test_Hint_Reject_NotSplit;
+      procedure Test_Hint_Reject_PileUp;
+      procedure Test_Hint_Reject_GridSquares;
+      procedure Test_Hint_Reject_GridEndingInUP;
+      procedure Test_Hint_Reject_OversizedOffset;
+      procedure Test_Hint_Reject_SignalReports;
+      procedure Test_Hint_Reject_Junk;
+      procedure Test_Hint_Reject_OutOfBand;
+      procedure Test_Hint_Reject_BareR;
 
       // The time stamp
       procedure Test_Time_Parsed;
@@ -229,23 +266,23 @@ var
    plainSpot, longSpot: TSpotRecord;
 begin
    BeginTest('Test_SourceCall_LengthByteQuirk');
-   // PINS A KNOWN DEFECT, unchanged from D7 (verified in the D7 tree, tagged
-   // "4.92.6").  SetLength on FSourceCall is guarded by "next column is not a
-   // space" while the character copy is not, so on the ORDINARY line -- where
-   // the spotter field IS blank-padded -- the length byte stays 0 and the
-   // spotter reads as an empty Pascal string.  It has never shown because
-   // every consumer reads @FSourceCall[1], i.e. as a C string.  Assigning
-   // FSourceCall to another CallString, or passing it to anything expecting a
-   // Pascal string, silently yields ''.
+   // REGRESSION PIN for a defect that survived from D7 (tagged "4.92.6" and
+   // identical in the D7 tree): SetLength on FSourceCall was guarded by "next
+   // column is not a space" while the character copy was not.  On the ORDINARY
+   // blank-padded line -- 198,759 of the 198,979 captured -- the characters
+   // landed in the field and the length byte stayed 0, so the spotter read as
+   // '' as a Pascal string and correctly only through @FSourceCall[1].
+   //
+   // Both readings must now agree, which is the whole point.
    CheckTrue(ParseDXSpotLine(PLAIN, plainSpot), 'plain line decodes');
-   CheckEquals(0, Length(plainSpot.FSourceCall),
-               'padded spotter: length byte NOT written (defect, pinned)');
-   CheckEquals('N4RJ', CallCStr(@plainSpot.FSourceCall[1]),
-               'the characters are there all the same');
+   CheckEquals(4, Length(plainSpot.FSourceCall),
+               'padded spotter: length byte written');
+   CheckEquals('N4RJ', string(plainSpot.FSourceCall), 'as a Pascal string');
+   CheckEquals('N4RJ', CallCStr(@plainSpot.FSourceCall[1]), 'as a C string');
 
    CheckTrue(ParseDXSpotLine(LONGSPTR, longSpot), 'long-spotter line decodes');
-   CheckEquals(11, Length(longSpot.FSourceCall),
-               'unpadded spotter: length byte IS written');
+   CheckEquals(11, Length(longSpot.FSourceCall), 'unpadded spotter length');
+   CheckEquals('3V/KF5EYY-#', string(longSpot.FSourceCall), 'as a Pascal string');
 end;
 
 { ---- REAL: QSX ------------------------------------------------------------ }
@@ -388,31 +425,27 @@ begin
    CheckFalse(ParseDXSpotLine(BADCALL, spot), 'a call with no letters is rejected');
 end;
 
-procedure TDXSpotParseTests.Test_TruncatedLineAccepted_KNOWN_DEFECT;
+procedure TDXSpotParseTests.Test_TruncatedLineRejected;
 var
    spot: TSpotRecord;
 begin
-   BeginTest('Test_TruncatedLineAccepted_KNOWN_DEFECT');
-   // REAL: exactly one of the 198,979 captured lines is cut off like this
-   // (a node dropping mid-write).  The call-scan loop never matches, so
-   // GoodCallSyntax is never reached and the decoder reports SUCCESS with an
-   // empty call and a zero frequency.  ProcessDX then dupe-checks and band-maps
-   // that empty spot.  Pinned, not fixed: rejecting it is a behaviour change
-   // and belongs in its own commit.
-   CheckTrue(ParseDXSpotLine(TRUNC, spot), 'truncated line reports success (defect)');
-   CheckEquals('', string(spot.FCall), 'with no call at all');
-   CheckEquals(0, spot.FFrequency, 'and no frequency');
+   BeginTest('Test_TruncatedLineRejected');
+   // REGRESSION PIN.  REAL: exactly one of the 198,979 captured lines is cut off
+   // like this, a node dropping mid-write.  The call-scan loop never matches, so
+   // GoodCallSyntax -- the only validation there is -- was never reached, and
+   // the decoder used to report SUCCESS.  ProcessDX would then dupe-check,
+   // band-map and display a spot with an empty callsign and a zero frequency.
+   CheckFalse(ParseDXSpotLine(TRUNC, spot), 'a line with no call is not a spot');
 end;
 
-procedure TDXSpotParseTests.Test_EmptyLineAccepted_KNOWN_DEFECT;
+procedure TDXSpotParseTests.Test_EmptyLineRejected;
 var
    spot: TSpotRecord;
 begin
-   BeginTest('Test_EmptyLineAccepted_KNOWN_DEFECT');
-   // Same defect at its limit.  It also proves the NUL fill holds: an empty
+   BeginTest('Test_EmptyLineRejected');
+   // The same rule at its limit.  It also proves the NUL fill holds: an empty
    // line must not read off the end of the buffer.
-   CheckTrue(ParseDXSpotLine('', spot), 'empty line reports success (defect)');
-   CheckEquals(0, spot.FFrequency, 'nothing decoded');
+   CheckFalse(ParseDXSpotLine('', spot), 'an empty line is not a spot');
 end;
 
 { ---- the time stamp ------------------------------------------------------- }
@@ -448,6 +481,348 @@ begin
    CheckEquals(19 * 60 + 17, minuteOfDay, 'minutes since midnight UTC');
 end;
 
+{ ---- ParseSplitHint: the comment grammar ---------------------------------- }
+
+// ExpectHz = 0 means "no hint": the grammar must decline rather than guess.
+procedure TDXSpotParseTests.CheckHint(const Comment: string; BaseHz: integer;
+                                      Mode: ModeType; ExpectHz: integer;
+                                      const ctx: string);
+var
+   hz: integer;
+   found: boolean;
+begin
+   found := ParseSplitHint(AnsiString(Comment), BaseHz, Mode, hz);
+   if ExpectHz = 0 then
+      begin
+      CheckFalse(found, ctx + ' -- must not be read as a split');
+      CheckEquals(0, hz, ctx + ' -- and must leave the frequency alone');
+      end
+   else
+      begin
+      CheckTrue(found, ctx + ' -- must be recognised');
+      CheckEquals(ExpectHz, hz, ctx);
+      end;
+end;
+
+procedure TDXSpotParseTests.Test_Hint_QSX_Kilohertz;
+begin
+   BeginTest('Test_Hint_QSX_Kilohertz');
+   CheckHint('QSX 7275.10', 7105000, CW, 7275100, 'QSX 7275.10 kHz');
+   CheckHint('QSX 7082 QRV', 7240000, CW, 7082000, 'QSX 7082 kHz');
+   CheckHint('QSX 28040.942', 28020000, CW, 28040942, 'QSX to the Hz');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_QSX_Megahertz;
+begin
+   BeginTest('Test_Hint_QSX_Megahertz');
+   // REAL comments, all of which the old decoder dropped: an integer part under
+   // 1000 with a decimal point is MHz, because no ham band is at 14 kHz.
+   CheckHint('QSX 14.030', 14025000, CW, 14030000, 'QSX 14.030 MHz');
+   CheckHint('QSX 24.9015', 24891000, CW, 24901500, 'QSX 24.9015 MHz');
+   CheckHint('QSX 28.029', 28029000, CW, 28029000, 'QSX 28.029 MHz');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_QSX_DottedMegahertz;
+begin
+   BeginTest('Test_Hint_QSX_DottedMegahertz');
+   // REAL: European-style grouping, MHz.kHz.Hz.  The old decoder produced the
+   // spot's OWN frequency for these -- its running divisor reached zero and
+   // zeroed the result, which then fell under the "small value is an offset"
+   // rule and was added to the base.  Silently wrong, not dropped.
+   CheckHint('USB QSX 21.290.000 UP 5-10', 21250000, Phone, 21290000,
+             'QSX 21.290.000');
+   CheckHint('CW QSX 18.072.411', 18069000, CW, 18072411, 'QSX 18.072.411');
+   CheckHint('QSX 24.899.87', 24897700, CW, 24899870, 'QSX 24.899.87');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_QSX_SpelledUnit;
+begin
+   BeginTest('Test_Hint_QSX_SpelledUnit');
+   // REAL.  Without honouring the spelled-out unit, "18.072" after a direction
+   // reads as an 18 kHz offset and lands 15 kHz from the DX.
+   CheckHint('QSX UP 18.072 MHZ  STRONG SIGN', 18069000, CW, 18072000,
+             'QSX UP 18.072 MHZ');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_QSX_SmallValueIsAnOffset;
+begin
+   BeginTest('Test_Hint_QSX_SmallValueIsAnOffset');
+   // The original decoder's rule, deliberately preserved: under 10 kHz after an
+   // introducer is a distance, not a frequency.  Real comments rely on it.
+   CheckHint('QSX 5', 14025000, CW, 14030000, 'QSX 5 = 5 kHz up');
+   CheckHint('LISTENING 5 UP.', 50115000, Phone, 50120000, 'LISTENING 5');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_QSX_WithDirection;
+begin
+   BeginTest('Test_Hint_QSX_WithDirection');
+   CheckHint('QSX UP 5', 14025000, CW, 14030000, 'QSX UP 5');
+   CheckHint('QSX UP1', 14025000, CW, 14026000, 'QSX UP1');
+   CheckHint('LSN UP 5', 14025000, CW, 14030000, 'LSN UP 5');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_CaseInsensitive;
+begin
+   BeginTest('Test_Hint_CaseInsensitive');
+   // Nodes are not consistent about case, and TR4W no longer upper-cases the
+   // line buffer in place before matching, so this is a real risk rather than a
+   // theoretical one.
+   CheckHint('qsx 7275.10', 7105000, CW, 7275100, 'lower-case qsx');
+   CheckHint('Split Up 5', 14025000, CW, 14030000, 'mixed-case Split Up');
+   CheckHint('listening 7093.5', 7203000, CW, 7093500, 'lower-case listening');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Listening_Absolute;
+begin
+   BeginTest('Test_Hint_Listening_Absolute');
+   // REAL: the listening forms carry an absolute frequency at least as often as
+   // an offset.  None of these were recognised at all before.
+   CheckHint('LSN 7217', 7086900, CW, 7217000, 'LSN 7217');
+   CheckHint('LISTENING 7093.5', 7203000, CW, 7093500, 'LISTENING 7093.5');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Listening_Synonyms;
+begin
+   BeginTest('Test_Hint_Listening_Synonyms');
+   CheckHint('LISTENING UP 2', 7005000, CW, 7007000, 'LISTENING');
+   CheckHint('LISTENS UP 2', 7005000, CW, 7007000, 'LISTENS');
+   CheckHint('LISTEN UP 2', 7005000, CW, 7007000, 'LISTEN');
+   CheckHint('LSTN UP 2', 7005000, CW, 7007000, 'LSTN');
+   CheckHint('LSN UP 2', 7005000, CW, 7007000, 'LSN');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_RX_Absolute;
+begin
+   BeginTest('Test_Hint_RX_Absolute');
+   CheckHint('RX 14205', 14195000, Phone, 14205000, 'RX with a frequency');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Split_UpAndDown;
+begin
+   BeginTest('Test_Hint_Split_UpAndDown');
+   CheckHint('CQ DX SPLIT UP 5', 14025000, CW, 14030000, 'SPLIT UP 5');
+   CheckHint('SPLIT DOWN 2', 14025000, CW, 14023000, 'SPLIT DOWN 2');
+   CheckHint('SPLT UP 3', 14025000, CW, 14028000, 'SPLT');
+   CheckHint('SPL UP 3', 14025000, CW, 14028000, 'SPL');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Down_Synonyms;
+begin
+   BeginTest('Test_Hint_Down_Synonyms');
+   CheckHint('DOWN 2', 14025000, CW, 14023000, 'DOWN 2');
+   CheckHint('DWN 2', 14025000, CW, 14023000, 'DWN 2');
+   CheckHint('QSX DOWN 1.5', 14025000, CW, 14023500, 'QSX DOWN 1.5');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Range_TakesLowEnd;
+begin
+   BeginTest('Test_Hint_Range_TakesLowEnd');
+   // "Listening 5 to 10 up" means start at the bottom of the range.
+   CheckHint('UP 5-10', 14025000, CW, 14030000, 'UP 5-10 takes the 5');
+   CheckHint('UP 5 - 10', 14025000, CW, 14030000, 'spaced range');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Postfix;
+begin
+   BeginTest('Test_Hint_Postfix');
+   // REAL and common: the number comes FIRST.  "5UP" with no space has to work
+   // too, while the grid square DM33UP must not (see Test_Hint_Reject_*).
+   CheckHint('5 UP', 50115000, Phone, 50120000, '5 UP');
+   CheckHint('WRKD 5UP', 14025000, CW, 14030000, '5UP');
+   CheckHint('TNX FOR GOOD QSO, 5 UP', 14025000, CW, 14030000, 'trailing 5 UP');
+   CheckHint('WRKD 2.5 UP. GOOD COPY', 7005000, CW, 7007500, '2.5 UP');
+   CheckHint('CALLING CQ TNX 1 UP', 28025000, CW, 28026000, '1 UP');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_FractionalOffset;
+begin
+   BeginTest('Test_Hint_FractionalOffset');
+   // REAL, and the old decoder truncated every one of these to whole kHz: it
+   // read the digits before the point and stopped, so "UP 1.5" tuned 500 Hz low.
+   CheckHint('UP 1.5', 24892000, CW, 24893500, 'UP 1.5');
+   CheckHint('UP 5.9', 14025000, CW, 14030900, 'UP 5.9');
+   CheckHint('TNX NEW BAND. CW UP 1.34', 21061000, CW, 21062340, 'UP 1.34');
+   CheckHint('CN84LV<>AH48 UP1.95K', 24891000, CW, 24892950, 'UP1.95K');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_AbsoluteAfterDirection;
+begin
+   BeginTest('Test_Hint_AbsoluteAfterDirection');
+   // REAL: "UP 1829.5" is a frequency, not a 1,829 kHz offset.  The old decoder
+   // added it to the base and reported 3655 kHz -- a different band.
+   CheckHint('UP 1829.5', 1826000, CW, 1829500, 'UP <absolute kHz>');
+   CheckHint('UP 7259.1', 7105000, CW, 7259100, 'UP 7259.1');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_AutoSplit_CW;
+begin
+   BeginTest('Test_Hint_AutoSplit_CW');
+   // AUTO SPLIT: bare UP is 1 kHz up on CW.  76 bare "UP"s in the capture, all
+   // of which the old decoder ignored.
+   CheckHint('UP', 28005000, CW, 28006000, 'bare UP on CW');
+   CheckHint('UP - LOUD', 21005000, CW, 21006000, 'UP with punctuation');
+   CheckHint('DOWN', 28005000, CW, 28004000, 'bare DOWN on CW');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_AutoSplit_Phone;
+begin
+   BeginTest('Test_Hint_AutoSplit_Phone');
+   CheckHint('UP', 14250000, Phone, 14255000, 'bare UP on phone');
+   CheckHint('UP', 29600000, FM, 29605000, 'bare UP on FM');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_AutoSplit_BareSplit;
+begin
+   BeginTest('Test_Hint_AutoSplit_BareSplit');
+   // REAL: a comment that is just the word SPLIT.  By convention that means up.
+   CheckHint('SPLIT', 21005000, CW, 21006000, 'bare SPLIT on CW');
+   CheckHint('SPLIT', 14250000, Phone, 14255000, 'bare SPLIT on phone');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_AutoSplit_CommentModeWins;
+begin
+   BeginTest('Test_Hint_AutoSplit_CommentModeWins');
+   // The band plan says this 160 m frequency has no mode at all; the spotter
+   // says CW.  REAL line: "UP TU NEW ONE 160M! CW" on 1826.5.
+   CheckHint('UP TU NEW ONE 160M! CW', 1826500, NoMode, 1827500,
+             'comment mode supplies what the band plan cannot');
+   // And where they disagree, the comment still wins.
+   CheckHint('CW UP', 14250000, Phone, 14251000, 'comment CW beats band-plan phone');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_AutoSplit_NotOnDigital;
+begin
+   BeginTest('Test_Hint_AutoSplit_NotOnDigital');
+   // There is no auto-split convention on FT8, and comments on those spots are
+   // full of the word UP for other reasons.
+   CheckHint('FT8 -13DB UP', 14074000, Digital, 0, 'bare UP on FT8');
+   CheckHint('RTTY UP', 14080000, Digital, 0, 'bare UP on RTTY');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_AutoSplit_NotWhenModeUnknown;
+begin
+   BeginTest('Test_Hint_AutoSplit_NotWhenModeUnknown');
+   // No mode in the comment and none from the band plan: no convention to
+   // apply, so nothing is invented.
+   CheckHint('UP', 1826500, NoMode, 0, 'bare UP with no mode anywhere');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_ExplicitBeatsAutoSplit;
+begin
+   BeginTest('Test_Hint_ExplicitBeatsAutoSplit');
+   // REAL: "CW SPLIT QSX 28.027.800".  Read strictly left to right, the bare
+   // SPLIT answers first and the exact frequency four words later is never
+   // reached.  A stated frequency must always win.
+   CheckHint('CW SPLIT QSX 28.027.800', 28023000, CW, 28027800,
+             'the stated QSX, not the SPLIT default');
+   CheckHint('USB QSX 24.970.000 SPLIT UP', 24960000, Phone, 24970000,
+             'stated frequency ahead of a trailing SPLIT UP');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_NoKeyword;
+begin
+   BeginTest('Test_Hint_Reject_NoKeyword');
+   CheckHint('', 14025000, CW, 0, 'empty comment');
+   CheckHint('CW 12 DB 22 WPM CQ', 14025000, CW, 0, 'a skimmer comment');
+   CheckHint('USB', 14250000, Phone, 0, 'just a mode');
+   CheckHint('ARRL INTERNATIONAL DX CONTEST', 14025000, CW, 0, 'a contest name');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_NotSplit;
+begin
+   BeginTest('Test_Hint_Reject_NotSplit');
+   // REAL: "NOT SPLIT" is in the capture.  The auto-split default would
+   // otherwise turn a denial into a QSX.
+   CheckHint('NOT SPLIT', 14025000, CW, 0, 'NOT SPLIT');
+   CheckHint('NO SPLIT', 14025000, CW, 0, 'NO SPLIT');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_PileUp;
+begin
+   BeginTest('Test_Hint_Reject_PileUp');
+   // REAL, four times.  Ordinary English that ends in the word UP.
+   CheckHint('PILE UP', 28762000, Phone, 0, 'PILE UP is not a split');
+   CheckHint('WHATS UP', 28762000, Phone, 0, 'WHATS UP is not a split');
+   CheckHint('SOUP 5', 14025000, CW, 0, 'UP inside a word');
+   CheckHint('UPSHUR COUNTY', 14025000, CW, 0, 'a word that starts with UP');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_GridSquares;
+begin
+   BeginTest('Test_Hint_Reject_GridSquares');
+   // THE EXPENSIVE ONE.  Letters and digits tokenize separately, so a grid
+   // square DN70 offers up a token spelled DN.  Every single "DN" in the
+   // 198,979-line capture is a grid square, never "down" -- which is why DN is
+   // not a synonym.  Before that was measured, 6 m grid comments decoded as
+   // 70 kHz down.
+   CheckHint('DN70MQ<>BL01XI', 50313000, Phone, 0, 'DN70 is a grid');
+   CheckHint('USB EN62CB -> DN11', 28565000, Phone, 0, 'DN11 is a grid');
+   CheckHint('FT8 -13DB FROM DN13 551HZ', 28074000, Digital, 0, 'DN13 is a grid');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_GridEndingInUP;
+begin
+   BeginTest('Test_Hint_Reject_GridEndingInUP');
+   // REAL: grid squares whose sub-square happens to be UP.  The postfix form
+   // "5UP" is legitimate, so the rule cannot simply be "no glued UP" -- it is
+   // that a keyword may follow a number only when the number starts the word.
+   CheckHint('FT8 FM05PN -> DM33UP TNX', 14074000, Digital, 0, 'DM33UP');
+   CheckHint('USB EM84UR -> GF29UP', 28450000, Phone, 0, 'GF29UP');
+   CheckHint('FT8 -18  FN32DR<>JN87UP', 14074000, Digital, 0, 'JN87UP');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_OversizedOffset;
+begin
+   BeginTest('Test_Hint_Reject_OversizedOffset');
+   // REAL: "UP 200-205" on 14195.  200 kHz up is 14395, outside the band; the
+   // spotter almost certainly meant 14200-14205 and wrote the last three digits.
+   // Ambiguous, so nothing is emitted -- the old decoder emitted 14395.
+   CheckHint('UP 200-205', 14195000, Phone, 0, 'a 200 kHz "offset"');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_SignalReports;
+begin
+   BeginTest('Test_Hint_Reject_SignalReports');
+   // REAL: "59 TU 73 UP LOUD OHIO".  The postfix form would read the 73 as an
+   // offset.  Nobody splits 73 kHz, so the number is refused -- and the bare UP
+   // that remains still gets the auto-split default, which is the right answer.
+   CheckHint('59 TU 73 UP LOUD OHIO', 14250000, Phone, 14255000,
+             '73 is not an offset, but UP is still UP');
+   CheckHint('57 UP', 28450000, Phone, 28455000, '57 is not an offset');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_Junk;
+begin
+   BeginTest('Test_Hint_Reject_Junk');
+   // REAL, all four: an introducer with nothing usable after it.  A bare
+   // introducer is a missing frequency, not a convention, so it gets no guess.
+   CheckHint('QSX ??? LSB', 14025000, CW, 0, 'QSX ???');
+   CheckHint('QSX CQ CQ', 14025000, CW, 0, 'QSX CQ CQ');
+   CheckHint('QSX!', 14025000, CW, 0, 'QSX with nothing after it');
+   CheckHint('QSX UP, TNX QSO, 73...', 14025000, CW, 14026000,
+             'QSX UP is a direction, and does get the default');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_OutOfBand;
+begin
+   BeginTest('Test_Hint_Reject_OutOfBand');
+   // One band check for every form, which the old decoder applied to QSX only.
+   CheckHint('QSX 5000.00', 7105000, CW, 0, '5 MHz is in no ham band');
+   CheckHint('QSX 455 TNX', 7105000, CW, 0, '455 kHz is in no ham band');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_BareR;
+begin
+   BeginTest('Test_Hint_Reject_BareR');
+   // "R" is NOT an introducer, on the evidence: every "R" and "RX" in the
+   // capture is an FT8 report, "RX ONLY", or an initial.  Accepting bare R
+   // would turn "R-17" into a QSX on 17 kHz -- and worse, "R 14205" style
+   // false matches into a confident wrong frequency.
+   CheckHint('DM78<>GF11 FT8 S-17 R-17 TNX', 14074000, Digital, 0, 'R-17');
+   CheckHint('QRL NO RX???', 14025000, CW, 0, 'RX with no number');
+   CheckHint('FT8 QG64KR<>DM61 -18 RX', 14074000, Digital, 0, 'RX at the end');
+end;
+
 { -------------------------------------------------------------------------- }
 
 procedure TDXSpotParseTests.RunAllTests;
@@ -478,12 +853,46 @@ begin
    Test_Frequency_160m;
 
    Test_BadCallSyntaxRejected;
-   Test_TruncatedLineAccepted_KNOWN_DEFECT;
-   Test_EmptyLineAccepted_KNOWN_DEFECT;
+   Test_TruncatedLineRejected;
+   Test_EmptyLineRejected;
 
    Test_Time_Parsed;
    Test_Time_MissingZRejected;
    Test_Time_TrailingGridStillParses;
+
+   Test_Hint_QSX_Kilohertz;
+   Test_Hint_QSX_Megahertz;
+   Test_Hint_QSX_DottedMegahertz;
+   Test_Hint_QSX_SpelledUnit;
+   Test_Hint_QSX_SmallValueIsAnOffset;
+   Test_Hint_QSX_WithDirection;
+   Test_Hint_CaseInsensitive;
+   Test_Hint_Listening_Absolute;
+   Test_Hint_Listening_Synonyms;
+   Test_Hint_RX_Absolute;
+   Test_Hint_Split_UpAndDown;
+   Test_Hint_Down_Synonyms;
+   Test_Hint_Range_TakesLowEnd;
+   Test_Hint_Postfix;
+   Test_Hint_FractionalOffset;
+   Test_Hint_AbsoluteAfterDirection;
+   Test_Hint_AutoSplit_CW;
+   Test_Hint_AutoSplit_Phone;
+   Test_Hint_AutoSplit_BareSplit;
+   Test_Hint_AutoSplit_CommentModeWins;
+   Test_Hint_AutoSplit_NotOnDigital;
+   Test_Hint_AutoSplit_NotWhenModeUnknown;
+   Test_Hint_ExplicitBeatsAutoSplit;
+   Test_Hint_Reject_NoKeyword;
+   Test_Hint_Reject_NotSplit;
+   Test_Hint_Reject_PileUp;
+   Test_Hint_Reject_GridSquares;
+   Test_Hint_Reject_GridEndingInUP;
+   Test_Hint_Reject_OversizedOffset;
+   Test_Hint_Reject_SignalReports;
+   Test_Hint_Reject_Junk;
+   Test_Hint_Reject_OutOfBand;
+   Test_Hint_Reject_BareR;
 end;
 
 end.

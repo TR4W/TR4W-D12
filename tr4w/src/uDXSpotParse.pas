@@ -34,9 +34,21 @@ unit uDXSpotParse;
 
   THE COLUMN ARITHMETIC IS UNCHANGED, DELIBERATELY.  Every offset below is
   copied verbatim from ProcessDX.  Those numbers are tuned against what real
-  cluster nodes emit and were never covered by a test, so this extraction moves
-  them without touching them; behaviour is pinned first (uTestDXSpotParse), and
-  any correction is a separate, deliberate change on top of that pin.
+  cluster nodes emit and were never covered by a test, so the extraction moved
+  them without touching them; behaviour was pinned first (uTestDXSpotParse).
+
+  WHAT HAS CHANGED SINCE, deliberately and each with its own tests:
+
+    * The DX call is now REQUIRED.  A line cut off before the call columns used
+      to decode as a success, and the caller would band-map a spot with an empty
+      callsign.
+    * FSourceCall's length byte is now always written.  It used to be set only
+      when the spotter field was unpadded, so on nearly every line the field
+      held the right characters and reported a length of zero.
+    * The comment's split/QSX grammar is a tokenizer (ParseSplitHint) rather
+      than two hand-rolled scans for "QSX " and "UP".  It reads DOWN, LSN,
+      LISTENING, SPLIT and RX, MHz and dotted-MHz frequencies, fractional
+      offsets, and applies ONE band check to every form.
 
   The format, measured over 198,979 real "DX de" lines captured from AR-Cluster
   and DXSpider nodes (D7-LogFilesForTesting/dxcluster):
@@ -62,9 +74,8 @@ uses
    VC;
 
 // Decode a complete cluster line.  Returns False -- leaving Spot partly filled
-// and NOT usable -- when the line does not decode: an absurd frequency, or a
-// DX call that fails GoodCallSyntax.  That is ProcessDX's original behaviour
-// (it simply Exited with Result False on those two paths).
+// and NOT usable -- when the line does not decode: an absurd frequency, no DX
+// call in the call columns at all, or a DX call that fails GoodCallSyntax.
 //
 // Fills FFrequency, FFreqString, FCall, FSourceCall, FNotes and FQSXFrequency.
 // FBand/FMode are left NoBand/NoMode: the band-map band/mode mapping is a
@@ -80,11 +91,51 @@ function ParseDXSpotLine(const Line: AnsiString; out Spot: TSpotRecord): boolean
 // with today's date from the UTC global to get a comparable timestamp.
 function ParseDXSpotTimeUTC(const Line: AnsiString; out MinuteOfDay: integer): boolean;
 
+// Read a split / QSX hint out of a spot's COMMENT field.
+//
+// Returns True and the DX station's receive frequency in Hz when the comment
+// states one unambiguously; False when it says nothing, or says something the
+// grammar refuses to guess at.  `BaseFrequencyHz` is the spot's own transmit
+// frequency, which the relative forms ("UP 5") are measured from.
+//
+// Exported so it can be tested against a comment directly rather than through a
+// 75-column line, and so other spot sources (WSJT-X, the band map, a future
+// non-AK1A cluster) can reuse one implementation of this grammar.
+//
+// GRAMMAR -- case-insensitive, first recognised hint wins:
+//
+//   introducer  QSX | LISTENING | LISTENS | LISTEN | LSTN | LSN | RX | SPLIT
+//               | SPLT | SPL
+//   direction   UP | DOWN | DWN | DN
+//
+//   <introducer> <number>              absolute frequency, or -- exactly as the
+//                                      original decoder did -- an UP offset when
+//                                      the value is under 10 kHz ("QSX 5")
+//   <introducer> <direction> <number>  offset in the named direction
+//   <direction> <number>               offset ("UP 5", "UP5", "DOWN 2")
+//   <direction> | SPLIT                AUTO SPLIT: 1 kHz up on CW, 5 kHz on
+//                                      phone, nothing on digital or an unknown
+//                                      mode
+//
+// Numbers may be kHz ("7275.10", "7082"), MHz ("14.030"), or MHz written with
+// dotted grouping ("21.290.000").  A range takes its LOW end ("UP 5-10" = 5).
+//
+// `BandPlanMode` is the fallback mode for the AUTO SPLIT default; a mode named
+// in the comment itself ("CW", "USB", "FT8") overrides it.
+//
+// WHAT IT DELIBERATELY REFUSES.  "NOT SPLIT" is not a split.  A bare "QSX" or
+// "LISTENING" -- an introducer whose frequency is simply missing -- is not
+// turned into a guess, unlike a bare direction, where the AUTO SPLIT convention
+// gives a real answer.  And any result landing outside every amateur band is
+// dropped rather than reported.
+function ParseSplitHint(const Comment: AnsiString; BaseFrequencyHz: integer;
+                        BandPlanMode: ModeType;
+                        out QSXFrequencyHz: integer): boolean;
+
 implementation
 
 uses
    Windows,
-   utils_text,          // StrUpper (PAnsiChar, ANSI)
    uBandLookup,         // CalculateBandMode -- tree.pas forwards to this unit
    uCallSignRoutines;   // GoodCallSyntax
 
@@ -110,33 +161,619 @@ begin
       end;
 end;
 
-// Does `Token` appear at 0-based offset `Index`?
+{ ---------------------------------------------------------------------------
+  The split / QSX comment grammar.
+
+  WHY A TOKENIZER RATHER THAN MORE OFFSET TESTS.  What was here compared four
+  bytes at a fixed position for "QSX ", then separately walked the comment
+  looking for a "UP" with a space in front of it.  Every additional spelling --
+  DOWN, LSN, SPLIT, "QSX UP 5" -- would have been another hand-rolled scan with
+  its own boundary bug, which is exactly how "UP7" and "UP10" came to be
+  silently dropped while UP1..UP5 worked.  Reading the comment into words once,
+  and then stating the grammar over those words, is the same amount of code and
+  admits new spellings without new scanning.
+
+  THE VOCABULARY IS MEASURED, NOT IMAGINED.  Every keyword below was counted in
+  the 198,979 captured "DX de" lines in D7-LogFilesForTesting/dxcluster:
+  QSX 548, UP 436, SPLIT 19, LISTENING 14, LSN 3, LSTN 1, DOWN 2.
+
+  NOTE ON "R" AND "RX".  The brief asked for RX/R receive hints.  RX is
+  accepted; bare **R is not**, on the evidence: all 13 "R" and all 11 "RX"
+  occurrences in the capture are noise -- FT8 signal reports ("R-17"), "RX
+  ONLY", "P.R.".  A bare R would turn every FT8 report into a bogus QSX.  RX is
+  kept only because the band check below makes it harmless: "RX -15" reads as
+  15 kHz, which is in no band, so nothing is emitted.
+  --------------------------------------------------------------------------- }
+
+const
+   MAXCOMMENTTOKENS = 32;
+
+   // The largest number that will be read as a split OFFSET rather than
+   // discarded.  HF splits run a few kHz; 50 is already generous for the
+   // biggest pileup.  Above it, a number after a direction word is far more
+   // likely to be a signal report, a "73", or a truncated frequency.
+   MAXSPLITOFFSETKHZ = 50;
+
+type
+   TCommentTokenKind = (ctWord, ctNumber);
+
+   TCommentToken = record
+      Kind: TCommentTokenKind;
+      Text: AnsiString;         // words are upper-cased; numbers are digits + '.'
+      // True when this token started immediately after the previous one, with no
+      // separator between them.  "DM33UP" is three GLUED tokens; "5 UP" is two
+      // that are not.  The distinction is load-bearing: without it the grid
+      // square DM33UP ends in a token spelled UP, and a routine 6 m grid comment
+      // becomes a split instruction.  See KeywordIsWholeWord.
+      Glued: boolean;
+   end;
+
+   TCommentTokens = array[0..MAXCOMMENTTOKENS - 1] of TCommentToken;
+
+   // What a keyword means once synonyms are folded together.
+   //
+   // skSplit is separated from skIntroducer for one reason: "SPLIT" on its own
+   // is a complete statement to an operator (see AutoSplitOffsetHz), where a
+   // bare "QSX" is just a missing frequency.
+   TSplitKeyword = (skNone, skIntroducer, skSplit, skUp, skDown);
+
+// Break a comment into WORDS (letters) and NUMBERS (digits and '.').  Anything
+// else separates.
 //
-// This replaces the `PInteger(@Buf[i])^ = $20585351 {QSX }` idiom that ran
-// through this decoder.  That trick compared four characters as one 32-bit
-// integer -- a D7-era micro-optimisation that saved a few cycles on 1990s
-// hardware and has cost every reader since, because the constant only spells
-// "QSX " if you know the machine is little-endian and read the bytes backwards.
-// It is also silently limited to exactly four characters and silently wrong on
-// a big-endian target.  The compare below is the same test, written down.
-function TokenAt(const Buf: array of AnsiChar; Index: integer;
-                 const Token: AnsiString): boolean;
+// A '-' separates, which is what makes a range read as its LOW end for free:
+// "UP 5-10" tokenizes to UP, 5, 10 and the grammar takes the first number after
+// the direction.  It also keeps "R-17" from reading as one token.
+function TokenizeComment(const S: AnsiString; var Toks: TCommentTokens): integer;
 var
-   k: integer;
+   i: integer;
+   c: AnsiChar;
+   prevEnd: integer;   // index just past the previous token, for Glued
+begin
+   Result := 0;
+   i := 1;
+   prevEnd := -1;
+   while (i <= Length(S)) and (Result < MAXCOMMENTTOKENS) do
+      begin
+      c := UpCase(S[i]);
+      if c in ['A'..'Z'] then
+         begin
+         Toks[Result].Kind := ctWord;
+         Toks[Result].Glued := (i = prevEnd);
+         Toks[Result].Text := '';
+         while (i <= Length(S)) and (UpCase(S[i]) in ['A'..'Z']) do
+            begin
+            Toks[Result].Text := Toks[Result].Text + UpCase(S[i]);
+            Inc(i);
+            end;
+         prevEnd := i;
+         Inc(Result);
+         end
+      else if c in ['0'..'9'] then
+         begin
+         Toks[Result].Kind := ctNumber;
+         Toks[Result].Glued := (i = prevEnd);
+         Toks[Result].Text := '';
+         while (i <= Length(S)) and (S[i] in ['0'..'9', '.']) do
+            begin
+            Toks[Result].Text := Toks[Result].Text + S[i];
+            Inc(i);
+            end;
+         prevEnd := i;
+         // A trailing point is punctuation, not a decimal: "UP 5." is 5.
+         while (Length(Toks[Result].Text) > 0) and
+               (Toks[Result].Text[Length(Toks[Result].Text)] = '.') do
+            begin
+            SetLength(Toks[Result].Text, Length(Toks[Result].Text) - 1);
+            end;
+         Inc(Result);
+         end
+      else
+         begin
+         Inc(i);
+         end;
+      end;
+end;
+
+function KeywordOf(const W: AnsiString): TSplitKeyword;
+begin
+   if (W = 'QSX') or (W = 'LISTENING') or (W = 'LISTENS') or (W = 'LISTEN') or
+      (W = 'LSTN') or (W = 'LSN') or (W = 'RX') then
+      begin
+      Result := skIntroducer;
+      end
+   else if (W = 'SPLIT') or (W = 'SPLT') or (W = 'SPL') then
+      begin
+      Result := skSplit;
+      end
+   else if W = 'UP' then
+      begin
+      Result := skUp;
+      end
+   // "DN" is NOT here, and that is a measurement, not an oversight.  Every one
+   // of its occurrences in the 198,979-line capture is a Maidenhead grid square
+   // -- DN70, DN27, DN30, DN13 ... -- because letters and digits tokenize
+   // separately.  Accepting it as "down" turned ordinary 6 m grid comments into
+   // splits: "DN70MQ<>BL01XI" became "70 kHz down".
+   else if (W = 'DOWN') or (W = 'DWN') then
+      begin
+      Result := skDown;
+      end
+   else
+      begin
+      Result := skNone;
+      end;
+end;
+
+// Is this keyword token a word in its own right, rather than the tail of a
+// longer alphanumeric run?
+//
+// Grid squares are why this exists.  "DM33UP" tokenizes to DM, 33, UP, and that
+// trailing UP must not be read as a direction; "FN31RX" likewise.  A keyword
+// counts when it starts a run, or when the run is exactly <number><keyword> --
+// which is the real and common "5UP".
+function KeywordIsWholeWord(const Toks: TCommentTokens; Index: integer): boolean;
+begin
+   if not Toks[Index].Glued then
+      begin
+      Result := True;
+      Exit;
+      end;
+   Result := (Index > 0) and (Toks[Index - 1].Kind = ctNumber) and
+             (not Toks[Index - 1].Glued);
+end;
+
+// Split a number token into its integer part and its fraction digits, with the
+// DOT COUNT, which is what tells the three written forms apart:
+//
+//   7275.10      one dot,  integer part >= 1000  -> kHz
+//   14.030       one dot,  integer part <  1000  -> MHz
+//   21.290.000   two dots                        -> MHz, dotted grouping,
+//                                                   so the groups after the
+//                                                   first are one fraction
+//
+// Returns False on a token with no digits, or one long enough to be a typo
+// rather than a frequency.
+function SplitNumber(const T: AnsiString; out IntPart: integer;
+                     out Frac: AnsiString; out Dots: integer): boolean;
+var
+   i: integer;
+   digits: AnsiString;
 begin
    Result := False;
-   if (Index < 0) or (Index + Length(Token) > Length(Buf)) then
+   IntPart := 0;
+   Frac := '';
+   Dots := 0;
+   digits := '';
+
+   for i := 1 to Length(T) do
+      begin
+      if T[i] = '.' then
+         begin
+         Inc(Dots);
+         end
+      else if T[i] in ['0'..'9'] then
+         begin
+         if Dots = 0 then
+            begin
+            digits := digits + T[i];
+            end
+         else
+            begin
+            Frac := Frac + T[i];
+            end;
+         end;
+      end;
+
+   // 9 integer digits is already 100x any amateur frequency in kHz; anything
+   // longer is not a frequency and must not be allowed to overflow below.
+   if (digits = '') or (Length(digits) > 9) then
       begin
       Exit;
       end;
-   for k := 1 to Length(Token) do
+
+   for i := 1 to Length(digits) do
       begin
-      if Buf[Index + k - 1] <> Token[k] then
+      IntPart := IntPart * 10 + (Ord(digits[i]) - Ord('0'));
+      end;
+   Result := True;
+end;
+
+// Scale a fraction to `Places` digits: '5' with 3 places is 500, '9015' with 3
+// places is 901 (extra digits are dropped, not rounded -- the original decoder
+// truncated too).
+function ScaleFraction(const Frac: AnsiString; Places: integer): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := 1 to Places do
+      begin
+      Result := Result * 10;
+      if i <= Length(Frac) then
+         begin
+         Result := Result + (Ord(Frac[i]) - Ord('0'));
+         end;
+      end;
+end;
+
+// A number token read as an ABSOLUTE frequency, in Hz.  Returns False when the
+// token is not a frequency at all.
+function AbsoluteHz(const T: AnsiString; out Hz: integer): boolean;
+var
+   IntPart, Dots: integer;
+   Frac: AnsiString;
+begin
+   Result := False;
+   Hz := 0;
+   if not SplitNumber(T, IntPart, Frac, Dots) then
+      begin
+      Exit;
+      end;
+
+   if (Dots >= 2) or ((Dots = 1) and (IntPart < 1000)) then
+      begin
+      // MHz.  Guard the multiply: 4,000 MHz is already past the top band.
+      if IntPart > 4000 then
          begin
          Exit;
          end;
+      Hz := IntPart * 1000000 + ScaleFraction(Frac, 6);
+      end
+   else
+      begin
+      // kHz.
+      if IntPart > 2000000 then
+         begin
+         Exit;
+         end;
+      Hz := IntPart * 1000 + ScaleFraction(Frac, 3);
       end;
-   Result := True;
+   Result := Hz > 0;
+end;
+
+// A number token read as MHz whatever its shape, for when the comment spells
+// the unit out: "QSX UP 18.072 MHZ".  Without this the 18.072 reads as an
+// 18 kHz offset and the operator lands 15 kHz away from the DX.
+function ForcedMHzHz(const T: AnsiString; out Hz: integer): boolean;
+var
+   IntPart, Dots: integer;
+   Frac: AnsiString;
+begin
+   Result := False;
+   Hz := 0;
+   if not SplitNumber(T, IntPart, Frac, Dots) then
+      begin
+      Exit;
+      end;
+   if IntPart > 4000 then
+      begin
+      Exit;
+      end;
+   Hz := IntPart * 1000000 + ScaleFraction(Frac, 6);
+   Result := Hz > 0;
+end;
+
+// Does the word after a number spell out MHz?
+function UnitIsMHz(const Toks: TCommentTokens; n, Index: integer): boolean;
+begin
+   Result := (Index + 1 < n) and (Toks[Index + 1].Kind = ctWord) and
+             ((Toks[Index + 1].Text = 'MHZ') or (Toks[Index + 1].Text = 'MC'));
+end;
+
+// A number token read as an OFFSET, in Hz: "5" is 5 kHz, "5.5" is 5.5 kHz.
+//
+// Refuses anything over MAXSPLITOFFSETKHZ.  Two real cases need that ceiling,
+// and neither is served by guessing:
+//
+//   "UP 200-205" on 14195 -- 200 kHz up is 14395, outside the band.  Almost
+//   certainly the spotter meant 14200-14205 and wrote the last three digits.
+//   Ambiguous, so nothing is emitted.  (The old decoder emitted 14395.)
+//
+//   "59 TU 73 UP LOUD OHIO" -- the postfix form below would read the signal
+//   report and the "73" as offsets.  Nobody splits 73 kHz.
+function OffsetHz(const T: AnsiString; out Hz: integer): boolean;
+var
+   IntPart, Dots: integer;
+   Frac: AnsiString;
+begin
+   Result := False;
+   Hz := 0;
+   if not SplitNumber(T, IntPart, Frac, Dots) then
+      begin
+      Exit;
+      end;
+   if (IntPart > MAXSPLITOFFSETKHZ) or (Dots >= 2) then
+      begin
+      Exit;
+      end;
+   Hz := IntPart * 1000 + ScaleFraction(Frac, 3);
+   Result := Hz > 0;
+end;
+
+// The mode a comment states about itself, if it states one.  Returns NoMode
+// when it does not.
+//
+// Worth reading rather than inferring: the spotter usually says the mode
+// outright, and says it far more often than anything else -- CW appears 57,296
+// times in the capture, USB 21,658, LSB 5,205.  It also beats the band plan
+// where the two disagree, which they do in every band segment that carries more
+// than one mode.
+function ModeStatedInComment(const Toks: TCommentTokens; n: integer): ModeType;
+var
+   i: integer;
+   W: AnsiString;
+begin
+   Result := NoMode;
+   for i := 0 to n - 1 do
+      begin
+      if Toks[i].Kind <> ctWord then
+         begin
+         Continue;
+         end;
+      W := Toks[i].Text;
+      if W = 'CW' then
+         begin
+         Result := CW;
+         Exit;
+         end;
+      if (W = 'SSB') or (W = 'USB') or (W = 'LSB') or (W = 'PHONE') or
+         (W = 'AM') then
+         begin
+         Result := Phone;
+         Exit;
+         end;
+      if W = 'FM' then
+         begin
+         Result := FM;
+         Exit;
+         end;
+      // "FT8" tokenizes as the word FT plus the number 8 -- letters and digits
+      // are separate tokens -- so FT covers FT8 and FT4 both.
+      if (W = 'RTTY') or (W = 'PSK') or (W = 'FT') or (W = 'JT') or
+         (W = 'MFSK') or (W = 'JS') or (W = 'DIGI') or (W = 'DATA') then
+         begin
+         Result := Digital;
+         Exit;
+         end;
+      end;
+end;
+
+// "AUTO SPLIT": what a bare "UP", "DOWN" or "SPLIT" means when the comment
+// names no distance.
+//
+// This is the convention the radios themselves implement under that name -- one
+// key press, 1 kHz up on CW and 5 kHz up on phone -- and it is what an operator
+// reading "UP" does.  It is a GUESS, but a conventional one, and it is confined
+// to the bare forms: any comment that states a distance is taken at its word.
+// On a digital mode, or where the mode is unknown, there is no convention to
+// apply and nothing is guessed.
+//
+// (Direction from NY4I, 2026-08-04.)
+function AutoSplitOffsetHz(Mode: ModeType; out Hz: integer): boolean;
+begin
+   Hz := 0;
+   case Mode of
+      CW:
+         begin
+         Hz := 1000;
+         end;
+      Phone, FM:
+         begin
+         Hz := 5000;
+         end;
+   end;
+   Result := Hz > 0;
+end;
+
+// Is this a frequency an amateur station could actually be listening on?  The
+// original decoder applied this test to QSX and NOT to UP, which is how a real
+// captured comment -- "UP 200-205" on 14195 -- produced a QSX of 14395 kHz,
+// outside the 20 m band.  One rule, applied to every form.
+function IsOnAHamBand(Hz: integer): boolean;
+var
+   band: BandType;
+   mode: ModeType;
+begin
+   band := NoBand;
+   mode := NoMode;
+   if Hz <= 0 then
+      begin
+      Result := False;
+      Exit;
+      end;
+   CalculateBandMode(Cardinal(Hz), band, mode);
+   Result := band <> NoBand;
+end;
+
+function ParseSplitHint(const Comment: AnsiString; BaseFrequencyHz: integer;
+                        BandPlanMode: ModeType;
+                        out QSXFrequencyHz: integer): boolean;
+var
+   Toks: TCommentTokens;
+   n, i, pass: integer;
+   kw: TSplitKeyword;
+   dir: TSplitKeyword;
+   numIndex: integer;
+   hz: integer;
+   mode: ModeType;
+   haveHz: boolean;
+begin
+   Result := False;
+   QSXFrequencyHz := 0;
+
+   n := TokenizeComment(Comment, Toks);
+
+   // What the comment says about the mode wins; the band plan is the fallback.
+   mode := ModeStatedInComment(Toks, n);
+   if mode = NoMode then
+      begin
+      mode := BandPlanMode;
+      end;
+
+   // TWO PASSES, and the order is the point.  A comment that states a frequency
+   // or a distance anywhere must beat the AUTO SPLIT convention, wherever the
+   // two appear relative to each other: "CW SPLIT QSX 28.027.800" opens with a
+   // bare SPLIT, and a single left-to-right pass answered "1 kHz up" while the
+   // exact frequency sat four words later.
+   for pass := 1 to 2 do
+      begin
+      i := 0;
+      while i < n do
+         begin
+         hz := 0;
+         haveHz := False;
+         dir := skNone;
+         numIndex := -1;
+
+         if Toks[i].Kind <> ctWord then
+            begin
+            Inc(i);
+            Continue;
+            end;
+
+         kw := KeywordOf(Toks[i].Text);
+
+         if (kw <> skNone) and not KeywordIsWholeWord(Toks, i) then
+            begin
+            kw := skNone;
+            end;
+
+         // "NOT SPLIT" / "NO SPLIT" says the opposite of split, and both appear
+         // in the capture.  Without this the auto-split default below would turn
+         // a denial into a QSX.
+         if (kw = skSplit) and (i > 0) and (Toks[i - 1].Kind = ctWord) and
+            ((Toks[i - 1].Text = 'NOT') or (Toks[i - 1].Text = 'NO')) then
+            begin
+            kw := skNone;
+            end;
+
+         // "PILE UP" is a pileup, and "WHATS UP" is a greeting.  Both are in the
+         // capture ahead of a bare UP, where the AUTO SPLIT default would
+         // otherwise invent a QSX out of ordinary English.
+         if (kw = skUp) and (i > 0) and (Toks[i - 1].Kind = ctWord) and
+            ((Toks[i - 1].Text = 'PILE') or (Toks[i - 1].Text = 'WHATS')) then
+            begin
+            kw := skNone;
+            end;
+
+         if kw in [skIntroducer, skSplit] then
+            begin
+            // "QSX UP 5" / "LSN UP 5" / "SPLIT DOWN 2": an introducer may name
+            // a direction before the number.
+            if (i + 1 < n) and (Toks[i + 1].Kind = ctWord) and
+               (KeywordOf(Toks[i + 1].Text) in [skUp, skDown]) then
+               begin
+               dir := KeywordOf(Toks[i + 1].Text);
+               numIndex := i + 2;
+               end
+            else
+               begin
+               numIndex := i + 1;
+               end;
+            end
+         else if kw in [skUp, skDown] then
+            begin
+            dir := kw;
+            numIndex := i + 1;
+            end;
+
+         if (pass = 1) and (numIndex >= 0) and (numIndex < n) and
+            (Toks[numIndex].Kind = ctNumber) then
+            begin
+            if UnitIsMHz(Toks, n, numIndex) then
+               begin
+               // The comment names the unit, so there is nothing to infer.
+               haveHz := ForcedMHzHz(Toks[numIndex].Text, hz);
+               end
+            else if dir = skNone then
+               begin
+               // Absolute form.  The one exception is the original decoder's
+               // rule, kept because real comments rely on it: a value under
+               // 10 kHz after QSX is an offset UP, not a frequency.
+               haveHz := AbsoluteHz(Toks[numIndex].Text, hz);
+               if haveHz and (hz < 10000) then
+                  begin
+                  hz := BaseFrequencyHz + hz;
+                  end;
+               end
+            else
+               begin
+               haveHz := OffsetHz(Toks[numIndex].Text, hz);
+               if haveHz then
+                  begin
+                  if dir = skDown then
+                     begin
+                     hz := BaseFrequencyHz - hz;
+                     end
+                  else
+                     begin
+                     hz := BaseFrequencyHz + hz;
+                     end;
+                  end
+               else
+                  begin
+                  // Too big to be an offset: somebody wrote the frequency
+                  // itself after the direction ("UP 1829.5").
+                  haveHz := AbsoluteHz(Toks[numIndex].Text, hz);
+                  end;
+               end;
+            end
+         else if (pass = 1) and (dir <> skNone) and (i > 0) and
+                 (Toks[i - 1].Kind = ctNumber) then
+            begin
+            // POSTFIX: "5 UP", "5UP", "LISTENING 5 UP", "2.5 UP".  As common in
+            // the capture as the prefix form and just as unambiguous, but the
+            // number sits BEFORE the direction.  MAXSPLITOFFSETKHZ is what keeps
+            // "59 TU 73 UP" from reading a signal report as an offset.
+            haveHz := OffsetHz(Toks[i - 1].Text, hz);
+            if haveHz then
+               begin
+               if dir = skDown then
+                  begin
+                  hz := BaseFrequencyHz - hz;
+                  end
+               else
+                  begin
+                  hz := BaseFrequencyHz + hz;
+                  end;
+               end;
+            end
+         else if (pass = 2) and ((dir <> skNone) or (kw = skSplit)) and
+                 not ((numIndex >= 0) and (numIndex < n) and
+                      (Toks[numIndex].Kind = ctNumber)) then
+            begin
+            // Nothing in the comment stated a distance: the AUTO SPLIT
+            // convention.  A bare SPLIT means up.
+            //
+            // The guard above matters.  "UP 200-205" DID state a distance -- one
+            // pass 1 refused as implausible -- and answering "1 kHz up" there
+            // would be pretending the number was never written.  A number that
+            // merely PRECEDES the direction is different ("59 TU 73 UP"): it is
+            // usually unrelated, so a bare-UP default still applies.
+            haveHz := AutoSplitOffsetHz(mode, hz);
+            if haveHz then
+               begin
+               if dir = skDown then
+                  begin
+                  hz := BaseFrequencyHz - hz;
+                  end
+               else
+                  begin
+                  hz := BaseFrequencyHz + hz;
+                  end;
+               end;
+            end;
+
+         if haveHz and IsOnAHamBand(hz) then
+            begin
+            QSXFrequencyHz := hz;
+            Result := True;
+            Exit;
+            end;
+
+         Inc(i);
+         end;
+      end;
 end;
 
 function ParseDXSpotLine(const Line: AnsiString; out Spot: TSpotRecord): boolean;
@@ -145,17 +782,13 @@ var
    DX: integer;        // always 0; kept so the offsets below read as they did
    i: integer;
    TempFrequency: integer;
-
    f: integer;
-   QSXPos: integer;
-   TempChar: AnsiChar;
-   Hertz: integer;
-   DivHertz: boolean;
-   QSXBand: BandType;
-   QSXMode: ModeType;
-   UpKhz: integer;
-
    Offset: integer;
+   CallFound: boolean;
+   Comment: AnsiString;
+   QSXHz: integer;
+   planBand: BandType;
+   planMode: ModeType;
 begin
    LineToBuf(Line, LineBuf);
    DX := 0;   // the line starts at the start; see the header
@@ -191,19 +824,19 @@ begin
       begin
       if ((LineBuf[i] = ' ') or (LineBuf[i] = ':')) then
          begin
-         // NOTE, pre-existing and NOT changed here: the length byte is only
-         // written when the next column is non-blank, while the characters are
-         // copied either way.  On the ordinary padded line ("W1FM:      ") the
-         // next column IS blank, so FSourceCall keeps the zero length left by
-         // the wipe above even though its bytes hold the spotter.  Everything
-         // downstream reads it as @FSourceCall[1], i.e. as a NUL-terminated C
-         // string, which is why this has never shown.  Verified identical in
-         // the D7 tree (c:\TR4W, tagged "4.92.6"), so it is upstream behaviour,
-         // not a D12 port artifact.  Pinned by uTestDXSpotParse.
-         if LineBuf[i + 1] <> ' ' then // 4.92.6
-            begin
-            SetLength(Spot.FSourceCall, i - DX - 6);
-            end;
+         // FIXED (was: the SetLength ran only `if LineBuf[i + 1] <> ' '`, tagged
+         // "4.92.6" and identical in the D7 tree).  The character copy was NOT
+         // guarded, so on the ordinary blank-padded line -- "W1FM:      ", which
+         // is nearly every line -- the spotter's characters landed in the field
+         // while its LENGTH BYTE stayed 0 from the wipe above.  FSourceCall then
+         // read as '' as a Pascal string, and only as the right callsign through
+         // @FSourceCall[1].  It never showed because both readers happen to use
+         // the pointer form (uBandmap:688, uTelnet's alert message).
+         //
+         // The length and the copy are one fact and are now written together:
+         // lstrcpynA writes at most n-1 characters plus a NUL, so n-1 characters
+         // is exactly the length.
+         SetLength(Spot.FSourceCall, i - DX - 6);
          Windows.lstrcpynA(@Spot.FSourceCall[1], @LineBuf[DX + 6], i - DX - 5);
          Break;
          end;
@@ -266,6 +899,7 @@ begin
       begin
       Offset := 3; // 4.92.7
       end;
+   CallFound := False;
    for i := DX + 27 to DX + 39 do
       begin
       // Nested single-statement ifs collapsed; same test, no else on either. 4.92.7
@@ -279,8 +913,21 @@ begin
             begin
             Exit;
             end;
+         CallFound := True;
          Break;
          end;
+      end;
+
+   // FIXED: a line cut off before the call columns used to be reported as a
+   // SUCCESSFUL decode.  The loop above simply never matched, so GoodCallSyntax
+   // -- the only validation there is -- was never reached, and the caller went
+   // on to dupe-check, band-map and display a spot with an empty callsign and a
+   // zero frequency.  One line in the 198,979 captured is truncated like that
+   // ("DX de K3LR:  ", a node dropping mid-write), and any short or garbled line
+   // does the same.  No call in the call columns is not a spot.
+   if not CallFound then
+      begin
+      Exit;
       end;
 
    {Note}
@@ -293,86 +940,31 @@ begin
       Windows.lstrcpynA(@Spot.FNotes[0], @LineBuf[DX + 39 + Offset], 31);
       //was 31 but allow for null ny4i
 
-      // In place, so the QSX / UP matching below is against an uppercased
-      // comment.  FNotes was copied first and keeps the original case.
-      StrUpper(PAnsiChar(@LineBuf[DX + 39 + Offset]));
-
-      for i := DX + 39 to DX + 65 do
+      // The comment is the 30-column field the note was just copied from.  It
+      // is read into a string here rather than uppercased in place: the
+      // grammar does its own case folding, and mutating the line buffer to
+      // help a later scan was a trap waiting for the next reader.
+      Comment := '';
+      for i := 0 to 29 do
          begin
-         if TokenAt(LineBuf, i, 'QSX ') then
+         if LineBuf[DX + 39 + Offset + i] = #0 then
             begin
-            if LineBuf[i + 4] in ['0'..'9'] then
-               begin
-               Hertz := 1000;
-               DivHertz := False;
-
-               for QSXPos := 4 to 12 do
-                  begin
-                  TempChar := LineBuf[i + QSXPos];
-                  case TempChar of
-                     ' ': Break;
-                     '0'..'9':
-                        begin
-                        Spot.FQSXFrequency := Spot.FQSXFrequency * 10 +
-                                              (Ord(TempChar) - 48);
-                        if DivHertz then
-                           begin
-                           Hertz := Hertz div 10;
-                           end;
-                        end;
-                     '.': DivHertz := True;
-                  end;
-                  end;
-
-               Spot.FQSXFrequency := Spot.FQSXFrequency * Hertz;
-               if Spot.FQSXFrequency < 10000 then
-                  begin
-                  Spot.FQSXFrequency := Spot.FFrequency + Spot.FQSXFrequency;
-                  end;
-               QSXBand := NoBand;
-               CalculateBandMode(Spot.FQSXFrequency, QSXBand, QSXMode);
-               if QSXBand = NoBand then
-                  begin
-                  Spot.FQSXFrequency := 0;
-                  end;
-               end;
+            Break;
             end;
+         Comment := Comment + LineBuf[DX + 39 + Offset + i];
+         end;
 
-         // "UP n" -- QSX n kHz up.  ONE test covering every spelling the format
-         // has: UP1, UP 5, UP10, UP 10.  Read "UP", allow one optional space, then
-         // take the digits and do the arithmetic.
-         //
-         // This replaces TWO blocks that between them still missed cases: five
-         // hard-coded tokens UP1..UP5, and a separate space-form block.  So "UP7"
-         // and "UP10" (no space) were silently ignored -- the QSX was dropped and
-         // the operator worked the wrong frequency.  Reading the number instead of
-         // enumerating spellings is why this now handles all of them.
-         //
-         // Left word boundary is required so PUP / CUP / SOUP in a comment cannot
-         // fake a QSX -- and guarded on i > 0, because the old space-form block
-         // read LineBuf[i - 1] with no such guard and would step off the front of
-         // the buffer when the match sat at offset 0.
-         if (i > 0) and (LineBuf[i - 1] = ' ') and
-            (LineBuf[i] = 'U') and (LineBuf[i + 1] = 'P') then
-            begin
-            QSXPos := i + 2;
-            if LineBuf[QSXPos] = ' ' then      // the optional space: "UP 10"
-               begin
-               Inc(QSXPos);
-               end;
-            UpKhz := 0;
-            // Terminates on the NUL that fills the tail of LineBuf, so a match at
-            // the very end of the line cannot run past it.
-            while (QSXPos <= High(LineBuf)) and (LineBuf[QSXPos] in ['0'..'9']) do
-               begin
-               UpKhz := UpKhz * 10 + (Ord(LineBuf[QSXPos]) - Ord('0'));
-               Inc(QSXPos);
-               end;
-            if UpKhz > 0 then
-               begin
-               Spot.FQSXFrequency := Spot.FFrequency + UpKhz * 1000;
-               end;
-            end;
+      // The band plan's mode for this frequency is the fallback the AUTO SPLIT
+      // default needs when the comment names no mode.  It is computed here and
+      // NOT stored: FMode is the band map's business (its band/mode mapping is
+      // a setting), and that stays on the apply side.
+      planBand := NoBand;
+      planMode := NoMode;
+      CalculateBandMode(Cardinal(Spot.FFrequency), planBand, planMode);
+
+      if ParseSplitHint(Comment, Spot.FFrequency, planMode, QSXHz) then
+         begin
+         Spot.FQSXFrequency := QSXHz;
          end;
       end;
 
