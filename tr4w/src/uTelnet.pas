@@ -88,8 +88,8 @@ function TelnetIsConnected: boolean;
 procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);
 procedure SaveTelnetWindowSpots;
 procedure EnableTelnetToolbatButtons(b: boolean);
-procedure ProcessTelnetString(const ByteReceived: integer);
-function ProcessDX(DX: integer; InListBox: boolean; var Stringtype:
+procedure ProcessTelnetLine(const Line: AnsiString);
+function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 procedure tCreateAndAddNewSpot(Call: CallString; Dupe: boolean; Radio:
   RadioPtr);
@@ -280,6 +280,9 @@ var
   // IsConnected long before the event methods are implemented.
   ClusterClient: TDXClusterClient;
   ClusterEvents: TClusterEvents;
+  // Scratch for one received line, main thread only (the window procedure and
+  // the list-box re-decode).  Replaces the 20 KB TelnetBuffer global in TF.pas.
+  TelnetLine: AnsiString;
   PendingTelnetHost: array[0..255] of AnsiChar;   // set on the main thread before the I/O thread starts
   PendingTelnetPort: Word;
 
@@ -603,7 +606,8 @@ begin
               Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
               AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
-              Windows.ZeroMemory(@TelnetBuffer, SizeOf(TelnetBuffer));
+              // (The TelnetBuffer clear that stood here is gone with the buffer
+              // -- there is no shared receive state to reset between sessions.)
               if ConnectionCommand <> '' then
                  SendViaTelnetSocket(@ConnectionCommand[1])
               else
@@ -631,14 +635,13 @@ begin
             begin
               if lParam <> 0 then
                  begin
-                 Move(PTelnetChunk(lParam)^.Data[0], TelnetBuffer[0],
-                      PTelnetChunk(lParam)^.Len);
-                 // Issue #23 -- null-terminate like the old recv path did
-                 // (TelnetBuffer[i] := #0); ProcessTelnetString treats it as a
-                 // C string, so without this it reads past Len into stale data.
-                 TelnetBuffer[PTelnetChunk(lParam)^.Len] := #0;
-                 ProcessTelnetString(PTelnetChunk(lParam)^.Len);
+                 // The chunk now carries exactly ONE complete line, terminator
+                 // already stripped by the transport.  No shared receive
+                 // buffer, no NUL bookkeeping, no re-scanning for line breaks.
+                 SetString(TelnetLine, PAnsiChar(@PTelnetChunk(lParam)^.Data[0]),
+                           PTelnetChunk(lParam)^.Len);
                  Dispose(PTelnetChunk(lParam));
+                 ProcessTelnetLine(TelnetLine);
                  end;
             end;
 
@@ -770,10 +773,17 @@ begin
           i := SendMessage(TelnetListBox, LB_GETCURSEL, 0, 0);
           if i = LB_ERR then
             Exit;
-          SendMessageA(TelnetListBox, LB_GETTEXT, i, integer(@TelnetBuffer[0]));
-          if PInteger(@TelnetBuffer[0])^ = $64205844 {DX D} then
-            if ProcessDX(0, True, StringType) then
-              TuneRadioToSpot(TempSpot, RadioOne);
+          // Re-decode the line the operator clicked, straight from the list box
+          // -- no shared buffer in the middle any more.
+          SendMessageA(TelnetListBox, LB_GETTEXT, i, integer(@TempBuffer1[0]));
+          TelnetLine := AnsiString(PAnsiChar(@TempBuffer1[0]));
+          if Copy(TelnetLine, 1, 6) = 'DX de ' then
+             begin
+             if ProcessDX(TelnetLine, True, StringType) then
+                begin
+                TuneRadioToSpot(TempSpot, RadioOne);
+                end;
+             end;
 
         end;
 
@@ -910,22 +920,17 @@ var
   n:     integer;
 begin
   n := Length(L);
-  if n > SizeOf(chunk^.Data) - 3 then
+  if n > SizeOf(chunk^.Data) - 1 then
      begin
-     n := SizeOf(chunk^.Data) - 3;   // room for CR + NUL
+     n := SizeOf(chunk^.Data) - 1;   // room for the NUL
      end;
   New(chunk);
   if n > 0 then
      begin
      Move(L[1], chunk^.Data[0], n);
      end;
-  // ProcessTelnetString scans for a char <= #13 to END a line, so a bare line
-  // with the terminator already stripped would never be emitted.  Put the CR
-  // back.  This keeps that 494-line column parser byte-for-byte unchanged --
-  // it now simply always receives exactly one whole line, which is the point.
-  chunk^.Data[n] := #13;
-  chunk^.Data[n + 1] := #0;
-  chunk^.Len := n + 1;
+  chunk^.Data[n] := #0;
+  chunk^.Len := n;
   if TR4W_TELNET_DEBUG then
      begin
      logger.Info('[Telnet RX %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
@@ -1213,49 +1218,37 @@ begin
   //  SetToolButSt(208);
 end;
 
-procedure ProcessTelnetString(const ByteReceived: integer);
-label
-  Start;
+// Handle ONE complete cluster line: show it, and if it is a spot, decode it.
+//
+// Was ProcessTelnetString(ByteReceived), which scanned a shared receive buffer
+// for line breaks itself.  It no longer has to -- the transport delivers whole
+// lines (uDXClusterClient) -- and it no longer can get it wrong: that scan
+// restarted per chunk with no carry-over, so a line split across two TCP
+// segments was cut in half and both halves dropped.
+//
+// The `d > 120` force-break went with it.  It existed to stop a runaway
+// terminator-less stream from swallowing the buffer; with the terminator now
+// doing that job, its only remaining effect would be to chop a long comment
+// into two console lines.
+procedure ProcessTelnetLine(const Line: AnsiString);
 var
-
-  c: integer;
   AddedSpot: boolean;
-  pr: integer;
   StringType: TelnetStringType;
-  d: integer;
 
 begin
-  //  Windows.CharUpperBuff(TelnetBuffer, ByteReceived);
   AddedSpot := False;
-  pr := -1;
-  d := 0;
-  for c := 0 to ByteReceived do
-  begin
-    d := d + 1;
-    if pr = -1 then
-      if TelnetBuffer[c] > #13 then
-        pr := c;
+  StringType := tstReceived;
 
-    if pr <> -1 then
-      if (TelnetBuffer[c] <= #13) or (d > 120) then // n4af 4.50.7   issue # 179
-      begin
-        d := 0;
-        TelnetBuffer[c] := #0;
-        StringType := tstReceived;
-        if (PInteger(@TelnetBuffer[pr])^ = $64205844) {DX D} and
-        (PInteger(@TelnetBuffer[pr + 2])^ = $20656420) { DE } then
-          AddedSpot := ProcessDX(pr, False, StringType);
+  // "DX de " -- the two PInteger compares this replaces were $64205844 ("DX d")
+  // at the line start and $20656420 (" de ") two bytes in, which together spell
+  // exactly these six characters.  Same test, minus the endian puzzle.
+  if Copy(Line, 1, 6) = 'DX de ' then
+     begin
+     AddedSpot := ProcessDX(Line, False, StringType);
+     end;
 
-        // boundary: TelnetBuffer is the raw socket receive buffer, parsed in
-        // place by byte offset (PInteger "DX D"/"DE " matches, in-place #0 terminators).
-        // Decode the parsed ANSI line to string here, at the wire->display edge.
-        AddStringToTelnetConsole(string(PAnsiChar(@TelnetBuffer[pr])), StringType);
-
-        //     SetUpBandMapEntry(@BandMapEntryRecord, ActiveRadio);   // remove hh
-        pr := -1;
-        //   end;
-      end;
-  end;
+  // The wire->display edge: one decode, here, of one complete line.
+  AddStringToTelnetConsole(string(Line), StringType);
 
   if AddedSpot then
   begin
@@ -1296,11 +1289,55 @@ begin
 
 end;
 
-function ProcessDX(DX: integer; InListBox: boolean; var Stringtype:
+// Does `Token` appear at 0-based offset `Index`?
+//
+// This replaces the `PInteger(@Buf[i])^ = $20585351 {QSX }` idiom that ran
+// through this decoder.  That trick compared four characters as one 32-bit
+// integer -- a D7-era micro-optimisation that saved a few cycles on 1990s
+// hardware and has cost every reader since, because the constant only spells
+// "QSX " if you know the machine is little-endian and read the bytes backwards.
+// It is also silently limited to exactly four characters and silently wrong on
+// a big-endian target.  The compare below is the same test, written down.
+function TokenAt(const Buf: array of AnsiChar; Index: integer;
+                 const Token: AnsiString): boolean;
+var
+  k: integer;
+begin
+  Result := False;
+  if (Index < 0) or (Index + Length(Token) > Length(Buf)) then
+     begin
+     Exit;
+     end;
+  for k := 1 to Length(Token) do
+     begin
+     if Buf[Index + k - 1] <> Token[k] then
+        begin
+        Exit;
+        end;
+     end;
+  Result := True;
+end;
+
+// Decode ONE complete cluster line into TempSpot.
+//
+// Takes the LINE, not an offset into a shared receive buffer.  It used to read
+// `TelnetBuffer[DX + n]` -- a global the socket wrote into -- which meant the
+// decoder could only run where that global was live, i.e. never in a test.  The
+// column arithmetic below is unchanged and deliberately so: those offsets are
+// tuned against what real nodes actually emit.  All that changed is WHERE the
+// bytes come from, so DX is now always 0 and the `DX + n` expressions keep
+// reading exactly as they always did.
+function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 label
   1;
 var
+  // The line, NUL-filled so any read past its end sees a terminator exactly as
+  // it did in the old NUL-terminated receive buffer.  1024 is far beyond any
+  // real cluster line (~80-120 chars).
+  LineBuf: array[0..1023] of AnsiChar;
+  DX: integer;        // always 0; kept so the offsets below read as before
+  copyLen: integer;
   i, i1: integer;
   TempFrequency: integer;
 
@@ -1316,6 +1353,21 @@ var
   Offset: integer;
   ct: Cardinal;
 begin
+  // Copy the line into a NUL-filled local.  Zero-filling is what makes the
+  // fixed offsets below safe on a SHORT line: a read past the end lands on #0,
+  // exactly as it did when this walked a NUL-terminated receive buffer.
+  Windows.ZeroMemory(@LineBuf, SizeOf(LineBuf));
+  copyLen := Length(Line);
+  if copyLen > SizeOf(LineBuf) - 1 then
+     begin
+     copyLen := SizeOf(LineBuf) - 1;
+     end;
+  if copyLen > 0 then
+     begin
+     Move(Line[1], LineBuf[0], copyLen);
+     end;
+  DX := 0;   // the line starts at the start; see the header
+
   Offset := 0;
   Result := False;
   Stringtype := tstReceived;
@@ -1323,23 +1375,33 @@ begin
   TempSpot.FBand := NoBand;
   TempSpot.FMode := NoMode;
 
-  //  ShowMessage(@TelnetBuffer[DX + 24]);
-  if TelnetBuffer[DX + 24] = '.' then
-    Offset := 3; // 4.92.6
-  if TelnetBuffer[DX + 25] = '.' then
-    Offset := 4;
-  if TelnetBuffer[DX + 26] = '.' then
-    Offset := 5;
-  if TelnetBuffer[Dx + 23] = '.' then
-    Offset := 1;
+  //  ShowMessage(@LineBuf[DX + 24]);
+  if LineBuf[DX + 24] = '.' then
+     begin
+     Offset := 3; // 4.92.6
+     end;
+  if LineBuf[DX + 25] = '.' then
+     begin
+     Offset := 4;
+     end;
+  if LineBuf[DX + 26] = '.' then
+     begin
+     Offset := 5;
+     end;
+  if LineBuf[Dx + 23] = '.' then
+     begin
+     Offset := 1;
+     end;
   {Source Callsign}
   for i := DX + 9 to DX + 20 do
   begin
-    if ((TelnetBuffer[i] = ' ') or (TelnetBuffer[i] = ':')) then
+    if ((LineBuf[i] = ' ') or (LineBuf[i] = ':')) then
     begin
-      if TelnetBuffer[i + 1] <> ' ' then // 4.92.6
-        SetLength(TempSpot.FSourceCall, i - DX - 6);
-      Windows.lstrcpynA(@TempSpot.FSourceCall[1], @TelnetBuffer[DX + 6], i - DX -
+      if LineBuf[i + 1] <> ' ' then // 4.92.6
+         begin
+         SetLength(TempSpot.FSourceCall, i - DX - 6);
+         end;
+      Windows.lstrcpynA(@TempSpot.FSourceCall[1], @LineBuf[DX + 6], i - DX -
         5);
       i1 := i;
       Break;
@@ -1348,12 +1410,14 @@ begin
 
   for i := DX + 10 to DX + 20 do
   begin
-    // if TelnetBuffer[i] = ' ' then if TelnetBuffer[i + 1] <> ' ' then
-    if (TelnetBuffer[i] = ' ') or (TelnetBuffer[i] = ':') then // 4.92.6
-      if TelnetBuffer[i + 1] <> ' ' then
-
+    // if LineBuf[i] = ' ' then if LineBuf[i + 1] <> ' ' then
+    // Two nested single-statement ifs collapsed into one condition -- no else
+    // on either, so this is the same test, and it satisfies the begin/end rule
+    // without adding a pointless nesting level.  4.92.6
+    if ((LineBuf[i] = ' ') or (LineBuf[i] = ':')) and
+       (LineBuf[i + 1] <> ' ') then
       begin
-        Windows.lstrcpynA(@TempSpot.FFreqString[0], @TelnetBuffer[i + 1], DX + 24
+        Windows.lstrcpynA(@TempSpot.FFreqString[0], @LineBuf[i + 1], DX + 24
           - i + Offset);
 
         TempFrequency := 0;
@@ -1408,11 +1472,12 @@ begin
     Offset := 3; // 4.92.7
   for i := DX + 27 to DX + 39 do
   begin
-    if TelnetBuffer[i] <> ' ' then
-      if TelnetBuffer[i + 1] = ' ' then // 4.92.7
+    // Nested single-statement ifs collapsed; same test, no else on either. 4.92.7
+    if (LineBuf[i] <> ' ') and
+       (LineBuf[i + 1] = ' ') then
       begin
         SetLength(TempSpot.FCall, i - (DX + 25 + Offset));
-        Windows.lstrcpynA(@TempSpot.FCall[1], @TelnetBuffer[DX + 26 + Offset], i
+        Windows.lstrcpynA(@TempSpot.FCall[1], @LineBuf[DX + 26 + Offset], i
           - (DX + 24 + Offset));
         if not GoodCallSyntax(TempSpot.FCall) then
           Exit;
@@ -1421,20 +1486,20 @@ begin
   end;
 
   {Note}
-  if TelnetBuffer[DX + 39 + Offset] <> '                              ' then
+  if LineBuf[DX + 39 + Offset] <> '                              ' then
     // This is not right as the extensions can be at the end so check if th ewhole comment (30 bytes) is blank // ny4i
   begin
-    Windows.lstrcpynA(@TempSpot.FNotes[0], @TelnetBuffer[DX + 39 + Offset], 31);
+    Windows.lstrcpynA(@TempSpot.FNotes[0], @LineBuf[DX + 39 + Offset], 31);
     //was 31 but allow for null ny4i
-    StrUpper(PAnsiChar(@TelnetBuffer[DX + 39 + Offset]));
+    StrUpper(PAnsiChar(@LineBuf[DX + 39 + Offset]));
     for i := DX + 39 to DX + 65 do
     begin
       //        i1:=
-     // i1 := PInteger(@TelnetBuffer[i])^;
+     // i1 := PInteger(@LineBuf[i])^;
 
-      if PInteger(@TelnetBuffer[i])^ = 542659409 {QSX } then
+      if TokenAt(LineBuf, i, 'QSX ') then
       begin
-        if TelnetBuffer[i + 4] in ['0'..'9'] then
+        if LineBuf[i + 4] in ['0'..'9'] then
         begin
 
           Hertz := 1000;
@@ -1442,7 +1507,7 @@ begin
 
           for QSXPos := 4 to 12 do
           begin
-            TempChar := TelnetBuffer[i + QSXPos];
+            TempChar := LineBuf[i + QSXPos];
             case TempChar of
               ' ': Break;
               '0'..'9':
@@ -1468,16 +1533,29 @@ begin
 
       end;
 
-      if PInteger(@TelnetBuffer[i])^ = $20315055 {UP1 } then
-        TempSpot.FQSXFrequency := TempSpot.FFrequency + 1000;
-      if PInteger(@TelnetBuffer[i])^ = $20325055 {UP2 } then
-        TempSpot.FQSXFrequency := TempSpot.FFrequency + 2000;
-      if PInteger(@TelnetBuffer[i])^ = $20335055 {UP3 } then
-        TempSpot.FQSXFrequency := TempSpot.FFrequency + 3000;
-      if PInteger(@TelnetBuffer[i])^ = $20345055 {UP4 } then
-        TempSpot.FQSXFrequency := TempSpot.FFrequency + 4000;
-      if PInteger(@TelnetBuffer[i])^ = $20355055 {UP5 } then
-        TempSpot.FQSXFrequency := TempSpot.FFrequency + 5000;
+      // UP1..UP5 -- "QSX n kHz up".  Five explicit tokens, kept explicit: only
+      // 1..5 were ever recognised, and inferring the digit would quietly start
+      // accepting UP6..UP9 that this decoder has never handled.
+      if TokenAt(LineBuf, i, 'UP1 ') then
+         begin
+         TempSpot.FQSXFrequency := TempSpot.FFrequency + 1000;
+         end;
+      if TokenAt(LineBuf, i, 'UP2 ') then
+         begin
+         TempSpot.FQSXFrequency := TempSpot.FFrequency + 2000;
+         end;
+      if TokenAt(LineBuf, i, 'UP3 ') then
+         begin
+         TempSpot.FQSXFrequency := TempSpot.FFrequency + 3000;
+         end;
+      if TokenAt(LineBuf, i, 'UP4 ') then
+         begin
+         TempSpot.FQSXFrequency := TempSpot.FFrequency + 4000;
+         end;
+      if TokenAt(LineBuf, i, 'UP5 ') then
+         begin
+         TempSpot.FQSXFrequency := TempSpot.FFrequency + 5000;
+         end;
 
       // Handle "UP <n>" format (space between UP and number, e.g. "UP 5", "UP 10").
       // Word-boundary guard: require a space (or start of comment field) before
@@ -1485,16 +1563,16 @@ begin
       // trigger a false split.
       // "UP <n>" with space-separated number, e.g. "UP 5", "UP 10".
       // Require a space before 'U' (word boundary) and a digit after "UP ".
-      if (TelnetBuffer[i] = 'U') and
-         (TelnetBuffer[i + 1] = 'P') and
-         (TelnetBuffer[i + 2] = ' ') and
-         (TelnetBuffer[i - 1] = ' ') and
-         (TelnetBuffer[i + 3] in ['0'..'9']) then
+      if (LineBuf[i] = 'U') and
+         (LineBuf[i + 1] = 'P') and
+         (LineBuf[i + 2] = ' ') and
+         (LineBuf[i - 1] = ' ') and
+         (LineBuf[i + 3] in ['0'..'9']) then
          begin
          UpKhz := 0;
          for QSXPos := 3 to 8 do
             begin
-            TempChar := TelnetBuffer[i + QSXPos];
+            TempChar := LineBuf[i + QSXPos];
             if not (TempChar in ['0'..'9']) then
                Break;
             UpKhz := UpKhz * 10 + (Ord(TempChar) - 48);
@@ -1534,11 +1612,11 @@ begin
   //  Windows.GetSystemTime(TempSpot.FSysTime);
   ct := UTC.wMinute + UTC.wHour * 60 + UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24
     * 30;
-  if (TelnetBuffer[DX + 74] = 'Z') then
+  if (LineBuf[DX + 74] = 'Z') then
   begin
-    TempSpot.FSysTime := ((Ord(TelnetBuffer[DX + 70]) - $30) * 10 +
-      Ord(TelnetBuffer[DX + 71]) - $30) * 60 +
-      ((Ord(TelnetBuffer[DX + 72]) - $30) * 10 + Ord(TelnetBuffer[DX + 73]) -
+    TempSpot.FSysTime := ((Ord(LineBuf[DX + 70]) - $30) * 10 +
+      Ord(LineBuf[DX + 71]) - $30) * 60 +
+      ((Ord(LineBuf[DX + 72]) - $30) * 10 + Ord(LineBuf[DX + 73]) -
       $30) + UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24 * 30;
     if ct >= TempSpot.FSysTime then
       TempSpot.FMinutesLeft := ct - TempSpot.FSysTime;
@@ -1547,8 +1625,8 @@ begin
   else
     TempSpot.FSysTime := ct;
 
-  //  TempSpot.FSysTime.wHour := (Ord(TelnetBuffer[DX + 70]) - $30) * 10 + Ord(TelnetBuffer[DX + 71]) - $30;
-  //  TempSpot.FSysTime.wMinute := (Ord(TelnetBuffer[DX + 72]) - $30) * 10 + Ord(TelnetBuffer[DX + 73]) - $30;
+  //  TempSpot.FSysTime.wHour := (Ord(LineBuf[DX + 70]) - $30) * 10 + Ord(LineBuf[DX + 71]) - $30;
+  //  TempSpot.FSysTime.wMinute := (Ord(LineBuf[DX + 72]) - $30) * 10 + Ord(LineBuf[DX + 73]) - $30;
   if TempSpot.FCall = MyCall then
   begin
     Stringtype := tstAlert;

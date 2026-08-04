@@ -85,7 +85,12 @@ var
   TempBuffer1                           : array[0..255] of AnsiChar;
   TempBuffer2                           : array[0..255] of AnsiChar;
   SetDlgItemTextBuffer                  : array[0..255] of AnsiChar;
-  TelnetBuffer                          : array[0..4096 * 5 - 1] of AnsiChar;
+  // TelnetBuffer (20 KB, array[0..4096*5-1] of AnsiChar) is GONE.  It was the
+  // DX cluster's shared receive buffer: the socket wrote into it, the line
+  // scanner chopped it up in place, and the spot decoder read it by fixed
+  // offset -- which is why the decoder could not run anywhere the global was
+  // not live.  The transport now delivers whole lines and the decoder takes
+  // one as a parameter (uDXClusterClient / uTelnet.ProcessDX).
   spotsBuffer                            : array[0..4096 * 5 - 1] of AnsiChar;
   NetBuffer                             : array[1..4096] of AnsiChar;
   SyncNetBuffer                         : array[0..4096 - 1] of AnsiChar;
