@@ -394,8 +394,8 @@ const
   CIV_SUBCMD_VFO_A = #$00;
   CIV_SUBCMD_VFO_B = #$01;
 
-  // CI-V Sub-commands for CW ($17)
-  CIV_SUBCMD_CW_SEND = #$00;
+  // $17 has NO sub-command.  A CIV_SUBCMD_CW_SEND = #$00 used to be prefixed to
+  // the message here; see TIcomRadio.SendCW for why it is gone.
 
   // CI-V Sub-commands for Filter ($1A)
   CIV_SUBCMD_FILTER_WIDTH = #$03;
@@ -1959,8 +1959,18 @@ begin
     Exit;
   end;
 
-  // Send CW message using CI-V command $17 $00
-  SendToRadio(BuildCIVCommand($17, CIV_SUBCMD_CW_SEND + FCWBuffer));
+  // Send CW message using CI-V command $17.  The message text follows the
+  // command DIRECTLY -- $17 takes no sub-command.
+  //
+  // A #$00 was prefixed here until 2026-08-04.  Two independent references send
+  // the text with nothing between: the D7 legacy path (LOGRADIO.PAS:2667 writes
+  // ICOM_SEND_CW then the characters) and HamLib (icom_send_morse passes
+  // C_SND_CW with subcmd -1, meaning "no sub-command byte").  $00 is also not in
+  // the character table the radio documents for this command -- the codes there
+  // are 20, 27-3F and 41-7A -- so it was a byte outside the alphabet the command
+  // accepts.  An IC-7100 tolerated it, which is why this went unnoticed; a radio
+  // that does not would have refused every CW message.
+  SendToRadio(BuildCIVCommand($17, FCWBuffer));
   logger.info('[%s.SendCW] Sending CW: "%s"', [radioModel, FCWBuffer]);
 
   // Clear buffer after sending
