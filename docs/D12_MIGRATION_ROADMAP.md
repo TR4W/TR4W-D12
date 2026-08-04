@@ -85,7 +85,14 @@ Three D7→D12 gaps found, all worth remembering:
    compiler to check. **W1057 cannot see this class of bug and neither can the linters** —
    any remaining `@buffer` passed to a *generic* Win32 name must be found by reading.
 
-### C-1 postscript — the cluster does not use Indy
+### C-1 postscript — the cluster did not use Indy (it does now)
+
+> **Superseded 2026-08-04.** The finding below was accurate when written and is
+> kept because it explains what was there. `uTelnet` has since been moved to
+> `TIdTCPClient` with line-based reads (`99ef30fb`, `bce1262e`) — not for D12
+> correctness, which was fine, but because the raw-Winsock reader dropped any DX
+> line split across two TCP segments. Re-verified live on AR-Cluster.
+
 
 The roadmap ranked C-1 top risk on the grounds of vendored Indy 10.6.3.3. That reasoning
 does not apply: `uTelnet.pas` uses **no Indy at all**. It is raw Winsock with `AnsiChar`
@@ -132,7 +139,7 @@ Nothing here is provable by code review. All of it needs hardware or a second st
 | C-1 | **Telnet / DX cluster / SSL** on the D12 binary. | P1-6 · **Group F** | ✅ **DONE 2026-08-02.** Cluster connects and logs in; CTY.DAT downloads over HTTPS (so vendored Indy + the bundled OpenSSL DLLs are proven); `{TOKEN}` expansion verified. Code audit found **no** defect — see the note below. Remaining SSL surface: score posting, HamScore. |
 | C-2 | ~~**Two-station D7 ↔ D12 wire test**~~ **RETIRED as written** — all stations run the same build by convention (NY4I). `ContestExchange` has zero plain `Char` fields and the corpus reads D7-written binaries, so the shared record is byte-stable. Replaced by a **two-client** test of the server's own `AnsiChar` paths — see §9. | — | 🟡 Rescoped 2026-08-02 |
 | C-3 | **CW / WinKeyer / DVK / DVP timing.** | P1-8 · **Group D** | 🟡 Partly done — WinKeyer latency + startup verified on the K3 (383 ms → 25 ms; 1978 ms → 0.4 ms) |
-| C-4 | **CW-by-CAT send, every radio.** `SendCW` now has one path for all families and three drivers emit `KY` for the first time. Highest-risk item on the branch. | `BENCH_TEST_PLAN_2026-08-01` §1–2 | 🟡 K3/K4 verified; **K2, KX3, Kenwood, Flex-on-COM, Icom long-message fix untested** |
+| C-4 | **CW-by-CAT send, every radio.** `SendCW` now has one path for all families and three drivers emit `KY` for the first time. Highest-risk item on the branch. | `BENCH_TEST_PLAN_2026-08-01` §1–2 | 🟡 K3/K4 verified, and **K3S over USB serial re-verified 2026-08-04** for both CW-by-CAT and CW speed sync after the capability/framing rework (`a9e77155`, `4a7f9833`) — the K3 pad-to-22 quirk survived the move onto `TElecraftSerial`. Still untested: **K2, KX3, Kenwood, Flex-on-COM, Icom long-message split, TCI** |
 | C-5 | **Ten-Tec Orion CW** — never worked (`#13` inside a quoted string is three literal chars). Fix is unverified; NY4I sourcing a radio. | §3 | 🔴 Blocked on hardware |
 | C-6 | **Freq / mode / split / DVK on every radio** after ~900 lines of legacy `SetRadioFreq` encoders were deleted. No fallback remains to mask a failure. | §6 | 🔴 Open |
 | C-7 | **SO2R** — YCCC box (Group C) and the two-radio CW-by-CAT interlock (asymmetric 500 ms sleep). N4AF owns validating the interlock. | Group C · §"Known NOT covered" | 🔴 Open |
