@@ -21,7 +21,7 @@ interface
 uses
    Windows, IdTCPClient, IdComponent, IdTCPConnection,IdThreadComponent, IdExceptionCore, SysUtils,
    Classes, StrUtils, Log4D, uLogConfig, VC, Tree, IdException, IdStack, SyncObjs, uSerialPort, uRadioBand,
-   uCWFraming;   // TCWFrameRule / TCWProsignDialect -- the CW traits a radio declares
+   uCWFraming;   // TCWFrameRule / TCWProsign -- the CW traits a radio declares
 
 Type TProcessMsgRef = procedure (sMessage: string) of Object;
 // Optional per-radio frame check for FIXED-LENGTH framing.  Returns True if the
@@ -145,17 +145,22 @@ Type
       CWSpeedMin: integer;         // CW keyer wpm range (ranged traits a set can't hold; default 6..48)
       CWSpeedMax: integer;
       // ---- CW-by-CAT framing, for the radios that declare rcCWByCAT ---------
-      // How this rig's CW command must be cut up, and which prosign dialect it
-      // speaks.  Both were `case model of` tables in uCWFraming until
-      // 2026-08-03; they are facts about ONE radio, so they belong here beside
-      // CWSpeedMin/Max rather than in a table the radio cannot participate in
-      // (a string-id radio has no InterfacedRadioType to be a case label).
+      // How this rig's CW command must be cut up.  This was a `case model of`
+      // table in uCWFraming until 2026-08-03; it is a fact about ONE radio, so
+      // it belongs here beside CWSpeedMin/Max rather than in a table the radio
+      // cannot participate in (a string-id radio has no InterfacedRadioType to
+      // be a case label).
       //
       // Declared by the family base and overridden per model -- the K2 and the
       // TS-890 differ from their families only in `pad`.  A base must never
       // test model identity to decide these; the model unit overrides the field.
+      //
+      // The prosign SPELLINGS were a second such table (a dialect enum
+      // enum) until 2026-08-04.  They are not a field at all now: the radio
+      // answers for itself in CWProsign below, because five unrelated classes
+      // share the Kenwood spellings and an enum was just the model table again
+      // under another name.
       CWFrame: TCWFrameRule;
-      CWProsignDialect: TCWProsignDialect;
    end;
 
 Type TSimpleEventProc = procedure(const aStrParam:string) of object;
@@ -512,6 +517,23 @@ Type TFactoryRadioBase = class(TObject)
       // ('KY '#4';RX;' for the K3) was never reached.  Bench: NY4I, K3,
       // 2026-07-31.
       function CWIsFactoryOwned: Boolean; Virtual;
+
+      // What THIS radio should key for one of TR4W's prosign tokens
+      // (^ half space, ! SN, + AR, < SK, = BT -- see TC_CWMENU).
+      //
+      // The radio answers, rather than a dialect enum being looked up in
+      // uCWFraming: the spellings are shared by groups that do not match the
+      // class graph (five unrelated classes speak the Kenwood one), so each
+      // driver overrides this and delegates to uCWFraming.ElecraftProsign,
+      // .KenwoodProsign or .IcomProsign.  That keeps one definition of each
+      // spelling while leaving the CHOICE where every other radio trait lives.
+      //
+      // The base answers "not handled" for every token, which is the honest
+      // default: a radio whose CW grammar nobody has established must pass
+      // tokens through as literal text rather than be sent another vendor's
+      // substitute characters.  TCI relies on this.
+      function CWProsign(const token: string): TCWProsign; Virtual;
+
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); Virtual; Abstract;
       procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); Virtual; Abstract;
       function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; Virtual; Abstract;
@@ -661,7 +683,6 @@ begin
    // Stated here rather than left implicit so that intent is on the page, and
    // pinned per keying radio by test/unit/uTestCWFraming.
    FCapabilities.CWFrame := uCWFraming.CWFrameRule(0, False);
-   FCapabilities.CWProsignDialect := pdNone;
 
    SocketLock := TCriticalSection.Create;
    Disconnecting := False;
@@ -800,6 +821,15 @@ begin
   // honest answer matters (Escape was being swallowed).  A driver that really
   // keys CW overrides this to True.
   Result := False;
+end;
+
+function TFactoryRadioBase.CWProsign(const token: string): TCWProsign;
+begin
+  // Not handled: the caller keys the token as literal text.  See the
+  // declaration -- substituting another vendor's character here would be a
+  // guess dressed up as a fact.
+  Result.handled := False;
+  Result.text := '';
 end;
 
 procedure TFactoryRadioBase.PollRadioState;
@@ -1591,12 +1621,13 @@ begin
    if rcCWByCAT in FCapabilities.Flags then
       begin
       Result := Result +
-         Format(' [CW frame: maxLen %d, pad %s, busy x%.2f, dialect %s]',
+         Format(' [CW frame: maxLen %d, pad %s, busy x%.2f, SK spelled "%s"]',
                 [FCapabilities.CWFrame.maxLen,
                  BoolToStr(FCapabilities.CWFrame.pad, True),
                  FCapabilities.CWFrame.busyFactor,
-                 GetEnumName(TypeInfo(TCWProsignDialect),
-                             Ord(FCapabilities.CWProsignDialect))]);
+                 // The prosign grammar is no longer an enum to name, so
+                 // log what this radio actually keys for one of them.
+                 CWProsign('<').text]);
       end;
 end;
 

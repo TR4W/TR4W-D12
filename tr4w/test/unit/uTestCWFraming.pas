@@ -57,56 +57,57 @@ type
       maxLen:     integer;
       pad:        boolean;
       busyPct:    integer;      // busyFactor x 100, so it can be compared as an integer
-      dialect:    TCWProsignDialect;
+      skText:     string;   // what this radio keys for '<' (SK) -- its
+                            // whole prosign grammar in one observable
    end;
 
 const
    CW_PINS: array[0..28] of TCWPin = (
       // Elecraft: 22 and padded, to survive the keyer-abort window.  The K2 is
       // the family's one deviation -- same length, no padding.
-      (model: K2;     link: rlSerial;  name: 'K2';     maxLen: 22; pad: False; busyPct: 100; dialect: pdElecraft),
-      (model: K3;     link: rlSerial;  name: 'K3';     maxLen: 22; pad: True;  busyPct: 100; dialect: pdElecraft),
-      (model: KX3;    link: rlSerial;  name: 'KX3';    maxLen: 22; pad: True;  busyPct: 100; dialect: pdElecraft),
-      (model: K4;     link: rlNetwork; name: 'K4';     maxLen: 22; pad: True;  busyPct: 100; dialect: pdElecraft),
+      (model: K2;     link: rlSerial;  name: 'K2';     maxLen: 22; pad: False; busyPct: 100; skText: '*'),
+      (model: K3;     link: rlSerial;  name: 'K3';     maxLen: 22; pad: True;  busyPct: 100; skText: '*'),
+      (model: KX3;    link: rlSerial;  name: 'KX3';    maxLen: 22; pad: True;  busyPct: 100; skText: '*'),
+      (model: K4;     link: rlNetwork; name: 'K4';     maxLen: 22; pad: True;  busyPct: 100; skText: '*'),
       // Kenwood: KY takes 24 and rejects a short P2 under P1=space, so it fills.
-      (model: TS480;  link: rlSerial;  name: 'TS-480'; maxLen: 24; pad: True;  busyPct: 100; dialect: pdKenwood),
-      (model: TS570;  link: rlSerial;  name: 'TS-570'; maxLen: 24; pad: True;  busyPct: 100; dialect: pdKenwood),
-      (model: TS590;  link: rlSerial;  name: 'TS-590'; maxLen: 24; pad: True;  busyPct: 100; dialect: pdKenwood),
-      (model: TS2000; link: rlSerial;  name: 'TS-2000';maxLen: 24; pad: True;  busyPct: 100; dialect: pdKenwood),
+      (model: TS480;  link: rlSerial;  name: 'TS-480'; maxLen: 24; pad: True;  busyPct: 100; skText: '>'),
+      (model: TS570;  link: rlSerial;  name: 'TS-570'; maxLen: 24; pad: True;  busyPct: 100; skText: '>'),
+      (model: TS590;  link: rlSerial;  name: 'TS-590'; maxLen: 24; pad: True;  busyPct: 100; skText: '>'),
+      (model: TS2000; link: rlSerial;  name: 'TS-2000';maxLen: 24; pad: True;  busyPct: 100; skText: '>'),
       // The TS-850 was NOT in the old model table even though it declares
       // rcCWByCAT, so it fell to "no limit, no padding" (and in D7, to an
       // uninitialised maxLen).  As a TKenwoodSerial it now gets the family rule.
-      (model: TS850;  link: rlSerial;  name: 'TS-850'; maxLen: 24; pad: True;  busyPct: 100; dialect: pdKenwood),
-      (model: TS990;  link: rlNetwork; name: 'TS-990'; maxLen: 24; pad: True;  busyPct: 100; dialect: pdKenwood),
+      (model: TS850;  link: rlSerial;  name: 'TS-850'; maxLen: 24; pad: True;  busyPct: 100; skText: '>'),
+      (model: TS990;  link: rlNetwork; name: 'TS-990'; maxLen: 24; pad: True;  busyPct: 100; skText: '>'),
       // The TS-890 takes a variable-length P2, so no fill.
-      (model: TS890;  link: rlNetwork; name: 'TS-890'; maxLen: 24; pad: False; busyPct: 100; dialect: pdKenwood),
+      (model: TS890;  link: rlNetwork; name: 'TS-890'; maxLen: 24; pad: False; busyPct: 100; skText: '>'),
       // Flex: two protocols, two classes, two rules.  This pair is what the old
       // `network: boolean` parameter existed to express.
-      (model: FLEX;   link: rlSerial;  name: 'Flex CAT'; maxLen: 24; pad: True;  busyPct: 100; dialect: pdKenwood),
-      (model: FLEX;   link: rlNetwork; name: 'Flex API'; maxLen: 0;  pad: False; busyPct: 100; dialect: pdKenwood),
+      (model: FLEX;   link: rlSerial;  name: 'Flex CAT'; maxLen: 24; pad: True;  busyPct: 100; skText: '>'),
+      (model: FLEX;   link: rlNetwork; name: 'Flex API'; maxLen: 0;  pad: False; busyPct: 100; skText: '>'),
       // Icom: 28 per send, and a 1.25 safety factor on the busy window because
       // the CI-V send queue is rate limited.  Every keying Icom is listed
       // individually rather than covered by a range: the rule reaches them by
       // INHERITANCE, and this test's whole job is to prove that it arrives.  It
       // did not, on the first run -- the value was set in DefineCapabilities,
       // which every subclass replaces, and all fourteen came out with maxLen 0.
-      (model: IC705;    link: rlSerial; name: 'IC-705';    maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC905;    link: rlSerial; name: 'IC-905';    maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7100;   link: rlSerial; name: 'IC-7100';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7300;   link: rlSerial; name: 'IC-7300';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7300MK2;link: rlSerial; name: 'IC-7300MK2';maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7410;   link: rlSerial; name: 'IC-7410';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7600;   link: rlSerial; name: 'IC-7600';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7610;   link: rlSerial; name: 'IC-7610';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7700;   link: rlSerial; name: 'IC-7700';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7760;   link: rlSerial; name: 'IC-7760';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7800;   link: rlSerial; name: 'IC-7800';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7850;   link: rlSerial; name: 'IC-7850';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC7851;   link: rlSerial; name: 'IC-7851';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC9100;   link: rlSerial; name: 'IC-9100';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
-      (model: IC9700;   link: rlSerial; name: 'IC-9700';   maxLen: 28; pad: False; busyPct: 125; dialect: pdIcom),
+      (model: IC705;    link: rlSerial; name: 'IC-705';    maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC905;    link: rlSerial; name: 'IC-905';    maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7100;   link: rlSerial; name: 'IC-7100';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7300;   link: rlSerial; name: 'IC-7300';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7300MK2;link: rlSerial; name: 'IC-7300MK2';maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7410;   link: rlSerial; name: 'IC-7410';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7600;   link: rlSerial; name: 'IC-7600';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7610;   link: rlSerial; name: 'IC-7610';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7700;   link: rlSerial; name: 'IC-7700';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7760;   link: rlSerial; name: 'IC-7760';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7800;   link: rlSerial; name: 'IC-7800';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7850;   link: rlSerial; name: 'IC-7850';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC7851;   link: rlSerial; name: 'IC-7851';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC9100;   link: rlSerial; name: 'IC-9100';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
+      (model: IC9700;   link: rlSerial; name: 'IC-9700';   maxLen: 28; pad: False; busyPct: 125; skText: '^SK'),
       // Ten-Tec keys with '/<text>', not a KY: no limit, no padding.
-      (model: ORION;  link: rlSerial;  name: 'Orion';   maxLen: 0;  pad: False; busyPct: 100; dialect: pdKenwood)
+      (model: ORION;  link: rlSerial;  name: 'Orion';   maxLen: 0;  pad: False; busyPct: 100; skText: '>')
    );
 
    // String-id radios have no InterfacedRadioType, which is the whole reason the
@@ -137,8 +138,10 @@ begin
                    CW_PINS[i].name + ' pad');
          CheckEquals(CW_PINS[i].busyPct, Round(caps.CWFrame.busyFactor * 100),
                      CW_PINS[i].name + ' busyFactor');
-         CheckTrue(caps.CWProsignDialect = CW_PINS[i].dialect,
-                   CW_PINS[i].name + ' prosign dialect');
+         // The radio spells its own prosigns now, so ask it rather than
+         // reading a dialect enum off the capability record.
+         CheckEquals(CW_PINS[i].skText, r.CWProsign('<').text,
+                     CW_PINS[i].name + ' SK spelling');
       finally
          r.Free;
       end;
@@ -154,8 +157,8 @@ begin
       try
          CheckEquals(0, r.Capabilities.CWFrame.maxLen, 'TCI has no stated limit');
          CheckFalse(r.Capabilities.CWFrame.pad, 'TCI does not pad');
-         CheckTrue(r.Capabilities.CWProsignDialect = pdNone,
-                   'TCI substitutes no prosigns');
+         CheckFalse(r.CWProsign('<').handled,
+                    'TCI substitutes no prosigns');
          CheckTrue(r.Supports(rcCWByCAT),
                    'TCI can key CW by CAT -- the point of the whole exercise');
       finally
@@ -295,54 +298,59 @@ var
 begin
    BeginTest('prosigns are spelled differently on Elecraft and Kenwood');
 
-   // AR / SK / BT: same prosign, different character per dialect.
-   CheckEquals('+', CWProsignFor(pdElecraft, '+').text, 'Elecraft AR');
-   CheckEquals('_', CWProsignFor(pdKenwood,  '+').text, 'Kenwood AR');
-   CheckEquals('*', CWProsignFor(pdElecraft, '<').text, 'Elecraft SK');
-   CheckEquals('>', CWProsignFor(pdKenwood,  '<').text, 'Kenwood SK');
-   CheckEquals('=', CWProsignFor(pdElecraft, '=').text, 'Elecraft BT');
-   CheckEquals('[', CWProsignFor(pdKenwood,  '=').text, 'Kenwood BT');
+   // AR / SK / BT: same prosign, different character per grammar.
+   CheckEquals('+', ElecraftProsign('+').text, 'Elecraft AR');
+   CheckEquals('_', KenwoodProsign('+').text, 'Kenwood AR');
+   CheckEquals('*', ElecraftProsign('<').text, 'Elecraft SK');
+   CheckEquals('>', KenwoodProsign('<').text, 'Kenwood SK');
+   CheckEquals('=', ElecraftProsign('=').text, 'Elecraft BT');
+   CheckEquals('[', KenwoodProsign('=').text, 'Kenwood BT');
 
-   // Half space: neither dialect has one, so both key a whole space.
-   CheckEquals(' ', CWProsignFor(pdElecraft, '^').text, 'Elecraft half space -> space');
-   CheckEquals(' ', CWProsignFor(pdKenwood,  '^').text, 'Kenwood half space -> space');
+   // Half space: neither grammar has one, so both key a whole space.
+   CheckEquals(' ', ElecraftProsign('^').text, 'Elecraft half space -> space');
+   CheckEquals(' ', KenwoodProsign('^').text, 'Kenwood half space -> space');
 
    // SN exists on Kenwood only.  On Elecraft the token is still HANDLED (it must
    // not fall through and be keyed as a literal '!') but produces no text.
-   CheckEquals('%', CWProsignFor(pdKenwood, '!').text, 'Kenwood SN');
-   p := CWProsignFor(pdElecraft, '!');
+   CheckEquals('%', KenwoodProsign('!').text, 'Kenwood SN');
+   p := ElecraftProsign('!');
    CheckTrue(p.handled, 'Elecraft SN token is consumed, not passed through');
    CheckEquals('', p.text, 'Elecraft has no SN, so nothing is keyed');
 
    // Anything else is not a prosign: the caller must treat it as literal text.
-   CheckFalse(CWProsignFor(pdElecraft, 'A').handled, 'a letter is not a prosign');
-   CheckFalse(CWProsignFor(pdElecraft, '&').handled, 'AS is deliberately not handled');
-   CheckFalse(CWProsignFor(pdElecraft, '').handled, 'empty token is not a prosign');
-   CheckFalse(CWProsignFor(pdElecraft, 'CQ').handled, 'a whole word is not a prosign');
+   CheckFalse(ElecraftProsign('A').handled, 'a letter is not a prosign');
+   CheckFalse(ElecraftProsign('&').handled, 'AS is deliberately not handled');
+   CheckFalse(ElecraftProsign('').handled, 'empty token is not a prosign');
+   CheckFalse(ElecraftProsign('CQ').handled, 'a whole word is not a prosign');
 end;
 
 procedure TCWFramingTests.Test_IcomIsAThirdDialect;
 var
    p: TCWProsign;
 begin
-   BeginTest('Icom uses NAMED prosigns, not substitute characters');
+   BeginTest('Icom keys prosigns as run-together ASCII, not substitute characters');
 
-   // Elecraft and Kenwood swap ONE character; Icom spells the prosign out.
-   CheckEquals('^AR', CWProsignFor(pdIcom, '+').text, 'Icom AR');
-   CheckEquals('^SK', CWProsignFor(pdIcom, '<').text, 'Icom SK');
-   CheckEquals('^BT', CWProsignFor(pdIcom, '=').text, 'Icom BT');
+   // Icom has no prosign alphabet.  '^' (0x5E) is a MODIFIER meaning "no
+   // inter-character space", so '^SK' is the letters S and K keyed together --
+   // which IS SK.  The manual's character table is 20, 27-3F and 41-7A.
+   CheckEquals('^AR', IcomProsign('+').text, 'Icom AR');
+   CheckEquals('^SK', IcomProsign('<').text, 'Icom SK');
+   CheckEquals('^BT', IcomProsign('=').text, 'Icom BT');
+   CheckEquals('^SN', IcomProsign('!').text, 'Icom SN');
 
-   // Icom HAS an SN, where Elecraft consumes the token and keys nothing.
-   CheckEquals('^SN', CWProsignFor(pdIcom, '!').text, 'Icom SN exists');
-   CheckEquals('', CWProsignFor(pdElecraft, '!').text, 'Elecraft SN does not');
-   CheckEquals('%', CWProsignFor(pdKenwood, '!').text, 'Kenwood SN is a character');
+   // WHY IT CANNOT SHARE EITHER OTHER GRAMMAR: every character the other two
+   // substitute is outside the set Icom documents for this command.
+   CheckTrue(Pos(ElecraftProsign('<').text, '%_*>[') > 0, 'Elecraft SK is one of the illegal five');
+   CheckTrue(Pos(KenwoodProsign('<').text, '%_*>[') > 0, 'Kenwood SK is one of the illegal five');
 
-   // Half space is a whole space on all three.
-   CheckEquals(' ', CWProsignFor(pdIcom, '^').text, 'Icom half space -> space');
+   // TR4W's '^' is a HALF space; Icom's '^' is the no-space modifier.  Passing
+   // the token through would run the next two characters together, so it keys a
+   // whole space instead.
+   CheckEquals(' ', IcomProsign('^').text, 'Icom half space -> space, NOT a bare ^');
 
-   // An unhandled token must still report handled=False for Icom, or the caller
-   // would key the raw token as text.
-   p := CWProsignFor(pdIcom, 'A');
+   // An unhandled token must still report handled=False, or the caller would
+   // key the raw token as text.
+   p := IcomProsign('A');
    CheckFalse(p.handled, 'a letter is not a prosign on Icom either');
 
    // Icom's own length limit, previously a truncation at 28 in LOGRADIO.
@@ -353,19 +361,30 @@ end;
 procedure TCWFramingTests.Test_NoneDialectPassesEverythingThrough;
 var
    t: string;
+   r: TFactoryRadioBase;
 begin
-   // pdNone is not a dialect -- it means "this radio's CW grammar is not one of
-   // the three, so substitute nothing".  Every token must come back unhandled so
-   // the caller keys it literally; silently substituting a Kenwood character for
-   // a radio nobody has tested would be a guess presented as a fact.
-   BeginTest('pdNone substitutes nothing -- every token passes through');
-   for t in ['^', '!', '+', '<', '=', 'A', 'CQ', ''] do
+   // A radio whose CW grammar nobody has established must substitute NOTHING:
+   // every token comes back unhandled so the caller keys it literally.  Silently
+   // sending a Kenwood character to an untested radio would be a guess presented
+   // as a fact.  This is the base-class default, and TCI relies on it.
+   BeginTest('the base default substitutes nothing -- every token passes through');
+   r := uRadioRegistry.CreateInstanceId(TCI_ID);
+   CheckTrue(r <> nil, 'TCI constructs');
+   if r = nil then
       begin
-      CheckFalse(CWProsignFor(pdNone, t).handled,
-                 'pdNone leaves "' + t + '" to the caller');
-      CheckEquals('', CWProsignFor(pdNone, t).text,
-                  'pdNone substitutes no text for "' + t + '"');
+      Exit;
       end;
+   try
+      for t in ['^', '!', '+', '<', '=', 'A', 'CQ', ''] do
+         begin
+         CheckFalse(r.CWProsign(t).handled,
+                    'an unclassified grammar leaves "' + t + '" to the caller');
+         CheckEquals('', r.CWProsign(t).text,
+                     'no text is substituted for "' + t + '"');
+         end;
+   finally
+      r.Free;
+   end;
 end;
 
 procedure TCWFramingTests.RunAllTests;

@@ -132,8 +132,12 @@ begin
       end
    else if Msg <> CWByCATBufferTerminator then
       begin
-      prosign := uCWFraming.CWProsignFor(
-                    radio.tFactoryObject.Capabilities.CWProsignDialect, Msg);
+      // The RADIO spells its own prosigns.  This was a dialect enum read off
+      // the capability record and switched on inside uCWFraming -- the last
+      // model-keyed table in a unit that is not supposed to know what a radio
+      // is.  The spellings still live there and are still shared; only the
+      // CHOICE moved onto the radio, beside every other trait it declares.
+      prosign := radio.tFactoryObject.CWProsign(Msg);
       if prosign.handled then
          begin
          radio.CWByCATBuffer := radio.CWByCATBuffer + prosign.text;

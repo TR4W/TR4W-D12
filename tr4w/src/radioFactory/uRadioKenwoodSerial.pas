@@ -76,6 +76,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    function CWProsign(const token: string): TCWProsign; override;
     function  CWIsFactoryOwned: Boolean; override;
 
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
@@ -136,7 +137,6 @@ begin
    // TS-850 keying CW by CAT was undefined in D7 and unchunked in D12; as a
    // TKenwoodSerial it now gets the family rule, which is what its KY wants.
   FCapabilities.CWFrame := CWFrameRule(24, True);
-  FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 function TKenwoodSerial.Connect: integer;
@@ -610,6 +610,12 @@ begin
    Self.CWBuffer := '';
    Self.SendToRadio('KY0;');
    Self.SendToRadio('RX;');
+end;
+
+
+function TKenwoodSerial.CWProsign(const token: string): TCWProsign;
+begin
+   Result := uCWFraming.KenwoodProsign(token);
 end;
 
 end.
