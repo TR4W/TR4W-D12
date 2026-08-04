@@ -272,8 +272,8 @@ the DX call one column right. That single line is now a fixture, and it is the
 only coverage the `Offset` branches have.
 
 **Three defects found while pinning, all pre-existing (verified against the D7
-tree), all pinned rather than fixed** — correcting them changes behaviour and
-belongs in its own commit, not inside a refactor:
+tree), pinned first and then fixed in the follow-up commit described in
+postscript (4):**
 
 1. **`FSourceCall`'s length byte is usually never written.** `SetLength` is
    guarded by "the next column is not a space" while the character copy is not,
@@ -296,9 +296,82 @@ byte*. A field whose length byte lies — see (1) — can therefore only be read
 through a pointer to the field itself; `const S: CallString` + `@S[1]` reads
 stack garbage.
 
+### D-2 postscript (4) — the split/QSX grammar, and what 198,979 real lines taught it
+
+**Done 2026-08-04.** With the decoder under test, the two defects above were
+fixed and the comment parser was rewritten. What made this tractable is that the
+capture in `D7-LogFilesForTesting/dxcluster` is big enough to be evidence: a
+throwaway probe ran the **committed decoder and the new one side by side over all
+198,979 lines** and diffed every field. Final state of that diff:
+
+| | |
+|---|---|
+| callsign differs | **0** |
+| frequency differs | **0** |
+| newly rejected | **1** — the one truncated line, which is the point |
+| source-call length fixed | **198,759** |
+| QSX found (old → new) | 814 → 951, **236 differing, each one read** |
+
+**The two defects, fixed:**
+
+1. `FSourceCall`'s length byte is now always written. It had been set only when
+   the spotter field was unpadded — i.e. almost never — so the field held the
+   right characters and reported length 0. Both readings now agree.
+2. A line with no callsign in the call columns is **rejected**. It used to decode
+   as a success and be band-mapped with an empty call.
+
+**The grammar (`ParseSplitHint`, exported and separately tested).** One
+tokenizer over the comment replaced two hand-rolled scans for `"QSX "` and
+`"UP"`. It reads `QSX`, `LISTENING`/`LISTENS`/`LISTEN`/`LSTN`/`LSN`, `RX`,
+`SPLIT`/`SPLT`/`SPL`, `UP`, `DOWN`/`DWN`; kHz, MHz (`14.030`) and dotted-MHz
+(`21.290.000`) frequencies; prefix (`UP 5`), postfix (`5 UP`, `5UP`) and
+fractional (`UP 1.5`) offsets; ranges by their low end; and a spelled-out `MHZ`
+unit. Case-insensitive. The old third defect — `UP` skipping the band check that
+`QSX` performed — is gone: **one band check applies to every form.**
+
+**AUTO SPLIT (NY4I, 2026-08-04).** A bare `UP`, `DOWN` or `SPLIT` is no longer
+treated as unusable: it means **1 kHz on CW, 5 kHz on phone**, the convention the
+radios implement under that name. The mode comes from the comment when it states
+one (`CW` appears 57,296 times in the capture, `USB` 21,658) and from the band
+plan otherwise; on digital, or with no mode at all, nothing is guessed. That
+single rule accounts for most of the 137 newly-found QSXs.
+
+**Four false-positive classes the corpus caught — none of which reading the code
+would have found:**
+
+- **`DN` is never "down".** All of its occurrences are Maidenhead grid squares
+  (DN70, DN27, …), because letters and digits tokenize separately. It was a
+  synonym for one probe run, during which ordinary 6 m grid comments decoded as
+  "70 kHz down". Dropped.
+- **Grids ending in `UP`** — `DM33UP`, `FN32DR<>JN87UP`. A keyword may follow a
+  number only when that number starts the word, which keeps the real `5UP`.
+- **`PILE UP` / `WHATS UP`** — ordinary English that ends in the word, and which
+  the AUTO SPLIT default would otherwise turn into a QSX. Also `NOT SPLIT`.
+- **Signal reports in the postfix position** — `59 TU 73 UP`. Offsets are capped
+  at 50 kHz, so the `73` is refused while the bare `UP` still gets its default.
+  The same cap refuses `UP 200-205`, which the old decoder turned into 14395 kHz,
+  outside the band.
+
+**`R` was asked for and deliberately not implemented.** Every `R` and `RX` in
+the capture is an FT8 report (`R-17`), `RX ONLY`, or an initial. `RX` is accepted
+because the band check makes it harmless; a bare `R` would turn every FT8 report
+into a confident wrong frequency.
+
+Suite is now **1,940 green** (37 tests on the grammar alone, half of them
+rejection cases).
+
 **Next in this seam:** `ProcessTelnetLine` and the `TelnetStringType`
 colourisation still sit in `uTelnet`; the apply half is now small enough to read
 in one screen, which is what makes the remaining decisions visible.
+
+**Issue #83 (multiplier hints in the comment — `DN40`, `UT`, `WCF`) is adjacent
+but deliberately not done here.** Its prerequisite is the same extraction this
+seam has been doing: `LooksLikeAGrid`, `LooksLikeAState` and `LooksLikeASection`
+live in `trdos/tree.pas`, which cannot link into the test EXE — exactly why
+`CalculateBandMode` was lifted into `uBandLookup`. It also produces a different
+output (a multiplier, not a receive frequency), so it wants its own function and
+its own field rather than a branch inside the split grammar. The tokenizer and
+the corpus method built here are what it should be written on top of.
 
 ---
 
