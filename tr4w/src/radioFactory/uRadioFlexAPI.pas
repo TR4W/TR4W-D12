@@ -74,7 +74,7 @@ type TFlexAPI = class(TFactoryRadioBase)
       procedure BufferCW(cwChars: string); override;
       procedure SendCW; override;
       procedure StopCW; override;
-      function CWProsign(const token: string): TCWProsign; override;
+   procedure DeclareCWProsigns; override;
       // True: this transport keys CW itself (cwx send / cwx clear).
       function CWIsFactoryOwned: Boolean; override;
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
@@ -1141,10 +1141,15 @@ end;
 // API differs subclasses TFlexAPI and only its own model unit changes.
 
 
-// The Ethernet API keys CW through the same Kenwood-style spellings.
-function TFlexAPI.CWProsign(const token: string): TCWProsign;
+
+
+procedure TFlexAPI.DeclareCWProsigns;
 begin
-   Result := uCWFraming.KenwoodProsign(token);
+   // The API path is NOT a KY radio: CW goes out as a SmartSDR cwx call with
+   // #127 for a word space, so this class does not descend from the Kenwood
+   // base even though TFlexCAT -- the same radio on a serial port -- does.
+   // The spellings match what LOGRADIO sent, stated here rather than inherited.
+   FCapabilities.CWProsigns := CWProsigns(' ', '%', '_', '>', '[');
 end;
 
 end.

@@ -59,13 +59,13 @@ unit uRadioElecraftSerial;
 
 interface
 
-uses Windows, uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uCWFraming,
+uses Windows, uFactoryRadioBase, uRadioKYBase, uRadioElecraftBase,
+     uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uCWFraming,
      uElecraftIF;   // shared IF decode -- the K4 uses the same one
 
 type
-  TElecraftSerial = class(TFactoryRadioBase)
+  TElecraftSerial = class(TElecraftRadio)
   protected
-    CWBuffer: string;       // text accumulated by BufferCW, emitted by SendCW
     firstProcessMessage: boolean;
     FCWSpeedMin: integer;   // KS range; K3/KX3 keyer is 8..50 wpm (per-model overridable)
     FCWSpeedMax: integer;
@@ -85,10 +85,7 @@ type
 
     procedure Transmit; override;
     procedure Receive; override;
-    procedure BufferCW(cwChars: string); override;
-    procedure SendCW; override;
     procedure StopCW; override;
-    function CWProsign(const token: string): TCWProsign; override;
     function  CWIsFactoryOwned: Boolean; override;
     // The character that aborts the keyer inside a KY command: #4 on the
     // K3/KX3/K4, '@' on the K2.  A VIRTUAL, not a model test -- this base must
@@ -206,29 +203,7 @@ begin
    Self.SendToRadio('RX;');
 end;
 
-// ---------------------------------------------------------------------------
-// CW keying is owned by the legacy path (and, later, the CW Keyer Factory).  See
-// unit header.  These stubs satisfy the abstract contract without duplicating it.
-procedure TElecraftSerial.BufferCW(cwChars: string);
-begin
-   Self.CWBuffer := Self.CWBuffer + cwChars;
-end;
 
-procedure TElecraftSerial.SendCW;
-begin
-   // No longer inert.  LOGRADIO used to format the KY command itself and push it
-   // through SendToRadio; it now hands the driver a chunk and this emits it, so
-   // the command form belongs to the radio that speaks it.  The chunking and the
-   // 22-character limit stay in uCWFraming -- they are per-model DATA, shared
-   // with the legacy path while the migration finishes.
-   if Self.CWBuffer = '' then
-      begin
-      Exit;
-      end;
-   Self.SendToRadio(uCWFraming.CWKYCommand(Self.CWBuffer, Self.CWSendImmediate));
-   Self.CWBuffer := '';
-   Self.CWSendImmediate := False;
-end;
 
 function TElecraftSerial.CWAbortChar: Char;
 begin
@@ -915,9 +890,5 @@ begin
 end;
 
 
-function TElecraftSerial.CWProsign(const token: string): TCWProsign;
-begin
-   Result := uCWFraming.ElecraftProsign(token);
-end;
 
 end.

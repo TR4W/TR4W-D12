@@ -140,6 +140,39 @@ Type
    );
    TRadioCapabilitySet = set of TRadioCapability;
 
+   // What a radio keys for one of TR4W's prosign tokens.
+   TCWProsign = record
+      handled: boolean;   // True: this token IS a prosign; do not treat it as text
+      text: string;       // what to append ('' = token consumed, key nothing)
+   end;
+
+   // How ONE radio spells the five prosign tokens TR4W understands
+   // (^ half space, ! SN, + AR, < SK, = BT -- see TC_CWMENU).
+   //
+   // DATA, declared by the radio in its constructor exactly as CWFrame is.  It
+   // was three functions in uCWFraming with each driver delegating to one, and
+   // that failed the test this factory is built around: adding a radio must
+   // touch only that radio's units.  A Yaesu that gained CW-by-CAT would have
+   // needed a YaesuProsign function added to a SHARED unit -- radio-specific
+   // code outside the factory, which is the thing being eliminated everywhere
+   // else.  Stating five strings here keeps every fact about a radio in that
+   // radio's own file.
+   //
+   // Declared = False means this radio's CW grammar has not been established.
+   // Every token then passes through as literal text, which is the only honest
+   // default: sending an untested radio another vendor's substitute characters
+   // would be a guess presented as a fact.  Note the difference from a DECLARED
+   // but empty spelling -- Elecraft has no SN, so its '!' is consumed and keys
+   // nothing, which is not the same as passing '!' through to be keyed.
+   TCWProsignSet = record
+      Declared: boolean;
+      HalfSpace: string;   // '^'
+      SN: string;          // '!'
+      AR: string;          // '+'
+      SK: string;          // '<'
+      BT: string;          // '='
+   end;
+
    TRadioCapabilities = record
       Flags: TRadioCapabilitySet;  // boolean traits
       CWSpeedMin: integer;         // CW keyer wpm range (ranged traits a set can't hold; default 6..48)
@@ -155,13 +188,16 @@ Type
       // TS-890 differ from their families only in `pad`.  A base must never
       // test model identity to decide these; the model unit overrides the field.
       //
-      // The prosign SPELLINGS were a second such table (a dialect enum
-      // enum) until 2026-08-04.  They are not a field at all now: the radio
-      // answers for itself in CWProsign below, because five unrelated classes
-      // share the Kenwood spellings and an enum was just the model table again
-      // under another name.
+      // The prosign spellings are the same kind of fact and are declared the
+      // same way -- see TCWProsignSet.
       CWFrame: TCWFrameRule;
+      CWProsigns: TCWProsignSet;
    end;
+
+// Declare a radio's prosign spellings, for use in its constructor.  Reads as
+// CWProsigns(' ', '%', '_', '>', '[') at each declaration -- half space, SN,
+// AR, SK, BT, in the order they appear in TR4W's own notation.
+function CWProsigns(const halfSpace, sn, ar, sk, bt: string): TCWProsignSet;
 
 Type TSimpleEventProc = procedure(const aStrParam:string) of object;
 Type PBoolean = ^Boolean;  // Pointer to Boolean type
@@ -518,21 +554,26 @@ Type TFactoryRadioBase = class(TObject)
       // 2026-07-31.
       function CWIsFactoryOwned: Boolean; Virtual;
 
-      // What THIS radio should key for one of TR4W's prosign tokens
-      // (^ half space, ! SN, + AR, < SK, = BT -- see TC_CWMENU).
+      // Look this radio's declared spelling up for one of TR4W's prosign tokens.
       //
-      // The radio answers, rather than a dialect enum being looked up in
-      // uCWFraming: the spellings are shared by groups that do not match the
-      // class graph (five unrelated classes speak the Kenwood one), so each
-      // driver overrides this and delegates to uCWFraming.ElecraftProsign,
-      // .KenwoodProsign or .IcomProsign.  That keeps one definition of each
-      // spelling while leaving the CHOICE where every other radio trait lives.
+      // NOT virtual, and no driver overrides it: the mechanism is the same for
+      // every radio, and the only thing that varies -- the five strings -- is
+      // DATA the radio states in its constructor (FCapabilities.CWProsigns).
+      // That is what keeps a new CW-by-CAT family, a Yaesu say, from having to
+      // add code to any shared unit.
+      function CWProsign(const token: string): TCWProsign;
+
+      // Where a family states its prosign spellings.  Called from the base
+      // constructor, so every radio in a family inherits them without touching
+      // its own constructor -- and a driver that needs no CW says nothing.
       //
-      // The base answers "not handled" for every token, which is the honest
-      // default: a radio whose CW grammar nobody has established must pass
-      // tokens through as literal text rather than be sent another vendor's
-      // substitute characters.  TCI relies on this.
-      function CWProsign(const token: string): TCWProsign; Virtual;
+      // A VIRTUAL rather than an assignment in each family's constructor,
+      // because the intermediate bases must not introduce a constructor of
+      // their own: TFactoryRadioBase.Create is OVERLOADED, and a parameterless
+      // `constructor Create; reintroduce` in between HIDES both overloads, so
+      // every `inherited Create(ProcessMessage)` below it stops compiling.
+      // See BaseConstructorRan for what that class of mistake costs.
+      procedure DeclareCWProsigns; Virtual;
 
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); Virtual; Abstract;
       procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); Virtual; Abstract;
@@ -684,6 +725,10 @@ begin
    // pinned per keying radio by test/unit/uTestCWFraming.
    FCapabilities.CWFrame := uCWFraming.CWFrameRule(0, False);
 
+   // Families override this; the base declares nothing, which means "grammar
+   // not established -- pass tokens through as text".
+   DeclareCWProsigns;
+
    SocketLock := TCriticalSection.Create;
    Disconnecting := False;
    FLastValidResponse := Now;  // Initialize to current time
@@ -823,13 +868,68 @@ begin
   Result := False;
 end;
 
+procedure TFactoryRadioBase.DeclareCWProsigns;
+begin
+   // Deliberately empty.  CWProsigns.Declared stays False, and CWProsign then
+   // reports every token unhandled so the caller keys it literally.
+end;
+
+
 function TFactoryRadioBase.CWProsign(const token: string): TCWProsign;
 begin
-  // Not handled: the caller keys the token as literal text.  See the
-  // declaration -- substituting another vendor's character here would be a
-  // guess dressed up as a fact.
+  // Undeclared grammar, or a token that is not a prosign at all: the caller
+  // keys it as literal text.
   Result.handled := False;
   Result.text := '';
+
+  if not FCapabilities.CWProsigns.Declared then
+     begin
+     Exit;
+     end;
+
+  // Every arm sets handled := True, INCLUDING the ones whose text is empty.
+  // Elecraft has no SN, so its '!' is consumed and keys nothing -- which is not
+  // the same as letting '!' through to be keyed as a character.
+  if token = '^' then
+     begin
+     Result.handled := True;
+     Result.text := FCapabilities.CWProsigns.HalfSpace;
+     end
+  else if token = '!' then
+     begin
+     Result.handled := True;
+     Result.text := FCapabilities.CWProsigns.SN;
+     end
+  else if token = '+' then
+     begin
+     Result.handled := True;
+     Result.text := FCapabilities.CWProsigns.AR;
+     end
+  else if token = '<' then
+     begin
+     Result.handled := True;
+     Result.text := FCapabilities.CWProsigns.SK;
+     end
+  else if token = '=' then
+     begin
+     Result.handled := True;
+     Result.text := FCapabilities.CWProsigns.BT;
+     end;
+
+  // NOT handled by any radio, deliberately: '&' (AS).  LOGRADIO carried a
+  // commented-out arm mapping it to '%' on Elecraft and '<' on Kenwood,
+  // disabled because in TR4W '&' is really MYSTATE and only documented as AS.
+  // Give it a field if that is ever settled; do not guess first.
+end;
+
+function CWProsigns(const halfSpace, sn, ar, sk, bt: string): TCWProsignSet;
+begin
+   Result.Declared  := True;
+   Result.HalfSpace := halfSpace;
+   Result.SN        := sn;
+   Result.AR        := ar;
+   Result.SK        := sk;
+   Result.BT        := bt;
 end;
 
 procedure TFactoryRadioBase.PollRadioState;

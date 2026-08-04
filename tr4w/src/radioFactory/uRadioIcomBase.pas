@@ -190,7 +190,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
-    function CWProsign(const token: string): TCWProsign; override;
+  procedure DeclareCWProsigns; override;
       function CWIsFactoryOwned: Boolean; override;   // The CI-V drivers key CW themselves ($17 / buffered send).
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
     procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
@@ -2262,12 +2262,20 @@ begin
       end;
 end;
 
-// ASCII plus the '^' no-inter-character-space modifier: '^SK' is S and K keyed
-// run together.  The other grammars' substitute characters (% _ * > [) are all
-// outside the set this command accepts.
-function TIcomRadio.CWProsign(const token: string): TCWProsign;
+
+
+procedure TIcomRadio.DeclareCWProsigns;
 begin
-   Result := uCWFraming.IcomProsign(token);
+  // Icom has NO prosign alphabet.  '^' (0x5E) is a MODIFIER meaning "send the
+  // following characters with no inter-character space", so '^SK' is the letters
+  // S and K keyed run together -- which IS SK.  Same for ^AR, ^BT, ^SN.
+  //
+  // This is why an Icom cannot borrow either KY grammar: every character those
+  // substitute (% _ * > [) is outside the set command $17 documents
+  // (20, 27-3F, 41-7A).  The half space is a whole space -- passing '^' through
+  // would run the next two characters together, which is not what TR4W means
+  // by it.
+  FCapabilities.CWProsigns := CWProsigns(' ', '^SN', '^AR', '^SK', '^BT');
 end;
 
 initialization

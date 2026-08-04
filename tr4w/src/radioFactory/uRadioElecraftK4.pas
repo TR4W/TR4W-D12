@@ -17,13 +17,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uRadioElecraftK4;
 
 interface
-uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry, uCWFraming,
+uses
+   uRadioElecraftBase, uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry, uCWFraming,
      uElecraftIF;   // shared IF decode -- the K3 uses the same one
 
 
-Type TK4Radio = class(TFactoryRadioBase)
+Type TK4Radio = class(TElecraftRadio)
    private
-      CWBuffer: string;
       firstProcessMessage: boolean;
       function ParseIFCommand(cmd: string): boolean;
       function ModeStrToMode(sMode: string; sDataMode: string): TRadioMode;
@@ -39,10 +39,7 @@ Type TK4Radio = class(TFactoryRadioBase)
       procedure Transmit; override;
       procedure Receive; override;
       procedure ProcessMsg(msg: string); override;
-      procedure BufferCW(cwChars: string); overload; override;
-      procedure SendCW; override;
       procedure StopCW; override;
-      function CWProsign(const token: string): TCWProsign; override;
       function CWIsFactoryOwned: Boolean; override;   // The K4 keys CW itself: StopCW sends Chr(4)+";RX;".
 
       // Base class overrides with VFO parameters
@@ -173,28 +170,7 @@ begin
    Self.SendToRadio('KY ' + Chr(4) + ';RX;');
 end;
 
-procedure TK4Radio.SendCW;
-//var s: string;
-begin
-   if Self.CWBuffer = '' then
-      begin
-      logger.Warn('[K4Radio.SendCW] CW buffer is empty - nothing to send');
-      Exit;
-      end;
 
-   logger.Info('[K4Radio.SendCW] Sending CW: "%s"', [Self.CWBuffer]);
-   // Shared formatter so the K4 cannot drift from the other KY radios, and so
-   // it honours the immediate (KYW) form the speed-change path uses.
-   Self.SendToRadio(uCWFraming.CWKYCommand(Self.CWBuffer, Self.CWSendImmediate));
-   Self.CWSendImmediate := False;
-   Self.CWBuffer := '';
-end;
-
-procedure TK4Radio.BufferCW(cwChars: string);
-begin
-   Self.CWBuffer := Self.CWBuffer + cwChars;
-   logger.Info('[K4Radio.BufferCW] Buffered: "%s", Total buffer: "%s"', [cwChars, Self.CWBuffer]);
-end;
 
 procedure TK4Radio.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
 var sCmd: string;
@@ -907,10 +883,6 @@ begin
 end;
 }
 
-function TK4Radio.CWProsign(const token: string): TCWProsign;
-begin
-   Result := uCWFraming.ElecraftProsign(token);
-end;
 
 initialization
   RegisterRadio(K4,

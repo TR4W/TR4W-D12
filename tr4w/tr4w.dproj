@@ -259,6 +259,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
         <DCCReference Include="src\uIcomNetworkTypes.pas"/>
         <DCCReference Include="src\uIcomNetworkTransport.pas"/>
         <DCCReference Include="src\uIcomNetworkDiscovery.pas"/>
+        <DCCReference Include="src\radioFactory\uRadioKYBase.pas"/>
+        <DCCReference Include="src\radioFactory\uRadioElecraftBase.pas"/>
+        <DCCReference Include="src\radioFactory\uRadioKenwoodBase.pas"/>
         <DCCReference Include="src\radioFactory\uRadioIcomBase.pas"/>
         <DCCReference Include="src\radioFactory\uRadioIcom9700.pas"/>
         <DCCReference Include="src\radioFactory\uRadioIcom7610.pas"/>

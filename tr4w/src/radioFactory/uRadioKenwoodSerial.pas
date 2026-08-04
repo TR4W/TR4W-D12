@@ -52,12 +52,12 @@ unit uRadioKenwoodSerial;
 interface
 
 uses
+   uRadioKenwoodBase,
   uFactoryRadioBase, uRadioBand, VC, SysUtils, StrUtils, Log4D, uCWFraming;
 
 type
-  TKenwoodSerial = class(TFactoryRadioBase)
+  TKenwoodSerial = class(TKenwoodProtocolRadio)
   protected
-    CWBuffer: string;
     FSeedOtherVFOMode: boolean;   // one-shot: probe the non-operating VFO's mode at connect
     function  ModeNumToMode(ch: Char): TRadioMode;
     function  ModeToKenwoodByte(mode: TRadioMode): string;
@@ -73,10 +73,7 @@ type
 
     procedure Transmit; override;
     procedure Receive; override;
-    procedure BufferCW(cwChars: string); override;
-    procedure SendCW; override;
     procedure StopCW; override;
-    function CWProsign(const token: string): TCWProsign; override;
     function  CWIsFactoryOwned: Boolean; override;
 
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
@@ -569,30 +566,7 @@ begin
   Self.SendToRadio('RX;');
 end;
 
-procedure TKenwoodSerial.BufferCW(cwChars: string);
-begin
-  Self.CWBuffer := Self.CWBuffer + cwChars;
-end;
 
-procedure TKenwoodSerial.SendCW;
-begin
-  // This used to log "CW-over-CAT not supported" and DISCARD the text, which
-  // was never true of the family: LOGRADIO's rtKenwood arm has always sent KY
-  // to TS480/570/590/850/890/950/990/2000, and the registry gives them
-  // rcCWByCAT.  The comment described the buffer being unused because LOGRADIO
-  // formatted the command itself, not a radio limitation.  Now it emits.
-  //
-  // A model that genuinely cannot key over CAT is expressed by NOT declaring
-  // rcCWByCAT, which stops the caller before it reaches here -- not by a driver
-  // silently dropping text.
-  if Self.CWBuffer = '' then
-    begin
-    Exit;
-    end;
-  Self.SendToRadio(uCWFraming.CWKYCommand(Self.CWBuffer, Self.CWSendImmediate));
-  Self.CWBuffer := '';
-  Self.CWSendImmediate := False;
-end;
 
 function TKenwoodSerial.CWIsFactoryOwned: Boolean;
 begin
@@ -613,9 +587,5 @@ begin
 end;
 
 
-function TKenwoodSerial.CWProsign(const token: string): TCWProsign;
-begin
-   Result := uCWFraming.KenwoodProsign(token);
-end;
 
 end.
