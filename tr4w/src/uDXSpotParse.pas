@@ -309,17 +309,57 @@ end;
 //
 // Grid squares are why this exists.  "DM33UP" tokenizes to DM, 33, UP, and that
 // trailing UP must not be read as a direction; "FN31RX" likewise.  A keyword
-// counts when it starts a run, or when the run is exactly <number><keyword> --
+// counts when it starts a run, or when the run is exactly <number><DIRECTION> --
 // which is the real and common "5UP".
-function KeywordIsWholeWord(const Toks: TCommentTokens; Index: integer): boolean;
+//
+// Only a DIRECTION may be glued to its number.  "5UP" is a form people write;
+// "5QSX" is not, and allowing it read the VHF comment "3RX 4 ANT DIR" as
+// "receive on 4" and moved the operator 4 kHz.
+function KeywordIsWholeWord(const Toks: TCommentTokens; Index: integer;
+                            Kind: TSplitKeyword): boolean;
 begin
    if not Toks[Index].Glued then
       begin
       Result := True;
       Exit;
       end;
-   Result := (Index > 0) and (Toks[Index - 1].Kind = ctNumber) and
+   Result := (Kind in [skUp, skDown]) and
+             (Index > 0) and (Toks[Index - 1].Kind = ctNumber) and
              (not Toks[Index - 1].Glued);
+end;
+
+// Does this word turn a following "UP" into ordinary English rather than a split
+// instruction?
+//
+// All of these are in the capture, one occurrence each: MESSED UP, COMING UP,
+// WARMING UP, GOING UP, PILE UP, WHATS UP.  The -ING / -ED test covers the
+// phrasal verbs as a class instead of chasing them one at a time (and catches
+// "WAMING UP", which is how one of them was actually spelled).
+//
+// It is consulted ONLY for the AUTO SPLIT default.  A comment that states a
+// distance -- even "PILE UP 5" -- is still taken at its word, so this can cost
+// nothing but a guess.
+function WordMakesUpEnglish(const W: AnsiString): boolean;
+var
+   n: integer;
+begin
+   Result := (W = 'PILE') or (W = 'WHATS');
+   if Result then
+      begin
+      Exit;
+      end;
+   n := Length(W);
+   Result := ((n >= 5) and (Copy(W, n - 2, 3) = 'ING')) or
+             ((n >= 5) and (Copy(W, n - 1, 2) = 'ED'));
+end;
+
+// Words that may stand between an introducer and its frequency: "LISTENING ON
+// 7227.00", "QSX AT 14205".  Without this the number is never reached and the
+// comment falls through to a guess -- which is what happened to "LISTENING ON
+// 7227.00 SPLIT LSB": it answered 5 kHz up while the frequency sat in the text.
+function IsFillerWord(const W: AnsiString): boolean;
+begin
+   Result := (W = 'ON') or (W = 'AT') or (W = 'TO');
 end;
 
 // Split a number token into its integer part and its fraction digits, with the
@@ -633,7 +673,7 @@ begin
 
          kw := KeywordOf(Toks[i].Text);
 
-         if (kw <> skNone) and not KeywordIsWholeWord(Toks, i) then
+         if (kw <> skNone) and not KeywordIsWholeWord(Toks, i, kw) then
             begin
             kw := skNone;
             end;
@@ -647,11 +687,12 @@ begin
             kw := skNone;
             end;
 
-         // "PILE UP" is a pileup, and "WHATS UP" is a greeting.  Both are in the
-         // capture ahead of a bare UP, where the AUTO SPLIT default would
-         // otherwise invent a QSX out of ordinary English.
-         if (kw = skUp) and (i > 0) and (Toks[i - 1].Kind = ctWord) and
-            ((Toks[i - 1].Text = 'PILE') or (Toks[i - 1].Text = 'WHATS')) then
+         // "PILE UP" / "COMING UP" / "MESSED UP": ordinary English that ends in
+         // the word.  Suppressed for the AUTO SPLIT guess only (pass 2), never
+         // for a stated distance.
+         if (pass = 2) and (kw = skUp) and (i > 0) and
+            (Toks[i - 1].Kind = ctWord) and
+            WordMakesUpEnglish(Toks[i - 1].Text) then
             begin
             kw := skNone;
             end;
@@ -665,6 +706,11 @@ begin
                begin
                dir := KeywordOf(Toks[i + 1].Text);
                numIndex := i + 2;
+               end
+            else if (i + 1 < n) and (Toks[i + 1].Kind = ctWord) and
+                    IsFillerWord(Toks[i + 1].Text) then
+               begin
+               numIndex := i + 2;      // "LISTENING ON 7227.00"
                end
             else
                begin

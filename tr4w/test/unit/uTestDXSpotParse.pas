@@ -104,6 +104,9 @@ type
       procedure Test_Hint_Reject_Junk;
       procedure Test_Hint_Reject_OutOfBand;
       procedure Test_Hint_Reject_BareR;
+      procedure Test_Hint_Reject_PhrasalVerbs;
+      procedure Test_Hint_Reject_GluedIntroducer;
+      procedure Test_Hint_FillerWordBeforeFrequency;
 
       // The time stamp
       procedure Test_Time_Parsed;
@@ -823,6 +826,45 @@ begin
    CheckHint('FT8 QG64KR<>DM61 -18 RX', 14074000, Digital, 0, 'RX at the end');
 end;
 
+procedure TDXSpotParseTests.Test_Hint_Reject_PhrasalVerbs;
+begin
+   BeginTest('Test_Hint_Reject_PhrasalVerbs');
+   // REAL, one occurrence each.  A verb ending in -ING or -ED before UP makes it
+   // ordinary English, and the AUTO SPLIT default would otherwise answer with a
+   // confident QSX for every one of them.
+   CheckHint('MESSED UP - CALLING ON RX FREQ', 14025000, CW, 0, 'MESSED UP');
+   CheckHint('COMING UP NICELY LSB', 3719400, Phone, 0, 'COMING UP');
+   CheckHint('73 GL. WARMING UP', 24940000, Phone, 0, 'WARMING UP');
+   CheckHint('BY #S NOW #1 GOING UP', 14255000, Phone, 0, 'GOING UP');
+   CheckHint('WAMING UP FOR WPX', 14202500, Phone, 0, 'the misspelling too');
+
+   // ...but only the GUESS is suppressed.  A stated distance is still read.
+   CheckHint('WORKING UP 5', 14025000, CW, 14030000,
+             'a stated distance survives the phrase guard');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_Reject_GluedIntroducer;
+begin
+   BeginTest('Test_Hint_Reject_GluedIntroducer');
+   // REAL: "3RX 4 ANT DIR" is VHF antenna talk -- three receive antennas.  Only
+   // a DIRECTION may be glued to a preceding number ("5UP" is a real form);
+   // "3RX" is not, and reading it as "receive on 4" moved the operator 4 kHz.
+   CheckHint('3RX 4 ANT DIR', 144050000, CW, 0, '3RX is not RX');
+   // The form this exception exists for still works.
+   CheckHint('5UP', 14025000, CW, 14030000, '5UP is a real postfix');
+end;
+
+procedure TDXSpotParseTests.Test_Hint_FillerWordBeforeFrequency;
+begin
+   BeginTest('Test_Hint_FillerWordBeforeFrequency');
+   // REAL: "LISTENING ON 7227.00 SPLIT LSB".  Requiring the number to follow the
+   // introducer immediately meant the stated frequency was never reached, and
+   // the trailing SPLIT then produced a 5 kHz guess instead.
+   CheckHint('LISTENING ON 7227.00 SPLIT LSB', 7052300, Phone, 7227000,
+             'a filler word between introducer and frequency');
+   CheckHint('QSX AT 14205', 14195000, Phone, 14205000, 'QSX AT');
+end;
+
 { -------------------------------------------------------------------------- }
 
 procedure TDXSpotParseTests.RunAllTests;
@@ -893,6 +935,9 @@ begin
    Test_Hint_Reject_Junk;
    Test_Hint_Reject_OutOfBand;
    Test_Hint_Reject_BareR;
+   Test_Hint_Reject_PhrasalVerbs;
+   Test_Hint_Reject_GluedIntroducer;
+   Test_Hint_FillerWordBeforeFrequency;
 end;
 
 end.
