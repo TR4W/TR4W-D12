@@ -128,7 +128,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
-    function CWProsign(const token: string): TCWProsign; override;
+   procedure DeclareCWProsigns; override;
     // True: this driver keys the Orion's CW itself ('/c<cr>' per character,
     // '*TU<cr>' to unkey).  The legacy rtOrion arms are buggy/empty.
     function CWIsFactoryOwned: Boolean; override;
@@ -546,10 +546,19 @@ begin
    logger.Debug('[Orion.VFOBumpUp] no VFO step command in the Orion set');
 end;
 
-// The Orion took the Kenwood spellings in LOGRADIO and keeps them.
-function TTenTecOrionRadio.CWProsign(const token: string): TCWProsign;
+
+
+procedure TTenTecOrionRadio.DeclareCWProsigns;
 begin
-   Result := uCWFraming.KenwoodProsign(token);
+   // The Orion is NOT a KY radio -- it keys '/<char><CR>', one character at a
+   // time -- so it does not descend from the Kenwood base.  These spellings are
+   // the ones LOGRADIO's Orion arm used, which took them from its Kenwood arm.
+   // Stated here rather than inherited, so the class hierarchy keeps claiming
+   // only what is true about the protocol.
+   //
+   // UNVERIFIED on hardware: NY4I is sourcing an Orion (bench item C-5).  If it
+   // spells a prosign differently, this one line is where it changes.
+   FCapabilities.CWProsigns := CWProsigns(' ', '%', '_', '>', '[');
 end;
 
 initialization

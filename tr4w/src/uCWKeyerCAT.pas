@@ -82,12 +82,13 @@ uses
    Tree,       // CodeSpeed -- the operator's current WPM
    LogWind,    // DisplayedCodeSpeed -- what the CW timing estimate is based on
    uRadioRegistry,
+   uFactoryRadioBase,   // TCWProsign -- the radio answers, so the type is its
    uCWFraming;
 
 procedure CWByCATSend(radio: RadioPtr; const Msg: Str160);
 var
    frameRule: uCWFraming.TCWFrameRule;
-   prosign: uCWFraming.TCWProsign;
+   prosign: uFactoryRadioBase.TCWProsign;
    chunkIx: integer;
    chunk: string;
    text: string;
@@ -132,11 +133,12 @@ begin
       end
    else if Msg <> CWByCATBufferTerminator then
       begin
-      // The RADIO spells its own prosigns.  This was a dialect enum read off
-      // the capability record and switched on inside uCWFraming -- the last
-      // model-keyed table in a unit that is not supposed to know what a radio
-      // is.  The spellings still live there and are still shared; only the
-      // CHOICE moved onto the radio, beside every other trait it declares.
+      // The RADIO spells its own prosigns.  This was a dialect enum switched on
+      // inside uCWFraming, with the three spelling tables there too -- so a new
+      // CW-by-CAT family meant editing a shared unit to describe one vendor's
+      // radio.  Each family base now declares its spellings as capability data
+      // and subclasses inherit them; nothing outside the factory knows a
+      // grammar exists.
       prosign := radio.tFactoryObject.CWProsign(Msg);
       if prosign.handled then
          begin

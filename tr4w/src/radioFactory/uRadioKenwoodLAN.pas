@@ -64,7 +64,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 }
 
 interface
-uses uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry,
+uses
+   uRadioKenwoodBase, uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Math, TF, Log4D, VC, uRadioRegistry,
      uCWFraming;
 
 type
@@ -77,9 +78,8 @@ type
       ksAuthFailed       // Auth was rejected; connection unusable
    );
 
-type TKenwoodLAN = class(TFactoryRadioBase)
+type TKenwoodLAN = class(TKenwoodProtocolRadio)
    private
-      CWBuffer: string;
       FAuthState: TTS890AuthState;
       FInitialized: Boolean;
 
@@ -130,10 +130,8 @@ type TKenwoodLAN = class(TFactoryRadioBase)
       // Required abstract overrides
       procedure Transmit; override;
       procedure Receive; override;
-      procedure BufferCW(cwChars: string); override;
       procedure SendCW; override;
       procedure StopCW; override;
-      function CWProsign(const token: string): TCWProsign; override;
       function CWIsFactoryOwned: Boolean; override;   // The LAN Kenwoods key CW themselves over the TCP link.
 
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
@@ -823,17 +821,17 @@ end;
 // CW (KY buffer-based, identical idiom to K4 / TS-990)
 // ============================================================================
 
-procedure TKenwoodLAN.BufferCW(cwChars: string);
-begin
-   Self.CWBuffer := Self.CWBuffer + cwChars;
-end;
-
 procedure TKenwoodLAN.SendCW;
 begin
-   if FAuthState <> ksAuthenticated then Exit;
-   if Self.CWBuffer = '' then Exit;
-   Self.SendToRadio('KY ' + Self.CWBuffer + ';');
-   Self.CWBuffer := '';
+   // The ONLY LAN-specific part: nothing may be sent before the session is
+   // authenticated.  The KY command itself is inherited -- this driver used to
+   // hand-roll the same string the other four KY radios built with a shared
+   // formatter, which is exactly how two spellings of one command drift apart.
+   if FAuthState <> ksAuthenticated then
+      begin
+      Exit;
+      end;
+   inherited SendCW;
 end;
 
 function TKenwoodLAN.CWIsFactoryOwned: Boolean;
@@ -1115,9 +1113,5 @@ begin
 end;
 
 
-function TKenwoodLAN.CWProsign(const token: string): TCWProsign;
-begin
-   Result := uCWFraming.KenwoodProsign(token);
-end;
 
 end.

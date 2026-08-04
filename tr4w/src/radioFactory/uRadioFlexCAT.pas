@@ -70,7 +70,8 @@ unit uRadioFlexCAT;
 
 interface
 
-uses uFactoryRadioBase, uRadioBand, SysUtils, StrUtils, Math, Log4D, VC,
+uses
+   uRadioKenwoodBase, uFactoryRadioBase, uRadioBand, SysUtils, StrUtils, Math, Log4D, VC,
      uRadioRegistry, uCWFraming;
 
 const
@@ -106,9 +107,8 @@ const
    FLEXMODE_DSTR = '40';
 
 type
-  TFlexCAT = class(TFactoryRadioBase)
+  TFlexCAT = class(TKenwoodProtocolRadio)
   protected
-    FCWBuffer: string;   // network (cwx) path only -- on CAT, LOGRADIO keys via KY
     function  ModeNumToMode(const s: string): TRadioMode;
     function  ModeToFlexNum(mode: TRadioMode): string;
     function  OffsetToFlex(hz: integer): string;
@@ -144,10 +144,7 @@ type
     // here, even where the honest implementation is "this protocol has no such
     // command".
     procedure SendToRadio(whichVFO: TVFO; sCmd: string; sData: string); overload; override;
-    procedure BufferCW(cwChars: string); override;
-    procedure SendCW; override;
     procedure StopCW; override;
-    function CWProsign(const token: string): TCWProsign; override;
     function  CWIsFactoryOwned: Boolean; override;
     procedure SetCWSpeed(speed: integer); override;
     function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; override;
@@ -604,25 +601,7 @@ end;
 // via LogCW.SetUpToSendOnActiveRadio -> FlushCWBufferAndClearPTT, before any CW
 // is sent.  Leaving it abstract killed the program at startup.
 
-procedure TFlexCAT.BufferCW(cwChars: string);
-begin
-   FCWBuffer := FCWBuffer + cwChars;
-end;
 
-procedure TFlexCAT.SendCW;
-begin
-   // LOGRADIO no longer formats KY itself, so this is the CAT-port keying path
-   // rather than a place text goes to die.  (The Ethernet API path is separate
-   // and uses cwx -- see uRadioFlexAPI; this unit is the Kenwood-subset CAT
-   // port, where KY is the right command.)
-   if FCWBuffer = '' then
-      begin
-      Exit;
-      end;
-   Self.SendToRadio(uCWFraming.CWKYCommand(FCWBuffer, Self.CWSendImmediate));
-   FCWBuffer := '';
-   Self.CWSendImmediate := False;
-end;
 
 function TFlexCAT.CWIsFactoryOwned: Boolean;
 begin
@@ -635,7 +614,7 @@ begin
    // Moved from LOGRADIO.StopSendingCW's rtKenwood arm.  ZZSS is a PowerSDR/
    // SmartSDR extended command with no Kenwood-subset equivalent -- the plain
    // KY0;/RX; pair the other Kenwood-protocol radios use does not stop a Flex.
-   FCWBuffer := '';
+   CWBuffer := '';
    Self.SendToRadio('ZZSS;');
 end;
 
@@ -754,10 +733,5 @@ end;
 // and is available on the serial CAT port (guide 2.2.2.1).
 
 
-// Flex over CAT speaks the Kenwood KY grammar, prosigns included.
-function TFlexCAT.CWProsign(const token: string): TCWProsign;
-begin
-   Result := uCWFraming.KenwoodProsign(token);
-end;
 
 end.
