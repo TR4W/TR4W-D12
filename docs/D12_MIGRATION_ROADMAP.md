@@ -155,10 +155,53 @@ are not mistaken for oversights.
 | # | Item | Why deferred | Blocks release? |
 |---|---|---|---|
 | D-1 | **MainUnit editable-log renderer** (`tAddContestExchangeToLog`) stays on the A-path | Entangled with ~15 ANSI `ContestExchange` DTO reads; converts *with* the SQLite work. Keeps a few `inttopchar` consumers alive. | No — renders correctly today |
-| D-2 | **Telnet socket I/O centralization** (one decode after `recv`, one encode before send) | A parser rewrite (byte-offset DX-spot matching), not a cast tweak | No |
-| D-3 | **Vendored Indy + `src\MMSystem.pas`** replaced by D12's RTL | Needs live network/SSL testing to swap — i.e. gated on **C-1** | No, but see C-1 |
-| D-4 | **Low-value shims** — `StrComp_JOH_IA32_6`, `BooleanToStr`, `RealToStr2`, `tCreateEditWindow`, `CopyFileA`/`FileExists` | Cost/benefit | No |
-| D-5 | **Lint enforcement** (`Lint-PCharAnsi.ps1`) wired into the build so a new unmarked `PAnsiChar` in the logic layer fails | Never wired | No — but it is what keeps Phase 2 from regressing |
+| D-2 | **Telnet socket I/O centralization** (one decode after `recv`, one encode before send) | A parser rewrite (byte-offset DX-spot matching), not a cast tweak | 🟡 **Half done 2026-08-04 (`99ef30fb`)** — see below |
+| D-3 | **Vendored Indy + `src\MMSystem.pas`** replaced by D12's RTL | — | ✅ **Decided 2026-08-04: NO.** See below |
+| D-4 | **Low-value shims** — `StrComp_JOH_IA32_6`, `BooleanToStr`, `RealToStr2`, `tCreateEditWindow`, `CopyFileA`/`FileExists` | Cost/benefit | No — not attempted |
+| D-5 | **Lint enforcement** (`Lint-PCharAnsi.ps1`) wired into the build so a new unmarked `PAnsiChar` in the logic layer fails | — | ✅ **Done (`fb3459e5`)** |
+
+### D-5 postscript — the lint could not just be switched on
+
+It reported 5 violations and **all 5 were false**: four inside a `{ … }` block
+comment (it stripped only *trailing* single-line comments), one genuinely wide
+(`array of Char` IS WideChar under D12). A linter that fires on commented-out
+code gets ignored, so it was taught to read Pascal — block-comment state carried
+across lines, `{$IFDEF}` correctly treated as live code, braces and `//` inside
+string literals ignored. Verified against a fixture: 7 true positives caught, 3
+negatives suppressed. Now gates the build: *"Lint-PCharAnsi: 296 source files
+checked, no D12 PChar hazards."*
+
+### D-3 postscript — the premise had expired
+
+Do **not** execute this as written. `WinSock2.pas` is already retired
+(`.d7-shadow`), so the project is on RTL Winsock already. The vendored Indy is
+**10.6.3.3**, while D12 ships Indy as **DCUs only** — `Studio\23.0\source\Indy`
+contains just the IPPeer abstraction. Swapping is plausibly a *downgrade* and
+loses source-level debuggability of the SSL path C-1 just verified. What is left
+worth removing is `src\MMSystem.pas` and the `.d7-shadow` leftovers, not Indy.
+
+### D-2 postscript — transport moved, parser deliberately left
+
+`99ef30fb` extracted the cluster socket into `TDXClusterClient`
+(`src\uDXClusterClient.pas`): `TIdTCPClient`, a reader thread, three events, no
+UI and no globals — constructible in a test EXE. `TelnetSock` is deleted (it was
+a connected-flag in four places); callers use `uTelnet.TelnetIsConnected`.
+
+**It fixed a real defect found by reading:** the old reader posted whatever one
+`recv()` returned and the parser restarted its line scan per chunk with no
+carry-over, so **a DX line split across two TCP segments was cut in half and
+both halves discarded** — the spot lost silently, since neither fragment matches
+`"DX de "`. Indy buffers to the terminator.
+
+`ProcessDX` — 494 lines of fixed-column byte-offset decoding tuned against real
+nodes' padding — is **untouched on purpose**. Each whole line is handed to the
+existing parser with its CR restored (it scans for `<= #13` to end a line). Get
+it under test first, rewrite second.
+
+**Owed:** an in-process `TIdTCPServer` fixture serving known calls/frequencies
+(format from `c:\projects\test-tools\mockDXCluster`, which stays unmodified),
+including a deliberate mid-line segment split to pin the boundary fix; then a
+live cluster re-run of C-1; then the parser rewrite.
 
 ---
 
