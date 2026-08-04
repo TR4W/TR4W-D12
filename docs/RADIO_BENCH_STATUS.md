@@ -31,7 +31,7 @@ This table is the gate on that decision.
 | Icom IC-706MkII | IC706II | - | testers | As IC706: split and TX status not readable (BenchProvenDivergences). |
 | Icom IC-706MkIIG | IC706IIG | - | testers | As IC706: split and TX status not readable (BenchProvenDivergences). |
 | Icom IC-707 | IC707 | - | - |  |
-| Icom IC-7100 | IC7100 | - | - |  |
+| Icom IC-7100 | IC7100 | 2026-08-04 | NY4I | Direct CI-V (not HamLib). CW-by-CAT sends. **Interrupting CW VERIFIED WORKING** after 7309eb69. Before it, F9 pressed 1.05 s into an F1 message neither stopped F1 nor keyed until F1 finished -- the log showed no StopCW at all, because `SendFunctionKeyMessage` skipped `FlushCWBuffer` outright for any radio declaring `rcCWFlushDisruptsTiming` (every Icom, family-wide; ny4i Issue 145). That skip predated the 2026-08-01 K3 fix that made the abort conditional on `CWByCAT_Sending`, so the timing problem it worked around was already gone at its source. **This also proves the abort byte:** `$17 $FF` -- the raw byte, as the D7 legacy path and HamLib's `icom_stop_morse` both send -- does stop the keyer, so the manual's "FF" needs no ASCII reading. STILL OWED: confirm a plain single F1 keys with clean timing (Issue 145's original symptom, the only regression risk of that commit). |
 | Icom IC-718 | IC718 | 2026-07-21 | NY4I | Extensive: mode=NON fixed, CW speed 6..60, per-VFO mode label, set-mode without filter byte, split set-only, TX status unreadable. 2026-07-31: CI-V bus-collision fix (mode display), transceiver-ID $19 logging. |
 | Icom IC-7200 | IC7200 | - | - |  |
 | Icom IC-725 | IC725 | - | - |  |
