@@ -1533,52 +1533,40 @@ begin
 
       end;
 
-      // UP1..UP5 -- "QSX n kHz up".  Five explicit tokens, kept explicit: only
-      // 1..5 were ever recognised, and inferring the digit would quietly start
-      // accepting UP6..UP9 that this decoder has never handled.
-      if TokenAt(LineBuf, i, 'UP1 ') then
+      // "UP n" -- QSX n kHz up.  ONE test covering every spelling the format
+      // has: UP1, UP 5, UP10, UP 10.  Read "UP", allow one optional space, then
+      // take the digits and do the arithmetic.
+      //
+      // This replaces TWO blocks that between them still missed cases: five
+      // hard-coded tokens UP1..UP5, and a separate space-form block.  So "UP7"
+      // and "UP10" (no space) were silently ignored -- the QSX was dropped and
+      // the operator worked the wrong frequency.  Reading the number instead of
+      // enumerating spellings is why this now handles all of them.
+      //
+      // Left word boundary is required so PUP / CUP / SOUP in a comment cannot
+      // fake a QSX -- and guarded on i > 0, because the old space-form block
+      // read LineBuf[i - 1] with no such guard and would step off the front of
+      // the buffer when the match sat at offset 0.
+      if (i > 0) and (LineBuf[i - 1] = ' ') and
+         (LineBuf[i] = 'U') and (LineBuf[i + 1] = 'P') then
          begin
-         TempSpot.FQSXFrequency := TempSpot.FFrequency + 1000;
-         end;
-      if TokenAt(LineBuf, i, 'UP2 ') then
-         begin
-         TempSpot.FQSXFrequency := TempSpot.FFrequency + 2000;
-         end;
-      if TokenAt(LineBuf, i, 'UP3 ') then
-         begin
-         TempSpot.FQSXFrequency := TempSpot.FFrequency + 3000;
-         end;
-      if TokenAt(LineBuf, i, 'UP4 ') then
-         begin
-         TempSpot.FQSXFrequency := TempSpot.FFrequency + 4000;
-         end;
-      if TokenAt(LineBuf, i, 'UP5 ') then
-         begin
-         TempSpot.FQSXFrequency := TempSpot.FFrequency + 5000;
-         end;
-
-      // Handle "UP <n>" format (space between UP and number, e.g. "UP 5", "UP 10").
-      // Word-boundary guard: require a space (or start of comment field) before
-      // "UP" so that words like "PUP", "CUP", "SOUP" in spot comments don't
-      // trigger a false split.
-      // "UP <n>" with space-separated number, e.g. "UP 5", "UP 10".
-      // Require a space before 'U' (word boundary) and a digit after "UP ".
-      if (LineBuf[i] = 'U') and
-         (LineBuf[i + 1] = 'P') and
-         (LineBuf[i + 2] = ' ') and
-         (LineBuf[i - 1] = ' ') and
-         (LineBuf[i + 3] in ['0'..'9']) then
-         begin
-         UpKhz := 0;
-         for QSXPos := 3 to 8 do
+         QSXPos := i + 2;
+         if LineBuf[QSXPos] = ' ' then      // the optional space: "UP 10"
             begin
-            TempChar := LineBuf[i + QSXPos];
-            if not (TempChar in ['0'..'9']) then
-               Break;
-            UpKhz := UpKhz * 10 + (Ord(TempChar) - 48);
+            Inc(QSXPos);
+            end;
+         UpKhz := 0;
+         // Terminates on the NUL that fills the tail of LineBuf, so a match at
+         // the very end of the line cannot run past it.
+         while (QSXPos <= High(LineBuf)) and (LineBuf[QSXPos] in ['0'..'9']) do
+            begin
+            UpKhz := UpKhz * 10 + (Ord(LineBuf[QSXPos]) - Ord('0'));
+            Inc(QSXPos);
             end;
          if UpKhz > 0 then
+            begin
             TempSpot.FQSXFrequency := TempSpot.FFrequency + UpKhz * 1000;
+            end;
          end;
     end;
   end;
