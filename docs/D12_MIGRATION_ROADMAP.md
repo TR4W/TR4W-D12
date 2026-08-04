@@ -198,10 +198,23 @@ nodes' padding — is **untouched on purpose**. Each whole line is handed to the
 existing parser with its CR restored (it scans for `<= #13` to end a line). Get
 it under test first, rewrite second.
 
-**Owed:** an in-process `TIdTCPServer` fixture serving known calls/frequencies
-(format from `c:\projects\test-tools\mockDXCluster`, which stays unmodified),
-including a deliberate mid-line segment split to pin the boundary fix; then a
-live cluster re-run of C-1; then the parser rewrite.
+**Fixture test landed (`a93cbec8`)** — `test/unit/uTestDXClusterClient.pas`, an
+in-process `TIdTCPServer` on loopback serving a known call/frequency table. The
+segment-split test carries a **negative control**: it looks during the 150 ms
+gap between the two half-line writes and requires zero lines, so it cannot pass
+by the two writes coalescing. Plus a 200-spot ordering burst. No external
+process; `mockDXCluster` stays unmodified and is not required to run it.
+
+**LIVE-VERIFIED 2026-08-04 (NY4I): spots decode correctly from a real
+AR-Cluster node, and the unified `UP n` handling works.** That re-runs C-1 for
+the Indy move and covers the parser end-to-end on a node whose software is
+*not* DXSpider — worth stating, because the decoder's fixed column offsets are
+exactly the thing that varies between cluster softwares.
+
+Still unproven on a live node: the segment-split path (not observable from the
+outside — it is the fixture test's job), reconnect after a node drop, and a
+long session. **Owed:** extracting `ProcessDX` far enough to link into the test
+EXE, so the decoder itself gets fixtures rather than only the transport.
 
 ---
 
