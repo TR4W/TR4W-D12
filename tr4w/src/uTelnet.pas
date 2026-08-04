@@ -255,6 +255,13 @@ const
   TELNET_DATA           = 3;   // lParam = PTelnetChunk (handler disposes it)
   TELNET_CLOSED         = 4;   // lParam = WSA error code (0 = graceful close)
 
+  // Auto-reconnect: WM_TIMER id on the telnet window, and the backoff bounds.
+  // First retry is quick because the common case is a node bouncing; the cap
+  // keeps a node that is down for hours to one attempt a minute.
+  TELNET_RETRY_TIMER = 1;
+  RETRY_DELAY_MIN    = 5000;    // 5 s
+  RETRY_DELAY_MAX    = 60000;   // 60 s -- NY4I's cap
+
 type
   PTelnetChunk = ^TTelnetChunk;
   TTelnetChunk = record
@@ -289,8 +296,25 @@ var
   // This is what `TelnetSock <> 0` actually meant before the socket moved into
   // TDXClusterClient.  Main thread only.
   TelnetSessionActive: boolean;
+
+  // ---- auto-reconnect ------------------------------------------------------
+  // Armed when a session we did not end goes away; cancelled the moment the
+  // OPERATOR ends one.  Gated on CONNECTION AT STARTUP (tConnectionAtStartup):
+  // an operator who does not want TR4W dialling the cluster on its own has
+  // already said so with that command, and reconnecting would contradict it.
+  //
+  // Radios have had this for a while (TFactoryRadioBase, 1 s -> 30 s backoff);
+  // the cluster is the one link that stayed down until somebody noticed the
+  // window had gone quiet.  Mid-contest that tends to be twenty minutes.
+  TelnetRetryArmed: boolean;
+  TelnetRetryDelay: integer;   // ms, doubles per failure to RETRY_DELAY_MAX
   PendingTelnetHost: array[0..255] of AnsiChar;   // set on the main thread before the I/O thread starts
   PendingTelnetPort: Word;
+
+// Forward-declared: the window procedure below arms and cancels the retry, but
+// the helpers need AddStringToTelnetConsole, which is declared after it.
+procedure ArmTelnetRetry; forward;
+procedure CancelTelnetRetry; forward;
 
 // ---------------------------------------------------------------------------
 //  Issue #973 - field substitution in cluster_commands.txt
@@ -610,6 +634,10 @@ begin
                  logger.Info('[Telnet] Connected to %s:%d', [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
                  end;
               TelnetSessionActive := True;   // there is now something to tear down
+              // We are back: forget any pending retry and reset the backoff, so
+              // the NEXT outage starts at 5 s again rather than inheriting the
+              // 60 s this one may have crept up to.
+              CancelTelnetRetry;
               Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
               AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
@@ -636,6 +664,11 @@ begin
                 @PendingTelnetHost[0], PendingTelnetPort);
               AddStringToTelnetConsole(wsprintfBuffer, tstError);
               Disconnect;
+              // Keep trying, with a longer gap each time.  A failed RETRY comes
+              // back through here, which is what makes the backoff advance --
+              // and a first connect that fails is retried too, so a TR4W
+              // started before the network is up still ends up connected.
+              ArmTelnetRetry;
             end;
 
           TELNET_DATA:
@@ -674,9 +707,28 @@ begin
                     TelnetConnectionError(lParam);
                     end;
                  Disconnect;
+                 // We did not ask for this -- the node hung up or the link
+                 // died -- so start trying to get it back.  Disconnect has
+                 // already restored the toolbar, so the operator can still
+                 // take over at any point and CancelTelnetRetry will stop us.
+                 ArmTelnetRetry;
                  end;
             end;
         end;
+      end;
+
+    // Auto-reconnect tick.  One-shot: kill it first, then try.  If the attempt
+    // fails, TELNET_CONNECT_FAILED arms the next one with a longer delay, so
+    // the loop continues without this handler knowing how many have gone by.
+    WM_TIMER:
+      begin
+        if wParam = TELNET_RETRY_TIMER then
+           begin
+           KillTimer(hwnddlg, TELNET_RETRY_TIMER);
+           TelnetRetryArmed := False;
+           AddStringToTelnetConsole('Reconnecting...', tstTR4W);
+           StartTelnetConnect;
+           end;
       end;
 
     WM_INITDIALOG:
@@ -821,7 +873,14 @@ begin
           end;
 
         case wParam of
-          201: Disconnect;
+          // Operator clicked Disconnect: cancel FIRST, so a retry armed by an
+          // earlier drop cannot fire and drag the link back up against their
+          // wishes.  This is the one place that must beat the timer.
+          201:
+            begin
+            CancelTelnetRetry;
+            Disconnect;
+            end;
 
           202:
             begin
@@ -1755,6 +1814,60 @@ end;
 function TelnetIsConnected: boolean;
 begin
   Result := (ClusterClient <> nil) and ClusterClient.IsConnected;
+end;
+
+// Stop retrying.  Called wherever the OPERATOR takes charge of the link --
+// clicking Disconnect, or closing the window -- so an automatic reconnect can
+// never undo a deliberate act.
+procedure CancelTelnetRetry;
+begin
+  if TelnetRetryArmed then
+     begin
+     KillTimer(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+               TELNET_RETRY_TIMER);
+     TelnetRetryArmed := False;
+     end;
+  TelnetRetryDelay := 0;
+end;
+
+// Schedule the next attempt, backing off.  Silent retrying is worse than none
+// -- the operator would have no way to tell a reconnecting cluster from a dead
+// one -- so every attempt is announced in the console.
+procedure ArmTelnetRetry;
+var
+  wnd: HWND;
+begin
+  if not tConnectionAtStartup then
+     begin
+     Exit;   // operator has opted out of TR4W dialling on its own
+     end;
+
+  if TelnetRetryDelay = 0 then
+     begin
+     TelnetRetryDelay := RETRY_DELAY_MIN;
+     end
+  else
+     begin
+     TelnetRetryDelay := TelnetRetryDelay * 2;
+     if TelnetRetryDelay > RETRY_DELAY_MAX then
+        begin
+        TelnetRetryDelay := RETRY_DELAY_MAX;
+        end;
+     end;
+
+  wnd := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
+  if wnd = 0 then
+     begin
+     Exit;   // window gone; nothing to reconnect into
+     end;
+
+  // TF.Format is wsprintf-style: positional arguments, not an open array.
+  Format(wsprintfBuffer, 'Reconnecting to %s:%u in %u seconds...',
+         @PendingTelnetHost[0], PendingTelnetPort, TelnetRetryDelay div 1000);
+  AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
+
+  SetTimer(wnd, TELNET_RETRY_TIMER, TelnetRetryDelay, nil);
+  TelnetRetryArmed := True;
 end;
 
 procedure SendClientStatus;
