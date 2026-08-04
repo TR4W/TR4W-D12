@@ -147,6 +147,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    function CWProsign(const token: string): TCWProsign; override;
     function  CWIsFactoryOwned: Boolean; override;
     procedure SetCWSpeed(speed: integer); override;
     function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; override;
@@ -223,7 +224,6 @@ begin
    // because ONE model enum covered two protocols.  TFlexCAT and TFlexAPI are
    // separate classes, so each simply states its own rule and the test is gone.
    FCapabilities.CWFrame := CWFrameRule(24, True);
-   FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 // ---------------------------------------------------------------------------
@@ -752,5 +752,12 @@ end;
 //
 // The TS-2000 emulation layer is not used at all: the ZZ set is strictly richer
 // and is available on the serial CAT port (guide 2.2.2.1).
+
+
+// Flex over CAT speaks the Kenwood KY grammar, prosigns included.
+function TFlexCAT.CWProsign(const token: string): TCWProsign;
+begin
+   Result := uCWFraming.KenwoodProsign(token);
+end;
 
 end.

@@ -88,6 +88,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    function CWProsign(const token: string): TCWProsign; override;
     function  CWIsFactoryOwned: Boolean; override;
     // The character that aborts the keyer inside a KY command: #4 on the
     // K3/KX3/K4, '@' on the K2.  A VIRTUAL, not a model test -- this base must
@@ -175,7 +176,6 @@ begin
    // SN.  The KX3 shares the K3's CAT command set and is a TElecraftSerial, so
    // it now inherits the Elecraft dialect here -- the omission was a gap, not a
    // decision.  Still unverified on hardware; NY4I has no KX3.
-   FCapabilities.CWProsignDialect := pdElecraft;
 end;
 
 function TElecraftSerial.Connect: integer;
@@ -912,6 +912,12 @@ begin
          dataModeInt := 1;
          end;
       end;
+end;
+
+
+function TElecraftSerial.CWProsign(const token: string): TCWProsign;
+begin
+   Result := uCWFraming.ElecraftProsign(token);
 end;
 
 end.

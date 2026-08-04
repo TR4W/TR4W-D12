@@ -128,6 +128,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    function CWProsign(const token: string): TCWProsign; override;
     // True: this driver keys the Orion's CW itself ('/c<cr>' per character,
     // '*TU<cr>' to unkey).  The legacy rtOrion arms are buggy/empty.
     function CWIsFactoryOwned: Boolean; override;
@@ -195,7 +196,6 @@ begin
    // not Elecraft or Icom, so this is what the Orion has always been keyed.
    // NOT verified against a Ten-Tec manual -- inherited behaviour, recorded as
    // such rather than dressed up as a protocol fact.
-   FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 // ---------------------------------------------------------------------------
@@ -546,6 +546,12 @@ begin
    logger.Debug('[Orion.VFOBumpUp] no VFO step command in the Orion set');
 end;
 
+// The Orion took the Kenwood spellings in LOGRADIO and keeps them.
+function TTenTecOrionRadio.CWProsign(const token: string): TCWProsign;
+begin
+   Result := uCWFraming.KenwoodProsign(token);
+end;
+
 initialization
   // 57600 8/N/1 -- the fastest port in the radio table, and ORION is one of only
   // three radios named explicitly in the legacy 1-stop-bit exception list
@@ -557,5 +563,6 @@ initialization
      ,
      16008
      );
+
 
 end.

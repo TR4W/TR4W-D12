@@ -42,6 +42,7 @@ Type TK4Radio = class(TFactoryRadioBase)
       procedure BufferCW(cwChars: string); overload; override;
       procedure SendCW; override;
       procedure StopCW; override;
+      function CWProsign(const token: string): TCWProsign; override;
       function CWIsFactoryOwned: Boolean; override;   // The K4 keys CW itself: StopCW sends Chr(4)+";RX;".
 
       // Base class overrides with VFO parameters
@@ -110,7 +111,6 @@ begin
    // is deliberately NOT a TElecraftSerial -- it is a network+serial radio with
    // an AI push model (see this unit's header).
    FCapabilities.CWFrame := CWFrameRule(22, True);
-   FCapabilities.CWProsignDialect := pdElecraft;
 end;
 
 function TK4Radio.Connect: integer;
@@ -907,6 +907,11 @@ begin
 end;
 }
 
+function TK4Radio.CWProsign(const token: string): TCWProsign;
+begin
+   Result := uCWFraming.ElecraftProsign(token);
+end;
+
 initialization
   RegisterRadio(K4,
      function: TFactoryRadioBase begin Result := TK4Radio.Create end,
@@ -916,5 +921,6 @@ initialization
      ,
      2047
      );
+
 
 end.

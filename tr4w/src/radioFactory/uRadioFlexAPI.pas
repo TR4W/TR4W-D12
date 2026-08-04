@@ -74,6 +74,7 @@ type TFlexAPI = class(TFactoryRadioBase)
       procedure BufferCW(cwChars: string); override;
       procedure SendCW; override;
       procedure StopCW; override;
+      function CWProsign(const token: string): TCWProsign; override;
       // True: this transport keys CW itself (cwx send / cwx clear).
       function CWIsFactoryOwned: Boolean; override;
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
@@ -133,7 +134,6 @@ begin
    // characters the KY path uses, which is what the legacy code did for FLEX on
    // both transports.
    FCapabilities.CWFrame := CWFrameRule(0, False);
-   FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 function TFlexAPI.Connect: integer;
@@ -1139,5 +1139,12 @@ end;
 // The FLEX registration lives in uRadioFlex6000.pas, which names this class for
 // the network transport and TFlexCAT for serial.  A future Flex whose Ethernet
 // API differs subclasses TFlexAPI and only its own model unit changes.
+
+
+// The Ethernet API keys CW through the same Kenwood-style spellings.
+function TFlexAPI.CWProsign(const token: string): TCWProsign;
+begin
+   Result := uCWFraming.KenwoodProsign(token);
+end;
 
 end.

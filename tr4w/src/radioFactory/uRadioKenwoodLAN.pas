@@ -133,6 +133,7 @@ type TKenwoodLAN = class(TFactoryRadioBase)
       procedure BufferCW(cwChars: string); override;
       procedure SendCW; override;
       procedure StopCW; override;
+      function CWProsign(const token: string): TCWProsign; override;
       function CWIsFactoryOwned: Boolean; override;   // The LAN Kenwoods key CW themselves over the TCP link.
 
       procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
@@ -228,7 +229,6 @@ begin
    // a short P2 under P1=space, so the last chunk is filled.  This is the
    // TS-990's rule; the TS-890 overrides `pad` -- see TKenwoodTS890Radio.
    FCapabilities.CWFrame := CWFrameRule(24, True);
-   FCapabilities.CWProsignDialect := pdKenwood;
 end;
 
 Destructor TKenwoodLAN.Destroy;
@@ -1112,6 +1112,12 @@ begin
    NetworkUsername := ShortString(user);
    NetworkPassword := ShortString(pass);
    logger.Info('[%s] LAN credentials set (user=%s, pass=*******)', [radioModel, user]);
+end;
+
+
+function TKenwoodLAN.CWProsign(const token: string): TCWProsign;
+begin
+   Result := uCWFraming.KenwoodProsign(token);
 end;
 
 end.

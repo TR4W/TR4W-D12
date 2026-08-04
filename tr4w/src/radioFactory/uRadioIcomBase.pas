@@ -190,6 +190,7 @@ type
     procedure BufferCW(cwChars: string); override;
     procedure SendCW; override;
     procedure StopCW; override;
+    function CWProsign(const token: string): TCWProsign; override;
       function CWIsFactoryOwned: Boolean; override;   // The CI-V drivers key CW themselves ($17 / buffered send).
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
     procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
@@ -493,7 +494,6 @@ begin
   // not by the compiler.  A per-model deviation goes in that model's OWN ctor,
   // which runs after this one.
   FCapabilities.CWFrame := CWFrameRule(28, False, 1.25);
-  FCapabilities.CWProsignDialect := pdIcom;
 
   FSupportsExtendedVFOBCommands := rcReadVFOB in FCapabilities.Flags;
   FSplitStateReadable          := rcReadSplit in FCapabilities.Flags;
@@ -2262,7 +2262,16 @@ begin
       end;
 end;
 
+// ASCII plus the '^' no-inter-character-space modifier: '^SK' is S and K keyed
+// run together.  The other grammars' substitute characters (% _ * > [) are all
+// outside the set this command accepts.
+function TIcomRadio.CWProsign(const token: string): TCWProsign;
+begin
+   Result := uCWFraming.IcomProsign(token);
+end;
+
 initialization
   logger := TLogLogger.GetLogger('uRadioIcomBase');
+
 
 end.

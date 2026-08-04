@@ -235,7 +235,6 @@ begin
    //
    // Until 2026-08-03 this radio got NO CW at all: the framing and the gate were
    // looked up by InterfacedRadioType, which a string-id radio does not have.
-   FCapabilities.CWProsignDialect := pdNone;
    // Deliberately absent: rcSharedRITXITOffset.  TCI carries rit_offset and
    // xit_offset separately, so they are independent. [VERIFY on hardware]
 

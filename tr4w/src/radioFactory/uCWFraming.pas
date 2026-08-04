@@ -26,9 +26,16 @@ unit uCWFraming;
   enum cannot describe a string-id factory radio at all (its RadioModel is
   NoInterfacedRadio by design), so TCI was framed as a no-limit radio no matter
   what it actually accepts.  The data now lives on the radio object, in
-  TRadioCapabilities.CWFrame / .CWProsignDialect, declared by the family base and
-  overridden per model -- the same place CWSpeedMin/Max already lived.  The
-  per-radio COMMENTS moved with the data; look in the driver, not here.
+  TRadioCapabilities.CWFrame, declared by the family base and overridden per
+  model -- the same place CWSpeedMin/Max already lived.  The per-radio COMMENTS
+  moved with the data; look in the driver, not here.
+
+  The prosign dialect followed on 2026-08-04 and went one step further: it is
+  not a capability FIELD either, but a method the radio answers
+  (TFactoryRadioBase.CWProsign).  An enum naming the dialect was still the model
+  table in disguise, and the groups do not match the class graph anyway -- five
+  unrelated classes speak the Kenwood spellings.  The spellings stay here as
+  three pure functions; the CHOICE belongs to the radio.
 
   What remains is the mechanism, which is genuinely shared: given a rule, cut a
   string up; given a dialect, spell a prosign.  It is pure string manipulation
@@ -81,32 +88,51 @@ function CWChunk(const text: string; const rule: TCWFrameRule; index: integer): 
 function CWChunkUnpadded(const text: string; const rule: TCWFrameRule; index: integer): string;
 
 type
-   // Which CW dialect a radio speaks.  DECLARED BY THE RADIO
-   // (TRadioCapabilities.CWProsignDialect).  Three real ones, not two: Elecraft and
-   // Kenwood substitute a single character per prosign but disagree on which,
-   // and Icom uses NAMED prosigns ('^AR').
-   //
-   // pdNone is the fourth, and it is not a dialect: it means "this radio's CW
-   // grammar is not one of the three, so do not substitute anything".  Every
-   // token then passes through as literal text.  TCI uses it -- its cw_macros
-   // takes plain text and nobody has established what it does with a prosign,
-   // so keying a Kenwood '_' at it would be a guess dressed up as a fact.
-   TCWProsignDialect = (pdNone, pdElecraft, pdKenwood, pdIcom);
-
    // What a radio should key for one of TR4W's prosign tokens.
    TCWProsign = record
       handled: boolean;   // True: this token IS a prosign; do not treat it as text
       text: string;       // what to append ('' = token consumed, key nothing)
    end;
 
-// Translate one TR4W prosign token into a dialect.  The tokens are TR4W's own
-// notation (^ half-space, ! SN, + AR, < SK, = BT); Elecraft and Kenwood spell
-// the same prosigns with different characters in a KY string.
+{
+  THE SPELLINGS, and who chooses between them.
+
+  TR4W's own notation for the prosigns is ^ half space, ! SN, + AR, < SK, = BT
+  (see TC_CWMENU).  Each of the three CW grammars below spells those differently.
+
+  WHICH ONE A RADIO SPEAKS IS THE RADIO'S ANSWER, not a lookup here: every
+  driver overrides TFactoryRadioBase.CWProsign and delegates to the function it
+  speaks.  A `TCWProsignDialect` enum used to live here and this unit switched
+  on it -- which was the last model-keyed table in a unit whose whole point is
+  that it does not know what a radio is.  The functions stay because the
+  SPELLINGS are genuinely shared: five unrelated classes speak the Kenwood one
+  (Kenwood serial and LAN, Flex CAT and API, TenTec Orion), and one definition
+  beats five copies.
+
+  `handled` and `text` are separate on purpose: Elecraft has no SN, so '!' is
+  consumed and keys NOTHING -- which is not the same as an unrecognised token
+  the caller should pass through as literal text.
+}
+
+// Elecraft KY grammar: one substitute character per prosign.
+function ElecraftProsign(const token: string): TCWProsign;
+
+// Kenwood KY grammar: same idea, different characters.  Shared by Kenwood,
+// Flex-over-CAT, Flex API and the TenTec Orion.
+function KenwoodProsign(const token: string): TCWProsign;
+
+// Icom $17 grammar, which is NOT a prosign alphabet at all.
 //
-// `handled` and `text` are separate on purpose: Elecraft has no SN, so '!' is
-// consumed and keys NOTHING -- which is not the same as an unrecognised token
-// the caller should pass through as literal text.
-function CWProsignFor(dialect: TCWProsignDialect; const token: string): TCWProsign;
+// The radio takes plain ASCII (the table in the manual is 20, 27-3F, 41-7A) plus
+// ONE modifier: '^' (0x5E) means "send the following characters with no
+// inter-character space".  So '^SK' is not a named prosign -- it is the letters
+// S and K keyed run together, which IS the SK prosign.  Same for ^AR, ^BT, ^SN.
+//
+// This matters beyond wording: the substitute characters the other two grammars
+// use -- % _ * > [ -- are all OUTSIDE the set Icom documents for this command,
+// so an Icom sharing either of those spellings would be sent bytes it has no
+// meaning for.
+function IcomProsign(const token: string): TCWProsign;
 
 // The Kenwood-protocol KY command carrying one chunk of CW text.  Identical on
 // Elecraft, Kenwood and Flex-over-CAT, which is why it lives here instead of
@@ -186,110 +212,105 @@ begin
       end;
 end;
 
-function CWProsignFor(dialect: TCWProsignDialect; const token: string): TCWProsign;
+function ElecraftProsign(const token: string): TCWProsign;
 begin
-   Result.handled := False;
-   Result.text := '';
-
-   // pdNone: an unclassified CW grammar.  Substituting a Kenwood or Elecraft
-   // character here would be inventing a fact about the radio, so every token
-   // falls through unhandled and the caller keys it literally.
-   if dialect = pdNone then
-      begin
-      Exit;
-      end;
-
-   // The Icom spellings are NAMED prosigns ('^AR'), not single substitute
-   // characters, and Icom has an SN where Elecraft does not -- a third dialect,
-   // taken from LOGRADIO.SendCW's rtIcom arm.
-   if dialect = pdIcom then
-      begin
-      if token = '^' then
-         begin
-         Result.handled := True;
-         Result.text := ' ';    // no half space in an Icom CW string either
-         end
-      else if token = '!' then
-         begin
-         Result.handled := True;
-         Result.text := '^SN';
-         end
-      else if token = '+' then
-         begin
-         Result.handled := True;
-         Result.text := '^AR';
-         end
-      else if token = '<' then
-         begin
-         Result.handled := True;
-         Result.text := '^SK';
-         end
-      else if token = '=' then
-         begin
-         Result.handled := True;
-         Result.text := '^BT';
-         end;
-      Exit;
-      end;
-
+   Result.handled := True;
    if token = '^' then
       begin
-      // Neither dialect's KY string has a half space; use a whole one.
-      Result.handled := True;
+      Result.text := ' ';    // no half space in a KY string; use a whole one
+      end
+   else if token = '!' then
+      begin
+      Result.text := '';     // Elecraft has no SN: consumed, keys nothing
+      end
+   else if token = '+' then
+      begin
+      Result.text := '+';    // AR
+      end
+   else if token = '<' then
+      begin
+      Result.text := '*';    // SK
+      end
+   else if token = '=' then
+      begin
+      Result.text := '=';    // BT
+      end
+   else
+      begin
+      Result.handled := False;
+      Result.text := '';
+      end;
+end;
+
+function KenwoodProsign(const token: string): TCWProsign;
+begin
+   Result.handled := True;
+   if token = '^' then
+      begin
+      Result.text := ' ';    // no half space in a KY string; use a whole one
+      end
+   else if token = '!' then
+      begin
+      Result.text := '%';    // SN
+      end
+   else if token = '+' then
+      begin
+      Result.text := '_';    // AR
+      end
+   else if token = '<' then
+      begin
+      Result.text := '>';    // SK
+      end
+   else if token = '=' then
+      begin
+      Result.text := '[';    // BT
+      end
+   else
+      begin
+      Result.handled := False;
+      Result.text := '';
+      end;
+end;
+
+function IcomProsign(const token: string): TCWProsign;
+begin
+   Result.handled := True;
+   if token = '^' then
+      begin
+      // TR4W's '^' is a HALF space; Icom's '^' is the no-inter-character-space
+      // modifier, a different thing entirely.  There is no half space in the
+      // Icom character set, so key a whole one -- and do NOT pass '^' through,
+      // which would run the next two characters together.
       Result.text := ' ';
       end
-   else if token = '!' then        // SN
+   else if token = '!' then
       begin
-      Result.handled := True;
-      if dialect <> pdElecraft then
-         begin
-         Result.text := '%';
-         end;
-      // Elecraft: no SN.  Consumed, keys nothing (legacy behaviour).
+      Result.text := '^SN';
       end
-   else if token = '+' then        // AR
+   else if token = '+' then
       begin
-      Result.handled := True;
-      if dialect = pdElecraft then
-         begin
-         Result.text := '+';
-         end
-      else
-         begin
-         Result.text := '_';
-         end;
+      Result.text := '^AR';
       end
-   else if token = '<' then        // SK
+   else if token = '<' then
       begin
-      Result.handled := True;
-      if dialect = pdElecraft then
-         begin
-         Result.text := '*';
-         end
-      else
-         begin
-         Result.text := '>';
-         end;
+      Result.text := '^SK';
       end
-   else if token = '=' then        // BT
+   else if token = '=' then
       begin
-      Result.handled := True;
-      if dialect = pdElecraft then
-         begin
-         Result.text := '=';
-         end
-      else
-         begin
-         Result.text := '[';
-         end;
+      Result.text := '^BT';
+      end
+   else
+      begin
+      Result.handled := False;
+      Result.text := '';
       end;
-
-   // NOT handled, deliberately: '&' (AS).  LOGRADIO carried a commented-out arm
-   // mapping it to '%' on Elecraft and '<' on Kenwood, disabled because in TR4W
-   // '&' is really MYSTATE and only documented as AS.  Recorded here so the
-   // spellings are not lost if AS is ever given its own token; do not enable it
-   // without deciding what '&' means first.
 end;
+
+// NOT handled by any of the three, deliberately: '&' (AS).  LOGRADIO carried a
+// commented-out arm mapping it to '%' on Elecraft and '<' on Kenwood, disabled
+// because in TR4W '&' is really MYSTATE and only documented as AS.  Recorded
+// here so the spellings are not lost if AS is ever given its own token; do not
+// enable it without deciding what '&' means first.
 
 function CWChunk(const text: string; const rule: TCWFrameRule;
                  index: integer): string;
