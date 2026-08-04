@@ -340,7 +340,10 @@ end;
 function ArrayToString(const a: array of Char): string;
 begin
   if Length(a)>0 then
-    SetString(Result, PChar(@a[0]), Length(a))
+    // Genuinely wide on both sides: under D12 `Char` IS WideChar and Result is
+    // a UnicodeString, so PChar here is PWideChar and the element stride
+    // matches.  Do not "fix" this one to PAnsiChar.
+    SetString(Result, PChar(@a[0]), Length(a))   // lint:wide-ok
   else
     Result := '';
 end;
