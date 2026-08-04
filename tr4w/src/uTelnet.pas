@@ -234,6 +234,7 @@ var
 implementation
 uses uNet,
   uDXClusterClient,   // the socket half, extracted so it can be tested headless
+  uDXSpotParse,       // the decode half, likewise -- ProcessDX keeps only APPLY
   uBandmap,
   LogGrid,
   SysUtils,   // Issue #997: provides SysUtils.Format/StrPCopy for asm removal.
@@ -1373,291 +1374,35 @@ begin
 
 end;
 
-// Does `Token` appear at 0-based offset `Index`?
+// Decode ONE complete cluster line and apply it to the running program.
 //
-// This replaces the `PInteger(@Buf[i])^ = $20585351 {QSX }` idiom that ran
-// through this decoder.  That trick compared four characters as one 32-bit
-// integer -- a D7-era micro-optimisation that saved a few cycles on 1990s
-// hardware and has cost every reader since, because the constant only spells
-// "QSX " if you know the machine is little-endian and read the bytes backwards.
-// It is also silently limited to exactly four characters and silently wrong on
-// a big-endian target.  The compare below is the same test, written down.
-function TokenAt(const Buf: array of AnsiChar; Index: integer;
-                 const Token: AnsiString): boolean;
+// The DECODE half now lives in uDXSpotParse: it is a pure function of the line,
+// so it links into the unit-test EXE and is pinned there (uTestDXSpotParse).
+// What is left here is everything that needs the running program and therefore
+// cannot -- the log (dupe and multiplier), the spot list, the alert list box,
+// the display and the clock.  That mixture is exactly why the decoder had no
+// test for as long as the two halves shared a function.
+function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
+  TelnetStringType): boolean;
 var
-  k: integer;
+  MinuteOfDay: integer;
+  ct: Cardinal;
 begin
   Result := False;
-  if (Index < 0) or (Index + Length(Token) > Length(Buf)) then
+  Stringtype := tstReceived;
+
+  if not ParseDXSpotLine(Line, TempSpot) then
      begin
      Exit;
      end;
-  for k := 1 to Length(Token) do
-     begin
-     if Buf[Index + k - 1] <> Token[k] then
-        begin
-        Exit;
-        end;
-     end;
-  Result := True;
-end;
 
-// Decode ONE complete cluster line into TempSpot.
-//
-// Takes the LINE, not an offset into a shared receive buffer.  It used to read
-// `TelnetBuffer[DX + n]` -- a global the socket wrote into -- which meant the
-// decoder could only run where that global was live, i.e. never in a test.  The
-// column arithmetic below is unchanged and deliberately so: those offsets are
-// tuned against what real nodes actually emit.  All that changed is WHERE the
-// bytes come from, so DX is now always 0 and the `DX + n` expressions keep
-// reading exactly as they always did.
-function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
-  TelnetStringType): boolean;
-label
-  1;
-var
-  // The line, NUL-filled so any read past its end sees a terminator exactly as
-  // it did in the old NUL-terminated receive buffer.  1024 is far beyond any
-  // real cluster line (~80-120 chars).
-  LineBuf: array[0..1023] of AnsiChar;
-  DX: integer;        // always 0; kept so the offsets below read as before
-  copyLen: integer;
-  i, i1: integer;
-  TempFrequency: integer;
-
-  f: integer;
-  QSXPos: integer;
-  TempChar: AnsiChar;
-  Hertz: integer;
-  DivHertz: boolean;
-  QSXBand: BandType;
-  QSXMode: ModeType;
-  UpKhz: integer;
-
-  Offset: integer;
-  ct: Cardinal;
-begin
-  // Copy the line into a NUL-filled local.  Zero-filling is what makes the
-  // fixed offsets below safe on a SHORT line: a read past the end lands on #0,
-  // exactly as it did when this walked a NUL-terminated receive buffer.
-  Windows.ZeroMemory(@LineBuf, SizeOf(LineBuf));
-  copyLen := Length(Line);
-  if copyLen > SizeOf(LineBuf) - 1 then
-     begin
-     copyLen := SizeOf(LineBuf) - 1;
-     end;
-  if copyLen > 0 then
-     begin
-     Move(Line[1], LineBuf[0], copyLen);
-     end;
-  DX := 0;   // the line starts at the start; see the header
-
-  Offset := 0;
-  Result := False;
-  Stringtype := tstReceived;
-  Windows.ZeroMemory(@TempSpot, SizeOf(TSpotRecord));
-  TempSpot.FBand := NoBand;
-  TempSpot.FMode := NoMode;
-
-  //  ShowMessage(@LineBuf[DX + 24]);
-  if LineBuf[DX + 24] = '.' then
-     begin
-     Offset := 3; // 4.92.6
-     end;
-  if LineBuf[DX + 25] = '.' then
-     begin
-     Offset := 4;
-     end;
-  if LineBuf[DX + 26] = '.' then
-     begin
-     Offset := 5;
-     end;
-  if LineBuf[Dx + 23] = '.' then
-     begin
-     Offset := 1;
-     end;
-  {Source Callsign}
-  for i := DX + 9 to DX + 20 do
-  begin
-    if ((LineBuf[i] = ' ') or (LineBuf[i] = ':')) then
-    begin
-      if LineBuf[i + 1] <> ' ' then // 4.92.6
-         begin
-         SetLength(TempSpot.FSourceCall, i - DX - 6);
-         end;
-      Windows.lstrcpynA(@TempSpot.FSourceCall[1], @LineBuf[DX + 6], i - DX -
-        5);
-      i1 := i;
-      Break;
-    end;
-  end;
-
-  for i := DX + 10 to DX + 20 do
-  begin
-    // if LineBuf[i] = ' ' then if LineBuf[i + 1] <> ' ' then
-    // Two nested single-statement ifs collapsed into one condition -- no else
-    // on either, so this is the same test, and it satisfies the begin/end rule
-    // without adding a pointless nesting level.  4.92.6
-    if ((LineBuf[i] = ' ') or (LineBuf[i] = ':')) and
-       (LineBuf[i + 1] <> ' ') then
-      begin
-        Windows.lstrcpynA(@TempSpot.FFreqString[0], @LineBuf[i + 1], DX + 24
-          - i + Offset);
-
-        TempFrequency := 0;
-
-        for f := 0 to 12 do
-        begin
-          if TempFrequency > 2100000 { $ 7FFFFFF} then
-            Exit;
-
-          if TempSpot.FFreqString[f] = '.' then
-          begin
-            //            try
-
-            // 0010368100 - 009E3464
-            // 1778165408 - 69FCA6A0
-            // 2147483647   7FFFFFFF
-            //            TempFrequency := 10368970*1000;
-            TempFrequency :=
-              (
-              TempFrequency * 10 +
-              (Ord(TempSpot.FFreqString[f + 1]) - 48)
-              ) * 100;
-            //            if TempFrequency < 10000000 then TempFrequency := TempFrequency * 100;
-            //            except
-            //              asm
-            //            nop
-            //              end;
-            //          end;
-            //103 681 190 00
-            if (TempFrequency > 1300000000) or (TempFrequency < 0) then
-
-              Exit;
-            TempSpot.FFrequency := TempFrequency;
-            Break;
-          end;
-          if TempSpot.FFreqString[f] = #0 then
-            Break;
-          if TempSpot.FFreqString[f] in ['0'..'9'] then
-            TempFrequency := TempFrequency * 10 + (Ord(TempSpot.FFreqString[f])
-              - 48);
-        end;
-
-      end;
-  end;
-
-  //1
-
-  {DX}
-
-//  DXCallStart := 25;
-  if Offset = 4 then
-    Offset := 3; // 4.92.7
-  for i := DX + 27 to DX + 39 do
-  begin
-    // Nested single-statement ifs collapsed; same test, no else on either. 4.92.7
-    if (LineBuf[i] <> ' ') and
-       (LineBuf[i + 1] = ' ') then
-      begin
-        SetLength(TempSpot.FCall, i - (DX + 25 + Offset));
-        Windows.lstrcpynA(@TempSpot.FCall[1], @LineBuf[DX + 26 + Offset], i
-          - (DX + 24 + Offset));
-        if not GoodCallSyntax(TempSpot.FCall) then
-          Exit;
-        Break;
-      end;
-  end;
-
-  {Note}
-  if LineBuf[DX + 39 + Offset] <> '                              ' then
-    // This is not right as the extensions can be at the end so check if th ewhole comment (30 bytes) is blank // ny4i
-  begin
-    Windows.lstrcpynA(@TempSpot.FNotes[0], @LineBuf[DX + 39 + Offset], 31);
-    //was 31 but allow for null ny4i
-    StrUpper(PAnsiChar(@LineBuf[DX + 39 + Offset]));
-    for i := DX + 39 to DX + 65 do
-    begin
-      //        i1:=
-     // i1 := PInteger(@LineBuf[i])^;
-
-      if TokenAt(LineBuf, i, 'QSX ') then
-      begin
-        if LineBuf[i + 4] in ['0'..'9'] then
-        begin
-
-          Hertz := 1000;
-          DivHertz := False;
-
-          for QSXPos := 4 to 12 do
-          begin
-            TempChar := LineBuf[i + QSXPos];
-            case TempChar of
-              ' ': Break;
-              '0'..'9':
-                begin
-                  TempSpot.FQSXFrequency := TempSpot.FQSXFrequency * 10 +
-                    (Ord(TempChar) - 48);
-                  if DivHertz then
-                    Hertz := Hertz div 10;
-                end;
-              '.': DivHertz := True;
-            end;
-          end;
-
-          TempSpot.FQSXFrequency := TempSpot.FQSXFrequency * Hertz;
-          if TempSpot.FQSXFrequency < 10000 then
-            TempSpot.FQSXFrequency := TempSpot.FFrequency +
-              TempSpot.FQSXFrequency;
-          QSXBand := NoBand;
-          CalculateBandMode(TempSpot.FQSXFrequency, QSXBand, QSXMode);
-          if QSXBand = NoBand then
-            TempSpot.FQSXFrequency := 0;
-        end;
-
-      end;
-
-      // "UP n" -- QSX n kHz up.  ONE test covering every spelling the format
-      // has: UP1, UP 5, UP10, UP 10.  Read "UP", allow one optional space, then
-      // take the digits and do the arithmetic.
-      //
-      // This replaces TWO blocks that between them still missed cases: five
-      // hard-coded tokens UP1..UP5, and a separate space-form block.  So "UP7"
-      // and "UP10" (no space) were silently ignored -- the QSX was dropped and
-      // the operator worked the wrong frequency.  Reading the number instead of
-      // enumerating spellings is why this now handles all of them.
-      //
-      // Left word boundary is required so PUP / CUP / SOUP in a comment cannot
-      // fake a QSX -- and guarded on i > 0, because the old space-form block
-      // read LineBuf[i - 1] with no such guard and would step off the front of
-      // the buffer when the match sat at offset 0.
-      if (i > 0) and (LineBuf[i - 1] = ' ') and
-         (LineBuf[i] = 'U') and (LineBuf[i + 1] = 'P') then
-         begin
-         QSXPos := i + 2;
-         if LineBuf[QSXPos] = ' ' then      // the optional space: "UP 10"
-            begin
-            Inc(QSXPos);
-            end;
-         UpKhz := 0;
-         // Terminates on the NUL that fills the tail of LineBuf, so a match at
-         // the very end of the line cannot run past it.
-         while (QSXPos <= High(LineBuf)) and (LineBuf[QSXPos] in ['0'..'9']) do
-            begin
-            UpKhz := UpKhz * 10 + (Ord(LineBuf[QSXPos]) - Ord('0'));
-            Inc(QSXPos);
-            end;
-         if UpKhz > 0 then
-            begin
-            TempSpot.FQSXFrequency := TempSpot.FFrequency + UpKhz * 1000;
-            end;
-         end;
-    end;
-  end;
-
+  // The telnet window's list box wants the decoded fields only: no log lookup,
+  // no band map, no alerting.  This was a `goto 1` past the whole apply half.
   if InListBox then
-    goto 1;
-  //1
+     begin
+     Result := True;
+     Exit;
+     end;
 
   GetBandMapBandModeFromFrequency(TempSpot.FFrequency, TempSpot.FBand,
     TempSpot.FMode);
@@ -1681,24 +1426,27 @@ begin
 
   end;
 
-  //  Windows.GetSystemTime(TempSpot.FSysTime);
+  // The spot's own age.  `ct` is "now" in the same made-up unit the stamp is
+  // converted into -- minutes, with the day and month folded in as fixed-size
+  // blocks (30-day months).  It is only ever used as a difference against a
+  // stamp from the same run, so the calendar being wrong does not matter; this
+  // is unchanged.
   ct := UTC.wMinute + UTC.wHour * 60 + UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24
     * 30;
-  if (LineBuf[DX + 74] = 'Z') then
-  begin
-    TempSpot.FSysTime := ((Ord(LineBuf[DX + 70]) - $30) * 10 +
-      Ord(LineBuf[DX + 71]) - $30) * 60 +
-      ((Ord(LineBuf[DX + 72]) - $30) * 10 + Ord(LineBuf[DX + 73]) -
-      $30) + UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24 * 30;
-    if ct >= TempSpot.FSysTime then
-      TempSpot.FMinutesLeft := ct - TempSpot.FSysTime;
-
-  end
+  if ParseDXSpotTimeUTC(Line, MinuteOfDay) then
+     begin
+     TempSpot.FSysTime := Cardinal(MinuteOfDay) +
+       UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24 * 30;
+     if ct >= TempSpot.FSysTime then
+        begin
+        TempSpot.FMinutesLeft := ct - TempSpot.FSysTime;
+        end;
+     end
   else
-    TempSpot.FSysTime := ct;
+     begin
+     TempSpot.FSysTime := ct;
+     end;
 
-  //  TempSpot.FSysTime.wHour := (Ord(LineBuf[DX + 70]) - $30) * 10 + Ord(LineBuf[DX + 71]) - $30;
-  //  TempSpot.FSysTime.wMinute := (Ord(LineBuf[DX + 72]) - $30) * 10 + Ord(LineBuf[DX + 73]) - $30;
   if TempSpot.FCall = MyCall then
   begin
     Stringtype := tstAlert;
@@ -1722,7 +1470,6 @@ begin
       Tree.QuickBeep;
     end;
 
-  1:
   Result := True;
 end;
 

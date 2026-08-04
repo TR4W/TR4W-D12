@@ -172,6 +172,8 @@ uses
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
    uTestHamLibIDs       in 'uTestHamLibIDs.pas',
    uTestDXClusterClient in 'uTestDXClusterClient.pas',
+   uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
+   uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
    // and registry coverage tests.
@@ -250,6 +252,7 @@ begin
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
+   RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
 
    if RunAllSuites then
       begin

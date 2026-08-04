@@ -136,7 +136,7 @@ Nothing here is provable by code review. All of it needs hardware or a second st
 
 | # | Item | Plan reference | Status |
 |---|---|---|---|
-| C-1 | **Telnet / DX cluster / SSL** on the D12 binary. | P1-6 · **Group F** | ✅ **DONE 2026-08-02.** Cluster connects and logs in; CTY.DAT downloads over HTTPS (so vendored Indy + the bundled OpenSSL DLLs are proven); `{TOKEN}` expansion verified. Code audit found **no** defect — see the note below. Remaining SSL surface: score posting, HamScore. |
+| C-1 | **Telnet / DX cluster / SSL** on the D12 binary. | P1-6 · **Group F** | ✅ **DONE 2026-08-02.** Cluster connects and logs in; CTY.DAT downloads over HTTPS (so vendored Indy + the bundled OpenSSL DLLs are proven); `{TOKEN}` expansion verified. Code audit found **no** defect — see the note below. **Re-verified 2026-08-04** after the Indy move: spots decode from a real AR-Cluster node, and auto-reconnect after a node drop is confirmed working (NY4I). Remaining SSL surface: score posting, HamScore. |
 | C-2 | ~~**Two-station D7 ↔ D12 wire test**~~ **RETIRED as written** — all stations run the same build by convention (NY4I). `ContestExchange` has zero plain `Char` fields and the corpus reads D7-written binaries, so the shared record is byte-stable. Replaced by a **two-client** test of the server's own `AnsiChar` paths — see §9. | — | 🟡 Rescoped 2026-08-02 |
 | C-3 | **CW / WinKeyer / DVK / DVP timing.** | P1-8 · **Group D** | 🟡 Partly done — WinKeyer latency + startup verified on the K3 (383 ms → 25 ms; 1978 ms → 0.4 ms) |
 | C-4 | **CW-by-CAT send, every radio.** `SendCW` now has one path for all families and three drivers emit `KY` for the first time. Highest-risk item on the branch. | `BENCH_TEST_PLAN_2026-08-01` §1–2 | 🟡 K3/K4 verified, and **K3S over USB serial re-verified 2026-08-04** for both CW-by-CAT and CW speed sync after the capability/framing rework (`a9e77155`, `4a7f9833`) — the K3 pad-to-22 quirk survived the move onto `TElecraftSerial`. Still untested: **K2, KX3, Kenwood, Flex-on-COM, Icom long-message split, TCI** |
@@ -162,7 +162,7 @@ are not mistaken for oversights.
 | # | Item | Why deferred | Blocks release? |
 |---|---|---|---|
 | D-1 | **MainUnit editable-log renderer** (`tAddContestExchangeToLog`) stays on the A-path | Entangled with ~15 ANSI `ContestExchange` DTO reads; converts *with* the SQLite work. Keeps a few `inttopchar` consumers alive. | No — renders correctly today |
-| D-2 | **Telnet socket I/O centralization** (one decode after `recv`, one encode before send) | A parser rewrite (byte-offset DX-spot matching), not a cast tweak | 🟡 **Half done 2026-08-04 (`99ef30fb`)** — see below |
+| D-2 | **Telnet socket I/O centralization** (one decode after `recv`, one encode before send) | A parser rewrite (byte-offset DX-spot matching), not a cast tweak | 🟢 **Largely done 2026-08-04** — transport on Indy (`99ef30fb`), session/reconnect fixed (`63158d61`, `82718ef3`), decoder split out and under test (`uDXSpotParse`, 27 fixtures). See below |
 | D-3 | **Vendored Indy + `src\MMSystem.pas`** replaced by D12's RTL | — | ✅ **Decided 2026-08-04: NO.** See below |
 | D-4 | **Low-value shims** — `StrComp_JOH_IA32_6`, `BooleanToStr`, `RealToStr2`, `tCreateEditWindow`, `CopyFileA`/`FileExists` | Cost/benefit | No — not attempted |
 | D-5 | **Lint enforcement** (`Lint-PCharAnsi.ps1`) wired into the build so a new unmarked `PAnsiChar` in the logic layer fails | — | ✅ **Done (`fb3459e5`)** |
@@ -219,9 +219,86 @@ the Indy move and covers the parser end-to-end on a node whose software is
 exactly the thing that varies between cluster softwares.
 
 Still unproven on a live node: the segment-split path (not observable from the
-outside — it is the fixture test's job), reconnect after a node drop, and a
-long session. **Owed:** extracting `ProcessDX` far enough to link into the test
-EXE, so the decoder itself gets fixtures rather than only the transport.
+outside — it is the fixture test's job) and a long session.
+
+### D-2 postscript (2) — what live use found that 1,704 green tests did not
+
+Two defects surfaced within a minute of NY4I running the Indy build against a
+real node. Both were in the *session* layer, which the fixture test does not
+model, and both are now fixed:
+
+- **`63158d61` — a peer close left the toolbar showing a live session and
+  blocked reconnect.** The guard was `IsConnected`, which is the socket's
+  opinion, not the session's. It is now `TelnetSessionActive`, set and cleared
+  where the session begins and ends.
+- **`82718ef3` — auto-reconnect.** Gated on `CONNECTION AT STARTUP`, 5 s
+  doubling to a 60 s cap, retrying forever; cancel-then-disconnect ordering on
+  the button so the operator's disconnect is not immediately undone by a pending
+  retry. **NY4I confirmed 2026-08-04: "the new reconnect change works well."**
+
+**Known gap, deliberate:** a *send* failure tears the session down without
+arming a retry — `SendViaTelnetSocket` calls `Disconnect` directly, clearing
+`TelnetSessionActive` before the reader's `TELNET_CLOSED` arrives. **Owed test:**
+a fixture case where the *server* closes, asserting the reconnect. That is the
+case that would have caught `63158d61`.
+
+### D-2 postscript (3) — the decoder is now split, and under test
+
+**Done 2026-08-04.** `ProcessDX` decoded *and* applied in one function: in the
+same 313 lines it read the columns and then called `VisibleLog.CallIsADupe`,
+`VisibleLog.DetermineIfNewMult`, `SpotsList.AddSpot`, `QuickDisplay` and
+`SendMessageA` on the alert list box. That mixture — not the byte arithmetic —
+is why the decoder had no test: linking it meant linking `MainUnit`, the bandmap
+and the window layer.
+
+- **`src\uDXSpotParse.pas` (new)** — `ParseDXSpotLine(const Line; out Spot)` and
+  `ParseDXSpotTimeUTC`. Pure functions of the line: no globals, no I/O, no window
+  handles. `TokenAt` moved with them.
+- **`uTelnet.ProcessDX` keeps the apply half** — dupe, multiplier, band map,
+  alert list, display — and calls the parser. The `goto`/`label` is gone with it.
+- **The column arithmetic is unchanged, deliberately.** It is tuned against what
+  real nodes emit; it moved without being touched, and behaviour was pinned
+  first.
+- **`test/unit/uTestDXSpotParse.pas`** — 27 tests, fixtures taken byte-for-byte
+  from the captured sessions in `D7-LogFilesForTesting/dxcluster` (265 files,
+  198,979 `DX de` lines). Suite total is now **1,765 green**.
+
+That corpus also settled what the mysterious `Offset` logic is *for*. 198,977 of
+the 198,979 captured lines put the frequency's decimal point on **column 22** —
+the field is right-justified, so the columns are genuinely fixed. `Offset`
+compensates for the one case that breaks it: a spotter callsign too long for its
+field, e.g. `DX de 3V/KF5EYY-#:14007.0  PA3DZM …`, which shoves the frequency and
+the DX call one column right. That single line is now a fixture, and it is the
+only coverage the `Offset` branches have.
+
+**Three defects found while pinning, all pre-existing (verified against the D7
+tree), all pinned rather than fixed** — correcting them changes behaviour and
+belongs in its own commit, not inside a refactor:
+
+1. **`FSourceCall`'s length byte is usually never written.** `SetLength` is
+   guarded by "the next column is not a space" while the character copy is not,
+   so on the *ordinary* blank-padded line the spotter's characters are present
+   but the ShortString reads as length 0. It has never shown because every
+   consumer reads `@FSourceCall[1]`, i.e. as a C string. Anything treating it as
+   a Pascal string silently gets `''`.
+2. **A truncated line decodes as SUCCESS.** The call-scan loop simply never
+   matches, so `GoodCallSyntax` is never reached and `ProcessDX` goes on to
+   dupe-check and band-map a spot with an empty call and a zero frequency. One
+   real line in the 198,979 is cut off like this.
+3. **`UP n` does not validate the result.** The `QSX` branch runs its frequency
+   through `CalculateBandMode` and discards an out-of-band answer; the `UP`
+   branch does not. A real capture contains `UP 200-205`, which lands 200 kHz up
+   and outside the band.
+
+**D12-specific trap worth remembering** (cost a debugging cycle, now recorded in
+the test): a ShortString passed **by `const`** is copied only up to its *length
+byte*. A field whose length byte lies — see (1) — can therefore only be read
+through a pointer to the field itself; `const S: CallString` + `@S[1]` reads
+stack garbage.
+
+**Next in this seam:** `ProcessTelnetLine` and the `TelnetStringType`
+colourisation still sit in `uTelnet`; the apply half is now small enough to read
+in one screen, which is what makes the remaining decisions visible.
 
 ---
 
