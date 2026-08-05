@@ -53,6 +53,8 @@ uses
    uTestWinTimer        in 'uTestWinTimer.pas',
    uRadioConfigStore    in '..\..\src\uRadioConfigStore.pas',
    uTestRadioConfigStore in 'uTestRadioConfigStore.pas',
+   uRadioConfigLegacyMap in '..\..\src\uRadioConfigLegacyMap.pas',
+   uTestRadioConfigLegacyMap in 'uTestRadioConfigLegacyMap.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
@@ -262,6 +264,7 @@ begin
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
+   RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
 
    if RunAllSuites then
       begin
