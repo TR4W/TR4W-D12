@@ -1,9 +1,12 @@
 # FMX inside TR4W's Win32 message loop
 
-**Status: built, compiles, starts — NOT yet bench-verified.** This document is
-written *before* the bench session so the session has a checklist. Every claim
-below marked **[VERIFIED]** was checked on this machine; everything marked
-**[BENCH]** is an open question that only NY4I's station can answer.
+**Status: the decisive items PASSED on NY4I's station, 2026-08-05.** See
+[Bench results](#bench-results-2026-08-05). A handful of secondary checklist
+items are still unreported; the spike form is kept until they are.
+
+This document was written *before* the bench session so the session had a
+checklist. Claims marked **[VERIFIED]** were checked on the dev machine;
+**[BENCH]** items needed the station.
 
 Branch: `fmx-coexistence-spike` (stacked on `vcl-removal`).
 
@@ -153,6 +156,41 @@ window unaffected:
 - [ ] Exit TR4W with the form open — clean, no AV in `tr4w.log`, no hang
 - [ ] Radio frequency updates and cluster spots keep flowing throughout
 - [ ] CW sending is unaffected with the form open but unfocused
+
+## Bench results 2026-08-05
+
+NY4I's station, radio connected and **cluster connected with spots flowing** —
+which matters, because an FMX window that behaves on an idle program is not the
+same evidence.
+
+**PASSED — the three that decide it:**
+
+- **Keyboard isolation.** A callsign typed into the FMX Edit stayed in the Edit;
+  TR4W's Call window was unaffected. **F1 was silent** — no CQ. The loop's
+  first-question gate does what it was built to do.
+- **`TThread.Queue` is drained.** The Queue-test label updated from the worker
+  thread. This was the open unknown: nothing in the TR4W tree calls
+  `CheckSynchronize`, so it works because `FMX.Forms` hooks
+  `System.Classes.WakeMainThread` and the resulting message reaches FMX through
+  the loop's fall-through `DispatchMessage`. **Do not "tidy" that fall-through
+  path** — it is load-bearing, and the failure it would cause is silent: every
+  radio and cluster callback marshalling to the UI would simply stop arriving.
+- **The contest side kept running.** CW by CAT continued sending and the
+  frequency display tracked the VFO while the form was open, and cluster spots
+  kept flowing. FMX is not starving the loop at contest cadence.
+
+**Verdict: FMX is viable inside TR4W's message loop.** The preferences UI is
+unblocked.
+
+**Still unreported** (secondary — none of them can invalidate the above, but they
+are cheap and the instrument still exists):
+
+- numeric keypad digits with KEYPAD CW MEMORIES enabled
+- `'` and `=`
+- the combo drop-down (the `GA_ROOT` case) and Tab/arrow navigation
+- open/close ×10, and exiting TR4W with the form open
+- the modal child, for information only — policy for the real preferences window
+  is **modeless** regardless
 
 ## Exit criteria
 
