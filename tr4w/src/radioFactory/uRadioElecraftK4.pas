@@ -25,9 +25,9 @@ uses
 Type TK4Radio = class(TElecraftRadio)
    private
       firstProcessMessage: boolean;
-      function ParseIFCommand(cmd: string): boolean;
-      function ModeStrToMode(sMode: string; sDataMode: string): TRadioMode;
-      function BandNumToBand(sBand: string): TRadioBand;
+   protected
+      procedure SelectOperatingVFO(rxVFOIsB: boolean); override;
+   private
       //procedure ProcessMessage(sMessage: string);
       procedure Initialize;
       function ModeTypeToInteger(mode: TRadioMode; var dataModeInt: integer): integer;
@@ -436,73 +436,6 @@ begin
       end;
 end;
 
-function TK4Radio.ParseIFCommand(cmd: string): boolean;
-var
-   info: TElecraftIF;
-   err: TElecraftIFError;
-   vfo: TRadioVFO;
-begin
-   Result := false;
-
-   // Decoding lives in uElecraftIF so the K3 and K4 cannot drift apart again;
-   // APPLYING the decoded state stays here, because that is where they legitimately
-   // differ -- see the VFO note below.
-   err := ParseElecraftIF(cmd, info);
-   if err <> ifeNone then
-      begin
-      logger.Error('[ParseIFCommand] %s', [ElecraftIFErrorText(err, cmd)]);
-      Exit;
-      end;
-
-   // Base setters, not the raw scalars: they also write the per-VFO RITOffset
-   // the radio window reads (uFactoryRadioBase.GetRITOffset).  On a SERIAL K4
-   // (AI off, IF;FB; polling) this IF response is the only ongoing RIT/XIT
-   // source -- the network AI path at RT/XT/RO writes vfo[] itself -- so
-   // writing just the scalar left the window offset blank.
-   Self.SetRITOffset(info.RITXITOffsetHz);
-   Self.SetXITOffset(Self.localRITOffset);   // Because on K4, these are the same
-   logger.trace('[ParseIFCommand] RITOffset = %d', [Self.localRITOffset]);
-
-   Self.SetRITOn(info.RITOn);
-   Self.SetXITOn(info.XITOn);
-   logger.trace('In IF processor, RIT is %s, XIT is %s',
-                [BoolToStr(info.RITOn, True), BoolToStr(info.XITOn, True)]);
-
-   if info.Transmitting then
-      begin
-      Self.RadioState := rsTransmit;
-      end
-   else
-      begin
-      Self.RadioState := rsReceive;
-      end;
-
-   Self.SetSplitOn(info.SplitOn);
-
-   // Post processing from gathered variables to the right VFO.
-   // NOTE the deliberate difference from the K3: the K4 uses the SWAP VFO model
-   // (A/B exchange contents, so A is always the operating VFO), so this radio
-   // must NOT call SetActiveVFO.  That is a real per-model behaviour, which is
-   // exactly why the shared code is a pure decoder and not a base class.
-   if not info.RXVFOIsB then
-      begin
-      vfo := Self.vfo[nrVFOA];
-      end
-   else
-      begin
-      vfo := Self.vfo[nrVFOB];
-      end;
-
-   vfo.frequency := info.FrequencyHz;
-   // Serial polling only sends IF;FB; (AI off), so BN never arrives on a band
-   // change -- derive band from frequency here, as every other modern radio
-   // class does (Icom/Flex/TS-890).  Keeps the band label in sync when the
-   // operator changes bands on the radio over a serial connection.
-   vfo.band := FreqToRadioBand(info.FrequencyHz);
-   vfo.mode := ModeStrToMode(info.ModeChar, info.DataModeChar);
-   Result := true;
-end;
-
 {
 Type TRadioMode = (rmNone,rmCW, rmCWRev, rmLSB, rmUSB, rmFM, rmAM,
                    rmData, rmDataRev, rmFSK, rmFSKRev, rmPSK, rmPSKRev,
@@ -510,20 +443,6 @@ Type TRadioMode = (rmNone,rmCW, rmCWRev, rmLSB, rmUSB, rmFM, rmAM,
                    }
 
 // Helper functions
-function TK4Radio.ModeStrToMode(sMode: string; sDataMode: string): TRadioMode;
-var
-   problem: string;
-begin
-   // Mapping lives in uElecraftIF alongside the IF decode -- the K3 had a
-   // character-for-character copy of this same case statement.  Logging stays
-   // here so each radio still reports in its own category.
-   Result := ElecraftModeToRadioMode(sMode, sDataMode, problem);
-   if problem <> '' then
-      begin
-      logger.Error('[ModeStrToMode] %s', [problem]);
-      end;
-end;
-
 procedure TK4Radio.ProcessMsg(msg: string);
 begin
    // Forward to ProcessMessage to maintain compatibility
@@ -728,37 +647,6 @@ begin
       end;
 end;
 
-function TK4Radio.BandNumToBand(sBand: string): TRadioBand;
-var
-   iBand: integer;
-begin
-   iBand := StrToIntDef(sBand,-9);
-   logger.trace('[BandNumToBand] Converting band string "%s" to iBand=%d', [sBand, iBand]);
-   case iBand of
-      0: Result := rb160m;
-      1: Result := rb80m;
-      2: Result := rb60m;
-      3: Result := rb40m;
-      4: Result := rb30m;
-      5: Result := rb20m;
-      6: Result := rb17m;
-      7: Result := rb15m;
-      8: Result := rb12m;
-      9: Result := rb10m;
-      10:Result := rb6m;
-      -9:begin
-         logger.Error('[BandNumToBand] Invalid band requested (non-numeric): %s',[sBand]);
-         Result := rbNone;
-         end;
-   else
-      begin
-      logger.Error('[BandNumToBand] Unhandled band value: %d (from string: %s)',[iBand, sBand]);
-      Result := rbNone;
-      end;
-   end;
-   logger.trace('[BandNumToBand] Result band = %d', [Ord(Result)]);
-end;
-
 procedure TK4Radio.PollRadioState;
 begin
    if Self.serialPort <> NoPort then
@@ -883,6 +771,16 @@ begin
 end;
 }
 
+
+procedure TK4Radio.SelectOperatingVFO(rxVFOIsB: boolean);
+begin
+   // DELIBERATELY NOTHING.  The K4 uses the SWAP VFO model: A and B exchange
+   // contents, so VFO A is always the operating VFO.  Telling it to switch --
+   // which is right on a K3 -- would fight the radio.
+   //
+   // This one override is the entire difference between the K3's handling of an
+   // IF response and the K4's; see TElecraftRadio.ParseIFCommand.
+end;
 
 initialization
   RegisterRadio(K4,
