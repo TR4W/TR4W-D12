@@ -845,7 +845,18 @@ type
 
   CFGFunc = (cfAll, {cfR1, cfR2, cfHard, cfBM, } cfCol, cfAppearance, cfWK, cfRadio1, cfRadio2);
 
-  CFGStatus = (csNew, csOld, csRem);
+  // csNew / csOld -- active; the value IS applied.  The difference is
+  // informational; no code reads it.
+  // csRem  -- retired: still recognised so an old config does not error, but
+  //           CheckCommand exits early and it is hidden from Options.
+  // csOwned -- STILL APPLIED, but hidden from Options because another dialog
+  //           owns it.  Not the same as csRem: these are live settings, and the
+  //           radio-configuration path depends on CheckCommand still accepting
+  //           them.  Used for the radio-scoped keys that moved into Preferences
+  //           (NY4I 2026-08-05) -- a setting that belongs to a specific radio
+  //           does not belong in a flat global command list, where it reads as
+  //           applying to the station.
+  CFGStatus = (csNew, csOld, csRem, csOwned);
 
   CFGType = (ctFreqList, ctDirectory, ctFileName, ctMessage, ctMultiplier, ctBoolean, ctReal, ctByte, ctInteger, ctWord, ctString, ctURL, ctCaseSensitive, ctPassword, ctOperation, ctOther, ctChar, ctAlphaChar, {ctPort, } ctPortLPT, ctBand);
 

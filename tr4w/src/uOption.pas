@@ -340,7 +340,10 @@ begin
   end;
 
   for Command := 1 to CommandsArraySize do
-    if not (CFGCA[Command].crS in [csRem]) then
+    // csOwned joins csRem here: both are hidden from this dialog, but only
+    // csRem is inert.  A csOwned command is still applied by CheckCommand --
+    // it simply has a better home (Preferences) than a flat global list.
+    if not (CFGCA[Command].crS in [csRem, csOwned]) then
       if CFGCA[Command].crType in [ctFreqList, ctURL, ctCaseSensitive, ctPassword, ctPortLPT, ctDirectory, ctFileName, ctAlphaChar, ctChar, ctBand, ctReal, ctByte, ctInteger, ctMessage, ctWord, ctString, ctBoolean, ctOther, ctMultiplier] then
       begin
 

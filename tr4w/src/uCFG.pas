@@ -310,7 +310,9 @@ const
 
    //  CFGKindStringArray                    : array[CFGKind] of PChar = ('Supported', 'Supported', 'Supported', 'Supported', 'Supported', 'Added', 'Removed', 'Not supported');
 
-   CFGStatusArray: array[CFGStatus] of PAnsiChar = ('New', 'Old', 'Removed');
+   // Indexed by CFGStatus -- adding a status without adding a name here is a
+   // compile error, which is how csOwned's missing entry was caught.
+   CFGStatusArray: array[CFGStatus] of PAnsiChar = ('New', 'Old', 'Removed', 'Preferences');
 
    CFGTypeStringArray: array[CFGType] of PAnsiChar = (nil, 'Directory', 'FileName',
       'String', 'Multiplier', 'Boolean', 'Real', 'Byte', 'Integer', 'Integer',
@@ -378,7 +380,7 @@ const
       (
     {(*}
 
- (crCommand: 'ADD DOMESTIC COUNTRY';          crAddress: @tAddDomesticCountryString;      crMin:0;  crMax:13;       crS: csOld; crA: 16;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'ADD DOMESTIC COUNTRY';          crAddress: @tAddDomesticCountryString;      crMin:0;  crMax:13;       crS: csOwned; crA: 16;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'ALL CW MESSAGES CHAINABLE';     crAddress: @AllCWMessagesChainable;         crMin:0;  crMax:0;        crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'ALLOW AUTO UPDATE';             crAddress: @tAllowAutoUpdate;               crMin:0;  crMax:0;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'ALT-D BUFFER ENABLE';           crAddress: @AltDBufferEnable;               crMin:0;  crMax:0;        crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
