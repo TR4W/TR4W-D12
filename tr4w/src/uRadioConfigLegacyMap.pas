@@ -1,0 +1,470 @@
+{
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+ This file is part of TR4W  (SRC)
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+}
+unit uRadioConfigLegacyMap;
+
+{
+  Renders a radio definition as the legacy [Radio] ini keys -- and NOTHING else.
+
+  WHY IT IS ITS OWN UNIT.  Putting a definition on the air means writing the
+  keys CFGCA understands and then telling CFGCA to re-read them.  The second
+  half needs uCFG, LOGRADIO, LogCW and the whole global world; the first half is
+  a pure function from a record to a list of (key, value) pairs.  Splitting them
+  means the part that is easy to get subtly wrong -- 26 key spellings, three of
+  which do not follow the pattern -- is the part that can be unit-tested.
+
+  It is also where a whole class of bug is prevented.  If activating a
+  definition writes only SOME of the keys, the rest are left over from the radio
+  that was configured BEFORE, and the operator gets an IC-7100 running with a
+  K3's CI-V address or a stale keyer port.  So the renderer emits the COMPLETE
+  set every time, including the keys whose value is empty; there is a test that
+  compares the emitted key set against a golden list lifted from CFGCA.
+
+  ON THE THREE KEYS THAT BREAK THE PATTERN.  Most keys read 'RADIO ONE <thing>'.
+  Three do not, and every one of them is a place a plausible-looking guess would
+  produce a key CFGCA silently ignores:
+
+      KEYER RADIO ONE OUTPUT PORT     (not RADIO ONE KEYER OUTPUT PORT)
+      POLL RADIO ONE                  (not RADIO ONE POLL)
+      RADIO ONE FACTORY ID            follows the pattern, but see below
+
+  ON TYPE vs FACTORY ID.  A radio driven by the factory is identified by a
+  STRING id and writes TYPE=NONE plus FACTORY ID=<id>; a legacy enum radio
+  writes TYPE=<enum name> and must have any stale FACTORY ID key DELETED, or
+  the factory picks the old radio up again.  Which of the two a given
+  registry id is, is a question for uRadioRegistry -- which this unit
+  deliberately does not use.  The caller resolves it and passes the answer in
+  as TRadioTypeRendering, which is what keeps this unit pure and testable.
+
+  ON DELETION.  A rendered entry can mean "delete this key" rather than "write
+  this value" (Value is ignored then).  That is not the same as writing an empty
+  string: WritePrivateProfileString with a nil value REMOVES the key, and for
+  FACTORY ID removal is the only thing that works.
+}
+
+interface
+
+uses
+   System.SysUtils,
+   uRadioConfigStore;
+
+type
+   // One instruction for the caller: write Value under Key, or delete Key.
+   TConfigKeyValue = record
+      Key: string;
+      Value: string;
+      // True = remove the key entirely (a nil value to
+      // WritePrivateProfileStringA).  Value is not meaningful.
+      Delete: boolean;
+   end;
+
+   TConfigKeyValues = array of TConfigKeyValue;
+
+   { What the caller resolved about this radio's identity by consulting the
+     registry.  Passed IN so that this unit needs no registry of its own. }
+   TRadioTypeRendering = record
+      // True for a factory (string-id) radio: TYPE=NONE + FACTORY ID=<id>.
+      IsFactoryRadio: boolean;
+      // For an enum radio, the InterfacedRadioTypeSA spelling ('IC7300',
+      // 'K3', ...).  Ignored when IsFactoryRadio.
+      LegacyTypeName: string;
+   end;
+
+// The complete key set for one slot, in a fixed order.  aProfile may be nil,
+// in which case the radio's own CWByCAT/CWSpeedSync are used rather than the
+// profile's per-slot CW output.
+function RenderRadioKeys(const aSlot: integer;
+                         const aRadio: TRadioDefinition;
+                         const aTypeRendering: TRadioTypeRendering;
+                         const aProfile: TStationProfile): TConfigKeyValues;
+
+// The same key set, rendered for "there is no radio in this slot".  Used when
+// a profile fills only slot one: without it, slot two keeps whatever the
+// previously active profile left there.
+function RenderEmptySlot(const aSlot: integer): TConfigKeyValues;
+
+// The key names this unit emits, in the same order, without needing a radio.
+// Exists so a test can compare the set against CFGCA, and so the apply layer
+// can log what it is about to touch.
+function RenderedKeyNames(const aSlot: integer): TArray<string>;
+
+// 'ONE' or 'TWO'.  Public because the apply layer logs with it.
+function SlotWord(const aSlot: integer): string;
+
+implementation
+
+const
+   TRUEVALUE  = 'TRUE';
+   FALSEVALUE = 'FALSE';
+
+function SlotWord(const aSlot: integer): string;
+begin
+   if aSlot = 2 then
+      begin
+      Result := 'TWO';
+      end
+   else
+      begin
+      Result := 'ONE';
+      end;
+end;
+
+function BoolValue(const aValue: boolean): string;
+begin
+   // CFGCA's boolean vocabulary, not Delphi's -- 'True' would not parse.
+   if aValue then
+      begin
+      Result := TRUEVALUE;
+      end
+   else
+      begin
+      Result := FALSEVALUE;
+      end;
+end;
+
+{ The key table.  ONE place, used by both the renderer and RenderedKeyNames, so
+  the two can never disagree about what the complete set is.
+
+  Each entry is a suffix appended to 'RADIO <slot> ', EXCEPT the two marked
+  below, which have their own shape.  Order is the order they are written; it
+  does not matter to the ini, but a stable order makes the apply log readable
+  and the pin test deterministic. }
+type
+   TKeyShape = (ksRadioPrefixed,    // 'RADIO ONE ' + suffix
+                ksKeyerOutputPort,  // 'KEYER RADIO ONE OUTPUT PORT'
+                ksPollRadio);       // 'POLL RADIO ONE'
+
+   TKeySpec = record
+      Shape: TKeyShape;
+      Suffix: string;
+   end;
+
+const
+   KEYSPECS: array[0..25] of TKeySpec = (
+      // identity
+      (Shape: ksRadioPrefixed;   Suffix: 'TYPE'),
+      (Shape: ksRadioPrefixed;   Suffix: 'FACTORY ID'),
+      (Shape: ksRadioPrefixed;   Suffix: 'NAME'),
+      // serial transport
+      (Shape: ksRadioPrefixed;   Suffix: 'CONTROL PORT'),
+      (Shape: ksRadioPrefixed;   Suffix: 'BAUD RATE'),
+      (Shape: ksRadioPrefixed;   Suffix: 'SERIAL FORMAT'),
+      (Shape: ksRadioPrefixed;   Suffix: 'CAT RTS'),
+      (Shape: ksRadioPrefixed;   Suffix: 'CAT DTR'),
+      // network transport
+      (Shape: ksRadioPrefixed;   Suffix: 'IP ADDRESS'),
+      (Shape: ksRadioPrefixed;   Suffix: 'TCP PORT'),
+      (Shape: ksRadioPrefixed;   Suffix: 'NETWORK USERNAME'),
+      (Shape: ksRadioPrefixed;   Suffix: 'NETWORK PASSWORD'),
+      // keyer lines
+      (Shape: ksKeyerOutputPort; Suffix: ''),
+      (Shape: ksRadioPrefixed;   Suffix: 'KEYER RTS'),
+      (Shape: ksRadioPrefixed;   Suffix: 'KEYER DTR'),
+      (Shape: ksRadioPrefixed;   Suffix: 'KEYER STOP BITS'),
+      // CW
+      (Shape: ksRadioPrefixed;   Suffix: 'CW BY CAT'),
+      (Shape: ksRadioPrefixed;   Suffix: 'CW SPEED SYNC'),
+      // model particulars
+      (Shape: ksRadioPrefixed;   Suffix: 'USE HAMLIB'),
+      (Shape: ksRadioPrefixed;   Suffix: 'HAMLIB ID'),
+      (Shape: ksRadioPrefixed;   Suffix: 'RECEIVER ADDRESS'),
+      (Shape: ksRadioPrefixed;   Suffix: 'ICOM DATA MODE ID'),
+      (Shape: ksRadioPrefixed;   Suffix: 'ICOM FILTER BYTE'),
+      (Shape: ksRadioPrefixed;   Suffix: 'WIDE CW FILTER'),
+      (Shape: ksRadioPrefixed;   Suffix: 'FT1000MP CW REVERSE'),
+      (Shape: ksRadioPrefixed;   Suffix: 'FREQUENCY ADDER')
+   );
+
+   // RenderRadioKeys emits its keys EXPLICITLY rather than walking this table,
+   // because each one needs a different value expression and a table of those
+   // would be less readable than the code, not more.  The risk that buys is
+   // drift: an emitted key that is not in the table, or vice versa.  That is
+   // what the pin test checks -- emitted set == RenderedKeyNames == the golden
+   // list lifted from CFGCA -- so drift fails a test rather than shipping.
+
+function KeyName(const aSlot: integer; const aSpec: TKeySpec): string;
+begin
+   case aSpec.Shape of
+      ksKeyerOutputPort:
+         begin
+         // NOT 'RADIO ONE KEYER OUTPUT PORT' -- CFGCA spells it this way round
+         // and would silently ignore the other.
+         Result := 'KEYER RADIO ' + SlotWord(aSlot) + ' OUTPUT PORT';
+         end;
+      ksPollRadio:
+         begin
+         Result := 'POLL RADIO ' + SlotWord(aSlot);
+         end;
+   else
+      begin
+      Result := 'RADIO ' + SlotWord(aSlot) + ' ' + aSpec.Suffix;
+      end;
+   end;
+end;
+
+// The two keys outside KEYSPECS, so that "the complete set" is one list in one
+// place rather than a table plus some ad-hoc additions.
+const
+   EXTRAKEYSPECS: array[0..2] of TKeySpec = (
+      (Shape: ksRadioPrefixed;   Suffix: 'BAND OUTPUT PORT'),
+      (Shape: ksRadioPrefixed;   Suffix: 'STARTUP COMMAND'),
+      (Shape: ksPollRadio;       Suffix: '')
+   );
+
+function RenderedKeyNames(const aSlot: integer): TArray<string>;
+var
+   i, n: integer;
+begin
+   n := Length(KEYSPECS) + Length(EXTRAKEYSPECS);
+   SetLength(Result, n);
+   for i := 0 to High(KEYSPECS) do
+      begin
+      Result[i] := KeyName(aSlot, KEYSPECS[i]);
+      end;
+   for i := 0 to High(EXTRAKEYSPECS) do
+      begin
+      Result[Length(KEYSPECS) + i] := KeyName(aSlot, EXTRAKEYSPECS[i]);
+      end;
+end;
+
+// Appends one instruction.  Local helper so the renderer below reads as a list
+// of decisions rather than as array bookkeeping.
+procedure Emit(var aList: TConfigKeyValues; const aKey, aValue: string;
+               const aDelete: boolean = False);
+var
+   n: integer;
+begin
+   n := Length(aList);
+   SetLength(aList, n + 1);
+   aList[n].Key    := aKey;
+   aList[n].Value  := aValue;
+   aList[n].Delete := aDelete;
+end;
+
+// An integer field where 0 means "not configured".  Writing a literal 0 would
+// be a real setting -- baud rate zero, CI-V address zero -- so an unset field
+// is written as empty, which CFGCA treats as absent.
+function OptionalInt(const aValue: integer): string;
+begin
+   if aValue = 0 then
+      begin
+      Result := '';
+      end
+   else
+      begin
+      Result := IntToStr(aValue);
+      end;
+end;
+
+function RenderRadioKeys(const aSlot: integer;
+                         const aRadio: TRadioDefinition;
+                         const aTypeRendering: TRadioTypeRendering;
+                         const aProfile: TStationProfile): TConfigKeyValues;
+var
+   slot: string;
+   cwOutput: string;
+   cwByCAT: boolean;
+   keyerPort: string;
+   speedSync: boolean;
+begin
+   Result := nil;
+   if aRadio = nil then
+      begin
+      Result := RenderEmptySlot(aSlot);
+      Exit;
+      end;
+
+   slot := SlotWord(aSlot);
+
+   // --- identity ----------------------------------------------------------
+   // A factory radio is TYPE=NONE plus FACTORY ID; an enum radio is the
+   // reverse AND must have the stale FACTORY ID key deleted, or the factory
+   // resurrects the previous radio.  This mirrors uCAT's own save path.
+   if aTypeRendering.IsFactoryRadio then
+      begin
+      Emit(Result, 'RADIO ' + slot + ' TYPE', 'NONE');
+      Emit(Result, 'RADIO ' + slot + ' FACTORY ID', aRadio.RegistryId);
+      end
+   else
+      begin
+      Emit(Result, 'RADIO ' + slot + ' TYPE', aTypeRendering.LegacyTypeName);
+      Emit(Result, 'RADIO ' + slot + ' FACTORY ID', '', True);
+      end;
+
+   Emit(Result, 'RADIO ' + slot + ' NAME', aRadio.Name);
+
+   // --- transport ----------------------------------------------------------
+   // Both transports' keys are written every time, with the inapplicable ones
+   // blanked.  A network radio that leaves a stale CONTROL PORT behind would
+   // have TR4W open a serial port it must not touch -- which on a shared port
+   // means stealing it from the OTHER radio.
+   if aRadio.Transport = rtNetwork then
+      begin
+      Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  PORT_NONE);
+      Emit(Result, 'RADIO ' + slot + ' BAUD RATE',     '');
+      Emit(Result, 'RADIO ' + slot + ' SERIAL FORMAT', '');
+      Emit(Result, 'RADIO ' + slot + ' CAT RTS',       '');
+      Emit(Result, 'RADIO ' + slot + ' CAT DTR',       '');
+
+      Emit(Result, 'RADIO ' + slot + ' IP ADDRESS',       aRadio.IPAddress);
+      Emit(Result, 'RADIO ' + slot + ' TCP PORT',         OptionalInt(aRadio.TCPPort));
+      Emit(Result, 'RADIO ' + slot + ' NETWORK USERNAME', aRadio.NetworkUsername);
+      Emit(Result, 'RADIO ' + slot + ' NETWORK PASSWORD', aRadio.NetworkPassword);
+      end
+   else
+      begin
+      Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  aRadio.ControlPort);
+      Emit(Result, 'RADIO ' + slot + ' BAUD RATE',     OptionalInt(aRadio.BaudRate));
+      Emit(Result, 'RADIO ' + slot + ' SERIAL FORMAT', aRadio.SerialFormat);
+      Emit(Result, 'RADIO ' + slot + ' CAT RTS',       aRadio.CatRTS);
+      Emit(Result, 'RADIO ' + slot + ' CAT DTR',       aRadio.CatDTR);
+
+      // Blanked, not left alone: see above.
+      Emit(Result, 'RADIO ' + slot + ' IP ADDRESS',       '');
+      Emit(Result, 'RADIO ' + slot + ' TCP PORT',         '');
+      Emit(Result, 'RADIO ' + slot + ' NETWORK USERNAME', '');
+      Emit(Result, 'RADIO ' + slot + ' NETWORK PASSWORD', '');
+      end;
+
+   // --- CW output ----------------------------------------------------------
+   // The PROFILE decides how CW reaches this slot, because that is a property
+   // of the station wiring rather than of the radio: the same K3 keys by CAT
+   // at home and off a WinKeyer portable.  With no profile the radio's own
+   // fields stand in, which is what seeding produces.
+   cwByCAT   := aRadio.CWByCAT;
+   keyerPort := aRadio.KeyerOutputPort;
+   speedSync := aRadio.CWSpeedSync;
+
+   if aProfile <> nil then
+      begin
+      if aSlot = 2 then
+         begin
+         cwOutput  := Trim(aProfile.CWOutput2);
+         speedSync := aProfile.SpeedSync2;
+         end
+      else
+         begin
+         cwOutput  := Trim(aProfile.CWOutput1);
+         speedSync := aProfile.SpeedSync1;
+         end;
+
+      if SameText(cwOutput, CWOUTPUT_CAT) then
+         begin
+         cwByCAT   := True;
+         keyerPort := PORT_NONE;
+         end
+      else if (cwOutput = '') or SameText(cwOutput, CWOUTPUT_NONE) then
+         begin
+         cwByCAT   := False;
+         keyerPort := PORT_NONE;
+         end
+      else
+         begin
+         cwByCAT   := False;
+         keyerPort := cwOutput;
+         end;
+      end;
+
+   Emit(Result, 'KEYER RADIO ' + slot + ' OUTPUT PORT', keyerPort);
+   Emit(Result, 'RADIO ' + slot + ' KEYER RTS',       aRadio.KeyerRTS);
+   Emit(Result, 'RADIO ' + slot + ' KEYER DTR',       aRadio.KeyerDTR);
+   Emit(Result, 'RADIO ' + slot + ' KEYER STOP BITS', OptionalInt(aRadio.KeyerStopBits));
+
+   Emit(Result, 'RADIO ' + slot + ' CW BY CAT',     BoolValue(cwByCAT));
+   Emit(Result, 'RADIO ' + slot + ' CW SPEED SYNC', BoolValue(speedSync));
+
+   // --- model particulars ---------------------------------------------------
+   Emit(Result, 'RADIO ' + slot + ' USE HAMLIB', BoolValue(aRadio.UseHamLib));
+   // HAMLIB ID is the operator's number only for the HamLib-any selection; for
+   // every other radio the legacy dialog shows a greyed informational value
+   // that must not be written back.  Same rule here, one layer up.
+   if SameText(aRadio.RegistryId, 'HAMLIBANY') then
+      begin
+      Emit(Result, 'RADIO ' + slot + ' HAMLIB ID', OptionalInt(aRadio.HamLibID));
+      end
+   else
+      begin
+      Emit(Result, 'RADIO ' + slot + ' HAMLIB ID', '');
+      end;
+
+   Emit(Result, 'RADIO ' + slot + ' RECEIVER ADDRESS',    OptionalInt(aRadio.ReceiverAddress));
+   Emit(Result, 'RADIO ' + slot + ' ICOM DATA MODE ID',   OptionalInt(aRadio.IcomDataModeID));
+   Emit(Result, 'RADIO ' + slot + ' ICOM FILTER BYTE',    OptionalInt(aRadio.IcomFilterByte));
+   Emit(Result, 'RADIO ' + slot + ' WIDE CW FILTER',      BoolValue(aRadio.WideCWFilter));
+   Emit(Result, 'RADIO ' + slot + ' FT1000MP CW REVERSE', BoolValue(aRadio.FT1000MPCWReverse));
+   Emit(Result, 'RADIO ' + slot + ' FREQUENCY ADDER',     OptionalInt(aRadio.FrequencyAdder));
+   Emit(Result, 'RADIO ' + slot + ' BAND OUTPUT PORT',    aRadio.BandOutputPort);
+   Emit(Result, 'RADIO ' + slot + ' STARTUP COMMAND',     aRadio.StartupCommand);
+
+   Emit(Result, 'POLL RADIO ' + slot, BoolValue(aRadio.PollingEnable));
+end;
+
+function RenderEmptySlot(const aSlot: integer): TConfigKeyValues;
+var
+   names: TArray<string>;
+   i: integer;
+   slot: string;
+begin
+   Result := nil;
+   slot := SlotWord(aSlot);
+   names := RenderedKeyNames(aSlot);
+
+   for i := 0 to High(names) do
+      begin
+      if names[i] = 'RADIO ' + slot + ' TYPE' then
+         begin
+         // TYPE=NONE is how the legacy configuration says "no radio here"; an
+         // empty value would not parse as a radio type.
+         Emit(Result, names[i], 'NONE');
+         end
+      else if names[i] = 'RADIO ' + slot + ' FACTORY ID' then
+         begin
+         // Deleted rather than blanked -- a blank FACTORY ID is still a key,
+         // and the factory would try to resolve it.
+         Emit(Result, names[i], '', True);
+         end
+      else if names[i] = 'RADIO ' + slot + ' CONTROL PORT' then
+         begin
+         Emit(Result, names[i], PORT_NONE);
+         end
+      else if names[i] = 'KEYER RADIO ' + slot + ' OUTPUT PORT' then
+         begin
+         Emit(Result, names[i], PORT_NONE);
+         end
+      else if names[i] = 'RADIO ' + slot + ' BAND OUTPUT PORT' then
+         begin
+         Emit(Result, names[i], PORT_NONE);
+         end
+      else if (names[i] = 'POLL RADIO ' + slot)              or
+              (names[i] = 'RADIO ' + slot + ' CW BY CAT')    or
+              (names[i] = 'RADIO ' + slot + ' CW SPEED SYNC') or
+              (names[i] = 'RADIO ' + slot + ' USE HAMLIB')   or
+              (names[i] = 'RADIO ' + slot + ' WIDE CW FILTER') or
+              (names[i] = 'RADIO ' + slot + ' FT1000MP CW REVERSE') then
+         begin
+         // The booleans go to FALSE rather than empty: CFGCA reads an empty
+         // boolean as unchanged, which would leave the previous radio's
+         // setting in force on a slot that is supposed to be off.
+         Emit(Result, names[i], FALSEVALUE);
+         end
+      else
+         begin
+         Emit(Result, names[i], '');
+         end;
+      end;
+end;
+
+end.
