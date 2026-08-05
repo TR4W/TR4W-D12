@@ -44,6 +44,11 @@ uses
 procedure CloseCATAndKeyerForThisRadio;
 function CATDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure RestartPollingThread(CATWndHWND: HWND);
+// Published for uRadioConfigApply: any code that writes [Radio] keys has to run
+// this afterwards, or newly-created keys stay stranded at the end of the
+// section instead of beside their radio's block.  It was implementation-only
+// while this dialog was the sole writer; it no longer is.
+procedure GroupRadioIniKeys;
 
 var
   CATWTR                                : RadioPtr {= @Radio1};

@@ -74,6 +74,12 @@ uses
   uFileView in 'src\uFileView.pas',
   uAutoCQ in 'src\uAutoCQ.pas',
   uCAT in 'src\uCAT.pas',
+  // The radio-configuration layer.  Nothing calls these yet -- the FMX
+  // preferences dialog is the caller -- but they are listed so the compiler
+  // checks them against the live CFGCA/CAT surface on every build.
+  uRadioConfigStore in 'src\uRadioConfigStore.pas',
+  uRadioConfigLegacyMap in 'src\uRadioConfigLegacyMap.pas',
+  uRadioConfigApply in 'src\uRadioConfigApply.pas',
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
   VC in 'src\VC.pas',
