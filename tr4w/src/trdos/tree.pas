@@ -756,7 +756,6 @@ var
 //  Com5PortBaseAddress              : Word;
 //  Com6PortBaseAddress              : Word;
 
-  //  tr4w_SerialPortDebug        : boolean;
 function CheckPTTLockout: boolean;
 function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
 
@@ -4536,33 +4535,6 @@ begin
       end;
 
 end;
-{
-function ReadFromSerialPort(port: HWND; BytesToRead: Cardinal; WriteDebug: boolean): boolean ;
-var
-   //  d                                     : array[1..250] of Char;
-   BytesRead                       : Cardinal;
-   //  i                                     : Byte;
-   //  Temstring                             : string;
-begin
-   Result := False;
-   if ReadFile(port, Radio1.tBuf, BytesToRead, BytesRead, nil) then
-      if BytesToRead = BytesRead then Result := True;
-
-   if CPUKeyer.SerialPortDebug then
-      if port = Radio1.tr4w_CATPortHandle then
-         WriteToDebugFile(Radio1.tr4w_CATPort, True, @Radio1.tBuf, BytesToRead);
-   //    begin
-   //      SetLength(Temstring, BytesRead);
-   //      for i := 1 to BytesRead do Temstring[i] := d[i];
-   //      RESULT := Temstring;
-   //    end;
-
-   //  if WriteDebug then
-   //    if CPUKeyer.SerialPortDebug then
-   //      if Port = Radio1.tr4w_CATPortHandle then
-   //        WriteLn(CPUKeyer.tr4w_InputDebugFile[Radio1.tr4w_CATPort], GetFullTimeString(True) + ': ' + Result);
-end;
-}
 
 procedure WriteLnCenter(Prompt: Str80);
 
