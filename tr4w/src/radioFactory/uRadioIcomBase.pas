@@ -119,6 +119,7 @@ type
     // One-shot $02 band-edge query.  PROBE, NY4I 2026-08-05 -- see the
     // implementation for what it is for and what it is not yet wired to.
     procedure QueryBandEdgesOnce;
+    procedure LogBandEdgePayload(const tag: string; const data: string);
 
     // A CI-V radio can say whether a startup command is even addressable to it.
     function StartupCommandIsSendable(const cmd: string;
@@ -365,6 +366,7 @@ const
 
   // CI-V Commands
   CIV_CMD_BAND_EDGES = #$02;   // read band edge frequencies -- see QueryBandEdgesOnce
+  CIV_CMD_TX_BANDS   = #$1E;   // $1E 00 = number of TX bands, $1E 01 = their edges
   CIV_CMD_READ_FREQ = #$03;
   CIV_CMD_READ_MODE = #$04;
   CIV_CMD_SET_FREQ = #$05;
@@ -630,13 +632,100 @@ begin
       end;
 end;
 
+// Log a band-edge payload without assuming its shape.  PROBE support: the
+// layouts of $02 and $1E 01 are being established on the bench, so this reports
+// what arrived and decodes only what it can justify.
+//
+// A pair is 5 bytes lower edge | $2D | 5 bytes higher edge = 11 bytes, in the
+// same little-endian BCD as $03/$05.  A payload may or may not carry a leading
+// index/sub-command byte, so both alignments are tried and the one that divides
+// evenly is reported.
+procedure TIcomRadio.LogBandEdgePayload(const tag: string; const data: string);
+var
+   offset, ix, pairNo: integer;
+begin
+   logger.Info('[%s] %s raw (%d bytes): %s',
+               [radioModel, tag, Length(data), CIVDataToHex(data)]);
+
+   // A single trailing byte after the sub-command echo is a COUNT, not edges.
+   if Length(data) = 2 then
+      begin
+      logger.Info('[%s] %s -> count = %d', [radioModel, tag, Ord(data[2])]);
+      Exit;
+      end;
+
+   offset := -1;
+   if (Length(data) mod 11) = 0 then
+      begin
+      offset := 1;                       // pairs start immediately
+      end
+   else if ((Length(data) - 1) mod 11) = 0 then
+      begin
+      offset := 2;                       // one leading index/sub-command byte
+      logger.Info('[%s] %s -> leading byte $%.2x (index?)',
+                  [radioModel, tag, Ord(data[1])]);
+      end
+   else if ((Length(data) - 2) mod 11) = 0 then
+      begin
+      offset := 3;                       // sub-command echo + index
+      logger.Info('[%s] %s -> leading bytes $%.2x $%.2x',
+                  [radioModel, tag, Ord(data[1]), Ord(data[2])]);
+      end;
+
+   if offset < 0 then
+      begin
+      logger.Info('[%s] %s -> %d bytes is not a whole number of 11-byte pairs; ' +
+                  'the layout differs from the manual we have',
+                  [radioModel, tag, Length(data)]);
+      Exit;
+      end;
+
+   ix := offset;
+   pairNo := 0;
+   while ix + 10 <= Length(data) do
+      begin
+      Inc(pairNo);
+      logger.Info('[%s] %s edge %d: %d Hz .. %d Hz  (separator $%.2x)',
+                  [radioModel, tag, pairNo,
+                   BCDToFreq(Copy(data, ix, 5)),
+                   BCDToFreq(Copy(data, ix + 6, 5)),
+                   Ord(data[ix + 5])]);
+      Inc(ix, 11);
+      end;
+end;
+
 procedure TIcomRadio.QueryBandEdgesOnce;
 begin
   if FBandEdgesQueried then
     Exit;
   FBandEdgesQueried := True;
-  logger.Info('[%s] Probing band edges ($02)', [radioModel]);
+  logger.Info('[%s] Probing band edges ($02) and TX bands ($1E 00 / $1E 01)', [radioModel]);
+
+  // $02 -- the overall tuning range of the main band.  Bench-answered on an
+  // IC-7100 (NY4I, 2026-08-05): ONE pair, 30 kHz .. 199.999999 MHz.  That is
+  // the whole main receiver, not a band plan, and it OMITS the radio's
+  // 400-470 MHz range entirely -- so on its own it would correctly exclude
+  // 222 MHz and wrongly exclude 70 cm.  Kept because it is one frame and it
+  // bounds the main receiver, but it cannot answer the coverage question.
   SendToRadio(BuildCIVCommand(Ord(CIV_CMD_BAND_EDGES), ''));
+
+  // $1E -- what we actually want, and it is about TRANSMIT, which is the right
+  // question for a logger: a band you cannot transmit on is not a band you can
+  // work.  $1E 00 = how many TX bands, $1E 01 = their edges.
+  //
+  // THE FORMAT, from the manual NY4I supplied ("Band edge frequency setting,
+  // Command: 02*, 1E 01, 1E 03"):
+  //
+  //     [edge no. 01-30] [5 bytes lower] [2D] [5 bytes higher]
+  //
+  // with the footnote that settles the shape: "Edge number is NOT sent with
+  // command 02".  So $02 returns 11 bytes and $1E 01 returns 12 -- which
+  // matches the IC-7100 exactly (its bare $02 gave 11).  An indexed $02 is
+  // therefore not a thing; if segments are selectable it is $1E 01 that takes
+  // the number.  $1E 00 tells us how many there are to ask for.
+  SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TX_BANDS), #$00));
+  SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TX_BANDS), #$01));
+
 end;
 
 function TIcomRadio.SupportsDataMode: Boolean;
@@ -1718,35 +1807,17 @@ begin
         end;
       end;
 
-    Ord(CIV_CMD_BAND_EDGES):  // $02 -- band edge frequencies (PROBE, see QueryBandEdgesOnce)
+    Ord(CIV_CMD_BAND_EDGES),   // $02 -- band edges (PROBE, see QueryBandEdgesOnce)
+    Ord(CIV_CMD_TX_BANDS):     // $1E -- TX band count / TX band edges
       begin
-        // FORMAT, from the IC-718 manual and others: pairs of band edges, each
-        //   5 bytes lower edge | $2D separator | 5 bytes higher edge
-        // with the frequency bytes in the same little-endian BCD as $03/$05.
-        //
-        // How MANY pairs come back is exactly what this probe is here to find
-        // out -- one for the current band, or the whole band plan.  So log the
-        // raw bytes always, then decode as many complete 11-byte groups as
-        // arrived rather than assuming a count.
-        logger.Info('[%s] Band edges ($02) raw: %s', [radioModel, CIVDataToHex(data)]);
-        edgeIx := 1;
-        pairNo := 0;
-        while edgeIx + 10 <= Length(data) do
-          begin
-          Inc(pairNo);
-          logger.Info('[%s] Band edge %d: %d Hz .. %d Hz  (separator $%.2x)',
-                      [radioModel, pairNo,
-                       BCDToFreq(Copy(data, edgeIx, 5)),
-                       BCDToFreq(Copy(data, edgeIx + 6, 5)),
-                       Ord(data[edgeIx + 5])]);
-          Inc(edgeIx, 11);
-          end;
-        if pairNo = 0 then
-          begin
-          logger.Info('[%s] Band edges ($02): %d data bytes, no complete 11-byte pair -- ' +
-                      'the format differs from the IC-718 manual on this radio',
-                      [radioModel, Length(data)]);
-          end;
+        if command = Ord(CIV_CMD_BAND_EDGES) then
+           begin
+           LogBandEdgePayload('Band edges ($02)', data);
+           end
+        else
+           begin
+           LogBandEdgePayload('TX bands ($1E)', data);
+           end;
       end;
 
     Ord(CIV_CMD_TRANSCEIVER_ID):  // $19 -- ID response ($19 $00 sent once on first valid frame)
@@ -1766,10 +1837,8 @@ begin
              end
           else
              begin
-             logger.Info('[%s] Transceiver ID ($19 $00): $%.2x — configured CI-V address is $%.2x. '
-                       + 'The ID byte is the model''s factory-default bus address, so a difference means '
-                       + 'either the rig''s address was changed by the operator or the selected radio '
-                       + 'type does not match the radio on the wire.',
+             logger.Info('[%s] Transceiver ID ($19 $00): $%.2x — configured CI-V address is $%.2x. ' +
+                         'A mismatch means the radio TYPE selected in TR4W is not the radio on the port.',
                          [radioModel, Ord(data[2]), FRadioAddress]);
              end;
           end
