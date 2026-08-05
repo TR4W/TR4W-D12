@@ -620,7 +620,8 @@ var
   udp: TIdUDPClient; // ny4i 4.44.9 Uses to broadcast info
   //procedure AgeReceivedStamp(Exchange: ContestExchange; var LogString: Str80);
   //procedure AgeReceivedHeader(var LogString: Str80; var Underline: Str80);
-procedure BandChange(var ActiveBand: BandType; Direction: DirectionType);
+procedure BandChange(var ActiveBand: BandType; Direction: DirectionType;
+                     Radio: RadioPtr = nil);
 
 procedure CalculateQSOPoints(var RXData: ContestExchange);
 //procedure ChapterReceivedStamp(Exchange: ContestExchange; var LogString: Str80);
@@ -776,7 +777,38 @@ uses uNet,
   uPendingCounties,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
 
-procedure BandChange(var ActiveBand: BandType; Direction: DirectionType);
+// Can this radio transmit on the frequency TR4W would tune for `Band`?
+//
+// EffectiveBandFreq is the right thing to test: it is the frequency a band
+// change would actually use -- the last one used on that band, or the built-in
+// default for a band not yet visited.
+//
+// Answers True whenever it cannot know: no radio, no driver, or a band with no
+// default frequency (the microwave rows are 0).  Coverage is a filter, and a
+// filter that guesses would silently remove bands the operator can really work.
+function RadioCanWorkBand(Radio: RadioPtr; Band: BandType): boolean;
+var
+  f: LongInt;
+begin
+  Result := True;
+  if Radio = nil then
+     begin
+     Exit;
+     end;
+  if Radio^.tFactoryObject = nil then
+     begin
+     Exit;
+     end;
+  f := EffectiveBandFreq(Band, ActiveMode);
+  if f <= 0 then
+     begin
+     Exit;
+     end;
+  Result := Radio^.tFactoryObject.CoversFrequency(f);
+end;
+
+procedure BandChange(var ActiveBand: BandType; Direction: DirectionType;
+                     Radio: RadioPtr = nil);
 
 label
   NextBand;
@@ -811,9 +843,34 @@ const
 
 var
   TempInteger: integer;
+  attempts: integer;
+  startBand: BandType;
 begin
+  if Radio = nil then
+     begin
+     Radio := ActiveRadioPtr;
+     end;
+
+  // The walk below is a `goto` loop with no bound: every filter (WARC, VHF,
+  // SkipActiveBand, and now radio coverage) can send it round again, and if
+  // between them they reject EVERY band it never returns.  That was survivable
+  // while the filters were all operator settings; one driven by what the radio
+  // reports deserves a belt.  Two full cycles is far more than any legitimate
+  // walk needs.
+  startBand := ActiveBand;
+  attempts := 0;
 
   NextBand:
+
+  Inc(attempts);
+  if attempts > MAXBANDS * 2 then
+  begin
+    logger.Warn('[BandChange] No band available after %d attempts -- every band ' +
+                'is filtered out by the WARC/VHF settings or by the radio''s ' +
+                'reported coverage.  Staying put.', [attempts]);
+    ActiveBand := startBand;
+    Exit;
+  end;
 
   for TempInteger := 1 to MAXBANDS do
     if BandChangeArray[TempInteger].bcBand = ActiveBand then
@@ -839,6 +896,17 @@ begin
   end;
 
   ActiveBand := BandChangeArray[TempInteger].bcBand;
+
+  // A band this radio cannot TRANSMIT on is not a band to change to.  Nothing
+  // checked before: on an IC-7100 -- HF, 6 m, 2 m, 70 cm -- band-up from 2 m
+  // landed on 222, TR4W sent 222.100 MHz, the radio ignored a frequency it
+  // cannot tune, and only the display moved (NY4I bench, 2026-08-04).
+  // CoversFrequency answers True for any radio that has not reported its
+  // coverage, so this filters nothing it should not.
+  if not RadioCanWorkBand(Radio, ActiveBand) then
+     begin
+     goto NextBand;
+     end;
 
   if (CONTEST <> GeneralQSO) and (BandChangeArray[TempInteger].bcWARC) then
     goto NextBand; //n4af 04.37.11

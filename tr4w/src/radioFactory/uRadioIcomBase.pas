@@ -651,6 +651,7 @@ end;
 procedure TIcomRadio.LogBandEdgePayload(const tag: string; const data: string);
 var
    offset, ix, pairNo, count: integer;
+   lowHz, highHz: LongInt;
 begin
    logger.Info('[%s] %s raw (%d bytes): %s',
                [radioModel, tag, Length(data), CIVDataToHex(data)]);
@@ -670,6 +671,10 @@ begin
       // $1E 01 with no band number is answered NG (bench-proven), so the count
       // is not decoration: it is how many times to ask.  Enumerate them now --
       // the send queue serialises these behind whatever else is pending.
+      // A new enumeration is starting: forget the previous answer rather than
+      // appending to it, or a reconnect would double every range.
+      ClearCoverage;
+
       if (tag = TX_BANDS_TAG) and (not FTXBandsUnsupported) and
          (count > 0) and (count <= 30) then
          begin
@@ -715,11 +720,23 @@ begin
    while ix + 10 <= Length(data) do
       begin
       Inc(pairNo);
+      lowHz  := BCDToFreq(Copy(data, ix, 5));
+      highHz := BCDToFreq(Copy(data, ix + 6, 5));
       logger.Info('[%s] %s edge %d: %d Hz .. %d Hz  (separator $%.2x)',
-                  [radioModel, tag, pairNo,
-                   BCDToFreq(Copy(data, ix, 5)),
-                   BCDToFreq(Copy(data, ix + 6, 5)),
-                   Ord(data[ix + 5])]);
+                  [radioModel, tag, pairNo, lowHz, highHz, Ord(data[ix + 5])]);
+
+      // $1E IS THE COVERAGE SOURCE; $02 IS NOT.  $1E reports the TRANSMIT
+      // segments, which is the question a logger needs -- a band you cannot
+      // transmit on is not a band you can work.  $02 reports the tuning span of
+      // whichever receiver SECTION the VFO is in (bench-proven: 30 kHz ..
+      // 199.999999 MHz on 20 m, 400..470 MHz on 70 cm), so recording it would
+      // claim the radio can transmit right across 222 MHz, which is the very
+      // bug this exists to fix.
+      if tag = TX_BANDS_TAG then
+         begin
+         AddCoverageRange(lowHz, highHz);
+         end;
+
       Inc(ix, 11);
       end;
 end;
@@ -749,6 +766,10 @@ begin
    FTXBandsUnsupported  := False;
    FXITReadUnsupported  := False;
    FLastBandEdgeProbeMHz := -1;
+
+   // Coverage was read from the radio that WAS on this port.  Keeping it across
+   // a swap would let one radio's band plan filter another radio's band changes.
+   ClearCoverage;
 end;
 
 procedure TIcomRadio.MaybeReprobeBandEdges(hz: LongInt);
@@ -2091,6 +2112,14 @@ end;
 
 procedure TIcomRadio.QueryXITState;
 begin
+  // This radio has no XIT -- see TRadioCapabilities.HasXIT.  Guarded at every
+  // XIT entry point, not just the poll: where RIT and XIT SHARE one offset
+  // register ($21 $00), an XIT write would move the RIT instead.
+  if not FCapabilities.HasXIT then
+     begin
+     Exit;
+     end;
+
   // $21 $02 = XIT on/off (the offset is shared with RIT and already queried).
   //
   // NOT EVERY ICOM HAS IT.  The IC-7100's $21 set is $00 (RIT frequency) and
@@ -2480,6 +2509,14 @@ end;
 
 procedure TIcomRadio.XITClear(whichVFO: TVFO);
 begin
+  // This radio has no XIT -- see TRadioCapabilities.HasXIT.  Guarded at every
+  // XIT entry point, not just the poll: where RIT and XIT SHARE one offset
+  // register ($21 $00), an XIT write would move the RIT instead.
+  if not FCapabilities.HasXIT then
+     begin
+     Exit;
+     end;
+
   // Clear XIT by setting offset to 0
   SetXITFreq(whichVFO, 0);
   logger.debug('[%s.XITClear] Cleared XIT offset', [radioModel]);
@@ -2513,12 +2550,30 @@ end;
 
 procedure TIcomRadio.XITOn(vfo: TVFO);
 begin
+  // This radio has no XIT -- see TRadioCapabilities.HasXIT.  Guarded at every
+  // XIT entry point, not just the poll: where RIT and XIT SHARE one offset
+  // register ($21 $00), an XIT write would move the RIT instead.
+  if not FCapabilities.HasXIT then
+     begin
+     logger.Debug('[%s.XITOn] This radio has no XIT', [radioModel]);
+     Exit;
+     end;
+
   SendToRadio(BuildCIVCommand($21, CIV_SUBCMD_XIT_ON + #$01));  // $21 $02 $01
   logger.debug('[%s.XITOn] XIT enabled', [radioModel]);
 end;
 
 procedure TIcomRadio.XITOff(vfo: TVFO);
 begin
+  // This radio has no XIT -- see TRadioCapabilities.HasXIT.  Guarded at every
+  // XIT entry point, not just the poll: where RIT and XIT SHARE one offset
+  // register ($21 $00), an XIT write would move the RIT instead.
+  if not FCapabilities.HasXIT then
+     begin
+     logger.Debug('[%s.XITOff] This radio has no XIT', [radioModel]);
+     Exit;
+     end;
+
   SendToRadio(BuildCIVCommand($21, CIV_SUBCMD_XIT_OFF + #$00));  // $21 $02 $00
   logger.debug('[%s.XITOff] XIT disabled', [radioModel]);
 end;
@@ -2555,6 +2610,15 @@ procedure TIcomRadio.SetXITFreq(vfo: TVFO; hz: integer);
 var
   bcdOffset: string;
 begin
+  // This radio has no XIT -- see TRadioCapabilities.HasXIT.  Guarded at every
+  // XIT entry point, not just the poll: where RIT and XIT SHARE one offset
+  // register ($21 $00), an XIT write would move the RIT instead.
+  if not FCapabilities.HasXIT then
+     begin
+     logger.Debug('[%s.SetXITFreq] This radio has no XIT', [radioModel]);
+     Exit;
+     end;
+
   // RIT/XIT share the same offset register on modern Icom radios ($21 $00)
   bcdOffset := CivRawToStr(IcomOffsetToBCD(hz));
   SendToRadio(BuildCIVCommand($21, CIV_SUBCMD_RIT_FREQ + bcdOffset));

@@ -378,8 +378,11 @@ begin
       //KK1L: 6.73 Band change on inactive radio via command
     begin
       PutRadioOutOfSplit(InactiveRadio); // n4af 4.46.5
+      // Pass the radio whose band is being changed: the coverage filter in
+      // BandChange must ask THAT radio what it can transmit on, not whichever
+      // one happens to be active.
       BandChange(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
-        Direction);
+        Direction, InActiveRadioPtr);
     end
     else
     begin
