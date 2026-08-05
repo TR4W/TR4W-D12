@@ -69,9 +69,6 @@ type
     firstProcessMessage: boolean;
     FCWSpeedMin: integer;   // KS range; K3/KX3 keyer is 8..50 wpm (per-model overridable)
     FCWSpeedMax: integer;
-    function  ParseIFCommand(cmd: string): boolean;
-    function  ModeStrToMode(sMode: string; sDataMode: string): TRadioMode;
-    function  BandNumToBand(sBand: string): TRadioBand;
     function  ModeTypeToInteger(mode: TRadioMode; var dataModeInt: integer): integer;
     procedure Initialize;
     procedure SetAIMode(i: integer);
@@ -515,81 +512,7 @@ end;
 // IF[f=11]*****+yyyyrx*00tmvspbd1*;  -- parsed by deleting fixed-width fields
 // from the front.  (Ported verbatim from TK4Radio, including its lenient length
 // guard, to preserve bench-proven behavior.)
-function TElecraftSerial.ParseIFCommand(cmd: string): boolean;
-var
-   info: TElecraftIF;
-   err: TElecraftIFError;
-   vfo: TRadioVFO;
-begin
-   Result := false;
-
-   // Decoding lives in uElecraftIF so the K3 and K4 cannot drift apart again;
-   // APPLYING the decoded state stays here, because that is where they legitimately
-   // differ (this radio selects between VFOs, the K4 swaps them).
-   err := ParseElecraftIF(cmd, info);
-   if err <> ifeNone then
-      begin
-      logger.Error('[ParseIFCommand] %s', [ElecraftIFErrorText(err, cmd)]);
-      Exit;
-      end;
-
-   // Base setters, not the raw scalars: they also write the per-VFO values the
-   // radio window reads.  On a serial Elecraft (AI0 + poll) this IF poll is the
-   // ONLY ongoing RIT/XIT source -- writing just the scalar left the window
-   // indicator stuck off.
-   Self.SetRITOffset(info.RITXITOffsetHz);
-   Self.SetXITOffset(Self.localRITOffset);   // shared register on Elecraft
-   logger.trace('[ParseIFCommand] RITOffset = %d', [Self.localRITOffset]);
-
-   Self.SetRITOn(info.RITOn);
-   Self.SetXITOn(info.XITOn);
-
-   if info.Transmitting then
-      begin
-      Self.RadioState := rsTransmit;
-      end
-   else
-      begin
-      Self.RadioState := rsReceive;
-      end;
-
-   Self.SetSplitOn(info.SplitOn);
-
-   // Route to the RX (operating) VFO reported by the IF 'v' field.
-   if not info.RXVFOIsB then
-      begin
-      vfo := Self.vfo[nrVFOA];
-      Self.SetActiveVFO(nrVFOA);
-      end
-   else
-      begin
-      vfo := Self.vfo[nrVFOB];
-      Self.SetActiveVFO(nrVFOB);
-      end;
-
-   vfo.frequency := info.FrequencyHz;
-   // Serial polling does not deliver BN on a band change, so derive band from
-   // frequency here (as every other modern radio class does).
-   vfo.band := FreqToRadioBand(info.FrequencyHz);
-   vfo.mode := ModeStrToMode(info.ModeChar, info.DataModeChar);
-   Result := true;
-end;
-
 // Helper: Elecraft MD byte (+ DT sub-mode) -> TRadioMode.
-function TElecraftSerial.ModeStrToMode(sMode: string; sDataMode: string): TRadioMode;
-var
-   problem: string;
-begin
-   // Mapping lives in uElecraftIF alongside the IF decode -- the K4 had a
-   // character-for-character copy of this same case statement.  Logging stays
-   // here so each radio still reports in its own category.
-   Result := ElecraftModeToRadioMode(sMode, sDataMode, problem);
-   if problem <> '' then
-      begin
-      logger.Error('[ModeStrToMode] %s', [problem]);
-      end;
-end;
-
 procedure TElecraftSerial.ProcessMsg(msg: string);
 begin
    ProcessMessage(msg);   // forward to keep the internal handler name
@@ -755,34 +678,6 @@ begin
       firstProcessMessage := false;
       Initialize;
       end;
-end;
-
-function TElecraftSerial.BandNumToBand(sBand: string): TRadioBand;
-var iBand: integer;
-begin
-   iBand := StrToIntDef(sBand,-9);
-   case iBand of
-      0: Result := rb160m;
-      1: Result := rb80m;
-      2: Result := rb60m;
-      3: Result := rb40m;
-      4: Result := rb30m;
-      5: Result := rb20m;
-      6: Result := rb17m;
-      7: Result := rb15m;
-      8: Result := rb12m;
-      9: Result := rb10m;
-      10:Result := rb6m;
-      -9:begin
-         logger.Error('[BandNumToBand] Invalid band requested (non-numeric): %s',[sBand]);
-         Result := rbNone;
-         end;
-   else
-      begin
-      logger.Error('[BandNumToBand] Unhandled band value: %d (from string: %s)',[iBand, sBand]);
-      Result := rbNone;
-      end;
-   end;
 end;
 
 procedure TElecraftSerial.PollRadioState;
