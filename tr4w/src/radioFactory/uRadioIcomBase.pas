@@ -367,6 +367,7 @@ const
   // CI-V Commands
   CIV_CMD_BAND_EDGES = #$02;   // read band edge frequencies -- see QueryBandEdgesOnce
   CIV_CMD_TX_BANDS   = #$1E;   // $1E 00 = number of TX bands, $1E 01 = their edges
+  TX_BANDS_TAG = 'TX bands ($1E)';   // log tag, and the enumeration trigger
   CIV_CMD_READ_FREQ = #$03;
   CIV_CMD_READ_MODE = #$04;
   CIV_CMD_SET_FREQ = #$05;
@@ -642,15 +643,36 @@ end;
 // evenly is reported.
 procedure TIcomRadio.LogBandEdgePayload(const tag: string; const data: string);
 var
-   offset, ix, pairNo: integer;
+   offset, ix, pairNo, count: integer;
 begin
    logger.Info('[%s] %s raw (%d bytes): %s',
                [radioModel, tag, Length(data), CIVDataToHex(data)]);
 
    // A single trailing byte after the sub-command echo is a COUNT, not edges.
+   //
+   // AND IT IS BCD, like every other number CI-V carries.  The IC-7100 answers
+   // $13, which read as hex would be 19 and read as BCD is 13 -- and 13 is
+   // exactly its US band list: 160 80 60 40 30 20 17 15 12 10, 6 m, 2 m, 70 cm.
+   // Reading it as hex was my bug on the first pass (NY4I bench, 2026-08-05).
    if Length(data) = 2 then
       begin
-      logger.Info('[%s] %s -> count = %d', [radioModel, tag, Ord(data[2])]);
+      count := ((Ord(data[2]) shr 4) * 10) + (Ord(data[2]) and $0F);
+      logger.Info('[%s] %s -> count = %d (BCD $%.2x)',
+                  [radioModel, tag, count, Ord(data[2])]);
+
+      // $1E 01 with no band number is answered NG (bench-proven), so the count
+      // is not decoration: it is how many times to ask.  Enumerate them now --
+      // the send queue serialises these behind whatever else is pending.
+      if (tag = TX_BANDS_TAG) and (count > 0) and (count <= 30) then
+         begin
+         for ix := 1 to count do
+            begin
+            SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TX_BANDS),
+                                        #$01 + Chr(((ix div 10) shl 4) or (ix mod 10))));
+            end;
+         logger.Info('[%s] %s -> requested edges for bands 1..%d',
+                     [radioModel, tag, count]);
+         end;
       Exit;
       end;
 
@@ -1816,7 +1838,7 @@ begin
            end
         else
            begin
-           LogBandEdgePayload('TX bands ($1E)', data);
+           LogBandEdgePayload(TX_BANDS_TAG, data);
            end;
       end;
 
