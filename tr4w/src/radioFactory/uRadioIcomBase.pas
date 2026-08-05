@@ -108,6 +108,7 @@ type
     FLastSentCommand: Byte;        // command byte of the last frame sent -- an NG names no command
     FLastSentSubCommand: Byte;     // its sub-command, or $FF when the frame carried none
     FTXBandsUnsupported: Boolean;  // True once this radio has NAKed $1E (see QueryBandEdgesOnce)
+    FLastBandEdgeProbeMHz: integer; // MHz the VFO was on when $02 was last read
     FPollPhase: Integer;            // Rotates through query groups to avoid flooding radio
     FLastSetCWSpeedTick: DWORD;   // GetTickCount at last SetCWSpeed call — suppresses stale echoes
     FDataModeID: Byte;            // Icom data sub-mode: $01=D1 (default), $02=D2, $03=D3 — configurable via RADIO x ICOM DATA MODE ID
@@ -122,6 +123,7 @@ type
     // One-shot $02 band-edge query.  PROBE, NY4I 2026-08-05 -- see the
     // implementation for what it is for and what it is not yet wired to.
     procedure QueryBandEdgesOnce;
+    procedure MaybeReprobeBandEdges(hz: LongInt);
     procedure LogBandEdgePayload(const tag: string; const data: string);
 
     // A CI-V radio can say whether a startup command is even addressable to it.
@@ -720,6 +722,52 @@ begin
       end;
 end;
 
+// Re-read $02 when the radio moves to a different RECEIVER SECTION.
+//
+// THE HYPOTHESIS this tests.  On the IC-7100 a bare $02 returned 30 kHz ..
+// 199.999999 MHz while the VFO sat on 14.1 MHz -- which is not a band plan and
+// not the whole radio, but is EXACTLY the main section's span.  The 7100 also
+// has a separate 400-470 MHz section.  If $02 reports the section you are
+// currently in, then reading it from 70 cm should return 400-470 rather than
+// the same answer, and the command earns its place after all (NY4I: "I cannot
+// imagine why they would have that command if we cannot get all the band
+// edges").
+//
+// Sections are coarse on purpose -- below 200 MHz, or at/above 400 MHz -- so
+// this fires at most a couple of times a session, not on every tune.
+procedure TIcomRadio.MaybeReprobeBandEdges(hz: LongInt);
+var
+   section: integer;
+begin
+   if not FBandEdgesQueried then
+      begin
+      Exit;   // the connect probe has not run yet; it will read $02 itself
+      end;
+
+   if hz >= 400000000 then
+      begin
+      section := 2;
+      end
+   else if hz >= 200000000 then
+      begin
+      section := 1;
+      end
+   else
+      begin
+      section := 0;
+      end;
+
+   if section = FLastBandEdgeProbeMHz then
+      begin
+      Exit;
+      end;
+
+   FLastBandEdgeProbeMHz := section;
+   logger.Info('[%s] Now in receiver section %d (%d Hz) -- re-reading $02 to see ' +
+               'whether it is section-relative', [radioModel, section, hz]);
+   SendToRadio(BuildCIVCommand(Ord(CIV_CMD_BAND_EDGES), ''));
+end;
+
 procedure TIcomRadio.QueryBandEdgesOnce;
 begin
   if FBandEdgesQueried then
@@ -734,6 +782,19 @@ begin
   // 222 MHz and wrongly exclude 70 cm.  Kept because it is one frame and it
   // bounds the main receiver, but it cannot answer the coverage question.
   SendToRadio(BuildCIVCommand(Ord(CIV_CMD_BAND_EDGES), ''));
+
+  // $02 PERMUTATIONS.  NY4I: "I cannot imagine why they would have that command
+  // if we cannot get all the band edges."  Agreed -- so try the arguments it
+  // might take.  These are cheap (6-7 bytes each), they are sent once per
+  // connection, and an NG is now attributed by name, so the log says exactly
+  // which of them the radio refused.
+  //
+  // Each response is logged with its raw payload immediately after the CIV TX
+  // line that requested it, so a reply can be matched to its request by reading
+  // down the log even though a $02 response does not echo its argument.
+  SendToRadio(BuildCIVCommand(Ord(CIV_CMD_BAND_EDGES), #$00));
+  SendToRadio(BuildCIVCommand(Ord(CIV_CMD_BAND_EDGES), #$01));
+  SendToRadio(BuildCIVCommand(Ord(CIV_CMD_BAND_EDGES), #$02));
 
   // $1E -- what we actually want, and it is about TRANSMIT, which is the right
   // question for a logger: a band you cannot transmit on is not a band you can
@@ -1474,7 +1535,10 @@ begin
           if vfo[vfoSlot].Band <> rbNone then
             FBandMemory[vfo[vfoSlot].Band] := freq;
           if subCmd = $00 then
+            begin
             FVFOQueryPending := False;  // Query pair complete — allow next $00 to trigger
+            MaybeReprobeBandEdges(freq);
+            end;
           logger.Debug('[%s] $25/$%.2x → radio object vfo[%s] freq = %d Hz',
              [radioModel, subCmd, IfThen(vfoSlot = nrVFOA, 'nrVFOA', 'nrVFOB'), freq]);
         end
