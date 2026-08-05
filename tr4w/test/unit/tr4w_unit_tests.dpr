@@ -49,6 +49,8 @@ uses
    uGridDistance        in '..\..\src\uGridDistance.pas',
    uTestGridDistance    in 'uTestGridDistance.pas',
    utils_file           in '..\..\src\utils\utils_file.pas',
+   uWinTimer            in '..\..\src\utils\uWinTimer.pas',
+   uTestWinTimer        in 'uTestWinTimer.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
@@ -256,6 +258,7 @@ begin
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
+   RegisterSuite(TWinTimerTests.Create('WinTimer'));
 
    if RunAllSuites then
       begin

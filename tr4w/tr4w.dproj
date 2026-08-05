@@ -234,6 +234,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
         <DCCReference Include="src\utils\utils_hw.pas"/>
         <DCCReference Include="src\utils\utils_text.pas"/>
         <DCCReference Include="src\utils\utils_math.pas"/>
+        <DCCReference Include="src\utils\uWinTimer.pas"/>
         <DCCReference Include="src\utils\utils_file.pas"/>
         <DCCReference Include="src\exportto_trlog.pas"/>
         <DCCReference Include="src\uWSJTX.pas"/>

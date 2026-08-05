@@ -38,7 +38,7 @@ uses
    VC,
    Windows,
    utils_text,
-   ExtCtrls,
+   uWinTimer,   // TWinTimer -- was VCL ExtCtrls.TTimer; see that unit's header
    uFactoryRadioBase,
    uRadioElecraftK4,
    uRadioFactory,
@@ -293,7 +293,7 @@ type
       saveMode : integer;
       icomHasDataMode : boolean;   // True once this Icom answers a valid $1A06 (data-mode) query. Gates whether the standard $04 mode read is applied directly: old Icoms (IC-718, IC-706, non-Pro 746/756, etc.) have no data mode and never send $1A06, so their mode must be committed from $04.
       nextExtendedMode : ExtendedModeType;
-      tmrCWByCAT: TTimer;
+      tmrCWByCAT: TWinTimer;
       EventHandlers : TEventHandlers;
       procedure AddCommandToBuffer;
       function  CheckAutoCallTerminate: boolean;
@@ -893,7 +893,7 @@ procedure TEventHandlers.OnTimerTick(Sender : TObject);
 var callInactive: boolean;
 begin
   DebugMsg('TimerTick event fired');
-  TTimer(Sender).Enabled := false;
+  TWinTimer(Sender).Enabled := false;
   if IsCWByCATActive(ActiveRadioPtr) then
      begin
      if ActiveRadioPtr.CWByCAT_Sending then
@@ -2429,7 +2429,7 @@ begin
             QuickDisplayError('Radio "' + string(Self.RadioName) + '" could not be created -- not connected. Check its configuration.');
             end;
          Self.EventHandlers := EventHandlers;
-         Self.tmrCWByCAT := TTimer.Create(nil);
+         Self.tmrCWByCAT := TWinTimer.Create(nil);
          Self.tmrCWByCAT.Enabled := false;
          Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
          with FilteredStatus do
@@ -2481,7 +2481,7 @@ begin
 
          // Initialize timer and event handlers — must happen for all radio paths
          Self.EventHandlers := EventHandlers;
-         Self.tmrCWByCAT := TTimer.Create(nil);
+         Self.tmrCWByCAT := TWinTimer.Create(nil);
          Self.tmrCWByCAT.Enabled := false;
          Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
          // Reset filtered status
@@ -2591,7 +2591,7 @@ begin
 
    { Initialize the radio variables }
 
-   Self.tmrCWByCAT := TTimer.Create(nil);
+   Self.tmrCWByCAT := TWinTimer.Create(nil);
    Self.tmrCWByCAT.Enabled := false;
    Self.EventHandlers := EventHandlers;
    Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
