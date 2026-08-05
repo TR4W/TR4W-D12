@@ -917,6 +917,27 @@ procedure TIcomRadio.DoSendDirect(const s: string);
 begin
   if logger.IsTraceEnabled then
      logger.Trace('[%s] CIV TX: %s', [radioModel, CIVDataToHex(s)]);
+
+  // Remember the command (and sub-command) going out, because a CI-V NG does
+  // NOT say what it is refusing -- the whole frame is FE FE <to> <from> FA FD.
+  // The send queue serialises and the radio answers before the next frame, so
+  // the last command sent is the one being refused.
+  //
+  // Frame layout: FE FE <to> <from> <cmd> [<sub>] ... FD, so the command is at
+  // index 5 and the sub-command, when there is one, at 6.
+  if Length(s) >= 5 then
+     begin
+     FLastSentCommand := Ord(s[5]);
+     if Length(s) >= 7 then       // 7 = cmd + at least one data byte + FD
+        begin
+        FLastSentSubCommand := Ord(s[6]);
+        end
+     else
+        begin
+        FLastSentSubCommand := $FF;   // no sub-command in this frame
+        end;
+     end;
+
   if IsNetworkConnection and (FNetworkTransport <> nil) then
      FNetworkTransport.SendCivData(s)
   else
@@ -1340,6 +1361,12 @@ begin
         if Length(data) >= 5 then
         begin
           freq := BCDToFreq(Copy(data, 1, 5));
+          // A $00 transceive push is how this radio reports the operator turning
+          // the dial -- and on the IC-7100 it is the ONLY report of a band change
+          // made at the rig, so the section watcher has to see it here as well as
+          // on the $25 poll reply.  Bench, 2026-08-05: a move to 432.1 MHz arrived
+          // as "$00 freq push" and the re-probe hooked only to $25 never fired.
+          MaybeReprobeBandEdges(freq);
           if (FSupportsActiveVFOQuery or FDirectFreqRoute) and not FActiveVFOInverted then
           begin
             // Route directly to FActiveVFO — only for radios where FActiveVFO is
