@@ -59,7 +59,7 @@ release ships, and §6 treats it as its own track.
 | A-2 | **Installer packaging.** | `e610aa2` | DONE 2026-08-02. `FullBuild.ps1 -BuildInstallers` runs end to end: 1489 tests -> app -> **step 2b tr4wserver** -> 116 source files verified -> `tr4w_setup_4.149.0.exe` (6,883,849 bytes) -> VirusTotal 5/71, below the CI threshold. First complete installer producible since the migration began. **Payload caveat:** those are DEBUG binaries with UPX skipped -- packaging is proven, the artifact is not shippable until built Release + `-UseUpx`. |
 | A-3 | **`release.yml` on msbuild.** | `e1c1f48` | DONE 2026-08-02. `DELPHI7_BIN` -> `STUDIO_BIN`, the DCC32.EXE presence check -> `rsvars.bat`, both `-Delphi7Bin` arguments dropped, runner docs updated. `FullBuild.ps1` also lost the dead `$DCC32` / `$PROJECT` / `$LIB`. **Still needs RAD Studio installed on the self-hosted runner** -- that is now the only prerequisite. |
 | A-4 | **`BuildServer.ps1`** repointed to msbuild; `FullBuild.ps1` calls `Invoke-MSBuild` on the `.dproj` directly and no longer treats a server failure as expected breakage. The DCC32 existence check is gone from `-BuildInstallers`, so **`FullBuild.ps1` is D7-free end to end**. | `76de84c` | ✅ **DONE 2026-08-02** |
-| A-5 | **Packaging/doc staleness.** | `e610aa2` | Partly done 2026-08-02. Version skew fixed at the root: `full.nsi` no longer carries a hardcoded fallback (it had drifted to 4.148.1 vs Version.pas 4.149.0) and now `!error`s if `/DTR4WVERSION` is absent; the dead `make_setup_file.bat` (pointing at a non-existent `D:\...\NSIS`) is now a shim onto FullBuild. **`pota_parks.csv` was a FALSE ALARM** -- `uPOTAParks` downloads it on demand from pota.app, so shipping a 9 MB stale copy would be wrong. **Still open:** `tr4w/CLAUDE.md` describes Delphi 7 / `BatchCompile.cmd` / v4.143.2 and the pre-factory radio architecture. |
+| A-5 | **Packaging/doc staleness.** | `e610aa2` | Partly done 2026-08-02. Version skew fixed at the root: `full.nsi` no longer carries a hardcoded fallback (it had drifted to 4.148.1 vs Version.pas 4.149.0) and now `!error`s if `/DTR4WVERSION` is absent; the dead `make_setup_file.bat` (pointing at a non-existent `D:\...\NSIS`) is now a shim onto FullBuild. **`pota_parks.csv` was a FALSE ALARM** -- `uPOTAParks` downloads it on demand from pota.app, so shipping a 9 MB stale copy would be wrong. **Doc staleness CLOSED 2026-08-04:** `tr4w/CLAUDE.md` was corrected (`cf287c4d`) and then folded into the root `CLAUDE.md`, which was itself still the D7 port. There is now one CLAUDE.md. |
 
 
 ### A-1 postscript — the two copies were a two-way fork
@@ -457,7 +457,7 @@ mean the migration never finishes. Each is a **post-D12 project**.
    C-1 telnet/cluster/SSL      DONE
                                                     |
    C-3..C-8 CW + radios (one verified radio per family)  ==>  ENGLISH D12 RELEASE
-   A-5 tr4w/CLAUDE.md staleness (cheap)                  ==>
+   A-5 CLAUDE.md staleness      DONE (2026-08-04)        ==>
                                                     |
    B-2 per-language UI eyeball  ==>  LANGUAGE RELEASES (8)
 
@@ -486,9 +486,11 @@ names and IPs, drop one, confirm the other is told cleanly. That exercises every
    lead time rather than engineering. Everything else in Track A is done.
 2. **C-4 / C-6** — one verified radio per protocol family. Four unproven: Icom LAN,
    Yaesu binary, Yaesu ASCII, HamLib. Calendar-bound, not effort-bound.
-3. **A-5 remainder** — rewrite `tr4w/CLAUDE.md`, which still describes Delphi 7 and the
-   pre-factory radio architecture and so misleads every new agent session.
+3. ~~**A-5 remainder** — rewrite `tr4w/CLAUDE.md`.~~ **DONE 2026-08-04.** `tr4w/CLAUDE.md` was
+   corrected for D12 (`cf287c4d`) and has now been **folded into the root `CLAUDE.md`**, which was
+   itself still the D7 port (DCC32 recipe, 117 units, "no OOP framework", `LOGRADIO` as the radio
+   layer). One file now; do not reintroduce a second.
 4. **Build a Release-configuration installer** (`-UseUpx`) and confirm the payload, not
    just the packaging.
 
-Items 3 and 4 need no hardware. Item 2 is the long pole; item 1 is the blocker.
+Item 4 needs no hardware. Item 2 is the long pole; item 1 is the blocker.
