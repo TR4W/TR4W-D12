@@ -1085,10 +1085,12 @@ var
 
 implementation
 
-{$IFDEF UNICODE}
-uses
-  Consts;
-{$ENDIF UNICODE}
+{ The implementation uses clause was `uses Consts;` under UNICODE -- that is
+  Vcl.Consts, the VCL's resource strings, and it was the only thing left in this
+  unit tying a logging library to a UI framework.  Nothing here references a
+  symbol from it (no Consts.* qualification, no VCL resourcestring), so with the
+  VCL packages gone from the project it is simply removed rather than repointed;
+  if a symbol were needed, System.SysConst is the RTL equivalent. }
 
 const
   CRLF = #13#10;
@@ -3188,6 +3190,20 @@ begin
 end;
 
 {$IFDEF UNICODE}
+{ These five names came from Vcl.Consts, which is why this logging unit used to
+  pull in the VCL.  They are not UI strings: they are the vocabulary an operator
+  writes in a Log4D configuration file to pick a file encoding, so they must
+  stay spelled EXACTLY as the VCL spelled them or an existing config stops
+  resolving.  The values below are copied verbatim from Vcl.Consts (D12,
+  lines 337-342) and must not be "tidied". }
+const
+   SANSIEncoding      = 'ANSI';
+   SASCIIEncoding     = 'ASCII';
+   SUnicodeEncoding   = 'Unicode';
+   SBigEndianEncoding = 'Big Endian Unicode';
+   SUTF8Encoding      = 'UTF-8';
+   SUTF7Encoding      = 'UTF-7';
+
 function FindEncodingFromName(const Name: string): TEncoding;
 begin
   Result := nil;
