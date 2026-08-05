@@ -656,10 +656,9 @@ begin
       WriteLn('Ready to rescore ', ReadInLogFileName, '!');
     end;
 
-    if (UpperCase(ParamStr(ParameterCount)) = 'RADIODEBUG') or
-      (UpperCase(ParamStr(ParameterCount)) = 'SERIALDEBUG') or
-      (UpperCase(ParamStr(ParameterCount)) = 'TALKDEBUG') then
-      CPUKeyer.SerialPortDebug := True;
+    // RADIODEBUG / SERIALDEBUG / TALKDEBUG were removed with the COM<n>IN.BIN /
+    // COM<n>OUT.BIN writers they enabled.  Those predate Log4D; CAT tracing is
+    // now DEBUG LOG LEVEL = TRACE, which logs both directions with timestamps.
 
 
   end;

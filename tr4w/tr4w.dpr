@@ -1019,8 +1019,12 @@ begin
 {$IF NEWER_DEBUG}
   //QuickDisplay('Warning - This is a Debug version');
 {$IFEND}
-  if CPUKeyer.SerialPortDebug then
-    ShowMessage('Command SERIAL PORT DEBUG is no longer supported.'#13#10'Use instead Portmon program:'#13#10'http://technet.microsoft.com/sysinternals/bb896644.aspx');
+  // SERIAL PORT DEBUG used to raise a startup dialog here pointing at Portmon.
+  // The command is now retired the way the array already supports -- csRem with
+  // a nil address -- so it is accepted, not applied, and hidden from the Options
+  // dialog, exactly like every other retired command.  No popup: none of the
+  // others announce themselves either, and the help entry already reads "No
+  // longer used due to Windows restrictions on monitoring the serial port."
 
   if MyGrid = '' then
     SetCommand('MY GRID');

@@ -2303,7 +2303,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
     GetExitCodeThread(CATWTR^.tRadioInterfaceThreadHandle, lpExitCode);
     Windows.TerminateThread(CATWTR^.tRadioInterfaceThreadHandle, lpExitCode);
     logger.Info('Terminated Radio %s thread',[CATWTR^.RadioName] );
-//    if CPUKeyer.SerialPortDebug then CloseCATDebugFile(CATWTR^.tCATPortType);
     CloseCATAndKeyerForThisRadio;
   end;
 

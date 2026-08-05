@@ -129,9 +129,6 @@ type
   end;
 
   K1EAKeyer = object
-    tDebugFile: array[TSerialPortRange] of HWND {Text};
-
-    tr4w_PortDebug: array[TSerialPortRange] of boolean;
     NumberInterruptConstant: integer;
 
 //    CurtisModeA: boolean;
@@ -143,7 +140,6 @@ type
 
     //wli      SerialPortConfigured: array[Serial1..Serial9] of boolean;
     SerialPortConfigured_Handle: array[TSerialPortRange] of HWND;
-    SerialPortDebug: boolean;
 
     //    SerialPortOutputBuffer: array[Serial1..Serial9] of CharacterBuffer;
     //    SerialPortInputBuffer: array[Serial1..Serial9] of CharacterBuffer;
@@ -1148,64 +1144,6 @@ begin
 
   { Enable TimerInterrupt to check this port }
 
-  { See if we need to setup a debug file for this port }
-
-//  if tr4w_SerialPortDebug {SerialPortDebug} then
-{
- if SerialPortDebug then
- begin
-   SerialPortOutputBuffer[Port].Debug := True;
-   SerialPortInputBuffer[Port].Debug := True;
-
-   case Port of
-     Serial1:
-       begin
-         Assign(SerialPortOutputBuffer[Port].DebugFile, 'COM1OUT.BIN');
-         Assign(SerialPortInputBuffer[Port].DebugFile, 'COM1IN.BIN');
-       end;
-
-     Serial2:
-       begin
-         Assign(SerialPortOutputBuffer[Port].DebugFile, 'COM2OUT.BIN');
-         Assign(SerialPortInputBuffer[Port].DebugFile, 'COM2IN.BIN');
-       end;
-
-     Serial3:
-       begin
-         Assign(SerialPortOutputBuffer[Port].DebugFile, 'COM3OUT.BIN');
-         Assign(SerialPortInputBuffer[Port].DebugFile, 'COM3IN.BIN');
-       end;
-
-     Serial4:
-       begin
-         Assign(SerialPortOutputBuffer[Port].DebugFile, 'COM4OUT.BIN');
-         Assign(SerialPortInputBuffer[Port].DebugFile, 'COM4IN.BIN');
-       end;
-
-     Serial5:
-       begin
-         Assign(SerialPortOutputBuffer[Port].DebugFile, 'COM5OUT.BIN');
-         Assign(SerialPortInputBuffer[Port].DebugFile, 'COM5IN.BIN');
-       end;
-
-     Serial6:
-       begin
-         Assign(SerialPortOutputBuffer[Port].DebugFile, 'COM6OUT.BIN');
-         Assign(SerialPortInputBuffer[Port].DebugFile, 'COM6IN.BIN');
-       end;
-
-   else
-     begin
-       ShowWarning('Unexpected error - trying to assign debug file to bad serial port.');
-       halt;
-     end;
-
-   end;
-
-   ReWrite(SerialPortOutputBuffer[Port].DebugFile );
-   ReWrite(SerialPortInputBuffer[Port].DebugFile );
- end;
-}
 end;
 {
 procedure K1EAKeyer.CheckSerialPortSendData(SerialPort: PortType);
@@ -2344,15 +2282,6 @@ begin
   for SerialPort := Serial1 to Serial20 do
     if CPUKeyer.SerialPortConfigured_Handle[SerialPort] <> INVALID_HANDLE_VALUE then
     begin
-{
-      if SerialPortDebug then
-      begin
-            //        Close(tr4w_InputDebugFile[SerialPort]);
-            //        Close(tr4w_OutputDebugFile[SerialPort]);
-            //        CloseHandle(tDebugFile[SerialPort]);
-        CloseCATDebugFile(SerialPort);
-      end;
-}
       CPUKeyer.SerialPortConfigured_Handle[SerialPort] := INVALID_HANDLE_VALUE;
       CloseHandle(CPUKeyer.SerialPortConfigured_Handle[SerialPort]);
 
