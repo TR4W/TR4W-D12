@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Scope note.** This is the **single** guide for the repository — a former second copy at
+> `tr4w/CLAUDE.md` was folded in here on 2026-08-04, because two files that both described the build
+> and the radio architecture drifted apart. Don't reintroduce one. This file is a map; where it
+> summarizes a design, the document listed under [Documentation map](#documentation-map) is
+> authoritative.
+
 ## MANDATORY: Git command form
 
 Run **every** git command as `git -C /c/tr4w-d12 <subcommand>` (e.g. `git -C /c/tr4w-d12 commit ...`,
@@ -10,451 +16,618 @@ command in a shell block. A `cd` to the already-current directory triggers a per
 time — the `-C` flag targets the repo explicitly with no `cd` and no prompt. (A PreToolUse hook in
 `.claude/settings.json` enforces this; if it warns you, fix the command — don't work around it.)
 
+## MANDATORY: Development Philosophy
+
+This is a port. We want to do this once. Refactoring is not as important a factor as getting the
+object model correct. For example, the radio factory should be a classic factory pattern with proper
+inheritance.
+
 ## Overview
 
-TR4W is a free amateur radio contest logging application for Windows, written in Delphi 7 (Object Pascal). It's a feature-rich logging program supporting 120+ contests with multi-user networking, extensive radio control, and digital mode integration. The codebase is approximately 109,000 lines across 117 units.
+TR4W is a free amateur radio contest logging application for Windows, written in Object Pascal.
+It supports 120+ contests with multi-user networking, extensive radio control, and digital mode
+integration. Roughly **129,000 lines across ~260 units** (`tr4w/src`, `src/trdos`, `src/radioFactory`,
+`src/utils`, `src/lang`).
 
+**Branch:** `delphi12` — the active line of development. `master` is the Delphi 7 heritage.
+**Toolchain:** **Delphi 12 Athens** (Studio 23.0). The Delphi 7 era ended 2026-08-02, when
+`tr4wserver` — the last DCC32 consumer — moved to msbuild. **DCC32 is retired; do not use it.**
+**Version:** see `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) — `4.149.0` as of 2026-08.
 **Website:** https://tr4w.net
+
+## Where the D12 migration stands
+
+**Definition of done:** a Win32 D12 build replaces the D7 release and no part of the release pipeline
+still needs Delphi 7. That deliberately excludes 64-bit, VCL/FMX, SQLite and the contest factory.
+
+| | Status |
+|---|---|
+| **Compile under D12, Win32** | ✅ Complete. Corpus green. |
+| **Unicode / string correctness** | 🟡 Substantially done — leaf interiors flipped, display chain on W-APIs, ListView A→W, CI-V byte paths byte-faithful. Four *deliberate* deferrals remain, none release-blocking. |
+| **Release mechanics** | ✅ D7-free end to end (`16412f1`, `76de84c`, `e1c1f48`, `e610aa2`). Only prerequisite left: RAD Studio installed on the self-hosted CI runner. |
+| **Radio factory** | ✅ Complete — 100 radios, legacy path deleted. |
+| **CW keyer factory** | ✅ Phases A/B + CAT repoint complete. |
+| **64-bit** | ⛔ Out of scope for this migration. |
+| **Live/bench verification** | 🔴 **The largest open block** — nothing here is provable by code review. |
+
+The honest gate on radios is **one verified rig per protocol family**, not 100 rigs. Verified:
+Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT. **Unproven: Icom LAN,
+Yaesu binary, Yaesu ASCII, HamLib.** Track that in [`docs/RADIO_BENCH_STATUS.md`](docs/RADIO_BENCH_STATUS.md).
+
+Language matrix for this release is **ENG + 8** (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP). **POL and CHN are
+decided-out**, not pending. The 8 build green but **no one has eyeballed the rendered UI** — the
+corpus is pure ASCII and cannot see it. Recommendation on file: ship English first.
+
+Full picture, and the only document that should be treated as current on status:
+[`docs/D12_MIGRATION_ROADMAP.md`](docs/D12_MIGRATION_ROADMAP.md).
 
 ## Build System
 
-> **D12 (branch `delphi12`):** the app now builds under **Delphi 12 Athens** via `msbuild`, NOT the
-> DCC32 command below (that's the legacy D7 recipe). Use the working recipe in
-> **[`tr4w/docs/D12_BUILD.md`](tr4w/docs/D12_BUILD.md)**: `call rsvars.bat` (Studio 23.0) →
-> `msbuild tr4w.dproj /t:Make /p:Config=Debug /p:Platform=Win32`, then the golden-master corpus
-> `bash tr4w/test/corpus/export-d12-corpus.sh` (baseline: 22 passed / 0 failed / 4 known-divergence;
-> guard `Get-Process -Name tr4w` first — it collides if TR4W is running).
+### The one recipe that matters
 
-### Requirements
-- **Borland Delphi 12** - Required for compilation
-- Windows development environment
-- Delphi command-line compiler (DCC32.EXE) or Delphi 12 IDE **Note The Community Edition of Delphi 12 does not allow command line building with dcc. NY4I has a licensed version of D12 to allow automated building**
+`rsvars.bat` is a **batch** file and must be `call`ed first to put msbuild and the compiler on PATH.
 
-### Compilation
-
-**Command-line build:**
-```bash
-cd tr4w
-"C:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE" tr4w.dpr -E"target"
+```bat
+call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
+cd /d C:\tr4w-d12\tr4w
+msbuild tr4w.dproj /t:Make /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo
+echo EXITCODE=%ERRORLEVEL%
 ```
 
-**From Delphi 7 IDE:**
-1. Open `tr4w/tr4w.dpr`
-2. Build → Build tr4w (Ctrl+F9)
-3. Output goes to `tr4w/target/`
+- **`/t:Make` = incremental** — use it for a targeted fix. Editing `VC`, `TF`, `tree`, `LOGWIND`, or
+  `LOGSTUFF` cascades a large recompile regardless.
+- **`/t:Build` = full** — use it before committing anything that changes a class hierarchy. `Make`
+  skips up-to-date units and will hide a `W1020` missing-abstract-method warning.
+- Output binary: `tr4w/target/tr4w.exe`. DCUs land in `src\` — **do not** delete DCUs or add cache wipes.
+- Compiler options live in `tr4w.dproj`, including the vendored Indy search path
+  (`DCC_UnitSearchPath`) and the pinned `-$A8` / `-$Z1`. **`tr4w.cfg` / `tr4w.dof` are D7 leftovers**
+  — editing them does nothing, and neither does `BatchCompile.cmd` (retired D7 recipe; don't use it).
+- `tr4w.dpr` is the **program source** and is current — every Delphi version has one. What changed
+  from D7 is the *project* file: `.dpr` + `.dof` + `.cfg` under DCC32 became `.dproj` under msbuild.
 
-**Build configuration:**
-- Compiler settings: `tr4w.cfg` and `tr4w.dof`
-- Output directory: `target/`
-- Unit search paths include: `src`, `src/trdos`, `src/utils`, `include/Core`, `include/System`, `include/Protocols`
+Full recipe, including the Bash one-liner form and output filtering:
+[`tr4w/docs/D12_BUILD.md`](tr4w/docs/D12_BUILD.md).
 
-**Creating installer:**
-```bash
-cd tr4w/build
-make_setup_file.bat  # Compresses with UPX, creates NSIS installer
+### Everything at once
+
+```powershell
+.\FullBuild.ps1                     # unit tests + ENG app
+.\FullBuild.ps1 -AllLanguages       # + the 8 non-ENG variants (isolated DCU cache per language)
+.\FullBuild.ps1 -BuildInstallers    # + tr4wserver + NSIS installers
 ```
 
-### Language Support
-The application supports 11 languages via conditional compilation. Language is selected by the `LANG` constant in `src/VC.pas`:
+`tr4w/FullBuild.ps1` is the **single packaging path**. It runs the unit tests before it builds
+anything and derives the version from `src/Version.pas`; `full.nsi` refuses to build without
+`/DTR4WVERSION`, so an installer cannot be silently mis-versioned.
+
+### Language variants
+
+Language is selected by a **compiler define**, not by editing a constant:
+
 ```pascal
-const LANG = 'ENG';  // Options: ENG, RUS, SER, ESP, MNG, POL, CZE, ROM, CHN, GER, UKR
+{$IFDEF LANG_RUS}  LANG = 'RUS';{$ENDIF}   // VC.pas ~line 224
 ```
 
-Each language has a corresponding resource file in `res/` (e.g., `tr4w_eng.res`).
+Build one with `/p:ExtraDefines="LANG_RUS;VERSIONINFO_RES"` (that's what `FullBuild.ps1` does).
+Strings live in `tr4w/src/lang/tr4w_consts_<LANG>.pas`, one file per language, `{$INCLUDE}`d into
+`VC.pas`. Resources are `res/tr4w_<lang>.res`.
+
+**These files are UTF-8 *with a BOM*** — keep them that way. A no-BOM file is decoded with the build
+machine's ANSI codepage and silently corrupts the non-ASCII literals. Delphi's per-file mechanism is
+the BOM; **`{$CODEPAGE}` is FreePascal-only and Delphi rejects it with `E1030`**. The historical
+codepages were per-language (1251 rus/ukr/mng, **1250 cze/rom/ser** — Serbian is *Latin* — 1252
+ger/esp/eng), which is why a blanket conversion was wrong.
+
+Eight non-ENG variants (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP) build green. **POL and CHN stay excluded**
+(known-bad / corrupt source). See [`tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`](tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md).
+
+## Testing
+
+Three layers, all real and all expected to be green before a commit.
+
+**1. Unit tests** — `tr4w/test/unit/tr4w_unit_tests.dpr`, a minimal DUnit-compatible framework
+(`uTR4WTestFramework.pas`, no external deps). **2021 tests, 0 failures** is the baseline as of
+`55f4f5ed` (2026-08-04). The count grows steadily — take it from the newest commit message, and if
+the checked-in `.exe` reports fewer, it is stale.
+
+```bat
+call "...\rsvars.bat"
+cd /d C:\tr4w-d12\tr4w\test\unit
+msbuild tr4w_unit_tests.dproj /t:Make /p:Config=Debug /p:Platform=Win32
+tr4w_unit_tests.exe
+```
+
+Covers ADIF, Cabrillo, callsign routines, multipliers, CTY.DAT, band lookup, CRC32, grid/distance,
+text/file/math utils, DX-spot parsing, CW framing/keyer, and the radio factory (Icom CI-V, Kenwood,
+Yaesu ASCII/binary, Elecraft IF, Flex, HamLib IDs, registry taxonomy, capability pinning).
+It links only leaf `src` units, so **the TRDOS contest engine is not unit-covered** —
+`ProcessExchange`, scoring and dupe need the app's globals booted.
+
+**2. Golden-master corpus** — the regression oracle for the contest engine.
+`bash tr4w/test/corpus/export-d12-corpus.sh` runs the app's headless export mode
+(`tr4w.exe "<contest>.CFG" /EXPORT`, `tr4w.dpr:903`) over 13 real D7-written binary logs and
+byte-diffs both artifacts — ADIF and Cabrillo — against frozen D7 references (13 sets × 2 = 26
+comparisons).
+
+- **Baseline: `22 passed, 0 failed, 4 known-divergence, 0 awaiting-candidate` = GREEN.**
+- **Rebuild the app first**, and **guard that TR4W is not running** (`Get-Process -Name tr4w`) — a
+  running instance collides on `target/` and every set reports a false FAIL.
+- Run the corpus, **read the result, then commit**. Never chain the corpus run and `git commit` in
+  one shell block.
+
+**3. Integration / bench** — `tr4w/test/integration/` drives real serial radios (or `tools/radiosim`)
+via `run-bench.ps1`. `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
+`ContestExchange`; `tr4w/test/python/verify_adif_export.py` cross-checks ADIF export against it.
+
+**Lint scripts** in `tr4w/build/` enforce house rules: `Lint-PascalBeginEnd.ps1`,
+`Lint-PCharAnsi.ps1`, `Lint-RadioRegistry.ps1`, `Lint-PollRadioState.ps1`, `Lint-ChangedPascal.ps1`.
+
+Scoring, multiplier and exchange-parsing changes still deserve real-contest testing — the corpus is a
+strong net, not a proof.
 
 ## Architecture Overview
 
-### Hybrid Architecture: Legacy Core + Modern Windows
+### Hybrid: legacy core + modern Windows layer
 
-TR4W uses a **two-layer architecture**:
+1. **TRDOS layer** (`tr4w/src/trdos/`, 35 units, ~90k lines) — the DOS-era contest logging engine
+   ported to Windows. Stable, battle-tested, procedural.
+2. **Windows layer** (`tr4w/src/`) — Win32 UI, networking, integrations.
+3. **Modern factories** — `tr4w/src/radioFactory/` (118 units, 100 radios) and the CW keyer factory
+   (`src/uCWKeyer*.pas`) are genuine OOP subsystems: proper base classes, virtuals, capability sets,
+   and self-registration. Both were built with the **strangler pattern** — thin adapters over the
+   existing globals first, prove the seam on hardware, then delete the legacy path. That is the
+   model for how the next subsystem (contest factory) should be built.
 
-1. **TRDOS Layer** (`src/trdos/`) - Legacy DOS-based contest logging engine ported to Windows
-2. **Windows Layer** (`src/`) - Modern Windows UI and integration features
+### Framework
 
-This design preserves battle-tested contest logic while enabling modern features.
+- **Direct Win32 API** — no VCL forms. `program tr4w;` runs its own `GetMessage` /
+  `TranslateMessage` / `DispatchMessage` loop (`tr4w.dpr:1063`) and creates windows with
+  `CreateWindow`. There is no VCL `MainForm` and `Application.Run` is never called.
+- A **proof-of-concept** for hosting VCL forms alongside the Win32 loop exists on branch
+  `Add-VCL-to-Program`; the technique is preserved in
+  [`docs/VCL_WIN32_COEXISTENCE.md`](docs/VCL_WIN32_COEXISTENCE.md). It is the intended bridge for
+  incrementally converting painful hand-built windows (Band Map, Telnet) to designed forms.
+- Heavy use of **global variables** for state; Pascal **records** for most data structures; manual
+  resource management.
 
-### No Traditional Framework
-- **Direct Win32 API** - No VCL (Visual Component Library) framework
-- **Event-driven** message loop architecture
-- Heavy use of **global variables** for state management
-- Pascal **records** instead of classes for data structures
-- Manual memory and resource management
+### Key entry points
 
-### Key Entry Points
+**`tr4w/tr4w.dpr`** (1300 lines) — program entry and the startup sequence. Line numbers drift; these
+were correct at 2026-08-04:
 
-**tr4w.dpr** (Main program, 865 lines)
-- Program entry point with main message loop (lines 658-856)
-- Window procedure `WindowProc()` (lines 136-295)
-- Initialization of all subsystems
-- Message dispatching and event handling
+| Line | Step |
+|---|---|
+| 342 | `WindowProc` |
+| 687 | `CreateMutex` — single-instance guard |
+| 705 | `logger := TLogLogger.GetLogger('TR4WDebugLog')` |
+| 818 | WSJT-X server, if enabled |
+| 825 | External logger, if enabled |
+| 896 | `CreateMainWindow` |
+| 903–915 | headless `/EXPORT` mode — boots the contest, writes the files, `Halt(0)` before GUI/network init |
+| 988 | WinKeyer thread, if enabled |
+| 1063 | main message loop |
 
-**MainUnit.pas** (Core application controller)
-- Main window creation and management
-- Keyboard/mouse input processing
-- UI updates and display coordination
-- Integration point between trdos and modern features
+Config load (INI → CFG → common messages) and CTY.DAT load happen before the main window.
+
+**`tr4w/src/MainUnit.pas`** — main window creation, keyboard/mouse input, display coordination, and
+the process-wide globals: `wsjtx: TWSJTXServer` (171), `externalLogger: TExternalLogger` (172),
+`logger: TLogLogger` (175). **Any standalone EXE that links app units must assign `logger`** or it
+will AV on the first log call.
+
+**UI support:** `uWinManager.pas` (window manager), `uDialogs.pas` (dialog utilities),
+`uBandmap.pas`, `uCAT.pas` (the radio config dialog).
 
 ## Core Subsystems
 
-### 1. TRDOS Subsystem (`src/trdos/`)
+### 1. TRDOS subsystem (`src/trdos/`)
 
-The legacy core - **DO NOT modify these files unless absolutely necessary**. They contain stable, proven contest logic.
+Stable, proven contest logic. **Avoid modifying unless necessary** — prefer new units in `src/`.
 
-**Critical files:**
-- **LOGSTUFF.PAS** (262k lines) - Contest logging routines, exchange parsing, QSO validation
-- **LOGWIND.PAS** (172k lines) - Window management and display routines
-- **LOGRADIO.PAS** (152k lines) - Radio control and CAT protocols (Icom, Yaesu, Kenwood, Elecraft)
-- **LOGSUBS2.PAS** (121k lines) - Core logging subroutines
-- **PostUnit.PAS** (144k lines) - Post-contest processing and Cabrillo export
-- **Tree.pas** (143k lines) - Utility library
-- **LogCW.pas** - CW keyer control, memory management, DVK (digital voice keyer)
-- **LogDupe.pas** - Duplicate checking engine
-- **FCONTEST.PAS** - Contest type definitions and defaults
-- **CFGDEF.PAS** - Configuration parameter defaults
+| File | Lines | Role |
+|------|-------|------|
+| `LOGSTUFF.PAS` | 9469 | Contest logging, exchange parsing, QSO validation |
+| `tree.pas` | 4976 | Utility library |
+| `LOGWIND.PAS` | 4172 | Window management and display |
+| `PostUnit.PAS` | 3797 | Post-contest processing, Cabrillo export |
+| `HELP.PAS` | 3578 | Help text |
+| `LOGSCP.PAS` | 3320 | Super Check Partial |
+| `LOGRADIO.PAS` | 3165 | **Legacy** radio control — see the radio section below |
+| `LOGSUBS2.PAS` | 3253 | Core logging subroutines |
+| `LogCW.pas` | — | CW message memories/function keys; the **facade** over the keyer factory |
+| `LogDupe.pas` | — | Duplicate checking |
+| `FCONTEST.PAS` | — | Contest type definitions and defaults |
+| `CFGDEF.PAS` | — | Configuration parameter defaults |
 
-### 2. Type System (`src/VC.pas` and `src/TF.pas`)
+Contest-specific modules: `LOGWAE.PAS` (WAE), `LOGDOM.PAS` (domestic/QSO parties), `LOGK1EA.PAS`
+(also the CPU keyer), `LOGGRID.PAS`, `LOGEDIT.PAS`.
 
-**VC.pas** - The "type system bible":
-- All major type definitions and enumerations
-- 120+ contest types (`ContestType`)
-- Band types: HF (160m-10m), WARC, VHF/UHF (6m-10GHz)
-- Mode types: CW, Phone, Digital, FM, FT8, RTTY, PSK, etc.
-- `TMainWindowElement` enum (~60 UI elements)
-- Window color scheme definitions
-- Global constants and compiler directives
+(Files like `LOGRADIO.$$$`, `LOGSUBS2~.PAS`, `PostUnit.PAS.bak` are editor debris, not units.)
 
-**TF.pas** - Type-related functions:
-- UI helper functions
-- Dialog creation utilities
-- Format/conversion functions (frequency, time, strings)
-- Global character buffers (wsprintfBuffer, etc.)
+### 2. Type system (`src/VC.pas`, `src/TF.pas`)
 
-### 3. Configuration System (`src/uCFG.pas`, `src/trdos/CFGCMD.pas`)
+**`VC.pas` is the source of truth** for types: 120+ `ContestType` values, band and mode enums, the
+~60-element `TMainWindowElement`, colour schemes, and the compile-time switches (`tDebugMode`,
+`MMTTYMODE`, the `LANG_xxx` block near line 223).
 
-Configuration is loaded from multiple sources:
-1. **tr4w.ini** - User settings (`settings/tr4w.ini`)
-2. **.cfg files** - Contest-specific configuration
-3. **Common messages** - Shared CW/voice messages
+**`TF.pas`** holds UI helpers, dialog utilities, and format/conversion functions. Note: TF's
+hand-rolled `IntToStr`/`StrToInt`-style shims are legacy weight — prefer the RTL and delete the shim
+when you touch a call site (`TF.StrToInt` is lenient and silently returns 0; the faithful replacement
+is `StrToIntDef(s, 0)`).
 
-The configuration parser processes commands like:
+### 3. Configuration (`src/uCFG.pas`, `src/trdos/CFGCMD.pas`)
+
+Loaded from `settings/tr4w.ini`, contest `.cfg` files, and common messages. The parser handles
+`MY CALL = N6TR`-style commands via `CFGRecord` structures (command text → variable address → type →
+range). Supports network synchronisation for multi-station setups.
+
+**Known backlog:** the whole CFG system is slated for a rewrite onto Delphi's native `TIniFile`.
+`CommandsArray` *is* the ini parser, so every key is an editable "command" — there is no read-only
+attribute, no cross-key invariant, and no value validation. Park config design defects against that
+rewrite rather than patching piecemeal.
+
+### 4. Contest flow
+
+1. Callsign typed → `CallWindowChange`
+2. Super Check Partial → `LogSCP.pas` (TRMASTER.DTA)
+3. Dupe check → `LogDupe.pas`
+4. Country/multiplier → `uCTYDAT.pas` (CTY.DAT), `uMults.pas`
+5. Exchange parsing → `LOGSTUFF.PAS` `ProcessExchange()`
+6. Validation → `ContestExchange` record
+7. Network broadcast → `uNet.pas`
+8. Display update → `LOGWIND.PAS`
+
+### 5. Radio control — the factory
+
+**All radios go through the factory.** `src/radioFactory/` holds one unit per family base and one per
+model. **100 registrations** — 99 `RegisterRadio` (enum-keyed) plus one `RegisterRadioById` (TCI, a
+string-id radio with no enum member) — covering every selectable `InterfacedRadioType` except
+`NoInterfacedRadio`.
+
+- **Base class:** `src/radioFactory/uFactoryRadioBase.pas` (`TFactoryRadioBase`).
+  `uNetRadioBase.pas` is gone; `uRadioFactory.pas` moved into `src/radioFactory/`.
+- **Registry:** `uRadioRegistry.pas` is the single source of truth; each unit self-registers from its
+  `initialization` section. It owns the per-model data that used to live in parallel arrays — CI-V
+  address, HamLib `rig_model`, startup command, network metadata.
+- **Families:** Icom (CI-V, `uRadioIcomBase` + legacy/modern/read-limited tiers), Kenwood (serial +
+  LAN), Yaesu (ASCII, ASCII-legacy, binary), Elecraft (K2/K3/K4/KX3), Ten-Tec, FlexRadio (CAT and
+  the 4992 Ethernet API), HamLib, TCI.
+- **Capabilities are owned by the radio object** — a `TRadioCapabilities` set plus a
+  `DefineCapabilities` virtual (an Icom-family virtual; the other 68 drivers set
+  `FCapabilities.Flags` in the constructor). Not a global table.
+
+**Two hard rules:**
+
+1. **A base class must NEVER ask which radio model it is.** The subclass declares a trait; the base
+   guards on the trait. Three real defects in one afternoon had exactly the shape
+   `if RadioModel in [FT857, FT897]`.
+2. **One `RegisterRadio` per unit.** One model, one file, one registration — and every model an
+   operator can buy gets its own entry and display name even when models share a class (FT-817/818,
+   IC-7850/7851). A duplicate display name makes a model invisible in the radio list.
+
+**Adding a radio** should touch only its own unit(s), `tr4w.dpr`, and the unit-test `.dpr` — verified
+2026-08-02 by adding TCI (a WebSocket radio) with no change to any shared file. Read
+[`docs/ADDING_A_RADIO.md`](docs/ADDING_A_RADIO.md).
+
+**Legacy radio code: DELETED, not deprecated.** Track E completed 2026-08-02 (`1c820091`).
+
+- `uRadioPolling.pas` went **4,621 → 1,336 lines** (`a84266bd`): the `case rig^.RadioModel of`
+  dispatch and all 37 per-model pollers are gone. Its public surface dropped from 50 exported
+  routines to 14. Reachability was *computed* by a call-graph walk, not assumed.
+- `LOGRADIO.PAS` went **4,416 → 3,165 lines** with 11 model dispatches → 0. All seven Icom quirk
+  typesets (`IcomRadiosThatSupportRIT`, VFOB, PSKMode, SplitSetOnly, ModeSetNoFilter,
+  TXStatusUnreadable, 6to60WPMKeyer) and the last three `RadioSupports*` typesets are deleted;
+  `RadioParametersArray` is unreferenced. **LOGRADIO now holds no per-model radio knowledge.**
+- The `is TIcomRadio` / `is TKenwoodLAN` credential casts became virtuals on `TFactoryRadioBase`
+  (`ApplyNetworkCredentials`, `ApplyDataModeID` — named for the *concept*, not the vendor).
+
+Read the D7 tree as the authority on what the old program did — never mirror a fix back into it.
+
+**`src/uCAT.pas` is NOT legacy.** Despite the name it is the live **radio configuration dialog**
+(`CATDlgProc`) — port enumeration, the filtered/greyed COM drop-down (item data, never index
+arithmetic), string-id factory radios in the type combo, and `RestartPollingThread`. It is actively
+maintained.
+
+**SO2R:** `src/uRadio12.pas` manages Radio 1 / Radio 2, automatic switching on focus, independent VFO
+control.
+
+**Threading:** each radio instance runs its own reading thread with exponential-backoff reconnection
+(1s → 30s). An open COM port is *not* a working link — serial radios need a real close/reopen
+(`MaintainSerialLink`, on the radio, not in the poller). And a radio can answer CAT before it is
+ready: gate post-connect sends on link *stability*, not presence.
+
+### 6. Multi-user networking
+
+**TR4WServer** (`tr4w/tr4wserver/`, separate `.dproj`, built via `BuildServer.ps1` or `FullBuild.ps1
+-BuildInstallers`) is the TCP/IP server for multi-op stations: centralised log, multipliers, dupe
+checking, serial-number lockout, time sync. Binary packet protocol with CRC32
+(`src/utils/networkmessageutils.pas`).
+
+Client side: `src/uNet.pas`, `src/trdos/LogNet.pas`, `src/uGetServerLog.pas`.
+
+### 7. External logger integration
+
+`src/uExternalLoggerFactory.pas` creates loggers; `uExternalLoggerBase.pas` (`TExternalLoggerBase`) is
+the abstract base; `uExternalLogger.pas` and `uExternalLoggerManager.pas` carry the implementation.
+Each logger runs its own reading/sender thread pair.
+
+| Type | Status |
+|---|---|
+| `lt_DXKeeper` | Complete |
+| `lt_ACLog` | **Incomplete** — the factory logs a warning on creation |
+| `lt_HRD` (Ham Radio Deluxe) | **Incomplete** — same |
+
+Note this is the **older factory shape**: a `case` in one class function
+(`TExternalLoggerFactory.CreateLogger`) raising `EExternalLoggerFactoryException`, not the radio
+factory's self-registration registry. If it grows, move it toward the registry pattern rather than
+extending the `case`.
+
+### 8. Digital mode integration
+
+- **WSJT-X** (`uWSJTX.pas`) — UDP; sends colorization hints, receives decodes/QSOs.
+  Enabled with `WSJT-X ENABLE = TRUE`.
+- **MMTTY** (`uMMTTY.pas`) — RTTY engine, gated on `MMTTYMODE` in `VC.pas`.
+- **MixW** (`uMixW.pas`).
+
+### 9. DX tools
+
+- **Band map** (`uBandmap.pas`) — spots by frequency, click-to-tune, colour-coded, filterable.
+- **DX cluster** (`uTelnet.pas`, `uDXClusterClient.pas`, `uDXSpotParse.pas`, `uSpots.pas`) — the
+  Telnet client is now Indy-based (`TDXClusterClient`, fixing lines lost at TCP segment boundaries),
+  spot parsing is extracted and unit-tested, and auto-reconnect is on by default (5s doubling to a
+  60s cap, gated on having connected at startup).
+- **Country database** (`uCTYDAT.pas`) — CTY.DAT parsing, callsign → country/zone/continent.
+
+### 10. CW keying — the keyer factory
+
+**The CW keyer factory is BUILT.** Phases A and B and the CAT repoint are complete; see
+[`docs/CW_Keyer_Factory_Plan.md`](docs/CW_Keyer_Factory_Plan.md) (its status header is current and
+records the commits).
+
+TR4W has four mutually exclusive ways to key CW. Each is now a `TCWKeyer` strategy adapter, and
+**no consumer outside the factory branches on keyer type any more**:
+
+| Adapter | Unit | Device |
+|---|---|---|
+| `TCWKeyerCAT` | `src/uCWKeyerCAT.pas` | CW-by-CAT over the radio link |
+| `TCWKeyerWinKey` | `src/uCWKeyerWinKey.pas` | WinKeyer (own thread, `uWinKey.pas`) |
+| `TCWKeyerYCCC` | `src/uCWKeyerYCCC.pas` | YCCC SO2R+ box |
+| `TCWKeyerCPU` | `src/uCWKeyerCPU.pas` | DTR/RTS/LPT keying (`LOGK1EA`) |
+
+Base and selection live in `src/uCWKeyerBase.pas`; `src/trdos/LogCW.pas` is the facade. Per-keyer
+capabilities (`ckTune`, `ckDeleteLastChar`, `ckMessageChaining`) let the UI grey what the chosen
+interface cannot do. `LOGDVP.PAS` handles voice.
+
+**The CAT repoint (done 2026-08-03) ran in three steps and is worth understanding:**
+
+1. `edc9cbf2` — the send moved out of `RadioObject.SendCW` into `uCWKeyerCAT.CWByCATSend`, and
+   **`RadioObject.SendCW` was deleted**. `CWByCATSend` takes the radio *explicitly* rather than
+   assuming `ActiveRadioPtr`, because SO2R (`KeyersSwapped`) and the interlock nominate a radio.
+2. `a9e77155` — the capability gates repointed to `RadioObject.HasCapability`. The old model-keyed
+   form could not see a string-id radio, so TCI silently got no CW at all.
+3. `4a7f9833` + `55f4f5ed` — the *data* moved onto the radio. The frame rule and prosign dialect are
+   `TRadioCapabilities.CWFrame` / `.CWProsignDialect`, and the `KY <text>;` command lives on a real
+   base class:
+
 ```
-MY CALL = N6TR
-CQ EXCHANGE = TEST # @
-CONTEST = CQ WW
+TFactoryRadioBase
+├── TKYRadio                    'KY <text>;' -- the command, once
+│   ├── TElecraftRadio          + * =, no SN
+│   │   ├── TElecraftSerial (K2/K3/KX3)
+│   │   └── TK4Radio
+│   └── TKenwoodProtocolRadio   % _ > [
+│       ├── TKenwoodSerial
+│       ├── TKenwoodLAN
+│       └── TFlexCAT            speaks the Kenwood CAT set by design
+├── TIcomRadio                  ^SN ^AR ^SK ^BT
+├── TTenTecOrionRadio           NOT a KY radio -- keys '/<char><CR>' one char at a time
+└── TFlexAPI                    NOT a KY radio -- SmartSDR cwx, #127 for a word space
 ```
 
-### 4. Contest Flow
+Orion and FlexAPI are **deliberately not** under the Kenwood base: their Kenwood-looking spellings
+came from LOGRADIO copying its Kenwood arm, not from the protocol. Inheriting to save five lines
+would silently apply every future Kenwood-base behaviour to a radio that is not a Kenwood.
 
-**QSO Entry Flow:**
-1. User types callsign → `CallWindowChange` event
-2. Super Check Partial (SCP) lookup → **LogSCP.pas** searches TRMASTER.DTA
-3. Dupe check → **LogDupe.pas** validates against log
-4. Country/multiplier lookup → **uCTYDAT.pas** parses CTY.DAT, **uMults.pas** tracks multipliers
-5. Exchange parsing → **LOGSTUFF.PAS** `ProcessExchange()`
-6. QSO validation → Creates `ContestExchange` record
-7. Network broadcast → **uNet.pas** (multi-user mode sends to all stations)
-8. Display update → **LOGWIND.PAS** updates windows
+`src/radioFactory/uCWFraming.pas` is now **chunking and padding and nothing else** — it cannot name a
+vendor, a command or a protocol. Prosigns are declared via `DeclareCWProsigns`, a **virtual** called
+from the base constructor (not a constructor per family base — `TFactoryRadioBase.Create` is
+overloaded, and a `constructor Create; reintroduce` in between hides both overloads and breaks every
+`inherited Create(ProcessMessage)` below it).
 
-### 5. Radio Control
+**Two traps this work surfaced, neither visible to the compiler:** the TS-850 declared `rcCWByCAT`
+but was missing from the frame table (uninitialised `maxLen`), and Icom values written into
+`DefineCapabilities` were wiped by every Icom subclass that replaces it wholesale — leaving all
+fourteen keying Icoms with "no limit". `test/unit/uTestCWFraming.pas` now **fails if any radio
+declares `rcCWByCAT` without stating its frame rule.** Write the exhaustive pin test *with* the move.
 
-**Radio Polling Architecture:**
-1. Polling thread → **uRadioPolling.pas** (separate thread)
-2. CAT commands → **LOGRADIO.PAS** (radio-specific protocols)
-3. Frequency/mode updates → `RadioStatusRecord` global state
-4. Display updates → Band/mode windows
-5. Band map integration → **uBandmap.pas** spot management
+**Decided, not open:** Yaesu CW-by-CAT is out of scope (NY4I). Yaesu's `KY <n>;` plays a preset
+memory slot, not free text, so it cannot serve contest CW.
 
-**Supported radios:**
-- Icom, Yaesu, Kenwood, Elecraft (K3/K4), Ten-Tec
-- Via direct CAT or **HamLib** integration (`uRadioHamLib.pas`)
+**Genuinely open (NY4I, design not refactor):** `ActiveCWKeyer`'s precedence chain
+(CAT → WinKeyer → YCCC → CPU) is an *artifact* of the original if/else ordering, not a decision. An
+explicit "CW INTERFACE" config command would make it a lookup, delete `WarnIfKeyerConfigsConflict`,
+and turn today's silent WinKeyer-failed-to-open downgrade into a reported error. TR4QT is the likely
+reference.
 
-**SO2R (Dual Radio):**
-- **uRadio12.pas** - Manages Radio 1 and Radio 2
-- Automatic radio switching based on focus
-- Independent VFO control per radio
+### 11. Logging framework
 
-### 6. Multi-User Networking
-
-**TR4WServer** (separate application in `tr4wserver/`):
-- TCP/IP server for multi-operator stations
-- Centralizes log, multipliers, and dupe checking
-- Broadcasts QSOs, spots, and messages to all clients
-- Serial number lockout prevents duplicate numbers
-- Time synchronization across stations
-
-**Network protocol:**
-- Binary packet-based protocol (see `utils/networkmessageutils.pas`)
-- CRC32 checksums for data integrity
-- Message types: QSO info, DX spots, station status, time sync
-
-**Client-side networking:**
-- **uNet.pas** - Client network interface
-- **LogNet.pas** (trdos) - Network protocol implementation
-- **uGetServerLog.pas** - Log synchronization from server
-
-### 7. Digital Mode Integration
-
-**WSJT-X Integration (`uWSJTX.pas`):**
-- UDP-based communication with WSJT-X for FT8/FT4/etc.
-- Sends colorization hints (dupes, multipliers)
-- Receives decoded messages and QSOs
-- Enabled via `WSJT-X ENABLE = TRUE` in config
-
-**MMTTY Integration (`uMMTTY.pas`):**
-- RTTY mode via MMTTY engine
-- Enabled with `MMTTYMODE = True` in VC.pas
-
-**MixW Integration (`uMixW.pas`):**
-- Support for MixW digital modes
-
-### 8. DX Tools
-
-**Band Map (`uBandmap.pas`):**
-- Visual display of DX spots by frequency
-- Click-to-tune functionality
-- Color coding: dupes, multipliers, needed QSOs
-- Filter by band/mode/dupe status
-
-**Cluster Integration (`uTelnet.pas`, `uSpots.pas`):**
-- Telnet connection to DX clusters
-- Spot parsing and storage
-- Automatic band map population
-- Spot filtering and alert system
-
-**Country Database (`uCTYDAT.PAS`):**
-- Parses CTY.DAT (DXCC country/prefix database)
-- Callsign → country/zone/continent mapping
-- Supports custom exceptions and aliases
+Log4D (`src/Log4D.pas`), global `logger: TLogLogger`, rolling file appender to `tr4w.log`, level from
+`DEBUG LOG LEVEL` in `tr4w.ini` (`NONE`…`TRACE`). Any standalone EXE that links app units must assign
+the `MainUnit` global `logger` or it will AV.
 
 ## File Organization
 
 ```
-TR4W/
-├── tr4w/
-│   ├── tr4w.dpr              # Main program entry point
-│   ├── tr4w.cfg/.dof         # Delphi compiler configuration
-│   ├── src/                  # Source code (116+ units)
-│   │   ├── MainUnit.pas      # Main controller
-│   │   ├── VC.pas            # Type definitions (critical!)
-│   │   ├── TF.pas            # Type functions
-│   │   ├── Version.pas       # Version constants
-│   │   ├── trdos/            # Legacy core (9 units, ~12.7k lines)
-│   │   │   ├── LOGSTUFF.PAS  # Contest logging engine
-│   │   │   ├── LOGWIND.PAS   # Window management
-│   │   │   ├── LOGRADIO.PAS  # Radio control
-│   │   │   └── ...
-│   │   ├── utils/            # Utility modules
-│   │   │   ├── utils_text.pas
-│   │   │   ├── utils_file.pas
-│   │   │   ├── utils_net.pas
-│   │   │   └── utils_hw.pas
-│   │   ├── u*.pas            # Modern feature modules
-│   │   └── ...
-│   ├── include/              # Third-party libraries
-│   │   ├── Indy/             # Indy 10 networking components
-│   │   └── WinSock2.pas
-│   ├── res/                  # Resources per language
-│   │   ├── tr4w_eng.res
-│   │   ├── tr4w_rus.res
-│   │   └── ...
-│   ├── target/               # Build output directory
-│   │   ├── tr4w.exe
-│   │   ├── dom/              # 115 contest config files
-│   │   ├── CTY.DAT           # Country database
-│   │   ├── *.dll             # Runtime libraries
-│   │   └── commands_help_*.ini
-│   ├── build/                # Build scripts
-│   │   ├── make_setup_file.bat
-│   │   └── full.nsi          # NSIS installer script
-│   └── tr4wserver/           # Multi-user server (separate project)
-│       └── tr4wserver.dpr
-└── README.md
+tr4w-d12/
+├── CLAUDE.md                 # this file
+├── docs/                     # design docs, plans, protocol references (see map below)
+├── tools/                    # radiosim, formatters, helper scripts
+└── tr4w/
+    ├── tr4w.dpr / tr4w.dproj # program source + the real build config
+    ├── FullBuild.ps1         # the single packaging path
+    ├── docs/D12_BUILD.md     # the working build/test recipe
+    ├── src/
+    │   ├── MainUnit.pas, VC.pas, TF.pas, Version.pas, u*.pas   (129 units)
+    │   ├── trdos/            # legacy engine (35 units, ~90k lines)
+    │   ├── radioFactory/     # radio factory (118 units)
+    │   ├── utils/            # text/file/net/hw/math helpers
+    │   └── lang/             # per-language string constants (UTF-8 + BOM)
+    ├── include/              # vendored Indy 10, WinSock2
+    ├── res/                  # per-language .res
+    ├── target/               # build output: tr4w.exe, dom/, CTY.DAT, DLLs
+    ├── test/                 # unit/, corpus/, integration/, logdump/, python/
+    ├── build/                # Lint-*.ps1, make_setup_file.bat, full.nsi
+    └── tr4wserver/           # multi-user server (own .dproj)
 ```
 
-## Key Design Patterns
+## Documentation map
 
-### 1. Global State Management
-- Heavy use of **global variables** across units
-- State shared via `uses` clauses (circular dependencies are common)
-- No centralized state store - distributed across functional units
-- Example: `ActiveRadio`, `ActiveBand`, `OpMode`, `CurrentOperator`
+Read the specific doc before acting in its area — these are current and this file is only a summary.
 
-### 2. Message-Driven Event Loop
-Main loop in `tr4w.dpr` (lines 658-856):
-```pascal
-while (GetMessage(Msg, 0, 0, 0)) do
-begin
-  if TranslateAccelerator(...) then continue;
-  case Msg.Message of
-    WM_CHAR: ...       // Character input
-    WM_KEYDOWN: ...    // Function keys, shortcuts
-    WM_COMMAND: ...    // Menu commands
-    WM_NOTIFY: ...     // List view events
-  end;
-  TranslateMessage(Msg);
-  DispatchMessage(Msg);
-end;
-```
-
-### 3. Window Procedure Pattern
-Window elements defined in `TMainWindowElement` enum, created via Win32 API:
-```pascal
-CreateWindow(WindowClass, Caption, Style, X, Y, Width, Height, Parent, ...)
-```
-
-### 4. Configuration Command Pattern
-See `CFGCMD.pas`:
-```pascal
-type CFGRecord = record
-  crCommand: PChar;      // "MY CALL"
-  crAddress: Pointer;    // @MyCall variable
-  crMin, crMax: Word;    // Validation range
-  crType: CFGType;       // Boolean, String, Integer, etc.
-end;
-```
+| Topic | Document |
+|-------|----------|
+| Build & test recipe | `tr4w/docs/D12_BUILD.md` |
+| Adding a radio | `docs/ADDING_A_RADIO.md` |
+| Radio factory design | `docs/RADIO_FACTORY_README.md`, `docs/NETWORK_RADIO_FACTORY_ANALYSIS.md` |
+| Radio bench status | `docs/RADIO_BENCH_STATUS.md`, `docs/BENCH_TEST_PLAN_2026-08-01.md` |
+| Legacy removal plan | `docs/LEGACY_DEPENDENCY_AUDIT.md`, `docs/PHASE_INVENTORIES.md` |
+| CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
+| Adding a contest | `docs/ADDING_A_NEW_CONTEST.md` |
+| D12 migration roadmap | `docs/D12_MIGRATION_ROADMAP.md`, `tr4w/docs/D12_RELEASE_READINESS.md` |
+| String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
+| VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |
+| Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
+| Release process | `docs/RELEASE_WORKFLOW.md`, `docs/FORK_PROCESS.md` |
+| Hardware test plan | `tr4w/docs/D12_HARDWARE_TEST_PLAN.md` |
 
 ## Runtime Dependencies
 
-**Required files in `target/`:**
-- **CTY.DAT** - Country/prefix database (essential)
-- **TRMASTER.DTA** - Super Check Partial callsign database (optional but recommended)
-- **dom/*.cfg** - Domestic contest configurations (115 files)
-- **commands_help_*.ini** - Help text for commands
+**Required in `target/`:** `CTY.DAT` (essential), `TRMASTER.DTA` (SCP, optional but recommended),
+`dom/` (~126 domestic contest configs), `commands_help_*.ini`.
 
-**Runtime DLLs:**
-- `inpout32.dll` - Direct parallel port I/O (for CW keying via LPT)
-- `libhamlib-4.dll` - HamLib radio control library
-- `rigctld.exe` - HamLib daemon for network radio control
-- `libeay32.dll`, `ssleay32.dll` - OpenSSL for secure connections
+**DLLs:** `libhamlib-4.dll` (+ `libgcc_s_dw2-1.dll`, `libusb-1.0.dll`, `libwinpthread-1.dll`),
+`libeay32.dll` / `ssleay32.dll` (OpenSSL), `inpout32.dll` (LPT keying), `rigctld.exe`.
+See [`docs/UPDATING_RUNTIME_DLLS.md`](docs/UPDATING_RUNTIME_DLLS.md).
 
-**User files (created at runtime):**
-- `settings/tr4w.ini` - User configuration
-- `settings/tr4w.pos` - Window positions
-- `*.cfg` - Contest configuration files
-- `*.dat` - Log files (binary format)
+**Created at runtime:** `settings/tr4w.ini`, `settings/tr4w.pos`, contest `.cfg`, binary `.dat` logs.
 
 ## Common Development Tasks
 
-### Adding Support for a New Radio
+### Add a radio
+Read [`docs/ADDING_A_RADIO.md`](docs/ADDING_A_RADIO.md). In short: one new unit in
+`src/radioFactory/` inheriting the right family base, one `RegisterRadio` in its `initialization`,
+capability flags set in the constructor, added to `tr4w.dpr` and the unit-test `.dpr`. **Never** add
+a model check to a base class. **Never** add it to `LOGRADIO.PAS`.
 
-1. **Option A - Add to LOGRADIO.PAS (trdos):**
-   - Add new `RadioType` to `VC.pas` enum
-   - Implement CAT protocol in `LOGRADIO.PAS` following existing patterns (Icom, Yaesu, etc.)
-   - Add radio name to radio selection lists
+### Add a contest
+Read [`docs/ADDING_A_NEW_CONTEST.md`](docs/ADDING_A_NEW_CONTEST.md). New `ContestType` in `VC.pas`,
+initialisation in `FCONTEST.PAS`, `.cfg` in `target/dom/`. Then verify exchange parsing, multiplier
+tracking, scoring, and Cabrillo export — and run the corpus.
 
-2. **Option B - Create new unit (modern):**
-   - Create `uRadio[ModelName].pas` following `uRadioElecraftK4.pas` pattern
-   - Inherit from `TRadioBase` or similar base class
-   - Register in radio initialization code
+### Modify UI
+`TMainWindowElement` in `VC.pas` → `CreateMainWindow()` in `MainUnit.pas` → display routines in
+`LOGWIND.PAS` → colours in `VC.pas` (`tr4wColors`).
 
-3. **Option C - Use HamLib:**
-   - If radio is supported by HamLib, use `uRadioHamLib.pas`
-   - Configure via `rigctld.exe` or direct library calls
-
-### Adding a New Contest
-
-1. **Define contest in FCONTEST.PAS:**
-   - Add new `ContestType` enum value in `VC.pas`
-   - Create contest initialization function following existing patterns
-   - Set exchange type, multiplier rules, scoring
-
-2. **Create .cfg file:**
-   - Add contest configuration file in `target/dom/`
-   - Define exchange format, multipliers, QSO points
-   - Set contest-specific parameters
-
-3. **Test thoroughly:**
-   - Verify exchange parsing
-   - Check multiplier tracking
-   - Validate scoring calculations
-   - Test Cabrillo export
-
-### Modifying UI Elements
-
-1. **Window definitions:** Check `TMainWindowElement` enum in `VC.pas`
-2. **Window creation:** See `CreateMainWindow()` in `MainUnit.pas`
-3. **Display updates:** LOGWIND.PAS contains display routines
-4. **Colors:** Defined in `VC.pas` as `tr4wColors` enum
-
-### Debugging
-
-**Enable debug logging:**
-In `settings/tr4w.ini`:
-```ini
-[COMMANDS]
-DEBUG LOG LEVEL = DEBUG  # Options: NONE, FATAL, ERROR, WARN, INFO, DEBUG, TRACE
-```
-
-**Log file:** `tr4w.log` in program directory
-
-**Debug mode compilation:**
-Set in `VC.pas`:
-```pascal
-const tDebugMode = True;
-```
+### Debug
+`DEBUG LOG LEVEL = DEBUG` under `[COMMANDS]` in `settings/tr4w.ini`; output to `tr4w.log`.
+Build with `/p:Config=Debug` (the default recipe above).
 
 ## Important Conventions
 
-### Naming Conventions
-- **u*.pas** - Modern units (uBandmap, uRadio12, uCFG)
-- **Log*.pas** - Core logging subsystem (LOGSTUFF, LOGWIND)
-- **T** prefix - Types/classes (TSpotRecord, TRadioType)
-- **mwe** prefix - Main Window Elements enum (mweCall, mweExchange)
-- **Lowercase in trdos/** - Legacy style
-- **MixedCase in src/** - Modern style
+### Naming
+- `u*.pas` — modern units; `Log*.pas` — core logging subsystem; `T` prefix — types/classes;
+  `mwe` prefix — main window elements. Lowercase filenames in `trdos/`, MixedCase in `src/`.
+- **Pascal identifier search is case-insensitive.** Always `grep -i` for Delphi symbols — TR4W spells
+  the same identifier differently at declaration, assignment and use, and a case-sensitive grep has
+  already produced a false "dead code" conclusion.
 
-### Memory Model
-- **PChar** - Null-terminated strings for Win32 API
-- **ShortString** - 255-character Pascal strings for internal use
-- **Array buffers** - Pre-allocated globally (wsprintfBuffer, etc.)
-- Manual memory management - no garbage collection
+### Strings and buffers
+- **The program passes `string`s.** Pointers, lengths, `ZeroMemory` and `s[1]` belong *inside* the
+  transport where the bytes are actually written. Prefer `Foo(const s: string)` over
+  `Foo(p: PAnsiChar; len: DWORD)`.
+- **D12 binds generic Win32 names to the `W` variants.** A bare `@AnsiChar` buffer is an untyped
+  `Pointer`, so it compiles silently *even with warnings on*. Call the `...A` variant explicitly.
+  This is not theoretical: `GetPrivateProfileString` bound to `W`, wrote UTF-16 into an `AnsiChar`
+  buffer, and **TR4WServer rejected every client** (`1bea7af4`). **W1057 cannot see this class of
+  bug and neither can the linters** — any remaining `@buffer` passed to a *generic* Win32 name has to
+  be found by reading. Related: **Winsock signatures moved in both directions** between D7 and D12 —
+  `bind` went pointer → `var`, `accept` went `var` → pointer. There is no blanket rule; check each call.
+- `tr4w/build/Lint-PCharAnsi.ps1` **gates the build** and understands Pascal (block-comment state,
+  `{$IFDEF}` as live code, braces and `//` inside string literals). Its first run reported 5
+  violations of which all 5 were false — a linter that fires on commented-out code gets ignored, so
+  if you extend it, extend the fixture too.
+- **Serial binary I/O must be byte-exact** — `WriteBytes`/`ReadBytes`, never `WriteString`/
+  `ReadString`. A CI-V or Yaesu-binary frame corrupted by string conversion fails silently.
+- `ShortString` remains in the TRDOS core; `PChar`/`PAnsiChar` at real Win32 and binary boundaries is
+  fine. The done-criterion is "no `PAnsiChar(AnsiString(...))` double-casts except at genuine
+  boundaries."
 
 ### Threading
-Limited threading used for:
-- Radio polling (`uRadioPolling.pas`)
-- WinKeyer communication (`uWinKey.pas`)
-- Network server (`tr4wserver/`)
-- Created via Win32 `CreateThread()` API
+Radio threads (one per radio), external logger threads (`TReadingThread` / `TSenderThread`), WinKey
+thread, network threads, CW/DVP playback. Event objects are created via inline assembly in `tr4w.dpr`
+(`tCW_Event`, `tCWPaddle_Event`, `tDVP_Event`, `tNet_Event`).
 
-### Conditional Compilation
-Key compiler directives in `VC.pas`:
-```pascal
-const
-  tDebugMode = False;      // Debug features on/off
-  MMTTYMODE = True;        // MMTTY RTTY integration
-  LANG = 'ENG';            // Language selection
-```
+Threads hand results back through `TProcessMsgRef` callbacks — synchronize before touching UI state.
+Radio disconnection is handled via the `radioWasDisconnected` flag rather than by tearing the object
+down. **Open design observation (NY4I, not written up in any doc and not scheduled work):** the
+`rig.CurrentStatus` / `rig.PreviousStatus` pair (`uRadioPolling.pas` ~426, ~607) does change-detection
+*and* torn-read protection, and does neither cleanly — it is compared by raw byte scan over
+`RadioStatusRecord`. A seqlock, or an immutable snapshot published by the driver at a coherent batch
+boundary, is the likely replacement.
 
-Use `{$IF condition}...{$IFEND}` for conditional code blocks.
+### Error handling
+Log4D throughout. Custom exceptions: `ERadioFactoryException`
+(`src/radioFactory/uRadioFactory.pas:83`), `EExternalLoggerFactoryException`
+(`src/uExternalLoggerFactory.pas:32`). User-facing failures go through `ShowMessage`/`MessageBox`.
+Prefer a *reported* error over a silent fallback — several defects on this branch were silent
+downgrades (a string-id radio skipped in total silence, a WinKeyer that failed to open dropping to
+DTR/RTS keying).
+
+### Known compile snags
+- `Undeclared identifier: 'EIdConnClosedGracefully'` / `'EIdSocketError'` → add `IdException, IdStack`
+  to the uses clause.
+- Missing Indy units → the vendored search path is `DCC_UnitSearchPath` in `tr4w.dproj`, not in any
+  batch file.
+- **Vendored Indy 10.6.3.3 is kept deliberately.** D12 ships Indy as DCUs only
+  (`Studio\23.0\source\Indy` holds just the IPPeer abstraction), so swapping is plausibly a
+  *downgrade* and would lose source-level debuggability of the SSL path. Decided 2026-08-04 — don't
+  re-propose it.
+
+### Conditional compilation
+`tDebugMode`, `MMTTYMODE` and the `LANG_xxx` block live in `VC.pas`. Use `{$IF cond}...{$IFEND}`.
 
 ## Critical Notes for AI Assistants
 
-1. **Respect the TRDOS boundary:** Files in `src/trdos/` are stable, battle-tested contest logic. Avoid modifications unless absolutely necessary. Prefer creating new units in `src/` for new features.
-
-2. **Global state is everywhere:** Unlike modern applications, TR4W uses extensive global variables shared across units. Changes to global state can have wide-ranging effects.
-
-3. **No modern OOP framework:** Don't expect classes, inheritance, or design patterns common in modern Delphi/C++/Java. This is procedural Pascal with Win32 API calls.
-
-4. **Circular dependencies:** The `uses` clauses create circular dependencies between units. The compiler handles this via `interface` and `implementation` sections. Be aware when adding new cross-unit references.
-
-5. **VC.pas is the source of truth:** When in doubt about types, constants, or enums, check `VC.pas`. It's the central type definition unit.
-
-6. **Version management:** Update `Version.pas` when making releases:
-   ```pascal
-   TR4W_CURRENTVERSION_NUMBER = '4.xxx.x';
-   TR4W_CURRENTVERSIONDATE = 'Month, Year';
-   ```
-
-7. **Testing:** An automated unit-test project exists — `tr4w/test/unit/tr4w_unit_tests.dpr` (minimal DUnit-compatible `uTR4WTestFramework`, no external deps). It covers the pure/leaf units: ADIF, Cabrillo formatting, callsign routines, multipliers, CTY.DAT, band lookup, CRC32, grid/distance, text/file/math utils, Icom CI-V, FlexRadio, freq/time. It links only leaf `src` units, so the TRDOS contest engine (`ProcessExchange`/scoring/dupe) is **not** unit-covered (those need the app's global state booted). For log-level regression there is `tr4w/test/logdump/` (binary `.dat` → JSONL via the canonical `ContestExchange`) and `tr4w/test/python/verify_adif_export.py` (cross-checks ADIF export against the canonical log). Still be especially careful with scoring, multiplier, and exchange-parsing changes — the engine itself has no direct test, so real-contest testing remains the final check.
-
-8. **Multi-language support:** UI strings are `const` literals in `src/lang/tr4w_consts_<LANG>.pas` — one file per language (selected by `LANG` in `VC.pas`, `{$INCLUDE}`d into `VC.pas`). Add new strings to every language file, not just English. **D12 status (RESOLVED 2026-07-11):** these files are now **UTF-8 with a BOM** so the D12 compiler decodes them correctly on any machine. (A no-BOM file would be decoded with the *build machine's* ANSI codepage and silently corrupt the non-ASCII literals; Delphi's per-file mechanism is a BOM — **`{$CODEPAGE}` is FreePascal-only and Delphi rejects it with `E1030`**, so don't use it.) The true legacy codepage was per-language, not uniformly CP1251: 1251 for rus/ukr/mng, **1250 for cze/rom/ser** (Serbian is *Latin*), 1252 for ger/esp/eng. When adding strings, keep the files UTF-8+BOM. All 8 non-ENG variants (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP) build green under D12; **pol and chn stay excluded** (known-bad / corrupt). See `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`.
-
-## Version Information
-
-Current versions are defined in `src/Version.pas`:
-- **TR4W:** ~v4.149 (2026) — see `src/Version.pas` for the exact current value
-- **Log format:** v1.6
-- **Server:** Check `TR4WSERVER_CURRENTVERSION`
+1. **Respect the TRDOS boundary.** `src/trdos/` is proven contest logic. Prefer new units in `src/`.
+2. **The two factories are the exception to "no OOP here."** `src/radioFactory/` and the CW keyer
+   are real inheritance with real invariants — hold them to that standard. Everywhere else, expect
+   procedural Pascal.
+3. **The legacy radio path is gone, not deprecated.** Don't reach for `LOGRADIO.PAS` or
+   `uRadioPolling.pas` to fix radio behaviour — the per-model code was deleted 2026-08-02. Read the
+   D7 tree at `C:\TR4W` as the authority on old behaviour; fix the factory. (`uCAT.pas` is the live
+   config dialog, not legacy.)
+4. **Global state is everywhere.** Changes to globals have wide, non-local effects.
+5. **Circular `uses` dependencies are normal here** and handled by interface/implementation split.
+   Be careful adding cross-unit references.
+6. **`VC.pas` is the source of truth** for types, constants and enums.
+7. **Validate, don't assume.** If a log, capture, corpus reference, or the D7 tree at `C:\TR4W` can
+   answer the question, read it. `C:\TR4W` is the D7 source this tree was copied from — check it
+   before calling anything "new in D12" or "a port regression."
+8. **Prove equivalence before a "behaviour-preserving" swap; the first check often says no.**
+   Replacing `IcomRadiosThatSupportRIT` with `HasCapability(rcReadRIT)` looked trivial — but no Icom
+   *model* unit declares `rcReadRIT` (it is set once on the family base), so the naive substitution
+   would have silently disabled RIT clear for every Icom. The swap was only made after comparing the
+   two sets **in both directions** and getting 13 vs 13 with an empty difference. Likewise, "the
+   legacy poller is dead" was established by a call-graph walk from the five externally-referenced
+   symbols, not by inspection.
+9. **A silently-defaulted field reads as a legal zero.** An undeclared capability record field, an
+   uninitialised `maxLen`, a `DefineCapabilities` override that replaces its parent wholesale — none
+   of these produce a compiler diagnostic. When you move data onto a type, write the **exhaustive pin
+   test in the same commit**; that is what caught the TS-850 and all fourteen keying Icoms.
+8. **`tools/radiosim` proves things about TR4W, not about radios.** When a driver and the simulator
+   disagree, suspect the simulator first. `C:\Users\toms\projects\Hamlib` (`rigs/` backends, *not*
+   `simulators/`) is a useful independent reference.
+10. **Version management:** update `tr4w/src/Version.pas` for releases
+   (`TR4W_CURRENTVERSION_NUMBER`, `TR4W_CURRENTVERSIONDATE`).
 
 ## License
 
