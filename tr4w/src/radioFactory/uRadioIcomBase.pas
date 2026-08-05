@@ -108,6 +108,7 @@ type
     FLastSentCommand: Byte;        // command byte of the last frame sent -- an NG names no command
     FLastSentSubCommand: Byte;     // its sub-command, or $FF when the frame carried none
     FTXBandsUnsupported: Boolean;  // True once this radio has NAKed $1E (see QueryBandEdgesOnce)
+    FXITReadUnsupported: Boolean;  // True once this radio has NAKed $21 $02 (XIT on/off read)
     FLastBandEdgeProbeMHz: integer; // MHz the VFO was on when $02 was last read
     FPollPhase: Integer;            // Rotates through query groups to avoid flooding radio
     FLastSetCWSpeedTick: DWORD;   // GetTickCount at last SetCWSpeed call — suppresses stale echoes
@@ -124,6 +125,7 @@ type
     // implementation for what it is for and what it is not yet wired to.
     procedure QueryBandEdgesOnce;
     procedure MaybeReprobeBandEdges(hz: LongInt);
+    procedure RearmStartupCommand; override;
     procedure LogBandEdgePayload(const tag: string; const data: string);
 
     // A CI-V radio can say whether a startup command is even addressable to it.
@@ -735,6 +737,20 @@ end;
 //
 // Sections are coarse on purpose -- below 200 MHz, or at/above 400 MHz -- so
 // this fires at most a couple of times a session, not on every tune.
+procedure TIcomRadio.RearmStartupCommand;
+begin
+   inherited RearmStartupCommand;
+
+   // Everything below was LEARNED from the radio that was on this port.  A link
+   // drop can mean it was power-cycled -- or that a different rig is there now,
+   // which is exactly when a remembered "this radio does not support $1E" would
+   // be wrong.  Ask again.
+   FBandEdgesQueried    := False;
+   FTXBandsUnsupported  := False;
+   FXITReadUnsupported  := False;
+   FLastBandEdgeProbeMHz := -1;
+end;
+
 procedure TIcomRadio.MaybeReprobeBandEdges(hz: LongInt);
 var
    section: integer;
@@ -1988,6 +2004,17 @@ begin
         // table, because the radio answers for itself.  (Whether an IC-718
         // supports $1E is therefore something the log will state rather than
         // something we have to know in advance.)
+        // A polled command that is refused will be refused every time.  Record
+        // it and stop polling, so the log shows the fact once instead of once a
+        // second, and the bus carries traffic that can be answered.
+        if (FLastSentCommand = $21) and (FLastSentSubCommand = $02) and
+           (not FXITReadUnsupported) then
+           begin
+           FXITReadUnsupported := True;
+           logger.Info('[%s] No XIT on/off readback: this radio rejects $21 $02. ' +
+                       'Not polling it again on this link.', [radioModel]);
+           end;
+
         if (FLastSentCommand = Ord(CIV_CMD_TX_BANDS)) and
            (not FTXBandsUnsupported) then
            begin
@@ -2064,7 +2091,22 @@ end;
 
 procedure TIcomRadio.QueryXITState;
 begin
-  // $21 $02 = XIT on/off (offset is shared with RIT, already queried)
+  // $21 $02 = XIT on/off (the offset is shared with RIT and already queried).
+  //
+  // NOT EVERY ICOM HAS IT.  The IC-7100's $21 set is $00 (RIT frequency) and
+  // $01 (RIT on/off) -- there is no $02 (NY4I, from the manual, 2026-08-05) --
+  // so it NAKed this once a second for the life of every session: thousands of
+  // frames asking a question already answered no.
+  //
+  // The radio's refusal IS the answer, so stop asking.  Learned at runtime
+  // rather than declared per model, for the same reason the $1E probe is: the
+  // radio is the authority on itself, and a table of 28 Icoms would be a guess
+  // maintained by hand.  RearmUnsupportedQueries clears this on link-up, since
+  // the rig on the port may not be the one that refused.
+  if FXITReadUnsupported then
+     begin
+     Exit;
+     end;
   SendToRadio(BuildCIVCommand($21, CIV_SUBCMD_XIT_ONOFF_READ));
 end;
 
