@@ -120,6 +120,26 @@ begin
       begin
       Result.LegacyTypeName := string(AnsiString(InterfacedRadioTypeSA[model]));
       end;
+
+   // The model's own defaults, for every field the operator left blank.  The
+   // renderer cannot look these up -- it has no registry, deliberately -- and
+   // it must not render a blank number, because CFGCA reads a blank numeric as
+   // "never set" and keeps the PREVIOUS radio's value.
+   Result.DefaultBaudRate := 0;
+   Result.DefaultTCPPort  := 0;
+   if aRegistryId <> '' then
+      begin
+      Result.DefaultBaudRate := SerialParamsForId(aRegistryId).baud;
+      Result.DefaultTCPPort  := RegisteredNetworkPortId(aRegistryId);
+      end;
+
+   Result.DefaultCIVAddress := 0;
+   Result.DefaultHamLibID   := 0;
+   if model <> NoInterfacedRadio then
+      begin
+      Result.DefaultCIVAddress := RegisteredCIVAddress(model);
+      Result.DefaultHamLibID   := RegisteredHamLibID(model);
+      end;
 end;
 
 procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;

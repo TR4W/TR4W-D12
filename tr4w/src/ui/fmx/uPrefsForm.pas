@@ -96,12 +96,17 @@ const
    TC_PREFS_SPEEDSYNC        = 'Speed sync';
    TC_PREFS_SO2R             = 'SO2R enabled';
    TC_PREFS_AUTOCONNECT      = 'Connect radios at startup';
-   TC_PREFS_ACTIVATE         = 'Activate this profile';
+   TC_PREFS_ACTIVATE         = 'Save and activate this profile';
    TC_PREFS_ACTIVELABEL      = 'Active profile: ';
 
-   TC_PREFS_OK               = 'OK';
+   // Named for what they DO.  'OK' and 'Apply' gave no clue that they save,
+   // which left "how do I save this profile?" as a fair question (NY4I).
+   TC_PREFS_OK               = 'Save and close';
    TC_PREFS_CANCEL           = 'Cancel';
-   TC_PREFS_APPLY            = 'Apply';
+   TC_PREFS_APPLY            = 'Save';
+   TC_PREFS_UNSAVED          = 'Save your changes before closing?';
+   TC_PREFS_UNSAVEDTITLE     = 'TR4W Preferences';
+   TC_RADIOEDIT_UNSAVED      = 'Save your changes to this radio?';
 
    TC_PREFS_PORTCONFLICT     = 'Port conflicts:' + sLineBreak + sLineBreak + '%s' +
                                sLineBreak + sLineBreak + 'Apply anyway?';
@@ -117,6 +122,10 @@ const
    TC_RADIOEDIT_SERIAL       = 'Serial';
    TC_RADIOEDIT_NETWORK      = 'Network';
    TC_RADIOEDIT_ADVANCED     = 'Advanced';
+   TC_RADIOEDIT_DISCOVER     = 'Discover';
+   TC_RADIOEDIT_SEARCHING    = 'Searching...';
+   TC_RADIOEDIT_FOUND        = 'Found';
+   TC_RADIOEDIT_NONEFOUND    = 'No radios answered.';
    TC_RADIOEDIT_PORT         = 'Port';
    TC_RADIOEDIT_BAUD         = 'Baud rate';
    TC_RADIOEDIT_DATABITS     = 'Data bits';
@@ -132,6 +141,9 @@ const
    TC_RADIOEDIT_KEYERPORT    = 'Keyer output port';
    TC_RADIOEDIT_CIVADDRESS   = 'CI-V address (hex)';
    TC_RADIOEDIT_BADCIV       = 'The CI-V address must be a hex value, e.g. 88 or $88.';
+   // Shown greyed INSIDE an empty field, so "blank" reads as "using this"
+   // rather than as "you forgot something".
+   TC_RADIOEDIT_DEFAULTHINT  = '%s (default)';
    TC_RADIOEDIT_HAMLIBID     = 'HamLib model ID';
    TC_RADIOEDIT_STARTUP      = 'Startup command';
    TC_RADIOEDIT_FILTERBYTE   = 'Icom filter byte';
@@ -154,6 +166,10 @@ type
    TRadioEditForm = class(TForm)
    private
       FRadio: TRadioDefinition;
+      // What the radio looked like when the editor opened.  Comparing against
+      // this answers "did anything change" exactly, with no dirty flag to keep
+      // in step with the control count.
+      FSnapshot: TRadioDefinition;
       FOnDone: TRadioEditDone;
 
       FNameEdit: TEdit;
@@ -190,6 +206,8 @@ type
       FTCPPortEdit: TEdit;
       FUserEdit: TEdit;
       FPasswordEdit: TEdit;
+      FDiscoverButton: TButton;
+      FFoundCombo: TComboBox;
       FKeyerPortCombo: TComboBox;
       FCIVEdit: TEdit;
       FHamLibEdit: TEdit;
@@ -211,16 +229,21 @@ type
       function SerialFrame: string;
       procedure LoadFromRadio;
       function SaveToRadio(out aError: string): boolean;
+      function SaveTo(const aTarget: TRadioDefinition; out aError: string): boolean;
+      function IsModified: boolean;
       function SelectedRegistryId: string;
       procedure UpdateEnabledState;
       procedure HandleTypeChange(Sender: TObject);
       procedure HandleTransportChange(Sender: TObject);
+      procedure HandleDiscover(Sender: TObject);
+      procedure HandleFoundSelect(Sender: TObject);
       procedure HandleOK(Sender: TObject);
       procedure HandleCancel(Sender: TObject);
       procedure HandleShow(Sender: TObject);
       procedure HandleClose(Sender: TObject; var Action: TCloseAction);
    public
       constructor Create(AOwner: TComponent); override;
+      destructor Destroy; override;
       procedure EditRadio(const aRadio: TRadioDefinition; const aOnDone: TRadioEditDone);
    end;
 
@@ -235,6 +258,11 @@ type
       FEditClone: TRadioDefinition;
       FEditIsNew: boolean;
       FLoading: boolean;
+      // Set by every edit, cleared by every successful save.  Without it,
+      // closing with the window's X kept the edits in memory unsaved -- so
+      // reopening showed them as though they had been saved, which is the worst
+      // of both behaviours.
+      FDirty: boolean;
 
       FNavList: TListBox;
       FContent: TLayout;
@@ -285,6 +313,7 @@ type
       procedure HandleOK(Sender: TObject);
       procedure HandleCancel(Sender: TObject);
       procedure HandleApply(Sender: TObject);
+      procedure DiscardChanges;
       procedure HandleShow(Sender: TObject);
       procedure HandleClose(Sender: TObject; var Action: TCloseAction);
 
@@ -311,6 +340,8 @@ uses
    uFMXCoexist,
    uRadioConfigApply,
    uRadioRegistry,
+   uCAT,        // DiscoverNetworkRadios
+   MainUnit,    // logger
    ComPortEnumerator,
    VC;
 
@@ -610,6 +641,17 @@ begin
    FIPEdit.Position.Y := TABTOP;
    FIPEdit.Width      := 200;
 
+   FDiscoverButton := MakeButton(tab, TC_RADIOEDIT_DISCOVER,
+                                 350, TABTOP, 110, HandleDiscover);
+
+   MakeLabel(tab, TC_RADIOEDIT_FOUND, 10, TABTOP + 4 + 4 * ROWHEIGHT, 120);
+   FFoundCombo := TComboBox.Create(tab);
+   FFoundCombo.Parent     := tab;
+   FFoundCombo.Position.X := 140;
+   FFoundCombo.Position.Y := TABTOP + 4 * ROWHEIGHT;
+   FFoundCombo.Width      := 320;
+   FFoundCombo.OnChange   := HandleFoundSelect;
+
    MakeLabel(tab, TC_RADIOEDIT_TCPPORT, 10, TABTOP + 4 + ROWHEIGHT, 120);
    FTCPPortEdit := TEdit.Create(tab);
    FTCPPortEdit.Parent     := tab;
@@ -868,6 +910,12 @@ procedure TRadioEditForm.EditRadio(const aRadio: TRadioDefinition;
 begin
    FRadio  := aRadio;
    FOnDone := aOnDone;
+
+   FreeAndNil(FSnapshot);
+   if aRadio <> nil then
+      begin
+      FSnapshot := aRadio.Clone;
+      end;
    PopulatePortCombos;   // ports may have changed since the form was built
    LoadFromRadio;
    Show;
@@ -985,7 +1033,48 @@ begin
    Result := SelectedTag(FTypeCombo);
 end;
 
+destructor TRadioEditForm.Destroy;
+begin
+   FreeAndNil(FSnapshot);
+   inherited Destroy;
+end;
+
+// True when the controls hold something different from what was loaded.  It
+// works by writing the controls into a scratch copy and comparing -- so it can
+// never disagree with what OK would actually save, which a hand-maintained
+// dirty flag eventually does.
+function TRadioEditForm.IsModified: boolean;
+var
+   scratch: TRadioDefinition;
+   err: string;
+begin
+   Result := False;
+   if (FRadio = nil) or (FSnapshot = nil) then
+      begin
+      Exit;
+      end;
+
+   scratch := FRadio.Clone;
+   try
+      // A scratch copy that will not even validate is certainly not identical
+      // to the snapshot, so treat that as modified and let the prompt appear.
+      if not SaveTo(scratch, err) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      Result := not scratch.SameAs(FSnapshot);
+   finally
+      scratch.Free;
+   end;
+end;
+
 function TRadioEditForm.SaveToRadio(out aError: string): boolean;
+begin
+   Result := SaveTo(FRadio, aError);
+end;
+
+function TRadioEditForm.SaveTo(const aTarget: TRadioDefinition; out aError: string): boolean;
 var
    civ: integer;
 begin
@@ -1040,6 +1129,7 @@ var
    id: string;
    transport: TRadioTransport;
    isIcom: boolean;
+   civDefault: integer;
 begin
    // Reached during construction, from the first tab becoming active -- see
    // FBuilt.  Every control this method touches is created AFTER the tab
@@ -1060,6 +1150,11 @@ begin
    FSerialTab.Enabled  := (id = '') or SupportsSerialId(id);
    FNetworkTab.Enabled := (id = '') or SupportsNetworkId(id);
 
+   // Discovery is offered only where the registry says the model announces
+   // itself.  Broadcasting for a radio that cannot answer would produce a
+   // three-second wait and an empty list, which reads as a fault.
+   FDiscoverButton.Enabled := (id <> '') and RegisteredDiscoverableId(id);
+
    // HamLib ID is the operator's value ONLY for HamLib-any; for every other
    // radio the registry supplies it and typing one here would pin a model the
    // operator never chose.  Same rule the legacy dialog applies.
@@ -1078,10 +1173,25 @@ begin
    // That is not pedantry: the Ten-Tec Omni VI has an Icom-compatible CI-V
    // interface and declares address 4, so a brand test would have locked it out
    // of the one field it needs.
-   FCIVEdit.Enabled := (id <> '') and (RegisteredCIVAddress(ModelForId(id)) <> 0);
+   civDefault := 0;
+   if id <> '' then
+      begin
+      civDefault := RegisteredCIVAddress(ModelForId(id));
+      end;
+
+   FCIVEdit.Enabled := (civDefault <> 0);
    if not FCIVEdit.Enabled then
       begin
-      FCIVEdit.Text := '';
+      FCIVEdit.Text       := '';
+      FCIVEdit.TextPrompt := '';
+      end
+   else
+      begin
+      // Greyed, and only visible while the box is empty -- so it disappears the
+      // moment the operator types their own address, and comes back if they
+      // clear it.  Hex, to match the label, the radio's menu and the manual.
+      FCIVEdit.TextPrompt := Format(TC_RADIOEDIT_DEFAULTHINT,
+                                    [IntToHex(civDefault, 2)]);
       end;
 
    // The FT-1000MP's reversed CW sidebands are a quirk of that one radio.
@@ -1150,12 +1260,12 @@ begin
       FTCPPortEdit.Text := IntToStr(RegisteredNetworkPortId(id));
       end;
 
-   model := ModelForId(id);
-   if (model <> NoInterfacedRadio) and (Trim(FCIVEdit.Text) = '') and
-      (RegisteredCIVAddress(model) <> 0) then
-      begin
-      FCIVEdit.Text := IntToHex(RegisteredCIVAddress(model), 2);
-      end;
+   // The CI-V address is deliberately NOT prefilled.  Writing the model default
+   // into the box makes it look like an operator choice, and it then stops
+   // tracking the registry if that default is ever corrected.  Blank means "use
+   // the model default", and UpdateEnabledState shows what that default is as
+   // greyed prompt text inside the empty field -- which is what makes blank
+   // read as a decision rather than an omission (NY4I).
 
    // If the radio only speaks one transport, move the selection there rather
    // than leaving an impossible combination on screen.
@@ -1197,6 +1307,96 @@ begin
       end;
 
    UpdateEnabledState;
+end;
+
+procedure TRadioEditForm.HandleDiscover(Sender: TObject);
+var
+   model: InterfacedRadioType;
+begin
+   model := ModelForId(SelectedRegistryId);
+   if model = NoInterfacedRadio then
+      begin
+      Exit;
+      end;
+
+   // The button stays disabled for the whole search: a second broadcast while
+   // the first is still listening would have two sockets on the same port.
+   FDiscoverButton.Enabled := False;
+   FDiscoverButton.Text    := TC_RADIOEDIT_SEARCHING;
+   FFoundCombo.Clear;
+
+   // OFF THE MAIN THREAD.  DiscoverNetworkRadios broadcasts and then waits out
+   // its timeout -- about three seconds -- and doing that on the main thread
+   // would freeze not just this window but TR4W's whole message loop, which is
+   // also servicing the radios and the cluster.
+   //
+   // The completion comes back through TThread.Queue.  That is the mechanism
+   // the FMX coexistence spike existed to prove: nothing in TR4W calls
+   // CheckSynchronize, and Queue works only because FMX.Forms hooks
+   // WakeMainThread and that message reaches FMX through the main loop's
+   // fall-through DispatchMessage.
+   TThread.CreateAnonymousThread(
+      procedure
+      var
+         found: TStringList;
+      begin
+         found := TStringList.Create;
+         try
+            try
+               DiscoverNetworkRadios(model, found);
+            except
+               // A discovery failure is not worth taking the program down for;
+               // it comes back as "nothing answered", which is what the
+               // operator sees anyway when the radio is off.
+               on E: Exception do
+                  begin
+                  logger.Warn('[Preferences] Discovery failed: %s', [E.Message]);
+                  end;
+            end;
+
+            TThread.Queue(nil,
+               procedure
+               var
+                  i: integer;
+               begin
+                  FDiscoverButton.Text    := TC_RADIOEDIT_DISCOVER;
+                  FDiscoverButton.Enabled := True;
+
+                  for i := 0 to found.Count - 1 do
+                     begin
+                     AddComboItem(FFoundCombo, found[i], found[i]);
+                     end;
+
+                  if found.Count = 0 then
+                     begin
+                     ShowMessage(TC_RADIOEDIT_NONEFOUND);
+                     end
+                  else if found.Count = 1 then
+                     begin
+                     // Exactly one answer is not a choice -- fill it in.
+                     FFoundCombo.ItemIndex := 0;
+                     FIPEdit.Text := found[0];
+                     end;
+
+                  found.Free;
+               end);
+         except
+            found.Free;
+            raise;
+         end;
+      end).Start;
+end;
+
+procedure TRadioEditForm.HandleFoundSelect(Sender: TObject);
+begin
+   if not FBuilt then
+      begin
+      Exit;
+      end;
+   if SelectedTag(FFoundCombo) <> '' then
+      begin
+      FIPEdit.Text := SelectedTag(FFoundCombo);
+      end;
 end;
 
 procedure TRadioEditForm.HandleOK(Sender: TObject);
@@ -1674,6 +1874,8 @@ begin
    prof.SpeedSync1  := FSpeedSync1.IsChecked;
    prof.SpeedSync2  := FSpeedSync2.IsChecked;
    prof.SO2REnabled := FSO2RCheck.IsChecked;
+
+   FDirty := True;
 end;
 
 { -------------------------------------------------------------- events ---- }
@@ -1750,6 +1952,7 @@ begin
    copy.Name := FStore.UniqueRadioName(radio.Name);
    if FStore.AddRadio(copy, err) then
       begin
+      FDirty := True;
       RefreshAll;
       end
    else
@@ -1781,6 +1984,7 @@ begin
    // a dangling reference would be a profile that silently loses a radio.
    if FStore.DeleteRadio(radio.Name, err) then
       begin
+      FDirty := True;
       RefreshAll;
       end
    else
@@ -1827,6 +2031,7 @@ begin
       FreeAndNil(FEditClone);
       end;
 
+   FDirty := True;
    RefreshAll;
 end;
 
@@ -1846,6 +2051,7 @@ begin
    prof.Name := name;
    if FStore.AddProfile(prof, err) then
       begin
+      FDirty := True;
       RefreshProfileCombo;
       SelectByTag(FProfileCombo, prof.Name);
       RefreshProfileFields;
@@ -1883,6 +2089,7 @@ begin
       FStore.ActiveProfileName := Trim(name);
       end;
    prof.Name := Trim(name);
+   FDirty := True;
    RefreshProfileCombo;
    SelectByTag(FProfileCombo, prof.Name);
    RefreshProfileFields;
@@ -1900,6 +2107,7 @@ begin
       end;
    if FStore.DeleteProfile(prof.Name, err) then
       begin
+      FDirty := True;
       RefreshAll;
       end
    else
@@ -1935,6 +2143,8 @@ begin
       ShowMessage(err);
       Exit;
       end;
+
+   FDirty := False;
 
    if not aActivate then
       begin
@@ -2002,13 +2212,19 @@ begin
       end;
 end;
 
-procedure TPrefsForm.HandleCancel(Sender: TObject);
+procedure TPrefsForm.DiscardChanges;
 begin
    // Throw the working copy away and reload from disk, so that reopening shows
    // what is actually stored rather than the edits just abandoned.
    FStore.Clear;
    LoadStore;
+   FDirty := False;
    RefreshAll;
+end;
+
+procedure TPrefsForm.HandleCancel(Sender: TObject);
+begin
+   DiscardChanges;
    Hide;
 end;
 
@@ -2018,7 +2234,41 @@ begin
 end;
 
 procedure TPrefsForm.HandleClose(Sender: TObject; var Action: TCloseAction);
+var
+   answer: integer;
 begin
+   // The X is easy to hit by accident, so unsaved work gets a question rather
+   // than being silently kept OR silently thrown away.  Cancel means "do not
+   // close" -- caNone -- which is the option that makes the prompt safe to
+   // dismiss.
+   if FDirty then
+      begin
+      answer := MessageBoxA(FormToHWND(Self),
+                            PAnsiChar(AnsiString(TC_PREFS_UNSAVED)),
+                            PAnsiChar(AnsiString(TC_PREFS_UNSAVEDTITLE)),
+                            MB_YESNOCANCEL or MB_ICONQUESTION);
+      if answer = IDCANCEL then
+         begin
+         Action := TCloseAction.caNone;
+         Exit;
+         end;
+
+      if answer = IDYES then
+         begin
+         // A save that fails (validation, a bad path) must NOT close the window
+         // and lose the work it just refused to store.
+         if not ApplyNow(False) then
+            begin
+            Action := TCloseAction.caNone;
+            Exit;
+            end;
+         end
+      else
+         begin
+         DiscardChanges;
+         end;
+      end;
+
    UnregisterFMXFormHandle(FormToHWND(Self));
    // Hide, never free: freeing a form from inside its own event handler is the
    // classic way to crash on the way out, and reopening should be instant.

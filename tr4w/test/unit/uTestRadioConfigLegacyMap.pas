@@ -27,7 +27,7 @@ unit uTestRadioConfigLegacyMap;
 interface
 
 uses
-   SysUtils, Classes,
+   SysUtils, StrUtils, Classes,
    uTR4WTestFramework, uRadioConfigStore, uRadioConfigLegacyMap;
 
 type
@@ -48,7 +48,8 @@ type
       procedure Test_EnumRadioWritesTypeAndDeletesFactoryId;
       procedure Test_SerialRadioBlanksTheNetworkKeys;
       procedure Test_NetworkRadioBlanksTheSerialKeys;
-      procedure Test_UnsetIntegersRenderEmptyNotZero;
+      procedure Test_NumericKeysAreNeverEmpty;
+      procedure Test_UnsetNumericsFallBackToTheModelDefault;
       procedure Test_BooleansUseTheCFGCAVocabulary;
       procedure Test_ProfileCWOutputCATOverridesTheRadio;
       procedure Test_ProfileCWOutputPortOverridesTheRadio;
@@ -106,6 +107,29 @@ const
    );
 
    NOSUCHKEY = '<<absent>>';
+
+   // Every key CFGCA reads as a NUMBER (ctByte / ctWord / ctInteger).  These
+   // are the ones for which an empty value is not "unset" but "keep what you
+   // had", so none of them may ever render blank.
+   // Keys CFGCA parses against a fixed value list.  A blank one is not
+   // "unset" -- it is an INVALID STATEMENT that aborts the config load.
+   LISTKEYS: array[0..3] of string = (
+      'RADIO ONE CAT RTS',
+      'RADIO ONE CAT DTR',
+      'RADIO ONE KEYER RTS',
+      'RADIO ONE KEYER DTR'
+   );
+
+   NUMERICKEYS: array[0..7] of string = (
+      'RADIO ONE BAUD RATE',
+      'RADIO ONE TCP PORT',
+      'RADIO ONE KEYER STOP BITS',
+      'RADIO ONE HAMLIB ID',
+      'RADIO ONE RECEIVER ADDRESS',
+      'RADIO ONE ICOM DATA MODE ID',
+      'RADIO ONE ICOM FILTER BYTE',
+      'RADIO ONE FREQUENCY ADDER'
+   );
 
 { ------------------------------------------------------------- helpers ---- }
 
@@ -378,7 +402,10 @@ begin
       CheckEquals('38400',    ValueOf(rendered, 'RADIO ONE BAUD RATE'),    'baud');
       CheckEquals('',         ValueOf(rendered, 'RADIO ONE IP ADDRESS'),
                   'the stale IP address is blanked, not carried over');
-      CheckEquals('',         ValueOf(rendered, 'RADIO ONE TCP PORT'), 'TCP port blanked');
+      // The TCP port is a NUMBER, so it cannot be blanked -- an empty numeric
+      // would keep the previous radio's port.  It is written as 0 instead,
+      // which is inert for a serial radio.
+      CheckEquals('0',        ValueOf(rendered, 'RADIO ONE TCP PORT'), 'TCP port zeroed');
    finally
       radio.Free;
    end;
@@ -397,11 +424,19 @@ begin
    try
       rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
 
+      // THE safety property: a leftover CONTROL PORT would make TR4W open a
+      // serial port for a network radio, and on an SO2R station that port
+      // belongs to the OTHER radio.  This is the assertion that matters.
       CheckEquals(PORT_NONE, ValueOf(rendered, 'RADIO ONE CONTROL PORT'),
                   'the serial port is explicitly NONE');
-      CheckEquals('',        ValueOf(rendered, 'RADIO ONE BAUD RATE'),     'baud blanked');
       CheckEquals('',        ValueOf(rendered, 'RADIO ONE SERIAL FORMAT'), 'format blanked');
-      CheckEquals('',        ValueOf(rendered, 'RADIO ONE CAT RTS'),       'RTS blanked');
+      // NOT blank: 'RADIO ONE CAT RTS=' is an INVALID statement to CFGCA and
+      // aborts the whole config load.  NONE is the vocabulary's own "off".
+      CheckEquals('NONE',    ValueOf(rendered, 'RADIO ONE CAT RTS'),       'RTS is NONE');
+      // Baud is a number and so cannot be blank; it is simply irrelevant with
+      // CONTROL PORT = NONE.  Asserting it stays a number keeps the
+      // never-empty invariant visible here too.
+      CheckTrue(ValueOf(rendered, 'RADIO ONE BAUD RATE') <> '', 'baud is not blank');
 
       CheckEquals('192.168.73.108', ValueOf(rendered, 'RADIO ONE IP ADDRESS'), 'IP');
       CheckEquals('9200',           ValueOf(rendered, 'RADIO ONE TCP PORT'),   'TCP port');
@@ -414,27 +449,93 @@ end;
 
 { ------------------------------------------------------------- values ----- }
 
-procedure TRadioConfigLegacyMapTests.Test_UnsetIntegersRenderEmptyNotZero;
+procedure TRadioConfigLegacyMapTests.Test_NumericKeysAreNeverEmpty;
 var
    radio: TRadioDefinition;
    rendered: TConfigKeyValues;
+   i: integer;
 begin
-   BeginTest('Test_UnsetIntegersRenderEmptyNotZero');
-   // A literal 0 is a real setting -- CI-V address zero, baud rate zero -- so
-   // an unset field must render empty, which CFGCA treats as absent.
+   BeginTest('Test_NumericKeysAreNeverEmpty');
+   // THE INVARIANT, and the test that was missing when this shipped.
+   //
+   // A numeric config key written as an EMPTY value does not mean "use the
+   // default" to CFGCA.  It means "this was never set", so the variable keeps
+   // whatever it already held -- the PREVIOUSLY ACTIVATED RADIO's value -- and
+   // a notice is raised naming the parameter (uCFG.pas:1243-1253).  NY4I found
+   // it as a queue of "has no value in the config file" dialogs on the first
+   // real profile activation, 2026-08-05.
+   //
+   // The earlier test asserted the OPPOSITE of this and passed, which is what
+   // made the defect invisible: it pinned "unset renders empty" as if that were
+   // desirable, when empty was silently keeping the old radio's setting.
+   radio := TRadioDefinition.Create;   // everything at its zero value
+   try
+      radio.Name       := 'Bare';
+      radio.RegistryId := 'K3';
+      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
+
+      for i := 0 to High(NUMERICKEYS) do
+         begin
+         CheckTrue(ValueOf(rendered, NUMERICKEYS[i]) <> '',
+                   'not empty: ' + NUMERICKEYS[i]);
+         end;
+
+      // The list-valued keys are stricter still: CFGCA REJECTS a blank one as
+      // an invalid statement and stops loading the file, so these must always
+      // carry a member of the vocabulary.
+      for i := 0 to High(LISTKEYS) do
+         begin
+         CheckTrue(ValueOf(rendered, LISTKEYS[i]) <> '',
+                   'list key not empty: ' + LISTKEYS[i]);
+         end;
+   finally
+      radio.Free;
+   end;
+
+   // And the same for a CLEARED slot, where the risk is identical: an empty
+   // numeric would leave the departing radio's value in force on a slot that is
+   // supposed to be empty.
+   rendered := RenderEmptySlot(2);
+   for i := 0 to High(NUMERICKEYS) do
+      begin
+      CheckTrue(ValueOf(rendered, StringReplace(NUMERICKEYS[i], 'ONE', 'TWO',
+                                                [rfReplaceAll])) <> '',
+                'cleared slot not empty: ' + NUMERICKEYS[i]);
+      end;
+end;
+
+procedure TRadioConfigLegacyMapTests.Test_UnsetNumericsFallBackToTheModelDefault;
+var
+   radio: TRadioDefinition;
+   rendered: TConfigKeyValues;
+   typeRendering: TRadioTypeRendering;
+begin
+   BeginTest('Test_UnsetNumericsFallBackToTheModelDefault');
+   // "Blank" in the UI means "use the model default", and the renderer is where
+   // that becomes a concrete number -- the caller resolves the defaults from the
+   // registry and passes them in, because this unit has no registry.
+   typeRendering := Default(TRadioTypeRendering);
+   typeRendering.DefaultCIVAddress := 136;
+   typeRendering.DefaultBaudRate   := 19200;
+   typeRendering.DefaultTCPPort    := 9200;
+   typeRendering.DefaultHamLibID   := 3070;
+
    radio := MakeSerialRadio;
    try
       radio.ReceiverAddress := 0;
-      radio.FrequencyAdder  := 0;
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
+      radio.BaudRate        := 0;
+      rendered := RenderRadioKeys(1, radio, typeRendering, nil);
 
-      CheckEquals('', ValueOf(rendered, 'RADIO ONE RECEIVER ADDRESS'), 'address empty');
-      CheckEquals('', ValueOf(rendered, 'RADIO ONE FREQUENCY ADDER'),  'adder empty');
+      CheckEquals('136',   ValueOf(rendered, 'RADIO ONE RECEIVER ADDRESS'),
+                  'the model CI-V address, not blank');
+      CheckEquals('19200', ValueOf(rendered, 'RADIO ONE BAUD RATE'),
+                  'the model baud rate, not blank');
 
-      radio.ReceiverAddress := 136;
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
-      CheckEquals('136', ValueOf(rendered, 'RADIO ONE RECEIVER ADDRESS'),
-                  'a set address is written');
+      // An operator value always wins over the model default.
+      radio.ReceiverAddress := 8;
+      rendered := RenderRadioKeys(1, radio, typeRendering, nil);
+      CheckEquals('8', ValueOf(rendered, 'RADIO ONE RECEIVER ADDRESS'),
+                  'the operator''s address wins');
    finally
       radio.Free;
    end;
@@ -585,8 +686,11 @@ begin
       radio.HamLibID   := 2043;
       radio.RegistryId := 'K3';
       rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
-      CheckEquals('', ValueOf(rendered, 'RADIO ONE HAMLIB ID'),
-                  'not written for a specific model');
+      // The operator's 2043 is NOT written for a specific model -- but the key
+      // still gets a number, because a blank one would leave the PREVIOUS
+      // radio's HamLib id in place, which is the wrong rig to drive.
+      CheckEquals('0', ValueOf(rendered, 'RADIO ONE HAMLIB ID'),
+                  'the operator value is not written for a specific model');
 
       radio.RegistryId := 'HAMLIBANY';
       rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
@@ -656,7 +760,8 @@ begin
    Test_SerialRadioBlanksTheNetworkKeys;
    Test_NetworkRadioBlanksTheSerialKeys;
 
-   Test_UnsetIntegersRenderEmptyNotZero;
+   Test_NumericKeysAreNeverEmpty;
+   Test_UnsetNumericsFallBackToTheModelDefault;
    Test_BooleansUseTheCFGCAVocabulary;
 
    Test_ProfileCWOutputCATOverridesTheRadio;

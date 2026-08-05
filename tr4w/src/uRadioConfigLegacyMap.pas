@@ -73,14 +73,28 @@ type
 
    TConfigKeyValues = array of TConfigKeyValue;
 
-   { What the caller resolved about this radio's identity by consulting the
-     registry.  Passed IN so that this unit needs no registry of its own. }
+   { What the caller resolved about this radio's identity and defaults by
+     consulting the registry.  Passed IN so that this unit needs no registry of
+     its own.
+
+     The DEFAULTS matter more than they look.  A numeric config key written as
+     an empty value does NOT mean "use the default" to CFGCA -- it means "this
+     was never set", so the variable KEEPS WHATEVER IT ALREADY HELD, which is
+     the previously activated radio's value (uCFG.pas:1243-1253, and it raises a
+     notice per key while doing it).  So every numeric key has to carry a real
+     number, and when the operator has not chosen one that number is the model's
+     own default, which only the registry knows. }
    TRadioTypeRendering = record
       // True for a factory (string-id) radio: TYPE=NONE + FACTORY ID=<id>.
       IsFactoryRadio: boolean;
       // For an enum radio, the InterfacedRadioTypeSA spelling ('IC7300',
       // 'K3', ...).  Ignored when IsFactoryRadio.
       LegacyTypeName: string;
+      // Model defaults, used wherever the operator left a field blank.
+      DefaultCIVAddress: integer;
+      DefaultBaudRate: integer;
+      DefaultTCPPort: integer;
+      DefaultHamLibID: integer;
    end;
 
 // The complete key set for one slot, in a fixed order.  aProfile may be nil,
@@ -109,6 +123,14 @@ implementation
 const
    TRUEVALUE  = 'TRUE';
    FALSEVALUE = 'FALSE';
+
+   // The tr4w_RTSDTRType vocabulary is NONE / OFF / ON / CW / PTT
+   // (LOGRADIO.PAS:92).  Empty is not a member of it: CFGCA rejects
+   // 'RADIO ONE CAT RTS=' as "Invalid statement in config file", which aborts
+   // the whole config load -- it does not merely skip the line.  That is a
+   // harder failure than the empty-numeric one, and it is what stopped the
+   // headless corpus export dead (2026-08-05).
+   RTSDTR_NONE = 'NONE';
 
 function SlotWord(const aSlot: integer): string;
 begin
@@ -254,18 +276,41 @@ begin
    aList[n].Delete := aDelete;
 end;
 
-// An integer field where 0 means "not configured".  Writing a literal 0 would
-// be a real setting -- baud rate zero, CI-V address zero -- so an unset field
-// is written as empty, which CFGCA treats as absent.
-function OptionalInt(const aValue: integer): string;
+// A list-valued key that must never be blank -- see RTSDTR_NONE.
+function ListValue(const aValue, aDefault: string): string;
 begin
-   if aValue = 0 then
+   if Trim(aValue) <> '' then
       begin
-      Result := '';
+      Result := Trim(aValue);
       end
    else
       begin
+      Result := aDefault;
+      end;
+end;
+
+// A numeric field, resolved to a CONCRETE value.
+//
+// It must never render empty.  CFGCA reads an empty numeric as "never set" and
+// leaves the variable alone -- so an empty here would silently keep the
+// PREVIOUS radio's baud rate or CI-V address, which is precisely the leak this
+// renderer exists to prevent.  It also raises a notice per key, which is how
+// the defect was found: activating a profile produced a queue of "has no value
+// in the config file" dialogs (NY4I 2026-08-05).
+//
+// aValue = 0 means the operator did not choose one, so the model default is
+// written instead.  When there is no model default either, 0 is written --
+// which is a legitimate value for every key that reaches that case
+// (FREQUENCY ADDER, ICOM FILTER BYTE, KEYER STOP BITS).
+function NumericValue(const aValue, aDefault: integer): string;
+begin
+   if aValue <> 0 then
+      begin
       Result := IntToStr(aValue);
+      end
+   else
+      begin
+      Result := IntToStr(aDefault);
       end;
 end;
 
@@ -314,27 +359,31 @@ begin
    if aRadio.Transport = rtNetwork then
       begin
       Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  PORT_NONE);
-      Emit(Result, 'RADIO ' + slot + ' BAUD RATE',     '');
+      Emit(Result, 'RADIO ' + slot + ' BAUD RATE',
+           NumericValue(aRadio.BaudRate, aTypeRendering.DefaultBaudRate));
       Emit(Result, 'RADIO ' + slot + ' SERIAL FORMAT', '');
-      Emit(Result, 'RADIO ' + slot + ' CAT RTS',       '');
-      Emit(Result, 'RADIO ' + slot + ' CAT DTR',       '');
+      Emit(Result, 'RADIO ' + slot + ' CAT RTS',       RTSDTR_NONE);
+      Emit(Result, 'RADIO ' + slot + ' CAT DTR',       RTSDTR_NONE);
 
       Emit(Result, 'RADIO ' + slot + ' IP ADDRESS',       aRadio.IPAddress);
-      Emit(Result, 'RADIO ' + slot + ' TCP PORT',         OptionalInt(aRadio.TCPPort));
+      Emit(Result, 'RADIO ' + slot + ' TCP PORT',
+           NumericValue(aRadio.TCPPort, aTypeRendering.DefaultTCPPort));
       Emit(Result, 'RADIO ' + slot + ' NETWORK USERNAME', aRadio.NetworkUsername);
       Emit(Result, 'RADIO ' + slot + ' NETWORK PASSWORD', aRadio.NetworkPassword);
       end
    else
       begin
       Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  aRadio.ControlPort);
-      Emit(Result, 'RADIO ' + slot + ' BAUD RATE',     OptionalInt(aRadio.BaudRate));
+      Emit(Result, 'RADIO ' + slot + ' BAUD RATE',
+           NumericValue(aRadio.BaudRate, aTypeRendering.DefaultBaudRate));
       Emit(Result, 'RADIO ' + slot + ' SERIAL FORMAT', aRadio.SerialFormat);
-      Emit(Result, 'RADIO ' + slot + ' CAT RTS',       aRadio.CatRTS);
-      Emit(Result, 'RADIO ' + slot + ' CAT DTR',       aRadio.CatDTR);
+      Emit(Result, 'RADIO ' + slot + ' CAT RTS',       ListValue(aRadio.CatRTS, RTSDTR_NONE));
+      Emit(Result, 'RADIO ' + slot + ' CAT DTR',       ListValue(aRadio.CatDTR, RTSDTR_NONE));
 
       // Blanked, not left alone: see above.
       Emit(Result, 'RADIO ' + slot + ' IP ADDRESS',       '');
-      Emit(Result, 'RADIO ' + slot + ' TCP PORT',         '');
+      Emit(Result, 'RADIO ' + slot + ' TCP PORT',
+           NumericValue(aRadio.TCPPort, aTypeRendering.DefaultTCPPort));
       Emit(Result, 'RADIO ' + slot + ' NETWORK USERNAME', '');
       Emit(Result, 'RADIO ' + slot + ' NETWORK PASSWORD', '');
       end;
@@ -379,9 +428,9 @@ begin
       end;
 
    Emit(Result, 'KEYER RADIO ' + slot + ' OUTPUT PORT', keyerPort);
-   Emit(Result, 'RADIO ' + slot + ' KEYER RTS',       aRadio.KeyerRTS);
-   Emit(Result, 'RADIO ' + slot + ' KEYER DTR',       aRadio.KeyerDTR);
-   Emit(Result, 'RADIO ' + slot + ' KEYER STOP BITS', OptionalInt(aRadio.KeyerStopBits));
+   Emit(Result, 'RADIO ' + slot + ' KEYER RTS',       ListValue(aRadio.KeyerRTS, RTSDTR_NONE));
+   Emit(Result, 'RADIO ' + slot + ' KEYER DTR',       ListValue(aRadio.KeyerDTR, RTSDTR_NONE));
+   Emit(Result, 'RADIO ' + slot + ' KEYER STOP BITS', NumericValue(aRadio.KeyerStopBits, 0));
 
    Emit(Result, 'RADIO ' + slot + ' CW BY CAT',     BoolValue(cwByCAT));
    Emit(Result, 'RADIO ' + slot + ' CW SPEED SYNC', BoolValue(speedSync));
@@ -393,19 +442,27 @@ begin
    // that must not be written back.  Same rule here, one layer up.
    if SameText(aRadio.RegistryId, 'HAMLIBANY') then
       begin
-      Emit(Result, 'RADIO ' + slot + ' HAMLIB ID', OptionalInt(aRadio.HamLibID));
+      Emit(Result, 'RADIO ' + slot + ' HAMLIB ID',
+           NumericValue(aRadio.HamLibID, aTypeRendering.DefaultHamLibID));
       end
    else
       begin
-      Emit(Result, 'RADIO ' + slot + ' HAMLIB ID', '');
+      // The registry's id for the chosen model.  Not blank: a blank numeric
+      // would leave the PREVIOUS radio's HamLib id in place, which is exactly
+      // the wrong rig to drive through HamLib.
+      Emit(Result, 'RADIO ' + slot + ' HAMLIB ID',
+           NumericValue(aTypeRendering.DefaultHamLibID, 0));
       end;
 
-   Emit(Result, 'RADIO ' + slot + ' RECEIVER ADDRESS',    OptionalInt(aRadio.ReceiverAddress));
-   Emit(Result, 'RADIO ' + slot + ' ICOM DATA MODE ID',   OptionalInt(aRadio.IcomDataModeID));
-   Emit(Result, 'RADIO ' + slot + ' ICOM FILTER BYTE',    OptionalInt(aRadio.IcomFilterByte));
+   Emit(Result, 'RADIO ' + slot + ' RECEIVER ADDRESS',
+        NumericValue(aRadio.ReceiverAddress, aTypeRendering.DefaultCIVAddress));
+   // CFGCA's range for this one is 1..3, so 0 is not a legal fallback.
+   Emit(Result, 'RADIO ' + slot + ' ICOM DATA MODE ID',
+        NumericValue(aRadio.IcomDataModeID, 1));
+   Emit(Result, 'RADIO ' + slot + ' ICOM FILTER BYTE',    NumericValue(aRadio.IcomFilterByte, 0));
    Emit(Result, 'RADIO ' + slot + ' WIDE CW FILTER',      BoolValue(aRadio.WideCWFilter));
    Emit(Result, 'RADIO ' + slot + ' FT1000MP CW REVERSE', BoolValue(aRadio.FT1000MPCWReverse));
-   Emit(Result, 'RADIO ' + slot + ' FREQUENCY ADDER',     OptionalInt(aRadio.FrequencyAdder));
+   Emit(Result, 'RADIO ' + slot + ' FREQUENCY ADDER',     NumericValue(aRadio.FrequencyAdder, 0));
    Emit(Result, 'RADIO ' + slot + ' BAND OUTPUT PORT',    aRadio.BandOutputPort);
    Emit(Result, 'RADIO ' + slot + ' STARTUP COMMAND',     aRadio.StartupCommand);
 
@@ -459,6 +516,33 @@ begin
          // boolean as unchanged, which would leave the previous radio's
          // setting in force on a slot that is supposed to be off.
          Emit(Result, names[i], FALSEVALUE);
+         end
+      else if (names[i] = 'RADIO ' + slot + ' CAT RTS')   or
+              (names[i] = 'RADIO ' + slot + ' CAT DTR')   or
+              (names[i] = 'RADIO ' + slot + ' KEYER RTS') or
+              (names[i] = 'RADIO ' + slot + ' KEYER DTR') then
+         begin
+         // List-valued: blank is not in the vocabulary and is REJECTED, not
+         // ignored.
+         Emit(Result, names[i], RTSDTR_NONE);
+         end
+      else if (names[i] = 'RADIO ' + slot + ' ICOM DATA MODE ID') then
+         begin
+         // 1..3 in CFGCA -- an empty or zero value is not legal.
+         Emit(Result, names[i], '1');
+         end
+      else if (names[i] = 'RADIO ' + slot + ' BAUD RATE')         or
+              (names[i] = 'RADIO ' + slot + ' TCP PORT')          or
+              (names[i] = 'RADIO ' + slot + ' KEYER STOP BITS')   or
+              (names[i] = 'RADIO ' + slot + ' HAMLIB ID')         or
+              (names[i] = 'RADIO ' + slot + ' RECEIVER ADDRESS')  or
+              (names[i] = 'RADIO ' + slot + ' ICOM FILTER BYTE')  or
+              (names[i] = 'RADIO ' + slot + ' FREQUENCY ADDER')   then
+         begin
+         // Numerics get an explicit 0, never blank.  Blank means "never set"
+         // to CFGCA, which would leave the departing radio's value in force on
+         // a slot that is meant to be empty.
+         Emit(Result, names[i], '0');
          end
       else
          begin
