@@ -105,6 +105,9 @@ type
     FTransceiverIDQueried: Boolean; // True once $19 $00 has been sent for this connection (see QueryTransceiverIDOnce)
     FBandEdgesQueried: Boolean;    // True once $02 has been sent for this connection (see QueryBandEdgesOnce)
     FLastRxByteTick: DWORD;        // GetTickCount when serial RX bytes last arrived (bus-quiet gating)
+    FLastSentCommand: Byte;        // command byte of the last frame sent -- an NG names no command
+    FLastSentSubCommand: Byte;     // its sub-command, or $FF when the frame carried none
+    FTXBandsUnsupported: Boolean;  // True once this radio has NAKed $1E (see QueryBandEdgesOnce)
     FPollPhase: Integer;            // Rotates through query groups to avoid flooding radio
     FLastSetCWSpeedTick: DWORD;   // GetTickCount at last SetCWSpeed call — suppresses stale echoes
     FDataModeID: Byte;            // Icom data sub-mode: $01=D1 (default), $02=D2, $03=D3 — configurable via RADIO x ICOM DATA MODE ID
@@ -663,7 +666,8 @@ begin
       // $1E 01 with no band number is answered NG (bench-proven), so the count
       // is not decoration: it is how many times to ask.  Enumerate them now --
       // the send queue serialises these behind whatever else is pending.
-      if (tag = TX_BANDS_TAG) and (count > 0) and (count <= 30) then
+      if (tag = TX_BANDS_TAG) and (not FTXBandsUnsupported) and
+         (count > 0) and (count <= 30) then
          begin
          for ix := 1 to count do
             begin
@@ -1874,12 +1878,33 @@ begin
       logger.debug('[%s] Command acknowledged', [radioModel]);
 
     $FA:  // Command NG (NAK)
-      // Some commands are not supported by certain radios (e.g. IC-9700 rejects $21 $02 XIT).
-      // Log at Debug for radios known to have unsupported commands; Warn for others.
-      if FMainBandProcessingOnly then
-         logger.Debug('[%s] Command rejected (FA) — unsupported command on this radio', [radioModel])
-      else
-         logger.Warn('[%s] Command rejected (FA)', [radioModel]);
+      begin
+        // The frame is just FE FE <to> <from> FA FD -- it does NOT say what was
+        // refused.  DoSendDirect records the last command put on the wire, and
+        // the send queue serialises, so that is the one being refused.  Naming
+        // it turns "something was rejected" into "this radio does not support
+        // $1E", which is the difference between noise and a capability.
+        if FLastSentSubCommand = $FF then
+           logger.Debug('[%s] Command $%.2x rejected (NG)',
+                        [radioModel, FLastSentCommand])
+        else
+           logger.Debug('[%s] Command $%.2x $%.2x rejected (NG)',
+                        [radioModel, FLastSentCommand, FLastSentSubCommand]);
+
+        // A radio that refuses $1E has no band-segment interrogation.  Say so
+        // ONCE, at INFO, and stop asking -- both the count and any segments
+        // still queued.  This is the capability test: it needs no per-model
+        // table, because the radio answers for itself.  (Whether an IC-718
+        // supports $1E is therefore something the log will state rather than
+        // something we have to know in advance.)
+        if (FLastSentCommand = Ord(CIV_CMD_TX_BANDS)) and
+           (not FTXBandsUnsupported) then
+           begin
+           FTXBandsUnsupported := True;
+           logger.Info('[%s] No band-segment interrogation: this radio rejects $1E. ' +
+                       'TX coverage cannot be read from it.', [radioModel]);
+           end;
+      end;
   end;
 end;
 
