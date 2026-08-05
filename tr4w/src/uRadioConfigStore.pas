@@ -114,6 +114,23 @@ type
       NetworkPassword: string;    // plaintext -- see the unit header
 
       // --- keyer lines on this radio's port --------------------------------
+      // FUTURE (NY4I 2026-08-05): these four are properties of a KEYER, not of
+      // a radio, and they are here only because that is where the legacy config
+      // keys put them.  The intended shape is the one this unit already uses for
+      // radios -- a library of DEFINED keyers (WinKeyer, YCCC, CPU/LPT,
+      // CW-by-CAT), each with its own name, port and line settings, with the
+      // radio naming one.  Then "which keyer does this radio use" is a
+      // reference, exactly like "which radio is in slot 1".
+      //
+      // GATED ON the CW keyer settings arriving in Preferences.  Doing it
+      // earlier would leave a keyer defined in one place and configured in
+      // another, which is worse than the present arrangement.
+      //
+      // Worth folding in at the same time: ActiveCWKeyer's precedence chain
+      // (CAT -> WinKeyer -> YCCC -> CPU) is an artifact of the original if/else
+      // ordering rather than a decision, and a named keyer reference turns it
+      // into a lookup -- which is what the proposed "CW INTERFACE" command was
+      // for.  See docs\CW_Keyer_Factory_Plan.md.
       KeyerOutputPort: string;
       KeyerRTS: string;
       KeyerDTR: string;
