@@ -383,14 +383,49 @@ begin
       end;
 end;
 
+// Is this registry id an Icom?  ManufacturerOf reads the first word of the
+// registry DISPLAY NAME ('Icom IC-7300' -> 'Icom'), which is the only
+// manufacturer the registry actually records.  For a string-id radio there is
+// no enum to ask, so the display name is read directly -- the same rule, one
+// step earlier.
+//
+// A capability flag would be better than a brand test, and if a non-Icom radio
+// ever grows a filter byte this should become one.  It is a brand test today
+// because the two settings it gates ARE brand-specific: 'ICOM FILTER BYTE' and
+// 'ICOM DATA MODE ID' are the config keys' own names.
+function IsIcomRadio(const aRegistryId: string): boolean;
+var
+   model: InterfacedRadioType;
+begin
+   if Trim(aRegistryId) = '' then
+      begin
+      Result := False;
+      Exit;
+      end;
+
+   model := ModelForId(aRegistryId);
+   if model <> NoInterfacedRadio then
+      begin
+      Result := SameText(ManufacturerOf(model), 'Icom');
+      end
+   else
+      begin
+      Result := SameText(Copy(Trim(DisplayNameId(aRegistryId)), 1, 4), 'Icom');
+      end;
+end;
+
 { =========================================================== TRadioEditForm = }
 
 constructor TRadioEditForm.Create(AOwner: TComponent);
 begin
    inherited CreateNew(AOwner);
    Caption     := TC_RADIOEDIT_TITLE;
-   Width       := 520;
-   Height      := 660;
+   // ClientWidth/ClientHeight, NOT Width/Height.  In FMX, Height includes the
+   // caption bar and borders, so laying controls out against Height puts the
+   // last row BELOW the visible client area -- which is exactly how the OK and
+   // Cancel buttons went missing on NY4I's first look at this window.
+   ClientWidth  := 520;
+   ClientHeight := 690;
    Position    := TFormPosition.ScreenCenter;
    BorderStyle := TFmxFormBorderStyle.Sizeable;
    OnShow      := HandleShow;
@@ -583,9 +618,10 @@ begin
    FFT1000MPRevCheck.Width      := 230;
    FFT1000MPRevCheck.Text       := TC_RADIOEDIT_FT1000MPREV;
 
-   NextRow;
-   MakeButton(Self, TC_PREFS_OK,     280, y, 90, HandleOK);
-   MakeButton(Self, TC_PREFS_CANCEL, 380, y, 90, HandleCancel);
+   // Anchored to the bottom of the CLIENT area rather than to the running row
+   // position, so a row added above can never push them off the form again.
+   MakeButton(Self, TC_PREFS_OK,     ClientWidth - 200, ClientHeight - 38, 90, HandleOK);
+   MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 100, ClientHeight - 38, 90, HandleCancel);
 
    PopulateTypeCombo;
    PopulatePortCombos;
@@ -803,6 +839,7 @@ procedure TRadioEditForm.UpdateEnabledState;
 var
    id: string;
    transport: TRadioTransport;
+   isIcom: boolean;
 begin
    id := SelectedRegistryId;
    transport := StrToTransport(SelectedTag(FTransportCombo));
@@ -819,6 +856,33 @@ begin
    // radio the registry supplies it and typing one here would pin a model the
    // operator never chose.  Same rule the legacy dialog applies.
    FHamLibEdit.Enabled := SameText(id, 'HAMLIBANY');
+
+   // Model-specific settings are enabled only for the models they mean anything
+   // to (NY4I).  An Icom filter byte on a Kenwood is not a harmless spare
+   // field: it is an invitation to set something that will never be sent, and
+   // then to wonder why it had no effect.
+   isIcom := IsIcomRadio(id);
+   FFilterByteEdit.Enabled := isIcom;
+   FDataModeEdit.Enabled   := isIcom;
+
+   // The FT-1000MP's reversed CW sidebands are a quirk of that one radio.
+   FFT1000MPRevCheck.Enabled := (ModelForId(id) = FT1000MP);
+
+   // Blank a disabled field rather than leave a stale value showing: a greyed
+   // box with a number in it reads as "set, but locked", which is the opposite
+   // of what it means.
+   if not FFilterByteEdit.Enabled then
+      begin
+      FFilterByteEdit.Text := '';
+      end;
+   if not FDataModeEdit.Enabled then
+      begin
+      FDataModeEdit.Text := '';
+      end;
+   if not FFT1000MPRevCheck.Enabled then
+      begin
+      FFT1000MPRevCheck.IsChecked := False;
+      end;
 end;
 
 procedure TRadioEditForm.HandleTypeChange(Sender: TObject);
@@ -923,8 +987,8 @@ constructor TPrefsForm.Create(AOwner: TComponent);
 begin
    inherited CreateNew(AOwner);
    Caption     := TC_PREFS_TITLE;
-   Width       := 860;
-   Height      := 600;
+   ClientWidth  := 860;
+   ClientHeight := 620;
    Position    := TFormPosition.ScreenCenter;
    BorderStyle := TFmxFormBorderStyle.Sizeable;
    OnShow      := HandleShow;
@@ -956,7 +1020,7 @@ begin
    FNavList.Position.X := 0;
    FNavList.Position.Y := 0;
    FNavList.Width      := 170;
-   FNavList.Height     := ClientHeight - 45;
+   FNavList.Height     := ClientHeight - 48;
    FNavList.Align      := TAlignLayout.Left;
    FNavList.OnChange   := HandleNavChange;
 
@@ -972,8 +1036,8 @@ begin
    FContent.Parent     := Self;
    FContent.Position.X := 175;
    FContent.Position.Y := 0;
-   FContent.Width      := Width - 185;
-   FContent.Height     := Height - 55;
+   FContent.Width      := ClientWidth - 185;
+   FContent.Height     := ClientHeight - 48;
 
    // Shown for every section except Hardware.  The other categories exist in
    // the nav on purpose: they say what this window is GOING to be, so nobody
@@ -984,9 +1048,9 @@ begin
 
    BuildHardwarePanel;
 
-   MakeButton(Self, TC_PREFS_OK,     Width - 290, Height - 45, 85, HandleOK);
-   MakeButton(Self, TC_PREFS_CANCEL, Width - 195, Height - 45, 85, HandleCancel);
-   MakeButton(Self, TC_PREFS_APPLY,  Width - 100, Height - 45, 85, HandleApply);
+   MakeButton(Self, TC_PREFS_OK,     ClientWidth - 290, ClientHeight - 38, 85, HandleOK);
+   MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 195, ClientHeight - 38, 85, HandleCancel);
+   MakeButton(Self, TC_PREFS_APPLY,  ClientWidth - 100, ClientHeight - 38, 85, HandleApply);
 
    FNavList.ItemIndex := 0;
 end;
