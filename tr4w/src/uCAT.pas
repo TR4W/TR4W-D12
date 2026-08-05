@@ -50,6 +50,28 @@ procedure RestartPollingThread(CATWndHWND: HWND);
 // while this dialog was the sole writer; it no longer is.
 procedure GroupRadioIniKeys;
 
+// Published for the Preferences window.  Broadcasts for K4, FlexRadio or Icom
+// network radios and appends the IP addresses found.  BLOCKS for the discovery
+// timeout (about 3 s), so callers with a UI must run it off the main thread --
+// see uPrefsForm.HandleDiscover.
+procedure DiscoverNetworkRadios(rt: InterfacedRadioType; Found: TStringList);
+
+// Does this radio's NETWORK link require a user name and password?
+//
+// Published so the Preferences window and this dialog cannot disagree about it
+// -- the membership used to be a set literal buried in a nested procedure, and
+// a second copy elsewhere would have drifted the first time a model was added.
+//
+// The Elecraft K4, FlexRadio and TCI have no concept of network credentials
+// today (NY4I); it is the Icom LAN radios, plus the TS-890 whose LAN link wants
+// an Admin ID.
+//
+// NOTE: this is still a MODEL LIST, which is the shape this codebase has been
+// moving away from.  The durable form is a capability the radio declares, the
+// way rcCWByCAT works -- worth doing when something else touches these drivers.
+// Naming it here at least means there is one list to convert rather than two.
+function RadioUsesNetworkCredentials(rt: InterfacedRadioType): boolean;
+
 var
   CATWTR                                : RadioPtr {= @Radio1};
   TempKeyerPortType                     : PortType;
@@ -1155,6 +1177,15 @@ begin
       end;
 end;
 
+function RadioUsesNetworkCredentials(rt: InterfacedRadioType): boolean;
+begin
+   // A string-id factory radio resolves to NoInterfacedRadio, which is not in
+   // this set -- so TCI gets no credential fields, which is correct today.
+   Result := rt in [IC705, IC7300MK2, IC7600, IC7610,
+                    IC7760, IC7850, IC7851, IC9700, IC905,
+                    TS890];   // Issue #436 -- TS-890 LAN requires Admin ID/Password
+end;
+
 procedure DiscoverNetworkRadios(rt: InterfacedRadioType; Found: TStringList);
 var
   list : TList;
@@ -1366,11 +1397,7 @@ var
      // Item-data read (string-id factory radios resolve to NoInterfacedRadio,
      // which is not in the credentialed set -- fields hidden, as before).
      if (ComboSelectedPort(hwnddlg, 122) = Network) and
-        (ComboSelectedRadioModel(hwnddlg) in
-         [IC705, IC7300MK2, IC7600, IC7610,
-          IC7760, IC7850, IC7851, IC9700, IC905,
-          TS890])  // Issue #436 -- TS-890 LAN requires Admin ID/Password
-     then
+        RadioUsesNetworkCredentials(ComboSelectedRadioModel(hwnddlg)) then
         ShowCmd := SW_SHOW
      else
         ShowCmd := SW_HIDE;

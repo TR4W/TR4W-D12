@@ -156,6 +156,11 @@ type
       constructor Create;
       procedure Assign(const aSource: TRadioDefinition);
       function Clone: TRadioDefinition;
+      // Field-by-field equality, so a dialog can answer "did the operator
+      // actually change anything" without tracking a dirty flag on fifteen
+      // controls -- a flag that is wrong the moment someone adds a sixteenth
+      // and forgets to wire it.  Name is included: renaming IS a change.
+      function SameAs(const aOther: TRadioDefinition): boolean;
 
       // One line for a list box: 'K4D [192.168.73.108:9200]' or
       // 'IC-7100 [SERIAL 17 @ 19200]'.  Presentation, but it belongs with the
@@ -185,6 +190,7 @@ type
       constructor Create;
       procedure Assign(const aSource: TStationProfile);
       function Clone: TStationProfile;
+      function SameAs(const aOther: TStationProfile): boolean;
       // Slot lookup without the caller writing the same if/else every time.
       function RadioNameForSlot(const aSlot: integer): string;
       function ReferencesRadio(const aRadioName: string): boolean;
@@ -371,6 +377,40 @@ begin
    PollingEnable     := aSource.PollingEnable;
 end;
 
+function TRadioDefinition.SameAs(const aOther: TRadioDefinition): boolean;
+begin
+   Result := (aOther <> nil)                                        and
+      (Name              = aOther.Name)                             and
+      (RegistryId        = aOther.RegistryId)                       and
+      (Transport         = aOther.Transport)                        and
+      (ControlPort       = aOther.ControlPort)                      and
+      (BaudRate          = aOther.BaudRate)                         and
+      (SerialFormat      = aOther.SerialFormat)                     and
+      (CatRTS            = aOther.CatRTS)                           and
+      (CatDTR            = aOther.CatDTR)                           and
+      (IPAddress         = aOther.IPAddress)                        and
+      (TCPPort           = aOther.TCPPort)                          and
+      (NetworkUsername   = aOther.NetworkUsername)                  and
+      (NetworkPassword   = aOther.NetworkPassword)                  and
+      (KeyerOutputPort   = aOther.KeyerOutputPort)                  and
+      (KeyerRTS          = aOther.KeyerRTS)                         and
+      (KeyerDTR          = aOther.KeyerDTR)                         and
+      (KeyerStopBits     = aOther.KeyerStopBits)                    and
+      (CWByCAT           = aOther.CWByCAT)                          and
+      (CWSpeedSync       = aOther.CWSpeedSync)                      and
+      (UseHamLib         = aOther.UseHamLib)                        and
+      (HamLibID          = aOther.HamLibID)                         and
+      (ReceiverAddress   = aOther.ReceiverAddress)                  and
+      (IcomDataModeID    = aOther.IcomDataModeID)                   and
+      (IcomFilterByte    = aOther.IcomFilterByte)                   and
+      (WideCWFilter      = aOther.WideCWFilter)                     and
+      (FT1000MPCWReverse = aOther.FT1000MPCWReverse)                and
+      (FrequencyAdder    = aOther.FrequencyAdder)                   and
+      (BandOutputPort    = aOther.BandOutputPort)                   and
+      (StartupCommand    = aOther.StartupCommand)                   and
+      (PollingEnable     = aOther.PollingEnable);
+end;
+
 function TRadioDefinition.Clone: TRadioDefinition;
 begin
    Result := TRadioDefinition.Create;
@@ -431,6 +471,20 @@ begin
    SpeedSync1        := aSource.SpeedSync1;
    SpeedSync2        := aSource.SpeedSync2;
    SO2REnabled       := aSource.SO2REnabled;
+end;
+
+function TStationProfile.SameAs(const aOther: TStationProfile): boolean;
+begin
+   Result := (aOther <> nil)                             and
+      (Name              = aOther.Name)                  and
+      (Radio1Name        = aOther.Radio1Name)            and
+      (Radio2Name        = aOther.Radio2Name)            and
+      (DefaultActiveSlot = aOther.DefaultActiveSlot)     and
+      (CWOutput1         = aOther.CWOutput1)             and
+      (CWOutput2         = aOther.CWOutput2)             and
+      (SpeedSync1        = aOther.SpeedSync1)            and
+      (SpeedSync2        = aOther.SpeedSync2)            and
+      (SO2REnabled       = aOther.SO2REnabled);
 end;
 
 function TStationProfile.Clone: TStationProfile;
