@@ -494,3 +494,49 @@ names and IPs, drop one, confirm the other is told cleanly. That exercises every
    just the packaging.
 
 Item 4 needs no hardware. Item 2 is the long pole; item 1 is the blocker.
+
+---
+
+## Track F — Radio configuration as a library (branch `vcl-removal` → `fmx-coexistence-spike`)
+
+Started 2026-08-05 at NY4I's direction, from an observation made while bench-testing the
+Icom work: TR4W has exactly two radio slots and the configuration **is** those slots, so
+describing a radio and activating it are the same act. An operator with four rigs retypes a
+whole slot every time they change which one is connected. TR4QT separates the two ideas;
+this track does the same.
+
+The layering is deliberate, because the top of it may not survive the gate:
+
+| Unit | Depends on | Testable? | State |
+|---|---|---|---|
+| `uRadioConfigStore` | RTL only | yes — 156 assertions | **done** `e36bbf8b` |
+| `uRadioConfigLegacyMap` | the store | yes — 17 tests | **done** `e8002ad2` |
+| `uRadioConfigApply` | uCFG, uCAT, LOGRADIO, … | no, by construction | **built** `b85220bc`, bench owed |
+| FMX preferences UI | the above | — | **gated** on the spike |
+
+**F-1 VCL eviction — DONE (`0be4603e`).** TR4W has no VCL user interface, yet linked four VCL
+packages for one `TTimer`, one file-open dialog, `Vcl.Consts` inside a logging library, and
+seven `uses` entries that were never referenced. Removed so that the FMX question is a
+two-way one, not three. `uWinTimer` (`9e05572a`) replaces `ExtCtrls.TTimer` and is documented
+as a stepping stone to `FMX.Types.TTimer`.
+
+**F-2 store + renderer — DONE.** Radios and profiles persist to `settings\tr4wradios.ini`,
+kept separate from `tr4w.ini` because `GroupRadioIniKeys` rewrites the legacy `[Radio]`
+section wholesale. `SeedFromLegacyIni` builds definitions from an existing station's
+configuration read-only. The renderer emits the **complete** CFGCA key set every time; a
+partial write leaves keys from the previously configured radio, which reads as a radio fault
+rather than a configuration fault. A pin test compares the emitted set against a hand-typed
+golden list from CFGCA.
+
+**F-3 apply — BUILT, BENCH OWED (`b85220bc`).** Writes the keys, `CheckCommand`s each, closes
+**both** slots before writing **any** key (swapping two radios on one COM port is the ordinary
+case), re-initialises the keyer once at the end, and does **not** `TerminateThread` the way
+the legacy dialog does. Startup needs nothing from it: the keys were written at the last
+apply, so `ReadInConfigFile` loads them exactly as before.
+
+**F-4 FMX coexistence spike — HARD GATE, built and awaiting the bench (`77d82600`).**
+See **[`tr4w/docs/FMX_WIN32_COEXISTENCE.md`](../tr4w/docs/FMX_WIN32_COEXISTENCE.md)** for the checklist. Verified on
+the dev machine: builds, starts, corpus 22/0/4, FMX costs 4.8 MB of code. Everything about
+keyboard isolation, thread marshalling and stability needs NY4I's station. If the gate fails,
+the fallback is a native Win32 dialog on the same F-2/F-3 layers — which is why they were
+written UI-agnostic.
