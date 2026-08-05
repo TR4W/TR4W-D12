@@ -502,6 +502,7 @@ uses
   // uDocumentation,
 {$IFEND}
 
+  uFMXSpikeForm,    // SPIKE ONLY -- the FMXTEST command; remove with the spike
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
   uHamScore,        // Issue #783 -- HamScoreResyncFromScratch (Tools menu)
@@ -7484,7 +7485,12 @@ begin
   case AnsiIndexText(AnsiUpperCase(CallWindowString),
     ['ADIF', 'CAB', 'CMD', 'COL', 'CWOFF', 'CWON', 'EXIT', 'NOTE', 'OPON',
     'SCORE',
-      'SUM', 'UDP', 'WCY', 'WWV']) of
+      'SUM', 'UDP', 'WCY', 'WWV',
+    // SPIKE ONLY -- opens the FMX coexistence test form; remove with the spike.
+    // Appended out of alphabetical order deliberately: AnsiIndexText does not
+    // care about order, and slotting it after 'EXIT' would renumber seven case
+    // arms below, where an off-by-one silently fires the WRONG command.
+    'FMXTEST']) of
     0: ProcessMenu(menu_adif);
     1: ProcessMenu(menu_cabrillo);
     2: WinExec('cmd.exe', SW_SHOW);
@@ -7519,6 +7525,7 @@ begin
     11: SendFullLogToUDP;
     12: SendViaTelnetSocket('SH/WCY');
     13: SendViaTelnetSocket('SH/WWV');
+    14: ShowFMXSpikeForm;   // SPIKE ONLY -- remove with the spike
   else
     Result := false; // False result does not clear call window
   end; // case

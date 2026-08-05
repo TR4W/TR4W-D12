@@ -80,6 +80,12 @@ uses
   uRadioConfigStore in 'src\uRadioConfigStore.pas',
   uRadioConfigLegacyMap in 'src\uRadioConfigLegacyMap.pas',
   uRadioConfigApply in 'src\uRadioConfigApply.pas',
+  // FMX coexistence spike -- see docs\FMX_WIN32_COEXISTENCE.md.  FMX.Forms is
+  // needed for Application.Initialize; the spike form is opened on demand by
+  // the FMXTEST call-window command and never at startup.
+  FMX.Forms,
+  uFMXCoexist in 'src\ui\fmx\uFMXCoexist.pas',
+  uFMXSpikeForm in 'src\ui\fmx\uFMXSpikeForm.pas',
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
   VC in 'src\VC.pas',
@@ -689,6 +695,13 @@ begin
    // the main thread initialize simultaneously.
    IsMultiThread := True;
 
+   // FMX platform services, set up but NEVER RUN.  Application.Initialize
+   // registers the platform services an FMX form needs to create its window;
+   // it does not start a message loop and does not create a main form.  The
+   // loop below stays TR4W's own -- Application.Run is never called, and there
+   // is deliberately no Application.CreateForm anywhere.
+   FMX.Forms.Application.Initialize;
+
    // Check for another running instance BEFORE opening any shared files
    // (log file, etc.) to avoid an EFOpenError crash on the second instance.
    tMutex := CreateMutex(nil, False, tr4w_ClassName);
@@ -1073,6 +1086,17 @@ begin
 
   while (GetMessage(Msg, 0, 0, 0)) do
   begin
+
+    // FIRST question, before accelerators and before every case arm below.
+    // A message for an FMX window gets a plain Translate + Dispatch and
+    // nothing else: this loop routes WM_CHAR into the callsign window and
+    // treats F-keys and the numeric keypad as CW memories, all of which would
+    // steal keystrokes from a text box in another window.  One test closes
+    // every such leak at once.  See uFMXCoexist.
+    if MessageIsForFMXWindow(Msg) then
+       begin
+       goto TransMess;
+       end;
 
     // Issue #23 -- when a clipboard/edit key (Ctrl-C/V/X/A/Z) is pressed with
     // the DX Cluster command field focused, skip the main accelerator table so
