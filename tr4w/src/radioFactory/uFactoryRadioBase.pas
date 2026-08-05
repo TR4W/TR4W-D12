@@ -421,7 +421,11 @@ Type TFactoryRadioBase = class(TObject)
       // that went away may have been power-cycled, and a power-cycled radio has
       // lost whatever the startup command configured.  NY4I, 2026-08-01:
       // "resend it after power up."
-      procedure RearmStartupCommand;
+      // Virtual so a family can also forget what it LEARNED about this link --
+      // see TIcomRadio, which re-arms its probes and its refused-command flags,
+      // because the rig on the port after a reconnect may not be the one that
+      // refused them.
+      procedure RearmStartupCommand; Virtual;
 
       procedure SetExpectedFrameLength(n: integer);
 
