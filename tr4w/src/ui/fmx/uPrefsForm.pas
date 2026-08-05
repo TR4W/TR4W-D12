@@ -170,6 +170,12 @@ type
       // rather than read from whichever tab happens to be showing.  Without
       // this, looking at Advanced would silently change the radio's connection.
       FTransport: TRadioTransport;
+      // False until BuildControls has created EVERY control.  Assigning a
+      // TTabItem's Parent makes it the active tab, which fires OnChange -- so
+      // the handler runs while the tabs and edits created after it are still
+      // nil.  Guarding each field individually would mean remembering to add a
+      // test every time a control joins the form; one flag cannot be forgotten.
+      FBuilt: boolean;
       FPortCombo: TComboBox;
       FBaudEdit: TEdit;
       // The serial frame as three pickers rather than a typed '8N1'.  It is
@@ -709,6 +715,10 @@ begin
    MakeButton(Self, TC_PREFS_OK,     ClientWidth - 200, ClientHeight - 38, 90, HandleOK);
    MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 100, ClientHeight - 38, 90, HandleCancel);
 
+   // Last: every control now exists, so the handlers may run.  PopulateTypeCombo
+   // below sets ItemIndex and fires OnChange, which is safe from here on.
+   FBuilt := True;
+
    PopulateTypeCombo;
    PopulatePortCombos;
 end;
@@ -1031,6 +1041,14 @@ var
    transport: TRadioTransport;
    isIcom: boolean;
 begin
+   // Reached during construction, from the first tab becoming active -- see
+   // FBuilt.  Every control this method touches is created AFTER the tab
+   // control, so without this it dereferences nil.
+   if not FBuilt then
+      begin
+      Exit;
+      end;
+
    id := SelectedRegistryId;
    transport := FTransport;
 
@@ -1092,6 +1110,20 @@ var
    params: TSerialParams;
    model: InterfacedRadioType;
 begin
+   // NOTHING here may touch FRadio without this guard.  OnChange is wired in
+   // BuildControls, and PopulateTypeCombo -- called at the END of that same
+   // constructor -- sets ItemIndex, which fires this handler while FRadio is
+   // still nil.  The earlier version of this method only touched controls and
+   // so survived; adding one FRadio.SerialFormat read turned first-open of the
+   // editor into an access violation.
+   //
+   // The general shape: an event handler wired before its subject exists will
+   // be called before its subject exists.
+   if FRadio = nil then
+      begin
+      Exit;
+      end;
+
    id := SelectedRegistryId;
    if id = '' then
       begin
@@ -1143,6 +1175,14 @@ end;
 
 procedure TRadioEditForm.HandleTransportChange(Sender: TObject);
 begin
+   // Building the tabs must not decide the radio's transport: the first tab
+   // becomes active as a side effect of being parented, long before any radio
+   // is loaded.
+   if not FBuilt then
+      begin
+      Exit;
+      end;
+
    // ONLY the two transport tabs change the transport.  Advanced is a tab but
    // not a connection, so opening it must not silently turn a network radio
    // into a serial one -- which is exactly what reading the transport straight
