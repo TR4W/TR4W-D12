@@ -994,15 +994,44 @@ begin
     frameStart := Pos(CIV_PREAMBLE1 + CIV_PREAMBLE2, FCIVBuffer);
     if frameStart = 0 then
     begin
-      logger.trace('[%s.ProcessCIVMessage] No preamble found in buffer', [radioModel]);
-      Break;  // No complete preamble found
+      // THREE DIFFERENT SITUATIONS, and they used to share one message that
+      // read like an error in all three (NY4I, 2026-08-05: "the no preamble
+      // message is disconcerting").  Nearly every occurrence is the FIRST one:
+      // the loop drained the buffer and is simply done.
+      if FCIVBuffer = '' then
+        begin
+        logger.trace('[%s.ProcessCIVMessage] Buffer empty -- all frames processed',
+                     [radioModel]);
+        end
+      else if FCIVBuffer = CIV_PREAMBLE1 then
+        begin
+        // One FE: the second half of the preamble has not arrived yet.  Normal
+        // on a byte-at-a-time serial read; the next chunk completes it.
+        logger.trace('[%s.ProcessCIVMessage] Partial preamble (one FE) held for the next read',
+                     [radioModel]);
+        end
+      else
+        begin
+        // Bytes that cannot begin a frame.  THIS is the one worth seeing, so it
+        // says how many and shows them -- an echoed non-CI-V startup command
+        // looked exactly like this.  They are KEPT, not discarded: the preamble
+        // may still be arriving behind them, and the 1024-byte cap below is the
+        // backstop if it never does.
+        logger.Warn('[%s.ProcessCIVMessage] %d byte(s) in the buffer with no preamble: %s',
+                    [radioModel, Length(FCIVBuffer), CIVDataToHex(FCIVBuffer)]);
+        end;
+      Break;
     end;
 
     frameEnd := Pos(CIV_EOM, FCIVBuffer);
     if frameEnd = 0 then
     begin
-      logger.trace('[%s.ProcessCIVMessage] Preamble found but no EOM yet', [radioModel]);
-      Break;  // No end-of-message found
+      // A frame is arriving and its FD has not landed yet -- normal.  Shown with
+      // the bytes so a frame that never completes can be told from one that is
+      // merely in flight.
+      logger.trace('[%s.ProcessCIVMessage] Preamble but no EOM yet, holding %d byte(s): %s',
+                   [radioModel, Length(FCIVBuffer), CIVDataToHex(FCIVBuffer)]);
+      Break;
     end;
 
     if frameEnd < frameStart then
@@ -1044,9 +1073,14 @@ begin
     ProcessCIVFrame(frame);
   end;
 
-  // Prevent buffer from growing too large
+  // Backstop: a buffer this size means we are holding bytes that will never
+  // form a frame.  Say so with the contents rather than dropping them quietly.
   if Length(FCIVBuffer) > 1024 then
+    begin
+    logger.Warn('[%s.ProcessCIVMessage] Discarding %d unparseable byte(s): %s',
+                [radioModel, Length(FCIVBuffer), CIVDataToHex(Copy(FCIVBuffer, 1, 64))]);
     FCIVBuffer := '';
+    end;
 end;
 
 procedure TIcomRadio.ProcessCIVFrame(frame: string);
