@@ -872,6 +872,12 @@ procedure DisplayBandMap;
 procedure DisplayLocalTime(Country: Word);
 //procedure DisplayQuickMemoryMode;
 
+// The frequency a band change to `Band` would actually tune: the last one used
+// there, or the built-in default for a band not yet visited.  Exported because
+// BandChange needs it to ask the radio whether it can transmit on that band --
+// see LOGSTUFF.RadioCanWorkBand.
+function EffectiveBandFreq(Band: BandType; Mode: ModeType): longint;
+
 procedure DisplayBandMode(Band: BandType; Mode: ModeType; UpdateRadio: boolean);
 procedure DisplayBeamHeading(Call: CallString; Grid: GridString);
 procedure DispalyGrid(Grid: GridString);

@@ -124,6 +124,12 @@ Type
    );
    TRadioCapabilitySet = set of TRadioCapability;
 
+   // One span this radio can transmit on, in Hz.
+   TRadioFreqRange = record
+      lowHz:  LongInt;
+      highHz: LongInt;
+   end;
+
    // What a radio keys for one of TR4W's prosign tokens.
    TCWProsign = record
       handled: boolean;   // True: this token IS a prosign; do not treat it as text
@@ -176,6 +182,22 @@ Type
       // same way -- see TCWProsignSet.
       CWFrame: TCWFrameRule;
       CWProsigns: TCWProsignSet;
+
+      // Does this radio have XIT over CAT at all?
+      //
+      // A FIELD rather than a member of Flags, deliberately: this has to default
+      // TRUE, and a set member cannot -- absent means false.  Worse, every
+      // DefineCapabilities assigns `Flags := [...]` wholesale, so a default
+      // added in the base constructor would be silently wiped by any family that
+      // overrides it.  That exact hazard is documented on TIcomRadio.Create and
+      // it has bitten before; CWSpeedMin/Max and CWFrame are separate fields for
+      // the same reason.
+      //
+      // TRUE for every radio unless it says otherwise.  The IC-7100 says
+      // otherwise: its $21 set is $00 and $01 with no $02, so it NAKs every XIT
+      // command -- and HamLib agrees independently (rigctl -m 3070 -u reports
+      // "Can get XIT: N", where an IC-7850 reports Y).
+      HasXIT: boolean;
    end;
 
 // Declare a radio's prosign spellings, for use in its constructor.  Reads as
@@ -317,6 +339,11 @@ Type TFactoryRadioBase = class(TObject)
       localXITOffset: integer;
       bandIndependence: boolean;
       CWSendImmediate: boolean;   // see the public property of the same idea
+
+      // Transmit coverage, learned or declared.  30 is the Icom band-segment
+      // ceiling ($1E edge numbers run 01-30) and covers any radio comfortably.
+      FCoverage: array[1..30] of TRadioFreqRange;
+      FCoverageCount: integer;
       FStartupCommandSent: boolean;   // guard for the public StartupCommand
       // Settle window for the startup command -- see STARTUP_COMMAND_SETTLE_MS.
       // FStartupArmed says the link has been seen up at least once since the
@@ -336,6 +363,29 @@ Type TFactoryRadioBase = class(TObject)
       function GetCanRecycleOnStuckHandshake: boolean; virtual;
       function GetAuthFailed: boolean; virtual;
       function BandToFreq(band: TRadioBand): LongInt;  // Map band enum to typical calling frequency
+
+      // ---- TRANSMIT COVERAGE -----------------------------------------------
+      // Which frequencies this radio can actually transmit on.
+      //
+      // WHY.  TR4W's band-up/down walks ONE fixed list for every radio
+      // (LOGSTUFF's BandChangeArray: ... 6m, 2m, 222, 432, 902 ...) and nothing
+      // knew which of those a given radio has.  On an IC-7100 -- HF, 6 m, 2 m,
+      // 70 cm -- band-up from 2 m sent 222.100 MHz, the radio ignored a
+      // frequency it cannot tune, and TR4W's band display advanced anyway
+      // (NY4I bench, 2026-08-04).
+      //
+      // RANGES IN Hz, NOT A BAND SET.  The factory's TRadioBand cannot even name
+      // 222 or 23 cm, and coverage varies by region and by fitted option -- an
+      // E-model may have 4 m; an IC-9100's 23 cm is a module.  A span in Hz says
+      // all of that without a per-model table.
+      //
+      // EMPTY MEANS NO OPINION: CoversFrequency then answers True for
+      // everything, so a radio that cannot report its coverage behaves exactly
+      // as it does today.
+      // Filling it is the DRIVER's business (protected); asking is everyone's,
+      // so the two queries are published below.
+      procedure ClearCoverage;
+      procedure AddCoverageRange(lowHz, highHz: LongInt);
 
 
 
@@ -488,6 +538,11 @@ Type TFactoryRadioBase = class(TObject)
       // SocketLock.  There is no compiler warning for this -- it cost a full
       // bench session on the Flex.  Asserted for every registered radio by
       // test/unit/uTestFlexRegistry.pas.
+      // See the coverage block above: empty means no opinion, and this answers
+      // True for everything.
+      function  CoversFrequency(hz: LongInt): boolean;
+      function  CoverageRangeCount: integer;
+
       function BaseConstructorRan: Boolean;
       procedure Disconnect; overload; virtual;
       property IsTransmitting: boolean read GetIsTransmitting;
@@ -726,6 +781,7 @@ begin
    // Stated here rather than left implicit so that intent is on the page, and
    // pinned per keying radio by test/unit/uTestCWFraming.
    FCapabilities.CWFrame := uCWFraming.CWFrameRule(0, False);
+   FCapabilities.HasXIT := True;   // assume it does; a radio that does not says so
 
    // Families override this; the base declares nothing, which means "grammar
    // not established -- pass tokens through as text".
@@ -1643,6 +1699,58 @@ end;
 function TFactoryRadioBase.BandToFreq(band: TRadioBand): LongInt;
 begin
    Result := RadioBandToFreq(band);
+end;
+
+procedure TFactoryRadioBase.ClearCoverage;
+begin
+   FCoverageCount := 0;
+end;
+
+procedure TFactoryRadioBase.AddCoverageRange(lowHz, highHz: LongInt);
+begin
+   if (lowHz <= 0) or (highHz < lowHz) then
+      begin
+      logger.Warn('[%s] Ignoring nonsense coverage range %d..%d Hz',
+                  [radioModel, lowHz, highHz]);
+      Exit;
+      end;
+   if FCoverageCount >= High(FCoverage) then
+      begin
+      logger.Warn('[%s] Coverage table full at %d ranges; ignoring %d..%d Hz',
+                  [radioModel, FCoverageCount, lowHz, highHz]);
+      Exit;
+      end;
+   Inc(FCoverageCount);
+   FCoverage[FCoverageCount].lowHz := lowHz;
+   FCoverage[FCoverageCount].highHz := highHz;
+end;
+
+function TFactoryRadioBase.CoverageRangeCount: integer;
+begin
+   Result := FCoverageCount;
+end;
+
+function TFactoryRadioBase.CoversFrequency(hz: LongInt): boolean;
+var
+   i: integer;
+begin
+   // No declared coverage = no opinion = yes.  This is what keeps every radio
+   // that cannot report its ranges behaving exactly as it did before.
+   if FCoverageCount = 0 then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   for i := 1 to FCoverageCount do
+      begin
+      if (hz >= FCoverage[i].lowHz) and (hz <= FCoverage[i].highHz) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+   Result := False;
 end;
 
 function TFactoryRadioBase.GetBand(whichVFO: TVFO): TRadioBand;

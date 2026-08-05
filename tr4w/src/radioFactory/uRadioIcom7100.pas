@@ -61,6 +61,16 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
+
+   // NO XIT.  The IC-7100's $21 set is $00 (RIT frequency) and $01 (RIT on/off)
+   // -- there is no $02 -- so it NAKs every XIT command.  Bench-proven: it
+   // refused $21 $02 once a second for the life of a session.  HamLib says the
+   // same independently: rigctl -m 3070 -u reports "Can get XIT: N" and "Can
+   // set XIT: N", where an IC-7850 (3075) reports Y for both.
+   //
+   // A fact about THIS MODEL, not about Icoms -- $21 $02 is the XIT setting on
+   // most of the family, and they go on using it.
+   FCapabilities.HasXIT := False;
 end;
 
 initialization
