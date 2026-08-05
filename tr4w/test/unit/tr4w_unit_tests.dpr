@@ -51,6 +51,8 @@ uses
    utils_file           in '..\..\src\utils\utils_file.pas',
    uWinTimer            in '..\..\src\utils\uWinTimer.pas',
    uTestWinTimer        in 'uTestWinTimer.pas',
+   uRadioConfigStore    in '..\..\src\uRadioConfigStore.pas',
+   uTestRadioConfigStore in 'uTestRadioConfigStore.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
@@ -259,6 +261,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
+   RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
 
    if RunAllSuites then
       begin
