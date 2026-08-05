@@ -373,6 +373,35 @@ begin
     bottom := 0;
   end;
 
+  // CLAMP BEFORE INDEXING.  Four separate branches above compute `bottom` and
+  // `top`, and one of them -- the centre-not-found case -- can produce a
+  // NEGATIVE bottom:
+  //
+  //     centre := abs((k - 1) div 2);
+  //     bottom := centre - (BandMapDisplayLimit div 2);
+  //
+  // With few spots on the band, centre is smaller than half the display limit
+  // and bottom goes below zero, so FiltSpotIndex[k] indexes off the front of
+  // the array.  NY4I hit it as an ERangeError right after the bandmap opened
+  // with spots arriving (2026-08-05).
+  //
+  // The guard goes HERE rather than in each branch because the invariant
+  // belongs to the loop that does the indexing: whatever the branches decide,
+  // this array may only be read within its bounds.  Fixing the one branch that
+  // was observed to overflow would leave the other three free to do the same.
+  if bottom < 0 then
+     begin
+     logger.Warn('[SpotsList.Display] bottom=%d clamped to 0 (top=%d, filtered=%d, limit=%d)',
+                 [bottom, top, FilteredSpotCount, BandMapDisplayLimit]);
+     bottom := 0;
+     end;
+  if top > FilteredSpotCount - 1 then
+     begin
+     logger.Warn('[SpotsList.Display] top=%d clamped to %d (bottom=%d, limit=%d)',
+                 [top, FilteredSpotCount - 1, bottom, BandMapDisplayLimit]);
+     top := FilteredSpotCount - 1;
+     end;
+
   tSetWindowRedraw(BandMapListBox, False);
   tLB_RESETCONTENT(BandMapListBox);
   SendMessage(BandMapListBox, LB_INITSTORAGE, k, 10000);
