@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -304,16 +304,17 @@ type
       procedure SendIcomCommand(Command: byte);
       procedure SendIcomTwoByteCommand(Command: byte; opCode: byte);
       procedure SendXMITStatusCommand;
-      procedure SendIcomExtendedVFO(bVFO: boolean);
+     { procedure SendIcomExtendedVFO(bVFO: boolean);
       procedure SendIcomExtendedMode(bVFO: boolean);
+     }
       procedure SendRITStatusCommand;
       procedure SendRITFreqCommand;
       procedure GetIcomDataStateCommand;
       procedure SetICOMRITFrequency(hz: integer);
       function MemoryKeyer(mem: integer): boolean;
       procedure ProcessIcomMode(mode: integer);
-      procedure SendIcomClearRITCommand;
-      function CalculateIcomFilterWidth: integer;
+     // procedure SendIcomClearRITCommand;
+    //  function CalculateIcomFilterWidth: integer;
       function HasCapability(cap: TRadioCapability): boolean;
       procedure SetRadioCWSpeed(speed: longint);
       procedure SetRadioFreq(Freq: longint; Mode: ModeType; VFO: char); overload;
@@ -340,7 +341,6 @@ type
       procedure CheckAndInitializePorts_ForThisRadio;
       function WriteToCATPort(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
       function WritePollRequest(const Buffer; nNumberOfBytesToWrite: DWORD): longbool;
-      function AddToOutputBuffer(Buffer: PAnsiChar; nNumberOfBytesToWrite: DWORD): longbool;
       procedure WriteBufferToCATPort(const Buffer);
       procedure OnCWByCATTimeEvent(Sender :TObject);
       procedure EnableCWBYCATTimer(ms: integer);
@@ -781,8 +781,6 @@ function IntegerToBCD(Value: DWORD): integer; // ny4i  // 4.44.5
 function Integer4ToBCD(Value: DWORD): integer; // ny4i  // 4.44.5
 function ModeTypeToNetMode(mode: ModeType): TRadioMode;
 procedure InitRadios;
-function OpenCATDebugFile(port: PortType): boolean;
-//procedure CloseCATDebugFile(port: PortType);
 
 function tPTTVIACAT(PTTOn: boolean): boolean;
 //function GetRadioFromString(RadioName: ShortString): InterfacedRadioType;
@@ -1004,32 +1002,26 @@ end;
 procedure RITClear;
 
 var
-   IntRadioType: InterfacedRadioType;
-//   SerialPort: PortType;
+   ActiveNetObj: TFactoryRadioBase;
 
 begin
-
    if ActiveRadio = RadioOne then
+      ActiveNetObj := Radio1.tFactoryObject
+   else
+      ActiveNetObj := Radio2.tFactoryObject;
+
+   if ActiveNetObj <> nil then
       begin
-      if Radio1.tFactoryObject <> nil then
-         begin
-         Radio1.tFactoryObject.RITClear(nrVFOA);
-         Exit;
-         end;
-      IntRadioType := Radio1.RadioModel;
-//      SerialPort := Radio1.tCATPortType;
+      ActiveNetObj.RITClear(nrVFOA);
       end
    else
       begin
-      if Radio2.tFactoryObject <> nil then
-         begin
-         Radio2.tFactoryObject.RITClear(nrVFOA);
-         Exit;
-         end;
-      IntRadioType := Radio2.RadioModel;
-//      SerialPort := Radio2.tCATPortType;
+      // No factory driver -- not connected, or construction was refused.  That
+      // is the same situation as having no radio, so doing nothing is correct;
+      // it is logged only so a dead RIT key can be told apart from a broken one.
+      logger.warn('[RITClear] No radio driver -- RIT clear not sent');
       end;
-
+   {
    case IntRadioType of
       TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
       TS950, TS990, TS2000, FLEX, K2, K3, K4, FTDX10, FTDX101, FTX1F, FT450, FT891, FT950, FT991, FT1200, FT2000, FTDX3000,
@@ -1056,7 +1048,7 @@ begin
             end;
          end;
       OMNI6: {KK1L: 6.73 Added OMNI6}
-         begin
+      {   begin
          // Check what radios support this and send command to clear 21 00 00 00 00 on 9700
          Exit;
          end;
@@ -1072,6 +1064,7 @@ begin
          Exit;
          end;
       end;
+      }
 end;
 
 procedure RITBumpUp;
@@ -1090,9 +1083,13 @@ begin
    if ActiveNetObj <> nil then
       begin
       ActiveNetObj.RITBumpUp;
-      Exit;
+      end
+   else
+      begin
+      // No factory driver: same as no radio.  See RITClear.
+      logger.warn('[RITBumpUp] No radio driver -- RIT bump not sent');
       end;
-   if ActiveRadio = RadioOne then
+ {  if ActiveRadio = RadioOne then
       begin
       IntRadioType := Radio1.RadioModel;
 //      SerialPort := Radio1.tCATPortType;
@@ -1105,7 +1102,7 @@ begin
 
    case IntRadioType of
       TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
-      TS950, TS990, TS2000, K2, K3, K4 {, FTDX9000}:
+      TS950, TS990, TS2000, K2, K3, K4 {, FTDX9000}{:
          begin
          ActiveRadioPtr.WriteBufferToCATPort('RU;');
          end;
@@ -1116,7 +1113,7 @@ begin
          end;
 
       IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6}    // This does not work for all Icom radios.
-         begin
+     {    begin
          // NOTE: nothing here is implemented -- the guard that used to wrap
          // these comments (IntRadioType in IcomRadiosThatSupportRIT) protected
          // no code at all, so it is gone rather than translated.
@@ -1137,6 +1134,7 @@ begin
          Exit;
          end;
       end;
+      }
 end;
 
 procedure RITBumpDown;
@@ -1155,82 +1153,78 @@ begin
    if ActiveNetObj <> nil then
       begin
       ActiveNetObj.RITBumpDown;
-      Exit;
-      end;
-
-   if ActiveRadio = RadioOne then
-      begin
-      IntRadioType := Radio1.RadioModel;
-//      SerialPort := Radio1.tCATPortType;
       end
    else
       begin
-      IntRadioType := Radio2.RadioModel;
-//      SerialPort := Radio2.tCATPortType;
+      // No factory driver: same as no radio.  See RITClear.
+      logger.warn('[RITBumpDown] No radio driver -- RIT bump not sent');
       end;
 
-   case IntRadioType of
-      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
-      TS950, TS990, TS2000, K2, K3, K4 {, FTDX9000}:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('RD;');
-         end;
-
-      FT890, FT920, FT990, FT1000, FT1000MP:
-         begin
-         Exit;
-         end;
-
-      IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6} // Add code somewhere tohandle radios that do not support 21 code.
-         begin
-         // NOTE: nothing here is implemented -- the guard that used to wrap
-         // these comments (IntRadioType in IcomRadiosThatSupportRIT) protected
-         // no code at all, so it is gone rather than translated.
-         // Not implemented yet due to issues converting the hz to BCD
-         //ActiveRadioPtr.SetICOMRITFrequency(ActiveRadioPtr.CurrentStatus.RITFreq - 10);
-         Exit;
-         end;
-
-      Orion:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('*RMR-200' + CarriageReturn);
-         Exit;
-         end;
-
-      else
-         begin
-         Exit;
-         end;
-      end;
+ //  if ActiveRadio = RadioOne then
+//      begin
+//      IntRadioType := Radio1.RadioModel;
+////      SerialPort := Radio1.tCATPortType;
+//      end
+//   else
+//      begin
+//      IntRadioType := Radio2.RadioModel;
+////      SerialPort := Radio2.tCATPortType;
+//      end;
+//
+//   case IntRadioType of
+//      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
+//      TS950, TS990, TS2000, K2, K3, K4 {, FTDX9000}:
+//         begin
+//         ActiveRadioPtr.WriteBufferToCATPort('RD;');
+//         end;
+//
+//      FT890, FT920, FT990, FT1000, FT1000MP:
+//         begin
+//         Exit;
+//         end;
+//
+//      IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6} // Add code somewhere tohandle radios that do not support 21 code.
+//         begin
+//         // NOTE: nothing here is implemented -- the guard that used to wrap
+//         // these comments (IntRadioType in IcomRadiosThatSupportRIT) protected
+//         // no code at all, so it is gone rather than translated.
+//         // Not implemented yet due to issues converting the hz to BCD
+//         //ActiveRadioPtr.SetICOMRITFrequency(ActiveRadioPtr.CurrentStatus.RITFreq - 10);
+//         Exit;
+//         end;
+//
+//      Orion:
+//         begin
+//         ActiveRadioPtr.WriteBufferToCATPort('*RMR-200' + CarriageReturn);
+//         Exit;
+//         end;
+//
+//      else
+//         begin
+//         Exit;
+//         end;
+//      end;
 end;
 
 procedure VFOBumpUp;
 
 var
-   IntRadioType: InterfacedRadioType;
-//   SerialPort: PortType;
+   ActiveNetObj: TFactoryRadioBase;
 
 begin
-
    if ActiveRadio = RadioOne then
+      ActiveNetObj := Radio1.tFactoryObject
+   else
+      ActiveNetObj := Radio2.tFactoryObject;
+
+   if ActiveNetObj <> nil then
       begin
-      if Radio1.tFactoryObject <> nil then
-         begin
-         Radio1.tFactoryObject.VFOBumpUp(nrVFOA);
-         Exit;
-         end;
-      IntRadioType := Radio1.RadioModel;
-//      SerialPort := Radio1.tCATPortType;
+      ActiveNetObj.VFOBumpUp(nrVFOA);
       end
    else
       begin
-      if Radio2.tFactoryObject <> nil then
-         begin
-         Radio2.tFactoryObject.VFOBumpUp(nrVFOA);
-         Exit;
-         end;
-      IntRadioType := Radio2.RadioModel;
-//      SerialPort := Radio2.tCATPortType;
+      // No factory driver: same as no radio.  See RITClear.
+      logger.warn('[VFOBumpUp] No radio driver -- VFO bump up not sent');
       end;
 
    // The per-model `case IntRadioType of` that sent 'UP;' here is DELETED.
@@ -1247,29 +1241,22 @@ end;
 procedure VFOBumpDown;
 
 var
-   IntRadioType: InterfacedRadioType;
-//   SerialPort: PortType;
+   ActiveNetObj: TFactoryRadioBase;
 
 begin
    if ActiveRadio = RadioOne then
+      ActiveNetObj := Radio1.tFactoryObject
+   else
+      ActiveNetObj := Radio2.tFactoryObject;
+
+   if ActiveNetObj <> nil then
       begin
-      if Radio1.tFactoryObject <> nil then
-         begin
-         Radio1.tFactoryObject.VFOBumpDown(nrVFOA);
-         Exit;
-         end;
-      IntRadioType := Radio1.RadioModel;
-//      SerialPort := Radio1.tCATPortType;
+      ActiveNetObj.VFOBumpDown(nrVFOA);
       end
    else
       begin
-      if Radio2.tFactoryObject <> nil then
-         begin
-         Radio2.tFactoryObject.VFOBumpDown(nrVFOA);
-         Exit;
-         end;
-      IntRadioType := Radio2.RadioModel;
-//      SerialPort := Radio2.tCATPortType;
+      // No factory driver: same as no radio.  See RITClear.
+      logger.warn('[VFOBumpDown] No radio driver -- VFO bump down not sent');
       end;
 
    // The per-model `case IntRadioType of` that sent 'DN;' here is DELETED.
@@ -1427,48 +1414,6 @@ begin
       end;
 end;
 
-
-function RadioObject.AddToOutputBuffer(Buffer: PAnsiChar;
-   nNumberOfBytesToWrite: DWORD): longbool;
-begin
-   //  TLogger.GetInstance.Debug('In AddToOutputBuffer');
-   //  sleep(100);
-   //  Windows.lstrcat(CommandsBuffer[0], Buffer);
-{$IF MASKEVENT}
-   Windows.CopyMemory(@CommandsBuffer[0][CommandsBufferPointer], Buffer,
-      nNumberOfBytesToWrite);
-   Inc(CommandsBufferPointer, nNumberOfBytesToWrite);
-{$ELSE}
-  if Self.tFactoryObject <> nil then
-     begin
-     logger.Trace('[AddToOutputBuffer-Network] %s',[Buffer]);
-     Self.tFactoryObject.SendToRadio(Buffer);
-     end
-  else
-     begin
-     logger.Trace('[AddToOutputBuffer-Serial] %s',[Buffer]);
-     // Take this radio's serial lock so the write cannot be interleaved with a
-     // poll cycle's read on the same port (closes the race where a short KY
-     // message lands inside a pKenwood2 IF; cycle and never keys) -- but ONLY
-     // when CW-by-CAT is in use on this radio.  For any other radio this is the
-     // same bare WriteToCATPort as master (and AddToOutputBuffer is only called
-     // on the main thread, so Self.CWByCAT cannot flip between Enter and Leave).
-     if Self.CWByCAT then
-        begin
-        EnterCriticalSection(Self.CATSerialLock);
-        end;
-     try
-        WriteToCATPort(Buffer^, nNumberOfBytesToWrite);
-     finally
-        if Self.CWByCAT then
-           begin
-           LeaveCriticalSection(Self.CATSerialLock);
-           end;
-     end;
-     end;
-{$IFEND}
-   //TLogger.GetInstance.Debug('Exiting AddToOutputBuffer');
-end;
 
 function RadioObject.WriteToCATPort(const Buffer;
    nNumberOfBytesToWrite: DWORD): longbool;
@@ -2021,7 +1966,7 @@ begin
 end;
 
 
-procedure RadioObject.SendIcomClearRITCommand;
+{procedure RadioObject.SendIcomClearRITCommand;
 begin
    tIcom11Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
    tIcom11Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
@@ -2060,7 +2005,7 @@ begin
    tIcom11Bytes[6] := Ord(ICOM_END_OF_MESSAGE_CODE);
    WriteToCATPort(tIcom11Bytes, 7);
 end; // SendIcomExtendedMode
-
+}
 procedure RadioObject.PutRadioIntoSplit;
 
 begin
@@ -2906,21 +2851,10 @@ begin
               end;
      end;
 end;
-function OpenCATDebugFile(port: PortType): boolean;
-
-begin
-
-end;
-
-
 function tPTTVIACAT(PTTOn: boolean): boolean;
 
 var
-   IntRadioType: InterfacedRadioType;
    ro: TFactoryRadioBase;
-//   SerialPort: PortType;
-   TempString: Str80;
-   WaitAnswer: cardinal;
 const
 
    FT890PTTOn =
@@ -2934,7 +2868,6 @@ const
       CHR($00) + CHR($00) + CHR($00) + CHR($00) + CHR($88);
 
 begin
-   WaitAnswer := 0;
    Result := False;
    if not tPTTViaCommand then
       begin
@@ -2947,13 +2880,11 @@ begin
       end;
    if ActiveRadio = RadioOne then
       begin
-      IntRadioType := Radio1.RadioModel;
       ro := Radio1.tFactoryObject;
 //      SerialPort := Radio1.tCATPortType;
       end
    else
       begin
-      IntRadioType := Radio2.RadioModel;
       ro := Radio2.tFactoryObject;
  //     SerialPort := Radio2.tCATPortType;
       end;
@@ -2968,130 +2899,134 @@ begin
          ro.Receive;
          end;
       Result := true;
-      Exit;
-      end;
-   case IntRadioType of
-      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940, TS950, TS990,
-      TS2000, FLEX, K2, K3, KX3, K4:
-         begin
-         if PTTOn then
-            begin
-            TempString := 'TX;';
-            DEBUGMSG('Setting Kenwood/Flex/K3/KX3/K4 to TX mode');
-            end else
-            begin
-            DEBUGMSG('Setting Kenwood/Flex/K3/KX3/K4 to RX mode');
-            TempString := 'RX;';
-            end;
-         end;
-
-      FTDX10, FTDX101, FTX1F, FT710, FT450, FT950, FT891, FT991, FT1200, FT2000,
-      FTDX3000, FTDX5000, FTDX9000:
-         begin
-         if PTTOn then
-            begin
-            TempString := 'TX1;';
-            end
-         else
-            begin
-            TempString := 'TX0;';
-            end;
-         end;
-
-      FT747GX, FT100, FT840, FT890, FT900, FT990, FT1000, FT1000MP:
-         begin
-         if PTTOn then
-            begin
-            TempString := FT890PTTOn;
-            end else
-            begin
-            TempString := FT890PTTOff;
-            end;
-         end;
-
-      FT736R, FT817, FT818, FT847 {, FT857, FT897}:
-         begin
-         if PTTOn then
-            begin
-            TempString := FT817PTTOn;
-            end else
-            begin
-            TempString := FT817PTTOff;
-            end;
-         end;
-
-      FT920, FT767:
-         begin
-         logger.debug('FT920 or FT767 do not support PTT via CAT commands');
-         Exit;
-         end;
-  
-
-    IC78..IC9700:
-       begin
-          TempString := AnsiChar($FE) + CHR($FE) + CHR(Radio1.ReceiverAddress) + CHR($E0) + CHR($1C) + CHR($00) + CHR($00) + CHR($FD);
-          if PTTOn then
-             begin
-             logger.debug('Setting Icom to TX');
-             TempString[7] := AnsiChar($01);
-             end
-          else
-             begin
-             logger.debug('Setting Icom to RX');
-             end;
-          WaitAnswer := 14;
-       end;
-
-      //      IC78..IC9700, OMNI6: Exit;
-
-      Orion:
-         begin
-         if PTTOn then
-            begin
-            TempString := '*TK' + CarriageReturn;
-            end
-         else
-            begin
-            TempString := '*TU' + CarriageReturn;
-            end;
-         end;
-      else
-         begin
-         logger.warn('Radio model does not support TX/RX commands');
-         Exit;
-         end;
-      end;
-
-   //  CPUKeyer.AddSerialPortString(SerialPort, TempString);
-   ActiveRadioPtr.WriteToCATPort(TempString[1], length(TempString));
-   if WaitAnswer <> 0 then
+      end
+   else
       begin
-      ReadFromCOMPort(WaitAnswer, @Radio1);
+      // No factory driver: same as no radio, so PTT is not sent.
+      logger.warn('[tPTTVIACAT] No radio driver -- PTT %s not sent',
+                  [BoolToStr(PTTOn, True)]);
       end;
-   Result := True;
+
+   //case IntRadioType of
+//      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940, TS950, TS990,
+//      TS2000, FLEX, K2, K3, KX3, K4:
+//         begin
+//         if PTTOn then
+//            begin
+//            TempString := 'TX;';
+//            DEBUGMSG('Setting Kenwood/Flex/K3/KX3/K4 to TX mode');
+//            end else
+//            begin
+//            DEBUGMSG('Setting Kenwood/Flex/K3/KX3/K4 to RX mode');
+//            TempString := 'RX;';
+//            end;
+//         end;
+//
+//      FTDX10, FTDX101, FTX1F, FT710, FT450, FT950, FT891, FT991, FT1200, FT2000,
+//      FTDX3000, FTDX5000, FTDX9000:
+//         begin
+//         if PTTOn then
+//            begin
+//            TempString := 'TX1;';
+//            end
+//         else
+//            begin
+//            TempString := 'TX0;';
+//            end;
+//         end;
+//
+//      FT747GX, FT100, FT840, FT890, FT900, FT990, FT1000, FT1000MP:
+//         begin
+//         if PTTOn then
+//            begin
+//            TempString := FT890PTTOn;
+//            end else
+//            begin
+//            TempString := FT890PTTOff;
+//            end;
+//         end;
+//
+//      FT736R, FT817, FT818, FT847 {, FT857, FT897}:
+//         begin
+//         if PTTOn then
+//            begin
+//            TempString := FT817PTTOn;
+//            end else
+//            begin
+//            TempString := FT817PTTOff;
+//            end;
+//         end;
+//
+//      FT920, FT767:
+//         begin
+//         logger.debug('FT920 or FT767 do not support PTT via CAT commands');
+//         Exit;
+//         end;
+//
+//
+//    IC78..IC9700:
+//       begin
+//          TempString := AnsiChar($FE) + CHR($FE) + CHR(Radio1.ReceiverAddress) + CHR($E0) + CHR($1C) + CHR($00) + CHR($00) + CHR($FD);
+//          if PTTOn then
+//             begin
+//             logger.debug('Setting Icom to TX');
+//             TempString[7] := AnsiChar($01);
+//             end
+//          else
+//             begin
+//             logger.debug('Setting Icom to RX');
+//             end;
+//          WaitAnswer := 14;
+//       end;
+//
+//      //      IC78..IC9700, OMNI6: Exit;
+//
+//      Orion:
+//         begin
+//         if PTTOn then
+//            begin
+//            TempString := '*TK' + CarriageReturn;
+//            end
+//         else
+//            begin
+//            TempString := '*TU' + CarriageReturn;
+//            end;
+//         end;
+//      else
+//         begin
+//         logger.warn('Radio model does not support TX/RX commands');
+//         Exit;
+//         end;
+//      end;
+
+   // The per-model `case` above built TempString and this sent it.  Both are
+   // gone: with the case commented out nothing assigns TempString, and a local
+   // Str80 is NOT initialised -- its length byte is whatever was on the stack,
+   // so this line would have pushed 0..255 bytes of stack contents at the CAT
+   // port and then returned True as though PTT had been keyed.
 end;
 
-function RadioObject.CalculateIcomFilterWidth: integer;
-begin
-   Result := 0;
-   case tIcomFilterWidth of             // Not set in CFG so send current value
-      0: begin
-         if Icom_Filter_Width > 0 then     // this is the module global stored fromthe rig message in uRadioPolling
-            begin
-            Result := Icom_Filter_Width;  // n4af 4.43.4    tIcomFilterWidth
-            end
-         else
-            begin
-            Result := 1;       // Default to 1 if no CFG set and we do not have a value from the radio. We cannot send 0 to some radios as they reject the command. Others handle the zero though.
-            end;
-         end;
-      1..3: Result := tIcomFilterWidth;
-      else
-         begin
-         Result := 0;
-         end;
-      end; // case
-end;
+//function RadioObject.CalculateIcomFilterWidth: integer;
+//begin
+//   Result := 0;
+//   case tIcomFilterWidth of             // Not set in CFG so send current value
+//      0: begin
+//         if Icom_Filter_Width > 0 then     // this is the module global stored fromthe rig message in uRadioPolling
+//            begin
+//            Result := Icom_Filter_Width;  // n4af 4.43.4    tIcomFilterWidth
+//            end
+//         else
+//            begin
+//            Result := 1;       // Default to 1 if no CFG set and we do not have a value from the radio. We cannot send 0 to some radios as they reject the command. Others handle the zero though.
+//            end;
+//         end;
+//      1..3: Result := tIcomFilterWidth;
+//      else
+//         begin
+//         Result := 0;
+//         end;
+//      end; // case
+//end;
 
 
 procedure InitRadios;
