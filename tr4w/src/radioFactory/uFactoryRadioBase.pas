@@ -400,7 +400,21 @@ Type TFactoryRadioBase = class(TObject)
       // so a future radio with the same idea can implement it honestly.
       procedure ApplyDataModeID(id: integer); virtual;
 
-      procedure SendStartupCommand; virtual;
+      procedure SendStartupCommand;
+
+      // Could THIS radio's wire format carry the operator's startup command?
+      //
+      // The command is free text from the config, sent raw.  That is right --
+      // it exists so an operator can send something TR4W knows nothing about --
+      // but "raw" should not mean "unexamined": a K3's 'KY <;' left configured
+      // when the radio is swapped for an IC-7100 puts five bytes on a CI-V bus
+      // that can never be part of a frame, in silence (NY4I, 2026-08-05).
+      //
+      // Base has no opinion, which keeps every radio's existing behaviour.  A
+      // family whose wire format is checkable overrides this -- see TIcomRadio.
+      // `reason` is for the log, so the operator is told WHAT is wrong with it.
+      function StartupCommandIsSendable(const cmd: string;
+                                        out reason: string): boolean; Virtual;
 
       // Forget that the startup command was sent, so the next
       // SendStartupCommand fires again.  Called when the LINK DROPS: a radio
@@ -807,6 +821,8 @@ begin
 end;
 
 procedure TFactoryRadioBase.SendStartupCommand;
+var
+   reason: string;
 begin
    // Once per link-up (RearmStartupCommand re-arms it when the link drops, so
    // a power-cycled radio gets it again).  The two transports reach "connected" at different
@@ -838,9 +854,29 @@ begin
       Exit;
       end;
 
+   if not StartupCommandIsSendable(StartupCommand, reason) then
+      begin
+      // WARN, not silence: the operator configured this and it is NOT going
+      // out.  FStartupCommandSent is set so it is said once per link-up rather
+      // than on every poll cycle.
+      logger.Warn('[%s] Startup command NOT sent -- %s: %s',
+                  [rigLabel, reason, StartupCommand]);
+      FStartupCommandSent := True;
+      Exit;
+      end;
+
    logger.Info('[%s] Sending startup command: %s', [rigLabel, StartupCommand]);
    Self.SendToRadio(StartupCommand);
    FStartupCommandSent := True;
+end;
+
+function TFactoryRadioBase.StartupCommandIsSendable(const cmd: string;
+                                                    out reason: string): boolean;
+begin
+   // No opinion: this radio's wire format is not checkable here, so whatever
+   // the operator configured goes out exactly as it always did.
+   reason := '';
+   Result := True;
 end;
 
 function TFactoryRadioBase.CWIsFactoryOwned: Boolean;

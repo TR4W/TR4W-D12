@@ -103,6 +103,7 @@ type
     FInitialQueryPending: Boolean; // True after $19 sent; triggers $03/$04 on $19 response
     FFirstMessage: Boolean;        // True until first valid frame received; triggers initial VFO/mode queries
     FTransceiverIDQueried: Boolean; // True once $19 $00 has been sent for this connection (see QueryTransceiverIDOnce)
+    FBandEdgesQueried: Boolean;    // True once $02 has been sent for this connection (see QueryBandEdgesOnce)
     FLastRxByteTick: DWORD;        // GetTickCount when serial RX bytes last arrived (bus-quiet gating)
     FPollPhase: Integer;            // Rotates through query groups to avoid flooding radio
     FLastSetCWSpeedTick: DWORD;   // GetTickCount at last SetCWSpeed call — suppresses stale echoes
@@ -114,6 +115,14 @@ type
     // One-shot $19 $00 transceiver-ID query, triggered by the FIRST mode
     // response of the connection rather than the connect burst itself.
     procedure QueryTransceiverIDOnce;
+
+    // One-shot $02 band-edge query.  PROBE, NY4I 2026-08-05 -- see the
+    // implementation for what it is for and what it is not yet wired to.
+    procedure QueryBandEdgesOnce;
+
+    // A CI-V radio can say whether a startup command is even addressable to it.
+    function StartupCommandIsSendable(const cmd: string;
+                                      out reason: string): boolean; override;
 
     // Serial bus discipline -- called only by TCIVSendThread.DrainQueues.
     procedure WaitForBusQuiet;
@@ -355,6 +364,7 @@ const
   CIV_EOM = #$FD;
 
   // CI-V Commands
+  CIV_CMD_BAND_EDGES = #$02;   // read band edge frequencies -- see QueryBandEdgesOnce
   CIV_CMD_READ_FREQ = #$03;
   CIV_CMD_READ_MODE = #$04;
   CIV_CMD_SET_FREQ = #$05;
@@ -554,6 +564,79 @@ begin
   FTransceiverIDQueried := True;
   SendToRadio(BuildCIVCommand(Ord(CIV_CMD_TRANSCEIVER_ID),
                               CIV_SUBCMD_TRANSCEIVER_ID_READ));
+end;
+
+// Ask the radio for its BAND EDGE FREQUENCIES ($02), once per connection.
+//
+// WHY.  TR4W's band-up/down walks one fixed list for every radio (LOGSTUFF's
+// BandChangeArray: ... 6m, 2m, 222, 432, 902 ...) and nothing knows which of
+// those a given radio actually has.  On an IC-7100 -- HF, 6 m, 2 m, 70 cm --
+// band-up from 2 m therefore sends 222.100 MHz, the radio ignores a frequency
+// it cannot tune, and TR4W's own band display advances anyway.  Bench, NY4I
+// 2026-08-04: the wire showed FE FE 88 E0 05 00 00 10 22 02 FD twice.
+//
+// WHY ASK THE RADIO rather than tabulate it.  Coverage is per radio AND per
+// region: an E-model may have 4 m where a US model does not, and options like
+// the IC-9100's 23 cm module change it again.  HamLib's rig_caps carries a
+// curated table per model (rigctl -u), but the radio in front of the operator
+// is the authority.  This command is in the IC-718 manual and others.
+//
+// THIS IS A PROBE.  Nothing consumes the answer yet: it is logged so we can see
+// what a real 7100 returns -- one pair for the current band, or a list -- before
+// designing the coverage capability around it.  An Icom that does not implement
+// $02 answers NG, which is harmless and equally informative.
+//
+// Timing copies QueryTransceiverIDOnce deliberately: fired from the first mode
+// response, when the connect burst is over and the bus is quiet.  A CI-V bus
+// collision here would corrupt the very response we are trying to read.
+// Every byte TR4W sends a CI-V radio belongs to a frame: FE FE <to> <from>
+// <cmd> ... FD.  A startup command that is not one cannot mean anything to the
+// radio, and worse, it is not inert -- the rig echoes it back on a half-duplex
+// bus, so the reader has to resynchronise past bytes that can never begin a
+// frame.  Bench, NY4I 2026-08-05: an IC-7100 configured with a leftover K3
+// startup command put 4B 59 20 3C 3B ('KY <;') on the bus at every connect, and
+// the driver logged "No preamble found in buffer" while it recovered.
+//
+// So the Icoms refuse it and say why, rather than transmitting it in silence.
+// The check is FRAMING ONLY: addresses and command bytes are the operator's
+// business -- the point of a raw startup command is to send something TR4W does
+// not know about.
+function TIcomRadio.StartupCommandIsSendable(const cmd: string;
+                                             out reason: string): boolean;
+begin
+   reason := '';
+   Result := True;
+
+   // 6 bytes is the shortest legal frame: FE FE <to> <from> <cmd> FD.
+   if Length(cmd) < 6 then
+      begin
+      reason := 'shorter than the smallest CI-V frame (FE FE <to> <from> <cmd> FD)';
+      Result := False;
+      Exit;
+      end;
+
+   if (cmd[1] <> #$FE) or (cmd[2] <> #$FE) then
+      begin
+      reason := 'not a CI-V frame -- must begin FE FE';
+      Result := False;
+      Exit;
+      end;
+
+   if cmd[Length(cmd)] <> #$FD then
+      begin
+      reason := 'not a CI-V frame -- must end FD';
+      Result := False;
+      Exit;
+      end;
+end;
+
+procedure TIcomRadio.QueryBandEdgesOnce;
+begin
+  if FBandEdgesQueried then
+    Exit;
+  FBandEdgesQueried := True;
+  logger.Info('[%s] Probing band edges ($02)', [radioModel]);
+  SendToRadio(BuildCIVCommand(Ord(CIV_CMD_BAND_EDGES), ''));
 end;
 
 function TIcomRadio.SupportsDataMode: Boolean;
@@ -970,6 +1053,8 @@ procedure TIcomRadio.ProcessCIVFrame(frame: string);
 var
   command: Byte;
   data: string;
+  edgeIx: integer;   // $02 band-edge probe: walk position
+  pairNo: integer;   // $02 band-edge probe: pairs decoded
   freq: LongInt;
   modeNum: Byte;
   radioMode: TRadioMode;
@@ -1258,6 +1343,7 @@ begin
     $04:  // Read mode response
       begin
         QueryTransceiverIDOnce;   // first mode response = connect burst done, bus quiet
+        QueryBandEdgesOnce;       // PROBE -- see the implementation
         // IC-9700 (FMainBandProcessingOnly): the radio pushes mode changes as $04 transceive.
         // The $04 data covers only the active VFO and cannot distinguish A from B.
         // Use its arrival as a trigger to refresh both VFOs via explicit $25/$26 queries.
@@ -1379,6 +1465,7 @@ begin
       // Standard format: <freq5> <mode> <filter>
       begin
         QueryTransceiverIDOnce;   // first mode response = connect burst done, bus quiet
+        QueryBandEdgesOnce;       // PROBE -- see the implementation
         logger.Debug('[%s] $26 response received, data len=%d, extended=%s',
            [radioModel, Length(data), BoolToStr(FSupportsExtendedVFOBCommands, True)]);
         if FSupportsExtendedVFOBCommands then
@@ -1595,6 +1682,37 @@ begin
                          [radioModel, freq, GetTickCount - FLastSetCWSpeedTick]);
             end;
         end;
+      end;
+
+    Ord(CIV_CMD_BAND_EDGES):  // $02 -- band edge frequencies (PROBE, see QueryBandEdgesOnce)
+      begin
+        // FORMAT, from the IC-718 manual and others: pairs of band edges, each
+        //   5 bytes lower edge | $2D separator | 5 bytes higher edge
+        // with the frequency bytes in the same little-endian BCD as $03/$05.
+        //
+        // How MANY pairs come back is exactly what this probe is here to find
+        // out -- one for the current band, or the whole band plan.  So log the
+        // raw bytes always, then decode as many complete 11-byte groups as
+        // arrived rather than assuming a count.
+        logger.Info('[%s] Band edges ($02) raw: %s', [radioModel, CIVDataToHex(data)]);
+        edgeIx := 1;
+        pairNo := 0;
+        while edgeIx + 10 <= Length(data) do
+          begin
+          Inc(pairNo);
+          logger.Info('[%s] Band edge %d: %d Hz .. %d Hz  (separator $%.2x)',
+                      [radioModel, pairNo,
+                       BCDToFreq(Copy(data, edgeIx, 5)),
+                       BCDToFreq(Copy(data, edgeIx + 6, 5)),
+                       Ord(data[edgeIx + 5])]);
+          Inc(edgeIx, 11);
+          end;
+        if pairNo = 0 then
+          begin
+          logger.Info('[%s] Band edges ($02): %d data bytes, no complete 11-byte pair -- ' +
+                      'the format differs from the IC-718 manual on this radio',
+                      [radioModel, Length(data)]);
+          end;
       end;
 
     Ord(CIV_CMD_TRANSCEIVER_ID):  // $19 -- ID response ($19 $00 sent once on first valid frame)
