@@ -34,6 +34,10 @@
 # Delphi history and backups
 __history/
 *.~*
+# The IDE's previous-version copy, rewritten on every save.  One of these
+# (LOGRADIO.$$$) was tracked and showed as modified forever, with 600-line
+# diffs that were pure noise against the .PAS beside it.
+*.$$$
 
 # Castalia statistics file
 *.stat.gitignore
