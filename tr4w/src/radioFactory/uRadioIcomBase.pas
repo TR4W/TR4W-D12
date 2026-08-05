@@ -455,24 +455,6 @@ begin
   // IcomRadiosThatSupport* typesets).
   DefineCapabilities;
 
-  // FAMILY-WIDE: flushing the CW buffer mid-message wrecks CW timing on a CI-V
-  // radio, because CW-by-CAT goes out on the rate-limited send queue and an
-  // abort-and-requeue mangles the inter-element spacing.  Replaces LOGRADIO's
-  // `RadioModel in ICOMRadios` test at LOGSUBS1:302 (ny4i Issue 145).
-  //
-  // Declared on the BASE, so all 28 Icoms inherit it -- which matches ICOMRadios
-  // (IC78..IC9700) exactly, with one harmless difference: TTenTecOmni6Radio
-  // descends from TIcomRadio and so inherits the flag, while OMNI6 sits one enum
-  // slot past IC9700 and is NOT in ICOMRadios.  Unobservable either way -- the
-  // flag is only consulted while CW-by-CAT is active, and the Omni VI has no
-  // CW-by-CAT -- and it is right by mechanism, the Omni VI being a CI-V radio.
-  //
-  // This MUST run AFTER DefineCapabilities: every DefineCapabilities assigns
-  // `FCapabilities.Flags := [...]` (a full replacement), so an Include placed
-  // earlier in this constructor is silently wiped -- which is exactly the bug
-  // this line used to have, and why uTestIcomRegistry now asserts the flag.
-  Include(FCapabilities.Flags, rcCWFlushDisruptsTiming);
-
   // ---- CW-by-CAT framing, FAMILY-WIDE (was uCWFraming's `IC78..IC9700:` arm) --
   // 28 bytes per $17 send.  The legacy code TRUNCATED at 28 and dropped the rest
   // -- it never looped -- so a longer message lost its tail silently; stating it
@@ -523,7 +505,8 @@ begin
   // The CW FRAME RULE and prosign dialect are deliberately NOT set here.  This
   // method is replaced wholesale by every subclass override, so a family-wide
   // value must be assigned in the CONSTRUCTOR, after DefineCapabilities returns
-  // -- same hazard as rcCWFlushDisruptsTiming.  See the note there.
+  // -- the same hazard that made the retired rcCWFlushDisruptsTiming Include
+  // silently do nothing when it sat earlier in this constructor.
 end;
 
 destructor TIcomRadio.Destroy;

@@ -96,22 +96,6 @@ Type
       rcPlayDVK,       // can play a recorded voice message (DVK) over CAT.
                        //   Replaces LOGRADIO's RadioSupportsPlayDVK.  Same
                        //   config-versus-capability split as rcCWByCAT.
-      rcCWFlushDisruptsTiming,
-                       // Flushing the CW buffer mid-message WRECKS this radio's
-                       //   CW timing, so callers must not flush while CW-by-CAT is
-                       //   in progress.  Replaces LOGRADIO's `RadioModel in
-                       //   ICOMRadios` test at LOGSUBS1:302 (ny4i Issue 145,
-                       //   "Don't do this for Icom radios. It messes up the times
-                       //   of CW Messages").
-                       //
-                       //   MECHANISM, NOT VENDOR.  It is true of the Icoms because
-                       //   CW-by-CAT goes out on the rate-limited CI-V send queue
-                       //   (~25ms/command -- the same queue behind
-                       //   honorsFreqPollRate := False), so an abort-and-requeue
-                       //   mangles the inter-element timing.  A radio keyed by
-                       //   WinKeyer or the CPU keyer has no such queue and flushing
-                       //   is correct for it.  Named for the mechanism so a future
-                       //   non-Icom with a queued keyer can declare it honestly.
       rcCWSpeedSync,   // CW keyer speed can be pushed to the radio so its own
                        //   keyer follows TR4W's speed.  Replaces LOGRADIO's
                        //   RadioSupportsCWSpeedSync -- a WIDER set than
@@ -1692,7 +1676,7 @@ const
    // the new one.
    CapabilityNames: array[TRadioCapability] of string =
       ('ReadVFOB', 'ReadRIT', 'ReadSplit', 'ReadTXStatus', 'DataMode', 'CWByCAT',
-       'PlayDVK', 'CWFlushDisruptsTiming', 'CWSpeedSync',
+       'PlayDVK', 'CWSpeedSync',
        'SharedRITXITOffset');
 var
    c: TRadioCapability;

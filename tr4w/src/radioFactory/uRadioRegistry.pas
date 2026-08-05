@@ -120,7 +120,6 @@ const
    rcDataMode           = uFactoryRadioBase.rcDataMode;
    rcCWByCAT            = uFactoryRadioBase.rcCWByCAT;
    rcPlayDVK            = uFactoryRadioBase.rcPlayDVK;
-   rcCWFlushDisruptsTiming = uFactoryRadioBase.rcCWFlushDisruptsTiming;
    rcCWSpeedSync        = uFactoryRadioBase.rcCWSpeedSync;
    rcSharedRITXITOffset = uFactoryRadioBase.rcSharedRITXITOffset;
 
