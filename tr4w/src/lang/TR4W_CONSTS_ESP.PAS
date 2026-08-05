@@ -315,7 +315,7 @@
     '# QSO numero   % database name    ~ GM/GA/GE         : Activa teclado CW'#13 +
     '[ RST prompt   ^ half space       ] repite RST envi  @ Call window contents'#13 +
     '$ GM + name    | nombre rcbdoe    \ Mi indicativo    } partial corrected call'#13 +
-    '^F WPM+2  ^S WPM-2  + AR  < SK  = BT  ! SN  & AS     ) ultim QSO''s call'#13 +
+    '^F WPM+2 ^S WPM-2 + AR < SK = BT ! SN & MYSTATE      ) ultim QSO''s call'#13 +
     'Carateres de control del programa, pulse Control-P antes del caracter de control.';
 
   TC_CQFUNCTIONKEYMEMORYSTATUS          = 'TECLA FUNCION CQ ESTADO MEMORIA';
