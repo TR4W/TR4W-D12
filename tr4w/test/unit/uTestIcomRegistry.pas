@@ -196,7 +196,6 @@ begin
          // the `Flags := [...]` full replacement there silently wiped it --
          // every Icom answered False and the LOGSUBS1 Issue-145 guard never
          // fired.  No test covered it, so nothing failed.
-         Compare(rcCWFlushDisruptsTiming, True, 'CWFlush');
          if not (m in BenchProvenDivergences) then
             begin
             Compare(rcReadSplit, not (InModelList(m, LEGACY_SPLIT_SET_ONLY)), 'Split');

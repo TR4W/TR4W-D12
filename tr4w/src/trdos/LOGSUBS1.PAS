@@ -299,37 +299,27 @@ begin
       else if pos(ControlD, Message) = 0 then
       begin
         //          wkWaitForChainablemessage := True;
-        // A new function-key message must first stop whatever is still going
-        // out.  BENCH THIS -- see below; it is the change under test.
+        // A new function-key message first stops whatever is still going out.
         //
-        // This used to skip the flush entirely when the active radio declared
-        // rcCWFlushDisruptsTiming, which every Icom does (uRadioIcomBase.Create,
-        // family-wide).  ny4i Issue 145: "Don't do this for Icom radios.  It
-        // messes up the times of CW Messages."
+        // This used to be skipped entirely when the active radio declared
+        // rcCWFlushDisruptsTiming, which every Icom did -- ny4i Issue 145,
+        // "Don't do this for Icom radios.  It messes up the times of CW
+        // Messages."  The cost was measured on an IC-7100 (NY4I, 2026-08-04):
+        // F9 pressed 1.05 s into an F1 message neither stopped it nor keyed
+        // until it finished, because FlushCWBuffer never ran and so no StopCW
+        // was ever sent.
         //
-        // The cost of that skip was measured on an IC-7100 (NY4I, 2026-08-04):
-        // F9 pressed 1.05 s into an F1 message did not stop it, and then keyed
-        // AFTER it finished.  The log shows why -- no StopCW between the two
-        // sends, because FlushCWBuffer never ran:
+        // The skip predated the 2026-08-01 K3 fix in TCWKeyerCAT.Flush.  Until
+        // then Flush fired a keyer abort before EVERY function-key message,
+        // including with the radio sitting idle -- on a rate-limited CI-V send
+        // queue that is exactly what would wreck message timing.  Flush now
+        // aborts ONLY when CWByCAT_Sending is true, so the mechanism Issue 145
+        // worked around was already gone at its source.
         //
-        //   54.767  Setting tmrCWByCAT timer to 7429 ms
-        //   54.767  [Icom IC-7100.SendCW] Sending CW: "TU W8UH TEST"
-        //   55.818  [FunctionKeysWindow] MOUSE CLICK on F9 received
-        //   55.823  [Icom IC-7100.SendCW] Sending CW: "?"
-        //
-        // WHY THE SKIP LOOKS OBSOLETE.  It predates the 2026-08-01 K3 fix in
-        // TCWKeyerCAT.Flush.  Until then Flush fired a keyer abort before EVERY
-        // function-key message, including when the radio was sitting idle -- and
-        // on a rate-limited CI-V send queue that is exactly what would "mess up
-        // the times of CW Messages".  Flush now aborts ONLY when
-        // CWByCAT_Sending is true, so the mechanism Issue 145 was working around
-        // is gone at its source, and the skip costs only the abort.
-        //
-        // rcCWFlushDisruptsTiming is deliberately still DECLARED and still
-        // asserted by uTestIcomRegistry, but is no longer consulted anywhere: if
-        // the bench shows Issue 145's timing problem returning, restoring the
-        // condition here is the one-line revert.  If it does not, the capability
-        // goes with a follow-up commit.
+        // BOTH HALVES BENCH-VERIFIED on the IC-7100 (NY4I, 2026-08-04):
+        // interrupting works, and a plain F1 keys clean -- "the CW sent by the
+        // Icom 7100 sounded 100% accurate".  rcCWFlushDisruptsTiming was
+        // retired on that evidence.
         FlushCWBuffer;
       end;
     end;
