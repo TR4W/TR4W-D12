@@ -57,8 +57,7 @@ uses
   // tCabrilloFreqString / tCabrilloModeString + per-field formatters (extracted from this unit, see uCabrilloFormat.pas)
   uCabrilloExchange,
   // #998 capstone: FormatCabrilloExchange (the case ActiveExchange MYEX/HISEX builder, extracted + unit-tested)
-  uSuperCheckPartialFileUpload,
-  Dialogs;
+  uSuperCheckPartialFileUpload;
 
 type
   RateSheetType = array [ 1 .. 3, 0 .. 23, BandType, CW .. Both ] of integer;

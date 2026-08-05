@@ -19,10 +19,12 @@ unit uWSJTX;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, IdComponent, IdUDPBase, IdUDPServer, IdTCPServer, IdUDPClient,
+  // Graphics, Controls, Forms, Dialogs and StdCtrls were listed here and
+  // never referenced -- five VCL units linked by a UDP listener.
+  Windows, Messages, SysUtils, Variants, Classes,
+  IdComponent, IdUDPBase, IdUDPServer, IdTCPServer, IdUDPClient,
     IdContext,
-  IdBaseComponent, IdSocketHandle, IdGlobal, IdStackConsts, StdCtrls,
+  IdBaseComponent, IdSocketHandle, IdGlobal, IdStackConsts,
   NetworkMessageUtils, DateUtils, StrUtils, LOGRADIO, IdThreadSafe, IdThread
   ;
 

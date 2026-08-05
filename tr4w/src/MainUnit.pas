@@ -132,7 +132,6 @@ uses
   Tree,
   SysUtils,
   StrUtils,
-  Dialogs,
   ZoneCont,
   classes,
   IdGlobal,
@@ -140,7 +139,6 @@ uses
   uDXLabPathfinder,
   Math,
   Log4D,
-  Controls,
   uFactoryRadioBase,
   uRadioBand,
   uExternalLogger,
@@ -7907,8 +7905,6 @@ end; // of ParseADIFRecord
 
 procedure ImportFromADIF;
 var
-  openDlg: TOpenDialog;
-  buttonSelected: integer;
   adif: TextFile;
   adifFileName: string;
   sBuffer: string;
@@ -7939,42 +7935,42 @@ begin
   { This is a total rewrite of the ADIF import processing. - NY4I 2020 Jul 2
   }
   FoundEOH := false;
-  try
-    openDlg := TOpenDialog.Create(nil);
-    openDlg.InitialDir := GetCurrentDir;
-    openDlg.Options := [ofFileMustExist, ofHideReadOnly, ofEnableSizing];
-    openDlg.Filter := 'ADIF (*.adi, *.adif)|*.adi;*.adif';
-    openDlg.FilterIndex := 1;
-    if openDlg.Execute then
-    begin // File was selected in openDlg.FileName
-      adifFileName := openDlg.FileName;
-      if QSOTotals[AllBands, Both] > 0 then
-      begin
-        buttonSelected := MessageDlg(TC_APPENDIMPORTEDQSOSTOCURRENTLOG
-          , mtConfirmation
-          , [mbYes, mbNo]
-          , 0
-          );
-        if buttonSelected = mrNo then
+  // TR4W's own GetOpenFileNameA wrapper, not VCL's TOpenDialog.  This restores
+  // the house pattern that was here before -- it survived in comments at the
+  // ProcessMenu call site -- and is the last thing keeping Vcl.Dialogs linked.
+  //
+  // The filter is a DOUBLE-NUL terminated pair of C strings, which is what
+  // GetOpenFileName wants: description#0patterns#0#0.  (The commented original
+  // ended with a single #0; that is the one thing not copied verbatim.)
+  Windows.ZeroMemory(@TR4W_ADIF_FILENAME, SizeOf(TR4W_ADIF_FILENAME));
+  if not OpenFileDlg(nil, tr4whandle,
+                     'ADIF (*.adi, *.adif)'#0'*.adi;*.adif'#0#0,
+                     TR4W_ADIF_FILENAME,
+                     OFN_FILEMUSTEXIST or OFN_HIDEREADONLY or OFN_ENABLESIZING) then
+     begin
+     Exit;   // operator cancelled
+     end;
+  adifFileName := string(AnsiString(PAnsiChar(@TR4W_ADIF_FILENAME[0])));
+
+  if QSOTotals[AllBands, Both] > 0 then
+     begin
+     // YesOrNo is MessageBoxA, so it answers with Win32 IDYES/IDNO.
+     if YesOrNo(tr4whandle, TC_APPENDIMPORTEDQSOSTOCURRENTLOG) = IDNO then
         begin
-          exit;
+        Exit;
         end;
-      end;
-    end;
-  finally
-    openDlg.Free;
-  end;
+     end;
 
   if not FileExists(adifFileName) then
   begin
-    MessageDlg({TC_IMPORTFILENOTFOUND} 'The import file is not available' + ' '
-      + adifFileName, mtError, [mbOK], 0);
+    ShowMessage({TC_IMPORTFILENOTFOUND} 'The import file is not available' + ' '
+      + adifFileName);
     exit;
   end;
 
   if not OpenLogFile then
   begin
-    MessageDlg({TC_CANNOTOPENLOG} 'Cannot open log file', mtError, [mbOK], 0);
+    ShowMessage({TC_CANNOTOPENLOG} 'Cannot open log file');
 
     exit;
   end;
@@ -9470,7 +9466,11 @@ begin
     If the user agrees to convert, back up the original file, then
     rename it with a version-tagged extension so the conversion reads it. }
   ansiMsg := AnsiString('This log is version ' + sVersion + '. Would you like to convert it to ' + LOGVERSION + '?');
-  if YesOrNo(0, PAnsiChar(ansiMsg)) = mrNo then
+  // IDNO, not VCL's mrNo.  They are both 7 in D12 (System.UITypes: mrNo = idNo
+  // = 7), so this comparison was correct by coincidence rather than by intent;
+  // YesOrNo returns MessageBoxA's ID and should be compared with the Win32
+  // constant.  Behaviour is unchanged -- verified against the D12 RTL source.
+  if YesOrNo(0, PAnsiChar(ansiMsg)) = IDNO then
      begin
      logger.Fatal('User opted to not upgrade log format');
      Halt;

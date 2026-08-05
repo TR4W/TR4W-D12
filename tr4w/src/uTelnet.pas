@@ -24,7 +24,8 @@ unit uTelnet;
 interface
 
 uses
-  ClipBrd,
+  // ClipBrd (Vcl.ClipBrd) was listed here and never referenced -- there is no
+  // Clipboard use anywhere in this unit.  Removed with the rest of the VCL.
   uCTYDAT,
   uGradient,
   PostUnit,
