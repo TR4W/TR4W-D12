@@ -188,6 +188,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
         <DCCReference Include="src\uRadioConfigApply.pas"/>
         <DCCReference Include="src\ui\fmx\uFMXCoexist.pas"/>
         <DCCReference Include="src\ui\fmx\uFMXSpikeForm.pas"/>
+        <DCCReference Include="src\ui\fmx\uPrefsForm.pas"/>
         <DCCReference Include="src\radioFactory\uFlexDiscovery.pas"/>
         <DCCReference Include="src\uDialogs.pas"/>
         <DCCReference Include="src\Version.pas"/>

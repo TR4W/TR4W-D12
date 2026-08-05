@@ -503,6 +503,7 @@ uses
 {$IFEND}
 
   uFMXSpikeForm,    // SPIKE ONLY -- the FMXTEST command; remove with the spike
+  uPrefsForm,       // the PREF command -- the radio Preferences window
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
   uHamScore,        // Issue #783 -- HamScoreResyncFromScratch (Tools menu)
@@ -7490,7 +7491,10 @@ begin
     // Appended out of alphabetical order deliberately: AnsiIndexText does not
     // care about order, and slotting it after 'EXIT' would renumber seven case
     // arms below, where an off-by-one silently fires the WRONG command.
-    'FMXTEST']) of
+    'FMXTEST',
+    // Opens the new radio Preferences window.  Appended for the same reason
+    // as FMXTEST -- renumbering the arms above is where the off-by-one lives.
+    'PREF']) of
     0: ProcessMenu(menu_adif);
     1: ProcessMenu(menu_cabrillo);
     2: WinExec('cmd.exe', SW_SHOW);
@@ -7526,6 +7530,7 @@ begin
     12: SendViaTelnetSocket('SH/WCY');
     13: SendViaTelnetSocket('SH/WWV');
     14: ShowFMXSpikeForm;   // SPIKE ONLY -- remove with the spike
+    15: ShowPreferences;
   else
     Result := false; // False result does not clear call window
   end; // case

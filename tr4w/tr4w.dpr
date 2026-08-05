@@ -86,6 +86,7 @@ uses
   FMX.Forms,
   uFMXCoexist in 'src\ui\fmx\uFMXCoexist.pas',
   uFMXSpikeForm in 'src\ui\fmx\uFMXSpikeForm.pas',
+  uPrefsForm in 'src\ui\fmx\uPrefsForm.pas',
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
   VC in 'src\VC.pas',
