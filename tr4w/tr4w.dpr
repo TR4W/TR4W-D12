@@ -734,6 +734,20 @@ begin
    appender.Layout := CreateTR4WLogLayout;
    TLogBasicConfigurator.Configure(appender);
    logger := TLogLogger.GetLogger('TR4WDebugLog');
+
+   // BATCH MODE, decided here rather than at the /EXPORT block far below,
+   // because two things before that block need to know.
+   //
+   // It suppresses modal preview and upload prompts (TF.showwarning,
+   // MainUnit), and it was previously set only at the export itself -- which
+   // meant a warning raised while READING THE CONFIG could still open a modal
+   // and block a headless run with no one there to dismiss it.
+   //
+   // It also gates the radio-library apply below: an automated export must
+   // never write to the operator's live settings (NY4I, 2026-08-06).
+   // Reported at the startup banner below, NOT here: the file appender is not
+   // attached yet at this point, so a line logged now goes nowhere.
+   tSilentExport := SameText(ParamStr(2), '/EXPORT');
    // Default TRACE (was ERROR) when the key is absent from tr4w.ini.  Radio-driver
    // bring-up is diagnosed almost entirely from the TX/RX frame trace, and asking a
    // volunteer tester to hand-edit tr4w.ini before their first run is a poor trade
@@ -750,6 +764,11 @@ begin
    UpdateDebugLogLevel;
 
    logger.info('******************** PROGRAM STARTUP ************************');
+   if tSilentExport then
+      begin
+      logger.Info('[Startup] batch /EXPORT: settings are READ-ONLY for this run ' +
+                  '-- the radio library is not applied and no prompt will open');
+      end;
    logger.Trace('trace output');
    logger.Info('DecimalSeparator = ' + FormatSettings.DecimalSeparator);
 
@@ -851,7 +870,11 @@ begin
   //
   // A failure is reported and then ignored: an unusable library must not stop
   // TR4W starting, and the legacy keys are still a working configuration.
-  if not ApplyActiveProfileToConfigAtStartup(tRadioLibraryError) then
+  // Skipped entirely under batch /EXPORT: automated testing must not touch
+  // the operator's live settings, and the export halts before the radios are
+  // ever used, so the [Radio] keys are irrelevant to its output anyway.
+  if (not tSilentExport) and
+     (not ApplyActiveProfileToConfigAtStartup(tRadioLibraryError)) then
      begin
      logger.Warn('[Startup] the radio library was not applied: %s', [tRadioLibraryError]);
      end;
@@ -957,7 +980,7 @@ begin
   // history -- must be excluded by the driver, since that would block batch.)
   if SameText(ParamStr(2), '/EXPORT') then
      begin
-     tSilentExport := True;   // suppress the modal preview + SCP-upload prompt
+     // tSilentExport was set when the logger was created -- see there for why.
      ExportToADIF;
      CreateCabrilloFile;
      Halt(0);
