@@ -72,6 +72,7 @@ type
       btnClose: TButton;
       procedure edProbeChangeTracking(Sender: TObject);
       procedure btnCloseClick(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
    private
       procedure HandleShow(Sender: TObject);
       procedure HandleClose(Sender: TObject; var aAction: TCloseAction);
@@ -96,6 +97,11 @@ uses
 var
    gProbe: TFMXDesignedProbe = nil;
 
+
+procedure TFMXDesignedProbe.Button1Click(Sender: TObject);
+begin
+   ShowMessage('Hello');
+end;
 
 constructor TFMXDesignedProbe.Create(AOwner: TComponent);
 begin
