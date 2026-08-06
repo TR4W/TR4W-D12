@@ -3459,6 +3459,13 @@ begin
 
     menu_export_notes: MakeNotesList;
 
+    // Settings -> 'CAT and CW Keying' now opens the radio Preferences window.
+    // The two arms below are the LEGACY per-slot dialog, no longer on the menu
+    // but still reachable with the CATLEGACY call-window command while the new
+    // path is being proven on the bench.  Delete them, and uCAT.CATDlgProc,
+    // once Track F has replaced it outright.
+    menu_radio_preferences: ShowPreferences;
+
     menu_cat_radio_one:
       begin
         CATWTR := @Radio1;
@@ -7498,7 +7505,13 @@ begin
     'PREF',
     // SPIKE ONLY -- the designed-form probe; remove with the spike.  Appended
     // for the same reason as FMXTEST: renumbering the arms is the hazard.
-    'FMXDESIGN']) of
+    'FMXDESIGN',
+    // TRANSITIONAL -- the legacy per-slot CAT dialog, which came off the
+    // Settings menu when 'CAT and CW Keying' was repointed at the Preferences
+    // window.  Kept reachable until Track F has replaced it on the bench, then
+    // deleted along with uCAT.CATDlgProc.  Appended, like the two above:
+    // renumbering the case arms is where the off-by-one lives.
+    'CATLEGACY']) of
     0: ProcessMenu(menu_adif);
     1: ProcessMenu(menu_cabrillo);
     2: WinExec('cmd.exe', SW_SHOW);
@@ -7536,6 +7549,13 @@ begin
     14: ShowFMXSpikeForm;   // SPIKE ONLY -- remove with the spike
     15: ShowPreferences;
     16: ShowFMXDesignedProbe;   // SPIKE ONLY -- remove with the spike
+    17:
+      begin
+      // Radio 1, because the legacy dialog is per-slot and this is only an
+      // escape hatch; Settings -> CAT and CW Keying is the supported route.
+      CATWTR := @Radio1;
+      tDialogBox(66, @CATDlgProc);
+      end;
   else
     Result := false; // False result does not clear call window
   end; // case

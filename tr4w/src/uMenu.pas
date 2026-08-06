@@ -133,7 +133,11 @@ const
   RC_REPEAT_POTA_HK                     = #9'Ctrl+T';
 
 
-    T_MENU_ARRAY_SIZE                     = 179 {$IF MMTTYMODE} + 1{$IFEND}{$IF LANG = 'RUS'} + 3{$IFEND} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914};
+    // 179 -> 176: Settings -> 'CAT and CW Keying' went from a submenu of two
+    // per-slot entries to ONE item opening the Preferences window, removing
+    // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
+    // terminator, and adding one item (net -3).
+    T_MENU_ARRAY_SIZE                     = 176 {$IF MMTTYMODE} + 1{$IFEND}{$IF LANG = 'RUS'} + 3{$IFEND} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914};
   T_MENU_ARRAY                          : array[0..T_MENU_ARRAY_SIZE] of MenuRecord = (
     (mrText: RC_FILE; mrId: MAXWORD),
  //{
@@ -181,15 +185,12 @@ const
     (mrText: RC_APPEARANCE; mrId: menu_appearance),
     (mrText: 'Winkeyer'#9'Ctrl+W'; mrId: menu_winkeyer2),
 
-    (mrText: RC_CATANDCW; mrId: MAXWORD - 1),
-  //{
-    (mrText: TC_RADIO1 + RC_RADIOONE_HK; mrId: menu_cat_radio_one),
-    (mrText: TC_RADIO2 + RC_RADIOTWO_HK; mrId: menu_cat_radio_two),
-  //}
-
-
-
-    (mrText: nil; mrId: MAXWORD - 2),
+    // One item, not a submenu: the Preferences window owns BOTH radio slots
+    // plus the radio library and the profiles, so a per-slot entry would open
+    // the same window twice.  The legacy per-slot dialog (uCAT.CATDlgProc) is
+    // still reachable with the CATLEGACY call-window command while the new
+    // path is being proven on the bench.
+    (mrText: RC_CATANDCW; mrId: menu_radio_preferences),
 
     (mrText: '-'; mrId: 0),
     (mrText: RC_PROGRAMMES + RC_PROGRAMMES_HK; mrId: menu_messages),
