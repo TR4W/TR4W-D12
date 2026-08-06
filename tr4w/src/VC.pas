@@ -2418,6 +2418,10 @@ const
   menu_colors                           = 10108;
   menu_appearance                       = 10109;
   menu_trlog                            = 10110;
+  // The radio Preferences window (Track F).  Replaces the per-slot CAT dialog
+  // on the Settings menu -- Preferences configures BOTH slots, so 'Radio 1' /
+  // 'Radio 2' entries no longer map onto it.
+  menu_radio_preferences                = 10111;
 
   menu_windows_bandmap                  = 10200;
   menu_windows_dupesheet1               = 10201;
