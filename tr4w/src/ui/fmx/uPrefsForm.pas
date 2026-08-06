@@ -449,9 +449,16 @@ begin
    Result.GroupName  := aGroup;
 end;
 
+// aAnchors defaults to FMX's own default, so every existing caller is unchanged.
+// A FOOTER button must pass [akRight, akBottom]: positioning it once at
+// ClientWidth/ClientHeight minus an offset places it correctly on a form that
+// never resizes, and strands it in open space on one that does.  See the call
+// sites for the two footers this bit (NY4I, 2026-08-05).
 function MakeButton(const aParent: TFmxObject; const aText: string;
                     const aX, aY, aWidth: single;
-                    const aOnClick: TNotifyEvent): TButton;
+                    const aOnClick: TNotifyEvent;
+                    const aAnchors: TAnchors = [TAnchorKind.akLeft,
+                                                TAnchorKind.akTop]): TButton;
 begin
    Result := TButton.Create(aParent);
    Result.Parent     := aParent;
@@ -461,6 +468,9 @@ begin
    Result.Height     := 25;
    Result.Text       := aText;
    Result.OnClick    := aOnClick;
+   // Anchors are honoured only while Align is TAlignLayout.None, which is the
+   // default and what every control on these forms uses.
+   Result.Anchors    := aAnchors;
 end;
 
 // The 'SERIAL n' vocabulary CFGCA expects, from a Windows 'COMn' name.  Kept
@@ -552,7 +562,17 @@ begin
    ClientWidth  := 520;
    ClientHeight := 470;
    Position    := TFormPosition.ScreenCenter;
-   BorderStyle := TFmxFormBorderStyle.Sizeable;
+   // FIXED SIZE, deliberately.  Every control here is laid out at a fixed
+   // position and a fixed width, so a resize only adds whitespace -- and it
+   // used to strand the footer buttons in mid-air, because they were placed
+   // once from ClientWidth/ClientHeight rather than anchored (NY4I,
+   // 2026-08-05).  They are anchored now as well, so this can be flipped back
+   // to Sizeable if the content ever earns it.
+   //
+   // No maximize button either: offering one on a form that cannot use the
+   // space is a promise the dialog does not keep.
+   BorderStyle := TFmxFormBorderStyle.Single;
+   BorderIcons := [TBorderIcon.biSystemMenu, TBorderIcon.biMinimize];
    OnShow      := HandleShow;
    OnClose     := HandleClose;
    BuildControls;
@@ -765,10 +785,11 @@ begin
    FCIVEdit.Position.Y := NextRow;
    FCIVEdit.Width      := 80;
 
-   // Anchored to the bottom of the CLIENT area, so a row added above can never
-   // push them off the form the way it did once already.
-   MakeButton(Self, TC_PREFS_OK,     ClientWidth - 200, ClientHeight - 38, 90, HandleOK);
-   MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 100, ClientHeight - 38, 90, HandleCancel);
+   // Placed against the bottom-right of the client area AND anchored there, so
+   // they neither get pushed off by a row added above nor stranded in mid-air
+   // when the operator resizes the dialog.
+   MakeButton(Self, TC_PREFS_OK,     ClientWidth - 200, ClientHeight - 38, 90, HandleOK,     [TAnchorKind.akRight, TAnchorKind.akBottom]);
+   MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 100, ClientHeight - 38, 90, HandleCancel, [TAnchorKind.akRight, TAnchorKind.akBottom]);
 
    // Last: every control now exists, so the handlers may run.  PopulateTypeCombo
    // below sets ItemIndex and fires OnChange, which is safe from here on.
@@ -1471,7 +1492,17 @@ begin
    ClientWidth  := 860;
    ClientHeight := 620;
    Position    := TFormPosition.ScreenCenter;
-   BorderStyle := TFmxFormBorderStyle.Sizeable;
+   // FIXED SIZE, deliberately.  Every control here is laid out at a fixed
+   // position and a fixed width, so a resize only adds whitespace -- and it
+   // used to strand the footer buttons in mid-air, because they were placed
+   // once from ClientWidth/ClientHeight rather than anchored (NY4I,
+   // 2026-08-05).  They are anchored now as well, so this can be flipped back
+   // to Sizeable if the content ever earns it.
+   //
+   // No maximize button either: offering one on a form that cannot use the
+   // space is a promise the dialog does not keep.
+   BorderStyle := TFmxFormBorderStyle.Single;
+   BorderIcons := [TBorderIcon.biSystemMenu, TBorderIcon.biMinimize];
    OnShow      := HandleShow;
    OnClose     := HandleClose;
 
@@ -1529,9 +1560,9 @@ begin
 
    BuildHardwarePanel;
 
-   MakeButton(Self, TC_PREFS_OK,     ClientWidth - 290, ClientHeight - 38, 85, HandleOK);
-   MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 195, ClientHeight - 38, 85, HandleCancel);
-   MakeButton(Self, TC_PREFS_APPLY,  ClientWidth - 100, ClientHeight - 38, 85, HandleApply);
+   MakeButton(Self, TC_PREFS_OK,     ClientWidth - 290, ClientHeight - 38, 85, HandleOK,     [TAnchorKind.akRight, TAnchorKind.akBottom]);
+   MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 195, ClientHeight - 38, 85, HandleCancel, [TAnchorKind.akRight, TAnchorKind.akBottom]);
+   MakeButton(Self, TC_PREFS_APPLY,  ClientWidth - 100, ClientHeight - 38, 85, HandleApply,  [TAnchorKind.akRight, TAnchorKind.akBottom]);
 
    FNavList.ItemIndex := 0;
 end;
