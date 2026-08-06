@@ -297,7 +297,6 @@ type
       procedure BuildControls;
       procedure BuildHardwarePanel;
 
-      function SettingsPath: string;
       function StoreFileName: string;
       function LegacyStoreFileName: string;
       procedure LoadStore;
@@ -1696,26 +1695,17 @@ end;
 
 { ------------------------------------------------------------ the store --- }
 
-function TPrefsForm.SettingsPath: string;
-begin
-   Result := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
-end;
-
+// The store paths live in uRadioConfigApply, because STARTUP needs them too
+// and must not depend on this UI unit.  Two spellings of the same path is
+// precisely the divergence this whole change is about.
 function TPrefsForm.StoreFileName: string;
 begin
-   // settings\tr4w.json -- the format of record since Track F-5a.  Still a
-   // SEPARATE file from tr4w.ini, for the same reason it always was: the legacy
-   // [Radio] section is rewritten wholesale by GroupRadioIniKeys, so sharing
-   // one file would let either system discard the other's work.
-   Result := SettingsPath + 'tr4w.json';
+   Result := RadioStoreFileName;
 end;
 
 function TPrefsForm.LegacyStoreFileName: string;
 begin
-   // The pre-F-5a ini form of the same library.  Read once, on the first run
-   // after the upgrade, and then left alone -- NOT deleted, so an operator can
-   // drop back to a previous build without having lost their radio library.
-   Result := SettingsPath + 'tr4wradios.ini';
+   Result := LegacyRadioStoreFileName;
 end;
 
 procedure TPrefsForm.LoadStore;

@@ -34,16 +34,27 @@ unit uRadioConfigApply;
   and would drift from it the first time either side changed.  So the sequence
   is the same one the legacy dialog uses: write the key, then CheckCommand it.
 
-  It also means STARTUP NEEDS NOTHING FROM THIS UNIT.  The legacy keys were
-  written at the last apply, so ReadInConfigFile loads them exactly as it always
-  did and the existing CheckAndInitializePorts calls connect the radios.  There
-  is no second initialisation path to keep in step, and an operator who never
-  opens the new dialog is running the code they were running before.
+  STARTUP -- THIS CHANGED, 2026-08-06.  It used to say that startup needed
+  nothing from this unit: apply wrote the legacy keys, ReadInConfigFile read
+  them back, and the JSON library was never consulted while booting.  That is
+  true only while nothing else edits tr4w.ini.  NY4I hand-edited
+  RADIO ONE CONTROL PORT to 'SERIAL 3' after the library had been saved as JSON
+  and the program obeyed the INI -- the library and the live configuration had
+  silently diverged, with nothing to tell the operator which was in force.
 
-  ON COEXISTENCE WITH THE OLD DIALOG.  Both write the same [Radio] keys, so it
-  is last-writer-wins.  That is a deliberate non-goal for this increment: no
-  sync-back, no locking.  The UI is expected to say so when the active profile's
-  rendered keys differ from what is actually in the ini.
+  So settings\tr4w.json is now the FORMAT OF RECORD for radio settings, and the
+  [Radio] keys are a rendering of it.  ApplyActiveProfileToConfigAtStartup
+  rewrites them from the library on every start, before anything reads them.
+  A conflicting hand-edit is overwritten rather than obeyed, and the
+  disagreement is logged.
+
+  ON COEXISTENCE WITH THE OLD DIALOG.  Both write the same [Radio] keys, so
+  within a session it is last-writer-wins.  ACROSS a restart it is not: the
+  library wins, so a change made in the legacy dialog (CATLEGACY) does not
+  survive the next start once a profile is active.  That is the intended
+  direction of travel -- the legacy dialog is a transitional escape hatch, not a
+  second place to configure radios -- but it is a real behaviour change and is
+  the reason the override is logged rather than silent.
 
   ON THREADS.  ApplyProfile closes the CAT and keyer ports through the same
   CloseCATAndKeyerForThisRadio the dialog uses, and lets the polling thread
@@ -57,6 +68,7 @@ interface
 
 uses
    System.SysUtils,
+   System.IniFiles,
    uRadioConfigStore,
    uRadioConfigLegacyMap;
 
@@ -77,6 +89,36 @@ procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
 function ApplyProfile(const aStore: TRadioConfigStore;
                       const aProfile: TStationProfile;
                       out aError: string): boolean;
+
+// Where the radio library lives.  Here rather than in the preferences form
+// because STARTUP needs it too and must not depend on a UI unit -- and not in
+// uRadioConfigStore, which is deliberately RTL-only and knows no TR4W unit.
+function RadioStoreFileName: string;
+function LegacyRadioStoreFileName: string;
+
+// STARTUP ONLY.  Writes the active profile's keys into the configuration and
+// CheckCommands them -- and does NOTHING to the radios, because at startup they
+// do not exist yet and the normal CheckAndInitializePorts path is about to
+// connect them with these values.
+//
+// WHY THIS EXISTS.  Until now the legacy [Radio] keys were the system of record
+// AT STARTUP: apply wrote them, and ReadInConfigFile read them back, so the
+// JSON library was never consulted while booting.  That works only while
+// nothing else edits tr4w.ini.  NY4I hand-edited RADIO ONE CONTROL PORT to
+// 'SERIAL 3' after the library had been written to JSON, and the program used
+// the ini value -- the two stores had silently diverged with no way for the
+// operator to tell which one was live.
+//
+// So the JSON library WINS.  It is the format of record; the [Radio] keys are
+// now a rendering of it, rewritten from it on every start.  A conflicting
+// hand-edit of those keys is overwritten rather than obeyed, and the
+// disagreement is logged so "why did my ini change" has an answer.
+//
+// Returns False only when the store cannot be used at all.  No store, no active
+// profile, or a profile naming a radio that no longer exists all return True
+// having changed nothing -- an operator who has never opened Preferences must
+// boot exactly as they always did.
+function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 
 // UI-free description of the port collisions a profile WOULD cause, '' when
 // clean.  Advisory: unlike TRadioConfigStore.Validate, this also covers the
@@ -323,6 +365,144 @@ begin
 
    aStore.ActiveProfileName := aProfile.Name;
    Result := True;
+end;
+
+{ ------------------------------------------------------- the store on disk - }
+
+function SettingsDirectory: string;
+begin
+   Result := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
+end;
+
+function RadioStoreFileName: string;
+begin
+   Result := SettingsDirectory + 'tr4w.json';
+end;
+
+function LegacyRadioStoreFileName: string;
+begin
+   Result := SettingsDirectory + 'tr4wradios.ini';
+end;
+
+function ReadRadioKey(const aKey: string): string;
+var
+   ini: TIniFile;
+begin
+   // TIniFile, not GetPrivateProfileString: under D12 the generic name
+   // binds to the W variant and a bare buffer would compile silently while
+   // reading UTF-16 into ANSI (see CLAUDE.md).  The RTL wrapper sidesteps
+   // the whole question.
+   ini := TIniFile.Create(SettingsDirectory + 'tr4w.ini');
+   try
+      Result := ini.ReadString('Radio', aKey, '');
+   finally
+      ini.Free;
+   end;
+end;
+
+function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
+var
+   store: TRadioConfigStore;
+   profile: TStationProfile;
+   slot: integer;
+   radioDef: TRadioDefinition;
+   previousCATWTR: RadioPtr;
+   loadErr: string;
+   before, after: string;
+begin
+   aError := '';
+   Result := True;
+
+   if not FileExists(RadioStoreFileName) then
+      begin
+      // No library: this station has never opened Preferences, and must boot
+      // exactly as it always did.
+      Exit;
+      end;
+
+   store := TRadioConfigStore.Create;
+   try
+      if not store.LoadFromFile(RadioStoreFileName, loadErr) then
+         begin
+         // Readable-but-broken is worth saying out loud, because the legacy
+         // keys are about to be used instead and the operator's library is
+         // effectively ignored for this run.
+         aError := loadErr;
+         Result := False;
+         Exit;
+         end;
+
+      profile := store.ActiveProfile;
+      if profile = nil then
+         begin
+         logger.Debug('[Startup] radio library has no active profile -- leaving the [Radio] keys alone');
+         Exit;
+         end;
+
+      // Both slots must resolve before anything is written.  A half-applied
+      // profile at startup would leave the station matching neither the library
+      // nor the ini, which is the exact confusion this whole change is about.
+      for slot := 1 to 2 do
+         begin
+         if Trim(profile.RadioNameForSlot(slot)) = '' then
+            begin
+            Continue;
+            end;
+         if store.FindRadio(profile.RadioNameForSlot(slot)) = nil then
+            begin
+            aError := Format('Profile "%s" refers to radio "%s", which does not exist',
+                             [profile.Name, profile.RadioNameForSlot(slot)]);
+            logger.Warn('[Startup] %s -- leaving the [Radio] keys alone', [aError]);
+            Result := False;
+            Exit;
+            end;
+         end;
+
+      // Read one key back before and after purely to report a DISAGREEMENT.
+      // Without this the rewrite is silent, and an operator who edited the ini
+      // by hand gets no hint that something overrode them.
+      before := ReadRadioKey('RADIO ONE CONTROL PORT');
+
+      previousCATWTR := CATWTR;
+      try
+         for slot := 1 to 2 do
+            begin
+            if slot = 1 then
+               begin
+               CATWTR := @Radio1;
+               end
+            else
+               begin
+               CATWTR := @Radio2;
+               end;
+
+            radioDef := store.FindRadio(profile.RadioNameForSlot(slot));
+            // nil for an empty slot, which the renderer treats as "clear it" --
+            // necessary, or the slot keeps whatever was last in the ini.
+            ApplyRadioToSlot(radioDef, slot, profile);
+            end;
+
+         GroupRadioIniKeys;
+      finally
+         CATWTR := previousCATWTR;
+      end;
+
+      after := ReadRadioKey('RADIO ONE CONTROL PORT');
+      if not SameText(before, after) then
+         begin
+         logger.Warn('[Startup] the radio library overrode the [Radio] keys: ' +
+                     'RADIO ONE CONTROL PORT was "%s", profile "%s" says "%s". ' +
+                     'settings\tr4w.json is the format of record -- edit radios in Preferences, not tr4w.ini.',
+                     [before, profile.Name, after]);
+         end
+      else
+         begin
+         logger.Info('[Startup] radio profile "%s" applied from the library; the [Radio] keys already agreed',
+                     [profile.Name]);
+         end;
+   finally
+      store.Free;
+   end;
 end;
 
 { --------------------------------------------------------- port conflicts - }
