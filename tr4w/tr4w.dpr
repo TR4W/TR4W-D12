@@ -676,6 +676,8 @@ var
   TempTLogBrush                         : TLogBrush {= (lbStyle: BS_SOLID; lbHatch: 0)};
   c                                     : Cardinal;
   TempString                            : ShortString;
+  // The radio library's complaint, if it has one -- see the call site.
+  tRadioLibraryError                    : string;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -836,6 +838,23 @@ begin
 
   ReadInConfigFile(cfgCFG);          //n4af 4.31.5
   ReadInConfigFile(cfgCommMes);      //common messages gets precedence - n4af
+
+  // The radio library (settings	r4w.json) is the FORMAT OF RECORD for radio
+  // settings, so it gets the last word -- after every config file above, and
+  // before anything reads a [Radio] key.  Without this the ini wins simply by
+  // being read here, and a hand-edit of RADIO ONE CONTROL PORT silently
+  // overrides the profile the operator chose in Preferences (NY4I found
+  // exactly that on 2026-08-06).
+  //
+  // Radios are NOT touched here: they do not exist yet, and the ordinary
+  // CheckAndInitializePorts path below connects them with these values.
+  //
+  // A failure is reported and then ignored: an unusable library must not stop
+  // TR4W starting, and the legacy keys are still a working configuration.
+  if not ApplyActiveProfileToConfigAtStartup(tRadioLibraryError) then
+     begin
+     logger.Warn('[Startup] the radio library was not applied: %s', [tRadioLibraryError]);
+     end;
 
   // Issue #1012: the S&P F1 caption is derived from DE ENABLE, whose value is
   // only known after the config files above are read.  Recompute it now so
