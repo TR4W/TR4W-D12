@@ -280,6 +280,12 @@ const
    // The 'no port' value in TR4W's PortTypeSA vocabulary.
    PORT_NONE = 'NONE';
 
+   // The NETWORK member of that same vocabulary (tree.pas PortTypeSA, the entry
+   // after 'SERIAL 64').  CONTROL PORT is not a serial-only setting that a
+   // network radio leaves blank -- it is the key that SELECTS the link, so
+   // 'TCP/IP' is what tells the legacy path to use IP ADDRESS / TCP PORT at all.
+   PORT_NETWORK = 'TCP/IP';
+
 function TransportToStr(const aTransport: TRadioTransport): string;
 function StrToTransport(const aValue: string): TRadioTransport;
 
