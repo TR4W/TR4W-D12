@@ -222,6 +222,19 @@ type
       FWideCWCheck: TCheckBox;
       FFT1000MPRevCheck: TCheckBox;
 
+      // The labels of the model-only fields, kept so they can be greyed WITH
+      // their field (NY4I 2026-08-05).  Disabling the edit alone is invisible:
+      // the gating code blanks a disabled field's Text and TextPrompt, so what
+      // is left is an empty box that looks exactly like an enabled one, under a
+      // caption still drawn in full black.  Greying the caption is what makes
+      // "this radio does not have that setting" legible -- and it is the
+      // convention every other Windows dialog uses.
+      FCIVLabel: TLabel;
+      FFilterByteLabel: TLabel;
+      FDataModeLabel: TLabel;
+      FHamLibLabel: TLabel;
+
+
       procedure BuildControls;
       procedure PopulateTypeCombo;
       procedure PopulatePortCombos;
@@ -688,21 +701,21 @@ begin
    FStartupEdit.Position.Y := TABTOP;
    FStartupEdit.Width      := 310;
 
-   MakeLabel(tab, TC_RADIOEDIT_FILTERBYTE, 10, TABTOP + 4 + ROWHEIGHT, 130);
+   FFilterByteLabel := MakeLabel(tab, TC_RADIOEDIT_FILTERBYTE, 10, TABTOP + 4 + ROWHEIGHT, 130);
    FFilterByteEdit := TEdit.Create(tab);
    FFilterByteEdit.Parent     := tab;
    FFilterByteEdit.Position.X := 150;
    FFilterByteEdit.Position.Y := TABTOP + ROWHEIGHT;
    FFilterByteEdit.Width      := 70;
 
-   MakeLabel(tab, TC_RADIOEDIT_DATAMODEID, 240, TABTOP + 4 + ROWHEIGHT, 140);
+   FDataModeLabel := MakeLabel(tab, TC_RADIOEDIT_DATAMODEID, 240, TABTOP + 4 + ROWHEIGHT, 140);
    FDataModeEdit := TEdit.Create(tab);
    FDataModeEdit.Parent     := tab;
    FDataModeEdit.Position.X := 390;
    FDataModeEdit.Position.Y := TABTOP + ROWHEIGHT;
    FDataModeEdit.Width      := 70;
 
-   MakeLabel(tab, TC_RADIOEDIT_HAMLIBID, 10, TABTOP + 4 + 2 * ROWHEIGHT, 130);
+   FHamLibLabel := MakeLabel(tab, TC_RADIOEDIT_HAMLIBID, 10, TABTOP + 4 + 2 * ROWHEIGHT, 130);
    FHamLibEdit := TEdit.Create(tab);
    FHamLibEdit.Parent     := tab;
    FHamLibEdit.Position.X := 150;
@@ -745,7 +758,7 @@ begin
    FKeyerPortCombo.Position.Y := NextRow;
    FKeyerPortCombo.Width      := 200;
 
-   MakeLabel(Self, TC_RADIOEDIT_CIVADDRESS, LEFTMARGIN, y + 4, 130);
+   FCIVLabel := MakeLabel(Self, TC_RADIOEDIT_CIVADDRESS, LEFTMARGIN, y + 4, 130);
    FCIVEdit := TEdit.Create(Self);
    FCIVEdit.Parent     := Self;
    FCIVEdit.Position.X := 150;
@@ -1159,14 +1172,17 @@ begin
    // radio the registry supplies it and typing one here would pin a model the
    // operator never chose.  Same rule the legacy dialog applies.
    FHamLibEdit.Enabled := SameText(id, 'HAMLIBANY');
+   FHamLibLabel.Enabled := FHamLibEdit.Enabled;
 
    // Model-specific settings are enabled only for the models they mean anything
    // to (NY4I).  An Icom filter byte on a Kenwood is not a harmless spare
    // field: it is an invitation to set something that will never be sent, and
    // then to wonder why it had no effect.
    isIcom := IsIcomRadio(id);
-   FFilterByteEdit.Enabled := isIcom;
-   FDataModeEdit.Enabled   := isIcom;
+   FFilterByteEdit.Enabled  := isIcom;
+   FDataModeEdit.Enabled    := isIcom;
+   FFilterByteLabel.Enabled := isIcom;
+   FDataModeLabel.Enabled   := isIcom;
 
    // CI-V is offered only where the REGISTRY says the model has a CI-V address
    // -- its own declared meaning ('0 = not a CI-V radio'), not a brand guess.
@@ -1180,6 +1196,12 @@ begin
       end;
 
    FCIVEdit.Enabled := (civDefault <> 0);
+   // Grey the caption with the box.  The gating below blanks a disabled field's
+   // Text and TextPrompt, which leaves nothing to render greyed -- so on a K3
+   // (registered civAddress 0, correctly disabled) the operator saw an ordinary
+   // empty box under a full-black caption and read it as editable.  NY4I, bench,
+   // 2026-08-05.
+   FCIVLabel.Enabled := FCIVEdit.Enabled;
    if not FCIVEdit.Enabled then
       begin
       FCIVEdit.Text       := '';
