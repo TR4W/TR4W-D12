@@ -703,6 +703,12 @@ begin
    // is deliberately no Application.CreateForm anywhere.
    FMX.Forms.Application.Initialize;
 
+   // ...and then tell FMX the application is running, because Application.Run
+   // is what normally says so and we never call it.  Without this every FMX
+   // form stays Active=False and its edits never show a caret.  See
+   // uFMXCoexist.TellFMXTheApplicationIsRunning for the full chain.
+   TellFMXTheApplicationIsRunning;
+
    // Check for another running instance BEFORE opening any shared files
    // (log file, etc.) to avoid an EFOpenError crash on the second instance.
    tMutex := CreateMutex(nil, False, tr4w_ClassName);
