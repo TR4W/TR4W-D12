@@ -503,6 +503,7 @@ uses
 {$IFEND}
 
   uFMXSpikeForm,    // SPIKE ONLY -- the FMXTEST command; remove with the spike
+  uFMXDesignedProbe, // SPIKE ONLY -- the FMXDESIGN command; remove with the spike
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
@@ -7494,7 +7495,10 @@ begin
     'FMXTEST',
     // Opens the new radio Preferences window.  Appended for the same reason
     // as FMXTEST -- renumbering the arms above is where the off-by-one lives.
-    'PREF']) of
+    'PREF',
+    // SPIKE ONLY -- the designed-form probe; remove with the spike.  Appended
+    // for the same reason as FMXTEST: renumbering the arms is the hazard.
+    'FMXDESIGN']) of
     0: ProcessMenu(menu_adif);
     1: ProcessMenu(menu_cabrillo);
     2: WinExec('cmd.exe', SW_SHOW);
@@ -7531,6 +7535,7 @@ begin
     13: SendViaTelnetSocket('SH/WWV');
     14: ShowFMXSpikeForm;   // SPIKE ONLY -- remove with the spike
     15: ShowPreferences;
+    16: ShowFMXDesignedProbe;   // SPIKE ONLY -- remove with the spike
   else
     Result := false; // False result does not clear call window
   end; // case

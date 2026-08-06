@@ -1,0 +1,63 @@
+object FMXDesignedProbe: TFMXDesignedProbe
+  Left = 0
+  Top = 0
+  BorderIcons = [biSystemMenu, biMinimize]
+  BorderStyle = Single
+  Caption = 'Designed-form probe'
+  ClientHeight = 260
+  ClientWidth = 430
+  Position = ScreenCenter
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object lblWhat: TLabel
+    Position.X = 16.000000000000000000
+    Position.Y = 16.000000000000000000
+    Size.Width = 400.000000000000000000
+    Size.Height = 34.000000000000000000
+    Size.PlatformDefault = False
+    Text = 
+      'Streamed from uFMXDesignedProbe.fmx. If you can read this, form ' +
+      'streaming works under TR4W'#39's message loop.'
+    TabOrder = 0
+  end
+  object lblEcho: TLabel
+    Position.X = 16.000000000000000000
+    Position.Y = 104.000000000000000000
+    Size.Width = 400.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Type above: the text should echo here.'
+    TabOrder = 1
+  end
+  object edProbe: TEdit
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    TabOrder = 2
+    Position.X = 16.000000000000000000
+    Position.Y = 66.000000000000000000
+    Size.Width = 400.000000000000000000
+    Size.Height = 26.000000000000000000
+    Size.PlatformDefault = False
+    OnChangeTracking = edProbeChangeTracking
+  end
+  object btnClose: TButton
+    Anchors = [akRight, akBottom]
+    Position.X = 326.000000000000000000
+    Position.Y = 219.000000000000000000
+    Size.Width = 90.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 3
+    Text = 'Close'
+    TextSettings.Trimming = None
+    OnClick = btnCloseClick
+  end
+  object Button1: TButton
+    Position.X = 40.000000000000000000
+    Position.Y = 168.000000000000000000
+    TabOrder = 5
+    Text = 'Button1'
+    TextSettings.Trimming = None
+  end
+end
