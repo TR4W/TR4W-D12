@@ -297,7 +297,9 @@ type
       procedure BuildControls;
       procedure BuildHardwarePanel;
 
+      function SettingsPath: string;
       function StoreFileName: string;
+      function LegacyStoreFileName: string;
       procedure LoadStore;
       function SaveStore(out aError: string): boolean;
 
@@ -1694,36 +1696,73 @@ end;
 
 { ------------------------------------------------------------ the store --- }
 
+function TPrefsForm.SettingsPath: string;
+begin
+   Result := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
+end;
+
 function TPrefsForm.StoreFileName: string;
 begin
-   // Beside tr4w.ini, in settings\, but a SEPARATE file -- the legacy [Radio]
-   // section is rewritten wholesale by GroupRadioIniKeys, so sharing one file
-   // would let either system discard the other's work.
-   Result := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0])))) +
-             'tr4wradios.ini';
+   // settings\tr4w.json -- the format of record since Track F-5a.  Still a
+   // SEPARATE file from tr4w.ini, for the same reason it always was: the legacy
+   // [Radio] section is rewritten wholesale by GroupRadioIniKeys, so sharing
+   // one file would let either system discard the other's work.
+   Result := SettingsPath + 'tr4w.json';
+end;
+
+function TPrefsForm.LegacyStoreFileName: string;
+begin
+   // The pre-F-5a ini form of the same library.  Read once, on the first run
+   // after the upgrade, and then left alone -- NOT deleted, so an operator can
+   // drop back to a previous build without having lost their radio library.
+   Result := SettingsPath + 'tr4wradios.ini';
 end;
 
 procedure TPrefsForm.LoadStore;
 var
    ini: TIniFile;
    legacy: TIniFile;
+   err: string;
 begin
-   ini := TIniFile.Create(StoreFileName);
-   try
-      FStore.LoadFrom(ini);
-   finally
-      ini.Free;
-   end;
-
-   if FStore.RadioCount > 0 then
+   // 1. The JSON store, if there is one.
+   if FStore.LoadFromFile(StoreFileName, err) then
       begin
       Exit;
       end;
 
-   // First open: build the library from the configuration the operator already
-   // has, rather than presenting an empty list to someone with two working
-   // radios.  The legacy file is opened READ-ONLY -- seeding must not be able
-   // to damage a configuration still in use.
+   // A file that EXISTS but would not parse is worth a line in the log: the
+   // fall-through below is about to present an empty library, and "my radios
+   // vanished" is a much harder question to answer without this.
+   if FileExists(StoreFileName) then
+      begin
+      logger.Warn('[Preferences] %s could not be read (%s) -- falling back', [StoreFileName, err]);
+      end;
+
+   // 2. The ini store from before F-5a, migrated once.  Saving it back out in
+   //    JSON is deliberate: without that the migration would run on every open
+   //    and an operator's later edits would keep being overwritten by the ini.
+   if FileExists(LegacyStoreFileName) then
+      begin
+      ini := TIniFile.Create(LegacyStoreFileName);
+      try
+         FStore.LoadFrom(ini);
+      finally
+         ini.Free;
+      end;
+
+      if FStore.RadioCount > 0 then
+         begin
+         logger.Info('[Preferences] migrated %d radio(s) from %s to %s',
+                     [FStore.RadioCount, LegacyStoreFileName, StoreFileName]);
+         FStore.SaveToFile(StoreFileName);
+         Exit;
+         end;
+      end;
+
+   // 3. First run of all: build the library from the configuration the operator
+   //    already has, rather than presenting an empty list to someone with two
+   //    working radios.  The legacy file is opened READ-ONLY -- seeding must
+   //    not be able to damage a configuration still in use.
    legacy := TIniFile.Create(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
    try
       if TRadioConfigStore.LegacyIniHasRadios(legacy) then
@@ -1736,8 +1775,6 @@ begin
 end;
 
 function TPrefsForm.SaveStore(out aError: string): boolean;
-var
-   ini: TIniFile;
 begin
    Result := FStore.Validate(aError);
    if not Result then
@@ -1745,11 +1782,17 @@ begin
       Exit;
       end;
 
-   ini := TIniFile.Create(StoreFileName);
    try
-      FStore.SaveTo(ini);
-   finally
-      ini.Free;
+      FStore.SaveToFile(StoreFileName);
+   except
+      // A failed SAVE must be reported, not swallowed: the operator would
+      // otherwise close the dialog believing their library was stored.
+      on E: Exception do
+         begin
+         aError := 'Could not write ' + StoreFileName + ': ' + E.Message;
+         logger.Error('[Preferences] %s', [aError]);
+         Result := False;
+      end;
    end;
 end;
 
