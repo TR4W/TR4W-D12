@@ -76,6 +76,7 @@ type
       procedure Test_JSONLoadOfGarbageLeavesAnEmptyStore;
       procedure Test_JSONMissingFileIsReportedNotRaised;
       procedure Test_JSONFileRoundTripsThroughDisk;
+      procedure Test_JSONFileHasNoBOM;
    public
       procedure RunAllTests; override;
    end;
@@ -1394,6 +1395,35 @@ begin
    end;
 end;
 
+procedure TRadioConfigStoreTests.Test_JSONFileHasNoBOM;
+var
+   store: TRadioConfigStore;
+   fileName: string;
+   bytes: TBytes;
+begin
+   BeginTest('Test_JSONFileHasNoBOM');
+   // RFC 8259: a JSON text must not begin with a byte order mark.  Delphi's
+   // TFile.WriteAllText emits the encoding's preamble, so the first version of
+   // SaveToFile wrote one -- our own reader tolerated it and Python's json.load
+   // rejected the file outright.  Pinned here because the symptom appears only
+   // in some OTHER tool, which is exactly the kind of defect that survives.
+   //
+   // Opposite of the rule for src\lang\*.pas, which must KEEP their BOM.
+   fileName := NewTempFileName('json');
+   store := TRadioConfigStore.Create;
+   try
+      store.SaveToFile(fileName);
+   finally
+      store.Free;
+   end;
+
+   bytes := TFile.ReadAllBytes(fileName);
+   CheckTrue(Length(bytes) >= 3, 'the file has content');
+   CheckFalse((bytes[0] = $EF) and (bytes[1] = $BB) and (bytes[2] = $BF),
+              'no UTF-8 BOM at the start of the JSON');
+   CheckEquals(Ord('{'), bytes[0], 'the file starts with the opening brace');
+end;
+
 procedure TRadioConfigStoreTests.RunAllTests;
 begin
    try
@@ -1433,6 +1463,7 @@ begin
    Test_JSONLoadOfGarbageLeavesAnEmptyStore;
    Test_JSONMissingFileIsReportedNotRaised;
    Test_JSONFileRoundTripsThroughDisk;
+   Test_JSONFileHasNoBOM;
    Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
    finally
       // Even if a test escapes with an exception, the fixture files go.

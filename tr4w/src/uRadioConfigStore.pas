@@ -1397,7 +1397,18 @@ begin
    try
       // Format, not ToJSON: this file is meant to be readable and hand-editable
       // -- that is the reason for moving off the ini in the first place.
-      TFile.WriteAllText(aFileName, root.Format(2), TEncoding.UTF8);
+      //
+      // WriteAllBytes over GetBytes, NOT WriteAllText: WriteAllText emits the
+      // encoding's preamble, which for TEncoding.UTF8 is a BOM -- and a JSON
+      // text must not start with one (RFC 8259).  Our own reader tolerates it,
+      // but Python's json.load rejects the file outright, and so will jq and
+      // anything else the operator or a future cross-platform reader points at
+      // it.  Found by opening the file we had just written (2026-08-06).
+      //
+      // Note this is the OPPOSITE of the rule for src\lang\*.pas, which must
+      // KEEP their BOM.  Same three bytes, opposite requirement, and neither
+      // produces a diagnostic when it is wrong.
+      TFile.WriteAllBytes(aFileName, TEncoding.UTF8.GetBytes(root.Format(2)));
    finally
       root.Free;
    end;
