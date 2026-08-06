@@ -358,7 +358,15 @@ begin
    // means stealing it from the OTHER radio.
    if aRadio.Transport = rtNetwork then
       begin
-      Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  PORT_NONE);
+      // TCP/IP, NOT blank.  CONTROL PORT is the key that SELECTS the link, not
+      // a serial-only setting to be cleared alongside BAUD RATE: 'SERIAL n' is
+      // the serial link, 'TCP/IP' is the network one, and NONE means the radio
+      // has no link at all.  Writing NONE here to avoid opening a COM port also
+      // withdrew "use the network", so a K4 with a good IP ADDRESS and TCP PORT
+      // came up as `connection=NO PORT SET` and the factory refused to build a
+      // driver for it -- `NO FACTORY DRIVER built for Elecraft K4 on port 0`.
+      // Found on the bench by NY4I, 2026-08-05.
+      Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  PORT_NETWORK);
       Emit(Result, 'RADIO ' + slot + ' BAUD RATE',
            NumericValue(aRadio.BaudRate, aTypeRendering.DefaultBaudRate));
       Emit(Result, 'RADIO ' + slot + ' SERIAL FORMAT', '');

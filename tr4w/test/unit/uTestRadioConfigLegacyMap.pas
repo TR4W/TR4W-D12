@@ -424,18 +424,27 @@ begin
    try
       rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
 
-      // THE safety property: a leftover CONTROL PORT would make TR4W open a
-      // serial port for a network radio, and on an SO2R station that port
-      // belongs to the OTHER radio.  This is the assertion that matters.
-      CheckEquals(PORT_NONE, ValueOf(rendered, 'RADIO ONE CONTROL PORT'),
-                  'the serial port is explicitly NONE');
+      // TCP/IP, and this assertion used to say PORT_NONE -- which is how the
+      // bug survived a green test suite.  CONTROL PORT is not a serial-only
+      // setting to be cleared next to BAUD RATE: it is the key that SELECTS the
+      // link.  Writing NONE released the COM port and simultaneously told the
+      // legacy path the radio had no link at all, so a K4 with a valid IP and
+      // TCP port reported `connection=NO PORT SET` and the factory built no
+      // driver for it (NY4I, bench, 2026-08-05).
+      //
+      // The safety property the old assertion was reaching for still holds, and
+      // holds BETTER: TCP/IP is not a serial port either, so TR4W still opens no
+      // COM port for a network radio -- which matters most on an SO2R station,
+      // where that port belongs to the other radio.
+      CheckEquals(PORT_NETWORK, ValueOf(rendered, 'RADIO ONE CONTROL PORT'),
+                  'the link is TCP/IP -- not NONE, which would mean "no link"');
       CheckEquals('',        ValueOf(rendered, 'RADIO ONE SERIAL FORMAT'), 'format blanked');
       // NOT blank: 'RADIO ONE CAT RTS=' is an INVALID statement to CFGCA and
       // aborts the whole config load.  NONE is the vocabulary's own "off".
       CheckEquals('NONE',    ValueOf(rendered, 'RADIO ONE CAT RTS'),       'RTS is NONE');
-      // Baud is a number and so cannot be blank; it is simply irrelevant with
-      // CONTROL PORT = NONE.  Asserting it stays a number keeps the
-      // never-empty invariant visible here too.
+      // Baud is a number and so cannot be blank; it is simply irrelevant on a
+      // TCP/IP link.  Asserting it stays a number keeps the never-empty
+      // invariant visible here too.
       CheckTrue(ValueOf(rendered, 'RADIO ONE BAUD RATE') <> '', 'baud is not blank');
 
       CheckEquals('192.168.73.108', ValueOf(rendered, 'RADIO ONE IP ADDRESS'), 'IP');
