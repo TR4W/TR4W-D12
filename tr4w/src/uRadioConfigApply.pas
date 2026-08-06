@@ -78,9 +78,17 @@ function ResolveTypeRendering(const aRegistryId: string): TRadioTypeRendering;
 
 // Write one slot's keys and hand each to CheckCommand.  Does NOT touch ports;
 // ApplyProfile sequences that.  aRadio may be nil, meaning "clear this slot".
+// aPersist decides whether the rendered keys are also WRITTEN to tr4w.ini.
+// The two halves are genuinely separate concerns: CheckCommand is what moves
+// a value into TR4W's globals, and the ini write is only what makes it
+// survive a restart.  Startup passes False -- the library is already the
+// record, so persisting a copy of it would be writing to disk purely to
+// configure memory, and on a read-only program directory that write fails
+// or is redirected without anyone noticing.
 procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
-                           const aProfile: TStationProfile);
+                           const aProfile: TStationProfile;
+                           const aPersist: boolean = True);
 
 // The whole sequence: stop both radios, write both slots, regroup the ini,
 // restart.  Returns False with aError set if the profile cannot be applied at
@@ -186,7 +194,8 @@ end;
 
 procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
-                           const aProfile: TStationProfile);
+                           const aProfile: TStationProfile;
+                           const aPersist: boolean = True);
 var
    rendered: TConfigKeyValues;
    i: integer;
@@ -220,18 +229,24 @@ begin
       keyShort   := ShortString(idKey);
       valueShort := ShortString(cmdValue);
 
-      if rendered[i].Delete then
+      // The ini write is PERSISTENCE only.  Skipping it leaves CheckCommand
+      // below to do the configuring, which is the half that actually matters
+      // at startup.
+      if aPersist then
          begin
-         // nil, not '' -- a nil value REMOVES the key.  An empty string would
-         // leave the key present with a blank value, which for FACTORY ID is
-         // not the same thing at all.
-         Windows.WritePrivateProfileStringA('Radio', @keyShort[1], nil,
-                                            TR4W_INI_FILENAME);
-         end
-      else
-         begin
-         Windows.WritePrivateProfileStringA('Radio', @keyShort[1], @valueShort[1],
-                                            TR4W_INI_FILENAME);
+         if rendered[i].Delete then
+            begin
+            // nil, not '' -- a nil value REMOVES the key.  An empty string
+            // would leave the key present with a blank value, which for
+            // FACTORY ID is not the same thing at all.
+            Windows.WritePrivateProfileStringA('Radio', @keyShort[1], nil,
+                                               TR4W_INI_FILENAME);
+            end
+         else
+            begin
+            Windows.WritePrivateProfileStringA('Radio', @keyShort[1], @valueShort[1],
+                                               TR4W_INI_FILENAME);
+            end;
          end;
 
       // CheckCommand is what actually moves the value into TR4W's globals; the
@@ -400,6 +415,36 @@ begin
    end;
 end;
 
+// The value the library WOULD render for one key -- read-only, so the startup
+// path can report a disagreement without writing anything.  '' when the slot
+// is empty or the key is not in the rendered set.
+function RenderedValueFor(const aStore: TRadioConfigStore;
+                          const aProfile: TStationProfile;
+                          const aSlot: integer;
+                          const aKey: string): string;
+var
+   radioDef: TRadioDefinition;
+   rendered: TConfigKeyValues;
+   i: integer;
+begin
+   Result := '';
+   radioDef := aStore.FindRadio(aProfile.RadioNameForSlot(aSlot));
+   if radioDef = nil then
+      begin
+      Exit;
+      end;
+   rendered := RenderRadioKeys(aSlot, radioDef,
+                               ResolveTypeRendering(radioDef.RegistryId), aProfile);
+   for i := 0 to High(rendered) do
+      begin
+      if SameText(rendered[i].Key, aKey) then
+         begin
+         Result := rendered[i].Value;
+         Exit;
+         end;
+      end;
+end;
+
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 var
    store: TRadioConfigStore;
@@ -458,11 +503,6 @@ begin
             end;
          end;
 
-      // Read one key back before and after purely to report a DISAGREEMENT.
-      // Without this the rewrite is silent, and an operator who edited the ini
-      // by hand gets no hint that something overrode them.
-      before := ReadRadioKey('RADIO ONE CONTROL PORT');
-
       previousCATWTR := CATWTR;
       try
          for slot := 1 to 2 do
@@ -479,25 +519,42 @@ begin
             radioDef := store.FindRadio(profile.RadioNameForSlot(slot));
             // nil for an empty slot, which the renderer treats as "clear it" --
             // necessary, or the slot keeps whatever was last in the ini.
-            ApplyRadioToSlot(radioDef, slot, profile);
+            //
+            // aPersist=False: CONFIGURE, do not persist.  The library is
+            // already the record, so writing a copy of it into tr4w.ini on
+            // every start would be writing to disk purely to set globals --
+            // and it would fail silently on a read-only program directory.
+            // It also means a start CANNOT damage the operator's ini.
+            ApplyRadioToSlot(radioDef, slot, profile, False);
             end;
 
-         GroupRadioIniKeys;
+         // No GroupRadioIniKeys: nothing was written to group.
       finally
          CATWTR := previousCATWTR;
       end;
 
-      after := ReadRadioKey('RADIO ONE CONTROL PORT');
-      if not SameText(before, after) then
+      // REPORT a stale ini; do not fix it.  Nothing above wrote to the file,
+      // so the [Radio] keys may still say something the program is no longer
+      // doing.  That is the intended answer to "ignore the ini where they
+      // conflict" (NY4I) -- but silence would leave an operator reading a
+      // file that has not been true since they last used Preferences, so the
+      // disagreement is named, with the value that actually won.
+      //
+      // One representative key rather than all of them: this is a signpost
+      // pointing at Preferences, not a diff.
+      before := ReadRadioKey('RADIO ONE CONTROL PORT');
+      after  := RenderedValueFor(store, profile, 1, 'RADIO ONE CONTROL PORT');
+      if (after <> '') and (not SameText(before, after)) then
          begin
-         logger.Warn('[Startup] the radio library overrode the [Radio] keys: ' +
-                     'RADIO ONE CONTROL PORT was "%s", profile "%s" says "%s". ' +
-                     'settings\tr4w.json is the format of record -- edit radios in Preferences, not tr4w.ini.',
+         logger.Warn('[Startup] tr4w.ini disagrees with the radio library and is being IGNORED: ' +
+                     'RADIO ONE CONTROL PORT says "%s", profile "%s" uses "%s". ' +
+                     'settings\tr4w.json is the format of record -- edit radios in Preferences. ' +
+                     'The ini is rewritten only when a profile is applied there.',
                      [before, profile.Name, after]);
          end
       else
          begin
-         logger.Info('[Startup] radio profile "%s" applied from the library; the [Radio] keys already agreed',
+         logger.Info('[Startup] radio profile "%s" applied from the library',
                      [profile.Name]);
          end;
    finally
