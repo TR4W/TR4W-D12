@@ -540,6 +540,33 @@ Build with `/p:Config=Debug` (the default recipe above).
   the same identifier differently at declaration, assignment and use, and a case-sensitive grep has
   already produced a false "dead code" conclusion.
 
+### File encodings and line endings
+Two silent-corruption traps live here, and neither produces a compiler diagnostic.
+
+- **`src/lang/*.pas` are UTF-8 *with a BOM*** — see [Language variants](#language-variants).
+- **Source files must be CRLF.** Governed by `.gitattributes` and enforced by
+  `tr4w/build/Lint-LineEndings.ps1`, which gates the build. This is not cosmetic: the RAD Studio
+  form designer **inserts code by byte offset**, so against an LF file a new event handler is
+  spliced into the middle of an identifier —
+
+  ```pascal
+      procedure btnCloseClick(Sende
+    procedure FormCreate(Sender: TObject);r: TObject);
+  ```
+
+  Nothing is deleted; it reads like file corruption and is not. Converting to CRLF and repeating
+  the same designer action inserts perfectly (2026-08-06; 148 tracked `.pas` files were LF at the
+  time, `LOGSTUFF.PAS` and `VC.pas` among them). Fix with
+  `powershell -File tr4w\build\Lint-LineEndings.ps1 -SourceDir tr4w -Fix`.
+- **The corpus fixtures are `-text` and must stay that way.** `ref.adi` / `ref.cbr` are
+  **byte-diffed**, and git was previously EOL-converting them — they were stored LF and checked out
+  CRLF, surviving only because of one machine's `core.autocrlf`. A differently-configured clone
+  would see corpus failures that are purely a git artifact, on the regression oracle itself.
+- **`.gitattributes` alone is not enough**, which is why the lint exists: attributes govern what git
+  writes on checkout and stores on commit, but nothing stops a tool from writing an LF file straight
+  into the working tree, and git will not rewrite it afterwards because the content already
+  normalises to the same blob. Check the endings of any file you *create*.
+
 ### Strings and buffers
 - **The program passes `string`s.** Pointers, lengths, `ZeroMemory` and `s[1]` belong *inside* the
   transport where the bytes are actually written. Prefer `Foo(const s: string)` over
