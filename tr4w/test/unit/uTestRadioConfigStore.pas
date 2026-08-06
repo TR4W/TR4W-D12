@@ -27,7 +27,7 @@ unit uTestRadioConfigStore;
 interface
 
 uses
-   SysUtils, Classes, IniFiles,
+   SysUtils, Classes, IniFiles, System.JSON, System.IOUtils,
    uTR4WTestFramework, uRadioConfigStore;
 
 type
@@ -67,6 +67,15 @@ type
       procedure Test_SeedUsesFactoryIdAndLegacyNetworkNames;
       procedure Test_SeedDedupesIdenticalSlotNames;
       procedure Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
+
+      // --- JSON persistence (Track F-5a) ---------------------------------
+      procedure Test_JSONRoundTripsEveryRadioField;
+      procedure Test_JSONRoundTripsProfilesAndGeneral;
+      procedure Test_JSONStoresTheSchemaVersion;
+      procedure Test_JSONNameSurvivesIniHostileCharacters;
+      procedure Test_JSONLoadOfGarbageLeavesAnEmptyStore;
+      procedure Test_JSONMissingFileIsReportedNotRaised;
+      procedure Test_JSONFileRoundTripsThroughDisk;
    public
       procedure RunAllTests; override;
    end;
@@ -85,6 +94,27 @@ var
 
 // A TMemIniFile on a path of its own.  Unique per call, so no two fixtures can
 // see each other's contents even if a Free is missed somewhere.
+// A temp FILE NAME (not an ini object) for the JSON tests, registered for
+// cleanup exactly like NewTempIni's.
+function NewTempFileName(const aExt: string): string;
+var
+   buf: array[0..MAX_PATH] of Char;
+begin
+   Windows.GetTempPath(Length(buf), buf);
+   Inc(gTempIniSeq);
+   Result := IncludeTrailingPathDelimiter(buf) +
+             Format('tr4w_cfgstore_%d_%d.%s',
+                    [GetCurrentProcessId, gTempIniSeq, aExt]);
+   if FileExists(Result) then
+      begin
+      SysUtils.DeleteFile(Result);
+      end;
+   if gTempIniFiles <> nil then
+      begin
+      gTempIniFiles.Add(Result);
+      end;
+end;
+
 function NewTempIni: TMemIniFile;
 var
    buf: array[0..MAX_PATH] of Char;
@@ -1115,6 +1145,255 @@ end;
 
 { ----------------------------------------------------------------- runner - }
 
+procedure TRadioConfigStoreTests.Test_JSONRoundTripsEveryRadioField;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+   original: TRadioDefinition;
+   err: string;
+begin
+   BeginTest('Test_JSONRoundTripsEveryRadioField');
+   // The JSON counterpart of Test_RoundTripsEveryRadioField, and it exists for
+   // the same reason: a field missing from either half of the persistence code
+   // shows up here and nowhere else until a contest.  Both suites are kept --
+   // the ini reader is still live for migrating a pre-F-5a store.
+   original := MakeFullyPopulatedRadio('K4D');
+   try
+      store := TRadioConfigStore.Create;
+      try
+         CheckTrue(store.AddRadio(original.Clone, err), 'added: ' + err);
+         root := store.SaveToJSON;
+      finally
+         store.Free;
+      end;
+
+      try
+         store := TRadioConfigStore.Create;
+         try
+            store.LoadFromJSON(root);
+            CheckEquals(1, store.RadioCount, 'one radio came back');
+            CheckRadiosMatch(original, store.FindRadio('K4D'));
+         finally
+            store.Free;
+         end;
+      finally
+         root.Free;
+      end;
+   finally
+      original.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_JSONRoundTripsProfilesAndGeneral;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+   prof: TStationProfile;
+   loaded: TStationProfile;
+   err: string;
+begin
+   BeginTest('Test_JSONRoundTripsProfilesAndGeneral');
+   store := TRadioConfigStore.Create;
+   try
+      CheckTrue(store.AddRadio(MakeFullyPopulatedRadio('A'), err), 'radio A: ' + err);
+      CheckTrue(store.AddRadio(MakeFullyPopulatedRadio('B'), err), 'radio B: ' + err);
+
+      prof := TStationProfile.Create;
+      prof.Name              := 'Field Day';
+      prof.Radio1Name        := 'A';
+      prof.Radio2Name        := 'B';
+      prof.DefaultActiveSlot := 2;
+      prof.CWOutput1         := 'CAT';
+      prof.CWOutput2         := 'NONE';
+      CheckTrue(store.AddProfile(prof, err), 'profile: ' + err);
+
+      store.ActiveProfileName    := 'Field Day';
+      store.AutoConnectOnStartup := True;
+
+      root := store.SaveToJSON;
+   finally
+      store.Free;
+   end;
+
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckEquals(1, store.ProfileCount, 'one profile came back');
+         loaded := store.FindProfile('Field Day');
+         CheckTrue(loaded <> nil, 'profile found by name');
+         CheckEquals('A',    loaded.Radio1Name,        'radio 1');
+         CheckEquals('B',    loaded.Radio2Name,        'radio 2');
+         CheckEquals(2,      loaded.DefaultActiveSlot, 'default slot');
+         CheckEquals('CAT',  loaded.CWOutput1,         'cw output 1');
+         CheckEquals('NONE', loaded.CWOutput2,         'cw output 2');
+         // [General] travels too -- forgetting it would silently deactivate the
+         // operator's profile on the next start.
+         CheckEquals('Field Day', store.ActiveProfileName, 'active profile');
+         CheckTrue(store.AutoConnectOnStartup, 'auto-connect');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_JSONStoresTheSchemaVersion;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+   v: TJSONValue;
+begin
+   BeginTest('Test_JSONStoresTheSchemaVersion');
+   // Pinned so that a shape change cannot ship without someone deciding what
+   // the old version should do.  A store with no version is not something this
+   // code will ever have written.
+   store := TRadioConfigStore.Create;
+   try
+      root := store.SaveToJSON;
+   finally
+      store.Free;
+   end;
+
+   try
+      v := root.GetValue('version');
+      CheckTrue(v <> nil, 'a version is written');
+      CheckTrue(v is TJSONNumber, 'the version is a number');
+      CheckEquals(1, TJSONNumber(v).AsInt, 'schema version');
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_JSONNameSurvivesIniHostileCharacters;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+   radio: TRadioDefinition;
+   err: string;
+   hostile: string;
+begin
+   BeginTest('Test_JSONNameSurvivesIniHostileCharacters');
+   // THE REASON FOR THE MOVE, as a test.  The ini form encoded a radio's name
+   // in its SECTION HEADER ('[Radio.K3]'), so a name containing ']' or '=' --
+   // or with a leading space -- was at the mercy of the ini parser.  In JSON a
+   // name is an ordinary value and none of that matters.
+   // No LEADING/TRAILING space in the fixture: AddRadio trims deliberately
+   // (a name with edge whitespace is its own trap), so testing for it here
+   // would be asserting the store's normalisation, not JSON's fidelity.
+   hostile := 'K3 [home] = main; "quoted"';
+
+   radio := TRadioDefinition.Create;
+   radio.Name       := hostile;
+   radio.RegistryId := 'K3';
+
+   store := TRadioConfigStore.Create;
+   try
+      CheckTrue(store.AddRadio(radio, err), 'added: ' + err);
+      root := store.SaveToJSON;
+   finally
+      store.Free;
+   end;
+
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckEquals(1, store.RadioCount, 'one radio came back');
+         CheckEquals(hostile, store.Radio(0).Name, 'the name survived verbatim');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_JSONLoadOfGarbageLeavesAnEmptyStore;
+var
+   store: TRadioConfigStore;
+   fileName: string;
+   err: string;
+   ok: boolean;
+begin
+   BeginTest('Test_JSONLoadOfGarbageLeavesAnEmptyStore');
+   // A corrupt settings file must not stop TR4W starting, and must not leave a
+   // HALF-loaded library either -- a partial list is harder to diagnose than an
+   // obviously empty one.  The failure has to be reported, though, or "my
+   // radios vanished" becomes unanswerable.
+   fileName := NewTempFileName('json');
+   TFile.WriteAllText(fileName, '{ this is not json', TEncoding.UTF8);
+
+   store := TRadioConfigStore.Create;
+   try
+      ok := store.LoadFromFile(fileName, err);
+      CheckFalse(ok, 'a malformed file is reported as a failure');
+      CheckTrue(err <> '', 'and the reason is given');
+      CheckEquals(0, store.RadioCount, 'the store is empty, not half-loaded');
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_JSONMissingFileIsReportedNotRaised;
+var
+   store: TRadioConfigStore;
+   err: string;
+begin
+   BeginTest('Test_JSONMissingFileIsReportedNotRaised');
+   // The first-run path depends on this: no file yet is an ordinary answer, so
+   // the caller can fall through to migration or seeding.
+   store := TRadioConfigStore.Create;
+   try
+      CheckFalse(store.LoadFromFile(NewTempFileName('json') + '.absent', err),
+                 'absent file returns False');
+      CheckTrue(err <> '', 'and says why');
+      CheckEquals(0, store.RadioCount, 'store left empty');
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_JSONFileRoundTripsThroughDisk;
+var
+   store: TRadioConfigStore;
+   fileName: string;
+   original: TRadioDefinition;
+   err: string;
+begin
+   BeginTest('Test_JSONFileRoundTripsThroughDisk');
+   // SaveToFile/LoadFromFile together, because that pair is what production
+   // actually calls -- the in-memory tests above would still pass if the file
+   // were written in the wrong encoding or never flushed.
+   fileName := NewTempFileName('json');
+   original := MakeFullyPopulatedRadio('IC-7610');
+   try
+      store := TRadioConfigStore.Create;
+      try
+         CheckTrue(store.AddRadio(original.Clone, err), 'added: ' + err);
+         store.ActiveProfileName := 'Default';
+         store.SaveToFile(fileName);
+      finally
+         store.Free;
+      end;
+
+      CheckTrue(FileExists(fileName), 'the file was written');
+
+      store := TRadioConfigStore.Create;
+      try
+         CheckTrue(store.LoadFromFile(fileName, err), 'loaded: ' + err);
+         CheckEquals(1, store.RadioCount, 'one radio came back');
+         CheckRadiosMatch(original, store.FindRadio('IC-7610'));
+         CheckEquals('Default', store.ActiveProfileName, 'active profile');
+      finally
+         store.Free;
+      end;
+   finally
+      original.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.RunAllTests;
 begin
    try
@@ -1146,6 +1425,14 @@ begin
    Test_SeedInfersNetworkTransport;
    Test_SeedUsesFactoryIdAndLegacyNetworkNames;
    Test_SeedDedupesIdenticalSlotNames;
+
+   Test_JSONRoundTripsEveryRadioField;
+   Test_JSONRoundTripsProfilesAndGeneral;
+   Test_JSONStoresTheSchemaVersion;
+   Test_JSONNameSurvivesIniHostileCharacters;
+   Test_JSONLoadOfGarbageLeavesAnEmptyStore;
+   Test_JSONMissingFileIsReportedNotRaised;
+   Test_JSONFileRoundTripsThroughDisk;
    Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
    finally
       // Even if a test escapes with an exception, the fixture files go.

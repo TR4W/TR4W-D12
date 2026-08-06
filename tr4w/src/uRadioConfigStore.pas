@@ -68,7 +68,9 @@ uses
    System.SysUtils,
    System.StrUtils,      // StartsText, for the section-name prefixes
    System.Classes,
+   System.IOUtils,       // TFile -- whole-file read/write for the JSON store
    System.IniFiles,
+   System.JSON,          // the format of record for settings\tr4w.json
    System.Generics.Collections;
 
 type
@@ -245,6 +247,29 @@ type
       function Validate(out aError: string): boolean;
 
       // --- persistence -------------------------------------------------------
+      // JSON is the format of record (settings\tr4w.json).  The ini pair below
+      // is kept for reading a store written before the move, and for
+      // SeedFromLegacyIni, which reads tr4w.ini and always will.
+      //
+      // A JSON object rather than an ini-shaped adapter, deliberately.  The
+      // ini encodes a radio's NAME IN ITS SECTION HEADER ('[Radio.K3]'), so a
+      // name has to survive being an ini section -- brackets, '=' and leading
+      // or trailing spaces are all hazards there and none of them are hazards
+      // in a value.  Radios and profiles are therefore JSON ARRAYS whose name
+      // is an ordinary field.
+      //
+      // aRoot is the CALLER'S in both directions: LoadFromJSON does not free
+      // it, and SaveToJSON returns a new object the caller owns.
+      procedure LoadFromJSON(const aRoot: TJSONObject);
+      function  SaveToJSON: TJSONObject;
+
+      // Whole-file convenience.  LoadFromFile returns False when the file is
+      // absent or unreadable so the caller can fall back to a migration, and
+      // raises nothing on malformed JSON -- a corrupt settings file must not
+      // stop the program from starting.
+      function  LoadFromFile(const aFileName: string; out aError: string): boolean;
+      procedure SaveToFile(const aFileName: string);
+
       // aIni is the CALLER'S -- this never opens or frees a file.
       procedure LoadFrom(const aIni: TCustomIniFile);
       procedure SaveTo(const aIni: TCustomIniFile);
@@ -266,6 +291,18 @@ const
    // about.  Written to [General]; nothing reads it yet, deliberately -- it is
    // here so that a future migration HAS a version to branch on.
    RADIOCONFIG_SCHEMA_VERSION = 1;
+
+   // --- JSON schema ---------------------------------------------------
+   // Written on every save and checked on every load.  It exists so that a
+   // later shape change can migrate rather than guess: a store with no
+   // version predates the field and is not something this code will ever
+   // have written.
+   JSON_SCHEMA_VERSION   = 1;
+   JSONKEY_VERSION       = 'version';
+   JSONKEY_GENERAL       = 'general';
+   JSONKEY_RADIOS        = 'radios';
+   JSONKEY_PROFILES      = 'profiles';
+   JSONKEY_NAME          = 'name';
 
    RADIOSECTION_PREFIX   = 'Radio.';
    PROFILESECTION_PREFIX = 'Profile.';
@@ -1039,6 +1076,331 @@ begin
       begin
       prof.Free;
       end;
+end;
+
+{ ------------------------------------------------------------------ JSON --- }
+
+// Small readers that give a MISSING key and a present-but-wrong-typed key the
+// same answer: the default.  A settings file is edited by hand sooner or later,
+// and a typo in one field must not cost the operator the other forty.
+function JSONStr(const aObj: TJSONObject; const aKey: string; const aDefault: string): string;
+var
+   v: TJSONValue;
+begin
+   Result := aDefault;
+   if aObj = nil then
+      begin
+      Exit;
+      end;
+   v := aObj.GetValue(aKey);
+   if (v <> nil) and (v is TJSONString) then
+      begin
+      Result := TJSONString(v).Value;
+      end;
+end;
+
+function JSONInt(const aObj: TJSONObject; const aKey: string; const aDefault: integer): integer;
+var
+   v: TJSONValue;
+begin
+   Result := aDefault;
+   if aObj = nil then
+      begin
+      Exit;
+      end;
+   v := aObj.GetValue(aKey);
+   if (v <> nil) and (v is TJSONNumber) then
+      begin
+      Result := TJSONNumber(v).AsInt;
+      end;
+end;
+
+function JSONBool(const aObj: TJSONObject; const aKey: string; const aDefault: boolean): boolean;
+var
+   v: TJSONValue;
+begin
+   Result := aDefault;
+   if aObj = nil then
+      begin
+      Exit;
+      end;
+   v := aObj.GetValue(aKey);
+   if (v <> nil) and (v is TJSONBool) then
+      begin
+      Result := TJSONBool(v).AsBoolean;
+      end;
+end;
+
+function RadioToJSON(const aRadio: TRadioDefinition): TJSONObject;
+begin
+   Result := TJSONObject.Create;
+
+   Result.AddPair(JSONKEY_NAME,      aRadio.Name);
+   Result.AddPair('registryId',      aRadio.RegistryId);
+   Result.AddPair('transport',       TransportToStr(aRadio.Transport));
+
+   Result.AddPair('controlPort',     aRadio.ControlPort);
+   Result.AddPair('baudRate',        TJSONNumber.Create(aRadio.BaudRate));
+   Result.AddPair('serialFormat',    aRadio.SerialFormat);
+   Result.AddPair('catRTS',          aRadio.CatRTS);
+   Result.AddPair('catDTR',          aRadio.CatDTR);
+
+   Result.AddPair('ipAddress',       aRadio.IPAddress);
+   Result.AddPair('tcpPort',         TJSONNumber.Create(aRadio.TCPPort));
+   Result.AddPair('networkUsername', aRadio.NetworkUsername);
+   Result.AddPair('networkPassword', aRadio.NetworkPassword);
+
+   Result.AddPair('keyerOutputPort', aRadio.KeyerOutputPort);
+   Result.AddPair('keyerRTS',        aRadio.KeyerRTS);
+   Result.AddPair('keyerDTR',        aRadio.KeyerDTR);
+   Result.AddPair('keyerStopBits',   TJSONNumber.Create(aRadio.KeyerStopBits));
+
+   Result.AddPair('cwByCAT',         TJSONBool.Create(aRadio.CWByCAT));
+   Result.AddPair('cwSpeedSync',     TJSONBool.Create(aRadio.CWSpeedSync));
+
+   Result.AddPair('useHamLib',       TJSONBool.Create(aRadio.UseHamLib));
+   Result.AddPair('hamLibID',        TJSONNumber.Create(aRadio.HamLibID));
+   Result.AddPair('receiverAddress', TJSONNumber.Create(aRadio.ReceiverAddress));
+   Result.AddPair('icomDataModeID',  TJSONNumber.Create(aRadio.IcomDataModeID));
+   Result.AddPair('icomFilterByte',  TJSONNumber.Create(aRadio.IcomFilterByte));
+   Result.AddPair('wideCWFilter',    TJSONBool.Create(aRadio.WideCWFilter));
+   Result.AddPair('ft1000mpCWReverse', TJSONBool.Create(aRadio.FT1000MPCWReverse));
+   Result.AddPair('frequencyAdder',  TJSONNumber.Create(aRadio.FrequencyAdder));
+   Result.AddPair('bandOutputPort',  aRadio.BandOutputPort);
+   Result.AddPair('startupCommand',  aRadio.StartupCommand);
+   Result.AddPair('pollingEnable',   TJSONBool.Create(aRadio.PollingEnable));
+end;
+
+function ProfileToJSON(const aProfile: TStationProfile): TJSONObject;
+begin
+   Result := TJSONObject.Create;
+
+   Result.AddPair(JSONKEY_NAME,        aProfile.Name);
+   Result.AddPair('radio1',            aProfile.Radio1Name);
+   Result.AddPair('radio2',            aProfile.Radio2Name);
+   Result.AddPair('defaultActiveSlot', TJSONNumber.Create(aProfile.DefaultActiveSlot));
+   Result.AddPair('cwOutput1',         aProfile.CWOutput1);
+   Result.AddPair('cwOutput2',         aProfile.CWOutput2);
+end;
+
+function TRadioConfigStore.SaveToJSON: TJSONObject;
+var
+   radios, profiles: TJSONArray;
+   general: TJSONObject;
+   i: integer;
+begin
+   Result := TJSONObject.Create;
+   Result.AddPair(JSONKEY_VERSION, TJSONNumber.Create(JSON_SCHEMA_VERSION));
+
+   general := TJSONObject.Create;
+   general.AddPair('activeProfile', FActiveProfileName);
+   general.AddPair('autoConnect',   TJSONBool.Create(FAutoConnectOnStartup));
+   Result.AddPair(JSONKEY_GENERAL, general);
+
+   // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
+   // form had to encode the name in the section header, which made a name
+   // containing ']' or '=' a hazard and left ordering to whatever the ini
+   // reader happened to return.
+   radios := TJSONArray.Create;
+   for i := 0 to FRadios.Count - 1 do
+      begin
+      radios.AddElement(RadioToJSON(FRadios[i]));
+      end;
+   Result.AddPair(JSONKEY_RADIOS, radios);
+
+   profiles := TJSONArray.Create;
+   for i := 0 to FProfiles.Count - 1 do
+      begin
+      profiles.AddElement(ProfileToJSON(FProfiles[i]));
+      end;
+   Result.AddPair(JSONKEY_PROFILES, profiles);
+end;
+
+procedure TRadioConfigStore.LoadFromJSON(const aRoot: TJSONObject);
+var
+   arr: TJSONArray;
+   obj: TJSONObject;
+   general: TJSONObject;
+   radioDef: TRadioDefinition;
+   profile: TStationProfile;
+   v: TJSONValue;
+   i: integer;
+   err: string;
+begin
+   Clear;
+   if aRoot = nil then
+      begin
+      Exit;
+      end;
+
+   general := nil;
+   v := aRoot.GetValue(JSONKEY_GENERAL);
+   if (v <> nil) and (v is TJSONObject) then
+      begin
+      general := TJSONObject(v);
+      end;
+   FActiveProfileName    := JSONStr(general,  'activeProfile', '');
+   FAutoConnectOnStartup := JSONBool(general, 'autoConnect',   False);
+
+   // Radios before profiles: a profile's radio references are only meaningful
+   // once the radios exist, and Validate is easier to reason about that way.
+   v := aRoot.GetValue(JSONKEY_RADIOS);
+   if (v <> nil) and (v is TJSONArray) then
+      begin
+      arr := TJSONArray(v);
+      for i := 0 to arr.Count - 1 do
+         begin
+         if not (arr.Items[i] is TJSONObject) then
+            begin
+            Continue;
+            end;
+         obj := TJSONObject(arr.Items[i]);
+
+         radioDef := TRadioDefinition.Create;
+         radioDef.Name              := JSONStr(obj,  JSONKEY_NAME,      '');
+         radioDef.RegistryId        := JSONStr(obj,  'registryId',      '');
+         radioDef.Transport         := StrToTransport(
+                                       JSONStr(obj,  'transport',       TRANSPORTNAME[rtSerial]));
+
+         radioDef.ControlPort       := JSONStr(obj,  'controlPort',     PORT_NONE);
+         radioDef.BaudRate          := JSONInt(obj,  'baudRate',        0);
+         radioDef.SerialFormat      := JSONStr(obj,  'serialFormat',    '');
+         radioDef.CatRTS            := JSONStr(obj,  'catRTS',          '');
+         radioDef.CatDTR            := JSONStr(obj,  'catDTR',          '');
+
+         radioDef.IPAddress         := JSONStr(obj,  'ipAddress',       '');
+         radioDef.TCPPort           := JSONInt(obj,  'tcpPort',         0);
+         radioDef.NetworkUsername   := JSONStr(obj,  'networkUsername', '');
+         radioDef.NetworkPassword   := JSONStr(obj,  'networkPassword', '');
+
+         radioDef.KeyerOutputPort   := JSONStr(obj,  'keyerOutputPort', PORT_NONE);
+         radioDef.KeyerRTS          := JSONStr(obj,  'keyerRTS',        '');
+         radioDef.KeyerDTR          := JSONStr(obj,  'keyerDTR',        '');
+         radioDef.KeyerStopBits     := JSONInt(obj,  'keyerStopBits',   0);
+
+         radioDef.CWByCAT           := JSONBool(obj, 'cwByCAT',         False);
+         radioDef.CWSpeedSync       := JSONBool(obj, 'cwSpeedSync',     False);
+
+         radioDef.UseHamLib         := JSONBool(obj, 'useHamLib',       False);
+         radioDef.HamLibID          := JSONInt(obj,  'hamLibID',        0);
+         radioDef.ReceiverAddress   := JSONInt(obj,  'receiverAddress', 0);
+         radioDef.IcomDataModeID    := JSONInt(obj,  'icomDataModeID',  0);
+         radioDef.IcomFilterByte    := JSONInt(obj,  'icomFilterByte',  0);
+         radioDef.WideCWFilter      := JSONBool(obj, 'wideCWFilter',    False);
+         radioDef.FT1000MPCWReverse := JSONBool(obj, 'ft1000mpCWReverse', False);
+         radioDef.FrequencyAdder    := JSONInt(obj,  'frequencyAdder',  0);
+         radioDef.BandOutputPort    := JSONStr(obj,  'bandOutputPort',  PORT_NONE);
+         radioDef.StartupCommand    := JSONStr(obj,  'startupCommand',  '');
+         radioDef.PollingEnable     := JSONBool(obj, 'pollingEnable',   True);
+
+         // A blank or duplicate name cannot come from SaveToJSON, but it can
+         // come from a hand-edited file.  Drop that entry rather than raise
+         // while loading settings.
+         if not AddRadio(radioDef, err) then
+            begin
+            radioDef.Free;
+            end;
+         end;
+      end;
+
+   v := aRoot.GetValue(JSONKEY_PROFILES);
+   if (v <> nil) and (v is TJSONArray) then
+      begin
+      arr := TJSONArray(v);
+      for i := 0 to arr.Count - 1 do
+         begin
+         if not (arr.Items[i] is TJSONObject) then
+            begin
+            Continue;
+            end;
+         obj := TJSONObject(arr.Items[i]);
+
+         profile := TStationProfile.Create;
+         profile.Name              := JSONStr(obj, JSONKEY_NAME,        '');
+         profile.Radio1Name        := JSONStr(obj, 'radio1',            '');
+         profile.Radio2Name        := JSONStr(obj, 'radio2',            '');
+         profile.DefaultActiveSlot := JSONInt(obj, 'defaultActiveSlot', 1);
+         profile.CWOutput1         := JSONStr(obj, 'cwOutput1',         '');
+         profile.CWOutput2         := JSONStr(obj, 'cwOutput2',         '');
+
+         if not AddProfile(profile, err) then
+            begin
+            profile.Free;
+            end;
+         end;
+      end;
+end;
+
+function TRadioConfigStore.LoadFromFile(const aFileName: string; out aError: string): boolean;
+var
+   text: string;
+   root: TJSONValue;
+begin
+   Result  := False;
+   aError  := '';
+
+   if not FileExists(aFileName) then
+      begin
+      aError := 'not found: ' + aFileName;
+      Exit;
+      end;
+
+   try
+      // TEncoding.UTF8 explicitly: JSON is UTF-8 by definition (RFC 8259), and
+      // letting this default to the machine's ANSI codepage would mangle a
+      // non-ASCII radio name differently on different machines -- the same
+      // class of bug the lang files hit.
+      text := TFile.ReadAllText(aFileName, TEncoding.UTF8);
+   except
+      on E: Exception do
+         begin
+         aError := 'unreadable: ' + E.Message;
+         Exit;
+         end;
+   end;
+
+   root := TJSONObject.ParseJSONValue(text);
+   if root = nil then
+      begin
+      // Malformed.  Report it and leave the store EMPTY rather than
+      // half-loaded: a corrupt settings file must not stop TR4W starting, and
+      // a partial library is harder to diagnose than an obviously empty one.
+      aError := 'not valid JSON: ' + aFileName;
+      Exit;
+      end;
+
+   try
+      if not (root is TJSONObject) then
+         begin
+         aError := 'root is not a JSON object: ' + aFileName;
+         Exit;
+         end;
+      LoadFromJSON(TJSONObject(root));
+      Result := True;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStore.SaveToFile(const aFileName: string);
+var
+   root: TJSONObject;
+   dir: string;
+begin
+   dir := ExtractFilePath(aFileName);
+   if (dir <> '') and (not DirectoryExists(dir)) then
+      begin
+      ForceDirectories(dir);
+      end;
+
+   root := SaveToJSON;
+   try
+      // Format, not ToJSON: this file is meant to be readable and hand-editable
+      // -- that is the reason for moving off the ini in the first place.
+      TFile.WriteAllText(aFileName, root.Format(2), TEncoding.UTF8);
+   finally
+      root.Free;
+   end;
 end;
 
 procedure TRadioConfigStore.LoadFrom(const aIni: TCustomIniFile);
