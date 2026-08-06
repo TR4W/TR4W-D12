@@ -76,12 +76,58 @@ function MessageIsForFMXWindow(const aMsg: TMsg): boolean;
 // only matters while one is up.
 function AnyFMXWindowOpen: boolean;
 
+// Call ONCE, straight after FMX.Forms.Application.Initialize.
+//
+// FMX asks "is the application running?" before it will activate a form:
+//     TCommonCustomForm.Activate  (FMX.Forms.pas:5007)
+//        ... and (ApplicationState = TApplicationState.Running) then
+// and on Windows that answer comes from TPlatformWin.FRunning, which is set in
+// TPlatformWin.Run (FMX.Platform.Win.pas:734) -- i.e. by Application.Run, the
+// one call this architecture deliberately never makes.
+//
+// So every FMX form here stayed Active=False for its whole life.  The visible
+// symptom was small and very confusing: text could be typed into an edit but NO
+// CARET ever appeared, because TCustomCaret.CanShow (FMX.Types.pas) requires
+//     Visible and Enabled and IsFocused and <owning form>.Active
+// while keystrokes reach the control by a path that never consults Active.
+// Diagnosed on the bench 2026-08-05 by logging Active once per timer tick.
+//
+// ApplicationStateQuery is FMX's own hook for a host that owns the message loop
+// (a public, writable property on TApplication), so this is the supported
+// answer rather than a poke at FMX internals.  It reports Terminated once
+// Application.Terminated is set, mirroring the standard logic minus the
+// dependency on Run having been called -- claiming Running during shutdown
+// would tell FMX to activate forms while they are being torn down.
+procedure TellFMXTheApplicationIsRunning;
+
 implementation
+
+uses
+   FMX.Forms;
 
 var
    // Deliberately a plain array: it holds one or two handles, and it is
    // consulted once per message.
    gHandles: array of HWND;
+
+// TApplicationStateEvent is a PLAIN function type -- not `of object` and not
+// `reference to` -- so this is a unit-level function, not a method or a closure.
+function HostedApplicationState: TApplicationState;
+begin
+   if Application.Terminated then
+      begin
+      Result := TApplicationState.Terminated;
+      end
+   else
+      begin
+      Result := TApplicationState.Running;
+      end;
+end;
+
+procedure TellFMXTheApplicationIsRunning;
+begin
+   Application.ApplicationStateQuery := HostedApplicationState;
+end;
 
 function IndexOfHandle(const aHandle: HWND): integer;
 var
