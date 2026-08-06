@@ -1,0 +1,83 @@
+# Line endings, settled once.  See tr4w/build/Lint-LineEndings.ps1 for the
+# other half of this: .gitattributes governs what git WRITES on checkout and
+# STORES on commit, but it cannot stop a tool from writing a file with the
+# wrong endings straight into the working tree.  The lint catches that.
+#
+# WHY THIS FILE EXISTS.  This was `core.autocrlf=true` and nothing else, which
+# is per-machine configuration and is not committed -- so the tree's line
+# endings depended on how each clone happened to be configured.  Two things
+# went wrong because of it (2026-08-05):
+#
+#   1. A .pas written with LF endings was opened in the RAD Studio designer.
+#      The IDE computes insertion offsets assuming CRLF, so adding an event
+#      handler spliced the new code into the MIDDLE of two identifiers
+#      (`btnCloseClick(Sende` / `r: TObject)`).  Nothing was deleted; the text
+#      landed at the wrong byte offset.  150 tracked .pas files were sitting
+#      in the working tree with LF endings at the time, VC.pas among them.
+#
+#   2. More seriously, the golden-master corpus references (ref.adi/ref.cbr)
+#      are BYTE-DIFFED against the D12 export, and git was EOL-converting them
+#      -- they were stored LF and checked out CRLF.  They round-tripped only
+#      because of one particular autocrlf setting.  A contributor configured
+#      differently would get different bytes on disk and see corpus failures
+#      that are not in the code at all.
+
+# ---------------------------------------------------------------------------
+# Default: detect text, store it LF in the repository, check it out CRLF.
+# This is a Windows/Delphi tree; CRLF in the working copy is what every tool
+# here expects.
+# ---------------------------------------------------------------------------
+*               text=auto eol=crlf
+
+# ---------------------------------------------------------------------------
+# Sources the RAD Studio IDE co-owns.  These MUST be CRLF in the working tree:
+# the IDE edits them by byte offset, and an LF file gets spliced (see above).
+# ---------------------------------------------------------------------------
+*.pas           text eol=crlf
+*.dpr           text eol=crlf
+*.dpk           text eol=crlf
+*.inc           text eol=crlf
+*.dproj         text eol=crlf
+*.bdsproj       text eol=crlf
+*.fmx           text eol=crlf
+*.dfm           text eol=crlf
+*.rc            text eol=crlf
+
+# ---------------------------------------------------------------------------
+# Scripts that run under Git Bash.  A CRLF here is not cosmetic: the carriage
+# return becomes part of the last token on the line, which breaks shebangs and
+# heredoc terminators.
+# ---------------------------------------------------------------------------
+*.sh            text eol=lf
+
+# ---------------------------------------------------------------------------
+# BYTE-EXACT FIXTURES -- never convert, never normalise.
+#
+# The golden-master corpus (tr4w/test/corpus) byte-diffs ref.adi/ref.cbr
+# against what the app exports.  If git rewrites their endings on checkout,
+# the diff reports a regression that does not exist.  `-text` rather than
+# `binary` so they stay diffable in git -- when a reference legitimately
+# changes we want to read the change, not just see "binary files differ".
+# ---------------------------------------------------------------------------
+*.adi           -text
+*.cbr           -text
+*.trw           -text
+*.dat           -text
+
+# ---------------------------------------------------------------------------
+# Binary.  Marked explicitly rather than left to git's NUL-byte heuristic --
+# TRMASTER.DTA and the .trw logs are the regression suite's inputs, and a
+# guess is not good enough for those.
+# ---------------------------------------------------------------------------
+*.DTA           binary
+*.dcu           binary
+*.res           binary
+*.obj           binary
+*.exe           binary
+*.dll           binary
+*.bmp           binary
+*.ico           binary
+*.png           binary
+*.jpg           binary
+*.zip           binary
+*.resources     binary

@@ -49,8 +49,8 @@ begin
   WriteLn(h, '<HTML><BODY><OBJECT type="text/site properties"><PARAM name="Window Styles" value="0x800027"></OBJECT><UL>');
 
   AddEntryToHHC('TR4W', 'index.html', 11);
-  AddEntryToHHC('Инсталляция', 'installation.txt', 11);
-  AddEntryToHHC('Создание нового лога', 'newlog.txt', 11);
+  AddEntryToHHC('пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ', 'installation.txt', 11);
+  AddEntryToHHC('пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ', 'newlog.txt', 11);
 
   WriteLn(h, '</UL></BODY></HTML>');
   Close(h);

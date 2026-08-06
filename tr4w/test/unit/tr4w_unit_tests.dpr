@@ -1,4 +1,4 @@
-﻿program tr4w_unit_tests;
+program tr4w_unit_tests;
 
 {
   TR4W Automated Unit Test Runner

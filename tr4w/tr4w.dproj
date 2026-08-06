@@ -20,7 +20,8 @@
              macro and expands to empty under msbuild, which broke the command. -->
         <PreBuildEvent><![CDATA[powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-RadioRegistry.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-PollRadioState.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"
-powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-PCharAnsi.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"]]></PreBuildEvent>
+powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-PCharAnsi.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"
+powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-LineEndings.ps1" -SourceDir "$(MSBuildProjectDirectory)"]]></PreBuildEvent>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
         <Base_Win32>true</Base_Win32>

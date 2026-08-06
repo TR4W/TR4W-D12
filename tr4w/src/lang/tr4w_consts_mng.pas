@@ -1,4 +1,4 @@
-﻿const
+const
   { %s =	A string.}
   { %c =	A single character.}
   { %d =	A signed decimal integer argument.}

@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2024, 2025, 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
