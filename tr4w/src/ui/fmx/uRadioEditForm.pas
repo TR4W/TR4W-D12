@@ -19,21 +19,31 @@ unit uRadioEditForm;
 {
   The Radio editor: one radio DEFINITION, edited in isolation.
 
-  SPLIT OUT OF uPrefsForm 2026-08-06, ahead of converting it to a designed .fmx.
-  A designed form owns a resource named for its unit, so one form per unit is not
-  a style preference here -- it is what the IDE and the form-resource directive
-  require.  The unit
-  it came from held two forms and 2,336 lines.
+  A DESIGNED FORM.  The layout lives in uRadioEditForm.fmx and is edited in the
+  IDE; this unit holds behaviour.  Split out of uPrefsForm 2026-08-06 to make
+  that possible -- a designed form owns a resource named for its unit, so one
+  form per unit is not a style preference here, it is what the IDE and the
+  form-resource directive require.  The unit it came from held two forms and
+  2,336 lines.
 
-  Layout is still built in code.  Converting THAT is the next step; this move is
-  deliberately behaviour-preserving so that if the designed version misbehaves,
-  the difference between the two commits is the layout and nothing else.
+  The .fmx was GENERATED from the running code-built form rather than
+  hand-authored, so the designed layout started out identical to the one that
+  had been tested, to the pixel.  Positions are still absolute; converting them
+  to Align/Anchors is a designer job and does not need this file.
 
-  WHAT WILL NOT MOVE INTO THE DESIGNER.  Population stays here: the port and
-  radio-type combos depend on what is plugged into the machine and what the
-  registry holds, neither of which can be expressed in a .fmx.  Captions stay in
-  code too, assigned from the constants in uFMXFormHelpers, so the move to
-  Delphi resourcestring is not fought by literals baked into the form resource.
+  WHAT DELIBERATELY STAYS IN CODE.
+
+  POPULATION.  The port and radio-type combos depend on what is plugged into
+  the machine and what the registry holds, neither of which can be expressed in
+  a .fmx.  AddComboItem marks the items it creates as not Stored, so a save in
+  the designer can never freeze one machine's hardware into the resource.
+
+  CAPTIONS.  ApplyCaptions assigns every visible string from the constants in
+  uFMXFormHelpers, so the move to Delphi resourcestring is not fought by
+  literals baked into the form resource.  The .fmx does contain English text --
+  it was dumped from a running form -- but every string is overwritten at
+  construction, and it is what makes the form legible in the designer rather
+  than a grid of blank rectangles.
 }
 
 interface
@@ -158,14 +168,14 @@ type
       // rather than read from whichever tab happens to be showing.  Without
       // this, looking at Advanced would silently change the radio's connection.
       FTransport: TRadioTransport;
-      // False until BuildControls has created EVERY control.  Assigning a
-      // TTabItem's Parent makes it the active tab, which fires OnChange -- so
-      // the handler runs while the tabs and edits created after it are still
-      // nil.  Guarding each field individually would mean remembering to add a
-      // test every time a control joins the form; one flag cannot be forgotten.
+      // False until the form is fully constructed.  Streaming makes the first
+      // TTabItem active, which fires OnChange while the form is still being
+      // read -- so the handler runs before the constructor has decided anything.
+      // Guarding each field individually would mean remembering to add a test
+      // every time a control joins the form; one flag cannot be forgotten.
       FBuilt: boolean;
 
-      procedure BuildControls;
+      procedure ApplyCaptions;
       procedure PopulateTypeCombo;
       procedure PopulatePortCombos;
       procedure SetSerialFrame(const aFormat: string);
@@ -183,6 +193,8 @@ type
    end;
 
 implementation
+
+{$R *.fmx}
 
 uses
    Winapi.Windows,
@@ -202,280 +214,101 @@ uses
 
 constructor TRadioEditForm.Create(AOwner: TComponent);
 begin
-   inherited CreateNew(AOwner);
-   Caption     := TC_RADIOEDIT_TITLE;
-   // ClientWidth/ClientHeight, NOT Width/Height.  In FMX, Height includes the
-   // caption bar and borders, so laying controls out against Height puts the
-   // last row BELOW the visible client area -- which is exactly how the OK and
-   // Cancel buttons went missing on NY4I's first look at this window.
-   ClientWidth  := 520;
-   ClientHeight := 470;
-   Position    := TFormPosition.ScreenCenter;
-   // FIXED SIZE, deliberately.  Every control here is laid out at a fixed
-   // position and a fixed width, so a resize only adds whitespace -- and it
-   // used to strand the footer buttons in mid-air, because they were placed
-   // once from ClientWidth/ClientHeight rather than anchored (NY4I,
-   // 2026-08-05).  They are anchored now as well, so this can be flipped back
-   // to Sizeable if the content ever earns it.
+   // Create, NOT CreateNew.  The inherited constructor finds the resource named
+   // for this class and streams uRadioEditForm.fmx into it -- every control,
+   // its position and size, and the event bindings.  A missing or misnamed
+   // resource raises here, which is a loud answer rather than a subtle one.
    //
-   // No maximize button either: offering one on a form that cannot use the
-   // space is a promise the dialog does not keep.
-   BorderStyle := TFmxFormBorderStyle.Single;
-   BorderIcons := [TBorderIcon.biSystemMenu, TBorderIcon.biMinimize];
-   OnShow      := HandleShow;
-   OnClose     := HandleClose;
-   BuildControls;
-end;
+   // SIZE AND BORDER ARE NOW PROPERTIES IN THE DESIGNER, and the reasoning that
+   // put them where they are does not survive in the .fmx, so it is recorded
+   // here.  The form is a FIXED SIZE (BorderStyle Single, no maximize): every
+   // control sits at a fixed position and width, so a resize only adds
+   // whitespace, and offering a maximize button on a form that cannot use the
+   // space is a promise the dialog does not keep.  The footer buttons are
+   // anchored [akRight, akBottom] anyway -- they were once placed from
+   // ClientWidth/ClientHeight without anchors and stranded in mid-air on
+   // resize (NY4I, 2026-08-05) -- so this can be flipped to Sizeable if the
+   // content ever earns it.  Size was set through ClientWidth/ClientHeight, not
+   // Width/Height: in FMX, Height includes the caption bar and borders, which
+   // is how the OK and Cancel buttons went missing on NY4I's first look.
+   inherited Create(AOwner);
 
-procedure TRadioEditForm.BuildControls;
-var
-   y: single;
-   tab: TFmxObject;
+   ApplyCaptions;
 
-   function NextRow: single;
-   begin
-      Result := y;
-      y := y + ROWHEIGHT;
-   end;
+   // ASSIGNED HERE AS WELL AS IN THE RESOURCE, deliberately.  Both are bound by
+   // name in the .fmx, but losing them is not a visible fault: the form would
+   // still open and still look right, having silently stopped registering its
+   // window handle with the coexistence layer -- and keyboard handling is what
+   // that registration exists for.  Re-assigning the same handlers costs
+   // nothing and makes a designer accident survivable.
+   OnShow  := HandleShow;
+   OnClose := HandleClose;
 
-begin
-   y := 12;
-
-   // EVERY control is created with Self as its OWNER, whatever it is parented
-   // to, and every control is NAMED.  Both are prerequisites for the designed
-   // .fmx this form is being converted to: the resource holds the form and the
-   // components the form owns, keyed by name, so a control owned by the TTabItem
-   // it sits on would simply not be in the file.  Owner and Parent are different
-   // questions -- these still parent to the tab.
-
-   // --- identity, always visible -------------------------------------------
-   lblName := MakeLabel(Self, Self, 'lblName', TC_RADIOEDIT_NAME, LEFTMARGIN, y + 4, 120);
-   edtName := TEdit.Create(Self);
-   edtName.Name       := 'edtName';
-   edtName.Parent     := Self;
-   edtName.Position.X := 140;
-   edtName.Position.Y := NextRow;
-   edtName.Width      := 340;
-
-   lblType := MakeLabel(Self, Self, 'lblType', TC_RADIOEDIT_TYPE, LEFTMARGIN, y + 4, 120);
-   cboType := TComboBox.Create(Self);
-   cboType.Name       := 'cboType';
-   cboType.Parent     := Self;
-   cboType.Position.X := 140;
-   cboType.Position.Y := NextRow;
-   cboType.Width      := 340;
-   cboType.OnChange   := HandleTypeChange;
-
-   // --- Serial / Network / Advanced ----------------------------------------
-   tabsTransport := TTabControl.Create(Self);
-   tabsTransport.Name       := 'tabsTransport';
-   tabsTransport.Parent     := Self;
-   tabsTransport.Position.X := LEFTMARGIN;
-   tabsTransport.Position.Y := NextRow;
-   tabsTransport.Width      := 480;
-   tabsTransport.Height     := TABSTRIP + 5 * ROWHEIGHT + 16;
-   tabsTransport.OnChange   := HandleTransportChange;
-   y := y + tabsTransport.Height - ROWHEIGHT + 10;
-
-   tabSerial := TTabItem.Create(Self);
-   tabSerial.Name      := 'tabSerial';
-   tabSerial.Parent    := tabsTransport;
-   tabSerial.Text      := TC_RADIOEDIT_SERIAL;
-   tabSerial.TagString := TransportToStr(rtSerial);
-
-   tabNetwork := TTabItem.Create(Self);
-   tabNetwork.Name      := 'tabNetwork';
-   tabNetwork.Parent    := tabsTransport;
-   tabNetwork.Text      := TC_RADIOEDIT_NETWORK;
-   tabNetwork.TagString := TransportToStr(rtNetwork);
-
-   tabAdvanced := TTabItem.Create(Self);
-   tabAdvanced.Name      := 'tabAdvanced';
-   tabAdvanced.Parent    := tabsTransport;
-   tabAdvanced.Text      := TC_RADIOEDIT_ADVANCED;
-   tabAdvanced.TagString := '';   // not a transport -- see FTransport
-
-   // --- serial --------------------------------------------------------------
-   tab := tabSerial;
-   lblPort := MakeLabel(Self, tab, 'lblPort', TC_RADIOEDIT_PORT, 10, TABTOP + 4, 120);
-   cboPort := TComboBox.Create(Self);
-   cboPort.Name       := 'cboPort';
-   cboPort.Parent     := tab;
-   cboPort.Position.X := 140;
-   cboPort.Position.Y := TABTOP;
-   cboPort.Width      := 320;
-
-   lblBaud := MakeLabel(Self, tab, 'lblBaud', TC_RADIOEDIT_BAUD, 10, TABTOP + 4 + ROWHEIGHT, 120);
-   edtBaud := TEdit.Create(Self);
-   edtBaud.Name       := 'edtBaud';
-   edtBaud.Parent     := tab;
-   edtBaud.Position.X := 140;
-   edtBaud.Position.Y := TABTOP + ROWHEIGHT;
-   edtBaud.Width      := 120;
-
-   // GroupName is what makes each row mutually exclusive.  Without it FMX
-   // groups radio buttons by PARENT, so all seven would fight over one
-   // selection and only the last clicked would ever be set.
-   lblDataBits := MakeLabel(Self, tab, 'lblDataBits', TC_RADIOEDIT_DATABITS, 10, TABTOP + 4 + 2 * ROWHEIGHT, 120);
-   rbData7 := MakeRadio(Self, tab, 'rbData7', '7', 'databits', 140, TABTOP + 2 * ROWHEIGHT, 60);
-   rbData8 := MakeRadio(Self, tab, 'rbData8', '8', 'databits', 205, TABTOP + 2 * ROWHEIGHT, 60);
-
-   lblParity := MakeLabel(Self, tab, 'lblParity', TC_RADIOEDIT_PARITY, 10, TABTOP + 4 + 3 * ROWHEIGHT, 120);
-   rbParityNone := MakeRadio(Self, tab, 'rbParityNone', TC_RADIOEDIT_PARITYNONE, 'parity', 140, TABTOP + 3 * ROWHEIGHT, 75);
-   rbParityOdd := MakeRadio(Self, tab, 'rbParityOdd', TC_RADIOEDIT_PARITYODD,  'parity', 220, TABTOP + 3 * ROWHEIGHT, 65);
-   rbParityEven := MakeRadio(Self, tab, 'rbParityEven', TC_RADIOEDIT_PARITYEVEN, 'parity', 290, TABTOP + 3 * ROWHEIGHT, 70);
-
-   lblStopBits := MakeLabel(Self, tab, 'lblStopBits', TC_RADIOEDIT_STOPBITS, 10, TABTOP + 4 + 4 * ROWHEIGHT, 120);
-   rbStop1 := MakeRadio(Self, tab, 'rbStop1', '1', 'stopbits', 140, TABTOP + 4 * ROWHEIGHT, 60);
-   rbStop2 := MakeRadio(Self, tab, 'rbStop2', '2', 'stopbits', 205, TABTOP + 4 * ROWHEIGHT, 60);
-
-   // --- network -------------------------------------------------------------
-   tab := tabNetwork;
-   lblIP := MakeLabel(Self, tab, 'lblIP', TC_RADIOEDIT_IPADDRESS, 10, TABTOP + 4, 120);
-   edtIP := TEdit.Create(Self);
-   edtIP.Name       := 'edtIP';
-   edtIP.Parent     := tab;
-   edtIP.Position.X := 140;
-   edtIP.Position.Y := TABTOP;
-   edtIP.Width      := 200;
-
-   btnDiscover := MakeButton(Self, tab, 'btnDiscover', TC_RADIOEDIT_DISCOVER,
-                             350, TABTOP, 110, HandleDiscover);
-
-   lblFound := MakeLabel(Self, tab, 'lblFound', TC_RADIOEDIT_FOUND, 10, TABTOP + 4 + 4 * ROWHEIGHT, 120);
-   cboFound := TComboBox.Create(Self);
-   cboFound.Name       := 'cboFound';
-   cboFound.Parent     := tab;
-   cboFound.Position.X := 140;
-   cboFound.Position.Y := TABTOP + 4 * ROWHEIGHT;
-   cboFound.Width      := 320;
-   cboFound.OnChange   := HandleFoundSelect;
-
-   lblTCPPort := MakeLabel(Self, tab, 'lblTCPPort', TC_RADIOEDIT_TCPPORT, 10, TABTOP + 4 + ROWHEIGHT, 120);
-   edtTCPPort := TEdit.Create(Self);
-   edtTCPPort.Name       := 'edtTCPPort';
-   edtTCPPort.Parent     := tab;
-   edtTCPPort.Position.X := 140;
-   edtTCPPort.Position.Y := TABTOP + ROWHEIGHT;
-   edtTCPPort.Width      := 120;
-
-   lblUser := MakeLabel(Self, tab, 'lblUser', TC_RADIOEDIT_USERNAME, 10, TABTOP + 4 + 2 * ROWHEIGHT, 120);
-   edtUser := TEdit.Create(Self);
-   edtUser.Name       := 'edtUser';
-   edtUser.Parent     := tab;
-   edtUser.Position.X := 140;
-   edtUser.Position.Y := TABTOP + 2 * ROWHEIGHT;
-   edtUser.Width      := 200;
-
-   lblPassword := MakeLabel(Self, tab, 'lblPassword', TC_RADIOEDIT_PASSWORD, 10, TABTOP + 4 + 3 * ROWHEIGHT, 120);
-   edtPassword := TEdit.Create(Self);
-   edtPassword.Name       := 'edtPassword';
-   edtPassword.Parent     := tab;
-   edtPassword.Position.X := 140;
-   edtPassword.Position.Y := TABTOP + 3 * ROWHEIGHT;
-   edtPassword.Width      := 200;
-   edtPassword.Password   := True;
-
-   // --- advanced ------------------------------------------------------------
-   // Everything here is a diagnostic or a per-model quirk, NOT a setup choice.
-   // "Poll this radio" is the clearest case (NY4I): an operator has no way to
-   // know whether their radio should be polled -- that is something TR4W knows
-   // -- so it is on by default and lives here for the rare case of switching it
-   // off to chase a problem.  Same for the startup command and the Icom bytes.
-   tab := tabAdvanced;
-   lblStartup := MakeLabel(Self, tab, 'lblStartup', TC_RADIOEDIT_STARTUP, 10, TABTOP + 4, 130);
-   edtStartup := TEdit.Create(Self);
-   edtStartup.Name       := 'edtStartup';
-   edtStartup.Parent     := tab;
-   edtStartup.Position.X := 150;
-   edtStartup.Position.Y := TABTOP;
-   edtStartup.Width      := 310;
-
-   lblFilterByte := MakeLabel(Self, tab, 'lblFilterByte', TC_RADIOEDIT_FILTERBYTE, 10, TABTOP + 4 + ROWHEIGHT, 130);
-   edtFilterByte := TEdit.Create(Self);
-   edtFilterByte.Name       := 'edtFilterByte';
-   edtFilterByte.Parent     := tab;
-   edtFilterByte.Position.X := 150;
-   edtFilterByte.Position.Y := TABTOP + ROWHEIGHT;
-   edtFilterByte.Width      := 70;
-
-   lblDataMode := MakeLabel(Self, tab, 'lblDataMode', TC_RADIOEDIT_DATAMODEID, 240, TABTOP + 4 + ROWHEIGHT, 140);
-   edtDataMode := TEdit.Create(Self);
-   edtDataMode.Name       := 'edtDataMode';
-   edtDataMode.Parent     := tab;
-   edtDataMode.Position.X := 390;
-   edtDataMode.Position.Y := TABTOP + ROWHEIGHT;
-   edtDataMode.Width      := 70;
-
-   lblHamLibID := MakeLabel(Self, tab, 'lblHamLibID', TC_RADIOEDIT_HAMLIBID, 10, TABTOP + 4 + 2 * ROWHEIGHT, 130);
-   edtHamLibID := TEdit.Create(Self);
-   edtHamLibID.Name       := 'edtHamLibID';
-   edtHamLibID.Parent     := tab;
-   edtHamLibID.Position.X := 150;
-   edtHamLibID.Position.Y := TABTOP + 2 * ROWHEIGHT;
-   edtHamLibID.Width      := 70;
-
-   chkUseHamLib := TCheckBox.Create(Self);
-   chkUseHamLib.Name       := 'chkUseHamLib';
-   chkUseHamLib.Parent     := tab;
-   chkUseHamLib.Position.X := 240;
-   chkUseHamLib.Position.Y := TABTOP + 2 * ROWHEIGHT + 4;
-   chkUseHamLib.Width      := 220;
-   chkUseHamLib.Text       := TC_RADIOEDIT_USEHAMLIB;
-
-   chkWideCW := TCheckBox.Create(Self);
-   chkWideCW.Name       := 'chkWideCW';
-   chkWideCW.Parent     := tab;
-   chkWideCW.Position.X := 10;
-   chkWideCW.Position.Y := TABTOP + 3 * ROWHEIGHT + 4;
-   chkWideCW.Width      := 200;
-   chkWideCW.Text       := TC_RADIOEDIT_WIDECW;
-
-   chkFT1000MPReverse := TCheckBox.Create(Self);
-   chkFT1000MPReverse.Name       := 'chkFT1000MPReverse';
-   chkFT1000MPReverse.Parent     := tab;
-   chkFT1000MPReverse.Position.X := 240;
-   chkFT1000MPReverse.Position.Y := TABTOP + 3 * ROWHEIGHT + 4;
-   chkFT1000MPReverse.Width      := 230;
-   chkFT1000MPReverse.Text       := TC_RADIOEDIT_FT1000MPREV;
-
-   chkPolling := TCheckBox.Create(Self);
-   chkPolling.Name       := 'chkPolling';
-   chkPolling.Parent     := tab;
-   chkPolling.Position.X := 10;
-   chkPolling.Position.Y := TABTOP + 4 * ROWHEIGHT + 4;
-   chkPolling.Width      := 220;
-   chkPolling.Text       := TC_RADIOEDIT_POLLING;
-
-   // --- common, below the tabs ---------------------------------------------
-   lblKeyerPort := MakeLabel(Self, Self, 'lblKeyerPort', TC_RADIOEDIT_KEYERPORT, LEFTMARGIN, y + 4, 130);
-   cboKeyerPort := TComboBox.Create(Self);
-   cboKeyerPort.Name       := 'cboKeyerPort';
-   cboKeyerPort.Parent     := Self;
-   cboKeyerPort.Position.X := 150;
-   cboKeyerPort.Position.Y := NextRow;
-   cboKeyerPort.Width      := 200;
-
-   lblCIV := MakeLabel(Self, Self, 'lblCIV', TC_RADIOEDIT_CIVADDRESS, LEFTMARGIN, y + 4, 130);
-   edtCIV := TEdit.Create(Self);
-   edtCIV.Name       := 'edtCIV';
-   edtCIV.Parent     := Self;
-   edtCIV.Position.X := 150;
-   edtCIV.Position.Y := NextRow;
-   edtCIV.Width      := 80;
-
-   // Placed against the bottom-right of the client area AND anchored there, so
-   // they neither get pushed off by a row added above nor stranded in mid-air
-   // when the operator resizes the dialog.
-   btnOK     := MakeButton(Self, Self, 'btnOK',     TC_PREFS_OK,     ClientWidth - 200, ClientHeight - 38, 90, HandleOK,     [TAnchorKind.akRight, TAnchorKind.akBottom]);
-   btnCancel := MakeButton(Self, Self, 'btnCancel', TC_PREFS_CANCEL, ClientWidth - 100, ClientHeight - 38, 90, HandleCancel, [TAnchorKind.akRight, TAnchorKind.akBottom]);
-
-   // Last: every control now exists, so the handlers may run.  PopulateTypeCombo
-   // below sets ItemIndex and fires OnChange, which is safe from here on.
+   // Every control exists the moment streaming finishes, so the guard that
+   // BuildControls needed is satisfied earlier now -- but it is still needed.
+   // Streaming activates the first tab, which fires HandleTransportChange while
+   // the form is only part-way through being read.
    FBuilt := True;
 
    PopulateTypeCombo;
    PopulatePortCombos;
+end;
+
+// Captions are assigned in CODE, not baked into the form resource -- the one
+// part of this form deliberately left out of the designer.  NY4I's plan is to
+// move i18n onto Delphi's native support, and literals frozen into a .fmx would
+// have to be fought back out again.  The designer holds WHERE a control is; this
+// holds WHAT IT SAYS.
+//
+// The generated .fmx does contain the English text, because it was dumped from
+// a running form.  That is harmless -- every string below overwrites it -- and
+// it is what makes the form legible in the designer instead of a grid of blank
+// rectangles.
+procedure TRadioEditForm.ApplyCaptions;
+begin
+   Caption := TC_RADIOEDIT_TITLE;
+
+   lblName.Text     := TC_RADIOEDIT_NAME;
+   lblType.Text     := TC_RADIOEDIT_TYPE;
+
+   tabSerial.Text   := TC_RADIOEDIT_SERIAL;
+   tabNetwork.Text  := TC_RADIOEDIT_NETWORK;
+   tabAdvanced.Text := TC_RADIOEDIT_ADVANCED;
+
+   lblPort.Text     := TC_RADIOEDIT_PORT;
+   lblBaud.Text     := TC_RADIOEDIT_BAUD;
+   lblDataBits.Text := TC_RADIOEDIT_DATABITS;
+   lblParity.Text   := TC_RADIOEDIT_PARITY;
+   lblStopBits.Text := TC_RADIOEDIT_STOPBITS;
+   rbParityNone.Text := TC_RADIOEDIT_PARITYNONE;
+   rbParityOdd.Text  := TC_RADIOEDIT_PARITYODD;
+   rbParityEven.Text := TC_RADIOEDIT_PARITYEVEN;
+
+   lblIP.Text       := TC_RADIOEDIT_IPADDRESS;
+   btnDiscover.Text := TC_RADIOEDIT_DISCOVER;
+   lblFound.Text    := TC_RADIOEDIT_FOUND;
+   lblTCPPort.Text  := TC_RADIOEDIT_TCPPORT;
+   lblUser.Text     := TC_RADIOEDIT_USERNAME;
+   lblPassword.Text := TC_RADIOEDIT_PASSWORD;
+
+   lblStartup.Text    := TC_RADIOEDIT_STARTUP;
+   lblFilterByte.Text := TC_RADIOEDIT_FILTERBYTE;
+   lblDataMode.Text   := TC_RADIOEDIT_DATAMODEID;
+   lblHamLibID.Text   := TC_RADIOEDIT_HAMLIBID;
+   chkUseHamLib.Text  := TC_RADIOEDIT_USEHAMLIB;
+   chkWideCW.Text     := TC_RADIOEDIT_WIDECW;
+   chkFT1000MPReverse.Text := TC_RADIOEDIT_FT1000MPREV;
+   chkPolling.Text    := TC_RADIOEDIT_POLLING;
+
+   lblKeyerPort.Text := TC_RADIOEDIT_KEYERPORT;
+   lblCIV.Text       := TC_RADIOEDIT_CIVADDRESS;
+
+   btnOK.Text     := TC_PREFS_OK;
+   btnCancel.Text := TC_PREFS_CANCEL;
+
+   // The three serial-frame pickers are digits ('7', '8', '1', '2') and are the
+   // same in every language, so they stay in the resource.  Adding them here
+   // would be a translation point that can only ever hold one answer.
 end;
 
 procedure TRadioEditForm.PopulateTypeCombo;

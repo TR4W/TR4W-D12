@@ -89,7 +89,7 @@ uses
   // SPIKE ONLY -- the designed-form probe (FMXDESIGN); remove with the spike.
   uFMXDesignedProbe in 'src\ui\fmx\uFMXDesignedProbe.pas' {FMXDesignedProbe},
   uFMXFormHelpers in 'src\ui\fmx\uFMXFormHelpers.pas',
-  uRadioEditForm in 'src\ui\fmx\uRadioEditForm.pas',
+  uRadioEditForm in 'src\ui\fmx\uRadioEditForm.pas' {RadioEditForm},
   uPrefsForm in 'src\ui\fmx\uPrefsForm.pas',
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
