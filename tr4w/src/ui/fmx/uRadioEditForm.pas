@@ -58,25 +58,102 @@ type
    // because the editor is modeless -- see the unit header.
    TRadioEditDone = procedure(const aAccepted: boolean) of object;
 
+   // PUBLISHED, and that is a requirement rather than a style choice.  This form
+   // is being converted to a designed .fmx, and streaming binds a control to a
+   // field only when the field is published and its name matches the component's
+   // Name exactly -- hence the designer-idiomatic names with no F prefix, which
+   // is also what the IDE will generate for anything dropped on the form later.
+   //
+   // The event handlers are published for the same reason and a less obvious
+   // one: TWriter stores an event as the NAME of a published method, so a
+   // private handler is not written to the resource at all.  That failure is
+   // silent -- the form opens looking perfect and does nothing when clicked.
    TRadioEditForm = class(TForm)
+      lblName: TLabel;
+      edtName: TEdit;
+      lblType: TLabel;
+      cboType: TComboBox;
+      // The TABS are the transport selector -- there is no separate combo.
+      // Transport is exclusive, so a combo plus a visible group would be two
+      // controls expressing one fact and free to disagree.  Choosing the tab IS
+      // choosing the connection, and its parameters are what the tab reveals.
+      tabsTransport: TTabControl;
+      tabSerial: TTabItem;
+      tabNetwork: TTabItem;
+      tabAdvanced: TTabItem;
+      lblPort: TLabel;
+      cboPort: TComboBox;
+      lblBaud: TLabel;
+      edtBaud: TEdit;
+      // The serial frame as three pickers rather than a typed '8N1'.  It is
+      // not only tidier: a free-text frame can be wrong in ways that are
+      // invisible until the radio does not answer, and '8N1' vs '8-N-1' vs
+      // 'N81' all look reasonable to someone typing quickly.  Three groups can
+      // only ever produce a combination the parser accepts.
+      lblDataBits: TLabel;
+      rbData7, rbData8: TRadioButton;
+      lblParity: TLabel;
+      rbParityNone, rbParityOdd, rbParityEven: TRadioButton;
+      lblStopBits: TLabel;
+      rbStop1, rbStop2: TRadioButton;
+      lblIP: TLabel;
+      edtIP: TEdit;
+      lblTCPPort: TLabel;
+      edtTCPPort: TEdit;
+      lblUser: TLabel;
+      edtUser: TEdit;
+      lblPassword: TLabel;
+      edtPassword: TEdit;
+      btnDiscover: TButton;
+      lblFound: TLabel;
+      cboFound: TComboBox;
+      lblKeyerPort: TLabel;
+      cboKeyerPort: TComboBox;
+      edtCIV: TEdit;
+      edtHamLibID: TEdit;
+      lblStartup: TLabel;
+      edtStartup: TEdit;
+      chkPolling: TCheckBox;
+      chkUseHamLib: TCheckBox;
+      // Radio-scoped settings that used to sit in the flat config-command list,
+      // where they read as applying to the station rather than to one rig
+      // (NY4I 2026-08-05).  Their CFGCA rows are now csOwned.
+      edtFilterByte: TEdit;
+      edtDataMode: TEdit;
+      chkWideCW: TCheckBox;
+      chkFT1000MPReverse: TCheckBox;
+      btnOK: TButton;
+      btnCancel: TButton;
+
+      // The labels of the model-only fields, kept so they can be greyed WITH
+      // their field (NY4I 2026-08-05).  Disabling the edit alone is invisible:
+      // the gating code blanks a disabled field's Text and TextPrompt, so what
+      // is left is an empty box that looks exactly like an enabled one, under a
+      // caption still drawn in full black.  Greying the caption is what makes
+      // "this radio does not have that setting" legible -- and it is the
+      // convention every other Windows dialog uses.
+      lblCIV: TLabel;
+      lblFilterByte: TLabel;
+      lblDataMode: TLabel;
+      lblHamLibID: TLabel;
+
+      procedure HandleTypeChange(Sender: TObject);
+      procedure HandleTransportChange(Sender: TObject);
+      procedure HandleDiscover(Sender: TObject);
+      procedure HandleFoundSelect(Sender: TObject);
+      procedure HandleOK(Sender: TObject);
+      procedure HandleCancel(Sender: TObject);
+      procedure HandleShow(Sender: TObject);
+      procedure HandleClose(Sender: TObject; var Action: TCloseAction);
    private
+      // STATE, not controls: nothing here is streamed, so it keeps the F prefix
+      // and stays private.
       FRadio: TRadioDefinition;
       // What the radio looked like when the editor opened.  Comparing against
       // this answers "did anything change" exactly, with no dirty flag to keep
       // in step with the control count.
       FSnapshot: TRadioDefinition;
       FOnDone: TRadioEditDone;
-
-      FNameEdit: TEdit;
-      FTypeCombo: TComboBox;
-      // The TABS are the transport selector -- there is no separate combo.
-      // Transport is exclusive, so a combo plus a visible group would be two
-      // controls expressing one fact and free to disagree.  Choosing the tab IS
-      // choosing the connection, and its parameters are what the tab reveals.
-      FTransportTabs: TTabControl;
-      FSerialTab: TTabItem;
-      FNetworkTab: TTabItem;
-      FAdvancedTab: TTabItem;
       // Advanced is a tab but NOT a transport, so the transport is REMEMBERED
       // rather than read from whichever tab happens to be showing.  Without
       // this, looking at Advanced would silently change the radio's connection.
@@ -87,48 +164,6 @@ type
       // nil.  Guarding each field individually would mean remembering to add a
       // test every time a control joins the form; one flag cannot be forgotten.
       FBuilt: boolean;
-      FPortCombo: TComboBox;
-      FBaudEdit: TEdit;
-      // The serial frame as three pickers rather than a typed '8N1'.  It is
-      // not only tidier: a free-text frame can be wrong in ways that are
-      // invisible until the radio does not answer, and '8N1' vs '8-N-1' vs
-      // 'N81' all look reasonable to someone typing quickly.  Three groups can
-      // only ever produce a combination the parser accepts.
-      FData7, FData8: TRadioButton;
-      FParityN, FParityO, FParityE: TRadioButton;
-      FStop1, FStop2: TRadioButton;
-      FIPEdit: TEdit;
-      FTCPPortEdit: TEdit;
-      FUserEdit: TEdit;
-      FPasswordEdit: TEdit;
-      FDiscoverButton: TButton;
-      FFoundCombo: TComboBox;
-      FKeyerPortCombo: TComboBox;
-      FCIVEdit: TEdit;
-      FHamLibEdit: TEdit;
-      FStartupEdit: TEdit;
-      FPollingCheck: TCheckBox;
-      FUseHamLibCheck: TCheckBox;
-      // Radio-scoped settings that used to sit in the flat config-command list,
-      // where they read as applying to the station rather than to one rig
-      // (NY4I 2026-08-05).  Their CFGCA rows are now csOwned.
-      FFilterByteEdit: TEdit;
-      FDataModeEdit: TEdit;
-      FWideCWCheck: TCheckBox;
-      FFT1000MPRevCheck: TCheckBox;
-
-      // The labels of the model-only fields, kept so they can be greyed WITH
-      // their field (NY4I 2026-08-05).  Disabling the edit alone is invisible:
-      // the gating code blanks a disabled field's Text and TextPrompt, so what
-      // is left is an empty box that looks exactly like an enabled one, under a
-      // caption still drawn in full black.  Greying the caption is what makes
-      // "this radio does not have that setting" legible -- and it is the
-      // convention every other Windows dialog uses.
-      FCIVLabel: TLabel;
-      FFilterByteLabel: TLabel;
-      FDataModeLabel: TLabel;
-      FHamLibLabel: TLabel;
-
 
       procedure BuildControls;
       procedure PopulateTypeCombo;
@@ -141,14 +176,6 @@ type
       function IsModified: boolean;
       function SelectedRegistryId: string;
       procedure UpdateEnabledState;
-      procedure HandleTypeChange(Sender: TObject);
-      procedure HandleTransportChange(Sender: TObject);
-      procedure HandleDiscover(Sender: TObject);
-      procedure HandleFoundSelect(Sender: TObject);
-      procedure HandleOK(Sender: TObject);
-      procedure HandleCancel(Sender: TObject);
-      procedure HandleShow(Sender: TObject);
-      procedure HandleClose(Sender: TObject; var Action: TCloseAction);
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
@@ -214,120 +241,140 @@ var
 begin
    y := 12;
 
-   // --- identity, always visible -------------------------------------------
-   MakeLabel(Self, TC_RADIOEDIT_NAME, LEFTMARGIN, y + 4, 120);
-   FNameEdit := TEdit.Create(Self);
-   FNameEdit.Parent     := Self;
-   FNameEdit.Position.X := 140;
-   FNameEdit.Position.Y := NextRow;
-   FNameEdit.Width      := 340;
+   // EVERY control is created with Self as its OWNER, whatever it is parented
+   // to, and every control is NAMED.  Both are prerequisites for the designed
+   // .fmx this form is being converted to: the resource holds the form and the
+   // components the form owns, keyed by name, so a control owned by the TTabItem
+   // it sits on would simply not be in the file.  Owner and Parent are different
+   // questions -- these still parent to the tab.
 
-   MakeLabel(Self, TC_RADIOEDIT_TYPE, LEFTMARGIN, y + 4, 120);
-   FTypeCombo := TComboBox.Create(Self);
-   FTypeCombo.Parent     := Self;
-   FTypeCombo.Position.X := 140;
-   FTypeCombo.Position.Y := NextRow;
-   FTypeCombo.Width      := 340;
-   FTypeCombo.OnChange   := HandleTypeChange;
+   // --- identity, always visible -------------------------------------------
+   lblName := MakeLabel(Self, Self, 'lblName', TC_RADIOEDIT_NAME, LEFTMARGIN, y + 4, 120);
+   edtName := TEdit.Create(Self);
+   edtName.Name       := 'edtName';
+   edtName.Parent     := Self;
+   edtName.Position.X := 140;
+   edtName.Position.Y := NextRow;
+   edtName.Width      := 340;
+
+   lblType := MakeLabel(Self, Self, 'lblType', TC_RADIOEDIT_TYPE, LEFTMARGIN, y + 4, 120);
+   cboType := TComboBox.Create(Self);
+   cboType.Name       := 'cboType';
+   cboType.Parent     := Self;
+   cboType.Position.X := 140;
+   cboType.Position.Y := NextRow;
+   cboType.Width      := 340;
+   cboType.OnChange   := HandleTypeChange;
 
    // --- Serial / Network / Advanced ----------------------------------------
-   FTransportTabs := TTabControl.Create(Self);
-   FTransportTabs.Parent     := Self;
-   FTransportTabs.Position.X := LEFTMARGIN;
-   FTransportTabs.Position.Y := NextRow;
-   FTransportTabs.Width      := 480;
-   FTransportTabs.Height     := TABSTRIP + 5 * ROWHEIGHT + 16;
-   FTransportTabs.OnChange   := HandleTransportChange;
-   y := y + FTransportTabs.Height - ROWHEIGHT + 10;
+   tabsTransport := TTabControl.Create(Self);
+   tabsTransport.Name       := 'tabsTransport';
+   tabsTransport.Parent     := Self;
+   tabsTransport.Position.X := LEFTMARGIN;
+   tabsTransport.Position.Y := NextRow;
+   tabsTransport.Width      := 480;
+   tabsTransport.Height     := TABSTRIP + 5 * ROWHEIGHT + 16;
+   tabsTransport.OnChange   := HandleTransportChange;
+   y := y + tabsTransport.Height - ROWHEIGHT + 10;
 
-   FSerialTab := TTabItem.Create(FTransportTabs);
-   FSerialTab.Parent    := FTransportTabs;
-   FSerialTab.Text      := TC_RADIOEDIT_SERIAL;
-   FSerialTab.TagString := TransportToStr(rtSerial);
+   tabSerial := TTabItem.Create(Self);
+   tabSerial.Name      := 'tabSerial';
+   tabSerial.Parent    := tabsTransport;
+   tabSerial.Text      := TC_RADIOEDIT_SERIAL;
+   tabSerial.TagString := TransportToStr(rtSerial);
 
-   FNetworkTab := TTabItem.Create(FTransportTabs);
-   FNetworkTab.Parent    := FTransportTabs;
-   FNetworkTab.Text      := TC_RADIOEDIT_NETWORK;
-   FNetworkTab.TagString := TransportToStr(rtNetwork);
+   tabNetwork := TTabItem.Create(Self);
+   tabNetwork.Name      := 'tabNetwork';
+   tabNetwork.Parent    := tabsTransport;
+   tabNetwork.Text      := TC_RADIOEDIT_NETWORK;
+   tabNetwork.TagString := TransportToStr(rtNetwork);
 
-   FAdvancedTab := TTabItem.Create(FTransportTabs);
-   FAdvancedTab.Parent    := FTransportTabs;
-   FAdvancedTab.Text      := TC_RADIOEDIT_ADVANCED;
-   FAdvancedTab.TagString := '';   // not a transport -- see FTransport
+   tabAdvanced := TTabItem.Create(Self);
+   tabAdvanced.Name      := 'tabAdvanced';
+   tabAdvanced.Parent    := tabsTransport;
+   tabAdvanced.Text      := TC_RADIOEDIT_ADVANCED;
+   tabAdvanced.TagString := '';   // not a transport -- see FTransport
 
    // --- serial --------------------------------------------------------------
-   tab := FSerialTab;
-   MakeLabel(tab, TC_RADIOEDIT_PORT, 10, TABTOP + 4, 120);
-   FPortCombo := TComboBox.Create(tab);
-   FPortCombo.Parent     := tab;
-   FPortCombo.Position.X := 140;
-   FPortCombo.Position.Y := TABTOP;
-   FPortCombo.Width      := 320;
+   tab := tabSerial;
+   lblPort := MakeLabel(Self, tab, 'lblPort', TC_RADIOEDIT_PORT, 10, TABTOP + 4, 120);
+   cboPort := TComboBox.Create(Self);
+   cboPort.Name       := 'cboPort';
+   cboPort.Parent     := tab;
+   cboPort.Position.X := 140;
+   cboPort.Position.Y := TABTOP;
+   cboPort.Width      := 320;
 
-   MakeLabel(tab, TC_RADIOEDIT_BAUD, 10, TABTOP + 4 + ROWHEIGHT, 120);
-   FBaudEdit := TEdit.Create(tab);
-   FBaudEdit.Parent     := tab;
-   FBaudEdit.Position.X := 140;
-   FBaudEdit.Position.Y := TABTOP + ROWHEIGHT;
-   FBaudEdit.Width      := 120;
+   lblBaud := MakeLabel(Self, tab, 'lblBaud', TC_RADIOEDIT_BAUD, 10, TABTOP + 4 + ROWHEIGHT, 120);
+   edtBaud := TEdit.Create(Self);
+   edtBaud.Name       := 'edtBaud';
+   edtBaud.Parent     := tab;
+   edtBaud.Position.X := 140;
+   edtBaud.Position.Y := TABTOP + ROWHEIGHT;
+   edtBaud.Width      := 120;
 
    // GroupName is what makes each row mutually exclusive.  Without it FMX
    // groups radio buttons by PARENT, so all seven would fight over one
    // selection and only the last clicked would ever be set.
-   MakeLabel(tab, TC_RADIOEDIT_DATABITS, 10, TABTOP + 4 + 2 * ROWHEIGHT, 120);
-   FData7 := MakeRadio(tab, '7', 'databits', 140, TABTOP + 2 * ROWHEIGHT, 60);
-   FData8 := MakeRadio(tab, '8', 'databits', 205, TABTOP + 2 * ROWHEIGHT, 60);
+   lblDataBits := MakeLabel(Self, tab, 'lblDataBits', TC_RADIOEDIT_DATABITS, 10, TABTOP + 4 + 2 * ROWHEIGHT, 120);
+   rbData7 := MakeRadio(Self, tab, 'rbData7', '7', 'databits', 140, TABTOP + 2 * ROWHEIGHT, 60);
+   rbData8 := MakeRadio(Self, tab, 'rbData8', '8', 'databits', 205, TABTOP + 2 * ROWHEIGHT, 60);
 
-   MakeLabel(tab, TC_RADIOEDIT_PARITY, 10, TABTOP + 4 + 3 * ROWHEIGHT, 120);
-   FParityN := MakeRadio(tab, TC_RADIOEDIT_PARITYNONE, 'parity', 140, TABTOP + 3 * ROWHEIGHT, 75);
-   FParityO := MakeRadio(tab, TC_RADIOEDIT_PARITYODD,  'parity', 220, TABTOP + 3 * ROWHEIGHT, 65);
-   FParityE := MakeRadio(tab, TC_RADIOEDIT_PARITYEVEN, 'parity', 290, TABTOP + 3 * ROWHEIGHT, 70);
+   lblParity := MakeLabel(Self, tab, 'lblParity', TC_RADIOEDIT_PARITY, 10, TABTOP + 4 + 3 * ROWHEIGHT, 120);
+   rbParityNone := MakeRadio(Self, tab, 'rbParityNone', TC_RADIOEDIT_PARITYNONE, 'parity', 140, TABTOP + 3 * ROWHEIGHT, 75);
+   rbParityOdd := MakeRadio(Self, tab, 'rbParityOdd', TC_RADIOEDIT_PARITYODD,  'parity', 220, TABTOP + 3 * ROWHEIGHT, 65);
+   rbParityEven := MakeRadio(Self, tab, 'rbParityEven', TC_RADIOEDIT_PARITYEVEN, 'parity', 290, TABTOP + 3 * ROWHEIGHT, 70);
 
-   MakeLabel(tab, TC_RADIOEDIT_STOPBITS, 10, TABTOP + 4 + 4 * ROWHEIGHT, 120);
-   FStop1 := MakeRadio(tab, '1', 'stopbits', 140, TABTOP + 4 * ROWHEIGHT, 60);
-   FStop2 := MakeRadio(tab, '2', 'stopbits', 205, TABTOP + 4 * ROWHEIGHT, 60);
+   lblStopBits := MakeLabel(Self, tab, 'lblStopBits', TC_RADIOEDIT_STOPBITS, 10, TABTOP + 4 + 4 * ROWHEIGHT, 120);
+   rbStop1 := MakeRadio(Self, tab, 'rbStop1', '1', 'stopbits', 140, TABTOP + 4 * ROWHEIGHT, 60);
+   rbStop2 := MakeRadio(Self, tab, 'rbStop2', '2', 'stopbits', 205, TABTOP + 4 * ROWHEIGHT, 60);
 
    // --- network -------------------------------------------------------------
-   tab := FNetworkTab;
-   MakeLabel(tab, TC_RADIOEDIT_IPADDRESS, 10, TABTOP + 4, 120);
-   FIPEdit := TEdit.Create(tab);
-   FIPEdit.Parent     := tab;
-   FIPEdit.Position.X := 140;
-   FIPEdit.Position.Y := TABTOP;
-   FIPEdit.Width      := 200;
+   tab := tabNetwork;
+   lblIP := MakeLabel(Self, tab, 'lblIP', TC_RADIOEDIT_IPADDRESS, 10, TABTOP + 4, 120);
+   edtIP := TEdit.Create(Self);
+   edtIP.Name       := 'edtIP';
+   edtIP.Parent     := tab;
+   edtIP.Position.X := 140;
+   edtIP.Position.Y := TABTOP;
+   edtIP.Width      := 200;
 
-   FDiscoverButton := MakeButton(tab, TC_RADIOEDIT_DISCOVER,
-                                 350, TABTOP, 110, HandleDiscover);
+   btnDiscover := MakeButton(Self, tab, 'btnDiscover', TC_RADIOEDIT_DISCOVER,
+                             350, TABTOP, 110, HandleDiscover);
 
-   MakeLabel(tab, TC_RADIOEDIT_FOUND, 10, TABTOP + 4 + 4 * ROWHEIGHT, 120);
-   FFoundCombo := TComboBox.Create(tab);
-   FFoundCombo.Parent     := tab;
-   FFoundCombo.Position.X := 140;
-   FFoundCombo.Position.Y := TABTOP + 4 * ROWHEIGHT;
-   FFoundCombo.Width      := 320;
-   FFoundCombo.OnChange   := HandleFoundSelect;
+   lblFound := MakeLabel(Self, tab, 'lblFound', TC_RADIOEDIT_FOUND, 10, TABTOP + 4 + 4 * ROWHEIGHT, 120);
+   cboFound := TComboBox.Create(Self);
+   cboFound.Name       := 'cboFound';
+   cboFound.Parent     := tab;
+   cboFound.Position.X := 140;
+   cboFound.Position.Y := TABTOP + 4 * ROWHEIGHT;
+   cboFound.Width      := 320;
+   cboFound.OnChange   := HandleFoundSelect;
 
-   MakeLabel(tab, TC_RADIOEDIT_TCPPORT, 10, TABTOP + 4 + ROWHEIGHT, 120);
-   FTCPPortEdit := TEdit.Create(tab);
-   FTCPPortEdit.Parent     := tab;
-   FTCPPortEdit.Position.X := 140;
-   FTCPPortEdit.Position.Y := TABTOP + ROWHEIGHT;
-   FTCPPortEdit.Width      := 120;
+   lblTCPPort := MakeLabel(Self, tab, 'lblTCPPort', TC_RADIOEDIT_TCPPORT, 10, TABTOP + 4 + ROWHEIGHT, 120);
+   edtTCPPort := TEdit.Create(Self);
+   edtTCPPort.Name       := 'edtTCPPort';
+   edtTCPPort.Parent     := tab;
+   edtTCPPort.Position.X := 140;
+   edtTCPPort.Position.Y := TABTOP + ROWHEIGHT;
+   edtTCPPort.Width      := 120;
 
-   MakeLabel(tab, TC_RADIOEDIT_USERNAME, 10, TABTOP + 4 + 2 * ROWHEIGHT, 120);
-   FUserEdit := TEdit.Create(tab);
-   FUserEdit.Parent     := tab;
-   FUserEdit.Position.X := 140;
-   FUserEdit.Position.Y := TABTOP + 2 * ROWHEIGHT;
-   FUserEdit.Width      := 200;
+   lblUser := MakeLabel(Self, tab, 'lblUser', TC_RADIOEDIT_USERNAME, 10, TABTOP + 4 + 2 * ROWHEIGHT, 120);
+   edtUser := TEdit.Create(Self);
+   edtUser.Name       := 'edtUser';
+   edtUser.Parent     := tab;
+   edtUser.Position.X := 140;
+   edtUser.Position.Y := TABTOP + 2 * ROWHEIGHT;
+   edtUser.Width      := 200;
 
-   MakeLabel(tab, TC_RADIOEDIT_PASSWORD, 10, TABTOP + 4 + 3 * ROWHEIGHT, 120);
-   FPasswordEdit := TEdit.Create(tab);
-   FPasswordEdit.Parent     := tab;
-   FPasswordEdit.Position.X := 140;
-   FPasswordEdit.Position.Y := TABTOP + 3 * ROWHEIGHT;
-   FPasswordEdit.Width      := 200;
-   FPasswordEdit.Password   := True;
+   lblPassword := MakeLabel(Self, tab, 'lblPassword', TC_RADIOEDIT_PASSWORD, 10, TABTOP + 4 + 3 * ROWHEIGHT, 120);
+   edtPassword := TEdit.Create(Self);
+   edtPassword.Name       := 'edtPassword';
+   edtPassword.Parent     := tab;
+   edtPassword.Position.X := 140;
+   edtPassword.Position.Y := TABTOP + 3 * ROWHEIGHT;
+   edtPassword.Width      := 200;
+   edtPassword.Password   := True;
 
    // --- advanced ------------------------------------------------------------
    // Everything here is a diagnostic or a per-model quirk, NOT a setup choice.
@@ -335,83 +382,93 @@ begin
    // know whether their radio should be polled -- that is something TR4W knows
    // -- so it is on by default and lives here for the rare case of switching it
    // off to chase a problem.  Same for the startup command and the Icom bytes.
-   tab := FAdvancedTab;
-   MakeLabel(tab, TC_RADIOEDIT_STARTUP, 10, TABTOP + 4, 130);
-   FStartupEdit := TEdit.Create(tab);
-   FStartupEdit.Parent     := tab;
-   FStartupEdit.Position.X := 150;
-   FStartupEdit.Position.Y := TABTOP;
-   FStartupEdit.Width      := 310;
+   tab := tabAdvanced;
+   lblStartup := MakeLabel(Self, tab, 'lblStartup', TC_RADIOEDIT_STARTUP, 10, TABTOP + 4, 130);
+   edtStartup := TEdit.Create(Self);
+   edtStartup.Name       := 'edtStartup';
+   edtStartup.Parent     := tab;
+   edtStartup.Position.X := 150;
+   edtStartup.Position.Y := TABTOP;
+   edtStartup.Width      := 310;
 
-   FFilterByteLabel := MakeLabel(tab, TC_RADIOEDIT_FILTERBYTE, 10, TABTOP + 4 + ROWHEIGHT, 130);
-   FFilterByteEdit := TEdit.Create(tab);
-   FFilterByteEdit.Parent     := tab;
-   FFilterByteEdit.Position.X := 150;
-   FFilterByteEdit.Position.Y := TABTOP + ROWHEIGHT;
-   FFilterByteEdit.Width      := 70;
+   lblFilterByte := MakeLabel(Self, tab, 'lblFilterByte', TC_RADIOEDIT_FILTERBYTE, 10, TABTOP + 4 + ROWHEIGHT, 130);
+   edtFilterByte := TEdit.Create(Self);
+   edtFilterByte.Name       := 'edtFilterByte';
+   edtFilterByte.Parent     := tab;
+   edtFilterByte.Position.X := 150;
+   edtFilterByte.Position.Y := TABTOP + ROWHEIGHT;
+   edtFilterByte.Width      := 70;
 
-   FDataModeLabel := MakeLabel(tab, TC_RADIOEDIT_DATAMODEID, 240, TABTOP + 4 + ROWHEIGHT, 140);
-   FDataModeEdit := TEdit.Create(tab);
-   FDataModeEdit.Parent     := tab;
-   FDataModeEdit.Position.X := 390;
-   FDataModeEdit.Position.Y := TABTOP + ROWHEIGHT;
-   FDataModeEdit.Width      := 70;
+   lblDataMode := MakeLabel(Self, tab, 'lblDataMode', TC_RADIOEDIT_DATAMODEID, 240, TABTOP + 4 + ROWHEIGHT, 140);
+   edtDataMode := TEdit.Create(Self);
+   edtDataMode.Name       := 'edtDataMode';
+   edtDataMode.Parent     := tab;
+   edtDataMode.Position.X := 390;
+   edtDataMode.Position.Y := TABTOP + ROWHEIGHT;
+   edtDataMode.Width      := 70;
 
-   FHamLibLabel := MakeLabel(tab, TC_RADIOEDIT_HAMLIBID, 10, TABTOP + 4 + 2 * ROWHEIGHT, 130);
-   FHamLibEdit := TEdit.Create(tab);
-   FHamLibEdit.Parent     := tab;
-   FHamLibEdit.Position.X := 150;
-   FHamLibEdit.Position.Y := TABTOP + 2 * ROWHEIGHT;
-   FHamLibEdit.Width      := 70;
+   lblHamLibID := MakeLabel(Self, tab, 'lblHamLibID', TC_RADIOEDIT_HAMLIBID, 10, TABTOP + 4 + 2 * ROWHEIGHT, 130);
+   edtHamLibID := TEdit.Create(Self);
+   edtHamLibID.Name       := 'edtHamLibID';
+   edtHamLibID.Parent     := tab;
+   edtHamLibID.Position.X := 150;
+   edtHamLibID.Position.Y := TABTOP + 2 * ROWHEIGHT;
+   edtHamLibID.Width      := 70;
 
-   FUseHamLibCheck := TCheckBox.Create(tab);
-   FUseHamLibCheck.Parent     := tab;
-   FUseHamLibCheck.Position.X := 240;
-   FUseHamLibCheck.Position.Y := TABTOP + 2 * ROWHEIGHT + 4;
-   FUseHamLibCheck.Width      := 220;
-   FUseHamLibCheck.Text       := TC_RADIOEDIT_USEHAMLIB;
+   chkUseHamLib := TCheckBox.Create(Self);
+   chkUseHamLib.Name       := 'chkUseHamLib';
+   chkUseHamLib.Parent     := tab;
+   chkUseHamLib.Position.X := 240;
+   chkUseHamLib.Position.Y := TABTOP + 2 * ROWHEIGHT + 4;
+   chkUseHamLib.Width      := 220;
+   chkUseHamLib.Text       := TC_RADIOEDIT_USEHAMLIB;
 
-   FWideCWCheck := TCheckBox.Create(tab);
-   FWideCWCheck.Parent     := tab;
-   FWideCWCheck.Position.X := 10;
-   FWideCWCheck.Position.Y := TABTOP + 3 * ROWHEIGHT + 4;
-   FWideCWCheck.Width      := 200;
-   FWideCWCheck.Text       := TC_RADIOEDIT_WIDECW;
+   chkWideCW := TCheckBox.Create(Self);
+   chkWideCW.Name       := 'chkWideCW';
+   chkWideCW.Parent     := tab;
+   chkWideCW.Position.X := 10;
+   chkWideCW.Position.Y := TABTOP + 3 * ROWHEIGHT + 4;
+   chkWideCW.Width      := 200;
+   chkWideCW.Text       := TC_RADIOEDIT_WIDECW;
 
-   FFT1000MPRevCheck := TCheckBox.Create(tab);
-   FFT1000MPRevCheck.Parent     := tab;
-   FFT1000MPRevCheck.Position.X := 240;
-   FFT1000MPRevCheck.Position.Y := TABTOP + 3 * ROWHEIGHT + 4;
-   FFT1000MPRevCheck.Width      := 230;
-   FFT1000MPRevCheck.Text       := TC_RADIOEDIT_FT1000MPREV;
+   chkFT1000MPReverse := TCheckBox.Create(Self);
+   chkFT1000MPReverse.Name       := 'chkFT1000MPReverse';
+   chkFT1000MPReverse.Parent     := tab;
+   chkFT1000MPReverse.Position.X := 240;
+   chkFT1000MPReverse.Position.Y := TABTOP + 3 * ROWHEIGHT + 4;
+   chkFT1000MPReverse.Width      := 230;
+   chkFT1000MPReverse.Text       := TC_RADIOEDIT_FT1000MPREV;
 
-   FPollingCheck := TCheckBox.Create(tab);
-   FPollingCheck.Parent     := tab;
-   FPollingCheck.Position.X := 10;
-   FPollingCheck.Position.Y := TABTOP + 4 * ROWHEIGHT + 4;
-   FPollingCheck.Width      := 220;
-   FPollingCheck.Text       := TC_RADIOEDIT_POLLING;
+   chkPolling := TCheckBox.Create(Self);
+   chkPolling.Name       := 'chkPolling';
+   chkPolling.Parent     := tab;
+   chkPolling.Position.X := 10;
+   chkPolling.Position.Y := TABTOP + 4 * ROWHEIGHT + 4;
+   chkPolling.Width      := 220;
+   chkPolling.Text       := TC_RADIOEDIT_POLLING;
 
    // --- common, below the tabs ---------------------------------------------
-   MakeLabel(Self, TC_RADIOEDIT_KEYERPORT, LEFTMARGIN, y + 4, 130);
-   FKeyerPortCombo := TComboBox.Create(Self);
-   FKeyerPortCombo.Parent     := Self;
-   FKeyerPortCombo.Position.X := 150;
-   FKeyerPortCombo.Position.Y := NextRow;
-   FKeyerPortCombo.Width      := 200;
+   lblKeyerPort := MakeLabel(Self, Self, 'lblKeyerPort', TC_RADIOEDIT_KEYERPORT, LEFTMARGIN, y + 4, 130);
+   cboKeyerPort := TComboBox.Create(Self);
+   cboKeyerPort.Name       := 'cboKeyerPort';
+   cboKeyerPort.Parent     := Self;
+   cboKeyerPort.Position.X := 150;
+   cboKeyerPort.Position.Y := NextRow;
+   cboKeyerPort.Width      := 200;
 
-   FCIVLabel := MakeLabel(Self, TC_RADIOEDIT_CIVADDRESS, LEFTMARGIN, y + 4, 130);
-   FCIVEdit := TEdit.Create(Self);
-   FCIVEdit.Parent     := Self;
-   FCIVEdit.Position.X := 150;
-   FCIVEdit.Position.Y := NextRow;
-   FCIVEdit.Width      := 80;
+   lblCIV := MakeLabel(Self, Self, 'lblCIV', TC_RADIOEDIT_CIVADDRESS, LEFTMARGIN, y + 4, 130);
+   edtCIV := TEdit.Create(Self);
+   edtCIV.Name       := 'edtCIV';
+   edtCIV.Parent     := Self;
+   edtCIV.Position.X := 150;
+   edtCIV.Position.Y := NextRow;
+   edtCIV.Width      := 80;
 
    // Placed against the bottom-right of the client area AND anchored there, so
    // they neither get pushed off by a row added above nor stranded in mid-air
    // when the operator resizes the dialog.
-   MakeButton(Self, TC_PREFS_OK,     ClientWidth - 200, ClientHeight - 38, 90, HandleOK,     [TAnchorKind.akRight, TAnchorKind.akBottom]);
-   MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 100, ClientHeight - 38, 90, HandleCancel, [TAnchorKind.akRight, TAnchorKind.akBottom]);
+   btnOK     := MakeButton(Self, Self, 'btnOK',     TC_PREFS_OK,     ClientWidth - 200, ClientHeight - 38, 90, HandleOK,     [TAnchorKind.akRight, TAnchorKind.akBottom]);
+   btnCancel := MakeButton(Self, Self, 'btnCancel', TC_PREFS_CANCEL, ClientWidth - 100, ClientHeight - 38, 90, HandleCancel, [TAnchorKind.akRight, TAnchorKind.akBottom]);
 
    // Last: every control now exists, so the handlers may run.  PopulateTypeCombo
    // below sets ItemIndex and fires OnChange, which is safe from here on.
@@ -431,7 +488,7 @@ begin
    // must make it selectable here with no change to this file.  RegisteredIds
    // covers enum-backed and string-id radios alike, which is what makes TCI
    // appear without a special case.
-   FTypeCombo.Clear;
+   cboType.Clear;
    ids := RegisteredIds;
 
    labels := TList<string>.Create;
@@ -448,7 +505,7 @@ begin
 
       for i := 0 to labels.Count - 1 do
          begin
-         AddComboItem(FTypeCombo,
+         AddComboItem(cboType,
                       Copy(labels[i], 1, Pos(#9, labels[i]) - 1),
                       Copy(labels[i], Pos(#9, labels[i]) + 1, MaxInt));
          end;
@@ -465,11 +522,11 @@ var
    i: integer;
    caption: string;
 begin
-   FPortCombo.Clear;
-   FKeyerPortCombo.Clear;
+   cboPort.Clear;
+   cboKeyerPort.Clear;
 
-   AddComboItem(FPortCombo,      TC_PREFS_NONE, PORT_NONE);
-   AddComboItem(FKeyerPortCombo, TC_PREFS_NONE, PORT_NONE);
+   AddComboItem(cboPort,      TC_PREFS_NONE, PORT_NONE);
+   AddComboItem(cboKeyerPort, TC_PREFS_NONE, PORT_NONE);
 
    enumerator := TComPortEnumerator.Create;
    try
@@ -486,8 +543,8 @@ begin
          // tag.  Storing the displayed text would put 'COM17 - Silicon Labs
          // CP210x' into the ini, which is exactly the corruption the legacy
          // dialog had to be fixed for.
-         AddComboItem(FPortCombo,      caption, ComNameToPortValue(names[i]));
-         AddComboItem(FKeyerPortCombo, caption, ComNameToPortValue(names[i]));
+         AddComboItem(cboPort,      caption, ComNameToPortValue(names[i]));
+         AddComboItem(cboKeyerPort, caption, ComNameToPortValue(names[i]));
          end;
    finally
       enumerator.Free;
@@ -509,15 +566,15 @@ begin
       stopBits := 1;
       end;
 
-   FData7.IsChecked := (dataBits = 7);
-   FData8.IsChecked := (dataBits = 8);
+   rbData7.IsChecked := (dataBits = 7);
+   rbData8.IsChecked := (dataBits = 8);
 
-   FParityN.IsChecked := (parity = PARITY_NONE);
-   FParityO.IsChecked := (parity = PARITY_ODD);
-   FParityE.IsChecked := (parity = PARITY_EVEN);
+   rbParityNone.IsChecked := (parity = PARITY_NONE);
+   rbParityOdd.IsChecked := (parity = PARITY_ODD);
+   rbParityEven.IsChecked := (parity = PARITY_EVEN);
 
-   FStop1.IsChecked := (stopBits = 1);
-   FStop2.IsChecked := (stopBits = 2);
+   rbStop1.IsChecked := (stopBits = 1);
+   rbStop2.IsChecked := (stopBits = 2);
 end;
 
 // The three pickers back into the '8N1' the config command expects.  Composed
@@ -527,7 +584,7 @@ function TRadioEditForm.SerialFrame: string;
 var
    dataBits, parity, stopBits: Byte;
 begin
-   if FData7.IsChecked then
+   if rbData7.IsChecked then
       begin
       dataBits := 7;
       end
@@ -536,11 +593,11 @@ begin
       dataBits := 8;
       end;
 
-   if FParityO.IsChecked then
+   if rbParityOdd.IsChecked then
       begin
       parity := PARITY_ODD;
       end
-   else if FParityE.IsChecked then
+   else if rbParityEven.IsChecked then
       begin
       parity := PARITY_EVEN;
       end
@@ -549,7 +606,7 @@ begin
       parity := PARITY_NONE;
       end;
 
-   if FStop2.IsChecked then
+   if rbStop2.IsChecked then
       begin
       stopBits := 2;
       end
@@ -585,7 +642,7 @@ begin
       Exit;
       end;
 
-   FNameEdit.Text := FRadio.Name;
+   edtName.Text := FRadio.Name;
 
    // A NEW radio starts with NOTHING selected, rather than falling back to the
    // first row of an alphabetical list.  A defaulted type is a silent wrong
@@ -600,93 +657,93 @@ begin
    // selectable-and-invalid.
    if Trim(FRadio.RegistryId) = '' then
       begin
-      FTypeCombo.ItemIndex := -1;
+      cboType.ItemIndex := -1;
       end
    else
       begin
-      SelectByTag(FTypeCombo, FRadio.RegistryId);
+      SelectByTag(cboType, FRadio.RegistryId);
       end;
    FTransport := FRadio.Transport;
    if FTransport = rtNetwork then
       begin
-      FTransportTabs.ActiveTab := FNetworkTab;
+      tabsTransport.ActiveTab := tabNetwork;
       end
    else
       begin
-      FTransportTabs.ActiveTab := FSerialTab;
+      tabsTransport.ActiveTab := tabSerial;
       end;
 
-   SelectByTag(FPortCombo, FRadio.ControlPort);
+   SelectByTag(cboPort, FRadio.ControlPort);
    if FRadio.BaudRate > 0 then
       begin
-      FBaudEdit.Text := IntToStr(FRadio.BaudRate);
+      edtBaud.Text := IntToStr(FRadio.BaudRate);
       end
    else
       begin
-      FBaudEdit.Text := '';
+      edtBaud.Text := '';
       end;
    SetSerialFrame(FRadio.SerialFormat);
 
-   FIPEdit.Text       := FRadio.IPAddress;
+   edtIP.Text       := FRadio.IPAddress;
    if FRadio.TCPPort > 0 then
       begin
-      FTCPPortEdit.Text := IntToStr(FRadio.TCPPort);
+      edtTCPPort.Text := IntToStr(FRadio.TCPPort);
       end
    else
       begin
-      FTCPPortEdit.Text := '';
+      edtTCPPort.Text := '';
       end;
-   FUserEdit.Text     := FRadio.NetworkUsername;
-   FPasswordEdit.Text := FRadio.NetworkPassword;
+   edtUser.Text     := FRadio.NetworkUsername;
+   edtPassword.Text := FRadio.NetworkPassword;
 
-   SelectByTag(FKeyerPortCombo, FRadio.KeyerOutputPort);
+   SelectByTag(cboKeyerPort, FRadio.KeyerOutputPort);
    // HEX, because that is what the radio's own menu and every Icom manual show
    // (NY4I).  The value is STORED as the decimal the config command expects --
    // only the presentation changes, so nothing downstream has to know.
    if FRadio.ReceiverAddress > 0 then
       begin
-      FCIVEdit.Text := IntToHex(FRadio.ReceiverAddress, 2);
+      edtCIV.Text := IntToHex(FRadio.ReceiverAddress, 2);
       end
    else
       begin
-      FCIVEdit.Text := '';
+      edtCIV.Text := '';
       end;
    if FRadio.HamLibID > 0 then
       begin
-      FHamLibEdit.Text := IntToStr(FRadio.HamLibID);
+      edtHamLibID.Text := IntToStr(FRadio.HamLibID);
       end
    else
       begin
-      FHamLibEdit.Text := '';
+      edtHamLibID.Text := '';
       end;
-   FStartupEdit.Text        := FRadio.StartupCommand;
+   edtStartup.Text        := FRadio.StartupCommand;
    if FRadio.IcomFilterByte > 0 then
       begin
-      FFilterByteEdit.Text := IntToStr(FRadio.IcomFilterByte);
+      edtFilterByte.Text := IntToStr(FRadio.IcomFilterByte);
       end
    else
       begin
-      FFilterByteEdit.Text := '';
+      edtFilterByte.Text := '';
       end;
    if FRadio.IcomDataModeID > 0 then
       begin
-      FDataModeEdit.Text := IntToStr(FRadio.IcomDataModeID);
+      edtDataMode.Text := IntToStr(FRadio.IcomDataModeID);
       end
    else
       begin
-      FDataModeEdit.Text := '';
+      edtDataMode.Text := '';
       end;
-   FWideCWCheck.IsChecked      := FRadio.WideCWFilter;
-   FFT1000MPRevCheck.IsChecked := FRadio.FT1000MPCWReverse;
-   FUseHamLibCheck.IsChecked := FRadio.UseHamLib;
-   FPollingCheck.IsChecked   := FRadio.PollingEnable;
+   chkWideCW.IsChecked      := FRadio.WideCWFilter;
+   chkFT1000MPReverse.IsChecked := FRadio.FT1000MPCWReverse;
+   chkUseHamLib.IsChecked := FRadio.UseHamLib;
+   chkPolling.IsChecked   := FRadio.PollingEnable;
 
    UpdateEnabledState;
 end;
 
 function TRadioEditForm.SelectedRegistryId: string;
 begin
-   Result := SelectedTag(FTypeCombo);
+   Result := SelectedTag(cboType);
 end;
 
 destructor TRadioEditForm.Destroy;
@@ -737,7 +794,7 @@ begin
    aError := '';
    Result := False;
 
-   if Trim(FNameEdit.Text) = '' then
+   if Trim(edtName.Text) = '' then
       begin
       aError := TC_RADIOEDIT_NAMEREQUIRED;
       Exit;
@@ -748,34 +805,34 @@ begin
       Exit;
       end;
 
-   FRadio.Name       := Trim(FNameEdit.Text);
+   FRadio.Name       := Trim(edtName.Text);
    FRadio.RegistryId := SelectedRegistryId;
    FRadio.Transport  := FTransport;
 
-   FRadio.ControlPort  := SelectedTag(FPortCombo);
-   FRadio.BaudRate     := StrToIntDef(Trim(FBaudEdit.Text), 0);
+   FRadio.ControlPort  := SelectedTag(cboPort);
+   FRadio.BaudRate     := StrToIntDef(Trim(edtBaud.Text), 0);
    FRadio.SerialFormat := SerialFrame;
 
-   FRadio.IPAddress       := Trim(FIPEdit.Text);
-   FRadio.TCPPort         := StrToIntDef(Trim(FTCPPortEdit.Text), 0);
-   FRadio.NetworkUsername := Trim(FUserEdit.Text);
-   FRadio.NetworkPassword := FPasswordEdit.Text;   // not trimmed: it is a password
+   FRadio.IPAddress       := Trim(edtIP.Text);
+   FRadio.TCPPort         := StrToIntDef(Trim(edtTCPPort.Text), 0);
+   FRadio.NetworkUsername := Trim(edtUser.Text);
+   FRadio.NetworkPassword := edtPassword.Text;   // not trimmed: it is a password
 
-   FRadio.KeyerOutputPort := SelectedTag(FKeyerPortCombo);
-   if not TryParseHexByte(FCIVEdit.Text, civ) then
+   FRadio.KeyerOutputPort := SelectedTag(cboKeyerPort);
+   if not TryParseHexByte(edtCIV.Text, civ) then
       begin
       aError := TC_RADIOEDIT_BADCIV;
       Exit;
       end;
    FRadio.ReceiverAddress := civ;
-   FRadio.HamLibID        := StrToIntDef(Trim(FHamLibEdit.Text), 0);
-   FRadio.StartupCommand  := Trim(FStartupEdit.Text);
-   FRadio.IcomFilterByte    := StrToIntDef(Trim(FFilterByteEdit.Text), 0);
-   FRadio.IcomDataModeID    := StrToIntDef(Trim(FDataModeEdit.Text), 0);
-   FRadio.WideCWFilter      := FWideCWCheck.IsChecked;
-   FRadio.FT1000MPCWReverse := FFT1000MPRevCheck.IsChecked;
-   FRadio.UseHamLib       := FUseHamLibCheck.IsChecked;
-   FRadio.PollingEnable   := FPollingCheck.IsChecked;
+   FRadio.HamLibID        := StrToIntDef(Trim(edtHamLibID.Text), 0);
+   FRadio.StartupCommand  := Trim(edtStartup.Text);
+   FRadio.IcomFilterByte    := StrToIntDef(Trim(edtFilterByte.Text), 0);
+   FRadio.IcomDataModeID    := StrToIntDef(Trim(edtDataMode.Text), 0);
+   FRadio.WideCWFilter      := chkWideCW.IsChecked;
+   FRadio.FT1000MPCWReverse := chkFT1000MPReverse.IsChecked;
+   FRadio.UseHamLib       := chkUseHamLib.IsChecked;
+   FRadio.PollingEnable   := chkPolling.IsChecked;
 
    Result := True;
 end;
@@ -803,29 +860,29 @@ begin
    // actually supports, so a serial-only radio cannot be set to network here.
    // A radio that cannot speak a transport does not get that tab.  The registry
    // is the authority on which links a model supports.
-   FSerialTab.Enabled  := (id = '') or SupportsSerialId(id);
-   FNetworkTab.Enabled := (id = '') or SupportsNetworkId(id);
+   tabSerial.Enabled  := (id = '') or SupportsSerialId(id);
+   tabNetwork.Enabled := (id = '') or SupportsNetworkId(id);
 
    // Discovery is offered only where the registry says the model announces
    // itself.  Broadcasting for a radio that cannot answer would produce a
    // three-second wait and an empty list, which reads as a fault.
-   FDiscoverButton.Enabled := (id <> '') and RegisteredDiscoverableId(id);
+   btnDiscover.Enabled := (id <> '') and RegisteredDiscoverableId(id);
 
    // HamLib ID is the operator's value ONLY for HamLib-any; for every other
    // radio the registry supplies it and typing one here would pin a model the
    // operator never chose.  Same rule the legacy dialog applies.
-   FHamLibEdit.Enabled := SameText(id, 'HAMLIBANY');
-   FHamLibLabel.Enabled := FHamLibEdit.Enabled;
+   edtHamLibID.Enabled := SameText(id, 'HAMLIBANY');
+   lblHamLibID.Enabled := edtHamLibID.Enabled;
 
    // Model-specific settings are enabled only for the models they mean anything
    // to (NY4I).  An Icom filter byte on a Kenwood is not a harmless spare
    // field: it is an invitation to set something that will never be sent, and
    // then to wonder why it had no effect.
    isIcom := IsIcomRadio(id);
-   FFilterByteEdit.Enabled  := isIcom;
-   FDataModeEdit.Enabled    := isIcom;
-   FFilterByteLabel.Enabled := isIcom;
-   FDataModeLabel.Enabled   := isIcom;
+   edtFilterByte.Enabled  := isIcom;
+   edtDataMode.Enabled    := isIcom;
+   lblFilterByte.Enabled := isIcom;
+   lblDataMode.Enabled   := isIcom;
 
    // CI-V is offered only where the REGISTRY says the model has a CI-V address
    // -- its own declared meaning ('0 = not a CI-V radio'), not a brand guess.
@@ -838,44 +895,44 @@ begin
       civDefault := RegisteredCIVAddress(ModelForId(id));
       end;
 
-   FCIVEdit.Enabled := (civDefault <> 0);
+   edtCIV.Enabled := (civDefault <> 0);
    // Grey the caption with the box.  The gating below blanks a disabled field's
    // Text and TextPrompt, which leaves nothing to render greyed -- so on a K3
    // (registered civAddress 0, correctly disabled) the operator saw an ordinary
    // empty box under a full-black caption and read it as editable.  NY4I, bench,
    // 2026-08-05.
-   FCIVLabel.Enabled := FCIVEdit.Enabled;
-   if not FCIVEdit.Enabled then
+   lblCIV.Enabled := edtCIV.Enabled;
+   if not edtCIV.Enabled then
       begin
-      FCIVEdit.Text       := '';
-      FCIVEdit.TextPrompt := '';
+      edtCIV.Text       := '';
+      edtCIV.TextPrompt := '';
       end
    else
       begin
       // Greyed, and only visible while the box is empty -- so it disappears the
       // moment the operator types their own address, and comes back if they
       // clear it.  Hex, to match the label, the radio's menu and the manual.
-      FCIVEdit.TextPrompt := Format(TC_RADIOEDIT_DEFAULTHINT,
+      edtCIV.TextPrompt := Format(TC_RADIOEDIT_DEFAULTHINT,
                                     [IntToHex(civDefault, 2)]);
       end;
 
    // The FT-1000MP's reversed CW sidebands are a quirk of that one radio.
-   FFT1000MPRevCheck.Enabled := (ModelForId(id) = FT1000MP);
+   chkFT1000MPReverse.Enabled := (ModelForId(id) = FT1000MP);
 
    // Blank a disabled field rather than leave a stale value showing: a greyed
    // box with a number in it reads as "set, but locked", which is the opposite
    // of what it means.
-   if not FFilterByteEdit.Enabled then
+   if not edtFilterByte.Enabled then
       begin
-      FFilterByteEdit.Text := '';
+      edtFilterByte.Text := '';
       end;
-   if not FDataModeEdit.Enabled then
+   if not edtDataMode.Enabled then
       begin
-      FDataModeEdit.Text := '';
+      edtDataMode.Text := '';
       end;
-   if not FFT1000MPRevCheck.Enabled then
+   if not chkFT1000MPReverse.Enabled then
       begin
-      FFT1000MPRevCheck.IsChecked := False;
+      chkFT1000MPReverse.IsChecked := False;
       end;
 end;
 
@@ -909,9 +966,9 @@ begin
    // already filled in: re-picking the same radio must not silently discard a
    // baud rate they chose deliberately.
    params := SerialParamsForId(id);
-   if (Trim(FBaudEdit.Text) = '') and (params.baud > 0) then
+   if (Trim(edtBaud.Text) = '') and (params.baud > 0) then
       begin
-      FBaudEdit.Text := IntToStr(params.baud);
+      edtBaud.Text := IntToStr(params.baud);
       end;
    // The frame always has a value now (the pickers cannot be blank), so this
    // adopts the registry's frame whenever the operator has not yet saved one --
@@ -920,9 +977,9 @@ begin
       begin
       SetSerialFrame(SerialFormatToString(params.dataBits, params.parity, params.stopBits));
       end;
-   if (Trim(FTCPPortEdit.Text) = '') and (RegisteredNetworkPortId(id) > 0) then
+   if (Trim(edtTCPPort.Text) = '') and (RegisteredNetworkPortId(id) > 0) then
       begin
-      FTCPPortEdit.Text := IntToStr(RegisteredNetworkPortId(id));
+      edtTCPPort.Text := IntToStr(RegisteredNetworkPortId(id));
       end;
 
    // The CI-V address is deliberately NOT prefilled.  Writing the model default
@@ -937,12 +994,12 @@ begin
    if SupportsNetworkId(id) and (not SupportsSerialId(id)) then
       begin
       FTransport := rtNetwork;
-      FTransportTabs.ActiveTab := FNetworkTab;
+      tabsTransport.ActiveTab := tabNetwork;
       end
    else if SupportsSerialId(id) and (not SupportsNetworkId(id)) then
       begin
       FTransport := rtSerial;
-      FTransportTabs.ActiveTab := FSerialTab;
+      tabsTransport.ActiveTab := tabSerial;
       end;
 
    UpdateEnabledState;
@@ -962,11 +1019,11 @@ begin
    // not a connection, so opening it must not silently turn a network radio
    // into a serial one -- which is exactly what reading the transport straight
    // off the active tab would do.
-   if FTransportTabs.ActiveTab = FSerialTab then
+   if tabsTransport.ActiveTab = tabSerial then
       begin
       FTransport := rtSerial;
       end
-   else if FTransportTabs.ActiveTab = FNetworkTab then
+   else if tabsTransport.ActiveTab = tabNetwork then
       begin
       FTransport := rtNetwork;
       end;
@@ -986,9 +1043,9 @@ begin
 
    // The button stays disabled for the whole search: a second broadcast while
    // the first is still listening would have two sockets on the same port.
-   FDiscoverButton.Enabled := False;
-   FDiscoverButton.Text    := TC_RADIOEDIT_SEARCHING;
-   FFoundCombo.Clear;
+   btnDiscover.Enabled := False;
+   btnDiscover.Text    := TC_RADIOEDIT_SEARCHING;
+   cboFound.Clear;
 
    // OFF THE MAIN THREAD.  DiscoverNetworkRadios broadcasts and then waits out
    // its timeout -- about three seconds -- and doing that on the main thread
@@ -1024,12 +1081,12 @@ begin
                var
                   i: integer;
                begin
-                  FDiscoverButton.Text    := TC_RADIOEDIT_DISCOVER;
-                  FDiscoverButton.Enabled := True;
+                  btnDiscover.Text    := TC_RADIOEDIT_DISCOVER;
+                  btnDiscover.Enabled := True;
 
                   for i := 0 to found.Count - 1 do
                      begin
-                     AddComboItem(FFoundCombo, found[i], found[i]);
+                     AddComboItem(cboFound, found[i], found[i]);
                      end;
 
                   if found.Count = 0 then
@@ -1039,8 +1096,8 @@ begin
                   else if found.Count = 1 then
                      begin
                      // Exactly one answer is not a choice -- fill it in.
-                     FFoundCombo.ItemIndex := 0;
-                     FIPEdit.Text := found[0];
+                     cboFound.ItemIndex := 0;
+                     edtIP.Text := found[0];
                      end;
 
                   found.Free;
@@ -1058,9 +1115,9 @@ begin
       begin
       Exit;
       end;
-   if SelectedTag(FFoundCombo) <> '' then
+   if SelectedTag(cboFound) <> '' then
       begin
-      FIPEdit.Text := SelectedTag(FFoundCombo);
+      edtIP.Text := SelectedTag(cboFound);
       end;
 end;
 

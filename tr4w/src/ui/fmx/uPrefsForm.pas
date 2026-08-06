@@ -256,15 +256,15 @@ begin
    // Shown for every section except Hardware.  The other categories exist in
    // the nav on purpose: they say what this window is GOING to be, so nobody
    // has to guess whether Preferences is meant to grow.
-   FPlaceholder := MakeLabel(FContent, TC_PREFS_NOTMIGRATED, LEFTMARGIN, 20, 500);
+   FPlaceholder := MakeLabel(Self, FContent, '', TC_PREFS_NOTMIGRATED, LEFTMARGIN, 20, 500);
    FPlaceholder.Height  := 60;
    FPlaceholder.Visible := False;
 
    BuildHardwarePanel;
 
-   MakeButton(Self, TC_PREFS_OK,     ClientWidth - 290, ClientHeight - 38, 85, HandleOK,     [TAnchorKind.akRight, TAnchorKind.akBottom]);
-   MakeButton(Self, TC_PREFS_CANCEL, ClientWidth - 195, ClientHeight - 38, 85, HandleCancel, [TAnchorKind.akRight, TAnchorKind.akBottom]);
-   MakeButton(Self, TC_PREFS_APPLY,  ClientWidth - 100, ClientHeight - 38, 85, HandleApply,  [TAnchorKind.akRight, TAnchorKind.akBottom]);
+   MakeButton(Self, Self, '', TC_PREFS_OK,     ClientWidth - 290, ClientHeight - 38, 85, HandleOK,     [TAnchorKind.akRight, TAnchorKind.akBottom]);
+   MakeButton(Self, Self, '', TC_PREFS_CANCEL, ClientWidth - 195, ClientHeight - 38, 85, HandleCancel, [TAnchorKind.akRight, TAnchorKind.akBottom]);
+   MakeButton(Self, Self, '', TC_PREFS_APPLY,  ClientWidth - 100, ClientHeight - 38, 85, HandleApply,  [TAnchorKind.akRight, TAnchorKind.akBottom]);
 
    FNavList.ItemIndex := 0;
 end;
@@ -282,7 +282,7 @@ begin
    FHardwarePanel.Height     := FContent.Height;
 
    // --- my radios ----------------------------------------------------------
-   MakeLabel(FHardwarePanel, TC_PREFS_MYRADIOS, LEFTMARGIN, 8, 200);
+   MakeLabel(Self, FHardwarePanel, '', TC_PREFS_MYRADIOS, LEFTMARGIN, 8, 200);
 
    FRadioList := TListBox.Create(FHardwarePanel);
    FRadioList.Parent       := FHardwarePanel;
@@ -292,10 +292,10 @@ begin
    FRadioList.Height       := 150;
    FRadioList.OnDblClick   := HandleRadioDblClick;
 
-   MakeButton(FHardwarePanel, TC_PREFS_ADD,       445, 30,  95, HandleAdd);
-   MakeButton(FHardwarePanel, TC_PREFS_EDIT,      445, 62,  95, HandleEdit);
-   MakeButton(FHardwarePanel, TC_PREFS_DUPLICATE, 445, 94,  95, HandleDuplicate);
-   MakeButton(FHardwarePanel, TC_PREFS_REMOVE,    445, 126, 95, HandleRemove);
+   MakeButton(Self, FHardwarePanel, '', TC_PREFS_ADD,       445, 30,  95, HandleAdd);
+   MakeButton(Self, FHardwarePanel, '', TC_PREFS_EDIT,      445, 62,  95, HandleEdit);
+   MakeButton(Self, FHardwarePanel, '', TC_PREFS_DUPLICATE, 445, 94,  95, HandleDuplicate);
+   MakeButton(Self, FHardwarePanel, '', TC_PREFS_REMOVE,    445, 126, 95, HandleRemove);
 
    // --- station profile ----------------------------------------------------
    grp := TGroupBox.Create(FHardwarePanel);
@@ -315,12 +315,12 @@ begin
    FProfileCombo.Width      := 200;
    FProfileCombo.OnChange   := HandleProfileChange;
 
-   MakeButton(grp, TC_PREFS_NEWPROFILE,    220, y, 80, HandleNewProfile);
-   MakeButton(grp, TC_PREFS_RENAMEPROFILE, 305, y, 90, HandleRenameProfile);
-   MakeButton(grp, TC_PREFS_DELETEPROFILE, 400, y, 80, HandleDeleteProfile);
+   MakeButton(Self, grp, '', TC_PREFS_NEWPROFILE,    220, y, 80, HandleNewProfile);
+   MakeButton(Self, grp, '', TC_PREFS_RENAMEPROFILE, 305, y, 90, HandleRenameProfile);
+   MakeButton(Self, grp, '', TC_PREFS_DELETEPROFILE, 400, y, 80, HandleDeleteProfile);
 
    y := y + ROWHEIGHT + 6;
-   MakeLabel(grp, TC_PREFS_RADIO1, 12, y + 4, 70);
+   MakeLabel(Self, grp, '', TC_PREFS_RADIO1, 12, y + 4, 70);
    FRadio1Combo := TComboBox.Create(grp);
    FRadio1Combo.Parent     := grp;
    FRadio1Combo.Position.X := 90;
@@ -328,7 +328,7 @@ begin
    FRadio1Combo.Width      := 190;
    FRadio1Combo.OnChange   := HandleFieldChange;
 
-   MakeLabel(grp, TC_PREFS_CWOUTPUT1, 290, y + 4, 90);
+   MakeLabel(Self, grp, '', TC_PREFS_CWOUTPUT1, 290, y + 4, 90);
    FCW1Combo := TComboBox.Create(grp);
    FCW1Combo.Parent     := grp;
    FCW1Combo.Position.X := 385;
@@ -346,7 +346,7 @@ begin
    FSpeedSync1.OnChange   := HandleFieldChange;
 
    y := y + ROWHEIGHT;
-   MakeLabel(grp, TC_PREFS_RADIO2, 12, y + 4, 70);
+   MakeLabel(Self, grp, '', TC_PREFS_RADIO2, 12, y + 4, 70);
    FRadio2Combo := TComboBox.Create(grp);
    FRadio2Combo.Parent     := grp;
    FRadio2Combo.Position.X := 90;
@@ -354,7 +354,7 @@ begin
    FRadio2Combo.Width      := 190;
    FRadio2Combo.OnChange   := HandleFieldChange;
 
-   MakeLabel(grp, TC_PREFS_CWOUTPUT2, 290, y + 4, 90);
+   MakeLabel(Self, grp, '', TC_PREFS_CWOUTPUT2, 290, y + 4, 90);
    FCW2Combo := TComboBox.Create(grp);
    FCW2Combo.Parent     := grp;
    FCW2Combo.Position.X := 385;
@@ -381,8 +381,8 @@ begin
    FSO2RCheck.OnChange   := HandleFieldChange;
 
    y := y + ROWHEIGHT;
-   FActiveLabel := MakeLabel(grp, TC_PREFS_ACTIVELABEL, 12, y + 4, 260);
-   MakeButton(grp, TC_PREFS_ACTIVATE, 300, y, 225, HandleActivate);
+   FActiveLabel := MakeLabel(Self, grp, '', TC_PREFS_ACTIVELABEL, 12, y + 4, 260);
+   MakeButton(Self, grp, '', TC_PREFS_ACTIVATE, 300, y, 225, HandleActivate);
 
    // --- general ------------------------------------------------------------
    FAutoConnect := TCheckBox.Create(FHardwarePanel);
