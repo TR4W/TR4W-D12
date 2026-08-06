@@ -250,7 +250,13 @@ begin
   k := 0;
   for i := 0 to FCount - 1 do
   begin
-    if (FList^[i].FCall = FList^[i + 1].FCall) then
+    // Drop a spot whose call matches the NEXT one in the frequency-sorted list.
+    // The last element has no next: `FList^[i + 1]` at i = FCount - 1 read one
+    // past the live entries, and past the declared array[0..1000] altogether
+    // once the list was full, comparing against whatever happened to be there.
+    // Usually that garbage did not match and the spot survived, so the bug was
+    // invisible -- but a chance match silently dropped the highest spot.
+    if (i < FCount - 1) and (FList^[i].FCall = FList^[i + 1].FCall) then
       begin
       Inc(rejDupeNext);
       continue;
@@ -315,23 +321,33 @@ begin
 
   FilteredSpotCount := k;
 
-  if k > BandMapDisplayLimit then
+  if FilteredSpotCount > BandMapDisplayLimit then
   begin
-    if FList^[0].FFrequency >= BandMapCursorFrequency then
+    // Every endpoint test below must go through FiltSpotIndex.  The window
+    // (bottom..top) indexes the FILTERED list, so asking the UNFILTERED FList
+    // about it is asking a different list: with any filter active FList^[0] is
+    // not the first spot on display, and FList^[FilteredSpotCount] is not the
+    // last -- it is an unrelated spot, and off the end of the array[0..1000]
+    // once the list fills up.
+    if FList^[FiltSpotIndex[0]].FFrequency >= BandMapCursorFrequency then
     begin
+      // Everything on display is at or above the cursor -- show the low end.
       top := BandMapDisplayLimit - 1;
       bottom := 0;
       centrefound := true;
     end;
 
-    if FList^[FilteredSpotCount].FFrequency <= BandMapCursorFrequency then
+    if FList^[FiltSpotIndex[FilteredSpotCount - 1]].FFrequency <= BandMapCursorFrequency then
     begin
+      // Everything on display is at or below the cursor -- show the high end.
       top := FilteredSpotCount - 1;
       bottom := FilteredSpotCount - BandMapDisplayLimit;
       centrefound := true;
     end;
 
-    for k := 0 to k - 1 do
+    // Named bound, NOT `to k - 1`.  Treating the loop variable as a value is
+    // what produced the out-of-range window this routine used to clamp.
+    for k := 0 to FilteredSpotCount - 1 do
     begin
       if FList^[FiltSpotIndex[k]].FFrequency > BandMapCursorFrequency then
       begin
@@ -361,34 +377,42 @@ begin
 
     if (centrefound <> true) then
     begin
-      centre := abs((k - 1) div 2);
-      top := centre + ((BandMapDisplayLimit div 2) - 1);
-      bottom := centre - (BandMapDisplayLimit div 2);
+      // No displayed spot is above the cursor, so the cursor sits at or beyond
+      // the top of the list: the high end is the window to show -- the same one
+      // the second test above picks, which is why this should now be
+      // unreachable.  It is kept because centrefound is set in four places and
+      // a later branch could leave it False.
+      //
+      // This read `centre := abs((k - 1) div 2)`.  After a for loop completes
+      // normally, Delphi leaves the loop variable UNDEFINED -- so that line
+      // centred the window on a garbage value, and `centre - (limit div 2)`
+      // could land below zero.  THAT is the wrong range the clamp below was
+      // added to absorb.
+      top := FilteredSpotCount - 1;
+      bottom := FilteredSpotCount - BandMapDisplayLimit;
     end;
   end
 
   else
   begin
-    top := k - 1;
+    top := FilteredSpotCount - 1;
     bottom := 0;
   end;
 
-  // CLAMP BEFORE INDEXING.  Four separate branches above compute `bottom` and
-  // `top`, and one of them -- the centre-not-found case -- can produce a
-  // NEGATIVE bottom:
+  // BACKSTOP, not the fix.  The four branches above are now each provably in
+  // range, so neither clamp should ever fire; the Warn is how we find out if a
+  // later edit breaks that.  The guard stays at the indexing loop rather than
+  // in any one branch because the invariant belongs here: whatever the branches
+  // decide, this array may only be read within its bounds.
   //
-  //     centre := abs((k - 1) div 2);
-  //     bottom := centre - (BandMapDisplayLimit div 2);
-  //
-  // With few spots on the band, centre is smaller than half the display limit
-  // and bottom goes below zero, so FiltSpotIndex[k] indexes off the front of
-  // the array.  NY4I hit it as an ERangeError right after the bandmap opened
-  // with spots arriving (2026-08-05).
-  //
-  // The guard goes HERE rather than in each branch because the invariant
-  // belongs to the loop that does the indexing: whatever the branches decide,
-  // this array may only be read within its bounds.  Fixing the one branch that
-  // was observed to overflow would leave the other three free to do the same.
+  // NOTE ON WHAT THIS DOES *NOT* EXPLAIN.  This clamp was added believing it
+  // was the cause of an ERangeError NY4I saw in this routine.  It cannot be:
+  // range checking is OFF in this build (tr4w.dproj, DCC_RangeChecking=false)
+  // and no unit here turns it on, so a negative index is a SILENT bad read, not
+  // a raised exception.  With $R-, an ERangeError comes from the RTL itself --
+  // chiefly SetLength with a NEGATIVE length, which in this routine means
+  // `setlength(FiltSpotIndex, FCount)` above with FCount < 0.  That crash is
+  // still unexplained; do not treat it as fixed by this clamp.
   if bottom < 0 then
      begin
      logger.Warn('[SpotsList.Display] bottom=%d clamped to 0 (top=%d, filtered=%d, limit=%d)',
@@ -404,7 +428,9 @@ begin
 
   tSetWindowRedraw(BandMapListBox, False);
   tLB_RESETCONTENT(BandMapListBox);
-  SendMessage(BandMapListBox, LB_INITSTORAGE, k, 10000);
+  // The item count, not `k` -- k is a loop variable and is undefined here on
+  // the path where the centring loop above ran to completion.
+  SendMessage(BandMapListBox, LB_INITSTORAGE, top - bottom + 1, 10000);
   for k := bottom to top do
     SendMessage(BandMapListBox, LB_ADDSTRING, 0, FiltSpotIndex[k]);
   tLB_SETCURSEL(BandMapListBox, CurrentCursorPos);
