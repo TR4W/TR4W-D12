@@ -156,11 +156,24 @@ const
 function AddComboItem(const aCombo: TComboBox; const aText, aTag: string): TListBoxItem;
 procedure SelectByTag(const aCombo: TComboBox; const aTag: string);
 function SelectedTag(const aCombo: TComboBox): string;
-function MakeLabel(const aParent: TFmxObject; const aText: string;
+// OWNER AND PARENT ARE SEPARATE ARGUMENTS, and they are not the same thing.
+// These helpers used to take one object and use it for both, which is fine
+// while a form is built in code and fatal the moment it is streamed: a .fmx
+// contains the form and the components the FORM OWNS, so a control owned by the
+// TTabItem it sits on is simply absent from the resource.  Own everything from
+// the form; parent it wherever the layout wants it.
+//
+// aName is what the streamer keys on -- an unnamed control cannot be written to
+// a .fmx or addressed in the designer.  '' is accepted for forms not yet being
+// converted.
+function MakeLabel(const aOwner: TComponent; const aParent: TFmxObject;
+                   const aName, aText: string;
                    const aX, aY, aWidth: single): TLabel;
-function MakeRadio(const aParent: TFmxObject; const aText, aGroup: string;
+function MakeRadio(const aOwner: TComponent; const aParent: TFmxObject;
+                   const aName, aText, aGroup: string;
                    const aX, aY, aWidth: single): TRadioButton;
-function MakeButton(const aParent: TFmxObject; const aText: string;
+function MakeButton(const aOwner: TComponent; const aParent: TFmxObject;
+                    const aName, aText: string;
                     const aX, aY, aWidth: single;
                     const aOnClick: TNotifyEvent;
                     const aAnchors: TAnchors = [TAnchorKind.akLeft,
@@ -185,6 +198,15 @@ function AddComboItem(const aCombo: TComboBox; const aText, aTag: string): TList
 begin
    Result := TListBoxItem.Create(aCombo);
    Result.Parent    := aCombo;
+   // NOT STORED, and this is load-bearing rather than tidiness.
+   // TCustomComboBox.GetChildren (FMX.ListBox.pas) writes every list item whose
+   // Stored is True into the form resource.  These items are POPULATED AT
+   // RUNTIME from the COM ports on this machine and the radios in the registry,
+   // so persisting them would freeze one developer's hardware into the .fmx --
+   // and it would do it silently, because a stale list looks exactly like a
+   // fresh one.  The agreed split is that layout is designed and population is
+   // code; this is what makes the streamer honour it.
+   Result.Stored    := False;
    Result.Text      := aText;
    // The registry id / radio name travels in TagString, never as an index.
    // Index arithmetic against a list whose contents depend on what is plugged
@@ -220,10 +242,23 @@ begin
       end;
 end;
 
-function MakeLabel(const aParent: TFmxObject; const aText: string;
+// Named before anything else is assigned, so that if the name collides with one
+// already used in this owner the failure is immediate and points at the control
+// being created, not at some later property write.
+procedure NameIt(const aControl: TFmxObject; const aName: string);
+begin
+   if aName <> '' then
+      begin
+      aControl.Name := aName;
+      end;
+end;
+
+function MakeLabel(const aOwner: TComponent; const aParent: TFmxObject;
+                   const aName, aText: string;
                    const aX, aY, aWidth: single): TLabel;
 begin
-   Result := TLabel.Create(aParent);
+   Result := TLabel.Create(aOwner);
+   NameIt(Result, aName);
    Result.Parent     := aParent;
    Result.Position.X := aX;
    Result.Position.Y := aY;
@@ -231,10 +266,12 @@ begin
    Result.Text       := aText;
 end;
 
-function MakeRadio(const aParent: TFmxObject; const aText, aGroup: string;
+function MakeRadio(const aOwner: TComponent; const aParent: TFmxObject;
+                   const aName, aText, aGroup: string;
                    const aX, aY, aWidth: single): TRadioButton;
 begin
-   Result := TRadioButton.Create(aParent);
+   Result := TRadioButton.Create(aOwner);
+   NameIt(Result, aName);
    Result.Parent     := aParent;
    Result.Position.X := aX;
    Result.Position.Y := aY;
@@ -249,13 +286,15 @@ end;
 // ClientWidth/ClientHeight minus an offset places it correctly on a form that
 // never resizes, and strands it in open space on one that does.  See the call
 // sites for the two footers this bit (NY4I, 2026-08-05).
-function MakeButton(const aParent: TFmxObject; const aText: string;
+function MakeButton(const aOwner: TComponent; const aParent: TFmxObject;
+                    const aName, aText: string;
                     const aX, aY, aWidth: single;
                     const aOnClick: TNotifyEvent;
                     const aAnchors: TAnchors = [TAnchorKind.akLeft,
                                                 TAnchorKind.akTop]): TButton;
 begin
-   Result := TButton.Create(aParent);
+   Result := TButton.Create(aOwner);
+   NameIt(Result, aName);
    Result.Parent     := aParent;
    Result.Position.X := aX;
    Result.Position.Y := aY;
