@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{83EAA32B-D268-4CCB-9215-B1DA33F7E195}</ProjectGuid>
         <MainSource>tr4w.dpr</MainSource>
@@ -188,6 +188,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
         <DCCReference Include="src\uRadioConfigApply.pas"/>
         <DCCReference Include="src\ui\fmx\uFMXCoexist.pas"/>
         <DCCReference Include="src\ui\fmx\uFMXSpikeForm.pas"/>
+        <DCCReference Include="src\ui\fmx\uFMXDesignedProbe.pas">
+            <Form>FMXDesignedProbe</Form>
+            <FormType>fmx</FormType>
+        </DCCReference>
         <DCCReference Include="src\ui\fmx\uPrefsForm.pas"/>
         <DCCReference Include="src\radioFactory\uFlexDiscovery.pas"/>
         <DCCReference Include="src\uDialogs.pas"/>

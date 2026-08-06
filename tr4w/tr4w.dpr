@@ -1,4 +1,4 @@
-﻿program tr4w;
+program tr4w;
 {$IMPORTEDDATA OFF}
 
 // VERSIONINFO PE resource (Windows Properties dialog: File version /
@@ -86,6 +86,8 @@ uses
   FMX.Forms,
   uFMXCoexist in 'src\ui\fmx\uFMXCoexist.pas',
   uFMXSpikeForm in 'src\ui\fmx\uFMXSpikeForm.pas',
+  // SPIKE ONLY -- the designed-form probe (FMXDESIGN); remove with the spike.
+  uFMXDesignedProbe in 'src\ui\fmx\uFMXDesignedProbe.pas' {FMXDesignedProbe},
   uPrefsForm in 'src\ui\fmx\uPrefsForm.pas',
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
