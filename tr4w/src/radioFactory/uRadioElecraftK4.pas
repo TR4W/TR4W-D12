@@ -80,12 +80,21 @@ implementation
 // category name carries the rig label -- it never referred to MainUnit's global
 // at all, and the clause was vestigial.
 //
-// It was not harmless.  Dragging the main window's entire unit graph into a leaf
-// driver made dcc32 die with an internal error compiling this very line:
+// It was not harmless.  With this clause present, dcc32 died compiling this very
+// line and no cold build of TR4W would complete:
 //   uRadioElecraftK4.pas(78) F2084 Internal Error: AV62D16BA3(62CB0000)
-// which is why NO cold build of TR4W has completed.  Incremental builds hid it
-// because this unit's .dcu already existed.  Do not reintroduce the clause to
-// reach a global; a radio has its own logger.
+// Incremental builds hid it because this unit's .dcu already existed.
+//
+// BE PRECISE ABOUT THE CAUSE.  Removing this one clause did fix the build --
+// but re-adding it afterwards, once the other seven radioFactory units had also
+// stopped naming MainUnit, compiles cleanly.  So the internal error is a
+// compiler bug sensitive to the SHAPE OF THE WHOLE UNIT GRAPH, not to this line
+// in isolation.  What makes it stay fixed is that the factory as a whole no
+// longer drags the main window in.  That also costs ~60s less on a cold build.
+//
+// The practical rule stands: a radio has its own logger, so do not reach for
+// MainUnit here.  If an internal error ever reappears, suspect the graph, and
+// remember the IDE reports it in seconds where msbuild hangs silently.
 
 Constructor TK4Radio.Create;
 begin
