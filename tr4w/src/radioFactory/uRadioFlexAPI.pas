@@ -103,7 +103,7 @@ type TFlexAPI = class(TFactoryRadioBase)
 
 implementation
 
-uses MainUnit, uRadioRegistry, VC;
+uses uRadioRegistry, VC;   // not MainUnit: the logger is a field, see uRadioElecraftK4
 
 // ---------------------------------------------------------------------------
 

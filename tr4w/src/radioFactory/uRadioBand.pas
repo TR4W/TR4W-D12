@@ -34,6 +34,9 @@ unit uRadioBand;
 
 interface
 
+uses
+   VC;   // BandType, for GetRadioBandFromBandType below
+
 // ---------------------------------------------------------------------------
 // Band enum — canonical definition (moved from uFactoryRadioBase).
 // Order matters: routines in this unit rely on the enum ordinal values only
@@ -63,6 +66,24 @@ function FreqToRadioBand(freq: LongInt): TRadioBand;
 // ---------------------------------------------------------------------------
 
 function RadioBandToFreq(band: TRadioBand): LongInt;
+
+// ---------------------------------------------------------------------------
+// GetRadioBandFromBandType — TRDOS BandType to the factory's TRadioBand.
+//
+// MOVED HERE FROM MainUnit (2026-08-07).  It is a pure enum mapping and had no
+// business in the main window: its one caller is a radio driver, and reaching it
+// meant a leaf driver pulled the whole main-window unit graph in -- which is
+// what made dcc32 die with an internal error and stopped every cold build.
+//
+// BEHAVIOUR CHANGE, deliberate: an unmapped band now returns rbNone.  The
+// original fell out of its case with Result NEVER ASSIGNED and returned whatever
+// happened to be on the stack, which for a band the case does not cover (60m is
+// commented out there) is an arbitrary band.  It logged the error and then
+// returned rubbish.  Reporting is now the caller's job -- this unit is a pure
+// mapping and has no logger.
+// ---------------------------------------------------------------------------
+
+function GetRadioBandFromBandType(band: BandType): TRadioBand;
 
 implementation
 
@@ -104,6 +125,33 @@ begin
       rb70cm:  Result := 432100000;
    else
       Result := 14100000;  // Default to 20m (covers rbNone)
+   end;
+end;
+
+function GetRadioBandFromBandType(band: BandType): TRadioBand;
+begin
+   case band of
+      NoBand:  Result := rbNone;
+      Band160: Result := rb160m;
+      Band80:  Result := rb80m;
+      Band40:  Result := rb40m;
+      Band30:  Result := rb30m;
+      Band20:  Result := rb20m;
+      Band17:  Result := rb17m;
+      Band15:  Result := rb15m;
+      Band12:  Result := rb12m;
+      Band10:  Result := rb10m;
+      Band6:   Result := rb6m;
+      Band2:   Result := rb2m;
+      Band432: Result := rb70cm;
+   else
+      // 60m reaches here: BandType has Band60 but the original mapping left it
+      // commented out, and rb60m exists in TRadioBand.  Left as-is rather than
+      // quietly adding a mapping nobody has tested on the air -- but it now
+      // returns a DEFINED value instead of an unassigned Result.
+      begin
+      Result := rbNone;
+      end;
    end;
 end;
 

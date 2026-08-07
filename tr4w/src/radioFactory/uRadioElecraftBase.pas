@@ -81,7 +81,9 @@ implementation
 
 uses
    SysUtils,
-   MainUnit,        // the logger this radio was given at connect
+   // The comment that used to sit here said "the logger this radio was given at
+   // connect" -- and that is exactly right, which is why MainUnit is NOT needed:
+   // the logger is a FIELD on TFactoryRadioBase, not the main window's global.
    uElecraftIF;     // the pure decode: ParseElecraftIF, ElecraftModeToRadioMode
 
 procedure TElecraftRadio.DeclareCWProsigns;

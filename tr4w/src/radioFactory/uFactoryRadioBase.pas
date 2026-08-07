@@ -679,7 +679,27 @@ end;
 implementation
 
 //Uses Unit1;
-Uses MainUnit, LogRadio, TypInfo;   // TypInfo: GetEnumName, for CapabilitiesAsText
+// NOT MainUnit -- see the note in uRadioElecraftK4.  This class declares its own
+// `logger` field and sets it per radio in SetRadioModel, so it never needed the
+// main window's global; pulling that graph into the factory base is what made
+// dcc32 die with an internal error and stopped every cold build.
+Uses LogRadio, TypInfo;   // TypInfo: GetEnumName, for CapabilitiesAsText
+
+var
+   // TReadingThread IS NOT A RADIO.  It is a plain TThread declared beside
+   // TFactoryRadioBase, so it does not inherit the `logger` FIELD, and its
+   // logging used to resolve to MainUnit's global -- the one reference in this
+   // unit that genuinely needed the main window.
+   //
+   // Log4D's GetLogger is a repository lookup: the same name always returns the
+   // same instance (Log4D.pas, DefaultHierarchy.GetLogger).  So asking for
+   // 'TR4WDebugLog' here yields the very object tr4w.dpr assigns to the global,
+   // and the thread logs exactly where it always did -- without this unit
+   // knowing the main window exists.
+   //
+   // Inside TFactoryRadioBase's own methods the class FIELD still wins over this
+   // variable, so per-radio categories are unaffected.
+   logger: TLogLogger;
 
 // Byte-exact conversions for binary serial protocols (Icom CI-V). In a CI-V
 // frame string each Char carries exactly one wire byte (Ord 0..255, including
@@ -2259,6 +2279,12 @@ function BoolToString(b: boolean): string;
 begin
    Result := IfThen(b,'True','False');
 end;
+
+initialization
+   // Fetched once so TReadingThread never sees a nil logger however early it
+   // starts.  See the var block above: this is not a second logger, it is the
+   // same Log4D instance the program configures.
+   logger := TLogLogger.GetLogger('TR4WDebugLog');
 
 end.
 

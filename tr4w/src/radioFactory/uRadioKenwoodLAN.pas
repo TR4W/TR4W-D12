@@ -162,7 +162,8 @@ end;
 
 implementation
 
-uses MainUnit;
+// No uses clause: the `logger` referred to here is the FIELD on
+// TFactoryRadioBase, not MainUnit's global.  See uRadioElecraftK4.
 
 const
    // TS-890 CW speed range per the PC Command Reference (KS command, P1 = 004..060)

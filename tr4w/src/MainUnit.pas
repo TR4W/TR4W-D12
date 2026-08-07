@@ -221,7 +221,9 @@ procedure ProcessImportedSRX_String(fieldValue: string; var exch:
 // GetContestByADIFName moved to uADIF.pas (Issue #887).
 procedure SetExtendedModeFromMode(RData: ContestExchange);
 function GetTR4WBandFromNetworkBand(band: TRadioBand): BandType;
-function GetRadioBandFromBandType(band: BandType): TRadioBand;
+// GetRadioBandFromBandType moved to radioFactory\uRadioBand.pas (2026-08-07),
+// beside the other band mappings.  Its only caller is a radio driver, and
+// reaching it here forced that driver to pull in this unit's whole graph.
 procedure GetTRModeAndExtendedModeFromNetworkMode(netMode: TRadioMode; var mode:
   ModeType; var extMode: extendedModeType);
 
@@ -9314,32 +9316,7 @@ begin
 
 end;
 
-function GetRadioBandFromBandType(band: BandType): TRadioBand;
-begin
-
-  case band of
-    NoBand: Result := rbNone;
-    Band160: Result := rb160m;
-    Band80: Result := rb80m;
-    //    Band60: Result := rb60m;
-    Band40: Result := rb40m;
-    Band30: Result := rb30m;
-    Band20: Result := rb20m;
-    Band17: Result := rb17m;
-    Band15: Result := rb15m;
-    Band12: Result := rb12m;
-    Band10: Result := rb10m;
-    Band6: Result := rb6m;
-    Band2: Result := rb2m;
-    Band432: Result := rb70cm;
-  else
-    begin
-      logger.Error('[GetRadioBandFromBandType] band is invalid - Ord is %d',
-        [Ord(band)]);
-    end;
-  end; // of case
-
-end;
+// GetRadioBandFromBandType lives in radioFactory\uRadioBand.pas as of 2026-08-07.
 
 procedure GetTRModeAndExtendedModeFromNetworkMode(netMode: TRadioMode; var mode:
   ModeType; var extMode: extendedModeType);
