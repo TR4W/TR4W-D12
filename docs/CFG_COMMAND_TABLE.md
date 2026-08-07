@@ -284,7 +284,23 @@ Called after a value changes from three places: `MainUnit.pas:8501`, `uOption.pa
 So `crA` and `crP` are **not** two flavours of the same thing: `crA` is parse-time
 semantics (derive, validate, reject); `crP` is presentation (redraw what now looks wrong).
 NY4I's example, `WARC BAND ENABLE`, is `crA:0 crP:1` — nothing to derive, but the band map
-must be redrawn. **[UNCONFIRMED]** that this division is intended rather than incidental.
+must be redrawn.
+
+**Why there are two arrays at all: they hold DIFFERENT SIGNATURES** (NY4I, 2026-08-07).
+
+```pascal
+TAdditionalProc = function: Boolean;     // uCFG.pas:958      <- crA
+cmdProc         : procedure;             // uOption.pas:445   <- crP
+```
+
+`AdditionalProcsArray`'s own comment says *"These m[u]st be boolean functions"*
+(`uCFG.pas:194`). One array cannot hold both — calling a `function: Boolean` through a
+`procedure` type is a calling-convention error. So the split is **mechanical**, and the
+semantic pattern above (validate/derive vs. redraw) is a *consequence* of which signature a
+hook needs, rather than the design intent.
+
+Consequence for any rework: the two arrays cannot simply be merged, and adding a hook means
+choosing the array by **what it must return**, not by what it conceptually does.
 
 ### `crJ` — editor behaviour
 `0` editable · `1` editable, requires restart (`uOption.pas:764` sets
@@ -384,7 +400,8 @@ The encouraging part: those fields already exist and are already honoured. The w
 *(`csNew` vs `csOld` is no longer open — answered in the `crS` section above: TR LOG
 heritage vs. new in TR4W, evidenced from the lost `uDocumentation` generator.)*
 
-1. **`crA` vs `crP`** — is "derive/validate" vs "redraw" the intended division, or did it
-   grow that way?
-2. **`ckArray`** — 16 rows; is it still the right mechanism, or a legacy of the DOS table?
-3. **`cfRadio1` / `cfRadio2`** — do they select an ini section as `cfCol`/`cfWK` do?
+*(`crA` vs `crP` is no longer open — answered in the `crA` section above: two arrays because
+two signatures, `function: Boolean` vs `procedure`.)*
+
+1. **`ckArray`** — 16 rows; is it still the right mechanism, or a legacy of the DOS table?
+2. **`cfRadio1` / `cfRadio2`** — do they select an ini section as `cfCol`/`cfWK` do?
