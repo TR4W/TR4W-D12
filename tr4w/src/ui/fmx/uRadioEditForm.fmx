@@ -489,6 +489,40 @@ object RadioEditForm: TRadioEditForm
     Size.Height = 22.000000000000000000
     Size.PlatformDefault = False
   end
+  object lblKeyerRTS: TLabel
+    Position.X = 12.000000000000000000
+    Position.Y = 348.000000000000000000
+    Size.Width = 130.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Keyer RTS line'
+    TabOrder = 11
+  end
+  object cbxKeyerRTS: TComboBox
+    Position.X = 150.000000000000000000
+    Position.Y = 344.000000000000000000
+    Size.Width = 200.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 12
+  end
+  object lblKeyerDTR: TLabel
+    Position.X = 12.000000000000000000
+    Position.Y = 378.000000000000000000
+    Size.Width = 130.000000000000000000
+    Size.Height = 17.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Keyer DTR line'
+    TabOrder = 13
+  end
+  object cbxKeyerDTR: TComboBox
+    Position.X = 150.000000000000000000
+    Position.Y = 374.000000000000000000
+    Size.Width = 200.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 14
+  end
   object btnOK: TButton
     Anchors = [akRight, akBottom]
     Position.X = 320.000000000000000000

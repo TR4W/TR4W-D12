@@ -121,6 +121,14 @@ type
       cbxFound: TComboBox;
       lblKeyerPort: TLabel;
       cbxKeyerPort: TComboBox;
+      // The keyer port has TWO control lines and each is assigned a JOB
+      // (NONE/OFF/ON/CW/PTT), which is how one keys CW while the other drives
+      // PTT -- as the original TR4W radio dialog offered (NY4I 2026-08-07).
+      // Not a DTR-or-RTS choice.
+      lblKeyerRTS: TLabel;
+      cbxKeyerRTS: TComboBox;
+      lblKeyerDTR: TLabel;
+      cbxKeyerDTR: TComboBox;
       edtCIV: TEdit;
       edtHamLibID: TEdit;
       lblStartup: TLabel;
@@ -478,6 +486,8 @@ begin
    edtPassword.Text := FRadio.NetworkPassword;
 
    SelectByTag(cbxKeyerPort, FRadio.KeyerOutputPort);
+   FillRTSDTRCombo(cbxKeyerRTS, FRadio.KeyerRTS);
+   FillRTSDTRCombo(cbxKeyerDTR, FRadio.KeyerDTR);
    // HEX, because that is what the radio's own menu and every Icom manual show
    // (NY4I).  The value is STORED as the decimal the config command expects --
    // only the presentation changes, so nothing downstream has to know.
@@ -600,6 +610,8 @@ begin
    FRadio.NetworkPassword := edtPassword.Text;   // not trimmed: it is a password
 
    FRadio.KeyerOutputPort := SelectedTag(cbxKeyerPort);
+   FRadio.KeyerRTS        := SelectedTag(cbxKeyerRTS);
+   FRadio.KeyerDTR        := SelectedTag(cbxKeyerDTR);
    if not TryParseHexByte(edtCIV.Text, civ) then
       begin
       aError := TC_RADIOEDIT_BADCIV;

@@ -121,6 +121,8 @@ const
    TC_RADIOEDIT_USERNAME     = 'User name';
    TC_RADIOEDIT_PASSWORD     = 'Password';
    TC_RADIOEDIT_KEYERPORT    = 'Keyer output port';
+   TC_RADIOEDIT_KEYERRTS     = 'Keyer RTS line';
+   TC_RADIOEDIT_KEYERDTR     = 'Keyer DTR line';
    TC_RADIOEDIT_CIVADDRESS   = 'CI-V address (hex)';
    TC_RADIOEDIT_BADCIV       = 'The CI-V address must be a hex value, e.g. 88 or $88.';
    // Shown greyed INSIDE an empty field, so "blank" reads as "using this"
@@ -184,6 +186,19 @@ function MakeButton(const aOwner: TComponent; const aParent: TFmxObject;
                                                 TAnchorKind.akTop]): TButton;
 function ComNameToPortValue(const aComName: string): string;
 function IsIcomRadio(const aRegistryId: string): boolean;
+// The role each serial control line performs, spelled EXACTLY as
+// tr4w_RTSDTRTypeSA does (LOGRADIO.PAS:100).  The vocabulary is reproduced here
+// rather than reached for, because pulling LOGRADIO into a designed FMX form
+// would drag the legacy radio unit into the UI -- but the SPELLING must match
+// character for character: the store holds these strings and CheckCommand
+// parses them back.  One wrong word ('NONE' for 'TCP/IP') cost a bench session
+// on the radio track.
+//
+// This is why the keyer port needs TWO controls rather than a DTR/RTS choice:
+// each line is assigned a JOB, so one can key CW while the other drives PTT --
+// which is what the original TR4W radio dialog offered.
+procedure FillRTSDTRCombo(const aCombo: TComboBox; const aSelected: string);
+
 function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 
 implementation
@@ -373,6 +388,20 @@ begin
       begin
       Result := SameText(Copy(Trim(DisplayNameId(aRegistryId)), 1, 4), 'Icom');
       end;
+end;
+
+procedure FillRTSDTRCombo(const aCombo: TComboBox; const aSelected: string);
+const
+   RTSDTRROLES: array[0..4] of string = ('NONE', 'OFF', 'ON', 'CW', 'PTT');
+var
+   i: integer;
+begin
+   aCombo.Clear;
+   for i := Low(RTSDTRROLES) to High(RTSDTRROLES) do
+      begin
+      AddComboItem(aCombo, RTSDTRROLES[i], RTSDTRROLES[i]);
+      end;
+   SelectByTag(aCombo, aSelected);
 end;
 
 // Parses a CI-V address written the way manuals and radio menus write it: hex,
