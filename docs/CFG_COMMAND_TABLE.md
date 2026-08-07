@@ -118,6 +118,22 @@ See the trap above. `ckNormal`: address of the global. `ckArray`/`ckList`: an in
   row colours driven by `CFGStatusArray` — and it produced `commands_help_*.ini`, which TR4W
   **still ships as a runtime dependency**.
 
+  **Corroborated independently by the data itself.** If `csOld` means "inherited from TR
+  LOG", commands that could not exist in a DOS logger must be `csNew` — and they are,
+  without exception in the spot check:
+
+  | Command | `crS` | |
+  |---|---|---|
+  | `WSJT-X ENABLED`, `TELNET SERVER`, `DEBUG LOG LEVEL`, `ALLOW AUTO UPDATE` | `csNew` | impossible in DOS |
+  | `MY CALL`, `SPRINT QSY RULE`, `TEN MINUTE RULE`, `MY GRID`, `BEEP ENABLE` | `csOld` | classic TR LOG |
+  | `MULTI PORT`, `MULTI PORT BAUD RATE` | `csRem` | TR LOG's DOS serial multi-station link, **dropped** by TR4W for TCP/IP |
+
+  The `csRem` row is the clincher: it marks a TR LOG command TR4W does not support, which is
+  exactly the generator's label *"Removed, not supported"*.
+
+  **NY4I checked the original manual (2026-08-07); it says nothing about this.** Don't spend
+  time there again — the evidence is the `.dcu` plus the correlation above.
+
   So the field is not dead metadata; it is documentation provenance whose generator was
   lost. **Set it honestly on new rows** (`csNew` for anything TR LOG never had), and treat
   it as read-only history otherwise.
