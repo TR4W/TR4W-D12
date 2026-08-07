@@ -158,8 +158,22 @@ has "no read-only attribute" is wrong; `RADIO ONE FACTORY ID` being freely edita
 ### `crKind: CFGKind` — the shape of the value
 `(ckNormal, ckArray, ckList)`. 434 / 16 / 56 rows.
 - `ckNormal` — a single value at `crAddress`.
-- `ckArray` — value is numeric; `crAddress` indexes `ArrayRecordArray`, and
-  `SetParameterInArray` writes into the target array (`uCFG.pas:1141-1155`).
+- `ckArray` — value is numeric, and `crAddress` indexes `ArrayRecordArray`
+  (`uCFG.pas:166`), whose rows are `(arArrayPtr, arArrayLength, arVar)`. This is a
+  **DISCRETE ALLOW-LIST, not a range**: `SetParameterInArray` (`TF.pas:823`) linearly
+  searches for an **exact match**, stores into `arVar` on a hit, and returns `False`
+  otherwise — which rejects the command.
+
+  That is a capability `crMin`/`crMax` cannot express, and the non-contiguous arrays are
+  the proof: `SCP_MINIMUM_LETTERS_ARRAY = (0, 3, 4, 5)` — **1 and 2 are illegal** — and
+  `DITDAHRATIO_ARRAY = (3, 4, 5, 6)`. A 0..5 range would wrongly admit 1 and 2.
+
+  **`crMin`/`crMax` are DEAD FIELDS on `ckArray` rows.** The branch goes straight from
+  `Val` to `SetParameterInArray` and never reads them (`uCFG.pas:1141-1155`), and their
+  values are correspondingly inconsistent — `DIT DAH RATIO` and `MP3 RECORDER BITRATE`
+  carry `0/0` while `LEADING ZEROS` carries `0/3`, merely duplicating its array. Generating
+  validation from them would accept `SCP MINIMUM LETTERS = 2`, which the program rejects
+  today, and would validate nothing at all on the `0/0` rows.
 - `ckList` — value is an **enumerated word**; `crAddress` indexes `ListParamArray`
   (`uCFG.pas:243`), whose `lpArray` holds the accepted spellings and `lpVar` the target
   (`uCFG.pas:1159-1166`).
