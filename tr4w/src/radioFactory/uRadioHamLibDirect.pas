@@ -200,8 +200,10 @@ type
 
 implementation
 
-uses
-  MainUnit;
+// No MainUnit.  The `logger` here is the FIELD on TFactoryRadioBase, and
+// GetRadioBandFromBandType -- the one thing this unit genuinely did need from
+// the main window -- now lives in uRadioBand, which is already in the interface
+// uses above.  See uRadioElecraftK4 for why this mattered.
 
 var
   logger: TLogLogger;

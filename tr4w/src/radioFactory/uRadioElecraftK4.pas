@@ -75,7 +75,17 @@ end;
 
 implementation
 
-Uses MainUnit;
+// NO 'uses MainUnit' HERE.  Every logger.* call in this unit resolves to the
+// `logger` FIELD on TFactoryRadioBase, set per radio in SetRadioModel so the
+// category name carries the rig label -- it never referred to MainUnit's global
+// at all, and the clause was vestigial.
+//
+// It was not harmless.  Dragging the main window's entire unit graph into a leaf
+// driver made dcc32 die with an internal error compiling this very line:
+//   uRadioElecraftK4.pas(78) F2084 Internal Error: AV62D16BA3(62CB0000)
+// which is why NO cold build of TR4W has completed.  Incremental builds hid it
+// because this unit's .dcu already existed.  Do not reintroduce the clause to
+// reach a global; a radio has its own logger.
 
 Constructor TK4Radio.Create;
 begin

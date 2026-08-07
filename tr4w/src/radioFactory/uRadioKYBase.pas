@@ -79,8 +79,8 @@ type
 
 implementation
 
-uses
-   MainUnit;   // the global `logger`
+// No uses clause: the `logger` referred to here is the FIELD on
+// TFactoryRadioBase, not MainUnit's global.  See uRadioElecraftK4.
 
 function TKYRadio.CWCommand(const text: string; immediate: boolean): string;
 begin
