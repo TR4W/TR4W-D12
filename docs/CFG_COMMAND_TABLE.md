@@ -89,6 +89,52 @@ See the trap above. `ckNormal`: address of the global. `ckArray`/`ckList`: an in
 
 `crS` is *provenance*, **not permission** — it does not make a key read-only. That is `crJ`.
 
+#### Retiring a key into JSON: use `crS`, but in stages
+
+When a setting moves to `settings\tr4w.json`, the ini row must stop being a second owner —
+otherwise you get the `57a7f2ee` bug, where a hand-edited ini beat the library. `crS` is the
+lever, but **"moved to JSON" is not one condition**, because `CheckCommand` is not only the
+ini reader:
+
+| Situation | Marker | Effect |
+|---|---|---|
+| JSON renders legacy keys; `CheckCommand` still applies them | `csOwned` | applied, hidden from Options — what the radio keys use today |
+| JSON is the only source; nothing needs the legacy path | `csRem` (see `csJSON` below) | accepted so old files do not error, but **inert** |
+| Key must stay settable from a contest `.cfg` **or** the network | **stays live** | never retired, whatever the ini does |
+
+**The third row is the one that bites.** `csRem` makes `CheckCommand` return early
+(`uCFG.pas:1135`), and the contest `.CFG` reaches *the same* `CheckCommand`
+(`LogCfg.pas:825`). So retiring `MY STATE` would not merely drop the ini copy — it would
+make the **contest override inert**: travel to Georgia, set `MY STATE=GA` in the contest
+`.cfg`, and TR4W ignores it. That is the station-defaults ← event-overrides model disabled
+by the very marker meant to protect it. The same applies to any `crNetwork = 1` row, because
+`uNet.pas:318` feeds inbound multi-op values through `CheckCommand` too.
+
+So: a **station-only, non-synced** key can be retired. An **overlap** key never can — for
+those, the `.cfg` path is a feature, not a legacy fallback.
+
+#### Proposed: a `csJSON` status (NY4I, 2026-08-07)
+
+`csRem` already means something specific and historical — *this command was withdrawn*.
+Reusing it for migrated keys would conflate two unrelated stories and lose the ability to
+ask "what have we moved so far?".
+
+**Proposal: add `csJSON`, behaving exactly like `csRem` (accepted, inert, hidden) but
+recording a different reason** — *this setting now lives in `tr4w.json`*.
+
+**Existing `csRem` rows stay as they are.** They are already dead; there is nothing to move
+and no value in migrating a command nobody can set.
+
+Implementing it is small but **must be done completely**, because a new enum value that no
+branch handles would fall through as *active*:
+
+1. `CFGStatus` in `VC.pas:859`.
+2. `CFGStatusArray` (`uCFG.pas:315`) — indexed by `CFGStatus`, so a missing entry is a
+   **compile error**. That is how `csOwned`'s omission was caught (`uCFG.pas:314`), and it
+   is the safety net here too.
+3. `CheckCommand` (`uCFG.pas:1135`) — treat as `csRem`.
+4. `uOption.pas:343` — hide it, alongside `csRem` and `csOwned`.
+
 ### `crA` — the deeper-processing hook, which can also reject
 Index into `AdditionalProcsArray[1..25]` (`uCFG.pas:194`); `0` = none. NY4I's framing: the
 byte selects a procedure that provides **additional processing** for the parameter — e.g.
@@ -220,6 +266,24 @@ network behaviour (`crNetwork`), and both storage-routing fields (`crC`, `cfFunc
 
 The encouraging part: those fields already exist and are already honoured. The work is
 **auditing the classification**, not inventing a mechanism.
+
+## Decisions taken (2026-08-07)
+
+- **Scope of the ini retirement is the INI ONLY.** Contest `.cfg` and `.dom` go with the
+  contest factory. `.dom` turns out to be multiplier data, not config commands, so it was
+  never in this namespace.
+- **Station defaults ← contest/event overrides.** `MY STATE = FL` is identity; `MY STATE =
+  GA` in a contest `.cfg` is where you operated that weekend, and `MY PARK` only exists for
+  an event. A contest `.cfg` continuing to win while loaded is the semantics, not a
+  precedence hack — and it is already the behaviour, since the `.cfg` loads after the ini.
+- **`crC` is the existing station-vs-event routing bit** — 29 rows `crC:1`, 477 `crC:0`.
+  16 keys observed in real `.CFG` files are nonetheless `crC:0`; that set is the work list.
+- **Retire with `crS`, in stages, and add `csJSON`** — see the `crS` section above.
+- **`ctFreqList` becomes a JSON array.** Confirmed for `BAND MAP CUTOFF FREQUENCY` (12 bare
+  integers). `FREQUENCY MEMORY` is really a 2-D table — `DefaultFreqMemory[band, mode]`,
+  where the **band is derived from the frequency** by `CalculateBandMode` and the mode comes
+  from an `SSB ` text prefix (`uCFG.pas:1375`) — so store `{mode, freq}` and keep deriving
+  the band, rather than transcribing the ini's flat repeated key.
 
 ## Open questions for NY4I
 
