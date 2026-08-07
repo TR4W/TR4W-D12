@@ -55,6 +55,8 @@ uses
    uTestRadioConfigStore in 'uTestRadioConfigStore.pas',
    uRadioConfigLegacyMap in '..\..\src\uRadioConfigLegacyMap.pas',
    uTestRadioConfigLegacyMap in 'uTestRadioConfigLegacyMap.pas',
+   uKeyerConfigStore    in '..\..\src\uKeyerConfigStore.pas',
+   uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
@@ -265,6 +267,7 @@ begin
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
+   RegisterSuite(TKeyerConfigStoreTests.Create('KeyerConfigStore'));
 
    if RunAllSuites then
       begin

@@ -78,6 +78,7 @@ uses
   // preferences dialog is the caller -- but they are listed so the compiler
   // checks them against the live CFGCA/CAT surface on every build.
   uRadioConfigStore in 'src\uRadioConfigStore.pas',
+  uKeyerConfigStore in 'src\uKeyerConfigStore.pas',
   uRadioConfigLegacyMap in 'src\uRadioConfigLegacyMap.pas',
   uRadioConfigApply in 'src\uRadioConfigApply.pas',
   // FMX coexistence spike -- see docs\FMX_WIN32_COEXISTENCE.md.  FMX.Forms is
