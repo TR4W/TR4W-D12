@@ -55,6 +55,24 @@ honest test for "simple" is already in the source at `uCFG.pas:944` —
 `crKind = ckNormal` **and** `crType <> ctFreqList` **and** `crA = 0`. Anything failing it
 needs its own handling.
 
+## Three consumers of the table, and only two respect `crS`
+
+Retiring a key is not just about `CheckCommand`, because the table has other readers:
+
+1. **`CheckCommand`** (`uCFG.pas`) — the ini, the contest `.cfg` (`LogCfg.pas:825`) and
+   inbound network values (`uNet.pas:318`) all arrive here. Respects `crS`.
+2. **The Ctrl+J Options dialog** (`uOption.pas`, bound at `uMenu.pas:42`). Respects `crS` —
+   hides `csRem` and `csOwned` (`uOption.pas:343`).
+3. **`BOOLSWAP`** (`uProcessCommand.pas:628`) — the CW-message macro
+   `BOOLSWAP=<command name>`. **IGNORES `crS` COMPLETELY.** It walks `CFGCA` by name and,
+   for any `ctBoolean` row, flips the value **directly at `crAddress`**, then calls `crP`.
+
+**So retiring a boolean does not stop `BOOLSWAP` from setting it.** A key marked `csJSON`
+would still be flipped from a function-key message, writing to a legacy global while JSON
+believes it owns the setting — the two-owners bug via a path nobody would think to check.
+Any boolean that moves to JSON needs `BOOLSWAP` taught about the new store, or its legacy
+variable kept live and driven by the JSON layer.
+
 ---
 
 ## Field by field
@@ -124,6 +142,17 @@ recording a different reason** — *this setting now lives in `tr4w.json`*.
 
 **Existing `csRem` rows stay as they are.** They are already dead; there is nothing to move
 and no value in migrating a command nobody can set.
+
+It also earns its keep in the **Ctrl+J** command-configuration dialog (`uOption.pas`, bound
+at `uMenu.pas:42`). That list should shrink as settings move into Preferences, and `csJSON`
+makes the shrinking automatic *and* self-documenting — a reader can tell **why** a row is
+hidden:
+
+| Status | Hidden from Ctrl+J | Legacy path still applies? | Means |
+|---|---|---|---|
+| `csOwned` | yes | **yes** | another *dialog* owns the UI; the ini value is still the transport |
+| `csJSON` | yes | no | another *store* owns the value; `tr4w.json` is the source |
+| `csRem` | yes | no | withdrawn; nobody owns it |
 
 Implementing it is small but **must be done completely**, because a new enum value that no
 branch handles would fall through as *active*:
@@ -287,7 +316,16 @@ The encouraging part: those fields already exist and are already honoured. The w
 
 ## Open questions for NY4I
 
-1. **`csNew` vs `csOld`** — nothing reads the difference. What was it meant to record?
+1. **`csNew` vs `csOld`** — what was the distinction meant to record? Investigated
+   2026-08-07 and **not recoverable from the code or the history**:
+   - Both values trace to `b90ba930 initial`, so the intent predates this repository.
+   - The D7 tree at `C:\TR4W` carries no comment either.
+   - The explanatory comment at `VC.pas:848` is **ours** — commit `89ce0340a`, 2026-08-05,
+     added during the `csOwned` work — so it documents observed behaviour, not intent.
+   - `CFGStatusArray` labels them `'New'` / `'Old'`, which hints at the meaning, but that
+     array is **never referenced**; its only role is the compile-time completeness check.
+
+   So this one needs NY4I's or Howie N4AF's memory. Everything mechanical has been checked.
 2. **`crMin` on non-numeric rows** — meaningful, or conventionally 0?
 3. **`crA` vs `crP`** — is "derive/validate" vs "redraw" the intended division, or did it
    grow that way?
