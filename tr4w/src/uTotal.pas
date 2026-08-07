@@ -430,9 +430,16 @@ procedure ClearTotals(StartColumn: integer);
 var
   c, r                             : integer;
 begin
-   for c := StartColumn to 7 do
-     for r := 0 to 3 do
-      TotalTextOut('', c , r);
+   // Bounds from the arrays, not literals -- see VC.pas:2601. Clearing fewer
+   // rows than exist would leave a stale label behind when a contest with more
+   // categories is followed by one with fewer.
+   for c := StartColumn to High(TotWinHandles) do
+      begin
+      for r := 0 to High(TotWinHandles[0]) do
+         begin
+         TotalTextOut('', c, r);
+         end;
+      end;
 end;
 
 initialization

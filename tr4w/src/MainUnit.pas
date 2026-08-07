@@ -5308,8 +5308,11 @@ const
   w = 2.5;
 begin
 
-  for r := 0 to 3 do
-    for c := 0 to 7 do
+  // Bounds from the arrays themselves, so widening the grid is a one-line
+  // change in VC.pas rather than a hunt for every loop that repeated a literal.
+  for r := 0 to High(TotWinHandles[0]) do
+    begin
+    for c := 0 to High(TotWinHandles) do
     begin
 
       if c = 0 then
@@ -5333,6 +5336,7 @@ begin
         defStyle and (not (Cardinal(NoBorder) * SS_SUNKEN))
         );
 
+    end;
     end;
   for c := 1 to 7 do
   begin
