@@ -69,12 +69,23 @@ begin
   // labels) reach Row = 4.  NY4I hit exactly that at startup 2026-08-07:
   //   uTotal.TotalTextOut ('DX Mults', 0, 4)   <- Y is one past the end
   //
-  // With range checking OFF -- which is this project's setting -- that does not
-  // raise.  It reads four bytes past TotWinHandles into TotWinHandlesFilled
-  // (declared immediately after it in VC.pas:2601) and then writes past
-  // TotWinHandlesFilled into whatever follows.  A silent wild write into
-  // globals is a worse outcome than a visible error, which is why this is
-  // guarded here rather than left to the callers to each learn to count.
+  // WITH RANGE CHECKING OFF -- this project's setting -- it does not raise, and
+  // what it does instead depends on X, because Delphi lays array[0..7, 0..3]
+  // out with the FIRST index outermost: [X,Y] is element X*4 + Y of 32.
+  //
+  //   X = 0 (the left column):  [0,4] is element 4, which IS [1,0].  The label
+  //       silently overwrites the NEXT COLUMN's top cell.  Wrong, but contained.
+  //
+  //   X = 7 (DisplayBandTotals sets Column := 7 for AllBands):  [7,4] is
+  //       element 32 -- ONE PAST THE LAST.  TotWinHandles[7,4] reads into
+  //       TotWinHandlesFilled, and TotWinHandlesFilled[7,4] WRITES PAST IT INTO
+  //       TotWinheadHandles[1] (VC.pas:2604), which is a live window handle.
+  //
+  // That second case is the dangerous one and it is why this guard exists: a
+  // corrupted HWND fails later, somewhere else, depending on what the window
+  // manager happens to be doing -- which matches "ran fine for many sessions,
+  // then didn't" and a corpus set that failed only periodically.  Guarded here
+  // rather than left to each caller to learn to count.
   if (X < Low(TotWinHandles)) or (X > High(TotWinHandles)) or
      (Y < Low(TotWinHandles[0])) or (Y > High(TotWinHandles[0])) then
      begin
