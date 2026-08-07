@@ -8,7 +8,7 @@ configuration command. It is not merely a persistence table — it is simultaneo
 This document exists because the ini is slated for retirement in favour of JSON
 (`docs/`-adjacent decision, 2026-08-07), and **anything that migrates a row has to honour
 every field on it**. Written by reading the consumers, with line references so each claim
-can be re-checked. Items marked **[UNCONFIRMED]** are inferences NY4I should settle.
+can be re-checked. Open items are listed at the end; everything else is verified against the consumers.
 
 ```pascal
 CFGRecord = record
@@ -89,10 +89,24 @@ See the trap above. `ckNormal`: address of the global. `ckArray`/`ckList`: an in
   bound"** — the source comments it `{MAXLONG}`.
 - `ctReal`: the bounds are **tenths** — compared against `crMin / 10` and `crMax / 10`
   (`uCFG.pas:1237`).
-- String types: `crMax` is the **maximum input length** the editor allows
-  (`uOption.pas:695`).
-- **[UNCONFIRMED]** whether `crMin` carries any meaning for non-numeric types, or is
-  conventionally 0.
+- Text types: `crMax` is the **maximum input length** the editor allows
+  (`uOption.pas:695`) — populated on every `ctCaseSensitive`, `ctPassword`, `ctDirectory`
+  and `ctURL` row, and on 49 of 58 `ctString`.
+- **`crMin` is 0 on every non-numeric row** — verified across all 506 (NY4I, 2026-08-07).
+  Treat it as meaningless outside the numeric types; do not derive validation from it.
+
+**Two inconsistencies found while checking that, neither compiler-visible:**
+
+- **Nine `ctString` rows carry `crMax: 0`** — `CQ MENU`, `EX MENU`, `INPUT CONFIG FILE`,
+  `LOG FILE NAME`, `PACKET LOG FILENAME`, `PACKET SPOT COMMENT`, `RTTY RECEIVE STRING`,
+  `RTTY SEND STRING`, `TOTAL SCORE MESSAGE`. Since `crMax` is the editor's input length,
+  a `0` there is either an unreachable edit or an unbounded one. Worth a look before any
+  of them moves.
+- **The table spells types inconsistently**: `ctFileName` ×5 but `ctFilename` ×2, and
+  `ctInteger` ×93 but `ctinteger` ×1. Pascal is case-insensitive so it compiles, but **any
+  tool that parses this table textually must match case-insensitively** — a migration
+  generator that groups by literal spelling will silently split a type into two buckets.
+  (My own analysis script did exactly that before it was caught.)
 
 ### `crS: CFGStatus` — provenance and visibility
 `(csNew, csOld, csRem, csOwned)`, documented at `VC.pas:848-854`:
@@ -369,8 +383,7 @@ The encouraging part: those fields already exist and are already honoured. The w
 *(`csNew` vs `csOld` is no longer open — answered in the `crS` section above: TR LOG
 heritage vs. new in TR4W, evidenced from the lost `uDocumentation` generator.)*
 
-1. **`crMin` on non-numeric rows** — meaningful, or conventionally 0?
-2. **`crA` vs `crP`** — is "derive/validate" vs "redraw" the intended division, or did it
+1. **`crA` vs `crP`** — is "derive/validate" vs "redraw" the intended division, or did it
    grow that way?
-3. **`ckArray`** — 16 rows; is it still the right mechanism, or a legacy of the DOS table?
-4. **`cfRadio1` / `cfRadio2`** — do they select an ini section as `cfCol`/`cfWK` do?
+2. **`ckArray`** — 16 rows; is it still the right mechanism, or a legacy of the DOS table?
+3. **`cfRadio1` / `cfRadio2`** — do they select an ini section as `cfCol`/`cfWK` do?
