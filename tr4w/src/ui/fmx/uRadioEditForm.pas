@@ -38,12 +38,14 @@ unit uRadioEditForm;
   a .fmx.  AddComboItem marks the items it creates as not Stored, so a save in
   the designer can never freeze one machine's hardware into the resource.
 
-  CAPTIONS.  ApplyCaptions assigns every visible string from the constants in
-  uFMXFormHelpers, so the move to Delphi resourcestring is not fought by
-  literals baked into the form resource.  The .fmx does contain English text --
-  it was dumped from a running form -- but every string is overwritten at
-  construction, and it is what makes the form legible in the designer rather
-  than a grid of blank rectangles.
+  CAPTIONS ARE THE DESIGNER'S, in English (NY4I 2026-08-06).  What you type in
+  the Object Inspector is what ships in the English build -- there is no code to
+  keep in step, and no caption that looks right in the designer and is silently
+  replaced at run time.  TranslateForm (uFMXTranslate) then overrides only the
+  keys a language table supplies and FALLS THROUGH to the designed text
+  otherwise.  Text that changes at run time is a different matter and stays in
+  code: 'Searching...' on the Discover button, the CI-V default hint, every
+  message box.
 }
 
 interface
@@ -175,7 +177,6 @@ type
       // every time a control joins the form; one flag cannot be forgotten.
       FBuilt: boolean;
 
-      procedure ApplyCaptions;
       procedure PopulateTypeCombo;
       procedure PopulatePortCombos;
       procedure SetSerialFrame(const aFormat: string);
@@ -204,6 +205,7 @@ uses
    FMX.Platform.Win,
    FMX.Dialogs,
    uFMXFormHelpers,
+   uFMXTranslate,
    uFMXCoexist,
    uRadioConfigApply,
    uRadioRegistry,
@@ -233,7 +235,10 @@ begin
    // is how the OK and Cancel buttons went missing on NY4I's first look.
    inherited Create(AOwner);
 
-   ApplyCaptions;
+   // English lives in the .fmx; TranslateForm overrides only what a language
+   // table supplies and leaves the designed text alone otherwise.  Today no
+   // lookup is assigned, so this is a no-op and the designer is the UI.
+   TranslateForm(Self);
 
    // ASSIGNED HERE AS WELL AS IN THE RESOURCE, deliberately.  Both are bound by
    // name in the .fmx, but losing them is not a visible fault: the form would
@@ -252,63 +257,6 @@ begin
 
    PopulateTypeCombo;
    PopulatePortCombos;
-end;
-
-// Captions are assigned in CODE, not baked into the form resource -- the one
-// part of this form deliberately left out of the designer.  NY4I's plan is to
-// move i18n onto Delphi's native support, and literals frozen into a .fmx would
-// have to be fought back out again.  The designer holds WHERE a control is; this
-// holds WHAT IT SAYS.
-//
-// The generated .fmx does contain the English text, because it was dumped from
-// a running form.  That is harmless -- every string below overwrites it -- and
-// it is what makes the form legible in the designer instead of a grid of blank
-// rectangles.
-procedure TRadioEditForm.ApplyCaptions;
-begin
-   Caption := TC_RADIOEDIT_TITLE;
-
-   lblName.Text     := TC_RADIOEDIT_NAME;
-   lblType.Text     := TC_RADIOEDIT_TYPE;
-
-   tabSerial.Text   := TC_RADIOEDIT_SERIAL;
-   tabNetwork.Text  := TC_RADIOEDIT_NETWORK;
-   tabAdvanced.Text := TC_RADIOEDIT_ADVANCED;
-
-   lblPort.Text     := TC_RADIOEDIT_PORT;
-   lblBaud.Text     := TC_RADIOEDIT_BAUD;
-   lblDataBits.Text := TC_RADIOEDIT_DATABITS;
-   lblParity.Text   := TC_RADIOEDIT_PARITY;
-   lblStopBits.Text := TC_RADIOEDIT_STOPBITS;
-   rbParityNone.Text := TC_RADIOEDIT_PARITYNONE;
-   rbParityOdd.Text  := TC_RADIOEDIT_PARITYODD;
-   rbParityEven.Text := TC_RADIOEDIT_PARITYEVEN;
-
-   lblIP.Text       := TC_RADIOEDIT_IPADDRESS;
-   btnDiscover.Text := TC_RADIOEDIT_DISCOVER;
-   lblFound.Text    := TC_RADIOEDIT_FOUND;
-   lblTCPPort.Text  := TC_RADIOEDIT_TCPPORT;
-   lblUser.Text     := TC_RADIOEDIT_USERNAME;
-   lblPassword.Text := TC_RADIOEDIT_PASSWORD;
-
-   lblStartup.Text    := TC_RADIOEDIT_STARTUP;
-   lblFilterByte.Text := TC_RADIOEDIT_FILTERBYTE;
-   lblDataMode.Text   := TC_RADIOEDIT_DATAMODEID;
-   lblHamLibID.Text   := TC_RADIOEDIT_HAMLIBID;
-   chkUseHamLib.Text  := TC_RADIOEDIT_USEHAMLIB;
-   chkWideCW.Text     := TC_RADIOEDIT_WIDECW;
-   chkFT1000MPReverse.Text := TC_RADIOEDIT_FT1000MPREV;
-   chkPolling.Text    := TC_RADIOEDIT_POLLING;
-
-   lblKeyerPort.Text := TC_RADIOEDIT_KEYERPORT;
-   lblCIV.Text       := TC_RADIOEDIT_CIVADDRESS;
-
-   btnOK.Text     := TC_PREFS_OK;
-   btnCancel.Text := TC_PREFS_CANCEL;
-
-   // The three serial-frame pickers are digits ('7', '8', '1', '2') and are the
-   // same in every language, so they stay in the resource.  Adding them here
-   // would be a translation point that can only ever hold one answer.
 end;
 
 procedure TRadioEditForm.PopulateTypeCombo;

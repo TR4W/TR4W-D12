@@ -37,17 +37,23 @@ unit uPrefsForm;
   operator who opens Preferences mid-contest and changes their mind must not
   have altered anything by having looked.
 
-  BOTH FORMS ARE BUILT IN CODE and there is no .fmx.  That is what the
-  coexistence spike proved out, and it keeps the whole window in one file that
-  can be read top to bottom.  Moving to designer forms later is a mechanical
-  change; doing it now would mean debugging form streaming and layout at the
-  same time as the logic.
+  A DESIGNED FORM.  The layout lives in uPrefsForm.fmx and is edited in the IDE;
+  this unit holds behaviour.  The .fmx was GENERATED from the running code-built
+  form rather than hand-authored, so the designed layout started out identical to
+  the one that had been tested.
 
-  I18N -- NOT DONE, AND DELIBERATELY VISIBLE.  Every caption in this unit comes
-  from the const block below, in one place, so that moving them into
-  src\lang\tr4w_consts_<LANG>.pas is a mechanical lift rather than a hunt
-  through layout code.  Until that happens this window is English-only, which is
-  a gap against the stated requirement, not an oversight.
+  THE DESIGNER IS THE SOURCE OF THE ENGLISH UI (NY4I 2026-08-06).  Captions are
+  typed in the Object Inspector and ship as typed; TranslateForm (uFMXTranslate)
+  later overrides only the keys a language table supplies and falls through to
+  the designed text otherwise.  Nothing here reassigns a caption at construction,
+  because a caption that looks right in the designer and is silently replaced at
+  run time is precisely the trap this form had.
+
+  WHAT STAYS IN CODE.  Text that CHANGES at run time -- the active profile name,
+  '(none)' in a combo, every message box -- is assigned at the point of use from
+  the const block below.  So is all list POPULATION that depends on the store or
+  the machine.  The nav sections are the exception and are designed: they are a
+  fixed structure, identified by Tag.  See SelectFirstSection.
 }
 
 interface
@@ -73,57 +79,47 @@ type
    { Edits ONE TRadioDefinition.  It edits the caller's object directly and only
      when the operator accepts; the caller passes a clone if it wants a
      cancellable edit, which is what TPrefsForm does. }
+   // PUBLISHED for streaming, exactly as TRadioEditForm is -- see that unit's
+   // header.  A control binds to a field only when the field is published and
+   // its name matches the component's Name; an event binds only when the
+   // handler is a published method, because TWriter stores it BY NAME.
    TPrefsForm = class(TForm)
-   private
-      FStore: TRadioConfigStore;
-      FEditor: TRadioEditForm;
-      // The definition currently being edited, and the clone the editor works
-      // on.  Held as fields because the editor is modeless: the result arrives
-      // later, in a callback, not on the next line.
-      FEditTarget: TRadioDefinition;
-      FEditClone: TRadioDefinition;
-      FEditIsNew: boolean;
-      FLoading: boolean;
-      // Set by every edit, cleared by every successful save.  Without it,
-      // closing with the window's X kept the edits in memory unsaved -- so
-      // reopening showed them as though they had been saved, which is the worst
-      // of both behaviours.
-      FDirty: boolean;
+      lstNav: TListBox;
+      layContent: TLayout;
+      lblPlaceholder: TLabel;
 
-      FNavList: TListBox;
-      FContent: TLayout;
-      FPlaceholder: TLabel;
+      lblMyRadios: TLabel;
+      lstRadios: TListBox;
+      btnAdd: TButton;
+      btnEdit: TButton;
+      btnDuplicate: TButton;
+      btnRemove: TButton;
 
-      FRadioList: TListBox;
-      FProfileCombo: TComboBox;
-      FRadio1Combo: TComboBox;
-      FRadio2Combo: TComboBox;
-      FCW1Combo: TComboBox;
-      FCW2Combo: TComboBox;
-      FSpeedSync1: TCheckBox;
-      FSpeedSync2: TCheckBox;
-      FSO2RCheck: TCheckBox;
-      FAutoConnect: TCheckBox;
-      FActiveLabel: TLabel;
-      FHardwarePanel: TLayout;
+      grpProfile: TGroupBox;
+      cboProfile: TComboBox;
+      btnNewProfile: TButton;
+      btnRenameProfile: TButton;
+      btnDeleteProfile: TButton;
+      lblRadio1: TLabel;
+      cboRadio1: TComboBox;
+      lblCWOutput1: TLabel;
+      cboCW1: TComboBox;
+      chkSpeedSync1: TCheckBox;
+      lblRadio2: TLabel;
+      cboRadio2: TComboBox;
+      lblCWOutput2: TLabel;
+      cboCW2: TComboBox;
+      chkSpeedSync2: TCheckBox;
+      chkSO2R: TCheckBox;
+      lblActive: TLabel;
+      btnActivate: TButton;
 
-      procedure BuildControls;
-      procedure BuildHardwarePanel;
+      chkAutoConnect: TCheckBox;
+      layHardware: TLayout;
 
-      function StoreFileName: string;
-      function LegacyStoreFileName: string;
-      procedure LoadStore;
-      function SaveStore(out aError: string): boolean;
-
-      procedure RefreshRadioList;
-      procedure RefreshProfileCombo;
-      procedure RefreshProfileFields;
-      procedure RefreshAll;
-      function CurrentProfile: TStationProfile;
-      function SelectedRadio: TRadioDefinition;
-      procedure FillRadioNameCombo(const aCombo: TComboBox; const aSelected: string);
-      procedure FillCWOutputCombo(const aCombo: TComboBox; const aSelected: string);
-      procedure CaptureProfileFields;
+      btnOK: TButton;
+      btnCancel: TButton;
+      btnApply: TButton;
 
       procedure HandleNavChange(Sender: TObject);
       procedure HandleAdd(Sender: TObject);
@@ -140,10 +136,44 @@ type
       procedure HandleOK(Sender: TObject);
       procedure HandleCancel(Sender: TObject);
       procedure HandleApply(Sender: TObject);
-      procedure DiscardChanges;
       procedure HandleShow(Sender: TObject);
       procedure HandleClose(Sender: TObject; var Action: TCloseAction);
+   private
+      // STATE, not controls: nothing here is streamed, so it keeps the F prefix
+      // and stays private.
+      FStore: TRadioConfigStore;
+      FEditor: TRadioEditForm;
+      // The definition currently being edited, and the clone the editor works
+      // on.  Held as fields because the editor is modeless: the result arrives
+      // later, in a callback, not on the next line.
+      FEditTarget: TRadioDefinition;
+      FEditClone: TRadioDefinition;
+      FEditIsNew: boolean;
+      FLoading: boolean;
+      // Set by every edit, cleared by every successful save.  Without it,
+      // closing with the window's X kept the edits in memory unsaved -- so
+      // reopening showed them as though they had been saved, which is the worst
+      // of both behaviours.
+      FDirty: boolean;
 
+      procedure SelectFirstSection;
+
+      function StoreFileName: string;
+      function LegacyStoreFileName: string;
+      procedure LoadStore;
+      function SaveStore(out aError: string): boolean;
+
+      procedure RefreshRadioList;
+      procedure RefreshProfileCombo;
+      procedure RefreshProfileFields;
+      procedure RefreshAll;
+      function CurrentProfile: TStationProfile;
+      function SelectedRadio: TRadioDefinition;
+      procedure FillRadioNameCombo(const aCombo: TComboBox; const aSelected: string);
+      procedure FillCWOutputCombo(const aCombo: TComboBox; const aSelected: string);
+      procedure CaptureProfileFields;
+
+      procedure DiscardChanges;
       procedure EditorDone(const aAccepted: boolean);
       function ApplyNow(const aActivate: boolean): boolean;
    public
@@ -151,14 +181,49 @@ type
       destructor Destroy; override;
    end;
 
+const
+   // The Tag each nav item carries, set in the Object Inspector.  Tag rather
+   // than caption text, so the nav survives translation, and rather than
+   // position, so reordering the list in the designer cannot silently remap the
+   // sections.  THE NUMBER IS THE IDENTITY: it must not be renumbered to match a
+   // new display order.
+   //
+   // Only Hardware has a panel today.  Every other section deliberately shows
+   // the placeholder -- they are in the nav to say what this window is GOING to
+   // be, so nobody has to guess whether Preferences is meant to grow.
+   // NUMBERED FROM 1, and that is load-bearing rather than taste.  A section's
+   // PANEL carries the same Tag as its nav item, which is what lets
+   // HandleNavChange match them with no case statement and no table -- but Tag
+   // defaults to 0 on every control ever dropped on this form.  Starting at 1
+   // means 0 reads as "not a section panel", so an untagged control cannot
+   // accidentally claim a section.
+   NAV_NONE              = 0;
+   NAV_STATION           = 1;
+   NAV_HARDWARE          = 2;
+   NAV_CLUSTER           = 3;
+   NAV_SCP               = 4;
+   NAV_UDPBROADCAST      = 5;
+   NAV_NETWORK           = 6;
+   NAV_APPEARANCE        = 7;
+   NAV_LOGGING           = 8;
+   NAV_BACKUP            = 9;
+   NAV_CONTEST           = 10;
+   NAV_CW                = 11;
+   NAV_WEBSERVER         = 12;
+   NAV_EXTERNALSOFTWARE  = 13;
+   NAV_ADVANCED          = 14;
+
 // Opens Preferences, creating it on first use.  Called from the PREF
 // call-window command.
 procedure ShowPreferences;
 
 implementation
 
+{$R *.fmx}
+
 uses
    uFMXFormHelpers,
+   uFMXTranslate,
    Winapi.Windows,
    System.IniFiles,
    System.Generics.Collections,
@@ -189,29 +254,77 @@ end;
 
 constructor TPrefsForm.Create(AOwner: TComponent);
 begin
-   inherited CreateNew(AOwner);
-   Caption     := TC_PREFS_TITLE;
-   ClientWidth  := 860;
-   ClientHeight := 620;
-   Position    := TFormPosition.ScreenCenter;
-   // FIXED SIZE, deliberately.  Every control here is laid out at a fixed
-   // position and a fixed width, so a resize only adds whitespace -- and it
-   // used to strand the footer buttons in mid-air, because they were placed
-   // once from ClientWidth/ClientHeight rather than anchored (NY4I,
-   // 2026-08-05).  They are anchored now as well, so this can be flipped back
-   // to Sizeable if the content ever earns it.
+   // Create, NOT CreateNew -- the inherited constructor streams uPrefsForm.fmx.
+   // See uRadioEditForm for the full reasoning; this form followed it.
    //
-   // No maximize button either: offering one on a form that cannot use the
-   // space is a promise the dialog does not keep.
-   BorderStyle := TFmxFormBorderStyle.Single;
-   BorderIcons := [TBorderIcon.biSystemMenu, TBorderIcon.biMinimize];
-   OnShow      := HandleShow;
-   OnClose     := HandleClose;
+   // SIZE AND BORDER ARE PROPERTIES IN THE DESIGNER NOW, and the reasoning does
+   // not survive in a .fmx, so it is recorded here.  Fixed size on purpose
+   // (BorderStyle Single, no maximize): every control has a fixed position and
+   // width, so a resize would only add whitespace, and a maximize button on a
+   // form that cannot use the space is a promise the dialog does not keep.  The
+   // three footer buttons are anchored [akRight, akBottom] regardless -- they
+   // were once placed from ClientWidth/ClientHeight without anchors and
+   // stranded in mid-air on resize (NY4I, 2026-08-05).
+   inherited Create(AOwner);
+
+   // English lives in the .fmx; TranslateForm overrides only what a language
+   // table supplies and leaves the designed text alone otherwise.  Today no
+   // lookup is assigned, so this is a no-op and the designer is the UI.
+   TranslateForm(Self);
+
+   // In code as well as in the resource: losing these is invisible -- the form
+   // still opens and still looks right, having silently stopped registering its
+   // window handle with the FMX coexistence layer, which is what keyboard
+   // handling depends on.
+   OnShow  := HandleShow;
+   OnClose := HandleClose;
 
    FStore := TRadioConfigStore.Create;
-   BuildControls;
+   SelectFirstSection;
    LoadStore;
    RefreshAll;
+end;
+
+// The nav sections are DESIGNED, not built here -- add one in the IDE, set its
+// Tag, and wire it.  That is only possible because the section is identified by
+// Tag: TComponent.Tag is PUBLISHED, so it streams and appears in the Object
+// Inspector, whereas TFmxObject.TagString is public and can do neither.  The
+// first version of this form keyed the nav off TagString and so had to build the
+// items in code and Clear them on every construction -- which silently threw
+// away anything added in the designer (NY4I found it that way, 2026-08-06).
+//
+// The old code also compared TagString against the CAPTION constant, so
+// translating the nav would have broken section switching.  A Tag cannot be
+// translated, which is the point.
+procedure TPrefsForm.SelectFirstSection;
+var
+   i: integer;
+begin
+   // Selecting fires HandleNavChange, which shows the matching panel.  Done here
+   // rather than by streaming ItemIndex from the .fmx: OnChange would then fire
+   // part-way through loading the form, with the panels it switches not yet
+   // streamed in.
+   //
+   // HARDWARE by tag, not the first row.  Hardware is the only section with a
+   // panel, so opening on whatever happens to be top of the list would show the
+   // operator the "not migrated yet" placeholder as their first impression of
+   // Preferences -- and it would change again the next time the nav is reordered
+   // in the designer.
+   for i := 0 to lstNav.Items.Count - 1 do
+      begin
+      if lstNav.ListItems[i].Tag = NAV_HARDWARE then
+         begin
+         lstNav.ItemIndex := i;
+         Exit;
+         end;
+      end;
+
+   // No Hardware row at all: fall back to the first, so the window is never
+   // left with nothing selected.
+   if lstNav.Items.Count > 0 then
+      begin
+      lstNav.ItemIndex := 0;
+      end;
 end;
 
 destructor TPrefsForm.Destroy;
@@ -221,178 +334,6 @@ begin
    inherited Destroy;
 end;
 
-procedure TPrefsForm.BuildControls;
-var
-   i: integer;
-   item: TListBoxItem;
-const
-   SECTIONS: array[0..3] of string =
-      (TC_PREFS_HARDWARE, TC_PREFS_CONTEST, TC_PREFS_CW, TC_PREFS_CLUSTER);
-begin
-   FNavList := TListBox.Create(Self);
-   FNavList.Parent     := Self;
-   FNavList.Position.X := 0;
-   FNavList.Position.Y := 0;
-   FNavList.Width      := 170;
-   FNavList.Height     := ClientHeight - 48;
-   FNavList.Align      := TAlignLayout.Left;
-   FNavList.OnChange   := HandleNavChange;
-
-   for i := 0 to High(SECTIONS) do
-      begin
-      item := TListBoxItem.Create(FNavList);
-      item.Parent    := FNavList;
-      item.Text      := SECTIONS[i];
-      item.TagString := SECTIONS[i];
-      end;
-
-   FContent := TLayout.Create(Self);
-   FContent.Parent     := Self;
-   FContent.Position.X := 175;
-   FContent.Position.Y := 0;
-   FContent.Width      := ClientWidth - 185;
-   FContent.Height     := ClientHeight - 48;
-
-   // Shown for every section except Hardware.  The other categories exist in
-   // the nav on purpose: they say what this window is GOING to be, so nobody
-   // has to guess whether Preferences is meant to grow.
-   FPlaceholder := MakeLabel(Self, FContent, '', TC_PREFS_NOTMIGRATED, LEFTMARGIN, 20, 500);
-   FPlaceholder.Height  := 60;
-   FPlaceholder.Visible := False;
-
-   BuildHardwarePanel;
-
-   MakeButton(Self, Self, '', TC_PREFS_OK,     ClientWidth - 290, ClientHeight - 38, 85, HandleOK,     [TAnchorKind.akRight, TAnchorKind.akBottom]);
-   MakeButton(Self, Self, '', TC_PREFS_CANCEL, ClientWidth - 195, ClientHeight - 38, 85, HandleCancel, [TAnchorKind.akRight, TAnchorKind.akBottom]);
-   MakeButton(Self, Self, '', TC_PREFS_APPLY,  ClientWidth - 100, ClientHeight - 38, 85, HandleApply,  [TAnchorKind.akRight, TAnchorKind.akBottom]);
-
-   FNavList.ItemIndex := 0;
-end;
-
-procedure TPrefsForm.BuildHardwarePanel;
-var
-   y: single;
-   grp: TGroupBox;
-begin
-   FHardwarePanel := TLayout.Create(FContent);
-   FHardwarePanel.Parent     := FContent;
-   FHardwarePanel.Position.X := 0;
-   FHardwarePanel.Position.Y := 0;
-   FHardwarePanel.Width      := FContent.Width;
-   FHardwarePanel.Height     := FContent.Height;
-
-   // --- my radios ----------------------------------------------------------
-   MakeLabel(Self, FHardwarePanel, '', TC_PREFS_MYRADIOS, LEFTMARGIN, 8, 200);
-
-   FRadioList := TListBox.Create(FHardwarePanel);
-   FRadioList.Parent       := FHardwarePanel;
-   FRadioList.Position.X   := LEFTMARGIN;
-   FRadioList.Position.Y   := 30;
-   FRadioList.Width        := 420;
-   FRadioList.Height       := 150;
-   FRadioList.OnDblClick   := HandleRadioDblClick;
-
-   MakeButton(Self, FHardwarePanel, '', TC_PREFS_ADD,       445, 30,  95, HandleAdd);
-   MakeButton(Self, FHardwarePanel, '', TC_PREFS_EDIT,      445, 62,  95, HandleEdit);
-   MakeButton(Self, FHardwarePanel, '', TC_PREFS_DUPLICATE, 445, 94,  95, HandleDuplicate);
-   MakeButton(Self, FHardwarePanel, '', TC_PREFS_REMOVE,    445, 126, 95, HandleRemove);
-
-   // --- station profile ----------------------------------------------------
-   grp := TGroupBox.Create(FHardwarePanel);
-   grp.Parent     := FHardwarePanel;
-   grp.Position.X := LEFTMARGIN;
-   grp.Position.Y := 195;
-   grp.Width      := 540;
-   grp.Height     := 260;
-   grp.Text       := TC_PREFS_PROFILES;
-
-   // Below the caption, same reason as the serial/network groups.
-   y := GROUPTOP;
-   FProfileCombo := TComboBox.Create(grp);
-   FProfileCombo.Parent     := grp;
-   FProfileCombo.Position.X := 12;
-   FProfileCombo.Position.Y := y;
-   FProfileCombo.Width      := 200;
-   FProfileCombo.OnChange   := HandleProfileChange;
-
-   MakeButton(Self, grp, '', TC_PREFS_NEWPROFILE,    220, y, 80, HandleNewProfile);
-   MakeButton(Self, grp, '', TC_PREFS_RENAMEPROFILE, 305, y, 90, HandleRenameProfile);
-   MakeButton(Self, grp, '', TC_PREFS_DELETEPROFILE, 400, y, 80, HandleDeleteProfile);
-
-   y := y + ROWHEIGHT + 6;
-   MakeLabel(Self, grp, '', TC_PREFS_RADIO1, 12, y + 4, 70);
-   FRadio1Combo := TComboBox.Create(grp);
-   FRadio1Combo.Parent     := grp;
-   FRadio1Combo.Position.X := 90;
-   FRadio1Combo.Position.Y := y;
-   FRadio1Combo.Width      := 190;
-   FRadio1Combo.OnChange   := HandleFieldChange;
-
-   MakeLabel(Self, grp, '', TC_PREFS_CWOUTPUT1, 290, y + 4, 90);
-   FCW1Combo := TComboBox.Create(grp);
-   FCW1Combo.Parent     := grp;
-   FCW1Combo.Position.X := 385;
-   FCW1Combo.Position.Y := y;
-   FCW1Combo.Width      := 140;
-   FCW1Combo.OnChange   := HandleFieldChange;
-
-   y := y + ROWHEIGHT;
-   FSpeedSync1 := TCheckBox.Create(grp);
-   FSpeedSync1.Parent     := grp;
-   FSpeedSync1.Position.X := 385;
-   FSpeedSync1.Position.Y := y;
-   FSpeedSync1.Width      := 140;
-   FSpeedSync1.Text       := TC_PREFS_SPEEDSYNC;
-   FSpeedSync1.OnChange   := HandleFieldChange;
-
-   y := y + ROWHEIGHT;
-   MakeLabel(Self, grp, '', TC_PREFS_RADIO2, 12, y + 4, 70);
-   FRadio2Combo := TComboBox.Create(grp);
-   FRadio2Combo.Parent     := grp;
-   FRadio2Combo.Position.X := 90;
-   FRadio2Combo.Position.Y := y;
-   FRadio2Combo.Width      := 190;
-   FRadio2Combo.OnChange   := HandleFieldChange;
-
-   MakeLabel(Self, grp, '', TC_PREFS_CWOUTPUT2, 290, y + 4, 90);
-   FCW2Combo := TComboBox.Create(grp);
-   FCW2Combo.Parent     := grp;
-   FCW2Combo.Position.X := 385;
-   FCW2Combo.Position.Y := y;
-   FCW2Combo.Width      := 140;
-   FCW2Combo.OnChange   := HandleFieldChange;
-
-   y := y + ROWHEIGHT;
-   FSpeedSync2 := TCheckBox.Create(grp);
-   FSpeedSync2.Parent     := grp;
-   FSpeedSync2.Position.X := 385;
-   FSpeedSync2.Position.Y := y;
-   FSpeedSync2.Width      := 140;
-   FSpeedSync2.Text       := TC_PREFS_SPEEDSYNC;
-   FSpeedSync2.OnChange   := HandleFieldChange;
-
-   y := y + ROWHEIGHT;
-   FSO2RCheck := TCheckBox.Create(grp);
-   FSO2RCheck.Parent     := grp;
-   FSO2RCheck.Position.X := 12;
-   FSO2RCheck.Position.Y := y;
-   FSO2RCheck.Width      := 200;
-   FSO2RCheck.Text       := TC_PREFS_SO2R;
-   FSO2RCheck.OnChange   := HandleFieldChange;
-
-   y := y + ROWHEIGHT;
-   FActiveLabel := MakeLabel(Self, grp, '', TC_PREFS_ACTIVELABEL, 12, y + 4, 260);
-   MakeButton(Self, grp, '', TC_PREFS_ACTIVATE, 300, y, 225, HandleActivate);
-
-   // --- general ------------------------------------------------------------
-   FAutoConnect := TCheckBox.Create(FHardwarePanel);
-   FAutoConnect.Parent     := FHardwarePanel;
-   FAutoConnect.Position.X := LEFTMARGIN;
-   FAutoConnect.Position.Y := 458;
-   FAutoConnect.Width      := 300;
-   FAutoConnect.Text       := TC_PREFS_AUTOCONNECT;
-   FAutoConnect.OnChange   := HandleFieldChange;
-end;
 
 { ------------------------------------------------------------ the store --- }
 
@@ -491,15 +432,15 @@ end;
 
 function TPrefsForm.CurrentProfile: TStationProfile;
 begin
-   Result := FStore.FindProfile(SelectedTag(FProfileCombo));
+   Result := FStore.FindProfile(SelectedTag(cboProfile));
 end;
 
 function TPrefsForm.SelectedRadio: TRadioDefinition;
 begin
    Result := nil;
-   if FRadioList.ItemIndex >= 0 then
+   if lstRadios.ItemIndex >= 0 then
       begin
-      Result := FStore.FindRadio(FRadioList.ListItems[FRadioList.ItemIndex].TagString);
+      Result := FStore.FindRadio(lstRadios.ListItems[lstRadios.ItemIndex].TagString);
       end;
 end;
 
@@ -508,22 +449,23 @@ var
    i, keep: integer;
    item: TListBoxItem;
 begin
-   keep := FRadioList.ItemIndex;
-   FRadioList.Clear;
+   keep := lstRadios.ItemIndex;
+   lstRadios.Clear;
    for i := 0 to FStore.RadioCount - 1 do
       begin
-      item := TListBoxItem.Create(FRadioList);
-      item.Parent    := FRadioList;
+      item := TListBoxItem.Create(lstRadios);
+      item.Stored    := False;
+      item.Parent    := lstRadios;
       item.Text      := FStore.Radio(i).DisplaySummary;
       item.TagString := FStore.Radio(i).Name;
       end;
-   if (keep >= 0) and (keep < FRadioList.Items.Count) then
+   if (keep >= 0) and (keep < lstRadios.Items.Count) then
       begin
-      FRadioList.ItemIndex := keep;
+      lstRadios.ItemIndex := keep;
       end
-   else if FRadioList.Items.Count > 0 then
+   else if lstRadios.Items.Count > 0 then
       begin
-      FRadioList.ItemIndex := 0;
+      lstRadios.ItemIndex := 0;
       end;
 end;
 
@@ -570,18 +512,18 @@ var
    i: integer;
    keep: string;
 begin
-   keep := SelectedTag(FProfileCombo);
+   keep := SelectedTag(cboProfile);
    if keep = '' then
       begin
       keep := FStore.ActiveProfileName;
       end;
 
-   FProfileCombo.Clear;
+   cboProfile.Clear;
    for i := 0 to FStore.ProfileCount - 1 do
       begin
-      AddComboItem(FProfileCombo, FStore.Profile(i).Name, FStore.Profile(i).Name);
+      AddComboItem(cboProfile, FStore.Profile(i).Name, FStore.Profile(i).Name);
       end;
-   SelectByTag(FProfileCombo, keep);
+   SelectByTag(cboProfile, keep);
 end;
 
 procedure TPrefsForm.RefreshProfileFields;
@@ -596,34 +538,34 @@ begin
       prof := CurrentProfile;
       if prof = nil then
          begin
-         FillRadioNameCombo(FRadio1Combo, '');
-         FillRadioNameCombo(FRadio2Combo, '');
-         FillCWOutputCombo(FCW1Combo, CWOUTPUT_NONE);
-         FillCWOutputCombo(FCW2Combo, CWOUTPUT_NONE);
-         FSpeedSync1.IsChecked := False;
-         FSpeedSync2.IsChecked := False;
-         FSO2RCheck.IsChecked  := False;
+         FillRadioNameCombo(cboRadio1, '');
+         FillRadioNameCombo(cboRadio2, '');
+         FillCWOutputCombo(cboCW1, CWOUTPUT_NONE);
+         FillCWOutputCombo(cboCW2, CWOUTPUT_NONE);
+         chkSpeedSync1.IsChecked := False;
+         chkSpeedSync2.IsChecked := False;
+         chkSO2R.IsChecked  := False;
          end
       else
          begin
-         FillRadioNameCombo(FRadio1Combo, prof.Radio1Name);
-         FillRadioNameCombo(FRadio2Combo, prof.Radio2Name);
-         FillCWOutputCombo(FCW1Combo, prof.CWOutput1);
-         FillCWOutputCombo(FCW2Combo, prof.CWOutput2);
-         FSpeedSync1.IsChecked := prof.SpeedSync1;
-         FSpeedSync2.IsChecked := prof.SpeedSync2;
-         FSO2RCheck.IsChecked  := prof.SO2REnabled;
+         FillRadioNameCombo(cboRadio1, prof.Radio1Name);
+         FillRadioNameCombo(cboRadio2, prof.Radio2Name);
+         FillCWOutputCombo(cboCW1, prof.CWOutput1);
+         FillCWOutputCombo(cboCW2, prof.CWOutput2);
+         chkSpeedSync1.IsChecked := prof.SpeedSync1;
+         chkSpeedSync2.IsChecked := prof.SpeedSync2;
+         chkSO2R.IsChecked  := prof.SO2REnabled;
          end;
 
-      FAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
+      chkAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
 
       if FStore.ActiveProfileName <> '' then
          begin
-         FActiveLabel.Text := TC_PREFS_ACTIVELABEL + FStore.ActiveProfileName;
+         lblActive.Text := TC_PREFS_ACTIVELABEL + FStore.ActiveProfileName;
          end
       else
          begin
-         FActiveLabel.Text := TC_PREFS_ACTIVELABEL + TC_PREFS_NONE;
+         lblActive.Text := TC_PREFS_ACTIVELABEL + TC_PREFS_NONE;
          end;
    finally
       FLoading := False;
@@ -646,7 +588,7 @@ begin
       Exit;
       end;
 
-   FStore.AutoConnectOnStartup := FAutoConnect.IsChecked;
+   FStore.AutoConnectOnStartup := chkAutoConnect.IsChecked;
 
    prof := CurrentProfile;
    if prof = nil then
@@ -654,13 +596,13 @@ begin
       Exit;
       end;
 
-   prof.Radio1Name  := SelectedTag(FRadio1Combo);
-   prof.Radio2Name  := SelectedTag(FRadio2Combo);
-   prof.CWOutput1   := SelectedTag(FCW1Combo);
-   prof.CWOutput2   := SelectedTag(FCW2Combo);
-   prof.SpeedSync1  := FSpeedSync1.IsChecked;
-   prof.SpeedSync2  := FSpeedSync2.IsChecked;
-   prof.SO2REnabled := FSO2RCheck.IsChecked;
+   prof.Radio1Name  := SelectedTag(cboRadio1);
+   prof.Radio2Name  := SelectedTag(cboRadio2);
+   prof.CWOutput1   := SelectedTag(cboCW1);
+   prof.CWOutput2   := SelectedTag(cboCW2);
+   prof.SpeedSync1  := chkSpeedSync1.IsChecked;
+   prof.SpeedSync2  := chkSpeedSync2.IsChecked;
+   prof.SO2REnabled := chkSO2R.IsChecked;
 
    FDirty := True;
 end;
@@ -669,12 +611,54 @@ end;
 
 procedure TPrefsForm.HandleNavChange(Sender: TObject);
 var
-   isHardware: boolean;
+   i: integer;
+   wanted: NativeInt;
+   shown: boolean;
+   panel: TControl;
 begin
-   isHardware := (FNavList.ItemIndex >= 0) and
-                 SameText(FNavList.ListItems[FNavList.ItemIndex].TagString, TC_PREFS_HARDWARE);
-   FHardwarePanel.Visible := isHardware;
-   FPlaceholder.Visible   := not isHardware;
+   // Guarded because this is wired in the resource: streaming can activate a
+   // selection before the panels it switches have themselves been read in.
+   if (layHardware = nil) or (lblPlaceholder = nil) then
+      begin
+      Exit;
+      end;
+
+   // Identified by TAG, not by caption.  The previous version compared the
+   // item's TagString against TC_PREFS_HARDWARE -- the caption constant -- so
+   // translating the nav would have stopped section switching from working, and
+   // the coupling was invisible.  A Tag survives translation, and being
+   // published it can be set in the Object Inspector on a section added there.
+   wanted := NAV_NONE;
+   if lstNav.ItemIndex >= 0 then
+      begin
+      wanted := lstNav.ListItems[lstNav.ItemIndex].Tag;
+      end;
+
+   // A SECTION PANEL IS ANY CHILD OF layContent WHOSE TAG MATCHES.  No case
+   // statement and no tag-to-panel table: adding a section is designer work
+   // only -- drop a layout in layContent, give it the same Tag as its nav item,
+   // and it appears.  Nothing here needs to know the section exists.
+   //
+   // Tag 0 is skipped, which is what keeps the placeholder (and any future
+   // untagged decoration) out of the rotation.  See the NAV_ constants.
+   shown := False;
+   for i := 0 to layContent.ChildrenCount - 1 do
+      begin
+      if layContent.Children[i] is TControl then
+         begin
+         panel := TControl(layContent.Children[i]);
+         if panel.Tag <> NAV_NONE then
+            begin
+            panel.Visible := (panel.Tag = wanted);
+            shown := shown or panel.Visible;
+            end;
+         end;
+      end;
+
+   // The placeholder is the answer for every section that has no panel yet --
+   // which is most of them, deliberately: the nav says what this window is
+   // GOING to be, so nobody has to guess whether Preferences is meant to grow.
+   lblPlaceholder.Visible := not shown;
 end;
 
 procedure TPrefsForm.HandleAdd(Sender: TObject);
@@ -840,7 +824,7 @@ begin
       begin
       FDirty := True;
       RefreshProfileCombo;
-      SelectByTag(FProfileCombo, prof.Name);
+      SelectByTag(cboProfile, prof.Name);
       RefreshProfileFields;
       end
    else
@@ -878,7 +862,7 @@ begin
    prof.Name := Trim(name);
    FDirty := True;
    RefreshProfileCombo;
-   SelectByTag(FProfileCombo, prof.Name);
+   SelectByTag(cboProfile, prof.Name);
    RefreshProfileFields;
 end;
 
