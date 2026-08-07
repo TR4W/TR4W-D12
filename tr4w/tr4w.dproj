@@ -194,11 +194,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
             <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="src\ui\fmx\uFMXFormHelpers.pas"/>
+        <DCCReference Include="src\ui\fmx\uFMXTranslate.pas"/>
         <DCCReference Include="src\ui\fmx\uRadioEditForm.pas">
             <Form>RadioEditForm</Form>
             <FormType>fmx</FormType>
         </DCCReference>
-        <DCCReference Include="src\ui\fmx\uPrefsForm.pas"/>
+        <DCCReference Include="src\ui\fmx\uPrefsForm.pas">
+            <Form>PrefsForm</Form>
+            <FormType>fmx</FormType>
+        </DCCReference>
         <DCCReference Include="src\radioFactory\uFlexDiscovery.pas"/>
         <DCCReference Include="src\uDialogs.pas"/>
         <DCCReference Include="src\Version.pas"/>
