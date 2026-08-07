@@ -2598,6 +2598,29 @@ var
   ClearQuickDisplayTimer                : Cardinal;
   DifferentContests                     : boolean;
 
+  // FOUR ROWS, AND THAT IS ONE SHORT FOR SOME CONTESTS -- deliberately left
+  // that way until the main window moves to FMX (NY4I, 2026-08-07).
+  //
+  // The totals window shows one row per category, and a contest can want more
+  // than four: up to three QSO rows (CW, SSB, DIG) plus Domestic, DX, Prefix
+  // and Zone multipliers.  Winter Field Day WITH DIGITAL QSOs needs five, and
+  // the fifth write went one past the end -- at column 7 that lands on
+  // TotWinheadHandles below, corrupting a live window handle and failing
+  // unpredictably much later.  D7 has the identical four-row arrays and no
+  // bounds check at all, so this is an original TR4W defect, not a port
+  // regression.
+  //
+  // Widening to [0..7, 0..6] WORKS -- DX Mults appears and the numbers are
+  // right -- but the extra rows overrun the log area below, because these are
+  // absolutely-positioned children of the main window and nothing reflows.
+  // Fixing the layout properly belongs with the FMX main-window conversion, so
+  // the grid stays at four and uTotal.TotalTextOut GUARDS the overflow: the
+  // extra category is dropped and LOGGED rather than corrupting memory.
+  //
+  // These bounds are the SINGLE SOURCE OF TRUTH.  MainUnit.CreateTotalWindow
+  // and uTotal.ClearTotals derive their limits from High() rather than
+  // repeating a literal, so widening this line is the whole change when the
+  // layout can take it.
   TotWinHandles                         : array[0..7, 0..3] of HWND;
   TotWinHandlesFilled                   : array[0..7, 0..3] of boolean;
 
