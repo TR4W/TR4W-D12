@@ -8,7 +8,8 @@ configuration command. It is not merely a persistence table — it is simultaneo
 This document exists because the ini is slated for retirement in favour of JSON
 (`docs/`-adjacent decision, 2026-08-07), and **anything that migrates a row has to honour
 every field on it**. Written by reading the consumers, with line references so each claim
-can be re-checked. Open items are listed at the end; everything else is verified against the consumers.
+can be re-checked. Open items are flagged **[UNCONFIRMED]** inline and listed at the end; everything else is
+verified against the consumers.
 
 ```pascal
 CFGRecord = record
