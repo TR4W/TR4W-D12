@@ -96,19 +96,19 @@ type
       btnRemove: TButton;
 
       grpProfile: TGroupBox;
-      cbxProfile: TComboBox;
+      cboProfile: TComboBox;
       btnNewProfile: TButton;
       btnRenameProfile: TButton;
       btnDeleteProfile: TButton;
       lblRadio1: TLabel;
-      cbxRadio1: TComboBox;
+      cboRadio1: TComboBox;
       lblCWOutput1: TLabel;
-      cbxCW1: TComboBox;
+      cboCW1: TComboBox;
       chkSpeedSync1: TCheckBox;
       lblRadio2: TLabel;
-      cbxRadio2: TComboBox;
+      cboRadio2: TComboBox;
       lblCWOutput2: TLabel;
-      cbxCW2: TComboBox;
+      cboCW2: TComboBox;
       chkSpeedSync2: TCheckBox;
       chkSO2R: TCheckBox;
       lblActive: TLabel;
@@ -432,7 +432,7 @@ end;
 
 function TPrefsForm.CurrentProfile: TStationProfile;
 begin
-   Result := FStore.FindProfile(SelectedTag(cbxProfile));
+   Result := FStore.FindProfile(SelectedTag(cboProfile));
 end;
 
 function TPrefsForm.SelectedRadio: TRadioDefinition;
@@ -512,18 +512,18 @@ var
    i: integer;
    keep: string;
 begin
-   keep := SelectedTag(cbxProfile);
+   keep := SelectedTag(cboProfile);
    if keep = '' then
       begin
       keep := FStore.ActiveProfileName;
       end;
 
-   cbxProfile.Clear;
+   cboProfile.Clear;
    for i := 0 to FStore.ProfileCount - 1 do
       begin
-      AddComboItem(cbxProfile, FStore.Profile(i).Name, FStore.Profile(i).Name);
+      AddComboItem(cboProfile, FStore.Profile(i).Name, FStore.Profile(i).Name);
       end;
-   SelectByTag(cbxProfile, keep);
+   SelectByTag(cboProfile, keep);
 end;
 
 procedure TPrefsForm.RefreshProfileFields;
@@ -538,20 +538,20 @@ begin
       prof := CurrentProfile;
       if prof = nil then
          begin
-         FillRadioNameCombo(cbxRadio1, '');
-         FillRadioNameCombo(cbxRadio2, '');
-         FillCWOutputCombo(cbxCW1, CWOUTPUT_NONE);
-         FillCWOutputCombo(cbxCW2, CWOUTPUT_NONE);
+         FillRadioNameCombo(cboRadio1, '');
+         FillRadioNameCombo(cboRadio2, '');
+         FillCWOutputCombo(cboCW1, CWOUTPUT_NONE);
+         FillCWOutputCombo(cboCW2, CWOUTPUT_NONE);
          chkSpeedSync1.IsChecked := False;
          chkSpeedSync2.IsChecked := False;
          chkSO2R.IsChecked  := False;
          end
       else
          begin
-         FillRadioNameCombo(cbxRadio1, prof.Radio1Name);
-         FillRadioNameCombo(cbxRadio2, prof.Radio2Name);
-         FillCWOutputCombo(cbxCW1, prof.CWOutput1);
-         FillCWOutputCombo(cbxCW2, prof.CWOutput2);
+         FillRadioNameCombo(cboRadio1, prof.Radio1Name);
+         FillRadioNameCombo(cboRadio2, prof.Radio2Name);
+         FillCWOutputCombo(cboCW1, prof.CWOutput1);
+         FillCWOutputCombo(cboCW2, prof.CWOutput2);
          chkSpeedSync1.IsChecked := prof.SpeedSync1;
          chkSpeedSync2.IsChecked := prof.SpeedSync2;
          chkSO2R.IsChecked  := prof.SO2REnabled;
@@ -596,10 +596,10 @@ begin
       Exit;
       end;
 
-   prof.Radio1Name  := SelectedTag(cbxRadio1);
-   prof.Radio2Name  := SelectedTag(cbxRadio2);
-   prof.CWOutput1   := SelectedTag(cbxCW1);
-   prof.CWOutput2   := SelectedTag(cbxCW2);
+   prof.Radio1Name  := SelectedTag(cboRadio1);
+   prof.Radio2Name  := SelectedTag(cboRadio2);
+   prof.CWOutput1   := SelectedTag(cboCW1);
+   prof.CWOutput2   := SelectedTag(cboCW2);
    prof.SpeedSync1  := chkSpeedSync1.IsChecked;
    prof.SpeedSync2  := chkSpeedSync2.IsChecked;
    prof.SO2REnabled := chkSO2R.IsChecked;
@@ -824,7 +824,7 @@ begin
       begin
       FDirty := True;
       RefreshProfileCombo;
-      SelectByTag(cbxProfile, prof.Name);
+      SelectByTag(cboProfile, prof.Name);
       RefreshProfileFields;
       end
    else
@@ -862,7 +862,7 @@ begin
    prof.Name := Trim(name);
    FDirty := True;
    RefreshProfileCombo;
-   SelectByTag(cbxProfile, prof.Name);
+   SelectByTag(cboProfile, prof.Name);
    RefreshProfileFields;
 end;
 

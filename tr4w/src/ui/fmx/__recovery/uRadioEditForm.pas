@@ -84,17 +84,17 @@ type
       lblName: TLabel;
       edtName: TEdit;
       lblType: TLabel;
-      cbxType: TComboBox;
+      cboType: TComboBox;
       // The TABS are the transport selector -- there is no separate combo.
       // Transport is exclusive, so a combo plus a visible group would be two
       // controls expressing one fact and free to disagree.  Choosing the tab IS
       // choosing the connection, and its parameters are what the tab reveals.
-      tbcTransport: TTabControl;
+      tabsTransport: TTabControl;
       tabSerial: TTabItem;
       tabNetwork: TTabItem;
       tabAdvanced: TTabItem;
       lblPort: TLabel;
-      cbxPort: TComboBox;
+      cboPort: TComboBox;
       lblBaud: TLabel;
       edtBaud: TEdit;
       // The serial frame as three pickers rather than a typed '8N1'.  It is
@@ -103,11 +103,11 @@ type
       // 'N81' all look reasonable to someone typing quickly.  Three groups can
       // only ever produce a combination the parser accepts.
       lblDataBits: TLabel;
-      optData7, optData8: TRadioButton;
+      rbData7, rbData8: TRadioButton;
       lblParity: TLabel;
-      optParityNone, optParityOdd, optParityEven: TRadioButton;
+      rbParityNone, rbParityOdd, rbParityEven: TRadioButton;
       lblStopBits: TLabel;
-      optStop1, optStop2: TRadioButton;
+      rbStop1, rbStop2: TRadioButton;
       lblIP: TLabel;
       edtIP: TEdit;
       lblTCPPort: TLabel;
@@ -118,9 +118,9 @@ type
       edtPassword: TEdit;
       btnDiscover: TButton;
       lblFound: TLabel;
-      cbxFound: TComboBox;
+      cboFound: TComboBox;
       lblKeyerPort: TLabel;
-      cbxKeyerPort: TComboBox;
+      cboKeyerPort: TComboBox;
       edtCIV: TEdit;
       edtHamLibID: TEdit;
       lblStartup: TLabel;
@@ -269,7 +269,7 @@ begin
    // must make it selectable here with no change to this file.  RegisteredIds
    // covers enum-backed and string-id radios alike, which is what makes TCI
    // appear without a special case.
-   cbxType.Clear;
+   cboType.Clear;
    ids := RegisteredIds;
 
    labels := TList<string>.Create;
@@ -286,7 +286,7 @@ begin
 
       for i := 0 to labels.Count - 1 do
          begin
-         AddComboItem(cbxType,
+         AddComboItem(cboType,
                       Copy(labels[i], 1, Pos(#9, labels[i]) - 1),
                       Copy(labels[i], Pos(#9, labels[i]) + 1, MaxInt));
          end;
@@ -303,11 +303,11 @@ var
    i: integer;
    caption: string;
 begin
-   cbxPort.Clear;
-   cbxKeyerPort.Clear;
+   cboPort.Clear;
+   cboKeyerPort.Clear;
 
-   AddComboItem(cbxPort,      TC_PREFS_NONE, PORT_NONE);
-   AddComboItem(cbxKeyerPort, TC_PREFS_NONE, PORT_NONE);
+   AddComboItem(cboPort,      TC_PREFS_NONE, PORT_NONE);
+   AddComboItem(cboKeyerPort, TC_PREFS_NONE, PORT_NONE);
 
    enumerator := TComPortEnumerator.Create;
    try
@@ -324,8 +324,8 @@ begin
          // tag.  Storing the displayed text would put 'COM17 - Silicon Labs
          // CP210x' into the ini, which is exactly the corruption the legacy
          // dialog had to be fixed for.
-         AddComboItem(cbxPort,      caption, ComNameToPortValue(names[i]));
-         AddComboItem(cbxKeyerPort, caption, ComNameToPortValue(names[i]));
+         AddComboItem(cboPort,      caption, ComNameToPortValue(names[i]));
+         AddComboItem(cboKeyerPort, caption, ComNameToPortValue(names[i]));
          end;
    finally
       enumerator.Free;
@@ -347,15 +347,15 @@ begin
       stopBits := 1;
       end;
 
-   optData7.IsChecked := (dataBits = 7);
-   optData8.IsChecked := (dataBits = 8);
+   rbData7.IsChecked := (dataBits = 7);
+   rbData8.IsChecked := (dataBits = 8);
 
-   optParityNone.IsChecked := (parity = PARITY_NONE);
-   optParityOdd.IsChecked := (parity = PARITY_ODD);
-   optParityEven.IsChecked := (parity = PARITY_EVEN);
+   rbParityNone.IsChecked := (parity = PARITY_NONE);
+   rbParityOdd.IsChecked := (parity = PARITY_ODD);
+   rbParityEven.IsChecked := (parity = PARITY_EVEN);
 
-   optStop1.IsChecked := (stopBits = 1);
-   optStop2.IsChecked := (stopBits = 2);
+   rbStop1.IsChecked := (stopBits = 1);
+   rbStop2.IsChecked := (stopBits = 2);
 end;
 
 // The three pickers back into the '8N1' the config command expects.  Composed
@@ -365,7 +365,7 @@ function TRadioEditForm.SerialFrame: string;
 var
    dataBits, parity, stopBits: Byte;
 begin
-   if optData7.IsChecked then
+   if rbData7.IsChecked then
       begin
       dataBits := 7;
       end
@@ -374,11 +374,11 @@ begin
       dataBits := 8;
       end;
 
-   if optParityOdd.IsChecked then
+   if rbParityOdd.IsChecked then
       begin
       parity := PARITY_ODD;
       end
-   else if optParityEven.IsChecked then
+   else if rbParityEven.IsChecked then
       begin
       parity := PARITY_EVEN;
       end
@@ -387,7 +387,7 @@ begin
       parity := PARITY_NONE;
       end;
 
-   if optStop2.IsChecked then
+   if rbStop2.IsChecked then
       begin
       stopBits := 2;
       end
@@ -438,23 +438,23 @@ begin
    // selectable-and-invalid.
    if Trim(FRadio.RegistryId) = '' then
       begin
-      cbxType.ItemIndex := -1;
+      cboType.ItemIndex := -1;
       end
    else
       begin
-      SelectByTag(cbxType, FRadio.RegistryId);
+      SelectByTag(cboType, FRadio.RegistryId);
       end;
    FTransport := FRadio.Transport;
    if FTransport = rtNetwork then
       begin
-      tbcTransport.ActiveTab := tabNetwork;
+      tabsTransport.ActiveTab := tabNetwork;
       end
    else
       begin
-      tbcTransport.ActiveTab := tabSerial;
+      tabsTransport.ActiveTab := tabSerial;
       end;
 
-   SelectByTag(cbxPort, FRadio.ControlPort);
+   SelectByTag(cboPort, FRadio.ControlPort);
    if FRadio.BaudRate > 0 then
       begin
       edtBaud.Text := IntToStr(FRadio.BaudRate);
@@ -477,7 +477,7 @@ begin
    edtUser.Text     := FRadio.NetworkUsername;
    edtPassword.Text := FRadio.NetworkPassword;
 
-   SelectByTag(cbxKeyerPort, FRadio.KeyerOutputPort);
+   SelectByTag(cboKeyerPort, FRadio.KeyerOutputPort);
    // HEX, because that is what the radio's own menu and every Icom manual show
    // (NY4I).  The value is STORED as the decimal the config command expects --
    // only the presentation changes, so nothing downstream has to know.
@@ -524,7 +524,7 @@ end;
 
 function TRadioEditForm.SelectedRegistryId: string;
 begin
-   Result := SelectedTag(cbxType);
+   Result := SelectedTag(cboType);
 end;
 
 destructor TRadioEditForm.Destroy;
@@ -590,7 +590,7 @@ begin
    FRadio.RegistryId := SelectedRegistryId;
    FRadio.Transport  := FTransport;
 
-   FRadio.ControlPort  := SelectedTag(cbxPort);
+   FRadio.ControlPort  := SelectedTag(cboPort);
    FRadio.BaudRate     := StrToIntDef(Trim(edtBaud.Text), 0);
    FRadio.SerialFormat := SerialFrame;
 
@@ -599,7 +599,7 @@ begin
    FRadio.NetworkUsername := Trim(edtUser.Text);
    FRadio.NetworkPassword := edtPassword.Text;   // not trimmed: it is a password
 
-   FRadio.KeyerOutputPort := SelectedTag(cbxKeyerPort);
+   FRadio.KeyerOutputPort := SelectedTag(cboKeyerPort);
    if not TryParseHexByte(edtCIV.Text, civ) then
       begin
       aError := TC_RADIOEDIT_BADCIV;
@@ -775,12 +775,12 @@ begin
    if SupportsNetworkId(id) and (not SupportsSerialId(id)) then
       begin
       FTransport := rtNetwork;
-      tbcTransport.ActiveTab := tabNetwork;
+      tabsTransport.ActiveTab := tabNetwork;
       end
    else if SupportsSerialId(id) and (not SupportsNetworkId(id)) then
       begin
       FTransport := rtSerial;
-      tbcTransport.ActiveTab := tabSerial;
+      tabsTransport.ActiveTab := tabSerial;
       end;
 
    UpdateEnabledState;
@@ -800,11 +800,11 @@ begin
    // not a connection, so opening it must not silently turn a network radio
    // into a serial one -- which is exactly what reading the transport straight
    // off the active tab would do.
-   if tbcTransport.ActiveTab = tabSerial then
+   if tabsTransport.ActiveTab = tabSerial then
       begin
       FTransport := rtSerial;
       end
-   else if tbcTransport.ActiveTab = tabNetwork then
+   else if tabsTransport.ActiveTab = tabNetwork then
       begin
       FTransport := rtNetwork;
       end;
@@ -826,7 +826,7 @@ begin
    // the first is still listening would have two sockets on the same port.
    btnDiscover.Enabled := False;
    btnDiscover.Text    := TC_RADIOEDIT_SEARCHING;
-   cbxFound.Clear;
+   cboFound.Clear;
 
    // OFF THE MAIN THREAD.  DiscoverNetworkRadios broadcasts and then waits out
    // its timeout -- about three seconds -- and doing that on the main thread
@@ -867,7 +867,7 @@ begin
 
                   for i := 0 to found.Count - 1 do
                      begin
-                     AddComboItem(cbxFound, found[i], found[i]);
+                     AddComboItem(cboFound, found[i], found[i]);
                      end;
 
                   if found.Count = 0 then
@@ -877,7 +877,7 @@ begin
                   else if found.Count = 1 then
                      begin
                      // Exactly one answer is not a choice -- fill it in.
-                     cbxFound.ItemIndex := 0;
+                     cboFound.ItemIndex := 0;
                      edtIP.Text := found[0];
                      end;
 
@@ -896,9 +896,9 @@ begin
       begin
       Exit;
       end;
-   if SelectedTag(cbxFound) <> '' then
+   if SelectedTag(cboFound) <> '' then
       begin
-      edtIP.Text := SelectedTag(cbxFound);
+      edtIP.Text := SelectedTag(cboFound);
       end;
 end;
 

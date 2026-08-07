@@ -210,7 +210,7 @@ object PrefsForm: TPrefsForm
         Size.PlatformDefault = False
         Text = 'Station profile'
         TabOrder = 6
-        object cbxProfile: TComboBox
+        object cboProfile: TComboBox
           Position.X = 12.000000000000000000
           Position.Y = 26.000000000000000000
           Size.Width = 200.000000000000000000
@@ -261,7 +261,7 @@ object PrefsForm: TPrefsForm
           Text = 'Radio 1'
           TabOrder = 42
         end
-        object cbxRadio1: TComboBox
+        object cboRadio1: TComboBox
           Position.X = 90.000000000000000000
           Position.Y = 62.000000000000000000
           Size.Width = 190.000000000000000000
@@ -279,7 +279,7 @@ object PrefsForm: TPrefsForm
           Text = 'CW output 1'
           TabOrder = 44
         end
-        object cbxCW1: TComboBox
+        object cboCW1: TComboBox
           Position.X = 385.000000000000000000
           Position.Y = 62.000000000000000000
           Size.Width = 140.000000000000000000
@@ -307,7 +307,7 @@ object PrefsForm: TPrefsForm
           Text = 'Radio 2'
           TabOrder = 47
         end
-        object cbxRadio2: TComboBox
+        object cboRadio2: TComboBox
           Position.X = 90.000000000000000000
           Position.Y = 122.000000000000000000
           Size.Width = 190.000000000000000000
@@ -325,7 +325,7 @@ object PrefsForm: TPrefsForm
           Text = 'CW output 2'
           TabOrder = 49
         end
-        object cbxCW2: TComboBox
+        object cboCW2: TComboBox
           Position.X = 385.000000000000000000
           Position.Y = 122.000000000000000000
           Size.Width = 140.000000000000000000
