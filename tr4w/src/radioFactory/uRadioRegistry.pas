@@ -215,6 +215,15 @@ function CapabilitiesFor(model: InterfacedRadioType): TRadioCapabilitySet;
 // which is correct -- a radio the factory does not know cannot promise anything.
 function SupportsFor(model: InterfacedRadioType; cap: TRadioCapability): Boolean;
 
+// THE ID-KEYED FORM, and it is not a convenience -- it is the one that is
+// CORRECT for every registered radio.  CapabilitiesFor/SupportsFor take an
+// InterfacedRadioType, so a STRING-ID radio (TCI has no enum member) resolves to
+// NoInterfacedRadio and answers False to everything.  That is exactly how TCI
+// once ended up with no CW at all: the CW-by-CAT gate was model-keyed.  Anything
+// asking "can this radio do X" from a registry id must come through here.
+function CapabilitiesForId(const id: string): TRadioCapabilitySet;
+function SupportsForId(const id: string; cap: TRadioCapability): Boolean;
+
 function SerialParamsFor(model: InterfacedRadioType): TSerialParams;
 function SerialParamsForId(const id: string): TSerialParams;
 
@@ -275,6 +284,7 @@ function RegisteredIds: TArray<string>;                       // all ids, in reg
 implementation
 
 uses
+   SysUtils,   // Trim, for the id-keyed capability lookup
    Generics.Collections, TypInfo, SyncObjs;
 
 type
@@ -737,6 +747,50 @@ end;
 function SupportsFor(model: InterfacedRadioType; cap: TRadioCapability): Boolean;
 begin
    Result := cap in CapabilitiesFor(model);
+end;
+
+function CapabilitiesForId(const id: string): TRadioCapabilitySet;
+var
+   r: TFactoryRadioBase;
+   model: InterfacedRadioType;
+begin
+   Result := [];
+   if Trim(id) = '' then
+      begin
+      Exit;
+      end;
+
+   // An enum-backed radio goes through the CACHED path -- CapabilitiesFor
+   // constructs one instance per model and remembers the answer.
+   model := ModelForId(id);
+   if model <> NoInterfacedRadio then
+      begin
+      Result := CapabilitiesFor(model);
+      Exit;
+      end;
+
+   // A STRING-ID radio has no enum to cache against, so ask an instance
+   // directly. Uncached, but there is exactly one such radio today (TCI) and
+   // this is called from dialogs, not from a polling loop.
+   if not IsRegisteredId(id) then
+      begin
+      Exit;
+      end;
+
+   r := CreateInstanceId(id);
+   if r <> nil then
+      begin
+      try
+         Result := r.Capabilities.Flags;
+      finally
+         r.Free;
+      end;
+      end;
+end;
+
+function SupportsForId(const id: string; cap: TRadioCapability): Boolean;
+begin
+   Result := cap in CapabilitiesForId(id);
 end;
 
 function SerialParamsForId(const id: string): TSerialParams;

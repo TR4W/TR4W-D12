@@ -56,8 +56,6 @@ type
       procedure Test_ValidateCatchesDuplicateNames;
       procedure Test_ValidateCatchesBlankName;
       procedure Test_ValidateCatchesMissingPort;
-      procedure Test_ValidateAllowsCWByCATWithoutAPort;
-      procedure Test_RadioRelativeKindsNeedNoPortOfTheirOwn;
 
       procedure Test_SameAsDetectsEveryFieldIncludingName;
       procedure Test_CloneIsIndependent;
@@ -93,14 +91,6 @@ begin
    Result.WKFirstExtension     := 6;
    Result.WKKeyerCompensation  := 9;
    Result.WKPaddleSwitchpoint  := 33;
-
-   Result.PaddlePort         := 'SERIAL 12';
-   Result.PaddleBugEnable    := True;
-   Result.PaddleSwap         := False;
-   Result.PaddleSpeed        := 28;
-   Result.PaddleMonitorTone  := 690;
-   Result.PaddlePTTHoldCount := 4;
-   Result.CurtisKeyerMode    := 'MODE B';
 end;
 
 procedure TKeyerConfigStoreTests.CheckKeyersMatch(const aExpected, aActual: TKeyerDefinition);
@@ -124,14 +114,6 @@ begin
    CheckEquals(aExpected.WKFirstExtension, aActual.WKFirstExtension, 'WKFirstExtension');
    CheckEquals(aExpected.WKKeyerCompensation, aActual.WKKeyerCompensation, 'WKKeyerCompensation');
    CheckEquals(aExpected.WKPaddleSwitchpoint, aActual.WKPaddleSwitchpoint, 'WKPaddleSwitchpoint');
-
-   CheckEquals(aExpected.PaddlePort, aActual.PaddlePort, 'PaddlePort');
-   CheckTrue(aExpected.PaddleBugEnable = aActual.PaddleBugEnable, 'PaddleBugEnable');
-   CheckTrue(aExpected.PaddleSwap = aActual.PaddleSwap, 'PaddleSwap');
-   CheckEquals(aExpected.PaddleSpeed, aActual.PaddleSpeed, 'PaddleSpeed');
-   CheckEquals(aExpected.PaddleMonitorTone, aActual.PaddleMonitorTone, 'PaddleMonitorTone');
-   CheckEquals(aExpected.PaddlePTTHoldCount, aActual.PaddlePTTHoldCount, 'PaddlePTTHoldCount');
-   CheckEquals(aExpected.CurtisKeyerMode, aActual.CurtisKeyerMode, 'CurtisKeyerMode');
 end;
 
 { ------------------------------------------------------------------ JSON -- }
@@ -211,7 +193,7 @@ begin
    store := TKeyerConfigStore.Create;
    arr := TJSONArray.Create;
    try
-      store.AddKeyer('Doomed', kkCPU);
+      store.AddKeyer('Doomed', kkYCCC);
       store.FromJSON(arr);
       CheckEquals(0, store.KeyerCount, 'loading an empty array clears the store');
    finally
@@ -243,14 +225,14 @@ begin
    // file already written.
    store := TKeyerConfigStore.Create;
    try
-      store.AddKeyer('K', kkCWByCAT);
+      store.AddKeyer('K', kkYCCC);
       arr := store.ToJSON;
       try
          s := arr.ToJSON;
       finally
          arr.Free;
       end;
-      CheckTrue(Pos('CWBYCAT', UpperCase(s)) > 0, 'kind appears as text: ' + s);
+      CheckTrue(Pos('YCCC', UpperCase(s)) > 0, 'kind appears as text: ' + s);
    finally
       store.Free;
    end;
@@ -323,7 +305,7 @@ begin
    store := TKeyerConfigStore.Create;
    try
       store.AddKeyer('One', kkWinKeyer);
-      store.AddKeyer('Two', kkCPU);
+      store.AddKeyer('Two', kkYCCC);
       CheckFalse(store.RenameKeyer('One', 'Two', err), 'rename onto a taken name refused');
       CheckTrue(err <> '', 'and says why');
       CheckEquals('One', store.Keyer(0).Name, 'the original name is untouched');
@@ -372,7 +354,7 @@ begin
    store := TKeyerConfigStore.Create;
    try
       store.AddKeyer('One', kkWinKeyer);
-      store.AddKeyer('Two', kkCPU);
+      store.AddKeyer('Two', kkYCCC);
       CheckTrue(store.RemoveKeyer('one'), 'removed case-insensitively');
       CheckEquals(1, store.KeyerCount, 'one left');
       CheckEquals('Two', store.Keyer(0).Name, 'and it is the other one');
@@ -393,7 +375,7 @@ begin
    store := TKeyerConfigStore.Create;
    try
       store.AddKeyer('Same', kkWinKeyer).Port := 'SERIAL 1';
-      store.AddKeyer('same', kkCPU).Port := 'SERIAL 2';
+      store.AddKeyer('same', kkYCCC).Port := 'SERIAL 2';
       CheckFalse(store.Validate(err), 'duplicate names caught');
       CheckTrue(Pos('Same', err) > 0, 'and names the offender: ' + err);
    finally
@@ -409,7 +391,7 @@ begin
    BeginTest('Test_ValidateCatchesBlankName');
    store := TKeyerConfigStore.Create;
    try
-      store.AddKeyer('', kkCWByCAT);
+      store.AddKeyer('', kkWinKeyer);
       CheckFalse(store.Validate(err), 'a blank name is caught');
    finally
       store.Free;
@@ -429,23 +411,6 @@ begin
       store.AddKeyer('Portless', kkWinKeyer);   // Port defaults to NONE
       CheckFalse(store.Validate(err), 'a WinKeyer with no port is caught');
       CheckTrue(Pos('Portless', err) > 0, 'and names it: ' + err);
-   finally
-      store.Free;
-   end;
-end;
-
-procedure TKeyerConfigStoreTests.Test_ValidateAllowsCWByCATWithoutAPort;
-var
-   store: TKeyerConfigStore;
-   err: string;
-begin
-   BeginTest('Test_ValidateAllowsCWByCATWithoutAPort');
-   // CW-by-CAT keys through whichever radio is nominated; having no port of its
-   // own is correct, not an omission.
-   store := TKeyerConfigStore.Create;
-   try
-      store.AddKeyer('By CAT', kkCWByCAT);
-      CheckTrue(store.Validate(err), 'CW-by-CAT needs no port: ' + err);
    finally
       store.Free;
    end;
@@ -472,8 +437,8 @@ begin
       CheckFalse(a.SameAs(b), 'a single changed field is detected');
 
       b.Assign(a);
-      b.CurtisKeyerMode := 'SOMETHING ELSE';
-      CheckFalse(a.SameAs(b), 'and so is the last field in the record');
+      b.WKSidetoneFrequency := 'SOMETHING ELSE';
+      CheckFalse(a.SameAs(b), 'and so is a string field');
 
       CheckFalse(a.SameAs(nil), 'nil is not the same as anything');
    finally
@@ -509,14 +474,11 @@ begin
       k.Name := 'Desk';
       k.Kind := kkWinKeyer;
       k.Port := 'SERIAL 5';
-      CheckTrue(Pos('SERIAL 5', k.DisplaySummary) > 0, 'serial keyer shows its port');
+      CheckTrue(Pos('SERIAL 5', k.DisplaySummary) > 0, 'the device shows its port');
+      CheckTrue(Pos('WINKEYER', UpperCase(k.DisplaySummary)) > 0, 'and its kind');
 
-      k.Kind := kkCWByCAT;
-      CheckTrue(Pos('CAT', UpperCase(k.DisplaySummary)) > 0, 'CW-by-CAT says so');
-
-      k.Kind := kkCPU;
-      k.PaddlePort := 'SERIAL 9';
-      CheckTrue(Pos('SERIAL 9', k.DisplaySummary) > 0, 'CPU keyer shows its paddle port');
+      k.Kind := kkYCCC;
+      CheckTrue(Pos('YCCC', UpperCase(k.DisplaySummary)) > 0, 'YCCC too');
    finally
       k.Free;
    end;
@@ -524,32 +486,6 @@ end;
 
 { ------------------------------------------------------------------ run --- }
 
-procedure TKeyerConfigStoreTests.Test_RadioRelativeKindsNeedNoPortOfTheirOwn;
-var
-   store: TKeyerConfigStore;
-   err: string;
-begin
-   BeginTest('Test_RadioRelativeKindsNeedNoPortOfTheirOwn');
-   // Two kinds BORROW the slot's radio (NY4I 2026-08-07): kkRadioPort keys on
-   // the radio's own control port, kkCWByCAT over its CAT link.  Neither has a
-   // port of its own, so demanding one would make every such profile invalid.
-   store := TKeyerConfigStore.Create;
-   try
-      CheckTrue(store.AddKeyer('By CAT', kkCWByCAT).NeedsSlotRadio, 'CAT needs the radio');
-      CheckTrue(store.AddKeyer('Radio port', kkRadioPort).NeedsSlotRadio, 'radio port too');
-      CheckFalse(store.FindKeyer('By CAT').UsesOwnPort, 'CAT has no port of its own');
-      CheckFalse(store.FindKeyer('Radio port').UsesOwnPort, 'nor does radio-port keying');
-
-      CheckTrue(store.Validate(err), 'and neither is rejected for lacking one: ' + err);
-
-      // The independent kinds still are.
-      CheckTrue(store.AddKeyer('Desk', kkWinKeyer).UsesOwnPort, 'a WinKeyer owns its port');
-      CheckFalse(store.FindKeyer('Desk').NeedsSlotRadio, 'and does not need a radio');
-      CheckFalse(store.Validate(err), 'so a portless WinKeyer is still caught');
-   finally
-      store.Free;
-   end;
-end;
 
 procedure TKeyerConfigStoreTests.RunAllTests;
 begin
@@ -570,8 +506,6 @@ begin
    Test_ValidateCatchesDuplicateNames;
    Test_ValidateCatchesBlankName;
    Test_ValidateCatchesMissingPort;
-   Test_ValidateAllowsCWByCATWithoutAPort;
-   Test_RadioRelativeKindsNeedNoPortOfTheirOwn;
 
    Test_SameAsDetectsEveryFieldIncludingName;
    Test_CloneIsIndependent;
