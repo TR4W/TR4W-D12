@@ -46,8 +46,47 @@ procedure ClearTotals(StartColumn: integer);
 
 implementation
 
+uses
+   Log4D;
+
+var
+   // This unit's own reference to the program's log category, rather than
+   // MainUnit's global.  GetLogger is a repository lookup, so this IS the same
+   // instance tr4w.dpr configures -- and it keeps a display unit from dragging
+   // the whole main-window unit graph in, which is what made dcc32 die with an
+   // internal error on a cold build (see 8e4cafac).
+   logger: TLogLogger;
+
 procedure TotalTextOut(s: string; X, Y: integer);
 begin
+  // THE GRID IS FIXED AT 8 x 4 and the callers do not check.  MainUnit creates
+  // exactly `for r := 0 to 3` x `for c := 0 to 7` static windows (~5310), and
+  // VC.pas sizes both arrays [0..7, 0..3] to match -- so a cell outside that
+  // has no window to write to.
+  //
+  // WriteLeftColumnText and iTotalTextOut both do a bare `inc(Row)` with no
+  // bound, and enough conditional rows (CW + Phone + Digital, or the mult
+  // labels) reach Row = 4.  NY4I hit exactly that at startup 2026-08-07:
+  //   uTotal.TotalTextOut ('DX Mults', 0, 4)   <- Y is one past the end
+  //
+  // With range checking OFF -- which is this project's setting -- that does not
+  // raise.  It reads four bytes past TotWinHandles into TotWinHandlesFilled
+  // (declared immediately after it in VC.pas:2601) and then writes past
+  // TotWinHandlesFilled into whatever follows.  A silent wild write into
+  // globals is a worse outcome than a visible error, which is why this is
+  // guarded here rather than left to the callers to each learn to count.
+  if (X < Low(TotWinHandles)) or (X > High(TotWinHandles)) or
+     (Y < Low(TotWinHandles[0])) or (Y > High(TotWinHandles[0])) then
+     begin
+     // REPORTED, not swallowed: a dropped label means the totals window is
+     // showing fewer categories than the contest actually has, and an operator
+     // needs some way to discover that beyond noticing a blank line.
+     logger.Warn('[TotalTextOut] cell (%d,%d) is outside the %dx%d totals grid; ' +
+                 'text "%s" not shown',
+                 [X, Y, High(TotWinHandles) + 1, High(TotWinHandles[0]) + 1, s]);
+     Exit;
+     end;
+
   // D12: s is native string; '' is the "clear" signal nil used to be.
   if s = '' then
     if TotWinHandlesFilled[X, Y] = False then Exit;
@@ -385,5 +424,7 @@ begin
       TotalTextOut('', c , r);
 end;
 
-end.
+initialization
+   logger := TLogLogger.GetLogger('TR4WDebugLog');
 
+end.
