@@ -343,8 +343,29 @@ legacy keys must emit exactly the spelling in `lpArray` (e.g. `PortTypeSA`). One
 (`uOption.pas:351`) **and** selects the ini section name — `cfCol` → `COLORS`,
 `cfWK` → `WINKEYER` (`uOption.pas:760-761`), otherwise `_COMMANDS`.
 
-So `cfFunc` is a second storage-routing field alongside `crC`, and a migration must honour
-both. **[UNCONFIRMED]** whether `cfRadio1`/`cfRadio2` also select a section or only filter.
+**It says WHERE a command is configured** — which settings page it appears on (NY4I,
+2026-08-07). Distribution across the 506 rows:
+
+```
+cfAll 438 · cfRadio1 24 · cfRadio2 18 · cfWK 17 · cfAppearance 9 · cfCol 0
+```
+
+`cfCol` has **no rows at all**, so the Colors page is populated from something other than
+`CFGCA`.
+
+**Only `cfCol` and `cfWK` name an ini section.** `cfRadio1`, `cfRadio2`, `cfAppearance` and
+`cfAll` fall to the `else` branch and write to `[COMMANDS]`. So `cfFunc` is a second
+storage-routing field alongside `crC`, but for two values only.
+
+**Two subtleties in that `case` (`uOption.pas:758`):**
+
+- It switches on **`CommandsFilter`** — the page being *viewed* — **not** on the row's own
+  `cfFunc`. They coincide only because the list is filtered by `cfFunc = CommandsFilter`
+  (`uOption.pas:351`). Anything that writes outside that dialog cannot rely on the
+  coincidence.
+- The `cfCol` / `cfWK` branches **never consult `crC` or the `crJ = 1` restart flag** —
+  both live in the `else`. Verified latent, not live: no `cfWK` row sets either. But a
+  future `cfWK` row with `crJ:1` would silently fail to prompt for a restart.
 
 ### `crType: CFGType` — value type and editor
 `(ctFreqList, ctDirectory, ctFileName, ctMessage, ctMultiplier, ctBoolean, ctReal, ctByte,
@@ -403,5 +424,7 @@ heritage vs. new in TR4W, evidenced from the lost `uDocumentation` generator.)*
 *(`crA` vs `crP` is no longer open — answered in the `crA` section above: two arrays because
 two signatures, `function: Boolean` vs `procedure`.)*
 
+*(`cfRadio1`/`cfRadio2` is no longer open — answered in the `cfFunc` section above: they do
+not name a section; `cfFunc` says which settings page a command is configured on.)*
+
 1. **`ckArray`** — 16 rows; is it still the right mechanism, or a legacy of the DOS table?
-2. **`cfRadio1` / `cfRadio2`** — do they select an ini section as `cfCol`/`cfWK` do?
