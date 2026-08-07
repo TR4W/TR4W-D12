@@ -17,21 +17,27 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uKeyerConfigStore;
 
 {
-  The KEYER LIBRARY: define many keyers once, reference one by name.
+  The KEYER LIBRARY: define each keying DEVICE once, reference it by name.
 
-  Exactly the shape uRadioConfigStore gave radios, for the same reason.  TR4W
-  has four mutually exclusive ways to key CW -- WinKeyer, YCCC SO2R+, CPU
-  (DTR/RTS/LPT) and CW-by-CAT -- and today their settings sit in one flat
-  command list, where WK PORT, PADDLE PORT and RADIO ONE CW BY CAT all read as
-  station-wide facts rather than as properties of a particular keyer.  An
-  operator with a WinKeyer at the desk and a laptop that keys by CAT has to
-  retype settings rather than pick one.
+  Exactly the shape uRadioConfigStore gave radios, and for the same reason: a
+  WinKeyer's seventeen settings sit in one flat command list today, reading as
+  station-wide facts rather than as properties of a device.
 
-  So: DEFINE the keyers, then REFERENCE one by name (from a station profile, or
-  a radio).  That also retires ActiveCWKeyer's precedence chain
-  (CAT -> WinKeyer -> YCCC -> CPU), which docs/CW_Keyer_Factory_Plan.md records
-  as an artifact of the original if/else ordering rather than a decision: a
-  named reference makes it a lookup.
+  WHAT IS IN HERE, AND WHAT IS NOT (settled with NY4I, 2026-08-07).  Only
+  devices with their own settings -- WinKeyer and the YCCC SO2R+ box.  The other
+  ways to key CW are not devices at all:
+
+    * CW by CAT is a property of the RADIO MODEL;
+    * keying on the radio's own control port is the RADIO's wiring;
+    * a keying cable from some COM port to a rig's key jack is also that
+      RADIO's wiring, and lives on TRadioDefinition as KeyerOutputPort /
+      KeyerRTS / KeyerDTR -- where the legacy config already put it.
+
+  A profile then chooses, per slot: nothing, CW by CAT, the radio's own keyer
+  port, or one of these devices by name (CWOUT_* below).  That retires
+  ActiveCWKeyer's precedence chain (CAT -> WinKeyer -> YCCC -> CPU), which
+  docs/CW_Keyer_Factory_Plan.md records as an artifact of the original if/else
+  ordering rather than a decision: a named reference makes it a lookup.
 
   WHAT THIS UNIT IS AND IS NOT.  A pure data store -- it holds the library,
   validates it, and reads/writes JSON.  It knows nothing about uWinKey, the CW
@@ -64,33 +70,45 @@ uses
    System.Generics.Collections;
 
 type
-   { The ways TR4W can key CW.  Held as an enum here (unlike the radio store's
-     opaque registry id) because this list is CLOSED -- it is a property of the
-     program, not of a registry that gains models.  See
-     docs/CW_Keyer_Factory_Plan.md.
+   { DEVICES WITH KNOBS -- and only those.
 
-     NOT ALL OF THEM ARE INDEPENDENT HARDWARE (NY4I, 2026-08-07).  Three own a
-     port and stand alone; two BORROW THE SLOT'S RADIO and mean nothing without
-     it:
+     THE LINE, settled with NY4I 2026-08-07: WIRING belongs to the radio,
+     DEVICE SETTINGS belong here.
 
-       kkWinKeyer   own COM port          independent
-       kkYCCC       own port              independent
-       kkCPU        own port, DTR/RTS/LPT independent
-       kkRadioPort  the RADIO's control port, keyed by DTR/RTS   <- radio-relative
-       kkCWByCAT    commands over the radio's CAT link           <- radio-relative
+     If COM6's DTR runs to the K4's key jack, that is a fact about the K4 -- not
+     about a device you can point somewhere else -- so it lives on
+     TRadioDefinition as KeyerOutputPort/KeyerRTS/KeyerDTR, where the legacy
+     config already had it and where it belongs.  Same for CW-by-CAT, which is a
+     property of the model, and for keying on the radio's own control port.
+     None of those are library entries; they are METHODS available to a radio,
+     with no settings of their own.
 
-     The last two are why a profile pairs a keyer WITH a radio rather than
-     choosing them independently: "the radio's COM port" has no meaning until
-     you know which radio is in the slot, and CW by CAT is only possible if that
-     radio supports it. }
-   TKeyerKind = (kkWinKeyer, kkYCCC, kkCPU, kkRadioPort, kkCWByCAT);
+     A WinKeyer's dit/dah ratio, weight, lead-in and sidetone are different:
+     they belong to the DEVICE, and putting them on a radio would mean retyping
+     seventeen settings for every rig the WinKeyer might key.  That is what this
+     library is for.
+
+     So the profile offers, per slot: (none), CW by CAT if the slot's radio
+     supports it, the radio's own keyer port if it has one, or one of these
+     devices by name.  See CWOUT_* below. }
+   TKeyerKind = (kkWinKeyer, kkYCCC);
 
 const
-   // The JSON spelling of each kind.  Text, not the ordinal -- which is what
-   // made ADDING kkRadioPort in the middle of the enum safe: every file already
-   // written still reads back correctly.
-   KEYERKINDSTR: array[TKeyerKind] of string =
-      ('WINKEYER', 'YCCC', 'CPU', 'RADIOPORT', 'CWBYCAT');
+   // The JSON spelling of each kind.  Text, not the ordinal, so adding a device
+   // later cannot silently re-interpret every file already written.
+   KEYERKINDSTR: array[TKeyerKind] of string = ('WINKEYER', 'YCCC');
+
+   // The PROFILE's CW-output vocabulary.  A slot holds one of these two
+   // radio-relative tokens, or the NAME of a device in this library, or the
+   // store's CWOUTPUT_NONE.  Kept here beside the devices so the whole
+   // vocabulary is readable in one place.
+   //
+   // Both tokens are resolved AGAINST THE SLOT'S RADIO at apply time, and the
+   // capability check for CWOUT_CAT must ask the RADIO
+   // (HasCapability(rcCWByCAT)), never the model enum -- a model-keyed gate is
+   // what once left TCI, a string-id radio, with no CW at all.
+   CWOUT_CAT       = 'CAT';         // over the slot radio's CAT link
+   CWOUT_RADIOPORT = 'RADIOPORT';   // the slot radio's own keyer output port
 
    PORT_NONE = 'NONE';
 
@@ -108,9 +126,9 @@ type
       Kind: TKeyerKind;
 
       // --- shared ------------------------------------------------------------
-      // The port this keyer speaks on, in the PortTypeSA vocabulary.
-      // MEANINGLESS for kkCWByCAT, which uses whichever radio is nominated --
-      // that is the whole point of it, and why Port is not required below.
+      // The port this DEVICE speaks on, in the PortTypeSA vocabulary. Every
+      // kind here has one -- that is part of what makes it a device rather than
+      // a property of a radio -- so Validate insists on it.
       Port: string;
 
       // --- WinKeyer ----------------------------------------------------------
@@ -131,14 +149,10 @@ type
       WKKeyerCompensation: integer;
       WKPaddleSwitchpoint: integer;
 
-      // --- CPU / paddle (DTR, RTS, LPT) --------------------------------------
-      PaddlePort: string;
-      PaddleBugEnable: boolean;
-      PaddleSwap: boolean;
-      PaddleSpeed: integer;
-      PaddleMonitorTone: integer;
-      PaddlePTTHoldCount: integer;
-      CurtisKeyerMode: string;
+      // NO paddle / CPU fields here.  The computer's own keyer keys through
+      // whichever radio's keyer output port is configured, and its paddle
+      // settings are station-wide -- one paddle, one computer -- so they belong
+      // with the other station CW settings rather than on a per-device row.
 
       constructor Create;
       procedure Assign(const aSource: TKeyerDefinition);
@@ -147,22 +161,8 @@ type
       // dirty flag that goes stale the moment someone adds a field. Name is
       // included: renaming IS a change.
       function SameAs(const aOther: TKeyerDefinition): boolean;
-      // One line for a list box: 'Desk WinKey [SERIAL 3]', 'By CAT'.
+      // One line for a list box: 'Desk WinKey [WINKEYER SERIAL 3]'.
       function DisplaySummary: string;
-      // True when this kind needs a port of its own -- so Validate can insist
-      // on one without tripping over the kinds that borrow the radio's.
-      function UsesOwnPort: boolean;
-      // True when this keyer is meaningless without knowing which radio is in
-      // the slot: kkRadioPort borrows the radio's control port, kkCWByCAT sends
-      // over its CAT link.
-      //
-      // THE STORE DELIBERATELY STOPS HERE.  Whether a PARTICULAR radio can do
-      // CW by CAT is a capability question, and answering it needs
-      // uRadioRegistry -- which this RTL-only unit must not reach.  The profile
-      // and apply layers own that check, and they must ask the RADIO
-      // (HasCapability(rcCWByCAT)), never the model enum: a model-keyed gate is
-      // exactly what once left TCI, a string-id radio, with no CW at all.
-      function NeedsSlotRadio: boolean;
    end;
 
    TKeyerConfigStore = class(TObject)
@@ -236,7 +236,6 @@ begin
    inherited Create;
    Kind := kkWinKeyer;
    Port := PORT_NONE;
-   PaddlePort := PORT_NONE;
    // Zeroes elsewhere mean "leave it to the device default", the same
    // convention the radio store uses for BaudRate and ReceiverAddress. A store
    // that invented WinKeyer timings here would fight the hardware's own
@@ -269,14 +268,6 @@ begin
    WKFirstExtension     := aSource.WKFirstExtension;
    WKKeyerCompensation  := aSource.WKKeyerCompensation;
    WKPaddleSwitchpoint  := aSource.WKPaddleSwitchpoint;
-
-   PaddlePort         := aSource.PaddlePort;
-   PaddleBugEnable    := aSource.PaddleBugEnable;
-   PaddleSwap         := aSource.PaddleSwap;
-   PaddleSpeed        := aSource.PaddleSpeed;
-   PaddleMonitorTone  := aSource.PaddleMonitorTone;
-   PaddlePTTHoldCount := aSource.PaddlePTTHoldCount;
-   CurtisKeyerMode    := aSource.CurtisKeyerMode;
 end;
 
 function TKeyerDefinition.Clone: TKeyerDefinition;
@@ -311,28 +302,7 @@ begin
       (WKDitDahRatio = aOther.WKDitDahRatio) and
       (WKFirstExtension = aOther.WKFirstExtension) and
       (WKKeyerCompensation = aOther.WKKeyerCompensation) and
-      (WKPaddleSwitchpoint = aOther.WKPaddleSwitchpoint) and
-      SameText(PaddlePort, aOther.PaddlePort) and
-      (PaddleBugEnable = aOther.PaddleBugEnable) and
-      (PaddleSwap = aOther.PaddleSwap) and
-      (PaddleSpeed = aOther.PaddleSpeed) and
-      (PaddleMonitorTone = aOther.PaddleMonitorTone) and
-      (PaddlePTTHoldCount = aOther.PaddlePTTHoldCount) and
-      SameText(CurtisKeyerMode, aOther.CurtisKeyerMode);
-end;
-
-function TKeyerDefinition.UsesOwnPort: boolean;
-begin
-   // The radio-relative kinds have no port of their own -- kkRadioPort borrows
-   // the radio's control port, kkCWByCAT uses its CAT link. Asking the KIND
-   // rather than testing Port <> '' means an empty port on a WinKeyer is still
-   // reportable as the mistake it is.
-   Result := not NeedsSlotRadio;
-end;
-
-function TKeyerDefinition.NeedsSlotRadio: boolean;
-begin
-   Result := Kind in [kkRadioPort, kkCWByCAT];
+      (WKPaddleSwitchpoint = aOther.WKPaddleSwitchpoint);
 end;
 
 function TKeyerDefinition.DisplaySummary: string;
@@ -343,27 +313,7 @@ begin
       Result := '(unnamed)';
       end;
 
-   case Kind of
-      kkCWByCAT:
-         begin
-         // No port named, because it depends on the slot's radio -- saying
-         // otherwise in a list box would be a small lie the operator has to
-         // discover.
-         Result := Result + ' [by CAT, this slot''s radio]';
-         end;
-      kkRadioPort:
-         begin
-         Result := Result + ' [radio''s COM port, DTR/RTS]';
-         end;
-      kkCPU:
-         begin
-         Result := Result + ' [CPU ' + PaddlePort + ']';
-         end;
-   else
-      begin
-      Result := Result + ' [' + KeyerKindToStr(Kind) + ' ' + Port + ']';
-      end;
-   end;
+   Result := Result + ' [' + KeyerKindToStr(Kind) + ' ' + Port + ']';
 end;
 
 { ------------------------------------------------------ TKeyerConfigStore --- }
@@ -530,8 +480,9 @@ begin
       // A keyer that needs a port and has none cannot key. Reported here rather
       // than left to fail silently at the device, which presents as a hardware
       // fault (see the radio track: a silent downgrade cost a bench session).
-      if FKeyers[i].UsesOwnPort and
-         ((Trim(FKeyers[i].Port) = '') or SameText(FKeyers[i].Port, PORT_NONE)) then
+      // EVERY device here has a port -- CW-by-CAT and radio-port keying are the
+      // radio's business, not library rows -- so this is unconditional.
+      if (Trim(FKeyers[i].Port) = '') or SameText(FKeyers[i].Port, PORT_NONE) then
          begin
          aError := Format('Keyer "%s" has no port.', [FKeyers[i].Name]);
          Exit;
@@ -568,14 +519,6 @@ begin
    Result.AddPair('wkFirstExtension', TJSONNumber.Create(aKeyer.WKFirstExtension));
    Result.AddPair('wkKeyerCompensation', TJSONNumber.Create(aKeyer.WKKeyerCompensation));
    Result.AddPair('wkPaddleSwitchpoint', TJSONNumber.Create(aKeyer.WKPaddleSwitchpoint));
-
-   Result.AddPair('paddlePort', aKeyer.PaddlePort);
-   Result.AddPair('paddleBugEnable', TJSONBool.Create(aKeyer.PaddleBugEnable));
-   Result.AddPair('paddleSwap', TJSONBool.Create(aKeyer.PaddleSwap));
-   Result.AddPair('paddleSpeed', TJSONNumber.Create(aKeyer.PaddleSpeed));
-   Result.AddPair('paddleMonitorTone', TJSONNumber.Create(aKeyer.PaddleMonitorTone));
-   Result.AddPair('paddlePTTHoldCount', TJSONNumber.Create(aKeyer.PaddlePTTHoldCount));
-   Result.AddPair('curtisKeyerMode', aKeyer.CurtisKeyerMode);
 end;
 
 procedure TKeyerConfigStore.KeyerFromJSON(const aObj: TJSONObject;
@@ -649,14 +592,6 @@ begin
    aKeyer.WKFirstExtension     := Num('wkFirstExtension', 0);
    aKeyer.WKKeyerCompensation  := Num('wkKeyerCompensation', 0);
    aKeyer.WKPaddleSwitchpoint  := Num('wkPaddleSwitchpoint', 0);
-
-   aKeyer.PaddlePort         := Str('paddlePort', PORT_NONE);
-   aKeyer.PaddleBugEnable    := Bool('paddleBugEnable', False);
-   aKeyer.PaddleSwap         := Bool('paddleSwap', False);
-   aKeyer.PaddleSpeed        := Num('paddleSpeed', 0);
-   aKeyer.PaddleMonitorTone  := Num('paddleMonitorTone', 0);
-   aKeyer.PaddlePTTHoldCount := Num('paddlePTTHoldCount', 0);
-   aKeyer.CurtisKeyerMode    := Str('curtisKeyerMode', '');
 end;
 
 function TKeyerConfigStore.ToJSON: TJSONArray;

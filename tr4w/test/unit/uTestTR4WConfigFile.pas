@@ -118,7 +118,7 @@ begin
       fn := TempFileName;
       AddNamedRadio(radios, 'K4');
       keyers.AddKeyer('Desk WinKey', kkWinKeyer).Port := 'SERIAL 7';
-      keyers.AddKeyer('By CAT', kkCWByCAT);
+      keyers.AddKeyer('YCCC box', kkYCCC).Port := 'SERIAL 9';
 
       SaveConfig(fn, radios, keyers);
       CheckTrue(LoadConfig(fn, radios2, keyers2, err), 'load succeeded: ' + err);

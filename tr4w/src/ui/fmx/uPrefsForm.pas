@@ -188,7 +188,8 @@ type
       function CurrentProfile: TStationProfile;
       function SelectedRadio: TRadioDefinition;
       procedure FillRadioNameCombo(const aCombo: TComboBox; const aSelected: string);
-      procedure FillCWOutputCombo(const aCombo: TComboBox; const aSelected: string);
+      procedure FillCWOutputCombo(const aCombo: TComboBox;
+                                  const aSelected, aRadioName: string);
       procedure CaptureProfileFields;
 
       procedure DiscardChanges;
@@ -511,13 +512,45 @@ end;
 // which port had a keyer on it and to re-answer that question in every profile.
 // Now a keyer is DEFINED once in the keyer library and REFERENCED here by name,
 // exactly as a radio is.
-procedure TPrefsForm.FillCWOutputCombo(const aCombo: TComboBox; const aSelected: string);
+procedure TPrefsForm.FillCWOutputCombo(const aCombo: TComboBox;
+                                       const aSelected, aRadioName: string);
 var
    i: integer;
+   radio: TRadioDefinition;
 begin
    aCombo.Clear;
    AddComboItem(aCombo, TC_PREFS_NONE, CWOUTPUT_NONE);
 
+   // The two RADIO-RELATIVE choices, offered only when the slot's radio can
+   // actually provide them.  Both are properties of that radio, not devices --
+   // see uKeyerConfigStore's header for where the line falls.
+   radio := nil;
+   if Trim(aRadioName) <> '' then
+      begin
+      radio := FStore.FindRadio(aRadioName);
+      end;
+
+   if radio <> nil then
+      begin
+      // ASKED BY REGISTRY ID, not by model enum.  A string-id radio (TCI) has
+      // no enum member, so the enum-keyed CapabilitiesFor answers False to
+      // everything -- which is precisely how TCI once ended up with no CW at
+      // all.  SupportsForId handles both.
+      if SupportsForId(radio.RegistryId, rcCWByCAT) then
+         begin
+         AddComboItem(aCombo, 'CW by CAT', CWOUT_CAT);
+         end;
+
+      if (Trim(radio.KeyerOutputPort) <> '') and
+         (not SameText(radio.KeyerOutputPort, PORT_NONE)) then
+         begin
+         AddComboItem(aCombo,
+                      Format('Radio keyer port (%s)', [radio.KeyerOutputPort]),
+                      CWOUT_RADIOPORT);
+         end;
+      end;
+
+   // Then every DEVICE in the keyer library, by name.
    for i := 0 to FKeyerStore.KeyerCount - 1 do
       begin
       AddComboItem(aCombo,
@@ -525,17 +558,16 @@ begin
                    FKeyerStore.Keyer(i).Name);
       end;
 
-   // A PROFILE WRITTEN BEFORE THE KEYER LIBRARY holds 'CAT' or a port value
-   // like 'SERIAL 3', which matches no keyer name.  Show it rather than
-   // silently snapping the profile to '(none)': we cannot tell from 'SERIAL 3'
-   // whether that was a WinKeyer or CPU keying, so guessing would be inventing
-   // configuration.  Presented as what it is, so the operator can see the old
-   // setting and pick the keyer that replaces it.
+   // A stored value that matches nothing on offer is SHOWN, not silently
+   // dropped: a profile written before the keyer library holds a raw port like
+   // 'SERIAL 3', and CW by CAT stays visible even if the operator has just
+   // switched the slot to a radio that cannot do it.  Snapping the profile to
+   // '(none)' behind their back would lose a setting they never changed.
    if (Trim(aSelected) <> '') and
       (not SameText(aSelected, CWOUTPUT_NONE)) and
-      (FKeyerStore.FindKeyer(aSelected) = nil) then
+      (not HasTag(aCombo, aSelected)) then
       begin
-      AddComboItem(aCombo, Format('%s (not yet a defined keyer)', [aSelected]), aSelected);
+      AddComboItem(aCombo, Format('%s (not available for this radio)', [aSelected]), aSelected);
       end;
 
    SelectByTag(aCombo, aSelected);
@@ -574,8 +606,8 @@ begin
          begin
          FillRadioNameCombo(cbxRadio1, '');
          FillRadioNameCombo(cbxRadio2, '');
-         FillCWOutputCombo(cbxCW1, CWOUTPUT_NONE);
-         FillCWOutputCombo(cbxCW2, CWOUTPUT_NONE);
+         FillCWOutputCombo(cbxCW1, CWOUTPUT_NONE, '');
+         FillCWOutputCombo(cbxCW2, CWOUTPUT_NONE, '');
          chkSpeedSync1.IsChecked := False;
          chkSpeedSync2.IsChecked := False;
          chkSO2R.IsChecked  := False;
@@ -584,8 +616,8 @@ begin
          begin
          FillRadioNameCombo(cbxRadio1, prof.Radio1Name);
          FillRadioNameCombo(cbxRadio2, prof.Radio2Name);
-         FillCWOutputCombo(cbxCW1, prof.CWOutput1);
-         FillCWOutputCombo(cbxCW2, prof.CWOutput2);
+         FillCWOutputCombo(cbxCW1, prof.CWOutput1, prof.Radio1Name);
+         FillCWOutputCombo(cbxCW2, prof.CWOutput2, prof.Radio2Name);
          chkSpeedSync1.IsChecked := prof.SpeedSync1;
          chkSpeedSync2.IsChecked := prof.SpeedSync2;
          chkSO2R.IsChecked  := prof.SO2REnabled;

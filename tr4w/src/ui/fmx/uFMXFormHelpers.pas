@@ -155,6 +155,10 @@ const
 
 function AddComboItem(const aCombo: TComboBox; const aText, aTag: string): TListBoxItem;
 procedure SelectByTag(const aCombo: TComboBox; const aTag: string);
+// Is this tag already in the list?  Lets a caller add a fallback entry for a
+// stored value that no longer matches anything on offer, rather than silently
+// dropping the operator's setting.
+function HasTag(const aCombo: TComboBox; const aTag: string): boolean;
 function SelectedTag(const aCombo: TComboBox): string;
 // OWNER AND PARENT ARE SEPARATE ARGUMENTS, and they are not the same thing.
 // These helpers used to take one object and use it for both, which is fine
@@ -230,6 +234,21 @@ begin
    if aCombo.Items.Count > 0 then
       begin
       aCombo.ItemIndex := 0;
+      end;
+end;
+
+function HasTag(const aCombo: TComboBox; const aTag: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := 0 to aCombo.Items.Count - 1 do
+      begin
+      if SameText(aCombo.ListItems[i].TagString, aTag) then
+         begin
+         Result := True;
+         Exit;
+         end;
       end;
 end;
 
