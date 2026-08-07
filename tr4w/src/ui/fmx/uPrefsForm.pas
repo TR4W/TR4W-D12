@@ -17,7 +17,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uPrefsForm;
 
 {
-  The Preferences window: define many radios, activate a pair by profile.
+  The Preferences window: define the station's HARDWARE once, then build
+  PROFILES from it.
+
+  NY4I's model, 2026-08-07: "TR4W has all this hardware it knows about and we
+  build different profiles based on what combination of radios and keyers I
+  want to use."  So there are LIBRARIES -- radios (uRadioConfigStore) and
+  keyers (uKeyerConfigStore) -- and a profile REFERENCES entries in them by
+  name.  A radio does not own a keyer, and a keyer is not a property of a
+  radio: the pairing is the profile's business, which is why the CW output
+  drop-down sits beside the radio drop-down in the profile group.
 
   This is the UI half of the radio-configuration work.  Everything it decides is
   delegated: uRadioConfigStore owns the data and its rules, uRadioConfigApply
@@ -72,6 +81,7 @@ uses
    FMX.TabControl,
    FMX.Controls.Presentation,
    uRadioConfigStore,
+   uKeyerConfigStore,
    uRadioEditForm;   // the Radio editor, its own unit since it is next to be designed
 
 type
@@ -142,6 +152,14 @@ type
       // STATE, not controls: nothing here is streamed, so it keeps the F prefix
       // and stays private.
       FStore: TRadioConfigStore;
+      // The keyer library, sharing settings\tr4w.json with the radios.
+      // uTR4WConfigFile owns the root; neither store knows about the other.
+      //
+      // THE MODEL (NY4I 2026-08-07): TR4W knows about all the hardware, and a
+      // PROFILE is a combination of it -- which radios and which keyers to use
+      // together.  So the CW output belongs here beside the radio choice, not
+      // on the radio itself.
+      FKeyerStore: TKeyerConfigStore;
       FEditor: TRadioEditForm;
       // The definition currently being edited, and the clone the editor works
       // on.  Held as fields because the editor is modeless: the result arrives
@@ -231,11 +249,11 @@ uses
    FMX.Platform.Win,
    FMX.Dialogs,
    uFMXCoexist,
+   uTR4WConfigFile,
    uRadioConfigApply,
    uRadioRegistry,
    uCAT,        // DiscoverNetworkRadios
    MainUnit,    // logger
-   ComPortEnumerator,
    VC;
 
 var
@@ -280,6 +298,7 @@ begin
    OnClose := HandleClose;
 
    FStore := TRadioConfigStore.Create;
+   FKeyerStore := TKeyerConfigStore.Create;
    SelectFirstSection;
    LoadStore;
    RefreshAll;
@@ -330,6 +349,7 @@ end;
 destructor TPrefsForm.Destroy;
 begin
    FreeAndNil(FEditClone);
+   FreeAndNil(FKeyerStore);
    FreeAndNil(FStore);
    inherited Destroy;
 end;
@@ -356,8 +376,10 @@ var
    legacy: TIniFile;
    err: string;
 begin
-   // 1. The JSON store, if there is one.
-   if FStore.LoadFromFile(StoreFileName, err) then
+   // 1. The JSON store, if there is one.  Via uTR4WConfigFile, which loads
+   //    EVERY library sharing the file -- radios, profiles and keyers -- so the
+   //    two stores can never drift out of step through separate reads.
+   if LoadConfig(StoreFileName, FStore, FKeyerStore, err) then
       begin
       Exit;
       end;
@@ -415,7 +437,8 @@ begin
       end;
 
    try
-      FStore.SaveToFile(StoreFileName);
+      // Every library in one atomic write -- see uTR4WConfigFile.
+      SaveConfig(StoreFileName, FStore, FKeyerStore);
    except
       // A failed SAVE must be reported, not swallowed: the operator would
       // otherwise close the dialog believing their library was stored.
@@ -482,27 +505,38 @@ begin
    SelectByTag(aCombo, aSelected);
 end;
 
+// The CW output for a profile slot is A CHOICE OF THE CONFIGURED KEYING
+// METHODS (NY4I, 2026-08-07) -- not a raw COM port.  This used to offer every
+// port on the machine plus 'CW by CAT', which asked the operator to remember
+// which port had a keyer on it and to re-answer that question in every profile.
+// Now a keyer is DEFINED once in the keyer library and REFERENCED here by name,
+// exactly as a radio is.
 procedure TPrefsForm.FillCWOutputCombo(const aCombo: TComboBox; const aSelected: string);
 var
-   enumerator: TComPortEnumerator;
-   names: TArray<string>;
    i: integer;
 begin
    aCombo.Clear;
    AddComboItem(aCombo, TC_PREFS_NONE, CWOUTPUT_NONE);
-   AddComboItem(aCombo, 'CW by CAT',   CWOUTPUT_CAT);
 
-   enumerator := TComPortEnumerator.Create;
-   try
-      enumerator.Refresh;
-      names := enumerator.PortNames;
-      for i := 0 to High(names) do
-         begin
-         AddComboItem(aCombo, names[i], ComNameToPortValue(names[i]));
-         end;
-   finally
-      enumerator.Free;
-   end;
+   for i := 0 to FKeyerStore.KeyerCount - 1 do
+      begin
+      AddComboItem(aCombo,
+                   FKeyerStore.Keyer(i).DisplaySummary,
+                   FKeyerStore.Keyer(i).Name);
+      end;
+
+   // A PROFILE WRITTEN BEFORE THE KEYER LIBRARY holds 'CAT' or a port value
+   // like 'SERIAL 3', which matches no keyer name.  Show it rather than
+   // silently snapping the profile to '(none)': we cannot tell from 'SERIAL 3'
+   // whether that was a WinKeyer or CPU keying, so guessing would be inventing
+   // configuration.  Presented as what it is, so the operator can see the old
+   // setting and pick the keyer that replaces it.
+   if (Trim(aSelected) <> '') and
+      (not SameText(aSelected, CWOUTPUT_NONE)) and
+      (FKeyerStore.FindKeyer(aSelected) = nil) then
+      begin
+      AddComboItem(aCombo, Format('%s (not yet a defined keyer)', [aSelected]), aSelected);
+      end;
 
    SelectByTag(aCombo, aSelected);
 end;

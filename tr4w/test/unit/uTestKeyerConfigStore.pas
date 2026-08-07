@@ -57,6 +57,7 @@ type
       procedure Test_ValidateCatchesBlankName;
       procedure Test_ValidateCatchesMissingPort;
       procedure Test_ValidateAllowsCWByCATWithoutAPort;
+      procedure Test_RadioRelativeKindsNeedNoPortOfTheirOwn;
 
       procedure Test_SameAsDetectsEveryFieldIncludingName;
       procedure Test_CloneIsIndependent;
@@ -523,6 +524,33 @@ end;
 
 { ------------------------------------------------------------------ run --- }
 
+procedure TKeyerConfigStoreTests.Test_RadioRelativeKindsNeedNoPortOfTheirOwn;
+var
+   store: TKeyerConfigStore;
+   err: string;
+begin
+   BeginTest('Test_RadioRelativeKindsNeedNoPortOfTheirOwn');
+   // Two kinds BORROW the slot's radio (NY4I 2026-08-07): kkRadioPort keys on
+   // the radio's own control port, kkCWByCAT over its CAT link.  Neither has a
+   // port of its own, so demanding one would make every such profile invalid.
+   store := TKeyerConfigStore.Create;
+   try
+      CheckTrue(store.AddKeyer('By CAT', kkCWByCAT).NeedsSlotRadio, 'CAT needs the radio');
+      CheckTrue(store.AddKeyer('Radio port', kkRadioPort).NeedsSlotRadio, 'radio port too');
+      CheckFalse(store.FindKeyer('By CAT').UsesOwnPort, 'CAT has no port of its own');
+      CheckFalse(store.FindKeyer('Radio port').UsesOwnPort, 'nor does radio-port keying');
+
+      CheckTrue(store.Validate(err), 'and neither is rejected for lacking one: ' + err);
+
+      // The independent kinds still are.
+      CheckTrue(store.AddKeyer('Desk', kkWinKeyer).UsesOwnPort, 'a WinKeyer owns its port');
+      CheckFalse(store.FindKeyer('Desk').NeedsSlotRadio, 'and does not need a radio');
+      CheckFalse(store.Validate(err), 'so a portless WinKeyer is still caught');
+   finally
+      store.Free;
+   end;
+end;
+
 procedure TKeyerConfigStoreTests.RunAllTests;
 begin
    Test_RoundTripsEveryField;
@@ -543,6 +571,7 @@ begin
    Test_ValidateCatchesBlankName;
    Test_ValidateCatchesMissingPort;
    Test_ValidateAllowsCWByCATWithoutAPort;
+   Test_RadioRelativeKindsNeedNoPortOfTheirOwn;
 
    Test_SameAsDetectsEveryFieldIncludingName;
    Test_CloneIsIndependent;

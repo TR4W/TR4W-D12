@@ -64,17 +64,33 @@ uses
    System.Generics.Collections;
 
 type
-   { The four ways TR4W can key CW.  Held as an enum here (unlike the radio
-     store's opaque registry id) because this list is CLOSED -- it is a property
-     of the program, not of a registry that gains models.  See
-     docs/CW_Keyer_Factory_Plan.md. }
-   TKeyerKind = (kkWinKeyer, kkYCCC, kkCPU, kkCWByCAT);
+   { The ways TR4W can key CW.  Held as an enum here (unlike the radio store's
+     opaque registry id) because this list is CLOSED -- it is a property of the
+     program, not of a registry that gains models.  See
+     docs/CW_Keyer_Factory_Plan.md.
+
+     NOT ALL OF THEM ARE INDEPENDENT HARDWARE (NY4I, 2026-08-07).  Three own a
+     port and stand alone; two BORROW THE SLOT'S RADIO and mean nothing without
+     it:
+
+       kkWinKeyer   own COM port          independent
+       kkYCCC       own port              independent
+       kkCPU        own port, DTR/RTS/LPT independent
+       kkRadioPort  the RADIO's control port, keyed by DTR/RTS   <- radio-relative
+       kkCWByCAT    commands over the radio's CAT link           <- radio-relative
+
+     The last two are why a profile pairs a keyer WITH a radio rather than
+     choosing them independently: "the radio's COM port" has no meaning until
+     you know which radio is in the slot, and CW by CAT is only possible if that
+     radio supports it. }
+   TKeyerKind = (kkWinKeyer, kkYCCC, kkCPU, kkRadioPort, kkCWByCAT);
 
 const
-   // The JSON spelling of each kind.  Text, not the ordinal, so inserting a
-   // kind later cannot silently re-interpret every stored file.
+   // The JSON spelling of each kind.  Text, not the ordinal -- which is what
+   // made ADDING kkRadioPort in the middle of the enum safe: every file already
+   // written still reads back correctly.
    KEYERKINDSTR: array[TKeyerKind] of string =
-      ('WINKEYER', 'YCCC', 'CPU', 'CWBYCAT');
+      ('WINKEYER', 'YCCC', 'CPU', 'RADIOPORT', 'CWBYCAT');
 
    PORT_NONE = 'NONE';
 
@@ -133,8 +149,20 @@ type
       function SameAs(const aOther: TKeyerDefinition): boolean;
       // One line for a list box: 'Desk WinKey [SERIAL 3]', 'By CAT'.
       function DisplaySummary: string;
-      // True when this kind needs a port of its own. CW-by-CAT does not.
+      // True when this kind needs a port of its own -- so Validate can insist
+      // on one without tripping over the kinds that borrow the radio's.
       function UsesOwnPort: boolean;
+      // True when this keyer is meaningless without knowing which radio is in
+      // the slot: kkRadioPort borrows the radio's control port, kkCWByCAT sends
+      // over its CAT link.
+      //
+      // THE STORE DELIBERATELY STOPS HERE.  Whether a PARTICULAR radio can do
+      // CW by CAT is a capability question, and answering it needs
+      // uRadioRegistry -- which this RTL-only unit must not reach.  The profile
+      // and apply layers own that check, and they must ask the RADIO
+      // (HasCapability(rcCWByCAT)), never the model enum: a model-keyed gate is
+      // exactly what once left TCI, a string-id radio, with no CW at all.
+      function NeedsSlotRadio: boolean;
    end;
 
    TKeyerConfigStore = class(TObject)
@@ -295,10 +323,16 @@ end;
 
 function TKeyerDefinition.UsesOwnPort: boolean;
 begin
-   // CW-by-CAT keys through whichever radio is nominated, so it has no port of
-   // its own. Asking the KIND rather than testing Port <> '' means an empty
-   // port on a WinKeyer is still reportable as the mistake it is.
-   Result := (Kind <> kkCWByCAT);
+   // The radio-relative kinds have no port of their own -- kkRadioPort borrows
+   // the radio's control port, kkCWByCAT uses its CAT link. Asking the KIND
+   // rather than testing Port <> '' means an empty port on a WinKeyer is still
+   // reportable as the mistake it is.
+   Result := not NeedsSlotRadio;
+end;
+
+function TKeyerDefinition.NeedsSlotRadio: boolean;
+begin
+   Result := Kind in [kkRadioPort, kkCWByCAT];
 end;
 
 function TKeyerDefinition.DisplaySummary: string;
@@ -312,7 +346,14 @@ begin
    case Kind of
       kkCWByCAT:
          begin
-         Result := Result + ' [by CAT]';
+         // No port named, because it depends on the slot's radio -- saying
+         // otherwise in a list box would be a small lie the operator has to
+         // discover.
+         Result := Result + ' [by CAT, this slot''s radio]';
+         end;
+      kkRadioPort:
+         begin
+         Result := Result + ' [radio''s COM port, DTR/RTS]';
          end;
       kkCPU:
          begin
