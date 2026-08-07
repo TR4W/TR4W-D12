@@ -324,6 +324,26 @@ has "no read-only attribute" is wrong; `RADIO ONE FACTORY ID` being freely edita
   the proof: `SCP_MINIMUM_LETTERS_ARRAY = (0, 3, 4, 5)` — **1 and 2 are illegal** — and
   `DITDAHRATIO_ARRAY = (3, 4, 5, 6)`. A 0..5 range would wrongly admit 1 and 2.
 
+  **`ckArray` and `ckList` are also a UI affordance, and that is why they exist** (NY4I,
+  2026-08-07). In Ctrl+J the operator **clicks a row to advance its value**: the handler
+  finds the current entry, steps to the next, wraps at the end, and writes it back
+  (`uOption.pas:539-552`; `ckList` does the same over its text vocabulary at `:528`).
+  `ctBoolean` is the degenerate case — `InvertBoolean`, a two-element cycle. So the whole
+  dialog is click-to-cycle, and these two kinds are its multi-value generalisation:
+  **a simplistic way to avoid a drop-down, which is what the UX should have used.**
+
+  The example row shows the index trap in the source itself — no `@` anywhere:
+
+  ```pascal
+  (crCommand: 'LEADING ZEROS'; crAddress: pointer(14); crMin:0; crMax:3; ...
+   crKind: ckArray; crType: ctInteger; ...)
+  ```
+
+  **Consequence for the FMX Preferences work: these arrays ARE the drop-down item lists.**
+  When a `ckArray` or `ckList` setting moves to a designed form, the permitted-values array
+  becomes the combo's items, and the click-to-cycle behaviour disappears with the dialog
+  that needed it. The data required for the new UI is already in the table.
+
   **`crMin`/`crMax` are DEAD FIELDS on `ckArray` rows.** The branch goes straight from
   `Val` to `SetParameterInArray` and never reads them (`uCFG.pas:1141-1155`), and their
   values are correspondingly inconsistent — `DIT DAH RATIO` and `MP3 RECORDER BITRATE`
@@ -427,4 +447,7 @@ two signatures, `function: Boolean` vs `procedure`.)*
 *(`cfRadio1`/`cfRadio2` is no longer open — answered in the `cfFunc` section above: they do
 not name a section; `cfFunc` says which settings page a command is configured on.)*
 
-1. **`ckArray`** — 16 rows; is it still the right mechanism, or a legacy of the DOS table?
+**None — all five are answered.** `ckArray` was the last: it is a discrete allow-list *and*
+a click-to-cycle UI affordance, superseded by a drop-down in a designed form. See `crKind`.
+
+If a new question arises, add it here rather than leaving it in a commit message.
