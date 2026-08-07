@@ -33,6 +33,9 @@
 
 # Delphi history and backups
 __history/
+# RAD Studio's crash-recovery copies, same class as __history: editor state,
+# not source.  Committed by accident in 75ce5a60 via `git add <dir>`.
+__recovery/
 *.~*
 # The IDE's previous-version copy, rewritten on every save.  One of these
 # (LOGRADIO.$$$) was tracked and showed as modified forever, with 600-line
