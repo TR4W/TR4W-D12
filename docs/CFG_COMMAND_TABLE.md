@@ -43,6 +43,18 @@ Any code that walks the table to export values — a JSON writer, a settings dum
 branch on `crKind` before touching `crAddress`.** This is the single easiest way to write a
 migration that appears to work and corrupts memory.
 
+**And on two rows `crAddress` is a decoy.** The `ctFreqList` pair — `BAND MAP CUTOFF
+FREQUENCY` and `FREQUENCY MEMORY` — point at `tBandMapCutoffFrequency` (`LOGWIND.PAS:60`)
+and `tFrequencyMemory` (`LOGWIND.PAS:601`). Both are declared as plain integers and are
+**never read or written anywhere in the program**; they exist only so the record has
+something to take the address of. The real value goes into a list inside the `crA` function.
+Exporting `crAddress` for these rows would faithfully persist a number nobody maintains.
+
+The general lesson: **`crAddress` is where the value lives only for simple rows.** The
+honest test for "simple" is already in the source at `uCFG.pas:944` —
+`crKind = ckNormal` **and** `crType <> ctFreqList` **and** `crA = 0`. Anything failing it
+needs its own handling.
+
 ---
 
 ## Field by field
@@ -77,19 +89,43 @@ See the trap above. `ckNormal`: address of the global. `ckArray`/`ckList`: an in
 
 `crS` is *provenance*, **not permission** — it does not make a key read-only. That is `crJ`.
 
-### `crA` — parse-time hook that can reject
-Index into `AdditionalProcsArray[1..25]` (`uCFG.pas:194`), all **parameter-less boolean
-functions** (`F_CONTEST`, `F_ZONE_MULTIPLIER`, `F_RADIO_ONE_TYPE`, …). `0` = none.
+### `crA` — the deeper-processing hook, which can also reject
+Index into `AdditionalProcsArray[1..25]` (`uCFG.pas:194`); `0` = none. NY4I's framing: the
+byte selects a procedure that provides **additional processing** for the parameter — e.g.
+`BAND MAP CUTOFF FREQUENCY` carries `crA:17`, and element 17 is
+`@F_BAND_MAP_CUTOFF_FREQUENCY`.
 
-Runs **after the value has been stored**, and its result becomes `CheckCommand`'s result
-(`uCFG.pas:1287-1298`). So it does two jobs: **derive dependent state** — `F_ZONE_MULTIPLIER`
-sets `ActiveInitialExchange` and `CTY.ctyZoneMode` from the value just assigned
-(`uCFG.pas:1477`) — and **accept or reject**. A `False` return reaches callers as "command
+Every entry is a **parameter-less boolean function**, and its result becomes
+`CheckCommand`'s result (`uCFG.pas:1287-1298`). A `False` return reaches callers as "command
 not accepted"; `LogCfg.pas:825` then warns or shows a dialog.
 
-Consequence for migration: **a row with `crA <> 0` cannot be moved by copying its value.**
-The hook must still run, or dependent globals silently go stale. `uCFG.pas:945` already
-treats `crA = 0` as part of what makes a command "simple".
+**The raw text arrives through a GLOBAL, not a parameter.** `CMD: ShortString`
+(`uCFG.pas:323`) is assigned `CMD := CustomCMD` immediately before the call
+(`uCFG.pas:1289`). So these functions are **not pure** — anything that invokes one outside
+`CheckCommand` must set `CMD` first, or it parses whatever the last command left behind.
+
+**`crA` is not one thing. It has at least two shapes, and they differ in whether the value
+was already stored:**
+
+- **Derive after the store.** `F_ZONE_MULTIPLIER` (`uCFG.pas:1477`) reads the global that
+  was just assigned and derives dependent state — `ActiveInitialExchange`,
+  `CTY.ctyZoneMode`. Returns `True` unconditionally.
+- **Parse, validate and apply, itself.** `F_BAND_MAP_CUTOFF_FREQUENCY` does the whole job:
+
+  ```pascal
+  function F_BAND_MAP_CUTOFF_FREQUENCY: boolean;
+  begin
+     Val(CMD, TempLongInt, Result1);
+     Result := Result1 = 0;                            // the boolean IS the parse result
+     if Result then
+        AddBandMapModeCutoffFrequency(TempLongInt);    // applies to a LIST, not a scalar
+  end;
+  ```
+
+Consequence for migration: **a row with `crA <> 0` cannot be moved by copying a value.** The
+hook must still run — or dependent globals go stale, and for the second shape the value is
+never applied at all. `uCFG.pas:945` already treats `crA = 0` as part of what makes a
+command "simple".
 
 ### `crC` — WHICH FILE the editor writes to
 `1` → the contest `.CFG`; otherwise `tr4w.ini`. The default is set first
