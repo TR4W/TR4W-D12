@@ -79,6 +79,7 @@ uses
   // checks them against the live CFGCA/CAT surface on every build.
   uRadioConfigStore in 'src\uRadioConfigStore.pas',
   uKeyerConfigStore in 'src\uKeyerConfigStore.pas',
+  uTR4WConfigFile in 'src\uTR4WConfigFile.pas',
   uRadioConfigLegacyMap in 'src\uRadioConfigLegacyMap.pas',
   uRadioConfigApply in 'src\uRadioConfigApply.pas',
   // FMX coexistence spike -- see docs\FMX_WIN32_COEXISTENCE.md.  FMX.Forms is

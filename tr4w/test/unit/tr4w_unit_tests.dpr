@@ -56,7 +56,9 @@ uses
    uRadioConfigLegacyMap in '..\..\src\uRadioConfigLegacyMap.pas',
    uTestRadioConfigLegacyMap in 'uTestRadioConfigLegacyMap.pas',
    uKeyerConfigStore    in '..\..\src\uKeyerConfigStore.pas',
+   uTR4WConfigFile      in '..\..\src\uTR4WConfigFile.pas',
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
+   uTestTR4WConfigFile  in 'uTestTR4WConfigFile.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
@@ -268,6 +270,7 @@ begin
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
    RegisterSuite(TKeyerConfigStoreTests.Create('KeyerConfigStore'));
+   RegisterSuite(TTR4WConfigFileTests.Create('TR4WConfigFile'));
 
    if RunAllSuites then
       begin
