@@ -96,9 +96,31 @@ See the trap above. `ckNormal`: address of the global. `ckArray`/`ckList`: an in
 
 ### `crS: CFGStatus` — provenance and visibility
 `(csNew, csOld, csRem, csOwned)`, documented at `VC.pas:848-854`:
-- `csNew` / `csOld` — active, value applied. **The difference is informational; no code
-  reads it.** **[UNCONFIRMED]** what the distinction was meant to record (new in TR4W vs.
-  inherited from TR-DOS?).
+- `csNew` / `csOld` — active, value applied. **The difference is informational; no code in
+  the program reads it.** It records **whether the command came from N6TR's DOS TR LOG
+  (`csOld`) or is new in TR4W (`csNew`)** — settled 2026-08-07 by archaeology, not guesswork:
+
+  `CFGStatus = (csNew, csOld, csRem)` and `CFGStatusArray = ('New','Old','Removed')` are
+  present in the 2014 initial import (`b90ba930`, v4.30.3), so they predate this repository
+  and were written by the original Win32 port author. The only consumer was
+  `uDocumentation` — **source never committed**, but its compiled `.dcu` survives in
+  `tr4w/bin/`. Its strings give the game away:
+
+  ```
+  <TH>#</TH><TH>Command</TH><TH>Status</TH><TH>Type</TH>
+  <H3>TR LOG commands supported by %s.</H3>
+  "Removed, not supported"      BGCOLOR=#FFFF88 / BGCOLOR=#88FFFF
+  WriteCommandsNew  GenerateSupportedCommandsNew  bgColor
+  d:\...\workspace\CMS\out\commands_help_RUS.ini
+  ```
+
+  It generated the tr4w.net command reference from `CFGCA`, with a **Status column** and
+  row colours driven by `CFGStatusArray` — and it produced `commands_help_*.ini`, which TR4W
+  **still ships as a runtime dependency**.
+
+  So the field is not dead metadata; it is documentation provenance whose generator was
+  lost. **Set it honestly on new rows** (`csNew` for anything TR LOG never had), and treat
+  it as read-only history otherwise.
 - `csRem` — retired. Still recognised so an old config does not error, but `CheckCommand`
   exits early and it is hidden from Options.
 - `csOwned` — **live and applied, but hidden from Options because another dialog owns it.**
@@ -316,18 +338,11 @@ The encouraging part: those fields already exist and are already honoured. The w
 
 ## Open questions for NY4I
 
-1. **`csNew` vs `csOld`** — what was the distinction meant to record? Investigated
-   2026-08-07 and **not recoverable from the code or the history**:
-   - Both values trace to `b90ba930 initial`, so the intent predates this repository.
-   - The D7 tree at `C:\TR4W` carries no comment either.
-   - The explanatory comment at `VC.pas:848` is **ours** — commit `89ce0340a`, 2026-08-05,
-     added during the `csOwned` work — so it documents observed behaviour, not intent.
-   - `CFGStatusArray` labels them `'New'` / `'Old'`, which hints at the meaning, but that
-     array is **never referenced**; its only role is the compile-time completeness check.
+*(`csNew` vs `csOld` is no longer open — answered in the `crS` section above: TR LOG
+heritage vs. new in TR4W, evidenced from the lost `uDocumentation` generator.)*
 
-   So this one needs NY4I's or Howie N4AF's memory. Everything mechanical has been checked.
-2. **`crMin` on non-numeric rows** — meaningful, or conventionally 0?
-3. **`crA` vs `crP`** — is "derive/validate" vs "redraw" the intended division, or did it
+1. **`crMin` on non-numeric rows** — meaningful, or conventionally 0?
+2. **`crA` vs `crP`** — is "derive/validate" vs "redraw" the intended division, or did it
    grow that way?
-4. **`ckArray`** — 16 rows; is it still the right mechanism, or a legacy of the DOS table?
-5. **`cfRadio1` / `cfRadio2`** — do they select an ini section as `cfCol`/`cfWK` do?
+3. **`ckArray`** — 16 rows; is it still the right mechanism, or a legacy of the DOS table?
+4. **`cfRadio1` / `cfRadio2`** — do they select an ini section as `cfCol`/`cfWK` do?
