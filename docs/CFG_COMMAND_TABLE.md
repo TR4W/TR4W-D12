@@ -131,8 +131,20 @@ See the trap above. `ckNormal`: address of the global. `ckArray`/`ckList`: an in
   The `csRem` row is the clincher: it marks a TR LOG command TR4W does not support, which is
   exactly the generator's label *"Removed, not supported"*.
 
-  **NY4I checked the original manual (2026-08-07); it says nothing about this.** Don't spend
-  time there again — the evidence is the `.dcu` plus the correlation above.
+  **Third line, external and independent (NY4I):** TR LOG's own release history at
+  <https://www.trlog.com/revhistory.shtml> names commands in UPPERCASE, and every one
+  checked so far is `csOld` here.
+
+  **The original TR4W manual was checked (NY4I, 2026-08-07) and says nothing about this.**
+  Don't spend time there again — the evidence is the `.dcu`, the correlation above, and the
+  TR LOG release notes.
+
+  **Why it matters: barely, and that is the useful conclusion.** `csNew`/`csOld` is inert
+  provenance — nothing reads it, nothing routes on it, and it has no bearing on retiring a
+  key into JSON. The fields that decide that work are `crC`, the *other* `crS` values
+  (`csOwned` / `csRem` / `csJSON`), `crA`, `crKind`/`crType`, `crNetwork` and `crJ`. This
+  entry exists so the question stays closed, and so a migration leaves the field alone
+  instead of wondering whether it encodes behaviour.
 
   So the field is not dead metadata; it is documentation provenance whose generator was
   lost. **Set it honestly on new rows** (`csNew` for anything TR LOG never had), and treat
