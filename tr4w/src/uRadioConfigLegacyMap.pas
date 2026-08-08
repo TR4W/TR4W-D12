@@ -309,6 +309,31 @@ end;
 // written instead.  When there is no model default either, 0 is written --
 // which is a legitimate value for every key that reaches that case
 // (FREQUENCY ADDER, ICOM FILTER BYTE, KEYER STOP BITS).
+// BAUD RATE is a ckArray command: CFGCA accepts only a MEMBER of
+// CAT_BAUDRATE_ARRAY (1200..115200), so unlike every other numeric here a 0 is
+// REJECTED -- "Invalid statement in config file" at the next startup, on a line
+// this renderer wrote (NY4I, 2026-08-08: RADIO TWO BAUD RATE=0 from a cleared
+// slot).  The slot has no radio, so the value is inert; it only has to parse.
+const
+   LOWEST_LEGAL_BAUD = '1200';   // CAT_BAUDRATE_ARRAY[0], spelled here to keep
+                                 // this renderer free of uCFG -- pinned by test.
+
+function BaudRateValue(const aValue, aDefault: integer): string;
+begin
+   if aValue <> 0 then
+      begin
+      Result := IntToStr(aValue);
+      end
+   else if aDefault <> 0 then
+      begin
+      Result := IntToStr(aDefault);
+      end
+   else
+      begin
+      Result := LOWEST_LEGAL_BAUD;
+      end;
+end;
+
 function NumericValue(const aValue, aDefault: integer): string;
 begin
    if aValue <> 0 then
@@ -395,7 +420,7 @@ begin
       // Found on the bench by NY4I, 2026-08-05.
       Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  PORT_NETWORK);
       Emit(Result, 'RADIO ' + slot + ' BAUD RATE',
-           NumericValue(aRadio.BaudRate, aTypeRendering.DefaultBaudRate));
+           BaudRateValue(aRadio.BaudRate, aTypeRendering.DefaultBaudRate));
       Emit(Result, 'RADIO ' + slot + ' SERIAL FORMAT', '');
       Emit(Result, 'RADIO ' + slot + ' CAT RTS',       RTSDTR_NONE);
       Emit(Result, 'RADIO ' + slot + ' CAT DTR',       RTSDTR_NONE);
@@ -410,7 +435,7 @@ begin
       begin
       Emit(Result, 'RADIO ' + slot + ' CONTROL PORT',  aRadio.ControlPort);
       Emit(Result, 'RADIO ' + slot + ' BAUD RATE',
-           NumericValue(aRadio.BaudRate, aTypeRendering.DefaultBaudRate));
+           BaudRateValue(aRadio.BaudRate, aTypeRendering.DefaultBaudRate));
       Emit(Result, 'RADIO ' + slot + ' SERIAL FORMAT', aRadio.SerialFormat);
       Emit(Result, 'RADIO ' + slot + ' CAT RTS',       ListValue(aRadio.CatRTS, RTSDTR_NONE));
       Emit(Result, 'RADIO ' + slot + ' CAT DTR',       ListValue(aRadio.CatDTR, RTSDTR_NONE));
@@ -599,8 +624,13 @@ begin
          // 1..3 in CFGCA -- an empty or zero value is not legal.
          Emit(Result, names[i], '1');
          end
-      else if (names[i] = 'RADIO ' + slot + ' BAUD RATE')         or
-              (names[i] = 'RADIO ' + slot + ' TCP PORT')          or
+      else if (names[i] = 'RADIO ' + slot + ' BAUD RATE') then
+         begin
+         // NOT 0 -- see BaudRateValue.  Every other numeric below takes 0
+         // happily; this one is the exception because it is ckArray.
+         Emit(Result, names[i], LOWEST_LEGAL_BAUD);
+         end
+      else if (names[i] = 'RADIO ' + slot + ' TCP PORT')          or
               (names[i] = 'RADIO ' + slot + ' KEYER STOP BITS')   or
               (names[i] = 'RADIO ' + slot + ' HAMLIB ID')         or
               (names[i] = 'RADIO ' + slot + ' RECEIVER ADDRESS')  or

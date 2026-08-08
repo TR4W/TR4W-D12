@@ -741,6 +741,21 @@ begin
    // unchanged, which would leave the previous radio's setting in force.
    CheckEquals('FALSE', ValueOf(rendered, 'RADIO TWO CW BY CAT'), 'CW BY CAT off');
    CheckEquals('FALSE', ValueOf(rendered, 'POLL RADIO TWO'), 'polling off');
+
+   // BAUD RATE is the ONE numeric here that cannot be 0.  Its CFGCA row is
+   // ckArray, so only a MEMBER of CAT_BAUDRATE_ARRAY is accepted; a 0 was
+   // written to the operator's ini and TR4W then refused to start with
+   // "Invalid statement in config file. Line 106 RADIO TWO BAUD RATE=0"
+   // (NY4I, 2026-08-08).
+   //
+   // The legal set is TYPED OUT, not imported from uCFG: this unit deliberately
+   // does not link the config table, and a test that read the same constant as
+   // the code could not fail.  If CAT_BAUDRATE_ARRAY ever changes, this is
+   // meant to be updated by hand.
+   CheckTrue(IndexStr(ValueOf(rendered, 'RADIO TWO BAUD RATE'),
+                      ['1200', '2400', '4800', '9600',
+                       '19200', '38400', '57600', '115200']) >= 0,
+             'an empty slot must still render a LEGAL baud rate, not 0');
 end;
 
 procedure TRadioConfigLegacyMapTests.Test_NilRadioRendersAnEmptySlot;
