@@ -459,9 +459,23 @@ object PrefsForm: TPrefsForm
           Size.Height = 25.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 54
-          Text = 'Save and activate this profile'
+          Text = 'Activate this profile now'
           TextSettings.Trimming = None
           OnClick = HandleActivate
+        end
+        object lblActivateHint: TLabel
+          StyledSettings = [Family, Style, FontColor]
+          Position.X = 300.000000000000000000
+          Position.Y = 240.000000000000000000
+          Size.Width = 300.000000000000000000
+          Size.Height = 32.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 11.000000000000000000
+          TextSettings.WordWrap = True
+          Text = 
+            'Saving stores your changes. It does not switch the radios over ' +
+            '- use this button for that.'
+          TabOrder = 55
         end
       end
       object chkAutoConnect: TCheckBox
