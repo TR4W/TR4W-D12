@@ -70,6 +70,7 @@ uses
    System.SysUtils,
    System.IniFiles,
    uRadioConfigStore,
+   uKeyerConfigStore,
    uRadioConfigLegacyMap;
 
 // Resolve what the registry says about a definition's identity, so the pure
@@ -88,15 +89,20 @@ function ResolveTypeRendering(const aRegistryId: string): TRadioTypeRendering;
 procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
                            const aProfile: TStationProfile;
-                           const aPersist: boolean = True);
+                           const aPersist: boolean = True;
+                           const aKeyerPort: string = '');
 
 // The whole sequence: stop both radios, write both slots, regroup the ini,
 // restart.  Returns False with aError set if the profile cannot be applied at
 // all (unknown radio names); a radio that merely fails to CONNECT is not an
 // error here -- that is reported by the normal connection path.
+// aKeyers resolves a profile's CW-output choice when it names a keyer DEVICE.
+// Optional so existing callers are unchanged; without it a named device cannot
+// be resolved and its slot renders no keyer port.
 function ApplyProfile(const aStore: TRadioConfigStore;
                       const aProfile: TStationProfile;
-                      out aError: string): boolean;
+                      out aError: string;
+                      const aKeyers: TKeyerConfigStore = nil): boolean;
 
 // Where the radio library lives.  Here rather than in the preferences form
 // because STARTUP needs it too and must not depend on a UI unit -- and not in
@@ -146,6 +152,8 @@ uses
    uCFG,
    uCAT,
    uRadioRegistry,
+   uKeyerConfigApply,   // resolve a named keyer device and configure it
+   uTR4WConfigFile,     // LoadConfig -- both libraries live in the one file
    LOGRADIO,
    LOGK1EA,    // ActiveRadio
    LogCW,
@@ -195,7 +203,8 @@ end;
 procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
                            const aProfile: TStationProfile;
-                           const aPersist: boolean = True);
+                           const aPersist: boolean = True;
+                           const aKeyerPort: string = '');
 var
    rendered: TConfigKeyValues;
    i: integer;
@@ -212,7 +221,7 @@ begin
       typeRendering := Default(TRadioTypeRendering);
       end;
 
-   rendered := RenderRadioKeys(aSlot, aRadio, typeRendering, aProfile);
+   rendered := RenderRadioKeys(aSlot, aRadio, typeRendering, aProfile, aKeyerPort);
 
    for i := 0 to High(rendered) do
       begin
@@ -272,12 +281,68 @@ begin
       end;
 end;
 
+// A slot's CW-output choice, resolved against the keyer library.  Returns the
+// port the legacy KEYER RADIO n OUTPUT PORT key should carry -- '' when the
+// choice is not a device name (CAT, RADIOPORT and NONE are the renderer's
+// business, not ours) -- and configures the named device on the way past.
+//
+// ONE routine because BOTH entry points need it: Preferences applying a
+// profile, and startup configuring from the library.  Startup is the path that
+// matters most: the seventeen WK command rows are csJSON and inert, so if this
+// does not run there, a normal start leaves the WinKeyer unconfigured
+// altogether.  Two copies of that policy would drift, and the drift would be
+// invisible until an operator's keyer behaved differently after a restart than
+// it did in the session where they set it up.
+function ResolveKeyerForSlot(const aKeyers: TKeyerConfigStore;
+                             const aProfile: TStationProfile;
+                             const aSlot: integer): string;
+var
+   keyerDef: TKeyerDefinition;
+   cwChoice: string;
+   keyerErr: string;
+begin
+   Result := '';
+   if (aKeyers = nil) or (aProfile = nil) then
+      begin
+      Exit;
+      end;
+
+   if aSlot = 2 then
+      begin
+      cwChoice := Trim(aProfile.CWOutput2);
+      end
+   else
+      begin
+      cwChoice := Trim(aProfile.CWOutput1);
+      end;
+
+   keyerDef := aKeyers.FindKeyer(cwChoice);
+   if keyerDef = nil then
+      begin
+      Exit;
+      end;
+
+   Result := keyerDef.Port;
+
+   if keyerDef.Kind = kkWinKeyer then
+      begin
+      // REPORTED, not swallowed: a WinKeyer silently keeping the previous
+      // settings is a fault an operator blames on the box.
+      if not ApplyKeyerToWinKey(keyerDef, keyerErr) then
+         begin
+         logger.Warn('[Keyer] %s', [keyerErr]);
+         end;
+      end;
+end;
+
 function ApplyProfile(const aStore: TRadioConfigStore;
                       const aProfile: TStationProfile;
-                      out aError: string): boolean;
+                      out aError: string;
+                      const aKeyers: TKeyerConfigStore = nil): boolean;
 var
    slot: integer;
    radioDef: TRadioDefinition;
+   keyerPort: string;
    // NOT named radioPtr: Delphi is case-insensitive, so a variable of that name
    // shadows the TYPE RadioPtr in its own declaration.
    slotRadio: RadioPtr;
@@ -343,7 +408,12 @@ begin
          // radioDef is nil for an empty slot, and the renderer treats that as
          // "clear it" -- necessary, or the slot keeps whatever the previously
          // active profile left there.
-         ApplyRadioToSlot(radioDef, slot, aProfile);
+         // Resolve the slot's CW choice: when it names a keyer DEVICE, the
+         // legacy port key gets THAT DEVICE'S port, and the device itself is
+         // configured.  Without this the renderer writes NONE and the keyer,
+         // whose WK command rows are now csJSON and inert, is never set up.
+         keyerPort := ResolveKeyerForSlot(aKeyers, aProfile, slot);
+         ApplyRadioToSlot(radioDef, slot, aProfile, True, keyerPort);
          end;
 
       // The ini keys are correct but possibly scattered: WritePrivateProfileString
@@ -448,6 +518,7 @@ end;
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 var
    store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
    profile: TStationProfile;
    slot: integer;
    radioDef: TRadioDefinition;
@@ -465,9 +536,15 @@ begin
       Exit;
       end;
 
-   store := TRadioConfigStore.Create;
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
    try
-      if not store.LoadFromFile(RadioStoreFileName, loadErr) then
+      // BOTH libraries, from the one file.  LoadConfig rather than the radio
+      // store's own loader: a profile's CW output may name a keyer DEVICE, and
+      // without the keyer library that name resolves to nothing -- the slot
+      // would render no keyer port and the device would never be configured.
+      // A file with no keyers section is not an error; the store stays empty.
+      if not LoadConfig(RadioStoreFileName, store, keyers, loadErr) then
          begin
          // Readable-but-broken is worth saying out loud, because the legacy
          // keys are about to be used instead and the operator's library is
@@ -525,7 +602,8 @@ begin
             // every start would be writing to disk purely to set globals --
             // and it would fail silently on a read-only program directory.
             // It also means a start CANNOT damage the operator's ini.
-            ApplyRadioToSlot(radioDef, slot, profile, False);
+            ApplyRadioToSlot(radioDef, slot, profile, False,
+                             ResolveKeyerForSlot(keyers, profile, slot));
             end;
 
          // No GroupRadioIniKeys: nothing was written to group.
@@ -558,6 +636,7 @@ begin
                      [profile.Name]);
          end;
    finally
+      keyers.Free;
       store.Free;
    end;
 end;

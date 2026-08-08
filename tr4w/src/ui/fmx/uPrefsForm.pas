@@ -1248,7 +1248,7 @@ begin
          end;
       end;
 
-   if not ApplyProfile(FStore, prof, err) then
+   if not ApplyProfile(FStore, prof, err, FKeyerStore) then
       begin
       ShowMessage(err);
       Exit;

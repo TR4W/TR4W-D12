@@ -188,6 +188,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
         <DCCReference Include="src\uCAT.pas"/>
         <DCCReference Include="src\uRadioConfigStore.pas"/>
         <DCCReference Include="src\uKeyerConfigStore.pas"/>
+        <DCCReference Include="src\uKeyerConfigApply.pas"/>
         <DCCReference Include="src\uTR4WConfigFile.pas"/>
         <DCCReference Include="src\uRadioConfigLegacyMap.pas"/>
         <DCCReference Include="src\uRadioConfigApply.pas"/>
