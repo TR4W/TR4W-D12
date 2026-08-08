@@ -229,7 +229,8 @@ type
       function CurrentProfile: TStationProfile;
       function SelectedRadio: TRadioDefinition;
       procedure FillRadioNameCombo(const aCombo: TComboBox;
-                                   const aSelected, aUsedByOtherSlot: string);
+                                   const aSelected, aUsedByOtherSlot,
+                                   aOtherSlotLabel: string);
       procedure FillCWOutputCombo(const aCombo: TComboBox;
                                   const aSelected, aRadioName: string);
       procedure CaptureProfileFields;
@@ -545,35 +546,47 @@ end;
 // cannot be both Radio 1 and Radio 2 -- it is one rig on one port, and putting
 // it in both slots makes TR4W open that port twice and poll itself.
 //
-// GREYED, NOT REMOVED.  A radio that silently vanished from the list would read
-// as a missing definition -- the operator would go looking for it in the
-// library.  Greyed says "this one is spoken for", which is the actual reason.
-// Same rule as the COM-port drop-down, and for the same reason.
+// SAID IN THE ITEM, not in a dialog afterwards (NY4I 2026-08-08).  The row
+// reads "9700-IP (in use as Radio 1)", so the reason is on screen AT THE MOMENT
+// OF CHOOSING rather than in a message box after the fact -- and a message box
+// that explains a rule the list could have stated is just a longer way of
+// saying the same thing, late.
+//
+// Marked and greyed, NOT removed.  A radio that silently vanished would read as
+// a missing definition and send the operator looking for it in the library.
+// The TAG stays the bare radio name, so selection still matches by TagString
+// and the decorated text never reaches the profile -- the reason this dialog
+// selects by tag and never by index.
 procedure TPrefsForm.FillRadioNameCombo(const aCombo: TComboBox;
-                                        const aSelected, aUsedByOtherSlot: string);
+                                        const aSelected, aUsedByOtherSlot,
+                                        aOtherSlotLabel: string);
 var
    i: integer;
-   name: string;
+   name, shown: string;
    item: TListBoxItem;
 begin
    aCombo.Clear;
    AddComboItem(aCombo, TC_PREFS_NONE, '');
    for i := 0 to FStore.RadioCount - 1 do
       begin
-      name := FStore.Radio(i).Name;
-      item := AddComboItem(aCombo, name, name);
+      name  := FStore.Radio(i).Name;
+      shown := name;
 
       // The exception is THIS slot's own current value.  A profile written
       // before this rule can legitimately hold the same radio twice, and
-      // disabling the very item the combo has to display would leave the
-      // control showing nothing at all -- hiding the conflict instead of
-      // showing it.
+      // marking the very item the combo has to display would leave the control
+      // showing a decorated name -- hiding the conflict instead of showing it.
       if (aUsedByOtherSlot <> '') and
          SameText(name, aUsedByOtherSlot) and
          (not SameText(name, aSelected)) then
          begin
+         shown := Format(TC_PREFS_RADIOINUSE, [name, aOtherSlotLabel]);
+         item  := AddComboItem(aCombo, shown, name);
          item.Enabled := False;
+         Continue;
          end;
+
+      AddComboItem(aCombo, shown, name);
       end;
    SelectByTag(aCombo, aSelected);
 end;
@@ -882,8 +895,8 @@ begin
       prof := CurrentProfile;
       if prof = nil then
          begin
-         FillRadioNameCombo(cbxRadio1, '', '');
-         FillRadioNameCombo(cbxRadio2, '', '');
+         FillRadioNameCombo(cbxRadio1, '', '', '');
+         FillRadioNameCombo(cbxRadio2, '', '', '');
          FillCWOutputCombo(cbxCW1, CWOUTPUT_NONE, '');
          FillCWOutputCombo(cbxCW2, CWOUTPUT_NONE, '');
          chkSpeedSync1.IsChecked := False;
@@ -892,8 +905,8 @@ begin
          end
       else
          begin
-         FillRadioNameCombo(cbxRadio1, prof.Radio1Name, prof.Radio2Name);
-         FillRadioNameCombo(cbxRadio2, prof.Radio2Name, prof.Radio1Name);
+         FillRadioNameCombo(cbxRadio1, prof.Radio1Name, prof.Radio2Name, TC_PREFS_RADIO2);
+         FillRadioNameCombo(cbxRadio2, prof.Radio2Name, prof.Radio1Name, TC_PREFS_RADIO1);
          FillCWOutputCombo(cbxCW1, prof.CWOutput1, prof.Radio1Name);
          FillCWOutputCombo(cbxCW2, prof.CWOutput2, prof.Radio2Name);
          chkSpeedSync1.IsChecked := prof.SpeedSync1;
@@ -1320,10 +1333,15 @@ begin
          previous := prof.Radio1Name;
          end;
 
-      // REVERTED, not accepted-and-reported.  One radio is one rig on one port;
-      // accepting it would leave a profile the store's Validate refuses to save,
-      // so the operator would meet the error later and have to work out which of
-      // the two choices to undo.
+      // REVERTED SILENTLY.  The row the operator clicked says "(in use as
+      // Radio 1)" in as many words, so the reason was on screen before the
+      // click -- a modal afterwards only repeats it, later and more loudly.
+      //
+      // It also removes a real defect rather than papering over it: showing a
+      // message box from inside a combo's OnChange put the dialog up TWICE
+      // (NY4I 2026-08-08).  Reverting is a control assignment, which the
+      // FLoading guard already covers; a modal is re-entrant in a way no guard
+      // here was going to make reliable.
       wasLoading := FLoading;
       FLoading := True;
       try
@@ -1331,8 +1349,6 @@ begin
       finally
          FLoading := wasLoading;
       end;
-
-      ShowMessage(Format(TC_PREFS_RADIOINBOTHSLOTS, [chosen]));
       Exit;
       end;
 
@@ -1356,8 +1372,8 @@ begin
       // become unavailable over there, and whatever it released must come back.
       // Rebuilt preserving that slot's own selection, so refreshing the greying
       // never changes a choice the operator made.
-      FillRadioNameCombo(cbxRadio1, SelectedTag(cbxRadio1), SelectedTag(cbxRadio2));
-      FillRadioNameCombo(cbxRadio2, SelectedTag(cbxRadio2), SelectedTag(cbxRadio1));
+      FillRadioNameCombo(cbxRadio1, SelectedTag(cbxRadio1), SelectedTag(cbxRadio2), TC_PREFS_RADIO2);
+      FillRadioNameCombo(cbxRadio2, SelectedTag(cbxRadio2), SelectedTag(cbxRadio1), TC_PREFS_RADIO1);
    finally
       FLoading := wasLoading;
    end;

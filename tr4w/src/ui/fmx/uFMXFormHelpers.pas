@@ -94,11 +94,12 @@ const
                                sLineBreak + sLineBreak + 'Apply anyway?';
    TC_PREFS_APPLIED          = 'Profile "%s" is active.';
    TC_PREFS_NOPROFILE        = 'Select or create a station profile first.';
-   TC_PREFS_RADIOINBOTHSLOTS = '"%s" is already the other radio in this profile.' +
-                               sLineBreak + sLineBreak +
-                               'One radio is one rig on one port, so it can only ' +
-                               'fill one slot. Choose a different radio, or clear ' +
-                               'the other slot first.';
+   // Said in the LIST ROW, at the moment of choosing -- not in a dialog
+   // afterwards.  '%s' is the radio name, then which slot already has it.
+   // The slot names it interpolates are TC_PREFS_RADIO1 / TC_PREFS_RADIO2,
+   // already declared above -- reused so the drop-down and the field captions
+   // can never drift into calling the same slot two different things.
+   TC_PREFS_RADIOINUSE       = '%s  (in use as %s)';
    TC_PREFS_CONFIRMREMOVE    = 'Remove radio "%s"?';
 
    // --- radio editor --------------------------------------------------------
