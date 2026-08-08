@@ -154,7 +154,9 @@ uses
   uRadioPolling,
   uYCCCSO2R,
   uHamScore,        // Issue #783 -- HamScoreOnLog hook
-  uExchangeBuilder; // Canonical SentExchange builder for UDP broadcast
+  uExchangeBuilder, // Canonical SentExchange builder for UDP broadcast
+  uUDPBroadcastConfig, // TUDPStream / usContact, usScore, usLookup
+  uUDPBroadcaster;
 procedure CreateAndSendPacketSpot(PacketSpotCall: CallString; PacketSpotFreq: LONGINT);
 
 begin
@@ -685,7 +687,7 @@ begin
      Close(NetDebugBinaryOutput);
      Close(NetDebugBinaryInput);
      end;
-  if UDPBroadcastScore then
+  if UDPBroadcaster.Enabled(usScore) then
      begin
      SendScoreToUDP;
      end;
@@ -1463,7 +1465,7 @@ begin
         RXData.MP3Record := True;
     if not SendRecordToServer(NET_QSOINFO_ID, RXData) then inc(tUSQ);
     perfTimeStart := Now;
-    if UDPBroadcastContact then
+    if UDPBroadcaster.Enabled(usContact) then
        begin
        LogContactToUDP(RXData);
        end;
@@ -1481,7 +1483,7 @@ begin
     end
   else
     begin     // ny4i issue 82 - If the option is set, broadcast contacts received from the Network
-    if UDPBroadcastAllQSOs then
+    if UDPBroadcaster.BroadcastAllQSOs then
        begin
        LogContactToUDP(RXData);
        end;
@@ -1584,7 +1586,7 @@ begin
 //      UpdateBandMapDupeStatus(RXData.Callsign, RXData.Band, RXData.Mode, True);
     SpotsList.UpdateSpotsDupeStatus(RXData.Callsign, RXData.Band, TempMode {RXData.Mode});
   end;
-  if UDPBroadcastScore then
+  if UDPBroadcaster.Enabled(usScore) then
      begin
      if SecondsBetween(TimeLastScoreBroadcast,Now) > 250 then
         begin
@@ -2760,7 +2762,9 @@ You cannot use QSOTotals[TempBand, TempMode] for an accurate score for the total
 QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum those values to calculate the total
 }
    nTotal := 0;
-   if UDPBroadcastScore then                // Issue 304 NY4I
+   // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
+   // It guards CalculateTotals, which reads the whole log.
+   if UDPBroadcaster.Enabled(usScore) then    // Issue 304 NY4I
      begin
      CalculateTotals;    // This reads the log so be careful how often it is done.
      if length(ContestsArray[Contest].ADIFName) = 0 then
@@ -2839,16 +2843,16 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
                  #9 + '<score>' + IntToStr(TotalScore) + '</score>' + sLineBreak +
                  #9 + '<timestamp>' + SystemTimeToString(UTC) + '</timestamp>' + sLineBreak +
                  '</dynamicresults>' + sLineBreak;
-  udp.BroadcastEnabled := true;
   logger.debug('[SendScoreToUDP] \n %s',[sBuf]);
-  udp.Send(UDPBroadcastAddress,UDPBroadcastPortScore,sBuf);
+  UDPBroadcaster.Send(usScore, sBuf);
   end;
 end;
 procedure SendDeletedContactToUDP(RXData: ContestExchange);
 var
     sBuf: AnsiString;
 begin
-   if UDPBroadcastContact then                // Issue 165 NY4I
+   // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
+   if UDPBroadcaster.Enabled(usContact) then  // Issue 165 NY4I
      begin
      sBuf := '<?xml version="1.0"?>' + sLineBreak +
             '<contactdelete>' +  sLineBreak +
@@ -2867,8 +2871,7 @@ begin
             #9 + '<StationName>' +  ComputerName + '</StationName>' + sLineBreak + // Issue 263 NY4I
             #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
       '</contactdelete>'+ sLineBreak ;
-      udp.BroadcastEnabled := true;
-      udp.Send(UDPBroadcastAddress,UDPBroadcastPortContact,sBuf);
+      UDPBroadcaster.Send(usContact, sBuf);
       end;
 end;
 
@@ -3125,10 +3128,9 @@ var
    sBuf: AnsiString;
 begin
 
-   udp.BroadcastEnabled := true;
    sBuf := BuildUDPContact(RXData, udpContactInfo);
    logger.Trace('Sending UDP Broadcast data: ' + sBuf);
-   udp.Send(UDPBroadcastAddress,UDPBroadcastPortContact,sBuf);
+   UDPBroadcaster.Send(usContact, sBuf);
 end;
 
 procedure LogEditedContactToUDP(RXData: ContestExchange);
@@ -3136,10 +3138,9 @@ var
    sBuf: AnsiString;
 begin
 
-   udp.BroadcastEnabled := true;
    sBuf := BuildUDPContact(RXData, udpContactReplace);
    logger.Trace('Sending UDP Broadcast data: ' + sBuf);
-   udp.Send(UDPBroadcastAddress,UDPBroadcastPortContact,sBuf);
+   UDPBroadcaster.Send(usContact, sBuf);
 end;
 
 procedure LookupInfoToUDP(RXData: ContestExchange);
@@ -3147,10 +3148,9 @@ var
    sBuf: AnsiString;
 begin
 
-   udp.BroadcastEnabled := true;
    sBuf := BuildUDPContact(RXData, udpLookupInfo);
    logger.Trace('Sending UDP Broadcast data: ' + sBuf);
-   udp.Send(UDPBroadcastAddress,UDPBroadcastPortLookup,sBuf);
+   UDPBroadcaster.Send(usLookup, sBuf);
 end;
 
 

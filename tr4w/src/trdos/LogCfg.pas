@@ -70,11 +70,11 @@ function LoadInSeparateConfigFile(FileName: ShortString;
 
 procedure LookForCommands(var ContestConfigFileTitle: Str20);
 procedure ReadInConfigFile(ConfigFileName: TCFGType);
-procedure SetUpGlobalsAndInitialize;
 procedure TryRunPaddleAndFootSwitchThread;
 procedure tSetupExchangeNumbers;
 procedure InitializeOtherLPTPorts;
 procedure EnmuCFGFile(FileString: PShortString);
+procedure SetUpGlobalsAndInitialize;
 
 const
   CFGFilesArray                         : array[TCFGType] of PAnsiChar = (@TR4W_CFG_FILENAME, @TR4W_INI_FILENAME, @TR4W_INPUT_CFG_FILENAME, @TR4W_DEFMESSAGES_FILENAME);
@@ -89,7 +89,10 @@ uses
   AnsiStrings,   // D12: StrComp/StrPLCopy over PAnsiChar (SysUtils variants are PWideChar)
   uCFG,
   MainUnit,
-  uRadioPolling;
+  uRadioPolling,
+   uUDPBroadcaster,
+   uUDPBroadcastConfig,
+   uTR4WConfigFile;
 
 type
   // One single-valued tr4w.ini key already applied this load pass, plus the raw
@@ -311,6 +314,37 @@ begin
 
 end;
 
+// Loads the UDP settings and hands them to the broadcaster as one coherent
+// set.  Separate from SendUDPPayload only because the two answer different
+// questions: this one is "what did the operator configure", that one is "how do
+// the bytes leave".
+procedure ConfigureUDPBroadcastFromLibrary;
+var
+   cfg: TUDPBroadcastConfig;
+   settingsDir: string;
+begin
+   settingsDir := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
+   cfg := LoadUDPForStartup(settingsDir + 'tr4w.json', settingsDir + 'tr4w.ini');
+   try
+      UDPBroadcaster.Configure(cfg);   // takes a copy
+   finally
+      cfg.Free;
+   end;
+end;
+
+// The transport the broadcaster calls.  It lives here because `udp` does, and
+// it is the ONLY place that knows both the socket and the broadcaster.
+procedure SendUDPPayload(const aAddress: string; const aPort: integer;
+                         const aPayload: AnsiString);
+begin
+   if udp = nil then
+      begin
+      Exit;
+      end;
+   udp.BroadcastEnabled := True;
+   udp.Send(aAddress, aPort, aPayload);
+end;
+
 procedure SetUpGlobalsAndInitialize;
 //var
 //FileName : str40;
@@ -318,6 +352,12 @@ begin
 
   StartCPU := GetTickCount;
   udp := TIdUDPClient.Create(nil); // ny4i Issue #99
+  // The broadcaster owns WHETHER and WHERE; this unit owns the socket, so it
+  // hands over the transport once the socket exists.  Keeping Indy out of
+  // uUDPBroadcaster is what lets its enable and port rules be unit-tested
+  // against a recording stub instead of a network trace.
+  UDPBroadcaster.SetTransport(SendUDPPayload);
+  ConfigureUDPBroadcastFromLibrary;
   if QTCsEnabled then New(QTCDataArray); //LoadQTCDataFile;
 
 //  if TempDomesticQTHDataFileName <> nil then
