@@ -1273,13 +1273,70 @@ end;
 procedure TPrefsForm.HandleSlotRadioChange(Sender: TObject);
 var
    wasLoading: boolean;
+   prof: TStationProfile;
+   thisCombo, otherCombo: TComboBox;
+   chosen, taken, previous: string;
 begin
-   CaptureProfileFields;
-
    if FLoading then
       begin
+      CaptureProfileFields;
       Exit;
       end;
+
+   // ENFORCED HERE, not by the greying below.  FMX greys a disabled list item
+   // but still SELECTS it: TComboListBox.MouseUp resolves the click through
+   // ItemByPoint, which tests only Visible, and then assigns ItemIndex
+   // unconditionally (FMX.ListBox.pas).  So Enabled := False on a combo item is
+   // presentation only -- it was shipped as if it were a constraint and NY4I
+   // could still pick the same radio twice (2026-08-08).  The greying stays as
+   // the AFFORDANCE; this is the rule.
+   //
+   // Read BEFORE CaptureProfileFields, because that is what overwrites the
+   // profile with the new selection -- the old value is the only thing that can
+   // be reverted to.
+   if Sender = cbxRadio2 then
+      begin
+      thisCombo  := cbxRadio2;
+      otherCombo := cbxRadio1;
+      end
+   else
+      begin
+      thisCombo  := cbxRadio1;
+      otherCombo := cbxRadio2;
+      end;
+
+   prof   := CurrentProfile;
+   chosen := SelectedTag(thisCombo);
+   taken  := SelectedTag(otherCombo);
+
+   if (prof <> nil) and (Trim(chosen) <> '') and SameText(chosen, taken) then
+      begin
+      if thisCombo = cbxRadio2 then
+         begin
+         previous := prof.Radio2Name;
+         end
+      else
+         begin
+         previous := prof.Radio1Name;
+         end;
+
+      // REVERTED, not accepted-and-reported.  One radio is one rig on one port;
+      // accepting it would leave a profile the store's Validate refuses to save,
+      // so the operator would meet the error later and have to work out which of
+      // the two choices to undo.
+      wasLoading := FLoading;
+      FLoading := True;
+      try
+         SelectByTag(thisCombo, previous);
+      finally
+         FLoading := wasLoading;
+      end;
+
+      ShowMessage(Format(TC_PREFS_RADIOINBOTHSLOTS, [chosen]));
+      Exit;
+      end;
+
+   CaptureProfileFields;
 
    // Refilling fires the combo's own OnChange; the guard stops that from
    // writing a half-built list back into the profile.
