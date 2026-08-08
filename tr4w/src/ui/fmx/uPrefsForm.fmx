@@ -357,7 +357,7 @@ object PrefsForm: TPrefsForm
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 43
-          OnChange = HandleFieldChange
+          OnChange = HandleSlotRadioChange
         end
         object lblCWOutput1: TLabel
           Position.X = 290.000000000000000000
@@ -403,7 +403,7 @@ object PrefsForm: TPrefsForm
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 48
-          OnChange = HandleFieldChange
+          OnChange = HandleSlotRadioChange
         end
         object lblCWOutput2: TLabel
           Position.X = 290.000000000000000000

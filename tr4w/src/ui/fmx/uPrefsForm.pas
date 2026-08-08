@@ -221,6 +221,7 @@ type
       procedure FillCWOutputCombo(const aCombo: TComboBox;
                                   const aSelected, aRadioName: string);
       procedure CaptureProfileFields;
+      procedure HandleSlotRadioChange(Sender: TObject);
 
       procedure DiscardChanges;
       procedure EditorDone(const aAccepted: boolean);
@@ -1202,6 +1203,50 @@ end;
 
 procedure TPrefsForm.HandleFieldChange(Sender: TObject);
 begin
+   CaptureProfileFields;
+end;
+
+// A slot's RADIO changed, so that slot's CW-output list is stale: "CW by CAT"
+// and "Radio keyer port" are offered only when THAT radio provides them.
+// HandleFieldChange alone captured the new name and left the list built for
+// the previously displayed radio, so choosing a K4 in a profile whose slot had
+// been empty offered no CW-by-CAT at all -- it looked as though the option
+// belonged to some other profile (NY4I, 2026-08-08).
+//
+// Only the changed slot is rebuilt: refilling both would reset the other
+// slot's selection to whatever its stored value is, discarding an edit the
+// operator had just made and not yet saved.
+procedure TPrefsForm.HandleSlotRadioChange(Sender: TObject);
+var
+   wasLoading: boolean;
+begin
+   CaptureProfileFields;
+
+   if FLoading then
+      begin
+      Exit;
+      end;
+
+   // Refilling fires the combo's own OnChange; the guard stops that from
+   // writing a half-built list back into the profile.
+   wasLoading := FLoading;
+   FLoading := True;
+   try
+      if Sender = cbxRadio2 then
+         begin
+         FillCWOutputCombo(cbxCW2, SelectedTag(cbxCW2), SelectedTag(cbxRadio2));
+         end
+      else
+         begin
+         FillCWOutputCombo(cbxCW1, SelectedTag(cbxCW1), SelectedTag(cbxRadio1));
+         end;
+   finally
+      FLoading := wasLoading;
+   end;
+
+   // The refill may have dropped a choice the new radio cannot provide, so the
+   // profile must be re-read from the controls rather than left at the value
+   // captured above.
    CaptureProfileFields;
 end;
 
