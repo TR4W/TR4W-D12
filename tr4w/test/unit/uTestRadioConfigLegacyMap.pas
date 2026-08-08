@@ -37,6 +37,7 @@ type
       function MakeNetworkRadio: TRadioDefinition;
       // Value for a key, or a sentinel that cannot be mistaken for one.
       function ValueOf(const aRendered: TConfigKeyValues; const aKey: string): string;
+      procedure Test_KeyerDeviceNameNeverReachesTheLegacyPortKey;
       function IsDeleted(const aRendered: TConfigKeyValues; const aKey: string): boolean;
       function HasKey(const aRendered: TConfigKeyValues; const aKey: string): boolean;
    protected
@@ -756,8 +757,56 @@ end;
 
 { ---------------------------------------------------------------- runner -- }
 
+procedure TRadioConfigLegacyMapTests.Test_KeyerDeviceNameNeverReachesTheLegacyPortKey;
+var
+   radio: TRadioDefinition;
+   prof: TStationProfile;
+   rendered: TConfigKeyValues;
+begin
+   BeginTest('Test_KeyerDeviceNameNeverReachesTheLegacyPortKey');
+   // 'KEYER RADIO ONE OUTPUT PORT' takes the PortTypeSA vocabulary, and
+   // CheckCommand REJECTS anything else -- TR4W then refuses to start with
+   // "Invalid statement in config file".  That is what happened once the
+   // profile's CW output began holding keyer DEVICE names (NY4I, 2026-08-08:
+   // a keyer named 'WinKeyer' wrote KEYER RADIO ONE OUTPUT PORT=WINKEYER).
+   radio := TRadioDefinition.Create;
+   prof := TStationProfile.Create;
+   try
+      radio.Name := 'K4';
+      radio.KeyerOutputPort := 'SERIAL 6';
+      prof.Radio1Name := 'K4';
+
+      // A DEVICE NAME with no resolved port must fall back to NONE, never leak.
+      prof.CWOutput1 := 'WinKeyer';
+      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof);
+      CheckEquals('NONE', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+                  'an unresolved device name must not reach the legacy key');
+
+      // With the port resolved, THAT is what is written.
+      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof, 'SERIAL 9');
+      CheckEquals('SERIAL 9', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+                  'a resolved device port is written');
+
+      // The radio-relative token uses the RADIO's own port.
+      prof.CWOutput1 := 'RADIOPORT';
+      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof);
+      CheckEquals('SERIAL 6', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+                  'RADIOPORT means the radio''s own keyer port');
+
+      // A profile written BEFORE the keyer library holds a raw port: unchanged.
+      prof.CWOutput1 := 'SERIAL 3';
+      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof);
+      CheckEquals('SERIAL 3', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+                  'a legacy raw port still passes through');
+   finally
+      prof.Free;
+      radio.Free;
+   end;
+end;
+
 procedure TRadioConfigLegacyMapTests.RunAllTests;
 begin
+   Test_KeyerDeviceNameNeverReachesTheLegacyPortKey;
    Test_RenderedKeySetMatchesCFGCA;
    Test_EmittedKeysMatchRenderedKeyNames;
    Test_NoKeyIsEmittedTwice;
