@@ -2096,20 +2096,27 @@ end;
 procedure CloseCATAndKeyerForThisRadio;
 begin
   IcomResponseTimeout := 0;
+
   {Close CAT Port}
+  // THE FACTORY OBJECT OWNS THE LINK, whatever the transport.  Only the network
+  // arm disconnected it, so a SERIAL factory radio was left running here: the
+  // handle closed below belongs to the legacy CPU-keyer table, which a factory
+  // radio does not use.  It survived because SetUpRadioInterface frees the old
+  // object when a slot is REPLACED -- but not when it is cleared.
+  if (CATWTR^.tFactoryObject <> nil) and CATWTR^.tFactoryObject.IsConnected then
+     begin
+     CATWTR^.tFactoryObject.Disconnect;
+     end;
+
+  // Still done for a serial port: a radio with no factory object (the legacy
+  // fallback path) keeps its handle in that table, and closing an already
+  // invalid handle is guarded.
   if CATWTR^.tCATPortType in SerialPorts then
      begin
      if CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tCATPortType] <> INVALID_HANDLE_VALUE then
         begin
         Windows.CloseHandle(CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tCATPortType]);
         CPUKeyer.SerialPortConfigured_Handle[CATWTR^.tCATPortType] := INVALID_HANDLE_VALUE;
-        end;
-     end
-  else if CATWTR^.tCATPortType = Network then
-     begin
-     if (CATWTR^.tFactoryObject <> nil) and CATWTR^.tFactoryObject.IsConnected then
-        begin
-        CATWTR^.tFactoryObject.Disconnect;
         end;
      end;
   CATWTR^.tCATPortHandle := INVALID_HANDLE_VALUE;

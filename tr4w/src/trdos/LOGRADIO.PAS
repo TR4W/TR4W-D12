@@ -325,6 +325,11 @@ type
       // Initialize, which runs on the reading thread once Connect starts.
       procedure AdoptFactoryObject;
       procedure SetUpRadioInterface;
+      // Stops the polling thread and frees the factory object, leaving the slot
+      // genuinely empty.  Split out of SetUpRadioInterface because CLEARING a
+      // slot needs exactly this and nothing else -- see the call in
+      // CheckAndInitializePorts_ForThisRadio.
+      procedure ShutDownRadioInterface;
       procedure StopSendingCW;
       //    procedure StartNextPoll;
       //    function TimeToGiveUp: boolean;
@@ -1650,6 +1655,15 @@ begin
    // path had never been exercised until 2026-08-02.
    if (RadioModel = NoInterfacedRadio) and (Self.FactoryId = '') then
       begin
+      // "No radio configured" must also mean "STOP whatever was here".  A
+      // profile that CLEARS a slot lands exactly here, and returning early
+      // skipped SetUpRadioInterface -- the only thing that frees the old
+      // factory object and stops its polling thread.  NY4I switched from the
+      // K4/K3 profile to a K4-only one and the K3 kept polling from 14:16:56
+      // until the program closed at 14:22:10, so the main window went on
+      // showing its frequency (2026-08-08).
+      Self.ShutDownRadioInterface;
+      ClearRadioStatus(@Self);
       Exit;
       end;
    ResolveSerialFrameSettings;
@@ -2263,6 +2277,30 @@ begin
    Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
 end;
 
+procedure RadioObject.ShutDownRadioInterface;
+begin
+   if Self.tFactoryObject = nil then
+      begin
+      Exit;
+      end;
+
+   logger.Info('[%s.ShutDownRadioInterface] Stopping polling thread', [Self.RadioName]);
+   Self.PollingStopRequested := True;
+   if Self.tRadioInterfaceThreadHandle <> 0 then
+      begin
+      WaitForSingleObject(Self.tRadioInterfaceThreadHandle, 3000);
+      CloseHandle(Self.tRadioInterfaceThreadHandle);
+      Self.tRadioInterfaceThreadHandle := 0;
+      Self.tRadioInterfaceThreadID := 0;
+      end;
+   Self.PollingStopRequested := False;
+
+   logger.Info('[%s.ShutDownRadioInterface] Freeing radio object', [Self.RadioName]);
+   Self.tFactoryObject.Disconnect;
+   Self.tFactoryObject.Free;
+   Self.tFactoryObject := nil;
+end;
+
 procedure RadioObject.SetUpRadioInterface;
 var
    hand: HWND;
@@ -2272,23 +2310,7 @@ var
 begin
    // If a radio object already exists, stop the polling thread and free it before creating a new one.
    // This prevents the old thread from accessing freed memory (dangling pointer AV).
-   if Self.tFactoryObject <> nil then
-      begin
-      logger.Info('[%s.SetUpRadioInterface] Stopping polling thread before reinit', [Self.RadioName]);
-      Self.PollingStopRequested := True;
-      if Self.tRadioInterfaceThreadHandle <> 0 then
-         begin
-         WaitForSingleObject(Self.tRadioInterfaceThreadHandle, 3000);
-         CloseHandle(Self.tRadioInterfaceThreadHandle);
-         Self.tRadioInterfaceThreadHandle := 0;
-         Self.tRadioInterfaceThreadID := 0;
-         end;
-      Self.PollingStopRequested := False;
-      logger.Info('[%s.SetUpRadioInterface] Freeing existing radio object before reinit', [Self.RadioName]);
-      Self.tFactoryObject.Disconnect;
-      Self.tFactoryObject.Free;
-      Self.tFactoryObject := nil;
-      end;
+   Self.ShutDownRadioInterface;
 
    // INVARIANT: a HamLib-only radio always uses HamLib.  TR4W has no native CAT
    // implementation for these models, so the serial path would start a polling
