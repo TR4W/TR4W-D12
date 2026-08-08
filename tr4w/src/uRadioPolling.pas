@@ -737,6 +737,18 @@ begin
             ((rig.BandMemory <> rig.FilteredStatus.Band) or
              (rig.ModeMemory <> rig.FilteredStatus.Mode)) then
             begin
+               // INFO, not trace: this is the ONE place the main window's band
+               // and mode change, and when the display jumps the first question
+               // is always "which radio said so, and off what frequency".  A
+               // trace-level line does not answer it, because nobody is running
+               // at trace when the glitch happens (NY4I, 2026-08-08: a corrupt
+               // CI-V frame moved the band mid-QSO and only the raw hex dump
+               // could explain it afterwards).
+               logger.Info('[Band/Mode] %s -> band %d->%d, mode %d->%d, at %d Hz',
+                           [rig.RadioName,
+                            Ord(ActiveBand), Ord(rig.FilteredStatus.Band),
+                            Ord(ActiveMode), Ord(rig.FilteredStatus.Mode),
+                            rig.FilteredStatus.Freq]);
                ActiveBand := rig.FilteredStatus.Band;
                ActiveMode := rig.FilteredStatus.Mode;
                DisplayBandMode(ActiveBand, ActiveMode, False);

@@ -51,7 +51,28 @@ function IcomBCDToByte(bcd: Byte): Byte;
 // Frequency BCD encoding (5 bytes, LSB first — CI-V $03/$05 format)
 // ---------------------------------------------------------------------------
 
+const
+   // Not 0: zero is a value a radio could conceivably report, and a caller that
+   // forgot to check would treat it as band 160 -- BandType's FIRST member is
+   // Band160, so a silent zero reads as a perfectly legal band.
+   FREQ_INVALID = -1;
+
 function IcomFreqToBCD(freq: LongInt): AnsiString;
+
+// True when every byte is a legal packed-BCD pair (both nibbles 0-9).  A real
+// Icom never sends anything else in a frequency payload, so a byte like $E0
+// means the frame is corrupt: on the shared one-wire CI-V bus the radio's
+// unsolicited transceive broadcast can collide with our own outgoing bytes.
+function IcomBCDIsValid(bcd: AnsiString): boolean;
+
+// Returns FREQ_INVALID when the payload is not valid BCD, rather than
+// fabricating a number from it.  Not defensive programming for its own sake:
+// IcomBCDToByte($E0) is 140 and Format('%.2d', [140]) emits THREE digits, so
+// one corrupt nibble shifts every digit left and turns a single bad byte into
+// a wildly wrong frequency.  NY4I's IC-7100 received
+// FE FE 00 88 00 00 02 E0 21 00 FD -- its own $21 query colliding with a
+// transceive push -- and TR4W read it as 211400200 Hz, jumping the displayed
+// band while he was tuning (2026-08-08).  CALLERS MUST TEST THE RESULT.
 function IcomBCDToFreq(bcd: AnsiString): LongInt;
 
 // ---------------------------------------------------------------------------
@@ -103,11 +124,34 @@ begin
       end;
 end;
 
+function IcomBCDIsValid(bcd: AnsiString): boolean;
+var
+   i : Integer;
+   v : Byte;
+begin
+   Result := Length(bcd) > 0;
+   for i := 1 to Length(bcd) do
+      begin
+      v := Ord(bcd[i]);
+      if ((v and $0F) > 9) or (((v shr 4) and $0F) > 9) then
+         begin
+         Result := False;
+         Exit;
+         end;
+      end;
+end;
+
 function IcomBCDToFreq(bcd: AnsiString): LongInt;
 var
    i       : Integer;
    freqStr : string;
 begin
+   if not IcomBCDIsValid(bcd) then
+      begin
+      Result := FREQ_INVALID;
+      Exit;
+      end;
+
    // BCD is LSB first — walk backwards to get MSB first decimal string.
    freqStr := '';
    for i := Length(bcd) downto 1 do

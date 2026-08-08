@@ -55,6 +55,7 @@ type
       procedure Test_ValueToWPM_255;
       procedure Test_ValueToWPM_145;
       procedure Test_CWSpeed_RoundTrip;
+      procedure Test_CorruptBCDIsRejectedNotFabricated;
 
    public
       procedure RunAllTests; override;
@@ -345,6 +346,44 @@ begin
    Check(True);
 end;
 
+procedure TIcomCIVTests.Test_CorruptBCDIsRejectedNotFabricated;
+var
+   collided: AnsiString;
+begin
+   // THE EXACT PAYLOAD OFF NY4I'S BENCH, 2026-08-08.  His IC-7100 delivered
+   //    FE FE 00 88 00  00 02 E0 21 00  FD
+   // -- a transceive push whose payload had collided with TR4W's own outgoing
+   // $21 query on the shared one-wire CI-V bus.  $E0 is not a BCD pair.
+   //
+   // The old decode did not notice: IcomBCDToByte($E0) is 140, and
+   // Format('%.2d', [140]) writes THREE digits, so every digit shifted left and
+   // the frame read as 211400200 Hz.  That was pushed to VFO A and the
+   // displayed band jumped while he was tuning 40m.
+   BeginTest('a corrupt BCD frequency is rejected, never fabricated');
+
+   collided := AnsiChar($00) + AnsiChar($02) + AnsiChar($E0) +
+               AnsiChar($21) + AnsiChar($00);
+
+   CheckFalse(IcomBCDIsValid(collided), '$E0 is not a legal BCD pair');
+   CheckEquals(FREQ_INVALID, Integer(IcomBCDToFreq(collided)),
+               'a corrupt payload must report invalid, not invent a frequency');
+
+   // The sentinel must not be mistakable for a band.  BandType's first member
+   // is Band160, so a 0 return would have read as a legal 160m reading -- which
+   // is why this is -1.
+   CheckTrue(FREQ_INVALID < 0, 'the sentinel must be impossible as a frequency');
+
+   // A GOOD payload is untouched: the guard must not cost real frames.
+   CheckTrue(IcomBCDIsValid(IcomFreqToBCD(7030940)), 'a real frequency is valid BCD');
+   CheckEquals(7030940, Integer(IcomBCDToFreq(IcomFreqToBCD(7030940))),
+               'valid payloads decode exactly as before');
+
+   // Every nibble position is checked, not just the first byte.
+   CheckFalse(IcomBCDIsValid(AnsiChar($00) + AnsiChar($00) + AnsiChar($00) +
+                             AnsiChar($00) + AnsiChar($0A)),
+              'a bad low nibble in the LAST byte is still caught');
+end;
+
 // ---------------------------------------------------------------------------
 // RunAllTests
 // ---------------------------------------------------------------------------
@@ -371,6 +410,7 @@ begin
    Test_BCD_FreqRoundTrip_40m;
    Test_BCD_FreqRoundTrip_6m;
    Test_BCD_FreqRoundTrip_1296MHz;
+   Test_CorruptBCDIsRejectedNotFabricated;
 
    // RIT/XIT offset BCD
    Test_OffsetToBCD_Zero;
