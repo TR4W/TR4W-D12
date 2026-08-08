@@ -57,8 +57,11 @@ uses
    uTestRadioConfigLegacyMap in 'uTestRadioConfigLegacyMap.pas',
    uKeyerConfigStore    in '..\..\src\uKeyerConfigStore.pas',
    uTR4WConfigFile      in '..\..\src\uTR4WConfigFile.pas',
+   uUDPBroadcastConfig  in '..\..\src\uUDPBroadcastConfig.pas',
+   uUDPBroadcaster      in '..\..\src\uUDPBroadcaster.pas',
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
    uTestTR4WConfigFile  in 'uTestTR4WConfigFile.pas',
+   uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
    uFreqTimeFormat      in '..\..\src\uFreqTimeFormat.pas',
@@ -229,6 +232,7 @@ begin
    WriteLn('=== TR4W Unit Tests ===');
    WriteLn('');
 
+   RegisterSuite(TUDPBroadcasterTests.Create('UDPBroadcaster'));
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));

@@ -504,7 +504,9 @@ uses
   // uDocumentation,
 {$IFEND}
 
-  uFMXSpikeForm,    // SPIKE ONLY -- the FMXTEST command; remove with the spike
+  uFMXSpikeForm,    // SPIKE ONLY -- the FMXTEST command, remove with the spike
+  uUDPBroadcastConfig, // TUDPStream / usLookup
+  uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
   uFMXDesignedProbe, // SPIKE ONLY -- the FMXDESIGN command; remove with the spike
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uRadioPolling,
@@ -1072,7 +1074,7 @@ begin
       else
         WindowDupeCheck;
       tempRXData.Callsign := CallWindowString;
-      if UDPBroadcastLookup then
+      if UDPBroadcaster.Enabled(usLookup) then
       begin
         LookupInfoToUDP(tempRXData);
       end;

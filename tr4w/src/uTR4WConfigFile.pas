@@ -50,19 +50,25 @@ uses
    System.Classes,
    System.JSON,
    System.IOUtils,
+   System.IniFiles,
    uRadioConfigStore,
-   uKeyerConfigStore;
+   uKeyerConfigStore,
+   uUDPBroadcastConfig;
 
 const
    // The keyer library's section. The radio store's keys stay private to it;
    // this unit only needs to name what it adds.
    JSONKEY_KEYERS = 'keyers';
+   // The UDP broadcast settings. One object, not a list: there is one
+   // destination, unlike radios and keyers which are libraries of definitions.
+   JSONKEY_UDP    = 'udpBroadcast';
 
 // Writes every library into one file, atomically. Creates the directory if it
 // does not exist, exactly as the radio store did when it owned the file.
 procedure SaveConfig(const aFileName: string;
                      const aRadios: TRadioConfigStore;
-                     const aKeyers: TKeyerConfigStore);
+                     const aKeyers: TKeyerConfigStore;
+                     const aUDP: TUDPBroadcastConfig = nil);
 
 // Reads every library from one file. Returns False with a reason when the file
 // is unreadable or is not a JSON object; a MISSING SECTION is not an error --
@@ -70,13 +76,22 @@ procedure SaveConfig(const aFileName: string;
 function LoadConfig(const aFileName: string;
                     const aRadios: TRadioConfigStore;
                     const aKeyers: TKeyerConfigStore;
-                    out aError: string): boolean;
+                    out aError: string;
+                    const aUDP: TUDPBroadcastConfig = nil): boolean;
+
+// The UDP settings as they should stand at startup: from the JSON section when
+// it is there, otherwise SEEDED from whatever the operator's ini already holds.
+// One-time migration in the only place that can know it is needed -- without it
+// the CFGCA rows going inert would silently reset every station's broadcast
+// settings to the defaults.  Caller owns the result.
+function LoadUDPForStartup(const aFileName, aIniFileName: string): TUDPBroadcastConfig;
 
 implementation
 
 procedure SaveConfig(const aFileName: string;
                      const aRadios: TRadioConfigStore;
-                     const aKeyers: TKeyerConfigStore);
+                     const aKeyers: TKeyerConfigStore;
+                     const aUDP: TUDPBroadcastConfig = nil);
 var
    root: TJSONObject;
    dir: string;
@@ -97,6 +112,11 @@ begin
          root.AddPair(JSONKEY_KEYERS, aKeyers.ToJSON);
          end;
 
+      if aUDP <> nil then
+         begin
+         root.AddPair(JSONKEY_UDP, aUDP.ToJSON);
+         end;
+
       // See the unit header: formatted, and no BOM.
       TFile.WriteAllBytes(aFileName, TEncoding.UTF8.GetBytes(root.Format(2)));
    finally
@@ -107,7 +127,8 @@ end;
 function LoadConfig(const aFileName: string;
                     const aRadios: TRadioConfigStore;
                     const aKeyers: TKeyerConfigStore;
-                    out aError: string): boolean;
+                    out aError: string;
+                    const aUDP: TUDPBroadcastConfig = nil): boolean;
 var
    text: string;
    value: TJSONValue;
@@ -162,10 +183,85 @@ begin
          // existed. Not an error -- the store simply stays empty.
          end;
 
+      if aUDP <> nil then
+         begin
+         section := root.GetValue(JSONKEY_UDP);
+         if section is TJSONObject then
+            begin
+            aUDP.FromJSON(TJSONObject(section));
+            end;
+         // Absent means a file written before the UDP settings moved here. NOT
+         // an error and NOT a reset: the object keeps the defaults it was
+         // created with, and LoadUDPForStartup is what seeds the operator's
+         // real values from the ini in that case.
+         end;
+
       Result := True;
    finally
       root.Free;
    end;
+end;
+
+function LoadUDPForStartup(const aFileName, aIniFileName: string): TUDPBroadcastConfig;
+var
+   radios: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   ini: TIniFile;
+   err: string;
+   hasSection: boolean;
+   text: string;
+   value: TJSONValue;
+begin
+   Result := TUDPBroadcastConfig.Create;   // documented defaults
+
+   // Is there a udp section at all?  Asked directly rather than inferred from
+   // LoadConfig succeeding, because a file that loads fine but predates this
+   // section must still be seeded -- "loaded" and "has UDP settings" are not
+   // the same question.
+   hasSection := False;
+   if TFile.Exists(aFileName) then
+      begin
+      try
+         text  := TFile.ReadAllText(aFileName, TEncoding.UTF8);
+         value := TJSONObject.ParseJSONValue(text);
+         try
+            hasSection := (value is TJSONObject) and
+                          (TJSONObject(value).GetValue(JSONKEY_UDP) is TJSONObject);
+         finally
+            value.Free;
+         end;
+      except
+         // Unreadable is handled below by LoadConfig, which reports it.
+         hasSection := False;
+      end;
+      end;
+
+   if hasSection then
+      begin
+      radios := TRadioConfigStore.Create;
+      keyers := TKeyerConfigStore.Create;
+      try
+         LoadConfig(aFileName, radios, keyers, err, Result);
+      finally
+         keyers.Free;
+         radios.Free;
+      end;
+      Exit;
+      end;
+
+   // No section: this is the one-time move.  Read what the ini already holds,
+   // key by key, defaulting to what the object already has -- see
+   // TUDPBroadcastConfig.SeedFromLegacyIni for why an absent key must keep the
+   // default rather than read as False or 0.
+   if (aIniFileName <> '') and TFile.Exists(aIniFileName) then
+      begin
+      ini := TIniFile.Create(aIniFileName);
+      try
+         Result.SeedFromLegacyIni(ini);
+      finally
+         ini.Free;
+      end;
+      end;
 end;
 
 end.

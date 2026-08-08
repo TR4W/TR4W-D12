@@ -80,6 +80,8 @@ uses
   uRadioConfigStore in 'src\uRadioConfigStore.pas',
   uKeyerConfigStore in 'src\uKeyerConfigStore.pas',
   uKeyerConfigApply in 'src\uKeyerConfigApply.pas',
+  uUDPBroadcastConfig in 'src\uUDPBroadcastConfig.pas',
+  uUDPBroadcaster in 'src\uUDPBroadcaster.pas',
   uTR4WConfigFile in 'src\uTR4WConfigFile.pas',
   uRadioConfigLegacyMap in 'src\uRadioConfigLegacyMap.pas',
   uRadioConfigApply in 'src\uRadioConfigApply.pas',
