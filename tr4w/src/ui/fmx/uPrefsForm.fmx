@@ -128,6 +128,95 @@ object PrefsForm: TPrefsForm
       Visible = False
       TabOrder = 0
     end
+    object layCW: TLayout
+      Tag = 11
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Visible = False
+      object lblMyKeyers: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'CW keying devices'
+        TabOrder = 0
+      end
+      object lstKeyers: TListBox
+        Position.X = 12.000000000000000000
+        Position.Y = 30.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 150.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        OnDblClick = HandleKeyerDblClick
+        DisableFocusEffect = True
+        DefaultItemStyles.ItemStyle = ''
+        DefaultItemStyles.GroupHeaderStyle = ''
+        DefaultItemStyles.GroupFooterStyle = ''
+        Viewport.Width = 416.000000000000000000
+        Viewport.Height = 146.000000000000000000
+      end
+      object btnAddKeyer: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 30.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Add...'
+        TextSettings.Trimming = None
+        OnClick = HandleAddKeyer
+      end
+      object btnEditKeyer: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 62.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Edit...'
+        TextSettings.Trimming = None
+        OnClick = HandleEditKeyer
+      end
+      object btnDuplicateKeyer: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 94.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Duplicate'
+        TextSettings.Trimming = None
+        OnClick = HandleDuplicateKeyer
+      end
+      object btnRemoveKeyer: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 126.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = 'Remove'
+        TextSettings.Trimming = None
+        OnClick = HandleRemoveKeyer
+      end
+      object lblKeyerHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 195.000000000000000000
+        Size.Width = 540.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Only devices with their own settings live here - a WinKeyer or a Y' +
+          'CCC SO2R+ box.  Keying on a radio'#39's own port, or by CAT, is part o' +
+          'f that radio'#39's setup; a station profile then chooses which method ' +
+          'each slot uses.'
+        TabOrder = 6
+      end
+    end
     object layHardware: TLayout
       Tag = 2
       Size.Width = 675.000000000000000000
