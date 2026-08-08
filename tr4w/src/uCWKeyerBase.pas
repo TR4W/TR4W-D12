@@ -109,6 +109,22 @@ var
 //   re-selection events.
 function ActiveCWKeyer: TCWKeyer;
 
+// Set when a station PROFILE decided the keying, which makes the CW-by-CAT
+// versus hardware-keyer combination a STATEMENT rather than an ambiguity: the
+// profile names one CW output per slot, and it does so by writing the per-radio
+// CWByCAT that ActiveCWKeyer already tests.  A K3 on a WinKeyer alongside a
+// 7100 on CAT then resolves correctly by radio, with nothing left to guess.
+//
+// False for a station with no library -- the ini states both facts globally and
+// genuinely cannot say which should win, which is what the warning was written
+// for.  Defaulting to False keeps that station's behaviour unchanged.
+var
+   KeyerSelectionIsProfileDriven: boolean = False;
+
+// Whether the CAT-vs-hardware-keyer combination is worth warning about.
+// Separated from the logging so the RULE can be tested; the Warn itself cannot.
+function CATAndHardwareKeyerIsAmbiguous: boolean;
+
 // Once, after config load (LogCfg): a single Warn per conflicting keyer
 // configuration, so the log explains surprising keying instead of the operator
 // discovering precedence by experiment.
@@ -201,20 +217,38 @@ begin
       end;
 end;
 
-procedure WarnIfKeyerConfigsConflict;
+function CATAndHardwareKeyerIsAmbiguous: boolean;
 var
    catConfigured: boolean;
 begin
+   Result := False;
+   if KeyerSelectionIsProfileDriven then
+      begin
+      // The profile said which output each slot uses; there is nothing to warn
+      // about. See the declaration.
+      Exit;
+      end;
+
+   catConfigured :=
+      (Radio1.CWByCAT and Radio1.HasCapability(rcCWByCAT)) or
+      (Radio2.CWByCAT and Radio2.HasCapability(rcCWByCAT));
+
+   Result := catConfigured and
+             (WinKeySettings.wksWinKey2Enable or YCCCSo2rEnable);
+end;
+
+procedure WarnIfKeyerConfigsConflict;
+begin
+   // STILL a conflict under a profile: both of these are global enables, only
+   // one can key, and YCCC SO2R ENABLE is csNew -- still owned by the ini, not
+   // by the keyer library. Revisit when YCCC joins the library.
    if WinKeySettings.wksWinKey2Enable and YCCCSo2rEnable then
       begin
       logger.Warn('CW keyer config conflict: WINKEYER ENABLE and YCCC SO2R ENABLE are both set. '
                 + 'The WinKeyer wins when it opens; the YCCC box will not key CW.');
       end;
-   catConfigured :=
-      (Radio1.CWByCAT and Radio1.HasCapability(rcCWByCAT)) or
-      (Radio2.CWByCAT and Radio2.HasCapability(rcCWByCAT));
-   if catConfigured and
-      (WinKeySettings.wksWinKey2Enable or YCCCSo2rEnable) then
+
+   if CATAndHardwareKeyerIsAmbiguous then
       begin
       logger.Warn('CW keyer config conflict: CW BY CAT is enabled on a capable radio together with '
                 + 'a WinKeyer/YCCC keyer. CW-by-CAT wins while that radio is active; the hardware '

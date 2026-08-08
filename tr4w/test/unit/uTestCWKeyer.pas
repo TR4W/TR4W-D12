@@ -34,6 +34,7 @@ type
       procedure Test_FacadeBusyAndDeleteRouting;
       procedure Test_FlushOrderAndBroadcast;
       procedure Test_SetSpeedBroadcast;
+      procedure Test_ProfileDrivenSelectionIsNotAConflict;
    public
       procedure RunAllTests; override;
    end;
@@ -426,6 +427,43 @@ begin
    end;
 end;
 
+procedure TCWKeyerTests.Test_ProfileDrivenSelectionIsNotAConflict;
+var
+   savedProfileDriven, savedEnable, savedCWByCAT: boolean;
+   savedModel: InterfacedRadioType;
+begin
+   // The CW-by-CAT-plus-hardware-keyer warning predates station profiles.  A
+   // profile names ONE CW output per slot and writes it as the per-radio
+   // CWByCAT that ActiveCWKeyer already tests, so a K3 on a WinKeyer alongside
+   // a 7100 on CAT resolves by radio with nothing left to guess (NY4I,
+   // 2026-08-08).  Without a profile the ini states both facts globally and
+   // cannot say which wins -- that station must still be warned.
+   BeginTest('a profile-driven keyer selection is a statement, not a conflict');
+   savedProfileDriven := KeyerSelectionIsProfileDriven;
+   savedEnable        := WinKeySettings.wksWinKey2Enable;
+   savedCWByCAT       := Radio1.CWByCAT;
+   savedModel         := Radio1.RadioModel;
+   try
+      // The exact combination NY4I saw: CAT on a capable radio AND a WinKeyer.
+      Radio1.RadioModel := K3;
+      Radio1.CWByCAT := True;
+      WinKeySettings.wksWinKey2Enable := True;
+
+      KeyerSelectionIsProfileDriven := False;
+      CheckTrue(CATAndHardwareKeyerIsAmbiguous,
+                'with no profile the ini cannot say which wins -- still warn');
+
+      KeyerSelectionIsProfileDriven := True;
+      CheckFalse(CATAndHardwareKeyerIsAmbiguous,
+                 'a profile stated the output per slot -- nothing to warn about');
+   finally
+      Radio1.RadioModel := savedModel;
+      Radio1.CWByCAT := savedCWByCAT;
+      WinKeySettings.wksWinKey2Enable := savedEnable;
+      KeyerSelectionIsProfileDriven := savedProfileDriven;
+   end;
+end;
+
 procedure TCWKeyerTests.RunAllTests;
 begin
    Test_SelectionPrecedence;
@@ -436,6 +474,7 @@ begin
    Test_FacadeBusyAndDeleteRouting;
    Test_FlushOrderAndBroadcast;
    Test_SetSpeedBroadcast;
+   Test_ProfileDrivenSelectionIsNotAConflict;
 end;
 
 end.

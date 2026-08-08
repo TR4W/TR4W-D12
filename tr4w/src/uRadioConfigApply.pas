@@ -156,6 +156,7 @@ uses
    uTR4WConfigFile,     // LoadConfig -- both libraries live in the one file
    LOGRADIO,
    LOGK1EA,    // ActiveRadio
+   uCWKeyerBase,   // KeyerSelectionIsProfileDriven
    LogCW,
    LOGWIND,
    MainUnit;   // logger
@@ -363,6 +364,12 @@ begin
    // configured -- enabling a keyer we failed to set up would start its thread
    // against a port we never validated.
    SetWinKeyerEnabled(winKeyer <> nil);
+
+   // A profile STATED the CW output for each slot, so the CW-by-CAT versus
+   // hardware-keyer combination is no longer an ambiguity to warn about: the
+   // per-slot choice is written as the per-radio CWByCAT that ActiveCWKeyer
+   // already tests, so it resolves by radio.  The warning predates profiles.
+   KeyerSelectionIsProfileDriven := True;
 
    if winKeyer <> nil then
       begin
