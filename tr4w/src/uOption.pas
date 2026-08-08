@@ -340,10 +340,12 @@ begin
   end;
 
   for Command := 1 to CommandsArraySize do
-    // csOwned joins csRem here: both are hidden from this dialog, but only
-    // csRem is inert.  A csOwned command is still applied by CheckCommand --
-    // it simply has a better home (Preferences) than a flat global list.
-    if not (CFGCA[Command].crS in [csRem, csOwned]) then
+    // Three reasons a row is hidden from Ctrl-J, and they are NOT the same:
+    //   csRem   withdrawn -- inert.
+    //   csJSON  moved to settings	r4w.json -- inert; Preferences owns it now.
+    //   csOwned another dialog owns the UI, but CheckCommand STILL APPLIES it,
+    //           so the ini value remains the transport.
+    if not (CFGCA[Command].crS in [csRem, csOwned, csJSON]) then
       if CFGCA[Command].crType in [ctFreqList, ctURL, ctCaseSensitive, ctPassword, ctPortLPT, ctDirectory, ctFileName, ctAlphaChar, ctChar, ctBand, ctReal, ctByte, ctInteger, ctMessage, ctWord, ctString, ctBoolean, ctOther, ctMultiplier] then
       begin
 

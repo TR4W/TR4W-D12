@@ -312,7 +312,7 @@ const
 
    // Indexed by CFGStatus -- adding a status without adding a name here is a
    // compile error, which is how csOwned's missing entry was caught.
-   CFGStatusArray: array[CFGStatus] of PAnsiChar = ('New', 'Old', 'Removed', 'Preferences');
+   CFGStatusArray: array[CFGStatus] of PAnsiChar = ('New', 'Old', 'Removed', 'Preferences', 'JSON');
 
    CFGTypeStringArray: array[CFGType] of PAnsiChar = (nil, 'Directory', 'FileName',
       'String', 'Multiplier', 'Boolean', 'Real', 'Byte', 'Integer', 'Integer',
@@ -866,23 +866,23 @@ const
  (crCommand: 'WEIGHT';                        crAddress: @Weight;                                         crMin:5;  crMax:15;        crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
  (crCommand: 'WIDE FREQUENCY DISPLAY';        crAddress: nil;                                             crMin:0;  crMax:0;         crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'WILDCARD PARTIALS';             crAddress: @WildCardPartials;                               crMin:0;  crMax:0;         crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'WK AUTOSPACE';                  crAddress: @WinKeySettings.wksAutospace;                    crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK CT SPACING';                 crAddress: @WinKeySettings.wksCTSpacing;                    crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK DIT DAH RATIO';              crAddress: @WinKeySettings.wksValueList.vlDitDahRatio;      crMin:33; crMax:66;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK ENABLE';                     crAddress: @WinKeySettings.wksWinKey2Enable;                crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK FIRST EXTENSION';            crAddress: @WinKeySettings.wksValueList.vl1stExtension;     crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK IGNORE SPEED POT';           crAddress: @WinKeySettings.wksIgnoreSpeedSpot;              crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK KEYER COMPENSATION';         crAddress: @WinKeySettings.wksValueList.vlKeyCompensation;  crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK KEYER MODE';                 crAddress: pointer(47);                                     crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
- (crCommand: 'WK LEADIN TIME';                crAddress: @WinKeySettings.wksValueList.vlLeadInTime;       crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK PADDLE ONLY SIDETONE';       crAddress: @WinKeySettings.wksPadOnlySideT;                 crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK PADDLE SWAP';                crAddress: @WinKeySettings.wksPaddleSwap;                   crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK PADDLE SWITCHPOINT';         crAddress: @WinKeySettings.wksValueList.vlPaddleSWPoint;    crMin:10; crMax:90;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK PORT';                       crAddress: pointer(46);                                     crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
- (crCommand: 'WK SIDETONE FREQUENCY';         crAddress: pointer(48);                                     crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
- (crCommand: 'WK SIDETONE ENABLE';            crAddress: @WinKeySettings.wksSideTEnable;                  crMin:0;  crMax:0;         crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'WK TAIL TIME';                  crAddress: @WinKeySettings.wksValueList.vlTailTime;         crMin:0;  crMax:250;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
- (crCommand: 'WK WEIGHT';                     crAddress: @WinKeySettings.wksValueList.vlWeight;           crMin:10; crMax:90;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK AUTOSPACE';                  crAddress: @WinKeySettings.wksAutospace;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK CT SPACING';                 crAddress: @WinKeySettings.wksCTSpacing;                    crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK DIT DAH RATIO';              crAddress: @WinKeySettings.wksValueList.vlDitDahRatio;      crMin:33; crMax:66;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK ENABLE';                     crAddress: @WinKeySettings.wksWinKey2Enable;                crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK FIRST EXTENSION';            crAddress: @WinKeySettings.wksValueList.vl1stExtension;     crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK IGNORE SPEED POT';           crAddress: @WinKeySettings.wksIgnoreSpeedSpot;              crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK KEYER COMPENSATION';         crAddress: @WinKeySettings.wksValueList.vlKeyCompensation;  crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK KEYER MODE';                 crAddress: pointer(47);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
+ (crCommand: 'WK LEADIN TIME';                crAddress: @WinKeySettings.wksValueList.vlLeadInTime;       crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK PADDLE ONLY SIDETONE';       crAddress: @WinKeySettings.wksPadOnlySideT;                 crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK PADDLE SWAP';                crAddress: @WinKeySettings.wksPaddleSwap;                   crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK PADDLE SWITCHPOINT';         crAddress: @WinKeySettings.wksValueList.vlPaddleSWPoint;    crMin:10; crMax:90;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK PORT';                       crAddress: pointer(46);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
+ (crCommand: 'WK SIDETONE FREQUENCY';         crAddress: pointer(48);                                     crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfWK; crType: ctOther; crNetwork: 0),
+ (crCommand: 'WK SIDETONE ENABLE';            crAddress: @WinKeySettings.wksSideTEnable;                  crMin:0;  crMax:0;         crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'WK TAIL TIME';                  crAddress: @WinKeySettings.wksValueList.vlTailTime;         crMin:0;  crMax:250;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
+ (crCommand: 'WK WEIGHT';                     crAddress: @WinKeySettings.wksValueList.vlWeight;           crMin:10; crMax:90;        crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfWK; crType: ctByte; crNetwork: 0),
  (crCommand: 'WINDOW SIZE';                   crAddress: pointer(5);                                      crMin:1;  crMax:15;        crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAppearance; crType: ctInteger; crNetwork: 1),
  (crCommand: 'WSJT-X BROADCAST PORT';         crAddress: @WSJTXUDPPort;                                   crMin:1;  crMax:65535;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),   // ny4i
  (crCommand: 'WSJT-X MULTICAST GROUP';        crAddress: @WSJTXMulticastGroup;                            crMin:0;  crMax:16;        crS: csNew; crA: 25; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctString;  crNetwork: 0),   // Issue 443
@@ -1132,7 +1132,11 @@ begin
             {if (CFGCA[i].crCommand[0] = 'Q') then
                   Result := False;   }
 
-            if CFGCA[i].crS = csRem then
+            // csJSON joins csRem: both are ACCEPTED so an old config file does
+            // not error, and both are INERT.  The difference is only why --
+            // csRem was withdrawn, csJSON moved to settings	r4w.json, which is
+            // now the system of record for it.
+            if CFGCA[i].crS in [csRem, csJSON] then
                begin
                   Result := True;
                   Exit;
