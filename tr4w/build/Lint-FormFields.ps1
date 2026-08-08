@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
    Checks that every published control field on a designed FMX form has a
    component of that name in the .fmx -- a mismatch is nil at run time, with no
@@ -66,6 +66,39 @@ function Get-PublishedControlFields {
    return $result
 }
 
+# Methods declared in the published region -- the only ones TWriter can bind an
+# event to. `procedure Foo(Sender: TObject);` / `function Foo: boolean;`
+function Get-PublishedMethodNames {
+   param([string] $PasText)
+
+   $result = @()
+   $m = [regex]::Match($PasText, '=\s*class\(TForm\)(.*?)^\s*(private|protected|public|strict)\b',
+                       [Text.RegularExpressions.RegexOptions]::Singleline -bor
+                       [Text.RegularExpressions.RegexOptions]::Multiline)
+   if (-not $m.Success) {
+      return $result
+   }
+
+   foreach ($f in [regex]::Matches($m.Groups[1].Value,
+                   '^\s*(?:procedure|function)\s+([A-Za-z_][A-Za-z0-9_]*)',
+                   [Text.RegularExpressions.RegexOptions]::Multiline -bor
+                   [Text.RegularExpressions.RegexOptions]::IgnoreCase)) {
+      $result += $f.Groups[1].Value
+   }
+   return $result
+}
+
+# Every `OnSomething = Handler` the resource asks the streamer to bind.
+function Get-ResourceEventHandlers {
+   param([string] $FmxText)
+   $names = @()
+   foreach ($m in [regex]::Matches($FmxText, '^\s*On[A-Za-z0-9_]*\s*=\s*([A-Za-z_][A-Za-z0-9_]*)\s*$',
+                                   [Text.RegularExpressions.RegexOptions]::Multiline)) {
+      $names += $m.Groups[1].Value
+   }
+   return $names
+}
+
 function Get-ResourceComponentNames {
    param([string] $FmxText)
    $names = @()
@@ -87,6 +120,20 @@ function Test-FormFields {
          $violations += ("{0}: published field '{1}' has no component of that name in the .fmx - it will be nil at run time" -f $DisplayPath, $f)
       }
    }
+
+   # THE OTHER DIRECTION, and the same silent failure. A .fmx stores an event as
+   # the NAME of a published method. Declared anywhere else -- private, public,
+   # or not at all -- it does not resolve, and the FORM FAILS TO LOAD with
+   # "Error reading <control>.OnChange: Invalid property value". Nothing catches
+   # it at compile time: the method is a perfectly legal declaration, just not in
+   # a region the streamer can see (NY4I, 2026-08-08, cbxRadio1.OnChange).
+   $methods = Get-PublishedMethodNames -PasText $PasText
+   foreach ($h in (Get-ResourceEventHandlers -FmxText $FmxText)) {
+      if ($methods -notcontains $h) {
+         $violations += ("{0}: .fmx binds an event to '{1}', which is not a PUBLISHED method - the form will fail to load" -f $DisplayPath, $h)
+      }
+   }
+
    return $violations
 }
 
@@ -114,6 +161,15 @@ function Invoke-SelfTest {
 
       # Only the PUBLISHED section counts: a private control field is not
       # streamed and must not be demanded of the resource.
+      # An event bound to a method the streamer cannot see.
+      @{ Name = 'handler_not_published'; Expect = 1
+         Pas = "type`r`n  TfrmX = class(TForm)`r`n    lblA: TLabel;`r`n    procedure HandleOK(Sender: TObject);`r`n  private`r`n    procedure HandlePrivate(Sender: TObject);`r`n  end;"
+         Fmx = "object frmX: TfrmX`r`n  object lblA: TLabel`r`n    OnChange = HandlePrivate`r`n  end`r`nend" },
+
+      @{ Name = 'handler_published_is_fine'; Expect = 0
+         Pas = "type`r`n  TfrmX = class(TForm)`r`n    lblA: TLabel;`r`n    procedure HandleOK(Sender: TObject);`r`n  private`r`n  end;"
+         Fmx = "object frmX: TfrmX`r`n  object lblA: TLabel`r`n    OnChange = HandleOK`r`n  end`r`nend" },
+
       @{ Name = 'private_fields_ignored'; Expect = 0
          Pas = "type`r`n  TfrmX = class(TForm)`r`n    lblA: TLabel;`r`n  private`r`n    lblPrivate: TLabel;`r`n  end;"
          Fmx = "object frmX: TfrmX`r`n  object lblA: TLabel`r`n  end`r`nend" }

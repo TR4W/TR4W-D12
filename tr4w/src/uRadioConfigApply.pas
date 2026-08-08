@@ -212,6 +212,7 @@ var
    typeRendering: TRadioTypeRendering;
    idKey, cmdValue: AnsiString;
    keyShort, valueShort: ShortString;
+   accepted: boolean;
 begin
    if aRadio <> nil then
       begin
@@ -239,34 +240,42 @@ begin
       keyShort   := ShortString(idKey);
       valueShort := ShortString(cmdValue);
 
-      // The ini write is PERSISTENCE only.  Skipping it leaves CheckCommand
-      // below to do the configuring, which is the half that actually matters
-      // at startup.
+      // VALIDATE FIRST, PERSIST SECOND.  CheckCommand is what actually moves the
+      // value into TR4W's globals; the ini write is only what makes it survive
+      // a restart.  The order used to be the other way round, so a value CFGCA
+      // REJECTED was still written to the operator's ini -- and the next
+      // startup stopped on it with "Invalid statement in config file".  That is
+      // not hypothetical: a cleared slot rendered RADIO TWO BAUD RATE=0, CFGCA
+      // refused it (it is ckArray), the warning was logged, the line was
+      // written anyway, and TR4W would not start (NY4I, 2026-08-08).
+      //
+      // A rejected key now leaves the ini untouched, so at worst the file keeps
+      // its previous value for that one key -- a stale line beats an unstartable
+      // program, and the warning still says the renderer and CFGCA have drifted.
+      accepted := CheckCommand(@keyShort, valueShort);
+      if not accepted then
+         begin
+         logger.Warn('[ApplyRadioToSlot] CFGCA did not accept "%s" = "%s" -- NOT written to the ini',
+                     [rendered[i].Key, rendered[i].Value]);
+         end;
+
       if aPersist then
          begin
          if rendered[i].Delete then
             begin
+            // A DELETE is always safe to persist: removing a key cannot make
+            // the file unparseable, and CheckCommand has no say in it.
             // nil, not '' -- a nil value REMOVES the key.  An empty string
             // would leave the key present with a blank value, which for
             // FACTORY ID is not the same thing at all.
             Windows.WritePrivateProfileStringA('Radio', @keyShort[1], nil,
                                                TR4W_INI_FILENAME);
             end
-         else
+         else if accepted then
             begin
             Windows.WritePrivateProfileStringA('Radio', @keyShort[1], @valueShort[1],
                                                TR4W_INI_FILENAME);
             end;
-         end;
-
-      // CheckCommand is what actually moves the value into TR4W's globals; the
-      // ini write above is only what makes it survive a restart.  A key CFGCA
-      // does not recognise answers False -- worth a warning, because it means
-      // the renderer and CFGCA have drifted apart.
-      if not CheckCommand(@keyShort, valueShort) then
-         begin
-         logger.Warn('[ApplyRadioToSlot] CFGCA did not accept "%s" = "%s"',
-                     [rendered[i].Key, rendered[i].Value]);
          end;
       end;
 

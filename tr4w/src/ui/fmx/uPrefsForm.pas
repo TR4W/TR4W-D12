@@ -158,6 +158,12 @@ type
       procedure HandleDeleteProfile(Sender: TObject);
       procedure HandleProfileChange(Sender: TObject);
       procedure HandleFieldChange(Sender: TObject);
+      // MUST live here, with the other streamed handlers.  The .fmx stores an
+      // event as the NAME of a PUBLISHED method; declared in a private section
+      // it does not resolve, and the form fails to load at run time with
+      // "Error reading cbxRadio1.OnChange: Invalid property value" -- no
+      // compile error anywhere (NY4I, 2026-08-08).
+      procedure HandleSlotRadioChange(Sender: TObject);
       procedure HandleActivate(Sender: TObject);
       procedure HandleOK(Sender: TObject);
       procedure HandleCancel(Sender: TObject);
@@ -221,7 +227,6 @@ type
       procedure FillCWOutputCombo(const aCombo: TComboBox;
                                   const aSelected, aRadioName: string);
       procedure CaptureProfileFields;
-      procedure HandleSlotRadioChange(Sender: TObject);
 
       procedure DiscardChanges;
       procedure EditorDone(const aAccepted: boolean);
