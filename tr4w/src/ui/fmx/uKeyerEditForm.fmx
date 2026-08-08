@@ -4,7 +4,7 @@ object frmKeyerEdit: TfrmKeyerEdit
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = Single
   Caption = 'CW keying device'
-  ClientHeight = 360
+  ClientHeight = 392
   ClientWidth = 570
   Position = ScreenCenter
   FormFactor.Width = 320
@@ -63,7 +63,7 @@ object frmKeyerEdit: TfrmKeyerEdit
     Position.X = 12.000000000000000000
     Position.Y = 110.000000000000000000
     Size.Width = 540.000000000000000000
-    Size.Height = 190.000000000000000000
+    Size.Height = 222.000000000000000000
     Size.PlatformDefault = False
     Text = 'WinKeyer settings'
     object lblWKKeyerMode: TLabel
@@ -186,9 +186,24 @@ object frmKeyerEdit: TfrmKeyerEdit
       Size.Height = 22.000000000000000000
       Size.PlatformDefault = False
     end
-    object chkWKAutospace: TCheckBox
+    object lblWKFirstExt: TLabel
       Position.X = 12.000000000000000000
       Position.Y = 126.000000000000000000
+      Size.Width = 120.000000000000000000
+      Size.Height = 17.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'First extension'
+    end
+    object edtWKFirstExt: TEdit
+      Position.X = 140.000000000000000000
+      Position.Y = 122.000000000000000000
+      Size.Width = 60.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object chkWKAutospace: TCheckBox
+      Position.X = 12.000000000000000000
+      Position.Y = 158.000000000000000000
       Size.Width = 190.000000000000000000
       Size.Height = 19.000000000000000000
       Size.PlatformDefault = False
@@ -196,7 +211,7 @@ object frmKeyerEdit: TfrmKeyerEdit
     end
     object chkWKCTSpacing: TCheckBox
       Position.X = 210.000000000000000000
-      Position.Y = 126.000000000000000000
+      Position.Y = 158.000000000000000000
       Size.Width = 190.000000000000000000
       Size.Height = 19.000000000000000000
       Size.PlatformDefault = False
@@ -204,7 +219,7 @@ object frmKeyerEdit: TfrmKeyerEdit
     end
     object chkWKIgnoreSpeedPot: TCheckBox
       Position.X = 400.000000000000000000
-      Position.Y = 126.000000000000000000
+      Position.Y = 158.000000000000000000
       Size.Width = 150.000000000000000000
       Size.Height = 19.000000000000000000
       Size.PlatformDefault = False
@@ -212,7 +227,7 @@ object frmKeyerEdit: TfrmKeyerEdit
     end
     object chkWKSidetoneEnable: TCheckBox
       Position.X = 12.000000000000000000
-      Position.Y = 152.000000000000000000
+      Position.Y = 184.000000000000000000
       Size.Width = 190.000000000000000000
       Size.Height = 19.000000000000000000
       Size.PlatformDefault = False
@@ -220,7 +235,7 @@ object frmKeyerEdit: TfrmKeyerEdit
     end
     object chkWKPaddleOnlySidetone: TCheckBox
       Position.X = 210.000000000000000000
-      Position.Y = 152.000000000000000000
+      Position.Y = 184.000000000000000000
       Size.Width = 190.000000000000000000
       Size.Height = 19.000000000000000000
       Size.PlatformDefault = False
@@ -228,7 +243,7 @@ object frmKeyerEdit: TfrmKeyerEdit
     end
     object chkWKPaddleSwap: TCheckBox
       Position.X = 400.000000000000000000
-      Position.Y = 152.000000000000000000
+      Position.Y = 184.000000000000000000
       Size.Width = 150.000000000000000000
       Size.Height = 19.000000000000000000
       Size.PlatformDefault = False
@@ -238,7 +253,7 @@ object frmKeyerEdit: TfrmKeyerEdit
   object btnOK: TButton
     Anchors = [akRight, akBottom]
     Position.X = 352.000000000000000000
-    Position.Y = 320.000000000000000000
+    Position.Y = 352.000000000000000000
     Size.Width = 90.000000000000000000
     Size.Height = 25.000000000000000000
     Size.PlatformDefault = False
@@ -249,7 +264,7 @@ object frmKeyerEdit: TfrmKeyerEdit
   object btnCancel: TButton
     Anchors = [akRight, akBottom]
     Position.X = 452.000000000000000000
-    Position.Y = 320.000000000000000000
+    Position.Y = 352.000000000000000000
     Size.Width = 90.000000000000000000
     Size.Height = 25.000000000000000000
     Size.PlatformDefault = False
