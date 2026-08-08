@@ -228,7 +228,8 @@ type
       procedure RefreshAll;
       function CurrentProfile: TStationProfile;
       function SelectedRadio: TRadioDefinition;
-      procedure FillRadioNameCombo(const aCombo: TComboBox; const aSelected: string);
+      procedure FillRadioNameCombo(const aCombo: TComboBox;
+                                   const aSelected, aUsedByOtherSlot: string);
       procedure FillCWOutputCombo(const aCombo: TComboBox;
                                   const aSelected, aRadioName: string);
       procedure CaptureProfileFields;
@@ -540,15 +541,39 @@ begin
       end;
 end;
 
-procedure TPrefsForm.FillRadioNameCombo(const aCombo: TComboBox; const aSelected: string);
+// aUsedByOtherSlot is the radio the OTHER slot already has.  One physical radio
+// cannot be both Radio 1 and Radio 2 -- it is one rig on one port, and putting
+// it in both slots makes TR4W open that port twice and poll itself.
+//
+// GREYED, NOT REMOVED.  A radio that silently vanished from the list would read
+// as a missing definition -- the operator would go looking for it in the
+// library.  Greyed says "this one is spoken for", which is the actual reason.
+// Same rule as the COM-port drop-down, and for the same reason.
+procedure TPrefsForm.FillRadioNameCombo(const aCombo: TComboBox;
+                                        const aSelected, aUsedByOtherSlot: string);
 var
    i: integer;
+   name: string;
+   item: TListBoxItem;
 begin
    aCombo.Clear;
    AddComboItem(aCombo, TC_PREFS_NONE, '');
    for i := 0 to FStore.RadioCount - 1 do
       begin
-      AddComboItem(aCombo, FStore.Radio(i).Name, FStore.Radio(i).Name);
+      name := FStore.Radio(i).Name;
+      item := AddComboItem(aCombo, name, name);
+
+      // The exception is THIS slot's own current value.  A profile written
+      // before this rule can legitimately hold the same radio twice, and
+      // disabling the very item the combo has to display would leave the
+      // control showing nothing at all -- hiding the conflict instead of
+      // showing it.
+      if (aUsedByOtherSlot <> '') and
+         SameText(name, aUsedByOtherSlot) and
+         (not SameText(name, aSelected)) then
+         begin
+         item.Enabled := False;
+         end;
       end;
    SelectByTag(aCombo, aSelected);
 end;
@@ -857,8 +882,8 @@ begin
       prof := CurrentProfile;
       if prof = nil then
          begin
-         FillRadioNameCombo(cbxRadio1, '');
-         FillRadioNameCombo(cbxRadio2, '');
+         FillRadioNameCombo(cbxRadio1, '', '');
+         FillRadioNameCombo(cbxRadio2, '', '');
          FillCWOutputCombo(cbxCW1, CWOUTPUT_NONE, '');
          FillCWOutputCombo(cbxCW2, CWOUTPUT_NONE, '');
          chkSpeedSync1.IsChecked := False;
@@ -867,8 +892,8 @@ begin
          end
       else
          begin
-         FillRadioNameCombo(cbxRadio1, prof.Radio1Name);
-         FillRadioNameCombo(cbxRadio2, prof.Radio2Name);
+         FillRadioNameCombo(cbxRadio1, prof.Radio1Name, prof.Radio2Name);
+         FillRadioNameCombo(cbxRadio2, prof.Radio2Name, prof.Radio1Name);
          FillCWOutputCombo(cbxCW1, prof.CWOutput1, prof.Radio1Name);
          FillCWOutputCombo(cbxCW2, prof.CWOutput2, prof.Radio2Name);
          chkSpeedSync1.IsChecked := prof.SpeedSync1;
@@ -1269,6 +1294,13 @@ begin
          begin
          FillCWOutputCombo(cbxCW1, SelectedTag(cbxCW1), SelectedTag(cbxRadio1));
          end;
+
+      // The OTHER slot's list is now stale: whatever this slot just took must
+      // become unavailable over there, and whatever it released must come back.
+      // Rebuilt preserving that slot's own selection, so refreshing the greying
+      // never changes a choice the operator made.
+      FillRadioNameCombo(cbxRadio1, SelectedTag(cbxRadio1), SelectedTag(cbxRadio2));
+      FillRadioNameCombo(cbxRadio2, SelectedTag(cbxRadio2), SelectedTag(cbxRadio1));
    finally
       FLoading := wasLoading;
    end;

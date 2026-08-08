@@ -194,6 +194,19 @@ type
       // every time a control joins the form; one flag cannot be forgotten.
       FBuilt: boolean;
 
+      // A SETTER because setting FTransport has an OBLIGATION: every control on
+      // the form is enabled, greyed or prompted according to the transport, and
+      // UpdateEnabledState is what applies that.  All four write sites honour it
+      // today -- by CONVENTION, which is exactly how TPrefsForm's dirty flag was
+      // held until a thirteenth site was added and silently broke it
+      // (2026-08-08).  The obligation belongs on the write, not on the writer.
+      //
+      // It deliberately does NOT move tbcTransport: the tab is the VIEW, this is
+      // the MODEL, and HandleTransportChange already syncs model from view -- a
+      // setter that pushed back to the tab would close that loop on itself.
+      procedure SetTransport(const aValue: TRadioTransport);
+      property Transport: TRadioTransport read FTransport write SetTransport;
+
       procedure PopulateTypeCombo;
       procedure PopulatePortCombos;
       procedure SetSerialFrame(const aFormat: string);
@@ -461,7 +474,7 @@ begin
       begin
       SelectByTag(cbxType, FRadio.RegistryId);
       end;
-   FTransport := FRadio.Transport;
+   Transport := FRadio.Transport;
    if FTransport = rtNetwork then
       begin
       tbcTransport.ActiveTab := tabNetwork;
@@ -803,15 +816,21 @@ begin
    // than leaving an impossible combination on screen.
    if SupportsNetworkId(id) and (not SupportsSerialId(id)) then
       begin
-      FTransport := rtNetwork;
+      Transport := rtNetwork;
       tbcTransport.ActiveTab := tabNetwork;
       end
    else if SupportsSerialId(id) and (not SupportsNetworkId(id)) then
       begin
-      FTransport := rtSerial;
+      Transport := rtSerial;
       tbcTransport.ActiveTab := tabSerial;
       end;
 
+   UpdateEnabledState;
+end;
+
+procedure TRadioEditForm.SetTransport(const aValue: TRadioTransport);
+begin
+   FTransport := aValue;
    UpdateEnabledState;
 end;
 
@@ -831,14 +850,12 @@ begin
    // off the active tab would do.
    if tbcTransport.ActiveTab = tabSerial then
       begin
-      FTransport := rtSerial;
+      Transport := rtSerial;
       end
    else if tbcTransport.ActiveTab = tabNetwork then
       begin
-      FTransport := rtNetwork;
+      Transport := rtNetwork;
       end;
-
-   UpdateEnabledState;
 end;
 
 procedure TRadioEditForm.HandleDiscover(Sender: TObject);
