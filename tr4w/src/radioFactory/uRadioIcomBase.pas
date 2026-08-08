@@ -722,6 +722,13 @@ begin
       Inc(pairNo);
       lowHz  := BCDToFreq(Copy(data, ix, 5));
       highHz := BCDToFreq(Copy(data, ix + 6, 5));
+      if (lowHz = FREQ_INVALID) or (highHz = FREQ_INVALID) then
+         begin
+         // A corrupt edge would define a band that swallows or excludes real
+         // frequencies for the rest of the session -- worse than not probing.
+         logger.Warn('[%s] band-edge reply has a corrupt BCD frequency -- ignored', [radioModel]);
+         Exit;
+         end;
       logger.Info('[%s] %s edge %d: %d Hz .. %d Hz  (separator $%.2x)',
                   [radioModel, tag, pairNo, lowHz, highHz, Ord(data[ix + 5])]);
 
@@ -1398,6 +1405,13 @@ begin
         if Length(data) >= 5 then
         begin
           freq := BCDToFreq(Copy(data, 1, 5));
+          if freq = FREQ_INVALID then
+            begin
+            // A collision on the one-wire CI-V bus, not a dial movement. Dropped
+            // rather than pushed: see IcomBCDToFreq.
+            logger.Warn('[%s] $00 push has a corrupt BCD frequency -- frame ignored', [radioModel]);
+            Exit;
+            end;
           // A $00 transceive push is how this radio reports the operator turning
           // the dial -- and on the IC-7100 it is the ONLY report of a band change
           // made at the rig, so the section watcher has to see it here as well as
@@ -1571,6 +1585,11 @@ begin
         if Length(data) >= 5 then
         begin
           freq := BCDToFreq(Copy(data, 1, 5));
+          if freq = FREQ_INVALID then
+            begin
+            logger.Warn('[%s] $03 reply has a corrupt BCD frequency -- frame ignored', [radioModel]);
+            Exit;
+            end;
           // $03 returns the currently selected VFO. We only call $03 from the
           // initial connect block (before $25/$00 is available) so treat it as VFO A.
           logger.Debug('[%s] $03 freq: %d Hz -> VFO A', [radioModel, freq]);
@@ -1589,6 +1608,11 @@ begin
         begin
           subCmd := Ord(data[1]);
           freq := BCDToFreq(Copy(data, 2, 5));
+          if freq = FREQ_INVALID then
+            begin
+            logger.Warn('[%s] $25 reply has a corrupt BCD frequency -- frame ignored', [radioModel]);
+            Exit;
+            end;
           // $25 $00 = selected (active) VFO → nrVFOA (top display slot)
           // $25 $01 = unselected VFO       → nrVFOB (bottom display slot)
           // Applies to all Icoms including IC-9700 where $00=selected may be
