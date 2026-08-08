@@ -201,6 +201,11 @@ type
       // reopening showed them as though they had been saved, which is the worst
       // of both behaviours.
       FDirty: boolean;
+      // FDirty is written from ten places.  A SETTER rather than ten calls to a
+      // refresh routine, because the eleventh would be the one that forgot --
+      // and a stale "Save" button is exactly the confusion this fixes.
+      procedure SetDirty(const aValue: boolean);
+      property Dirty: boolean read FDirty write SetDirty;
 
       procedure SelectFirstSection;
 
@@ -339,6 +344,11 @@ begin
    SelectFirstSection;
    LoadStore;
    RefreshAll;
+
+   // Through the SETTER, so the button starts greyed.  A freshly opened window
+   // has nothing unsaved, but the designer leaves every button enabled, and
+   // FDirty being False by default would never say so.
+   Dirty := False;
 end;
 
 // The nav sections are DESIGNED, not built here -- add one in the IDE, set its
@@ -758,7 +768,7 @@ begin
       FreeAndNil(FKeyerEditClone);
       end;
 
-   FDirty := True;
+   Dirty := True;
    RefreshAll;
 end;
 
@@ -775,7 +785,7 @@ begin
    copy := FKeyerStore.AddKeyer(FKeyerStore.UniqueKeyerName(source.Name), source.Kind);
    copy.Assign(source);
    copy.Name := FKeyerStore.UniqueKeyerName(source.Name);
-   FDirty := True;
+   Dirty := True;
    RefreshAll;
 end;
 
@@ -807,7 +817,7 @@ begin
       end;
 
    FKeyerStore.RemoveKeyer(target.Name);
-   FDirty := True;
+   Dirty := True;
    RefreshAll;
 end;
 
@@ -889,6 +899,20 @@ begin
    RefreshProfileFields;
 end;
 
+// "Save" is the only button whose effect is invisible: nothing on screen moves
+// when it is pressed, so it reads as a no-op and the whole Save / Save-and-close
+// / Cancel set starts to look redundant (NY4I, 2026-08-08).  Greying it when
+// there is nothing to commit gives it a visible meaning -- enabled says "there
+// are unsaved changes", greyed says "everything here is on disk".
+procedure TPrefsForm.SetDirty(const aValue: boolean);
+begin
+   FDirty := aValue;
+   if btnApply <> nil then
+      begin
+      btnApply.Enabled := FDirty;
+      end;
+end;
+
 procedure TPrefsForm.CaptureProfileFields;
 var
    prof: TStationProfile;
@@ -914,7 +938,7 @@ begin
    prof.SpeedSync2  := chkSpeedSync2.IsChecked;
    prof.SO2REnabled := chkSO2R.IsChecked;
 
-   FDirty := True;
+   Dirty := True;
 end;
 
 { -------------------------------------------------------------- events ---- }
@@ -1033,7 +1057,7 @@ begin
    copy.Name := FStore.UniqueRadioName(radio.Name);
    if FStore.AddRadio(copy, err) then
       begin
-      FDirty := True;
+      Dirty := True;
       RefreshAll;
       end
    else
@@ -1065,7 +1089,7 @@ begin
    // a dangling reference would be a profile that silently loses a radio.
    if FStore.DeleteRadio(radio.Name, err) then
       begin
-      FDirty := True;
+      Dirty := True;
       RefreshAll;
       end
    else
@@ -1112,7 +1136,7 @@ begin
       FreeAndNil(FEditClone);
       end;
 
-   FDirty := True;
+   Dirty := True;
    RefreshAll;
 end;
 
@@ -1132,7 +1156,7 @@ begin
    prof.Name := name;
    if FStore.AddProfile(prof, err) then
       begin
-      FDirty := True;
+      Dirty := True;
       RefreshProfileCombo;
       SelectByTag(cbxProfile, prof.Name);
       RefreshProfileFields;
@@ -1170,7 +1194,7 @@ begin
       FStore.ActiveProfileName := Trim(name);
       end;
    prof.Name := Trim(name);
-   FDirty := True;
+   Dirty := True;
    RefreshProfileCombo;
    SelectByTag(cbxProfile, prof.Name);
    RefreshProfileFields;
@@ -1188,7 +1212,7 @@ begin
       end;
    if FStore.DeleteProfile(prof.Name, err) then
       begin
-      FDirty := True;
+      Dirty := True;
       RefreshAll;
       end
    else
@@ -1269,7 +1293,7 @@ begin
       Exit;
       end;
 
-   FDirty := False;
+   Dirty := False;
 
    if not aActivate then
       begin
@@ -1343,7 +1367,7 @@ begin
    // what is actually stored rather than the edits just abandoned.
    FStore.Clear;
    LoadStore;
-   FDirty := False;
+   Dirty := False;
    RefreshAll;
 end;
 
