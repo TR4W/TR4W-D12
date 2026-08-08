@@ -100,10 +100,14 @@ type
 // The complete key set for one slot, in a fixed order.  aProfile may be nil,
 // in which case the radio's own CWByCAT/CWSpeedSync are used rather than the
 // profile's per-slot CW output.
+// aKeyerPort is the PORT of the keyer DEVICE the profile names, already looked
+// up by the caller -- this unit stays free of the keyer library, exactly as it
+// is free of the registry.  Empty when the profile names no device.
 function RenderRadioKeys(const aSlot: integer;
                          const aRadio: TRadioDefinition;
                          const aTypeRendering: TRadioTypeRendering;
-                         const aProfile: TStationProfile): TConfigKeyValues;
+                         const aProfile: TStationProfile;
+                         const aKeyerPort: string = ''): TConfigKeyValues;
 
 // The same key set, rendered for "there is no radio in this slot".  Used when
 // a profile fills only slot one: without it, slot two keeps whatever the
@@ -314,10 +318,30 @@ begin
       end;
 end;
 
+// Is this the PortTypeSA vocabulary rather than something else?  'NONE',
+// 'SERIAL n', 'LPT n' -- anything else would be rejected by CheckCommand.
+const
+   // The profile's radio-relative CW token, spelled as uKeyerConfigStore
+   // declares it (CWOUT_RADIOPORT).  Repeated rather than imported to keep this
+   // renderer dependency-free -- the same reason CWOUTPUT_CAT is not imported
+   // from the UI.  One vocabulary, two declarations, and a test that would fail
+   // if they diverged.
+   CWOUT_RADIOPORT = 'RADIOPORT';
+
+function LooksLikePortValue(const aValue: string): boolean;
+var
+   v: string;
+begin
+   v := UpperCase(Trim(aValue));
+   Result := (v = '') or (v = PORT_NONE) or
+             (Copy(v, 1, 7) = 'SERIAL ') or (Copy(v, 1, 4) = 'LPT ');
+end;
+
 function RenderRadioKeys(const aSlot: integer;
                          const aRadio: TRadioDefinition;
                          const aTypeRendering: TRadioTypeRendering;
-                         const aProfile: TStationProfile): TConfigKeyValues;
+                         const aProfile: TStationProfile;
+                         const aKeyerPort: string = ''): TConfigKeyValues;
 var
    slot: string;
    cwOutput: string;
@@ -428,10 +452,38 @@ begin
          cwByCAT   := False;
          keyerPort := PORT_NONE;
          end
+      else if SameText(cwOutput, CWOUT_RADIOPORT) then
+         begin
+         // Keying on the radio's OWN control port: the port is the radio's, not
+         // a device's.
+         cwByCAT   := False;
+         keyerPort := aRadio.KeyerOutputPort;
+         end
+      else if aKeyerPort <> '' then
+         begin
+         // The profile names a DEVICE, and the caller resolved its port.
+         cwByCAT   := False;
+         keyerPort := aKeyerPort;
+         end
       else
          begin
-         cwByCAT   := False;
-         keyerPort := cwOutput;
+         // A profile written BEFORE the keyer library holds a raw port value
+         // here, so it is passed through -- that is the migration path.
+         //
+         // It is also the last resort, and it must not emit a DEVICE NAME: the
+         // legacy key takes the PortTypeSA vocabulary, and CheckCommand rejects
+         // anything else with "Invalid statement in config file" at startup.
+         // That is exactly what a keyer named 'WinKeyer' produced (NY4I,
+         // 2026-08-08) once the profile started holding device names.
+         cwByCAT := False;
+         if LooksLikePortValue(cwOutput) then
+            begin
+            keyerPort := cwOutput;
+            end
+         else
+            begin
+            keyerPort := PORT_NONE;
+            end;
          end;
       end;
 
