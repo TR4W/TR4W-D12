@@ -79,6 +79,7 @@ uses
   // checks them against the live CFGCA/CAT surface on every build.
   uRadioConfigStore in 'src\uRadioConfigStore.pas',
   uKeyerConfigStore in 'src\uKeyerConfigStore.pas',
+  uKeyerConfigApply in 'src\uKeyerConfigApply.pas',
   uTR4WConfigFile in 'src\uTR4WConfigFile.pas',
   uRadioConfigLegacyMap in 'src\uRadioConfigLegacyMap.pas',
   uRadioConfigApply in 'src\uRadioConfigApply.pas',
