@@ -47,6 +47,12 @@ uses
 // wrong keyer mode is the kind of fault an operator blames on the hardware.
 function ApplyKeyerToWinKey(const aKeyer: TKeyerDefinition; out aError: string): boolean;
 
+// Whether the WinKeyer is in use at all.  Separate from ApplyKeyerToWinKey
+// because that is a property of the PROFILE, not of the device: the same keyer
+// sits on the desk whether or not tonight's profile keys through it.  Exposed
+// here so this unit stays the only one that touches WinKeySettings.
+procedure SetWinKeyerEnabled(const aEnabled: boolean);
+
 implementation
 
 uses
@@ -59,6 +65,11 @@ uses
 // because the STORE holds a spelling and the program holds an enum, and an
 // index would re-point silently the next time either list changed.  Returning
 // False on an unknown spelling is deliberate: see the interface note.
+procedure SetWinKeyerEnabled(const aEnabled: boolean);
+begin
+   WinKeySettings.wksWinKey2Enable := aEnabled;
+end;
+
 function KeyerModeFromString(const aText: string; out aMode: TWK2KeyerMode): boolean;
 var
    m: TWK2KeyerMode;
@@ -151,8 +162,12 @@ begin
       Exit;
       end;
 
-   WinKeySettings.wksWinKey2Port   := port;
-   WinKeySettings.wksWinKey2Enable := True;
+   // The PORT only.  Whether the WinKeyer is IN USE is a property of the
+   // profile, not of the device, so wksWinKey2Enable is settled once per
+   // profile by the caller -- see ApplyKeyersForProfile.  Enabling it here
+   // would mean a profile that stops using the keyer could never turn it off,
+   // because nothing would run to say so.
+   WinKeySettings.wksWinKey2Port := port;
 
    if Trim(aKeyer.WKKeyerMode) <> '' then
       begin

@@ -782,10 +782,22 @@ begin
       CheckEquals('NONE', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
                   'an unresolved device name must not reach the legacy key');
 
-      // With the port resolved, THAT is what is written.
-      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof, 'SERIAL 9');
-      CheckEquals('SERIAL 9', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
-                  'a resolved device port is written');
+      // AND a RESOLVED device must not reach it either -- this key is the CPU
+      // keyer's DTR/RTS port, while a WinKeyer owns and opens its own port.
+      // Writing the device's port here made LOGK1EA open COM20 exclusively for
+      // DTR/RTS keying, after which the WinKeyer thread died with "Access is
+      // denied" (NY4I, 2026-08-08). Two keying mechanisms, one port.
+      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof, True);
+      CheckEquals('NONE', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+                  'a device owns its own port; the CPU-keyer key must stay NONE');
+
+      // The flag decides, NOT the spelling: a keyer NAMED like a port would
+      // otherwise pass the looks-like-a-port test and reintroduce the conflict.
+      prof.CWOutput1 := 'SERIAL 20';
+      rendered := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), prof, True);
+      CheckEquals('NONE', ValueOf(rendered, 'KEYER RADIO ONE OUTPUT PORT'),
+                  'a device named like a port is still a device');
+      prof.CWOutput1 := 'WinKeyer';
 
       // The radio-relative token uses the RADIO's own port.
       prof.CWOutput1 := 'RADIOPORT';

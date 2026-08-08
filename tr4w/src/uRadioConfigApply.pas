@@ -90,7 +90,7 @@ procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
                            const aProfile: TStationProfile;
                            const aPersist: boolean = True;
-                           const aKeyerPort: string = '');
+                           const aNamesAKeyerDevice: boolean = False);
 
 // The whole sequence: stop both radios, write both slots, regroup the ini,
 // restart.  Returns False with aError set if the profile cannot be applied at
@@ -204,7 +204,7 @@ procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
                            const aProfile: TStationProfile;
                            const aPersist: boolean = True;
-                           const aKeyerPort: string = '');
+                           const aNamesAKeyerDevice: boolean = False);
 var
    rendered: TConfigKeyValues;
    i: integer;
@@ -221,7 +221,7 @@ begin
       typeRendering := Default(TRadioTypeRendering);
       end;
 
-   rendered := RenderRadioKeys(aSlot, aRadio, typeRendering, aProfile, aKeyerPort);
+   rendered := RenderRadioKeys(aSlot, aRadio, typeRendering, aProfile, aNamesAKeyerDevice);
 
    for i := 0 to High(rendered) do
       begin
@@ -281,27 +281,15 @@ begin
       end;
 end;
 
-// A slot's CW-output choice, resolved against the keyer library.  Returns the
-// port the legacy KEYER RADIO n OUTPUT PORT key should carry -- '' when the
-// choice is not a device name (CAT, RADIOPORT and NONE are the renderer's
-// business, not ours) -- and configures the named device on the way past.
-//
-// ONE routine because BOTH entry points need it: Preferences applying a
-// profile, and startup configuring from the library.  Startup is the path that
-// matters most: the seventeen WK command rows are csJSON and inert, so if this
-// does not run there, a normal start leaves the WinKeyer unconfigured
-// altogether.  Two copies of that policy would drift, and the drift would be
-// invisible until an operator's keyer behaved differently after a restart than
-// it did in the session where they set it up.
-function ResolveKeyerForSlot(const aKeyers: TKeyerConfigStore;
-                             const aProfile: TStationProfile;
-                             const aSlot: integer): string;
+// The keyer DEVICE a slot's CW-output choice names, or nil.  CAT, RADIOPORT and
+// NONE are the renderer's business and are not devices, so they resolve to nil.
+function KeyerDeviceForSlot(const aKeyers: TKeyerConfigStore;
+                            const aProfile: TStationProfile;
+                            const aSlot: integer): TKeyerDefinition;
 var
-   keyerDef: TKeyerDefinition;
    cwChoice: string;
-   keyerErr: string;
 begin
-   Result := '';
+   Result := nil;
    if (aKeyers = nil) or (aProfile = nil) then
       begin
       Exit;
@@ -316,22 +304,70 @@ begin
       cwChoice := Trim(aProfile.CWOutput1);
       end;
 
-   keyerDef := aKeyers.FindKeyer(cwChoice);
-   if keyerDef = nil then
-      begin
-      Exit;
-      end;
+   Result := aKeyers.FindKeyer(cwChoice);
+end;
 
-   Result := keyerDef.Port;
+// Configures every keyer device the profile names, and settles whether the
+// WinKeyer is enabled AT ALL.
+//
+// PROFILE-LEVEL, not per-slot, for two reasons.  The enable flag is one flag
+// for the whole program, so deciding it inside a per-slot loop would let slot 2
+// undo what slot 1 asked for.  And it must be decided in BOTH directions: WK
+// ENABLE is csJSON and so inert in the ini, which means nothing but this
+// routine can ever turn the WinKeyer back off -- a profile switched from a
+// WinKeyer to CW-by-CAT would otherwise keep opening the keyer's port for the
+// rest of the session.
+procedure ApplyKeyersForProfile(const aKeyers: TKeyerConfigStore;
+                                const aProfile: TStationProfile);
+var
+   slot: integer;
+   keyerDef: TKeyerDefinition;
+   winKeyer: TKeyerDefinition;
+   keyerErr: string;
+begin
+   winKeyer := nil;
 
-   if keyerDef.Kind = kkWinKeyer then
+   for slot := 1 to 2 do
       begin
+      keyerDef := KeyerDeviceForSlot(aKeyers, aProfile, slot);
+      if (keyerDef = nil) or (keyerDef.Kind <> kkWinKeyer) then
+         begin
+         Continue;
+         end;
+
+      // TR4W has ONE WinKeyer: a single WinKeySettings, a single port, a single
+      // thread.  Two slots naming two DIFFERENT WinKeyers cannot both be
+      // honoured, and silently letting the second win would be a keyer on the
+      // wrong port with nothing said about it.
+      if (winKeyer <> nil) and (not SameText(winKeyer.Name, keyerDef.Name)) then
+         begin
+         logger.Warn('[Keyer] profile "%s" names two different WinKeyers ("%s" and "%s"); ' +
+                     'TR4W supports one, so "%s" is used',
+                     [aProfile.Name, winKeyer.Name, keyerDef.Name, winKeyer.Name]);
+         Continue;
+         end;
+
       // REPORTED, not swallowed: a WinKeyer silently keeping the previous
       // settings is a fault an operator blames on the box.
-      if not ApplyKeyerToWinKey(keyerDef, keyerErr) then
+      if ApplyKeyerToWinKey(keyerDef, keyerErr) then
+         begin
+         winKeyer := keyerDef;
+         end
+      else
          begin
          logger.Warn('[Keyer] %s', [keyerErr]);
          end;
+      end;
+
+   // False when the profile names none, or when the one it named could not be
+   // configured -- enabling a keyer we failed to set up would start its thread
+   // against a port we never validated.
+   SetWinKeyerEnabled(winKeyer <> nil);
+
+   if winKeyer <> nil then
+      begin
+      logger.Info('[Keyer] profile "%s" uses WinKeyer "%s" on %s',
+                  [aProfile.Name, winKeyer.Name, winKeyer.Port]);
       end;
 end;
 
@@ -342,7 +378,6 @@ function ApplyProfile(const aStore: TRadioConfigStore;
 var
    slot: integer;
    radioDef: TRadioDefinition;
-   keyerPort: string;
    // NOT named radioPtr: Delphi is case-insensitive, so a variable of that name
    // shadows the TYPE RadioPtr in its own declaration.
    slotRadio: RadioPtr;
@@ -402,18 +437,17 @@ begin
          CloseCATAndKeyerForThisRadio;
          end;
 
+      // Once, across both slots -- the enable flag is one flag for the program.
+      ApplyKeyersForProfile(aKeyers, aProfile);
+
       for slot := 1 to 2 do
          begin
          radioDef := aStore.FindRadio(aProfile.RadioNameForSlot(slot));
          // radioDef is nil for an empty slot, and the renderer treats that as
          // "clear it" -- necessary, or the slot keeps whatever the previously
          // active profile left there.
-         // Resolve the slot's CW choice: when it names a keyer DEVICE, the
-         // legacy port key gets THAT DEVICE'S port, and the device itself is
-         // configured.  Without this the renderer writes NONE and the keyer,
-         // whose WK command rows are now csJSON and inert, is never set up.
-         keyerPort := ResolveKeyerForSlot(aKeyers, aProfile, slot);
-         ApplyRadioToSlot(radioDef, slot, aProfile, True, keyerPort);
+         ApplyRadioToSlot(radioDef, slot, aProfile, True,
+                          KeyerDeviceForSlot(aKeyers, aProfile, slot) <> nil);
          end;
 
       // The ini keys are correct but possibly scattered: WritePrivateProfileString
@@ -580,6 +614,11 @@ begin
             end;
          end;
 
+      // Once, across both slots -- see ApplyKeyersForProfile.  This is the path
+      // that matters: the WK command rows are csJSON and inert, so a normal
+      // start configures the WinKeyer here or not at all.
+      ApplyKeyersForProfile(keyers, profile);
+
       previousCATWTR := CATWTR;
       try
          for slot := 1 to 2 do
@@ -603,7 +642,7 @@ begin
             // and it would fail silently on a read-only program directory.
             // It also means a start CANNOT damage the operator's ini.
             ApplyRadioToSlot(radioDef, slot, profile, False,
-                             ResolveKeyerForSlot(keyers, profile, slot));
+                             KeyerDeviceForSlot(keyers, profile, slot) <> nil);
             end;
 
          // No GroupRadioIniKeys: nothing was written to group.

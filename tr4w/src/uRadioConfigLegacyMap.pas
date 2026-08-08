@@ -100,14 +100,17 @@ type
 // The complete key set for one slot, in a fixed order.  aProfile may be nil,
 // in which case the radio's own CWByCAT/CWSpeedSync are used rather than the
 // profile's per-slot CW output.
-// aKeyerPort is the PORT of the keyer DEVICE the profile names, already looked
-// up by the caller -- this unit stays free of the keyer library, exactly as it
-// is free of the registry.  Empty when the profile names no device.
+// aNamesAKeyerDevice says the profile's CW output resolved to a DEVICE in the
+// keyer library.  A boolean rather than the device's port, because such a
+// device owns and opens its own port: what this unit needs to know is only
+// that the legacy CPU-keying key must stay NONE.  The lookup is the caller's,
+// so this unit stays free of the keyer library, exactly as it is free of the
+// registry.
 function RenderRadioKeys(const aSlot: integer;
                          const aRadio: TRadioDefinition;
                          const aTypeRendering: TRadioTypeRendering;
                          const aProfile: TStationProfile;
-                         const aKeyerPort: string = ''): TConfigKeyValues;
+                         const aNamesAKeyerDevice: boolean = False): TConfigKeyValues;
 
 // The same key set, rendered for "there is no radio in this slot".  Used when
 // a profile fills only slot one: without it, slot two keeps whatever the
@@ -341,7 +344,7 @@ function RenderRadioKeys(const aSlot: integer;
                          const aRadio: TRadioDefinition;
                          const aTypeRendering: TRadioTypeRendering;
                          const aProfile: TStationProfile;
-                         const aKeyerPort: string = ''): TConfigKeyValues;
+                         const aNamesAKeyerDevice: boolean = False): TConfigKeyValues;
 var
    slot: string;
    cwOutput: string;
@@ -459,11 +462,16 @@ begin
          cwByCAT   := False;
          keyerPort := aRadio.KeyerOutputPort;
          end
-      else if aKeyerPort <> '' then
+      else if aNamesAKeyerDevice then
          begin
-         // The profile names a DEVICE, and the caller resolved its port.
+         // The profile names a DEVICE -- a WinKeyer or a YCCC box -- and such a
+         // device OWNS ITS PORT and opens it itself.  This key must therefore
+         // stay NONE.  Putting the device's port here instead told LOGK1EA to
+         // ALSO key DTR/RTS on that port; it opened COM20 exclusively first and
+         // the WinKeyer thread then died with "Access is denied" (NY4I,
+         // 2026-08-08).  Two keying mechanisms cannot share one port.
          cwByCAT   := False;
-         keyerPort := aKeyerPort;
+         keyerPort := PORT_NONE;
          end
       else
          begin
