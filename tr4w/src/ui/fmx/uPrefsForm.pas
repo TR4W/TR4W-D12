@@ -82,7 +82,8 @@ uses
    FMX.Controls.Presentation,
    uRadioConfigStore,
    uKeyerConfigStore,
-   uRadioEditForm;   // the Radio editor, its own unit since it is next to be designed
+   uRadioEditForm,   // the Radio editor, its own unit since it is next to be designed
+   uKeyerEditForm;   // the CW keying-device editor
 
 type
 
@@ -127,6 +128,16 @@ type
       chkAutoConnect: TCheckBox;
       layHardware: TLayout;
 
+      // --- CW section (Tag = NAV_CW), the keying-device library ---------------
+      layCW: TLayout;
+      lblMyKeyers: TLabel;
+      lstKeyers: TListBox;
+      btnAddKeyer: TButton;
+      btnEditKeyer: TButton;
+      btnDuplicateKeyer: TButton;
+      btnRemoveKeyer: TButton;
+      lblKeyerHint: TLabel;
+
       btnOK: TButton;
       btnCancel: TButton;
       btnApply: TButton;
@@ -137,6 +148,11 @@ type
       procedure HandleDuplicate(Sender: TObject);
       procedure HandleRemove(Sender: TObject);
       procedure HandleRadioDblClick(Sender: TObject);
+      procedure HandleAddKeyer(Sender: TObject);
+      procedure HandleEditKeyer(Sender: TObject);
+      procedure HandleDuplicateKeyer(Sender: TObject);
+      procedure HandleRemoveKeyer(Sender: TObject);
+      procedure HandleKeyerDblClick(Sender: TObject);
       procedure HandleNewProfile(Sender: TObject);
       procedure HandleRenameProfile(Sender: TObject);
       procedure HandleDeleteProfile(Sender: TObject);
@@ -161,6 +177,12 @@ type
       // on the radio itself.
       FKeyerStore: TKeyerConfigStore;
       FEditor: TRadioEditForm;
+      // The keyer editor and its working copy. Modeless like the radio editor,
+      // so the result arrives in a callback rather than on the next line.
+      FKeyerEditor: TfrmKeyerEdit;
+      FKeyerEditTarget: TKeyerDefinition;
+      FKeyerEditClone: TKeyerDefinition;
+      FKeyerEditIsNew: boolean;
       // The definition currently being edited, and the clone the editor works
       // on.  Held as fields because the editor is modeless: the result arrives
       // later, in a callback, not on the next line.
@@ -182,6 +204,14 @@ type
       function SaveStore(out aError: string): boolean;
 
       procedure RefreshRadioList;
+      procedure RefreshKeyerList;
+      function SelectedKeyer: TKeyerDefinition;
+      procedure KeyerEditorDone(const aAccepted: boolean);
+      // Profiles reference a keyer BY NAME, so a rename has to follow through
+      // and a delete has to be refused while anything still points at it --
+      // the same bookkeeping TRadioConfigStore does for radios.
+      procedure RenameKeyerInProfiles(const aOldName, aNewName: string);
+      function ProfilesUsingKeyer(const aName: string): string;
       procedure RefreshProfileCombo;
       procedure RefreshProfileFields;
       procedure RefreshAll;
@@ -350,6 +380,7 @@ end;
 destructor TPrefsForm.Destroy;
 begin
    FreeAndNil(FEditClone);
+   FreeAndNil(FKeyerEditClone);
    FreeAndNil(FKeyerStore);
    FreeAndNil(FStore);
    inherited Destroy;
@@ -573,6 +604,212 @@ begin
    SelectByTag(aCombo, aSelected);
 end;
 
+procedure TPrefsForm.RenameKeyerInProfiles(const aOldName, aNewName: string);
+var
+   i: integer;
+   prof: TStationProfile;
+begin
+   for i := 0 to FStore.ProfileCount - 1 do
+      begin
+      prof := FStore.Profile(i);
+      if SameText(prof.CWOutput1, aOldName) then
+         begin
+         prof.CWOutput1 := aNewName;
+         end;
+      if SameText(prof.CWOutput2, aOldName) then
+         begin
+         prof.CWOutput2 := aNewName;
+         end;
+      end;
+end;
+
+function TPrefsForm.ProfilesUsingKeyer(const aName: string): string;
+var
+   i: integer;
+   prof: TStationProfile;
+begin
+   Result := '';
+   for i := 0 to FStore.ProfileCount - 1 do
+      begin
+      prof := FStore.Profile(i);
+      if SameText(prof.CWOutput1, aName) or SameText(prof.CWOutput2, aName) then
+         begin
+         if Result <> '' then
+            begin
+            Result := Result + ', ';
+            end;
+         Result := Result + prof.Name;
+         end;
+      end;
+end;
+
+procedure TPrefsForm.RefreshKeyerList;
+var
+   i, keep: integer;
+   item: TListBoxItem;
+begin
+   keep := lstKeyers.ItemIndex;
+   lstKeyers.Clear;
+   for i := 0 to FKeyerStore.KeyerCount - 1 do
+      begin
+      item := TListBoxItem.Create(lstKeyers);
+      item.Parent    := lstKeyers;
+      // NOT stored: these rows come from the library at run time, so a designer
+      // save must never freeze them into the .fmx. See AddComboItem.
+      item.Stored    := False;
+      item.Text      := FKeyerStore.Keyer(i).DisplaySummary;
+      item.TagString := FKeyerStore.Keyer(i).Name;
+      end;
+   if (keep >= 0) and (keep < lstKeyers.Items.Count) then
+      begin
+      lstKeyers.ItemIndex := keep;
+      end;
+end;
+
+function TPrefsForm.SelectedKeyer: TKeyerDefinition;
+begin
+   Result := nil;
+   if (lstKeyers.ItemIndex >= 0) and (lstKeyers.ItemIndex < lstKeyers.Items.Count) then
+      begin
+      Result := FKeyerStore.FindKeyer(lstKeyers.ListItems[lstKeyers.ItemIndex].TagString);
+      end;
+end;
+
+procedure TPrefsForm.HandleAddKeyer(Sender: TObject);
+begin
+   if FKeyerEditor = nil then
+      begin
+      FKeyerEditor := TfrmKeyerEdit.Create(Self);
+      end;
+
+   FKeyerEditIsNew  := True;
+   FKeyerEditTarget := nil;
+   FreeAndNil(FKeyerEditClone);
+   FKeyerEditClone := TKeyerDefinition.Create;
+   FKeyerEditClone.Name := FKeyerStore.UniqueKeyerName('WinKeyer');
+   FKeyerEditor.EditKeyer(FKeyerEditClone, KeyerEditorDone);
+end;
+
+procedure TPrefsForm.HandleEditKeyer(Sender: TObject);
+var
+   target: TKeyerDefinition;
+begin
+   target := SelectedKeyer;
+   if target = nil then
+      begin
+      Exit;
+      end;
+
+   if FKeyerEditor = nil then
+      begin
+      FKeyerEditor := TfrmKeyerEdit.Create(Self);
+      end;
+
+   // The editor works on a CLONE, so Cancel costs nothing -- the same rule the
+   // radio editor follows and the reason opening a dialog cannot alter a
+   // configuration by having been looked at.
+   FKeyerEditIsNew  := False;
+   FKeyerEditTarget := target;
+   FreeAndNil(FKeyerEditClone);
+   FKeyerEditClone := target.Clone;
+   FKeyerEditor.EditKeyer(FKeyerEditClone, KeyerEditorDone);
+end;
+
+procedure TPrefsForm.KeyerEditorDone(const aAccepted: boolean);
+var
+   err: string;
+begin
+   if not aAccepted then
+      begin
+      FreeAndNil(FKeyerEditClone);
+      Exit;
+      end;
+
+   if FKeyerEditIsNew then
+      begin
+      if FKeyerStore.FindKeyer(FKeyerEditClone.Name) <> nil then
+         begin
+         ShowMessage(Format('A keyer named "%s" already exists.', [FKeyerEditClone.Name]));
+         Exit;
+         end;
+      FKeyerStore.AddKeyer(FKeyerEditClone.Name, FKeyerEditClone.Kind).Assign(FKeyerEditClone);
+      FreeAndNil(FKeyerEditClone);
+      end
+   else
+      begin
+      // A RENAME has to fix the profiles that reference this keyer by name,
+      // otherwise the reference dangles and the slot silently keys nothing.
+      if not SameText(FKeyerEditTarget.Name, FKeyerEditClone.Name) then
+         begin
+         if not FKeyerStore.RenameKeyer(FKeyerEditTarget.Name, FKeyerEditClone.Name, err) then
+            begin
+            ShowMessage(err);
+            Exit;
+            end;
+         RenameKeyerInProfiles(FKeyerEditTarget.Name, FKeyerEditClone.Name);
+         end;
+      FKeyerEditTarget.Assign(FKeyerEditClone);
+      FreeAndNil(FKeyerEditClone);
+      end;
+
+   FDirty := True;
+   RefreshAll;
+end;
+
+procedure TPrefsForm.HandleDuplicateKeyer(Sender: TObject);
+var
+   source, copy: TKeyerDefinition;
+begin
+   source := SelectedKeyer;
+   if source = nil then
+      begin
+      Exit;
+      end;
+
+   copy := FKeyerStore.AddKeyer(FKeyerStore.UniqueKeyerName(source.Name), source.Kind);
+   copy.Assign(source);
+   copy.Name := FKeyerStore.UniqueKeyerName(source.Name);
+   FDirty := True;
+   RefreshAll;
+end;
+
+procedure TPrefsForm.HandleRemoveKeyer(Sender: TObject);
+var
+   target: TKeyerDefinition;
+   used: string;
+begin
+   target := SelectedKeyer;
+   if target = nil then
+      begin
+      Exit;
+      end;
+
+   // REFUSED while a profile still names it, exactly as a referenced radio is.
+   // Deleting it and leaving the reference behind would give that slot no CW
+   // with nothing on screen to explain why.
+   used := ProfilesUsingKeyer(target.Name);
+   if used <> '' then
+      begin
+      ShowMessage(Format('"%s" is still used by: %s', [target.Name, used]));
+      Exit;
+      end;
+
+   if MessageDlg(Format(TC_PREFS_CONFIRMREMOVE, [target.Name]),
+                 TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
+      begin
+      Exit;
+      end;
+
+   FKeyerStore.RemoveKeyer(target.Name);
+   FDirty := True;
+   RefreshAll;
+end;
+
+procedure TPrefsForm.HandleKeyerDblClick(Sender: TObject);
+begin
+   HandleEditKeyer(Sender);
+end;
+
 procedure TPrefsForm.RefreshProfileCombo;
 var
    i: integer;
@@ -641,6 +878,7 @@ end;
 procedure TPrefsForm.RefreshAll;
 begin
    RefreshRadioList;
+   RefreshKeyerList;
    RefreshProfileCombo;
    RefreshProfileFields;
 end;

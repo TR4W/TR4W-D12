@@ -93,6 +93,7 @@ uses
   uFMXFormHelpers in 'src\ui\fmx\uFMXFormHelpers.pas',
   uFMXTranslate in 'src\ui\fmx\uFMXTranslate.pas',
   uRadioEditForm in 'src\ui\fmx\uRadioEditForm.pas' {RadioEditForm},
+  uKeyerEditForm in 'src\ui\fmx\uKeyerEditForm.pas' {frmKeyerEdit},
   uPrefsForm in 'src\ui\fmx\uPrefsForm.pas' {PrefsForm},
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
