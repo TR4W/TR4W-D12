@@ -108,6 +108,13 @@ type
       optParityNone, optParityOdd, optParityEven: TRadioButton;
       lblStopBits: TLabel;
       optStop1, optStop2: TRadioButton;
+      // The CAT port has its own two control lines, same NONE/OFF/ON/CW/PTT
+      // vocabulary as the keyer port's.  A rig keyed through its CAT cable uses
+      // these; one wired to a separate keying interface uses the keyer port's.
+      lblCatRTS: TLabel;
+      cbxCatRTS: TComboBox;
+      lblCatDTR: TLabel;
+      cbxCatDTR: TComboBox;
       lblIP: TLabel;
       edtIP: TEdit;
       lblTCPPort: TLabel;
@@ -129,6 +136,8 @@ type
       cbxKeyerRTS: TComboBox;
       lblKeyerDTR: TLabel;
       cbxKeyerDTR: TComboBox;
+      lblKeyerStopBits: TLabel;
+      cbxKeyerStopBits: TComboBox;
       edtCIV: TEdit;
       edtHamLibID: TEdit;
       lblStartup: TLabel;
@@ -488,6 +497,9 @@ begin
    SelectByTag(cbxKeyerPort, FRadio.KeyerOutputPort);
    FillRTSDTRCombo(cbxKeyerRTS, FRadio.KeyerRTS);
    FillRTSDTRCombo(cbxKeyerDTR, FRadio.KeyerDTR);
+   FillRTSDTRCombo(cbxCatRTS,   FRadio.CatRTS);
+   FillRTSDTRCombo(cbxCatDTR,   FRadio.CatDTR);
+   FillStopBitsCombo(cbxKeyerStopBits, FRadio.KeyerStopBits);
    // HEX, because that is what the radio's own menu and every Icom manual show
    // (NY4I).  The value is STORED as the decimal the config command expects --
    // only the presentation changes, so nothing downstream has to know.
@@ -612,6 +624,11 @@ begin
    FRadio.KeyerOutputPort := SelectedTag(cbxKeyerPort);
    FRadio.KeyerRTS        := SelectedTag(cbxKeyerRTS);
    FRadio.KeyerDTR        := SelectedTag(cbxKeyerDTR);
+   FRadio.CatRTS          := SelectedTag(cbxCatRTS);
+   FRadio.CatDTR          := SelectedTag(cbxCatDTR);
+   // 0 = "not stated", so the apply layer can leave the registry/model default
+   // alone rather than forcing a value the operator never chose.
+   FRadio.KeyerStopBits   := StrToIntDef(SelectedTag(cbxKeyerStopBits), 0);
    if not TryParseHexByte(edtCIV.Text, civ) then
       begin
       aError := TC_RADIOEDIT_BADCIV;

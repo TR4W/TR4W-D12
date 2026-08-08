@@ -123,6 +123,9 @@ const
    TC_RADIOEDIT_KEYERPORT    = 'Keyer output port';
    TC_RADIOEDIT_KEYERRTS     = 'Keyer RTS line';
    TC_RADIOEDIT_KEYERDTR     = 'Keyer DTR line';
+   TC_RADIOEDIT_CATRTS       = 'CAT RTS';
+   TC_RADIOEDIT_CATDTR       = 'CAT DTR';
+   TC_RADIOEDIT_KEYERSTOPBITS = 'Stop bits';
    TC_RADIOEDIT_CIVADDRESS   = 'CI-V address (hex)';
    TC_RADIOEDIT_BADCIV       = 'The CI-V address must be a hex value, e.g. 88 or $88.';
    // Shown greyed INSIDE an empty field, so "blank" reads as "using this"
@@ -198,6 +201,11 @@ function IsIcomRadio(const aRegistryId: string): boolean;
 // each line is assigned a JOB, so one can key CW while the other drives PTT --
 // which is what the original TR4W radio dialog offered.
 procedure FillRTSDTRCombo(const aCombo: TComboBox; const aSelected: string);
+// Stop bits for a keying port: 1 or 2, plus a '(default)' entry that stores 0.
+// Zero means "not stated", so the apply layer leaves the registry/model default
+// in force rather than the dialog silently pinning a value the operator never
+// chose -- the same convention BaudRate and ReceiverAddress already use.
+procedure FillStopBitsCombo(const aCombo: TComboBox; const aSelected: integer);
 
 function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 
@@ -388,6 +396,15 @@ begin
       begin
       Result := SameText(Copy(Trim(DisplayNameId(aRegistryId)), 1, 4), 'Icom');
       end;
+end;
+
+procedure FillStopBitsCombo(const aCombo: TComboBox; const aSelected: integer);
+begin
+   aCombo.Clear;
+   AddComboItem(aCombo, TC_PREFS_NONE, '0');
+   AddComboItem(aCombo, '1', '1');
+   AddComboItem(aCombo, '2', '2');
+   SelectByTag(aCombo, IntToStr(aSelected));
 end;
 
 procedure FillRTSDTRCombo(const aCombo: TComboBox; const aSelected: string);
