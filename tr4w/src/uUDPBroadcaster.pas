@@ -70,6 +70,21 @@ type
                             const aPort: integer;
                             const aPayload: AnsiString);
 
+const
+   // What the Test button puts on the wire.  Shaped like TR4W's other
+   // broadcasts -- XML with a root of its own -- so a listener that parses them
+   // sees an element it does not handle and ignores it, rather than being fed
+   // something malformed.  Under its own root, never <contactinfo>, because a
+   // test must not be able to land in anybody's log.
+   // Untyped, not "UDP_TEST_PAYLOAD: AnsiString = ...": a typed constant is a
+   // writable variable under {$J+} and this is a literal.
+   UDP_TEST_PAYLOAD =
+      '<?xml version="1.0" encoding="utf-8"?>' +
+      '<TR4WTest><app>TR4W</app>' +
+      '<message>UDP test from the TR4W settings dialog</message></TR4WTest>';
+
+type
+
    TUDPBroadcaster = class
    private
       FConfig: TUDPBroadcastConfig;
@@ -102,6 +117,25 @@ type
       // BUILDING a payload it is about to throw away; it is not a precondition
       // of Send, which tests it again.
       function Enabled(const aStream: TUDPStream): boolean;
+
+      // The master switch, on its own.  Enabled() above already accounts for
+      // it; this exists so the UI can say WHY a configured destination is
+      // quiet, rather than showing an operator four endpoints and no traffic.
+      function MasterEnabled: boolean;
+
+      // Sends one recognisable packet to an address and port that are NOT
+      // required to be in the configuration -- this is the Test button, and it
+      // has to work on a row the operator has typed but not yet saved.
+      //
+      // It deliberately ignores the master switch: "does this address and port
+      // work" is a different question from "am I broadcasting right now", and
+      // making the operator switch broadcasting on to test a destination is the
+      // kind of coupling that gets a Test button called broken.
+      //
+      // True means the packet was HANDED TO THE SOCKET.  UDP cannot tell us it
+      // arrived, and callers must not word it as though it could.
+      function TestDestination(const aAddress: string; const aPort: integer;
+                               out aError: string): boolean;
 
       // Sends, IF the stream is enabled.  Silently doing nothing is correct
       // here: "not enabled" is the operator's decision, not a fault.
@@ -208,7 +242,7 @@ begin
    n := 0;
    for i := 0 to FConfig.DestinationCount - 1 do
       begin
-      if FConfig.Destination[i].Stream <> aStream then
+      if not FConfig.Destination[i].Carries(aStream) then
          begin
          Continue;
          end;
@@ -222,15 +256,85 @@ end;
 
 function TUDPBroadcaster.Enabled(const aStream: TUDPStream): boolean;
 begin
-   // EMERGENT, not a stored flag.  A stream is on when something is listening.
-   // The old shape had a separate boolean, which meant "enabled" and "has
-   // somewhere to go" were two facts free to disagree -- CONTACT=FALSE with a
-   // contact port carefully filled in says nothing at all.
+   // EMERGENT per stream, not a stored flag.  A stream is on when something is
+   // listening.  The old shape had a boolean PER STREAM, which meant "enabled"
+   // and "has somewhere to go" were two facts free to disagree -- CONTACT=FALSE
+   // with a contact port carefully filled in says nothing at all.
+   //
+   // The MASTER switch is a different question and is a stored flag on purpose:
+   // it means "not right now", and it has to be able to say that without the
+   // operator deleting the destinations they configured.
    FLock.Enter;
    try
-      Result := FConfig.CountFor(aStream) > 0;
+      Result := FConfig.Enabled and (FConfig.CountFor(aStream) > 0);
    finally
       FLock.Leave;
+   end;
+end;
+
+function TUDPBroadcaster.MasterEnabled: boolean;
+begin
+   FLock.Enter;
+   try
+      Result := FConfig.Enabled;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TUDPBroadcaster.TestDestination(const aAddress: string; const aPort: integer;
+                                         out aError: string): boolean;
+var
+   sendProc: TUDPSendProc;
+begin
+   aError := '';
+   Result := False;
+
+   // Checked here rather than trusted from the caller: this is reachable from a
+   // dialog with half-typed fields in it, and Indy's failure for a blank host
+   // is an exception, not a message anyone can act on.
+   if Trim(aAddress) = '' then
+      begin
+      aError := 'Enter an address before testing.';
+      Exit;
+      end;
+
+   if (aPort < 1) or (aPort > 65535) then
+      begin
+      aError := Format('The port must be between 1 and 65535 (it is %d).', [aPort]);
+      Exit;
+      end;
+
+   FLock.Enter;
+   try
+      sendProc := FSend;
+   finally
+      FLock.Leave;
+   end;
+
+   // Unlike Send, this REPORTS having no transport.  A silent no-op is right
+   // for a broadcast during startup and wrong for a button the operator just
+   // pressed and is waiting on.
+   if not Assigned(sendProc) then
+      begin
+      aError := 'UDP is not started yet, so nothing could be sent.';
+      Exit;
+      end;
+
+   // Outside the lock, for the same reason as Send: an unreachable destination
+   // must not block a Configure from another thread.
+   try
+      sendProc(Trim(aAddress), aPort, UDP_TEST_PAYLOAD);
+      Result := True;
+   except
+      // The socket layer raises for a name that will not resolve or a route
+      // that does not exist.  That is exactly what the operator pressed the
+      // button to find out, so it is an ANSWER, not a crash.
+      on E: Exception do
+         begin
+         aError := Format('Could not send to %s:%d -- %s',
+                          [Trim(aAddress), aPort, E.Message]);
+         end;
    end;
 end;
 
@@ -245,7 +349,17 @@ begin
    // the same configuration -- the reason Configure swaps rather than edits.
    FLock.Enter;
    try
-      CollectTargets(aStream, addresses, ports);
+      // The master switch is read INSIDE the same lock as the destinations, so
+      // a Configure that switches broadcasting off cannot be half-applied to a
+      // send already choosing its targets.
+      if FConfig.Enabled then
+         begin
+         CollectTargets(aStream, addresses, ports);
+         end
+      else
+         begin
+         SetLength(addresses, 0);
+         end;
       sendProc := FSend;
    finally
       FLock.Leave;
