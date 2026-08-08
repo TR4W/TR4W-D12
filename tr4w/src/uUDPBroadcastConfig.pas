@@ -32,11 +32,26 @@ unit uUDPBroadcastConfig;
   old shape is the degenerate case: seeding an existing ini produces one
   destination per enabled stream, all sharing the one address it held.
 
-  THE ENABLE FLAG IS GONE, and that is the point rather than a side effect.
-  "Is this stream on" and "where does it go" were two facts free to disagree --
-  an operator could have CONTACT=FALSE and a contact port carefully set, which
-  means nothing.  A stream is on when something is listening: no destinations,
-  no broadcast.
+  A DESTINATION CARRIES A SET OF STREAMS, not one.  The row an operator thinks
+  in is an ENDPOINT -- "my N1MM bridge at 10.0.0.5:12060" -- and what varies is
+  which kinds of data it wants.  One row per stream would list that same
+  endpoint six times and make "change its address" six edits, five of which can
+  be forgotten.  This is also the shape of NY4I's TR4QT panel.  Note that it
+  still keeps a port PER ROW rather than per station, which the flat host:port
+  list in TR4QT cannot do: N1MM's own documentation puts RadioInfo on 12060 and
+  ContactInfo on 12061, so one endpoint genuinely needs two rows.
+
+  THE PER-STREAM ENABLE FLAG IS GONE, and that is the point rather than a side
+  effect.  "Is this stream on" and "where does it go" were two facts free to
+  disagree -- an operator could have CONTACT=FALSE and a contact port carefully
+  set, which means nothing.  A stream is on when something is listening: no
+  destination carrying it, no broadcast.
+
+  THE MASTER ENABLE IS NOT THAT FLAG COMING BACK.  It answers a question the
+  destination list cannot: "stop broadcasting for now, without me losing the
+  four endpoints I spent ten minutes typing."  It is one switch over the whole
+  facility, it cannot disagree with any individual destination, and it is the
+  only thing standing between an operator and deleting rows to go quiet.
 
   RTL ONLY, deliberately -- System.JSON, SysUtils, IniFiles and nothing of
   TR4W's.  That is what lets the whole thing be unit-tested without booting the
@@ -104,29 +119,40 @@ type
    // Declared HERE rather than on the broadcaster because the config is the
    // lower unit and both need it.
    TUDPStream = (usAppInfo, usContact, usScore, usRadio, usRotor, usLookup);
+   TUDPStreams = set of TUDPStream;
 
-   // Somewhere one stream is sent.  A stream may have several.
+   // One place data is sent -- an address and a port -- and which streams it
+   // wants.  A stream may be carried by several destinations, and a destination
+   // may carry several streams.
    TUDPDestination = class
    private
-      FStream: TUDPStream;
+      FStreams: TUDPStreams;
       FAddress: string;
       FPort: integer;
    public
-      constructor Create(const aStream: TUDPStream;
-                         const aAddress: string;
-                         const aPort: integer);
+      constructor Create(const aAddress: string;
+                         const aPort: integer;
+                         const aStreams: TUDPStreams);
       function Clone: TUDPDestination;
       function SameAs(const aOther: TUDPDestination): boolean;
 
-      property Stream: TUDPStream read FStream  write FStream;
-      property Address: string    read FAddress write FAddress;
-      property Port: integer      read FPort    write FPort;
+      // Does this endpoint want that kind of data?
+      function Carries(const aStream: TUDPStream): boolean;
+
+      // Adds or removes one stream, so a checkbox does not have to do set
+      // arithmetic at the call site.
+      procedure SetStream(const aStream: TUDPStream; const aWanted: boolean);
+
+      property Streams: TUDPStreams read FStreams write FStreams;
+      property Address: string      read FAddress write FAddress;
+      property Port: integer        read FPort    write FPort;
    end;
 
    TUDPBroadcastConfig = class
    private
       FDestinations: TObjectList<TUDPDestination>;
       FAllQSOs: boolean;
+      FEnabled: boolean;
       function GetDestination(const aIndex: integer): TUDPDestination;
    public
       constructor Create;
@@ -137,12 +163,18 @@ type
       function  Clone: TUDPBroadcastConfig;
       function  SameAs(const aOther: TUDPBroadcastConfig): boolean;
 
-      // Adds a place to send one stream.  Returns the destination so a caller
-      // can hold on to it; the config owns it.
-      function  AddDestination(const aStream: TUDPStream;
-                               const aAddress: string;
-                               const aPort: integer): TUDPDestination;
+      // Adds a place to send.  Returns the destination so a caller can hold on
+      // to it; the config owns it.
+      function  AddDestination(const aAddress: string;
+                               const aPort: integer;
+                               const aStreams: TUDPStreams): TUDPDestination;
       procedure RemoveDestination(const aIndex: integer);
+
+      // The destination at that address and port, or nil.  Endpoint identity is
+      // (address, port) -- which is why two rows sharing one is a mistake
+      // Validate refuses rather than a duplicate send nobody notices.
+      function  FindDestination(const aAddress: string;
+                                const aPort: integer): TUDPDestination;
 
       function  DestinationCount: integer;
       function  CountFor(const aStream: TUDPStream): integer;
@@ -163,6 +195,12 @@ type
 
       property Destination[const aIndex: integer]: TUDPDestination read GetDestination;
       property AllQSOs: boolean read FAllQSOs write FAllQSOs;
+
+      // The master switch.  False silences every stream while leaving the
+      // destinations exactly as the operator typed them.  Defaults TRUE so that
+      // a file written before it existed -- or an ini seeded into one -- keeps
+      // behaving as it did.
+      property Enabled: boolean read FEnabled write FEnabled;
    end;
 
 // The stream's name as it is written to JSON.  A NAME, not the ordinal: the
@@ -176,10 +214,17 @@ implementation
 const
    // JSON member names.  Lower camel, matching the radio and keyer sections.
    J_ALLQSOS      = 'allQSOs';
+   J_ENABLED      = 'enabled';
    J_DESTINATIONS = 'destinations';
-   J_STREAM       = 'stream';
+   J_STREAMS      = 'streams';
    J_ADDRESS      = 'address';
    J_PORT         = 'port';
+
+   // The member a destination used to store when it carried exactly one stream.
+   // Still READ, never written: a settings file from the first cut of this
+   // feature must not lose its destinations, and dropping them would look like
+   // "TR4W forgot my UDP settings" rather than a format change.
+   J_STREAM_LEGACY = 'stream';
 
    // The stored spelling of each stream.  Written out rather than derived from
    // the enum, so renaming a member in code cannot silently orphan every stored
@@ -211,27 +256,44 @@ end;
 
 { ------------------------------------------------------- TUDPDestination -- }
 
-constructor TUDPDestination.Create(const aStream: TUDPStream;
-                                   const aAddress: string;
-                                   const aPort: integer);
+constructor TUDPDestination.Create(const aAddress: string;
+                                   const aPort: integer;
+                                   const aStreams: TUDPStreams);
 begin
    inherited Create;
-   FStream  := aStream;
    FAddress := aAddress;
    FPort    := aPort;
+   FStreams := aStreams;
 end;
 
 function TUDPDestination.Clone: TUDPDestination;
 begin
-   Result := TUDPDestination.Create(FStream, FAddress, FPort);
+   Result := TUDPDestination.Create(FAddress, FPort, FStreams);
 end;
 
 function TUDPDestination.SameAs(const aOther: TUDPDestination): boolean;
 begin
    Result := (aOther <> nil)                     and
-             (FStream = aOther.FStream)          and
              SameText(FAddress, aOther.FAddress) and
-             (FPort = aOther.FPort);
+             (FPort = aOther.FPort)              and
+             (FStreams = aOther.FStreams);
+end;
+
+function TUDPDestination.Carries(const aStream: TUDPStream): boolean;
+begin
+   Result := aStream in FStreams;
+end;
+
+procedure TUDPDestination.SetStream(const aStream: TUDPStream; const aWanted: boolean);
+begin
+   if aWanted then
+      begin
+      Include(FStreams, aStream);
+      end
+   else
+      begin
+      Exclude(FStreams, aStream);
+      end;
 end;
 
 { ---------------------------------------------------- TUDPBroadcastConfig - }
@@ -241,6 +303,7 @@ begin
    inherited Create;
    FDestinations := TObjectList<TUDPDestination>.Create(True);   // owns them
    FAllQSOs := False;
+   FEnabled := True;    // see the Enabled property -- absence must not silence
 end;
 
 destructor TUDPBroadcastConfig.Destroy;
@@ -253,6 +316,10 @@ procedure TUDPBroadcastConfig.Clear;
 begin
    FDestinations.Clear;
    FAllQSOs := False;
+   // Back to the constructed state, master switch included: "clear" means an
+   // empty configuration, and an empty one broadcasts nothing anyway because
+   // there is nowhere to send.
+   FEnabled := True;
 end;
 
 function TUDPBroadcastConfig.GetDestination(const aIndex: integer): TUDPDestination;
@@ -272,19 +339,36 @@ begin
    Result := 0;
    for i := 0 to FDestinations.Count - 1 do
       begin
-      if FDestinations[i].Stream = aStream then
+      if FDestinations[i].Carries(aStream) then
          begin
          Inc(Result);
          end;
       end;
 end;
 
-function TUDPBroadcastConfig.AddDestination(const aStream: TUDPStream;
-                                            const aAddress: string;
-                                            const aPort: integer): TUDPDestination;
+function TUDPBroadcastConfig.AddDestination(const aAddress: string;
+                                            const aPort: integer;
+                                            const aStreams: TUDPStreams): TUDPDestination;
 begin
-   Result := TUDPDestination.Create(aStream, aAddress, aPort);
+   Result := TUDPDestination.Create(aAddress, aPort, aStreams);
    FDestinations.Add(Result);
+end;
+
+function TUDPBroadcastConfig.FindDestination(const aAddress: string;
+                                             const aPort: integer): TUDPDestination;
+var
+   i: integer;
+begin
+   Result := nil;
+   for i := 0 to FDestinations.Count - 1 do
+      begin
+      if SameText(Trim(FDestinations[i].Address), Trim(aAddress)) and
+         (FDestinations[i].Port = aPort) then
+         begin
+         Result := FDestinations[i];
+         Exit;
+         end;
+      end;
 end;
 
 procedure TUDPBroadcastConfig.RemoveDestination(const aIndex: integer);
@@ -314,6 +398,7 @@ begin
       FDestinations.Add(aSource.FDestinations[i].Clone);
       end;
    FAllQSOs := aSource.FAllQSOs;
+   FEnabled := aSource.FEnabled;
 end;
 
 function TUDPBroadcastConfig.Clone: TUDPBroadcastConfig;
@@ -332,6 +417,10 @@ begin
       Exit;
       end;
    if FAllQSOs <> aOther.FAllQSOs then
+      begin
+      Exit;
+      end;
+   if FEnabled <> aOther.FEnabled then
       begin
       Exit;
       end;
@@ -355,7 +444,7 @@ end;
 
 function TUDPBroadcastConfig.Validate(out aError: string): boolean;
 var
-   i: integer;
+   i, j: integer;
    d: TUDPDestination;
 begin
    aError := '';
@@ -365,10 +454,12 @@ begin
       begin
       d := FDestinations[i];
 
+      // Every message names WHICH row, by position and by endpoint.  A
+      // destination is no longer identified by the one stream it carried, and
+      // "a port is out of range" in a list of four is not actionable.
       if Trim(d.Address) = '' then
          begin
-         aError := Format('The %s destination has no address.',
-                          [UDPStreamName(d.Stream)]);
+         aError := Format('Destination %d has no address.', [i + 1]);
          Exit;
          end;
 
@@ -376,16 +467,43 @@ begin
       // the way in, which is a silent change of destination.
       if Length(d.Address) > 255 then
          begin
-         aError := Format('The %s destination address is longer than 255 characters.',
-                          [UDPStreamName(d.Stream)]);
+         aError := Format('Destination %d has an address longer than 255 characters.',
+                          [i + 1]);
          Exit;
          end;
 
       if (d.Port < 1) or (d.Port > 65535) then
          begin
-         aError := Format('The %s destination port must be between 1 and 65535 (it is %d).',
-                          [UDPStreamName(d.Stream), d.Port]);
+         aError := Format('Destination %d (%s) has port %d; it must be between 1 and 65535.',
+                          [i + 1, Trim(d.Address), d.Port]);
          Exit;
+         end;
+
+      // A row carrying nothing is NOT the same as "switched off": it is an
+      // address and a port that will never be sent anything, and it reads on
+      // the panel as a destination that is configured.  Going quiet is what the
+      // master switch is for.
+      if d.Streams = [] then
+         begin
+         aError := Format('Destination %d (%s:%d) has no data selected. ' +
+                          'Choose at least one kind of data, or remove it.',
+                          [i + 1, Trim(d.Address), d.Port]);
+         Exit;
+         end;
+
+      // The same endpoint twice sends everything it carries twice.  A remote
+      // logger seeing duplicate QSOs is a support call that looks like a TR4W
+      // bug, so refuse it here rather than at the socket.
+      for j := 0 to i - 1 do
+         begin
+         if SameText(Trim(FDestinations[j].Address), Trim(d.Address)) and
+            (FDestinations[j].Port = d.Port) then
+            begin
+            aError := Format('%s:%d is listed twice (destinations %d and %d). ' +
+                             'Put every kind of data it should receive on one of them.',
+                             [Trim(d.Address), d.Port, j + 1, i + 1]);
+            Exit;
+            end;
          end;
       end;
 
@@ -411,17 +529,34 @@ var
    procedure SeedStream(const aStream: TUDPStream;
                         const aEnableKey, aPortKey: string;
                         const aDefaultPort: integer);
+   var
+      port: integer;
+      dest: TUDPDestination;
    begin
       // A stream that was OFF produces NO destination.  That is the same fact
-      // said in the new shape, and it is why the enable flag does not survive.
+      // said in the new shape, and it is why the per-stream flag does not
+      // survive.
       if not CFGBool(aEnableKey) then
          begin
          Exit;
          end;
+
       // An ABSENT port key keeps the compiled-in default rather than reading as
       // 0: most stations never wrote them and were running on the defaults.
-      AddDestination(aStream, address,
-                     aIni.ReadInteger(INISECTION_COMMANDS, aPortKey, aDefaultPort));
+      port := aIni.ReadInteger(INISECTION_COMMANDS, aPortKey, aDefaultPort);
+
+      // MERGED onto the endpoint rather than one row per stream.  The ini held
+      // ONE address, so a station with five streams on the default port has one
+      // listener wanting five kinds of data -- and listing it five times would
+      // be the first thing the operator had to tidy up by hand.  It also keeps
+      // seeding within what Validate accepts, which refuses the same address
+      // and port twice.
+      dest := FindDestination(address, port);
+      if dest = nil then
+         begin
+         dest := AddDestination(address, port, []);
+         end;
+      dest.SetStream(aStream, True);
    end;
 
 begin
@@ -452,22 +587,70 @@ end;
 function TUDPBroadcastConfig.ToJSON: TJSONObject;
 var
    arr: TJSONArray;
+   streams: TJSONArray;
    obj: TJSONObject;
+   st: TUDPStream;
    i: integer;
 begin
    Result := TJSONObject.Create;
    Result.AddPair(J_ALLQSOS, TJSONBool.Create(FAllQSOs));
+   Result.AddPair(J_ENABLED, TJSONBool.Create(FEnabled));
 
    arr := TJSONArray.Create;
    for i := 0 to FDestinations.Count - 1 do
       begin
       obj := TJSONObject.Create;
-      obj.AddPair(J_STREAM,  UDPStreamName(FDestinations[i].Stream));
       obj.AddPair(J_ADDRESS, FDestinations[i].Address);
       obj.AddPair(J_PORT,    TJSONNumber.Create(FDestinations[i].Port));
+
+      // Written in ENUM order, not the order they were ticked, so a file does
+      // not churn in git every time the panel rebuilds a row.
+      streams := TJSONArray.Create;
+      for st := Low(TUDPStream) to High(TUDPStream) do
+         begin
+         if FDestinations[i].Carries(st) then
+            begin
+            streams.Add(UDPStreamName(st));
+            end;
+         end;
+      obj.AddPair(J_STREAMS, streams);
+
       arr.AddElement(obj);
       end;
    Result.AddPair(J_DESTINATIONS, arr);
+end;
+
+// The streams a stored destination asks for.  Understands BOTH spellings: the
+// 'streams' array written today, and the single 'stream' member written by the
+// first cut of this feature.  Returns [] when it can make out neither, which
+// the caller treats as "skip this row" rather than "send it everything".
+function StreamsFromJSON(const aObj: TJSONObject): TUDPStreams;
+var
+   arr: TJSONValue;
+   st: TUDPStream;
+   i: integer;
+begin
+   Result := [];
+
+   arr := aObj.FindValue(J_STREAMS);
+   if arr is TJSONArray then
+      begin
+      for i := 0 to TJSONArray(arr).Count - 1 do
+         begin
+         // A name this build does not know is SKIPPED, not guessed at: sending
+         // contacts to something expecting scores is worse than not sending.
+         if UDPStreamFromName(TJSONArray(arr).Items[i].Value, st) then
+            begin
+            Include(Result, st);
+            end;
+         end;
+      Exit;
+      end;
+
+   if UDPStreamFromName(aObj.GetValue<string>(J_STREAM_LEGACY, ''), st) then
+      begin
+      Include(Result, st);
+      end;
 end;
 
 procedure TUDPBroadcastConfig.FromJSON(const aObj: TJSONObject);
@@ -475,7 +658,10 @@ var
    arr: TJSONValue;
    item: TJSONValue;
    obj: TJSONObject;
-   st: TUDPStream;
+   dest: TUDPDestination;
+   streams: TUDPStreams;
+   address: string;
+   port: integer;
    i: integer;
    v: TJSONValue;
 begin
@@ -488,6 +674,15 @@ begin
    if v is TJSONBool then
       begin
       FAllQSOs := TJSONBool(v).AsBoolean;
+      end;
+
+   // ABSENT means a file written before the master switch existed.  It must
+   // read as ON: the alternative is that upgrading TR4W silently stops every
+   // broadcast the operator had working.
+   v := aObj.FindValue(J_ENABLED);
+   if v is TJSONBool then
+      begin
+      FEnabled := TJSONBool(v).AsBoolean;
       end;
 
    arr := aObj.FindValue(J_DESTINATIONS);
@@ -508,17 +703,32 @@ begin
          end;
       obj := TJSONObject(item);
 
-      // A destination naming a stream this build does not know is SKIPPED, not
-      // guessed at.  Sending contacts to something expecting scores is worse
-      // than not sending them.
-      if not UDPStreamFromName(obj.GetValue<string>(J_STREAM, ''), st) then
+      // A row asking for nothing this build understands is dropped rather than
+      // kept as an endpoint that never sends -- which Validate would then
+      // refuse, leaving the operator unable to save a file they did not write.
+      streams := StreamsFromJSON(obj);
+      if streams = [] then
          begin
          Continue;
          end;
 
-      AddDestination(st,
-                     obj.GetValue<string>(J_ADDRESS, UDP_DEFAULT_ADDRESS),
-                     obj.GetValue<integer>(J_PORT, UDP_DEFAULT_PORT));
+      address := obj.GetValue<string>(J_ADDRESS, UDP_DEFAULT_ADDRESS);
+      port    := obj.GetValue<integer>(J_PORT, UDP_DEFAULT_PORT);
+
+      // MERGED by endpoint.  A file in the first cut of this format stored one
+      // row per stream, so the same address and port appears up to six times --
+      // and rows that are duplicates by the current rules would load, fail
+      // Validate, and leave the operator unable to save a file they did not
+      // write.  Reading is also then idempotent.
+      dest := FindDestination(address, port);
+      if dest = nil then
+         begin
+         AddDestination(address, port, streams);
+         end
+      else
+         begin
+         dest.Streams := dest.Streams + streams;
+         end;
       end;
 end;
 
