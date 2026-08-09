@@ -136,6 +136,12 @@ type
       function Clone: TUDPDestination;
       function SameAs(const aOther: TUDPDestination): boolean;
 
+      // Copies the VALUES onto an existing object, leaving its identity alone.
+      // That is what lets the editor work on a clone and then write the result
+      // back: the config's list still holds the same object, so nothing that
+      // referenced it is left pointing at a freed one.
+      procedure Assign(const aSource: TUDPDestination);
+
       // Does this endpoint want that kind of data?
       function Carries(const aStream: TUDPStream): boolean;
 
@@ -277,6 +283,17 @@ begin
              SameText(FAddress, aOther.FAddress) and
              (FPort = aOther.FPort)              and
              (FStreams = aOther.FStreams);
+end;
+
+procedure TUDPDestination.Assign(const aSource: TUDPDestination);
+begin
+   if aSource = nil then
+      begin
+      Exit;
+      end;
+   FAddress := aSource.FAddress;
+   FPort    := aSource.FPort;
+   FStreams := aSource.FStreams;
 end;
 
 function TUDPDestination.Carries(const aStream: TUDPStream): boolean;

@@ -102,6 +102,30 @@ const
    TC_PREFS_RADIOINUSE       = '%s  (in use as %s)';
    TC_PREFS_CONFIRMREMOVE    = 'Remove radio "%s"?';
 
+   // --- UDP broadcast section -----------------------------------------------
+   // The stream names AS THE OPERATOR SEES THEM.  Separate from the storage
+   // spellings in uUDPBroadcastConfig ('appInfo', 'contact') on purpose: those
+   // are written into settings\tr4w.json and must stay stable however the UI
+   // words them, and they are the one thing that must NOT be translated.
+   TC_PREFS_UDPSTREAM_CONTACT = 'Contact info';
+   TC_PREFS_UDPSTREAM_RADIO   = 'Radio info';
+   TC_PREFS_UDPSTREAM_SCORE   = 'Score';
+   TC_PREFS_UDPSTREAM_ROTOR   = 'Rotor';
+   TC_PREFS_UDPSTREAM_LOOKUP  = 'Callsign lookup';
+   TC_PREFS_UDPSTREAM_APPINFO = 'App info';
+
+   TC_PREFS_UDPNOSTREAMS      = '(nothing selected)';
+   TC_PREFS_UDPCONFIRMREMOVE  = 'Remove the destination %s:%d?';
+   TC_PREFS_UDPSELECTFIRST    = 'Select a destination to test.';
+   // SENT, never "reached": UDP gives no delivery confirmation, and a message
+   // that implies one sends the operator to debug the wrong end.
+   TC_PREFS_UDPTESTSENT       = 'Test packet sent to %s:%d.' + sLineBreak +
+                                'UDP cannot confirm it arrived -- check the ' +
+                                'receiving program.';
+   TC_PREFS_UDPDUPLICATE      = '%s:%d is already in the list.' + sLineBreak +
+                                'Add the extra kinds of data to that ' +
+                                'destination instead of listing it twice.';
+
    // --- radio editor --------------------------------------------------------
    TC_RADIOEDIT_TITLE        = 'Radio';
    TC_RADIOEDIT_NAME         = 'Name';

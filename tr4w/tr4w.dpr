@@ -97,6 +97,7 @@ uses
   uFMXTranslate in 'src\ui\fmx\uFMXTranslate.pas',
   uRadioEditForm in 'src\ui\fmx\uRadioEditForm.pas' {RadioEditForm},
   uKeyerEditForm in 'src\ui\fmx\uKeyerEditForm.pas' {frmKeyerEdit},
+  uUDPDestinationEditForm in 'src\ui\fmx\uUDPDestinationEditForm.pas' {frmUDPDestinationEdit},
   uPrefsForm in 'src\ui\fmx\uPrefsForm.pas' {PrefsForm},
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
