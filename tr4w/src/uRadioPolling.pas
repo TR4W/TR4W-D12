@@ -371,8 +371,26 @@ begin
             begin
             if (GetTickCount - lastPollTick >= LongWord(ro.pollingInterval)) then
                begin
-               ro.PollRadioState;
-               lastPollTick := GetTickCount;
+               // ONE OUTSTANDING POLL AT A TIME.  This loop used to fire every
+               // pollingInterval regardless of whether the radio had answered
+               // the last one, so a radio slower than the interval piled up
+               // backlog in its OWN CAT input buffer -- and a radio gets
+               // slower exactly when it is transmitting.  A K3S measured on
+               // the bench unkeyed in 99 ms when paced and 820 ms when flooded
+               // at this loop's rate: the RX; was queued behind poll commands
+               // we had already sent.  See TFactoryRadioBase.PollOutstanding.
+               if ro.PollOutstanding then
+                  begin
+                  // Skip this cycle.  Deliberately WITHOUT touching
+                  // lastPollTick, so the next poll goes the instant the radio
+                  // answers rather than waiting out another whole interval.
+                  end
+               else
+                  begin
+                  ro.MarkPollSent;
+                  ro.PollRadioState;
+                  lastPollTick := GetTickCount;
+                  end;
                end;
             end;
 
