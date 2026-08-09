@@ -133,6 +133,13 @@ type
       procedure SessionClosed(Session: TWSServerSession);
       procedure TextArrived(Session: TWSServerSession; const Text: string);
 
+      // THE ONE PLACE ANYTHING GOES OUT.  Every reply, confirmation and
+      // broadcast goes through these two, so 'TCI DEBUG = TRUE' shows the
+      // whole conversation in tr4w.log instead of only the inbound half.
+      // Before this, outbound was not logged AT ALL and diagnosing a refused
+      // PTT needed a Wireshark capture.
+      procedure Send(Session: TWSServerSession; const Msg: string);
+      procedure SendAll(const Msg: string);
       procedure SendInitBurst(Session: TWSServerSession);
       procedure Dispatch(Session: TWSServerSession; const Raw: string);
 
@@ -539,6 +546,42 @@ begin
       end;
 end;
 
+{ --------------------------------------------------------------- output -- }
+
+procedure TTCIServer.Send(Session: TWSServerSession; const Msg: string);
+begin
+   if Session = nil then
+      begin
+      Exit;
+      end;
+   if TR4W_TCI_DEBUG then
+      begin
+      logger.Info('[TCI TX %d] %s', [Session.Id, Msg]);
+      end
+   else
+      begin
+      logger.Trace('[TCI TX %d] %s', [Session.Id, Msg]);
+      end;
+   Session.SendText(Msg);
+end;
+
+procedure TTCIServer.SendAll(const Msg: string);
+begin
+   if FWS = nil then
+      begin
+      Exit;
+      end;
+   if TR4W_TCI_DEBUG then
+      begin
+      logger.Info('[TCI TX *] %s', [Msg]);
+      end
+   else
+      begin
+      logger.Trace('[TCI TX *] %s', [Msg]);
+      end;
+   FWS.Broadcast(Msg);
+end;
+
 { ----------------------------------------------------------- init burst -- }
 
 procedure TTCIServer.SendInitBurst(Session: TWSServerSession);
@@ -555,19 +598,19 @@ begin
    // global transmit state, then ready; and start; last.  SDC and CW Skimmer
    // latch their cached settings the moment ready; arrives, so anything sent
    // after it is not seen.
-   Session.SendText(TCIMsg('vfo_limits', TCIInt(TCI_VFO_LIMIT_LOW), TCIInt(TCI_VFO_LIMIT_HIGH)));
-   Session.SendText(TCIMsg('if_limits', TCIInt(TCI_IF_LIMIT_LOW), TCIInt(TCI_IF_LIMIT_HIGH)));
-   Session.SendText(TCIMsg('trx_count', TCIInt(count)));
-   Session.SendText(TCIMsg('channels_count', TCIInt(TCI_CHANNELS_COUNT)));
-   Session.SendText(TCIMsg('device', TCI_DEVICE_NAME));
-   Session.SendText(TCIMsg('receive_only', TCIBool(False)));
+   Send(Session, TCIMsg('vfo_limits', TCIInt(TCI_VFO_LIMIT_LOW), TCIInt(TCI_VFO_LIMIT_HIGH)));
+   Send(Session, TCIMsg('if_limits', TCIInt(TCI_IF_LIMIT_LOW), TCIInt(TCI_IF_LIMIT_HIGH)));
+   Send(Session, TCIMsg('trx_count', TCIInt(count)));
+   Send(Session, TCIMsg('channels_count', TCIInt(TCI_CHANNELS_COUNT)));
+   Send(Session, TCIMsg('device', TCI_DEVICE_NAME));
+   Send(Session, TCIMsg('receive_only', TCIBool(False)));
    // NOT TCIMsg for these two.  TCIMsg scrubs ',' out of every argument,
    // which is right for a value but wrong here: modulations_list IS a
    // comma-separated list, and 'ExpertSDR3,1.5' is a two-field value.
    // Scrubbing them produced 'expertsdr3_1.5', which is exactly the string
    // WSJT-X fails to match before it halves transmit amplitude.
-   Session.SendText(TCIMsgFreeText('modulations_list', TCI_MODULATIONS));
-   Session.SendText(TCIMsgFreeText('protocol', TCI_PROTOCOL_ID));
+   Send(Session, TCIMsgFreeText('modulations_list', TCI_MODULATIONS));
+   Send(Session, TCIMsgFreeText('protocol', TCI_PROTOCOL_ID));
 
    for trx := 0 to count - 1 do
       begin
@@ -590,24 +633,24 @@ begin
          txHz := snap.VFO[VFOA].Frequency;
          end;
 
-      Session.SendText(TCIMsg('vfo', TCIInt(trx), '0', TCIInt(snap.VFO[VFOA].Frequency)));
-      Session.SendText(TCIMsg('vfo', TCIInt(trx), '1', TCIInt(txHz)));
-      Session.SendText(TCIMsg('modulation', TCIInt(trx),
+      Send(Session, TCIMsg('vfo', TCIInt(trx), '0', TCIInt(snap.VFO[VFOA].Frequency)));
+      Send(Session, TCIMsg('vfo', TCIInt(trx), '1', TCIInt(txHz)));
+      Send(Session, TCIMsg('modulation', TCIInt(trx),
                               TR4WModeToTCI(snap.VFO[VFOA].Mode,
                                             snap.VFO[VFOA].ExtendedMode,
                                             snap.VFO[VFOA].Frequency)));
-      Session.SendText(TCIMsg('rx_enable', TCIInt(trx), TCIBool(True)));
-      Session.SendText(TCIMsg('rit_enable', TCIInt(trx), TCIBool(snap.RIT)));
-      Session.SendText(TCIMsg('xit_enable', TCIInt(trx), TCIBool(snap.XIT)));
-      Session.SendText(TCIMsg('rit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
-      Session.SendText(TCIMsg('xit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
+      Send(Session, TCIMsg('rx_enable', TCIInt(trx), TCIBool(True)));
+      Send(Session, TCIMsg('rit_enable', TCIInt(trx), TCIBool(snap.RIT)));
+      Send(Session, TCIMsg('xit_enable', TCIInt(trx), TCIBool(snap.XIT)));
+      Send(Session, TCIMsg('rit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
+      Send(Session, TCIMsg('xit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
 
       // split_enable is not decoration.  The RF2K-S amplifier client uses
       // split_enable:0,false as its signal that VFO 0 is the active VFO;
       // without ever receiving it, its current position stays unset and it
       // reports "No TCI available" no matter how many vfo: events arrive.
-      Session.SendText(TCIMsg('split_enable', TCIInt(trx), TCIBool(snap.Split)));
-      Session.SendText(TCIMsg('tx_enable', TCIInt(trx),
+      Send(Session, TCIMsg('split_enable', TCIInt(trx), TCIBool(snap.Split)));
+      Send(Session, TCIMsg('tx_enable', TCIInt(trx),
                               TCIBool(rig = ActiveRadioPtr)));
       end;
 
@@ -620,16 +663,16 @@ begin
       begin
       trx := 0;
       end;
-   Session.SendText(TCIMsg('drive', TCIInt(trx), '100'));
-   Session.SendText(TCIMsg('tune_drive', TCIInt(trx), '100'));
-   Session.SendText(TCIMsg('trx', TCIInt(trx), TCIBool(False)));
+   Send(Session, TCIMsg('drive', TCIInt(trx), '100'));
+   Send(Session, TCIMsg('tune_drive', TCIInt(trx), '100'));
+   Send(Session, TCIMsg('trx', TCIInt(trx), TCIBool(False)));
 
    // ready; LAST, after every setting.  start; is a device-state
    // notification and follows it.  Note what is NOT here: no audio_start and
    // no iq_start.  Those are client-owned, and a server-sent primer wedged
    // SDC before it processed start;.
-   Session.SendText(TCIMsg('ready'));
-   Session.SendText(TCIMsg('start'));
+   Send(Session, TCIMsg('ready'));
+   Send(Session, TCIMsg('start'));
 
    logger.Info('[TCI-SRV] init burst sent to client %d (%d receivers)',
                [Session.Id, count]);
@@ -688,7 +731,14 @@ begin
    cmd := TCIExpandGlobalForm(TCIParse(Raw));
    state := TTCIClientState(Session.Tag);
 
-   logger.Trace('[TCI-SRV RX %d] %s', [Session.Id, Raw]);
+   if TR4W_TCI_DEBUG then
+      begin
+      logger.Info('[TCI RX %d] %s;', [Session.Id, Raw]);
+      end
+   else
+      begin
+      logger.Trace('[TCI RX %d] %s', [Session.Id, Raw]);
+      end;
 
    case TCIClassify(cmd) of
       tcrGet:
@@ -734,12 +784,12 @@ begin
    // The identity commands answer from constants and need no radio.
    if Cmd.Name = 'vfo_limits' then
       begin
-      Session.SendText(TCIMsg('vfo_limits', TCIInt(TCI_VFO_LIMIT_LOW), TCIInt(TCI_VFO_LIMIT_HIGH)));
+      Send(Session, TCIMsg('vfo_limits', TCIInt(TCI_VFO_LIMIT_LOW), TCIInt(TCI_VFO_LIMIT_HIGH)));
       Exit;
       end;
    if Cmd.Name = 'if_limits' then
       begin
-      Session.SendText(TCIMsg('if_limits', TCIInt(TCI_IF_LIMIT_LOW), TCIInt(TCI_IF_LIMIT_HIGH)));
+      Send(Session, TCIMsg('if_limits', TCIInt(TCI_IF_LIMIT_LOW), TCIInt(TCI_IF_LIMIT_HIGH)));
       Exit;
       end;
 
@@ -748,19 +798,19 @@ begin
    if (Cmd.Name = 'audio_start') or (Cmd.Name = 'audio_stop') or
       (Cmd.Name = 'iq_start') or (Cmd.Name = 'iq_stop') then
       begin
-      Session.SendText(Cmd.Raw + ';');
+      Send(Session, Cmd.Raw + ';');
       Exit;
       end;
 
    if (Cmd.Name = 'rx_sensors_enable') or (Cmd.Name = 'tx_sensors_enable') then
       begin
-      Session.SendText(TCIMsg(Cmd.Name, TCIBool(False)));
+      Send(Session, TCIMsg(Cmd.Name, TCIBool(False)));
       Exit;
       end;
 
    if Cmd.Name = 'cw_macros_speed' then
       begin
-      Session.SendText(TCIMsg('cw_macros_speed', TCIInt(CodeSpeed)));
+      Send(Session, TCIMsg('cw_macros_speed', TCIInt(CodeSpeed)));
       Exit;
       end;
 
@@ -773,7 +823,7 @@ begin
          begin
          trx := 0;
          end;
-      Session.SendText(TCIMsg(Cmd.Name, TCIInt(trx), '100'));
+      Send(Session, TCIMsg(Cmd.Name, TCIInt(trx), '100'));
       Exit;
       end;
 
@@ -796,11 +846,11 @@ begin
       case Cmd.ArgInt(1, -1) of
          0:
             begin
-            Session.SendText(TCIMsg('vfo', TCIInt(trx), '0', TCIInt(snap.VFO[VFOA].Frequency)));
+            Send(Session, TCIMsg('vfo', TCIInt(trx), '0', TCIInt(snap.VFO[VFOA].Frequency)));
             end;
          1:
             begin
-            Session.SendText(TCIMsg('vfo', TCIInt(trx), '1', TCIInt(snap.VFO[VFOB].Frequency)));
+            Send(Session, TCIMsg('vfo', TCIInt(trx), '1', TCIInt(snap.VFO[VFOB].Frequency)));
             end;
       else
          // Out of range.  Answering channel 0 would be worse than silence:
@@ -810,49 +860,49 @@ begin
       end
    else if Cmd.Name = 'modulation' then
       begin
-      Session.SendText(TCIMsg('modulation', TCIInt(trx),
+      Send(Session, TCIMsg('modulation', TCIInt(trx),
                               TR4WModeToTCI(snap.VFO[VFOA].Mode,
                                             snap.VFO[VFOA].ExtendedMode,
                                             snap.VFO[VFOA].Frequency)));
       end
    else if Cmd.Name = 'trx' then
       begin
-      Session.SendText(TCIMsg('trx', TCIInt(trx), TCIBool(snap.TXOn)));
+      Send(Session, TCIMsg('trx', TCIInt(trx), TCIBool(snap.TXOn)));
       end
    else if Cmd.Name = 'tune' then
       begin
-      Session.SendText(TCIMsg('tune', TCIInt(trx), TCIBool(False)));
+      Send(Session, TCIMsg('tune', TCIInt(trx), TCIBool(False)));
       end
    else if Cmd.Name = 'split_enable' then
       begin
-      Session.SendText(TCIMsg('split_enable', TCIInt(trx), TCIBool(snap.Split)));
+      Send(Session, TCIMsg('split_enable', TCIInt(trx), TCIBool(snap.Split)));
       end
    else if Cmd.Name = 'rit_enable' then
       begin
-      Session.SendText(TCIMsg('rit_enable', TCIInt(trx), TCIBool(snap.RIT)));
+      Send(Session, TCIMsg('rit_enable', TCIInt(trx), TCIBool(snap.RIT)));
       end
    else if Cmd.Name = 'xit_enable' then
       begin
-      Session.SendText(TCIMsg('xit_enable', TCIInt(trx), TCIBool(snap.XIT)));
+      Send(Session, TCIMsg('xit_enable', TCIInt(trx), TCIBool(snap.XIT)));
       end
    else if Cmd.Name = 'rit_offset' then
       begin
-      Session.SendText(TCIMsg('rit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
+      Send(Session, TCIMsg('rit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
       end
    else if Cmd.Name = 'xit_offset' then
       begin
-      Session.SendText(TCIMsg('xit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
+      Send(Session, TCIMsg('xit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
       end
    else if Cmd.Name = 'dds' then
       begin
       // No panadapter: the centre is the receive frequency.
-      Session.SendText(TCIMsg('dds', TCIInt(trx), TCIInt(snap.VFO[VFOA].Frequency)));
+      Send(Session, TCIMsg('dds', TCIInt(trx), TCIInt(snap.VFO[VFOA].Frequency)));
       end
    else if Cmd.Name = 'rx_filter_band' then
       begin
       // We do not read filter edges from the rig.  Report a plausible SSB
       // passband rather than nothing: a client that gets silence here waits.
-      Session.SendText(TCIMsg('rx_filter_band', TCIInt(trx), '-2700', '-300'));
+      Send(Session, TCIMsg('rx_filter_band', TCIInt(trx), '-2700', '-300'));
       end;
 end;
 
@@ -883,7 +933,7 @@ begin
    if (Cmd.Name = 'rx_sensors_enable') or (Cmd.Name = 'tx_sensors_enable') then
       begin
       // Acknowledged; we publish no sensor telemetry.
-      Session.SendText(TCIMsg(Cmd.Name, TCIBool(False)));
+      Send(Session, TCIMsg(Cmd.Name, TCIBool(False)));
       Exit;
       end;
 
@@ -892,7 +942,7 @@ begin
       // We do not control rig power.  Confirm with what is actually in
       // force, so a client is not left waiting on an acknowledgement.
       trx := Cmd.ArgInt(0, 0);
-      Session.SendText(TCIMsg(Cmd.Name, TCIInt(trx), '100'));
+      Send(Session, TCIMsg(Cmd.Name, TCIInt(trx), '100'));
       Exit;
       end;
 
@@ -903,7 +953,7 @@ begin
          begin
          // A REFUSED PTT MUST BE ANSWERED.  Refusing in silence is what
          // WSJT-X surfaces as "TCI failed to set ptt" with no cause.
-         Session.SendText(TCIMsg('trx', TCIInt(Cmd.ArgInt(0, 0)), TCIBool(False)));
+         Send(Session, TCIMsg('trx', TCIInt(Cmd.ArgInt(0, 0)), TCIBool(False)));
          end;
       logger.Debug('[TCI-SRV] client %d addressed receiver %d, which is not configured',
                    [Session.Id, trx]);
@@ -928,7 +978,7 @@ begin
       if not Cmd.ArgBool(1, b) then
          begin
          // Not a boolean.  Do not guess -- but this is PTT, so say no.
-         Session.SendText(TCIMsg('trx', TCIInt(trx), TCIBool(False)));
+         Send(Session, TCIMsg('trx', TCIInt(trx), TCIBool(False)));
          Exit;
          end;
       ApplyPTT(Session, trx, b);
@@ -944,7 +994,7 @@ begin
       begin
       // Tune (carrier for an ATU) is not offered.  Confirm off rather than
       // leave the client waiting for an acknowledgement it will not get.
-      Session.SendText(TCIMsg('tune', TCIInt(trx), TCIBool(False)));
+      Send(Session, TCIMsg('tune', TCIInt(trx), TCIBool(False)));
       end;
 
    // rit/xit offsets and rx_filter_band SETs are accepted into silence for
@@ -1034,7 +1084,7 @@ begin
    // than none, because it reports a frequency the radio has already left.
    // The poll that follows will broadcast the truth if the radio disagreed,
    // which is the whole confirm-then-reconcile contract.
-   Session.SendText(TCIMsg('vfo', TCIInt(Trx), TCIInt(Channel), TCIInt(Hz)));
+   Send(Session, TCIMsg('vfo', TCIInt(Trx), TCIInt(Channel), TCIInt(Hz)));
 end;
 
 procedure TTCIServer.ApplyModulation(Trx: integer; const Modulation: string;
@@ -1097,7 +1147,7 @@ begin
    // broadcasts the truth afterwards if the radio disagreed.
    if Session <> nil then
       begin
-      Session.SendText(TCIMsg('modulation', TCIInt(Trx), LowerCase(Trim(Modulation))));
+      Send(Session, TCIMsg('modulation', TCIInt(Trx), LowerCase(Trim(Modulation))));
       end;
 end;
 
@@ -1156,7 +1206,7 @@ begin
    state := TTCIClientState(Session.Tag);
    if (rig = nil) or (state = nil) then
       begin
-      Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(False)));
+      Send(Session, TCIMsg('trx', TCIInt(Trx), TCIBool(False)));
       Exit;
       end;
 
@@ -1197,12 +1247,12 @@ begin
          begin
          logger.Warn('[TCI-SRV] client %d asked to key while another client holds PTT',
                      [Session.Id]);
-         Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(False)));
+         Send(Session, TCIMsg('trx', TCIInt(Trx), TCIBool(False)));
          end
       else
          begin
          snap := ReadRadioStatus(rig);
-         Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(snap.TXOn)));
+         Send(Session, TCIMsg('trx', TCIInt(Trx), TCIBool(snap.TXOn)));
          end;
       Exit;
       end;
@@ -1266,7 +1316,7 @@ begin
          // disagrees, the next publish broadcasts the truth to everyone --
          // which is what replaces uWSJTX's KLUDGESECONDSV, a commanded state
          // reported as fact for two seconds.
-         Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(KeyDown and sent)));
+         Send(Session, TCIMsg('trx', TCIInt(Trx), TCIBool(KeyDown and sent)));
       end);
 end;
 
@@ -1349,7 +1399,7 @@ begin
    // can trust a message to mean something moved.
    if First or (Cur.VFO[VFOA].Frequency <> Was.VFO[VFOA].Frequency) then
       begin
-      FWS.Broadcast(TCIMsg('vfo', TCIInt(Trx), '0', TCIInt(Cur.VFO[VFOA].Frequency)));
+      SendAll(TCIMsg('vfo', TCIInt(Trx), '0', TCIInt(Cur.VFO[VFOA].Frequency)));
       end;
 
    // Channel 1 follows VFO B while split is on, and the receive frequency
@@ -1373,13 +1423,13 @@ begin
       end;
    if First or (txNow <> txPrev) then
       begin
-      FWS.Broadcast(TCIMsg('vfo', TCIInt(Trx), '1', TCIInt(txNow)));
+      SendAll(TCIMsg('vfo', TCIInt(Trx), '1', TCIInt(txNow)));
       end;
 
    if First or (Cur.VFO[VFOA].Mode <> Was.VFO[VFOA].Mode) or
       (Cur.VFO[VFOA].ExtendedMode <> Was.VFO[VFOA].ExtendedMode) then
       begin
-      FWS.Broadcast(TCIMsg('modulation', TCIInt(Trx),
+      SendAll(TCIMsg('modulation', TCIInt(Trx),
                            TR4WModeToTCI(Cur.VFO[VFOA].Mode,
                                          Cur.VFO[VFOA].ExtendedMode,
                                          Cur.VFO[VFOA].Frequency)));
@@ -1387,22 +1437,22 @@ begin
 
    if First or (Cur.Split <> Was.Split) then
       begin
-      FWS.Broadcast(TCIMsg('split_enable', TCIInt(Trx), TCIBool(Cur.Split)));
+      SendAll(TCIMsg('split_enable', TCIInt(Trx), TCIBool(Cur.Split)));
       end;
 
    if First or (Cur.RIT <> Was.RIT) then
       begin
-      FWS.Broadcast(TCIMsg('rit_enable', TCIInt(Trx), TCIBool(Cur.RIT)));
+      SendAll(TCIMsg('rit_enable', TCIInt(Trx), TCIBool(Cur.RIT)));
       end;
 
    if First or (Cur.XIT <> Was.XIT) then
       begin
-      FWS.Broadcast(TCIMsg('xit_enable', TCIInt(Trx), TCIBool(Cur.XIT)));
+      SendAll(TCIMsg('xit_enable', TCIInt(Trx), TCIBool(Cur.XIT)));
       end;
 
    if First or (Cur.RITFreq <> Was.RITFreq) then
       begin
-      FWS.Broadcast(TCIMsg('rit_offset', TCIInt(Trx), TCIInt(Cur.RITFreq)));
+      SendAll(TCIMsg('rit_offset', TCIInt(Trx), TCIInt(Cur.RITFreq)));
       end;
 
    // Transmit state last, and unconditionally on change: this is the message
@@ -1410,7 +1460,7 @@ begin
    // filtered out by a cleverer diff.
    if First or (Cur.TXOn <> Was.TXOn) then
       begin
-      FWS.Broadcast(TCIMsg('trx', TCIInt(Trx), TCIBool(Cur.TXOn)));
+      SendAll(TCIMsg('trx', TCIInt(Trx), TCIBool(Cur.TXOn)));
       end;
 end;
 
