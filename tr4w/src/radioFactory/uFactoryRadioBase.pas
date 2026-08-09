@@ -683,7 +683,14 @@ implementation
 // `logger` field and sets it per radio in SetRadioModel, so it never needed the
 // main window's global; pulling that graph into the factory base is what made
 // dcc32 die with an internal error and stopped every cold build.
-Uses LogRadio, TypInfo;   // TypInfo: GetEnumName, for CapabilitiesAsText
+// LogRadio was here and was VESTIGIAL -- no symbol of it was referenced in any
+// code in this section (the only textual hits, `rig` and `SetUpRadioInterface`,
+// are in comments).  It was also the last edge from the radio factory into
+// src/trdos: the base class of the factory depending on the legacy unit the
+// factory replaced.  Removed 2026-08-08.  If a future change here needs
+// something from LogRadio, that is the signal the concept belongs ON THE RADIO,
+// not that this uses clause should come back.
+Uses TypInfo;   // TypInfo: GetEnumName, for CapabilitiesAsText
 
 var
    // TReadingThread IS NOT A RADIO.  It is a plain TThread declared beside
