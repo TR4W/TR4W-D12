@@ -168,6 +168,9 @@ type
       // Releases the transmitter if this client was holding it.  Public so a
       // disconnect and a Stop can both fail closed through one path.
       procedure ReleasePTT(Session: TWSServerSession);
+      // Drops the transmit session without unkeying -- for a key that was
+      // refused before it reached the radio.
+      procedure ReleasePTTOwnership(Session: TWSServerSession);
    end;
 
 var
@@ -193,6 +196,7 @@ implementation
 uses
    MainUnit,          // logger
    tree,              // CodeSpeed
+   LOGK1EA,           // tPTTViaCommand, NoPollDuringPTT -- named in the refusal
    uRadioPolling,     // RadioStatusPublished
    uFactoryRadioBase;
 
@@ -482,6 +486,22 @@ begin
    // not leave a rig keyed with nobody holding it.  This is the single most
    // important line in the unit.
    ReleasePTT(Session);
+end;
+
+// Gives up the transmit session WITHOUT unkeying.  Used when a key was
+// refused: there is nothing to unkey, and sending an unkey would be a command
+// to the radio that no client asked for.
+procedure TTCIServer.ReleasePTTOwnership(Session: TWSServerSession);
+begin
+   FLock.Enter;
+   try
+      if FPTTOwner = Session then
+         begin
+         FPTTOwner := nil;
+         end;
+   finally
+      FLock.Leave;
+   end;
 end;
 
 procedure TTCIServer.ReleasePTT(Session: TWSServerSession);
@@ -1187,11 +1207,31 @@ begin
       Exit;
       end;
 
+   // CONFIRMED FROM THE RESULT, NOT FROM HAVING ASKED.
+   //
+   // tPTTVIACAT has THREE gates before anything reaches the radio, and two of
+   // them exit in near-silence (LOGRADIO.PAS:3037):
+   //   1. 'PTT VIA COMMANDS' false  -> one DEBUG line, nothing sent
+   //   2. NoPollDuringPTT           -> no log at all, nothing sent
+   //   3. it keys ActiveRadio, NOT the receiver the client addressed
+   // It returns False in the first two cases and every caller in the program
+   // ignores that.  Confirming trx:<n>,true after one of them fires tells the
+   // client it is transmitting while the rig sits there -- the exact class of
+   // silent downgrade this project keeps paying for, and worse here because
+   // the subject is a transmitter.
+   //
+   // So the queued apply reports back, and the confirmation is sent from the
+   // MAIN thread once the answer is known.  A refused key still gets an
+   // explicit trx:<n>,false -- silence is what WSJT-X surfaces as "TCI failed
+   // to set ptt" with no cause.
    TThread.Queue(nil,
       procedure
+      var
+         sent: boolean;
       begin
+         sent := False;
          try
-            tPTTVIACAT(KeyDown);
+            sent := tPTTVIACAT(KeyDown);
          except
             on E: Exception do
                begin
@@ -1199,16 +1239,35 @@ begin
                             [BoolToStr(KeyDown, True), E.Message]);
                end;
          end;
-      end);
 
-   // CONFIRM FROM THE COMMANDED STATE, THEN LET THE POLL TELL THE TRUTH.
-   // This is what replaces uWSJTX's KLUDGESECONDSV: that code reports a
-   // commanded state for two seconds and calls it fact.  Here the
-   // confirmation is a confirmation, and if the radio disagrees the next
-   // publish broadcasts trx:<n>,<real state> to everyone.  A client that
-   // watches the broadcast learns the truth instead of being told a lie
-   // with a timer on it.
-   Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(KeyDown)));
+         if not sent then
+            begin
+            // Named explicitly, because the operator has to change a setting
+            // and "it did not transmit" gives them nothing to act on.
+            if not tPTTViaCommand then
+               begin
+               logger.Warn('[TCI-SRV] PTT refused: "PTT VIA COMMANDS" is FALSE, ' +
+                           'so no transmit command is sent to the radio');
+               end
+            else if NoPollDuringPTT then
+               begin
+               logger.Warn('[TCI-SRV] PTT refused: NO POLL DURING PTT is set');
+               end
+            else
+               begin
+               logger.Warn('[TCI-SRV] PTT refused: no radio driver');
+               end;
+            // Give the transmit session back -- we do not hold a transmitter
+            // we never keyed.
+            ReleasePTTOwnership(Session);
+            end;
+
+         // Sent LAST and from what actually happened.  If the radio then
+         // disagrees, the next publish broadcasts the truth to everyone --
+         // which is what replaces uWSJTX's KLUDGESECONDSV, a commanded state
+         // reported as fact for two seconds.
+         Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(KeyDown and sent)));
+      end);
 end;
 
 { ------------------------------------------------------------ broadcast -- }
