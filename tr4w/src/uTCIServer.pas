@@ -1365,6 +1365,18 @@ begin
    // so this copy is taken from a settled seqlock on the first attempt.
    snap := ReadRadioStatus(rig);
 
+   // TRANSMIT STATE COMES FROM THE LIVE STATUS, NOT THE FILTERED ONE.
+   //
+   // ReadRadioStatus returns FilteredStatus, which UpdateStatus debounces by
+   // a poll cycle.  That debounce exists to stop the DISPLAY flickering on
+   // frequency jitter, and it is right for frequency.  It is wrong for PTT:
+   // transmit state is binary, it does not jitter, and it is the one value
+   // where being late is the whole problem.  Measured on NY4I's bench
+   // 2026-08-09: RX; reached the K3 2 ms after the request, but the
+   // trx:0,false broadcast telling other clients about it came 725 ms later,
+   // purely because of the debounce.
+   snap.TXOn := ReadRadioCurrentStatus(rig).TXOn;
+
    FLock.Enter;
    try
       first := not FHave[r];
