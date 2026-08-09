@@ -521,13 +521,13 @@ object PrefsForm: TPrefsForm
         Size.Height = 150.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 2
+        OnDblClick = lstUDPDestinationsDblClick
         DisableFocusEffect = True
         DefaultItemStyles.ItemStyle = ''
         DefaultItemStyles.GroupHeaderStyle = ''
         DefaultItemStyles.GroupFooterStyle = ''
         Viewport.Width = 416.000000000000000000
         Viewport.Height = 146.000000000000000000
-        OnDblClick = lstUDPDestinationsDblClick
       end
       object btnUDPAdd: TButton
         Position.X = 445.000000000000000000
