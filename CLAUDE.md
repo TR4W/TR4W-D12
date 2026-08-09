@@ -455,6 +455,7 @@ Read the specific doc before acting in its area — these are current and this f
 | String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
 | VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
+| TCI server | `docs/TCI_SERVER_DESIGN.md` |
 | Release process | `docs/RELEASE_WORKFLOW.md`, `docs/FORK_PROCESS.md` |
 | Hardware test plan | `tr4w/docs/D12_HARDWARE_TEST_PLAN.md` |
 
