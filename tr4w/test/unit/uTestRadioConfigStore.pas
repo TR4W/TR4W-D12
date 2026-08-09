@@ -28,7 +28,11 @@ interface
 
 uses
    SysUtils, Classes, IniFiles, System.JSON, System.IOUtils,
-   uTR4WTestFramework, uRadioConfigStore;
+   uTR4WTestFramework, uRadioConfigStore,
+   // For the render-then-seed round trip.  The store and the renderer are two
+   // halves of one conversation and were tested only separately, which is how
+   // they came to disagree about how a network radio is spelled.
+   uRadioConfigLegacyMap;
 
 type
    TRadioConfigStoreTests = class(TTestCase)
@@ -64,6 +68,8 @@ type
       procedure Test_SeedSkipsUnconfiguredSlot;
       procedure Test_SeedWithNoRadiosProducesEmptyStore;
       procedure Test_SeedInfersNetworkTransport;
+      procedure Test_SeedInfersNetworkFromTcpIpControlPort;
+      procedure Test_NetworkRadioSurvivesRenderThenSeed;
       procedure Test_SeedUsesFactoryIdAndLegacyNetworkNames;
       procedure Test_SeedDedupesIdenticalSlotNames;
       procedure Test_LegacyIniHasRadiosDetectsFactoryOnlySlot;
@@ -1049,6 +1055,109 @@ begin
    end;
 end;
 
+// The spelling the program ACTUALLY writes.  Test_SeedInfersNetworkTransport
+// above covers 'NONE' + IP, the pre-2026-08-05 convention -- and covering only
+// that is how this defect survived: the writer moved to 'TCP/IP' and the reader
+// did not, so a correctly-configured network K4 seeded as SERIAL with its IP
+// still attached.  The editor then opened it on the Serial tab, found no
+// matching port, and saved CONTROL PORT=NONE over the definition.
+procedure TRadioConfigStoreTests.Test_SeedInfersNetworkFromTcpIpControlPort;
+var
+   store: TRadioConfigStore;
+   ini: TMemIniFile;
+   radio: TRadioDefinition;
+begin
+   BeginTest('Test_SeedInfersNetworkFromTcpIpControlPort');
+   ini := NewTempIni;
+   store := TRadioConfigStore.Create;
+   try
+      ini.WriteString('Radio', 'RADIO ONE TYPE',         'K4');
+      ini.WriteString('Radio', 'RADIO ONE NAME',         'K4-278');
+      ini.WriteString('Radio', 'RADIO ONE CONTROL PORT', 'TCP/IP');
+      ini.WriteString('Radio', 'RADIO ONE IP ADDRESS',   '192.168.73.108');
+      ini.WriteString('Radio', 'RADIO ONE TCP PORT',     '9200');
+
+      store.SeedFromLegacyIni(ini);
+      radio := store.FindRadio('K4-278');
+      CheckTrue(radio <> nil, 'seeded');
+      if radio <> nil then
+         begin
+         CheckEquals(Ord(rtNetwork), Ord(radio.Transport),
+            'CONTROL PORT=TCP/IP must seed as NETWORK.  Read as serial, the '
+            + 'radio loses its network identity while keeping its IP, and the '
+            + 'factory then refuses to build a driver for it.');
+         CheckEquals('192.168.73.108', radio.IPAddress, 'IPAddress');
+         CheckEquals(9200,             radio.TCPPort,   'TCPPort');
+         end;
+   finally
+      store.Free;
+      ini.Free;
+   end;
+end;
+
+// THE TEST THAT WOULD HAVE CAUGHT IT, and the one that keeps the two halves
+// honest from here on: render a definition the way the program renders it, feed
+// exactly those keys back through seeding, and require the radio to come out
+// the same.  Neither side is allowed to be the reference for the other -- the
+// keys come from RenderRadioKeys, so changing how a network radio is spelled
+// fails here rather than silently converting operators' radios to serial.
+procedure TRadioConfigStoreTests.Test_NetworkRadioSurvivesRenderThenSeed;
+var
+   store: TRadioConfigStore;
+   ini: TMemIniFile;
+   source, seeded: TRadioDefinition;
+   rendered: TConfigKeyValues;
+   typeRendering: TRadioTypeRendering;
+   i: integer;
+begin
+   BeginTest('Test_NetworkRadioSurvivesRenderThenSeed');
+   ini := NewTempIni;
+   store := TRadioConfigStore.Create;
+   source := TRadioDefinition.Create;
+   try
+      source.Name       := 'K4-278';
+      source.RegistryId := 'K4';
+      source.Transport  := rtNetwork;
+      source.IPAddress  := '192.168.73.108';
+      source.TCPPort    := 9200;
+      source.BaudRate   := 38400;
+
+      // A real rendering, not Default().  With an empty LegacyTypeName the
+      // renderer writes RADIO ONE TYPE='' and seeding correctly treats the slot
+      // as unconfigured -- which made the first version of this test fail for a
+      // reason that had nothing to do with transport.
+      typeRendering := Default(TRadioTypeRendering);
+      typeRendering.LegacyTypeName := 'K4';
+
+      rendered := RenderRadioKeys(1, source, typeRendering, nil);
+      for i := 0 to High(rendered) do
+         begin
+         ini.WriteString('Radio', rendered[i].Key, rendered[i].Value);
+         end;
+      // The name is not part of the rendered set in every path; seeding needs
+      // one to find the radio by.
+      ini.WriteString('Radio', 'RADIO ONE NAME', source.Name);
+
+      store.SeedFromLegacyIni(ini);
+      seeded := store.FindRadio('K4-278');
+      CheckTrue(seeded <> nil, 'the rendered radio seeds back');
+      if seeded <> nil then
+         begin
+         CheckEquals(Ord(rtNetwork), Ord(seeded.Transport),
+            'a NETWORK radio must still be NETWORK after render -> seed.  If '
+            + 'this fails, the renderer and the seeder disagree about how a '
+            + 'network radio is spelled, and every operator with a network rig '
+            + 'silently gets a serial definition on migration.');
+         CheckEquals(source.IPAddress, seeded.IPAddress, 'IPAddress survived');
+         CheckEquals(source.TCPPort,   seeded.TCPPort,   'TCPPort survived');
+         end;
+   finally
+      source.Free;
+      store.Free;
+      ini.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.Test_SeedUsesFactoryIdAndLegacyNetworkNames;
 var
    store: TRadioConfigStore;
@@ -1453,6 +1562,8 @@ begin
    Test_SeedSkipsUnconfiguredSlot;
    Test_SeedWithNoRadiosProducesEmptyStore;
    Test_SeedInfersNetworkTransport;
+   Test_SeedInfersNetworkFromTcpIpControlPort;
+   Test_NetworkRadioSurvivesRenderThenSeed;
    Test_SeedUsesFactoryIdAndLegacyNetworkNames;
    Test_SeedDedupesIdenticalSlotNames;
 
