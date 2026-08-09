@@ -746,6 +746,33 @@ const
 }
 
 
+// Has the radio's status changed since the last poll?
+//
+// This replaces a raw byte scan over SizeOf(RadioStatusRecord) in
+// uRadioPolling.UpdateStatus.  The byte scan worked, and it is not being
+// replaced because it was failing -- it is being replaced because it compares
+// something other than what it claims to.
+//
+// WHAT A BYTE SCAN ACTUALLY COMPARES.  RadioStatusRecord's declared fields sit
+// in a larger aligned footprint: VFOStatusType packs two longints and six
+// one-byte enums, so the compiler pads it, and the two arrays of it multiply
+// that padding.  Padding is memory no field owns.  It reads equal today only
+// because ClearRadioStatus zeroes the whole record and every later write goes
+// through a named field, so the pad bytes are set once and never touched again.
+//
+// That is a property of today's code, not an invariant.  Give this record a
+// managed field -- a string, a dynamic array, an interface -- and Delphi stops
+// copying it as a block: `PreviousStatus := CurrentStatus` becomes field-wise,
+// the padding in the two records diverges, and the byte scan then reports a
+// change on EVERY poll forever.  The symptom is a display and a UDP stream that
+// never stop repainting, with nothing in the diff to explain it.
+//
+// Comparing named fields cannot fail that way, and it is what the routine was
+// always trying to express.  test/unit/uTestRadioStatus.pas pins it field by
+// field in both directions, so a field added to the record but not added here
+// fails a test rather than becoming silently invisible to change detection.
+function RadioStatusDiffers(const a, b: RadioStatusRecord): boolean;
+
 function tPTTVIACAT(PTTOn: boolean): boolean;
 //function GetRadioFromString(RadioName: ShortString): InterfacedRadioType;
 procedure TestRadioInterface;
@@ -2830,6 +2857,64 @@ begin
               end;
      end;
 end;
+// Field-by-field, in declaration order.  See the note on the declaration for
+// why this is not a byte compare.
+//
+// The two VFO arrays are compared over their FULL index range -- vfoUnknown and
+// vfoMem included, not just VFOA/VFOB.  pFactoryRadio only ever fills A and B
+// today, so the other two slots are always zero and the extra comparisons are
+// free; but a byte scan covered them, and quietly narrowing what counts as a
+// change while claiming to preserve behaviour is exactly the kind of silent
+// difference this whole exercise exists to avoid.
+function VFOStatusDiffers(const a, b: VFOStatusType): boolean;
+begin
+   Result := (a.Frequency    <> b.Frequency)    or
+             (a.RITFreq      <> b.RITFreq)      or
+             (a.Band         <> b.Band)         or
+             (a.Mode         <> b.Mode)         or
+             (a.Split        <> b.Split)        or
+             (a.RIT          <> b.RIT)          or
+             (a.XIT          <> b.XIT)          or
+             (a.ExtendedMode <> b.ExtendedMode);
+end;
+
+function RadioStatusDiffers(const a, b: RadioStatusRecord): boolean;
+var
+   v: ActiveVFOStatusType;
+begin
+   Result := True;
+
+   if (a.Freq          <> b.Freq)          or
+      (a.Split         <> b.Split)         or
+      (a.RIT           <> b.RIT)           or
+      (a.XIT           <> b.XIT)           or
+      (a.RITFreq       <> b.RITFreq)       or
+      (a.PrevRITFreq   <> b.PrevRITFreq)   or
+      (a.Band          <> b.Band)          or
+      (a.Mode          <> b.Mode)          or
+      (a.ExtendedMode  <> b.ExtendedMode)  or
+      (a.VFOStatus     <> b.VFOStatus)     or
+      (a.PrevVFOStatus <> b.PrevVFOStatus) or
+      (a.TXOn          <> b.TXOn)          then
+      begin
+      Exit;
+      end;
+
+   for v := Low(ActiveVFOStatusType) to High(ActiveVFOStatusType) do
+      begin
+      if VFOStatusDiffers(a.VFO[v], b.VFO[v]) then
+         begin
+         Exit;
+         end;
+      if VFOStatusDiffers(a.previousVFO[v], b.previousVFO[v]) then
+         begin
+         Exit;
+         end;
+      end;
+
+   Result := False;
+end;
+
 function tPTTVIACAT(PTTOn: boolean): boolean;
 
 var

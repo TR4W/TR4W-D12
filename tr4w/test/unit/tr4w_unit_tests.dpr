@@ -131,6 +131,10 @@ uses
    uRadioElecraftBase in '..\..\src\radioFactory\uRadioElecraftBase.pas',
    uRadioKenwoodBase in '..\..\src\radioFactory\uRadioKenwoodBase.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
+   // Pins the radio-status change detector.  LOGRADIO itself is not listed
+   // here -- it arrives through the search path, the same way uTestIcomRegistry
+   // reaches RadioParametersArray.
+   uTestRadioStatus in 'uTestRadioStatus.pas',
    uElecraftIF in '..\..\src\radioFactory\uElecraftIF.pas',
    uTestElecraftIF in 'uTestElecraftIF.pas',
    // CW keyer factory -- listed EXPLICITLY (same rule as the radio units:
@@ -267,6 +271,7 @@ begin
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
+   RegisterSuite(TRadioStatusTests.Create('RadioStatus'));
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));

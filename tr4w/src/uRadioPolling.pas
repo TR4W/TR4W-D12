@@ -624,23 +624,18 @@ end;
 procedure UpdateStatus(rig: RadioPtr);
 var
    StatusChanged: boolean;
-   TempInteger: integer;
 begin
   //  logger.Trace('UpdateStatus called for %s', [rig.RadioName]);
-   StatusChanged := False;
-   //  CompareString(LOCALE_SYSTEM_DEFAULT, 0, @rig.CurrentStatus, SizeOf(RadioStatusRecord), @rig.PreviousStatus, SizeOf(RadioStatusRecord)) <> 2;
-   for TempInteger := 0 to SizeOf(RadioStatusRecord) - 1 do
-      begin
-         // D12: PChar is PWideChar, so PChar(...)[i] would step 2 bytes and read
-         // past the record (spuriously "changed" every poll -> UDP/display flood).
-         // PByte walks one byte at a time, matching SizeOf(RadioStatusRecord).
-         if PByte(@rig.CurrentStatus)[TempInteger] <>
-            PByte(@rig.PreviousStatus)[TempInteger] then
-            begin
-               StatusChanged := True;
-               Break;
-            end;
-      end;
+   // Was a byte scan over SizeOf(RadioStatusRecord), which also compared the
+   // record's alignment padding -- memory no field owns.  It happened to work,
+   // and it is one managed field away from reporting a change on every poll
+   // forever.  LogRadio.RadioStatusDiffers compares named fields; the reasoning
+   // is on its declaration and test/unit/uTestRadioStatus.pas pins it.
+   //
+   // Equivalence was not assumed: test/integration/run-status-trace.ps1 records
+   // every decision this routine makes, and the trace is byte-identical across
+   // the swap.
+   StatusChanged := RadioStatusDiffers(rig.CurrentStatus, rig.PreviousStatus);
 
    //if StatusChanged = True then
    if (StatusChanged) or
