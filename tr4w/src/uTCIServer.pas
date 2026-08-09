@@ -94,6 +94,31 @@ type
       destructor  Destroy; override;
    end;
 
+   TTCIServer = class;
+
+   { Bounds a TCI-keyed transmission.
+
+     WHY IT HAS ITS OWN THREAD.  This is a safety interlock, so it must not
+     share a fate with anything it is protecting against.  The poll loop would
+     have been free, but a stuck transmitter and a stalled poll loop are not
+     independent events -- if polling has died, that is exactly when we most
+     need this to still run.  One thread, asleep on an event for all but a
+     few microseconds a second, is the right price.
+
+     WHAT IT DOES NOT DO: touch a transmission the OPERATOR started.  It fires
+     only while a TCI client holds the transmit session. }
+   TTCIWatchdogThread = class(TThread)
+   private
+      FOwner:  TTCIServer;
+      FWakeUp: TEvent;
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(AOwner: TTCIServer);
+      destructor  Destroy; override;
+      procedure Stop;
+   end;
+
    TTCIServer = class(TObject)
    private
       FWS:      TWebSocketServer;
@@ -128,6 +153,9 @@ type
       // FLock; the session pointer is only ever compared, never dereferenced
       // outside a handler that already owns the session.
       FPTTOwner: TWSServerSession;
+      // GetTickCount at the moment a TCI client keyed.  Guarded by FLock.
+      FPTTKeyedAt: cardinal;
+      FWatchdog: TTCIWatchdogThread;
 
       procedure SessionOpened(Session: TWSServerSession);
       procedure SessionClosed(Session: TWSServerSession);
@@ -155,6 +183,8 @@ type
       procedure BroadcastRadio(Trx: integer; const Cur, Was: RadioStatusRecord;
                                First: boolean);
       function  SlotOf(Trx: integer): RadioType;
+      // Called about once a second from the watchdog thread.
+      procedure CheckTransmitTimeout;
    public
       constructor Create;
       destructor  Destroy; override;
@@ -362,6 +392,50 @@ begin
    inherited Destroy;
 end;
 
+{ ---------------------------------------------------- TTCIWatchdogThread -- }
+
+constructor TTCIWatchdogThread.Create(AOwner: TTCIServer);
+begin
+   FOwner := AOwner;
+   FWakeUp := TEvent.Create(nil, False, False, '');
+   FreeOnTerminate := False;
+   inherited Create(False);
+end;
+
+destructor TTCIWatchdogThread.Destroy;
+begin
+   FreeAndNil(FWakeUp);
+   inherited Destroy;
+end;
+
+procedure TTCIWatchdogThread.Stop;
+begin
+   Terminate;
+   FWakeUp.SetEvent;   // do not make shutdown wait out the poll interval
+end;
+
+procedure TTCIWatchdogThread.Execute;
+begin
+   while not Terminated do
+      begin
+      FWakeUp.WaitFor(1000);
+      if Terminated then
+         begin
+         Break;
+         end;
+      try
+         FOwner.CheckTransmitTimeout;
+      except
+         on E: Exception do
+            begin
+            // Must never die: it is the last thing standing between a wedged
+            // client and a transmitter that stays keyed.
+            logger.Error('[TCI-SRV] watchdog: %s - %s', [E.ClassName, E.Message]);
+            end;
+      end;
+      end;
+end;
+
 { ------------------------------------------------- the publish-side hook -- }
 
 // A plain procedure, because the hook in uRadioPolling is a plain procedure
@@ -384,6 +458,7 @@ begin
    FLock := TCriticalSection.Create;
    FPort := TCI_SERVER_DEFAULT_PORT;
    FPTTOwner := nil;
+   FPTTKeyedAt := 0;
    for r := RadioOne to RadioTwo do
       begin
       FHave[r] := False;
@@ -394,11 +469,22 @@ begin
    FWS.OnSessionOpened := SessionOpened;
    FWS.OnSessionClosed := SessionClosed;
    FWS.OnTextMessage := TextArrived;
+
+   // Always running, even with the server stopped: it costs one sleeping
+   // thread, and a safety interlock that is only armed some of the time is
+   // one more thing to reason about.
+   FWatchdog := TTCIWatchdogThread.Create(Self);
 end;
 
 destructor TTCIServer.Destroy;
 begin
    Stop;
+   if Assigned(FWatchdog) then
+      begin
+      FWatchdog.Stop;
+      FWatchdog.WaitFor;
+      FreeAndNil(FWatchdog);
+      end;
    FreeAndNil(FWS);
    FreeAndNil(FLock);
    inherited Destroy;
@@ -474,6 +560,7 @@ begin
    FLock.Enter;
    try
       FPTTOwner := nil;
+      FPTTKeyedAt := 0;
    finally
       FLock.Leave;
    end;
@@ -505,6 +592,7 @@ begin
       if FPTTOwner = Session then
          begin
          FPTTOwner := nil;
+         FPTTKeyedAt := 0;
          end;
    finally
       FLock.Leave;
@@ -521,6 +609,7 @@ begin
       if (FPTTOwner <> nil) and (FPTTOwner = Session) then
          begin
          FPTTOwner := nil;
+         FPTTKeyedAt := 0;
          wasOwner := True;
          end;
    finally
@@ -1221,6 +1310,13 @@ begin
          if (FPTTOwner = nil) or (FPTTOwner = Session) then
             begin
             FPTTOwner := Session;
+            // Stamped only on a fresh key, so a client that re-sends
+            // trx:<n>,true during a transmission cannot keep pushing the
+            // watchdog deadline out for ever.
+            if FPTTKeyedAt = 0 then
+               begin
+               FPTTKeyedAt := GetTickCount;
+               end;
             state.OwnsPTT := True;
             accepted := True;
             end;
@@ -1233,6 +1329,7 @@ begin
          if FPTTOwner = Session then
             begin
             FPTTOwner := nil;
+            FPTTKeyedAt := 0;
             state.OwnsPTT := False;
             accepted := True;
             end;
@@ -1321,6 +1418,82 @@ begin
 end;
 
 { ------------------------------------------------------------ broadcast -- }
+
+procedure TTCIServer.CheckTransmitTimeout;
+var
+   owner:   TWSServerSession;
+   keyedAt: cardinal;
+   elapsed: cardinal;
+   limit:   cardinal;
+begin
+   if TR4W_TCI_MAX_TX_SECONDS <= 0 then
+      begin
+      Exit;      // deliberately disabled
+      end;
+   limit := cardinal(TR4W_TCI_MAX_TX_SECONDS) * 1000;
+
+   FLock.Enter;
+   try
+      owner := FPTTOwner;
+      keyedAt := FPTTKeyedAt;
+   finally
+      FLock.Leave;
+   end;
+
+   // No TCI client is holding the transmitter.  In particular this is how a
+   // transmission the OPERATOR started is left alone -- the watchdog has no
+   // business unkeying something it did not key.
+   if (owner = nil) or (keyedAt = 0) then
+      begin
+      Exit;
+      end;
+
+   // Unsigned subtraction, so the 49.7-day GetTickCount wrap is handled
+   // rather than producing an enormous elapsed and an instant false trip.
+   elapsed := GetTickCount - keyedAt;
+   if elapsed < limit then
+      begin
+      Exit;
+      end;
+
+   logger.Error('[TCI-SRV] WATCHDOG: client %d has held the transmitter for %d s ' +
+                '(limit %d s) - unkeying',
+                [owner.Id, elapsed div 1000, TR4W_TCI_MAX_TX_SECONDS]);
+
+   FLock.Enter;
+   try
+      FPTTOwner := nil;
+      FPTTKeyedAt := 0;
+   finally
+      FLock.Leave;
+   end;
+
+   // CALLED DIRECTLY, NOT VIA TThread.Queue.  Everywhere else in this unit a
+   // radio command is marshalled to the main thread, and that is right for a
+   // tune: SetRadioFreq writes program globals.  It is WRONG here.  A stalled
+   // main thread is one of the things that could have produced a stuck
+   // transmitter in the first place, so a safety unkey must not queue behind
+   // it.  This is safe because the transport is the thread-safe part --
+   // SendToRadio takes SocketLock, and uWSJTX already calls tPTTVIACAT from
+   // its Indy connection thread.
+   try
+      if not tPTTVIACAT(False) then
+         begin
+         logger.Error('[TCI-SRV] WATCHDOG: the unkey was REFUSED -- ' +
+                      'check "PTT VIA COMMANDS" and NO POLL DURING PTT');
+         end;
+   except
+      on E: Exception do
+         begin
+         logger.Error('[TCI-SRV] WATCHDOG: unkey failed: %s', [E.Message]);
+         end;
+   end;
+
+   // Tell every client, including the one that was holding it: its next
+   // trx:<n>,false would otherwise be refused as unowned and it would never
+   // learn the session was taken away.
+   SendAll(TCIMsg('trx', TCIInt(RadioToTrx(ActiveRadioPtr)), TCIBool(False)));
+end;
 
 function TTCIServer.SlotOf(Trx: integer): RadioType;
 begin

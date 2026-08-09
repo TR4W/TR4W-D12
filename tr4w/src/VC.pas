@@ -2887,6 +2887,10 @@ var
   TR4W_HAMLIB_TRACE                     : boolean;  // Enable HamLib internal trace → target/hamlib_trace.log
   TR4W_TELNET_DEBUG                     : boolean;  // Issue #23 — log all DX cluster I/O + telnet-window writes (INFO, gated)
   TR4W_TCI_DEBUG                        : boolean;  // Log every TCI server command, BOTH directions (INFO, gated)
+  // Hard ceiling on a TCI-KEYED transmission, seconds.  0 disables it.
+  // 180 covers WSPR's 110.6 s period and any normal digital or voice
+  // transmission; a station running FST4W-1800 must raise it deliberately.
+  TR4W_TCI_MAX_TX_SECONDS               : integer = 180;
 
   TR4W_LC_FILENAME                      : PChar = 'LUCONSZ.TTF';
 

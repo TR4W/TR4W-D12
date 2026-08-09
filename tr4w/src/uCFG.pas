@@ -368,6 +368,7 @@ const
    + 2 {PSTROTATOR IP ADDRESS + PSTROTATOR UDP PORT}  // Issue #732
    + 1 {TELNET DEBUG}  // Issue #23
    + 1 {TCI DEBUG}
+   + 1 {TCI MAX TX SECONDS}
    + 2 {Radio1 and Radio2 SERIAL FORMAT}  // dialog-exposed data bits / parity / stop bits
    ;
 
@@ -829,6 +830,7 @@ const
 // (crCommand: 'TAIL END SSB MESSAGE';          crAddress: @TailEndPhoneMessage;            crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 1),
  (crCommand: 'TELNET DEBUG';                  crAddress: @TR4W_TELNET_DEBUG;              crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),   // Issue #23
  (crCommand: 'TCI DEBUG';                     crAddress: @TR4W_TCI_DEBUG;                 crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'TCI MAX TX SECONDS';            crAddress: @TR4W_TCI_MAX_TX_SECONDS;        crMin:0;  crMax:3600;    crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'TELNET SERVER';                 crAddress: @TelnetServer;                   crMin:0;  crMax:255;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'TEN MINUTE RULE';               crAddress: pointer(18);                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'TOTAL OFF TIME';                crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
