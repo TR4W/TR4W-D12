@@ -309,7 +309,20 @@ var
   PTTEnable                             : boolean = True;
   PTTLockout                            : boolean;
   PTTTurnOnDelay                        : integer = 15;
-  tPTTViaCommand                        : boolean;
+  // Default TRUE (NY4I, 2026-08-09).  This selects the PTT INTERFACE -- key by
+  // CAT command, or key by the hardware line above -- and defaulting it FALSE
+  // meant the CAT path silently did nothing: tPTTVIACAT logs one DEBUG line
+  // and returns False, and every caller in the program ignored that result.
+  // The switch is kept because the choice is real (CI-V bus contention during
+  // transmit, amplifier sequencing off PTTTurnOnDelay, radios with no CAT
+  // transmit command at all) -- only the default changes, so a station that
+  // wants the hardware line still turns it off.
+  //
+  // NOTE this moves the default ONLY.  TR4W writes every CommandsArray key
+  // back to tr4w.ini, so an existing station already has an explicit
+  // 'PTT VIA COMMANDS=' line and the file still wins.  This changes fresh
+  // installs.
+  tPTTViaCommand                        : boolean = True;
   tr4w_PTTStartTime                     : DWORD;
   tElapsedTimeFromLastQSO               : DWORD;
 
