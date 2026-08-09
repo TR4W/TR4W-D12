@@ -138,6 +138,13 @@ function SettingsDirectory: string;
 // profile, or a profile naming a radio that no longer exists all return True
 // having changed nothing -- an operator who has never opened Preferences must
 // boot exactly as they always did.
+// Library-owned settings that the PROGRAM (not a radio) acts on, published
+// here by ApplyActiveProfileToConfigAtStartup.  The store is loaded once at
+// startup and freed again, so a global is how a decision made in Preferences
+// reaches tr4w.dpr without a second read of the file.
+var
+   RadioLibraryTCIServerEnabled: boolean = False;
+
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 
 // UI-free description of the port collisions a profile WOULD cause, '' when
@@ -609,6 +616,11 @@ begin
          Result := False;
          Exit;
          end;
+
+      // Published BEFORE the profile check: whether TR4W offers a TCI server
+      // is a station-wide decision and does not depend on a profile
+      // resolving, which is a separate failure with its own message.
+      RadioLibraryTCIServerEnabled := store.TCIServerEnabled;
 
       profile := store.ActiveProfile;
       if profile = nil then

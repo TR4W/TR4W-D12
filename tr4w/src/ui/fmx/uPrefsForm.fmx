@@ -488,6 +488,16 @@ object PrefsForm: TPrefsForm
         Text = 'Connect radios at startup'
         OnChange = chkAutoConnectChange
       end
+      object chkTCIServer: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 482.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 8
+        Text = 'Enable TCI radio server'
+        OnChange = chkTCIServerChange
+      end
     end
     object layUDP: TLayout
       Tag = 5

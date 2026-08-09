@@ -91,8 +91,27 @@ type
    // prevent.  The cost in the shipping program is one nil test per poll cycle.
    TRadioStatusTraceProc = procedure(rig: RadioPtr; aEvent: TRadioStatusEvent);
 
+   // Observer for "a coherent status has just been published".  nil in a
+   // program with no state-broadcast consumer; assigned by the TCI server,
+   // which diffs against what it last told its clients and broadcasts only
+   // what changed.
+   //
+   // WHY A HOOK RATHER THAN THE CONSUMER POLLING.  A consumer that sampled on
+   // its own timer would either lag the radio or re-read it needlessly, and it
+   // would have no way to know whether two reads spanned a poll cycle.  The
+   // poll loop already knows exactly when a coherent state exists; saying so
+   // costs one nil test per cycle, the same price RadioStatusTrace pays.
+   //
+   // CONTRACT.  Called on the POLLING THREAD, and deliberately AFTER
+   // EndStatusPublish -- see the batch boundary in pFactoryRadio.  An observer
+   // must therefore (a) take its copy with ReadRadioStatus rather than reading
+   // fields directly, and (b) never block: a slow observer delays the next
+   // poll of that radio.  The TCI server satisfies (b) by only enqueueing.
+   TRadioStatusPublishedProc = procedure(rig: RadioPtr);
+
 var
    RadioStatusTrace: TRadioStatusTraceProc = nil;
+   RadioStatusPublished: TRadioStatusPublishedProc = nil;
 
 var
    saveVFOAFreq: integer;
@@ -435,6 +454,16 @@ begin
          finally
          EndStatusPublish(rig);
          end;
+
+         // Announce the freshly-published state to any state-broadcast
+         // consumer.  OUTSIDE the seqlock on purpose: an observer calls
+         // ReadRadioStatus, and inside the window the version is odd, so it
+         // would spin its whole retry budget and then hand back a copy it
+         // knows may be torn.
+         if Assigned(RadioStatusPublished) then
+            begin
+            RadioStatusPublished(rig);
+            end;
          end
       else
          begin

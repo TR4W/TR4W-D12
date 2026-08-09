@@ -204,6 +204,8 @@ uses
   uWebSocketFraming in 'src\uWebSocketFraming.pas',
   uWebSocketClient in 'src\uWebSocketClient.pas',
   uWebSocketServer in 'src\uWebSocketServer.pas',
+  uTCIProtocol in 'src\uTCIProtocol.pas',
+  uTCIServer in 'src\uTCIServer.pas',
   uRadioTCI in 'src\radioFactory\uRadioTCI.pas',
   uRadioKenwoodTS890 in 'src\radioFactory\uRadioKenwoodTS890.pas',
   uRadioKenwoodTS990 in 'src\radioFactory\uRadioKenwoodTS990.pas',
@@ -900,6 +902,12 @@ begin
      begin
      wsjtx := TWSJTXServer.Create;
      end;
+
+  // The TCI server.  Created unconditionally and STARTED only if enabled --
+  // uWSJTX reads its enable flag in the constructor, which is why toggling
+  // that one needs a program restart.  A live object with Start/Stop is what
+  // makes the Preferences check box able to take effect without one.
+  TCIServer := TTCIServer.Create;
   logger.debug('[tr4w] SpotCollectorEnabled = %s', [BooleanToStr(SpotCollectorEnabled)]);
   if SpotCollectorEnabled then
      StartDXLabPathfinder;
@@ -1145,6 +1153,18 @@ begin
       wsjtx.Start;
       end;
    end;
+
+   // Started AFTER the radios are set up, so the init burst a client gets on
+   // connect describes real radios rather than zeroes.  Loopback only: this
+   // is an unauthenticated radio-control socket and the clients that use it
+   // (WSJT-X, JTDX, a skimmer) run on the operator's own machine.
+   if RadioLibraryTCIServerEnabled and (TCIServer <> nil) then
+      begin
+      if not TCIServer.Start(TCI_SERVER_DEFAULT_PORT, False) then
+         begin
+         QuickDisplay('TCI server could not open port ' + IntToStr(TCI_SERVER_DEFAULT_PORT));
+         end;
+      end;
     {****************************  Main CallBack  ****************************}
 
   while (GetMessage(Msg, 0, 0, 0)) do
