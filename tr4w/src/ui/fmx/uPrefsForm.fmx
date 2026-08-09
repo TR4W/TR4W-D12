@@ -10,8 +10,8 @@ object PrefsForm: TPrefsForm
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop, iPhone, iPad]
-  OnClose = HandleClose
-  OnShow = HandleShow
+  OnClose = FormClose
+  OnShow = FormShow
   DesignerMasterStyle = 0
   object lstNav: TListBox
     Align = Left
@@ -23,7 +23,7 @@ object PrefsForm: TPrefsForm
     DefaultItemStyles.ItemStyle = ''
     DefaultItemStyles.GroupHeaderStyle = ''
     DefaultItemStyles.GroupFooterStyle = ''
-    OnChange = HandleNavChange
+    OnChange = lstNavChange
     Viewport.Width = 166.000000000000000000
     Viewport.Height = 616.000000000000000000
     object navStation: TListBoxItem
@@ -133,8 +133,8 @@ object PrefsForm: TPrefsForm
       Size.Width = 675.000000000000000000
       Size.Height = 572.000000000000000000
       Size.PlatformDefault = False
-      TabOrder = 2
       Visible = False
+      TabOrder = 2
       object lblMyKeyers: TLabel
         Position.X = 12.000000000000000000
         Position.Y = 8.000000000000000000
@@ -151,7 +151,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 150.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        OnDblClick = HandleKeyerDblClick
+        OnDblClick = lstKeyersDblClick
         DisableFocusEffect = True
         DefaultItemStyles.ItemStyle = ''
         DefaultItemStyles.GroupHeaderStyle = ''
@@ -168,7 +168,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 2
         Text = 'Add...'
         TextSettings.Trimming = None
-        OnClick = HandleAddKeyer
+        OnClick = btnAddKeyerClick
       end
       object btnEditKeyer: TButton
         Position.X = 445.000000000000000000
@@ -179,7 +179,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 3
         Text = 'Edit...'
         TextSettings.Trimming = None
-        OnClick = HandleEditKeyer
+        OnClick = btnEditKeyerClick
       end
       object btnDuplicateKeyer: TButton
         Position.X = 445.000000000000000000
@@ -190,7 +190,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 4
         Text = 'Duplicate'
         TextSettings.Trimming = None
-        OnClick = HandleDuplicateKeyer
+        OnClick = btnDuplicateKeyerClick
       end
       object btnRemoveKeyer: TButton
         Position.X = 445.000000000000000000
@@ -201,7 +201,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 5
         Text = 'Remove'
         TextSettings.Trimming = None
-        OnClick = HandleRemoveKeyer
+        OnClick = btnRemoveKeyerClick
       end
       object lblKeyerHint: TLabel
         Position.X = 12.000000000000000000
@@ -210,10 +210,10 @@ object PrefsForm: TPrefsForm
         Size.Height = 51.000000000000000000
         Size.PlatformDefault = False
         Text = 
-          'Only devices with their own settings live here - a WinKeyer or a Y' +
-          'CCC SO2R+ box.  Keying on a radio'#39's own port, or by CAT, is part o' +
-          'f that radio'#39's setup; a station profile then chooses which method ' +
-          'each slot uses.'
+          'Only devices with their own settings live here - a WinKeyer or a' +
+          ' YCCC SO2R+ box.  Keying on a radio'#39's own port, or by CAT, is pa' +
+          'rt of that radio'#39's setup; a station profile then chooses which m' +
+          'ethod each slot uses.'
         TabOrder = 6
       end
     end
@@ -222,6 +222,7 @@ object PrefsForm: TPrefsForm
       Size.Width = 675.000000000000000000
       Size.Height = 572.000000000000000000
       Size.PlatformDefault = False
+      Visible = False
       TabOrder = 1
       object lblMyRadios: TLabel
         Position.X = 12.000000000000000000
@@ -239,7 +240,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 150.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        OnDblClick = HandleRadioDblClick
+        OnDblClick = lstRadiosDblClick
         DisableFocusEffect = True
         DefaultItemStyles.ItemStyle = ''
         DefaultItemStyles.GroupHeaderStyle = ''
@@ -256,7 +257,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 2
         Text = 'Add...'
         TextSettings.Trimming = None
-        OnClick = HandleAdd
+        OnClick = btnAddClick
       end
       object btnEdit: TButton
         Position.X = 445.000000000000000000
@@ -267,7 +268,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 3
         Text = 'Edit...'
         TextSettings.Trimming = None
-        OnClick = HandleEdit
+        OnClick = btnEditClick
       end
       object btnDuplicate: TButton
         Position.X = 445.000000000000000000
@@ -278,7 +279,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 4
         Text = 'Duplicate'
         TextSettings.Trimming = None
-        OnClick = HandleDuplicate
+        OnClick = btnDuplicateClick
       end
       object btnRemove: TButton
         Position.X = 445.000000000000000000
@@ -289,7 +290,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 5
         Text = 'Remove'
         TextSettings.Trimming = None
-        OnClick = HandleRemove
+        OnClick = btnRemoveClick
       end
       object grpProfile: TGroupBox
         Position.X = 12.000000000000000000
@@ -306,7 +307,7 @@ object PrefsForm: TPrefsForm
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 38
-          OnChange = HandleProfileChange
+          OnChange = cbxProfileChange
         end
         object btnNewProfile: TButton
           Position.X = 220.000000000000000000
@@ -317,7 +318,7 @@ object PrefsForm: TPrefsForm
           TabOrder = 39
           Text = 'New...'
           TextSettings.Trimming = None
-          OnClick = HandleNewProfile
+          OnClick = btnNewProfileClick
         end
         object btnRenameProfile: TButton
           Position.X = 305.000000000000000000
@@ -328,7 +329,7 @@ object PrefsForm: TPrefsForm
           TabOrder = 40
           Text = 'Rename...'
           TextSettings.Trimming = None
-          OnClick = HandleRenameProfile
+          OnClick = btnRenameProfileClick
         end
         object btnDeleteProfile: TButton
           Position.X = 400.000000000000000000
@@ -339,7 +340,7 @@ object PrefsForm: TPrefsForm
           TabOrder = 41
           Text = 'Delete'
           TextSettings.Trimming = None
-          OnClick = HandleDeleteProfile
+          OnClick = btnDeleteProfileClick
         end
         object lblRadio1: TLabel
           Position.X = 12.000000000000000000
@@ -357,7 +358,7 @@ object PrefsForm: TPrefsForm
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 43
-          OnChange = HandleSlotRadioChange
+          OnChange = cbxRadio1Change
         end
         object lblCWOutput1: TLabel
           Position.X = 290.000000000000000000
@@ -375,7 +376,7 @@ object PrefsForm: TPrefsForm
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 45
-          OnChange = HandleFieldChange
+          OnChange = cbxCW1Change
         end
         object chkSpeedSync1: TCheckBox
           Position.X = 385.000000000000000000
@@ -385,7 +386,7 @@ object PrefsForm: TPrefsForm
           Size.PlatformDefault = False
           TabOrder = 46
           Text = 'Speed sync'
-          OnChange = HandleFieldChange
+          OnChange = chkSpeedSync1Change
         end
         object lblRadio2: TLabel
           Position.X = 12.000000000000000000
@@ -403,7 +404,7 @@ object PrefsForm: TPrefsForm
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 48
-          OnChange = HandleSlotRadioChange
+          OnChange = cbxRadio2Change
         end
         object lblCWOutput2: TLabel
           Position.X = 290.000000000000000000
@@ -421,7 +422,7 @@ object PrefsForm: TPrefsForm
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 50
-          OnChange = HandleFieldChange
+          OnChange = cbxCW2Change
         end
         object chkSpeedSync2: TCheckBox
           Position.X = 385.000000000000000000
@@ -431,7 +432,7 @@ object PrefsForm: TPrefsForm
           Size.PlatformDefault = False
           TabOrder = 51
           Text = 'Speed sync'
-          OnChange = HandleFieldChange
+          OnChange = chkSpeedSync2Change
         end
         object chkSO2R: TCheckBox
           Position.X = 12.000000000000000000
@@ -441,7 +442,7 @@ object PrefsForm: TPrefsForm
           Size.PlatformDefault = False
           TabOrder = 52
           Text = 'SO2R enabled'
-          OnChange = HandleFieldChange
+          OnChange = chkSO2RChange
         end
         object lblActive: TLabel
           Position.X = 12.000000000000000000
@@ -461,7 +462,7 @@ object PrefsForm: TPrefsForm
           TabOrder = 54
           Text = 'Activate this profile now'
           TextSettings.Trimming = None
-          OnClick = HandleActivate
+          OnClick = btnActivateClick
         end
         object lblActivateHint: TLabel
           StyledSettings = [Family, Style, FontColor]
@@ -471,10 +472,9 @@ object PrefsForm: TPrefsForm
           Size.Height = 32.000000000000000000
           Size.PlatformDefault = False
           TextSettings.Font.Size = 11.000000000000000000
-          TextSettings.WordWrap = True
           Text = 
-            'Saving stores your changes. It does not switch the radios over ' +
-            '- use this button for that.'
+            'Saving stores your changes. It does not switch the radios over -' +
+            ' use this button for that.'
           TabOrder = 55
         end
       end
@@ -486,7 +486,107 @@ object PrefsForm: TPrefsForm
         Size.PlatformDefault = False
         TabOrder = 7
         Text = 'Connect radios at startup'
-        OnChange = HandleFieldChange
+        OnChange = chkAutoConnectChange
+      end
+    end
+    object layUDP: TLayout
+      Tag = 5
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      object chkUDPEnabled: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 10.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'Broadcast UDP data'
+      end
+      object lblUDPDestinations: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 44.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Destinations'
+        TabOrder = 1
+      end
+      object lstUDPDestinations: TListBox
+        Position.X = 12.000000000000000000
+        Position.Y = 66.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 150.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        DisableFocusEffect = True
+        DefaultItemStyles.ItemStyle = ''
+        DefaultItemStyles.GroupHeaderStyle = ''
+        DefaultItemStyles.GroupFooterStyle = ''
+        Viewport.Width = 416.000000000000000000
+        Viewport.Height = 146.000000000000000000
+      end
+      object btnUDPAdd: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 66.000000000000000000
+        Size.Width = 100.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Add...'
+        TextSettings.Trimming = None
+      end
+      object btnUDPEdit: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 98.000000000000000000
+        Size.Width = 100.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Edit...'
+        TextSettings.Trimming = None
+      end
+      object btnUDPRemove: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 130.000000000000000000
+        Size.Width = 100.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = 'Remove'
+        TextSettings.Trimming = None
+      end
+      object btnUDPTest: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 162.000000000000000000
+        Size.Width = 100.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Text = 'Test'
+        TextSettings.Trimming = None
+      end
+      object chkUDPAllQSOs: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 230.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+        Text = 'Also broadcast edited and previously logged QSOs'
+      end
+      object lblUDPHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 262.000000000000000000
+        Size.Width = 540.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Each destination is one program listening.  Add a second row for' +
+          ' the same address when it expects different data on a different ' +
+          'port.'
+        TabOrder = 8
       end
     end
   end
@@ -500,7 +600,7 @@ object PrefsForm: TPrefsForm
     TabOrder = 2
     Text = 'Save and close'
     TextSettings.Trimming = None
-    OnClick = HandleOK
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Anchors = [akRight, akBottom]
@@ -512,7 +612,7 @@ object PrefsForm: TPrefsForm
     TabOrder = 3
     Text = 'Cancel'
     TextSettings.Trimming = None
-    OnClick = HandleCancel
+    OnClick = btnCancelClick
   end
   object btnApply: TButton
     Anchors = [akRight, akBottom]
@@ -524,6 +624,6 @@ object PrefsForm: TPrefsForm
     TabOrder = 4
     Text = 'Save'
     TextSettings.Trimming = None
-    OnClick = HandleApply
+    OnClick = btnApplyClick
   end
 end
