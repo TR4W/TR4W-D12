@@ -46,47 +46,20 @@ uses
 
 var
    Icom_Filter_Width: integer;     // n4af 4.43.4
-   TimeoutBuffer:     PCOMMTIMEOUTS;
 
 const
 
-   ICOM_TRANSFER_FREQ = #$00;
-   ICOM_TRANSFER_MODE = #$01;
-
-   ICOM_GET_FREQ      = #$03;
-   ICOM_GET_MODE      = #$04;
-   ICOM_XMIT_SETTINGS = #$1C;
-
-   ICOM_SET_FREQ        = #$05;
-   ICOM_SET_MODE        = #$06;
-   ICOM_SET_VFO_COMMAND = #$07;
-
-   ICOM_SPLIT_MODE     = #$0F;
-   ICOM_SET_SPLIT_MODE = #$0F;
-
-   ICOM_SET_SLIDERS  = #$14;
-   // Things like CW speed, and rotating knobs
-   ICOM_SET_CW_SPEED = #$0C;
-
-   ICOM_SEND_CW        = #$17;
-   ICOM_SET_XMIT_STATE = #$18;  // + 00 for XMIT off, 01 for XMIT on.
-
-   ICOM_GET_RIT_FREQ   = #$21;
-   ICOM_GET_EXTENDEDVFO = #$25;
-   ICOM_GET_EXTENDEDMODE = #$26;
-   ICOM_SET_DVK = #$28;     // Command 28 plays voice memories
-   //ICOM_SET_RIT_FREQ   =
-   ICOM_STATE            = #$1A;
-   ICOM_STATE_DATA_MODE  = #$06;
-
-   ICOM_SET_VFO_A_COMMAND = #$00;
-   ICOM_SET_VFO_B_COMMAND = #$01;
+   // The CI-V command vocabulary that used to live here is GONE from the
+   // interface.  Track E deleted the per-model Icom code that spoke it; these
+   // constants outlived their only callers and nothing outside this unit had
+   // referenced them since.  The factory owns CI-V now -- see uIcomCIV.pas and
+   // uRadioIcomBase.pas, where the commands sit beside the code that sends them.
+   // Five that this unit still uses internally moved to the implementation
+   // section below; do not promote them back without a caller to justify it.
 
    ICOM_END_OF_MESSAGE_CODE = #$FD;
-   ICOM_PREAMBLE_CODE       = #$FE;
 
    ICOM_CONTROLLER_ADDRESS   = #$E0;
-   ICOM_OTHER_RADIOS_ADDRESS = #$00;
 
 type
    tr4w_RTSDTRType = (RtsDtr_Nothing, RtsDtr_OFF, RtsDtr_ON, RtsDtr_CW, RtsDtr_PTT);
@@ -97,6 +70,9 @@ type
 // var EventHandlers : TEventHandlers;
 const
 
+   // Live: uCFG.pas CommandsArray uses this as the lpArray for the four
+   // RTS/DTR state commands, so it is read by the config parser, not by radio
+   // code.  Its type tr4w_RTSDTRType is a RadioObject field type and stays too.
    tr4w_RTSDTRTypeSA: array[tr4w_RTSDTRType] of PAnsiChar =
       (
       'NONE',
@@ -106,9 +82,9 @@ const
       'PTT'
       );
 
+
 type
    ActiveVFOStatusType = (vfoUnknown, VFOA, VFOB, vfoMem);
-   TXRXType = (VFODisabled, RXOnly, TXOnly, Transceive, UnknownTXRX);
 
    //  SplitType = (NoSplit, SplitOn);
    //  RITType = (NoRIT, RITOn);
@@ -357,11 +333,12 @@ type
 
 var
    IcomResponseTimeout:    integer;
-   cmdIcomResponseTimeout: integer = -1;
+   // newIcomResponseTimeout is the target of the "ICOM RESPONSE TIMEOUT"
+   // config command (uCFG.pas CommandsArray takes its address), so it is live
+   // even though no radio code reads it.  cmdIcomResponseTimeout,
+   // newIcomResponseTimeoutAuto and icomCIVTransceiveEnable are GONE: they
+   // configured the deleted per-model Icom poller and had no reader left.
    newIcomResponseTimeout: integer = 60;
-
-   newIcomResponseTimeoutAuto: integer;
-   icomCIVTransceiveEnable:    boolean;
    InBandLock:     boolean = True;      // 4.92.1
    TwoRadioMode: boolean;
 
@@ -467,6 +444,14 @@ const
     1200, 2400, 4800, 9600, 19200, 38400, 57600 , 115200
     );
 }
+// RadioParametersArray STAYS, and is not dead code.  Nothing in the running
+// program reads it any more -- but test/unit/uTestIcomRegistry.pas does, as the
+// ORACLE for the Icom migration: it builds each Icom through the registry and
+// compares its CI-V address against RadioParametersArray[m].RA, so a mistake in
+// the 28 hand-transcribed addresses fails a test instead of looking like a bad
+// cable.  Deleting the table would delete the proof.  It goes when that test
+// does, and not before.  To ADD a radio, do not touch this table -- it is no
+// longer a registry.  Read docs/ADDING_A_RADIO.md.
 type
    TRadioParameters = record
       //    Name: PChar;
@@ -782,11 +767,6 @@ const
 }
 
 
-function IntegerToBCD(Value: DWORD): integer; // ny4i  // 4.44.5
-function Integer4ToBCD(Value: DWORD): integer; // ny4i  // 4.44.5
-function ModeTypeToNetMode(mode: ModeType): TRadioMode;
-procedure InitRadios;
-
 function tPTTVIACAT(PTTOn: boolean): boolean;
 //function GetRadioFromString(RadioName: ShortString): InterfacedRadioType;
 procedure TestRadioInterface;
@@ -796,9 +776,6 @@ procedure TestRadioInterface;
 
 { Works on the radio specified  (Radio1 or Radio2) }
 
-function GetRadioParameters(Radio: RadioType; RadioInfoString: string;
-   var Freq: longint; var Band: BandType; var Mode: ModeType;
-   Polling: boolean; Debug: boolean): boolean;
 procedure PutRadioIntoSplit(Radio: RadioType);
 procedure PutRadioOutOfSplit(Radio: RadioType);
 procedure SetRadioFreq(Radio: RadioType; Freq: longint; Mode: ModeType; VFO: char);
@@ -815,32 +792,15 @@ procedure RITBumpUp;
 procedure VFOBumpDown;
 procedure VFOBumpUp;
 
-procedure SetK3ExtendedCommandMode;
-
-
-
-
-const
-
-   //FT767PollString = NullKey + NullKey + NullKey + CHR($01) + NullKey;
-   FT767PollString: Yaesu5Bytes = (0, 0, 0, 1, 0);
-   FT767CATEnablePollingString = NullKey + NullKey + NullKey + NullKey + NullKey;
-   FT767ACKString = NullKey + NullKey + NullKey + NullKey + CHR($0B);
-
-   FT847PollString = NullKey + NullKey + NullKey + NullKey + CHR($03);
-   FT747GXPollString = NullKey + NullKey + NullKey + NullKey + CHR($10);
-
-   FT1000MPPoll1String = CHR($00) + CHR($00) + CHR($00) + CHR($02) + CHR($10); //16 answer
-   FT1000MPPoll2String = CHR($00) + CHR($00) + CHR($00) + CHR($03) + CHR($10); //32b answer
-   FT1000MPPoll3String = CHR($00) + CHR($00) + CHR($00) + CHR($01) + CHR($FA);
-
-   FT100StatusUpdate = CHR($00) + CHR($00) + CHR($00) + CHR($00) + CHR($10);
-   FT100ReadStatusFlags = CHR($00) + CHR($00) + CHR($00) + CHR($01) + CHR($FA);
-
-   TurnOn847CATString = NullKey + NullKey + NullKey + NullKey + CHR($00);
-   TurnOff847CATString = NullKey + NullKey + NullKey + NullKey + CHR($80);
+// The Yaesu poll strings that used to close this interface (FT767/FT847/
+// FT747GX/FT1000MP/FT100 and the two 847 CAT-enable strings) are GONE.  They
+// were the wire vocabulary of the per-model pollers Track E deleted, and after
+// that deletion nothing -- in this unit or any other -- referenced them.  The
+// Yaesu families own their own framing now: uRadioYaesuBinary.pas,
+// uRadioYaesuASCII.pas and the FT-817 group.
 
 implementation
+
 
 uses
    LogK1EA,
@@ -855,6 +815,36 @@ uses
    uRadioKenwoodLAN,  // Issue #436 -- TKenwoodLAN base (TS-890S / TS-990S)
    uCWFraming,        // per-model CW length/padding rules (shared with the factory)
    uCWKeyerBase;      // KeyerCAT -- owns the cross-radio CW-by-CAT interlock
+
+// ---------------------------------------------------------------------------
+// IMPLEMENTATION-ONLY SURFACE
+//
+// These were declared in the interface but nothing outside LOGRADIO referenced
+// them.  Narrowing the interface is the point: this unit is the last legacy
+// radio unit standing, and every public symbol it keeps is a symbol some future
+// change can bind to by accident.
+//
+// The routines are FORWARD-declared rather than simply moved, because the
+// interface declaration was also what let their bodies be called from anywhere
+// in this 3,000-line implementation regardless of definition order.  Dropping
+// the declaration without `forward` would make call-order load-bearing.
+// ---------------------------------------------------------------------------
+
+const
+   ICOM_XMIT_SETTINGS   = #$1C;
+   ICOM_GET_RIT_FREQ    = #$21;
+   ICOM_STATE           = #$1A;
+   ICOM_STATE_DATA_MODE = #$06;
+   ICOM_PREAMBLE_CODE   = #$FE;
+
+function IntegerToBCD(Value: DWORD): integer; forward;      // ny4i  // 4.44.5
+function Integer4ToBCD(Value: DWORD): integer; forward;     // ny4i  // 4.44.5
+function ModeTypeToNetMode(mode: ModeType): TRadioMode; forward;
+procedure InitRadios; forward;
+procedure SetK3ExtendedCommandMode; forward;
+function GetRadioParameters(Radio: RadioType; RadioInfoString: string;
+   var Freq: longint; var Band: BandType; var Mode: ModeType;
+   Polling: boolean; Debug: boolean): boolean; forward;
 
 // ---------------------------------------------------------------------------
 // Parity ordinal conversion.  Tree.ParityType and the Win32 DCB (which the
@@ -873,6 +863,7 @@ uses
 // scope resolution makes a bare OddParity/EvenParity here resolve to THOSE, not
 // to Tree.ParityType's members -- E2010 at best, a silent wrong ordinal at worst.
 function Win32ParityToParityType(w: Byte): ParityType;
+
 begin
    case w of
       uRadioRegistry.PARITY_ODD:  Result := Tree.OddParity;
