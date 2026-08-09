@@ -685,7 +685,23 @@ begin
    // Serial poll: IF gives VFO A freq+mode+RIT/XIT/split/TX and the operating
    // VFO; FB/MD$/DT$ give VFO B's freq/mode/sub-mode via the "$" suffix.  This is
    // also the keep-alive that lets the factory serial path recover a power-cycle.
-   Self.SendToRadio('IF;FB;MD$;DT$;');
+   //
+   // WHILE TRANSMITTING, ASK FOR LESS.  A K3 answers CAT noticeably more
+   // slowly during transmit (measured: ~160 ms per cycle against ~110 ms
+   // receiving), so four commands per poll is where backlog builds -- and the
+   // command that then queues behind it is the RX; that ends the
+   // transmission.  IF alone carries the T/R flag, which is the only thing
+   // that can change mid-transmission: VFO B's frequency and the data
+   // sub-mode cannot.  Quartering the traffic in exactly that window costs no
+   // information.
+   if Self.IsTransmitting then
+      begin
+      Self.SendToRadio('IF;');
+      end
+   else
+      begin
+      Self.SendToRadio('IF;FB;MD$;DT$;');
+      end;
 end;
 
 procedure TElecraftSerial.SetAIMode(i: integer);

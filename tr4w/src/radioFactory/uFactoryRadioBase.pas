@@ -273,6 +273,10 @@ Type TFactoryRadioBase = class(TObject)
       baseProcMsg: TProcessMsgRef;
       SocketLock: TCriticalSection;
       FLastValidResponse: TDateTime;  // Track last valid response for timeout detection
+
+      // ONE OUTSTANDING POLL AT A TIME -- see PollOutstanding.
+      FPollAwaitingReply: boolean;
+      FPollSentTick: cardinal;
       FLastSerialReopenTick: LongWord;  // MaintainSerialLink throttle
       FSerialReopenDelay: Integer;      // grows to RECONNECT_MAX_DELAY while silent
       FActiveVFO: TVFO;  // RX/operating VFO; nrVFOA = swap model (K4: A/B swaps contents so A is always active), selectable-model radios (Kenwood FR, Flex slice) drive it via SetActiveVFO
@@ -529,6 +533,32 @@ Type TFactoryRadioBase = class(TObject)
       function Connect (address: string; port: integer): integer; overload;
       function VFOToString(whichVFO: TVFO): string;
       procedure UpdateLastValidResponse;  // Call when valid radio response received
+
+      // FLOW CONTROL FOR THE POLL LOOP.
+      //
+      // THE DEFECT THIS FIXES.  pFactoryRadio fired a poll every
+      // pollingInterval whether or not the previous one had EVER been
+      // answered.  A radio slower than that interval therefore accumulates
+      // unbounded backlog in its own CAT input buffer -- and the moment a
+      // radio gets slower is exactly when it is transmitting, which is when
+      // latency matters most.
+      //
+      // Measured on NY4I's K3S, 2026-08-09, with a serial A/B that did not
+      // involve TR4W at all:
+      //     paced (request/response)      RX; -> receiving in   99 ms
+      //     flooded at TR4W's 117 ms rate RX; -> receiving in  820 ms
+      // The radio is not slow.  We were talking over it.
+      //
+      // THREADING.  MarkPollSent runs on the polling thread and the clear
+      // runs on the reader thread.  Deliberately unlocked: both touch one
+      // aligned Boolean, and the worst outcome of a race is one extra poll
+      // or one skipped cycle -- paying for a lock on the hot path to prevent
+      // that would be the wrong trade.
+      procedure MarkPollSent;
+      // True while a poll is unanswered and has not yet timed out.  The
+      // timeout matters: without it a radio that stops answering would never
+      // be polled again, and polling is how a dead link is DETECTED.
+      function  PollOutstanding: boolean;
       // True only if the base constructor actually ran.  Exists because it can
       // silently NOT run: Create(ProcRef) is `overload`ed, so a subclass writing
       // `inherited Create;` instead of `inherited Create(ProcessMsg);` compiles
@@ -817,6 +847,8 @@ begin
    SocketLock := TCriticalSection.Create;
    Disconnecting := False;
    FLastValidResponse := Now;  // Initialize to current time
+   FPollAwaitingReply := False;
+   FPollSentTick := 0;
    FLastSerialReopenTick := GetTickCount;
    FSerialReopenDelay := RECONNECT_INITIAL_DELAY;
 end;
@@ -1522,9 +1554,43 @@ begin
    logger := TLogLogger.GetLogger(LogCategoryFor(value));
 end;
 
+procedure TFactoryRadioBase.MarkPollSent;
+begin
+   FPollAwaitingReply := True;
+   FPollSentTick := GetTickCount;
+end;
+
+function TFactoryRadioBase.PollOutstanding: boolean;
+var
+   limit: cardinal;
+begin
+   if not FPollAwaitingReply then
+      begin
+      Result := False;
+      Exit;
+      end;
+
+   // Three intervals, floor 500 ms.  Generous on purpose: the point is to
+   // stop us TALKING OVER the radio, not to police its response time, and
+   // giving up too early puts the flood straight back.
+   limit := cardinal(pollingInterval) * 3;
+   if limit < 500 then
+      begin
+      limit := 500;
+      end;
+
+   // Unsigned subtraction, so the 49.7-day GetTickCount wrap cannot make a
+   // fresh poll look ancient and re-open the flood.
+   Result := (GetTickCount - FPollSentTick) < limit;
+end;
+
 procedure TFactoryRadioBase.UpdateLastValidResponse;
 begin
    FLastValidResponse := Now;
+   // The radio answered, so the next poll may go.  Any valid frame counts,
+   // including an unsolicited one -- a radio that is talking to us is a
+   // radio whose input queue is draining, which is all this gate cares about.
+   FPollAwaitingReply := False;
    // The radio is talking, so any reopen backoff has served its purpose.
    // Resetting HERE means the recovery bookkeeping cannot drift out of step
    // with liveness -- there is no separate we-are-healthy flag to forget.
