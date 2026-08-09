@@ -104,6 +104,26 @@ type
       FLast:     array[RadioOne..RadioTwo] of RadioStatusRecord;
       FHave:     array[RadioOne..RadioTwo] of boolean;
 
+      // A mode we have commanded but the poll has not yet confirmed.
+      //
+      // WHY THIS EXISTS.  SetRadioFreq sets FREQUENCY AND MODE TOGETHER --
+      // there is no frequency-only setter on the legacy facade.  So a QSY has
+      // to name a mode, and the obvious source, the status snapshot, is stale
+      // for up to a poll interval.  WSJT-X sends modulation and vfo THREE
+      // MILLISECONDS apart, so the vfo re-asserted the old mode and undid the
+      // mode change that had just been made.  Observed on the wire, not
+      // theorised: 13:30:44.948 modulation:0,digu then 13:30:44.951
+      // vfo:0,0,50313000, and the radio ended up on the new frequency in the
+      // old mode.
+      //
+      // Cleared as soon as the radio reports the mode we asked for, so a mode
+      // set on the radio's own front panel is not fought forever.
+      FPendingMode: array[RadioOne..RadioTwo] of record
+         Active:   boolean;
+         Mode:     ModeType;
+         Extended: ExtendedModeType;
+      end;
+
       // At most one client may key the transmitter at a time.  Guarded by
       // FLock; the session pointer is only ever compared, never dereferenced
       // outside a handler that already owns the session.
@@ -120,12 +140,14 @@ type
       procedure HandleSet(Session: TWSServerSession; const Cmd: TTCICommand);
 
       procedure ApplyFrequency(Trx, Channel, Hz: integer; Session: TWSServerSession);
-      procedure ApplyModulation(Trx: integer; const Modulation: string);
+      procedure ApplyModulation(Trx: integer; const Modulation: string;
+                                Session: TWSServerSession);
       procedure ApplySplit(Trx: integer; TurnOn: boolean);
       procedure ApplyPTT(Session: TWSServerSession; Trx: integer; KeyDown: boolean);
 
       procedure BroadcastRadio(Trx: integer; const Cur, Was: RadioStatusRecord;
                                First: boolean);
+      function  SlotOf(Trx: integer): RadioType;
    public
       constructor Create;
       destructor  Destroy; override;
@@ -135,6 +157,9 @@ type
       procedure Stop;
       function  Active: boolean;
       function  ClientCount: integer;
+      // Why the last Start failed -- the operator cannot diagnose silence,
+      // and "port already in use" is the common case.
+      function  LastError: string;
 
       // Called from the radio POLLING thread via the RadioStatusPublished
       // hook, immediately after a coherent status is published.
@@ -351,6 +376,7 @@ begin
    for r := RadioOne to RadioTwo do
       begin
       FHave[r] := False;
+      FPendingMode[r].Active := False;
       end;
 
    FWS := TWebSocketServer.Create;
@@ -370,6 +396,18 @@ end;
 function TTCIServer.Active: boolean;
 begin
    Result := (FWS <> nil) and FWS.Active;
+end;
+
+function TTCIServer.LastError: string;
+begin
+   if FWS = nil then
+      begin
+      Result := '';
+      end
+   else
+      begin
+      Result := FWS.LastError;
+      end;
 end;
 
 function TTCIServer.ClientCount: integer;
@@ -623,7 +661,11 @@ begin
       Exit;
       end;
 
-   cmd := TCIParse(Raw);
+   // 'split_enable:false' -- the global one-argument form WSJT-X really
+   // sends -- becomes 'split_enable:0,false' here, so there is one shape
+   // downstream.  Without this it read as a GET for receiver -1 and was
+   // answered with silence.
+   cmd := TCIExpandGlobalForm(TCIParse(Raw));
    state := TTCIClientState(Session.Tag);
 
    logger.Trace('[TCI-SRV RX %d] %s', [Session.Id, Raw]);
@@ -859,7 +901,7 @@ begin
       end
    else if Cmd.Name = 'modulation' then
       begin
-      ApplyModulation(trx, Cmd.Arg(1));
+      ApplyModulation(trx, Cmd.Arg(1), Session);
       end
    else if Cmd.Name = 'trx' then
       begin
@@ -921,20 +963,43 @@ begin
    TThread.Queue(nil,
       procedure
       var
-         snap: RadioStatusRecord;
-         mode: ModeType;
+         snap:     RadioStatusRecord;
+         mode:     ModeType;
+         extended: ExtendedModeType;
+         slot:     RadioType;
+         ch:       char;
       begin
          try
+            // SetRadioFreq sets frequency AND MODE -- there is no
+            // frequency-only setter -- so a QSY must name a mode.  Prefer a
+            // mode we have COMMANDED and the poll has not confirmed yet;
+            // the snapshot lags by up to a poll interval, and using it here
+            // re-asserted the old mode 3 ms after a modulation command and
+            // silently undid it.
             snap := ReadRadioStatus(rig);
             mode := snap.VFO[VFOA].Mode;
+            extended := snap.VFO[VFOA].ExtendedMode;
+            slot := SlotOf(Trx);
+            FLock.Enter;
+            try
+               if FPendingMode[slot].Active then
+                  begin
+                  mode := FPendingMode[slot].Mode;
+                  extended := FPendingMode[slot].Extended;
+                  end;
+            finally
+               FLock.Leave;
+            end;
+
             if Channel = 0 then
                begin
-               rig^.SetRadioFreq(Hz, mode, 'A');
+               ch := 'A';
                end
             else
                begin
-               rig^.SetRadioFreq(Hz, mode, 'B');
+               ch := 'B';
                end;
+            rig^.SetRadioFreq(Hz, mode, ch, extended);
          except
             on E: Exception do
                begin
@@ -952,11 +1017,13 @@ begin
    Session.SendText(TCIMsg('vfo', TCIInt(Trx), TCIInt(Channel), TCIInt(Hz)));
 end;
 
-procedure TTCIServer.ApplyModulation(Trx: integer; const Modulation: string);
+procedure TTCIServer.ApplyModulation(Trx: integer; const Modulation: string;
+                                     Session: TWSServerSession);
 var
    rig:      RadioPtr;
    mode:     ModeType;
    extended: ExtendedModeType;
+   slot:     RadioType;
 begin
    if not TCIToTR4WMode(Modulation, mode, extended) then
       begin
@@ -968,6 +1035,19 @@ begin
       begin
       Exit;
       end;
+
+   // Recorded BEFORE the queue, so a vfo command arriving microseconds later
+   // -- which is exactly what WSJT-X does -- carries this mode rather than
+   // the stale one from the last poll.
+   slot := SlotOf(Trx);
+   FLock.Enter;
+   try
+      FPendingMode[slot].Active := True;
+      FPendingMode[slot].Mode := mode;
+      FPendingMode[slot].Extended := extended;
+   finally
+      FLock.Leave;
+   end;
 
    TThread.Queue(nil,
       procedure
@@ -989,6 +1069,16 @@ begin
                end;
          end;
       end);
+
+   // CONFIRM, exactly as a tune is confirmed.  WSJT-X's do_mode() waits on
+   // this echo and reports "TCI failed set mode" and drops the socket without
+   // it -- observed: modulation:0,digu accepted at 13:30:44.948, no reply,
+   // client gone at 13:30:46.151.  The echo is what we ACCEPTED; the poll
+   // broadcasts the truth afterwards if the radio disagreed.
+   if Session <> nil then
+      begin
+      Session.SendText(TCIMsg('modulation', TCIInt(Trx), LowerCase(Trim(Modulation))));
+      end;
 end;
 
 procedure TTCIServer.ApplySplit(Trx: integer; TurnOn: boolean);
@@ -1123,6 +1213,18 @@ end;
 
 { ------------------------------------------------------------ broadcast -- }
 
+function TTCIServer.SlotOf(Trx: integer): RadioType;
+begin
+   if Trx = 1 then
+      begin
+      Result := RadioTwo;
+      end
+   else
+      begin
+      Result := RadioOne;
+      end;
+end;
+
 procedure TTCIServer.PublishRadioState(rig: RadioPtr);
 var
    trx:  integer;
@@ -1160,6 +1262,14 @@ begin
       prev := FLast[r];
       FLast[r] := snap;
       FHave[r] := True;
+
+      // The radio has caught up: stop overriding the snapshot, so a mode the
+      // operator sets on the front panel is not fought on the next QSY.
+      if FPendingMode[r].Active and
+         (snap.VFO[VFOA].Mode = FPendingMode[r].Mode) then
+         begin
+         FPendingMode[r].Active := False;
+         end;
    finally
       FLock.Leave;
    end;

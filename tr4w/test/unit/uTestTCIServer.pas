@@ -80,6 +80,12 @@ type
       procedure Test_PTT_RefusedReceiverAnswersFalse;
       procedure Test_PTT_NonBooleanAnswersFalse;
 
+      // Confirmations WSJT-X waits on
+      procedure Test_Set_ModulationIsConfirmed;
+      procedure Test_Set_VfoIsConfirmed;
+      procedure Test_Set_GlobalSplitEnableIsAccepted;
+      procedure Test_Set_UnknownModulationIsSilent;
+
       // The mode mapping, which is a wire contract
       procedure Test_Mode_ToTCI;
       procedure Test_Mode_PhoneSidebandFollowsBand;
@@ -800,6 +806,128 @@ begin
    end;
 end;
 
+procedure TTCIServerTests.Test_Set_ModulationIsConfirmed;
+var
+   c: TWebSocketClient;
+begin
+   BeginTest('Test_Set_ModulationIsConfirmed');
+   if not StartServer then
+      begin
+      Check(False, 'no port');
+      Exit;
+      end;
+   try
+      CheckTrue(Connect(c), '');
+      try
+         WaitForQuiet(WAIT_MS);
+         RxClear;
+         // THE REGRESSION THIS SUITE MISSED THE FIRST TIME.  A mode SET was
+         // accepted and applied but never confirmed, and WSJT-X's do_mode()
+         // waits on the echo: it reported "TCI failed set mode" and dropped
+         // the socket 1.2 s later.  Observed 2026-08-09 13:30:44.948.
+         c.SendText('modulation:0,digu;');
+         CheckTrue(WaitForPrefix('modulation:0,', WAIT_MS),
+                   'a mode SET must be confirmed, exactly as a tune is');
+         CheckEquals('modulation:0,digu;', RxItem(IndexOfPrefix('modulation:0,')),
+                     'and the confirmation names the mode that was accepted');
+      finally
+         c.Free;
+      end;
+   finally
+      StopServer;
+   end;
+end;
+
+procedure TTCIServerTests.Test_Set_VfoIsConfirmed;
+var
+   c: TWebSocketClient;
+begin
+   BeginTest('Test_Set_VfoIsConfirmed');
+   if not StartServer then
+      begin
+      Check(False, 'no port');
+      Exit;
+      end;
+   try
+      CheckTrue(Connect(c), '');
+      try
+         WaitForQuiet(WAIT_MS);
+         RxClear;
+         // WSJT-X's do_frequency() waits about two seconds for this and then
+         // reports rig-control failure and drops the socket.
+         c.SendText('vfo:0,0,50313000;');
+         CheckTrue(WaitForPrefix('vfo:0,0,', WAIT_MS), 'a tune is confirmed');
+         CheckEquals('vfo:0,0,50313000;', RxItem(IndexOfPrefix('vfo:0,0,')),
+                     'with the frequency that was accepted');
+      finally
+         c.Free;
+      end;
+   finally
+      StopServer;
+   end;
+end;
+
+procedure TTCIServerTests.Test_Set_GlobalSplitEnableIsAccepted;
+var
+   c: TWebSocketClient;
+begin
+   BeginTest('Test_Set_GlobalSplitEnableIsAccepted');
+   if not StartServer then
+      begin
+      Check(False, 'no port');
+      Exit;
+      end;
+   try
+      CheckTrue(Connect(c), '');
+      try
+         WaitForQuiet(WAIT_MS);
+         RxClear;
+         // The exact line WSJT-X sends.  It must not be read as a GET for
+         // receiver -1 -- which is what happened, silently, before the
+         // global-form expander existed.  With no radio attached the split
+         // is already off, so this is a no-op transition and draws no reply;
+         // what is asserted is that it is not MISREAD, which the log shows
+         // as "asked about receiver -1, which is not configured".
+         c.SendText('split_enable:false;');
+         Sleep(QUIET_MS);
+         CheckEquals(0, RxCount, 'a steady false is a no-op, not an error');
+      finally
+         c.Free;
+      end;
+   finally
+      StopServer;
+   end;
+end;
+
+procedure TTCIServerTests.Test_Set_UnknownModulationIsSilent;
+var
+   c: TWebSocketClient;
+begin
+   BeginTest('Test_Set_UnknownModulationIsSilent');
+   if not StartServer then
+      begin
+      Check(False, 'no port');
+      Exit;
+      end;
+   try
+      CheckTrue(Connect(c), '');
+      try
+         WaitForQuiet(WAIT_MS);
+         RxClear;
+         // A mode we never advertised is refused, and refusing means NOT
+         // confirming: confirming a mode we did not set would tell the client
+         // the radio is somewhere it is not.
+         c.SendText('modulation:0,sam;');
+         Sleep(QUIET_MS);
+         CheckEquals(0, RxCount, 'an unknown modulation is not confirmed');
+      finally
+         c.Free;
+      end;
+   finally
+      StopServer;
+   end;
+end;
+
 { --------------------------------------------------------- mode mapping -- }
 
 procedure TTCIServerTests.Test_Mode_ToTCI;
@@ -934,6 +1062,11 @@ begin
 
    Test_PTT_RefusedReceiverAnswersFalse;
    Test_PTT_NonBooleanAnswersFalse;
+
+   Test_Set_ModulationIsConfirmed;
+   Test_Set_VfoIsConfirmed;
+   Test_Set_GlobalSplitEnableIsAccepted;
+   Test_Set_UnknownModulationIsSilent;
 
    Test_Mode_ToTCI;
    Test_Mode_PhoneSidebandFollowsBand;

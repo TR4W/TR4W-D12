@@ -103,6 +103,11 @@ type
       GetMax: integer;
       SetMin: integer;   // at least this many args means SET; -1 = not settable
       Kind:   TTCICommandKind;
+      // Accepts the GLOBAL one-argument form, e.g. 'split_enable:false'
+      // instead of 'split_enable:0,false'.  WSJT-X really sends that -- it
+      // was observed on the wire being read as a GET for receiver -1 and
+      // answered with silence.  See TCIExpandGlobalForm.
+      GlobalForm: boolean;
    end;
 
    { Splits an inbound text stream into commands.
@@ -130,6 +135,16 @@ type
 { -------------------------------------------------------------- parsing -- }
 
 function TCIParse(const Cmd: string): TTCICommand;
+
+// Rewrites the GLOBAL one-argument form into the explicit per-receiver one:
+// 'split_enable:false' becomes 'split_enable:0,false'.  Call this BEFORE
+// TCIClassify so there is one shape downstream.
+//
+// The test is "argument 0 is not a receiver index".  'split_enable:0' stays a
+// GET for receiver 0; 'split_enable:false' is a global SET.  That is the same
+// distinction the reference server draws by hand in cmdDrive and cmdVolume,
+// made once here instead of per command.
+function TCIExpandGlobalForm(const Cmd: TTCICommand): TTCICommand;
 
 // Looks up Cmd.Name and decides what was asked.  This is the ONLY place
 // GET/SET is decided.
@@ -202,59 +217,59 @@ const
    //                       name                 get       set  kind
    //                                          min  max    min
    TCI_SPECS: array[0..27] of TTCICommandSpec = (
-      (Name: 'vfo';               GetMin: 2; GetMax: 2; SetMin: 3; Kind: tckNormal),
-      (Name: 'modulation';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
-      (Name: 'trx';               GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
-      (Name: 'tune';              GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
+      (Name: 'vfo';               GetMin: 2; GetMax: 2; SetMin: 3; Kind: tckNormal; GlobalForm: False),
+      (Name: 'modulation';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
+      (Name: 'trx';               GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: True),
+      (Name: 'tune';              GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
 
       // drive/tune_drive accept a bare global GET and a per-trx GET.  Their
       // REPLY always carries <trx>,<power>: ESDR3-mode WSJT-X and JTDX index
       // args[1] unconditionally, and a one-field 'drive:0;' crashes them.
-      (Name: 'drive';             GetMin: 0; GetMax: 1; SetMin: 2; Kind: tckNormal),
-      (Name: 'tune_drive';        GetMin: 0; GetMax: 1; SetMin: 2; Kind: tckNormal),
+      (Name: 'drive';             GetMin: 0; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
+      (Name: 'tune_drive';        GetMin: 0; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
 
-      (Name: 'split_enable';      GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
-      (Name: 'rx_filter_band';    GetMin: 1; GetMax: 1; SetMin: 3; Kind: tckNormal),
-      (Name: 'rit_enable';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
-      (Name: 'xit_enable';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
-      (Name: 'rit_offset';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
-      (Name: 'xit_offset';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
-      (Name: 'dds';               GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal),
+      (Name: 'split_enable';      GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: True),
+      (Name: 'rx_filter_band';    GetMin: 1; GetMax: 1; SetMin: 3; Kind: tckNormal; GlobalForm: False),
+      (Name: 'rit_enable';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
+      (Name: 'xit_enable';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
+      (Name: 'rit_offset';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
+      (Name: 'xit_offset';        GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
+      (Name: 'dds';               GetMin: 1; GetMax: 1; SetMin: 2; Kind: tckNormal; GlobalForm: False),
 
       // One-argument SETs.  These are the commands the reference server's
       // global 'two or more args means SET' rule makes unreachable.
-      (Name: 'cw_macros_speed';   GetMin: 0; GetMax: 0; SetMin: 1; Kind: tckNormal),
-      (Name: 'cw_msg';            GetMin: -1; GetMax: -1; SetMin: 1; Kind: tckNormal),
+      (Name: 'cw_macros_speed';   GetMin: 0; GetMax: 0; SetMin: 1; Kind: tckNormal; GlobalForm: False),
+      (Name: 'cw_msg';            GetMin: -1; GetMax: -1; SetMin: 1; Kind: tckNormal; GlobalForm: False),
 
       // Read-only identity.  The other identity commands (device, protocol,
       // trx_count...) have no inbound form at all and fall through to
       // silence, which is what the reference does and what clients expect --
       // but the LIMITS are genuinely asked for, because a client checks a
       // tune against them.
-      (Name: 'vfo_limits';        GetMin: 0; GetMax: 1; SetMin: -1; Kind: tckNormal),
-      (Name: 'if_limits';         GetMin: 0; GetMax: 1; SetMin: -1; Kind: tckNormal),
+      (Name: 'vfo_limits';        GetMin: 0; GetMax: 1; SetMin: -1; Kind: tckNormal; GlobalForm: False),
+      (Name: 'if_limits';         GetMin: 0; GetMax: 1; SetMin: -1; Kind: tckNormal; GlobalForm: False),
 
-      (Name: 'start';             GetMin: 0; GetMax: 0; SetMin: -1; Kind: tckNormal),
-      (Name: 'stop';              GetMin: 0; GetMax: 0; SetMin: -1; Kind: tckNormal),
+      (Name: 'start';             GetMin: 0; GetMax: 0; SetMin: -1; Kind: tckNormal; GlobalForm: False),
+      (Name: 'stop';              GetMin: 0; GetMax: 0; SetMin: -1; Kind: tckNormal; GlobalForm: False),
 
-      (Name: 'rx_sensors_enable'; GetMin: 0; GetMax: 0; SetMin: 1; Kind: tckNormal),
-      (Name: 'tx_sensors_enable'; GetMin: 0; GetMax: 0; SetMin: 1; Kind: tckNormal),
+      (Name: 'rx_sensors_enable'; GetMin: 0; GetMax: 0; SetMin: 1; Kind: tckNormal; GlobalForm: False),
+      (Name: 'tx_sensors_enable'; GetMin: 0; GetMax: 0; SetMin: 1; Kind: tckNormal; GlobalForm: False),
 
       // Streams.  We have no audio to offer -- TR4W bridges a rig and the
       // client keeps its own soundcard -- but the commands are acknowledged
       // because a client that gets silence here concludes the server is
       // broken.  No binary frame is ever emitted.
-      (Name: 'audio_start';       GetMin: 0; GetMax: 4; SetMin: -1; Kind: tckNormal),
-      (Name: 'audio_stop';        GetMin: 0; GetMax: 4; SetMin: -1; Kind: tckNormal),
-      (Name: 'iq_start';          GetMin: 0; GetMax: 4; SetMin: -1; Kind: tckNormal),
-      (Name: 'iq_stop';           GetMin: 0; GetMax: 4; SetMin: -1; Kind: tckNormal),
+      (Name: 'audio_start';       GetMin: 0; GetMax: 4; SetMin: -1; Kind: tckNormal; GlobalForm: False),
+      (Name: 'audio_stop';        GetMin: 0; GetMax: 4; SetMin: -1; Kind: tckNormal; GlobalForm: False),
+      (Name: 'iq_start';          GetMin: 0; GetMax: 4; SetMin: -1; Kind: tckNormal; GlobalForm: False),
+      (Name: 'iq_stop';           GetMin: 0; GetMax: 4; SetMin: -1; Kind: tckNormal; GlobalForm: False),
 
       // Server-to-client state.  TCI 2.0 and Thetis both define TX_ENABLE
       // that way, so an inbound one must mutate nothing and answer nothing.
       // Recognised rather than unknown so the distinction is testable.
-      (Name: 'tx_enable';         GetMin: -1; GetMax: -1; SetMin: -1; Kind: tckNotificationOnly),
-      (Name: 'rx_enable';         GetMin: -1; GetMax: -1; SetMin: -1; Kind: tckNotificationOnly),
-      (Name: 'rx_smeter';         GetMin: -1; GetMax: -1; SetMin: -1; Kind: tckNotificationOnly)
+      (Name: 'tx_enable';         GetMin: -1; GetMax: -1; SetMin: -1; Kind: tckNotificationOnly; GlobalForm: False),
+      (Name: 'rx_enable';         GetMin: -1; GetMax: -1; SetMin: -1; Kind: tckNotificationOnly; GlobalForm: False),
+      (Name: 'rx_smeter';         GetMin: -1; GetMax: -1; SetMin: -1; Kind: tckNotificationOnly; GlobalForm: False)
       );
 
 { ---------------------------------------------------------- TTCICommand -- }
@@ -412,6 +427,32 @@ begin
    Result.GetMax := -1;
    Result.SetMin := -1;
    Result.Kind := tckNormal;
+end;
+
+function TCIExpandGlobalForm(const Cmd: TTCICommand): TTCICommand;
+var
+   spec: TTCICommandSpec;
+begin
+   Result := Cmd;
+   spec := TCIFindSpec(Cmd.Name);
+   if (spec.Name = '') or (not spec.GlobalForm) then
+      begin
+      Exit;
+      end;
+   if Cmd.ArgCount <> 1 then
+      begin
+      Exit;
+      end;
+   // A receiver index is an integer.  Anything else in that position is the
+   // VALUE, and the receiver was left implicit -- which by convention means
+   // receiver 0, the one every WSJT-X instance addresses.
+   if StrToIntDef(Cmd.Arg(0), MaxInt) <> MaxInt then
+      begin
+      Exit;
+      end;
+   SetLength(Result.Args, 2);
+   Result.Args[0] := '0';
+   Result.Args[1] := Cmd.Arg(0);
 end;
 
 function TCIClassify(const Cmd: TTCICommand): TTCIRequestKind;
