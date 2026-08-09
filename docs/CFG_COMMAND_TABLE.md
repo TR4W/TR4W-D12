@@ -110,7 +110,7 @@ See the trap above. `ckNormal`: address of the global. `ckArray`/`ckList`: an in
   (My own analysis script did exactly that before it was caught.)
 
 ### `crS: CFGStatus` — provenance and visibility
-`(csNew, csOld, csRem, csOwned)`, documented at `VC.pas:848-854`:
+`(csNew, csOld, csRem, csOwned, csJSON)`, documented at `VC.pas:848-865`:
 - `csNew` / `csOld` — active, value applied. **The difference is informational; no code in
   the program reads it.** It records **whether the command came from N6TR's DOS TR LOG
   (`csOld`) or is new in TR4W (`csNew`)** — settled 2026-08-07 by archaeology, not guesswork:
@@ -196,7 +196,7 @@ by the very marker meant to protect it. The same applies to any `crNetwork = 1` 
 So: a **station-only, non-synced** key can be retired. An **overlap** key never can — for
 those, the `.cfg` path is a feature, not a legacy fallback.
 
-#### Proposed: a `csJSON` status (NY4I, 2026-08-07)
+#### `csJSON` — proposed 2026-08-07, **IMPLEMENTED** (see below)
 
 `csRem` already means something specific and historical — *this command was withdrawn*.
 Reusing it for migrated keys would conflate two unrelated stories and lose the ability to
@@ -228,6 +228,65 @@ branch handles would fall through as *active*:
    is the safety net here too.
 3. `CheckCommand` (`uCFG.pas:1135`) — treat as `csRem`.
 4. `uOption.pas:343` — hide it, alongside `csRem` and `csOwned`.
+
+**All four are done** (`VC.pas:866`, `CFGStatusArray`, `uCFG.pas:1139`, `uOption.pas:348`),
+and the first rows have moved: the seventeen WinKeyer rows and the three
+`UDP BROADCAST …` rows are `csJSON` today. The radio rows have **not** — all 54 are still
+`csOwned`, which is why `tr4w.ini` is still both read and written for them.
+
+---
+
+## Migrating the RADIO rows — the audit
+
+`csOwned` → `csJSON` for radios cannot be done in one pass. Running this document's own
+"simple row" test (`ckNormal` ∧ `crA = 0` ∧ `crType ≠ ctFreqList`) over the 54 `csOwned`
+radio rows splits them four ways, and only the first group is a value copy.
+
+**The retirement and the direct applier are ONE piece of work, per set.** `csJSON` makes
+`CheckCommand` inert, and `CheckCommand` is currently the *only* thing that moves a radio
+definition into the live globals — `ApplyRadioToSlot`'s own comment says so. Retiring a set
+without an applier for it does not fall back to the ini; it silently configures nothing.
+`uKeyerConfigApply.pas` is the precedent and says the same in its header.
+
+### Set 1 — 25 plain scalars, ready to move
+`ckNormal`, `crA = 0`, `crNetwork = 0`, non-boolean. `NAME`, `IP ADDRESS`, `TCP PORT`,
+`SERIAL FORMAT`, `STARTUP COMMAND`, `RECEIVER ADDRESS`, `HAMLIB ID`, `FREQUENCY ADDER`,
+`ICOM DATA MODE ID`, `KEYER STOP BITS`, `NETWORK USERNAME`, `NETWORK PASSWORD` (both
+slots), plus `RADIO ONE FACTORY ID`.
+
+### Set 2 — 16 rows that are not a value copy
+Twelve `ckList` (`CONTROL PORT`, `CAT RTS/DTR`, `KEYER RTS/DTR`, `TYPE`) and four `ckArray`
+(`BAUD RATE`, `ICOM FILTER BYTE`). The value is a *spelling* in `lpArray` and `crAddress`
+is an index. Needs one explicit spelling→enum translation site — exactly what
+`uKeyerConfigApply` did for `KeyerModeSA` / `PortTypeSA`. **This is where the vocabulary
+hazard named in `crKind` lives, and it has already bitten twice**: `NONE` vs `TCP/IP` cost a
+bench session, and the same mismatch in the seeding direction silently converted a network
+K4 to serial (fixed 2026-08-09).
+
+### Set 3 — `RADIO ONE/TWO TYPE`, `crA = 9/10`
+The only radio rows with a parse-time hook, and the most important rows in the table. Per
+the `crA` section, these **cannot be moved by copying a value** — the hook must still run or
+dependent globals go stale.
+
+### Set 4 — 12 booleans, BLOCKED on `BOOLSWAP`
+`POLL RADIO ONE/TWO`, `CW BY CAT`, `CW SPEED SYNC`, `USE HAMLIB`, `WIDE CW FILTER`,
+`FT1000MP CW REVERSE`. `BOOLSWAP` ignores `crS` entirely and writes `crAddress` directly, so
+marking these `csJSON` leaves a CW-message macro able to flip a legacy global that JSON
+believes it owns. **Do not retire these until `BOOLSWAP` is taught the store** — the
+"three consumers" section above predicted exactly this.
+
+### Data defects found during the audit (2026-08-09)
+Slot ONE and slot TWO disagree on three rows. Each is a one-word fix, but each changes
+behaviour, so they are listed rather than silently corrected:
+
+| Row | `RADIO ONE` | `RADIO TWO` | Consequence |
+|---|---|---|---|
+| `FACTORY ID` | `crNetwork:0` | `crNetwork:1` | only slot 2 syncs to multi-op; retiring slot 2 breaks that receive path, slot 1 has nothing to break |
+| `FREQUENCY ADDER` | `crJ:0` | `crJ:2` | editable on one radio, read-only on the other |
+| `RECEIVER ADDRESS` | `crJ:0` | `crJ:2` | same |
+
+`FACTORY ID` is also `crJ:0` on both, which the `crJ` section already flags as wrong — it
+should be `crJ:2`.
 
 ### `crA` — the deeper-processing hook, which can also reject
 Index into `AdditionalProcsArray[1..25]` (`uCFG.pas:194`); `0` = none. NY4I's framing: the
