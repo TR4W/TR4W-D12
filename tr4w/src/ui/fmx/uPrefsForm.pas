@@ -83,7 +83,9 @@ uses
    uRadioConfigStore,
    uKeyerConfigStore,
    uRadioEditForm,   // the Radio editor, its own unit since it is next to be designed
-   uKeyerEditForm;   // the CW keying-device editor
+   uKeyerEditForm,   // the CW keying-device editor
+   uUDPDestinationEditForm,   // one UDP destination, edited in isolation
+   uUDPBroadcastConfig;       // the settings this panel edits
 
 type
 
@@ -145,6 +147,14 @@ type
       // --- UDP section (Tag = NAV_UDPBROADCAST) -------------------------------
       layUDP: TLayout;
       chkUDPEnabled: TCheckBox;
+      lblUDPDestinations: TLabel;
+      lstUDPDestinations: TListBox;
+      btnUDPAdd: TButton;
+      btnUDPEdit: TButton;
+      btnUDPRemove: TButton;
+      btnUDPTest: TButton;
+      chkUDPAllQSOs: TCheckBox;
+      lblUDPHint: TLabel;
 
       procedure lstNavChange(Sender: TObject);
       procedure btnAddClick(Sender: TObject);
@@ -185,6 +195,16 @@ type
       procedure cbxRadio1Change(Sender: TObject);
       procedure cbxRadio2Change(Sender: TObject);
       procedure btnActivateClick(Sender: TObject);
+
+      // --- UDP section --------------------------------------------------------
+      procedure btnUDPAddClick(Sender: TObject);
+      procedure btnUDPEditClick(Sender: TObject);
+      procedure btnUDPRemoveClick(Sender: TObject);
+      procedure btnUDPTestClick(Sender: TObject);
+      procedure lstUDPDestinationsDblClick(Sender: TObject);
+      procedure chkUDPEnabledChange(Sender: TObject);
+      procedure chkUDPAllQSOsChange(Sender: TObject);
+
       procedure btnOKClick(Sender: TObject);
       procedure btnCancelClick(Sender: TObject);
       procedure btnApplyClick(Sender: TObject);
@@ -215,6 +235,17 @@ type
       FEditTarget: TRadioDefinition;
       FEditClone: TRadioDefinition;
       FEditIsNew: boolean;
+
+      // The UDP broadcast settings, edited as a WORKING COPY like every other
+      // library here: Cancel throws it away and reloads, Apply writes it and
+      // hands it to the broadcaster.  It shares settings\tr4w.json with the
+      // radios and keyers through uTR4WConfigFile, so one write covers all
+      // three and they cannot drift apart.
+      FUDPConfig: TUDPBroadcastConfig;
+      FUDPEditor: TfrmUDPDestinationEdit;
+      FUDPEditTarget: TUDPDestination;
+      FUDPEditClone: TUDPDestination;
+      FUDPEditIsNew: boolean;
       FLoading: boolean;
       // Set by every edit, cleared by every successful save.  Without it,
       // closing with the window's X kept the edits in memory unsaved -- so
@@ -261,6 +292,14 @@ type
       procedure EditSelectedRadio;
       procedure EditSelectedKeyer;
       procedure SlotRadioChanged(const aThisCombo, aOtherCombo, aThisCWCombo: TComboBox);
+
+      // --- UDP section --------------------------------------------------------
+      procedure RefreshUDPList;
+      function  UDPRowText(const aDestination: TUDPDestination): string;
+      function  SelectedUDPDestination: TUDPDestination;
+      procedure EditSelectedUDPDestination;
+      procedure UDPEditorDone(const aAccepted: boolean);
+      procedure CaptureUDPFields;
 
       procedure DiscardChanges;
       procedure EditorDone(const aAccepted: boolean);
@@ -324,6 +363,7 @@ uses
    uRadioConfigApply,
    uRadioRegistry,
    uCAT,        // DiscoverNetworkRadios
+   uUDPBroadcaster,   // TestDestination, and Configure once the settings are saved
    MainUnit,    // logger
    VC;
 
@@ -370,6 +410,7 @@ begin
 
    FStore := TRadioConfigStore.Create;
    FKeyerStore := TKeyerConfigStore.Create;
+   FUDPConfig := TUDPBroadcastConfig.Create;
    SelectFirstSection;
    LoadStore;
    RefreshAll;
@@ -426,8 +467,10 @@ destructor TPrefsForm.Destroy;
 begin
    FreeAndNil(FEditClone);
    FreeAndNil(FKeyerEditClone);
+   FreeAndNil(FUDPEditClone);
    FreeAndNil(FKeyerStore);
    FreeAndNil(FStore);
+   FreeAndNil(FUDPConfig);
    inherited Destroy;
 end;
 
@@ -451,8 +494,21 @@ procedure TPrefsForm.LoadStore;
 var
    ini: TIniFile;
    legacy: TIniFile;
+   udp: TUDPBroadcastConfig;
    err: string;
 begin
+   // 0. The UDP settings, through the SAME call startup uses.  That function
+   //    reads the JSON section when it is there and seeds from the operator's
+   //    tr4w.ini when it is not, so the dialog and startup cannot disagree
+   //    about what is configured -- which they would the moment either grew its
+   //    own copy of the fall-back rule.
+   udp := LoadUDPForStartup(StoreFileName, SettingsDirectory + 'tr4w.ini');
+   try
+      FUDPConfig.Assign(udp);
+   finally
+      udp.Free;
+   end;
+
    // 1. The JSON store, if there is one.  Via uTR4WConfigFile, which loads
    //    EVERY library sharing the file -- radios, profiles and keyers -- so the
    //    two stores can never drift out of step through separate reads.
@@ -513,9 +569,27 @@ begin
       Exit;
       end;
 
+   // The UDP settings are validated on the SAME footing as the radio library,
+   // and before anything is written: a duplicated endpoint or a row carrying
+   // nothing is refused here rather than discovered as silence on the wire.
+   Result := FUDPConfig.Validate(aError);
+   if not Result then
+      begin
+      Exit;
+      end;
+
    try
       // Every library in one atomic write -- see uTR4WConfigFile.
-      SaveConfig(StoreFileName, FStore, FKeyerStore);
+      SaveConfig(StoreFileName, FStore, FKeyerStore, FUDPConfig);
+
+      // HERE, not in the two ApplyNow call sites.  The broadcaster's settings
+      // and the file must change together: a save that did not reconfigure
+      // would leave the operator's new destination stored but not broadcasting
+      // until a restart, and "it only works after I restart TR4W" is a bug
+      // report nobody can act on.  Configure takes a COPY, so the working copy
+      // stays the dialog's.  (The radios need an explicit Activate because
+      // restarting them mid-contest is a real cost; a UDP destination has none.)
+      UDPBroadcaster.Configure(FUDPConfig);
    except
       // A failed SAVE must be reported, not swallowed: the operator would
       // otherwise close the dialog believing their library was stored.
@@ -967,6 +1041,7 @@ begin
    RefreshKeyerList;
    RefreshProfileCombo;
    RefreshProfileFields;
+   RefreshUDPList;
 end;
 
 // "Save" is the only button whose effect is invisible: nothing on screen moves
@@ -1449,6 +1524,280 @@ begin
    // profile must be re-read from the controls rather than left at the value
    // captured above.
    CaptureProfileFields;
+end;
+
+{ ------------------------------------------------- UDP broadcast section --- }
+
+// The stream's name for the OPERATOR.  Deliberately not UDPStreamName, which is
+// the storage spelling ('appInfo') and must stay stable in the file whatever
+// the UI calls it.
+function UDPStreamCaption(const aStream: TUDPStream): string;
+begin
+   case aStream of
+      usContact: Result := TC_PREFS_UDPSTREAM_CONTACT;
+      usRadio:   Result := TC_PREFS_UDPSTREAM_RADIO;
+      usScore:   Result := TC_PREFS_UDPSTREAM_SCORE;
+      usRotor:   Result := TC_PREFS_UDPSTREAM_ROTOR;
+      usLookup:  Result := TC_PREFS_UDPSTREAM_LOOKUP;
+      usAppInfo: Result := TC_PREFS_UDPSTREAM_APPINFO;
+   else
+      // A stream added to the enum with no caption here: show the storage name
+      // rather than an empty column, so it is visibly unfinished instead of
+      // invisibly missing.
+      Result := UDPStreamName(aStream);
+   end;
+end;
+
+function TPrefsForm.UDPRowText(const aDestination: TUDPDestination): string;
+var
+   st: TUDPStream;
+   streams: string;
+begin
+   streams := '';
+   for st := Low(TUDPStream) to High(TUDPStream) do
+      begin
+      if aDestination.Carries(st) then
+         begin
+         if streams <> '' then
+            begin
+            streams := streams + ', ';
+            end;
+         streams := streams + UDPStreamCaption(st);
+         end;
+      end;
+
+   // The editor refuses to save a destination carrying nothing, so this is only
+   // reachable through a hand-edited file -- and it must READ as wrong rather
+   // than as a row with an empty column.
+   if streams = '' then
+      begin
+      streams := TC_PREFS_UDPNOSTREAMS;
+      end;
+
+   // Address, port and streams all on the row: "which port does radio info go
+   // to" is answerable without opening anything.
+   Result := Format('%s:%d   %s', [aDestination.Address, aDestination.Port, streams]);
+end;
+
+procedure TPrefsForm.RefreshUDPList;
+var
+   wasLoading: boolean;
+   keep: integer;
+   i: integer;
+begin
+   if FUDPConfig = nil then
+      begin
+      Exit;
+      end;
+
+   // The two checkboxes below fire OnChange when assigned, and their handlers
+   // capture and mark the panel dirty.  Without this guard, merely OPENING
+   // Preferences would light up Apply.
+   wasLoading := FLoading;
+   FLoading := True;
+   try
+      keep := lstUDPDestinations.ItemIndex;
+
+      lstUDPDestinations.Clear;
+      for i := 0 to FUDPConfig.DestinationCount - 1 do
+         begin
+         lstUDPDestinations.Items.Add(UDPRowText(FUDPConfig.Destination[i]));
+         end;
+
+      // Selection restored by POSITION, which is what it means here: the list
+      // is the config's own order and the operator's mental row number.
+      if (keep >= 0) and (keep < lstUDPDestinations.Items.Count) then
+         begin
+         lstUDPDestinations.ItemIndex := keep;
+         end;
+
+      chkUDPEnabled.IsChecked := FUDPConfig.Enabled;
+      chkUDPAllQSOs.IsChecked := FUDPConfig.AllQSOs;
+   finally
+      FLoading := wasLoading;
+   end;
+end;
+
+function TPrefsForm.SelectedUDPDestination: TUDPDestination;
+begin
+   Result := nil;
+   if (FUDPConfig = nil) or (lstUDPDestinations.ItemIndex < 0) then
+      begin
+      Exit;
+      end;
+   if lstUDPDestinations.ItemIndex >= FUDPConfig.DestinationCount then
+      begin
+      Exit;
+      end;
+   Result := FUDPConfig.Destination[lstUDPDestinations.ItemIndex];
+end;
+
+procedure TPrefsForm.btnUDPAddClick(Sender: TObject);
+begin
+   if FUDPEditor = nil then
+      begin
+      FUDPEditor := TfrmUDPDestinationEdit.Create(Self);
+      end;
+
+   FUDPEditIsNew  := True;
+   FUDPEditTarget := nil;
+   FreeAndNil(FUDPEditClone);
+
+   // Opens on the compiled-in defaults with contacts ticked: that is what most
+   // stations are adding, and an empty dialog makes the operator supply three
+   // answers to add the ordinary case.
+   FUDPEditClone := TUDPDestination.Create(UDP_DEFAULT_ADDRESS, UDP_DEFAULT_PORT,
+                                           [usContact]);
+   FUDPEditor.EditDestination(FUDPEditClone, UDPEditorDone);
+end;
+
+procedure TPrefsForm.EditSelectedUDPDestination;
+var
+   target: TUDPDestination;
+begin
+   target := SelectedUDPDestination;
+   if target = nil then
+      begin
+      Exit;
+      end;
+
+   if FUDPEditor = nil then
+      begin
+      FUDPEditor := TfrmUDPDestinationEdit.Create(Self);
+      end;
+
+   // A CLONE, so Cancel costs nothing -- the same rule the radio and keyer
+   // editors follow.  The original is remembered so the accepted values can be
+   // assigned back onto it, keeping the object identity the list indexes.
+   FUDPEditIsNew  := False;
+   FUDPEditTarget := target;
+   FreeAndNil(FUDPEditClone);
+   FUDPEditClone := target.Clone;
+   FUDPEditor.EditDestination(FUDPEditClone, UDPEditorDone);
+end;
+
+procedure TPrefsForm.btnUDPEditClick(Sender: TObject);
+begin
+   EditSelectedUDPDestination;
+end;
+
+procedure TPrefsForm.lstUDPDestinationsDblClick(Sender: TObject);
+begin
+   EditSelectedUDPDestination;
+end;
+
+procedure TPrefsForm.UDPEditorDone(const aAccepted: boolean);
+var
+   clash: TUDPDestination;
+begin
+   if not aAccepted then
+      begin
+      FreeAndNil(FUDPEditClone);
+      Exit;
+      end;
+
+   // REFUSED HERE, not at save time.  The same address and port twice would
+   // send everything it carries twice, and Validate would then block a save the
+   // operator cannot see the cause of.  Told now, while the dialog they just
+   // accepted is still what they are thinking about.
+   clash := FUDPConfig.FindDestination(FUDPEditClone.Address, FUDPEditClone.Port);
+   if (clash <> nil) and (clash <> FUDPEditTarget) then
+      begin
+      ShowMessage(Format(TC_PREFS_UDPDUPLICATE,
+                         [FUDPEditClone.Address, FUDPEditClone.Port]));
+      FreeAndNil(FUDPEditClone);
+      Exit;
+      end;
+
+   if FUDPEditIsNew then
+      begin
+      FUDPConfig.AddDestination(FUDPEditClone.Address, FUDPEditClone.Port,
+                                FUDPEditClone.Streams);
+      end
+   else if FUDPEditTarget <> nil then
+      begin
+      // Assigned onto the existing object rather than replaced, so the list
+      // position and anything holding it stay valid.
+      FUDPEditTarget.Assign(FUDPEditClone);
+      end;
+
+   // The clone is ours either way: AddDestination builds its own object from
+   // the values, so this is not an ownership transfer.
+   FreeAndNil(FUDPEditClone);
+
+   Dirty := True;
+   RefreshUDPList;
+end;
+
+procedure TPrefsForm.btnUDPRemoveClick(Sender: TObject);
+var
+   target: TUDPDestination;
+   index: integer;
+begin
+   target := SelectedUDPDestination;
+   if target = nil then
+      begin
+      Exit;
+      end;
+
+   index := lstUDPDestinations.ItemIndex;
+   if MessageDlg(Format(TC_PREFS_UDPCONFIRMREMOVE, [target.Address, target.Port]),
+                 TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
+      begin
+      Exit;
+      end;
+
+   FUDPConfig.RemoveDestination(index);
+   Dirty := True;
+   RefreshUDPList;
+end;
+
+procedure TPrefsForm.btnUDPTestClick(Sender: TObject);
+var
+   target: TUDPDestination;
+   err: string;
+begin
+   target := SelectedUDPDestination;
+   if target = nil then
+      begin
+      ShowMessage(TC_PREFS_UDPSELECTFIRST);
+      Exit;
+      end;
+
+   // Tests the ROW, not the configuration: it works whether or not the master
+   // switch is on and whether or not the panel has been saved, because "does
+   // this endpoint work" is a different question from "am I broadcasting".
+   if UDPBroadcaster.TestDestination(target.Address, target.Port, err) then
+      begin
+      // SENT, not delivered -- UDP cannot tell us the difference and neither
+      // can this message.
+      ShowMessage(Format(TC_PREFS_UDPTESTSENT, [target.Address, target.Port]));
+      end
+   else
+      begin
+      ShowMessage(err);
+      end;
+end;
+
+procedure TPrefsForm.CaptureUDPFields;
+begin
+   if (FUDPConfig = nil) or FLoading then
+      begin
+      Exit;
+      end;
+   FUDPConfig.Enabled := chkUDPEnabled.IsChecked;
+   FUDPConfig.AllQSOs := chkUDPAllQSOs.IsChecked;
+   Dirty := True;
+end;
+
+procedure TPrefsForm.chkUDPEnabledChange(Sender: TObject);
+begin
+   CaptureUDPFields;
+end;
+
+procedure TPrefsForm.chkUDPAllQSOsChange(Sender: TObject);
+begin
+   CaptureUDPFields;
 end;
 
 function TPrefsForm.ApplyNow(const aActivate: boolean): boolean;

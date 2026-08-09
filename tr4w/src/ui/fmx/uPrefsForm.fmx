@@ -503,6 +503,7 @@ object PrefsForm: TPrefsForm
         Size.PlatformDefault = False
         TabOrder = 0
         Text = 'Broadcast UDP data'
+        OnChange = chkUDPEnabledChange
       end
       object lblUDPDestinations: TLabel
         Position.X = 12.000000000000000000
@@ -526,6 +527,7 @@ object PrefsForm: TPrefsForm
         DefaultItemStyles.GroupFooterStyle = ''
         Viewport.Width = 416.000000000000000000
         Viewport.Height = 146.000000000000000000
+        OnDblClick = lstUDPDestinationsDblClick
       end
       object btnUDPAdd: TButton
         Position.X = 445.000000000000000000
@@ -536,6 +538,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 3
         Text = 'Add...'
         TextSettings.Trimming = None
+        OnClick = btnUDPAddClick
       end
       object btnUDPEdit: TButton
         Position.X = 445.000000000000000000
@@ -546,6 +549,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 4
         Text = 'Edit...'
         TextSettings.Trimming = None
+        OnClick = btnUDPEditClick
       end
       object btnUDPRemove: TButton
         Position.X = 445.000000000000000000
@@ -556,6 +560,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 5
         Text = 'Remove'
         TextSettings.Trimming = None
+        OnClick = btnUDPRemoveClick
       end
       object btnUDPTest: TButton
         Position.X = 445.000000000000000000
@@ -566,6 +571,7 @@ object PrefsForm: TPrefsForm
         TabOrder = 6
         Text = 'Test'
         TextSettings.Trimming = None
+        OnClick = btnUDPTestClick
       end
       object chkUDPAllQSOs: TCheckBox
         Position.X = 12.000000000000000000
@@ -575,6 +581,7 @@ object PrefsForm: TPrefsForm
         Size.PlatformDefault = False
         TabOrder = 7
         Text = 'Also broadcast edited and previously logged QSOs'
+        OnChange = chkUDPAllQSOsChange
       end
       object lblUDPHint: TLabel
         Position.X = 12.000000000000000000

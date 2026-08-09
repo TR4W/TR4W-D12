@@ -110,6 +110,12 @@ function ApplyProfile(const aStore: TRadioConfigStore;
 function RadioStoreFileName: string;
 function LegacyRadioStoreFileName: string;
 
+// The settings folder itself.  Exported because the UDP settings are seeded
+// from settings\tr4w.ini and the Preferences form must reach it the SAME way
+// startup does -- two spellings of one path is exactly the divergence this
+// unit exists to prevent.
+function SettingsDirectory: string;
+
 // STARTUP ONLY.  Writes the active profile's keys into the configuration and
 // CheckCommands them -- and does NOTHING to the radios, because at startup they
 // do not exist yet and the normal CheckAndInitializePorts path is about to

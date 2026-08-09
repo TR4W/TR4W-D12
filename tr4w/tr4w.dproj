@@ -209,6 +209,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
             <Form>frmKeyerEdit</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <DCCReference Include="src\ui\fmx\uUDPDestinationEditForm.pas">
+            <Form>frmUDPDestinationEdit</Form>
+            <FormType>fmx</FormType>
+        </DCCReference>
         <DCCReference Include="src\ui\fmx\uPrefsForm.pas">
             <Form>PrefsForm</Form>
             <FormType>fmx</FormType>
