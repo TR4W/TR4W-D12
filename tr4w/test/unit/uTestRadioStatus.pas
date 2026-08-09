@@ -33,6 +33,10 @@ type
       procedure Test_EveryVFOSlotAndFieldIsDetected;
       procedure Test_RecordSizeIsPinned;
       procedure Test_PaddingExistsAndIsNotState;
+      procedure Test_PublishTogglesVersionOddThenEven;
+      procedure Test_SnapshotReturnsThePublishedRecord;
+      procedure Test_SnapshotStillReturnsACopyIfTheVersionIsLeftOdd;
+      procedure Test_CurrentAndFilteredAreReadSeparately;
    public
       procedure RunAllTests; override;
    end;
@@ -242,6 +246,118 @@ begin
       + 'something untrue.');
 end;
 
+// ---------------------------------------------------------------------------
+// The seqlock.
+//
+// These are single-threaded on purpose.  A unit test cannot reliably provoke a
+// real reader/writer collision -- the window is nanoseconds and the outcome is
+// timing-dependent, so a test that tried would be flaky and would prove nothing
+// on the run where it happened not to collide.  What IS worth pinning is the
+// protocol the collision detection rests on: odd while writing, even when
+// coherent, and a reader that cannot get a stable version still returns
+// something rather than spinning forever.
+// ---------------------------------------------------------------------------
+
+// A standalone RadioObject, so the tests never touch the real Radio1/Radio2 the
+// rest of the program is using.
+procedure ResetRig(var rig: RadioObject);
+begin
+   FillChar(rig, SizeOf(rig), 0);
+end;
+
+procedure TRadioStatusTests.Test_PublishTogglesVersionOddThenEven;
+var
+   rig: RadioObject;
+begin
+   BeginTest('Test_PublishTogglesVersionOddThenEven');
+   ResetRig(rig);
+
+   CheckEquals(0, integer(rig.StatusVersion and 1),
+      'a fresh rig must start on an EVEN version, or its very first snapshot '
+      + 'would be treated as mid-write');
+
+   BeginStatusPublish(@rig);
+   CheckEquals(1, integer(rig.StatusVersion and 1),
+      'BeginStatusPublish must make the version odd -- odd is what tells a '
+      + 'reader a write is in progress');
+
+   EndStatusPublish(@rig);
+   CheckEquals(0, integer(rig.StatusVersion and 1),
+      'EndStatusPublish must make the version even again');
+
+   // The version must MOVE, not just toggle parity: a reader that copied across
+   // a complete publish sees before <> after and retries.  A counter that
+   // returned to its old value would let that reader accept a torn copy.
+   BeginStatusPublish(@rig);
+   EndStatusPublish(@rig);
+   CheckEquals(4, integer(rig.StatusVersion),
+      'two complete publishes must advance the version by four, so a reader '
+      + 'spanning either of them detects it');
+end;
+
+procedure TRadioStatusTests.Test_SnapshotReturnsThePublishedRecord;
+var
+   rig: RadioObject;
+   snap: RadioStatusRecord;
+begin
+   BeginTest('Test_SnapshotReturnsThePublishedRecord');
+   ResetRig(rig);
+
+   BeginStatusPublish(@rig);
+   rig.FilteredStatus := Baseline;
+   EndStatusPublish(@rig);
+
+   snap := ReadRadioStatus(@rig);
+   CheckFalse(RadioStatusDiffers(snap, rig.FilteredStatus),
+      'a snapshot taken on an even version must equal the published record');
+   CheckEquals(14025000, snap.Freq, 'snapshot carried the wrong frequency');
+end;
+
+// The bounded-retry path.  If a publish were ever left unbalanced -- an
+// exception escaping between Begin and End -- the version would stay odd and a
+// naive `repeat until stable` would hang the UI thread.  It must degrade to
+// "returns a copy", which is exactly what every unconverted caller already
+// does by reading the field directly.
+procedure TRadioStatusTests.Test_SnapshotStillReturnsACopyIfTheVersionIsLeftOdd;
+var
+   rig: RadioObject;
+   snap: RadioStatusRecord;
+begin
+   BeginTest('Test_SnapshotStillReturnsACopyIfTheVersionIsLeftOdd');
+   ResetRig(rig);
+
+   rig.FilteredStatus := Baseline;
+   BeginStatusPublish(@rig);   // deliberately never ended: version stays ODD
+
+   snap := ReadRadioStatus(@rig);   // must return, not spin
+   CheckEquals(14025000, snap.Freq,
+      'a reader that cannot get a stable version must still hand back the last '
+      + 'copy it took -- spinning forever here would hang the UI thread');
+end;
+
+procedure TRadioStatusTests.Test_CurrentAndFilteredAreReadSeparately;
+var
+   rig: RadioObject;
+   cur, filt: RadioStatusRecord;
+begin
+   BeginTest('Test_CurrentAndFilteredAreReadSeparately');
+   ResetRig(rig);
+
+   BeginStatusPublish(@rig);
+   rig.CurrentStatus := Baseline;
+   rig.FilteredStatus := Baseline;
+   rig.FilteredStatus.Freq := 7025000;   // filtered lags by a cycle
+   EndStatusPublish(@rig);
+
+   cur  := ReadRadioCurrentStatus(@rig);
+   filt := ReadRadioStatus(@rig);
+
+   CheckEquals(14025000, cur.Freq, 'ReadRadioCurrentStatus must read CurrentStatus');
+   CheckEquals(7025000, filt.Freq, 'ReadRadioStatus must read FilteredStatus');
+   CheckTrue(RadioStatusDiffers(cur, filt),
+      'the two accessors must not be reading the same record');
+end;
+
 procedure TRadioStatusTests.RunAllTests;
 begin
    Test_IdenticalRecordsDoNotDiffer;
@@ -251,6 +367,10 @@ begin
    Test_EveryVFOSlotAndFieldIsDetected;
    Test_RecordSizeIsPinned;
    Test_PaddingExistsAndIsNotState;
+   Test_PublishTogglesVersionOddThenEven;
+   Test_SnapshotReturnsThePublishedRecord;
+   Test_SnapshotStillReturnsACopyIfTheVersionIsLeftOdd;
+   Test_CurrentAndFilteredAreReadSeparately;
 end;
 
 end.

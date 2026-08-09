@@ -703,11 +703,23 @@ begin
   Radio2.SetRadioFreq(R2VFO.Frequency, R2VFO.Mode, 'A');
 }
   logger.Debug('Entering scExchangeRadios');
-  if Radio1.FilteredStatus.Freq = 0 then Exit;
-  if Radio2.FilteredStatus.Freq = 0 then Exit;
 
-  Windows.CopyMemory(@R2REC, @Radio1.FilteredStatus, SizeOf(RadioStatusRecord));
-  Windows.CopyMemory(@R1REC, @Radio2.FilteredStatus, SizeOf(RadioStatusRecord));
+  // SNAPSHOT, then decide.  This routine retunes BOTH radios from what it
+  // reads, so the frequency and the mode it uses have to describe the same
+  // instant.  It used to CopyMemory 160 bytes straight out of a record the
+  // polling thread writes field by field, with nothing stopping the copy from
+  // straddling a poll -- which would QSY the operator to a frequency from one
+  // cycle paired with a mode from another, in the middle of a contest, and
+  // leave nothing behind to explain it.
+  //
+  // The zero guards moved onto the snapshots too.  Testing the live field and
+  // then copying would re-introduce the same gap in miniature: the value that
+  // passed the guard need not be the value that gets used.
+  R2REC := ReadRadioStatus(@Radio1);
+  R1REC := ReadRadioStatus(@Radio2);
+
+  if R2REC.Freq = 0 then Exit;
+  if R1REC.Freq = 0 then Exit;
 
   Radio1.SetRadioFreq(R1REC.Freq, R1REC.Mode, 'A'{VFPLETTERARRAY[Radio1.FilteredStatus.VFOStatus]});
   Radio2.SetRadioFreq(R2REC.Freq, R2REC.Mode, 'A'{VFPLETTERARRAY[Radio2.FilteredStatus.VFOStatus]});

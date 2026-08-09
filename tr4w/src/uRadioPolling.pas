@@ -362,6 +362,21 @@ begin
          // from before. Selectable-model radios (Kenwood FR, Flex) return the
          // receiving VFO, so the main window tracks A/B selection on the radio.
          actVFO := ro.GetActiveVFO;
+
+         // THE BATCH BOUNDARY.  Everything from here to EndStatusPublish below
+         // -- the whole CurrentStatus fill and the FilteredStatus copy inside
+         // UpdateStatus -- is one coherent update as far as a reader is
+         // concerned.  Bracketing only the fill would publish a CurrentStatus
+         // that FilteredStatus had not caught up with yet, which is precisely
+         // the mismatch a snapshot is supposed to make impossible.
+         // try/finally is load-bearing, not defensive habit.  Everything below
+         // reads properties off a live radio object and calls the logger; if any
+         // of that raised, the version would be left ODD permanently and every
+         // reader would spin its full retry budget on every call, for the rest
+         // of the session.  An unbalanced seqlock does not fail loudly -- it
+         // quietly degrades to "always contended".
+         BeginStatusPublish(rig);
+         try
          rig^.CurrentStatus.Freq := ro.frequency[actVFO];
          rig^.CurrentStatus.Band := GetTR4WBandFromNetworkBand(ro.band[actVFO]);
          GetTRModeAndExtendedModeFromNetworkMode(ro.mode[actVFO],rig^.CurrentStatus.Mode,rig^.CurrentStatus.ExtendedMode);
@@ -417,6 +432,9 @@ begin
          SetRadioAlertState(not ro.IsOperational);
 
          UpdateStatus(rig);
+         finally
+         EndStatusPublish(rig);
+         end;
          end
       else
          begin

@@ -186,6 +186,13 @@ type
       PreviousStatus:  RadioStatusRecord; { Reading before Last }
       FilteredStatus:  RadioStatusRecord; { Updated if Current = Previous }
       FilteredStatusChanged: boolean;
+
+      // Seqlock version guarding CurrentStatus + FilteredStatus as a pair.
+      // ODD while the polling thread is mid-update, EVEN when the two records
+      // are coherent.  Read through ReadRadioStatus / ReadRadioCurrentStatus;
+      // see the note on BeginStatusPublish for why this exists and why not
+      // every reader needs converting.
+      StatusVersion: cardinal;
       BandOutputPort:  PortType;
       tBandOutputPortBaseAddress: HWND;
       FrequencyAdder:  longint;
@@ -772,6 +779,54 @@ const
 // field in both directions, so a field added to the record but not added here
 // fails a test rather than becoming silently invisible to change detection.
 function RadioStatusDiffers(const a, b: RadioStatusRecord): boolean;
+
+// ---------------------------------------------------------------------------
+// Coherent status snapshots (a seqlock).
+//
+// THE PROBLEM.  The polling thread fills CurrentStatus one named field at a
+// time and then copies it into FilteredStatus, while the main thread reads
+// those records whenever it repaints, logs, or retunes.  There is no
+// synchronisation of any kind between the two.
+//
+// MOST READS ARE SAFE ANYWAY, and it is worth being precise about why rather
+// than pretending otherwise: nearly every consumer reads ONE field --
+// `.Freq`, `.Mode`, `.Split` -- and a naturally-aligned 32-bit read is atomic
+// on x86.  Those cannot tear and gain nothing from a snapshot.
+//
+// THE READS THAT ARE NOT SAFE are the ones that take several fields and expect
+// them to describe the same instant.  uProcessCommand.scExchangeRadios is the
+// clearest: it CopyMemory's the whole 160-byte record out of a live one and
+// then RETUNES BOTH RADIOS from it, so a copy that straddles a poll can QSY the
+// operator to a frequency from one cycle with a mode from another.
+//
+// HOW IT WORKS.  The writer brackets its whole update -- the CurrentStatus fill
+// AND the FilteredStatus copy, which happen back to back on the same thread --
+// between BeginStatusPublish and EndStatusPublish.  The version is odd while a
+// write is in progress and even when the pair is coherent.  A reader takes the
+// version, copies, and takes it again; if it changed or was odd, the copy may
+// have straddled a write and is retried.
+//
+// WHY A SEQLOCK RATHER THAN A LOCK.  There is exactly one writer and it is a
+// real-time-ish poll loop; readers must never be able to stall it, and a reader
+// that is descheduled must not hold anything.  Readers pay a retry only when
+// they genuinely collide.
+//
+// WHY PARTIAL ADOPTION IS LEGITIMATE HERE.  Converting a reader is opt-in and
+// local: a reader that uses ReadRadioStatus gets a coherent snapshot, and one
+// that still touches the field directly is exactly as safe as it was before --
+// no worse.  That is a property of a seqlock specifically; with a mutex,
+// leaving some readers unconverted would be a broken invariant rather than an
+// unfinished migration.  So these are being converted where multi-field
+// coherence is actually required, not swept through mechanically.
+procedure BeginStatusPublish(rig: RadioPtr);
+procedure EndStatusPublish(rig: RadioPtr);
+
+// A coherent copy of the settled (filtered) status.  Use this whenever more
+// than one field is read and the fields must agree with each other.
+function ReadRadioStatus(rig: RadioPtr): RadioStatusRecord;
+
+// The same, for the live (unsettled) status.
+function ReadRadioCurrentStatus(rig: RadioPtr): RadioStatusRecord;
 
 function tPTTVIACAT(PTTOn: boolean): boolean;
 //function GetRadioFromString(RadioName: ShortString): InterfacedRadioType;
@@ -2913,6 +2968,70 @@ begin
       end;
 
    Result := False;
+end;
+
+// InterlockedIncrement, not Inc.  Two reasons, and the second is the one that
+// bites: it is a full memory barrier, so neither the compiler nor the CPU may
+// move the record writes outside the odd/even window -- without that the whole
+// scheme is decoration, because a reader could observe an even version while
+// the field stores are still in flight.
+procedure BeginStatusPublish(rig: RadioPtr);
+begin
+   Windows.InterlockedIncrement(integer(rig^.StatusVersion));   // -> odd: writing
+end;
+
+procedure EndStatusPublish(rig: RadioPtr);
+begin
+   Windows.InterlockedIncrement(integer(rig^.StatusVersion));   // -> even: coherent
+end;
+
+// Seqlock read.  Copy, then check the version did not move under us.
+//
+// The retry is bounded rather than a bare `repeat until`: the writer is a poll
+// loop that touches this a few times a second, so a reader that has spun this
+// many times is not losing a race, it is looking at a stuck or never-published
+// version.  Spinning forever on the UI thread would hang the program; returning
+// the last copy is what the caller would have got before this existed.
+function ReadStatusSnapshot(rig: RadioPtr; const aFiltered: boolean): RadioStatusRecord;
+const
+   MAX_ATTEMPTS = 64;
+var
+   before, after: cardinal;
+   attempts: integer;
+begin
+   attempts := 0;
+   repeat
+      before := rig^.StatusVersion;
+      if aFiltered then
+         begin
+         Result := rig^.FilteredStatus;
+         end
+      else
+         begin
+         Result := rig^.CurrentStatus;
+         end;
+      after := rig^.StatusVersion;
+      Inc(attempts);
+      // Stable when the version did not move AND was not mid-write to begin
+      // with.  Testing Odd(before) alone would accept a copy that started
+      // during a write and finished after the next one began.
+      if (before = after) and ((before and 1) = 0) then
+         begin
+         Exit;
+         end;
+   until attempts >= MAX_ATTEMPTS;
+   // Fell through: hand back the last copy taken.  No worse than a direct field
+   // read, which is what every unconverted caller still does.
+end;
+
+function ReadRadioStatus(rig: RadioPtr): RadioStatusRecord;
+begin
+   Result := ReadStatusSnapshot(rig, True);
+end;
+
+function ReadRadioCurrentStatus(rig: RadioPtr): RadioStatusRecord;
+begin
+   Result := ReadStatusSnapshot(rig, False);
 end;
 
 function tPTTVIACAT(PTTOn: boolean): boolean;
