@@ -40,15 +40,11 @@ integration. Roughly **129,000 lines across ~260 units** (`tr4w/src`, `src/trdos
 **Definition of done:** a Win32 D12 build replaces the D7 release and no part of the release pipeline
 still needs Delphi 7. That deliberately excludes 64-bit, VCL/FMX, SQLite and the contest factory.
 
-| | Status |
-|---|---|
-| **Compile under D12, Win32** | ✅ Complete. Corpus green. |
-| **Unicode / string correctness** | 🟡 Substantially done — leaf interiors flipped, display chain on W-APIs, ListView A→W, CI-V byte paths byte-faithful. Four *deliberate* deferrals remain, none release-blocking. |
-| **Release mechanics** | ✅ D7-free end to end (`16412f1`, `76de84c`, `e1c1f48`, `e610aa2`). Only prerequisite left: RAD Studio installed on the self-hosted CI runner. |
-| **Radio factory** | ✅ Complete — 100 radios, legacy path deleted. |
-| **CW keyer factory** | ✅ Phases A/B + CAT repoint complete. |
-| **64-bit** | ⛔ Out of scope for this migration. |
-| **Live/bench verification** | 🔴 **The largest open block** — nothing here is provable by code review. |
+**Per-area status lives in [`docs/D12_MIGRATION_ROADMAP.md`](docs/D12_MIGRATION_ROADMAP.md)** — the
+only document that should be treated as current. A status table here would be a second copy going
+stale in the file every session loads. What is stable enough to state: compile, release mechanics,
+the radio factory and the CW keyer factory are done; 64-bit is out of scope; **live/bench
+verification is the largest open block** and nothing in it is provable by code review.
 
 The honest gate on radios is **one verified rig per protocol family**, not 100 rigs. Verified:
 Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT. **Unproven: Icom LAN,
@@ -57,9 +53,6 @@ Yaesu binary, Yaesu ASCII, HamLib.** Track that in [`docs/RADIO_BENCH_STATUS.md`
 Language matrix for this release is **ENG + 8** (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP). **POL and CHN are
 decided-out**, not pending. The 8 build green but **no one has eyeballed the rendered UI** — the
 corpus is pure ASCII and cannot see it. Recommendation on file: ship English first.
-
-Full picture, and the only document that should be treated as current on status:
-[`docs/D12_MIGRATION_ROADMAP.md`](docs/D12_MIGRATION_ROADMAP.md).
 
 ## Build System
 
@@ -192,22 +185,13 @@ strong net, not a proof.
 
 ### Key entry points
 
-**`tr4w/tr4w.dpr`** (1300 lines) — program entry and the startup sequence. Line numbers drift; these
-were correct at 2026-08-04:
+**`tr4w/tr4w.dpr`** — program entry and the startup sequence: single-instance mutex, logger,
+optional WSJT-X and external-logger servers, `CreateMainWindow`, WinKeyer thread, then the main
+`GetMessage` loop. Grep for the step you need; the order above is what matters, not the offsets.
 
-| Line | Step |
-|---|---|
-| 342 | `WindowProc` |
-| 687 | `CreateMutex` — single-instance guard |
-| 705 | `logger := TLogLogger.GetLogger('TR4WDebugLog')` |
-| 818 | WSJT-X server, if enabled |
-| 825 | External logger, if enabled |
-| 896 | `CreateMainWindow` |
-| 903–915 | headless `/EXPORT` mode — boots the contest, writes the files, `Halt(0)` before GUI/network init |
-| 988 | WinKeyer thread, if enabled |
-| 1063 | main message loop |
-
-Config load (INI → CFG → common messages) and CTY.DAT load happen before the main window.
+Two facts about that sequence that grep will not tell you: **headless `/EXPORT` mode boots the
+contest, writes the files and `Halt(0)`s before any GUI or network init**, and config load
+(INI → CFG → common messages) plus CTY.DAT load happen before the main window.
 
 **`tr4w/src/MainUnit.pas`** — main window creation, keyboard/mouse input, display coordination, and
 the process-wide globals: `wsjtx: TWSJTXServer` (171), `externalLogger: TExternalLogger` (172),
@@ -454,31 +438,6 @@ Log4D (`src/Log4D.pas`), global `logger: TLogLogger`, rolling file appender to `
 `DEBUG LOG LEVEL` in `tr4w.ini` (`NONE`…`TRACE`). Any standalone EXE that links app units must assign
 the `MainUnit` global `logger` or it will AV.
 
-## File Organization
-
-```
-tr4w-d12/
-├── CLAUDE.md                 # this file
-├── docs/                     # design docs, plans, protocol references (see map below)
-├── tools/                    # radiosim, formatters, helper scripts
-└── tr4w/
-    ├── tr4w.dpr / tr4w.dproj # program source + the real build config
-    ├── FullBuild.ps1         # the single packaging path
-    ├── docs/D12_BUILD.md     # the working build/test recipe
-    ├── src/
-    │   ├── MainUnit.pas, VC.pas, TF.pas, Version.pas, u*.pas   (129 units)
-    │   ├── trdos/            # legacy engine (35 units, ~90k lines)
-    │   ├── radioFactory/     # radio factory (118 units)
-    │   ├── utils/            # text/file/net/hw/math helpers
-    │   └── lang/             # per-language string constants (UTF-8 + BOM)
-    ├── include/              # vendored Indy 10, WinSock2
-    ├── res/                  # per-language .res
-    ├── target/               # build output: tr4w.exe, dom/, CTY.DAT, DLLs
-    ├── test/                 # unit/, corpus/, integration/, logdump/, python/
-    ├── build/                # Lint-*.ps1, make_setup_file.bat, full.nsi
-    └── tr4wserver/           # multi-user server (own .dproj)
-```
-
 ## Documentation map
 
 Read the specific doc before acting in its area — these are current and this file is only a summary.
@@ -655,7 +614,3 @@ DTR/RTS keying).
    `simulators/`) is a useful independent reference.
 10. **Version management:** update `tr4w/src/Version.pas` for releases
    (`TR4W_CURRENTVERSION_NUMBER`, `TR4W_CURRENTVERSIONDATE`).
-
-## License
-
-TR4W is licensed under GPL v2 or later. See copyright headers in source files.
