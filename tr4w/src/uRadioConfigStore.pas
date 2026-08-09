@@ -1601,10 +1601,32 @@ begin
          controlPort := PORT_NONE;
          end;
 
-      // Transport is not stored in the legacy ini -- it is INFERRED, the same
-      // way the legacy code infers it: no serial port but an IP address means
-      // the radio is reached over the network.
-      if SameText(controlPort, PORT_NONE) and (ipAddress <> '') then
+      // Transport is not stored in the legacy ini -- it is INFERRED from the
+      // control port.  TWO spellings mean network and both must be honoured:
+      //
+      //   'TCP/IP' (PORT_NETWORK) -- what the program writes TODAY.  This is
+      //       the authoritative marker.  RenderRadioKeys emits it for every
+      //       network radio.
+      //
+      //   'NONE' + an IP address -- the OLD convention, still sitting in every
+      //       ini written before that changed.  Kept as a fallback so an
+      //       existing config still migrates.
+      //
+      // ONLY THE SECOND WAS TESTED, WHICH IS HOW THIS SURVIVED.  The writer was
+      // corrected on the bench (NY4I, 2026-08-05) to emit 'TCP/IP', because
+      // writing 'NONE' to avoid opening a COM port also withdrew "use the
+      // network" and the factory refused to build a driver -- see the note in
+      // uRadioConfigLegacyMap.  The reader was never moved with it, so a
+      // correctly-configured network radio round-tripped into a SERIAL
+      // definition with its IP and TCP port still attached: the editor then
+      // opened it on the Serial tab, found no matching port, and saved
+      // CONTROL PORT=NONE over it.  Observed on NY4I's own K4.
+      //
+      // This matters more, not less, as radio settings move to csJSON: seeding
+      // then runs ONCE per operator and the JSON becomes authoritative, so a
+      // mis-inference here stops being a re-runnable bug and becomes permanent.
+      if SameText(controlPort, PORT_NETWORK) or
+         (SameText(controlPort, PORT_NONE) and (ipAddress <> '')) then
          begin
          radioDef.Transport := rtNetwork;
          end
