@@ -2884,6 +2884,7 @@ var
    sComputerID : AnsiString;
    freq : integer;
    txFreq : integer;
+   radioStatus: RadioStatusRecord;   // one coherent read; see where it is taken
    nMultCount: integer;
    sContestName: AnsiString;
    sOperator : AnsiString;
@@ -2914,14 +2915,22 @@ begin
 
    if ActiveRadioPtr.RadioModel <> NoInterfacedRadio then
       begin
-      if ActiveRadioPtr.CurrentStatus.Split then
+      // ONE read of the radio, three fields used from it.  The split flag, the
+      // RX frequency and the VFO B frequency go out together in a single UDP
+      // contact record, so they have to describe the same instant: reading them
+      // separately off the live record lets a QSY land in between and broadcast
+      // an RX frequency from one poll with a TX frequency from another.  A
+      // wrong TX frequency in a contact broadcast is not a display glitch --
+      // it is what an external logger records.
+      radioStatus := ReadRadioCurrentStatus(ActiveRadioPtr);
+      if radioStatus.Split then
          begin
-         freq := ActiveRadioPtr.CurrentStatus.Freq;
-         txFreq := ActiveRadioPtr.CurrentStatus.VFO[VFOB].Frequency;
+         freq := radioStatus.Freq;
+         txFreq := radioStatus.VFO[VFOB].Frequency;
          end
       else
          begin
-         freq := ActiveRadioPtr.CurrentStatus.Freq;
+         freq := radioStatus.Freq;
          txFreq := freq;
          end;
       end

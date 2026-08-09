@@ -637,11 +637,24 @@ procedure RememberFrequency;
 var
   Band: BandType;
   Mode: ModeType;
+  Freq: longint;
 begin
-  CalculateBandMode(ActiveRadioPtr.FilteredStatus.Freq, Band, Mode);
+  // READ ONCE.  This used to read ActiveRadioPtr.FilteredStatus.Freq twice --
+  // once to work out which band it is on, once to store it -- with the polling
+  // thread free to update the radio in between.  A QSY landing in that gap
+  // passes the band gate on the OLD frequency and then writes the NEW one into
+  // that band's memory, so the operator's 20m memory quietly acquires a 40m
+  // frequency and the next band change tunes somewhere wrong.
+  //
+  // Note this is not a torn read and does not need a snapshot: a single
+  // aligned 32-bit read is atomic.  The defect was reading the same field
+  // twice and assuming the two answers agreed.
+  Freq := ActiveRadioPtr.FilteredStatus.Freq;
+
+  CalculateBandMode(Freq, Band, Mode);
   Mode := ActiveMode;
   if (Band = ActiveBand) and (Mode in [CW..Phone]) then
-    FreqMemory[ActiveBand, ActiveMode] := ActiveRadioPtr.FilteredStatus.Freq;
+    FreqMemory[ActiveBand, ActiveMode] := Freq;
 
 end;
 

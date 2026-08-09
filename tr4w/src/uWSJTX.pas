@@ -1051,6 +1051,12 @@ var
   fieldName, fieldValue: string;
   saveDecimalSeparator: char;
   saveThousandSeparator: char;
+  // Radio frequencies read ONCE per command branch.  See CmdGetFreq and
+  // CmdGetTXFreq: both used to test the live field for zero and then read it
+  // again to build the reply, so the value WSJT-X received was never the value
+  // that passed the guard.
+  vfoAFreq: longint;
+  vfoBFreq: longint;
 
 begin
   // ... get message from client
@@ -1106,8 +1112,11 @@ begin
 
       if fieldValue = 'CmdGetFreq' then
       begin
+        // Guard and reply must use the SAME reading -- see the note in the var
+        // block.  WSJT-X tunes itself from what it gets back here.
+        vfoAFreq := radio1.CurrentStatus.VFO[VFOA].Frequency;
         if (ActiveRadioPtr.RadioModel = NoInterfacedRadio) or
-          (radio1.CurrentStatus.VFO[VFOA].Frequency = 0) then
+          (vfoAFreq = 0) then
         begin
           logger.error('[uWSJTX] **** radio1.CurrentStatus.VFO[VFOA].Frequency = 0');
           logger.trace('[uWSJTX] Sending VFOA frequency as .000');
@@ -1121,8 +1130,7 @@ begin
           try
              FormatSettings.DecimalSeparator := '.';
              FormatSettings.ThousandSeparator := ',';
-             sFreq := SysUtils.FormatFloat(',0.000',
-             radio1.CurrentStatus.VFO[VFOA].Frequency / 1000);
+             sFreq := SysUtils.FormatFloat(',0.000', vfoAFreq / 1000);
              logger.Trace('[uWSJTX] Sending VFOA frequency: ' +
                           SysUtils.Format('<CmdFreq:%u>%s', [length(sFreq), sFreq]));
              AContext.Connection.IOHandler.Write(SysUtils.Format('<CmdFreq:%u>%s',
@@ -1306,13 +1314,15 @@ begin
       end
       else if fieldValue = 'CmdGetTXFreq' then
       begin // Return VFO B
+        // Guard, diagnostic and reply all from one reading -- see the note in
+        // the var block.  This is the TX frequency WSJT-X transmits on.
+        vfoBFreq := ActiveRadioPtr.CurrentStatus.VFO[VFOB].Frequency;
         if (ActiveRadioPtr.RadioModel = NoInterfacedRadio) or
-          (ActiveRadioPtr.CurrentStatus.VFO[VFOB].Frequency = 0) then
+          (vfoBFreq = 0) then
         begin
           //DEBUGMSG('**** radio1.CurrentStatus.VFO[VFOB].Frequency = 0');
           logger.error('[uWSJTX]        ActiveRadioPtr.CurrentStatus.VFO[VFOB] = ' +
-            SysUtils.FormatFloat(',0.000',
-            ActiveRadioPtr.CurrentStatus.VFO[VFOB].Frequency / 1000));
+            SysUtils.FormatFloat(',0.000', vfoBFreq / 1000));
           logger.trace('[uWSJTX] Sending VFOB frequency as requestedTXFreq since we do not have frequency [' + SysUtils.Format('<CmdFreq:%u>%s', [length(sFreq), sFreq]) + ']');
           sFreq := SysUtils.FormatFloat(',0.000', Self.requestedTXFreq / 1000);
           AContext.Connection.IOHandler.Write(SysUtils.Format('<CmdTXFreq:%u>%s',
@@ -1320,8 +1330,7 @@ begin
         end
         else
         begin
-          sFreq := SysUtils.FormatFloat(',0.000',
-            ActiveRadioPtr.CurrentStatus.VFO[VFOB].Frequency / 1000);
+          sFreq := SysUtils.FormatFloat(',0.000', vfoBFreq / 1000);
           logger.Trace('[uWSJTX] Sending VFOB frequency as ' +
             SysUtils.Format('<CmdFreq:%u>%s', [length(sFreq), sFreq]));
           AContext.Connection.IOHandler.Write(SysUtils.Format('<CmdTXFreq:%u>%s',

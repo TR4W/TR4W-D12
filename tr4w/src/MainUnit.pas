@@ -2109,6 +2109,7 @@ var
   TempBand: BandType;
   TempVFO: Char;
   TempString: CallString;
+  FilteredFreq: longint;   // read once -- see the band-fallback block below
 const
   QSYSHIFT = 20000;
 begin
@@ -2146,16 +2147,25 @@ begin
 
   if not (TempBand in [Band160..Band2]) then
   begin
-    GetBandMapBandModeFromFrequency(ActiveRadioPtr.FilteredStatus.Freq +
-      QSYSHIFT, TempBand, TempMode);
+    // READ ONCE.  This tried the radio's frequency shifted up, then the same
+    // frequency shifted down, then logged it -- three separate reads of a value
+    // the polling thread is free to change between them.  A QSY landing in the
+    // middle made the -QSYSHIFT fallback probe a DIFFERENT base frequency than
+    // the +QSYSHIFT attempt, so the two halves of one decision disagreed, and
+    // the diagnostic printed a third value again.
+    //
+    // A single aligned 32-bit read is atomic, so this never tore; the defect
+    // was assuming three reads of one field return the same answer.
+    FilteredFreq := ActiveRadioPtr.FilteredStatus.Freq;
+
+    GetBandMapBandModeFromFrequency(FilteredFreq + QSYSHIFT, TempBand, TempMode);
 
     if not (TempBand in [Band160..Band2]) then
-      GetBandMapBandModeFromFrequency(ActiveRadioPtr.FilteredStatus.Freq -
-        QSYSHIFT, TempBand, TempMode);
+      GetBandMapBandModeFromFrequency(FilteredFreq - QSYSHIFT, TempBand, TempMode);
 
     if not (TempBand in [Band160..Band2]) then
     begin
-      logger.debug('[TuneOnFreq] Exit: TempBand not in HF range after fallback, FilteredFreq=%d', [ActiveRadioPtr.FilteredStatus.Freq]);
+      logger.debug('[TuneOnFreq] Exit: TempBand not in HF range after fallback, FilteredFreq=%d', [FilteredFreq]);
       Exit;
     end;
   end;
