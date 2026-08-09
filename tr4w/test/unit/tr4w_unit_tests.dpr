@@ -60,6 +60,7 @@ uses
    uUDPBroadcastConfig  in '..\..\src\uUDPBroadcastConfig.pas',
    uUDPBroadcaster      in '..\..\src\uUDPBroadcaster.pas',
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
+   uTestWebSocketFraming in 'uTestWebSocketFraming.pas',
    uTestTR4WConfigFile  in 'uTestTR4WConfigFile.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
@@ -199,6 +200,7 @@ uses
    // and registry coverage tests.
    uRadioKenwoodSerial  in '..\..\src\radioFactory\uRadioKenwoodSerial.pas',
    uRadioKenwoodLAN     in '..\..\src\radioFactory\uRadioKenwoodLAN.pas',
+   uWebSocketFraming    in '..\..\src\uWebSocketFraming.pas',
    uWebSocketClient     in '..\..\src\uWebSocketClient.pas',
    uRadioTCI            in '..\..\src\radioFactory\uRadioTCI.pas',
    uRadioKenwoodTS890   in '..\..\src\radioFactory\uRadioKenwoodTS890.pas',
@@ -279,6 +281,7 @@ begin
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
    RegisterSuite(TKeyerConfigStoreTests.Create('KeyerConfigStore'));
+   RegisterSuite(TWebSocketFramingTests.Create('WebSocketFraming'));
    RegisterSuite(TTR4WConfigFileTests.Create('TR4WConfigFile'));
 
    if RunAllSuites then

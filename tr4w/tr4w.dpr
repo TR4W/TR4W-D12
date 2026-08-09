@@ -201,6 +201,7 @@ uses
   uRadioElecraftK2 in 'src\radioFactory\uRadioElecraftK2.pas',
   uRadioElecraftKX3 in 'src\radioFactory\uRadioElecraftKX3.pas',
   uRadioKenwoodLAN in 'src\radioFactory\uRadioKenwoodLAN.pas',
+  uWebSocketFraming in 'src\uWebSocketFraming.pas',
   uWebSocketClient in 'src\uWebSocketClient.pas',
   uRadioTCI in 'src\radioFactory\uRadioTCI.pas',
   uRadioKenwoodTS890 in 'src\radioFactory\uRadioKenwoodTS890.pas',
