@@ -1,3 +1,9 @@
 tr4w_radio_bench.exe
+tr4w_status_trace.exe
+# Compiler-generated project resource; recreated by msbuild from the .dproj.
+tr4w_status_trace.res
+# Working files from a status-trace run.  The BASELINE is tracked; these are not.
+status_trace_actual.jsonl
+status_trace_actual.jsonl.tally
 *.dcu
 *.map

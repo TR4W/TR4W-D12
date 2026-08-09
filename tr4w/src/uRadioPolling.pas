@@ -70,6 +70,30 @@ procedure DisplayCurrentStatus(rig: RadioPtr);
 procedure ProcessFilteredStatus(rig: RadioPtr);
 procedure PTTStatusChanged;
 procedure SendRadioInfoToUDP(rig: RadioPtr);
+
+type
+   // What UpdateStatus decided on one poll cycle.  These are the only three
+   // outcomes it has, and they are what the consumers downstream actually see.
+   TRadioStatusEvent = (
+      rseChanged,      // CurrentStatus differs from PreviousStatus -> display repainted
+      rsePeriodic,     // unchanged, but the 10s UDP heartbeat forced a publish
+      rseFiltered      // the settle cycle after a change -> FilteredStatus adopted it
+      );
+
+   // Observer for the status pipeline.  nil in the running program; assigned by
+   // test/integration/tr4w_status_trace.dpr, which records the sequence of
+   // events and dumps it as JSONL so two builds can be diffed.
+   //
+   // WHY A HOOK AND NOT A COPY OF UpdateStatus IN THE HARNESS.  The whole point
+   // is to pin the behaviour of THIS routine across a refactor.  A harness that
+   // reimplemented the byte-compare and the one-cycle debounce would pin its own
+   // copy and pass even if this one changed -- which is the failure it exists to
+   // prevent.  The cost in the shipping program is one nil test per poll cycle.
+   TRadioStatusTraceProc = procedure(rig: RadioPtr; aEvent: TRadioStatusEvent);
+
+var
+   RadioStatusTrace: TRadioStatusTraceProc = nil;
+
 var
    saveVFOAFreq: integer;
    dtLastUDPRadio: TDateTime;
@@ -622,6 +646,21 @@ begin
    if (StatusChanged) or
       ((UDPBroadcastRadio) and (SecondsBetween(Now, dtLastUDPRadio) > 10) ) then
       begin
+         if Assigned(RadioStatusTrace) then
+            begin
+            // Distinguish the two reasons for taking this branch: a real state
+            // change, versus the 10-second UDP heartbeat republishing an
+            // unchanged status.  A trace that conflated them would look
+            // different every run purely because of wall-clock timing.
+            if StatusChanged then
+               begin
+               RadioStatusTrace(rig, rseChanged);
+               end
+            else
+               begin
+               RadioStatusTrace(rig, rsePeriodic);
+               end;
+            end;
          DisplayCurrentStatus(rig); // Update the Radio Window only
          rig.FilteredStatusChanged := True;
       end
@@ -630,6 +669,10 @@ begin
          if rig.FilteredStatusChanged then
             begin
                rig.FilteredStatus := rig.CurrentStatus;
+               if Assigned(RadioStatusTrace) then
+                  begin
+                  RadioStatusTrace(rig, rseFiltered);
+                  end;
                ProcessFilteredStatus(rig);
                rig.FilteredStatusChanged := False;
             end;

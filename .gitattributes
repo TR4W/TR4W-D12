@@ -64,6 +64,13 @@
 *.trw           -text
 *.dat           -text
 
+# The radio status-pipeline trace baseline is byte-compared the same way, by
+# tr4w/test/integration/run-status-trace.ps1.  Same reasoning as the corpus
+# references above: the harness writes CRLF, and a clone that converted the
+# stored copy would report a status-pipeline regression that is purely a git
+# artifact -- on the oracle whose entire job is to be trustworthy.
+status_trace_baseline.jsonl  -text
+
 # ---------------------------------------------------------------------------
 # Binary.  Marked explicitly rather than left to git's NUL-byte heuristic --
 # TRMASTER.DTA and the .trw logs are the regression suite's inputs, and a
