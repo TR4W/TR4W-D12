@@ -1,8 +1,15 @@
 *.nsi
 *.pos
 *.ini
-*~pas
+# RAD Studio's "previous version" copy, saved beside the unit as NAME~.EXT.
+# The old pattern here was `*~pas` -- no dot -- so it never matched LOGSUBS2~.PAS
+# and four such files were committed.  Match the tilde before the extension, and
+# match a trailing tilde too (PostUnit.PAS~, uCommctrl.pas~).
+*~.*
+*~
 *.bak
+# Knowledge-graph output (graphify): regenerated on demand, ~5 MB of JSON.
+graphify-out/
 # Delphi compiler-generated binaries (safe to delete)
 *.exe
 *.dll

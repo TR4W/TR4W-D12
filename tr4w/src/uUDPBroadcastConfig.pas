@@ -65,9 +65,10 @@ unit uUDPBroadcastConfig;
   its ini always did.
 
   WHAT IS DELIBERATELY ABSENT.  'UDP BROADCAST PORT' is not here.  LOGSTUFF.PAS
-  declares it "Kept for backward compatibility - no longer used", and its only
-  remaining references are in LOGSUBS2~.PAS, which is editor debris and is not
-  in the project.  Superseded by the per-stream ports below; carrying it into a
+  declares it "Kept for backward compatibility - no longer used", and it has no
+  remaining reader anywhere in the project.  (Its last references were in
+  LOGSUBS2~.PAS, an IDE backup copy that was never in the project and has since
+  been deleted from the repo.)  Superseded by the per-stream ports below; carrying it into a
   new format would have given a dead setting a second life and a checkbox.
 
   APP INFO IS PRESENT BUT UNIMPLEMENTED.  Nothing in TR4W sends an app-info
