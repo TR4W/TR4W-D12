@@ -61,6 +61,7 @@ uses
    uUDPBroadcaster      in '..\..\src\uUDPBroadcaster.pas',
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
    uTestWebSocketFraming in 'uTestWebSocketFraming.pas',
+   uTestWebSocketLoopback in 'uTestWebSocketLoopback.pas',
    uTestTR4WConfigFile  in 'uTestTR4WConfigFile.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
@@ -202,6 +203,7 @@ uses
    uRadioKenwoodLAN     in '..\..\src\radioFactory\uRadioKenwoodLAN.pas',
    uWebSocketFraming    in '..\..\src\uWebSocketFraming.pas',
    uWebSocketClient     in '..\..\src\uWebSocketClient.pas',
+   uWebSocketServer     in '..\..\src\uWebSocketServer.pas',
    uRadioTCI            in '..\..\src\radioFactory\uRadioTCI.pas',
    uRadioKenwoodTS890   in '..\..\src\radioFactory\uRadioKenwoodTS890.pas',
    uRadioKenwoodTS990   in '..\..\src\radioFactory\uRadioKenwoodTS990.pas',
@@ -282,6 +284,7 @@ begin
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
    RegisterSuite(TKeyerConfigStoreTests.Create('KeyerConfigStore'));
    RegisterSuite(TWebSocketFramingTests.Create('WebSocketFraming'));
+   RegisterSuite(TWebSocketLoopbackTests.Create('WebSocketLoopback'));
    RegisterSuite(TTR4WConfigFileTests.Create('TR4WConfigFile'));
 
    if RunAllSuites then

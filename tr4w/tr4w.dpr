@@ -203,6 +203,7 @@ uses
   uRadioKenwoodLAN in 'src\radioFactory\uRadioKenwoodLAN.pas',
   uWebSocketFraming in 'src\uWebSocketFraming.pas',
   uWebSocketClient in 'src\uWebSocketClient.pas',
+  uWebSocketServer in 'src\uWebSocketServer.pas',
   uRadioTCI in 'src\radioFactory\uRadioTCI.pas',
   uRadioKenwoodTS890 in 'src\radioFactory\uRadioKenwoodTS890.pas',
   uRadioKenwoodTS990 in 'src\radioFactory\uRadioKenwoodTS990.pas',
