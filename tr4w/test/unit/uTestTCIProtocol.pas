@@ -57,6 +57,9 @@ type
       procedure Test_Classify_Malformed;
       procedure Test_Classify_StartStopTakeNoArguments;
       procedure Test_Classify_IsCaseInsensitive;
+      procedure Test_GlobalForm_SplitEnableFromWSJTX;
+      procedure Test_GlobalForm_DoesNotHijackAReceiverIndex;
+      procedure Test_GlobalForm_OnlyWhereDeclared;
 
       // Formatting and sanitizing
       procedure Test_Msg_Shapes;
@@ -441,6 +444,71 @@ begin
    CheckKind('Trx:0,TRUE', tcrSet, '');
 end;
 
+procedure TTCIProtocolTests.Test_GlobalForm_SplitEnableFromWSJTX;
+var
+   c: TTCICommand;
+begin
+   BeginTest('Test_GlobalForm_SplitEnableFromWSJTX');
+   // OBSERVED ON THE WIRE, 2026-08-09 13:30:40: WSJT-X sends
+   // "split_enable:false" with NO receiver.  Before the expander that read as
+   // a GET for receiver StrToIntDef('false') = -1 and was answered with
+   // silence, so WSJT-X never learned the split state.
+   c := TCIExpandGlobalForm(TCIParse('split_enable:false'));
+   CheckEquals(2, c.ArgCount, 'the implicit receiver is filled in');
+   CheckEquals('0', c.Arg(0), 'and it is receiver 0, which every WSJT-X instance addresses');
+   CheckEquals('false', c.Arg(1), 'the value moves to the value position');
+   // UNEXPANDED it classifies as a GET -- one argument matches the GET arity
+   // -- and that is exactly the misread: HandleGet then does
+   // StrToIntDef('false', -1) and answers nothing for receiver -1.  Pinned so
+   // it is obvious WHY the expansion has to run before classification.
+   CheckKind('split_enable:false', tcrGet,
+             'unexpanded, WSJT-X''s line is misread as a read');
+   CheckTrue(TCIClassify(c) = tcrSet, 'the EXPANDED form is a SET');
+
+   c := TCIExpandGlobalForm(TCIParse('trx:true'));
+   CheckEquals('0', c.Arg(0), 'PTT takes the global form too');
+   CheckEquals('true', c.Arg(1), '');
+   CheckTrue(TCIClassify(c) = tcrSet, '');
+end;
+
+procedure TTCIProtocolTests.Test_GlobalForm_DoesNotHijackAReceiverIndex;
+var
+   c: TTCICommand;
+begin
+   BeginTest('Test_GlobalForm_DoesNotHijackAReceiverIndex');
+   // The distinction is "argument 0 is not a receiver index".  A GET for
+   // receiver 0 must survive untouched, or every read turns into a write.
+   c := TCIExpandGlobalForm(TCIParse('split_enable:0'));
+   CheckEquals(1, c.ArgCount, 'an integer argument IS a receiver -- left alone');
+   CheckTrue(TCIClassify(c) = tcrGet, 'so it stays a GET');
+
+   c := TCIExpandGlobalForm(TCIParse('trx:1'));
+   CheckEquals(1, c.ArgCount, '');
+   CheckTrue(TCIClassify(c) = tcrGet, '');
+
+   // Already explicit: nothing to do.
+   c := TCIExpandGlobalForm(TCIParse('split_enable:0,true'));
+   CheckEquals(2, c.ArgCount, '');
+   CheckEquals('0', c.Arg(0), '');
+   CheckEquals('true', c.Arg(1), '');
+end;
+
+procedure TTCIProtocolTests.Test_GlobalForm_OnlyWhereDeclared;
+var
+   c: TTCICommand;
+begin
+   BeginTest('Test_GlobalForm_OnlyWhereDeclared');
+   // The expansion is opt-in per command.  'modulation:cw' is NOT a global
+   // form -- modulation always names its receiver -- and inventing one would
+   // apply a mode to receiver 0 that the client never addressed.
+   c := TCIExpandGlobalForm(TCIParse('modulation:cw'));
+   CheckEquals(1, c.ArgCount, 'modulation does not declare a global form');
+   c := TCIExpandGlobalForm(TCIParse('rit_enable:true'));
+   CheckEquals(1, c.ArgCount, '');
+   c := TCIExpandGlobalForm(TCIParse('made_up:true'));
+   CheckEquals(1, c.ArgCount, 'and an unknown command is never expanded');
+end;
+
 { ------------------------------------------------------ formatting / safety -- }
 
 procedure TTCIProtocolTests.Test_Msg_Shapes;
@@ -597,6 +665,9 @@ begin
    Test_Classify_Malformed;
    Test_Classify_StartStopTakeNoArguments;
    Test_Classify_IsCaseInsensitive;
+   Test_GlobalForm_SplitEnableFromWSJTX;
+   Test_GlobalForm_DoesNotHijackAReceiverIndex;
+   Test_GlobalForm_OnlyWhereDeclared;
 
    Test_Msg_Shapes;
    Test_Msg_NameIsLowercased;

@@ -366,6 +366,7 @@ uses
    uRadioRegistry,
    uCAT,        // DiscoverNetworkRadios
    uUDPBroadcaster,   // TestDestination, and Configure once the settings are saved
+   uTCIServer,        // started/stopped when the check box is saved
    MainUnit,    // logger
    VC;
 
@@ -592,6 +593,31 @@ begin
       // stays the dialog's.  (The radios need an explicit Activate because
       // restarting them mid-contest is a real cost; a UDP destination has none.)
       UDPBroadcaster.Configure(FUDPConfig);
+
+      // The TCI server, on the same footing and for the same reason.  It was
+      // originally started only from tr4w.dpr, which reproduced the exact
+      // uWSJTX trap this project already knows about: the enable flag was
+      // read once at startup, so ticking the box did nothing until the next
+      // launch and the operator had no way to tell that from a broken server.
+      // A listening socket costs nothing to start or stop, unlike restarting
+      // the radios -- which is why THOSE still need an explicit Activate.
+      if TCIServer <> nil then
+         begin
+         if FStore.TCIServerEnabled and (not TCIServer.Active) then
+            begin
+            if not TCIServer.Start(TCI_SERVER_DEFAULT_PORT, False) then
+               begin
+               // Reported, not swallowed.  A port already in use is the
+               // common case and the operator cannot diagnose silence.
+               ShowMessage(Format('The TCI server could not open port %d: %s',
+                                  [TCI_SERVER_DEFAULT_PORT, TCIServer.LastError]));
+               end;
+            end
+         else if (not FStore.TCIServerEnabled) and TCIServer.Active then
+            begin
+            TCIServer.Stop;
+            end;
+         end;
    except
       // A failed SAVE must be reported, not swallowed: the operator would
       // otherwise close the dialog believing their library was stored.
