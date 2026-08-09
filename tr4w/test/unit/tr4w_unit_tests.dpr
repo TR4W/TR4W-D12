@@ -62,6 +62,8 @@ uses
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
    uTestWebSocketFraming in 'uTestWebSocketFraming.pas',
    uTestWebSocketLoopback in 'uTestWebSocketLoopback.pas',
+   uTestTCIProtocol     in 'uTestTCIProtocol.pas',
+   uTestTCIServer       in 'uTestTCIServer.pas',
    uTestTR4WConfigFile  in 'uTestTR4WConfigFile.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
@@ -204,6 +206,8 @@ uses
    uWebSocketFraming    in '..\..\src\uWebSocketFraming.pas',
    uWebSocketClient     in '..\..\src\uWebSocketClient.pas',
    uWebSocketServer     in '..\..\src\uWebSocketServer.pas',
+   uTCIProtocol         in '..\..\src\uTCIProtocol.pas',
+   uTCIServer           in '..\..\src\uTCIServer.pas',
    uRadioTCI            in '..\..\src\radioFactory\uRadioTCI.pas',
    uRadioKenwoodTS890   in '..\..\src\radioFactory\uRadioKenwoodTS890.pas',
    uRadioKenwoodTS990   in '..\..\src\radioFactory\uRadioKenwoodTS990.pas',
@@ -285,6 +289,8 @@ begin
    RegisterSuite(TKeyerConfigStoreTests.Create('KeyerConfigStore'));
    RegisterSuite(TWebSocketFramingTests.Create('WebSocketFraming'));
    RegisterSuite(TWebSocketLoopbackTests.Create('WebSocketLoopback'));
+   RegisterSuite(TTCIProtocolTests.Create('TCIProtocol'));
+   RegisterSuite(TTCIServerTests.Create('TCIServer'));
    RegisterSuite(TTR4WConfigFileTests.Create('TR4WConfigFile'));
 
    if RunAllSuites then

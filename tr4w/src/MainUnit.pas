@@ -509,6 +509,7 @@ uses
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
   uFMXDesignedProbe, // SPIKE ONLY -- the FMXDESIGN command; remove with the spike
   uPrefsForm,       // the PREF command -- the radio Preferences window
+  uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
   uHamScore,        // Issue #783 -- HamScoreResyncFromScratch (Tools menu)
@@ -2644,6 +2645,15 @@ begin
   begin
     wsjtx.Stop;
     FreeAndNil(wsjtx);
+  end;
+
+  // Before the radios go away.  Stop detaches the polling hook first, so the
+  // poll loop cannot enter a server that is tearing its sessions down, and
+  // each session's disconnect unkeys a transmitter that client was holding.
+  if Assigned(TCIServer) then
+  begin
+    TCIServer.Stop;
+    FreeAndNil(TCIServer);
   end;
 
   if assigned(externalLogger) then

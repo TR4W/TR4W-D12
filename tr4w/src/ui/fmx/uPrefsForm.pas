@@ -128,6 +128,7 @@ type
       btnActivate: TButton;
 
       chkAutoConnect: TCheckBox;
+      chkTCIServer: TCheckBox;
       layHardware: TLayout;
 
       // --- CW section (Tag = NAV_CW), the keying-device library ---------------
@@ -186,6 +187,7 @@ type
       procedure chkSpeedSync2Change(Sender: TObject);
       procedure chkSO2RChange(Sender: TObject);
       procedure chkAutoConnectChange(Sender: TObject);
+      procedure chkTCIServerChange(Sender: TObject);
 
       // MUST live here, with the other streamed handlers.  The .fmx stores an
       // event as the NAME of a PUBLISHED method; declared in a private section
@@ -1021,6 +1023,7 @@ begin
          end;
 
       chkAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
+      chkTCIServer.IsChecked   := FStore.TCIServerEnabled;
 
       if FStore.ActiveProfileName <> '' then
          begin
@@ -1068,6 +1071,7 @@ begin
       end;
 
    FStore.AutoConnectOnStartup := chkAutoConnect.IsChecked;
+   FStore.TCIServerEnabled     := chkTCIServer.IsChecked;
 
    prof := CurrentProfile;
    if prof = nil then
@@ -1410,6 +1414,11 @@ begin
 end;
 
 procedure TPrefsForm.chkAutoConnectChange(Sender: TObject);
+begin
+   CaptureProfileFields;
+end;
+
+procedure TPrefsForm.chkTCIServerChange(Sender: TObject);
 begin
    CaptureProfileFields;
 end;

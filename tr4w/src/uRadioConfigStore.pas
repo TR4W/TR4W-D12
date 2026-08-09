@@ -205,6 +205,7 @@ type
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
       FAutoConnectOnStartup: boolean;
+      FTCIServerEnabled: boolean;
       procedure LoadRadio(const aIni: TCustomIniFile; const aSection, aName: string);
       procedure SaveRadio(const aIni: TCustomIniFile; const aRadio: TRadioDefinition);
       procedure LoadProfile(const aIni: TCustomIniFile; const aSection, aName: string);
@@ -284,6 +285,13 @@ type
 
       property ActiveProfileName: string read FActiveProfileName write FActiveProfileName;
       property AutoConnectOnStartup: boolean read FAutoConnectOnStartup write FAutoConnectOnStartup;
+
+      // Offers a TCI server so other programs can reach the radio THIS
+      // program has the COM port open on.  It lives beside AutoConnect
+      // because it is the same kind of setting: a station-wide statement
+      // about how the radios are made available, not a property of any one
+      // radio or profile.
+      property TCIServerEnabled: boolean read FTCIServerEnabled write FTCIServerEnabled;
    end;
 
 const
@@ -578,6 +586,7 @@ begin
    FProfiles.Clear;
    FActiveProfileName    := '';
    FAutoConnectOnStartup := False;
+   FTCIServerEnabled     := False;
 end;
 
 function TRadioConfigStore.RadioCount: integer;
@@ -1195,6 +1204,7 @@ begin
    general := TJSONObject.Create;
    general.AddPair('activeProfile', FActiveProfileName);
    general.AddPair('autoConnect',   TJSONBool.Create(FAutoConnectOnStartup));
+   general.AddPair('tciServer',     TJSONBool.Create(FTCIServerEnabled));
    Result.AddPair(JSONKEY_GENERAL, general);
 
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
@@ -1241,6 +1251,7 @@ begin
       end;
    FActiveProfileName    := JSONStr(general,  'activeProfile', '');
    FAutoConnectOnStartup := JSONBool(general, 'autoConnect',   False);
+   FTCIServerEnabled     := JSONBool(general, 'tciServer',     False);
 
    // Radios before profiles: a profile's radio references are only meaningful
    // once the radios exist, and Validate is easier to reason about that way.
@@ -1451,6 +1462,7 @@ begin
 
    FActiveProfileName    := aIni.ReadString(GENERALSECTION, 'ActiveProfile', '');
    FAutoConnectOnStartup := aIni.ReadBool(GENERALSECTION,   'AutoConnect',   False);
+   FTCIServerEnabled     := aIni.ReadBool(GENERALSECTION,   'TCIServer',     False);
 end;
 
 procedure TRadioConfigStore.SaveTo(const aIni: TCustomIniFile);
@@ -1482,6 +1494,7 @@ begin
    aIni.WriteInteger(GENERALSECTION, 'Version',       RADIOCONFIG_SCHEMA_VERSION);
    aIni.WriteString(GENERALSECTION,  'ActiveProfile', FActiveProfileName);
    aIni.WriteBool(GENERALSECTION,    'AutoConnect',   FAutoConnectOnStartup);
+   aIni.WriteBool(GENERALSECTION,    'TCIServer',     FTCIServerEnabled);
 
    for i := 0 to FRadios.Count - 1 do
       begin

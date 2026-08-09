@@ -1,0 +1,1248 @@
+{
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+ This file is part of TR4W  (SRC)
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+}
+unit uTCIServer;
+
+{
+  TR4W AS A TCI SERVER -- the bridge between TCI clients and our radio.
+
+  WHY.  Only one program can hold a serial port.  TR4W holds it, so anything
+  else that needs the radio -- WSJT-X, JTDX, a skimmer -- has to come through
+  us.  TR4W already does this for WSJT-X by impersonating DXLab Commander in
+  uWSJTX.pas, but that is a single-client, protocol-by-accident bridge with a
+  documented lie in it (the KLUDGESECONDSV block reports COMMANDED transmit
+  state for two seconds, because WSJT-X drops the link if a PTT command is not
+  reflected within about a second and TR4W only learns the truth on the next
+  poll).  TCI is the right shape for the job: published, multi-client, and
+  state-broadcast rather than polled.
+
+  THE KLUDGE DOES NOT COME WITH US, AND THIS IS WHY.  TCI's contract is that
+  the SERVER confirms: it answers the command, and then broadcasts the truth
+  when the radio reconciles.  So a client learns the real state from the
+  broadcast instead of being told a timed lie.  That is a protocol property,
+  not a trick -- see ApplyPTT.
+
+  THIS UNIT KNOWS TCI AND RADIOS.  It knows nothing about WebSocket framing
+  (uWebSocketServer) or TCI grammar (uTCIProtocol).
+
+  ------------------------------------------------------------------------
+  THREADING.  Three threads meet here and the rules are not symmetric.
+
+  1. INDY CONNECTION THREADS raise OnTextMessage.  They may READ radio state
+     -- via ReadRadioStatus, which is a seqlock and safe from any thread --
+     but they must NEVER call the radio.  RadioObject.SetRadioFreq writes
+     globals (tCommandedQSYFreq, the auto-S&P hook) and the display routines
+     around it are main-thread things.  So every write is marshalled onto the
+     main thread with TThread.Queue.  That works here because TR4W's message
+     loop falls through to DispatchMessage, which drains the queue -- proven
+     on the bench during the FMX coexistence work.
+
+  2. THE RADIO POLLING THREAD calls PublishRadioState through the
+     RadioStatusPublished hook.  It must not be blocked: a slow observer
+     delays the next poll of that radio.  Everything on that path only
+     enqueues -- TWSServerSession.SendText never touches a socket.
+
+  3. THE MAIN THREAD runs the queued applies.
+
+  Broadcast state (what we last told clients) is guarded by one critical
+  section.  It is small and never held across a socket write.
+  ------------------------------------------------------------------------
+
+  RECEIVER MAPPING.  trx 0 = Radio 1, trx 1 = Radio 2.  Split is expressed
+  the clean way -- split_enable:<trx>,<b> plus vfo:<trx>,1,<hz> -- and NOT as
+  AetherSDR's second-receiver-with-tx_enable idiom, which only makes sense
+  for an SDR with many slices.
+
+  NOT IMPLEMENTED, DELIBERATELY: audio and IQ streams.  TR4W bridges a rig
+  and has no audio to offer; clients keep their soundcard.  The commands are
+  acknowledged, because a client that gets silence there concludes the server
+  is broken, but no binary frame is ever emitted.
+}
+
+interface
+
+uses
+   Windows, System.SysUtils, System.Classes, System.SyncObjs,
+   VC, LOGRADIO,
+   uWebSocketServer, uTCIProtocol;
+
+const
+   TCI_SERVER_DEFAULT_PORT = 50001;
+
+type
+   { Per-connection TCI state.  Owned by the TWSServerSession that carries it
+     as its Tag, and freed with it. }
+   TTCIClientState = class(TObject)
+   public
+      Framer:  TTCIFramer;
+      Started: boolean;    // the client sent start;
+      OwnsPTT: boolean;    // this client holds the transmit session
+      constructor Create;
+      destructor  Destroy; override;
+   end;
+
+   TTCIServer = class(TObject)
+   private
+      FWS:      TWebSocketServer;
+      FPort:    integer;
+      FBindAll: boolean;
+
+      FLock:     TCriticalSection;
+      FLast:     array[RadioOne..RadioTwo] of RadioStatusRecord;
+      FHave:     array[RadioOne..RadioTwo] of boolean;
+
+      // At most one client may key the transmitter at a time.  Guarded by
+      // FLock; the session pointer is only ever compared, never dereferenced
+      // outside a handler that already owns the session.
+      FPTTOwner: TWSServerSession;
+
+      procedure SessionOpened(Session: TWSServerSession);
+      procedure SessionClosed(Session: TWSServerSession);
+      procedure TextArrived(Session: TWSServerSession; const Text: string);
+
+      procedure SendInitBurst(Session: TWSServerSession);
+      procedure Dispatch(Session: TWSServerSession; const Raw: string);
+
+      procedure HandleGet(Session: TWSServerSession; const Cmd: TTCICommand);
+      procedure HandleSet(Session: TWSServerSession; const Cmd: TTCICommand);
+
+      procedure ApplyFrequency(Trx, Channel, Hz: integer; Session: TWSServerSession);
+      procedure ApplyModulation(Trx: integer; const Modulation: string);
+      procedure ApplySplit(Trx: integer; TurnOn: boolean);
+      procedure ApplyPTT(Session: TWSServerSession; Trx: integer; KeyDown: boolean);
+
+      procedure BroadcastRadio(Trx: integer; const Cur, Was: RadioStatusRecord;
+                               First: boolean);
+   public
+      constructor Create;
+      destructor  Destroy; override;
+
+      function  Start(APort: integer = TCI_SERVER_DEFAULT_PORT;
+                      ABindAll: boolean = False): boolean;
+      procedure Stop;
+      function  Active: boolean;
+      function  ClientCount: integer;
+
+      // Called from the radio POLLING thread via the RadioStatusPublished
+      // hook, immediately after a coherent status is published.
+      procedure PublishRadioState(rig: RadioPtr);
+
+      // Releases the transmitter if this client was holding it.  Public so a
+      // disconnect and a Stop can both fail closed through one path.
+      procedure ReleasePTT(Session: TWSServerSession);
+   end;
+
+var
+   // The one instance.  A plain procedure hook cannot carry Self, and there
+   // is exactly one server, so a singleton is honest rather than a shortcut.
+   TCIServer: TTCIServer = nil;
+
+// Maps between TR4W's mode pair and TCI's modulation names.  Exposed for the
+// unit tests: the mapping is a wire contract, not an implementation detail.
+function TR4WModeToTCI(Mode: ModeType; Extended: ExtendedModeType;
+                       FreqHz: integer): string;
+function TCIToTR4WMode(const Modulation: string; out Mode: ModeType;
+                       out Extended: ExtendedModeType): boolean;
+
+// trx <-> radio.  Returns nil / -1 when the receiver is not configured; a
+// caller must NEVER fall back to radio 0 when a client names a receiver.
+function TrxToRadio(Trx: integer): RadioPtr;
+function RadioToTrx(rig: RadioPtr): integer;
+function ConfiguredRadioCount: integer;
+
+implementation
+
+uses
+   MainUnit,          // logger
+   tree,              // CodeSpeed
+   uRadioPolling,     // RadioStatusPublished
+   uFactoryRadioBase;
+
+{ ------------------------------------------------------------- mapping -- }
+
+function TrxToRadio(Trx: integer): RadioPtr;
+begin
+   case Trx of
+      0: Result := @Radio1;
+      1: Result := @Radio2;
+   else
+      Result := nil;
+   end;
+end;
+
+function RadioToTrx(rig: RadioPtr): integer;
+begin
+   if rig = @Radio1 then
+      begin
+      Result := 0;
+      end
+   else if rig = @Radio2 then
+      begin
+      Result := 1;
+      end
+   else
+      begin
+      Result := -1;
+      end;
+end;
+
+function ConfiguredRadioCount: integer;
+begin
+   // The test is "does a factory radio object exist", NOT
+   // "RadioModel <> NoInterfacedRadio".  A string-id factory radio -- TCI
+   // itself is one -- has RadioModel = NoInterfacedRadio by design, so the
+   // model-keyed form reports a configured radio as absent.  That exact
+   // shape has already cost this project a silently missing radio twice.
+   if Radio2.tFactoryObject <> nil then
+      begin
+      Result := 2;
+      end
+   else
+      begin
+      Result := 1;
+      end;
+end;
+
+function TR4WModeToTCI(Mode: ModeType; Extended: ExtendedModeType;
+                       FreqHz: integer): string;
+begin
+   // The extended mode is the precise one; consult it first.
+   case Extended of
+      eCW:                Result := 'cw';
+      eCW_R:              Result := 'cwr';
+      eUSB:               Result := 'usb';
+      eLSB:               Result := 'lsb';
+      eAM, eAM_N:         Result := 'am';
+      eFM, eFM_N, eWFM:   Result := 'fm';
+      eRTTY:              Result := 'rtty';
+      eRTTY_R:            Result := 'rtty';
+      eData, eData_FM:    Result := 'digu';
+      eData_R:            Result := 'digl';
+   else
+      // No extended mode: fall back on the coarse one.  For phone that means
+      // choosing a sideband, and the only sane rule is the operating
+      // convention -- LSB below 10 MHz, USB above.  Guessing 'usb' on 40 m
+      // would make a client show the wrong sideband on every QSY.
+      case Mode of
+         CW:      Result := 'cw';
+         Digital: Result := 'digu';
+         FM:      Result := 'fm';
+         Phone:
+            begin
+            if (FreqHz > 0) and (FreqHz < 10000000) then
+               begin
+               Result := 'lsb';
+               end
+            else
+               begin
+               Result := 'usb';
+               end;
+            end;
+      else
+         Result := 'usb';
+      end;
+   end;
+end;
+
+function TCIToTR4WMode(const Modulation: string; out Mode: ModeType;
+                       out Extended: ExtendedModeType): boolean;
+var
+   m: string;
+begin
+   m := LowerCase(Trim(Modulation));
+   Result := True;
+   if m = 'cw' then
+      begin
+      Mode := CW;       Extended := eCW;
+      end
+   else if m = 'cwr' then
+      begin
+      Mode := CW;       Extended := eCW_R;
+      end
+   else if m = 'usb' then
+      begin
+      Mode := Phone;    Extended := eUSB;
+      end
+   else if m = 'lsb' then
+      begin
+      Mode := Phone;    Extended := eLSB;
+      end
+   else if m = 'am' then
+      begin
+      Mode := Phone;    Extended := eAM;
+      end
+   else if m = 'fm' then
+      begin
+      Mode := FM;       Extended := eFM;
+      end
+   else if m = 'rtty' then
+      begin
+      Mode := Digital;  Extended := eRTTY;
+      end
+   else if m = 'digu' then
+      begin
+      Mode := Digital;  Extended := eData;
+      end
+   else if m = 'digl' then
+      begin
+      Mode := Digital;  Extended := eData_R;
+      end
+   else
+      begin
+      // A mode we never advertised.  The reference server silently coerces
+      // anything unknown to USB, which puts a radio in the wrong mode
+      // without telling anyone -- refuse instead and answer with silence.
+      Mode := NoMode;   Extended := eNoMode;
+      Result := False;
+      end;
+end;
+
+{ ------------------------------------------------------ TTCIClientState -- }
+
+constructor TTCIClientState.Create;
+begin
+   inherited Create;
+   Framer := TTCIFramer.Create;
+   Started := False;
+   OwnsPTT := False;
+end;
+
+destructor TTCIClientState.Destroy;
+begin
+   FreeAndNil(Framer);
+   inherited Destroy;
+end;
+
+{ ------------------------------------------------- the publish-side hook -- }
+
+// A plain procedure, because the hook in uRadioPolling is a plain procedure
+// type -- see the note there on why it is not a method pointer.
+procedure TCIStatusPublished(rig: RadioPtr);
+begin
+   if TCIServer <> nil then
+      begin
+      TCIServer.PublishRadioState(rig);
+      end;
+end;
+
+{ ----------------------------------------------------------- TTCIServer -- }
+
+constructor TTCIServer.Create;
+var
+   r: RadioType;
+begin
+   inherited Create;
+   FLock := TCriticalSection.Create;
+   FPort := TCI_SERVER_DEFAULT_PORT;
+   FPTTOwner := nil;
+   for r := RadioOne to RadioTwo do
+      begin
+      FHave[r] := False;
+      end;
+
+   FWS := TWebSocketServer.Create;
+   FWS.OnSessionOpened := SessionOpened;
+   FWS.OnSessionClosed := SessionClosed;
+   FWS.OnTextMessage := TextArrived;
+end;
+
+destructor TTCIServer.Destroy;
+begin
+   Stop;
+   FreeAndNil(FWS);
+   FreeAndNil(FLock);
+   inherited Destroy;
+end;
+
+function TTCIServer.Active: boolean;
+begin
+   Result := (FWS <> nil) and FWS.Active;
+end;
+
+function TTCIServer.ClientCount: integer;
+begin
+   if FWS = nil then
+      begin
+      Result := 0;
+      end
+   else
+      begin
+      Result := FWS.SessionCount;
+      end;
+end;
+
+function TTCIServer.Start(APort: integer; ABindAll: boolean): boolean;
+var
+   r: RadioType;
+begin
+   FPort := APort;
+   FBindAll := ABindAll;
+
+   // Forget what we believe clients know.  A fresh listener has no clients,
+   // so the first publish must send a full picture rather than a diff
+   // against state from the previous run.
+   FLock.Enter;
+   try
+      for r := RadioOne to RadioTwo do
+         begin
+         FHave[r] := False;
+         end;
+   finally
+      FLock.Leave;
+   end;
+
+   Result := FWS.Start(APort, ABindAll);
+   if Result then
+      begin
+      RadioStatusPublished := TCIStatusPublished;
+      logger.Info('[TCI-SRV] TCI server offering %d radio(s) on port %d',
+                  [ConfiguredRadioCount, APort]);
+      end;
+end;
+
+procedure TTCIServer.Stop;
+begin
+   // Detach the hook FIRST, so the polling thread cannot enter a server that
+   // is tearing its sessions down.
+   RadioStatusPublished := nil;
+   if FWS <> nil then
+      begin
+      FWS.Stop;
+      end;
+   FLock.Enter;
+   try
+      FPTTOwner := nil;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+{ ------------------------------------------------------------- sessions -- }
+
+procedure TTCIServer.SessionOpened(Session: TWSServerSession);
+begin
+   Session.Tag := TTCIClientState.Create;
+   SendInitBurst(Session);
+end;
+
+procedure TTCIServer.SessionClosed(Session: TWSServerSession);
+begin
+   // FAIL CLOSED.  A client that dropped while holding the transmitter must
+   // not leave a rig keyed with nobody holding it.  This is the single most
+   // important line in the unit.
+   ReleasePTT(Session);
+end;
+
+procedure TTCIServer.ReleasePTT(Session: TWSServerSession);
+var
+   wasOwner: boolean;
+begin
+   wasOwner := False;
+   FLock.Enter;
+   try
+      if (FPTTOwner <> nil) and (FPTTOwner = Session) then
+         begin
+         FPTTOwner := nil;
+         wasOwner := True;
+         end;
+   finally
+      FLock.Leave;
+   end;
+
+   if wasOwner then
+      begin
+      logger.Warn('[TCI-SRV] client %d dropped while holding PTT - unkeying',
+                  [Session.Id]);
+      TThread.Queue(nil,
+         procedure
+         begin
+            try
+               tPTTVIACAT(False);
+            except
+               on E: Exception do
+                  begin
+                  logger.Error('[TCI-SRV] unkey on disconnect failed: %s', [E.Message]);
+                  end;
+            end;
+         end);
+      end;
+end;
+
+{ ----------------------------------------------------------- init burst -- }
+
+procedure TTCIServer.SendInitBurst(Session: TWSServerSession);
+var
+   trx:   integer;
+   count: integer;
+   rig:   RadioPtr;
+   snap:  RadioStatusRecord;
+   txHz:  integer;
+begin
+   count := ConfiguredRadioCount;
+
+   // ORDER IS THE CONTRACT.  Identity, then per-receiver state, then the
+   // global transmit state, then ready; and start; last.  SDC and CW Skimmer
+   // latch their cached settings the moment ready; arrives, so anything sent
+   // after it is not seen.
+   Session.SendText(TCIMsg('vfo_limits', TCIInt(TCI_VFO_LIMIT_LOW), TCIInt(TCI_VFO_LIMIT_HIGH)));
+   Session.SendText(TCIMsg('if_limits', TCIInt(TCI_IF_LIMIT_LOW), TCIInt(TCI_IF_LIMIT_HIGH)));
+   Session.SendText(TCIMsg('trx_count', TCIInt(count)));
+   Session.SendText(TCIMsg('channels_count', TCIInt(TCI_CHANNELS_COUNT)));
+   Session.SendText(TCIMsg('device', TCI_DEVICE_NAME));
+   Session.SendText(TCIMsg('receive_only', TCIBool(False)));
+   // NOT TCIMsg for these two.  TCIMsg scrubs ',' out of every argument,
+   // which is right for a value but wrong here: modulations_list IS a
+   // comma-separated list, and 'ExpertSDR3,1.5' is a two-field value.
+   // Scrubbing them produced 'expertsdr3_1.5', which is exactly the string
+   // WSJT-X fails to match before it halves transmit amplitude.
+   Session.SendText(TCIMsgFreeText('modulations_list', TCI_MODULATIONS));
+   Session.SendText(TCIMsgFreeText('protocol', TCI_PROTOCOL_ID));
+
+   for trx := 0 to count - 1 do
+      begin
+      rig := TrxToRadio(trx);
+      if rig = nil then
+         begin
+         Continue;
+         end;
+      snap := ReadRadioStatus(rig);
+
+      // Channel 1 is the transmit VFO.  With split off it must still report
+      // something coherent -- the receive frequency -- rather than the 0 a
+      // blank VFO B holds, which a client would try to tune to.
+      if snap.Split and (snap.VFO[VFOB].Frequency > 0) then
+         begin
+         txHz := snap.VFO[VFOB].Frequency;
+         end
+      else
+         begin
+         txHz := snap.VFO[VFOA].Frequency;
+         end;
+
+      Session.SendText(TCIMsg('vfo', TCIInt(trx), '0', TCIInt(snap.VFO[VFOA].Frequency)));
+      Session.SendText(TCIMsg('vfo', TCIInt(trx), '1', TCIInt(txHz)));
+      Session.SendText(TCIMsg('modulation', TCIInt(trx),
+                              TR4WModeToTCI(snap.VFO[VFOA].Mode,
+                                            snap.VFO[VFOA].ExtendedMode,
+                                            snap.VFO[VFOA].Frequency)));
+      Session.SendText(TCIMsg('rx_enable', TCIInt(trx), TCIBool(True)));
+      Session.SendText(TCIMsg('rit_enable', TCIInt(trx), TCIBool(snap.RIT)));
+      Session.SendText(TCIMsg('xit_enable', TCIInt(trx), TCIBool(snap.XIT)));
+      Session.SendText(TCIMsg('rit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
+      Session.SendText(TCIMsg('xit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
+
+      // split_enable is not decoration.  The RF2K-S amplifier client uses
+      // split_enable:0,false as its signal that VFO 0 is the active VFO;
+      // without ever receiving it, its current position stays unset and it
+      // reports "No TCI available" no matter how many vfo: events arrive.
+      Session.SendText(TCIMsg('split_enable', TCIInt(trx), TCIBool(snap.Split)));
+      Session.SendText(TCIMsg('tx_enable', TCIInt(trx),
+                              TCIBool(rig = ActiveRadioPtr)));
+      end;
+
+   // drive/tune_drive ALWAYS carry <trx>,<power>.  ESDR3-mode WSJT-X and
+   // JTDX index args[1] unconditionally, and a one-field 'drive:0;' crashes
+   // them.  We do not control rig power, so a constant 100 is the honest
+   // answer: "we are not attenuating anything".
+   trx := RadioToTrx(ActiveRadioPtr);
+   if trx < 0 then
+      begin
+      trx := 0;
+      end;
+   Session.SendText(TCIMsg('drive', TCIInt(trx), '100'));
+   Session.SendText(TCIMsg('tune_drive', TCIInt(trx), '100'));
+   Session.SendText(TCIMsg('trx', TCIInt(trx), TCIBool(False)));
+
+   // ready; LAST, after every setting.  start; is a device-state
+   // notification and follows it.  Note what is NOT here: no audio_start and
+   // no iq_start.  Those are client-owned, and a server-sent primer wedged
+   // SDC before it processed start;.
+   Session.SendText(TCIMsg('ready'));
+   Session.SendText(TCIMsg('start'));
+
+   logger.Info('[TCI-SRV] init burst sent to client %d (%d receivers)',
+               [Session.Id, count]);
+end;
+
+{ -------------------------------------------------------------- inbound -- }
+
+procedure TTCIServer.TextArrived(Session: TWSServerSession; const Text: string);
+var
+   state: TTCIClientState;
+   cmd:   string;
+begin
+   state := TTCIClientState(Session.Tag);
+   if state = nil then
+      begin
+      Exit;
+      end;
+
+   state.Framer.Append(Text);
+   if state.Framer.Overflowed then
+      begin
+      logger.Warn('[TCI-SRV] client %d sent an unterminated flood - closing', [Session.Id]);
+      Session.Close;
+      Exit;
+      end;
+
+   while state.Framer.NextCommand(cmd) do
+      begin
+      try
+         Dispatch(Session, cmd);
+      except
+         on E: Exception do
+            begin
+            // One bad command must not kill the connection or the thread.
+            logger.Error('[TCI-SRV] client %d: "%s" raised %s - %s',
+                         [Session.Id, cmd, E.ClassName, E.Message]);
+            end;
+      end;
+      end;
+end;
+
+procedure TTCIServer.Dispatch(Session: TWSServerSession; const Raw: string);
+var
+   cmd:   TTCICommand;
+   state: TTCIClientState;
+begin
+   if Raw = '' then
+      begin
+      Exit;
+      end;
+
+   cmd := TCIParse(Raw);
+   state := TTCIClientState(Session.Tag);
+
+   logger.Trace('[TCI-SRV RX %d] %s', [Session.Id, Raw]);
+
+   case TCIClassify(cmd) of
+      tcrGet:
+         begin
+         if cmd.Name = 'start' then
+            begin
+            state.Started := True;
+            end
+         else if cmd.Name = 'stop' then
+            begin
+            state.Started := False;
+            end
+         else
+            begin
+            HandleGet(Session, cmd);
+            end;
+         end;
+
+      tcrSet:
+         begin
+         HandleSet(Session, cmd);
+         end;
+
+      tcrIgnored:
+         begin
+         // Recognised, server-to-client only.  Mutates nothing, answers
+         // nothing -- and is NOT logged as a problem, because a client
+         // echoing tx_enable back at us is doing nothing wrong.
+         end;
+   else
+      // Unknown or malformed: SILENCE.  That is what the protocol says and
+      // what clients expect; an error reply would be parsed as a command.
+      logger.Debug('[TCI-SRV] client %d: ignoring "%s"', [Session.Id, Raw]);
+   end;
+end;
+
+procedure TTCIServer.HandleGet(Session: TWSServerSession; const Cmd: TTCICommand);
+var
+   trx:  integer;
+   rig:  RadioPtr;
+   snap: RadioStatusRecord;
+begin
+   // The identity commands answer from constants and need no radio.
+   if Cmd.Name = 'vfo_limits' then
+      begin
+      Session.SendText(TCIMsg('vfo_limits', TCIInt(TCI_VFO_LIMIT_LOW), TCIInt(TCI_VFO_LIMIT_HIGH)));
+      Exit;
+      end;
+   if Cmd.Name = 'if_limits' then
+      begin
+      Session.SendText(TCIMsg('if_limits', TCIInt(TCI_IF_LIMIT_LOW), TCIInt(TCI_IF_LIMIT_HIGH)));
+      Exit;
+      end;
+
+   // Stream commands are ECHOED verbatim.  We never send audio, but a client
+   // that gets silence here concludes the server is broken and gives up.
+   if (Cmd.Name = 'audio_start') or (Cmd.Name = 'audio_stop') or
+      (Cmd.Name = 'iq_start') or (Cmd.Name = 'iq_stop') then
+      begin
+      Session.SendText(Cmd.Raw + ';');
+      Exit;
+      end;
+
+   if (Cmd.Name = 'rx_sensors_enable') or (Cmd.Name = 'tx_sensors_enable') then
+      begin
+      Session.SendText(TCIMsg(Cmd.Name, TCIBool(False)));
+      Exit;
+      end;
+
+   if Cmd.Name = 'cw_macros_speed' then
+      begin
+      Session.SendText(TCIMsg('cw_macros_speed', TCIInt(CodeSpeed)));
+      Exit;
+      end;
+
+   // drive/tune_drive: the bare form addresses the active radio.  The REPLY
+   // always carries both fields regardless of which form was asked.
+   if (Cmd.Name = 'drive') or (Cmd.Name = 'tune_drive') then
+      begin
+      trx := Cmd.ArgInt(0, RadioToTrx(ActiveRadioPtr));
+      if trx < 0 then
+         begin
+         trx := 0;
+         end;
+      Session.SendText(TCIMsg(Cmd.Name, TCIInt(trx), '100'));
+      Exit;
+      end;
+
+   // Everything below addresses a receiver, and the receiver is argument 0.
+   trx := Cmd.ArgInt(0, -1);
+   rig := TrxToRadio(trx);
+   if (rig = nil) or (trx >= ConfiguredRadioCount) then
+      begin
+      // NEVER fall back to radio 0.  A client that asked about receiver 1
+      // and got receiver 0's frequency would act on the wrong radio.
+      logger.Debug('[TCI-SRV] client %d asked about receiver %d, which is not configured',
+                   [Session.Id, trx]);
+      Exit;
+      end;
+
+   snap := ReadRadioStatus(rig);
+
+   if Cmd.Name = 'vfo' then
+      begin
+      case Cmd.ArgInt(1, -1) of
+         0:
+            begin
+            Session.SendText(TCIMsg('vfo', TCIInt(trx), '0', TCIInt(snap.VFO[VFOA].Frequency)));
+            end;
+         1:
+            begin
+            Session.SendText(TCIMsg('vfo', TCIInt(trx), '1', TCIInt(snap.VFO[VFOB].Frequency)));
+            end;
+      else
+         // Out of range.  Answering channel 0 would be worse than silence:
+         // the client would believe its bad request succeeded.
+         logger.Debug('[TCI-SRV] vfo channel %d out of range', [Cmd.ArgInt(1, -1)]);
+      end;
+      end
+   else if Cmd.Name = 'modulation' then
+      begin
+      Session.SendText(TCIMsg('modulation', TCIInt(trx),
+                              TR4WModeToTCI(snap.VFO[VFOA].Mode,
+                                            snap.VFO[VFOA].ExtendedMode,
+                                            snap.VFO[VFOA].Frequency)));
+      end
+   else if Cmd.Name = 'trx' then
+      begin
+      Session.SendText(TCIMsg('trx', TCIInt(trx), TCIBool(snap.TXOn)));
+      end
+   else if Cmd.Name = 'tune' then
+      begin
+      Session.SendText(TCIMsg('tune', TCIInt(trx), TCIBool(False)));
+      end
+   else if Cmd.Name = 'split_enable' then
+      begin
+      Session.SendText(TCIMsg('split_enable', TCIInt(trx), TCIBool(snap.Split)));
+      end
+   else if Cmd.Name = 'rit_enable' then
+      begin
+      Session.SendText(TCIMsg('rit_enable', TCIInt(trx), TCIBool(snap.RIT)));
+      end
+   else if Cmd.Name = 'xit_enable' then
+      begin
+      Session.SendText(TCIMsg('xit_enable', TCIInt(trx), TCIBool(snap.XIT)));
+      end
+   else if Cmd.Name = 'rit_offset' then
+      begin
+      Session.SendText(TCIMsg('rit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
+      end
+   else if Cmd.Name = 'xit_offset' then
+      begin
+      Session.SendText(TCIMsg('xit_offset', TCIInt(trx), TCIInt(snap.RITFreq)));
+      end
+   else if Cmd.Name = 'dds' then
+      begin
+      // No panadapter: the centre is the receive frequency.
+      Session.SendText(TCIMsg('dds', TCIInt(trx), TCIInt(snap.VFO[VFOA].Frequency)));
+      end
+   else if Cmd.Name = 'rx_filter_band' then
+      begin
+      // We do not read filter edges from the rig.  Report a plausible SSB
+      // passband rather than nothing: a client that gets silence here waits.
+      Session.SendText(TCIMsg('rx_filter_band', TCIInt(trx), '-2700', '-300'));
+      end;
+end;
+
+procedure TTCIServer.HandleSet(Session: TWSServerSession; const Cmd: TTCICommand);
+var
+   trx: integer;
+   b:   boolean;
+   hz:  integer;
+begin
+   if Cmd.Name = 'cw_msg' then
+      begin
+      // Accepted and dropped, for now.  Sending arbitrary CW from a network
+      // client while the operator is running a contest is a decision, not a
+      // detail -- it interleaves with the keyer's own sending and with the
+      // interlock.  Silence is the protocol's answer either way.
+      logger.Info('[TCI-SRV] client %d sent cw_msg (not implemented): %s',
+                  [Session.Id, Cmd.Raw]);
+      Exit;
+      end;
+
+   if Cmd.Name = 'cw_macros_speed' then
+      begin
+      logger.Info('[TCI-SRV] client %d asked for %d WPM (not implemented)',
+                  [Session.Id, Cmd.ArgInt(0, 0)]);
+      Exit;
+      end;
+
+   if (Cmd.Name = 'rx_sensors_enable') or (Cmd.Name = 'tx_sensors_enable') then
+      begin
+      // Acknowledged; we publish no sensor telemetry.
+      Session.SendText(TCIMsg(Cmd.Name, TCIBool(False)));
+      Exit;
+      end;
+
+   if (Cmd.Name = 'drive') or (Cmd.Name = 'tune_drive') then
+      begin
+      // We do not control rig power.  Confirm with what is actually in
+      // force, so a client is not left waiting on an acknowledgement.
+      trx := Cmd.ArgInt(0, 0);
+      Session.SendText(TCIMsg(Cmd.Name, TCIInt(trx), '100'));
+      Exit;
+      end;
+
+   trx := Cmd.ArgInt(0, -1);
+   if (TrxToRadio(trx) = nil) or (trx >= ConfiguredRadioCount) then
+      begin
+      if Cmd.Name = 'trx' then
+         begin
+         // A REFUSED PTT MUST BE ANSWERED.  Refusing in silence is what
+         // WSJT-X surfaces as "TCI failed to set ptt" with no cause.
+         Session.SendText(TCIMsg('trx', TCIInt(Cmd.ArgInt(0, 0)), TCIBool(False)));
+         end;
+      logger.Debug('[TCI-SRV] client %d addressed receiver %d, which is not configured',
+                   [Session.Id, trx]);
+      Exit;
+      end;
+
+   if Cmd.Name = 'vfo' then
+      begin
+      hz := Cmd.ArgInt(2, -1);
+      if hz <= 0 then
+         begin
+         Exit;
+         end;
+      ApplyFrequency(trx, Cmd.ArgInt(1, -1), hz, Session);
+      end
+   else if Cmd.Name = 'modulation' then
+      begin
+      ApplyModulation(trx, Cmd.Arg(1));
+      end
+   else if Cmd.Name = 'trx' then
+      begin
+      if not Cmd.ArgBool(1, b) then
+         begin
+         // Not a boolean.  Do not guess -- but this is PTT, so say no.
+         Session.SendText(TCIMsg('trx', TCIInt(trx), TCIBool(False)));
+         Exit;
+         end;
+      ApplyPTT(Session, trx, b);
+      end
+   else if Cmd.Name = 'split_enable' then
+      begin
+      if Cmd.ArgBool(1, b) then
+         begin
+         ApplySplit(trx, b);
+         end;
+      end
+   else if Cmd.Name = 'tune' then
+      begin
+      // Tune (carrier for an ATU) is not offered.  Confirm off rather than
+      // leave the client waiting for an acknowledgement it will not get.
+      Session.SendText(TCIMsg('tune', TCIInt(trx), TCIBool(False)));
+      end;
+
+   // rit/xit offsets and rx_filter_band SETs are accepted into silence for
+   // now: the factory exposes no setter for them that is safe to drive from
+   // a network client mid-contest.  Adding one is a separate change.
+end;
+
+{ ------------------------------------------------------------ the applies -- }
+
+procedure TTCIServer.ApplyFrequency(Trx, Channel, Hz: integer;
+                                    Session: TWSServerSession);
+var
+   rig: RadioPtr;
+begin
+   // Range-check the channel.  'vfo:0,2,...' must produce no request at all
+   // rather than being treated as channel 0.
+   if (Channel <> 0) and (Channel <> 1) then
+      begin
+      logger.Debug('[TCI-SRV] vfo channel %d out of range - ignored', [Channel]);
+      Exit;
+      end;
+   if (Hz < TCI_VFO_LIMIT_LOW) or (Hz > TCI_VFO_LIMIT_HIGH) then
+      begin
+      logger.Debug('[TCI-SRV] %d Hz is outside the announced limits - ignored', [Hz]);
+      Exit;
+      end;
+
+   rig := TrxToRadio(Trx);
+   if rig = nil then
+      begin
+      Exit;
+      end;
+
+   // Marshalled: SetRadioFreq writes program globals and the display
+   // routines around it belong to the main thread.
+   TThread.Queue(nil,
+      procedure
+      var
+         snap: RadioStatusRecord;
+         mode: ModeType;
+      begin
+         try
+            snap := ReadRadioStatus(rig);
+            mode := snap.VFO[VFOA].Mode;
+            if Channel = 0 then
+               begin
+               rig^.SetRadioFreq(Hz, mode, 'A');
+               end
+            else
+               begin
+               rig^.SetRadioFreq(Hz, mode, 'B');
+               end;
+         except
+            on E: Exception do
+               begin
+               logger.Error('[TCI-SRV] tune to %d Hz failed: %s', [Hz, E.Message]);
+               end;
+         end;
+      end);
+
+   // CONFIRM IMMEDIATELY, AND CONFIRM WHAT WE ACCEPTED.  WSJT-X's
+   // do_frequency() waits about two seconds for this echo and then reports
+   // rig-control failure and drops the socket -- and a stale echo is worse
+   // than none, because it reports a frequency the radio has already left.
+   // The poll that follows will broadcast the truth if the radio disagreed,
+   // which is the whole confirm-then-reconcile contract.
+   Session.SendText(TCIMsg('vfo', TCIInt(Trx), TCIInt(Channel), TCIInt(Hz)));
+end;
+
+procedure TTCIServer.ApplyModulation(Trx: integer; const Modulation: string);
+var
+   rig:      RadioPtr;
+   mode:     ModeType;
+   extended: ExtendedModeType;
+begin
+   if not TCIToTR4WMode(Modulation, mode, extended) then
+      begin
+      logger.Debug('[TCI-SRV] unknown modulation "%s" - ignored', [Modulation]);
+      Exit;
+      end;
+   rig := TrxToRadio(Trx);
+   if rig = nil then
+      begin
+      Exit;
+      end;
+
+   TThread.Queue(nil,
+      procedure
+      var
+         snap: RadioStatusRecord;
+      begin
+         try
+            // Setting the mode means retuning to where we already are with a
+            // new mode: that is the only mode setter the legacy facade has.
+            snap := ReadRadioStatus(rig);
+            if snap.VFO[VFOA].Frequency > 0 then
+               begin
+               rig^.SetRadioFreq(snap.VFO[VFOA].Frequency, mode, 'A', extended);
+               end;
+         except
+            on E: Exception do
+               begin
+               logger.Error('[TCI-SRV] mode change failed: %s', [E.Message]);
+               end;
+         end;
+      end);
+end;
+
+procedure TTCIServer.ApplySplit(Trx: integer; TurnOn: boolean);
+var
+   rig:  RadioPtr;
+   snap: RadioStatusRecord;
+begin
+   rig := TrxToRadio(Trx);
+   if rig = nil then
+      begin
+      Exit;
+      end;
+
+   snap := ReadRadioStatus(rig);
+
+   // A STEADY false IS NOT AN EDGE.  WSJT-X sends split_enable:<n>,false as
+   // part of its normal sequence BEFORE programming channel 1, and acting on
+   // it every time would tear down a split the operator had just set up.
+   // Only a real transition does anything.
+   if snap.Split = TurnOn then
+      begin
+      Exit;
+      end;
+
+   TThread.Queue(nil,
+      procedure
+      begin
+         try
+            if TurnOn then
+               begin
+               rig^.PutRadioIntoSplit;
+               end
+            else
+               begin
+               rig^.PutRadioOutOfSplit;
+               end;
+         except
+            on E: Exception do
+               begin
+               logger.Error('[TCI-SRV] split change failed: %s', [E.Message]);
+               end;
+         end;
+      end);
+end;
+
+procedure TTCIServer.ApplyPTT(Session: TWSServerSession; Trx: integer;
+                              KeyDown: boolean);
+var
+   rig:      RadioPtr;
+   state:    TTCIClientState;
+   accepted: boolean;
+   snap:     RadioStatusRecord;
+begin
+   rig := TrxToRadio(Trx);
+   state := TTCIClientState(Session.Tag);
+   if (rig = nil) or (state = nil) then
+      begin
+      Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(False)));
+      Exit;
+      end;
+
+   accepted := False;
+   FLock.Enter;
+   try
+      if KeyDown then
+         begin
+         // One owner at a time.  A second client's key is refused while the
+         // first holds it -- and refused OUT LOUD, because a silent refusal
+         // is what WSJT-X reports as "TCI failed to set ptt" with no cause.
+         if (FPTTOwner = nil) or (FPTTOwner = Session) then
+            begin
+            FPTTOwner := Session;
+            state.OwnsPTT := True;
+            accepted := True;
+            end;
+         end
+      else
+         begin
+         // A client may only release a session it owns.  An unowned
+         // trx:<n>,false must NEVER unkey the operator, or VOX, or another
+         // client -- it reports the actual state instead.
+         if FPTTOwner = Session then
+            begin
+            FPTTOwner := nil;
+            state.OwnsPTT := False;
+            accepted := True;
+            end;
+         end;
+   finally
+      FLock.Leave;
+   end;
+
+   if not accepted then
+      begin
+      if KeyDown then
+         begin
+         logger.Warn('[TCI-SRV] client %d asked to key while another client holds PTT',
+                     [Session.Id]);
+         Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(False)));
+         end
+      else
+         begin
+         snap := ReadRadioStatus(rig);
+         Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(snap.TXOn)));
+         end;
+      Exit;
+      end;
+
+   TThread.Queue(nil,
+      procedure
+      begin
+         try
+            tPTTVIACAT(KeyDown);
+         except
+            on E: Exception do
+               begin
+               logger.Error('[TCI-SRV] PTT %s failed: %s',
+                            [BoolToStr(KeyDown, True), E.Message]);
+               end;
+         end;
+      end);
+
+   // CONFIRM FROM THE COMMANDED STATE, THEN LET THE POLL TELL THE TRUTH.
+   // This is what replaces uWSJTX's KLUDGESECONDSV: that code reports a
+   // commanded state for two seconds and calls it fact.  Here the
+   // confirmation is a confirmation, and if the radio disagrees the next
+   // publish broadcasts trx:<n>,<real state> to everyone.  A client that
+   // watches the broadcast learns the truth instead of being told a lie
+   // with a timer on it.
+   Session.SendText(TCIMsg('trx', TCIInt(Trx), TCIBool(KeyDown)));
+end;
+
+{ ------------------------------------------------------------ broadcast -- }
+
+procedure TTCIServer.PublishRadioState(rig: RadioPtr);
+var
+   trx:  integer;
+   r:    RadioType;
+   snap: RadioStatusRecord;
+   prev: RadioStatusRecord;
+   first: boolean;
+begin
+   if (FWS = nil) or (not FWS.Active) or (FWS.SessionCount = 0) then
+      begin
+      Exit;
+      end;
+
+   trx := RadioToTrx(rig);
+   if trx < 0 then
+      begin
+      Exit;
+      end;
+   if trx = 0 then
+      begin
+      r := RadioOne;
+      end
+   else
+      begin
+      r := RadioTwo;
+      end;
+
+   // Coherent by construction: the poll loop calls us AFTER EndStatusPublish,
+   // so this copy is taken from a settled seqlock on the first attempt.
+   snap := ReadRadioStatus(rig);
+
+   FLock.Enter;
+   try
+      first := not FHave[r];
+      prev := FLast[r];
+      FLast[r] := snap;
+      FHave[r] := True;
+   finally
+      FLock.Leave;
+   end;
+
+   // Single writer (the poll loop for this radio), so the diff is race-free
+   // without holding the lock across the broadcast.
+   BroadcastRadio(trx, snap, prev, first);
+end;
+
+procedure TTCIServer.BroadcastRadio(Trx: integer; const Cur, Was: RadioStatusRecord;
+                                    First: boolean);
+var
+   txNow, txPrev: integer;
+begin
+   // Only what CHANGED goes on the wire.  A poll cycle runs several times a
+   // second per radio; re-sending an unchanged picture to every client would
+   // be pure noise, and a broadcast protocol's whole point is that clients
+   // can trust a message to mean something moved.
+   if First or (Cur.VFO[VFOA].Frequency <> Was.VFO[VFOA].Frequency) then
+      begin
+      FWS.Broadcast(TCIMsg('vfo', TCIInt(Trx), '0', TCIInt(Cur.VFO[VFOA].Frequency)));
+      end;
+
+   // Channel 1 follows VFO B while split is on, and the receive frequency
+   // otherwise -- never the 0 a blank VFO B holds, which a client would try
+   // to tune to.
+   if Cur.Split and (Cur.VFO[VFOB].Frequency > 0) then
+      begin
+      txNow := Cur.VFO[VFOB].Frequency;
+      end
+   else
+      begin
+      txNow := Cur.VFO[VFOA].Frequency;
+      end;
+   if Was.Split and (Was.VFO[VFOB].Frequency > 0) then
+      begin
+      txPrev := Was.VFO[VFOB].Frequency;
+      end
+   else
+      begin
+      txPrev := Was.VFO[VFOA].Frequency;
+      end;
+   if First or (txNow <> txPrev) then
+      begin
+      FWS.Broadcast(TCIMsg('vfo', TCIInt(Trx), '1', TCIInt(txNow)));
+      end;
+
+   if First or (Cur.VFO[VFOA].Mode <> Was.VFO[VFOA].Mode) or
+      (Cur.VFO[VFOA].ExtendedMode <> Was.VFO[VFOA].ExtendedMode) then
+      begin
+      FWS.Broadcast(TCIMsg('modulation', TCIInt(Trx),
+                           TR4WModeToTCI(Cur.VFO[VFOA].Mode,
+                                         Cur.VFO[VFOA].ExtendedMode,
+                                         Cur.VFO[VFOA].Frequency)));
+      end;
+
+   if First or (Cur.Split <> Was.Split) then
+      begin
+      FWS.Broadcast(TCIMsg('split_enable', TCIInt(Trx), TCIBool(Cur.Split)));
+      end;
+
+   if First or (Cur.RIT <> Was.RIT) then
+      begin
+      FWS.Broadcast(TCIMsg('rit_enable', TCIInt(Trx), TCIBool(Cur.RIT)));
+      end;
+
+   if First or (Cur.XIT <> Was.XIT) then
+      begin
+      FWS.Broadcast(TCIMsg('xit_enable', TCIInt(Trx), TCIBool(Cur.XIT)));
+      end;
+
+   if First or (Cur.RITFreq <> Was.RITFreq) then
+      begin
+      FWS.Broadcast(TCIMsg('rit_offset', TCIInt(Trx), TCIInt(Cur.RITFreq)));
+      end;
+
+   // Transmit state last, and unconditionally on change: this is the message
+   // that corrects an optimistic PTT confirmation, so it must never be
+   // filtered out by a cleverer diff.
+   if First or (Cur.TXOn <> Was.TXOn) then
+      begin
+      FWS.Broadcast(TCIMsg('trx', TCIInt(Trx), TCIBool(Cur.TXOn)));
+      end;
+end;
+
+end.
