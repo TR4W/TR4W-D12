@@ -142,34 +142,54 @@ type
       btnCancel: TButton;
       btnApply: TButton;
 
-      procedure HandleNavChange(Sender: TObject);
-      procedure HandleAdd(Sender: TObject);
-      procedure HandleEdit(Sender: TObject);
-      procedure HandleDuplicate(Sender: TObject);
-      procedure HandleRemove(Sender: TObject);
-      procedure HandleRadioDblClick(Sender: TObject);
-      procedure HandleAddKeyer(Sender: TObject);
-      procedure HandleEditKeyer(Sender: TObject);
-      procedure HandleDuplicateKeyer(Sender: TObject);
-      procedure HandleRemoveKeyer(Sender: TObject);
-      procedure HandleKeyerDblClick(Sender: TObject);
-      procedure HandleNewProfile(Sender: TObject);
-      procedure HandleRenameProfile(Sender: TObject);
-      procedure HandleDeleteProfile(Sender: TObject);
-      procedure HandleProfileChange(Sender: TObject);
-      procedure HandleFieldChange(Sender: TObject);
+      // --- UDP section (Tag = NAV_UDPBROADCAST) -------------------------------
+      layUDP: TLayout;
+      chkUDPEnabled: TCheckBox;
+
+      procedure lstNavChange(Sender: TObject);
+      procedure btnAddClick(Sender: TObject);
+      procedure btnEditClick(Sender: TObject);
+      procedure btnDuplicateClick(Sender: TObject);
+      procedure btnRemoveClick(Sender: TObject);
+      procedure lstRadiosDblClick(Sender: TObject);
+      procedure btnAddKeyerClick(Sender: TObject);
+      procedure btnEditKeyerClick(Sender: TObject);
+      procedure btnDuplicateKeyerClick(Sender: TObject);
+      procedure btnRemoveKeyerClick(Sender: TObject);
+      procedure lstKeyersDblClick(Sender: TObject);
+      procedure btnNewProfileClick(Sender: TObject);
+      procedure btnRenameProfileClick(Sender: TObject);
+      procedure btnDeleteProfileClick(Sender: TObject);
+      procedure cbxProfileChange(Sender: TObject);
+
+      // ONE HANDLER PER CONTROL, named the way the IDE names them, each a thin
+      // adapter over a private method that takes what it needs as PARAMETERS
+      // (NY4I 2026-08-08).  The alternative -- one handler shared by several
+      // controls, working out from Sender which one fired -- is a dispatcher
+      // wearing an event handler's signature: the compiler cannot check an
+      // untyped TObject comparison, and pointing a new control at it silently
+      // takes the else branch.  Sharing is only safe where the body ignores
+      // Sender entirely, and then it saves nothing worth the ambiguity.
+      procedure cbxCW1Change(Sender: TObject);
+      procedure cbxCW2Change(Sender: TObject);
+      procedure chkSpeedSync1Change(Sender: TObject);
+      procedure chkSpeedSync2Change(Sender: TObject);
+      procedure chkSO2RChange(Sender: TObject);
+      procedure chkAutoConnectChange(Sender: TObject);
+
       // MUST live here, with the other streamed handlers.  The .fmx stores an
       // event as the NAME of a PUBLISHED method; declared in a private section
       // it does not resolve, and the form fails to load at run time with
       // "Error reading cbxRadio1.OnChange: Invalid property value" -- no
       // compile error anywhere (NY4I, 2026-08-08).
-      procedure HandleSlotRadioChange(Sender: TObject);
-      procedure HandleActivate(Sender: TObject);
-      procedure HandleOK(Sender: TObject);
-      procedure HandleCancel(Sender: TObject);
-      procedure HandleApply(Sender: TObject);
-      procedure HandleShow(Sender: TObject);
-      procedure HandleClose(Sender: TObject; var Action: TCloseAction);
+      procedure cbxRadio1Change(Sender: TObject);
+      procedure cbxRadio2Change(Sender: TObject);
+      procedure btnActivateClick(Sender: TObject);
+      procedure btnOKClick(Sender: TObject);
+      procedure btnCancelClick(Sender: TObject);
+      procedure btnApplyClick(Sender: TObject);
+      procedure FormShow(Sender: TObject);
+      procedure FormClose(Sender: TObject; var Action: TCloseAction);
    private
       // STATE, not controls: nothing here is streamed, so it keeps the F prefix
       // and stays private.
@@ -235,6 +255,13 @@ type
                                   const aSelected, aRadioName: string);
       procedure CaptureProfileFields;
 
+      // WHERE THE WORK LIVES.  Each is called by more than one control's
+      // handler -- Edit and a double-click, slot 1 and slot 2 -- so it takes
+      // what it operates on as an argument instead of asking who called it.
+      procedure EditSelectedRadio;
+      procedure EditSelectedKeyer;
+      procedure SlotRadioChanged(const aThisCombo, aOtherCombo, aThisCWCombo: TComboBox);
+
       procedure DiscardChanges;
       procedure EditorDone(const aAccepted: boolean);
       function ApplyNow(const aActivate: boolean): boolean;
@@ -255,7 +282,7 @@ const
    // be, so nobody has to guess whether Preferences is meant to grow.
    // NUMBERED FROM 1, and that is load-bearing rather than taste.  A section's
    // PANEL carries the same Tag as its nav item, which is what lets
-   // HandleNavChange match them with no case statement and no table -- but Tag
+   // lstNavChange match them with no case statement and no table -- but Tag
    // defaults to 0 on every control ever dropped on this form.  Starting at 1
    // means 0 reads as "not a section panel", so an untagged control cannot
    // accidentally claim a section.
@@ -338,8 +365,8 @@ begin
    // still opens and still looks right, having silently stopped registering its
    // window handle with the FMX coexistence layer, which is what keyboard
    // handling depends on.
-   OnShow  := HandleShow;
-   OnClose := HandleClose;
+   OnShow  := FormShow;
+   OnClose := FormClose;
 
    FStore := TRadioConfigStore.Create;
    FKeyerStore := TKeyerConfigStore.Create;
@@ -368,7 +395,7 @@ procedure TPrefsForm.SelectFirstSection;
 var
    i: integer;
 begin
-   // Selecting fires HandleNavChange, which shows the matching panel.  Done here
+   // Selecting fires lstNavChange, which shows the matching panel.  Done here
    // rather than by streaming ItemIndex from the .fmx: OnChange would then fire
    // part-way through loading the form, with the panels it switches not yet
    // streamed in.
@@ -729,7 +756,7 @@ begin
       end;
 end;
 
-procedure TPrefsForm.HandleAddKeyer(Sender: TObject);
+procedure TPrefsForm.btnAddKeyerClick(Sender: TObject);
 begin
    if FKeyerEditor = nil then
       begin
@@ -744,7 +771,12 @@ begin
    FKeyerEditor.EditKeyer(FKeyerEditClone, KeyerEditorDone);
 end;
 
-procedure TPrefsForm.HandleEditKeyer(Sender: TObject);
+procedure TPrefsForm.btnEditKeyerClick(Sender: TObject);
+begin
+   EditSelectedKeyer;
+end;
+
+procedure TPrefsForm.EditSelectedKeyer;
 var
    target: TKeyerDefinition;
 begin
@@ -810,7 +842,7 @@ begin
    RefreshAll;
 end;
 
-procedure TPrefsForm.HandleDuplicateKeyer(Sender: TObject);
+procedure TPrefsForm.btnDuplicateKeyerClick(Sender: TObject);
 var
    source, copy: TKeyerDefinition;
 begin
@@ -827,7 +859,7 @@ begin
    RefreshAll;
 end;
 
-procedure TPrefsForm.HandleRemoveKeyer(Sender: TObject);
+procedure TPrefsForm.btnRemoveKeyerClick(Sender: TObject);
 var
    target: TKeyerDefinition;
    used: string;
@@ -859,9 +891,9 @@ begin
    RefreshAll;
 end;
 
-procedure TPrefsForm.HandleKeyerDblClick(Sender: TObject);
+procedure TPrefsForm.lstKeyersDblClick(Sender: TObject);
 begin
-   HandleEditKeyer(Sender);
+   EditSelectedKeyer;
 end;
 
 procedure TPrefsForm.RefreshProfileCombo;
@@ -981,7 +1013,7 @@ end;
 
 { -------------------------------------------------------------- events ---- }
 
-procedure TPrefsForm.HandleNavChange(Sender: TObject);
+procedure TPrefsForm.lstNavChange(Sender: TObject);
 var
    i: integer;
    wanted: NativeInt;
@@ -1033,7 +1065,7 @@ begin
    lblPlaceholder.Visible := not shown;
 end;
 
-procedure TPrefsForm.HandleAdd(Sender: TObject);
+procedure TPrefsForm.btnAddClick(Sender: TObject);
 begin
    if FEditor = nil then
       begin
@@ -1049,7 +1081,12 @@ begin
    FEditor.EditRadio(FEditClone, EditorDone);
 end;
 
-procedure TPrefsForm.HandleEdit(Sender: TObject);
+procedure TPrefsForm.btnEditClick(Sender: TObject);
+begin
+   EditSelectedRadio;
+end;
+
+procedure TPrefsForm.EditSelectedRadio;
 var
    radio: TRadioDefinition;
 begin
@@ -1075,12 +1112,12 @@ begin
    FEditor.EditRadio(FEditClone, EditorDone);
 end;
 
-procedure TPrefsForm.HandleRadioDblClick(Sender: TObject);
+procedure TPrefsForm.lstRadiosDblClick(Sender: TObject);
 begin
-   HandleEdit(Sender);
+   EditSelectedRadio;
 end;
 
-procedure TPrefsForm.HandleDuplicate(Sender: TObject);
+procedure TPrefsForm.btnDuplicateClick(Sender: TObject);
 var
    radio, copy: TRadioDefinition;
    err: string;
@@ -1105,7 +1142,7 @@ begin
       end;
 end;
 
-procedure TPrefsForm.HandleRemove(Sender: TObject);
+procedure TPrefsForm.btnRemoveClick(Sender: TObject);
 var
    radio: TRadioDefinition;
    err: string;
@@ -1178,7 +1215,7 @@ begin
    RefreshAll;
 end;
 
-procedure TPrefsForm.HandleNewProfile(Sender: TObject);
+procedure TPrefsForm.btnNewProfileClick(Sender: TObject);
 var
    prof: TStationProfile;
    name: string;
@@ -1206,7 +1243,7 @@ begin
       end;
 end;
 
-procedure TPrefsForm.HandleRenameProfile(Sender: TObject);
+procedure TPrefsForm.btnRenameProfileClick(Sender: TObject);
 var
    prof: TStationProfile;
    name: string;
@@ -1238,7 +1275,7 @@ begin
    RefreshProfileFields;
 end;
 
-procedure TPrefsForm.HandleDeleteProfile(Sender: TObject);
+procedure TPrefsForm.btnDeleteProfileClick(Sender: TObject);
 var
    prof: TStationProfile;
    err: string;
@@ -1259,7 +1296,7 @@ begin
       end;
 end;
 
-procedure TPrefsForm.HandleProfileChange(Sender: TObject);
+procedure TPrefsForm.cbxProfileChange(Sender: TObject);
 begin
    if FLoading then
       begin
@@ -1268,28 +1305,76 @@ begin
    RefreshProfileFields;
 end;
 
-procedure TPrefsForm.HandleFieldChange(Sender: TObject);
+// Six controls, six handlers, one line each.  They used to share one
+// HandleFieldChange; it never looked at Sender, so sharing was SAFE -- but it
+// was one control's handler wearing six controls' hats, and the Object
+// Inspector gave no hint that retyping it on one would change all six.
+procedure TPrefsForm.cbxCW1Change(Sender: TObject);
 begin
    CaptureProfileFields;
 end;
 
+procedure TPrefsForm.cbxCW2Change(Sender: TObject);
+begin
+   CaptureProfileFields;
+end;
+
+procedure TPrefsForm.chkSpeedSync1Change(Sender: TObject);
+begin
+   CaptureProfileFields;
+end;
+
+procedure TPrefsForm.chkSpeedSync2Change(Sender: TObject);
+begin
+   CaptureProfileFields;
+end;
+
+procedure TPrefsForm.chkSO2RChange(Sender: TObject);
+begin
+   CaptureProfileFields;
+end;
+
+procedure TPrefsForm.chkAutoConnectChange(Sender: TObject);
+begin
+   CaptureProfileFields;
+end;
+
+procedure TPrefsForm.cbxRadio1Change(Sender: TObject);
+begin
+   SlotRadioChanged(cbxRadio1, cbxRadio2, cbxCW1);
+end;
+
+procedure TPrefsForm.cbxRadio2Change(Sender: TObject);
+begin
+   SlotRadioChanged(cbxRadio2, cbxRadio1, cbxCW2);
+end;
+
 // A slot's RADIO changed, so that slot's CW-output list is stale: "CW by CAT"
 // and "Radio keyer port" are offered only when THAT radio provides them.
-// HandleFieldChange alone captured the new name and left the list built for
-// the previously displayed radio, so choosing a K4 in a profile whose slot had
-// been empty offered no CW-by-CAT at all -- it looked as though the option
-// belonged to some other profile (NY4I, 2026-08-08).
+// Capturing the field alone left the list built for the previously displayed
+// radio, so choosing a K4 in a profile whose slot had been empty offered no
+// CW-by-CAT at all -- it looked as though the option belonged to some other
+// profile (NY4I, 2026-08-08).
+//
+// WHICH SLOT IS A PARAMETER, not something to work out from Sender.  This used
+// to be one handler on both combos that opened with `if Sender = cbxRadio2`,
+// and that comparison is uncheckable: TObject against TObject compiles whatever
+// is passed, so a third combo wired to it would silently take the slot-1 branch
+// (NY4I 2026-08-08).  The two callers above already know which slot they are.
 //
 // Only the changed slot is rebuilt: refilling both would reset the other
 // slot's selection to whatever its stored value is, discarding an edit the
 // operator had just made and not yet saved.
-procedure TPrefsForm.HandleSlotRadioChange(Sender: TObject);
+procedure TPrefsForm.SlotRadioChanged(const aThisCombo, aOtherCombo, aThisCWCombo: TComboBox);
 var
    wasLoading: boolean;
    prof: TStationProfile;
    thisCombo, otherCombo: TComboBox;
    chosen, taken, previous: string;
 begin
+   thisCombo  := aThisCombo;
+   otherCombo := aOtherCombo;
+
    if FLoading then
       begin
       CaptureProfileFields;
@@ -1307,17 +1392,6 @@ begin
    // Read BEFORE CaptureProfileFields, because that is what overwrites the
    // profile with the new selection -- the old value is the only thing that can
    // be reverted to.
-   if Sender = cbxRadio2 then
-      begin
-      thisCombo  := cbxRadio2;
-      otherCombo := cbxRadio1;
-      end
-   else
-      begin
-      thisCombo  := cbxRadio1;
-      otherCombo := cbxRadio2;
-      end;
-
    prof   := CurrentProfile;
    chosen := SelectedTag(thisCombo);
    taken  := SelectedTag(otherCombo);
@@ -1359,14 +1433,7 @@ begin
    wasLoading := FLoading;
    FLoading := True;
    try
-      if Sender = cbxRadio2 then
-         begin
-         FillCWOutputCombo(cbxCW2, SelectedTag(cbxCW2), SelectedTag(cbxRadio2));
-         end
-      else
-         begin
-         FillCWOutputCombo(cbxCW1, SelectedTag(cbxCW1), SelectedTag(cbxRadio1));
-         end;
+      FillCWOutputCombo(aThisCWCombo, SelectedTag(aThisCWCombo), SelectedTag(thisCombo));
 
       // The OTHER slot's list is now stale: whatever this slot just took must
       // become unavailable over there, and whatever it released must come back.
@@ -1446,19 +1513,19 @@ begin
    Result := True;
 end;
 
-procedure TPrefsForm.HandleActivate(Sender: TObject);
+procedure TPrefsForm.btnActivateClick(Sender: TObject);
 begin
    ApplyNow(True);
 end;
 
-procedure TPrefsForm.HandleApply(Sender: TObject);
+procedure TPrefsForm.btnApplyClick(Sender: TObject);
 begin
    // Apply saves but does NOT activate: an operator adjusting a radio they are
    // not currently using should not have their live radios restarted.
    ApplyNow(False);
 end;
 
-procedure TPrefsForm.HandleOK(Sender: TObject);
+procedure TPrefsForm.btnOKClick(Sender: TObject);
 begin
    if ApplyNow(False) then
       begin
@@ -1476,18 +1543,18 @@ begin
    RefreshAll;
 end;
 
-procedure TPrefsForm.HandleCancel(Sender: TObject);
+procedure TPrefsForm.btnCancelClick(Sender: TObject);
 begin
    DiscardChanges;
    Hide;
 end;
 
-procedure TPrefsForm.HandleShow(Sender: TObject);
+procedure TPrefsForm.FormShow(Sender: TObject);
 begin
    RegisterFMXFormHandle(FormToHWND(Self));
 end;
 
-procedure TPrefsForm.HandleClose(Sender: TObject; var Action: TCloseAction);
+procedure TPrefsForm.FormClose(Sender: TObject; var Action: TCloseAction);
 var
    answer: integer;
 begin
