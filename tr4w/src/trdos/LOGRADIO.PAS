@@ -89,7 +89,6 @@ type
    //  SplitType = (NoSplit, SplitOn);
    //  RITType = (NoRIT, RITOn);
 
-   { PollingStatusType is used for the basic state machine states }
    TRMode = (
       TR0,
       TR1, //spacebar TwoRadioMode = false
@@ -97,12 +96,11 @@ type
       TR3
       );
 
-   PollingStatusType = (NoPollStatus,
-      PollStatus1,
-      PollStatus2,
-      PollStatus3,
-      PollStatus4,
-      PollStatus5);
+   // PollingStatusType (NoPollStatus, PollStatus1..5) is GONE.  It described the
+   // legacy poller's state machine; its only field, RadioObject.PollStatus, was
+   // written once and never read after Track E deleted that state machine.  The
+   // factory tracks link state on the radio (see TFactoryRadioBase.MaintainSerialLink
+   // and the connect/settle gate), not in an enum on a shared record.
 
    VFOStatusType = record
       {04}Frequency: longint;
@@ -171,21 +169,17 @@ type
       //    ICOM_SET_PTT: array[0..7] of Char;
       //    ICOM_SET_SPLIT: array[0..7] of Char;
 
-      FT857_COMMAND_SET_MODE: string[5];
-      FT857_COMMAND_SET_FREQ: string[5];
 
       tRadioInterfaceThreadID: cardinal;
       tRadioInterfaceThreadHandle: HWND;
       PollingStopRequested: Boolean;
       tPollCount: integer;
-      tStatusEqualityCounter: cardinal;
       tRadioInterfaceWndHandle: HWND;
       RITWndHandle:     HWND;
       XITWndHandle:     HWND;
       SplitWndHandle:   HWND;
       ModeVFOAWndHandle: HWND;  // Issue #566: mode label beside VFO A freq
       ModeVFOBWndHandle: HWND;  // Issue #566: mode label beside VFO B freq
-      tRadioOnTheMove: boolean;
       tBuf: array[1..512] of AnsiChar;
       active : boolean;
       CurrentStatus:   RadioStatusRecord; { Last reading taken }
@@ -194,7 +188,6 @@ type
       FilteredStatusChanged: boolean;
       BandOutputPort:  PortType;
       tBandOutputPortBaseAddress: HWND;
-      CommandPauseTimeStamp: TimeRecord;
       FrequencyAdder:  longint;
       FT1000MPCWReverse: boolean;
       CWByCAT:         boolean;                    // ny4i 4.44.5
@@ -222,9 +215,6 @@ type
       CWByCATBuffer:   string;                  // ny4i 4.44.5
       //    PartialRadioResponse: string;
       PollingEnable:   boolean;
-      PollDelay:       integer;
-      PollStatus:      PollingStatusType;
-      PollTime:        cardinal {TimeRecord};
       RadioModel:      InterfacedRadioType;
       FactoryId:       Str50;   // non-empty => a string-id factory radio (RadioModel is NoInterfacedRadio)
       RadioBaudRate:   cardinal;
@@ -235,9 +225,7 @@ type
       SerialFormat:    Str50;   // 'RADIO n SERIAL FORMAT' ('8N2'); '' = use the
                                 // radio's registered defaults (SerialParamsFor)
       RadioTCPPort:    integer;
-      RadioTimeout:    integer;
       ReceiverAddress: integer; { Used for Icom interfaces }
-      WaitingForCommandPause: boolean;
 
       tCATPortType:   PortType;
       tCATPortHandle: HWND;
@@ -251,23 +239,15 @@ type
       tr4w_cat_dtr_state:   tr4w_RTSDTRType; //CAT DTR
 
       tYaesuFreq5Bytes: array[0..4] of byte;
-      tYaesuMode5Bytes: array[0..4] of byte;
 
-      tYaesuSendFreq: boolean;
-      tYaesuSendMode: boolean;
 
       tIcom6Bytes: array[0..5] of byte;
       tIcom7Bytes: array[0..6] of byte; //ny4i  // 4.44.5
       tIcom11Bytes: array[0..10] of byte; //ny4i
       tIcomFilterWidth: integer;
 
-      tKenwood14Bytes: array[0..14] of AnsiChar;
 
-      tOrionFreq:   array[0..15] of AnsiChar;
-      tOrionMode:   array[0..07] of AnsiChar;
       CommandPause: integer;
-      saveMode : integer;
-      icomHasDataMode : boolean;   // True once this Icom answers a valid $1A06 (data-mode) query. Gates whether the standard $04 mode read is applied directly: old Icoms (IC-718, IC-706, non-Pro 746/756, etc.) have no data mode and never send $1A06, so their mode must be committed from $04.
       nextExtendedMode : ExtendedModeType;
       tmrCWByCAT: TWinTimer;
       EventHandlers : TEventHandlers;
@@ -281,7 +261,6 @@ type
       procedure SendIcomTwoByteCommand(Command: byte; opCode: byte);
       procedure SendXMITStatusCommand;
      { procedure SendIcomExtendedVFO(bVFO: boolean);
-      procedure SendIcomExtendedMode(bVFO: boolean);
      }
       procedure SendRITStatusCommand;
       procedure SendRITFreqCommand;
@@ -1636,7 +1615,6 @@ begin
    // Reset data-mode capability for this connection: assume no data mode until
    // the radio proves it by answering a valid $1A06. This lets an old Icom put
    // on a slot previously held by a data-mode radio commit its mode via $04.
-   Self.icomHasDataMode := False;
    // "No radio configured" is NOT the same as "RadioModel = NoInterfacedRadio".
    // A STRING-ID radio (RegisterRadioById) has no InterfacedRadioType member at
    // all, so its RadioModel IS NoInterfacedRadio by design -- see the note in
@@ -1999,17 +1977,6 @@ begin
    WriteToCATPort(tIcom11Bytes, 7);
 end; // SendIcomExtendedVFO
 
-procedure RadioObject.SendIcomExtendedMode(bVFO: boolean);
-begin
-   tIcom11Bytes[0] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom11Bytes[1] := Ord(ICOM_PREAMBLE_CODE);
-   tIcom11Bytes[2] := ReceiverAddress;
-   tIcom11Bytes[3] := Ord(ICOM_CONTROLLER_ADDRESS);
-   tIcom11Bytes[4] := Ord(ICOM_GET_EXTENDEDMODE);
-   tIcom11Bytes[5] := ifthen(bVFO,Ord(Chr(1)),Ord(Chr(0)));
-   tIcom11Bytes[6] := Ord(ICOM_END_OF_MESSAGE_CODE);
-   WriteToCATPort(tIcom11Bytes, 7);
-end; // SendIcomExtendedMode
 }
 procedure RadioObject.PutRadioIntoSplit;
 
@@ -2609,7 +2576,6 @@ begin
    Self.EventHandlers := EventHandlers;
    Self.tmrCWByCAT.OnTimer := Self.EventHandlers.OnTimerTick;
 
-   PollStatus := NoPollStatus;
 
    with CurrentStatus do
       begin
