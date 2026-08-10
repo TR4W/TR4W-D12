@@ -47,8 +47,9 @@ the radio factory and the CW keyer factory are done; 64-bit is out of scope; **l
 verification is the largest open block** and nothing in it is provable by code review.
 
 The honest gate on radios is **one verified rig per protocol family**, not 100 rigs. Verified:
-Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT. **Unproven: Icom LAN,
-Yaesu binary, Yaesu ASCII, HamLib.** Track that in [`docs/RADIO_BENCH_STATUS.md`](docs/RADIO_BENCH_STATUS.md).
+Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT, Yaesu binary (FT-1000MP,
+2026-08-09 — first proof of that family). **Unproven: Icom LAN, Yaesu ASCII, HamLib.** Track that in
+[`docs/RADIO_BENCH_STATUS.md`](docs/RADIO_BENCH_STATUS.md).
 
 Language matrix for this release is **ENG + 8** (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP). **POL and CHN are
 decided-out**, not pending. The 8 build green but **no one has eyeballed the rendered UI** — the
