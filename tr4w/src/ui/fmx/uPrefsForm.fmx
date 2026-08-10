@@ -13,100 +13,147 @@ object PrefsForm: TPrefsForm
   OnClose = FormClose
   OnShow = FormShow
   DesignerMasterStyle = 0
-  object lstNav: TListBox
+  object tvNav: TTreeView
     Align = Left
     Size.Width = 170.000000000000000000
     Size.Height = 620.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     DisableFocusEffect = True
-    DefaultItemStyles.ItemStyle = ''
-    DefaultItemStyles.GroupHeaderStyle = ''
-    DefaultItemStyles.GroupFooterStyle = ''
-    OnChange = lstNavChange
+    OnChange = tvNavChange
     Viewport.Width = 166.000000000000000000
     Viewport.Height = 616.000000000000000000
-    object navStation: TListBoxItem
+    object navStation: TTreeViewItem
       Tag = 1
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 0
       Text = 'Station'
     end
-    object navHardware: TListBoxItem
+    object navHardware: TTreeViewItem
       Tag = 2
-      Position.Y = 19.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 1
       Text = 'Hardware'
     end
-    object navCluster: TListBoxItem
+    object navCluster: TTreeViewItem
       Tag = 3
-      Position.Y = 38.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 2
       Text = 'DX Cluster'
     end
-    object navSCP: TListBoxItem
+    object navSCP: TTreeViewItem
       Tag = 4
-      Position.Y = 57.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 3
       Text = 'SCP'
     end
-    object navUDPBroadcast: TListBoxItem
+    object navUDPBroadcast: TTreeViewItem
       Tag = 5
-      Position.Y = 76.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 4
       Text = 'UDP Broadcast'
     end
-    object navNetwork: TListBoxItem
+    object navNetwork: TTreeViewItem
       Tag = 6
-      Position.Y = 95.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 5
       Text = 'Network'
     end
-    object navAppearance: TListBoxItem
+    object navAppearance: TTreeViewItem
       Tag = 7
-      Position.Y = 114.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 6
       Text = 'Appearance'
     end
-    object navLogging: TListBoxItem
+    object navLogging: TTreeViewItem
       Tag = 8
-      Position.Y = 133.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 7
       Text = 'Logging'
     end
-    object navBackup: TListBoxItem
+    object navBackup: TTreeViewItem
       Tag = 9
-      Position.Y = 152.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 8
       Text = 'Backup'
     end
-    object navContest: TListBoxItem
+    object navContest: TTreeViewItem
       Tag = 10
-      Position.Y = 171.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 9
       Text = 'Contest'
     end
-    object navCW: TListBoxItem
+    object navCW: TTreeViewItem
       Tag = 11
-      Position.Y = 190.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 10
       Text = 'CW Settings'
     end
-    object navWebServer: TListBoxItem
+    object navWebServer: TTreeViewItem
       Tag = 12
-      Position.Y = 209.000000000000000000
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 11
       Text = 'Web Server'
     end
-    object navExternalSoftware: TListBoxItem
-      Tag = 13
-      Position.Y = 228.000000000000000000
+    object navTCIServer: TTreeViewItem
+      Tag = 15
+      Height = 19.000000000000000000
+      IsExpanded = False
       TabOrder = 12
-      Text = 'External Software'
+      Text = 'TCI Server'
     end
-    object navAdvanced: TListBoxItem
-      Tag = 14
-      Position.Y = 247.000000000000000000
+    object navExternalSoftware: TTreeViewItem
+      Tag = 13
+      Height = 19.000000000000000000
+      IsExpanded = True
       TabOrder = 13
+      Text = 'External Software'
+      object navWSJTX: TTreeViewItem
+        Tag = 16
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 0
+        Text = 'WSJT-X'
+      end
+      object navExternalLogger: TTreeViewItem
+        Tag = 17
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 1
+        Text = 'External Logger'
+      end
+      object navDXLab: TTreeViewItem
+        Tag = 18
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 2
+        Text = 'DXLab'
+      end
+      object navMMTTY: TTreeViewItem
+        Tag = 19
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 3
+        Text = 'MMTTY'
+      end
+    end
+    object navAdvanced: TTreeViewItem
+      Tag = 14
+      Height = 19.000000000000000000
+      IsExpanded = False
+      TabOrder = 14
       Text = 'Advanced'
     end
   end
@@ -488,16 +535,6 @@ object PrefsForm: TPrefsForm
         Text = 'Connect radios at startup'
         OnChange = chkAutoConnectChange
       end
-      object chkTCIServer: TCheckBox
-        Position.X = 12.000000000000000000
-        Position.Y = 482.000000000000000000
-        Size.Width = 300.000000000000000000
-        Size.Height = 19.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 8
-        Text = 'Enable TCI radio server'
-        OnChange = chkTCIServerChange
-      end
     end
     object layUDP: TLayout
       Tag = 5
@@ -727,6 +764,123 @@ object PrefsForm: TPrefsForm
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 11
+      end
+    end
+    object layTCIServer: TLayout
+      Tag = 15
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 5
+      object chkTCIServer: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 12.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'Enable the TCI server'
+        OnChange = chkTCIServerChange
+      end
+      object lblTCIIntro: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 40.000000000000000000
+        Size.Width = 640.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Lets other programs - WSJT-X, JTDX, a skimmer - control whichever' +
+          ' radio TR4W has the port open on, even a radio with no TCI of its' +
+          ' own.  Radio 1 is trx 0 and radio 2 is trx 1.'
+        TabOrder = 1
+      end
+      object lblTCIPort: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 104.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Port:'
+        TabOrder = 2
+      end
+      object edtTCIPort: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 90.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+      end
+      object chkTCIBindAll: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 134.000000000000000000
+        Size.Width = 480.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Accept connections from other computers'
+      end
+      object lblTCIBindAllWarning: TLabel
+        Position.X = 30.000000000000000000
+        Position.Y = 158.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Off by default, and worth leaving off.  This is an unauthenticate' +
+          'd radio-control socket: anything that can reach the port can move' +
+          ' your VFO and key your transmitter.'
+        TabOrder = 5
+      end
+      object lblTCIMaxTx: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 224.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Stop transmitting after:'
+        TabOrder = 6
+      end
+      object edtTCIMaxTx: TEdit
+        Position.X = 220.000000000000000000
+        Position.Y = 220.000000000000000000
+        Size.Width = 70.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+      end
+      object lblTCIMaxTxUnits: TLabel
+        Position.X = 298.000000000000000000
+        Position.Y = 224.000000000000000000
+        Size.Width = 340.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'seconds  (0 = no limit)'
+        TabOrder = 8
+      end
+      object lblTCIMaxTxHint: TLabel
+        Position.X = 30.000000000000000000
+        Position.Y = 248.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'A safety net, not a timer for normal use: if a client keys the ra' +
+          'dio and then stops answering - it crashed, or the network went aw' +
+          'ay - this is what puts the transmitter back into receive.'
+        TabOrder = 9
+      end
+      object lblTCILogHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 314.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 34.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'To log every TCI command in both directions, see the Logging sect' +
+          'ion.'
+        TabOrder = 10
       end
     end
   end

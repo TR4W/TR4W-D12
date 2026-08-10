@@ -77,6 +77,7 @@ uses
    FMX.StdCtrls,
    FMX.Edit,
    FMX.ListBox,
+   FMX.TreeView,
    FMX.Layouts,
    FMX.TabControl,
    FMX.Controls.Presentation,
@@ -97,7 +98,7 @@ type
    // its name matches the component's Name; an event binds only when the
    // handler is a published method, because TWriter stores it BY NAME.
    TPrefsForm = class(TForm)
-      lstNav: TListBox;
+      tvNav: TTreeView;
       layContent: TLayout;
       lblPlaceholder: TLabel;
 
@@ -128,8 +129,27 @@ type
       btnActivate: TButton;
 
       chkAutoConnect: TCheckBox;
-      chkTCIServer: TCheckBox;
       layHardware: TLayout;
+
+      // --- TCI Server (Tag = NAV_TCISERVER) ----------------------------------
+      // Its OWN section, beside Web Server, because that is what it is: a
+      // network service TR4W offers to other programs.  Not a radio -- it
+      // exposes whichever radio is ACTIVE, which is the point of trx 0 / trx 1
+      // -- and not external software either.  The enable check box MOVED here
+      // off Hardware rather than being duplicated: enable in one place and port
+      // in another is exactly the split this settings pass exists to remove.
+      layTCIServer: TLayout;
+      chkTCIServer: TCheckBox;
+      lblTCIIntro: TLabel;
+      lblTCIPort: TLabel;
+      edtTCIPort: TEdit;
+      chkTCIBindAll: TCheckBox;
+      lblTCIBindAllWarning: TLabel;
+      lblTCIMaxTx: TLabel;
+      edtTCIMaxTx: TEdit;
+      lblTCIMaxTxUnits: TLabel;
+      lblTCIMaxTxHint: TLabel;
+      lblTCILogHint: TLabel;
 
       // --- Logging (Tag = NAV_LOGGING) ---------------------------------------
       // The ONE place for logging, which used to be spread across a level key,
@@ -175,7 +195,7 @@ type
       chkUDPAllQSOs: TCheckBox;
       lblUDPHint: TLabel;
 
-      procedure lstNavChange(Sender: TObject);
+      procedure tvNavChange(Sender: TObject);
       procedure btnAddClick(Sender: TObject);
       procedure btnEditClick(Sender: TObject);
       procedure btnDuplicateClick(Sender: TObject);
@@ -305,6 +325,8 @@ type
       // readability; they are called from exactly there.
       procedure LoadLoggingPanel;
       procedure SaveLoggingPanel;
+      procedure LoadTCIPanel;
+      procedure SaveTCIPanel;
 
       procedure FillRadioNameCombo(const aCombo: TComboBox;
                                    const aSelected, aUsedByOtherSlot,
@@ -348,7 +370,7 @@ const
    // be, so nobody has to guess whether Preferences is meant to grow.
    // NUMBERED FROM 1, and that is load-bearing rather than taste.  A section's
    // PANEL carries the same Tag as its nav item, which is what lets
-   // lstNavChange match them with no case statement and no table -- but Tag
+   // tvNavChange match them with no case statement and no table -- but Tag
    // defaults to 0 on every control ever dropped on this form.  Starting at 1
    // means 0 reads as "not a section panel", so an untagged control cannot
    // accidentally claim a section.
@@ -367,6 +389,23 @@ const
    NAV_WEBSERVER         = 12;
    NAV_EXTERNALSOFTWARE  = 13;
    NAV_ADVANCED          = 14;
+
+   // APPENDED, NOT RENUMBERED.  The tags are stamped into the .fmx resource;
+   // renumbering would mean re-editing every nav item and every panel in the
+   // designer, and a single missed pair is a section that silently stops
+   // opening.  Order in the tree is a designer concern and is independent of
+   // these numbers.
+   NAV_TCISERVER         = 15;   // its own leaf: a service TR4W offers, like Web Server
+
+   // Children of External Software.  Nav entries only for now -- a section with
+   // no panel shows the placeholder, which Lint-FormTags deliberately allows.
+   // They exist so the HIERARCHY is settled before panels are written against
+   // it: splitting one flat panel into four later is the throwaway work worth
+   // avoiding (NY4I).
+   NAV_WSJTX             = 16;
+   NAV_EXTERNALLOGGER    = 17;
+   NAV_DXLAB             = 18;
+   NAV_MMTTY             = 19;
 
 // Opens Preferences, creating it on first use.  Called from the PREF
 // call-window command.
@@ -466,30 +505,36 @@ procedure TPrefsForm.SelectFirstSection;
 var
    i: integer;
 begin
-   // Selecting fires lstNavChange, which shows the matching panel.  Done here
-   // rather than by streaming ItemIndex from the .fmx: OnChange would then fire
-   // part-way through loading the form, with the panels it switches not yet
-   // streamed in.
+   // Selecting fires tvNavChange, which shows the matching panel.  Done here
+   // rather than by streaming a selection from the .fmx: OnChange would then
+   // fire part-way through loading the form, with the panels it switches not
+   // yet streamed in.
    //
-   // HARDWARE by tag, not the first row.  Hardware is the only section with a
-   // panel, so opening on whatever happens to be top of the list would show the
-   // operator the "not migrated yet" placeholder as their first impression of
-   // Preferences -- and it would change again the next time the nav is reordered
-   // in the designer.
-   for i := 0 to lstNav.Items.Count - 1 do
+   // HARDWARE by tag, not the first row.  Opening on whatever happens to be top
+   // of the tree would show the operator the "not migrated yet" placeholder as
+   // their first impression of Preferences -- and it would change again the next
+   // time the nav is reordered in the designer.
+   //
+   // GlobalCount / ItemByGlobalIndex, NOT Count / Items[].  On a TTreeView those
+   // are different sets: Count is Content.ControlsCount -- ROOT ITEMS ONLY --
+   // while GlobalCount walks the whole tree.  Since External Software now has
+   // children, the root-only form would silently fail to find any child section
+   // by tag, and the failure would look like "that section just doesn't open".
+   // Read from FMX.TreeView rather than assumed.
+   for i := 0 to tvNav.GlobalCount - 1 do
       begin
-      if lstNav.ListItems[i].Tag = NAV_HARDWARE then
+      if tvNav.ItemByGlobalIndex(i).Tag = NAV_HARDWARE then
          begin
-         lstNav.ItemIndex := i;
+         tvNav.Selected := tvNav.ItemByGlobalIndex(i);
          Exit;
          end;
       end;
 
    // No Hardware row at all: fall back to the first, so the window is never
    // left with nothing selected.
-   if lstNav.Items.Count > 0 then
+   if tvNav.GlobalCount > 0 then
       begin
-      lstNav.ItemIndex := 0;
+      tvNav.Selected := tvNav.ItemByGlobalIndex(0);
       end;
 end;
 
@@ -1096,8 +1141,7 @@ begin
          end;
 
       chkAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
-      chkTCIServer.IsChecked   := FStore.TCIServerEnabled;
-
+      LoadTCIPanel;
       LoadLoggingPanel;
 
       if FStore.ActiveProfileName <> '' then
@@ -1146,8 +1190,7 @@ begin
       end;
 
    FStore.AutoConnectOnStartup := chkAutoConnect.IsChecked;
-   FStore.TCIServerEnabled     := chkTCIServer.IsChecked;
-
+   SaveTCIPanel;
    SaveLoggingPanel;
 
    prof := CurrentProfile;
@@ -1169,7 +1212,7 @@ end;
 
 { -------------------------------------------------------------- events ---- }
 
-procedure TPrefsForm.lstNavChange(Sender: TObject);
+procedure TPrefsForm.tvNavChange(Sender: TObject);
 var
    i: integer;
    wanted: NativeInt;
@@ -1188,10 +1231,12 @@ begin
    // translating the nav would have stopped section switching from working, and
    // the coupling was invisible.  A Tag survives translation, and being
    // published it can be set in the Object Inspector on a section added there.
+   // Selected, not an index: on a tree the selection can be a CHILD, and there
+   // is no single index that addresses both levels.
    wanted := NAV_NONE;
-   if lstNav.ItemIndex >= 0 then
+   if tvNav.Selected <> nil then
       begin
-      wanted := lstNav.ListItems[lstNav.ItemIndex].Tag;
+      wanted := tvNav.Selected.Tag;
       end;
 
    // A SECTION PANEL IS ANY CHILD OF layContent WHOSE TAG MATCHES.  No case
@@ -1502,6 +1547,73 @@ end;
 
 
 { --------------------------------------------------------------- Logging --- }
+
+
+{ ------------------------------------------------------------ TCI Server --- }
+
+procedure TPrefsForm.LoadTCIPanel;
+begin
+   chkTCIServer.IsChecked  := FStore.TCIServerEnabled;
+   chkTCIBindAll.IsChecked := FStore.TCIBindAll;
+
+   // A BLANK PORT MEANS "the default", which is what 0 means in the store.
+   // Showing 0 would invite the operator to think the server listens on port
+   // zero; the greyed prompt shows the number that will actually be used
+   // without pretending it has been chosen.  Same idiom as the CI-V address
+   // and auto-info hints in the radio editor.
+   if FStore.TCIPort > 0 then
+      begin
+      edtTCIPort.Text := IntToStr(FStore.TCIPort);
+      end
+   else
+      begin
+      edtTCIPort.Text := '';
+      end;
+   edtTCIPort.TextPrompt := IntToStr(TCI_SERVER_DEFAULT_PORT);
+
+   edtTCIMaxTx.Text := IntToStr(FStore.TCIMaxTxSeconds);
+end;
+
+procedure TPrefsForm.SaveTCIPanel;
+var
+   n: integer;
+   txt: string;
+begin
+   FStore.TCIServerEnabled := chkTCIServer.IsChecked;
+   FStore.TCIBindAll       := chkTCIBindAll.IsChecked;
+
+   // Blank -> 0 -> "the server's default".  A value that is not a usable port
+   // is REFUSED and the previous one kept, rather than being coerced to 0:
+   // coercion would silently move the operator's server to a different port
+   // and they would find out when a client failed to connect.
+   txt := Trim(edtTCIPort.Text);
+   if txt = '' then
+      begin
+      FStore.TCIPort := 0;
+      end
+   else if TryStrToInt(txt, n) and (n > 0) and (n <= 65535) then
+      begin
+      FStore.TCIPort := n;
+      end
+   else
+      begin
+      logger.Warn('[Preferences] "%s" is not a port number 1..65535 -- keeping %d',
+                  [txt, FStore.TCIPort]);
+      end;
+
+   // 0 is legal here and means NO LIMIT, so it is not refused -- unlike the
+   // port, where 0 means something else entirely.
+   txt := Trim(edtTCIMaxTx.Text);
+   if TryStrToInt(txt, n) and (n >= 0) and (n <= 3600) then
+      begin
+      FStore.TCIMaxTxSeconds := n;
+      end
+   else
+      begin
+      logger.Warn('[Preferences] "%s" is not 0..3600 seconds -- keeping %d',
+                  [txt, FStore.TCIMaxTxSeconds]);
+      end;
+end;
 
 procedure TPrefsForm.LoadLoggingPanel;
 var
