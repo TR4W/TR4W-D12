@@ -620,18 +620,23 @@ begin
       begin
       logger.Warn('[TCI-SRV] client %d dropped while holding PTT - unkeying',
                   [Session.Id]);
-      TThread.Queue(nil,
-         procedure
-         begin
-            try
-               tPTTVIACAT(False);
-            except
-               on E: Exception do
-                  begin
-                  logger.Error('[TCI-SRV] unkey on disconnect failed: %s', [E.Message]);
-                  end;
+      // DIRECTLY, NOT QUEUED.  This used to marshal to the main thread like
+      // every other radio command here, and that is wrong for the same reason
+      // it is wrong in the watchdog: the cases where a client vanishes
+      // mid-transmission include TR4W SHUTTING DOWN, and by then the message
+      // loop is tearing down and the queue never drains -- so the unkey never
+      // ran and NY4I's K3 was left transmitting after he quit.
+      //
+      // Safe because the transport is the thread-safe part: SendToRadio takes
+      // SocketLock, and uWSJTX already calls tPTTVIACAT from its Indy thread.
+      try
+         tPTTVIACAT(False);
+      except
+         on E: Exception do
+            begin
+            logger.Error('[TCI-SRV] unkey on disconnect failed: %s', [E.Message]);
             end;
-         end);
+      end;
       end;
 end;
 
