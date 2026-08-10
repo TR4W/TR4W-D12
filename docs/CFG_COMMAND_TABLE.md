@@ -248,7 +248,22 @@ definition into the live globals — `ApplyRadioToSlot`'s own comment says so. R
 without an applier for it does not fall back to the ini; it silently configures nothing.
 `uKeyerConfigApply.pas` is the precedent and says the same in its header.
 
-### Set 1 — 25 plain scalars, ready to move
+### Set 1 — 25 plain scalars — **DONE 2026-08-10** (`efda90c8`)
+
+Moved to `csJSON` together with `ApplyJSONOwnedRadioKey` in `uRadioConfigApply.pas`, in one
+commit, per the rule below. The applier consumes the **rendered value**, not the typed
+`TRadioDefinition`, because the renderer holds rules that are load-bearing and bench-proven
+(transport blanking, the TCP-port default, FACTORY ID emit-vs-delete); re-deriving them
+would be the second implementation the vocabulary hazard warns about. Bounds moved with the
+values — bypassing `CheckCommand` bypasses `crMin`/`crMax`, and a `Str20` truncates in
+silence.
+
+`Lint-ConfigOwnership.ps1` was **strengthened, not relaxed**: it now reads the applier and
+fails the build on a `csJSON` row no applier handles, so the one-commit rule is enforced
+mechanically rather than by memory. Still owed: a Pascal unit test of the applier's bounds
+(the unit is not linked into the test EXE).
+
+### Set 1 — the original audit
 `ckNormal`, `crA = 0`, `crNetwork = 0`, non-boolean. `NAME`, `IP ADDRESS`, `TCP PORT`,
 `SERIAL FORMAT`, `STARTUP COMMAND`, `RECEIVER ADDRESS`, `HAMLIB ID`, `FREQUENCY ADDER`,
 `ICOM DATA MODE ID`, `KEYER STOP BITS`, `NETWORK USERNAME`, `NETWORK PASSWORD` (both
