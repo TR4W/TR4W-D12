@@ -73,6 +73,11 @@ uses
    System.JSON,          // the format of record for settings\tr4w.json
    System.Generics.Collections;
 
+const
+   // "Let the radio decide."  Distinct from 0, which is the operator saying
+   // OFF -- see TRadioDefinition.AutoInfoLevel.
+   AUTOINFO_RADIO_DEFAULT = -1;
+
 type
    // How TR4W reaches the radio.  This is a property of the DEFINITION, not of
    // the model: a K4 can be driven over serial or over the network, and the
@@ -154,10 +159,19 @@ type
       BandOutputPort: string;
       StartupCommand: string;
       PollingEnable: boolean;
-      // Auto-info level, 0 = off.  The radio pushes state changes instead of
-      // being polled for them.  Per RADIO, not per station: a K3 and a K2 on
-      // the same desk can want different levels, and what a level MEANS is
-      // the driver's business.
+      // Auto-info level.  The radio pushes state changes instead of being
+      // polled for them.  Per RADIO, not per station: a K3 and a K2 on the
+      // same desk can want different levels, and what a level MEANS is the
+      // driver's business.
+      //
+      //   -1  let the RADIO decide (the default, and what a new definition
+      //       gets) -- an Elecraft chooses 2, anything else ignores it
+      //    0  explicitly OFF: poll for everything, the historic behaviour
+      //   1+  an explicit level the operator has chosen
+      //
+      // The three-way split exists because "off" and "not chosen" are
+      // different answers, and collapsing them would mean a driver could
+      // never have a default of its own.
       AutoInfoLevel: integer;
 
       constructor Create;
@@ -388,7 +402,7 @@ begin
    // Polling on is the useful default -- a radio defined but never polled
    // looks broken to the operator.
    PollingEnable     := True;
-   AutoInfoLevel     := 0;   // off: poll for everything, as before
+   AutoInfoLevel     := AUTOINFO_RADIO_DEFAULT;
 end;
 
 procedure TRadioDefinition.Assign(const aSource: TRadioDefinition);
@@ -1042,7 +1056,7 @@ begin
    radioDef.BandOutputPort    := aIni.ReadString(aSection,  'BandOutputPort',    PORT_NONE);
    radioDef.StartupCommand    := aIni.ReadString(aSection,  'StartupCommand',    '');
    radioDef.PollingEnable     := aIni.ReadBool(aSection,    'PollingEnable',     True);
-   radioDef.AutoInfoLevel     := aIni.ReadInteger(aSection, 'AutoInfoLevel',     0);
+   radioDef.AutoInfoLevel     := aIni.ReadInteger(aSection, 'AutoInfoLevel',     AUTOINFO_RADIO_DEFAULT);
 
    // A duplicate section name cannot happen in a well-formed ini, but a
    // hand-edited file can produce one; drop the later one rather than raise
@@ -1314,7 +1328,7 @@ begin
          radioDef.BandOutputPort    := JSONStr(obj,  'bandOutputPort',  PORT_NONE);
          radioDef.StartupCommand    := JSONStr(obj,  'startupCommand',  '');
          radioDef.PollingEnable     := JSONBool(obj, 'pollingEnable',   True);
-         radioDef.AutoInfoLevel     := JSONInt(obj,  'autoInfoLevel',  0);
+         radioDef.AutoInfoLevel     := JSONInt(obj,  'autoInfoLevel',  AUTOINFO_RADIO_DEFAULT);
 
          // A blank or duplicate name cannot come from SaveToJSON, but it can
          // come from a hand-edited file.  Drop that entry rather than raise

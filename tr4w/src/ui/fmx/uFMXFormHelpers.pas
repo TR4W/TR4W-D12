@@ -90,6 +90,18 @@ const
    TC_PREFS_UNSAVEDTITLE     = 'TR4W Preferences';
    TC_RADIOEDIT_UNSAVED      = 'Save your changes to this radio?';
 
+   // Shown when an auto-info level is typed rather than left blank.  Names
+   // what blank MEANS, because "leave it empty" is not obvious advice, and
+   // says what the risk actually is rather than warning in the abstract.
+   TC_RADIOEDIT_AUTOINFOWARN =
+      'Setting an auto-info level by hand is a non-standard configuration.' + sLineBreak + sLineBreak +
+      'Leave this box EMPTY unless you have a specific reason: the radio then uses the ' +
+      'level TR4W knows works for it, and TR4W polls it as little as possible.' + sLineBreak + sLineBreak +
+      'A value you type here overrides that, and it affects operating - entering 0 returns ' +
+      'the radio to being polled for everything, which noticeably delays the change from ' +
+      'transmit back to receive.' + sLineBreak + sLineBreak +
+      'Use this value anyway?';
+
    TC_PREFS_PORTCONFLICT     = 'Port conflicts:' + sLineBreak + sLineBreak + '%s' +
                                sLineBreak + sLineBreak + 'Apply anyway?';
    TC_PREFS_APPLIED          = 'Profile "%s" is active.';
