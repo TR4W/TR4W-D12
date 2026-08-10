@@ -191,10 +191,11 @@ def main():
                     sp.write(b"TX;\r")
                     key_at = time.monotonic()
                     print(f"{stamp()}  -> TX;")
-                elif (key_at is not None and unkey_at is None
+                elif (key_at is not None and not unkey_sent
                       and now - key_at >= args.key):
                     sp.write(b"RX;\r")
                     unkey_at = time.monotonic()
+                    unkey_sent = True
                     print(f"{stamp()}  -> RX;")
 
             # --- send a poll --------------------------------------------
