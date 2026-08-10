@@ -139,6 +139,12 @@ type
     procedure Split(splitOn: boolean); override;
     procedure SetRITFreq(whichVFO: TVFO; hz: integer); override;
     procedure SetXITFreq(whichVFO: TVFO; hz: integer); override;
+  public
+    // D7 keyed this radio with the 0F frame -- see the constants in
+    // uRadioYaesuBinary.  Declared HERE because the base must never ask
+    // which model it is.
+    function PTTFrameOn: string; override;
+    function PTTFrameOff: string; override;
   end;
 
 implementation
@@ -451,6 +457,17 @@ end;
 procedure TFT1000MPRadio.SetXITFreq(whichVFO: TVFO; hz: integer);
 begin
    Self.SetRITFreq(whichVFO, hz);
+end;
+
+
+function TFT1000MPRadio.PTTFrameOn: string;
+begin
+   Result := YAESU_PTT_ON_0F;
+end;
+
+function TFT1000MPRadio.PTTFrameOff: string;
+begin
+   Result := YAESU_PTT_OFF_0F;
 end;
 
 initialization

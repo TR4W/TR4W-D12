@@ -71,6 +71,25 @@ const
    // DIGU columns of LOGRADIO's radio table.  SetMode refuses instead of putting
    // $FF on the wire, which is not a defined mode byte on any of these radios.
    MODEBYTE_NONE    = $FF;
+
+const
+   // PTT frames, taken from the D7 tree's tPTTVIACAT dispatch -- the code this
+   // factory was ported from, and the authority on what these radios actually
+   // accept.  They are NOT guesses: the port simply never carried them over,
+   // so TYaesuBinary.Transmit has been a logged no-op since.
+   //
+   //   D7:  FT747GX, FT100, FT840, FT890, FT900, FT990, FT1000, FT1000MP
+   //           on  00 00 00 01 0F      off  00 00 00 00 0F
+   //        FT736R, FT817, FT818, FT847
+   //           on  00 00 00 00 08      off  00 00 00 00 88
+   //
+   // Radios in NEITHER list -- the FT-920 and FT-767 among them -- are left
+   // unable to key by CAT, because that is what D7 did and inventing a frame
+   // for a transmitter is not a guess worth making.
+   YAESU_PTT_ON_0F  = #$00#$00#$00#$01#$0F;
+   YAESU_PTT_OFF_0F = #$00#$00#$00#$00#$0F;
+   YAESU_PTT_ON_08  = #$00#$00#$00#$00#$08;
+   YAESU_PTT_OFF_08 = #$00#$00#$00#$00#$88;
    // A model that has not declared its set-mode row.  Distinct from a real
    // opcode so the base can tell "not declared" from "declared as 0".
    MODEOPCODE_UNSET = $00;
@@ -138,6 +157,13 @@ type
     // the FT-817 does not have to restate a wall of empty stubs. ----
     procedure Transmit; override;
     procedure Receive; override;
+
+    // The 5-byte CAT frame this radio keys with, or '' if it cannot key by
+    // CAT.  A SUBCLASS DECLARES ITS FRAME; this base never asks which model
+    // it is.  Default '' keeps the old, honest behaviour -- a warning and no
+    // command -- for the radios D7 did not key either.
+    function PTTFrameOn: string; virtual;
+    function PTTFrameOff: string; virtual;
     procedure BufferCW(cwChars: string); override;   // CW keying stays on the legacy
     procedure SendCW; override;                      // path / future CW Keyer Factory
     procedure StopCW; override;
@@ -281,14 +307,34 @@ end;
 // Neutral defaults.  Anything a specific radio supports is overridden there.
 // ---------------------------------------------------------------------------
 
+function TYaesuBinary.PTTFrameOn: string;
+begin
+   Result := '';      // this radio cannot key by CAT unless it says otherwise
+end;
+
+function TYaesuBinary.PTTFrameOff: string;
+begin
+   Result := '';
+end;
+
 procedure TYaesuBinary.Transmit;
 begin
-   logger.Warn('[Transmit] PTT-via-CAT not supported by %s', [Self.radioModel]);
+   if PTTFrameOn = '' then
+      begin
+      logger.Warn('[Transmit] PTT-via-CAT not supported by %s', [Self.radioModel]);
+      Exit;
+      end;
+   Self.SendToRadio(PTTFrameOn);
 end;
 
 procedure TYaesuBinary.Receive;
 begin
-   logger.Warn('[Receive] PTT-via-CAT not supported by %s', [Self.radioModel]);
+   if PTTFrameOff = '' then
+      begin
+      logger.Warn('[Receive] PTT-via-CAT not supported by %s', [Self.radioModel]);
+      Exit;
+      end;
+   Self.SendToRadio(PTTFrameOff);
 end;
 
 procedure TYaesuBinary.BufferCW(cwChars: string);
