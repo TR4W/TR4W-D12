@@ -131,6 +131,24 @@ type
       chkTCIServer: TCheckBox;
       layHardware: TLayout;
 
+      // --- Logging (Tag = NAV_LOGGING) ---------------------------------------
+      // The ONE place for logging, which used to be spread across a level key,
+      // three HamLib switches, a telnet switch, and TCI's own settings file
+      // (NY4I: "our logging is all over the place").
+      layLogging: TLayout;
+      lblLogLevel: TLabel;
+      cbxLogLevel: TComboBox;
+      lblLogLevelHint: TLabel;
+      lblDetailLogs: TLabel;
+      chkTelnetDebug: TCheckBox;
+      chkTCIDebug: TCheckBox;
+      chkHamLibDebug: TCheckBox;
+      chkHamLibTrace: TCheckBox;
+      chkHamLibAsyncOnly: TCheckBox;
+      lblHamLibRestart: TLabel;
+      btnOpenLogFile: TButton;
+      lblLogFilePath: TLabel;
+
       // --- CW section (Tag = NAV_CW), the keying-device library ---------------
       layCW: TLayout;
       lblMyKeyers: TLabel;
@@ -188,6 +206,8 @@ type
       procedure chkSO2RChange(Sender: TObject);
       procedure chkAutoConnectChange(Sender: TObject);
       procedure chkTCIServerChange(Sender: TObject);
+      procedure cbxLogLevelChange(Sender: TObject);
+      procedure btnOpenLogFileClick(Sender: TObject);
 
       // MUST live here, with the other streamed handlers.  The .fmx stores an
       // event as the NAME of a PUBLISHED method; declared in a private section
@@ -281,6 +301,11 @@ type
       procedure RefreshAll;
       function CurrentProfile: TStationProfile;
       function SelectedRadio: TRadioDefinition;
+      // Logging panel <-> store.  Separate from LoadStore/SaveStore only for
+      // readability; they are called from exactly there.
+      procedure LoadLoggingPanel;
+      procedure SaveLoggingPanel;
+
       procedure FillRadioNameCombo(const aCombo: TComboBox;
                                    const aSelected, aUsedByOtherSlot,
                                    aOtherSlotLabel: string);
@@ -367,8 +392,10 @@ uses
    uCAT,        // DiscoverNetworkRadios
    uUDPBroadcaster,   // TestDestination, and Configure once the settings are saved
    uTCIServer,        // started/stopped when the check box is saved
-   MainUnit,    // logger
-   VC;
+   System.IOUtils,     // TFile.Exists -- the log file may not exist yet
+   Winapi.ShellAPI,    // ShellExecute -- open the log in the operator's editor
+   MainUnit,    // logger, and `appender` for the log file's real path
+   VC;          // tLogLevels / tLogLevelsSA / logLevels, TR4W_TCI_DEBUG
 
 var
    gPrefsForm: TPrefsForm = nil;
@@ -1071,6 +1098,8 @@ begin
       chkAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
       chkTCIServer.IsChecked   := FStore.TCIServerEnabled;
 
+      LoadLoggingPanel;
+
       if FStore.ActiveProfileName <> '' then
          begin
          lblActive.Text := TC_PREFS_ACTIVELABEL + FStore.ActiveProfileName;
@@ -1118,6 +1147,8 @@ begin
 
    FStore.AutoConnectOnStartup := chkAutoConnect.IsChecked;
    FStore.TCIServerEnabled     := chkTCIServer.IsChecked;
+
+   SaveLoggingPanel;
 
    prof := CurrentProfile;
    if prof = nil then
@@ -1467,6 +1498,121 @@ end;
 procedure TPrefsForm.chkTCIServerChange(Sender: TObject);
 begin
    CaptureProfileFields;
+end;
+
+
+{ --------------------------------------------------------------- Logging --- }
+
+procedure TPrefsForm.LoadLoggingPanel;
+var
+   lvl: tLogLevels;
+   idx: integer;
+begin
+   // THE LEVEL LIST IS BUILT FROM tLogLevelsSA, NOT TYPED INTO THE DESIGNER.
+   //
+   // A populated combo BAKES ITSELF INTO THE .fmx resource (learned building
+   // the radio editor), so designer-entered items would be a second copy of the
+   // level vocabulary -- one that keeps working while it drifts from the enum.
+   // Reading the same array CFGCA matched against makes drift impossible: add a
+   // level to tLogLevels and it appears here.
+   cbxLogLevel.BeginUpdate;
+   try
+      cbxLogLevel.Clear;
+      for lvl := Low(tLogLevels) to High(tLogLevels) do
+         begin
+         cbxLogLevel.Items.Add(string(AnsiString(tLogLevelsSA[lvl])));
+         end;
+   finally
+      cbxLogLevel.EndUpdate;
+   end;
+
+   idx := cbxLogLevel.Items.IndexOf(UpperCase(Trim(FStore.LogLevelName)));
+   if idx < 0 then
+      begin
+      // An unreadable level in the file selects nothing rather than silently
+      // showing NONE, which the operator would then save and thereby turn
+      // logging off without ever choosing to.
+      logger.Warn('[Preferences] log level "%s" is not one this build knows',
+                  [FStore.LogLevelName]);
+      end;
+   cbxLogLevel.ItemIndex := idx;
+
+   chkTelnetDebug.IsChecked     := FStore.TelnetDebug;
+   chkHamLibDebug.IsChecked     := FStore.HamLibDebug;
+   chkHamLibTrace.IsChecked     := FStore.HamLibTrace;
+   chkHamLibAsyncOnly.IsChecked := FStore.HamLibAsyncOnly;
+
+   // TCI's debug flag is SHOWN here and OWNED by the tci section -- this panel
+   // is a view of it, not a second home for it.
+   chkTCIDebug.IsChecked := FStore.TCIDebug;
+
+   // ASK THE APPENDER, do not recompute the path.  It is a MainUnit global
+   // created with 'tr4w.log' relative to the program directory; deriving it
+   // again here would be a second answer to one question, and the two would
+   // disagree the day the appender moves.
+   if Assigned(appender) then
+      begin
+      lblLogFilePath.Text := ExpandFileName(appender.FileName);
+      end
+   else
+      begin
+      lblLogFilePath.Text := '';
+      end;
+end;
+
+procedure TPrefsForm.SaveLoggingPanel;
+begin
+   if cbxLogLevel.ItemIndex >= 0 then
+      begin
+      FStore.LogLevelName := cbxLogLevel.Items[cbxLogLevel.ItemIndex];
+      end;
+
+   FStore.TelnetDebug     := chkTelnetDebug.IsChecked;
+   FStore.HamLibDebug     := chkHamLibDebug.IsChecked;
+   FStore.HamLibTrace     := chkHamLibTrace.IsChecked;
+   FStore.HamLibAsyncOnly := chkHamLibAsyncOnly.IsChecked;
+   FStore.TCIDebug        := chkTCIDebug.IsChecked;
+
+   // STRAIGHT ONTO THE PROGRAM, not just into the store.  These rows are csJSON
+   // now, so CheckCommand is inert for them and nothing else will publish them
+   // -- and the level in particular has always taken effect IMMEDIATELY (NY4I),
+   // which is what CommandsProcArray[13] = @UpdateDebugLogLevel exists for.
+   // ApplyLoggingSettings makes that call; assigning logLevels alone would
+   // leave the running logger untouched.
+   ApplyLoggingSettings(FStore);
+   TR4W_TCI_DEBUG := FStore.TCIDebug;
+end;
+
+procedure TPrefsForm.cbxLogLevelChange(Sender: TObject);
+begin
+   // Deliberately does NOT apply the level here.  Save is what commits every
+   // other setting on this form, and a level that changed on selection while
+   // Cancel still promised to discard it would be lying about Cancel.
+end;
+
+procedure TPrefsForm.btnOpenLogFileClick(Sender: TObject);
+var
+   fileName: string;
+begin
+   if not Assigned(appender) then
+      begin
+      ShowMessage('Logging is not running, so there is no file to open.');
+      Exit;
+      end;
+
+   fileName := ExpandFileName(appender.FileName);
+   if not TFile.Exists(fileName) then
+      begin
+      ShowMessage(Format('There is no log file yet at %s.', [fileName]));
+      Exit;
+      end;
+
+   // ShellExecute with no verb, so the operator's own choice of text editor
+   // opens it.  Nothing is written and the file stays open in the appender --
+   // which is why there is no "Clear log file" button beside this one: the
+   // rolling appender holds the handle, and truncating underneath it is not
+   // something to do casually from a settings screen.
+   ShellExecute(0, nil, PChar(fileName), nil, nil, SW_SHOWNORMAL);
 end;
 
 procedure TPrefsForm.cbxRadio1Change(Sender: TObject);

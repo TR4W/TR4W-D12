@@ -151,6 +151,10 @@ var
    RadioLibraryTCIPort: integer = 0;
    RadioLibraryTCIBindAll: boolean = False;
 
+// Logging settings from the store into the globals -- see the implementation
+// for why the level cannot simply be assigned.
+procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
+
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 
 // UI-free description of the port collisions a profile WOULD cause, '' when
@@ -219,6 +223,109 @@ begin
       Result.DefaultCIVAddress := RegisteredCIVAddress(model);
       Result.DefaultHamLibID   := RegisteredHamLibID(model);
       end;
+end;
+
+// ---------------------------------------------------------------------------
+// Logging settings, from the store into the globals the program actually reads.
+//
+// ONE TRANSLATION SITE FOR THE LEVEL, and this is the shape Set 2 of the ini
+// retirement will need for its twelve ckList rows.  The store keeps the
+// SPELLING ('DEBUG'); tLogLevels is a Pascal enum; somewhere the two must meet,
+// and the whole point is that it happens exactly once.  tLogLevelsSA is the
+// same table CFGCA matched against, so the vocabularies cannot drift -- reading
+// the spellings from the array rather than retyping them here is what
+// guarantees that.  An unrecognised spelling keeps the current level rather
+// than silently selecting llNone, because a typo in a settings file must not
+// turn logging off at the moment someone is trying to diagnose something.
+//
+// UpdateDebugLogLevel IS NOT OPTIONAL.  The ini row carries crP:13, which is
+// CommandsProcArray[13] = @UpdateDebugLogLevel, and that hook exists so a level
+// changed in the UI takes effect IMMEDIATELY (NY4I).  csJSON makes CheckCommand
+// inert, so nothing else will call it: assigning logLevels without this would
+// store the new level correctly, show it correctly, and leave the running
+// logger exactly as it was.
+procedure SeedLoggingFromIni(const aStore: TRadioConfigStore);
+var
+   ini: TIniFile;
+begin
+   // ONE-TIME MIGRATION, tr4w.ini -> the store's logging section.
+   //
+   // These five settings lived in tr4w.ini until their rows became csJSON,
+   // which makes CheckCommand inert for them.  So on the first run after the
+   // upgrade NOTHING would apply them and an operator with
+   // DEBUG LOG LEVEL = DEBUG would silently drop to INFO -- precisely when
+   // they were trying to diagnose something.
+   //
+   // Runs only when the JSON had no logging section at all.  Once Preferences
+   // saves, the section exists and the ini is never consulted again, so a value
+   // deliberately turned off later cannot be resurrected by a stale ini line.
+   // The ini keys are left in place: harmless, inert, and a fallback if someone
+   // rolls back to the previous build.
+   if (aStore = nil) or aStore.HasLoggingSection then
+      begin
+      Exit;
+      end;
+
+   ini := TIniFile.Create(SettingsDirectory + 'tr4w.ini');
+   try
+      // Defaults are the store's OWN current values, so a key missing from the
+      // ini leaves the default alone rather than forcing it to False.
+      aStore.LogLevelName    := ini.ReadString(string(_COMMANDS), 'DEBUG LOG LEVEL',
+                                               aStore.LogLevelName);
+      aStore.HamLibDebug     := ini.ReadBool(string(_COMMANDS), 'HAMLIB DEBUG',
+                                             aStore.HamLibDebug);
+      aStore.HamLibAsyncOnly := ini.ReadBool(string(_COMMANDS), 'HAMLIB ASYNC ONLY',
+                                             aStore.HamLibAsyncOnly);
+      aStore.HamLibTrace     := ini.ReadBool(string(_COMMANDS), 'HAMLIB TRACE',
+                                             aStore.HamLibTrace);
+      aStore.TelnetDebug     := ini.ReadBool(string(_COMMANDS), 'TELNET DEBUG',
+                                             aStore.TelnetDebug);
+      logger.Info('[SeedLoggingFromIni] logging settings migrated from tr4w.ini (level %s)',
+                  [aStore.LogLevelName]);
+   finally
+      ini.Free;
+   end;
+end;
+
+procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
+var
+   lvl: tLogLevels;
+   wanted: string;
+   matched: boolean;
+begin
+   if aStore = nil then
+      begin
+      Exit;
+      end;
+
+   SeedLoggingFromIni(aStore);
+
+   wanted  := UpperCase(Trim(aStore.LogLevelName));
+   matched := False;
+   for lvl := Low(tLogLevels) to High(tLogLevels) do
+      begin
+      if wanted = UpperCase(string(AnsiString(tLogLevelsSA[lvl]))) then
+         begin
+         logLevels := lvl;
+         matched   := True;
+         Break;
+         end;
+      end;
+
+   if not matched then
+      begin
+      logger.Warn('[ApplyLoggingSettings] "%s" is not a log level -- keeping the current one',
+                  [aStore.LogLevelName]);
+      end;
+
+   TR4W_HAMLIB_DEBUG      := aStore.HamLibDebug;
+   TR4W_HAMLIB_ASYNC_ONLY := aStore.HamLibAsyncOnly;
+   TR4W_HAMLIB_TRACE      := aStore.HamLibTrace;
+   TR4W_TELNET_DEBUG      := aStore.TelnetDebug;
+
+   // The whole reason the level is wired this way.  Safe before the logger
+   // exists: it checks and returns.
+   UpdateDebugLogLevel;
 end;
 
 // The part of a key after 'RADIO ONE ' / 'RADIO TWO ', or the whole key if it

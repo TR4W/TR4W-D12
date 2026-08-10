@@ -606,6 +606,129 @@ object PrefsForm: TPrefsForm
         TabOrder = 8
       end
     end
+    object layLogging: TLayout
+      Tag = 8
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 4
+      object lblLogLevel: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 14.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Log level:'
+        TabOrder = 0
+      end
+      object cbxLogLevel: TComboBox
+        Position.X = 140.000000000000000000
+        Position.Y = 10.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        OnChange = cbxLogLevelChange
+      end
+      object lblLogLevelHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 40.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 34.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Takes effect immediately - no restart.  INFO is the normal settin' +
+          'g; DEBUG and TRACE make the log much larger and are for diagnosin' +
+          'g a problem.'
+        TabOrder = 2
+      end
+      object lblDetailLogs: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 90.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Detailed logging for one subsystem'
+        TabOrder = 3
+      end
+      object chkTelnetDebug: TCheckBox
+        Position.X = 24.000000000000000000
+        Position.Y = 114.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'DX cluster - log all telnet traffic'
+      end
+      object chkTCIDebug: TCheckBox
+        Position.X = 24.000000000000000000
+        Position.Y = 140.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = 'TCI server - log every command, both directions'
+      end
+      object chkHamLibDebug: TCheckBox
+        Position.X = 24.000000000000000000
+        Position.Y = 166.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Text = 'HamLib - debug logging'
+      end
+      object chkHamLibTrace: TCheckBox
+        Position.X = 24.000000000000000000
+        Position.Y = 192.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+        Text = 'HamLib - internal trace to hamlib_trace.log'
+      end
+      object chkHamLibAsyncOnly: TCheckBox
+        Position.X = 24.000000000000000000
+        Position.Y = 218.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 8
+        Text = 'HamLib - async callbacks only, no heartbeat (testing)'
+      end
+      object lblHamLibRestart: TLabel
+        Position.X = 24.000000000000000000
+        Position.Y = 244.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 34.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'The three HamLib settings take effect when TR4W next starts.  The' +
+          'y are very verbose and are for diagnosing a radio problem - leave' +
+          ' them off otherwise.'
+        TabOrder = 9
+      end
+      object btnOpenLogFile: TButton
+        Position.X = 12.000000000000000000
+        Position.Y = 296.000000000000000000
+        Size.Width = 130.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 10
+        Text = 'Open log file'
+        TextSettings.Trimming = None
+        OnClick = btnOpenLogFileClick
+      end
+      object lblLogFilePath: TLabel
+        Position.X = 152.000000000000000000
+        Position.Y = 301.000000000000000000
+        Size.Width = 500.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 11
+      end
+    end
   end
   object btnOK: TButton
     Anchors = [akRight, akBottom]
