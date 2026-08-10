@@ -2558,9 +2558,30 @@ begin
          Self.AdoptFactoryObject;
          if Self.tFactoryObject <> nil then
             begin
+            // ASK WHETHER IT WORKED.  Connect's result was discarded and
+            // success logged unconditionally, so a port that could not be
+            // opened produced "serial radio connected via factory" in the
+            // log while the radio was dead -- and the operator, reasonably,
+            // went looking anywhere but here (NY4I: COM15 came back
+            // "Cannot open (error 5)" and the next line said connected).
+            // Connect returns an integer whose meaning is not documented, so
+            // ASK THE RADIO instead -- which is the idiom the K4 driver
+            // already uses after calling inherited Connect.
             Self.tFactoryObject.Connect;
-            logger.Info('[%s.SetUpRadioInterface] %s serial radio connected via factory',
-                       [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+            if Self.tFactoryObject.IsConnected then
+               begin
+               logger.Info('[%s.SetUpRadioInterface] %s serial radio connected via factory',
+                          [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel)]);
+               end
+            else
+               begin
+               logger.Error('[%s.SetUpRadioInterface] %s did NOT connect -- ' +
+                            'serial port %d is in use or unavailable',
+                            [Self.RadioName, uRadioRegistry.DisplayName(Self.RadioModel),
+                             Ord(tCATPortType)]);
+               QuickDisplayError('Radio "' + string(Self.RadioName) +
+                                 '" could not open its port -- not connected.');
+               end;
             end
          else
             begin
