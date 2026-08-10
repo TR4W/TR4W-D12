@@ -630,7 +630,10 @@ begin
       // Safe because the transport is the thread-safe part: SendToRadio takes
       // SocketLock, and uWSJTX already calls tPTTVIACAT from its Indy thread.
       try
-         tPTTVIACAT(False);
+         // Both radios: the dropped client may have been holding either, and
+         // this path exists to fail closed.
+         tPTTVIACATForRadio(@Radio1, False);
+         tPTTVIACATForRadio(@Radio2, False);
       except
          on E: Exception do
             begin
@@ -1383,7 +1386,10 @@ begin
       begin
          sent := False;
          try
-            sent := tPTTVIACAT(KeyDown);
+            // THE RADIO THE CLIENT ADDRESSED, not whichever is active.
+            // trx:1,true means radio 2, and tPTTVIACAT keys ActiveRadio --
+            // so a client working the second radio keyed the first.
+            sent := tPTTVIACATForRadio(rig, KeyDown);
          except
             on E: Exception do
                begin
@@ -1482,7 +1488,10 @@ begin
    // SendToRadio takes SocketLock, and uWSJTX already calls tPTTVIACAT from
    // its Indy connection thread.
    try
-      if not tPTTVIACAT(False) then
+      // Both radios, for the same reason as the disconnect path: a
+      // watchdog that unkeys only the active radio is not a watchdog.
+      if (not tPTTVIACATForRadio(@Radio1, False)) and
+         (not tPTTVIACATForRadio(@Radio2, False)) then
          begin
          logger.Error('[TCI-SRV] WATCHDOG: the unkey was REFUSED -- ' +
                       'check "PTT VIA COMMANDS" and NO POLL DURING PTT');

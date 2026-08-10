@@ -836,6 +836,17 @@ function ReadRadioStatus(rig: RadioPtr): RadioStatusRecord;
 // The same, for the live (unsettled) status.
 function ReadRadioCurrentStatus(rig: RadioPtr): RadioStatusRecord;
 
+// Key or unkey a SPECIFIC radio.  aRadio nil means "whichever is active",
+// which is what an operator-driven action wants.
+//
+// THE EXPLICIT FORM EXISTS BECAUSE A CALLER CAN MEAN A PARTICULAR RADIO.  A
+// TCI client addresses a receiver by number -- trx:1,true means radio 2 --
+// and the active-radio form keys whatever happens to be active instead, so a
+// client working the second radio keys the first.  This is the same lesson as
+// CWByCATSend, which was given the radio explicitly for exactly this reason:
+// SO2R and the interlock nominate a radio, and assuming the active one is a
+// guess dressed as a default.
+function tPTTVIACATForRadio(aRadio: RadioPtr; PTTOn: boolean): boolean;
 function tPTTVIACAT(PTTOn: boolean): boolean;
 
 // Put EVERY radio back into receive.  Call it before anything is torn down.
@@ -3124,7 +3135,7 @@ begin
    Unkey(@Radio2, 'radio 2');
 end;
 
-function tPTTVIACAT(PTTOn: boolean): boolean;
+function tPTTVIACATForRadio(aRadio: RadioPtr; PTTOn: boolean): boolean;
 
 var
    ro: TFactoryRadioBase;
@@ -3151,15 +3162,18 @@ begin
       begin
       Exit;
       end;
-   if ActiveRadio = RadioOne then
+   if aRadio <> nil then
+      begin
+      // The caller named a radio.  Use it.
+      ro := aRadio^.tFactoryObject;
+      end
+   else if ActiveRadio = RadioOne then
       begin
       ro := Radio1.tFactoryObject;
-//      SerialPort := Radio1.tCATPortType;
       end
    else
       begin
       ro := Radio2.tFactoryObject;
- //     SerialPort := Radio2.tCATPortType;
       end;
    if ro <> nil then
       begin
@@ -3278,6 +3292,14 @@ begin
    // so this line would have pushed 0..255 bytes of stack contents at the CAT
    // port and then returned True as though PTT had been keyed.
 end;
+
+// The historic form: whichever radio is ACTIVE.  Correct for anything driven
+// by the operator, because that is what "the radio" means to them.
+function tPTTVIACAT(PTTOn: boolean): boolean;
+begin
+   Result := tPTTVIACATForRadio(nil, PTTOn);
+end;
+
 
 //function RadioObject.CalculateIcomFilterWidth: integer;
 //begin
