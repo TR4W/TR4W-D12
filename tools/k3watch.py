@@ -251,11 +251,21 @@ def main():
     sp.reset_input_buffer()
 
     if args.ai is not None:
+        # SET IT, THEN ASK THE RADIO WHAT IT THINKS -- and print the answer.
+        # Announcing "auto-info set to AI0" without showing the reply is an
+        # assertion, not a measurement, and NY4I rightly would not take it on
+        # trust when the result of a run depends on it.
         sp.write(("AI%d;" % args.ai).encode() + bytes([13]))
         time.sleep(0.3)
         sp.reset_input_buffer()
-        print(f"auto-info set to AI{args.ai}"
+        sp.write(b"AI;" + bytes([13]))
+        time.sleep(0.4)
+        echoed = sp.read(4096).decode("latin-1", "replace").strip()
+        sp.reset_input_buffer()
+        print(f"auto-info: sent AI{args.ai};  radio answered {echoed!r}"
               + ("   LISTENING ONLY -- nothing is polled" if listen_only else ""))
+        if echoed and ("AI%d;" % args.ai) not in echoed:
+            print(f"*** WARNING: radio did not confirm AI{args.ai} -- readings below may not mean what you think")
 
     if listen_only:
         print("not polling -- every line below is something the RADIO sent")
