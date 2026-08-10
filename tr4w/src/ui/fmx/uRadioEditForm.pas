@@ -543,7 +543,16 @@ begin
       begin
       edtFilterByte.Text := '';
       end;
-   edtAutoInfo.Text := IntToStr(FRadio.AutoInfoLevel);
+   // Blank means "let the radio decide".  Showing -1 would be showing the
+   // operator an implementation detail and inviting them to type one.
+   if FRadio.AutoInfoLevel < 0 then
+      begin
+      edtAutoInfo.Text := '';
+      end
+   else
+      begin
+      edtAutoInfo.Text := IntToStr(FRadio.AutoInfoLevel);
+      end;
 
    if FRadio.IcomDataModeID > 0 then
       begin
@@ -656,7 +665,14 @@ begin
    FRadio.StartupCommand  := Trim(edtStartup.Text);
    FRadio.IcomFilterByte    := StrToIntDef(Trim(edtFilterByte.Text), 0);
    FRadio.IcomDataModeID    := StrToIntDef(Trim(edtDataMode.Text), 0);
-   FRadio.AutoInfoLevel     := StrToIntDef(Trim(edtAutoInfo.Text), 0);
+   if Trim(edtAutoInfo.Text) = '' then
+      begin
+      FRadio.AutoInfoLevel := AUTOINFO_RADIO_DEFAULT;
+      end
+   else
+      begin
+      FRadio.AutoInfoLevel := StrToIntDef(Trim(edtAutoInfo.Text), AUTOINFO_RADIO_DEFAULT);
+      end;
    FRadio.WideCWFilter      := chkWideCW.IsChecked;
    FRadio.FT1000MPCWReverse := chkFT1000MPReverse.IsChecked;
    FRadio.UseHamLib       := chkUseHamLib.IsChecked;
@@ -755,11 +771,25 @@ begin
    //
    // The K4 is deliberately excluded: it is not a TElecraftSerial and runs its
    // own AI policy (AI5 on network, AI0 on serial).
-   edtAutoInfo.Enabled := MatchText(id, ['K2', 'K3', 'KX3']);
-   lblAutoInfo.Enabled := edtAutoInfo.Enabled;
-   if not edtAutoInfo.Enabled then
+   // HIDDEN, not greyed, on a radio that ignores it (NY4I).  A greyed
+   // control still says "this radio has an auto-info setting and you may not
+   // touch it", which is a different and wrong statement -- an Icom or a
+   // Yaesu has no such concept at all.  The Icom fields above are greyed
+   // rather than hidden because they belong to a family the operator may be
+   // about to select; this one belongs to a capability the radio either has
+   // or does not.
+   edtAutoInfo.Visible := MatchText(id, ['K2', 'K3', 'KX3']);
+   lblAutoInfo.Visible := edtAutoInfo.Visible;
+   if not edtAutoInfo.Visible then
       begin
       edtAutoInfo.Text := '';
+      end
+   else
+      begin
+      // Greyed, and only while the box is empty, so it disappears the moment
+      // the operator types and returns if they clear it -- the same idiom as
+      // the CI-V default hint.
+      edtAutoInfo.TextPrompt := '2';
       end;
 
    // Blank a disabled field rather than leave a stale value showing: a greyed
@@ -972,6 +1002,24 @@ procedure TRadioEditForm.HandleOK(Sender: TObject);
 var
    err: string;
 begin
+   // AN AUTO-INFO LEVEL THE OPERATOR TYPED IS A NON-STANDARD CONFIGURATION,
+   // AND IT AFFECTS OPERATING (NY4I).
+   //
+   // Blank means "let the radio decide", which is the supported answer and
+   // says nothing.  Anything typed overrides a default the driver chose from
+   // measured behaviour -- including 0, which turns the radio back to being
+   // polled for everything and costs several hundred milliseconds on an
+   // unkey.  The operator is told once, on the way out, rather than being
+   // stopped: this is their radio and they may have a reason.
+   if edtAutoInfo.Visible and (Trim(edtAutoInfo.Text) <> '') then
+      begin
+      if MessageDlg(TC_RADIOEDIT_AUTOINFOWARN,
+                    TMsgDlgType.mtWarning, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
+         begin
+         Exit;
+         end;
+      end;
+
    if not SaveToRadio(err) then
       begin
       ShowMessage(err);

@@ -75,6 +75,8 @@ type
     // Set by LOGRADIO from the radio library at setup.  0 = off, which is
     // the historic behaviour: poll for everything.
     procedure ApplyAutoInfoLevel(level: integer); override;
+    // Puts auto-info back to 0 on the way out -- see the implementation.
+    procedure Disconnect; override;
   private
     FAutoInfoLevel: integer;
   public
@@ -735,14 +737,62 @@ begin
       end;
 end;
 
+procedure TElecraftSerial.Disconnect;
+begin
+   // LEAVE THE RADIO AS WE FOUND IT.
+   //
+   // Auto-info is a setting we make ON THE RADIO, and it outlives us: the rig
+   // keeps pushing after TR4W closes the port.  Whatever opens it next -- the
+   // next TR4W run, WSJT-X in CAT mode, a terminal -- then meets a radio
+   // talking unprompted, and a program that cannot tell an unsolicited push
+   // from its own reply will mis-pace itself badly.  That is not theoretical:
+   // it wrecked a bench measurement here, where a paced IF; poll collapsed
+   // from ~100 ms to 2953 ms purely because the K3 was still in AI2 from a
+   // previous TR4W session (NY4I, 2026-08-09).
+   //
+   // Best effort, and quiet about failing: by the time this runs the radio may
+   // already be gone, which is not worth an error on the way out.
+   if FAutoInfoLevel > 0 then
+      begin
+      try
+         logger.Debug('[Disconnect] restoring auto-info to 0');
+         Self.SetAIMode(0);
+      except
+         // The port may already be closed.  Nothing to do and nothing to say.
+      end;
+      end;
+   inherited Disconnect;
+end;
+
 procedure TElecraftSerial.ApplyAutoInfoLevel(level: integer);
 begin
+   // A NEGATIVE LEVEL MEANS "YOU DECIDE", AND THIS FAMILY SAYS 2.
+   //
+   // AI2 is the right default for every Elecraft in this family -- K2, K3,
+   // KX3, and a KX2 when it is added, which shares the KX3 command set
+   // (NY4I).  Measured on a K3S: the radio pushes FA/FB/FR/FT/IF/MD/DT on
+   // every change, including VFO B DURING A TRANSMISSION, so the poll drops
+   // to one command and an unkey falls from ~500-1100 ms to 221 ms.
+   //
+   // Deciding it HERE rather than in a table is what makes that true for a
+   // model nobody has written yet: a new thin subclass inherits the default
+   // with no list to remember to update.  Zero remains the operator saying
+   // OFF, which is a different answer from not having chosen.
+   if level < 0 then
+      begin
+      FAutoInfoLevel := 2;
+      end
+   else
+      begin
+      FAutoInfoLevel := level;
+      end;
+
    // Stored, not sent: Initialize and the extended-mode setup both send it,
    // and they run at the right point in the connect sequence.  Sending here
    // would race a port that may not be open yet.
-   FAutoInfoLevel := level;
-   logger.Debug('[ApplyAutoInfoLevel] auto-info level %d%s',
-      [level, IfThen(level > 0, ' -- polling reduced to IF;', ' -- full poll')]);
+   logger.Debug('[ApplyAutoInfoLevel] requested %d -> auto-info %d%s',
+      [level, FAutoInfoLevel,
+       IfThen(FAutoInfoLevel > 0, ' -- polling reduced to IF;', ' -- full poll')]);
 end;
 
 procedure TElecraftSerial.SetAIMode(i: integer);
