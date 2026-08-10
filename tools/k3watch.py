@@ -98,6 +98,31 @@ def tr_flag(resp):
     return resp[TR_INDEX]
 
 
+def ensure_receive(sp, attempts=5):
+    """Send RX; and CONFIRM the rig acted on it.  Returns True if it did.
+
+    WHY THIS IS NOT ONE WRITE.  The exit path used to send a single RX; and
+    print "rig left in receive" -- a claim, not a fact.  It was wrong twice on
+    NY4I's bench: the script exited saying that while the K3 was still keyed.
+    A transmitter is the one thing a test tool must not be optimistic about,
+    so this asks the rig, and if it cannot get agreement it says so loudly
+    instead of reassuring.
+    """
+    for _ in range(attempts):
+        try:
+            sp.reset_input_buffer()
+            sp.write(b"RX;" + bytes([13]))
+            time.sleep(0.3)
+            sp.write(b"IF;" + bytes([13]))
+            time.sleep(0.3)
+            resp = find_last_if(sp.read(4096).decode("latin-1"))
+            if resp is not None and tr_flag(resp) == "0":
+                return True
+        except Exception:
+            pass
+    return False
+
+
 def describe(flag):
     if flag == "1":
         return "TRANSMIT"
@@ -204,6 +229,7 @@ def main():
     time.sleep(0.4)
     sp.reset_input_buffer()
 
+    print(f"poll: {poll.rstrip()}    T/R read from {'TQ' if use_tq else 'IF'}")
     print(f"{args.port} at {args.baud} 8N1.  "
           f"{'paced (wait for reply)' if args.interval == 0 else f'every {args.interval*1000:.0f} ms'}"
           f"{', burst poll' if args.burst else ''}.  Ctrl-C to stop.")
@@ -212,6 +238,7 @@ def main():
     buf = ""
     poll_buf = ""          # replies to the poll currently outstanding
     last_rx = 0.0          # when bytes last arrived, for --wait-all
+    last_unkey_retry = 0.0 # rate-limits the transmit watchdog
     last_flag = None
     last_change = time.monotonic()
     key_at = None
@@ -343,6 +370,18 @@ def main():
             if args.interval == 0 and pending:
                 time.sleep(0.005)
 
+            # TRANSMIT WATCHDOG.  Independent of the flag detection AND of
+            # the exit condition, both of which have been wrong in this file:
+            # if the rig has been keyed longer than was asked for, keep
+            # telling it to stop.  The run that prompted this sent one RX;
+            # and then sat in the loop while the K3 stayed keyed.
+            if (key_at is not None and last_flag == "1"
+                    and now - key_at > args.key + 1.5
+                    and now - last_unkey_retry > 1.0):
+                sp.write(b"RX;" + bytes([13]))
+                last_unkey_retry = now
+                print(f"{stamp()}  -> RX; (watchdog retry)")
+
             # Hard stop, whatever else is going on.  Checked before the
             # normal exit so a bug in that condition cannot outrank it.
             if now - started > args.max_seconds:
@@ -357,13 +396,13 @@ def main():
     except KeyboardInterrupt:
         print("\ninterrupted")
     finally:
-        try:
-            sp.write(b"RX;\r")     # never leave the rig keyed
-            time.sleep(0.2)
-        except Exception:
-            pass
+        ok = ensure_receive(sp)
         sp.close()
-        print("port closed, rig left in receive")
+        if ok:
+            print("port closed, rig CONFIRMED in receive")
+        else:
+            print("*** WARNING: could not confirm the rig returned to receive.")
+            print("*** CHECK THE RADIO.  It may still be transmitting.")
 
 
 if __name__ == "__main__":
