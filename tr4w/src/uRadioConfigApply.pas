@@ -161,6 +161,7 @@ uses
    // and qualifies calls as Windows.<fn>, which only resolves if the unit is
    // named that way here too.
    Windows,
+   StrUtils,   // StartsText -- KeySuffix
    VC,
    uCFG,
    uCAT,
@@ -211,6 +212,206 @@ begin
       begin
       Result.DefaultCIVAddress := RegisteredCIVAddress(model);
       Result.DefaultHamLibID   := RegisteredHamLibID(model);
+      end;
+end;
+
+// The part of a key after 'RADIO ONE ' / 'RADIO TWO ', or the whole key if it
+// does not have that shape.
+//
+// NOT EVERY RADIO KEY IS SLOT-PREFIXED, which is why this does not just chop a
+// fixed number of characters: 'KEYER RADIO ONE OUTPUT PORT' and
+// 'POLL RADIO ONE' put the slot in the MIDDLE and at the END.  Neither is in
+// Set 1, but both will arrive here when their sets move, and a naive strip
+// would silently produce a suffix that matches nothing -- or worse, one that
+// matches the wrong row.  Returning the key whole makes such a case fall into
+// the applier's else-branch, which logs an error loudly.
+function KeySuffix(const aKey: string): string;
+const
+   PREFIX_ONE = 'RADIO ONE ';
+   PREFIX_TWO = 'RADIO TWO ';
+begin
+   if StartsText(PREFIX_ONE, aKey) then
+      begin
+      Result := Copy(aKey, Length(PREFIX_ONE) + 1, MaxInt);
+      end
+   else if StartsText(PREFIX_TWO, aKey) then
+      begin
+      Result := Copy(aKey, Length(PREFIX_TWO) + 1, MaxInt);
+      end
+   else
+      begin
+      Result := aKey;
+      end;
+end;
+
+// ---------------------------------------------------------------------------
+// The direct applier for rows that JSON now owns (Set 1: plain scalars).
+//
+// WHY THIS EXISTS AT ALL.  csJSON makes CheckCommand INERT, and CheckCommand is
+// the only thing that moves a radio setting into TR4W's live globals.  So
+// retiring a row without an applier for it does not fall back to the ini -- it
+// silently configures nothing.  The retirement and the applier are therefore
+// one piece of work, and that is why this landed in the same commit as the
+// csJSON flips rather than after them.
+//
+// WHY IT TAKES THE RENDERED STRING RATHER THAN THE TYPED TRadioDefinition.
+// This looks like the round trip NY4I objected to for auto-info, and it is
+// deliberately not the same case.  Auto-info had NO legacy reader: nothing in
+// the old tree had ever heard of it, so there was no existing rule to preserve
+// and inventing an ini key would have been pure ceremony.  These thirteen rows
+// are the opposite -- the renderer already holds rules that are load-bearing
+// and bench-proven:
+//
+//   * a NETWORK radio blanks SERIAL FORMAT, and a SERIAL radio blanks
+//     IP ADDRESS / NETWORK USERNAME / NETWORK PASSWORD.  Not tidiness: a stale
+//     value in the inapplicable field is how a K4 with a good IP came up as
+//     "NO PORT SET" (2026-08-05), and how a shared serial port gets stolen
+//     from the other radio.
+//   * TCP PORT falls back to the model's default when unset (NumericValue).
+//   * FACTORY ID is emitted for a string-id radio and DELETED for an enum one,
+//     because a stale FACTORY ID resurrects the previous radio.
+//
+// Re-deriving that from aRadio here would be a SECOND implementation of those
+// rules, which is precisely the drift the audit warns about -- the same
+// vocabulary hazard has already bitten twice (NONE vs TCP/IP cost a bench
+// session; the mirror of it silently converted a network K4 to serial).  One
+// source of values, two destinations: the ini for rows still owned by CFGCA,
+// the globals directly for rows JSON owns.  When every set has moved, the
+// renderer collapses into this function and the strings disappear with it.
+//
+// VALIDATION IS NOT OPTIONAL HERE.  Bypassing CheckCommand also bypasses the
+// crMin/crMax bounds it enforced, and the bounds are NOT decorative: a Str20
+// silently TRUNCATES a longer name in Delphi rather than failing, and
+// ICOM DATA MODE ID outside 1..3 is a mode the radio does not have.  Each case
+// below carries the same bound as its CommandsArray row, and a rejection is
+// logged and NOT applied -- matching what CFGCA did, so a bad JSON value
+// behaves the way a bad ini value did.
+function ApplyJSONOwnedRadioKey(const aSlot: integer;
+                                const aSuffix: string;
+                                const aValue: string;
+                                const aDelete: boolean): boolean;
+var
+   rig: RadioPtr;
+   n: integer;
+
+   // Assign a string, refusing one too long for its ShortString target rather
+   // than letting Delphi truncate it in silence.
+   function FitsIn(const aMax: integer): boolean;
+   begin
+      Result := Length(aValue) <= aMax;
+      if not Result then
+         begin
+         logger.Warn('[ApplyJSONOwnedRadioKey] %s: "%s" is %d chars, max %d -- NOT applied',
+                     [aSuffix, aValue, Length(aValue), aMax]);
+         end;
+   end;
+
+   // Parse an integer within bounds.  An unparseable or out-of-range value is
+   // refused, not silently coerced to zero -- StrToIntDef(s, 0) would turn
+   // "garbage" into a legal-looking 0, which for TCP PORT means "no port".
+   function IntInRange(const aMin, aMax: integer; out aOut: integer): boolean;
+   var
+      code: integer;
+   begin
+      Val(aValue, aOut, code);
+      Result := (code = 0) and (aOut >= aMin) and (aOut <= aMax);
+      if not Result then
+         begin
+         logger.Warn('[ApplyJSONOwnedRadioKey] %s: "%s" is not an integer in %d..%d -- NOT applied',
+                     [aSuffix, aValue, aMin, aMax]);
+         end;
+   end;
+
+begin
+   Result := True;
+
+   if aSlot = 2 then
+      begin
+      rig := @Radio2;
+      end
+   else
+      begin
+      rig := @Radio1;
+      end;
+
+   // A DELETE clears the field.  Only FACTORY ID is emitted this way today,
+   // and for it "" and "absent" mean the same thing to the factory: no
+   // string-id radio.  Handled before the case so every future deletable row
+   // gets the same treatment for free.
+   if aDelete then
+      begin
+      if SameText(aSuffix, 'FACTORY ID') then
+         begin
+         rig^.FactoryId := '';
+         end;
+      Exit;
+      end;
+
+   if SameText(aSuffix, 'NAME') then
+      begin
+      if FitsIn(20) then rig^.RadioName := Str20(aValue) else Result := False;
+      end
+   else if SameText(aSuffix, 'FACTORY ID') then
+      begin
+      // 48, not 50: the CommandsArray row says 48 and this must not be laxer
+      // than the rule it replaces.
+      if FitsIn(48) then rig^.FactoryId := Str50(aValue) else Result := False;
+      end
+   else if SameText(aSuffix, 'IP ADDRESS') then
+      begin
+      if FitsIn(50) then rig^.IPAddress := Str50(aValue) else Result := False;
+      end
+   else if SameText(aSuffix, 'NETWORK USERNAME') then
+      begin
+      if FitsIn(50) then rig^.NetworkUsername := Str50(aValue) else Result := False;
+      end
+   else if SameText(aSuffix, 'NETWORK PASSWORD') then
+      begin
+      if FitsIn(50) then rig^.NetworkPassword := Str50(aValue) else Result := False;
+      end
+   else if SameText(aSuffix, 'SERIAL FORMAT') then
+      begin
+      // 3 is a LENGTH, not a value: '8N2'.  Blank is legal and means "use the
+      // driver's default", which is how a network radio renders.
+      if FitsIn(3) then rig^.SerialFormat := Str50(aValue) else Result := False;
+      end
+   else if SameText(aSuffix, 'STARTUP COMMAND') then
+      begin
+      if FitsIn(50) then rig^.StartupCommand := Str50(aValue) else Result := False;
+      end
+   else if SameText(aSuffix, 'TCP PORT') then
+      begin
+      if IntInRange(0, 65535, n) then rig^.RadioTCPPort := n else Result := False;
+      end
+   else if SameText(aSuffix, 'RECEIVER ADDRESS') then
+      begin
+      if IntInRange(0, MAXWORD, n) then rig^.ReceiverAddress := n else Result := False;
+      end
+   else if SameText(aSuffix, 'HAMLIB ID') then
+      begin
+      if IntInRange(0, MAXWORD, n) then rig^.HamLibID := n else Result := False;
+      end
+   else if SameText(aSuffix, 'FREQUENCY ADDER') then
+      begin
+      if IntInRange(0, MAXWORD, n) then rig^.FrequencyAdder := n else Result := False;
+      end
+   else if SameText(aSuffix, 'ICOM DATA MODE ID') then
+      begin
+      if IntInRange(1, 3, n) then rig^.IcomDataModeID := Byte(n) else Result := False;
+      end
+   else if SameText(aSuffix, 'KEYER STOP BITS') then
+      begin
+      if IntInRange(0, 2, n) then rig^.RadioKeyerStopBits := n else Result := False;
+      end
+   else
+      begin
+      // A row was flipped to csJSON with no applier written for it.  This is
+      // the exact failure the audit warns about -- it would otherwise be
+      // SILENT, the setting simply never reaching the program -- so it is
+      // loud, and the unit test below asserts it cannot happen.
+      logger.Error('[ApplyJSONOwnedRadioKey] "%s" is csJSON but has NO applier -- ' +
+                   'the setting will not reach the program', [aSuffix]);
+      Result := False;
       end;
 end;
 
@@ -287,8 +488,16 @@ begin
       // Emit is a second place to keep in step, and it will not be.
       if CommandIsJSONOwned(rendered[i].Key) then
          begin
+         // ...but it still has to REACH THE PROGRAM.  Skipping the ini write is
+         // only half of the retirement: CheckCommand below is what moves a
+         // value into the live globals, and csJSON has just made it inert for
+         // this row.  Without the direct applier the setting would be stored
+         // perfectly in JSON, shown correctly in Preferences, and never
+         // actually configure anything.
          logger.Debug('[ApplyProfile] %s is csJSON -- Preferences owns it, not the ini',
                       [rendered[i].Key]);
+         ApplyJSONOwnedRadioKey(aSlot, KeySuffix(rendered[i].Key),
+                                rendered[i].Value, rendered[i].Delete);
          Continue;
          end;
 
