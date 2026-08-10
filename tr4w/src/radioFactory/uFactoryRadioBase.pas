@@ -458,6 +458,12 @@ Type TFactoryRadioBase = class(TObject)
       // Icom's data sub-mode (D1/D2/D3).  Named for the CONCEPT, not the vendor,
       // so a future radio with the same idea can implement it honestly.
       procedure ApplyDataModeID(id: integer); virtual;
+      // Auto-info: the radio pushes state changes instead of being asked.
+      // Named for the CONCEPT, not a vendor -- Elecraft calls it AI, Icom
+      // calls it transceive, and a driver that supports neither ignores it.
+      // What a LEVEL means is the radio's business; the caller only passes
+      // the operator's number through.
+      procedure ApplyAutoInfoLevel(level: integer); virtual;
 
       procedure SendStartupCommand;
 
@@ -957,6 +963,11 @@ end;
 procedure TFactoryRadioBase.ApplyDataModeID(id: integer);
 begin
    // Default: this radio has no data sub-mode selector.
+end;
+
+procedure TFactoryRadioBase.ApplyAutoInfoLevel(level: integer);
+begin
+   // Most radios have no such concept.  Doing nothing is correct, not a stub.
 end;
 
 procedure TFactoryRadioBase.SendStartupCommand;

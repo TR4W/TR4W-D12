@@ -72,6 +72,11 @@ type
     function  ModeTypeToInteger(mode: TRadioMode; var dataModeInt: integer): integer;
     procedure Initialize;
     procedure SetAIMode(i: integer);
+    // Set by LOGRADIO from the radio library at setup.  0 = off, which is
+    // the historic behaviour: poll for everything.
+    procedure ApplyAutoInfoLevel(level: integer); override;
+  private
+    FAutoInfoLevel: integer;
   public
     constructor Create; reintroduce;
 
@@ -182,7 +187,7 @@ begin
       // suffix and the extended IF response are available (basic "K30" mode has
       // neither).  Then disable AI -- we poll on serial.
       Self.SendToRadio('K31;');
-      Self.SetAIMode(TR4W_ELECRAFT_AI_LEVEL);
+      Self.SetAIMode(FAutoInfoLevel);
       Self.requiresPolling := True;
       // Prime the display: extended-mode probe already sent; now pull full state
       // for both VFOs.  MD$/DT$ read VFO B's mode/sub-mode via the "$" suffix.
@@ -720,7 +725,7 @@ begin
    // Coupled deliberately: the poll may only be cut BECAUSE auto-info is
    // supplying the rest.  Turning AI off must restore the full poll, or the
    // display silently stops tracking VFO B.
-   if TR4W_ELECRAFT_AI_LEVEL > 0 then
+   if FAutoInfoLevel > 0 then
       begin
       Self.SendToRadio('IF;');
       end
@@ -728,6 +733,16 @@ begin
       begin
       Self.SendToRadio('IF;FB;MD$;DT$;');
       end;
+end;
+
+procedure TElecraftSerial.ApplyAutoInfoLevel(level: integer);
+begin
+   // Stored, not sent: Initialize and the extended-mode setup both send it,
+   // and they run at the right point in the connect sequence.  Sending here
+   // would race a port that may not be open yet.
+   FAutoInfoLevel := level;
+   logger.Debug('[ApplyAutoInfoLevel] auto-info level %d%s',
+      [level, IfThen(level > 0, ' -- polling reduced to IF;', ' -- full poll')]);
 end;
 
 procedure TElecraftSerial.SetAIMode(i: integer);
@@ -748,11 +763,10 @@ begin
       logger := TLogLogger.GetLogger('TR4WDebugLog.ElecraftSerial');
       end;
 
-   // 'ELECRAFT AUTO INFO' -- 0 keeps the historic poll-for-everything
-   // behaviour.  At 2 the radio pushes state and PollRadioState drops to a
-   // single command, which is what makes an unkey fast; see the note on
-   // TR4W_ELECRAFT_AI_LEVEL in VC.pas.
-   Self.SetAIMode(TR4W_ELECRAFT_AI_LEVEL);
+   // 0 keeps the historic poll-for-everything behaviour.  At 2 the radio
+   // pushes state and PollRadioState drops to a single command, which is
+   // what makes an unkey fast -- see ApplyAutoInfoLevel.
+   Self.SetAIMode(FAutoInfoLevel);
    logger.debug('[Initialize] Querying full state (KS;BN;RT;XT;RO;FT;MD;DT;IF;FP; + $ VFO B)');
    Self.SendToRadio('KS;BN;RT;XT;RO;FT;MD;DT;IF;FP;');
    Self.SendToRadio('BN$;RT$;XT$;RO$;MD$;DT$;IF$;FP$;');

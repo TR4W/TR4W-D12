@@ -222,6 +222,12 @@ type
       CWByCATBuffer:   string;                  // ny4i 4.44.5
       //    PartialRadioResponse: string;
       PollingEnable:   boolean;
+      // Auto-info level this radio should run at, 0 = off.  Owned by
+      // Preferences (the radio library), rendered into 'RADIO n AUTO INFO'.
+      // Handed to the driver through ApplyAutoInfoLevel, because what a level
+      // MEANS is the radio's business -- an Elecraft AI2 and a K4 AI5 are not
+      // the same thing and this record must not know the difference.
+      AutoInfoLevel:   integer;
       RadioModel:      InterfacedRadioType;
       FactoryId:       Str50;   // non-empty => a string-id factory radio (RadioModel is NoInterfacedRadio)
       RadioBaudRate:   cardinal;
@@ -340,6 +346,7 @@ var
     IDCharacter: #0;
     //    PollTimeout: 500;
     PollingEnable: True;
+    AutoInfoLevel: 0;
     PollStatus: NoPollStatus;
     RadioModel: NoInterfacedRadio;
 
@@ -378,6 +385,7 @@ var
     IDCharacter: #0;
     //    PollTimeout: 500;
     PollingEnable: True;
+    AutoInfoLevel: 0;
     PollStatus: NoPollStatus;
     RadioModel: NoInterfacedRadio;
     RadioBaudRate: 4800;
@@ -2633,6 +2641,7 @@ begin
          Self.tFactoryObject.ApplyNetworkCredentials(string(Self.NetworkUsername),
                                                      string(Self.NetworkPassword));
          Self.tFactoryObject.ApplyDataModeID(Self.IcomDataModeID);
+         Self.tFactoryObject.ApplyAutoInfoLevel(Self.AutoInfoLevel);
 
          // Connect is deferred to the polling thread (pFactoryRadio).  Running
          // it synchronously here blocked the main thread for up to 10 s
