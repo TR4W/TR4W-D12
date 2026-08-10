@@ -78,6 +78,8 @@ uses
    FMX.Edit,
    FMX.ListBox,
    FMX.TreeView,
+   FMX.Objects,       // TPath -- the nav expander chevron
+   FMX.Graphics,      // TBrushKind / TStrokeCap / TStrokeJoin for that chevron
    FMX.Layouts,
    FMX.TabControl,
    FMX.Controls.Presentation,
@@ -328,6 +330,12 @@ type
       procedure LoadTCIPanel;
       procedure SaveTCIPanel;
 
+      // The nav expander drawn as a chevron rather than the style's filled
+      // triangle -- see the implementation.
+      procedure ApplyChevrons;
+      procedure ApplyChevronToItem(const aItem: TTreeViewItem);
+      procedure TreeItemStyleApplied(Sender: TObject);
+
       procedure FillRadioNameCombo(const aCombo: TComboBox;
                                    const aSelected, aUsedByOtherSlot,
                                    aOtherSlotLabel: string);
@@ -505,6 +513,10 @@ procedure TPrefsForm.SelectFirstSection;
 var
    i: integer;
 begin
+   // Chevrons before the selection, so the tree is already drawing the way it
+   // will keep drawing when the operator first sees it.
+   ApplyChevrons;
+
    // Selecting fires tvNavChange, which shows the matching panel.  Done here
    // rather than by streaming a selection from the .fmx: OnChange would then
    // fire part-way through loading the form, with the panels it switches not
@@ -1550,6 +1562,120 @@ end;
 
 
 { ------------------------------------------------------------ TCI Server --- }
+
+
+{ ------------------------------------------------------------- chevrons ---- }
+
+procedure TPrefsForm.ApplyChevronToItem(const aItem: TTreeViewItem);
+var
+   btn: TFmxObject;
+   i: integer;
+   // FULLY QUALIFIED, deliberately: System.IOUtils also exports a TPath (the
+   // file-path utility record) and it is in this unit's uses for TFile.  The
+   // unqualified name resolves to whichever unit is listed later, which is a
+   // silent trap -- it compiled as the wrong type before this.
+   paths: TList<FMX.Objects.TPath>;
+   p: FMX.Objects.TPath;
+begin
+   // WHY THIS EXISTS.  The FMX style draws the expander as two FILLED
+   // TRIANGLES -- 'treeviewexpanderbuttonstyle' in Win10Modern.Style holds two
+   // 7x7 TPaths with Fill.Color = claBlack and Stroke.Kind = None, one shown
+   // when collapsed and one when expanded, swapped by a trigger animation on
+   // IsExpanded.  Windows Explorer uses a STROKED CHEVRON, which is what NY4I
+   // expected and what everyone recognises as a tree.
+   //
+   // Restyling by hand rather than by shipping a .style: a TStyleBook would
+   // mean carrying a copy of a platform style purely to change fourteen points,
+   // and it would then have to be maintained against every future RAD Studio
+   // style.  This reaches the two paths the style already provides and changes
+   // their geometry, so everything else about the control stays the platform's
+   // business -- colours, hover, focus and the expand animation included.
+   //
+   // FAILS SAFE.  If the style is not applied yet, or does not have a 'button',
+   // or does not have exactly the two paths this depends on, NOTHING is
+   // changed and the operator gets the stock triangles.  A cosmetic
+   // improvement must never be able to break the nav.
+   if aItem = nil then
+      begin
+      Exit;
+      end;
+
+   btn := aItem.FindStyleResource('button');
+   if not (btn is TControl) then
+      begin
+      Exit;
+      end;
+
+   paths := TList<FMX.Objects.TPath>.Create;
+   try
+      for i := 0 to TControl(btn).ChildrenCount - 1 do
+         begin
+         if TControl(btn).Children[i] is FMX.Objects.TPath then
+            begin
+            paths.Add(FMX.Objects.TPath(TControl(btn).Children[i]));
+            end;
+         end;
+
+      // Exactly two, in the style's own order: [0] is shown while COLLAPSED,
+      // [1] while EXPANDED -- that is how the triggers are written
+      // (IsExpanded=false reveals the first, IsExpanded=true the second).
+      // Any other shape means the style is not the one this was written
+      // against, so leave it alone.
+      if paths.Count <> 2 then
+         begin
+         Exit;
+         end;
+
+      // Collapsed: '>' .  Expanded: 'v' .  Drawn in the same 7x7 box the
+      // style's triangles used, so spacing and alignment are unchanged.
+      p := paths[0];
+      p.Data.Data      := 'M 2,0.5 L 5.5,3.5 L 2,6.5';
+      p.Fill.Kind      := TBrushKind.None;
+      p.Stroke.Kind    := TBrushKind.Solid;
+      p.Stroke.Color   := TAlphaColorRec.Black;
+      p.Stroke.Thickness := 1.2;
+      p.Stroke.Cap     := TStrokeCap.Round;
+      p.Stroke.Join    := TStrokeJoin.Round;
+      p.WrapMode       := TPathWrapMode.Original;
+
+      p := paths[1];
+      p.Data.Data      := 'M 0.5,2 L 3.5,5.5 L 6.5,2';
+      p.Fill.Kind      := TBrushKind.None;
+      p.Stroke.Kind    := TBrushKind.Solid;
+      p.Stroke.Color   := TAlphaColorRec.Black;
+      p.Stroke.Thickness := 1.2;
+      p.Stroke.Cap     := TStrokeCap.Round;
+      p.Stroke.Join    := TStrokeJoin.Round;
+      p.WrapMode       := TPathWrapMode.Original;
+   finally
+      paths.Free;
+   end;
+end;
+
+procedure TPrefsForm.TreeItemStyleApplied(Sender: TObject);
+begin
+   // The style is re-applied on theme changes and when an item is recreated,
+   // so the chevron is re-established here rather than only once at startup.
+   if Sender is TTreeViewItem then
+      begin
+      ApplyChevronToItem(TTreeViewItem(Sender));
+      end;
+end;
+
+procedure TPrefsForm.ApplyChevrons;
+var
+   i: integer;
+   item: TTreeViewItem;
+begin
+   // GlobalCount, so CHILD items are included -- Count would stop at the root
+   // and External Software's children would keep the stock triangle.
+   for i := 0 to tvNav.GlobalCount - 1 do
+      begin
+      item := tvNav.ItemByGlobalIndex(i);
+      item.OnApplyStyleLookup := TreeItemStyleApplied;
+      ApplyChevronToItem(item);
+      end;
+end;
 
 procedure TPrefsForm.LoadTCIPanel;
 begin
