@@ -30,6 +30,7 @@ including on Ctrl-C.
 """
 
 import argparse
+import re
 import sys
 import time
 
@@ -48,6 +49,14 @@ except ImportError:
 # --raw before trusting it.
 TR_INDEX = 28
 IF_LEN = 38          # 'IF' + 35 payload + ';'
+
+# DT$ is the LAST command in the burst poll, so its reply is what means "the
+# radio has finished with that burst".  The reply carries the sub-receiver
+# marker back: we send DT$; and the K3 answers DT$0;.  The optional $ is
+# NOT cosmetic -- requiring a digit straight after "DT" matched nothing, so
+# --wait-all would never have fired.  Caught by test_k3watch.py, not by a
+# fourth trip to the radio.  The echoed command DT$; must not match.
+DT_REPLY = re.compile(r"DT\$?\d;")
 
 
 def find_last_if(buf):
@@ -173,6 +182,7 @@ def main():
     print()
 
     buf = ""
+    poll_buf = ""          # replies to the poll currently outstanding
     last_flag = None
     last_change = time.monotonic()
     key_at = None
@@ -210,9 +220,11 @@ def main():
             if args.interval > 0:
                 if now >= next_poll:
                     sp.write(poll.encode())
+                    poll_buf = ""
                     next_poll = now + args.interval
             elif not pending:
                 sp.write(poll.encode())
+                poll_buf = ""
                 pending = True
                 sent_at = now
             elif now - sent_at > 0.5:
@@ -229,7 +241,9 @@ def main():
             # --- read ---------------------------------------------------
             data = sp.read(4096)
             if data:
-                buf += data.decode("latin-1")
+                chunk = data.decode("latin-1")
+                buf += chunk
+                poll_buf += chunk          # THIS poll's replies only
                 if len(buf) > 8192:
                     buf = buf[-2048:]
 
@@ -252,7 +266,13 @@ def main():
             # burst".  Run it against plain --burst to see what strengthening
             # the gate would buy before changing TR4W.
             if args.wait_all and args.burst:
-                if "DT" in buf and buf.rstrip().endswith(";"):
+                # Against poll_buf, NOT buf.  The first version tested the
+                # cumulative buffer, where "DT" is present from the first
+                # burst onwards and the test is therefore true for ever --
+                # so --wait-all silently did not wait, and measured the same
+                # thing as plain --burst.  poll_buf is reset on every send,
+                # so a match here means THIS burst has been answered.
+                if DT_REPLY.search(poll_buf):
                     pending = False
             elif resp is not None:
                 pending = False
