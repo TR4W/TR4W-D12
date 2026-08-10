@@ -50,9 +50,31 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 interface
 
+
 uses
   Windows, uFactoryRadioBase, uRadioBand, uIcomNetworkTransport, uIcomNetworkTypes, SysUtils, StrUtils, VC, Log4D,
   uIcomCIV, Classes, SyncObjs, uCWFraming;
+
+const
+  // CI-V Sub-commands for TX/RX
+  // PTT.  CI-V command $1C takes a SUBCOMMAND AND A DATA BYTE:
+  //
+  //     1C 00 01   set transmit
+  //     1C 00 00   set receive
+  //     1C 00      READ the transmit state -- no data byte
+  //     1C 01      READ the ATU state
+  //
+  // These were $00 and $01 and were passed as the whole payload, so Transmit
+  // asked the radio whether it was transmitting and Receive asked about the
+  // antenna tuner.  Neither ever keyed anything, and tPTTVIACAT still
+  // reported success because a frame HAD been sent.  Found on NY4I's IC-7100
+  // over TCI: WSJT-X requested transmit, the log showed
+  // FE FE 88 E0 1C 00 FD on the wire, and the radio stayed in receive.
+  //
+  // Named for what they ARE now -- a full payload, not a subcommand -- so the
+  // next caller cannot make the same substitution.
+  CIV_PAYLOAD_PTT_ON  = #$00#$01;
+  CIV_PAYLOAD_PTT_OFF = #$00#$00;
 
 type
   TIcomRadio = class; // forward — TCIVSendThread holds a back-reference
@@ -389,9 +411,6 @@ const
   CIV_CMD_VFO_SELECT = #$25;
   CIV_CMD_TRANSCEIVER_ID = #$19;
 
-  // CI-V Sub-commands for TX/RX
-  CIV_SUBCMD_TX = #$00;
-  CIV_SUBCMD_RX = #$01;
 
   // CI-V Sub-commands for RIT/XIT ($21)
   // Modern Icom layout (IC-7610, IC-7760, confirmed via pcap):
@@ -2219,12 +2238,12 @@ end;
 // Radio control methods - basic implementations
 procedure TIcomRadio.Transmit;
 begin
-  SendToRadioUrgent(BuildCIVCommand($1C, CIV_SUBCMD_TX));  // PTT on — urgent
+  SendToRadioUrgent(BuildCIVCommand($1C, CIV_PAYLOAD_PTT_ON));   // PTT on — urgent
 end;
 
 procedure TIcomRadio.Receive;
 begin
-  SendToRadioUrgent(BuildCIVCommand($1C, CIV_SUBCMD_RX));  // PTT off — urgent
+  SendToRadioUrgent(BuildCIVCommand($1C, CIV_PAYLOAD_PTT_OFF));  // PTT off — urgent
 end;
 
 procedure TIcomRadio.SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode);
