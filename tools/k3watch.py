@@ -51,13 +51,22 @@ IF_LEN = 38          # 'IF' + 35 payload + ';'
 
 
 def find_last_if(buf):
-    """Return the most recent complete IF response in buf, or None."""
-    end = buf.rfind(";")
-    while end != -1:
-        start = buf.rfind("IF", 0, end)
-        if start != -1 and (end - start) >= IF_LEN - 1:
+    """Return the most recent complete IF response in buf, or None.
+
+    FIXED LENGTH, deliberately.  The first version searched back from the last
+    ';', which with a burst poll ('IF;FB;MD$;DT$;') returned a span reaching
+    from the IF all the way to the DT$ reply's terminator -- one "response"
+    several fields long.  The T/R character happened to still land inside the
+    IF part so the readings were right by luck, but the consume step then ate
+    replies that had not been examined.  An IF response is exactly IF_LEN
+    characters ending in ';': accept nothing else.
+    """
+    start = buf.rfind("IF")
+    while start != -1:
+        end = start + IF_LEN - 1
+        if end < len(buf) and buf[end] == ";":
             return buf[start:end + 1]
-        end = buf.rfind(";", 0, end)
+        start = buf.rfind("IF", 0, start)
     return None
 
 
@@ -160,6 +169,10 @@ def main():
     last_change = time.monotonic()
     key_at = None
     unkey_at = None
+    # Separate from unkey_at, which is CLEARED once the change is reported.
+    # Reusing it as the "have we sent RX; yet" flag re-armed the schedule and
+    # sent a second RX;.
+    unkey_sent = False
     pending = False        # a poll is out and unanswered
     sent_at = 0.0
     next_poll = 0.0
@@ -251,8 +264,8 @@ def main():
                 break
 
             # Exit once a --key cycle has completed and settled.
-            if (args.key > 0 and unkey_at is None and key_at is not None
-                    and last_flag == "0" and now - key_at > args.key + 1.0):
+            if (args.key > 0 and unkey_sent and last_flag == "0"
+                    and now - key_at > args.key + 0.5):
                 break
 
     except KeyboardInterrupt:
