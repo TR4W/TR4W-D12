@@ -2103,9 +2103,28 @@ begin
   // handle closed below belongs to the legacy CPU-keyer table, which a factory
   // radio does not use.  It survived because SetUpRadioInterface frees the old
   // object when a slot is REPLACED -- but not when it is cleared.
-  if (CATWTR^.tFactoryObject <> nil) and CATWTR^.tFactoryObject.IsConnected then
+  //
+  // STOP THE POLLING THREAD, DO NOT MERELY DISCONNECT.  Disconnect closes the
+  // port and ends the READING thread; the POLLING thread kept running, and its
+  // MaintainSerialLink exists precisely to reopen a port that has gone quiet.
+  // So it did its job on the port we had just closed, and the replacement
+  // radio then met "Cannot open COM15 (error 5)".  Measured on NY4I's bench
+  // while activating a profile:
+  //
+  //   22.604  Disconnect: closing serial port
+  //   22.715  MaintainSerialLink - Elecraft K3 silent for 1000 ms, reopening
+  //   22.735  ReopenSerialPort: reopened COM15          <- the OLD radio
+  //   22.810  Connect: Cannot open COM15 (error 5)      <- the NEW one
+  //
+  // The Icom in slot two escaped only by timing.  ShutDownRadioInterface is
+  // the one routine that does this in the right order -- request the poller
+  // stop, WAIT for it, then disconnect and free -- so both the profile-apply
+  // path and this dialog use it rather than each open-coding a teardown.
+  // That matters more, not less, as Ctrl-J and uCFG are retired: the durable
+  // behaviour belongs on the radio, not in a dialog that is going away.
+  if CATWTR^.tFactoryObject <> nil then
      begin
-     CATWTR^.tFactoryObject.Disconnect;
+     CATWTR^.ShutDownRadioInterface;
      end;
 
   // Still done for a serial port: a radio with no factory object (the legacy
