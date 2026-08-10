@@ -2892,6 +2892,20 @@ var
   // transmission; a station running FST4W-1800 must raise it deliberately.
   TR4W_TCI_MAX_TX_SECONDS               : integer = 180;
 
+  // Elecraft SERIAL auto-info level, 0..3.  0 = off, and off is the historic
+  // behaviour: poll for everything.
+  //
+  // At 2 the K3 pushes FA/FB/FR/FT/IF/MD/DT on front-panel changes -- every
+  // piece of state the four-command poll existed to fetch -- but NEVER the
+  // T/R transition.  So a non-zero level also CUTS THE POLL to 'IF;', which
+  // supplies T/R and re-syncs the rest each cycle in case a push was missed.
+  //
+  // The point is latency, not tidiness.  Measured on a K3S: an unkey takes
+  // ~100 ms behind a one-command poll and ~600 ms behind the four-command
+  // one, because a PTT command waits behind whatever is already in the
+  // radio's input buffer.  See TFactoryRadioBase.PollOutstanding.
+  TR4W_ELECRAFT_AI_LEVEL                : integer = 0;
+
   TR4W_LC_FILENAME                      : PChar = 'LUCONSZ.TTF';
 
   CPUstart, CPUstop                     : int64;

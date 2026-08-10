@@ -182,7 +182,7 @@ begin
       // suffix and the extended IF response are available (basic "K30" mode has
       // neither).  Then disable AI -- we poll on serial.
       Self.SendToRadio('K31;');
-      Self.SetAIMode(0);
+      Self.SetAIMode(TR4W_ELECRAFT_AI_LEVEL);
       Self.requiresPolling := True;
       // Prime the display: extended-mode probe already sent; now pull full state
       // for both VFOs.  MD$/DT$ read VFO B's mode/sub-mode via the "$" suffix.
@@ -549,7 +549,7 @@ begin
       SetLength(sData,length(sData)-1);
       end;
 
-   Case AnsiIndexText(AnsiUppercase(sCommand), ['AI','BI','BN','DT','FA','FB','FT','IF','KS','MA','MD','RT','RX','TX','XT','RO','FP']) of
+   Case AnsiIndexText(AnsiUppercase(sCommand), ['AI','BI','BN','DT','FA','FB','FT','IF','KS','MA','MD','RT','RX','TX','XT','RO','FP','FR']) of
       0: begin                                     // AI
          logger.debug('[ProcessMessage] AI command set to %s',[sData]);
          end;
@@ -702,7 +702,32 @@ begin
    // If this is revisited, 'IF;FB;' is the shape to consider: MD$/DT$ are the
    // two that plausibly cannot change mid-transmission.  That is a question
    // for someone who programs rigs, not an assumption to make here.
-   Self.SendToRadio('IF;FB;MD$;DT$;');
+   //
+   // WITH AUTO-INFO ON, ASK FOR ONE THING.  AI2 pushes FA/FB/FR/FT/IF/MD/DT
+   // whenever the operator changes them -- every piece of state this poll
+   // existed to fetch -- but it NEVER reports a T/R transition (confirmed on
+   // NY4I's K3S: keying and unkeying from the front panel produced no
+   // message at all, while the VFO, mode and filter changes all did).  So
+   // transmit state is the one thing that still has to be asked for.
+   //
+   // IF rather than TQ, although TQ is four bytes against thirty-seven.
+   // Bytes are not the constraint -- command COUNT is, and both are one
+   // command -- and IF doubles as a re-sync, so a push lost to a buffer
+   // overrun or a reconnect cannot leave the display stale indefinitely.
+   // TQ also reports pseudo-transmit (TX TEST, CW pre-arm) as transmitting,
+   // which would misreport CW keying.
+   //
+   // Coupled deliberately: the poll may only be cut BECAUSE auto-info is
+   // supplying the rest.  Turning AI off must restore the full poll, or the
+   // display silently stops tracking VFO B.
+   if TR4W_ELECRAFT_AI_LEVEL > 0 then
+      begin
+      Self.SendToRadio('IF;');
+      end
+   else
+      begin
+      Self.SendToRadio('IF;FB;MD$;DT$;');
+      end;
 end;
 
 procedure TElecraftSerial.SetAIMode(i: integer);
@@ -723,7 +748,11 @@ begin
       logger := TLogLogger.GetLogger('TR4WDebugLog.ElecraftSerial');
       end;
 
-   Self.SetAIMode(0);   // serial: poll, do not push
+   // 'ELECRAFT AUTO INFO' -- 0 keeps the historic poll-for-everything
+   // behaviour.  At 2 the radio pushes state and PollRadioState drops to a
+   // single command, which is what makes an unkey fast; see the note on
+   // TR4W_ELECRAFT_AI_LEVEL in VC.pas.
+   Self.SetAIMode(TR4W_ELECRAFT_AI_LEVEL);
    logger.debug('[Initialize] Querying full state (KS;BN;RT;XT;RO;FT;MD;DT;IF;FP; + $ VFO B)');
    Self.SendToRadio('KS;BN;RT;XT;RO;FT;MD;DT;IF;FP;');
    Self.SendToRadio('BN$;RT$;XT$;RO$;MD$;DT$;IF$;FP$;');
