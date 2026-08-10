@@ -69,6 +69,10 @@ type
       procedure Test_TCINewSectionWinsOverTheOldKey;
       procedure Test_TCIDefaultsWhenAbsent;
       procedure Test_TCISaveStopsWritingTheOldKey;
+      procedure Test_LoggingRoundTrips;
+      procedure Test_LoggingLevelIsAName;
+      procedure Test_LoggingAbsentSectionIsReported;
+      procedure Test_LoggingPresentSectionSuppressesTheSeed;
       procedure Test_SeedFromLegacyIniBuildsBothSlots;
       procedure Test_SeedSkipsUnconfiguredSlot;
       procedure Test_SeedWithNoRadiosProducesEmptyStore;
@@ -1698,6 +1702,128 @@ begin
    end;
 end;
 
+
+{ ------------------------------------------------------------ Logging ------
+  The logging settings moved out of tr4w.ini into the store, so their ini rows
+  are csJSON and CheckCommand no longer applies them.
+
+  HasLoggingSection is the migration signal and is what these tests are really
+  about: it tells the apply layer "the file had nothing, seed from the ini this
+  once".  If it ever reported True for a file with no logging section, an
+  operator upgrading with DEBUG LOG LEVEL = DEBUG would silently drop to INFO
+  at the moment they were trying to diagnose something -- and nothing else in
+  the program would notice.
+  --------------------------------------------------------------------------- }
+
+procedure TRadioConfigStoreTests.Test_LoggingRoundTrips;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_LoggingRoundTrips');
+   store := TRadioConfigStore.Create;
+   try
+      store.LogLevelName    := 'TRACE';
+      store.HamLibDebug     := True;
+      store.HamLibAsyncOnly := True;
+      store.HamLibTrace     := True;
+      store.TelnetDebug     := True;
+
+      root := store.SaveToJSON;
+      try
+         store.Clear;
+         store.LoadFromJSON(root);
+         CheckEquals('TRACE', store.LogLevelName, 'level survives');
+         CheckTrue(store.HamLibDebug,     'hamlibDebug survives');
+         CheckTrue(store.HamLibAsyncOnly, 'hamlibAsyncOnly survives');
+         CheckTrue(store.HamLibTrace,     'hamlibTrace survives');
+         CheckTrue(store.TelnetDebug,     'telnetDebug survives');
+         CheckTrue(store.HasLoggingSection, 'a saved store has the section');
+      finally
+         root.Free;
+      end;
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_LoggingLevelIsAName;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+   logging: TJSONObject;
+begin
+   BeginTest('Test_LoggingLevelIsAName');
+   // The level is written as its SPELLING, never as the enum's ordinal.  An
+   // ordinal would silently change meaning the day a level is inserted into
+   // tLogLevels, and would tell an operator reading their own settings file
+   // nothing at all.
+   store := TRadioConfigStore.Create;
+   try
+      store.LogLevelName := 'DEBUG';
+      root := store.SaveToJSON;
+      try
+         logging := root.GetValue(JSONKEY_LOGGING) as TJSONObject;
+         CheckTrue(logging <> nil, 'the logging section is written');
+         CheckEquals('DEBUG', logging.GetValue('level').Value,
+                     'the level is stored as a name, not a number');
+      finally
+         root.Free;
+      end;
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_LoggingAbsentSectionIsReported;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_LoggingAbsentSectionIsReported');
+   // EXACTLY the shape of every file written before this change.  False here is
+   // what triggers the one-time seed from tr4w.ini; a wrong True silently
+   // discards the operator's existing log level.
+   root := TCIJson('{"version":1,"general":{},"radios":[],"profiles":[]}');
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckFalse(store.HasLoggingSection,
+                    'no logging section must be REPORTED, so the ini can be read once');
+         CheckEquals('INFO', store.LogLevelName, 'and the level falls back to INFO');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_LoggingPresentSectionSuppressesTheSeed;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_LoggingPresentSectionSuppressesTheSeed');
+   // Once the section exists, the ini must never be consulted again -- else a
+   // stale ini line would resurrect a setting the operator deliberately turned
+   // off.  An EMPTY section still counts as present.
+   root := TCIJson('{"version":1,"general":{},"logging":{},"radios":[],"profiles":[]}');
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckTrue(store.HasLoggingSection,
+                   'an empty logging section is still a section');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.RunAllTests;
 begin
    try
@@ -1711,6 +1837,10 @@ begin
    Test_TCINewSectionWinsOverTheOldKey;
    Test_TCIDefaultsWhenAbsent;
    Test_TCISaveStopsWritingTheOldKey;
+   Test_LoggingRoundTrips;
+   Test_LoggingLevelIsAName;
+   Test_LoggingAbsentSectionIsReported;
+   Test_LoggingPresentSectionSuppressesTheSeed;
 
    Test_AddRejectsBlankAndDuplicateNames;
    Test_NameMatchingIsCaseInsensitive;

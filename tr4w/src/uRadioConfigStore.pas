@@ -241,6 +241,35 @@ type
       FTCIBindAll: boolean;
       FTCIDebug: boolean;
       FTCIMaxTxSeconds: integer;
+
+      // LOGGING -- consolidated here because it was "all over the place"
+      // (NY4I): a level in one ini key, three HamLib switches in others, a
+      // telnet switch in another, and TCI's in a third file.  The Preferences
+      // Logging section is the one place, so the store needs one home for it.
+      //
+      // THE LEVEL IS STORED AS ITS SPELLING, NOT ITS ORDINAL.  tLogLevels is a
+      // Pascal enum; writing 5 to the file would silently change meaning the
+      // day anyone inserts a level in the middle, and the operator reading
+      // their own settings file would learn nothing from "5".  'DEBUG' is
+      // stable under reordering and is the same vocabulary the ini used, so an
+      // old value pasted into the new file still means what it says.
+      FLogLevelName: string;
+      FHamLibDebug: boolean;
+      FHamLibAsyncOnly: boolean;
+      FHamLibTrace: boolean;
+      FTelnetDebug: boolean;
+
+      // Was there a logging section in the file we loaded?
+      //
+      // This is the MIGRATION SIGNAL, and it is needed because these settings
+      // are not being renamed within this file (as tci.enabled was) -- they are
+      // arriving from tr4w.ini, a different file this unit deliberately knows
+      // nothing about.  So the store cannot do the fallback itself; it can only
+      // report "I had nothing to load", and the apply layer -- which can read
+      // the ini -- seeds from there exactly once.  Without this an operator
+      // with DEBUG LOG LEVEL = DEBUG in their ini would silently drop to INFO
+      // on upgrade, at the moment they were trying to diagnose something.
+      FHasLoggingSection: boolean;
       procedure LoadRadio(const aIni: TCustomIniFile; const aSection, aName: string);
       procedure SaveRadio(const aIni: TCustomIniFile; const aRadio: TRadioDefinition);
       procedure LoadProfile(const aIni: TCustomIniFile; const aSection, aName: string);
@@ -342,6 +371,21 @@ type
       property TCIBindAll: boolean read FTCIBindAll write FTCIBindAll;
       property TCIDebug: boolean read FTCIDebug write FTCIDebug;
       property TCIMaxTxSeconds: integer read FTCIMaxTxSeconds write FTCIMaxTxSeconds;
+
+      // Logging.  The level is a SPELLING ('NONE'..'TRACE') -- see the field.
+      // The store does not know tLogLevels exists; translating the spelling to
+      // the enum is the apply layer's job, for the same reason it owns the TCI
+      // globals: this unit's uses clause stays pure RTL so the store can be
+      // unit-tested without linking VC and the world.
+      property LogLevelName: string read FLogLevelName write FLogLevelName;
+      property HamLibDebug: boolean read FHamLibDebug write FHamLibDebug;
+      property HamLibAsyncOnly: boolean read FHamLibAsyncOnly write FHamLibAsyncOnly;
+      property HamLibTrace: boolean read FHamLibTrace write FHamLibTrace;
+      property TelnetDebug: boolean read FTelnetDebug write FTelnetDebug;
+
+      // False when the loaded file had no logging section -- see the field.
+      // Read-only: only a load can answer it.
+      property HasLoggingSection: boolean read FHasLoggingSection;
    end;
 
 const
@@ -362,6 +406,11 @@ const
    JSONKEY_PROFILES      = 'profiles';
    JSONKEY_NAME          = 'name';
    JSONKEY_TCI           = 'tci';
+   JSONKEY_LOGGING       = 'logging';
+
+   // The level TR4W has always shipped with.  A spelling, not an ordinal --
+   // see TRadioConfigStore.FLogLevelName.
+   LOG_DEFAULT_LEVEL     = 'INFO';
 
    // Defaults.  MAX TX SECONDS MUST MATCH TR4W_TCI_MAX_TX_SECONDS in VC.pas --
    // two defaults for one setting is how a value silently changes meaning
@@ -654,6 +703,13 @@ begin
    FTCIBindAll           := TCI_DEFAULT_BINDALL;
    FTCIDebug             := TCI_DEFAULT_DEBUG;
    FTCIMaxTxSeconds      := TCI_DEFAULT_MAX_TX_SECONDS;
+
+   FHasLoggingSection    := False;
+   FLogLevelName         := LOG_DEFAULT_LEVEL;
+   FHamLibDebug          := False;
+   FHamLibAsyncOnly      := False;
+   FHamLibTrace          := False;
+   FTelnetDebug          := False;
 end;
 
 function TRadioConfigStore.RadioCount: integer;
@@ -1265,7 +1321,7 @@ end;
 function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
-   general, tci: TJSONObject;
+   general, tci, logging: TJSONObject;
    i: integer;
 begin
    Result := TJSONObject.Create;
@@ -1293,6 +1349,18 @@ begin
    tci.AddPair('maxTxSeconds', TJSONNumber.Create(FTCIMaxTxSeconds));
    Result.AddPair(JSONKEY_TCI, tci);
 
+   // Logging.  tci.debug is NOT duplicated here even though the Logging panel
+   // shows it: it is one setting belonging to the TCI subsystem, and the panel
+   // is a VIEW of it.  Writing it in both places would be the same
+   // two-homes-for-one-setting mistake the tci migration just removed.
+   logging := TJSONObject.Create;
+   logging.AddPair('level',           FLogLevelName);
+   logging.AddPair('hamlibDebug',     TJSONBool.Create(FHamLibDebug));
+   logging.AddPair('hamlibAsyncOnly', TJSONBool.Create(FHamLibAsyncOnly));
+   logging.AddPair('hamlibTrace',     TJSONBool.Create(FHamLibTrace));
+   logging.AddPair('telnetDebug',     TJSONBool.Create(FTelnetDebug));
+   Result.AddPair(JSONKEY_LOGGING, logging);
+
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
    // form had to encode the name in the section header, which made a name
    // containing ']' or '=' a hazard and left ordering to whatever the ini
@@ -1316,7 +1384,7 @@ procedure TRadioConfigStore.LoadFromJSON(const aRoot: TJSONObject);
 var
    arr: TJSONArray;
    obj: TJSONObject;
-   general, tci: TJSONObject;
+   general, tci, logging: TJSONObject;
    radioDef: TRadioDefinition;
    profile: TStationProfile;
    v: TJSONValue;
@@ -1363,6 +1431,24 @@ begin
    FTCIBindAll       := JSONBool(tci, 'bindAll',      TCI_DEFAULT_BINDALL);
    FTCIDebug         := JSONBool(tci, 'debug',        TCI_DEFAULT_DEBUG);
    FTCIMaxTxSeconds  := JSONInt(tci,  'maxTxSeconds', TCI_DEFAULT_MAX_TX_SECONDS);
+
+   logging := nil;
+   v := aRoot.GetValue(JSONKEY_LOGGING);
+   if (v <> nil) and (v is TJSONObject) then
+      begin
+      logging := TJSONObject(v);
+      end;
+
+   // No fallback to an old JSON key here, unlike tci: these settings have never
+   // been in this file.  They are arriving from tr4w.ini, and the ini rows stay
+   // readable for one release, so an operator who has not opened Preferences
+   // yet keeps the behaviour their ini describes.
+   FHasLoggingSection := logging <> nil;
+   FLogLevelName    := JSONStr(logging,  'level',           LOG_DEFAULT_LEVEL);
+   FHamLibDebug     := JSONBool(logging, 'hamlibDebug',     False);
+   FHamLibAsyncOnly := JSONBool(logging, 'hamlibAsyncOnly', False);
+   FHamLibTrace     := JSONBool(logging, 'hamlibTrace',     False);
+   FTelnetDebug     := JSONBool(logging, 'telnetDebug',     False);
 
    // Radios before profiles: a profile's radio references are only meaningful
    // once the radios exist, and Validate is easier to reason about that way.
