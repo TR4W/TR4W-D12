@@ -686,22 +686,23 @@ begin
    // VFO; FB/MD$/DT$ give VFO B's freq/mode/sub-mode via the "$" suffix.  This is
    // also the keep-alive that lets the factory serial path recover a power-cycle.
    //
-   // WHILE TRANSMITTING, ASK FOR LESS.  A K3 answers CAT noticeably more
-   // slowly during transmit (measured: ~160 ms per cycle against ~110 ms
-   // receiving), so four commands per poll is where backlog builds -- and the
-   // command that then queues behind it is the RX; that ends the
-   // transmission.  IF alone carries the T/R flag, which is the only thing
-   // that can change mid-transmission: VFO B's frequency and the data
-   // sub-mode cannot.  Quartering the traffic in exactly that window costs no
-   // information.
-   if Self.IsTransmitting then
-      begin
-      Self.SendToRadio('IF;');
-      end
-   else
-      begin
-      Self.SendToRadio('IF;FB;MD$;DT$;');
-      end;
+   // A REDUCED POLL DURING TRANSMIT WAS TRIED AND REVERTED (NY4I, 2026-08-09).
+   // Sending only 'IF;' while transmitting cut the traffic that delays the
+   // RX; ending the transmission, and it was wrong: the premise was that
+   // nothing observable can change mid-transmission, and the operator can
+   // change VFO B on the radio while it is transmitting.  A poll that cannot
+   // see that is a display showing a frequency the radio is not on.
+   //
+   // The latency it bought is not worth buying this way.  The backlog it was
+   // treating is addressed properly by flow control in the poll loop -- see
+   // TFactoryRadioBase.PollOutstanding -- which slows the poll only when the
+   // radio has not answered, rather than deciding in advance what the
+   // operator is allowed to change.
+   //
+   // If this is revisited, 'IF;FB;' is the shape to consider: MD$/DT$ are the
+   // two that plausibly cannot change mid-transmission.  That is a question
+   // for someone who programs rigs, not an assumption to make here.
+   Self.SendToRadio('IF;FB;MD$;DT$;');
 end;
 
 procedure TElecraftSerial.SetAIMode(i: integer);
