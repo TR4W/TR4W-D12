@@ -160,6 +160,16 @@ def main():
                          "poll the IF reply releases it while FB/MD$/DT$ are "
                          "still in flight.  Run it against plain --burst to "
                          "see what strengthening the gate would buy.")
+    ap.add_argument("--ai", type=int, choices=[0, 1, 2, 3], default=None,
+                    help="set the rig's auto-info level, then LISTEN.  AI is "
+                         "the other side of everything this tool measures: "
+                         "the latency it exists to find comes from OUR "
+                         "commands sitting in the rig's input queue, so a "
+                         "mode where the rig pushes state and we send nothing "
+                         "removes the cause instead of trading against it.  "
+                         "With --ai and no explicit --poll nothing is polled "
+                         "at all, so what you see is what the rig "
+                         "volunteered.  AI0 is restored on exit.")
     ap.add_argument("--poll", default="",
                     help="exact poll string to send each cycle, e.g. "
                          "--poll IF;FB; or --poll TQ;  Overrides --burst "
@@ -180,6 +190,10 @@ def main():
     # file.  That matters: the useful question is not "burst or not" but what
     # each COMMAND in the transmit-time poll costs in unkey latency, and that
     # is a table someone builds by trying them.
+    # --ai with no explicit --poll means LISTEN ONLY.  Polling would defeat
+    # the point: the question is what the radio sends WITHOUT being asked.
+    listen_only = (args.ai is not None and args.ai > 0 and not args.poll)
+
     if args.poll:
         poll = args.poll
     elif args.burst:
@@ -229,6 +243,13 @@ def main():
     time.sleep(0.4)
     sp.reset_input_buffer()
 
+    if args.ai is not None:
+        sp.write(("AI%d;" % args.ai).encode() + bytes([13]))
+        time.sleep(0.3)
+        sp.reset_input_buffer()
+        print(f"auto-info set to AI{args.ai}"
+              + ("   LISTENING ONLY -- nothing is polled" if listen_only else ""))
+
     print(f"poll: {poll.rstrip()}    T/R read from {'TQ' if use_tq else 'IF'}")
     print(f"{args.port} at {args.baud} 8N1.  "
           f"{'paced (wait for reply)' if args.interval == 0 else f'every {args.interval*1000:.0f} ms'}"
@@ -239,6 +260,9 @@ def main():
     poll_buf = ""          # replies to the poll currently outstanding
     last_rx = 0.0          # when bytes last arrived, for --wait-all
     last_unkey_retry = 0.0 # rate-limits the transmit watchdog
+    msg_buf = ""           # for splitting the stream into whole messages
+    tally = {}             # message prefix -> how many arrived
+    first_seen = {}        # message prefix -> seconds after start
     last_flag = None
     last_change = time.monotonic()
     key_at = None
@@ -273,7 +297,9 @@ def main():
                     print(f"{stamp()}  -> RX;")
 
             # --- send a poll --------------------------------------------
-            if args.interval > 0:
+            if listen_only:
+                pass
+            elif args.interval > 0:
                 if now >= next_poll:
                     sp.write(poll.encode())
                     poll_buf = ""
@@ -303,6 +329,28 @@ def main():
                 last_rx = now               # for the quiet-period rule
                 if len(buf) > 8192:
                     buf = buf[-2048:]
+
+            # WHAT DID THE RADIO VOLUNTEER?  Split the stream into whole
+            # messages and record each, so an --ai run answers the actual
+            # question: does the rig push T/R changes?  VFO B?  the mode?
+            if data:
+                msg_buf += chunk
+                while ";" in msg_buf:
+                    j = msg_buf.index(";")
+                    msg, msg_buf = msg_buf[:j + 1].strip(), msg_buf[j + 1:]
+                    if not msg:
+                        continue
+                    prefix = ""
+                    for ch in msg:
+                        if not ch.isalpha():
+                            break
+                        prefix += ch
+                    prefix = prefix[:2] or "?"
+                    tally[prefix] = tally.get(prefix, 0) + 1
+                    if prefix not in first_seen:
+                        first_seen[prefix] = now - started
+                    if listen_only or args.raw:
+                        print(f"{stamp()}  <- {msg}")
 
             if use_tq:
                 resp = find_last_tq(buf)
@@ -396,6 +444,22 @@ def main():
     except KeyboardInterrupt:
         print("\ninterrupted")
     finally:
+        if args.ai is not None and args.ai != 0:
+            # Leave the rig as we found it.  A K3 left chattering at AI2 is a
+            # surprise for whatever opens the port next -- TR4W included.
+            try:
+                sp.write(b"AI0;" + bytes([13]))
+                time.sleep(0.2)
+                print("auto-info restored to AI0")
+            except Exception:
+                print("*** WARNING: could not restore AI0 -- check the radio")
+
+        if tally:
+            print()
+            print("messages received, by type:")
+            for k in sorted(tally, key=lambda k: -tally[k]):
+                print(f"    {k:<4} {tally[k]:6d}   first at {first_seen[k]:6.2f} s")
+
         ok = ensure_receive(sp)
         sp.close()
         if ok:
