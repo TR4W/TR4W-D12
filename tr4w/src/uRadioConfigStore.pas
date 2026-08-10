@@ -154,6 +154,11 @@ type
       BandOutputPort: string;
       StartupCommand: string;
       PollingEnable: boolean;
+      // Auto-info level, 0 = off.  The radio pushes state changes instead of
+      // being polled for them.  Per RADIO, not per station: a K3 and a K2 on
+      // the same desk can want different levels, and what a level MEANS is
+      // the driver's business.
+      AutoInfoLevel: integer;
 
       constructor Create;
       procedure Assign(const aSource: TRadioDefinition);
@@ -383,6 +388,7 @@ begin
    // Polling on is the useful default -- a radio defined but never polled
    // looks broken to the operator.
    PollingEnable     := True;
+   AutoInfoLevel     := 0;   // off: poll for everything, as before
 end;
 
 procedure TRadioDefinition.Assign(const aSource: TRadioDefinition);
@@ -426,6 +432,7 @@ begin
    BandOutputPort    := aSource.BandOutputPort;
    StartupCommand    := aSource.StartupCommand;
    PollingEnable     := aSource.PollingEnable;
+   AutoInfoLevel     := aSource.AutoInfoLevel;
 end;
 
 function TRadioDefinition.SameAs(const aOther: TRadioDefinition): boolean;
@@ -459,7 +466,8 @@ begin
       (FrequencyAdder    = aOther.FrequencyAdder)                   and
       (BandOutputPort    = aOther.BandOutputPort)                   and
       (StartupCommand    = aOther.StartupCommand)                   and
-      (PollingEnable     = aOther.PollingEnable);
+      (PollingEnable     = aOther.PollingEnable) and
+      (AutoInfoLevel     = aOther.AutoInfoLevel);
 end;
 
 function TRadioDefinition.Clone: TRadioDefinition;
@@ -989,6 +997,7 @@ begin
    aIni.WriteString(section,  'BandOutputPort',    aRadio.BandOutputPort);
    aIni.WriteString(section,  'StartupCommand',    aRadio.StartupCommand);
    aIni.WriteBool(section,    'PollingEnable',     aRadio.PollingEnable);
+   aIni.WriteInteger(section, 'AutoInfoLevel',     aRadio.AutoInfoLevel);
 end;
 
 procedure TRadioConfigStore.LoadRadio(const aIni: TCustomIniFile; const aSection, aName: string);
@@ -1033,6 +1042,7 @@ begin
    radioDef.BandOutputPort    := aIni.ReadString(aSection,  'BandOutputPort',    PORT_NONE);
    radioDef.StartupCommand    := aIni.ReadString(aSection,  'StartupCommand',    '');
    radioDef.PollingEnable     := aIni.ReadBool(aSection,    'PollingEnable',     True);
+   radioDef.AutoInfoLevel     := aIni.ReadInteger(aSection, 'AutoInfoLevel',     0);
 
    // A duplicate section name cannot happen in a well-formed ini, but a
    // hand-edited file can produce one; drop the later one rather than raise
@@ -1178,6 +1188,7 @@ begin
    Result.AddPair('bandOutputPort',  aRadio.BandOutputPort);
    Result.AddPair('startupCommand',  aRadio.StartupCommand);
    Result.AddPair('pollingEnable',   TJSONBool.Create(aRadio.PollingEnable));
+   Result.AddPair('autoInfoLevel',   TJSONNumber.Create(aRadio.AutoInfoLevel));
 end;
 
 function ProfileToJSON(const aProfile: TStationProfile): TJSONObject;
@@ -1303,6 +1314,7 @@ begin
          radioDef.BandOutputPort    := JSONStr(obj,  'bandOutputPort',  PORT_NONE);
          radioDef.StartupCommand    := JSONStr(obj,  'startupCommand',  '');
          radioDef.PollingEnable     := JSONBool(obj, 'pollingEnable',   True);
+         radioDef.AutoInfoLevel     := JSONInt(obj,  'autoInfoLevel',  0);
 
          // A blank or duplicate name cannot come from SaveToJSON, but it can
          // come from a hand-edited file.  Drop that entry rather than raise

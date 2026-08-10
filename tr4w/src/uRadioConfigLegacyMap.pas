@@ -182,7 +182,7 @@ type
    end;
 
 const
-   KEYSPECS: array[0..25] of TKeySpec = (
+   KEYSPECS: array[0..26] of TKeySpec = (
       // identity
       (Shape: ksRadioPrefixed;   Suffix: 'TYPE'),
       (Shape: ksRadioPrefixed;   Suffix: 'FACTORY ID'),
@@ -212,6 +212,7 @@ const
       (Shape: ksRadioPrefixed;   Suffix: 'RECEIVER ADDRESS'),
       (Shape: ksRadioPrefixed;   Suffix: 'ICOM DATA MODE ID'),
       (Shape: ksRadioPrefixed;   Suffix: 'ICOM FILTER BYTE'),
+      (Shape: ksRadioPrefixed;   Suffix: 'AUTO INFO'),
       (Shape: ksRadioPrefixed;   Suffix: 'WIDE CW FILTER'),
       (Shape: ksRadioPrefixed;   Suffix: 'FT1000MP CW REVERSE'),
       (Shape: ksRadioPrefixed;   Suffix: 'FREQUENCY ADDER')
@@ -553,6 +554,7 @@ begin
    Emit(Result, 'RADIO ' + slot + ' ICOM DATA MODE ID',
         NumericValue(aRadio.IcomDataModeID, 1));
    Emit(Result, 'RADIO ' + slot + ' ICOM FILTER BYTE',    NumericValue(aRadio.IcomFilterByte, 0));
+   Emit(Result, 'RADIO ' + slot + ' AUTO INFO',           NumericValue(aRadio.AutoInfoLevel, 0));
    Emit(Result, 'RADIO ' + slot + ' WIDE CW FILTER',      BoolValue(aRadio.WideCWFilter));
    Emit(Result, 'RADIO ' + slot + ' FT1000MP CW REVERSE', BoolValue(aRadio.FT1000MPCWReverse));
    Emit(Result, 'RADIO ' + slot + ' FREQUENCY ADDER',     NumericValue(aRadio.FrequencyAdder, 0));
@@ -635,6 +637,7 @@ begin
               (names[i] = 'RADIO ' + slot + ' HAMLIB ID')         or
               (names[i] = 'RADIO ' + slot + ' RECEIVER ADDRESS')  or
               (names[i] = 'RADIO ' + slot + ' ICOM FILTER BYTE')  or
+              (names[i] = 'RADIO ' + slot + ' AUTO INFO')         or
               (names[i] = 'RADIO ' + slot + ' FREQUENCY ADDER')   then
          begin
          // Numerics get an explicit 0, never blank.  Blank means "never set"

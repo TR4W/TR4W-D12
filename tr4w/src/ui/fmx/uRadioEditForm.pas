@@ -149,6 +149,8 @@ type
       // (NY4I 2026-08-05).  Their CFGCA rows are now csOwned.
       edtFilterByte: TEdit;
       edtDataMode: TEdit;
+      lblAutoInfo: TLabel;
+      edtAutoInfo: TEdit;
       chkWideCW: TCheckBox;
       chkFT1000MPReverse: TCheckBox;
       btnOK: TButton;
@@ -541,6 +543,8 @@ begin
       begin
       edtFilterByte.Text := '';
       end;
+   edtAutoInfo.Text := IntToStr(FRadio.AutoInfoLevel);
+
    if FRadio.IcomDataModeID > 0 then
       begin
       edtDataMode.Text := IntToStr(FRadio.IcomDataModeID);
@@ -652,6 +656,7 @@ begin
    FRadio.StartupCommand  := Trim(edtStartup.Text);
    FRadio.IcomFilterByte    := StrToIntDef(Trim(edtFilterByte.Text), 0);
    FRadio.IcomDataModeID    := StrToIntDef(Trim(edtDataMode.Text), 0);
+   FRadio.AutoInfoLevel     := StrToIntDef(Trim(edtAutoInfo.Text), 0);
    FRadio.WideCWFilter      := chkWideCW.IsChecked;
    FRadio.FT1000MPCWReverse := chkFT1000MPReverse.IsChecked;
    FRadio.UseHamLib       := chkUseHamLib.IsChecked;

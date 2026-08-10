@@ -369,7 +369,7 @@ const
    + 1 {TELNET DEBUG}  // Issue #23
    + 1 {TCI DEBUG}
    + 1 {TCI MAX TX SECONDS}
-   + 1 {ELECRAFT AUTO INFO}
+   + 2 {RADIO ONE/TWO AUTO INFO}
    + 2 {Radio1 and Radio2 SERIAL FORMAT}  // dialog-exposed data bits / parity / stop bits
    ;
 
@@ -712,6 +712,7 @@ const
  (crCommand: 'RADIO ONE NETWORK USERNAME';      crAddress: @Radio1.NetworkUsername;     crMin:0;  crMax:50;      crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctCaseSensitive; crNetwork: 0),  // Issue #904 -- canonical generic name
  (crCommand: 'RADIO ONE NETWORK PASSWORD';      crAddress: @Radio1.NetworkPassword;     crMin:0;  crMax:50;      crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio1; crType: ctPassword;       crNetwork: 0),  // Issue #904 -- canonical generic name
  (crCommand: 'RADIO ONE ICOM DATA MODE ID';    crAddress: @Radio1.IcomDataModeID;        crMin:1;  crMax:3;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
+ (crCommand: 'RADIO ONE AUTO INFO';            crAddress: @Radio1.AutoInfoLevel;         crMin:0;  crMax:5;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO ONE KEYER DTR';           crAddress: pointer(31);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;   cfFunc: cfRadio1; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO ONE KEYER RTS';           crAddress: pointer(30);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;   cfFunc: cfRadio1; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO ONE KEYER STOP BITS';     crAddress: @Radio1.RadioKeyerStopBits;      crMin:0;  crMax:2;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // ny4i
@@ -748,6 +749,7 @@ const
  (crCommand: 'RADIO TWO NETWORK USERNAME';      crAddress: @Radio2.NetworkUsername;     crMin:0;  crMax:50;      crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctCaseSensitive; crNetwork: 0),  // Issue #904 -- canonical generic name
  (crCommand: 'RADIO TWO NETWORK PASSWORD';      crAddress: @Radio2.NetworkPassword;     crMin:0;  crMax:50;      crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfRadio2; crType: ctPassword;       crNetwork: 0),  // Issue #904 -- canonical generic name
  (crCommand: 'RADIO TWO ICOM DATA MODE ID';    crAddress: @Radio2.IcomDataModeID;        crMin:1;  crMax:3;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
+ (crCommand: 'RADIO TWO AUTO INFO';            crAddress: @Radio2.AutoInfoLevel;         crMin:0;  crMax:5;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'RADIO TWO KEYER DTR';           crAddress: pointer(35);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;   cfFunc: cfRadio2; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO TWO KEYER RTS';           crAddress: pointer(34);                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckList;   cfFunc: cfRadio2; crType: ctOther; crNetwork: 0),
  (crCommand: 'RADIO TWO KEYER STOP BITS';     crAddress: @Radio2.RadioKeyerStopBits;      crMin:0;  crMax:2;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),   // ny4i
@@ -832,7 +834,6 @@ const
  (crCommand: 'TELNET DEBUG';                  crAddress: @TR4W_TELNET_DEBUG;              crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),   // Issue #23
  (crCommand: 'TCI DEBUG';                     crAddress: @TR4W_TCI_DEBUG;                 crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'TCI MAX TX SECONDS';            crAddress: @TR4W_TCI_MAX_TX_SECONDS;        crMin:0;  crMax:3600;    crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
- (crCommand: 'ELECRAFT AUTO INFO';            crAddress: @TR4W_ELECRAFT_AI_LEVEL;         crMin:0;  crMax:3;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'TELNET SERVER';                 crAddress: @TelnetServer;                   crMin:0;  crMax:255;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'TEN MINUTE RULE';               crAddress: pointer(18);                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'TOTAL OFF TIME';                crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
