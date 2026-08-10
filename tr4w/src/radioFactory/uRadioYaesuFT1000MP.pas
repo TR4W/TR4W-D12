@@ -66,6 +66,25 @@ const
    FT1KMP_FRAME_LEN      = FT1KMP_STATUS_LEN + FT1KMP_FA_LEN;   // 38
    FT1KMP_SPLIT_POS      = FT1KMP_STATUS_LEN + 1;   // $FA byte 1
    FT1KMP_SPLIT_BIT      = $01;
+   // TRANSMIT, in the SAME $FA byte as split.  Measured on NY4I's FT-1000MP
+   // with tools/yaesuprobe.py, receiving then transmitting:
+   //
+   //     01 20 30 00 00 00     byte 1 = $01, bit 7 clear
+   //     C1 20 30 00 02 00     byte 1 = $C1, bit 7 SET
+   //
+   // So transmit state costs NOTHING to read: the block is already fetched
+   // every cycle for split.  The alternative -- a third request, $00 00 00 01
+   // $10 -- would have meant a longer fixed frame and another command per
+   // poll, which on this radio's 4800 baud link is real latency.  It was
+   // measured before it was written, and turned out not to be needed.
+   //
+   // BIT 7, NOT $FA byte 4 bit 4.  Byte 4 reports transmit that WE caused by
+   // CAT (it moved 00 -> 02 in the capture above); bit 7 reports transmit
+   // however it started, including the front panel and the foot switch.
+   // Reading the narrower flag would leave the display and any TCI client
+   // blind to the operator keying manually -- the same "commanded state is
+   // not actual state" trap that KLUDGESECONDSV falls into in uWSJTX.
+   FT1KMP_TX_BIT         = $80;
    // $FA byte 2 bit 2 is what D7 reads as the ACTIVE VFO.  BENCH-DISPROVED: this
    // byte is constant ($20) across front-panel VFO switches.  Kept only to document
    // what was ruled out -- selection is conveyed by RECORD ORDER.  See ProcessMsg.
@@ -251,6 +270,18 @@ begin
    Self.SetXITOffset(clarHz);
    // Split, from the appended $FA block (D7 pFT1000MP reads the same bit).
    Self.SetSplitOn((Ord(msg[FT1KMP_SPLIT_POS]) and FT1KMP_SPLIT_BIT) <> 0);
+
+   // Transmit, from bit 7 of that same byte.  Nothing read this before, so
+   // the radio could key -- once PTT-via-CAT was restored -- and TR4W would
+   // still show receive, and a TCI client would never be told the truth.
+   if (Ord(msg[FT1KMP_SPLIT_POS]) and FT1KMP_TX_BIT) <> 0 then
+      begin
+      Self.radioState := rsTransmit;
+      end
+   else
+      begin
+      Self.radioState := rsReceive;
+      end;
    // Active VFO: SetActiveVFO(nrVFOA) is CORRECT here and is not a placeholder.
    // BENCH-RESOLVED 2026-07-26 (four front-panel A/B switches captured):
    //  - D7 reads the active VFO as ActiveVFOStatusType((tBuf[2] and $04) + 1) from
