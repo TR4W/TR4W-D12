@@ -139,6 +139,20 @@ begin
          begin
          // Serial: disable AI to avoid flooding the serial port.
          // Use periodic polling instead (same approach as legacy K3 code).
+         //
+         // OPEN: NY4I wants auto-info here too, as TElecraftSerial now does
+         // for the K2/K3/KX3 (default level 2, measured to cut an unkey from
+         // ~500-1100 ms to 221 ms while still tracking VFO B during
+         // transmit).  Not done yet, and it is NOT a copy of that change:
+         //
+         //   * this radio is deliberately not a TElecraftSerial, so it would
+         //     need its own ApplyAutoInfoLevel and its own default;
+         //   * AI on the SERIAL side PERSISTS ACROSS A DISCONNECT -- measured
+         //     on a K3S, which still answered AI2; after the port was closed
+         //     for two seconds and reopened.  So a serial K4 running AI would
+         //     need the same restore-to-AI0 on Disconnect that
+         //     TElecraftSerial now does, or it leaves the radio chattering
+         //     for whatever opens the port next.
          Self.SetAIMode(0);
          Self.requiresPolling := True;
          Self.pollingInterval  := 100; // Default; overridden by FREQUENCY POLL RATE in pFactoryRadio
@@ -146,7 +160,16 @@ begin
       else
          begin
          // Network: AI5 pushes state changes -- no polling needed for
-         // state.  But the K4 server drops clients that send nothing
+         // state.
+         //
+         // NOTE THE ASYMMETRY WITH SERIAL, because it decides what this path
+         // does NOT need: a K4 NETWORK connection always starts at AI0 (per
+         // the K4 manual, NY4I).  The level is therefore per-connection, not
+         // a radio setting that outlives us -- so it must be set on every
+         // connect, as it is here, and needs no restore on disconnect.  The
+         // serial side is the opposite and does need one.
+         //
+         // But the K4 server drops clients that send nothing
          // for 10 seconds (per K4 Programmer's Reference, PING/PONG
          // section -- Issue #897).  Enable a 1 Hz poll that sends
          // PING; as a keep-alive.  ProcessMessage handles the PONG;
