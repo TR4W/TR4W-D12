@@ -178,11 +178,18 @@ def main():
                          "cost roughly 125 ms of unkey latency.")
     ap.add_argument("--raw", action="store_true",
                     help="print every response, not just the changes")
-    ap.add_argument("--max-seconds", type=float, default=60.0,
+    ap.add_argument("--max-seconds", type=float, default=0.0,
                     help="hard stop.  This tool can key a transmitter, so it "
                          "must not be able to run unbounded if anything goes "
                          "wrong -- see the reply timeout below.")
     args = ap.parse_args()
+
+    # The hard stop is a TRANSMIT safety, so it only needs to be tight when
+    # this tool can key.  A listening session is hands-on -- you are turning
+    # the VFO and pressing buttons -- and cutting it off after a minute helps
+    # nobody.  Ctrl-C ends it either way.
+    if args.max_seconds <= 0:
+        args.max_seconds = 60.0 if args.key > 0 else 3600.0
 
     # WHAT TO SEND EACH CYCLE.
     #
@@ -250,10 +257,20 @@ def main():
         print(f"auto-info set to AI{args.ai}"
               + ("   LISTENING ONLY -- nothing is polled" if listen_only else ""))
 
-    print(f"poll: {poll.rstrip()}    T/R read from {'TQ' if use_tq else 'IF'}")
-    print(f"{args.port} at {args.baud} 8N1.  "
-          f"{'paced (wait for reply)' if args.interval == 0 else f'every {args.interval*1000:.0f} ms'}"
-          f"{', burst poll' if args.burst else ''}.  Ctrl-C to stop.")
+    if listen_only:
+        print("not polling -- every line below is something the RADIO sent")
+        print("use the radio's controls now (VFO, mode, XMIT); Ctrl-C when done")
+    else:
+        print(f"poll: {poll.rstrip()}    T/R read from {'TQ' if use_tq else 'IF'}")
+    if listen_only:
+        mode = "listening"
+    elif args.interval == 0:
+        mode = "paced (wait for reply)"
+    else:
+        mode = f"every {args.interval*1000:.0f} ms"
+    print(f"{args.port} at {args.baud} 8N1.  {mode}"
+          f"{', burst poll' if args.burst and not listen_only else ''}.  "
+          f"Ctrl-C to stop.")
     print()
 
     buf = ""
