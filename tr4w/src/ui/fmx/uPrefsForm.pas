@@ -565,6 +565,8 @@ begin
 end;
 
 function TPrefsForm.SaveStore(out aError: string): boolean;
+var
+   tciPort: integer;
 begin
    Result := FStore.Validate(aError);
    if not Result then
@@ -601,16 +603,34 @@ begin
       // launch and the operator had no way to tell that from a broken server.
       // A listening socket costs nothing to start or stop, unlike restarting
       // the radios -- which is why THOSE still need an explicit Activate.
+      // Debug and MaxTxSeconds live in the store now, not in tr4w.ini, but the
+      // server reads them from GLOBALS at the point of use.  Publishing here --
+      // in the apply layer rather than in the store -- keeps uRadioConfigStore's
+      // uses clause pure RTL so uTestRadioConfigStore can go on linking it
+      // standalone.  Unconditional, and before the start/stop below, so a debug
+      // flag ticked in the same visit is already in force for the very first
+      // message the server logs.
+      TR4W_TCI_DEBUG          := FStore.TCIDebug;
+      TR4W_TCI_MAX_TX_SECONDS := FStore.TCIMaxTxSeconds;
+
       if TCIServer <> nil then
          begin
          if FStore.TCIServerEnabled and (not TCIServer.Active) then
             begin
-            if not TCIServer.Start(TCI_SERVER_DEFAULT_PORT, False) then
+            // 0 in the store means "whatever the server calls default", so the
+            // number 50001 is written down in exactly one place.
+            tciPort := FStore.TCIPort;
+            if tciPort <= 0 then
+               begin
+               tciPort := TCI_SERVER_DEFAULT_PORT;
+               end;
+
+            if not TCIServer.Start(tciPort, FStore.TCIBindAll) then
                begin
                // Reported, not swallowed.  A port already in use is the
                // common case and the operator cannot diagnose silence.
                ShowMessage(Format('The TCI server could not open port %d: %s',
-                                  [TCI_SERVER_DEFAULT_PORT, TCIServer.LastError]));
+                                  [tciPort, TCIServer.LastError]));
                end;
             end
          else if (not FStore.TCIServerEnabled) and TCIServer.Active then

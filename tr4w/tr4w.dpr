@@ -1160,9 +1160,18 @@ begin
    // (WSJT-X, JTDX, a skimmer) run on the operator's own machine.
    if RadioLibraryTCIServerEnabled and (TCIServer <> nil) then
       begin
-      if not TCIServer.Start(TCI_SERVER_DEFAULT_PORT, False) then
+      // The store says 0 when the operator has not chosen a port, so the
+      // default lives in exactly one place -- here, next to the server that
+      // owns the constant.  Bind-all is likewise the store's to say; it stays
+      // False unless asked, for the loopback reason described above.
+      if RadioLibraryTCIPort <= 0 then
          begin
-         QuickDisplay('TCI server could not open port ' + IntToStr(TCI_SERVER_DEFAULT_PORT));
+         RadioLibraryTCIPort := TCI_SERVER_DEFAULT_PORT;
+         end;
+
+      if not TCIServer.Start(RadioLibraryTCIPort, RadioLibraryTCIBindAll) then
+         begin
+         QuickDisplay('TCI server could not open port ' + IntToStr(RadioLibraryTCIPort));
          end;
       end;
     {****************************  Main CallBack  ****************************}
