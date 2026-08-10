@@ -273,6 +273,25 @@ begin
 
    for i := 0 to High(rendered) do
       begin
+      // A SETTING THAT HAS MOVED TO JSON IS NOT WRITTEN HERE.
+      //
+      // csJSON means the ini row is inert: CheckCommand accepts it so an old
+      // config does not error, and then does nothing with it.  Emitting such
+      // a key would write a value into a file nothing reads -- which is worse
+      // than useless, because the next person to open the ini sees it and
+      // takes it for the system of record.
+      //
+      // Asking the row rather than maintaining a second list is the point
+      // (NY4I): migrating a setting becomes "add the direct applier, flip the
+      // row to csJSON", and this writer follows automatically.  A hand-removed
+      // Emit is a second place to keep in step, and it will not be.
+      if CommandIsJSONOwned(rendered[i].Key) then
+         begin
+         logger.Debug('[ApplyProfile] %s is csJSON -- Preferences owns it, not the ini',
+                      [rendered[i].Key]);
+         Continue;
+         end;
+
       // A FRESH AnsiString per value, not a reused buffer.  The ini write takes
       // @s[1] as a null-terminated PAnsiChar, so a shorter value assigned over
       // a longer one in the same ShortString leaves the previous tail in place

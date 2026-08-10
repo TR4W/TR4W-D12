@@ -107,6 +107,19 @@ type
    end;
 
    //procedure F_MY_GRID;
+// Is this command's system of record settings	r4w.json rather than the ini?
+//
+// csJSON means the row is INERT: recognised so an old config does not error,
+// but not applied and hidden from Ctrl-J.  A writer that still emitted such a
+// key would put a value into a file nothing reads, which then looks
+// authoritative to the next person who opens it.
+//
+// Exposed so the RADIO LIBRARY's writer can ask.  That makes csJSON the one
+// switch for a migration: add the direct applier, flip the row, and the ini
+// writer stops on its own -- rather than a hand-removed Emit that can drift
+// out of step with the row it is meant to match (NY4I).
+function CommandIsJSONOwned(const aCommand: string): boolean;
+
 function F_RADIO_ONE_TYPE: boolean;
 function F_RADIO_TWO_TYPE: boolean;
 function F_SCP_COUNTRY_STRING: boolean;
@@ -917,6 +930,21 @@ var
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
      uRadioRegistry;       // RegisteredCIVAddress -- the per-model Icom CI-V default
+
+function CommandIsJSONOwned(const aCommand: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(CFGCA) to High(CFGCA) do
+      begin
+      if SameText(string(CFGCA[i].crCommand), aCommand) then
+         begin
+         Result := (CFGCA[i].crS = csJSON);
+         Exit;
+         end;
+      end;
+end;
 var
    TempBand: BandType;
    TempMode: ModeType;
