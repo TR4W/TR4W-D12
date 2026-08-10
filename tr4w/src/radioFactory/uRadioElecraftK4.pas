@@ -25,6 +25,11 @@ uses
 Type TK4Radio = class(TElecraftRadio)
    private
       firstProcessMessage: boolean;
+
+      // SERIAL auto-info level.  NETWORK IS NOT STORED HERE AND IS NOT
+      // CONFIGURABLE -- see ApplyAutoInfoLevel for why the two transports are
+      // deliberately not unified.
+      FAutoInfoLevel: integer;
    protected
       procedure SelectOperatingVFO(rxVFOIsB: boolean); override;
    private
@@ -71,6 +76,17 @@ Type TK4Radio = class(TElecraftRadio)
       procedure SendToRadio(whichVFO: TVFO; sCmd: string; sData: string); overload;
       procedure ProcessMessage(sMessage: string);
       procedure SetAIMode(i: integer);
+
+      // Auto-info.  SERIAL ONLY -- see the implementations.
+      procedure ApplyAutoInfoLevel(level: integer); override;
+      procedure Disconnect; override;
+
+      // READ-ONLY, and exposed so the resolved level can be asserted without a
+      // radio: "negative means you decide, and serial says 2" is a silently
+      // defaulted value of exactly the kind that reads as a legal zero if it
+      // regresses.  Write access stays with ApplyAutoInfoLevel, which is where
+      // the policy lives.
+      property AutoInfoLevel: integer read FAutoInfoLevel;
 end;
 
 implementation
@@ -137,23 +153,22 @@ begin
       begin
       if Self.serialPort <> NoPort then
          begin
-         // Serial: disable AI to avoid flooding the serial port.
-         // Use periodic polling instead (same approach as legacy K3 code).
+         // Serial: auto-info at the operator's level (default 2), with the
+         // poll kept as the backstop.  See ApplyAutoInfoLevel for why serial
+         // and network are deliberately not the same setting, and Disconnect
+         // for why serial -- and only serial -- has to be put back.
          //
-         // OPEN: NY4I wants auto-info here too, as TElecraftSerial now does
-         // for the K2/K3/KX3 (default level 2, measured to cut an unkey from
-         // ~500-1100 ms to 221 ms while still tracking VFO B during
-         // transmit).  Not done yet, and it is NOT a copy of that change:
+         // This used to be a hard SetAIMode(0).  The pushes cost nothing to
+         // consume: ProcessMessage is transport-agnostic, so the code that has
+         // always handled the network's AI5 pushes handles these too.
          //
-         //   * this radio is deliberately not a TElecraftSerial, so it would
-         //     need its own ApplyAutoInfoLevel and its own default;
-         //   * AI on the SERIAL side PERSISTS ACROSS A DISCONNECT -- measured
-         //     on a K3S, which still answered AI2; after the port was closed
-         //     for two seconds and reopened.  So a serial K4 running AI would
-         //     need the same restore-to-AI0 on Disconnect that
-         //     TElecraftSerial now does, or it leaves the radio chattering
-         //     for whatever opens the port next.
-         Self.SetAIMode(0);
+         // requiresPolling stays TRUE even at AI2, and that is not vestigial.
+         // Auto-info never reports a T/R transition -- confirmed on a K3S,
+         // where keying and unkeying from the front panel produced no message
+         // at all while VFO, mode and filter changes all did.  Transmit state
+         // is the one thing that still has to be asked for, so PollRadioState
+         // keeps asking; it just asks for less.
+         Self.SetAIMode(FAutoInfoLevel);
          Self.requiresPolling := True;
          Self.pollingInterval  := 100; // Default; overridden by FREQUENCY POLL RATE in pFactoryRadio
          end
@@ -693,10 +708,27 @@ procedure TK4Radio.PollRadioState;
 begin
    if Self.serialPort <> NoPort then
       begin
-      // Serial: poll state (no AI on serial).
       // IF gives VFO A freq + mode + RIT/XIT/split/TX state in one response.
       // FB gives VFO B frequency.
-      Self.SendToRadio('IF;FB;');
+      //
+      // With auto-info on, FB is PUSHED on every change -- including a VFO B
+      // change made while the radio is transmitting -- so asking for it costs
+      // a command and buys nothing.  IF is still asked for, because auto-info
+      // never reports a T/R transition (see Connect), and because it doubles
+      // as a re-sync: a push lost to a buffer overrun or a reconnect cannot
+      // leave the display stale indefinitely.
+      //
+      // COUPLED DELIBERATELY: the poll may only be cut BECAUSE auto-info is
+      // supplying the rest.  Turning AI off must restore the full poll, or the
+      // display silently stops tracking VFO B.
+      if FAutoInfoLevel > 0 then
+         begin
+         Self.SendToRadio('IF;');
+         end
+      else
+         begin
+         Self.SendToRadio('IF;FB;');
+         end;
       end
    else
       begin
@@ -714,6 +746,84 @@ begin
    Self.SendToRadio(Format('AI%d;',[i]));
 end;
 
+procedure TK4Radio.ApplyAutoInfoLevel(level: integer);
+begin
+   // SERIAL ONLY, AND THE STORED VALUE IS IGNORED ON THE NETWORK.
+   //
+   // The two transports are not two settings of one thing, and unifying them
+   // would break the path that already works:
+   //
+   //   NETWORK is AI5, always, set on every connect.  A K4 network session
+   //   ALWAYS starts at AI0 (K4 manual, NY4I), so the level is a property of
+   //   the connection rather than of the radio -- it cannot be left behind and
+   //   there is nothing to restore.  It is also not the operator's to choose:
+   //   the network path has no poll to fall back on (PollRadioState sends only
+   //   the PING; keep-alive), so an operator who set 0 here would get a radio
+   //   that reports nothing at all.  Hence: stored, but never read on network.
+   //
+   //   SERIAL is the opposite in every respect.  It has a working poll to fall
+   //   back on, so 0 is a legitimate answer, and the setting PERSISTS ON THE
+   //   RADIO across a disconnect -- which is why Disconnect exists below.
+   //
+   // A NEGATIVE LEVEL MEANS "YOU DECIDE", AND SERIAL SAYS 2.  Same answer as
+   // TElecraftSerial gives the K2/K3/KX3, reached independently rather than by
+   // inheriting it: this radio is deliberately not a TElecraftSerial, and the
+   // K4 is the one Elecraft where the same field means something different on
+   // each transport.  Zero remains the operator saying OFF, which is a
+   // different answer from not having chosen.
+   if level < 0 then
+      begin
+      FAutoInfoLevel := 2;
+      end
+   else
+      begin
+      FAutoInfoLevel := level;
+      end;
+
+   // Stored, not sent.  Connect and Initialize send it at the point in the
+   // sequence where the port is actually open; sending here would race it.
+   if Self.serialPort <> NoPort then
+      begin
+      logger.Debug('[ApplyAutoInfoLevel] serial: requested %d -> auto-info %d%s',
+         [level, FAutoInfoLevel,
+          IfThen(FAutoInfoLevel > 0, ' -- polling reduced to IF;', ' -- full poll')]);
+      end
+   else
+      begin
+      logger.Debug('[ApplyAutoInfoLevel] network: requested %d IGNORED -- ' +
+                   'the network path is AI5 per connection', [level]);
+      end;
+end;
+
+procedure TK4Radio.Disconnect;
+begin
+   // LEAVE THE RADIO AS WE FOUND IT -- SERIAL ONLY.
+   //
+   // Auto-info on the serial side is a setting we make ON THE RADIO and it
+   // outlives us: measured on a K3S, which still answered AI2; after the port
+   // was closed for two seconds and reopened.  Whatever opens the port next --
+   // the next TR4W run, WSJT-X in CAT mode, a terminal -- then meets a radio
+   // talking unprompted, and a program that cannot tell an unsolicited push
+   // from its own reply mis-paces itself badly.  That is measured, not feared:
+   // a paced IF; poll collapsed from ~100 ms to 2953 ms purely because the rig
+   // was still in AI2 from a previous session (NY4I, 2026-08-09).
+   //
+   // The network path needs none of this.  Its AI5 dies with the socket.
+   //
+   // Best effort, and quiet about failing: by the time this runs the radio may
+   // already be gone, which is not worth an error on the way out.
+   if (Self.serialPort <> NoPort) and (FAutoInfoLevel > 0) then
+      begin
+      try
+         logger.Debug('[Disconnect] serial: restoring auto-info to 0');
+         Self.SetAIMode(0);
+      except
+         // The port may already be closed.  Nothing to do and nothing to say.
+      end;
+      end;
+   inherited Disconnect;
+end;
+
 procedure TK4Radio.Initialize;
 begin
    // Now rigLabel is set by LOGRADIO — reinitialize logger with the radio's identity.
@@ -723,8 +833,11 @@ begin
    else
       logger := TLogLogger.GetLogger('TR4WDebugLog.K4-Radio');
 
+   // Serial takes the operator's level (default 2, set by ApplyAutoInfoLevel).
+   // NOT 5: AI5 is the K4's network-side firehose and would flood a serial
+   // port.  Network is always 5 and is not the operator's to change.
    if Self.serialPort <> NoPort then
-      Self.SetAIMode(0)   // Serial: polling mode; AI5 would flood the serial port
+      Self.SetAIMode(FAutoInfoLevel)
    else
       Self.SetAIMode(5);
    logger.debug('[TK4Radio.Initialize] Sending KS;BN;RT;XT;RO;FT;ID;MD;DT$;IF;FP; to radio');

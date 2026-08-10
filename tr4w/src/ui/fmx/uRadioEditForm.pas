@@ -769,8 +769,6 @@ begin
    // "invitation to set something that will never be sent" the Icom fields
    // above are gated to avoid.
    //
-   // The K4 is deliberately excluded: it is not a TElecraftSerial and runs its
-   // own AI policy (AI5 on network, AI0 on serial).
    // HIDDEN, not greyed, on a radio that ignores it (NY4I).  A greyed
    // control still says "this radio has an auto-info setting and you may not
    // touch it", which is a different and wrong statement -- an Icom or a
@@ -778,7 +776,20 @@ begin
    // rather than hidden because they belong to a family the operator may be
    // about to select; this one belongs to a capability the radio either has
    // or does not.
-   edtAutoInfo.Visible := MatchText(id, ['K2', 'K3', 'KX3']);
+   //
+   // THE K4 IS TRANSPORT-DEPENDENT, AND IT IS THE ONLY RADIO THAT IS.  Its
+   // driver acts on this setting over SERIAL (default 2, same as its cousins)
+   // and deliberately ignores it over NETWORK, where the level is a property
+   // of the connection: a K4 network session always starts at AI0 and is put
+   // into AI5, and the network path has no poll to fall back on -- so an
+   // operator who set 0 there would get a radio that reported nothing at all.
+   // Hiding it on the network tab is therefore not tidiness; it is refusing to
+   // offer a control whose only effect would be to break the transport that
+   // already works.  TK4Radio.ApplyAutoInfoLevel enforces the same rule at the
+   // driver, because the UI must not be the only thing standing between an
+   // operator and a mute radio.
+   edtAutoInfo.Visible := MatchText(id, ['K2', 'K3', 'KX3'])
+                       or (MatchText(id, ['K4']) and (transport = rtSerial));
    lblAutoInfo.Visible := edtAutoInfo.Visible;
    if not edtAutoInfo.Visible then
       begin
