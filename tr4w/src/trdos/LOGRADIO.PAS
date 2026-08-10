@@ -2323,6 +2323,15 @@ begin
       end;
    Self.tFactoryObject.rigLabel := Self.RadioName;          // e.g. "K3S-15"
    Self.tFactoryObject.StartupCommand := string(Self.StartupCommand);
+
+   // Auto-info, HERE and not in a branch.  It was added next to
+   // ApplyDataModeID, which lives inside the NETWORK arm -- so it was never
+   // called for a serial radio, and the K3S it was written for silently kept
+   // level 0.  That is the exact gap the comment above describes for
+   // rigLabel: a fact handed over at one construction site instead of all of
+   // them.  Adopt runs before Connect at every site, which is the ordering
+   // this needs -- the level has to be known before the driver sends AI.
+   Self.tFactoryObject.ApplyAutoInfoLevel(Self.AutoInfoLevel);
 end;
 
 procedure RadioObject.ShutDownRadioInterface;
@@ -2641,7 +2650,6 @@ begin
          Self.tFactoryObject.ApplyNetworkCredentials(string(Self.NetworkUsername),
                                                      string(Self.NetworkPassword));
          Self.tFactoryObject.ApplyDataModeID(Self.IcomDataModeID);
-         Self.tFactoryObject.ApplyAutoInfoLevel(Self.AutoInfoLevel);
 
          // Connect is deferred to the polling thread (pFactoryRadio).  Running
          // it synchronously here blocked the main thread for up to 10 s
