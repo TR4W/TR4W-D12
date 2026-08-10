@@ -236,6 +236,39 @@ begin
       typeRendering := Default(TRadioTypeRendering);
       end;
 
+   // SETTINGS THAT ARE NEW GO STRAIGHT ONTO THE RADIO.
+   //
+   // The rendered-keys path below exists to feed CFGCA -- it is a BRIDGE to
+   // legacy code that reads its configuration from ini commands.  Auto-info
+   // has no legacy reader: nothing in the old tree has ever heard of it, so
+   // routing it through an ini key would invent a round trip through a format
+   // we are trying to retire, purely to arrive back in memory (NY4I).
+   //
+   // Assigned before the keys are written for the same reason they are: the
+   // radio has not been opened yet at this point, and SetUpRadioInterface
+   // hands the value to the driver through ApplyAutoInfoLevel when it is.
+   if aSlot = 1 then
+      begin
+      Radio1.AutoInfoLevel := 0;
+      end
+   else
+      begin
+      Radio2.AutoInfoLevel := 0;
+      end;
+   if aRadio <> nil then
+      begin
+      if aSlot = 1 then
+         begin
+         Radio1.AutoInfoLevel := aRadio.AutoInfoLevel;
+         end
+      else
+         begin
+         Radio2.AutoInfoLevel := aRadio.AutoInfoLevel;
+         end;
+      logger.Debug('[ApplyProfile] radio %d auto-info level %d',
+                   [aSlot, aRadio.AutoInfoLevel]);
+      end;
+
    rendered := RenderRadioKeys(aSlot, aRadio, typeRendering, aProfile, aNamesAKeyerDevice);
 
    for i := 0 to High(rendered) do
