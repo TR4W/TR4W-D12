@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -277,6 +277,11 @@ Type TFactoryRadioBase = class(TObject)
       // ONE OUTSTANDING POLL AT A TIME -- see PollOutstanding.
       FPollAwaitingReply: boolean;
       FPollSentTick: cardinal;
+      // Has the radio said ANYTHING since the poll went out, and when.
+      // Both are needed: "quiet" only means the poll is answered if the
+      // radio started talking in the first place.
+      FPollHeardReply: boolean;
+      FPollLastFrameTick: cardinal;
       FLastSerialReopenTick: LongWord;  // MaintainSerialLink throttle
       FSerialReopenDelay: Integer;      // grows to RECONNECT_MAX_DELAY while silent
       FActiveVFO: TVFO;  // RX/operating VFO; nrVFOA = swap model (K4: A/B swaps contents so A is always active), selectable-model radios (Kenwood FR, Flex slice) drive it via SetActiveVFO
@@ -722,6 +727,19 @@ implementation
 // not that this uses clause should come back.
 Uses TypInfo;   // TypInfo: GetEnumName, for CapabilitiesAsText
 
+const
+   // How long the radio must be SILENT before its poll counts as answered.
+   //
+   // Sized from the wire, not chosen: on a K3S at 38400 the gaps BETWEEN the
+   // replies to one multi-command poll ran a few milliseconds, while the gap
+   // between one poll's last reply and the next poll was tens.  30 ms sits
+   // clear of the first and well under the second.
+   //
+   // Too small and the gate releases mid-burst, which is the defect this
+   // replaces.  Too large and it eats into the poll rate on a fast link.
+   // The timeout in PollOutstanding is the backstop either way.
+   POLL_QUIET_MS = 30;
+
 var
    // TReadingThread IS NOT A RADIO.  It is a plain TThread declared beside
    // TFactoryRadioBase, so it does not inherit the `logger` FIELD, and its
@@ -849,6 +867,8 @@ begin
    FLastValidResponse := Now;  // Initialize to current time
    FPollAwaitingReply := False;
    FPollSentTick := 0;
+   FPollHeardReply := False;
+   FPollLastFrameTick := 0;
    FLastSerialReopenTick := GetTickCount;
    FSerialReopenDelay := RECONNECT_INITIAL_DELAY;
 end;
@@ -1558,6 +1578,8 @@ procedure TFactoryRadioBase.MarkPollSent;
 begin
    FPollAwaitingReply := True;
    FPollSentTick := GetTickCount;
+   FPollHeardReply := False;
+   FPollLastFrameTick := FPollSentTick;
 end;
 
 function TFactoryRadioBase.PollOutstanding: boolean;
@@ -1579,18 +1601,60 @@ begin
       limit := 500;
       end;
 
-   // Unsigned subtraction, so the 49.7-day GetTickCount wrap cannot make a
-   // fresh poll look ancient and re-open the flood.
-   Result := (GetTickCount - FPollSentTick) < limit;
+   // Unsigned subtraction throughout, so the 49.7-day GetTickCount wrap
+   // cannot make a fresh poll look ancient and re-open the flood.
+   if (GetTickCount - FPollSentTick) >= limit then
+      begin
+      // Timed out.  Poll anyway: polling is how a dead link is DETECTED, and
+      // a radio that has stopped answering must not stop being asked.
+      Result := False;
+      Exit;
+      end;
+
+   if not FPollHeardReply then
+      begin
+      // Sent, nothing back yet.  Still outstanding.
+      Result := True;
+      Exit;
+      end;
+
+   // QUIESCENCE, NOT "A FRAME ARRIVED".  A poll is answered when the radio
+   // has STOPPED talking, not when it has started.
+   //
+   // This was the first version's defect and it is worth spelling out,
+   // because "any valid frame clears the gate" reads as obviously correct
+   // and is not.  A multi-command poll draws several replies.  Releasing on
+   // the first one lets the next poll out while the rest are still being
+   // processed, so every cycle ADDS more commands than the radio retires and
+   // the backlog grows without bound -- positive feedback, not a slightly
+   // weaker heuristic.
+   //
+   // Measured on a K3S over serial (tools/k3watch.py, TR4W not in the path),
+   // unkey latency during transmit:
+   //
+   //     poll          released on first reply     released on quiescence
+   //     IF;FB;              3593 ms / wedged              203 ms
+   //     IF;FB;MD$;DT$;       672 ms                       609 ms
+   //
+   // The two-command row is the one that matters: same poll, same radio,
+   // 17x difference, and the first-reply run had to be abandoned once
+   // because the rig never came out of transmit.
+   //
+   // Silence is also the only rule that generalises.  Counting expected
+   // replies would work for Elecraft, where commands and responses pair up,
+   // and cannot work for Icom CI-V or the binary Yaesus, which answer in
+   // frames that do not map one-to-one onto what was asked.
+   Result := (GetTickCount - FPollLastFrameTick) < POLL_QUIET_MS;
 end;
 
 procedure TFactoryRadioBase.UpdateLastValidResponse;
 begin
    FLastValidResponse := Now;
-   // The radio answered, so the next poll may go.  Any valid frame counts,
-   // including an unsolicited one -- a radio that is talking to us is a
-   // radio whose input queue is draining, which is all this gate cares about.
-   FPollAwaitingReply := False;
+   // The radio is TALKING.  That does not mean the poll is answered -- see
+   // PollOutstanding, which waits for it to stop.  Note the gate is NOT
+   // cleared here: doing that was the bug.
+   FPollHeardReply := True;
+   FPollLastFrameTick := GetTickCount;
    // The radio is talking, so any reopen backoff has served its purpose.
    // Resetting HERE means the recovery bookkeeping cannot drift out of step
    // with liveness -- there is no separate we-are-healthy flag to forget.
