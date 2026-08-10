@@ -118,6 +118,14 @@ def main():
                          "for CW via XMIT/PTT), because those raise KEY OUT "
                          "for downstream relays.  So tq and if do NOT always "
                          "agree, and that difference is worth measuring.")
+    ap.add_argument("--wait-all", action="store_true",
+                    help="with --burst, wait for EVERY reply before sending "
+                         "the next poll, not just the first.  This models the "
+                         "proposed change to TR4W's gate, which today reopens "
+                         "on any valid response -- so with a four-command "
+                         "poll the IF reply releases it while FB/MD$/DT$ are "
+                         "still in flight.  Run it against plain --burst to "
+                         "see what strengthening the gate would buy.")
     ap.add_argument("--raw", action="store_true",
                     help="print every response, not just the changes")
     ap.add_argument("--max-seconds", type=float, default=60.0,
@@ -229,8 +237,27 @@ def main():
                 resp = find_last_tq(buf)
             else:
                 resp = find_last_if(buf)
-            if resp is not None:
+
+            # WHAT SATISFIES A POLL.
+            #
+            # Normally any reply does -- which is exactly what TR4W's gate
+            # does today, because UpdateLastValidResponse fires per frame.
+            # With a four-command burst that means the IF reply releases the
+            # gate while FB/MD$/DT$ are still inbound, so the next burst goes
+            # out on top of them and the backlog the gate exists to prevent
+            # builds anyway.
+            #
+            # --wait-all models the proposed fix: DT$ is sent LAST, so its
+            # reply is the one that means "the radio has finished with that
+            # burst".  Run it against plain --burst to see what strengthening
+            # the gate would buy before changing TR4W.
+            if args.wait_all and args.burst:
+                if "DT" in buf and buf.rstrip().endswith(";"):
+                    pending = False
+            elif resp is not None:
                 pending = False
+
+            if resp is not None:
                 flag = tr_flag(resp)
 
                 if args.raw:
