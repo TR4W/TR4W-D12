@@ -145,6 +145,12 @@ function SettingsDirectory: string;
 var
    RadioLibraryTCIServerEnabled: boolean = False;
 
+   // 0 = "use the server's own default port" -- the store deliberately does not
+   // name 50001, so that number stays written down in exactly one place
+   // (uTCIServer).  tr4w.dpr substitutes it.
+   RadioLibraryTCIPort: integer = 0;
+   RadioLibraryTCIBindAll: boolean = False;
+
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 
 // UI-free description of the port collisions a profile WOULD cause, '' when
@@ -882,6 +888,18 @@ begin
       // is a station-wide decision and does not depend on a profile
       // resolving, which is a separate failure with its own message.
       RadioLibraryTCIServerEnabled := store.TCIServerEnabled;
+
+      // The other TCI settings, which the server reads from globals at the
+      // point of use.  These used to arrive through CFGCA from tr4w.ini; the
+      // rows are csJSON now, which makes CheckCommand inert for them, so THIS
+      // is the only thing that sets them at startup.  Same shape as the
+      // csJSON radio rows: retiring the ini row and writing the applier are
+      // one change, because a retired row with no applier is silent.
+      TR4W_TCI_DEBUG          := store.TCIDebug;
+      TR4W_TCI_MAX_TX_SECONDS := store.TCIMaxTxSeconds;
+
+      RadioLibraryTCIPort    := store.TCIPort;
+      RadioLibraryTCIBindAll := store.TCIBindAll;
 
       profile := store.ActiveProfile;
       if profile = nil then

@@ -224,7 +224,23 @@ type
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
       FAutoConnectOnStartup: boolean;
+
+      // TCI SERVER -- ITS OWN SECTION, not three more keys in "general".
+      //
+      // Enabled started life as general.tciServer, which was wrong for a reason
+      // that only became visible when the second setting arrived: general is a
+      // junk drawer, and a subsystem with five settings is not a general
+      // setting (NY4I spotted it in the file).  udpBroadcast is already a
+      // top-level section and TCI is the same KIND of thing -- a network
+      // service TR4W offers -- so it gets the same treatment.
+      //
+      // Debug and MaxTxSeconds were in tr4w.ini only because they had nowhere
+      // else to live; they are the reason this could not stay as it was.
       FTCIServerEnabled: boolean;
+      FTCIPort: integer;
+      FTCIBindAll: boolean;
+      FTCIDebug: boolean;
+      FTCIMaxTxSeconds: integer;
       procedure LoadRadio(const aIni: TCustomIniFile; const aSection, aName: string);
       procedure SaveRadio(const aIni: TCustomIniFile; const aRadio: TRadioDefinition);
       procedure LoadProfile(const aIni: TCustomIniFile; const aSection, aName: string);
@@ -306,11 +322,26 @@ type
       property AutoConnectOnStartup: boolean read FAutoConnectOnStartup write FAutoConnectOnStartup;
 
       // Offers a TCI server so other programs can reach the radio THIS
-      // program has the COM port open on.  It lives beside AutoConnect
-      // because it is the same kind of setting: a station-wide statement
-      // about how the radios are made available, not a property of any one
-      // radio or profile.
+      // program has the COM port open on.  Station-wide, not a property of any
+      // one radio or profile -- which is why it is NOT inside the radios
+      // array.  See the field declarations for why it has its own section
+      // rather than sitting in "general".
       property TCIServerEnabled: boolean read FTCIServerEnabled write FTCIServerEnabled;
+      // ZERO MEANS "THE SERVER'S DEFAULT", not port zero.
+      //
+      // The store deliberately does NOT name 50001.  That constant belongs to
+      // uTCIServer, and this unit's uses clause is pure RTL on purpose --
+      // uTestRadioConfigStore links it standalone, so reaching for uTCIServer
+      // would drag LOGRADIO and MainUnit into the test EXE to learn one
+      // integer.  Copying the number here instead would be two defaults for
+      // one setting, which is the duplication this whole section exists to
+      // remove.  So the sentinel says "not chosen" and the apply layer, which
+      // can see both, substitutes the real default -- the same idiom as
+      // AutoInfoLevel's negative "you decide".
+      property TCIPort: integer read FTCIPort write FTCIPort;
+      property TCIBindAll: boolean read FTCIBindAll write FTCIBindAll;
+      property TCIDebug: boolean read FTCIDebug write FTCIDebug;
+      property TCIMaxTxSeconds: integer read FTCIMaxTxSeconds write FTCIMaxTxSeconds;
    end;
 
 const
@@ -330,6 +361,15 @@ const
    JSONKEY_RADIOS        = 'radios';
    JSONKEY_PROFILES      = 'profiles';
    JSONKEY_NAME          = 'name';
+   JSONKEY_TCI           = 'tci';
+
+   // Defaults.  MAX TX SECONDS MUST MATCH TR4W_TCI_MAX_TX_SECONDS in VC.pas --
+   // two defaults for one setting is how a value silently changes meaning
+   // depending on which path initialised it.
+   TCI_DEFAULT_MAX_TX_SECONDS = 180;
+   TCI_DEFAULT_DEBUG          = False;
+   TCI_DEFAULT_BINDALL        = False;
+   TCI_PORT_USE_SERVER_DEFAULT = 0;   // see the TCIPort property
 
    RADIOSECTION_PREFIX   = 'Radio.';
    PROFILESECTION_PREFIX = 'Profile.';
@@ -608,7 +648,12 @@ begin
    FProfiles.Clear;
    FActiveProfileName    := '';
    FAutoConnectOnStartup := False;
+
    FTCIServerEnabled     := False;
+   FTCIPort              := TCI_PORT_USE_SERVER_DEFAULT;
+   FTCIBindAll           := TCI_DEFAULT_BINDALL;
+   FTCIDebug             := TCI_DEFAULT_DEBUG;
+   FTCIMaxTxSeconds      := TCI_DEFAULT_MAX_TX_SECONDS;
 end;
 
 function TRadioConfigStore.RadioCount: integer;
@@ -1220,17 +1265,33 @@ end;
 function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
-   general: TJSONObject;
+   general, tci: TJSONObject;
    i: integer;
 begin
    Result := TJSONObject.Create;
    Result.AddPair(JSONKEY_VERSION, TJSONNumber.Create(JSON_SCHEMA_VERSION));
 
+   // "general" keeps what is genuinely general: which profile is active, and
+   // whether to connect the radios at startup.  Both are single station-wide
+   // statements with no subsystem of their own.
    general := TJSONObject.Create;
    general.AddPair('activeProfile', FActiveProfileName);
    general.AddPair('autoConnect',   TJSONBool.Create(FAutoConnectOnStartup));
-   general.AddPair('tciServer',     TJSONBool.Create(FTCIServerEnabled));
    Result.AddPair(JSONKEY_GENERAL, general);
+
+   // tciServer USED to be written into "general" above.  It is not written
+   // there any more -- writing both would create two sources of truth for one
+   // setting, and the next person to edit the file by hand would have no way
+   // to know which one wins.  LoadFromJSON still READS the old key when the
+   // new section is absent, which is what makes an existing file migrate
+   // silently and correctly on its first save.
+   tci := TJSONObject.Create;
+   tci.AddPair('enabled',      TJSONBool.Create(FTCIServerEnabled));
+   tci.AddPair('port',         TJSONNumber.Create(FTCIPort));
+   tci.AddPair('bindAll',      TJSONBool.Create(FTCIBindAll));
+   tci.AddPair('debug',        TJSONBool.Create(FTCIDebug));
+   tci.AddPair('maxTxSeconds', TJSONNumber.Create(FTCIMaxTxSeconds));
+   Result.AddPair(JSONKEY_TCI, tci);
 
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
    // form had to encode the name in the section header, which made a name
@@ -1255,7 +1316,7 @@ procedure TRadioConfigStore.LoadFromJSON(const aRoot: TJSONObject);
 var
    arr: TJSONArray;
    obj: TJSONObject;
-   general: TJSONObject;
+   general, tci: TJSONObject;
    radioDef: TRadioDefinition;
    profile: TStationProfile;
    v: TJSONValue;
@@ -1276,7 +1337,32 @@ begin
       end;
    FActiveProfileName    := JSONStr(general,  'activeProfile', '');
    FAutoConnectOnStartup := JSONBool(general, 'autoConnect',   False);
-   FTCIServerEnabled     := JSONBool(general, 'tciServer',     False);
+
+   // TCI: the new section, falling back to the OLD general.tciServer key.
+   //
+   // The fallback is not politeness, it is the difference between a rename and
+   // a silent reset.  Every existing file has general.tciServer and no "tci"
+   // section; reading only the new location would default enabled to False and
+   // turn the operator's TCI server OFF on upgrade -- with nothing to see, at
+   // the exact moment they went looking for it.  That is the same
+   // silently-defaulted-to-a-legal-zero trap this project keeps meeting.
+   //
+   // Reading the old key as the DEFAULT for the new one means both files
+   // behave correctly and the first save writes the new shape, so the
+   // migration completes itself with no version branch.
+   tci := nil;
+   v := aRoot.GetValue(JSONKEY_TCI);
+   if (v <> nil) and (v is TJSONObject) then
+      begin
+      tci := TJSONObject(v);
+      end;
+
+   FTCIServerEnabled := JSONBool(tci, 'enabled',
+                                 JSONBool(general, 'tciServer', False));
+   FTCIPort          := JSONInt(tci,  'port',         TCI_PORT_USE_SERVER_DEFAULT);
+   FTCIBindAll       := JSONBool(tci, 'bindAll',      TCI_DEFAULT_BINDALL);
+   FTCIDebug         := JSONBool(tci, 'debug',        TCI_DEFAULT_DEBUG);
+   FTCIMaxTxSeconds  := JSONInt(tci,  'maxTxSeconds', TCI_DEFAULT_MAX_TX_SECONDS);
 
    // Radios before profiles: a profile's radio references are only meaningful
    // once the radios exist, and Validate is easier to reason about that way.
@@ -1488,6 +1574,13 @@ begin
 
    FActiveProfileName    := aIni.ReadString(GENERALSECTION, 'ActiveProfile', '');
    FAutoConnectOnStartup := aIni.ReadBool(GENERALSECTION,   'AutoConnect',   False);
+
+   // The legacy ini store, which JSON replaced.  It is a READ path for old
+   // files, so it keeps the flat [General] TCIServer key it was written with
+   // and does NOT grow the new settings -- adding them here would mean
+   // maintaining the new shape in a format that is on its way out.  A file
+   // loaded through here gets the defaults for the rest and writes the full
+   // tci section on its first JSON save.
    FTCIServerEnabled     := aIni.ReadBool(GENERALSECTION,   'TCIServer',     False);
 end;
 

@@ -64,6 +64,11 @@ type
       procedure Test_ValidateAllowsNetworkRadiosSharingNothing;
       procedure Test_ValidateCatchesMissingActiveProfile;
       procedure Test_PasswordRoundTripsAsPlaintext;
+      procedure Test_TCISectionRoundTrips;
+      procedure Test_TCIMigratesFromGeneralTciServer;
+      procedure Test_TCINewSectionWinsOverTheOldKey;
+      procedure Test_TCIDefaultsWhenAbsent;
+      procedure Test_TCISaveStopsWritingTheOldKey;
       procedure Test_SeedFromLegacyIniBuildsBothSlots;
       procedure Test_SeedSkipsUnconfiguredSlot;
       procedure Test_SeedWithNoRadiosProducesEmptyStore;
@@ -1533,6 +1538,166 @@ begin
    CheckEquals(Ord('{'), bytes[0], 'the file starts with the opening brace');
 end;
 
+
+{ ---------------------------------------------------------------- TCI -------
+  The TCI settings moved out of "general" into their own "tci" section, and two
+  of them (debug, maxTxSeconds) moved out of tr4w.ini at the same time.
+
+  THE MIGRATION IS THE POINT OF THESE TESTS.  Every existing file on every
+  operator's machine has general.tciServer and no tci section.  Reading only the
+  new location would default enabled to False and turn the TCI server OFF on
+  upgrade -- silently, at the moment the operator went looking for it.  That is
+  the same silently-defaulted-to-a-legal-zero failure this project keeps
+  meeting, and a rename is exactly where it happens.
+  --------------------------------------------------------------------------- }
+
+function TCIJson(const aBody: string): TJSONObject;
+begin
+   Result := TJSONObject.ParseJSONValue(aBody) as TJSONObject;
+end;
+
+procedure TRadioConfigStoreTests.Test_TCISectionRoundTrips;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_TCISectionRoundTrips');
+   store := TRadioConfigStore.Create;
+   try
+      store.TCIServerEnabled := True;
+      store.TCIPort          := 50123;
+      store.TCIBindAll       := True;
+      store.TCIDebug         := True;
+      store.TCIMaxTxSeconds  := 42;
+
+      root := store.SaveToJSON;
+      try
+         store.Clear;
+         store.LoadFromJSON(root);
+         CheckTrue (store.TCIServerEnabled,          'enabled survives');
+         CheckEquals(50123, store.TCIPort,           'port survives');
+         CheckTrue (store.TCIBindAll,                'bindAll survives');
+         CheckTrue (store.TCIDebug,                  'debug survives');
+         CheckEquals(42, store.TCIMaxTxSeconds,      'maxTxSeconds survives');
+      finally
+         root.Free;
+      end;
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_TCIMigratesFromGeneralTciServer;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_TCIMigratesFromGeneralTciServer');
+   // EXACTLY the shape of every file written before this change: the old key,
+   // no tci section.  If this ever fails, upgrading silently disables the
+   // operator's TCI server.
+   root := TCIJson('{"version":1,"general":{"activeProfile":"","autoConnect":true,' +
+                   '"tciServer":true},"radios":[],"profiles":[]}');
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckTrue(store.TCIServerEnabled,
+                   'general.tciServer=true must survive the move to the tci section');
+         // The settings that did not exist in the old file take their defaults.
+         CheckEquals(180, store.TCIMaxTxSeconds, 'maxTxSeconds defaults to 180');
+         CheckFalse(store.TCIDebug,              'debug defaults off');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_TCINewSectionWinsOverTheOldKey;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_TCINewSectionWinsOverTheOldKey');
+   // A hand-edited file could carry both.  The new section is the system of
+   // record; the old key is only a fallback for when the new one is ABSENT.
+   // Getting this backwards would make the stale copy authoritative forever.
+   root := TCIJson('{"version":1,"general":{"tciServer":true},' +
+                   '"tci":{"enabled":false},"radios":[],"profiles":[]}');
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckFalse(store.TCIServerEnabled,
+                    'tci.enabled=false must beat the legacy general.tciServer=true');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_TCIDefaultsWhenAbsent;
+var
+   store: TRadioConfigStore;
+   root: TJSONObject;
+begin
+   BeginTest('Test_TCIDefaultsWhenAbsent');
+   // Neither the section nor the old key: a file from before TCI existed.
+   root := TCIJson('{"version":1,"general":{},"radios":[],"profiles":[]}');
+   try
+      store := TRadioConfigStore.Create;
+      try
+         store.LoadFromJSON(root);
+         CheckFalse(store.TCIServerEnabled, 'the server is OFF unless asked for');
+         CheckFalse(store.TCIBindAll,       'loopback only unless asked for');
+         CheckFalse(store.TCIDebug,         'debug off');
+         CheckEquals(180, store.TCIMaxTxSeconds, 'maxTxSeconds default matches VC.pas');
+         // 0 is the sentinel meaning "use the server's default", NOT port zero.
+         // The store must not name 50001; the apply layer substitutes it.
+         CheckEquals(0, store.TCIPort, 'port 0 means "the server decides"');
+      finally
+         store.Free;
+      end;
+   finally
+      root.Free;
+   end;
+end;
+
+procedure TRadioConfigStoreTests.Test_TCISaveStopsWritingTheOldKey;
+var
+   store: TRadioConfigStore;
+   root, general: TJSONObject;
+begin
+   BeginTest('Test_TCISaveStopsWritingTheOldKey');
+   // Writing both would give one setting two homes, and the next person to
+   // hand-edit the file would have no way to tell which one wins.  The
+   // migration completes itself on the first save precisely BECAUSE the old
+   // key stops being written.
+   store := TRadioConfigStore.Create;
+   try
+      store.TCIServerEnabled := True;
+      root := store.SaveToJSON;
+      try
+         general := root.GetValue('general') as TJSONObject;
+         CheckTrue(general <> nil, 'general section still exists');
+         CheckTrue(general.GetValue('tciServer') = nil,
+                   'general.tciServer must NO LONGER be written');
+         CheckTrue(root.GetValue('tci') <> nil, 'the tci section is written');
+         // The keys that genuinely are general stay put.
+         CheckTrue(general.GetValue('activeProfile') <> nil, 'activeProfile stays in general');
+         CheckTrue(general.GetValue('autoConnect')   <> nil, 'autoConnect stays in general');
+      finally
+         root.Free;
+      end;
+   finally
+      store.Free;
+   end;
+end;
+
 procedure TRadioConfigStoreTests.RunAllTests;
 begin
    try
@@ -1541,6 +1706,11 @@ begin
    Test_SaveRemovesDeletedSections;
    Test_LoadOfEmptyFileYieldsEmptyStore;
    Test_PasswordRoundTripsAsPlaintext;
+   Test_TCISectionRoundTrips;
+   Test_TCIMigratesFromGeneralTciServer;
+   Test_TCINewSectionWinsOverTheOldKey;
+   Test_TCIDefaultsWhenAbsent;
+   Test_TCISaveStopsWritingTheOldKey;
 
    Test_AddRejectsBlankAndDuplicateNames;
    Test_NameMatchingIsCaseInsensitive;
