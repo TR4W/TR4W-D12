@@ -883,6 +883,315 @@ object PrefsForm: TPrefsForm
         TabOrder = 10
       end
     end
+    object layStation: TLayout
+      Tag = 1
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 6
+      object lblStationHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Station information'
+        TabOrder = 0
+      end
+      object lblMyCall: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 38.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Callsign:'
+        TabOrder = 1
+      end
+      object edtMyCall: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+      end
+      object lblMyName: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 68.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'First name:'
+        TabOrder = 3
+      end
+      object edtMyName: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+      end
+      object lblMyGrid: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 98.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Grid square:'
+        TabOrder = 5
+      end
+      object edtMyGrid: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 94.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+      end
+      object lblMyContinent: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 128.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Continent:'
+        TabOrder = 7
+      end
+      object cbxMyContinent: TComboBox
+        Position.X = 140.000000000000000000
+        Position.Y = 124.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 8
+      end
+      object lblMyZone: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 158.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'CQ zone:'
+        TabOrder = 9
+      end
+      object edtMyZone: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 154.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 10
+      end
+      object lblMyITUZone: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 188.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'ITU zone:'
+        TabOrder = 11
+      end
+      object edtMyITUZone: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 184.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 12
+      end
+      object lblMyState: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 218.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'State/Province:'
+        TabOrder = 13
+      end
+      object edtMyState: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 214.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 14
+      end
+      object lblMySection: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 248.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'ARRL section:'
+        TabOrder = 15
+      end
+      object edtMySection: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 244.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 16
+      end
+      object lblMyCountry: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 278.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Country:'
+        TabOrder = 17
+      end
+      object edtMyCountry: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 274.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 18
+      end
+      object lblMyPostalCode: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 308.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Postal code:'
+        TabOrder = 19
+      end
+      object edtMyPostalCode: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 304.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 20
+      end
+      object lblContestHeading: TLabel
+        Position.X = 380.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 280.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Contest exchange'
+        TabOrder = 21
+      end
+      object lblMyCheck: TLabel
+        Position.X = 380.000000000000000000
+        Position.Y = 38.000000000000000000
+        Size.Width = 110.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Check:'
+        TabOrder = 22
+      end
+      object edtMyCheck: TEdit
+        Position.X = 496.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 150.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 23
+      end
+      object lblMyPrec: TLabel
+        Position.X = 380.000000000000000000
+        Position.Y = 68.000000000000000000
+        Size.Width = 110.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Precedence:'
+        TabOrder = 24
+      end
+      object edtMyPrec: TEdit
+        Position.X = 496.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 150.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 25
+      end
+      object lblMyFDClass: TLabel
+        Position.X = 380.000000000000000000
+        Position.Y = 98.000000000000000000
+        Size.Width = 110.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'FD class:'
+        TabOrder = 26
+      end
+      object edtMyFDClass: TEdit
+        Position.X = 496.000000000000000000
+        Position.Y = 94.000000000000000000
+        Size.Width = 150.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 27
+      end
+      object lblMyFOCNumber: TLabel
+        Position.X = 380.000000000000000000
+        Position.Y = 128.000000000000000000
+        Size.Width = 110.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'FOC number:'
+        TabOrder = 28
+      end
+      object edtMyFOCNumber: TEdit
+        Position.X = 496.000000000000000000
+        Position.Y = 124.000000000000000000
+        Size.Width = 150.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 29
+      end
+      object lblMyIOTA: TLabel
+        Position.X = 380.000000000000000000
+        Position.Y = 158.000000000000000000
+        Size.Width = 110.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'IOTA:'
+        TabOrder = 30
+      end
+      object edtMyIOTA: TEdit
+        Position.X = 496.000000000000000000
+        Position.Y = 154.000000000000000000
+        Size.Width = 150.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 31
+      end
+      object lblMyPark: TLabel
+        Position.X = 380.000000000000000000
+        Position.Y = 188.000000000000000000
+        Size.Width = 110.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Park:'
+        TabOrder = 32
+      end
+      object edtMyPark: TEdit
+        Position.X = 496.000000000000000000
+        Position.Y = 184.000000000000000000
+        Size.Width = 150.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 33
+      end
+      object lblStationHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 360.000000000000000000
+        Size.Width = 640.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'These are sent to the other stations in a multi-operator network w' +
+          'hen you change them, so all positions agree on the exchange.'
+        TabOrder = 34
+      end
+    end
   end
   object btnOK: TButton
     Anchors = [akRight, akBottom]
