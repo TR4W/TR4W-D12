@@ -371,6 +371,41 @@ begin
             begin
             if (GetTickCount - lastPollTick >= LongWord(ro.pollingInterval)) then
                begin
+               // MEASURED, K3S over serial at 38400, 2026-08-09, with a
+               // standalone harness (tools/k3watch.py) so TR4W was not in
+               // the path.  Command -> the radio REPORTING the new state:
+               //
+               //   poll during TX          TX; ->tx    RX; ->rx
+               //   IF; only, paced         125-146 ms   88-124 ms
+               //   4 commands, paced*      406 ms       672 ms
+               //   4 commands, waiting
+               //     for EVERY reply       282 ms       609 ms
+               //   (*released on the first reply -- what the gate below does)
+               //
+               // Read the last two rows together: waiting for every reply
+               // instead of the first buys 63 ms.  The 500 ms between row 1
+               // and row 3 is the radio's own CAT processing, and the only
+               // variable is how many commands it was asked for -- roughly
+               // 125 ms per command WHILE TRANSMITTING.  An unkey waits
+               // behind whatever is already in the radio's buffer, and no
+               // amount of pacing changes what is already there.
+               //
+               // So this gate is worth having and worth NOT extending: it
+               // stops backlog growing without bound, which is what turned a
+               // 100 ms unkey into 1200 ms.  Making it wait for the last
+               // reply of a multi-command poll was measured and rejected --
+               // 63 ms, in exchange for every driver having to declare how
+               // many replies its poll expects, which Icom CI-V and the
+               // binary Yaesus cannot cleanly answer.
+               //
+               // The lever that DOES work is asking for less while
+               // transmitting, and that is a question about what the
+               // operator can change mid-transmission, not a tuning knob.
+               // Reducing the Elecraft poll to 'IF;' was tried and reverted:
+               // the operator can move VFO B while the radio is transmitting
+               // (NY4I), so a poll that cannot see it shows a frequency the
+               // radio is not on.
+               //
                // ONE OUTSTANDING POLL AT A TIME.  This loop used to fire every
                // pollingInterval regardless of whether the radio had answered
                // the last one, so a radio slower than the interval piled up
