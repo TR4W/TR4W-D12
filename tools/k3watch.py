@@ -135,6 +135,12 @@ def main():
                          "poll the IF reply releases it while FB/MD$/DT$ are "
                          "still in flight.  Run it against plain --burst to "
                          "see what strengthening the gate would buy.")
+    ap.add_argument("--poll", default="",
+                    help="exact poll string to send each cycle, e.g. "
+                         "--poll IF;FB; or --poll TQ;  Overrides --burst "
+                         "and --probe.  Use it to price each command: on a "
+                         "K3 every extra command in the transmit-time poll "
+                         "cost roughly 125 ms of unkey latency.")
     ap.add_argument("--raw", action="store_true",
                     help="print every response, not just the changes")
     ap.add_argument("--max-seconds", type=float, default=60.0,
@@ -143,7 +149,29 @@ def main():
                          "wrong -- see the reply timeout below.")
     args = ap.parse_args()
 
-    poll = "IF;FB;MD$;DT$;\r" if args.burst else "IF;\r"
+    # WHAT TO SEND EACH CYCLE.
+    #
+    # --poll wins, so any combination can be measured without editing this
+    # file.  That matters: the useful question is not "burst or not" but what
+    # each COMMAND in the transmit-time poll costs in unkey latency, and that
+    # is a table someone builds by trying them.
+    if args.poll:
+        poll = args.poll
+    elif args.burst:
+        poll = "TQ;FB;MD$;DT$;" if args.probe == "tq" else "IF;FB;MD$;DT$;"
+    elif args.probe == "tq":
+        poll = "TQ;"
+    else:
+        poll = "IF;"
+    CR = chr(13)
+    if not poll.endswith(CR):
+        poll += CR
+
+    # Where the T/R flag is read from follows what we actually ASK for, so a
+    # switch cannot disagree with the poll.  --probe tq was parsed and then
+    # never used to build the poll string, so it has been sending IF; all
+    # along -- a silent no-op edit that nothing checked.
+    use_tq = "TQ" in poll
 
     # DO NOT let the port open assert DTR/RTS.
     #
@@ -183,6 +211,7 @@ def main():
 
     buf = ""
     poll_buf = ""          # replies to the poll currently outstanding
+    last_rx = 0.0          # when bytes last arrived, for --wait-all
     last_flag = None
     last_change = time.monotonic()
     key_at = None
@@ -244,10 +273,11 @@ def main():
                 chunk = data.decode("latin-1")
                 buf += chunk
                 poll_buf += chunk          # THIS poll's replies only
+                last_rx = now               # for the quiet-period rule
                 if len(buf) > 8192:
                     buf = buf[-2048:]
 
-            if args.probe == "tq" and not args.burst:
+            if use_tq:
                 resp = find_last_tq(buf)
             else:
                 resp = find_last_if(buf)
@@ -265,14 +295,22 @@ def main():
             # reply is the one that means "the radio has finished with that
             # burst".  Run it against plain --burst to see what strengthening
             # the gate would buy before changing TR4W.
-            if args.wait_all and args.burst:
-                # Against poll_buf, NOT buf.  The first version tested the
-                # cumulative buffer, where "DT" is present from the first
-                # burst onwards and the test is therefore true for ever --
-                # so --wait-all silently did not wait, and measured the same
-                # thing as plain --burst.  poll_buf is reset on every send,
-                # so a match here means THIS burst has been answered.
-                if DT_REPLY.search(poll_buf):
+            if args.wait_all:
+                # A QUIET PERIOD, not a named last reply.
+                #
+                # Waiting for "the reply to the last command" has to know
+                # what that command is, which does not survive --poll taking
+                # an arbitrary string.  Silence does: the poll is answered
+                # when the radio stops talking.  It is also the heuristic
+                # worth considering for TR4W, where Icom CI-V and the binary
+                # Yaesus answer in frames that do not map one-to-one onto
+                # commands and so cannot be counted either.
+                #
+                # Against poll_buf, which is reset on every send.  The first
+                # version tested "DT" in the CUMULATIVE buffer, where it is
+                # present from the first burst onwards -- so it was true for
+                # ever and --wait-all never waited at all.
+                if poll_buf and (now - last_rx) > 0.03:
                     pending = False
             elif resp is not None:
                 pending = False
