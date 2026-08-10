@@ -1,8 +1,8 @@
 # Place at .github/workflows/release.yml in TR4W/TR4W
 #
 # Triggers:
-#   1. Tag push v4.X.Y       -> English-only build + ENG installer
-#   2. Tag push v4.X.Y-all   -> Full ENG + 7 per-language installers
+#   1. Tag push vX.Y.Z       -> English-only build + ENG installer
+#   2. Tag push vX.Y.Z-all   -> Full ENG + 7 per-language installers
 #   3. Manual (Actions UI)   -> Run workflow button, "Build all languages" checkbox
 #
 # Pipeline (TR4W is Windows-only; ALL jobs run on the self-hosted
@@ -44,7 +44,14 @@ name: Release Build
 on:
   push:
     tags:
-      - 'v4.*.*'           # matches v4.147.17 and v4.147.17-all
+      # Deliberately MAJOR-AGNOSTIC.  This read 'v4.*.*' until 2026-08-10, when
+      # the D12 line became the release line and the version went to 5.0.0 --
+      # a v5.0.0 tag matched nothing and would have run NO release build and NO
+      # VirusTotal scan, silently, because a tag that matches no trigger is not
+      # an error.  Nothing else here is major-locked: the version is parsed by
+      # stripping a leading 'v' and a trailing '-all', and version-guard.yml
+      # checks only that the shape is dotted-numeric.
+      - 'v[0-9]*.*.*'      # matches v4.147.17, v5.0.0, and either with -all
   workflow_dispatch:
     inputs:
       all_languages:
