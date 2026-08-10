@@ -163,6 +163,12 @@ type
     procedure RITOff(whichVFO: TVFO); override;
     procedure RITClear(whichVFO: TVFO); override;
     procedure SetRITFreq(whichVFO: TVFO; hz: integer); override;
+  public
+    // D7 keyed this radio with the 08 frame -- see the constants in
+    // uRadioYaesuBinary.  Declared HERE because the base must never ask
+    // which model it is.
+    function PTTFrameOn: string; override;
+    function PTTFrameOff: string; override;
   end;
 
 implementation
@@ -539,5 +545,16 @@ end;
 
 
 // This unit registers NOTHING -- it is the shared base.
+
+
+function TYaesuFT817Group.PTTFrameOn: string;
+begin
+   Result := YAESU_PTT_ON_08;
+end;
+
+function TYaesuFT817Group.PTTFrameOff: string;
+begin
+   Result := YAESU_PTT_OFF_08;
+end;
 
 end.

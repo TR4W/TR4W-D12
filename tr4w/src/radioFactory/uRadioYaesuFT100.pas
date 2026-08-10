@@ -94,6 +94,12 @@ type
     procedure ProcessMsg(msg: string); override;
     procedure PollRadioState; override;
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
+  public
+    // D7 keyed this radio with the 0F frame -- see the constants in
+    // uRadioYaesuBinary.  Declared HERE because the base must never ask
+    // which model it is.
+    function PTTFrameOn: string; override;
+    function PTTFrameOff: string; override;
   end;
 
 implementation
@@ -225,6 +231,17 @@ begin
       begin
       Self.SetMode(mode, vfo);
       end;
+end;
+
+
+function TFT100Radio.PTTFrameOn: string;
+begin
+   Result := YAESU_PTT_ON_0F;
+end;
+
+function TFT100Radio.PTTFrameOff: string;
+begin
+   Result := YAESU_PTT_OFF_0F;
 end;
 
 initialization

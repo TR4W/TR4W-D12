@@ -110,6 +110,12 @@ type
     procedure PollRadioState; override;
     procedure SetFrequency(freq: longint; vfo: TVFO; mode: TRadioMode); override;
     procedure SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA); override;
+  public
+    // D7 keyed this radio with the 0F frame -- see the constants in
+    // uRadioYaesuBinary.  Declared HERE because the base must never ask
+    // which model it is.
+    function PTTFrameOn: string; override;
+    function PTTFrameOff: string; override;
   end;
 
 implementation
@@ -266,6 +272,17 @@ begin
    end;
    // Row MB=3: the mode byte sits at index 3, opcode last.
    Self.SendBytes($00, $00, $00, modeByte, FT747_SET_MODE_OPCODE);
+end;
+
+
+function TFT747GXRadio.PTTFrameOn: string;
+begin
+   Result := YAESU_PTT_ON_0F;
+end;
+
+function TFT747GXRadio.PTTFrameOff: string;
+begin
+   Result := YAESU_PTT_OFF_0F;
 end;
 
 initialization
