@@ -2634,61 +2634,16 @@ begin
   BeSilent := PreviousBeSilent;
 end;
 
-// Put every radio back into receive.  Called FIRST in tr4w_ShutDown, while
-// the ports are still open and before anything is torn down.
-//
-// WHY THIS EXISTS.  NY4I quit TR4W while WSJT-X was transmitting over TCI and
-// the K3 STAYED KEYED.  A transmitter left on by exiting a program is the
-// worst failure this project can have -- it is a regulatory problem before it
-// is an engineering one, and the operator has already walked away.
-//
-// UNCONDITIONAL on purpose.  It does not ask who keyed the radio or whether
-// we believe it is transmitting: an RX to a receiving radio is a no-op, and
-// "we thought it was not transmitting" is exactly how a rig gets left on.
-// It also does not go through tPTTVIACAT, which answers only for ActiveRadio
-// and is gated on PTT VIA COMMANDS -- neither is a condition worth honouring
-// at shutdown.
-//
-// SYNCHRONOUS, on this thread.  Marshalling was the bug: ReleasePTT queued
-// its unkey to the main thread, and by shutdown the message loop no longer
-// drains the queue.  SendToRadio takes SocketLock, so calling it here is safe.
-//
-// Hardware PTT on DTR/RTS is not covered and does not need to be -- closing
-// the port drops those lines.
-procedure PutAllRadiosIntoReceive;
-
-   procedure Unkey(rig: RadioPtr; const aWhich: string);
-   begin
-      if (rig = nil) or (rig^.tFactoryObject = nil) then
-         begin
-         Exit;
-         end;
-      try
-         logger.Info('[Shutdown] returning %s to receive', [aWhich]);
-         rig^.tFactoryObject.Receive;
-      except
-         on E: Exception do
-            begin
-            // Reported, never swallowed: if this failed the operator may be
-            // leaving a keyed transmitter, and the log is the only record.
-            logger.Error('[Shutdown] could NOT return %s to receive: %s - %s',
-                         [aWhich, E.ClassName, E.Message]);
-            end;
-      end;
-   end;
-
-begin
-   Unkey(@Radio1, 'radio 1');
-   Unkey(@Radio2, 'radio 2');
-end;
-
 procedure tr4w_ShutDown;
 begin
   { PTTOff; // 4.113.1
   scWK_RESET; // 4.113.1
   WkClose; // 4.113.1 }
 
-  // FIRST, before any teardown: the ports are still open here.
+  // Backstop only.  The call that MATTERS is at the top of ExitProgram --
+  // by the time this runs the radios are already disconnected.  Left here
+  // for any exit path that does not go through ExitProgram; it reports
+  // honestly when there is nothing left to talk to.
   PutAllRadiosIntoReceive;
 
   if IsDXLabPathfinderRunning then
