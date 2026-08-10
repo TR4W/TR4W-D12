@@ -98,6 +98,23 @@ def tr_flag(resp):
     return resp[TR_INDEX]
 
 
+def read_ai(sp):
+    """Ask the radio its auto-info level.  Returns e.g. 'AI2;', or '' if it
+    did not answer.  Used both to record the level before changing it and to
+    confirm a change actually took."""
+    try:
+        sp.reset_input_buffer()
+        sp.write(b"AI;" + bytes([13]))
+        time.sleep(0.4)
+        d = sp.read(4096).decode("latin-1", "replace")
+        i = d.rfind("AI")
+        if i >= 0 and len(d) >= i + 4 and d[i + 3] == ";":
+            return d[i:i + 4]
+    except Exception:
+        pass
+    return ""
+
+
 def ensure_receive(sp, attempts=5):
     """Send RX; and CONFIRM the rig acted on it.  Returns True if it did.
 
@@ -201,6 +218,11 @@ def main():
     # the point: the question is what the radio sends WITHOUT being asked.
     listen_only = (args.ai is not None and args.ai > 0 and not args.poll)
 
+    # Declared here, not inside the --ai block: the exit path references it
+    # unconditionally, and a NameError in a finally clause would take out
+    # the unkey confirmation with it.
+    original_ai = ''
+
     if args.poll:
         poll = args.poll
     elif args.burst:
@@ -251,21 +273,31 @@ def main():
     sp.reset_input_buffer()
 
     if args.ai is not None:
-        # SET IT, THEN ASK THE RADIO WHAT IT THINKS -- and print the answer.
-        # Announcing "auto-info set to AI0" without showing the reply is an
-        # assertion, not a measurement, and NY4I rightly would not take it on
-        # trust when the result of a run depends on it.
+        # READ BEFORE WRITE, AND RESTORE WHAT WAS THERE.
+        #
+        # The first version SET the level and only then queried it, so the
+        # radio's original setting was destroyed before it was ever read --
+        # and the exit path restored a hard-coded AI0, which is not "leave it
+        # as we found it", it is "leave it how I assumed it was".  An operator
+        # deliberately running AI2 would have had it silently turned off by a
+        # measurement tool (NY4I).
+        #
+        # Both the before and after values are PRINTED, because a run whose
+        # result depends on the AI state has to show that state rather than
+        # assert it.
+        original_ai = read_ai(sp)
+        print(f"auto-info: radio was at {original_ai if original_ai else 'unknown'}")
+
         sp.write(("AI%d;" % args.ai).encode() + bytes([13]))
         time.sleep(0.3)
         sp.reset_input_buffer()
-        sp.write(b"AI;" + bytes([13]))
-        time.sleep(0.4)
-        echoed = sp.read(4096).decode("latin-1", "replace").strip()
-        sp.reset_input_buffer()
-        print(f"auto-info: sent AI{args.ai};  radio answered {echoed!r}"
+        now_ai = read_ai(sp)
+        print(f"auto-info: sent AI{args.ai};  radio now answers "
+              f"{now_ai if now_ai else 'nothing'}"
               + ("   LISTENING ONLY -- nothing is polled" if listen_only else ""))
-        if echoed and ("AI%d;" % args.ai) not in echoed:
-            print(f"*** WARNING: radio did not confirm AI{args.ai} -- readings below may not mean what you think")
+        if now_ai != ("AI%d;" % args.ai):
+            print(f"*** WARNING: radio did not confirm AI{args.ai} -- "
+                  f"readings below may not mean what you think")
 
     if listen_only:
         print("not polling -- every line below is something the RADIO sent")
@@ -471,15 +503,22 @@ def main():
     except KeyboardInterrupt:
         print("\ninterrupted")
     finally:
-        if args.ai is not None and args.ai != 0:
-            # Leave the rig as we found it.  A K3 left chattering at AI2 is a
-            # surprise for whatever opens the port next -- TR4W included.
+        if args.ai is not None and original_ai:
+            # Restore WHAT WAS THERE, not a guess.  The level survives a port
+            # close on this radio -- measured: a K3S still answered AI2; after
+            # the port was shut for two seconds -- so whatever we leave behind
+            # is what the next program meets.
             try:
-                sp.write(b"AI0;" + bytes([13]))
-                time.sleep(0.2)
-                print("auto-info restored to AI0")
+                sp.write(original_ai.encode() + bytes([13]))
+                time.sleep(0.3)
+                back = read_ai(sp)
+                if back == original_ai:
+                    print(f"auto-info restored to {original_ai}")
+                else:
+                    print(f"*** WARNING: tried to restore {original_ai}, "
+                          f"radio answers {back or 'nothing'} -- check the radio")
             except Exception:
-                print("*** WARNING: could not restore AI0 -- check the radio")
+                print(f"*** WARNING: could not restore {original_ai} -- check the radio")
 
         if tally:
             print()
