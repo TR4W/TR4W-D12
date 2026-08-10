@@ -13,11 +13,16 @@ unit uTestIcomCIV;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, uIcomCIV;
+   SysUtils, uTR4WTestFramework, uIcomCIV, uRadioIcomBase;
 
 type
    TIcomCIVTests = class(TTestCase)
    protected
+      // PTT -- the payload bytes, pinned
+      procedure Test_PTTOnPayloadIsSubcommandPlusData;
+      procedure Test_PTTOffPayloadIsSubcommandPlusData;
+      procedure Test_PTTPayloadsAreNotBareSubcommands;
+
       // BCD byte encode/decode
       procedure Test_ByteToBCD_Zero;
       procedure Test_ByteToBCD_SingleDigit;
@@ -62,6 +67,55 @@ type
    end;
 
 implementation
+
+{ ---------------------------------------------------------------- PTT ----- }
+
+// CI-V $1C takes a SUBCOMMAND AND A DATA BYTE:
+//
+//     1C 00 01   set transmit
+//     1C 00 00   set receive
+//     1C 00      READ the transmit state
+//     1C 01      READ the ATU state
+//
+// The constants used to be $00 and $01 and were passed as the WHOLE payload,
+// so Transmit asked the radio whether it was transmitting and Receive asked
+// about the antenna tuner.  Nothing keyed, and nothing complained: a frame
+// had been sent, so tPTTVIACAT reported success.  It took a bench session on
+// an IC-7100 over TCI to notice.
+//
+// These pin the bytes rather than the constant names, because the defect was
+// a value that read perfectly well.
+
+procedure TIcomCIVTests.Test_PTTOnPayloadIsSubcommandPlusData;
+begin
+   BeginTest('Test_PTTOnPayloadIsSubcommandPlusData');
+   CheckEquals(2, Length(string(CIV_PAYLOAD_PTT_ON)),
+               'PTT on is a subcommand AND a data byte, not one byte');
+   CheckEquals(0, Ord(CIV_PAYLOAD_PTT_ON[1]), 'subcommand $00 selects PTT');
+   CheckEquals(1, Ord(CIV_PAYLOAD_PTT_ON[2]), 'data $01 means transmit');
+end;
+
+procedure TIcomCIVTests.Test_PTTOffPayloadIsSubcommandPlusData;
+begin
+   BeginTest('Test_PTTOffPayloadIsSubcommandPlusData');
+   CheckEquals(2, Length(string(CIV_PAYLOAD_PTT_OFF)), '');
+   CheckEquals(0, Ord(CIV_PAYLOAD_PTT_OFF[1]), 'subcommand $00 selects PTT');
+   CheckEquals(0, Ord(CIV_PAYLOAD_PTT_OFF[2]), 'data $00 means receive');
+end;
+
+procedure TIcomCIVTests.Test_PTTPayloadsAreNotBareSubcommands;
+begin
+   BeginTest('Test_PTTPayloadsAreNotBareSubcommands');
+   // THE REGRESSION GUARD.  A single-byte payload is a READ, and the radio
+   // answers it instead of acting on it -- silently, which is what made this
+   // survive.  $01 alone is worse still: it reads the ATU.
+   CheckTrue(Length(string(CIV_PAYLOAD_PTT_ON)) > 1,
+             'a one-byte payload is a READ of the transmit state, not a set');
+   CheckTrue(Length(string(CIV_PAYLOAD_PTT_OFF)) > 1,
+             'a one-byte payload of $01 reads the ATU, not PTT off');
+   CheckTrue(CIV_PAYLOAD_PTT_ON <> CIV_PAYLOAD_PTT_OFF,
+             'transmit and receive must not be the same frame');
+end;
 
 // ---------------------------------------------------------------------------
 // BCD byte encode/decode
@@ -390,6 +444,9 @@ end;
 
 procedure TIcomCIVTests.RunAllTests;
 begin
+   Test_PTTOnPayloadIsSubcommandPlusData;
+   Test_PTTOffPayloadIsSubcommandPlusData;
+   Test_PTTPayloadsAreNotBareSubcommands;
    // BCD byte
    Test_ByteToBCD_Zero;
    Test_ByteToBCD_SingleDigit;
