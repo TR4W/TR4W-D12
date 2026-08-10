@@ -837,6 +837,19 @@ function ReadRadioStatus(rig: RadioPtr): RadioStatusRecord;
 function ReadRadioCurrentStatus(rig: RadioPtr): RadioStatusRecord;
 
 function tPTTVIACAT(PTTOn: boolean): boolean;
+
+// Put EVERY radio back into receive.  Call it before anything is torn down.
+//
+// WHY IT LIVES HERE.  It was first written inside MainUnit's implementation,
+// which meant ExitProgram -- in LOGSUBS2, and the place it actually has to be
+// called from -- could not see it.  It is about radios; it belongs with them.
+//
+// UNCONDITIONAL BY DESIGN.  It does not ask who keyed the radio, whether we
+// believe it is transmitting, or whether PTT VIA COMMANDS is set: an RX to a
+// receiving radio is a no-op, and "we thought it was not transmitting" is
+// exactly how a rig gets left on.  It also bypasses tPTTVIACAT, which answers
+// only for ActiveRadio -- the second radio can be the one transmitting.
+procedure PutAllRadiosIntoReceive;
 //function GetRadioFromString(RadioName: ShortString): InterfacedRadioType;
 procedure TestRadioInterface;
 
@@ -3049,6 +3062,45 @@ end;
 function ReadRadioCurrentStatus(rig: RadioPtr): RadioStatusRecord;
 begin
    Result := ReadStatusSnapshot(rig, False);
+end;
+
+procedure PutAllRadiosIntoReceive;
+
+   procedure Unkey(rig: RadioPtr; const aWhich: string);
+   begin
+      if (rig = nil) or (rig^.tFactoryObject = nil) then
+         begin
+         Exit;
+         end;
+
+      // REPORT WHAT ACTUALLY HAPPENED.  The first version logged "returning
+      // radio 1 to receive" and then called SendToRadio on a radio that had
+      // already been disconnected -- which drops the command SILENTLY, with no
+      // open port and no error.  The log claimed the rig had been unkeyed
+      // while it was still transmitting, which is worse than saying nothing
+      // (NY4I exited mid-transmission and the K3 stayed keyed).
+      if not rig^.tFactoryObject.IsConnected then
+         begin
+         logger.Warn('[Unkey] %s is already disconnected -- CANNOT return it to receive',
+                     [aWhich]);
+         Exit;
+         end;
+
+      try
+         logger.Info('[Unkey] returning %s to receive', [aWhich]);
+         rig^.tFactoryObject.Receive;
+      except
+         on E: Exception do
+            begin
+            logger.Error('[Unkey] could NOT return %s to receive: %s - %s',
+                         [aWhich, E.ClassName, E.Message]);
+            end;
+      end;
+   end;
+
+begin
+   Unkey(@Radio1, 'radio 1');
+   Unkey(@Radio2, 'radio 2');
 end;
 
 function tPTTVIACAT(PTTOn: boolean): boolean;

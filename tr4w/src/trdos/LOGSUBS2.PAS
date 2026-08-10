@@ -632,6 +632,22 @@ begin
 {$IF  LANG = 'RUS'}
 //  if (OCXHandle <> 0) then FreeLibrary(OCXHandle);
 {$IFEND}
+  // STEP 0, BEFORE ANYTHING ELSE: STOP TRANSMITTING.
+  //
+  // NY4I exited while WSJT-X was transmitting over TCI and the K3 STAYED
+  // KEYED -- twice.  The first fix put this in tr4w_ShutDown, which runs
+  // AFTER ExitProgram has already disconnected the radios (Step 3 below), so
+  // the RX; met a closed port and was dropped SILENTLY -- while still logging
+  // "returning radio 1 to receive", which is worse than not trying.
+  //
+  // The ports are open here and nothing has been torn down, so this is the
+  // only place it can work.  Everything about it is unconditional: it does
+  // not ask who keyed the radio, whether we believe it is transmitting, or
+  // whether PTT VIA COMMANDS is set -- "we thought it was not transmitting"
+  // is exactly how a rig gets left on, and the operator has already walked
+  // away by the time this runs.
+  PutAllRadiosIntoReceive;
+
   logger.Info('[ExitProgram] Step 1: SaveTelnetWindowSpots');
   logger.debug('Calling SaveTelnetWindowSpots');
   SaveTelnetWindowSpots;
