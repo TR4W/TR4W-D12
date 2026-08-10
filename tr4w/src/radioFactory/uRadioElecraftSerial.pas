@@ -80,6 +80,12 @@ type
   private
     FAutoInfoLevel: integer;
   public
+    // READ-ONLY, so the resolved level can be asserted without a radio.  The
+    // default is decided in ApplyAutoInfoLevel rather than in a table, which
+    // makes it exactly the kind of silently-defaulted value that reads as a
+    // legal zero if it ever regresses.  Write access stays with the applier.
+    property AutoInfoLevel: integer read FAutoInfoLevel;
+
     constructor Create; reintroduce;
 
     function  Connect: integer; override;

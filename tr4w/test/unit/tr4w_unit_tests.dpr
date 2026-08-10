@@ -141,6 +141,7 @@ uses
    uTestRadioStatus in 'uTestRadioStatus.pas',
    uElecraftIF in '..\..\src\radioFactory\uElecraftIF.pas',
    uTestElecraftIF in 'uTestElecraftIF.pas',
+   uTestAutoInfo in 'uTestAutoInfo.pas',
    // CW keyer factory -- listed EXPLICITLY (same rule as the radio units:
    // adapters self-install from initialization; a transitive-only link path
    // would silently drop them from this EXE).
@@ -281,6 +282,7 @@ begin
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
    RegisterSuite(TRadioStatusTests.Create('RadioStatus'));
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
+   RegisterSuite(TAutoInfoTests.Create('AutoInfo'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
