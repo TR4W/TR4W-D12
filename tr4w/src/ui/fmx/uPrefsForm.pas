@@ -99,6 +99,15 @@ type
    // header.  A control binds to a field only when the field is published and
    // its name matches the component's Name; an event binds only when the
    // handler is a published method, because TWriter stores it BY NAME.
+   { One row of the Station panel: the CFGCA command it edits, and the control
+     that shows it.  A TABLE rather than thirty lines of copy-paste -- every
+     field does the same thing, so the only per-field facts are the command name
+     and the control, and those belong in data. }
+   TStationField = record
+      Command: string;
+      Edit: TEdit;
+   end;
+
    TPrefsForm = class(TForm)
       tvNav: TTreeView;
       layContent: TLayout;
@@ -152,6 +161,47 @@ type
       lblTCIMaxTxUnits: TLabel;
       lblTCIMaxTxHint: TLabel;
       lblTCILogHint: TLabel;
+
+      // --- Station (Tag = NAV_STATION) ----------------------------------------
+      // The TR4QT station pane combined with TR4W's MY* commands, per
+      // docs/Settings Design Proposal.md.  ONE control for MY STATE: 'MY QTH'
+      // is the same global (@MyState), a back-compat alias.
+      layStation: TLayout;
+      lblStationHeading: TLabel;
+      lblContestHeading: TLabel;
+      lblStationHint: TLabel;
+      lblMyContinent: TLabel;
+      cbxMyContinent: TComboBox;
+      lblMyCall: TLabel;
+      edtMyCall: TEdit;
+      lblMyName: TLabel;
+      edtMyName: TEdit;
+      lblMyGrid: TLabel;
+      edtMyGrid: TEdit;
+      lblMyZone: TLabel;
+      edtMyZone: TEdit;
+      lblMyITUZone: TLabel;
+      edtMyITUZone: TEdit;
+      lblMyState: TLabel;
+      edtMyState: TEdit;
+      lblMySection: TLabel;
+      edtMySection: TEdit;
+      lblMyCountry: TLabel;
+      edtMyCountry: TEdit;
+      lblMyPostalCode: TLabel;
+      edtMyPostalCode: TEdit;
+      lblMyCheck: TLabel;
+      edtMyCheck: TEdit;
+      lblMyPrec: TLabel;
+      edtMyPrec: TEdit;
+      lblMyFDClass: TLabel;
+      edtMyFDClass: TEdit;
+      lblMyFOCNumber: TLabel;
+      edtMyFOCNumber: TEdit;
+      lblMyIOTA: TLabel;
+      edtMyIOTA: TEdit;
+      lblMyPark: TLabel;
+      edtMyPark: TEdit;
 
       // --- Logging (Tag = NAV_LOGGING) ---------------------------------------
       // The ONE place for logging, which used to be spread across a level key,
@@ -330,6 +380,13 @@ type
       procedure LoadTCIPanel;
       procedure SaveTCIPanel;
 
+      // Station.  Save returns False when CFGCA refused any value, having told
+      // the operator which -- a refused entry must not close silently.
+      procedure LoadStationPanel;
+      function  SaveStationPanel: boolean;
+      function  StationFields: TArray<TStationField>;
+      function  MakeStationField(const aCommand: string; const aEdit: TEdit): TStationField;
+
       // The nav expander drawn as a chevron rather than the style's filled
       // triangle -- see the implementation.
       procedure ApplyChevrons;
@@ -441,6 +498,8 @@ uses
    uTCIServer,        // started/stopped when the check box is saved
    System.IOUtils,     // TFile.Exists -- the log file may not exist yet
    Winapi.ShellAPI,    // ShellExecute -- open the log in the operator's editor
+   uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
+   uCallSignRoutines,   // GoodCallSyntax -- the MY CALL sanity check
    MainUnit,    // logger, and `appender` for the log file's real path
    VC;          // tLogLevels / tLogLevelsSA / logLevels, TR4W_TCI_DEBUG
 
@@ -1153,6 +1212,7 @@ begin
          end;
 
       chkAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
+      LoadStationPanel;
       LoadTCIPanel;
       LoadLoggingPanel;
 
@@ -1202,6 +1262,7 @@ begin
       end;
 
    FStore.AutoConnectOnStartup := chkAutoConnect.IsChecked;
+   SaveStationPanel;
    SaveTCIPanel;
    SaveLoggingPanel;
 
@@ -1674,6 +1735,161 @@ begin
       item := tvNav.ItemByGlobalIndex(i);
       item.OnApplyStyleLookup := TreeItemStyleApplied;
       ApplyChevronToItem(item);
+      end;
+end;
+
+
+{ ------------------------------------------------------------- Station ----- }
+
+function TPrefsForm.StationFields: TArray<TStationField>;
+begin
+   Result := [
+      // Station identity
+      MakeStationField('MY CALL',         edtMyCall),
+      MakeStationField('MY NAME',         edtMyName),
+      MakeStationField('MY GRID',         edtMyGrid),
+      MakeStationField('MY ZONE',         edtMyZone),
+      MakeStationField('MY ITU ZONE',     edtMyITUZone),
+      // ONE control for MY STATE.  'MY QTH' is the SAME GLOBAL (@MyState) -- a
+      // back-compat alias, like ICOM NETWORK USERNAME.  Two boxes would let
+      // editing one silently change the other.  The alias row stays in CFGCA so
+      // existing config files and multi-op peers keep working.
+      MakeStationField('MY STATE',        edtMyState),
+      MakeStationField('MY SECTION',      edtMySection),
+      MakeStationField('MY COUNTRY',      edtMyCountry),
+      MakeStationField('MY POSTAL CODE',  edtMyPostalCode),
+
+      // Contest exchange
+      MakeStationField('MY CHECK',        edtMyCheck),
+      MakeStationField('MY PREC',         edtMyPrec),
+      MakeStationField('MY FD CLASS',     edtMyFDClass),
+      MakeStationField('MY FOC NUMBER',   edtMyFOCNumber),
+      MakeStationField('MY IOTA',         edtMyIOTA),
+      MakeStationField('MY PARK',         edtMyPark)
+   ];
+end;
+
+function TPrefsForm.MakeStationField(const aCommand: string;
+                                     const aEdit: TEdit): TStationField;
+begin
+   Result.Command := aCommand;
+   Result.Edit    := aEdit;
+end;
+
+procedure TPrefsForm.LoadStationPanel;
+var
+   f: TStationField;
+   c: ContinentType;
+begin
+   for f in StationFields do
+      begin
+      f.Edit.Text := CFGCommandValueAsString(f.Command);
+      end;
+
+   // Continent is a ckList: the value is a SPELLING in ContinentTypeSA, and the
+   // combo is filled from that array rather than typed into the designer, for
+   // the same reason the log level is -- one vocabulary, no drift, and a new
+   // continent would appear here for free.
+   cbxMyContinent.BeginUpdate;
+   try
+      cbxMyContinent.Clear;
+      for c := Low(ContinentType) to High(ContinentType) do
+         begin
+         cbxMyContinent.Items.Add(string(AnsiString(ContinentTypeSA[c])));
+         end;
+   finally
+      cbxMyContinent.EndUpdate;
+   end;
+   cbxMyContinent.ItemIndex :=
+      cbxMyContinent.Items.IndexOf(UpperCase(Trim(CFGCommandValueAsString('MY CONTINENT'))));
+end;
+
+function TPrefsForm.SaveStationPanel: boolean;
+var
+   f: TStationField;
+   bad: string;
+   callText: string;
+begin
+   Result := True;
+   bad := '';
+
+   // A CALLSIGN THAT DOES NOT LOOK LIKE ONE IS QUERIED, NOT REFUSED (NY4I: "if
+   // it looks wrong ask the user to confirm... but accept it if they confirm").
+   //
+   // Refusing outright would be worse than useless.  GoodCallSyntax is a syntax
+   // heuristic and real operators hold calls it will not love -- special event
+   // calls, unusual prefixes, /MM.  A settings screen that will not accept the
+   // operator's own callsign is a bug however good the checker is.  So the
+   // check exists to catch a TYPO, and confirming means it is taken as typed.
+   //
+   // GoodCallSyntax, NOT LooksLikeACallSign.  They answer different questions.
+   // LooksLikeACallSign asks "is this token in a RECEIVED EXCHANGE probably a
+   // call", so it deliberately tolerates partials -- and it reads the global
+   // `contest` for a PCC special case.  GoodCallSyntax asks "is this a
+   // well-formed callsign", which is what a settings field is asking, and it is
+   // already extracted into uCallSignRoutines and already unit-tested.
+   //
+   // Blank is NOT queried: GoodCallSyntax('') is False, so checking it would
+   // nag every time the operator cleared the field.
+   callText := Trim(edtMyCall.Text);
+   if (callText <> '') and (not GoodCallSyntax(callText)) then
+      begin
+      if MessageDlg(Format('"%s" does not look like a regular callsign.' + sLineBreak +
+                           sLineBreak + 'Use it anyway?', [callText]),
+                    TMsgDlgType.mtWarning,
+                    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
+         begin
+         // Nothing saved, so the operator comes back to a panel still showing
+         // what they typed and can correct it.
+         Result := False;
+         Exit;
+         end;
+      end;
+
+   // WRITTEN THROUGH CheckCommand, NOT INTO A JSON SECTION, and that is a
+   // decision rather than an omission.  Three things depend on the row still
+   // being applied by CFGCA:
+   //
+   //   1. EVERY 'MY' ROW IS crNetwork:1 -- it is pushed to the other stations
+   //      in a multi-op network when it changes, and uNet.pas:318 applies an
+   //      INBOUND change by calling CheckCommand.  csJSON makes CheckCommand
+   //      inert, so a change made at another position would be accepted,
+   //      written to the ini, and never reach the program.
+   //   2. MY CALL, MY CONTINENT, MY COUNTRY and MY ZONE carry crA hooks
+   //      (F_MY_CALL, F_MY_CONTINENT, F_MY_COUNTRY, F_MY_ZONE) which derive
+   //      dependent state.  A value copied past them leaves that state stale.
+   //   3. CheckCommand is where the crMin/crMax bounds live.
+   //
+   // So Station keeps the ini as its transport for now.  The rows move to
+   // csOwned -- hidden from Ctrl-J so there is ONE editor -- but stay applied.
+   // Moving them to JSON needs the multi-op receive path to have somewhere else
+   // to land, which is its own piece of work.
+   for f in StationFields do
+      begin
+      if not SetCFGCommandValue(f.Command, Trim(f.Edit.Text)) then
+         begin
+         bad := bad + f.Command + ' = "' + Trim(f.Edit.Text) + '"' + sLineBreak;
+         Result := False;
+         end;
+      end;
+
+   if cbxMyContinent.ItemIndex >= 0 then
+      begin
+      if not SetCFGCommandValue('MY CONTINENT',
+                                cbxMyContinent.Items[cbxMyContinent.ItemIndex]) then
+         begin
+         bad := bad + 'MY CONTINENT' + sLineBreak;
+         Result := False;
+         end;
+      end;
+
+   if not Result then
+      begin
+      // REPORTED, not swallowed.  A refused value means the operator's typing
+      // did not take, and the only thing worse than a rejection is a silent
+      // one -- they would close Preferences believing the station was set.
+      ShowMessage('These entries were not accepted and have not been saved:'
+                  + sLineBreak + sLineBreak + bad);
       end;
 end;
 

@@ -120,6 +120,17 @@ type
 // out of step with the row it is meant to match (NY4I).
 function CommandIsJSONOwned(const aCommand: string): boolean;
 
+// Index of a command in CFGCA, or -1.  Exported because a settings screen edits
+// a row BY NAME and otherwise has to re-scan the table itself.
+function FindCFGCommand(const aCommand: string): integer;
+
+// A command's current value as text, rendered per its crType/crKind.
+function CFGCommandValueAsString(const aCommand: string): string;
+
+// Apply a value to a command and persist it.  Returns False when CFGCA REFUSES
+// the value, in which case nothing is written -- see the implementation.
+function SetCFGCommandValue(const aCommand, aValue: string): boolean;
+
 function F_RADIO_ONE_TYPE: boolean;
 function F_RADIO_TWO_TYPE: boolean;
 function F_SCP_COUNTRY_STRING: boolean;
@@ -606,23 +617,23 @@ const
  (crCommand: 'MULTIPLE BANDS';                crAddress: @MultipleBandsEnabled;           crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULTIPLE MODES';                crAddress: @MultipleModesEnabled;           crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULT SHEET AUTO RESET';         crAddress: @MultReset   ;                   crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'MY CALL';                       crAddress: @MyCall;                         crMin:0;  crMax:13;      crS: csOld; crA: 14;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY CHECK';                      crAddress: @MyCheck;                        crMin:0;  crMax:10;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOld; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'MY COUNTRY';                    crAddress: @MyCountry;                      crMin:0;  crMax:20;      crS: csOld; crA: 8; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY FD CLASS';                   crAddress: @MyFDClass;                      crMin:0;  crMax:10;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY FOC NUMBER';                 crAddress: @MyFOCNumber;                    crMin:0;  crMax:10;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),      //n4af 04.32.5
- (crCommand: 'MY GRID';                       crAddress: @MyGrid;                         crMin:0;  crMax:7;        crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY IOTA';                       crAddress: @MyIOTA;                         crMin:0;  crMax:20;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY ITU ZONE';                   crAddress: @MyITUZone;                      crMin:0;  crMax:90;      crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),  // Issue #930 -- 0 = use CTY.DAT default
- (crCommand: 'MY NAME';                       crAddress: @MyName;                         crMin:0;  crMax:20;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY PARK';                       crAddress: @MyPark;                         crMin:0;  crMax:10;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY POSTAL CODE';                crAddress: @MyPostalCode;                   crMin:0;  crMax:20;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY PREC';                       crAddress: @MyPrec;                         crMin:0;  crMax:10;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY QTH';                        crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY SECTION';                    crAddress: @MySection;                      crMin:0;  crMax:10;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY STATE';                      crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
- (crCommand: 'MY ZONE';                       crAddress: @MyZone;                         crMin:0;  crMax: 6;       crS: csOld; crA: 21;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY CALL';                       crAddress: @MyCall;                         crMin:0;  crMax:13;      crS: csOwned; crA: 14;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY CHECK';                      crAddress: @MyCheck;                        crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY CONTINENT';                  crAddress: pointer(21);                     crMin:0;  crMax:0;       crS: csOwned; crA: 22;crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
+ (crCommand: 'MY COUNTRY';                    crAddress: @MyCountry;                      crMin:0;  crMax:20;      crS: csOwned; crA: 8; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY FD CLASS';                   crAddress: @MyFDClass;                      crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY FOC NUMBER';                 crAddress: @MyFOCNumber;                    crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),      //n4af 04.32.5
+ (crCommand: 'MY GRID';                       crAddress: @MyGrid;                         crMin:0;  crMax:7;        crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY IOTA';                       crAddress: @MyIOTA;                         crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY ITU ZONE';                   crAddress: @MyITUZone;                      crMin:0;  crMax:90;      crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),  // Issue #930 -- 0 = use CTY.DAT default
+ (crCommand: 'MY NAME';                       crAddress: @MyName;                         crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY PARK';                       crAddress: @MyPark;                         crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY POSTAL CODE';                crAddress: @MyPostalCode;                   crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY PREC';                       crAddress: @MyPrec;                         crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY QTH';                        crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY SECTION';                    crAddress: @MySection;                      crMin:0;  crMax:10;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY STATE';                      crAddress: @MyState;                        crMin:0;  crMax:20;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
+ (crCommand: 'MY ZONE';                       crAddress: @MyZone;                         crMin:0;  crMax: 6;       crS: csOwned; crA: 21;crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'NAME FLAG ENABLE';              crAddress: @NameFlagEnable;                 crMin:0;  crMax: 0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'NET STATUS UPDATE INTERVAL';    crAddress: @tNetStatusUpdateInterval;       crMin:1000;crMax:10000;   crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'NO BORDER';                     crAddress: @NoBorder;                       crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAppearance; crType: ctBoolean; crNetwork: 1),
@@ -943,6 +954,115 @@ begin
          Result := (CFGCA[i].crS = csJSON);
          Exit;
          end;
+      end;
+end;
+
+function FindCFGCommand(const aCommand: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := Low(CFGCA) to High(CFGCA) do
+      begin
+      if SameText(string(CFGCA[i].crCommand), aCommand) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+function CFGCommandValueAsString(const aCommand: string): string;
+var
+   idx: integer;
+   listIdx: integer;
+   p: PAnsiChar;
+begin
+   // A CONFIG VALUE, RENDERED THE WAY THE TABLE SAYS TO.
+   //
+   // Lives here, beside CFGCA, because the row is the only thing that knows how
+   // to read its own target: crAddress is a bare pointer and crType is what
+   // makes it an integer, a ShortString or an index into a list.
+   //
+   // THE +1 IS NOT AN OFF-BY-ONE.  A ctString target is a ShortString, whose
+   // first byte is the LENGTH, so the text starts one byte in.  Reading from
+   // crAddress directly yields a string with a stray control character at the
+   // front -- which displays as a box and compares unequal to everything.
+   //
+   // Deliberately partial: the types the settings screens actually edit.  An
+   // unsupported type returns '' rather than guessing at bytes.  uOption.pas
+   // has a fuller version inline for Ctrl+J; it is not shared because Ctrl+J is
+   // being retired, and the two are not worth coupling on the way out.
+   Result := '';
+   idx := FindCFGCommand(aCommand);
+   if idx < 0 then
+      begin
+      Exit;
+      end;
+
+   if CFGCA[idx].crKind = ckList then
+      begin
+      // The value is a SPELLING: crAddress is an index into ListParamArray, and
+      // lpVar holds the current enum ordinal.
+      listIdx := integer(CFGCA[idx].crAddress);
+      if (listIdx >= Low(ListParamArray)) and (listIdx <= High(ListParamArray)) then
+         begin
+         p := PAnsiChar(ListParamArray[listIdx].lpArray) +
+              (ListParamArray[listIdx].lpVar^ * SizeOf(Pointer));
+         Result := string(PPAnsiChar(p)^);
+         end;
+      Exit;
+      end;
+
+   case CFGCA[idx].crType of
+      ctString, ctCaseSensitive, ctURL, ctMessage, ctPassword:
+         Result := string(PAnsiChar(CFGCA[idx].crAddress) + 1);
+      ctDirectory, ctFileName:
+         Result := string(PAnsiChar(CFGCA[idx].crAddress));
+      ctInteger:
+         Result := IntToStr(PInteger(CFGCA[idx].crAddress)^);
+      ctWord:
+         Result := IntToStr(PWord(CFGCA[idx].crAddress)^);
+      ctByte:
+         Result := IntToStr(PByte(CFGCA[idx].crAddress)^);
+      ctBoolean:
+         Result := string(BA[PBoolean(CFGCA[idx].crAddress)^]);
+   end;
+end;
+
+function SetCFGCommandValue(const aCommand, aValue: string): boolean;
+var
+   keyShort, valueShort: ShortString;
+   idKey, cmdValue: AnsiString;
+begin
+   // VALIDATE FIRST, PERSIST SECOND -- the same order, and for the same reason,
+   // as ApplyRadioToSlot: CheckCommand is what moves the value into the live
+   // globals AND what runs the row's crA hook and bounds check; the ini write
+   // is only what makes it survive a restart.  Writing first would put a value
+   // CFGCA rejected into the operator's file, and the next start would stop on
+   // it with "Invalid statement in config file".
+   //
+   // Going through CheckCommand is also what preserves MULTI-OP SYNC: the send
+   // side reads crNetwork from the row, and uNet's receive side applies an
+   // inbound change by calling this same function.  A settings screen that
+   // assigned the global directly would leave the other positions stale.
+   //
+   // Fresh AnsiStrings per call, not a reused buffer: the ini write takes
+   // @s[1] as a null-terminated PAnsiChar, so a shorter value written over a
+   // longer one in the same ShortString leaves the previous tail behind.
+   idKey    := AnsiString(aCommand);
+   cmdValue := AnsiString(aValue);
+
+   Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
+   Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+   keyShort   := ShortString(idKey);
+   valueShort := ShortString(cmdValue);
+
+   Result := CheckCommand(@keyShort, valueShort);
+   if Result then
+      begin
+      Windows.WritePrivateProfileStringA(_COMMANDS, @keyShort[1], @valueShort[1],
+                                         TR4W_INI_FILENAME);
       end;
 end;
 var
