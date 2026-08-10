@@ -75,7 +75,7 @@ const
    // them backward-compatible ALIASES that CFGCA still parses from old files,
    // and uCAT actively DELETES them when it saves.  Writing them would be
    // writing a key the legacy code is trying to retire.
-   GOLDENKEYS: array[0..29] of string = (
+   GOLDENKEYS: array[0..28] of string = (
       'RADIO ONE TYPE',
       'RADIO ONE FACTORY ID',
       'RADIO ONE NAME',
@@ -99,7 +99,6 @@ const
       'RADIO ONE RECEIVER ADDRESS',
       'RADIO ONE ICOM DATA MODE ID',
       'RADIO ONE ICOM FILTER BYTE',
-      'RADIO ONE AUTO INFO',
       'RADIO ONE WIDE CW FILTER',
       'RADIO ONE FT1000MP CW REVERSE',
       'RADIO ONE FREQUENCY ADDER',
@@ -122,7 +121,7 @@ const
       'RADIO ONE KEYER DTR'
    );
 
-   NUMERICKEYS: array[0..8] of string = (
+   NUMERICKEYS: array[0..7] of string = (
       'RADIO ONE BAUD RATE',
       'RADIO ONE TCP PORT',
       'RADIO ONE KEYER STOP BITS',
@@ -130,7 +129,6 @@ const
       'RADIO ONE RECEIVER ADDRESS',
       'RADIO ONE ICOM DATA MODE ID',
       'RADIO ONE ICOM FILTER BYTE',
-      'RADIO ONE AUTO INFO',
       'RADIO ONE FREQUENCY ADDER'
    );
 
