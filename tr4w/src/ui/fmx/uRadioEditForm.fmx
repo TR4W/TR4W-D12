@@ -433,9 +433,9 @@ object RadioEditForm: TRadioEditForm
         Size.PlatformDefault = False
       end
       object lblAutoInfo: TLabel
-        Position.X = 480.000000000000000000
-        Position.Y = 46.000000000000000000
-        Size.Width = 120.000000000000000000
+        Position.X = 240.000000000000000000
+        Position.Y = 140.000000000000000000
+        Size.Width = 130.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
         Text = 'Auto-info level'
@@ -444,9 +444,9 @@ object RadioEditForm: TRadioEditForm
       object edtAutoInfo: TEdit
         Touch.InteractiveGestures = [LongTap, DoubleTap]
         TabOrder = 7
-        Position.X = 610.000000000000000000
-        Position.Y = 42.000000000000000000
-        Size.Width = 50.000000000000000000
+        Position.X = 380.000000000000000000
+        Position.Y = 136.000000000000000000
+        Size.Width = 70.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
       end

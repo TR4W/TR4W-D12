@@ -747,6 +747,21 @@ begin
    // The FT-1000MP's reversed CW sidebands are a quirk of that one radio.
    chkFT1000MPReverse.Enabled := (ModelForId(id) = FT1000MP);
 
+   // Auto-info is offered only where a driver acts on it.  Today that is the
+   // Elecraft serial family; TFactoryRadioBase.ApplyAutoInfoLevel is a no-op
+   // everywhere else, and an editable box that changes nothing is exactly the
+   // "invitation to set something that will never be sent" the Icom fields
+   // above are gated to avoid.
+   //
+   // The K4 is deliberately excluded: it is not a TElecraftSerial and runs its
+   // own AI policy (AI5 on network, AI0 on serial).
+   edtAutoInfo.Enabled := MatchText(id, ['K2', 'K3', 'KX3']);
+   lblAutoInfo.Enabled := edtAutoInfo.Enabled;
+   if not edtAutoInfo.Enabled then
+      begin
+      edtAutoInfo.Text := '';
+      end;
+
    // Blank a disabled field rather than leave a stale value showing: a greyed
    // box with a number in it reads as "set, but locked", which is the opposite
    // of what it means.
