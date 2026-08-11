@@ -552,6 +552,9 @@ type
 
       // The nav expander drawn as a chevron rather than the style's filled
       // triangle -- see the implementation.
+      { Every nav item, expanded or not.  NOT GlobalCount -- see the
+        implementation; that list stops at a collapsed parent. }
+      procedure ForEachNavItem(const aVisit: TProc<TTreeViewItem>);
       procedure ApplyChevrons;
       procedure ApplyChevronToItem(const aItem: TTreeViewItem);
       procedure TreeItemStyleApplied(Sender: TObject);
@@ -754,7 +757,7 @@ end;
 // translated, which is the point.
 procedure TPrefsForm.SelectFirstSection;
 var
-   i: integer;
+   wanted: TTreeViewItem;
 begin
    // Chevrons before the selection, so the tree is already drawing the way it
    // will keep drawing when the operator first sees it.
@@ -776,20 +779,32 @@ begin
    // children, the root-only form would silently fail to find any child section
    // by tag, and the failure would look like "that section just doesn't open".
    // Read from FMX.TreeView rather than assumed.
-   for i := 0 to tvNav.GlobalCount - 1 do
+   // ForEachNavItem, not GlobalCount: with the tree starting COLLAPSED the
+   // global list stops at a collapsed parent, so a section that lives under one
+   // could not be found by tag at all.  Hardware is a root item today and would
+   // survive either way -- but "the default section happens to be at the root"
+   // is not something to depend on, and the next default might not be.
+   wanted := nil;
+   ForEachNavItem(
+      procedure (item: TTreeViewItem)
       begin
-      if tvNav.ItemByGlobalIndex(i).Tag = NAV_HARDWARE then
+      if (wanted = nil) and (item.Tag = NAV_HARDWARE) then
          begin
-         tvNav.Selected := tvNav.ItemByGlobalIndex(i);
-         Exit;
+         wanted := item;
          end;
+      end);
+
+   if wanted <> nil then
+      begin
+      tvNav.Selected := wanted;
+      Exit;
       end;
 
    // No Hardware row at all: fall back to the first, so the window is never
    // left with nothing selected.
-   if tvNav.GlobalCount > 0 then
+   if tvNav.Count > 0 then
       begin
-      tvNav.Selected := tvNav.ItemByGlobalIndex(0);
+      tvNav.Selected := tvNav.ItemByIndex(0);
       end;
 end;
 
@@ -1940,16 +1955,43 @@ begin
       end;
 end;
 
-procedure TPrefsForm.ApplyChevrons;
+procedure TPrefsForm.ForEachNavItem(const aVisit: TProc<TTreeViewItem>);
+
+   procedure Walk(const aItem: TTreeViewItem);
+   var
+      i: integer;
+   begin
+      aVisit(aItem);
+      for i := 0 to aItem.Count - 1 do
+         begin
+         Walk(aItem.ItemByIndex(i));
+         end;
+   end;
+
 var
    i: integer;
-   item: TTreeViewItem;
 begin
-   // GlobalCount, so CHILD items are included -- Count would stop at the root
-   // and External Software's children would keep the stock triangle.
-   for i := 0 to tvNav.GlobalCount - 1 do
+   // RECURSIVE, AND DELIBERATELY NOT GlobalCount.
+   //
+   // TCustomTreeView.UpdateGlobalIndexes recurses into an item's children only
+   // `if AItem.IsExpanded` (FMX.TreeView.pas:1582), so the global list STOPS AT
+   // A COLLAPSED PARENT.  With the tree now starting collapsed, a GlobalCount
+   // walk would never visit the children -- and the two things this walk does,
+   // the chevron and CustomChildrenOffset, are needed by exactly those items.
+   // The indent defect would have come straight back, and only for operators
+   // who expanded a node, which is the worst kind of intermittent.
+   for i := 0 to tvNav.Count - 1 do
       begin
-      item := tvNav.ItemByGlobalIndex(i);
+      Walk(tvNav.ItemByIndex(i));
+      end;
+end;
+
+procedure TPrefsForm.ApplyChevrons;
+begin
+   // Every item, collapsed parents included -- see ForEachNavItem.
+   ForEachNavItem(
+      procedure (item: TTreeViewItem)
+      begin
       item.OnApplyStyleLookup := TreeItemStyleApplied;
       ApplyChevronToItem(item);
 
@@ -1976,7 +2018,7 @@ begin
       // avoids a rule about which items are parents that would go stale the
       // next time a leaf gains children.
       item.CustomChildrenOffset := NAV_CHILD_INDENT;
-      end;
+      end);
 end;
 
 
