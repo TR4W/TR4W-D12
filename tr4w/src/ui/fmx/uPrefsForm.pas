@@ -203,6 +203,42 @@ type
       lblMyPark: TLabel;
       edtMyPark: TEdit;
 
+      // --- External Software (Tags 16..19) ------------------------------------
+      // Four children of the External Software node.  DXLab has no settings of
+      // its own -- see its panel -- and is present because operators look for it.
+      layWSJTX: TLayout;
+      layExternalLogger: TLayout;
+      layDXLab: TLayout;
+      layMMTTY: TLayout;
+      lblWSJTXHeading: TLabel;
+      lblWSJTXPort: TLabel;
+      lblWSJTXMulticast: TLabel;
+      lblWSJTXRestart: TLabel;
+      lblWSJTXTCIHint: TLabel;
+      lblLoggerHeading: TLabel;
+      lblLoggerType: TLabel;
+      lblLoggerAddress: TLabel;
+      lblLoggerPort: TLabel;
+      lblLoggerRestart: TLabel;
+      lblLoggerStatus: TLabel;
+      lblDXLabHeading: TLabel;
+      lblDXLabInfo: TLabel;
+      lblDXLabInfo2: TLabel;
+      lblMMTTYHeading: TLabel;
+      lblMMTTYEngine: TLabel;
+      lblMMTTYHint: TLabel;
+      chkWSJTXEnabled: TCheckBox;
+      chkWSJTXRadioControl: TCheckBox;
+      chkWSJTXHighlights: TCheckBox;
+      chkLoggerEnabled: TCheckBox;
+      edtWSJTXPort: TEdit;
+      edtWSJTXMulticast: TEdit;
+      edtLoggerAddress: TEdit;
+      edtLoggerPort: TEdit;
+      edtMMTTYEngine: TEdit;
+      cbxLoggerType: TComboBox;
+      btnBrowseMMTTY: TButton;
+
       // --- Logging (Tag = NAV_LOGGING) ---------------------------------------
       // The ONE place for logging, which used to be spread across a level key,
       // three HamLib switches, a telnet switch, and TCI's own settings file
@@ -279,6 +315,7 @@ type
       procedure chkAutoConnectChange(Sender: TObject);
       procedure chkTCIServerChange(Sender: TObject);
       procedure cbxLogLevelChange(Sender: TObject);
+      procedure btnBrowseMMTTYClick(Sender: TObject);
       procedure btnOpenLogFileClick(Sender: TObject);
 
       // MUST live here, with the other streamed handlers.  The .fmx stores an
@@ -382,6 +419,10 @@ type
 
       // Station.  Save returns False when CFGCA refused any value, having told
       // the operator which -- a refused entry must not close silently.
+      procedure LoadExternalSoftwarePanels;
+      procedure SaveExternalSoftwarePanels;
+      function  CommandBool(const aCommand: string): boolean;
+      function  SetCommandBool(const aCommand: string; const aValue: boolean): boolean;
       procedure LoadStationPanel;
       function  SaveStationPanel: boolean;
       function  StationFields: TArray<TStationField>;
@@ -500,6 +541,7 @@ uses
    Winapi.ShellAPI,    // ShellExecute -- open the log in the operator's editor
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
    uCallSignRoutines,   // GoodCallSyntax -- the MY CALL sanity check
+   uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
    VC;          // tLogLevels / tLogLevelsSA / logLevels, TR4W_TCI_DEBUG
 
@@ -1213,6 +1255,7 @@ begin
 
       chkAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
       LoadStationPanel;
+      LoadExternalSoftwarePanels;
       LoadTCIPanel;
       LoadLoggingPanel;
 
@@ -1263,6 +1306,7 @@ begin
 
    FStore.AutoConnectOnStartup := chkAutoConnect.IsChecked;
    SaveStationPanel;
+   SaveExternalSoftwarePanels;
    SaveTCIPanel;
    SaveLoggingPanel;
 
@@ -1774,6 +1818,104 @@ function TPrefsForm.MakeStationField(const aCommand: string;
 begin
    Result.Command := aCommand;
    Result.Edit    := aEdit;
+end;
+
+
+{ ---------------------------------------------------- External Software ---- }
+
+// Boolean CFGCA rows are text: BA[] is the table CheckCommand itself matches
+// against, so reading and writing through it means the two cannot disagree
+// about how TRUE is spelled.
+function TPrefsForm.CommandBool(const aCommand: string): boolean;
+begin
+   Result := SameText(Trim(FStore.CommandValue(aCommand,
+                           CFGCommandValueAsString(aCommand))), string(BA[True]));
+end;
+
+function TPrefsForm.SetCommandBool(const aCommand: string; const aValue: boolean): boolean;
+begin
+   Result := ApplyAndStoreCommand(FStore, aCommand, string(BA[aValue]));
+end;
+
+procedure TPrefsForm.LoadExternalSoftwarePanels;
+var
+   t: ExternalLoggerType;
+begin
+   chkWSJTXEnabled.IsChecked      := CommandBool('WSJT-X ENABLED');
+   chkWSJTXRadioControl.IsChecked := CommandBool('WSJT-X RADIO CONTROL ENABLED');
+   chkWSJTXHighlights.IsChecked   := CommandBool('WSJT-X SEND HIGHLIGHTS');
+   edtWSJTXPort.Text      := FStore.CommandValue('WSJT-X BROADCAST PORT',
+                                CFGCommandValueAsString('WSJT-X BROADCAST PORT'));
+   edtWSJTXMulticast.Text := FStore.CommandValue('WSJT-X MULTICAST GROUP',
+                                CFGCommandValueAsString('WSJT-X MULTICAST GROUP'));
+
+   // Filled from ExternalLoggerTypeSA, the same array CFGCA matches against --
+   // not typed into the designer, where it would be a second copy that keeps
+   // working while it drifts.  A populated combo also bakes itself into the
+   // .fmx resource, which is how such a copy becomes permanent.
+   cbxLoggerType.BeginUpdate;
+   try
+      cbxLoggerType.Clear;
+      for t := Low(ExternalLoggerType) to High(ExternalLoggerType) do
+         begin
+         cbxLoggerType.Items.Add(string(AnsiString(ExternalLoggerTypeSA[t])));
+         end;
+   finally
+      cbxLoggerType.EndUpdate;
+   end;
+   cbxLoggerType.ItemIndex := cbxLoggerType.Items.IndexOf(
+      UpperCase(Trim(FStore.CommandValue('EXTERNAL LOGGER',
+                     CFGCommandValueAsString('EXTERNAL LOGGER')))));
+
+   chkLoggerEnabled.IsChecked := CommandBool('EXTERNAL LOGGER ENABLED');
+   edtLoggerAddress.Text := FStore.CommandValue('EXTERNAL LOGGER ADDRESS',
+                               CFGCommandValueAsString('EXTERNAL LOGGER ADDRESS'));
+   edtLoggerPort.Text    := FStore.CommandValue('EXTERNAL LOGGER PORT',
+                               CFGCommandValueAsString('EXTERNAL LOGGER PORT'));
+
+   edtMMTTYEngine.Text   := FStore.CommandValue('MMTTY ENGINE',
+                               CFGCommandValueAsString('MMTTY ENGINE'));
+end;
+
+procedure TPrefsForm.SaveExternalSoftwarePanels;
+begin
+   SetCommandBool('WSJT-X ENABLED',               chkWSJTXEnabled.IsChecked);
+   SetCommandBool('WSJT-X RADIO CONTROL ENABLED', chkWSJTXRadioControl.IsChecked);
+   SetCommandBool('WSJT-X SEND HIGHLIGHTS',       chkWSJTXHighlights.IsChecked);
+   ApplyAndStoreCommand(FStore, 'WSJT-X BROADCAST PORT',  Trim(edtWSJTXPort.Text));
+   ApplyAndStoreCommand(FStore, 'WSJT-X MULTICAST GROUP', Trim(edtWSJTXMulticast.Text));
+
+   if cbxLoggerType.ItemIndex >= 0 then
+      begin
+      ApplyAndStoreCommand(FStore, 'EXTERNAL LOGGER',
+                           cbxLoggerType.Items[cbxLoggerType.ItemIndex]);
+      end;
+   SetCommandBool('EXTERNAL LOGGER ENABLED', chkLoggerEnabled.IsChecked);
+   ApplyAndStoreCommand(FStore, 'EXTERNAL LOGGER ADDRESS', Trim(edtLoggerAddress.Text));
+   ApplyAndStoreCommand(FStore, 'EXTERNAL LOGGER PORT',    Trim(edtLoggerPort.Text));
+
+   ApplyAndStoreCommand(FStore, 'MMTTY ENGINE', Trim(edtMMTTYEngine.Text));
+end;
+
+procedure TPrefsForm.btnBrowseMMTTYClick(Sender: TObject);
+var
+   dlg: TOpenDialog;
+begin
+   dlg := TOpenDialog.Create(nil);
+   try
+      dlg.Title  := 'Locate MMTTY.EXE';
+      dlg.Filter := 'MMTTY|MMTTY.exe|Programs (*.exe)|*.exe|All files (*.*)|*.*';
+      if Trim(edtMMTTYEngine.Text) <> '' then
+         begin
+         dlg.FileName := Trim(edtMMTTYEngine.Text);
+         end;
+      if dlg.Execute then
+         begin
+         edtMMTTYEngine.Text := dlg.FileName;
+         end;
+   finally
+      dlg.Free;
+   end;
 end;
 
 procedure TPrefsForm.LoadStationPanel;
