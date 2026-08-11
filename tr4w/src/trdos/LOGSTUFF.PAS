@@ -773,6 +773,7 @@ implementation
 uses uNet,
   PostUnit,
   MainUnit,
+  uRotatorControl,   // RotorControl delegates here -- see its body
   uPOTAParks,
   uPendingCounties,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
@@ -8303,55 +8304,34 @@ begin
 end;
 
 procedure RotorControl(Heading: integer);
-var
-  nNumberOfBytesToWrite: Cardinal;
-  TempPchar: PAnsiChar;
 begin
+  // DELEGATED to the rotator factory.  What stood here was a
+  // `case ActiveRotatorType of` picking a printf format per rotator, wrapped in
+  // two special cases that said plainly it had outgrown its shape: PstRotator
+  // returned EARLY because it is UDP and has no port, and AlfaSpid formatted
+  // like the others and then reached back into the buffer to patch two bytes
+  // and force the length to 13.
+  //
+  // Each protocol is now one driver, and every frame is pinned byte-for-byte by
+  // unit tests that need no hardware.  This routine survives as the NAME the
+  // rest of TR4W calls -- the strangler shape the radio and CW keyer factories
+  // used -- so no caller had to move.
+  //
+  // UDPBroadcastRotor STAYS HERE.  It is not a rotator: it is a broadcast of
+  // the heading for whatever else is listening, and it fires whether or not any
+  // rotator is configured (ny4i 4.44.9).  Moving it into the factory would tie
+  // a broadcast to owning hardware.
   if UDPBroadcastRotor then
-    // Even if there is no rotator set, if the UDP option is requested, send the command // ny4i 4.44.9
   begin
     SendUDPRotorCommand(Heading);
   end;
 
-  // Issue #732 -- PSTRotator is a UDP-only rotator type: send its native
-  // command and stop (it has no serial port, so the serial path below is N/A).
-  if ActiveRotatorType = PSTRotator then
-  begin
-    SendPSTRotorCommand(Heading);
-    Exit;
-  end;
-
-  if ActiveRotatorPort = NoPort then
-    Exit;
-  case ActiveRotatorType of
-    OrionRotator: TempPchar := '#%03u'#$D;
-    DCU1Rotator: TempPchar := 'AP1%03u;AM1;';
-    YaesuRotator: TempPchar := 'M%03u'#$D;
-    AlfaSpidRotator:
-      begin
-        TempPchar := 'W%03u0'#01;
-        inc(Heading, 360);
-      end;
-  end;
-  Windows.ZeroMemory(@wsprintfBuffer, SizeOf(wsprintfBuffer));
-  // Issue #997: asm wsprintf-push -> TF.Format. TempPchar is the per-rotator
-  // runtime format (e.g. 'M%03u'#$D); heading fills %03u. Format == wsprintfA,
-  // so the runtime C format and the returned byte count are preserved.
-  nNumberOfBytesToWrite := Format(wsprintfBuffer, TempPchar, heading);
-
-  if ActiveRotatorType = AlfaSpidRotator then
-  begin
-    nNumberOfBytesToWrite := 13;
-    wsprintfBuffer[11] := #$2F;
-    wsprintfBuffer[12] := #$20;
-  end;
-
-  sWriteFile(CPUKeyer.SerialPortConfigured_Handle[ActiveRotatorPort],
-    wsprintfBuffer, nNumberOfBytesToWrite);
-
-  logger.Trace('[RotorControl] serial rotor (%s) on %s, %u bytes: %s',   // Issue #989
-    [RotatorTypeSA[ActiveRotatorType], PortTypeSA[ActiveRotatorPort],
-     nNumberOfBytesToWrite, PAnsiChar(@wsprintfBuffer)]);
+  // The BAND travels with the heading now, because a rotator may claim only
+  // some bands -- NY4I's case where 20 m turns the Orion and 40 m the Yaesu.
+  // With one rotator defined, which is nearly every station, its claim is blank
+  // and it answers for everything.
+  uRotatorControl.TurnRotator(Heading,
+    string(BandStringsArrayWithOutSpaces[ActiveBand]));
 end;
 
 function MarineOrAirMobileStation(Call: CallString): boolean;

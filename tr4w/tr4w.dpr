@@ -78,6 +78,7 @@ uses
   // preferences dialog is the caller -- but they are listed so the compiler
   // checks them against the live CFGCA/CAT surface on every build.
   uRotatorBase in 'src\rotatorFactory\uRotatorBase.pas',
+  uRotatorControl in 'src\uRotatorControl.pas',
   uRotatorRegistry in 'src\rotatorFactory\uRotatorRegistry.pas',
   uRotatorYaesu in 'src\rotatorFactory\uRotatorYaesu.pas',
   uRotatorOrion in 'src\rotatorFactory\uRotatorOrion.pas',

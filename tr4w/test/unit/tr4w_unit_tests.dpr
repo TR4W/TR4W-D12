@@ -54,6 +54,7 @@ uses
    uRadioConfigStore    in '..\..\src\uRadioConfigStore.pas',
    uTestRadioConfigStore in 'uTestRadioConfigStore.pas',
    uRotatorBase in '..\..\src\rotatorFactory\uRotatorBase.pas',
+   uRotatorControl in '..\..\src\uRotatorControl.pas',
    uRotatorRegistry in '..\..\src\rotatorFactory\uRotatorRegistry.pas',
    uRotatorYaesu in '..\..\src\rotatorFactory\uRotatorYaesu.pas',
    uRotatorOrion in '..\..\src\rotatorFactory\uRotatorOrion.pas',
