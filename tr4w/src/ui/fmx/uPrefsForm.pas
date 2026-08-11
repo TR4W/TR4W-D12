@@ -724,6 +724,7 @@ uses
    uSettingsRegistry,     // the settings themselves
    uSettingsDeclarations, // DeclareAllSettings
    uRotatorBase,        // UsesSerialPort / PreferredBaudRate -- asked, not assumed
+   uRotatorControl,     // rebuild the live rotators when the library is saved
    uRotatorRegistry,    // the rotator type list comes from the registry
    uCallSignRoutines,   // GoodCallSyntax -- the MY CALL sanity check
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
@@ -990,6 +991,11 @@ begin
       // stays the dialog's.  (The radios need an explicit Activate because
       // restarting them mid-contest is a real cost; a UDP destination has none.)
       UDPBroadcaster.Configure(FUDPConfig);
+
+      // Rotators rebuilt on save, for the same reason the TCI server is
+      // started and stopped here: a library the operator just edited that does
+      // not take effect until a restart is a settings screen that lies.
+      uRotatorControl.ConfigureRotators(FStore);
 
       // The TCI server, on the same footing and for the same reason.  It was
       // originally started only from tr4w.dpr, which reproduced the exact

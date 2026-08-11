@@ -189,6 +189,7 @@ uses
    uTR4WConfigFile,     // LoadConfig -- both libraries live in the one file
    LOGRADIO,
    LOGK1EA,    // ActiveRadio
+   uRotatorControl,   // ConfigureRotators -- the rotator library goes live here
    uCWKeyerBase,   // KeyerSelectionIsProfileDriven
    LogCW,
    LOGWIND,
@@ -1082,6 +1083,22 @@ begin
 
       RadioLibraryTCIPort    := store.TCIPort;
       RadioLibraryTCIBindAll := store.TCIBindAll;
+
+      // APPLIED AT STARTUP, and all three of these were missing -- the store
+      // held the values, Preferences displayed them, and the program never
+      // received them until the operator opened Preferences and saved.  Which
+      // is the exact silent failure csJSON is documented to cause without an
+      // applier; I wrote the appliers and then did not call them.
+      ApplyLoggingSettings(store);
+      ApplyStoredCommands(store);
+
+      // The rotator library.  ConfigureRotators seeds one rotator from the
+      // legacy ROTATOR TYPE / ROTATOR PORT when the library is empty, so a
+      // station that has never opened the Rotators page keeps working -- and
+      // there is still only ONE code path, which is what made the old
+      // `case ActiveRotatorType of` safe to delete outright rather than keep
+      // as a fallback.
+      uRotatorControl.ConfigureRotators(store);
 
       profile := store.ActiveProfile;
       if profile = nil then
