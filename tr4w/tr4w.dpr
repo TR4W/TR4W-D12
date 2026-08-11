@@ -77,6 +77,13 @@ uses
   // The radio-configuration layer.  Nothing calls these yet -- the FMX
   // preferences dialog is the caller -- but they are listed so the compiler
   // checks them against the live CFGCA/CAT surface on every build.
+  uRotatorBase in 'src\rotatorFactory\uRotatorBase.pas',
+  uRotatorRegistry in 'src\rotatorFactory\uRotatorRegistry.pas',
+  uRotatorYaesu in 'src\rotatorFactory\uRotatorYaesu.pas',
+  uRotatorOrion in 'src\rotatorFactory\uRotatorOrion.pas',
+  uRotatorDCU1 in 'src\rotatorFactory\uRotatorDCU1.pas',
+  uRotatorAlfaSpid in 'src\rotatorFactory\uRotatorAlfaSpid.pas',
+  uRotatorPSTRotator in 'src\rotatorFactory\uRotatorPSTRotator.pas',
   uSettingsRegistry in 'src\uSettingsRegistry.pas',
   uSettingsBinding in 'src\uSettingsBinding.pas',
   uSettingsDeclarations in 'src\uSettingsDeclarations.pas',

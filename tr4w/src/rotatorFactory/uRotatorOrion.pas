@@ -1,0 +1,73 @@
+{
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+ This file is part of TR4W  (SRC)
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+}
+unit uRotatorOrion;
+
+{
+  Ten-Tec Orion rotator azimuth command.
+
+  PORTED EXACTLY from LOGSTUFF.RotorControl: '#%03u'#$D.
+
+  THE LEGACY ALIAS THIS REPLACES is worth recording, because it looks like a
+  setting and is not.  'ORION PORT' in CommandsArray shares list index 40 with
+  'ROTATOR PORT', so both write ActiveRotatorPort, and its crA hook
+  F_ORION_PORT does nothing but
+
+      ActiveRotatorType := OrionRotator;
+
+  So 'ORION PORT = COM5' was shorthand for "the rotator is an Orion, on COM5" --
+  a second spelling of two other settings, in the same family as MY QTH being
+  MY STATE.  With a rotator library that shorthand has nowhere to live, so the
+  row is deleted rather than migrated.
+}
+
+interface
+
+uses
+   System.SysUtils,
+   uRotatorBase;
+
+type
+   TRotatorOrion = class(TRotatorBase)
+   protected
+      function TurnFrame(const aAzimuth: integer): TBytes; override;
+   public
+      class function DisplayName: string; override;
+   end;
+
+implementation
+
+uses
+   uRotatorRegistry;
+
+class function TRotatorOrion.DisplayName: string;
+begin
+   Result := 'Ten-Tec Orion';
+end;
+
+function TRotatorOrion.TurnFrame(const aAzimuth: integer): TBytes;
+begin
+   Result := Ascii(Format('#%.3d', [aAzimuth]) + #$0D);
+end;
+
+initialization
+   RegisterRotator('ORION', 'Ten-Tec Orion',
+      function (const aSend: TRotatorSendProc): TRotatorBase
+      begin
+         Result := TRotatorOrion.Create(aSend);
+      end);
+
+end.

@@ -53,6 +53,14 @@ uses
    uTestWinTimer        in 'uTestWinTimer.pas',
    uRadioConfigStore    in '..\..\src\uRadioConfigStore.pas',
    uTestRadioConfigStore in 'uTestRadioConfigStore.pas',
+   uRotatorBase in '..\..\src\rotatorFactory\uRotatorBase.pas',
+   uRotatorRegistry in '..\..\src\rotatorFactory\uRotatorRegistry.pas',
+   uRotatorYaesu in '..\..\src\rotatorFactory\uRotatorYaesu.pas',
+   uRotatorOrion in '..\..\src\rotatorFactory\uRotatorOrion.pas',
+   uRotatorDCU1 in '..\..\src\rotatorFactory\uRotatorDCU1.pas',
+   uRotatorAlfaSpid in '..\..\src\rotatorFactory\uRotatorAlfaSpid.pas',
+   uRotatorPSTRotator in '..\..\src\rotatorFactory\uRotatorPSTRotator.pas',
+   uTestRotatorFactory in 'uTestRotatorFactory.pas',
    uSettingsRegistry in '..\..\src\uSettingsRegistry.pas',
    uSettingsBinding in '..\..\src\uSettingsBinding.pas',
    uSettingsDeclarations in '..\..\src\uSettingsDeclarations.pas',
@@ -288,6 +296,7 @@ begin
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TAutoInfoTests.Create('AutoInfo'));
    RegisterSuite(TSettingsRegistryTests.Create('SettingsRegistry'));
+   RegisterSuite(TRotatorFactoryTests.Create('RotatorFactory'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
