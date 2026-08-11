@@ -38,6 +38,9 @@ type
       procedure Test_OnApplyRunsOnlyWhenTheValueWasAccepted;
       procedure Test_DuplicateKeyIsRefused;
       procedure Test_AllowedValuesDrivesTheControlChoice;
+      procedure Test_SelfStoringNeedsNoGlobal;
+      procedure Test_SelfStoringInstancesAreIndependent;
+      procedure Test_SelfStoringEnumRefusesADefaultOutsideItsValues;
    end;
 
 implementation
@@ -309,6 +312,103 @@ begin
    end;
 end;
 
+procedure TSettingsRegistryTests.Test_SelfStoringNeedsNoGlobal;
+var
+   b: TBoolSetting;
+   i: TIntSetting;
+   t: TStringSetting;
+   e: TEnumSetting;
+   err: string;
+begin
+   BeginTest('a self-storing setting works with NO backing global at all');
+   // The point of Own: a NEW setting should not have to invent a global first.
+   // Nothing in this test declares one -- the setting is the storage.
+   b := TBoolSetting.Own('test.own.bool', 'b', True);
+   i := TIntSetting.Own('test.own.int', 'i', 50001, 1, 65535);
+   t := TStringSetting.Own('test.own.str', 'S', 'hello', 20);
+   e := TEnumSetting.Own('test.own.enum', 'e', 'NONE', ['NONE', 'DXKEEPER']);
+   try
+      CheckEquals('TRUE', b.AsText,   'bool default');
+      CheckEquals('50001', i.AsText,  'int default');
+      CheckEquals('hello', t.AsText,  'string default');
+      CheckEquals('NONE', e.AsText,   'enum default');
+
+      CheckTrue(b.TrySetText('FALSE', err), 'bool set: ' + err);
+      CheckEquals('FALSE', b.AsText, 'bool round-trips through its own storage');
+
+      CheckTrue(i.TrySetText('1024', err), 'int set: ' + err);
+      CheckEquals('1024', i.AsText, 'int round-trips');
+
+      // Validation is unchanged by where the value lives.
+      CheckFalse(i.TrySetText('99999', err), 'out of range still refused');
+      CheckEquals('1024', i.AsText, 'and the value is untouched');
+
+      CheckTrue(t.TrySetText('world', err), 'string set: ' + err);
+      CheckEquals('world', t.AsText, 'string round-trips');
+
+      CheckTrue(e.TrySetText('dxkeeper', err), 'enum set: ' + err);
+      CheckEquals('DXKEEPER', e.AsText, 'enum normalises, self-stored');
+   finally
+      e.Free;
+      t.Free;
+      i.Free;
+      b.Free;
+   end;
+end;
+
+procedure TSettingsRegistryTests.Test_SelfStoringInstancesAreIndependent;
+var
+   a, b: TIntSetting;
+   err: string;
+begin
+   BeginTest('two self-storing settings do not share storage');
+   // THE FAILURE THIS GUARDS AGAINST is subtle and would look like haunting:
+   // each Own captures its OWN one-element array.  Had the storage been a class
+   // variable, or a local whose frame both closures somehow shared, setting one
+   // would move the other, and it would present as a settings page where
+   // changing one field altered a different one.
+   a := TIntSetting.Own('test.own.indep.a', 'a', 1);
+   b := TIntSetting.Own('test.own.indep.b', 'b', 2);
+   try
+      CheckTrue(a.TrySetText('100', err), 'a set');
+      CheckEquals('100', a.AsText, 'a changed');
+      CheckEquals('2', b.AsText, 'b did NOT change');
+
+      CheckTrue(b.TrySetText('200', err), 'b set');
+      CheckEquals('100', a.AsText, 'a still unchanged');
+      CheckEquals('200', b.AsText, 'b changed');
+   finally
+      b.Free;
+      a.Free;
+   end;
+end;
+
+procedure TSettingsRegistryTests.Test_SelfStoringEnumRefusesADefaultOutsideItsValues;
+var
+   raised: boolean;
+   e: TEnumSetting;
+begin
+   BeginTest('a self-storing enum refuses a default that is not one of its values');
+   // Such a setting would start in a state TrySetText will never accept, so the
+   // operator could not put it back after changing it.  Caught at registration
+   // rather than puzzled over during a contest.
+   raised := False;
+   e := nil;
+   try
+      e := TEnumSetting.Own('test.own.enum.bad', 'e', 'LOGGER32', ['NONE', 'DXKEEPER']);
+   except
+      on E2: Exception do
+         begin
+         raised := True;
+         end;
+   end;
+   if e <> nil then
+      begin
+      e.Free;
+      end;
+   CheckTrue(raised, 'a default outside the declared values must raise');
+end;
+
 procedure TSettingsRegistryTests.RunAllTests;
 begin
    Test_BoolRoundTripsAndAcceptsCommonSpellings;
@@ -321,6 +421,9 @@ begin
    Test_OnApplyRunsOnlyWhenTheValueWasAccepted;
    Test_DuplicateKeyIsRefused;
    Test_AllowedValuesDrivesTheControlChoice;
+   Test_SelfStoringNeedsNoGlobal;
+   Test_SelfStoringInstancesAreIndependent;
+   Test_SelfStoringEnumRefusesADefaultOutsideItsValues;
 end;
 
 end.
