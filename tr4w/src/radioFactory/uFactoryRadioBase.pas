@@ -1503,6 +1503,29 @@ begin
       Result := serialPortObj.IsOpen;
       if Result then
          begin
+         // A REOPENED PORT IS A NEW LINK, so the disconnecting flag must go --
+         // exactly as Connect clears it.  Without this, MaintainSerialLink did
+         // the hard part (noticing the silence, closing, reopening) and was
+         // then FORBIDDEN TO USE the port it had just opened: SendToRadio drops
+         // every command while Disconnecting is set, so no poll ever went out.
+         //
+         // NY4I found it on an FT-1000MP that would not come back after a power
+         // cycle until Reset Radio Ports -- which works because it runs Connect,
+         // which clears this.  tr4w.log 2026-08-11 17:34:59 shows the port
+         // reopening six times on the 1s..30s backoff while
+         // '[SendToRadio] Ignoring command - radio is disconnecting' repeats 688
+         // times.  The port was fine; nothing was allowed to talk to it.
+         //
+         // NOT A YAESU DEFECT, though that is where it shows.  A radio that
+         // volunteers data on power-up -- an Elecraft in AI2, an Icom in
+         // transceive -- recovers anyway, because the reading thread hears it
+         // without TR4W having to ask, and the stuck flag never matters.  The
+         // FT-1000MP is strictly polled and says nothing until asked, so
+         // silence was the only possible outcome.  Confirmed by prediction
+         // before the fix: NY4I set a K3 to AI0, power-cycled it, and it failed
+         // in exactly the same way.
+         Disconnecting := False;
+
          logger.Info('[ReopenSerialPort] %s reopened COM%d after prolonged silence',
                      [Self.radioModel, Ord(Self.serialPort)]);
          end

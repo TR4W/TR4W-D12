@@ -110,6 +110,29 @@ For each radio:
   the right split and offset. *(RIT/XIT was in the `df0017a` corruption set.)*
 - **A6 — Soak.** Leave it connected 15+ minutes with the VFO moving. No drift into
   garbage, no disconnect, `tr4w.log` shows clean CAT exchanges throughout.
+- **A6b — POWER CYCLE, unattended recovery.** With TR4W running and connected,
+  **switch the radio off**, wait ~30 seconds, then **switch it back on** and
+  leave TR4W alone.
+
+  - The radio's name in the main window turns **magenta** when it goes off —
+    that is correct, it means "not answering".
+  - Within about 30 seconds of switching back on, the magenta must **clear by
+    itself** and the frequency must start tracking again.
+  - **Do NOT touch Reset Radio Ports.** Needing it is the failure, not the fix.
+
+  *Why this step exists, and why it needs doing on every radio rather than
+  once:* an FT-1000MP would reopen its port on the 1s..30s backoff and still
+  never come back, because a stale `Disconnecting` flag made TR4W drop every
+  poll it tried to send — the port was fine and nothing was allowed to talk to
+  it (NY4I, 2026-08-11; fixed same day).
+  
+  A radio that **volunteers data** on power-up hides this entirely: an Elecraft
+  in AI2 or an Icom in transceive starts talking on its own, so TR4W hears it
+  without having to ask and recovers regardless. A **strictly polled** radio --
+  the Yaesu binary set -- says nothing until asked and never recovers. So this
+  step is worth most on a Yaesu, and on **any radio with auto-info turned off**:
+  a K3 set to AI0 reproduced the failure exactly, which is how the diagnosis was
+  confirmed before the fix.
 - **A7 — FT1000MP only.** It uses a Yaesu 5-byte binary CAT protocol (its own path
   in `LOGRADIO.PAS`, with a `FT1000MPCWReverse` quirk). Verify freq/mode set+read
   *and* that CW normal/reverse is correct — this is the byte path most unlike the

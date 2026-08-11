@@ -2318,8 +2318,29 @@ begin
       edtRotatorBands.Text := '';
       cbxRotatorType.ItemIndex := -1;
       cbxRotatorPort.ItemIndex := -1;
+
+      // NOTHING SELECTED MEANS NOTHING TO EDIT (NY4I).  The fields were merely
+      // cleared, so an empty page still accepted typing -- which went nowhere,
+      // because CaptureSelectedRotator has no rotator to write to.  A control
+      // that takes input and discards it is worse than one that refuses it.
+      // Add... is what creates something to edit.
+      edtRotatorName.Enabled  := False;
+      cbxRotatorType.Enabled  := False;
+      cbxRotatorPort.Enabled  := False;
+      edtRotatorBaud.Enabled  := False;
+      edtRotatorIP.Enabled    := False;
+      edtRotatorUDP.Enabled   := False;
+      edtRotatorBands.Enabled := False;
+      btnRemoveRotator.Enabled := False;
       Exit;
       end;
+
+   // Something is selected, so the fields that apply to it come back.  Which of
+   // the transport fields apply is decided below, by asking the driver.
+   edtRotatorName.Enabled   := True;
+   cbxRotatorType.Enabled   := True;
+   edtRotatorBands.Enabled  := True;
+   btnRemoveRotator.Enabled := True;
 
    FLoading := True;
    try
