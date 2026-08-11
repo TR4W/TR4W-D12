@@ -57,6 +57,34 @@ object PrefsForm: TPrefsForm
         TabOrder = 0
         Text = 'Band Map'
       end
+      object navBands: TTreeViewItem
+        Tag = 24
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 1
+        Text = 'Bands'
+      end
+      object navOperatingCW: TTreeViewItem
+        Tag = 23
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 2
+        Text = 'CW'
+      end
+      object navOnlineScoring: TTreeViewItem
+        Tag = 22
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 3
+        Text = 'Online Scoring'
+      end
+      object navTwoRadio: TTreeViewItem
+        Tag = 25
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 4
+        Text = 'Two Radio Mode'
+      end
     end
     object navSCP: TTreeViewItem
       Tag = 4
@@ -1546,6 +1574,32 @@ object PrefsForm: TPrefsForm
           ' effect when TR4W next starts.'
         TabOrder = 3
       end
+      object chkClusterAtStartup: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 118.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 20
+        Text = 'Connect at startup'
+      end
+      object lblClusterCommand: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 152.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'After connecting, send:'
+        TabOrder = 21
+      end
+      object edtClusterCommand: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 148.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 22
+      end
       object chkSpotCollector: TCheckBox
         Position.X = 12.000000000000000000
         Position.Y = 118.000000000000000000
@@ -2165,6 +2219,493 @@ object PrefsForm: TPrefsForm
           'A second copy of the log, written as you go.  Put it somewhere t' +
           'hat is not the same disk as the log itself, or it protects again' +
           'st nothing worth protecting against.'
+        TabOrder = 7
+      end
+    end
+    object layOnlineScoring: TLayout
+      Tag = 22
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 17
+      object lblScoreHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Online scoring'
+        TabOrder = 0
+      end
+      object chkHamScoreEnable: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Post my score while the contest runs'
+      end
+      object lblHamScoreURL: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 72.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Service URL:'
+        TabOrder = 2
+      end
+      object edtHamScoreURL: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 68.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+      end
+      object lblHamScoreUser: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 104.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Username:'
+        TabOrder = 4
+      end
+      object edtHamScoreUser: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 240.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+      end
+      object lblHamScorePass: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 136.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Password:'
+        TabOrder = 6
+      end
+      object edtHamScorePass: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 132.000000000000000000
+        Size.Width = 240.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+        Password = True
+      end
+      object chkHamScoreContact: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 166.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 8
+        Text = 'Include contact information'
+      end
+      object lblScoreRestart: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 196.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 34.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'These take effect when TR4W next starts.'
+        TabOrder = 9
+      end
+      object lblScoreBoardHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 244.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Score board'
+        TabOrder = 10
+      end
+      object lblScorePostURL: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 278.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Posting URL:'
+        TabOrder = 11
+      end
+      object edtScorePostURL: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 274.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 12
+      end
+      object lblScoreReadURL: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 310.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Reading URL:'
+        TabOrder = 13
+      end
+      object edtScoreReadURL: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 306.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 14
+      end
+      object lblScoreBoardHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 340.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Where TR4W posts its score and where it reads other stations'' sc' +
+          'ores from.  The two are separate so a club board can be read whi' +
+          'le posting elsewhere.'
+        TabOrder = 15
+      end
+    end
+    object layOperatingCW: TLayout
+      Tag = 23
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 18
+      object lblOpCWHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'CW while operating'
+        TabOrder = 0
+      end
+      object chkSayHiEnable: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Send a greeting to stations worked before'
+      end
+      object lblSayHiCutoff: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 68.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Stop above a rate of:'
+        TabOrder = 2
+      end
+      object edtSayHiCutoff: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 60.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+      end
+      object lblSayHiCutoffUnits: TLabel
+        Position.X = 270.000000000000000000
+        Position.Y = 68.000000000000000000
+        Size.Width = 220.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'QSOs per hour'
+        TabOrder = 4
+      end
+      object chkKeypadCWMemories: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 100.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = 'Number keypad sends CW memories'
+      end
+      object lblLeadingZeros: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 138.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Leading zeros:'
+        TabOrder = 6
+      end
+      object cbxLeadingZeros: TComboBox
+        Position.X = 200.000000000000000000
+        Position.Y = 134.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+      end
+      object lblLeadingZeroChar: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 170.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Sent as:'
+        TabOrder = 8
+      end
+      object edtLeadingZeroChar: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 166.000000000000000000
+        Size.Width = 60.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 9
+      end
+      object lblLeadingZeroHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 198.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Serial numbers are padded to that many digits.  T for a zero is ' +
+          'the usual cut-number choice; leave it as 0 to send them plainly.'
+        TabOrder = 10
+      end
+      object lblSerialKeyHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 258.000000000000000000
+        Size.Width = 500.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Radio serial keying  (DTR/RTS keying only)'
+        TabOrder = 11
+      end
+      object lblSerialKeyIntro: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 282.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'These shape the CW that TR4W generates itself by toggling a seri' +
+          'al line.  They do nothing for a WinKeyer, a YCCC box, or CW sent' +
+          ' by CAT - those devices keep their own timing.'
+        TabOrder = 12
+      end
+      object lblDitDah: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 340.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Dit/dah ratio:'
+        TabOrder = 13
+      end
+      object cbxDitDah: TComboBox
+        Position.X = 200.000000000000000000
+        Position.Y = 336.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 14
+      end
+      object lblWeight: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 372.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Weight:'
+        TabOrder = 15
+      end
+      object edtWeight: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 368.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 16
+      end
+      object chkFarnsworth: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 402.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 17
+        Text = 'Farnsworth spacing'
+      end
+      object lblFarnsworthSpeed: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 436.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Character speed:'
+        TabOrder = 18
+      end
+      object edtFarnsworthSpeed: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 432.000000000000000000
+        Size.Width = 60.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 19
+      end
+      object lblFarnsworthUnits: TLabel
+        Position.X = 270.000000000000000000
+        Position.Y = 436.000000000000000000
+        Size.Width = 220.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'WPM'
+        TabOrder = 20
+      end
+    end
+    object layBands: TLayout
+      Tag = 24
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 19
+      object lblBandsHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Bands in use'
+        TabOrder = 0
+      end
+      object chkHFBands: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'HF (160 - 10 m)'
+      end
+      object chkWARCBands: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 60.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'WARC (30, 17, 12 m)'
+      end
+      object chkVHFBands: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 86.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'VHF and up (6 m and above)'
+      end
+      object lblBandsHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 120.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Which bands TR4W offers when you change band, and which appear i' +
+          'n the multiplier and band-map displays.  WARC bands are off by d' +
+          'efault because most contests do not allow them.'
+        TabOrder = 4
+      end
+    end
+    object layTwoRadio: TLayout
+      Tag = 25
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 20
+      object lblTwoRadioHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Two radio operating'
+        TabOrder = 0
+      end
+      object chkTwoRadioMode: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Two radio mode'
+      end
+      object lblTwoRadioIntro: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 34.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Everything below applies only while two radio mode is on.'
+        TabOrder = 2
+      end
+      object chkAltDBuffer: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 110.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Alt-D remembers what you typed'
+      end
+      object chkAltDCQ: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 136.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Alt-D can start a CQ on the second radio'
+      end
+      object chkAlwaysBlindCQ: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 162.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = 'Always call a blind CQ'
+      end
+      object chkSkipActiveBand: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 188.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Text = 'Skip the band the other radio is on'
+      end
+      object lblTwoRadioHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 222.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Skipping the other radio''s band is what stops a band change on o' +
+          'ne radio landing you on top of the other.'
         TabOrder = 7
       end
     end

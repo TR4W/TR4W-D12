@@ -53,6 +53,8 @@ uses
    uTestWinTimer        in 'uTestWinTimer.pas',
    uRadioConfigStore    in '..\..\src\uRadioConfigStore.pas',
    uTestRadioConfigStore in 'uTestRadioConfigStore.pas',
+   uSettingsRegistry in '..\..\src\uSettingsRegistry.pas',
+   uTestSettingsRegistry in 'uTestSettingsRegistry.pas',
    uRadioConfigLegacyMap in '..\..\src\uRadioConfigLegacyMap.pas',
    uTestRadioConfigLegacyMap in 'uTestRadioConfigLegacyMap.pas',
    uKeyerConfigStore    in '..\..\src\uKeyerConfigStore.pas',
@@ -283,6 +285,7 @@ begin
    RegisterSuite(TRadioStatusTests.Create('RadioStatus'));
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TAutoInfoTests.Create('AutoInfo'));
+   RegisterSuite(TSettingsRegistryTests.Create('SettingsRegistry'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
