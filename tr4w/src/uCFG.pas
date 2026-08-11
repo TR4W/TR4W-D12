@@ -1076,6 +1076,20 @@ begin
          Result := IntToStr(PByte(CFGCA[idx].crAddress)^);
       ctBoolean:
          Result := string(BA[PBoolean(CFGCA[idx].crAddress)^]);
+      ctReal:
+         Result := RealToStr2(PDouble(CFGCA[idx].crAddress)^);
+      ctChar, ctAlphaChar:
+         // A single AnsiChar, not a ShortString -- no length byte, so no +1.
+         Result := string(PAnsiChar(CFGCA[idx].crAddress)^);
+      else
+         // LOUD, not ''.  A type this does not render silently produced an
+         // EMPTY control, which reads to the operator as "unset" -- so they set
+         // it, and their real value is overwritten by whatever they typed over
+         // the blank.  COMPUTER ID (ctAlphaChar) shipped that way; it is above
+         // now, and this else is why the next one will be found by reading a
+         // log rather than by a mis-saved setting.
+         logger.Warn('[CFGCommandValueAsString] %s: crType %d is not rendered here',
+                     [aCommand, Ord(CFGCA[idx].crType)]);
    end;
 end;
 
