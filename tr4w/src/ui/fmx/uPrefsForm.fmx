@@ -1839,87 +1839,225 @@ object PrefsForm: TPrefsForm
       object lblClusterHeading: TLabel
         Position.X = 12.000000000000000000
         Position.Y = 8.000000000000000000
-        Size.Width = 400.000000000000000000
+        Size.Width = 300.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
-        Text = 'DX cluster'
+        Text = 'My DX clusters'
         TabOrder = 0
       end
-      object lblTelnetServer: TLabel
+      object lstClusters: TListBox
         Position.X = 12.000000000000000000
-        Position.Y = 38.000000000000000000
+        Position.Y = 30.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 110.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        OnChange = lstClustersChange
+        DisableFocusEffect = True
+        DefaultItemStyles.ItemStyle = ''
+        DefaultItemStyles.GroupHeaderStyle = ''
+        DefaultItemStyles.GroupFooterStyle = ''
+        Viewport.Width = 416.000000000000000000
+        Viewport.Height = 106.000000000000000000
+      end
+      object btnAddCluster: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 30.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Add...'
+        TextSettings.Trimming = None
+        OnClick = btnAddClusterClick
+      end
+      object btnRemoveCluster: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 62.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Remove'
+        TextSettings.Trimming = None
+        OnClick = btnRemoveClusterClick
+      end
+      object btnUseCluster: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 94.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Use this'
+        TextSettings.Trimming = None
+        OnClick = btnUseClusterClick
+      end
+      object lblActiveCluster: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 148.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Connecting to: (none chosen)'
+        TabOrder = 5
+      end
+      object lblClusterName: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 182.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Name:'
+        TabOrder = 6
+      end
+      object edtClusterName: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 178.000000000000000000
+        Size.Width = 240.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+      end
+      object lblClusterServer: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 214.000000000000000000
         Size.Width = 120.000000000000000000
         Size.Height = 17.000000000000000000
         Size.PlatformDefault = False
         Text = 'Server:'
-        TabOrder = 1
+        TabOrder = 8
       end
-      object edtTelnetServer: TEdit
+      object cbxClusterServer: TComboEdit
         Position.X = 140.000000000000000000
-        Position.Y = 34.000000000000000000
+        Position.Y = 210.000000000000000000
         Size.Width = 300.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 2
+        TabOrder = 9
+        OnChange = cbxClusterServerChange
       end
-      object lblTelnetServerHint: TLabel
+      object lblClusterServerHint: TLabel
         Position.X = 12.000000000000000000
-        Position.Y = 62.000000000000000000
+        Position.Y = 238.000000000000000000
         Size.Width = 620.000000000000000000
-        Size.Height = 51.000000000000000000
+        Size.Height = 34.000000000000000000
         Size.PlatformDefault = False
         Text = 
-          'host:port, for example dxc.nc7j.com:7373.  Servers listed in TRC' +
-          'LUSTER.DAT also appear in the cluster window''s drop-down.  Takes' +
-          ' effect when TR4W next starts.'
-        TabOrder = 3
+          'host:port, for example dxc.nc7j.com:7373.  The drop-down lists t' +
+          'he servers in TRCLUSTER.DAT; you can also type one that is not o' +
+          'n it.'
+        TabOrder = 10
+      end
+      object lblClusterLogin: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 286.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Log in as:'
+        TabOrder = 11
+      end
+      object edtClusterLogin: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 282.000000000000000000
+        Size.Width = 160.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 12
+      end
+      object lblClusterLoginHint: TLabel
+        Position.X = 310.000000000000000000
+        Position.Y = 286.000000000000000000
+        Size.Width = 320.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'blank = my station callsign'
+        TabOrder = 13
+      end
+      object lblClusterPassword: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 318.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Password:'
+        TabOrder = 14
+      end
+      object edtClusterPassword: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 314.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 15
+        Password = True
+      end
+      object lblClusterCommand: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 350.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'After connecting:'
+        TabOrder = 16
+      end
+      object edtClusterCommand: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 346.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 17
+      end
+      object lblClusterCommandHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 374.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 34.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Sent once the login is accepted - filters, set/name, sh/dx.  Sep' +
+          'arate several with a semicolon.'
+        TabOrder = 18
+      end
+      object lblClusterGlobalHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 424.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'For every cluster'
+        TabOrder = 19
       end
       object chkClusterAtStartup: TCheckBox
         Position.X = 12.000000000000000000
-        Position.Y = 118.000000000000000000
+        Position.Y = 450.000000000000000000
         Size.Width = 460.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 20
         Text = 'Connect at startup'
       end
-      object lblClusterCommand: TLabel
-        Position.X = 12.000000000000000000
-        Position.Y = 152.000000000000000000
-        Size.Width = 140.000000000000000000
-        Size.Height = 17.000000000000000000
-        Size.PlatformDefault = False
-        Text = 'After connecting, send:'
-        TabOrder = 21
-      end
-      object edtClusterCommand: TEdit
-        Position.X = 160.000000000000000000
-        Position.Y = 148.000000000000000000
-        Size.Width = 420.000000000000000000
-        Size.Height = 22.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 22
-      end
       object chkSpotCollector: TCheckBox
         Position.X = 12.000000000000000000
-        Position.Y = 186.000000000000000000
+        Position.Y = 476.000000000000000000
         Size.Width = 460.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 4
+        TabOrder = 21
         Text = 'Collect spots from the cluster'
       end
       object lblClusterNote: TLabel
         Position.X = 12.000000000000000000
-        Position.Y = 220.000000000000000000
+        Position.Y = 506.000000000000000000
         Size.Width = 620.000000000000000000
         Size.Height = 51.000000000000000000
         Size.PlatformDefault = False
         Text = 
           'The cluster reconnects on its own after a drop.  Telnet logging ' +
-          'is on the Logging page.  Spot display and ageing are on the Band' +
-          ' Map page - a band map works without a cluster.'
-        TabOrder = 5
+          'is on the Logging page; spot display and ageing are on Band Map.'
+        TabOrder = 22
       end
     end
     object layBandMap: TLayout
