@@ -300,7 +300,7 @@ type
       lblBackupEveryUnits: TLabel;
       lblBackupFile: TLabel;
       lblBackupHint: TLabel;
-      edtSCPMinLetters: TEdit;
+      cbxSCPMinLetters: TComboBox;
       edtSCPCountry: TEdit;
       edtNetAddress: TEdit;
       edtNetPort: TEdit;
@@ -497,6 +497,7 @@ type
 
       // Station.  Save returns False when CFGCA refused any value, having told
       // the operator which -- a refused entry must not close silently.
+      procedure FillFromAllowedValues(const aCombo: TComboBox; const aCommand: string);
       procedure LoadRemainingPanels;
       procedure SaveRemainingPanels;
       procedure LoadClusterPanels;
@@ -1943,10 +1944,40 @@ end;
 
 { ------------------------------ SCP, network, appearance, backup ----------- }
 
+
+procedure TPrefsForm.FillFromAllowedValues(const aCombo: TComboBox;
+                                           const aCommand: string);
+var
+   v: string;
+   current: string;
+begin
+   // Filled from CFGCA's own allow-list, never typed into the designer -- a
+   // populated combo bakes itself into the .fmx resource, so a hand-entered
+   // list becomes a permanent second copy that keeps working while it drifts
+   // from the values the program actually accepts.
+   current := FStore.CommandValue(aCommand, CFGCommandValueAsString(aCommand));
+
+   aCombo.BeginUpdate;
+   try
+      aCombo.Clear;
+      for v in CFGCommandAllowedValues(aCommand) do
+         begin
+         aCombo.Items.Add(v);
+         end;
+   finally
+      aCombo.EndUpdate;
+   end;
+
+   aCombo.ItemIndex := aCombo.Items.IndexOf(Trim(current));
+end;
+
 procedure TPrefsForm.LoadRemainingPanels;
 begin
-   edtSCPMinLetters.Text := FStore.CommandValue('SCP MINIMUM LETTERS',
-                               CFGCommandValueAsString('SCP MINIMUM LETTERS'));
+   // A DROP-DOWN, not a text box: SCP MINIMUM LETTERS is ckArray, a discrete
+   // allow-list of (0, 3, 4, 5).  A text box would let the operator type 2 and
+   // have it silently refused.  The list comes from the table itself, so it
+   // cannot drift from what CheckCommand will accept.
+   FillFromAllowedValues(cbxSCPMinLetters, 'SCP MINIMUM LETTERS');
    edtSCPCountry.Text    := FStore.CommandValue('SCP COUNTRY STRING',
                                CFGCommandValueAsString('SCP COUNTRY STRING'));
 
@@ -1975,7 +2006,11 @@ end;
 
 procedure TPrefsForm.SaveRemainingPanels;
 begin
-   ApplyAndStoreCommand(FStore, 'SCP MINIMUM LETTERS', Trim(edtSCPMinLetters.Text));
+   if cbxSCPMinLetters.ItemIndex >= 0 then
+      begin
+      ApplyAndStoreCommand(FStore, 'SCP MINIMUM LETTERS',
+                           cbxSCPMinLetters.Items[cbxSCPMinLetters.ItemIndex]);
+      end;
    ApplyAndStoreCommand(FStore, 'SCP COUNTRY STRING',  Trim(edtSCPCountry.Text));
 
    ApplyAndStoreCommand(FStore, 'SERVER ADDRESS',  Trim(edtNetAddress.Text));

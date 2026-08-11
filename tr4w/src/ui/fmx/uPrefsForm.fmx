@@ -1781,7 +1781,7 @@ object PrefsForm: TPrefsForm
         Text = 'Start matching after:'
         TabOrder = 1
       end
-      object edtSCPMinLetters: TEdit
+      object cbxSCPMinLetters: TComboBox
         Position.X = 200.000000000000000000
         Position.Y = 38.000000000000000000
         Size.Width = 60.000000000000000000

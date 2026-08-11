@@ -127,6 +127,15 @@ function FindCFGCommand(const aCommand: string): integer;
 // A command's current value as text, rendered per its crType/crKind.
 function CFGCommandValueAsString(const aCommand: string): string;
 
+// The values a ckArray command will ACCEPT, as text, in the table's own order.
+// Empty for any other kind.
+//
+// A ckArray is a DISCRETE ALLOW-LIST, not a range: SetParameterInArray searches
+// for an exact match and rejects anything else.  So a settings screen that
+// offers a free-text box for one is offering values the program will refuse --
+// which is why this exists, and why the SCP control is a drop-down.
+function CFGCommandAllowedValues(const aCommand: string): TArray<string>;
+
 // Apply a value to a command and persist it.  Returns False when CFGCA REFUSES
 // the value, in which case nothing is written -- see the implementation.
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
@@ -1001,6 +1010,14 @@ begin
       Exit;
       end;
 
+   // crAddress IS NOT ALWAYS AN ADDRESS.  This is the first thing
+   // docs/CFG_COMMAND_TABLE.md warns about and it cost an access violation
+   // here: SCP MINIMUM LETTERS is ckArray with crAddress: pointer(1), an INDEX,
+   // and the crType case below happily dereferenced 1 as a PInteger.
+   //
+   // So crKind is decided FIRST and completely.  Only ckNormal reaches the
+   // dereferencing code; every other kind is either handled by its own branch
+   // or returns '' rather than guessing at bytes.
    if CFGCA[idx].crKind = ckList then
       begin
       // The value is a SPELLING: crAddress is an index into ListParamArray, and
@@ -1012,6 +1029,37 @@ begin
               (ListParamArray[listIdx].lpVar^ * SizeOf(Pointer));
          Result := string(PPAnsiChar(p)^);
          end;
+      Exit;
+      end;
+
+   if CFGCA[idx].crKind = ckArray then
+      begin
+      // crAddress indexes ArrayRecordArray, whose arVar POINTS AT the live
+      // value.  The array itself is a discrete allow-list of the values the
+      // command will accept, which is CheckCommand's business, not ours -- all
+      // that is wanted here is what the setting currently is.
+      listIdx := integer(CFGCA[idx].crAddress);
+      if (listIdx >= Low(ArrayRecordArray)) and (listIdx <= High(ArrayRecordArray)) then
+         begin
+         if ArrayRecordArray[listIdx].arVar <> nil then
+            begin
+            Result := IntToStr(ArrayRecordArray[listIdx].arVar^);
+            end;
+         end;
+      Exit;
+      end;
+
+   if CFGCA[idx].crKind <> ckNormal then
+      begin
+      // A kind added later, with an unknown meaning for crAddress.  Say
+      // nothing rather than dereference it.
+      Exit;
+      end;
+
+   // NIL IS A REAL VALUE HERE -- several rows are declared crAddress: nil,
+   // notably the csRem ones whose target no longer exists.
+   if CFGCA[idx].crAddress = nil then
+      begin
       Exit;
       end;
 
@@ -1029,6 +1077,39 @@ begin
       ctBoolean:
          Result := string(BA[PBoolean(CFGCA[idx].crAddress)^]);
    end;
+end;
+
+
+function CFGCommandAllowedValues(const aCommand: string): TArray<string>;
+var
+   idx, arrIdx, i: integer;
+   values: PInteger;
+begin
+   Result := nil;
+   idx := FindCFGCommand(aCommand);
+   if (idx < 0) or (CFGCA[idx].crKind <> ckArray) then
+      begin
+      Exit;
+      end;
+
+   arrIdx := integer(CFGCA[idx].crAddress);
+   if (arrIdx < Low(ArrayRecordArray)) or (arrIdx > High(ArrayRecordArray)) then
+      begin
+      Exit;
+      end;
+
+   values := ArrayRecordArray[arrIdx].arArrayPtr;
+   if values = nil then
+      begin
+      Exit;
+      end;
+
+   // arArrayLength is high(), so the count is one more than it.
+   SetLength(Result, ArrayRecordArray[arrIdx].arArrayLength + 1);
+   for i := 0 to ArrayRecordArray[arrIdx].arArrayLength do
+      begin
+      Result[i] := IntToStr(PIntegerArray(values)^[i]);
+      end;
 end;
 
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
