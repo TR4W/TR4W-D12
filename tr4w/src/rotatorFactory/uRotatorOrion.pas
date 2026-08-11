@@ -17,7 +17,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 unit uRotatorOrion;
 
 {
-  Ten-Tec Orion rotator azimuth command.
+  Orion rotator azimuth command.
+
+  NOT THE TEN-TEC ORION, despite sharing the name (NY4I).  The radio factory has
+  a Ten-Tec Orion transceiver, and calling this one "Ten-Tec Orion" in a
+  drop-down would invite an operator to pick their radio's manufacturer for
+  their rotator.  It is just "Orion" here.
 
   PORTED EXACTLY from LOGSTUFF.RotorControl: '#%03u'#$D.
 
@@ -55,7 +60,7 @@ uses
 
 class function TRotatorOrion.DisplayName: string;
 begin
-   Result := 'Ten-Tec Orion';
+   Result := 'Orion';
 end;
 
 function TRotatorOrion.TurnFrame(const aAzimuth: integer): TBytes;
@@ -64,7 +69,7 @@ begin
 end;
 
 initialization
-   RegisterRotator('ORION', 'Ten-Tec Orion',
+   RegisterRotator('ORION', 'Orion',
       function (const aSend: TRotatorSendProc): TRotatorBase
       begin
          Result := TRotatorOrion.Create(aSend);
