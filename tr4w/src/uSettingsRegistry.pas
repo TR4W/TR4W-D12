@@ -139,6 +139,16 @@ type
       function TrySetText(const aText: string; out aError: string): boolean; override;
       function AllowedValues: TArray<string>; override;
 
+      { SELF-STORING: the registry holds the value and there is no global
+        anywhere.  For a setting that is genuinely NEW.
+
+        The closure form above exists to WRAP an existing global during
+        migration.  A new setting has nothing to wrap, and making one declare a
+        global first would be the old design creeping back in through the door
+        marked "consistency" -- so it does not have to. }
+      class function Own(const aKey, aCaption: string;
+                         const aDefault: boolean): TBoolSetting;
+
       function Value: boolean;
       procedure SetValue(const aValue: boolean);
    end;
@@ -166,6 +176,11 @@ type
 
       { Restrict to a fixed set.  Returns Self so it reads as one declaration. }
       function Allowed(const aValues: array of integer): TIntSetting;
+
+      { Self-storing -- see TBoolSetting.Own. }
+      class function Own(const aKey, aCaption: string; const aDefault: integer;
+                         const aMin: integer = Low(integer);
+                         const aMax: integer = High(integer)): TIntSetting;
    end;
 
    TStringSetting = class(TSettingBase)
@@ -188,6 +203,10 @@ type
         mask it and a log can refuse to print it. }
       function Secret: TStringSetting;
       property IsSecret: boolean read FIsSecret;
+
+      { Self-storing -- see TBoolSetting.Own. }
+      class function Own(const aKey, aCaption: string; const aDefault: string;
+                         const aMaxLength: integer = 0): TStringSetting;
    end;
 
    TEnumSetting = class(TSettingBase)
@@ -205,6 +224,12 @@ type
       function AsText: string; override;
       function TrySetText(const aText: string; out aError: string): boolean; override;
       function AllowedValues: TArray<string>; override;
+
+      { Self-storing -- see TBoolSetting.Own.  The default MUST be one of the
+        declared values, or the setting starts in a state it will not let you
+        return to. }
+      class function Own(const aKey, aCaption: string; const aDefault: string;
+                         const aValues: array of string): TEnumSetting;
    end;
 
 { Registration.  Takes ownership; the registry frees everything at shutdown.
@@ -246,6 +271,19 @@ begin
    Result := nil;
 end;
 
+{ ------------------------------------------------------ self-storing ------ }
+
+{ HOW THESE WORK, because the trick is worth understanding before anyone edits
+  one.  A self-storing setting has no global to point at, so it makes its own
+  storage: a one-element array captured by the getter and setter closures.  The
+  array is a managed dynamic array, so it lives as long as the closures do and
+  is freed with them -- there is nothing to leak and nothing to free by hand.
+
+  A local variable would NOT do.  It goes out of scope when the constructor
+  returns, and the closures would capture a dead frame.  Delphi's closures
+  capture VARIABLES, not values, which is exactly what makes the array work and
+  a plain local fail. }
+
 { ------------------------------------------------------------ TBoolSetting - }
 
 constructor TBoolSetting.Create(const aKey, aCaption: string;
@@ -254,6 +292,18 @@ begin
    inherited Create(aKey, aCaption);
    FGet := aGet;
    FSet := aSet;
+end;
+
+class function TBoolSetting.Own(const aKey, aCaption: string;
+                                const aDefault: boolean): TBoolSetting;
+var
+   cell: TArray<boolean>;
+begin
+   SetLength(cell, 1);
+   cell[0] := aDefault;
+   Result := TBoolSetting.Create(aKey, aCaption,
+      function: boolean begin Result := cell[0] end,
+      procedure (v: boolean) begin cell[0] := v end);
 end;
 
 function TBoolSetting.Value: boolean;
@@ -326,6 +376,19 @@ begin
    FSet := aSet;
    FMin := aMin;
    FMax := aMax;
+end;
+
+class function TIntSetting.Own(const aKey, aCaption: string; const aDefault: integer;
+                               const aMin, aMax: integer): TIntSetting;
+var
+   cell: TArray<integer>;
+begin
+   SetLength(cell, 1);
+   cell[0] := aDefault;
+   Result := TIntSetting.Create(aKey, aCaption,
+      function: integer begin Result := cell[0] end,
+      procedure (v: integer) begin cell[0] := v end,
+      aMin, aMax);
 end;
 
 function TIntSetting.Allowed(const aValues: array of integer): TIntSetting;
@@ -424,6 +487,19 @@ begin
    FMaxLength := aMaxLength;
 end;
 
+class function TStringSetting.Own(const aKey, aCaption: string; const aDefault: string;
+                                  const aMaxLength: integer): TStringSetting;
+var
+   cell: TArray<string>;
+begin
+   SetLength(cell, 1);
+   cell[0] := aDefault;
+   Result := TStringSetting.Create(aKey, aCaption,
+      function: string begin Result := cell[0] end,
+      procedure (v: string) begin cell[0] := v end,
+      aMaxLength);
+end;
+
 function TStringSetting.Secret: TStringSetting;
 begin
    FIsSecret := True;
@@ -486,6 +562,39 @@ begin
       begin
       FValues[i - Low(aValues)] := aValues[i];
       end;
+end;
+
+class function TEnumSetting.Own(const aKey, aCaption: string; const aDefault: string;
+                                const aValues: array of string): TEnumSetting;
+var
+   cell: TArray<string>;
+   i: integer;
+   ok: boolean;
+begin
+   // A DEFAULT OUTSIDE THE DECLARED VALUES is a setting that starts in a state
+   // TrySetText will not let the operator return to -- so it is a defect at
+   // registration, caught here rather than puzzled over later.
+   ok := False;
+   for i := Low(aValues) to High(aValues) do
+      begin
+      if SameText(aValues[i], aDefault) then
+         begin
+         ok := True;
+         Break;
+         end;
+      end;
+   if not ok then
+      begin
+      raise Exception.CreateFmt('Setting "%s": default "%s" is not one of its values',
+                                [aKey, aDefault]);
+      end;
+
+   SetLength(cell, 1);
+   cell[0] := aDefault;
+   Result := TEnumSetting.Create(aKey, aCaption,
+      function: string begin Result := cell[0] end,
+      procedure (v: string) begin cell[0] := v end,
+      aValues);
 end;
 
 function TEnumSetting.AsText: string;
