@@ -1783,7 +1783,11 @@ var
 begin
    for f in StationFields do
       begin
-      f.Edit.Text := CFGCommandValueAsString(f.Command);
+      // The STORE is the record now; CFGCA is where the value is applied.
+      // Falling back to the live global covers the first run after upgrade,
+      // when the store has nothing yet and the ini seeded the globals.
+      f.Edit.Text := FStore.CommandValue(f.Command,
+                                         CFGCommandValueAsString(f.Command));
       end;
 
    // Continent is a ckList: the value is a SPELLING in ContinentTypeSA, and the
@@ -1801,7 +1805,9 @@ begin
       cbxMyContinent.EndUpdate;
    end;
    cbxMyContinent.ItemIndex :=
-      cbxMyContinent.Items.IndexOf(UpperCase(Trim(CFGCommandValueAsString('MY CONTINENT'))));
+      cbxMyContinent.Items.IndexOf(UpperCase(Trim(
+         FStore.CommandValue('MY CONTINENT',
+                             CFGCommandValueAsString('MY CONTINENT')))));
 end;
 
 function TPrefsForm.SaveStationPanel: boolean;
@@ -1866,7 +1872,7 @@ begin
    // to land, which is its own piece of work.
    for f in StationFields do
       begin
-      if not SetCFGCommandValue(f.Command, Trim(f.Edit.Text)) then
+      if not ApplyAndStoreCommand(FStore, f.Command, Trim(f.Edit.Text)) then
          begin
          bad := bad + f.Command + ' = "' + Trim(f.Edit.Text) + '"' + sLineBreak;
          Result := False;
@@ -1875,8 +1881,8 @@ begin
 
    if cbxMyContinent.ItemIndex >= 0 then
       begin
-      if not SetCFGCommandValue('MY CONTINENT',
-                                cbxMyContinent.Items[cbxMyContinent.ItemIndex]) then
+      if not ApplyAndStoreCommand(FStore, 'MY CONTINENT',
+                                  cbxMyContinent.Items[cbxMyContinent.ItemIndex]) then
          begin
          bad := bad + 'MY CONTINENT' + sLineBreak;
          Result := False;

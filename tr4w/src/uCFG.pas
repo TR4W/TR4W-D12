@@ -922,7 +922,8 @@ const
  (crCommand: 'ZONE MULTIPLIER';               crAddress: pointer(23);                                     crMin:0;  crMax:0;         crS: csOld; crA: 2; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier)
     {*)}
       );
-function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString): boolean;
+function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
+                      const aApplyJSONOwned: boolean = False): boolean;
 // True when Command names a single-valued (overwrite) config command, i.e. one
 // for which a duplicate line is a misconfiguration.  Accumulating commands
 // (frequency lists, band lists, ADD DOMESTIC COUNTRY, indexed arrays) legitimately
@@ -1100,7 +1101,8 @@ begin
       end;
 end;
 
-function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString): boolean;
+function CheckCommand(Command: PAnsiChar; CustomCMD: ShortString;
+                      const aApplyJSONOwned: boolean = False): boolean;
 label
    AdditionalProc;
 type
@@ -1288,7 +1290,31 @@ begin
             // not error, and both are INERT.  The difference is only why --
             // csRem was withdrawn, csJSON moved to settings	r4w.json, which is
             // now the system of record for it.
-            if CFGCA[i].crS in [csRem, csJSON] then
+            // csRem is ACCEPTED AND INERT unconditionally: it was withdrawn,
+            // there is nowhere for its value to go, and an old config file
+            // naming it must not error.
+            if CFGCA[i].crS = csRem then
+               begin
+                  Result := True;
+                  Exit;
+               end;
+
+            // csJSON DEPENDS ON WHO IS ASKING, and that distinction is the
+            // whole of it.
+            //
+            // The inertness exists to stop a STALE INI FILE overriding
+            // settings\tr4w.json, which is the system of record.  That is a
+            // statement about the ini LOADER, not about every caller.  A value
+            // arriving from a trusted source -- the settings screens, or a
+            // multi-op peer -- still has to be APPLIED, and applied through
+            // here rather than by assignment, because this is the only code
+            // that knows how to turn text into the right typed global, enforce
+            // crMin/crMax, and run the row's crA hook.
+            //
+            // Default False keeps every existing caller, above all the ini
+            // loader, exactly as it was.  A trusted caller passes True and the
+            // row behaves like any other.
+            if (CFGCA[i].crS = csJSON) and (not aApplyJSONOwned) then
                begin
                   Result := True;
                   Exit;

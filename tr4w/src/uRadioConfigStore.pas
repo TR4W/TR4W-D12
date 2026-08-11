@@ -270,6 +270,20 @@ type
       // with DEBUG LOG LEVEL = DEBUG in their ini would silently drop to INFO
       // on upgrade, at the moment they were trying to diagnose something.
       FHasLoggingSection: boolean;
+
+      // RETIRED CFGCA ROWS, name -> value.
+      //
+      // A generic map rather than a hand-written field per setting, because
+      // "everything moves to JSON" (NY4I) means ~400 CFGCA rows eventually
+      // land here and a field each is not a plan.  The KEY IS THE COMMAND
+      // NAME exactly as CFGCA spells it ('MY SECTION'), so there is no
+      // second vocabulary to drift: the applier hands each pair straight
+      // back to CheckCommand, which already knows the type, the bounds and
+      // the hook.
+      //
+      // Structured sections (radios, profiles, keyers, tci, logging) stay
+      // structured -- those are objects with shape, not flat legacy rows.
+      FCommands: TStringList;
       procedure LoadRadio(const aIni: TCustomIniFile; const aSection, aName: string);
       procedure SaveRadio(const aIni: TCustomIniFile; const aRadio: TRadioDefinition);
       procedure LoadProfile(const aIni: TCustomIniFile; const aSection, aName: string);
@@ -386,6 +400,12 @@ type
       // False when the loaded file had no logging section -- see the field.
       // Read-only: only a load can answer it.
       property HasLoggingSection: boolean read FHasLoggingSection;
+
+      // Retired CFGCA rows as name=value.  Owned by the store; callers read
+      // and write entries but do not free it.
+      property Commands: TStringList read FCommands;
+      function  CommandValue(const aCommand: string; const aDefault: string = ''): string;
+      procedure SetCommand(const aCommand, aValue: string);
    end;
 
 const
@@ -407,6 +427,7 @@ const
    JSONKEY_NAME          = 'name';
    JSONKEY_TCI           = 'tci';
    JSONKEY_LOGGING       = 'logging';
+   JSONKEY_COMMANDS      = 'commands';
 
    // The level TR4W has always shipped with.  A spelling, not an ordinal --
    // see TRadioConfigStore.FLogLevelName.
@@ -682,10 +703,42 @@ begin
    // object over.
    FRadios   := TObjectList<TRadioDefinition>.Create(True);
    FProfiles := TObjectList<TStationProfile>.Create(True);
+
+   // Name=value, case-insensitive: CFGCA command names are matched with
+   // SameText everywhere else, and a store that disagreed would answer '' for
+   // a command the program is perfectly happy to apply.
+   FCommands := TStringList.Create;
+   FCommands.CaseSensitive := False;
+end;
+
+function TRadioConfigStore.CommandValue(const aCommand, aDefault: string): string;
+var
+   idx: integer;
+begin
+   // A DEFAULT, not ''.  The caller passes the live value, so the first run
+   // after upgrade -- store empty, globals seeded from the ini -- shows what is
+   // actually in force rather than blanking the operator's station.
+   idx := FCommands.IndexOfName(aCommand);
+   if idx < 0 then
+      begin
+      Result := aDefault;
+      end
+   else
+      begin
+      Result := FCommands.ValueFromIndex[idx];
+      end;
+end;
+
+procedure TRadioConfigStore.SetCommand(const aCommand, aValue: string);
+begin
+   // Values[] REPLACES, so setting a command twice updates it rather than
+   // leaving a second entry whose effect would depend on read order.
+   FCommands.Values[aCommand] := aValue;
 end;
 
 destructor TRadioConfigStore.Destroy;
 begin
+   FreeAndNil(FCommands);
    FreeAndNil(FProfiles);
    FreeAndNil(FRadios);
    inherited Destroy;
@@ -703,6 +756,11 @@ begin
    FTCIBindAll           := TCI_DEFAULT_BINDALL;
    FTCIDebug             := TCI_DEFAULT_DEBUG;
    FTCIMaxTxSeconds      := TCI_DEFAULT_MAX_TX_SECONDS;
+
+   if FCommands <> nil then
+      begin
+      FCommands.Clear;
+      end;
 
    FHasLoggingSection    := False;
    FLogLevelName         := LOG_DEFAULT_LEVEL;
@@ -1321,7 +1379,7 @@ end;
 function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
-   general, tci, logging: TJSONObject;
+   general, tci, logging, commands: TJSONObject;
    i: integer;
 begin
    Result := TJSONObject.Create;
@@ -1361,6 +1419,15 @@ begin
    logging.AddPair('telnetDebug',     TJSONBool.Create(FTelnetDebug));
    Result.AddPair(JSONKEY_LOGGING, logging);
 
+   // Retired CFGCA rows.  An OBJECT keyed by command name, so the file reads as
+   // what it is -- "MY SECTION": "WCF" -- and needs no schema beyond CFGCA.
+   commands := TJSONObject.Create;
+   for i := 0 to FCommands.Count - 1 do
+      begin
+      commands.AddPair(FCommands.Names[i], FCommands.ValueFromIndex[i]);
+      end;
+   Result.AddPair(JSONKEY_COMMANDS, commands);
+
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
    // form had to encode the name in the section header, which made a name
    // containing ']' or '=' a hazard and left ordering to whatever the ini
@@ -1384,7 +1451,7 @@ procedure TRadioConfigStore.LoadFromJSON(const aRoot: TJSONObject);
 var
    arr: TJSONArray;
    obj: TJSONObject;
-   general, tci, logging: TJSONObject;
+   general, tci, logging, commands: TJSONObject;
    radioDef: TRadioDefinition;
    profile: TStationProfile;
    v: TJSONValue;
@@ -1449,6 +1516,21 @@ begin
    FHamLibAsyncOnly := JSONBool(logging, 'hamlibAsyncOnly', False);
    FHamLibTrace     := JSONBool(logging, 'hamlibTrace',     False);
    FTelnetDebug     := JSONBool(logging, 'telnetDebug',     False);
+
+   // Retired CFGCA rows.  Whatever is here is applied verbatim by the apply
+   // layer through CheckCommand, so an unknown name simply fails there rather
+   // than needing a check of its own.
+   FCommands.Clear;
+   v := aRoot.GetValue(JSONKEY_COMMANDS);
+   if (v <> nil) and (v is TJSONObject) then
+      begin
+      commands := TJSONObject(v);
+      for i := 0 to commands.Count - 1 do
+         begin
+         FCommands.Values[commands.Pairs[i].JsonString.Value] :=
+            commands.Pairs[i].JsonValue.Value;
+         end;
+      end;
 
    // Radios before profiles: a profile's radio references are only meaningful
    // once the radios exist, and Validate is easier to reason about that way.
