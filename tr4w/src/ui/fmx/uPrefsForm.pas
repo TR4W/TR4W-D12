@@ -88,7 +88,8 @@ uses
    uRadioEditForm,   // the Radio editor, its own unit since it is next to be designed
    uKeyerEditForm,   // the CW keying-device editor
    uUDPDestinationEditForm,   // one UDP destination, edited in isolation
-   uUDPBroadcastConfig;       // the settings this panel edits
+   uUDPBroadcastConfig,       // the settings this panel edits
+   uSettingsBinding;          // TSettingBindings -- a field on the form below
 
 type
 
@@ -316,6 +317,40 @@ type
       chkDupeSheetColor: TCheckBox;
       btnBrowseBackup: TButton;
 
+      // --- Operating leaves, CW sending, and the DX cluster additions ---------
+      // Declared because a binding or a handler touches them.  Labels and the
+      // nav items are not: labels are decoration, and nav items are found by Tag.
+      chkCWEnable: TCheckBox;
+      chkCWSpeedFromDatabase: TCheckBox;
+      cbxCWSpeedIncrement: TComboBox;
+      edtCWTone: TEdit;
+      chkClusterAtStartup: TCheckBox;
+      edtClusterCommand: TEdit;
+      chkHamScoreEnable: TCheckBox;
+      edtHamScoreURL: TEdit;
+      edtHamScoreUser: TEdit;
+      edtHamScorePass: TEdit;
+      chkHamScoreContact: TCheckBox;
+      edtScorePostURL: TEdit;
+      edtScoreReadURL: TEdit;
+      chkSayHiEnable: TCheckBox;
+      edtSayHiCutoff: TEdit;
+      chkKeypadCWMemories: TCheckBox;
+      cbxLeadingZeros: TComboBox;
+      edtLeadingZeroChar: TEdit;
+      cbxDitDah: TComboBox;
+      edtWeight: TEdit;
+      chkFarnsworth: TCheckBox;
+      edtFarnsworthSpeed: TEdit;
+      chkHFBands: TCheckBox;
+      chkWARCBands: TCheckBox;
+      chkVHFBands: TCheckBox;
+      chkTwoRadioMode: TCheckBox;
+      chkAltDBuffer: TCheckBox;
+      chkAltDCQ: TCheckBox;
+      chkAlwaysBlindCQ: TCheckBox;
+      chkSkipActiveBand: TCheckBox;
+
       // --- Logging (Tag = NAV_LOGGING) ---------------------------------------
       // The ONE place for logging, which used to be spread across a level key,
       // three HamLib switches, a telnet switch, and TCI's own settings file
@@ -423,6 +458,9 @@ type
       // STATE, not controls: nothing here is streamed, so it keeps the F prefix
       // and stays private.
       FStore: TRadioConfigStore;
+      { Controls bound to settings by KEY -- see uSettingsBinding.  Anything
+        bound needs no load/save code of its own. }
+      FBindings: TSettingBindings;
       // The keyer library, sharing settings\tr4w.json with the radios.
       // uTR4WConfigFile owns the root; neither store knows about the other.
       //
@@ -498,6 +536,7 @@ type
       // Station.  Save returns False when CFGCA refused any value, having told
       // the operator which -- a refused entry must not close silently.
       procedure FillFromAllowedValues(const aCombo: TComboBox; const aCommand: string);
+      procedure BuildBindings;
       procedure LoadRemainingPanels;
       procedure SaveRemainingPanels;
       procedure LoadClusterPanels;
@@ -637,6 +676,8 @@ uses
    System.IOUtils,     // TFile.Exists -- the log file may not exist yet
    Winapi.ShellAPI,    // ShellExecute -- open the log in the operator's editor
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
+   uSettingsRegistry,     // the settings themselves
+   uSettingsDeclarations, // DeclareAllSettings
    uCallSignRoutines,   // GoodCallSyntax -- the MY CALL sanity check
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
@@ -750,6 +791,7 @@ end;
 
 destructor TPrefsForm.Destroy;
 begin
+   FreeAndNil(FBindings);
    FreeAndNil(FEditClone);
    FreeAndNil(FKeyerEditClone);
    FreeAndNil(FUDPEditClone);
@@ -849,11 +891,23 @@ end;
 function TPrefsForm.SaveStore(out aError: string): boolean;
 var
    tciPort: integer;
+   bindErrors: string;
 begin
    Result := FStore.Validate(aError);
    if not Result then
       begin
       Exit;
+      end;
+   // REPORTED HERE, once, and all of them together: a panel of thirty settings
+   // that showed one problem per visit would take thirty visits to correct.
+   // The accepted values were already applied as they were typed.
+   if FBindings <> nil then
+      begin
+      if not FBindings.SaveAll(bindErrors) then
+         begin
+         ShowMessage('These entries were not accepted and have not been saved:'
+                     + sLineBreak + sLineBreak + bindErrors);
+         end;
       end;
 
    // The UDP settings are validated on the SAME footing as the radio library,
@@ -1355,6 +1409,8 @@ begin
       LoadExternalSoftwarePanels;
       LoadClusterPanels;
       LoadRemainingPanels;
+      BuildBindings;
+      FBindings.LoadAll;
       LoadTCIPanel;
       LoadLoggingPanel;
 
@@ -1397,6 +1453,7 @@ end;
 procedure TPrefsForm.CaptureProfileFields;
 var
    prof: TStationProfile;
+   ignoredErrors: string;
 begin
    if FLoading then
       begin
@@ -1408,8 +1465,19 @@ begin
    SaveExternalSoftwarePanels;
    SaveClusterPanels;
    SaveRemainingPanels;
+
+   // QUIETLY here.  This runs on every change -- every keystroke in an edit --
+   // so a refusal is expected mid-typing: "5" on the way to "50" is genuinely
+   // out of range for a moment.  Reporting it here would pop a dialog while the
+   // operator is still typing.  The accepted values apply as they are typed;
+   // the refusals are reported ONCE, on the explicit save, in SaveStore.
+   if FBindings <> nil then
+      begin
+      FBindings.SaveAll(ignoredErrors);
+      end;
    SaveTCIPanel;
    SaveLoggingPanel;
+
 
    prof := CurrentProfile;
    if prof = nil then
@@ -1969,6 +2037,62 @@ begin
    end;
 
    aCombo.ItemIndex := aCombo.Items.IndexOf(Trim(current));
+end;
+
+procedure TPrefsForm.BuildBindings;
+begin
+   // DECLARED ONCE, HERE, AND NOWHERE ELSE.  Each line says which control edits
+   // which setting; load, save, validation, allow-lists and the
+   // drop-down-versus-text-box decision all follow from the setting.  There is
+   // deliberately no per-field code below this -- that is the whole point, and
+   // the reason the older panels above still have hand-written Load/Save pairs
+   // is only that they were written before this existed.
+   DeclareAllSettings;
+
+   FreeAndNil(FBindings);
+   FBindings := TSettingBindings.Create;
+
+   // Operating - CW
+   FBindings.Bind(chkSayHiEnable,       'operating.cw.sayHi');
+   FBindings.Bind(edtSayHiCutoff,       'operating.cw.sayHiRateCutoff');
+   FBindings.Bind(chkKeypadCWMemories,  'operating.cw.keypadMemories');
+   FBindings.Bind(cbxLeadingZeros,      'operating.cw.leadingZeros');
+   FBindings.Bind(edtLeadingZeroChar,   'operating.cw.leadingZeroChar');
+   FBindings.Bind(cbxDitDah,            'operating.cw.serial.ditDahRatio');
+   FBindings.Bind(edtWeight,            'operating.cw.serial.weight');
+   FBindings.Bind(chkFarnsworth,        'operating.cw.serial.farnsworth');
+   FBindings.Bind(edtFarnsworthSpeed,   'operating.cw.serial.farnsworthSpeed');
+
+   // CW Settings
+   FBindings.Bind(chkCWEnable,             'cw.enable');
+   FBindings.Bind(chkCWSpeedFromDatabase,  'cw.speedFromDatabase');
+   FBindings.Bind(cbxCWSpeedIncrement,     'cw.speedIncrement');
+   FBindings.Bind(edtCWTone,               'cw.tone');
+
+   // Operating - Bands
+   FBindings.Bind(chkHFBands,   'operating.bands.hf');
+   FBindings.Bind(chkWARCBands, 'operating.bands.warc');
+   FBindings.Bind(chkVHFBands,  'operating.bands.vhf');
+
+   // Operating - Two radio
+   FBindings.Bind(chkTwoRadioMode,    'operating.tworadio.enable');
+   FBindings.Bind(chkAltDBuffer,      'operating.tworadio.altDBuffer');
+   FBindings.Bind(chkAltDCQ,          'operating.tworadio.altDCQ');
+   FBindings.Bind(chkAlwaysBlindCQ,   'operating.tworadio.blindCQ');
+   FBindings.Bind(chkSkipActiveBand,  'operating.tworadio.skipActiveBand');
+
+   // Operating - Online scoring
+   FBindings.Bind(chkHamScoreEnable,  'scoring.hamscore.enable');
+   FBindings.Bind(edtHamScoreURL,     'scoring.hamscore.url');
+   FBindings.Bind(edtHamScoreUser,    'scoring.hamscore.username');
+   FBindings.Bind(edtHamScorePass,    'scoring.hamscore.password');
+   FBindings.Bind(chkHamScoreContact, 'scoring.hamscore.contactInfo');
+   FBindings.Bind(edtScorePostURL,    'scoring.board.postingUrl');
+   FBindings.Bind(edtScoreReadURL,    'scoring.board.readingUrl');
+
+   // DX cluster
+   FBindings.Bind(chkClusterAtStartup, 'cluster.connectAtStartup');
+   FBindings.Bind(edtClusterCommand,   'cluster.connectCommand');
 end;
 
 procedure TPrefsForm.LoadRemainingPanels;
