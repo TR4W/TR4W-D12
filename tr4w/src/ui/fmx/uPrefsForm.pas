@@ -76,6 +76,7 @@ uses
    FMX.Forms,
    FMX.StdCtrls,
    FMX.Edit,
+   FMX.ComboEdit,   // TComboEdit -- the cluster server picker is editable
    FMX.ListBox,
    FMX.TreeView,
    FMX.Objects,       // TPath -- the nav expander chevron
@@ -243,9 +244,26 @@ type
       // --- DX Cluster (Tag 3) and Band Map (Tag 20) ---------------------------
       layCluster: TLayout;
       lblClusterHeading: TLabel;
-      lblTelnetServer: TLabel;
-      edtTelnetServer: TEdit;
-      lblTelnetServerHint: TLabel;
+      lstClusters: TListBox;
+      btnAddCluster: TButton;
+      btnRemoveCluster: TButton;
+      btnUseCluster: TButton;
+      lblActiveCluster: TLabel;
+      lblClusterName: TLabel;
+      edtClusterName: TEdit;
+      lblClusterServer: TLabel;
+      // A TComboEdit, not a TComboBox: FMX's TComboBox.Text is READ-ONLY
+      // (it reflects the selection), and this field has to accept a server
+      // that is not in TRCLUSTER.DAT -- a club node, or a private one.
+      cbxClusterServer: TComboEdit;
+      lblClusterServerHint: TLabel;
+      lblClusterLogin: TLabel;
+      edtClusterLogin: TEdit;
+      lblClusterLoginHint: TLabel;
+      lblClusterPassword: TLabel;
+      edtClusterPassword: TEdit;
+      lblClusterCommandHint: TLabel;
+      lblClusterGlobalHeading: TLabel;
       chkSpotCollector: TCheckBox;
       lblClusterNote: TLabel;
       layBandMap: TLayout;
@@ -453,6 +471,11 @@ type
       procedure cbxLogLevelChange(Sender: TObject);
       procedure btnBrowseMMTTYClick(Sender: TObject);
       procedure btnBrowseBackupClick(Sender: TObject);
+      procedure lstClustersChange(Sender: TObject);
+      procedure cbxClusterServerChange(Sender: TObject);
+      procedure btnAddClusterClick(Sender: TObject);
+      procedure btnRemoveClusterClick(Sender: TObject);
+      procedure btnUseClusterClick(Sender: TObject);
       procedure lstRotatorsChange(Sender: TObject);
       procedure cbxRotatorTypeChange(Sender: TObject);
       procedure btnAddRotatorClick(Sender: TObject);
@@ -565,6 +588,11 @@ type
       // the operator which -- a refused entry must not close silently.
       procedure FillFromAllowedValues(const aCombo: TComboBox; const aCommand: string);
       procedure BuildBindings;
+      procedure LoadClusterServerList;
+      procedure LoadClusterList;
+      procedure ShowActiveCluster;
+      procedure ShowSelectedCluster;
+      procedure CaptureSelectedCluster;
       procedure LoadRotatorList;
       procedure ShowSelectedRotator;
       procedure CaptureSelectedRotator;
@@ -1476,6 +1504,7 @@ begin
       LoadClusterPanels;
       LoadRemainingPanels;
       LoadRotatorList;
+      LoadClusterList;
       BuildBindings;
       FBindings.LoadAll;
       LoadTCIPanel;
@@ -2216,6 +2245,252 @@ end;
 
 { ------------------------------------------------------------ Rotators ----- }
 
+
+{ ---------------------------------------------------------- DX clusters --- }
+
+procedure TPrefsForm.LoadClusterServerList;
+var
+   fileName: string;
+   lines: TStringList;
+   i: integer;
+   line: string;
+begin
+   // THE PUBLIC DIRECTORY, offered as a picker.  TRCLUSTER.DAT is ~15 KB of
+   // host:port lines that ship with TR4W -- it is not the operator's list, it
+   // is the list they choose FROM.  Their own servers, with credentials, are
+   // the library above.
+   //
+   // Editable, not a closed list: a club or a private node will not be in the
+   // file, and refusing to accept one would make the picker a cage.
+   cbxClusterServer.BeginUpdate;
+   try
+      cbxClusterServer.Clear;
+
+      fileName := ExtractFilePath(ParamStr(0)) + 'TRCLUSTER.DAT';
+      if TFile.Exists(fileName) then
+         begin
+         lines := TStringList.Create;
+         try
+            lines.LoadFromFile(fileName);
+            for i := 0 to lines.Count - 1 do
+               begin
+               line := Trim(lines[i]);
+               // Skip blanks and anything that looks like a comment.  The file
+               // is hand-maintained and has picked up both over the years.
+               if (line <> '') and (line[1] <> ';') and (line[1] <> '#') then
+                  begin
+                  cbxClusterServer.Items.Add(line);
+                  end;
+               end;
+         finally
+            lines.Free;
+         end;
+         end;
+   finally
+      cbxClusterServer.EndUpdate;
+   end;
+end;
+
+procedure TPrefsForm.LoadClusterList;
+var
+   i: integer;
+   keep: integer;
+begin
+   LoadClusterServerList;
+
+   keep := lstClusters.ItemIndex;
+   lstClusters.BeginUpdate;
+   try
+      lstClusters.Clear;
+      for i := 0 to FStore.ClusterCount - 1 do
+         begin
+         lstClusters.Items.Add(Format('%s  -  %s',
+            [FStore.Cluster(i).Name, FStore.Cluster(i).Server]));
+         end;
+   finally
+      lstClusters.EndUpdate;
+   end;
+
+   if (keep >= 0) and (keep < lstClusters.Items.Count) then
+      begin
+      lstClusters.ItemIndex := keep;
+      end
+   else if lstClusters.Items.Count > 0 then
+      begin
+      lstClusters.ItemIndex := 0;
+      end;
+
+   ShowActiveCluster;
+   ShowSelectedCluster;
+end;
+
+procedure TPrefsForm.ShowActiveCluster;
+begin
+   if FStore.ActiveCluster <> nil then
+      begin
+      lblActiveCluster.Text := 'Connecting to: ' + FStore.ActiveCluster.Name +
+                               '  -  ' + FStore.ActiveCluster.Server;
+      end
+   else
+      begin
+      // SAID PLAINLY.  A cluster page listing three servers while connecting to
+      // none is the kind of thing an operator discovers mid-contest.
+      lblActiveCluster.Text := 'Connecting to: (none chosen -- select one and press Use this)';
+      end;
+end;
+
+procedure TPrefsForm.ShowSelectedCluster;
+var
+   c: TClusterDefinition;
+   have: boolean;
+begin
+   have := (lstClusters.ItemIndex >= 0) and (lstClusters.ItemIndex < FStore.ClusterCount);
+
+   // Nothing selected means nothing to edit -- the same rule as the rotator
+   // page.  Fields that merely LOOK empty still accept typing, and that typing
+   // goes nowhere.
+   edtClusterName.Enabled     := have;
+   cbxClusterServer.Enabled   := have;
+   edtClusterLogin.Enabled    := have;
+   edtClusterPassword.Enabled := have;
+   edtClusterCommand.Enabled  := have;
+   btnRemoveCluster.Enabled   := have;
+   btnUseCluster.Enabled      := have;
+
+   if not have then
+      begin
+      edtClusterName.Text     := '';
+      cbxClusterServer.Text   := '';
+      edtClusterLogin.Text    := '';
+      edtClusterPassword.Text := '';
+      edtClusterCommand.Text  := '';
+      Exit;
+      end;
+
+   FLoading := True;
+   try
+      c := FStore.Cluster(lstClusters.ItemIndex);
+      edtClusterName.Text     := c.Name;
+      cbxClusterServer.Text   := c.Server;
+      edtClusterLogin.Text    := c.LoginCall;
+      edtClusterPassword.Text := c.Password;
+      edtClusterCommand.Text  := c.ConnectCommand;
+   finally
+      FLoading := False;
+   end;
+end;
+
+procedure TPrefsForm.CaptureSelectedCluster;
+var
+   c: TClusterDefinition;
+   wasActive: boolean;
+begin
+   if FLoading then
+      begin
+      Exit;
+      end;
+   if (lstClusters.ItemIndex < 0) or (lstClusters.ItemIndex >= FStore.ClusterCount) then
+      begin
+      Exit;
+      end;
+
+   c := FStore.Cluster(lstClusters.ItemIndex);
+   wasActive := SameText(c.Name, FStore.ActiveClusterName);
+
+   // A blank name keeps the old one: this runs on every keystroke, and the box
+   // is empty for a moment whenever somebody clears it to retype.
+   if Trim(edtClusterName.Text) <> '' then
+      begin
+      c.Name := Trim(edtClusterName.Text);
+      // RENAMING THE ACTIVE ONE MUST FOLLOW IT.  ActiveClusterName is matched by
+      // name, so a rename would otherwise silently deactivate the very cluster
+      // the operator was editing.
+      if wasActive then
+         begin
+         FStore.ActiveClusterName := c.Name;
+         ShowActiveCluster;
+         end;
+      end;
+
+   c.Server         := Trim(cbxClusterServer.Text);
+   c.LoginCall      := Trim(edtClusterLogin.Text);
+   // NOT trimmed -- a password may legitimately begin or end with a space.
+   c.Password       := edtClusterPassword.Text;
+   c.ConnectCommand := Trim(edtClusterCommand.Text);
+end;
+
+procedure TPrefsForm.lstClustersChange(Sender: TObject);
+begin
+   ShowSelectedCluster;
+end;
+
+procedure TPrefsForm.cbxClusterServerChange(Sender: TObject);
+begin
+   CaptureSelectedCluster;
+end;
+
+procedure TPrefsForm.btnAddClusterClick(Sender: TObject);
+var
+   c: TClusterDefinition;
+begin
+   c := TClusterDefinition.Create;
+   c.Name := FStore.UniqueClusterName('Cluster');
+
+   if not FStore.AddCluster(c) then
+      begin
+      // AddCluster does not free on refusal -- the caller still owns it.
+      c.Free;
+      Exit;
+      end;
+
+   // THE FIRST ONE BECOMES ACTIVE.  An operator who defines exactly one cluster
+   // means that one; making them press Use this as well would be ceremony.
+   if FStore.ClusterCount = 1 then
+      begin
+      FStore.ActiveClusterName := c.Name;
+      end;
+
+   LoadClusterList;
+   lstClusters.ItemIndex := FStore.ClusterCount - 1;
+   ShowSelectedCluster;
+end;
+
+procedure TPrefsForm.btnRemoveClusterClick(Sender: TObject);
+var
+   i: integer;
+begin
+   i := lstClusters.ItemIndex;
+   if (i < 0) or (i >= FStore.ClusterCount) then
+      begin
+      Exit;
+      end;
+
+   if MessageDlg(Format('Remove the cluster "%s"?', [FStore.Cluster(i).Name]),
+                 TMsgDlgType.mtConfirmation,
+                 [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
+      begin
+      Exit;
+      end;
+
+   FStore.DeleteCluster(i);
+   LoadClusterList;
+end;
+
+procedure TPrefsForm.btnUseClusterClick(Sender: TObject);
+begin
+   if (lstClusters.ItemIndex < 0) or (lstClusters.ItemIndex >= FStore.ClusterCount) then
+      begin
+      Exit;
+      end;
+
+   FStore.ActiveClusterName := FStore.Cluster(lstClusters.ItemIndex).Name;
+   ShowActiveCluster;
+
+   // NOT reconnected here.  Dropping a live cluster connection the moment
+   // somebody clicks in a settings window would lose the spots on screen; the
+   // choice takes effect on the next connect, which the operator controls.
+end;
+
 procedure TPrefsForm.LoadRotatorList;
 var
    i: integer;
@@ -2620,8 +2895,8 @@ end;
 
 procedure TPrefsForm.LoadClusterPanels;
 begin
-   edtTelnetServer.Text  := FStore.CommandValue('TELNET SERVER',
-                               CFGCommandValueAsString('TELNET SERVER'));
+   // TELNET SERVER is no longer edited directly -- it is a rendering of
+   // whichever cluster is active, written in SaveClusterPanels.
    chkSpotCollector.IsChecked := CommandBool('SPOT COLLECTOR ENABLED');
 
    chkBandMapEnable.IsChecked     := CommandBool('BAND MAP ENABLE');
@@ -2644,7 +2919,15 @@ end;
 
 procedure TPrefsForm.SaveClusterPanels;
 begin
-   ApplyAndStoreCommand(FStore, 'TELNET SERVER', Trim(edtTelnetServer.Text));
+   // THE ACTIVE CLUSTER IS WHAT TELNET SERVER MEANS NOW.  The connect path
+   // still reads that one global, so the library stays a library and the
+   // legacy setting becomes a rendering of the operator's choice -- the same
+   // relationship the [Radio] keys have with the radio library.  A cluster's
+   // credentials go with it; only the server name has somewhere old to live.
+   if FStore.ActiveCluster <> nil then
+      begin
+      ApplyAndStoreCommand(FStore, 'TELNET SERVER', FStore.ActiveCluster.Server);
+      end;
    SetCommandBool('SPOT COLLECTOR ENABLED', chkSpotCollector.IsChecked);
 
    SetCommandBool('BAND MAP ENABLE', chkBandMapEnable.IsChecked);

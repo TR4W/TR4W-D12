@@ -94,6 +94,40 @@ type
      UPDATE SECONDS) are RETIRED: CFGCA still accepts them from an old ini so
      it does not error, but they drive nothing, so they are absent here by
      intent rather than by oversight. }
+   { ONE DX CLUSTER the operator connects to.
+
+     NOT A FACTORY, and NY4I was explicit about why: "I am not suggesting that
+     the user would state the type of cluster it is.  The user is just connected
+     to one cluster at a time.  But they may want to have a list of frequently
+     connected servers they use stored with different credentials for each."
+
+     So there is no protocol type here and no driver -- every cluster is telnet.
+     What varies is the SERVER AND THE CREDENTIALS, which is a library, not
+     polymorphism.  I had proposed carrying a type discriminator "so it can grow
+     into a factory"; that would have been a field nobody sets, answering a
+     question nobody asked.
+
+     Credentials are PER SERVER because they genuinely differ: a reverse-beacon
+     node wants a bare callsign, a club cluster may want a password, and an
+     operator with two calls logs into different clusters as different
+     stations. }
+   TClusterDefinition = class(TObject)
+   public
+      // What the operator calls it.  The key, and what the drop-down shows.
+      Name: string;
+      // 'dxc.nc7j.com:7373' -- host and optional port, the spelling
+      // TRCLUSTER.DAT uses so an entry can be pasted straight in.
+      Server: string;
+      // The callsign to log in AS.  Blank means "my station callsign", which is
+      // what nearly everyone wants and nobody should have to type twice.
+      LoginCall: string;
+      Password: string;
+      // Sent after the login is accepted -- filters, set/name, sh/dx.
+      ConnectCommand: string;
+
+      procedure Assign(const aOther: TClusterDefinition);
+   end;
+
    { ONE ROTATOR the operator has defined.  Shaped like TRadioDefinition on
      purpose: the operator's mental model is the same -- a thing with a name,
      a type, and how it is connected -- and reusing the shape means the
@@ -263,6 +297,8 @@ type
    private
       FRadios: TObjectList<TRadioDefinition>;
       FRotators: TObjectList<TRotatorDefinition>;
+      FClusters: TObjectList<TClusterDefinition>;
+      FActiveClusterName: string;
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
       FAutoConnectOnStartup: boolean;
@@ -455,6 +491,16 @@ type
       function  AddRotator(const aRotator: TRotatorDefinition): boolean;
       procedure DeleteRotator(const aIndex: integer);
       function  UniqueRotatorName(const aBase: string): string;
+
+      { The cluster library.  One is ACTIVE -- the one TR4W connects to. }
+      function  ClusterCount: integer;
+      function  Cluster(const aIndex: integer): TClusterDefinition;
+      function  IndexOfCluster(const aName: string): integer;
+      function  AddCluster(const aCluster: TClusterDefinition): boolean;
+      procedure DeleteCluster(const aIndex: integer);
+      function  UniqueClusterName(const aBase: string): string;
+      function  ActiveCluster: TClusterDefinition;
+      property  ActiveClusterName: string read FActiveClusterName write FActiveClusterName;
       function  CommandValue(const aCommand: string; const aDefault: string = ''): string;
       procedure SetCommand(const aCommand, aValue: string);
    end;
@@ -480,6 +526,7 @@ const
    JSONKEY_LOGGING       = 'logging';
    JSONKEY_COMMANDS      = 'commands';
    JSONKEY_ROTATORS      = 'rotators';
+   JSONKEY_CLUSTERS      = 'clusters';
 
    // The level TR4W has always shipped with.  A spelling, not an ordinal --
    // see TRadioConfigStore.FLogLevelName.
@@ -834,6 +881,105 @@ begin
       end;
 end;
 
+{ ------------------------------------------------------ TClusterDefinition - }
+
+procedure TClusterDefinition.Assign(const aOther: TClusterDefinition);
+begin
+   if aOther = nil then
+      begin
+      Exit;
+      end;
+   Name           := aOther.Name;
+   Server         := aOther.Server;
+   LoginCall      := aOther.LoginCall;
+   Password       := aOther.Password;
+   ConnectCommand := aOther.ConnectCommand;
+end;
+
+function TRadioConfigStore.ClusterCount: integer;
+begin
+   Result := FClusters.Count;
+end;
+
+function TRadioConfigStore.Cluster(const aIndex: integer): TClusterDefinition;
+begin
+   Result := FClusters[aIndex];
+end;
+
+function TRadioConfigStore.IndexOfCluster(const aName: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to FClusters.Count - 1 do
+      begin
+      if SameText(FClusters[i].Name, aName) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+function TRadioConfigStore.AddCluster(const aCluster: TClusterDefinition): boolean;
+begin
+   // Takes ownership on success, frees NOTHING on failure -- the caller still
+   // owns what it handed over, so a rejected add cannot double-free.
+   Result := False;
+   if (aCluster = nil) or (Trim(aCluster.Name) = '') then
+      begin
+      Exit;
+      end;
+   if IndexOfCluster(aCluster.Name) >= 0 then
+      begin
+      Exit;
+      end;
+   FClusters.Add(aCluster);
+   Result := True;
+end;
+
+procedure TRadioConfigStore.DeleteCluster(const aIndex: integer);
+begin
+   if (aIndex < 0) or (aIndex >= FClusters.Count) then
+      begin
+      Exit;
+      end;
+
+   // Deleting the ACTIVE one clears the choice rather than silently promoting a
+   // neighbour.  TR4W then connects to nothing until the operator says which --
+   // better than connecting to a cluster they never picked.
+   if SameText(FClusters[aIndex].Name, FActiveClusterName) then
+      begin
+      FActiveClusterName := '';
+      end;
+   FClusters.Delete(aIndex);
+end;
+
+function TRadioConfigStore.UniqueClusterName(const aBase: string): string;
+var
+   n: integer;
+begin
+   Result := aBase;
+   n := 2;
+   while IndexOfCluster(Result) >= 0 do
+      begin
+      Result := Format('%s %d', [aBase, n]);
+      Inc(n);
+      end;
+end;
+
+function TRadioConfigStore.ActiveCluster: TClusterDefinition;
+var
+   i: integer;
+begin
+   Result := nil;
+   i := IndexOfCluster(FActiveClusterName);
+   if i >= 0 then
+      begin
+      Result := FClusters[i];
+      end;
+end;
+
 { ------------------------------------------------------ TRadioConfigStore -- }
 
 constructor TRadioConfigStore.Create;
@@ -849,6 +995,7 @@ begin
    // SameText everywhere else, and a store that disagreed would answer '' for
    // a command the program is perfectly happy to apply.
    FRotators := TObjectList<TRotatorDefinition>.Create(True);
+   FClusters := TObjectList<TClusterDefinition>.Create(True);
 
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
@@ -882,6 +1029,7 @@ end;
 destructor TRadioConfigStore.Destroy;
 begin
    FreeAndNil(FCommands);
+   FreeAndNil(FClusters);
    FreeAndNil(FRotators);
    FreeAndNil(FProfiles);
    FreeAndNil(FRadios);
@@ -892,6 +1040,8 @@ procedure TRadioConfigStore.Clear;
 begin
    FRadios.Clear;
    FRotators.Clear;
+   FClusters.Clear;
+   FActiveClusterName := '';
    FProfiles.Clear;
    FActiveProfileName    := '';
    FAutoConnectOnStartup := False;
@@ -1524,8 +1674,8 @@ end;
 function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
-   general, tci, logging, commands, rot: TJSONObject;
-   rotators: TJSONArray;
+   general, tci, logging, commands, rot, clu: TJSONObject;
+   rotators, clusters: TJSONArray;
    i: integer;
 begin
    Result := TJSONObject.Create;
@@ -1591,6 +1741,23 @@ begin
       end;
    Result.AddPair(JSONKEY_ROTATORS, rotators);
 
+   // Clusters, and which one is active.  The active NAME rather than an index:
+   // an index silently re-points at a different server the moment the list is
+   // reordered, and reordering a list is exactly what an operator does.
+   clusters := TJSONArray.Create;
+   for i := 0 to FClusters.Count - 1 do
+      begin
+      clu := TJSONObject.Create;
+      clu.AddPair(JSONKEY_NAME,     FClusters[i].Name);
+      clu.AddPair('server',         FClusters[i].Server);
+      clu.AddPair('loginCall',      FClusters[i].LoginCall);
+      clu.AddPair('password',       FClusters[i].Password);
+      clu.AddPair('connectCommand', FClusters[i].ConnectCommand);
+      clusters.AddElement(clu);
+      end;
+   Result.AddPair(JSONKEY_CLUSTERS, clusters);
+   general.AddPair('activeCluster', FActiveClusterName);
+
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
    // form had to encode the name in the section header, which made a name
    // containing ']' or '=' a hazard and left ordering to whatever the ini
@@ -1617,6 +1784,7 @@ var
    general, tci, logging, commands: TJSONObject;
    radioDef: TRadioDefinition;
    rotDef: TRotatorDefinition;
+   cluDef: TClusterDefinition;
    profile: TStationProfile;
    v: TJSONValue;
    i: integer;
@@ -1684,6 +1852,32 @@ begin
    // Retired CFGCA rows.  Whatever is here is applied verbatim by the apply
    // layer through CheckCommand, so an unknown name simply fails there rather
    // than needing a check of its own.
+   FClusters.Clear;
+   FActiveClusterName := JSONStr(general, 'activeCluster', '');
+   v := aRoot.GetValue(JSONKEY_CLUSTERS);
+   if (v <> nil) and (v is TJSONArray) then
+      begin
+      arr := TJSONArray(v);
+      for i := 0 to arr.Count - 1 do
+         begin
+         if not (arr.Items[i] is TJSONObject) then
+            begin
+            Continue;
+            end;
+         obj := TJSONObject(arr.Items[i]);
+         cluDef := TClusterDefinition.Create;
+         cluDef.Name           := JSONStr(obj, JSONKEY_NAME,     '');
+         cluDef.Server         := JSONStr(obj, 'server',         '');
+         cluDef.LoginCall      := JSONStr(obj, 'loginCall',      '');
+         cluDef.Password       := JSONStr(obj, 'password',       '');
+         cluDef.ConnectCommand := JSONStr(obj, 'connectCommand', '');
+         if not AddCluster(cluDef) then
+            begin
+            cluDef.Free;
+            end;
+         end;
+      end;
+
    FRotators.Clear;
    v := aRoot.GetValue(JSONKEY_ROTATORS);
    if (v <> nil) and (v is TJSONArray) then
