@@ -723,6 +723,7 @@ uses
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
    uSettingsRegistry,     // the settings themselves
    uSettingsDeclarations, // DeclareAllSettings
+   ComPortEnumerator,   // the real serial ports, same source as the radio editor
    uRotatorBase,        // UsesSerialPort / PreferredBaudRate -- asked, not assumed
    uRotatorControl,     // rebuild the live rotators when the library is saved
    uRotatorRegistry,    // the rotator type list comes from the registry
@@ -2220,6 +2221,10 @@ var
    i: integer;
    id: string;
    keep: integer;
+   enumerator: TComPortEnumerator;
+   names: TArray<string>;
+   info: TComPortInfo;
+   caption: string;
 begin
    // THE TYPE LIST COMES FROM THE REGISTRY, never from the designer.  Same rule
    // as the log level and the external-logger list: a combo populated in the
@@ -2237,14 +2242,37 @@ begin
       cbxRotatorType.EndUpdate;
    end;
 
+   // THE PORTS THAT ACTUALLY EXIST, through the same enumerator the radio
+   // editor uses -- not a hopeful SERIAL 1..64.  NY4I asked for this and it is
+   // the right call twice over: a list of sixty-four mostly-imaginary ports
+   // makes the operator hunt for the real one, and the friendly name is what
+   // tells a CP210x apart from an FTDI when a station has four of them.
+   //
+   // The CAPTION carries the friendly name; the ITEM'S TAG carries the config
+   // value.  Storing what is displayed would put 'COM17 - Silicon Labs CP210x'
+   // into the settings file, which is the corruption the legacy dialog had to
+   // be fixed for.
    cbxRotatorPort.BeginUpdate;
    try
       cbxRotatorPort.Clear;
-      cbxRotatorPort.Items.Add(PORT_NONE);
-      for i := 1 to 64 do
-         begin
-         cbxRotatorPort.Items.Add(Format('SERIAL %d', [i]));
-         end;
+      AddComboItem(cbxRotatorPort, TC_PREFS_NONE, PORT_NONE);
+
+      enumerator := TComPortEnumerator.Create;
+      try
+         enumerator.Refresh;
+         names := enumerator.PortNames;
+         for i := 0 to High(names) do
+            begin
+            caption := names[i];
+            if enumerator.PortByName(names[i], info) and (info.FriendlyName <> '') then
+               begin
+               caption := names[i] + ' - ' + info.FriendlyName;
+               end;
+            AddComboItem(cbxRotatorPort, caption, ComNameToPortValue(names[i]));
+            end;
+      finally
+         enumerator.Free;
+      end;
    finally
       cbxRotatorPort.EndUpdate;
    end;
@@ -2299,7 +2327,15 @@ begin
       edtRotatorName.Text := r.Name;
       cbxRotatorType.ItemIndex :=
          cbxRotatorType.Items.IndexOf(RotatorDisplayName(r.RotatorId));
-      cbxRotatorPort.ItemIndex := cbxRotatorPort.Items.IndexOf(r.ControlPort);
+      // A STORED PORT THAT IS NO LONGER PLUGGED IN still has to show.  Adding
+      // it back rather than selecting nothing is what stops opening this page
+      // on a machine with the interface unplugged from silently clearing the
+      // operator's rotator port.
+      if (r.ControlPort <> '') and (not HasTag(cbxRotatorPort, r.ControlPort)) then
+         begin
+         AddComboItem(cbxRotatorPort, r.ControlPort + ' (not present)', r.ControlPort);
+         end;
+      SelectByTag(cbxRotatorPort, r.ControlPort);
 
       // Blank rather than 0: 0 means "the type's own default", and showing it
       // as a number invites the operator to treat it as a chosen value.
@@ -2386,7 +2422,8 @@ begin
 
    if cbxRotatorPort.ItemIndex >= 0 then
       begin
-      r.ControlPort := cbxRotatorPort.Items[cbxRotatorPort.ItemIndex];
+      // The TAG, never the caption -- see LoadRotatorList.
+      r.ControlPort := SelectedTag(cbxRotatorPort);
       end;
 
    if TryStrToInt(Trim(edtRotatorBaud.Text), n) then
