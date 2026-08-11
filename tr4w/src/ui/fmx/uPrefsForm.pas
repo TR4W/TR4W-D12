@@ -269,6 +269,53 @@ type
       chkBandMapSO2R: TCheckBox;
       chkBandMapGHz: TCheckBox;
 
+      // --- SCP (4), Network (6), Appearance (7), Backup (9) -------------------
+      laySCP: TLayout;
+      layNetwork: TLayout;
+      layAppearance: TLayout;
+      layBackup: TLayout;
+      lblSCPHeading: TLabel;
+      lblSCPMinLetters: TLabel;
+      lblSCPMinLettersUnits: TLabel;
+      lblSCPCountry: TLabel;
+      lblSCPHint: TLabel;
+      lblSCPFileHint: TLabel;
+      lblNetHeading: TLabel;
+      lblNetAddress: TLabel;
+      lblNetPort: TLabel;
+      lblNetPassword: TLabel;
+      lblNetComputerID: TLabel;
+      lblNetComputerIDHint: TLabel;
+      lblNetHint: TLabel;
+      lblRadioTCPHeading: TLabel;
+      lblRadioTCPPort: TLabel;
+      lblRadioTCPHint: TLabel;
+      lblAppearHeading: TLabel;
+      lblMainFont: TLabel;
+      lblFontSize: TLabel;
+      lblAppearHint: TLabel;
+      lblAppearColorsHint: TLabel;
+      lblBackupHeading: TLabel;
+      lblBackupEvery: TLabel;
+      lblBackupEveryUnits: TLabel;
+      lblBackupFile: TLabel;
+      lblBackupHint: TLabel;
+      edtSCPMinLetters: TEdit;
+      edtSCPCountry: TEdit;
+      edtNetAddress: TEdit;
+      edtNetPort: TEdit;
+      edtNetPassword: TEdit;
+      edtNetComputerID: TEdit;
+      edtRadioTCPPort: TEdit;
+      edtMainFont: TEdit;
+      edtFontSize: TEdit;
+      edtBackupEvery: TEdit;
+      edtBackupFile: TEdit;
+      chkNetAutoSync: TCheckBox;
+      chkBoldFont: TCheckBox;
+      chkDupeSheetColor: TCheckBox;
+      btnBrowseBackup: TButton;
+
       // --- Logging (Tag = NAV_LOGGING) ---------------------------------------
       // The ONE place for logging, which used to be spread across a level key,
       // three HamLib switches, a telnet switch, and TCI's own settings file
@@ -346,6 +393,7 @@ type
       procedure chkTCIServerChange(Sender: TObject);
       procedure cbxLogLevelChange(Sender: TObject);
       procedure btnBrowseMMTTYClick(Sender: TObject);
+      procedure btnBrowseBackupClick(Sender: TObject);
       procedure btnOpenLogFileClick(Sender: TObject);
 
       // MUST live here, with the other streamed handlers.  The .fmx stores an
@@ -449,6 +497,8 @@ type
 
       // Station.  Save returns False when CFGCA refused any value, having told
       // the operator which -- a refused entry must not close silently.
+      procedure LoadRemainingPanels;
+      procedure SaveRemainingPanels;
       procedure LoadClusterPanels;
       procedure SaveClusterPanels;
       procedure LoadExternalSoftwarePanels;
@@ -1303,6 +1353,7 @@ begin
       LoadStationPanel;
       LoadExternalSoftwarePanels;
       LoadClusterPanels;
+      LoadRemainingPanels;
       LoadTCIPanel;
       LoadLoggingPanel;
 
@@ -1355,6 +1406,7 @@ begin
    SaveStationPanel;
    SaveExternalSoftwarePanels;
    SaveClusterPanels;
+   SaveRemainingPanels;
    SaveTCIPanel;
    SaveLoggingPanel;
 
@@ -1887,6 +1939,86 @@ end;
 
 
 { --------------------------------------------- DX cluster and band map ----- }
+
+
+{ ------------------------------ SCP, network, appearance, backup ----------- }
+
+procedure TPrefsForm.LoadRemainingPanels;
+begin
+   edtSCPMinLetters.Text := FStore.CommandValue('SCP MINIMUM LETTERS',
+                               CFGCommandValueAsString('SCP MINIMUM LETTERS'));
+   edtSCPCountry.Text    := FStore.CommandValue('SCP COUNTRY STRING',
+                               CFGCommandValueAsString('SCP COUNTRY STRING'));
+
+   edtNetAddress.Text    := FStore.CommandValue('SERVER ADDRESS',
+                               CFGCommandValueAsString('SERVER ADDRESS'));
+   edtNetPort.Text       := FStore.CommandValue('SERVER PORT',
+                               CFGCommandValueAsString('SERVER PORT'));
+   edtNetPassword.Text   := FStore.CommandValue('SERVER PASSWORD',
+                               CFGCommandValueAsString('SERVER PASSWORD'));
+   edtNetComputerID.Text := FStore.CommandValue('COMPUTER ID',
+                               CFGCommandValueAsString('COMPUTER ID'));
+   chkNetAutoSync.IsChecked := CommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT');
+   edtRadioTCPPort.Text  := FStore.CommandValue('RADIO TCP SERVER PORT',
+                               CFGCommandValueAsString('RADIO TCP SERVER PORT'));
+
+   edtMainFont.Text := FStore.CommandValue('MAIN FONT', CFGCommandValueAsString('MAIN FONT'));
+   edtFontSize.Text := FStore.CommandValue('FONT SIZE', CFGCommandValueAsString('FONT SIZE'));
+   chkBoldFont.IsChecked       := CommandBool('BOLD FONT');
+   chkDupeSheetColor.IsChecked := CommandBool('COLUMN DUPESHEET COLOR');
+
+   edtBackupEvery.Text := FStore.CommandValue('BACKUP LOG FREQUENCY',
+                             CFGCommandValueAsString('BACKUP LOG FREQUENCY'));
+   edtBackupFile.Text  := FStore.CommandValue('BACKUP LOG FILE NAME',
+                             CFGCommandValueAsString('BACKUP LOG FILE NAME'));
+end;
+
+procedure TPrefsForm.SaveRemainingPanels;
+begin
+   ApplyAndStoreCommand(FStore, 'SCP MINIMUM LETTERS', Trim(edtSCPMinLetters.Text));
+   ApplyAndStoreCommand(FStore, 'SCP COUNTRY STRING',  Trim(edtSCPCountry.Text));
+
+   ApplyAndStoreCommand(FStore, 'SERVER ADDRESS',  Trim(edtNetAddress.Text));
+   ApplyAndStoreCommand(FStore, 'SERVER PORT',     Trim(edtNetPort.Text));
+   // NOT trimmed: a password may legitimately begin or end with a space, and
+   // silently removing one turns "wrong password" into an unsolvable puzzle.
+   ApplyAndStoreCommand(FStore, 'SERVER PASSWORD', edtNetPassword.Text);
+   ApplyAndStoreCommand(FStore, 'COMPUTER ID',     Trim(edtNetComputerID.Text));
+   SetCommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT', chkNetAutoSync.IsChecked);
+   ApplyAndStoreCommand(FStore, 'RADIO TCP SERVER PORT', Trim(edtRadioTCPPort.Text));
+
+   ApplyAndStoreCommand(FStore, 'MAIN FONT', Trim(edtMainFont.Text));
+   ApplyAndStoreCommand(FStore, 'FONT SIZE', Trim(edtFontSize.Text));
+   SetCommandBool('BOLD FONT',              chkBoldFont.IsChecked);
+   SetCommandBool('COLUMN DUPESHEET COLOR', chkDupeSheetColor.IsChecked);
+
+   ApplyAndStoreCommand(FStore, 'BACKUP LOG FREQUENCY', Trim(edtBackupEvery.Text));
+   ApplyAndStoreCommand(FStore, 'BACKUP LOG FILE NAME', Trim(edtBackupFile.Text));
+end;
+
+procedure TPrefsForm.btnBrowseBackupClick(Sender: TObject);
+var
+   dlg: TSaveDialog;
+begin
+   // SAVE dialog, not Open: the backup file is somewhere to WRITE, and it
+   // usually does not exist yet.  An Open dialog would refuse to name it.
+   dlg := TSaveDialog.Create(nil);
+   try
+      dlg.Title   := 'Backup log file';
+      dlg.Filter  := 'Log files (*.dat)|*.dat|All files (*.*)|*.*';
+      dlg.Options := dlg.Options - [TOpenOption.ofOverwritePrompt];
+      if Trim(edtBackupFile.Text) <> '' then
+         begin
+         dlg.FileName := Trim(edtBackupFile.Text);
+         end;
+      if dlg.Execute then
+         begin
+         edtBackupFile.Text := dlg.FileName;
+         end;
+   finally
+      dlg.Free;
+   end;
+end;
 
 procedure TPrefsForm.LoadClusterPanels;
 begin

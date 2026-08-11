@@ -1756,6 +1756,418 @@ object PrefsForm: TPrefsForm
         TabOrder = 19
       end
     end
+    object laySCP: TLayout
+      Tag = 4
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 13
+      object lblSCPHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Super Check Partial'
+        TabOrder = 0
+      end
+      object lblSCPMinLetters: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 42.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Start matching after:'
+        TabOrder = 1
+      end
+      object edtSCPMinLetters: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 38.000000000000000000
+        Size.Width = 60.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+      end
+      object lblSCPMinLettersUnits: TLabel
+        Position.X = 270.000000000000000000
+        Position.Y = 42.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'letters typed'
+        TabOrder = 3
+      end
+      object lblSCPCountry: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 76.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Restrict to countries:'
+        TabOrder = 4
+      end
+      object edtSCPCountry: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 72.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+      end
+      object lblSCPHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 106.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Blank shows matches from everywhere.  A list of country prefixes' +
+          ' narrows it, which is useful in a domestic contest where the who' +
+          'le world is not workable.'
+        TabOrder = 6
+      end
+      object lblSCPFileHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 160.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Matches come from TRMASTER.DTA in the program folder.  Without t' +
+          'hat file Super Check Partial simply shows nothing; it is not an ' +
+          'error.'
+        TabOrder = 7
+      end
+    end
+    object layNetwork: TLayout
+      Tag = 6
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 14
+      object lblNetHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Multi-operator network'
+        TabOrder = 0
+      end
+      object lblNetAddress: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 42.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Server:'
+        TabOrder = 1
+      end
+      object edtNetAddress: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 38.000000000000000000
+        Size.Width = 240.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+      end
+      object lblNetPort: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 74.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Port:'
+        TabOrder = 3
+      end
+      object edtNetPort: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 70.000000000000000000
+        Size.Width = 90.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+      end
+      object lblNetPassword: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 106.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Password:'
+        TabOrder = 5
+      end
+      object edtNetPassword: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 102.000000000000000000
+        Size.Width = 240.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Password = True
+      end
+      object lblNetComputerID: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 138.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'This station:'
+        TabOrder = 7
+      end
+      object edtNetComputerID: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 134.000000000000000000
+        Size.Width = 60.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 8
+      end
+      object lblNetComputerIDHint: TLabel
+        Position.X = 230.000000000000000000
+        Position.Y = 138.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'a single letter, unique in the network'
+        TabOrder = 9
+      end
+      object chkNetAutoSync: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 170.000000000000000000
+        Size.Width = 500.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 10
+        Text = 'Synchronise the log when connecting'
+      end
+      object lblNetHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 204.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'TR4WServer runs on one machine and every operating position conn' +
+          'ects to it.  It holds the shared log, the multipliers and the se' +
+          'rial numbers.'
+        TabOrder = 11
+      end
+      object lblRadioTCPHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 268.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Radio sharing'
+        TabOrder = 12
+      end
+      object lblRadioTCPPort: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 302.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'TCP port:'
+        TabOrder = 13
+      end
+      object edtRadioTCPPort: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 298.000000000000000000
+        Size.Width = 90.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 14
+      end
+      object lblRadioTCPHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 330.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Lets another position read this station''s radio.  Takes effect w' +
+          'hen TR4W next starts.'
+        TabOrder = 15
+      end
+    end
+    object layAppearance: TLayout
+      Tag = 7
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 15
+      object lblAppearHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Main window'
+        TabOrder = 0
+      end
+      object lblMainFont: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 42.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Font:'
+        TabOrder = 1
+      end
+      object edtMainFont: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 38.000000000000000000
+        Size.Width = 240.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+      end
+      object lblFontSize: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 74.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Size:'
+        TabOrder = 3
+      end
+      object edtFontSize: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 70.000000000000000000
+        Size.Width = 60.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+      end
+      object chkBoldFont: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 104.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+        Text = 'Bold'
+      end
+      object chkDupeSheetColor: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 134.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Text = 'Colour the dupe sheet columns'
+      end
+      object lblAppearHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 168.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'The font applies to the main contest window.  All four take effe' +
+          'ct when TR4W next starts.'
+        TabOrder = 7
+      end
+      object lblAppearColorsHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 222.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Window colours are still on the Settings menu.  They belong here' +
+          ' and will move once the main window is resizable, which is the c' +
+          'hange that decides what the layout options need to be.'
+        TabOrder = 8
+      end
+    end
+    object layBackup: TLayout
+      Tag = 9
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 16
+      object lblBackupHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Log backup'
+        TabOrder = 0
+      end
+      object lblBackupEvery: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 42.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Back up every:'
+        TabOrder = 1
+      end
+      object edtBackupEvery: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 38.000000000000000000
+        Size.Width = 60.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+      end
+      object lblBackupEveryUnits: TLabel
+        Position.X = 270.000000000000000000
+        Position.Y = 42.000000000000000000
+        Size.Width = 220.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'QSOs  (0 = never)'
+        TabOrder = 3
+      end
+      object lblBackupFile: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 76.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Copy to:'
+        TabOrder = 4
+      end
+      object edtBackupFile: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 72.000000000000000000
+        Size.Width = 340.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+      end
+      object btnBrowseBackup: TButton
+        Position.X = 548.000000000000000000
+        Position.Y = 71.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        Text = 'Browse...'
+        TextSettings.Trimming = None
+        OnClick = btnBrowseBackupClick
+      end
+      object lblBackupHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 106.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'A second copy of the log, written as you go.  Put it somewhere t' +
+          'hat is not the same disk as the log itself, or it protects again' +
+          'st nothing worth protecting against.'
+        TabOrder = 7
+      end
+    end
   end
   object btnOK: TButton
     Anchors = [akRight, akBottom]
