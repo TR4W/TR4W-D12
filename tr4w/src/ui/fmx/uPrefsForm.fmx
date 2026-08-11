@@ -47,7 +47,7 @@ object PrefsForm: TPrefsForm
     object navOperating: TTreeViewItem
       Tag = 21
       Height = 19.000000000000000000
-      IsExpanded = True
+      IsExpanded = False
       TabOrder = 3
       Text = 'Operating'
       object navBandMap: TTreeViewItem
@@ -159,7 +159,7 @@ object PrefsForm: TPrefsForm
     object navExternalSoftware: TTreeViewItem
       Tag = 13
       Height = 19.000000000000000000
-      IsExpanded = True
+      IsExpanded = False
       TabOrder = 13
       Text = 'External Software'
       object navWSJTX: TTreeViewItem
