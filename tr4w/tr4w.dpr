@@ -78,6 +78,8 @@ uses
   // preferences dialog is the caller -- but they are listed so the compiler
   // checks them against the live CFGCA/CAT surface on every build.
   uSettingsRegistry in 'src\uSettingsRegistry.pas',
+  uSettingsBinding in 'src\uSettingsBinding.pas',
+  uSettingsDeclarations in 'src\uSettingsDeclarations.pas',
   uRadioConfigStore in 'src\uRadioConfigStore.pas',
   uKeyerConfigStore in 'src\uKeyerConfigStore.pas',
   uKeyerConfigApply in 'src\uKeyerConfigApply.pas',

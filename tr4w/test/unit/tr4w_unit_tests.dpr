@@ -54,6 +54,8 @@ uses
    uRadioConfigStore    in '..\..\src\uRadioConfigStore.pas',
    uTestRadioConfigStore in 'uTestRadioConfigStore.pas',
    uSettingsRegistry in '..\..\src\uSettingsRegistry.pas',
+   uSettingsBinding in '..\..\src\uSettingsBinding.pas',
+   uSettingsDeclarations in '..\..\src\uSettingsDeclarations.pas',
    uTestSettingsRegistry in 'uTestSettingsRegistry.pas',
    uRadioConfigLegacyMap in '..\..\src\uRadioConfigLegacyMap.pas',
    uTestRadioConfigLegacyMap in 'uTestRadioConfigLegacyMap.pas',

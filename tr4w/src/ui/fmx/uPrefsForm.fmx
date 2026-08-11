@@ -305,6 +305,85 @@ object PrefsForm: TPrefsForm
           'ethod each slot uses.'
         TabOrder = 6
       end
+      object lblCWSendHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 262.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Sending'
+        TabOrder = 7
+      end
+      object chkCWEnable: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 288.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 8
+        Text = 'Send CW'
+      end
+      object chkCWSpeedFromDatabase: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 314.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 9
+        Text = 'Match the speed a station was worked at before'
+      end
+      object lblCWSpeedIncrement: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 352.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Speed step:'
+        TabOrder = 10
+      end
+      object cbxCWSpeedIncrement: TComboBox
+        Position.X = 200.000000000000000000
+        Position.Y = 348.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 11
+      end
+      object lblCWSpeedIncrementUnits: TLabel
+        Position.X = 290.000000000000000000
+        Position.Y = 352.000000000000000000
+        Size.Width = 280.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'WPM per PageUp / PageDown'
+        TabOrder = 12
+      end
+      object lblCWTone: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 384.000000000000000000
+        Size.Width = 180.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Sidetone:'
+        TabOrder = 13
+      end
+      object edtCWTone: TEdit
+        Position.X = 200.000000000000000000
+        Position.Y = 380.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 14
+      end
+      object lblCWToneUnits: TLabel
+        Position.X = 290.000000000000000000
+        Position.Y = 384.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Hz  (0 = the radios own sidetone)'
+        TabOrder = 15
+      end
     end
     object layHardware: TLayout
       Tag = 2
