@@ -141,7 +141,7 @@ type
       btnActivate: TButton;
 
       chkAutoConnect: TCheckBox;
-      layHardware: TLayout;
+      layRadios: TLayout;
 
       // --- TCI Server (Tag = NAV_TCISERVER) ----------------------------------
       // Its OWN section, beside Web Server, because that is what it is: a
@@ -351,6 +351,30 @@ type
       chkAlwaysBlindCQ: TCheckBox;
       chkSkipActiveBand: TCheckBox;
 
+      // --- Rotators (Tag = NAV_ROTATORS) --------------------------------------
+      layRotators: TLayout;
+      lblMyRotators: TLabel;
+      lstRotators: TListBox;
+      btnAddRotator: TButton;
+      btnRemoveRotator: TButton;
+      lblRotatorName: TLabel;
+      edtRotatorName: TEdit;
+      lblRotatorType: TLabel;
+      cbxRotatorType: TComboBox;
+      lblRotatorPort: TLabel;
+      cbxRotatorPort: TComboBox;
+      lblRotatorBaud: TLabel;
+      edtRotatorBaud: TEdit;
+      lblRotatorBaudHint: TLabel;
+      lblRotatorIP: TLabel;
+      edtRotatorIP: TEdit;
+      lblRotatorUDP: TLabel;
+      edtRotatorUDP: TEdit;
+      lblRotatorBands: TLabel;
+      edtRotatorBands: TEdit;
+      lblRotatorBandsHint: TLabel;
+      lblRotatorNote: TLabel;
+
       // --- Logging (Tag = NAV_LOGGING) ---------------------------------------
       // The ONE place for logging, which used to be spread across a level key,
       // three HamLib switches, a telnet switch, and TCI's own settings file
@@ -429,6 +453,10 @@ type
       procedure cbxLogLevelChange(Sender: TObject);
       procedure btnBrowseMMTTYClick(Sender: TObject);
       procedure btnBrowseBackupClick(Sender: TObject);
+      procedure lstRotatorsChange(Sender: TObject);
+      procedure cbxRotatorTypeChange(Sender: TObject);
+      procedure btnAddRotatorClick(Sender: TObject);
+      procedure btnRemoveRotatorClick(Sender: TObject);
       procedure btnOpenLogFileClick(Sender: TObject);
 
       // MUST live here, with the other streamed handlers.  The .fmx stores an
@@ -537,6 +565,9 @@ type
       // the operator which -- a refused entry must not close silently.
       procedure FillFromAllowedValues(const aCombo: TComboBox; const aCommand: string);
       procedure BuildBindings;
+      procedure LoadRotatorList;
+      procedure ShowSelectedRotator;
+      procedure CaptureSelectedRotator;
       procedure LoadRemainingPanels;
       procedure SaveRemainingPanels;
       procedure LoadClusterPanels;
@@ -656,6 +687,13 @@ const
    // from the style -- see ApplyChevrons for why that is not optional.
    NAV_CHILD_INDENT      = 20;
 
+   // Hardware became a PARENT (NY4I): the radio library moved to a Radios leaf
+   // beside a new Rotators one.  The Hardware panel itself was simply retagged
+   // -- 272 lines of designed layout that did not have to move, which is what
+   // tag dispatch buys.
+   NAV_RADIOS            = 26;
+   NAV_ROTATORS          = 27;
+
 // Opens Preferences, creating it on first use.  Called from the PREF
 // call-window command.
 procedure ShowPreferences;
@@ -685,6 +723,8 @@ uses
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
    uSettingsRegistry,     // the settings themselves
    uSettingsDeclarations, // DeclareAllSettings
+   uRotatorBase,        // UsesSerialPort / PreferredBaudRate -- asked, not assumed
+   uRotatorRegistry,    // the rotator type list comes from the registry
    uCallSignRoutines,   // GoodCallSyntax -- the MY CALL sanity check
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
@@ -788,7 +828,7 @@ begin
    ForEachNavItem(
       procedure (item: TTreeViewItem)
       begin
-      if (wanted = nil) and (item.Tag = NAV_HARDWARE) then
+      if (wanted = nil) and (item.Tag = NAV_RADIOS) then
          begin
          wanted := item;
          end;
@@ -1428,6 +1468,7 @@ begin
       LoadExternalSoftwarePanels;
       LoadClusterPanels;
       LoadRemainingPanels;
+      LoadRotatorList;
       BuildBindings;
       FBindings.LoadAll;
       LoadTCIPanel;
@@ -1526,7 +1567,7 @@ var
 begin
    // Guarded because this is wired in the resource: streaming can activate a
    // selection before the panels it switches have themselves been read in.
-   if (layHardware = nil) or (lblPlaceholder = nil) then
+   if (layRadios = nil) or (lblPlaceholder = nil) then
       begin
       Exit;
       end;
@@ -2163,6 +2204,270 @@ begin
    // DX cluster
    FBindings.Bind(chkClusterAtStartup, 'cluster.connectAtStartup');
    FBindings.Bind(edtClusterCommand,   'cluster.connectCommand');
+end;
+
+
+{ ------------------------------------------------------------ Rotators ----- }
+
+procedure TPrefsForm.LoadRotatorList;
+var
+   i: integer;
+   id: string;
+   keep: integer;
+begin
+   // THE TYPE LIST COMES FROM THE REGISTRY, never from the designer.  Same rule
+   // as the log level and the external-logger list: a combo populated in the
+   // designer bakes itself into the .fmx and becomes a second copy that keeps
+   // working while it drifts.  Add a rotator driver and it appears here with no
+   // edit to this form -- which is the whole promise of the factory.
+   cbxRotatorType.BeginUpdate;
+   try
+      cbxRotatorType.Clear;
+      for id in RegisteredRotatorIds do
+         begin
+         cbxRotatorType.Items.Add(RotatorDisplayName(id));
+         end;
+   finally
+      cbxRotatorType.EndUpdate;
+   end;
+
+   cbxRotatorPort.BeginUpdate;
+   try
+      cbxRotatorPort.Clear;
+      cbxRotatorPort.Items.Add(PORT_NONE);
+      for i := 1 to 64 do
+         begin
+         cbxRotatorPort.Items.Add(Format('SERIAL %d', [i]));
+         end;
+   finally
+      cbxRotatorPort.EndUpdate;
+   end;
+
+   keep := lstRotators.ItemIndex;
+   lstRotators.BeginUpdate;
+   try
+      lstRotators.Clear;
+      for i := 0 to FStore.RotatorCount - 1 do
+         begin
+         lstRotators.Items.Add(Format('%s [%s]',
+            [FStore.Rotator(i).Name,
+             RotatorDisplayName(FStore.Rotator(i).RotatorId)]));
+         end;
+   finally
+      lstRotators.EndUpdate;
+   end;
+
+   if (keep >= 0) and (keep < lstRotators.Items.Count) then
+      begin
+      lstRotators.ItemIndex := keep;
+      end
+   else if lstRotators.Items.Count > 0 then
+      begin
+      lstRotators.ItemIndex := 0;
+      end;
+
+   ShowSelectedRotator;
+end;
+
+procedure TPrefsForm.ShowSelectedRotator;
+var
+   r: TRotatorDefinition;
+   serial: boolean;
+   drv: TRotatorBase;
+begin
+   if (lstRotators.ItemIndex < 0) or (lstRotators.ItemIndex >= FStore.RotatorCount) then
+      begin
+      edtRotatorName.Text  := '';
+      edtRotatorBaud.Text  := '';
+      edtRotatorIP.Text    := '';
+      edtRotatorUDP.Text   := '';
+      edtRotatorBands.Text := '';
+      cbxRotatorType.ItemIndex := -1;
+      cbxRotatorPort.ItemIndex := -1;
+      Exit;
+      end;
+
+   FLoading := True;
+   try
+      r := FStore.Rotator(lstRotators.ItemIndex);
+      edtRotatorName.Text := r.Name;
+      cbxRotatorType.ItemIndex :=
+         cbxRotatorType.Items.IndexOf(RotatorDisplayName(r.RotatorId));
+      cbxRotatorPort.ItemIndex := cbxRotatorPort.Items.IndexOf(r.ControlPort);
+
+      // Blank rather than 0: 0 means "the type's own default", and showing it
+      // as a number invites the operator to treat it as a chosen value.
+      if r.BaudRate > 0 then
+         begin
+         edtRotatorBaud.Text := IntToStr(r.BaudRate);
+         end
+      else
+         begin
+         edtRotatorBaud.Text := '';
+         end;
+
+      edtRotatorIP.Text := r.IPAddress;
+      if r.UDPPort > 0 then
+         begin
+         edtRotatorUDP.Text := IntToStr(r.UDPPort);
+         end
+      else
+         begin
+         edtRotatorUDP.Text := '';
+         end;
+      edtRotatorBands.Text := r.Bands;
+
+      // WHETHER IT IS SERIAL IS THE DRIVER'S ANSWER, not a list of type names
+      // kept here.  Building one and asking it is what stops this form growing
+      // the `if type = PSTROTATOR` the factory exists to remove -- and a future
+      // networked rotator greys the right fields without touching this unit.
+      serial := True;
+      drv := CreateRotator(r.RotatorId, nil);
+      if drv <> nil then
+         begin
+         try
+            serial := drv.UsesSerialPort;
+            // The greyed hint shows what this type uses when the box is left
+            // blank, so the default is visible without being typed in and
+            // thereby frozen against a later change.
+            edtRotatorBaud.TextPrompt := IntToStr(drv.PreferredBaudRate);
+         finally
+            drv.Free;
+         end;
+         end;
+
+      cbxRotatorPort.Enabled := serial;
+      edtRotatorBaud.Enabled := serial;
+      edtRotatorIP.Enabled   := not serial;
+      edtRotatorUDP.Enabled  := not serial;
+   finally
+      FLoading := False;
+   end;
+end;
+
+procedure TPrefsForm.CaptureSelectedRotator;
+var
+   r: TRotatorDefinition;
+   n: integer;
+   ids: TArray<string>;
+begin
+   if FLoading then
+      begin
+      Exit;
+      end;
+   if (lstRotators.ItemIndex < 0) or (lstRotators.ItemIndex >= FStore.RotatorCount) then
+      begin
+      Exit;
+      end;
+
+   r := FStore.Rotator(lstRotators.ItemIndex);
+
+   // A blank name keeps the old one rather than raising: this runs on every
+   // keystroke, and the box is momentarily empty whenever somebody clears it to
+   // retype.  A dialog there would fire mid-edit.
+   if Trim(edtRotatorName.Text) <> '' then
+      begin
+      r.Name := Trim(edtRotatorName.Text);
+      end;
+
+   // STORE THE ID, SHOW THE DISPLAY NAME.  The id is what the registry and the
+   // JSON use, and it survives a display name being reworded or translated.
+   ids := RegisteredRotatorIds;
+   if (cbxRotatorType.ItemIndex >= 0) and (cbxRotatorType.ItemIndex < Length(ids)) then
+      begin
+      r.RotatorId := ids[cbxRotatorType.ItemIndex];
+      end;
+
+   if cbxRotatorPort.ItemIndex >= 0 then
+      begin
+      r.ControlPort := cbxRotatorPort.Items[cbxRotatorPort.ItemIndex];
+      end;
+
+   if TryStrToInt(Trim(edtRotatorBaud.Text), n) then
+      begin
+      r.BaudRate := n;
+      end
+   else
+      begin
+      r.BaudRate := 0;
+      end;
+
+   r.IPAddress := Trim(edtRotatorIP.Text);
+   if TryStrToInt(Trim(edtRotatorUDP.Text), n) then
+      begin
+      r.UDPPort := n;
+      end
+   else
+      begin
+      r.UDPPort := 0;
+      end;
+
+   r.Bands := Trim(edtRotatorBands.Text);
+end;
+
+procedure TPrefsForm.lstRotatorsChange(Sender: TObject);
+begin
+   ShowSelectedRotator;
+end;
+
+procedure TPrefsForm.cbxRotatorTypeChange(Sender: TObject);
+begin
+   CaptureSelectedRotator;
+   // Re-shown, not merely captured: changing the type changes WHICH FIELDS
+   // APPLY, and the driver is what says so.
+   ShowSelectedRotator;
+end;
+
+procedure TPrefsForm.btnAddRotatorClick(Sender: TObject);
+var
+   r: TRotatorDefinition;
+   ids: TArray<string>;
+begin
+   r := TRotatorDefinition.Create;
+   r.Name := FStore.UniqueRotatorName('Rotator');
+
+   // Defaults to the first registered driver rather than to nothing: a rotator
+   // with no type is not something the operator asked for, and an empty combo
+   // invites them to believe one is optional.
+   ids := RegisteredRotatorIds;
+   if Length(ids) > 0 then
+      begin
+      r.RotatorId := ids[0];
+      end;
+   r.ControlPort := PORT_NONE;
+
+   if not FStore.AddRotator(r) then
+      begin
+      // AddRotator does NOT free on refusal -- the caller still owns it, which
+      // is what stops a rejected add becoming a double free.
+      r.Free;
+      Exit;
+      end;
+
+   LoadRotatorList;
+   lstRotators.ItemIndex := FStore.RotatorCount - 1;
+   ShowSelectedRotator;
+end;
+
+procedure TPrefsForm.btnRemoveRotatorClick(Sender: TObject);
+var
+   i: integer;
+begin
+   i := lstRotators.ItemIndex;
+   if (i < 0) or (i >= FStore.RotatorCount) then
+      begin
+      Exit;
+      end;
+
+   if MessageDlg(Format('Remove the rotator "%s"?', [FStore.Rotator(i).Name]),
+                 TMsgDlgType.mtConfirmation,
+                 [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) <> mrYes then
+      begin
+      Exit;
+      end;
+
+   FStore.DeleteRotator(i);
+   LoadRotatorList;
 end;
 
 procedure TPrefsForm.LoadRemainingPanels;
