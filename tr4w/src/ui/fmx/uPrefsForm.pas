@@ -649,6 +649,10 @@ const
    // candidates to join it once NY4I says so.
    NAV_OPERATING         = 21;
 
+   // Pixels a child is indented under its parent.  Stated rather than taken
+   // from the style -- see ApplyChevrons for why that is not optional.
+   NAV_CHILD_INDENT      = 20;
+
 // Opens Preferences, creating it on first use.  Called from the PREF
 // call-window command.
 procedure ShowPreferences;
@@ -1948,6 +1952,30 @@ begin
       item := tvNav.ItemByGlobalIndex(i);
       item.OnApplyStyleLookup := TreeItemStyleApplied;
       ApplyChevronToItem(item);
+
+      // INDENTATION, and why it has to be stated rather than inherited.
+      //
+      // NY4I: on a fresh run the leaves under Operating were NOT indented, but
+      // collapsing and re-expanding the parent fixed them.  That is the shape
+      // of an ordering problem, and it is:
+      //
+      //   a child's indent is GetLevelOffset, which sums each ANCESTOR's
+      //   ChildrenOffset;  ChildrenOffset is set by UpdateChildrenOffset,
+      //   which runs only from ApplyStyle and derives the value from
+      //   FExpander.Width -- a STYLE RESOURCE.
+      //
+      // So at first layout the parent has not been styled yet, its
+      // ChildrenOffset is still the constructor's 0, and the children are laid
+      // out flush.  Collapsing forces a realign after styling, which is why the
+      // indent appears on the second look and never on the first.
+      //
+      // CustomChildrenOffset is the supported way out: UpdateChildrenOffset
+      // prefers it and never consults the style, so the offset no longer
+      // depends on whether a style has been applied yet.  Setting it on every
+      // item is harmless -- a leaf has no children for it to offset -- and
+      // avoids a rule about which items are parents that would go stale the
+      // next time a leaf gains children.
+      item.CustomChildrenOffset := NAV_CHILD_INDENT;
       end;
 end;
 
