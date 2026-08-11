@@ -155,6 +155,15 @@ var
 // for why the level cannot simply be assigned.
 procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
 
+// Apply every retired CFGCA row the store holds.  Trusted caller: csJSON rows
+// ARE applied, with their bounds and crA hooks -- see the implementation.
+procedure ApplyStoredCommands(const aStore: TRadioConfigStore);
+
+// One command from a trusted source (a settings screen, or a multi-op peer):
+// applied through CFGCA and recorded in the store.  Returns CFGCA's verdict.
+function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
+                              const aCommand, aValue: string): boolean;
+
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 
 // UI-free description of the port collisions a profile WOULD cause, '' when
@@ -285,6 +294,72 @@ begin
    finally
       ini.Free;
    end;
+end;
+
+
+procedure ApplyStoredCommands(const aStore: TRadioConfigStore);
+var
+   i: integer;
+   name, value: string;
+   keyShort, valueShort: ShortString;
+begin
+   // EVERY RETIRED ROW, APPLIED THROUGH CFGCA.
+   //
+   // csJSON makes CheckCommand inert for the INI LOADER, which is the whole
+   // point -- a stale ini must not override the store.  Here we are the
+   // trusted caller, so aApplyJSONOwned is True and the row behaves normally:
+   // right typed global, crMin/crMax enforced, crA hook run.  Assigning the
+   // globals directly instead would skip all three, and for MY CALL,
+   // MY CONTINENT, MY COUNTRY and MY ZONE the hook is where dependent state
+   // gets derived.
+   if aStore = nil then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to aStore.Commands.Count - 1 do
+      begin
+      name  := aStore.Commands.Names[i];
+      value := aStore.Commands.ValueFromIndex[i];
+      if name = '' then
+         begin
+         Continue;
+         end;
+
+      Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
+      Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+      keyShort   := ShortString(AnsiString(name));
+      valueShort := ShortString(AnsiString(value));
+
+      if not CheckCommand(@keyShort, valueShort, True) then
+         begin
+         // Loud: a stored value CFGCA refuses is a setting the operator
+         // believes is in force and is not.
+         logger.Warn('[ApplyStoredCommands] CFGCA refused "%s" = "%s"', [name, value]);
+         end;
+      end;
+end;
+
+function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
+                              const aCommand, aValue: string): boolean;
+var
+   keyShort, valueShort: ShortString;
+begin
+   // APPLY FIRST, RECORD SECOND -- the same order as everywhere else here.
+   // CheckCommand is what moves the value into the live globals and runs the
+   // hook; the store is only what makes it survive a restart.  Recording a
+   // value CFGCA rejected would put it in the file for the next start to
+   // stumble over.
+   Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
+   Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+   keyShort   := ShortString(AnsiString(aCommand));
+   valueShort := ShortString(AnsiString(aValue));
+
+   Result := CheckCommand(@keyShort, valueShort, True);
+   if Result and (aStore <> nil) then
+      begin
+      aStore.SetCommand(aCommand, aValue);
+      end;
 end;
 
 procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
