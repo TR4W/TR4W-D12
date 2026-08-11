@@ -94,6 +94,47 @@ type
      UPDATE SECONDS) are RETIRED: CFGCA still accepts them from an old ini so
      it does not error, but they drive nothing, so they are absent here by
      intent rather than by oversight. }
+   { ONE ROTATOR the operator has defined.  Shaped like TRadioDefinition on
+     purpose: the operator's mental model is the same -- a thing with a name,
+     a type, and how it is connected -- and reusing the shape means the
+     Add/Edit/Remove machinery reads the same way on both pages.
+
+     BANDS is the part that is NOT like a radio.  NY4I: "I could see a case of
+     defining a band to a rotator and when we tell the program to turn the
+     rotator for a contact on 20m, it knows to turn the Orion rotator but on 40
+     meters, it turns the Yaesu rotator."  So rotators are not "define many,
+     activate one" like radios -- they are "define many, each responsible for
+     some bands", which is a different SELECTION model and the reason this
+     carries a band list rather than being chosen by a profile. }
+   TRotatorDefinition = class(TObject)
+   public
+      Name: string;
+      // Registry id from uRotatorRegistry: 'YAESU', 'ORION', 'DCU1',
+      // 'ALFA SPID', 'PSTROTATOR'.  Opaque here -- the store knows no protocol.
+      RotatorId: string;
+
+      // Serial rotators.  The PortTypeSA vocabulary ('SERIAL 15'), the NAME and
+      // never a combo index -- an index re-points at a different port the day
+      // the list changes, which is the trap the radio store documents.
+      ControlPort: string;
+      // 0 means "whatever the driver prefers" -- the DCU-1 wants 4800 and the
+      // rest 9600, and that is the driver's business, not a number the operator
+      // should have to know.
+      BaudRate: integer;
+
+      // PstRotator is UDP and has no port at all.
+      IPAddress: string;
+      UDPPort: integer;
+
+      // Which bands this rotator turns for.  EMPTY MEANS ALL BANDS, which is
+      // the right default for the overwhelmingly common case of one rotator:
+      // an operator with a single antenna should not have to tick eleven boxes
+      // to make it work.
+      Bands: string;
+
+      procedure Assign(const aOther: TRotatorDefinition);
+   end;
+
    TRadioDefinition = class(TObject)
    public
       // Identity.  Name is the key the operator sees and profiles refer to, so
@@ -221,6 +262,7 @@ type
    TRadioConfigStore = class(TObject)
    private
       FRadios: TObjectList<TRadioDefinition>;
+      FRotators: TObjectList<TRotatorDefinition>;
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
       FAutoConnectOnStartup: boolean;
@@ -404,6 +446,15 @@ type
       // Retired CFGCA rows as name=value.  Owned by the store; callers read
       // and write entries but do not free it.
       property Commands: TStringList read FCommands;
+
+      { The rotator library.  Same shape as the radio one -- see AddRadio for
+        why Add takes ownership. }
+      function  RotatorCount: integer;
+      function  Rotator(const aIndex: integer): TRotatorDefinition;
+      function  IndexOfRotator(const aName: string): integer;
+      function  AddRotator(const aRotator: TRotatorDefinition): boolean;
+      procedure DeleteRotator(const aIndex: integer);
+      function  UniqueRotatorName(const aBase: string): string;
       function  CommandValue(const aCommand: string; const aDefault: string = ''): string;
       procedure SetCommand(const aCommand, aValue: string);
    end;
@@ -428,6 +479,7 @@ const
    JSONKEY_TCI           = 'tci';
    JSONKEY_LOGGING       = 'logging';
    JSONKEY_COMMANDS      = 'commands';
+   JSONKEY_ROTATORS      = 'rotators';
 
    // The level TR4W has always shipped with.  A spelling, not an ordinal --
    // see TRadioConfigStore.FLogLevelName.
@@ -693,6 +745,95 @@ begin
    Result := SameName(Radio1Name, aRadioName) or SameName(Radio2Name, aRadioName);
 end;
 
+{ ------------------------------------------------------ TRotatorDefinition - }
+
+procedure TRotatorDefinition.Assign(const aOther: TRotatorDefinition);
+begin
+   if aOther = nil then
+      begin
+      Exit;
+      end;
+   Name        := aOther.Name;
+   RotatorId   := aOther.RotatorId;
+   ControlPort := aOther.ControlPort;
+   BaudRate    := aOther.BaudRate;
+   IPAddress   := aOther.IPAddress;
+   UDPPort     := aOther.UDPPort;
+   Bands       := aOther.Bands;
+end;
+
+function TRadioConfigStore.RotatorCount: integer;
+begin
+   Result := FRotators.Count;
+end;
+
+function TRadioConfigStore.Rotator(const aIndex: integer): TRotatorDefinition;
+begin
+   Result := FRotators[aIndex];
+end;
+
+function TRadioConfigStore.IndexOfRotator(const aName: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   for i := 0 to FRotators.Count - 1 do
+      begin
+      // Case-insensitive, like the radio library: an operator who types
+      // "yaesu" should not end up with a second rotator beside "Yaesu".
+      if SameText(FRotators[i].Name, aName) then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+function TRadioConfigStore.AddRotator(const aRotator: TRotatorDefinition): boolean;
+begin
+   // TAKES OWNERSHIP on success, and FREES NOTHING on failure -- the caller
+   // still owns what it handed over, so a rejected add cannot double-free.
+   Result := False;
+   if aRotator = nil then
+      begin
+      Exit;
+      end;
+   if Trim(aRotator.Name) = '' then
+      begin
+      Exit;
+      end;
+   if IndexOfRotator(aRotator.Name) >= 0 then
+      begin
+      Exit;
+      end;
+   FRotators.Add(aRotator);
+   Result := True;
+end;
+
+procedure TRadioConfigStore.DeleteRotator(const aIndex: integer);
+begin
+   // No reference check, unlike DeleteRadio.  A profile names radios; nothing
+   // names a rotator -- a rotator claims BANDS instead, and deleting it simply
+   // leaves those bands unserved, which is a decision the operator just made.
+   if (aIndex >= 0) and (aIndex < FRotators.Count) then
+      begin
+      FRotators.Delete(aIndex);
+      end;
+end;
+
+function TRadioConfigStore.UniqueRotatorName(const aBase: string): string;
+var
+   n: integer;
+begin
+   Result := aBase;
+   n := 2;
+   while IndexOfRotator(Result) >= 0 do
+      begin
+      Result := Format('%s %d', [aBase, n]);
+      Inc(n);
+      end;
+end;
+
 { ------------------------------------------------------ TRadioConfigStore -- }
 
 constructor TRadioConfigStore.Create;
@@ -707,6 +848,8 @@ begin
    // Name=value, case-insensitive: CFGCA command names are matched with
    // SameText everywhere else, and a store that disagreed would answer '' for
    // a command the program is perfectly happy to apply.
+   FRotators := TObjectList<TRotatorDefinition>.Create(True);
+
    FCommands := TStringList.Create;
    FCommands.CaseSensitive := False;
 end;
@@ -739,6 +882,7 @@ end;
 destructor TRadioConfigStore.Destroy;
 begin
    FreeAndNil(FCommands);
+   FreeAndNil(FRotators);
    FreeAndNil(FProfiles);
    FreeAndNil(FRadios);
    inherited Destroy;
@@ -747,6 +891,7 @@ end;
 procedure TRadioConfigStore.Clear;
 begin
    FRadios.Clear;
+   FRotators.Clear;
    FProfiles.Clear;
    FActiveProfileName    := '';
    FAutoConnectOnStartup := False;
@@ -1379,7 +1524,8 @@ end;
 function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
-   general, tci, logging, commands: TJSONObject;
+   general, tci, logging, commands, rot: TJSONObject;
+   rotators: TJSONArray;
    i: integer;
 begin
    Result := TJSONObject.Create;
@@ -1428,6 +1574,23 @@ begin
       end;
    Result.AddPair(JSONKEY_COMMANDS, commands);
 
+   // Rotators.  An ARRAY, like radios and keyers, so order is preserved and a
+   // name is an ordinary value rather than something encoded in a key.
+   rotators := TJSONArray.Create;
+   for i := 0 to FRotators.Count - 1 do
+      begin
+      rot := TJSONObject.Create;
+      rot.AddPair(JSONKEY_NAME,  FRotators[i].Name);
+      rot.AddPair('rotatorId',   FRotators[i].RotatorId);
+      rot.AddPair('controlPort', FRotators[i].ControlPort);
+      rot.AddPair('baudRate',    TJSONNumber.Create(FRotators[i].BaudRate));
+      rot.AddPair('ipAddress',   FRotators[i].IPAddress);
+      rot.AddPair('udpPort',     TJSONNumber.Create(FRotators[i].UDPPort));
+      rot.AddPair('bands',       FRotators[i].Bands);
+      rotators.AddElement(rot);
+      end;
+   Result.AddPair(JSONKEY_ROTATORS, rotators);
+
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
    // form had to encode the name in the section header, which made a name
    // containing ']' or '=' a hazard and left ordering to whatever the ini
@@ -1453,6 +1616,7 @@ var
    obj: TJSONObject;
    general, tci, logging, commands: TJSONObject;
    radioDef: TRadioDefinition;
+   rotDef: TRotatorDefinition;
    profile: TStationProfile;
    v: TJSONValue;
    i: integer;
@@ -1520,6 +1684,36 @@ begin
    // Retired CFGCA rows.  Whatever is here is applied verbatim by the apply
    // layer through CheckCommand, so an unknown name simply fails there rather
    // than needing a check of its own.
+   FRotators.Clear;
+   v := aRoot.GetValue(JSONKEY_ROTATORS);
+   if (v <> nil) and (v is TJSONArray) then
+      begin
+      arr := TJSONArray(v);
+      for i := 0 to arr.Count - 1 do
+         begin
+         if not (arr.Items[i] is TJSONObject) then
+            begin
+            Continue;
+            end;
+         obj := TJSONObject(arr.Items[i]);
+         rotDef := TRotatorDefinition.Create;
+         rotDef.Name        := JSONStr(obj, JSONKEY_NAME,  '');
+         rotDef.RotatorId   := JSONStr(obj, 'rotatorId',   '');
+         rotDef.ControlPort := JSONStr(obj, 'controlPort', '');
+         rotDef.BaudRate    := JSONInt(obj, 'baudRate',    0);
+         rotDef.IPAddress   := JSONStr(obj, 'ipAddress',   '');
+         rotDef.UDPPort     := JSONInt(obj, 'udpPort',     0);
+         rotDef.Bands       := JSONStr(obj, 'bands',       '');
+         // AddRotator refuses a blank or duplicate name and does NOT free on
+         // refusal, so the object has to be released here or a malformed file
+         // leaks one per bad entry.
+         if not AddRotator(rotDef) then
+            begin
+            rotDef.Free;
+            end;
+         end;
+      end;
+
    FCommands.Clear;
    v := aRoot.GetValue(JSONKEY_COMMANDS);
    if (v <> nil) and (v is TJSONObject) then

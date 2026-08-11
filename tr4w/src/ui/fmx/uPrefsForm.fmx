@@ -36,6 +36,20 @@ object PrefsForm: TPrefsForm
       IsExpanded = False
       TabOrder = 1
       Text = 'Hardware'
+      object navRadios: TTreeViewItem
+        Tag = 26
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 0
+        Text = 'Radios'
+      end
+      object navRotators: TTreeViewItem
+        Tag = 27
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 1
+        Text = 'Rotators'
+      end
     end
     object navCluster: TTreeViewItem
       Tag = 3
@@ -385,8 +399,8 @@ object PrefsForm: TPrefsForm
         TabOrder = 15
       end
     end
-    object layHardware: TLayout
-      Tag = 2
+    object layRadios: TLayout
+      Tag = 26
       Size.Width = 675.000000000000000000
       Size.Height = 572.000000000000000000
       Size.PlatformDefault = False
@@ -655,6 +669,213 @@ object PrefsForm: TPrefsForm
         TabOrder = 7
         Text = 'Connect radios at startup'
         OnChange = chkAutoConnectChange
+      end
+    end
+    object layRotators: TLayout
+      Tag = 27
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 21
+      object lblMyRotators: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'My rotators'
+        TabOrder = 0
+      end
+      object lstRotators: TListBox
+        Position.X = 12.000000000000000000
+        Position.Y = 30.000000000000000000
+        Size.Width = 420.000000000000000000
+        Size.Height = 130.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        OnChange = lstRotatorsChange
+        DisableFocusEffect = True
+        DefaultItemStyles.ItemStyle = ''
+        DefaultItemStyles.GroupHeaderStyle = ''
+        DefaultItemStyles.GroupFooterStyle = ''
+        Viewport.Width = 416.000000000000000000
+        Viewport.Height = 126.000000000000000000
+      end
+      object btnAddRotator: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 30.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Add...'
+        TextSettings.Trimming = None
+        OnClick = btnAddRotatorClick
+      end
+      object btnRemoveRotator: TButton
+        Position.X = 445.000000000000000000
+        Position.Y = 62.000000000000000000
+        Size.Width = 95.000000000000000000
+        Size.Height = 25.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Remove'
+        TextSettings.Trimming = None
+        OnClick = btnRemoveRotatorClick
+      end
+      object lblRotatorName: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 180.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Name:'
+        TabOrder = 4
+      end
+      object edtRotatorName: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 176.000000000000000000
+        Size.Width = 240.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 5
+      end
+      object lblRotatorType: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 212.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Type:'
+        TabOrder = 6
+      end
+      object cbxRotatorType: TComboBox
+        Position.X = 140.000000000000000000
+        Position.Y = 208.000000000000000000
+        Size.Width = 240.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 7
+        OnChange = cbxRotatorTypeChange
+      end
+      object lblRotatorPort: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 244.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Port:'
+        TabOrder = 8
+      end
+      object cbxRotatorPort: TComboBox
+        Position.X = 140.000000000000000000
+        Position.Y = 240.000000000000000000
+        Size.Width = 160.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 9
+      end
+      object lblRotatorBaud: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 276.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Baud rate:'
+        TabOrder = 10
+      end
+      object edtRotatorBaud: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 272.000000000000000000
+        Size.Width = 90.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 11
+      end
+      object lblRotatorBaudHint: TLabel
+        Position.X = 240.000000000000000000
+        Position.Y = 276.000000000000000000
+        Size.Width = 320.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'blank or 0 = the default for this type'
+        TabOrder = 12
+      end
+      object lblRotatorIP: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 308.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'IP address:'
+        TabOrder = 13
+      end
+      object edtRotatorIP: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 304.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 14
+      end
+      object lblRotatorUDP: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 340.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'UDP port:'
+        TabOrder = 15
+      end
+      object edtRotatorUDP: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 336.000000000000000000
+        Size.Width = 90.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 16
+      end
+      object lblRotatorBands: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 372.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Bands:'
+        TabOrder = 17
+      end
+      object edtRotatorBands: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 368.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 18
+      end
+      object lblRotatorBandsHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 398.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'Leave blank and this rotator turns for every band, which is what' +
+          ' a station with one antenna wants.  List bands - 20 15 10 - to h' +
+          'ave TR4W choose between several rotators by band.'
+        TabOrder = 19
+      end
+      object lblRotatorNote: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 456.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'PstRotator is reached over UDP and has no serial port; the other' +
+          's use one.  A blank baud rate lets each type use what it expects' +
+          ' - the DCU-1 wants 4800 where the rest want 9600.'
+        TabOrder = 20
       end
     end
     object layUDP: TLayout
