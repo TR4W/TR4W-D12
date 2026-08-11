@@ -44,6 +44,20 @@ object PrefsForm: TPrefsForm
       TabOrder = 2
       Text = 'DX Cluster'
     end
+    object navOperating: TTreeViewItem
+      Tag = 21
+      Height = 19.000000000000000000
+      IsExpanded = True
+      TabOrder = 3
+      Text = 'Operating'
+      object navBandMap: TTreeViewItem
+        Tag = 20
+        Height = 19.000000000000000000
+        IsExpanded = False
+        TabOrder = 0
+        Text = 'Band Map'
+      end
+    end
     object navSCP: TTreeViewItem
       Tag = 4
       Height = 19.000000000000000000
@@ -1485,6 +1499,261 @@ object PrefsForm: TPrefsForm
           'The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks t' +
           'o it directly.'
         TabOrder = 4
+      end
+    end
+    object layCluster: TLayout
+      Tag = 3
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 11
+      object lblClusterHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'DX cluster'
+        TabOrder = 0
+      end
+      object lblTelnetServer: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 38.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Server:'
+        TabOrder = 1
+      end
+      object edtTelnetServer: TEdit
+        Position.X = 140.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 300.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+      end
+      object lblTelnetServerHint: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 62.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'host:port, for example dxc.nc7j.com:7373.  Servers listed in TRC' +
+          'LUSTER.DAT also appear in the cluster window''s drop-down.  Takes' +
+          ' effect when TR4W next starts.'
+        TabOrder = 3
+      end
+      object chkSpotCollector: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 118.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Collect spots from the cluster'
+      end
+      object lblClusterNote: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 152.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'The cluster reconnects on its own after a drop.  Telnet logging ' +
+          'is on the Logging page.  Spot display and ageing are on the Band' +
+          ' Map page - a band map works without a cluster.'
+        TabOrder = 5
+      end
+    end
+    object layBandMap: TLayout
+      Tag = 20
+      Size.Width = 675.000000000000000000
+      Size.Height = 572.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+      TabOrder = 12
+      object lblBandMapHeading: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 8.000000000000000000
+        Size.Width = 400.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Band map'
+        TabOrder = 0
+      end
+      object chkBandMapEnable: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Show the band map'
+      end
+      object lblBandMapDecay: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 72.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Spot expiry:'
+        TabOrder = 2
+      end
+      object edtBandMapDecay: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 68.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+      end
+      object lblBandMapDecayUnits: TLabel
+        Position.X = 248.000000000000000000
+        Position.Y = 72.000000000000000000
+        Size.Width = 160.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'seconds'
+        TabOrder = 4
+      end
+      object lblBandMapGuard: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 102.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Guard band:'
+        TabOrder = 5
+      end
+      object edtBandMapGuard: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 98.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+      end
+      object lblBandMapGuardUnits: TLabel
+        Position.X = 248.000000000000000000
+        Position.Y = 102.000000000000000000
+        Size.Width = 160.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Hz'
+        TabOrder = 7
+      end
+      object lblBandMapLimit: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 132.000000000000000000
+        Size.Width = 140.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Display limit:'
+        TabOrder = 8
+      end
+      object edtBandMapLimit: TEdit
+        Position.X = 160.000000000000000000
+        Position.Y = 128.000000000000000000
+        Size.Width = 80.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 9
+      end
+      object lblBandMapLimitUnits: TLabel
+        Position.X = 248.000000000000000000
+        Position.Y = 132.000000000000000000
+        Size.Width = 160.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'spots'
+        TabOrder = 10
+      end
+      object chkBandMapDupes: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 170.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 11
+        Text = 'Show duplicates'
+      end
+      object chkBandMapMultsOnly: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 196.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 12
+        Text = 'Multipliers only'
+      end
+      object chkBandMapAllBands: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 222.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 13
+        Text = 'All bands'
+      end
+      object chkBandMapAllModes: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 248.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 14
+        Text = 'All modes'
+      end
+      object chkBandMapCQ: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 274.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 15
+        Text = 'Show CQ spots'
+      end
+      object chkBandMapCallWindow: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 300.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 16
+        Text = 'Show the call window entry'
+      end
+      object chkBandMapSO2R: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 326.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 17
+        Text = 'SO2R display'
+      end
+      object chkBandMapGHz: TCheckBox
+        Position.X = 12.000000000000000000
+        Position.Y = 352.000000000000000000
+        Size.Width = 460.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 18
+        Text = 'Show GHz'
+      end
+      object lblBandMapNote: TLabel
+        Position.X = 12.000000000000000000
+        Position.Y = 388.000000000000000000
+        Size.Width = 620.000000000000000000
+        Size.Height = 51.000000000000000000
+        Size.PlatformDefault = False
+        Text = 
+          'A band map does not need a DX cluster: it also holds spots you m' +
+          'ake yourself and anything the SO2R radio hears.  Cluster setting' +
+          's are on the DX Cluster page.'
+        TabOrder = 19
       end
     end
   end

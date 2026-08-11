@@ -239,6 +239,36 @@ type
       cbxLoggerType: TComboBox;
       btnBrowseMMTTY: TButton;
 
+      // --- DX Cluster (Tag 3) and Band Map (Tag 20) ---------------------------
+      layCluster: TLayout;
+      lblClusterHeading: TLabel;
+      lblTelnetServer: TLabel;
+      edtTelnetServer: TEdit;
+      lblTelnetServerHint: TLabel;
+      chkSpotCollector: TCheckBox;
+      lblClusterNote: TLabel;
+      layBandMap: TLayout;
+      lblBandMapHeading: TLabel;
+      chkBandMapEnable: TCheckBox;
+      lblBandMapDecay: TLabel;
+      edtBandMapDecay: TEdit;
+      lblBandMapDecayUnits: TLabel;
+      lblBandMapGuard: TLabel;
+      edtBandMapGuard: TEdit;
+      lblBandMapGuardUnits: TLabel;
+      lblBandMapLimit: TLabel;
+      edtBandMapLimit: TEdit;
+      lblBandMapLimitUnits: TLabel;
+      lblBandMapNote: TLabel;
+      chkBandMapDupes: TCheckBox;
+      chkBandMapMultsOnly: TCheckBox;
+      chkBandMapAllBands: TCheckBox;
+      chkBandMapAllModes: TCheckBox;
+      chkBandMapCQ: TCheckBox;
+      chkBandMapCallWindow: TCheckBox;
+      chkBandMapSO2R: TCheckBox;
+      chkBandMapGHz: TCheckBox;
+
       // --- Logging (Tag = NAV_LOGGING) ---------------------------------------
       // The ONE place for logging, which used to be spread across a level key,
       // three HamLib switches, a telnet switch, and TCI's own settings file
@@ -419,6 +449,8 @@ type
 
       // Station.  Save returns False when CFGCA refused any value, having told
       // the operator which -- a refused entry must not close silently.
+      procedure LoadClusterPanels;
+      procedure SaveClusterPanels;
       procedure LoadExternalSoftwarePanels;
       procedure SaveExternalSoftwarePanels;
       function  CommandBool(const aCommand: string): boolean;
@@ -512,6 +544,20 @@ const
    NAV_EXTERNALLOGGER    = 17;
    NAV_DXLAB             = 18;
    NAV_MMTTY             = 19;
+
+   // Band map is its OWN section, not part of DX Cluster.  NY4I: "a band map
+   // strictly speaking can be used without a dx cluster" -- it also holds spots
+   // the operator makes by hand and whatever the second radio hears, so filing
+   // it under the cluster would say something untrue about when it works.
+   NAV_BANDMAP           = 20;
+
+   // A PARENT for the things that are about operating rather than about
+   // hardware or files (NY4I).  It has no panel of its own -- selecting it
+   // shows the placeholder, the same as External Software -- because it is a
+   // grouping, and inventing a page for it would mean inventing content.
+   // Band Map is its first leaf; SCP, Contest and CW Settings are the obvious
+   // candidates to join it once NY4I says so.
+   NAV_OPERATING         = 21;
 
 // Opens Preferences, creating it on first use.  Called from the PREF
 // call-window command.
@@ -1256,6 +1302,7 @@ begin
       chkAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
       LoadStationPanel;
       LoadExternalSoftwarePanels;
+      LoadClusterPanels;
       LoadTCIPanel;
       LoadLoggingPanel;
 
@@ -1307,6 +1354,7 @@ begin
    FStore.AutoConnectOnStartup := chkAutoConnect.IsChecked;
    SaveStationPanel;
    SaveExternalSoftwarePanels;
+   SaveClusterPanels;
    SaveTCIPanel;
    SaveLoggingPanel;
 
@@ -1835,6 +1883,53 @@ end;
 function TPrefsForm.SetCommandBool(const aCommand: string; const aValue: boolean): boolean;
 begin
    Result := ApplyAndStoreCommand(FStore, aCommand, string(BA[aValue]));
+end;
+
+
+{ --------------------------------------------- DX cluster and band map ----- }
+
+procedure TPrefsForm.LoadClusterPanels;
+begin
+   edtTelnetServer.Text  := FStore.CommandValue('TELNET SERVER',
+                               CFGCommandValueAsString('TELNET SERVER'));
+   chkSpotCollector.IsChecked := CommandBool('SPOT COLLECTOR ENABLED');
+
+   chkBandMapEnable.IsChecked     := CommandBool('BAND MAP ENABLE');
+   edtBandMapDecay.Text := FStore.CommandValue('BAND MAP DECAY TIME',
+                              CFGCommandValueAsString('BAND MAP DECAY TIME'));
+   edtBandMapGuard.Text := FStore.CommandValue('BAND MAP GUARD BAND',
+                              CFGCommandValueAsString('BAND MAP GUARD BAND'));
+   edtBandMapLimit.Text := FStore.CommandValue('BAND MAP DISPLAY LIMIT',
+                              CFGCommandValueAsString('BAND MAP DISPLAY LIMIT'));
+
+   chkBandMapDupes.IsChecked      := CommandBool('BAND MAP DUPE DISPLAY');
+   chkBandMapMultsOnly.IsChecked  := CommandBool('BAND MAP MULTS ONLY');
+   chkBandMapAllBands.IsChecked   := CommandBool('BAND MAP ALL BANDS');
+   chkBandMapAllModes.IsChecked   := CommandBool('BAND MAP ALL MODES');
+   chkBandMapCQ.IsChecked         := CommandBool('BAND MAP DISPLAY CQ');
+   chkBandMapCallWindow.IsChecked := CommandBool('BAND MAP CALL WINDOW ENABLE');
+   chkBandMapSO2R.IsChecked       := CommandBool('BAND MAP SO2R DISPLAY');
+   chkBandMapGHz.IsChecked        := CommandBool('BAND MAP DISPLAY GHZ');
+end;
+
+procedure TPrefsForm.SaveClusterPanels;
+begin
+   ApplyAndStoreCommand(FStore, 'TELNET SERVER', Trim(edtTelnetServer.Text));
+   SetCommandBool('SPOT COLLECTOR ENABLED', chkSpotCollector.IsChecked);
+
+   SetCommandBool('BAND MAP ENABLE', chkBandMapEnable.IsChecked);
+   ApplyAndStoreCommand(FStore, 'BAND MAP DECAY TIME',    Trim(edtBandMapDecay.Text));
+   ApplyAndStoreCommand(FStore, 'BAND MAP GUARD BAND',    Trim(edtBandMapGuard.Text));
+   ApplyAndStoreCommand(FStore, 'BAND MAP DISPLAY LIMIT', Trim(edtBandMapLimit.Text));
+
+   SetCommandBool('BAND MAP DUPE DISPLAY',       chkBandMapDupes.IsChecked);
+   SetCommandBool('BAND MAP MULTS ONLY',         chkBandMapMultsOnly.IsChecked);
+   SetCommandBool('BAND MAP ALL BANDS',          chkBandMapAllBands.IsChecked);
+   SetCommandBool('BAND MAP ALL MODES',          chkBandMapAllModes.IsChecked);
+   SetCommandBool('BAND MAP DISPLAY CQ',         chkBandMapCQ.IsChecked);
+   SetCommandBool('BAND MAP CALL WINDOW ENABLE', chkBandMapCallWindow.IsChecked);
+   SetCommandBool('BAND MAP SO2R DISPLAY',       chkBandMapSO2R.IsChecked);
+   SetCommandBool('BAND MAP DISPLAY GHZ',        chkBandMapGHz.IsChecked);
 end;
 
 procedure TPrefsForm.LoadExternalSoftwarePanels;
