@@ -177,6 +177,22 @@ right than it was.
   that Delphi rejects with `E1030`, is an FPC feature.
 - **Longevity by construction.** No vendor can reprice, restrict or discontinue it. For a 10-year
   horizon whose real question is succession, that is the strongest single argument.
+- **Translation tooling that still exists.** NY4I, 2026-08-12: Delphi has been deprecating its
+  localisation tools (the Integrated Translation Environment / External Translation Manager), while
+  FPC and Lazarus support **GNU gettext `.po` files** natively -- `resourcestring` values are
+  extracted to `.po`, and Lazarus ships a translator unit that loads them at run time. This is not a
+  small point for TR4W:
+  - The **ENG + 8** language matrix currently costs **nine separate builds**, selected by the
+    `LANG_xxx` compiler defines in `VC.pas`. `.po` files are loaded at run time, so that collapses to
+    **one build per platform** -- which is exactly what the localisation brief
+    (`docs/claude-code-localization-migration-prompt.md`) already specifies as the target, and it
+    specifies it because resource DLLs have no FMX/macOS/Linux equivalent.
+  - **Translators get Poedit**, a free, standard, cross-platform tool. For volunteer translators in
+    the amateur radio community that is the difference between a contribution being possible and
+    not -- and it is the same argument as the toolchain licence, one layer up.
+  - The mechanism is already visible: the FPC spike emitted `.rsj` resource-string files beside the
+    units without being asked. That is the input side of the `.po` pipeline.
+
 - **Cross-compilation is routine**, so one machine can produce all three targets.
 
 ### Weaknesses
