@@ -30,7 +30,7 @@ unit uRotatorYaesu;
 interface
 
 uses
-   System.SysUtils,
+   SysUtils,
    uRotatorBase;
 
 type
@@ -56,11 +56,15 @@ begin
    Result := Ascii(Format('M%.3d', [aAzimuth]) + #$0D);
 end;
 
+// A NAMED unit-level function, not an anonymous one.  The registry's factory type is a
+// plain procedure pointer so that this unit compiles under a Pascal without closures;
+// nothing was captured here anyway, so the anonymous form bought nothing.
+function CreateYaesu(const aSend: TRotatorSendProc): TRotatorBase;
+begin
+   Result := TRotatorYaesu.Create(aSend);
+end;
+
 initialization
-   RegisterRotator('YAESU', 'Yaesu',
-      function (const aSend: TRotatorSendProc): TRotatorBase
-      begin
-         Result := TRotatorYaesu.Create(aSend);
-      end);
+   RegisterRotator('YAESU', 'Yaesu', CreateYaesu);
 
 end.

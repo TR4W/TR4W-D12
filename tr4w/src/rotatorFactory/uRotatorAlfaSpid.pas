@@ -58,7 +58,7 @@ unit uRotatorAlfaSpid;
 interface
 
 uses
-   System.SysUtils,
+   SysUtils,
    uRotatorBase;
 
 type
@@ -109,11 +109,15 @@ begin
    Result[12] := $20;
 end;
 
+// A NAMED unit-level function, not an anonymous one.  The registry's factory type is a
+// plain procedure pointer so that this unit compiles under a Pascal without closures;
+// nothing was captured here anyway, so the anonymous form bought nothing.
+function CreateAlfaSpid(const aSend: TRotatorSendProc): TRotatorBase;
+begin
+   Result := TRotatorAlfaSpid.Create(aSend);
+end;
+
 initialization
-   RegisterRotator('ALFA SPID', 'Alfa SPID',
-      function (const aSend: TRotatorSendProc): TRotatorBase
-      begin
-         Result := TRotatorAlfaSpid.Create(aSend);
-      end);
+   RegisterRotator('ALFA SPID', 'Alfa SPID', CreateAlfaSpid);
 
 end.
