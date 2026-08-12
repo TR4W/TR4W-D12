@@ -423,3 +423,55 @@ always going to be hardest to see: **runtime behaviour under a different string
 model**, which no compile proves and which the golden corpus is the right oracle
 for.
 
+## STEP 7 -- `VC.pas` compiles under FPC. The next blocker is the asm.
+
+```
+FPC 3.2.2, VC.pas:   9,677 lines compiled, 0 errors
+Delphi 12:           full /t:Build green, 3,795 tests, corpus 22/0/4
+```
+
+The type foundation of the whole program is now portable, and the change is
+smaller than the log predicted: **`tr4w_ClassName` did not need to become a
+`PChar`.** Making it a plain string constant satisfies both compilers, because
+every consumer wanted a `PChar` all along and the array form only ever worked
+through Delphi's implicit decay.
+
+```pascal
+tr4w_ClassName = 'TR4W';          // was: array[0..4] of Char = ('T','R','4','W',#0)
+```
+
+That sidesteps the trap flagged in step 6 -- retyping to `PChar` would have made
+`@tr4w_ClassName` take the address of the *pointer* -- by removing the array
+rather than repointing it.
+
+### Two real defects fell out of the two consumer sites
+
+Neither is reachable today, and neither was findable by grep; both surfaced only
+because the retype forced the sites to be read.
+
+- **`uAbout.pas` asked OpenGL to read 1,024 bytes** (16 x 16 x RGBA) starting
+  three characters into a five-character constant -- a ~1,014-byte overread.
+  Dead: `OGLVERSION` is `False`, so the About menu is a `MessageBox`. Now `nil`,
+  which is what the call was really getting minus the out-of-bounds read.
+- **`uTrayBalloon.pas` moved five raw bytes of UTF-16 into an ANSI field**, so the
+  balloon title was `"T"`. A D7-to-D12 port regression: `Char` was `AnsiChar` when
+  that line was written. Its two neighbouring copies were unbounded as well --
+  a 255-character `Hint` ran **191 bytes past `szTip`** into the rest of the
+  global `IconData`. All three are now bounded, NUL-terminating `StrPLCopy`.
+  Every caller of this unit is commented out, so this is latent, not live.
+
+### The next blocker is inline assembly, as forecast
+
+With `VC.pas` clear, `uFactoryRadioBase` reaches `utils_text.pas` and stops on
+x86-32 asm against an x86_64 compiler (`Unknown identifier "EDI"`, ~50 errors).
+
+**Not a new finding and not a toolchain argument** -- the asm is slated for
+removal under either toolchain, and `utils_text` and `uCRC32` are precisely the
+two asm units that already have tests, so replacing them is verifiable
+byte-exact. They are now also the *only* thing between the spike and a much
+larger slice of the suite, which promotes them from "cheapest first move" to
+"the next move".
+
+`spike/fpc-compile.ps1` is the harness, checked in so the next measurement is one
+command rather than a reconstructed command line.
+

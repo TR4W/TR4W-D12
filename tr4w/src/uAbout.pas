@@ -125,8 +125,14 @@ procedure MainProc( );
      WGL_FONT_POLYGONS, nil );
   glListBase( listBase );
 
+  // This asked OpenGL to read 1024 bytes (16 x 16 x RGBA) starting three
+  // characters into the five-character tr4w_ClassName constant -- a ~1014-byte
+  // overread of whatever followed it in the image.  Unreachable in practice
+  // (OGLVERSION is False, so the About menu is a MessageBox), but it still has
+  // to compile.  nil allocates the texture with undefined contents, which is
+  // what the call was really getting, minus the out-of-bounds read.
   glTexImage2D( GL_TEXTURE_2D, 0, 4, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-     @tr4w_ClassName[ 3 ] );
+     nil );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
   glTexGeni( GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP );
