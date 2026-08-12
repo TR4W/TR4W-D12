@@ -58,10 +58,23 @@ implementation
 uses
    uRadioRegistry, uRadioFlexAPI, uRadioFlexCAT, VC;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateFlexAPI: TFactoryRadioBase;
+begin
+   Result := TFlexAPI.Create;
+end;
+
+function CreateFlexCAT: TFactoryRadioBase;
+begin
+   Result := TFlexCAT.Create;
+end;
+
 initialization
    RegisterRadio(FLEX,
-      function: TFactoryRadioBase begin Result := TFlexAPI.Create end,   // network: 4992 Ethernet API
-      function: TFactoryRadioBase begin Result := TFlexCAT.Create end,   // serial:  ZZ CAT
+      CreateFlexAPI,   // network: 4992 Ethernet API
+      CreateFlexCAT,   // serial:  ZZ CAT
       // discoverable = True, and now backed by a real implementation:
       // uFlexDiscovery listens for the radio's 1 Hz VITA-49 broadcast on UDP
       // 4992, dispatched from uCAT.DiscoverNetworkRadios.  Before that existed

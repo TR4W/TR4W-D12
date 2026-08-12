@@ -111,6 +111,9 @@ type
       Edit: TEdit;
    end;
 
+   { What ForEachNavItem calls for each item. }
+   TNavItemVisit = procedure (item: TTreeViewItem) of object;
+
    TPrefsForm = class(TForm)
       tvNav: TTreeView;
       layContent: TLayout;
@@ -567,6 +570,10 @@ type
       // The cluster directory is built once per program run, on first visit to
       // the DX Cluster section.  See LoadClusterServerList for the measurement.
       FClusterServersLoaded: boolean;
+      { Where NoteRadiosNavItem leaves its answer.  A field rather than a
+        captured local: the visitor is a method now, so it needs somewhere on
+        the object to put the result. }
+      FNavWanted: TTreeViewItem;
       // The construction phase timer -- a FIELD rather than a local so that the
       // phases inside RefreshProfileFields report against the same watch and the
       // numbers still sum to the total.  See LogPhase.
@@ -649,7 +656,14 @@ type
       // triangle -- see the implementation.
       { Every nav item, expanded or not.  NOT GlobalCount -- see the
         implementation; that list stops at a collapsed parent. }
-      procedure ForEachNavItem(const aVisit: TProc<TTreeViewItem>);
+      { A METHOD POINTER, not TProc<T>.  Same change as the radio and rotator
+        factories: `of object` names the owner of whatever the visitor touches,
+        and it compiles without closures. }
+      procedure ForEachNavItem(const aVisit: TNavItemVisit);
+      { Visitors. Each is a method because each needs Self anyway -- one to reach
+        the form's helpers, one to record what it found. }
+      procedure StyleNavItem(item: TTreeViewItem);
+      procedure NoteRadiosNavItem(item: TTreeViewItem);
       procedure ApplyChevrons;
       procedure ApplyChevronToItem(const aItem: TTreeViewItem);
       procedure TreeItemStyleApplied(Sender: TObject);
@@ -939,15 +953,9 @@ begin
    // could not be found by tag at all.  Hardware is a root item today and would
    // survive either way -- but "the default section happens to be at the root"
    // is not something to depend on, and the next default might not be.
-   wanted := nil;
-   ForEachNavItem(
-      procedure (item: TTreeViewItem)
-      begin
-      if (wanted = nil) and (item.Tag = NAV_RADIOS) then
-         begin
-         wanted := item;
-         end;
-      end);
+   FNavWanted := nil;
+   ForEachNavItem(NoteRadiosNavItem);
+   wanted := FNavWanted;
 
    if wanted <> nil then
       begin
@@ -2261,7 +2269,46 @@ begin
       end;
 end;
 
-procedure TPrefsForm.ForEachNavItem(const aVisit: TProc<TTreeViewItem>);
+procedure TPrefsForm.NoteRadiosNavItem(item: TTreeViewItem);
+begin
+   // FIRST match wins, so a later item with the same tag cannot displace it.
+   if (FNavWanted = nil) and (item.Tag = NAV_RADIOS) then
+      begin
+      FNavWanted := item;
+      end;
+end;
+
+procedure TPrefsForm.StyleNavItem(item: TTreeViewItem);
+begin
+      item.OnApplyStyleLookup := TreeItemStyleApplied;
+      ApplyChevronToItem(item);
+
+      // INDENTATION, and why it has to be stated rather than inherited.
+      //
+      // NY4I: on a fresh run the leaves under Operating were NOT indented, but
+      // collapsing and re-expanding the parent fixed them.  That is the shape
+      // of an ordering problem, and it is:
+      //
+      //   a child's indent is GetLevelOffset, which sums each ANCESTOR's
+      //   ChildrenOffset;  ChildrenOffset is set by UpdateChildrenOffset,
+      //   which runs only from ApplyStyle and derives the value from
+      //   FExpander.Width -- a STYLE RESOURCE.
+      //
+      // So at first layout the parent has not been styled yet, its
+      // ChildrenOffset is still the constructor's 0, and the children are laid
+      // out flush.  Collapsing forces a realign after styling, which is why the
+      // indent appears on the second look and never on the first.
+      //
+      // CustomChildrenOffset is the supported way out: UpdateChildrenOffset
+      // prefers it and never consults the style, so the offset no longer
+      // depends on whether a style has been applied yet.  Setting it on every
+      // item is harmless -- a leaf has no children for it to offset -- and
+      // avoids a rule about which items are parents that would go stale the
+      // next time a leaf gains children.
+      item.CustomChildrenOffset := NAV_CHILD_INDENT;
+end;
+
+procedure TPrefsForm.ForEachNavItem(const aVisit: TNavItemVisit);
 
    procedure Walk(const aItem: TTreeViewItem);
    var
@@ -2295,36 +2342,7 @@ end;
 procedure TPrefsForm.ApplyChevrons;
 begin
    // Every item, collapsed parents included -- see ForEachNavItem.
-   ForEachNavItem(
-      procedure (item: TTreeViewItem)
-      begin
-      item.OnApplyStyleLookup := TreeItemStyleApplied;
-      ApplyChevronToItem(item);
-
-      // INDENTATION, and why it has to be stated rather than inherited.
-      //
-      // NY4I: on a fresh run the leaves under Operating were NOT indented, but
-      // collapsing and re-expanding the parent fixed them.  That is the shape
-      // of an ordering problem, and it is:
-      //
-      //   a child's indent is GetLevelOffset, which sums each ANCESTOR's
-      //   ChildrenOffset;  ChildrenOffset is set by UpdateChildrenOffset,
-      //   which runs only from ApplyStyle and derives the value from
-      //   FExpander.Width -- a STYLE RESOURCE.
-      //
-      // So at first layout the parent has not been styled yet, its
-      // ChildrenOffset is still the constructor's 0, and the children are laid
-      // out flush.  Collapsing forces a realign after styling, which is why the
-      // indent appears on the second look and never on the first.
-      //
-      // CustomChildrenOffset is the supported way out: UpdateChildrenOffset
-      // prefers it and never consults the style, so the offset no longer
-      // depends on whether a style has been applied yet.  Setting it on every
-      // item is harmless -- a leaf has no children for it to offset -- and
-      // avoids a rule about which items are parents that would go stale the
-      // next time a leaf gains children.
-      item.CustomChildrenOffset := NAV_CHILD_INDENT;
-      end);
+   ForEachNavItem(StyleNavItem);
 end;
 
 

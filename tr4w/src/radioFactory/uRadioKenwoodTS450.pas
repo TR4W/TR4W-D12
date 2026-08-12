@@ -46,9 +46,17 @@ begin
   radioModel := 'Kenwood TS-450';
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateKenwoodTS450: TFactoryRadioBase;
+begin
+   Result := TKenwoodTS450Radio.Create;
+end;
+
 initialization
   RegisterRadio(TS450,
-     function: TFactoryRadioBase begin Result := TKenwoodTS450Radio.Create end,
+     CreateKenwoodTS450,
      'Kenwood TS-450', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      ,

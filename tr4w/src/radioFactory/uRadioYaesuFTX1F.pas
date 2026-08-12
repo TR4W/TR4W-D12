@@ -182,9 +182,17 @@ begin
       end;
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateFTX1F: TFactoryRadioBase;
+begin
+   Result := TFTX1FRadio.Create;
+end;
+
 initialization
   RegisterRadio(FTX1F,
-     function: TFactoryRadioBase begin Result := TFTX1FRadio.Create end,
+     CreateFTX1F,
      'Yaesu FTX-1F', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      ,

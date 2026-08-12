@@ -561,12 +561,20 @@ begin
    FCapabilities.CWProsigns := CWProsigns(' ', '%', '_', '>', '[');
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateTenTecOrion: TFactoryRadioBase;
+begin
+   Result := TTenTecOrionRadio.Create;
+end;
+
 initialization
   // 57600 8/N/1 -- the fastest port in the radio table, and ORION is one of only
   // three radios named explicitly in the legacy 1-stop-bit exception list
   // (`[IC78..IC9700, FT100, Orion]`).
   RegisterRadio(ORION,
-     function: TFactoryRadioBase begin Result := TTenTecOrionRadio.Create end,
+     CreateTenTecOrion,
      'Ten-Tec Orion', [rlSerial], 0, False,
      SerialParams(57600, 8, PARITY_NONE, 1)
      ,

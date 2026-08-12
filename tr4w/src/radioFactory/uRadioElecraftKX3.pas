@@ -60,9 +60,17 @@ begin
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateKX3: TFactoryRadioBase;
+begin
+   Result := TKX3Radio.Create;
+end;
+
 initialization
   RegisterRadio(KX3,
-     function: TFactoryRadioBase begin Result := TKX3Radio.Create end,
+     CreateKX3,
      'Elecraft KX3', [rlSerial], 0, False,
      // 1 stop bit: Elecraft serial is 8N1 (NY4I 2026-07-30) -- see uRadioElecraftK2.
      SerialParams(38400, 8, PARITY_NONE, 1)

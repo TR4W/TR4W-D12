@@ -125,10 +125,18 @@ begin
   // The 718 cannot read VFO B mode ($26 $01 NAKs) -- no-op.
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateIcom718: TFactoryRadioBase;
+begin
+   Result := TIcom718Radio.Create;
+end;
+
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom718');
   RegisterRadio(IC718,
-     function: TFactoryRadioBase begin Result := TIcom718Radio.Create end,
+     CreateIcom718,
      'Icom IC-718', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
      ,

@@ -1007,6 +1007,14 @@ begin
    SendToRadio(Format('cw_macros_speed:%d;', [speed]));
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateTCI: TFactoryRadioBase;
+begin
+   Result := TTCIRadio.Create;
+end;
+
 initialization
    // String id, NOT the EXPERTTCI enum: that enum stays bound to the HamLib
    // bridge registration until this driver is bench-proven, so an operator can
@@ -1017,7 +1025,7 @@ initialization
    // advertises PERIPHERALS, not radios.  Shipping a Discover button with
    // nothing behind it was the pre-implementation Flex mistake.
    RegisterRadioById('TCI',
-      function: TFactoryRadioBase begin Result := TTCIRadio.Create end,
+      CreateTCI,
       'TCI (ExpertSDR / Thetis / AetherSDR)', [rlNetwork], 50001, False,
       SerialParams(0, 0, PARITY_NONE, 0)   // network-only; the serial row is unused
    );

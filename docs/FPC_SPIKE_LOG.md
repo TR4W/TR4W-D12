@@ -306,3 +306,55 @@ green. Build the toolchain nobody has to assemble.
 all, FMX Linux or not. It is the first item in this whole exercise that moved TOWARD Lazarus on
 capability rather than governance.
 
+## STEP 4 REACHED -- TR4W tests RUN under FPC
+
+```
+FPC 3.2.2 :  PASSED: 111  FAILED: 0
+Delphi 12 :  PASSED: 111  FAILED: 0     (same two suites)
+```
+
+`spike/fpc_tests.pas` is a reduced driver linking the RotatorFactory and
+SettingsRegistry suites -- the two whose dependencies are proven to compile. It
+uses **the same source files the Delphi build uses**: no forked copies, no
+conditional defines added to force a pass.
+
+**Identical counts, not merely "it ran".** This is the first behavioural evidence
+in the exercise; everything before it was compile-time.
+
+### What it does and does not prove
+
+**Does:** the test framework, the rotator factory and the settings registry
+behave identically on a different compiler, a different string model
+(`-Mdelphi` = 8-bit `string`) and a different word size (x86_64 vs Win32).
+That last point is quietly significant -- these suites are the first TR4W code
+proven to work as **64-bit**.
+
+**Does not:** touch the contest engine, `ShortString`-heavy code, the fixed-column
+parsers, or anything doing file or byte I/O -- which is where the string-model
+risk actually lives. 111 assertions out of 3,795.
+
+### The closure work is finished
+
+Every anonymous method in `tr4w/src` is gone. The only `reference to` / `TFunc<`
+/ `TProc<` matches remaining are the comments explaining their removal.
+
+| Site | Converted to | Sites |
+|---|---|---:|
+| `TRadioCtor` | plain procedure pointer + named unit-level constructors | **101** |
+| `TRotatorSendProc`, `TRotatorFactoryProc` | `of object` / plain pointer | 6 |
+| `uSettingsRegistry` getters/setters/`OnApply` | 6 method-pointer types + 3 cell classes | 4 types |
+| `uPrefsForm.ForEachNavItem` | `TNavItemVisit = ... of object` + 2 visitor methods | 2 |
+
+Delphi builds throughout; **3,795 tests, 0 failures** after every step.
+
+**Two corrections to this log's earlier estimate**, both in the cheaper
+direction:
+
+- **`TProcessMsgRef` was never a closure** -- it is already
+  `procedure (sMessage: string) of object`. Listing it among the seven
+  anonymous-method users was wrong.
+- **The 101 radio registrations were the bulk of the count but the least of the
+  work** -- every one captured nothing, so a single scripted pass converted them.
+  The estimate of "half a day for the remaining five" was high; it took about an
+  hour.
+
