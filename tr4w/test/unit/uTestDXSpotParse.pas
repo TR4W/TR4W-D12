@@ -111,6 +111,10 @@ type
       procedure Test_PasswordPrompt_SmearedIntoTheNextChunk;
       procedure Test_PasswordPrompt_CorpusLinesDoNotTrigger;
       procedure Test_PasswordPrompt_SpotTrafficDoesNotTrigger;
+      procedure Test_LoginPrompt_Recognised;
+      procedure Test_LoginPrompt_SmearedIntoTheNextChunk;
+      procedure Test_LoginPrompt_YieldsToAPasswordPromptOnTheSameLine;
+      procedure Test_LoginPrompt_OrdinaryTrafficDoesNotTrigger;
 
       // The time stamp
       procedure Test_Time_Parsed;
@@ -920,6 +924,54 @@ begin
    CheckFalse(LineAsksForPassword('login:'), 'the LOGIN prompt is not the password prompt');
 end;
 
+
+{ -------------------------------------------------- the cluster login prompt --
+
+  `login:` only. It is a protocol token that survives translation -- the Spanish
+  DXSpider node in the corpus prints its banner in three languages and still
+  prompts in English. The prose forms are sysop text and DO get translated, so
+  they are handled by a TIMEOUT in uTelnet rather than by widening this.        }
+
+procedure TDXSpotParseTests.Test_LoginPrompt_Recognised;
+begin
+   BeginTest('Test_LoginPrompt_Recognised');
+   CheckTrue(LineAsksForLogin('login:'), 'the bare DXSpider prompt');
+   CheckTrue(LineAsksForLogin('login: '), 'with the trailing space nodes send');
+   CheckTrue(LineAsksForLogin('Login:'), 'capitalised');
+end;
+
+procedure TDXSpotParseTests.Test_LoginPrompt_SmearedIntoTheNextChunk;
+begin
+   BeginTest('Test_LoginPrompt_SmearedIntoTheNextChunk');
+   // Verbatim from the capture corpus: a prompt with no terminator, delivered
+   // joined to the line that followed it.
+   CheckTrue(LineAsksForLogin('login: nected to VE7CC-1:'),
+             'a smeared prompt is still a prompt');
+end;
+
+// The case that would answer the WRONG prompt. Both can arrive in one delivery
+// when the login prompt smears into what follows; replying with the callsign
+// there would send it where the password was wanted -- and then the password
+// would never be sent at all.
+procedure TDXSpotParseTests.Test_LoginPrompt_YieldsToAPasswordPromptOnTheSameLine;
+begin
+   BeginTest('Test_LoginPrompt_YieldsToAPasswordPromptOnTheSameLine');
+   CheckFalse(LineAsksForLogin('login: NY4I' + #13#10 + 'password:'),
+              'a line carrying both prompts is the PASSWORD prompt');
+   CheckTrue(LineAsksForPassword('login: NY4I' + #13#10 + 'password:'),
+             'and the password matcher still sees it');
+end;
+
+procedure TDXSpotParseTests.Test_LoginPrompt_OrdinaryTrafficDoesNotTrigger;
+begin
+   BeginTest('Test_LoginPrompt_OrdinaryTrafficDoesNotTrigger');
+   CheckFalse(LineAsksForLogin(''), 'an empty line');
+   CheckFalse(LineAsksForLogin('DX de NY4I:      14025.0  K1ABC        tnx qso   1713Z'),
+              'a spot');
+   CheckFalse(LineAsksForLogin('Please enter your callsign'),
+              'prose is deliberately NOT matched -- the timeout covers it');
+end;
+
 procedure TDXSpotParseTests.RunAllTests;
 begin
    Test_PlainSpot_Frequency;
@@ -995,6 +1047,10 @@ begin
    Test_PasswordPrompt_SmearedIntoTheNextChunk;
    Test_PasswordPrompt_CorpusLinesDoNotTrigger;
    Test_PasswordPrompt_SpotTrafficDoesNotTrigger;
+   Test_LoginPrompt_Recognised;
+   Test_LoginPrompt_SmearedIntoTheNextChunk;
+   Test_LoginPrompt_YieldsToAPasswordPromptOnTheSameLine;
+   Test_LoginPrompt_OrdinaryTrafficDoesNotTrigger;
 end;
 
 end.
