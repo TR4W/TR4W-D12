@@ -80,10 +80,67 @@ unit uSettingsRegistry;
 interface
 
 uses
-   System.SysUtils,
-   System.Generics.Collections;
+   SysUtils,
+   Generics.Collections;
 
 type
+   { METHOD POINTERS, not anonymous methods.
+
+     These were TFunc<T> / TProc<T> -- generic anonymous method types. They read
+     beautifully and they cost a closure-capable compiler: FPC 3.2.2 stable
+     answers `Identifier not found "reference"`. `of object` says the same thing
+     with the owner named rather than implied, which is the property the rotator
+     factory gained from the same change.
+
+     A setting binds to storage SOMEBODY ELSE owns -- a CFGCA row, a global, a
+     record field -- so a method pointer is the honest shape: there is always an
+     object behind the pair. Where there genuinely was not one, see the cells
+     below. }
+   TSettingApplyProc = procedure of object;
+
+   TBoolGetter   = function: boolean of object;
+   TBoolSetter   = procedure (aValue: boolean) of object;
+   TIntGetter    = function: integer of object;
+   TIntSetter    = procedure (aValue: integer) of object;
+   TStringGetter = function: string of object;
+   TStringSetter = procedure (aValue: string) of object;
+
+   { STORAGE FOR A SETTING THAT HAS NO HOME ELSEWHERE.
+
+     `Own` used to capture a one-element dynamic array, which gave the closure
+     something to hold that outlived the call. That is a cell object with the
+     object left out, so here it is with the object put back: same lifetime, same
+     single value, and now something a method pointer can point at.
+
+     The setting OWNS the cell it creates -- see TSettingBase.OwnCell -- so a
+     self-storing setting still cleans up after itself the way the closure did. }
+   TBoolCell = class
+   private
+      FValue: boolean;
+   public
+      constructor Create(const aDefault: boolean);
+      function  Get: boolean;
+      procedure SetValue(aValue: boolean);
+   end;
+
+   TIntCell = class
+   private
+      FValue: integer;
+   public
+      constructor Create(const aDefault: integer);
+      function  Get: integer;
+      procedure SetValue(aValue: integer);
+   end;
+
+   TStringCell = class
+   private
+      FValue: string;
+   public
+      constructor Create(const aDefault: string);
+      function  Get: string;
+      procedure SetValue(aValue: string);
+   end;
+
    { What a setting is made of that a UI or a persister can use without knowing
      the setting's type.  Everything type-specific is on the descendants. }
    TSettingBase = class abstract
@@ -91,9 +148,16 @@ type
       FKey: string;
       FCaption: string;
       FNeedsRestart: boolean;
-      FOnApply: TProc;
+      FOnApply: TSettingApplyProc;
+      { A cell this setting created for itself, or nil.  See TBoolCell. }
+      FOwnedCell: TObject;
    public
       constructor Create(const aKey, aCaption: string);
+      destructor Destroy; override;
+
+      { Take ownership of a cell created by Own, so a self-storing setting still
+        cleans up after itself exactly as the captured array did. }
+      procedure OwnCell(const aCell: TObject);
 
       { The value as text, for JSON and for a text control.  Never raises: a
         setting that cannot render itself is a bug in the setting, not something
@@ -125,16 +189,16 @@ type
       { Runs after a successful set: derive dependent state, redraw, restart a
         server.  Replaces crA and crP, and unlike them it is written next to the
         setting rather than in a numbered array. }
-      property OnApply: TProc read FOnApply write FOnApply;
+      property OnApply: TSettingApplyProc read FOnApply write FOnApply;
    end;
 
    TBoolSetting = class(TSettingBase)
    private
-      FGet: TFunc<boolean>;
-      FSet: TProc<boolean>;
+      FGet: TBoolGetter;
+      FSet: TBoolSetter;
    public
       constructor Create(const aKey, aCaption: string;
-                         const aGet: TFunc<boolean>; const aSet: TProc<boolean>);
+                         const aGet: TBoolGetter; const aSet: TBoolSetter);
       function AsText: string; override;
       function TrySetText(const aText: string; out aError: string): boolean; override;
       function AllowedValues: TArray<string>; override;
@@ -155,8 +219,8 @@ type
 
    TIntSetting = class(TSettingBase)
    private
-      FGet: TFunc<integer>;
-      FSet: TProc<integer>;
+      FGet: TIntGetter;
+      FSet: TIntSetter;
       FMin, FMax: integer;
       FAllowed: TArray<integer>;
    public
@@ -164,7 +228,7 @@ type
         values, pass them to Allowed instead -- that is the old ckArray, made
         explicit rather than hidden behind a pointer that is really an index. }
       constructor Create(const aKey, aCaption: string;
-                         const aGet: TFunc<integer>; const aSet: TProc<integer>;
+                         const aGet: TIntGetter; const aSet: TIntSetter;
                          const aMin: integer = Low(integer);
                          const aMax: integer = High(integer));
       function AsText: string; override;
@@ -185,13 +249,13 @@ type
 
    TStringSetting = class(TSettingBase)
    private
-      FGet: TFunc<string>;
-      FSet: TProc<string>;
+      FGet: TStringGetter;
+      FSet: TStringSetter;
       FMaxLength: integer;
       FIsSecret: boolean;
    public
       constructor Create(const aKey, aCaption: string;
-                         const aGet: TFunc<string>; const aSet: TProc<string>;
+                         const aGet: TStringGetter; const aSet: TStringSetter;
                          const aMaxLength: integer = 0);
       function AsText: string; override;
       function TrySetText(const aText: string; out aError: string): boolean; override;
@@ -211,15 +275,15 @@ type
 
    TEnumSetting = class(TSettingBase)
    private
-      FGet: TFunc<string>;
-      FSet: TProc<string>;
+      FGet: TStringGetter;
+      FSet: TStringSetter;
       FValues: TArray<string>;
    public
       { The values ARE the contract, so they are required rather than optional.
         This replaces ckList, where the values lived in a parallel array reached
         through an index stored in a pointer field. }
       constructor Create(const aKey, aCaption: string;
-                         const aGet: TFunc<string>; const aSet: TProc<string>;
+                         const aGet: TStringGetter; const aSet: TStringSetter;
                          const aValues: array of string);
       function AsText: string; override;
       function TrySetText(const aText: string; out aError: string): boolean; override;
@@ -257,11 +321,77 @@ var
 
 { ------------------------------------------------------------ TSettingBase - }
 
+{ ------------------------------------------------------------- the cells --- }
+
+constructor TBoolCell.Create(const aDefault: boolean);
+begin
+   inherited Create;
+   FValue := aDefault;
+end;
+
+function TBoolCell.Get: boolean;
+begin
+   Result := FValue;
+end;
+
+procedure TBoolCell.SetValue(aValue: boolean);
+begin
+   FValue := aValue;
+end;
+
+constructor TIntCell.Create(const aDefault: integer);
+begin
+   inherited Create;
+   FValue := aDefault;
+end;
+
+function TIntCell.Get: integer;
+begin
+   Result := FValue;
+end;
+
+procedure TIntCell.SetValue(aValue: integer);
+begin
+   FValue := aValue;
+end;
+
+constructor TStringCell.Create(const aDefault: string);
+begin
+   inherited Create;
+   FValue := aDefault;
+end;
+
+function TStringCell.Get: string;
+begin
+   Result := FValue;
+end;
+
+procedure TStringCell.SetValue(aValue: string);
+begin
+   FValue := aValue;
+end;
+
+{ -------------------------------------------------------- TSettingBase ----- }
+
 constructor TSettingBase.Create(const aKey, aCaption: string);
 begin
    inherited Create;
    FKey     := aKey;
    FCaption := aCaption;
+end;
+
+destructor TSettingBase.Destroy;
+begin
+   // Only a cell this setting MADE for itself.  A setting bound to somebody
+   // else's storage owns nothing and frees nothing -- FOwnedCell is nil there,
+   // which is the whole point of it being a separate field rather than a flag.
+   FreeAndNil(FOwnedCell);
+   inherited Destroy;
+end;
+
+procedure TSettingBase.OwnCell(const aCell: TObject);
+begin
+   FOwnedCell := aCell;
 end;
 
 function TSettingBase.AllowedValues: TArray<string>;
@@ -287,7 +417,7 @@ end;
 { ------------------------------------------------------------ TBoolSetting - }
 
 constructor TBoolSetting.Create(const aKey, aCaption: string;
-                                const aGet: TFunc<boolean>; const aSet: TProc<boolean>);
+                                const aGet: TBoolGetter; const aSet: TBoolSetter);
 begin
    inherited Create(aKey, aCaption);
    FGet := aGet;
@@ -297,13 +427,11 @@ end;
 class function TBoolSetting.Own(const aKey, aCaption: string;
                                 const aDefault: boolean): TBoolSetting;
 var
-   cell: TArray<boolean>;
+   cell: TBoolCell;
 begin
-   SetLength(cell, 1);
-   cell[0] := aDefault;
-   Result := TBoolSetting.Create(aKey, aCaption,
-      function: boolean begin Result := cell[0] end,
-      procedure (v: boolean) begin cell[0] := v end);
+   cell := TBoolCell.Create(aDefault);
+   Result := TBoolSetting.Create(aKey, aCaption, cell.Get, cell.SetValue);
+   Result.OwnCell(cell);
 end;
 
 function TBoolSetting.Value: boolean;
@@ -368,7 +496,7 @@ end;
 { ------------------------------------------------------------- TIntSetting - }
 
 constructor TIntSetting.Create(const aKey, aCaption: string;
-                               const aGet: TFunc<integer>; const aSet: TProc<integer>;
+                               const aGet: TIntGetter; const aSet: TIntSetter;
                                const aMin, aMax: integer);
 begin
    inherited Create(aKey, aCaption);
@@ -381,13 +509,10 @@ end;
 class function TIntSetting.Own(const aKey, aCaption: string; const aDefault: integer;
                                const aMin, aMax: integer): TIntSetting;
 var
-   cell: TArray<integer>;
+   cell: TIntCell;
 begin
-   SetLength(cell, 1);
-   cell[0] := aDefault;
-   Result := TIntSetting.Create(aKey, aCaption,
-      function: integer begin Result := cell[0] end,
-      procedure (v: integer) begin cell[0] := v end,
+   cell := TIntCell.Create(aDefault);
+   Result := TIntSetting.Create(aKey, aCaption, cell.Get, cell.SetValue,
       aMin, aMax);
 end;
 
@@ -478,7 +603,7 @@ end;
 { ---------------------------------------------------------- TStringSetting - }
 
 constructor TStringSetting.Create(const aKey, aCaption: string;
-                                  const aGet: TFunc<string>; const aSet: TProc<string>;
+                                  const aGet: TStringGetter; const aSet: TStringSetter;
                                   const aMaxLength: integer);
 begin
    inherited Create(aKey, aCaption);
@@ -490,13 +615,10 @@ end;
 class function TStringSetting.Own(const aKey, aCaption: string; const aDefault: string;
                                   const aMaxLength: integer): TStringSetting;
 var
-   cell: TArray<string>;
+   cell: TStringCell;
 begin
-   SetLength(cell, 1);
-   cell[0] := aDefault;
-   Result := TStringSetting.Create(aKey, aCaption,
-      function: string begin Result := cell[0] end,
-      procedure (v: string) begin cell[0] := v end,
+   cell := TStringCell.Create(aDefault);
+   Result := TStringSetting.Create(aKey, aCaption, cell.Get, cell.SetValue,
       aMaxLength);
 end;
 
@@ -549,7 +671,7 @@ end;
 { ------------------------------------------------------------ TEnumSetting - }
 
 constructor TEnumSetting.Create(const aKey, aCaption: string;
-                                const aGet: TFunc<string>; const aSet: TProc<string>;
+                                const aGet: TStringGetter; const aSet: TStringSetter;
                                 const aValues: array of string);
 var
    i: integer;
@@ -567,7 +689,7 @@ end;
 class function TEnumSetting.Own(const aKey, aCaption: string; const aDefault: string;
                                 const aValues: array of string): TEnumSetting;
 var
-   cell: TArray<string>;
+   cell: TStringCell;
    i: integer;
    ok: boolean;
 begin
@@ -589,12 +711,9 @@ begin
                                 [aKey, aDefault]);
       end;
 
-   SetLength(cell, 1);
-   cell[0] := aDefault;
-   Result := TEnumSetting.Create(aKey, aCaption,
-      function: string begin Result := cell[0] end,
-      procedure (v: string) begin cell[0] := v end,
-      aValues);
+   cell := TStringCell.Create(aDefault);
+   Result := TEnumSetting.Create(aKey, aCaption, cell.Get, cell.SetValue, aValues);
+   Result.OwnCell(cell);
 end;
 
 function TEnumSetting.AsText: string;
