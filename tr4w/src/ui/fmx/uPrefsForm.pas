@@ -71,6 +71,7 @@ uses
    System.SysUtils,
    System.Classes,
    System.UITypes,
+   System.Diagnostics,   // TStopwatch -- the FTiming phase timer
    FMX.Types,
    FMX.Controls,
    FMX.Forms,
@@ -473,11 +474,29 @@ type
       procedure btnBrowseBackupClick(Sender: TObject);
       procedure lstClustersChange(Sender: TObject);
       procedure cbxClusterServerChange(Sender: TObject);
+      procedure cbxClusterServerEnter(Sender: TObject);
+      // ONE HANDLER PER CONTROL, each delegating to the same capture routine --
+      // the house pattern, and NOT one handler branching on Sender.  These were
+      // missing entirely until 2026-08-11: the capture routine existed and was
+      // correct, but nothing in the .fmx ever called it, so every one of these
+      // fields was typed into and silently discarded (NY4I lost a password that
+      // way).  Delphi cannot warn about this -- an unreferenced published method
+      // is just an unused method -- which is why Lint-FormEvents now exists.
+      procedure edtClusterNameChange(Sender: TObject);
+      procedure edtClusterLoginChange(Sender: TObject);
+      procedure edtClusterPasswordChange(Sender: TObject);
+      procedure edtClusterCommandChange(Sender: TObject);
       procedure btnAddClusterClick(Sender: TObject);
       procedure btnRemoveClusterClick(Sender: TObject);
       procedure btnUseClusterClick(Sender: TObject);
       procedure lstRotatorsChange(Sender: TObject);
       procedure cbxRotatorTypeChange(Sender: TObject);
+      procedure cbxRotatorPortChange(Sender: TObject);
+      procedure edtRotatorNameChange(Sender: TObject);
+      procedure edtRotatorBaudChange(Sender: TObject);
+      procedure edtRotatorIPChange(Sender: TObject);
+      procedure edtRotatorUDPChange(Sender: TObject);
+      procedure edtRotatorBandsChange(Sender: TObject);
       procedure btnAddRotatorClick(Sender: TObject);
       procedure btnRemoveRotatorClick(Sender: TObject);
       procedure btnOpenLogFileClick(Sender: TObject);
@@ -545,6 +564,13 @@ type
       FUDPEditClone: TUDPDestination;
       FUDPEditIsNew: boolean;
       FLoading: boolean;
+      // The cluster directory is built once per program run, on first visit to
+      // the DX Cluster section.  See LoadClusterServerList for the measurement.
+      FClusterServersLoaded: boolean;
+      // The construction phase timer -- a FIELD rather than a local so that the
+      // phases inside RefreshProfileFields report against the same watch and the
+      // numbers still sum to the total.  See LogPhase.
+      FTiming: TStopwatch;
       // Set by every edit, cleared by every successful save.  Without it,
       // closing with the window's X kept the edits in memory unsaved -- so
       // reopening showed them as though they had been saved, which is the worst
@@ -590,6 +616,16 @@ type
       procedure BuildBindings;
       procedure LoadClusterServerList;
       procedure LoadClusterList;
+      { The blanket "something was edited" marker.  See HookDirtyMarkers. }
+      procedure MarkDirty(Sender: TObject);
+      procedure HookDirtyMarkers(const aRoot: TFmxObject);
+      procedure HookDirtyMarker(const aControl: TFmxObject);
+      function  ClusterIsActive(const aCluster: TClusterDefinition): boolean;
+      procedure ShowClusterRow(const aIndex: integer;
+                               const aCluster: TClusterDefinition);
+      procedure RefreshClusterRows;
+      procedure ShowRotatorRow(const aIndex: integer;
+                               const aRotator: TRotatorDefinition);
       procedure ShowActiveCluster;
       procedure ShowSelectedCluster;
       procedure CaptureSelectedCluster;
@@ -763,14 +799,51 @@ uses
 var
    gPrefsForm: TPrefsForm = nil;
 
-procedure ShowPreferences;
+// WHERE THE FIRST-OPEN SECOND GOES.  NY4I reported a noticeable delay the first
+// time Preferences opens after startup and none on later opens -- which points
+// at construction rather than at Show, but "points at" is not a measurement.
+// The form went from 67 designed controls to 347 in one day, and construction
+// also enumerates the serial ports and pours TRCLUSTER.DAT into a combo, so
+// there are three credible suspects and no way to pick between them by reading.
+//
+// KEPT after the fix, not deleted with it.  "Preferences is slow" is a report
+// that will come again -- a new panel, a bigger file, a slower machine -- and
+// the whole reason this one took a build to answer is that there was no number
+// anywhere.  The cost is a handful of QueryPerformanceCounter calls.
+//
+// TOTALS at Info, PHASES at Debug.  An operator reporting slowness should not
+// have to reconfigure logging to give a useful number, but fifteen lines per
+// open is noise in everybody else's log.  Each call restarts the watch, so the
+// phases are individual costs and sum to the total.
+procedure LogPhase(var aWatch: TStopwatch; const aName: string;
+                   const aIsTotal: boolean = False);
 begin
+   if aIsTotal then
+      begin
+      logger.Info('[Prefs] %-22s %5d ms', [aName, aWatch.ElapsedMilliseconds]);
+      end
+   else
+      begin
+      logger.Debug('[Prefs] %-22s %5d ms', [aName, aWatch.ElapsedMilliseconds]);
+      end;
+   aWatch := TStopwatch.StartNew;
+end;
+
+procedure ShowPreferences;
+var
+   sw: TStopwatch;
+begin
+   sw := TStopwatch.StartNew;
+
    if gPrefsForm = nil then
       begin
       gPrefsForm := TPrefsForm.Create(nil);
+      LogPhase(sw, 'CONSTRUCT first open', True);
       end;
+
    gPrefsForm.Show;
    gPrefsForm.BringToFront;
+   LogPhase(sw, 'Show + BringToFront');
 end;
 
 
@@ -787,12 +860,15 @@ begin
    // three footer buttons are anchored [akRight, akBottom] regardless -- they
    // were once placed from ClientWidth/ClientHeight without anchors and
    // stranded in mid-air on resize (NY4I, 2026-08-05).
+   FTiming := TStopwatch.StartNew;
    inherited Create(AOwner);
+   LogPhase(FTiming, 'stream .fmx');
 
    // English lives in the .fmx; TranslateForm overrides only what a language
    // table supplies and leaves the designed text alone otherwise.  Today no
    // lookup is assigned, so this is a no-op and the designer is the UI.
    TranslateForm(Self);
+   LogPhase(FTiming, 'TranslateForm');
 
    // In code as well as in the resource: losing these is invisible -- the form
    // still opens and still looks right, having silently stopped registering its
@@ -805,8 +881,17 @@ begin
    FKeyerStore := TKeyerConfigStore.Create;
    FUDPConfig := TUDPBroadcastConfig.Create;
    SelectFirstSection;
+   LogPhase(FTiming, 'SelectFirstSection');
    LoadStore;
+   LogPhase(FTiming, 'LoadStore');
    RefreshAll;
+   LogPhase(FTiming, 'RefreshAll');
+
+   // AFTER the form is populated, so that loading cannot mark it dirty even if
+   // a future Load routine forgets to set FLoading.  Belt and braces on purpose:
+   // the cost of getting this wrong is a save prompt on an untouched window.
+   HookDirtyMarkers(Self);
+   LogPhase(FTiming, 'HookDirtyMarkers');
 
    // Through the SETTER, so the button starts greyed.  A freshly opened window
    // has nothing unsaved, but the designer leaves every button enabled, and
@@ -1498,17 +1583,33 @@ begin
          chkSO2R.IsChecked  := prof.SO2REnabled;
          end;
 
+      // RESTARTED HERE.  FTiming is a field, so between one refresh and the next
+      // it keeps running -- and the first phase logged afterwards then reports
+      // however long the operator sat looking at the window.  It read a
+      // convincing "profile combos 4138 ms" that way on the first run, which is
+      // exactly the sort of number that sends someone optimising nothing.
+      FTiming := TStopwatch.StartNew;
+
       chkAutoConnect.IsChecked := FStore.AutoConnectOnStartup;
+      LogPhase(FTiming, '  profile combos');
       LoadStationPanel;
+      LogPhase(FTiming, '  Station');
       LoadExternalSoftwarePanels;
+      LogPhase(FTiming, '  External software');
       LoadClusterPanels;
+      LogPhase(FTiming, '  Cluster panels');
       LoadRemainingPanels;
+      LogPhase(FTiming, '  Remaining panels');
       LoadRotatorList;
+      LogPhase(FTiming, '  Rotators (COM enum)');
       LoadClusterList;
+      LogPhase(FTiming, '  Cluster list (DAT)');
       BuildBindings;
       FBindings.LoadAll;
+      LogPhase(FTiming, '  Bindings');
       LoadTCIPanel;
       LoadLoggingPanel;
+      LogPhase(FTiming, '  TCI + Logging');
 
       if FStore.ActiveProfileName <> '' then
          begin
@@ -1537,6 +1638,129 @@ end;
 // / Cancel set starts to look redundant (NY4I, 2026-08-08).  Greying it when
 // there is nothing to commit gives it a visible meaning -- enabled says "there
 // are unsaved changes", greyed says "everything here is on disk".
+{ ------------------------------------------------- the blanket dirty flag --- }
+
+// WHY THIS IS ATTACHED IN CODE and not ninety designer assignments.
+//
+// Marking the form dirty is a CROSS-CUTTING concern: every control does the
+// same thing, so ninety identical one-line handlers would be ninety chances to
+// forget the ninety-first.  It had already gone wrong -- on 2026-08-11 exactly
+// 100 of the 147 interactive controls on this form had no event at all, so
+// Save stayed greyed while the operator typed and, worse, closing with the X
+// discarded the work WITHOUT the unsaved-changes prompt, because that prompt is
+// gated on FDirty (NY4I).
+//
+// Attaching by a walk means a control dropped on this form in the designer
+// tomorrow is covered without anyone remembering this file exists.  That is the
+// property worth having; a table of control names would rot the same way.
+//
+// NOT the same thing as an event handler with behaviour.  The house rule --
+// one named handler per control, never branch on Sender -- is about handlers
+// that DO something specific; this one does the identical thing for every
+// control and never asks who Sender is.
+//
+// EXISTING HANDLERS ARE NEVER REPLACED.  A control the designer already wired
+// keeps its handler, which is responsible for its own Dirty (the cluster and
+// rotator captures set it centrally, in Capture*Selected).
+procedure TPrefsForm.MarkDirty(Sender: TObject);
+begin
+   // Loading is not editing.  Without this, populating the form would arm the
+   // unsaved-changes prompt on a window nobody has touched -- and DiscardChanges
+   // would leave the form dirty immediately after discarding.
+   if FLoading then
+      begin
+      Exit;
+      end;
+
+   Dirty := True;
+end;
+
+procedure TPrefsForm.HookDirtyMarker(const aControl: TFmxObject);
+begin
+   // OnChangeTracking for edits, because it fires on every KEYSTROKE, while
+   // OnChange fires on the validate/commit path -- effectively when the field is
+   // left.  Read from FMX.Edit rather than assumed: DoChangeTracking is called
+   // from SetText, DoChange from the Change path gated on FChanged.  A Save
+   // button that only un-greys once you tab out is the sort of thing that reads
+   // as a bug.
+   if aControl is TCustomEdit then
+      begin
+      if not Assigned(TCustomEdit(aControl).OnChangeTracking) then
+         begin
+         TCustomEdit(aControl).OnChangeTracking := MarkDirty;
+         end;
+      Exit;
+      end;
+
+   // TComboEdit is NOT a TCustomEdit descendant -- it comes down through
+   // TComboEditBase -- so it needs its own arm rather than being caught above.
+   if aControl is TComboEdit then
+      begin
+      if not Assigned(TComboEdit(aControl).OnChange) then
+         begin
+         TComboEdit(aControl).OnChange := MarkDirty;
+         end;
+      Exit;
+      end;
+
+   // TComboBox, not TCustomComboBox: the base declares OnChange PROTECTED and
+   // only the concrete class publishes it, so the base-class form does not
+   // compile.  A descendant of TComboBox is still caught by the `is` test.
+   if aControl is TComboBox then
+      begin
+      if not Assigned(TComboBox(aControl).OnChange) then
+         begin
+         TComboBox(aControl).OnChange := MarkDirty;
+         end;
+      Exit;
+      end;
+
+   if aControl is TCheckBox then
+      begin
+      if not Assigned(TCheckBox(aControl).OnChange) then
+         begin
+         TCheckBox(aControl).OnChange := MarkDirty;
+         end;
+      Exit;
+      end;
+
+   if aControl is TRadioButton then
+      begin
+      if not Assigned(TRadioButton(aControl).OnChange) then
+         begin
+         TRadioButton(aControl).OnChange := MarkDirty;
+         end;
+      Exit;
+      end;
+
+   // DELIBERATELY NOT LISTS OR THE TREE.  Selecting a different cluster, keyer
+   // or nav section is navigation, not an edit; marking those dirty would make
+   // simply LOOKING at the window prompt to save on the way out, which trains
+   // the operator to dismiss the prompt that matters.
+   //
+   // ADDING A CONTROL TYPE: add an arm here.  Missing one costs a greyed Save
+   // button, not data -- the Save* routines read their controls directly at save
+   // time -- but it is still the silent-gap shape this whole change is about.
+end;
+
+procedure TPrefsForm.HookDirtyMarkers(const aRoot: TFmxObject);
+var
+   i: integer;
+begin
+   if aRoot = nil then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to aRoot.ChildrenCount - 1 do
+      begin
+      HookDirtyMarker(aRoot.Children[i]);
+      // Recursive: every control on this form is nested at least two deep,
+      // inside its section panel inside layContent.
+      HookDirtyMarkers(aRoot.Children[i]);
+      end;
+end;
+
 procedure TPrefsForm.SetDirty(const aValue: boolean);
 begin
    FDirty := aValue;
@@ -1646,6 +1870,11 @@ begin
    // which is most of them, deliberately: the nav says what this window is
    // GOING to be, so nobody has to guess whether Preferences is meant to grow.
    lblPlaceholder.Visible := not shown;
+
+   // The cluster directory is NOT built here.  Opening the section was already
+   // far better than building it on every refresh -- 1864 ms measured, once --
+   // but a section that pauses when you click it still reads as a slow program.
+   // It is built from the drop-down instead; see cbxClusterServerPopup.
 end;
 
 procedure TPrefsForm.btnAddClick(Sender: TObject);
@@ -2254,6 +2483,7 @@ var
    lines: TStringList;
    i: integer;
    line: string;
+   sw: TStopwatch;
 begin
    // THE PUBLIC DIRECTORY, offered as a picker.  TRCLUSTER.DAT is ~15 KB of
    // host:port lines that ship with TR4W -- it is not the operator's list, it
@@ -2262,6 +2492,44 @@ begin
    //
    // Editable, not a closed list: a club or a private node will not be in the
    // file, and refusing to accept one would make the picker a cage.
+   //
+   // ONCE PER PROGRAM RUN, AND NOT BEFORE IT IS LOOKED AT.  Measured 2026-08-11:
+   // 726 entries cost 1.8 SECONDS, because FMX builds a styled list item per
+   // entry.  It was being paid twice on every load -- RefreshProfileCombo fires
+   // the profile OnChange, which re-enters RefreshProfileFields -- and a load
+   // happens on construction AND inside DiscardChanges, so opening Preferences
+   // cost 3.9 s and cancelling out of it cost another 3.6 s (NY4I felt both).
+   //
+   // The guard is correct rather than merely cheap: the file is read-only data
+   // shipped with the program, so it cannot change while TR4W is running, and
+   // rebuilding an identical list can only ever cost time.  The one caller that
+   // legitimately wants it fresh is a hypothetical "reload the directory"
+   // action, which would clear the flag.
+   if FClusterServersLoaded then
+      begin
+      Exit;
+      end;
+   FClusterServersLoaded := True;
+   sw := TStopwatch.StartNew;
+
+   // THE WAIT CURSOR, for the one operation on this form that visibly takes
+   // time.  Nearly two seconds of frozen UI with no acknowledgement reads as a
+   // hang, and the operator's instinct is to click again -- which on a combo
+   // means a second DropDown arriving while the first is still building.
+   //
+   // WIN32 SetCursor, NOT the FMX Cursor property, and the difference is the
+   // whole point.  Assigning Cursor asks FMX to apply the change on the next
+   // WM_SETCURSOR -- but this routine then blocks the UI thread outright, so no
+   // message is pumped, the change is never applied, and it has already been
+   // restored by the time one is.  Setting Cursor := crHourGlass here produced
+   // no visible indication at all (NY4I, 2026-08-11).
+   //
+   // SetCursor takes effect immediately, and it STAYS for exactly the same
+   // reason the property does not: nothing is pumping the messages that would
+   // reset it. That makes the blocked thread work in our favour rather than
+   // against us. Windows restores the cursor naturally on the first
+   // WM_SETCURSOR after we return.
+   SetCursor(LoadCursor(0, IDC_WAIT));
    cbxClusterServer.BeginUpdate;
    try
       cbxClusterServer.Clear;
@@ -2288,7 +2556,86 @@ begin
          end;
    finally
       cbxClusterServer.EndUpdate;
+      // In the finally: a directory file that throws mid-load must not leave the
+      // operator with a permanent hourglass on a window that is working fine.
+      SetCursor(LoadCursor(0, IDC_ARROW));
    end;
+
+   // Info, and it names the count: this is the one remaining pause an operator
+   // can feel, it happens once, and the number tells the next reader whether it
+   // is the file that grew or FMX that got slower.
+   logger.Info('[Prefs] cluster directory: %d entries in %d ms (once per run)',
+               [cbxClusterServer.Items.Count, sw.ElapsedMilliseconds]);
+end;
+
+const
+   // A TICK ON THE ACTIVE ROW.  TR4W connects to exactly one cluster, and until
+   // now the list gave no sign of which -- the only indication was the
+   // "Connecting to:" label above the fields, which is nowhere near the list the
+   // operator is reading (NY4I, 2026-08-11).
+   //
+   // As a code point, NOT as a literal tick in the source.  A non-ASCII byte in
+   // a .pas is decoded with the build machine's ANSI codepage unless the file
+   // carries a BOM, which is the silent-corruption trap the lang files are
+   // documented for.  #$2713 cannot be corrupted by a re-save.
+   CLUSTER_ACTIVE_MARK   = #$2713 + ' ';
+   // Same width, so the names line up whether or not a row is ticked.
+   CLUSTER_INACTIVE_MARK = '  ';
+
+// The one place that spells a cluster's row, so the list built by LoadClusterList
+// and the row rewritten on every keystroke cannot drift into two formats.
+function ClusterRowText(const aCluster: TClusterDefinition;
+                        const aIsActive: boolean): string;
+var
+   mark: string;
+begin
+   if aIsActive then
+      begin
+      mark := CLUSTER_ACTIVE_MARK;
+      end
+   else
+      begin
+      mark := CLUSTER_INACTIVE_MARK;
+      end;
+
+   Result := Format('%s%s  -  %s', [mark, aCluster.Name, aCluster.Server]);
+end;
+
+function TPrefsForm.ClusterIsActive(const aCluster: TClusterDefinition): boolean;
+begin
+   // BY NAME, which is how the store identifies it -- and why renaming the
+   // active cluster has to carry ActiveClusterName with it (see
+   // CaptureSelectedCluster).  An index would silently re-point at whatever
+   // moved into that slot.
+   Result := (aCluster <> nil)
+             and (FStore.ActiveClusterName <> '')
+             and SameText(aCluster.Name, FStore.ActiveClusterName);
+end;
+
+procedure TPrefsForm.ShowClusterRow(const aIndex: integer;
+                                    const aCluster: TClusterDefinition);
+begin
+   if (aIndex < 0) or (aIndex >= lstClusters.Items.Count) or (aCluster = nil) then
+      begin
+      Exit;
+      end;
+
+   lstClusters.ListItems[aIndex].Text :=
+      ClusterRowText(aCluster, ClusterIsActive(aCluster));
+end;
+
+// Every row, because the tick MOVES: making one cluster active un-ticks
+// whichever held it.  Rewriting only the newly active row would leave two ticks
+// on screen, and a list claiming two active clusters is worse than one claiming
+// none.
+procedure TPrefsForm.RefreshClusterRows;
+var
+   i: integer;
+begin
+   for i := 0 to FStore.ClusterCount - 1 do
+      begin
+      ShowClusterRow(i, FStore.Cluster(i));
+      end;
 end;
 
 procedure TPrefsForm.LoadClusterList;
@@ -2296,16 +2643,22 @@ var
    i: integer;
    keep: integer;
 begin
-   LoadClusterServerList;
-
+   // NOT LoadClusterServerList.  The directory is populated when the DX Cluster
+   // section is first opened (see tvNavChange), not whenever the operator's own
+   // cluster library is refreshed -- the two lists have nothing to do with each
+   // other, and coupling them is what put a 1.8 s file load on the path of every
+   // add, remove and cancel.
+   //
+   // The stored server still SHOWS with the list empty: cbxClusterServer is a
+   // TComboEdit, whose Text is independent of Items.
    keep := lstClusters.ItemIndex;
    lstClusters.BeginUpdate;
    try
       lstClusters.Clear;
       for i := 0 to FStore.ClusterCount - 1 do
          begin
-         lstClusters.Items.Add(Format('%s  -  %s',
-            [FStore.Cluster(i).Name, FStore.Cluster(i).Server]));
+         lstClusters.Items.Add(ClusterRowText(FStore.Cluster(i),
+                                              ClusterIsActive(FStore.Cluster(i))));
          end;
    finally
       lstClusters.EndUpdate;
@@ -2417,6 +2770,22 @@ begin
    // NOT trimmed -- a password may legitimately begin or end with a space.
    c.Password       := edtClusterPassword.Text;
    c.ConnectCommand := Trim(edtClusterCommand.Text);
+
+   // THE LIST ROW FOLLOWS THE EDIT.  Without this the row kept the name it was
+   // created with -- NY4I typed a whole HamAlert definition and the list still
+   // read "Cluster  -", which makes it look as though nothing was recorded.
+   //
+   // ListItems[].Text, not Items[] and not a rebuild: assigning to Items fires
+   // the list's OnChange, which re-enters ShowSelectedCluster and reloads every
+   // field from the store MID-KEYSTROKE -- moving the caret and undoing what is
+   // being typed.
+   ShowClusterRow(lstClusters.ItemIndex, c);
+
+   // Set HERE rather than in each of the five handlers, so the sixth cannot
+   // forget it.  Below the FLoading guard on purpose: loading the form is not
+   // an edit, and marking it dirty would arm the unsaved-changes prompt on a
+   // window nobody has touched.
+   Dirty := True;
 end;
 
 procedure TPrefsForm.lstClustersChange(Sender: TObject);
@@ -2425,6 +2794,50 @@ begin
 end;
 
 procedure TPrefsForm.cbxClusterServerChange(Sender: TObject);
+begin
+   CaptureSelectedCluster;
+end;
+
+// THE DIRECTORY IS BUILT WHEN THE OPERATOR REACHES THE CONTROL -- N1MM's
+// behaviour, which NY4I asked for after seeing it.  It is the honest place for
+// the cost: a list being assembled is what a click on a drop-down leads someone
+// to expect, whereas the same pause on merely opening a tab reads as a slow
+// program.
+//
+// OnEnter, NOT OnPopup, and the reason is worth keeping.  TComboEdit HAS an
+// OnPopup and it looks like exactly the right hook, but TStyledComboEdit.DropDown
+// reads:
+//
+//    Model.DroppedDown := True;
+//    if Model.Count > 0 then          <-- the popup, and OnPopup, live in here
+//
+// so an EMPTY combo never opens its popup and never raises the event. Filling
+// on OnPopup cannot work by construction: the event only fires once the list is
+// already populated. Wired that way first, and the arrow did nothing at all
+// (NY4I, 2026-08-11).
+//
+// LoadClusterServerList is idempotent, so only the first visit pays.
+procedure TPrefsForm.cbxClusterServerEnter(Sender: TObject);
+begin
+   LoadClusterServerList;
+end;
+
+procedure TPrefsForm.edtClusterNameChange(Sender: TObject);
+begin
+   CaptureSelectedCluster;
+end;
+
+procedure TPrefsForm.edtClusterLoginChange(Sender: TObject);
+begin
+   CaptureSelectedCluster;
+end;
+
+procedure TPrefsForm.edtClusterPasswordChange(Sender: TObject);
+begin
+   CaptureSelectedCluster;
+end;
+
+procedure TPrefsForm.edtClusterCommandChange(Sender: TObject);
 begin
    CaptureSelectedCluster;
 end;
@@ -2485,10 +2898,31 @@ begin
 
    FStore.ActiveClusterName := FStore.Cluster(lstClusters.ItemIndex).Name;
    ShowActiveCluster;
+   RefreshClusterRows;
+   // Choosing where to connect IS a change to be saved.  Without this the tick
+   // moves, the operator closes the window, and the choice is gone.
+   Dirty := True;
 
    // NOT reconnected here.  Dropping a live cluster connection the moment
    // somebody clicks in a settings window would lose the spots on screen; the
    // choice takes effect on the next connect, which the operator controls.
+end;
+
+function RotatorRowText(const aRotator: TRotatorDefinition): string;
+begin
+   Result := Format('%s [%s]',
+      [aRotator.Name, RotatorDisplayName(aRotator.RotatorId)]);
+end;
+
+procedure TPrefsForm.ShowRotatorRow(const aIndex: integer;
+                                    const aRotator: TRotatorDefinition);
+begin
+   if (aIndex < 0) or (aIndex >= lstRotators.Items.Count) or (aRotator = nil) then
+      begin
+      Exit;
+      end;
+
+   lstRotators.ListItems[aIndex].Text := RotatorRowText(aRotator);
 end;
 
 procedure TPrefsForm.LoadRotatorList;
@@ -2558,9 +2992,7 @@ begin
       lstRotators.Clear;
       for i := 0 to FStore.RotatorCount - 1 do
          begin
-         lstRotators.Items.Add(Format('%s [%s]',
-            [FStore.Rotator(i).Name,
-             RotatorDisplayName(FStore.Rotator(i).RotatorId)]));
+         lstRotators.Items.Add(RotatorRowText(FStore.Rotator(i)));
          end;
    finally
       lstRotators.EndUpdate;
@@ -2742,6 +3174,11 @@ begin
       end;
 
    r.Bands := Trim(edtRotatorBands.Text);
+
+   // The row follows the edit -- see CaptureSelectedCluster for why this is
+   // ListItems[].Text and not a rebuild.
+   ShowRotatorRow(lstRotators.ItemIndex, r);
+   Dirty := True;
 end;
 
 procedure TPrefsForm.lstRotatorsChange(Sender: TObject);
@@ -2755,6 +3192,36 @@ begin
    // Re-shown, not merely captured: changing the type changes WHICH FIELDS
    // APPLY, and the driver is what says so.
    ShowSelectedRotator;
+end;
+
+procedure TPrefsForm.cbxRotatorPortChange(Sender: TObject);
+begin
+   CaptureSelectedRotator;
+end;
+
+procedure TPrefsForm.edtRotatorNameChange(Sender: TObject);
+begin
+   CaptureSelectedRotator;
+end;
+
+procedure TPrefsForm.edtRotatorBaudChange(Sender: TObject);
+begin
+   CaptureSelectedRotator;
+end;
+
+procedure TPrefsForm.edtRotatorIPChange(Sender: TObject);
+begin
+   CaptureSelectedRotator;
+end;
+
+procedure TPrefsForm.edtRotatorUDPChange(Sender: TObject);
+begin
+   CaptureSelectedRotator;
+end;
+
+procedure TPrefsForm.edtRotatorBandsChange(Sender: TObject);
+begin
+   CaptureSelectedRotator;
 end;
 
 procedure TPrefsForm.btnAddRotatorClick(Sender: TObject);
@@ -3790,14 +4257,26 @@ begin
    oldCaption := btnActivate.Text;
    btnActivate.Text    := 'Activating...';
    btnActivate.Enabled := False;
-   Cursor := crHourGlass;
    try
       // Repainted before the work starts, or the new caption never appears --
       // the whole apply runs without returning to the message loop.
       Application.ProcessMessages;
+
+      // AFTER ProcessMessages, deliberately.  The FMX Cursor property was set
+      // here originally and showed nothing: FMX applies a cursor on the next
+      // WM_SETCURSOR, and Windows only sends one when the pointer MOVES -- which
+      // it does not, because it is resting on the button that was just clicked.
+      // Pumping the queue therefore repaints the caption and still leaves the
+      // cursor alone.
+      //
+      // Win32 SetCursor changes it now, and it survives the whole apply because
+      // nothing after this point pumps the message that would reset it.  It goes
+      // after ProcessMessages so that the pump cannot undo it.  Same reasoning
+      // as LoadClusterServerList; see the longer note there.
+      SetCursor(LoadCursor(0, IDC_WAIT));
       ApplyNow(True);
    finally
-      Cursor := crDefault;
+      SetCursor(LoadCursor(0, IDC_ARROW));
       btnActivate.Text    := oldCaption;
       btnActivate.Enabled := True;
    end;
@@ -3811,21 +4290,42 @@ begin
 end;
 
 procedure TPrefsForm.btnOKClick(Sender: TObject);
+var
+   sw: TStopwatch;
 begin
+   sw := TStopwatch.StartNew;
    if ApplyNow(False) then
       begin
+      LogPhase(sw, 'OK: ApplyNow', True);
       Hide;
+      LogPhase(sw, 'OK: Hide');
       end;
 end;
 
 procedure TPrefsForm.DiscardChanges;
+var
+   sw: TStopwatch;
 begin
    // Throw the working copy away and reload from disk, so that reopening shows
    // what is actually stored rather than the edits just abandoned.
+   //
+   // NOTE THE COST: this repeats the whole of RefreshAll, which is the same work
+   // construction does -- including the COM enumeration and the cluster file.
+   // That is why the CLOSE is timed too; NY4I reported a delay on the way out as
+   // well as on the way in, and this is the only path that could explain it.
+   // ITS OWN WATCH, not FTiming.  The nested phase logging restarts FTiming, so
+   // a total read from it afterwards reports only the last phase -- which is
+   // exactly what it did on the first run here: 2 ms against a 3.6 s reality.
+   sw := TStopwatch.StartNew;
    FStore.Clear;
    LoadStore;
-   Dirty := False;
    RefreshAll;
+   // CLEARED AFTER THE REFRESH, not before.  Repopulating the controls fires
+   // their change events, and while FLoading suppresses the marker, clearing the
+   // flag first would leave the form dirty the moment anything slipped past that
+   // guard -- discarding changes and being told there are unsaved changes.
+   Dirty := False;
+   LogPhase(sw, 'CANCEL: reload', True);
 end;
 
 procedure TPrefsForm.btnCancelClick(Sender: TObject);

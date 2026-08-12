@@ -740,6 +740,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 5
+        OnChangeTracking = edtRotatorNameChange
       end
       object lblRotatorType: TLabel
         Position.X = 12.000000000000000000
@@ -775,6 +776,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 9
+        OnChange = cbxRotatorPortChange
       end
       object lblRotatorBaud: TLabel
         Position.X = 12.000000000000000000
@@ -792,6 +794,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 11
+        OnChangeTracking = edtRotatorBaudChange
       end
       object lblRotatorBaudHint: TLabel
         Position.X = 240.000000000000000000
@@ -818,6 +821,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 14
+        OnChangeTracking = edtRotatorIPChange
       end
       object lblRotatorUDP: TLabel
         Position.X = 12.000000000000000000
@@ -835,6 +839,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 16
+        OnChangeTracking = edtRotatorUDPChange
       end
       object lblRotatorBands: TLabel
         Position.X = 12.000000000000000000
@@ -852,6 +857,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 18
+        OnChangeTracking = edtRotatorBandsChange
       end
       object lblRotatorBandsHint: TLabel
         Position.X = 12.000000000000000000
@@ -1918,6 +1924,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 7
+        OnChangeTracking = edtClusterNameChange
       end
       object lblClusterServer: TLabel
         Position.X = 12.000000000000000000
@@ -1936,6 +1943,7 @@ object PrefsForm: TPrefsForm
         Size.PlatformDefault = False
         TabOrder = 9
         OnChange = cbxClusterServerChange
+        OnEnter = cbxClusterServerEnter
       end
       object lblClusterServerHint: TLabel
         Position.X = 12.000000000000000000
@@ -1965,6 +1973,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 12
+        OnChangeTracking = edtClusterLoginChange
       end
       object lblClusterLoginHint: TLabel
         Position.X = 310.000000000000000000
@@ -1992,6 +2001,7 @@ object PrefsForm: TPrefsForm
         Size.PlatformDefault = False
         TabOrder = 15
         Password = True
+        OnChangeTracking = edtClusterPasswordChange
       end
       object lblClusterCommand: TLabel
         Position.X = 12.000000000000000000
@@ -2009,6 +2019,7 @@ object PrefsForm: TPrefsForm
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 17
+        OnChangeTracking = edtClusterCommandChange
       end
       object lblClusterCommandHint: TLabel
         Position.X = 12.000000000000000000
