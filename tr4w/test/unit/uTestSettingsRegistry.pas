@@ -50,33 +50,56 @@ uses
 
 // Backing variables for the settings under test.  Deliberately plain globals:
 // that is what the real settings wrap, so the tests exercise the same shape.
+type
+   { The storage a test setting binds to.
+     An OBJECT, because TBoolGetter and friends are method pointers now -- the
+     production side binds to a global's owner the same way. Fields are public
+     and read directly by the tests; this is a fixture, not an abstraction. }
+   TSettingsProbe = class
+   public
+      vBool: boolean;
+      vInt: integer;
+      vStr: string;
+      vEnum: string;
+      applyCount: integer;
+
+      function  GetBool: boolean;   procedure SetBool(aValue: boolean);
+      function  GetInt: integer;    procedure SetInt(aValue: integer);
+      function  GetStr: string;     procedure SetStr(aValue: string);
+      function  GetEnum: string;    procedure SetEnum(aValue: string);
+      procedure CountApply;
+   end;
+
 var
-   vBool: boolean;
-   vInt: integer;
-   vStr: string;
-   vEnum: string;
-   applyCount: integer;
+   probe: TSettingsProbe;
+
+function TSettingsProbe.GetBool: boolean;         begin Result := vBool; end;
+procedure TSettingsProbe.SetBool(aValue: boolean); begin vBool := aValue; end;
+function TSettingsProbe.GetInt: integer;          begin Result := vInt; end;
+procedure TSettingsProbe.SetInt(aValue: integer);  begin vInt := aValue; end;
+function TSettingsProbe.GetStr: string;           begin Result := vStr; end;
+procedure TSettingsProbe.SetStr(aValue: string);   begin vStr := aValue; end;
+function TSettingsProbe.GetEnum: string;          begin Result := vEnum; end;
+procedure TSettingsProbe.SetEnum(aValue: string);  begin vEnum := aValue; end;
+procedure TSettingsProbe.CountApply;               begin Inc(applyCount); end;
 
 function NewBool(const aKey: string): TBoolSetting;
 begin
    Result := TBoolSetting.Create(aKey, 'test',
-      function: boolean begin Result := vBool end,
-      procedure (v: boolean) begin vBool := v end);
+      probe.GetBool, probe.SetBool);
 end;
 
 function NewInt(const aKey: string; const aMin, aMax: integer): TIntSetting;
 begin
    Result := TIntSetting.Create(aKey, 'test',
-      function: integer begin Result := vInt end,
-      procedure (v: integer) begin vInt := v end,
+      probe.GetInt, probe.SetInt,
       aMin, aMax);
 end;
 
 function NewStr(const aKey: string; const aMax: integer): TStringSetting;
 begin
    Result := TStringSetting.Create(aKey, 'test',
-      function: string begin Result := vStr end,
-      procedure (v: string) begin vStr := v end,
+      probe.GetStr, probe.SetStr,
       aMax);
 end;
 
@@ -88,20 +111,20 @@ begin
    BeginTest('a boolean round-trips and accepts the spellings people type');
    s := NewBool('test.bool.spellings');
    try
-      vBool := False;
+      probe.vBool := False;
       CheckEquals('FALSE', s.AsText, 'renders FALSE');
 
       CheckTrue(s.TrySetText('TRUE', err), 'TRUE accepted: ' + err);
-      CheckTrue(vBool, 'and assigned');
+      CheckTrue(probe.vBool, 'and assigned');
       CheckEquals('TRUE', s.AsText, 'renders TRUE');
 
       // Generous on input, exact on output: config files get hand-edited.
       CheckTrue(s.TrySetText('no', err),  'no accepted');
-      CheckFalse(vBool, 'no means false');
+      CheckFalse(probe.vBool, 'no means false');
       CheckTrue(s.TrySetText('1', err),   '1 accepted');
-      CheckTrue(vBool, '1 means true');
+      CheckTrue(probe.vBool, '1 means true');
       CheckTrue(s.TrySetText('Off', err), 'Off accepted');
-      CheckFalse(vBool, 'Off means false');
+      CheckFalse(probe.vBool, 'Off means false');
    finally
       s.Free;
    end;
@@ -115,12 +138,12 @@ begin
    BeginTest('a refused boolean leaves the value ALONE');
    s := NewBool('test.bool.refuse');
    try
-      vBool := True;
+      probe.vBool := True;
       CheckFalse(s.TrySetText('banana', err), 'banana refused');
       CheckTrue(err <> '', 'and says why');
       // The half of "refused" that matters: reporting failure while assigning
       // anyway would have the caller show an error for a change that happened.
-      CheckTrue(vBool, 'value untouched by the refusal');
+      CheckTrue(probe.vBool, 'value untouched by the refusal');
    finally
       s.Free;
    end;
@@ -134,16 +157,16 @@ begin
    BeginTest('an integer outside its range is refused, and the value kept');
    s := NewInt('test.int.range', 1, 65535);
    try
-      vInt := 50001;
+      probe.vInt := 50001;
       CheckFalse(s.TrySetText('0', err),      '0 is below the range');
-      CheckEquals(50001, vInt, 'value untouched');
+      CheckEquals(50001, probe.vInt, 'value untouched');
       CheckFalse(s.TrySetText('70000', err),  '70000 is above the range');
-      CheckEquals(50001, vInt, 'value untouched');
+      CheckEquals(50001, probe.vInt, 'value untouched');
       CheckFalse(s.TrySetText('garbage', err),'garbage is not a number');
-      CheckEquals(50001, vInt, 'value untouched');
+      CheckEquals(50001, probe.vInt, 'value untouched');
 
       CheckTrue(s.TrySetText('1024', err), '1024 accepted: ' + err);
-      CheckEquals(1024, vInt, 'and assigned');
+      CheckEquals(1024, probe.vInt, 'and assigned');
    finally
       s.Free;
    end;
@@ -162,18 +185,18 @@ begin
    // these and nothing else.
    s := NewInt('test.int.allowed', 0, 100).Allowed([0, 3, 4, 5]);
    try
-      vInt := 4;
+      probe.vInt := 4;
       CheckFalse(s.TrySetText('2', err), '2 is not in the list');
-      CheckEquals(4, vInt, 'value untouched');
+      CheckEquals(4, probe.vInt, 'value untouched');
       CheckTrue(err <> '', 'and says why');
 
       CheckTrue(s.TrySetText('5', err), '5 is in the list: ' + err);
-      CheckEquals(5, vInt, 'and assigned');
+      CheckEquals(5, probe.vInt, 'and assigned');
 
       // Inside the min/max but not in the list -- the list is the stricter
       // rule and must win, or the range silently re-admits what it excluded.
       CheckFalse(s.TrySetText('50', err), '50 is in range but not in the list');
-      CheckEquals(5, vInt, 'value untouched');
+      CheckEquals(5, probe.vInt, 'value untouched');
    finally
       s.Free;
    end;
@@ -190,9 +213,9 @@ begin
    // no explanation.  Refusing is the honest answer.
    s := NewStr('test.str.length', 10);
    try
-      vStr := 'NY4I';
+      probe.vStr := 'NY4I';
       CheckFalse(s.TrySetText('THIS IS FAR TOO LONG', err), 'refused');
-      CheckEquals('NY4I', vStr, 'value untouched -- NOT truncated');
+      CheckEquals('NY4I', probe.vStr, 'value untouched -- NOT truncated');
       CheckTrue(Pos('10', err) > 0, 'the message names the limit: ' + err);
    finally
       s.Free;
@@ -208,7 +231,7 @@ begin
    s := NewStr('test.str.trim', 0);
    try
       CheckTrue(s.TrySetText('  spaced  ', err), 'accepted');
-      CheckEquals('  spaced  ', vStr,
+      CheckEquals('  spaced  ', probe.vStr,
                   'stored verbatim: silently eating a space turns "wrong password" into a puzzle');
    finally
       s.Free;
@@ -222,18 +245,17 @@ var
 begin
    BeginTest('an enum stores the DECLARED spelling, whatever case was typed');
    s := TEnumSetting.Create('test.enum', 'test',
-      function: string begin Result := vEnum end,
-      procedure (v: string) begin vEnum := v end,
+      probe.GetEnum, probe.SetEnum,
       ['NONE', 'DXKEEPER', 'ACLOG', 'HRD']);
    try
-      vEnum := 'NONE';
+      probe.vEnum := 'NONE';
       CheckTrue(s.TrySetText('dxkeeper', err), 'lower case accepted: ' + err);
       // One spelling in the system: a hand-edited file is normalised on the
       // next save rather than carrying a variant that only some code matches.
-      CheckEquals('DXKEEPER', vEnum, 'normalised to the declared spelling');
+      CheckEquals('DXKEEPER', probe.vEnum, 'normalised to the declared spelling');
 
       CheckFalse(s.TrySetText('LOGGER32', err), 'an unknown value is refused');
-      CheckEquals('DXKEEPER', vEnum, 'value untouched');
+      CheckEquals('DXKEEPER', probe.vEnum, 'value untouched');
    finally
       s.Free;
    end;
@@ -250,15 +272,15 @@ begin
    // that did not happen; not running it after a success leaves the program
    // holding a value nothing has reacted to.  Both are silent in the old table.
    s := NewInt('test.int.apply', 1, 10);
-   applyCount := 0;
-   s.OnApply := procedure begin Inc(applyCount) end;
+   probe.applyCount := 0;
+   s.OnApply := probe.CountApply;
    try
-      vInt := 5;
+      probe.vInt := 5;
       CheckTrue(s.TrySetText('7', err), 'accepted');
-      CheckEquals(1, applyCount, 'OnApply ran once');
+      CheckEquals(1, probe.applyCount, 'OnApply ran once');
 
       CheckFalse(s.TrySetText('99', err), 'refused');
-      CheckEquals(1, applyCount, 'OnApply did NOT run for the refusal');
+      CheckEquals(1, probe.applyCount, 'OnApply did NOT run for the refusal');
    finally
       s.Free;
    end;
@@ -411,6 +433,10 @@ end;
 
 procedure TSettingsRegistryTests.RunAllTests;
 begin
+   // The fixture's storage. Created here rather than in an initialization
+   // section so a failing suite cannot leave one behind for the next run.
+   probe := TSettingsProbe.Create;
+   try
    Test_BoolRoundTripsAndAcceptsCommonSpellings;
    Test_BoolRefusesNonsenseAndKeepsItsValue;
    Test_IntRangeIsEnforced;
@@ -424,6 +450,9 @@ begin
    Test_SelfStoringNeedsNoGlobal;
    Test_SelfStoringInstancesAreIndependent;
    Test_SelfStoringEnumRefusesADefaultOutsideItsValues;
+   finally
+      FreeAndNil(probe);
+   end;
 end;
 
 end.

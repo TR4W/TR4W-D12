@@ -233,3 +233,76 @@ easy ones.
    separate, and there is no point moving platforms while the dialect question is open.
 4. Check whether a 3.3.x build changes item 1, but treat "requires a development compiler" as a
    finding in its own right, not a workaround.
+
+## The hard one, priced -- `uSettingsRegistry`
+
+The unit flagged as the one that would NOT follow the easy pattern, because its `Own` constructors
+capture a one-element dynamic array specifically to give a setting storage with no object behind it.
+
+**Result: compiles clean under FPC 3.2.2 (815 lines). Delphi still builds. 3,795 tests pass.**
+**About 45 minutes**, including two self-inflicted mis-steps -- a duplicated `type` keyword, and one
+scripted replacement that silently no-op'd because its pattern was not converted to CRLF.
+
+| Change | Detail |
+|---|---|
+| `TFunc<T>` / `TProc<T>` -> 6 method-pointer types | `TBoolGetter`, `TBoolSetter`, ... |
+| `TProc` (`OnApply`) -> `TSettingApplyProc` | `procedure of object` |
+| 3 cell classes | `TBoolCell`, `TIntCell`, `TStringCell` -- ~45 lines |
+| `TSettingBase` owns its cell | `FOwnedCell` + destructor + `OwnCell` -- ~15 lines |
+| 4 `Own` bodies rewritten | 3 lines each |
+| Test globals -> `TSettingsProbe` | ~40 references, scripted |
+| `RegisterLegacySetting` | **no change** -- `TLegacySetting` was already a class |
+
+### The captured array was a cell object with the object left out
+
+That is the whole finding. `Own` held a one-element array so the closure had something outliving the
+call -- which is a cell object missing its object. Putting the object back gives the same lifetime
+and the same single value, and now there is something a method pointer can point at. The setting
+owns the cell it creates, so a self-storing setting still cleans up after itself exactly as the
+captured array did.
+
+**This is a better design than the closure**, for the same reason the rotator change was: it names
+the owner of the state instead of implying it. That `RegisterLegacySetting` needed no change at all
+is the confirmation -- the parts of this unit that were already objects were already portable.
+
+### Revised estimate for the remaining 5 units
+
+Both priced units came in cheap AND improved the code, and they were deliberately the smallest and
+the hardest. Three shapes now cover everything seen:
+
+- **captures nothing** -> a named function (free)
+- **captures one object** -> a method on it (cheap, clearer)
+- **captures a value with no owner** -> a cell object (cheap, clearer)
+
+The remaining five -- the radio registry's self-registration closures, `TProcessMsgRef`, and the
+`uSettingsBinding` / `uSettingsDeclarations` call sites -- are all the first two shapes.
+**Estimate: half a day for the lot**, and the result is code worth having under Delphi.
+
+**The anonymous-method blocker should be struck from the risk list.** It was the #1 technical risk in
+the SWOT; measured twice, it is a day of mechanical work that improves the design.
+
+## Cross-compilation -- measured, and then made moot
+
+The installed FPC has `ppcx64.exe` only, `x86_64-win64` units only, and no cross binutils: **it
+cannot cross-compile anything today.** Adding a target needs three things, and only the first is
+FPC's -- a cross-compiler binary, cross binutils, and the target's system libraries.
+
+- **Linux from Windows: practical.** glibc/crt objects are freely redistributable and `fpcupdeluxe`
+  automates the chain.
+- **macOS ARM from Windows: the worst available path.** It needs Apple's licence-restricted SDK
+  copied off a Mac, a Mach-O linker, and signing -- Apple Silicon will not execute an unsigned
+  binary, and `codesign` is macOS-only.
+- **A GUI app is harder than the spike.** Cross-compiling the test suite is the easy case: a console
+  program with no widget dependencies. The eventual Lazarus app additionally needs the target's GUI
+  libraries (GTK dev files, Cocoa frameworks). A successful cross-compile of the spike would NOT
+  prove the app cross-compiles.
+
+**Made moot 2026-08-12:** NY4I has self-hosted CI runners for **macOS, Windows, Linux and Raspberry
+Pi**. So the answer is native builds per platform, no cross toolchain, no SDK smuggling, no signing
+gymnastics -- and the spike's Linux/macOS legs have somewhere to run as soon as the Windows leg is
+green. Build the toolchain nobody has to assemble.
+
+**The RPi runner is worth noting on its own:** ARM Linux desktop is a target Delphi does not reach at
+all, FMX Linux or not. It is the first item in this whole exercise that moved TOWARD Lazarus on
+capability rather than governance.
+
