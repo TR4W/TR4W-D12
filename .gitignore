@@ -113,3 +113,5 @@ spike/units/
 spike/*.exe
 spike/*.o
 spike/*.ppu
+spike/*.exe
+spike/units/

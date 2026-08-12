@@ -280,9 +280,17 @@ begin
    Self.SendBytes(modeByte, $00, $00, $00, FT767_SET_MODE_OPCODE);
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateFT767: TFactoryRadioBase;
+begin
+   Result := TFT767Radio.Create;
+end;
+
 initialization
   RegisterRadio(FT767,
-     function: TFactoryRadioBase begin Result := TFT767Radio.Create end,
+     CreateFT767,
      'Yaesu FT-767', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      ,

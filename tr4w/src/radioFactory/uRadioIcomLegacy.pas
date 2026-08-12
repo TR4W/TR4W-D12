@@ -167,32 +167,55 @@ begin
   radioModel := 'Icom IC-7000';
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateIcom706: TFactoryRadioBase;
+begin
+   Result := TIcom706Radio.Create;
+end;
+
+function CreateIcom706MkII: TFactoryRadioBase;
+begin
+   Result := TIcom706MkIIRadio.Create;
+end;
+
+function CreateIcom706MkIIG: TFactoryRadioBase;
+begin
+   Result := TIcom706MkIIGRadio.Create;
+end;
+
+function CreateIcom7000: TFactoryRadioBase;
+begin
+   Result := TIcom7000Radio.Create;
+end;
+
 initialization
   logger := TLogLogger.GetLogger('uRadioIcomLegacy');
 
   RegisterRadio(IC706,
-     function: TFactoryRadioBase begin Result := TIcom706Radio.Create end,
+     CreateIcom706,
      'Icom IC-706', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
      ,
      3009
      , 72);
   RegisterRadio(IC706II,
-     function: TFactoryRadioBase begin Result := TIcom706MkIIRadio.Create end,
+     CreateIcom706MkII,
      'Icom IC-706MkII', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
      ,
      3010
      , 78);
   RegisterRadio(IC706IIG,
-     function: TFactoryRadioBase begin Result := TIcom706MkIIGRadio.Create end,
+     CreateIcom706MkIIG,
      'Icom IC-706MkIIG', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
      ,
      3011
      , 88);
   RegisterRadio(IC7000,
-     function: TFactoryRadioBase begin Result := TIcom7000Radio.Create end,
+     CreateIcom7000,
      'Icom IC-7000', [rlSerial], 0, False,
      SerialParams(9600, 8, PARITY_NONE, 1)
      ,

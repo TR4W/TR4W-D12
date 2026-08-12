@@ -72,14 +72,52 @@ begin
    Result.radioModel := uRadioRegistry.DisplayName(model);
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateFlrig: TFactoryRadioBase;
+begin
+   Result := MakeHamLibRadio(FLRIG, 4);
+end;
+
+function CreateTrxmanager: TFactoryRadioBase;
+begin
+   Result := MakeHamLibRadio(TRXMANAGER, 5);
+end;
+
+function CreateExperttci: TFactoryRadioBase;
+begin
+   Result := MakeHamLibRadio(EXPERTTCI, 7);
+end;
+
+function CreateAclog: TFactoryRadioBase;
+begin
+   Result := MakeHamLibRadio(ACLOG, 8);
+end;
+
+function CreateHamlibany: TFactoryRadioBase;
+begin
+   Result := MakeHamLibRadio(HAMLIBANY, 1);
+end;
+
+function CreateFt736R: TFactoryRadioBase;
+begin
+   Result := MakeHamLibRadio(FT736R, 1010);
+end;
+
+function CreateFt757Gxii: TFactoryRadioBase;
+begin
+   Result := MakeHamLibRadio(FT757GXII, 1007);
+end;
+
 initialization
    // Software bridges (TCP links to other programs; hamlib "dummy" backend family).
    RegisterHamLibOnlyRadio(FLRIG,
-      function: TFactoryRadioBase begin Result := MakeHamLibRadio(FLRIG, 4) end,
+      CreateFlrig,
       'FLRig (HamLib bridge)', 4,
       SerialParams(57600, 8, PARITY_NONE, 2));
    RegisterHamLibOnlyRadio(TRXMANAGER,
-      function: TFactoryRadioBase begin Result := MakeHamLibRadio(TRXMANAGER, 5) end,
+      CreateTrxmanager,
       'TRX-Manager (HamLib bridge)', 5,
       SerialParams(57600, 8, PARITY_NONE, 2));
    // TCI IS NOT A HAMLIB PROTOCOL, and this row is a placeholder, not a design.
@@ -93,17 +131,17 @@ initialization
    // deliberately: it will be replaced by a native TCI driver, not repaired.
    // See tools/hamlib-crosscheck/check_rig_models.py, which flags it every run.
    RegisterHamLibOnlyRadio(EXPERTTCI,
-      function: TFactoryRadioBase begin Result := MakeHamLibRadio(EXPERTTCI, 7) end,
+      CreateExperttci,
       'Expert TCI (HamLib bridge)', 7,
       SerialParams(57600, 8, PARITY_NONE, 2));
    RegisterHamLibOnlyRadio(ACLOG,
-      function: TFactoryRadioBase begin Result := MakeHamLibRadio(ACLOG, 8) end,
+      CreateAclog,
       'N3FJP ACLog (HamLib bridge)', 8,
       SerialParams(57600, 8, PARITY_NONE, 2));
    // "Any rig HamLib knows" -- the stored ID 1 (hamlib dummy) is a placeholder;
    // the real rig_model ALWAYS comes from the RADIO n HAMLIB ID config command.
    RegisterHamLibOnlyRadio(HAMLIBANY,
-      function: TFactoryRadioBase begin Result := MakeHamLibRadio(HAMLIBANY, 1) end,
+      CreateHamlibany,
       'HamLib (any supported rig)', 1,
       SerialParams(57600, 8, PARITY_NONE, 2));
 
@@ -111,11 +149,11 @@ initialization
    // FT-736R: TR4W never had a working native read path (the legacy pFT736R
    // stub wrote one enable frame and returned) -- hamlib 1010 drives it properly.
    RegisterHamLibOnlyRadio(FT736R,
-      function: TFactoryRadioBase begin Result := MakeHamLibRadio(FT736R, 1010) end,
+      CreateFt736R,
       'Yaesu FT-736R (via HamLib)', 1010,
       SerialParams(4800, 8, PARITY_NONE, 2));
    RegisterHamLibOnlyRadio(FT757GXII,
-      function: TFactoryRadioBase begin Result := MakeHamLibRadio(FT757GXII, 1007) end,
+      CreateFt757Gxii,
       'Yaesu FT-757GXII (via HamLib)', 1007,
       SerialParams(4800, 8, PARITY_NONE, 2));
 

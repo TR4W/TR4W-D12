@@ -162,26 +162,32 @@ right than it was.
 - **All three desktop platforms are first-party.** LCL targets Windows (Win32/WinAPI), Linux
   (GTK2/GTK3/Qt5/Qt6) and macOS (Cocoa, including Apple Silicon) as peers. The stated platform
   matrix is reachable.
+
 - **Free and unrestricted, permanently.** GPL/LGPL with a linking exception. No licence server, no
   revenue cap, no activation. Any contributor can clone and build; CI can build all three platforms
   on stock GitHub runners with no licence provisioning. For "open to community contributors" this is
   not a preference, it is the requirement.
+
 - **LCL is a closer conceptual match to TR4W than FMX is.** LCL wraps *native* widgets and is
   VCL-shaped — handle-backed controls, owner-draw, message-ish semantics. TR4W's UI is HWND and
   owner-draw throughout. Porting a Win32 app to a native-widget toolkit is a shorter conceptual leap
   than porting it to a render-everything framework, and it preserves the native look and the
   responsiveness budget in `CLAUDE.md`.
+
 - **FPC is more comfortable with this code than modern Delphi is.** 451 `ShortString` sites,
   procedural style, records everywhere, a DOS heritage — FPC's dialect support is excellent and its
   `{$MODE DELPHI}` covers most of the tree. The `{$CODEPAGE}` directive the lang files wanted, and
   that Delphi rejects with `E1030`, is an FPC feature.
+
 - **Longevity by construction.** No vendor can reprice, restrict or discontinue it. For a 10-year
   horizon whose real question is succession, that is the strongest single argument.
+
 - **Translation tooling that still exists.** NY4I, 2026-08-12: Delphi has been deprecating its
   localisation tools (the Integrated Translation Environment / External Translation Manager), while
   FPC and Lazarus support **GNU gettext `.po` files** natively -- `resourcestring` values are
   extracted to `.po`, and Lazarus ships a translator unit that loads them at run time. This is not a
   small point for TR4W:
+
   - The **ENG + 8** language matrix currently costs **nine separate builds**, selected by the
     `LANG_xxx` compiler defines in `VC.pas`. `.po` files are loaded at run time, so that collapses to
     **one build per platform** -- which is exactly what the localisation brief

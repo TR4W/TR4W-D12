@@ -61,7 +61,12 @@ type
    TFactoryRadioBase = uFactoryRadioBase.TFactoryRadioBase;
 
    // A factory radio is created by invoking its registered constructor function.
-   TRadioCtor = reference to function: TFactoryRadioBase;
+   //
+   // A PLAIN procedure pointer, not `reference to`.  All 101 registrations name
+   // a unit-level function that captures nothing -- the anonymous form bought
+   // nothing here and cost a closure-capable compiler (FPC 3.2.2 stable has
+   // none).  Same change, same reasoning, as the rotator factory.
+   TRadioCtor = function: TFactoryRadioBase;
 
    // Which transports the factory can build this radio for.  A radio configured
    // on the "wrong" transport (e.g. a network-only Kenwood on a serial port)

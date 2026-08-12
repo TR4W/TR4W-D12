@@ -147,10 +147,18 @@ begin
   // IC-9700 has no XIT. No-op.
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateIcom9700: TFactoryRadioBase;
+begin
+   Result := TIcom9700Radio.Create;
+end;
+
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom9700');
   RegisterRadio(IC9700,
-     function: TFactoryRadioBase begin Result := TIcom9700Radio.Create end,
+     CreateIcom9700,
      'Icom IC-9700', [rlSerial, rlNetwork], 50001, True,
      SerialParams(38400, 8, PARITY_NONE, 1)
      ,

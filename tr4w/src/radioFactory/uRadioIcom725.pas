@@ -54,9 +54,17 @@ begin
    radioModel := 'Icom IC-725';
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateIcom725: TFactoryRadioBase;
+begin
+   Result := TIcom725Radio.Create;
+end;
+
 initialization
   RegisterRadio(IC725,
-     function: TFactoryRadioBase begin Result := TIcom725Radio.Create end,
+     CreateIcom725,
      'Icom IC-725', [rlSerial], 0, False,
      SerialParams(1200, 8, PARITY_NONE, 1)
      ,

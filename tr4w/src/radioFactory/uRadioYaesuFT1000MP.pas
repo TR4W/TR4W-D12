@@ -501,9 +501,17 @@ begin
    Result := YAESU_PTT_OFF_0F;
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateFT1000MP: TFactoryRadioBase;
+begin
+   Result := TFT1000MPRadio.Create;
+end;
+
 initialization
   RegisterRadio(FT1000MP,
-     function: TFactoryRadioBase begin Result := TFT1000MPRadio.Create end,
+     CreateFT1000MP,
      'Yaesu FT-1000MP', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      ,

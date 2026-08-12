@@ -58,9 +58,17 @@ begin
    radioModel := 'Ten-Tec Omni VI (CI-V)';
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateTenTecOmni6: TFactoryRadioBase;
+begin
+   Result := TTenTecOmni6Radio.Create;
+end;
+
 initialization
   RegisterRadio(OMNI6,
-     function: TFactoryRadioBase begin Result := TTenTecOmni6Radio.Create end,
+     CreateTenTecOmni6,
      'Ten-Tec Omni VI (CI-V)', [rlSerial], 0, False,
      SerialParams(9600, 8, PARITY_NONE, 1)
      ,

@@ -127,10 +127,18 @@ begin
    FCapabilities.Flags := FCapabilities.Flags + [rcCWSpeedSync, rcPlayDVK];
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateYaesuFT991: TFactoryRadioBase;
+begin
+   Result := TYaesuFT991Radio.Create;
+end;
+
 initialization
   // FT-991 and FT-991A are the same radio to CAT; TR4W's enum has one member.
   RegisterRadio(FT991,
-     function: TFactoryRadioBase begin Result := TYaesuFT991Radio.Create end,
+     CreateYaesuFT991,
      'Yaesu FT-991', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      ,

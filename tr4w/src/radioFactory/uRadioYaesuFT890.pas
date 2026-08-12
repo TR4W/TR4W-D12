@@ -59,9 +59,17 @@ begin
    FModeDIGU := MODEBYTE_NONE;
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateFT890: TFactoryRadioBase;
+begin
+   Result := TFT890Radio.Create;
+end;
+
 initialization
   RegisterRadio(FT890,
-     function: TFactoryRadioBase begin Result := TFT890Radio.Create end,
+     CreateFT890,
      'Yaesu FT-890', [rlSerial], 0, False,
      SerialParams(4800, 8, PARITY_NONE, 2)
      ,

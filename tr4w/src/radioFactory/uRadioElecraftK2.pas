@@ -66,9 +66,17 @@ begin
    Result := '@';
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateK2: TFactoryRadioBase;
+begin
+   Result := TK2Radio.Create;
+end;
+
 initialization
   RegisterRadio(K2,
-     function: TFactoryRadioBase begin Result := TK2Radio.Create end,
+     CreateK2,
      'Elecraft K2', [rlSerial], 0, False,
      // 1 stop bit: Elecraft serial is 8N1 (NY4I 2026-07-30, corroborated by the
      // Elecraft docs and HamLib's kenwood/elecraft backends).  The old 2 came

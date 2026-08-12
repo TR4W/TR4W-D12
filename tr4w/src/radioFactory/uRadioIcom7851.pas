@@ -85,13 +85,21 @@ begin
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateIcom7851: TFactoryRadioBase;
+begin
+   Result := TIcom7851Radio.Create;
+end;
+
 initialization
   logger := TLogLogger.GetLogger('uRadioIcom7851');
   // Its OWN registry entry so a 7851 owner finds THEIR radio in the list -- a
   // 7850 standing in for both reads as "this build does not support my radio".
   // It also keeps radioModel honest, so their log and bug report say IC-7851.
   RegisterRadio(IC7851,
-     function: TFactoryRadioBase begin Result := TIcom7851Radio.Create end,
+     CreateIcom7851,
      'Icom IC-7851', [rlSerial, rlNetwork], 50001, True,
      SerialParams(19200, 8, PARITY_NONE, 1)
      ,

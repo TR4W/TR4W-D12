@@ -937,9 +937,17 @@ begin
    // IF response and the K4's; see TElecraftRadio.ParseIFCommand.
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateK4: TFactoryRadioBase;
+begin
+   Result := TK4Radio.Create;
+end;
+
 initialization
   RegisterRadio(K4,
-     function: TFactoryRadioBase begin Result := TK4Radio.Create end,
+     CreateK4,
      'Elecraft K4', [rlSerial, rlNetwork], 9200, True,
      // 1 stop bit: Elecraft serial is 8N1 (NY4I 2026-07-30) -- see uRadioElecraftK2.
      SerialParams(38400, 8, PARITY_NONE, 1)

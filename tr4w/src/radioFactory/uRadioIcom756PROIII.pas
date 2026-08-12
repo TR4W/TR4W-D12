@@ -62,9 +62,17 @@ begin
    FCapabilities.Flags := FCapabilities.Flags + [rcCWSpeedSync];
 end;
 
+// NAMED unit-level constructors, not anonymous functions.  None of these
+// captured anything, so the anonymous form bought nothing and cost a
+// closure-capable compiler; TRadioCtor is a plain procedure pointer now.
+function CreateIcom756PROIII: TFactoryRadioBase;
+begin
+   Result := TIcom756PROIIIRadio.Create;
+end;
+
 initialization
   RegisterRadio(IC756PROIII,
-     function: TFactoryRadioBase begin Result := TIcom756PROIIIRadio.Create end,
+     CreateIcom756PROIII,
      'Icom IC-756PROIII', [rlSerial], 0, False,
      SerialParams(9600, 8, PARITY_NONE, 1)
      ,
