@@ -475,3 +475,77 @@ larger slice of the suite, which promotes them from "cheapest first move" to
 `spike/fpc-compile.ps1` is the harness, checked in so the next measurement is one
 command rather than a reconstructed command line.
 
+## STEP 8 -- the inline assembly, counted properly and then removed
+
+### The count was wrong, and wrong in the helpful direction
+
+A raw grep says **40 `asm` blocks across 23 units**. Blanking Pascal comments
+first says **19 live blocks across 7 units**; the other 49 hits are text sitting
+inside `{ }` or `(* *)`. Two were verified by hand (`LOGK1EA`'s `INT $F1`,
+`uCallsigns`' comparison) rather than trusted to the classifier.
+
+That reclassification is the difference between a daunting job and a bounded one.
+
+### Removed so far
+
+| Unit | Blocks | What it was |
+|---|---:|---|
+| `utils_text` | 2 | `StrComp`, `StrUpper` -- now Pascal, characterization-tested first |
+| `uCRC32` | 3 | now the RTL's CRC-32, no algorithm of our own |
+| `JCTRL2` | 1 | `asm xor ebx,ebx end;` -- a register clobber with no effect |
+| `MainUnit` | 6 | the custom memory manager (below) |
+| `BeepUnit` | 2 | PC-speaker port I/O (below) |
+
+`uStrSearch` had already been converted under Issue #997; its only remaining
+blocker was `System.AnsiStrings`, and **that is the one dotted name this log got
+wrong**. `System.SysUtils` and `System.Classes` drop their prefix because FPC has
+`sysutils` and `classes`. FPC has **no `AnsiStrings` unit at all** -- it ships the
+classic `strings` instead. Checked in the FPC unit directory, not assumed.
+`uStrSearch` now owns the two routines it borrowed and has no uses clause.
+
+### Two things worth more than the assembly they were written in
+
+**The custom memory manager in `MainUnit` never ran and could not have been
+right.** Each hook opened with `add esp,12 / pop PreviousProcAddress /
+sub esp,16` to reach up the stack for the caller's return address -- assuming the
+Delphi 7 frame layout, in a function that also carried a `try/except` whose SEH
+record lives on that same stack. Its handler called `wsprintfA` and
+`showwarning` from inside a `GetMem` callback that had fired *because allocation
+failed*. And `SetNewMemMgr` was only ever called under `{$IF tDebugMode}`, which
+is `False`. Deleted.
+
+**`BeepUnit`'s `Sound()` executed privileged instructions.** `IN`/`OUT` on ports
+`$42`/`$43`/`$61` fault from user mode on any NT Windows; they last worked on
+Windows Me. Nothing supported reached them -- `LOGK1EA`'s two calls sat behind
+`WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS`, and `tree.pas`'s `Dit`/`Dah`
+were not in that unit's interface and had no callers. Deleted along with the
+dead Windows 9x branches, so the sidetone path no longer asks what OS it is on.
+
+**`NoSound` was NOT deleted**, and this is the cautionary half. It has five live
+callers, four of them in TRDOS, and they call it **without parentheses** -- so a
+`NoSound\s*\(` search finds none of them. Its body was already inside the same
+Windows 9x guard, so it has always been a no-op on supported systems; it is now
+an explicit one. NY4I's rule earned its keep here: *check that the code is still
+referenced, especially in TRDOS.*
+
+### Still open in `BeepUnit`, and it is a decision rather than a translation
+
+`ntBeep` drives `\Device\Beep` by IOCTL. On Windows 10/11 `beep.sys` is commonly
+disabled and most machines have no PC speaker, so `CreateFile` fails, `hBeep`
+stays invalid, and **every beep silently does nothing**.
+
+`Windows.Beep` is the documented modern replacement and does synthesize through
+the sound card -- but it **blocks for the duration**, while the IOCTL returns
+immediately and `LOGK1EA` does its own `tCWSleep` afterwards. Swapping it in
+would double every CW element. The real answer is a sidetone on its own thread
+(waveOut/XAudio2), which is also the only version that survives leaving Win32.
+
+### Remaining live blocks
+
+`MainUnit` 7 (RDTSC `GetCPU`, an LPT-driver IOCTL dispatcher, `wsprintf` varargs
+shims), `TF.pas` 2 (`_Pow10`/`ValExt` float parsing -- TF's own comment already
+scopes this as needing a golden harness for the CTY.DAT lat/lon path),
+`DLPortIO` 2, `tr4wserverUnit` 2 and `uWinKey` 2. The last two pairs sit inside
+`{$IF SERVERDEBUG}` and `{$IF K6VVA_WK_DEBUG}`, both `False`, so they do not
+compile today and block nothing.
+

@@ -2369,12 +2369,11 @@ begin
         TurnOnActivePort;
         CWElementLength := round(Weight * (CWBuffer^[CWBufferStart].length * ElementLength) / 10.0);
 
-        if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then
-          Sound(CWTone)
-        else
-          ntBeep(CWTone, CWElementLength);
+        // Was: Sound(CWTone) on Windows 9x, ntBeep otherwise, then NoSound.
+        // The 9x arm drove the PC speaker through privileged IN/OUT and could
+        // not execute on any NT Windows, so this is the branch that always ran.
+        ntBeep(CWTone, CWElementLength);
         tCWSleep(CWElementLength, tCW_Event);
-        if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then NoSound;
       end
       else
       begin
@@ -2737,16 +2736,14 @@ begin
           if DitContact then CWElementLength := tPaddleElementLength * 3;
         end;
 
-        if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then
-          Sound(PaddleMonitorTone)
-        else
-          ntBeep(PaddleMonitorTone, CWElementLength);
+        // See the note at the CW-buffer sidetone above: the Windows 9x arm
+        // (Sound/NoSound over privileged IN/OUT) could never run here.
+        ntBeep(PaddleMonitorTone, CWElementLength);
 
             //        Sleep(CWElementLength);
         tCWSleep(CWElementLength, tCWPaddle_Event);
 
         TurnOffActivePort;
-        if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then NoSound;
       end
       else
       begin
