@@ -861,6 +861,8 @@ var
    // shadows the TYPE RadioPtr in its own declaration.
    slotRadio: RadioPtr;
    previousCATWTR: RadioPtr;
+   // Per-phase timing -- see the comment at the first log line below.
+   tStart, tPhase: cardinal;
 begin
    aError := '';
    Result := False;
@@ -888,6 +890,21 @@ begin
          end;
       end;
 
+   // TIMED, PER PHASE.  NY4I: "there seems to be a noticable delay when swapping
+   // profiles... to debug this, consider if we need more debug log messages
+   // right after the user selects the next profile and presses Activate."
+   //
+   // Timing each phase rather than the whole thing, because the answer decides
+   // what to do next and the phases have very different fixes: closing ports is
+   // waiting on the OS and on a polling thread noticing; writing keys is CPU;
+   // reopening is the radio's own startup.  A single total would say "it is
+   // slow" and nothing more.
+   //
+   // The swap case NY4I describes -- the same two radios trading slots, both
+   // already connected -- is the one worth measuring: everything gets torn down
+   // and rebuilt to reach a state that was already true.  Whether that is worth
+   // an exception path is a decision to make from numbers, not from a hunch.
+   tStart := GetTickCount;
    logger.Info('[ApplyProfile] Applying profile "%s"', [aProfile.Name]);
 
    // CATWTR is the "radio being configured" that uCAT's helpers work through.
@@ -915,6 +932,9 @@ begin
          // not released yet.
          CloseCATAndKeyerForThisRadio;
          end;
+      logger.Info('[ApplyProfile] phase 1 -- both radios stopped: %d ms',
+                  [GetTickCount - tStart]);
+      tPhase := GetTickCount;
 
       // Once, across both slots -- the enable flag is one flag for the program.
       ApplyKeyersForProfile(aKeyers, aProfile);
@@ -950,7 +970,13 @@ begin
          // A radio that fails to connect is NOT an apply failure: the port may
          // be busy, the rig may be off.  That is reported the same way it is
          // for any other connection attempt, and the profile is still active.
+         logger.Info('[ApplyProfile] phase 2 -- keys written for both slots: %d ms',
+                     [GetTickCount - tPhase]);
+         tPhase := GetTickCount;
          slotRadio^.CheckAndInitializePorts_ForThisRadio;
+         logger.Info('[ApplyProfile] phase 3 -- radio %d port opened: %d ms',
+                     [slot, GetTickCount - tPhase]);
+         tPhase := GetTickCount;
          end;
    finally
       CATWTR := previousCATWTR;
@@ -962,6 +988,8 @@ begin
    DisplayRadio(ActiveRadio);
 
    aStore.ActiveProfileName := aProfile.Name;
+    logger.Info('[ApplyProfile] profile "%s" active after %d ms total',
+                [aProfile.Name, GetTickCount - tStart]);
    Result := True;
 end;
 

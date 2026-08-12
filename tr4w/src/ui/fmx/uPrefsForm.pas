@@ -3774,8 +3774,33 @@ begin
 end;
 
 procedure TPrefsForm.btnActivateClick(Sender: TObject);
+var
+   oldCaption: string;
 begin
-   ApplyNow(True);
+   // ACTIVATING TAKES SECONDS AND LOOKS LIKE NOTHING (NY4I).  Both radios are
+   // closed and reopened, and closing waits on the OS and on a polling thread
+   // noticing -- so the window sits there with no cursor change and no message,
+   // which reads as a hang.  An operator who clicks again during it starts a
+   // SECOND teardown on top of the first.
+   //
+   // The button says what is happening and is disabled while it happens, which
+   // costs nothing and removes the double-click.  Whether the wait itself can
+   // be shortened is a separate question, and the per-phase timings now in the
+   // log are what will answer it.
+   oldCaption := btnActivate.Text;
+   btnActivate.Text    := 'Activating...';
+   btnActivate.Enabled := False;
+   Cursor := crHourGlass;
+   try
+      // Repainted before the work starts, or the new caption never appears --
+      // the whole apply runs without returning to the message loop.
+      Application.ProcessMessages;
+      ApplyNow(True);
+   finally
+      Cursor := crDefault;
+      btnActivate.Text    := oldCaption;
+      btnActivate.Enabled := True;
+   end;
 end;
 
 procedure TPrefsForm.btnApplyClick(Sender: TObject);
