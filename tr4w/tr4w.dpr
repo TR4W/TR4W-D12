@@ -1052,27 +1052,33 @@ begin
   if CTYUpdateCheckOnStartup then
      CheckCTYVersionAsync(tr4whandle);
 
-  asm
-  mov  ebx,0
-  push ebx
-  push ebx
-  push ebx
-  push ebx
-  call CreateEvent
-  mov  [tCW_Event],eax
+  // The four synchronization events: CW element, CW paddle, DVP playback and
+  // network.  All auto-reset, all starting unsignalled -- which is what the
+  // assembly this replaces built, by pushing four zeros for
+  // CreateEvent(nil, FALSE, FALSE, nil).
+  //
+  // Three things about that assembly were worth not keeping.  It opened with
+  // `mov ebx,0`, CLOBBERING EBX without saving it -- EBX is callee-saved in the
+  // Win32 ABI and the compiler may hold a local in it, and this sits in the
+  // middle of the startup path.  It reused the first call's arguments for the
+  // next three via `sub esp,16`, walking ESP back over stack bytes that
+  // CreateEvent's stdcall epilogue had already popped -- correct only for as
+  // long as nothing happens to touch that region in between.  And it checked no
+  // result: a failed CreateEvent left a 0 handle, after which every
+  // WaitForSingleObject on it fails forever, in silence.
+  tCW_Event       := CreateEvent(nil, False, False, nil);
+  tCWPaddle_Event := CreateEvent(nil, False, False, nil);
+  tDVP_Event      := CreateEvent(nil, False, False, nil);
+  tNet_Event      := CreateEvent(nil, False, False, nil);
 
-  sub  esp,16
-  call CreateEvent
-  mov  [tCWPaddle_Event],eax
-
-  sub  esp,16
-  call CreateEvent
-  mov  [tDVP_Event],eax
-
-  sub  esp,16
-  call CreateEvent
-  mov  [tNet_Event],eax
-  end;
+  if (tCW_Event = 0) or (tCWPaddle_Event = 0) or
+     (tDVP_Event = 0) or (tNet_Event = 0) then
+     begin
+     // Not fatal -- CW still keys, but tCWSleep falls back to plain Sleep() and
+     // the element timing coarsens.  Report it rather than degrade silently.
+     logger.Error('CreateEvent failed (CW=%d paddle=%d DVP=%d net=%d), last error %d',
+        [tCW_Event, tCWPaddle_Event, tDVP_Event, tNet_Event, GetLastError]);
+     end;
 
 
   if not tHandLogMode then
@@ -1208,7 +1214,7 @@ begin
     if (not TelnetWantsClipboardKey(Msg)) and
        (TranslateAccelerator(tr4whandle, tr4w_accelerators, Msg) <> 0) then
     begin
-      asm nop end;
+      // (an `asm nop end;` breakpoint placeholder stood here)
       goto NoTransMess;
     end;
     case Msg.Message of
