@@ -159,6 +159,11 @@ procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
 // ARE applied, with their bounds and crA hooks -- see the implementation.
 procedure ApplyStoredCommands(const aStore: TRadioConfigStore);
 
+// Render the chosen cluster into the globals the connect path reads: server,
+// login callsign, password and post-login command.  Called at startup and
+// whenever Preferences is saved, so the two cannot disagree.
+procedure ApplyActiveCluster(const aStore: TRadioConfigStore);
+
 // One command from a trusted source (a settings screen, or a multi-op peer):
 // applied through CFGCA and recorded in the store.  Returns CFGCA's verdict.
 function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
@@ -361,6 +366,53 @@ begin
       begin
       aStore.SetCommand(aCommand, aValue);
       end;
+end;
+
+procedure ApplyActiveCluster(const aStore: TRadioConfigStore);
+var
+   c: TClusterDefinition;
+begin
+   // NOTHING CHOSEN LEAVES THE LEGACY SETTINGS ALONE.  An operator who has never
+   // opened the DX Cluster page still has TELNET SERVER in their ini and must
+   // keep connecting exactly as before -- the same migration rule the rotators
+   // use.  Clearing the globals here would take the cluster away from everyone
+   // who has not adopted the library yet.
+   if (aStore = nil) or (aStore.ActiveCluster = nil) then
+      begin
+      Exit;
+      end;
+
+   c := aStore.ActiveCluster;
+
+   if Trim(c.Server) <> '' then
+      begin
+      ApplyAndStoreCommand(aStore, 'TELNET SERVER', Trim(c.Server));
+      end;
+
+   // BLANK LOGIN MEANS MY CALL, which is what the field's own hint promises.
+   // Left blank HERE and resolved at connect time, because MyCall can change
+   // after startup -- a different contest, a different operator -- and baking it
+   // in now would log in as whoever was configured when the program booted.
+   TelnetLoginCall := Trim(c.LoginCall);
+
+   // NOT trimmed: a password may legitimately begin or end with a space, and
+   // trimming one produces a login failure with no visible cause.
+   TelnetPassword := c.Password;
+
+   // The post-login command.  Str20 is the legacy declaration and it truncates,
+   // so SAY SO rather than quietly sending half of what the operator typed.
+   if Length(Trim(c.ConnectCommand)) > 20 then
+      begin
+      logger.Warn('[ApplyActiveCluster] "After connecting" is %d characters and the ' +
+                  'legacy ConnectionCommand holds 20 -- it will be truncated',
+                  [Length(Trim(c.ConnectCommand))]);
+      end;
+   ConnectionCommand := Str20(Trim(c.ConnectCommand));
+
+   // The password itself is never logged, at any level.
+   logger.Info('[ApplyActiveCluster] "%s" -> %s, login "%s"%s',
+               [c.Name, c.Server, TelnetLoginCall,
+                IfThen(TelnetPassword <> '', ', password set', '')]);
 end;
 
 procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
@@ -1119,6 +1171,7 @@ begin
       // applier; I wrote the appliers and then did not call them.
       ApplyLoggingSettings(store);
       ApplyStoredCommands(store);
+      ApplyActiveCluster(store);
 
       // The rotator library.  ConfigureRotators seeds one rotator from the
       // legacy ROTATOR TYPE / ROTATOR PORT when the library is empty, so a

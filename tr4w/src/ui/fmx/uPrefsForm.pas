@@ -3391,10 +3391,12 @@ begin
    // legacy setting becomes a rendering of the operator's choice -- the same
    // relationship the [Radio] keys have with the radio library.  A cluster's
    // credentials go with it; only the server name has somewhere old to live.
-   if FStore.ActiveCluster <> nil then
-      begin
-      ApplyAndStoreCommand(FStore, 'TELNET SERVER', FStore.ActiveCluster.Server);
-      end;
+   // ONE call, doing what startup does.  This used to render only the server,
+   // so the login callsign, password and post-connect command were stored and
+   // never reached the connect path -- and Preferences and startup rendered the
+   // active cluster differently, which is the divergence this whole seam exists
+   // to prevent.
+   ApplyActiveCluster(FStore);
    SetCommandBool('SPOT COLLECTOR ENABLED', chkSpotCollector.IsChecked);
 
    SetCommandBool('BAND MAP ENABLE', chkBandMapEnable.IsChecked);

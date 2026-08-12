@@ -2916,6 +2916,17 @@ var
 
 //  trWSAData                             : TWSAData;
   ConnectionCommand                     : Str20;
+
+  // THE ACTIVE CLUSTER, rendered out of the JSON library for the connect path.
+  // Same relationship the [Radio] keys have with the radio library: the library
+  // is the store, and these are what the runtime reads -- so uTelnet does not
+  // have to know that a cluster library exists.  Written by ApplyActiveCluster.
+  //
+  // `string`, not Str20: a login callsign is short but a cluster PASSWORD is not
+  // bounded by anything, and a ShortString would truncate it silently at 20
+  // characters -- which would look exactly like a wrong password.
+  TelnetLoginCall                       : string = '';
+  TelnetPassword                        : string = '';
 //  RICHED32DLLHANDLE                     : Cardinal;
 
 type

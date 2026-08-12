@@ -318,6 +318,33 @@ var
 procedure ArmTelnetRetry; forward;
 procedure CancelTelnetRetry; forward;
 
+// The login sequence, forward-declared for the same reason: the WM_TELNET_MSG
+// handler runs it and it needs SendViaTelnetSocket, which is declared later.
+procedure SendClusterLogin; forward;
+procedure AnswerClusterPasswordPrompt(const Line: AnsiString); forward;
+
+var
+  // ---- the login sequence --------------------------------------------------
+  // Main thread only: everything here runs from the WM_TELNET_MSG handler.
+  //
+  // Armed on connect when the active cluster has a password, and disarmed the
+  // moment one is sent OR the budget below runs out.  A password is a secret
+  // being matched against a live public feed, so it gets a window, not a
+  // standing subscription: without one, ANY later line containing "password:"
+  // -- an announcement, somebody's spot comment -- would transmit it as a
+  // command, in the clear, to everyone on the node.
+  ClusterPasswordArmed: boolean;
+  ClusterPasswordLinesLeft: integer;
+  // Held back until the login is done.  Sending it with the callsign would
+  // offer it up as the answer to a password prompt.
+  ClusterPendingConnectCommand: AnsiString;
+
+const
+  // Lines of grace for the prompt to arrive.  A DXSpider banner is a few dozen
+  // lines and the prompt comes FIRST, so this is generous; the point is that it
+  // is finite.
+  CLUSTER_PASSWORD_LINE_BUDGET = 60;
+
 // ---------------------------------------------------------------------------
 //  Issue #973 - field substitution in cluster_commands.txt
 //
@@ -645,10 +672,23 @@ begin
               AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
               // (The TelnetBuffer clear that stood here is gone with the buffer
               // -- there is no shared receive state to reset between sessions.)
-              if ConnectionCommand <> '' then
-                 SendViaTelnetSocket(@ConnectionCommand[1])
-              else
-                 SetDlgItemTextA(hwnddlg, 106, @MyCall[1]);
+              // LOG IN.  Until 2026-08-11 this branch sent ConnectionCommand
+              // INSTEAD of the callsign when one was configured -- so anybody
+              // who set a connection command never logged in at all -- and
+              // otherwise merely PRE-FILLED the input box with MyCall and waited
+              // for the operator to press Enter.
+              //
+              // Sent immediately, with NO PROMPT MATCHING, and that is a
+              // decision rather than an omission.  Nodes do prompt (`login:` is
+              // in 248 lines of the capture corpus) but the prose forms are
+              // sysop text -- "Enter your callsign" -- which a localised node
+              // translates, and prompts arrive with NO LINE TERMINATOR, so they
+              // smear into the following chunk (`login: nected to VE7CC-1:` is
+              // in the corpus verbatim).  Matching either would be fragile in a
+              // way that fails on somebody else's node, not ours.  Sending on
+              // connect is what TR4W has always effectively done and what every
+              // node in the corpus accepts.
+              SendClusterLogin;
               SendClientStatus;
               EnableTelnetToolbatButtons(True);
               EnableWindowTrue(hwnddlg, 104);
@@ -683,6 +723,12 @@ begin
                  SetString(TelnetLine, PAnsiChar(@PTelnetChunk(lParam)^.Data[0]),
                            PTelnetChunk(lParam)^.Len);
                  Dispose(PTelnetChunk(lParam));
+                 // BEFORE the spot decoder, and unconditionally: a login prompt
+                 // is not a spot, and the answer must go out before anything
+                 // else this line might trigger.  Costs one Pos() per line and
+                 // only while the window is open -- it returns immediately once
+                 // the password has gone or the budget has run out.
+                 AnswerClusterPasswordPrompt(TelnetLine);
                  ProcessTelnetLine(TelnetLine);
                  end;
             end;
@@ -1213,6 +1259,144 @@ begin
       Disconnect;
       end;
   end;
+end;
+
+{ ------------------------------------------------------- the login sequence --
+
+  Three steps, in order, and the order is the whole design:
+
+     connect  ->  send the callsign
+              ->  answer `password:` if the cluster has one
+              ->  send the "After connecting" command
+
+  WHY THE CALLSIGN IS SENT UNPROMPTED.  Nodes do prompt, but the prose forms
+  ("Enter your callsign", 228 lines of the capture corpus) are sysop text that a
+  localised node translates -- and prompts carry NO LINE TERMINATOR, so they
+  arrive smeared into the next chunk. Matching either is fragile in a way that
+  fails on somebody else's node. Sending on connect needs no matching at all.
+
+  WHY THE PASSWORD IS NOT.  `password:` is a protocol token from the same layer
+  as `login:` -- a Spanish DXSpider node that translates its entire banner still
+  prints both in English -- so matching it is safe in a way the prose is not.
+  And a password must NEVER be sent unprompted: a node that did not ask reads it
+  as a command, which puts it on the screen and in that node's logs.
+                                                                              }
+
+// The password goes out WITHOUT the console echo and WITHOUT the [Telnet TX]
+// log line that SendViaTelnetSocket writes for everything else -- which is the
+// entire reason this does not simply call it. Sending the operator's password
+// through the normal path would print it in the telnet window and write it to
+// tr4w.log in the clear.
+procedure SendClusterPasswordQuietly;
+begin
+   if not ClusterClient.IsConnected then
+      begin
+      Exit;
+      end;
+
+   try
+      ClusterClient.SendLine(AnsiString(TelnetPassword));
+      // The console still SAYS something happened -- an operator watching a
+      // login stall needs to know the password went, just not what it was.
+      AddStringToTelnetConsole('<password sent>', tstSend);
+   except
+      on E: Exception do
+         begin
+         AddStringToTelnetConsole(PAnsiChar(AnsiString(E.Message)), tstError);
+         Disconnect;
+         end;
+   end;
+end;
+
+procedure SendClusterConnectCommand;
+begin
+   if ClusterPendingConnectCommand = '' then
+      begin
+      Exit;
+      end;
+
+   SendViaTelnetSocket(PAnsiChar(ClusterPendingConnectCommand));
+   // Once only: this is reached from two places -- straight after the login when
+   // there is no password, and after the password when there is.
+   ClusterPendingConnectCommand := '';
+end;
+
+procedure SendClusterLogin;
+var
+   call: string;
+begin
+   // BLANK MEANS MY CALL, which is what the Preferences field promises. Resolved
+   // HERE and not at config-apply time, because MyCall can change between
+   // startup and a connect -- a different contest, a different operator.
+   call := Trim(TelnetLoginCall);
+   if call = '' then
+      begin
+      call := Trim(string(MyCall));
+      end;
+
+   // Held back until after any password -- see the header above.
+   ClusterPendingConnectCommand := AnsiString(Trim(string(ConnectionCommand)));
+
+   ClusterPasswordArmed := False;
+   ClusterPasswordLinesLeft := 0;
+
+   if call = '' then
+      begin
+      // No callsign anywhere. Reported rather than sending an empty line and
+      // leaving the operator looking at a node that never greets them.
+      AddStringToTelnetConsole('No callsign configured -- cannot log in to the cluster',
+                               tstError);
+      logger.Warn('[Telnet] Connected but neither the cluster login nor MY CALL is set');
+      Exit;
+      end;
+
+   SendViaTelnetSocket(PAnsiChar(AnsiString(call)));
+
+   if TelnetPassword <> '' then
+      begin
+      ClusterPasswordArmed := True;
+      ClusterPasswordLinesLeft := CLUSTER_PASSWORD_LINE_BUDGET;
+      logger.Info('[Telnet] Logged in as %s; waiting for a password prompt', [call]);
+      end
+   else
+      begin
+      logger.Info('[Telnet] Logged in as %s', [call]);
+      SendClusterConnectCommand;
+      end;
+end;
+
+// Called for every received line while the window is open.
+procedure AnswerClusterPasswordPrompt(const Line: AnsiString);
+begin
+   if not ClusterPasswordArmed then
+      begin
+      Exit;
+      end;
+
+   // The test itself lives in uDXSpotParse, with the other line decoders and
+   // under test -- see LineAsksForPassword for why it is a substring, why the
+   // colon is load-bearing, and why English is the right answer here.
+   if LineAsksForPassword(Line) then
+      begin
+      ClusterPasswordArmed := False;
+      SendClusterPasswordQuietly;
+      SendClusterConnectCommand;
+      Exit;
+      end;
+
+   Dec(ClusterPasswordLinesLeft);
+   if ClusterPasswordLinesLeft <= 0 then
+      begin
+      // The window closed with no prompt. Said out loud: the alternative is a
+      // configured password that silently never gets used, which looks like the
+      // password being wrong.
+      ClusterPasswordArmed := False;
+      logger.Info('[Telnet] No password prompt in %d lines -- the stored password was not sent',
+                  [CLUSTER_PASSWORD_LINE_BUDGET]);
+      // The command still goes, because the node evidently did not want a
+      // password and the operator asked for this to be sent after connecting.
+      SendClusterConnectCommand;
+      end;
 end;
 
 procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);

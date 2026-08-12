@@ -84,6 +84,29 @@ uses
 // depend on the log and the clock, not on the line.
 function ParseDXSpotLine(const Line: AnsiString; out Spot: TSpotRecord): boolean;
 
+// Does this line from the node ask for a password?
+//
+// Lives here, with the other line decoders, because it is the decision that
+// puts the operator's PASSWORD on the wire -- not something to bury inside a
+// window procedure where it cannot be tested.
+//
+// Grounded in the 209-file capture corpus rather than in a guess:
+//
+//  - Matched as a SUBSTRING.  Prompts carry no line terminator, so they arrive
+//    joined to whatever followed them (`login: nected to VE7CC-1:` is in the
+//    corpus verbatim).  A whole-line test would miss exactly the case this
+//    exists for.
+//  - The COLON is what separates a prompt from traffic that merely mentions
+//    passwords.  The corpus contains `set/password` and "Pse Set password on
+//    internet connects with set/password"; neither contains "password:", and
+//    neither may cause a send.
+//  - English only, and deliberately so.  `login:` and `password:` come from the
+//    protocol layer: a Spanish DXSpider node that prints its whole banner in
+//    Basque, English and Spanish still prompts in English.  The PROSE forms
+//    ("Enter your callsign") are sysop text and DO get translated -- which is
+//    why the callsign is sent unprompted and never matched at all.
+function LineAsksForPassword(const Line: AnsiString): boolean;
+
 // The "1713Z" stamp at the end of the line, as minutes since midnight UTC.
 // Returns False when column 74 is not 'Z', which is how ProcessDX decides the
 // line carries no usable time and falls back to the current clock.  Split out
@@ -136,14 +159,25 @@ implementation
 
 uses
    Windows,
+   SysUtils,            // LowerCase -- the RTL, not a TF shim
    uBandLookup,         // CalculateBandMode -- tree.pas forwards to this unit
    uCallSignRoutines;   // GoodCallSyntax
+
+const
+   // The token, in one place.  Lower case because the test lower-cases the line
+   // first; nodes are inconsistent about capitalising it.
+   CLUSTER_PASSWORD_TOKEN = 'password:';
 
 type
    // The line, NUL-filled, so a read past its end sees a terminator exactly as
    // it did when this walked the NUL-terminated receive buffer.  1024 is far
    // beyond any real cluster line (~80-120 chars).
    TDXLineBuf = array[0..1023] of AnsiChar;
+
+function LineAsksForPassword(const Line: AnsiString): boolean;
+begin
+   Result := Pos(CLUSTER_PASSWORD_TOKEN, LowerCase(string(Line))) > 0;
+end;
 
 procedure LineToBuf(const Line: AnsiString; var Buf: TDXLineBuf);
 var

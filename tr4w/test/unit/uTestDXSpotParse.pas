@@ -107,6 +107,10 @@ type
       procedure Test_Hint_Reject_PhrasalVerbs;
       procedure Test_Hint_Reject_GluedIntroducer;
       procedure Test_Hint_FillerWordBeforeFrequency;
+      procedure Test_PasswordPrompt_Recognised;
+      procedure Test_PasswordPrompt_SmearedIntoTheNextChunk;
+      procedure Test_PasswordPrompt_CorpusLinesDoNotTrigger;
+      procedure Test_PasswordPrompt_SpotTrafficDoesNotTrigger;
 
       // The time stamp
       procedure Test_Time_Parsed;
@@ -867,6 +871,55 @@ end;
 
 { -------------------------------------------------------------------------- }
 
+
+{ ----------------------------------------------- the cluster password prompt --
+
+  LineAsksForPassword decides when the operator's PASSWORD goes on the wire, so
+  the negative cases matter more than the positive one. Every "must not trigger"
+  line below is real traffic from the 209-file capture corpus rather than
+  invented -- a false positive here transmits a secret to a public node, in the
+  clear, as a command.                                                         }
+
+procedure TDXSpotParseTests.Test_PasswordPrompt_Recognised;
+begin
+   BeginTest('Test_PasswordPrompt_Recognised');
+   // HamAlert is the one node NY4I uses that actually challenges.
+   CheckTrue(LineAsksForPassword('password: '), 'the bare HamAlert prompt');
+   CheckTrue(LineAsksForPassword('Password:'), 'capitalised');
+   CheckTrue(LineAsksForPassword('Enter password: '), 'with a lead-in');
+end;
+
+// Prompts carry no terminator, so they reach us joined to the next chunk -- the
+// corpus has `login: nected to VE7CC-1:` verbatim. A whole-line match would
+// fail on precisely the delivery this has to cope with.
+procedure TDXSpotParseTests.Test_PasswordPrompt_SmearedIntoTheNextChunk;
+begin
+   BeginTest('Test_PasswordPrompt_SmearedIntoTheNextChunk');
+   CheckTrue(LineAsksForPassword('password: Hello NY4I, this is HamAlert'),
+             'a prompt with the following line stuck to it still counts');
+end;
+
+// Real corpus lines that mention passwords and MUST NOT cause a send.
+procedure TDXSpotParseTests.Test_PasswordPrompt_CorpusLinesDoNotTrigger;
+begin
+   BeginTest('Test_PasswordPrompt_CorpusLinesDoNotTrigger');
+   CheckFalse(LineAsksForPassword('Pse Set password on internet connects with set/password'),
+              'the CC Cluster advice line -- no colon after "password"');
+   CheckFalse(LineAsksForPassword('set/password w4afc'),
+              'an operator setting their own password');
+   CheckFalse(LineAsksForPassword('set/password'), 'the bare command');
+end;
+
+// The feed is public and runs for hours, so anything a user can type can arrive.
+procedure TDXSpotParseTests.Test_PasswordPrompt_SpotTrafficDoesNotTrigger;
+begin
+   BeginTest('Test_PasswordPrompt_SpotTrafficDoesNotTrigger');
+   CheckFalse(LineAsksForPassword('DX de NY4I:      14025.0  K1ABC        no password needed   1713Z'),
+              'a spot comment mentioning a password');
+   CheckFalse(LineAsksForPassword(''), 'an empty line');
+   CheckFalse(LineAsksForPassword('login:'), 'the LOGIN prompt is not the password prompt');
+end;
+
 procedure TDXSpotParseTests.RunAllTests;
 begin
    Test_PlainSpot_Frequency;
@@ -938,6 +991,10 @@ begin
    Test_Hint_Reject_PhrasalVerbs;
    Test_Hint_Reject_GluedIntroducer;
    Test_Hint_FillerWordBeforeFrequency;
+   Test_PasswordPrompt_Recognised;
+   Test_PasswordPrompt_SmearedIntoTheNextChunk;
+   Test_PasswordPrompt_CorpusLinesDoNotTrigger;
+   Test_PasswordPrompt_SpotTrafficDoesNotTrigger;
 end;
 
 end.
