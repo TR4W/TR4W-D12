@@ -116,3 +116,9 @@ spike/*.o
 spike/*.ppu
 spike/*.exe
 spike/units/
+
+
+# Test builds sent to the radio-bench testers -- packaged by FullBuild.ps1 and
+# handed out per rig, not release history. The release itself is a tag.
+tr4w/build/release/*.zip
+tr4w/build/release/README_*.txt

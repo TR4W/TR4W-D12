@@ -1463,8 +1463,11 @@ begin
 
   TempString := 'FALSE';
 
-  asm xor ebx,ebx
-  end; //=TempStringIsTrue := True;
+  // Removed: `asm xor ebx,ebx end;`, whose trailing comment claimed it meant
+  // "TempStringIsTrue := True".  It did not -- it zeroed EBX and nothing else,
+  // while TempStringIsTrue was already set False on the line above.  EBX is
+  // callee-saved and the compiler is free to hold a local in it, so this was a
+  // register clobber in the middle of a Pascal function with no effect to keep.
 
   case Line of
     ACC: TempStringIsTrue := AllCWMessagesChainable;

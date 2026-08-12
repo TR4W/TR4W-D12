@@ -55,27 +55,63 @@ procedure StrU(var Str: ShortString);
 
 implementation
 
-uses
-  SysUtils, System.AnsiStrings;
+// NO uses clause, deliberately. This unit exists to be dependency-light enough
+// to link into the test harness, and it now has no dependencies at all.
+//
+// It previously used System.AnsiStrings for StrLen and StrComp. That unit has
+// NO FreePascal equivalent -- FPC ships the classic `strings` unit instead, so
+// System.AnsiStrings is not a "drop the prefix" case the way System.SysUtils
+// is. Both routines it borrowed are a handful of lines, so the portable answer
+// is to own them rather than to shim around the difference with {$IFDEF FPC}.
 
-// Issue #997: x86 inline-asm bodies replaced by the Delphi RTL / pure Pascal.
+// Length of a NUL-terminated byte string, replacing AnsiStrings.StrLen.
+function PAnsiLen(const p: PAnsiChar): integer;
+var
+  q: PAnsiChar;
+begin
+  q := p;
+  while q^ <> #0 do
+    begin
+    Inc(q);
+    end;
+  Result := q - p;
+end;
+
+// Issue #997: x86 inline-asm bodies replaced by pure Pascal.
 // Equivalence to the original asm is frozen by uTestStrSearch (31 golden cases).
 
 function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
 var
-  Cmp: integer;
+  p1: PAnsiChar;
+  p2: PAnsiChar;
 begin
   // The original asm normalized its result to exactly -1 / 0 / +1
-  // (sbb eax,eax; or al,1). SysUtils.StrComp instead returns the raw byte
-  // difference of the first mismatch (e.g. '' vs 'A' -> -65). Normalize the
-  // sign to preserve the original contract byte-for-byte.
-  Cmp := System.AnsiStrings.StrComp(Str1, Str2);
-  if Cmp < 0 then
-    Result := -1
-  else if Cmp > 0 then
-    Result := 1
+  // (sbb eax,eax; or al,1), unlike the RTL's StrComp, which returns the raw
+  // byte difference of the first mismatch (e.g. '' vs 'A' -> -65). The -1/0/+1
+  // contract is what uTestStrSearch pins, so it is produced directly here.
+  //
+  // AnsiChar compares by ordinal 0..255, i.e. UNSIGNED, so a byte >= $80 sorts
+  // after every ASCII character -- matching both the assembly and the RTL.
+  p1 := Str1;
+  p2 := Str2;
+  while (p1^ <> #0) and (p1^ = p2^) do
+    begin
+    Inc(p1);
+    Inc(p2);
+    end;
+
+  if p1^ < p2^ then
+    begin
+    Result := -1;
+    end
+  else if p1^ > p2^ then
+    begin
+    Result := 1;
+    end
   else
+    begin
     Result := 0;
+    end;
 end;
 
 function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
@@ -92,11 +128,11 @@ begin
   if (Str1 = nil) or (Str2 = nil) then
     Exit;
 
-  Len2 := System.AnsiStrings.StrLen(Str2);
+  Len2 := PAnsiLen(Str2);
   if Len2 = 0 then          // empty pattern -> nil (matches the asm)
     Exit;
 
-  Len1 := System.AnsiStrings.StrLen(Str1);
+  Len1 := PAnsiLen(Str1);
   if Len1 < Len2 then       // pattern longer than text -> nil
     Exit;
 
