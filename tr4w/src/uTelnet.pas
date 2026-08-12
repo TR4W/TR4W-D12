@@ -256,6 +256,11 @@ const
   TELNET_CONNECT_FAILED = 2;   // lParam = WSA error code
   TELNET_DATA           = 3;   // lParam = PTelnetChunk (handler disposes it)
   TELNET_CLOSED         = 4;   // lParam = WSA error code (0 = graceful close)
+  // Unterminated text sitting in the receive buffer -- a login prompt, in
+  // practice.  Same chunk ownership as TELNET_DATA.  NOT fed to the spot
+  // decoder: it is by definition an incomplete line, and the complete one will
+  // arrive later through TELNET_DATA.
+  TELNET_PENDING        = 5;   // lParam = PTelnetChunk (handler disposes it)
 
   // Auto-reconnect: WM_TIMER id on the telnet window, and the backoff bounds.
   // First retry is quick because the common case is a node bouncing; the cap
@@ -263,6 +268,13 @@ const
   TELNET_RETRY_TIMER = 1;
   RETRY_DELAY_MIN    = 5000;    // 5 s
   RETRY_DELAY_MAX    = 60000;   // 60 s -- NY4I's cap
+
+  // The login fallback: send the callsign anyway if no `login:` has arrived.
+  // Covers nodes that prompt in prose we deliberately do not match, and nodes
+  // that do not prompt at all.  4 s is comfortably past a banner on a live link
+  // and short enough that a node which never prompts is not left hanging.
+  TELNET_LOGIN_TIMER = 2;
+  LOGIN_PROMPT_WAIT  = 4000;
 
 type
   PTelnetChunk = ^TTelnetChunk;
@@ -279,6 +291,7 @@ type
   // A class only because the event types are `of object`; it holds no state.
   TClusterEvents = class
     procedure Line(const L: AnsiString);
+    procedure PendingText(const L: AnsiString);
     procedure Connected;
     procedure Disconnected(const Text: string; Code: Integer);
   end;
@@ -320,10 +333,14 @@ procedure CancelTelnetRetry; forward;
 
 // The login sequence, forward-declared for the same reason: the WM_TELNET_MSG
 // handler runs it and it needs SendViaTelnetSocket, which is declared later.
+procedure ArmClusterLogin; forward;
+procedure CancelClusterLogin; forward;
 procedure SendClusterLogin; forward;
-procedure AnswerClusterPasswordPrompt(const Line: AnsiString); forward;
+procedure AnswerClusterLoginPrompts(const Line: AnsiString); forward;
 
 var
+  // Armed on connect, disarmed when the callsign goes out. See ArmClusterLogin.
+  ClusterLoginArmed: boolean;
   // ---- the login sequence --------------------------------------------------
   // Main thread only: everything here runs from the WM_TELNET_MSG handler.
   //
@@ -678,17 +695,14 @@ begin
               // otherwise merely PRE-FILLED the input box with MyCall and waited
               // for the operator to press Enter.
               //
-              // Sent immediately, with NO PROMPT MATCHING, and that is a
-              // decision rather than an omission.  Nodes do prompt (`login:` is
-              // in 248 lines of the capture corpus) but the prose forms are
-              // sysop text -- "Enter your callsign" -- which a localised node
-              // translates, and prompts arrive with NO LINE TERMINATOR, so they
-              // smear into the following chunk (`login: nected to VE7CC-1:` is
-              // in the corpus verbatim).  Matching either would be fragile in a
-              // way that fails on somebody else's node, not ours.  Sending on
-              // connect is what TR4W has always effectively done and what every
-              // node in the corpus accepts.
-              SendClusterLogin;
+              // WAIT FOR THE PROMPT, with a timeout.  The first version of this
+              // sent the callsign the instant the socket opened, on the argument
+              // that TR4W had always effectively done so.  It had not: the old
+              // code only PRE-FILLED the input box and the operator pressed
+              // Enter after seeing the prompt.  HamAlert discarded a callsign
+              // that arrived before its banner and then sat at `login:` waiting
+              // (NY4I, 2026-08-12).  See ArmClusterLogin.
+              ArmClusterLogin;
               SendClientStatus;
               EnableTelnetToolbatButtons(True);
               EnableWindowTrue(hwnddlg, 104);
@@ -699,13 +713,35 @@ begin
               // Issue #23 -- keep the detailed WinSock reason in the log for
               // diagnostics, but show the operator a short message naming the
               // host they tried to reach (the raw message is long and unwrapped).
-              logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
-                [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, lParam,
-                 SysUtils.SysErrorMessage(lParam)]);
+              // CODE 0 MEANS NO SOCKET ERROR, so SysErrorMessage(0) renders as
+              // "The operation completed successfully" -- a failure line that
+              // says nothing failed, which is exactly how the already-connected
+              // refusal disguised itself.  The real reason came through
+              // OnDisconnected; do not overwrite it with a lie.
+              if lParam = 0 then
+                 begin
+                 logger.Error('[Telnet] Could not connect to %s:%d -- no socket error reported ' +
+                              '(see the preceding reason)',
+                   [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort]);
+                 end
+              else
+                 begin
+                 logger.Error('[Telnet] Could not connect to %s:%d -- WinSock %d: %s',
+                   [PAnsiChar(@PendingTelnetHost[0]), PendingTelnetPort, lParam,
+                    SysUtils.SysErrorMessage(lParam)]);
+                 end;
+
+              // TEARDOWN BEFORE COSMETICS.  Disconnect used to sit after the
+              // console formatting, and the whole log shows it NEVER RAN across
+              // three failures -- leaving the session up and wedging every
+              // later attempt.  Whatever aborted the handler did so before this
+              // line; putting the state change first means a formatting problem
+              // can no longer cost the teardown.
+              Disconnect;
+
               Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
               AddStringToTelnetConsole(wsprintfBuffer, tstError);
-              Disconnect;
               // Keep trying, with a longer gap each time.  A failed RETRY comes
               // back through here, which is what makes the backoff advance --
               // and a first connect that fails is retried too, so a TR4W
@@ -728,8 +764,23 @@ begin
                  // else this line might trigger.  Costs one Pos() per line and
                  // only while the window is open -- it returns immediately once
                  // the password has gone or the budget has run out.
-                 AnswerClusterPasswordPrompt(TelnetLine);
+                 AnswerClusterLoginPrompts(TelnetLine);
                  ProcessTelnetLine(TelnetLine);
+                 end;
+            end;
+
+          // AN UNTERMINATED PROMPT. Answered, but NOT decoded and NOT displayed:
+          // it is an incomplete line by definition, and the complete one arrives
+          // later through TELNET_DATA. Feeding it to ProcessDX would decode the
+          // same text twice.
+          TELNET_PENDING:
+            begin
+              if lParam <> 0 then
+                 begin
+                 SetString(TelnetLine, PAnsiChar(@PTelnetChunk(lParam)^.Data[0]),
+                           PTelnetChunk(lParam)^.Len);
+                 Dispose(PTelnetChunk(lParam));
+                 AnswerClusterLoginPrompts(TelnetLine);
                  end;
             end;
 
@@ -776,6 +827,20 @@ begin
            TelnetRetryArmed := False;
            AddStringToTelnetConsole('Reconnecting...', tstTR4W);
            StartTelnetConnect;
+           end;
+
+        // No `login:` arrived in time. Send the callsign anyway: the node may
+        // prompt in prose we deliberately do not match, or not prompt at all.
+        // SendClusterLogin kills this timer and is a no-op if the prompt won
+        // the race.
+        if wParam = TELNET_LOGIN_TIMER then
+           begin
+           if ClusterLoginArmed then
+              begin
+              logger.Info('[Telnet] No login prompt within %d ms -- sending the callsign anyway',
+                          [LOGIN_PROMPT_WAIT]);
+              end;
+           SendClusterLogin;
            end;
       end;
 
@@ -1064,6 +1129,33 @@ begin
               WM_TELNET_MSG, TELNET_DATA, LPARAM(chunk));
 end;
 
+// Same marshalling as Line, and for the same reason -- this fires on the reader
+// thread and the handler answers prompts and touches UI state.
+procedure TClusterEvents.PendingText(const L: AnsiString);
+var
+  chunk: PTelnetChunk;
+  n:     integer;
+begin
+  n := Length(L);
+  if n > SizeOf(chunk^.Data) - 1 then
+     begin
+     n := SizeOf(chunk^.Data) - 1;
+     end;
+  New(chunk);
+  if n > 0 then
+     begin
+     Move(L[1], chunk^.Data[0], n);
+     end;
+  chunk^.Data[n] := #0;
+  chunk^.Len := n;
+  if TR4W_TELNET_DEBUG then
+     begin
+     logger.Info('[Telnet RX pending %d] %s', [n, PAnsiChar(@chunk^.Data[0])]);
+     end;
+  PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+              WM_TELNET_MSG, TELNET_PENDING, LPARAM(chunk));
+end;
+
 procedure TClusterEvents.Connected;
 begin
   PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
@@ -1120,6 +1212,20 @@ begin
      Exit;   // already connecting / connected
      end;
 
+  // A LIVE SESSION IS TORN DOWN FIRST.  Connecting while already connected used
+  // to reach TDXClusterClient.Connect, which refused with a bare False; the
+  // operator saw "Could not connect -- WinSock 0", the old session was left up,
+  // and because IsConnected stayed true EVERY later attempt failed the same way
+  // until TR4W was restarted (NY4I, 2026-08-12, three failures in the log).
+  //
+  // Asking to connect is unambiguous about intent -- especially now that the
+  // active cluster can change in Preferences -- so switch, rather than refuse.
+  if ClusterClient.IsConnected then
+     begin
+     logger.Info('[Telnet] Connect requested while connected -- dropping the current session first');
+     Disconnect;
+     end;
+
   StackTelHandle := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
   PendingTelnetPort := 23;
   i := Windows.GetDlgItemTextA(StackTelHandle, 102, TempBuffer1, SizeOf(TempBuffer1));
@@ -1168,11 +1274,19 @@ procedure Disconnect;
 var
   StackTelHandle: HWND;
 begin
-  if TR4W_TELNET_DEBUG then   // Issue #23 -- log every disconnect
-     begin
-     logger.Info('[Telnet] Disconnecting (connected=%s)',
-                 [BoolToStr(ClusterClient.IsConnected, True)]);
-     end;
+  // NOT gated on TELNET DEBUG any more.  "Did the teardown run?" turned out to
+  // be the one question the log could not answer: three failed connects in a
+  // row left the session up, and the absence of this line -- with debug ON --
+  // was the only evidence that Disconnect never executed.  A state change this
+  // consequential should say so unconditionally; it is one line per session.
+  logger.Info('[Telnet] Disconnecting (connected=%s)',
+              [BoolToStr(ClusterClient.IsConnected, True)]);
+
+  // HERE, because this is the ONE teardown both paths reach -- the operator's
+  // Disconnect button and a server-initiated close.  A login timer left running
+  // would otherwise fire after the link is gone, or against the next session.
+  CancelClusterLogin;
+
   StackTelHandle := tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle;
 
   // Issue #23 -- show a disconnect message only if we were actually connected.
@@ -1321,10 +1435,67 @@ begin
    ClusterPendingConnectCommand := '';
 end;
 
+// Called on connect. Nothing is sent yet -- we wait for `login:`, and start a
+// timer so that a node which never sends one still gets a callsign.
+//
+// WHY WAITING IS RIGHT AND SENDING WAS NOT. HamAlert discards a callsign that
+// arrives before its banner, then prompts and waits forever. The corpus proves
+// prompts EXIST; it could not prove an early send is accepted, because TR4W has
+// never made one -- the operator always typed it after seeing the prompt. The
+// first version of this read the corpus as licence to send early. It was not.
+//
+// The timer is what keeps the prompt-matching honest. Because a node that
+// prompts in prose ("Enter your callsign") or in a translation is handled by the
+// clock rather than by a word list, LineAsksForLogin can stay at the one token
+// that survives translation instead of growing a phrasebook.
+// Called wherever a session ends, so a pending login timer cannot outlive it and
+// fire against the next connection -- or, worse, against a link the operator has
+// just deliberately dropped.  SendViaTelnetSocket would refuse on a closed
+// socket anyway, but a timer nobody cancelled is the kind of thing that only
+// misbehaves once the code around it changes.
+procedure CancelClusterLogin;
+begin
+   if ClusterLoginArmed then
+      begin
+      KillTimer(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+                TELNET_LOGIN_TIMER);
+      ClusterLoginArmed := False;
+      end;
+   ClusterPasswordArmed := False;
+   ClusterPendingConnectCommand := '';
+end;
+
+procedure ArmClusterLogin;
+begin
+   // Any leftovers from a previous session go first: reconnecting must start the
+   // sequence cleanly, not inherit a half-finished one.
+   CancelClusterLogin;
+   ClusterLoginArmed := True;
+
+   // Held back until the login is done -- see the header above.
+   ClusterPendingConnectCommand := AnsiString(Trim(string(ConnectionCommand)));
+   ClusterPasswordArmed := False;
+   ClusterPasswordLinesLeft := 0;
+
+   SetTimer(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+            TELNET_LOGIN_TIMER, LOGIN_PROMPT_WAIT, nil);
+end;
+
 procedure SendClusterLogin;
 var
    call: string;
 begin
+   if not ClusterLoginArmed then
+      begin
+      // Already sent. Reached from both the prompt and the timer, and whichever
+      // loses the race must do nothing -- sending the callsign twice puts the
+      // second copy in as a COMMAND once the node has logged us in.
+      Exit;
+      end;
+
+   ClusterLoginArmed := False;
+   KillTimer(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, TELNET_LOGIN_TIMER);
+
    // BLANK MEANS MY CALL, which is what the Preferences field promises. Resolved
    // HERE and not at config-apply time, because MyCall can change between
    // startup and a connect -- a different contest, a different operator.
@@ -1333,12 +1504,6 @@ begin
       begin
       call := Trim(string(MyCall));
       end;
-
-   // Held back until after any password -- see the header above.
-   ClusterPendingConnectCommand := AnsiString(Trim(string(ConnectionCommand)));
-
-   ClusterPasswordArmed := False;
-   ClusterPasswordLinesLeft := 0;
 
    if call = '' then
       begin
@@ -1365,9 +1530,21 @@ begin
       end;
 end;
 
-// Called for every received line while the window is open.
-procedure AnswerClusterPasswordPrompt(const Line: AnsiString);
+// Called for every received line. Answers whichever prompt is outstanding --
+// the login first, then the password -- and returns immediately once neither is.
+procedure AnswerClusterLoginPrompts(const Line: AnsiString);
 begin
+   if ClusterLoginArmed then
+      begin
+      if LineAsksForLogin(Line) then
+         begin
+         SendClusterLogin;
+         end;
+      // Nothing else to do with this line: the password prompt cannot precede
+      // the callsign, and the timer covers a prompt that never comes.
+      Exit;
+      end;
+
    if not ClusterPasswordArmed then
       begin
       Exit;
@@ -1890,6 +2067,7 @@ initialization
   ClusterEvents := TClusterEvents.Create;
   ClusterClient := TDXClusterClient.Create;
   ClusterClient.OnLine         := ClusterEvents.Line;
+  ClusterClient.OnPendingText  := ClusterEvents.PendingText;
   ClusterClient.OnConnected    := ClusterEvents.Connected;
   ClusterClient.OnDisconnected := ClusterEvents.Disconnected;
 

@@ -107,6 +107,20 @@ function ParseDXSpotLine(const Line: AnsiString; out Spot: TSpotRecord): boolean
 //    why the callsign is sent unprompted and never matched at all.
 function LineAsksForPassword(const Line: AnsiString): boolean;
 
+// Does this line ask for the callsign?
+//
+// `login:` ONLY, deliberately.  It is a protocol token and it survives
+// translation -- the Spanish DXSpider node above prints it in English while
+// translating everything around it.  The prose forms the corpus also contains
+// ("Enter your callsign", 228 lines; "Please enter your call:", 52) are sysop
+// banner text that a localised node DOES translate, so matching them would work
+// here and fail on somebody else's node.
+//
+// Nodes that prompt in prose, or do not prompt at all, are covered by a TIMEOUT
+// in uTelnet rather than by widening this list.  A timer cannot be wrong about
+// a language; a word list can.
+function LineAsksForLogin(const Line: AnsiString): boolean;
+
 // The "1713Z" stamp at the end of the line, as minutes since midnight UTC.
 // Returns False when column 74 is not 'Z', which is how ProcessDX decides the
 // line carries no usable time and falls back to the current clock.  Split out
@@ -167,6 +181,7 @@ const
    // The token, in one place.  Lower case because the test lower-cases the line
    // first; nodes are inconsistent about capitalising it.
    CLUSTER_PASSWORD_TOKEN = 'password:';
+   CLUSTER_LOGIN_TOKEN    = 'login:';
 
 type
    // The line, NUL-filled, so a read past its end sees a terminator exactly as
@@ -177,6 +192,20 @@ type
 function LineAsksForPassword(const Line: AnsiString): boolean;
 begin
    Result := Pos(CLUSTER_PASSWORD_TOKEN, LowerCase(string(Line))) > 0;
+end;
+
+function LineAsksForLogin(const Line: AnsiString): boolean;
+var
+   lower: string;
+begin
+   lower := LowerCase(string(Line));
+
+   // NOT when the same line also asks for a password.  A prompt can arrive
+   // smeared into the line before it, so `login: ... password:` in one delivery
+   // is possible -- and answering the LOGIN half of that would send the callsign
+   // where the password was wanted.  The later prompt is the live one.
+   Result := (Pos(CLUSTER_LOGIN_TOKEN, lower) > 0)
+             and (Pos(CLUSTER_PASSWORD_TOKEN, lower) = 0);
 end;
 
 procedure LineToBuf(const Line: AnsiString; var Buf: TDXLineBuf);
