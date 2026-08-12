@@ -46,6 +46,12 @@ type
       procedure Test_AllFFsOneByte;
       procedure Test_LongerInput_PreservesAlgorithm;
 
+      // The lookup table used to be rebuilt on EVERY call; it is now built once
+      // at unit initialization.  These pin the property that made that safe --
+      // repeated and interleaved calls are independent and stable.
+      procedure Test_RepeatedCallsAgree;
+      procedure Test_InterleavedInputsDoNotContaminate;
+
    public
       procedure RunAllTests; override;
    end;
@@ -179,6 +185,49 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// Table lifetime
+// ---------------------------------------------------------------------------
+
+procedure TCRC32Tests.Test_RepeatedCallsAgree;
+var
+   s: AnsiString;
+   i: Integer;
+   first: LongWord;
+begin
+   BeginTest('Test_RepeatedCallsAgree');
+   // The old assembly rebuilt the 256-entry table inside every GetCRC32 call.
+   // Building it once at unit initialization is only safe if the table is
+   // never mutated by a run -- so call the same input repeatedly and require
+   // a stable answer.
+   s := '123456789';
+   first := GetCRC32(s[1], Length(s));
+   CheckEquals(Integer($CBF43926), Integer(first), 'first call is the standard check value');
+
+   for i := 1 to 50 do
+      begin
+      CheckCRC(s[1], Length(s), first, Format('call %d agrees with the first', [i]));
+      end;
+end;
+
+procedure TCRC32Tests.Test_InterleavedInputsDoNotContaminate;
+var
+   a, b: AnsiString;
+   i: Integer;
+begin
+   BeginTest('Test_InterleavedInputsDoNotContaminate');
+   // Different inputs alternating: each must still produce its own value, so
+   // no state survives a call.  This is the test that would fail if the shared
+   // table were ever written during a computation.
+   a := '123456789';
+   b := 'abc';
+   for i := 1 to 10 do
+      begin
+      CheckCRC(a[1], Length(a), $CBF43926, 'interleaved "123456789"');
+      CheckCRC(b[1], Length(b), $352441C2, 'interleaved "abc"');
+      end;
+end;
+
+// ---------------------------------------------------------------------------
 // Test runner
 // ---------------------------------------------------------------------------
 
@@ -192,6 +241,8 @@ begin
    Test_SingleZeroByte;
    Test_AllFFsOneByte;
    Test_LongerInput_PreservesAlgorithm;
+   Test_RepeatedCallsAgree;
+   Test_InterleavedInputsDoNotContaminate;
 end;
 
 end.

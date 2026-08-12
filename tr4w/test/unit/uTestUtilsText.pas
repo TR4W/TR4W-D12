@@ -5,7 +5,16 @@ unit uTestUtilsText;
 
   Functions NOT tested here (easily replaced by Delphi 12 stdlib):
     UpperCase, StringHas, PostcedingString, PrecedingString,
-    tPos, pPos, StrComp, StrUpper, safeFloat.
+    tPos, pPos, safeFloat.
+
+  StrComp and StrUpper ARE tested here, and the tests came first: both were
+  hand-written x86-32 assembly with no coverage at all, and they are load-bearing
+  -- StrComp drives the CTY.DAT prefix search and every config-command lookup,
+  StrUpper normalizes callsigns and CTY records.  These are CHARACTERIZATION
+  tests: they were written against the assembly, run green against it, and only
+  then was the assembly replaced with Pascal.  They pin the exact return values,
+  not merely the sign, so a "behaviour-preserving" rewrite has something that can
+  actually say no.
 
   Functions tested:
     StringIsAllNumbers               -- used in exchange field parsing
@@ -50,6 +59,12 @@ type
       procedure Test_StringHasLowerCase;
       procedure Test_tCharIsNumbers;
       procedure Test_tCharIsAlphaNumericOrDash;
+
+      // Asm eradication -- characterization tests, written against the assembly
+      procedure Test_StrComp;
+      procedure Test_StrComp_HighBitBytesAreUnsigned;
+      procedure Test_StrUpper;
+      procedure Test_StrUpper_LeavesNonAsciiAlone;
    end;
 
 implementation
@@ -319,6 +334,137 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// StrComp -- returns Ord(first differing byte of Str1) - Ord(same of Str2),
+// comparing to and including the NUL.  NOT normalized to -1/0/+1: callers use
+// only the sign, but the magnitude is pinned here so a rewrite cannot quietly
+// change what "difference" means.
+// ---------------------------------------------------------------------------
+
+procedure TUtilsTextTests.Test_StrComp;
+begin
+   BeginTest('Test_StrComp');
+
+   // Equal, including both-empty
+   CheckEquals(0, StrComp('ABC', 'ABC'), 'equal strings');
+   CheckEquals(0, StrComp('', ''), 'both empty');
+   CheckEquals(0, StrComp('K4A-1234', 'K4A-1234'), 'equal callsign shape');
+
+   // Same length, one byte differs -- the difference IS the byte difference
+   CheckEquals(-1, StrComp('ABC', 'ABD'), 'C(67) - D(68)');
+   CheckEquals(1, StrComp('ABD', 'ABC'), 'D(68) - C(67)');
+   CheckEquals(-3, StrComp('ABC', 'ABF'), 'C(67) - F(70)');
+
+   // Prefix cases stop at Str1's NUL, so the difference is 0 - Ord(next byte)
+   CheckEquals(-67, StrComp('AB', 'ABC'), 'prefix shorter: #0 - C(67)');
+   CheckEquals(67, StrComp('ABC', 'AB'), 'prefix longer: C(67) - #0');
+
+   // Empty against non-empty
+   CheckEquals(-65, StrComp('', 'A'), 'empty vs A: #0 - A(65)');
+   CheckEquals(65, StrComp('A', ''), 'A vs empty: A(65) - #0');
+
+   // Case sensitive -- 'a'(97) - 'A'(65) = 32.  This is why callers uppercase
+   // first; StrComp itself does no folding.
+   CheckEquals(32, StrComp('a', 'A'), 'lowercase sorts after uppercase');
+   CheckEquals(-32, StrComp('A', 'a'), 'uppercase sorts before lowercase');
+
+   // First difference wins even when later bytes differ more
+   CheckEquals(-1, StrComp('AZZZ', 'BAAA'), 'first byte decides');
+end;
+
+// ---------------------------------------------------------------------------
+// StrComp -- bytes >= $80 compare UNSIGNED.  This matters: CTY.DAT and the
+// language files carry codepage-specific high-bit bytes, and a signed compare
+// would sort them before ASCII instead of after, silently reordering the
+// prefix table the country lookup binary-searches.
+// ---------------------------------------------------------------------------
+
+procedure TUtilsTextTests.Test_StrComp_HighBitBytesAreUnsigned;
+var
+   hi, lo: array[0..3] of AnsiChar;
+begin
+   BeginTest('Test_StrComp_HighBitBytesAreUnsigned');
+
+   hi[0] := AnsiChar($E1);  hi[1] := #0;
+   lo[0] := 'A';            lo[1] := #0;   // 'A' = $41
+
+   CheckEquals(160, StrComp(@hi[0], @lo[0]), '$E1(225) - A(65) -- unsigned');
+   CheckEquals(-160, StrComp(@lo[0], @hi[0]), 'A(65) - $E1(225) -- unsigned');
+
+   // $FF is the largest byte, not -1
+   hi[0] := AnsiChar($FF);  hi[1] := #0;
+   CheckEquals(255, StrComp(@hi[0], ''), '$FF(255) - #0 -- unsigned');
+end;
+
+// ---------------------------------------------------------------------------
+// StrUpper -- in place, ASCII 'a'..'z' ONLY.  Everything else, including every
+// byte >= $80, is left untouched.  That restriction is deliberate and load
+// bearing: uCTYDAT and MainUnit run it over buffers that may hold CP1251 or
+// CP1250 text, where a locale-aware uppercase would corrupt the bytes.
+// ---------------------------------------------------------------------------
+
+procedure TUtilsTextTests.Test_StrUpper;
+var
+   buf: array[0..31] of AnsiChar;
+
+   procedure Upper(const src: AnsiString);
+   begin
+      FillChar(buf, SizeOf(buf), 0);
+      if src <> '' then
+         begin
+         Move(src[1], buf[0], Length(src));
+         end;
+      StrUpper(@buf[0]);
+   end;
+
+begin
+   BeginTest('Test_StrUpper');
+
+   Upper('abc');
+   CheckEquals('ABC', AnsiString(PAnsiChar(@buf[0])), 'all lowercase');
+
+   Upper('ABC');
+   CheckEquals('ABC', AnsiString(PAnsiChar(@buf[0])), 'already uppercase is unchanged');
+
+   Upper('K4a-1234');
+   CheckEquals('K4A-1234', AnsiString(PAnsiChar(@buf[0])), 'mixed callsign, digits and dash survive');
+
+   Upper('');
+   CheckEquals('', AnsiString(PAnsiChar(@buf[0])), 'empty string');
+
+   Upper('a b c');
+   CheckEquals('A B C', AnsiString(PAnsiChar(@buf[0])), 'spaces survive');
+
+   // The two bytes flanking 'a'..'z' in ASCII must NOT be touched:
+   // '`' is $60 (one below 'a'), '{' is $7B (one above 'z').
+   Upper('`az{');
+   CheckEquals('`AZ{', AnsiString(PAnsiChar(@buf[0])), 'range boundaries are exclusive');
+end;
+
+procedure TUtilsTextTests.Test_StrUpper_LeavesNonAsciiAlone;
+var
+   buf: array[0..7] of AnsiChar;
+begin
+   BeginTest('Test_StrUpper_LeavesNonAsciiAlone');
+
+   // $E0..$FF is lowercase Cyrillic in CP1251.  The asm compared UNSIGNED, so
+   // these are above 'z' and skipped.  A rewrite that used a signed compare, or
+   // a locale-aware UpCase, would rewrite these bytes -- and CTY.DAT would stop
+   // matching.
+   buf[0] := AnsiChar($E0);
+   buf[1] := AnsiChar($FF);
+   buf[2] := AnsiChar($80);
+   buf[3] := 'a';
+   buf[4] := #0;
+
+   StrUpper(@buf[0]);
+
+   CheckEquals($E0, Ord(buf[0]), '$E0 untouched');
+   CheckEquals($FF, Ord(buf[1]), '$FF untouched');
+   CheckEquals($80, Ord(buf[2]), '$80 untouched');
+   CheckEquals(Ord('A'), Ord(buf[3]), 'ASCII in the same buffer still folds');
+end;
+
+// ---------------------------------------------------------------------------
 // Suite entry point
 // ---------------------------------------------------------------------------
 
@@ -336,6 +482,12 @@ begin
    Test_StringHasLowerCase;
    Test_tCharIsNumbers;
    Test_tCharIsAlphaNumericOrDash;
+
+   // Asm eradication
+   Test_StrComp;
+   Test_StrComp_HighBitBytesAreUnsigned;
+   Test_StrUpper;
+   Test_StrUpper_LeavesNonAsciiAlone;
 end;
 
 end.

@@ -25,8 +25,8 @@ function PrecedingString(LongString: string; Deliminator: string): string;
 function tPos(s: ShortString; c: AnsiChar): integer; //wli  boundary: byte-char search (legacy ShortString callers)
 function pPos(c: AnsiChar; p: PAnsiChar): integer;         // boundary: raw PAnsiChar scan
 
-function StrComp(const Str1, Str2: PAnsiChar): integer;    // boundary: PAnsiChar (asm)
-procedure StrUpper(Str: PAnsiChar);                        // boundary: PAnsiChar (asm)
+function StrComp(const Str1, Str2: PAnsiChar): integer;    // boundary: PAnsiChar
+procedure StrUpper(Str: PAnsiChar);                        // boundary: PAnsiChar (ASCII a-z only)
 
 implementation
 
@@ -284,47 +284,62 @@ begin
     end;
 end;
 
-function StrComp(const Str1, Str2: PAnsiChar): integer; assembler;
-asm
-        PUSH    EDI
-        PUSH    ESI
-        MOV     EDI,EDX
-        MOV     ESI,EAX
-        MOV     ECX,0FFFFFFFFH
-        XOR     EAX,EAX
-        REPNE   SCASB
-        NOT     ECX
-        MOV     EDI,EDX
-        XOR     EDX,EDX
-        REPE    CMPSB
-        MOV     AL,[ESI-1]
-        MOV     DL,[EDI-1]
-        SUB     EAX,EDX
-        POP     ESI
-        POP     EDI
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  StrComp
+
+  Compares two NUL-terminated byte strings and returns the difference between
+  the first bytes that differ -- NOT a normalized -1/0/+1.  Callers use only the
+  sign, but the magnitude is what the assembly this replaces returned, and
+  uTestUtilsText pins it exactly.
+
+  Bytes compare UNSIGNED, so anything >= $80 sorts AFTER every ASCII character.
+  That is load-bearing rather than incidental: CTY.DAT and the language files
+  carry codepage-specific high-bit bytes, and the country lookup binary-searches
+  the prefix table this orders.  A signed comparison would reorder it silently.
+}
+function StrComp(const Str1, Str2: PAnsiChar): integer;
+var
+   p1                                    : PAnsiChar;
+   p2                                    : PAnsiChar;
+begin
+   p1 := Str1;
+   p2 := Str2;
+
+   // Stops at the first difference OR at Str1's terminator, so a string that is
+   // a prefix of the other ends up comparing #0 against the other's next byte.
+   while (p1^ <> #0) and (p1^ = p2^) do
+      begin
+      Inc(p1);
+      Inc(p2);
+      end;
+
+   Result := Ord(p1^) - Ord(p2^);
 end;
 
-procedure StrUpper(Str: PAnsiChar); assembler;
-asm
-//        PUSH    ECX
-//        XOR     ECX , ECX
-        PUSH    ESI
-        MOV     ESI,Str
-//        LODSB
-//        XCHG    CL,AL
-//        MOV     ECX,Str
-@@1:    LODSB
-        OR      AL,AL
-        JE      @@2
-        CMP     AL,'a'
-        JB      @@1
-        CMP     AL,'z'
-        JA      @@1
-        SUB     AL,20H
-        MOV     [ESI-1],AL
-        JMP     @@1
-@@2:    POP     ESI
-//        POP     ECX
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  StrUpper
+
+  Uppercases in place, ASCII 'a'..'z' ONLY.  Every other byte -- including all
+  of $80..$FF -- is left exactly as it was.
+
+  That restriction is deliberate.  uCTYDAT and MainUnit run this over buffers
+  that may hold CP1251/CP1250 text, and a locale-aware uppercase would rewrite
+  those bytes and stop CTY.DAT matching.  Do not "improve" this into UpperCase
+  or CharUpperBuff.
+}
+procedure StrUpper(Str: PAnsiChar);
+var
+   p                                     : PAnsiChar;
+begin
+   p := Str;
+   while p^ <> #0 do
+      begin
+      if p^ in ['a' .. 'z'] then
+         begin
+         p^ := AnsiChar(Ord(p^) - 32);
+         end;
+      Inc(p);
+      end;
 end;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
