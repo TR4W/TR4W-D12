@@ -358,3 +358,68 @@ direction:
   The estimate of "half a day for the remaining five" was high; it took about an
   hour.
 
+## STEP 6 -- INDY COMPILES. The big dependency risk is retired.
+
+```
+FPC 3.2.2, vendored Indy 10.6.3.3, unmodified:
+   109,486 lines compiled, 0 errors
+```
+
+This was the item that would have forced "bigger changes" (NY4I): Indy carries the
+network radios, the DX cluster, TCI's WebSocket transport, the external loggers
+and tr4wserver. A failure here meant replacing the networking layer wholesale.
+
+**It did not fail.** The vendored copy already contains FPC support -- 136 `FPC`
+references in `IdCompilerDefines.inc` -- and it built with nothing but search
+paths. No patching, no upstream swap, no Synapse/lNet migration.
+
+Worth noting against §9 item 4: NY4I's research said the community recommends the
+upstream Indy over the RAD-Studio-supplied one. That may still be the right long
+-term call, but it is now an *option* rather than a *prerequisite*.
+
+### What stands between here and the whole test suite
+
+With Indy passed, `uFactoryRadioBase` gets as far as **`VC.pas`, which fails on
+exactly two lines** -- the same idiom found on day one:
+
+```
+VC.pas(774,114)  Incompatible types: got "Array[0..2] Of Char" expected "PChar"
+VC.pas(2637,160) Incompatible types: got "Array[0..4] Of Char" expected "PChar"
+```
+
+A typed-constant record field declared `PChar`, initialised from a `char` array
+constant. Delphi converts implicitly; FPC does not.
+
+**The two are NOT equally easy, and that matters:**
+
+- **`CQPChar` (line 774) is trivial** -- one use, in that record. Replace with a
+  literal.
+- **`tr4w_ClassName` (line 2637) is not a drop-in.** It is consumed as an ARRAY
+  in two other places: `@tr4w_ClassName[3]` (`uAbout`) and
+  `CopyMemory(@tr4w_ClassName, ..., length(tr4w_ClassName))` (`uTrayBalloon`).
+  Retyping it to `PChar` fixes `VC.pas` and silently breaks the `CopyMemory` --
+  `@` would take the address of the pointer, and `length()` of a `PChar` is not
+  the string length. **This constant registers the main window class**, so an
+  error here means the main window does not create.
+
+  The fix is small (retype, then `tr4w_ClassName` + `StrLen(...)` at the
+  `CopyMemory` site, which is arguably a correctness fix in its own right) but it
+  is load-bearing Win32 and deserves its own careful pass rather than being
+  tacked onto a spike. **Deliberately not done here.**
+
+### Revised risk picture
+
+| Was | Now |
+|---|---|
+| Anonymous methods -- #1 risk | **Gone.** ~1 hour, improved the design |
+| Indy -- would force "bigger changes" | **Gone.** Compiles unmodified |
+| Dotted unit names -- broad | **Trivial.** Both compilers take the short form |
+| `VC.pas` PChar idiom | **2 sites.** One trivial, one needs care |
+| Inline asm | Unchanged -- already slated for removal |
+| **String model, `ShortString`, byte I/O** | **Still entirely untested** |
+
+Every *dependency* risk has now been retired. What remains is the one that was
+always going to be hardest to see: **runtime behaviour under a different string
+model**, which no compile proves and which the golden corpus is the right oracle
+for.
+
