@@ -540,12 +540,76 @@ immediately and `LOGK1EA` does its own `tCWSleep` afterwards. Swapping it in
 would double every CW element. The real answer is a sidetone on its own thread
 (waveOut/XAudio2), which is also the only version that survives leaving Win32.
 
-### Remaining live blocks
+### The count was ALSO wrong because it only looked at `.pas`
 
-`MainUnit` 7 (RDTSC `GetCPU`, an LPT-driver IOCTL dispatcher, `wsprintf` varargs
-shims), `TF.pas` 2 (`_Pow10`/`ValExt` float parsing -- TF's own comment already
-scopes this as needing a golden harness for the CTY.DAT lat/lon path),
-`DLPortIO` 2, `tr4wserverUnit` 2 and `uWinKey` 2. The last two pairs sit inside
-`{$IF SERVERDEBUG}` and `{$IF K6VVA_WK_DEBUG}`, both `False`, so they do not
-compile today and block nothing.
+`tr4w.dpr` carried one of the largest live blocks in the tree and a `.pas`-only
+search missed it entirely (NY4I caught this). `tr4w/build/Count-LiveAsm.ps1` is
+now checked in: it blanks comments first and scans `.pas`/`.dpr`/`.dpk`/`.inc`,
+so the number is reproducible instead of re-derived by hand each time.
+
+### `tr4w.dpr` -- the four event handles
+
+`CreateEvent` x4 built by hand: push four zeros, call, then `sub esp,16` before
+each subsequent call to walk ESP back over stack bytes the stdcall epilogue had
+already popped. It worked, but it opened with `mov ebx,0` -- **clobbering EBX
+without saving it**, in the startup path, where the compiler may be holding a
+local. Same defect shape as the `JCTRL2` one-liner, in live code. It also checked
+no result: a failed `CreateEvent` left a 0 handle and every later
+`WaitForSingleObject` failed silently forever. Now four Pascal calls and an
+error log.
+
+### `MainUnit` is asm-free
+
+`GetCPU` was `db 0fh,31h` -- a raw RDTSC opcode as bytes. Beyond not assembling
+64-bit, RDTSC is per-core (a migrating thread can read it going **backwards**)
+and its tick rate is not a documented constant. Now `QueryPerformanceCounter`.
+
+`DeviceIoControlHandler` was a **kernel-mode driver dispatch routine pasted into
+a user-mode application** -- ~160 lines switching on `IOCTL_READ_PORTS` /
+`IOCTL_WRITE_PORTS` with raw LPT base arithmetic. Nothing called it, and it could
+not have worked: both `READ_PORT_UCHAR` and `WRITE_PORT_UCHAR` were commented
+out, so the read path stored a hard-coded `0`. Real LPT access goes through
+DLPortIO/inpout32, which is untouched.
+
+### `DLPortIO` -- an error message that had already rotted
+
+The `wsprintf` shim in `NoDLPortioMessage` did `call SysErrorMessage`. **TF's
+`SysErrorMessage` was deleted during the D12 port**, so that call now resolves to
+`SysUtils.SysErrorMessage`, which returns a managed UTF-16 string -- pushed
+straight into `wsprintf` as a `%s`, and leaked. Now Pascal concatenation.
+
+### Verifying code that a normal build never compiles
+
+`{$IF SERVERDEBUG}` and `{$IF K6VVA_WK_DEBUG}` are both `False`, so anything
+inside them is invisible to the compiler and **a rewrite there cannot be checked
+by building normally**. Flipping each switch on and building is cheap, and it
+paid twice:
+
+- `tr4wserverUnit`'s debug writer converted cleanly (verified by building
+  `tr4wserver.dproj` with the switch on -- note it is NOT in `tr4w.dproj`, so
+  building the app proves nothing about it). Three latent defects came out with
+  the assembly: a **`Time` local that was never assigned** yet formatted by the
+  leading `%s`; a `stored` CHARACTER count passed to `WriteFile`, which takes
+  BYTES, over a `WideChar` buffer; and an unbounded `wsprintf` of a
+  caller-supplied string into a fixed 256-element buffer.
+- **`uWinKey`'s `K6VVA_WK_DEBUG` facility does not compile at all** and has not
+  for a long time: `AddStringToTelnetConsole` is called with one argument where
+  it takes two, `CID_TWO_BYTES` is never declared, `DirectionChar`/`ClassName`
+  are `PChar` assigned from `PAnsiChar`, `tOpenFileForWrite` is qualified
+  `Tree.` but lives in `utils_file`, and `wkDebugBuffer` is
+  `array[0..63] of Char` while the format string alone is longer than 64
+  characters. It is also **superseded**: the live path immediately above it is a
+  proper Log4D `logger` call doing the same job. Left alone pending a decision
+  to delete the facility outright -- its 2 asm blocks are inside a `False`
+  switch, so they neither compile nor block anything.
+
+### Remaining live blocks: 4
+
+`TF.pas` 2 -- `_Pow10`/`ValExt` float parsing. TF's own comment already scopes
+this correctly: it needs a golden harness covering precision, the `code` error
+index and whitespace handling, because a silent regression corrupts CTY.DAT
+lat/lon and every beam heading and distance downstream. **Do not convert these
+without the harness.**
+
+`uWinKey` 2 -- inside the `False` switch described above.
 

@@ -53,6 +53,7 @@ interface
 uses
   VC,
   TF,
+  SysUtils,   // SysErrorMessage -- TF's own was removed in the D12 port
   Windows,
   WinSvc,
   Messages
@@ -610,17 +611,16 @@ begin
 end;
 
 procedure NoDLPortioMessage;
-begin;
-  asm
-  push dwStatus
-  call SysErrorMessage
-  push eax
-  push FLastError
-  end;
-  wsprintf(wsprintfBuffer, TC_DLPORTIODRIVERISNOTINSTALLED + ': %s: %s');
-  asm add esp,16
-  end;
-  showwarning(wsprintfBuffer);
+begin
+  // Was a hand-built varargs call: push the arguments, `call SysErrorMessage`,
+  // then wsprintf, then `add esp,16` to unwind.  It had gone stale as well as
+  // being unportable -- TF.SysErrorMessage was DELETED in the D12 port, so that
+  // `call` now resolves to SysUtils.SysErrorMessage, which returns a MANAGED
+  // UTF-16 string.  The assembly pushed that straight into wsprintf as a %s and
+  // leaked the temporary.  Pascal string concatenation has none of those
+  // problems and reads as what it is.
+  showwarning(TC_DLPORTIODRIVERISNOTINSTALLED + ': ' + string(FLastError) +
+     ': ' + SysUtils.SysErrorMessage(dwStatus));
   halt;
 end;
 

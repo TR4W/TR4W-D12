@@ -823,31 +823,31 @@ procedure WriteToServerDebugFile(Count: Cardinal; s: TSocket; comment: PChar; mt
 var
   h                                     : HWND;
   lpNumberOfBytesWritten                : Cardinal;
-  TempBuffer                            : array[0..255] of Char;
-  stored                                : integer;
-  Time                                  : PChar;
+  line                                  : AnsiString;
 begin
 {$IF SERVERDEBUG}
   if not ServerDebugMode then Exit;
   h := CreateFile(@ServerDebugFileName, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
   if h = INVALID_HANDLE_VALUE then Exit;
   SetFilePointer(h, 0, nil, FILE_END);
-  asm
-  push  comment
 
-  push  BytesSEND
-  push  BytesRCVD
+  // Was six manual pushes, a wsprintf, and `add esp,32` to unwind. Three
+  // separate defects came out with the assembly, none of which the compiler
+  // could report because SERVERDEBUG is False and this never compiled:
+  //
+  //   - `Time` was a local PChar that was NEVER ASSIGNED. The leading %s
+  //     formatted whatever happened to be on the stack. It now carries the
+  //     timestamp the column was obviously meant to hold.
+  //   - TempBuffer was array[0..255] of Char, i.e. WideChar under D12, but
+  //     `stored` is a CHARACTER count and WriteFile takes BYTES -- so it wrote
+  //     half the line, as UTF-16, into a text log.
+  //   - wsprintf into a fixed 256-element buffer with a caller-supplied
+  //     `comment` had no bound.
+  line := AnsiString(Format('%s  Client: %-6u   Bytes: %-7u  RX: %-7d  TX: %-7d   %s'#13#10,
+     [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now), s, Count,
+      BytesRCVD, BytesSEND, string(comment)]));
 
-  push  Count
-  push  s
-  push  time
-  end;
-
-  stored := wsprintf(TempBuffer, '%s  Client: %-6u   Bytes: %-7u  RX: %-7d  TX: %-7d   %s'#13#10);
-  asm add esp,32
-  end;
-
-  WriteFile(h, TempBuffer, stored, lpNumberOfBytesWritten, nil);
+  WriteFile(h, PAnsiChar(line)^, Length(line), lpNumberOfBytesWritten, nil);
   CloseHandle(h);
 {$IFEND}
 end;
