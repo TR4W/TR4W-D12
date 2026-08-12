@@ -25,6 +25,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-FormTags.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-FormFields.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-FormOverlap.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"
+powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-FormEvents.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"
 powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\build\Lint-ConfigOwnership.ps1" -SourceDir "$(MSBuildProjectDirectory)\src"]]></PreBuildEvent>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
