@@ -127,6 +127,25 @@ type
       procedure SetXITFreq(whichVFO: TVFO; hz: integer); override;
 
       function  SetFilterHz(hz: integer; vfo: TVFO = nrVFOA): integer; override;
+
+      // THE REST OF THE ABSTRACT SURFACE.  These nine were left unimplemented
+      // when TCI was added, and TFactoryRadioBase declares them Virtual;
+      // Abstract -- so calling any of them on a TCI radio was an access
+      // violation, not a polite refusal.  The compiler DOES say so, but only on
+      // a full build: nine W1020 "Constructing instance of TTCIRadio containing
+      // abstract method" warnings, which /t:Make skips over.
+      //
+      // Every one is now either implemented against the protocol or refuses in
+      // writing.  Nothing here may fault.
+      function  ToggleMode(vfo: TVFO = nrVFOA): TRadioMode; override;
+      procedure SetBand(band: TRadioBand; vfo: TVFO = nrVFOA); override;
+      function  ToggleBand(vfo: TVFO = nrVFOA): TRadioBand; override;
+      procedure SetFilter(filter: TRadioFilter; vfo: TVFO = nrVFOA); override;
+      function  MemoryKeyer(mem: integer): boolean; override;
+      procedure RITBumpUp; override;
+      procedure RITBumpDown; override;
+      procedure VFOBumpUp(whichVFO: TVFO); override;
+      procedure VFOBumpDown(whichVFO: TVFO); override;
    end;
 
 implementation
@@ -811,6 +830,138 @@ begin
    half := Max(1, hz div 2);
    SendToRadio(Format('rx_filter_band:%s,%d,%d;', [TCI_TRX, -half, half]));
    Result := hz;
+end;
+
+// The three named widths, in Hz, expressed through the one place that knows how
+// to phrase a filter to TCI.  Values chosen to match the Icom family's intent
+// (narrow = CW, mid = a tight SSB filter, wide = normal SSB) rather than picked
+// fresh, so a contest operator switching radios gets the same three steps.
+procedure TTCIRadio.SetFilter(filter: TRadioFilter; vfo: TVFO = nrVFOA);
+var
+   hz: integer;
+begin
+   case filter of
+      rfNarrow: hz := 500;
+      rfMid:    hz := 1800;
+      rfWide:   hz := 2700;
+   else
+      // The enum has three members, so this is unreachable today -- and is here
+      // because a fourth added later must not silently pick a width.
+      logger.Warn('[TCI.SetFilter] Unknown filter ordinal %d -- ignored', [Ord(filter)]);
+      Exit;
+   end;
+
+   SetFilterHz(hz, vfo);
+end;
+
+// The TR4W mode cycle, same order as the Icom family so the key does the same
+// thing on every radio: LSB -> USB -> CW -> CWRev -> AM -> FM -> LSB.
+function TTCIRadio.ToggleMode(vfo: TVFO = nrVFOA): TRadioMode;
+var
+   nextMode: TRadioMode;
+begin
+   case Self.vfo[vfo].mode of
+      rmNone, rmLSB: nextMode := rmUSB;
+      rmUSB:         nextMode := rmCW;
+      rmCW:          nextMode := rmCWRev;
+      rmCWRev:       nextMode := rmAM;
+      rmAM:          nextMode := rmFM;
+      rmFM:          nextMode := rmLSB;
+   else
+      nextMode := rmUSB;
+   end;
+
+   SetMode(nextMode, vfo);
+   Result := nextMode;
+end;
+
+// TCI has no band command -- it addresses frequency directly -- so a band change
+// is a tune to that band's calling frequency.  BandToFreq is the base's own
+// table, which is what keeps this radio from growing a second copy of it.
+procedure TTCIRadio.SetBand(band: TRadioBand; vfo: TVFO = nrVFOA);
+var
+   freq: LongInt;
+begin
+   freq := BandToFreq(band);
+   if freq <= 0 then
+      begin
+      logger.Warn('[TCI.SetBand] No frequency known for band ordinal %d -- ignored',
+                  [Ord(band)]);
+      Exit;
+      end;
+
+   SetFrequency(freq, vfo, Self.vfo[vfo].mode);
+end;
+
+// Up through the HF contest bands and round again.  Bands the operator does not
+// have are still stepped through, exactly as on the other radios -- filtering
+// that is a station-configuration question, not a driver one.
+function TTCIRadio.ToggleBand(vfo: TVFO = nrVFOA): TRadioBand;
+var
+   nextBand: TRadioBand;
+begin
+   case Self.vfo[vfo].band of
+      rb160m: nextBand := rb80m;
+      rb80m:  nextBand := rb40m;
+      rb40m:  nextBand := rb20m;
+      rb20m:  nextBand := rb15m;
+      rb15m:  nextBand := rb10m;
+      rb10m:  nextBand := rb160m;
+   else
+      // Includes rbNone and the WARC/VHF bands: a toggle from somewhere outside
+      // the cycle enters it at the top rather than doing nothing.
+      nextBand := rb160m;
+   end;
+
+   SetBand(nextBand, vfo);
+   Result := nextBand;
+end;
+
+// TRUE MEANS ERROR/UNSUPPORTED here -- the house convention for this method,
+// and it fails closed.  TCI can send CW text (see BufferCW/SendCW) but has no
+// command to play a message memory held in the radio, because the "radio" is
+// software that has no such memories.
+function TTCIRadio.MemoryKeyer(mem: integer): boolean;
+begin
+   logger.Warn('[TCI.MemoryKeyer] TCI has no radio message memory -- memory %d ignored',
+               [mem]);
+   Result := True;
+end;
+
+{ ------------------------------------------------- the relative-tune group -- }
+
+// THESE FOUR REFUSE IN WRITING, and the reason is worth stating once because it
+// applies to all of them.
+//
+// TCI is an absolute protocol: vfo: and rit_offset: carry a frequency, and there
+// is no "nudge" command. A serial radio's RU;/UP; moves by the STEP THE OPERATOR
+// SET ON THE RADIO, which the radio knows and we do not. Implementing these as
+// read-and-add would require inventing a step size, and would then move a TCI
+// radio by a different amount than the K3 sitting next to it on the same key --
+// silently, and only noticeably during a contest.
+//
+// A logged refusal is the better failure: nothing moves, and the log says why.
+// Before this they were abstract, so the same key press access-violated.
+//
+// If TR4W later grows a configured tuning step, these become three lines each.
+procedure TTCIRadio.RITBumpUp;
+begin
+   logger.Warn('[TCI.RITBumpUp] TCI has no relative RIT command and no step size is configured -- ignored');
+end;
+
+procedure TTCIRadio.RITBumpDown;
+begin
+   logger.Warn('[TCI.RITBumpDown] TCI has no relative RIT command and no step size is configured -- ignored');
+end;
+
+procedure TTCIRadio.VFOBumpUp(whichVFO: TVFO);
+begin
+   logger.Warn('[TCI.VFOBumpUp] TCI has no relative tune command and no step size is configured -- ignored');
+end;
+
+procedure TTCIRadio.VFOBumpDown(whichVFO: TVFO);
+begin
+   logger.Warn('[TCI.VFOBumpDown] TCI has no relative tune command and no step size is configured -- ignored');
 end;
 
 { -------------------------------------------------------------------- CW -- }
