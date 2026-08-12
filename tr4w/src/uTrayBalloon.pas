@@ -152,6 +152,9 @@ var
 
 implementation
 
+uses
+  SysUtils;   // StrPLCopy
+
 function Balloon_AddTrayIcon(hWin: HWND; ID: Cardinal; Icon: HICON; CallbackMessage: Cardinal; Hint: ShortString): boolean;
 begin
   IconData.cbSize := SizeOf(IconData);
@@ -160,7 +163,10 @@ begin
   IconData.uFlags := NIF_ICON or NIF_MESSAGE or NIF_TIP;
   IconData.uCallbackMessage := CallbackMessage;
   IconData.HICON := Icon;
-  Windows.CopyMemory(@IconData.szTip, @Hint[1], length(Hint));
+  // szTip is a fixed 64-byte ANSI field in the shell struct, so the copy has to
+  // be bounded HERE -- a 255-character Hint used to run 191 bytes past it, over
+  // the rest of the global IconData record.
+  StrPLCopy(PAnsiChar(@IconData.szTip[0]), Hint, High(IconData.szTip));
   Result := tShell_NotifyIcon(NIM_ADD, @IconData);
 end;
 
@@ -168,9 +174,15 @@ function Balloon_ShowTrayTips(TipInfo: ShortString): boolean;
 begin
   IconData.cbSize := SizeOf(IconData);
   IconData.uFlags := NIF_INFO;
-  Windows.CopyMemory(@IconData.szInfo, @TipInfo[1], length(TipInfo));
+  // Bounded and NUL-terminated: IconData is a global reused across calls, so an
+  // unterminated copy also leaves the tail of the previous message behind.
+  StrPLCopy(PAnsiChar(@IconData.szInfo[0]), TipInfo, High(IconData.szInfo));
   IconData.DUMMYUNIONNAME.uTimeout := 60;
-  Windows.CopyMemory(@IconData.szInfoTitle, @tr4w_ClassName, length(tr4w_ClassName));
+  // tr4w_ClassName is Char (= WideChar under D12) and szInfoTitle is ANSI, so
+  // this needs a real narrowing conversion.  The raw CopyMemory it replaces
+  // moved five BYTES of UTF-16 -- 'T', #0 -- and titled the balloon "T".
+  StrPLCopy(PAnsiChar(@IconData.szInfoTitle[0]), AnsiString(tr4w_ClassName),
+     High(IconData.szInfoTitle));
   IconData.dwInfoFlags := NIIF_INFO;
   tShell_NotifyIcon(NIM_MODIFY, @IconData);
   IconData.DUMMYUNIONNAME.uVersion := NOTIFYICON_VERSION;

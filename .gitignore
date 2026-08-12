@@ -110,6 +110,7 @@ tr4w/.claude/
 wiki/
 pcap/
 spike/units/
+spike/units_indy/
 spike/*.exe
 spike/*.o
 spike/*.ppu

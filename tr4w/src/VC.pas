@@ -196,8 +196,12 @@ const
   ZoneModeTypeSA                        : array[ZoneModeType] of PAnsiChar = ('CQ Zone', 'ITU Zone');
 
 const
-  tr4w_ClassName                        : array[0..4] of Char = ('T', 'R', '4', 'W', #0);
-  CQPChar                               : array[0..2] of AnsiChar = ('C', 'Q', #0);
+  // The Win32 window-class name.  This is a plain string constant, NOT a
+  // char array: every consumer wants a PChar (RegisterClass, CreateWindowEx,
+  // UnregisterClass, CreateMutex, MessageBox), and the array form only ever
+  // worked because Delphi decays it implicitly.  FPC does not, and neither
+  // does anything else -- see docs/FPC_SPIKE_LOG.md.
+  tr4w_ClassName                        = 'TR4W';
   MASKEVENT                             = False;
   OGLVERSION                            = False;
   K6VVA_WK_DEBUG                        = False;
@@ -771,7 +775,7 @@ var
 {mweNetwork}              (mweName: 'NETWORK';                 mweiStyle: 1;                 mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:1; mweB: 1; mweiX: 25; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
 
 {mweOnAirTimeCounter}     (mweName: 'ON AIR TIME';             mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 28; mweiY: 08; mweiWidth: 05; mweiHeight: 1 ),
-{mweOpMode}               (mweName: 'OP MODE';                 mweiStyle: defStyle;          mweText:CQPChar     ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 28; mweiY: 11; mweiWidth: 05; mweiHeight: 1 ),
+{mweOpMode}               (mweName: 'OP MODE';                 mweiStyle: defStyle;          mweText:'CQ'        ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 28; mweiY: 11; mweiWidth: 05; mweiHeight: 1 ),
 {mwePaddle}               (mweName: 'PADDLE';                  mweiStyle: DefStyleDis;       mweText:TC_PADDLE   ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 38; mweiY: 10; mweiWidth: 04; mweiHeight: 1 ),
 {mwePossibleCall}         (mweName: 'POSSIBLE CALL';           mweiStyle: 0;                 mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 23; mweiY: 07; mweiWidth: 02; mweiHeight: 1 ),
 {mweQSOsWithThisStation}  (mweName: 'PREVIOUS QSOS';           mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 1; mweiX: 23; mweiY: 07; mweiWidth: 02; mweiHeight: 1 ),
