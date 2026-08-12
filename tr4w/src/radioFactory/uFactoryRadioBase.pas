@@ -236,7 +236,24 @@ const
 
    // Reconnection configuration
    RECONNECT_INITIAL_DELAY = 1000;    // 1 second initial delay
-   RECONNECT_MAX_DELAY = 30000;       // 30 seconds max delay
+   // 5 seconds, not 30.  NY4I timed a power cycle at 13.55 s from switch-on to
+   // the frequency reappearing -- and almost all of that was WAITING FOR THE
+   // NEXT ATTEMPT, not the radio: he switched on part way through an 8 or 16
+   // second backoff.
+   //
+   // The 30 s cap was set to avoid "a tight loop", but the log says what a
+   // reopen actually costs: 17:34:59.391 -> .503, ONE HUNDRED AND TWELVE
+   // MILLISECONDS.  Rationing a 112 ms operation to once every 30 s buys
+   // nothing measurable and costs up to 30 s of an operator staring at a
+   // magenta callsign.  At 5 s a rig left off overnight costs 112 ms every 5 s
+   // -- about 2% of one thread, doing nothing but a close and an open on a port
+   // with no one on the other end.
+   //
+   // Worst-case recovery is now roughly the backoff plus one poll round trip,
+   // so about 5 s rather than about 30 s.  The doubling is kept: the first
+   // retry is still immediate-ish for the common case of a rig switched off and
+   // straight back on.
+   RECONNECT_MAX_DELAY = 5000;        // 5 seconds max delay between reopen attempts
    RECONNECT_BACKOFF_MULTIPLIER = 2;  // Double delay each retry
 
    // How long the link must stay good before the startup command goes out.
@@ -1551,7 +1568,9 @@ end;
 // The reopen is throttled and backs off, because "not answering" is usually just
 // a radio switched off: the first retry is prompt (off-and-straight-back-on is
 // the common case) and the interval then doubles to RECONNECT_MAX_DELAY so a rig
-// left off overnight costs one reopen every 30s rather than a tight loop.
+// left off overnight costs one reopen every 5s rather than a tight loop.  See
+// that constant for why 5 and not 30: the wait, not the radio, was most of a
+// measured 13.55 s recovery.
 // FSerialReopenDelay resets in UpdateLastValidResponse, i.e. the moment the radio
 // speaks again -- there is no separate "we are healthy" bookkeeping to get wrong.
 procedure TFactoryRadioBase.MaintainSerialLink;
