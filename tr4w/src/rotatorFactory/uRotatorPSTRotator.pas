@@ -46,7 +46,7 @@ unit uRotatorPSTRotator;
 interface
 
 uses
-   System.SysUtils,
+   SysUtils,
    uRotatorBase;
 
 type
@@ -82,11 +82,15 @@ begin
    Result := Ascii(Format('%.3d', [aAzimuth]));
 end;
 
+// A NAMED unit-level function, not an anonymous one.  The registry's factory type is a
+// plain procedure pointer so that this unit compiles under a Pascal without closures;
+// nothing was captured here anyway, so the anonymous form bought nothing.
+function CreatePSTRotator(const aSend: TRotatorSendProc): TRotatorBase;
+begin
+   Result := TRotatorPSTRotator.Create(aSend);
+end;
+
 initialization
-   RegisterRotator('PSTROTATOR', 'PstRotator (UDP)',
-      function (const aSend: TRotatorSendProc): TRotatorBase
-      begin
-         Result := TRotatorPSTRotator.Create(aSend);
-      end);
+   RegisterRotator('PSTROTATOR', 'PstRotator (UDP)', CreatePSTRotator);
 
 end.

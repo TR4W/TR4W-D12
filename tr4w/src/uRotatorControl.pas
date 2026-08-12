@@ -51,8 +51,8 @@ unit uRotatorControl;
 interface
 
 uses
-   System.SysUtils,
-   System.Generics.Collections,
+   SysUtils,
+   Generics.Collections,
    uRotatorBase,
    uRadioConfigStore;
 
@@ -95,16 +95,31 @@ type
         Reconstructing it from the payload would work today and would break the
         first time a UDP rotator sent anything but bare digits. }
       LastHeading: integer;
+      { The driver's outlet. A METHOD on the live rotator rather than a closure
+        capturing it: same effect, and it names the owner instead of implying it.
+        Each driver is handed ITS OWN rotator's SendBytes, which is what stops
+        one rotator's frame going out on another's wire. }
+      procedure SendBytes(const aBytes: TBytes);
       destructor Destroy; override;
    end;
 
 var
    GLive: TObjectList<TLiveRotator> = nil;
 
+// Forward: SendBytes is a method on the type declared above, but the routine it
+// delegates to needs PortFromName and the driver's UsesSerialPort, so it lives
+// further down with the rest of the transport.
+procedure SendToRotator(const aLive: TLiveRotator; const aBytes: TBytes); forward;
+
 destructor TLiveRotator.Destroy;
 begin
    FreeAndNil(Driver);
    inherited Destroy;
+end;
+
+procedure TLiveRotator.SendBytes(const aBytes: TBytes);
+begin
+   SendToRotator(Self, aBytes);
 end;
 
 function PortFromName(const aName: string): PortType;
@@ -220,14 +235,14 @@ begin
    live.Port  := PortFromName(aPortName);
    live.Bands := aBands;
 
-   // The closure captures `live`, so each driver's bytes reach ITS port.  A
-   // shared send would put one rotator's frame on another's wire, which on a
-   // two-rotator station is exactly the failure that is hardest to believe.
-   live.Driver := CreateRotator(aRotatorId,
-      procedure (const aBytes: TBytes)
-      begin
-         SendToRotator(live, aBytes);
-      end);
+   // Each driver gets ITS OWN rotator's SendBytes, so a driver's frame can only
+   // reach that rotator's port.  A shared send would put one rotator's frame on
+   // another's wire, which on a two-rotator station is exactly the failure that
+   // is hardest to believe.
+   //
+   // Was an anonymous method capturing `live`; a method pointer says the same
+   // thing while naming the owner, and compiles without closures.
+   live.Driver := CreateRotator(aRotatorId, live.SendBytes);
 
    if live.Driver = nil then
       begin

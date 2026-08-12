@@ -44,12 +44,15 @@ unit uRotatorRegistry;
 interface
 
 uses
-   System.SysUtils,
-   System.Generics.Collections,
+   SysUtils,
+   Generics.Collections,
    uRotatorBase;
 
 type
-   TRotatorFactoryProc = reference to function (const aSend: TRotatorSendProc): TRotatorBase;
+   { A PLAIN procedure pointer. Each driver registers a named unit-level
+     function; none of them captured anything, so the anonymous form bought
+     nothing and cost a closure-capable compiler. }
+   TRotatorFactoryProc = function (const aSend: TRotatorSendProc): TRotatorBase;
 
 { Called from a driver unit's initialization. }
 procedure RegisterRotator(const aId, aDisplayName: string;

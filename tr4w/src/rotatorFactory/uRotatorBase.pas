@@ -46,7 +46,7 @@ unit uRotatorBase;
 interface
 
 uses
-   System.SysUtils;
+   SysUtils;
 
 type
    { What a rotator can do.  Declared per driver, never asked of a type. }
@@ -58,7 +58,14 @@ type
    TRotatorCapabilities = set of TRotatorCapability;
 
    { Bytes out.  A driver never touches a port itself. }
-   TRotatorSendProc = reference to procedure (const aBytes: TBytes);
+   { HOW A DRIVER'S BYTES REACH A PORT.
+     A METHOD POINTER, not a closure. It was `reference to procedure` -- an
+     anonymous method -- which reads well but costs two things. It requires a
+     compiler with closures (FPC 3.2.2 stable has none: `Identifier not found
+     "reference"`), and it hides WHO owns the state being captured. `of object`
+     says the sender is an object, which is what it always was: the one live
+     rotator whose port these bytes belong on. }
+   TRotatorSendProc = procedure (const aBytes: TBytes) of object;
 
    TRotatorBase = class abstract
    private

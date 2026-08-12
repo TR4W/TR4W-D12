@@ -61,19 +61,30 @@ uses
    uRotatorAlfaSpid,
    uRotatorPSTRotator;
 
-var
-   captured: TBytes;
+type
+   // The wire, captured. An OBJECT rather than an anonymous method over a
+   // global: TRotatorSendProc is a method pointer now, and a probe object is
+   // what the production side does too (TLiveRotator.SendBytes). One fewer
+   // difference between how the test drives a driver and how the program does.
+   TWireProbe = class
+   public
+      bytes: TBytes;
+      procedure Send(const aBytes: TBytes);
+   end;
+
+procedure TWireProbe.Send(const aBytes: TBytes);
+begin
+   bytes := aBytes;
+end;
 
 function TRotatorFactoryTests.Frame(const aId: string; const aAzimuth: integer): TBytes;
 var
    r: TRotatorBase;
+   probe: TWireProbe;
 begin
-   captured := nil;
-   r := CreateRotator(aId,
-      procedure (const aBytes: TBytes)
-      begin
-         captured := aBytes;
-      end);
+   probe := TWireProbe.Create;
+   try
+   r := CreateRotator(aId, probe.Send);
    try
       if r <> nil then
          begin
@@ -82,7 +93,10 @@ begin
    finally
       r.Free;
    end;
-   Result := captured;
+      Result := probe.bytes;
+   finally
+      probe.Free;
+   end;
 end;
 
 function TRotatorFactoryTests.FrameText(const aId: string; const aAzimuth: integer): string;
@@ -267,27 +281,25 @@ end;
 procedure TRotatorFactoryTests.Test_StopIsRefusedWhenNotSupported;
 var
    r: TRotatorBase;
-   sent: boolean;
+   probe: TWireProbe;
 begin
    BeginTest('Stop sends nothing when the driver does not declare rcStop');
    // None of the five has a stop command ported yet.  The capability and the
    // StopFrame override go together; asserting that Stop is silent without the
    // capability is what stops a future driver declaring one and forgetting the
    // other -- an empty frame would otherwise be sent to a live rotator.
-   sent := False;
-   r := CreateRotator('YAESU',
-      procedure (const aBytes: TBytes)
-      begin
-         sent := True;
-      end);
+   probe := TWireProbe.Create;
+   probe.bytes := nil;
+   r := CreateRotator('YAESU', probe.Send);
    try
       CheckFalse(r.Supports(rcStop), 'no stop capability declared');
       r.Stop;
-      CheckFalse(sent, 'and nothing was sent');
+      CheckTrue(probe.bytes = nil, 'and nothing was sent');
 
       CheckTrue(r.Supports(rcTurn), 'every rotator turns, without declaring it');
    finally
       r.Free;
+      probe.Free;
    end;
 end;
 
