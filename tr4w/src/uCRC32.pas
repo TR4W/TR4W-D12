@@ -20,6 +20,28 @@ http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uCRC32;
 
+{
+  Standard CRC-32 (CRC-32/ISO-HDLC): polynomial $EDB88320, initial $FFFFFFFF,
+  reflected, output one's-complemented.  The same CRC as PKZIP, Ethernet, PNG
+  and gzip.  TR4WServer uses it for log and packet integrity, so a regression
+  here corrupts multi-op log synchronization silently -- uTestCRC32 holds the
+  published reference vectors.
+
+  This was three blocks of hand-written x86-32 assembly.  Replacing them with
+  Pascal was NOT a style exercise: the asm cannot assemble on a 64-bit compiler,
+  which made this unit one of two blocking the FPC/Lazarus portability spike
+  (see docs/FPC_SPIKE_LOG.md).  The tests came first and did not change.
+
+  Two defects went with it, neither of which the tests could see:
+
+  - The 256-entry lookup table was rebuilt on EVERY call to GetCRC32 -- 2,048
+    shift/xor iterations before a single input byte was read.  It is a constant
+    table; it is now built once at unit initialization.
+  - The table builder set the direction flag (STD) and cleared it (CLD) at the
+    end.  Any exception in between would have left DF set, which violates the
+    ABI and misbehaves in unrelated code that assumes forward string ops.
+}
+
 interface
 
 function GetCRC32(const data; Count: longword): longword; register;
@@ -32,64 +54,61 @@ implementation
 var
   CRC32Table                            : array[Byte] of Cardinal;
 
-function Crc32Next(Crc32Current: longword; const data; Count: longword): longword; register;
-asm
-//file://EAX - CRC32Current; EDX - Data; ECX - Count
-  test  ecx, ecx
-  jz    @@EXIT
-  PUSH  ESI
-  MOV   ESI, EDX  //file://Data
+{~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Crc32BuildTable
 
-@@Loop:
-    MOV EDX, EAX                       // copy CRC into EDX
-    LODSB                              // load next byte into AL
-    XOR EDX, EAX                       // put array index into DL
-    SHR EAX, 8                         // shift CRC one byte right
-    SHL EDX, 2                         // correct EDX (*4 - index in array)
-    XOR EAX, DWORD PTR CRC32Table[EDX] // calculate next CRC value
-  dec   ECX
-  JNZ   @@Loop                         // LOOP @@Loop
-  POP   ESI
-@@EXIT:
-end; //Crc32Next
+  Entry i holds the CRC of the single byte i.  For each of the 8 bits the value
+  is shifted right, and the polynomial is XORed in when the bit shifted OUT was
+  set -- which is exactly what the assembly's SHR-then-JNC pair did, since SHR
+  leaves the departing bit in the carry flag.
 
-function Crc32Done(Crc32: longword): longword; register;
-asm
-  NOT   EAX
-end; //Crc32Done
-
-function Crc32Initialization: Pointer;
-asm
-  push    EDI
-  STD
-  mov     edi, OFFSET CRC32Table+ ($400-4)  // Last DWORD of the array
-  mov     edx, $FF  // array size
-
-@im0:
-  mov     eax, edx  // array index
-  mov     ecx, 8
-@im1:
-  shr     eax, 1
-  jnc     @Bit0
-  xor     eax, Crc32Polynomial  // <магическое> число - тоже что у ZIP,ARJ,RAR,:
-@Bit0:
-  dec     ECX
-  jnz     @im1
-
-  stosd
-  dec     edx
-  jns     @im0
-
-  CLD
-  pop     EDI
-  mov     eax, OFFSET CRC32Table
-end; //Crc32Initialization
+  Called once, from initialization.  The table is read-only afterwards, which is
+  what makes GetCRC32 safe to call from more than one thread.
+}
+procedure Crc32BuildTable;
+var
+  i                                     : integer;
+  bit                                   : integer;
+  c                                     : Cardinal;
+begin
+  for i := 0 to 255 do
+    begin
+    c := Cardinal(i);
+    for bit := 1 to 8 do
+      begin
+      if (c and 1) <> 0 then
+        begin
+        c := (c shr 1) xor Crc32Polynomial;
+        end
+      else
+        begin
+        c := c shr 1;
+        end;
+      end;
+    CRC32Table[i] := c;
+    end;
+end;
 
 function GetCRC32(const data; Count: longword): longword; register;
+var
+  p                                     : PByte;
+  i                                     : longword;
 begin
-  Crc32Initialization;
-  RESULT := Crc32Next(Crc32Init, data, Count);
-  RESULT := Crc32Done(RESULT);
+  RESULT := Crc32Init;
+  p := PByte(@data);
+
+  for i := 1 to Count do
+    begin
+    RESULT := (RESULT shr 8) xor CRC32Table[Byte(RESULT xor p^)];
+    Inc(p);
+    end;
+
+  // Count = 0 falls straight through to here, so the empty input yields
+  // NOT $FFFFFFFF = 0 -- the same answer the assembly's short-circuit gave.
+  RESULT := not RESULT;
 end;
+
+initialization
+  Crc32BuildTable;
 
 end.
