@@ -469,10 +469,6 @@ type
 // TADIF_Fields enum moved to uADIF.pas (Issue #887).
 
 var
-  FreeMemCount: integer;
-  ReallocMemCount: integer;
-  OldMemMgr: TMemoryManager;
-  PreviousProcAddress: integer;
   debugstr: string;
 const
   PCharDayTags: array[0..6] of PAnsiChar = (TC_SUN, TC_MON, TC_TUE, TC_WED, TC_THU,
@@ -7415,77 +7411,27 @@ begin
 
 end;
 
-function NewGetMem(Size: integer): Pointer;
-begin
-  // inc(GetMemCount);
-  // RESULT := OldMemMgr.GetMem(Size);
-
-  asm
- add esp,12
- pop PreviousProcAddress
- sub esp,16
-  end;
-
-  // inc(GetMemCount);
-  try
-    Result := OldMemMgr.GetMem(Size);
-  except
-    begin
-      asm
- push PreviousProcAddress
-      end;
-      wsprintfA(wsprintfBuffer,
-        'If you see this message, please send this code: '#13#10#13#10'GM-%X'#13#10#13#10'to ny4i@ny4i.com.');
-      asm add esp,12
-      end;
-      showwarning(wsprintfBuffer);
-    end;
-
-  end;
-end;
-
-function NewFreeMem(p: Pointer): integer;
-begin
-
-  asm
- add esp,12
- pop PreviousProcAddress
- sub esp,16
-  end;
-
-  inc(FreeMemCount);
-  Result := OldMemMgr.FreeMem(p);
-  if Result <> 0 then
-  begin
-    asm
- push PreviousProcAddress
-    end;
-    wsprintfA(wsprintfBuffer,
-      'If you see this message, please send this code: '#13#10#13#10'FM-%X'#13#10#13#10'to tr4w@qrz.ru.');
-    asm add esp,12
-    end;
-    showwarning(wsprintfBuffer);
-  end;
-end;
-
-function NewReallocMem(p: Pointer; Size: integer): Pointer;
-begin
-
-  inc(ReallocMemCount);
-  Result := OldMemMgr.ReallocMem(p, Size);
-end;
-
-const
-  NewMemMgr: TMemoryManager = (
-    GetMem: NewGetMem;
-    FreeMem: NewFreeMem;
-    ReallocMem: NewReallocMem);
-
-procedure SetNewMemMgr;
-begin
-  GetMemoryManager(OldMemMgr);
-  SetMemoryManager(NewMemMgr);
-end;
+// The custom memory manager that used to live here (NewGetMem / NewFreeMem /
+// NewReallocMem / NewMemMgr / SetNewMemMgr) is DELETED.  It was never installed
+// in any build we ship -- SetNewMemMgr was called only under {$IF tDebugMode},
+// and tDebugMode is False -- and it was unsound in three separate ways:
+//
+//   - Each hook opened with `add esp,12 / pop PreviousProcAddress / sub esp,16`
+//     to reach up the stack for the caller's return address.  That assumed the
+//     exact frame layout the Delphi 7 compiler produced.  D12 guarantees no
+//     such thing, and the functions also carried a try/except, whose SEH
+//     registration record lives on the very stack being indexed by hand.
+//   - The except handler called wsprintfA and showwarning FROM INSIDE A GetMem
+//     callback that had fired because an allocation just failed -- re-entering
+//     the allocator in order to report the allocator.
+//   - It was inconsistent: NewReallocMem had none of the address capture, so
+//     the three hooks did not behave alike.
+//
+// What it bought was a diagnostic code in a message box. What it cost was six
+// blocks of x86-32 assembly that cannot assemble on a 64-bit compiler.
+// If allocation-failure diagnostics are wanted again, the supported route is
+// System.GetMemoryManager/SetMemoryManagerEx with ReturnAddress, not hand
+// arithmetic on ESP.
 
 procedure CheckEditableWindowHeight;
 var
@@ -9855,10 +9801,8 @@ begin
 end;
 }
 begin
-{$IF tDebugMode}
-  SetNewMemMgr;
-  //Msidle.dll GetIdleMinutes(
-{$IFEND}
+// The {$IF tDebugMode} SetNewMemMgr call that stood here went with the custom
+// memory manager -- see the note where those hooks used to be defined.
 
 end.
 

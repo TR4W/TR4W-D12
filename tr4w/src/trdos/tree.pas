@@ -1271,23 +1271,12 @@ begin
 end;
 
 
-procedure Dit;
-
-begin
-  Sound(CWPitch);
-  Sleep(DitLength);
-  NoSound;
-  Sleep(DitLength);
-end;
-
-procedure Dah;
-
-begin
-  Sound(CWPitch);
-  Sleep(DahLength);
-  NoSound;
-  Sleep(DitLength);
-end;
+// Dit and Dah were deleted with BeepUnit's PC-speaker path. They were the only
+// callers of Sound/NoSound that were NOT guarded by a Windows 9x test, so on
+// anything since Windows Me they would have executed a privileged IN/OUT and
+// faulted. They could not: neither appeared in this unit's interface section
+// and nothing called either one. K1EAKeyer has its own Dit/Dah methods, which
+// are the live ones and are untouched.
 
 { Now for the external routines in alphabetical order. }
 
