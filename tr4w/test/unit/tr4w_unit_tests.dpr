@@ -206,6 +206,7 @@ uses
    uFlexDiscovery       in '..\..\src\radioFactory\uFlexDiscovery.pas',
    uTestFlexDiscovery   in 'uTestFlexDiscovery.pas',
    uTestKenwoodSerial   in 'uTestKenwoodSerial.pas',
+   uTestRadioTCI        in 'uTestRadioTCI.pas',
    uTestSerialParams    in 'uTestSerialParams.pas',
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
    uTestHamLibIDs       in 'uTestHamLibIDs.pas',
@@ -288,6 +289,7 @@ begin
    RegisterSuite(TFlexRegistryTests.Create('FlexRegistry'));
    RegisterSuite(TFlexDiscoveryTests.Create('FlexDiscovery'));
    RegisterSuite(TKenwoodSerialTests.Create('KenwoodSerial'));
+   RegisterSuite(TRadioTCITests.Create('RadioTCI'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
