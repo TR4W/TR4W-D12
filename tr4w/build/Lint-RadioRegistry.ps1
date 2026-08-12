@@ -78,11 +78,21 @@ foreach ($file in Get-ChildItem -LiteralPath $SourceDir -Recurse -Filter *.pas) 
       $args = $m.Groups['args'].Value
       $isById = $m.Groups['byId'].Success
 
-      # Skip the declarations/forwards in uRadioRegistry itself and any
-      # commented-out example: every real call passes an anonymous constructor
-      # closure.  (The old test required a bracketed link set, which silently
-      # excluded the RegisterHamLibOnlyRadio form -- it has no links argument.)
-      if ($args -notmatch 'function\s*:') { continue }
+      # Skip the declarations/forwards in uRadioRegistry itself.  A DECLARATION
+      # separates its parameters with semicolons (aModel: InterfacedRadioType;
+      # aCtor: TRadioCtor; ...); a CALL separates arguments with commas and has
+      # no semicolon before its closing paren.  That distinction is a property
+      # of Pascal rather than of how the constructors happen to be spelled,
+      # which is the point --
+      #
+      # this test USED to look for 'function :', the anonymous-method form the
+      # constructors had before the FPC portability work replaced all 101 with
+      # named unit-level functions.  Nothing failed when that happened: the lint
+      # matched nothing and reported "0 radio registrations, no collisions",
+      # passing the build while guarding absolutely nothing.  A filter keyed on
+      # incidental syntax is how a gate fails open.  Hence also the floor check
+      # at the bottom of this script.
+      if ($args -match ';') { continue }
 
       # @() is load-bearing: with a SINGLE literal, ForEach-Object returns a bare
       # string and $literals[0] would index its first CHARACTER, not the literal.
@@ -139,6 +149,18 @@ $registrations |
 
 if ($violations -gt 0) {
    Write-Output ("Lint-RadioRegistry: {0} violation(s) across {1} registration(s)." -f $violations, $registrations.Count)
+   exit 1
+}
+
+# --- the lint must not fail open --------------------------------------------
+# A pattern that stops matching reports "no collisions" and passes, which is
+# indistinguishable from a healthy run.  That happened for real: see the note on
+# the constructor filter above.  TR4W registers ~100 radios, so any count this
+# low means the SCRIPT is broken, not the source.  Deliberately far below the
+# real number so removing a radio never trips it.
+$floor = 50
+if ($registrations.Count -lt $floor) {
+   Write-Output ("Lint-RadioRegistry: found only {0} registrations (expected at least {1}) - this lint has almost certainly stopped matching the source rather than the source having lost its radios. Fix the pattern in {2}." -f $registrations.Count, $floor, $PSCommandPath)
    exit 1
 }
 
