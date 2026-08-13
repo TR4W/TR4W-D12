@@ -461,8 +461,10 @@ mean the migration never finishes. Each is a **post-D12 project**.
   D7 quirk, not introduced by D12. **Documented in full** at the foot of
   `tr4w/test/corpus/known-divergences.txt` (2026-08-13), including the demonstrated
   diff and the fix direction — store the sent exchange with the QSO instead of
-  rebuilding it from session globals at export time. **Still to be filed as an
-  issue.**
+  rebuilding it from session globals at export time. **Tracked as TR4W-D12 issue
+  #2** ("Event sourcing issue in log record creation"), where the four diffs are
+  attached as its concrete instances — the issue predates this item and is the
+  same defect, so no second issue was opened. **DONE 2026-08-13.**
 - **A-5** — the doc/version staleness above.
 
 ---
