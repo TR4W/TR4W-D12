@@ -37,8 +37,14 @@ general_qso_2026_w1aw4  event-source: MY STATE appended to sent exchange
 #
 # STILL OPEN (P2-10): these four are a pre-existing D7 quirk, not a D12
 # conversion defect -- the sent exchange is rebuilt from MY-station session
-# globals at export time instead of being stored per QSO.  The fix is to store
-# the sent exchange with the QSO.
+# globals at export time instead of being stored per QSO.
+#
+# GATED ON THE SQLite3 LOG MIGRATION (NY4I, 2026-08-13).  Do not reach for the
+# obvious fix first: storing the sent exchange with the QSO widens the log
+# RECORD, and that record is the fixed-layout binary .dat that these fixtures
+# are D7-WRITTEN examples of.  Widening it now means a format break, a
+# converter, and re-freezing all 13 fixtures -- work the SQLite3 move has to do
+# once anyway.  Capture the sent exchange in that schema from the start.
 #
 # TRACKED AS TR4W-D12 issue #2, "Event sourcing issue in log record creation".
 # The four diffs above are attached there as its concrete instances.  When it

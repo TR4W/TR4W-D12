@@ -461,8 +461,12 @@ mean the migration never finishes. Each is a **post-D12 project**.
   D7 quirk, not introduced by D12. **Documented in full** at the foot of
   `tr4w/test/corpus/known-divergences.txt` (2026-08-13), including the demonstrated
   diff and the fix direction — store the sent exchange with the QSO instead of
-  rebuilding it from session globals at export time. **Tracked as TR4W-D12 issue
-  #2** ("Event sourcing issue in log record creation"), where the four diffs are
+  rebuilding it from session globals at export time — but **GATED ON THE SQLite3
+  LOG MIGRATION** (NY4I, 2026-08-13): that fix widens the log record, and the
+  record is the fixed-layout binary `.dat` the corpus reads as D7-written
+  fixtures, so doing it before the store moves means a format break, a
+  converter and re-freezing 13 fixtures that the SQLite3 move must do once
+  anyway. **Tracked as TR4W-D12 issue #2** ("Event sourcing issue in log record creation"), where the four diffs are
   attached as its concrete instances — the issue predates this item and is the
   same defect, so no second issue was opened. **DONE 2026-08-13.**
 - **A-5** — the doc/version staleness above.
