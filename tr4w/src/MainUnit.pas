@@ -492,11 +492,21 @@ uses
   // uDocumentation,
 {$IFEND}
 
+// FMX is Delphi-only.  Under FPC the LCL is the intended replacement (proven on
+// the bench: an LCL form runs inside TR4W's own GetMessage loop, and TThread.Queue
+// drains), but that port is not done, and blocking every other unit on it would
+// mean never finding out whether the CONTEST ENGINE works under FPC.  Excluded
+// here so the FPC build can be built and tested; the three commands below are
+// simply unavailable in it.  This guard comes OUT with the LCL port.
+{$IFNDEF FPC}
   uFMXSpikeForm,    // SPIKE ONLY -- the FMXTEST command, remove with the spike
+{$ENDIF}
   uUDPBroadcastConfig, // TUDPStream / usLookup
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
+{$IFNDEF FPC}
   uFMXDesignedProbe, // SPIKE ONLY -- the FMXDESIGN command; remove with the spike
   uPrefsForm,       // the PREF command -- the radio Preferences window
+{$ENDIF}
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
@@ -7536,9 +7546,11 @@ begin
     11: SendFullLogToUDP;
     12: SendViaTelnetSocket('SH/WCY');
     13: SendViaTelnetSocket('SH/WWV');
+{$IFNDEF FPC}
     14: ShowFMXSpikeForm;   // SPIKE ONLY -- remove with the spike
     15: ShowPreferences;
     16: ShowFMXDesignedProbe;   // SPIKE ONLY -- remove with the spike
+{$ENDIF}
     17:
       begin
       // Radio 1, because the legacy dialog is per-slot and this is only an

@@ -630,7 +630,7 @@ Type TFactoryRadioBase = class(TObject)
       function GetActiveVFO: TVFO;
       procedure SetActiveVFO(vfo: TVFO);
 
-   published
+   public
 
       // Polling interface - radios override to send appropriate query commands
       procedure QueryVFOAFrequency; Virtual;     // Query VFO A frequency

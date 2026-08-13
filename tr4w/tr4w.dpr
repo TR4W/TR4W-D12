@@ -159,6 +159,7 @@ uses
   uMenu in 'src\uMenu.pas',
   utils_net in 'src\utils\utils_net.pas',
   utils_hw in 'src\utils\utils_hw.pas',
+  uAnsiStr in 'src\utils\uAnsiStr.pas',
   utils_text in 'src\utils\utils_text.pas',
   utils_math in 'src\utils\utils_math.pas',
   utils_file in 'src\utils\utils_file.pas',

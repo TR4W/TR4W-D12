@@ -103,7 +103,7 @@ var
 implementation
 uses
   SysUtils,   // Issue #997: Format/StrPCopy
-  System.AnsiStrings, // D12: ANSI StrPCopy for wsprintfBuffer
+  uAnsiStr, // D12: ANSI StrPCopy for wsprintfBuffer
   LOGSUBS2,
   MainUnit,
   uNet,
@@ -443,7 +443,7 @@ begin
   ValidateRect(BandMapListBox, nil);
   RedrawWindow(BandMapListBox, nil, 0, RDW_INVALIDATE or RDW_NOERASE or RDW_UPDATENOW);
   // Issue #997: asm-push wsprintf -> SysUtils.Format (TC_SPOTS = '%d spots').
-  System.AnsiStrings.StrPCopy(wsprintfBuffer, SysUtils.Format(TC_SPOTS, [NumberEntriesDisplayed]));
+  uAnsiStr.StrPCopy(wsprintfBuffer, SysUtils.Format(TC_SPOTS, [NumberEntriesDisplayed]));
   SetTextInBMSB(5, wsprintfBuffer);
   if NumberEntriesDisplayed = 0 then
     ClearSpotInfo;

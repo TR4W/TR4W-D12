@@ -31,7 +31,6 @@ uses
   VC,
   TF,
   Windows,
-  WinSvc,
   Messages,
   SysUtils;
 

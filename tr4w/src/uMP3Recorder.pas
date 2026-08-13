@@ -25,7 +25,7 @@ uses
 //  spectrum_vis,
   LogK1EA,
   SysUtils, // Issue #997 (StrPCopy/Format for asm-block removal; placed before TF so unqualified Format still resolves to TF.Format)
-  System.AnsiStrings, // D12: ANSI StrPCopy (before TF so unqualified Format still resolves to TF.Format)
+  uAnsiStr, // D12: ANSI StrPCopy (before TF so unqualified Format still resolves to TF.Format)
   TF,
   Version,
   VC,
@@ -377,7 +377,7 @@ begin
         else
         begin
           // Issue #997 (asm push/wsprintf/add esp -> StrPCopy + SysUtils.Format)
-          System.AnsiStrings.StrPCopy(TR4W_TEMP_MP3_FILENAME,
+          uAnsiStr.StrPCopy(TR4W_TEMP_MP3_FILENAME,
             SysUtils.Format('LAME_ENC.DLL: %s ' + TC_LAME_ERROR + ':' + #13#10#13#10' http://www.tr4w.com/files/',
               [SysErrorMessage(GetLastError)]));
           showwarning(TR4W_TEMP_MP3_FILENAME);

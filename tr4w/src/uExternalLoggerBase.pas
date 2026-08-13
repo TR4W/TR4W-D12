@@ -149,7 +149,7 @@ Type
       procedure Disconnect; overload;
 
 
-   published
+   public
 
       procedure ProcessMsg(msg: string); Virtual; Abstract;
 

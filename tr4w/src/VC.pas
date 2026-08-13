@@ -255,16 +255,26 @@ const
 {$IFDEF LANG_GER}{$INCLUDE lang\tr4w_consts_ger.pas}{$ENDIF}
 {$IFDEF LANG_UKR}{$INCLUDE lang\tr4w_consts_ukr.pas}{$ENDIF}
 
-{$IF tDebugMode}
-
+// These five were declared INSIDE {$IF tDebugMode}, and tDebugMode is False --
+// so in every shipping build they did not exist at all, while LOGK1EA, uWinKey,
+// MainUnit, LogCfg and uCFG went on testing them.  Delphi silently treats an
+// undeclared identifier in a compile-time IF as false, so the result happened to
+// match the intent and nobody ever saw it; FPC says so out loud.
+//
+// Declared unconditionally now, with the values that reproduce TODAY's
+// behaviour in BOTH configurations:
+//   - the four debug flags were False when declared and absent-so-false
+//     otherwise, so plain False is exact either way;
+//   - MAKE_DEFAULT_VALUES read as False in a shipping build (undeclared) and
+//     True in a debug build, which is precisely tDebugMode.  Writing True here
+//     would silently switch on blocks that have been dead for years.
 const
   WINKEYDEBUG                           = False;
   tKeyerDebug                           = False;
 
   CWDEBUG                               = False;
   SCPDEBUG                              = False;
-  MAKE_DEFAULT_VALUES                   = True;
-{$IFEND}
+  MAKE_DEFAULT_VALUES                   = tDebugMode;
 
   OZCR2008                              = False;
   LOGVERSION                            = 'v1.7'; // This is broken out below for comparison later on. Again, needlessly complex. de NY4I
