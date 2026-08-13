@@ -111,7 +111,7 @@ const
 
 
  // sCommands                             =  67  {$IF MMTYMODE} + 5  {$IFEND};
-  sCommands                             =  72 + 2 + 1 + 5;  // Issue 61 Added OTRSP command + 5 display entries
+  sCommands                             =  72 + 2 + 1 + 5 + 1;  // Issue 61 Added OTRSP command + 5 display entries + BOOLSWAP
 
   sCommandsArray                        : array[0..sCommands - 1] of TsCommandsArrayType =
     (
@@ -143,7 +143,12 @@ const
 (caCommand: '  CTRL-P CTRL-S = Slower'; caAddress: @scWK_SWAPTUNE),
 (caCommand: ' + = Previous #'; caAddress: @scWK_RESET),       //4.53.2  // 4.71.5
 (caCommand: '  > = Reset RIT'; caAddress: @scSENDMESSAGE),
-(caCommand: ' < = SK'; caAddress: @scBOOLSWAP),
+(caCommand: ' < = SK'; caAddress: @scEXCHANGERADIOS),   // DISPLAY ONLY -- see the note on sCommandsArray
+// The reachable BOOLSWAP row.  scBOOLSWAP had only the display row above,
+// whose caption contains '=' -- and FoundCommand splits the typed command on
+// '=' before matching, so that row can never be the compared string.  The
+// feature was documented in 2010 and unreachable ever since.
+(caCommand: 'BOOLSWAP'; caAddress: @scBOOLSWAP),
 (caCommand: ' = = BT'; caAddress: @tClearDupesheet),
 (caCommand: ' ! = SN'; caAddress: @tClearMultSheet),
 (caCommand: ' & = AS'; caAddress: @scDUPECHECK),
@@ -642,33 +647,82 @@ begin
   DupeCheckOnInactiveRadio(False);
 end;
 
+// Toggle any ctBoolean config command by name.
+//
+// REWRITTEN 2026-08-13.  It used to assign the global directly:
+//
+//     PBoolean(CFGCA[i].crAddress)^ := not PBoolean(CFGCA[i].crAddress)^;
+//
+// which is the same bypass that produced the SCP MINIMUM LETTERS access
+// violation.  Going straight at crAddress skips everything CheckCommand exists
+// to do -- the row's crA hook, its bounds/validation, the multi-op network
+// sync (crNetwork), and the ini write -- so the toggle applied to the running
+// session and then vanished on restart, and the other positions in a multi-op
+// never heard about it.  SetCFGCommandValue does all of that in one call.
+//
+// It also means crS is now respected.  A csJSON row is owned by the JSON store,
+// and CheckCommand deliberately exits early for one; flipping its legacy global
+// behind JSON's back is the two-owners bug.  Refused out loud rather than
+// silently no-oped -- a toggle that reports nothing is indistinguishable from
+// one that worked.
+//
+// NOTE ON REACHABILITY.  As of this writing nothing can invoke this: dispatch
+// matches caCommand with an exact StrComp, and FoundCommand splits the typed
+// command on '=' BEFORE comparing, so the compared string never contains '='.
+// The only table row pointing here is ' < = SK', which does.  A reachable
+// 'BOOLSWAP' row is added alongside this change.  The <03>...<04> trigger
+// syntax is itself on the way out (NY4I, 2026-08-13); the point of fixing the
+// body now is that whatever replaces the syntax inherits a correct
+// implementation rather than this one.
 procedure scBOOLSWAP;
 var
   i                                     : integer;
-  //p                                     : Pointer;
-  cmdProc                               : procedure;   // Issue #997: typed call of a Pointer change-handler
+  cmdName                               : string;
+  newValue                              : boolean;
 begin
+  cmdName := string(PAnsiChar(@scFileName[1]));
+
   for i := 1 to CommandsArraySize do
+    begin
     if utils_text.StrComp(@scFileName[1], CFGCA[i].crCommand) = 0 then
        begin
-       if CFGCA[i].crType = ctBoolean then
+       if CFGCA[i].crType <> ctBoolean then
           begin
-          PBoolean(CFGCA[i].crAddress)^ := not PBoolean(CFGCA[i].crAddress)^;
-          if CFGCA[i].crP <> 0 then
-             begin
-             // Issue #997: asm `call P` (untyped Pointer change-handler) -> typed
-             // call, guarded against a nil entry in the CommandsProcArray definition.
-             @cmdProc := CommandsProcArray[CFGCA[i].crP];
-             if Assigned(cmdProc) then
-                begin
-                cmdProc;
-                end;
-             TF.Format(QuickDisplayBuffer, '%s=%s', @scFileName[1], BA[PBoolean(CFGCA[i].crAddress)^]);
-             QuickDisplay(QuickDisplayBuffer);
-             end;
-          Break;
+          TF.Format(QuickDisplayBuffer, '%s is not a boolean setting', @scFileName[1]);
+          QuickDisplay(QuickDisplayBuffer);
+          Exit;
           end;
+
+       if CommandIsJSONOwned(cmdName) then
+          begin
+          // CheckCommand would accept and discard this; say so instead.
+          TF.Format(QuickDisplayBuffer, '%s is owned by the JSON settings store', @scFileName[1]);
+          QuickDisplay(QuickDisplayBuffer);
+          Exit;
+          end;
+
+       newValue := not PBoolean(CFGCA[i].crAddress)^;
+
+       // Validates, applies through CheckCommand (which runs the crA hook and
+       // the crP change-handler), syncs multi-op, and persists.
+       if SetCFGCommandValue(cmdName, string(BA[newValue])) then
+          begin
+          TF.Format(QuickDisplayBuffer, '%s=%s', @scFileName[1], BA[PBoolean(CFGCA[i].crAddress)^]);
+          end
+       else
+          begin
+          TF.Format(QuickDisplayBuffer, '%s was refused', @scFileName[1]);
+          end;
+
+       // Reported UNCONDITIONALLY.  This used to sit inside `if crP <> 0`, so
+       // every boolean without a change-handler toggled in complete silence.
+       QuickDisplay(QuickDisplayBuffer);
+       Exit;
        end;
+    end;
+
+  TF.Format(QuickDisplayBuffer, 'No setting called %s', @scFileName[1]);
+  QuickDisplay(QuickDisplayBuffer);
 end;
 
 procedure scWK_RESET;
