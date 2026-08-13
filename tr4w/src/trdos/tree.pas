@@ -695,7 +695,7 @@ const
  //  ControlUpArrow = CHR(141);
 
   {KK1L: 6.72 Added following set constant for Scandinavian letters}
-  AccentedChars                         : set of Char = [CHR(132), CHR(142), {A umlaut  }
+  AccentedChars                         : set of AnsiChar = [CHR(132), CHR(142), {A umlaut  }
     CHR(134), CHR(143), {A dot     }
     CHR(148), CHR(153)]; {O umlaut  }
 
