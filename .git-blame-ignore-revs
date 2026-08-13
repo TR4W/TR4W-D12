@@ -1,0 +1,18 @@
+# Commits that are pure formatting -- `git blame` should look straight through
+# them to the change that actually wrote the line.
+#
+# Turn this on once, per clone:
+#
+#     git -C /c/tr4w-d12 config blame.ignoreRevsFile .git-blame-ignore-revs
+#
+# GitHub honours this file automatically; local git needs the config above.
+#
+# Only add a revision here if it is WHITESPACE ONLY and you can show it.  The
+# bar used for the entry below was byte-identical compiler output before and
+# after -- same bytes of code and data from more source lines -- not merely a
+# green test run.
+
+# style: apply the begin/end formatter to tr4w/src (158 files, no code change)
+# tr4w.exe        8446228 bytes code / 794972 data, unchanged
+# tr4w_unit_tests 8926000 bytes code / 705168 data, unchanged
+28df6dcb0afd88eb6865135158831b7c89a67fb5
