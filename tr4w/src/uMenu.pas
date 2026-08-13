@@ -30,7 +30,22 @@ uses
 type
 
   MenuRecord = record
-    mrText: PAnsiChar;
+    { A STRING, not a PAnsiChar, and that is load-bearing rather than tidying.
+
+      77 of the rows below build their caption by concatenating a caption
+      constant with its accelerator -- RC_EXIT + RC_EXIT_HK. Folded into a
+      PAnsiChar typed constant, FPC pointed the field at the string's
+      DESCRIPTOR instead of its characters: every accelerator menu item came
+      out as four bytes of length and refcount, and the window captions taken
+      from those items (CreateWindowByID in MainUnit) came out as garbage. No
+      warning, from either compiler. Delphi folded the same expression into a
+      literal and hid it.
+
+      Carrying the real string type removes the class of bug rather than the
+      instance, and matches the house rule that the program passes strings and
+      lets the boundary deal in pointers -- which the AppendMenuW calls below
+      now do explicitly. }
+    mrText: string;
     mrId: Word;
   end;
 
@@ -172,7 +187,7 @@ const
     (mrText: RC_SUMMARY; mrId: menu_summary),
     (mrText: '3830 Score'; mrId: menu_3830scores),
   //}
-    (mrText: nil; mrId: MAXWORD - 2),
+    (mrText: ''; mrId: MAXWORD - 2),
     (mrText: '-'; mrId: 0),
     (mrText: RC_EXIT + RC_EXIT_HK; mrId: menu_exit),
  //}
@@ -209,7 +224,7 @@ const
     (mrText: TC_RADIO1 + RC_DUPESHEET_HK; mrId: menu_windows_dupesheet1),
     (mrText: TC_RADIO2; mrId: menu_windows_dupesheet2),
   //}
-    (mrText: nil; mrId: MAXWORD - 2),
+    (mrText: ''; mrId: MAXWORD - 2),
     (mrText: RC_FKEYS + RC_FKEYS_HK; mrId: menu_windows_funckeys),
     (mrText: RC_TRMASTER + RC_TRMASTER_HK; mrId: menu_windows_trmasterdta),
     (mrText: RC_REMMULTS; mrId: MAXWORD - 1),
@@ -220,7 +235,7 @@ const
     (mrText: 'Domestic'; mrId: menu_rm_domestic),
     (mrText: 'Zones'; mrId: menu_rm_zone),
     (mrText: 'Prefixes'; mrId: menu_rm_prefix),
-    (mrText: nil; mrId: MAXWORD - 2),
+    (mrText: ''; mrId: MAXWORD - 2),
   //}
 
     (mrText: TC_RADIO1 + RC_RADIO1_HK; mrId: menu_windows_radiointerface1),
@@ -462,8 +477,9 @@ begin
      begin
      TempMenuRecord := PMenuRecord(integer(m) + (SizeOf(MenuRecord) * i))^;
      uFlags := MF_STRING;
-     if TempMenuRecord.mrText <> nil then
-       if TempMenuRecord.mrText[0] = '-' then
+     // A string is 1-based where the PAnsiChar was 0-based.
+     if TempMenuRecord.mrText <> '' then
+       if TempMenuRecord.mrText[1] = '-' then
           begin
           uFlags := MF_SEPARATOR;
           end;
@@ -473,14 +489,14 @@ begin
         CurrMenu := CreatePopupMenu;
         LatestMenu := CurrMenu;
 
-        Windows.AppendMenuA(Result, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
+        Windows.AppendMenuW(Result, MF_STRING + MF_POPUP, CurrMenu, PWideChar(TempMenuRecord.mrText));
         Continue;
         end;
 
      if TempMenuRecord.mrId = MAXWORD - 1 then
         begin
         CurrMenu := CreatePopupMenu;
-        Windows.AppendMenuA(LatestMenu, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
+        Windows.AppendMenuW(LatestMenu, MF_STRING + MF_POPUP, CurrMenu, PWideChar(TempMenuRecord.mrText));
         Continue;
         end;
      if TempMenuRecord.mrId = MAXWORD - 2 then
@@ -488,7 +504,7 @@ begin
         CurrMenu := LatestMenu;
         Continue;
         end;
-     Windows.AppendMenuA(CurrMenu, uFlags, TempMenuRecord.mrId, TempMenuRecord.mrText);
+     Windows.AppendMenuW(CurrMenu, uFlags, TempMenuRecord.mrId, PWideChar(TempMenuRecord.mrText));
      end;
 
 
