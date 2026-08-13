@@ -1,0 +1,144 @@
+object LCLProbeForm: TLCLProbeForm
+  Left = 0
+  Top = 0
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsSingle
+  Caption = 'LCL Probe'
+  ClientHeight = 430
+  ClientWidth = 520
+  Position = poScreenCenter
+  object lblAddress: TLabel
+    Left = 16
+    Top = 18
+    Width = 90
+    Height = 17
+    Caption = 'Address'
+  end
+  object lblSized: TLabel
+    Left = 16
+    Top = 400
+    Width = 90
+    Height = 17
+    AutoSize = False
+    Caption = 'Sized'
+  end
+  object edtAddress: TEdit
+    Left = 112
+    Top = 14
+    Width = 200
+    Height = 22
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 1
+    Text = 'probe'
+  end
+  object chkEnabled: TCheckBox
+    Left = 16
+    Top = 52
+    Width = 200
+    Height = 19
+    Caption = 'Enabled'
+    Checked = True
+    State = cbChecked
+    TabOrder = 2
+  end
+  object cboMode: TComboBox
+    Left = 112
+    Top = 82
+    Width = 200
+    Height = 22
+    ItemHeight = 0
+    Items.Strings = (
+      'CW'
+      'SSB'
+      'RTTY'
+    )
+    TabOrder = 3
+    Text = 'CW'
+  end
+  object radA: TRadioButton
+    Left = 16
+    Top = 116
+    Width = 90
+    Height = 19
+    Caption = 'Radio One'
+    Checked = True
+    TabOrder = 4
+    TabStop = True
+  end
+  object radB: TRadioButton
+    Left = 112
+    Top = 116
+    Width = 90
+    Height = 19
+    Caption = 'Radio Two'
+    TabOrder = 5
+  end
+  object lstItems: TListBox
+    Left = 16
+    Top = 146
+    Width = 200
+    Height = 80
+    ItemHeight = 0
+    Items.Strings = (
+      'first'
+      'second'
+    )
+    TabOrder = 6
+  end
+  object grpBox: TGroupBox
+    Left = 232
+    Top = 146
+    Width = 260
+    Height = 80
+    Caption = 'A Group'
+    TabOrder = 7
+  end
+  object pnlLayout: TPanel
+    Left = 16
+    Top = 236
+    Width = 476
+    Height = 60
+    BevelOuter = bvNone
+    Caption = ''
+    Tag = 7
+    TabOrder = 8
+  end
+  object pgcTabs: TPageControl
+    Left = 16
+    Top = 302
+    Width = 476
+    Height = 70
+    ActivePage = tabOne
+    TabIndex = 0
+    TabOrder = 9
+    object tabOne: TTabSheet
+      Caption = 'Tab One'
+    end
+  end
+  object trvTree: TTreeView
+    Left = 332
+    Top = 14
+    Width = 160
+    Height = 120
+    TabOrder = 0
+  end
+  object cboEditable: TComboBox
+    Left = 332
+    Top = 380
+    Width = 160
+    Height = 22
+    ItemHeight = 0
+    Style = csDropDown
+    TabOrder = 10
+    Text = 'editable'
+  end
+  object btnOK: TButton
+    Left = 16
+    Top = 380
+    Width = 90
+    Height = 25
+    Caption = 'OK'
+    OnClick = btnOKClick
+    TabOrder = 11
+  end
+end
