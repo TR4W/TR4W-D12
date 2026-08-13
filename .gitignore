@@ -126,3 +126,9 @@ tr4w/build/release/README_*.txt
 # FPC sweep reports -- generated artifacts, regenerate with spike/fpc-sweep.ps1
 spike/sweep-*.txt
 spike/units/
+
+# LCL probe build artefacts
+spike/lclprobe/*.exe
+spike/lclprobe/*.o
+spike/lclprobe/*.or
+spike/lclprobe/*.ppu
