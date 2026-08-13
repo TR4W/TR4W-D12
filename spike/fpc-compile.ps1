@@ -9,18 +9,34 @@
 #   .\fpc-compile.ps1 radioFactory\uFactoryRadioBase.pas
 #
 # -Mdelphi gives an 8-bit `string`; -MdelphiUnicode matches Delphi 12's UTF-16.
-# Which mode TR4W should target is still an open decision, so pass -Mode to try
-# both against the same source.
+# NY4I chose delphiunicode; -Mode remains so the two can be compared on the
+# same source.
+#
+# TARGET: i386-win32 by default, NOT the host's x86_64.  The golden-master
+# corpus byte-diffs binary logs whose record layout depends on pointer width
+# and the pinned -$A8 alignment, so a 64-bit build cannot run that gate.
+#
+# COMPILER: there are two FPC 3.2.2 installs on this machine and only the
+# fpcupdeluxe one gets the i386 cross target.  The stock c:\lazarus install is
+# x86_64-only.  Both answer to `fpc` on PATH, so this is pinned absolutely
+# rather than resolved -- picking the wrong one fails as a confusing .ppu or
+# unit-not-found error that never names the real cause.
 
 param(
    [Parameter(Mandatory = $true)] [string] $Unit,
-   [string] $Mode = 'delphi',
-   [string] $Fpc  = 'C:\lazarus\fpc\3.2.2\bin\x86_64-win64\fpc.exe',
+   [string] $Mode = 'delphiunicode',
+   [string] $Cpu  = 'i386',
+   [string] $Os   = 'win32',
+   [string] $Fpc  = 'C:\fpcupdeluxe\fpc\bin\x86_64-win64\fpc.exe',
    [string] $Repo = 'C:\tr4w-d12'
 )
 
 $src = Join-Path $Repo 'tr4w\src'
-$out = Join-Path $Repo 'spike\units'
+
+# One output directory per target AND mode.  FPC will happily read a .ppu built
+# for another CPU or string model out of a shared directory and fail somewhere
+# far from the cause.
+$out = Join-Path $Repo "spike\units\$Cpu-$Os-$Mode"
 
 $searchPaths = @(
    $src
@@ -29,14 +45,44 @@ $searchPaths = @(
    Join-Path $src 'lang'
    Join-Path $src 'radioFactory'
    # The vendored Indy 10.6.3.3 -- the same directories tr4w.dproj lists in
-   # DCC_UnitSearchPath.  It compiles unmodified; see the spike log, step 6.
+   # DCC_UnitSearchPath.  It compiles unmodified under -Mdelphi but NOT under
+   # -MdelphiUnicode: Indy's own FPC branch is not UnicodeString-enabled.
+   # See the spike log, steps 6 and 9.
    Join-Path $Repo 'tr4w\Include'
    Join-Path $Repo 'tr4w\include\Core'
    Join-Path $Repo 'tr4w\include\System'
    Join-Path $Repo 'tr4w\include\Protocols'
 )
 
-$args = @("-M$Mode", '-Sc', '-B', '-Cn', "-FU$out")
+# Fail loudly on a missing toolchain rather than emitting a diagnostic that
+# blames the source.  The UNITS are the real evidence a target is usable: the
+# cross compiler binary alone cannot compile anything without an RTL.
+if (-not (Test-Path $Fpc))
+   {
+   Write-Error "FPC not found at $Fpc"
+   exit 1
+   }
+
+# fpc.exe lives at <root>\bin\<hostcpu>\fpc.exe, so the install root is three
+# levels up, not two.
+$fpcRoot = Split-Path (Split-Path (Split-Path $Fpc -Parent) -Parent) -Parent
+$rtl = Join-Path $fpcRoot "units\$Cpu-$Os\rtl\system.ppu"
+if (-not (Test-Path $rtl))
+   {
+   Write-Error @"
+No RTL for $Cpu-$Os -- expected $rtl
+This target is not installed.  Add it from the fpcupdeluxe cross-compile
+selectors (CPU=$Cpu, OS=$Os), which also fetches the $Cpu-$Os binutils.
+"@
+   exit 1
+   }
+
+if (-not (Test-Path $out))
+   {
+   New-Item -ItemType Directory -Path $out | Out-Null
+   }
+
+$args = @("-M$Mode", "-P$Cpu", "-T$Os", '-Sc', '-B', '-Cn', "-FU$out")
 foreach ($p in $searchPaths)
    {
    $args += "-Fu$p"
@@ -46,9 +92,19 @@ $args += $Unit
 Push-Location $src
 try
    {
-   & $Fpc @args 2>&1 |
+   $output = & $Fpc @args 2>&1
+   $rc = $LASTEXITCODE
+
+   $output |
       Select-String -Pattern 'Error|Fatal|lines compiled' |
       Select-Object -First 25
+
+   # A filtered pipeline that matches nothing prints nothing, which reads as
+   # success.  Always state the outcome.
+   if ($rc -ne 0)
+      {
+      Write-Host "FAILED (exit $rc) -- $Unit for $Cpu-$Os -M$Mode"
+      }
    }
 finally
    {
