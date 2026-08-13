@@ -38,4 +38,8 @@ general_qso_2026_w1aw4  event-source: MY STATE appended to sent exchange
 # STILL OPEN (P2-10): these four are a pre-existing D7 quirk, not a D12
 # conversion defect -- the sent exchange is rebuilt from MY-station session
 # globals at export time instead of being stored per QSO.  The fix is to store
-# the sent exchange with the QSO.  Worth a tracked issue; not filed yet.
+# the sent exchange with the QSO.
+#
+# TRACKED AS TR4W-D12 issue #2, "Event sourcing issue in log record creation".
+# The four diffs above are attached there as its concrete instances.  When it
+# is fixed these rows come out and the corpus goes to 26 passed / 0 known.
