@@ -67,8 +67,8 @@ unit uRadioConfigApply;
 interface
 
 uses
-   System.SysUtils,
-   System.IniFiles,
+   SysUtils,
+   IniFiles,
    uRadioConfigStore,
    uKeyerConfigStore,
    uRadioConfigLegacyMap;

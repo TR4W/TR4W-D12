@@ -55,8 +55,8 @@ unit uUDPBroadcaster;
 interface
 
 uses
-   System.SysUtils,
-   System.SyncObjs,
+   SysUtils,
+   SyncObjs,
    uUDPBroadcastConfig;
 
 type

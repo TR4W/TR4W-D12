@@ -62,9 +62,9 @@ unit ComPortEnumerator;
 interface
 
 uses
-   Winapi.Windows,
-   System.SysUtils,
-   System.Classes,
+   Windows,
+   SysUtils,
+   Classes,
    VC;   // for MAX_SERIAL_PORT -- see below
 
 const
@@ -230,7 +230,7 @@ function SetupDiOpenDevRegKey(DeviceInfoSet: HDEVINFO;
 // ---------------------------------------------------------------------------
 
 // Not declared by Delphi 12: the device-notification constants and filter struct.
-// RegisterDeviceNotification / HDEVNOTIFY themselves DO come from Winapi.Windows.
+// RegisterDeviceNotification / HDEVNOTIFY themselves DO come from Windows.
 const
    DBT_DEVICEARRIVAL          = $8000;
    DBT_DEVICEREMOVECOMPLETE   = $8004;
@@ -261,7 +261,7 @@ begin
    filter.dbcc_size       := SizeOf(filter);
    filter.dbcc_devicetype := DBT_DEVTYP_DEVICEINTERFACE;
    filter.dbcc_classguid  := GUID_DEVINTERFACE_COMPORT;
-   Result := Pointer(Winapi.Windows.RegisterDeviceNotification(AWnd, @filter,
+   Result := Pointer(Windows.RegisterDeviceNotification(AWnd, @filter,
                                                 DEVICE_NOTIFY_WINDOW_HANDLE));
 end;
 
@@ -269,7 +269,7 @@ procedure UnregisterComPortNotification(var AHandle: Pointer);
 begin
    if AHandle <> nil then
       begin
-      Winapi.Windows.UnregisterDeviceNotification(HDEVNOTIFY(AHandle));
+      Windows.UnregisterDeviceNotification(HDEVNOTIFY(AHandle));
       AHandle := nil;
       end;
 end;

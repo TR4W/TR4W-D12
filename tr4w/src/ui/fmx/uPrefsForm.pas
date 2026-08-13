@@ -68,8 +68,8 @@ unit uPrefsForm;
 interface
 
 uses
-   System.SysUtils,
-   System.Classes,
+   SysUtils,
+   Classes,
    System.UITypes,
    System.Diagnostics,   // TStopwatch -- the FTiming phase timer
    FMX.Types,
@@ -783,10 +783,10 @@ implementation
 uses
    uFMXFormHelpers,
    uFMXTranslate,
-   Winapi.Windows,
-   System.IniFiles,
-   System.Generics.Collections,
-   System.Generics.Defaults,
+   Windows,
+   IniFiles,
+   Generics.Collections,
+   Generics.Defaults,
    FMX.Platform.Win,
    FMX.Dialogs,
    uFMXCoexist,
@@ -797,7 +797,7 @@ uses
    uUDPBroadcaster,   // TestDestination, and Configure once the settings are saved
    uTCIServer,        // started/stopped when the check box is saved
    System.IOUtils,     // TFile.Exists -- the log file may not exist yet
-   Winapi.ShellAPI,    // ShellExecute -- open the log in the operator's editor
+   ShellAPI,    // ShellExecute -- open the log in the operator's editor
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
    uSettingsRegistry,     // the settings themselves
    uSettingsDeclarations, // DeclareAllSettings

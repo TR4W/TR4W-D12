@@ -40,7 +40,7 @@ unit uFMXFormHelpers;
 interface
 
 uses
-   System.Classes,
+   Classes,
    System.UITypes,
    FMX.Types,
    FMX.Controls,
@@ -254,8 +254,8 @@ function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 implementation
 
 uses
-   System.SysUtils,
-   System.StrUtils,
+   SysUtils,
+   StrUtils,
    uRadioConfigStore,
    uRadioRegistry,
    ComPortEnumerator,

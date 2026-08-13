@@ -35,7 +35,7 @@ var
   i                                     : integer;
 begin
   // ASCII-only upcase (a..z -> A..Z), byte-stable for callsign/contest text --
-  // deliberately NOT System.SysUtils.UpperCase (which does full Unicode casing).
+  // deliberately NOT SysUtils.UpperCase (which does full Unicode casing).
   // Was a PAnsiChar pointer loop; now a plain native-string loop.
   SetLength(Result, Length(s));
   for i := 1 to Length(s) do

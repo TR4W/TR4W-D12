@@ -75,7 +75,7 @@ unit uTCIServer;
 interface
 
 uses
-   Windows, System.SysUtils, System.Classes, System.SyncObjs,
+   Windows, SysUtils, Classes, SyncObjs,
    VC, LOGRADIO,
    uWebSocketServer, uTCIProtocol;
 

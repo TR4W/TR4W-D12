@@ -65,13 +65,13 @@ unit uRadioConfigStore;
 interface
 
 uses
-   System.SysUtils,
-   System.StrUtils,      // StartsText, for the section-name prefixes
-   System.Classes,
+   SysUtils,
+   StrUtils,      // StartsText, for the section-name prefixes
+   Classes,
    System.IOUtils,       // TFile -- whole-file read/write for the JSON store
-   System.IniFiles,
+   IniFiles,
    System.JSON,          // the format of record for settings\tr4w.json
-   System.Generics.Collections;
+   Generics.Collections;
 
 const
    // "Let the radio decide."  Distinct from 0, which is the operator saying

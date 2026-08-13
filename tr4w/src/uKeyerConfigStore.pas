@@ -64,10 +64,10 @@ unit uKeyerConfigStore;
 interface
 
 uses
-   System.SysUtils,
-   System.Classes,
+   SysUtils,
+   Classes,
    System.JSON,
-   System.Generics.Collections;
+   Generics.Collections;
 
 type
    { DEVICES WITH KNOBS -- and only those.

@@ -56,7 +56,7 @@ procedure SetWinKeyerEnabled(const aEnabled: boolean);
 implementation
 
 uses
-   System.SysUtils,
+   SysUtils,
    uWinKey,
    Tree,       // PortType / PortTypeSA -- the port vocabulary the store's strings use
    VC;
