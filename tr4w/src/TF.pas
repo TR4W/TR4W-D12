@@ -18,6 +18,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit TF;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -133,7 +134,7 @@ function RealToStr2(Num: REAL): string;
 function PCharToInt(p: PAnsiChar): integer;
 function BooleanToStr(b: boolean): string;
 //function CenterString(s: string; count: byte): string;
-procedure strU(var Str: ShortString);
+procedure strU(var Str: OpenString);
 procedure SetMainWindowText(Window: TMainWindowElement; Text: string);
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 
@@ -805,7 +806,7 @@ begin
   Result := uStrSearch.StrPosPartial(Str1, Str2);
 end;
 
-// StrPos removed (D12): callers use System.AnsiStrings.StrPos directly -- the
+// StrPos removed (D12): callers use uAnsiStr.StrPos directly -- the
 // TF -> uStrSearch -> RTL forwarding was asm-eradication scaffolding, obsolete now.
 
 function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; CMD: PAnsiChar): Byte;
@@ -1109,7 +1110,7 @@ begin
 //  if Result = -1 then MessageBox(0, SysErrorMessage(GetLastError), nil, MB_OK or MB_ICONINFORMATION {or MB_RTLREADING } or MB_TASKMODAL);
 end;
 
-procedure strU(var Str: ShortString);
+procedure strU(var Str: OpenString);
 begin
   // Issue #997: extracted to uStrSearch (golden-master tested). Now 'var' to
   // make the in-place upcase contract explicit (the old by-value asm modified

@@ -51,7 +51,7 @@ interface
 
 function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrComp_JOH_IA32_6(const Str1, Str2: PAnsiChar): integer;
-procedure StrU(var Str: ShortString);
+procedure strU(var Str: OpenString);
 
 implementation
 
@@ -64,7 +64,7 @@ implementation
 // is. Both routines it borrowed are a handful of lines, so the portable answer
 // is to own them rather than to shim around the difference with {$IFDEF FPC}.
 
-// Length of a NUL-terminated byte string, replacing AnsiStrings.StrLen.
+// Length of a NUL-terminated byte string, replacing System.AnsiStrings.StrLen.
 function PAnsiLen(const p: PAnsiChar): integer;
 var
   q: PAnsiChar;
@@ -164,7 +164,7 @@ end;
 // callers use the RTL directly now. StrPosPartial (?-wildcard) stays -- it is
 // genuine custom logic, not an RTL duplicate.
 
-procedure StrU(var Str: ShortString);
+procedure strU(var Str: OpenString);
 var
   i: integer;
 begin

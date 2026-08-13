@@ -23,7 +23,7 @@ unit uCheckLatestVersion;
 interface
 
 uses
-  System.AnsiStrings,
+  uAnsiStr,
   TF,
   Version,
   VC,
@@ -70,7 +70,7 @@ begin
   end;
 
 //  ShowMessage(GetScoresBuffer);
-  p := System.AnsiStrings.StrPos(GetScoresBuffer, #13#10#13#10);
+  p := uAnsiStr.StrPos(GetScoresBuffer, #13#10#13#10);
   if p <> nil then
   begin
     inc(p, 4);

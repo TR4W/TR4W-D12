@@ -413,8 +413,8 @@ const
 implementation
 
 uses
-  System.AnsiStrings,
-  // AnsiStrings.StrPCopy for ANSI (PAnsiChar) buffers under D12
+  uAnsiStr,
+  // uAnsiStr.StrPCopy for ANSI (PAnsiChar) buffers under D12
   uCbrSum,
   MainUnit,
   uCFG;
@@ -2411,7 +2411,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         TempPchar := @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ];
         if TempTag = ctOperators then
           begin
-          System.AnsiStrings.StrPCopy( TempBuffer2, GetOperatorsFromLog );
+          uAnsiStr.StrPCopy( TempBuffer2, GetOperatorsFromLog );
           // Issue #998 (was custom Format '%s')
           end;
         // Issue #998: %s=tag(TempPchar), %s=value(TempBuffer2).
@@ -2432,7 +2432,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             ControlID := integer( TempErmakField ) + ( Operator ) * 100;
             // Issue #998: builds the INI key into TempBuffer2 (not file output).
             // OPERATORINFO is C '_OP_INFO_%03u' (zero-pad); Delphi Format uses '%.3u'.
-            System.AnsiStrings.StrPCopy( TempBuffer2,
+            uAnsiStr.StrPCopy( TempBuffer2,
                sysutils.Format( '_OP_INFO_%.3u', [ ControlID ] ) );
             TempInteger := GetPrivateProfileStringA( ERMAKSECTION, TempBuffer2,
                '?', TempBuffer1, SizeOf( TempBuffer1 ), TR4W_INI_FILENAME );

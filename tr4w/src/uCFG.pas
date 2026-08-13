@@ -25,7 +25,7 @@ unit uCFG;
 interface
 
 uses
-  System.AnsiStrings,
+  uAnsiStr,
    uIO,
    uCTYDAT,
    uWinKey,
@@ -1186,7 +1186,7 @@ begin
    Command[Ord(Command[0]) + 1] := #0;   // null-terminate the key for StrComp (as CheckCommand does)
    for i := 1 to CommandsArraySize do
       begin
-      if System.AnsiStrings.StrComp(@Command[1], CFGCA[i].crCommand) = 0 then
+      if uAnsiStr.StrComp(@Command[1], CFGCA[i].crCommand) = 0 then
          begin
          Result := (CFGCA[i].crKind = ckNormal) and
                    (CFGCA[i].crType <> ctFreqList) and
@@ -1252,20 +1252,20 @@ begin
    // StrPos resolve to the WIDE (PWideChar) overload and misread the ANSI bytes
    // as UTF-16 -- so it never matches.  Cast to PAnsiChar to force the ANSI
    // overload (same guard GetValueFromArray already uses for @CMD[1]).
-   if System.AnsiStrings.StrPos(PAnsiChar(@Command[1]), ' WINDOW ') <> nil then
+   if uAnsiStr.StrPos(PAnsiChar(@Command[1]), ' WINDOW ') <> nil then
       begin
          for TempElement := Low(TMainWindowElement) to High(TMainWindowElement)
             do
             begin
 
-               if System.AnsiStrings.StrPos(PAnsiChar(@Command[1]), TWindows[TempElement].mweName) =
+               if uAnsiStr.StrPos(PAnsiChar(@Command[1]), TWindows[TempElement].mweName) =
                   PAnsiChar(@Command[1]) then
                   begin
                      TempByte := GetValueFromArray(@tr4wColorsSA,
                         Byte(High(tr4wColors)), @CustomCMD);
                      if TempByte <> UNKNOWNTYPE then
                         begin
-                           if System.AnsiStrings.StrPos(PAnsiChar(@Command[1]), ' COLOR') <> nil then
+                           if uAnsiStr.StrPos(PAnsiChar(@Command[1]), ' COLOR') <> nil then
                               begin
                               TWindows[TempElement].mweColor :=
                                  tr4wColors(TempByte)
@@ -1286,7 +1286,7 @@ begin
             end;
       end;
 
-   if System.AnsiStrings.StrPos(PAnsiChar(@Command[1]), 'COLUMN WIDTH ') = PAnsiChar(@Command[1]) then
+   if uAnsiStr.StrPos(PAnsiChar(@Command[1]), 'COLUMN WIDTH ') = PAnsiChar(@Command[1]) then
       begin
       // Match against the canonical (language-neutral) column name first.
       // Fall back to UpperCase(Text) so CFGs written before the canonical

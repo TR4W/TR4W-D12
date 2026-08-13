@@ -31,6 +31,8 @@ uses
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
+   uAnsiStr             in '..\..\src\utils\uAnsiStr.pas',
+   uTestAnsiStr         in 'uTestAnsiStr.pas',
    utils_text           in '..\..\src\utils\utils_text.pas',
    uTestUtilsText       in 'uTestUtilsText.pas',
    uADIF                in '..\..\src\uADIF.pas',
@@ -263,6 +265,7 @@ begin
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
+   RegisterSuite(TAnsiStrTests.Create('AnsiStr'));
    RegisterSuite(TUtilsTextTests.Create('UtilsText'));
    RegisterSuite(TADIFLexerTests.Create('ADIFLexer'));
    RegisterSuite(TADIFHelperTests.Create('ADIFHelpers'));
