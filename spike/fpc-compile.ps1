@@ -16,18 +16,25 @@
 # corpus byte-diffs binary logs whose record layout depends on pointer width
 # and the pinned -$A8 alignment, so a 64-bit build cannot run that gate.
 #
-# COMPILER: there are two FPC 3.2.2 installs on this machine and only the
-# fpcupdeluxe one gets the i386 cross target.  The stock c:\lazarus install is
-# x86_64-only.  Both answer to `fpc` on PATH, so this is pinned absolutely
-# rather than resolved -- picking the wrong one fails as a confusing .ppu or
-# unit-not-found error that never names the real cause.
+# COMPILER: c:\FPC is a NATIVE i386 install -- ppc386.exe is itself a 32-bit
+# binary under WOW64, exactly like Delphi's own DCC32.EXE.  Nothing is
+# cross-compiled.
+#
+# This is not a preference either.  Win64 -> i386 cross-compilation is
+# REFUSED by FPC: on x86_64-win64 `Extended` is only 64-bit, and folding
+# i386's 80-bit float constants at 64-bit precision would silently change
+# results, so the build stops at fpcdefs.inc:288.  Both x86_64 installs on
+# this machine (c:\lazarus, c:\fpcupdeluxe) are therefore unusable for our
+# target.  Pinned absolutely rather than resolved through PATH, because
+# picking the wrong tree fails as a confusing .ppu or unit-not-found error
+# that never names the real cause.
 
 param(
    [Parameter(Mandatory = $true)] [string] $Unit,
    [string] $Mode = 'delphiunicode',
    [string] $Cpu  = 'i386',
    [string] $Os   = 'win32',
-   [string] $Fpc  = 'C:\fpcupdeluxe\fpc\bin\x86_64-win64\fpc.exe',
+   [string] $Fpc  = 'C:\FPC\3.2.2\bin\i386-win32\fpc.exe',
    [string] $Repo = 'C:\tr4w-d12'
 )
 
