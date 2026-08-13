@@ -178,6 +178,7 @@ uses
   uFileText in 'src\utils\uFileText.pas',
   uRegex in 'src\utils\uRegex.pas',
   uWin32Compat in 'src\utils\uWin32Compat.pas',
+  uHostedFormWindows in 'src\utils\uHostedFormWindows.pas',
   uJSON in 'src\utils\uJSON.pas',
   utils_text in 'src\utils\utils_text.pas',
   utils_math in 'src\utils\utils_math.pas',
