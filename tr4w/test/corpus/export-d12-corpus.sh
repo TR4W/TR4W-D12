@@ -31,7 +31,14 @@ EXE="tr4w/target/$EXE_NAME"
 D12_ROOT="${D12_ROOT:-/c/tr4w-d12/D7-LogFilesForTesting}"
 ONLY="${1:-}"
 # Sets whose load pops an interactive dialog would BLOCK batch -- skip them.
-SKIP=" iaru_hf_2026_ny4i "
+#
+# EMPTY as of 2026-08-13.  iaru_hf_2026_ny4i was listed here, and the listing
+# had gone stale: it now exports cleanly (exit 0, both artifacts, no dialog).
+# While it was skipped its divergence was ASSERTED by known-divergences.txt
+# rather than demonstrated, which is the hole P2-9 was about -- see the header
+# of run-golden-diff.sh.  Before adding a slug here, be sure the dialog is real
+# and say what it is; a skipped set is a set nobody is checking.
+SKIP=" "
 [ -f "$EXE" ] || { echo "ERROR: no $EXE -- rebuild the D12 app first."; exit 1; }
 
 # /c/foo/bar -> C:\foo\bar  (the app needs a native Windows path)

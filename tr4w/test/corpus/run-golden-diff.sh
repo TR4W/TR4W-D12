@@ -20,13 +20,11 @@ for d in tr4w/test/corpus/*/; do
       ref="${d}ref.$kind"; cand="${d}cand.$kind"
       [ -f "$ref" ] || continue
       if [ ! -f "$cand" ]; then
-         if is_known "$slug"; then
-            printf '  KNOWN %-26s %-3s (no candidate; known-divergence)\n' "$slug" "$kind"
-            known=$((known+1))
-         elif [ "${GOLDEN_STRICT:-0}" = 1 ]; then
-            # Fail-loud: a full export ran but produced no FRESH candidate for
-            # this set (aborted export / no output). Never let a prior stale
-            # file mask that -- the export driver deletes candidates first.
+         if [ "${GOLDEN_STRICT:-0}" = 1 ]; then
+            # Fail-loud, and deliberately NOT exempting known-divergence sets:
+            # a full export ran but produced no FRESH candidate for this set
+            # (aborted export / no output). Never let a prior stale file mask
+            # that -- the export driver deletes candidates first.
             printf '  FAIL  %-26s %-3s (no fresh D12 candidate -- export aborted or produced no output)\n' "$slug" "$kind"
             fail=$((fail+1))
          else
