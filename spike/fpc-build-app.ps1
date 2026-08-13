@@ -20,7 +20,8 @@ param(
    [string] $Os   = 'win32',
    [string] $Fpc  = 'C:\FPC\3.2.2\bin\i386-win32\fpc.exe',
    [string] $Repo = 'C:\tr4w-d12',
-   [switch] $Run
+   [switch] $Run,
+   [string] $Laz  = 'C:\Lazarus'
 )
 
 $app = Join-Path $Repo 'tr4w'
@@ -48,6 +49,15 @@ $searchPaths = @(
    Join-Path $src 'lang'
    Join-Path $src 'radioFactory'
    Join-Path $src 'rotatorFactory'
+   Join-Path $src 'ui\lcl'
+   # The LCL itself.  Lazarus ships an x86_64 fpc binary but carries LCL
+   # units for BOTH targets, and their PPU format (207) matches
+   # C:\FPC\3.2.2, so the i386 compiler consumes them directly -- no
+   # cross-compiler and no Lazarus fpc needed.
+   "$Laz\lcl\units\$Cpu-$Os"
+   "$Laz\lcl\units\$Cpu-$Os\win32"
+   "$Laz\components\lazutils\lib\$Cpu-$Os"
+   "$Laz\packager\units\$Cpu-$Os"
    Join-Path $fpcRoot "units\$Cpu-$Os\regexpr"
    Join-Path $fpcRoot "units\$Cpu-$Os\fcl-json"
    Join-Path $app 'Include'

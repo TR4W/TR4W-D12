@@ -63,6 +63,27 @@ begin
          Inc(ticks);
          end;
 
+      // THE FMX TRAP, asked directly of the LCL.  Under FMX every hosted form
+      // stayed Active=False because Application.Run was never called, and the
+      // only visible symptom was that edits took keystrokes but showed NO
+      // CARET.  If the LCL has the same dependency it needs its own shim; if
+      // not, uLCLCoexist has nothing to mirror.  Asked, not assumed.
+      WriteLn;
+      WriteLn('  form Active     : ', probe.Active);
+      WriteLn('  form Visible    : ', probe.Visible);
+      WriteLn('  handle allocated: ', probe.HandleAllocated);
+      probe.edtAddress.SetFocus;
+      for ticks := 0 to 50 do
+         begin
+         if PeekMessage(msg, 0, 0, 0, PM_REMOVE) then
+            begin
+            TranslateMessage(msg);
+            DispatchMessage(msg);
+            end;
+         end;
+      WriteLn('  edit Focused    : ', probe.edtAddress.Focused);
+      WriteLn;
+
       report := ProbeReport(probe);
       try
          failed := 0;
