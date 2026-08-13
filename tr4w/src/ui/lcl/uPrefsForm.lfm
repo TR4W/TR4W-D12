@@ -1,0 +1,2841 @@
+object PrefsForm: TPrefsForm
+  Left = 0
+  Top = 0
+  BorderIcons = [biSystemMenu, biMinimize]
+  BorderStyle = bsSingle
+  Caption = 'TR4W Preferences'
+  ClientHeight = 620
+  ClientWidth = 860
+  Position = poScreenCenter
+  OnClose = FormClose
+  OnShow = FormShow
+  object tvNav: TTreeView
+    Align = Left
+    Width = 170
+    Height = 620
+    AutoSize = False
+    TabOrder = 0
+    OnChange = tvNavChange
+  end
+  object layContent: TPanel
+    BevelOuter = bvNone
+    Caption = ''
+    Left = 175
+    Width = 675
+    Height = 572
+    AutoSize = False
+    TabOrder = 1
+    object lblPlaceholder: TLabel
+      Left = 12
+      Top = 20
+      Width = 500
+      Height = 60
+      AutoSize = False
+      Caption = 
+        'This section has not been migrated yet.'#13#10'Use the existing config' +
+        'uration screens for it.'
+      Visible = False
+    end
+    object layCW: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 11
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 2
+      object lblMyKeyers: TLabel
+        Left = 12
+        Top = 8
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'CW keying devices'
+      end
+      object lstKeyers: TListBox
+        Left = 12
+        Top = 30
+        Width = 420
+        Height = 150
+        AutoSize = False
+        TabOrder = 1
+        OnDblClick = lstKeyersDblClick
+      end
+      object btnAddKeyer: TButton
+        Left = 445
+        Top = 30
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 2
+        Caption = 'Add...'
+        OnClick = btnAddKeyerClick
+      end
+      object btnEditKeyer: TButton
+        Left = 445
+        Top = 62
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Edit...'
+        OnClick = btnEditKeyerClick
+      end
+      object btnDuplicateKeyer: TButton
+        Left = 445
+        Top = 94
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 4
+        Caption = 'Duplicate'
+        OnClick = btnDuplicateKeyerClick
+      end
+      object btnRemoveKeyer: TButton
+        Left = 445
+        Top = 126
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 5
+        Caption = 'Remove'
+        OnClick = btnRemoveKeyerClick
+      end
+      object lblKeyerHint: TLabel
+        Left = 12
+        Top = 195
+        Width = 540
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Only devices with their own settings live here - a WinKeyer or a' +
+          ' YCCC SO2R+ box.  Keying on a radio'#39's own port, or by CAT, is pa' +
+          'rt of that radio'#39's setup; a station profile then chooses which m' +
+          'ethod each slot uses.'
+      end
+      object lblCWSendHeading: TLabel
+        Left = 12
+        Top = 262
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Sending'
+      end
+      object chkCWEnable: TCheckBox
+        Left = 12
+        Top = 288
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 8
+        Caption = 'Send CW'
+      end
+      object chkCWSpeedFromDatabase: TCheckBox
+        Left = 12
+        Top = 314
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 9
+        Caption = 'Match the speed a station was worked at before'
+      end
+      object lblCWSpeedIncrement: TLabel
+        Left = 12
+        Top = 352
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Speed step:'
+      end
+      object cbxCWSpeedIncrement: TComboBox
+        Left = 200
+        Top = 348
+        Width = 80
+        Height = 22
+        AutoSize = False
+        TabOrder = 11
+      end
+      object lblCWSpeedIncrementUnits: TLabel
+        Left = 290
+        Top = 352
+        Width = 280
+        Height = 17
+        AutoSize = False
+        Caption = 'WPM per PageUp / PageDown'
+      end
+      object lblCWTone: TLabel
+        Left = 12
+        Top = 384
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Sidetone:'
+      end
+      object edtCWTone: TEdit
+        Left = 200
+        Top = 380
+        Width = 80
+        Height = 22
+        AutoSize = False
+        TabOrder = 14
+      end
+      object lblCWToneUnits: TLabel
+        Left = 290
+        Top = 384
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'Hz  (0 = the radios own sidetone)'
+      end
+    end
+    object layRadios: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 26
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 1
+      object lblMyRadios: TLabel
+        Left = 12
+        Top = 8
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'My radios'
+      end
+      object lstRadios: TListBox
+        Left = 12
+        Top = 30
+        Width = 420
+        Height = 150
+        AutoSize = False
+        TabOrder = 1
+        OnDblClick = lstRadiosDblClick
+      end
+      object btnAdd: TButton
+        Left = 445
+        Top = 30
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 2
+        Caption = 'Add...'
+        OnClick = btnAddClick
+      end
+      object btnEdit: TButton
+        Left = 445
+        Top = 62
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Edit...'
+        OnClick = btnEditClick
+      end
+      object btnDuplicate: TButton
+        Left = 445
+        Top = 94
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 4
+        Caption = 'Duplicate'
+        OnClick = btnDuplicateClick
+      end
+      object btnRemove: TButton
+        Left = 445
+        Top = 126
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 5
+        Caption = 'Remove'
+        OnClick = btnRemoveClick
+      end
+      object grpProfile: TGroupBox
+        Left = 12
+        Top = 195
+        Width = 540
+        Height = 260
+        AutoSize = False
+        Caption = 'Station profile'
+        TabOrder = 6
+        object cbxProfile: TComboBox
+          Left = 12
+          Top = 26
+          Width = 200
+          Height = 22
+          AutoSize = False
+          TabOrder = 38
+          OnChange = cbxProfileChange
+        end
+        object btnNewProfile: TButton
+          Left = 220
+          Top = 26
+          Width = 80
+          Height = 25
+          AutoSize = False
+          TabOrder = 39
+          Caption = 'New...'
+          OnClick = btnNewProfileClick
+        end
+        object btnRenameProfile: TButton
+          Left = 305
+          Top = 26
+          Width = 90
+          Height = 25
+          AutoSize = False
+          TabOrder = 40
+          Caption = 'Rename...'
+          OnClick = btnRenameProfileClick
+        end
+        object btnDeleteProfile: TButton
+          Left = 400
+          Top = 26
+          Width = 80
+          Height = 25
+          AutoSize = False
+          TabOrder = 41
+          Caption = 'Delete'
+          OnClick = btnDeleteProfileClick
+        end
+        object lblRadio1: TLabel
+          Left = 12
+          Top = 66
+          Width = 70
+          Height = 17
+          AutoSize = False
+          Caption = 'Radio 1'
+        end
+        object cbxRadio1: TComboBox
+          Left = 90
+          Top = 62
+          Width = 190
+          Height = 22
+          AutoSize = False
+          TabOrder = 43
+          OnChange = cbxRadio1Change
+        end
+        object lblCWOutput1: TLabel
+          Left = 290
+          Top = 66
+          Width = 90
+          Height = 17
+          AutoSize = False
+          Caption = 'CW output 1'
+        end
+        object cbxCW1: TComboBox
+          Left = 385
+          Top = 62
+          Width = 140
+          Height = 22
+          AutoSize = False
+          TabOrder = 45
+          OnChange = cbxCW1Change
+        end
+        object chkSpeedSync1: TCheckBox
+          Left = 385
+          Top = 92
+          Width = 140
+          Height = 19
+          AutoSize = False
+          TabOrder = 46
+          Caption = 'Speed sync'
+          OnChange = chkSpeedSync1Change
+        end
+        object lblRadio2: TLabel
+          Left = 12
+          Top = 126
+          Width = 70
+          Height = 17
+          AutoSize = False
+          Caption = 'Radio 2'
+        end
+        object cbxRadio2: TComboBox
+          Left = 90
+          Top = 122
+          Width = 190
+          Height = 22
+          AutoSize = False
+          TabOrder = 48
+          OnChange = cbxRadio2Change
+        end
+        object lblCWOutput2: TLabel
+          Left = 290
+          Top = 126
+          Width = 90
+          Height = 17
+          AutoSize = False
+          Caption = 'CW output 2'
+        end
+        object cbxCW2: TComboBox
+          Left = 385
+          Top = 122
+          Width = 140
+          Height = 22
+          AutoSize = False
+          TabOrder = 50
+          OnChange = cbxCW2Change
+        end
+        object chkSpeedSync2: TCheckBox
+          Left = 385
+          Top = 152
+          Width = 140
+          Height = 19
+          AutoSize = False
+          TabOrder = 51
+          Caption = 'Speed sync'
+          OnChange = chkSpeedSync2Change
+        end
+        object chkSO2R: TCheckBox
+          Left = 12
+          Top = 182
+          Width = 200
+          Height = 19
+          AutoSize = False
+          TabOrder = 52
+          Caption = 'SO2R enabled'
+          OnChange = chkSO2RChange
+        end
+        object lblActive: TLabel
+          Left = 12
+          Top = 216
+          Width = 260
+          Height = 17
+          AutoSize = False
+          Caption = 'Active profile: '
+        end
+        object btnActivate: TButton
+          Left = 300
+          Top = 212
+          Width = 225
+          Height = 25
+          AutoSize = False
+          TabOrder = 54
+          Caption = 'Activate this profile now'
+          OnClick = btnActivateClick
+        end
+        object lblActivateHint: TLabel
+          Left = 300
+          Top = 240
+          Width = 300
+          Height = 32
+          AutoSize = False
+          Caption = 
+            'Saving stores your changes. It does not switch the radios over -' +
+            ' use this button for that.'
+        end
+      end
+      object chkAutoConnect: TCheckBox
+        Left = 12
+        Top = 458
+        Width = 300
+        Height = 19
+        AutoSize = False
+        TabOrder = 7
+        Caption = 'Connect radios at startup'
+        OnChange = chkAutoConnectChange
+      end
+    end
+    object layRotators: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 27
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 21
+      object lblMyRotators: TLabel
+        Left = 12
+        Top = 8
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'My rotators'
+      end
+      object lstRotators: TListBox
+        Left = 12
+        Top = 30
+        Width = 420
+        Height = 130
+        AutoSize = False
+        TabOrder = 1
+        OnChange = lstRotatorsChange
+      end
+      object btnAddRotator: TButton
+        Left = 445
+        Top = 30
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 2
+        Caption = 'Add...'
+        OnClick = btnAddRotatorClick
+      end
+      object btnRemoveRotator: TButton
+        Left = 445
+        Top = 62
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Remove'
+        OnClick = btnRemoveRotatorClick
+      end
+      object lblRotatorName: TLabel
+        Left = 12
+        Top = 180
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Name:'
+      end
+      object edtRotatorName: TEdit
+        Left = 140
+        Top = 176
+        Width = 240
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+        OnChangeTracking = edtRotatorNameChange
+      end
+      object lblRotatorType: TLabel
+        Left = 12
+        Top = 212
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Type:'
+      end
+      object cbxRotatorType: TComboBox
+        Left = 140
+        Top = 208
+        Width = 240
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+        OnChange = cbxRotatorTypeChange
+      end
+      object lblRotatorPort: TLabel
+        Left = 12
+        Top = 244
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Port:'
+      end
+      object cbxRotatorPort: TComboBox
+        Left = 140
+        Top = 240
+        Width = 160
+        Height = 22
+        AutoSize = False
+        TabOrder = 9
+        OnChange = cbxRotatorPortChange
+      end
+      object lblRotatorBaud: TLabel
+        Left = 12
+        Top = 276
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Baud rate:'
+      end
+      object edtRotatorBaud: TEdit
+        Left = 140
+        Top = 272
+        Width = 90
+        Height = 22
+        AutoSize = False
+        TabOrder = 11
+        OnChangeTracking = edtRotatorBaudChange
+      end
+      object lblRotatorBaudHint: TLabel
+        Left = 240
+        Top = 276
+        Width = 320
+        Height = 17
+        AutoSize = False
+        Caption = 'blank or 0 = the default for this type'
+      end
+      object lblRotatorIP: TLabel
+        Left = 12
+        Top = 308
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'IP address:'
+      end
+      object edtRotatorIP: TEdit
+        Left = 140
+        Top = 304
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 14
+        OnChangeTracking = edtRotatorIPChange
+      end
+      object lblRotatorUDP: TLabel
+        Left = 12
+        Top = 340
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'UDP port:'
+      end
+      object edtRotatorUDP: TEdit
+        Left = 140
+        Top = 336
+        Width = 90
+        Height = 22
+        AutoSize = False
+        TabOrder = 16
+        OnChangeTracking = edtRotatorUDPChange
+      end
+      object lblRotatorBands: TLabel
+        Left = 12
+        Top = 372
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Bands:'
+      end
+      object edtRotatorBands: TEdit
+        Left = 140
+        Top = 368
+        Width = 300
+        Height = 22
+        AutoSize = False
+        TabOrder = 18
+        OnChangeTracking = edtRotatorBandsChange
+      end
+      object lblRotatorBandsHint: TLabel
+        Left = 12
+        Top = 398
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Leave blank and this rotator turns for every band, which is what' +
+          ' a station with one antenna wants.  List bands - 20 15 10 - to h' +
+          'ave TR4W choose between several rotators by band.'
+      end
+      object lblRotatorNote: TLabel
+        Left = 12
+        Top = 456
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'PstRotator is reached over UDP and has no serial port; the other' +
+          's use one.  A blank baud rate lets each type use what it expects' +
+          ' - the DCU-1 wants 4800 where the rest want 9600.'
+      end
+    end
+    object layUDP: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 5
+      Width = 675
+      Height = 572
+      AutoSize = False
+      TabOrder = 3
+      object chkUDPEnabled: TCheckBox
+        Left = 12
+        Top = 10
+        Width = 300
+        Height = 22
+        AutoSize = False
+        TabOrder = 0
+        Caption = 'Broadcast UDP data'
+        OnChange = chkUDPEnabledChange
+      end
+      object lblUDPDestinations: TLabel
+        Left = 12
+        Top = 44
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'Destinations'
+      end
+      object lstUDPDestinations: TListBox
+        Left = 12
+        Top = 66
+        Width = 420
+        Height = 150
+        AutoSize = False
+        TabOrder = 2
+        OnDblClick = lstUDPDestinationsDblClick
+      end
+      object btnUDPAdd: TButton
+        Left = 445
+        Top = 66
+        Width = 100
+        Height = 25
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Add...'
+        OnClick = btnUDPAddClick
+      end
+      object btnUDPEdit: TButton
+        Left = 445
+        Top = 98
+        Width = 100
+        Height = 25
+        AutoSize = False
+        TabOrder = 4
+        Caption = 'Edit...'
+        OnClick = btnUDPEditClick
+      end
+      object btnUDPRemove: TButton
+        Left = 445
+        Top = 130
+        Width = 100
+        Height = 25
+        AutoSize = False
+        TabOrder = 5
+        Caption = 'Remove'
+        OnClick = btnUDPRemoveClick
+      end
+      object btnUDPTest: TButton
+        Left = 445
+        Top = 162
+        Width = 100
+        Height = 25
+        AutoSize = False
+        TabOrder = 6
+        Caption = 'Test'
+        OnClick = btnUDPTestClick
+      end
+      object chkUDPAllQSOs: TCheckBox
+        Left = 12
+        Top = 230
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+        Caption = 'Also broadcast edited and previously logged QSOs'
+        OnChange = chkUDPAllQSOsChange
+      end
+      object lblUDPHint: TLabel
+        Left = 12
+        Top = 262
+        Width = 540
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Each destination is one program listening.  Add a second row for' +
+          ' the same address when it expects different data on a different ' +
+          'port.'
+      end
+    end
+    object layLogging: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 8
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 4
+      object lblLogLevel: TLabel
+        Left = 12
+        Top = 14
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Log level:'
+      end
+      object cbxLogLevel: TComboBox
+        Left = 140
+        Top = 10
+        Width = 180
+        Height = 22
+        AutoSize = False
+        TabOrder = 1
+        OnChange = cbxLogLevelChange
+      end
+      object lblLogLevelHint: TLabel
+        Left = 12
+        Top = 40
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'Takes effect immediately - no restart.  INFO is the normal settin' +
+          'g; DEBUG and TRACE make the log much larger and are for diagnosin' +
+          'g a problem.'
+      end
+      object lblDetailLogs: TLabel
+        Left = 12
+        Top = 90
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Detailed logging for one subsystem'
+      end
+      object chkTelnetDebug: TCheckBox
+        Left = 24
+        Top = 114
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 4
+        Caption = 'DX cluster - log all telnet traffic'
+      end
+      object chkTCIDebug: TCheckBox
+        Left = 24
+        Top = 140
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+        Caption = 'TCI server - log every command, both directions'
+      end
+      object chkHamLibDebug: TCheckBox
+        Left = 24
+        Top = 166
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 6
+        Caption = 'HamLib - debug logging'
+      end
+      object chkHamLibTrace: TCheckBox
+        Left = 24
+        Top = 192
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+        Caption = 'HamLib - internal trace to hamlib_trace.log'
+      end
+      object chkHamLibAsyncOnly: TCheckBox
+        Left = 24
+        Top = 218
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 8
+        Caption = 'HamLib - async callbacks only, no heartbeat (testing)'
+      end
+      object lblHamLibRestart: TLabel
+        Left = 24
+        Top = 244
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'The three HamLib settings take effect when TR4W next starts.  The' +
+          'y are very verbose and are for diagnosing a radio problem - leave' +
+          ' them off otherwise.'
+      end
+      object btnOpenLogFile: TButton
+        Left = 12
+        Top = 296
+        Width = 130
+        Height = 25
+        AutoSize = False
+        TabOrder = 10
+        Caption = 'Open log file'
+        OnClick = btnOpenLogFileClick
+      end
+      object lblLogFilePath: TLabel
+        Left = 152
+        Top = 301
+        Width = 500
+        Height = 17
+        AutoSize = False
+      end
+    end
+    object layTCIServer: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 15
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 5
+      object chkTCIServer: TCheckBox
+        Left = 12
+        Top = 12
+        Width = 400
+        Height = 22
+        AutoSize = False
+        TabOrder = 0
+        Caption = 'Enable the TCI server'
+        OnChange = chkTCIServerChange
+      end
+      object lblTCIIntro: TLabel
+        Left = 12
+        Top = 40
+        Width = 640
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Lets other programs - WSJT-X, JTDX, a skimmer - control whichever' +
+          ' radio TR4W has the port open on, even a radio with no TCI of its' +
+          ' own.  Radio 1 is trx 0 and radio 2 is trx 1.'
+      end
+      object lblTCIPort: TLabel
+        Left = 12
+        Top = 104
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Port:'
+      end
+      object edtTCIPort: TEdit
+        Left = 140
+        Top = 100
+        Width = 90
+        Height = 22
+        AutoSize = False
+        TabOrder = 3
+      end
+      object chkTCIBindAll: TCheckBox
+        Left = 12
+        Top = 134
+        Width = 480
+        Height = 22
+        AutoSize = False
+        TabOrder = 4
+        Caption = 'Accept connections from other computers'
+      end
+      object lblTCIBindAllWarning: TLabel
+        Left = 30
+        Top = 158
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Off by default, and worth leaving off.  This is an unauthenticate' +
+          'd radio-control socket: anything that can reach the port can move' +
+          ' your VFO and key your transmitter.'
+      end
+      object lblTCIMaxTx: TLabel
+        Left = 12
+        Top = 224
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'Stop transmitting after:'
+      end
+      object edtTCIMaxTx: TEdit
+        Left = 220
+        Top = 220
+        Width = 70
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+      end
+      object lblTCIMaxTxUnits: TLabel
+        Left = 298
+        Top = 224
+        Width = 340
+        Height = 17
+        AutoSize = False
+        Caption = 'seconds  (0 = no limit)'
+      end
+      object lblTCIMaxTxHint: TLabel
+        Left = 30
+        Top = 248
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'A safety net, not a timer for normal use: if a client keys the ra' +
+          'dio and then stops answering - it crashed, or the network went aw' +
+          'ay - this is what puts the transmitter back into receive.'
+      end
+      object lblTCILogHint: TLabel
+        Left = 12
+        Top = 314
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'To log every TCI command in both directions, see the Logging sect' +
+          'ion.'
+      end
+    end
+    object layStation: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 1
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 6
+      object lblStationHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 340
+        Height = 17
+        AutoSize = False
+        Caption = 'Station information'
+      end
+      object lblMyCall: TLabel
+        Left = 12
+        Top = 38
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Callsign:'
+      end
+      object edtMyCall: TEdit
+        Left = 140
+        Top = 34
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+      end
+      object lblMyName: TLabel
+        Left = 12
+        Top = 68
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'First name:'
+      end
+      object edtMyName: TEdit
+        Left = 140
+        Top = 64
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 4
+      end
+      object lblMyGrid: TLabel
+        Left = 12
+        Top = 98
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Grid square:'
+      end
+      object edtMyGrid: TEdit
+        Left = 140
+        Top = 94
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 6
+      end
+      object lblMyContinent: TLabel
+        Left = 12
+        Top = 128
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Continent:'
+      end
+      object cbxMyContinent: TComboBox
+        Left = 140
+        Top = 124
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 8
+      end
+      object lblMyZone: TLabel
+        Left = 12
+        Top = 158
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'CQ zone:'
+      end
+      object edtMyZone: TEdit
+        Left = 140
+        Top = 154
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 10
+      end
+      object lblMyITUZone: TLabel
+        Left = 12
+        Top = 188
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'ITU zone:'
+      end
+      object edtMyITUZone: TEdit
+        Left = 140
+        Top = 184
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 12
+      end
+      object lblMyState: TLabel
+        Left = 12
+        Top = 218
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'State/Province:'
+      end
+      object edtMyState: TEdit
+        Left = 140
+        Top = 214
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 14
+      end
+      object lblMySection: TLabel
+        Left = 12
+        Top = 248
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'ARRL section:'
+      end
+      object edtMySection: TEdit
+        Left = 140
+        Top = 244
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 16
+      end
+      object lblMyCountry: TLabel
+        Left = 12
+        Top = 278
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Country:'
+      end
+      object edtMyCountry: TEdit
+        Left = 140
+        Top = 274
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 18
+      end
+      object lblMyPostalCode: TLabel
+        Left = 12
+        Top = 308
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Postal code:'
+      end
+      object edtMyPostalCode: TEdit
+        Left = 140
+        Top = 304
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 20
+      end
+      object lblContestHeading: TLabel
+        Left = 380
+        Top = 8
+        Width = 280
+        Height = 17
+        AutoSize = False
+        Caption = 'Contest exchange'
+      end
+      object lblMyCheck: TLabel
+        Left = 380
+        Top = 38
+        Width = 110
+        Height = 17
+        AutoSize = False
+        Caption = 'Check:'
+      end
+      object edtMyCheck: TEdit
+        Left = 496
+        Top = 34
+        Width = 150
+        Height = 22
+        AutoSize = False
+        TabOrder = 23
+      end
+      object lblMyPrec: TLabel
+        Left = 380
+        Top = 68
+        Width = 110
+        Height = 17
+        AutoSize = False
+        Caption = 'Precedence:'
+      end
+      object edtMyPrec: TEdit
+        Left = 496
+        Top = 64
+        Width = 150
+        Height = 22
+        AutoSize = False
+        TabOrder = 25
+      end
+      object lblMyFDClass: TLabel
+        Left = 380
+        Top = 98
+        Width = 110
+        Height = 17
+        AutoSize = False
+        Caption = 'FD class:'
+      end
+      object edtMyFDClass: TEdit
+        Left = 496
+        Top = 94
+        Width = 150
+        Height = 22
+        AutoSize = False
+        TabOrder = 27
+      end
+      object lblMyFOCNumber: TLabel
+        Left = 380
+        Top = 128
+        Width = 110
+        Height = 17
+        AutoSize = False
+        Caption = 'FOC number:'
+      end
+      object edtMyFOCNumber: TEdit
+        Left = 496
+        Top = 124
+        Width = 150
+        Height = 22
+        AutoSize = False
+        TabOrder = 29
+      end
+      object lblMyIOTA: TLabel
+        Left = 380
+        Top = 158
+        Width = 110
+        Height = 17
+        AutoSize = False
+        Caption = 'IOTA:'
+      end
+      object edtMyIOTA: TEdit
+        Left = 496
+        Top = 154
+        Width = 150
+        Height = 22
+        AutoSize = False
+        TabOrder = 31
+      end
+      object lblMyPark: TLabel
+        Left = 380
+        Top = 188
+        Width = 110
+        Height = 17
+        AutoSize = False
+        Caption = 'Park:'
+      end
+      object edtMyPark: TEdit
+        Left = 496
+        Top = 184
+        Width = 150
+        Height = 22
+        AutoSize = False
+        TabOrder = 33
+      end
+      object lblStationHint: TLabel
+        Left = 12
+        Top = 360
+        Width = 640
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'These are sent to the other stations in a multi-operator network w' +
+          'hen you change them, so all positions agree on the exchange.'
+      end
+    end
+    object layWSJTX: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 16
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 7
+      object lblWSJTXHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'WSJT-X / JTDX'
+      end
+      object chkWSJTXEnabled: TCheckBox
+        Left = 12
+        Top = 34
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 1
+        Caption = 'Exchange data with WSJT-X'
+      end
+      object chkWSJTXRadioControl: TCheckBox
+        Left = 12
+        Top = 60
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+        Caption = 'Let WSJT-X control the radio'
+      end
+      object chkWSJTXHighlights: TCheckBox
+        Left = 12
+        Top = 86
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Send callsign highlighting to WSJT-X'
+      end
+      object lblWSJTXPort: TLabel
+        Left = 12
+        Top = 120
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Broadcast port:'
+      end
+      object edtWSJTXPort: TEdit
+        Left = 160
+        Top = 116
+        Width = 90
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+      end
+      object lblWSJTXMulticast: TLabel
+        Left = 12
+        Top = 152
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Multicast group:'
+      end
+      object edtWSJTXMulticast: TEdit
+        Left = 160
+        Top = 148
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+      end
+      object lblWSJTXRestart: TLabel
+        Left = 12
+        Top = 184
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'These take effect when TR4W next starts.  Leave the multicast gr' +
+          'oup blank unless WSJT-X is configured to use one.'
+      end
+      object lblWSJTXTCIHint: TLabel
+        Left = 12
+        Top = 240
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'To let WSJT-X drive the radio over TCI instead, see the TCI Serv' +
+          'er section - that works with any radio TR4W controls, not only o' +
+          'ne with TCI of its own.'
+      end
+    end
+    object layExternalLogger: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 17
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 8
+      object lblLoggerHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'External logger'
+      end
+      object lblLoggerType: TLabel
+        Left = 12
+        Top = 38
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Program:'
+      end
+      object cbxLoggerType: TComboBox
+        Left = 160
+        Top = 34
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+      end
+      object chkLoggerEnabled: TCheckBox
+        Left = 12
+        Top = 68
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Send QSOs to it as they are logged'
+      end
+      object lblLoggerAddress: TLabel
+        Left = 12
+        Top = 102
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Address:'
+      end
+      object edtLoggerAddress: TEdit
+        Left = 160
+        Top = 98
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+      end
+      object lblLoggerPort: TLabel
+        Left = 12
+        Top = 134
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Port:'
+      end
+      object edtLoggerPort: TEdit
+        Left = 160
+        Top = 130
+        Width = 90
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+      end
+      object lblLoggerRestart: TLabel
+        Left = 12
+        Top = 166
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'These take effect when TR4W next starts.'
+      end
+      object lblLoggerStatus: TLabel
+        Left = 12
+        Top = 208
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'DXKEEPER is complete.  ACLOG and HRD are not finished - selectin' +
+          'g one logs a warning and no QSOs are sent.'
+      end
+    end
+    object layDXLab: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 18
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 9
+      object lblDXLabHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'DXLab'
+      end
+      object lblDXLabInfo: TLabel
+        Left = 12
+        Top = 34
+        Width = 620
+        Height = 68
+        AutoSize = False
+        Caption = 
+          'DXLab needs no settings of its own.  TR4W offers a DX Commander ' +
+          'compatible interface on TCP port 52002 whenever the WSJT-X suppo' +
+          'rt is running, and DXLab programs connect to that.'
+      end
+      object lblDXLabInfo2: TLabel
+        Left = 12
+        Top = 112
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'The port is not configurable today.  If you want it to be, say s' +
+          'o and it becomes a setting here.'
+      end
+    end
+    object layMMTTY: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 19
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 10
+      object lblMMTTYHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'MMTTY'
+      end
+      object lblMMTTYEngine: TLabel
+        Left = 12
+        Top = 42
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Engine:'
+      end
+      object edtMMTTYEngine: TEdit
+        Left = 160
+        Top = 38
+        Width = 380
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+      end
+      object btnBrowseMMTTY: TButton
+        Left = 548
+        Top = 37
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Browse...'
+        OnClick = btnBrowseMMTTYClick
+      end
+      object lblMMTTYHint: TLabel
+        Left = 12
+        Top = 74
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks t' +
+          'o it directly.'
+      end
+    end
+    object layCluster: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 3
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 11
+      object lblClusterHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'My DX clusters'
+      end
+      object lstClusters: TListBox
+        Left = 12
+        Top = 30
+        Width = 420
+        Height = 110
+        AutoSize = False
+        TabOrder = 1
+        OnChange = lstClustersChange
+      end
+      object btnAddCluster: TButton
+        Left = 445
+        Top = 30
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 2
+        Caption = 'Add...'
+        OnClick = btnAddClusterClick
+      end
+      object btnRemoveCluster: TButton
+        Left = 445
+        Top = 62
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Remove'
+        OnClick = btnRemoveClusterClick
+      end
+      object btnUseCluster: TButton
+        Left = 445
+        Top = 94
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 4
+        Caption = 'Use this'
+        OnClick = btnUseClusterClick
+      end
+      object lblActiveCluster: TLabel
+        Left = 12
+        Top = 148
+        Width = 420
+        Height = 17
+        AutoSize = False
+        Caption = 'Connecting to: (none chosen)'
+      end
+      object lblClusterName: TLabel
+        Left = 12
+        Top = 182
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Name:'
+      end
+      object edtClusterName: TEdit
+        Left = 140
+        Top = 178
+        Width = 240
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+        OnChangeTracking = edtClusterNameChange
+      end
+      object lblClusterServer: TLabel
+        Left = 12
+        Top = 214
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Server:'
+      end
+      object cbxClusterServer: TComboBox
+        Style = csDropDown
+        Left = 140
+        Top = 210
+        Width = 300
+        Height = 22
+        AutoSize = False
+        TabOrder = 9
+        OnChange = cbxClusterServerChange
+        OnEnter = cbxClusterServerEnter
+      end
+      object lblClusterServerHint: TLabel
+        Left = 12
+        Top = 238
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'host:port, for example dxc.nc7j.com:7373.  The drop-down lists t' +
+          'he servers in TRCLUSTER.DAT; you can also type one that is not o' +
+          'n it.'
+      end
+      object lblClusterLogin: TLabel
+        Left = 12
+        Top = 286
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Log in as:'
+      end
+      object edtClusterLogin: TEdit
+        Left = 140
+        Top = 282
+        Width = 160
+        Height = 22
+        AutoSize = False
+        TabOrder = 12
+        OnChangeTracking = edtClusterLoginChange
+      end
+      object lblClusterLoginHint: TLabel
+        Left = 310
+        Top = 286
+        Width = 320
+        Height = 17
+        AutoSize = False
+        Caption = 'blank = my station callsign'
+      end
+      object lblClusterPassword: TLabel
+        Left = 12
+        Top = 318
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'Password:'
+      end
+      object edtClusterPassword: TEdit
+        Left = 140
+        Top = 314
+        Width = 200
+        Height = 22
+        AutoSize = False
+        TabOrder = 15
+        PasswordChar = '*'
+        OnChangeTracking = edtClusterPasswordChange
+      end
+      object lblClusterCommand: TLabel
+        Left = 12
+        Top = 350
+        Width = 120
+        Height = 17
+        AutoSize = False
+        Caption = 'After connecting:'
+      end
+      object edtClusterCommand: TEdit
+        Left = 140
+        Top = 346
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 17
+        OnChangeTracking = edtClusterCommandChange
+      end
+      object lblClusterCommandHint: TLabel
+        Left = 12
+        Top = 374
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'Sent once the login is accepted - filters, set/name, sh/dx.  Sep' +
+          'arate several with a semicolon.'
+      end
+      object lblClusterGlobalHeading: TLabel
+        Left = 12
+        Top = 424
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'For every cluster'
+      end
+      object chkClusterAtStartup: TCheckBox
+        Left = 12
+        Top = 450
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 20
+        Caption = 'Connect at startup'
+      end
+      object chkSpotCollector: TCheckBox
+        Left = 12
+        Top = 476
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 21
+        Caption = 'Collect spots from the cluster'
+      end
+      object lblClusterNote: TLabel
+        Left = 12
+        Top = 506
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'The cluster reconnects on its own after a drop.  Telnet logging ' +
+          'is on the Logging page; spot display and ageing are on Band Map.'
+      end
+    end
+    object layBandMap: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 20
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 12
+      object lblBandMapHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Band map'
+      end
+      object chkBandMapEnable: TCheckBox
+        Left = 12
+        Top = 34
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 1
+        Caption = 'Show the band map'
+      end
+      object lblBandMapDecay: TLabel
+        Left = 12
+        Top = 72
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Spot expiry:'
+      end
+      object edtBandMapDecay: TEdit
+        Left = 160
+        Top = 68
+        Width = 80
+        Height = 22
+        AutoSize = False
+        TabOrder = 3
+      end
+      object lblBandMapDecayUnits: TLabel
+        Left = 248
+        Top = 72
+        Width = 160
+        Height = 17
+        AutoSize = False
+        Caption = 'seconds'
+      end
+      object lblBandMapGuard: TLabel
+        Left = 12
+        Top = 102
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Guard band:'
+      end
+      object edtBandMapGuard: TEdit
+        Left = 160
+        Top = 98
+        Width = 80
+        Height = 22
+        AutoSize = False
+        TabOrder = 6
+      end
+      object lblBandMapGuardUnits: TLabel
+        Left = 248
+        Top = 102
+        Width = 160
+        Height = 17
+        AutoSize = False
+        Caption = 'Hz'
+      end
+      object lblBandMapLimit: TLabel
+        Left = 12
+        Top = 132
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Display limit:'
+      end
+      object edtBandMapLimit: TEdit
+        Left = 160
+        Top = 128
+        Width = 80
+        Height = 22
+        AutoSize = False
+        TabOrder = 9
+      end
+      object lblBandMapLimitUnits: TLabel
+        Left = 248
+        Top = 132
+        Width = 160
+        Height = 17
+        AutoSize = False
+        Caption = 'spots'
+      end
+      object chkBandMapDupes: TCheckBox
+        Left = 12
+        Top = 170
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 11
+        Caption = 'Show duplicates'
+      end
+      object chkBandMapMultsOnly: TCheckBox
+        Left = 12
+        Top = 196
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 12
+        Caption = 'Multipliers only'
+      end
+      object chkBandMapAllBands: TCheckBox
+        Left = 12
+        Top = 222
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 13
+        Caption = 'All bands'
+      end
+      object chkBandMapAllModes: TCheckBox
+        Left = 12
+        Top = 248
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 14
+        Caption = 'All modes'
+      end
+      object chkBandMapCQ: TCheckBox
+        Left = 12
+        Top = 274
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 15
+        Caption = 'Show CQ spots'
+      end
+      object chkBandMapCallWindow: TCheckBox
+        Left = 12
+        Top = 300
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 16
+        Caption = 'Show the call window entry'
+      end
+      object chkBandMapSO2R: TCheckBox
+        Left = 12
+        Top = 326
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 17
+        Caption = 'SO2R display'
+      end
+      object chkBandMapGHz: TCheckBox
+        Left = 12
+        Top = 352
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 18
+        Caption = 'Show GHz'
+      end
+      object lblBandMapNote: TLabel
+        Left = 12
+        Top = 388
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'A band map does not need a DX cluster: it also holds spots you m' +
+          'ake yourself and anything the SO2R radio hears.  Cluster setting' +
+          's are on the DX Cluster page.'
+      end
+    end
+    object laySCP: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 4
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 13
+      object lblSCPHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Super Check Partial'
+      end
+      object lblSCPMinLetters: TLabel
+        Left = 12
+        Top = 42
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Start matching after:'
+      end
+      object cbxSCPMinLetters: TComboBox
+        Left = 200
+        Top = 38
+        Width = 60
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+      end
+      object lblSCPMinLettersUnits: TLabel
+        Left = 270
+        Top = 42
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'letters typed'
+      end
+      object lblSCPCountry: TLabel
+        Left = 12
+        Top = 76
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Restrict to countries:'
+      end
+      object edtSCPCountry: TEdit
+        Left = 200
+        Top = 72
+        Width = 300
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+      end
+      object lblSCPHint: TLabel
+        Left = 12
+        Top = 106
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Blank shows matches from everywhere.  A list of country prefixes' +
+          ' narrows it, which is useful in a domestic contest where the who' +
+          'le world is not workable.'
+      end
+      object lblSCPFileHint: TLabel
+        Left = 12
+        Top = 160
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Matches come from TRMASTER.DTA in the program folder.  Without t' +
+          'hat file Super Check Partial simply shows nothing; it is not an ' +
+          'error.'
+      end
+    end
+    object layNetwork: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 6
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 14
+      object lblNetHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Multi-operator network'
+      end
+      object lblNetAddress: TLabel
+        Left = 12
+        Top = 42
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Server:'
+      end
+      object edtNetAddress: TEdit
+        Left = 160
+        Top = 38
+        Width = 240
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+      end
+      object lblNetPort: TLabel
+        Left = 12
+        Top = 74
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Port:'
+      end
+      object edtNetPort: TEdit
+        Left = 160
+        Top = 70
+        Width = 90
+        Height = 22
+        AutoSize = False
+        TabOrder = 4
+      end
+      object lblNetPassword: TLabel
+        Left = 12
+        Top = 106
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Password:'
+      end
+      object edtNetPassword: TEdit
+        Left = 160
+        Top = 102
+        Width = 240
+        Height = 22
+        AutoSize = False
+        TabOrder = 6
+        PasswordChar = '*'
+      end
+      object lblNetComputerID: TLabel
+        Left = 12
+        Top = 138
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'This station:'
+      end
+      object edtNetComputerID: TEdit
+        Left = 160
+        Top = 134
+        Width = 60
+        Height = 22
+        AutoSize = False
+        TabOrder = 8
+      end
+      object lblNetComputerIDHint: TLabel
+        Left = 230
+        Top = 138
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'a single letter, unique in the network'
+      end
+      object chkNetAutoSync: TCheckBox
+        Left = 12
+        Top = 170
+        Width = 500
+        Height = 22
+        AutoSize = False
+        TabOrder = 10
+        Caption = 'Synchronise the log when connecting'
+      end
+      object lblNetHint: TLabel
+        Left = 12
+        Top = 204
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'TR4WServer runs on one machine and every operating position conn' +
+          'ects to it.  It holds the shared log, the multipliers and the se' +
+          'rial numbers.'
+      end
+      object lblRadioTCPHeading: TLabel
+        Left = 12
+        Top = 268
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Radio sharing'
+      end
+      object lblRadioTCPPort: TLabel
+        Left = 12
+        Top = 302
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'TCP port:'
+      end
+      object edtRadioTCPPort: TEdit
+        Left = 160
+        Top = 298
+        Width = 90
+        Height = 22
+        AutoSize = False
+        TabOrder = 14
+      end
+      object lblRadioTCPHint: TLabel
+        Left = 12
+        Top = 330
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Lets another position read this station''s radio.  Takes effect w' +
+          'hen TR4W next starts.'
+      end
+    end
+    object layAppearance: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 7
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 15
+      object lblAppearHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Main window'
+      end
+      object lblMainFont: TLabel
+        Left = 12
+        Top = 42
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Font:'
+      end
+      object edtMainFont: TEdit
+        Left = 160
+        Top = 38
+        Width = 240
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+      end
+      object lblFontSize: TLabel
+        Left = 12
+        Top = 74
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Size:'
+      end
+      object edtFontSize: TEdit
+        Left = 160
+        Top = 70
+        Width = 60
+        Height = 22
+        AutoSize = False
+        TabOrder = 4
+      end
+      object chkBoldFont: TCheckBox
+        Left = 12
+        Top = 104
+        Width = 400
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+        Caption = 'Bold'
+      end
+      object chkDupeSheetColor: TCheckBox
+        Left = 12
+        Top = 134
+        Width = 400
+        Height = 22
+        AutoSize = False
+        TabOrder = 6
+        Caption = 'Colour the dupe sheet columns'
+      end
+      object lblAppearHint: TLabel
+        Left = 12
+        Top = 168
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'The font applies to the main contest window.  All four take effe' +
+          'ct when TR4W next starts.'
+      end
+      object lblAppearColorsHint: TLabel
+        Left = 12
+        Top = 222
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Window colours are still on the Settings menu.  They belong here' +
+          ' and will move once the main window is resizable, which is the c' +
+          'hange that decides what the layout options need to be.'
+      end
+    end
+    object layBackup: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 9
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 16
+      object lblBackupHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Log backup'
+      end
+      object lblBackupEvery: TLabel
+        Left = 12
+        Top = 42
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Back up every:'
+      end
+      object edtBackupEvery: TEdit
+        Left = 200
+        Top = 38
+        Width = 60
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+      end
+      object lblBackupEveryUnits: TLabel
+        Left = 270
+        Top = 42
+        Width = 220
+        Height = 17
+        AutoSize = False
+        Caption = 'QSOs  (0 = never)'
+      end
+      object lblBackupFile: TLabel
+        Left = 12
+        Top = 76
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Copy to:'
+      end
+      object edtBackupFile: TEdit
+        Left = 200
+        Top = 72
+        Width = 340
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+      end
+      object btnBrowseBackup: TButton
+        Left = 548
+        Top = 71
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 6
+        Caption = 'Browse...'
+        OnClick = btnBrowseBackupClick
+      end
+      object lblBackupHint: TLabel
+        Left = 12
+        Top = 106
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'A second copy of the log, written as you go.  Put it somewhere t' +
+          'hat is not the same disk as the log itself, or it protects again' +
+          'st nothing worth protecting against.'
+      end
+    end
+    object layOnlineScoring: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 22
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 17
+      object lblScoreHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Online scoring'
+      end
+      object chkHamScoreEnable: TCheckBox
+        Left = 12
+        Top = 34
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 1
+        Caption = 'Post my score while the contest runs'
+      end
+      object lblHamScoreURL: TLabel
+        Left = 12
+        Top = 72
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Service URL:'
+      end
+      object edtHamScoreURL: TEdit
+        Left = 160
+        Top = 68
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 3
+      end
+      object lblHamScoreUser: TLabel
+        Left = 12
+        Top = 104
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Username:'
+      end
+      object edtHamScoreUser: TEdit
+        Left = 160
+        Top = 100
+        Width = 240
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+      end
+      object lblHamScorePass: TLabel
+        Left = 12
+        Top = 136
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Password:'
+      end
+      object edtHamScorePass: TEdit
+        Left = 160
+        Top = 132
+        Width = 240
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+        PasswordChar = '*'
+      end
+      object chkHamScoreContact: TCheckBox
+        Left = 12
+        Top = 166
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 8
+        Caption = 'Include contact information'
+      end
+      object lblScoreRestart: TLabel
+        Left = 12
+        Top = 196
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'These take effect when TR4W next starts.'
+      end
+      object lblScoreBoardHeading: TLabel
+        Left = 12
+        Top = 244
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Score board'
+      end
+      object lblScorePostURL: TLabel
+        Left = 12
+        Top = 278
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Posting URL:'
+      end
+      object edtScorePostURL: TEdit
+        Left = 160
+        Top = 274
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 12
+      end
+      object lblScoreReadURL: TLabel
+        Left = 12
+        Top = 310
+        Width = 140
+        Height = 17
+        AutoSize = False
+        Caption = 'Reading URL:'
+      end
+      object edtScoreReadURL: TEdit
+        Left = 160
+        Top = 306
+        Width = 420
+        Height = 22
+        AutoSize = False
+        TabOrder = 14
+      end
+      object lblScoreBoardHint: TLabel
+        Left = 12
+        Top = 340
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Where TR4W posts its score and where it reads other stations'' sc' +
+          'ores from.  The two are separate so a club board can be read whi' +
+          'le posting elsewhere.'
+      end
+    end
+    object layOperatingCW: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 23
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 18
+      object lblOpCWHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'CW while operating'
+      end
+      object chkSayHiEnable: TCheckBox
+        Left = 12
+        Top = 34
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 1
+        Caption = 'Send a greeting to stations worked before'
+      end
+      object lblSayHiCutoff: TLabel
+        Left = 12
+        Top = 68
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Stop above a rate of:'
+      end
+      object edtSayHiCutoff: TEdit
+        Left = 200
+        Top = 64
+        Width = 60
+        Height = 22
+        AutoSize = False
+        TabOrder = 3
+      end
+      object lblSayHiCutoffUnits: TLabel
+        Left = 270
+        Top = 68
+        Width = 220
+        Height = 17
+        AutoSize = False
+        Caption = 'QSOs per hour'
+      end
+      object chkKeypadCWMemories: TCheckBox
+        Left = 12
+        Top = 100
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+        Caption = 'Number keypad sends CW memories'
+      end
+      object lblLeadingZeros: TLabel
+        Left = 12
+        Top = 138
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Leading zeros:'
+      end
+      object cbxLeadingZeros: TComboBox
+        Left = 200
+        Top = 134
+        Width = 80
+        Height = 22
+        AutoSize = False
+        TabOrder = 7
+      end
+      object lblLeadingZeroChar: TLabel
+        Left = 12
+        Top = 170
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Sent as:'
+      end
+      object edtLeadingZeroChar: TEdit
+        Left = 200
+        Top = 166
+        Width = 60
+        Height = 22
+        AutoSize = False
+        TabOrder = 9
+      end
+      object lblLeadingZeroHint: TLabel
+        Left = 12
+        Top = 198
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Serial numbers are padded to that many digits.  T for a zero is ' +
+          'the usual cut-number choice; leave it as 0 to send them plainly.'
+      end
+      object lblSerialKeyHeading: TLabel
+        Left = 12
+        Top = 258
+        Width = 500
+        Height = 17
+        AutoSize = False
+        Caption = 'Radio serial keying  (DTR/RTS keying only)'
+      end
+      object lblSerialKeyIntro: TLabel
+        Left = 12
+        Top = 282
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'These shape the CW that TR4W generates itself by toggling a seri' +
+          'al line.  They do nothing for a WinKeyer, a YCCC box, or CW sent' +
+          ' by CAT - those devices keep their own timing.'
+      end
+      object lblDitDah: TLabel
+        Left = 12
+        Top = 340
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Dit/dah ratio:'
+      end
+      object cbxDitDah: TComboBox
+        Left = 200
+        Top = 336
+        Width = 80
+        Height = 22
+        AutoSize = False
+        TabOrder = 14
+      end
+      object lblWeight: TLabel
+        Left = 12
+        Top = 372
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Weight:'
+      end
+      object edtWeight: TEdit
+        Left = 200
+        Top = 368
+        Width = 80
+        Height = 22
+        AutoSize = False
+        TabOrder = 16
+      end
+      object chkFarnsworth: TCheckBox
+        Left = 12
+        Top = 402
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 17
+        Caption = 'Farnsworth spacing'
+      end
+      object lblFarnsworthSpeed: TLabel
+        Left = 12
+        Top = 436
+        Width = 180
+        Height = 17
+        AutoSize = False
+        Caption = 'Character speed:'
+      end
+      object edtFarnsworthSpeed: TEdit
+        Left = 200
+        Top = 432
+        Width = 60
+        Height = 22
+        AutoSize = False
+        TabOrder = 19
+      end
+      object lblFarnsworthUnits: TLabel
+        Left = 270
+        Top = 436
+        Width = 220
+        Height = 17
+        AutoSize = False
+        Caption = 'WPM'
+      end
+    end
+    object layBands: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 24
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 19
+      object lblBandsHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Bands in use'
+      end
+      object chkHFBands: TCheckBox
+        Left = 12
+        Top = 34
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 1
+        Caption = 'HF (160 - 10 m)'
+      end
+      object chkWARCBands: TCheckBox
+        Left = 12
+        Top = 60
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 2
+        Caption = 'WARC (30, 17, 12 m)'
+      end
+      object chkVHFBands: TCheckBox
+        Left = 12
+        Top = 86
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'VHF and up (6 m and above)'
+      end
+      object lblBandsHint: TLabel
+        Left = 12
+        Top = 120
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Which bands TR4W offers when you change band, and which appear i' +
+          'n the multiplier and band-map displays.  WARC bands are off by d' +
+          'efault because most contests do not allow them.'
+      end
+    end
+    object layTwoRadio: TPanel
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 25
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 20
+      object lblTwoRadioHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Two radio operating'
+      end
+      object chkTwoRadioMode: TCheckBox
+        Left = 12
+        Top = 34
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 1
+        Caption = 'Two radio mode'
+      end
+      object lblTwoRadioIntro: TLabel
+        Left = 12
+        Top = 64
+        Width = 620
+        Height = 34
+        AutoSize = False
+        Caption = 
+          'Everything below applies only while two radio mode is on.'
+      end
+      object chkAltDBuffer: TCheckBox
+        Left = 12
+        Top = 110
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 3
+        Caption = 'Alt-D remembers what you typed'
+      end
+      object chkAltDCQ: TCheckBox
+        Left = 12
+        Top = 136
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 4
+        Caption = 'Alt-D can start a CQ on the second radio'
+      end
+      object chkAlwaysBlindCQ: TCheckBox
+        Left = 12
+        Top = 162
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 5
+        Caption = 'Always call a blind CQ'
+      end
+      object chkSkipActiveBand: TCheckBox
+        Left = 12
+        Top = 188
+        Width = 460
+        Height = 22
+        AutoSize = False
+        TabOrder = 6
+        Caption = 'Skip the band the other radio is on'
+      end
+      object lblTwoRadioHint: TLabel
+        Left = 12
+        Top = 222
+        Width = 620
+        Height = 51
+        AutoSize = False
+        Caption = 
+          'Skipping the other radio''s band is what stops a band change on o' +
+          'ne radio landing you on top of the other.'
+      end
+    end
+  end
+  object btnOK: TButton
+    Anchors = [akRight, akBottom]
+    Left = 570
+    Top = 582
+    Width = 85
+    Height = 25
+    AutoSize = False
+    TabOrder = 2
+    Caption = 'Save and close'
+    OnClick = btnOKClick
+  end
+  object btnCancel: TButton
+    Anchors = [akRight, akBottom]
+    Left = 665
+    Top = 582
+    Width = 85
+    Height = 25
+    AutoSize = False
+    TabOrder = 3
+    Caption = 'Cancel'
+    OnClick = btnCancelClick
+  end
+  object btnApply: TButton
+    Anchors = [akRight, akBottom]
+    Left = 760
+    Top = 582
+    Width = 85
+    Height = 25
+    AutoSize = False
+    TabOrder = 4
+    Caption = 'Save'
+    OnClick = btnApplyClick
+  end
+end
+
