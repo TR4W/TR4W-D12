@@ -122,3 +122,7 @@ spike/units/
 # handed out per rig, not release history. The release itself is a tag.
 tr4w/build/release/*.zip
 tr4w/build/release/README_*.txt
+
+# FPC sweep reports -- generated artifacts, regenerate with spike/fpc-sweep.ps1
+spike/sweep-*.txt
+spike/units/
