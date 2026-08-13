@@ -36,6 +36,7 @@ uses
    uRegex               in '..\..\src\utils\uRegex.pas',
    uTestRegexValidators in 'uTestRegexValidators.pas',
    uWin32Compat         in '..\..\src\utils\uWin32Compat.pas',
+   uHostedFormWindows   in '..\..\src\utils\uHostedFormWindows.pas',
    uJSON                in '..\..\src\utils\uJSON.pas',
    uTestAnsiStr         in 'uTestAnsiStr.pas',
    utils_text           in '..\..\src\utils\utils_text.pas',

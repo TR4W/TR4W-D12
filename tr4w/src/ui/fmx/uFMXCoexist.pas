@@ -104,12 +104,9 @@ procedure TellFMXTheApplicationIsRunning;
 implementation
 
 uses
-   FMX.Forms;
+   FMX.Forms,
+   uHostedFormWindows;
 
-var
-   // Deliberately a plain array: it holds one or two handles, and it is
-   // consulted once per message.
-   gHandles: array of HWND;
 
 // TApplicationStateEvent is a PLAIN function type -- not `of object` and not
 // `reference to` -- so this is a unit-level function, not a method or a closure.
@@ -130,93 +127,30 @@ begin
    Application.ApplicationStateQuery := HostedApplicationState;
 end;
 
-function IndexOfHandle(const aHandle: HWND): integer;
-var
-   i: integer;
-begin
-   Result := -1;
-   for i := 0 to High(gHandles) do
-      begin
-      if gHandles[i] = aHandle then
-         begin
-         Result := i;
-         Exit;
-         end;
-      end;
-end;
+// The handle registry moved to uHostedFormWindows when the LCL port started:
+// it is pure Win32 (an array plus a GetAncestor walk) and the answer is the
+// same whichever toolkit owns the window.  These four stay as the FMX-named
+// entry points so no call site had to change, and so the main loop keeps
+// reading MessageIsForFMXWindow while FMX is still the only hosted toolkit.
 
 procedure RegisterFMXFormHandle(const aHandle: HWND);
-var
-   n: integer;
 begin
-   if aHandle = 0 then
-      begin
-      Exit;
-      end;
-   if IndexOfHandle(aHandle) >= 0 then
-      begin
-      Exit;
-      end;
-
-   n := Length(gHandles);
-   SetLength(gHandles, n + 1);
-   gHandles[n] := aHandle;
+   uHostedFormWindows.RegisterHostedFormHandle(aHandle);
 end;
 
 procedure UnregisterFMXFormHandle(const aHandle: HWND);
-var
-   idx, i: integer;
 begin
-   idx := IndexOfHandle(aHandle);
-   if idx < 0 then
-      begin
-      Exit;
-      end;
-
-   for i := idx to High(gHandles) - 1 do
-      begin
-      gHandles[i] := gHandles[i + 1];
-      end;
-   SetLength(gHandles, Length(gHandles) - 1);
+   uHostedFormWindows.UnregisterHostedFormHandle(aHandle);
 end;
 
 function AnyFMXWindowOpen: boolean;
 begin
-   Result := Length(gHandles) > 0;
+   Result := uHostedFormWindows.AnyHostedWindowOpen;
 end;
 
 function MessageIsForFMXWindow(const aMsg: TMsg): boolean;
-var
-   root: HWND;
 begin
-   Result := False;
-
-   // The overwhelmingly common case, and the one that must stay cheap: no FMX
-   // window is open at all, so every message in a contest goes through one
-   // length test.
-   if Length(gHandles) = 0 then
-      begin
-      Exit;
-      end;
-
-   if aMsg.hwnd = 0 then
-      begin
-      // A thread message (PostThreadMessage) belongs to no window.  It is not
-      // FMX's, and asking GetAncestor about a null handle would answer 0 --
-      // which could match an empty slot if the list ever held one.
-      Exit;
-      end;
-
-   if IndexOfHandle(aMsg.hwnd) >= 0 then
-      begin
-      Result := True;
-      Exit;
-      end;
-
-   // Walk up to the owning top-level window: the message is addressed to the
-   // child with focus, and everything under a registered form counts as FMX's.
-   root := GetAncestor(aMsg.hwnd, GA_ROOT);
-   Result := (root <> 0) and (IndexOfHandle(root) >= 0);
+   Result := uHostedFormWindows.MessageIsForHostedWindow(aMsg);
 end;
 
 end.
