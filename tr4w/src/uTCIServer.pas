@@ -237,6 +237,268 @@ uses
    uRadioPolling,     // RadioStatusPublished
    uFactoryRadioBase;
 
+{ ------------------------------------------------- the queued applies -- }
+
+// WHY THESE ARE OBJECTS AND NOT ANONYMOUS METHODS.
+//
+// Each apply below runs on the MAIN thread via TThread.Queue, because
+// SetRadioFreq and friends write program globals and touch the display.  The
+// values they act on are read on the CLIENT's thread, so they have to travel.
+//
+// A closure captured them implicitly.  That reads well and costs two things,
+// and rotatorFactory\uRotatorBase.pas:62 already wrote down both: it needs a
+// compiler with closures (FPC 3.2.2 stable has none), and it HIDES WHO OWNS THE
+// STATE BEING CAPTURED.  The second matters more here than portability -- these
+// are transmit commands, and "which radio, at what frequency, keyed by whom"
+// is exactly the state that must not be ambiguous.
+//
+// So each apply is a small command object that NAMES what it carries, and Run
+// is a plain `procedure of object` that both compilers accept.  The command
+// owns itself and frees in Run's finally, so a raising Execute cannot leak it.
+//
+// Lifetime note: a command queued but never drained (shutdown between the queue
+// and the next message pump) is leaked.  That was equally true of the closures,
+// which captured the same values into a compiler-generated object.
+
+type
+   TTCIApplyCommand = class abstract
+   protected
+      FServer: TTCIServer;
+      FRig:    RadioPtr;
+      procedure Execute; virtual; abstract;
+   public
+      constructor Create(aServer: TTCIServer; aRig: RadioPtr);
+      procedure Run;
+   end;
+
+   TTCIApplyFreq = class(TTCIApplyCommand)
+   private
+      FTrx:     integer;
+      FChannel: integer;
+      FHz:      integer;
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(aServer: TTCIServer; aRig: RadioPtr;
+                         aTrx, aChannel, aHz: integer);
+   end;
+
+   TTCIApplyMode = class(TTCIApplyCommand)
+   private
+      FMode:     ModeType;
+      FExtended: ExtendedModeType;
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(aServer: TTCIServer; aRig: RadioPtr;
+                         aMode: ModeType; aExtended: ExtendedModeType);
+   end;
+
+   TTCIApplySplit = class(TTCIApplyCommand)
+   private
+      FTurnOn: boolean;
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(aServer: TTCIServer; aRig: RadioPtr; aTurnOn: boolean);
+   end;
+
+   TTCIApplyPTT = class(TTCIApplyCommand)
+   private
+      FTrx:     integer;
+      FKeyDown: boolean;
+      FSession: TWSServerSession;
+   protected
+      procedure Execute; override;
+   public
+      constructor Create(aServer: TTCIServer; aRig: RadioPtr; aTrx: integer;
+                         aKeyDown: boolean; aSession: TWSServerSession);
+   end;
+
+{ ------------------------------------------------- the queued applies -- }
+
+constructor TTCIApplyCommand.Create(aServer: TTCIServer; aRig: RadioPtr);
+begin
+   inherited Create;
+   FServer := aServer;
+   FRig    := aRig;
+end;
+
+procedure TTCIApplyCommand.Run;
+begin
+   // Frees in the finally so a raising Execute cannot leak the command.  After
+   // this returns nothing may touch Self.
+   try
+      Execute;
+   finally
+      Free;
+   end;
+end;
+
+constructor TTCIApplyFreq.Create(aServer: TTCIServer; aRig: RadioPtr;
+                                 aTrx, aChannel, aHz: integer);
+begin
+   inherited Create(aServer, aRig);
+   FTrx     := aTrx;
+   FChannel := aChannel;
+   FHz      := aHz;
+end;
+
+procedure TTCIApplyFreq.Execute;
+var
+   snap:     RadioStatusRecord;
+   mode:     ModeType;
+   extended: ExtendedModeType;
+   slot:     RadioType;
+   ch:       char;
+begin
+   try
+      // SetRadioFreq sets frequency AND MODE -- there is no frequency-only
+      // setter -- so a QSY must name a mode.  Prefer a mode we have COMMANDED
+      // and the poll has not confirmed yet; the snapshot lags by up to a poll
+      // interval, and using it here re-asserted the old mode 3 ms after a
+      // modulation command and silently undid it.
+      snap := ReadRadioStatus(FRig);
+      mode := snap.VFO[VFOA].Mode;
+      extended := snap.VFO[VFOA].ExtendedMode;
+      slot := FServer.SlotOf(FTrx);
+      FServer.FLock.Enter;
+      try
+         if FServer.FPendingMode[slot].Active then
+            begin
+            mode := FServer.FPendingMode[slot].Mode;
+            extended := FServer.FPendingMode[slot].Extended;
+            end;
+      finally
+         FServer.FLock.Leave;
+      end;
+
+      if FChannel = 0 then
+         begin
+         ch := 'A';
+         end
+      else
+         begin
+         ch := 'B';
+         end;
+      FRig^.SetRadioFreq(FHz, mode, ch, extended);
+   except
+      on E: Exception do
+         begin
+         logger.Error('[TCI-SRV] tune to %d Hz failed: %s', [FHz, E.Message]);
+         end;
+   end;
+end;
+
+constructor TTCIApplyMode.Create(aServer: TTCIServer; aRig: RadioPtr;
+                                 aMode: ModeType; aExtended: ExtendedModeType);
+begin
+   inherited Create(aServer, aRig);
+   FMode     := aMode;
+   FExtended := aExtended;
+end;
+
+procedure TTCIApplyMode.Execute;
+var
+   snap: RadioStatusRecord;
+begin
+   try
+      // Setting the mode means retuning to where we already are with a new
+      // mode: that is the only mode setter the legacy facade has.
+      snap := ReadRadioStatus(FRig);
+      if snap.VFO[VFOA].Frequency > 0 then
+         begin
+         FRig^.SetRadioFreq(snap.VFO[VFOA].Frequency, FMode, 'A', FExtended);
+         end;
+   except
+      on E: Exception do
+         begin
+         logger.Error('[TCI-SRV] mode change failed: %s', [E.Message]);
+         end;
+   end;
+end;
+
+constructor TTCIApplySplit.Create(aServer: TTCIServer; aRig: RadioPtr; aTurnOn: boolean);
+begin
+   inherited Create(aServer, aRig);
+   FTurnOn := aTurnOn;
+end;
+
+procedure TTCIApplySplit.Execute;
+begin
+   try
+      if FTurnOn then
+         begin
+         FRig^.PutRadioIntoSplit;
+         end
+      else
+         begin
+         FRig^.PutRadioOutOfSplit;
+         end;
+   except
+      on E: Exception do
+         begin
+         logger.Error('[TCI-SRV] split change failed: %s', [E.Message]);
+         end;
+   end;
+end;
+
+constructor TTCIApplyPTT.Create(aServer: TTCIServer; aRig: RadioPtr; aTrx: integer;
+                                aKeyDown: boolean; aSession: TWSServerSession);
+begin
+   inherited Create(aServer, aRig);
+   FTrx     := aTrx;
+   FKeyDown := aKeyDown;
+   FSession := aSession;
+end;
+
+procedure TTCIApplyPTT.Execute;
+var
+   sent: boolean;
+begin
+   sent := False;
+   try
+      // THE RADIO THE CLIENT ADDRESSED, not whichever is active.  trx:1,true
+      // means radio 2, and tPTTVIACAT keys ActiveRadio -- so a client working
+      // the second radio keyed the first.
+      sent := tPTTVIACATForRadio(FRig, FKeyDown);
+   except
+      on E: Exception do
+         begin
+         logger.Error('[TCI-SRV] PTT %s failed: %s',
+                      [BoolToStr(FKeyDown, True), E.Message]);
+         end;
+   end;
+
+   if not sent then
+      begin
+      // Named explicitly, because the operator has to change a setting and
+      // "it did not transmit" gives them nothing to act on.
+      if not tPTTViaCommand then
+         begin
+         logger.Warn('[TCI-SRV] PTT refused: "PTT VIA COMMANDS" is FALSE, ' +
+                     'so no transmit command is sent to the radio');
+         end
+      else if NoPollDuringPTT then
+         begin
+         logger.Warn('[TCI-SRV] PTT refused: NO POLL DURING PTT is set');
+         end
+      else
+         begin
+         logger.Warn('[TCI-SRV] PTT refused: no radio driver');
+         end;
+      // Give the transmit session back -- we do not hold a transmitter we
+      // never keyed.
+      FServer.ReleasePTTOwnership(FSession);
+      end;
+
+   // Sent LAST and from what actually happened.  If the radio then disagrees,
+   // the next publish broadcasts the truth to everyone -- which is what
+   // replaces uWSJTX's KLUDGESECONDSV, a commanded state reported as fact for
+   // two seconds.
+   FServer.Send(FSession, TCIMsg('trx', TCIInt(FTrx), TCIBool(FKeyDown and sent)));
+end;
+
 { ------------------------------------------------------------- mapping -- }
 
 function TrxToRadio(Trx: integer): RadioPtr;
@@ -1127,53 +1389,7 @@ begin
 
    // Marshalled: SetRadioFreq writes program globals and the display
    // routines around it belong to the main thread.
-   TThread.Queue(nil,
-      procedure
-      var
-         snap:     RadioStatusRecord;
-         mode:     ModeType;
-         extended: ExtendedModeType;
-         slot:     RadioType;
-         ch:       char;
-      begin
-         try
-            // SetRadioFreq sets frequency AND MODE -- there is no
-            // frequency-only setter -- so a QSY must name a mode.  Prefer a
-            // mode we have COMMANDED and the poll has not confirmed yet;
-            // the snapshot lags by up to a poll interval, and using it here
-            // re-asserted the old mode 3 ms after a modulation command and
-            // silently undid it.
-            snap := ReadRadioStatus(rig);
-            mode := snap.VFO[VFOA].Mode;
-            extended := snap.VFO[VFOA].ExtendedMode;
-            slot := SlotOf(Trx);
-            FLock.Enter;
-            try
-               if FPendingMode[slot].Active then
-                  begin
-                  mode := FPendingMode[slot].Mode;
-                  extended := FPendingMode[slot].Extended;
-                  end;
-            finally
-               FLock.Leave;
-            end;
-
-            if Channel = 0 then
-               begin
-               ch := 'A';
-               end
-            else
-               begin
-               ch := 'B';
-               end;
-            rig^.SetRadioFreq(Hz, mode, ch, extended);
-         except
-            on E: Exception do
-               begin
-               logger.Error('[TCI-SRV] tune to %d Hz failed: %s', [Hz, E.Message]);
-               end;
-         end;
-      end);
+   TThread.Queue(nil, TTCIApplyFreq.Create(Self, rig, Trx, Channel, Hz).Run);
 
    // CONFIRM IMMEDIATELY, AND CONFIRM WHAT WE ACCEPTED.  WSJT-X's
    // do_frequency() waits about two seconds for this echo and then reports
@@ -1216,26 +1432,7 @@ begin
       FLock.Leave;
    end;
 
-   TThread.Queue(nil,
-      procedure
-      var
-         snap: RadioStatusRecord;
-      begin
-         try
-            // Setting the mode means retuning to where we already are with a
-            // new mode: that is the only mode setter the legacy facade has.
-            snap := ReadRadioStatus(rig);
-            if snap.VFO[VFOA].Frequency > 0 then
-               begin
-               rig^.SetRadioFreq(snap.VFO[VFOA].Frequency, mode, 'A', extended);
-               end;
-         except
-            on E: Exception do
-               begin
-               logger.Error('[TCI-SRV] mode change failed: %s', [E.Message]);
-               end;
-         end;
-      end);
+   TThread.Queue(nil, TTCIApplyMode.Create(Self, rig, mode, extended).Run);
 
    // CONFIRM, exactly as a tune is confirmed.  WSJT-X's do_mode() waits on
    // this echo and reports "TCI failed set mode" and drops the socket without
@@ -1270,25 +1467,7 @@ begin
       Exit;
       end;
 
-   TThread.Queue(nil,
-      procedure
-      begin
-         try
-            if TurnOn then
-               begin
-               rig^.PutRadioIntoSplit;
-               end
-            else
-               begin
-               rig^.PutRadioOutOfSplit;
-               end;
-         except
-            on E: Exception do
-               begin
-               logger.Error('[TCI-SRV] split change failed: %s', [E.Message]);
-               end;
-         end;
-      end);
+   TThread.Queue(nil, TTCIApplySplit.Create(Self, rig, TurnOn).Run);
 end;
 
 procedure TTCIServer.ApplyPTT(Session: TWSServerSession; Trx: integer;
@@ -1379,53 +1558,7 @@ begin
    // MAIN thread once the answer is known.  A refused key still gets an
    // explicit trx:<n>,false -- silence is what WSJT-X surfaces as "TCI failed
    // to set ptt" with no cause.
-   TThread.Queue(nil,
-      procedure
-      var
-         sent: boolean;
-      begin
-         sent := False;
-         try
-            // THE RADIO THE CLIENT ADDRESSED, not whichever is active.
-            // trx:1,true means radio 2, and tPTTVIACAT keys ActiveRadio --
-            // so a client working the second radio keyed the first.
-            sent := tPTTVIACATForRadio(rig, KeyDown);
-         except
-            on E: Exception do
-               begin
-               logger.Error('[TCI-SRV] PTT %s failed: %s',
-                            [BoolToStr(KeyDown, True), E.Message]);
-               end;
-         end;
-
-         if not sent then
-            begin
-            // Named explicitly, because the operator has to change a setting
-            // and "it did not transmit" gives them nothing to act on.
-            if not tPTTViaCommand then
-               begin
-               logger.Warn('[TCI-SRV] PTT refused: "PTT VIA COMMANDS" is FALSE, ' +
-                           'so no transmit command is sent to the radio');
-               end
-            else if NoPollDuringPTT then
-               begin
-               logger.Warn('[TCI-SRV] PTT refused: NO POLL DURING PTT is set');
-               end
-            else
-               begin
-               logger.Warn('[TCI-SRV] PTT refused: no radio driver');
-               end;
-            // Give the transmit session back -- we do not hold a transmitter
-            // we never keyed.
-            ReleasePTTOwnership(Session);
-            end;
-
-         // Sent LAST and from what actually happened.  If the radio then
-         // disagrees, the next publish broadcasts the truth to everyone --
-         // which is what replaces uWSJTX's KLUDGESECONDSV, a commanded state
-         // reported as fact for two seconds.
-         Send(Session, TCIMsg('trx', TCIInt(Trx), TCIBool(KeyDown and sent)));
-      end);
+   TThread.Queue(nil, TTCIApplyPTT.Create(Self, rig, Trx, KeyDown, Session).Run);
 end;
 
 { ------------------------------------------------------------ broadcast -- }
