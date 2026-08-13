@@ -2990,7 +2990,13 @@ end;
 { Log to debugging output. }
 procedure TLogODSAppender.DoAppend(const Message: string);
 begin
-  OutputDebugString(PChar(Message));
+  { Name the W variant explicitly rather than relying on the generic name.
+    Delphi 12 binds the generic Win32 names to W, but FPC's precompiled RTL
+    binds them to A -- so `OutputDebugString(PChar(Message))` fails to compile
+    under FPC once our units use UnicodeStrings and PChar is PWideChar.  This
+    call is behaviour-identical on Delphi and correct on both compilers; the
+    UnicodeString cast is a no-op wherever `string` already is one. }
+  OutputDebugStringW(PWideChar(UnicodeString(Message)));
 end;
 
 { TLogStreamAppender ----------------------------------------------------------}
