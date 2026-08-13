@@ -21,12 +21,17 @@ uses
   TF,
   VC,
   PostUnit,
-  uCommctrl,
   Windows,
   Messages,
   LogWind,
   //Country9,
-  Tree
+  Tree,
+  // LAST deliberately.  FPC's `windows` pulls in its own commctrl declarations,
+  // and in Pascal the last unit in the clause wins -- so listed earlier, the
+  // ListView_* calls bound to FPC's overloads while the record variables kept
+  // uCommctrl's types, giving "Call by var has to match exactly".  TR4W's
+  // uCommctrl is the one this code is written against, so it goes last.
+  uCommctrl
   ;
 function ct1bohDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 function CT1BOHInfoString(QSOs: integer; Percents: integer): PAnsiChar;
@@ -39,8 +44,14 @@ var
   Band                                  : integer;
   Continent                             : ContinentType;
   hLV                                   : HWND;
-  lvi                                   : TLVItem;
-  lvc                                   : tagLVCOLUMNA;
+  // Unit-qualified deliberately.  FPC's own commctrl declares types of these
+  // same names, so an unqualified declaration can bind to FPC's while the
+  // ListView_* call binds to uCommctrl's -- two distinct types spelled
+  // identically, which surfaces as "Call by var has to match exactly: got
+  // tagLVCOLUMNA expected LV_COLUMN".  Delphi resolves both to uCommctrl
+  // either way, so naming the unit costs nothing and removes the ambiguity.
+  lvi                                   : uCommctrl.TLVItem;
+  lvc                                   : uCommctrl.tagLVCOLUMNA;
   TimeAnsi                              : AnsiString;   // D12: persistent buffer for pszText (see below)
 //  TotalTimeOn                           : integer;
   Percent                               : integer;
