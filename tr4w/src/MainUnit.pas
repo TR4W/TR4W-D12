@@ -5064,6 +5064,9 @@ var
   ctrlPt: TPoint;
   Radio: RadioPtr;
   i: integer;
+  // Local, so a failed GetMenuStringW leaves an EMPTY caption rather than
+  // whatever the shared TempBuffer1 happened to be holding.
+  menuText: array[0..255] of WideChar;
 begin
   if Contest = WRTC then
     if ID in [tw_MASTERWINDOW_INDEX, tw_TELNETWINDOW_INDEX,
@@ -5120,17 +5123,27 @@ begin
   h := CreateDialogIndirectParam(hInstance, PDlgTemplate(@MAINTR4WDLGTEMPLATE)^,
     tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
 
-  Windows.GetMenuStringA(tr4w_main_menu, 10199 + Ord(ID), TempBuffer1,
-    SizeOf(TempBuffer1), MF_BYCOMMAND);
+  // The window's caption is its MENU ITEM's text with the accelerator cut off,
+  // so this reads back what CreateTR4WMenu wrote. W on both sides: the menu is
+  // built with AppendMenuW, and an ANSI round trip here would decode a Cyrillic
+  // caption through whatever codepage the machine happens to be running.
+  //
+  // A LOCAL buffer, not the shared TempBuffer1 -- when this call returns
+  // nothing the buffer keeps whatever the last caller left in it, and that is
+  // exactly how the FPC menu defect first showed itself: three windows titled
+  // with stale bytes rather than titled empty.
+  FillChar(menuText, SizeOf(menuText), 0);
+  Windows.GetMenuStringW(tr4w_main_menu, 10199 + Ord(ID), menuText,
+    Length(menuText), MF_BYCOMMAND);
 
-  for i := 0 to SizeOf(TempBuffer1) - 1 do
-    if TempBuffer1[i] = #9 then
+  for i := 0 to Length(menuText) - 1 do
+    if menuText[i] = #9 then
        begin
-       TempBuffer1[i] := #0;
+       menuText[i] := #0;
        Break;
        end;
 
-  Windows.SetWindowTextA(h, TempBuffer1);
+  Windows.SetWindowTextW(h, menuText);
   {
   Windows.GetMenuStringA(tr4w_main_menu, 10199 + Ord(ID), wsprintfBuffer, SizeOf(wsprintfBuffer), MF_BYCOMMAND);
   for TempFlag := 0 to 100 do if wsprintfBuffer[TempFlag] = #9 then wsprintfBuffer[TempFlag] := #0;
