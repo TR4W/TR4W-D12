@@ -24,7 +24,7 @@ type
   tcolor = -$7FFFFFFF - 1..$7FFFFFFF;
   // The definition of the TTriVertex structure in Windows.pas is
   // incorrect.
-  // В Windows.pas структура TTriVertex с ошибкой.
+  // пїЅ Windows.pas пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ TTriVertex пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
   TTriVertex = packed record
     X: LONGINT;
     Y: LONGINT;
@@ -33,6 +33,19 @@ type
     Blue: {Smallint} Word;
     Alpha: Smallint;
   end;
+{$IFDEF FPC}
+  // A genuine gap in FPC's `windows` unit rather than a behavioural
+  // difference: the Win32 API has GRADIENT_RECT and Delphi's Winapi.Windows
+  // declares it, FPC does not.  It is simply the index pair naming which two
+  // vertices GradientFill should span, and the SDK defines it as two ULONGs.
+  // Declared here for the same reason TTriVertex above is -- locally, so the
+  // Delphi build keeps using the RTL's own declaration.
+  TGradientRect = packed record
+    UpperLeft: ULONG;
+    LowerRight: ULONG;
+  end;
+{$ENDIF}
+
   TGradientFill = function(DC: HDC; var P2: TTriVertex; p3: ULONG; p4: Pointer; p5, p6: ULONG): BOOL; stdcall;
   // Variables used for interfacing to the MSIMG32.DLL
 //function GradientFill(DC: HDC; var P2: TTriVertex; p3: ULONG; p4: Pointer; p5, p6: ULONG): BOOL; stdcall;
@@ -45,6 +58,13 @@ function GradientRect(canvashandle: HWND; const ARect: TRect; Color1, Color2: tc
 function ColorToRGB(Color: tcolor): Cardinal {LONGINT};
 function InitTriVertex(XPos, YPos: integer; Color: tcolor): TTriVertex;
 implementation
+
+{$IFDEF FPC}
+const
+  // Winapi.Windows supplies this DLL name; FPC's windows unit does not.
+  msimg32 = 'msimg32.dll';
+{$ENDIF}
+
 //uses Unit1;
 //function GradientFill; external msimg32 Name 'GradientFill';
 //function GradientFill; external gdi32 Name 'GdiGradientFill';

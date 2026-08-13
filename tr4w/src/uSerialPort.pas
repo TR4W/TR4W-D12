@@ -151,8 +151,8 @@ begin
   else
     PortStr := FPortName;
 
-  FHandle := CreateFile(
-    PChar(PortStr),
+  FHandle := CreateFileW(
+    PWideChar(PortStr),
     GENERIC_READ or GENERIC_WRITE,
     0,
     nil,
@@ -233,8 +233,8 @@ begin
   else
     PortStr := FPortName;
 
-  FHandle := CreateFile(
-    PChar(PortStr),
+  FHandle := CreateFileW(
+    PWideChar(PortStr),
     GENERIC_READ or GENERIC_WRITE,
     0,
     nil,

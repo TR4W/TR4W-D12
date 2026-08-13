@@ -641,7 +641,14 @@ end;
 
 procedure tSetWindowText(WindowHandle: HWND; s: string);
 begin
-  Windows.SetWindowTextA(WindowHandle, PChar(s));
+  { Cast to AnsiString at the boundary rather than letting the compiler do it.
+    This deliberately calls the A variant, as the rest of the program does, but
+    PChar is PWideChar under D12 -- so today this resolves to the AnsiString
+    overload of SetWindowTextA via an IMPLICIT PWideChar->AnsiString conversion
+    (W1057).  Same bytes reach Windows either way; making it explicit says the
+    narrowing is intended and compiles under FPC, whose RTL offers only the
+    LPCSTR form. }
+  Windows.SetWindowTextA(WindowHandle, PAnsiChar(AnsiString(s)));
 end;
 
 procedure tSetWindowRedraw(wnd: HWND; Redraw: boolean);
@@ -1112,7 +1119,7 @@ end;
 
 function CreateComboBox(hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowEx(WS_EX_STATICEDGE, COMBOBOX, nil,
+  Result := CreateWindowExW(WS_EX_STATICEDGE, COMBOBOX, nil,
 
     CBS_DROPDOWN or CBS_AUTOHSCROLL or CBS_SORT or CBS_HASSTRINGS or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP
 
@@ -1122,13 +1129,13 @@ end;
 
 function CreateListView2(X, Y, nWidth, nHeight: Word; hwndParent: HWND): HWND;
 begin
-  Result := CreateWindowEx(WS_EX_STATICEDGE, LISTVIEW, nil, LVS_REPORT or LVS_SINGLESEL or LVS_SHOWSELALWAYS or LVS_NOSORTHEADER or WS_VISIBLE or WS_CHILD or WS_TABSTOP, X, Y, nWidth, nHeight, hwndParent, 101, hInstance, nil);
+  Result := CreateWindowExW(WS_EX_STATICEDGE, LISTVIEW, nil, LVS_REPORT or LVS_SINGLESEL or LVS_SHOWSELALWAYS or LVS_NOSORTHEADER or WS_VISIBLE or WS_CHILD or WS_TABSTOP, X, Y, nWidth, nHeight, hwndParent, 101, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
 function CreateListBox(X, Y, nWidth, nHeight: Word; hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowEx(WS_EX_STATICEDGE, LISTBOX, nil, LBS_NOINTEGRALHEIGHT or LBS_NOTIFY or LBS_SORT or WS_VSCROLL or WS_VISIBLE or WS_CHILD or WS_TABSTOP, X, Y, nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
+  Result := CreateWindowExW(WS_EX_STATICEDGE, LISTBOX, nil, LBS_NOINTEGRALHEIGHT or LBS_NOTIFY or LBS_SORT or WS_VSCROLL or WS_VISIBLE or WS_CHILD or WS_TABSTOP, X, Y, nWidth, nHeight, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
@@ -1146,13 +1153,13 @@ end;
 
 function CreateEdit(dwStyle: Cardinal; X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  Result := CreateWindowEx(WS_EX_CLIENTEDGE or WS_EX_NOPARENTNOTIFY, EditPChar, nil, dwStyle or WS_CHILD or WS_VISIBLE or WS_TABSTOP, X, Y, Width, Height, hwndParent, HMENU, hInstance, nil);
+  Result := CreateWindowExW(WS_EX_CLIENTEDGE or WS_EX_NOPARENTNOTIFY, EditPChar, nil, dwStyle or WS_CHILD or WS_VISIBLE or WS_TABSTOP, X, Y, Width, Height, hwndParent, HMENU, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
 function CreateOwnerDrawListBox(dwStyle: DWORD; hwndParent: HWND): HWND;
 begin
-  Result := CreateWindowEx(WS_EX_STATICEDGE, LISTBOX, nil, dwStyle, 0, 0, 0, 0, hwndParent, 101, hInstance, nil);
+  Result := CreateWindowExW(WS_EX_STATICEDGE, LISTBOX, nil, dwStyle, 0, 0, 0, 0, hwndParent, 101, hInstance, nil);
   tWM_SETFONT(Result, MSSansSerifFont);
 end;
 
