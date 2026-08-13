@@ -509,6 +509,26 @@ function Invoke-Packaging {
         exit 3
     }
 
+    # The check above answers "does every file the script NAMES exist" -- it
+    # cannot see a file that exists and is NOT named.  That blind spot shipped
+    # three QSO parties without their in-state multiplier file (PA, AZ, MO), so
+    # the complementary direction is checked here: every US QSO party VC.pas
+    # defines must have BOTH of its dom files packaged.  See Lint-DomCoverage.
+    $domLint = Join-Path $PSScriptRoot 'build\Lint-DomCoverage.ps1'
+    if (Test-Path $domLint) {
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $domLint -Repo $ProjectRoot | Out-Host
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host ""
+            Write-Host "=== DOM COVERAGE CHECK FAILED -- aborting build ===" -ForegroundColor Red
+            exit 3
+        }
+    } else {
+        # Absent gate is a failure, not a pass: this file going missing must not
+        # quietly restore the blind spot it was written to close.
+        Write-Host "  Lint-DomCoverage.ps1 NOT FOUND at $domLint -- aborting." -ForegroundColor Red
+        exit 3
+    }
+
     New-Item -ItemType Directory -Force -Path $RELEASE_DIR | Out-Null
 
     # UPX --lzma (destructive: overwrites the exe with the compressed copy).

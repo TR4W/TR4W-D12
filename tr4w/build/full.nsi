@@ -270,6 +270,7 @@ Section "Domestic multiplier files" Secdom
    File ..\target\dom\michigan_cty.dom
    File ..\target\dom\minnesota.dom
    File ..\target\dom\minnesota_cty.dom
+   File ..\target\dom\missouri.dom
    File ..\target\dom\missouri_cty.dom
    File ..\target\dom\naqp.dom
    File ..\target\dom\nc.dom
@@ -287,6 +288,7 @@ Section "Domestic multiplier files" Secdom
    File ..\target\dom\p13.dom
    File ..\target\dom\p14.dom
    File ..\target\dom\p8.dom
+   File ..\target\dom\pa.dom
    File ..\target\dom\pa_cty.dom
    File ..\target\dom\pacc.dom
    File ..\target\dom\paccpa.dom
