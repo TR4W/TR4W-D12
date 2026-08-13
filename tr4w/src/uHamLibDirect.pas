@@ -1,4 +1,5 @@
 unit uHamLibDirect;
+{$I tr4w.inc}
 
 {
   HamLib Direct DLL Bindings for Delphi 7

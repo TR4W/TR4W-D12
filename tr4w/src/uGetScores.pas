@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uGetScores;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -103,7 +104,7 @@ begin
         CreateStatic(nil, 5, 5, 200, hwnddlg, 105);
 
         SetTimer(hwnddlg, 1, 1000 * 60 * 5 {minutes}, nil);
-        Format(GetScoresAnswerFileName, '%sscoresserveranswer.html', TR4W_LOG_PATH_NAME);
+        TF.Format(GetScoresAnswerFileName, '%sscoresserveranswer.html', TR4W_LOG_PATH_NAME);
 
 //        windows.SetWindowTextA(hwnddlg,'asdasd')
 
@@ -211,7 +212,7 @@ procedure ShowGetScoresStatus(Status: PAnsiChar);
 var
   tempbuffer                            : array[0..255] of AnsiChar;
 begin
-  Format(tempbuffer, '%s : %s', GetTimeString, Status);
+  TF.Format(tempbuffer, '%s : %s', GetTimeString, Status);
   Windows.SetDlgItemTextA(tr4w_WindowsArray[tw_POSTSCORESWINDOW_INDEX].WndHandle, 105, tempbuffer);
 end;
 

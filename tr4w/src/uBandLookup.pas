@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uBandLookup;
+{$I tr4w.inc}
 
 {
   Map an HF/VHF/UHF frequency in Hz to the TR4W legacy BandType + ModeType.

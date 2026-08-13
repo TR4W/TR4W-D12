@@ -1,4 +1,5 @@
 unit uHamScore;
+{$I tr4w.inc}
 
 (*
   HamScore Real-Time Contest (RTC) uploader -- Issue #783.
@@ -78,8 +79,21 @@ type
   private
     FQueueLock:    TCriticalSection;
     FPending:      TList;            // FIFO of TRTCContact owned by the uploader
-    FStopEvent:    TEvent;
-    FCycleEvent:   TEvent;           // signaled by PushNow to wake the worker early
+    // RAW WIN32 EVENT HANDLES, deliberately -- not SyncObjs.TEvent.
+    //
+    // The worker below blocks in WaitForMultipleObjects on BOTH of these at
+    // once, which needs real kernel handles.  Delphi's TEvent.Handle is one;
+    // FPC's is not -- FPC implements TEvent over its own RTL event object, and
+    // WaitForSingleObject on that value returns WAIT_FAILED with
+    // ERROR_INVALID_HANDLE (measured, not assumed).  A THandle() cast would
+    // therefore compile clean and then never wake, never stop and never fail
+    // visibly: the worker would fall through to its FCycleMs timeout every
+    // time and RequestStop would be ignored until the next tick.
+    //
+    // Owning the handles states the actual requirement instead of depending on
+    // an abstraction that only happened to satisfy it on one compiler.
+    FStopEvent:    THandle;          // manual reset
+    FCycleEvent:   THandle;          // auto reset -- PushNow wakes the worker early
     FURL:          string;
     FUsername:     string;
     FPassword:     string;
@@ -380,8 +394,8 @@ begin
   FCycleMs    := DEFAULT_CYCLE_MS;
   FQueueLock  := TCriticalSection.Create;
   FPending    := TList.Create;
-  FStopEvent  := TEvent.Create(nil, True, False, '');     // manual reset
-  FCycleEvent := TEvent.Create(nil, False, False, '');    // auto reset (unused for now)
+  FStopEvent  := Windows.CreateEventW(nil, True,  False, nil);   // manual reset
+  FCycleEvent := Windows.CreateEventW(nil, False, False, nil);   // auto reset
   FLogger     := TLogLogger.GetLogger('TR4WDebugLog.HamScore.Uploader');
   FLastCycleStatus := 'Not yet run';
   FLastCycleTime   := 0;
@@ -393,8 +407,8 @@ destructor THamScoreUploader.Destroy;
 begin
   FreeContactList(FPending);
   FPending.Free;
-  FStopEvent.Free;
-  FCycleEvent.Free;
+  Windows.CloseHandle(FStopEvent);
+  Windows.CloseHandle(FCycleEvent);
   FQueueLock.Free;
   inherited;
 end;
@@ -410,7 +424,7 @@ end;
 
 procedure THamScoreUploader.RequestStop;
 begin
-  FStopEvent.SetEvent;
+  Windows.SetEvent(FStopEvent);
 end;
 
 procedure THamScoreUploader.PushNow;
@@ -418,8 +432,10 @@ begin
   // Manual push from the Phase 4 UI: signal the worker to wake before the
   // 2-minute timer expires.  Auto-reset event so the next post-then-sleep
   // cycle returns to its normal cadence.
-  if FCycleEvent <> nil then
-    FCycleEvent.SetEvent;
+  if FCycleEvent <> 0 then
+     begin
+     Windows.SetEvent(FCycleEvent);
+     end;
 end;
 
 procedure THamScoreUploader.SetCycleStatus(const status: string);
@@ -776,8 +792,8 @@ begin
   // WaitForMultipleObjects returns WAIT_OBJECT_0+i for the signaled handle,
   // WAIT_TIMEOUT after FCycleMs ms, or WAIT_FAILED on error.  WaitAll = False
   // means "any of these wakes us".
-  handles[0] := FStopEvent.Handle;
-  handles[1] := FCycleEvent.Handle;
+  handles[0] := FStopEvent;
+  handles[1] := FCycleEvent;
   try
     while not Terminated do
     begin

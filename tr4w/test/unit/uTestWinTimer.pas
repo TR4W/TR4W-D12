@@ -1,4 +1,5 @@
 unit uTestWinTimer;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins TWinTimer, the WM_TIMER timer that replaced VCL's TTimer in LOGRADIO.
@@ -20,7 +21,7 @@ unit uTestWinTimer;
 interface
 
 uses
-   Winapi.Windows, Winapi.Messages, SysUtils, Classes,
+   Windows, Messages, SysUtils, Classes,
    uTR4WTestFramework, uWinTimer;
 
 type

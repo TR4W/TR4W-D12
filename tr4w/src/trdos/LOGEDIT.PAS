@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogEdit;
+{$I ..\tr4w.inc}
 
 { This unit contains the object EditableLog.  }
 
@@ -690,7 +691,7 @@ begin
      end;
   DomesticQTHtemp := DomesticQTH;
 
-  Format(wsprintfBuffer, TC_MULTNEEDSFOR, PAnsiChar(AnsiString(DomesticQTHtemp)));
+  TF.Format(wsprintfBuffer, TC_MULTNEEDSFOR, PAnsiChar(AnsiString(DomesticQTHtemp)));
 
   logger.debug('[ShowDomesticMultiplierStatus] MultNeedsHeader field set to %s',[DomesticQTHtemp]);
   SetMainWindowText(mweMultNeedsHeader, wsprintfBuffer);
@@ -713,7 +714,7 @@ begin
       push eax
     end;
   }
-  Format(wsprintfBuffer, TC_MULTNEEDSFOR, PAnsiChar(integer(Call) + 1));
+  TF.Format(wsprintfBuffer, TC_MULTNEEDSFOR, PAnsiChar(integer(Call) + 1));
   logger.debug('[ShowMultiplierStatus] MultNeedsHeader field set to %s',[Call^]);
   SetMainWindowText(mweMultNeedsHeader, wsprintfBuffer);
   SetMultStatus(Call^, '');
@@ -997,7 +998,7 @@ begin
   if length(Call) < 3 then
     Exit;
 
-  Format(wsprintfBuffer, TC_QSONEEDSFOR, PAnsiChar(AnsiString(Call)));
+  TF.Format(wsprintfBuffer, TC_QSONEEDSFOR, PAnsiChar(AnsiString(Call)));
   SetMainWindowText(mweQSONeedsHeader, wsprintfBuffer);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
@@ -1038,7 +1039,7 @@ begin
   if length(Call^) < 3 then
     Exit;
 
-  Format(wsprintfBuffer, TC_QSONEEDSFOR, PAnsiChar(integer(Call) + 1));
+  TF.Format(wsprintfBuffer, TC_QSONEEDSFOR, PAnsiChar(integer(Call) + 1));
   SetMainWindowText(mweQSONeedsHeader, wsprintfBuffer);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
@@ -1580,7 +1581,7 @@ begin
     end;
   end;
 
-  Format(wsprintfBuffer, TC_MISSINGMULTSREPORT, NumberCountriesDisplayed,
+  TF.Format(wsprintfBuffer, TC_MISSINGMULTSREPORT, NumberCountriesDisplayed,
     MultReportMinimumBands);
 
   Windows.SetWindowTextA(h, wsprintfBuffer);

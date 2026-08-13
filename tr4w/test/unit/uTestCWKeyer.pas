@@ -1,4 +1,5 @@
 unit uTestCWKeyer;
+{$I ..\..\src\tr4w.inc}
 
 {
   CW keyer factory -- selection and capability tests (plan T1-T3, T8).

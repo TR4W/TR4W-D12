@@ -1,4 +1,5 @@
 unit uTestRotatorFactory;
+{$I ..\..\src\tr4w.inc}
 
 {
   The rotator factory, pinned against the code it replaces.

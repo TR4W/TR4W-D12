@@ -1,4 +1,5 @@
 unit uTestIcomRegistry;
+{$I ..\..\src\tr4w.inc}
 
 {
   Guards the CI-V addresses and capability profiles of the migrated Icom radios.

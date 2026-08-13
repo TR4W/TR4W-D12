@@ -1,4 +1,5 @@
 unit uTestIcomCIV;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for uIcomCIV — Icom CI-V pure utility functions.

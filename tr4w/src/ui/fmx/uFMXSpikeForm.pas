@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uFMXSpikeForm;
+{$I ..\..\tr4w.inc}
 
 {
   THROWAWAY.  This form exists to answer one question before any real work is

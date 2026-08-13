@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioIcom735;
+{$I ..\tr4w.inc}
 
 {
   Icom IC-735 -- CI-V address $04.

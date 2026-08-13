@@ -1,4 +1,5 @@
 unit uGridDistance;
+{$I tr4w.inc}
 
 (*
   Pure Haversine distance, in kilometres, between the CENTERS of two

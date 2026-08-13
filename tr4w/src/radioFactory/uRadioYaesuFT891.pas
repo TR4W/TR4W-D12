@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT891;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FT-891 -- the other rtYaesu3 radio, migrated from

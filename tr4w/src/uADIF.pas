@@ -1,4 +1,5 @@
 unit uADIF;
+{$I tr4w.inc}
 
 {
   TR4W ADIF lexer + helpers — focused, dependency-light, testable.
@@ -781,6 +782,65 @@ const
       // X-QSO marker fields (Issue #750) -- order must match the enum
       'APP_TR4W_CLAIMEDQSO', 'APP_N1MM_CLAIMEDQSO', 'APP_DXLOG_XQSO');
 
+// Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
+//
+// This replaced AnsiIndexText(AnsiUpperCase(fieldName), ADIF_FIELD_NAMES).
+// AnsiIndexText takes an open array whose element type is the RTL's OWN
+// `string`, and the two compilers do not agree on what that is: under FPC the
+// RTL is compiled 8-bit while this unit is not, so a named UnicodeString table
+// will not bind.  (The inline ['AI','BI',...] literals elsewhere in the tree
+// coerce element-by-element and are unaffected.)
+//
+// Doing the lookup here also drops the AnsiUpperCase copy that was allocated
+// for every field of every QSO on the import path.  ADIF field names are ASCII
+// by specification, so ASCII-only folding is exactly right -- and it is the
+// same restraint StrUpper observes so CP1251 text is never mis-folded.
+function ADIFFieldIndex(const aName: string): integer;
+var
+   i, j, n : integer;
+   a, b    : Char;
+   match   : boolean;
+begin
+   Result := -1;
+   n := Length(aName);
+
+   for i := Low(ADIF_FIELD_NAMES) to High(ADIF_FIELD_NAMES) do
+      begin
+      if Length(ADIF_FIELD_NAMES[i]) <> n then
+         begin
+         Continue;
+         end;
+
+      match := True;
+      for j := 1 to n do
+         begin
+         a := aName[j];
+         if (a >= 'a') and (a <= 'z') then
+            begin
+            a := Char(Ord(a) - 32);
+            end;
+
+         b := ADIF_FIELD_NAMES[i][j];
+         if (b >= 'a') and (b <= 'z') then
+            begin
+            b := Char(Ord(b) - 32);
+            end;
+
+         if a <> b then
+            begin
+            match := False;
+            Break;
+            end;
+         end;
+
+      if match then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
 function ApplyADIFFieldsToExchange(const fields: TADIFFieldList;
                                    var exch: ContestExchange;
                                    var temps: TADIFRecordTemps): Boolean;
@@ -805,8 +865,7 @@ begin
       fieldValue := fields[i].Value;
 
       try
-         case TADIF_Fields(AnsiIndexText(AnsiUpperCase(fieldName),
-                                         ADIF_FIELD_NAMES)) of
+         case TADIF_Fields(ADIFFieldIndex(fieldName)) of
 
             tAdifARRL_SECT:
                temps.ARRL_Sect := fieldValue;

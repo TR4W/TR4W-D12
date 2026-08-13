@@ -1,4 +1,5 @@
 unit uExternalLoggerFactory;
+{$I tr4w.inc}
 
 {
   External Logger Factory Pattern Implementation

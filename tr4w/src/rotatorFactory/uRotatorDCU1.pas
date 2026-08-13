@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRotatorDCU1;
+{$I ..\tr4w.inc}
 
 {
   Hy-Gain DCU-1 azimuth command.

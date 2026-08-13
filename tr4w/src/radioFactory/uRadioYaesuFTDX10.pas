@@ -16,6 +16,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 }
 
 unit uRadioYaesuFTDX10;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FTDX-10 -- the rtYaesu4 exemplar, and the model the Yaesu ASCII CAT base

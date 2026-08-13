@@ -18,6 +18,7 @@
 If not, ref http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit HtmlHelp;
+{$I tr4w.inc}
 //http://support.microsoft.com/kb/935448/ru
 interface
 

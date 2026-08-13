@@ -17,6 +17,7 @@
      Public License along with TR4W.  If not, see
  <http: www.gnu.org/licenses/>.
  }unit LogCW;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 interface
@@ -764,7 +765,7 @@ function TimeString: Str10;
 begin
   tGetSystemTime;
   Windows.ZeroMemory(@Result, SizeOf(Result));
-  Format(@Result[1], '%.2hu%.2hu', UTC.wHour, UTC.wMinute);
+  TF.Format(@Result[1], '%.2hu%.2hu', UTC.wHour, UTC.wMinute);
   Result[0]                                                 := #4;
 end;
 

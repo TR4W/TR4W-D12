@@ -1,4 +1,5 @@
 unit utils_math;
+{$I ..\tr4w.inc}
 
 interface
 

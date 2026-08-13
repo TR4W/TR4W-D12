@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uStations;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -82,14 +83,14 @@ begin
         elvc.fmt := LVCFMT_LEFT;
         elvc.pszText := RC_CALLSIGN;
         elvc.cx := 75;
-        ListView_InsertColumn(wh[mweStations], 0, elvc);
+        uCommctrl.ListView_InsertColumnA(wh[mweStations], 0, elvc);
 
         elvc.fmt := LVCFMT_CENTER;
         for TempBand := Band160 to Band10 do
         begin
           elvc.pszText := BandStringsArrayWithOutSpaces[TempBand];
           elvc.cx := 36;
-          ListView_InsertColumn(wh[mweStations], Ord(TempBand) + 1, elvc);
+          uCommctrl.ListView_InsertColumnA(wh[mweStations], Ord(TempBand) + 1, elvc);
         end;
         FillStationsColumn;
       end;
@@ -227,7 +228,7 @@ begin
     UpdateStationStatus(CallString(Call), Index);
   end;
   tSetWindowRedraw(wh[mweStations], True);
-  Format(wsprintfBuffer, TC_STATIONSINMODE, ModeStringArray[ActiveMode]);
+  TF.Format(wsprintfBuffer, TC_STATIONSINMODE, ModeStringArray[ActiveMode]);
   Windows.SetWindowTextA(tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle, wsprintfBuffer);
 end;
 

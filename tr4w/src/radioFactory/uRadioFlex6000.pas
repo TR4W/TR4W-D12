@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioFlex6000;
+{$I ..\tr4w.inc}
 
 {
   MODEL unit for the FlexRadio SmartSDR rigs: the 6000 series

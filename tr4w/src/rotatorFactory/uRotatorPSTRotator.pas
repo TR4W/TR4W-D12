@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRotatorPSTRotator;
+{$I ..\tr4w.inc}
 
 {
   PstRotator, over its native UDP interface.

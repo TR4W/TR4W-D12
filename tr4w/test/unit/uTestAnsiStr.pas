@@ -1,4 +1,5 @@
 unit uTestAnsiStr;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for uAnsiStr.pas -- the five PAnsiChar routines TR4W owns rather than

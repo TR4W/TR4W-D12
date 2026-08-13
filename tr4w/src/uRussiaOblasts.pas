@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uRussiaOblasts;
+{$I tr4w.inc}
 
 interface
 
@@ -546,7 +547,7 @@ begin
 
     if TempRegion = rtUnknownRegion then Continue;
 
-    Format(TempBuffer, '%3u %-50s: ', integer(TempRegion), RegionTypeStringArray[TempRegion]);
+    TF.Format(TempBuffer, '%3u %-50s: ', integer(TempRegion), RegionTypeStringArray[TempRegion]);
     sWriteFile(h, TempBuffer);
     for c1 := '0' to '9' do
       for c2 := 'A' to 'Z' do
@@ -562,7 +563,7 @@ begin
 
         if ResultRegion = TempRegion then
         begin
-          Format(TempBuffer, ' %s', @TempCallsign[1]);
+          TF.Format(TempBuffer, ' %s', @TempCallsign[1]);
           sWriteFile(h, TempBuffer);
         end;
       end;

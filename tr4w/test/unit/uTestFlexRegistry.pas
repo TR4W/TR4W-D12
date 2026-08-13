@@ -1,4 +1,5 @@
 unit uTestFlexRegistry;
+{$I ..\..\src\tr4w.inc}
 
 {
   Guards the TWO-CONSTRUCTOR registration -- the registry mechanism that lets ONE

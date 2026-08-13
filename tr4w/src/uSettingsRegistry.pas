@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uSettingsRegistry;
+{$I tr4w.inc}
 
 {
   THE SETTINGS REGISTRY -- what CommandsArray would be if it were written today.

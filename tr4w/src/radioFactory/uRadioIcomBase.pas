@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -16,6 +16,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
  }
 
  unit uRadioIcomBase;
+{$I ..\tr4w.inc}
 
 {
   Icom Radio Base Class with CI-V Protocol Support
@@ -1738,7 +1739,7 @@ begin
               else
               begin
                 logger.Warn('[%s] CI-V Transceive is OFF — frequency/mode will not update automatically', [radioModel]);
-                MessageBox(0,
+                MessageBoxW(0,
                   PChar(radioModel + ': CI-V Transceive is disabled on this radio.' + #13#10 +
                   'Frequency and mode will not update automatically in network mode.' + #13#10 + #13#10 +
                   'To fix: Set > Connectors > CI-V Transceive = ON'),

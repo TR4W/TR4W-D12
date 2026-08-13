@@ -1,4 +1,5 @@
 unit uTestFlexDiscovery;
+{$I ..\..\src\tr4w.inc}
 
 {
   Parses a REAL FlexRadio discovery datagram.

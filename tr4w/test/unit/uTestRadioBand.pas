@@ -1,4 +1,5 @@
 unit uTestRadioBand;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for uRadioBand — FreqToRadioBand and RadioBandToFreq.

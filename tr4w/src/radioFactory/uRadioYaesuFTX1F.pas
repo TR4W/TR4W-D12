@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFTX1F;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FTX-1F / FTX-1R -- rtYaesu4 (Issue #817), migrated from

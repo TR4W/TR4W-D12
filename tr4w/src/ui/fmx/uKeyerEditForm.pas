@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uKeyerEditForm;
+{$I ..\..\tr4w.inc}
 
 {
   The keyer editor: one CW keying DEVICE, edited in isolation.

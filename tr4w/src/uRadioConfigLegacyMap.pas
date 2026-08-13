@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioConfigLegacyMap;
+{$I tr4w.inc}
 
 {
   Renders a radio definition as the legacy [Radio] ini keys -- and NOTHING else.

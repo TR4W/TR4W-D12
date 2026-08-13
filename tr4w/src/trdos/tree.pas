@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit Tree;
+{$I ..\tr4w.inc}
 
 { This unit contains all the neat little library routines that are used
     in most of the N6TR programs.  They are not specfic to any program
@@ -834,8 +835,8 @@ function GetKeyResponse(Prompt: string): Char;
 
 function GetReal(Prompt: PAnsiChar): REAL;
 function GetResponse(Prompt: PAnsiChar {string}): ShortString;
-procedure GetRidOfPostcedingSpaces(var s: ShortString);
-procedure GetRidOfPrecedingSpaces(var s: ShortString);
+procedure GetRidOfPostcedingSpaces(var s: OpenString);
+procedure GetRidOfPrecedingSpaces(var s: OpenString);
 function GetSCPCharFromInteger(Index: integer): Char;
 function GetSCPIntegerFromChar(InputChar: AnsiChar): integer;
 function GetStateFromSection(Section: Str20): string;
@@ -893,8 +894,8 @@ function LineInput(Prompt: Str160;
   ExitOnAltKey: boolean): Str160;
 
 function LowerCase(const s: string): string;
-function LooksLikeAGrid(var GridString: ShortString): boolean;
-function LooksLikeAGridIgnoreAE(var GridString: ShortString): boolean;
+function LooksLikeAGrid(var GridString: OpenString): boolean;
+function LooksLikeAGridIgnoreAE(var GridString: OpenString): boolean;
 function LooksLikeAPOTAPark(park: string): boolean;
 function LooksLikeAState(state: string): boolean; // NY4I
 function LooksLikeASection(section: string): boolean;
@@ -934,7 +935,7 @@ function RemoveBand(var LongString: ShortString): BandType;
 function RemoveFirstChar(var LongString: string): Char;
 function RemoveFirstLongInteger(var LongString: ShortString): LONGINT;
 function RemoveFirstReal(var LongString: ShortString): REAL;
-function RemoveFirstString(var LongString: ShortString): Str80;
+function RemoveFirstString(var LongString: OpenString): Str80;
 function RemoveLastString(var LongString: ShortString): Str80;
 function RemoveMode(var LongString: ShortString): ModeType;
 
@@ -2314,7 +2315,7 @@ begin
 end;
 
 
-procedure GetRidOfPostcedingSpaces(var s: ShortString);
+procedure GetRidOfPostcedingSpaces(var s: OpenString);
 
 begin
   while length(s) > 0 do
@@ -2324,7 +2325,7 @@ begin
       Exit;
 end;
 
-procedure GetRidOfPrecedingSpaces(var s: ShortString);
+procedure GetRidOfPrecedingSpaces(var s: OpenString);
 
 begin
   if s = '' then Exit;
@@ -2369,7 +2370,7 @@ end;
 function GetTimeString: PAnsiChar;
 begin
   tGetSystemTime;
-  Format(GetTimeStringBuffer, '%.2hu:%.2hu', UTC.wHour, UTC.wMinute);
+  TF.Format(GetTimeStringBuffer, '%.2hu:%.2hu', UTC.wHour, UTC.wMinute);
   Result := GetTimeStringBuffer;
 end;
 
@@ -2410,7 +2411,7 @@ begin
   push eax
   end;
 }
-  Format(GetYearStringBuffer, '%u', UTC.wYear);
+  TF.Format(GetYearStringBuffer, '%u', UTC.wYear);
 
 //  wsprintf(GetYearStringBuffer, '%u');
 //  asm add esp,12  end;
@@ -2892,7 +2893,7 @@ begin
    Result := IsValidPOTAPark(park);
 end;
 
-function LooksLikeAGrid(var GridString: ShortString): boolean;
+function LooksLikeAGrid(var GridString: OpenString): boolean;
 
 { If it does look like a grid, it will make the first two letters lower
   case so it looks like a domestic QTH. }
@@ -2957,7 +2958,7 @@ begin
 end;
 
 
-function LooksLikeAGridIgnoreAE(var GridString: ShortString): boolean;
+function LooksLikeAGridIgnoreAE(var GridString: OpenString): boolean;
 
 { If it does look like a grid, it will make the first two letters lower
   case so it looks like a domestic QTH. }
@@ -3152,7 +3153,7 @@ end;
 
 function OkayToDeleteExistingFile(FileName: PAnsiChar): boolean;
 begin
-  Format(wsprintfBuffer, TC_ALREADYEXISTSOKAYTODELETE, FileName);
+  TF.Format(wsprintfBuffer, TC_ALREADYEXISTSOKAYTODELETE, FileName);
   Result := MessageBoxA(0, wsprintfBuffer, 'TR4W', MB_YESNO or MB_ICONWARNING) = IDYES;
 end;
 
@@ -3202,7 +3203,7 @@ begin
   OpenFileForAppend := True;
 
   //  if FindFirst(FileName, faArchive, DirInfo) = 0 then
-//  if Windows.FindFirstFile(PChar(FileName), find_data) <> INVALID_HANDLE_VALUE then
+//  if Windows.FindFirstFileW(PChar(FileName), find_data) <> INVALID_HANDLE_VALUE then
      //    IF IORESULT{DosError}{WLI} = 0 THEN { FileExists }
   if FileExists(@FileName[1]) then
   begin
@@ -3440,7 +3441,7 @@ begin
     GetFirstString := '';
 end;
 
-function RemoveFirstString(var LongString: ShortString): Str80;
+function RemoveFirstString(var LongString: OpenString): Str80;
 
 var
   CharCount                             : integer;
@@ -4559,13 +4560,13 @@ var
   //{WLI}
   s                                     : string;
 //  CharPos                               : integer;
-  find_data                             : WIN32_FIND_DATA;
+  find_data                             : WIN32_FIND_DATAW;   // W, to match FindFirstFileW
 begin
   FoundDirectory := False;
 
   //wli
   //    S := FSearch (FileName, Path);
-  if Windows.FindFirstFile(PChar(FileName), find_data) <> INVALID_HANDLE_VALUE then
+  if Windows.FindFirstFileW(PChar(FileName), find_data) <> INVALID_HANDLE_VALUE then
 
     if s = '' then
       Exit
@@ -4668,7 +4669,7 @@ var
 
 begin
 
-  Windows.DeleteFile(PChar(NewName));
+  Windows.DeleteFileW(PChar(NewName));
   //wli DeleteFile(NewName);
 
   Assign(f, OldName);
@@ -4683,7 +4684,7 @@ end;
 
 function TryToOpenCOMPort(portnr: Cardinal {Byte}; dwFlagsAndAttributes: DWORD): HWND;
 begin
-  Format(wsprintfBuffer, _COM, portnr);
+  TF.Format(wsprintfBuffer, _COM, portnr);
 
   Result :=
     CreateFileA(
@@ -4769,11 +4770,11 @@ begin
   Windows.ZeroMemory(@GETREALPATHBUFFER, SizeOf(GETREALPATHBUFFER));
   if pPos('\', TR4W_DVKPATH) = -1 then
   begin
-    Format(GETREALPATHBUFFER, '%s%s\', TR4W_PATH_NAME, Path);
+    TF.Format(GETREALPATHBUFFER, '%s%s\', TR4W_PATH_NAME, Path);
   end
   else
   begin
-    Format(GETREALPATHBUFFER, '%s\', Path);
+    TF.Format(GETREALPATHBUFFER, '%s\', Path);
   end;
 
   if AddFolder <> nil then

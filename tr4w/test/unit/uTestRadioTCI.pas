@@ -1,4 +1,5 @@
 unit uTestRadioTCI;
+{$I ..\..\src\tr4w.inc}
 
 {
   THE NINE METHODS THAT USED TO CRASH.

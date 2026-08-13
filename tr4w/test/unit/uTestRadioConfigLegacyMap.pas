@@ -1,4 +1,5 @@
 unit uTestRadioConfigLegacyMap;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins uRadioConfigLegacyMap -- the renderer that turns a radio definition into

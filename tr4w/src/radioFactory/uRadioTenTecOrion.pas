@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioTenTecOrion;
+{$I ..\tr4w.inc}
 
 {
   Ten-Tec Orion (565) and Orion II (566) -- factory port of uRadioPolling.pOrion3.

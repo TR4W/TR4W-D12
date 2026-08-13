@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogCfg;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 interface
@@ -361,14 +362,14 @@ begin
   if QTCsEnabled then New(QTCDataArray); //LoadQTCDataFile;
 
 //  if TempDomesticQTHDataFileName <> nil then
-//    Format(DomQTHDataFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME, TempDomesticQTHDataFileName);
+//    TF.Format(DomQTHDataFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME, TempDomesticQTHDataFileName);
 
   if DomQTHDataFileName[0] <> #0 then
   begin
    if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
-    Format(wsprintfBuffer, '%s', TR4W_DOM_FILENAME)
+    TF.Format(wsprintfBuffer, '%s', TR4W_DOM_FILENAME)
     else
-    Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
+    TF.Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
     Windows.ZeroMemory(@DomQTHDataFileName, SizeOf(DomQTHDataFileName));
     Windows.lstrcatA(DomQTHDataFileName, wsprintfBuffer);
     if not DomQTHTable.LoadInDomQTHFile(DomQTHDataFileName) then halt;
@@ -528,7 +529,7 @@ begin
         FileString[length(FileString) + 1] := #0;
         // Issue #997: asm wsprintf-push -> TF.Format. Args pushed cdecl-reverse;
         // format is %s(FileName) / %u(LineNumber) / %s(FileString).
-        Format(wsprintfBuffer, TC_INVALIDSTATEMENTIN, @FileName[1], LineNumber, @FileString[1]);
+        TF.Format(wsprintfBuffer, TC_INVALIDSTATEMENTIN, @FileName[1], LineNumber, @FileString[1]);
         showwarning(wsprintfBuffer);
         Exit;
       end;
@@ -544,7 +545,7 @@ begin
   begin
     FileName[Ord(FileName[0]) + 1] := #0;
     // Issue #997: asm wsprintf-push -> TF.Format.
-    Format(wsprintfBuffer, TC_UNABLETOFIND, @FileName[1]);
+    TF.Format(wsprintfBuffer, TC_UNABLETOFIND, @FileName[1]);
     showwarning(wsprintfBuffer);
     Exit;
   end;
@@ -873,7 +874,7 @@ var
        end
     else
        begin
-       Format(wsprintfBuffer, TC_INVALIDSTATEMENTINCONFIGFILE, CFGFilesArray[CurrentConfigFile], LineNumberInConfigFile, @FileString^[1]);
+       TF.Format(wsprintfBuffer, TC_INVALIDSTATEMENTINCONFIGFILE, CFGFilesArray[CurrentConfigFile], LineNumberInConfigFile, @FileString^[1]);
        showwarning(wsprintfBuffer);
 //    halt;
        end;

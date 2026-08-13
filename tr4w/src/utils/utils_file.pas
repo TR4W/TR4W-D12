@@ -1,4 +1,5 @@
 unit utils_file;
+{$I ..\tr4w.inc}
 
 interface
 

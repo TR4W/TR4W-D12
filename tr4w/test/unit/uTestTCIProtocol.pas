@@ -1,4 +1,5 @@
 unit uTestTCIProtocol;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins uTCIProtocol -- the TCI grammar.

@@ -1,4 +1,5 @@
 unit uTR4WTestFramework;
+{$I ..\..\src\tr4w.inc}
 
 {
   Minimal unit test framework for TR4W.

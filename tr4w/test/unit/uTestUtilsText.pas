@@ -1,4 +1,5 @@
 unit uTestUtilsText;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for utils_text.pas string predicate functions.

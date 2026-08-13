@@ -1,4 +1,5 @@
 unit uTestUtilsMath;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for utils/utils_math.pas.

@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioIcomReadLimited;
+{$I ..\tr4w.inc}
 
 {
   Shared base for the CI-V radios that read everything a modern Icom does EXCEPT

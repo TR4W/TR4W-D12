@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioConfigApply;
+{$I tr4w.inc}
 
 {
   Puts a station profile on the air.

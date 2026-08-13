@@ -1,4 +1,5 @@
 unit utils_net;
+{$I ..\tr4w.inc}
 
 interface
 

@@ -1,4 +1,5 @@
 unit uTestRadioConfigStore;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins uRadioConfigStore -- the library of radio definitions and the station
@@ -27,7 +28,7 @@ unit uTestRadioConfigStore;
 interface
 
 uses
-   SysUtils, Classes, IniFiles, System.JSON, System.IOUtils,
+   SysUtils, Classes, IniFiles, uJSON, uFileText,
    uTR4WTestFramework, uRadioConfigStore,
    // For the render-then-seed round trip.  The store and the renderer are two
    // halves of one conversation and were tested only separately, which is how
@@ -113,12 +114,9 @@ var
 // A temp FILE NAME (not an ini object) for the JSON tests, registered for
 // cleanup exactly like NewTempIni's.
 function NewTempFileName(const aExt: string): string;
-var
-   buf: array[0..MAX_PATH] of Char;
 begin
-   Windows.GetTempPath(Length(buf), buf);
    Inc(gTempIniSeq);
-   Result := IncludeTrailingPathDelimiter(buf) +
+   Result := TempDirectory +
              Format('tr4w_cfgstore_%d_%d.%s',
                     [GetCurrentProcessId, gTempIniSeq, aExt]);
    if FileExists(Result) then
@@ -133,12 +131,10 @@ end;
 
 function NewTempIni: TMemIniFile;
 var
-   buf: array[0..MAX_PATH] of Char;
    path: string;
 begin
-   Windows.GetTempPath(Length(buf), buf);
    Inc(gTempIniSeq);
-   path := IncludeTrailingPathDelimiter(buf) +
+   path := TempDirectory +
            Format('tr4w_cfgstore_%d_%d.ini', [GetCurrentProcessId, gTempIniSeq]);
 
    // Start from nothing: a file left behind by an aborted earlier run must not
@@ -1442,7 +1438,7 @@ begin
    // obviously empty one.  The failure has to be reported, though, or "my
    // radios vanished" becomes unanswerable.
    fileName := NewTempFileName('json');
-   TFile.WriteAllText(fileName, '{ this is not json', TEncoding.UTF8);
+   WriteAllTextUTF8(fileName, '{ this is not json');
 
    store := TRadioConfigStore.Create;
    try
@@ -1535,7 +1531,7 @@ begin
       store.Free;
    end;
 
-   bytes := TFile.ReadAllBytes(fileName);
+   bytes := ReadAllBytesFile(fileName);
    CheckTrue(Length(bytes) >= 3, 'the file has content');
    CheckFalse((bytes[0] = $EF) and (bytes[1] = $BB) and (bytes[2] = $BF),
               'no UTF-8 BOM at the start of the JSON');

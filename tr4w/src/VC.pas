@@ -16,6 +16,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit VC;
+{$I tr4w.inc}
 interface
 
 {$IMPORTEDDATA OFF}
@@ -187,6 +188,19 @@ type
   FileNameType = array[0..MAX_PATH - 1] of AnsiChar;
   OperatorType = array[0..10] of AnsiChar;
   ZoneModeType = (CQZoneMode, ITUZoneMode);
+
+  // Whatever `string` means INSIDE Indy, which is not the same on both
+  // compilers.  Delphi's Indy is Unicode; the vendored Indy 10.6.3.3 forces
+  // {$MODE Delphi} on itself and its conditionals follow FPC_UNICODESTRINGS,
+  // which our invocation deliberately leaves unset -- so under FPC an Indy
+  // `string` is an AnsiString while every TR4W unit's is a UnicodeString.
+  //
+  // A method assigned to an Indy event property has to match Indy's signature
+  // EXACTLY, so any TR4W callback that takes text from Indy declares it with
+  // this alias rather than with `string`.  Naming the boundary is the point:
+  // the alternative is a per-site {$IFDEF} that reads like a compiler quirk
+  // instead of like the protocol seam it actually is.
+  TIdText = {$IFDEF FPC}AnsiString{$ELSE}string{$ENDIF};
 
 const
 

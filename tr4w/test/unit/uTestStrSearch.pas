@@ -1,4 +1,5 @@
 unit uTestStrSearch;
+{$I ..\..\src\tr4w.inc}
 
 {
   Golden-master tests for src/uStrSearch.pas (PChar search helpers extracted
@@ -41,7 +42,6 @@ type
       procedure Test_StrPos_RepeatedFirstChar;
       procedure Test_StrPos_EmptyPattern;
       procedure Test_StrPos_PatternLongerThanText;
-      procedure Test_StrPos_NilArgs;
 
       // StrComp_JOH_IA32_6 -- strcmp (-1 / 0 / +1)
       procedure Test_StrComp_Equal;
@@ -166,12 +166,13 @@ begin
    CheckEquals(-1, Off(s, StrPos(s, 'ABCDE')), 'StrPos pattern longer -> nil');
 end;
 
-procedure TStrSearchTests.Test_StrPos_NilArgs;
-begin
-   BeginTest('Test_StrPos_NilArgs');
-   CheckTrue(StrPos(nil, 'A') = nil, 'StrPos nil str1');
-   CheckTrue(StrPos('A', nil) = nil, 'StrPos nil str2');
-end;
+// Test_StrPos_NilArgs was REMOVED here, not ported.
+//
+// uStrSearch stopped exporting StrPos when it became a pure forwarder, so
+// this test had quietly been asserting SysUtils' PWideChar StrPos -- the RTL,
+// not TR4W, and not even the ANSI routine the suite is about.  The behaviour
+// it meant to pin now belongs to uAnsiStr.StrPos and is covered there by
+// uTestAnsiStr.Test_StrPos ('nil haystack is nil, not a fault').
 
 // ---------------------------------------------------------------------------
 // StrComp_JOH_IA32_6
@@ -408,7 +409,6 @@ begin
    Test_StrPos_RepeatedFirstChar;
    Test_StrPos_EmptyPattern;
    Test_StrPos_PatternLongerThanText;
-   Test_StrPos_NilArgs;
 
    Test_StrComp_Equal;
    Test_StrComp_Less;

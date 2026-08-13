@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uCAT;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -1297,7 +1298,7 @@ begin
   // radios with LAN auto-discovery: K4, the network Icoms, FLEX).
   if not TRadioFactory.IsDiscoverable(rt) then
      begin
-     Format(wsprintfBuffer, TC_DISCOVER_NOT_AVAILABLE, PAnsiChar(radioName));
+     TF.Format(wsprintfBuffer, TC_DISCOVER_NOT_AVAILABLE, PAnsiChar(radioName));
      showwarning(wsprintfBuffer);
      Exit;
      end;
@@ -1315,7 +1316,7 @@ begin
 
      if found.Count = 0 then
         begin
-        Format(wsprintfBuffer, TC_DISCOVER_NONE_FOUND, PAnsiChar(radioName));
+        TF.Format(wsprintfBuffer, TC_DISCOVER_NONE_FOUND, PAnsiChar(radioName));
         showwarning(wsprintfBuffer);
         end
      else
@@ -1327,7 +1328,7 @@ begin
         ApplyDefaultNetworkPort(hwnddlg);
         if found.Count > 1 then
            begin
-           Format(wsprintfBuffer, TC_DISCOVER_MULTI_FOUND, PAnsiChar(radioName));
+           TF.Format(wsprintfBuffer, TC_DISCOVER_MULTI_FOUND, PAnsiChar(radioName));
            msg := string(wsprintfBuffer) + #13#10;
            for i := 0 to found.Count - 1 do
               begin
@@ -1721,15 +1722,15 @@ begin
            begin
            tCB_SETCURSEL(hwnddlg, i + 20, 0);
            Windows.GetDlgItemTextA(hwnddlg, i, TempBuffer1, SizeOf(TempBuffer1));
-           Format(wsprintfBuffer, '%s%s', TempPchar, TempBuffer1);         // This prepends RADIO ONE or RADIO TWO.
+           TF.Format(wsprintfBuffer, '%s%s', TempPchar, TempBuffer1);         // This prepends RADIO ONE or RADIO TWO.
            if i = 103 then
-              Format(wsprintfBuffer, 'KEYER %s%s', TempPchar, TempBuffer1);
+              TF.Format(wsprintfBuffer, 'KEYER %s%s', TempPchar, TempBuffer1);
            Windows.SetDlgItemTextA(hwnddlg, i, wsprintfBuffer);
            end;
 
         i := 1000;
         Windows.GetDlgItemTextA(hwnddlg, i, TempBuffer1, SizeOf(TempBuffer1));
-        Format(wsprintfBuffer, '%s%s', TempPchar, TempBuffer1);         // This prepends RADIO ONE or RADIO TWO.
+        TF.Format(wsprintfBuffer, '%s%s', TempPchar, TempBuffer1);         // This prepends RADIO ONE or RADIO TWO.
         Windows.SetDlgItemTextA(hwnddlg, i, wsprintfBuffer);
 
 
@@ -1807,12 +1808,12 @@ begin
         {freq adder}
 
 //        Windows.SetDlgItemInt(hwnddlg, 129, TempRadio^.FrequencyAdder, False);
-        Windows.SetDlgItemTextW(hwnddlg, 129, PChar(CATWTR^.RadioName));
+        Windows.SetDlgItemTextW(hwnddlg, 129, PChar(string(CATWTR^.RadioName)));
 
-        Windows.SetDlgItemTextW(hwnddlg, 130, PChar(CATWTR^.IPAddress));
+        Windows.SetDlgItemTextW(hwnddlg, 130, PChar(string(CATWTR^.IPAddress)));
         Windows.SetDlgItemInt(hwnddlg, 131, CATWTR^.RadioTCPPort, False);
-        Windows.SetDlgItemTextW(hwnddlg, 132, PChar(CATWTR^.NetworkUsername));
-        Windows.SetDlgItemTextW(hwnddlg, 133, PChar(CATWTR^.NetworkPassword));
+        Windows.SetDlgItemTextW(hwnddlg, 132, PChar(string(CATWTR^.NetworkUsername)));
+        Windows.SetDlgItemTextW(hwnddlg, 133, PChar(string(CATWTR^.NetworkPassword)));
         hamLibCheckBoxWind := GetDlgItem(hwnddlg, 1000);
 
         // Test the CONFIGURED radio -- NOT the RadioType variable, which at this

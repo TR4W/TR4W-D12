@@ -19,6 +19,7 @@
   http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uAbout;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 
 interface

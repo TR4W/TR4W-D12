@@ -1122,7 +1122,7 @@ begin
       else
       begin
         // Issue #997: asm wsprintf-push -> TF.Format (PRM2 = '...%u minutes').
-        Format(wsprintfBuffer, PRM2, PacketReturnPerMinute);
+        TF.Format(wsprintfBuffer, PRM2, PacketReturnPerMinute);
         RESULT := wsprintfBuffer;
       end;
 
@@ -1359,7 +1359,7 @@ begin
       begin
         // Issue #997: asm wsprintf-push -> TF.Format. SSN1 = 'Use a %c key...';
         // the Format(...; c: Char) overload handles %c (StartSendingNowKey is Char).
-        Format(wsprintfBuffer, SSN1, StartSendingNowKey);
+        TF.Format(wsprintfBuffer, SSN1, StartSendingNowKey);
         RESULT := wsprintfBuffer;
       end
       else
@@ -1518,7 +1518,7 @@ begin
           begin
             I := Cardinal(UserInfoShown) - 9;
             // Issue #997: asm wsprintf-push -> TF.Format (UIS11 = '...USER %u shown').
-            Format(wsprintfBuffer, UIS11, i);
+            TF.Format(wsprintfBuffer, UIS11, i);
             RESULT := wsprintfBuffer;
           end;
         {

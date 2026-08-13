@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uTR4WConfigFile;
+{$I tr4w.inc}
 
 {
   Composes settings\tr4w.json from the several libraries that share it.
@@ -33,7 +34,7 @@ unit uTR4WConfigFile;
 
   ON THE FILE FORMAT.  Formatted (not compact) because the point of leaving the
   ini was a file an operator can read and hand-edit, and written with
-  WriteAllBytes over TEncoding.UTF8.GetBytes -- never WriteAllText, which emits
+  uFileText.WriteAllTextUTF8, which never emits
   a BOM that RFC 8259 forbids at the start of JSON and that Python's json.load
   and jq both reject.  See uRadioConfigStore.SaveToFile for the full note; the
   rule is inverted from src\lang\*.pas, which must KEEP their BOM.
@@ -49,7 +50,7 @@ uses
    SysUtils,
    Classes,
    uJSON,
-   System.IOUtils,
+   uFileText,            // whole-file UTF-8 read/write -- see the BOM note in that unit
    IniFiles,
    uRadioConfigStore,
    uKeyerConfigStore,
@@ -118,7 +119,7 @@ begin
          end;
 
       // See the unit header: formatted, and no BOM.
-      TFile.WriteAllBytes(aFileName, TEncoding.UTF8.GetBytes(root.Format(2)));
+      WriteAllTextUTF8(aFileName, root.Format(2));
    finally
       root.Free;
    end;
@@ -138,7 +139,7 @@ begin
    aError := '';
    Result := False;
 
-   if not TFile.Exists(aFileName) then
+   if not FileTextExists(aFileName) then
       begin
       aError := Format('%s does not exist.', [aFileName]);
       Exit;
@@ -147,7 +148,7 @@ begin
    try
       // ReadAllText tolerates a BOM if some other tool put one back; we simply
       // never write one ourselves.
-      text := TFile.ReadAllText(aFileName, TEncoding.UTF8);
+      text := ReadAllTextUTF8(aFileName);
    except
       on E: Exception do
          begin
@@ -219,10 +220,10 @@ begin
    // section must still be seeded -- "loaded" and "has UDP settings" are not
    // the same question.
    hasSection := False;
-   if TFile.Exists(aFileName) then
+   if FileTextExists(aFileName) then
       begin
       try
-         text  := TFile.ReadAllText(aFileName, TEncoding.UTF8);
+         text  := ReadAllTextUTF8(aFileName);
          value := TJSONObject.ParseJSONValue(text);
          try
             hasSection := (value is TJSONObject) and
@@ -253,7 +254,7 @@ begin
    // key by key, defaulting to what the object already has -- see
    // TUDPBroadcastConfig.SeedFromLegacyIni for why an absent key must keep the
    // default rather than read as False or 0.
-   if (aIniFileName <> '') and TFile.Exists(aIniFileName) then
+   if (aIniFileName <> '') and FileTextExists(aIniFileName) then
       begin
       ini := TIniFile.Create(aIniFileName);
       try

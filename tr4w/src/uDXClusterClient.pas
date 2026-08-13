@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uDXClusterClient;
+{$I tr4w.inc}
 
 {
   THE DX CLUSTER CONNECTION, WITH NO UI ATTACHED.

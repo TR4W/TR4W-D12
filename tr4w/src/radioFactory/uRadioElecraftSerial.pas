@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioElecraftSerial;
+{$I ..\tr4w.inc}
 
 {
   Elecraft serial CAT -- concrete, configurable family base for the serial

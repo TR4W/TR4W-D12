@@ -34,6 +34,7 @@
     - YCCC SO2R ENABLE config command
 }
 unit uYCCCSO2R;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 

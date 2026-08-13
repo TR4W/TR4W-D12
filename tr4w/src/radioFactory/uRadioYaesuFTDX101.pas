@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFTDX101;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FTDX-101D / FTDX-101MP -- rtYaesu4, migrated from uRadioPolling.

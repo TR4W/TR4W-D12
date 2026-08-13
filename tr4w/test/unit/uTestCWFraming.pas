@@ -1,4 +1,5 @@
 unit uTestCWFraming;
+{$I ..\..\src\tr4w.inc}
 
 {
   Two things are pinned here.

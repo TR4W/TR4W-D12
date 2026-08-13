@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
  unit uAltP;
+{$I tr4w.inc}
 
 interface
 
@@ -128,15 +129,15 @@ begin
         elvc.fmt := LVCFMT_LEFT;
         elvc.pszText := 'Command'; //TC_COMMAND;
         elvc.cx := 270;
-        ListView_InsertColumn(AltPListView, 0, elvc);
+        uCommctrl.ListView_InsertColumnA(AltPListView, 0, elvc);
 
         elvc.pszText := 'Message';
         elvc.cx := 340;
-        ListView_InsertColumn(AltPListView, 1, elvc);
+        uCommctrl.ListView_InsertColumnA(AltPListView, 1, elvc);
 
         elvc.pszText := 'Caption';
         elvc.cx := 155;
-        ListView_InsertColumn(AltPListView, 2, elvc);
+        uCommctrl.ListView_InsertColumnA(AltPListView, 2, elvc);
 
         DisplaymessagesList(MesWindow, ActiveMode);
 
@@ -205,7 +206,7 @@ begin
         // Issue #997: asm wsprintf-push -> TF.Format. The format is a RUNTIME
         // string (omCommand, e.g. 'CQ %s EXCHANGE'); TF.Format == wsprintfA so the
         // runtime C format + ModeString work directly.
-        Format(wsprintfBuffer, OthermessagesArray[TempInt].omCommand, ModeString);
+        TF.Format(wsprintfBuffer, OthermessagesArray[TempInt].omCommand, ModeString);
         elvi.pszText := wsprintfBuffer;
 
         ListView_InsertItem(AltPListView, elvi);
@@ -272,7 +273,7 @@ begin
 
     // Issue #997: asm wsprintf-push -> TF.Format. cdecl-reverse pushes ->
     // OpModeString, ModeString, ButtonString, TempInt (%s %s MEMORY %sF%u).
-    Format(wsprintfBuffer, '%s %s MEMORY %sF%u', OpModeString, ModeString, ButtonString, TempInt);
+    TF.Format(wsprintfBuffer, '%s %s MEMORY %sF%u', OpModeString, ModeString, ButtonString, TempInt);
 
     elvi.pszText := wsprintfBuffer;
     ListView_InsertItem(AltPListView, elvi);

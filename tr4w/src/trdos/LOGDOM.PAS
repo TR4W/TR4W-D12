@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogDom;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 interface
@@ -544,7 +545,7 @@ begin
   if Copy(FileString^, 1, length(incfile)) = incfile then
   begin
     TempString := Copy(FileString^, length(incfile) + 2, 200);
-    Format(TempFileName, '%sDOM\%s', TR4W_PATH_NAME, @FileString^[length(incfile) + 2]);
+    TF.Format(TempFileName, '%sDOM\%s', TR4W_PATH_NAME, @FileString^[length(incfile) + 2]);
     DomQTHTable.ReadDomQTHFile(TempFileName, True);
   end;
 //todo process ;

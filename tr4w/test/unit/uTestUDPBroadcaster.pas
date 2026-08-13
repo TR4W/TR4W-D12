@@ -1,4 +1,5 @@
 unit uTestUDPBroadcaster;
+{$I ..\..\src\tr4w.inc}
 
 {
   The UDP broadcaster's RULES: is this stream on, where does it go, on which
@@ -15,7 +16,7 @@ unit uTestUDPBroadcaster;
 interface
 
 uses
-   System.SysUtils,
+   SysUtils,
    uTR4WTestFramework,
    uUDPBroadcastConfig,
    uUDPBroadcaster;
@@ -45,9 +46,9 @@ type
 implementation
 
 uses
-   System.IniFiles,
-   System.IOUtils,
-   System.JSON;
+   IniFiles,
+   uFileText,
+   uJSON;
 
 // The recording stub. A unit-level variable because TUDPSendProc is a plain
 // procedure type -- see the note on its declaration.
@@ -200,8 +201,8 @@ begin
    // turn "never configured" into "configured to nothing" and silently move
    // every broadcast off its port.
    BeginTest('seeding keeps the default for a key the ini never had');
-   fn := TPath.Combine(TPath.GetTempPath, 'tr4w_udp_seed_test.ini');
-   TFile.WriteAllText(fn,
+   fn := CombinePath(TempDirectory, 'tr4w_udp_seed_test.ini');
+   WriteAllTextUTF8(fn,
       '[COMMANDS]'#13#10 +
       'UDP BROADCAST ADDRESS=192.168.73.255'#13#10 +
       'UDP BROADCAST CONTACT INFO=TRUE'#13#10);
@@ -224,7 +225,7 @@ begin
    finally
       ini.Free;
       c.Free;
-      TFile.Delete(fn);
+      DeleteFileIfExists(fn);
    end;
 end;
 
@@ -241,8 +242,8 @@ begin
    // tidy by hand, and Validate now refuses the same endpoint twice, so an
    // unmerged seed would produce a configuration that cannot be saved.
    BeginTest('seeding merges streams sharing an address and port into one destination');
-   fn := TPath.Combine(TPath.GetTempPath, 'tr4w_udp_seed_merge_test.ini');
-   TFile.WriteAllText(fn,
+   fn := CombinePath(TempDirectory, 'tr4w_udp_seed_merge_test.ini');
+   WriteAllTextUTF8(fn,
       '[COMMANDS]'#13#10 +
       'UDP BROADCAST ADDRESS=10.0.0.255'#13#10 +
       'UDP BROADCAST CONTACT INFO=TRUE'#13#10 +
@@ -270,7 +271,7 @@ begin
    finally
       ini.Free;
       c.Free;
-      TFile.Delete(fn);
+      DeleteFileIfExists(fn);
    end;
 end;
 

@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uPendingCounties;
+{$I tr4w.inc}
 
 {
   Pending county queue for state-QP exchanges.

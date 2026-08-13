@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uEditQSO;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -371,7 +372,7 @@ begin
                 Exit;
               end;
 
-              Format(wsprintfBuffer, '"%s" "%s"', TR4W_MP3_PLAYER_FILENAME,
+              TF.Format(wsprintfBuffer, '"%s" "%s"', TR4W_MP3_PLAYER_FILENAME,
                 DeleteSlashes(MakeMP3Filename(@EditableQSORXData)));
               //                wsprintf(wsprintfBuffer, '"E:\Program Files\Windows Media Player\wmplayer.exe" "%s"');
 
@@ -794,7 +795,7 @@ end;
 
 procedure ShowNote(CE: ContestExchange);
 begin
-  Format(wsprintfBuffer, RC_NOTE + ' :'#13#10#13#10'%s',
+  TF.Format(wsprintfBuffer, RC_NOTE + ' :'#13#10#13#10'%s',
     @EditableQSORXData.Prefix);
   ShowMessageParent(wsprintfBuffer, eq_handle);
 end;
@@ -838,7 +839,7 @@ begin
       w := PDWORD(ValueAdr)^;
 
     // Issue #997: asm-push wsprintf -> Format (single %d arg = W).
-    Format(IntToPCharBuffer, '%d', W);
+    TF.Format(IntToPCharBuffer, '%d', W);
     Value := IntToPCharBuffer;
   end;
   tCreateStaticWindow(Caption, LeftStyle, 10, CurrentEditRow * 20 + 400, 70, ws,

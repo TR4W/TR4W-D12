@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LOGDDX;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 interface

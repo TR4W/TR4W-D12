@@ -1,4 +1,5 @@
 unit uTestKenwoodSerial;
+{$I ..\..\src\tr4w.inc}
 
 {
   Guards TKenwoodSerial against silently drifting away from the LEGACY path.

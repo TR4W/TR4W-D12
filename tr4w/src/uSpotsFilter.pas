@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uSpotsFilter;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -107,7 +108,7 @@ begin
         elvc.fmt := LVCFMT_LEFT;
         elvc.pszText := nil;
         elvc.cx := 90;
-        ListView_InsertColumn(SpotsFilterListView, 0, elvc);
+        uCommctrl.ListView_InsertColumnA(SpotsFilterListView, 0, elvc);
 
         elvi.Mask := LVIF_TEXT;
         for I := 0 to SpotsFiltersCount - 1 do

@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT817Group;
+{$I ..\tr4w.inc}
 
 {
   SHARED BASE for the small-rig old-binary Yaesus -- FT-817, FT-818, FT-847,

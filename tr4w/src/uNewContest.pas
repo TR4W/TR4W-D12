@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uNewContest;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -164,12 +165,12 @@ begin
 
         {BUTTON LATEST CONFIG}
             TempCardinal := tWM_SETFONT(
-              CreateWindowEx(0, ButtonPChar, nil, BS_MULTILINE or WS_CHILD or BS_TEXT or WS_VISIBLE {or WS_TABSTOP}, 5, 415, 250, 50 {nHeight}, hwnddlg, NC_BUTTON_LATEST_CONFIG, hInstance, nil),
+              CreateWindowExW(0, ButtonPChar, nil, BS_MULTILINE or WS_CHILD or BS_TEXT or WS_VISIBLE {or WS_TABSTOP}, 5, 415, 250, 50 {nHeight}, hwnddlg, NC_BUTTON_LATEST_CONFIG, hInstance, nil),
               MSSansSerifFont);
 
             Windows.CopyMemory(@TempBuffer1, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
             Windows.CharLowerA(TempBuffer1);
-            Format(wsprintfBuffer, TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s', TempBuffer1);
+            TF.Format(wsprintfBuffer, TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s', TempBuffer1);
             //i := GetDlgItem(hwnddlg, NC_BUTTON_LATEST_CONFIG);
 
             Windows.SetWindowTextA(TempCardinal, wsprintfBuffer);
@@ -196,7 +197,7 @@ begin
 
         NewContestListBoxHandle := GetDlgItem(hwnddlg, NC_LISTBOX);
 
-        Format(wsprintfBuffer, '%s*.CFG', TR4W_PATH_NAME);
+        TF.Format(wsprintfBuffer, '%s*.CFG', TR4W_PATH_NAME);
 
         Windows.DlgDirListA(hwnddlg, wsprintfBuffer, NC_LISTBOX, 445, sfFLAG + DDL_DRIVES);
         SelectParentDir(NewContestListBoxHandle);
@@ -620,11 +621,11 @@ begin
 
     if TempBuffer2 = 'POTA' then
        begin
-       Format(wsprintfBuffer, '%s%s %s %s %s\', TR4W_PATH_NAME, GetYearString, TempBuffer2, GetDateString, TempBuffer1);
+       TF.Format(wsprintfBuffer, '%s%s %s %s %s\', TR4W_PATH_NAME, GetYearString, TempBuffer2, GetDateString, TempBuffer1);
        end
     else
        begin
-       Format(wsprintfBuffer, '%s%s %s %s\', TR4W_PATH_NAME, GetYearString, TempBuffer2, TempBuffer1);
+       TF.Format(wsprintfBuffer, '%s%s %s %s\', TR4W_PATH_NAME, GetYearString, TempBuffer2, TempBuffer1);
        end;
 
     Windows.CreateDirectoryA(wsprintfBuffer, nil);
@@ -632,11 +633,11 @@ begin
 
   {CFGFileName}
   Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
-  Format(TR4W_CFG_FILENAME, '%s%s.CFG', wsprintfBuffer, TempBuffer1);
+  TF.Format(TR4W_CFG_FILENAME, '%s%s.CFG', wsprintfBuffer, TempBuffer1);
 
   if FileExists(TR4W_CFG_FILENAME) then
   begin
-    Format(SYSERRORBUFFER, TC_FOLDERALREADYEXISTSOVERWRITE, TR4W_CFG_FILENAME);
+    TF.Format(SYSERRORBUFFER, TC_FOLDERALREADYEXISTSOVERWRITE, TR4W_CFG_FILENAME);
     if YesOrNo(h, SYSERRORBUFFER) = IDno then Exit;
   end;
 
@@ -645,19 +646,19 @@ begin
   begin
 
     Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
-    BytesToWrite := Format(wsprintfBuffer, ';Created by ' + TR4W_CURRENTVERSION + #13#10#13#10'[COMMANDS]'#13#10'MY CALL=%s'#13#10, TempBuffer1);
+    BytesToWrite := TF.Format(wsprintfBuffer, ';Created by ' + TR4W_CURRENTVERSION + #13#10#13#10'[COMMANDS]'#13#10'MY CALL=%s'#13#10, TempBuffer1);
     sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
     for i := 1 to CSAS do
     begin
       GetWindowTextA(InitialCommandsHWNDArray[i, 1], TempBuffer1, SizeOf(TempBuffer1));
       if GetWindowTextA(InitialCommandsHWNDArray[i, 2], TempBuffer2, SizeOf(TempBuffer2)) = 0 then Continue;
-      BytesToWrite := Format(wsprintfBuffer, '%s=%s'#13#10, TempBuffer1, TempBuffer2);
+      BytesToWrite := TF.Format(wsprintfBuffer, '%s=%s'#13#10, TempBuffer1, TempBuffer2);
       sWriteFile(f, wsprintfBuffer, BytesToWrite);
     end;
 
     Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
-    BytesToWrite := Format(wsprintfBuffer, 'CONTEST=%s', TempBuffer1);
+    BytesToWrite := TF.Format(wsprintfBuffer, 'CONTEST=%s', TempBuffer1);
     sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
     CloseHandle(f);
@@ -682,7 +683,7 @@ end;
 procedure DisplayCheckBox(Text: PAnsiChar);
 begin
   // Issue #997: asm-push wsprintf -> Format (TC_IAMIN = '&I am in %s').
-  Format(wsprintfBuffer, TC_IAMIN, Text);
+  TF.Format(wsprintfBuffer, TC_IAMIN, Text);
   Windows.SetWindowTextA(NewContestCheckBox, wsprintfBuffer);
   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
 end;
@@ -699,7 +700,7 @@ begin
   DisplayInitialCommand(icmyState);
   // Issue #997: asm-push wsprintf -> Format. TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX
   // has two %s, both = State.
-  Format(wsprintfBuffer, TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX, State, State);
+  TF.Format(wsprintfBuffer, TC_ENTERYOURCOUNTYORSTATEPOROVINCEDX, State, State);
   Windows.SetWindowTextA(NewContestCommentWndHandle, wsprintfBuffer);
 end;
 

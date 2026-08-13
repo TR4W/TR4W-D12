@@ -1,4 +1,5 @@
 unit Log4D;
+{$I tr4w.inc}
 
 {
   The contents of this file are subject to the Mozilla Public

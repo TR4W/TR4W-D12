@@ -1,4 +1,5 @@
 unit uK4Discovery;
+{$I tr4w.inc}
 
 {
   Elecraft K4 Network Radio Discovery -- Issue #853
@@ -60,7 +61,8 @@ type
 implementation
 
 uses
-  StrUtils;
+  StrUtils,
+  VC;   // TIdText -- Indy's own string type, which is not `string` on both compilers
 
 var
   logger: TLogLogger;
@@ -128,7 +130,7 @@ var
   SendBytes: TIdBytes;
   RecvBuf: TIdBytes;
   RecvLen: Integer;
-  PeerIP: string;
+  PeerIP: TIdText;   // var parameter of Indy's ReceiveBuffer -- must match Indy exactly
   PeerPort: Word;
   StartTime: LongWord;
   Reply: string;

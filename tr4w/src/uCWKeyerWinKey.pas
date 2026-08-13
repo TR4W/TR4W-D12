@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uCWKeyerWinKey;
+{$I tr4w.inc}
 
 {
   WinKeyer (K1EL WK2/WK3) adapter -- thin delegation onto uWinKey's procedural

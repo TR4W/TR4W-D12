@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT767;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FT-767 -- migrated from uRadioPolling.pFT767.

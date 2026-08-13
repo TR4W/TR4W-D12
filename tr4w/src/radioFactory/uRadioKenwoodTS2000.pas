@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioKenwoodTS2000;
+{$I ..\tr4w.inc}
 
 {
   Kenwood TS-2000 (serial CAT).  A thin per-model subclass of TKenwoodSerial --

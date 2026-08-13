@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uFileView;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 uses
@@ -209,7 +210,7 @@ begin
           Menu := GetMenu(hwnddlg);
           if ContestsArray[Contest].Email <> nil then
           begin
-            Format(wsprintfBuffer, 'Send log to %s', ContestsArray[Contest].Email);
+            TF.Format(wsprintfBuffer, 'Send log to %s', ContestsArray[Contest].Email);
             AppendMenuA(Menu, MF_CHECKED + MF_STRING, 105, wsprintfBuffer);
           end;
 
@@ -298,7 +299,7 @@ begin
     begin
 {
       lpMessage.lpszSubject := '[Bug Report] ' + TR4W_CURRENTVERSION;
-      Format(wsprintfBuffer, 'Version: ' + TR4W_CURRENTVERSION + ' (' + TR4W_CURRENTVERSIONDATE + ')'#13#10'OS: %u.%u %s'#13#10'Attached 3 files.'#13#10#13#10'Description:'#13#10, tr4w_osverinfo.dwMajorVersion, tr4w_osverinfo.dwMinorVersion, tr4w_osverinfo.szCSDVersion);
+      TF.Format(wsprintfBuffer, 'Version: ' + TR4W_CURRENTVERSION + ' (' + TR4W_CURRENTVERSIONDATE + ')'#13#10'OS: %u.%u %s'#13#10'Attached 3 files.'#13#10#13#10'Description:'#13#10, tr4w_osverinfo.dwMajorVersion, tr4w_osverinfo.dwMinorVersion, tr4w_osverinfo.szCSDVersion);
       lpMessage.lpszNoteText := wsprintfBuffer;
       lpMessage.nFileCount := 3;
 
@@ -319,14 +320,14 @@ begin
 
     lpMessage.nRecipCount := 1;
     lpMessage.flFlags := MAPI_UNREAD;
-    Format(TempBuffer, 'SMTP:%s', Address);
+    TF.Format(TempBuffer, 'SMTP:%s', Address);
     lpRecips.lpszAddress := TempBuffer;
     lpRecips.ulRecipClass := MAPI_TO;
 
     MapiResult := MapiSendMail(0, tr4whandle, lpMessage, MAPI_LOGON_UI or MAPI_DIALOG, 0);
     if MapiResult > 1 then
     begin
-      Format(wsprintfBuffer, 'Send Mail Error: %u', MapiResult);
+      TF.Format(wsprintfBuffer, 'Send Mail Error: %u', MapiResult);
       showwarning(wsprintfBuffer);
     end;
 

@@ -1,4 +1,5 @@
 unit uTestDXSpotParse;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins uDXSpotParse.ParseDXSpotLine -- the DX cluster spot DECODER, until now

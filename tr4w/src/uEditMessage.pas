@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uEditMessage;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 //
@@ -221,7 +222,7 @@ begin
                 end;
               end;
 
-              Format(TempBuffer1, '"%s" "%s"', TR4W_DVP_RECORDER_FILENAME, p);
+              TF.Format(TempBuffer1, '"%s" "%s"', TR4W_DVP_RECORDER_FILENAME, p);
               WinExec(TempBuffer1, SW_SHOWNORMAL);
 //              if FileExists(TempBuffer1) then if sndPlaySound(TempBuffer1, SND_ASYNC or SND_NODEFAULT) then Exit;
 //              ShowSysErrorMessage('PLAY FILE');

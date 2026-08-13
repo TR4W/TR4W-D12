@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit Help;
+{$I ..\tr4w.inc}
 
 {$O+}
 {$F+}
@@ -762,7 +763,7 @@ begin
   inc(NumberReminderRecords);
 
   //  SaveSetAndClearActiveWindow(QuickCommandWindow);
-  //wli временно удалил
+  //wli пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
   {
     Write('Reminder number ', NumberReminderRecords, ' added on ');
     Write(Reminders^[NumberReminderRecords - 1].DateString);
@@ -3350,7 +3351,7 @@ begin
     WriteLn;
   }
   {
-  удалено в исходнике
+  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
      StartDate := UpperCase (GetResponse ('Enter the starting date (i.e. 01-Nov-97) : '));
       StartTime := UpperCase (GetResponse ('Enter starting time (i.e. 18:30) : '));
       EndDate   := UpperCase (GetResponse ('Enter the ending date (i.e. 01-Nov-97) : '));

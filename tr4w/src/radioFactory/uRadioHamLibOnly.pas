@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioHamLibOnly;
+{$I ..\tr4w.inc}
 
 {
   Registrations for the HAMLIB-ONLY radios -- the seven models with no native

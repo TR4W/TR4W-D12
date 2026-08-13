@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uWebSocketClient;
+{$I tr4w.inc}
 
 {
   A MINIMAL RFC 6455 WEBSOCKET CLIENT -- TRANSPORT ONLY, NO RADIO KNOWLEDGE.

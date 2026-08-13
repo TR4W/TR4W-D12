@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uMultsFrequencies;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -97,15 +98,15 @@ begin
         elvc.fmt := LVCFMT_CENTER;
         elvc.pszText := 'Band';
         elvc.cx := 50 + 13;
-        ListView_InsertColumn(MultsFrequenciesHandle, 0, elvc);
+        uCommctrl.ListView_InsertColumnA(MultsFrequenciesHandle, 0, elvc);
 
         elvc.pszText := 'Mode';
         elvc.cx := 70 - 6;
-        ListView_InsertColumn(MultsFrequenciesHandle, 1, elvc);
+        uCommctrl.ListView_InsertColumnA(MultsFrequenciesHandle, 1, elvc);
 
         elvc.pszText := 'Freq';
         elvc.cx := 70 - 6;
-        ListView_InsertColumn(MultsFrequenciesHandle, 2, elvc);
+        uCommctrl.ListView_InsertColumnA(MultsFrequenciesHandle, 2, elvc);
 
         elvi.Mask := LVIF_TEXT;
 

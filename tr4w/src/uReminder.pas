@@ -18,7 +18,8 @@
 If not, ref: 
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
-unit uReminder; {Reminder WinAPI}
+unit uReminder;
+{$I tr4w.inc} {Reminder WinAPI}
 {$IMPORTEDDATA OFF}
 interface
 

@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uTelnet;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 
 interface
@@ -684,7 +685,7 @@ begin
               // the NEXT outage starts at 5 s again rather than inheriting the
               // 60 s this one may have crept up to.
               CancelTelnetRetry;
-              Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
+              TF.Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTEDTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
               AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
               // (The TelnetBuffer clear that stood here is gone with the buffer
@@ -739,7 +740,7 @@ begin
               // can no longer cost the teardown.
               Disconnect;
 
-              Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
+              TF.Format(wsprintfBuffer, '%s%s:%u', TC_FAILEDTOCONNECTTO,
                 @PendingTelnetHost[0], PendingTelnetPort);
               AddStringToTelnetConsole(wsprintfBuffer, tstError);
               // Keep trying, with a longer gap each time.  A failed RETRY comes
@@ -1252,7 +1253,7 @@ begin
   // Issue #23 -- immediate visual feedback so connect is not a black box:
   // show the attempt in the window and switch the toolbar to the connected
   // state (grays Connect, enables Disconnect) the instant the user clicks.
-  Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTINGTO, @PendingTelnetHost[0],
+  TF.Format(wsprintfBuffer, '%s%s:%u', TC_CONNECTINGTO, @PendingTelnetHost[0],
     PendingTelnetPort);
   AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
   EnableTelnetToolbatButtons(True);
@@ -1298,7 +1299,7 @@ begin
   // suppress the very message the operator most needs to see.
   if TelnetSessionActive then
      begin
-     Format(wsprintfBuffer, '%s%s:%u', TC_DISCONNECTEDFROM, @PendingTelnetHost[0],
+     TF.Format(wsprintfBuffer, '%s%s:%u', TC_DISCONNECTEDFROM, @PendingTelnetHost[0],
        PendingTelnetPort);
      AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
      end;
@@ -1824,7 +1825,7 @@ begin
     begin
       Stringtype := tstAlert;
 
-      Format(QuickDisplayBuffer,
+      TF.Format(QuickDisplayBuffer,
         'New DX Cluster spot: %s was spoted by %s on %s', @TempSpot.FCall[1],
         @TempSpot.FSourceCall[1], TempSpot.FFreqString);
       QuickDisplay(QuickDisplayBuffer);
@@ -1971,7 +1972,7 @@ begin
      end;
 
   // TF.Format is wsprintf-style: positional arguments, not an open array.
-  Format(wsprintfBuffer, 'Reconnecting to %s:%u in %u seconds...',
+  TF.Format(wsprintfBuffer, 'Reconnecting to %s:%u in %u seconds...',
          @PendingTelnetHost[0], PendingTelnetPort, TelnetRetryDelay div 1000);
   AddStringToTelnetConsole(wsprintfBuffer, tstTR4W);
 

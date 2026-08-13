@@ -1,4 +1,5 @@
 unit uTestCabrilloFormat;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for uCabrilloFormat.FormatCabrilloFreq and FormatCabrilloMode.

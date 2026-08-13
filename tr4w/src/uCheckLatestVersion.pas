@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uCheckLatestVersion;
+{$I tr4w.inc}
 
 interface
 
@@ -61,7 +62,7 @@ begin
     Exit;
   end;
 
-  WinSock2.Send(TempSocket, wsprintfBuffer, Format(wsprintfBuffer, checkVersionRequest, @MyCall[1], InterfacedRadioTypeSA[Radio1.RadioModel], InterfacedRadioTypeSA[Radio2.RadioModel], BA[CD.MasterFileExists]), 0);
+  WinSock2.Send(TempSocket, wsprintfBuffer, TF.Format(wsprintfBuffer, checkVersionRequest, @MyCall[1], InterfacedRadioTypeSA[Radio1.RadioModel], InterfacedRadioTypeSA[Radio2.RadioModel], BA[CD.MasterFileExists]), 0);
   Windows.Sleep(2000);
   if WinSock2.recv(TempSocket, GetScoresBuffer, SizeOf(GetScoresBuffer), 0) <= 0 then
   begin
@@ -82,7 +83,7 @@ begin
       goto 1;
     end;
 
-    Format(wsprintfBuffer, TC_VERSIONONSERVER + ': %s. ' + TC_THISVERSION2 + ': ' + TR4W_CURRENTVERSION + '.'#13#10 + TC_DOWNLOADIT, p);
+    TF.Format(wsprintfBuffer, TC_VERSIONONSERVER + ': %s. ' + TC_THISVERSION2 + ': ' + TR4W_CURRENTVERSION + '.'#13#10 + TC_DOWNLOADIT, p);
     if YesOrNo(tr4whandle, wsprintfBuffer) = IDYES then OpenURL(TR4W_DOWNLOAD_LINK);
   end;
   1:

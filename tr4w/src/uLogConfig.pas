@@ -1,4 +1,5 @@
 unit uLogConfig;
+{$I tr4w.inc}
 
 { Centralizes the TR4W Log4D layout so every appender renders identical
   timestamps.  D12's Log4D fork defaults the %d token to ShortDateFormat

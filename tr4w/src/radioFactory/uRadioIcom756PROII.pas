@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioIcom756PROII;
+{$I ..\tr4w.inc}
 
 {
   Icom IC-756PROII -- CI-V address $64.

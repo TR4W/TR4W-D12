@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uFlexDiscovery;
+{$I ..\tr4w.inc}
 
 {
   FlexRadio 6000-series network discovery.
@@ -107,7 +108,8 @@ type
 implementation
 
 uses
-  StrUtils;
+  StrUtils,
+  VC;   // TIdText -- Indy's own string type, which is not `string` on both compilers
 
 var
   logger: TLogLogger;
@@ -204,7 +206,7 @@ var
   client: TIdUDPClient;
   RecvBuf: TIdBytes;
   RecvLen: Integer;
-  PeerIP: string;
+  PeerIP: TIdText;   // var parameter of Indy's ReceiveBuffer -- must match Indy exactly
   PeerPort: Word;
   StartTime: LongWord;
   Parsed: TFlexDiscoveredRadio;

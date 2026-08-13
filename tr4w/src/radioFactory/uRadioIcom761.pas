@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioIcom761;
+{$I ..\tr4w.inc}
 
 {
   Icom IC-761 -- CI-V address $1E.

@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uTestTR4WConfigFile;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for the settings\tr4w.json composer.
@@ -34,7 +35,7 @@ unit uTestTR4WConfigFile;
 interface
 
 uses
-   SysUtils, Classes, System.JSON, System.IOUtils,
+   SysUtils, Classes, uJSON, uFileText,
    uTR4WTestFramework, uRadioConfigStore, uKeyerConfigStore, uTR4WConfigFile;
 
 type
@@ -71,9 +72,9 @@ var
 begin
    for i := 0 to FTempFiles.Count - 1 do
       begin
-      if TFile.Exists(FTempFiles[i]) then
+      if FileTextExists(FTempFiles[i]) then
          begin
-         TFile.Delete(FTempFiles[i]);
+         DeleteFileIfExists(FTempFiles[i]);
          end;
       end;
    FTempFiles.Free;
@@ -98,7 +99,7 @@ end;
 
 function TTR4WConfigFileTests.TempFileName: string;
 begin
-   Result := TPath.Combine(TPath.GetTempPath,
+   Result := CombinePath(TempDirectory,
                            'tr4wcfg_' + TGUID.NewGuid.ToString + '.json');
    FTempFiles.Add(Result);
 end;
@@ -178,7 +179,7 @@ begin
    try
       fn := TempFileName;
       SaveConfig(fn, radios, keyers);
-      bytes := TFile.ReadAllBytes(fn);
+      bytes := ReadAllBytesFile(fn);
       CheckTrue(Length(bytes) >= 1, 'something was written');
       CheckFalse((Length(bytes) >= 3) and (bytes[0] = $EF) and
                  (bytes[1] = $BB) and (bytes[2] = $BF),
@@ -199,7 +200,7 @@ begin
    radios := TRadioConfigStore.Create;
    keyers := TKeyerConfigStore.Create;
    try
-      CheckFalse(LoadConfig(TPath.Combine(TPath.GetTempPath, 'no_such_tr4w.json'),
+      CheckFalse(LoadConfig(CombinePath(TempDirectory, 'no_such_tr4w.json'),
                             radios, keyers, err), 'a missing file reports False');
       CheckTrue(err <> '', 'and says why');
    finally
@@ -221,7 +222,7 @@ begin
    keyers := TKeyerConfigStore.Create;
    try
       fn := TempFileName;
-      TFile.WriteAllText(fn, 'this is not json');
+      WriteAllTextUTF8(fn, 'this is not json');
       CheckFalse(LoadConfig(fn, radios, keyers, err), 'malformed reports False');
       CheckTrue(err <> '', 'and says why: ' + err);
    finally
@@ -240,14 +241,14 @@ begin
    radios := TRadioConfigStore.Create;
    keyers := TKeyerConfigStore.Create;
    try
-      dir := TPath.Combine(TPath.GetTempPath, 'tr4wcfg_' + TGUID.NewGuid.ToString);
-      fn := TPath.Combine(dir, 'tr4w.json');
+      dir := CombinePath(TempDirectory, 'tr4wcfg_' + TGUID.NewGuid.ToString);
+      fn := CombinePath(dir, 'tr4w.json');
       FTempFiles.Add(fn);
       SaveConfig(fn, radios, keyers);
-      CheckTrue(TFile.Exists(fn), 'the settings directory was created');
+      CheckTrue(FileTextExists(fn), 'the settings directory was created');
       // Remove the directory too, so the temp area does not accumulate.
-      TFile.Delete(fn);
-      TDirectory.Delete(dir);
+      DeleteFileIfExists(fn);
+      RemoveDir(dir);
    finally
       keyers.Free;
       radios.Free;

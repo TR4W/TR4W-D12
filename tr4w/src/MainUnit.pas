@@ -321,7 +321,7 @@ procedure PutCallToCallWindow(Call: CallString);
 procedure SetColumnsWidth;
 procedure EnsureListViewColumnVisible(h: HWND);
 procedure SaveColumnWidthToConfig(ColIndex: Integer; NewWidth: Integer);
-procedure ExecuteConfigurationFile(f: ShortString);
+procedure ExecuteConfigurationFile(const f: AnsiString);
 procedure CheckEditableWindowHeight;
 function CheckCommandInCallsignWindow: boolean;
 procedure ClearMultSheet_CtrlC;
@@ -523,7 +523,9 @@ uses
   uPOTAParks,
   uPendingCounties,
   uCTYUpdate,
+  uWin32Compat,   // AnimateWindow -- see that unit for the whole FPC gap list
   Types;
+
 
 // GetCPU -- a monotonic high-resolution counter for the debug timing readout.
 //
@@ -556,7 +558,9 @@ var
   arrCh: array[0..MAX_PATH] of char;
 begin
   c1 := MAX_PATH;
-  GetComputerName(arrCh, c1);
+  // Explicitly W: arrCh is an array of (Wide)Char, and the generic name binds
+  // to the ANSI entry point under FPC's windows unit.
+  GetComputerNameW(arrCh, c1);
   if c1 > 0 then
     result := arrCh
   else
@@ -754,7 +758,9 @@ begin
   if not DetectRoverSlashInCall(RoverCounty) then
      Exit;
   ExchangeWindowString := RoverCounty;
-  Windows.SetWindowTextW(wh[mweExchange], PChar(ExchangeWindowString));
+  // The string() step is what Delphi was doing implicitly: PChar() of a
+  // ShortString is not a legal cast, PChar() of a string expression is.
+  Windows.SetWindowTextW(wh[mweExchange], PChar(string(ExchangeWindowString)));
   // Move focus to exchange.  The caller's existing focus-move logic only
   // fires when ExchangeWindowString is empty (which won't be true after
   // we just populated it), so we have to do it ourselves here.
@@ -2460,10 +2466,10 @@ begin
   if lpTranslated then
   begin
     // Issue #997: asm `inc eax; push eax; wsprintf(' %u')` -> TF.Format. The
-    // Integer() cast is load-bearing: it forces the Format(...; i: integer)
+    // Integer() cast is load-bearing: it forces the TF.Format(...; i: integer)
     // wsprintfA overload. Without it, the Cardinal arg can bind a different
     // overload and the field doesn't update.
-    Format(wsprintfBuffer, ' %u', Integer(Value + 1));
+    TF.Format(wsprintfBuffer, ' %u', Integer(Value + 1));
     SetMainWindowText(mweExchange, wsprintfBuffer);
     PlaceCaretToTheEnd(wh[mweExchange]);
   end;
@@ -3049,7 +3055,7 @@ var
   temprect: TRect;
   // OffsetY : integer;
 begin
-  tr4whandle := CreateWindowEx($00010100 { WS_EX_CONTROLPARENT or WS_EX_WINDOWEDGE },
+  tr4whandle := CreateWindowExW($00010100 { WS_EX_CONTROLPARENT or WS_EX_WINDOWEDGE },
     tr4w_ClassName, nil,
     WS_SYSMENU or WS_MINIMIZEBOX,
     0, 30, MainWindowWidth, 0 {MainWindowHeight},
@@ -3140,7 +3146,7 @@ begin
     ShowTourDuration;
   end;
 
-  wh[mwePossibleCall] := CreateWindowEx(0, LISTBOX, nil,
+  wh[mwePossibleCall] := CreateWindowExW(0, LISTBOX, nil,
     LBS_NOTIFY or LBS_OWNERDRAWFIXED or {LBS_HASSTRINGS or }LBS_NOINTEGRALHEIGHT
     or LBS_MULTICOLUMN or WS_CHILD or WS_VISIBLE,
     0, EditableLogHeight + ws * 13 {line6}, MainWindowChildsWidth, ws,
@@ -3151,11 +3157,11 @@ begin
 
   CreateTotalWindow;
 
-  Format(wsprintfBuffer, TC_RULESONQRZRU, ContestTypeSA[Contest]);
+  TF.Format(wsprintfBuffer, TC_RULESONQRZRU, ContestTypeSA[Contest]);
   ModifyMenuA(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND + MF_STRING,
     menu_qrzru_calendar, wsprintfBuffer);
 
-  Format(wsprintfBuffer, TC_RULESONSM3CER, ContestTypeSA[Contest]);
+  TF.Format(wsprintfBuffer, TC_RULESONSM3CER, ContestTypeSA[Contest]);
   ModifyMenuA(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND + MF_STRING,
     menu_WA7BNM_calendar, wsprintfBuffer);
   if (pos('CQ-WW', ContestTypeSA[Contest]) <> 0) or (pos('IARU-HF',
@@ -3210,8 +3216,10 @@ begin
     <> 0) and (RussianID(MyCall));
 
   if ErmakSpecification then
-    ModifyMenu(tr4w_main_menu, menu_cabrillo, MF_BYCOMMAND + MF_STRING,
-      menu_cabrillo, ERMAK_);
+     begin
+     ModifyMenuW(tr4w_main_menu, menu_cabrillo, MF_BYCOMMAND + MF_STRING,
+       menu_cabrillo, ERMAK_);
+     end;
 
   // AppendMenu(GetSubMenu(tr4w_main_menu, menu_rescore), MF_POPUP , 11010, 'NepItem');
   // InsertMenu(tr4w_main_menu, menu_rescore, MF_BYCOMMAND, 177, 'aa');
@@ -3236,7 +3244,7 @@ end;
 
 function tCreateFont(nHeight, fnWeight: integer; lpszFace: PChar): HFONT;
 begin
-  Result := Windows.CreateFont
+  Result := Windows.CreateFontW
     (
     nHeight + FontSize - 1,
     0,
@@ -3273,7 +3281,7 @@ begin
  SymbolFont := tCreateFont(ws, FW_SEMIBOLD, 'Symbol');
  {Alt-P}
  TerminalFont :=
- Windows.CreateFont(
+ Windows.CreateFontW(
  18, 0, 0, 0,
  FW_DONTCARE,
  0, 0, 0,
@@ -3510,7 +3518,11 @@ begin
     // but still reachable with the CATLEGACY call-window command while the new
     // path is being proven on the bench.  Delete them, and uCAT.CATDlgProc,
     // once Track F has replaced it outright.
+{$IFNDEF FPC}
+    // uPrefsForm is FMX, which has no FPC equivalent yet -- see the guard on
+    // the uses clause.  The menu arm goes with it.
     menu_radio_preferences: ShowPreferences;
+{$ENDIF}
 
     menu_cat_radio_one:
       begin
@@ -3818,7 +3830,7 @@ begin
       begin
         if CallWindowString <> '' then
         begin
-          Format(wsprintfBuffer, 'Callsign %s', @CallWindowString[1]);
+          TF.Format(wsprintfBuffer, 'Callsign %s', @CallWindowString[1]);
           ShowMessage(wsprintfBuffer);
         end
         else
@@ -3829,14 +3841,14 @@ begin
       begin
         if ActiveMode = CW then
         begin
-          Format(wsprintfBuffer, 'Speed %u', CodeSpeed);
+          TF.Format(wsprintfBuffer, 'Speed %u', CodeSpeed);
           ShowMessage(wsprintfBuffer);
         end;
       end;
 
     menu_ctrl_showBand:
       begin
-        Format(wsprintfBuffer, 'Band %s',
+        TF.Format(wsprintfBuffer, 'Band %s',
           BandStringsArrayWithOutSpaces[ActiveBand]);
         ShowMessage(wsprintfBuffer);
       end;
@@ -3847,7 +3859,7 @@ begin
 {$IF tDebugMode}
         CPUButtonProc;
 {$ELSE}
-        Format(wsprintfBuffer, 'QSO number %u', TotalContacts);
+        TF.Format(wsprintfBuffer, 'QSO number %u', TotalContacts);
         ShowMessage(wsprintfBuffer);
 {$IFEND}
       end;
@@ -4002,13 +4014,13 @@ begin
 
     menu_pingserver:
       begin
-        Format(wsprintfBuffer, 'ping %s -w 2000 -n 10', @ServerAddress[1]);
+        TF.Format(wsprintfBuffer, 'ping %s -w 2000 -n 10', @ServerAddress[1]);
         WinExec(wsprintfBuffer, SW_SHOW);
       end;
 
     menu_runserver:
       begin
-        Format(wsprintfBuffer, '%sserver\tr4wserver.exe', TR4W_PATH_NAME);
+        TF.Format(wsprintfBuffer, '%sserver\tr4wserver.exe', TR4W_PATH_NAME);
         WinExec(wsprintfBuffer, SW_NORMAL);
       end;
 
@@ -4086,7 +4098,7 @@ begin
     menu_historytxt:
       begin
         // Issue #986 -- open in the system default text editor, not Notepad.
-        Format(wsprintfBuffer, '%shistory.txt', TR4W_PATH_NAME);
+        TF.Format(wsprintfBuffer, '%shistory.txt', TR4W_PATH_NAME);
         OpenInDefaultTextEditor(wsprintfBuffer);
       end;
 
@@ -4251,7 +4263,7 @@ begin
 
     menu_qrzru_calendar:
       begin
-        Format(TempBuffer1, 'http://www.qrz.ru/contest/detail/%d.html',
+        TF.Format(TempBuffer1, 'http://www.qrz.ru/contest/detail/%d.html',
           ContestsArray[Contest].QRZRUID);
         // OpenUrl(TempBuffer1);
         ShellexecuteA(0, 'open', TempBuffer1, nil, nil, SW_NORMAL); // 4.75.3
@@ -4259,7 +4271,7 @@ begin
 
     menu_WA7BNM_calendar:
       begin
-        Format(TempBuffer1,
+        TF.Format(TempBuffer1,
           'https://contestcalendar.com/contestdetails.php?ref=%u', // 4.127.1',
           ContestsArray[Contest].WA7BNM);
         //   OpenUrl(TempBuffer1);
@@ -4277,7 +4289,13 @@ begin
           ' (*.cfg)'#0'*.cfg'#0#0, TR4W_EXECONFIGFILE_FILENAME, OFN_HIDEREADONLY
           or
           OFN_ENABLESIZING) then
-          ExecuteConfigurationFile(ShortString(TR4W_EXECONFIGFILE_FILENAME));
+          // TR4W_EXECONFIGFILE_FILENAME is a NUL-terminated AnsiChar array, NOT
+          // a ShortString.  The ShortString() variable cast that used to be here
+          // reinterpreted the path's FIRST CHARACTER as the length byte -- 'C'
+          // gave length 67 -- so the pointer happened to land right while the
+          // length was garbage.  Both GetRidOfPrecedingSpaces and
+          // OpenFileForRead_old inside LoadInSeparateConfigFile use that length.
+          ExecuteConfigurationFile(PAnsiChar(@TR4W_EXECONFIGFILE_FILENAME[0]));
       end;
 
     menu_ctrl_shdxcallsign:
@@ -4290,7 +4308,7 @@ begin
 
         if TempCallstring <> '' then
         begin
-          Format(wsprintfBuffer, 'SH/DX %s 5', @TempCallstring[1]);
+          TF.Format(wsprintfBuffer, 'SH/DX %s 5', @TempCallstring[1]);
           SendViaTelnetSocket(wsprintfBuffer);
         end;
       end;
@@ -5186,7 +5204,7 @@ begin
 
   if not GoodCallSyntax(RData.Callsign) then
   begin
-    Format(QuickDisplayBuffer, TC_HASIMPROPERSYNTAX, @RData.Callsign[1]);
+    TF.Format(QuickDisplayBuffer, TC_HASIMPROPERSYNTAX, @RData.Callsign[1]);
     QuickDisplay(QuickDisplayBuffer);
     DoABeep(Warning);
     Exit;
@@ -5585,8 +5603,8 @@ end;
 function tCreateComboBoxWindow(dwStyle: DWORD; X, Y, nWidth,
   {nHeight: integer;}hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  // Result := CreateWindowEx(WS_EX_NOPARENTNOTIFY {WS_EX_STATICEDGE}, COMBOBOX, nil, dwStyle, X, Y, nWidth, 300 {nHeight}, hwndParent, HMENU, hInstance, nil);
-  Result := CreateWindowEx(WS_EX_NOPARENTNOTIFY {WS_EX_STATICEDGE}, COMBOBOX,
+  // Result := CreateWindowExW(WS_EX_NOPARENTNOTIFY {WS_EX_STATICEDGE}, COMBOBOX, nil, dwStyle, X, Y, nWidth, 300 {nHeight}, hwndParent, HMENU, hInstance, nil);
+  Result := CreateWindowExW(WS_EX_NOPARENTNOTIFY {WS_EX_STATICEDGE}, COMBOBOX,
     nil, dwStyle, X, Y, nWidth, 340 {nHeight}, hwndParent, HMENU, hInstance,
     nil);
   // 4.117.3
@@ -5664,7 +5682,7 @@ end;
 procedure showint(Num: integer);
 begin
   logger.Error(IntToStr(Num));
-  //Format(wsprintfBuffer, '%i', Num);
+  //TF.Format(wsprintfBuffer, '%i', Num);
   //ShowMessage(wsprintfBuffer);
 end;
 
@@ -5797,7 +5815,7 @@ end;
 
 function CreateCallOrExchangeWin(Top, ID: integer): HWND;
 begin
-  Result := CreateWindowEx(Cardinal(not NoBorder) * WS_EX_STATICEDGE, EditPChar,
+  Result := CreateWindowExW(Cardinal(not NoBorder) * WS_EX_STATICEDGE, EditPChar,
     nil, CallsignExchangeWinStyle,
     ws * 15 {col4}, Top, 13 * ws, MainWindowEditHeight, tr4whandle, ID,
     hInstance, nil);
@@ -5808,7 +5826,7 @@ end;
 
 procedure TimeApplet(i: Cardinal);
 begin
-  Format(TempBuffer2,
+  TF.Format(TempBuffer2,
     'rundll32.exe shell32.dll,Control_RunDLL timedate.cpl,,%u', i);
   WinExec(TempBuffer2, SW_SHOWNORMAL);
 end;
@@ -5873,7 +5891,7 @@ begin
          Halt;
          end;
  
-      Format(wsprintfBuffer, TC_DIFVERSION, _LOGFILE, LogHeader.lhVersionString,
+      TF.Format(wsprintfBuffer, TC_DIFVERSION, _LOGFILE, LogHeader.lhVersionString,
         TempBuffer1);
       showwarning(wsprintfBuffer);
       CloseLogFile;
@@ -6047,7 +6065,7 @@ begin
   else
     Style := style1;
   Factor := ws;
-  Result := CreateWindowEx(Cardinal(not NoBorder) * WS_EX_STATICEDGE,
+  Result := CreateWindowExW(Cardinal(not NoBorder) * WS_EX_STATICEDGE,
     WC_LISTVIEW, nil, Style + integer(NoColumnHeader) * LVS_NOCOLUMNHEADER, X,
     Y,
     Width, Height, Parent, 0, hInstance, nil);
@@ -6068,7 +6086,7 @@ begin
       elvc.fmt := ColumnsArray[Column].Align;
       elvc.pszText := ColumnsArray[Column].Text;
       elvc.cx := ColumnsArray[Column].Width * Factor;
-      ListView_InsertColumn(Result, ColumnsArray[Column].pos, elvc);
+      uCommctrl.ListView_InsertColumnA(Result, ColumnsArray[Column].pos, elvc);
     end;
 
   Windows.SendMessage(Result, LVM_SETSELECTEDCOLUMN,
@@ -6187,7 +6205,7 @@ begin
   // P1 := BandStringsArray[RXData.Band];
   // P2 := ModeString[RXData.Mode];
   // Issue #997: removed empty asm (commented push p1/p2); Format below does it.
-  Format(LogDisplayBuffer, TWO_STRINGS, BandStringsArray[RXData.Band],
+  TF.Format(LogDisplayBuffer, TWO_STRINGS, BandStringsArray[RXData.Band],
     ModeStringArray[RXData.Mode]);
 
   elvi.pszText := LogDisplayBuffer;
@@ -6211,7 +6229,7 @@ begin
   elvi.pszText := tGetDateFormat(RXData.tSysTime);
   ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
 
-  Format(LogDisplayBuffer, '%02d:%02d', RXData.tSysTime.qtHour,
+  TF.Format(LogDisplayBuffer, '%02d:%02d', RXData.tSysTime.qtHour,
     RXData.tSysTime.qtMinute);
   elvi.iSubItem := ColumnsArray[logColTime].pos; //Ord(logColTime);
   elvi.pszText := LogDisplayBuffer;
@@ -6235,7 +6253,7 @@ begin
 
   if RXData.ceRecordKind in [rkQTCR, rkQTCS] then
   begin
-    Format(LogDisplayBuffer, 'QTC: %s', @RXData.Callsign[1]);
+    TF.Format(LogDisplayBuffer, 'QTC: %s', @RXData.Callsign[1]);
     elvi.pszText := LogDisplayBuffer;
   end
   else
@@ -6254,7 +6272,7 @@ begin
   if RXData.ceRecordKind in [rkQTCR, rkQTCS] then
   begin
     elvi.iSubItem := ColumnsArray[logColQTC].pos; //Ord(logColQTC);
-    Format(LogDisplayBuffer, '%04d %s', RXData.NumberSent, @RXData.Kids[1]);
+    TF.Format(LogDisplayBuffer, '%04d %s', RXData.NumberSent, @RXData.Kids[1]);
     elvi.pszText := LogDisplayBuffer;
     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
 
@@ -6476,7 +6494,7 @@ procedure LogEnsureVisible;
 begin
 
   if ActiveMainWindow <> awEditableLog then
-    ListView_EnsureVisible(wh[mweEditableLog], tLogIndex - 1, True);
+    uCommctrl.ListView_EnsureVisible(wh[mweEditableLog], tLogIndex - 1, True);
 end;
 
 procedure GenerateCallsignsList(FileName: PAnsiChar);
@@ -6504,7 +6522,7 @@ begin
       begin
         //if StringHas(InitialExchange, '255 ') then
         // InitialExchange := GetLastString(initialexchange); // 4.90.6
-        nNumberOfBytesToWrite := Format(wsprintfBuffer, '%-15s %s'#13#10,
+        nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%-15s %s'#13#10,
           @Callsign[1], @InitialExchange[1]);
         sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
       end;
@@ -6527,7 +6545,7 @@ begin
   if not tOpenFileForWrite(h, @ReportsFilename[1]) then
     Exit;
 
-  sWriteFile(h, wsprintfBuffer, Format(wsprintfBuffer,
+  sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
     #13#10' %s'#13#10#13#10' Unique callsigns: %u '#13#10, @ContestTitle[1],
     CallsignsList.GetTotalWorkedStations));
 
@@ -6543,13 +6561,13 @@ begin
         if WriteHeader then
         begin
 
-          sWriteFile(h, wsprintfBuffer, Format(wsprintfBuffer,
+          sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
             #13#10#13#10' %u QSOs:'#13#10' -----------------'#13#10#13#10,
             QSOs));
         end;
         ZeroMemory(@TempCall, SizeOf(TempCall));
         TempCall := CallsignsList.Get(i);
-        sWriteFile(h, wsprintfBuffer, Format(wsprintfBuffer,
+        sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
           ' %4u. %s '#13#10, counter, @TempCall[1]));
         WriteHeader := False;
       end;
@@ -6931,7 +6949,7 @@ end;
 
 procedure FlashPreviousDupeQSOsWnd(show: boolean);
 begin
-  Windows.AnimateWindow(tPreviousDupeQSOsWndHandle, 300, AW_HIDE * (integer(show)
+  AnimateWindow(tPreviousDupeQSOsWndHandle, 300, AW_HIDE * (integer(show)
     + 1) or AW_HOR_POSITIVE);
 end;
 
@@ -6939,7 +6957,7 @@ procedure DestroyPreviousDupeQSOsWnd;
 begin
   // DestroyWindow(tPreviousDupeQSOsWndHandle);
   // Windows.ShowWindow(tPreviousDupeQSOsWndHandle, SW_HIDE);
-  Windows.AnimateWindow(tPreviousDupeQSOsWndHandle, 300, AW_HIDE or
+  AnimateWindow(tPreviousDupeQSOsWndHandle, 300, AW_HIDE or
     AW_HOR_POSITIVE);
   tPreviousDupeQSOsShowed := False;
   Windows.EnableWindow(wh[mweEditableLog], True);
@@ -7414,7 +7432,7 @@ begin
       end;
 end;
 
-procedure ExecuteConfigurationFile(f: ShortString);
+procedure ExecuteConfigurationFile(const f: AnsiString);
 var
   FirstCommand: boolean;
 
@@ -7422,8 +7440,10 @@ begin
   RunningConfigFile := True;
   ClearDupeSheetCommandGiven := False;
   FirstCommand := False;
-  if utils_file.FileExists(@f[1]) then
-    LoadInSeparateConfigFile(f, FirstCommand, MyCall);
+  if utils_file.FileExists(PAnsiChar(f)) then
+     begin
+     LoadInSeparateConfigFile(f, FirstCommand, MyCall);
+     end;
   if ClearDupeSheetCommandGiven then
     tClearDupesheet;
   RunningConfigFile := False;
@@ -7967,7 +7987,7 @@ var
 
   procedure DisplayLoadedQSOs;
   begin
-    Format(QuickDisplayBuffer, '%u ' + TC_QSO_IMPORTED, QSOCounter);
+    TF.Format(QuickDisplayBuffer, '%u ' + TC_QSO_IMPORTED, QSOCounter);
     SetTextInQuickCommandWindow(QuickDisplayBuffer);
   end;
 begin
@@ -8151,7 +8171,7 @@ const
  procedure DisplayLoadedQSOs;
  begin
 
- Format(QuickDisplayBuffer, '%u ' + TC_QSO_IMPORTED, QSOCounter);
+ TF.Format(QuickDisplayBuffer, '%u ' + TC_QSO_IMPORTED, QSOCounter);
  SetTextInQuickCommandWindow(QuickDisplayBuffer);
  end;
 
@@ -8465,7 +8485,7 @@ begin
   SetFilePointer(h, 0, nil, FILE_END);
 
   // Issue #997: asm wsprintf-push -> TF.Format (cdecl-reverse: GetTickCount, Text).
-  r := Format(TempBuffer1, '%u %s'#13#10, Windows.GetTickCount, Text);
+  r := TF.Format(TempBuffer1, '%u %s'#13#10, Windows.GetTickCount, Text);
   Windows.WriteFile(h, TempBuffer1, r, t, nil);
   CloseHandle(h);
   // AddStringToTelnetConsole(Text, tstSend);
@@ -8473,7 +8493,7 @@ end;
 
 procedure SetCommand(c: PAnsiChar);
 begin
-  Format(TempBuffer1, TC_SET_VALUE_OF_SET_NOW, c);
+  TF.Format(TempBuffer1, TC_SET_VALUE_OF_SET_NOW, c);
   if YesOrNo(tr4whandle, TempBuffer1) = IDno then
     Exit;
   CommandToSet := c;
@@ -8527,7 +8547,7 @@ begin
   else
     TempPchar := 'explorer %s';
 
-  Format(wsprintfBuffer, TempPchar, Command);
+  TF.Format(wsprintfBuffer, TempPchar, Command);
   WinExec(wsprintfBuffer, SW_SHOW);
 end;
 
@@ -8563,7 +8583,7 @@ begin
      if editor[0] <> #0 then
         begin
         // The file path may contain spaces, so pass it as a quoted argument.
-        Format(cmdBuf, '"%s"', FileName);
+        TF.Format(cmdBuf, '"%s"', FileName);
         if ShellExecuteA(0, nil, editor, cmdBuf, nil,
               SW_SHOWNORMAL) > 32 then
            begin
@@ -8575,7 +8595,7 @@ begin
   if not launched then
      begin
      // Fallback: Notepad, opened in a normal (non-maximized) window.
-     Format(cmdBuf, 'Notepad %s', FileName);
+     TF.Format(cmdBuf, 'Notepad %s', FileName);
      WinExec(cmdBuf, SW_SHOWNORMAL);
      end;
 end;
@@ -8640,14 +8660,14 @@ begin
         if TempBuffer2[lpcbValue + 1] = ' ' then
           TempBuffer2[lpcbValue + 1] := #0;
 
-    Format(wsprintfBuffer, '%s "%s"', TempBuffer2, url);
+    TF.Format(wsprintfBuffer, '%s "%s"', TempBuffer2, url);
 
     WinExec(wsprintfBuffer, SW_SHOWNORMAL);
   end
   else
      begin}
   sURI := TIDURI.URLEncode(url);
-  ShellExecute(0, 'open', PChar(sURI), nil, nil, SW_SHOWNORMAL);
+  ShellExecuteW(0, 'open', PChar(sURI), nil, nil, SW_SHOWNORMAL);
   { end;}
   //RunExplorer(url);
 end;
@@ -8752,7 +8772,7 @@ var
   module: HWND;
   TempFunc: Tmain;
 begin
-  Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME, PluginsArray[PluginNumber
+  TF.Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME, PluginsArray[PluginNumber
     - 10700]);
   module := LoadLibraryA(TempBuffer1);
   TempFunc := GetProcAddress(module, 'main');
@@ -8786,7 +8806,7 @@ var
 const
   MAXLOADEDPLUGINS = 10;
 begin
-  Format(TempBuffer1, '%sPlugins\tr4w*.dll', TR4W_PATH_NAME);
+  TF.Format(TempBuffer1, '%sPlugins\tr4w*.dll', TR4W_PATH_NAME);
 
   hFindFile := Windows.FindFirstFileA(TempBuffer1, lpFindFileData);
   if hFindFile <> INVALID_HANDLE_VALUE then
@@ -8798,7 +8818,7 @@ begin
   if FindNextFileA(hFindFile, lpFindFileData) then
   begin
     1:
-    Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME,
+    TF.Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME,
       lpFindFileData.cFileName);
 
     module := LoadLibraryA(TempBuffer1);
@@ -9389,7 +9409,7 @@ begin
   // Original is backed up and renamed. Write the new v1.7 header and convert.
   //***
 
-  AssignFile(headerFH, TR4W_LOG_FILENAME);
+  AssignFile(headerFH, string(TR4W_LOG_FILENAME));
   ReWrite(headerFH);
   Write(headerFH, LogHeader);
   CloseFile(headerFH);
@@ -9402,7 +9422,7 @@ begin
      AssignFile(oldFH_v1_5, OldFile);
      FileMode := fmOpenRead;
      Reset(oldFH_v1_5);
-     AssignFile(newFH, TR4W_LOG_FILENAME);
+     AssignFile(newFH, string(TR4W_LOG_FILENAME));
      FileMode := fmOpenWrite;
      Reset(newFH);
      Seek(newFH, 1);
@@ -9494,7 +9514,7 @@ begin
      AssignFile(oldFH_v1_6, OldFile);
      FileMode := fmOpenRead;
      Reset(oldFH_v1_6);
-     AssignFile(newFH, TR4W_LOG_FILENAME);
+     AssignFile(newFH, string(TR4W_LOG_FILENAME));
      FileMode := fmOpenWrite;
      Reset(newFH);
      Seek(newFH, 1);

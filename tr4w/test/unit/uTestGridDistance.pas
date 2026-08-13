@@ -1,4 +1,5 @@
 unit uTestGridDistance;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for uGridDistance.GridHaversineKm -- the RTC contest Haversine

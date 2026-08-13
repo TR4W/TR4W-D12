@@ -1,4 +1,5 @@
 unit uExchangeBuilder;
+{$I tr4w.inc}
 
 (*
   Shared exchange string builders for RTC / HamScore / N1MM-style UDP

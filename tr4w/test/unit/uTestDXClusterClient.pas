@@ -1,4 +1,5 @@
 unit uTestDXClusterClient;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins TDXClusterClient against a REAL socket -- an in-process TIdTCPServer on

@@ -1,4 +1,5 @@
 unit uTestCRC32;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for uCRC32.GetCRC32.

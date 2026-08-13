@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uTestKeyerConfigStore;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for the keyer library (uKeyerConfigStore).
@@ -30,7 +31,7 @@ unit uTestKeyerConfigStore;
 interface
 
 uses
-   SysUtils, Classes, System.JSON,
+   SysUtils, Classes, uJSON,
    uTR4WTestFramework, uKeyerConfigStore;
 
 type

@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uSynTime;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -130,7 +131,7 @@ begin
         //t = ((T2 - T1) + (T3 - T4)) / 2.
         Offset := round((STToInt64(T2) - STToInt64(T1) + STToInt64(T3) - STToInt64(T4)) / 2);
 
-        Format(wsprintfBuffer, '%d ' + TC_MS, integer(Offset));
+        TF.Format(wsprintfBuffer, '%d ' + TC_MS, integer(Offset));
         SetDlgItemTextA(hwnddlg, 105, wsprintfBuffer);
 
 //        TR4W_WM_SetTest(hwnddlg, 123, _StrInt64(Offset, 1) + TC_MS);
@@ -147,7 +148,7 @@ begin
               IncSystemTime(T2, Offset);
               if not Windows.SetSystemTime(T2) then
               begin
-                SetDlgItemTextW(st_window_handle, 106, PChar(SysUtils.SysErrorMessage(GetLastError)));
+                SetDlgItemTextW(st_window_handle, 106, PChar(string(SysUtils.SysErrorMessage(GetLastError))));
               end;
               EnableWindowFalse(hwnddlg, 201);
             end;
@@ -182,13 +183,13 @@ end;
 
 procedure ShowTime(Control: integer; LocalTime: SYSTEMTIME);
 begin
-  SetDlgItemTextW(st_window_handle, Control, PChar(TF.SystemTimeToString(LocalTime)));
+  SetDlgItemTextW(st_window_handle, Control, PChar(string(TF.SystemTimeToString(LocalTime))));
 end;
 
 procedure GetServerAnswerOffset;
 begin
 //  TR4W_WM_SetTest(st_window_handle, 122, IntToStr(STToInt64(T4) - STToInt64(T1)) + TC_MS);
-  Format(wsprintfBuffer, '%d ' + TC_MS, integer(STToInt64(T4) - STToInt64(T1)));
+  TF.Format(wsprintfBuffer, '%d ' + TC_MS, integer(STToInt64(T4) - STToInt64(T1)));
   SetDlgItemTextA(st_window_handle, 104, wsprintfBuffer);
 end;
 
@@ -260,7 +261,7 @@ begin
   Unsuccessful:
   ST_SOCKET := INVALID_SOCKET;
   1:
-  SetDlgItemTextW(st_window_handle, 106, PChar(SysUtils.SysErrorMessage(WSAGetLastError)));
+  SetDlgItemTextW(st_window_handle, 106, PChar(string(SysUtils.SysErrorMessage(WSAGetLastError))));
   NTPThreadID := 0;
 end;
 
@@ -361,7 +362,7 @@ begin
       msg := 'Warning: PC clock is ' + IntToStr(Abs(offset) div 1000) +
              ' seconds off from NTP server (' + ntpServer +
              '). Please synchronize your Windows time.';
-      MessageBox(0, PChar(msg), 'TR4W Time Warning',
+      MessageBoxW(0, PChar(msg), 'TR4W Time Warning',
          MB_OK or MB_ICONWARNING or MB_TOPMOST);
       end
    else

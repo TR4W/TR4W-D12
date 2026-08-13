@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioIcom726;
+{$I ..\tr4w.inc}
 
 {
   Icom IC-726 -- CI-V address $30.

@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uLogCompare;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -26,6 +27,7 @@ uses
   SysUtils,
   VC,
   TF,
+  uWin32Compat,   // IDI_WARNING -- the FPC gap list
 
   PostUnit,
   uCommctrl,
@@ -86,15 +88,15 @@ begin
         elvc.fmt := LVCFMT_CENTER;
         elvc.pszText := nil;
         elvc.cx := 130;
-        ListView_InsertColumn(LogCompareListView, 0, elvc);
+        uCommctrl.ListView_InsertColumnA(LogCompareListView, 0, elvc);
 
         elvc.pszText := TC_SERVERLOG;
         elvc.cx := 150;
-        ListView_InsertColumn(LogCompareListView, 1, elvc);
+        uCommctrl.ListView_InsertColumnA(LogCompareListView, 1, elvc);
 
         elvc.pszText := TC_LOCALLOG;
         elvc.cx := 150;
-        ListView_InsertColumn(LogCompareListView, 2, elvc);
+        uCommctrl.ListView_InsertColumnA(LogCompareListView, 2, elvc);
 
         elvi.Mask := LVIF_TEXT {+ LVIF_STATE};
 {        if s^.liServerLogSize <> s^.liLocalLogSize then

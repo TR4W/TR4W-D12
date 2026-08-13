@@ -1,4 +1,5 @@
 unit uTestRadioStatus;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins LogRadio.RadioStatusDiffers -- the change detector that drives the radio

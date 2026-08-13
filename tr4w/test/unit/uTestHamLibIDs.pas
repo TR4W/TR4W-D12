@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uTestHamLibIDs;
+{$I ..\..\src\tr4w.inc}
 
 {
   Every radio's HamLib rig_model, as registered, checked against the value the

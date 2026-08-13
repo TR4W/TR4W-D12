@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uUDPDestinationEditForm;
+{$I ..\..\tr4w.inc}
 
 {
   One UDP destination, edited in isolation: an address, a port, and which kinds
