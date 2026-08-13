@@ -1110,9 +1110,9 @@ begin
          logger.Warn('YCCC SO2R box not found or failed to open');
       end;
 
-{$IF MIXWMODE}
+{$IFDEF MIXWMODE}
   tEnableMenuItem(menu_windows_mmtty, MF_ENABLED);
-{$IFEND}
+{$ENDIF}
 
   CD.MasterFileExists := FileExists(CD.ActiveFilename);
 

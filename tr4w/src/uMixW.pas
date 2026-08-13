@@ -30,17 +30,17 @@ uses
   Windows,
   Messages,
   LogWind,
-{$IF MIXWMODE}
+{$IFDEF MIXWMODE}
   ComObj,
   ActiveX,
-{$IFEND}
+{$ENDIF}
   Tree
   ;
 
 function MixW2DlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-{$IF MIXWMODE}
+{$IFDEF MIXWMODE}
 function MyGetActiveOleObject: IDispatch;
-{$IFEND}
+{$ENDIF}
 procedure DisplayMixWConnection;
 procedure SendMessageToMixW(mess: string);
 
@@ -60,7 +60,7 @@ label
 //var
  // p                                     : PChar;
 begin
-{$IF MIXWMODE}
+{$IFDEF MIXWMODE}
   RESULT := False;
   case Msg of
     WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
@@ -106,10 +106,10 @@ begin
 
     WM_CLOSE: 1: CloseTR4WWindow(tw_MixWWINDOW_INDEX);
   end;
-{$IFEND}
+{$ENDIF}
 end;
 
-{$IF MIXWMODE}
+{$IFDEF MIXWMODE}
 function MyGetActiveOleObject: IDispatch;
 var
   ClassID                               : TCLSID;
@@ -124,21 +124,21 @@ begin
   end;
   Unknown.QueryInterface(IDispatch, RESULT);
 end;
-{$IFEND}
+{$ENDIF}
 
 procedure DisplayMixWConnection;
 //var
  // p                                     : PChar;
 begin
-{$IF MIXWMODE}
+{$IFDEF MIXWMODE}
   if MixWLoaded = True then p := TC_MIXW_CONNECTED else p := TC_MIXW_DISCONNECTED;
   Windows.SetWindowTextA(MixWConnectionStatusWnd, p);
-{$IFEND}
+{$ENDIF}
 end;
 
 procedure SendMessageToMixW(mess: string);
 begin
- {$IF MIXWMODE}
+ {$IFDEF MIXWMODE}
   try
     if MixWLoaded then MixW.ExecuteMacros(mess);
   except
@@ -147,7 +147,7 @@ begin
       DisplayMixWConnection;
     end;
   end;
-{$IFEND}
+{$ENDIF}
 end;
 
 end.

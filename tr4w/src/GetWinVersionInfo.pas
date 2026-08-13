@@ -21,9 +21,9 @@ interface
 uses
   Windows;
 
-{$IF RTLVersion < 18}
+{$IFNDEF FPC}{$IF RTLVersion < 18}
 {$MESSAGE Warn 'Not tested on Delphi versions before 2007!'}
-{$IFEND}
+{$IFEND}{$ENDIF}
 
 
 function GetOSInfo: string;
@@ -40,7 +40,15 @@ implementation
 
 uses Registry, SysUtils;
 
-{$IF RTLVersion < 19}
+// This block supplies PRODUCT_* / TOSVERSIONINFOEX definitions that the host
+// RTL does not.  Modern Delphi gets them from Windows.pas, which is why it was
+// gated on RTLVersion -- but FPC's `windows` unit does NOT provide them, so FPC
+// needs the block for the OPPOSITE reason old Delphi did.  Gating it on "not
+// FPC" excluded it and broke every PRODUCT_* reference below; the condition is
+// "does my RTL already have these?", not "am I a new compiler?".
+{$IFDEF FPC}{$DEFINE _TR4W_NEED_WINVER_COMPAT}{$ENDIF}
+{$IFNDEF FPC}{$IF RTLVersion < 19}{$DEFINE _TR4W_NEED_WINVER_COMPAT}{$IFEND}{$ENDIF}
+{$IFDEF _TR4W_NEED_WINVER_COMPAT}
 
 // Only used for pre-unicode versions of Delphi. Provides some definitions that
 // Windows.pas doesn't provide in earlier versions of Delphi (most likely because
@@ -156,7 +164,7 @@ function GetVersionEx(var lpVersionInformation: TOSVersionInfo): BOOL; stdcall; 
 function GetVersionEx(var lpVersionInformationEx: TOSVERSIONINFOEX): BOOL; stdcall; overload;
   external kernel32 name 'GetVersionExA';
 
-{$IFEND}
+{$ENDIF}
 
   // Not in the Windows.pas unit as of XE3
 const

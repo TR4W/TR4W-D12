@@ -208,6 +208,46 @@ const
 
 implementation
 
+// TStringHelper.Split is a Delphi RTL string helper.  FPC 3.2.2 has no string
+// helpers at all, so the member call is an "Illegal qualifier" there.  Splitting
+// explicitly keeps ONE tokenizer that both compilers agree on -- which matters
+// more here than elsewhere, because this is the wire grammar: a difference in
+// how arguments split is a difference in what every TCI client is told.
+function SplitOnChar(const S: string; Sep: Char): TArray<string>;
+var
+   i, start, n: integer;
+begin
+   SetLength(Result, 0);
+   if S = '' then
+      begin
+      Exit;
+      end;
+
+   // One pass to count, one to fill -- no repeated reallocation.
+   n := 1;
+   for i := 1 to Length(S) do
+      begin
+      if S[i] = Sep then
+         begin
+         Inc(n);
+         end;
+      end;
+
+   SetLength(Result, n);
+   n := 0;
+   start := 1;
+   for i := 1 to Length(S) do
+      begin
+      if S[i] = Sep then
+         begin
+         Result[n] := Copy(S, start, i - start);
+         Inc(n);
+         start := i + 1;
+         end;
+      end;
+   Result[n] := Copy(S, start, Length(S) - start + 1);
+end;
+
 const
    // The commands TR4W's server understands.  A rig bridge, so the SDR-only
    // surface of TCI (panadapter, noise blanker, IQ) is absent by design --
@@ -401,7 +441,7 @@ begin
       Exit;
       end;
 
-   Result.Args := argsPart.Split([',']);
+   Result.Args := SplitOnChar(argsPart, ',');
    for i := 0 to High(Result.Args) do
       begin
       // Trimmed but NOT lowercased: cw_msg and spot text keep their case,

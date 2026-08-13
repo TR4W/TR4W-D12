@@ -437,7 +437,12 @@ const
   BAR                                   : array[boolean] of PAnsiChar = ('No', 'Yes');
   BAMARK                                : array[boolean] of PAnsiChar = (nil, '+');
 
-  MIXWMODE                              = False;
+  // MIXWMODE is now a compiler DEFINE, not a constant -- enable with
+  // /p:ExtraDefines="MIXWMODE".  It had to move: uMixW.pas tests it inside its
+  // USES clause, and a constant cannot be resolved there (the unit that
+  // declares it is not in the symbol table until the uses clause completes).
+  // Delphi tolerated it; FPC rejects it outright.  The constant is deliberately
+  // NOT left behind as well -- two switches for one decision is how they drift.
 
   CALLSIGNWINDOWID                      = 73;
   EXCHANGEWINDOWID                      = 88;
