@@ -162,6 +162,7 @@ uses
   utils_hw in 'src\utils\utils_hw.pas',
   uAnsiStr in 'src\utils\uAnsiStr.pas',
   uFileText in 'src\utils\uFileText.pas',
+  uRegex in 'src\utils\uRegex.pas',
   uWin32Compat in 'src\utils\uWin32Compat.pas',
   uJSON in 'src\utils\uJSON.pas',
   utils_text in 'src\utils\utils_text.pas',

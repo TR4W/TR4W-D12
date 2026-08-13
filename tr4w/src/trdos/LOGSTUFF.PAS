@@ -56,7 +56,7 @@ uses {Dos, Printer,}Tree,
   idGlobal, // ny4i 4.44.9
   SysUtils, // ny4i 4.44.9
   StrUtils, // 4.90.11
-  PerlRegEx,
+  uRegex,
   uMults,
   Windows
   ;
@@ -9401,24 +9401,35 @@ begin
   // Result := (StrToInt(sXmit) in [1..99]) and (length(sCategory) = 1);
 end;
 
-// ^[AaWaKkNn][a-zA-Z]?[0-9][a-zA-Z]{1,3}$/
+{ ---------------------------------------------------------------------------
+  The five regular expressions TR4W uses, and the only ones.
+
+  Named constants rather than literals inside each function so the wire-visible
+  rules sit together and can be pinned by uTestRegexValidators.
+
+  RX_CALLSIGN's optional prefix group was written `?+` -- PCRE's POSSESSIVE
+  quantifier -- which FPC's TRegExpr rejects at compile time.  The `+` is gone.
+  That was measured, not assumed: both spellings were run through the shipping
+  PCRE engine over 67,681 real callsigns from the corpus and TRMASTER.DTA (610
+  of them containing '/'), and they agreed on every one.  See uRegex's header.
+  --------------------------------------------------------------------------- }
+const
+  // The three 4-digit groups are written out rather than as (...){3}.  Same
+  // pattern, and it has to be: TRegExpr THROWS on the grouped form when a
+  // near-miss forces it to backtrack into the repetition -- 'TRegExpr exec:
+  // loop without loop entry' on a GUID one hex digit short.  PCRE handles
+  // both; the expanded form is the one both engines agree on.
+  RX_GUID        = '^[{]?[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?' +
+                   '[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}[}]?$';
+  RX_US_PREFIX   = '^[AaWaKkNn][a-zA-Z]?';
+  RX_US_CALLSIGN = '^[AaWaKkNn][a-zA-Z]?[0-9][a-zA-Z]{1,3}$';
+  RX_CALLSIGN    = '^(?:\w{1,2}\d\/|\d\w\/|\w{1,2}\/)?\w+[0-9]+\w+\/?\w*\s*$';
+  RX_POTA_PARK   = '^([A-Za-z]{2})-(\d{4,5})$';
 
 function IsValidGUID(const guid: string): boolean;
-var
-  regex: TPerlRegEx;
 begin
-  // create our regex instance, and we want to do a case insensitive search, in multiline mode
-  Result := false;
-  regex := TPerlRegEx.Create;
-  try
-     logger.debug('Checking if %s is a valid guid', [guid]);
-     regex.RegEx := '^[{]?[0-9a-fA-F]{8}-?([0-9a-fA-F]{4}-?){3}[0-9a-fA-F]{12}[}]?$';  // letters-hyphen-digits only;
-     regex.Subject := guid;
-
-     Result := regex.MatchAgain;
-  finally
-     regex.Free;
-  end;
+  logger.debug('Checking if %s is a valid guid', [guid]);
+  Result := RegexMatches(RX_GUID, guid);
   if Result then
      begin
      logger.debug('%s is a valid GUID', [guid]);
@@ -9426,23 +9437,9 @@ begin
 end;
 
 function IsValidUSPrefix(const callsign: string): boolean;
-var
-  regex: TPerlRegEx;
 begin
-  // create our regex instance, and we want to do a case insensitive search, in multiline mode
-  Result := false;
-  regex := TPerlRegEx.Create;
-  try
-    logger.debug('Checking if %s is a valid US prefix', [callsign]);
-    regex.RegEx := '^[AaWaKkNn][a-zA-Z]?';
-    // Valid against all of LOTW file
-
-    regex.Subject := callsign;
-
-    Result := regex.MatchAgain;
-  finally
-    regex.Free;
-  end;
+  logger.debug('Checking if %s is a valid US prefix', [callsign]);
+  Result := RegexMatches(RX_US_PREFIX, callsign);
   if Result then
   begin
     logger.debug('%s is a valid US prefix', [callsign]);
@@ -9450,49 +9447,22 @@ begin
 end;
 
 function IsValidUSCallsign(const callsign: string): boolean;
-var
-  regex: TPerlRegEx;
 begin
-  // create our regex instance, and we want to do a case insensitive search, in multiline mode
-  Result := false;
-  regex := TPerlRegEx.Create;
-  try
-    logger.debug('Checking if %s is a valid US call', [callsign]);
-    regex.RegEx := '^[AaWaKkNn][a-zA-Z]?[0-9][a-zA-Z]{1,3}$';
-    // Valid against all of LOTW file
-
-    regex.Subject := callsign;
-
-    Result := regex.MatchAgain;
-  finally
-    regex.Free;
-  end;
+  logger.debug('Checking if %s is a valid US call', [callsign]);
+  Result := RegexMatches(RX_US_CALLSIGN, callsign);
   if Result then
   begin
     logger.debug('%s is a valid US call', [callsign]);
   end;
 end;
 
-// Add Uses PerlRegEx to unit and code from https://regular-expressions.mobi/delphi.html?wlr=1
+// Originally from https://regular-expressions.mobi/delphi.html?wlr=1 via
+// TPerlRegEx; the engine now comes from uRegex so FPC can link it too.
 
 function IsValidCallsign(const callsign: string): boolean;
-var
-  regex: TPerlRegEx;
 begin
-  // create our regex instance, and we want to do a case insensitive search, in multiline mode
-  Result := false;
-  regex := TPerlRegEx.Create;
-  try
-    logger.debug('Checking if %s is a valid call', [callsign]);
-    regex.RegEx := '^(?:\w{1,2}\d\/|\d\w\/|\w{1,2}\/)?+\w+[0-9]+\w+\/?\w*\s*$';
-    // Valid against all of LOTW file
-
-    regex.Subject := callsign;
-
-    Result := regex.MatchAgain;
-  finally
-    regex.Free;
-  end;
+  logger.debug('Checking if %s is a valid call', [callsign]);
+  Result := RegexMatches(RX_CALLSIGN, callsign);
   if Result then
   begin
     logger.debug('%s is a valid call', [callsign]);
@@ -9500,24 +9470,9 @@ begin
 end;
 
 function IsValidPOTAPark(const park: string): boolean;
-var
-  regex: TPerlRegEx;
 begin
-  // create our regex instance, and we want to do a case insensitive search, in multiline mode
-  Result := false;
-  regex := TPerlRegEx.Create;
-  try
-    logger.debug('Checking if %s is a valid park', [park]);
-   // regex.RegEx := '^([A-Za-z]{1,4})-(\d{1,5})$';  // letters-hyphen-digits only; rejects RST values like '59'      - Claude's version but this does not follow US-12345
-   regex.RegEx := '^([A-Za-z]{2})-(\d{4,5})$';  // letters-hyphen-digits only; rejects RST values like '59'
-    //regex.RegEx := '^(?:\w{1,2}\d\/|\d\w\/|\w{1,2}\/)?+\w+[0-9]+\w+\/?\w*\s*$';  // Valid against all of LOTW file
-
-    regex.Subject := park;
-
-    Result := regex.MatchAgain;
-  finally
-    regex.Free;
-  end;
+  logger.debug('Checking if %s is a valid park', [park]);
+  Result := RegexMatches(RX_POTA_PARK, park);
   if Result then
   begin
     logger.debug('%s is a valid park', [park]);

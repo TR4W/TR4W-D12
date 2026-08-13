@@ -33,6 +33,8 @@ uses
    VC                   in '..\..\src\VC.pas',
    uAnsiStr             in '..\..\src\utils\uAnsiStr.pas',
    uFileText            in '..\..\src\utils\uFileText.pas',
+   uRegex               in '..\..\src\utils\uRegex.pas',
+   uTestRegexValidators in 'uTestRegexValidators.pas',
    uWin32Compat         in '..\..\src\utils\uWin32Compat.pas',
    uJSON                in '..\..\src\utils\uJSON.pas',
    uTestAnsiStr         in 'uTestAnsiStr.pas',
@@ -269,6 +271,7 @@ begin
    RegisterSuite(TRadioBandTests.Create('RadioBand'));
    RegisterSuite(TFlexRadioUtilsTests.Create('FlexRadioUtils'));
    RegisterSuite(TAnsiStrTests.Create('AnsiStr'));
+   RegisterSuite(TRegexValidatorTests.Create('RegexValidators'));
    RegisterSuite(TUtilsTextTests.Create('UtilsText'));
    RegisterSuite(TADIFLexerTests.Create('ADIFLexer'));
    RegisterSuite(TADIFHelperTests.Create('ADIFHelpers'));
