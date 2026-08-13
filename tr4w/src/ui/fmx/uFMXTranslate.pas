@@ -62,8 +62,8 @@ unit uFMXTranslate;
 interface
 
 uses
-   System.Classes,
-   System.SysUtils;
+   Classes,
+   SysUtils;
 
 type
    // Given 'PrefsForm.lblMyRadios', return the translated text, or '' to leave
@@ -86,7 +86,7 @@ function TranslationKey(const aRoot, aComponent: TComponent): string;
 implementation
 
 uses
-   System.TypInfo,
+   TypInfo,
    MainUnit;   // logger
 
 function TranslationKey(const aRoot, aComponent: TComponent): string;

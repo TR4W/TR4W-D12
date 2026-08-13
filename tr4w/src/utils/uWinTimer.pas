@@ -28,7 +28,7 @@ unit uWinTimer;
   framework.
 
   WHAT IT IS.  SetTimer/KillTimer against a hidden message-only window from
-  System.Classes.AllocateHWnd -- which is RTL, not VCL.  VCL's own TTimer is
+  Classes.AllocateHWnd -- which is RTL, not VCL.  VCL's own TTimer is
   implemented exactly this way; this is the same mechanism with the framework
   peeled off.
 
@@ -74,9 +74,9 @@ unit uWinTimer;
 interface
 
 uses
-   Winapi.Windows,
-   Winapi.Messages,
-   System.Classes;
+   Windows,
+   Messages,
+   Classes;
 
 type
    TWinTimer = class(TComponent)

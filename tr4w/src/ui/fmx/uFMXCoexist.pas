@@ -60,8 +60,8 @@ unit uFMXCoexist;
 interface
 
 uses
-   Winapi.Windows,
-   Winapi.Messages;
+   Windows,
+   Messages;
 
 // Called by a form as it is shown / as it closes.  Registering the same handle
 // twice is harmless; unregistering one that was never registered is too.

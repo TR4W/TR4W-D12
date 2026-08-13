@@ -55,7 +55,7 @@ unit uFMXDesignedProbe;
 interface
 
 uses
-   System.Classes,
+   Classes,
    System.UITypes,   // TCloseAction
    FMX.Forms,
    FMX.Types,
@@ -88,8 +88,8 @@ implementation
 {$R *.fmx}
 
 uses
-   Winapi.Windows,
-   System.SysUtils,    // Exception
+   Windows,
+   SysUtils,    // Exception
    FMX.Platform.Win,   // FormToHWND
    MainUnit,           // logger
    uFMXCoexist;

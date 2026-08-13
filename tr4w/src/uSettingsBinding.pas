@@ -55,8 +55,8 @@ unit uSettingsBinding;
 interface
 
 uses
-   System.SysUtils,
-   System.Generics.Collections,
+   SysUtils,
+   Generics.Collections,
    FMX.StdCtrls,
    FMX.Edit,
    FMX.ListBox,

@@ -80,10 +80,10 @@ unit uUDPBroadcastConfig;
 interface
 
 uses
-   System.SysUtils,
-   System.Classes,
-   System.Generics.Collections,
-   System.IniFiles,
+   SysUtils,
+   Classes,
+   Generics.Collections,
+   IniFiles,
    System.JSON;
 
 const

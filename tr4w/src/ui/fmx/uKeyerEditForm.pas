@@ -40,8 +40,8 @@ unit uKeyerEditForm;
 interface
 
 uses
-   System.SysUtils,
-   System.Classes,
+   SysUtils,
+   Classes,
    System.UITypes,
    FMX.Types,
    FMX.Controls,

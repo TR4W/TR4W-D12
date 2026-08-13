@@ -51,8 +51,8 @@ unit uRadioEditForm;
 interface
 
 uses
-   System.SysUtils,
-   System.Classes,
+   SysUtils,
+   Classes,
    System.UITypes,
    FMX.Types,
    FMX.Controls,
@@ -230,10 +230,10 @@ implementation
 {$R *.fmx}
 
 uses
-   Winapi.Windows,
-   System.StrUtils,
-   System.Generics.Collections,
-   System.Generics.Defaults,
+   Windows,
+   StrUtils,
+   Generics.Collections,
+   Generics.Defaults,
    FMX.Platform.Win,
    FMX.Dialogs,
    uFMXFormHelpers,

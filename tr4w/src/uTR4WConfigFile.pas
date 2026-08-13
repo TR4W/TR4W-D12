@@ -46,11 +46,11 @@ unit uTR4WConfigFile;
 interface
 
 uses
-   System.SysUtils,
-   System.Classes,
+   SysUtils,
+   Classes,
    System.JSON,
    System.IOUtils,
-   System.IniFiles,
+   IniFiles,
    uRadioConfigStore,
    uKeyerConfigStore,
    uUDPBroadcastConfig;
