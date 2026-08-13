@@ -86,7 +86,7 @@
     <PropertyGroup Condition="'$(Cfg_2_OSXARM64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+    <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UnitSearchPath>..\..\src;..\..\src\ui\fmx;..\..\src\radioFactory;..\..\src\lang;..\..\src\trdos;..\..\src\utils;..\..\Include;..\..\include\Core;..\..\include\System;..\..\include\Protocols;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
         <Manifest_File>(None)</Manifest_File>

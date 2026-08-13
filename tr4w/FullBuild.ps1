@@ -88,7 +88,25 @@
     #      diagnostics for the units it actually recompiles; -B recompiles
     #      every unit so no prior warnings are skipped.
     # Applies to the Step 2 ENG build only (the full tr4w.dpr + all src units).
-    [switch]$VerboseCompile
+    [switch]$VerboseCompile,
+
+    # Build configuration.  DEBUG IS THE DEFAULT AND IS WHAT SHIPS TODAY -- every
+    # D12 release so far was built Debug, and every corpus/unit-test result on
+    # record is a Debug result.
+    #
+    # The two configs are NOT just a label.  In tr4w.dproj, Debug sets
+    # DCC_Optimize=false and DCC_GenerateStackFrames=true; Release sets NEITHER,
+    # so Release inherits the compiler defaults -- OPTIMISATION ON, no stack
+    # frames, no debug info.  (The RELEASE/DEBUG conditional symbols are inert:
+    # nothing in tr4w\src or the vendored Indy tests either one.)  The app's code
+    # section is ~154 KB smaller under Release, which is real codegen difference.
+    #
+    # Release was first put through the full suite on 2026-08-13 -- corpus 22/0/4
+    # and 3978/0 unit tests, both optimised -- so it is now a supported choice
+    # rather than an untested one.  It stays opt-in because switching what ships
+    # is NY4I's call, not a build-script default.
+    [ValidateSet('Debug','Release')]
+    [string]$Config = 'Debug'
 )
 
 # Guard: a 0/blank NUMBER_OF_PROCESSORS (or a silly override) must not stall the
@@ -219,7 +237,7 @@ function Invoke-MSBuild {
     $projDir  = Split-Path $Dproj -Parent
     $projName = Split-Path $Dproj -Leaf
 
-    $props = @("/p:Config=Debug", "/p:Platform=Win32")
+    $props = @("/p:Config=$Config", "/p:Platform=Win32")
     if ($Defines.Count -gt 0) { $props += "/p:ExtraDefines=`"$($Defines -join ';')`"" }
     if ($DcuOutput)           { $props += "/p:DCC_DcuOutput=`"$DcuOutput`"" }
     foreach ($p in $ExtraProps) { $props += "/p:$p" }
@@ -396,6 +414,7 @@ function Test-InstallerDependencies {
     $checked = 0
     $skippedMacro = 0
     $skippedFlag  = 0
+    $globbed      = 0
 
     foreach ($line in Get-Content $NsiPath) {
         # Plain "File <path>" with no flags. Trailing ;comments stripped.
@@ -412,12 +431,29 @@ function Test-InstallerDependencies {
         }
         $checked++
 
+        # WILDCARDS.  `File ..\target\dom\*.dom` is a legitimate NSIS form and is
+        # what the dom section uses, precisely so the packaging list cannot fall
+        # behind the directory again.  -LiteralPath would treat the '*' as a
+        # character and report every such line as missing, so glob lines are
+        # resolved here -- and required to match AT LEAST ONE file.  A pattern
+        # matching nothing is still a packaging error; a silently empty section
+        # is exactly what this check exists to catch.
+        if ($path -match '[*?]') {
+            $hits = @(Get-ChildItem -Path $path -File -ErrorAction SilentlyContinue)
+            if ($hits.Count -eq 0) {
+                [void]$missing.Add("$path  (wildcard matched nothing)")
+            } else {
+                $globbed += $hits.Count
+            }
+            continue
+        }
+
         if (-not (Test-Path -LiteralPath $path)) {
             [void]$missing.Add($path)
         }
     }
 
-    Write-Host "  Verified $checked installer source file(s); skipped $skippedMacro macro / $skippedFlag flag-form line(s)." -ForegroundColor DarkGray
+    Write-Host "  Verified $checked installer source line(s) -- $globbed file(s) matched by wildcard; skipped $skippedMacro macro / $skippedFlag flag-form line(s)." -ForegroundColor DarkGray
     if ($missing.Count -gt 0) {
         Write-Host ""
         Write-Host "  $($missing.Count) MISSING installer source file(s):" -ForegroundColor Red
@@ -628,7 +664,7 @@ function Invoke-ParallelLangBuilds {
             # meaningful for a backgrounded Start-Process, so exe-presence is the
             # success gate (checked on exit below).
             $mbLine = "call `"$RSVARS`" && cd /d `"$wtTr4w`" && msbuild tr4w.dproj /t:Build " +
-                      "/p:Config=Debug /p:Platform=Win32 /p:ExtraDefines=`"$wtDefines`" /v:minimal /nologo"
+                      "/p:Config=$Config /p:Platform=Win32 /p:ExtraDefines=`"$wtDefines`" /v:minimal /nologo"
 
             $outLog = Join-Path $collect "$lang.compile.out.log"
             $errLog = Join-Path $collect "$lang.compile.err.log"
