@@ -48,6 +48,10 @@ const
    DEVICE_NOTIFY_WINDOW_HANDLE  = $00000000;
    DEVICE_NOTIFY_SERVICE_HANDLE = $00000001;
 
+   // Parent handle that makes CreateWindowEx produce a MESSAGE-ONLY window:
+   // never shown, never enumerated, receives no broadcasts.  uWinTimer's sink.
+   HWND_MESSAGE = HWND(-3);
+
 type
    HDEVNOTIFY = Pointer;
 

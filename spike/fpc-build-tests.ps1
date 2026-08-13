@@ -56,6 +56,10 @@ $searchPaths = @(
    Join-Path $src 'lang'
    Join-Path $src 'radioFactory'
    Join-Path $src 'ui\fmx'
+   # regexpr supplies TRegExpr, which uRegex.pas uses in place of TPerlRegEx --
+   # the vendored PCRE library is twenty Borland-format .obj files and FPC's
+   # linker cannot read them.
+   Join-Path $fpcRoot "units\$Cpu-$Os\regexpr"
    # fcl-json supplies fpjson/jsonparser, which uJSON.pas shims onto the
    # System.JSON spellings the config stores are written against.
    Join-Path $fpcRoot "units\$Cpu-$Os\fcl-json"

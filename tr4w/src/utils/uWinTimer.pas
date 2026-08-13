@@ -77,6 +77,8 @@ interface
 uses
    Windows,
    Messages,
+   SysUtils,      // RaiseLastOSError
+   uWin32Compat,  // HWND_MESSAGE -- FPC's windows unit does not declare it
    Classes;
 
 type
@@ -111,19 +113,110 @@ const
    // window has exactly one timer.
    WINTIMER_ID = 1;
 
+   // Our own window class, rather than Classes.AllocateHWnd.
+   //
+   // AllocateHWnd is RTL, not VCL, and worked fine -- under Delphi.  Under FPC
+   // 3.2.2 it FAILS AT RUNTIME: a thirty-line console program that does nothing
+   // but call it dies with runtime error 217 before it returns.  That is not
+   // something a compiler can warn about, and it took the unit-test suite
+   // running under FPC to find it.
+   //
+   // Owning the window is also less magic than the RTL's version, which keeps a
+   // process-wide class and an object-instance table behind the scenes.  Here
+   // the instance is in the window's own user data, where it belongs, and the
+   // whole mechanism is thirty lines that read the same on both compilers.
+   WINTIMER_CLASS = 'TR4WWinTimerWindow';
+
+var
+   // Registered once, on first use.  Not in an initialization section: a unit
+   // that registers a window class at load time makes every executable linking
+   // it pay for a timer it may never create.
+   GClassAtom: ATOM = 0;
+
+function WinTimerWndProc(Wnd: HWND; Msg: UINT; wp: WPARAM; lp: LPARAM): LRESULT; stdcall;
+var
+   inst: TWinTimer;
+   m: TMessage;
+begin
+   inst := TWinTimer(GetWindowLongPtrW(Wnd, GWLP_USERDATA));
+   if inst = nil then
+      begin
+      Result := DefWindowProcW(Wnd, Msg, wp, lp);
+      Exit;
+      end;
+
+   m.Msg    := Msg;
+   m.WParam := wp;
+   m.LParam := lp;
+   m.Result := 0;
+   inst.WndProc(m);
+   Result := m.Result;
+end;
+
+procedure EnsureWinTimerClass;
+var
+   wc: WNDCLASSW;
+begin
+   if GClassAtom <> 0 then
+      begin
+      Exit;
+      end;
+
+   FillChar(wc, SizeOf(wc), 0);
+   wc.lpfnWndProc   := @WinTimerWndProc;
+   wc.hInstance     := HInstance;
+   wc.lpszClassName := WINTIMER_CLASS;
+
+   GClassAtom := Windows.RegisterClassW(wc);
+   if GClassAtom = 0 then
+      begin
+      // Already registered by an earlier load of this module is the only benign
+      // failure, and it is reported as ERROR_CLASS_ALREADY_EXISTS.
+      if GetLastError = ERROR_CLASS_ALREADY_EXISTS then
+         begin
+         GClassAtom := 1;
+         end
+      else
+         begin
+         RaiseLastOSError;
+         end;
+      end;
+end;
+
 constructor TWinTimer.Create(AOwner: TComponent);
 begin
    inherited Create(AOwner);
    FEnabled  := False;
    FInterval := 1000;   // TTimer's default, for anyone who reads Interval first
-   FWindowHandle := AllocateHWnd(WndProc);
+
+   EnsureWinTimerClass;
+
+   // HWND_MESSAGE: a message-only window.  It is never shown, never enumerated,
+   // and receives no broadcasts -- which is exactly right for a timer sink.
+   FWindowHandle := CreateWindowExW(0, WINTIMER_CLASS, nil, 0, 0, 0, 0, 0,
+                                    HWND_MESSAGE, 0, HInstance, nil);
+   if FWindowHandle = 0 then
+      begin
+      RaiseLastOSError;
+      end;
+
+   SetWindowLongPtrW(FWindowHandle, GWLP_USERDATA, LONG_PTR(Self));
 end;
 
 destructor TWinTimer.Destroy;
 begin
    FEnabled := False;
    UpdateTimer;                      // kills the timer if one is running
-   DeallocateHWnd(FWindowHandle);
+
+   if FWindowHandle <> 0 then
+      begin
+      // Clear the back-pointer FIRST: a WM_DESTROY arriving after the object is
+      // gone would otherwise reach a dangling Self.
+      SetWindowLongPtrW(FWindowHandle, GWLP_USERDATA, 0);
+      DestroyWindow(FWindowHandle);
+      FWindowHandle := 0;
+      end;
+
    inherited Destroy;
 end;
 
