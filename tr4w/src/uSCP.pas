@@ -57,32 +57,35 @@ end;
 procedure scpLoadInDateBase(FileName: PChar);
 begin
   if not tOpenFileForRead(scpHWND, FileName) then
-  begin
-    scpDisabled := True;
-    Exit;
-  end;
+     begin
+     scpDisabled := True;
+     Exit;
+     end;
 
   scpFileSize := Windows.GetFileSize(scpHWND, nil);
 
   if scpFileSize <= SizeOf(SCPIndexArrayType) + 4 then
-  begin
-    CloseHandle(scpHWND);
-    Exit;
-  end;
+     begin
+     CloseHandle(scpHWND);
+     Exit;
+     end;
 
   scpFMO := Windows.CreateFileMapping(scpHWND, nil, PAGE_READONLY, 0, 0, nil);
   if scpFMO = 0 then
-  begin
-    CloseHandle(scpHWND);
-    Exit;
-  end;
+     begin
+     CloseHandle(scpHWND);
+     Exit;
+     end;
 
   scpMap := Windows.MapViewOfFile(scpFMO, FILE_MAP_READ, 0, 0, 0);
   SCPIndexArray := Pointer(scpMap);
 
   scpLoaded := True;
 
-  if scpFileSize <> PCardinal(@scpMap[SizeOf(SCPIndexArrayType)])^ then scpClose;
+  if scpFileSize <> PCardinal(@scpMap[SizeOf(SCPIndexArrayType)])^ then
+     begin
+     scpClose;
+     end;
 end;
 
 function scpGetAddress(Call: CallString): PAnsiChar;
@@ -127,11 +130,11 @@ begin
   for TempPointer := 1 to length(Call^) - 1 do
     if Call^[TempPointer] <> '?' then
       if Call^[TempPointer + 1] <> '?' then
-      begin
-        X := Call^[TempPointer];
-        Y := Call^[TempPointer + 1];
-        Break;
-      end;
+         begin
+         X := Call^[TempPointer];
+         Y := Call^[TempPointer + 1];
+         Break;
+         end;
 
   if X = #0 then Exit;
   if Y = #0 then Exit;
@@ -139,7 +142,10 @@ begin
   Index := @SCPIndexArray[scpMakeIndex(X), scpMakeIndex(Y)];
   StartingOffset := pCardinal(Index)^;
   EndingOffset := pCardinal(Index + 4)^;
-  if ListBoxHWND <> 0 then tLB_RESETCONTENT(ListBoxHWND);
+  if ListBoxHWND <> 0 then
+     begin
+     tLB_RESETCONTENT(ListBoxHWND);
+     end;
 
   Offset1 := StartingOffset;
   Offset := StartingOffset;
@@ -147,148 +153,154 @@ begin
 //  for Offset := StartingOffset to EndingOffset do
   begin
     if scpMap[Offset] < #30 then
-    begin
-      Windows.ZeroMemory(@TempBuffer, SizeOf(TempBuffer));
-      Windows.CopyMemory(@TempBuffer, @scpMap[Offset1], Offset - Offset1);
+       begin
+       Windows.ZeroMemory(@TempBuffer, SizeOf(TempBuffer));
+       Windows.CopyMemory(@TempBuffer, @scpMap[Offset1], Offset - Offset1);
 
-      if Result = True then
-        if data <> nil then
-        begin
+       if Result = True then
+         if data <> nil then
+            begin
 
-//          if ScipThisByte then Continue;
+            //          if ScipThisByte then Continue;
 
-          case NextKey of
+                      case NextKey of
 
-            ControlA:
-              begin
-                Windows.lstrcatA(@data.Section[1], TempBuffer);
-                data.Section[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlA:
+                          begin
+                            Windows.lstrcatA(@data.Section[1], TempBuffer);
+                            data.Section[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlC:
-              begin
-                Windows.lstrcatA(@data.CQZone[1], TempBuffer);
-                data.CQZone[0] := CHR(Windows.lstrlenA(TempBuffer));
+                        ControlC:
+                          begin
+                            Windows.lstrcatA(@data.CQZone[1], TempBuffer);
+                            data.CQZone[0] := CHR(Windows.lstrlenA(TempBuffer));
 
-              end;
+                          end;
 
-            ControlF:
-              begin
-                Windows.lstrcatA(@data.FOC[1], TempBuffer);
-                data.FOC[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlF:
+                          begin
+                            Windows.lstrcatA(@data.FOC[1], TempBuffer);
+                            data.FOC[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlG:
-              begin
-                Windows.lstrcatA(@data.Grid[1], TempBuffer);
-                data.Grid[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlG:
+                          begin
+                            Windows.lstrcatA(@data.Grid[1], TempBuffer);
+                            data.Grid[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlH:
-              begin
-                data.Hits := Ord(scpMap[Offset]);
-                inc(Offset);
-              end;
+                        ControlH:
+                          begin
+                            data.Hits := Ord(scpMap[Offset]);
+                            inc(Offset);
+                          end;
 
-            ControlI:
-              begin
-                Windows.lstrcatA(@data.ITUZone[1], TempBuffer);
-                data.ITUZone[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlI:
+                          begin
+                            Windows.lstrcatA(@data.ITUZone[1], TempBuffer);
+                            data.ITUZone[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlK:
-              begin
-                Windows.lstrcatA(@data.Check[1], TempBuffer);
-                data.Check[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlK:
+                          begin
+                            Windows.lstrcatA(@data.Check[1], TempBuffer);
+                            data.Check[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlN:
-              begin
-                Windows.lstrcatA(@data.mName[1], TempBuffer);
-                data.mName[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlN:
+                          begin
+                            Windows.lstrcatA(@data.mName[1], TempBuffer);
+                            data.mName[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlO:
-              begin
-                Windows.lstrcatA(@data.OldCall[1], TempBuffer);
-                data.OldCall[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlO:
+                          begin
+                            Windows.lstrcatA(@data.OldCall[1], TempBuffer);
+                            data.OldCall[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlQ:
-              begin
-                Windows.lstrcatA(@data.QTH[1], TempBuffer);
-                data.QTH[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlQ:
+                          begin
+                            Windows.lstrcatA(@data.QTH[1], TempBuffer);
+                            data.QTH[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlS:
-              begin
-                data.Speed := Ord(scpMap[Offset + 1]);
-                inc(Offset);
-              end;
+                        ControlS:
+                          begin
+                            data.Speed := Ord(scpMap[Offset + 1]);
+                            inc(Offset);
+                          end;
 
-            ControlT:
-              begin
-                Windows.lstrcatA(@data.TENTEN[1], TempBuffer);
-                data.TENTEN[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlT:
+                          begin
+                            Windows.lstrcatA(@data.TENTEN[1], TempBuffer);
+                            data.TENTEN[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlU:
-              begin
-                Windows.lstrcatA(@data.User1[1], TempBuffer);
-                data.User1[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlU:
+                          begin
+                            Windows.lstrcatA(@data.User1[1], TempBuffer);
+                            data.User1[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlV:
-              begin
-                Windows.lstrcatA(@data.User2[1], TempBuffer);
-                data.User2[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlV:
+                          begin
+                            Windows.lstrcatA(@data.User2[1], TempBuffer);
+                            data.User2[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlW:
-              begin
-                Windows.lstrcatA(@data.User3[1], TempBuffer);
-                data.User3[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlW:
+                          begin
+                            Windows.lstrcatA(@data.User3[1], TempBuffer);
+                            data.User3[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlX:
-              begin
-                Windows.lstrcatA(@data.User4[1], TempBuffer);
-                data.User4[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlX:
+                          begin
+                            Windows.lstrcatA(@data.User4[1], TempBuffer);
+                            data.User4[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-            ControlY:
-              begin
-                Windows.lstrcatA(@data.User5[1], TempBuffer);
-                data.User5[0] := CHR(Windows.lstrlenA(TempBuffer));
-              end;
+                        ControlY:
+                          begin
+                            Windows.lstrcatA(@data.User5[1], TempBuffer);
+                            data.User5[0] := CHR(Windows.lstrlenA(TempBuffer));
+                          end;
 
-          end;
-          NextKey := scpMap[Offset];
-          if NextKey = #0 then Exit;
-//          ScipThisByte := False;
-        end;
+                      end;
+                      NextKey := scpMap[Offset];
+                      if NextKey = #0 then Exit;
+            //          ScipThisByte := False;
+            end;
 
-      if StrPosPartial(TempBuffer, CallBuffer) <> nil then
-      begin
-        if StrComp(TempBuffer, CallBuffer) = 0 then
-        begin
-          Result := True;
-          if data <> nil then
+       if StrPosPartial(TempBuffer, CallBuffer) <> nil then
           begin
-            ZeroMemory(data, SizeOf(DataBaseEntryRecord));
-            NextKey := scpMap[Offset];
-            data.Call := Call^;
-//            ScipThisByte := False;
+          if StrComp(TempBuffer, CallBuffer) = 0 then
+             begin
+             Result := True;
+             if data <> nil then
+                begin
+                ZeroMemory(data, SizeOf(DataBaseEntryRecord));
+                NextKey := scpMap[Offset];
+                data.Call := Call^;
+    //            ScipThisByte := False;
+                end;
+             end;
+          if ListBoxHWND <> 0 then
+             begin
+             tLB_ADDSTRING(ListBoxHWND, TempBuffer);
+             end;
           end;
-        end;
-        if ListBoxHWND <> 0 then tLB_ADDSTRING(ListBoxHWND, TempBuffer);
-      end;
-      Offset1 := Offset + 1;
-    end;
+       Offset1 := Offset + 1;
+       end;
 
   end;
   inc(Offset);
-  if Offset < EndingOffset then goto NextByte;
+  if Offset < EndingOffset then
+     begin
+     goto NextByte;
+     end;
 end;
 
 end.

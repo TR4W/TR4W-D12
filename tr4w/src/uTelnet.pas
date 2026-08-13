@@ -416,35 +416,65 @@ var
 begin
    Found := True;
    if Token = 'MY_CALL' then
+      begin
       Result := MyCall
+      end
    else if Token = 'MY_STATE' then
+      begin
       Result := MyState
+      end
    else if Token = 'MY_SECTION' then
+      begin
       Result := MySection
+      end
    else if Token = 'MY_NAME' then
+      begin
       Result := MyName
+      end
    else if Token = 'MY_GRID' then
+      begin
       Result := MyGrid
+      end
    else if Token = 'MY_ZONE' then
+      begin
       Result := MyZone
+      end
    else if Token = 'MY_CHECK' then
+      begin
       Result := MyCheck
+      end
    else if Token = 'MY_PREC' then
+      begin
       Result := MyPrec
+      end
    else if Token = 'MY_CLASS' then
+      begin
       Result := MyFDClass
+      end
    else if Token = 'MY_PARK' then
+      begin
       Result := MyPark
+      end
    else if Token = 'MY_POSTALCODE' then
+      begin
       Result := MyPostalCode
+      end
    else if Token = 'CALL' then
+      begin
       Result := CallWindowString
+      end
    else if Token = 'DATE' then
+      begin
       Result := GetDateString
+      end
    else if Token = 'TIME' then
+      begin
       Result := GetTimeString
+      end
    else if Token = 'BAND' then
+      begin
       Result := BandStringsArrayWithOutSpaces[ActiveBand]
+      end
    else if Token = 'FREQ' then
       begin
       RealFreq := Radio1.FilteredStatus.Freq / 1000.0;   { Hz -> kHz }
@@ -647,24 +677,26 @@ begin
         TDIS := Pointer(lParam);
 
         if TDIS^.itemAction = ODA_DRAWENTIRE then
-        begin
-          i := SendMessageA(TDIS^.hwndItem, LB_GETTEXT, TDIS^.ItemID,
-            integer(@InfoBuffer));
+           begin
+           i := SendMessageA(TDIS^.hwndItem, LB_GETTEXT, TDIS^.ItemID,
+             integer(@InfoBuffer));
 
-          StringType := TelnetStringType(SendMessage(TDIS^.hwndItem,
-            LB_GETITEMDATA, TDIS^.ItemID, 0));
+           StringType := TelnetStringType(SendMessage(TDIS^.hwndItem,
+             LB_GETITEMDATA, TDIS^.ItemID, 0));
 
-          if StringType = tstAlert then
-            GradientRect(TDIS^.HDC, TDIS^.rcItem, tr4wColorsArray[trYellow],
-              tr4wColorsArray[trYellow], gdHorizontal);
+           if StringType = tstAlert then
+              begin
+              GradientRect(TDIS^.HDC, TDIS^.rcItem, tr4wColorsArray[trYellow],
+                tr4wColorsArray[trYellow], gdHorizontal);
+              end;
 
-          Windows.SetTextColor(TDIS^.HDC,
-            tr4wColorsArray[TelnetStringColor[StringType]]);
-          SetBkMode(TDIS^.HDC, TRANSPARENT);
-          Windows.TextOutA(TDIS^.HDC, TDIS^.rcItem.Left + 5
-            {TelnetStringOffset[StringType]}, TDIS^.rcItem.Top, InfoBuffer, i);
-          Result := True;
-        end;
+           Windows.SetTextColor(TDIS^.HDC,
+             tr4wColorsArray[TelnetStringColor[StringType]]);
+           SetBkMode(TDIS^.HDC, TRANSPARENT);
+           Windows.TextOutA(TDIS^.HDC, TDIS^.rcItem.Left + 5
+             {TelnetStringOffset[StringType]}, TDIS^.rcItem.Top, InfoBuffer, i);
+           Result := True;
+           end;
       end;
 
     WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
@@ -877,7 +909,9 @@ begin
           integer(@TelnetServer[1])); //n4af 4.35.1
         //     i := SendDlgItemMessage(hwnddlg, 102, CB_FINDSTRINGEXACT, -1,integer(@TelnetServer[1]));
         if i <> CB_ERR then
-          tCB_SETCURSEL(hwnddlg, 102, i);
+           begin
+           tCB_SETCURSEL(hwnddlg, 102, i);
+           end;
 
         TelToolbar := uCommctrl.CreateToolBarEx(hwnddlg,
           WS_CHILD or
@@ -905,7 +939,9 @@ begin
         //            SendMessage(TelnetConnectionStatus, STM_SETICON, 0, 0);
 
         if tConnectionAtStartup then
-          SendMessage(hwnddlg, WM_COMMAND, 200, 0);
+           begin
+           SendMessage(hwnddlg, WM_COMMAND, 200, 0);
+           end;
 
         TelPopMemu := CreatePopupMenu;
         TelLastPopMemu := TelPopMemu;
@@ -934,9 +970,13 @@ begin
     WM_MENUSELECT:
       begin
         if (HiWord(wParam) = $FFFF) and (lParam = 0) then
-          HideClusterCommandTooltip   // menu closed
+           begin
+           HideClusterCommandTooltip   // menu closed
+           end
         else
-          ShowClusterCommandTooltip(LoWord(wParam), HiWord(wParam));
+           begin
+           ShowClusterCommandTooltip(LoWord(wParam), HiWord(wParam));
+           end;
       end;
 
     WM_EXITMENULOOP:
@@ -947,44 +987,50 @@ begin
     WM_COMMAND:
       begin
         if HiWord(wParam) = LBN_SELCHANGE then
-          DlgDirSelectExA(hwnddlg, wsprintfBuffer, SizeOf(wsprintfBuffer), 101);
+           begin
+           DlgDirSelectExA(hwnddlg, wsprintfBuffer, SizeOf(wsprintfBuffer), 101);
+           end;
 
         if HiWord(wParam) = LBN_DBLCLK then
-        begin
-          //      DlgDirSelectEx(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, wsprintfBuffer, SizeOf(wsprintfBuffer), 101);  //n4af
-          //    DlgDirList(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, wsprintfBuffer, 101, 106, DDL_ARCHIVE or DDL_DIRECTORY);       //n4af
-          //   ShowMessage(SysErrorMessage(GetLastError));
-          i := SendMessage(TelnetListBox, LB_GETCURSEL, 0, 0);
-          if i = LB_ERR then
-            Exit;
-          // Re-decode the line the operator clicked, straight from the list box
-          // -- no shared buffer in the middle any more.
-          SendMessageA(TelnetListBox, LB_GETTEXT, i, integer(@TempBuffer1[0]));
-          TelnetLine := AnsiString(PAnsiChar(@TempBuffer1[0]));
-          if Copy(TelnetLine, 1, 6) = 'DX de ' then
-             begin
-             if ProcessDX(TelnetLine, True, StringType) then
-                begin
-                TuneRadioToSpot(TempSpot, RadioOne);
-                end;
-             end;
+           begin
+           //      DlgDirSelectEx(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, wsprintfBuffer, SizeOf(wsprintfBuffer), 101);  //n4af
+           //    DlgDirList(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, wsprintfBuffer, 101, 106, DDL_ARCHIVE or DDL_DIRECTORY);       //n4af
+           //   ShowMessage(SysErrorMessage(GetLastError));
+           i := SendMessage(TelnetListBox, LB_GETCURSEL, 0, 0);
+           if i = LB_ERR then
+              begin
+              Exit;
+              end;
+           // Re-decode the line the operator clicked, straight from the list box
+           // -- no shared buffer in the middle any more.
+           SendMessageA(TelnetListBox, LB_GETTEXT, i, integer(@TempBuffer1[0]));
+           TelnetLine := AnsiString(PAnsiChar(@TempBuffer1[0]));
+           if Copy(TelnetLine, 1, 6) = 'DX de ' then
+              begin
+              if ProcessDX(TelnetLine, True, StringType) then
+                 begin
+                 TuneRadioToSpot(TempSpot, RadioOne);
+                 end;
+              end;
 
-        end;
+           end;
 
         if (wParam >= 1000) then
           if (wParam <= 1000 + MAXITEMSINTELNETPOPUPMENU) then
-          begin
-            GetMenuStringA(TelPopMemu, wParam, wsprintfBuffer, 256,
-              MF_BYCOMMAND);
-            //n4af    4.51.1
-            // Issue #973: expand {TOKEN} fields to live values before sending.
-            // Cap to 250 so SendViaTelnetSocket's CRLF append cannot overflow
-            // its 256-byte wsprintfBuffer when expansion grows the string.
-            ExpandedClusterCommand := ExpandClusterTokens(wsprintfBuffer);
-            if Length(ExpandedClusterCommand) > 250 then
-              SetLength(ExpandedClusterCommand, 250);
-            SendViaTelnetSocket(PAnsiChar(ExpandedClusterCommand));
-          end;
+             begin
+             GetMenuStringA(TelPopMemu, wParam, wsprintfBuffer, 256,
+               MF_BYCOMMAND);
+             //n4af    4.51.1
+             // Issue #973: expand {TOKEN} fields to live values before sending.
+             // Cap to 250 so SendViaTelnetSocket's CRLF append cannot overflow
+             // its 256-byte wsprintfBuffer when expansion grows the string.
+             ExpandedClusterCommand := ExpandClusterTokens(wsprintfBuffer);
+             if Length(ExpandedClusterCommand) > 250 then
+                begin
+                SetLength(ExpandedClusterCommand, 250);
+                end;
+             SendViaTelnetSocket(PAnsiChar(ExpandedClusterCommand));
+             end;
 
         case wParam of
           // Operator clicked Disconnect: cancel FIRST, so a retry armed by an
@@ -1024,16 +1070,18 @@ begin
               Windows.GetWindowTextA(TelnetCommandWindow, TempBuffer1,
                 SizeOf(TempBuffer1));
               if TempBuffer1[0] = #0 then
-                Exit;
+                 begin
+                 Exit;
+                 end;
               SendViaTelnetSocket(TempBuffer1);
               Windows.SetWindowTextA(TelnetCommandWindow, nil);
               if
                 SendMessageA(TelnetCommandWindow, CB_FINDSTRING, -1,
                 integer(PAnsiChar(@TempBuffer1))) = CB_ERR then
                 //  SendMessage(TelnetCommandWindow, CB_FINDSTRINGEXACT, -1, integer(PChar(@TempBuffer1))) = CB_ERR then
-                begin
-                tCB_ADDSTRING_PCHAR(hwnddlg, 106, TempBuffer1);
-                end;
+                 begin
+                 tCB_ADDSTRING_PCHAR(hwnddlg, 106, TempBuffer1);
+                 end;
 
             end
 
@@ -1351,7 +1399,9 @@ var
 begin
   Result := 0;
   if not ClusterClient.IsConnected then
-    Exit;
+     begin
+     Exit;
+     end;
   if TR4W_TELNET_DEBUG then   // Issue #23
      begin
      logger.Info('[Telnet TX] %s', [p]);
@@ -1368,11 +1418,11 @@ begin
     ClusterClient.SendLine(AnsiString(p));
   except
     on E: Exception do
-      begin
-      Result := -1;
-      AddStringToTelnetConsole(PAnsiChar(AnsiString(E.Message)), tstError);
-      Disconnect;
-      end;
+       begin
+       Result := -1;
+       AddStringToTelnetConsole(PAnsiChar(AnsiString(E.Message)), tstError);
+       Disconnect;
+       end;
   end;
 end;
 
@@ -1599,7 +1649,9 @@ begin
     integer(@buf)), integer(c));
 
   if TelnetFreezeMode then
-    Exit;
+     begin
+     Exit;
+     end;
   SendMessage(Handle, WM_HSCROLL, SB_BOTTOM, 0);
   SendMessage(Handle, WM_VSCROLL, SB_BOTTOM, 0);
 end;
@@ -1613,12 +1665,16 @@ var
   TelnetLogHandle: HWND;
 begin
   if not tWindowsExist(tw_TELNETWINDOW_INDEX) then
-    Exit;
+     begin
+     Exit;
+     end;
   Lines :=
     SendDlgItemMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 101,
     LB_GETCOUNT, 0, 0);
   if Lines < 10 then
-    Exit;
+     begin
+     Exit;
+     end;
   TimeString := GetTimeString;
   TimeString[2] := '-';
   // Issue #997: asm wsprintf -> Format
@@ -1629,18 +1685,18 @@ begin
     nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
 
   if TelnetLogHandle <> INVALID_HANDLE_VALUE then
-  begin
-    for i := 0 to Lines - 1 do
-    begin
-      LineLength :=
-        SendDlgItemMessageA(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-        101, LB_GETTEXT, i, lParam(@wsprintfBuffer));
-      wsprintfBuffer[LineLength + 0] := #13;
-      wsprintfBuffer[LineLength + 1] := #10;
-      sWriteFile(TelnetLogHandle, wsprintfBuffer, LineLength + 2);
-    end;
-    CloseHandle(TelnetLogHandle);
-  end;
+     begin
+     for i := 0 to Lines - 1 do
+        begin
+        LineLength :=
+          SendDlgItemMessageA(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+          101, LB_GETTEXT, i, lParam(@wsprintfBuffer));
+        wsprintfBuffer[LineLength + 0] := #13;
+        wsprintfBuffer[LineLength + 1] := #10;
+        sWriteFile(TelnetLogHandle, wsprintfBuffer, LineLength + 2);
+        end;
+     CloseHandle(TelnetLogHandle);
+     end;
 
 end;
 
@@ -1652,7 +1708,9 @@ procedure EnableTelnetToolbatButtons(b: boolean);
   begin
     State := b;
     if Control = 200 then
-      InvertBoolean(State);
+       begin
+       InvertBoolean(State);
+       end;
     SendMessage(TelToolbar, TB_ENABLEBUTTON, integer(Control), integer(State));
   end;
 begin
@@ -1708,29 +1766,31 @@ begin
     // most 250ms behind.
     if BandMapAllBands or (TempSpot.FBand = BandmapBand) then
       if BandMapAllModes or (TempSpot.FMode = BandmapMode) then
-        BandMapNeedsRefresh := True;
+         begin
+         BandMapNeedsRefresh := True;
+         end;
 
 {$IFDEF AUTOSPOT}
     if TwoRadioMode then
-    begin
-      if first then
-      begin
-        //TLogger.GetInstance.Debug(Format('Writing to Radio One: %s',[TempSpot.FFreqString]));
-        TuneRadioToSpot(TempSpot, RadioOne); // ny4i test code to exercise radio
-        first := false;
-      end
-      else
-      begin
-        first := true;
-        //TLogger.GetInstance.Debug(Format('Writing to Radio Two: %s',[TempSpot.FFreqString]));
-        TuneRadioToSpot(TempSpot, RadioTwo);
-      end;
-    end
+       begin
+       if first then
+          begin
+          //TLogger.GetInstance.Debug(Format('Writing to Radio One: %s',[TempSpot.FFreqString]));
+          TuneRadioToSpot(TempSpot, RadioOne); // ny4i test code to exercise radio
+          first := false;
+          end
+       else
+          begin
+          first := true;
+          //TLogger.GetInstance.Debug(Format('Writing to Radio Two: %s',[TempSpot.FFreqString]));
+          TuneRadioToSpot(TempSpot, RadioTwo);
+          end;
+       end
     else
-    begin
-      //TLogger.GetInstance.Debug(Format('Writing to Radio One: %s',[TempSpot.FFreqString]));
-      TuneRadioToSpot(TempSpot, RadioOne);
-    end;
+       begin
+       //TLogger.GetInstance.Debug(Format('Writing to Radio One: %s',[TempSpot.FFreqString]));
+       TuneRadioToSpot(TempSpot, RadioOne);
+       end;
 
 {$ENDIF}
   end;
@@ -1777,17 +1837,21 @@ begin
   VisibleLog.CallIsADupe(TempSpot.FCall, TempSpot.FBand, TempSpot.FMode);
 
   if TempSpot.FDupe then
-    Stringtype := tstReceivedDupe;
+     begin
+     Stringtype := tstReceivedDupe;
+     end;
 
   if not TempSpot.FDupe then
-  begin
-    TempSpot.FMult := VisibleLog.DetermineIfNewMult(TempSpot.FCall,
-      TempSpot.FBand, TempSpot.FMode);
-    //    TempSpot.FMult := MultString <> 0;
-    if TempSpot.FMult then
-      Stringtype := tstReceivedMult;
+     begin
+     TempSpot.FMult := VisibleLog.DetermineIfNewMult(TempSpot.FCall,
+       TempSpot.FBand, TempSpot.FMode);
+     //    TempSpot.FMult := MultString <> 0;
+     if TempSpot.FMult then
+        begin
+        Stringtype := tstReceivedMult;
+        end;
 
-  end;
+     end;
 
   // The spot's own age.  `ct` is "now" in the same made-up unit the stamp is
   // converted into -- minutes, with the day and month folded in as fixed-size
@@ -1811,27 +1875,29 @@ begin
      end;
 
   if TempSpot.FCall = MyCall then
-  begin
-    Stringtype := tstAlert;
-    QuickDisplay(TC_YOUARESPOTTEDBYANOTHERSTATION);
-    QuickBeep;
-  end;
+     begin
+     Stringtype := tstAlert;
+     QuickDisplay(TC_YOUARESPOTTEDBYANOTHERSTATION);
+     QuickBeep;
+     end;
   if not TempSpot.FDupe then // 4.93.4
-    SpotsList.AddSpot(TempSpot, True);
+     begin
+     SpotsList.AddSpot(TempSpot, True);
+     end;
 
   if telnet_callsign_alert_list_loaded then
     if Windows.SendMessageA(TelnetCallsignAlertList, LB_FINDSTRINGEXACT, -1,
       integer(PAnsiChar(@TempSpot.FCall[1]))) <> LB_ERR then
-    begin
-      Stringtype := tstAlert;
+       begin
+       Stringtype := tstAlert;
 
-      TF.Format(QuickDisplayBuffer,
-        'New DX Cluster spot: %s was spoted by %s on %s', @TempSpot.FCall[1],
-        @TempSpot.FSourceCall[1], TempSpot.FFreqString);
-      QuickDisplay(QuickDisplayBuffer);
+       TF.Format(QuickDisplayBuffer,
+         'New DX Cluster spot: %s was spoted by %s on %s', @TempSpot.FCall[1],
+         @TempSpot.FSourceCall[1], TempSpot.FFreqString);
+       QuickDisplay(QuickDisplayBuffer);
 
-      Tree.QuickBeep;
-    end;
+       Tree.QuickBeep;
+       end;
 
   Result := True;
 end;
@@ -1845,41 +1911,49 @@ var
   Mult: boolean;
 begin
   if not BandMapEnable then
-    Exit;
+     begin
+     Exit;
+     end;
   if bandmappreventrefresh then
-    exit;
+     begin
+     exit;
+     end;
   if StringIsAllNumbers(Call) then
-    Exit;
+     begin
+     Exit;
+     end;
   //  if ActiveRadio = RadioOne then TempFrequency := Radio1.FilteredStatus.Freq;
   //  if ActiveRadio = RadioTwo then TempFrequency := Radio2.FilteredStatus.Freq;
   TempFrequency := Radio^.FilteredStatus.Freq;
   if TempFrequency = 0 then
     //    if OpMode = SearchAndPounceOpMode then
     if AskForFrequencies then
-    begin
-      Call[length(Call) + 1] := #0;
-      // Issue #997: asm wsprintf -> Format
-      StrPCopy(wsprintfBuffer, SysUtils.Format(TC_FREQUENCYFORCALLINKHZ,
-        [string(PAnsiChar(@Call[1]))]));
-      TempFrequency := QuickEditFreq(wsprintfBuffer, 10);
-    end;
+       begin
+       Call[length(Call) + 1] := #0;
+       // Issue #997: asm wsprintf -> Format
+       StrPCopy(wsprintfBuffer, SysUtils.Format(TC_FREQUENCYFORCALLINKHZ,
+         [string(PAnsiChar(@Call[1]))]));
+       TempFrequency := QuickEditFreq(wsprintfBuffer, 10);
+       end;
   if TempFrequency <= 0 then
-    Exit;
+     begin
+     Exit;
+     end;
 
   Windows.ZeroMemory(@TempSpot, SizeOf(TempSpot));
 
   if PInteger(@Call[1])^ = tCQAsInteger then
-  begin
-    Mult := False;
-    TempSpot.FCQ := True; //GAV changed from true to false
-    goto 1;
-  end;
+     begin
+     Mult := False;
+     TempSpot.FCQ := True; //GAV changed from true to false
+     goto 1;
+     end;
 
   if PInteger(@Call[1])^ = tNEWAsInteger then
-  begin
-    Mult := False;
-    goto 1;
-  end;
+     begin
+     Mult := False;
+     goto 1;
+     end;
 
   Mult := VisibleLog.DetermineIfNewMult(Call, ActiveBand, ActiveMode);
   //  Mult := MultString <> 0;
@@ -1891,15 +1965,15 @@ begin
 
   if TempSpot.FCQ then
     //GAV      issue, picking activeband on dupecheck   changed from ActiveBand / mode to BandmapBand / mode  if not CQ
-  begin
-    TempSpot.FBand := ActiveBand;
-    TempSpot.FMode := ActiveMode;
-  end
+     begin
+     TempSpot.FBand := ActiveBand;
+     TempSpot.FMode := ActiveMode;
+     end
   else
-  begin
-    TempSpot.FBand := BandmapBand;
-    TempSpot.FMode := BandmapMode;
-  end;
+     begin
+     TempSpot.FBand := BandmapBand;
+     TempSpot.FMode := BandmapMode;
+     end;
 
   TempSpot.FQSXFrequency := 0;
   TempSpot.FDupe := Dupe;
@@ -1992,48 +2066,54 @@ var
   Offset: integer;
 begin
   if ItemsInTelnetPopupMenu > MAXITEMSINTELNETPOPUPMENU - 1 then
-    Exit;
+     begin
+     Exit;
+     end;
   if MenuText[0] = #0 then
-    Exit;
+     begin
+     Exit;
+     end;
 
   Flag := MF_STRING;
   Offset := 0;
 
   if MenuText[0] = '-' then
-    Flag := MF_SEPARATOR;
+     begin
+     Flag := MF_SEPARATOR;
+     end;
 
   if MenuText[0] = '.' then
-  begin
-    TelLastPopMemu := TelPopMemu;
-    Exit;
-  end;
+     begin
+     TelLastPopMemu := TelPopMemu;
+     Exit;
+     end;
 
   if MenuText[0] = '#' then
-  begin
-    Flag := MF_STRING + MF_DISABLED + MF_GRAYED;
-    Offset := 1;
-  end;
+     begin
+     Flag := MF_STRING + MF_DISABLED + MF_GRAYED;
+     Offset := 1;
+     end;
 
   if MenuText[0] = '!' then
-  begin
-    Flag := MF_STRING + MF_CHECKED;
-    Offset := 1;
-  end;
+     begin
+     Flag := MF_STRING + MF_CHECKED;
+     Offset := 1;
+     end;
 
   if MenuText[0] = '>' then
-  begin
-    TelLastPopMemu := CreatePopupMenu;
-    Windows.AppendMenuA(TelPopMemu, MF_STRING + MF_POPUP, TelLastPopMemu,
-      @MenuText[1]);
-    inc(ItemsInTelnetPopupMenu);
-    Exit;
-  end;
+     begin
+     TelLastPopMemu := CreatePopupMenu;
+     Windows.AppendMenuA(TelPopMemu, MF_STRING + MF_POPUP, TelLastPopMemu,
+       @MenuText[1]);
+     inc(ItemsInTelnetPopupMenu);
+     Exit;
+     end;
 
   if MenuText[0] = '=' then
-  begin
-    Flag := MF_STRING;
-    Offset := 1;
-  end;
+     begin
+     Flag := MF_STRING;
+     Offset := 1;
+     end;
 
   Windows.AppendMenuA(TelLastPopMemu, Flag, 1000 + ItemsInTelnetPopupMenu,
     @MenuText[Offset]);
@@ -2050,8 +2130,10 @@ end;
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
 begin
   if telnet_callsign_alert_list_loaded = False then
-    TelnetCallsignAlertList := CreateWindowA('LISTBOX', nil, $50210003, 0, 0, 0, 0,
-      tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 0, hInstance, nil);
+     begin
+     TelnetCallsignAlertList := CreateWindowA('LISTBOX', nil, $50210003, 0, 0, 0, 0,
+       tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, 0, hInstance, nil);
+     end;
 
   tLB_ADDSTRING(TelnetCallsignAlertList, @FileString^[1]);
   telnet_callsign_alert_list_loaded := True;
@@ -2060,7 +2142,9 @@ end;
 procedure EnumCLUSTERCOMMANDSTXT(FileString: PShortString);
 begin
   if FileString^[1] = ';' then
-    Exit;
+     begin
+     Exit;
+     end;
   AppendTelnetPopupMenu(@FileString^[1]);
 end;
 

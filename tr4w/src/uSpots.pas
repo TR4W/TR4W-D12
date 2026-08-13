@@ -138,56 +138,84 @@ begin
   SetCursor;
   ie_check := False;
   if BandMapPreventRefresh then
-    exit;
+     begin
+     exit;
+     end;
   if BandMapSO2RDisplay then
     if ((Radio1.FilteredStatus.Freq <> 0) and (Radio2.FilteredStatus.Freq <> 0))
       then
       if ((ActiveBand <> Spot.Fband) and (InactiveRadioptr.BandMemory <>
         Spot.Fband)) then
-        exit; // 4.105.14
+         begin
+         exit; // 4.105.14
+         end;
   for i := 0 to FCount - 1 do
-  begin
-    // 4.102.5 - filter the added spots to match the actual bm display
+     begin
+     // 4.102.5 - filter the added spots to match the actual bm display
 
-    if not BandMapAllBands then
-      if FList^[i].FBand <> BandmapBand then
-        Continue; //Gav  ActiveBand changed to BandmapBand
-    if not BandMapAllModes then
-      if FList^[i].FMode <> BandmapMode then
-        Continue; //Gav  ActiveMode changed to BandmapMode
-    if not BandMapDupeDisplay then
-      if FList^[i].FDupe then
+     if not BandMapAllBands then
+       if FList^[i].FBand <> BandmapBand then
+          begin
+          Continue; //Gav  ActiveBand changed to BandmapBand
+          end;
+     if not BandMapAllModes then
+       if FList^[i].FMode <> BandmapMode then
+          begin
+          Continue; //Gav  ActiveMode changed to BandmapMode
+          end;
+     if not BandMapDupeDisplay then
+       if FList^[i].FDupe then
+          begin
+          Continue;
+          end;
+     if not BandMapDisplayCQ then
+       if FList^[i].FCQ then
+          begin
+          Continue;
+          end;
+     if not WARCBandsEnabled then
+       if FList^[i].FWARCBand then
+          begin
+          Continue;
+          end;
+     //if TwoRadioMode then
+     if ((ActiveBand <> Spot.Fband) and (InactiveRadioptr.BandMemory <>
+       Spot.Fband)) then
+        begin
         Continue;
-    if not BandMapDisplayCQ then
-      if FList^[i].FCQ then
-        Continue;
-    if not WARCBandsEnabled then
-      if FList^[i].FWARCBand then
-        Continue;
-    //if TwoRadioMode then
-    if ((ActiveBand <> Spot.Fband) and (InactiveRadioptr.BandMemory <>
-      Spot.Fband)) then
-      Continue;
-    if BandMapMultsOnly then
-      if not ((FList^[i].FMult) or (FList^[i].FCQ)) then
-        Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
-    if not VHFBandsEnabled then
-      if (FList^[i].FBand > Band12) then
-        Continue;
-    if (FList^[i].FBand = Spot.FBand) and (FList^[i].FCall = Spot.FCall) then
-      continue;
-  end;
+        end;
+     if BandMapMultsOnly then
+       if not ((FList^[i].FMult) or (FList^[i].FCQ)) then
+          begin
+          Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
+          end;
+     if not VHFBandsEnabled then
+       if (FList^[i].FBand > Band12) then
+          begin
+          Continue;
+          end;
+     if (FList^[i].FBand = Spot.FBand) and (FList^[i].FCall = Spot.FCall) then
+        begin
+        continue;
+        end;
+     end;
   if Spot.FBand in [Band30, Band17, Band12] then
-    Spot.FWARCBand := True;
+     begin
+     Spot.FWARCBand := True;
+     end;
   if (IE_Switch) then
-  begin
-    ie_check := True;
-    if (InitialExchangeEntry(Spot.FCall) = '') then
-      exit;
-  end;
+     begin
+     ie_check := True;
+     if (InitialExchangeEntry(Spot.FCall) = '') then
+        begin
+        exit;
+        end;
+     end;
 
   if FindSpot(Spot, Result) then
-    goto Add;
+     begin
+     goto Add;
+     end;
   FCriticalSection.Enter;
   try
      InsertSpot(Result, Spot);
@@ -203,10 +231,10 @@ begin
   if SendToNetwork then
     if PInteger(@Spot.FCall[1])^ <> tCQAsInteger then
       if NetSocket <> 0 then
-      begin
-        NetDXSpot.dsSpot := Spot;
-        SendToNet(NetDXSpot, SizeOf(NetDXSpot));
-      end;
+         begin
+         NetDXSpot.dsSpot := Spot;
+         SendToNet(NetDXSpot, SizeOf(NetDXSpot));
+         end;
 
 end;
 
@@ -235,85 +263,87 @@ begin
   //  inc(SpotsDisplayed);
   //  setwindowtext(OpModeWindowHandle,inttopchar(SpotsDisplayed));
   if BandMapListBox = 0 then
-    begin
-    logger.Trace('[SpotsList.Display] exit: BandMapListBox=0');
-    Exit;
-    end;
+     begin
+     logger.Trace('[SpotsList.Display] exit: BandMapListBox=0');
+     Exit;
+     end;
   if BandMapPreventRefresh then
-    begin
-    logger.Trace('[SpotsList.Display] exit: BandMapPreventRefresh=True');
-    Exit; // Gav 4.45.6
-    end;
+     begin
+     logger.Trace('[SpotsList.Display] exit: BandMapPreventRefresh=True');
+     Exit; // Gav 4.45.6
+     end;
   TDXSpotsList.UpdateSpotsMultiplierStatus;
   CurrentCursorPos := tLB_GETCURSEL(BandMapListBox); //0;
   setlength(FiltSpotIndex, FCount);
   NumberEntriesDisplayed := 0;
   k := 0;
   for i := 0 to FCount - 1 do
-  begin
-    // Drop a spot whose call matches the NEXT one in the frequency-sorted list.
-    // The last element has no next: `FList^[i + 1]` at i = FCount - 1 read one
-    // past the live entries, and past the declared array[0..1000] altogether
-    // once the list was full, comparing against whatever happened to be there.
-    // Usually that garbage did not match and the spot survived, so the bug was
-    // invisible -- but a chance match silently dropped the highest spot.
-    if (i < FCount - 1) and (FList^[i].FCall = FList^[i + 1].FCall) then
-      begin
-      Inc(rejDupeNext);
-      continue;
-      end;
-    if not BandMapAllBands then
-      if FList^[i].FBand <> BandmapBand then
+     begin
+     // Drop a spot whose call matches the NEXT one in the frequency-sorted list.
+     // The last element has no next: `FList^[i + 1]` at i = FCount - 1 read one
+     // past the live entries, and past the declared array[0..1000] altogether
+     // once the list was full, comparing against whatever happened to be there.
+     // Usually that garbage did not match and the spot survived, so the bug was
+     // invisible -- but a chance match silently dropped the highest spot.
+     if (i < FCount - 1) and (FList^[i].FCall = FList^[i + 1].FCall) then
         begin
-        Inc(rejBand);
-        Continue; //Gav  ActiveBand changed to BandmapBand
+        Inc(rejDupeNext);
+        continue;
         end;
-    if not BandMapAllModes then
-      if FList^[i].FMode <> BandmapMode then
-        begin
-        Inc(rejMode);
-        Continue; //Gav  ActiveMode changed to BandmapMode
-        end;
-    if not BandMapDupeDisplay then
-      if FList^[i].FDupe then
-        begin
-        Inc(rejDupeFlag);
-        Continue;
-        end;
-    if not BandMapDisplayCQ then
-      if FList^[i].FCQ then
-        begin
-        Inc(rejCQ);
-        Continue;
-        end;
-    if not WARCBandsEnabled then
-      if FList^[i].FWARCBand then
-        begin
-        Inc(rejWARC);
-        Continue;
-        end;
-    if BandMapMultsOnly then
-      if not ((FList^[i].FMult) or (FList^[i].FCQ)) then
-        begin
-        Inc(rejMultsOnly);
-        Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
-        end;
-    if not VHFBandsEnabled then
-      if (FList^[i].FBand > Band12) then
-        begin
-        Inc(rejVHF);
-        Continue;
-        end;
+     if not BandMapAllBands then
+       if FList^[i].FBand <> BandmapBand then
+          begin
+          Inc(rejBand);
+          Continue; //Gav  ActiveBand changed to BandmapBand
+          end;
+     if not BandMapAllModes then
+       if FList^[i].FMode <> BandmapMode then
+          begin
+          Inc(rejMode);
+          Continue; //Gav  ActiveMode changed to BandmapMode
+          end;
+     if not BandMapDupeDisplay then
+       if FList^[i].FDupe then
+          begin
+          Inc(rejDupeFlag);
+          Continue;
+          end;
+     if not BandMapDisplayCQ then
+       if FList^[i].FCQ then
+          begin
+          Inc(rejCQ);
+          Continue;
+          end;
+     if not WARCBandsEnabled then
+       if FList^[i].FWARCBand then
+          begin
+          Inc(rejWARC);
+          Continue;
+          end;
+     if BandMapMultsOnly then
+       if not ((FList^[i].FMult) or (FList^[i].FCQ)) then
+          begin
+          Inc(rejMultsOnly);
+          Continue; //Gav added or FCQ to stop CQ spots being trapped by Mult only filter
+          end;
+     if not VHFBandsEnabled then
+       if (FList^[i].FBand > Band12) then
+          begin
+          Inc(rejVHF);
+          Continue;
+          end;
 
-    // SendMessage(BandMapListBox, LB_ADDSTRING, 0, integer(i));         //GAV original message send
+     // SendMessage(BandMapListBox, LB_ADDSTRING, 0, integer(i));         //GAV original message send
 
-    if FList^[i].FFrequency = FCurrentCursorFreq then
-      CurrentCursorPos := NumberEntriesDisplayed;
-    FiltSpotIndex[k] := i;
-    inc(NumberEntriesDisplayed);
-    inc(k);
+     if FList^[i].FFrequency = FCurrentCursorFreq then
+        begin
+        CurrentCursorPos := NumberEntriesDisplayed;
+        end;
+     FiltSpotIndex[k] := i;
+     inc(NumberEntriesDisplayed);
+     inc(k);
 
-  end;
+     end;
   logger.Trace('[SpotsList.Display] filter pass: FCount=%d, passed=%d, rejected by: NextDup=%d Band=%d Mode=%d DupeFlag=%d CQ=%d WARC=%d MultsOnly=%d VHF=%d',
     [FCount, NumberEntriesDisplayed, rejDupeNext, rejBand, rejMode, rejDupeFlag,
      rejCQ, rejWARC, rejMultsOnly, rejVHF]);
@@ -323,82 +353,82 @@ begin
   FilteredSpotCount := k;
 
   if FilteredSpotCount > BandMapDisplayLimit then
-  begin
-    // Every endpoint test below must go through FiltSpotIndex.  The window
-    // (bottom..top) indexes the FILTERED list, so asking the UNFILTERED FList
-    // about it is asking a different list: with any filter active FList^[0] is
-    // not the first spot on display, and FList^[FilteredSpotCount] is not the
-    // last -- it is an unrelated spot, and off the end of the array[0..1000]
-    // once the list fills up.
-    if FList^[FiltSpotIndex[0]].FFrequency >= BandMapCursorFrequency then
-    begin
-      // Everything on display is at or above the cursor -- show the low end.
-      top := BandMapDisplayLimit - 1;
-      bottom := 0;
-      centrefound := true;
-    end;
-
-    if FList^[FiltSpotIndex[FilteredSpotCount - 1]].FFrequency <= BandMapCursorFrequency then
-    begin
-      // Everything on display is at or below the cursor -- show the high end.
-      top := FilteredSpotCount - 1;
-      bottom := FilteredSpotCount - BandMapDisplayLimit;
-      centrefound := true;
-    end;
-
-    // Named bound, NOT `to k - 1`.  Treating the loop variable as a value is
-    // what produced the out-of-range window this routine used to clamp.
-    for k := 0 to FilteredSpotCount - 1 do
-    begin
-      if FList^[FiltSpotIndex[k]].FFrequency > BandMapCursorFrequency then
-      begin
-        centre := k;
-        if (centre >= (BandMapDisplayLimit div 2)) and (centre <=
-          (FilteredSpotCount - (BandMapDisplayLimit div 2))) then
+     begin
+     // Every endpoint test below must go through FiltSpotIndex.  The window
+     // (bottom..top) indexes the FILTERED list, so asking the UNFILTERED FList
+     // about it is asking a different list: with any filter active FList^[0] is
+     // not the first spot on display, and FList^[FilteredSpotCount] is not the
+     // last -- it is an unrelated spot, and off the end of the array[0..1000]
+     // once the list fills up.
+     if FList^[FiltSpotIndex[0]].FFrequency >= BandMapCursorFrequency then
         begin
-          top := centre + ((BandMapDisplayLimit div 2) - 1);
-          bottom := centre - (BandMapDisplayLimit div 2);
-          centrefound := true;
+        // Everything on display is at or above the cursor -- show the low end.
+        top := BandMapDisplayLimit - 1;
+        bottom := 0;
+        centrefound := true;
         end;
-        if centre > (FilteredSpotCount - (BandMapDisplayLimit div 2)) then
-        begin
-          top := FilteredSpotCount - 1;
-          bottom := FilteredSpotCount - BandMapDisplayLimit;
-          centrefound := true;
-        end;
-        if centre < (BandMapDisplayLimit div 2) then
-        begin
-          top := BandMapDisplayLimit - 1;
-          bottom := 0;
-          centrefound := true;
-        end;
-        break;
-      end;
-    end;
 
-    if (centrefound <> true) then
-    begin
-      // No displayed spot is above the cursor, so the cursor sits at or beyond
-      // the top of the list: the high end is the window to show -- the same one
-      // the second test above picks, which is why this should now be
-      // unreachable.  It is kept because centrefound is set in four places and
-      // a later branch could leave it False.
-      //
-      // This read `centre := abs((k - 1) div 2)`.  After a for loop completes
-      // normally, Delphi leaves the loop variable UNDEFINED -- so that line
-      // centred the window on a garbage value, and `centre - (limit div 2)`
-      // could land below zero.  THAT is the wrong range the clamp below was
-      // added to absorb.
-      top := FilteredSpotCount - 1;
-      bottom := FilteredSpotCount - BandMapDisplayLimit;
-    end;
-  end
+     if FList^[FiltSpotIndex[FilteredSpotCount - 1]].FFrequency <= BandMapCursorFrequency then
+        begin
+        // Everything on display is at or below the cursor -- show the high end.
+        top := FilteredSpotCount - 1;
+        bottom := FilteredSpotCount - BandMapDisplayLimit;
+        centrefound := true;
+        end;
+
+     // Named bound, NOT `to k - 1`.  Treating the loop variable as a value is
+     // what produced the out-of-range window this routine used to clamp.
+     for k := 0 to FilteredSpotCount - 1 do
+        begin
+        if FList^[FiltSpotIndex[k]].FFrequency > BandMapCursorFrequency then
+           begin
+           centre := k;
+           if (centre >= (BandMapDisplayLimit div 2)) and (centre <=
+             (FilteredSpotCount - (BandMapDisplayLimit div 2))) then
+              begin
+              top := centre + ((BandMapDisplayLimit div 2) - 1);
+              bottom := centre - (BandMapDisplayLimit div 2);
+              centrefound := true;
+              end;
+           if centre > (FilteredSpotCount - (BandMapDisplayLimit div 2)) then
+              begin
+              top := FilteredSpotCount - 1;
+              bottom := FilteredSpotCount - BandMapDisplayLimit;
+              centrefound := true;
+              end;
+           if centre < (BandMapDisplayLimit div 2) then
+              begin
+              top := BandMapDisplayLimit - 1;
+              bottom := 0;
+              centrefound := true;
+              end;
+           break;
+           end;
+        end;
+
+     if (centrefound <> true) then
+        begin
+        // No displayed spot is above the cursor, so the cursor sits at or beyond
+        // the top of the list: the high end is the window to show -- the same one
+        // the second test above picks, which is why this should now be
+        // unreachable.  It is kept because centrefound is set in four places and
+        // a later branch could leave it False.
+        //
+        // This read `centre := abs((k - 1) div 2)`.  After a for loop completes
+        // normally, Delphi leaves the loop variable UNDEFINED -- so that line
+        // centred the window on a garbage value, and `centre - (limit div 2)`
+        // could land below zero.  THAT is the wrong range the clamp below was
+        // added to absorb.
+        top := FilteredSpotCount - 1;
+        bottom := FilteredSpotCount - BandMapDisplayLimit;
+        end;
+     end
 
   else
-  begin
-    top := FilteredSpotCount - 1;
-    bottom := 0;
-  end;
+     begin
+     top := FilteredSpotCount - 1;
+     bottom := 0;
+     end;
 
   // BACKSTOP, not the fix.  The four branches above are now each provably in
   // range, so neither clamp should ever fire; the Warn is how we find out if a
@@ -433,7 +463,9 @@ begin
   // the path where the centring loop above ran to completion.
   SendMessage(BandMapListBox, LB_INITSTORAGE, top - bottom + 1, 10000);
   for k := bottom to top do
-    SendMessage(BandMapListBox, LB_ADDSTRING, 0, FiltSpotIndex[k]);
+     begin
+     SendMessage(BandMapListBox, LB_ADDSTRING, 0, FiltSpotIndex[k]);
+     end;
   tLB_SETCURSEL(BandMapListBox, CurrentCursorPos);
   tSetWindowRedraw(BandMapListBox, True);
   logger.Trace('[SpotsList.Display] listbox populated: bottom=%d, top=%d, items_added=%d, CurrentCursorPos=%d, BandMapDisplayLimit=%d',
@@ -447,7 +479,9 @@ begin
   uAnsiStr.StrPCopy(wsprintfBuffer, SysUtils.Format(TC_SPOTS, [NumberEntriesDisplayed]));
   SetTextInBMSB(5, wsprintfBuffer);
   if NumberEntriesDisplayed = 0 then
-    ClearSpotInfo;
+     begin
+     ClearSpotInfo;
+     end;
 
 end;
 
@@ -472,20 +506,22 @@ var
   i: integer;
 begin
   if BCount <> 0 then
-  begin
-    i := BCount;
-    for i := 0 to i - 1 do
-    begin
-      AddSpot(BList^[i], False)
-    end;
-  end;
+     begin
+     i := BCount;
+     for i := 0 to i - 1 do
+        begin
+        AddSpot(BList^[i], False)
+        end;
+     end;
   BCount := 0;
 end;
 
 procedure TDXSpotsList.Delete(Index: integer);
 begin
   if (Index < 0) or (Index >= FCount) then
-    Exit; //Error(@SListIndexError, Index);
+     begin
+     Exit; //Error(@SListIndexError, Index);
+     end;
   try
      dec(FCount);
      if Index < FCount then
@@ -506,22 +542,24 @@ begin
   l := 0;
   h := FCount - 1;
   while l <= h do
-  begin
-    i := (l + h) shr 1;
-    c := FList^[i].FFrequency - Spot.FFrequency;
-      //CompareStrings(FList^[I].FCall, s);
-    if c < 0 then
-      l := i + 1
-    else
-    begin
-      h := i - 1;
-      if c = 0 then
-      begin
-        Result := True;
-        l := i;
-      end;
-    end;
-  end;
+     begin
+     i := (l + h) shr 1;
+     c := FList^[i].FFrequency - Spot.FFrequency;
+       //CompareStrings(FList^[I].FCall, s);
+     if c < 0 then
+        begin
+        l := i + 1
+        end
+     else
+        begin
+        h := i - 1;
+        if c = 0 then
+           begin
+           Result := True;
+           l := i;
+           end;
+        end;
+     end;
   Index := l;
 end;
 
@@ -529,7 +567,9 @@ function TDXSpotsList.Get(Index: integer): TSpotRecord;
 begin
   FillChar(Result, SizeOf(Result), 0); // ny4i Test to return null Issue #115
   if (Index < 0) or (Index >= FCount) then
-    Exit; //ERROR(@SListIndexError, Index);
+     begin
+     Exit; //ERROR(@SListIndexError, Index);
+     end;
   Result := FList^[Index];
 end;
 
@@ -543,14 +583,16 @@ var
   i: integer;
 begin
   for i := 0 to FCount - 1 do
-  begin
+     begin
 
-    if PInteger(@FList^[i].FCall[1])^ <> tCQAsInteger then
-      if PInteger(@FList^[i].FCall[1])^ <> tNEWAsInteger then
-        FList^[i].FMult := VisibleLog.DetermineIfNewMult(FList^[i].FCall,
-          FList^[i].FBand, FList^[i].FMode);
-    //    FList^[i].FMult := MultString <> 0;
-  end;
+     if PInteger(@FList^[i].FCall[1])^ <> tCQAsInteger then
+       if PInteger(@FList^[i].FCall[1])^ <> tNEWAsInteger then
+          begin
+          FList^[i].FMult := VisibleLog.DetermineIfNewMult(FList^[i].FCall,
+            FList^[i].FBand, FList^[i].FMode);
+          end;
+     //    FList^[i].FMult := MultString <> 0;
+     end;
   //  Display;
 end;
 
@@ -564,7 +606,9 @@ var
   St: SYSTEMTIME;
 begin
   if FCount = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   GetSystemTime(St);
   CurrentTime := St.wMinute + St.wHour * 60 + St.wDay * 60 * 24 + St.wMonth * 60
     * 24 * 30;
@@ -575,11 +619,17 @@ begin
   Difference := CurrentTime - FList^[i].FSysTime;
   FList^[i].FMinutesLeft := Difference;
   if Difference >= BandMapDecayTime then
-    Delete(i)
+     begin
+     Delete(i)
+     end
   else
-    inc(i);
+     begin
+     inc(i);
+     end;
   if i = FCount then
-    Exit;
+     begin
+     Exit;
+     end;
   goto NextSpot;
 end;
 
@@ -589,12 +639,14 @@ var
   i: integer;
 begin
   for i := 0 to FCount - 1 do
-  begin
-    if FList^[i].FBand = RXBand then
-      if FList^[i].FMode = RXMode then
-        if FList^[i].FCall = RXCall then
-          FList^[i].FDupe := True;
-  end;
+     begin
+     if FList^[i].FBand = RXBand then
+       if FList^[i].FMode = RXMode then
+         if FList^[i].FCall = RXCall then
+            begin
+            FList^[i].FDupe := True;
+            end;
+     end;
   Display;
 end;
 
@@ -603,11 +655,17 @@ var
   delta: integer;
 begin
   if FCapacity > 64 then
-    delta := FCapacity div 4
+     begin
+     delta := FCapacity div 4
+     end
   else if FCapacity > 8 then
-    delta := 16
+     begin
+     delta := 16
+     end
   else
-    delta := 4;
+     begin
+     delta := 4;
+     end;
   SetCapacity(FCapacity + delta);
 end;
 
@@ -616,11 +674,17 @@ var
   delta: integer;
 begin
   if BCapacity > 64 then
-    delta := BCapacity div 4
+     begin
+     delta := BCapacity div 4
+     end
   else if BCapacity > 8 then
-    delta := 16
+     begin
+     delta := 16
+     end
   else
-    delta := 4;
+     begin
+     delta := 4;
+     end;
   SetCapacityBuffer(BCapacity + delta);
 end;
 
@@ -649,10 +713,14 @@ begin
   FCriticalSection.Enter;
   try
      if BCount = BCapacity then
-       GrowBuffer;
+        begin
+        GrowBuffer;
+        end;
      if Index < BCount then
-       System.Move(BList^[Index], BList^[Index + 1],
-         (BCount - Index) * SizeOf(TSpotRecord));
+        begin
+        System.Move(BList^[Index], BList^[Index + 1],
+          (BCount - Index) * SizeOf(TSpotRecord));
+        end;
      BList^[Index] := Spot;
      inc(BCount);
   finally
@@ -679,17 +747,25 @@ begin
   L1 := length(s1);
   L2 := length(s2);
   if L1 > L2 then
-    l := L2
+     begin
+     l := L2
+     end
   else
-    l := L1;
+     begin
+     l := L1;
+     end;
   for i := 1 to l do
-  begin
-    Result := Ord(s1[i]) - Ord(s2[i]);
-    if Result <> 0 then
-      Exit;
-  end;
+     begin
+     Result := Ord(s1[i]) - Ord(s2[i]);
+     if Result <> 0 then
+        begin
+        Exit;
+        end;
+     end;
   if Result = 0 then
-    Result := L1 - L2;
+     begin
+     Result := L1 - L2;
+     end;
 
   //  Result := CompareString(LOCALE_SYSTEM_DEFAULT, NORM_IGNORECASE, @s1[1], length(s1), @s2[1], length(s2)) - 2;
 
@@ -702,12 +778,12 @@ begin
   FCriticalSection.Enter;
   try
      if Assigned(FList) then
-     begin
-       for Index := 0 to FCount - 1 do
-       begin
-         FList^[Index].FMinutesLeft := 0;
-       end;
-     end;
+        begin
+        for Index := 0 to FCount - 1 do
+           begin
+           FList^[Index].FMinutesLeft := 0;
+           end;
+        end;
   finally
      FCriticalSection.Leave;
   end;
@@ -720,12 +796,12 @@ begin
   FCriticalSection.Enter;
   try
      if Assigned(FList) then
-     begin
-       for Index := 0 to FCount - 1 do
-       begin
-         FList^[Index].FDupe := False;
-       end;
-     end;
+        begin
+        for Index := 0 to FCount - 1 do
+           begin
+           FList^[Index].FDupe := False;
+           end;
+        end;
   finally
      FCriticalSection.Leave;
   end;
@@ -736,20 +812,20 @@ begin
   FCriticalSection.Enter;
   try
      if BandMapListBox <> 0 then
-     begin
-       FCurrentCursorFreq := GetBMSelItemData;
-       if FCurrentCursorFreq <> LB_ERR then
-       begin
-         if Assigned(FList) then
-         begin
-           FCurrentCursorFreq := FList^[FCurrentCursorFreq].FFrequency;
-         end
-         else
-         begin
-           DebugMsg('FList was nil in SetCursor');
-         end;
-       end;
-     end;
+        begin
+        FCurrentCursorFreq := GetBMSelItemData;
+        if FCurrentCursorFreq <> LB_ERR then
+           begin
+           if Assigned(FList) then
+              begin
+              FCurrentCursorFreq := FList^[FCurrentCursorFreq].FFrequency;
+              end
+           else
+              begin
+              DebugMsg('FList was nil in SetCursor');
+              end;
+           end;
+        end;
   finally
      FCriticalSection.Leave;
   end;
@@ -763,53 +839,57 @@ var
   a: integer;
 begin
   if not BandMapEnable then
-    Exit;
+     begin
+     Exit;
+     end;
   if not Assigned(FList) then
-  begin
-    exit;
-  end;
+     begin
+     exit;
+     end;
 
   d := MAXLONG;
   //  Index2 := 0; // 4.79.3
   for Index := 0 to FCount - 1 do
-  begin
-    a := Abs(FList^[Index].FFrequency - Freq);
-    if a = 0 then
-      exit;
-    if (a < BandMapGuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>
-      tCQAsInteger) then
-    begin
-      if (a < d) then
-      begin
-        d := a;
-        Index2 := Index;
-      end;
-      DupeInfoCall := FList^[Index2].FCall;
-      break; // stop search on match 4.130.1
-    end;
-  end;
+     begin
+     a := Abs(FList^[Index].FFrequency - Freq);
+     if a = 0 then
+        begin
+        exit;
+        end;
+     if (a < BandMapGuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>
+       tCQAsInteger) then
+        begin
+        if (a < d) then
+           begin
+           d := a;
+           Index2 := Index;
+           end;
+        DupeInfoCall := FList^[Index2].FCall;
+        break; // stop search on match 4.130.1
+        end;
+     end;
   if (d >= BandMapGuardBand) or (Pos(MyCall, Flist^[Index2].FCall) > 0) then
     // 4.57.8  // 4.72.1
-  begin
-    ClearAltD;
-    tClearDupeInfoCall;
+     begin
+     ClearAltD;
+     tClearDupeInfoCall;
 
-  end;
+     end;
 
   if d <= BandMapGuardBand then
-  begin
-    {  if not SprintQSYRule then
+     begin
+     {  if not SprintQSYRule then
        begin
         switch := False;    // n4af 4.56.1
         switchnext := False;
        end;   }
-    tClearDupeInfoCall; // 4.57.10
-    ClearAltD; // 4.65.2
-    DupeInfoCall := FList^[Index2].FCall; // 4.65.2
-    DupeCheckOnInactiveRadio(True);
-    DupeInfoCallWindowCleared := False;
-    tCallWindowSetFocus;
-  end;
+     tClearDupeInfoCall; // 4.57.10
+     ClearAltD; // 4.65.2
+     DupeInfoCall := FList^[Index2].FCall; // 4.65.2
+     DupeCheckOnInactiveRadio(True);
+     DupeInfoCallWindowCleared := False;
+     tCallWindowSetFocus;
+     end;
 end;
 
 procedure TDXSpotsList.DisplayCallsignOnThisFreq(Freq: integer);
@@ -820,62 +900,68 @@ var
   a: integer;
 begin
   if not BandMapEnable then
-    Exit;
+     begin
+     Exit;
+     end;
   if not BandMapCallWindowEnable then
-    Exit;
+     begin
+     Exit;
+     end;
   if CallsignIsTypedByOperator then
-    Exit;
+     begin
+     Exit;
+     end;
 
   d := MAXLONG;
   //  index2 := 0; // 4.79.3
   for Index := 0 to FCount - 1 do
-  begin
-    a := Abs(FList^[Index].FFrequency - Freq);
-    {logger.debug('[TDXSpotsList.DisplayCallsignOnThisFreq] a = %d, BandMapGuardBand = %d,  PInteger(@FList^[Index].FCall[1])^ = %d, tCQAsInteger = %d',
+     begin
+     a := Abs(FList^[Index].FFrequency - Freq);
+     {logger.debug('[TDXSpotsList.DisplayCallsignOnThisFreq] a = %d, BandMapGuardBand = %d,  PInteger(@FList^[Index].FCall[1])^ = %d, tCQAsInteger = %d',
                   [a, BandMapGuardBand, PInteger(@FList^[Index].FCall[1])^, tCQAsInteger]);}
-    if (a < BandMapGuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>  tCQAsInteger) then
-    begin
-      if a < d then
-      begin
-        d := a;
-        Index2 := Index;
-      end;
-    end;
-  end;
+     if (a < BandMapGuardBand) and (PInteger(@FList^[Index].FCall[1])^ <>  tCQAsInteger) then
+        begin
+        if a < d then
+           begin
+           d := a;
+           Index2 := Index;
+           end;
+        end;
+     end;
 
   if d <= BandMapGuardBand then
-  begin
-    //if (Pos(MyCall,Flist^[Index2].FCall)>0) then continue;
-    if FList^[Index2].FCall <> MyCall then
-      if OpMode = SearchAndPounceOpMode then // n4af 4.45.10
-      begin
-        tCleareCallWindow;
-        tClearDupeInfoCall; // 4.55.6
-        PutCallToCallWindow(FList^[Index2].FCall);
-        SendMessage(wh[mweCall], EM_SETSEL, 0, -1);
-        CallsignIsPastedFromBandMap := True;
-       // tSetExchWindInitExchangeEntry ; // 4.139.1
-       // Windows.SetFocus(wh[mweCall]);      // 4.139.2
-       end;
+     begin
+     //if (Pos(MyCall,Flist^[Index2].FCall)>0) then continue;
+     if FList^[Index2].FCall <> MyCall then
+       if OpMode = SearchAndPounceOpMode then // n4af 4.45.10
+          begin
+          tCleareCallWindow;
+          tClearDupeInfoCall; // 4.55.6
+          PutCallToCallWindow(FList^[Index2].FCall);
+          SendMessage(wh[mweCall], EM_SETSEL, 0, -1);
+          CallsignIsPastedFromBandMap := True;
+         // tSetExchWindInitExchangeEntry ; // 4.139.1
+         // Windows.SetFocus(wh[mweCall]);      // 4.139.2
+          end;
 
 
-   Exit;
-  end;
+    Exit;
+     end;
 
   if not CallWindowEmpty then
     if (CallsignIsPastedFromBandMap)  then
-    begin
-      tCleareCallWindow;
-      tCleareExchangeWindow;
-      //tCallWindowSetFocus;
-    end
+       begin
+       tCleareCallWindow;
+       tCleareExchangeWindow;
+       //tCallWindowSetFocus;
+       end
     else
      if CallWindowEmpty then
-    begin
-     tcleareExchangeWindow;
-     tcleareCallWindow;
-     tCallWindowSetFocus;
-    end;
+        begin
+        tcleareExchangeWindow;
+        tcleareCallWindow;
+        tCallWindowSetFocus;
+        end;
 
 end;
 

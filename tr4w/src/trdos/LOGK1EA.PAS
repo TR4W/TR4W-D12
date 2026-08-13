@@ -672,28 +672,40 @@ begin
 //  ActivePortOn := (PTTAsserted or PTTForcedOn or PTTFootSwitch) and PTTEnable;
 
    if ActiveRadioPtr.tKeyerPort in SerialPorts then
-  begin
-    SerialOff := 0;
-    if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_CW then SerialOff := CLRDTR;
-    if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_CW then SerialOff := CLRRTS;
-    if SerialOff = 0 then Exit;
-    if SerialInvert then dec(SerialOff);
-    hand := ActiveRadioPtr.tKeyerPortHandle; //ActiveRadioPtr.tKeyerPortHandle;
-    if hand <> INVALID_HANDLE_VALUE then TREscapeCommFunction(hand, SerialOff);
-  end
+      begin
+      SerialOff := 0;
+      if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_CW then
+         begin
+         SerialOff := CLRDTR;
+         end;
+      if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_CW then
+         begin
+         SerialOff := CLRRTS;
+         end;
+      if SerialOff = 0 then Exit;
+      if SerialInvert then
+         begin
+         dec(SerialOff);
+         end;
+      hand := ActiveRadioPtr.tKeyerPortHandle; //ActiveRadioPtr.tKeyerPortHandle;
+      if hand <> INVALID_HANDLE_VALUE then
+         begin
+         TREscapeCommFunction(hand, SerialOff);
+         end;
+      end
   else
 
     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
-    begin
-      if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
-      TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-      DriverBitOperation(TempByte, CW_SIGNAL, boSet1);
-        {17PIN}
-//      LPTTempByte := LPTTempByte or BIT3;
-        {1PIN}
-//      LPTTempByte := LPTTempByte xor BIT0;
-      SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-    end;
+       begin
+       if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
+       TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
+       DriverBitOperation(TempByte, CW_SIGNAL, boSet1);
+         {17PIN}
+ //      LPTTempByte := LPTTempByte or BIT3;
+         {1PIN}
+ //      LPTTempByte := LPTTempByte xor BIT0;
+       SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
+       end;
 end;
 
 procedure DVKEnableWrite;
@@ -774,30 +786,42 @@ begin
 //  CountsSinceLastCW := 0;
 
   if ActiveRadioPtr.tKeyerPort in SerialPorts then
-  begin
-    SerialOn := 0;
-    if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_CW then SerialOn := SETDTR;
-    if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_CW then SerialOn := SETRTS;
-    if SerialOn = 0 then Exit;
-    if SerialInvert then inc(SerialOn);
-    hand := ActiveRadioPtr.tKeyerPortHandle; //ActiveRadioPtr.tKeyerPortHandle;
-    if hand <> INVALID_HANDLE_VALUE then TREscapeCommFunction(hand, SerialOn);
-//    SetMainWindowText(mweInsert, inttopchar(hand));
-  end
+     begin
+     SerialOn := 0;
+     if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_CW then
+        begin
+        SerialOn := SETDTR;
+        end;
+     if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_CW then
+        begin
+        SerialOn := SETRTS;
+        end;
+     if SerialOn = 0 then Exit;
+     if SerialInvert then
+        begin
+        inc(SerialOn);
+        end;
+     hand := ActiveRadioPtr.tKeyerPortHandle; //ActiveRadioPtr.tKeyerPortHandle;
+     if hand <> INVALID_HANDLE_VALUE then
+        begin
+        TREscapeCommFunction(hand, SerialOn);
+        end;
+ //    SetMainWindowText(mweInsert, inttopchar(hand));
+     end
   else
-  begin
-    if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
-    begin
-      if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
-      TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-      DriverBitOperation(TempByte, CW_SIGNAL, boSet0);
-          {17PIN}
-//      LPTTempByte := LPTTempByte and (not BIT3);
-          {1PIN}
-//      LPTTempByte := LPTTempByte xor BIT0;
-      SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-    end;
-  end;
+     begin
+     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
+        begin
+        if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
+        TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
+        DriverBitOperation(TempByte, CW_SIGNAL, boSet0);
+            {17PIN}
+  //      LPTTempByte := LPTTempByte and (not BIT3);
+            {1PIN}
+  //      LPTTempByte := LPTTempByte xor BIT0;
+        SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
+        end;
+     end;
 
 end;
 
@@ -822,12 +846,22 @@ begin
 
   if SwapRadioRelaySense then
     if Radio = RadioOne then
-      TempRadio := RadioTwo
+       begin
+       TempRadio := RadioTwo
+       end
     else
-      TempRadio := RadioOne;
+       begin
+       TempRadio := RadioOne;
+       end;
 
-  if TempRadio = RadioOne then Operation := boSet0;
-  if TempRadio = RadioTwo then Operation := boSet1;
+  if TempRadio = RadioOne then
+     begin
+     Operation := boSet0;
+     end;
+  if TempRadio = RadioTwo then
+     begin
+     Operation := boSet1;
+     end;
 
   TempByte := GetPortByte(tRelayControlPortBaseAddress, otControl);
 
@@ -933,10 +967,10 @@ begin
   //   SpeakerBeep(CWTone, 90);
   //   Sleep(30);
   if not CWBufferAvailable then
-  begin
-    New(CWBuffer);
-    CWBufferAvailable := True;
-  end;
+     begin
+     New(CWBuffer);
+     CWBufferAvailable := True;
+     end;
 
 //  CheckPTT;
 
@@ -956,10 +990,10 @@ procedure K1EAKeyer.Dat;
 
 begin
   if not CWBufferAvailable then
-  begin
-    New(CWBuffer);
-    CWBufferAvailable := True;
-  end;
+     begin
+     New(CWBuffer);
+     CWBufferAvailable := True;
+     end;
 {
   if not PTTAsserted then
   begin
@@ -994,10 +1028,10 @@ begin
   //   Sleep(30);
 
   if not CWBufferAvailable then
-  begin
-    New(CWBuffer);
-    CWBufferAvailable := True;
-  end;
+     begin
+     New(CWBuffer);
+     CWBufferAvailable := True;
+     end;
 {
   if not PTTAsserted then
   begin
@@ -1035,27 +1069,31 @@ var
 
 begin
   if CWBufferEnd <> CWBufferStart then
-    BufferPointer := CWBufferEnd - 1
+     begin
+     BufferPointer := CWBufferEnd - 1
+     end
   else
-  begin
-    DeleteLastCharacter := False;
-    Exit;
-  end;
+     begin
+     DeleteLastCharacter := False;
+     Exit;
+     end;
 
   while BufferPointer <> CWBufferStart do
-  begin
-    dec(BufferPointer);
+     begin
+     dec(BufferPointer);
 
-    if BufferPointer < 0 then
-      BufferPointer := BufferPointer + CWBufferSize;
+     if BufferPointer < 0 then
+        begin
+        BufferPointer := BufferPointer + CWBufferSize;
+        end;
 
-    if (CWBuffer^[BufferPointer].length = 20) and (CWBuffer^[BufferPointer].Key = False) then
-    begin
-      CWBufferEnd := (BufferPointer + 1) mod CWBufferSize;
-      DeleteLastCharacter := True;
-      Exit;
-    end;
-  end;
+     if (CWBuffer^[BufferPointer].length = 20) and (CWBuffer^[BufferPointer].Key = False) then
+        begin
+        CWBufferEnd := (BufferPointer + 1) mod CWBufferSize;
+        DeleteLastCharacter := True;
+        Exit;
+        end;
+     end;
 
   DeleteLastCharacter := False;
 end;
@@ -1791,11 +1829,11 @@ begin
     (Character <> ' ') and
     (Character <> StartSendingNowKey) and
     (Character <> '^') then
-  begin
-    CWBuffer^[CWBufferEnd].length := 20;
-    CWBuffer^[CWBufferEnd].Key := False;
-    IncrementBufferEnd;
-  end;
+     begin
+     CWBuffer^[CWBufferEnd].length := 20;
+     CWBuffer^[CWBufferEnd].Key := False;
+     IncrementBufferEnd;
+     end;
 end;
 
 procedure K1EAKeyer.AddStringToCWBuffer(Msg: Str160; Tone: integer);
@@ -1815,10 +1853,10 @@ begin
 //  PaddleActive := False;
 
   if not CWBufferAvailable then
-  begin
-    New(CWBuffer);
-    CWBufferAvailable := True;
-  end;
+     begin
+     New(CWBuffer);
+     CWBufferAvailable := True;
+     end;
 
   MonitorTone := Tone;
 {
@@ -1831,26 +1869,26 @@ begin
   CommandState := False;
 
   if length(Msg) > 0 then
-  begin
-    for Character := 1 to length(Msg) do
-    begin
-      if CommandState then
-      begin
-        CWBuffer^[CWBufferEnd].length := Ord('0') - Ord(Msg[Character]);
-        IncrementBufferEnd;
-        CommandState := False;
-        Continue;
-      end;
+     begin
+     for Character := 1 to length(Msg) do
+        begin
+        if CommandState then
+           begin
+           CWBuffer^[CWBufferEnd].length := Ord('0') - Ord(Msg[Character]);
+           IncrementBufferEnd;
+           CommandState := False;
+           Continue;
+           end;
 
-      case UpCase(Msg[Character]) of
-        ControlLeftBracket: CommandState := True;
+        case UpCase(Msg[Character]) of
+          ControlLeftBracket: CommandState := True;
 
-      else
-        AddCharacterToCWBuffer(Char(UpCase(Msg[Character])));
-      end;
+        else
+          AddCharacterToCWBuffer(Char(UpCase(Msg[Character])));
+        end;
 
-    end;
-  end;
+        end;
+     end;
 
 end;
 
@@ -1881,10 +1919,13 @@ begin
 //  ExitFromCWThread := True;
   CWBufferStart := CWBufferEnd;
   if CWThreadID <> 0 then
-  begin
-    dec(CWBufferStart);
-    if CWBufferStart = -1 then CWBufferStart := CWBufferSize;
-  end;
+     begin
+     dec(CWBufferStart);
+     if CWBufferStart = -1 then
+        begin
+        CWBufferStart := CWBufferSize;
+        end;
+     end;
   logger.debug('[CWThreadProc] CWBufferStart := CWBuferEnd');
   {$IF tDebugMode}
   AddStringToTelnetConsole('CWBufferStart := CWBufferEnd', tstReceived);
@@ -1914,11 +1955,11 @@ procedure K1EAKeyer.SetSpeed(Speed: integer {byte});
 
 begin
   if Speed > 0 then
-  begin
-    CodeSpeed := Speed;
-    ElementLength := round(ElementLengthConstant / Speed);
-//    PaddlePTTOffTimerCount := ElementLength * PaddlePTTHoldCount;
-  end;
+     begin
+     CodeSpeed := Speed;
+     ElementLength := round(ElementLengthConstant / Speed);
+ //    PaddlePTTOffTimerCount := ElementLength * PaddlePTTHoldCount;
+     end;
 end;
 
 procedure DoABeep(TypeOfBeep: BeepType);
@@ -2215,74 +2256,98 @@ begin
 //  TurnOffActivePort;
 
   if Radio1.tKeyerPort in SerialPorts then
-  begin
-    hand := CPUKeyer.SerialPortConfigured_Handle[Radio1.tKeyerPort {ActiveKeyerPort}];
-    if hand = INVALID_HANDLE_VALUE then
-       begin
-       if logger.IsErrorEnabled then
-          begin
-          if (uRadioRegistry.ManufacturerOf(radio1.RadioModel) = 'Yaesu') and (radio1.RadioKeyerStopBits <> 0) then
-             begin
-             logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
-             end;
-          end;
-       hand := InitializeSerialPort(Radio1.tKeyerPort, Radio1.RadioBaudRate, 8, Tree.tNoParity, Radio1.RadioKeyerStopBits, FILE_ATTRIBUTE_NORMAL, #0);
-       end;
-    if hand <> INVALID_HANDLE_VALUE then
-    begin
-      if hand <> INVALID_HANDLE_VALUE then
-      begin
-        Radio1.tKeyerPortHandle := hand;
-        if Radio1.tr4w_keyer_DTR_state = RtsDtr_ON then TREscapeCommFunction(hand, SETDTR);
-        if Radio1.tr4w_keyer_DTR_state = RtsDtr_OFF then TREscapeCommFunction(hand, CLRDTR);
-        if Radio1.tr4w_keyer_rts_state = RtsDtr_ON then TREscapeCommFunction(hand, SETRTS);
-        if Radio1.tr4w_keyer_rts_state = RtsDtr_OFF then TREscapeCommFunction(hand, CLRRTS);
-        KeyerInitialized := True;
-      end;
-    end;
-  end;
+     begin
+     hand := CPUKeyer.SerialPortConfigured_Handle[Radio1.tKeyerPort {ActiveKeyerPort}];
+     if hand = INVALID_HANDLE_VALUE then
+        begin
+        if logger.IsErrorEnabled then
+           begin
+           if (uRadioRegistry.ManufacturerOf(radio1.RadioModel) = 'Yaesu') and (radio1.RadioKeyerStopBits <> 0) then
+              begin
+              logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
+              end;
+           end;
+        hand := InitializeSerialPort(Radio1.tKeyerPort, Radio1.RadioBaudRate, 8, Tree.tNoParity, Radio1.RadioKeyerStopBits, FILE_ATTRIBUTE_NORMAL, #0);
+        end;
+     if hand <> INVALID_HANDLE_VALUE then
+        begin
+        if hand <> INVALID_HANDLE_VALUE then
+           begin
+           Radio1.tKeyerPortHandle := hand;
+           if Radio1.tr4w_keyer_DTR_state = RtsDtr_ON then
+              begin
+              TREscapeCommFunction(hand, SETDTR);
+              end;
+           if Radio1.tr4w_keyer_DTR_state = RtsDtr_OFF then
+              begin
+              TREscapeCommFunction(hand, CLRDTR);
+              end;
+           if Radio1.tr4w_keyer_rts_state = RtsDtr_ON then
+              begin
+              TREscapeCommFunction(hand, SETRTS);
+              end;
+           if Radio1.tr4w_keyer_rts_state = RtsDtr_OFF then
+              begin
+              TREscapeCommFunction(hand, CLRRTS);
+              end;
+           KeyerInitialized := True;
+           end;
+        end;
+     end;
 
   if Radio1.tKeyerPort in [Parallel1..Parallel3] then
-  begin
-    OpenLPT(Radio1.tKeyerPortHandle, Radio1.tKeyerPort);
-//    PTTOff;
-    KeyerInitialized := True;
-  end;
+     begin
+     OpenLPT(Radio1.tKeyerPortHandle, Radio1.tKeyerPort);
+ //    PTTOff;
+     KeyerInitialized := True;
+     end;
 
   if (Radio2.tKeyerPort >= Serial1) and (Radio2.tKeyerPort <= Serial20) then
-  begin
-    hand := CPUKeyer.SerialPortConfigured_Handle[Radio2.tKeyerPort {Radio2.tr4w_KeyerPort}];
-    if hand = INVALID_HANDLE_VALUE then
-       begin
-       if logger.IsErrorEnabled then
-          begin
-          if (uRadioRegistry.ManufacturerOf(radio2.RadioModel) = 'Yaesu') and (radio2.RadioKeyerStopBits <> 0) then
-             begin
-             logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
-             end;
-          end;
-       hand := InitializeSerialPort(Radio2.tKeyerPort, Radio2.RadioBaudRate, 8, Tree.tNoParity, Radio2.RadioKeyerStopBits, FILE_ATTRIBUTE_NORMAL, #0);
-       end;
-    if hand <> INVALID_HANDLE_VALUE then
-    begin
-      if hand <> INVALID_HANDLE_VALUE then
-      begin
-        Radio2.tKeyerPortHandle := hand;
-        if Radio2.tr4w_keyer_DTR_state = RtsDtr_ON then TREscapeCommFunction(hand, SETDTR);
-        if Radio2.tr4w_keyer_DTR_state = RtsDtr_OFF then TREscapeCommFunction(hand, CLRDTR);
-        if Radio2.tr4w_keyer_rts_state = RtsDtr_ON then TREscapeCommFunction(hand, SETRTS);
-        if Radio2.tr4w_keyer_rts_state = RtsDtr_OFF then TREscapeCommFunction(hand, CLRRTS);
-        KeyerInitialized := True;
-      end;
-    end;
-  end;
+     begin
+     hand := CPUKeyer.SerialPortConfigured_Handle[Radio2.tKeyerPort {Radio2.tr4w_KeyerPort}];
+     if hand = INVALID_HANDLE_VALUE then
+        begin
+        if logger.IsErrorEnabled then
+           begin
+           if (uRadioRegistry.ManufacturerOf(radio2.RadioModel) = 'Yaesu') and (radio2.RadioKeyerStopBits <> 0) then
+              begin
+              logger.Error('***** Keyer stop bits not set to 0 for a Yaesu radio');
+              end;
+           end;
+        hand := InitializeSerialPort(Radio2.tKeyerPort, Radio2.RadioBaudRate, 8, Tree.tNoParity, Radio2.RadioKeyerStopBits, FILE_ATTRIBUTE_NORMAL, #0);
+        end;
+     if hand <> INVALID_HANDLE_VALUE then
+        begin
+        if hand <> INVALID_HANDLE_VALUE then
+           begin
+           Radio2.tKeyerPortHandle := hand;
+           if Radio2.tr4w_keyer_DTR_state = RtsDtr_ON then
+              begin
+              TREscapeCommFunction(hand, SETDTR);
+              end;
+           if Radio2.tr4w_keyer_DTR_state = RtsDtr_OFF then
+              begin
+              TREscapeCommFunction(hand, CLRDTR);
+              end;
+           if Radio2.tr4w_keyer_rts_state = RtsDtr_ON then
+              begin
+              TREscapeCommFunction(hand, SETRTS);
+              end;
+           if Radio2.tr4w_keyer_rts_state = RtsDtr_OFF then
+              begin
+              TREscapeCommFunction(hand, CLRRTS);
+              end;
+           KeyerInitialized := True;
+           end;
+        end;
+     end;
 
   if (Radio2.tKeyerPort >= Parallel1) and (Radio2.tKeyerPort <= Parallel3) then
-  begin
-    OpenLPT(Radio2.tKeyerPortHandle, Radio2.tKeyerPort);
-//    PTTOff;
-    KeyerInitialized := True;
-  end;
+     begin
+     OpenLPT(Radio2.tKeyerPortHandle, Radio2.tKeyerPort);
+ //    PTTOff;
+     KeyerInitialized := True;
+     end;
 
   ElementLength := round(ElementLengthConstant / CodeSpeed);
 
@@ -2296,11 +2361,11 @@ var
 begin
   for SerialPort := Serial1 to Serial20 do
     if CPUKeyer.SerialPortConfigured_Handle[SerialPort] <> INVALID_HANDLE_VALUE then
-    begin
-      CPUKeyer.SerialPortConfigured_Handle[SerialPort] := INVALID_HANDLE_VALUE;
-      CloseHandle(CPUKeyer.SerialPortConfigured_Handle[SerialPort]);
+       begin
+       CPUKeyer.SerialPortConfigured_Handle[SerialPort] := INVALID_HANDLE_VALUE;
+       CloseHandle(CPUKeyer.SerialPortConfigured_Handle[SerialPort]);
 
-    end;
+       end;
 
 //  DestroyDlPortio;
 
@@ -2319,7 +2384,9 @@ begin
   if BaseAddress = INVALID_HANDLE_VALUE then Exit;
   Image := BandInfoArray[Band];
   if Mode = Phone then
-    Image := Image or (1 shl 1);
+     begin
+     Image := Image or (1 shl 1);
+     end;
   SetPortByte(BaseAddress, otData, Image);
 end;
 
@@ -2327,71 +2394,103 @@ procedure SendCWBufferStart;
 begin
   CallWinKeyDown := False;  //4.52.4
   if CWBuffer^[CWBufferStart].length = 0 then // Bump speed command
-  begin
-    if CWBuffer^[CWBufferStart].Key then
-    begin
-      if CPUKeyer.CodeSpeed < 98 then inc(CPUKeyer.CodeSpeed);
-      if (CPUKeyer.CodeSpeed > 25) and (CPUKeyer.CodeSpeed < 98) then inc(CPUKeyer.CodeSpeed);
-      if (CPUKeyer.CodeSpeed > 35) and (CPUKeyer.CodeSpeed < 98) then inc(CPUKeyer.CodeSpeed);
-      if (CPUKeyer.CodeSpeed > 45) and (CPUKeyer.CodeSpeed < 98) then inc(CPUKeyer.CodeSpeed);
-    end
-    else
-    begin
-      if CPUKeyer.CodeSpeed > 49 then dec(CPUKeyer.CodeSpeed);
-      if CPUKeyer.CodeSpeed > 38 then dec(CPUKeyer.CodeSpeed);
-      if CPUKeyer.CodeSpeed > 27 then dec(CPUKeyer.CodeSpeed);
-      if CPUKeyer.CodeSpeed > 2 then dec(CPUKeyer.CodeSpeed);
-    end;
-    ElementLength := round(ElementLengthConstant / CPUKeyer.CodeSpeed);
-  end
+     begin
+     if CWBuffer^[CWBufferStart].Key then
+        begin
+        if CPUKeyer.CodeSpeed < 98 then
+           begin
+           inc(CPUKeyer.CodeSpeed);
+           end;
+        if (CPUKeyer.CodeSpeed > 25) and (CPUKeyer.CodeSpeed < 98) then
+           begin
+           inc(CPUKeyer.CodeSpeed);
+           end;
+        if (CPUKeyer.CodeSpeed > 35) and (CPUKeyer.CodeSpeed < 98) then
+           begin
+           inc(CPUKeyer.CodeSpeed);
+           end;
+        if (CPUKeyer.CodeSpeed > 45) and (CPUKeyer.CodeSpeed < 98) then
+           begin
+           inc(CPUKeyer.CodeSpeed);
+           end;
+        end
+     else
+        begin
+        if CPUKeyer.CodeSpeed > 49 then
+           begin
+           dec(CPUKeyer.CodeSpeed);
+           end;
+        if CPUKeyer.CodeSpeed > 38 then
+           begin
+           dec(CPUKeyer.CodeSpeed);
+           end;
+        if CPUKeyer.CodeSpeed > 27 then
+           begin
+           dec(CPUKeyer.CodeSpeed);
+           end;
+        if CPUKeyer.CodeSpeed > 2 then
+           begin
+           dec(CPUKeyer.CodeSpeed);
+           end;
+        end;
+     ElementLength := round(ElementLengthConstant / CPUKeyer.CodeSpeed);
+     end
 
   else
     if CWBuffer^[CWBufferStart].length < 0 then // Command mode
-    begin
-      case CWBuffer^[CWBufferStart].length of
-        -1:
-          if CWBuffer^[CWBufferStart].Key then
-            Weight := Weight + 0.03
-          else
-            Weight := Weight - 0.03;
+       begin
+       case CWBuffer^[CWBufferStart].length of
+         -1:
+           if CWBuffer^[CWBufferStart].Key then
+              begin
+              Weight := Weight + 0.03
+              end
+           else
+              begin
+              Weight := Weight - 0.03;
+              end;
 
-        -2: InvertBoolean(FarnsworthEnable);
-        -3: FarnsworthSpeed := 25;
-        -4: FarnsworthSpeed := 35;
-        -5: FarnsworthSpeed := 45;
-        -6: FarnsworthSpeed := 55;
-        -7: FarnsworthSpeed := 75;
-        -8: FarnsworthSpeed := 95;
-      end;
-    end
+         -2: InvertBoolean(FarnsworthEnable);
+         -3: FarnsworthSpeed := 25;
+         -4: FarnsworthSpeed := 35;
+         -5: FarnsworthSpeed := 45;
+         -6: FarnsworthSpeed := 55;
+         -7: FarnsworthSpeed := 75;
+         -8: FarnsworthSpeed := 95;
+       end;
+       end
     else
-    begin
-      if CWBuffer^[CWBufferStart].Key then
-      begin
-        TurnOnActivePort;
-        CWElementLength := round(Weight * (CWBuffer^[CWBufferStart].length * ElementLength) / 10.0);
+       begin
+       if CWBuffer^[CWBufferStart].Key then
+          begin
+          TurnOnActivePort;
+          CWElementLength := round(Weight * (CWBuffer^[CWBufferStart].length * ElementLength) / 10.0);
 
-        // Was: Sound(CWTone) on Windows 9x, ntBeep otherwise, then NoSound.
-        // The 9x arm drove the PC speaker through privileged IN/OUT and could
-        // not execute on any NT Windows, so this is the branch that always ran.
-        ntBeep(CWTone, CWElementLength);
-        tCWSleep(CWElementLength, tCW_Event);
-      end
-      else
-      begin
-        SendingADah := False;
-        TurnOffActivePort;
-        if FarnsworthEnable and (CWBuffer^[CWBufferStart].length >= 15) and (CodeSpeed < FarnsworthSpeed) then
-        begin
-          if CWBuffer^[CWBufferStart].length = 15 then
-            CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + (FarnsworthSpeed - CodeSpeed)
-          else
-            CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + ((FarnsworthSpeed - CodeSpeed) * 2);
-        end;
-        CWElementLength := round(((CWBuffer^[CWBufferStart].length * ElementLength) / 10.0) - ((Weight - 1.0) * 2 * ElementLength));
-        tCWSleep(CWElementLength, tCW_Event);
-      end;
-    end;
+          // Was: Sound(CWTone) on Windows 9x, ntBeep otherwise, then NoSound.
+          // The 9x arm drove the PC speaker through privileged IN/OUT and could
+          // not execute on any NT Windows, so this is the branch that always ran.
+          ntBeep(CWTone, CWElementLength);
+          tCWSleep(CWElementLength, tCW_Event);
+          end
+       else
+          begin
+          SendingADah := False;
+          TurnOffActivePort;
+          if FarnsworthEnable and (CWBuffer^[CWBufferStart].length >= 15) and (CodeSpeed < FarnsworthSpeed) then
+             begin
+             if CWBuffer^[CWBufferStart].length = 15 then
+                begin
+                CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + (FarnsworthSpeed - CodeSpeed)
+                end
+             else
+                begin
+                CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + ((FarnsworthSpeed - CodeSpeed) * 2);
+                end;
+             end;
+          CWElementLength := round(((CWBuffer^[CWBufferStart].length * ElementLength) / 10.0) - ((Weight - 1.0) * 2 * ElementLength));
+          tCWSleep(CWElementLength, tCW_Event);
+          end;
+       end;
 {$IF tDebugMode}
 //  Windows.SetWindowTextA(InsertWindowHandle, inttopchar({CWBufferEnd - }CWBufferStart));
 {$IFEND}
@@ -2416,29 +2515,29 @@ begin
 //  tCWSleep(1, tCW_Event);
   SendNext:
   if CWBufferStart <> CWBufferEnd then
-  begin
-    SendCWBufferStart;
-    if CWBufferStart <> CWBufferEnd then
-    begin
-      CWBufferStart := (CWBufferStart + 1) mod CWBufferSize;
-      goto SendNext;
-    end;
+     begin
+     SendCWBufferStart;
+     if CWBufferStart <> CWBufferEnd then
+        begin
+        CWBufferStart := (CWBufferStart + 1) mod CWBufferSize;
+        goto SendNext;
+        end;
 
-  end;
+     end;
 
   if b = False then
     if tStartAutoCallTerminate(CWThreadID) then
-    begin
-      b := True;
-      goto SendNext;
-    end;
+       begin
+       b := True;
+       goto SendNext;
+       end;
 //  if tAutoSendMode then goto SendNext;
 
   if tAutoSendMode or tWaitForNextChar then
-  begin
-    Sleep(10);
-    goto SendNext;
-  end;
+     begin
+     Sleep(10);
+     goto SendNext;
+     end;
 
   ExitAndPTTof:
   logger.debug('[CWThreadProc] ExitAndPTTof');
@@ -2446,7 +2545,10 @@ begin
   AddStringToTelnetConsole('ExitAndPTTof', tstReceived);
 {$IFEND}
   CWBufferStart := CWBufferEnd;
-  if not PaddlePTTOn then PTTOff;
+  if not PaddlePTTOn then
+     begin
+     PTTOff;
+     end;
 
 //  ExitFromCWThread := False;
    SetSpeed(DisplayedCodeSpeed);   // 4.50.1
@@ -2461,7 +2563,9 @@ begin
   timeEndPeriod(1);
 
   if not CloseHandle(CWThreadHandle) then
-    ShowSysErrorMessage('CW');
+     begin
+     ShowSysErrorMessage('CW');
+     end;
 
   CWThreadID := 0;
 
@@ -2476,11 +2580,11 @@ begin
     if ExchangeHasBeenSent = False then
       if tAutoSendMode then
         if ControlAMode = False then
-        begin
-          AttachThreadInput(idAttach, MainThreadID, True);
-          ReturnInCQOpMode;
-          Result := True;
-        end;
+           begin
+           AttachThreadInput(idAttach, MainThreadID, True);
+           ReturnInCQOpMode;
+           Result := True;
+           end;
 end;
 
 procedure tStartAutoCQ;
@@ -2490,7 +2594,9 @@ begin
   AddStringToTelnetConsole('In tStartAutoCQ', tstReceived);
 {$IFEND}
   if tAutoCQMode = True then
-    tAutoCQTimerID := SetTimer(tr4whandle, AUTOCQ_TIMER_HANDLE, AutoCQDelayTime, @tAutoCQTimerProc);
+     begin
+     tAutoCQTimerID := SetTimer(tr4whandle, AUTOCQ_TIMER_HANDLE, AutoCQDelayTime, @tAutoCQTimerProc);
+     end;
 
 end;
 
@@ -2593,13 +2699,19 @@ var
 begin
   Windows.KillTimer(tr4whandle, AUTOCQ_TIMER_HANDLE);
   if OpMode = SearchAndPounceOpMode then
-  begin
-    TryKillAutoCQ;
-    Exit;
-  end;
+     begin
+     TryKillAutoCQ;
+     Exit;
+     end;
   TempChar := AutoCQMemory;
-  if (AutoCQMemory = F1) and RandomCQMode then TempChar := Char(Random(4) + 112);
-  if GetCQMemoryString(ActiveMode, TempChar) = '' then TempChar := AutoCQMemory;
+  if (AutoCQMemory = F1) and RandomCQMode then
+     begin
+     TempChar := Char(Random(4) + 112);
+     end;
+  if GetCQMemoryString(ActiveMode, TempChar) = '' then
+     begin
+     TempChar := AutoCQMemory;
+     end;
   //   Windows.SetWindowTextA(VC.InsertWindowHandle, inttopchar(ord(TempChar)));
   tDisplayAutoCQStatus;
   SendFunctionKeyMessage(TempChar, OpMode);
@@ -2616,13 +2728,13 @@ begin
 
   t := timeSetEvent(millsec, 1, TFNTimeCallBack(myEvent), 0, TIME_ONESHOT + TIME_CALLBACK_EVENT_SET);
   if t <> 0 then
-  begin
-    WaitForSingleObject(myEvent, INFINITE);
-  end
+     begin
+     WaitForSingleObject(myEvent, INFINITE);
+     end
   else
-  begin
-    Sleep(millsec);
-  end;
+     begin
+     Sleep(millsec);
+     end;
 
 {$IF tDebugMode}
 //  cw_tick_array[cw_tick] := (GetCPU - Start) {div 17000000};
@@ -2651,114 +2763,157 @@ begin
 //  sleep(100);
 
   if PaddlePTTOn = False then
-    Sleep(CWElementLength)
+     begin
+     Sleep(CWElementLength)
+     end
   else
-    tCWSleep(CWElementLength, tCWPaddle_Event);
+     begin
+     tCWSleep(CWElementLength, tCWPaddle_Event);
+     end;
 
   if tDoingFootSwitchEnable then
     if FootSwitchMode <> FootSwitchDisabled then
-    begin
-      if not tUseControlPort then
-      begin
-            {LPT}
-        TempByte := GetPortByte(tFootSwitchPortBaseAddress, otState);
-//        Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));
-        if TempByte and 8 = 8 then
-        begin
-          if tFootSwitchPressed = True then
-            if FootSwitchMode = Normal then PTTOff;
-          tFootSwitchPressed := False;
-        end;
-        if TempByte and 8 = 0 then
-          if tFootSwitchPressed = False then
+       begin
+       if not tUseControlPort then
           begin
-            tFootSwitchPressed := True;
-            tFootSwitchProcedure;
-          end;
+             {LPT}
+         TempByte := GetPortByte(tFootSwitchPortBaseAddress, otState);
+ //        Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));
+         if TempByte and 8 = 8 then
+            begin
+            if tFootSwitchPressed = True then
+              if FootSwitchMode = Normal then
+                 begin
+                 PTTOff;
+                 end;
+            tFootSwitchPressed := False;
+            end;
+         if TempByte and 8 = 0 then
+           if tFootSwitchPressed = False then
+              begin
+              tFootSwitchPressed := True;
+              tFootSwitchProcedure;
+              end;
 
-      end
-      else
-      begin
-            {COM}
-        GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal);
-
-        if TempCardinal and MS_RLSD_ON = 0 then
-        begin
-          if tFootSwitchPressed = True then
-            if FootSwitchMode = Normal then PTTOff;
-          tFootSwitchPressed := False;
-        end;
-        if TempCardinal and MS_RLSD_ON = MS_RLSD_ON then
-          if tFootSwitchPressed = False then
+       end
+       else
           begin
-            tFootSwitchPressed := True;
-            tFootSwitchProcedure;
+          {COM}
+      GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal);
+
+      if TempCardinal and MS_RLSD_ON = 0 then
+         begin
+         if tFootSwitchPressed = True then
+           if FootSwitchMode = Normal then
+              begin
+              PTTOff;
+              end;
+         tFootSwitchPressed := False;
+         end;
+      if TempCardinal and MS_RLSD_ON = MS_RLSD_ON then
+        if tFootSwitchPressed = False then
+           begin
+           tFootSwitchPressed := True;
+           tFootSwitchProcedure;
+           end;
           end;
-      end;
-    end;
+       end;
 
   if DoingPaddle then
     if ActiveMode = CW then
-    begin
+       begin
 
-      DitContact := False;
-      DahContact := False;
-      if not tUseControlPort then
-      begin
-        if tPaddlePortBaseAddress <> INVALID_HANDLE_VALUE then
-        begin
-          TempByte := GetPortByte(tPaddlePortBaseAddress, otState);
-//          Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));
-          if TempByte and 32 = 0 then DitContact := True;
-          if TempByte and 16 = 0 then DahContact := True;
-        end;
-      end
-      else
-      begin
-            //1.DCD - 128 6.DSR - 32 Dah 8.CTS - 16 Dit  9.RI  - 64
-        GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal);
-        if TempCardinal and MS_CTS_ON = MS_CTS_ON then DitContact := True;
-        if TempCardinal and MS_DSR_ON = MS_DSR_ON then DahContact := True;
-      end;
-      if (DitContact or DahContact) then
-      begin
-        tPTTOnCounter := 0;
-        CWBufferStart := CWBufferEnd;
-        if PaddlePTTOn = False then
-        begin
-          PaddlePTTOn := True;
-          if not CheckPTTLockout then PTTOn;
-        end;
-        TurnOnActivePort;
+       DitContact := False;
+       DahContact := False;
+       if not tUseControlPort then
+          begin
+          if tPaddlePortBaseAddress <> INVALID_HANDLE_VALUE then
+             begin
+             TempByte := GetPortByte(tPaddlePortBaseAddress, otState);
+   //          Windows.SetWindowTextA(wh[mweUserInfo], inttopchar(TempByte));
+             if TempByte and 32 = 0 then
+                begin
+                DitContact := True;
+                end;
+             if TempByte and 16 = 0 then
+                begin
+                DahContact := True;
+                end;
+             end;
+          end
+       else
+          begin
+          //1.DCD - 128 6.DSR - 32 Dah 8.CTS - 16 Dit  9.RI  - 64
+      GetCommModemStatus(Radio1.tCATPortHandle, TempCardinal);
+      if TempCardinal and MS_CTS_ON = MS_CTS_ON then
+         begin
+         DitContact := True;
+         end;
+      if TempCardinal and MS_DSR_ON = MS_DSR_ON then
+         begin
+         DahContact := True;
+         end;
+          end;
+       if (DitContact or DahContact) then
+          begin
+          tPTTOnCounter := 0;
+          CWBufferStart := CWBufferEnd;
+          if PaddlePTTOn = False then
+             begin
+             PaddlePTTOn := True;
+             if not CheckPTTLockout then
+                begin
+                PTTOn;
+                end;
+             end;
+          TurnOnActivePort;
 
-        if DahContact then CWElementLength := tPaddleElementLength * 3;
-        if SwapPaddles then
-        begin
-          if DahContact then CWElementLength := tPaddleElementLength;
-          if DitContact then CWElementLength := tPaddleElementLength * 3;
-        end;
+          if DahContact then
+             begin
+             CWElementLength := tPaddleElementLength * 3;
+             end;
+          if SwapPaddles then
+             begin
+             if DahContact then
+                begin
+                CWElementLength := tPaddleElementLength;
+                end;
+             if DitContact then
+                begin
+                CWElementLength := tPaddleElementLength * 3;
+                end;
+             end;
 
-        // See the note at the CW-buffer sidetone above: the Windows 9x arm
-        // (Sound/NoSound over privileged IN/OUT) could never run here.
-        ntBeep(PaddleMonitorTone, CWElementLength);
+          // See the note at the CW-buffer sidetone above: the Windows 9x arm
+          // (Sound/NoSound over privileged IN/OUT) could never run here.
+          ntBeep(PaddleMonitorTone, CWElementLength);
 
-            //        Sleep(CWElementLength);
-        tCWSleep(CWElementLength, tCWPaddle_Event);
+              //        Sleep(CWElementLength);
+          tCWSleep(CWElementLength, tCWPaddle_Event);
 
-        TurnOffActivePort;
-      end
-      else
-      begin
-        if PaddlePTTOn then inc(tPTTOnCounter);
-      end;
-      if PaddlePTTOn then if tPTTOnCounter = PaddlePTTHoldCount then
-        begin
-          PaddlePTTOn := False;
-          if CWBufferStart = CWBufferEnd then PTTOff;
-        end;
-    end;
+          TurnOffActivePort;
+          end
+       else
+          begin
+          if PaddlePTTOn then
+             begin
+             inc(tPTTOnCounter);
+             end;
+          end;
+       if PaddlePTTOn then if tPTTOnCounter = PaddlePTTHoldCount then
+                              begin
+                              PaddlePTTOn := False;
+                              if CWBufferStart = CWBufferEnd then
+                                 begin
+                                 PTTOff;
+                                 end;
+                              end;
+       end;
 
-  if tExitFromPaddleFootSwitchThread = False then goto Start;
+  if tExitFromPaddleFootSwitchThread = False then
+     begin
+     goto Start;
+     end;
 
 end;
 
@@ -2768,7 +2923,10 @@ var
 begin
 
   TempSpeed := PaddleSpeed;
-  if TempSpeed = 0 then TempSpeed := CodeSpeed;
+  if TempSpeed = 0 then
+     begin
+     TempSpeed := CodeSpeed;
+     end;
   tPaddleElementLength := round(ElementLengthConstant / TempSpeed);
 end;
 
@@ -2798,9 +2956,13 @@ begin
     FootSwitchF1:
       begin
         if OpMode = CQOpMode then
-          SendFunctionKeyMessage(F1, CQOpMode)
+           begin
+           SendFunctionKeyMessage(F1, CQOpMode)
+           end
         else
-          ProcessExchangeFunctionKey(F1);
+           begin
+           ProcessExchangeFunctionKey(F1);
+           end;
       end;
 
     //    FootSwitchDisabled:      FootSwitchPressed := False;
@@ -2816,7 +2978,9 @@ begin
 
     StartSending:
       if ActiveMode = CW then
-        PostMessage(wh[mweCall], WM_CHAR, integer(StartSendingNowKey), 0);
+         begin
+         PostMessage(wh[mweCall], WM_CHAR, integer(StartSendingNowKey), 0);
+         end;
 
     SwapRadio:
       begin
@@ -2826,7 +2990,10 @@ begin
 
     Normal:
       begin
-        if not CheckPTTLockout then PTTOn;
+        if not CheckPTTLockout then
+           begin
+           PTTOn;
+           end;
         //        if TwoRadioState <> TwoRadiosDisabled then          CheckTwoRadioState(FootswitchWasPressed);
 
         //        FootSwitchPressed := False;
@@ -2835,9 +3002,13 @@ begin
       begin
         AttachThreadInput(tPaddleThreadID, MainThreadID, True);
         if FootSwitchMode = QSONormal then
-          ProcessReturn
+           begin
+           ProcessReturn
+           end
         else
-          ProcessMenu(menu_ctrl_logqsowithoutcw);
+           begin
+           ProcessMenu(menu_ctrl_logqsowithoutcw);
+           end;
       end;
 
   end;
@@ -2847,28 +3018,36 @@ end;
 function tGetPortType(port: PortType): PortInterface;
 begin
   Result := NoInterface;
-  if port in SerialPorts then Result := SerialInterface
+  if port in SerialPorts then
+     begin
+     Result := SerialInterface
+     end
   else
-    if port in [Parallel1..Parallel3] then Result := ParallelInterface;
+    if port in [Parallel1..Parallel3] then
+       begin
+       Result := ParallelInterface;
+       end;
 end;
 
 procedure BackToInactiveRadioAfterQSO;
 begin
   if (ActiveRadioPtr^.tTwoRadioMode = TR3) then // ny4i Issue 149 This activeradioptr.cwbycat would cause the rigs to swap all the time for CWBC or (activeradioptr.cwbycat) then
-  begin
-    tClearDupeInfoCall;
-    ActiveRadioPtr^.tTwoRadioMode := TR0;
-    InActiveRadioPtr^.tTwoRadioMode := TR0;
-    SwapRadios;
-    SetOpMode(CQOpMode);
-     if AltDCQEnable then  // 4.89.3
-     if OnDeckCall = '' then
-      SendCrypticMessage(GetCQMemoryString(ActiveMode, F1))
-     else
      begin
-      PutCallToCallWindow(OnDeckCall);
+     tClearDupeInfoCall;
+     ActiveRadioPtr^.tTwoRadioMode := TR0;
+     InActiveRadioPtr^.tTwoRadioMode := TR0;
+     SwapRadios;
+     SetOpMode(CQOpMode);
+      if AltDCQEnable then  // 4.89.3
+      if OnDeckCall = '' then
+         begin
+         SendCrypticMessage(GetCQMemoryString(ActiveMode, F1))
+         end
+      else
+         begin
+         PutCallToCallWindow(OnDeckCall);
+         end;
      end;
-  end;
 
 //  if ActiveRadioPtr^.tTwoRadioMode = TR2 then
 //   if (GetCQMemoryString(InActiveRadioPtr^.ModeMemory, AltF3) <> '') {and (CalledFromCQMode) } then

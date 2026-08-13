@@ -206,17 +206,17 @@ begin
 //        SendMessage(RichEditViewer, EM_SETBKGNDCOLOR, 0, $0000FFff);
 
         if PreviewFileIsCabrillo then
-        begin
-          Menu := GetMenu(hwnddlg);
-          if ContestsArray[Contest].Email <> nil then
-          begin
-            TF.Format(wsprintfBuffer, 'Send log to %s', ContestsArray[Contest].Email);
-            AppendMenuA(Menu, MF_CHECKED + MF_STRING, 105, wsprintfBuffer);
-          end;
+           begin
+           Menu := GetMenu(hwnddlg);
+           if ContestsArray[Contest].Email <> nil then
+              begin
+              TF.Format(wsprintfBuffer, 'Send log to %s', ContestsArray[Contest].Email);
+              AppendMenuA(Menu, MF_CHECKED + MF_STRING, 105, wsprintfBuffer);
+              end;
 
-          //if Contest in [DARCWAEDCCW, DARCWAEDCSSB, RUSSIANDX, IARU, ARRL160, ARRL10, ARRLSSCW, ARRLSSSSB, ARRLDXCW, ARRLDXSSB, CQ160CW, CQ160SSB, CQWPXCW, CQWPXSSB, CQWWCW, CQWWSSB, CQWWRTTY] then
-           // AppendMenu(Menu, MF_STRING, 106, 'Contribute log for SCP database');
-        end;
+           //if Contest in [DARCWAEDCCW, DARCWAEDCSSB, RUSSIANDX, IARU, ARRL160, ARRL10, ARRLSSCW, ARRLSSSSB, ARRLDXCW, ARRLDXSSB, CQ160CW, CQ160SSB, CQWPXCW, CQWPXSSB, CQWWCW, CQWWSSB, CQWWRTTY] then
+            // AppendMenu(Menu, MF_STRING, 106, 'Contribute log for SCP database');
+           end;
 //        RichEditViewer := Get101Window(hwnddlg);
         SetWindowTextA(hwnddlg, PreviewFileNameAddress);
         Windows.SetTimer(hwnddlg, 1, 50, nil);
@@ -286,18 +286,18 @@ var
 begin
   module := LoadLibrary('Mapi32.dll');
   if module <> 0 then
-  begin
-    @MapiSendMail := GetProcAddress(module, 'MAPISendMail');
-    Windows.ZeroMemory(@lpMessage, SizeOf(TMapiMessage));
-    Windows.ZeroMemory(@lpRecips, SizeOf(TMapiRecipDesc));
-    Windows.ZeroMemory(@Files, SizeOf(Files));
+     begin
+     @MapiSendMail := GetProcAddress(module, 'MAPISendMail');
+     Windows.ZeroMemory(@lpMessage, SizeOf(TMapiMessage));
+     Windows.ZeroMemory(@lpRecips, SizeOf(TMapiRecipDesc));
+     Windows.ZeroMemory(@Files, SizeOf(Files));
 
-    lpMessage.lpRecips := @lpRecips;
-    lpMessage.lpFiles := @Files;
+     lpMessage.lpRecips := @lpRecips;
+     lpMessage.lpFiles := @Files;
 
-    if BugReport then
-    begin
-{
+     if BugReport then
+        begin
+        {
       lpMessage.lpszSubject := '[Bug Report] ' + TR4W_CURRENTVERSION;
       TF.Format(wsprintfBuffer, 'Version: ' + TR4W_CURRENTVERSION + ' (' + TR4W_CURRENTVERSIONDATE + ')'#13#10'OS: %u.%u %s'#13#10'Attached 3 files.'#13#10#13#10'Description:'#13#10, tr4w_osverinfo.dwMajorVersion, tr4w_osverinfo.dwMinorVersion, tr4w_osverinfo.szCSDVersion);
       lpMessage.lpszNoteText := wsprintfBuffer;
@@ -307,32 +307,32 @@ begin
       Files[1].lpszPathName := TR4W_CFG_FILENAME;
       Files[2].lpszPathName := TR4W_INI_FILENAME;
 }
-    end
-    else
-    begin
-      lpMessage.lpszSubject := @MyCall[1];
+        end
+     else
+        begin
+        lpMessage.lpszSubject := @MyCall[1];
 
-      lpMessage.nFileCount := 1;
-      Files[0].lpszPathName := PreviewFileNameAddress;
-    end;
+        lpMessage.nFileCount := 1;
+        Files[0].lpszPathName := PreviewFileNameAddress;
+        end;
 
-    Files[0].nPosition := ULONG($FFFFFFFF);
+     Files[0].nPosition := ULONG($FFFFFFFF);
 
-    lpMessage.nRecipCount := 1;
-    lpMessage.flFlags := MAPI_UNREAD;
-    TF.Format(TempBuffer, 'SMTP:%s', Address);
-    lpRecips.lpszAddress := TempBuffer;
-    lpRecips.ulRecipClass := MAPI_TO;
+     lpMessage.nRecipCount := 1;
+     lpMessage.flFlags := MAPI_UNREAD;
+     TF.Format(TempBuffer, 'SMTP:%s', Address);
+     lpRecips.lpszAddress := TempBuffer;
+     lpRecips.ulRecipClass := MAPI_TO;
 
-    MapiResult := MapiSendMail(0, tr4whandle, lpMessage, MAPI_LOGON_UI or MAPI_DIALOG, 0);
-    if MapiResult > 1 then
-    begin
-      TF.Format(wsprintfBuffer, 'Send Mail Error: %u', MapiResult);
-      showwarning(wsprintfBuffer);
-    end;
+     MapiResult := MapiSendMail(0, tr4whandle, lpMessage, MAPI_LOGON_UI or MAPI_DIALOG, 0);
+     if MapiResult > 1 then
+        begin
+        TF.Format(wsprintfBuffer, 'Send Mail Error: %u', MapiResult);
+        showwarning(wsprintfBuffer);
+        end;
 
-    FreeLibrary(module);
-  end;
+     FreeLibrary(module);
+     end;
 end;
 
 function OpenCallback(dwCookie: LONGINT; pbBuff: PByte; cb: LONGINT; var pcb: LONGINT): LONGINT; stdcall;
@@ -342,11 +342,14 @@ begin
   Windows.ReadFile(dwCookie, pbBuff^, cb, Cardinal(pcb), nil);
 //  pcb := _lread(dwCookie, pbBuff, cb);
   if pcb <= 0 {-1} then
-  begin
-    pcb := 0;
-    Result := ReadError;
-  end
-  else Result := NoError;
+     begin
+     pcb := 0;
+     Result := ReadError;
+     end
+  else
+     begin
+     Result := NoError;
+     end;
 end;
 
 end.

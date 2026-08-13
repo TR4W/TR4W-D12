@@ -61,8 +61,14 @@ begin
 
         dwNewLong := MainStyle;
 
-        if not tInputDialogLowerCase then dwNewLong := dwNewLong + ES_UPPERCASE;
-        if tInputDialogInteger then dwNewLong := dwNewLong + ES_NUMBER;
+        if not tInputDialogLowerCase then
+           begin
+           dwNewLong := dwNewLong + ES_UPPERCASE;
+           end;
+        if tInputDialogInteger then
+           begin
+           dwNewLong := dwNewLong + ES_NUMBER;
+           end;
 
 //        SetDlgItemText(hwnddlg, 102, IQPrompt);
         Windows.SetWindowTextA(hwnddlg, 'TR4W');
@@ -91,7 +97,9 @@ begin
         // Win32 way to convert an existing edit to password mode after
         // creation -- toggling ES_PASSWORD via SetWindowLong does not work.
         if tInputDialogPassword then
-          SendDlgItemMessage(hwnddlg, 101, EM_SETPASSWORDCHAR, Ord('*'), 0);
+           begin
+           SendDlgItemMessage(hwnddlg, 101, EM_SETPASSWORDCHAR, Ord('*'), 0);
+           end;
 
         tInputDialogWarning := False;
         tInputDialogInteger := False;

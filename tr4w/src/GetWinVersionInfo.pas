@@ -192,244 +192,296 @@ begin
     BRes := GetVersionEx(OSVI);
   end;
   if (not BRes) and (not NTBres) then
-    Exit;
+     begin
+     Exit;
+     end;
   Move( OSVI, OSVI_NT, SizeOf(TOSVersionInfo) );
 
   if Assigned(GetNativeSystemInfo) then
-    GetNativeSystemInfo(SI)
+     begin
+     GetNativeSystemInfo(SI)
+     end
   else
-    GetSystemInfo(SI);
+     begin
+     GetSystemInfo(SI);
+     end;
 
   case OSVI_NT.dwPlatformId of
      VER_PLATFORM_WIN32_NT:
        begin
          if OSVI_NT.dwMajorVersion <= 4 then
-           Result := 'Windows NT ';
+            begin
+            Result := 'Windows NT ';
+            end;
          if (OSVI_NT.dwMajorVersion = 5) then
-         begin
-           case OSVI_NT.dwMinorVersion of
-             0: Result := 'Windows 2000 ';
-             1: begin
-                  Result := 'Windows XP ';
-                  if (GetSystemMetrics(SM_MEDIACENTER) <> 0) then
-                    Result := Result + 'Media Center';
-                end;
-             2: begin
-                 if (OSVI_NT.wProductType = VER_NT_WORKSTATION) and
-                    (SI.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64) then
-                   Result := 'Windows XP Professional x64 '
-                 else
-                 begin
-                   if GetSystemMetrics(SM_SERVERR2) <> 0 then
-                     Result := 'Windows Server 2003 R2'
-                   else
-                     Result := 'Windows Server 2003 ';
-                end;
-             end;
-           end;
-         end;
-         if (OSVI_NT.dwMajorVersion = 6) then
-         begin
-           case OSVI_NT.dwMinorVersion of
-             0: begin
-                  if OSVI_NT.wProductType = VER_NT_WORKSTATION then
-                    Result := 'Windows Vista '
+            begin
+            case OSVI_NT.dwMinorVersion of
+              0: Result := 'Windows 2000 ';
+              1: begin
+                   Result := 'Windows XP ';
+                   if (GetSystemMetrics(SM_MEDIACENTER) <> 0) then
+                      begin
+                      Result := Result + 'Media Center';
+                      end;
+                 end;
+              2: begin
+                  if (OSVI_NT.wProductType = VER_NT_WORKSTATION) and
+                     (SI.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64) then
+                     begin
+                     Result := 'Windows XP Professional x64 '
+                     end
                   else
-                   Result := 'Windows Server 2008 ';
-                 end;
-             1:  begin
+                     begin
+                     if GetSystemMetrics(SM_SERVERR2) <> 0 then
+                        begin
+                        Result := 'Windows Server 2003 R2'
+                        end
+                     else
+                        begin
+                        Result := 'Windows Server 2003 ';
+                        end;
+                     end;
+              end;
+            end;
+            end;
+         if (OSVI_NT.dwMajorVersion = 6) then
+            begin
+            case OSVI_NT.dwMinorVersion of
+              0: begin
                    if OSVI_NT.wProductType = VER_NT_WORKSTATION then
-                     Result := 'Windows 7 '
+                      begin
+                      Result := 'Windows Vista '
+                      end
                    else
-                     Result := 'Windows Server 2008 R2 ';
-                 end;
-             2:  begin
-                   if OSVI_NT.wProductType = VER_NT_WORKSTATION then
-                     Result := 'Windows 8 '
-                   else
-                     Result := 'Windows Server 2012 ';
-                 end;
-           else
-             Result := 'Unknown Windows version ';
-           end;
+                      begin
+                      Result := 'Windows Server 2008 ';
+                      end;
+                  end;
+              1:  begin
+                    if OSVI_NT.wProductType = VER_NT_WORKSTATION then
+                       begin
+                       Result := 'Windows 7 '
+                       end
+                    else
+                       begin
+                       Result := 'Windows Server 2008 R2 ';
+                       end;
+                  end;
+              2:  begin
+                    if OSVI_NT.wProductType = VER_NT_WORKSTATION then
+                       begin
+                       Result := 'Windows 8 '
+                       end
+                    else
+                       begin
+                       Result := 'Windows Server 2012 ';
+                       end;
+                  end;
+            else
+              Result := 'Unknown Windows version ';
+            end;
 
-           if Assigned(GetProductInfo) then
-           begin
-             GetProductInfo(OSVI_NT.dwMajorVersion,
-                            OSVI_NT.dwMinorVersion,
-                            0,
-                            0,
-                            pdwReturnedProductType);
-             case pdwReturnedProductType of
-               PRODUCT_PROFESSIONAL,
-               PRODUCT_PROFESSIONAL_N:
-                 tmpStr := 'Professional';
-               PRODUCT_PROFESSIONAL_WMC:
-                 tmpStr := 'Professional with Media Center';
-               PRODUCT_BUSINESS,
-               PRODUCT_BUSINESS_N:
-                 tmpStr := 'Business Edition';
-               PRODUCT_CLUSTER_SERVER:
-                 tmpStr := 'Cluster Server Edition';
-               PRODUCT_DATACENTER_SERVER:
-                 tmpStr := 'Server Datacenter Edition (full installation)';
-               PRODUCT_DATACENTER_SERVER_CORE:
-                 tmpStr := 'Server Datacenter Edition (core installation)';
-               PRODUCT_ENTERPRISE,
-               PRODUCT_ENTERPRISE_N:
-                 tmpStr := 'Enterprise Edition';
-               PRODUCT_ENTERPRISE_SERVER:
-                 tmpStr := 'Server Enterprise Edition (full installation)';
-               PRODUCT_ENTERPRISE_SERVER_CORE:
-                 tmpStr := 'Server Enterprise Edition (core installation)';
-               PRODUCT_ENTERPRISE_SERVER_IA64:
-                 tmpStr := 'Server Enterprise Edition for Itanium-based Systems';
-               PRODUCT_HOME_BASIC,
-               PRODUCT_HOME_BASIC_N:
-                 tmpStr := 'Home Basic Edition';
-               PRODUCT_HOME_PREMIUM,
-               PRODUCT_HOME_PREMIUM_N:
-                 tmpStr := 'Home Premium Edition';
-               PRODUCT_HOME_PREMIUM_SERVER:
-                 tmpStr := 'Home Premium Server Edition';
-               PRODUCT_HOME_SERVER:
-                 tmpStr := 'Home Server Edition';
-               PRODUCT_HYPERV:
-                 tmpStr := 'Hyper-V Server Edition';
-               PRODUCT_MEDIUMBUSINESS_SERVER_MANAGEMENT:
-                 tmpStr := 'Windows Essential Business Server Management Server Edition';
-               PRODUCT_MEDIUMBUSINESS_SERVER_SECURITY:
-                 tmpStr := 'Windows Essential Business Server Security Server Edition';
-               PRODUCT_MEDIUMBUSINESS_SERVER_MESSAGING:
-                 tmpStr := 'Windows Essential Business Server Messaging Server Edition';
-               PRODUCT_SERVER_FOR_SMALLBUSINESS:
-                 tmpStr := 'Server for Small Business Edition';
-               PRODUCT_SERVER_FOUNDATION:
-                 tmpStr := 'Server Foundation';
-               PRODUCT_SMALLBUSINESS_SERVER:
-                 tmpStr := 'Small Business Server';
-               PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
-                 tmpStr := 'Small Business Server Premium Edition';
-               PRODUCT_STANDARD_SERVER:
-                 tmpStr := 'Server Standard Edition (full installation)';
-               PRODUCT_STANDARD_SERVER_CORE:
-                 tmpStr := 'Server Standard Edition (core installation)';
-               PRODUCT_STARTER:
-                 tmpStr := 'Starter Edition';
-               PRODUCT_STORAGE_ENTERPRISE_SERVER:
-                 tmpStr := 'Storage Server Enterprise Edition';
-               PRODUCT_STORAGE_EXPRESS_SERVER:
-                 tmpStr := 'Storage Server Express Edition';
-               PRODUCT_STORAGE_STANDARD_SERVER:
-                 tmpStr := 'Storage Server Standard Edition';
-               PRODUCT_STORAGE_WORKGROUP_SERVER:
-                 tmpStr := 'Storage Server Workgroup Edition';
-               PRODUCT_UNDEFINED:
-                 tmpStr := 'An unknown product';
-               PRODUCT_ULTIMATE,
-               PRODUCT_ULTIMATE_N:
-                 tmpStr := 'Ultimate Edition';
-               PRODUCT_WEB_SERVER:
-                 tmpStr := 'Web Server Edition';
-               PRODUCT_WEB_SERVER_CORE:
-                 tmpStr := 'Web Server Edition (core installation)';
-               PRODUCT_UNLICENSED:
-                 tmpStr := 'Unlicensed product'
-             else
-               tmpStr := '';
-             end;{ pdwReturnedProductType }
-             Result := Result + tmpStr;
-             NTBRes := FALSE;
-           end;{ GetProductInfo<>NIL }
-         end;{ Vista }
+            if Assigned(GetProductInfo) then
+               begin
+               GetProductInfo(OSVI_NT.dwMajorVersion,
+                              OSVI_NT.dwMinorVersion,
+                              0,
+                              0,
+                              pdwReturnedProductType);
+               case pdwReturnedProductType of
+                 PRODUCT_PROFESSIONAL,
+                 PRODUCT_PROFESSIONAL_N:
+                   tmpStr := 'Professional';
+                 PRODUCT_PROFESSIONAL_WMC:
+                   tmpStr := 'Professional with Media Center';
+                 PRODUCT_BUSINESS,
+                 PRODUCT_BUSINESS_N:
+                   tmpStr := 'Business Edition';
+                 PRODUCT_CLUSTER_SERVER:
+                   tmpStr := 'Cluster Server Edition';
+                 PRODUCT_DATACENTER_SERVER:
+                   tmpStr := 'Server Datacenter Edition (full installation)';
+                 PRODUCT_DATACENTER_SERVER_CORE:
+                   tmpStr := 'Server Datacenter Edition (core installation)';
+                 PRODUCT_ENTERPRISE,
+                 PRODUCT_ENTERPRISE_N:
+                   tmpStr := 'Enterprise Edition';
+                 PRODUCT_ENTERPRISE_SERVER:
+                   tmpStr := 'Server Enterprise Edition (full installation)';
+                 PRODUCT_ENTERPRISE_SERVER_CORE:
+                   tmpStr := 'Server Enterprise Edition (core installation)';
+                 PRODUCT_ENTERPRISE_SERVER_IA64:
+                   tmpStr := 'Server Enterprise Edition for Itanium-based Systems';
+                 PRODUCT_HOME_BASIC,
+                 PRODUCT_HOME_BASIC_N:
+                   tmpStr := 'Home Basic Edition';
+                 PRODUCT_HOME_PREMIUM,
+                 PRODUCT_HOME_PREMIUM_N:
+                   tmpStr := 'Home Premium Edition';
+                 PRODUCT_HOME_PREMIUM_SERVER:
+                   tmpStr := 'Home Premium Server Edition';
+                 PRODUCT_HOME_SERVER:
+                   tmpStr := 'Home Server Edition';
+                 PRODUCT_HYPERV:
+                   tmpStr := 'Hyper-V Server Edition';
+                 PRODUCT_MEDIUMBUSINESS_SERVER_MANAGEMENT:
+                   tmpStr := 'Windows Essential Business Server Management Server Edition';
+                 PRODUCT_MEDIUMBUSINESS_SERVER_SECURITY:
+                   tmpStr := 'Windows Essential Business Server Security Server Edition';
+                 PRODUCT_MEDIUMBUSINESS_SERVER_MESSAGING:
+                   tmpStr := 'Windows Essential Business Server Messaging Server Edition';
+                 PRODUCT_SERVER_FOR_SMALLBUSINESS:
+                   tmpStr := 'Server for Small Business Edition';
+                 PRODUCT_SERVER_FOUNDATION:
+                   tmpStr := 'Server Foundation';
+                 PRODUCT_SMALLBUSINESS_SERVER:
+                   tmpStr := 'Small Business Server';
+                 PRODUCT_SMALLBUSINESS_SERVER_PREMIUM:
+                   tmpStr := 'Small Business Server Premium Edition';
+                 PRODUCT_STANDARD_SERVER:
+                   tmpStr := 'Server Standard Edition (full installation)';
+                 PRODUCT_STANDARD_SERVER_CORE:
+                   tmpStr := 'Server Standard Edition (core installation)';
+                 PRODUCT_STARTER:
+                   tmpStr := 'Starter Edition';
+                 PRODUCT_STORAGE_ENTERPRISE_SERVER:
+                   tmpStr := 'Storage Server Enterprise Edition';
+                 PRODUCT_STORAGE_EXPRESS_SERVER:
+                   tmpStr := 'Storage Server Express Edition';
+                 PRODUCT_STORAGE_STANDARD_SERVER:
+                   tmpStr := 'Storage Server Standard Edition';
+                 PRODUCT_STORAGE_WORKGROUP_SERVER:
+                   tmpStr := 'Storage Server Workgroup Edition';
+                 PRODUCT_UNDEFINED:
+                   tmpStr := 'An unknown product';
+                 PRODUCT_ULTIMATE,
+                 PRODUCT_ULTIMATE_N:
+                   tmpStr := 'Ultimate Edition';
+                 PRODUCT_WEB_SERVER:
+                   tmpStr := 'Web Server Edition';
+                 PRODUCT_WEB_SERVER_CORE:
+                   tmpStr := 'Web Server Edition (core installation)';
+                 PRODUCT_UNLICENSED:
+                   tmpStr := 'Unlicensed product'
+               else
+                 tmpStr := '';
+               end;{ pdwReturnedProductType }
+               Result := Result + tmpStr;
+               NTBRes := FALSE;
+               end;{ GetProductInfo<>NIL }
+            end;{ Vista }
 
          if (OSVI_NT.dwMajorVersion = 10) then
-   begin
-   if OSVI_NT.dwMinorVersion = 0 then
-      begin
-      if OSVI_NT.wProductType = VER_NT_WORKSTATION then
-         begin
-         if OSVI_NT.dwBuildNumber >= 22000 then
             begin
-            Result := 'Windows 11 ';
-            end
-         else
-            begin
-            Result := 'Windows 10 ';
+            if OSVI_NT.dwMinorVersion = 0 then
+               begin
+               if OSVI_NT.wProductType = VER_NT_WORKSTATION then
+                  begin
+                  if OSVI_NT.dwBuildNumber >= 22000 then
+                     begin
+                     Result := 'Windows 11 ';
+                     end
+                  else
+                     begin
+                     Result := 'Windows 10 ';
+                     end;
+                  end
+               end
+            else
+               begin
+               Result := 'Windows Server 2016 ';
+               end;
             end;
-         end
-      end
-   else
-      begin
-      Result := 'Windows Server 2016 ';
-      end;
-   end;
          if OSVI_NT.dwMajorVersion >= 6 then
-         begin
-           if (SI.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64) then
-             Result := Result + ' 64-bit '
-           else if (SI.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL) then
-             Result := Result + ' 32-bit ';
-         end;
+            begin
+            if (SI.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_AMD64) then
+               begin
+               Result := Result + ' 64-bit '
+               end
+            else if (SI.wProcessorArchitecture = PROCESSOR_ARCHITECTURE_INTEL) then
+               begin
+               Result := Result + ' 32-bit ';
+               end;
+            end;
 
          if NTBres then
-         begin
-           if OSVI_NT.wProductType = VER_NT_WORKSTATION then
-           begin
-             case OSVI_NT.wSuiteMask of
-               512: Result := Result + 'Personal';
-               768: Result := Result + 'Home Premium';
-             else
-               Result := Result + 'Professional';
-             end;
-           end
-           else if OSVI_NT.wProductType = VER_NT_SERVER then
-           begin
-             if OSVI_NT.wSuiteMask = VER_SUITE_DATACENTER then
-               Result := Result + 'DataCenter Server'
-             else if OSVI_NT.wSuiteMask = VER_SUITE_ENTERPRISE then
-               Result :=  Result + 'Advanced Server'
-             else
-               Result := Result + 'Server';
-           end{ wProductType=VER_NT_WORKSTATION }
-           else
-           begin
-             with TRegistry.Create do
-               try
-                 RootKey := HKEY_LOCAL_MACHINE;
-                 if OpenKeyReadOnly('SYSTEM\CurrentControlSet\' +
-                                    'Control\ProductOptions') then
-                   try
-                     tmpStr := UpperCase(ReadString('ProductType'));
-                     if tmpStr = 'WINNT' then
-                       Result := Result + 'Workstation';
-                     if tmpStr = 'SERVERNT' then
-                       Result := Result + 'Server';
-                   finally
-                     CloseKey;
-                   end;
-               finally
-                 Free;
+            begin
+            if OSVI_NT.wProductType = VER_NT_WORKSTATION then
+               begin
+               case OSVI_NT.wSuiteMask of
+                 512: Result := Result + 'Personal';
+                 768: Result := Result + 'Home Premium';
+               else
+                 Result := Result + 'Professional';
                end;
-   end;{ wProductType<>VER_NT_WORKSTATION }
-           end;{ NTBRes }
+               end
+            else if OSVI_NT.wProductType = VER_NT_SERVER then
+               begin
+               if OSVI_NT.wSuiteMask = VER_SUITE_DATACENTER then
+                  begin
+                  Result := Result + 'DataCenter Server'
+                  end
+               else if OSVI_NT.wSuiteMask = VER_SUITE_ENTERPRISE then
+                  begin
+                  Result :=  Result + 'Advanced Server'
+                  end
+               else
+                  begin
+                  Result := Result + 'Server';
+                  end;
+               end{ wProductType=VER_NT_WORKSTATION }
+            else
+               begin
+               with TRegistry.Create do
+                  begin
+                  try
+                    RootKey := HKEY_LOCAL_MACHINE;
+                    if OpenKeyReadOnly('SYSTEM\CurrentControlSet\' +
+                                       'Control\ProductOptions') then
+                       begin
+                       try
+                         tmpStr := UpperCase(ReadString('ProductType'));
+                         if tmpStr = 'WINNT' then
+                            begin
+                            Result := Result + 'Workstation';
+                            end;
+                         if tmpStr = 'SERVERNT' then
+                            begin
+                            Result := Result + 'Server';
+                            end;
+                       finally
+                         CloseKey;
+                       end;
+                       end;
+                  finally
+                    Free;
+                  end;
+                  end;
+               end;{ wProductType<>VER_NT_WORKSTATION }
+            end;{ NTBRes }
          end;{ VER_PLATFORM_WIN32_NT }
      VER_PLATFORM_WIN32_WINDOWS:
        begin
          if (OSVI.dwMajorVersion = 4) and (OSVI.dwMinorVersion = 0) then
-         begin
-           Result := 'Windows 95 ';
-           if OSVI.szCSDVersion[1] = 'C' then
-             Result := Result + 'OSR2';
-         end;
+            begin
+            Result := 'Windows 95 ';
+            if OSVI.szCSDVersion[1] = 'C' then
+               begin
+               Result := Result + 'OSR2';
+               end;
+            end;
          if (OSVI.dwMajorVersion = 4) and (OSVI.dwMinorVersion = 10) then
-         begin
-           Result := 'Windows 98 ';
-           if OSVI.szCSDVersion[1] = 'A' then
-             Result := Result + 'SE';
-         end;
+            begin
+            Result := 'Windows 98 ';
+            if OSVI.szCSDVersion[1] = 'A' then
+               begin
+               Result := Result + 'SE';
+               end;
+            end;
          if (OSVI.dwMajorVersion = 4) and (OSVI.dwMinorVersion = 90) then
-           Result := 'Windows Me';
+            begin
+            Result := 'Windows Me';
+            end;
        end;{ VER_PLATFORM_WIN32_WINDOWS }
      VER_PLATFORM_WIN32s:
        Result := 'Microsoft Win32s';

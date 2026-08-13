@@ -219,7 +219,9 @@ begin
   Total := 0;
 
   for Band := Band160 to Band10 do
-    Total := Total + TempQSOTotals[Band, CW];
+     begin
+     Total := Total + TempQSOTotals[Band, CW];
+     end;
 
   TotalCWContacts := Total;
 end;
@@ -239,7 +241,9 @@ begin
   Total := 0;
 
   for Band := Band160 to Band10 do
-    Total := Total + TempQSOTotals[Band, Phone];
+     begin
+     Total := Total + TempQSOTotals[Band, Phone];
+     end;
 
   TotalPhoneContacts := Total;
 end;
@@ -248,7 +252,9 @@ procedure Send88Message;
 
 begin
   if SeventyThreeMessageSent then
-    Exit;
+     begin
+     Exit;
+     end;
 
   SendStringAndStop('88 ' + MyCall + ' TEST');
 end;
@@ -261,7 +267,9 @@ begin
 
   for w := Low(TMainWindowElement) to High(TMainWindowElement) do
     if TWindows[w].mweI = 1 then
-      SetMainWindowText(w, '');
+       begin
+       SetMainWindowText(w, '');
+       end;
   {
     Windows.SetWindowTextA(w h[mweCountryName], nil);
     Windows.SetWindowTextA(w h[mweBeamHeading], nil);
@@ -278,10 +286,10 @@ function TotalContacts: integer;
 begin
 
   if ServerSerialNumber <> 0 then
-  begin
-    Result := ServerSerialNumber - 1;
-    Exit;
-  end;
+     begin
+     Result := ServerSerialNumber - 1;
+     Exit;
+     end;
 
   if QSONumberByBand then
      begin
@@ -308,11 +316,17 @@ end;
 procedure UpdateMaxSerialSent(Band: BandType; SerialNum: integer);
 begin
    if (SerialNum <= 0) or (SerialNum >= $FFFF) then
+      begin
       Exit;
+      end;
    if SerialNum > MaxSerialSent[Band] then
+      begin
       MaxSerialSent[Band] := SerialNum;
+      end;
    if SerialNum > MaxSerialSent[AllBands] then
+      begin
       MaxSerialSent[AllBands] := SerialNum;
+      end;
 end;
 
 // Issue #954.  The next serial to send is one past the HIGHEST serial we have
@@ -331,9 +345,13 @@ begin
       end;
 
    if QSONumberByBand then
+      begin
       Result := MaxSerialSent[ActiveBand] + 1
+      end
    else
+      begin
       Result := MaxSerialSent[AllBands] + 1;
+      end;
 end;
 
 // Shared display refresh after the active band changes.  Both the Alt-B
@@ -342,14 +360,20 @@ end;
 procedure RefreshAfterBandChange;
 begin
   if QSOByBand then
-    CallsignsList.DisplayDupeSheet(ActiveRadioPtr);
+     begin
+     CallsignsList.DisplayDupeSheet(ActiveRadioPtr);
+     end;
   if MultByBand then
-    VisibleLog.ShowRemainingMultipliers;
+     begin
+     VisibleLog.ShowRemainingMultipliers;
+     end;
   BandMapBand := ActiveBand;
   DisplayBandMap;
   ShowSpotInfo;
   if QSONumberByBand then
-    DisplayNextQSONumber;
+     begin
+     DisplayNextQSONumber;
+     end;
 end;
 
 // Jump straight to a specific band (e.g. WSJT-X dial frequency when no
@@ -358,9 +382,13 @@ end;
 procedure GoToBand(NewBand: BandType);
 begin
   if (NewBand = NoBand) or (NewBand = ActiveBand) then
-    Exit;
+     begin
+     Exit;
+     end;
   if (not MultipleBandsEnabled) and (TotalContacts <> 0) then
-    Exit;
+     begin
+     Exit;
+     end;
   PutRadioOutOfSplit(ActiveRadio); // n4af 4.46.5
   ActiveBand := NewBand;
   // Repaint the band indicator + totals-row highlight (UpdateRadio=False:
@@ -374,24 +402,24 @@ procedure BandDownOrUp(Direction: DirectionType);
 begin
 
   if (MultipleBandsEnabled) or (TotalContacts = 0) then
-  begin
-    if CommandUseInactiveRadio then
-      //KK1L: 6.73 Band change on inactive radio via command
-    begin
-      PutRadioOutOfSplit(InactiveRadio); // n4af 4.46.5
-      // Pass the radio whose band is being changed: the coverage filter in
-      // BandChange must ask THAT radio what it can transmit on, not whichever
-      // one happens to be active.
-      BandChange(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
-        Direction, InActiveRadioPtr);
-    end
-    else
-    begin
-      PutRadioOutOfSplit(ActiveRadio); // n4af 4.46.5
-      BandChange(ActiveBand, Direction);
-      RefreshAfterBandChange;
-    end;
-  end;
+     begin
+     if CommandUseInactiveRadio then
+       //KK1L: 6.73 Band change on inactive radio via command
+        begin
+        PutRadioOutOfSplit(InactiveRadio); // n4af 4.46.5
+        // Pass the radio whose band is being changed: the coverage filter in
+        // BandChange must ask THAT radio what it can transmit on, not whichever
+        // one happens to be active.
+        BandChange(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
+          Direction, InActiveRadioPtr);
+        end
+     else
+        begin
+        PutRadioOutOfSplit(ActiveRadio); // n4af 4.46.5
+        BandChange(ActiveBand, Direction);
+        RefreshAfterBandChange;
+        end;
+     end;
 end;
 
 
@@ -405,19 +433,31 @@ var
 begin
   CallIsADupe := False;
   if Call = '' then
-    Exit;
+     begin
+     Exit;
+     end;
 
   if (ActiveDomesticMult = GridSquares) and RoverCall(Call) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   if QSOByMode then
-    TempMode := Mode
+     begin
+     TempMode := Mode
+     end
   else
-    TempMode := Both;
+     begin
+     TempMode := Both;
+     end;
   if QSOByBand then
-    TempBand := Band
+     begin
+     TempBand := Band
+     end
   else
-    TempBand := AllBands;
+     begin
+     TempBand := AllBands;
+     end;
   //  call[length(call)+1] := #0;
   Result := CallsignsList.CallsignIsDupe(Call, TempBand, TempMode, Index);
 end;
@@ -455,11 +495,15 @@ begin
     DownArrow:
       begin
         if GridMapCenter[4] <> '0' then
-          GridMapCenter := Copy(GridMapCenter, 1, 3) + AnsiChar(Ord(GridMapCenter[4])
-            - 1)
+           begin
+           GridMapCenter := Copy(GridMapCenter, 1, 3) + AnsiChar(Ord(GridMapCenter[4])
+             - 1)
+           end
         else
-          GridMapCenter := GridMapCenter[1] + AnsiChar(Ord(GridMapCenter[2]) - 1) +
-            GridMapCenter[3] + '9';
+           begin
+           GridMapCenter := GridMapCenter[1] + AnsiChar(Ord(GridMapCenter[2]) - 1) +
+             GridMapCenter[3] + '9';
+           end;
       end;
 
     UpArrow: ;
@@ -467,23 +511,31 @@ begin
     ControlLeftArrow:
       begin
         if GridMapCenter[3] <> '0' then
-          GridMapCenter := Copy(GridMapCenter, 1, 2) + AnsiChar(Ord(GridMapCenter[3])
-            - 1) +
-            GridMapCenter[4]
+           begin
+           GridMapCenter := Copy(GridMapCenter, 1, 2) + AnsiChar(Ord(GridMapCenter[3])
+             - 1) +
+             GridMapCenter[4]
+           end
         else
-          GridMapCenter := AnsiChar(Ord(GridMapCenter[1]) - 1) + GridMapCenter[2] +
-            '9' + GridMapCenter[4];
+           begin
+           GridMapCenter := AnsiChar(Ord(GridMapCenter[1]) - 1) + GridMapCenter[2] +
+             '9' + GridMapCenter[4];
+           end;
       end;
 
     ControlRightArrow:
       begin
         if GridMapCenter[3] <> '9' then
-          GridMapCenter := Copy(GridMapCenter, 1, 2) + AnsiChar(Ord(GridMapCenter[3])
-            + 1) +
-            GridMapCenter[4]
+           begin
+           GridMapCenter := Copy(GridMapCenter, 1, 2) + AnsiChar(Ord(GridMapCenter[3])
+             + 1) +
+             GridMapCenter[4]
+           end
         else
-          GridMapCenter := AnsiChar(Ord(GridMapCenter[1]) + 1) + GridMapCenter[2] +
-            '0' + GridMapCenter[4];
+           begin
+           GridMapCenter := AnsiChar(Ord(GridMapCenter[1]) + 1) + GridMapCenter[2] +
+             '0' + GridMapCenter[4];
+           end;
       end;
   end;
 end;
@@ -542,10 +594,10 @@ procedure EditableLog.ProcessMultipliers(var RXData: ContestExchange);
 
 begin
   if RXData.InhibitMults then
-    begin
-    logger.Error('ProcessMultipliers called while RXData.InhibitMults is set - Exiting...');
-    Exit;
-    end;
+     begin
+     logger.Error('ProcessMultipliers called while RXData.InhibitMults is set - Exiting...');
+     Exit;
+     end;
  
   Sheet.SetMultFlags(RXData);
 
@@ -554,7 +606,9 @@ begin
   if MultiplierAlarm then
     if RXData.DomesticMult or RXData.DXMult or RXData.PrefixMult or
       RXData.ZoneMult then
-      DoABeep(BeepCongrats);
+       begin
+       DoABeep(BeepCongrats);
+       end;
 end;
 
 procedure EditableLog.PutLogEntryIntoSheet(var LogEntry: string {Str80});
@@ -587,11 +641,13 @@ begin
   TempRXData.QTHString := DomesticMult;
 
   if FoundDomesticQTH(TempRXData) then
-  begin
-    Sheet.SetMultFlags(TempRXData);
-    if TempRXData.DomesticMult then
-      MultString := 1; //TempRXData.DomMultQTH
-  end;
+     begin
+     Sheet.SetMultFlags(TempRXData);
+     if TempRXData.DomesticMult then
+        begin
+        MultString := 1; //TempRXData.DomMultQTH
+        end;
+     end;
 end;
 
 function EditableLog.DetermineIfNewMult(Call: CallString; Band: BandType; Mode:
@@ -609,13 +665,21 @@ var
 begin
   OutputValue := 0;
   if not MultByMode then
-    TempMode := Both
+     begin
+     TempMode := Both
+     end
   else
-    TempMode := Mode;
+     begin
+     TempMode := Mode;
+     end;
   if not MultByBand then
-    TempBand := AllBands
+     begin
+     TempBand := AllBands
+     end
   else
-    TempBand := Band;
+     begin
+     TempBand := Band;
+     end;
   OutputValue := GetMultArray(Call, TempMode, '');
   Result := (OutputValue and (1 shl Cardinal(TempBand))) <> 0;
  
@@ -634,48 +698,58 @@ begin
   //  if Mode <> Both then    OutputString := OutputString + ModeString[Mode] + ': ';
 
   if MultByBand then
-  begin
-    if ActiveBand <= Band10 then
-      Band := Band160
-    else
-      Band := Band6;
-  end
+     begin
+     if ActiveBand <= Band10 then
+        begin
+        Band := Band160
+        end
+     else
+        begin
+        Band := Band6;
+        end;
+     end
   else
-    Band := AllBands;
+     begin
+     Band := AllBands;
+     end;
 
   while True do
-  begin
-    DetermineIfNewDomesticMult(DomQTH, Band, Mode, Mult);
-    if Mult <> 0 then
+     begin
+     DetermineIfNewDomesticMult(DomQTH, Band, Mode, Mult);
+     if Mult <> 0 then
 
-      OutputString := OutputString or (1 shl integer(Band))
-    else
-      OutputString := OutputString and not (1 shl integer(Band));
+        begin
+        OutputString := OutputString or (1 shl integer(Band))
+        end
+     else
+        begin
+        OutputString := OutputString and not (1 shl integer(Band));
+        end;
     
-    case Band of
-      AllBands: Exit;
-      Band160: Band := Band80;
-      Band80: Band := Band40;
-      Band40: Band := Band20;
-      Band20: Band := Band15;
-      Band15: Band := Band10;
-      Band10: Exit;
+     case Band of
+       AllBands: Exit;
+       Band160: Band := Band80;
+       Band80: Band := Band40;
+       Band40: Band := Band20;
+       Band20: Band := Band15;
+       Band15: Band := Band10;
+       Band10: Exit;
 
-      Band6: Band := Band2;
-      Band2: Band := Band222;
-      Band222: Band := Band432;
-      Band432: Band := Band902;
-      Band902: Band := Band1296;
-      Band1296: Exit;
-      //      Band1296: Band := Band2304;
-      //     Band2304: Band := Band3456;
-      //      Band3456: Band := Band5760;
-      //      Band5760: Band := Band10G;
-      //      Band10G: Band := Band24G;
-      //      Band24G: Band := BandLight;
-      //      BandLight: Exit;
-    end;
-  end;
+       Band6: Band := Band2;
+       Band2: Band := Band222;
+       Band222: Band := Band432;
+       Band432: Band := Band902;
+       Band902: Band := Band1296;
+       Band1296: Exit;
+       //      Band1296: Band := Band2304;
+       //     Band2304: Band := Band3456;
+       //      Band3456: Band := Band5760;
+       //      Band5760: Band := Band10G;
+       //      Band10G: Band := Band24G;
+       //      Band24G: Band := BandLight;
+       //      BandLight: Exit;
+     end;
+     end;
 end;
 
 procedure EditableLog.ShowDomesticMultiplierStatus(DomesticQTH: Str10);
@@ -734,108 +808,130 @@ begin
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (DX/Zone arrays are CW..NoMode)
 
   if DoingDXMults or DoingZoneMults or DoingPrefixMults then
-  begin
-    Windows.ZeroMemory(@TempRXData, SizeOf(TempRXData));
-    ctyLocateCall(Call, TempRXData.QTH);
-    if TempRXData.QTH.Country = UNKNOWN_COUNTRY then
-      Exit;
-  end;
+     begin
+     Windows.ZeroMemory(@TempRXData, SizeOf(TempRXData));
+     ctyLocateCall(Call, TempRXData.QTH);
+     if TempRXData.QTH.Country = UNKNOWN_COUNTRY then
+        begin
+        Exit;
+        end;
+     end;
 
   if DoingDXMults then
-  begin
-    TempRXData.DXQTH := '';
-    TempRXData.Callsign := Call;
-    GetDXQTH(TempRXData);
-    if TempRXData.DXQTH <> '' then
-    begin
+     begin
+     TempRXData.DXQTH := '';
+     TempRXData.Callsign := Call;
+     GetDXQTH(TempRXData);
+     if TempRXData.DXQTH <> '' then
+        begin
 
-      TempCardinal := $FFFFFFFF xor
-        mo.DXMultsArray[TempRXData.QTH.Country][Mode];
-      Result := TempCardinal or Result;
+        TempCardinal := $FFFFFFFF xor
+          mo.DXMultsArray[TempRXData.QTH.Country][Mode];
+        Result := TempCardinal or Result;
 
-      if DXCCMultByBand = dmbbAllBand then
-        if mo.DXMultsArray[TempRXData.QTH.Country][Mode] > 0 then
-          Result := 0;
+        if DXCCMultByBand = dmbbAllBand then
+          if mo.DXMultsArray[TempRXData.QTH.Country][Mode] > 0 then
+             begin
+             Result := 0;
+             end;
 
-    end;
-  end;
+        end;
+     end;
 
   if DoingZoneMults then
-  begin
-    if ActiveZoneMult in [CQZones, ITUZones] then
-    begin
+     begin
+     if ActiveZoneMult in [CQZones, ITUZones] then
+        begin
 
-      if ActiveZoneMult = CQZones then
-        Zone := ctyGetCQZone(Call)
-      else
-        Zone := ctyGetITUZone(Call);
+        if ActiveZoneMult = CQZones then
+           begin
+           Zone := ctyGetCQZone(Call)
+           end
+        else
+           begin
+           Zone := ctyGetITUZone(Call);
+           end;
 
-      TempCardinal := $FFFFFFFF xor
-        mo.ZoneMultsArray[{TempRXData.QTH.}Zone][Mode];
-      Result := TempCardinal or Result;
-    end;
-  end;
+        TempCardinal := $FFFFFFFF xor
+          mo.ZoneMultsArray[{TempRXData.QTH.}Zone][Mode];
+        Result := TempCardinal or Result;
+        end;
+     end;
 
   if DoingPrefixMults then
-  begin
-    TempRXData.Callsign := Call;
-    SetPrefix(TempRXData);
-    if TempRXData.Prefix <> '' then
-    begin
-      if mo.PrfList.FindMult(TempRXData.Prefix, Index) then
-      begin
-        TempCardinal := $FFFFFFFF xor mo.PrfList.FList[Index].FArray[Mode];
-          //1000000000000000000000
-        Result := TempCardinal or Result;
-      end
-      else
-        Result := $FFFFFFFF or Result;
-    end;
-  end;
+     begin
+     TempRXData.Callsign := Call;
+     SetPrefix(TempRXData);
+     if TempRXData.Prefix <> '' then
+        begin
+        if mo.PrfList.FindMult(TempRXData.Prefix, Index) then
+           begin
+           TempCardinal := $FFFFFFFF xor mo.PrfList.FList[Index].FArray[Mode];
+             //1000000000000000000000
+           Result := TempCardinal or Result;
+           end
+        else
+           begin
+           Result := $FFFFFFFF or Result;
+           end;
+        end;
+     end;
 
   if DoingDomesticMults then
-  begin
+     begin
 
-    TempDomMult := '';
-    if TempMult <> '' then
-      TempDomMult := TempMult
-    else
-    begin
-      case Contest of
-        RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB:
-          if RussianID(Call) then
-            TempDomMult := GetRussiaOblastID(Call);
+     TempDomMult := '';
+     if TempMult <> '' then
+        begin
+        TempDomMult := TempMult
+        end
+     else
+        begin
+        case Contest of
+          RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB:
+            if RussianID(Call) then
+               begin
+               TempDomMult := GetRussiaOblastID(Call);
+               end;
 
-        CUPURAL:
-          TempDomMult := ctyGetGrid(Call, TempID);
+          CUPURAL:
+            TempDomMult := ctyGetGrid(Call, TempID);
 
-        RDA:
-          if RussianID(Call) then
-            TempDomMult := CallsignsList.GetIniitialExchange(Call);
+          RDA:
+            if RussianID(Call) then
+               begin
+               TempDomMult := CallsignsList.GetIniitialExchange(Call);
+               end;
 
-        YODX:
-          if Call[1] = 'Y' then
-            TempDomMult := CallsignsList.GetIniitialExchange(Call);
+          YODX:
+            if Call[1] = 'Y' then
+               begin
+               TempDomMult := CallsignsList.GetIniitialExchange(Call);
+               end;
         
-      end;
-    end;
+        end;
+        end;
 
-    if TempDomMult <> '' then
-    begin
-      if mo.DomList.FindMult(TempDomMult, Index) then
-      begin
-        if DomesticMultByBand = dmbbAllBand then
-          if mo.DomList.FList[Index].FArray[Mode] > 0 then
-            Exit;
+     if TempDomMult <> '' then
+        begin
+        if mo.DomList.FindMult(TempDomMult, Index) then
+           begin
+           if DomesticMultByBand = dmbbAllBand then
+             if mo.DomList.FList[Index].FArray[Mode] > 0 then
+                begin
+                Exit;
+                end;
 
-        TempCardinal := $FFFFFFFF xor mo.DomList.FList[Index].FArray[Mode];
-        Result := TempCardinal or Result;
+           TempCardinal := $FFFFFFFF xor mo.DomList.FList[Index].FArray[Mode];
+           Result := TempCardinal or Result;
 
-      end
-      else
-        Result := $FFFFFFFF or Result;
-    end;
-  end;
+           end
+        else
+           begin
+           Result := $FFFFFFFF or Result;
+           end;
+        end;
+     end;
 end;
 
 procedure EditableLog.CreateModeSpecificMultiplierInfo(Call: CallString;
@@ -849,19 +945,25 @@ begin
   OutputString := GetMultArray(Call, Mode, TempMult);
 
   if MultByMode and (Mode <> ActiveMode) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   nCmndShow := SW_HIDE;
 
   if MultByBand then
-  begin
-    if (OutputString and (1 shl integer(ActiveBand))) <> 0 then
-      nCmndShow := SW_SHOWNORMAL;
-  end
+     begin
+     if (OutputString and (1 shl integer(ActiveBand))) <> 0 then
+        begin
+        nCmndShow := SW_SHOWNORMAL;
+        end;
+     end
   else
     {//    nCmndShow := integer(OutputString = 0);} if (OutputString and (1 shl
       integer(AllBands))) <> 0 then
-      nCmndShow := SW_SHOWNORMAL;
+       begin
+       nCmndShow := SW_SHOWNORMAL;
+       end;
 
   DispalayNewMult(nCmndShow);
 end;
@@ -875,39 +977,49 @@ var
 begin
    logger.debug('[SetMultStatus] Entered with call = %s and TempMult = %s',[Call, TempMult]);
   if NumberDifferentMults = 0 then
-    begin
-    logger.debug('[SetMultStatus] Exiting early because NumberDifferentMults = 0');
-    Exit;
-    end;
+     begin
+     logger.debug('[SetMultStatus] Exiting early because NumberDifferentMults = 0');
+     Exit;
+     end;
 
   if MultByMode then
-  begin
-    CreateModeSpecificMultiplierInfo(Call, TempMult, CW, OutputValue);
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(MultsWindowsHandles1[Band], integer((OutputValue and (1
-        shl integer(Band))) <> 0));
+     begin
+     CreateModeSpecificMultiplierInfo(Call, TempMult, CW, OutputValue);
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(MultsWindowsHandles1[Band], integer((OutputValue and (1
+          shl integer(Band))) <> 0));
+        end;
 
-    CreateModeSpecificMultiplierInfo(Call, TempMult, Phone, OutputValue);
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(MultsWindowsHandles2[Band], integer((OutputValue and (1
-        shl integer(Band))) <> 0))
+     CreateModeSpecificMultiplierInfo(Call, TempMult, Phone, OutputValue);
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(MultsWindowsHandles2[Band], integer((OutputValue and (1
+          shl integer(Band))) <> 0))
+        end
 
-  end
+     end
   else
-  begin
-    CreateModeSpecificMultiplierInfo(Call, TempMult, Both, OutputValue);
+     begin
+     CreateModeSpecificMultiplierInfo(Call, TempMult, Both, OutputValue);
 
-    if not MultByBand then
-      if (OutputValue and (1 shl integer(AllBands))) <> 0 then
-        OutputValue := $FFFFFFFF
-      else
-        OutputValue := 0;
+     if not MultByBand then
+       if (OutputValue and (1 shl integer(AllBands))) <> 0 then
+          begin
+          OutputValue := $FFFFFFFF
+          end
+       else
+          begin
+          OutputValue := 0;
+          end;
 
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(MultsWindowsHandles1[Band], integer((OutputValue and (1
-        shl integer(Band))) <> 0))
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(MultsWindowsHandles1[Band], integer((OutputValue and (1
+          shl integer(Band))) <> 0))
+        end
 
-  end;
+     end;
 end;
 
 procedure EditableLog.CreateModeSpecificQSOInfo(Call: CallString; Mode:
@@ -920,25 +1032,35 @@ begin
   //  if Mode <> Both then    OutputString := OutputString + ModeString[Mode] + ': ';
   OutputString := 0;
   if QSOByBand then
-  begin
-    if ActiveBand <= Band10 then
-      Band := Band160
-    else
-      Band := Band6;
-  end
+     begin
+     if ActiveBand <= Band10 then
+        begin
+        Band := Band160
+        end
+     else
+        begin
+        Band := Band6;
+        end;
+     end
   else
-    Band := AllBands;
+     begin
+     Band := AllBands;
+     end;
 
   while True do
-  begin
-    if not VisibleLog.CallIsADupe(Call, Band, Mode)
-      {or CallIsInEditableLog(Call, Band, Mode)} then
+     begin
+     if not VisibleLog.CallIsADupe(Call, Band, Mode)
+       {or CallIsInEditableLog(Call, Band, Mode)} then
 
-      OutputString := OutputString or (1 shl integer(Band))
-    else
-      OutputString := OutputString and not (1 shl integer(Band));
+        begin
+        OutputString := OutputString or (1 shl integer(Band))
+        end
+     else
+        begin
+        OutputString := OutputString and not (1 shl integer(Band));
+        end;
 
-    {
+     {
         begin
           if Band <= Band10 then
             OutputString := OutputString + '   '
@@ -961,22 +1083,22 @@ begin
               else
                 OutputString := OutputString + BandStringsArray[Band] + ' ';
     }
-    case Band of
-      AllBands: Exit;
-      Band160: Band := Band80;
-      Band80: Band := Band40;
-      Band40: Band := Band20;
-      Band20: Band := Band15;
-      Band15: Band := Band10;
-      Band10: Exit;
+     case Band of
+       AllBands: Exit;
+       Band160: Band := Band80;
+       Band80: Band := Band40;
+       Band40: Band := Band20;
+       Band20: Band := Band15;
+       Band15: Band := Band10;
+       Band10: Exit;
 
-      Band6: Band := Band2;
-      Band2: Band := Band222;
-      Band222: Band := Band432;
-      Band432: Band := Band902;
-      Band902: Band := Band1296;
-      Band1296: Exit;
-      {
+       Band6: Band := Band2;
+       Band2: Band := Band222;
+       Band222: Band := Band432;
+       Band432: Band := Band902;
+       Band902: Band := Band1296;
+       Band1296: Exit;
+       {
             Band1296: Band := Band2304;
             Band2304: Band := Band3456;
             Band3456: Band := Band5760;
@@ -985,8 +1107,8 @@ begin
             Band24G: Band := BandLight;
             BandLight: Exit;
       }
-    end;
-  end;
+     end;
+     end;
 end;
 
 procedure EditableLog.ShowQSOStatus(Call: string);
@@ -996,32 +1118,40 @@ var
 begin
   logger.debug('[ShowQSOStatus] Called with call of [%s]',[Call]);
   if length(Call) < 3 then
-    Exit;
+     begin
+     Exit;
+     end;
 
   TF.Format(wsprintfBuffer, TC_QSONEEDSFOR, PAnsiChar(AnsiString(Call)));
   SetMainWindowText(mweQSONeedsHeader, wsprintfBuffer);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
   if QSOByMode then
-  begin
-    CreateModeSpecificQSOInfo(Call, CW, OutputString);
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
-        (1 shl integer(Band))) <> 0));
+     begin
+     CreateModeSpecificQSOInfo(Call, CW, OutputString);
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
+          (1 shl integer(Band))) <> 0));
+        end;
 
-    CreateModeSpecificQSOInfo(Call, Phone, OutputString);
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(QSONeedWindowsHandles2[Band], integer((OutputString and
-        (1 shl integer(Band))) <> 0));
+     CreateModeSpecificQSOInfo(Call, Phone, OutputString);
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(QSONeedWindowsHandles2[Band], integer((OutputString and
+          (1 shl integer(Band))) <> 0));
+        end;
 
-  end
+     end
   else
-  begin
-    CreateModeSpecificQSOInfo(Call, Both, OutputString);
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
-        (1 shl integer(Band))) <> 0));
-  end;
+     begin
+     CreateModeSpecificQSOInfo(Call, Both, OutputString);
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
+          (1 shl integer(Band))) <> 0));
+        end;
+     end;
 
 
 end;
@@ -1037,32 +1167,40 @@ var
 begin
 
   if length(Call^) < 3 then
-    Exit;
+     begin
+     Exit;
+     end;
 
   TF.Format(wsprintfBuffer, TC_QSONEEDSFOR, PAnsiChar(integer(Call) + 1));
   SetMainWindowText(mweQSONeedsHeader, wsprintfBuffer);
   //  tSetWindowText(QIHeaderWindowHandle, ' QSO needs for ' + Call);
 
   if QSOByMode then
-  begin
-    CreateModeSpecificQSOInfo(Call^, CW, OutputString);
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
-        (1 shl integer(Band))) <> 0));
+     begin
+     CreateModeSpecificQSOInfo(Call^, CW, OutputString);
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
+          (1 shl integer(Band))) <> 0));
+        end;
 
-    CreateModeSpecificQSOInfo(Call^, Phone, OutputString);
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(QSONeedWindowsHandles2[Band], integer((OutputString and
-        (1 shl integer(Band))) <> 0));
+     CreateModeSpecificQSOInfo(Call^, Phone, OutputString);
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(QSONeedWindowsHandles2[Band], integer((OutputString and
+          (1 shl integer(Band))) <> 0));
+        end;
 
-  end
+     end
   else
-  begin
-    CreateModeSpecificQSOInfo(Call^, Both, OutputString);
-    for Band := Band160 to Band10 do
-      Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
-        (1 shl integer(Band))) <> 0));
-  end;
+     begin
+     CreateModeSpecificQSOInfo(Call^, Both, OutputString);
+     for Band := Band160 to Band10 do
+        begin
+        Windows.ShowWindow(QSONeedWindowsHandles1[Band], integer((OutputString and
+          (1 shl integer(Band))) <> 0));
+        end;
+     end;
 
 end;
 
@@ -1074,15 +1212,21 @@ begin
   PossibleCallList.NumberPossibleCalls := 0;
   PossibleCallList.CursorPosition := 0;
   if not PossibleCallEnable then
-    Exit;
+     begin
+     Exit;
+     end;
   CD.GeneratePossibleCallList(Call);
   //  Sheet.MakePossibleCallList(Call, PossibleCallList);
   if PossibleCallList.NumberPossibleCalls = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   tLB_RESETCONTENT(wh[mwePossibleCall]);
 
   for TempIndex := 0 to PossibleCallList.NumberPossibleCalls - 1 do
-    SendMessage(wh[mwePossibleCall], LB_ADDSTRING, 0, TempIndex);
+     begin
+     SendMessage(wh[mwePossibleCall], LB_ADDSTRING, 0, TempIndex);
+     end;
   SendMessage(wh[mwePossibleCall], LB_SETCURSEL, 0, 0);
   //  FlagDupesInPossibleCallList(ActiveBand, ActiveMode, PossibleCallList);
   //  DisplayPossibleCalls{(PossibleCallList)};
@@ -1098,9 +1242,13 @@ var
   TempMultBand: BandType;
 begin
   if rmt = rmNoRemMultDisplay then
-    Exit;
+     begin
+     Exit;
+     end;
   if not tWindowsExist(Window) then
-    Exit;
+     begin
+     Exit;
+     end;
  //  DomWidth := 45;
   SetRemMultsColumnWidth;       // 4.71.2      // 4.83.0
   rmw := Windows.GetDlgItem(tr4w_WindowsArray[Window].WndHandle, 101);
@@ -1109,11 +1257,11 @@ begin
   SendMessage(rmw, LB_RESETCONTENT, 0, 0);
 
   if RemainingMultDisplayMode = NoRemainingMults then
-  begin
-    {?}
-    Windows.InvalidateRect(rmw, nil, True);
-    Exit;
-  end;
+     begin
+     {?}
+     Windows.InvalidateRect(rmw, nil, True);
+     Exit;
+     end;
 
   case rmt of
 
@@ -1122,40 +1270,58 @@ begin
         TempMultBand := GetAddMultBand(DomesticMultByBand, MultBand);
 
         for i := 0 to mo.DomList.Count - 1 do
-        begin
+           begin
            if RemainingMultDisplayMode = HiLight then       // 4.72.4
-             goto AddDom;
+              begin
+              goto AddDom;
+              end;
           if not mo.DomList.StringIsDupeByIndex(i, TempMultBand, MultMode) then
+             begin
              AddDom:
             SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
-        end;
+             end;
+           end;
       end;
 
     rmPrefix:
       begin
         for i := 0 to mo.PrfList.Count - 1 do
-        begin
-          if RemainingMultDisplayMode = HiLight then
-            goto AddPrefix;
-          if not mo.PrfList.StringIsDupeByIndex(i, MultBand, MultMode) then
-            AddPrefix: SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
-        end;
+           begin
+           if RemainingMultDisplayMode = HiLight then
+              begin
+              goto AddPrefix;
+              end;
+           if not mo.PrfList.StringIsDupeByIndex(i, MultBand, MultMode) then
+              begin
+              AddPrefix: SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
+              end;
+           end;
       end;
 
     rmZone:
       begin
         if MaxNumberOfZones <> 0 then
-          for i := 1 to MaxNumberOfZones do
-          begin
-            if RemainingMultDisplayMode = HiLight then
-              goto AddZone;
-            if mo.IsZnMult(i, MultBand, MultMode) then
-              AddZone:
-              if ActiveZoneMult = EUHFCYear then
-                SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i - 1))
-              else
-                SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
-          end;
+           begin
+           for i := 1 to MaxNumberOfZones do
+              begin
+              if RemainingMultDisplayMode = HiLight then
+                 begin
+                 goto AddZone;
+                 end;
+              if mo.IsZnMult(i, MultBand, MultMode) then
+                 begin
+                 AddZone:
+                 if ActiveZoneMult = EUHFCYear then
+                    begin
+                    SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i - 1))
+                    end
+                 else
+                    begin
+                    SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
+                    end;
+                 end;
+              end;
+           end;
 
       end;
 
@@ -1163,14 +1329,20 @@ begin
       begin
         TempMultBand := GetAddMultBand(DXCCMultByBand, MultBand);
         for i := 0 to CTY.ctyNumberCountries - 1 do
-        begin
-          if CTY.ctyTable[i].VisibleInRM <> 2 then
-            Continue;
-          if RemainingMultDisplayMode = HiLight then
-            goto AddDX;
-          if mo.IsDXMult(i, TempMultBand, MultMode) then
-            AddDX: SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
-        end;
+           begin
+           if CTY.ctyTable[i].VisibleInRM <> 2 then
+              begin
+              Continue;
+              end;
+           if RemainingMultDisplayMode = HiLight then
+              begin
+              goto AddDX;
+              end;
+           if mo.IsDXMult(i, TempMultBand, MultMode) then
+              begin
+              AddDX: SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
+              end;
+           end;
       end;
 
   end;
@@ -1181,7 +1353,9 @@ procedure EditableLog.ShowRemainingMultipliers;
 begin
 
   if ActiveBand = NoBand then
-    Exit;
+     begin
+     Exit;
+     end;
   ShowRemMultsInWindow(tw_REMMULTSWINDOW_INDEX, RemainingMultDisplay);
   ShowRemMultsInWindow(tw_STATIONS_RM_DX, rmDX);
   ShowRemMultsInWindow(tw_STATIONS_RM_ZONE, rmZone);
@@ -1289,36 +1463,52 @@ label
 begin
   Windows.ZeroMemory(@Result, SizeOf(Result));
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
   records := Windows.GetFileSize(LogHandle, nil) div SizeOf(ContestExchange);
 
   for Offset := 1 to records - 1 do
-  begin
-    tSetFilePointer(-1 * Offset * SizeOf(ContestExchange), FILE_END);
-    if not ReadLogFile then
-      goto ExitLabel;
-    if InMyLog then
-      if TempRXData.ceComputerID <> ComputerID then
+     begin
+     tSetFilePointer(-1 * Offset * SizeOf(ContestExchange), FILE_END);
+     if not ReadLogFile then
+        begin
+        goto ExitLabel;
+        end;
+     if InMyLog then
+       if TempRXData.ceComputerID <> ComputerID then
+          begin
+          Continue;
+          end;
+     if TempRXData.ceRecordKind <> rkQSO then
+        begin
         Continue;
-    if TempRXData.ceRecordKind <> rkQSO then
-      Continue;
-    if TempRXData.ceQSO_Deleted then
-      Continue;
-    if TempRXData.ceQSO_Skiped then
-      Continue;
+        end;
+     if TempRXData.ceQSO_Deleted then
+        begin
+        Continue;
+        end;
+     if TempRXData.ceQSO_Skiped then
+        begin
+        Continue;
+        end;
 
-    case let of
-      letCallsign:
-        Result := TempRXData.Callsign;
-      letQTHString:
-        Result := TempRXData.QTHString;
-    end;
+     case let of
+       letCallsign:
+         Result := TempRXData.Callsign;
+       letQTHString:
+         Result := TempRXData.QTHString;
+     end;
 
-    if GoodCallSyntax(Result) then
-      Break
-    else
-      Windows.ZeroMemory(@Result, SizeOf(Result));
-  end;
+     if GoodCallSyntax(Result) then
+        begin
+        Break
+        end
+     else
+        begin
+        Windows.ZeroMemory(@Result, SizeOf(Result));
+        end;
+     end;
   ExitLabel:
   CloseLogFile;
   {
@@ -1392,20 +1582,22 @@ var
   Index: integer;
 begin
   if MasterListBox = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   if ItemsInMasterListBox >= MaxItemsInMasterListBox then
-  begin
-    //    tLB_ADDSTRING(MasterListBox, '...');
-    Exit;
-  end;
+     begin
+     //    tLB_ADDSTRING(MasterListBox, '...');
+     Exit;
+     end;
   Call[length(Call) + 1] := #0;
   Index := tLB_ADDSTRING(MasterListBox, @Call[1]);
   if Index <> -1 then
-  begin
-    SendMessage(MasterListBox, LB_SETITEMDATA, Index,
-      integer(VisibleLog.CallIsADupe(Call, ActiveBand, ActiveMode)));
-    inc(ItemsInMasterListBox);
-  end;
+     begin
+     SendMessage(MasterListBox, LB_SETITEMDATA, Index,
+       integer(VisibleLog.CallIsADupe(Call, ActiveBand, ActiveMode)));
+     inc(ItemsInMasterListBox);
+     end;
 end;
 
 
@@ -1423,55 +1615,69 @@ var
 begin
   Result := False;
   if CD.SCPDisabledByApplication then
-    Exit;
-  if Call = LastSCPCall then
-    Exit;
-  if Contest = WRTC then           
+     begin
      Exit;
+     end;
+  if Call = LastSCPCall then
+     begin
+     Exit;
+     end;
+  if Contest = WRTC then           
+     begin
+     Exit;
+     end;
   LastSCPCall := Call;
 
   SCPScreenFull := False;
 
   if Call = '' then
-  begin
-    //    if {VisibleDupesheetEnable and} not SuperDupeSheet then
-                {DisplayVisibleDupesheet (ActiveBand, ActiveMode)}
-//    CallsignsList.DisplayDupeSheet(Radio.BandMemory { BandMemory[Radio]}, Radio.ModeMemory { ModeMemory[Radio]}); {KK1L: 6.73 suppory SO2R SCP}
-    //    else
-    //      if not EditableLogDisplayed then        DisplayEditableLog(LogEntries);
+     begin
+     //    if {VisibleDupesheetEnable and} not SuperDupeSheet then
+                 {DisplayVisibleDupesheet (ActiveBand, ActiveMode)}
+ //    CallsignsList.DisplayDupeSheet(Radio.BandMemory { BandMemory[Radio]}, Radio.ModeMemory { ModeMemory[Radio]}); {KK1L: 6.73 suppory SO2R SCP}
+     //    else
+     //      if not EditableLogDisplayed then        DisplayEditableLog(LogEntries);
 
-    Exit;
-  end;
+     Exit;
+     end;
 
   if Automatic then
-  begin
-    if length(Call) < SCPMinimumLetters then
-    begin
-      LastSCPCall := '';
-      Exit;
-    end
-  end
+     begin
+     if length(Call) < SCPMinimumLetters then
+        begin
+        LastSCPCall := '';
+        Exit;
+        end
+     end
   else if length(Call) < 2 then
-  begin
-    LastSCPCall := '';
-    Exit;
-  end;
+     begin
+     LastSCPCall := '';
+     Exit;
+     end;
 
   if not CD.PartialCallSetup(Call) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   //  EditableLogDisplayed := False;
     //  SaveSetAndClearActiveWindow(EditableLogWindow);
 
   GridSquareListShown := False;
   if MasterListBox = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   repeat
     CD.GetNextPartialCall(CallCD);
     if CallCD <> '' then
-      DisplaySCPCall(CallCD, Radio); //KK1L: 6.73 Fixed proc to for SO2R
+       begin
+       DisplaySCPCall(CallCD, Radio); //KK1L: 6.73 Fixed proc to for SO2R
+       end;
     if CallCD = Call then
-      Result := True;
+       begin
+       Result := True;
+       end;
     //WLI        IF SCPScreenFull THEN Break;
   until (CallCD = '')
 
@@ -1501,85 +1707,95 @@ begin
   NumberCountriesDisplayed := 0;
 
   if ActiveBand <= Band10 then
-  begin
-    StartBand := Band160;
-    EndBand := Band10;
-  end
+     begin
+     StartBand := Band160;
+     EndBand := Band10;
+     end
   else if ActiveBand >= Band6 then
-  begin
-    StartBand := Band6;
-    EndBand := BandLight;
-  end;
+     begin
+     StartBand := Band6;
+     EndBand := BandLight;
+     end;
   if MultByMode then
-    Mode := ActiveMode
+     begin
+     Mode := ActiveMode
+     end
   else
-    Mode := Both;
+     begin
+     Mode := Both;
+     end;
 
   for Country := 0 to CTY.ctyNumberCountries - 1 do
-  begin
-    Hits := 0;
+     begin
+     Hits := 0;
 
-    //         TempString := CountryTable.GetCountryName(Country);
-//    CompressFormat(ID, CompressedMult);
+     //         TempString := CountryTable.GetCountryName(Country);
+ //    CompressFormat(ID, CompressedMult);
 
-    Windows.ZeroMemory(@BandHits, SizeOf(BandHits));
+     Windows.ZeroMemory(@BandHits, SizeOf(BandHits));
 
-    for Band := StartBand to EndBand do
-    begin
-      BandHits[Band] := False;
+     for Band := StartBand to EndBand do
+        begin
+        BandHits[Band] := False;
 
-      //      NumberMults := mo.MTotals[Band, Mode, rmDX]; // Sheet.MultSheet.Totals[Band, Mode].NumberDXMults;
+        //      NumberMults := mo.MTotals[Band, Mode, rmDX]; // Sheet.MultSheet.Totals[Band, Mode].NumberDXMults;
 
-      if not mo.IsDXMult(Country, Band, Mode) then
-      begin
-        inc(Hits);
-        BandHits[Band] := True;
-      end;
-    end;
+        if not mo.IsDXMult(Country, Band, Mode) then
+           begin
+           inc(Hits);
+           BandHits[Band] := True;
+           end;
+        end;
 
-    if (Hits >= MultReportMinimumBands) and (Hits < 6) and
-      (NumberCountriesDisplayed < 100) then
-    begin
+     if (Hits >= MultReportMinimumBands) and (Hits < 6) and
+       (NumberCountriesDisplayed < 100) then
+        begin
 
-      Windows.ZeroMemory(@ID, SizeOf(ID));
-      ID := CTY.ctyTable[Country].ID;
+        Windows.ZeroMemory(@ID, SizeOf(ID));
+        ID := CTY.ctyTable[Country].ID;
 
-      TempRow := ((NumberCountriesDisplayed mod rows)) * 15 + 5;
-      TempColumn := ((((NumberCountriesDisplayed div rows)))) * 135 + 5;
-      //               GoToXY (Column, Row);
-      TempParametr := SS_SUNKEN;
-      if Hits > 3 then
-        TempParametr := WS_BORDER;
-      TempHWND :=
-        tCreateStaticWindow(string(PAnsiChar(@ID[1])), WS_CHILD or TempParametr or SS_center or
-          WS_VISIBLE, TempColumn, TempRow, 40, 14, h, 0);
+        TempRow := ((NumberCountriesDisplayed mod rows)) * 15 + 5;
+        TempColumn := ((((NumberCountriesDisplayed div rows)))) * 135 + 5;
+        //               GoToXY (Column, Row);
+        TempParametr := SS_SUNKEN;
+        if Hits > 3 then
+           begin
+           TempParametr := WS_BORDER;
+           end;
+        TempHWND :=
+          tCreateStaticWindow(string(PAnsiChar(@ID[1])), WS_CHILD or TempParametr or SS_center or
+            WS_VISIBLE, TempColumn, TempRow, 40, 14, h, 0);
 
-      //               TempString := ID;
+        //               TempString := ID;
 
-      //               while length(TempString) < 6 do
-      //                  TempString := ' ' + TempString;
+        //               while length(TempString) < 6 do
+        //                  TempString := ' ' + TempString;
 
-                     //               Write (TempString, ' ');
-//               TempColumn := ((((NumberCountriesDisplayed div 16)) ) + 0) * 300 + 5;
-      Counter160_10 := TempColumn + 43;
-      for Band := Band160 to Band10 do
-      begin
-        if BandHits[Band] then
-          RectBlackOrWhite := SS_BLACKFRAME
-        else
-          RectBlackOrWhite := SS_WHITERECT;
+                       //               Write (TempString, ' ');
+  //               TempColumn := ((((NumberCountriesDisplayed div 16)) ) + 0) * 300 + 5;
+        Counter160_10 := TempColumn + 43;
+        for Band := Band160 to Band10 do
+           begin
+           if BandHits[Band] then
+              begin
+              RectBlackOrWhite := SS_BLACKFRAME
+              end
+           else
+              begin
+              RectBlackOrWhite := SS_WHITERECT;
+              end;
 
-        tCreateStaticWindow('',
-          RectBlackOrWhite or WS_CHILD or WS_VISIBLE,
-          Counter160_10, TempRow, 13, 13, h, 0);
+           tCreateStaticWindow('',
+             RectBlackOrWhite or WS_CHILD or WS_VISIBLE,
+             Counter160_10, TempRow, 13, 13, h, 0);
 
-        inc(Counter160_10, 14);
+           inc(Counter160_10, 14);
 
-      end;
+           end;
 
-      inc(NumberCountriesDisplayed);
-    end;
-  end;
+        inc(NumberCountriesDisplayed);
+        end;
+     end;
 
   TF.Format(wsprintfBuffer, TC_MISSINGMULTSREPORT, NumberCountriesDisplayed,
     MultReportMinimumBands);
@@ -1619,33 +1835,43 @@ begin
     the left over entry from before - or from the bandmap. }
 
   if (AltDBufferEnable) and (TwoRadioMode) then
-  begin
-    if DupeInfoCall <> '' then
-      InputString := DupeInfoCall
-    else
-      InputString := DupeInfoCallPrompt;
+     begin
+     if DupeInfoCall <> '' then
+        begin
+        InputString := DupeInfoCall
+        end
+     else
+        begin
+        InputString := DupeInfoCallPrompt;
+        end;
 
-    Write(InputString);
-      {KK1L: 6.73 Display existing call (from band map) if there.}
-  end
+     Write(InputString);
+       {KK1L: 6.73 Display existing call (from band map) if there.}
+     end
   else if K5KA.ModeEnabled then
-    InputString := AutoAltDWindowString
+     begin
+     InputString := AutoAltDWindowString
+     end
   else
-    InputString := '';
+     begin
+     InputString := '';
+     end;
 
   if InputString <> '' then
-    Write(InputString);
+     begin
+     Write(InputString);
+     end;
 
   repeat
     repeat
       if K5KA.ModeEnabled and CWBeingSentAtStart then
         if not CWStillBeingSent then
-        begin
-          AutoAltDWindowString := InputString;
-          QuickEditResponseWithPartials := '';
-          //          RemoveAndRestorePreviousWindow;
-          Exit;
-        end;
+           begin
+           AutoAltDWindowString := InputString;
+           QuickEditResponseWithPartials := '';
+           //          RemoveAndRestorePreviousWindow;
+           Exit;
+           end;
 
     until NewKeyPressed;
 
@@ -1654,43 +1880,45 @@ begin
     case Key of
       EscapeKey:
         if InputString = '' then
-        begin
-          QuickEditResponseWithPartials := EscapeKey;
-          //          RemoveAndRestorePreviousWindow;
-          Exit;
-        end
+           begin
+           QuickEditResponseWithPartials := EscapeKey;
+           //          RemoveAndRestorePreviousWindow;
+           Exit;
+           end
         else
-        begin
-          {WLI             GoToXY (WhereX - Length (InputString), WhereY);
+           begin
+           {WLI             GoToXY (WhereX - Length (InputString), WhereY);
                               ClrEol;
                              }InputString := '';
-        end;
+           end;
 
       BackSpace:
         begin
           if length(InputString) > 0 then
-          begin
-            InputString[0] := AnsiChar(length(InputString) - 1);
-            {                    GoToXY (WhereX - 1, WhereY);
+             begin
+             InputString[0] := AnsiChar(length(InputString) - 1);
+             {                    GoToXY (WhereX - 1, WhereY);
                                 ClrEol;
             }
-            if PartialCallEnable then
-              if Sheet.TwoLetterCrunchProcess(InputString) then
-              begin
-                {
+             if PartialCallEnable then
+               if Sheet.TwoLetterCrunchProcess(InputString) then
+                  begin
+                  {
                   VisibleLog.GeneratePartialCallList(InputString,
                     ActiveBand,
                     ActiveMode,
                     PossibleCallList);
                   DisplayPossibleCalls(PossibleCallList);
                   }
-              end;
+                  end;
 
-            if SCPMinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
-              VisibleLog.SuperCheckPartial(InputString, True, InActiveRadioPtr);
-                {KK1L: 6.73 Added InactiveRadio}
+             if SCPMinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
+                begin
+                VisibleLog.SuperCheckPartial(InputString, True, InActiveRadioPtr);
+                end;
+                 {KK1L: 6.73 Added InactiveRadio}
 
-          end;
+             end;
         end;
 
       CarriageReturn:
@@ -1702,11 +1930,11 @@ begin
 
       SpaceBar:
         if K5KA.ModeEnabled and CWBeingSentAtStart then
-        begin
-          QuickEditResponseWithPartials := InputString;
-          //          RemoveAndRestorePreviousWindow;
-          Exit;
-        end;
+           begin
+           QuickEditResponseWithPartials := InputString;
+           //          RemoveAndRestorePreviousWindow;
+           Exit;
+           end;
 
       NullKey:
         begin
@@ -1716,43 +1944,45 @@ begin
       if ((Key >= '0') and (Key <= '9')) or
         ((Key >= 'A') and (Key <= 'Z')) or
         (Key = '/') then
-      begin
-        {KK1L: 6.73 Overwrites band map callsign.}
+         begin
+         {KK1L: 6.73 Overwrites band map callsign.}
 
-        if (InputString = DupeInfoCallPrompt) or (InputString =
-          DupeInfoCallPrompt) then
-        begin
-          {                           GoToXY (WhereX - Length (InputString), WhereY);
+         if (InputString = DupeInfoCallPrompt) or (InputString =
+           DupeInfoCallPrompt) then
+            begin
+            {                           GoToXY (WhereX - Length (InputString), WhereY);
                                      ClrEol;
                                     }InputString := '';
-        end;
-        Write(Key);
-        InputString := InputString + Key;
+            end;
+         Write(Key);
+         InputString := InputString + Key;
 
-        if PartialCallEnable then
-          if Sheet.TwoLetterCrunchProcess(InputString) then
-          begin
-            {
+         if PartialCallEnable then
+           if Sheet.TwoLetterCrunchProcess(InputString) then
+              begin
+              {
               VisibleLog.GeneratePartialCallList(InputString,
                 ActiveBand,
                 ActiveMode,
                 PossibleCallList);
               DisplayPossibleCalls(PossibleCallList);
               }
-          end;
+              end;
 
-        if SCPMinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
-          VisibleLog.SuperCheckPartial(InputString, True, InActiveRadioPtr);
-            {KK1L: 6.73 Added InactiveRadio}
+         if SCPMinimumLetters > 0 then {KK1L: 6.73 Adds SCP to ALT-D entry}
+            begin
+            VisibleLog.SuperCheckPartial(InputString, True, InActiveRadioPtr);
+            end;
+             {KK1L: 6.73 Added InactiveRadio}
 
-      end;
+         end;
 
       if length(InputString) = MaxInputLength then
-      begin
-        QuickEditResponseWithPartials := InputString;
-        //        RemoveAndRestorePreviousWindow;
-        Exit;
-      end;
+         begin
+         QuickEditResponseWithPartials := InputString;
+         //        RemoveAndRestorePreviousWindow;
+         Exit;
+         end;
 
     end; { of case }
 
@@ -1786,36 +2016,36 @@ begin
     {      Saves having to enter time, day, etc if you only want to update a new computer on the network.}
 
     if TempString = '' then
-    begin
-      //            if ActiveMultiPort <> NoPort then
-      begin
-        if
-          UpperCase(QuickEditResponse('Do you want to send time to computers on the network? (Y/N)', 1)) = 'Y' then
-        begin
-          GetTime(Hour, Minute, Second, Sec100);
-          GetDate(Year, Month, Day, DayOfWeek);
+       begin
+       //            if ActiveMultiPort <> NoPort then
+       begin
+         if
+           UpperCase(QuickEditResponse('Do you want to send time to computers on the network? (Y/N)', 1)) = 'Y' then
+            begin
+            GetTime(Hour, Minute, Second, Sec100);
+            GetDate(Year, Month, Day, DayOfWeek);
 
-          Str(Hour, Hours);
-          Str(Minute, Mins);
-          Str(Second, Secs);
-          Str(Year, YearS);
-          Str(Month, MonS);
-          Str(Day, Days);
+            Str(Hour, Hours);
+            Str(Minute, Mins);
+            Str(Second, Secs);
+            Str(Year, YearS);
+            Str(Month, MonS);
+            Str(Day, Days);
 
-          SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
-            MultiTimeMessage, YearS + ' ' + MonS + ' ' +
-            Days + ' ' + Hours + ' ' +
-            Mins + ' ' + Secs);
-        end;
-      end;
-      //      RemoveAndRestorePreviousWindow;
-      Exit;
-    end
+            SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
+              MultiTimeMessage, YearS + ' ' + MonS + ' ' +
+              Days + ' ' + Hours + ' ' +
+              Mins + ' ' + Secs);
+            end;
+       end;
+       //      RemoveAndRestorePreviousWindow;
+       Exit;
+       end
     else if TempString = EscapeKey then
-    begin
-      //      RemoveAndRestorePreviousWindow;
-      Exit;
-    end;
+       begin
+       //      RemoveAndRestorePreviousWindow;
+       Exit;
+       end;
 
   until TempString[3] = ':';
 
@@ -1828,23 +2058,23 @@ begin
   Delete(TempString, 1, pos(':', TempString));
 
   if StringHas(TempString, ':') then
-  begin
-    MinuteTempString := PrecedingString(TempString, ':');
-    SecondTempString := PostcedingString(TempString, ':');
-  end
+     begin
+     MinuteTempString := PrecedingString(TempString, ':');
+     SecondTempString := PostcedingString(TempString, ':');
+     end
   else
-  begin
-    MinuteTempString := TempString;
-    SecondTempString := '00';
-  end;
+     begin
+     MinuteTempString := TempString;
+     SecondTempString := '00';
+     end;
 
   if (not StringIsAllNumbers(HourTempString)) or
     (not StringIsAllNumbers(MinuteTempString)) or
     (not StringIsAllNumbers(SecondTempString)) then
-  begin
-    //    RemoveAndRestorePreviousWindow;
-    Exit;
-  end;
+     begin
+     //    RemoveAndRestorePreviousWindow;
+     Exit;
+     end;
 
   Val(HourTempString, Hour, Result);
   Val(MinuteTempString, Minute, Result);
@@ -1863,10 +2093,10 @@ begin
       False);
 
     if (TempString = '') or (TempString = EscapeKey) then
-    begin
-      //      RemoveAndRestorePreviousWindow;
-      Exit;
-    end;
+       begin
+       //      RemoveAndRestorePreviousWindow;
+       Exit;
+       end;
 
     Val(TempString, Year, Result);
 
@@ -1881,10 +2111,10 @@ begin
     TempString := LineInput('Enter month (1-12) : ', TempString, True, False);
 
     if (TempString = '') or (TempString = EscapeKey) then
-    begin
-      //      RemoveAndRestorePreviousWindow;
-      Exit;
-    end;
+       begin
+       //      RemoveAndRestorePreviousWindow;
+       Exit;
+       end;
 
     Val(TempString, Month, Result);
 
@@ -1899,10 +2129,10 @@ begin
     DoABeep(PromptBeep);
 
     if (TempString = '') or (TempString = EscapeKey) then
-    begin
-      //      RemoveAndRestorePreviousWindow;
-      Exit;
-    end;
+       begin
+       //      RemoveAndRestorePreviousWindow;
+       Exit;
+       end;
 
     Val(TempString, Day, Result);
 
@@ -1914,22 +2144,22 @@ begin
   begin
     if
       UpperCase(QuickEditResponse('Do you want to send time to computers on the network? (Y/N) : ', 1)) = 'Y' then
-    begin
-      GetTime(Hour, Minute, Second, Sec100);
-      GetDate(Year, Month, Day, DayOfWeek);
+       begin
+       GetTime(Hour, Minute, Second, Sec100);
+       GetDate(Year, Month, Day, DayOfWeek);
 
-      Str(Hour, Hours);
-      Str(Minute, Mins);
-      Str(Second, Secs);
-      Str(Year, YearS);
-      Str(Month, MonS);
-      Str(Day, Days);
+       Str(Hour, Hours);
+       Str(Minute, Mins);
+       Str(Second, Secs);
+       Str(Year, YearS);
+       Str(Month, MonS);
+       Str(Day, Days);
 
-      SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
-        MultiTimeMessage, YearS + ' ' + MonS + ' ' +
-        Days + ' ' + Hours + ' ' +
-        Mins + ' ' + Secs);
-    end;
+       SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
+         MultiTimeMessage, YearS + ' ' + MonS + ' ' +
+         Days + ' ' + Hours + ' ' +
+         Mins + ' ' + Secs);
+       end;
   end;
 
   //  RemoveAndRestorePreviousWindow;
@@ -1961,36 +2191,40 @@ begin
   ShowName(Call^);
 
   if QTCsEnabled then
-    DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(Call^, False)));
+     begin
+     DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(Call^, False)));
+     end;
 
   if Contest <> GENERALQSO then
     // Gav 4.44.8   Uses intiial exchange & previous qso DOM to display Domestic mults, if it exists
-  begin
-    if DoingDomesticMults then
-    begin
-      TempString := Call^;
-      if TempString <> '' then
-      begin
-        TempExchange := CallsignsList.GetIniitialExchange(TempString);
-        if TempExchange <> '' then
+     begin
+     if DoingDomesticMults then
         begin
-          ParsedTempExchange := DomStringParse(TempExchange);
-          if ParsedTempExchange <> '' then
-            VisibleLog.ShowDomesticMultiplierStatus(ParsedTempExchange);
+        TempString := Call^;
+        if TempString <> '' then
+           begin
+           TempExchange := CallsignsList.GetIniitialExchange(TempString);
+           if TempExchange <> '' then
+              begin
+              ParsedTempExchange := DomStringParse(TempExchange);
+              if ParsedTempExchange <> '' then
+                 begin
+                 VisibleLog.ShowDomesticMultiplierStatus(ParsedTempExchange);
+                 end;
+              end
+           else
+              begin
+              VisibleLog.ShowMultiplierStatus(Call);
+              end;
+           VisibleLog.ShowQSOStatus(Call);
+           end;
         end
-        else
+     else
         begin
-          VisibleLog.ShowMultiplierStatus(Call);
-        end;
+        VisibleLog.ShowMultiplierStatus(Call);
         VisibleLog.ShowQSOStatus(Call);
-      end;
-    end
-    else
-    begin
-      VisibleLog.ShowMultiplierStatus(Call);
-      VisibleLog.ShowQSOStatus(Call);
-    end;
-  end;
+        end;
+     end;
 
   DisplayUserInfo(Call^);
   DisplayBeamHeading(Call^, '');
@@ -2009,41 +2243,43 @@ var
 begin
   DetermineQTCNumberAndQuanity := False;
   if InputString = '' then
-    Exit;
+     begin
+     Exit;
+     end;
   QTCNumberString := PrecedingString(InputString, '/');
   NumberMessagesString := PostcedingString(InputString, '/');
 
   if (QTCNumberString = '') or (NumberMessagesString = '') then
-  begin
-    DoABeep(Beepsingle);
-    showwarning('QTC process terminated.');
-    Exit;
-  end;
+     begin
+     DoABeep(Beepsingle);
+     showwarning('QTC process terminated.');
+     Exit;
+     end;
 
   Val(QTCNumberString, QTCNumber, Result1);
 
   if Result1 <> 0 then
-  begin
-    DoABeep(Warning);
-    showwarning('QTC Number has illegal characters.');
-    Exit;
-  end;
+     begin
+     DoABeep(Warning);
+     showwarning('QTC Number has illegal characters.');
+     Exit;
+     end;
 
   Val(NumberMessagesString, Quantity, Result1);
 
   if Result1 <> 0 then
-  begin
-    DoABeep(Warning);
-    showwarning('Number of messages has illegal characters.');
-    Exit;
-  end;
+     begin
+     DoABeep(Warning);
+     showwarning('Number of messages has illegal characters.');
+     Exit;
+     end;
 
   if (Quantity < 1) or (Quantity > 10) then
-  begin
-    DoABeep(Warning);
-    showwarning('QTC process terminated.  Invalid number of messages.');
-    Exit;
-  end;
+     begin
+     DoABeep(Warning);
+     showwarning('QTC process terminated.  Invalid number of messages.');
+     Exit;
+     end;
 
   DetermineQTCNumberAndQuanity := True;
 end;
@@ -2109,7 +2345,9 @@ begin
     6:
       begin
         while length(QTCBuffer[1]) < 40 do
-          QTCBuffer[1] := QTCBuffer[1] + ' ';
+           begin
+           QTCBuffer[1] := QTCBuffer[1] + ' ';
+           end;
         QTCBuffer[1] := QTCBuffer[1] + ' 6: ' + QTCString;
         {           GoToXY (1, 1);
                    ClrEol;
@@ -2120,7 +2358,9 @@ begin
     7:
       begin
         while length(QTCBuffer[2]) < 40 do
-          QTCBuffer[2] := QTCBuffer[2] + ' ';
+           begin
+           QTCBuffer[2] := QTCBuffer[2] + ' ';
+           end;
         QTCBuffer[2] := QTCBuffer[2] + ' 7: ' + QTCString;
         {           GoToXY (1, 2);
                    ClrEol;
@@ -2131,7 +2371,9 @@ begin
     8:
       begin
         while length(QTCBuffer[3]) < 40 do
-          QTCBuffer[3] := QTCBuffer[3] + ' ';
+           begin
+           QTCBuffer[3] := QTCBuffer[3] + ' ';
+           end;
         QTCBuffer[3] := QTCBuffer[3] + ' 8: ' + QTCString;
         {           GoToXY (1, 3);
                    ClrEol;
@@ -2142,7 +2384,9 @@ begin
     9:
       begin
         while length(QTCBuffer[4]) < 40 do
-          QTCBuffer[4] := QTCBuffer[4] + ' ';
+           begin
+           QTCBuffer[4] := QTCBuffer[4] + ' ';
+           end;
         QTCBuffer[4] := QTCBuffer[4] + ' 9: ' + QTCString;
         {           GoToXY (1, 4);
                    ClrEol;
@@ -2153,7 +2397,9 @@ begin
     10:
       begin
         while length(QTCBuffer[5]) < 40 do
-          QTCBuffer[5] := QTCBuffer[5] + ' ';
+           begin
+           QTCBuffer[5] := QTCBuffer[5] + ' ';
+           end;
         QTCBuffer[5] := QTCBuffer[5] + '10: ' + QTCString;
         {           GoToXY (1, 5);
                    ClrEol;
@@ -2189,408 +2435,496 @@ begin
   { InitialExchangePutUp := False; }
   InitialExchangeEntry := ' ';
   if not GoodCallSyntax(Call) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   //  TempString := VisibleLog.GetInitialExchangeFromEditableLog(Call);
 
     if ((TempString = '') and (not ReverseInitialEx)) then
-   TempString := CallsignsList.GetIniitialExchange(Call);
+       begin
+       TempString := CallsignsList.GetIniitialExchange(Call);
+       end;
   //  GetInitialExchange(Call);
 
   //  if ActiveExchange = RSTPrefectureExchange then TempString := Copy(TempString, 2, 10);
 
   if TempString = '' then
-  begin
-    StandardCall := StandardCallFormat(Call, True);
+     begin
+     StandardCall := StandardCallFormat(Call, True);
 
-    case ActiveInitialExchange of
+     case ActiveInitialExchange of
 
-      CustomInitialExchange:
-        begin
-          Exchange := '';
+       CustomInitialExchange:
+         begin
+           Exchange := '';
 
-          CustomString := CustomInitialExchangeString;
+           CustomString := CustomInitialExchangeString;
 
-          while CustomString <> '' do
-          begin
-            Command := RemoveFirstString(CustomString);
-
-            if Command = 'CQZONE' then
-              if CD.GetEntry(Call, data) and (data.CQZone <> '') then
-                Exchange := Exchange + data.CQZone + ' '
-              else
+           while CustomString <> '' do
               begin
-                Zone := ctyGetCQZone(Call);
+              Command := RemoveFirstString(CustomString);
 
-                if Zone > 0 then
+              if Command = 'CQZONE' then
+                if CD.GetEntry(Call, data) and (data.CQZone <> '') then
+                   begin
+                   Exchange := Exchange + data.CQZone + ' '
+                   end
+                else
+                   begin
+                   Zone := ctyGetCQZone(Call);
+
+                   if Zone > 0 then
+                      begin
+                      Str(Zone, TempString);
+                      Exchange := Exchange + TempString + ' ';
+                      end;
+                   end;
+
+              if Command = 'ITUZONE' then
+                if CD.GetEntry(Call, data) and (data.ITUZone <> '') then
+                   begin
+                   Exchange := Exchange + data.ITUZone + ' '
+                   end
+                else
+                   begin
+                   Zone := ctyGetITUZone(Call);
+
+                   if Zone > 0 then
+                      begin
+                      Str(Zone, TempString);
+                      Exchange := Exchange + TempString + ' ';
+                      end;
+                   end;
+
+              if Command = 'NAME' then
+                if CD.GetEntry(StandardCall, data) and (data.mName <> '') then
+                   begin
+                   Exchange := Exchange + data.mName + ' ';
+                   end;
+
+              if Command = 'QTH' then
+                if CD.GetEntry(Call, data) and (data.QTH <> '') then
+                   begin
+                   Exchange := Exchange + data.QTH + ' ';
+                   end;
+
+              if Command = 'SECTION' then
+                if CD.GetEntry(Call, data) and (data.Section <> '') then
+                   begin
+                   Exchange := Exchange + data.Section + ' ';
+                   end;
+
+              if Command = 'USER1' then
+                if CD.GetEntry(Call, data) and (data.User1 <> '') then
+                   begin
+                   Exchange := Exchange + data.User1 ; // hh
+                   end;
+
+              if Command = 'USER2' then
+                if CD.GetEntry(Call, data) and (data.User2 <> '') then
+                   begin
+                   Exchange := Exchange + data.User2 + ' ';
+                   end;
+
+              if Command = 'USER3' then
+                if CD.GetEntry(Call, data) and (data.User3 <> '') then
+                   begin
+                   Exchange := Exchange + data.User3 + ' ';
+                   end;
+
+              if Command = 'USER4' then
+                if CD.GetEntry(Call, data) and (data.User4 <> '') then
+                   begin
+                   Exchange := Exchange + data.User4 + ' ';
+                   end;
+
+              if Command = 'USER5' then
+                if CD.GetEntry(Call, data) and (data.User5 <> '') then
+                   begin
+                   Exchange := Exchange + data.User5 + ' ';
+                   end;
+
+              if Command = 'GRID' then
+                if CD.GetEntry(Call, data) and (data.Grid <> '') then
+                   begin
+                   Exchange := Exchange + data.Grid + ' ';
+
+                   if (MyGrid <> '') and LooksLikeAGrid(data.Grid) then
+                      begin
+                      //                  SaveSetAndClearActiveWindow(BeamHeadingWindow);
+                      Heading := round(GetBeamHeading(MyGrid, data.Grid));
+                      //                  Write(data.Grid, ' at ', Heading, '?');
+                                                //                  RestorePreviousWindow;
+                      end;
+                   end;
+
+              if Command = 'FOC' then
+                if CD.GetEntry(StandardCall, data) and (data.FOC <> '') then
+                   begin
+                   Exchange := Exchange + data.FOC + ' ';
+                   end;
+
+              if Command = 'CHECK' then
+                if CD.GetEntry(Call, data) and (data.Check <> '') then
+                   begin
+                   Exchange := Exchange + data.Check + ' ';
+                   end;
+
+              if Command = 'OLDCALL' then
+                if CD.GetEntry(Call, data) and (data.OldCall <> '') then
+                   begin
+                   Exchange := Exchange + data.OldCall + ' ';
+                   end;
+
+              if Command = 'TENTEN' then
+                if CD.GetEntry(Call, data) and (data.TENTEN <> '') then
+                   begin
+                   Exchange := Exchange + data.TENTEN + ' ';
+                   end;
+
+              end;
+           if Exchange <> '' then
+              begin
+              getridofpostcedingspaces(Exchange);    // 4.123.9
+              InitialExchangeEntry := '' + Exchange + ' '; // Issue151
+              end
+             else
                 begin
-                  Str(Zone, TempString);
-                  Exchange := Exchange + TempString + ' ';
+                InitialExchangeEntry := CallsignsList.GetIniitialExchange(Call);
                 end;
+           CheckAndSetInitialExchangeCursorPos;
+           //          if InitialExchangeOverwrite then Windows.SendMessage(ExchangeWindowHandle, EM_SETSEL, 0, -1);
+           //                                      InitialExchangePutUp := True; {KK1L: 6.70 For custom typing any character overwrites the whole exchange.}
+           Exit;
+         end;
+
+       ZoneInitialExchange:
+         begin
+           if Contest in [OZCR_O, OZCR_Z] then
+              begin
+              //        if length(Call) = 3 then if Call[1] = 'R' then {if Call[2] in ['0'..'1'] then} Exit;
+              if Call[1] = 'R' then
+                if Call[2] in ['3'] then
+                  if Call[3] in ['0'..'9'] then
+                     begin
+                     Exit;
+                     end;
               end;
 
-            if Command = 'ITUZONE' then
-              if CD.GetEntry(Call, data) and (data.ITUZone <> '') then
-                Exchange := Exchange + data.ITUZone + ' '
-              else
-              begin
-                Zone := ctyGetITUZone(Call);
-
-                if Zone > 0 then
+           if ActiveExchange = RSTZoneOrDomesticQTH then
+             if DomesticCountryCall(Call) then
                 begin
-                  Str(Zone, TempString);
-                  Exchange := Exchange + TempString + ' ';
-                end;
-              end;
-
-            if Command = 'NAME' then
-              if CD.GetEntry(StandardCall, data) and (data.mName <> '') then
-                Exchange := Exchange + data.mName + ' ';
-
-            if Command = 'QTH' then
-              if CD.GetEntry(Call, data) and (data.QTH <> '') then
-                Exchange := Exchange + data.QTH + ' ';
-
-            if Command = 'SECTION' then
-              if CD.GetEntry(Call, data) and (data.Section <> '') then
-                Exchange := Exchange + data.Section + ' ';
-
-            if Command = 'USER1' then
-              if CD.GetEntry(Call, data) and (data.User1 <> '') then
-                Exchange := Exchange + data.User1 ; // hh
-
-            if Command = 'USER2' then
-              if CD.GetEntry(Call, data) and (data.User2 <> '') then
-                Exchange := Exchange + data.User2 + ' ';
-
-            if Command = 'USER3' then
-              if CD.GetEntry(Call, data) and (data.User3 <> '') then
-                Exchange := Exchange + data.User3 + ' ';
-
-            if Command = 'USER4' then
-              if CD.GetEntry(Call, data) and (data.User4 <> '') then
-                Exchange := Exchange + data.User4 + ' ';
-
-            if Command = 'USER5' then
-              if CD.GetEntry(Call, data) and (data.User5 <> '') then
-                Exchange := Exchange + data.User5 + ' ';
-
-            if Command = 'GRID' then
-              if CD.GetEntry(Call, data) and (data.Grid <> '') then
-              begin
-                Exchange := Exchange + data.Grid + ' ';
-
-                if (MyGrid <> '') and LooksLikeAGrid(data.Grid) then
-                begin
-                  //                  SaveSetAndClearActiveWindow(BeamHeadingWindow);
-                  Heading := round(GetBeamHeading(MyGrid, data.Grid));
-                  //                  Write(data.Grid, ' at ', Heading, '?');
-                                            //                  RestorePreviousWindow;
-                end;
-              end;
-
-            if Command = 'FOC' then
-              if CD.GetEntry(StandardCall, data) and (data.FOC <> '') then
-                Exchange := Exchange + data.FOC + ' ';
-
-            if Command = 'CHECK' then
-              if CD.GetEntry(Call, data) and (data.Check <> '') then
-                Exchange := Exchange + data.Check + ' ';
-
-            if Command = 'OLDCALL' then
-              if CD.GetEntry(Call, data) and (data.OldCall <> '') then
-                Exchange := Exchange + data.OldCall + ' ';
-
-            if Command = 'TENTEN' then
-              if CD.GetEntry(Call, data) and (data.TENTEN <> '') then
-                Exchange := Exchange + data.TENTEN + ' ';
-
-          end;
-          if Exchange <> '' then
-          begin
-             getridofpostcedingspaces(Exchange);    // 4.123.9
-             InitialExchangeEntry := '' + Exchange + ' '; // Issue151
-          end
-            else
-            InitialExchangeEntry := CallsignsList.GetIniitialExchange(Call);
-          CheckAndSetInitialExchangeCursorPos;
-          //          if InitialExchangeOverwrite then Windows.SendMessage(ExchangeWindowHandle, EM_SETSEL, 0, -1);
-          //                                      InitialExchangePutUp := True; {KK1L: 6.70 For custom typing any character overwrites the whole exchange.}
-          Exit;
-        end;
-
-      ZoneInitialExchange:
-        begin
-          if Contest in [OZCR_O, OZCR_Z] then
-          begin
-            //        if length(Call) = 3 then if Call[1] = 'R' then {if Call[2] in ['0'..'1'] then} Exit;
-            if Call[1] = 'R' then
-              if Call[2] in ['3'] then
-                if Call[3] in ['0'..'9'] then
-                  Exit;
-          end;
-
-          if ActiveExchange = RSTZoneOrDomesticQTH then
-            if DomesticCountryCall(Call) then
-            begin
-              Result := '';
-              Exit;
-            end;
-
-          if Contest in [RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then
-          begin
-            Result := '';
-            Command := GetOblast(Call);
-            case Command[1] of
-              '1', '2': Result := '1';
-              '3', '4', '6': Result := '2';
-              '9':
-                begin
-                  case Command[2] of
-
-                    'A', 'B', 'C', 'D', 'F', 'G', 'L', 'Q', 'R', 'S', 'T', 'W',
-                      'X': Result := '3';
-                    'H', 'J', 'K', 'M', 'O', 'U', 'Y', 'Z': Result := '4';
-                  end;
-                end;
-
-              '0':
-                begin
-                  case Command[2] of
-
-                    'A', 'W', 'Y': Result := '4';
-                    'B', 'H', 'O', 'S', 'T', 'U', 'V': Result := '5';
-                    'J', 'C', 'D', 'F', 'Q', 'L': Result := '6';
-                    'I', 'K', 'X', 'Z': Result := '7';
-                  end;
-                end;
-
-            end;
-            Exit;
-          end;
-
-          if CD.GetEntry(Call, data) then
-          begin
-            if ActiveZoneMult = ITUZones then
-            begin
-              if data.ITUZone <> '' then
-              begin
-                InitialExchangeEntry := ' ' + data.ITUZone;
-                  {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
-
-                { InitialExchangePutUp := True; }
-
+                Result := '';
                 Exit;
+                end;
+
+           if Contest in [RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then
+              begin
+              Result := '';
+              Command := GetOblast(Call);
+              case Command[1] of
+                '1', '2': Result := '1';
+                '3', '4', '6': Result := '2';
+                '9':
+                  begin
+                    case Command[2] of
+
+                      'A', 'B', 'C', 'D', 'F', 'G', 'L', 'Q', 'R', 'S', 'T', 'W',
+                        'X': Result := '3';
+                      'H', 'J', 'K', 'M', 'O', 'U', 'Y', 'Z': Result := '4';
+                    end;
+                  end;
+
+                '0':
+                  begin
+                    case Command[2] of
+
+                      'A', 'W', 'Y': Result := '4';
+                      'B', 'H', 'O', 'S', 'T', 'U', 'V': Result := '5';
+                      'J', 'C', 'D', 'F', 'Q', 'L': Result := '6';
+                      'I', 'K', 'X', 'Z': Result := '7';
+                    end;
+                  end;
+
               end;
-            end
-            else if data.CQZone <> '' then
-            begin
-              InitialExchangeEntry := ' ' + data.CQZone;
-                {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
-
-              { InitialExchangePutUp := True; }
               Exit;
+              end;
+
+           if CD.GetEntry(Call, data) then
+              begin
+              if ActiveZoneMult = ITUZones then
+                 begin
+                 if data.ITUZone <> '' then
+                    begin
+                    InitialExchangeEntry := ' ' + data.ITUZone;
+                      {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
+
+                    { InitialExchangePutUp := True; }
+
+                    Exit;
+                    end;
+                 end
+              else if data.CQZone <> '' then
+                 begin
+                 InitialExchangeEntry := ' ' + data.CQZone;
+                   {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
+
+                 { InitialExchangePutUp := True; }
+                 Exit;
+                 end;
+              end;
+
+           //ctyLocateCall(Call, TempQTH);
+           //if TempQTH.Zone > 0 then Str(TempQTH.Zone, TempString);
+           TempZone := ctyGetZone(Call);
+           if TempZone {TempQTH.Zone} <> DUMMYZONE then
+              begin
+              Str(TempZone {TempQTH.Zone}, TempString);
+              end;
+           GetRidOfPrecedingSpaces(TempString);
+           if DebugFlag and (TempString = '') then
+              begin
+              TempString := '40';
+              end;
+
+           { InitialExchangePutUp := TempString <> ''; }
+         end;
+
+       NameInitialExchange:
+         begin
+           TempString := CD.GetName(StandardCall);
+           if TempString <> '' then
+              begin
+              TempString := TempString + ' ';
+              end;
+         end;
+
+       NameQTHInitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            if data.mName <> '' then
+               begin
+               TempString := data.mName + ' ';
+               end;
+            if data.QTH <> '' then
+               begin
+               TempString := TempString + data.QTH + ' ';
+               end;
             end;
-          end;
 
-          //ctyLocateCall(Call, TempQTH);
-          //if TempQTH.Zone > 0 then Str(TempQTH.Zone, TempString);
-          TempZone := ctyGetZone(Call);
-          if TempZone {TempQTH.Zone} <> DUMMYZONE then
-            Str(TempZone {TempQTH.Zone}, TempString);
-          GetRidOfPrecedingSpaces(TempString);
-          if DebugFlag and (TempString = '') then
-            TempString := '40';
+       CheckSectionInitialExchange:
+         if CD.GetEntry(Call, data) then
+           if (data.Check <> '') and (data.Section <> '') then
+              begin
+              TempString := data.Check + data.Section + ' ';
+              end;
 
-          { InitialExchangePutUp := TempString <> ''; }
-        end;
-
-      NameInitialExchange:
-        begin
-          TempString := CD.GetName(StandardCall);
-          if TempString <> '' then
-            TempString := TempString + ' ';
-        end;
-
-      NameQTHInitialExchange:
-        if CD.GetEntry(Call, data) then
-        begin
-          if data.mName <> '' then
-            TempString := data.mName + ' ';
-          if data.QTH <> '' then
-            TempString := TempString + data.QTH + ' ';
-        end;
-
-      CheckSectionInitialExchange:
-        if CD.GetEntry(Call, data) then
-          if (data.Check <> '') and (data.Section <> '') then
-            TempString := data.Check + data.Section + ' ';
-
-      SectionInitialExchange:
-        if CD.GetEntry(Call, data) then
-        begin
-          if data.Section <> '' then
-            TempString := data.Section + ' '
-          else
-            TempString := GetVEInitialExchange(Call);
-        end
-        else
-        begin
+       SectionInitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            if data.Section <> '' then
+               begin
+               TempString := data.Section + ' '
+               end
+            else
+               begin
+               TempString := GetVEInitialExchange(Call);
+               end;
+            end
+         else
+            begin
           
-          TempString := GetVEInitialExchange(Call);
-        end;
-
-      QTHInitialExchange:
-        if CD.GetEntry(Call, data) then
-        begin
-          if data.QTH <> '' then
-            TempString := data.QTH + ' '
-          else
             TempString := GetVEInitialExchange(Call);
-        end
-        else
-          TempString := GetVEInitialExchange(Call);
+            end;
 
-      GridInitialExchange:
-        if CD.GetEntry(Call, data) then
-        begin
-          TempString := data.Grid;
+       QTHInitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            if data.QTH <> '' then
+               begin
+               TempString := data.QTH + ' '
+               end
+            else
+               begin
+               TempString := GetVEInitialExchange(Call);
+               end;
+            end
+         else
+            begin
+            TempString := GetVEInitialExchange(Call);
+            end;
 
-          if (MyGrid <> '') and LooksLikeAGrid(data.Grid) then
+       GridInitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            TempString := data.Grid;
+
+            if (MyGrid <> '') and LooksLikeAGrid(data.Grid) then
+               begin
+               //            SaveSetAndClearActiveWindow(BeamHeadingWindow);
+               Heading := round(GetBeamHeading(MyGrid, data.Grid));
+               //            Write(data.Grid, ' at ', Heading, '?');
+                                 //            RestorePreviousWindow;
+               end;
+            end;
+
+       FOCInitialExchange:
+         if CD.GetEntry(StandardCall, data) then
+            begin
+            TempString := data.FOC;
+            end;
+
+       User1InitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            TempString := data.User1;
+            end;
+
+       User2InitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            TempString := data.User2;
+            end;
+
+       User3InitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            TempString := data.User3;
+            end;
+
+       User4InitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            TempString := data.User4;
+            end;
+
+       User5InitialExchange:
+         if CD.GetEntry(Call, data) then
+            begin
+            TempString := data.User5;
+            end;
+
+     end; { if case }
+
+     if TempString = '' then
+       if Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL] then
           begin
-            //            SaveSetAndClearActiveWindow(BeamHeadingWindow);
-            Heading := round(GetBeamHeading(MyGrid, data.Grid));
-            //            Write(data.Grid, ' at ', Heading, '?');
-                              //            RestorePreviousWindow;
+          ctyLocateCall(Call, TempQTH);
+          if RussianID(TempQTH.CountryID) then
+             begin
+             TempString := GetRussiaOblastID(Call);
+             end;
           end;
-        end;
+     if ReverseInitialEx then
+        begin
+        TempString := CallsignsList.GetIniitialExchange(Call)
+        end
+       else
+          begin
+          InitialExchangeEntry := ' ' + TempString;
+          end;
 
-      FOCInitialExchange:
-        if CD.GetEntry(StandardCall, data) then
-          TempString := data.FOC;
+       {KK1L: 6.73 Added ' '. K9PG forgets to add it when cursor at start.}
 
-      User1InitialExchange:
-        if CD.GetEntry(Call, data) then
-          TempString := data.User1;
-
-      User2InitialExchange:
-        if CD.GetEntry(Call, data) then
-          TempString := data.User2;
-
-      User3InitialExchange:
-        if CD.GetEntry(Call, data) then
-          TempString := data.User3;
-
-      User4InitialExchange:
-        if CD.GetEntry(Call, data) then
-          TempString := data.User4;
-
-      User5InitialExchange:
-        if CD.GetEntry(Call, data) then
-          TempString := data.User5;
-
-    end; { if case }
-
-    if TempString = '' then
-      if Contest in [RUSSIANDX, RDA, RU3AXMEMORIAL] then
-      begin
-        ctyLocateCall(Call, TempQTH);
-        if RussianID(TempQTH.CountryID) then
-          TempString := GetRussiaOblastID(Call);
-      end;
-    if ReverseInitialEx then
-     TempString := CallsignsList.GetIniitialExchange(Call)
-      else
-       InitialExchangeEntry := ' ' + TempString;
-
-      {KK1L: 6.73 Added ' '. K9PG forgets to add it when cursor at start.}
-
-    {        IF InitialExchangeOverwrite THEN
+     {        IF InitialExchangeOverwrite THEN
                 InitialExchangePutUp := True; {KK1L: 6.73 Typing any character overwrites the whole exchange.}
 
-  end
+     end
   else
-  begin
-    GetRidOfPrecedingSpaces(TempString); //n4af 4.31.7
-    GetRidOfPostcedingSpaces(TempString);
+     begin
+     GetRidOfPrecedingSpaces(TempString); //n4af 4.31.7
+     GetRidOfPostcedingSpaces(TempString);
 
-    if (ActiveExchange = QSONumberDomesticOrDXQTHExchange) or
-      (ActiveExchange = RSTAndFOCNumberExchange) or
-      (ActiveExchange = QSONumberDomesticQTHExchange) or
-      (ActiveExchange = QSONumberAndGridSquare) or
-      (ActiveExchange = RSTAndQSONumberOrDomesticQTHExchange) or
-      (ActiveExchange = RSTDomesticOrDXQTHExchange) or
-      (ActiveExchange = RSTDomesticQTHExchange) or
-      (ActiveExchange = RSTDomesticQTHOrQSONumberExchange) or
-      (ActiveExchange = RSTQSONumberAndDomesticQTHExchange) or
-      (ActiveExchange = QSONumberAndPossibleDomesticQTHExchange) or {KK1L: 6.73}
-    (ActiveExchange = RSTQSONumberAndPossibleDomesticQTHExchange) then
-      for CharPosition := 1 to length(TempString) do
-        if Copy(TempString, CharPosition, 1) = ' ' then
-          TempString[CharPosition] := '/';
+     if (ActiveExchange = QSONumberDomesticOrDXQTHExchange) or
+       (ActiveExchange = RSTAndFOCNumberExchange) or
+       (ActiveExchange = QSONumberDomesticQTHExchange) or
+       (ActiveExchange = QSONumberAndGridSquare) or
+       (ActiveExchange = RSTAndQSONumberOrDomesticQTHExchange) or
+       (ActiveExchange = RSTDomesticOrDXQTHExchange) or
+       (ActiveExchange = RSTDomesticQTHExchange) or
+       (ActiveExchange = RSTDomesticQTHOrQSONumberExchange) or
+       (ActiveExchange = RSTQSONumberAndDomesticQTHExchange) or
+       (ActiveExchange = QSONumberAndPossibleDomesticQTHExchange) or {KK1L: 6.73}
+     (ActiveExchange = RSTQSONumberAndPossibleDomesticQTHExchange) then
+        begin
+        for CharPosition := 1 to length(TempString) do
+          if Copy(TempString, CharPosition, 1) = ' ' then
+             begin
+             TempString[CharPosition] := '/';
+             end;
+        end;
 
-    {ua4wli 3.01}
-    if ActiveExchange = RSTZoneOrDomesticQTH then
-      if DomesticCountryCall(Call) then
-        TempString := RemoveLastString(TempString);
-    if ActiveExchange = QSONumberPrecedenceCheckDomesticQTHEXchange then
-      // n4af 4.43.2
-      if length(GetFirstString(TempString)) = 1 then // 4.43.2
-        if StringIsAllNumbers(GetFirstString(TempString)) then // 4.43.2
-          TempString := '0' + TempString; // 4.43.2
+     {ua4wli 3.01}
+     if ActiveExchange = RSTZoneOrDomesticQTH then
+       if DomesticCountryCall(Call) then
+          begin
+          TempString := RemoveLastString(TempString);
+          end;
+     if ActiveExchange = QSONumberPrecedenceCheckDomesticQTHEXchange then
+       // n4af 4.43.2
+       if length(GetFirstString(TempString)) = 1 then // 4.43.2
+         if StringIsAllNumbers(GetFirstString(TempString)) then // 4.43.2
+            begin
+            TempString := '0' + TempString; // 4.43.2
+            end;
 
-    {KK1L: 6.68 For IARU there was a problem with intial exchanges read from the log.}
-    {           Both the zone and country are log entries, but only the zone is in the}
-    {           exchange. This confused the parser. Only the first string (zone) is needed.}
+     {KK1L: 6.68 For IARU there was a problem with intial exchanges read from the log.}
+     {           Both the zone and country are log entries, but only the zone is in the}
+     {           exchange. This confused the parser. Only the first string (zone) is needed.}
 
-    if (ActiveInitialExchange = ZoneInitialExchange) or (Contest = IARU) then
-      {KK1L: 6.71 The init exchange bug came back when I changed the Initital exchange default}
-      {           for IARU and WRTC!! Added the second line above.}
-      TempString := RemoveFirstString(TempString);
+     if (ActiveInitialExchange = ZoneInitialExchange) or (Contest = IARU) then
+       {KK1L: 6.71 The init exchange bug came back when I changed the Initital exchange default}
+       {           for IARU and WRTC!! Added the second line above.}
+        begin
+        TempString := RemoveFirstString(TempString);
+        end;
 
-    {KK1L: 6.73 Typing any character overwrites the whole exchange. Tree
+     {KK1L: 6.73 Typing any character overwrites the whole exchange. Tree
      decided this was a good thing even for rover calls and moved it here }
 
- {       IF InitialExchangeOverwrite THEN InitialExchangePutUp := True;  }
+  {       IF InitialExchangeOverwrite THEN InitialExchangePutUp := True;  }
 
-    if not RoverCall(Call) then
-    begin
-      InitialExchangeEntry := ' ' + TempString + ' ';
-        {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
-    end
-    else
-    begin
-      InitialExchangeEntry := TempString;
-        {KK1L: 6.73 Per Tree to fix VHF rover problem.}
+     if not RoverCall(Call) then
+        begin
+        InitialExchangeEntry := ' ' + TempString + ' ';
+          {KK1L: 6.73 Added ' '. K9PG forgets to add it.}
+        end
+     else
+        begin
+        InitialExchangeEntry := TempString;
+          {KK1L: 6.73 Per Tree to fix VHF rover problem.}
 
-      {           InitialExchangePutUp := True; }
-    end;
-    //         curspos := length(Result);
-//    Frm.ExchangeWindow . SetFocus;
-  if not ie_check then
-   tExchangeWindowSetFocus;
+        {           InitialExchangePutUp := True; }
+        end;
+     //         curspos := length(Result);
+ //    Frm.ExchangeWindow . SetFocus;
+   if not ie_check then
+      begin
+      tExchangeWindowSetFocus;
+      end;
 
-    if InitialExchangeOverwrite then
-    begin
-      Windows.SendMessage(wh[mweExchange], EM_SETSEL, 0, -1);     //hh
-      InitialExchangePutUp := ExchangeWindowString <> '';
-    end;
+     if InitialExchangeOverwrite then
+        begin
+        Windows.SendMessage(wh[mweExchange], EM_SETSEL, 0, -1);     //hh
+        InitialExchangePutUp := ExchangeWindowString <> '';
+        end;
 
-  end;
+     end;
 
  while TempString <> '' do
-  begin
+    begin
     { was FirstString before 6.43 }
 
     TestString := RemoveLastString(TempString);
 
     if (MyGrid <> '') and LooksLikeAGrid(TestString) then
-    begin
-      //      SaveSetAndClearActiveWindow(BeamHeadingWindow);
-      Heading := round(GetBeamHeading(MyGrid, TestString));
-      //               Write(TestString, ' ', Heading, '?');
-      TestString := TestString + ' ' + IntToStr(Heading) + '*';
-      {               if DistanceMode <> NoDistanceDisplay then
+       begin
+       //      SaveSetAndClearActiveWindow(BeamHeadingWindow);
+       Heading := round(GetBeamHeading(MyGrid, TestString));
+       //               Write(TestString, ' ', Heading, '?');
+       TestString := TestString + ' ' + IntToStr(Heading) + '*';
+       {               if DistanceMode <> NoDistanceDisplay then
                         begin
                            Distance := GetDistanceBetweenGrids(MyGrid, TestString);
 
@@ -2606,31 +2940,33 @@ begin
                            Frm.BeamHeadingWindow . Caption := TestString;
                         end;
       }
-                     //      RestorePreviousWindow;
+                      //      RestorePreviousWindow;
 
-    end;
+       end;
 
     if DoingDomesticMults then // Gav 4.44.8    Uncommented this section
       if not StringIsAllNumbersOrSpaces(TestString) then
-      begin
-        TempExchange.QTHString := TestString;
+         begin
+         TempExchange.QTHString := TestString;
 
-        if FoundDomesticQTH(TempExchange) then
-        begin
-          VisibleLog.ShowDomesticMultiplierStatus(TempExchange.DomesticQTH);
-          Exit;
-        end;
-      end
+         if FoundDomesticQTH(TempExchange) then
+            begin
+            VisibleLog.ShowDomesticMultiplierStatus(TempExchange.DomesticQTH);
+            Exit;
+            end;
+         end
       else if ActiveExchange = RSTPrefectureExchange then
-      begin
-        TempExchange.QTHString := 'p' + RemoveFirstString(TempString);
-        logger.debug('Calling FoundDomesticQTH from InitialExchangeEntry');
-        if FoundDomesticQTH(TempExchange) then
-          VisibleLog.ShowDomesticMultiplierStatus(TempExchange.DomesticQTH);
-        Exit;
-      end;
+         begin
+         TempExchange.QTHString := 'p' + RemoveFirstString(TempString);
+         logger.debug('Calling FoundDomesticQTH from InitialExchangeEntry');
+         if FoundDomesticQTH(TempExchange) then
+            begin
+            VisibleLog.ShowDomesticMultiplierStatus(TempExchange.DomesticQTH);
+            end;
+         Exit;
+         end;
 
-  end;
+    end;
 
   //{WLI}
 
@@ -2648,34 +2984,36 @@ begin
 
   BandMapEntryRecord := BandMapFirstEntryList[RXBand, RXMode];
   while BandMapEntryRecord <> nil do
-  begin
-    with BandMapEntryRecord^ do
-    begin
+     begin
+     with BandMapEntryRecord^ do
+        begin
 
-      {IF (RXCall = BandMapExpandedString(Call)) AND           } {KK1L: 6.73 Removed}
-      {   (RXBand = ActiveBand) AND (RXMode = ActiveMode) THEN }
-      {KK1L: 6.73 Don't limit compare to active band/mode. This keeps a contact made on the}
-      {           second radio from getting reset correctly. The BandMapFirstEntryList limits}
-      {           the check appropriately to the band/mode of the deleted contact.}
-      if (RXCall = BandMapExpandedString(Call)) then
-        if MakeDupe then
-        begin
-          StatusByte := StatusByte or $40; {KK1L: 6.64 Turn on dupe bit}
-          StatusByte := StatusByte and $7F;
-            {KK1L: 6.69 if it is a dupe it CAN'T be a mult}
-          ChangeMade := True;
-        end
-        else
-        begin
-          StatusByte := StatusByte and $BF; {KK1L: 6.64 Turn off dupe bit}
-          ChangeMade := True;
+        {IF (RXCall = BandMapExpandedString(Call)) AND           } {KK1L: 6.73 Removed}
+        {   (RXBand = ActiveBand) AND (RXMode = ActiveMode) THEN }
+        {KK1L: 6.73 Don't limit compare to active band/mode. This keeps a contact made on the}
+        {           second radio from getting reset correctly. The BandMapFirstEntryList limits}
+        {           the check appropriately to the band/mode of the deleted contact.}
+        if (RXCall = BandMapExpandedString(Call)) then
+          if MakeDupe then
+             begin
+             StatusByte := StatusByte or $40; {KK1L: 6.64 Turn on dupe bit}
+             StatusByte := StatusByte and $7F;
+               {KK1L: 6.69 if it is a dupe it CAN'T be a mult}
+             ChangeMade := True;
+             end
+          else
+             begin
+             StatusByte := StatusByte and $BF; {KK1L: 6.64 Turn off dupe bit}
+             ChangeMade := True;
+             end;
         end;
-    end;
-    BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-  end;
+     BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
+     end;
 
   if ChangeMade then
-    DisplayBandMap;
+     begin
+     DisplayBandMap;
+     end;
 end;
 
 function TotalScore: LONGINT;
@@ -2693,161 +3031,179 @@ begin
   //  VisibleLog.IncrementQSOPointsWithContentsOfEditableWindow(QPoints);
 
   if QTCsEnabled then
-    QPoints := QPoints + TotalNumberQTCsProcessed;
+     begin
+     QPoints := QPoints + TotalNumberQTCsProcessed;
+     end;
 
    if (ActiveDomesticMult = NoDomesticMults)  and        // 4.57.2    //4.69.5  // 4.70.2
     (ActiveDXMult = NoDXMults) and
     (ActivePrefixMult = NoPrefixMults) and
     (ActiveZoneMult = NoZoneMults) then
-    begin
-    TotalScore := QPoints;
-    Exit;
-  end;
+      begin
+      TotalScore := QPoints;
+      Exit;
+      end;
 
   {KK1L: 6.70 Ugly fix for FISTS because mults don't work...too long an exchange}
   if ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
-  begin
-    TotalScore := QPoints;
-    Exit;
-  end;
+     begin
+     TotalScore := QPoints;
+     Exit;
+     end;
 
   if Contest = ARRLFIELDDAY then    // 4.72.4
-   begin
+     begin
      totalscore := QPoints;
      exit;
-   end;
+     end;
 { if contest = DL-DX RTTY then
  exit
  }
 
   if Contest = WINTERFIELDDAY then // Issue 301 NY4I
-  begin
-    TotalMults := 0;
-    for b := Low(BandType) to Band1296 do
-    begin
-      if QTotals[b, Digital] > 0 then
-      begin
-        inc(TotalMults);
-      end;
-      if QTotals[b, CW] > 0 then
-      begin
-        inc(TotalMults);
-      end;
-      if QTotals[b, Phone] > 0 then
-      begin
-        inc(TotalMults);
-      end;
-    end;
-    TotalScore := TotalMults * QPoints;
-    if tCategoryPowerSA[Categorypower] = 'LOW' then
-       begin
-       Result := Result * 2;
-       end
-    else if tCategoryPowerSA[Categorypower] = 'QRP' then
-       begin
-       Result := Result * 5;
-       end;
+     begin
+     TotalMults := 0;
+     for b := Low(BandType) to Band1296 do
+        begin
+        if QTotals[b, Digital] > 0 then
+           begin
+           inc(TotalMults);
+           end;
+        if QTotals[b, CW] > 0 then
+           begin
+           inc(TotalMults);
+           end;
+        if QTotals[b, Phone] > 0 then
+           begin
+           inc(TotalMults);
+           end;
+        end;
+     TotalScore := TotalMults * QPoints;
+     if tCategoryPowerSA[Categorypower] = 'LOW' then
+        begin
+        Result := Result * 2;
+        end
+     else if tCategoryPowerSA[Categorypower] = 'QRP' then
+        begin
+        Result := Result * 5;
+        end;
 
 
-    Exit;
-  end;
+     Exit;
+     end;
 
   //  Sheet.MultSheetTotals(MTotals);
     //  VisibleLog.IncrementMultTotalsWithContentsOfEditableWindow(MTotals);
 //   TotalMults := 0;
 
   if SingleBand <> AllBands then
-  begin
+     begin
       
-    for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-      TotalMults := TotalMults + mo.MTotals[SingleBand, Both, m];
+     for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
+        begin
+        TotalMults := TotalMults + mo.MTotals[SingleBand, Both, m];
+        end;
 
-    //    TotalMults := MTotals[SingleBand, Both].NumberDomesticMults;
-    //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberDXMults;
-    //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberPrefixMults;
-    //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberZoneMults;
-  end
+     //    TotalMults := MTotals[SingleBand, Both].NumberDomesticMults;
+     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberDXMults;
+     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberPrefixMults;
+     //    TotalMults := TotalMults + MTotals[SingleBand, Both].NumberZoneMults;
+     end
   else if (ActiveQSOPointMethod = WAEQSOPointMethod)  then               // 4.116.1
-  begin
+     begin
 
-    if ActiveDXMult = CQEuropeanCountries then
-      m := rmDX
-    else
-      m := rmPrefix;
+     if ActiveDXMult = CQEuropeanCountries then
+        begin
+        m := rmDX
+        end
+     else
+        begin
+        m := rmPrefix;
+        end;
 
-    TotalMults := mo.MTotals[Band80, Both, m] * 4;
-    TotalMults := TotalMults + mo.MTotals[Band40, Both, m] * 3;
-    TotalMults := TotalMults + mo.MTotals[Band20, Both, m] * 2;
-    TotalMults := TotalMults + mo.MTotals[Band15, Both, m] * 2;
-    TotalMults := TotalMults + mo.MTotals[Band10, Both, m] * 2;
-  end
+     TotalMults := mo.MTotals[Band80, Both, m] * 4;
+     TotalMults := TotalMults + mo.MTotals[Band40, Both, m] * 3;
+     TotalMults := TotalMults + mo.MTotals[Band20, Both, m] * 2;
+     TotalMults := TotalMults + mo.MTotals[Band15, Both, m] * 2;
+     TotalMults := TotalMults + mo.MTotals[Band10, Both, m] * 2;
+     end
   else
-  begin
-    for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
-      TotalMults := TotalMults + mo.MTotals[AllBands, Both, m];
+     begin
+     for m := Low(RemainingMultiplierType) to High(RemainingMultiplierType) do
+        begin
+        TotalMults := TotalMults + mo.MTotals[AllBands, Both, m];
+        end;
 
-    //      TotalMults := mo.MTotals[All, Both, rmDomestic];
+     //      TotalMults := mo.MTotals[All, Both, rmDomestic];
 
-    //      TotalMults := TotalMults + moMTotals[All, Both].NumberDXMults;
+     //      TotalMults := TotalMults + moMTotals[All, Both].NumberDXMults;
 
-    //      if (Contest = RDA) and (not RussianID(MyCountry)) then        TotalMults := TotalMults - MTotals[All, Both].NumberDXMults;
+     //      if (Contest = RDA) and (not RussianID(MyCountry)) then        TotalMults := TotalMults - MTotals[All, Both].NumberDXMults;
 
-    //      if Contest <> CUPURAL then        TotalMults := TotalMults + MTotals[All, Both].NumberPrefixMults;
+     //      if Contest <> CUPURAL then        TotalMults := TotalMults + MTotals[All, Both].NumberPrefixMults;
 
-    //      TotalMults := TotalMults + MTotals[All, Both].NumberZoneMults;
-    if Contest = CUPURAL then
-      TotalMults := TotalMults - mo.MTotals[AllBands, Both, rmPrefix];
-  end;
+     //      TotalMults := TotalMults + MTotals[All, Both].NumberZoneMults;
+     if Contest = CUPURAL then
+        begin
+        TotalMults := TotalMults - mo.MTotals[AllBands, Both, rmPrefix];
+        end;
+     end;
 
   if Contest = RSGB18 then
-  begin
-    TotalMults := 1;
-  end;
+     begin
+     TotalMults := 1;
+     end;
 
   if ActiveQSOPointMethod = CupRFMethod then
-  begin
-    TotalScore := QPoints + (100 * TotalMults);
-    Exit;
-  end;
+     begin
+     TotalScore := QPoints + (100 * TotalMults);
+     Exit;
+     end;
 
   if ActiveQSOPointMethod = ALRSUA1DZCupQSOPointMethod then
-  begin
-    TotalScore := QPoints + (300 * TotalMults);
-    Exit;
-  end;
+     begin
+     TotalScore := QPoints + (300 * TotalMults);
+     Exit;
+     end;
 
   if ActiveQSOPointMethod = ChampionshipRFMethod then
-  begin
-    TotalScore := QPoints + (50 * TotalMults);
-    Exit;
-  end;
+     begin
+     TotalScore := QPoints + (50 * TotalMults);
+     Exit;
+     end;
 
   //  if ActiveQSOPointMethod = ChampionshipUkrMethod then
   if Contest in [UKRAINECHAMPIONSHIP {, RADIOYOC}] then
-  begin
-    TotalScore := QPoints + (10 * TotalMults);
-    Exit;
-  end;
+     begin
+     TotalScore := QPoints + (10 * TotalMults);
+     Exit;
+     end;
 
   if ActiveQSOPointMethod = OZHCRVHFQSOPointMethod then
-  begin
-    TotalScore := QPoints + (1000 * TotalMults);
-    Exit;
-  end;
+     begin
+     TotalScore := QPoints + (1000 * TotalMults);
+     Exit;
+     end;
   
   TotalScore := QPoints * TotalMults;
 
   if Contest = MOQSOPARTY then
      begin
      if MOQSOPartyW0MAWorked then
+        begin
         TotalScore := Result + 100;
+        end;
      if MOQSOPartyK0GQWorked then
+        begin
         TotalScore := Result + 100;
+        end;
      TotalScore := Result + MOQSOPartyPeakHourCount;
      end;
 
   if Contest = CUPURAL then
-    Result := Result + 10 * mo.MTotals[AllBands, Both, rmPrefix];
+     begin
+     Result := Result + 10 * mo.MTotals[AllBands, Both, rmPrefix];
+     end;
 
 end;
 
@@ -2857,26 +3213,42 @@ begin
     CQNonEuropeanCountriesAndWAECallRegions: RData.Prefix :=
       EuropeanCountriesAndWAECallRegions(RData.QTH);
     BelgiumPrefixes: if RData.QTH.CountryID = 'ON' then
-        RData.Prefix := RData.QTH.Prefix;
+                        begin
+                        RData.Prefix := RData.QTH.Prefix;
+                        end;
     SACDistricts: RData.Prefix := SACDistrict(RData.QTH);
     IndonesianDistricts: RData.Prefix := IndonesianDistrict(RData.QTH); // 4.64.1
     Prefix: RData.Prefix := RData.QTH.Prefix;
     SouthAmericanPrefixes: if RData.QTH.Continent = SouthAmerica then
-        RData.Prefix := RData.QTH.Prefix;
+                              begin
+                              RData.Prefix := RData.QTH.Prefix;
+                              end;
     NorthAmericanPrefixes: if RData.QTH.Continent = NorthAmerica then
-        RData.Prefix := RData.QTH.Prefix;
+                              begin
+                              RData.Prefix := RData.QTH.Prefix;
+                              end;
     AsianPrefixes: if RData.QTH.Continent = Asia then
-        RData.Prefix := RData.QTH.Prefix;
+                      begin
+                      RData.Prefix := RData.QTH.Prefix;
+                      end;
     SouthAndNorthAmericanPrefixes: if RData.QTH.Continent in [NorthAmerica,
       SouthAmerica] then
-        RData.Prefix := RData.QTH.Prefix;
+                                      begin
+                                      RData.Prefix := RData.QTH.Prefix;
+                                      end;
     NonSouthAmericanPrefixes: if RData.QTH.Continent <> SouthAmerica then
-        RData.Prefix := RData.QTH.Prefix;
+                                 begin
+                                 RData.Prefix := RData.QTH.Prefix;
+                                 end;
     CallSignPrefix: RData.Prefix := RData.Callsign;
     MongolianCallSignPrefix: if RData.QTH.CountryID = 'JT' then
-        RData.Prefix := RData.Callsign;
+                                begin
+                                RData.Prefix := RData.Callsign;
+                                end;
     RussianPrefixes: if Rdata.QTH.CountryID = 'UA' then
-        RData.Prefix := RData.Callsign;
+                        begin
+                        RData.Prefix := RData.Callsign;
+                        end;
     // CzechRepublicCallsignPrefix: if RData.QTH.CountryID = 'OK' then
     //      RDATA.Prefix := RDATA.Callsign;
     GCStation:
@@ -2885,7 +3257,9 @@ begin
           (RData.Callsign = 'RS3A')
           or (RData.Callsign = 'RT3F') or (RData.Callsign = 'UP7Z') or
             (RData.Callsign = 'UN/RA3VM') then
-          RData.Prefix := RData.Callsign;
+           begin
+           RData.Prefix := RData.Callsign;
+           end;
       end;
   end;
   //  RData^.Prefix := RData^.Prefix;

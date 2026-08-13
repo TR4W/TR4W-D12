@@ -85,13 +85,15 @@ begin
       begin
         Windows.SetWindowTextA(hwnddlg, RC_SYNPCTIME);
         for i := 0 to 3 do
-          CreateButton(0, b[i], 270, 5 + i * 35, 190, hwnddlg, 200 + i);
+           begin
+           CreateButton(0, b[i], 270, 5 + i * 35, 190, hwnddlg, 200 + i);
+           end;
 
         for i := 0 to 5 do
-        begin
-          CreateStatic(l[i], 5, 5 + i * 23, 100 + 10, hwnddlg, 0);
-          CreateEdit(ES_READONLY or ES_CENTER, 120, 5 + i * 23, 140, 20, hwnddlg, 100 + i);
-        end;
+           begin
+           CreateStatic(l[i], 5, 5 + i * 23, 100 + 10, hwnddlg, 0);
+           CreateEdit(ES_READONLY or ES_CENTER, 120, 5 + i * 23, 140, 20, hwnddlg, 100 + i);
+           end;
 
         CreateStatic(nil, 0, 157, 470, hwnddlg, 106);
 
@@ -100,7 +102,9 @@ begin
         st_window_handle := hwnddlg;
         Windows.SetTimer(hwnddlg, local_time_timer_handle, 1000, nil);
         if NetSocket = 0 then
-          EnableWindowFalse(hwnddlg, 202);
+           begin
+           EnableWindowFalse(hwnddlg, 202);
+           end;
         EnableWindowFalse(hwnddlg, 201);
         goto ShowCurrentTime;
       end;
@@ -147,9 +151,9 @@ begin
               Windows.GetSystemTime(T2);
               IncSystemTime(T2, Offset);
               if not Windows.SetSystemTime(T2) then
-              begin
-                SetDlgItemTextW(st_window_handle, 106, PChar(string(SysUtils.SysErrorMessage(GetLastError))));
-              end;
+                 begin
+                 SetDlgItemTextW(st_window_handle, 106, PChar(string(SysUtils.SysErrorMessage(GetLastError))));
+                 end;
               EnableWindowFalse(hwnddlg, 201);
             end;
 
@@ -233,17 +237,23 @@ var
 begin
 
   EnableWindowFalse(st_window_handle, 201);
-  for i := 102 to 106 do Windows.SetDlgItemTextA(st_window_handle, i, nil);
+  for i := 102 to 106 do
+     begin
+     Windows.SetDlgItemTextA(st_window_handle, i, nil);
+     end;
   Windows.ZeroMemory(@ST_Buffer, SizeOf(ST_Buffer));
   ST_Buffer[1] := 27;
   if ST_SOCKET = INVALID_SOCKET then
-  begin
+     begin
 
-//    InitiatesUseOfTheWindowsSockets;
-//    ST_SOCKET := socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+     //    InitiatesUseOfTheWindowsSockets;
+     //    ST_SOCKET := socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
 
-    if not GetConnection(ST_SOCKET, NTP_SERVER, 123, SOCK_DGRAM) then goto Unsuccessful;
-{
+         if not GetConnection(ST_SOCKET, NTP_SERVER, 123, SOCK_DGRAM) then
+            begin
+            goto Unsuccessful;
+            end;
+     {
     InitiatesUseOfTheWindowsSockets;
 
     ST_SOCKET := socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
@@ -253,8 +263,11 @@ begin
     if ST_SOCKET = INVALID_SOCKET then goto Unsuccessful;
     if tConnect(ST_SOCKET, @ST_saddr) <> 0 then goto Unsuccessful;
 }
-    if WinSock2.WSAAsyncSelect(ST_SOCKET, st_window_handle, WM_SOCK_SYNC_TIME, FD_READ or FD_CLOSE or FD_CONNECT) <> 0 then goto Unsuccessful;
-  end;
+         if WinSock2.WSAAsyncSelect(ST_SOCKET, st_window_handle, WM_SOCK_SYNC_TIME, FD_READ or FD_CLOSE or FD_CONNECT) <> 0 then
+            begin
+            goto Unsuccessful;
+            end;
+     end;
   Windows.GetSystemTime(T1);
   WinSock2.Send(ST_SOCKET, ST_Buffer, 48, 0);
   goto 1;
@@ -280,7 +293,9 @@ begin
       if reg.OpenKeyReadOnly('SYSTEM\CurrentControlSet\Services\W32Time\Parameters') then
          begin
          if reg.ValueExists('NtpServer') then
+            begin
             Result := reg.ReadString('NtpServer');
+            end;
          reg.CloseKey;
          end;
    finally
@@ -289,13 +304,19 @@ begin
    // Multiple servers are space-separated; take the first
    spacePos := Pos(' ', Result);
    if spacePos > 0 then
+      begin
       Result := Copy(Result, 1, spacePos - 1);
+      end;
    // Strip flags suffix e.g. "time.windows.com,0x9" -> "time.windows.com"
    commaPos := Pos(',', Result);
    if commaPos > 0 then
+      begin
       Result := Copy(Result, 1, commaPos - 1);
+      end;
    if Result = '' then
+      begin
       Result := NTP_SERVER;
+      end;
 end;
 
 // Background thread proc: queries NTP, warns if clock offset exceeds 2 seconds.
@@ -348,7 +369,9 @@ begin
 
    // Copy into ST_Buffer to reuse existing timestamp parser
    for i := 1 to 48 do
+      begin
       ST_Buffer[i] := recvBuf[i];
+      end;
    GetInt64AndSysTimeFromBuffer(33, t2Time);  // T2: server receive timestamp (bytes 33-40)
    GetInt64AndSysTimeFromBuffer(41, t3Time);  // T3: server transmit timestamp (bytes 41-48)
 
@@ -366,7 +389,9 @@ begin
          MB_OK or MB_ICONWARNING or MB_TOPMOST);
       end
    else
+      begin
       logger.Info('[NTP] Clock OK: offset=%d ms from %s', [offset, ntpServer]);
+      end;
 
    NTPStartupThreadID := 0;
 end;

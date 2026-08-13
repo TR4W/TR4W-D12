@@ -85,27 +85,63 @@ begin
   if ActiveQSOPointMethod = RussianDXQSOPointMethod then
     if (CountryID[1] = 'U') then
       if (CountryID[2] = 'A') then
-      begin
-        Result := GetRussiaOblastID(Call);
-        Exit;
-      end;
+         begin
+         Result := GetRussiaOblastID(Call);
+         Exit;
+         end;
 
   if CountryID <> 'VE' then Exit;
   Call := Copy(Call, 1, 3);
 
-  if StringHas(Call, '3') then GetVEInitialExchange := 'Ont ';
-  if StringHas(Call, '4') then GetVEInitialExchange := 'Man';
-  if StringHas(Call, '5') then GetVEInitialExchange := 'Sask';
-  if StringHas(Call, '6') then GetVEInitialExchange := 'Ab';
-  if StringHas(Call, '7') then GetVEInitialExchange := 'Bc';
-  if StringHas(Call, '8') then GetVEInitialExchange := 'NWT';
+  if StringHas(Call, '3') then
+     begin
+     GetVEInitialExchange := 'Ont ';
+     end;
+  if StringHas(Call, '4') then
+     begin
+     GetVEInitialExchange := 'Man';
+     end;
+  if StringHas(Call, '5') then
+     begin
+     GetVEInitialExchange := 'Sask';
+     end;
+  if StringHas(Call, '6') then
+     begin
+     GetVEInitialExchange := 'Ab';
+     end;
+  if StringHas(Call, '7') then
+     begin
+     GetVEInitialExchange := 'Bc';
+     end;
+  if StringHas(Call, '8') then
+     begin
+     GetVEInitialExchange := 'NWT';
+     end;
 
-  if Call = 'VE2' then GetVEInitialExchange := 'Que';
-  if Call = 'VY2' then GetVEInitialExchange := 'vy2';
-  if Call = 'VY1' then GetVEInitialExchange := 'Yuk';
-  if Call = 'VO1' then GetVEInitialExchange := 'vo1';
-  if Call = 'VO2' then GetVEInitialExchange := 'vo2';
-  if Call = 'VE1' then GetVEInitialExchange := 've1';
+  if Call = 'VE2' then
+     begin
+     GetVEInitialExchange := 'Que';
+     end;
+  if Call = 'VY2' then
+     begin
+     GetVEInitialExchange := 'vy2';
+     end;
+  if Call = 'VY1' then
+     begin
+     GetVEInitialExchange := 'Yuk';
+     end;
+  if Call = 'VO1' then
+     begin
+     GetVEInitialExchange := 'vo1';
+     end;
+  if Call = 'VO2' then
+     begin
+     GetVEInitialExchange := 'vo2';
+     end;
+  if Call = 'VE1' then
+     begin
+     GetVEInitialExchange := 've1';
+     end;
 end;
 
 procedure AddDomesticCountry(ID: CallString);
@@ -117,17 +153,19 @@ begin
   strU(ID);
 
   if FirstDomesticCountryRecord = nil then
-  begin
-    FirstDomesticCountryRecord := New(DomesticCountryRecordPointer);
-    FirstDomesticCountryRecord^.CountryID := ID;
-    FirstDomesticCountryRecord^.NextRecord := nil;
-    Exit;
-  end;
+     begin
+     FirstDomesticCountryRecord := New(DomesticCountryRecordPointer);
+     FirstDomesticCountryRecord^.CountryID := ID;
+     FirstDomesticCountryRecord^.NextRecord := nil;
+     Exit;
+     end;
 
   ActiveRecord := FirstDomesticCountryRecord;
 
   while ActiveRecord^.NextRecord <> nil do
-    ActiveRecord := ActiveRecord^.NextRecord;
+     begin
+     ActiveRecord := ActiveRecord^.NextRecord;
+     end;
 
   ActiveRecord^.NextRecord := New(DomesticCountryRecordPointer);
 
@@ -150,20 +188,20 @@ begin
   ActiveRecord := FirstDomesticCountryRecord;
 
   if ActiveRecord = nil then
-  begin
-    DomesticCountryCall := False;
-    Exit;
-  end;
+     begin
+     DomesticCountryCall := False;
+     Exit;
+     end;
 
   ctyLocateCall(Call, QTH);
   ID := QTH.CountryID;
 
   repeat
     if ActiveRecord^.CountryID = ID then
-    begin
-      DomesticCountryCall := True;
-      Exit;
-    end;
+       begin
+       DomesticCountryCall := True;
+       Exit;
+       end;
 
     ActiveRecord := ActiveRecord^.NextRecord;
 
@@ -181,11 +219,11 @@ begin
   ActiveRecord := FirstDomesticCountryRecord;
 
   while ActiveRecord <> nil do
-  begin
-    NextRecord := ActiveRecord^.NextRecord;
-    Dispose(ActiveRecord);
-    ActiveRecord := NextRecord;
-  end;
+     begin
+     NextRecord := ActiveRecord^.NextRecord;
+     Dispose(ActiveRecord);
+     ActiveRecord := NextRecord;
+     end;
   FirstDomesticCountryRecord := nil;
 end;
 
@@ -205,10 +243,10 @@ begin
     (QTH.CountryID = 'JA') or
     (QTH.CountryID = 'PY') or
     (QTH.CountryID = 'UA9') then
-  begin
-    NumberChar := AnsiChar(GetNumber(QTH.StandardCall));
-    Result := QTH.CountryID + NumberChar;
-  end;
+     begin
+     NumberChar := AnsiChar(GetNumber(QTH.StandardCall));
+     Result := QTH.CountryID + NumberChar;
+     end;
 
 end;
 
@@ -218,12 +256,18 @@ var
 begin
   SACDistrict := '';
   if ScandinavianCountry(QTH.CountryID) then
-  begin
-    Oblast := GetOblast(QTH.StandardCall);
-    if length(Oblast) = 0 then Oblast := '0';
-    SACDistrict := QTH.CountryID + Oblast[1];
-    if (QTH.CountryID = 'OH0') or (QTH.CountryID = 'OJ0') then SACDistrict := QTH.CountryID;
-  end;
+     begin
+     Oblast := GetOblast(QTH.StandardCall);
+     if length(Oblast) = 0 then
+        begin
+        Oblast := '0';
+        end;
+     SACDistrict := QTH.CountryID + Oblast[1];
+     if (QTH.CountryID = 'OH0') or (QTH.CountryID = 'OJ0') then
+        begin
+        SACDistrict := QTH.CountryID;
+        end;
+     end;
 end;
 
 function IndonesianDistrict(QTH: QTHRecord): string;        // 4.64.1
@@ -382,14 +426,16 @@ var
 
 begin
   if StringHas(Call, '/') then
-    Call := PrecedingString(Call, '/');
+     begin
+     Call := PrecedingString(Call, '/');
+     end;
 
   for CharPtr := length(Call) downto 1 do
     if (Call[CharPtr] <= '9') and (Call[CharPtr] >= '0') then
-    begin
-      GetNumber := Call[CharPtr];
-      Exit;
-    end;
+       begin
+       GetNumber := Call[CharPtr];
+       Exit;
+       end;
   GetNumber := #0;
 end;
 {
@@ -473,17 +519,44 @@ end;
 function GetContinentFromString(Cont: ShortString): ContinentType;
 begin
   Result := UnknownContinent;
-  if Cont = 'NA' then Result := NorthAmerica;
-  if Cont = 'NO' then Result := NorthAmerica;
+  if Cont = 'NA' then
+     begin
+     Result := NorthAmerica;
+     end;
+  if Cont = 'NO' then
+     begin
+     Result := NorthAmerica;
+     end;
 
-  if Cont = 'SA' then Result := SouthAmerica;
-  if Cont = 'SO' then Result := SouthAmerica;
+  if Cont = 'SA' then
+     begin
+     Result := SouthAmerica;
+     end;
+  if Cont = 'SO' then
+     begin
+     Result := SouthAmerica;
+     end;
 
-  if Cont = 'EU' then Result := Europe;
-  if Cont = 'AF' then Result := Africa;
-  if Cont = 'AS' then Result := Asia;
-  if Cont = 'OC' then Result := Oceania;
-  if Cont = 'AN' then Result := Antartica;
+  if Cont = 'EU' then
+     begin
+     Result := Europe;
+     end;
+  if Cont = 'AF' then
+     begin
+     Result := Africa;
+     end;
+  if Cont = 'AS' then
+     begin
+     Result := Asia;
+     end;
+  if Cont = 'OC' then
+     begin
+     Result := Oceania;
+     end;
+  if Cont = 'AN' then
+     begin
+     Result := Antartica;
+     end;
 end;
 
 //begin

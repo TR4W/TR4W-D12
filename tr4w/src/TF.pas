@@ -350,9 +350,13 @@ begin
     // Genuinely wide on both sides: under D12 `Char` IS WideChar and Result is
     // a UnicodeString, so PChar here is PWideChar and the element stride
     // matches.  Do not "fix" this one to PAnsiChar.
-    SetString(Result, PChar(@a[0]), Length(a))   // lint:wide-ok
+     begin
+     SetString(Result, PChar(@a[0]), Length(a))   // lint:wide-ok
+     end
   else
-    Result := '';
+     begin
+     Result := '';
+     end;
 end;
 
 {
@@ -502,18 +506,27 @@ begin
   Negative := False;
 
   if p[i] = '-' then
-  begin
-    i := 1;
-    Negative := True;
-  end;
+     begin
+     i := 1;
+     Negative := True;
+     end;
 
   1:
-  if p[i] in ['0'..'9'] then Result := Result * 10 + (Ord(p[i]) - 48)
-  else goto 2;
+  if p[i] in ['0'..'9'] then
+     begin
+     Result := Result * 10 + (Ord(p[i]) - 48)
+     end
+  else
+     begin
+     goto 2;
+     end;
   inc(i);
   goto 1;
   2:
-  if Negative then Result := Result * -1;
+  if Negative then
+     begin
+     Result := Result * -1;
+     end;
 end;
 
 {
@@ -554,29 +567,31 @@ begin
     Val := Val div 10;
   until Val = 0;
   if sign then
-  begin
-    d[i] := '-';
-    inc(i);
-  end;
+     begin
+     d[i] := '-';
+     inc(i);
+     end;
 
   { Fill the Result with the appropriate number of blanks }
   if Width > 255 then
-    Width := 255;
+     begin
+     Width := 255;
+     end;
   k := 1;
   spaces := Width - i;
   while k <= spaces do
-  begin
-    Result[k] := ' ';
-    inc(k);
-  end;
+     begin
+     Result[k] := ' ';
+     inc(k);
+     end;
 
   { Fill the Result with the number }
   while i > 0 do
-  begin
-    dec(i);
-    Result[k] := d[i];
-    inc(k);
-  end;
+     begin
+     dec(i);
+     Result[k] := d[i];
+     inc(k);
+     end;
 
   { Result is k-1 characters long }
   SetLength(Result, k - 1);
@@ -592,21 +607,23 @@ var
 begin
   LANMAN_DLL := GetModuleHandle('NTLANMAN.DLL');
   if LANMAN_DLL = 0 then
-  begin
-    LANMAN_DLL := LoadLibrary('NTLANMAN.DLL');
-    bLoadLib := True;
-  end;
+     begin
+     LANMAN_DLL := LoadLibrary('NTLANMAN.DLL');
+     bLoadLib := True;
+     end;
   if LANMAN_DLL <> 0 then
-  begin
-    @ServerBrowseDialogA0 := GetProcAddress(LANMAN_DLL, {'ShareAsDialogA0'} 'ServerBrowseDialogA0');
-    ServerBrowseDialogA0(AHandle, @Buffer, 256);
-      //         if Buffer[0] = '\' then
-    begin
-      Result := Buffer;
-    end;
-    if bLoadLib then
-      FreeLibrary(LANMAN_DLL);
-  end;
+     begin
+     @ServerBrowseDialogA0 := GetProcAddress(LANMAN_DLL, {'ShareAsDialogA0'} 'ServerBrowseDialogA0');
+     ServerBrowseDialogA0(AHandle, @Buffer, 256);
+       //         if Buffer[0] = '\' then
+     begin
+       Result := Buffer;
+     end;
+     if bLoadLib then
+        begin
+        FreeLibrary(LANMAN_DLL);
+        end;
+     end;
 end;
 
 {
@@ -707,10 +724,10 @@ begin
   ContestString[Ord(ContestString[0]) + 1] := #0;
   for TempContest := Succ(DUMMYCONTEST) to High(ContestType) do
     if Windows.lstrcmpA(ContestTypeSA[TempContest], @ContestString[1]) = 0 then
-    begin
-      Result := TempContest;
-      Exit;
-    end;
+       begin
+       Result := TempContest;
+       Exit;
+       end;
   Result := DUMMYCONTEST;
 end;
 
@@ -721,13 +738,20 @@ var
 begin
 
   if Control = -1 then
-    TempHWND := h
+     begin
+     TempHWND := h
+     end
   else
-    TempHWND := Windows.GetDlgItem(h, Control);
+     begin
+     TempHWND := Windows.GetDlgItem(h, Control);
+     end;
   Len := Windows.SendMessageA(TempHWND, WM_GETTEXTLENGTH, 0, 0);
   Windows.ZeroMemory(@Result, SizeOf(Result));
   SetLength(Result, Len);
-  if Len <> 0 then Windows.SendMessageA(TempHWND, WM_GETTEXT, Len + 1, LONGINT(Pointer(@Result[1])));
+  if Len <> 0 then
+     begin
+     Windows.SendMessageA(TempHWND, WM_GETTEXT, Len + 1, LONGINT(Pointer(@Result[1])));
+     end;
 end;
 
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
@@ -741,12 +765,12 @@ begin
   i := 0;
   1:
   if p[i] in ['0'..'9'] then
-  begin
-    b := Byte(p[i]) - $30;
-    Result := b + (Result * 10);
-    inc(i);
-    goto 1;
-  end;
+     begin
+     b := Byte(p[i]) - $30;
+     Result := b + (Result * 10);
+     inc(i);
+     goto 1;
+     end;
 end;
 {
 function StrLen(const Str: PChar): Cardinal; assembler;
@@ -781,10 +805,10 @@ var
 begin
   for wt := Low(WindowsType) to High(WindowsType) do
     if tr4w_WindowsArray[wt].WndHandle = h then
-    begin
-      Result := wt;
-      Break;
-    end;
+       begin
+       Result := wt;
+       Break;
+       end;
 end;
 
 function tWindowsExist(wID: WindowsType): boolean;
@@ -816,16 +840,16 @@ var
 begin
   CMD[Ord(CMD[0]) + 1] := #0;
   for b := 0 to ArraySize {- 1} do
-  begin
-    p := PCharArrayAddress + (b * 4);
-    p := Pointer(p^);
-//    showmessage(p);
-    if StrComp(PAnsiChar(@CMD[1]), PAnsiChar(p)) = 0 then
-    begin
-      Result := b;
-      Exit;
-    end;
-  end;
+     begin
+     p := PCharArrayAddress + (b * 4);
+     p := Pointer(p^);
+ //    showmessage(p);
+     if StrComp(PAnsiChar(@CMD[1]), PAnsiChar(p)) = 0 then
+        begin
+        Result := b;
+        Exit;
+        end;
+     end;
   Result := UNKNOWNTYPE;
 end;
 
@@ -836,15 +860,15 @@ begin
   Result := False;
 
   for b := 0 to ArrayLength do
-  begin
+     begin
 
-    if PInteger(PAnsiChar(ArrayPtr) + (b * 4))^ = ValueToSet then
-    begin
-      aVar^ := ValueToSet;
-      Result := True;
-      Exit;
-    end;
-  end;
+     if PInteger(PAnsiChar(ArrayPtr) + (b * 4))^ = ValueToSet then
+        begin
+        aVar^ := ValueToSet;
+        Result := True;
+        Exit;
+        end;
+     end;
 end;
 
 function tGetDateFormat(DT: TQSOTime): PAnsiChar; //assembler;
@@ -884,10 +908,13 @@ var
 begin
   Result := p;
   for TempInteger := 0 to 255 do
-  begin
-    if p[TempInteger] = '/' then p[TempInteger] := '_';
-    if p[TempInteger] = #0 then Break;
-  end;
+     begin
+     if p[TempInteger] = '/' then
+        begin
+        p[TempInteger] := '_';
+        end;
+     if p[TempInteger] = #0 then Break;
+     end;
 end;
 
 procedure ShowSysErrorMessage(ID: PAnsiChar);
@@ -903,10 +930,10 @@ const
 begin
   i := Windows.SendMessageA(h, LB_FINDSTRING, -1, integer(PAnsiChar(c)));
   if i <> LB_ERR then
-  begin
-    Windows.SendMessage(h, LB_DELETESTRING, i, 0);
-    Windows.SendMessageA(h, LB_INSERTSTRING, 0, integer(PAnsiChar(c)));
-  end;
+     begin
+     Windows.SendMessage(h, LB_DELETESTRING, i, 0);
+     Windows.SendMessageA(h, LB_INSERTSTRING, 0, integer(PAnsiChar(c)));
+     end;
   tLB_SETCURSEL(h, 0);
 end;
 
@@ -915,7 +942,10 @@ var
   hwndParent                            : HWND;
 begin
   hwndParent := tr4whandle;
-  if CreateCabrilloWindow <> 0 then hwndParent := CreateCabrilloWindow;
+  if CreateCabrilloWindow <> 0 then
+     begin
+     hwndParent := CreateCabrilloWindow;
+     end;
   Result := DialogBox(hInstance, MAKEINTRESOURCE(WindowID), hwndParent, WinProcAdr);
 //  Result := DialogBoxParamW(hInstance, MakeIntResourceW(WindowID), hwndParent, WinProcAdr, 0);
 
@@ -928,9 +958,9 @@ begin
   // used to be.  Write via the W-API so the whole path is Unicode.
   if (Text = '') then
     if TWindows[Window].mweE then
-    begin
-      Exit;
-    end;
+       begin
+       Exit;
+       end;
   Windows.SetWindowTextW(wh[Window], PChar(Text));
 
   TWindows[Window].mweE := (Text = '');
@@ -943,7 +973,9 @@ begin
   // connect-retry loop (one thread every 5s while the server is unreachable)
   // does not spam the log -- loud on a genuine attempt, silent on retries.
   if not Quiet then
-    logger.Debug('[tCreateThread] Created thread %d',[lpThreadId]);
+     begin
+     logger.Debug('[tCreateThread] Created thread %d',[lpThreadId]);
+     end;
 end;
 
 // _Pow10 and ValExt were DELETED here (Issue #997 finally closed).
@@ -979,22 +1011,27 @@ begin
   Result := False;
 
   if strpos(FileName, '\') <> nil then
-    tOpenFileForRead(h, FileName)
+     begin
+     tOpenFileForRead(h, FileName)
+     end
   else
-  begin
-    Format(TempBuffer, '%s%s', TR4W_LOG_PATH_NAME, FileName);
-    if not tOpenFileForRead(h, TempBuffer) then
-    begin
-      Format(TempBuffer, '%s%s', TR4W_PATH_NAME, FileName);
-      tOpenFileForRead(h, TempBuffer);
-    end;
-  end;
+     begin
+     Format(TempBuffer, '%s%s', TR4W_LOG_PATH_NAME, FileName);
+     if not tOpenFileForRead(h, TempBuffer) then
+        begin
+        Format(TempBuffer, '%s%s', TR4W_PATH_NAME, FileName);
+        tOpenFileForRead(h, TempBuffer);
+        end;
+     end;
 
   if h = INVALID_HANDLE_VALUE then Exit;
 
   FileSize := Windows.GetFileSize(h, nil);
   MapFin := Windows.CreateFileMapping(h, nil, PAGE_READONLY, 0, 0, nil);
-  if MapFin = 0 then goto 2;
+  if MapFin = 0 then
+     begin
+     goto 2;
+     end;
 
   MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_READ, 0, 0, 0);
 
@@ -1005,46 +1042,49 @@ begin
   FilePos := 0;
 
   while FilePos < FileSize do
-  begin
-    if (MapBase[FilePos] in [#13, #10]) then
-    begin
-
-      if not NewLine then
-      begin
-        LastLine:
-
-        LineSize := FilePos - StartPos;
-        if LineSize > 0 then
+     begin
+     if (MapBase[FilePos] in [#13, #10]) then
         begin
-          Windows.ZeroMemory(@TempString, SizeOf(TempString));
-          TempString[0] := AnsiChar(LineSize);
-          Windows.CopyMemory(@TempString[1], @MapBase[StartPos], LineSize);
-          if UpperCase then strU(TempString);
-          //logger.debug('[TF.EnumerateLinesInFile] Reading config line %s',[TempString]);
-          Func(@TempString);
+
+        if not NewLine then
+           begin
+           LastLine:
+
+           LineSize := FilePos - StartPos;
+           if LineSize > 0 then
+              begin
+              Windows.ZeroMemory(@TempString, SizeOf(TempString));
+              TempString[0] := AnsiChar(LineSize);
+              Windows.CopyMemory(@TempString[1], @MapBase[StartPos], LineSize);
+              if UpperCase then
+                 begin
+                 strU(TempString);
+                 end;
+              //logger.debug('[TF.EnumerateLinesInFile] Reading config line %s',[TempString]);
+              Func(@TempString);
+              end;
+           end;
+
+        NewLine := True;
+
+        end
+     else
+        begin
+        if NewLine then
+           begin
+           NewLine := False;
+           StartPos := FilePos;
+           end;
         end;
-      end;
 
-      NewLine := True;
-
-    end
-    else
-    begin
-      if NewLine then
-      begin
-        NewLine := False;
-        StartPos := FilePos;
-      end;
-    end;
-
-    inc(FilePos);
-  end;
+     inc(FilePos);
+     end;
 
   if not NewLine then
-  begin
-    // Issue #997: removed a bare `asm nop end;` no-op anchor (no codegen effect).
-    goto LastLine;
-  end;
+     begin
+     // Issue #997: removed a bare `asm nop end;` no-op anchor (no codegen effect).
+     goto LastLine;
+     end;
 
   Windows.UnmapViewOfFile(MapBase);
   3:

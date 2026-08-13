@@ -286,15 +286,15 @@ function DoubleIndexCall(Call: CallString): boolean;
 
 begin
   while length(Call) >= 3 do
-  begin
-    if pos(Copy(Call, 1, 2), Copy(Call, 2, length(Call) - 1)) > 0 then
-    begin
-      DoubleIndexCall := True;
-      Exit;
-    end;
+     begin
+     if pos(Copy(Call, 1, 2), Copy(Call, 2, length(Call) - 1)) > 0 then
+        begin
+        DoubleIndexCall := True;
+        Exit;
+        end;
 
-    Delete(Call, 1, 1);
-  end;
+     Delete(Call, 1, 1);
+     end;
 
   DoubleIndexCall := False;
 end;
@@ -302,50 +302,54 @@ end;
 procedure CellBufferObject.Initialize(var NumberBytes: LONGINT);
 begin
   if MaximumMemoryToUse = 3 * BufferArraySize then { POST mode }
-  begin
-    if MemoryAllocated = 0 then
+     begin
+     if MemoryAllocated = 0 then
+        begin
+        //{WLI}            IF MaxAvail > BufferArraySize THEN
     begin
-          //{WLI}            IF MaxAvail > BufferArraySize THEN
-      begin
-        Buffer1Used := True;
-        New(Buffer1);
-      end;
-
-          //{WLI}            IF MaxAvail > BufferArraySize THEN
-      begin
-        Buffer2Used := True;
-        New(Buffer2);
-      end;
-
-          //{WLI}            IF MaxAvail > BufferArraySize THEN
-      begin
-        Buffer3Used := True;
-        New(Buffer3);
-      end;
+      Buffer1Used := True;
+      New(Buffer1);
     end;
 
-    MemoryAllocated := 3 * BufferArraySize;
-  end
+        //{WLI}            IF MaxAvail > BufferArraySize THEN
+    begin
+      Buffer2Used := True;
+      New(Buffer2);
+    end;
+
+        //{WLI}            IF MaxAvail > BufferArraySize THEN
+    begin
+      Buffer3Used := True;
+      New(Buffer3);
+    end;
+        end;
+
+     MemoryAllocated := 3 * BufferArraySize;
+     end
 
   else { TR has set the max memory to something else }
-  begin
-    if MemoryAllocated > 0 then
-      FreeMem(Buffer1, MemoryAllocated);
-      {wli ������ 216 �� FreeMem}
-    if (NumberBytes > MaximumMemoryToUse) or
-      (NumberBytes < 0) then
-      NumberBytes := MaximumMemoryToUse;
+     begin
+     if MemoryAllocated > 0 then
+        begin
+        FreeMem(Buffer1, MemoryAllocated);
+        end;
+       {wli ������ 216 �� FreeMem}
+     if (NumberBytes > MaximumMemoryToUse) or
+       (NumberBytes < 0) then
+        begin
+        NumberBytes := MaximumMemoryToUse;
+        end;
 
-      { Runtime error 201 here with K5KG - 0D73:0139 }
+       { Runtime error 201 here with K5KG - 0D73:0139 }
 
-   //{WLI}        IF NumberBytes < MaxAvail THEN
-    begin
-      GetMem(Buffer1, NumberBytes);
-      MemoryAllocated := NumberBytes;
-    end
-      //{WLI}        ELSE
-      //{WLI}            MemoryAllocated := 0;
-  end;
+    //{WLI}        IF NumberBytes < MaxAvail THEN
+     begin
+       GetMem(Buffer1, NumberBytes);
+       MemoryAllocated := NumberBytes;
+     end
+       //{WLI}        ELSE
+       //{WLI}            MemoryAllocated := 0;
+     end;
 
   Key := '';
   NumberBufferEntries := 0;
@@ -358,23 +362,32 @@ procedure CellBufferObject.GoAway;
 
 begin
   if MaximumMemoryToUse = 3 * BufferArraySize then { Post mode }
-  begin
-    if MemoryAllocated > 0 then
-    begin
-      if Buffer1Used then Dispose(Buffer1);
-      if Buffer2Used then Dispose(Buffer2);
-      if Buffer3Used then Dispose(Buffer3);
+     begin
+     if MemoryAllocated > 0 then
+        begin
+        if Buffer1Used then
+           begin
+           Dispose(Buffer1);
+           end;
+        if Buffer2Used then
+           begin
+           Dispose(Buffer2);
+           end;
+        if Buffer3Used then
+           begin
+           Dispose(Buffer3);
+           end;
 
-      Buffer1Used := False;
-      Buffer2Used := False;
-      Buffer3Used := False;
-    end;
-  end
+        Buffer1Used := False;
+        Buffer2Used := False;
+        Buffer3Used := False;
+        end;
+     end
   else
     if MemoryAllocated > 0 then
-    begin
-      FreeMem(Buffer1, MemoryAllocated);
-    end;
+       begin
+       FreeMem(Buffer1, MemoryAllocated);
+       end;
 
   MemoryAllocated := 0;
   Key := '';
@@ -391,31 +404,37 @@ begin
   Buffer3Bytes := 0;
 
   if NumberBytes > BufferArraySize then
-  begin
-    Buffer1Bytes := BufferArraySize;
+     begin
+     Buffer1Bytes := BufferArraySize;
 
-    NumberBytes := NumberBytes - BufferArraySize;
+     NumberBytes := NumberBytes - BufferArraySize;
 
-    if NumberBytes > BufferArraySize then
-    begin
-      Buffer2Bytes := BufferArraySize;
-      NumberBytes := NumberBytes - BufferArraySize;
+     if NumberBytes > BufferArraySize then
+        begin
+        Buffer2Bytes := BufferArraySize;
+        NumberBytes := NumberBytes - BufferArraySize;
 
-      if NumberBytes > BufferArraySize then
-      begin
-              //{WLI}                ReportError ('This cell is too big!');
-        logger.Fatal('In FigureOutBufferSizes, the cell is too big');
-        halt;
-      end
-      else
-        Buffer3Bytes := NumberBytes;
+        if NumberBytes > BufferArraySize then
+           begin
+           //{WLI}                ReportError ('This cell is too big!');
+     logger.Fatal('In FigureOutBufferSizes, the cell is too big');
+     halt;
+           end
+        else
+           begin
+           Buffer3Bytes := NumberBytes;
+           end;
 
-    end
-    else
-      Buffer2Bytes := NumberBytes;
-  end
+        end
+     else
+        begin
+        Buffer2Bytes := NumberBytes;
+        end;
+     end
   else
-    Buffer1Bytes := NumberBytes;
+     begin
+     Buffer1Bytes := NumberBytes;
+     end;
 
 end;
 
@@ -430,49 +449,49 @@ begin
   Initialize(NumberBytes);
 
   if MaximumMemoryToUse <= BufferArraySize then { TR mode }
-  begin
-    sReadFile(FileRead, Buffer1^, NumberBytes);
-//    BlockRead(FileRead, Buffer1^, NumberBytes, BytesRead);
-    Key := KeyString;
-    NumberBufferEntries := NumberBytes;
-    ReadAddress := 0;
-    Exit;
-  end;
+     begin
+     sReadFile(FileRead, Buffer1^, NumberBytes);
+ //    BlockRead(FileRead, Buffer1^, NumberBytes, BytesRead);
+     Key := KeyString;
+     NumberBufferEntries := NumberBytes;
+     ReadAddress := 0;
+     Exit;
+     end;
 
   FigureOutBufferSizes(NumberBytes);
 
   if (Buffer1Bytes > 0) and Buffer1Used then
-  begin
-    sReadFile(FileRead, Buffer1^, Buffer1Bytes);
+     begin
+     sReadFile(FileRead, Buffer1^, Buffer1Bytes);
 
-    if BytesRead < Buffer1Bytes then
-    begin
-          //{WLI}            ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
-      halt;
-    end;
-  end;
+     if BytesRead < Buffer1Bytes then
+        begin
+        //{WLI}            ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
+    halt;
+        end;
+     end;
 
   if (Buffer2Bytes > 0) and Buffer2Used then
-  begin
-    sReadFile(FileRead, Buffer2^, Buffer2Bytes);
+     begin
+     sReadFile(FileRead, Buffer2^, Buffer2Bytes);
 
-    if BytesRead < Buffer2Bytes then
-    begin
-          //                 ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
-      halt;
-    end;
-  end;
+     if BytesRead < Buffer2Bytes then
+        begin
+        //                 ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
+    halt;
+        end;
+     end;
 
   if (Buffer3Bytes > 0) and Buffer3Used then
-  begin
-    sReadFile(FileRead, Buffer3^, Buffer3Bytes);
+     begin
+     sReadFile(FileRead, Buffer3^, Buffer3Bytes);
 
-    if BytesRead < Buffer3Bytes then
-    begin
-          //{WLI}            ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
-      halt;
-    end;
-  end;
+     if BytesRead < Buffer3Bytes then
+        begin
+        //{WLI}            ReportError ('File read error!!  Line #721 in LOGSCP.PAS.');
+    halt;
+        end;
+     end;
 
   Key := KeyString;
   NumberBufferEntries := NumberBytes;
@@ -490,25 +509,31 @@ begin
   EntryString := '';
 
   while ReadAddress <= NumberBufferEntries - 1 do
-  begin
-    if ReadAddress < BufferArraySize then
-      CellChar := Buffer1^[ReadAddress]
-    else
-      if ReadAddress < BufferArraySize * 2 then
-        CellChar := Buffer2^[ReadAddress - BufferArraySize]
-      else
-        CellChar := Buffer3^[ReadAddress - (2 * BufferArraySize)];
+     begin
+     if ReadAddress < BufferArraySize then
+        begin
+        CellChar := Buffer1^[ReadAddress]
+        end
+     else
+       if ReadAddress < BufferArraySize * 2 then
+          begin
+          CellChar := Buffer2^[ReadAddress - BufferArraySize]
+          end
+       else
+          begin
+          CellChar := Buffer3^[ReadAddress - (2 * BufferArraySize)];
+          end;
 
-    inc(ReadAddress);
+     inc(ReadAddress);
 
-    if CellChar = CHR(0) then
-    begin
-      GetNextEntry := True;
-      Exit;
-    end;
+     if CellChar = CHR(0) then
+        begin
+        GetNextEntry := True;
+        Exit;
+        end;
 
-    EntryString := EntryString + CellChar;
-  end;
+     EntryString := EntryString + CellChar;
+     end;
 
   { We didn't find a null character at the end - return a null string }
 
@@ -527,47 +552,55 @@ begin
   { Find address of first byte in the record to be read }
 
   if ReadAddress < BufferArraySize then
-    EntryAddress := Addr(Buffer1^[ReadAddress])
+     begin
+     EntryAddress := Addr(Buffer1^[ReadAddress])
+     end
   else
     if ReadAddress < BufferArraySize * 2 then
-    begin
-      if not Buffer2Used then
-      begin
-        GetNextEntryAddress := False;
-        Exit;
-      end;
+       begin
+       if not Buffer2Used then
+          begin
+          GetNextEntryAddress := False;
+          Exit;
+          end;
 
-      EntryAddress := Addr(Buffer2^[ReadAddress - BufferArraySize])
-    end
+       EntryAddress := Addr(Buffer2^[ReadAddress - BufferArraySize])
+       end
     else
-    begin
-      if not Buffer3Used then
-      begin
-        GetNextEntryAddress := False;
-        Exit;
-      end;
+       begin
+       if not Buffer3Used then
+          begin
+          GetNextEntryAddress := False;
+          Exit;
+          end;
 
-      EntryAddress := Addr(Buffer3^[ReadAddress - (2 * BufferArraySize)]);
-    end;
+       EntryAddress := Addr(Buffer3^[ReadAddress - (2 * BufferArraySize)]);
+       end;
 
   while ReadAddress <= NumberBufferEntries - 1 do
-  begin
-    if ReadAddress < BufferArraySize then
-      CellChar := Buffer1^[ReadAddress]
-    else
-      if ReadAddress < BufferArraySize * 2 then
-        CellChar := Buffer2^[ReadAddress - BufferArraySize]
-      else
-        CellChar := Buffer3^[ReadAddress - (2 * BufferArraySize)];
+     begin
+     if ReadAddress < BufferArraySize then
+        begin
+        CellChar := Buffer1^[ReadAddress]
+        end
+     else
+       if ReadAddress < BufferArraySize * 2 then
+          begin
+          CellChar := Buffer2^[ReadAddress - BufferArraySize]
+          end
+       else
+          begin
+          CellChar := Buffer3^[ReadAddress - (2 * BufferArraySize)];
+          end;
 
-    inc(ReadAddress);
+     inc(ReadAddress);
 
-    if CellChar = CHR(0) then
-    begin
-      GetNextEntryAddress := True;
-      Exit;
-    end;
-  end;
+     if CellChar = CHR(0) then
+        begin
+        GetNextEntryAddress := True;
+        Exit;
+        end;
+     end;
 
   { We didn't find a null character at the end - return a null string }
 
@@ -594,10 +627,10 @@ begin
   inc(BlockAddress);
 
   if BlockAddress = SizeOf(MemoryBlock) then
-  begin
-    BlockAddress := 0;
-    inc(BlockNumber);
-  end;
+     begin
+     BlockAddress := 0;
+     inc(BlockNumber);
+     end;
 end;
 
 function KeyInRange(X, Y, FirstKeyX, FirstKeyY, LastKeyX, LastKeyY: integer): boolean;
@@ -625,27 +658,78 @@ var
 
 begin
   with data do
-  begin
-    NumberBytes := length(Call);
+     begin
+     NumberBytes := length(Call);
 
-    if Section <> '' then NumberBytes := NumberBytes + length(Section) + 1;
-    if CQZone <> '' then NumberBytes := NumberBytes + length(CQZone) + 1;
-    if FOC <> '' then NumberBytes := NumberBytes + length(FOC) + 1;
-    if Hits > 0 then NumberBytes := NumberBytes + 2;
-    if Grid <> '' then NumberBytes := NumberBytes + length(Grid) + 1;
-    if ITUZone <> '' then NumberBytes := NumberBytes + length(ITUZone) + 1;
-    if Check <> '' then NumberBytes := NumberBytes + length(Check) + 1;
-    if mName <> '' then NumberBytes := NumberBytes + length(mName) + 1;
-    if OldCall <> '' then NumberBytes := NumberBytes + length(OldCall) + 1;
-    if QTH <> '' then NumberBytes := NumberBytes + length(QTH) + 1;
-    if Speed > 0 then NumberBytes := NumberBytes + 2;
-    if TENTEN <> '' then NumberBytes := NumberBytes + length(TENTEN) + 1;
-    if User1 <> '' then NumberBytes := NumberBytes + length(User1) + 1;
-    if User2 <> '' then NumberBytes := NumberBytes + length(User2) + 1;
-    if User3 <> '' then NumberBytes := NumberBytes + length(User3) + 1;
-    if User4 <> '' then NumberBytes := NumberBytes + length(User4) + 1;
-    if User5 <> '' then NumberBytes := NumberBytes + length(User5) + 1;
-  end;
+     if Section <> '' then
+        begin
+        NumberBytes := NumberBytes + length(Section) + 1;
+        end;
+     if CQZone <> '' then
+        begin
+        NumberBytes := NumberBytes + length(CQZone) + 1;
+        end;
+     if FOC <> '' then
+        begin
+        NumberBytes := NumberBytes + length(FOC) + 1;
+        end;
+     if Hits > 0 then
+        begin
+        NumberBytes := NumberBytes + 2;
+        end;
+     if Grid <> '' then
+        begin
+        NumberBytes := NumberBytes + length(Grid) + 1;
+        end;
+     if ITUZone <> '' then
+        begin
+        NumberBytes := NumberBytes + length(ITUZone) + 1;
+        end;
+     if Check <> '' then
+        begin
+        NumberBytes := NumberBytes + length(Check) + 1;
+        end;
+     if mName <> '' then
+        begin
+        NumberBytes := NumberBytes + length(mName) + 1;
+        end;
+     if OldCall <> '' then
+        begin
+        NumberBytes := NumberBytes + length(OldCall) + 1;
+        end;
+     if QTH <> '' then
+        begin
+        NumberBytes := NumberBytes + length(QTH) + 1;
+        end;
+     if Speed > 0 then
+        begin
+        NumberBytes := NumberBytes + 2;
+        end;
+     if TENTEN <> '' then
+        begin
+        NumberBytes := NumberBytes + length(TENTEN) + 1;
+        end;
+     if User1 <> '' then
+        begin
+        NumberBytes := NumberBytes + length(User1) + 1;
+        end;
+     if User2 <> '' then
+        begin
+        NumberBytes := NumberBytes + length(User2) + 1;
+        end;
+     if User3 <> '' then
+        begin
+        NumberBytes := NumberBytes + length(User3) + 1;
+        end;
+     if User4 <> '' then
+        begin
+        NumberBytes := NumberBytes + length(User4) + 1;
+        end;
+     if User5 <> '' then
+        begin
+        NumberBytes := NumberBytes + length(User5) + 1;
+        end;
+     end;
 
   NumberBytes := NumberBytes + 1; { for the null character at the end }
   NumberOfDataBytes := NumberBytes;
@@ -660,7 +744,9 @@ begin
   EntrySize := 0;
 
   while (EntryArray^[EntrySize] <> CHR(0)) do
-    inc(EntrySize);
+     begin
+     inc(EntrySize);
+     end;
 
   inc(EntrySize); { Give me the null character too }
 
@@ -679,10 +765,10 @@ begin
   CharPointer := 0;
 
   while EntryArray^[CharPointer] > ControlZ do
-  begin
-    TempCall := TempCall + EntryArray^[CharPointer];
-    inc(CharPointer);
-  end;
+     begin
+     TempCall := TempCall + EntryArray^[CharPointer];
+     inc(CharPointer);
+     end;
 
   GetCall := TempCall;
 end;
@@ -698,10 +784,10 @@ begin
   Address := 0;
 
   while InputArray^[Address] <> CHR(0) do
-  begin
-    TempString := TempString + InputArray^[Address];
-    inc(Address);
-  end;
+     begin
+     TempString := TempString + InputArray^[Address];
+     inc(Address);
+     end;
 
   GetArrayString := TempString;
 end;
@@ -716,209 +802,209 @@ begin
   OutputAddress := 0;
 
   with InputRecord do
-  begin
-    for InputAddress := 1 to length(Call) do
-    begin
-      OutputArray^[OutputAddress] := Call[InputAddress];
-      inc(OutputAddress);
-    end;
-
-    if Section <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlA;
-      inc(OutputAddress);
-
-      for InputAddress := 1 to length(Section) do
-      begin
-        OutputArray^[OutputAddress] := Section[InputAddress];
+     begin
+     for InputAddress := 1 to length(Call) do
+        begin
+        OutputArray^[OutputAddress] := Call[InputAddress];
         inc(OutputAddress);
-      end;
-    end;
+        end;
 
-    if CQZone <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlC;
-      inc(OutputAddress);
-
-      for InputAddress := 1 to length(CQZone) do
-      begin
-        OutputArray^[OutputAddress] := CQZone[InputAddress];
+     if Section <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlA;
         inc(OutputAddress);
-      end;
-    end;
 
-    if FOC <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlF;
-      inc(OutputAddress);
+        for InputAddress := 1 to length(Section) do
+           begin
+           OutputArray^[OutputAddress] := Section[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-      for InputAddress := 1 to length(FOC) do
-      begin
-        OutputArray^[OutputAddress] := FOC[InputAddress];
+     if CQZone <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlC;
         inc(OutputAddress);
-      end;
-    end;
 
-    if Hits > 0 then
-    begin
-      OutputArray^[OutputAddress] := ControlH;
-      inc(OutputAddress);
-      OutputArray^[OutputAddress] := AnsiChar(Hits);
-      inc(OutputAddress);
-    end;
+        for InputAddress := 1 to length(CQZone) do
+           begin
+           OutputArray^[OutputAddress] := CQZone[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-    if Grid <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlG;
-      inc(OutputAddress);
-
-      for InputAddress := 1 to length(Grid) do
-      begin
-        OutputArray^[OutputAddress] := Grid[InputAddress];
+     if FOC <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlF;
         inc(OutputAddress);
-      end;
-    end;
 
-    if ITUZone <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlI;
-      inc(OutputAddress);
+        for InputAddress := 1 to length(FOC) do
+           begin
+           OutputArray^[OutputAddress] := FOC[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-      for InputAddress := 1 to length(ITUZone) do
-      begin
-        OutputArray^[OutputAddress] := ITUZone[InputAddress];
+     if Hits > 0 then
+        begin
+        OutputArray^[OutputAddress] := ControlH;
         inc(OutputAddress);
-      end;
-    end;
-
-    if Check <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlK;
-      inc(OutputAddress);
-
-      for InputAddress := 1 to length(Check) do
-      begin
-        OutputArray^[OutputAddress] := Check[InputAddress];
+        OutputArray^[OutputAddress] := AnsiChar(Hits);
         inc(OutputAddress);
-      end;
-    end;
+        end;
 
-    if mName <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlN;
-      inc(OutputAddress);
-
-      for InputAddress := 1 to length(mName) do
-      begin
-        OutputArray^[OutputAddress] := mName[InputAddress];
+     if Grid <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlG;
         inc(OutputAddress);
-      end;
-    end;
 
-    if OldCall <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlO;
-      inc(OutputAddress);
+        for InputAddress := 1 to length(Grid) do
+           begin
+           OutputArray^[OutputAddress] := Grid[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-      for InputAddress := 1 to length(OldCall) do
-      begin
-        OutputArray^[OutputAddress] := OldCall[InputAddress];
+     if ITUZone <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlI;
         inc(OutputAddress);
-      end;
-    end;
 
-    if QTH <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlQ;
-      inc(OutputAddress);
+        for InputAddress := 1 to length(ITUZone) do
+           begin
+           OutputArray^[OutputAddress] := ITUZone[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-      for InputAddress := 1 to length(QTH) do
-      begin
-        OutputArray^[OutputAddress] := QTH[InputAddress];
+     if Check <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlK;
         inc(OutputAddress);
-      end;
-    end;
 
-    if Speed <> 0 then
-    begin
-      OutputArray^[OutputAddress] := ControlS;
-      inc(OutputAddress);
-      OutputArray^[OutputAddress] := AnsiChar(Speed);
-      inc(OutputAddress);
-    end;
+        for InputAddress := 1 to length(Check) do
+           begin
+           OutputArray^[OutputAddress] := Check[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-    if TENTEN <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlT;
-      inc(OutputAddress);
-
-      for InputAddress := 1 to length(TENTEN) do
-      begin
-        OutputArray^[OutputAddress] := TENTEN[InputAddress];
+     if mName <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlN;
         inc(OutputAddress);
-      end;
-    end;
 
-    if User1 <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlU;
-      inc(OutputAddress);
+        for InputAddress := 1 to length(mName) do
+           begin
+           OutputArray^[OutputAddress] := mName[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-      for InputAddress := 1 to length(User1) do
-      begin
-        OutputArray^[OutputAddress] := User1[InputAddress];
+     if OldCall <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlO;
         inc(OutputAddress);
-      end;
-    end;
 
-    if User2 <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlV;
-      inc(OutputAddress);
+        for InputAddress := 1 to length(OldCall) do
+           begin
+           OutputArray^[OutputAddress] := OldCall[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-      for InputAddress := 1 to length(User2) do
-      begin
-        OutputArray^[OutputAddress] := User2[InputAddress];
+     if QTH <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlQ;
         inc(OutputAddress);
-      end;
-    end;
 
-    if User3 <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlW;
-      inc(OutputAddress);
+        for InputAddress := 1 to length(QTH) do
+           begin
+           OutputArray^[OutputAddress] := QTH[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
 
-      for InputAddress := 1 to length(User3) do
-      begin
-        OutputArray^[OutputAddress] := User3[InputAddress];
+     if Speed <> 0 then
+        begin
+        OutputArray^[OutputAddress] := ControlS;
         inc(OutputAddress);
-      end;
-    end;
-
-    if User4 <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlX;
-      inc(OutputAddress);
-
-      for InputAddress := 1 to length(User4) do
-      begin
-        OutputArray^[OutputAddress] := User4[InputAddress];
+        OutputArray^[OutputAddress] := AnsiChar(Speed);
         inc(OutputAddress);
-      end;
-    end;
+        end;
 
-    if User5 <> '' then
-    begin
-      OutputArray^[OutputAddress] := ControlY;
-      inc(OutputAddress);
-
-      for InputAddress := 1 to length(User5) do
-      begin
-        OutputArray^[OutputAddress] := User5[InputAddress];
+     if TENTEN <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlT;
         inc(OutputAddress);
-      end;
-    end;
-  end;
+
+        for InputAddress := 1 to length(TENTEN) do
+           begin
+           OutputArray^[OutputAddress] := TENTEN[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
+
+     if User1 <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlU;
+        inc(OutputAddress);
+
+        for InputAddress := 1 to length(User1) do
+           begin
+           OutputArray^[OutputAddress] := User1[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
+
+     if User2 <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlV;
+        inc(OutputAddress);
+
+        for InputAddress := 1 to length(User2) do
+           begin
+           OutputArray^[OutputAddress] := User2[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
+
+     if User3 <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlW;
+        inc(OutputAddress);
+
+        for InputAddress := 1 to length(User3) do
+           begin
+           OutputArray^[OutputAddress] := User3[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
+
+     if User4 <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlX;
+        inc(OutputAddress);
+
+        for InputAddress := 1 to length(User4) do
+           begin
+           OutputArray^[OutputAddress] := User4[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
+
+     if User5 <> '' then
+        begin
+        OutputArray^[OutputAddress] := ControlY;
+        inc(OutputAddress);
+
+        for InputAddress := 1 to length(User5) do
+           begin
+           OutputArray^[OutputAddress] := User5[InputAddress];
+           inc(OutputAddress);
+           end;
+        end;
+     end;
 
   OutputArray^[OutputAddress] := NullCharacter;
   inc(OutputAddress);
@@ -946,28 +1032,80 @@ begin
   { We add the hits together }
 
   if FirstDataRecord.Hits + SecondDataRecord.Hits > 255 then
-    OutputDataRecord.Hits := 255
+     begin
+     OutputDataRecord.Hits := 255
+     end
   else
-    OutputDataRecord.Hits := FirstDataRecord.Hits + SecondDataRecord.Hits;
+     begin
+     OutputDataRecord.Hits := FirstDataRecord.Hits + SecondDataRecord.Hits;
+     end;
 
   { If the second record has any data - put it into the output record }
 
-  if SecondDataRecord.Section <> '' then OutputDataRecord.Section := SecondDataRecord.Section;
-  if SecondDataRecord.CQZone <> '' then OutputDataRecord.CQZone := SecondDataRecord.CQZone;
-  if SecondDataRecord.FOC <> '' then OutputDataRecord.FOC := SecondDataRecord.FOC;
-  if SecondDataRecord.Grid <> '' then OutputDataRecord.Grid := SecondDataRecord.Grid;
-  if SecondDataRecord.ITUZone <> '' then OutputDataRecord.ITUZone := SecondDataRecord.ITUZone;
-  if SecondDataRecord.Check <> '' then OutputDataRecord.Check := SecondDataRecord.Check;
-  if SecondDataRecord.mName <> '' then OutputDataRecord.mName := SecondDataRecord.mName;
-  if SecondDataRecord.OldCall <> '' then OutputDataRecord.OldCall := SecondDataRecord.OldCall;
-  if SecondDataRecord.QTH <> '' then OutputDataRecord.QTH := SecondDataRecord.QTH;
-  if SecondDataRecord.Speed <> 0 then OutputDataRecord.Speed := SecondDataRecord.Speed;
-  if SecondDataRecord.TENTEN <> '' then OutputDataRecord.TENTEN := SecondDataRecord.TENTEN;
-  if SecondDataRecord.User1 <> '' then OutputDataRecord.User1 := SecondDataRecord.User1;
-  if SecondDataRecord.User2 <> '' then OutputDataRecord.User2 := SecondDataRecord.User2;
-  if SecondDataRecord.User3 <> '' then OutputDataRecord.User3 := SecondDataRecord.User3;
-  if SecondDataRecord.User4 <> '' then OutputDataRecord.User4 := SecondDataRecord.User4;
-  if SecondDataRecord.User5 <> '' then OutputDataRecord.User5 := SecondDataRecord.User5;
+  if SecondDataRecord.Section <> '' then
+     begin
+     OutputDataRecord.Section := SecondDataRecord.Section;
+     end;
+  if SecondDataRecord.CQZone <> '' then
+     begin
+     OutputDataRecord.CQZone := SecondDataRecord.CQZone;
+     end;
+  if SecondDataRecord.FOC <> '' then
+     begin
+     OutputDataRecord.FOC := SecondDataRecord.FOC;
+     end;
+  if SecondDataRecord.Grid <> '' then
+     begin
+     OutputDataRecord.Grid := SecondDataRecord.Grid;
+     end;
+  if SecondDataRecord.ITUZone <> '' then
+     begin
+     OutputDataRecord.ITUZone := SecondDataRecord.ITUZone;
+     end;
+  if SecondDataRecord.Check <> '' then
+     begin
+     OutputDataRecord.Check := SecondDataRecord.Check;
+     end;
+  if SecondDataRecord.mName <> '' then
+     begin
+     OutputDataRecord.mName := SecondDataRecord.mName;
+     end;
+  if SecondDataRecord.OldCall <> '' then
+     begin
+     OutputDataRecord.OldCall := SecondDataRecord.OldCall;
+     end;
+  if SecondDataRecord.QTH <> '' then
+     begin
+     OutputDataRecord.QTH := SecondDataRecord.QTH;
+     end;
+  if SecondDataRecord.Speed <> 0 then
+     begin
+     OutputDataRecord.Speed := SecondDataRecord.Speed;
+     end;
+  if SecondDataRecord.TENTEN <> '' then
+     begin
+     OutputDataRecord.TENTEN := SecondDataRecord.TENTEN;
+     end;
+  if SecondDataRecord.User1 <> '' then
+     begin
+     OutputDataRecord.User1 := SecondDataRecord.User1;
+     end;
+  if SecondDataRecord.User2 <> '' then
+     begin
+     OutputDataRecord.User2 := SecondDataRecord.User2;
+     end;
+  if SecondDataRecord.User3 <> '' then
+     begin
+     OutputDataRecord.User3 := SecondDataRecord.User3;
+     end;
+  if SecondDataRecord.User4 <> '' then
+     begin
+     OutputDataRecord.User4 := SecondDataRecord.User4;
+     end;
+  if SecondDataRecord.User5 <> '' then
+     begin
+     OutputDataRecord.User5 := SecondDataRecord.User5;
+     end;
 
   { Convert the output record back into a packed array in the format used
     in the TRMASTER.DTA file }
@@ -982,20 +1120,22 @@ var
 
 begin
   if NumberCallsAlreadySaved > 0 then
-    for Address := 0 to NumberCallsAlreadySaved - 1 do
-      if Call = CallsAlreadySaved^[Address] then
-      begin
-        AlreadySaved := True;
-        Exit;
-      end;
+     begin
+     for Address := 0 to NumberCallsAlreadySaved - 1 do
+       if Call = CallsAlreadySaved^[Address] then
+          begin
+          AlreadySaved := True;
+          Exit;
+          end;
+     end;
 
   AlreadySaved := False;
 
   if NumberCallsAlreadySaved < MaximumCallsAlreadSaved then
-  begin
-    CallsAlreadySaved^[NumberCallsAlreadySaved] := Call;
-    inc(NumberCallsAlreadySaved);
-  end;
+     begin
+     CallsAlreadySaved^[NumberCallsAlreadySaved] := Call;
+     inc(NumberCallsAlreadySaved);
+     end;
 end;
 
 procedure CallDatabase.SaveCallsAndNamesToFile(FileName: string);
@@ -1024,92 +1164,104 @@ begin
   New(CallsAlreadySaved);
 
   for X := 0 to 36 do
-    for Y := 0 to 36 do
-    begin
-      NumberCallsAlreadySaved := 0; { Set to zero for each cell }
-
-        //{WLI}            GoToXY (WhereX - 2, WhereY);
-
-      KeyString := GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y);
-
-        //      Write(KeyString);
-
-      StartingOffset := SCPIndexArray^[X, Y];
-
-      NextY := Y + 1;
-      NextX := X;
-
-      if NextY > 36 then
-      begin
-        if X < 36 then
+     begin
+     for Y := 0 to 36 do
         begin
-          NextX := X + 1;
-          NextY := 0;
-          EndingOffset := SCPIndexArray^[NextX, NextY];
-        end
-        else
-          EndingOffset := SCPEndOfFile;
-      end
-      else
-        EndingOffset := SCPIndexArray^[NextX, NextY];
+        NumberCallsAlreadySaved := 0; { Set to zero for each cell }
 
-      if (X <> 0) or (Y <> 0) then
-      begin
-        if FilePos(FileRead) <> StartingOffset then
-        begin
-          Close(FileRead);
-          Assign(FileRead, string(ActiveFilename));
-          Reset(FileRead, 1);
-          Seek(FileRead, StartingOffset);
-        end;
-      end
-      else
-      begin
-        Assign(FileRead, string(ActiveFilename));
-        Reset(FileRead, 1);
-        Seek(FileRead, StartingOffset);
-      end;
+          //{WLI}            GoToXY (WhereX - 2, WhereY);
 
-      if StartingOffset < EndingOffset then
-      begin
-        CellSize := EndingOffset - StartingOffset;
+        KeyString := GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y);
 
-        if CellSize > 3 * BufferArraySize then
-        begin
-          WriteLn;
-                //{WLI}                    ReportError (GetSCPCharFromInteger (X) + GetSCPCharFromInteger (Y) + ' cell is too large!!!');
-          halt;
-        end;
+          //      Write(KeyString);
 
-//        CellBuffer.LoadCellIntoBuffer(KeyString, FileRead, CellSize);
+        StartingOffset := SCPIndexArray^[X, Y];
 
-        while CellBuffer.GetNextEntry(EntryString) do
-        begin
-          ParseEntryToDataRecord(EntryString, DataRecord);
+        NextY := Y + 1;
+        NextX := X;
 
-          if DataRecord.mName <> '' then
-            if FirstCellForThisCall(DataRecord.Call, X, Y) then
-              if DoubleIndexCall(DataRecord.Call) then
+        if NextY > 36 then
+           begin
+           if X < 36 then
               begin
-                if not AlreadySaved(DataRecord.Call) then
-                begin
-                  TempString := DataRecord.Call;
-                  while length(TempString) < 15 do TempString := TempString + ' ';
-                  TempString := TempString + DataRecord.mName;
-                  WriteLn(FileWrite, TempString);
-                end;
+              NextX := X + 1;
+              NextY := 0;
+              EndingOffset := SCPIndexArray^[NextX, NextY];
               end
-              else
+           else
               begin
-                TempString := DataRecord.Call;
-                while length(TempString) < 15 do TempString := TempString + ' ';
-                TempString := TempString + DataRecord.mName;
-                WriteLn(FileWrite, TempString);
+              EndingOffset := SCPEndOfFile;
               end;
-        end;
+           end
+        else
+           begin
+           EndingOffset := SCPIndexArray^[NextX, NextY];
+           end;
 
-      end;
-    end;
+        if (X <> 0) or (Y <> 0) then
+           begin
+           if FilePos(FileRead) <> StartingOffset then
+              begin
+              Close(FileRead);
+              Assign(FileRead, string(ActiveFilename));
+              Reset(FileRead, 1);
+              Seek(FileRead, StartingOffset);
+              end;
+           end
+        else
+           begin
+           Assign(FileRead, string(ActiveFilename));
+           Reset(FileRead, 1);
+           Seek(FileRead, StartingOffset);
+           end;
+
+        if StartingOffset < EndingOffset then
+           begin
+           CellSize := EndingOffset - StartingOffset;
+
+           if CellSize > 3 * BufferArraySize then
+              begin
+              WriteLn;
+                    //{WLI}                    ReportError (GetSCPCharFromInteger (X) + GetSCPCharFromInteger (Y) + ' cell is too large!!!');
+              halt;
+              end;
+
+   //        CellBuffer.LoadCellIntoBuffer(KeyString, FileRead, CellSize);
+
+           while CellBuffer.GetNextEntry(EntryString) do
+              begin
+              ParseEntryToDataRecord(EntryString, DataRecord);
+
+              if DataRecord.mName <> '' then
+                if FirstCellForThisCall(DataRecord.Call, X, Y) then
+                  if DoubleIndexCall(DataRecord.Call) then
+                     begin
+                     if not AlreadySaved(DataRecord.Call) then
+                        begin
+                        TempString := DataRecord.Call;
+                        while length(TempString) < 15 do
+                           begin
+                           TempString := TempString + ' ';
+                           end;
+                        TempString := TempString + DataRecord.mName;
+                        WriteLn(FileWrite, TempString);
+                        end;
+                     end
+                  else
+                     begin
+                     TempString := DataRecord.Call;
+                     while length(TempString) < 15 do
+                        begin
+                        TempString := TempString + ' ';
+                        end;
+                     TempString := TempString + DataRecord.mName;
+                     WriteLn(FileWrite, TempString);
+                     end;
+              end;
+
+           end;
+        end;
+     end;
 
   CellBuffer.GoAway;
   Dispose(CallsAlreadySaved);
@@ -1136,15 +1288,21 @@ begin
   inc(Y);
 
   if Y > 36 then
-  begin
-    inc(X);
-    Y := 0;
-  end;
+     begin
+     inc(X);
+     Y := 0;
+     end;
 
   if X <= 36 then
-    for XAddress := X to 36 do
-      for YAddress := Y to 36 do
-        SCPIndexArray^[XAddress, YAddress] := SCPIndexArray^[XAddress, YAddress] + NumberBytes;
+     begin
+     for XAddress := X to 36 do
+        begin
+        for YAddress := Y to 36 do
+           begin
+           SCPIndexArray^[XAddress, YAddress] := SCPIndexArray^[XAddress, YAddress] + NumberBytes;
+           end;
+        end;
+     end;
 
   SCPEndOfFile := SCPEndOfFile + NumberBytes;
 end;
@@ -1161,36 +1319,40 @@ begin
   BestTwoLetterString := BestTwoLetters(Call);
 
   if BestTwoLetterString = '' then { No calls found in array }
-  begin
-    StartingOffset := 0;
-    EndingOffset := 0;
-    Exit;
-  end;
+     begin
+     StartingOffset := 0;
+     EndingOffset := 0;
+     Exit;
+     end;
 
   X := GetSCPIntegerFromChar(BestTwoLetterString[1]);
   Y := GetSCPIntegerFromChar(BestTwoLetterString[2]);
 
   if (X <> -1) and (Y <> -1) then
-  begin
-    StartingOffset := SCPIndexArray^[X, Y];
+     begin
+     StartingOffset := SCPIndexArray^[X, Y];
 
-    NextY := Y + 1;
-    NextX := X;
+     NextY := Y + 1;
+     NextX := X;
 
-    if NextY > 36 then
-    begin
-      if X < 36 then
-      begin
-        NextX := X + 1;
-        NextY := 0;
+     if NextY > 36 then
+        begin
+        if X < 36 then
+           begin
+           NextX := X + 1;
+           NextY := 0;
+           EndingOffset := SCPIndexArray^[NextX, NextY];
+           end
+        else
+           begin
+           EndingOffset := SCPEndOfFile;
+           end;
+        end
+     else
+        begin
         EndingOffset := SCPIndexArray^[NextX, NextY];
-      end
-      else
-        EndingOffset := SCPEndOfFile;
-    end
-    else
-      EndingOffset := SCPIndexArray^[NextX, NextY];
-  end;
+        end;
+     end;
 
 end;
 
@@ -1214,26 +1376,28 @@ begin
   MinimumBytes := AVeryBigNumber;
 
   for CharPos := 1 to length(Partial) - 1 do
-  begin
-    if Copy(Partial, CharPos, 2) = 'JA' then Continue;
+     begin
+     if Copy(Partial, CharPos, 2) = 'JA' then Continue;
 
-    NumberBytes[CharPos] := NumberOfBytesAtThisAddress(Copy(Partial, CharPos, 2));
+     NumberBytes[CharPos] := NumberOfBytesAtThisAddress(Copy(Partial, CharPos, 2));
 
-      { We get zero if we had an illegal character - like a question mark }
+       { We get zero if we had an illegal character - like a question mark }
 
-    if NumberBytes[CharPos] > 0 then
-      if NumberBytes[CharPos] < MinimumBytes then
-        MinimumBytes := NumberBytes[CharPos];
-  end;
+     if NumberBytes[CharPos] > 0 then
+       if NumberBytes[CharPos] < MinimumBytes then
+          begin
+          MinimumBytes := NumberBytes[CharPos];
+          end;
+     end;
 
   { Now, which pair had the minimum cell size? }
 
   for CharPos := 1 to length(Partial) - 1 do
     if NumberBytes[CharPos] = MinimumBytes then
-    begin
-      BestTwoLetters := Copy(Partial, CharPos, 2);
-      Exit;
-    end;
+       begin
+       BestTwoLetters := Copy(Partial, CharPos, 2);
+       Exit;
+       end;
 
   { We fall through leaving a null string if we couldn't process the
     data.  This might occure if someone called us with a string that
@@ -1252,11 +1416,11 @@ begin
   ActiveRecord := InitialPartialList;
 
   while ActiveRecord <> nil do
-  begin
-    NextRecord := ActiveRecord^.NextEntry;
-    Dispose(ActiveRecord);
-    ActiveRecord := NextRecord;
-  end;
+     begin
+     NextRecord := ActiveRecord^.NextEntry;
+     Dispose(ActiveRecord);
+     ActiveRecord := NextRecord;
+     end;
 
   InitialPartialCall := '';
   InitialPartialList := nil;
@@ -1341,25 +1505,25 @@ var
 
 begin
   if length(Call) < 2 then
-  begin
-    FirstCellForThisCall := False;
-    Exit;
-  end;
+     begin
+     FirstCellForThisCall := False;
+     Exit;
+     end;
 
   LeastX := 37;
   LeastY := 37;
 
   for CharPointer := 1 to length(Call) - 1 do
-  begin
-    TestX := GetSCPIntegerFromChar(Call[CharPointer]);
-    TestY := GetSCPIntegerFromChar(Call[CharPointer + 1]);
+     begin
+     TestX := GetSCPIntegerFromChar(Call[CharPointer]);
+     TestY := GetSCPIntegerFromChar(Call[CharPointer + 1]);
 
-    if (TestX < LeastX) or ((TestX = LeastX) and (TestY < LeastY)) then
-    begin
-      LeastX := TestX;
-      LeastY := TestY;
-    end;
-  end;
+     if (TestX < LeastX) or ((TestX = LeastX) and (TestY < LeastY)) then
+        begin
+        LeastX := TestX;
+        LeastY := TestY;
+        end;
+     end;
 
   FirstCellForThisCall := (X = LeastX) and (Y = LeastY);
 end;
@@ -1371,9 +1535,13 @@ var
 
 begin
   if GetEntry(Call, data) then
-    GetCodeSpeed := data.Speed
+     begin
+     GetCodeSpeed := data.Speed
+     end
   else
-    GetCodeSpeed := 0;
+     begin
+     GetCodeSpeed := 0;
+     end;
 end;
 
 function CallDatabase.GetName(Call: CallString): CallString;
@@ -1393,14 +1561,16 @@ begin
   }
 
   if GetEntry(Call, data) then
-  begin
-      //    GetName := data.mName;
-    tName := LowerCase(data.mName);
-    tName[1] := UpCase(data.mName[1]);
-    GetName := tName;
-  end
+     begin
+     //    GetName := data.mName;
+   tName := LowerCase(data.mName);
+   tName[1] := UpCase(data.mName[1]);
+   GetName := tName;
+     end
   else
-    GetName := '';
+     begin
+     GetName := '';
+     end;
 end;
 
 function CallDatabase.GetFOCNumber(Call: CallString): CallString;
@@ -1410,9 +1580,13 @@ var
 
 begin
   if GetEntry(RootCall(Call), data) then
-    GetFOCNumber := data.FOC
+     begin
+     GetFOCNumber := data.FOC
+     end
   else
-    GetFOCNumber := '';
+     begin
+     GetFOCNumber := '';
+     end;
 end;
 
 function CallDatabase.GetEntry(Call: CallString; var data: DataBaseEntryRecord): boolean;
@@ -1425,11 +1599,11 @@ var
 
 begin
   if Call = LastCallRecord.Call then
-  begin
-    data := LastCallRecord;
-    GetEntry := True;
-    Exit;
-  end;
+     begin
+     data := LastCallRecord;
+     GetEntry := True;
+     Exit;
+     end;
 
   GetEntry := False;
 
@@ -1440,16 +1614,16 @@ begin
   if not PartialCallSetup(Call) then Exit;
 
   while CellBuffer.GetNextEntry(EntryString) do
-  begin
-    ParseEntryToDataRecord(EntryString, data);
+     begin
+     ParseEntryToDataRecord(EntryString, data);
 
-    if data.Call = Call then
-    begin
-      GetEntry := True;
-      LastCallRecord := data;
-      Exit;
-    end;
-  end;
+     if data.Call = Call then
+        begin
+        GetEntry := True;
+        LastCallRecord := data;
+        Exit;
+        end;
+     end;
 
   { Didn't find anything }
 
@@ -1472,90 +1646,144 @@ begin
   data.Call := UpperCase(RemoveFirstString(FileString));
 
   while (FileString <> '') and (FileString[1] = '=') do
-  begin
-    ID := FileString[2];
+     begin
+     ID := FileString[2];
 
-    Delete(FileString, 1, 2);
+     Delete(FileString, 1, 2);
 
-    if StringHas(FileString, '=') then { Another command in waiting }
-    begin
-      Command := PrecedingString(FileString, ' =');
+     if StringHas(FileString, '=') then { Another command in waiting }
+        begin
+        Command := PrecedingString(FileString, ' =');
 
-      FileString := Copy(FileString,
-        pos('=', FileString),
-        (length(FileString) - pos('=', FileString)) + 1);
+        FileString := Copy(FileString,
+          pos('=', FileString),
+          (length(FileString) - pos('=', FileString)) + 1);
 
-    end
-    else
-    begin
-      Command := FileString;
-      FileString := '';
-    end;
+        end
+     else
+        begin
+        Command := FileString;
+        FileString := '';
+        end;
 
-    with data do
-      case ID of
-        'A':
-          if Ignore <> 'A' then Section := Command;
-        'C':
-          if Ignore <> 'C' then CQZone := Command;
-        'F':
-          if Ignore <> 'F' then FOC := Command;
-        'G':
-          if Ignore <> 'G' then Grid := Command;
+     with data do
+        begin
+        case ID of
+          'A':
+            if Ignore <> 'A' then
+               begin
+               Section := Command;
+               end;
+          'C':
+            if Ignore <> 'C' then
+               begin
+               CQZone := Command;
+               end;
+          'F':
+            if Ignore <> 'F' then
+               begin
+               FOC := Command;
+               end;
+          'G':
+            if Ignore <> 'G' then
+               begin
+               Grid := Command;
+               end;
 
-        'H':
-          if Ignore <> 'H' then Val(Command, Hits, Result);
+          'H':
+            if Ignore <> 'H' then
+               begin
+               Val(Command, Hits, Result);
+               end;
 
-        'I':
-          if Ignore <> 'I' then ITUZone := Command;
-        'K':
-          if Ignore <> 'K' then Check := Command;
+          'I':
+            if Ignore <> 'I' then
+               begin
+               ITUZone := Command;
+               end;
+          'K':
+            if Ignore <> 'K' then
+               begin
+               Check := Command;
+               end;
 
-        'N':
-          if Ignore <> 'N' then
-          begin
-            if length(Command) = 1 then
-              Continue;
+          'N':
+            if Ignore <> 'N' then
+               begin
+               if length(Command) = 1 then
+                  begin
+                  Continue;
+                  end;
 
-            if length(Command) = 2 then
-            begin
-              TestName := UpperCase(Command);
+               if length(Command) = 2 then
+                  begin
+                  TestName := UpperCase(Command);
 
-              if (TestName <> 'AL') and (TestName <> 'ED') and
-                (TestName <> 'OZ') and (TestName <> 'BO') and
-                (TestName <> 'TY') and (TestName <> 'JO') and
-                (TestName <> 'GO') and (TestName <> 'OX') and
-                (TestName <> 'CY') and (TestName <> 'JP') and
-                (TestName <> 'MO') and (TestName <> 'HI') and
-                (TestName <> 'OJ') then
-                Continue;
-            end;
+                  if (TestName <> 'AL') and (TestName <> 'ED') and
+                    (TestName <> 'OZ') and (TestName <> 'BO') and
+                    (TestName <> 'TY') and (TestName <> 'JO') and
+                    (TestName <> 'GO') and (TestName <> 'OX') and
+                    (TestName <> 'CY') and (TestName <> 'JP') and
+                    (TestName <> 'MO') and (TestName <> 'HI') and
+                    (TestName <> 'OJ') then
+                     begin
+                     Continue;
+                     end;
+                  end;
 
-            mName := Command;
-          end;
+               mName := Command;
+               end;
 
-        'O':
-          if Ignore <> 'O' then OldCall := Command;
-        'Q':
-          if Ignore <> 'Q' then QTH := Command;
+          'O':
+            if Ignore <> 'O' then
+               begin
+               OldCall := Command;
+               end;
+          'Q':
+            if Ignore <> 'Q' then
+               begin
+               QTH := Command;
+               end;
 
-        'S':
-          if Ignore <> 'S' then Val(Command, Speed, Result);
+          'S':
+            if Ignore <> 'S' then
+               begin
+               Val(Command, Speed, Result);
+               end;
 
-        'T':
-          if Ignore <> 'T' then TENTEN := Command;
-        'U':
-          if Ignore <> 'U' then User1 := Command;
-        'V':
-          if Ignore <> 'V' then User2 := Command;
-        'W':
-          if Ignore <> 'W' then User3 := Command;
-        'X':
-          if Ignore <> 'X' then User4 := Command;
-        'Y':
-          if Ignore <> 'Y' then User5 := Command;
-      end;
-  end;
+          'T':
+            if Ignore <> 'T' then
+               begin
+               TENTEN := Command;
+               end;
+          'U':
+            if Ignore <> 'U' then
+               begin
+               User1 := Command;
+               end;
+          'V':
+            if Ignore <> 'V' then
+               begin
+               User2 := Command;
+               end;
+          'W':
+            if Ignore <> 'W' then
+               begin
+               User3 := Command;
+               end;
+          'X':
+            if Ignore <> 'X' then
+               begin
+               User4 := Command;
+               end;
+          'Y':
+            if Ignore <> 'Y' then
+               begin
+               User5 := Command;
+               end;
+        end;
+        end;
+     end;
 
 end;
 
@@ -1567,28 +1795,32 @@ var
 
 begin
   while pos(',', CountryString) > 0 do
-  begin
-    CommaPosition := pos(',', CountryString);
+     begin
+     CommaPosition := pos(',', CountryString);
 
-    if CommaPosition > 1 then
-    begin
-      CString := Copy(CountryString, 1, CommaPosition - 1);
+     if CommaPosition > 1 then
+        begin
+        CString := Copy(CountryString, 1, CommaPosition - 1);
 
-      if CString = CountryID then
-      begin
-        CountryStringPresent := True;
-        Exit;
-      end;
+        if CString = CountryID then
+           begin
+           CountryStringPresent := True;
+           Exit;
+           end;
 
-      Delete(CountryString, 1, CommaPosition);
-      GetRidOfPrecedingSpaces(CountryString);
-    end;
-  end;
+        Delete(CountryString, 1, CommaPosition);
+        GetRidOfPrecedingSpaces(CountryString);
+        end;
+     end;
 
   if CountryString <> '' then
-    CountryStringPresent := CountryID = CountryString
+     begin
+     CountryStringPresent := CountryID = CountryString
+     end
   else
-    CountryStringPresent := False;
+     begin
+     CountryStringPresent := False;
+     end;
 end;
 
 function CallDatabase.GoodCountry(Call: CallString): boolean;
@@ -1608,19 +1840,23 @@ begin
 
   if (Copy(CountryString, 1, 1) = '!') or
     (Copy(CountryString, 1, 1) = '-') then { Exclude countries }
-  begin
-    Delete(TempString, 1, 1); { Get rid of ! or - }
+     begin
+     Delete(TempString, 1, 1); { Get rid of ! or - }
 
-    if CountryStringPresent(CountryID, TempString) then
-      GoodCountry := False;
+     if CountryStringPresent(CountryID, TempString) then
+        begin
+        GoodCountry := False;
+        end;
 
-    Exit;
-  end
+     Exit;
+     end
   else
 
     { Include countries}
 
-    GoodCountry := CountryStringPresent(CountryID, TempString);
+     begin
+     GoodCountry := CountryStringPresent(CountryID, TempString);
+     end;
 end;
 
 //function CallDatabase.GetNextPartialCall: CallString;
@@ -1641,24 +1877,24 @@ begin
   if CellBuffer.Key = '' then Exit;
 
   while CellBuffer.GetNextEntry(EntryString) do
-  begin
-    ParseEntryToDataRecord(EntryString, data);
+     begin
+     ParseEntryToDataRecord(EntryString, data);
 
-    if (length(InitialPartialCall) = 2) or (PartialCall(InitialPartialCall, data.Call)) then
-      if CountryString <> '' then
-      begin
-        if GoodCountry(data.Call) then
-        begin
+     if (length(InitialPartialCall) = 2) or (PartialCall(InitialPartialCall, data.Call)) then
+       if CountryString <> '' then
+          begin
+          if GoodCountry(data.Call) then
+             begin
+             {GetNextPartial}Call := data.Call;
+             Exit;
+             end;
+          end
+       else
+          begin
           {GetNextPartial}Call := data.Call;
           Exit;
-        end;
-      end
-      else
-      begin
-        {GetNextPartial}Call := data.Call;
-        Exit;
-      end;
-  end;
+          end;
+     end;
 end;
 
 function CallDatabase.LoadInIndexArray: boolean;
@@ -1678,16 +1914,16 @@ begin
   {KK1L 6.69 added LogOnly check}
 
   if TRMasterFileOpen then
-  begin
-    LoadInIndexArray := True;
-    Exit;
-  end;
+     begin
+     LoadInIndexArray := True;
+     Exit;
+     end;
 
   //{WLI}    IF SizeOf (SCPIndexArray^) + 5000 >= MaxAvail THEN Exit;
 
 //  if ActiveFilename <> '' then
   if ActiveFilename[0] <> #0 then
-  begin
+     begin
 
       { If the file does not appear in the active directory, we need
         to search around for it and come up with a complete path for
@@ -1708,18 +1944,18 @@ begin
 //      Assign(TRMasterFileRead, ActiveFilename);
 //    Reset(TRMasterFileRead, 1);
 //    if IORESULT {DosError} {WLI} = 0 then
-    begin
-      DTAFileSize := Windows.GetFileSize(TRMasterFileRead, nil) {FileSize(TRMasterFileRead)};
+       begin
+       DTAFileSize := Windows.GetFileSize(TRMasterFileRead, nil) {FileSize(TRMasterFileRead)};
 
-      New(SCPIndexArray);
-      sReadFile(TRMasterFileRead, SCPIndexArray^, SizeOf(SCPIndexArray^));
-      sReadFile(TRMasterFileRead, SCPEndOfFile, SizeOf(SCPEndOfFile));
-//      BlockRead(TRMasterFileRead, SCPIndexArray^, SizeOf(SCPIndexArray^), Result1);
-//      BlockRead(TRMasterFileRead, SCPEndOfFile, SizeOf(SCPEndOfFile), Result1);
-      LoadInIndexArray := True;
-      TRMasterFileOpen := True;
-      IndexArrayAllocated := True;
-    end;
+       New(SCPIndexArray);
+       sReadFile(TRMasterFileRead, SCPIndexArray^, SizeOf(SCPIndexArray^));
+       sReadFile(TRMasterFileRead, SCPEndOfFile, SizeOf(SCPEndOfFile));
+ //      BlockRead(TRMasterFileRead, SCPIndexArray^, SizeOf(SCPIndexArray^), Result1);
+ //      BlockRead(TRMasterFileRead, SCPEndOfFile, SizeOf(SCPEndOfFile), Result1);
+       LoadInIndexArray := True;
+       TRMasterFileOpen := True;
+       IndexArrayAllocated := True;
+       end;
 
   end;
 
@@ -1745,15 +1981,17 @@ begin
   KeyString := GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y);
 
   if StartingOffset = EndingOffset then { No calls found }
-  begin
-    CellBuffer.GoAway;
-    Exit;
-  end;
+     begin
+     CellBuffer.GoAway;
+     Exit;
+     end;
 
   CellBuffer.Key := GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y);
 
   if EndingOffset - StartingOffset > BufferArraySize then
-    EndingOffset := StartingOffset + BufferArraySize;
+     begin
+     EndingOffset := StartingOffset + BufferArraySize;
+     end;
 
   //{WLI}    IF EndingOffset - StartingOffset >= MaxAvail THEN
   //{WLI}        EndingOffset := StartingOffset + (MaxAvail - 5000);
@@ -1775,10 +2013,10 @@ var
 
 begin
   if TwoLetters = '//' then
-  begin
-    NumberOfBytesAtThisAddress := 0;
-    Exit;
-  end;
+     begin
+     NumberOfBytesAtThisAddress := 0;
+     Exit;
+     end;
 
   if not LoadInIndexArray then Exit;
 
@@ -1786,20 +2024,20 @@ begin
   Y := GetSCPIntegerFromChar(TwoLetters[2]);
 
   if (X = -1) or (Y = -1) then
-  begin
-    NumberOfBytesAtThisAddress := 0;
-    Exit;
-  end;
+     begin
+     NumberOfBytesAtThisAddress := 0;
+     Exit;
+     end;
 
   StartingOffset := SCPIndexArray^[X, Y];
 
   inc(Y);
 
   if Y > 36 then
-  begin
-    Y := 0;
-    inc(X);
-  end;
+     begin
+     Y := 0;
+     inc(X);
+     end;
 
   EndingOffset := SCPIndexArray^[X, Y];
   Difference := EndingOffset - StartingOffset;
@@ -1818,218 +2056,218 @@ begin
   ClearDataEntry(DataRecord);
 
   with DataRecord do
-  begin
-    CharAddress := 1;
+     begin
+     CharAddress := 1;
 
-    repeat
-      while EntryString[CharAddress] > ControlZ do
-      begin
-        Call := Call + EntryString[CharAddress];
-        inc(CharAddress);
-        if CharAddress > length(EntryString) then Exit;
-      end;
-
-      case EntryString[CharAddress] of
-
-        ControlA:
+     repeat
+       while EntryString[CharAddress] > ControlZ do
           begin
-            inc(CharAddress);
-
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              Section := Section + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
+          Call := Call + EntryString[CharAddress];
+          inc(CharAddress);
+          if CharAddress > length(EntryString) then Exit;
           end;
 
-        ControlC:
-          begin
-            inc(CharAddress);
+       case EntryString[CharAddress] of
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              CQZone := CQZone + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlA:
+           begin
+             inc(CharAddress);
 
-        ControlF:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                Section := Section + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              FOC := FOC + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlC:
+           begin
+             inc(CharAddress);
 
-        ControlG:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                CQZone := CQZone + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              Grid := Grid + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlF:
+           begin
+             inc(CharAddress);
 
-        ControlH:
-          begin
-            inc(CharAddress);
-            Hits := Ord(EntryString[CharAddress]);
-            inc(CharAddress);
-          end;
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                FOC := FOC + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-        ControlI:
-          begin
-            inc(CharAddress);
+         ControlG:
+           begin
+             inc(CharAddress);
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              ITUZone := ITUZone + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                Grid := Grid + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-        ControlK:
-          begin
-            inc(CharAddress);
+         ControlH:
+           begin
+             inc(CharAddress);
+             Hits := Ord(EntryString[CharAddress]);
+             inc(CharAddress);
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              Check := Check + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlI:
+           begin
+             inc(CharAddress);
 
-        ControlN:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                ITUZone := ITUZone + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              mName := mName + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlK:
+           begin
+             inc(CharAddress);
 
-        ControlO:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                Check := Check + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              OldCall := OldCall + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlN:
+           begin
+             inc(CharAddress);
 
-        ControlQ:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                mName := mName + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              QTH := QTH + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlO:
+           begin
+             inc(CharAddress);
 
-        ControlS:
-          begin
-            inc(CharAddress);
-            Speed := Ord(EntryString[CharAddress]);
-            inc(CharAddress);
-          end;
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                OldCall := OldCall + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-        ControlT:
-          begin
-            inc(CharAddress);
+         ControlQ:
+           begin
+             inc(CharAddress);
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              TENTEN := TENTEN + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                QTH := QTH + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-        ControlU:
-          begin
-            inc(CharAddress);
+         ControlS:
+           begin
+             inc(CharAddress);
+             Speed := Ord(EntryString[CharAddress]);
+             inc(CharAddress);
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              User1 := User1 + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlT:
+           begin
+             inc(CharAddress);
 
-        ControlV:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                TENTEN := TENTEN + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              User2 := User2 + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlU:
+           begin
+             inc(CharAddress);
 
-        ControlW:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                User1 := User1 + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              User3 := User3 + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlV:
+           begin
+             inc(CharAddress);
 
-        ControlX:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                User2 := User2 + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              User4 := User4 + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlW:
+           begin
+             inc(CharAddress);
 
-        ControlY:
-          begin
-            inc(CharAddress);
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                User3 := User3 + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-            while EntryString[CharAddress] > ControlZ do
-            begin
-              User5 := User5 + EntryString[CharAddress];
-              inc(CharAddress);
-              if CharAddress > length(EntryString) then Exit;
-            end;
-          end;
+         ControlX:
+           begin
+             inc(CharAddress);
 
-      else Exit; { This should not happen! }
-      end;
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                User4 := User4 + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
 
-    until CharAddress >= length(EntryString);
-  end;
+         ControlY:
+           begin
+             inc(CharAddress);
+
+             while EntryString[CharAddress] > ControlZ do
+                begin
+                User5 := User5 + EntryString[CharAddress];
+                inc(CharAddress);
+                if CharAddress > length(EntryString) then Exit;
+                end;
+           end;
+
+       else Exit; { This should not happen! }
+       end;
+
+     until CharAddress >= length(EntryString);
+     end;
 end;
 
 procedure CallDatabase.SaveDataToASCIIFile(var FileWrite: Text;
@@ -2041,25 +2279,76 @@ begin
   Write(FileWrite, NewData.Call);
 
   with NewData do
-  begin
-    if Section <> '' then Write(FileWrite, ' =A', Section);
-    if CQZone <> '' then Write(FileWrite, ' =C', CQZone);
-    if FOC <> '' then Write(FileWrite, ' =F', FOC);
-    if Grid <> '' then Write(FileWrite, ' =G', Grid);
-    if Hits > 0 then Write(FileWrite, ' =H', Hits);
-    if ITUZone <> '' then Write(FileWrite, ' =I', ITUZone);
-    if Check <> '' then Write(FileWrite, ' =K', Check);
-    if mName <> '' then Write(FileWrite, ' =N', mName);
-    if OldCall <> '' then Write(FileWrite, ' =O', OldCall);
-    if QTH <> '' then Write(FileWrite, ' =Q', QTH);
-    if Speed > 0 then Write(FileWrite, ' =S', Speed);
-    if TENTEN <> '' then Write(FileWrite, ' =T', TENTEN);
-    if User1 <> '' then Write(FileWrite, ' =U', User1);
-    if User2 <> '' then Write(FileWrite, ' =V', User2);
-    if User3 <> '' then Write(FileWrite, ' =W', User3);
-    if User4 <> '' then Write(FileWrite, ' =X', User4);
-    if User5 <> '' then Write(FileWrite, ' =Y', User5);
-  end;
+     begin
+     if Section <> '' then
+        begin
+        Write(FileWrite, ' =A', Section);
+        end;
+     if CQZone <> '' then
+        begin
+        Write(FileWrite, ' =C', CQZone);
+        end;
+     if FOC <> '' then
+        begin
+        Write(FileWrite, ' =F', FOC);
+        end;
+     if Grid <> '' then
+        begin
+        Write(FileWrite, ' =G', Grid);
+        end;
+     if Hits > 0 then
+        begin
+        Write(FileWrite, ' =H', Hits);
+        end;
+     if ITUZone <> '' then
+        begin
+        Write(FileWrite, ' =I', ITUZone);
+        end;
+     if Check <> '' then
+        begin
+        Write(FileWrite, ' =K', Check);
+        end;
+     if mName <> '' then
+        begin
+        Write(FileWrite, ' =N', mName);
+        end;
+     if OldCall <> '' then
+        begin
+        Write(FileWrite, ' =O', OldCall);
+        end;
+     if QTH <> '' then
+        begin
+        Write(FileWrite, ' =Q', QTH);
+        end;
+     if Speed > 0 then
+        begin
+        Write(FileWrite, ' =S', Speed);
+        end;
+     if TENTEN <> '' then
+        begin
+        Write(FileWrite, ' =T', TENTEN);
+        end;
+     if User1 <> '' then
+        begin
+        Write(FileWrite, ' =U', User1);
+        end;
+     if User2 <> '' then
+        begin
+        Write(FileWrite, ' =V', User2);
+        end;
+     if User3 <> '' then
+        begin
+        Write(FileWrite, ' =W', User3);
+        end;
+     if User4 <> '' then
+        begin
+        Write(FileWrite, ' =X', User4);
+        end;
+     if User5 <> '' then
+        begin
+        Write(FileWrite, ' =Y', User5);
+        end;
+     end;
 
   WriteLn(FileWrite);
 
@@ -2081,10 +2370,10 @@ var
 
 begin
   if not LoadInIndexArray then
-  begin
-    ShowMessage('Unable to save .DTA to ASCII file.');
-    Exit;
-  end;
+     begin
+     ShowMessage('Unable to save .DTA to ASCII file.');
+     Exit;
+     end;
 
   OpenFileForWrite(FileWrite, { WorkingDirectory + } ActiveASCIIFileName);
 
@@ -2094,79 +2383,89 @@ begin
   New(CallsAlreadySaved);
 
   for X := 0 to 36 do
-    for Y := 0 to 36 do
-    begin
-      NumberCallsAlreadySaved := 0;
-
-        //{WLI}            GoToXY (WhereX - 2, WhereY);
-      KeyString := GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y);
-        //      Write(KeyString);
-
-      StartingOffset := SCPIndexArray^[X, Y];
-
-      NextY := Y + 1;
-      NextX := X;
-
-      if NextY > 36 then
-      begin
-        if X < 36 then
+     begin
+     for Y := 0 to 36 do
         begin
-          NextX := X + 1;
-          NextY := 0;
-          EndingOffset := SCPIndexArray^[NextX, NextY];
-        end
+        NumberCallsAlreadySaved := 0;
+
+          //{WLI}            GoToXY (WhereX - 2, WhereY);
+        KeyString := GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y);
+          //      Write(KeyString);
+
+        StartingOffset := SCPIndexArray^[X, Y];
+
+        NextY := Y + 1;
+        NextX := X;
+
+        if NextY > 36 then
+           begin
+           if X < 36 then
+              begin
+              NextX := X + 1;
+              NextY := 0;
+              EndingOffset := SCPIndexArray^[NextX, NextY];
+              end
+           else
+              begin
+              EndingOffset := SCPEndOfFile;
+              end;
+           end
         else
-          EndingOffset := SCPEndOfFile;
-      end
-      else
-        EndingOffset := SCPIndexArray^[NextX, NextY];
+           begin
+           EndingOffset := SCPIndexArray^[NextX, NextY];
+           end;
 
-      if (X <> 0) or (Y <> 0) then
-      begin
-        if FilePos(FileRead) <> StartingOffset then
-        begin
-          Close(FileRead);
-          Assign(FileRead, string(ActiveFilename));
-          Reset(FileRead, 1);
-          Seek(FileRead, StartingOffset);
+        if (X <> 0) or (Y <> 0) then
+           begin
+           if FilePos(FileRead) <> StartingOffset then
+              begin
+              Close(FileRead);
+              Assign(FileRead, string(ActiveFilename));
+              Reset(FileRead, 1);
+              Seek(FileRead, StartingOffset);
+              end;
+           end
+        else
+           begin
+           Assign(FileRead, string(ActiveFilename));
+           Reset(FileRead, 1);
+           Seek(FileRead, StartingOffset);
+           end;
+
+        if StartingOffset < EndingOffset then
+           begin
+           CellSize := EndingOffset - StartingOffset;
+
+           if CellSize > BufferArraySize * 3 then
+              begin
+
+              ShowMessage(GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y) + ' cell is too large - 3!!');
+              halt;
+              end;
+
+   //        CellBuffer.LoadCellIntoBuffer(KeyString, FileRead, CellSize);
+
+           while CellBuffer.GetNextEntry(EntryString) do
+              begin
+              ParseEntryToDataRecord(EntryString, DataRecord);
+
+              if FirstCellForThisCall(DataRecord.Call, X, Y) then
+                if DoubleIndexCall(DataRecord.Call) then
+                   begin
+                   if not AlreadySaved(DataRecord.Call) then
+                      begin
+                      SaveDataToASCIIFile(FileWrite, DataRecord);
+                      end;
+
+                   end
+                else
+                   begin
+                   SaveDataToASCIIFile(FileWrite, DataRecord);
+                   end;
+              end;
+           end;
         end;
-      end
-      else
-      begin
-        Assign(FileRead, string(ActiveFilename));
-        Reset(FileRead, 1);
-        Seek(FileRead, StartingOffset);
-      end;
-
-      if StartingOffset < EndingOffset then
-      begin
-        CellSize := EndingOffset - StartingOffset;
-
-        if CellSize > BufferArraySize * 3 then
-        begin
-
-          ShowMessage(GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y) + ' cell is too large - 3!!');
-          halt;
-        end;
-
-//        CellBuffer.LoadCellIntoBuffer(KeyString, FileRead, CellSize);
-
-        while CellBuffer.GetNextEntry(EntryString) do
-        begin
-          ParseEntryToDataRecord(EntryString, DataRecord);
-
-          if FirstCellForThisCall(DataRecord.Call, X, Y) then
-            if DoubleIndexCall(DataRecord.Call) then
-            begin
-              if not AlreadySaved(DataRecord.Call) then
-                SaveDataToASCIIFile(FileWrite, DataRecord);
-
-            end
-            else
-              SaveDataToASCIIFile(FileWrite, DataRecord);
-        end;
-      end;
-    end;
+     end;
 
   Dispose(CallsAlreadySaved);
   CellBuffer.GoAway;
@@ -2186,29 +2485,81 @@ procedure CallDatabase.TransferNewData(OldData: DataBaseEntryRecord; var NewData
 
 begin
   if HitsOverwrite and (OldData.Hits < 255) then
-    NewData.Hits := OldData.Hits + 1
+     begin
+     NewData.Hits := OldData.Hits + 1
+     end
   else
-    NewData.Hits := OldData.Hits;
+     begin
+     NewData.Hits := OldData.Hits;
+     end;
 
   with NewData do
-  begin
-    if (not SectionOverwrite) and (OldData.Section <> '') or (NewData.Section = '') then Section := OldData.Section;
-    if (not CQZoneOverwrite) and (OldData.CQZone <> '') or (NewData.CQZone = '') then CQZone := OldData.CQZone;
-    if (not FOCOverwrite) and (OldData.FOC <> '') or (NewData.FOC = '') then FOC := OldData.FOC;
-    if (not GridOverwrite) and (OldData.Grid <> '') or (NewData.Grid = '') then Grid := OldData.Grid;
-    if (not ITUZoneOverwrite) and (OldData.ITUZone <> '') or (NewData.ITUZone = '') then ITUZone := OldData.ITUZone;
-    if (not CheckOverwrite) and (OldData.Check <> '') or (NewData.Check = '') then Check := OldData.Check;
-    if (not NameOverwrite) and (OldData.mName <> '') or (NewData.mName = '') then mName := OldData.mName;
-    if (not OldCallOverwrite) and (OldData.OldCall <> '') or (NewData.OldCall = '') then OldCall := OldData.OldCall;
-    if (not QTHOverwrite) and (OldData.QTH <> '') or (NewData.QTH = '') then QTH := OldData.QTH;
-    if (not SpeedOverwrite) and (OldData.Speed > 0) or (NewData.Speed = 0) then Speed := OldData.Speed;
-    if (not TenTenOverwrite) and (OldData.TENTEN <> '') or (NewData.TENTEN = '') then TENTEN := OldData.TENTEN;
-    if (not User1Overwrite) and (OldData.User1 <> '') or (NewData.User1 = '') then User1 := OldData.User1;
-    if (not User2Overwrite) and (OldData.User2 <> '') or (NewData.User2 = '') then User2 := OldData.User2;
-    if (not User3Overwrite) and (OldData.User3 <> '') or (NewData.User3 = '') then User3 := OldData.User3;
-    if (not User4Overwrite) and (OldData.User4 <> '') or (NewData.User4 = '') then User4 := OldData.User4;
-    if (not User5Overwrite) and (OldData.User5 <> '') or (NewData.User5 = '') then User5 := OldData.User5;
-  end;
+     begin
+     if (not SectionOverwrite) and (OldData.Section <> '') or (NewData.Section = '') then
+        begin
+        Section := OldData.Section;
+        end;
+     if (not CQZoneOverwrite) and (OldData.CQZone <> '') or (NewData.CQZone = '') then
+        begin
+        CQZone := OldData.CQZone;
+        end;
+     if (not FOCOverwrite) and (OldData.FOC <> '') or (NewData.FOC = '') then
+        begin
+        FOC := OldData.FOC;
+        end;
+     if (not GridOverwrite) and (OldData.Grid <> '') or (NewData.Grid = '') then
+        begin
+        Grid := OldData.Grid;
+        end;
+     if (not ITUZoneOverwrite) and (OldData.ITUZone <> '') or (NewData.ITUZone = '') then
+        begin
+        ITUZone := OldData.ITUZone;
+        end;
+     if (not CheckOverwrite) and (OldData.Check <> '') or (NewData.Check = '') then
+        begin
+        Check := OldData.Check;
+        end;
+     if (not NameOverwrite) and (OldData.mName <> '') or (NewData.mName = '') then
+        begin
+        mName := OldData.mName;
+        end;
+     if (not OldCallOverwrite) and (OldData.OldCall <> '') or (NewData.OldCall = '') then
+        begin
+        OldCall := OldData.OldCall;
+        end;
+     if (not QTHOverwrite) and (OldData.QTH <> '') or (NewData.QTH = '') then
+        begin
+        QTH := OldData.QTH;
+        end;
+     if (not SpeedOverwrite) and (OldData.Speed > 0) or (NewData.Speed = 0) then
+        begin
+        Speed := OldData.Speed;
+        end;
+     if (not TenTenOverwrite) and (OldData.TENTEN <> '') or (NewData.TENTEN = '') then
+        begin
+        TENTEN := OldData.TENTEN;
+        end;
+     if (not User1Overwrite) and (OldData.User1 <> '') or (NewData.User1 = '') then
+        begin
+        User1 := OldData.User1;
+        end;
+     if (not User2Overwrite) and (OldData.User2 <> '') or (NewData.User2 = '') then
+        begin
+        User2 := OldData.User2;
+        end;
+     if (not User3Overwrite) and (OldData.User3 <> '') or (NewData.User3 = '') then
+        begin
+        User3 := OldData.User3;
+        end;
+     if (not User4Overwrite) and (OldData.User4 <> '') or (NewData.User4 = '') then
+        begin
+        User4 := OldData.User4;
+        end;
+     if (not User5Overwrite) and (OldData.User5 <> '') or (NewData.User5 = '') then
+        begin
+        User5 := OldData.User5;
+        end;
+     end;
 end;
 
 function CallDatabase.PartialCallSetup(PartialCall: CallString): boolean;
@@ -2221,20 +2572,20 @@ var
 
 begin
   if not LoadInIndexArray then
-  begin
-    PartialCallSetup := False;
-    Exit;
-  end;
+     begin
+     PartialCallSetup := False;
+     Exit;
+     end;
 
   PartialCallSetup := True;
 
   for CharPos := 1 to length(PartialCall) do
     if Copy(PartialCall, CharPos, 2) = CellBuffer.Key then
-    begin { We have already read in a cell with this call }
-      CellBuffer.ReadAddress := 0; { Rewind list }
-      InitialPartialCall := PartialCall;
-      Exit;
-    end;
+       begin { We have already read in a cell with this call }
+       CellBuffer.ReadAddress := 0; { Rewind list }
+       InitialPartialCall := PartialCall;
+       Exit;
+       end;
 
   NewTwoLetters(PartialCall);
 end;
@@ -2567,12 +2918,12 @@ var
 
 begin
   if FirstMergeDataListEntry = nil then
-  begin
-    FirstMergeDataListEntry := New(DataListEntryPointer);
-    FirstMergeDataListEntry^.NextEntry := nil;
-    FirstMergeDataListEntry^.data := data;
-    Exit;
-  end;
+     begin
+     FirstMergeDataListEntry := New(DataListEntryPointer);
+     FirstMergeDataListEntry^.NextEntry := nil;
+     FirstMergeDataListEntry^.data := data;
+     Exit;
+     end;
 
   { We have some entries already - make sure it isn't a dupe }
 
@@ -2618,30 +2969,34 @@ begin
   CellBuffer.ReadAddress := 0; { Rewind list }
 
   while CellBuffer.GetNextEntry(EntryString) do
-  begin
-    ParseEntryToDataRecord(EntryString, data);
+     begin
+     ParseEntryToDataRecord(EntryString, data);
 
-    if SimilarCall(Call, data.Call) then
-      if (PossibleCallAction <> OnlyCallsWithNames) or (data.mName <> '') then
-        if PossibleCallList.NumberPossibleCalls < MaximumPossibleCalls then
-        begin
-          if PossibleCallList.NumberPossibleCalls > 0 then
-            for Address := 0 to PossibleCallList.NumberPossibleCalls - 1 do
-              if PossibleCallList.List[Address].Call = data.Call then
-                goto CallFound;
+     if SimilarCall(Call, data.Call) then
+       if (PossibleCallAction <> OnlyCallsWithNames) or (data.mName <> '') then
+         if PossibleCallList.NumberPossibleCalls < MaximumPossibleCalls then
+            begin
+            if PossibleCallList.NumberPossibleCalls > 0 then
+               begin
+               for Address := 0 to PossibleCallList.NumberPossibleCalls - 1 do
+                 if PossibleCallList.List[Address].Call = data.Call then
+                    begin
+                    goto CallFound;
+                    end;
+               end;
 
-              { Call not in list and there is room for it }
+                { Call not in list and there is room for it }
 
-          with PossibleCallList do
-          begin
-            List[NumberPossibleCalls].Call := data.Call;
-            List[NumberPossibleCalls].Dupe := False;
-            inc(NumberPossibleCalls);
-          end;
-        end;
+            with PossibleCallList do
+               begin
+               List[NumberPossibleCalls].Call := data.Call;
+               List[NumberPossibleCalls].Dupe := False;
+               inc(NumberPossibleCalls);
+               end;
+            end;
 
-    CallFound:
-  end;
+     CallFound:
+     end;
 end;
 
 procedure CallDatabase.GeneratePossibleCallList(Call: CallString);
@@ -2673,75 +3028,81 @@ begin
   ThirdLowestCell := AVeryBigNumber;
 
   for CharPos := 1 to length(Call) - 1 do
-  begin
-    BytesAtThisPos := NumberOfBytesAtThisAddress(Copy(Call, CharPos, 2));
+     begin
+     BytesAtThisPos := NumberOfBytesAtThisAddress(Copy(Call, CharPos, 2));
 
-    if BytesAtThisPos < LowestCell then
-    begin
-      ThirdLowestCell := SecondLowestCell;
-      ThirdLowestKeyPos := SecondLowestKeyPos;
-
-      SecondLowestCell := LowestCell;
-      SecondLowestKeyPos := LowestKeyPos;
-
-      LowestCell := BytesAtThisPos;
-      LowestKeyPos := CharPos;
-    end
-    else
-      if BytesAtThisPos < SecondLowestCell then
-      begin
+     if BytesAtThisPos < LowestCell then
+        begin
         ThirdLowestCell := SecondLowestCell;
         ThirdLowestKeyPos := SecondLowestKeyPos;
 
-        SecondLowestCell := BytesAtThisPos;
-        SecondLowestKeyPos := CharPos;
-      end
-      else
-        if BytesAtThisPos < ThirdLowestCell then
-        begin
-          ThirdLowestCell := BytesAtThisPos;
-          ThirdLowestKeyPos := CharPos;
-        end;
-  end;
+        SecondLowestCell := LowestCell;
+        SecondLowestKeyPos := LowestKeyPos;
+
+        LowestCell := BytesAtThisPos;
+        LowestKeyPos := CharPos;
+        end
+     else
+       if BytesAtThisPos < SecondLowestCell then
+          begin
+          ThirdLowestCell := SecondLowestCell;
+          ThirdLowestKeyPos := SecondLowestKeyPos;
+
+          SecondLowestCell := BytesAtThisPos;
+          SecondLowestKeyPos := CharPos;
+          end
+       else
+         if BytesAtThisPos < ThirdLowestCell then
+            begin
+            ThirdLowestCell := BytesAtThisPos;
+            ThirdLowestKeyPos := CharPos;
+            end;
+     end;
 
   for CharPos := 1 to length(Call) - 1 do
     if Copy(Call, CharPos, 2) = CellBuffer.Key then
-    begin { We have already read in a cell for this call }
-      MovePossibleCallsFromBufferIntoCallList(Call);
-      FirstKeyPos := CharPos;
-      Break;
-    end;
+       begin { We have already read in a cell for this call }
+       MovePossibleCallsFromBufferIntoCallList(Call);
+       FirstKeyPos := CharPos;
+       Break;
+       end;
 
   if FirstKeyPos = 0 then { Current buffer was no help }
-  begin
-    if Abs(LowestKeyPos - SecondLowestKeyPos) >= 2 then
-    begin
-      FirstKeyPos := LowestKeyPos;
-      SecondKeyPos := SecondLowestKeyPos;
-    end
-    else
-      if Abs(LowestKeyPos - ThirdLowestKeyPos) >= 2 then
-      begin
+     begin
+     if Abs(LowestKeyPos - SecondLowestKeyPos) >= 2 then
+        begin
         FirstKeyPos := LowestKeyPos;
-        SecondKeyPos := ThirdLowestKeyPos;
-      end
-      else
-      begin
-        FirstKeyPos := SecondLowestKeyPos;
-        SecondKeyPos := ThirdLowestKeyPos;
-      end;
+        SecondKeyPos := SecondLowestKeyPos;
+        end
+     else
+       if Abs(LowestKeyPos - ThirdLowestKeyPos) >= 2 then
+          begin
+          FirstKeyPos := LowestKeyPos;
+          SecondKeyPos := ThirdLowestKeyPos;
+          end
+       else
+          begin
+          FirstKeyPos := SecondLowestKeyPos;
+          SecondKeyPos := ThirdLowestKeyPos;
+          end;
 
-    NewTwoLetters(Copy(Call, FirstKeyPos, 2));
-    MovePossibleCallsFromBufferIntoCallList(Call);
-  end
+     NewTwoLetters(Copy(Call, FirstKeyPos, 2));
+     MovePossibleCallsFromBufferIntoCallList(Call);
+     end
   else
     if Abs(FirstKeyPos - LowestKeyPos) >= 2 then
-      SecondKeyPos := LowestKeyPos
+       begin
+       SecondKeyPos := LowestKeyPos
+       end
     else
       if Abs(FirstKeyPos - SecondLowestKeyPos) >= 2 then
-        SecondKeyPos := SecondLowestKeyPos
+         begin
+         SecondKeyPos := SecondLowestKeyPos
+         end
       else
-        SecondKeyPos := ThirdLowestKeyPos;
+         begin
+         SecondKeyPos := ThirdLowestKeyPos;
+         end;
 
   NewTwoLetters(Copy(Call, SecondKeyPos, 2));
   MovePossibleCallsFromBufferIntoCallList(Call);
@@ -2754,23 +3115,23 @@ begin
 
   repeat
     with PossibleCallList do
-    begin
-      Change := False;
+       begin
+       Change := False;
 
-      for CallAddress := 0 to Range do
-        if List[CallAddress].Call > List[CallAddress + 1].Call then
-        begin
-          TempString := List[CallAddress].Call;
-          List[CallAddress].Call := List[CallAddress + 1].Call;
-          List[CallAddress + 1].Call := TempString;
+       for CallAddress := 0 to Range do
+         if List[CallAddress].Call > List[CallAddress + 1].Call then
+            begin
+            TempString := List[CallAddress].Call;
+            List[CallAddress].Call := List[CallAddress + 1].Call;
+            List[CallAddress + 1].Call := TempString;
 
-          TempDupe := List[CallAddress].Dupe;
-          List[CallAddress].Dupe := List[CallAddress + 1].Dupe;
-          List[CallAddress].Dupe := TempDupe;
+            TempDupe := List[CallAddress].Dupe;
+            List[CallAddress].Dupe := List[CallAddress + 1].Dupe;
+            List[CallAddress].Dupe := TempDupe;
 
-          Change := True;
-        end;
-    end;
+            Change := True;
+            end;
+       end;
 
     dec(Range);
   until (not Change) or (Range < 0);
@@ -2800,35 +3161,35 @@ var
 
 begin
   if not LoadInIndexArray then
-  begin
-    case Random(4) of
-      0: RandomCall := GetRandomLetter +
-        GetRandomNumber +
-          GetRandomLetter +
-          GetRandomLetter;
+     begin
+     case Random(4) of
+       0: RandomCall := GetRandomLetter +
+         GetRandomNumber +
+           GetRandomLetter +
+           GetRandomLetter;
 
-      1: RandomCall := GetRandomLetter +
-        GetRandomNumber +
-          GetRandomLetter +
-          GetRandomLetter +
-          GetRandomLetter;
+       1: RandomCall := GetRandomLetter +
+         GetRandomNumber +
+           GetRandomLetter +
+           GetRandomLetter +
+           GetRandomLetter;
 
-      2: RandomCall := GetRandomLetter +
-        GetRandomLetter +
-          GetRandomNumber +
-          GetRandomLetter +
-          GetRandomLetter +
-          GetRandomLetter;
+       2: RandomCall := GetRandomLetter +
+         GetRandomLetter +
+           GetRandomNumber +
+           GetRandomLetter +
+           GetRandomLetter +
+           GetRandomLetter;
 
-      3: RandomCall := GetRandomLetter +
-        GetRandomLetter +
-          GetRandomNumber +
-          GetRandomLetter;
+       3: RandomCall := GetRandomLetter +
+         GetRandomLetter +
+           GetRandomNumber +
+           GetRandomLetter;
 
-    end;
+     end;
 
-    Exit;
-  end;
+     Exit;
+     end;
 
   X := Random(37);
   Y := Random(36);
@@ -2839,22 +3200,29 @@ begin
   NextX := X;
 
   if NextY > 36 then
-  begin
-    if X < 36 then
-    begin
-      NextX := X + 1;
-      NextY := 0;
-      EndingOffset := SCPIndexArray^[NextX, NextY];
-    end
-    else
-      EndingOffset := SCPEndOfFile;
-  end
+     begin
+     if X < 36 then
+        begin
+        NextX := X + 1;
+        NextY := 0;
+        EndingOffset := SCPIndexArray^[NextX, NextY];
+        end
+     else
+        begin
+        EndingOffset := SCPEndOfFile;
+        end;
+     end
   else
-    EndingOffset := SCPIndexArray^[NextX, NextY];
+     begin
+     EndingOffset := SCPIndexArray^[NextX, NextY];
+     end;
 
   Range := EndingOffset - StartingOffset;
 
-  while Range > 65000 do Range := Range - 32000;
+  while Range > 65000 do
+     begin
+     Range := Range - 32000;
+     end;
 
   Address := Random(Range) + StartingOffset;
 
@@ -2862,7 +3230,9 @@ begin
 //  FileSize(TRMasterFileRead)
   Windows.GetFileSize(TRMasterFileRead, nil)
     then
-    Address := (Windows.GetFileSize(TRMasterFileRead, nil) {FileSize(TRMasterFileRead)} - SizeOf(MiniBuffer)) - 5;
+     begin
+     Address := (Windows.GetFileSize(TRMasterFileRead, nil) {FileSize(TRMasterFileRead)} - SizeOf(MiniBuffer)) - 5;
+     end;
 
 //  Seek(TRMasterFileRead, Address);
   Windows.SetFilePointer(TRMasterFileRead, Address, nil, FILE_BEGIN);
@@ -2872,35 +3242,37 @@ begin
   Address := 0;
 
   while MiniBuffer[Address] <> NullCharacter do
-  begin
-    inc(Address);
+     begin
+     inc(Address);
 
-    if Address = 64 then
-    begin
-      RandomCall := 'N6TR';
-      Exit;
-    end;
+     if Address = 64 then
+        begin
+        RandomCall := 'N6TR';
+        Exit;
+        end;
 
-  end;
+     end;
 
   inc(Address);
 
   Call := '';
 
   while MiniBuffer[Address] > ControlZ do
-  begin
-    Call := Call + MiniBuffer[Address];
-    inc(Address);
+     begin
+     Call := Call + MiniBuffer[Address];
+     inc(Address);
 
-    if Address = 64 then
-    begin
-      while length(Call) < 4 do
-        Call := Call + 'A';
+     if Address = 64 then
+        begin
+        while length(Call) < 4 do
+           begin
+           Call := Call + 'A';
+           end;
 
-      RandomCall := Call;
-      Exit;
-    end;
-  end;
+        RandomCall := Call;
+        Exit;
+        end;
+     end;
 
   RandomCall := Call;
 end;
@@ -2911,12 +3283,12 @@ begin
   {   IF FileBuffer    <> nil THEN Dispose (FileBuffer);    6.43 }
 
   if TRMasterFileOpen then
-  begin
-    CloseHandle(TRMasterFileRead);
-    Dispose(SCPIndexArray);
-    TRMasterFileOpen := False;
-    IndexArrayAllocated := False;
-  end;
+     begin
+     CloseHandle(TRMasterFileRead);
+     Dispose(SCPIndexArray);
+     TRMasterFileOpen := False;
+     IndexArrayAllocated := False;
+     end;
 
   SCPDisabledByApplication := True;
 end;
@@ -2945,13 +3317,13 @@ begin
 
   if SCPIndexArray = nil then { Make sure index array is loaded }
     if not LoadInIndexArray then
-    begin
-        //{WLI}            GoToXY (1, WhereY);
-        //{WLI}            ClrEol;
-      ShowMessage('No TRMASTER.DTA file found.');
-        //{WLI}            WaitForKeyPressed;
-      Exit;
-    end;
+       begin
+       //{WLI}            GoToXY (1, WhereY);
+       //{WLI}            ClrEol;
+     ShowMessage('No TRMASTER.DTA file found.');
+       //{WLI}            WaitForKeyPressed;
+     Exit;
+       end;
 
   { Initialize counts }
 
@@ -2973,11 +3345,15 @@ begin
   TotalUser4s := 0;
   TotalUser5s := 0;
 
-  for Entry := 0 to 51 do HitList[Entry] := 0;
+  for Entry := 0 to 51 do
+     begin
+     HitList[Entry] := 0;
+     end;
 
   for X := 0 to 36 do
-    for Y := 0 to 36 do
-    begin
+     begin
+     for Y := 0 to 36 do
+        begin
         //{WLI}            GoToXY (WhereX - 2, WhereY);
       KeyString := GetSCPCharFromInteger(X) + GetSCPCharFromInteger(Y);
         //{WLI}            Write (KeyString);
@@ -2988,85 +3364,142 @@ begin
       NextX := X;
 
       if NextY > 36 then
-      begin
-        if X < 36 then
-        begin
-          NextX := X + 1;
-          NextY := 0;
-          EndingOffset := SCPIndexArray^[NextX, NextY];
-        end
-        else
-          EndingOffset := SCPEndOfFile;
-      end
+         begin
+         if X < 36 then
+            begin
+            NextX := X + 1;
+            NextY := 0;
+            EndingOffset := SCPIndexArray^[NextX, NextY];
+            end
+         else
+            begin
+            EndingOffset := SCPEndOfFile;
+            end;
+         end
       else
-        EndingOffset := SCPIndexArray^[NextX, NextY];
+         begin
+         EndingOffset := SCPIndexArray^[NextX, NextY];
+         end;
 
       if (X <> 0) or (Y <> 0) then
-      begin
-        if FilePos(FileRead) <> StartingOffset then
-        begin
-          Close(FileRead);
-          Assign(FileRead, string(ActiveFilename));
-          Reset(FileRead, 1);
-          Seek(FileRead, StartingOffset);
-        end;
-      end
+         begin
+         if FilePos(FileRead) <> StartingOffset then
+            begin
+            Close(FileRead);
+            Assign(FileRead, string(ActiveFilename));
+            Reset(FileRead, 1);
+            Seek(FileRead, StartingOffset);
+            end;
+         end
       else
-      begin
-        Assign(FileRead, string(ActiveFilename));
-        Reset(FileRead, 1);
-        Seek(FileRead, StartingOffset);
-      end;
+         begin
+         Assign(FileRead, string(ActiveFilename));
+         Reset(FileRead, 1);
+         Seek(FileRead, StartingOffset);
+         end;
 
       if StartingOffset < EndingOffset then
-      begin
-        NumberBytes := EndingOffset - StartingOffset;
+         begin
+         NumberBytes := EndingOffset - StartingOffset;
 
-        if NumberBytes > BufferArraySize * 3 then
-        begin
-                //        WriteLn;
-//          showmessage(GetSCPCharFromInteger(x) + GetSCPCharFromInteger(y) + ' cell is too large - 5!!');
-          halt;
-        end;
-
-//        CellBuffer.LoadCellIntoBuffer(KeyString, FileRead, NumberBytes);
-
-        while CellBuffer.GetNextEntry(EntryString) do
-        begin
-          ParseEntryToDataRecord(EntryString, DataRecord);
-
-          if FirstCellForThisCall(DataRecord.Call, X, Y) then
-          begin
-            inc(TotalCalls);
-
-            with DataRecord do
+         if NumberBytes > BufferArraySize * 3 then
             begin
-              if mName <> '' then inc(TotalNames);
-              if Grid <> '' then inc(TotalGrids);
-              if Section <> '' then inc(TotalSections);
-              if CQZone <> '' then inc(TotalCQZones);
-              if FOC <> '' then inc(TotalFocs);
-              if ITUZone <> '' then inc(TotalITUZones);
-              if Check <> '' then inc(TotalChecks);
-              if QTH <> '' then inc(TotalQTHs);
-              if OldCall <> '' then inc(TotalOldCalls);
-              if Speed > 0 then inc(TotalSpeeds);
-              if TENTEN <> '' then inc(TotalTenTens);
-              if User1 <> '' then inc(TotalUser1s);
-              if User2 <> '' then inc(TotalUser2s);
-              if User3 <> '' then inc(TotalUser3s);
-              if User4 <> '' then inc(TotalUser4s);
-              if User5 <> '' then inc(TotalUser5s);
+                 //        WriteLn;
+ //          showmessage(GetSCPCharFromInteger(x) + GetSCPCharFromInteger(y) + ' cell is too large - 5!!');
+           halt;
+         end;
 
-              if Hits <= 50 then
-                inc(HitList[Hits])
-              else
-                inc(HitList[51]);
+ //        CellBuffer.LoadCellIntoBuffer(KeyString, FileRead, NumberBytes);
+
+         while CellBuffer.GetNextEntry(EntryString) do
+            begin
+            ParseEntryToDataRecord(EntryString, DataRecord);
+
+            if FirstCellForThisCall(DataRecord.Call, X, Y) then
+               begin
+               inc(TotalCalls);
+
+               with DataRecord do
+                  begin
+                  if mName <> '' then
+                     begin
+                     inc(TotalNames);
+                     end;
+                  if Grid <> '' then
+                     begin
+                     inc(TotalGrids);
+                     end;
+                  if Section <> '' then
+                     begin
+                     inc(TotalSections);
+                     end;
+                  if CQZone <> '' then
+                     begin
+                     inc(TotalCQZones);
+                     end;
+                  if FOC <> '' then
+                     begin
+                     inc(TotalFocs);
+                     end;
+                  if ITUZone <> '' then
+                     begin
+                     inc(TotalITUZones);
+                     end;
+                  if Check <> '' then
+                     begin
+                     inc(TotalChecks);
+                     end;
+                  if QTH <> '' then
+                     begin
+                     inc(TotalQTHs);
+                     end;
+                  if OldCall <> '' then
+                     begin
+                     inc(TotalOldCalls);
+                     end;
+                  if Speed > 0 then
+                     begin
+                     inc(TotalSpeeds);
+                     end;
+                  if TENTEN <> '' then
+                     begin
+                     inc(TotalTenTens);
+                     end;
+                  if User1 <> '' then
+                     begin
+                     inc(TotalUser1s);
+                     end;
+                  if User2 <> '' then
+                     begin
+                     inc(TotalUser2s);
+                     end;
+                  if User3 <> '' then
+                     begin
+                     inc(TotalUser3s);
+                     end;
+                  if User4 <> '' then
+                     begin
+                     inc(TotalUser4s);
+                     end;
+                  if User5 <> '' then
+                     begin
+                     inc(TotalUser5s);
+                     end;
+
+                  if Hits <= 50 then
+                     begin
+                     inc(HitList[Hits])
+                     end
+                  else
+                     begin
+                     inc(HitList[51]);
+                     end;
+                  end;
+               end;
             end;
-          end;
+         end;
         end;
-      end;
-    end;
+     end;
 
   //{WLI}    GoToXY (1, WhereY);
   //{WLI}    ClrEol;
@@ -3154,16 +3587,18 @@ var
 
 begin
   if Call = '' then
-  begin
-    CallHasNoNumber := True;
-    Exit;
-  end;
+     begin
+     CallHasNoNumber := True;
+     Exit;
+     end;
 
   CallHasNoNumber := False;
 
   for CharPointer := 1 to length(Call) do
     if ((Call[CharPointer] >= '0') and (Call[CharPointer] <= '9')) then
-      Exit;
+       begin
+       Exit;
+       end;
 
   CallHasNoNumber := True;
 end;
@@ -3207,9 +3642,13 @@ var
    Rec         : DataBaseEntryRecord;
 begin
    if not LoadInIndexArray then
+      begin
       Exit;
+      end;
    if not tOpenFileForRead(FileHandle, ActiveFilename) then
+      begin
       Exit;
+      end;
    FillChar(LocalBuf, SizeOf(LocalBuf), 0);
    LocalBuf.MaximumMemoryToUse := BufferArraySize;
    try
@@ -3220,23 +3659,35 @@ begin
             StartOffset := SCPIndexArray^[X, Y];
             { End offset = start of the next cell; the very last cell uses SCPEndOfFile }
             if Y < 36 then
+               begin
                EndOffset := SCPIndexArray^[X, Y + 1]
+               end
             else if X < 36 then
+               begin
                EndOffset := SCPIndexArray^[X + 1, 0]
+               end
             else
+               begin
                EndOffset := SCPEndOfFile;
+               end;
             NumBytes := EndOffset - StartOffset;
             if NumBytes <= 0 then
+               begin
                Continue;
+               end;
             if NumBytes > BufferArraySize then
+               begin
                NumBytes := BufferArraySize;
+               end;
             Windows.SetFilePointer(FileHandle, StartOffset, nil, FILE_BEGIN);
             LocalBuf.LoadCellIntoBuffer('', FileHandle, NumBytes);
             while LocalBuf.GetNextEntry(EntryStr) do
                begin
                ParseEntryToDataRecord(EntryStr, Rec);
                if Rec.mName <> '' then
+                  begin
                   Names.Add(UpperCase(Rec.mName));
+                  end;
                end;
             end;
          end;
@@ -3252,7 +3703,9 @@ procedure InitOperatorNameSet;
   so we do a live check here now that the contest has set the filename. }
 begin
    if OperatorNameSet <> nil then
+      begin
       Exit;
+      end;
    CD.MasterFileExists := (CD.ActiveFilename[0] <> #0) and
       FileExists(CD.ActiveFilename);
    if not CD.MasterFileExists then

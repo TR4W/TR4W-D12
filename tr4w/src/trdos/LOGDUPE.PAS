@@ -493,15 +493,18 @@ begin
 
   QTHString := UpperCase(RXData.QTHString);
 
-  if StringHas(QTHString, '/') then QTHString := PrecedingString(QTHString, '/');
+  if StringHas(QTHString, '/') then
+     begin
+     QTHString := PrecedingString(QTHString, '/');
+     end;
 
   GetRidOfPrecedingSpaces(QTHString);
   GetRidOfPostcedingSpaces(QTHString);
   if QTHString = 'XXX' then
-   begin
-    FoundDomesticQTH := True;
-    exit;
-   end;
+     begin
+     FoundDomesticQTH := True;
+     exit;
+     end;
   FoundDomesticQTH := DomQTHTable.GetDomQTH(QTHString, RXData.DomMultQTH, RXData.DomesticQTH);
 
 
@@ -537,16 +540,16 @@ begin
     make this the first entry. }
 
   if NumberInitialExchanges = 0 then { First one - allocate memory }
-  begin
-      {WLI}
-      //{WLI}        IF MaxAvail > SizeOf (InitialExchangeArray) THEN
-    begin
-        //        if InitialExchangeList = nil then New(InitialExchangeList);
-        //        inc(NumberInitialExchanges);
-        //        InitialExchangeList^[NumberInitialExchanges] := TempBytes;
-        //        GetInitialExchangeIndex := NumberInitialExchanges;
-    end;
-      {        ELSE
+     begin
+     {WLI}
+     //{WLI}        IF MaxAvail > SizeOf (InitialExchangeArray) THEN
+   begin
+       //        if InitialExchangeList = nil then New(InitialExchangeList);
+       //        inc(NumberInitialExchanges);
+       //        InitialExchangeList^[NumberInitialExchanges] := TempBytes;
+       //        GetInitialExchangeIndex := NumberInitialExchanges;
+   end;
+     {        ELSE
                   BEGIN
                   DoABeep (Single);
                   QuickDisplay ('Not enough memory for initial exchange array!!');
@@ -555,7 +558,7 @@ begin
 
               Exit;
              }
-  end;
+     end;
 
   { Search the list for this entry }
 
@@ -578,11 +581,11 @@ begin
     { Not found in the list.  Add it to end if there is room. }
 
   if NumberInitialExchanges < MaxInitialExchanges then
-  begin
-      //      inc(NumberInitialExchanges);
-      //      InitialExchangeList^[NumberInitialExchanges] := TempBytes;
-      //      GetInitialExchangeIndex := NumberInitialExchanges;
-  end;
+     begin
+     //      inc(NumberInitialExchanges);
+     //      InitialExchangeList^[NumberInitialExchanges] := TempBytes;
+     //      GetInitialExchangeIndex := NumberInitialExchanges;
+     end;
 end;
 
 procedure AddCallToPartialList(Call: CallString; InitialExchange: CallString);
@@ -642,10 +645,10 @@ begin
 
   for Entry := 0 to PossCallList.NumberPossibleCalls - 1 do
     if Call = PossCallList.List[Entry].Call then
-    begin
-      CallNotInPossibleCallList := False;
-      Exit;
-    end;
+       begin
+       CallNotInPossibleCallList := False;
+       Exit;
+       end;
 end;
 {
 procedure DupeAndMultSheet.MakePartialCallList(Call: CallString;
@@ -737,10 +740,10 @@ begin
   while (TempString <> '') and
     (Copy(TempString, length(TempString), 1) >= '0') and
     (Copy(TempString, length(TempString), 1) <= '9') do
-  begin
-    NumberString := Copy(TempString, length(TempString), 1) + NumberString;
-    Delete(TempString, length(TempString), 1);
-  end;
+     begin
+     NumberString := Copy(TempString, length(TempString), 1) + NumberString;
+     Delete(TempString, length(TempString), 1);
+     end;
 
   GetNumber := NumberString[1];
 end;
@@ -753,12 +756,12 @@ procedure GetDXQTH(var RXData: ContestExchange);
 
 begin
   if not CountDomesticCountries then
-  begin
-    if ActiveDomesticMult = WYSIWYGDomestic then
-      if RXData.DomesticQTH <> '' then Exit;
+     begin
+     if ActiveDomesticMult = WYSIWYGDomestic then
+       if RXData.DomesticQTH <> '' then Exit;
 
-    if DomesticCountryCall(RXData.Callsign) then Exit;
-  end;
+     if DomesticCountryCall(RXData.Callsign) then Exit;
+     end;
 
 //R3DSS/E9
   case ActiveDXMult of
@@ -770,21 +773,29 @@ begin
 
     ARRLDXCCWithNoUSAOrCanada, CQDXCCWithNoUSAOrCanada:
       if (RXData.QTH.CountryID <> 'K') and (RXData.QTH.CountryID <> 'VE') then
-        RXData.DXQTH := RXData.QTH.CountryID;
+         begin
+         RXData.DXQTH := RXData.QTH.CountryID;
+         end;
 
     ARRLDXCCWithNoARRLSections:
       if pos(' ' + RXData.QTH.CountryID + ' ', ARRLSectionCountryString) = 0 then
-        RXData.DXQTH := RXData.QTH.CountryID;
+         begin
+         RXData.DXQTH := RXData.QTH.CountryID;
+         end;
 
     ARRLDXCCWithNoUSACanadaKH6OrKL7:
       if (RXData.QTH.CountryID <> 'K') and (RXData.QTH.CountryID <> 'VE') and
         (RXData.QTH.CountryID <> 'KH6') and (RXData.QTH.CountryID <> 'KL') then
-        RXData.DXQTH := RXData.QTH.CountryID;
+         begin
+         RXData.DXQTH := RXData.QTH.CountryID;
+         end;
 
     ARRLDXCCWithNoIOrIS0:
 //      if (RXData.QTH.CountryID <> 'I') and (RXData.QTH.CountryID <> 'IS') and (RXData.QTH.CountryID <> 'IT9') then
       if RXData.QTH.CountryID[1] <> 'I' then
-        RXData.DXQTH := RXData.QTH.CountryID;
+         begin
+         RXData.DXQTH := RXData.QTH.CountryID;
+         end;
 
     CQDXCCWithNoHB9: if RXData.QTH.CountryID <> 'HB' then RXData.DXQTH := RXData.QTH.CountryID;
     CQDXCCWithNoOK: if RXData.QTH.CountryID <> 'OK' then RXData.DXQTH := RXData.QTH.CountryID;
@@ -795,51 +806,67 @@ begin
         if (RXData.QTH.CountryID <> 'K') and
           (RXData.QTH.CountryID <> 'VE') and
           (RXData.QTH.CountryID <> 'KL') then
-          RXData.DXQTH := RXData.QTH.CountryID;
+           begin
+           RXData.DXQTH := RXData.QTH.CountryID;
+           end;
 
     CQEuropeanCountries:
       if (RXData.QTH.Continent = Europe) then
-        RXData.DXQTH := RXData.QTH.CountryID;
+         begin
+         RXData.DXQTH := RXData.QTH.CountryID;
+         end;
 
     CQUBAEuropeanCountries:
       if UBACountry(RXData.QTH.CountryID) then
-        RXData.DXQTH := RXData.QTH.CountryID;
+         begin
+         RXData.DXQTH := RXData.QTH.CountryID;
+         end;
 
     CQNonEuropeanCountries:
       if (RXData.QTH.Continent <> Europe) then
-        RXData.DXQTH := RXData.QTH.CountryID;
+         begin
+         RXData.DXQTH := RXData.QTH.CountryID;
+         end;
 
     NonSouthAmericanCountries:
       if RXData.QTH.Continent <> SouthAmerica then
-        RXData.DXQTH := RXData.QTH.CountryID;
+         begin
+         RXData.DXQTH := RXData.QTH.CountryID;
+         end;
 
     BlackSeaCountries:
       begin
         if BlackSeaRegionCountry(RXData.QTH.CountryID) then
-          RXData.DXQTH := RXData.QTH.CountryID;
+           begin
+           RXData.DXQTH := RXData.QTH.CountryID;
+           end;
       end;
 
     PACCCountriesAndPrefixes:
       begin
         if RXData.QTH.CountryID = 'UA9' then
-        begin
-          if StringHas(RXData.Callsign, '9') then
-            RXData.DXQTH := 'UA9'
-          else
-            RXData.DXQTH := 'UA0';
+           begin
+           if StringHas(RXData.Callsign, '9') then
+              begin
+              RXData.DXQTH := 'UA9'
+              end
+           else
+              begin
+              RXData.DXQTH := 'UA0';
+              end;
 
-          Exit;
-        end;
+           Exit;
+           end;
 
         if (RXData.QTH.CountryID = 'CE') or
           (RXData.QTH.CountryID = 'JA') or (RXData.QTH.CountryID = 'LU') or
           (RXData.QTH.CountryID = 'PY') or (RXData.QTH.CountryID = 'VE') or
           (RXData.QTH.CountryID = 'K') or (RXData.QTH.CountryID = 'VK') or
           (RXData.QTH.CountryID = 'ZS') or (RXData.QTH.CountryID = 'ZL') then
-        begin
-          RXData.DXQTH := RXData.QTH.CountryID + AnsiChar(GetNumber(RXData.Callsign));
-          Exit;
-        end;
+           begin
+           RXData.DXQTH := RXData.QTH.CountryID + AnsiChar(GetNumber(RXData.Callsign));
+           Exit;
+           end;
 
         RXData.DXQTH := RXData.QTH.CountryID;
       end;
@@ -919,37 +946,41 @@ procedure DupeAndMultSheet.AddQSOToSheets(RXData: ContestExchangePtr; AddToParti
 begin
 
   if RXData.ceSearchAndPounce then
-    inc(tRestartInfo.riQSOByOpMode[SearchAndPounceOpMode])
+     begin
+     inc(tRestartInfo.riQSOByOpMode[SearchAndPounceOpMode])
+     end
   else
-    inc(tRestartInfo.riQSOByOpMode[CQOpMode]);
+     begin
+     inc(tRestartInfo.riQSOByOpMode[CQOpMode]);
+     end;
 
   if not RXData.ceClearMultSheet then
 //    if RXData.DomesticMult or RXData.DXMult or RXData.PrefixMult or RXData.ZoneMult then
-  begin
+     begin
 
-    if RXData.DomesticMult then
-    begin
-//        TempDOMBand := RXData.Band;
-//        if Contest in [RDA, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then TempDOMBand := All;
-//        mo.SetDmMult(RXData.DomMultQTH, TempDOMBand, RXData.Mode);
-      mo.SetDmMult(RXData.DomMultQTH, RXData.Band, RXData.Mode);
-    end;
+     if RXData.DomesticMult then
+        begin
+        //        TempDOMBand := RXData.Band;
+        //        if Contest in [RDA, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then TempDOMBand := All;
+        //        mo.SetDmMult(RXData.DomMultQTH, TempDOMBand, RXData.Mode);
+              mo.SetDmMult(RXData.DomMultQTH, RXData.Band, RXData.Mode);
+        end;
 
-    if RXData.DXMult then
-    begin
-      mo.SetDXMult(RXData.QTH.Country, RXData.Band, RXData.Mode);
-    end;
+     if RXData.DXMult then
+        begin
+        mo.SetDXMult(RXData.QTH.Country, RXData.Band, RXData.Mode);
+        end;
 
-    if RXData.PrefixMult then
-    begin
-      mo.SetPxMult(RXData.Prefix, RXData.Band, RXData.Mode);
-    end;
+     if RXData.PrefixMult then
+        begin
+        mo.SetPxMult(RXData.Prefix, RXData.Band, RXData.Mode);
+        end;
 
-    if RXData.ZoneMult then
-    begin
-      mo.SetZnMult(RXData.Zone, RXData.Band, RXData.Mode);
-    end;
-  end;
+     if RXData.ZoneMult then
+        begin
+        mo.SetZnMult(RXData.Zone, RXData.Band, RXData.Mode);
+        end;
+     end;
 end;
 
 function DupeAndMultSheet.TwoLetterCrunchProcess(PartialCall: {Call} string): boolean;
@@ -974,13 +1005,13 @@ begin
     empty list of callsigns. }
 
   if LastTwoLettersCrunchedOn <> Copy(PartialCall, 1, 2) then
-  begin
-    LastTwoLettersCrunchedOn := Copy(PartialCall, 1, 2);
-    LastTwoLetterCrunchedAddress := -1;
-    NumberTwoLetterPartialCalls := 0;
-    TwoLetterCrunchProcess := True;
-    LastPartialCall := PartialCall;
-  end;
+     begin
+     LastTwoLettersCrunchedOn := Copy(PartialCall, 1, 2);
+     LastTwoLetterCrunchedAddress := -1;
+     NumberTwoLetterPartialCalls := 0;
+     TwoLetterCrunchProcess := True;
+     LastPartialCall := PartialCall;
+     end;
 
   { Look to see if we have process the whole list.  If so, then, there isn't
     anything for us to do.  However, if the callsign has changed, we will
@@ -988,34 +1019,37 @@ begin
     the new callsign.  }
 
   if LastTwoLetterCrunchedAddress >= NumberPartialCalls - 1 then
-  begin
-    TwoLetterCrunchProcess := PartialCall <> LastPartialCall;
-    LastPartialCall := PartialCall;
-    Exit;
-  end;
+     begin
+     TwoLetterCrunchProcess := PartialCall <> LastPartialCall;
+     LastPartialCall := PartialCall;
+     Exit;
+     end;
 
   { Now we only care about the first two letters. }
 
-  if length(PartialCall) > 2 then PartialCall := Copy(PartialCall, 1, 2);
+  if length(PartialCall) > 2 then
+     begin
+     PartialCall := Copy(PartialCall, 1, 2);
+     end;
 
   { Wildcard partials means the two letters can show up anywhere in the
     callsign. }
 
   if WildCardPartials then
-  begin
-    NumberCallsToCrunch := NumberPartialCalls - LastTwoLetterCrunchedAddress - 1;
+     begin
+     NumberCallsToCrunch := NumberPartialCalls - LastTwoLetterCrunchedAddress - 1;
 
-      { We will only crunch up to 200 callsigns per call to this process.  Note
+       { We will only crunch up to 200 callsigns per call to this process.  Note
         that we might not get to all of them if the operator presses a key. }
 
-//wli ???? ???????????? initial.ex ? ????? ????????    if NumberCallsToCrunch > 200 then NumberCallsToCrunch := 200;
+ //wli ???? ???????????? initial.ex ? ????? ????????    if NumberCallsToCrunch > 200 then NumberCallsToCrunch := 200;
 
-      { Now look through the partial call list, looking for any calls that have
+       { Now look through the partial call list, looking for any calls that have
         the partial string in it. }
 
-    for Address := LastTwoLetterCrunchedAddress + 1 to LastTwoLetterCrunchedAddress + NumberCallsToCrunch do
-    begin
-          {
+     for Address := LastTwoLetterCrunchedAddress + 1 to LastTwoLetterCrunchedAddress + NumberCallsToCrunch do
+        begin
+        {
             if pos(PartialCall, GetPartialCall(Address)) > 0 then
               begin
                 if NumberTwoLetterPartialCalls < TwoLetterPartialCallListLength then
@@ -1028,12 +1062,12 @@ begin
 
             inc(LastTwoLetterCrunchedAddress);
           }
-            //            IF NewKeyPressed THEN Exit;  { Went to NewKeyPressed in 6.27 }
-    end;
-  end
+          //            IF NewKeyPressed THEN Exit;  { Went to NewKeyPressed in 6.27 }
+        end;
+     end
 
   else
-  begin
+     begin
 
       { Remember that the partial call list is in alphabetical order.  If we
         find the first and last address that partial calls will be found, our
@@ -1044,7 +1078,10 @@ begin
       { Since we back up one more, if the address is more than zero, decrement
         it by one. }
 
-    if FirstAddress > 0 then dec(FirstAddress);
+    if FirstAddress > 0 then
+       begin
+       dec(FirstAddress);
+       end;
 
       { Now we find the last address for any partial calls.  We do this by finding
         the proper address for a call with the last character incremented by one. }
@@ -1053,25 +1090,25 @@ begin
     TempString := PartialCall;
 
     if TempString[2] = 'Z' then
-    begin
-      TempString[2] := '0';
-      TempString[1] := AnsiChar(Ord(TempString[1]) + 1);
-          {
+       begin
+       TempString[2] := '0';
+       TempString[1] := AnsiChar(Ord(TempString[1]) + 1);
+           {
                     if TempString[1] > 'Z' then
                       LastAddress := NumberPartialCalls
                     else
                       LastAddress := FindProperPartialCallAddress(TempString);
           }
-    end
+       end
     else
-    begin
-      TempString[2] := AnsiChar(Ord(TempString[2]) + 1);
-          //          LastAddress := FindProperPartialCallAddress(TempString);
-    end;
+       begin
+       TempString[2] := AnsiChar(Ord(TempString[2]) + 1);
+           //          LastAddress := FindProperPartialCallAddress(TempString);
+       end;
 
     for Address := FirstAddress to LastAddress do
-    begin
-          {
+       begin
+       {
             GotPartialCall := GetPartialCall(Address);
 
             if pos(PartialCall, GotPartialCall) = 1 then
@@ -1086,7 +1123,7 @@ begin
 
             inc(LastTwoLetterCrunchedAddress);
             }
-    end;
+       end;
     LastTwoLetterCrunchedAddress := NumberPartialCalls - 1;
   end;
 end;
@@ -1114,85 +1151,95 @@ begin
   NumberChar := NumberString[1];
 
   if FirstVDEntry = nil then { Set up entries with 1 to 10 }
-  begin
-    FirstVDEntry := New(VDEntryPointer);
-    ActiveVDEntry := FirstVDEntry;
+     begin
+     FirstVDEntry := New(VDEntryPointer);
+     ActiveVDEntry := FirstVDEntry;
 
-    ActiveVDEntry^.Callsign := '1';
-    ActiveVDEntry^.NextEntry := New(VDEntryPointer);
+     ActiveVDEntry^.Callsign := '1';
+     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
 
-    for Count := 2 to 10 do
-    begin
-      if Count < 10 then
-        Character := CHR(Ord('0') + Count)
-      else
-        Character := '0';
+     for Count := 2 to 10 do
+        begin
+        if Count < 10 then
+           begin
+           Character := CHR(Ord('0') + Count)
+           end
+        else
+           begin
+           Character := '0';
+           end;
 
-      ActiveVDEntry := ActiveVDEntry^.NextEntry;
+        ActiveVDEntry := ActiveVDEntry^.NextEntry;
 
-      ActiveVDEntry^.Callsign := Character;
+        ActiveVDEntry^.Callsign := Character;
 
-      if Character <> '0' then
-        ActiveVDEntry^.NextEntry := New(VDEntryPointer)
-      else
-        ActiveVDEntry^.NextEntry := nil;
-    end;
+        if Character <> '0' then
+           begin
+           ActiveVDEntry^.NextEntry := New(VDEntryPointer)
+           end
+        else
+           begin
+           ActiveVDEntry^.NextEntry := nil;
+           end;
+        end;
 
-    NumberVDCalls := 10;
-  end;
+     NumberVDCalls := 10;
+     end;
 
   ActiveVDEntry := FirstVDEntry;
 
   while ActiveVDEntry^.Callsign <> NumberChar do
     if ActiveVDEntry^.NextEntry = nil then
-    begin
-      ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-      ActiveVDEntry := ActiveVDEntry^.NextEntry;
+       begin
+       ActiveVDEntry^.NextEntry := New(VDEntryPointer);
+       ActiveVDEntry := ActiveVDEntry^.NextEntry;
 
-      ActiveVDEntry^.Callsign := Callsign;
-      ActiveVDEntry^.NextEntry := nil;
-      inc(NumberVDCalls);
-      Exit;
-    end
+       ActiveVDEntry^.Callsign := Callsign;
+       ActiveVDEntry^.NextEntry := nil;
+       inc(NumberVDCalls);
+       Exit;
+       end
     else
-      ActiveVDEntry := ActiveVDEntry^.NextEntry;
+       begin
+       ActiveVDEntry := ActiveVDEntry^.NextEntry;
+       end;
 
   { We have found the Number Entry that matches the call we are adding. }
 
   if ActiveVDEntry^.NextEntry = nil then { Adding the 1st 0 call? }
-  begin
-    if ActiveVDEntry^.Callsign <> '0' then
-    begin
-          //      SetWindow(WholeScreenWindow);
-               //{WLI}            ClrScr;
-      ShowMessage('Not finding zero at end visible dupesheet list!!');
-      logger.Fatal('Not finding zero at end visible dupesheet list!!');
-      halt;
-    end;
+     begin
+     if ActiveVDEntry^.Callsign <> '0' then
+        begin
+        //      SetWindow(WholeScreenWindow);
+             //{WLI}            ClrScr;
+    ShowMessage('Not finding zero at end visible dupesheet list!!');
+    logger.Fatal('Not finding zero at end visible dupesheet list!!');
+    halt;
+        end;
 
-    ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-    ActiveVDEntry := ActiveVDEntry^.NextEntry;
+     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
+     ActiveVDEntry := ActiveVDEntry^.NextEntry;
 
-    ActiveVDEntry^.Callsign := Callsign;
-    ActiveVDEntry^.NextEntry := nil;
-    inc(NumberVDCalls);
-    Exit; { All done - 1st 0 call added }
-  end;
+     ActiveVDEntry^.Callsign := Callsign;
+     ActiveVDEntry^.NextEntry := nil;
+     inc(NumberVDCalls);
+     Exit; { All done - 1st 0 call added }
+     end;
 
   { See if it is the first for this number }
 
   NextRecord := ActiveVDEntry^.NextEntry;
 
   if (length(NextRecord^.Callsign) = 1) and StringIsAllNumbers(ActiveVDEntry^.Callsign) then
-  begin
-    ActiveVDEntry^.NextEntry := New(VDEntryPointer);
+     begin
+     ActiveVDEntry^.NextEntry := New(VDEntryPointer);
 
-    ActiveVDEntry := ActiveVDEntry^.NextEntry;
-    ActiveVDEntry^.Callsign := Callsign;
-    ActiveVDEntry^.NextEntry := NextRecord;
-    inc(NumberVDCalls);
-    Exit;
-  end;
+     ActiveVDEntry := ActiveVDEntry^.NextEntry;
+     ActiveVDEntry^.Callsign := Callsign;
+     ActiveVDEntry^.NextEntry := NextRecord;
+     inc(NumberVDCalls);
+     Exit;
+     end;
 
   { We have to find the right place to squeeze it }
 
@@ -1201,25 +1248,25 @@ begin
   while (SuffixString > GetSuffix(NextRecord^.Callsign)) and
     (length(NextRecord^.Callsign) > 1) and
     (ActiveVDEntry^.NextEntry <> nil) do
-  begin
-    ActiveVDEntry := NextRecord;
-    NextRecord := ActiveVDEntry^.NextEntry;
-    if NextRecord = nil then Break; {added by wli}
-  end;
+     begin
+     ActiveVDEntry := NextRecord;
+     NextRecord := ActiveVDEntry^.NextEntry;
+     if NextRecord = nil then Break; {added by wli}
+     end;
 
   if NextRecord <> nil then {added by wli}
-  begin {added by wli}
-    if (ActiveVDEntry^.NextEntry = nil) and (SuffixString > GetSuffix(NextRecord^.Callsign)) then
-    begin
-      ActiveVDEntry := NextRecord;
+     begin {added by wli}
+     if (ActiveVDEntry^.NextEntry = nil) and (SuffixString > GetSuffix(NextRecord^.Callsign)) then
+        begin
+        ActiveVDEntry := NextRecord;
 
-      ActiveVDEntry^.NextEntry := New(VDEntryPointer);
-      ActiveVDEntry := ActiveVDEntry^.NextEntry;
-      ActiveVDEntry^.Callsign := Callsign;
-      ActiveVDEntry^.NextEntry := nil;
-      Exit;
-    end;
-  end; {added by wli}
+        ActiveVDEntry^.NextEntry := New(VDEntryPointer);
+        ActiveVDEntry := ActiveVDEntry^.NextEntry;
+        ActiveVDEntry^.Callsign := Callsign;
+        ActiveVDEntry^.NextEntry := nil;
+        Exit;
+        end;
+     end; {added by wli}
 
   ActiveVDEntry^.NextEntry := New(VDEntryPointer);
 
@@ -1334,12 +1381,15 @@ begin
 //  Windows.ZeroMemory(@MultSheet, SizeOf(MultSheet));
 
   if QTCsEnabled then
-  begin
-    if QTCDataArray <> nil then Windows.ZeroMemory(QTCDataArray, SizeOf(QTCDataArrayType));
-    NumberQTCBooksSent := 0;
-    NumberQTCStations := 0;
-    TotalNumberQTCsProcessed := 0;
-  end;
+     begin
+     if QTCDataArray <> nil then
+        begin
+        Windows.ZeroMemory(QTCDataArray, SizeOf(QTCDataArrayType));
+        end;
+     NumberQTCBooksSent := 0;
+     NumberQTCStations := 0;
+     TotalNumberQTCsProcessed := 0;
+     end;
 
   TotalQSOPoints := 0;
   MOQSOPartyW0MAWorked := False;
@@ -1356,9 +1406,13 @@ end;
 procedure CheckMOQSOPartyBonusStation(const Callsign: CallString);
 begin
    if Callsign = 'W0MA' then
+      begin
       MOQSOPartyW0MAWorked := True;
+      end;
    if Callsign = 'K0GQ' then
+      begin
       MOQSOPartyK0GQWorked := True;
+      end;
 end;
 
 procedure DupeAndMultSheet.DupeSheetTotals(var Totals: QSOTotalArray);
@@ -1389,15 +1443,20 @@ begin
 
   Call := RemoveFirstString(FileString^);
   if FileString^ <> '' then
-  begin
-    InitialExchangeString := '';
-    while FileString^ <> '' do
-      InitialExchangeString := InitialExchangeString + RemoveFirstString(FileString^) + ' ';
+     begin
+     InitialExchangeString := '';
+     while FileString^ <> '' do
+        begin
+        InitialExchangeString := InitialExchangeString + RemoveFirstString(FileString^) + ' ';
+        end;
 
-    GetRidOfPostcedingSpaces(InitialExchangeString);
-    if not CallsignsList.AddIniitialExchange(Call, InitialExchangeString) then inc(InitialExDupes);
-    inc(InitialExCallsigns);
-  end;
+     GetRidOfPostcedingSpaces(InitialExchangeString);
+     if not CallsignsList.AddIniitialExchange(Call, InitialExchangeString) then
+        begin
+        inc(InitialExDupes);
+        end;
+     inc(InitialExCallsigns);
+     end;
 end;
 
 procedure LoadInitialExchangeFile;
@@ -1584,21 +1643,33 @@ begin
   if MultByMode then MultMode := RXData.Mode else MultMode := Both;
 
   if (RXData.DomMultQTH = '') and (RXData.DomesticQTH <> '') then
-    RXData.DomMultQTH := RXData.DomesticQTH;
+     begin
+     RXData.DomMultQTH := RXData.DomesticQTH;
+     end;
 
   SkipDomesticMult:
   if (Contest = BCQP) and (RXData.DomMultQTH = 'dx') then         // 4.98.2
-    exit;   // no mults for dx
+     begin
+     exit;   // no mults for dx
+     end;
   if (Contest = NYQP) and (RXData.DomMultQTH = 'DX') then         // 4.116.5
-    exit;
-   if (Contest = INQSOPARTY) and (RXData.DomMultQTH = 'DX') then         // 4.116.5
+     begin
      exit;
+     end;
+   if (Contest = INQSOPARTY) and (RXData.DomMultQTH = 'DX') then         // 4.116.5
+      begin
+      exit;
+      end;
   if (RXData.DomMultQTH <> '') and DoingDomesticMults then
-    RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ActiveDomesticMult);
+     begin
+     RXData.DomesticMult := mo.IsDmMult(RXData.DomMultQTH, GetAddMultBand(DomesticMultByBand, MultBand), MultMode, ActiveDomesticMult);
+     end;
 
   if (RXData.DXQTH <> '') and DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
  // if (activeqsopointmethod = DLRTTY then
-    RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, GetAddMultBand(DXCCMultByBand, MultBand), MultMode);
+     begin
+     RXData.DXMult := mo.IsDXMult(RXData.QTH.Country, GetAddMultBand(DXCCMultByBand, MultBand), MultMode);
+     end;
 
    if (RXData.Prefix <> '') and DoingPrefixMults then
       begin        // 4.83.6
@@ -1617,7 +1688,9 @@ begin
 
 
   if (RXData.Zone <> DUMMYZONE) and DoingZoneMults then              // n4af 4.42.1
+     begin
      RXData.ZoneMult := mo.IsZnMult(RXData.Zone, MultBand, MultMode);
+     end;
 end;
 
 procedure DupeAndMultSheet.SaveRestartFile;
@@ -1723,25 +1796,28 @@ begin
   sReadFile(h, RestartVersion, SizeOf(RestartVersion));
 
   if RestartVersion <> RestartVersionNumber then
-  begin
-    CloseHandle(h);
+     begin
+     CloseHandle(h);
 
-    TF.Format(wsprintfBuffer, TC_DIFVERSION, _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
+     TF.Format(wsprintfBuffer, TC_DIFVERSION, _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
 
-    ShowMessage(wsprintfBuffer);
-    Exit;
-  end;
+     ShowMessage(wsprintfBuffer);
+     Exit;
+     end;
 
   sReadFile(h, NameOfContest, SizeOf(ContestName));
 
-  if ContestName = '' then ContestName := NameOfContest;
+  if ContestName = '' then
+     begin
+     ContestName := NameOfContest;
+     end;
 
   if NameOfContest <> ContestName then
-  begin
-    CloseHandle(h);
-    ShowMessage(TC_RESTARTBINISFORADIFFERENTCONTEST);
-    Exit;
-  end;
+     begin
+     CloseHandle(h);
+     ShowMessage(TC_RESTARTBINISFORADIFFERENTCONTEST);
+     Exit;
+     end;
 
   sReadFile(h, Radio1.BandMemory, SizeOf(BandType));
   sReadFile(h, Radio2.BandMemory, SizeOf(BandType));
@@ -1817,23 +1893,23 @@ begin
   //windows.ZeroMemory(@ExchangeInformation,sizeof(ExchangeInformation));
 
   with ExchangeInformation do
-  begin
-    Age := False;
-    Chapter := False;
-    Check := False;
-    ClassEI := False;
-//    FOCNumber := False;
-    Name := False;
-//    PostalCode := False;
-    Power := False;
-    Precedence := False;
-    QSONumber := False;
-    QTH := False;
-    RandomChars := False;
-    RST := False;
-    Zone := False;
-    ZoneOrSociety := False;
-  end;
+     begin
+     Age := False;
+     Chapter := False;
+     Check := False;
+     ClassEI := False;
+ //    FOCNumber := False;
+     Name := False;
+ //    PostalCode := False;
+     Power := False;
+     Precedence := False;
+     QSONumber := False;
+     QTH := False;
+     RandomChars := False;
+     RST := False;
+     Zone := False;
+     ZoneOrSociety := False;
+     end;
 
   case ActiveExchange of
     CheckAndChapterOrQTHExchange:
@@ -2159,76 +2235,96 @@ begin
   ExchangeString := GetLogEntryExchangeString(LogEntry);
 
   if ExchangeInformation.RST then
-  begin
-    RXData.RSTSent := StrToIntDef(RemoveFirstString(ExchangeString), 0);
+     begin
+     RXData.RSTSent := StrToIntDef(RemoveFirstString(ExchangeString), 0);
 
-      { Sometimes the received RST is optional, so I only pull it
+       { Sometimes the received RST is optional, so I only pull it
         off if it appears to be all there (numbers only). }
 
-    if StringIsAllNumbers(GetFirstString(ExchangeString)) then
-      RXData.RSTReceived := StrToIntDef(RemoveFirstString(ExchangeString), 0);
-  end;
+     if StringIsAllNumbers(GetFirstString(ExchangeString)) then
+        begin
+        RXData.RSTReceived := StrToIntDef(RemoveFirstString(ExchangeString), 0);
+        end;
+     end;
 
 
   if (ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange) then {KK1L: 6.70 for FISTS funny exchange}
-  begin
+     begin
 
-    RXData.QTHString := RemoveFirstString(ExchangeString);
-    RXData.Name := RemoveFirstString(ExchangeString);
-      {KK1L: 6.70 The power/number is right where the mults usually go}
-    RXData.Power := GetLogEntryMultString(LogEntry); {KK1L: 6.70 I use power string for either number or power}
-  end
+     RXData.QTHString := RemoveFirstString(ExchangeString);
+     RXData.Name := RemoveFirstString(ExchangeString);
+       {KK1L: 6.70 The power/number is right where the mults usually go}
+     RXData.Power := GetLogEntryMultString(LogEntry); {KK1L: 6.70 I use power string for either number or power}
+     end
 
   else {KK1L: 6.70 What follows is what was always here!}
-  begin
-    if ExchangeInformation.ClassEI then
-      RXData.ceClass := RemoveFirstString(ExchangeString);
+     begin
+     if ExchangeInformation.ClassEI then
+        begin
+        RXData.ceClass := RemoveFirstString(ExchangeString);
+        end;
 
-      { Sometimes the QSO number is optional - so only pull it off the
+       { Sometimes the QSO number is optional - so only pull it off the
         exchange if it looks like it is there. }
 
-    if ExchangeInformation.QSONumber and StringIsAllNumbers(GetFirstString(ExchangeString)) then
-      RXData.NumberReceived := RemoveFirstLongInteger(ExchangeString);
+     if ExchangeInformation.QSONumber and StringIsAllNumbers(GetFirstString(ExchangeString)) then
+        begin
+        RXData.NumberReceived := RemoveFirstLongInteger(ExchangeString);
+        end;
 
-    if ExchangeInformation.RandomChars then
-    begin
-      RXData.RandomCharsSent := RemoveFirstString(ExchangeString); { added in 6.27 }
-      RXData.RandomCharsReceived := RemoveFirstString(ExchangeString);
-    end;
-{
+     if ExchangeInformation.RandomChars then
+        begin
+        RXData.RandomCharsSent := RemoveFirstString(ExchangeString); { added in 6.27 }
+        RXData.RandomCharsReceived := RemoveFirstString(ExchangeString);
+        end;
+ {
     if ExchangeInformation.PostalCode then
     begin
       RXData.PostalCode := RemoveFirstString(ExchangeString) + ' ' + RemoveFirstString(ExchangeString);
     end;
 }
-    if ExchangeInformation.Power then
-      RXData.Power := RemoveFirstString(ExchangeString);
+     if ExchangeInformation.Power then
+        begin
+        RXData.Power := RemoveFirstString(ExchangeString);
+        end;
 
-    if ExchangeInformation.Age then
-      RXData.Age := StrToIntDef(RemoveFirstString(ExchangeString), 0);
+     if ExchangeInformation.Age then
+        begin
+        RXData.Age := StrToIntDef(RemoveFirstString(ExchangeString), 0);
+        end;
 
-    if ExchangeInformation.Name then
-      RXData.Name := RemoveFirstString(ExchangeString);
+     if ExchangeInformation.Name then
+        begin
+        RXData.Name := RemoveFirstString(ExchangeString);
+        end;
 
-    if ExchangeInformation.Chapter then
-      RXData.Chapter := RemoveFirstString(ExchangeString);
+     if ExchangeInformation.Chapter then
+        begin
+        RXData.Chapter := RemoveFirstString(ExchangeString);
+        end;
 
-    if ExchangeInformation.Precedence then
-      RXData.Precedence := RemoveFirstString(ExchangeString)[1];
+     if ExchangeInformation.Precedence then
+        begin
+        RXData.Precedence := RemoveFirstString(ExchangeString)[1];
+        end;
 
-    if ExchangeInformation.Check then
-      RXData.Check := StrToIntDef(RemoveFirstString(ExchangeString), 0);
+     if ExchangeInformation.Check then
+        begin
+        RXData.Check := StrToIntDef(RemoveFirstString(ExchangeString), 0);
+        end;
 
-    if ExchangeInformation.Zone and StringIsAllNumbersOrSpaces(ExchangeString) then
-      RXData.Zone := StrToIntDef(RemoveFirstString(ExchangeString), 0);
+     if ExchangeInformation.Zone and StringIsAllNumbersOrSpaces(ExchangeString) then
+        begin
+        RXData.Zone := StrToIntDef(RemoveFirstString(ExchangeString), 0);
+        end;
 
-    if ExchangeInformation.QTH then
-    begin
-      GetRidOfPrecedingSpaces(ExchangeString);
-      GetRidOfPostcedingSpaces(ExchangeString);
-      RXData.QTHString := ExchangeString;
-    end;
-  end;
+     if ExchangeInformation.QTH then
+        begin
+        GetRidOfPrecedingSpaces(ExchangeString);
+        GetRidOfPostcedingSpaces(ExchangeString);
+        RXData.QTHString := ExchangeString;
+        end;
+     end;
 
   ParseExchangeIntoContestExchange := True;
 end;
@@ -2245,11 +2341,11 @@ begin
   //  for Block := 1 to MaxPartialCallBlocks do PartialCallList[Block] := nil;
   ActiveVDEntry := FirstVDEntry;
   while ActiveVDEntry <> nil do
-  begin
-    NextEntry := ActiveVDEntry^.NextEntry;
-    Dispose(ActiveVDEntry);
-    ActiveVDEntry := NextEntry;
-  end;
+     begin
+     NextEntry := ActiveVDEntry^.NextEntry;
+     Dispose(ActiveVDEntry);
+     ActiveVDEntry := NextEntry;
+     end;
 end;
 
 function GetInitialExchangeStringFromContestExchange(RData: ContestExchange): string;
@@ -2263,70 +2359,87 @@ begin
   TempString := '';
 
   with RData do
-  begin
+     begin
 
-    if ActiveExchange = RSTALLJAPrefectureAndPrecedenceExchange then
-    begin
-      GetInitialExchangeStringFromContestExchange := Precedence + ' ' + QTHString;
-      Exit;
-    end;
-
-    if ActiveExchange = RSTDomesticQTHOrQSONumberExchange then
-    begin
-      QString := QTHString;
-
-      while QString <> '' do
-      begin
-        TString := RemoveFirstString(QString);
-
-              //wli              if StringHasLowerCase(TString) then
+     if ActiveExchange = RSTALLJAPrefectureAndPrecedenceExchange then
         begin
-          GetInitialExchangeStringFromContestExchange := TString;
-          Exit;
+        GetInitialExchangeStringFromContestExchange := Precedence + ' ' + QTHString;
+        Exit;
         end;
-      end;
-      Exit;
-    end;
 
-    if ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
-    begin
-      GetInitialExchangeStringFromContestExchange := QTHString + ' ' + Name + ' ' + Power;
-      Exit;
-    end;
-
-    if ActiveExchange = RSTZoneOrSocietyExchange then
-    begin
-      if QTHString <> '' then
-      begin
-        GetInitialExchangeStringFromContestExchange := QTHString;
-        Exit;
-      end;
-    end;
-
-     if ActiveExchange = RSTZoneOrDomesticQTH then           // 4.95.6
-      begin
-       if QTHString <> '' then
+     if ActiveExchange = RSTDomesticQTHOrQSONumberExchange then
         begin
-         GetInitialExchangeStringFromContestExchange := QTHString;
+        QString := QTHString;
+
+        while QString <> '' do
+           begin
+           TString := RemoveFirstString(QString);
+
+                 //wli              if StringHasLowerCase(TString) then
+           begin
+             GetInitialExchangeStringFromContestExchange := TString;
+             Exit;
+           end;
+           end;
         Exit;
-       end;
-    end;
+        end;
 
-    if ExchangeInformation.Zone then
+     if ActiveExchange = RSTQTHNameAndFistsNumberOrPowerExchange then
+        begin
+        GetInitialExchangeStringFromContestExchange := QTHString + ' ' + Name + ' ' + Power;
+        Exit;
+        end;
 
-      TempString := IntToStr(Zone);
+     if ActiveExchange = RSTZoneOrSocietyExchange then
+        begin
+        if QTHString <> '' then
+           begin
+           GetInitialExchangeStringFromContestExchange := QTHString;
+           Exit;
+           end;
+        end;
 
-    if ExchangeInformation.Name then TempString := Name;
-    if ExchangeInformation.ClassEI then TempString := ceClass;
-    if ExchangeInformation.Age then TempString := IntToStr(Age);
-    if ExchangeInformation.Check then TempString := IntToStr(Check);
+      if ActiveExchange = RSTZoneOrDomesticQTH then           // 4.95.6
+         begin
+         if QTHString <> '' then
+            begin
+            GetInitialExchangeStringFromContestExchange := QTHString;
+           Exit;
+            end;
+         end;
 
-    if ExchangeInformation.Chapter then TempString := TempString + ' ' + Chapter;
+     if ExchangeInformation.Zone then
 
-    if ExchangeInformation.QTH then
-    begin
-      QString := QTHString;
-{//?
+        begin
+        TempString := IntToStr(Zone);
+        end;
+
+     if ExchangeInformation.Name then
+        begin
+        TempString := Name;
+        end;
+     if ExchangeInformation.ClassEI then
+        begin
+        TempString := ceClass;
+        end;
+     if ExchangeInformation.Age then
+        begin
+        TempString := IntToStr(Age);
+        end;
+     if ExchangeInformation.Check then
+        begin
+        TempString := IntToStr(Check);
+        end;
+
+     if ExchangeInformation.Chapter then
+        begin
+        TempString := TempString + ' ' + Chapter;
+        end;
+
+     if ExchangeInformation.QTH then
+        begin
+        QString := QTHString;
+  {//?
       if ((ActiveExchange = QSONumberNameChapterAndQTHExchange) or
         (ActiveDomesticMult <> NoDomesticMults) or
         (ActiveExchange = QSONumberAndGeoCoordinates) or
@@ -2335,20 +2448,28 @@ begin
         (ActiveExchange = RSTAndQSONumberOrDomesticQTHExchange) or
         (ActiveExchange = RSTAndOrGridExchange)) then
 }
-      if (TempString = '') or (StrToIntDef(TempString, 0) = 255) then   // 4.85.6
-        TempString := QString
-      else
-        TempString := TempString + ' ' + QString;
-    end;
+        if (TempString = '') or (StrToIntDef(TempString, 0) = 255) then   // 4.85.6
+           begin
+           TempString := QString
+           end
+        else
+           begin
+           TempString := TempString + ' ' + QString;
+           end;
+        end;
 
-    if ExchangeInformation.Power then
-      if TempString = '' then
-        TempString := Power
-      else
-        TempString := TempString + ' ' + Power;
+     if ExchangeInformation.Power then
+       if TempString = '' then
+          begin
+          TempString := Power
+          end
+       else
+          begin
+          TempString := TempString + ' ' + Power;
+          end;
 
-      //         if Contest = OLDNEWYEAR then if TempString = '' then TempString := IntToStr(RData.NumberReceived);
-  end;
+       //         if Contest = OLDNEWYEAR then if TempString = '' then TempString := IntToStr(RData.NumberReceived);
+     end;
 
   GetInitialExchangeStringFromContestExchange := TempString;
 end;
@@ -2473,26 +2594,26 @@ var
 
 begin
   if MultByBand then
-  begin
-    StartBand := Band160;
-    FinishBand := Band2304;
-  end
+     begin
+     StartBand := Band160;
+     FinishBand := Band2304;
+     end
   else
-  begin
-    StartBand := AllBands;
-    FinishBand := AllBands;
-  end;
+     begin
+     StartBand := AllBands;
+     FinishBand := AllBands;
+     end;
 
   if MultByMode then
-  begin
-    StartMode := CW;
-    FinishMode := Phone;
-  end
+     begin
+     StartMode := CW;
+     FinishMode := Phone;
+     end
   else
-  begin
-    StartMode := Both;
-    FinishMode := Both;
-  end;
+     begin
+     StartMode := Both;
+     FinishMode := Both;
+     end;
 {
   if (DoingDXMults) then
   begin
@@ -2514,18 +2635,18 @@ begin
   end;
 }
   if DoingZoneMults then
-  begin
-    case ActiveZoneMult of
-      CQZones: MaxNumberOfZones := 40;
-      EUHFCYear: MaxNumberOfZones := 100;
-      ITUZones: MaxNumberOfZones := 75;
-      JAPrefectures: MaxNumberOfZones := 50;
-      BranchZones: MaxNumberOfZones := 99;
-      RFChampionchipZones: MaxNumberOfZones := 7;
-    else MaxNumberOfZones := 0;
-    end;
+     begin
+     case ActiveZoneMult of
+       CQZones: MaxNumberOfZones := 40;
+       EUHFCYear: MaxNumberOfZones := 100;
+       ITUZones: MaxNumberOfZones := 75;
+       JAPrefectures: MaxNumberOfZones := 50;
+       BranchZones: MaxNumberOfZones := 99;
+       RFChampionchipZones: MaxNumberOfZones := 7;
+     else MaxNumberOfZones := 0;
+     end;
 
-  end;
+     end;
 
 
 end;

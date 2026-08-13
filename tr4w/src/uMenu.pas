@@ -447,42 +447,49 @@ var
   LatestMenu                            : HMENU;
 begin
   if popup then
-    Result := CreatePopupMenu
+     begin
+     Result := CreatePopupMenu
+     end
   else
-    Result := CreateMenu;
+     begin
+     Result := CreateMenu;
+     end;
 
   LatestMenu := Result;
   CurrMenu := Result;
 
   for i := 0 to s do
-  begin
-    TempMenuRecord := PMenuRecord(integer(m) + (SizeOf(MenuRecord) * i))^;
-    uFlags := MF_STRING;
-    if TempMenuRecord.mrText <> nil then
-      if TempMenuRecord.mrText[0] = '-' then uFlags := MF_SEPARATOR;
+     begin
+     TempMenuRecord := PMenuRecord(integer(m) + (SizeOf(MenuRecord) * i))^;
+     uFlags := MF_STRING;
+     if TempMenuRecord.mrText <> nil then
+       if TempMenuRecord.mrText[0] = '-' then
+          begin
+          uFlags := MF_SEPARATOR;
+          end;
 
-    if TempMenuRecord.mrId = MAXWORD then
-    begin
-      CurrMenu := CreatePopupMenu;
-      LatestMenu := CurrMenu;
+     if TempMenuRecord.mrId = MAXWORD then
+        begin
+        CurrMenu := CreatePopupMenu;
+        LatestMenu := CurrMenu;
 
-      Windows.AppendMenuA(Result, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
-      Continue;
-    end;
+        Windows.AppendMenuA(Result, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
+        Continue;
+        end;
 
-    if TempMenuRecord.mrId = MAXWORD - 1 then
-    begin
-      CurrMenu := CreatePopupMenu;
-      Windows.AppendMenuA(LatestMenu, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
-      Continue;
-    end;
-    if TempMenuRecord.mrId = MAXWORD - 2 then
-    begin
-      CurrMenu := LatestMenu;
-      Continue;
-    end;
-    Windows.AppendMenuA(CurrMenu, uFlags, TempMenuRecord.mrId, TempMenuRecord.mrText);
-  end;
+     if TempMenuRecord.mrId = MAXWORD - 1 then
+        begin
+        CurrMenu := CreatePopupMenu;
+        Windows.AppendMenuA(LatestMenu, MF_STRING + MF_POPUP, CurrMenu, TempMenuRecord.mrText);
+        Continue;
+        end;
+     if TempMenuRecord.mrId = MAXWORD - 2 then
+        begin
+        CurrMenu := LatestMenu;
+        Continue;
+        end;
+     Windows.AppendMenuA(CurrMenu, uFlags, TempMenuRecord.mrId, TempMenuRecord.mrText);
+     end;
 
 
 end;

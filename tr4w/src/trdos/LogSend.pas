@@ -68,40 +68,43 @@ begin
 //  if not DVPEnabled then Exit;
 
   while SendString <> '' do
-  begin
+     begin
 
-    FileName := RemoveFirstString(SendString);
-    GetRidOfPrecedingSpaces(FileName);
-    if DVPMessagesArrayIndex = DVPArraySize then Exit;
-    if FileName = '#' then
-    begin
-      QSONumber := NextSerialToSend;  // Issue #954
-      if AutoQSONumberDecrement then
-        if (ActiveMainWindow = awCallWindow)
-        //if tr4w_CallWindowActive
-        and (CallWindowString = '') and (ExchangeWindowString = '') then dec(QSONumber);
-      FileName := IntToStr(QSONumber);
-    end;
+     FileName := RemoveFirstString(SendString);
+     GetRidOfPrecedingSpaces(FileName);
+     if DVPMessagesArrayIndex = DVPArraySize then Exit;
+     if FileName = '#' then
+        begin
+        QSONumber := NextSerialToSend;  // Issue #954
+        if AutoQSONumberDecrement then
+          if (ActiveMainWindow = awCallWindow)
+          //if tr4w_CallWindowActive
+          and (CallWindowString = '') and (ExchangeWindowString = '') then dec(QSONumber);
+        FileName := IntToStr(QSONumber);
+        end;
 
-    if FileName = '@' then
-      if CallWindowString <> '' then FileName := CallWindowString;
+     if FileName = '@' then
+       if CallWindowString <> '' then
+          begin
+          FileName := CallWindowString;
+          end;
 
-    if (StringHas(FileName, '.WAV')) or tUseRecordedSigns then
-    begin
-      DVPMessagesArray[DVPMessagesArrayIndex] := FileName;
-      inc(DVPMessagesArrayIndex);
-      if DVPThreadID = 0 then
-      begin
-        DVPOn := True;
-        tExitFromDVPThread := False;
-        DisplayCodeSpeed;
-        logger.Debug('Calling tCreateThread from LogSend');
-        tCreateThread(@tDVPPlayThreadproc, DVPThreadID);
-        logger.Debug('Created DVP thread with threadid of %d',[DVPThreadID] );
-      end;
-    end;
+     if (StringHas(FileName, '.WAV')) or tUseRecordedSigns then
+        begin
+        DVPMessagesArray[DVPMessagesArrayIndex] := FileName;
+        inc(DVPMessagesArrayIndex);
+        if DVPThreadID = 0 then
+           begin
+           DVPOn := True;
+           tExitFromDVPThread := False;
+           DisplayCodeSpeed;
+           logger.Debug('Calling tCreateThread from LogSend');
+           tCreateThread(@tDVPPlayThreadproc, DVPThreadID);
+           logger.Debug('Created DVP thread with threadid of %d',[DVPThreadID] );
+           end;
+        end;
 
-  end;
+     end;
 
 end;
 
@@ -167,22 +170,27 @@ begin
     begin
        SendChar := SendString[CharacterCount];
       if CommandMode then
-      begin
-        case SendChar of
-          '@':
-            if StringHas(CallWindowString, '?') then
-              AddStringToBuffer(' ' + CallWindowString, CWTone);
+         begin
+         case SendChar of
+           '@':
+             if StringHas(CallWindowString, '?') then
+                begin
+                AddStringToBuffer(' ' + CallWindowString, CWTone);
+                end;
 
-        else AddStringToBuffer(ControlLeftBracket + SendChar, CWTone);
-        end;
-        CommandMode := False;
-        Continue;
-      end;
+         else AddStringToBuffer(ControlLeftBracket + SendChar, CWTone);
+         end;
+         CommandMode := False;
+         Continue;
+         end;
 
        case SendChar of
             '+':
             begin                              // n4af 4.53.2
-              if PrevNr = '' then PrevNr := '000';
+              if PrevNr = '' then
+                 begin
+                 PrevNr := '000';
+                 end;
         //       while length(PrevNr) < 3  do
         //       PrevNr := '0' + PrevNr;
                AddStringToBuffer(PrevNr,CWTone);
@@ -192,54 +200,75 @@ begin
           begin
             QSONumber := NextSerialToSend;  // Issue #954
 
-            if TailEnding then inc(QSONumber);
+            if TailEnding then
+               begin
+               inc(QSONumber);
+               end;
 
             if AutoQSONumberDecrement then
               //              if (ActiveWindow = CallWindow) and
 //              if tr4w_CallWindowActive and
               if (ActiveMainWindow = awCallWindow) and
                 (CallWindowString = '') and (ExchangeWindowString = '') then
-                dec(QSONumber);
+                 begin
+                 dec(QSONumber);
+                 end;
 
             if length(SendString) >= CharacterCount + 2 then
-            begin
-              TempChar := SendString[CharacterCount + 1];
+               begin
+               TempChar := SendString[CharacterCount + 1];
 
-              if TempChar = '+' then
-              begin
-                TempChar := SendString[CharacterCount + 2];
-                Val(TempChar, Offset, Result);
-                if Result = 0 then
-                begin
-                  QSONumber := QSONumber + Offset;
-                  CharacterCount := CharacterCount + 2;
-                end;
-              end;
+               if TempChar = '+' then
+                  begin
+                  TempChar := SendString[CharacterCount + 2];
+                  Val(TempChar, Offset, Result);
+                  if Result = 0 then
+                     begin
+                     QSONumber := QSONumber + Offset;
+                     CharacterCount := CharacterCount + 2;
+                     end;
+                  end;
 
-              if TempChar = '-' then
-              begin
-                TempChar := SendString[CharacterCount + 2];
-                Val(TempChar, Offset, Result);
-                if Result = 0 then
-                begin
-                  QSONumber := QSONumber - Offset;
-                  CharacterCount := CharacterCount + 2;
-                end;
-              end;
-            end;
+               if TempChar = '-' then
+                  begin
+                  TempChar := SendString[CharacterCount + 2];
+                  Val(TempChar, Offset, Result);
+                  if Result = 0 then
+                     begin
+                     QSONumber := QSONumber - Offset;
+                     CharacterCount := CharacterCount + 2;
+                     end;
+                  end;
+               end;
 
             TempString := QSONumberString(QSONumber);
 
             while LeadingZeros > length(TempString) do
-              TempString := LeadingZeroCharacter + TempString;
+               begin
+               TempString := LeadingZeroCharacter + TempString;
+               end;
               if ShortIntegers then
-              for CharPointer := 1 to length(TempString) do
-              begin
-                if TempString[CharPointer] = '0' then TempString[CharPointer] := Short0;
-                if TempString[CharPointer] = '1' then TempString[CharPointer] := Short1;
-                if TempString[CharPointer] = '2' then TempString[CharPointer] := Short2;
-                if TempString[CharPointer] = '9' then TempString[CharPointer] := Short9;
-              end;
+                 begin
+                 for CharPointer := 1 to length(TempString) do
+                    begin
+                    if TempString[CharPointer] = '0' then
+                       begin
+                       TempString[CharPointer] := Short0;
+                       end;
+                    if TempString[CharPointer] = '1' then
+                       begin
+                       TempString[CharPointer] := Short1;
+                       end;
+                    if TempString[CharPointer] = '2' then
+                       begin
+                       TempString[CharPointer] := Short2;
+                       end;
+                    if TempString[CharPointer] = '9' then
+                       begin
+                       TempString[CharPointer] := Short9;
+                       end;
+                    end;
+                 end;
 
 
             AddStringToBuffer(TempString, CWTone);
@@ -248,7 +277,10 @@ begin
         '_': AddStringToBuffer(' ', CWTone);
 
         ControlD:
-          if CWStillBeingSent then AddStringToBuffer(' ', CWTone);
+          if CWStillBeingSent then
+             begin
+             AddStringToBuffer(' ', CWTone);
+             end;
 
         ',':      // n4af 4.56.7
         begin
@@ -259,52 +291,66 @@ begin
 
              '.':
              if StString <> '' then
-          AddStringToBuffer(STString, CWTone);     // n4af 04.35.2
+                begin
+                AddStringToBuffer(STString, CWTone);     // n4af 04.35.2
+                end;
 
         '*':
           begin //KK1L: 6.72 New character to send Alt-D dupe checked call or call in call window
             if (DupeInfoCall <> '') and (DupeInfoCall <> EscapeKey) then
-              AddStringToBuffer(DupeInfoCall, CWTone)
+               begin
+               AddStringToBuffer(DupeInfoCall, CWTone)
+               end
             else
-            begin
-              if CallsignUpdateEnable then
-              begin
-                TempString := GetCorrectedCallFromExchangeString(ExchangeWindowString);
+               begin
+               if CallsignUpdateEnable then
+                  begin
+                  TempString := GetCorrectedCallFromExchangeString(ExchangeWindowString);
 
-                if TempString <> '' then
-                begin
-                  CallWindowString := TempString;
-                  CallsignICameBackTo := TempString;
-                end;
-              end;
+                  if TempString <> '' then
+                     begin
+                     CallWindowString := TempString;
+                     CallsignICameBackTo := TempString;
+                     end;
+                  end;
 
-              if CallWindowString <> '' then
-                AddStringToBuffer(CallWindowString, CWTone);
-            end;
+               if CallWindowString <> '' then
+                  begin
+                  AddStringToBuffer(CallWindowString, CWTone);
+                  end;
+               end;
           end;
 
         '@':
           begin
             if CallsignUpdateEnable then
-            begin
-              TempString := ExchangeWindowString;
-              TempString := GetCorrectedCallFromExchangeString(TempString);
+               begin
+               TempString := ExchangeWindowString;
+               TempString := GetCorrectedCallFromExchangeString(TempString);
 
-              if TempString <> '' then
-              begin
-                CallWindowString := TempString;
-                CallsignICameBackTo := TempString;
-              end;
-            end;
+               if TempString <> '' then
+                  begin
+                  CallWindowString := TempString;
+                  CallsignICameBackTo := TempString;
+                  end;
+               end;
 
             if CallWindowString <> '' then
-              AddStringToBuffer(CallWindowString, CWTone);
+               begin
+               AddStringToBuffer(CallWindowString, CWTone);
+               end;
           end;
 
         '$':
-          if SayHiEnable and (Rate < SayHiRateCutOff) then SayHello(CallWindowString);
+          if SayHiEnable and (Rate < SayHiRateCutOff) then
+             begin
+             SayHello(CallWindowString);
+             end;
         '%':
-          if SayHiEnable and (Rate < SayHiRateCutOff) then SayName(CallWindowString);
+          if SayHiEnable and (Rate < SayHiRateCutOff) then
+             begin
+             SayName(CallWindowString);
+             end;
 
         ':':
           begin
@@ -325,7 +371,9 @@ begin
             Windows.ZeroMemory(@TempReceivedData, SizeOf(TempReceivedData));
             ProcessExchange(TempString, TempReceivedData);
             if TempReceivedData.Name <> '' then
-              AddStringToBuffer(TempReceivedData.Name + ' ', CWTone);
+               begin
+               AddStringToBuffer(TempReceivedData.Name + ' ', CWTone);
+               end;
           end;
 
         '[':
@@ -335,22 +383,31 @@ begin
             //            QuickDisplay('WAITING FOR YOU ENTER STRENGTH OF RST (Single digit)!!');
             //            AddStringToBuffer('5', CWTone);
             if WaitForStrength then
-              i := QuickEditInteger(TC_WAITINGFORYOUENTERSTRENGTHOFRST, 1)
-            else i := 9;
+               begin
+               i := QuickEditInteger(TC_WAITINGFORYOUENTERSTRENGTHOFRST, 1)
+               end
+            else
+               begin
+               i := 9;
+               end;
 
 
 
             if i = -1 then
-            begin
-              FlushCWBufferAndClearPTT;
-              Exit;
-            end;
+               begin
+               FlushCWBufferAndClearPTT;
+               Exit;
+               end;
 
             Key := IntToStr(i)[1];
             if i = 9 then
-              AddStringToBuffer('5NN', CWTone)
+               begin
+               AddStringToBuffer('5NN', CWTone)
+               end
             else
-              AddStringToBuffer('5' + Key + 'N', CWTone);
+               begin
+               AddStringToBuffer('5' + Key + 'N', CWTone);
+               end;
             ReceivedData.RSTSent := 509 + i * 10;
 
             LastRSTSent := ReceivedData.RSTSent;
@@ -364,39 +421,51 @@ begin
           if StringHas(ReceivedData.Callsign, '/') or
             ((length(ReceivedData.Callsign) = 4) and SendCompleteFourLetterCall) or
             StringHas(CallsignICameBackTo, '/') then
-            AddStringToBuffer(ReceivedData.Callsign, CWTone)
+             begin
+             AddStringToBuffer(ReceivedData.Callsign, CWTone)
+             end
           else
             if GetPrefix(ReceivedData.Callsign) =
               GetPrefix(CallsignICameBackTo) then
-            begin
-              TempString := GetSuffix(ReceivedData.Callsign);
-              if length(TempString) = 1 then
-                TempString := Copy(ReceivedData.Callsign, length(ReceivedData.Callsign) - 1, 2);
-              AddStringToBuffer(TempString, CWTone);
-            end
+               begin
+               TempString := GetSuffix(ReceivedData.Callsign);
+               if length(TempString) = 1 then
+                  begin
+                  TempString := Copy(ReceivedData.Callsign, length(ReceivedData.Callsign) - 1, 2);
+                  end;
+               AddStringToBuffer(TempString, CWTone);
+               end
             else
               if GetSuffix(ReceivedData.Callsign) =
                 GetSuffix(CallsignICameBackTo) then
-                AddStringToBuffer(GetPrefix(ReceivedData.Callsign), CWTone)
+                 begin
+                 AddStringToBuffer(GetPrefix(ReceivedData.Callsign), CWTone)
+                 end
               else
-                AddStringToBuffer(ReceivedData.Callsign, CWTone);
+                 begin
+                 AddStringToBuffer(ReceivedData.Callsign, CWTone);
+                 end;
 
         ')': AddStringToBuffer(VisibleLog.LastEntry(False, letCallsign), CWTone);
 
         '(':
           if TotalContacts = 0 then
-          begin
-            if MyName <> '' then
-              AddStringToBuffer(MyName, CWTone)
-            else
-              AddStringToBuffer(MyPostalCode, CWTone);
-          end
+             begin
+             if MyName <> '' then
+                begin
+                AddStringToBuffer(MyName, CWTone)
+                end
+             else
+                begin
+                AddStringToBuffer(MyPostalCode, CWTone);
+                end;
+             end
           else
-          begin
+             begin
 
-            AddStringToBuffer(VisibleLog.LastEntry(False, letQTHString), CWTone);
+             AddStringToBuffer(VisibleLog.LastEntry(False, letQTHString), CWTone);
 
-          end;
+             end;
 
         ControlW: AddStringToBuffer(VisibleLog.LastName(4), CWTone);
 
@@ -424,9 +493,13 @@ begin
             TempCall := GetCorrectedCallFromExchangeString(ExchangeWindowString);
 
             if TempCall <> '' then
-              CallsignICameBackTo := TempString
+               begin
+               CallsignICameBackTo := TempString
+               end
             else
-              CallsignICameBackTo := CallWindowString;
+               begin
+               CallsignICameBackTo := CallWindowString;
+               end;
 
             ShowStationInformation(@CallsignICameBackTo);
           end;
@@ -442,9 +515,9 @@ begin
 
   InactiveRigCallingCQ := False;
    if (IsCWByCATActive)  then
-     begin
-     AddStringToBuffer(CWByCATBufferTerminator,CWTone); // Flushes the buffer when the $242 is passed to SendCW - by only By CAT
-     end;
+      begin
+      AddStringToBuffer(CWByCATBufferTerminator,CWTone); // Flushes the buffer when the $242 is passed to SendCW - by only By CAT
+      end;
 
 // if IsCWByCATActive then backtoinactiveradioafterqso;
 end;

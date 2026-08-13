@@ -236,28 +236,38 @@ begin
 
   // Map HamLib VFO to TR4W VFO — covers both A/B and Main/Sub naming
   if (vfo = RIG_VFO_B) or (vfo = RIG_VFO_SUB) then
+     begin
      tr4wVFO := nrVFOB
+     end
   else
+     begin
      tr4wVFO := nrVFOA;
+     end;
 
   newFreq := Round(freq);
 
   // Log every callback invocation in debug mode so we can confirm transceive
   // is actually firing and at what rate (Icom CI-V broadcasts every ~1s).
   if TR4W_HAMLIB_DEBUG then
+     begin
      logger.Info('[HLFreqCallback] ASYNC: vfo=%d freq=%.0f cached=%d',
                  [vfo, freq, radio.vfo[tr4wVFO].frequency]);
+     end;
 
   // Only trigger a poll when the value actually changed — Icom radios broadcast
   // frequency every second via CI-V transceive even when nothing is tuned,
   // which would trigger a full poll on every broadcast and defeat the purpose
   // of async-driven polling.
   if newFreq = radio.vfo[tr4wVFO].frequency then
+     begin
      Exit;
+     end;
 
   if TR4W_HAMLIB_DEBUG then
+     begin
      logger.Info('[HLFreqCallback] ASYNC freq change: %d -> %d (triggering poll)',
                  [radio.vfo[tr4wVFO].frequency, newFreq]);
+     end;
 
   radio.vfo[tr4wVFO].frequency := newFreq;
   InterlockedExchange(radio.FNeedsPoll, 1);
@@ -270,8 +280,10 @@ begin
   if rig_arg = nil then Exit;
 
   if TR4W_HAMLIB_DEBUG then
+     begin
      logger.Info('[HLModeCallback] ASYNC mode change: vfo=%d mode=%d width=%d',
                  [vfo, Integer(mode), width]);
+     end;
 
   InterlockedExchange(THamLibDirect(rig_arg).FNeedsPoll, 1);
 end;
@@ -283,7 +295,9 @@ begin
   if rig_arg = nil then Exit;
 
   if TR4W_HAMLIB_DEBUG then
+     begin
      logger.Info('[HLVFOCallback] ASYNC VFO change: vfo=%d', [vfo]);
+     end;
 
   InterlockedExchange(THamLibDirect(rig_arg).FNeedsPoll, 1);
 end;
@@ -295,7 +309,9 @@ begin
   if rig_arg = nil then Exit;
 
   if TR4W_HAMLIB_DEBUG then
+     begin
      logger.Info('[HLPTTCallback] ASYNC PTT change: vfo=%d ptt=%d', [vfo, ptt]);
+     end;
 
   InterlockedExchange(THamLibDirect(rig_arg).FNeedsPoll, 1);
 end;
@@ -326,11 +342,15 @@ begin
 
   hLib := GetModuleHandle(HAMLIB_DLL);
   if hLib = 0 then
+     begin
      hLib := LoadLibrary(HAMLIB_DLL);
+     end;
 
   @pSetDebugFile := nil;
   if hLib <> 0 then
+     begin
      @pSetDebugFile := GetProcAddress(hLib, 'rig_set_debug_file');
+     end;
 
   rig_set_debug(RIG_DEBUG_TRACE);
 
@@ -378,17 +398,19 @@ end;
 destructor THamLibDirect.Destroy;
 begin
   if FRig <> nil then
-  begin
-    try
-      logger.Info('[THamLibDirect] Cleaning up HamLib rig handle');
-      rig_close(FRig);
-      rig_cleanup(FRig);
-    except
-      on E: Exception do
-        logger.Error('[THamLibDirect.Destroy] Exception during cleanup: %s', [E.Message]);
-    end;
-    FRig := nil;
-  end;
+     begin
+     try
+       logger.Info('[THamLibDirect] Cleaning up HamLib rig handle');
+       rig_close(FRig);
+       rig_cleanup(FRig);
+     except
+       on E: Exception do
+          begin
+          logger.Error('[THamLibDirect.Destroy] Exception during cleanup: %s', [E.Message]);
+          end;
+     end;
+     FRig := nil;
+     end;
 
   // Drain and free the queue — any pending commands are discarded since the
   // radio is already closed.  Must happen before deleting the critical section.
@@ -440,92 +462,100 @@ begin
   logger.Debug('[THamLibDirect.Connect] Calling rig_init(%d)', [HamLibModelID]);
   FRig := rig_init(HamLibModelID);
   if FRig = nil then
-  begin
-    logger.Error('[THamLibDirect.Connect] rig_init failed - returned nil for model %d', [HamLibModelID]);
-    Result := RIG_EINTERNAL;
-    Exit;
-  end;
+     begin
+     logger.Error('[THamLibDirect.Connect] rig_init failed - returned nil for model %d', [HamLibModelID]);
+     Result := RIG_EINTERNAL;
+     Exit;
+     end;
 
   logger.Debug('[THamLibDirect.Connect] rig_init successful, FRig = %p', [Pointer(FRig)]);
 
   // Configure connection parameters
   try
     if UseIPAddress then
-    begin
-      // Network connection - use rig_set_conf with token lookup like rigctl does
-      portStr := Format('%s:%d', [IPAddress, IPPort]);
-      logger.Debug('[THamLibDirect.Connect] Configuring network: %s', [portStr]);
+       begin
+       // Network connection - use rig_set_conf with token lookup like rigctl does
+       portStr := Format('%s:%d', [IPAddress, IPPort]);
+       logger.Debug('[THamLibDirect.Connect] Configuring network: %s', [portStr]);
 
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(AnsiString(portStr)));
-      if err <> RIG_OK then
-      begin
-        logger.Error('[THamLibDirect.Connect] rig_set_conf(rig_pathname) failed: %s (code %d)',
-                     [RigErrorToString(err), err]);
-        rig_cleanup(FRig);
-        FRig := nil;
-        Result := err;
-        Exit;
-      end;
-      logger.Debug('[THamLibDirect.Connect] Network path configured: %s', [portStr]);
-    end
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(AnsiString(portStr)));
+       if err <> RIG_OK then
+          begin
+          logger.Error('[THamLibDirect.Connect] rig_set_conf(rig_pathname) failed: %s (code %d)',
+                       [RigErrorToString(err), err]);
+          rig_cleanup(FRig);
+          FRig := nil;
+          Result := err;
+          Exit;
+          end;
+       logger.Debug('[THamLibDirect.Connect] Network path configured: %s', [portStr]);
+       end
     else
-    begin
-      // Serial connection - use rig_set_conf for serial ports
-      logger.Info('[THamLibDirect.Connect] Configuring serial port: %s at %d baud',
-                  [COMPortName, BaudRate]);
+       begin
+       // Serial connection - use rig_set_conf for serial ports
+       logger.Info('[THamLibDirect.Connect] Configuring serial port: %s at %d baud',
+                   [COMPortName, BaudRate]);
 
-      // Use token lookup like rigctl does
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(AnsiString(COMPortName)));
-      if err <> RIG_OK then
-      begin
-        logger.Error('[THamLibDirect.Connect] Error setting serial port: %s',
-                     [RigErrorToString(err)]);
-        rig_cleanup(FRig);
-        FRig := nil;
-        Result := err;
-        Exit;
-      end;
+       // Use token lookup like rigctl does
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'rig_pathname'), PAnsiChar(AnsiString(COMPortName)));
+       if err <> RIG_OK then
+          begin
+          logger.Error('[THamLibDirect.Connect] Error setting serial port: %s',
+                       [RigErrorToString(err)]);
+          rig_cleanup(FRig);
+          FRig := nil;
+          Result := err;
+          Exit;
+          end;
 
-      baudStr := IntToStr(BaudRate);
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'serial_speed'), PAnsiChar(AnsiString(baudStr)));
-      if err <> RIG_OK then
-        logger.Warn('[THamLibDirect.Connect] Error setting baud rate: %s',
-                    [RigErrorToString(err)]);
+       baudStr := IntToStr(BaudRate);
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'serial_speed'), PAnsiChar(AnsiString(baudStr)));
+       if err <> RIG_OK then
+          begin
+          logger.Warn('[THamLibDirect.Connect] Error setting baud rate: %s',
+                      [RigErrorToString(err)]);
+          end;
 
-      // Set timeout for serial communication (in milliseconds)
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'timeout'), '2000');
-      if err <> RIG_OK then
-        logger.Warn('[THamLibDirect.Connect] Error setting timeout: %s',
-                    [RigErrorToString(err)]);
-    end;
+       // Set timeout for serial communication (in milliseconds)
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'timeout'), '2000');
+       if err <> RIG_OK then
+          begin
+          logger.Warn('[THamLibDirect.Connect] Error setting timeout: %s',
+                      [RigErrorToString(err)]);
+          end;
+       end;
 
     // Set CI-V address for Icom radios if provided
     if Length(FCIVAddress) > 0 then
-    begin
-      logger.Info('[THamLibDirect.Connect] Setting CI-V address: 0x%s', [FCIVAddress]);
-      err := rig_set_conf(FRig, rig_token_lookup(FRig, 'civaddr'), PAnsiChar(AnsiString(FCIVAddress)));
-      if err <> RIG_OK then
-        logger.Warn('[THamLibDirect.Connect] Warning setting CI-V address: %s', [RigErrorToString(err)]);
-    end;
+       begin
+       logger.Info('[THamLibDirect.Connect] Setting CI-V address: 0x%s', [FCIVAddress]);
+       err := rig_set_conf(FRig, rig_token_lookup(FRig, 'civaddr'), PAnsiChar(AnsiString(FCIVAddress)));
+       if err <> RIG_OK then
+          begin
+          logger.Warn('[THamLibDirect.Connect] Warning setting CI-V address: %s', [RigErrorToString(err)]);
+          end;
+       end;
 
     // Open the connection
     logger.Debug('[THamLibDirect.Connect] Opening rig connection');
     err := rig_open(FRig);
     if err <> RIG_OK then
-    begin
-      logger.Error('[THamLibDirect.Connect] rig_open failed: %s (code %d)', [RigErrorToString(err), err]);
-      rig_cleanup(FRig);
-      FRig := nil;
-      Result := err;
-      Exit;
-    end;
+       begin
+       logger.Error('[THamLibDirect.Connect] rig_open failed: %s (code %d)', [RigErrorToString(err), err]);
+       rig_cleanup(FRig);
+       FRig := nil;
+       Result := err;
+       Exit;
+       end;
 
     logger.Info('[THamLibDirect.Connect] Connected successfully to radio');
 
     if not TR4W_HAMLIB_DEBUG then
+       begin
        logger.Warn('*** HamLib radio connected but HAMLIB DEBUG = FALSE — ' +
           'polling detail will not be logged. Add "HAMLIB DEBUG = TRUE" to ' +
           'your cfg file to enable full HamLib trace output. ***');
+       end;
 
     // Register transceive callbacks — invoked from HamLib's reader thread
     // when the radio pushes unsolicited freq/mode/VFO/PTT changes.
@@ -572,22 +602,24 @@ begin
       Initialize;
     except
       on E: Exception do
-        logger.Error('[THamLibDirect.Connect] Exception during initialization: %s', [E.Message]);
+         begin
+         logger.Error('[THamLibDirect.Connect] Exception during initialization: %s', [E.Message]);
+         end;
     end;
 
     Result := RIG_OK;
 
   except
     on E: Exception do
-    begin
-      logger.Error('[THamLibDirect.Connect] Exception during connection: %s', [E.Message]);
-      if FRig <> nil then
-      begin
-        rig_cleanup(FRig);
-        FRig := nil;
-      end;
-      Result := RIG_EINTERNAL;
-    end;
+       begin
+       logger.Error('[THamLibDirect.Connect] Exception during connection: %s', [E.Message]);
+       if FRig <> nil then
+          begin
+          rig_cleanup(FRig);
+          FRig := nil;
+          end;
+       Result := RIG_EINTERNAL;
+       end;
   end;
 end;
 
@@ -596,27 +628,31 @@ var
   err: Integer;
 begin
   if FRig <> nil then
-  begin
-    try
-      logger.Info('[THamLibDirect.Disconnect] Disconnecting from radio');
-      err := rig_close(FRig);
-      if err <> RIG_OK then
-        logger.Warn('[THamLibDirect.Disconnect] rig_close returned: %s', [RigErrorToString(err)]);
+     begin
+     try
+       logger.Info('[THamLibDirect.Disconnect] Disconnecting from radio');
+       err := rig_close(FRig);
+       if err <> RIG_OK then
+          begin
+          logger.Warn('[THamLibDirect.Disconnect] rig_close returned: %s', [RigErrorToString(err)]);
+          end;
 
-      err := rig_cleanup(FRig);
-      if err <> RIG_OK then
-        logger.Warn('[THamLibDirect.Disconnect] rig_cleanup returned: %s', [RigErrorToString(err)]);
+       err := rig_cleanup(FRig);
+       if err <> RIG_OK then
+          begin
+          logger.Warn('[THamLibDirect.Disconnect] rig_cleanup returned: %s', [RigErrorToString(err)]);
+          end;
 
-      FRig := nil;
-      logger.Info('[THamLibDirect.Disconnect] Disconnected successfully');
-    except
-      on E: Exception do
-      begin
-        logger.Error('[THamLibDirect.Disconnect] Exception during disconnect: %s', [E.Message]);
-        FRig := nil;
-      end;
-    end;
-  end;
+       FRig := nil;
+       logger.Info('[THamLibDirect.Disconnect] Disconnected successfully');
+     except
+       on E: Exception do
+          begin
+          logger.Error('[THamLibDirect.Disconnect] Exception during disconnect: %s', [E.Message]);
+          FRig := nil;
+          end;
+     end;
+     end;
 end;
 
 procedure THamLibDirect.Initialize;
@@ -681,7 +717,9 @@ begin
        end;
   except
     on E: Exception do
-      logger.Error('[THamLibDirect.Initialize] Exception during VFO probe: %s', [E.Message]);
+       begin
+       logger.Error('[THamLibDirect.Initialize] Exception during VFO probe: %s', [E.Message]);
+       end;
   end;
 
   // Poll RIT/XIT immediately so the display shows correct state at connect time
@@ -710,7 +748,9 @@ var
   err: Integer;
 begin
   if FRig = nil then
+     begin
      Exit;
+     end;
 
   case cmd.CmdType of
      hlcSetFreq:
@@ -729,47 +769,63 @@ begin
         begin
         err := rig_set_mode(FRig, cmd.VFO, cmd.Mode, RIG_PASSBAND_NORMAL);
         if err <> RIG_OK then
+           begin
            logger.Error('[ExecuteCommand] SetMode failed: %s', [RigErrorToString(err)]);
+           end;
         end;
 
      hlcTransmit:
         begin
         err := rig_set_ptt(FRig, RIG_VFO_CURR, RIG_PTT_ON);
         if err <> RIG_OK then
+           begin
            logger.Error('[ExecuteCommand] Transmit (PTT ON) failed: %s', [RigErrorToString(err)]);
+           end;
         end;
 
      hlcReceive:
         begin
         err := rig_set_ptt(FRig, RIG_VFO_CURR, RIG_PTT_OFF);
         if err <> RIG_OK then
+           begin
            logger.Error('[ExecuteCommand] Receive (PTT OFF) failed: %s', [RigErrorToString(err)]);
+           end;
         end;
 
      hlcSetRIT:
         begin
         err := rig_set_rit(FRig, cmd.VFO, cmd.Hz);
         if err <> RIG_OK then
+           begin
            logger.Error('[ExecuteCommand] SetRIT failed: %s (hz=%d)',
                         [RigErrorToString(err), cmd.Hz]);
+           end;
         end;
 
      hlcSetXIT:
         begin
         err := rig_set_xit(FRig, cmd.VFO, cmd.Hz);
         if err <> RIG_OK then
+           begin
            logger.Error('[ExecuteCommand] SetXIT failed: %s (hz=%d)',
                         [RigErrorToString(err), cmd.Hz]);
+           end;
         end;
 
      hlcSetSplit:
         begin
         if cmd.SplitOn then
+           begin
            err := rig_set_split_vfo(FRig, RIG_VFO_CURR, RIG_SPLIT_ON,  RIG_VFO_B)
+           end
         else
+           begin
            err := rig_set_split_vfo(FRig, RIG_VFO_CURR, RIG_SPLIT_OFF, RIG_VFO_B);
+           end;
         if err <> RIG_OK then
+           begin
            logger.Error('[ExecuteCommand] SetSplit failed: %s', [RigErrorToString(err)]);
+           end;
         end;
   end;
 end;
@@ -788,7 +844,9 @@ begin
      EnterCriticalSection(FCritSect);
      try
         for i := 0 to FUrgentQueue.Count - 1 do
+           begin
            snapshot.Add(FUrgentQueue[i]);
+           end;
         FUrgentQueue.Clear;
      finally
         LeaveCriticalSection(FCritSect);
@@ -833,29 +891,53 @@ end;
 function THamLibDirect.HamLibModeToTR4WMode(mode: rmode_t): TRadioMode;
 begin
   if mode = RIG_MODE_CW then
-    Result := rmCW
+     begin
+     Result := rmCW
+     end
   else if mode = RIG_MODE_CWR then
-    Result := rmCWRev
+     begin
+     Result := rmCWRev
+     end
   else if mode = RIG_MODE_LSB then
-    Result := rmLSB
+     begin
+     Result := rmLSB
+     end
   else if mode = RIG_MODE_USB then
-    Result := rmUSB
+     begin
+     Result := rmUSB
+     end
   else if mode = RIG_MODE_FM then
-    Result := rmFM
+     begin
+     Result := rmFM
+     end
   else if mode = RIG_MODE_AM then
-    Result := rmAM
+     begin
+     Result := rmAM
+     end
   else if mode = RIG_MODE_RTTY then
-    Result := rmFSK
+     begin
+     Result := rmFSK
+     end
   else if mode = RIG_MODE_RTTYR then
-    Result := rmFSKRev
+     begin
+     Result := rmFSKRev
+     end
   else if mode = RIG_MODE_PKTUSB then
-    Result := rmData
+     begin
+     Result := rmData
+     end
   else if mode = RIG_MODE_PKTLSB then
-    Result := rmDataRev
+     begin
+     Result := rmDataRev
+     end
   else if mode = RIG_MODE_PKTFM then
-    Result := rmFM
+     begin
+     Result := rmFM
+     end
   else
-    Result := rmUSB;  // Default
+     begin
+     Result := rmUSB;  // Default
+     end;
 end;
 
 function THamLibDirect.TR4WVFOToHamLibVFO(vfo: TVFO): vfo_t;
@@ -863,14 +945,22 @@ begin
   case vfo of
     nrVFOA:
        if FUseMainSubVFO then
+          begin
           Result := RIG_VFO_MAIN
+          end
        else
+          begin
           Result := RIG_VFO_A;
+          end;
     nrVFOB:
        if FUseMainSubVFO then
+          begin
           Result := RIG_VFO_SUB
+          end
        else
+          begin
           Result := RIG_VFO_B;
+          end;
   else
     Result := RIG_VFO_CURR;
   end;
@@ -890,9 +980,13 @@ begin
   hlVFO := TR4WVFOToHamLibVFO(vfo);
   err := rig_get_freq(FRig, hlVFO, freq);
   if err = RIG_OK then
-    Result := freq
+     begin
+     Result := freq
+     end
   else
-    logger.Debug('[GetFreqFromRig] Error getting frequency: %s', [RigErrorToString(err)]);
+     begin
+     logger.Debug('[GetFreqFromRig] Error getting frequency: %s', [RigErrorToString(err)]);
+     end;
 end;
 
 function THamLibDirect.GetModeFromRig(vfo: TVFO): rmode_t;
@@ -908,9 +1002,13 @@ begin
   hlVFO := TR4WVFOToHamLibVFO(vfo);
   err := rig_get_mode(FRig, hlVFO, mode, width);
   if err = RIG_OK then
-    Result := mode
+     begin
+     Result := mode
+     end
   else
-    logger.Debug('[GetModeFromRig] Error getting mode: %s', [RigErrorToString(err)]);
+     begin
+     logger.Debug('[GetModeFromRig] Error getting mode: %s', [RigErrorToString(err)]);
+     end;
 end;
 
 // The four pollable-state getters share the latching pattern (see the
@@ -931,15 +1029,19 @@ begin
   hlVFO := TR4WVFOToHamLibVFO(vfo);
   err := rig_get_rit(FRig, hlVFO, rit);
   if err = RIG_OK then
-    Result := rit
+     begin
+     Result := rit
+     end
   else if (err = RIG_ENAVAIL) or (err = RIG_ENIMPL) then
-    begin
-    FRITUnavailable := True;
-    logger.Info('[GetRITFromRig] Backend does not implement RIT read (%s) — RIT polling disabled for this connection',
-                [RigErrorToString(err)]);
-    end
+     begin
+     FRITUnavailable := True;
+     logger.Info('[GetRITFromRig] Backend does not implement RIT read (%s) — RIT polling disabled for this connection',
+                 [RigErrorToString(err)]);
+     end
   else
-    logger.Debug('[GetRITFromRig] Error getting RIT: %s', [RigErrorToString(err)]);
+     begin
+     logger.Debug('[GetRITFromRig] Error getting RIT: %s', [RigErrorToString(err)]);
+     end;
 end;
 
 function THamLibDirect.GetXITFromRig(vfo: TVFO): Integer;
@@ -954,15 +1056,19 @@ begin
   hlVFO := TR4WVFOToHamLibVFO(vfo);
   err := rig_get_xit(FRig, hlVFO, xit);
   if err = RIG_OK then
-    Result := xit
+     begin
+     Result := xit
+     end
   else if (err = RIG_ENAVAIL) or (err = RIG_ENIMPL) then
-    begin
-    FXITUnavailable := True;
-    logger.Info('[GetXITFromRig] Backend does not implement XIT read (%s) — XIT polling disabled for this connection',
-                [RigErrorToString(err)]);
-    end
+     begin
+     FXITUnavailable := True;
+     logger.Info('[GetXITFromRig] Backend does not implement XIT read (%s) — XIT polling disabled for this connection',
+                 [RigErrorToString(err)]);
+     end
   else
-    logger.Debug('[GetXITFromRig] Error getting XIT: %s', [RigErrorToString(err)]);
+     begin
+     logger.Debug('[GetXITFromRig] Error getting XIT: %s', [RigErrorToString(err)]);
+     end;
 end;
 
 function THamLibDirect.GetPTTFromRig: Boolean;
@@ -975,15 +1081,19 @@ begin
 
   err := rig_get_ptt(FRig, RIG_VFO_CURR, ptt);
   if err = RIG_OK then
-    Result := (ptt = RIG_PTT_ON)
+     begin
+     Result := (ptt = RIG_PTT_ON)
+     end
   else if (err = RIG_ENAVAIL) or (err = RIG_ENIMPL) then
-    begin
-    FPTTUnavailable := True;
-    logger.Info('[GetPTTFromRig] Backend does not implement PTT read (%s) — TX-status polling disabled for this connection',
-                [RigErrorToString(err)]);
-    end
+     begin
+     FPTTUnavailable := True;
+     logger.Info('[GetPTTFromRig] Backend does not implement PTT read (%s) — TX-status polling disabled for this connection',
+                 [RigErrorToString(err)]);
+     end
   else
-    logger.Debug('[GetPTTFromRig] Error getting PTT: %s', [RigErrorToString(err)]);
+     begin
+     logger.Debug('[GetPTTFromRig] Error getting PTT: %s', [RigErrorToString(err)]);
+     end;
 end;
 
 function THamLibDirect.GetSplitFromRig: Boolean;
@@ -997,18 +1107,22 @@ begin
 
   err := rig_get_split_vfo(FRig, RIG_VFO_CURR, split, tx_vfo);
   if err = RIG_OK then
-    Result := (split = RIG_SPLIT_ON)
+     begin
+     Result := (split = RIG_SPLIT_ON)
+     end
   else if (err = RIG_ENAVAIL) or (err = RIG_ENIMPL) then
-    begin
-    FSplitUnavailable := True;
-    // NOTE: with split unreadable, VFO B is only polled when the backend has a
-    // targetable VFO (SendPollRequests) -- same information-loss the native
-    // set-only-split radios (IC-718) live with.
-    logger.Info('[GetSplitFromRig] Backend does not implement split read (%s) — split polling disabled for this connection',
-                [RigErrorToString(err)]);
-    end
+     begin
+     FSplitUnavailable := True;
+     // NOTE: with split unreadable, VFO B is only polled when the backend has a
+     // targetable VFO (SendPollRequests) -- same information-loss the native
+     // set-only-split radios (IC-718) live with.
+     logger.Info('[GetSplitFromRig] Backend does not implement split read (%s) — split polling disabled for this connection',
+                 [RigErrorToString(err)]);
+     end
   else
-    logger.Debug('[GetSplitFromRig] Error getting split: %s', [RigErrorToString(err)]);
+     begin
+     logger.Debug('[GetSplitFromRig] Error getting split: %s', [RigErrorToString(err)]);
+     end;
 end;
 
 // TFactoryRadioBase required implementations
@@ -1113,13 +1227,15 @@ begin
   if FRig = nil then Exit;
 
   if (speed >= 8) and (speed <= 60) then
-  begin
-    Self.localCWSpeed := speed;
-    logger.Debug('[THamLibDirect.SetCWSpeed] Set CW speed to %d wpm', [speed]);
-    // HamLib CW speed setting would use rig_set_level with RIG_LEVEL_KEYSPD
-  end
+     begin
+     Self.localCWSpeed := speed;
+     logger.Debug('[THamLibDirect.SetCWSpeed] Set CW speed to %d wpm', [speed]);
+     // HamLib CW speed setting would use rig_set_level with RIG_LEVEL_KEYSPD
+     end
   else
-    logger.Error('[SetCWSpeed] Speed %d out of range (8-60 wpm)', [speed]);
+     begin
+     logger.Error('[SetCWSpeed] Speed %d out of range (8-60 wpm)', [speed]);
+     end;
 end;
 
 procedure THamLibDirect.RITClear(vfo: TVFO);
@@ -1267,10 +1383,10 @@ begin
   if FRig = nil then Exit;
 
   if (mem < 0) or (mem > 8) then
-  begin
-    logger.Error('[MemoryKeyer] Memory %d out of range (0-8)', [mem]);
-    Exit;
-  end;
+     begin
+     logger.Error('[MemoryKeyer] Memory %d out of range (0-8)', [mem]);
+     Exit;
+     end;
 
   logger.Debug('[THamLibDirect.MemoryKeyer] Playing memory %d', [mem]);
   // HamLib memory keyer functionality
@@ -1328,26 +1444,36 @@ begin
        Self.vfo[nrVFOA].band := GetRadioBandFromBandType(tempBand);
        end;
     if TR4W_HAMLIB_DEBUG then
+       begin
        logger.Info('[SendPollRequests] VFO A freq=%.0f', [freq]);
+       end;
 
     // VFO A mode
     mode := GetModeFromRig(nrVFOA);
     Self.vfo[nrVFOA].mode := HamLibModeToTR4WMode(mode);
     if TR4W_HAMLIB_DEBUG then
+       begin
        logger.Info('[SendPollRequests] VFO A mode=%d', [Integer(mode)]);
+       end;
 
     // PTT
     ptt := GetPTTFromRig;
     if ptt then
+       begin
        Self.radioState := rsTransmit
+       end
     else
+       begin
        Self.radioState := rsReceive;
+       end;
 
     // Split — also gates VFO B polling below
     split := GetSplitFromRig;
     Self.localSplitEnabled := split;
     if TR4W_HAMLIB_DEBUG then
+       begin
        logger.Info('[SendPollRequests] PTT=%s split=%s', [BoolToStr(ptt, True), BoolToStr(split, True)]);
+       end;
 
 
 
@@ -1362,7 +1488,9 @@ begin
           Self.vfo[nrVFOB].band := GetRadioBandFromBandType(tempBand);
           end;
        if TR4W_HAMLIB_DEBUG then
+          begin
           logger.Info('[SendPollRequests] VFO B freq=%.0f', [freq]);
+          end;
 
        mode := GetModeFromRig(nrVFOB);
        Self.vfo[nrVFOB].mode := HamLibModeToTR4WMode(mode);
@@ -1370,7 +1498,9 @@ begin
 
   except
     on E: Exception do
-      logger.Error('[SendPollRequests] Exception during polling: %s', [E.Message]);
+       begin
+       logger.Error('[SendPollRequests] Exception during polling: %s', [E.Message]);
+       end;
   end;
 end;
 
@@ -1381,7 +1511,9 @@ var
   hlVFO: vfo_t;
 begin
   if FRig = nil then
+     begin
      Exit;
+     end;
   try
     hlVFO := TR4WVFOToHamLibVFO(nrVFOA);
 
@@ -1405,11 +1537,15 @@ begin
     Self.vfo[nrVFOA].XITOffset := xit;
 
     if TR4W_HAMLIB_DEBUG then
+       begin
        logger.Info('[SendRITXITPoll] RIT state=%d offset=%d  XIT state=%d offset=%d',
                    [ritEnabled, rit, xitEnabled, xit]);
+       end;
   except
     on E: Exception do
-      logger.Error('[SendRITXITPoll] Exception: %s', [E.Message]);
+       begin
+       logger.Error('[SendRITXITPoll] Exception: %s', [E.Message]);
+       end;
   end;
 end;
 

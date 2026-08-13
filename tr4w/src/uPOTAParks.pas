@@ -197,15 +197,21 @@ begin
          if ALine[I] = '"' then
             begin
             if (I < Length(ALine)) and (ALine[I + 1] = '"') then
+               begin
                Inc(I)  // escaped double-quote: skip extra quote
+               end
             else
+               begin
                InQuote := False;
+               end;
             end;
          end
       else
          begin
          if ALine[I] = '"' then
+            begin
             InQuote := True
+            end
          else if ALine[I] = ',' then
             begin
             if Field = AIndex then
@@ -213,7 +219,9 @@ begin
                Result := Copy(ALine, FieldStart, I - FieldStart);
                if (Length(Result) >= 2) and (Result[1] = '"') and
                   (Result[Length(Result)] = '"') then
+                  begin
                   Result := Copy(Result, 2, Length(Result) - 2);
+                  end;
                Exit;
                end;
             Inc(Field);
@@ -228,7 +236,9 @@ begin
       Result := Copy(ALine, FieldStart, Length(ALine));
       if (Length(Result) >= 2) and (Result[1] = '"') and
          (Result[Length(Result)] = '"') then
+         begin
          Result := Copy(Result, 2, Length(Result) - 2);
+         end;
       end;
 end;
 
@@ -250,7 +260,9 @@ var
 begin
    Result := -1;
    if not FileExists(AFilename) then
+      begin
       Exit;
+      end;
    Lines := TStringList.Create;
    NewParks := TStringList.Create;
    try
@@ -263,7 +275,9 @@ begin
          Ref := UpperCase(Trim(GetCSVField(Lines[I], 0)));
          Name := Trim(GetCSVField(Lines[I], 1));
          if (Ref <> '') and (Name <> '') then
+            begin
             NewParks.Add(Ref + '=' + Name);
+            end;
          end;
       // Atomically swap in the new database
       FParks.Free;
@@ -273,7 +287,9 @@ begin
    finally
       Lines.Free;
       if Assigned(NewParks) then
+         begin
          NewParks.Free;
+         end;
    end;
 end;
 
@@ -286,7 +302,9 @@ function GetPOTAParkName(const AReference: string): string;
 begin
    Result := '';
    if not Assigned(FParks) then
+      begin
       Exit;
+      end;
    Result := FParks.Values[UpperCase(Trim(AReference))];
 end;
 
@@ -299,7 +317,9 @@ begin
    Result := '';
    S := Trim(AToken);
    if S = '' then
+      begin
       Exit;
+      end;
 
    // Case 1: Already canonical — 1-2 letters, hyphen, 1-5 digits.
    // e.g. 'US-1274' -> 'US-1274'  (just uppercase it)
@@ -320,7 +340,9 @@ begin
    // e.g. 'US1274' -> 'US-1274'
    I := 1;
    while (I <= Length(S)) and (S[I] in ['A'..'Z', 'a'..'z']) do
+      begin
       Inc(I);
+      end;
    if (I > 1) and (I <= 3) then  // 1-2 leading letters
       begin
       LetterPart := UpperCase(Copy(S, 1, I - 1));
@@ -340,9 +362,13 @@ begin
       begin
       DashPos := Pos('-', AMyPark);
       if DashPos >= 2 then
+         begin
          Prefix := UpperCase(Copy(AMyPark, 1, DashPos - 1))
+         end
       else
+         begin
          Exit;  // MyPark not set or has no hyphen — cannot determine prefix
+         end;
       Result := Prefix + '-' + S;
       Exit;
       end;
@@ -360,7 +386,9 @@ procedure QueuePendingPark(const ARef: string);
 begin
    // Create the queue lazily on first use.
    if not Assigned(FPendingParks) then
+      begin
       FPendingParks := TStringList.Create;
+      end;
    FPendingParks.Add(ARef);
 end;
 
@@ -368,7 +396,9 @@ function DequeuePendingPark: string;
 begin
    Result := '';
    if not Assigned(FPendingParks) or (FPendingParks.Count = 0) then
+      begin
       Exit;
+      end;
    // Return the front entry and remove it, preserving FIFO order so 2fer
    // parks are logged in the same sequence the operator typed them.
    Result := FPendingParks[0];
@@ -383,15 +413,21 @@ end;
 function PendingParksCount: Integer;
 begin
    if Assigned(FPendingParks) then
+      begin
       Result := FPendingParks.Count
+      end
    else
+      begin
       Result := 0;
+      end;
 end;
 
 procedure ClearPendingParks;
 begin
    if Assigned(FPendingParks) then
+      begin
       FPendingParks.Clear;
+      end;
 end;
 
 procedure SetLastPOTAExchange(const AExchange: string);
@@ -437,7 +473,9 @@ var
 begin
    Filename := POTAParksFilePath;
    if not FileExists(Filename) then
+      begin
       Exit;  // Nothing to load; no notification needed
+      end;
    Lines := TStringList.Create;
    NewParks := TStringList.Create;
    try
@@ -449,7 +487,9 @@ begin
          Ref := UpperCase(Trim(GetCSVField(Lines[I], 0)));
          Name := Trim(GetCSVField(Lines[I], 1));
          if (Ref <> '') and (Name <> '') then
+            begin
             NewParks.Add(Ref + '=' + Name);
+            end;
          end;
       // Post the parsed list to the main thread. Ownership transfers on receipt.
       PostMessage(FNotifyWnd, WM_POTA_LOAD_DONE, 0, LPARAM(NewParks));
@@ -459,7 +499,9 @@ begin
    end;
    Lines.Free;
    if Assigned(NewParks) then
+      begin
       NewParks.Free;
+      end;
 end;
 
 procedure LoadPOTAParksAsync(ANotifyWnd: HWND);
@@ -476,7 +518,9 @@ var
 begin
    NewParks := TStringList(ALParam);
    if not Assigned(NewParks) then
+      begin
       Exit;
+      end;
    FParks.Free;
    FParks := NewParks;
 end;
@@ -531,7 +575,9 @@ begin
       except
          // Remove any partial file so a retry starts clean
          if FileExists(FTargetFile) then
+            begin
             SysUtils.DeleteFile(FTargetFile);
+            end;
       end;
    finally
       http.Free;

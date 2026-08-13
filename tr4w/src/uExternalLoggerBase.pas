@@ -317,9 +317,10 @@ begin
         socket.Connect;
         logger.Info('[TExternalLoggerBase.Connect] Connected successfully to external logger');
     except
-        on E: Exception do begin
+        on E: Exception do
+           begin
            logger.Error('[TExternalLoggerBase.Connect] Exception when connecting to external logger (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
-        end;
+           end;
     end;
 end;
 

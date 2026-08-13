@@ -29,7 +29,9 @@ begin
   socket := INVALID_SOCKET;
 
   if not WindowsSocketsInitialised then
-    WindowsSocketsInitialised := WSAStartup($0202, WSData) = 0;
+     begin
+     WindowsSocketsInitialised := WSAStartup($0202, WSData) = 0;
+     end;
   if not WindowsSocketsInitialised then Exit;   // WinSock unavailable
 
   TempHostent := WinSock2.gethostbyname(Host);
@@ -45,16 +47,16 @@ begin
 
   Result := WinSock2.Connect(socket, PSockAddr(@TempSockaddr)^, SizeOf(TSockAddrIn)) = 0;
   if not Result then
-  begin
-    // Issue #23 -- closesocket() resets WSAGetLastError to 0 (its own success),
-    // wiping the real connect error before the caller can read it (which is why
-    // a failed connect reported "The operation completed successfully").
-    // Capture the connect error and restore it after the cleanup.
-    connErr := WSAGetLastError;
-    closesocket(socket);
-    socket := INVALID_SOCKET;                    // closed -- don't expose the dead handle
-    WSASetLastError(connErr);
-  end;
+     begin
+     // Issue #23 -- closesocket() resets WSAGetLastError to 0 (its own success),
+     // wiping the real connect error before the caller can read it (which is why
+     // a failed connect reported "The operation completed successfully").
+     // Capture the connect error and restore it after the cleanup.
+     connErr := WSAGetLastError;
+     closesocket(socket);
+     socket := INVALID_SOCKET;                    // closed -- don't expose the dead handle
+     WSASetLastError(connErr);
+     end;
 end;
 
 end.

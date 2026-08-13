@@ -1236,17 +1236,17 @@ begin
                //          if pshortstring(Command)^[7] in [' ', 'M', 'O'] then
                if pshortstring(Command)^[10] in ['M', 'O', ' '] then
                   begin
-                     Result := ProcessMessage(pshortstring(Command)^,
-                        CustomCMD);
+                  Result := ProcessMessage(pshortstring(Command)^,
+                     CustomCMD);
 
-                     Exit;
+                  Exit;
                   end;
 
    if pshortstring(Command)^ = 'TOTAL SCORE MESSAGE' then
       begin
-         //ProcessTotalScoreMessage(pshortstring(Command)^, CustomCMD);
-         Result := True;
-         Exit;
+      //ProcessTotalScoreMessage(pshortstring(Command)^, CustomCMD);
+      Result := True;
+      Exit;
       end;
 
    // D12: @Command[1] is an untyped Pointer ({$TYPEDADDRESS OFF}), which makes
@@ -1255,36 +1255,38 @@ begin
    // overload (same guard GetValueFromArray already uses for @CMD[1]).
    if uAnsiStr.StrPos(PAnsiChar(@Command[1]), ' WINDOW ') <> nil then
       begin
-         for TempElement := Low(TMainWindowElement) to High(TMainWindowElement)
-            do
+      for TempElement := Low(TMainWindowElement) to High(TMainWindowElement)
+         do
+         begin
+
+         if uAnsiStr.StrPos(PAnsiChar(@Command[1]), TWindows[TempElement].mweName) =
+            PAnsiChar(@Command[1]) then
             begin
-
-               if uAnsiStr.StrPos(PAnsiChar(@Command[1]), TWindows[TempElement].mweName) =
-                  PAnsiChar(@Command[1]) then
+            TempByte := GetValueFromArray(@tr4wColorsSA,
+               Byte(High(tr4wColors)), @CustomCMD);
+            if TempByte <> UNKNOWNTYPE then
+               begin
+               if uAnsiStr.StrPos(PAnsiChar(@Command[1]), ' COLOR') <> nil then
                   begin
-                     TempByte := GetValueFromArray(@tr4wColorsSA,
-                        Byte(High(tr4wColors)), @CustomCMD);
-                     if TempByte <> UNKNOWNTYPE then
-                        begin
-                           if uAnsiStr.StrPos(PAnsiChar(@Command[1]), ' COLOR') <> nil then
-                              begin
-                              TWindows[TempElement].mweColor :=
-                                 tr4wColors(TempByte)
-                              end
-                           else
-                              begin
-                              TWindows[TempElement].mweBackG :=
-                                 tr4wColors(TempByte);
-                              end;
-                           Result := True;
-                           Exit;
-                        end
-                     else
-                        Break;
-
+                  TWindows[TempElement].mweColor :=
+                     tr4wColors(TempByte)
+                  end
+               else
+                  begin
+                  TWindows[TempElement].mweBackG :=
+                     tr4wColors(TempByte);
                   end;
+               Result := True;
+               Exit;
+               end
+            else
+               begin
+               Break;
+               end;
 
             end;
+
+         end;
       end;
 
    if uAnsiStr.StrPos(PAnsiChar(@Command[1]), 'COLUMN WIDTH ') = PAnsiChar(@Command[1]) then
@@ -1379,215 +1381,243 @@ begin
       if (StrComp(@Command[1], CFGCA[i].crCommand) = 0) then
          //logger.debug('Found command %s at index %d', [Command, i]);
          begin
-            {if (CFGCA[i].crCommand[0] = 'Q') then
+         {if (CFGCA[i].crCommand[0] = 'Q') then
                   Result := False;   }
 
-            // csJSON joins csRem: both are ACCEPTED so an old config file does
-            // not error, and both are INERT.  The difference is only why --
-            // csRem was withdrawn, csJSON moved to settings	r4w.json, which is
-            // now the system of record for it.
-            // csRem is ACCEPTED AND INERT unconditionally: it was withdrawn,
-            // there is nowhere for its value to go, and an old config file
-            // naming it must not error.
-            if CFGCA[i].crS = csRem then
-               begin
-                  Result := True;
-                  Exit;
-               end;
-
-            // csJSON DEPENDS ON WHO IS ASKING, and that distinction is the
-            // whole of it.
-            //
-            // The inertness exists to stop a STALE INI FILE overriding
-            // settings\tr4w.json, which is the system of record.  That is a
-            // statement about the ini LOADER, not about every caller.  A value
-            // arriving from a trusted source -- the settings screens, or a
-            // multi-op peer -- still has to be APPLIED, and applied through
-            // here rather than by assignment, because this is the only code
-            // that knows how to turn text into the right typed global, enforce
-            // crMin/crMax, and run the row's crA hook.
-            //
-            // Default False keeps every existing caller, above all the ini
-            // loader, exactly as it was.  A trusted caller passes True and the
-            // row behaves like any other.
-            if (CFGCA[i].crS = csJSON) and (not aApplyJSONOwned) then
-               begin
-                  Result := True;
-                  Exit;
-               end;
-
-            if CFGCA[i].crKind = ckArray then
-               begin
-                  Val(CustomCMD, TempInteger2, code);
-                  if code <> 0 then
-                     Exit;
-                  TempInteger := integer(CFGCA[i].crAddress);
-                  Result := SetParameterInArray
-                     (
-                     ArrayRecordArray[TempInteger].arArrayPtr,
-                     ArrayRecordArray[TempInteger].arArrayLength,
-                     ArrayRecordArray[TempInteger].arVar,
-                     TempInteger2
-                     );
-                  if not Result then
-                     Exit;
-                  goto AdditionalProc;
-               end;
-
-            if CFGCA[i].crKind = ckList then
-               begin
-                  TempInteger := integer(CFGCA[i].crAddress);
-                  TempByte :=
-                     GetValueFromArray(ListParamArray[TempInteger].lpArray,
-                     ListParamArray[TempInteger].lpLength, @CustomCMD);
-                  if TempByte <> UNKNOWNTYPE then
-                     begin
-                        //   if tempinteger = 1 then    // if QSOPOINTMETHOD then decrement tempbyte 4.57.1
-                        //   tempbyte := tempbyte -1;
-                        ListParamArray[TempInteger].lpVar^ := TempByte;
-                        Result := True;
-                        goto AdditionalProc;
-                     end
-                  else
-                     Exit;
-
-               end;
-
-            if CFGCA[i].crAddress <> nil then
-               begin
-                  case CFGCA[i].crType of
-
-                     ctMessage:
-                        begin
-                           SniffOutControlCharacters(CustomCMD);
-                           PShortString(CFGCA[i].crAddress)^ := CustomCMD;
-                           PShortString(CFGCA[i].crAddress)^[length(CustomCMD) +
-                              1] := #0;
-                        end;
-
-                     ctDirectory, ctFileName:
-                        begin
-                           Windows.CopyMemory(CFGCA[i].crAddress, @CustomCMD[1],
-                              length(CustomCMD));
-                           FileNameType(CFGCA[i].crAddress^)[length(CustomCMD)]
-                              := #0;
-                        end;
-
-                     ctString, ctURL, ctCaseSensitive, ctPassword:
-                        begin
-                           PShortString(CFGCA[i].crAddress)^ := CustomCMD;
-                           ;
-                           PShortString(CFGCA[i].crAddress)^[length(CustomCMD) +
-                              1] := #0;
-                           if CFGCA[i].crType = ctURL then
-                              Windows.CharLowerA(PAnsiChar(CFGCA[i].crAddress) + 1);
-                        end;
-
-                     ctPortLPT:
-                        PPortType(CFGCA[i].crAddress)^ :=
-                           GetLPTPortFromChar(CustomCMD);
-
-                     ctChar:
-                        PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1];
-
-                     ctAlphaChar:
-                        begin
-                           if CustomCMD[1] in ['A'..'Z'] then
-                              PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1]
-                           else
-                              Exit;
-                        end;
-
-                     ctBoolean:
-                        begin
-                           if not (CustomCMD[1] in ['T', 'F']) then
-                              Exit;
-                           ;
-                           PBoolean(CFGCA[i].crAddress)^ := CustomCMD[1] = 'T';
-                        end;
-
-                     ctReal:
-                        begin
-                           Val(CustomCMD, TempReal, code);
-                           //             TempReal := ValExt(@CustomCMD[1], code);
-                           if code <> 0 then
-                              Exit;
-                           if (TempReal < CFGCA[i].crMin / 10) or (TempReal >
-                              CFGCA[i].crMax / 10) then
-                              Exit;
-                           PDouble(CFGCA[i].crAddress)^ := TempReal;
-                        end;
-
-                     ctByte, ctWord, ctInteger:
-                        begin
-                           // Issue #968 -- a blank value (e.g. "RADIO ONE TCP PORT=")
-                           // means the parameter was never set.  Leave the variable at its
-                           // default and surface a clear, non-fatal notice that names the
-                           // parameter, instead of rejecting the line as "invalid statement".
-                           // A non-empty but non-numeric value (e.g. "abc") still fails the
-                           // Val check below, so the defensive catch for typos is preserved.
-                           if CustomCMD = '' then
-                              begin
-                              TF.Format(wsprintfBuffer, TC_PARAMETERHASNOVALUE, @Command[1]);
-                              showwarning(wsprintfBuffer);
-                              logger.Warn('[CheckCommand] %s has no value -- left at its default', [pshortstring(Command)^]);
-                              Result := True;
-                              Exit;
-                              end;
-                           Val(CustomCMD, TempInteger, code);
-                           //              TempInteger := round(ValExt(@CustomCMD[1], code));
-                           if code <> 0 then
-                              Exit;
-
-                           if (TempInteger >= CFGCA[i].crMin) and ((TempInteger
-                              <= CFGCA[i].crMax) or (CFGCA[i].crMax = MAXWORD - 1
-                              {MAXLONG})) then
-                              begin
-
-                                 if CFGCA[i].crType = ctWord then
-                                    PWORD(CFGCA[i].crAddress)^ := TempInteger;
-
-                                 if CFGCA[i].crType = ctInteger then
-                                    PInteger(CFGCA[i].crAddress)^ :=
-                                       TempInteger;
-
-                                 if CFGCA[i].crType = ctByte then
-                                    PByte(CFGCA[i].crAddress)^ := TempInteger;
-
-                              end
-                           else
-                              Exit;
-                        end;
-                  end;
-               end;
-
-            AdditionalProc:
-            if CFGCA[i].crA <> 0 then
-               begin
-               CMD := CustomCMD;
-               Proc := AdditionalProcsArray[CFGCA[i].crA];
-               if Assigned(Proc) then
-                  begin
-                  // Issue #997: was inline asm (`call Proc; mov result,al`).
-                  // Proc is an untyped Pointer into AdditionalProcsArray; every
-                  // entry is a param-less boolean function (register), so a
-                  // typed cast + call is exactly equivalent.
-                  Result := TAdditionalProc(Proc)();
-                  end
-               else
-                  begin
-                  logger.debug('AdditionalProc was not assigned in uCFG for command %s - Index = %d',
-                               [CFGCA[i].crCommand, i]);
-                  end;
-               if Result = False then
-                  begin
-                  logger.debug('Additional proc for %s returned false',[CFGCA[i].crCommand]);
-                  exit;
-                  end;
-               end;
-
+         // csJSON joins csRem: both are ACCEPTED so an old config file does
+         // not error, and both are INERT.  The difference is only why --
+         // csRem was withdrawn, csJSON moved to settings	r4w.json, which is
+         // now the system of record for it.
+         // csRem is ACCEPTED AND INERT unconditionally: it was withdrawn,
+         // there is nowhere for its value to go, and an old config file
+         // naming it must not error.
+         if CFGCA[i].crS = csRem then
+            begin
             Result := True;
-            Break;
+            Exit;
+            end;
+
+         // csJSON DEPENDS ON WHO IS ASKING, and that distinction is the
+         // whole of it.
+         //
+         // The inertness exists to stop a STALE INI FILE overriding
+         // settings\tr4w.json, which is the system of record.  That is a
+         // statement about the ini LOADER, not about every caller.  A value
+         // arriving from a trusted source -- the settings screens, or a
+         // multi-op peer -- still has to be APPLIED, and applied through
+         // here rather than by assignment, because this is the only code
+         // that knows how to turn text into the right typed global, enforce
+         // crMin/crMax, and run the row's crA hook.
+         //
+         // Default False keeps every existing caller, above all the ini
+         // loader, exactly as it was.  A trusted caller passes True and the
+         // row behaves like any other.
+         if (CFGCA[i].crS = csJSON) and (not aApplyJSONOwned) then
+            begin
+            Result := True;
+            Exit;
+            end;
+
+         if CFGCA[i].crKind = ckArray then
+            begin
+            Val(CustomCMD, TempInteger2, code);
+            if code <> 0 then
+               begin
+               Exit;
+               end;
+            TempInteger := integer(CFGCA[i].crAddress);
+            Result := SetParameterInArray
+               (
+               ArrayRecordArray[TempInteger].arArrayPtr,
+               ArrayRecordArray[TempInteger].arArrayLength,
+               ArrayRecordArray[TempInteger].arVar,
+               TempInteger2
+               );
+            if not Result then
+               begin
+               Exit;
+               end;
+            goto AdditionalProc;
+            end;
+
+         if CFGCA[i].crKind = ckList then
+            begin
+            TempInteger := integer(CFGCA[i].crAddress);
+            TempByte :=
+               GetValueFromArray(ListParamArray[TempInteger].lpArray,
+               ListParamArray[TempInteger].lpLength, @CustomCMD);
+            if TempByte <> UNKNOWNTYPE then
+               begin
+               //   if tempinteger = 1 then    // if QSOPOINTMETHOD then decrement tempbyte 4.57.1
+               //   tempbyte := tempbyte -1;
+               ListParamArray[TempInteger].lpVar^ := TempByte;
+               Result := True;
+               goto AdditionalProc;
+               end
+            else
+               begin
+               Exit;
+               end;
+
+            end;
+
+         if CFGCA[i].crAddress <> nil then
+            begin
+            case CFGCA[i].crType of
+
+               ctMessage:
+                  begin
+                     SniffOutControlCharacters(CustomCMD);
+                     PShortString(CFGCA[i].crAddress)^ := CustomCMD;
+                     PShortString(CFGCA[i].crAddress)^[length(CustomCMD) +
+                        1] := #0;
+                  end;
+
+               ctDirectory, ctFileName:
+                  begin
+                     Windows.CopyMemory(CFGCA[i].crAddress, @CustomCMD[1],
+                        length(CustomCMD));
+                     FileNameType(CFGCA[i].crAddress^)[length(CustomCMD)]
+                        := #0;
+                  end;
+
+               ctString, ctURL, ctCaseSensitive, ctPassword:
+                  begin
+                     PShortString(CFGCA[i].crAddress)^ := CustomCMD;
+                     ;
+                     PShortString(CFGCA[i].crAddress)^[length(CustomCMD) +
+                        1] := #0;
+                     if CFGCA[i].crType = ctURL then
+                        begin
+                        Windows.CharLowerA(PAnsiChar(CFGCA[i].crAddress) + 1);
+                        end;
+                  end;
+
+               ctPortLPT:
+                  PPortType(CFGCA[i].crAddress)^ :=
+                     GetLPTPortFromChar(CustomCMD);
+
+               ctChar:
+                  PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1];
+
+               ctAlphaChar:
+                  begin
+                     if CustomCMD[1] in ['A'..'Z'] then
+                        begin
+                        PAnsiChar(CFGCA[i].crAddress)^ := CustomCMD[1]
+                        end
+                     else
+                        begin
+                        Exit;
+                        end;
+                  end;
+
+               ctBoolean:
+                  begin
+                     if not (CustomCMD[1] in ['T', 'F']) then
+                        begin
+                        Exit;
+                        end;
+                     ;
+                     PBoolean(CFGCA[i].crAddress)^ := CustomCMD[1] = 'T';
+                  end;
+
+               ctReal:
+                  begin
+                     Val(CustomCMD, TempReal, code);
+                     //             TempReal := ValExt(@CustomCMD[1], code);
+                     if code <> 0 then
+                        begin
+                        Exit;
+                        end;
+                     if (TempReal < CFGCA[i].crMin / 10) or (TempReal >
+                        CFGCA[i].crMax / 10) then
+                        begin
+                        Exit;
+                        end;
+                     PDouble(CFGCA[i].crAddress)^ := TempReal;
+                  end;
+
+               ctByte, ctWord, ctInteger:
+                  begin
+                     // Issue #968 -- a blank value (e.g. "RADIO ONE TCP PORT=")
+                     // means the parameter was never set.  Leave the variable at its
+                     // default and surface a clear, non-fatal notice that names the
+                     // parameter, instead of rejecting the line as "invalid statement".
+                     // A non-empty but non-numeric value (e.g. "abc") still fails the
+                     // Val check below, so the defensive catch for typos is preserved.
+                     if CustomCMD = '' then
+                        begin
+                        TF.Format(wsprintfBuffer, TC_PARAMETERHASNOVALUE, @Command[1]);
+                        showwarning(wsprintfBuffer);
+                        logger.Warn('[CheckCommand] %s has no value -- left at its default', [pshortstring(Command)^]);
+                        Result := True;
+                        Exit;
+                        end;
+                     Val(CustomCMD, TempInteger, code);
+                     //              TempInteger := round(ValExt(@CustomCMD[1], code));
+                     if code <> 0 then
+                        begin
+                        Exit;
+                        end;
+
+                     if (TempInteger >= CFGCA[i].crMin) and ((TempInteger
+                        <= CFGCA[i].crMax) or (CFGCA[i].crMax = MAXWORD - 1
+                        {MAXLONG})) then
+                        begin
+
+                        if CFGCA[i].crType = ctWord then
+                           begin
+                           PWORD(CFGCA[i].crAddress)^ := TempInteger;
+                           end;
+
+                        if CFGCA[i].crType = ctInteger then
+                           begin
+                           PInteger(CFGCA[i].crAddress)^ :=
+                              TempInteger;
+                           end;
+
+                        if CFGCA[i].crType = ctByte then
+                           begin
+                           PByte(CFGCA[i].crAddress)^ := TempInteger;
+                           end;
+
+                        end
+                     else
+                        begin
+                        Exit;
+                        end;
+                  end;
+            end;
+            end;
+
+         AdditionalProc:
+         if CFGCA[i].crA <> 0 then
+            begin
+            CMD := CustomCMD;
+            Proc := AdditionalProcsArray[CFGCA[i].crA];
+            if Assigned(Proc) then
+               begin
+               // Issue #997: was inline asm (`call Proc; mov result,al`).
+               // Proc is an untyped Pointer into AdditionalProcsArray; every
+               // entry is a param-less boolean function (register), so a
+               // typed cast + call is exactly equivalent.
+               Result := TAdditionalProc(Proc)();
+               end
+            else
+               begin
+               logger.debug('AdditionalProc was not assigned in uCFG for command %s - Index = %d',
+                            [CFGCA[i].crCommand, i]);
+               end;
+            if Result = False then
+               begin
+               logger.debug('Additional proc for %s returned false',[CFGCA[i].crCommand]);
+               exit;
+               end;
+            end;
+
+         Result := True;
+         Break;
          end;
       end;
 end;
@@ -1595,9 +1625,13 @@ end;
 function F_ADD_DOMESTIC_COUNTRY: boolean;
 begin
    if CMD = 'CLEAR' then
+      begin
       ClearDomesticCountryList
+      end
    else
+      begin
       AddDomesticCountry(CMD);
+      end;
    Result := True;
 end;
 
@@ -1621,7 +1655,9 @@ begin
    Val(CMD, TempLongInt, Result1);
    Result := Result1 = 0;
    if Result then
+      begin
       AddBandMapModeCutoffFrequency(TempLongInt);
+      end;
 end;
 
 function F_BAND_MAP_DECAY_TIME: boolean;
@@ -1654,22 +1690,22 @@ function F_FREQUENCY_MEMORY: boolean;
 begin
    if StringHas(CMD, 'SSB') then
       begin
-         Delete(CMD, pos('SSB ', CMD), 4);
-         Val(CMD, TempFreq, Result1);
-         if Result1 = 0 then
-            begin
-               CalculateBandMode(TempFreq, TempBand, TempMode);
-               DefaultFreqMemory[TempBand, Phone] := TempFreq;
-            end;
+      Delete(CMD, pos('SSB ', CMD), 4);
+      Val(CMD, TempFreq, Result1);
+      if Result1 = 0 then
+         begin
+         CalculateBandMode(TempFreq, TempBand, TempMode);
+         DefaultFreqMemory[TempBand, Phone] := TempFreq;
+         end;
       end
    else
       begin
-         Val(CMD, TempFreq, Result1);
-         if Result1 = 0 then
-            begin
-               CalculateBandMode(TempFreq, TempBand, TempMode);
-               DefaultFreqMemory[TempBand, CW] := TempFreq;
-            end;
+      Val(CMD, TempFreq, Result1);
+      if Result1 = 0 then
+         begin
+         CalculateBandMode(TempFreq, TempBand, TempMode);
+         DefaultFreqMemory[TempBand, CW] := TempFreq;
+         end;
       end;
    Result := Result1 = 0;
 end;
@@ -1720,7 +1756,9 @@ begin
    Result := False;
    ctyLocateCall(CMD, TempQTH);
    if MyCountry <> TempQTH.CountryID then
+      begin
       Exit;
+      end;
 
    MyCountryIsSet := True;
    RecalculateMyCountryContinentAndZoneNew(CMD);
@@ -1756,14 +1794,14 @@ function F_ZONE_MULTIPLIER: boolean;
 begin
    if ActiveZoneMult = CQZones then
       begin
-         ActiveInitialExchange := ZoneInitialExchange;
-         CTY.ctyZoneMode := CQZoneMode;
+      ActiveInitialExchange := ZoneInitialExchange;
+      CTY.ctyZoneMode := CQZoneMode;
       end;
 
    if ActiveZoneMult = ITUZones then
       begin
-         ActiveInitialExchange := ZoneInitialExchange;
-         CTY.ctyZoneMode := ITUZoneMode;
+      ActiveInitialExchange := ZoneInitialExchange;
+      CTY.ctyZoneMode := ITUZoneMode;
       end;
    Result := True;
 end;
@@ -1787,7 +1825,9 @@ function F_SCP_COUNTRY_STRING: boolean;
 begin
    if CD.CountryString <> '' then
       if Copy(CD.CountryString, length(CD.CountryString), 1) <> ',' then
+         begin
          CD.CountryString := CD.CountryString + ',';
+         end;
    Result := True;
 end;
 
@@ -1801,9 +1841,13 @@ begin
          ARRLDXCCWithNoIOrIS0,
          ARRLDXCCWithNoJT,
          ARRLDXCC]) then
+      begin
       CTY.ctyCountryMode := CQCountryMode
+      end
    else
+      begin
       CTY.ctyCountryMode := ARRLCountryMode;
+      end;
    Result := True;
 end;
 
@@ -1831,12 +1875,14 @@ begin
 
    if NumberReminderRecords >= MaximumReminderRecords then
       begin
-         ShowMessage(TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED);
-         Exit;
+      ShowMessage(TC_MAXIMUMNUMBEROFREMINDERSEXCEEDED);
+      Exit;
       end;
 
    if NumberReminderRecords = 0 then
+      begin
       New(Reminders);
+      end;
 
    Reminders^[NumberReminderRecords].DateString := '';
    Reminders^[NumberReminderRecords].DayString := '';
@@ -1846,11 +1892,11 @@ begin
 
    if not StringIsAllNumbers(TimeString) then
       begin
-         // Issue #997 -- replaced wsprintf-push asm with SysUtils.Format
-         SysUtils.StrPCopy(wsprintfBuffer, SysUtils.Format('%s '#13 + TC_INVALIDREMINDERTIME, [TimeString]));
-         ShowMessage(wsprintfBuffer);
-         //      showmessage(TimeString + #13 + 'Invalid reminder time!!');
-         Exit;
+      // Issue #997 -- replaced wsprintf-push asm with SysUtils.Format
+      SysUtils.StrPCopy(wsprintfBuffer, SysUtils.Format('%s '#13 + TC_INVALIDREMINDERTIME, [TimeString]));
+      ShowMessage(wsprintfBuffer);
+      //      showmessage(TimeString + #13 + 'Invalid reminder time!!');
+      Exit;
       end;
 
    Val(TimeString, Reminders^[NumberReminderRecords].Time, Result1);
@@ -1859,8 +1905,8 @@ begin
 
    if StringHas(DateString, 'ALARM') then
       begin
-         Reminders^[NumberReminderRecords].Alarm := True;
-         DateString := BracketedString(DateString, '', ' ALARM');
+      Reminders^[NumberReminderRecords].Alarm := True;
+      DateString := BracketedString(DateString, '', ' ALARM');
       end;
 
    //WLI
@@ -1868,38 +1914,40 @@ begin
 
    if StringHas(DateString, '-') then
       begin
-         case length(DateString) of
-            8:
-               if (DateString[2] <> '-') or (DateString[6] <> '-') then
-                  begin
-                     ShowMessage(TC_INVALIDREMINDERDATE);
-                     Exit;
-                  end
-               else
-                  DateString := '0' + DateString;
-
-            9:
-               if (DateString[3] <> '-') or (DateString[7] <> '-') then
-                  begin
-                     ShowMessage(TC_INVALIDREMINDERDATE);
-                     Exit;
-                  end;
-
-            else
+      case length(DateString) of
+         8:
+            if (DateString[2] <> '-') or (DateString[6] <> '-') then
+               begin
                ShowMessage(TC_INVALIDREMINDERDATE);
-         end;
-         Reminders^[NumberReminderRecords].DateString := DateString;
+               Exit;
+               end
+            else
+               begin
+               DateString := '0' + DateString;
+               end;
+
+         9:
+            if (DateString[3] <> '-') or (DateString[7] <> '-') then
+               begin
+               ShowMessage(TC_INVALIDREMINDERDATE);
+               Exit;
+               end;
+
+         else
+            ShowMessage(TC_INVALIDREMINDERDATE);
+      end;
+      Reminders^[NumberReminderRecords].DateString := DateString;
       end
    else
       begin
-         DayString := Copy(DateString, length(DateString) - 2, 3);
-         if (DayString <> 'DAY') and (DayString <> 'ALL') then
-            begin
-               ShowMessage(TC_INVALIDREMINDERDATE);
-               Exit;
-            end;
+      DayString := Copy(DateString, length(DateString) - 2, 3);
+      if (DayString <> 'DAY') and (DayString <> 'ALL') then
+         begin
+         ShowMessage(TC_INVALIDREMINDERDATE);
+         Exit;
+         end;
 
-         Reminders^[NumberReminderRecords].DayString := DateString;
+      Reminders^[NumberReminderRecords].DayString := DateString;
       end;
 
    ReadLn(ConfigFileRead, Reminders^[NumberReminderRecords].RemMessage);
@@ -1949,7 +1997,9 @@ begin
    end;
 
    if TempMode = NoMode then
+      begin
       Exit;
+      end;
 
    TempValue := 0;
    case ID[Offset + 7] of
@@ -1972,26 +2022,38 @@ begin
    FuncKey := Ord(ID[Offset]) - Ord('0');
    if length(ID) > Offset then
       if ID[Offset + 1] in ['0'..'2'] then
+         begin
          FuncKey := Ord(ID[Offset + 1]) - Ord('0') + 10;
+         end;
 
    if not (FuncKey in [1..12]) then
+      begin
       Exit;
+      end;
 
    Result := True;
 
    if ID[length(ID)] = 'N' then
       begin
-         if CQMessage then
-            SetCQCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
-         else
-            SetEXCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+      if CQMessage then
+         begin
+         SetCQCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
+         end
+      else
+         begin
+         SetEXCaptionMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+         end;
       end
    else
       begin
-         if CQMessage then
-            SetCQMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
-         else
-            SetEXMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+      if CQMessage then
+         begin
+         SetCQMemoryString(TempMode, CHR(TempValue + FuncKey), CMD)
+         end
+      else
+         begin
+         SetEXMemoryString(TempMode, CHR(TempValue + FuncKey), CMD);
+         end;
       end;
 
    //  Exit;
@@ -2138,7 +2200,9 @@ begin
    else
       begin
       if Assigned(logger) then
+         begin
          logger.Error('In F_UpdateWSJTXEnabled, wsjtx variable was not assigned');
+         end;
       end;
 end;
 
@@ -2152,7 +2216,9 @@ begin
    else
       begin
       if Assigned(logger) then
+         begin
          logger.Error('In F_UpdateWSJTXSendColorizations, wsjtx variable was not assigned');
+         end;
       end;
 end;
 
@@ -2165,7 +2231,9 @@ begin
       exit;
       end;
    if WSJTXMulticastGroup <> '' then
+      begin
       wsjtx.JoinMulticastGroup(WSJTXMulticastGroup);
+      end;
 end;
 
 procedure ProcessTotalScoreMessage(ID, CMD: ShortString);
@@ -2226,9 +2294,9 @@ var
 begin
    for i := 1 to SAS do
       begin
-         Windows.lstrcatA(PAnsiChar(integer(SA[i].isString) + 1),
-            SA[i].isPcharString);
-         SA[i].isString^[0] := AnsiChar(lstrlenA(SA[i].isPcharString));
+      Windows.lstrcatA(PAnsiChar(integer(SA[i].isString) + 1),
+         SA[i].isPcharString);
+      SA[i].isString^[0] := AnsiChar(lstrlenA(SA[i].isPcharString));
       end;
    p := 'logback.tr4w';
    Windows.lstrcatA(TR4W_FLOPPY_FILENAME, p); // 4.56.13

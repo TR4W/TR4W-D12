@@ -316,35 +316,41 @@ begin
 //  Sleep(150);
 
   if ((not wkRead(1)) or (wkREADBuffer[0] <> wkECHOTESTBYTE)) then
-  begin
-    wkClose;
-    Exit;
-  end;
+     begin
+     wkClose;
+     Exit;
+     end;
 
   wkSendAdminCommand(wkHOSTOPEN);
 //  Sleep(150);
 
   PCardinal(@wkREADBuffer[0])^ := 0;   // Issue #997: was asm (zero first dword)
   if wkRead(1) then
-  begin
-    // The keyer's HOST OPEN response is its firmware-revision byte.
-    // Map it to a family digit for the status display:
-    //   v < 20   -> WK1     (legacy WinKeyer)
-    //   v 20-29  -> WK2     (WinKeyer2)
-    //   v >= 30  -> WK3     (WinKeyer3 — was previously displayed as WK2
-    //                        because the family was tracked as a single
-    //                        Boolean WK2 := version >= 20.  Issue #891)
-    versionByte := wkREADBuffer[0];
-    WK2 := versionByte >= 20;
-    if versionByte >= 30 then
-      family := 3
-    else if versionByte >= 20 then
-      family := 2
-    else
-      family := 1;
-    msg := Format('WK%d v%d', [family, versionByte]);
-    SetMainWindowText(mweWinKey, msg);
-  end;
+     begin
+     // The keyer's HOST OPEN response is its firmware-revision byte.
+     // Map it to a family digit for the status display:
+     //   v < 20   -> WK1     (legacy WinKeyer)
+     //   v 20-29  -> WK2     (WinKeyer2)
+     //   v >= 30  -> WK3     (WinKeyer3 — was previously displayed as WK2
+     //                        because the family was tracked as a single
+     //                        Boolean WK2 := version >= 20.  Issue #891)
+     versionByte := wkREADBuffer[0];
+     WK2 := versionByte >= 20;
+     if versionByte >= 30 then
+        begin
+        family := 3
+        end
+     else if versionByte >= 20 then
+        begin
+        family := 2
+        end
+     else
+        begin
+        family := 1;
+        end;
+     msg := Format('WK%d v%d', [family, versionByte]);
+     SetMainWindowText(mweWinKey, msg);
+     end;
   wklpCommTimeouts.ReadTotalTimeoutConstant := 10 - 0;
 //  wklpCommTimeouts.WriteTotalTimeoutConstant := 1;
   SetCommTimeouts(WinKeyHandle, wklpCommTimeouts);
@@ -713,55 +719,60 @@ begin
 //        Windows.SendDlgItemMessage(hwnddlg, 300, TBM_SETTHUMBLENGTH , 10, 0);
         Top := 0;
         for c := 1 to length(WK2SettingsNamesArray) do
-        begin
+           begin
 
-          if ((c - 1) mod 2) = 0 then
-          begin
-            Left := o;
-            inc(Top, CC);
-          end
-          else
+           if ((c - 1) mod 2) = 0 then
+              begin
+              Left := o;
+              inc(Top, CC);
+              end
+           else
 
-            Left := o * 2 + w;
-//          Top := c * CC;
-          tCreateButtonWindow(0, WK2SettingsNamesArray[c], $50010003, Left, Top, w, 17, hwnddlg, 100 + c);
-//          showint(c mod 2);
-        end;
+              begin
+              Left := o * 2 + w;
+              end;
+ //          Top := c * CC;
+           tCreateButtonWindow(0, WK2SettingsNamesArray[c], $50010003, Left, Top, w, 17, hwnddlg, 100 + c);
+ //          showint(c mod 2);
+           end;
 
         for c := 1 to wkCombo do
-        begin
-          Top := c * CC + w4 * CC;
-          tCreateStaticWindow(WK2ComboSettingsNamesArray[c], LeftVisNoSunStyle, o {* 2 + w}, Top, w, 17, hwnddlg, 100 + High(WK2SettingsNamesArray) + c);
+           begin
+           Top := c * CC + w4 * CC;
+           tCreateStaticWindow(WK2ComboSettingsNamesArray[c], LeftVisNoSunStyle, o {* 2 + w}, Top, w, 17, hwnddlg, 100 + High(WK2SettingsNamesArray) + c);
 
-          CreateWindowExW(
-            WS_EX_STATICEDGE,
-            COMBOBOX,
-            nil,
-            CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP,
-            o * 2 + w,
-            Top,
-            w3,
-            200,
-            hwnddlg,
-            100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + c,
-            hInstance,
-            nil
-            );
+           CreateWindowExW(
+             WS_EX_STATICEDGE,
+             COMBOBOX,
+             nil,
+             CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP,
+             o * 2 + w,
+             Top,
+             w3,
+             200,
+             hwnddlg,
+             100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + c,
+             hInstance,
+             nil
+             );
 
-          // Issue #997: asm tWM_SETFONT (EAX = the COMBOBOX just created above);
-          // re-fetch it by its child id and set its font.
-          tWM_SETFONT(GetDlgItem(hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + c), MSSansSerifFont);
-        end;
+           // Issue #997: asm tWM_SETFONT (EAX = the COMBOBOX just created above);
+           // re-fetch it by its child id and set its font.
+           tWM_SETFONT(GetDlgItem(hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + c), MSSansSerifFont);
+           end;
 
         for c := 1 to wkRange do
-        begin
-          Top := c * CC + length(WK2ComboSettingsNamesArray) * CC + w4 * CC;
-          tCreateStaticWindow(WK2SliderLabelArray[c], LeftVisNoSunStyle, o, Top, w, 17, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + c);
-          TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, '', ES_CENTER + ES_NUMBER + WS_CHILD or WS_TABSTOP or WS_VISIBLE, o * 2 + w, Top, w3, 20, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c);
-          CreateUpDownControl(UpDownControlStyle, 0, 0, 0, 0, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c, hInstance, TempHWND, WK2UpDownUpperValue[c], WK2UpDownLowerValue[c], integer(WK2UpDownValue[c]^));
-        end;
+           begin
+           Top := c * CC + length(WK2ComboSettingsNamesArray) * CC + w4 * CC;
+           tCreateStaticWindow(WK2SliderLabelArray[c], LeftVisNoSunStyle, o, Top, w, 17, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + c);
+           TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, '', ES_CENTER + ES_NUMBER + WS_CHILD or WS_TABSTOP or WS_VISIBLE, o * 2 + w, Top, w3, 20, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c);
+           CreateUpDownControl(UpDownControlStyle, 0, 0, 0, 0, hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c, hInstance, TempHWND, WK2UpDownUpperValue[c], WK2UpDownLowerValue[c], integer(WK2UpDownValue[c]^));
+           end;
 
-        for c := 1 to 4 do tCB_ADDSTRING(hwnddlg, MODE_CB, WK2KeyerModesArray[c]);
+        for c := 1 to 4 do
+           begin
+           tCB_ADDSTRING(hwnddlg, MODE_CB, WK2KeyerModesArray[c]);
+           end;
         tCB_SETCURSEL(hwnddlg, MODE_CB, Cardinal(WinKeySettings.wksKeyerMode));
 
         // SERIAL 1..MAX_SERIAL_PORT.  This list was hard-coded to 20 -- the OLD
@@ -777,76 +788,95 @@ begin
         // ceiling fix.
         tCB_ADDSTRING(hwnddlg, PORT_CB, 'NONE');
         for c := 1 to MAX_SERIAL_PORT do
-        begin
-          // Issue #997: asm wsprintf-push -> TF.Format (c is the integer loop var).
-          TF.Format(@wkREADBuffer, 'SERIAL %u', c);
-          tCB_ADDSTRING_PCHAR(hwnddlg, PORT_CB, string(PAnsiChar(@wkREADBuffer[0])));
-        end;
+           begin
+           // Issue #997: asm wsprintf-push -> TF.Format (c is the integer loop var).
+           TF.Format(@wkREADBuffer, 'SERIAL %u', c);
+           tCB_ADDSTRING_PCHAR(hwnddlg, PORT_CB, string(PAnsiChar(@wkREADBuffer[0])));
+           end;
         tCB_SETCURSEL(hwnddlg, PORT_CB, Cardinal(WinKeySettings.wksWinKey2Port));
 
         for c := 1 to 10 do
-        begin
-          TempInteger := integer(wk2) * 10 + c;
-          tCB_ADDSTRING_PCHAR(hwnddlg, FREQ_CB, inttopchar(wkSidetoneFrequencyArray[TempInteger]));
-        end;
+           begin
+           TempInteger := integer(wk2) * 10 + c;
+           tCB_ADDSTRING_PCHAR(hwnddlg, FREQ_CB, inttopchar(wkSidetoneFrequencyArray[TempInteger]));
+           end;
         tCB_SETCURSEL(hwnddlg, FREQ_CB, Byte(WinKeySettings.wksValueList.vlSidetoneFrequency) - 1);
         goto 1;
       end;
     WM_COMMAND:
       begin
-        if wParam = 2 then goto ExitAndClose;
+        if wParam = 2 then
+           begin
+           goto ExitAndClose;
+           end;
         if wParam = 1 then
-        begin
-        {SIDETONE}
-          Byte(WinKeySettings.wksValueList.vlSidetoneFrequency) := tCB_GETCURSEL(hwnddlg, FREQ_CB) + 1;
-          WinKeySettings.wksKeyerMode := TWK2KeyerMode(tCB_GETCURSEL(hwnddlg, MODE_CB));
+           begin
+           {SIDETONE}
+             Byte(WinKeySettings.wksValueList.vlSidetoneFrequency) := tCB_GETCURSEL(hwnddlg, FREQ_CB) + 1;
+             WinKeySettings.wksKeyerMode := TWK2KeyerMode(tCB_GETCURSEL(hwnddlg, MODE_CB));
 
-          for c := 1 to wkBool do
-            WK2BoolValue[c]^ := boolean(TF.SendDlgItemMessage(hwnddlg, 100 + c, BM_GETCHECK));
+             for c := 1 to wkBool do
+                begin
+                WK2BoolValue[c]^ := boolean(TF.SendDlgItemMessage(hwnddlg, 100 + c, BM_GETCHECK));
+                end;
 
 
-          WinKeySettings.wksWinKey2Port := PortType(tCB_GETCURSEL(hwnddlg, PORT_CB));
+             WinKeySettings.wksWinKey2Port := PortType(tCB_GETCURSEL(hwnddlg, PORT_CB));
 
-//          if Windows.SendDlgItemMessage(hwnddlg, 104, BM_GETCHECK, 0, 0) = BST_CHECKED then WinKeySettings.wksValueList.vlSidetoneFrequency := WinKeySettings.wksValueList.vlSidetoneFrequency or (1 shl 7);
+   //          if Windows.SendDlgItemMessage(hwnddlg, 104, BM_GETCHECK, 0, 0) = BST_CHECKED then WinKeySettings.wksValueList.vlSidetoneFrequency := WinKeySettings.wksValueList.vlSidetoneFrequency or (1 shl 7);
 
-          TempInteger :=
-            4 + 128 + //64 +
-            integer(WinKeySettings.wksCTSpacing) * 1 +
-            integer(WinKeySettings.wksAutospace) * 2 +
-            integer(WinKeySettings.wksPaddleSwap) * 8;
+             TempInteger :=
+               4 + 128 + //64 +
+               integer(WinKeySettings.wksCTSpacing) * 1 +
+               integer(WinKeySettings.wksAutospace) * 2 +
+               integer(WinKeySettings.wksPaddleSwap) * 8;
 
-          if WinKeySettings.wksKeyerMode = kmIambicA then TempInteger := TempInteger + 16;
-          if WinKeySettings.wksKeyerMode = kmUltimatic then TempInteger := TempInteger + 32;
-          if WinKeySettings.wksKeyerMode = kmBugMode then TempInteger := TempInteger + 48;
+             if WinKeySettings.wksKeyerMode = kmIambicA then
+                begin
+                TempInteger := TempInteger + 16;
+                end;
+             if WinKeySettings.wksKeyerMode = kmUltimatic then
+                begin
+                TempInteger := TempInteger + 32;
+                end;
+             if WinKeySettings.wksKeyerMode = kmBugMode then
+                begin
+                TempInteger := TempInteger + 48;
+                end;
 
-//1000 0100
-          WinKeySettings.wksValueList.vlModeRegister := TempInteger;
-//          showint(tCB_GETCURSEL(hwnddlg, 116) + 34);
+   //1000 0100
+             WinKeySettings.wksValueList.vlModeRegister := TempInteger;
+   //          showint(tCB_GETCURSEL(hwnddlg, 116) + 34);
 
-          for c := 1 to wkRange do
-          begin
-            TempInteger := Windows.GetDlgItemInt(hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c, lpTranslated, False);
-            if TempInteger <= WK2UpDownUpperValue[c] then
-              if TempInteger >= WK2UpDownLowerValue[c] then
-                WK2UpDownValue[c]^ := Byte(TempInteger);
-          end;
+             for c := 1 to wkRange do
+                begin
+                TempInteger := Windows.GetDlgItemInt(hwnddlg, 100 + High(WK2ComboSettingsNamesArray) + High(WK2SettingsNamesArray) + length(WK2ComboSettingsNamesArray) + length(WK2SliderLabelArray) + c, lpTranslated, False);
+                if TempInteger <= WK2UpDownUpperValue[c] then
+                  if TempInteger >= WK2UpDownLowerValue[c] then
+                     begin
+                     WK2UpDownValue[c]^ := Byte(TempInteger);
+                     end;
+                end;
 
-          wkClose;
-          wkOpen;
-          goto ExitAndClose;
-        end;
+             wkClose;
+             wkOpen;
+             goto ExitAndClose;
+           end;
 
         if (HiWord(wParam) in [CBN_SELCHANGE {, BN_CLICKED}]) or (HiWord(wParam) = EN_CHANGE) then EnableWindowTrue(hwnddlg, 1);
         if HiWord(wParam) = BN_CLICKED then if LoWord(wParam) = 101 then
-          begin
-            1:
-            TempInteger := TF.SendDlgItemMessage(hwnddlg, 101, BM_GETCHECK);
-            for c := 102 to 124 + 3 do Windows.EnableWindow(GetDlgItem(hwnddlg, c), LongBool(TempInteger));
-            if not wk2 then
-            begin
-              TF.EnableWindowFalse(hwnddlg, 107);
-            end;
-          end;
+                                               begin
+                                               1:
+                                               TempInteger := TF.SendDlgItemMessage(hwnddlg, 101, BM_GETCHECK);
+                                               for c := 102 to 124 + 3 do
+                                                  begin
+                                                  Windows.EnableWindow(GetDlgItem(hwnddlg, c), LongBool(TempInteger));
+                                                  end;
+                                               if not wk2 then
+                                                  begin
+                                                  TF.EnableWindowFalse(hwnddlg, 107);
+                                                  end;
+                                               end;
       end;
 
     WM_CLOSE:
@@ -903,9 +933,14 @@ begin
     {*)}
 
 {$IF WINKEYDEBUG}
-            if wkBUSY then AddStringToTelnetConsole('YES', tstSend)
+            if wkBUSY then
+               begin
+               AddStringToTelnetConsole('YES', tstSend)
+               end
             else
-              AddStringToTelnetConsole('NO', tstSend);
+               begin
+               AddStringToTelnetConsole('NO', tstSend);
+               end;
 
 {$IFEND}
 
@@ -916,7 +951,7 @@ begin
             SendStationStatus(sstPTT);
 
           if not wkBUSY then
-            begin
+             begin
               logger.debug('PTTStatus=WK-NOT-BUSY');
               wkWaitingBytesInWK := 0;
               // The device has stopped keying, so nothing of ours is
@@ -927,7 +962,10 @@ begin
 //              wkHostBufferIndex := 0;
 //              wkHostBufferSendIndex := 0;
 //              wkWaitingBytesInHost := 0;
-              if not tStartAutoCallTerminate(wkThreadID) then tStartAutoCQ;
+              if not tStartAutoCallTerminate(wkThreadID) then
+                 begin
+                 tStartAutoCQ;
+                 end;
              BackToInactiveRadioAfterQSO;
             end;
           end
@@ -939,16 +977,19 @@ begin
 //              AddStringToTelnetConsole('speed pot byte');
 {$IFEND}
               if not WinKeySettings.wksIgnoreSpeedSpot then
-              begin
-                SetSpeed(wkThreadReadBuffer[i] - 128 + wkMINWPM);
-                DisplayCodeSpeed;
-              end;
+                 begin
+                 SetSpeed(wkThreadReadBuffer[i] - 128 + wkMINWPM);
+                 DisplayCodeSpeed;
+                 end;
             end
             else
             begin
 
               begin
-                if wkWaitingBytesInWK > 0 then dec(wkWaitingBytesInWK);
+                if wkWaitingBytesInWK > 0 then
+                   begin
+                   dec(wkWaitingBytesInWK);
+                   end;
               end;
 {$IF WINKEYDEBUG}
 //              AddStringToTelnetConsole('> RX ' + CHR(wkThreadReadBuffer[I]));
@@ -974,18 +1015,18 @@ begin
   begin
     Windows.ReadFile(WinKeyHandle, wkThreadReadBuffer, SizeOf(wkThreadReadBuffer), lpNumberOfBytesRead, nil);
     if lpNumberOfBytesRead = 0 then
-    begin
-      wkSendNextByteFromHostBuffer;
-      goto 1;
-    end;
+       begin
+       wkSendNextByteFromHostBuffer;
+       goto 1;
+       end;
 
     for i := 0 to lpNumberOfBytesRead - 1 do
     begin
 {$IF WINKEYDEBUG}
       if wkThreadReadBuffer[i] >= $C0 then
-      begin
+         begin
 
-      end
+         end
       else
 //        sWriteFile(wkDebugFileRX, wkThreadReadBuffer[I], 1);
 {$IFEND}
@@ -994,7 +1035,10 @@ begin
 {$IF WINKEYDEBUG}
 //          AddStringToTelnetConsole('> RX ' + CHR(wkThreadReadBuffer[i]));
 {$IFEND}
-          if wkWaitingBytesInWK > 0 then dec(wkWaitingBytesInWK);
+          if wkWaitingBytesInWK > 0 then
+             begin
+             dec(wkWaitingBytesInWK);
+             end;
 //        wkSendNextByteFromHostBuffer;
           wkBUSY := True;
         end
@@ -1016,14 +1060,17 @@ begin
         wkWaitingBytesInHost := 0;
         wkCWOutstanding := False;   // device says the buffer drained
 
-        if tr4w_PTTStartTime <> 0 then tRestartInfo.riPTTOnTotalTime := tRestartInfo.riPTTOnTotalTime + GetTickCount - tr4w_PTTStartTime;
+        if tr4w_PTTStartTime <> 0 then
+           begin
+           tRestartInfo.riPTTOnTotalTime := tRestartInfo.riPTTOnTotalTime + GetTickCount - tr4w_PTTStartTime;
+           end;
         tDispalyOnAirTime;
         wkPTTOn := False;
         if tAutoCQMode = True then
-         begin
+           begin
             
-          tAutoCQTimerID := SetTimer(tr4whandle, AUTOCQ_TIMER_HANDLE, AutoCQDelayTime, @tAutoCQTimerProc);
-         end;
+           tAutoCQTimerID := SetTimer(tr4whandle, AUTOCQ_TIMER_HANDLE, AutoCQDelayTime, @tAutoCQTimerProc);
+           end;
       end;
 
       if (wkThreadReadBuffer[i] = 196) then
@@ -1031,25 +1078,28 @@ begin
 {$IF WINKEYDEBUG}
 //        AddStringToTelnetConsole('START');
 {$IFEND}
-        if wkPTTOn = False then tr4w_PTTStartTime := GetTickCount;
+        if wkPTTOn = False then
+           begin
+           tr4w_PTTStartTime := GetTickCount;
+           end;
         wkPTTOn := True;
       end;
 
 {$IF WINKEYDEBUG}
       if (wkThreadReadBuffer[i] = 198) then
-      begin
-//        AddStringToTelnetConsole('PADDLE');
-//        wkHostBufferIndex := 0;
-        wkWaitingBytesInHost := 0;
-        wkWaitingBytesInWK := 0;
-      end;
+         begin
+         //        AddStringToTelnetConsole('PADDLE');
+         //        wkHostBufferIndex := 0;
+                 wkWaitingBytesInHost := 0;
+                 wkWaitingBytesInWK := 0;
+         end;
 {$IFEND}
 
       if (wkThreadReadBuffer[i] and $C0) = $80 then if not WinKeySettings.wksIgnoreSpeedSpot then
-        begin
-          SetSpeed(wkThreadReadBuffer[i] - 128 + wkMINWPM);
-          DisplayCodeSpeed;
-        end;
+                                                       begin
+                                                       SetSpeed(wkThreadReadBuffer[i] - 128 + wkMINWPM);
+                                                       DisplayCodeSpeed;
+                                                       end;
     end;
 {$IF WINKEYDEBUG}
 //    Windows.SetWindowTextA(InsertWindowHandle, inttopchar(wkWaitingBytesInWK));
@@ -1074,7 +1124,10 @@ begin
               [string(c), Ord(c), IntToHex(Ord(c), 2)]);
   wkInternalCWBuffer[wkHostBufferIndex] := c;
   inc(wkHostBufferIndex);
-  if wkHostBufferIndex = SizeOfHostBuffer then wkHostBufferIndex := 0;
+  if wkHostBufferIndex = SizeOfHostBuffer then
+     begin
+     wkHostBufferIndex := 0;
+     end;
   inc(wkWaitingBytesInHost);
   wkCWOutstanding := True;
  
@@ -1085,43 +1138,54 @@ procedure wkAddCWMessageToInternalBuffer(Msg: Str160);
   procedure CheckSpeedChange;
   begin
     if wkSpeedUp <> 0 then
-    begin
-      wkCWSpeed := round(wkCWSpeed * (1 + (0.06 * wkSpeedUp)));
-      wkAddCharToHostBuffer(wkCMD_CHANGESPEEDBUFFERED);
-      wkAddCharToHostBuffer(AnsiChar(wkCWSpeed));
-      wkSpeedUp := 0;
-    end;
+       begin
+       wkCWSpeed := round(wkCWSpeed * (1 + (0.06 * wkSpeedUp)));
+       wkAddCharToHostBuffer(wkCMD_CHANGESPEEDBUFFERED);
+       wkAddCharToHostBuffer(AnsiChar(wkCWSpeed));
+       wkSpeedUp := 0;
+       end;
 
     if wkSpeedDown <> 0 then
-    begin
-      wkCWSpeed := round(wkCWSpeed * (1 - (0.06 * wkSpeedDown)));
-      wkAddCharToHostBuffer(wkCMD_CHANGESPEEDBUFFERED);
-      wkAddCharToHostBuffer(AnsiChar(wkCWSpeed));
-      wkSpeedDown := 0;
-    end;
+       begin
+       wkCWSpeed := round(wkCWSpeed * (1 - (0.06 * wkSpeedDown)));
+       wkAddCharToHostBuffer(wkCMD_CHANGESPEEDBUFFERED);
+       wkAddCharToHostBuffer(AnsiChar(wkCWSpeed));
+       wkSpeedDown := 0;
+       end;
   end;
 
 var
   i                                     : integer;
 begin
   if length(Msg) = 0 then
-  Exit;
+     begin
+     Exit;
+     end;
 
   logger.Debug('[wkAddCWMessageToInternalBuffer] Msg="%s" len=%d', [Msg, length(Msg)]);
 
   for i := 1 to length(Msg) do
-  begin
-    if Msg[i] in ['A'..'Z', ' ', '0'..'9','.', '/', '?'] then
-    begin
-      CheckSpeedChange;
-      wkAddCharToHostBuffer(Msg[i]);
+     begin
+     if Msg[i] in ['A'..'Z', ' ', '0'..'9','.', '/', '?'] then
+        begin
+        CheckSpeedChange;
+        wkAddCharToHostBuffer(Msg[i]);
 
-    end;
+        end;
 
-    if Msg[i] = '^' then wkAddCharToHostBuffer('|');
-    if Msg[i] = #$06 then inc(wkSpeedUp);
-    if Msg[i] = #$13 then inc(wkSpeedDown);
-  end;
+     if Msg[i] = '^' then
+        begin
+        wkAddCharToHostBuffer('|');
+        end;
+     if Msg[i] = #$06 then
+        begin
+        inc(wkSpeedUp);
+        end;
+     if Msg[i] = #$13 then
+        begin
+        inc(wkSpeedDown);
+        end;
+     end;
   CheckSpeedChange;
 end;
 
@@ -1136,7 +1200,10 @@ const
 begin
   if WinKeyHandle = INVALID_HANDLE_VALUE then Exit;
   if r = @Radio1 then TempByte := WK_RADIO_ONE else TempByte := WK_RADIO_TWO;
-  if r.ModeMemory <> Phone then TempByte := TempByte + WK_CW_MODE;
+  if r.ModeMemory <> Phone then
+     begin
+     TempByte := TempByte + WK_CW_MODE;
+     end;
 
  // if r = RadioOne then TempByte := 4 {+ 1} else TempByte := 8 {+ 1};
   TempByte := TempByte + Byte(WinKeySettings.wksSideTEnable) * 2;
@@ -1170,16 +1237,16 @@ begin
   TF.Format(@wkREADBuffer, _COM, Ord(WinKeySettings.wksWinKey2Port));
   WinKeyHandle := CreateFileA(@wkREADBuffer, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL {FILE_FLAG_OVERLAPPED}, 0);
   if WinKeyHandle = INVALID_HANDLE_VALUE then
-  begin
-    // SysErrorMessage returns an AnsiString via a hidden var-parameter, not in
-    // eax. Assign to a local so the string data remains alive, then build the
-    // full message with SysUtils.Format. No inline asm / varargs juggling.
-    msg := Format('Winkeyer port COM%d: %s',
-                  [Integer(WinKeySettings.wksWinKey2Port),
-                   SysErrorMessage(GetLastError)]);
-    showwarning(msg);
-    Exit;
-  end;
+     begin
+     // SysErrorMessage returns an AnsiString via a hidden var-parameter, not in
+     // eax. Assign to a local so the string data remains alive, then build the
+     // full message with SysUtils.Format. No inline asm / varargs juggling.
+     msg := Format('Winkeyer port COM%d: %s',
+                   [Integer(WinKeySettings.wksWinKey2Port),
+                    SysErrorMessage(GetLastError)]);
+     showwarning(msg);
+     Exit;
+     end;
   GetCommState(WinKeyHandle, wkDCB);
   wkDCB.BaudRate := CBR_1200;
   wkDCB.StopBits := ONESTOPBIT;
@@ -1227,10 +1294,16 @@ begin
     AddStringToTelnetConsole(CID_TWO_BYTES);
 {$IFEND}
 
-    if wkWaitingBytesInHost > 0 then dec(wkWaitingBytesInHost);
+    if wkWaitingBytesInHost > 0 then
+       begin
+       dec(wkWaitingBytesInHost);
+       end;
     inc(BytesSendNow);
     inc(wkHostBufferSendIndex);
-    if wkHostBufferSendIndex >= SizeOfHostBuffer then wkHostBufferSendIndex := 0;
+    if wkHostBufferSendIndex >= SizeOfHostBuffer then
+       begin
+       wkHostBufferSendIndex := 0;
+       end;
 {$IF WINKEYDEBUG}
     Windows.SetWindowTextA(InsertWindowHandle, inttopchar(wkHostBufferSendIndex));
 {$IFEND}

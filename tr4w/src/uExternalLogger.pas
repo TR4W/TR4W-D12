@@ -294,9 +294,9 @@ This is all we need to send as we DO NOT want to send every contact to any of th
 
 }
    if CurrentOperator[0] = #0 then
-       begin
-       sOperator := MyCall;
-       end
+      begin
+      sOperator := MyCall;
+      end
    else
       begin
       sOperator := ce.ceOperator;
@@ -367,7 +367,7 @@ This is all we need to send as we DO NOT want to send every contact to any of th
         begin
         sCoreADIF := sCoreADIF + AddADIFField('STX',IntToStr(ce.NumberSent));
         end;
-      end;
+     end;
 
   if ce.Age <> 0 then
      begin

@@ -56,13 +56,19 @@ begin
    padded    := ' ' + s;   // prepend space so the very first key is also matched
    keyPos    := Pos(searchKey, padded);
    if keyPos = 0 then
+      begin
       Exit;
+      end;
    afterEq  := Copy(padded, keyPos + Length(searchKey), Length(padded));
    spacePos := Pos(' ', afterEq);
    if spacePos = 0 then
+      begin
       Result := afterEq
+      end
    else
+      begin
       Result := Copy(afterEq, 1, spacePos - 1);
+      end;
 end;
 
 // ---------------------------------------------------------------------------

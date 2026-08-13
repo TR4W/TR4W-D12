@@ -77,9 +77,13 @@ begin
       try
 
         if (AData = '') then
-          sMethod := 'GET'
+           begin
+           sMethod := 'GET'
+           end
         else
-          sMethod := 'POST';
+           begin
+           sMethod := 'POST';
+           end;
 
         case isSSL of
           True  : pRequest := HTTPOpenRequestW(pConnection, PChar(sMethod), PChar(AURL), nil, nil, nil, INTERNET_FLAG_SECURE  or INTERNET_FLAG_KEEP_CONNECTION, 0);
@@ -98,35 +102,35 @@ begin
             Header := TStringStream.Create('');
 
             with Header do
-            begin
-              WriteString('Host: ' + AServer + sLineBreak);
-              WriteString('Authorization: Basic ' + authEncode + sLineBreak);
-              WriteString('Connection: close' + sLineBreak + sLineBreak);
-            end;
+               begin
+               WriteString('Host: ' + AServer + sLineBreak);
+               WriteString('Authorization: Basic ' + authEncode + sLineBreak);
+               WriteString('Connection: close' + sLineBreak + sLineBreak);
+               end;
 
             HttpAddRequestHeadersW(pRequest, PChar(Header.DataString), Length(Header.DataString), HTTP_ADDREQ_FLAG_ADD);
 
             if HTTPSendRequestW(pRequest, nil, 0, Pointer(AData), Length(AData)) then
-            begin
+               begin
 
-              BufStream := TMemoryStream.Create;
-              try
+               BufStream := TMemoryStream.Create;
+               try
 
-                 while InternetReadFile(pRequest, @aBuffer, SizeOf(aBuffer), BytesRead) do
-                 begin
-                   if (BytesRead = 0) then Break;
-                   BufStream.Write(aBuffer, BytesRead);
-                 end;
+                  while InternetReadFile(pRequest, @aBuffer, SizeOf(aBuffer), BytesRead) do
+                     begin
+                     if (BytesRead = 0) then Break;
+                     BufStream.Write(aBuffer, BytesRead);
+                     end;
 
-                 aBuffer[0] := #0;
-                 BufStream.Write(aBuffer, 1);
-                 Result := PChar(BufStream.Memory);
+                  aBuffer[0] := #0;
+                  BufStream.Write(aBuffer, 1);
+                  Result := PChar(BufStream.Memory);
 
-              finally
-                FreeAndNil(BufStream);
-              end;
+               finally
+                 FreeAndNil(BufStream);
+               end;
 
-            end;
+               end;
 
           finally
             InternetCloseHandle(pRequest);

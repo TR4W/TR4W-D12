@@ -653,15 +653,18 @@ begin
   CC.hwndOwner := hWin;
   if FullOpen
     then CC.Flags := CC_RGBINIT or CC_FULLOPEN
-  else CC.Flags := CC_RGBINIT;
+  else
+     begin
+     CC.Flags := CC_RGBINIT;
+     end;
   CC.hInstance := hWin;
   CC.lpCustColors := @custColors[0];
   CC.rgbResult := GetSysColor(COLOR_BTNFACE);
   if ChooseColor(CC) then
-  begin
-    SetClassLong(hWin, GCL_HBRBACKGROUND { or GCL_CBCLSEXTRA}, CreateSolidBrush(CC.rgbResult));
-    Result := CC.rgbResult;
-  end else Result := INVALID_HANDLE_VALUE;
+     begin
+     SetClassLong(hWin, GCL_HBRBACKGROUND { or GCL_CBCLSEXTRA}, CreateSolidBrush(CC.rgbResult));
+     Result := CC.rgbResult;
+     end else Result := INVALID_HANDLE_VALUE;
 end;
 {
 function ShowAboutDlg(hAbout: HWND; Caption, Text: string; Icon: HICON): integer;
@@ -813,22 +816,22 @@ begin
     WM_NOTIFY:
       begin
         if PNMHdr(lParam)^.code = CDN_HELP then
-        begin
-          TR4W_LOG_FILENAME[0] := '_';
-//          PostMessage(GetParent(wnd), WM_CLOSE, 0, 0);
-          PostMessage(GetParent(wnd), WM_COMMAND, {Windows.MakeWParam(-IDABORT-IDCANCEL, BN_CLICKED)} 2, 0);
-        end;
+           begin
+           TR4W_LOG_FILENAME[0] := '_';
+ //          PostMessage(GetParent(wnd), WM_CLOSE, 0, 0);
+           PostMessage(GetParent(wnd), WM_COMMAND, {Windows.MakeWParam(-IDABORT-IDCANCEL, BN_CLICKED)} 2, 0);
+           end;
 
         if PNMHdr(lParam)^.code = CDN_SELCHANGE then
           if FirstCDN_SELCHANGE then
-          begin
-            p := GetParent(wnd);
-            Windows.GetWindowRect(p, rec);
-            SetWindowPos(p, 0, rec.Left, rec.Top, 550, 500, SWP_DRAWFRAME or SWP_NOACTIVATE or SWP_NOZORDER);
-            Windows.GetWindowRect(HelpButton, rec);
-            SendMessage(p, WM_NEXTDLGCTL, 1, 0);
-            FirstCDN_SELCHANGE := False;
-          end;
+             begin
+             p := GetParent(wnd);
+             Windows.GetWindowRect(p, rec);
+             SetWindowPos(p, 0, rec.Left, rec.Top, 550, 500, SWP_DRAWFRAME or SWP_NOACTIVATE or SWP_NOZORDER);
+             Windows.GetWindowRect(HelpButton, rec);
+             SendMessage(p, WM_NEXTDLGCTL, 1, 0);
+             FirstCDN_SELCHANGE := False;
+             end;
       end;
 
     {
@@ -881,7 +884,10 @@ begin
   CommDlgLibHandle := LoadLibrary('comdlg32.dll');
   if CommDlgLibHandle = 0 then Exit;
   @OpenFileF := GetProcAddress(CommDlgLibHandle, 'GetOpenFileNameA');
-  if @OpenFileF = nil then goto 1;
+  if @OpenFileF = nil then
+     begin
+     goto 1;
+     end;
   ofn.lStructSize := SizeOf(TOpenFileName);
   ofn.nMaxFile := MAXSIZE;
 
@@ -917,22 +923,22 @@ begin
   ofn.nMaxFile := MAXSIZE;
   ofn.Flags := OFN_FILEMUSTEXIST or OFN_PATHMUSTEXIST or OFN_LONGNAMES or OFN_HIDEREADONLY;
   if GetSaveFileName(ofn) then
-  begin
-    hFile := CreateFileA(wsprintfBuffer {Lenin_Buffer}, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or
-      FILE_SHARE_WRITE, nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
-    hMemory := GlobalAlloc(GMEM_MOVEABLE or GMEM_ZEROINIT, MemSize);
-    pMemory := GlobalLock(hMemory);
-    SizeReadWrite := SendMessageA(hControl, WM_GETTEXT, MemSize - 1, integer(pMemory));
-    tWriteFile(hFile, pMemory^, SizeReadWrite, SizeReadWrite);
-    SendMessage(hControl, EM_SETSEL, 0, 0);
-    sFilePath := ofn.lpstrFile;
-    sFile := PAnsiChar(@ofn.lpstrFile[ofn.nFileOffset]);
-    CloseHandle(hFile);
-    GlobalUnlock(DWORD(pMemory));
-    GlobalFree(hMemory);
-    EnableMenuItem(hWndMenu, 1030, MF_ENABLED);
-    ModifyFlag := 0;
-  end;
+     begin
+     hFile := CreateFileA(wsprintfBuffer {Lenin_Buffer}, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or
+       FILE_SHARE_WRITE, nil, CREATE_NEW, FILE_ATTRIBUTE_ARCHIVE, 0);
+     hMemory := GlobalAlloc(GMEM_MOVEABLE or GMEM_ZEROINIT, MemSize);
+     pMemory := GlobalLock(hMemory);
+     SizeReadWrite := SendMessageA(hControl, WM_GETTEXT, MemSize - 1, integer(pMemory));
+     tWriteFile(hFile, pMemory^, SizeReadWrite, SizeReadWrite);
+     SendMessage(hControl, EM_SETSEL, 0, 0);
+     sFilePath := ofn.lpstrFile;
+     sFile := PAnsiChar(@ofn.lpstrFile[ofn.nFileOffset]);
+     CloseHandle(hFile);
+     GlobalUnlock(DWORD(pMemory));
+     GlobalFree(hMemory);
+     EnableMenuItem(hWndMenu, 1030, MF_ENABLED);
+     ModifyFlag := 0;
+     end;
 end;
 
 procedure SelectFolder(Parent: HWND; var Folder: FileNameType);
@@ -943,26 +949,29 @@ var
   SHBrowseForFolder                     : TSHBrowseForFolder;
   SHGetPathFromIDList                   : TSHGetPathFromIDList;
 begin
-  if Shell32LibHandle = 0 then Shell32LibHandle := LoadLibrary('shell32.dll');
+  if Shell32LibHandle = 0 then
+     begin
+     Shell32LibHandle := LoadLibrary('shell32.dll');
+     end;
   if Shell32LibHandle <> 0 then
-  begin
-    @SHBrowseForFolder := GetProcAddress(Shell32LibHandle, 'SHBrowseForFolderA');
-    @SHGetPathFromIDList := GetProcAddress(Shell32LibHandle, 'SHGetPathFromIDListA');
-    if @SHBrowseForFolder <> nil then
-    begin
-      Windows.ZeroMemory(@BrowseInfo, SizeOf(TBrowseInfo));
-      BrowseInfo.hwndOwner := tr4whandle;
-      BrowseInfo.pszDisplayName := DisplayName;
-      BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS;
-      lpItemID := SHBrowseForFolder(BrowseInfo);
-      if lpItemId <> nil then
-      begin
-        SHGetPathFromIDList(lpItemID, Folder);
-        GlobalFreePtr(lpItemID);
-      end;
-    end;
-    FreeLibrary(Shell32LibHandle);
-  end;
+     begin
+     @SHBrowseForFolder := GetProcAddress(Shell32LibHandle, 'SHBrowseForFolderA');
+     @SHGetPathFromIDList := GetProcAddress(Shell32LibHandle, 'SHGetPathFromIDListA');
+     if @SHBrowseForFolder <> nil then
+        begin
+        Windows.ZeroMemory(@BrowseInfo, SizeOf(TBrowseInfo));
+        BrowseInfo.hwndOwner := tr4whandle;
+        BrowseInfo.pszDisplayName := DisplayName;
+        BrowseInfo.ulFlags := BIF_RETURNONLYFSDIRS;
+        lpItemID := SHBrowseForFolder(BrowseInfo);
+        if lpItemId <> nil then
+           begin
+           SHGetPathFromIDList(lpItemID, Folder);
+           GlobalFreePtr(lpItemID);
+           end;
+        end;
+     FreeLibrary(Shell32LibHandle);
+     end;
 
 
 end;

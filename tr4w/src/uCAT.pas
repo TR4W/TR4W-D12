@@ -1399,9 +1399,13 @@ var
      // which is not in the credentialed set -- fields hidden, as before).
      if (ComboSelectedPort(hwnddlg, 122) = Network) and
         RadioUsesNetworkCredentials(ComboSelectedRadioModel(hwnddlg)) then
+        begin
         ShowCmd := SW_SHOW
+        end
      else
+        begin
         ShowCmd := SW_HIDE;
+        end;
      ShowWindow(GetDlgItem(hwnddlg, 112), ShowCmd);
      ShowWindow(GetDlgItem(hwnddlg, 113), ShowCmd);
      ShowWindow(GetDlgItem(hwnddlg, 132), ShowCmd);
@@ -1490,16 +1494,16 @@ begin
       begin
 //        CATWTR := RadioPtr(lParam);
         if CATWTR = @Radio1 then
-        begin
-          TempKeyerPortType := Radio1.tKeyerPort;
-          TempPchar := 'RADIO ONE ';
-        end;
+           begin
+           TempKeyerPortType := Radio1.tKeyerPort;
+           TempPchar := 'RADIO ONE ';
+           end;
 
         if CATWTR = @Radio2 then
-        begin
-          TempKeyerPortType := Radio2.tKeyerPort;
-          TempPchar := 'RADIO TWO ';
-        end;
+           begin
+           TempKeyerPortType := Radio2.tKeyerPort;
+           TempPchar := 'RADIO TWO ';
+           end;
         SetWindowTextA(hwnddlg, TempPchar);
 
         {radio -- registry-built: display names, sorted, identity in item data}
@@ -1526,15 +1530,25 @@ begin
         WidenDialogForPortNames(hwnddlg);
 
         for I2 := 124 to 125 do
-          for i := 1 to 2 do
-            tCB_ADDSTRING_PCHAR(hwnddlg, I2, RTS_DTR_Values_Array[i]);
+           begin
+           for i := 1 to 2 do
+              begin
+              tCB_ADDSTRING_PCHAR(hwnddlg, I2, RTS_DTR_Values_Array[i]);
+              end;
+           end;
 
         for I2 := 126 to 127 do
-          for i := 1 to 4 do
-            tCB_ADDSTRING_PCHAR(hwnddlg, I2, RTS_DTR_Values_Array[i]);
+           begin
+           for i := 1 to 4 do
+              begin
+              tCB_ADDSTRING_PCHAR(hwnddlg, I2, RTS_DTR_Values_Array[i]);
+              end;
+           end;
 
         for BRT := BR1200 to BR115200 do
-          tCB_ADDSTRING_PCHAR(hwnddlg, 128, inttopchar(CAT_BAUDRATE_ARRAY[integer(BRT)]));
+           begin
+           tCB_ADDSTRING_PCHAR(hwnddlg, 128, inttopchar(CAT_BAUDRATE_ARRAY[integer(BRT)]));
+           end;
 
         // DATA/PARITY/STOP row, one pitch below BAUD RATE.  Must run BEFORE
         // the credential rows below: it shifts everything under the CAT
@@ -1724,7 +1738,9 @@ begin
            Windows.GetDlgItemTextA(hwnddlg, i, TempBuffer1, SizeOf(TempBuffer1));
            TF.Format(wsprintfBuffer, '%s%s', TempPchar, TempBuffer1);         // This prepends RADIO ONE or RADIO TWO.
            if i = 103 then
+              begin
               TF.Format(wsprintfBuffer, 'KEYER %s%s', TempPchar, TempBuffer1);
+              end;
            Windows.SetDlgItemTextA(hwnddlg, i, wsprintfBuffer);
            end;
 
@@ -1791,7 +1807,9 @@ begin
 
         for BRT := BR1200 to BR115200 do
           if CATWTR^.RadioBaudRate = CAT_BAUDRATE_ARRAY[integer(BRT)] then
-            tCB_SETCURSEL(hwnddlg, 128, Cardinal(brt));
+             begin
+             tCB_SETCURSEL(hwnddlg, 128, Cardinal(brt));
+             end;
 
         {data/parity/stop: the configured SERIAL FORMAT if valid, else the
          model's registered defaults (what the connect path will actually use)}
@@ -1902,79 +1920,79 @@ begin
         if (HiWord(wParam) = CBN_SELCHANGE)
           or (HiWord(wParam) = EN_CHANGE)
           then
-        begin
-          ButtonsEnable;
-          if LoWord(wParam) = 122 then   // 122 is port type (serial, network, etc).
-             begin
-             if ComboSelectedPort(hwnddlg, 122) = Network then
-                begin
-                EnableWindowTrue(hwnddlg, 130);
-                EnableWindowTrue(hwnddlg, 140);
-                EnableWindowTrue(hwnddlg, 131);
-                EnableWindowTrue(hwnddlg, 132);
-                EnableWindowTrue(hwnddlg, 133);
-                EnableWindowFalse(hwnddlg,124);
-                EnableWindowFalse(hwnddlg,125);
-                EnableWindowFalse(hwnddlg,128);
-                EnableWindowFalse(hwnddlg, SERIALFMT_COMBO_ID);
-                ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port on switch to Network
-                end
-             else
-                begin
-                EnableWindowTrue(hwnddlg, 124);
-                EnableWindowTrue(hwnddlg, 125);
-                EnableWindowTrue(hwnddlg, 128);
-                EnableWindowTrue(hwnddlg, SERIALFMT_COMBO_ID);
-                EnableWindowFalse(hwnddlg,130);
-                EnableWindowFalse(hwnddlg,140);
-                EnableWindowFalse(hwnddlg,131);
-                EnableWindowFalse(hwnddlg,132);
-                EnableWindowFalse(hwnddlg,133);
-               end;
-             UpdateNetworkCredentialsVisibility;
-             end;
-          if LoWord(wParam) = 121 then
-          begin
-            // Identity from ITEM DATA -- the registry-built list is sorted, so
-            // the row index is meaningless.  A string-id factory radio (and
-            // NONE) resolves to NoInterfacedRadio here.
-            selRadioModel := ComboSelectedRadioModel(hwnddlg);
-            // Baud default comes from the RADIO REGISTRY, not the legacy
-            // RadioParametersArray.br.  A model the registry does not know
-            // (NONE, string-id radios) still falls back to 4800 / 8N2.
-            if uRadioRegistry.IsRegistered(selRadioModel) then
-               begin
-               tCB_SETCURSEL(hwnddlg, 128,
-                  Cardinal(BaudRateComboIndex(
-                     uRadioRegistry.SerialParamsFor(selRadioModel).baud)));
-               // DATA/PARITY/STOP follows the model, exactly like the baud rate.
-               SelectSerialFormat(hwnddlg, SerialFormatDefaultFor(selRadioModel));
-               end
-            else
-               begin
-               tCB_SETCURSEL(hwnddlg, 128, 2);   // 4800 default
-               SelectSerialFormat(hwnddlg, '8N2');
-               end;
-            // The USE HAMLIB checkbox follows the selected model: forced ON and
-            // greyed for a HamLib-only model (unchecking it would leave the
-            // operator with no radio control at all), operator-controlled for
-            // everything else -- including recovering from a greyed state after
-            // switching AWAY from a HamLib-only model.
-            if uRadioRegistry.IsHamLibOnly(selRadioModel) then
-               begin
-               Windows.SendDlgItemMessage(hwnddlg, 1000, BM_SETCHECK, BST_CHECKED, 0);
-               EnableWindowFalse(hwnddlg, 1000);
-               end
-            else
-               begin
-               EnableWindowTrue(hwnddlg, 1000);
-               end;
-            UpdateHamLibIDRow(hwnddlg);
-            UpdateNetworkCredentialsVisibility;
-            ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port when the radio type changes
-          end;
+           begin
+           ButtonsEnable;
+           if LoWord(wParam) = 122 then   // 122 is port type (serial, network, etc).
+              begin
+              if ComboSelectedPort(hwnddlg, 122) = Network then
+                 begin
+                 EnableWindowTrue(hwnddlg, 130);
+                 EnableWindowTrue(hwnddlg, 140);
+                 EnableWindowTrue(hwnddlg, 131);
+                 EnableWindowTrue(hwnddlg, 132);
+                 EnableWindowTrue(hwnddlg, 133);
+                 EnableWindowFalse(hwnddlg,124);
+                 EnableWindowFalse(hwnddlg,125);
+                 EnableWindowFalse(hwnddlg,128);
+                 EnableWindowFalse(hwnddlg, SERIALFMT_COMBO_ID);
+                 ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port on switch to Network
+                 end
+              else
+                 begin
+                 EnableWindowTrue(hwnddlg, 124);
+                 EnableWindowTrue(hwnddlg, 125);
+                 EnableWindowTrue(hwnddlg, 128);
+                 EnableWindowTrue(hwnddlg, SERIALFMT_COMBO_ID);
+                 EnableWindowFalse(hwnddlg,130);
+                 EnableWindowFalse(hwnddlg,140);
+                 EnableWindowFalse(hwnddlg,131);
+                 EnableWindowFalse(hwnddlg,132);
+                 EnableWindowFalse(hwnddlg,133);
+                 end;
+              UpdateNetworkCredentialsVisibility;
+              end;
+           if LoWord(wParam) = 121 then
+              begin
+              // Identity from ITEM DATA -- the registry-built list is sorted, so
+              // the row index is meaningless.  A string-id factory radio (and
+              // NONE) resolves to NoInterfacedRadio here.
+              selRadioModel := ComboSelectedRadioModel(hwnddlg);
+              // Baud default comes from the RADIO REGISTRY, not the legacy
+              // RadioParametersArray.br.  A model the registry does not know
+              // (NONE, string-id radios) still falls back to 4800 / 8N2.
+              if uRadioRegistry.IsRegistered(selRadioModel) then
+                 begin
+                 tCB_SETCURSEL(hwnddlg, 128,
+                    Cardinal(BaudRateComboIndex(
+                       uRadioRegistry.SerialParamsFor(selRadioModel).baud)));
+                 // DATA/PARITY/STOP follows the model, exactly like the baud rate.
+                 SelectSerialFormat(hwnddlg, SerialFormatDefaultFor(selRadioModel));
+                 end
+              else
+                 begin
+                 tCB_SETCURSEL(hwnddlg, 128, 2);   // 4800 default
+                 SelectSerialFormat(hwnddlg, '8N2');
+                 end;
+              // The USE HAMLIB checkbox follows the selected model: forced ON and
+              // greyed for a HamLib-only model (unchecking it would leave the
+              // operator with no radio control at all), operator-controlled for
+              // everything else -- including recovering from a greyed state after
+              // switching AWAY from a HamLib-only model.
+              if uRadioRegistry.IsHamLibOnly(selRadioModel) then
+                 begin
+                 Windows.SendDlgItemMessage(hwnddlg, 1000, BM_SETCHECK, BST_CHECKED, 0);
+                 EnableWindowFalse(hwnddlg, 1000);
+                 end
+              else
+                 begin
+                 EnableWindowTrue(hwnddlg, 1000);
+                 end;
+              UpdateHamLibIDRow(hwnddlg);
+              UpdateNetworkCredentialsVisibility;
+              ApplyDefaultNetworkPort(hwnddlg);   // Issue #968 -- default port when the radio type changes
+              end;
 
-        end;
+           end;
         case wParam of
           2, 119: goto 1;   // Cancel / Escape -- discard immediately (per Win32 dialog convention)
           117: {Apply}
@@ -2004,7 +2022,10 @@ begin
               // Reset every combo to its first entry.  For the keyer RTS (126)
               // and DTR (127) combos this is index 0 = 'OFF'
               // (RTS_DTR_Values_Array = OFF/ON/CW/PTT), so they end up OFF.
-              for i := 121 to 128 do tCB_SETCURSEL(hwnddlg, i, 0);
+              for i := 121 to 128 do
+                 begin
+                 tCB_SETCURSEL(hwnddlg, i, 0);
+                 end;
               tCB_SETCURSEL(hwnddlg, 128, 2);   // baud rate -> 4800 (default)
               SelectSerialFormat(hwnddlg, '8N2');   // frame -> the program default
 
@@ -2357,13 +2378,13 @@ Otherwise, we have to start that up.
 
 if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
    (CATWTR^.tCATPortType = Network)                 then
-  begin
+   begin
 
-    GetExitCodeThread(CATWTR^.tRadioInterfaceThreadHandle, lpExitCode);
-    Windows.TerminateThread(CATWTR^.tRadioInterfaceThreadHandle, lpExitCode);
-    logger.Info('Terminated Radio %s thread',[CATWTR^.RadioName] );
-    CloseCATAndKeyerForThisRadio;
-  end;
+   GetExitCodeThread(CATWTR^.tRadioInterfaceThreadHandle, lpExitCode);
+   Windows.TerminateThread(CATWTR^.tRadioInterfaceThreadHandle, lpExitCode);
+   logger.Info('Terminated Radio %s thread',[CATWTR^.RadioName] );
+   CloseCATAndKeyerForThisRadio;
+   end;
 
   { Labels 101-111 come from the resource file. Value controls have IDs = label
     ID + 20 (121-131). The label text (already prefixed with "RADIO ONE/TWO "
@@ -2371,45 +2392,45 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
     Username (132) and password (133) are saved explicitly below.
     }
   for i := 101 to 111 do
-  begin
-    Windows.ZeroMemory(@ID, SizeOf(ID));
-    Windows.ZeroMemory(@CMD, SizeOf(CMD));
-    ID := GetDialogItemText(CATWndHWND, i);
-    CMD := GetDialogItemText(CATWndHWND, i + 20);
-    // Controls whose DISPLAYED text is friendly rather than canonical emit
-    // their config value from the row's ITEM DATA instead of what is drawn:
-    //   101/121 radio type -- shows 'Icom IC-7300MK2', config wants 'IC7300MK2'
-    //   102/122, 103/123 ports -- show 'SERIAL 14 - Silicon Labs CP210x',
-    //     config wants 'SERIAL 14' (CheckCommand matches against PortTypeSA).
-    if i = 101 then
-       begin
-       // For a string-id factory radio ComboSelectedRadioModel resolves to
-       // NoInterfacedRadio => TYPE=NONE, matching the FACTORY ID block below.
-       Windows.ZeroMemory(@CMD, SizeOf(CMD));
-       CMD := ShortString(AnsiString(
-          InterfacedRadioTypeSA[ComboSelectedRadioModel(CATWndHWND)]));
-       end;
-    if (i = 102) or (i = 103) then
-       begin
-       // ZeroMemory FIRST -- this is not belt-and-braces, it is required.
-       // CMD is a ShortString, and the line below is written out by
-       // WritePrivateProfileStringA as @CMD[1], i.e. as a NULL-TERMINATED
-       // PAnsiChar.  Assigning a SHORTER value only updates the length byte and
-       // the leading characters; the tail of the previous, longer value survives.
-       // So 'SERIAL 17' assigned over 'SERIAL 17 - USB-CI-V (COM17)' logs as
-       // 'SERIAL 17' (logger honours the length byte) while the ini receives the
-       // whole leftover string -- which is exactly the corruption seen in
-       // testing, and why the trace and the file disagreed.
-       Windows.ZeroMemory(@CMD, SizeOf(CMD));
-       CMD := ShortString(StrPas(PortTypeSA[ComboSelectedPort(CATWndHWND, i + 20)]));
-       end;
-    logger.Trace('[RestartPollingThread] ID = %s, CMD = %s',[ID, CMD]);
-    Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
-//    if not
-    CheckCommand(@ID, CMD)
-//    then      showwarning(@id[1])
-    ;
-  end;
+     begin
+     Windows.ZeroMemory(@ID, SizeOf(ID));
+     Windows.ZeroMemory(@CMD, SizeOf(CMD));
+     ID := GetDialogItemText(CATWndHWND, i);
+     CMD := GetDialogItemText(CATWndHWND, i + 20);
+     // Controls whose DISPLAYED text is friendly rather than canonical emit
+     // their config value from the row's ITEM DATA instead of what is drawn:
+     //   101/121 radio type -- shows 'Icom IC-7300MK2', config wants 'IC7300MK2'
+     //   102/122, 103/123 ports -- show 'SERIAL 14 - Silicon Labs CP210x',
+     //     config wants 'SERIAL 14' (CheckCommand matches against PortTypeSA).
+     if i = 101 then
+        begin
+        // For a string-id factory radio ComboSelectedRadioModel resolves to
+        // NoInterfacedRadio => TYPE=NONE, matching the FACTORY ID block below.
+        Windows.ZeroMemory(@CMD, SizeOf(CMD));
+        CMD := ShortString(AnsiString(
+           InterfacedRadioTypeSA[ComboSelectedRadioModel(CATWndHWND)]));
+        end;
+     if (i = 102) or (i = 103) then
+        begin
+        // ZeroMemory FIRST -- this is not belt-and-braces, it is required.
+        // CMD is a ShortString, and the line below is written out by
+        // WritePrivateProfileStringA as @CMD[1], i.e. as a NULL-TERMINATED
+        // PAnsiChar.  Assigning a SHORTER value only updates the length byte and
+        // the leading characters; the tail of the previous, longer value survives.
+        // So 'SERIAL 17' assigned over 'SERIAL 17 - USB-CI-V (COM17)' logs as
+        // 'SERIAL 17' (logger honours the length byte) while the ini receives the
+        // whole leftover string -- which is exactly the corruption seen in
+        // testing, and why the trace and the file disagreed.
+        Windows.ZeroMemory(@CMD, SizeOf(CMD));
+        CMD := ShortString(StrPas(PortTypeSA[ComboSelectedPort(CATWndHWND, i + 20)]));
+        end;
+     logger.Trace('[RestartPollingThread] ID = %s, CMD = %s',[ID, CMD]);
+     Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
+ //    if not
+     CheckCommand(@ID, CMD)
+ //    then      showwarning(@id[1])
+     ;
+     end;
 
   // Radio identity (Stage 2 string-id factory radios).  The TYPE row already
   // committed the canonical enum name from item data (NONE for a string-id
@@ -2466,33 +2487,49 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
   Windows.ZeroMemory(@ID, SizeOf(ID));
   Windows.ZeroMemory(@CMD, SizeOf(CMD));
   if CATWTR = @Radio1 then
+     begin
      ID := 'RADIO ONE NETWORK USERNAME'
+     end
   else
+     begin
      ID := 'RADIO TWO NETWORK USERNAME';
+     end;
   CMD := GetDialogItemText(CATWndHWND, 132);
   Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
   // Delete the legacy ICOM NETWORK USERNAME key (nil value = delete).
   if CATWTR = @Radio1 then
+     begin
      ID := 'RADIO ONE ICOM NETWORK USERNAME'
+     end
   else
+     begin
      ID := 'RADIO TWO ICOM NETWORK USERNAME';
+     end;
   Windows.WritePrivateProfileStringA('Radio', @ID[1], nil, TR4W_INI_FILENAME);
 
   Windows.ZeroMemory(@ID, SizeOf(ID));
   Windows.ZeroMemory(@CMD, SizeOf(CMD));
   if CATWTR = @Radio1 then
+     begin
      ID := 'RADIO ONE NETWORK PASSWORD'
+     end
   else
+     begin
      ID := 'RADIO TWO NETWORK PASSWORD';
+     end;
   CMD := GetDialogItemText(CATWndHWND, 133);
   Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
   // Delete the legacy ICOM NETWORK PASSWORD key.
   if CATWTR = @Radio1 then
+     begin
      ID := 'RADIO ONE ICOM NETWORK PASSWORD'
+     end
   else
+     begin
      ID := 'RADIO TWO ICOM NETWORK PASSWORD';
+     end;
   Windows.WritePrivateProfileStringA('Radio', @ID[1], nil, TR4W_INI_FILENAME);
 
   // Save the DATA/PARITY/STOP combo (runtime-created, so outside the 101..111

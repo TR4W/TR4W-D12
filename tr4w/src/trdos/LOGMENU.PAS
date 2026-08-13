@@ -58,8 +58,8 @@ var
 
 begin
   if FileExists('LOGCFG.DAT') then
-  begin
-      {        ClrScr;
+     begin
+     {        ClrScr;
               TextColor (Yellow);
               WriteLnCenter ('LOGCFG.DAT FILE CONVERSION');
               WriteLn;
@@ -78,38 +78,38 @@ begin
               WriteLn ('files renamed to the new convention, I can do that for you.');
               WriteLn;
       }
-    repeat
-      Key := UpCase(GetKey('Would you like you files updated to the new method? (Y/N) : '));
-      if (Key = EscapeKey) or (Key = 'N') then Exit;
-    until Key = 'Y';
-    WriteLn;
+   repeat
+     Key := UpCase(GetKey('Would you like you files updated to the new method? (Y/N) : '));
+     if (Key = EscapeKey) or (Key = 'N') then Exit;
+   until Key = 'Y';
+   WriteLn;
 
-      //{WLI}        TextColor (Cyan);
+     //{WLI}        TextColor (Cyan);
 
-    if OpenFileForRead(FileRead, 'LOGCFG.DAT') then
-    begin
-      while not Eof(FileRead) do
+   if OpenFileForRead(FileRead, 'LOGCFG.DAT') then
       begin
-        ReadLn(FileRead, FileString);
+      while not Eof(FileRead) do
+         begin
+         ReadLn(FileRead, FileString);
 
-        FileString := UpperCase(FileString);
+         FileString := UpperCase(FileString);
 
-        ID := UpperCase(PrecedingString(FileString, '='));
-        CMD := PostcedingString(FileString, '=');
+         ID := UpperCase(PrecedingString(FileString, '='));
+         CMD := PostcedingString(FileString, '=');
 
-        GetRidOfPrecedingSpaces(ID);
-        GetRidOfPrecedingSpaces(CMD);
-        GetRidOfPostcedingSpaces(ID);
-        GetRidOfPostcedingSpaces(CMD);
+         GetRidOfPrecedingSpaces(ID);
+         GetRidOfPrecedingSpaces(CMD);
+         GetRidOfPostcedingSpaces(ID);
+         GetRidOfPostcedingSpaces(CMD);
 
-        if ID = 'CONTEST' then
-          if FoundContest(CMD) then
-          begin
-            Close(FileRead);
+         if ID = 'CONTEST' then
+           if FoundContest(CMD) then
+              begin
+              Close(FileRead);
 
-//            WriteLn('Renaming LOGCFG.DAT to ', LogConfigFileName);
-//            RenameFile('LOGCFG.DAT', LogConfigFileName);
-                    {
+  //            WriteLn('Renaming LOGCFG.DAT to ', LogConfigFileName);
+  //            RenameFile('LOGCFG.DAT', LogConfigFileName);
+                      {
                                 if FileExists('LOG.DAT') then
                                 begin
                                   WriteLn('Renaming LOG.DAT to ', LogFileName);
@@ -122,35 +122,35 @@ begin
                                   RenameFile('LOG.TMP', LogTempFileName);
                                 end;
                     }
-            if FileExists('RESTART.BIN') then
-            begin
-//              WriteLn('Renaming RESTART.BIN to ', LogRestartFileName);
-//              RenameFile('RESTART.BIN', LogRestartFileName);
-            end;
+              if FileExists('RESTART.BIN') then
+                 begin
+                 //              WriteLn('Renaming RESTART.BIN to ', LogRestartFileName);
+                 //              RenameFile('RESTART.BIN', LogRestartFileName);
+                 end;
 
-                    {                        TextColor (Cyan);
+                      {                        TextColor (Cyan);
                                             WriteLn;
                                             WriteLn ('Process completed - press any key to continue.');
                     }
-                    //{WLI}                        REPEAT UNTIL KeyPressed;
-                    //{WLI}                        WHILE KeyPressed DO ReadKey;
-            Exit;
-          end
-          else
-          begin
-            Close(FileRead);
-            ShowMessage('I found a contest name I do no understand in your LOGCFG.DAT file.');
-                    //{WLI}                        WaitForKeyPressed;
-            Exit;
-          end;
-      end;
+                      //{WLI}                        REPEAT UNTIL KeyPressed;
+                      //{WLI}                        WHILE KeyPressed DO ReadKey;
+              Exit;
+              end
+           else
+              begin
+              Close(FileRead);
+              ShowMessage('I found a contest name I do no understand in your LOGCFG.DAT file.');
+                      //{WLI}                        WaitForKeyPressed;
+              Exit;
+              end;
+         end;
 
       Close(FileRead);
 
       ShowMessage('I did not fine a contest name in your LOGCFG.DAT file.');
           //{WLI}            WaitForKeyPressed;
-    end;
-  end;
+      end;
+     end;
 end;
 {
 procedure MakeListOfAvailableContestFiles;
@@ -186,7 +186,10 @@ var
   Row, col                    : integer;
 
 begin
-  while length(Contest) < 20 do Contest := Contest + ' ';
+  while length(Contest) < 20 do
+     begin
+     Contest := Contest + ' ';
+     end;
 
   //  NoCursor;
   col := (Entry div NumberRows) * 20 + 1;
@@ -205,7 +208,10 @@ var
   Row, col                    : integer;
 
 begin
-  while length(Contest) < 20 do Contest := Contest + ' ';
+  while length(Contest) < 20 do
+     begin
+     Contest := Contest + ' ';
+     end;
 
   col := (Entry div NumberRows) * 20 + 1;
   Row := (Entry mod NumberRows);

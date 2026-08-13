@@ -157,27 +157,27 @@ begin
 
         GetPrivateProfileStringA(_COMMANDS, LATEST_CONFIG_FILE, nil, TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType), TR4W_INI_FILENAME);
         if TR4W_LATESTCFG_FILENAME[0] <> #0 then
-        begin
+           begin
 
-          if FileExists(TR4W_LATESTCFG_FILENAME) then
+           if FileExists(TR4W_LATESTCFG_FILENAME) then
 
-          begin
+              begin
 
-        {BUTTON LATEST CONFIG}
-            TempCardinal := tWM_SETFONT(
-              CreateWindowExW(0, ButtonPChar, nil, BS_MULTILINE or WS_CHILD or BS_TEXT or WS_VISIBLE {or WS_TABSTOP}, 5, 415, 250, 50 {nHeight}, hwnddlg, NC_BUTTON_LATEST_CONFIG, hInstance, nil),
-              MSSansSerifFont);
+              {BUTTON LATEST CONFIG}
+                  TempCardinal := tWM_SETFONT(
+                    CreateWindowExW(0, ButtonPChar, nil, BS_MULTILINE or WS_CHILD or BS_TEXT or WS_VISIBLE {or WS_TABSTOP}, 5, 415, 250, 50 {nHeight}, hwnddlg, NC_BUTTON_LATEST_CONFIG, hInstance, nil),
+                    MSSansSerifFont);
 
-            Windows.CopyMemory(@TempBuffer1, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
-            Windows.CharLowerA(TempBuffer1);
-            TF.Format(wsprintfBuffer, TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s', TempBuffer1);
-            //i := GetDlgItem(hwnddlg, NC_BUTTON_LATEST_CONFIG);
+                  Windows.CopyMemory(@TempBuffer1, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
+                  Windows.CharLowerA(TempBuffer1);
+                  TF.Format(wsprintfBuffer, TC_LATEST_CONFIG_FILE + ' (Alt+&A):'#13#10'%s', TempBuffer1);
+                  //i := GetDlgItem(hwnddlg, NC_BUTTON_LATEST_CONFIG);
 
-            Windows.SetWindowTextA(TempCardinal, wsprintfBuffer);
-            EnableWindow(TempCardinal, True);
-            Windows.ShowWindow(TempCardinal, SW_SHOW);
-          end;
-        end;
+                  Windows.SetWindowTextA(TempCardinal, wsprintfBuffer);
+                  EnableWindow(TempCardinal, True);
+                  Windows.ShowWindow(TempCardinal, SW_SHOW);
+              end;
+           end;
 
         // Issue #915: labels shifted left + widened to fit CATEGORY-TRANSMITTER
         // at right-align.  x was 300, w was 125+20 (=145).  Now x=270, w=155+20.
@@ -204,7 +204,10 @@ begin
         OldSelectContestListBoxProc := Pointer(Windows.SetWindowLong(NewContestListBoxHandle, GWL_WNDPROC, integer(@NewSelectContestListBoxProc)));
         tWM_SETFONT(NewContestListBoxHandle, MainFixedFont);
 
-        for ct := Succ(DUMMYCONTEST) to High(ContestType) do tCB_ADDSTRING_PCHAR(hwnddlg, NC_CONTEST_COMBOBOX, ContestTypeSA[ct]);
+        for ct := Succ(DUMMYCONTEST) to High(ContestType) do
+           begin
+           tCB_ADDSTRING_PCHAR(hwnddlg, NC_CONTEST_COMBOBOX, ContestTypeSA[ct]);
+           end;
 
         NewContestCheckBox := GetDlgItem(hwnddlg, NC_CHECKBOX_IAMIN);
 
@@ -213,42 +216,62 @@ begin
         tLoadKeyboardLayout;
 
         for TempCardinal := 1 to CSAS do
-        begin
-          Top := 120 + TempCardinal * (h + 6);
-          // Issue #915: CATEGORY-* labels shifted left + widened so the
-          // longest one (CATEGORY-TRANSMITTER) fits at right-align without
-          // clipping.  Was: x=300, w=128+20 (=148).  Now: x=270, w=158+20.
-          InitialCommandsHWNDArray[TempCardinal, 1] := tCreateStaticWindow(InitialCommandsSA2[TempCardinal], WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE, 270, Top, 158 + 20, h, hwnddlg, 0);
-          if TempCardinal < 4 then
-            InitialCommandsHWNDArray[TempCardinal, 2] := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_TABSTOP or WS_CHILD or ES_UPPERCASE, 435 + 20, Top, 173 - 20, h, hwnddlg, 0)
-          else
-            InitialCommandsHWNDArray[TempCardinal, 2] := tCreateComboBoxWindow({CBS_SORT + }CBS_UPPERCASE + CBS_DROPDOWNLIST or WS_CHILD or {WS_VSCROLL or } WS_VISIBLE or WS_TABSTOP, 435 + 20, Top, 173 - 20, hwnddlg, 0);
-        end;
+           begin
+           Top := 120 + TempCardinal * (h + 6);
+           // Issue #915: CATEGORY-* labels shifted left + widened so the
+           // longest one (CATEGORY-TRANSMITTER) fits at right-align without
+           // clipping.  Was: x=300, w=128+20 (=148).  Now: x=270, w=158+20.
+           InitialCommandsHWNDArray[TempCardinal, 1] := tCreateStaticWindow(InitialCommandsSA2[TempCardinal], WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE, 270, Top, 158 + 20, h, hwnddlg, 0);
+           if TempCardinal < 4 then
+              begin
+              InitialCommandsHWNDArray[TempCardinal, 2] := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_TABSTOP or WS_CHILD or ES_UPPERCASE, 435 + 20, Top, 173 - 20, h, hwnddlg, 0)
+              end
+           else
+              begin
+              InitialCommandsHWNDArray[TempCardinal, 2] := tCreateComboBoxWindow({CBS_SORT + }CBS_UPPERCASE + CBS_DROPDOWNLIST or WS_CHILD or {WS_VSCROLL or } WS_VISIBLE or WS_TABSTOP, 435 + 20, Top, 173 - 20, hwnddlg, 0);
+              end;
+           end;
 
         for TempCategoryAssisted := Low(tCategoryAssisted) to High(tCategoryAssisted) do
-          SendMessageA(InitialCommandsHWNDArray[4, 2], CB_ADDSTRING, 0, integer(tCategoryAssistedSA[TempCategoryAssisted]));
+           begin
+           SendMessageA(InitialCommandsHWNDArray[4, 2], CB_ADDSTRING, 0, integer(tCategoryAssistedSA[TempCategoryAssisted]));
+           end;
 
         for TempCategoryBand := Low(tCategoryBand) to High(tCategoryBand) do
-          SendMessageA(InitialCommandsHWNDArray[5, 2], CB_ADDSTRING, 0, integer(tCategoryBandSA[TempCategoryBand]));
+           begin
+           SendMessageA(InitialCommandsHWNDArray[5, 2], CB_ADDSTRING, 0, integer(tCategoryBandSA[TempCategoryBand]));
+           end;
 
         for TempCategoryMode := Low(tCategoryMode) to High(tCategoryMode) do
-          SendMessageA(InitialCommandsHWNDArray[6, 2], CB_ADDSTRING, 0, integer(tCategoryModeSA[TempCategoryMode]));
+           begin
+           SendMessageA(InitialCommandsHWNDArray[6, 2], CB_ADDSTRING, 0, integer(tCategoryModeSA[TempCategoryMode]));
+           end;
 
         for TempCategoryOperator := Low(tCategoryOperator) to High(tCategoryOperator) do
-          SendMessageA(InitialCommandsHWNDArray[7, 2], CB_ADDSTRING, 0, integer(tCategoryOperatorSA[TempCategoryOperator]));
+           begin
+           SendMessageA(InitialCommandsHWNDArray[7, 2], CB_ADDSTRING, 0, integer(tCategoryOperatorSA[TempCategoryOperator]));
+           end;
 
         for TempCategoryPower := Low(tCategoryPower) to High(tCategoryPower) do
-          SendMessageA(InitialCommandsHWNDArray[8, 2], CB_ADDSTRING, 0, integer(tCategoryPowerSA[TempCategoryPower]));
+           begin
+           SendMessageA(InitialCommandsHWNDArray[8, 2], CB_ADDSTRING, 0, integer(tCategoryPowerSA[TempCategoryPower]));
+           end;
 
         for TempCategoryTransmitter := Low(tCategoryTransmitter) to High(tCategoryTransmitter) do
-          SendMessageA(InitialCommandsHWNDArray[9, 2], CB_ADDSTRING, 0, integer(tCategoryTransmitterSA[TempCategoryTransmitter]));
+           begin
+           SendMessageA(InitialCommandsHWNDArray[9, 2], CB_ADDSTRING, 0, integer(tCategoryTransmitterSA[TempCategoryTransmitter]));
+           end;
 
         for TempCardinal := 4 to CSAS do
-          SendMessage(InitialCommandsHWNDArray[TempCardinal, 2], CB_SETCURSEL, 0, 0);
+           begin
+           SendMessage(InitialCommandsHWNDArray[TempCardinal, 2], CB_SETCURSEL, 0, 0);
+           end;
 
         MainCallsign[0] := AnsiChar(GetPrivateProfileStringA(_COMMANDS, MAIN_CALLSIGN, nil, @MainCallsign[1], SizeOf(MainCallsign), TR4W_INI_FILENAME));
         if MainCallsign <> '' then
-          Windows.SetDlgItemTextA(hwnddlg, NC_CALL_EDIT, @MainCallsign[1]);
+           begin
+           Windows.SetDlgItemTextA(hwnddlg, NC_CALL_EDIT, @MainCallsign[1]);
+           end;
 
         {OK}
         CreateButton(BS_DEFPUSHBUTTON, OK_WORD, 350, 430, 80, hwnddlg, NC_BUTTON_OK);
@@ -267,292 +290,297 @@ begin
 
     WM_COMMAND:
       begin
-        if HiWord(wParam) = LBN_DBLCLK then ChangeDir;
+        if HiWord(wParam) = LBN_DBLCLK then
+           begin
+           ChangeDir;
+           end;
 
         if HiWord(wParam) = BN_CLICKED then
-        begin
-          if LoWord(wParam) = NC_BUTTON_LATEST_CONFIG then
-          begin
-            Windows.CopyMemory(@TR4W_CFG_FILENAME, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
-            DestroyWindow(NewContestDlgWndHandle);
-          end;
+           begin
+           if LoWord(wParam) = NC_BUTTON_LATEST_CONFIG then
+              begin
+              Windows.CopyMemory(@TR4W_CFG_FILENAME, @TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
+              DestroyWindow(NewContestDlgWndHandle);
+              end;
 
-          if LoWord(wParam) = NC_CHECKBOX_IAMIN then
-          begin
-            ClearFields;
+           if LoWord(wParam) = NC_CHECKBOX_IAMIN then
+              begin
+              ClearFields;
 
-            Windows.SetWindowTextA(NewContestCommentWndHandle, nil);
-             if Windows.SendMessage(NewContestCheckBox, BM_GETCHECK, 0, 0) = BST_UNCHECKED then
+              Windows.SetWindowTextA(NewContestCommentWndHandle, nil);
+               if Windows.SendMessage(NewContestCheckBox, BM_GETCHECK, 0, 0) = BST_UNCHECKED then
 
 
-            begin
-{
+                  begin
+                  {
               if SelectedContest = NYQP then
               begin
                 SetCommentAndEnableEditControl(TC_ENTERSTATEFORUSPROVINCEFORCANADA, nc_MyState);
                 EnableWindow(GetDlgItem(hwnddlg, 101), False);
               end;
 }
-              Exit;
-            end;
-            case SelectedContest of
-            MWC:
-            ;
-            VAQP:
-            ;
+                                Exit;
+                  end;
+              case SelectedContest of
+              MWC:
+              ;
+              VAQP:
+              ;
 
-              ALRS_UA1DZ_CUP:
-                SetCommentAndEnableEditControl(TC_ENTERYOURRDAIDORGRID, icmyState);
+                ALRS_UA1DZ_CUP:
+                  SetCommentAndEnableEditControl(TC_ENTERYOURRDAIDORGRID, icmyState);
 
-              NEWENGLANDQSO:
-                SetCommentAndEnableEditControl(TC_NEWENGLANDSTATEABREVIATION, icmyState);
+                NEWENGLANDQSO:
+                  SetCommentAndEnableEditControl(TC_NEWENGLANDSTATEABREVIATION, icmyState);
 
-              ARRL10, ARRL160, ARRLDXCW, ARRL_RTTY_ROUNDUP:
-                begin
-                   Windows.SendMessage(107, BM_SETCHECK, BST_CHECKED, 0);
-                  SetCommentAndEnableEditControl(TC_ENTERTHEQTHTHATYOUWANTTOSEND, icmyState);
-                end;
+                ARRL10, ARRL160, ARRLDXCW, ARRL_RTTY_ROUNDUP:
+                  begin
+                     Windows.SendMessage(107, BM_SETCHECK, BST_CHECKED, 0);
+                    SetCommentAndEnableEditControl(TC_ENTERTHEQTHTHATYOUWANTTOSEND, icmyState);
+                  end;
 
-              CQWWRTTY, CQ160CW, CQ160SSB:
-                SetCommentAndEnableEditControl(TC_ENTERSTATEFORUSPROVINCEFORCANADA, icmyState);
+                CQWWRTTY, CQ160CW, CQ160SSB:
+                  SetCommentAndEnableEditControl(TC_ENTERSTATEFORUSPROVINCEFORCANADA, icmyState);
 
-                  IRTS:
-                   SetCommentAndEnableEditControl(TC_EnterYourCountyCode,icmyState);
+                    IRTS:
+                     SetCommentAndEnableEditControl(TC_EnterYourCountyCode,icmyState);
 
-              CANADA_DAY, CANADA_WINTER:
-                SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
+                CANADA_DAY, CANADA_WINTER:
+                  SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
 
 
-              REFSSB, REFCW:
-                SetCommentAndEnableEditControl(TC_DEPARTMENT, icmyState);
+                REFSSB, REFCW:
+                  SetCommentAndEnableEditControl(TC_DEPARTMENT, icmyState);
 
-              UKRAINIAN, RUSSIANDX, UNDX, CIS, RU3AXMEMORIAL:
-                SetCommentAndEnableEditControl(TC_ENTERYOUROBLASTID, icmyState);
+                UKRAINIAN, RUSSIANDX, UNDX, CIS, RU3AXMEMORIAL:
+                  SetCommentAndEnableEditControl(TC_ENTERYOUROBLASTID, icmyState);
 
-              KINGOFSPAINCW, KINGOFSPAINSSB, UBACW, UBASSB, PACC, ARI_DX, HELVETIA:
-                SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
+                KINGOFSPAINCW, KINGOFSPAINSSB, UBACW, UBASSB, PACC, ARI_DX, HELVETIA:
+                  SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
 
-              CQIR, HADX, YUDX: SetCommentAndEnableEditControl(TC_ENTERYOURCOUNTYCODE, icmyState);
+                CQIR, HADX, YUDX: SetCommentAndEnableEditControl(TC_ENTERYOURCOUNTYCODE, icmyState);
 
-              GagarinCup: SetCommentAndEnableEditControl(TC_Gagarin, icmystate);
+                GagarinCup: SetCommentAndEnableEditControl(TC_Gagarin, icmystate);
 
-              UKEI: SetCommentAndEnableEditControl(TC_EnterYourDistrictCode, icmyState);
+                UKEI: SetCommentAndEnableEditControl(TC_EnterYourDistrictCode, icmyState);
 
-              DARC10M, WAG, DARCXMAS: SetCommentAndEnableEditControl(TC_ENTERYOURDOK, icmyState);
+                DARC10M, WAG, DARCXMAS: SetCommentAndEnableEditControl(TC_ENTERYOURDOK, icmyState);
 
-              SPDX, OKDX, OKOMSSB, YODX, RSGB18, LZDX, EUDX:                // 4.80.1
-                SetCommentAndEnableEditControl(TC_ENTERYOURDISTRICTABBREVIATION, icmyState);
+                SPDX, OKDX, OKOMSSB, YODX, RSGB18, LZDX, EUDX:                // 4.80.1
+                  SetCommentAndEnableEditControl(TC_ENTERYOURDISTRICTABBREVIATION, icmyState);
 
-              RDA: SetCommentAndEnableEditControl(TC_ENTERYOURRDAID, icmyState);
+                RDA: SetCommentAndEnableEditControl(TC_ENTERYOURRDAID, icmyState);
 
-              BSCI, IARU:
-                SetCommentAndEnableEditControl(nil, icmyState);
+                BSCI, IARU:
+                  SetCommentAndEnableEditControl(nil, icmyState);
 
-              IOTA:
-                SetCommentAndEnableEditControl(TC_ENTERYOURIOTAREFERENCEDESIGNATOR, icmyState);
+                IOTA:
+                  SetCommentAndEnableEditControl(TC_ENTERYOURIOTAREFERENCEDESIGNATOR, icmyState);
 
-              WWPMC:
-                SetCommentAndEnableEditControl(TC_ENTERYOURCITYIDENTIFIER, icmyState);
-              POTA:
-                 SetCommentAndEnableEditControl(TC_ENTERYOURPARKREFERENCEDESIGNATOR, icmyPark);
-              PCC, ARKTIKA_SPRING:
-                SetCommentAndEnableEditControl(TC_ENTERYOURMEMBERSHIPNUMBER, icmyState);
+                WWPMC:
+                  SetCommentAndEnableEditControl(TC_ENTERYOURCITYIDENTIFIER, icmyState);
+                POTA:
+                   SetCommentAndEnableEditControl(TC_ENTERYOURPARKREFERENCEDESIGNATOR, icmyPark);
+                PCC, ARKTIKA_SPRING:
+                  SetCommentAndEnableEditControl(TC_ENTERYOURMEMBERSHIPNUMBER, icmyState);
 
-              JIDXCW, JIDXSSB:
-                SetCommentAndEnableEditControl(TC_PREFECTURE, icmyState);
+                JIDXCW, JIDXSSB:
+                  SetCommentAndEnableEditControl(TC_PREFECTURE, icmyState);
 
-            end;
-          end;
+              end;
+              end;
 
-        end;
+           end;
 
         if HiWord(wParam) = CBN_SELCHANGE then
           if LoWord(wParam) = NC_CONTEST_COMBOBOX then
-          begin
-            SelectedContest := GetContestFromString(GetDialogItemText(hwnddlg, NC_CONTEST_COMBOBOX));
-            ClearFields;
-            Windows.SetWindowTextA(NewContestCommentWndHandle, nil);
-            Windows.ShowWindow(NewContestCheckBox, SW_HIDE);
-            Windows.SendMessage(NewContestCheckBox, BM_SETCHECK, BST_UNCHECKED, 0);
+             begin
+             SelectedContest := GetContestFromString(GetDialogItemText(hwnddlg, NC_CONTEST_COMBOBOX));
+             ClearFields;
+             Windows.SetWindowTextA(NewContestCommentWndHandle, nil);
+             Windows.ShowWindow(NewContestCheckBox, SW_HIDE);
+             Windows.SendMessage(NewContestCheckBox, BM_SETCHECK, BST_UNCHECKED, 0);
 
-            if (ContestsArray[SelectedContest].p <> 0) and (SelectedContest <> BCQP)  then
-              EnterCountyOrState(QSOParties[ContestsArray[SelectedContest].p].StateName);
-
-            case SelectedContest of
-             LABRE:
-                  SetCommentAndEnableEditControl(TC_LABRE,icmyState);
-            
-               BCQP:            // 4.97.7
-                 SetCommentAndEnableEditControl(TC_ENTERYOURISTRICTIFINVE7,icmyState);
-
-
-              COLORADOQSOPARTY, MINNQSOPARTY :
+             if (ContestsArray[SelectedContest].p <> 0) and (SelectedContest <> BCQP)  then
                 begin
-                   DisplayInitialCommand(icmyName);
+                EnterCountyOrState(QSOParties[ContestsArray[SelectedContest].p].StateName);
                 end;
 
-              ALRS_UA1DZ_CUP:
-                SetCommentAndEnableEditControl(TC_ENTERYOURRDAIDORGRID, icmyState);
+             case SelectedContest of
+              LABRE:
+                   SetCommentAndEnableEditControl(TC_LABRE,icmyState);
+            
+                BCQP:            // 4.97.7
+                  SetCommentAndEnableEditControl(TC_ENTERYOURISTRICTIFINVE7,icmyState);
 
-              EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW: SetCommentAndEnableEditControl(TC_ENTERYOURNAME, icMyName);
 
-              NZFIELDDAY: SetCommentAndEnableEditControl(TC_ENTERYOURBRANCHNUMBER, icmyZone);
+               COLORADOQSOPARTY, MINNQSOPARTY :
+                 begin
+                    DisplayInitialCommand(icmyName);
+                 end;
 
-              EUROPEANHFC: SetCommentAndEnableEditControl(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, icmyZone);
+               ALRS_UA1DZ_CUP:
+                 SetCommentAndEnableEditControl(TC_ENTERYOURRDAIDORGRID, icmyState);
 
-              KVP: SetCommentAndEnableEditControl(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, icmyZone);      // 4.65.3
+               EUSPRINT_SPRING_SSB, EUSPRINT_AUTUMN_CW, EUSPRINT_AUTUMN_SSB, EUSPRINT_SPRING_CW: SetCommentAndEnableEditControl(TC_ENTERYOURNAME, icMyName);
 
-              RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB: SetCommentAndEnableEditControl(TC_ENTERYOURZONE, icmyState);
-              RAEM: SetCommentAndEnableEditControl(TC_ENTERYOURGEOGRAPHICALCOORDINATES, icmyQTH);
+               NZFIELDDAY: SetCommentAndEnableEditControl(TC_ENTERYOURBRANCHNUMBER, icmyZone);
 
-              OLDNEWYEAR: SetCommentAndEnableEditControl(TC_ENTERSUMOFYOURAGEANDAMOUNT, icmyQTH);
-              RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB: SetCommentAndEnableEditControl(TC_ENTERYOURPOSTCODE, icmyPostalCode);
+               EUROPEANHFC: SetCommentAndEnableEditControl(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, icmyZone);
+
+               KVP: SetCommentAndEnableEditControl(TC_ENTERTHELASTTWODIGITSOFTHEYEAR, icmyZone);      // 4.65.3
+
+               RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB: SetCommentAndEnableEditControl(TC_ENTERYOURZONE, icmyState);
+               RAEM: SetCommentAndEnableEditControl(TC_ENTERYOURGEOGRAPHICALCOORDINATES, icmyQTH);
+
+               OLDNEWYEAR: SetCommentAndEnableEditControl(TC_ENTERSUMOFYOURAGEANDAMOUNT, icmyQTH);
+               RSGB_ROPOCO_CW, RSGB_ROPOCO_SSB: SetCommentAndEnableEditControl(TC_ENTERYOURPOSTCODE, icmyPostalCode);
 
              
-              RADIOMEMORY: SetCommentAndEnableEditControl(TC_AGECALLSIGNAGE, icmyQTH);
-              CQMM: SetCommentAndEnableEditControl(TC_ENTERYOURCONTINENT, icmyState);
+               RADIOMEMORY: SetCommentAndEnableEditControl(TC_AGECALLSIGNAGE, icmyQTH);
+               CQMM: SetCommentAndEnableEditControl(TC_ENTERYOURCONTINENT, icmyState);
 
-              NRAUBALTICCW, NRAUBALTICSSB: SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
-              OZCR_O: SetCommentAndEnableEditControl(TC_OZCR, icmyState);
+               NRAUBALTICCW, NRAUBALTICSSB: SetCommentAndEnableEditControl(TC_ENTERYOURPROVINCEID, icmyState);
+               OZCR_O: SetCommentAndEnableEditControl(TC_OZCR, icmyState);
 
-              //RUSSIAN160: SetCommentAndEnableEditControl(TC_ENTERYOURSQUAREID, icmyState);
-              R9W_UW9WK_MEMORIAL: SetCommentAndEnableEditControl(TC_STATIONCLASS, icmyState);
+               //RUSSIAN160: SetCommentAndEnableEditControl(TC_ENTERYOURSQUAREID, icmyState);
+               R9W_UW9WK_MEMORIAL: SetCommentAndEnableEditControl(TC_STATIONCLASS, icmyState);
 
-              CUPRFCW, CUPRFSSB, CUPRFDIG: SetCommentAndEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE, icmyGrid);
-              RFASCHAMPIONSHIPCW: SetCommentAndEnableEditControl(TC_RFAS, icMyQTH);
-               CQVHF,ARRLVHFJAN,ARRLVHFJUN, ARRLVHFSEP,ARRLDIGI, STEWPERRY, BATAVIA_FT8, WWDIGI, MAKROTHEN, RTC: SetCommentAndEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE, icmyGrid);
+               CUPRFCW, CUPRFSSB, CUPRFDIG: SetCommentAndEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE, icmyGrid);
+               RFASCHAMPIONSHIPCW: SetCommentAndEnableEditControl(TC_RFAS, icMyQTH);
+                CQVHF,ARRLVHFJAN,ARRLVHFJUN, ARRLVHFSEP,ARRLDIGI, STEWPERRY, BATAVIA_FT8, WWDIGI, MAKROTHEN, RTC: SetCommentAndEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE, icmyGrid);
 
-              OZHCRVHF, EUROPEANVHF, RADIOVHFFD: SetCommentAndEnableEditControl(TC_ENTERYOURSIXDIGITGRIDSQUARE, icmyGrid);
+               OZHCRVHF, EUROPEANVHF, RADIOVHFFD: SetCommentAndEnableEditControl(TC_ENTERYOURSIXDIGITGRIDSQUARE, icmyGrid);
 
-              TESLA:
-               SetCommentandEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE,icmyGrid);
+               TESLA:
+                SetCommentandEnableEditControl(TC_ENTERYOURFOURDIGITGRIDSQUARE,icmyGrid);
               
-              NEWENGLANDQSO: DisplayCheckBox(TC_NEWENGLAND);
+               NEWENGLANDQSO: DisplayCheckBox(TC_NEWENGLAND);
 
-              CQWWRTTY, CQ160CW, CQ160SSB, ARRL10, ARRL160, ARRL_RTTY_ROUNDUP: DisplayCheckBox(TC_NORTHAMERICA);
+               CQWWRTTY, CQ160CW, CQ160SSB, ARRL10, ARRL160, ARRL_RTTY_ROUNDUP: DisplayCheckBox(TC_NORTHAMERICA);
 
-              RDA, RUSSIANDX, RU3AXMEMORIAL: DisplayCheckBox(TC_RUSSIA);
-              CQIR: DisplayCheckBox(TC_IRELAND);
-              CANADA_DAY, CANADA_WINTER: DisplayCheckBox(TC_CANADA);
-              REFSSB, REFCW: DisplayCheckBox(TC_FRANCE);
-              IRTS: DisplayCheckBox(TC_IRTS);   // 4.93.2
-             EUDX:
-               DisplayCheckBox(TC_EUDX);  // 4.95.6
-              KINGOFSPAINCW, KINGOFSPAINSSB: DisplayCheckBox(TC_SPAIN);
-              JIDXCW, JIDXSSB: DisplayCheckBox(TC_JAPAN);
-              HELVETIA: DisplayCheckBox(TC_SWITZERLAND);
-              ARI_DX: DisplayCheckBox(TC_ITALY);
-              UNDX: DisplayCheckBox(TC_KAZAKHSTAN);
-              UKRAINIAN: DisplayCheckBox(TC_UKRAINE);
-              OKDX, OKOMSSB: DisplayCheckBox(TC_CZECHREPUBLICORINSLOVAKIA);
-     //         LABRE: DisplayCheckBox(TC_LABRE);
-              LZDX: DisplayCheckBox(TC_BULGARIA);
-              YODX: DisplayCheckBox(TC_ROMANIA);
-              HADX: DisplayCheckBox(TC_HUNGARY);
-              YUDX: DisplayCheckBox(TC_YUGOSLAVIA);
-              UKEI: DisplayCheckBox(TC_UKEI);
-              GagarinCup: DisplayCheckBox(TC_GC);
-            //  UKEI: SetCommentAndEnableEditControl(TC_EnterYourDistrictCode, icmyState);
-              UBACW, UBASSB: DisplayCheckBox(TC_BELGIUM);
-              PACC: DisplayCheckBox(TC_NETHERLANDS);
-              DARC10M, WAG, DARCXMAS: DisplayCheckBox(TC_GERMANY);
-              RSGB18: DisplayCheckBox(TC_UK);
-              CIS: DisplayCheckBox(TC_CIS);
-              SPDX: DisplayCheckBox(TC_POLAND);
-              BSCI, IARU: DisplayCheckBox(TC_HQ_OR_MEMBER);
-              IOTA:
-                begin
-                  Windows.SetWindowTextA(NewContestCheckBox, TC_ISLANDSTATION);
+               RDA, RUSSIANDX, RU3AXMEMORIAL: DisplayCheckBox(TC_RUSSIA);
+               CQIR: DisplayCheckBox(TC_IRELAND);
+               CANADA_DAY, CANADA_WINTER: DisplayCheckBox(TC_CANADA);
+               REFSSB, REFCW: DisplayCheckBox(TC_FRANCE);
+               IRTS: DisplayCheckBox(TC_IRTS);   // 4.93.2
+              EUDX:
+                DisplayCheckBox(TC_EUDX);  // 4.95.6
+               KINGOFSPAINCW, KINGOFSPAINSSB: DisplayCheckBox(TC_SPAIN);
+               JIDXCW, JIDXSSB: DisplayCheckBox(TC_JAPAN);
+               HELVETIA: DisplayCheckBox(TC_SWITZERLAND);
+               ARI_DX: DisplayCheckBox(TC_ITALY);
+               UNDX: DisplayCheckBox(TC_KAZAKHSTAN);
+               UKRAINIAN: DisplayCheckBox(TC_UKRAINE);
+               OKDX, OKOMSSB: DisplayCheckBox(TC_CZECHREPUBLICORINSLOVAKIA);
+      //         LABRE: DisplayCheckBox(TC_LABRE);
+               LZDX: DisplayCheckBox(TC_BULGARIA);
+               YODX: DisplayCheckBox(TC_ROMANIA);
+               HADX: DisplayCheckBox(TC_HUNGARY);
+               YUDX: DisplayCheckBox(TC_YUGOSLAVIA);
+               UKEI: DisplayCheckBox(TC_UKEI);
+               GagarinCup: DisplayCheckBox(TC_GC);
+             //  UKEI: SetCommentAndEnableEditControl(TC_EnterYourDistrictCode, icmyState);
+               UBACW, UBASSB: DisplayCheckBox(TC_BELGIUM);
+               PACC: DisplayCheckBox(TC_NETHERLANDS);
+               DARC10M, WAG, DARCXMAS: DisplayCheckBox(TC_GERMANY);
+               RSGB18: DisplayCheckBox(TC_UK);
+               CIS: DisplayCheckBox(TC_CIS);
+               SPDX: DisplayCheckBox(TC_POLAND);
+               BSCI, IARU: DisplayCheckBox(TC_HQ_OR_MEMBER);
+               IOTA:
+                 begin
+                   Windows.SetWindowTextA(NewContestCheckBox, TC_ISLANDSTATION);
+                   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
+                 end;
+
+               WWPMC: DisplayCheckBox('PMC');
+               PCC,ARKTIKA_SPRING: DisplayCheckBox(TC_ARKTIKACLUB);
+
+               NAQSOCW, NAQSOSSB, NAQSORTTY, SST:
+                 begin
+                   SetCommentAndEnableEditControl(TC_ENTERYOURNAMEANDSTATE, icmyState);
+                   DisplayInitialCommand(icmyName);
+                 end;
+
+               CWOPEN, MST:
+                 begin
+                   SetCommentAndEnableEditControl(TC_ENTERYOURNAME, icmyName);
+                 end;
+
+               CWOPS, LQP, NCCCSPRINT:
+                 begin
+                   DisplayInitialCommand(icmyName);
+                   SetCommentAndEnableEditControl(TC_ENTERYOURNAMEANDQTH, icmyState);
+                 end;
+
+              FOCMarathon:
+              begin
+           //    DisplayInitialCommand(icmyFOC);
+              SetCommentAndEnableEditControl(TC_ENTERYOURFOCNUMBER,icmyFOC);
+              end;
+
+              KCJ:
+              begin
+              SetCommentAndEnableEditControl(TC_PREF_OR_CQZONE,icMyState);    // 4.114.1
+              end;
+
+              POTA:
+                 begin
+                  Windows.SetWindowTextA(NewContestCheckBox, 'Activator');
                   Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
-                end;
+                 end;
+              WINTERFIELDDAY:
+                 begin
+                   DisplayInitialCommand(icmyFDClass);
+                   DisplayInitialCommand(icmySection);
+                 end;
 
-              WWPMC: DisplayCheckBox('PMC');
-              PCC,ARKTIKA_SPRING: DisplayCheckBox(TC_ARKTIKACLUB);
+               ARRLFIELDDAY:
+                 begin
+                   DisplayInitialCommand(icmyFDClass);
+                   DisplayInitialCommand(icmySection);
+                 end;
 
-              NAQSOCW, NAQSOSSB, NAQSORTTY, SST:
-                begin
-                  SetCommentAndEnableEditControl(TC_ENTERYOURNAMEANDSTATE, icmyState);
-                  DisplayInitialCommand(icmyName);
-                end;
+               ARRLSSCW, ARRLSSSSB:
+                 begin
+                   SetCommentAndEnableEditControl(TC_ENTERYOURPRECEDENCECHECKSECTION, icMyPrec);
+                   DisplayInitialCommand(icmyCheck);
+                   DisplayInitialCommand(icmySection);
+                 end;
 
-              CWOPEN, MST:
-                begin
-                  SetCommentAndEnableEditControl(TC_ENTERYOURNAME, icmyName);
-                end;
+               NASPRINTCW, SPRINTSSB, NASPRINTRTTY:
+                 begin
+                   SetCommentAndEnableEditControl(TC_ENTERYOURQTHANDTHENAME, icmyState);
+                   DisplayInitialCommand(icmyName);
+                 end;
 
-              CWOPS, LQP, NCCCSPRINT:
-                begin
-                  DisplayInitialCommand(icmyName);
-                  SetCommentAndEnableEditControl(TC_ENTERYOURNAMEANDQTH, icmyState);
-                end;
+           //    RSGBDX:
+           //    DisplayCheckBox(TC_UKRSGB);
 
-             FOCMarathon:
-             begin
-          //    DisplayInitialCommand(icmyFOC);
-             SetCommentAndEnableEditControl(TC_ENTERYOURFOCNUMBER,icmyFOC);
+               UA4WCHAMPIONSHIP:
+                 SetCommentAndEnableEditControl('Enter your RDA (for Russian stations) or four digit grid square:', icMyQTH);
+
+               ALLASIANCW, ALLASIANSSB, YOUTHCHAMPIONSHIPRF, YOTA:
+                 SetCommentAndEnableEditControl(TC_ENTERYOURAGEINMYSTATEFIELD, icmyState);
+
+                UKRAINECHAMPIONSHIP:
+                 SetCommentAndEnableEditControl(TC_ENTERYOUROBLASTID, icmyState);
+
+               ARRLDXCW,
+                 ARRLDXSSB:
+                 SetCommentAndEnableEditControl(TC_ENTERYOURQTHORPOWER, icmyState);
+
+               CUPURAL:
+                 SetCommentAndEnableEditControl(TC_ENTERFIRSTTWOLETTERSOFYOURGRID, icmyState);
+
+
+        //        IN7QPNE:
+        //'/}         SetCommentAndEnableEditControl(TC_IN7QPNE, icmyState);
+
              end;
 
-             KCJ:
-             begin
-             SetCommentAndEnableEditControl(TC_PREF_OR_CQZONE,icMyState);    // 4.114.1
              end;
-
-             POTA:
-                begin
-                 Windows.SetWindowTextA(NewContestCheckBox, 'Activator');
-                 Windows.ShowWindow(NewContestCheckBox, SW_SHOW);
-                end;
-             WINTERFIELDDAY:
-                begin
-                  DisplayInitialCommand(icmyFDClass);
-                  DisplayInitialCommand(icmySection);
-                end;
-
-              ARRLFIELDDAY:
-                begin
-                  DisplayInitialCommand(icmyFDClass);
-                  DisplayInitialCommand(icmySection);
-                end;
-
-              ARRLSSCW, ARRLSSSSB:
-                begin
-                  SetCommentAndEnableEditControl(TC_ENTERYOURPRECEDENCECHECKSECTION, icMyPrec);
-                  DisplayInitialCommand(icmyCheck);
-                  DisplayInitialCommand(icmySection);
-                end;
-
-              NASPRINTCW, SPRINTSSB, NASPRINTRTTY:
-                begin
-                  SetCommentAndEnableEditControl(TC_ENTERYOURQTHANDTHENAME, icmyState);
-                  DisplayInitialCommand(icmyName);
-                end;
-
-          //    RSGBDX:
-          //    DisplayCheckBox(TC_UKRSGB);
-
-              UA4WCHAMPIONSHIP:
-                SetCommentAndEnableEditControl('Enter your RDA (for Russian stations) or four digit grid square:', icMyQTH);
-
-              ALLASIANCW, ALLASIANSSB, YOUTHCHAMPIONSHIPRF, YOTA:
-                SetCommentAndEnableEditControl(TC_ENTERYOURAGEINMYSTATEFIELD, icmyState);
-
-               UKRAINECHAMPIONSHIP:
-                SetCommentAndEnableEditControl(TC_ENTERYOUROBLASTID, icmyState);
-
-              ARRLDXCW,
-                ARRLDXSSB:
-                SetCommentAndEnableEditControl(TC_ENTERYOURQTHORPOWER, icmyState);
-
-              CUPURAL:
-                SetCommentAndEnableEditControl(TC_ENTERFIRSTTWOLETTERSOFYOURGRID, icmyState);
-
-
-       //        IN7QPNE:
-       //'/}         SetCommentAndEnableEditControl(TC_IN7QPNE, icmyState);
-
-            end;
-
-          end;
         BeginNewContest(hwnddlg);
 
         case wParam of
@@ -572,11 +600,11 @@ var
 begin
   NewContestDisplayedCommands := 0;
   for i := 1 to 3 do
-  begin
-    ShowWindow(InitialCommandsHWNDArray[i, 1], SW_HIDE);
-    ShowWindow(InitialCommandsHWNDArray[i, 2], SW_HIDE);
-    Windows.SetWindowTextA(InitialCommandsHWNDArray[i, 2], nil);
-  end;
+     begin
+     ShowWindow(InitialCommandsHWNDArray[i, 1], SW_HIDE);
+     ShowWindow(InitialCommandsHWNDArray[i, 2], SW_HIDE);
+     Windows.SetWindowTextA(InitialCommandsHWNDArray[i, 2], nil);
+     end;
 end;
 
 procedure BeginNewContest(h: HWND);
@@ -586,15 +614,26 @@ var
   Call                                  : CallString;
 begin
   res := True;
-  if tCB_GETCURSEL(h, NC_CONTEST_COMBOBOX) = -1 then res := False;
+  if tCB_GETCURSEL(h, NC_CONTEST_COMBOBOX) = -1 then
+     begin
+     res := False;
+     end;
   i := GetDlgItemTextA(h, NC_CALL_EDIT, @Call[1], SizeOf(CallString));
-  if i < 3 then res := False;
+  if i < 3 then
+     begin
+     res := False;
+     end;
   Call[0] := AnsiChar(i);
-  if not GoodCallSyntax(Call) then res := False;
+  if not GoodCallSyntax(Call) then
+     begin
+     res := False;
+     end;
 
   for i := 1 to NewContestDisplayedCommands do
     if Windows.GetWindowTextLength(InitialCommandsHWNDArray[i, 2]) = 0 then
-      res := False;
+       begin
+       res := False;
+       end;
   EnableWindow(GetDlgItem(h, NC_BUTTON_OK), res);
 
 end;
@@ -609,11 +648,11 @@ begin
       {callsign}
     i := Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
     if MainCallsign = '' then
-    begin
-      MainCallsign[0] := AnsiChar(i);
-      Windows.CopyMemory(@MainCallsign[1], @TempBuffer1, i);
-      Windows.WritePrivateProfileStringA(_COMMANDS, MAIN_CALLSIGN, TempBuffer1, TR4W_INI_FILENAME);
-    end;
+       begin
+       MainCallsign[0] := AnsiChar(i);
+       Windows.CopyMemory(@MainCallsign[1], @TempBuffer1, i);
+       Windows.WritePrivateProfileStringA(_COMMANDS, MAIN_CALLSIGN, TempBuffer1, TR4W_INI_FILENAME);
+       end;
     DeleteSlashes(TempBuffer1);
 
       {Contest Name}
@@ -636,47 +675,49 @@ begin
   TF.Format(TR4W_CFG_FILENAME, '%s%s.CFG', wsprintfBuffer, TempBuffer1);
 
   if FileExists(TR4W_CFG_FILENAME) then
-  begin
-    TF.Format(SYSERRORBUFFER, TC_FOLDERALREADYEXISTSOVERWRITE, TR4W_CFG_FILENAME);
-    if YesOrNo(h, SYSERRORBUFFER) = IDno then Exit;
-  end;
+     begin
+     TF.Format(SYSERRORBUFFER, TC_FOLDERALREADYEXISTSOVERWRITE, TR4W_CFG_FILENAME);
+     if YesOrNo(h, SYSERRORBUFFER) = IDno then Exit;
+     end;
 
   f := CreateFileA(TR4W_CFG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
   if f <> INVALID_HANDLE_VALUE then
-  begin
+     begin
 
-    Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
-    BytesToWrite := TF.Format(wsprintfBuffer, ';Created by ' + TR4W_CURRENTVERSION + #13#10#13#10'[COMMANDS]'#13#10'MY CALL=%s'#13#10, TempBuffer1);
-    sWriteFile(f, wsprintfBuffer, BytesToWrite);
+     Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
+     BytesToWrite := TF.Format(wsprintfBuffer, ';Created by ' + TR4W_CURRENTVERSION + #13#10#13#10'[COMMANDS]'#13#10'MY CALL=%s'#13#10, TempBuffer1);
+     sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
-    for i := 1 to CSAS do
-    begin
-      GetWindowTextA(InitialCommandsHWNDArray[i, 1], TempBuffer1, SizeOf(TempBuffer1));
-      if GetWindowTextA(InitialCommandsHWNDArray[i, 2], TempBuffer2, SizeOf(TempBuffer2)) = 0 then Continue;
-      BytesToWrite := TF.Format(wsprintfBuffer, '%s=%s'#13#10, TempBuffer1, TempBuffer2);
-      sWriteFile(f, wsprintfBuffer, BytesToWrite);
-    end;
+     for i := 1 to CSAS do
+        begin
+        GetWindowTextA(InitialCommandsHWNDArray[i, 1], TempBuffer1, SizeOf(TempBuffer1));
+        if GetWindowTextA(InitialCommandsHWNDArray[i, 2], TempBuffer2, SizeOf(TempBuffer2)) = 0 then Continue;
+        BytesToWrite := TF.Format(wsprintfBuffer, '%s=%s'#13#10, TempBuffer1, TempBuffer2);
+        sWriteFile(f, wsprintfBuffer, BytesToWrite);
+        end;
 
-    Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
-    BytesToWrite := TF.Format(wsprintfBuffer, 'CONTEST=%s', TempBuffer1);
-    sWriteFile(f, wsprintfBuffer, BytesToWrite);
+     Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
+     BytesToWrite := TF.Format(wsprintfBuffer, 'CONTEST=%s', TempBuffer1);
+     sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
-    CloseHandle(f);
+     CloseHandle(f);
 
-    // If the user confirmed overwriting an existing contest, delete any
-    // existing .TRW log file.  LoadinLog fatally halts if the file size
-    // is not an exact multiple of SizeOf(ContestExchange), which will be
-    // true of any .TRW from a previous (different) contest.
-    Windows.lstrcpyA(TempBuffer1, TR4W_CFG_FILENAME);
-    TempBuffer1[lstrlenA(TempBuffer1) - 3] := 'T';
-    TempBuffer1[lstrlenA(TempBuffer1) - 2] := 'R';
-    TempBuffer1[lstrlenA(TempBuffer1) - 1] := 'W';
-    Windows.DeleteFileA(TempBuffer1); // no-op (returns False) if no .TRW exists
+     // If the user confirmed overwriting an existing contest, delete any
+     // existing .TRW log file.  LoadinLog fatally halts if the file size
+     // is not an exact multiple of SizeOf(ContestExchange), which will be
+     // true of any .TRW from a previous (different) contest.
+     Windows.lstrcpyA(TempBuffer1, TR4W_CFG_FILENAME);
+     TempBuffer1[lstrlenA(TempBuffer1) - 3] := 'T';
+     TempBuffer1[lstrlenA(TempBuffer1) - 2] := 'R';
+     TempBuffer1[lstrlenA(TempBuffer1) - 1] := 'W';
+     Windows.DeleteFileA(TempBuffer1); // no-op (returns False) if no .TRW exists
 
-    DestroyWindow(h);
-  end
+     DestroyWindow(h);
+     end
   else
-    ShowSysErrorMessage('CFG FILE');
+     begin
+     ShowSysErrorMessage('CFG FILE');
+     end;
 
 end;
 
@@ -718,17 +759,19 @@ function NewSelectContestListBoxProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; l
 begin
   if Msg = WM_KEYUP then
     if wParam = VK_RETURN then
-      ChangeDir;
+       begin
+       ChangeDir;
+       end;
   Result := CallWindowProc(OldSelectContestListBoxProc, hwnddlg, Msg, wParam, lParam);
 end;
 
 procedure ChangeDir;
 begin
   if Windows.DlgDirSelectExA(NewContestDlgWndHandle, TempBuffer1, SizeOf(TempBuffer1), NC_LISTBOX) = False then
-  begin
-    StartContestFromListbox;
-    Exit;
-  end;
+     begin
+     StartContestFromListbox;
+     Exit;
+     end;
   Windows.lstrcatA(TempBuffer1, '*.CFG');
   Windows.DlgDirListA(NewContestDlgWndHandle, TempBuffer1, NC_LISTBOX, 445, sfFLAG);
 

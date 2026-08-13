@@ -85,17 +85,26 @@ procedure MultsObject.IncrementTotals(Band: BandType; Mode: ModeType; m: Remaini
 begin
   // MTotals mode dim is CW..Both; FM (ordinal 5) is outside it -> remap to
   // Phone (FM counts as Phone) so MTotals[Band, FM, m] is not out of bounds.
-  if Mode = FM then Mode := Phone;
+  if Mode = FM then
+     begin
+     Mode := Phone;
+     end;
   inc(MTotals[Band, Mode, m]);
 
   if Mode <> Both then
-    inc(MTotals[Band, Both, m]);
+     begin
+     inc(MTotals[Band, Both, m]);
+     end;
 
   if Band <> AllBands then
-    inc(MTotals[AllBands, Mode, m]);
+     begin
+     inc(MTotals[AllBands, Mode, m]);
+     end;
 
    if ((Mode <> Both) and (Band <> AllBands)) then
-     inc(MTotals[AllBands, Both, m]);
+      begin
+      inc(MTotals[AllBands, Both, m]);
+      end;
 end;
 
 procedure MultsObject.ClearAllMults;
@@ -149,18 +158,26 @@ function MultsObject.IsZnMult(Zone: Word; Band: BandType; Mode: ModeType): boole
 begin
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Zone in [0..ZoneMultArraySize] then
-    Result := (ZoneMultsArray[Zone][Mode] and (1 shl Ord(Band))) = 0
+     begin
+     Result := (ZoneMultsArray[Zone][Mode] and (1 shl Ord(Band))) = 0
+     end
   else
-    Result := False;
+     begin
+     Result := False;
+     end;
 end;
 
 function MultsObject.IsDXMult(Country: Word; Band: BandType; Mode: ModeType): boolean;
 begin
   if Mode = FM then Mode := Phone;   // FM shares the Phone slot (TDupesArray is CW..NoMode)
   if Country < MaxCountries then
+     begin
      Result := (DXMultsArray[Country][Mode] and (1 shl Ord(Band))) = 0
+     end
     else
+       begin
        Result := False;
+       end;
 end;
 
 function MultsObject.IsPxMult(const Prfx: string; Band: BandType; Mode: ModeType): boolean;
@@ -214,7 +231,9 @@ begin
 
   Result := not DomList.StringIsDupe(Dom, Band, Mode, Index);
   if Index = -1 then
+     begin
      Result := True;
+     end;
 
 end;
 
@@ -230,32 +249,37 @@ var
   i                                     : integer;
 begin
   for i := 0 to MaxCountries - 1 do
-  begin
-    if CTY.ctyCountryMode = ARRLCountryMode then
-      if CTY.ctyTable[i].ID[1] = '*' then
-      begin
-        1:
-        CTY.ctyTable[i].VisibleInRM := 0;
-        Continue;
-      end;
+     begin
+     if CTY.ctyCountryMode = ARRLCountryMode then
+       if CTY.ctyTable[i].ID[1] = '*' then
+          begin
+          1:
+          CTY.ctyTable[i].VisibleInRM := 0;
+          Continue;
+          end;
 
-    if ActiveDXMult = NoDXMults then goto 1;
+     if ActiveDXMult = NoDXMults then
+        begin
+        goto 1;
+        end;
 
-    if ActiveDXMult = CQNonEuropeanCountries then
-      if CTY.ctyTable[i].DefaultContinent = Europe then Continue;
+     if ActiveDXMult = CQNonEuropeanCountries then
+       if CTY.ctyTable[i].DefaultContinent = Europe then Continue;
 
-    if ActiveDXMult = CQEuropeanCountries then
-      if CTY.ctyTable[i].DefaultContinent <> Europe then Continue;
+     if ActiveDXMult = CQEuropeanCountries then
+       if CTY.ctyTable[i].DefaultContinent <> Europe then Continue;
 
-    if ActiveDXMult = CQUBAEuropeanCountries then
-      if not UBACountry(CTY.ctyTable[i].ID) then Continue;
+     if ActiveDXMult = CQUBAEuropeanCountries then
+       if not UBACountry(CTY.ctyTable[i].ID) then Continue;
 
-    if CTY.ctyCustomRemainingCountryListFound then Continue;
+     if CTY.ctyCustomRemainingCountryListFound then Continue;
 
-    if CTY.ctyTable[i].VisibleInRM <> 1 then
-      CTY.ctyTable[i].VisibleInRM := 2;
+     if CTY.ctyTable[i].VisibleInRM <> 1 then
+        begin
+        CTY.ctyTable[i].VisibleInRM := 2;
+        end;
 
-  end;
+     end;
 end;
 
 begin

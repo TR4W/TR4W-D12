@@ -97,8 +97,10 @@ var
       WM_NOTIFY:
          begin
          with PNMHdr(lParam)^ do
+            begin
             case code of
                NM_DBLCLK: EditFullLog;
+            end;
             end;
          end;
   end;

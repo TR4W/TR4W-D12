@@ -131,22 +131,28 @@ begin
 
   if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then Exit;
   if Windows.QueryDosDeviceA(DevName, wsprintfBuffer, MAX_PATH) = 0 then
-  begin
-    //if not
-    Windows.DefineDosDeviceA(DDD_RAW_TARGET_PATH, DevName, '\Device\Beep');
-    //then ShowSysErrorMessage('GET SPEAKER');
-    OwnDevName := True;
+     begin
+     //if not
+     Windows.DefineDosDeviceA(DDD_RAW_TARGET_PATH, DevName, '\Device\Beep');
+     //then ShowSysErrorMessage('GET SPEAKER');
+     OwnDevName := True;
 
-    hBeep := Windows.CreateFileA(BeepFileName, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
-//    if hBeep = INVALID_HANDLE_VALUE then ShowSysErrorMessage('COMPUTER SPEAKER');
-    ntBeep(32767 - 1, 1);
-  end;
+     hBeep := Windows.CreateFileA(BeepFileName, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
+ //    if hBeep = INVALID_HANDLE_VALUE then ShowSysErrorMessage('COMPUTER SPEAKER');
+     ntBeep(32767 - 1, 1);
+     end;
 end;
 
 procedure ntBeepClose;
 begin
-  if OwnDevName then Windows.DefineDosDeviceA(DDD_REMOVE_DEFINITION, DevName, nil);
-  if hBeep <> INVALID_HANDLE_VALUE then CloseHandle(hBeep);
+  if OwnDevName then
+     begin
+     Windows.DefineDosDeviceA(DDD_REMOVE_DEFINITION, DevName, nil);
+     end;
+  if hBeep <> INVALID_HANDLE_VALUE then
+     begin
+     CloseHandle(hBeep);
+     end;
 end;
 
 {

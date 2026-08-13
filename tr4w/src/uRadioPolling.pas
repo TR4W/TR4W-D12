@@ -146,16 +146,26 @@ const
    procedure SetRadioAlertState(alertOn: boolean);
    begin
       if alertOn = rig^.RadioDisconnected then
+         begin
          Exit;   // No change � do not call InvalidateRect unnecessarily
+         end;
       rig^.RadioDisconnected := alertOn;
       if alertOn then
+         begin
          logger.Info('[pFactoryRadio] %s � alert color ON', [rig^.RadioName])
+         end
       else
+         begin
          logger.Info('[pFactoryRadio] %s � alert color OFF', [rig^.RadioName]);
+         end;
       if rig^.FreqWindowHandle <> 0 then
+         begin
          Windows.InvalidateRect(rig^.FreqWindowHandle, nil, False);
+         end;
       if rig^.RadioNameWndHandle <> 0 then
+         begin
          Windows.InvalidateRect(rig^.RadioNameWndHandle, nil, False);
+         end;
    end;
 
 begin
@@ -183,342 +193,362 @@ begin
       begin
       try
          if ro.IsConnected then
-         begin
-         // Stuck-handshake detector: IsConnected is the loose "transport is doing
-         // something" check that stays True throughout the multi-step Icom
-         // handshake (WaitingForHere/WaitingForReady/WaitingForLogin/etc.).
-         // If we sit in that limbo too long -- e.g. the radio was off when our
-         // initial AYH packet was sent, and the transport doesn't auto-retry --
-         // force a Disconnect so the else-branch fires Connect() again with
-         // a fresh handshake.  Without this, the polling thread spins forever
-         // in the connected branch sending CI-V commands that fail with
-         // "stream not open" until the operator manually intervenes.
-         //
-         // Gated on CanRecycleOnStuckHandshake so we only force-recycle for
-         // radios where it actually fixes things.  Flex returns False because
-         // its IsOperational drops when SmartSDR closes (TCP is fine, slice
-         // is gone) -- recycling TCP wouldn't help and would just churn.
-         if (not ro.IsOperational) and ro.CanRecycleOnStuckHandshake then
             begin
-            if handshakeStuckSinceTick = 0 then
-               handshakeStuckSinceTick := GetTickCount
-            else if (GetTickCount - handshakeStuckSinceTick) > HANDSHAKE_STUCK_MS then
+            // Stuck-handshake detector: IsConnected is the loose "transport is doing
+            // something" check that stays True throughout the multi-step Icom
+            // handshake (WaitingForHere/WaitingForReady/WaitingForLogin/etc.).
+            // If we sit in that limbo too long -- e.g. the radio was off when our
+            // initial AYH packet was sent, and the transport doesn't auto-retry --
+            // force a Disconnect so the else-branch fires Connect() again with
+            // a fresh handshake.  Without this, the polling thread spins forever
+            // in the connected branch sending CI-V commands that fail with
+            // "stream not open" until the operator manually intervenes.
+            //
+            // Gated on CanRecycleOnStuckHandshake so we only force-recycle for
+            // radios where it actually fixes things.  Flex returns False because
+            // its IsOperational drops when SmartSDR closes (TCP is fine, slice
+            // is gone) -- recycling TCP wouldn't help and would just churn.
+            if (not ro.IsOperational) and ro.CanRecycleOnStuckHandshake then
                begin
-               logger.Warn('[pFactoryRadio] %s handshake stuck (IsConnected but not IsOperational) for >%d ms; forcing Disconnect for retry',
-                  [rig^.RadioName, HANDSHAKE_STUCK_MS]);
-               handshakeStuckSinceTick := 0;
-               try
-                  ro.Disconnect;
-               except
-                  on E: Exception do
-                     logger.Debug('[pFactoryRadio] Forced Disconnect raised: %s - %s', [E.ClassName, E.Message]);
-               end;
-               // Brief sleep so the next iteration sees the new state cleanly,
-               // then loop -- the else-branch will reset wasConnected and
-               // schedule the reconnect via the existing backoff path.
-               Sleep(100);
-               Continue;
-               end;
-            end
-         else
-            handshakeStuckSinceTick := 0;  // operational, or this radio doesn't recycle on stuck
-
-         // Radio is connected - poll status
-         if not wasConnected then
-            begin
-            logger.trace('[pFactoryRadio] Radio connected � querying initial freq/mode/state');
-            wasConnected := True;
-            reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on successful connection
-            // Don't unconditionally clear the alert here -- IsConnected is
-            // the loose "transport is doing something" check that stays True
-            // throughout the multi-step Icom handshake (WaitingForHere etc.).
-            // The IsOperational query below (and the per-iteration check at
-            // line ~944) is the strict "fully connected" gate that drives
-            // the alert color; clearing here would briefly turn the alert
-            // off during reconnect even when the radio is unreachable.
-            SetRadioAlertState(not ro.IsOperational);
-
-            // For serial radios that poll frequency directly (K4/K3-style), honour the
-            // user-configurable FREQUENCY POLL RATE (FreqPollRate, default 10ms, range
-            // 10-1000ms). NOT for the Icom (honorsFreqPollRate=False): its PollRadioState
-            // is a heavy multi-command CI-V state query (RIT/XIT/split/TX) and frequency
-            // arrives via CI-V transceive, so a 10ms cadence enqueues ~500 CI-V cmds/sec
-            // and permanently floods the rate-limited send queue (25ms/command) -- keep
-            // the Icom's own 1s pollingInterval.
-            if ro.requiresPolling and (ro.serialPort <> NoPort) and ro.honorsFreqPollRate then
+               if handshakeStuckSinceTick = 0 then
+                  begin
+                  handshakeStuckSinceTick := GetTickCount
+                  end
+               else if (GetTickCount - handshakeStuckSinceTick) > HANDSHAKE_STUCK_MS then
+                  begin
+                  logger.Warn('[pFactoryRadio] %s handshake stuck (IsConnected but not IsOperational) for >%d ms; forcing Disconnect for retry',
+                     [rig^.RadioName, HANDSHAKE_STUCK_MS]);
+                  handshakeStuckSinceTick := 0;
+                  try
+                     ro.Disconnect;
+                  except
+                     on E: Exception do
+                        begin
+                        logger.Debug('[pFactoryRadio] Forced Disconnect raised: %s - %s', [E.ClassName, E.Message]);
+                        end;
+                  end;
+                  // Brief sleep so the next iteration sees the new state cleanly,
+                  // then loop -- the else-branch will reset wasConnected and
+                  // schedule the reconnect via the existing backoff path.
+                  Sleep(100);
+                  Continue;
+                  end;
+               end
+            else
                begin
-               ro.pollingInterval := FreqPollRate;
-               logger.Debug('[pFactoryRadio] Serial polling interval set to %dms (FREQUENCY POLL RATE)',
-                            [ro.pollingInterval]);
+               handshakeStuckSinceTick := 0;  // operational, or this radio doesn't recycle on stuck
                end;
 
-            // Query freq and mode directly from the polling thread.
-            // The OnInitialPollSeeding timer window is created on this thread, which has
-            // no Win32 message pump (it only calls Sleep), so WM_TIMER is never dispatched
-            // and the timer callback never fires. Querying here guarantees the display
-            // updates on every connect/reconnect without the user needing to touch the VFO.
+            // Radio is connected - poll status
+            if not wasConnected then
+               begin
+               logger.trace('[pFactoryRadio] Radio connected � querying initial freq/mode/state');
+               wasConnected := True;
+               reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on successful connection
+               // Don't unconditionally clear the alert here -- IsConnected is
+               // the loose "transport is doing something" check that stays True
+               // throughout the multi-step Icom handshake (WaitingForHere etc.).
+               // The IsOperational query below (and the per-iteration check at
+               // line ~944) is the strict "fully connected" gate that drives
+               // the alert color; clearing here would briefly turn the alert
+               // off during reconnect even when the radio is unreachable.
+               SetRadioAlertState(not ro.IsOperational);
+
+               // For serial radios that poll frequency directly (K4/K3-style), honour the
+               // user-configurable FREQUENCY POLL RATE (FreqPollRate, default 10ms, range
+               // 10-1000ms). NOT for the Icom (honorsFreqPollRate=False): its PollRadioState
+               // is a heavy multi-command CI-V state query (RIT/XIT/split/TX) and frequency
+               // arrives via CI-V transceive, so a 10ms cadence enqueues ~500 CI-V cmds/sec
+               // and permanently floods the rate-limited send queue (25ms/command) -- keep
+               // the Icom's own 1s pollingInterval.
+               if ro.requiresPolling and (ro.serialPort <> NoPort) and ro.honorsFreqPollRate then
+                  begin
+                  ro.pollingInterval := FreqPollRate;
+                  logger.Debug('[pFactoryRadio] Serial polling interval set to %dms (FREQUENCY POLL RATE)',
+                               [ro.pollingInterval]);
+                  end;
+
+               // Query freq and mode directly from the polling thread.
+               // The OnInitialPollSeeding timer window is created on this thread, which has
+               // no Win32 message pump (it only calls Sleep), so WM_TIMER is never dispatched
+               // and the timer callback never fires. Querying here guarantees the display
+               // updates on every connect/reconnect without the user needing to touch the VFO.
+               if Assigned(ro) then
+                  begin
+                  logger.Debug('[pFactoryRadio] Querying initial freq/mode');
+                  ro.QueryActiveVFO;      // $07 $D2 � must be first so FActiveVFO is set before mode routing
+                  ro.QueryVFOAFrequency;
+                  ro.QueryVFOBFrequency;
+                  ro.QueryMode;           // $04 � active VFO mode ? routed to FActiveVFO slot
+                  ro.QueryVFOAMode;       // $26 $00 � inactive VFO A mode (when VFO B is active)
+                  ro.QueryVFOBMode;       // $26 $01 � VFO B mode + data mode
+                  end;
+
+               // Poll the remaining states that transceive does not push
+               if Assigned(ro) and ro.requiresPolling then
+                  begin
+                  logger.Debug('[pFactoryRadio] Querying initial RIT/XIT/split/TX');
+                  ro.PollRadioState;
+                  end;
+
+               // CW speed on initial connection:
+               // - CWSpeedSync OFF: program is master � push CodeSpeed to radio so they agree.
+               // - CWSpeedSync ON:  radio is master � do NOT push; leave the radio's speed alone.
+               //   The $14 $0C query sent during connect will return ro.CWSpeed, and the
+               //   polling loop below (ro.CWSpeed -> CodeSpeed sync) will apply it on the
+               //   first cycle that sees a valid response.
+               if not rig^.CWSpeedSync and (CodeSpeed >= 6) and Assigned(ro) then
+                  begin
+                  logger.Debug('[pFactoryRadio] CWSpeedSync off � pushing program speed %d WPM to radio', [CodeSpeed]);
+                  ro.SetCWSpeed(CodeSpeed);
+                  end;
+
+               // StartupCommand: configured per-radio in the .cfg file, handed to
+               // the radio object at construction and sent ONCE, here, because
+               // this is where a network radio is first known to be connected --
+               // its Connect returns before the link is up.  The once-only guard
+               // now lives on the RADIO (TFactoryRadioBase.FStartupCommandSent),
+               // not on the legacy RadioObject, so both transports share one
+               // implementation and Reset Radio Ports still re-arms it by
+               // rebuilding the radio.  Issue #436.
+               end;
+
+            // Deliberately OUTSIDE the "not wasConnected" block above.  The radio
+            // holds the command for STARTUP_COMMAND_SETTLE_MS after the link comes
+            // up, because a just-powered-on rig answers CAT before it is ready to
+            // act on anything (bench-proven on a K3, 2026-08-01: sent at the first
+            // good response and silently dropped, accepted on a Reset Radio Ports
+            // seconds later).  That settle can only elapse if we keep asking, so
+            // this runs every poll cycle.  SendStartupCommand self-guards, so it
+            // is one boolean test once the command has gone out.
             if Assigned(ro) then
                begin
-               logger.Debug('[pFactoryRadio] Querying initial freq/mode');
-               ro.QueryActiveVFO;      // $07 $D2 � must be first so FActiveVFO is set before mode routing
-               ro.QueryVFOAFrequency;
-               ro.QueryVFOBFrequency;
-               ro.QueryMode;           // $04 � active VFO mode ? routed to FActiveVFO slot
-               ro.QueryVFOAMode;       // $26 $00 � inactive VFO A mode (when VFO B is active)
-               ro.QueryVFOBMode;       // $26 $01 � VFO B mode + data mode
+               ro.SendStartupCommand;
                end;
 
-            // Poll the remaining states that transceive does not push
-            if Assigned(ro) and ro.requiresPolling then
+            // HamLib Direct: short sleep so FNeedsPoll is checked promptly when
+            // an async callback fires. Legacy serial radios use FreqPollRate.
+            if Assigned(ro) and (ro is THamLibDirect) then
                begin
-               logger.Debug('[pFactoryRadio] Querying initial RIT/XIT/split/TX');
-               ro.PollRadioState;
-               end;
-
-            // CW speed on initial connection:
-            // - CWSpeedSync OFF: program is master � push CodeSpeed to radio so they agree.
-            // - CWSpeedSync ON:  radio is master � do NOT push; leave the radio's speed alone.
-            //   The $14 $0C query sent during connect will return ro.CWSpeed, and the
-            //   polling loop below (ro.CWSpeed -> CodeSpeed sync) will apply it on the
-            //   first cycle that sees a valid response.
-            if not rig^.CWSpeedSync and (CodeSpeed >= 6) and Assigned(ro) then
-               begin
-               logger.Debug('[pFactoryRadio] CWSpeedSync off � pushing program speed %d WPM to radio', [CodeSpeed]);
-               ro.SetCWSpeed(CodeSpeed);
-               end;
-
-            // StartupCommand: configured per-radio in the .cfg file, handed to
-            // the radio object at construction and sent ONCE, here, because
-            // this is where a network radio is first known to be connected --
-            // its Connect returns before the link is up.  The once-only guard
-            // now lives on the RADIO (TFactoryRadioBase.FStartupCommandSent),
-            // not on the legacy RadioObject, so both transports share one
-            // implementation and Reset Radio Ports still re-arms it by
-            // rebuilding the radio.  Issue #436.
-            end;
-
-         // Deliberately OUTSIDE the "not wasConnected" block above.  The radio
-         // holds the command for STARTUP_COMMAND_SETTLE_MS after the link comes
-         // up, because a just-powered-on rig answers CAT before it is ready to
-         // act on anything (bench-proven on a K3, 2026-08-01: sent at the first
-         // good response and silently dropped, accepted on a Reset Radio Ports
-         // seconds later).  That settle can only elapse if we keep asking, so
-         // this runs every poll cycle.  SendStartupCommand self-guards, so it
-         // is one boolean test once the command has gone out.
-         if Assigned(ro) then
-            begin
-            ro.SendStartupCommand;
-            end;
-
-         // HamLib Direct: short sleep so FNeedsPoll is checked promptly when
-         // an async callback fires. Legacy serial radios use FreqPollRate.
-         if Assigned(ro) and (ro is THamLibDirect) then
-            Sleep(50)
-         else
-            Sleep(FreqPollRate);
-
-         // Auth failure may happen asynchronously during handshake.
-         // IsConnected can still be True if Disconnect couldn't complete
-         // (Indy self-deadlock), so check AuthFailed explicitly.
-         if Assigned(ro) and ro.AuthFailed then
-            begin
-            logger.Warn('[pFactoryRadio] Auth failed for %s - stopping', [rig^.RadioName]);
-            StrPCopy(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
-            QuickDisplayError(authErrBuf);
-            if rig^.tRadioInterfaceWndHandle <> 0 then
-               begin
-               SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
-               end;
-            Break;
-            end;
-
-         // HamLib Direct: drain user commands first on every cycle (max 50ms latency),
-         // then poll when an async callback fired or the heartbeat interval elapsed.
-         // Set HAMLIB ASYNC ONLY = TRUE in cfg to disable the heartbeat and only
-         // poll on async callbacks � useful for testing whether transceive is working.
-         if Assigned(ro) and (ro is THamLibDirect) then
-            begin
-            THamLibDirect(ro).DrainUrgentQueue;
-
-            if InterlockedExchange(THamLibDirect(ro).FNeedsPoll, 0) <> 0 then
-               begin
-               if TR4W_HAMLIB_DEBUG then
-                  logger.Info('[pFactoryRadio] HamLib poll triggered by ASYNC callback');
-               THamLibDirect(ro).SendPollRequests;
-               lastHeartbeatTick := GetTickCount;
+               Sleep(50)
                end
-            else if not TR4W_HAMLIB_ASYNC_ONLY and
-                    (GetTickCount - lastHeartbeatTick >= LongWord(ro.pollingInterval)) then
+            else
                begin
-               if TR4W_HAMLIB_DEBUG then
-                  logger.Info('[pFactoryRadio] HamLib poll triggered by HEARTBEAT (%dms)',
-                              [ro.pollingInterval]);
-               THamLibDirect(ro).SendPollRequests;
-               lastHeartbeatTick := GetTickCount;
+               Sleep(FreqPollRate);
                end;
 
-            // RIT/XIT slow poll � every 5000ms independently of the main heartbeat.
-            // rig_get_rit/xit trigger $07 D0 side-effects in HamLib's Icom driver
-            // which dismiss front-panel menus; polling infrequently keeps them usable.
-            if GetTickCount - lastRITXITTick >= 5000 then
+            // Auth failure may happen asynchronously during handshake.
+            // IsConnected can still be True if Disconnect couldn't complete
+            // (Indy self-deadlock), so check AuthFailed explicitly.
+            if Assigned(ro) and ro.AuthFailed then
                begin
-               THamLibDirect(ro).SendRITXITPoll;
-               lastRITXITTick := GetTickCount;
+               logger.Warn('[pFactoryRadio] Auth failed for %s - stopping', [rig^.RadioName]);
+               StrPCopy(authErrBuf, rig^.RadioName + ': Auth failed - check credentials');
+               QuickDisplayError(authErrBuf);
+               if rig^.tRadioInterfaceWndHandle <> 0 then
+                  begin
+                  SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
+                  end;
+               Break;
                end;
-            end
-         // For radios that require active polling (Icom, etc.), call PollRadioState
-         // Throttled by pollingInterval (e.g. 500ms for network Icom)
-         else if Assigned(ro) and ro.requiresPolling then
-            begin
-            if (GetTickCount - lastPollTick >= LongWord(ro.pollingInterval)) then
+
+            // HamLib Direct: drain user commands first on every cycle (max 50ms latency),
+            // then poll when an async callback fired or the heartbeat interval elapsed.
+            // Set HAMLIB ASYNC ONLY = TRUE in cfg to disable the heartbeat and only
+            // poll on async callbacks � useful for testing whether transceive is working.
+            if Assigned(ro) and (ro is THamLibDirect) then
                begin
-               // MEASURED, K3S over serial at 38400, 2026-08-09, with a
-               // standalone harness (tools/k3watch.py) so TR4W was not in
-               // the path.  Command -> the radio REPORTING the new state:
-               //
-               //   poll during TX          TX; ->tx    RX; ->rx
-               //   IF; only, paced         125-146 ms   88-124 ms
-               //   4 commands, paced*      406 ms       672 ms
-               //   4 commands, waiting
-               //     for EVERY reply       282 ms       609 ms
-               //   (*released on the first reply -- what the gate below does)
-               //
-               // Read the last two rows together: waiting for every reply
-               // instead of the first buys 63 ms.  The 500 ms between row 1
-               // and row 3 is the radio's own CAT processing, and the only
-               // variable is how many commands it was asked for -- roughly
-               // 125 ms per command WHILE TRANSMITTING.  An unkey waits
-               // behind whatever is already in the radio's buffer, and no
-               // amount of pacing changes what is already there.
-               //
-               // So this gate is worth having and worth NOT extending: it
-               // stops backlog growing without bound, which is what turned a
-               // 100 ms unkey into 1200 ms.  Making it wait for the last
-               // reply of a multi-command poll was measured and rejected --
-               // 63 ms, in exchange for every driver having to declare how
-               // many replies its poll expects, which Icom CI-V and the
-               // binary Yaesus cannot cleanly answer.
-               //
-               // The lever that DOES work is asking for less while
-               // transmitting, and that is a question about what the
-               // operator can change mid-transmission, not a tuning knob.
-               // Reducing the Elecraft poll to 'IF;' was tried and reverted:
-               // the operator can move VFO B while the radio is transmitting
-               // (NY4I), so a poll that cannot see it shows a frequency the
-               // radio is not on.
-               //
-               // ONE OUTSTANDING POLL AT A TIME.  This loop used to fire every
-               // pollingInterval regardless of whether the radio had answered
-               // the last one, so a radio slower than the interval piled up
-               // backlog in its OWN CAT input buffer -- and a radio gets
-               // slower exactly when it is transmitting.  A K3S measured on
-               // the bench unkeyed in 99 ms when paced and 820 ms when flooded
-               // at this loop's rate: the RX; was queued behind poll commands
-               // we had already sent.  See TFactoryRadioBase.PollOutstanding.
-               if ro.PollOutstanding then
+               THamLibDirect(ro).DrainUrgentQueue;
+
+               if InterlockedExchange(THamLibDirect(ro).FNeedsPoll, 0) <> 0 then
                   begin
-                  // Skip this cycle.  Deliberately WITHOUT touching
-                  // lastPollTick, so the next poll goes the instant the radio
-                  // answers rather than waiting out another whole interval.
+                  if TR4W_HAMLIB_DEBUG then
+                     begin
+                     logger.Info('[pFactoryRadio] HamLib poll triggered by ASYNC callback');
+                     end;
+                  THamLibDirect(ro).SendPollRequests;
+                  lastHeartbeatTick := GetTickCount;
                   end
-               else
+               else if not TR4W_HAMLIB_ASYNC_ONLY and
+                       (GetTickCount - lastHeartbeatTick >= LongWord(ro.pollingInterval)) then
                   begin
-                  ro.MarkPollSent;
-                  ro.PollRadioState;
-                  lastPollTick := GetTickCount;
+                  if TR4W_HAMLIB_DEBUG then
+                     begin
+                     logger.Info('[pFactoryRadio] HamLib poll triggered by HEARTBEAT (%dms)',
+                                 [ro.pollingInterval]);
+                     end;
+                  THamLibDirect(ro).SendPollRequests;
+                  lastHeartbeatTick := GetTickCount;
+                  end;
+
+               // RIT/XIT slow poll � every 5000ms independently of the main heartbeat.
+               // rig_get_rit/xit trigger $07 D0 side-effects in HamLib's Icom driver
+               // which dismiss front-panel menus; polling infrequently keeps them usable.
+               if GetTickCount - lastRITXITTick >= 5000 then
+                  begin
+                  THamLibDirect(ro).SendRITXITPoll;
+                  lastRITXITTick := GetTickCount;
+                  end;
+               end
+            // For radios that require active polling (Icom, etc.), call PollRadioState
+            // Throttled by pollingInterval (e.g. 500ms for network Icom)
+            else if Assigned(ro) and ro.requiresPolling then
+               begin
+               if (GetTickCount - lastPollTick >= LongWord(ro.pollingInterval)) then
+                  begin
+                  // MEASURED, K3S over serial at 38400, 2026-08-09, with a
+                  // standalone harness (tools/k3watch.py) so TR4W was not in
+                  // the path.  Command -> the radio REPORTING the new state:
+                  //
+                  //   poll during TX          TX; ->tx    RX; ->rx
+                  //   IF; only, paced         125-146 ms   88-124 ms
+                  //   4 commands, paced*      406 ms       672 ms
+                  //   4 commands, waiting
+                  //     for EVERY reply       282 ms       609 ms
+                  //   (*released on the first reply -- what the gate below does)
+                  //
+                  // Read the last two rows together: waiting for every reply
+                  // instead of the first buys 63 ms.  The 500 ms between row 1
+                  // and row 3 is the radio's own CAT processing, and the only
+                  // variable is how many commands it was asked for -- roughly
+                  // 125 ms per command WHILE TRANSMITTING.  An unkey waits
+                  // behind whatever is already in the radio's buffer, and no
+                  // amount of pacing changes what is already there.
+                  //
+                  // So this gate is worth having and worth NOT extending: it
+                  // stops backlog growing without bound, which is what turned a
+                  // 100 ms unkey into 1200 ms.  Making it wait for the last
+                  // reply of a multi-command poll was measured and rejected --
+                  // 63 ms, in exchange for every driver having to declare how
+                  // many replies its poll expects, which Icom CI-V and the
+                  // binary Yaesus cannot cleanly answer.
+                  //
+                  // The lever that DOES work is asking for less while
+                  // transmitting, and that is a question about what the
+                  // operator can change mid-transmission, not a tuning knob.
+                  // Reducing the Elecraft poll to 'IF;' was tried and reverted:
+                  // the operator can move VFO B while the radio is transmitting
+                  // (NY4I), so a poll that cannot see it shows a frequency the
+                  // radio is not on.
+                  //
+                  // ONE OUTSTANDING POLL AT A TIME.  This loop used to fire every
+                  // pollingInterval regardless of whether the radio had answered
+                  // the last one, so a radio slower than the interval piled up
+                  // backlog in its OWN CAT input buffer -- and a radio gets
+                  // slower exactly when it is transmitting.  A K3S measured on
+                  // the bench unkeyed in 99 ms when paced and 820 ms when flooded
+                  // at this loop's rate: the RX; was queued behind poll commands
+                  // we had already sent.  See TFactoryRadioBase.PollOutstanding.
+                  if ro.PollOutstanding then
+                     begin
+                     // Skip this cycle.  Deliberately WITHOUT touching
+                     // lastPollTick, so the next poll goes the instant the radio
+                     // answers rather than waiting out another whole interval.
+                     end
+                  else
+                     begin
+                     ro.MarkPollSent;
+                     ro.PollRadioState;
+                     lastPollTick := GetTickCount;
+                     end;
                   end;
                end;
+
+            // Aggregate "main window" status follows the active (RX/operating) VFO.
+            // Swap-model radios (K4) return nrVFOA from GetActiveVFO -- unchanged
+            // from before. Selectable-model radios (Kenwood FR, Flex) return the
+            // receiving VFO, so the main window tracks A/B selection on the radio.
+            actVFO := ro.GetActiveVFO;
+
+            // THE BATCH BOUNDARY.  Everything from here to EndStatusPublish below
+            // -- the whole CurrentStatus fill and the FilteredStatus copy inside
+            // UpdateStatus -- is one coherent update as far as a reader is
+            // concerned.  Bracketing only the fill would publish a CurrentStatus
+            // that FilteredStatus had not caught up with yet, which is precisely
+            // the mismatch a snapshot is supposed to make impossible.
+            // try/finally is load-bearing, not defensive habit.  Everything below
+            // reads properties off a live radio object and calls the logger; if any
+            // of that raised, the version would be left ODD permanently and every
+            // reader would spin its full retry budget on every call, for the rest
+            // of the session.  An unbalanced seqlock does not fail loudly -- it
+            // quietly degrades to "always contended".
+            BeginStatusPublish(rig);
+            try
+            rig^.CurrentStatus.Freq := ro.frequency[actVFO];
+            rig^.CurrentStatus.Band := GetTR4WBandFromNetworkBand(ro.band[actVFO]);
+            GetTRModeAndExtendedModeFromNetworkMode(ro.mode[actVFO],rig^.CurrentStatus.Mode,rig^.CurrentStatus.ExtendedMode);
+            rig^.CurrentStatus.RITFreq :=  ro.RITOffset[actVFO];
+            rig^.CurrentStatus.Split := ro.IsSplitEnabled;
+            rig^.CurrentStatus.RIT := ro.IsRITOn[actVFO];
+            rig^.CurrentStatus.XIT := ro.IsXITOn[actVFO];
+            rig^.CurrentStatus.TXOn := ro.IsTransmitting;
+            if actVFO = nrVFOB then
+               begin
+               rig^.CurrentStatus.VFOStatus := VFOB
+               end
+            else
+               begin
+               rig^.CurrentStatus.VFOStatus := VFOA;
+               end;
+
+            // VFO A
+            rig.CurrentStatus.VFO[VFOA].Frequency := ro.frequency[nrVFOA];
+            GetTRModeAndExtendedModeFromNetworkMode(ro.mode[nrVFOA],rig.CurrentStatus.VFO[VFOA].Mode,rig.CurrentStatus.VFO[VFOA].ExtendedMode);
+            rig.CurrentStatus.VFO[VFOA].RIT := ro.IsRITOn[nrVFOA];
+            rig.CurrentStatus.VFO[VFOA].XIT := ro.IsXITOn[nrVFOA];
+            rig.CurrentStatus.VFO[VFOA].RITFreq := ro.RITOffset[nrVFOA];
+            rig.CurrentStatus.VFO[VFOA].Band := GetTR4WBandFromNetworkBand(ro.band[nrVFOA]);
+            rig.CurrentStatus.Band := GetTR4WBandFromNetworkBand(ro.band[actVFO]);  // aggregate band follows active VFO
+
+            // VFO B
+            rig.CurrentStatus.VFO[VFOB].Frequency := ro.frequency[nrVFOB];
+            GetTRModeAndExtendedModeFromNetworkMode(ro.mode[nrVFOB],rig.CurrentStatus.VFO[VFOB].Mode,rig.CurrentStatus.VFO[VFOB].ExtendedMode);
+            rig.CurrentStatus.VFO[VFOB].RIT := ro.IsRITOn[nrVFOB];
+            rig.CurrentStatus.VFO[VFOB].XIT := ro.IsXITOn[nrVFOB];
+            rig.CurrentStatus.VFO[VFOB].RITFreq := ro.RITOffset[nrVFOB];
+            rig.CurrentStatus.VFO[VFOB].Band := GetTR4WBandFromNetworkBand(ro.band[nrVFOB]);
+
+            // Sync CW speed from radio ? program (active radio only, when CWSpeedSync enabled)
+            // Only the active radio should update CodeSpeed � in SO2R, the inactive radio
+            // may have a different speed and would otherwise fight the active radio.
+            if rig^.CWSpeedSync and (ro.CWSpeed > 0) and (ro.CWSpeed <> CodeSpeed)
+               and (rig = ActiveRadioPtr) then
+               begin
+               logger.Info('[pFactoryRadio] CWSpeedSync: radio speed %d WPM -> CodeSpeed', [ro.CWSpeed]);
+               CodeSpeed := ro.CWSpeed;
+               DisplayCodeSpeed;  // Refreshes display and persists to SpeedMemory
+               end;
+
+            // HamLib Direct skips this � SendPollRequests already logs individual values.
+            if TR4W_HAMLIB_DEBUG and not (ro is THamLibDirect) then
+               begin
+               logger.Info('[pFactoryRadio:%s] pre-UpdateStatus: VFOA=%d VFOB=%d split=%s VFOStatus=%d',
+                  [rig^.RadioName,
+                   rig.CurrentStatus.VFO[VFOA].Frequency,
+                   rig.CurrentStatus.VFO[VFOB].Frequency,
+                   BoolToStr(rig.CurrentStatus.Split, True),
+                   Ord(rig.CurrentStatus.VFOStatus)]);
+               end;
+
+            // Check operational state (e.g. Flex slice 0 validity).
+            // TCP may be up while slices are gone (SmartSDR closed); alert in that case too.
+            SetRadioAlertState(not ro.IsOperational);
+
+            UpdateStatus(rig);
+            finally
+            EndStatusPublish(rig);
             end;
 
-         // Aggregate "main window" status follows the active (RX/operating) VFO.
-         // Swap-model radios (K4) return nrVFOA from GetActiveVFO -- unchanged
-         // from before. Selectable-model radios (Kenwood FR, Flex) return the
-         // receiving VFO, so the main window tracks A/B selection on the radio.
-         actVFO := ro.GetActiveVFO;
-
-         // THE BATCH BOUNDARY.  Everything from here to EndStatusPublish below
-         // -- the whole CurrentStatus fill and the FilteredStatus copy inside
-         // UpdateStatus -- is one coherent update as far as a reader is
-         // concerned.  Bracketing only the fill would publish a CurrentStatus
-         // that FilteredStatus had not caught up with yet, which is precisely
-         // the mismatch a snapshot is supposed to make impossible.
-         // try/finally is load-bearing, not defensive habit.  Everything below
-         // reads properties off a live radio object and calls the logger; if any
-         // of that raised, the version would be left ODD permanently and every
-         // reader would spin its full retry budget on every call, for the rest
-         // of the session.  An unbalanced seqlock does not fail loudly -- it
-         // quietly degrades to "always contended".
-         BeginStatusPublish(rig);
-         try
-         rig^.CurrentStatus.Freq := ro.frequency[actVFO];
-         rig^.CurrentStatus.Band := GetTR4WBandFromNetworkBand(ro.band[actVFO]);
-         GetTRModeAndExtendedModeFromNetworkMode(ro.mode[actVFO],rig^.CurrentStatus.Mode,rig^.CurrentStatus.ExtendedMode);
-         rig^.CurrentStatus.RITFreq :=  ro.RITOffset[actVFO];
-         rig^.CurrentStatus.Split := ro.IsSplitEnabled;
-         rig^.CurrentStatus.RIT := ro.IsRITOn[actVFO];
-         rig^.CurrentStatus.XIT := ro.IsXITOn[actVFO];
-         rig^.CurrentStatus.TXOn := ro.IsTransmitting;
-         if actVFO = nrVFOB then
-            rig^.CurrentStatus.VFOStatus := VFOB
-         else
-            rig^.CurrentStatus.VFOStatus := VFOA;
-
-         // VFO A
-         rig.CurrentStatus.VFO[VFOA].Frequency := ro.frequency[nrVFOA];
-         GetTRModeAndExtendedModeFromNetworkMode(ro.mode[nrVFOA],rig.CurrentStatus.VFO[VFOA].Mode,rig.CurrentStatus.VFO[VFOA].ExtendedMode);
-         rig.CurrentStatus.VFO[VFOA].RIT := ro.IsRITOn[nrVFOA];
-         rig.CurrentStatus.VFO[VFOA].XIT := ro.IsXITOn[nrVFOA];
-         rig.CurrentStatus.VFO[VFOA].RITFreq := ro.RITOffset[nrVFOA];
-         rig.CurrentStatus.VFO[VFOA].Band := GetTR4WBandFromNetworkBand(ro.band[nrVFOA]);
-         rig.CurrentStatus.Band := GetTR4WBandFromNetworkBand(ro.band[actVFO]);  // aggregate band follows active VFO
-
-         // VFO B
-         rig.CurrentStatus.VFO[VFOB].Frequency := ro.frequency[nrVFOB];
-         GetTRModeAndExtendedModeFromNetworkMode(ro.mode[nrVFOB],rig.CurrentStatus.VFO[VFOB].Mode,rig.CurrentStatus.VFO[VFOB].ExtendedMode);
-         rig.CurrentStatus.VFO[VFOB].RIT := ro.IsRITOn[nrVFOB];
-         rig.CurrentStatus.VFO[VFOB].XIT := ro.IsXITOn[nrVFOB];
-         rig.CurrentStatus.VFO[VFOB].RITFreq := ro.RITOffset[nrVFOB];
-         rig.CurrentStatus.VFO[VFOB].Band := GetTR4WBandFromNetworkBand(ro.band[nrVFOB]);
-
-         // Sync CW speed from radio ? program (active radio only, when CWSpeedSync enabled)
-         // Only the active radio should update CodeSpeed � in SO2R, the inactive radio
-         // may have a different speed and would otherwise fight the active radio.
-         if rig^.CWSpeedSync and (ro.CWSpeed > 0) and (ro.CWSpeed <> CodeSpeed)
-            and (rig = ActiveRadioPtr) then
-            begin
-            logger.Info('[pFactoryRadio] CWSpeedSync: radio speed %d WPM -> CodeSpeed', [ro.CWSpeed]);
-            CodeSpeed := ro.CWSpeed;
-            DisplayCodeSpeed;  // Refreshes display and persists to SpeedMemory
-            end;
-
-         // HamLib Direct skips this � SendPollRequests already logs individual values.
-         if TR4W_HAMLIB_DEBUG and not (ro is THamLibDirect) then
-            logger.Info('[pFactoryRadio:%s] pre-UpdateStatus: VFOA=%d VFOB=%d split=%s VFOStatus=%d',
-               [rig^.RadioName,
-                rig.CurrentStatus.VFO[VFOA].Frequency,
-                rig.CurrentStatus.VFO[VFOB].Frequency,
-                BoolToStr(rig.CurrentStatus.Split, True),
-                Ord(rig.CurrentStatus.VFOStatus)]);
-
-         // Check operational state (e.g. Flex slice 0 validity).
-         // TCP may be up while slices are gone (SmartSDR closed); alert in that case too.
-         SetRadioAlertState(not ro.IsOperational);
-
-         UpdateStatus(rig);
-         finally
-         EndStatusPublish(rig);
-         end;
-
-         // Announce the freshly-published state to any state-broadcast
-         // consumer.  OUTSIDE the seqlock on purpose: an observer calls
-         // ReadRadioStatus, and inside the window the version is odd, so it
-         // would spin its whole retry budget and then hand back a copy it
-         // knows may be torn.
-         if Assigned(RadioStatusPublished) then
-            begin
-            RadioStatusPublished(rig);
-            end;
-         end
+            // Announce the freshly-published state to any state-broadcast
+            // consumer.  OUTSIDE the seqlock on purpose: an observer calls
+            // ReadRadioStatus, and inside the window the version is odd, so it
+            // would spin its whole retry budget and then hand back a copy it
+            // knows may be torn.
+            if Assigned(RadioStatusPublished) then
+               begin
+               RadioStatusPublished(rig);
+               end;
+            end
       else
          begin
          // Radio disconnected - attempt reconnection
@@ -554,7 +584,9 @@ begin
             // Blank the frequency display immediately. FreqToPChar(0) shows "0.000"
             // which is as misleading as the stale value, so write '' directly.
             if rig^.FreqWindowHandle <> 0 then
+               begin
                Windows.SetWindowTextA(rig^.FreqWindowHandle, '');
+               end;
             if rig^.tRadioInterfaceWndHandle <> 0 then
                begin
                SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 102, '');
@@ -664,7 +696,9 @@ begin
                // Exponential backoff: double the delay, cap at max
                reconnectDelay := reconnectDelay * 2;
                if reconnectDelay > RECONNECT_MAX_DELAY then
+                  begin
                   reconnectDelay := RECONNECT_MAX_DELAY;
+                  end;
                end;
          end;
          end;
@@ -692,12 +726,16 @@ var
 begin
    Result := False;
    if BytesToRead > SizeOf(rig^.tBuf) then
+      begin
       Exit;
+      end;
 
    if Windows.ReadFile(rig.tCATPortHandle, rig^.tBuf, BytesToRead, BytesRead, nil
       {rig^.pOver}) then
       if BytesToRead = BytesRead then
+         begin
          Result := True;
+         end;
    if logger.IsTraceEnabled then
       begin
       logger.trace('[ReadFromSerialPort] Read %s from serial port',[String2Hex(AnsiLeftStr(ArrayToString(rig^.tBuf),BytesRead))]);
@@ -742,36 +780,36 @@ begin
    if (StatusChanged) or
       ((UDPBroadcastRadio) and (SecondsBetween(Now, dtLastUDPRadio) > 10) ) then
       begin
-         if Assigned(RadioStatusTrace) then
+      if Assigned(RadioStatusTrace) then
+         begin
+         // Distinguish the two reasons for taking this branch: a real state
+         // change, versus the 10-second UDP heartbeat republishing an
+         // unchanged status.  A trace that conflated them would look
+         // different every run purely because of wall-clock timing.
+         if StatusChanged then
             begin
-            // Distinguish the two reasons for taking this branch: a real state
-            // change, versus the 10-second UDP heartbeat republishing an
-            // unchanged status.  A trace that conflated them would look
-            // different every run purely because of wall-clock timing.
-            if StatusChanged then
-               begin
-               RadioStatusTrace(rig, rseChanged);
-               end
-            else
-               begin
-               RadioStatusTrace(rig, rsePeriodic);
-               end;
+            RadioStatusTrace(rig, rseChanged);
+            end
+         else
+            begin
+            RadioStatusTrace(rig, rsePeriodic);
             end;
-         DisplayCurrentStatus(rig); // Update the Radio Window only
-         rig.FilteredStatusChanged := True;
+         end;
+      DisplayCurrentStatus(rig); // Update the Radio Window only
+      rig.FilteredStatusChanged := True;
       end
    else
       begin
-         if rig.FilteredStatusChanged then
+      if rig.FilteredStatusChanged then
+         begin
+         rig.FilteredStatus := rig.CurrentStatus;
+         if Assigned(RadioStatusTrace) then
             begin
-               rig.FilteredStatus := rig.CurrentStatus;
-               if Assigned(RadioStatusTrace) then
-                  begin
-                  RadioStatusTrace(rig, rseFiltered);
-                  end;
-               ProcessFilteredStatus(rig);
-               rig.FilteredStatusChanged := False;
+            RadioStatusTrace(rig, rseFiltered);
             end;
+         ProcessFilteredStatus(rig);
+         rig.FilteredStatusChanged := False;
+         end;
       end;
    rig.PreviousStatus := rig.CurrentStatus;
 end;
@@ -783,179 +821,183 @@ begin
    if rig.CurrentStatus.Mode = CW then
       if IsCWByCATActive(rig) then
          begin
-            // Latch that the radio really is transmitting.  Without this, the
-            // TX-off test below races the rig: the keyer abort TR4W sends before
-            // a message is 'KY <abort>;RX;', which puts the radio in RECEIVE, and
-            // the message follows within milliseconds -- so a poll arriving
-            // before the rig keys up reports TX off and the message is declared
-            // finished before it began.  Bench, NY4I 2026-08-01: an F4 armed a
-            // 4622 ms window at 38.298 and the poll thread cleared it at 38.466,
-            // 168 ms later, firing tStartAutoCQ and resuming polling straight
-            // into the keying.  The operator heard no CW.
-            if rig.FilteredStatus.TXOn then
+         // Latch that the radio really is transmitting.  Without this, the
+         // TX-off test below races the rig: the keyer abort TR4W sends before
+         // a message is 'KY <abort>;RX;', which puts the radio in RECEIVE, and
+         // the message follows within milliseconds -- so a poll arriving
+         // before the rig keys up reports TX off and the message is declared
+         // finished before it began.  Bench, NY4I 2026-08-01: an F4 armed a
+         // 4622 ms window at 38.298 and the poll thread cleared it at 38.466,
+         // 168 ms later, firing tStartAutoCQ and resuming polling straight
+         // into the keying.  The operator heard no CW.
+         if rig.FilteredStatus.TXOn then
+            begin
+            rig.CWByCAT_SawTX := True;
+            end;
+         // Only believe "TX off means done" once we have SEEN it transmit.
+         // A radio that cannot report TX status never sets the latch and is
+         // ended by tmrCWByCAT instead -- which is what it already relied on.
+         if (not rig.FilteredStatus.TXOn) and rig.CWByCAT_SawTX then
+            begin
+            if rig.CWByCAT_Sending then
+               // ny4i Moved under this If to only perform when we are sending
                begin
-               rig.CWByCAT_SawTX := True;
+               logger.trace('rig.CWByCAT_Sending set to FALSE - %s (%s)',
+                        [rig.RadioName, InterfacedRadioTypeSA[rig.RadioModel]]);
+                     rig.tmrCWByCAT.Enabled := false;
+                        // ny4i Issue 153 Disable timer so we do not fire if we get the this event here
+                     //BackToInactiveRadioAfterQSO; // Moved to Timer event // ny4i Issue 153 We have to try here as WK and Serial do it in their threads when not busy
+                     rig.CWByCAT_Sending := false;
+                     if rig.CheckAutoCallTerminate then
+                        begin
+                        DebugMsg('rig.CheckAutoCallTerminate is true - Enter ReturnInCQMode');
+                        ReturnInCQOpMode;
+                        end;
                end;
-            // Only believe "TX off means done" once we have SEEN it transmit.
-            // A radio that cannot report TX status never sets the latch and is
-            // ended by tmrCWByCAT instead -- which is what it already relied on.
-            if (not rig.FilteredStatus.TXOn) and rig.CWByCAT_SawTX then
-               begin
-               if rig.CWByCAT_Sending then
-                  // ny4i Moved under this If to only perform when we are sending
-                  begin
-                  logger.trace('rig.CWByCAT_Sending set to FALSE - %s (%s)',
-                           [rig.RadioName, InterfacedRadioTypeSA[rig.RadioModel]]);
-                        rig.tmrCWByCAT.Enabled := false;
-                           // ny4i Issue 153 Disable timer so we do not fire if we get the this event here
-                        //BackToInactiveRadioAfterQSO; // Moved to Timer event // ny4i Issue 153 We have to try here as WK and Serial do it in their threads when not busy
-                        rig.CWByCAT_Sending := false;
-                        if rig.CheckAutoCallTerminate then
-                           begin
-                              DebugMsg('rig.CheckAutoCallTerminate is true - Enter ReturnInCQMode');
-                              ReturnInCQOpMode;
-                           end;
-                     end;
-               end;
+            end;
          end;
    // move location of variable dif assignment so it is used for both active and inactive radios K0TI 12/19/2020
    dif := Abs(rig.FilteredStatus.Freq - rig.LastDisplayedFreq);
    if rig = ActiveRadioPtr then
       begin
-         if rig.LastDisplayedFreq <> 0 then
-            if dif > AutoSAPEnableRate then
-               if dif <= 10000 then
-                  if AutoSAPEnable and
-                     // Issue #795 vs bandmap: #795 made a MANUAL dial QSY clear
-                     // the call/exchange in S&P.  But a COMMANDED QSY (bandmap
-                     // double-click, spot click, typed freq) also moves the VFO
-                     // and may have just placed a call -- don't clobber it.
-                     // SetRadioFreq records the commanded VFO-A freq; treat this
-                     // as a manual tune (and clear) only if we landed FAR from
-                     // the last commanded freq.
-                     (Abs(rig.FilteredStatus.Freq - rig.tCommandedQSYFreq) > AutoSAPEnableRate) then // n4af 4.44.10
-                    // if OpMode = CQOpMode then    // 4.139.3
-                        begin
-                           SetOpMode(SearchAndPounceOpMode);
-                           tClearDupeInfoCall;
-                           ClearAltD; // 4.53.7
-                           initializeQSO; // 4.53.5
-                           Second := False;
-                              // n4af 4.46.7  first esc d/n clear call
-                           switchnext := False; // n4af issue  230
-                           tCallWindowSetFocus;  // 4.139.1
-                        end;
-         if rig.CurrentStatus.TxOn then
-            begin
-               rig.tPTTStatus := PTT_ON;
-            end
-         else
-            begin
-               rig.tPTTStatus := PTT_OFF;
-            end;
-         pTTStatusChanged;
-         if rig.FilteredStatus.Freq = 0 then
-            Exit;
-         if rig.FilteredStatus.Band = NoBand then
-            begin
-            logger.debug('ProcessFilteredStatus:Radio %s] rig.FilteredStatus.Band = NoBand', [rig.RadioName]);
-            logger.debug('ProcessFilteredStatus:Radio %s] rig.FilteredStatus.freq = %d', [rig.RadioName,rig.FilteredStatus.Freq]);
-            end;
-         logger.Trace('[ProcessFilteredStatus] rig=%s, ' +
-                      'BandMemory=%d, FS.Band=%d, ' +
-                      'ModeMemory=%d, FS.Mode=%d, ' +
-                      'FS.Freq=%d, ActiveBand(before)=%d, ActiveMode(before)=%d',
-                      [rig.RadioName, Ord(rig.BandMemory), Ord(rig.FilteredStatus.Band),
-                       Ord(rig.ModeMemory), Ord(rig.FilteredStatus.Mode),
-                       rig.FilteredStatus.Freq, Ord(ActiveBand), Ord(ActiveMode)]);
-         // Guard: NoBand/NoMode are sentinels meaning "not yet reported by radio".
-         // Never propagate them into ActiveBand/ActiveMode; they would corrupt the
-         // bandmap, dupe sheet, and multiplier displays until the next valid poll.
-         if (rig.FilteredStatus.Band <> NoBand) and
-            (rig.FilteredStatus.Mode <> NoMode) and
-            ((rig.BandMemory <> rig.FilteredStatus.Band) or
-             (rig.ModeMemory <> rig.FilteredStatus.Mode)) then
-            begin
-               // INFO, not trace: this is the ONE place the main window's band
-               // and mode change, and when the display jumps the first question
-               // is always "which radio said so, and off what frequency".  A
-               // trace-level line does not answer it, because nobody is running
-               // at trace when the glitch happens (NY4I, 2026-08-08: a corrupt
-               // CI-V frame moved the band mid-QSO and only the raw hex dump
-               // could explain it afterwards).
-               logger.Info('[Band/Mode] %s -> band %d->%d, mode %d->%d, at %d Hz',
-                           [rig.RadioName,
-                            Ord(ActiveBand), Ord(rig.FilteredStatus.Band),
-                            Ord(ActiveMode), Ord(rig.FilteredStatus.Mode),
-                            rig.FilteredStatus.Freq]);
-               ActiveBand := rig.FilteredStatus.Band;
-               ActiveMode := rig.FilteredStatus.Mode;
-               DisplayBandMode(ActiveBand, ActiveMode, False);
-               VisibleDupeSheetChanged := True;
+      if rig.LastDisplayedFreq <> 0 then
+         if dif > AutoSAPEnableRate then
+            if dif <= 10000 then
+               if AutoSAPEnable and
+                  // Issue #795 vs bandmap: #795 made a MANUAL dial QSY clear
+                  // the call/exchange in S&P.  But a COMMANDED QSY (bandmap
+                  // double-click, spot click, typed freq) also moves the VFO
+                  // and may have just placed a call -- don't clobber it.
+                  // SetRadioFreq records the commanded VFO-A freq; treat this
+                  // as a manual tune (and clear) only if we landed FAR from
+                  // the last commanded freq.
+                  (Abs(rig.FilteredStatus.Freq - rig.tCommandedQSYFreq) > AutoSAPEnableRate) then // n4af 4.44.10
+                 // if OpMode = CQOpMode then    // 4.139.3
+                  begin
+                  SetOpMode(SearchAndPounceOpMode);
+                  tClearDupeInfoCall;
+                  ClearAltD; // 4.53.7
+                  initializeQSO; // 4.53.5
+                  Second := False;
+                     // n4af 4.46.7  first esc d/n clear call
+                  switchnext := False; // n4af issue  230
+                  tCallWindowSetFocus;  // 4.139.1
+                  end;
+      if rig.CurrentStatus.TxOn then
+         begin
+         rig.tPTTStatus := PTT_ON;
+         end
+      else
+         begin
+         rig.tPTTStatus := PTT_OFF;
+         end;
+      pTTStatusChanged;
+      if rig.FilteredStatus.Freq = 0 then
+         begin
+         Exit;
+         end;
+      if rig.FilteredStatus.Band = NoBand then
+         begin
+         logger.debug('ProcessFilteredStatus:Radio %s] rig.FilteredStatus.Band = NoBand', [rig.RadioName]);
+         logger.debug('ProcessFilteredStatus:Radio %s] rig.FilteredStatus.freq = %d', [rig.RadioName,rig.FilteredStatus.Freq]);
+         end;
+      logger.Trace('[ProcessFilteredStatus] rig=%s, ' +
+                   'BandMemory=%d, FS.Band=%d, ' +
+                   'ModeMemory=%d, FS.Mode=%d, ' +
+                   'FS.Freq=%d, ActiveBand(before)=%d, ActiveMode(before)=%d',
+                   [rig.RadioName, Ord(rig.BandMemory), Ord(rig.FilteredStatus.Band),
+                    Ord(rig.ModeMemory), Ord(rig.FilteredStatus.Mode),
+                    rig.FilteredStatus.Freq, Ord(ActiveBand), Ord(ActiveMode)]);
+      // Guard: NoBand/NoMode are sentinels meaning "not yet reported by radio".
+      // Never propagate them into ActiveBand/ActiveMode; they would corrupt the
+      // bandmap, dupe sheet, and multiplier displays until the next valid poll.
+      if (rig.FilteredStatus.Band <> NoBand) and
+         (rig.FilteredStatus.Mode <> NoMode) and
+         ((rig.BandMemory <> rig.FilteredStatus.Band) or
+          (rig.ModeMemory <> rig.FilteredStatus.Mode)) then
+         begin
+         // INFO, not trace: this is the ONE place the main window's band
+         // and mode change, and when the display jumps the first question
+         // is always "which radio said so, and off what frequency".  A
+         // trace-level line does not answer it, because nobody is running
+         // at trace when the glitch happens (NY4I, 2026-08-08: a corrupt
+         // CI-V frame moved the band mid-QSO and only the raw hex dump
+         // could explain it afterwards).
+         logger.Info('[Band/Mode] %s -> band %d->%d, mode %d->%d, at %d Hz',
+                     [rig.RadioName,
+                      Ord(ActiveBand), Ord(rig.FilteredStatus.Band),
+                      Ord(ActiveMode), Ord(rig.FilteredStatus.Mode),
+                      rig.FilteredStatus.Freq]);
+         ActiveBand := rig.FilteredStatus.Band;
+         ActiveMode := rig.FilteredStatus.Mode;
+         DisplayBandMode(ActiveBand, ActiveMode, False);
+         VisibleDupeSheetChanged := True;
 
-               DisplayCodeSpeed;
-               DisplayAutoSendCharacterCount;
-               VisibleLog.ShowRemainingMultipliers; //wli
+         DisplayCodeSpeed;
+         DisplayAutoSendCharacterCount;
+         VisibleLog.ShowRemainingMultipliers; //wli
 
-               if QSONumberByBand then
-                  DisplayNextQSONumber;
-
-               ShowFMessages(0);
-            end;
-
-         if ((dif > 0) and ((rig.FilteredStatus.Freq <> BandMapCursorFrequency)
-            or (BandMapMode <> ActiveMode)) and (rig.FilteredStatus.Freq <> 0)) then
-            // Gav 4.47.4 #015
+         if QSONumberByBand then
             begin
-               SpotsList.DisplayCallsignOnThisFreq(rig.FilteredStatus.Freq);
-               BandMapCursorFrequency := rig.FilteredStatus.Freq;
-               BandMapBand := ActiveBand;
-               BandMapMode := ActiveMode;
-               BandMapNeedsRefresh := True; // coalesced via 250ms timer � avoids flash on every VFO poll
+            DisplayNextQSONumber;
             end;
+
+         ShowFMessages(0);
+         end;
+
+      if ((dif > 0) and ((rig.FilteredStatus.Freq <> BandMapCursorFrequency)
+         or (BandMapMode <> ActiveMode)) and (rig.FilteredStatus.Freq <> 0)) then
+         // Gav 4.47.4 #015
+         begin
+         SpotsList.DisplayCallsignOnThisFreq(rig.FilteredStatus.Freq);
+         BandMapCursorFrequency := rig.FilteredStatus.Freq;
+         BandMapBand := ActiveBand;
+         BandMapMode := ActiveMode;
+         BandMapNeedsRefresh := True; // coalesced via 250ms timer � avoids flash on every VFO poll
+         end;
       end
    else
       begin // Inactive Radio Processing
 
-         if TuneDupeCheckEnable then
-            begin
-               SpotsList.TuneDupeCheck(rig.FilteredStatus.Freq);
-            end;
+      if TuneDupeCheckEnable then
+         begin
+         SpotsList.TuneDupeCheck(rig.FilteredStatus.Freq);
+         end;
 
-         if (rig.BandMemory <> rig.FilteredStatus.Band) or (rig.ModeMemory <>
-            rig.FilteredStatus.Mode) then
-            begin
-               InActiveRadioPtr.UpdateBandOutputInfo(rig.FilteredStatus.Band,
-                  rig.FilteredStatus.Mode);
-            end;
+      if (rig.BandMemory <> rig.FilteredStatus.Band) or (rig.ModeMemory <>
+         rig.FilteredStatus.Mode) then
+         begin
+         InActiveRadioPtr.UpdateBandOutputInfo(rig.FilteredStatus.Band,
+            rig.FilteredStatus.Mode);
+         end;
 
-         //GAV added this section. Changes BandmapBand & Bandmap Mode to follow inactive radio when inactive radio is tuned
+      //GAV added this section. Changes BandmapBand & Bandmap Mode to follow inactive radio when inactive radio is tuned
 
-         // Issue #908: gate the "follow inactive radio" feature on TwoRadioMode.
-         // The legacy LOGWIND.PAS path checked TwoRadioState <> TwoRadiosDisabled;
-         // this Gav-added polling path forgot the SO2R gate, so an inactive radio
-         // could mutate the bandmap even with TWO RADIO MODE=FALSE.
-         //
-         // Guard: also skip if the inactive radio has not yet reported real
-         // band/mode (NoBand/NoMode are uninitialized sentinels), which would
-         // otherwise blank the active radio's bandmap on first poll.
-         if TwoRadioMode and
-            (rig.FilteredStatus.Band <> NoBand) and
-            (rig.FilteredStatus.Mode <> NoMode) and
-            (dif > 0) and
-            ((rig.FilteredStatus.Freq <> BandMapCursorFrequency) or
-             (BandMapMode <> ActiveMode)) and
-            (rig.FilteredStatus.Freq <> 0) then
-            // Gav 4.47.4 #015
-            begin
-               BandmapBand := rig.FilteredStatus.Band;
-               BandMapMode := rig.FilteredStatus.Mode;
-               VisibleDupeSheetChanged := True;
-               BandMapCursorFrequency := rig.FilteredStatus.Freq;
-               BandMapNeedsRefresh := True; // coalesced via 250ms timer � avoids flash on every VFO poll
-            end;
+      // Issue #908: gate the "follow inactive radio" feature on TwoRadioMode.
+      // The legacy LOGWIND.PAS path checked TwoRadioState <> TwoRadiosDisabled;
+      // this Gav-added polling path forgot the SO2R gate, so an inactive radio
+      // could mutate the bandmap even with TWO RADIO MODE=FALSE.
+      //
+      // Guard: also skip if the inactive radio has not yet reported real
+      // band/mode (NoBand/NoMode are uninitialized sentinels), which would
+      // otherwise blank the active radio's bandmap on first poll.
+      if TwoRadioMode and
+         (rig.FilteredStatus.Band <> NoBand) and
+         (rig.FilteredStatus.Mode <> NoMode) and
+         (dif > 0) and
+         ((rig.FilteredStatus.Freq <> BandMapCursorFrequency) or
+          (BandMapMode <> ActiveMode)) and
+         (rig.FilteredStatus.Freq <> 0) then
+         // Gav 4.47.4 #015
+         begin
+         BandmapBand := rig.FilteredStatus.Band;
+         BandMapMode := rig.FilteredStatus.Mode;
+         VisibleDupeSheetChanged := True;
+         BandMapCursorFrequency := rig.FilteredStatus.Freq;
+         BandMapNeedsRefresh := True; // coalesced via 250ms timer � avoids flash on every VFO poll
+         end;
 
-         //GAV End of added
+      //GAV End of added
 
       end;
 {$IF tDebugMode}
@@ -980,7 +1022,9 @@ var
 begin
    //logger.Debug('Entering DisplayCurrentStatus');
    if rig = ActiveRadioPtr then
+      begin
       SendStationStatus(sstBandModeFreq);
+      end;
    if UDPBroadcastRadio then
       begin
       SendRadioInfoToUDP(rig); // ny4i 4.44.9 // Broadcast Radio Info if set
@@ -992,23 +1036,25 @@ begin
    if rig.CurrentStatus.VFO[VFOA].Frequency <>
       rig.CurrentStatus.previousVFO[VFOA].Frequency then
       begin
-         if TR4W_HAMLIB_DEBUG then
-            logger.Info('[DisplayCurrentStatus:%s] VFOA display update: %d ? %d',
-               [rig^.RadioName,
-                rig.CurrentStatus.previousVFO[VFOA].Frequency,
-                rig.CurrentStatus.VFO[VFOA].Frequency]);
-         if h <> 0 then
-            begin
-               SetDlgItemTextW(h, 102,
-                  PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOA].Frequency)));
-            end;
-         Windows.SetWindowTextW(rig^.FreqWindowHandle,
-            PChar(FreqToPChar(rig.CurrentStatus.Freq)));
+      if TR4W_HAMLIB_DEBUG then
+         begin
+         logger.Info('[DisplayCurrentStatus:%s] VFOA display update: %d ? %d',
+            [rig^.RadioName,
+             rig.CurrentStatus.previousVFO[VFOA].Frequency,
+             rig.CurrentStatus.VFO[VFOA].Frequency]);
+         end;
+      if h <> 0 then
+         begin
+         SetDlgItemTextW(h, 102,
+            PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOA].Frequency)));
+         end;
+      Windows.SetWindowTextW(rig^.FreqWindowHandle,
+         PChar(FreqToPChar(rig.CurrentStatus.Freq)));
       end
    else
       begin
-         rig.CurrentStatus.previousVFO[VFOA].Frequency :=
-            rig.CurrentStatus.VFO[VFOA].Frequency;
+      rig.CurrentStatus.previousVFO[VFOA].Frequency :=
+         rig.CurrentStatus.VFO[VFOA].Frequency;
       end;
    (*fa := rig.CurrentStatus.VFO[VFOA].Frequency;    // This is so pointless updates do not flicker.
    if fa <> saveVFOAFreq then                      // We need a changed flag so we can check them all.
@@ -1027,67 +1073,71 @@ begin
    if rig.CurrentStatus.VFO[VFOB].Frequency <>
       rig.CurrentStatus.previousVFO[VFOB].Frequency then
       begin
-         if TR4W_HAMLIB_DEBUG then
-            logger.Info('[DisplayCurrentStatus:%s] VFOB display update: %d ? %d',
-               [rig^.RadioName,
-                rig.CurrentStatus.previousVFO[VFOB].Frequency,
-                rig.CurrentStatus.VFO[VFOB].Frequency]);
-         if h <> 0 then
-            begin
-               SetDlgItemTextW(h, 104,
-                  PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOB].Frequency)));
-            end;
-         //Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
+      if TR4W_HAMLIB_DEBUG then
+         begin
+         logger.Info('[DisplayCurrentStatus:%s] VFOB display update: %d ? %d',
+            [rig^.RadioName,
+             rig.CurrentStatus.previousVFO[VFOB].Frequency,
+             rig.CurrentStatus.VFO[VFOB].Frequency]);
+         end;
+      if h <> 0 then
+         begin
+         SetDlgItemTextW(h, 104,
+            PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOB].Frequency)));
+         end;
+      //Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
       end
    else
       begin
-         rig.CurrentStatus.previousVFO[VFOB].Frequency :=
-            rig.CurrentStatus.VFO[VFOB].Frequency;
+      rig.CurrentStatus.previousVFO[VFOB].Frequency :=
+         rig.CurrentStatus.VFO[VFOB].Frequency;
       end;
    //tSetWindowRedraw(h,true);
    //UpdateWindow(h);
   // ActiveRadioPtr.tPTTStatus :=
    if rig.CurrentStatus.TXOn then
       begin
-         ActiveRadioPtr.tPTTStatus := PTT_ON;
+      ActiveRadioPtr.tPTTStatus := PTT_ON;
       end
    else
       begin
-         ActiveRadioPtr.tPTTStatus := PTT_OFF;
+      ActiveRadioPtr.tPTTStatus := PTT_OFF;
       end;
 
    if rig.CurrentStatus.PrevRITFreq <> rig.CurrentStatus.RITFreq then
       begin
-         { $ R A NGECHECKS OFF}
-             //SetDlgItemInt(h, 120, Cardinal(rig.CurrentStatus.RITFreq), rig.CurrentStatus.RITFreq < 0);
-         SetDlgItemTextW(h, 120, PChar(RITFreqToPchar(rig.CurrentStatus.RITFreq)));
-         { $ R A NGECHECKS ON}
-         rig.CurrentStatus.PrevRITFreq := rig.CurrentStatus.RITFreq;
+      { $ R A NGECHECKS OFF}
+          //SetDlgItemInt(h, 120, Cardinal(rig.CurrentStatus.RITFreq), rig.CurrentStatus.RITFreq < 0);
+      SetDlgItemTextW(h, 120, PChar(RITFreqToPchar(rig.CurrentStatus.RITFreq)));
+      { $ R A NGECHECKS ON}
+      rig.CurrentStatus.PrevRITFreq := rig.CurrentStatus.RITFreq;
       end;
 
    if rig.CurrentStatus.PrevVFOStatus <> rig.CurrentStatus.VFOStatus then
       begin
-         if TR4W_HAMLIB_DEBUG then
-            logger.Info('[DisplayCurrentStatus:%s] VFOStatus change: %d ? %d',
-               [rig^.RadioName,
-                Ord(rig.CurrentStatus.PrevVFOStatus),
-                Ord(rig.CurrentStatus.VFOStatus)]);
-         if rig.CurrentStatus.VFOStatus = VFOA then
-            begin
-               EnableWindowTrue(h, 102);
-               EnableWindowFalse(h, 104);
-            end;
-         if rig.CurrentStatus.VFOStatus = VFOB then
-            begin
-               EnableWindowTrue(h, 104);
-               EnableWindowFalse(h, 102);
-            end;
-         if rig.CurrentStatus.VFOStatus = vfoUnknown then
-            begin
-               EnableWindowTrue(h, 104);
-               EnableWindowTrue(h, 102);
-            end;
-         rig.CurrentStatus.PrevVFOStatus := rig.CurrentStatus.VFOStatus;
+      if TR4W_HAMLIB_DEBUG then
+         begin
+         logger.Info('[DisplayCurrentStatus:%s] VFOStatus change: %d ? %d',
+            [rig^.RadioName,
+             Ord(rig.CurrentStatus.PrevVFOStatus),
+             Ord(rig.CurrentStatus.VFOStatus)]);
+         end;
+      if rig.CurrentStatus.VFOStatus = VFOA then
+         begin
+         EnableWindowTrue(h, 102);
+         EnableWindowFalse(h, 104);
+         end;
+      if rig.CurrentStatus.VFOStatus = VFOB then
+         begin
+         EnableWindowTrue(h, 104);
+         EnableWindowFalse(h, 102);
+         end;
+      if rig.CurrentStatus.VFOStatus = vfoUnknown then
+         begin
+         EnableWindowTrue(h, 104);
+         EnableWindowTrue(h, 102);
+         end;
+      rig.CurrentStatus.PrevVFOStatus := rig.CurrentStatus.VFOStatus;
       end;
 
    Windows.EnableWindow(rig.RITWndHandle, rig.CurrentStatus.RIT);
@@ -1101,9 +1151,13 @@ begin
       (rig.PreviousStatus.Split <> rig.CurrentStatus.Split) then
       begin
       if rig.CurrentStatus.Split then
+         begin
          QuickDisplay(TC_SPLIT_WARN)
+         end
       else
+         begin
          QuickDisplay('');
+         end;
       end;
 
    // Update VFO A mode label when mode changes (Issue #566)
@@ -1206,8 +1260,8 @@ begin
 {$IF MASKEVENT}
    if rig^.RadioModel in KenwoodRadios then
       begin
-         Result := ReadFromCOMPortOnEvent(b, rig);
-         Exit;
+      Result := ReadFromCOMPortOnEvent(b, rig);
+      Exit;
       end;
 {$IFEND}
 
@@ -1217,79 +1271,103 @@ begin
    stat.cbInQue := 0;
 
    if rig^.RadioModel in [IC78..IC9700, OMNI6] then
+      begin
       SleepMs := IcomResponseTimeout
+      end
    else
       begin
-         if b < 5 then
-            SleepMs := 100
-         else
-            SleepMs := 50 {+50};
-         if rig^.RadioModel = Orion then
-            SleepMs := 100;
+      if b < 5 then
+         begin
+         SleepMs := 100
+         end
+      else
+         begin
+         SleepMs := 50 {+50};
+         end;
+      if rig^.RadioModel = Orion then
+         begin
+         SleepMs := 100;
+         end;
       end;
 
    while stat.cbInQue < {<>}b do
       begin
-         Sleep(SleepMs);
-         if rig^.tPollCount < 0 then
-            Exit;
-         if not ClearCommError(rig^.tCATPortHandle, Errs, @stat) then
+      Sleep(SleepMs);
+      if rig^.tPollCount < 0 then
+         begin
+         Exit;
+         end;
+      if not ClearCommError(rig^.tCATPortHandle, Errs, @stat) then
 
-            ShowSysErrorMessage('READ');
+         begin
+         ShowSysErrorMessage('READ');
+         end;
 
-         inc(c);
-         if c >= b then
+      inc(c);
+      if c >= b then
+         begin
+         1:
+
+         {To view data in Portmon}
+         if Errs = 0 then
             begin
-               1:
-
-               {To view data in Portmon}
-               if Errs = 0 then
-                  begin
-                     if stat.cbInQue <> 0 then
-                        ReadFromSerialPort(stat.cbInQue, rig);
-                  end
-               else
-                  begin
-                     logger.Error('In ReadFromCOMPort, Errs <> 0 %d', [Errs]);
-                     Sleep(100);
-                  end;
-
-               PurgeComm(rig^.tCATPortHandle, PURGE_RXCLEAR or PURGE_RXABORT);
-               ClearCommError(rig^.tCATPortHandle, Errs, @stat);
-               Result := False;
-               Exit;
+            if stat.cbInQue <> 0 then
+               begin
+               ReadFromSerialPort(stat.cbInQue, rig);
+               end;
+            end
+         else
+            begin
+            logger.Error('In ReadFromCOMPort, Errs <> 0 %d', [Errs]);
+            Sleep(100);
             end;
+
+         PurgeComm(rig^.tCATPortHandle, PURGE_RXCLEAR or PURGE_RXABORT);
+         ClearCommError(rig^.tCATPortHandle, Errs, @stat);
+         Result := False;
+         Exit;
+         end;
       end;
    rig.tBuf[b + 1] := #0;
    Result := ReadFromSerialPort(b, rig);
 
    if rig^.RadioModel in [Orion] then
       begin
-         if rig.tBuf[1] <> '@' then
-            goto 1;
-         if rig.tBuf[b] <> #$0D then
-            goto 1;
+      if rig.tBuf[1] <> '@' then
+         begin
+         goto 1;
+         end;
+      if rig.tBuf[b] <> #$0D then
+         begin
+         goto 1;
+         end;
       end;
 
    if rig^.RadioModel in KenwoodRadios then
       if rig.tBuf[b] <> ';' then
+         begin
          goto 1;
+         end;
 
    if rig^.RadioModel in [IC706..OMNI6] then
       begin
-         if (PWORD(@rig.tBuf[1])^ <> $FEFE) then
-            goto 1;
+      if (PWORD(@rig.tBuf[1])^ <> $FEFE) then
+         begin
+         goto 1;
+         end;
 
-         if rig.tBuf[3] = #0 then
-            if not rig.tDisableCIVTransceive then
-               begin
-                  rig.tDisableCIVTransceive := True;
-                  showwarning(TC_DISBALE_CIV);
-               end;
+      if rig.tBuf[3] = #0 then
+         if not rig.tDisableCIVTransceive then
+            begin
+            rig.tDisableCIVTransceive := True;
+            showwarning(TC_DISBALE_CIV);
+            end;
 
-         if (rig.tBuf[b] <> ICOM_END_OF_MESSAGE_CODE) or
-            (rig.tBuf[4] <> ICOM_CONTROLLER_ADDRESS) then
-            goto 1;
+      if (rig.tBuf[b] <> ICOM_END_OF_MESSAGE_CODE) or
+         (rig.tBuf[4] <> ICOM_CONTROLLER_ADDRESS) then
+         begin
+         goto 1;
+         end;
       end;
 
 end;
@@ -1337,40 +1415,40 @@ procedure PTTStatusChanged;
 begin
    if ActiveRadioPtr.tPTTStatus = PTT_ON then
       begin
-         tr4w_PTTStartTime := GetTickCount;
-         // PTT ON is a genuine transmit sighting -- latch it, so the PTT-OFF
-         // arm below can tell "the message finished" from "the radio has not
-         // keyed up yet".  Same latch ProcessFilteredStatus uses; both doors
-         // into "CW is over" must agree or the race just moves to the other one
-         // (it did: 08d6eb2 fixed only ProcessFilteredStatus and the failure
-         // reappeared here -- NY4I, 2026-08-01 16:54).
-         ActiveRadioPtr.CWByCAT_SawTX := True;
+      tr4w_PTTStartTime := GetTickCount;
+      // PTT ON is a genuine transmit sighting -- latch it, so the PTT-OFF
+      // arm below can tell "the message finished" from "the radio has not
+      // keyed up yet".  Same latch ProcessFilteredStatus uses; both doors
+      // into "CW is over" must agree or the race just moves to the other one
+      // (it did: 08d6eb2 fixed only ProcessFilteredStatus and the failure
+      // reappeared here -- NY4I, 2026-08-01 16:54).
+      ActiveRadioPtr.CWByCAT_SawTX := True;
       end
    else //n4af 04.30.3
       begin
-         if ActiveRadioPtr.CurrentStatus.Mode = CW then
-            // Only believe PTT-OFF means "done" once the radio has actually been
-            // SEEN transmitting this message.  The keyer abort TR4W sends ahead
-            // of every interrupting message is 'KY <abort>;RX;' -- the RX drops
-            // the rig out of transmit -- and the message follows within
-            // milliseconds.  A PTT-off observed in that window ended a message
-            // that had not started: an F9 armed an 800 ms window at 15.876 and
-            // this cleared it 272 ms later, firing tStartAutoCQ.  The operator
-            // heard no CW.
-            if IsCWByCATActive and ActiveRadioPtr.CWByCAT_SawTX then
-               begin
-                  ActiveRadioPtr.CWByCAT_Sending := false;
-                     // If we were sending but the PTT goes off, now reset this.
-                  BackToInactiveRadioAfterQSO; // ny4i Issue 153 We have to try here as WK and Serial do it in their threads when not busy
-                  logger.trace('[Active] CWByCAT_Sending set to FALSE - %s (%s)',
-                     [ActiveRadioPtr.RadioName, InterfacedRadioTypeSA[ActiveRadioPtr.RadioModel]]);
-                  tStartAutoCQ; // this is totally bizzare but the way autocqresume works is you call this and it checks.
-               end;
-         if tr4w_PTTStartTime <> 0 then
+      if ActiveRadioPtr.CurrentStatus.Mode = CW then
+         // Only believe PTT-OFF means "done" once the radio has actually been
+         // SEEN transmitting this message.  The keyer abort TR4W sends ahead
+         // of every interrupting message is 'KY <abort>;RX;' -- the RX drops
+         // the rig out of transmit -- and the message follows within
+         // milliseconds.  A PTT-off observed in that window ended a message
+         // that had not started: an F9 armed an 800 ms window at 15.876 and
+         // this cleared it 272 ms later, firing tStartAutoCQ.  The operator
+         // heard no CW.
+         if IsCWByCATActive and ActiveRadioPtr.CWByCAT_SawTX then
             begin
-               tRestartInfo.riPTTOnTotalTime := tRestartInfo.riPTTOnTotalTime +
-                  GetTickCount - tr4w_PTTStartTime;
+            ActiveRadioPtr.CWByCAT_Sending := false;
+               // If we were sending but the PTT goes off, now reset this.
+            BackToInactiveRadioAfterQSO; // ny4i Issue 153 We have to try here as WK and Serial do it in their threads when not busy
+            logger.trace('[Active] CWByCAT_Sending set to FALSE - %s (%s)',
+               [ActiveRadioPtr.RadioName, InterfacedRadioTypeSA[ActiveRadioPtr.RadioModel]]);
+            tStartAutoCQ; // this is totally bizzare but the way autocqresume works is you call this and it checks.
             end;
+      if tr4w_PTTStartTime <> 0 then
+         begin
+         tRestartInfo.riPTTOnTotalTime := tRestartInfo.riPTTOnTotalTime +
+            GetTickCount - tr4w_PTTStartTime;
+         end;
       end;
 
    tDispalyOnAirTime;
@@ -1403,13 +1481,13 @@ begin
    }
    if rig.CurrentStatus.Split then
       begin
-         txFreq := rig.CurrentStatus.VFO[VFOB].Frequency;
-         freq := rig.CurrentStatus.Freq;
+      txFreq := rig.CurrentStatus.VFO[VFOB].Frequency;
+      freq := rig.CurrentStatus.Freq;
       end
    else
       begin
-         txFreq := rig.CurrentStatus.Freq;
-         freq := rig.CurrentStatus.Freq;
+      txFreq := rig.CurrentStatus.Freq;
+      freq := rig.CurrentStatus.Freq;
       end;
 
    case rig.CurrentStatus.Mode of
@@ -1418,15 +1496,15 @@ begin
          if freq < 10000000 then
             // It seems like this should be in the radio object instead of us guessing // ny4i
             begin
-               sMode := 'LSB';
-               if (freq > 5300000) and (freq < 5400000) then
-                  begin
-                     sMode := 'USB';
-                  end;
+            sMode := 'LSB';
+            if (freq > 5300000) and (freq < 5400000) then
+               begin
+               sMode := 'USB';
+               end;
             end
          else
             begin
-               sMode := 'USB';
+            sMode := 'USB';
             end;
       Digital: sMode := 'RTTY';
       else
@@ -1485,9 +1563,13 @@ end; // SendRadioInfoToUDP;
 function ArrayToString(const a: array of AnsiChar): string;
 begin
   if Length(a)>0 then
-    SetString(Result, PAnsiChar(@a[0]), Length(a))
+     begin
+     SetString(Result, PAnsiChar(@a[0]), Length(a))
+     end
   else
-    Result := '';
+     begin
+     Result := '';
+     end;
 end;
 
 end.

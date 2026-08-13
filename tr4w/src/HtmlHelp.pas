@@ -317,17 +317,17 @@ begin
 
   OCXHandle := LoadLibrary('HHCtrl.OCX');
   if (OCXHandle <> 0) then
-  begin
-    // D12: bind the Unicode entry point so the PWideChar pszFile (PChar) is
-    // passed to a wide API. The prior 'HtmlHelpA' binding fed a wide string to
-    // the ANSI function -- garbage for the CP1251 Russian help topics/paths.
-    HtmlHelpW := GetProcAddress(OCXHandle, 'HtmlHelpW');
-  end;
+     begin
+     // D12: bind the Unicode entry point so the PWideChar pszFile (PChar) is
+     // passed to a wide API. The prior 'HtmlHelpA' binding fed a wide string to
+     // the ANSI function -- garbage for the CP1251 Russian help topics/paths.
+     HtmlHelpW := GetProcAddress(OCXHandle, 'HtmlHelpW');
+     end;
 
   if (Assigned(HtmlHelpW)) then
-  begin
-    HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
-  end;
+     begin
+     HtmlHelpW(hwndCaller, pszFile, uCommand, dwData);
+     end;
 
 end;
 

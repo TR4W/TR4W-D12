@@ -90,7 +90,10 @@ var
 begin
   GRect.UpperLeft := 0;
   GRect.LowerRight := 1;
-  if tEightBitsPerPixel then Color2 := Color1;
+  if tEightBitsPerPixel then
+     begin
+     Color2 := Color1;
+     end;
   Offset := (ARect.Bottom - ARect.Top) div 2;
   Vertex[0] := InitTriVertex(ARect.Left, ARect.Bottom - Offset, Color1);
   Vertex[1] := InitTriVertex(ARect.Right, ARect.Bottom, Color2);
@@ -108,7 +111,10 @@ var
 begin
   GRect.UpperLeft := 0;
   GRect.LowerRight := 1;
-  if tEightBitsPerPixel then Color2 := Color1;
+  if tEightBitsPerPixel then
+     begin
+     Color2 := Color1;
+     end;
   Vertex[0] := InitTriVertex(ARect.Left, ARect.Top, Color1);
   Vertex[1] := InitTriVertex(ARect.Right, ARect.Bottom, Color2);
   Result := GradientFillFunction(
@@ -124,25 +130,29 @@ function ColorToRGB(Color: tcolor): Cardinal {LONGINT};
 begin
   if Color < 0 then
     Result := GetSysColor(Color and $000000FF) else
-    Result := Color;
+                                                  begin
+                                                  Result := Color;
+                                                  end;
 end;
 function InitTriVertex(XPos, YPos: integer; Color: tcolor): TTriVertex;
 var
   TempRGB                               : TRGB;
 begin
   with Result do
-  begin
-    X := XPos;
-    Y := YPos;
-    Alpha := 0 {2};
-    TempRGB := GetRGB(Color);
-    Red := TempRGB.r shl 8;
-    Green := TempRGB.g shl 8;
-    Blue := TempRGB.b shl 8;
-  end
+     begin
+     X := XPos;
+     Y := YPos;
+     Alpha := 0 {2};
+     TempRGB := GetRGB(Color);
+     Red := TempRGB.r shl 8;
+     Green := TempRGB.g shl 8;
+     Blue := TempRGB.b shl 8;
+     end
 end;
 begin
   @GradientFillFunction := GetProcAddress(GetModuleHandle(gdi32), 'GdiGradientFill');
   if not Assigned(GradientFillFunction) then
-    @GradientFillFunction := GetProcAddress(LoadLibrary(msimg32), 'GradientFill');
+     begin
+     @GradientFillFunction := GetProcAddress(LoadLibrary(msimg32), 'GradientFill');
+     end;
 end.

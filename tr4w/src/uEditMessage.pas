@@ -131,16 +131,19 @@ begin
 
         EditMessageWnd := hwnddlg;
         for i := 0 to 2 do
-        begin
-          ListView_GetItemText(AltPListView, lParam, i, TempBuffer1, SizeOf(TempBuffer1));
-          Windows.SetDlgItemTextA(hwnddlg, 101 + i, TempBuffer1);
-          //if I = 2 then Continue;
+           begin
+           ListView_GetItemText(AltPListView, lParam, i, TempBuffer1, SizeOf(TempBuffer1));
+           Windows.SetDlgItemTextA(hwnddlg, 101 + i, TempBuffer1);
+           //if I = 2 then Continue;
 
-          // Issue #997: asm tWM_SETFONT (EAX = GetDlgItem result) -> direct call.
-          tWM_SETFONT(GetDlgItem(hwnddlg, 101 + i), TerminalFont);
+           // Issue #997: asm tWM_SETFONT (EAX = GetDlgItem result) -> direct call.
+           tWM_SETFONT(GetDlgItem(hwnddlg, 101 + i), TerminalFont);
 
-        end;
-        if MesWindow = OtherMsgWin then EnableWindowFalse(hwnddlg, 103);
+           end;
+        if MesWindow = OtherMsgWin then
+           begin
+           EnableWindowFalse(hwnddlg, 103);
+           end;
         MsgEditHWND := GetDlgItem(hwnddlg, 102);
         OldMsgEditProc := Pointer(Windows.SetWindowLong(MsgEditHWND, GWL_WNDPROC, integer(@NewMsgEditProc)));
 
@@ -148,7 +151,10 @@ begin
         CreateButton(0, TC_LIST_OF_COMMAND, 385, 105, 110, hwnddlg, 3);
         CreateButton(0, RC_EDIT_WORD, 5, 105, 110, hwnddlg, 109);
 
-        if ActiveMode <> Phone then TF.EnableWindowFalse(hwnddlg, 109);
+        if ActiveMode <> Phone then
+           begin
+           TF.EnableWindowFalse(hwnddlg, 109);
+           end;
 
 //        goto 2;
       end;
@@ -166,14 +172,14 @@ begin
 
 //        if HiWord(wParam) = LBN_DBLCLK then PutCommandFromHintListBox;
         if HiWord(wParam) = EN_SETFOCUS then
-        begin
-          Windows.SendDlgItemMessage(hwnddlg, LoWord(wParam), EM_SETSEL, SelPos[LoWord(wParam)], SelPos[LoWord(wParam)]);
-        end;
+           begin
+           Windows.SendDlgItemMessage(hwnddlg, LoWord(wParam), EM_SETSEL, SelPos[LoWord(wParam)], SelPos[LoWord(wParam)]);
+           end;
 
         if HiWord(wParam) = EN_KILLFOCUS then
-        begin
-          Windows.SendDlgItemMessage(hwnddlg, LoWord(wParam), EM_GETSEL, integer(@SelPos[LoWord(wParam)]), integer(@SelPos[LoWord(wParam)]));
-        end;
+           begin
+           Windows.SendDlgItemMessage(hwnddlg, LoWord(wParam), EM_GETSEL, integer(@SelPos[LoWord(wParam)]), integer(@SelPos[LoWord(wParam)]));
+           end;
 //        if lParam = integer(MsgEditHWND) then if HiWord(wParam) = EN_KILLFOCUS then DestroyHintListBox;
 
         case wParam of
@@ -182,11 +188,11 @@ begin
             // SelPos[102] is saved by EN_KILLFOCUS when the edit field loses
             // focus to this button, so it already holds the cursor position.
             if CreateModalDialog(225, 170, EditMessageWnd, @MessagesListDlgProc, 0) = 1 then
-              begin
-              Windows.SendMessage(MsgEditHWND, EM_SETSEL, SelPos[102], SelPos[102]);
-              Windows.SendMessageA(MsgEditHWND, EM_REPLACESEL, 1, Integer(PAnsiChar(AnsiString(LastSelectedCommand))));
-              SetFocus(MsgEditHWND);
-              end;
+               begin
+               Windows.SendMessage(MsgEditHWND, EM_SETSEL, SelPos[102], SelPos[102]);
+               Windows.SendMessageA(MsgEditHWND, EM_REPLACESEL, 1, Integer(PAnsiChar(AnsiString(LastSelectedCommand))));
+               SetFocus(MsgEditHWND);
+               end;
             end;
           109:
             begin
@@ -195,10 +201,10 @@ begin
               if PInteger(@TempBuffer2[i - 4])^ <> 1447122734 then Exit;
 
               if TR4W_DVP_RECORDER_FILENAME[0] = #0 then
-              begin
-                SetCommand('DVP RECORDER');
-                Exit;
-              end;
+                 begin
+                 SetCommand('DVP RECORDER');
+                 Exit;
+                 end;
 
               p := GetRealPath(TR4W_DVKPATH, TempBuffer2, nil);
 {
@@ -213,14 +219,14 @@ begin
               end;
 }
               if not FileExists(p) then
-              begin
-                if YesOrNo(hwnddlg, TC_THIS_FILE_DOES_NOT_EXIST) = IDno then Exit;
-                if tOpenFileForWrite(h, p) then
-                begin
-                  sWriteFile(h, waveheader, length(waveheader));
-                  CloseHandle(h);
-                end;
-              end;
+                 begin
+                 if YesOrNo(hwnddlg, TC_THIS_FILE_DOES_NOT_EXIST) = IDno then Exit;
+                 if tOpenFileForWrite(h, p) then
+                    begin
+                    sWriteFile(h, waveheader, length(waveheader));
+                    CloseHandle(h);
+                    end;
+                 end;
 
               TF.Format(TempBuffer1, '"%s" "%s"', TR4W_DVP_RECORDER_FILENAME, p);
               WinExec(TempBuffer1, SW_SHOWNORMAL);
@@ -238,19 +244,22 @@ begin
               CheckCommand(@ID, CMD);
 
               if MesWindow <> OtherMsgWin then
-              begin
-                i := Windows.GetDlgItemTextA(hwnddlg, 103, @CMD[1], 255);
-//              if I <> 0 then
-                begin
-                  CMD[0] := AnsiChar(i);
-                  Windows.lstrcatA(@ID[1], ' CAPTION');
-                  inc(Byte(ID[0]), 8);
-                  p := @CMD[1];
-                  if CMD = '' then p := nil;
-                  Windows.WritePrivateProfileStringA(m, @ID[1], p, @TR4W_CFG_FILENAME);
-                  CheckCommand(@ID, CMD);
-                end;
-              end;
+                 begin
+                 i := Windows.GetDlgItemTextA(hwnddlg, 103, @CMD[1], 255);
+ //              if I <> 0 then
+                 begin
+                   CMD[0] := AnsiChar(i);
+                   Windows.lstrcatA(@ID[1], ' CAPTION');
+                   inc(Byte(ID[0]), 8);
+                   p := @CMD[1];
+                   if CMD = '' then
+                      begin
+                      p := nil;
+                      end;
+                   Windows.WritePrivateProfileStringA(m, @ID[1], p, @TR4W_CFG_FILENAME);
+                   CheckCommand(@ID, CMD);
+                 end;
+                 end;
 
               DisplaymessagesList(MesWindow, ActiveMode);
               goto 1;
@@ -268,18 +277,18 @@ var
 begin
   Result := 0;
   if Msg = WM_CHAR then
-  begin
-// 3  -1070071807
-// 4  -1070071807
-//    if wParam = $2665 then showint(wParam);
-//    wParam := 65;
-//    Exit;
-    if ControlSpace then
-    begin
-      ControlSpace := False;
-      Exit;
-    end;
-  end;
+     begin
+     // 3  -1070071807
+     // 4  -1070071807
+     //    if wParam = $2665 then showint(wParam);
+     //    wParam := 65;
+     //    Exit;
+         if ControlSpace then
+            begin
+            ControlSpace := False;
+            Exit;
+            end;
+     end;
 {
   if Msg = WM_KEYUP then
   begin
@@ -294,49 +303,53 @@ begin
   if Msg = WM_PASTE then if GetKeyState(VK_CONTROL) < -126 then Exit;
 
   if Msg = WM_KEYDOWN then
-  begin
-//    Windows.SetWindowTextA(EditMessageWnd, inttopchar(wParam));
-    if HintListBoxCreated then
-      if wParam in [VK_UP, VK_DOWN, VK_HOME, VK_END, VK_PRIOR, VK_NEXT] then
-      begin
-        MoveSelectedItemInHintListBox(wParam);
-        Exit;
-      end;
-    if GetKeyState(VK_CONTROL) < -126 then
-    begin
+     begin
+     //    Windows.SetWindowTextA(EditMessageWnd, inttopchar(wParam));
+         if HintListBoxCreated then
+           if wParam in [VK_UP, VK_DOWN, VK_HOME, VK_END, VK_PRIOR, VK_NEXT] then
+              begin
+              MoveSelectedItemInHintListBox(wParam);
+              Exit;
+              end;
+         if GetKeyState(VK_CONTROL) < -126 then
+            begin
 
-//      if wParam = 32 then
-//      begin
-//        ControlSpace := True;
-//        CreateHintListBox;
-//      end;
+            //      if wParam = 32 then
+            //      begin
+            //        ControlSpace := True;
+            //        CreateHintListBox;
+            //      end;
 
-      if wParam <> 17 then
-      begin
+                  if wParam <> 17 then
+                     begin
 
-        if wParam = 80 then
-          if not AllowEscapes then
-          begin
-            AllowEscapes := True;
-            Exit;
-          end;
-        if not AllowEscapes then Exit;
+                     if wParam = 80 then
+                       if not AllowEscapes then
+                          begin
+                          AllowEscapes := True;
+                          Exit;
+                          end;
+                     if not AllowEscapes then Exit;
 
-        SendMessage(MsgEditHWND, EM_GETSEL, LONGINT(@Selection.StartPos), LONGINT(@Selection.EndPos));
-        c := Windows.GetWindowTextA(MsgEditHWND, TempBuffer1, 255);
+                     SendMessage(MsgEditHWND, EM_GETSEL, LONGINT(@Selection.StartPos), LONGINT(@Selection.EndPos));
+                     c := Windows.GetWindowTextA(MsgEditHWND, TempBuffer1, 255);
 
-        TempBuffer1[c + 1] := #0;
-        if c <> 0 then
-          for i := c - 1 downto Selection.EndPos do
-            TempBuffer1[i + 1] := TempBuffer1[i];
-        TempBuffer1[Selection.StartPos] := AnsiChar(wParam - 64);
+                     TempBuffer1[c + 1] := #0;
+                     if c <> 0 then
+                        begin
+                        for i := c - 1 downto Selection.EndPos do
+                           begin
+                           TempBuffer1[i + 1] := TempBuffer1[i];
+                           end;
+                        end;
+                     TempBuffer1[Selection.StartPos] := AnsiChar(wParam - 64);
 
-        Windows.SetWindowTextA(MsgEditHWND, TempBuffer1);
-        Windows.SendMessage(MsgEditHWND, EM_SETSEL, Selection.StartPos + 1, Selection.EndPos + 1);
-        AllowEscapes := False;
-      end;
-    end;
-  end;
+                     Windows.SetWindowTextA(MsgEditHWND, TempBuffer1);
+                     Windows.SendMessage(MsgEditHWND, EM_SETSEL, Selection.StartPos + 1, Selection.EndPos + 1);
+                     AllowEscapes := False;
+                     end;
+            end;
+     end;
 
   Result := CallWindowProc(OldMsgEditProc, hwnddlg, Msg, wParam, lParam);
 
@@ -375,7 +388,10 @@ end;
 function DestroyHintListBox: boolean;
 begin
   Result := HintListBoxCreated;
-  if HintListBoxCreated then Windows.DestroyWindow(HintListView);
+  if HintListBoxCreated then
+     begin
+     Windows.DestroyWindow(HintListView);
+     end;
   HintListBoxCreated := False;
 end;
 
@@ -424,29 +440,41 @@ procedure MoveSelectedItemInHintListBox(wParam: integer);
 begin
 
   if wParam = VK_UP then
-  begin
-    if SelectedItemInHitListBox > 0 then dec(SelectedItemInHitListBox) else Exit;
-  end;
+     begin
+     if SelectedItemInHitListBox > 0 then dec(SelectedItemInHitListBox) else Exit;
+     end;
 
   if wParam = VK_DOWN then
-  begin
-    if SelectedItemInHitListBox < MESSAGESHINTS - 1 then inc(SelectedItemInHitListBox) else Exit;
-  end;
+     begin
+     if SelectedItemInHitListBox < MESSAGESHINTS - 1 then inc(SelectedItemInHitListBox) else Exit;
+     end;
 
-  if wParam = VK_END then SelectedItemInHitListBox := MESSAGESHINTS - 1;
-  if wParam = VK_HOME then SelectedItemInHitListBox := 0;
+  if wParam = VK_END then
+     begin
+     SelectedItemInHitListBox := MESSAGESHINTS - 1;
+     end;
+  if wParam = VK_HOME then
+     begin
+     SelectedItemInHitListBox := 0;
+     end;
 
   if wParam = VK_NEXT then
-  begin
-    SelectedItemInHitListBox := SelectedItemInHitListBox + 11;
-    if SelectedItemInHitListBox > (MESSAGESHINTS - 1) then SelectedItemInHitListBox := MESSAGESHINTS - 1;
-  end;
+     begin
+     SelectedItemInHitListBox := SelectedItemInHitListBox + 11;
+     if SelectedItemInHitListBox > (MESSAGESHINTS - 1) then
+        begin
+        SelectedItemInHitListBox := MESSAGESHINTS - 1;
+        end;
+     end;
 
   if wParam = VK_PRIOR then
-  begin
-    SelectedItemInHitListBox := SelectedItemInHitListBox - 11;
-    if SelectedItemInHitListBox < 0 then SelectedItemInHitListBox := 0;
-  end;
+     begin
+     SelectedItemInHitListBox := SelectedItemInHitListBox - 11;
+     if SelectedItemInHitListBox < 0 then
+        begin
+        SelectedItemInHitListBox := 0;
+        end;
+     end;
   ListView_SetItemState(HintListView, SelectedItemInHitListBox, LVIS_SELECTED or LVIS_FOCUSED, 3);
   SendMessage(HintListView, LVM_ENSUREVISIBLE, SelectedItemInHitListBox, LONGINT(False));
 //  SendMessage(HintListBox, LVM_REDRAWITEMS, 0, 100);
@@ -464,21 +492,21 @@ var
 begin
   l := 0;
   for i := 1 to length(s) do
-  begin
-    inc(l);
-    if s[i] > CHR(31) then
-    begin
-      TempString[l] := s[i];
-    end
-    else
-    begin
-      TempString[l] := '<';
-      TempString[l + 1] := HexChars[Ord(s[i]) shr $4];
-      TempString[l + 2] := HexChars[Ord(s[i]) and $F];
-      TempString[l + 3] := '>';
-      inc(l, 3);
-    end;
-  end;
+     begin
+     inc(l);
+     if s[i] > CHR(31) then
+        begin
+        TempString[l] := s[i];
+        end
+     else
+        begin
+        TempString[l] := '<';
+        TempString[l + 1] := HexChars[Ord(s[i]) shr $4];
+        TempString[l + 2] := HexChars[Ord(s[i]) and $F];
+        TempString[l + 3] := '>';
+        inc(l, 3);
+        end;
+     end;
   TempString[0] := AnsiChar(l);
   s := TempString;
   s[l + 1] := #0;

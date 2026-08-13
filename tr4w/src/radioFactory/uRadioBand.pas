@@ -90,7 +90,10 @@ implementation
 
 function FreqToRadioBand(freq: LongInt): TRadioBand;
 begin
-   if      freq < 2000000   then Result := rb160m
+   if      freq < 2000000   then
+      begin
+      Result := rb160m
+      end
    else if freq < 4000000   then Result := rb80m
    else if freq < 6000000   then Result := rb60m
    else if freq < 7300000   then Result := rb40m
@@ -104,7 +107,10 @@ begin
    else if freq < 80000000  then Result := rb4m
    else if freq < 170000000 then Result := rb2m
    else if freq < 500000000 then Result := rb70cm
-   else                          Result := rbNone;
+   else
+      begin
+      Result := rbNone;
+      end;
 end;
 
 function RadioBandToFreq(band: TRadioBand): LongInt;

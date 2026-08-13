@@ -1170,7 +1170,7 @@ begin
          aError := 'Could not write ' + StoreFileName + ': ' + E.Message;
          logger.Error('[Preferences] %s', [aError]);
          Result := False;
-      end;
+         end;
    end;
 end;
 

@@ -4260,18 +4260,25 @@ end;
 procedure initcomctl;
 begin
   if ComCtl32DLL = 0 then
-  begin
-    ComCtl32DLL := GetModuleHandle(cctrl);
-    if { (ComCtl32DLL >= 0) and}(ComCtl32DLL < 32) then
-      ComCtl32DLL := 0
-    else
-      @_InitCommonControlsEx := GetProcAddress(ComCtl32DLL, 'InitCommonControlsEx');
-  end;
+     begin
+     ComCtl32DLL := GetModuleHandle(cctrl);
+     if { (ComCtl32DLL >= 0) and}(ComCtl32DLL < 32) then
+        begin
+        ComCtl32DLL := 0
+        end
+     else
+        begin
+        @_InitCommonControlsEx := GetProcAddress(ComCtl32DLL, 'InitCommonControlsEx');
+        end;
+     end;
 end;
 
 function INITCOMMONCONTROLSEX(var ICC: TInitCommonControlsEx): BOOL;
 begin
-  if ComCtl32DLL = 0 then initcomctl;
+  if ComCtl32DLL = 0 then
+     begin
+     initcomctl;
+     end;
   Result := Assigned(_InitCommonControlsEx) and _InitCommonControlsEx(ICC);
 end;
 
@@ -4800,12 +4807,14 @@ function ListView_GetItemRect(HWND: HWND; i: integer; var prc: TRect;
   code: integer): BOOL;
 begin
   if @prc <> nil then
-  begin
-    prc.Left := code;
-    Result := BOOL(SendMessage(HWND, LVM_GETITEMRECT, i, LONGINT(@prc)));
-  end
+     begin
+     prc.Left := code;
+     Result := BOOL(SendMessage(HWND, LVM_GETITEMRECT, i, LONGINT(@prc)));
+     end
   else
-    Result := BOOL(SendMessage(HWND, LVM_GETITEMRECT, i, 0));
+     begin
+     Result := BOOL(SendMessage(HWND, LVM_GETITEMRECT, i, 0));
+     end;
 end;
 
 function ListView_SetItemPosition(HWND: HWND; i, X, Y: integer): BOOL;
@@ -5196,10 +5205,10 @@ function ListView_GetSubItemRect(hwndLV: HWND; iItem, iSubItem: integer;
   code: DWORD; prc: PRect): BOOL;
 begin
   if prc <> nil then
-  begin
-    prc^.Top := iSubItem;
-    prc^.Left := code;
-  end;
+     begin
+     prc^.Top := iSubItem;
+     prc^.Left := code;
+     end;
   Result := BOOL(SendMessage(hwndLV, LVM_GETSUBITEMRECT, iItem, LONGINT(prc)));
 end;
 

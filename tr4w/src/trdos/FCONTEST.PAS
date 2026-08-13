@@ -98,21 +98,21 @@ begin
   Windows.CopyMemory(@TR4W_LOG_PATH_NAME, @TR4W_CFG_FILENAME,
     SizeOf(TR4W_LOG_PATH_NAME));
   for i := SizeOf(TR4W_LOG_PATH_NAME) - 1 downto 0 do
-  begin
-    if TR4W_LOG_PATH_NAME[i] = '\' then
-    begin
-      TR4W_LOG_PATH_NAME[i + 1] := #0;
-      Break;
-    end;
-    if TR4W_LOG_PATH_NAME[i] = '.' then
-    begin
-      TR4W_LOG_PATH_NAME[i] := #0;
+     begin
+     if TR4W_LOG_PATH_NAME[i] = '\' then
+        begin
+        TR4W_LOG_PATH_NAME[i + 1] := #0;
+        Break;
+        end;
+     if TR4W_LOG_PATH_NAME[i] = '.' then
+        begin
+        TR4W_LOG_PATH_NAME[i] := #0;
 
-      TF.Format(TR4W_LOG_FILENAME, '%s.TRW', TR4W_LOG_PATH_NAME);
-      TF.Format(TR4W_RST_FILENAME, '%s.RST', TR4W_LOG_PATH_NAME);
-      TF.Format(TR4W_DOM_FILENAME, '%s.DOM', TR4W_LOG_PATH_NAME); // 4.100.2
-    end;
-  end;
+        TF.Format(TR4W_LOG_FILENAME, '%s.TRW', TR4W_LOG_PATH_NAME);
+        TF.Format(TR4W_RST_FILENAME, '%s.RST', TR4W_LOG_PATH_NAME);
+        TF.Format(TR4W_DOM_FILENAME, '%s.DOM', TR4W_LOG_PATH_NAME); // 4.100.2
+        end;
+     end;
 
   TF.Format(TR4W_SYN_FILENAME, '%sSERVERLOG.TMP', TR4W_LOG_PATH_NAME);
   TF.Format(TR4W_REMAININGMULTS_FILENAME, '%sREMAININGMULTS.TXT',
@@ -121,22 +121,22 @@ begin
   TF.Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_LOG_PATH_NAME);
 
   if not FileExists(TR4W_CTY_FILENAME) then
-  begin
-    TF.Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_PATH_NAME);
-      // n4af issue  # 219  & 212
-  end;
+     begin
+     TF.Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_PATH_NAME);
+       // n4af issue  # 219  & 212
+     end;
 
   TF.Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_LOG_PATH_NAME);
 
   if not FileExists(CD.ActiveFilename) then
-  begin
-    TF.Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_PATH_NAME);
-    if not FileExists(CD.ActiveFilename) then
-    begin
-      TF.Format(@CD.ActiveFilename, '%sMASTER.DTA', TR4W_PATH_NAME);
-    end;
+     begin
+     TF.Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_PATH_NAME);
+     if not FileExists(CD.ActiveFilename) then
+        begin
+        TF.Format(@CD.ActiveFilename, '%sMASTER.DTA', TR4W_PATH_NAME);
+        end;
 
-  end;
+     end;
 
 {$IF MAKE_DEFAULT_VALUES = false}
 
@@ -181,10 +181,10 @@ begin
 
   if MyState <> '' then
     if ActiveExchange = RSTZoneAndPossibleDomesticQTHExchange then
-    begin
-      OldMyZone := MyZone;
-      MyZone := MyZone + ' ' + MyState;
-    end;
+       begin
+       OldMyZone := MyZone;
+       MyZone := MyZone + ' ' + MyState;
+       end;
 
   CQExchange := ' ' + Code599 + ' ' + MyZone;
   SetCQMemoryString(CW, F3, ' ' + Code599 + ' ' + MyZone);
@@ -197,7 +197,9 @@ begin
   SearchAndPounceExchange := ' ' + Code599 + ' ' + MyZone;
 
   if OldMyZone <> '' then
-    MyZone := OldMyZone;
+     begin
+     MyZone := OldMyZone;
+     end;
 end;
 
 procedure SetUpNameAndStateExchange;
@@ -289,65 +291,65 @@ begin
 
   //  Contest := GetContestFromString(CMD);
   if Contest <> DUMMYCONTEST then
-  begin
-    QSOByMode := ContestsBooleanArray[Contest] and (1 shl QSO_BY_MODE_BIT) <> 0;
-    QSOByBand := ContestsBooleanArray[Contest] and (1 shl QSO_BY_BAND_BIT) <> 0;
-    MultByMode := ContestsBooleanArray[Contest] and (1 shl MULT_BY_MODE_BIT) <>
-      0;
-    MultByBand := ContestsBooleanArray[Contest] and (1 shl MULT_BY_BAND_BIT) <>
-      0;
+     begin
+     QSOByMode := ContestsBooleanArray[Contest] and (1 shl QSO_BY_MODE_BIT) <> 0;
+     QSOByBand := ContestsBooleanArray[Contest] and (1 shl QSO_BY_BAND_BIT) <> 0;
+     MultByMode := ContestsBooleanArray[Contest] and (1 shl MULT_BY_MODE_BIT) <>
+       0;
+     MultByBand := ContestsBooleanArray[Contest] and (1 shl MULT_BY_BAND_BIT) <>
+       0;
 
-    VHFBandsEnabled := ContestsBooleanArray[Contest] and (1 shl
-      VHF_BAND_ENABLE_BIT) <> 0;
+     VHFBandsEnabled := ContestsBooleanArray[Contest] and (1 shl
+       VHF_BAND_ENABLE_BIT) <> 0;
 
-    CTY.ctyZoneMode := ZoneModeType(ContestsBooleanArray[Contest] and (1 shl
-      CQ_ZONE_MODE_BIT) = 0);
+     CTY.ctyZoneMode := ZoneModeType(ContestsBooleanArray[Contest] and (1 shl
+       CQ_ZONE_MODE_BIT) = 0);
 
-    CountDomesticCountries := ContestsBooleanArray[Contest] and (1 shl CDC_BIT)
-      <> 0;
+     CountDomesticCountries := ContestsBooleanArray[Contest] and (1 shl CDC_BIT)
+       <> 0;
 
-    ActiveQSOPointMethod := ContestsArray[Contest].QP;
-    ActiveExchange := ContestsArray[Contest].AE;
-    ActiveInitialExchange := ContestsArray[Contest].AIE;
+     ActiveQSOPointMethod := ContestsArray[Contest].QP;
+     ActiveExchange := ContestsArray[Contest].AE;
+     ActiveInitialExchange := ContestsArray[Contest].AIE;
 
-    ActiveDomesticMult := ContestsArray[Contest].dm;
-    ActiveDXMult := ContestsArray[Contest].XM;
-    ActiveZoneMult := ContestsArray[Contest].ZnM;
-    ActivePrefixMult := ContestsArray[Contest].PxM;
+     ActiveDomesticMult := ContestsArray[Contest].dm;
+     ActiveDXMult := ContestsArray[Contest].XM;
+     ActiveZoneMult := ContestsArray[Contest].ZnM;
+     ActivePrefixMult := ContestsArray[Contest].PxM;
 
-    //if ActiveZoneMult = ITUZones then
-    RecalculateMyCountryContinentAndZoneNew(MyCall);
+     //if ActiveZoneMult = ITUZones then
+     RecalculateMyCountryContinentAndZoneNew(MyCall);
 
-    //TempDomesticQTHDataFileName := nil;
+     //TempDomesticQTHDataFileName := nil;
 
-    if ContestsArray[Contest].p <> 0 then
-    begin
-      if FoundMyStateInDomFile then
-      begin
-        TempDomesticQTHDataFileName :=
-          QSOParties[ContestsArray[Contest].p].InsideStateDOMFile;
-        ContestName := ContestTypeSA[Contest] + ' (in state)';
-      end
-      else
-      begin
-        Windows.ZeroMemory(@TmpBuf, SizeOf(TmpBuf));
-        TF.Format(TmpBuf, '%s_cty',
-          QSOParties[ContestsArray[Contest].p].InsideStateDOMFile);
-        TempDomesticQTHDataFileName := @TmpBuf;
-          //QSOParties[ContestsArray[Contest].p].OutsideStateDOMFile;
-        ContestName := ContestTypeSA[Contest] + ' (out of state)';
-        MultipliersIsCounties := True;
-      end;
-      Add_KVEKH6KL;
-    end
-    else
-    begin
-      //      TempInt := StrLen(ContestsArray[Contest].DF);
-      //      DomesticQTHDataFileName[0] := CHR(TempInt);
-      //      Windows.CopyMemory(@DomesticQTHDataFileName[1], ContestsArray[Contest].DF, TempInt);
-      TempDomesticQTHDataFileName := ContestsArray[Contest].DF;
-    end;
-  end;
+     if ContestsArray[Contest].p <> 0 then
+        begin
+        if FoundMyStateInDomFile then
+           begin
+           TempDomesticQTHDataFileName :=
+             QSOParties[ContestsArray[Contest].p].InsideStateDOMFile;
+           ContestName := ContestTypeSA[Contest] + ' (in state)';
+           end
+        else
+           begin
+           Windows.ZeroMemory(@TmpBuf, SizeOf(TmpBuf));
+           TF.Format(TmpBuf, '%s_cty',
+             QSOParties[ContestsArray[Contest].p].InsideStateDOMFile);
+           TempDomesticQTHDataFileName := @TmpBuf;
+             //QSOParties[ContestsArray[Contest].p].OutsideStateDOMFile;
+           ContestName := ContestTypeSA[Contest] + ' (out of state)';
+           MultipliersIsCounties := True;
+           end;
+        Add_KVEKH6KL;
+        end
+     else
+        begin
+        //      TempInt := StrLen(ContestsArray[Contest].DF);
+        //      DomesticQTHDataFileName[0] := CHR(TempInt);
+        //      Windows.CopyMemory(@DomesticQTHDataFileName[1], ContestsArray[Contest].DF, TempInt);
+        TempDomesticQTHDataFileName := ContestsArray[Contest].DF;
+        end;
+     end;
 
   case Contest of
 
@@ -371,9 +373,13 @@ begin
         SearchAndPounceExchange := MySTATE;
         QSLMessage := '73 \/AZ ';
         if not FoundMyStateInDomFile then
-          ActiveExchange := RSTDomesticQTHExchange
+           begin
+           ActiveExchange := RSTDomesticQTHExchange
+           end
         else
-          MultbyBand := False;
+           begin
+           MultbyBand := False;
+           end;
 
       end;
 
@@ -400,7 +406,9 @@ begin
       begin
         ActiveDXMult := NoDXMults;
         if MyCountry = 'VE7' then
-          AddDomesticCountry('VE7'); // 4.97.8
+           begin
+           AddDomesticCountry('VE7'); // 4.97.8
+           end;
 
       end;
 
@@ -433,24 +441,26 @@ begin
     CROATIAN:
       begin
         if MyCountry = '9A' then
-          ACTIVEDXMULT := CQDXCC;
+           begin
+           ACTIVEDXMULT := CQDXCC;
+           end;
       end;
 
     JIDXSSB, JIDXCW:
       begin
         if MyCountry = 'JA' then
-        begin
-          ActiveDXMult := ARRLDXCC;
-          ActiveInitialExchange := ZoneInitialExchange;
-          ActiveExchange := RSTZoneExchange;
-          ActiveZoneMult := CQZones;
-        end
+           begin
+           ActiveDXMult := ARRLDXCC;
+           ActiveInitialExchange := ZoneInitialExchange;
+           ActiveExchange := RSTZoneExchange;
+           ActiveZoneMult := CQZones;
+           end
         else
-        begin
-          ActiveDomesticMult := DomesticFile;
-          ActiveExchange := RSTPrefectureExchange;
-          TempDomesticQTHDataFileName := 'JIDX';
-        end;
+           begin
+           ActiveDomesticMult := DomesticFile;
+           ActiveExchange := RSTPrefectureExchange;
+           TempDomesticQTHDataFileName := 'JIDX';
+           end;
 
         //        ContestName := 'Japan International DX Test';
         //        CountryTable.ZoneMode := CQZoneMode;
@@ -459,9 +469,13 @@ begin
     SOUTHAMERICANWW: //, SA-SSPRINT: // issue 177
       begin
         if MyContinent = SouthAmerica then
-          ActivePrefixMult := NonSouthAmericanPrefixes
+           begin
+           ActivePrefixMult := NonSouthAmericanPrefixes
+           end
         else
-          ActivePrefixMult := SouthAmericanPrefixes;
+           begin
+           ActivePrefixMult := SouthAmericanPrefixes;
+           end;
       end;
 
     STEWPERRY:
@@ -475,9 +489,13 @@ begin
     ALLASIANCW, ALLASIANSSB:
       begin
         if MyContinent = Asia then
-          ActiveDXMult := ARRLDXCC
+           begin
+           ActiveDXMult := ARRLDXCC
+           end
         else
-          ActivePrefixMult := Prefix;
+           begin
+           ActivePrefixMult := Prefix;
+           end;
       end;
 
     ALLJA, YOTA:
@@ -522,12 +540,14 @@ begin
     ARRL160:
       begin
         if ARRLSectionCountry(MyCountry) then
-        begin
-          ActiveExchange := RSTDomesticOrDXQTHExchange; {*}
-          ActiveDXMult := ARRLDXCCWithNoARRLSections;
-        end
+           begin
+           ActiveExchange := RSTDomesticOrDXQTHExchange; {*}
+           ActiveDXMult := ARRLDXCCWithNoARRLSections;
+           end
         else
-          ActiveExchange := RSTDomesticQTHExchange; {*}
+           begin
+           ActiveExchange := RSTDomesticQTHExchange; {*}
+           end;
 
         //        ContestName := 'ARRL 160 Contest';
         //        DomesticQTHDataFileName := 'ARRLSECT';
@@ -537,16 +557,16 @@ begin
     ARRLDXCW, ARRLDXSSB:
       begin
         if (MyCountry = 'K') or (MyCountry = 'VE') then
-        begin
-          ActiveExchange := RSTPowerExchange; {*}
-          ActiveDXMult := ARRLDXCCWithNoUSAOrCanada;
-        end
+           begin
+           ActiveExchange := RSTPowerExchange; {*}
+           ActiveDXMult := ARRLDXCCWithNoUSAOrCanada;
+           end
         else
-        begin
-          ActiveDomesticMult := DomesticFile;
-          TempDomesticQTHDataFileName := 'S48P14DC';
-          ActiveExchange := RSTDomesticQTHExchange; {*}
-        end;
+           begin
+           ActiveDomesticMult := DomesticFile;
+           TempDomesticQTHDataFileName := 'S48P14DC';
+           ActiveExchange := RSTDomesticQTHExchange; {*}
+           end;
 
         ContestName := 'ARRL DX Test';
         Add_KVE;
@@ -642,16 +662,16 @@ begin
       begin
 
         if FoundMyStateInDomFile then
-        begin
+           begin
 
-          ActiveExchange := QSONumberDomesticOrDXQTHExchange;
+           ActiveExchange := QSONumberDomesticOrDXQTHExchange;
 
-        end
+           end
         else
-        begin
-          //          DomesticQTHDataFileName := 'CALCTY';
-          ActiveExchange := QSONumberDomesticQTHExchange; {*}
-        end;
+           begin
+           //          DomesticQTHDataFileName := 'CALCTY';
+           ActiveExchange := QSONumberDomesticQTHExchange; {*}
+           end;
         //        ContestName := 'California QSO Party';
         //        Add_KVEKH6KL;
       end;
@@ -770,7 +790,9 @@ begin
         DIGITALMODEENABLE := FALSE;
         INITIALEXCHANGECURSORPOS := ATSTART;
         if (MyCountry <> 'EI') and (MyCountry <> 'GI') then
-          ActiveDXMult := NoDXMults;
+           begin
+           ActiveDXMult := NoDXMults;
+           end;
       end;
 
     EUDX: // 4.95.6
@@ -783,10 +805,10 @@ begin
       begin
         AddDomesticCountry('YU');
         if MyCountry = 'YU' then
-        begin
-          ActiveDomesticMult := NoDomesticMults; // 4.57.7
-          ActiveDXMult := ARRLDXCC;
-        end
+           begin
+           ActiveDomesticMult := NoDomesticMults; // 4.57.7
+           ActiveDXMult := ARRLDXCC;
+           end
       end;
 
     UKEI: // 4.58.2
@@ -801,14 +823,18 @@ begin
         AddDomesticCountry('GU');
         AddDomesticCountry('EI');
         if not UKEIStation(mycountry) then
-          SetUpRSTQSONumberExchange;
+           begin
+           SetUpRSTQSONumberExchange;
+           end;
 
       end;
 
     HELVETIA:
       begin
         if MyCountry = 'HB' then
-          ActiveDXMult := ARRLDXCC;
+           begin
+           ActiveDXMult := ARRLDXCC;
+           end;
         //  else          // 4.56.3 issue 232
         AddDomesticCountry('HB');
       end;
@@ -973,19 +999,19 @@ begin
           (TempWord = Ord('M') + Ord('A') * $100) or
           (TempWord = Ord('C') + Ord('T') * $100) or
           (TempWord = Ord('R') + Ord('I') * $100) then
-        begin
-          TempDomesticQTHDataFileName := 'NEQSOW1';
-          ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
-          ActiveExchange := RSTDomesticOrDXQTHExchange;
-          //          ContestName := 'New England QSO Party (within NE)';
-        end
+           begin
+           TempDomesticQTHDataFileName := 'NEQSOW1';
+           ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
+           ActiveExchange := RSTDomesticOrDXQTHExchange;
+           //          ContestName := 'New England QSO Party (within NE)';
+           end
         else
-        begin
-          TempDomesticQTHDataFileName := 'NEQSO';
-          //          ActiveDXMult := NoCountDXMults;
-          ActiveExchange := RSTDomesticQTHExchange;
-          //          ContestName := 'New England QSO Party (outside NE)';
-        end;
+           begin
+           TempDomesticQTHDataFileName := 'NEQSO';
+           //          ActiveDXMult := NoCountDXMults;
+           ActiveExchange := RSTDomesticQTHExchange;
+           //          ContestName := 'New England QSO Party (outside NE)';
+           end;
 
         DXMultLimit := 20;
         Add_KVEKH6KL;
@@ -1021,32 +1047,32 @@ begin
         AddDomesticCountry('OK');
         AddDomesticCountry('OM');
         if not OKOMStation(MyCountry) then
-        begin
-          ActiveDomesticMult := DomesticFile;
-          TempDomesticQTHDataFileName := 'OKOM';
-        end
+           begin
+           ActiveDomesticMult := DomesticFile;
+           TempDomesticQTHDataFileName := 'OKOM';
+           end
         else
-        begin
-          ActivePrefixMult := Prefix;
-        end;
+           begin
+           ActivePrefixMult := Prefix;
+           end;
       end;
 
     PACC:
       begin
 
         if MyCountry = 'PA' then
-        begin
-          ActiveDXMult := PACCCountriesAndPrefixes;
-          ActiveExchange := RSTAndQSONumberOrDomesticQTHExchange;
-          AddDomesticCountry('PA');
-          TempDomesticQTHDataFileName := 'PACCPA';
-          LiteralDomesticQTH := True;
-        end
+           begin
+           ActiveDXMult := PACCCountriesAndPrefixes;
+           ActiveExchange := RSTAndQSONumberOrDomesticQTHExchange;
+           AddDomesticCountry('PA');
+           TempDomesticQTHDataFileName := 'PACCPA';
+           LiteralDomesticQTH := True;
+           end
         else
-        begin
-          ActiveExchange := RSTDomesticQTHExchange;
-          TempDomesticQTHDataFileName := 'PACC';
-        end;
+           begin
+           ActiveExchange := RSTDomesticQTHExchange;
+           TempDomesticQTHDataFileName := 'PACC';
+           end;
 
       end;
 
@@ -1084,7 +1110,9 @@ begin
     CANADA_DAY, CANADA_WINTER:
       begin
         if MyCountry <> 'VE' then // 4.82.1
-          MyState := '';
+           begin
+           MyState := '';
+           end;
         AddDomesticCountry('VE');
         AddDomesticCountry('CY0');
         AddDomesticCountry('CY9');
@@ -1112,7 +1140,9 @@ begin
         AddRussianDomesticCountrys;
         //        CountDomesticCountries := True;
         if not RussianID(MyCountry) then
-          ActiveDXMult := NoDXMults;
+           begin
+           ActiveDXMult := NoDXMults;
+           end;
         DomesticMultByBand := dmbbAllBand;
       end;
 
@@ -1121,7 +1151,9 @@ begin
         AddRussianDomesticCountrys;
         AddDomesticCountry('CE9');
         if not RussianID(MyCountry) then // 4.79.2
-          MyState := '';
+           begin
+           MyState := '';
+           end;
         //        CountDomesticCountries := True;
         //        ContestName := 'Russian DX Contest';
       end;
@@ -1130,16 +1162,16 @@ begin
       begin
         //        if PWORD(@MyState[1])^ = $4157 {WA} then
         if FoundMyStateInDomFile then
-        begin
-          //          DomesticQTHDataFileName := 'SALMONWA';
-          ActiveExchange := RSTDomesticOrDXQTHExchange;
-          ActiveDXMult := ARRLDXCCWithNoUSAOrCanada;
-        end
+           begin
+           //          DomesticQTHDataFileName := 'SALMONWA';
+           ActiveExchange := RSTDomesticOrDXQTHExchange;
+           ActiveDXMult := ARRLDXCCWithNoUSAOrCanada;
+           end
         else
-        begin
-          //          DomesticQTHDataFileName := 'SALMON';
-          ActiveExchange := RSTDomesticQTHExchange;
-        end;
+           begin
+           //          DomesticQTHDataFileName := 'SALMON';
+           ActiveExchange := RSTDomesticQTHExchange;
+           end;
         //        ContestName := 'Washington State Salmon Run';
         //        Add_KVEKH6KL;
 
@@ -1148,9 +1180,13 @@ begin
     SACCW, SACSSB:
       begin
         if ScandinavianCountry(MyCountry) then
-          ActiveDXMult := ARRLDXCC
+           begin
+           ActiveDXMult := ARRLDXCC
+           end
         else
-          ActivePrefixMult := SACDistricts;
+           begin
+           ActivePrefixMult := SACDistricts;
+           end;
       end;
 
     YBDX: // 4.64.1
@@ -1313,16 +1349,16 @@ begin
     TEXASQSOPARTY:
       begin
         if FoundMyStateInDomFile then
-        begin
-          ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
-          //          DomesticQTHDataFileName := 'TEXASTX';
-          //          CQP := True;
-        end
+           begin
+           ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
+           //          DomesticQTHDataFileName := 'TEXASTX';
+           //          CQP := True;
+           end
         else
-        begin
-          //          DomesticQTHDataFileName := 'TEXAS';
-          ActiveExchange := RSTDomesticQTHExchange;
-        end;
+           begin
+           //          DomesticQTHDataFileName := 'TEXAS';
+           ActiveExchange := RSTDomesticQTHExchange;
+           end;
 
         //        Add_KVEKH6KL;
       end;
@@ -1331,24 +1367,26 @@ begin
       begin
         LiteralDomesticQTH := True;
         if MyCountry = 'ON' then // 4.96.2
-        begin
-          ActiveDXMult := CQDXCC;
-          ActiveDomesticMult := NoDomesticMults;
-          ActiveBand := Band80;
-          ActivePrefixMult := NoPrefixMults;
-        end
+           begin
+           ActiveDXMult := CQDXCC;
+           ActiveDomesticMult := NoDomesticMults;
+           ActiveBand := Band80;
+           ActivePrefixMult := NoPrefixMults;
+           end
         else
-        begin
-          ActivePrefixMult := BelgiumPrefixes;
-          ActiveDomesticMult := DomesticFile;
-        end;
+           begin
+           ActivePrefixMult := BelgiumPrefixes;
+           ActiveDomesticMult := DomesticFile;
+           end;
       end;
 
     UKRAINIAN:
       begin
         AddDomesticCountry('UR');
         if MyCountry = 'UR' then
-          ActiveDomesticMult := NoDomesticMults;
+           begin
+           ActiveDomesticMult := NoDomesticMults;
+           end;
       end;
 
     VAQP:
@@ -1366,10 +1404,14 @@ begin
         QSOByMode := True;
         if MyCountry = 'DL' then
 
-          ActiveDXMult := CQDXCC
+           begin
+           ActiveDXMult := CQDXCC
+           end
 
         else
-          ActiveDomesticMult := DOKCodes;
+           begin
+           ActiveDomesticMult := DOKCodes;
+           end;
 
         LiteralDomesticQTH := True;
         AddDomesticCountry('DL');
@@ -1389,12 +1431,14 @@ begin
         //        CountryTable.ZoneMode := CQZoneMode;
 
         if MyCountry = 'DL' then
-        begin
-          ActiveDXMult := CQDXCC;
-          //For the WAG contest - German stations will need to count Germany as a country multiplier manually after the contest.
-        end
+           begin
+           ActiveDXMult := CQDXCC;
+           //For the WAG contest - German stations will need to count Germany as a country multiplier manually after the contest.
+           end
         else
-          ActiveDomesticMult := DOKCodes;
+           begin
+           ActiveDomesticMult := DOKCodes;
+           end;
 
         LiteralDomesticQTH := True;
         AddDomesticCountry('DL');
@@ -1405,9 +1449,13 @@ begin
         //        CountryTable.ZoneMode := CQZoneMode;
 
         if MyContinent <> Europe then
-          ActiveDXMult := CQEuropeanCountries
+           begin
+           ActiveDXMult := CQEuropeanCountries
+           end
         else
-          ActivePrefixMult := CQNonEuropeanCountriesAndWAECallRegions;
+           begin
+           ActivePrefixMult := CQNonEuropeanCountriesAndWAECallRegions;
+           end;
 
         ActiveBand := Band80;
         ContactsPerPage := 40;
@@ -1437,7 +1485,9 @@ begin
       begin
         ActiveMode := CW;
         if Contest = CUPRFSSB then
-          ActiveMode := Phone;
+           begin
+           ActiveMode := Phone;
+           end;
         MyState := MyGrid;
         LiteralDomesticQTH := True;
       end;
@@ -1456,7 +1506,9 @@ begin
       begin
         ActiveMode := Phone;
         if Contest = RFCHAMPIONSHIPCW then
-          ActiveMode := CW;
+           begin
+           ActiveMode := CW;
+           end;
         DomesticMultByBand := dmbbAllBand;
         InitialExchangeOverwrite := True;
         //        ActiveZoneMult := RFChampionchipZones;
@@ -1489,17 +1541,17 @@ begin
       begin
         LiteralDomesticQTH := true;
         if RussianID(MyCountry) then
-        begin
-          TempOblast := GetOblast(MyCall);
-          if not (GetRussiaOblastByTwoChars(Char(TempOblast[1]), Char(TempOblast[2])) in
-            [rtUA1A, rtUA1C]) then
-          begin
-            ActiveDXMult := NoDXMults;
-            ActiveDomesticMult := RDADistrict;
-            TempDomesticQTHDataFileName := nil;
-            MultByBand := false;
-          end;
-        end;
+           begin
+           TempOblast := GetOblast(MyCall);
+           if not (GetRussiaOblastByTwoChars(Char(TempOblast[1]), Char(TempOblast[2])) in
+             [rtUA1A, rtUA1C]) then
+              begin
+              ActiveDXMult := NoDXMults;
+              ActiveDomesticMult := RDADistrict;
+              TempDomesticQTHDataFileName := nil;
+              MultByBand := false;
+              end;
+           end;
 
       end;
 
@@ -1531,20 +1583,20 @@ begin
       begin
         //        if (pos('7', MyCall) > 0) or (pos('/7', MyCall) > 0) then
         if FoundMyStateInDomFile then
-        begin
-          //          DomesticQTHDataFileName := '7QP-W7';
-          //          ContestName := '7th Area QSO Party Inside W7';
-          ActiveExchange := RSTDomesticOrDXQTHExchange;
-          ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
-          DXMultLimit := 20;
-          //          Add_KVEKH6KL;
-        end
+           begin
+           //          DomesticQTHDataFileName := '7QP-W7';
+           //          ContestName := '7th Area QSO Party Inside W7';
+           ActiveExchange := RSTDomesticOrDXQTHExchange;
+           ActiveDXMult := ARRLDXCCWithNoUSACanadaKH6OrKL7;
+           DXMultLimit := 20;
+           //          Add_KVEKH6KL;
+           end
         else
-        begin
-          //          DomesticQTHDataFileName := '7QP';
-          //          ContestName := '7th Area QSO Party Outside W7';
-          ActiveExchange := RSTDomesticQTHExchange;
-        end;
+           begin
+           //          DomesticQTHDataFileName := '7QP';
+           //          ContestName := '7th Area QSO Party Outside W7';
+           ActiveExchange := RSTDomesticQTHExchange;
+           end;
         //        VHFBandsEnabled := True;
 
       end;
@@ -1598,7 +1650,9 @@ begin
     CQMM:
       begin
         if MyContinent = SouthAmerica then
-          ActivePrefixMult := SouthAndNorthAmericanPrefixes;
+           begin
+           ActivePrefixMult := SouthAndNorthAmericanPrefixes;
+           end;
         DXCCMultByBand := dmbbAllBand;
         ActiveBand := Band80;
       end;
@@ -1627,10 +1681,10 @@ begin
   end;
 
   if TempDomesticQTHDataFileName <> nil then
-  begin
-    Windows.lstrcatA(DomQTHDataFileName, TempDomesticQTHDataFileName);
-    Windows.lstrcatA(DomQTHDataFileName, '.dom');
-  end;
+     begin
+     Windows.lstrcatA(DomQTHDataFileName, TempDomesticQTHDataFileName);
+     Windows.lstrcatA(DomQTHDataFileName, '.dom');
+     end;
 
   case ActiveExchange of
     NameAndDomesticOrDXQTHExchange: SetUpNameAndStateExchange;
@@ -1644,19 +1698,29 @@ begin
       RSTDomesticQTHOrQSONumberExchange:
 
       if MyState = '' then
-        SetUpRSTQSONumberExchange
+         begin
+         SetUpRSTQSONumberExchange
+         end
       else
-        SetUpRSTMyStateExchange;
+         begin
+         SetUpRSTMyStateExchange;
+         end;
 
     RSTZoneAndPossibleDomesticQTHExchange, RSTZoneExchange:
       if not (Contest in [JIDXCW, JIDXSSB]) then
-        SetUpRSTMyZoneExchange;
+         begin
+         SetUpRSTMyZoneExchange;
+         end;
 
     RSTZoneOrSocietyExchange:
       if MyState = '' then
-        SetUpRSTMyZoneExchange
+         begin
+         SetUpRSTMyZoneExchange
+         end
       else
-        SetUpRSTMyStateExchange;
+         begin
+         SetUpRSTMyStateExchange;
+         end;
 
   end;
 
@@ -1709,30 +1773,38 @@ begin
   Windows.ZeroMemory(@CTY.ctyLastLocatedCall, SizeOf(CTY.ctyLastLocatedCall));
 
   if MyCountryIsSet then
-    ctyLocateCall(MyCountry, TempQTH)
+     begin
+     ctyLocateCall(MyCountry, TempQTH)
+     end
   else
-    ctyLocateCall(Call, TempQTH);
+     begin
+     ctyLocateCall(Call, TempQTH);
+     end;
 
   if not MyCountryIsSet then
-  begin
-    MyCountry := TempQTH.CountryID;
-    CountryString := MyCountry;
-    if MRC = '' then
-      MRC := MyCountry;
-  end;
+     begin
+     MyCountry := TempQTH.CountryID;
+     CountryString := MyCountry;
+     if MRC = '' then
+        begin
+        MRC := MyCountry;
+        end;
+     end;
 
   if not MyZoneIsSet then
-  begin
-    Str({TempQTH.Zone}ctyGetZone(Call), MyZone);
-  end;
+     begin
+     Str({TempQTH.Zone}ctyGetZone(Call), MyZone);
+     end;
 
   if not MyContinentIsSet then
-  begin
-    MyContinent := TempQTH.Continent;
-    if MyCo = '' then
-      MyCo := tContinentArray[MyContinent];
-    ContinentString := tContinentArray[MyContinent];
-  end;
+     begin
+     MyContinent := TempQTH.Continent;
+     if MyCo = '' then
+        begin
+        MyCo := tContinentArray[MyContinent];
+        end;
+     ContinentString := tContinentArray[MyContinent];
+     end;
 
 end;
 
@@ -1747,15 +1819,19 @@ var
   TempString: ShortString;
 begin
   if StringHas(FileString^, '=') then
-  begin
-    TempString := PrecedingString(FileString^, '=');
-    if tPos(TempString, '>') <> 0 then
-      TempString := PrecedingString(TempString, '>');
-    GetRidOfPrecedingSpaces(TempString);
-    GetRidOfPostcedingSpaces(TempString);
-    if TempString = MyState then
-      InState := True;
-  end;
+     begin
+     TempString := PrecedingString(FileString^, '=');
+     if tPos(TempString, '>') <> 0 then
+        begin
+        TempString := PrecedingString(TempString, '>');
+        end;
+     GetRidOfPrecedingSpaces(TempString);
+     GetRidOfPostcedingSpaces(TempString);
+     if TempString = MyState then
+        begin
+        InState := True;
+        end;
+     end;
 end;
 
 function FoundMyStateInDomFile: boolean;
@@ -1765,12 +1841,16 @@ var
 begin
   Result := False;
   if Contest = DUMMYCONTEST then
-    Exit;
+     begin
+     Exit;
+     end;
   InState := False;
   TF.Format(TempFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME,
     ContestsArray[Contest].DF);
   if not EnumerateLinesInFile(TempFileName, EnumDOM2, True) then
-    Exit;
+     begin
+     Exit;
+     end;
   Result := InState;
   // Result := True;
 end;

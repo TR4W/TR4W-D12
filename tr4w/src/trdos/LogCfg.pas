@@ -157,9 +157,13 @@ begin
             PShortString(CFGCA[I].crAddress)^ := CMD;
             PShortString(CFGCA[I].crAddress)^[Length(CMD) + 1] := #0;
             if CFGCA[I].crType = ctPassword then
+               begin
                logger.Debug('[case fixup] "%s" restored, value=*******', [CFGCA[I].crCommand])
+               end
             else
+               begin
                logger.Debug('[case fixup] "%s" restored, value=%s', [CFGCA[I].crCommand, CMD]);
+               end;
             Break;
             end;
       end;
@@ -213,10 +217,10 @@ begin
   ConfigurationOkay := False;
 
   if MyCall = '' then
-  begin
-    showwarning(TC_NOCALLSIGNSPECIFIED);
-    Exit;
-  end;
+     begin
+     showwarning(TC_NOCALLSIGNSPECIFIED);
+     Exit;
+     end;
 {
   if FloppyFileSaveFrequency > 0 then
     if FloppyFileSaveName = '' then
@@ -233,26 +237,34 @@ begin
 
   if ActivePaddlePort <> NoPort then
     if ActivePaddlePort = RelayControlPort then
-    begin
-      showwarning('RELAY CONTROL PORT = PADDLE PORT');
-//      Exit;
-    end;
+       begin
+       showwarning('RELAY CONTROL PORT = PADDLE PORT');
+ //      Exit;
+       end;
 
   tRelayControlPortBaseAddress := INVALID_HANDLE_VALUE;
   if tGetPortType(RelayControlPort) = ParallelInterface then
-    OpenLPT(tRelayControlPortBaseAddress, RelayControlPort);
+     begin
+     OpenLPT(tRelayControlPortBaseAddress, RelayControlPort);
+     end;
 
   tActiveStereoPortBaseAddress := INVALID_HANDLE_VALUE;
   if tGetPortType(ActiveStereoPort) = ParallelInterface then
-    OpenLPT(tActiveStereoPortBaseAddress, ActiveStereoPort);
+     begin
+     OpenLPT(tActiveStereoPortBaseAddress, ActiveStereoPort);
+     end;
 
   Radio1.tBandOutputPortBaseAddress := INVALID_HANDLE_VALUE;
   if tGetPortType(Radio1.BandOutputPort) = ParallelInterface then
-    OpenLPT(Radio1.tBandOutputPortBaseAddress, Radio1.BandOutputPort);
+     begin
+     OpenLPT(Radio1.tBandOutputPortBaseAddress, Radio1.BandOutputPort);
+     end;
 
   Radio2.tBandOutputPortBaseAddress := INVALID_HANDLE_VALUE;
   if tGetPortType(Radio2.BandOutputPort) = ParallelInterface then
-    OpenLPT(Radio2.tBandOutputPortBaseAddress, Radio2.BandOutputPort);
+     begin
+     OpenLPT(Radio2.tBandOutputPortBaseAddress, Radio2.BandOutputPort);
+     end;
 end;
 
 procedure TryRunPaddleAndFootSwitchThread;
@@ -260,26 +272,26 @@ begin
 
   if tUseControlPort then
     if Radio1.tCATPortHandle <> INVALID_HANDLE_VALUE then
-    begin
-      DoingPaddle := True;
-      tDoingFootSwitchEnable := True;
-      tRuntPaddleAndFootSwitchThread;
-      Exit;
-    end;
+       begin
+       DoingPaddle := True;
+       tDoingFootSwitchEnable := True;
+       tRuntPaddleAndFootSwitchThread;
+       Exit;
+       end;
 
   if tGetPortType(ActiveFootSwitchPort) = ParallelInterface then
     if OpenLPT(tFootSwitchPortBaseAddress, ActiveFootSwitchPort) then
-    begin
-      tRuntPaddleAndFootSwitchThread;
-      tDoingFootSwitchEnable := True;
-    end;
+       begin
+       tRuntPaddleAndFootSwitchThread;
+       tDoingFootSwitchEnable := True;
+       end;
 
   if tGetPortType(ActivePaddlePort) = ParallelInterface then
     if OpenLPT(tPaddlePortBaseAddress, ActivePaddlePort) then
-    begin
-      tRuntPaddleAndFootSwitchThread;
-      DoingPaddle := True;
-    end;
+       begin
+       tRuntPaddleAndFootSwitchThread;
+       DoingPaddle := True;
+       end;
 
 end;
 
@@ -289,11 +301,14 @@ var
 begin
 
   if ActiveRotatorPort <> NoPort then
-  begin
-    BaudRate := 1200;
-    if ActiveRotatorType = DCU1Rotator then BaudRate := 4800;
-    InitializeSerialPort(ActiveRotatorPort, BaudRate, 8, tNoParity, 1, FILE_ATTRIBUTE_NORMAL, #0);
-  end;
+     begin
+     BaudRate := 1200;
+     if ActiveRotatorType = DCU1Rotator then
+        begin
+        BaudRate := 4800;
+        end;
+     InitializeSerialPort(ActiveRotatorPort, BaudRate, 8, tNoParity, 1, FILE_ATTRIBUTE_NORMAL, #0);
+     end;
  
 
   // A hand-edited config can point BOTH radios at the same serial port; the
@@ -365,15 +380,22 @@ begin
 //    TF.Format(DomQTHDataFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME, TempDomesticQTHDataFileName);
 
   if DomQTHDataFileName[0] <> #0 then
-  begin
-   if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
-    TF.Format(wsprintfBuffer, '%s', TR4W_DOM_FILENAME)
-    else
-    TF.Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
-    Windows.ZeroMemory(@DomQTHDataFileName, SizeOf(DomQTHDataFileName));
-    Windows.lstrcatA(DomQTHDataFileName, wsprintfBuffer);
-    if not DomQTHTable.LoadInDomQTHFile(DomQTHDataFileName) then halt;
-  end;
+     begin
+     if fileexists(TR4W_DOM_FILENAME) then                       // 4.100.2
+        begin
+        TF.Format(wsprintfBuffer, '%s', TR4W_DOM_FILENAME)
+        end
+      else
+         begin
+         TF.Format(wsprintfBuffer, '%sdom\%s', TR4W_PATH_NAME, DomQTHDataFileName);
+         end;
+      Windows.ZeroMemory(@DomQTHDataFileName, SizeOf(DomQTHDataFileName));
+      Windows.lstrcatA(DomQTHDataFileName, wsprintfBuffer);
+      if not DomQTHTable.LoadInDomQTHFile(DomQTHDataFileName) then
+         begin
+         halt;
+         end;
+     end;
 
 
   //wli  if DVPEnable then
@@ -387,7 +409,10 @@ begin
 
 //  TotalQSOPoints := 0;
 
-  if AutoTimeIncrementQSOs <> 0 then IncrementTimeEnable := True;
+  if AutoTimeIncrementQSOs <> 0 then
+     begin
+     IncrementTimeEnable := True;
+     end;
 
   DoingDomesticMults := ActiveDomesticMult <> NoDomesticMults;
   DoingDXMults := ActiveDXMult <> NoDXMults;
@@ -401,32 +426,40 @@ begin
   {   ((DomesticQTHDataFileName <> '') OR (ActiveDomesticMult = WYSIWYGDomestic)) THEN }
 
   if DoingDomesticMults then                              // Gav 4.44.8      Display remaining domestic Mults
-  begin
-    if RemainingMultDisplay = rmNoRemMultDisplay then
-      RemainingMultDisplay := rmDomestic;
-    inc(NumberDifferentMults);
-  end;
+     begin
+     if RemainingMultDisplay = rmNoRemMultDisplay then
+        begin
+        RemainingMultDisplay := rmDomestic;
+        end;
+     inc(NumberDifferentMults);
+     end;
 
   if DoingDXMults then
-  begin
-    inc(NumberDifferentMults);
-    if RemainingMultDisplay = rmNoRemMultDisplay then
-      RemainingMultDisplay := rmDX;
-  end;
+     begin
+     inc(NumberDifferentMults);
+     if RemainingMultDisplay = rmNoRemMultDisplay then
+        begin
+        RemainingMultDisplay := rmDX;
+        end;
+     end;
 
   if DoingZoneMults then
-  begin
-    inc(NumberDifferentMults);
-    if RemainingMultDisplay = rmNoRemMultDisplay then
-      RemainingMultDisplay := rmZone;
-  end;
+     begin
+     inc(NumberDifferentMults);
+     if RemainingMultDisplay = rmNoRemMultDisplay then
+        begin
+        RemainingMultDisplay := rmZone;
+        end;
+     end;
 
   if DoingPrefixMults then
-  begin
-    inc(NumberDifferentMults);
-    if RemainingMultDisplay = rmNoRemMultDisplay then
-      RemainingMultDisplay := rmPrefix;
-  end;
+     begin
+     inc(NumberDifferentMults);
+     if RemainingMultDisplay = rmNoRemMultDisplay then
+        begin
+        RemainingMultDisplay := rmPrefix;
+        end;
+     end;
 
   LoadSpecialHelloFile;
 
@@ -470,10 +503,10 @@ begin
   // SetSpeed(CodeSpeed);  // ny4i Issue 153 Not necessary as SetUpToSendOnActiveRadio is called and sets the speed
 
   if AutoSendCharacterCount > 0 then
-  begin
-    AutoSendEnable := True;
-    DisplayAutoSendCharacterCount;
-  end;
+     begin
+     AutoSendEnable := True;
+     DisplayAutoSendCharacterCount;
+     end;
 {
   if ReadInLog then
   begin
@@ -510,45 +543,45 @@ begin
    if OpenFileForRead_old(ConfigRead, FileName) then         // ADDED 4.36.3
  //if tf.topenFileForRead(h, FileName) then
 
-  begin
-     while not Eof(ConfigRead) do
-    begin
-      ReadLn(ConfigRead, FileString);
-
-      if StringHas(UpperCase(FileString), 'MY CALL') and (Call <> '') then
       begin
-        FirstCommand := False;
-        Continue;
-      end;
+      while not Eof(ConfigRead) do
+         begin
+         ReadLn(ConfigRead, FileString);
 
-      if not ProcessConfigInstruction(FileString, FirstCommand) then
-      begin
-              //        WriteLn;
-              //        WriteLn('INVALID STATEMENT IN ', FileName, '!!  Line ', LineNumber);
-              //        WriteLn(FileString);
-        FileString[length(FileString) + 1] := #0;
-        // Issue #997: asm wsprintf-push -> TF.Format. Args pushed cdecl-reverse;
-        // format is %s(FileName) / %u(LineNumber) / %s(FileString).
-        TF.Format(wsprintfBuffer, TC_INVALIDSTATEMENTIN, @FileName[1], LineNumber, @FileString[1]);
-        showwarning(wsprintfBuffer);
-        Exit;
-      end;
+         if StringHas(UpperCase(FileString), 'MY CALL') and (Call <> '') then
+            begin
+            FirstCommand := False;
+            Continue;
+            end;
 
-      inc(LineNumber);
-    end;
+         if not ProcessConfigInstruction(FileString, FirstCommand) then
+            begin
+            //        WriteLn;
+            //        WriteLn('INVALID STATEMENT IN ', FileName, '!!  Line ', LineNumber);
+            //        WriteLn(FileString);
+      FileString[length(FileString) + 1] := #0;
+      // Issue #997: asm wsprintf-push -> TF.Format. Args pushed cdecl-reverse;
+      // format is %s(FileName) / %u(LineNumber) / %s(FileString).
+      TF.Format(wsprintfBuffer, TC_INVALIDSTATEMENTIN, @FileName[1], LineNumber, @FileString[1]);
+      showwarning(wsprintfBuffer);
+      Exit;
+            end;
 
-    Close(ConfigRead);
-    LoadInSeparateConfigFile := True;
-  end   
+         inc(LineNumber);
+         end;
+
+     Close(ConfigRead);
+     LoadInSeparateConfigFile := True;
+      end   
   
   else
-  begin
-    FileName[Ord(FileName[0]) + 1] := #0;
-    // Issue #997: asm wsprintf-push -> TF.Format.
-    TF.Format(wsprintfBuffer, TC_UNABLETOFIND, @FileName[1]);
-    showwarning(wsprintfBuffer);
-    Exit;
-  end;
+     begin
+     FileName[Ord(FileName[0]) + 1] := #0;
+     // Issue #997: asm wsprintf-push -> TF.Format.
+     TF.Format(wsprintfBuffer, TC_UNABLETOFIND, @FileName[1]);
+     showwarning(wsprintfBuffer);
+     Exit;
+     end;
  // n4af }
 end;
 
@@ -596,12 +629,18 @@ procedure ReadInConfigFile(ConfigFileName: TCFGType);
   correctly without a second-pass workaround. }
 
 begin
-  if ConfigFileName = cfgCFG then ClearDomesticCountryList;
+  if ConfigFileName = cfgCFG then
+     begin
+     ClearDomesticCountryList;
+     end;
   LineNumberInConfigFile := 0;
   gRawLineNumber := 0;
   CurrentConfigFile := ConfigFileName;
   // Reset the duplicate-key tracker per load; only tr4w.ini is checked (see EnmuCFGFile).
-  if ConfigFileName = cfgINI then SetLength(gSeenINICmds, 0);
+  if ConfigFileName = cfgINI then
+     begin
+     SetLength(gSeenINICmds, 0);
+     end;
   // Issue #965 -- reset per file so TWO RADIO MODE "wins" only within a single
   // file; a later-loaded contest .cfg can still override the mode set by the ini.
   TwoRadioModeWasSet := False;
@@ -613,7 +652,9 @@ begin
   // Uses EnumerateLinesInFile (UpperCase=False) + RestoreCFGPasswordCase callback
   // rather than GetPrivateProfileString, which proved unreliable in this context.
   if ConfigFileName = cfgINI then
+     begin
      EnumerateLinesInFile(TR4W_INI_FILENAME, RestoreCFGPasswordCase, False);
+     end;
 
   // CW-state desync fix: the 'CW ENABLE' config command writes only CWEnable,
   // but the actual transmit gate (SendCrypticCWString) and the Alt-K toggle
@@ -638,71 +679,80 @@ var
 begin
   PacketFile := False;
    for ParameterCount := 1 to ParamCount do
-  begin
-
-
-    if UpperCase(ParamStr(ParameterCount)) = 'BANDMAP' then
-      FakeBandMap := True;
-
-    if UpperCase(ParamStr(ParameterCount)) = 'DEBUG' then
-       begin
-       DebugFlag := True;
-       logger.Level := Debug;
-       end;
-
-     if UpperCase(ParamStr(ParameterCount)) = 'TRACE' then
-       begin
-       DebugFlag := True;
-       logger.Level := Trace;
-       end;
-
-    if UpperCase(ParamStr(ParameterCount)) = 'FOOTSWITCHDEBUG' then
-      FootSwitchDebug := True;
-
-
-    if UpperCase(ParamStr(ParameterCount)) = 'NETDEBUG' then NetDebug := True;
-
-    if UpperCase(ParamStr(ParameterCount)) = 'PACKET' then
-      FakePacket := True;
-
-    if UpperCase(ParamStr(ParameterCount)) = 'PACKETFILE' then
-    begin
-      WriteLn('Opening ', ParamStr(ParameterCount + 1), ' as a packet file to process.');
-    end;
-
-    if UpperCase(ParamStr(ParameterCount)) = 'PACKETINPUTFILE' then
-    begin
-      Packet.PacketInputFileName := ParamStr(ParameterCount + 1);
-
-      if StringIsAllNumbers(ParamStr(ParameterCount + 2)) then
       begin
-        TempString := ParamStr(ParameterCount + 2);
-        Val(TempString, PacketInputFileDelay, Result);
+
+
+      if UpperCase(ParamStr(ParameterCount)) = 'BANDMAP' then
+         begin
+         FakeBandMap := True;
+         end;
+
+      if UpperCase(ParamStr(ParameterCount)) = 'DEBUG' then
+         begin
+         DebugFlag := True;
+         logger.Level := Debug;
+         end;
+
+       if UpperCase(ParamStr(ParameterCount)) = 'TRACE' then
+          begin
+          DebugFlag := True;
+          logger.Level := Trace;
+          end;
+
+      if UpperCase(ParamStr(ParameterCount)) = 'FOOTSWITCHDEBUG' then
+         begin
+         FootSwitchDebug := True;
+         end;
+
+
+      if UpperCase(ParamStr(ParameterCount)) = 'NETDEBUG' then
+         begin
+         NetDebug := True;
+         end;
+
+      if UpperCase(ParamStr(ParameterCount)) = 'PACKET' then
+         begin
+         FakePacket := True;
+         end;
+
+      if UpperCase(ParamStr(ParameterCount)) = 'PACKETFILE' then
+         begin
+         WriteLn('Opening ', ParamStr(ParameterCount + 1), ' as a packet file to process.');
+         end;
+
+      if UpperCase(ParamStr(ParameterCount)) = 'PACKETINPUTFILE' then
+         begin
+         Packet.PacketInputFileName := ParamStr(ParameterCount + 1);
+
+         if StringIsAllNumbers(ParamStr(ParameterCount + 2)) then
+            begin
+            TempString := ParamStr(ParameterCount + 2);
+            Val(TempString, PacketInputFileDelay, Result);
+            end;
+         end;
+
+      if UpperCase(ParamStr(ParameterCount)) = 'READ' then
+         begin
+         //      ReadInLog := True;
+               ReadInLogFileName := ParamStr(ParameterCount + 1);
+                   ////{WLI}            Inc (ParameterCount);
+         end;
+
+        {KK1L: 6.71 Added as a multiplier and dupe check}
+
+      if UpperCase(ParamStr(ParameterCount)) = 'RESCORE' then
+         begin
+         PushLogFiles(LastPushedLogName);
+         ReadInLogFileName := LastPushedLogName;
+         WriteLn('Ready to rescore ', ReadInLogFileName, '!');
+         end;
+
+      // RADIODEBUG / SERIALDEBUG / TALKDEBUG were removed with the COM<n>IN.BIN /
+      // COM<n>OUT.BIN writers they enabled.  Those predate Log4D; CAT tracing is
+      // now DEBUG LOG LEVEL = TRACE, which logs both directions with timestamps.
+
+
       end;
-    end;
-
-    if UpperCase(ParamStr(ParameterCount)) = 'READ' then
-    begin
-//      ReadInLog := True;
-      ReadInLogFileName := ParamStr(ParameterCount + 1);
-          ////{WLI}            Inc (ParameterCount);
-    end;
-
-      {KK1L: 6.71 Added as a multiplier and dupe check}
-
-    if UpperCase(ParamStr(ParameterCount)) = 'RESCORE' then
-    begin
-      PushLogFiles(LastPushedLogName);
-      ReadInLogFileName := LastPushedLogName;
-      WriteLn('Ready to rescore ', ReadInLogFileName, '!');
-    end;
-
-    // RADIODEBUG / SERIALDEBUG / TALKDEBUG were removed with the COM<n>IN.BIN /
-    // COM<n>OUT.BIN writers they enabled.  Those predate Log4D; CAT tracing is
-    // now DEBUG LOG LEVEL = TRACE, which logs both directions with timestamps.
-
-
-  end;
 end;
 
 procedure tSetupExchangeNumbers;
@@ -742,17 +792,25 @@ begin
     JIDXCW, JIDXSSB, CQ160SSB, CQ160CW, LZDX, IARU, OZCR_O, OZCR_Z:
       begin
         if MyState <> '' then
-          tCQExchange := ' 5NN ' + MyState
+           begin
+           tCQExchange := ' 5NN ' + MyState
+           end
         else
-          tCQExchange := ' 5NN ' + MyZone;
+           begin
+           tCQExchange := ' 5NN ' + MyZone;
+           end;
       end;
 
     CQIR:
       begin
         if MyState <> '' then
-          tCQExchange := ' ' + MyState + ' #'
+           begin
+           tCQExchange := ' ' + MyState + ' #'
+           end
         else
-          tCQExchange := ' #';
+           begin
+           tCQExchange := ' #';
+           end;
       end;
 
     NZFIELDDAY:
@@ -800,16 +858,22 @@ begin
 {$IFEND}
 
   if CQExchange = '' then
-    CQExchange := tCQExchange;
+     begin
+     CQExchange := tCQExchange;
+     end;
 
   if SearchAndPounceExchange = '' then
     SearchAndPounceExchange := {$IF MMTTYMODE} '_@_' + {$IFEND}CQExchange;
 
   if RepeatSearchAndPounceExchange = '' then
-    RepeatSearchAndPounceExchange := tSPExchange;
+     begin
+     RepeatSearchAndPounceExchange := tSPExchange;
+     end;
 
   if CQExchangeNameKnown = '' then
-    CQExchangeNameKnown := tCQExchange;
+     begin
+     CQExchangeNameKnown := tCQExchange;
+     end;
 end;
 
 procedure EnmuCFGFile(FileString: PShortString);
@@ -850,68 +914,73 @@ var
   // (a debugger breakpoint anchor; no runtime effect).
 
   if CurrentConfigFile = cfgCFG then
-  begin
-    if LineNumberInConfigFile = 1 then
-      if ID <> 'MY CALL' then
-      begin
-        showwarning(TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE);
-        halt;
-      end;
+     begin
+     if LineNumberInConfigFile = 1 then
+       if ID <> 'MY CALL' then
+          begin
+          showwarning(TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE);
+          halt;
+          end;
 
-  end;
+     end;
 
-  if CMD = 'SPACE' then CMD[1] := ' ';
+  if CMD = 'SPACE' then
+     begin
+     CMD[1] := ' ';
+     end;
    if cmd = 'FM' then
-  CMD := 'FM';
+      begin
+      CMD := 'FM';
+      end;
   if not CheckCommand(@ID, CMD) then
-  begin
-    // Commands removed in a prior version — log quietly, no dialog
-    if (ID = 'HAMLIB RIGCTLD PORT') or
-       (ID = 'HAMLIB RIGCTLD IP ADDRESS') or
-       (ID = 'HAMLIB RIGCTLD RUN AT STARTUP') then
-       begin
-       logger.Warn('[LogCfg] Obsolete command ignored (removed): %s', [ID]);
-       end
-    else
-       begin
-       TF.Format(wsprintfBuffer, TC_INVALIDSTATEMENTINCONFIGFILE, CFGFilesArray[CurrentConfigFile], LineNumberInConfigFile, @FileString^[1]);
-       showwarning(wsprintfBuffer);
-//    halt;
-       end;
-  end
+     begin
+     // Commands removed in a prior version — log quietly, no dialog
+     if (ID = 'HAMLIB RIGCTLD PORT') or
+        (ID = 'HAMLIB RIGCTLD IP ADDRESS') or
+        (ID = 'HAMLIB RIGCTLD RUN AT STARTUP') then
+        begin
+        logger.Warn('[LogCfg] Obsolete command ignored (removed): %s', [ID]);
+        end
+     else
+        begin
+        TF.Format(wsprintfBuffer, TC_INVALIDSTATEMENTINCONFIGFILE, CFGFilesArray[CurrentConfigFile], LineNumberInConfigFile, @FileString^[1]);
+        showwarning(wsprintfBuffer);
+ //    halt;
+        end;
+     end
   else
-  begin
-    // Flag a hand-edited duplicate single-valued key in tr4w.ini.  The line-based
-    // loader applies every occurrence (last wins) while the Win32 profile API used
-    // by the config dialog reads/writes the first (first wins) -- so a duplicate
-    // silently reverts on restart.  Only tr4w.ini scalars qualify; accumulating
-    // commands (freq/band lists, ADD DOMESTIC COUNTRY) legitimately repeat.
-    if (CurrentConfigFile = cfgINI) and CommandIsSingleValued(@ID) then
-       begin
-       firstLine := -1;
-       for k := 0 to High(gSeenINICmds) do
-          begin
-          if gSeenINICmds[k].Name = string(ID) then
-             begin
-             firstLine := gSeenINICmds[k].Line;
-             Break;
-             end;
-          end;
-       if firstLine >= 0 then
-          begin
-          logger.Warn('[Config] Duplicate key "%s" in tr4w.ini: first at line %d, ' +
-             'repeated at line %d -- startup uses the last occurrence, the config ' +
-             'dialog uses the first; remove one.',
-             [ID, firstLine, gRawLineNumber]);
-          end
-       else
-          begin
-          SetLength(gSeenINICmds, Length(gSeenINICmds) + 1);
-          gSeenINICmds[High(gSeenINICmds)].Name := string(ID);
-          gSeenINICmds[High(gSeenINICmds)].Line := gRawLineNumber;
-          end;
-       end;
-  end;
+     begin
+     // Flag a hand-edited duplicate single-valued key in tr4w.ini.  The line-based
+     // loader applies every occurrence (last wins) while the Win32 profile API used
+     // by the config dialog reads/writes the first (first wins) -- so a duplicate
+     // silently reverts on restart.  Only tr4w.ini scalars qualify; accumulating
+     // commands (freq/band lists, ADD DOMESTIC COUNTRY) legitimately repeat.
+     if (CurrentConfigFile = cfgINI) and CommandIsSingleValued(@ID) then
+        begin
+        firstLine := -1;
+        for k := 0 to High(gSeenINICmds) do
+           begin
+           if gSeenINICmds[k].Name = string(ID) then
+              begin
+              firstLine := gSeenINICmds[k].Line;
+              Break;
+              end;
+           end;
+        if firstLine >= 0 then
+           begin
+           logger.Warn('[Config] Duplicate key "%s" in tr4w.ini: first at line %d, ' +
+              'repeated at line %d -- startup uses the last occurrence, the config ' +
+              'dialog uses the first; remove one.',
+              [ID, firstLine, gRawLineNumber]);
+           end
+        else
+           begin
+           SetLength(gSeenINICmds, Length(gSeenINICmds) + 1);
+           gSeenINICmds[High(gSeenINICmds)].Name := string(ID);
+           gSeenINICmds[High(gSeenINICmds)].Line := gRawLineNumber;
+           end;
+        end;
+     end;
 end;
 
 //begin

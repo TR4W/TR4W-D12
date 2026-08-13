@@ -66,7 +66,9 @@ begin
          end;
       end;
    while (Length(Result) > 0) and (Result[Length(Result)] = ' ') do
+      begin
       SetLength(Result, Length(Result) - 1);
+      end;
 end;
 
 // 599 on CW/Digital, 59 on Phone/FM -- used when RSTReceived = 0 because
@@ -84,9 +86,13 @@ end;
 function RSTReceivedString(const RXData: ContestExchange): string;
 begin
    if RXData.RSTReceived > 0 then
+      begin
       Result := IntToStr(RXData.RSTReceived)
+      end
    else
+      begin
       Result := DefaultRST(RXData.Mode);
+      end;
 end;
 
 function BuildSentExchangeText(const RXData: ContestExchange): string;
@@ -160,9 +166,13 @@ begin
       // whichever the worked station actually sent.
       ARRLDXCW, ARRLDXSSB:
          if qth <> '' then
+            begin
             Result := rst + ' ' + qth
+            end
          else
+            begin
             Result := rst + ' ' + pwr;
+            end;
 
       // RST + age
       ALLASIANCW, ALLASIANSSB:

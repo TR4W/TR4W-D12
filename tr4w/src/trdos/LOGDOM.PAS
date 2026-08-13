@@ -106,24 +106,24 @@ begin
   if Index <= 0 then Exit;
 
   if FirstPrefixRecord[Index] = nil then
-  begin
-    FirstPrefixRecord[Index] := New(PrefixRecPtr);
-    FirstPrefixRecord[Index]^.DomQTH := DomQTH;
-    FirstPrefixRecord[Index]^.Multiplier := Multiplier;
-    FirstPrefixRecord[Index]^.Prefix := Prefix;
-    FirstPrefixRecord[Index]^.NextRecord := nil;
-    LastPrefixRecord[Index] := FirstPrefixRecord[Index];
-  end
+     begin
+     FirstPrefixRecord[Index] := New(PrefixRecPtr);
+     FirstPrefixRecord[Index]^.DomQTH := DomQTH;
+     FirstPrefixRecord[Index]^.Multiplier := Multiplier;
+     FirstPrefixRecord[Index]^.Prefix := Prefix;
+     FirstPrefixRecord[Index]^.NextRecord := nil;
+     LastPrefixRecord[Index] := FirstPrefixRecord[Index];
+     end
   else
-  begin
-{?}
-    LastPrefixRecord[Index]^.NextRecord := New(PrefixRecPtr);
-    LastPrefixRecord[Index] := LastPrefixRecord[Index]^.NextRecord;
-    LastPrefixRecord[Index]^.Multiplier := Multiplier;
-    LastPrefixRecord[Index]^.DomQTH := DomQTH;
-    LastPrefixRecord[Index]^.Prefix := Prefix;
-    LastPrefixRecord[Index]^.NextRecord := nil;
-  end;
+     begin
+     {?}
+         LastPrefixRecord[Index]^.NextRecord := New(PrefixRecPtr);
+         LastPrefixRecord[Index] := LastPrefixRecord[Index]^.NextRecord;
+         LastPrefixRecord[Index]^.Multiplier := Multiplier;
+         LastPrefixRecord[Index]^.DomQTH := DomQTH;
+         LastPrefixRecord[Index]^.Prefix := Prefix;
+         LastPrefixRecord[Index]^.NextRecord := nil;
+     end;
 
 end;
 
@@ -142,10 +142,10 @@ begin
   //{WLI}    Directory := FindDirectory (FileName);
 
   if not DomQTHTable.ReadDomQTHFile(FileName, False) then
-  begin
-//    ActiveDomQTHFile := '';
-    Exit;
-  end;
+     begin
+     //    ActiveDomQTHFile := '';
+         Exit;
+     end;
 
   LoadInDomQTHFile := True;
 //  ActiveDomQTHFile := FileName;
@@ -204,22 +204,24 @@ begin
   if FirstPrefixRecord[Index] = nil then Exit;
 
   while InputString <> '' do
-  begin
-    CurrentPrefixRecord := FirstPrefixRecord[Index];
+     begin
+     CurrentPrefixRecord := FirstPrefixRecord[Index];
 
-    repeat
-      if CurrentPrefixRecord^.Prefix = InputString then
-      begin
-        GetStandardDomesticQTH := CurrentPrefixRecord^.DomQTH;
-        Exit;
-      end;
+     repeat
+       if CurrentPrefixRecord^.Prefix = InputString then
+          begin
+          GetStandardDomesticQTH := CurrentPrefixRecord^.DomQTH;
+          Exit;
+          end;
 
-      if CurrentPrefixRecord <> nil then
-        CurrentPrefixRecord := CurrentPrefixRecord^.NextRecord;
-    until CurrentPrefixRecord = nil;
+       if CurrentPrefixRecord <> nil then
+          begin
+          CurrentPrefixRecord := CurrentPrefixRecord^.NextRecord;
+          end;
+     until CurrentPrefixRecord = nil;
 
-    Delete(InputString, length(InputString), 1);
-  end;
+     Delete(InputString, length(InputString), 1);
+     end;
 
 end;
 
@@ -243,106 +245,116 @@ begin
   strU(InputString);
 
   if ActiveDomesticMult = NoDomesticMults then
-  begin
-    QTH := InputString;
-    GetDomQTH := True;
-    Exit;
-  end;
+     begin
+     QTH := InputString;
+     GetDomQTH := True;
+     Exit;
+     end;
 
   if ActiveDomesticMult = RDADistrict then
-  begin
-    if length(InputString) = 4 then
-      if InputString[1] in ['A'..'Z'] then
-        if InputString[2] in ['A'..'Z'] then
-          if InputString[3] in ['0'..'9'] then
-            if InputString[4] in ['0'..'9'] then
-            begin
-              Multiplier := InputString;
-              QTH := InputString;
-              GetDomQTH := True;
-            end;
-    Exit;
-  end;
+     begin
+     if length(InputString) = 4 then
+       if InputString[1] in ['A'..'Z'] then
+         if InputString[2] in ['A'..'Z'] then
+           if InputString[3] in ['0'..'9'] then
+             if InputString[4] in ['0'..'9'] then
+                begin
+                Multiplier := InputString;
+                QTH := InputString;
+                GetDomQTH := True;
+                end;
+     Exit;
+     end;
 
   if ActiveDomesticMult = WYSIWYGDomestic then
-  begin
-    Multiplier := InputString;
-    QTH := InputString;
-    GetDomQTH := True;
-    Exit;
-  end;
+     begin
+     Multiplier := InputString;
+     QTH := InputString;
+     GetDomQTH := True;
+     Exit;
+     end;
 
   if ActiveDomesticMult = DOKCodes then { for WAG contest }
-  begin
-    for Index := 1 to length(InputString) do
-    begin
-      if InputString[Index] in ['A'..'Z'] then
-      begin
-        Multiplier := Copy(InputString, Index, 1);
-        Break;
-      end;
-    end;
+     begin
+     for Index := 1 to length(InputString) do
+        begin
+        if InputString[Index] in ['A'..'Z'] then
+           begin
+           Multiplier := Copy(InputString, Index, 1);
+           Break;
+           end;
+        end;
 
-    QTH := InputString;
-    GetDomQTH := Multiplier <> '';
-    Exit;
-  end;
+     QTH := InputString;
+     GetDomQTH := Multiplier <> '';
+     Exit;
+     end;
 
   if ActiveDomesticMult = IOTADomestic then
-  begin
-    if (length(InputString) < 3) or (length(InputString) > 5) then Exit;
+     begin
+     if (length(InputString) < 3) or (length(InputString) > 5) then Exit;
 
-    ContinentString := UpperCase(Copy(InputString, 1, 2));
-    if GetContinentFromString(ContinentString) <> UnknownContinent then
-    begin
-      NumberString := Copy(InputString, 3, length(InputString) - 2);
+     ContinentString := UpperCase(Copy(InputString, 1, 2));
+     if GetContinentFromString(ContinentString) <> UnknownContinent then
+        begin
+        NumberString := Copy(InputString, 3, length(InputString) - 2);
 
-      if not StringIsAllNumbers(NumberString) then Exit;
+        if not StringIsAllNumbers(NumberString) then Exit;
 
-      while length(NumberString) < 3 do
-        NumberString := '0' + NumberString;
+        while length(NumberString) < 3 do
+           begin
+           NumberString := '0' + NumberString;
+           end;
 
-      Multiplier := ContinentString + '-' + NumberString;
-      QTH := Multiplier;
-      GetDomQTH := True;
-    end;
-  end;
+        Multiplier := ContinentString + '-' + NumberString;
+        QTH := Multiplier;
+        GetDomQTH := True;
+        end;
+     end;
 
   if ActiveDomesticMult = GridSquares then
-  begin
-    if (length(InputString) <> 4) and (length(InputString) <> 6) then
-      Exit;
-
-    if (InputString[1] < 'A') or (InputString[1] > 'R') or
-      (InputString[2] < 'A') or (InputString[2] > 'R') or
-      (InputString[3] > '9') or (InputString[3] < '0') or
-      (InputString[4] > '9') or (InputString[4] < '0') then
-      Exit;
-
-    if length(InputString) = 6 then
-      if (InputString[5] < 'A') or (InputString[5] > 'Z') or
-        (InputString[6] < 'A') or (InputString[6] > 'Z') then
+     begin
+     if (length(InputString) <> 4) and (length(InputString) <> 6) then
+        begin
         Exit;
+        end;
 
-    Multiplier := Copy(InputString, 1, 4);
-    QTH := InputString;
-    GetDomQTH := True;
-    Exit;
-  end;
+     if (InputString[1] < 'A') or (InputString[1] > 'R') or
+       (InputString[2] < 'A') or (InputString[2] > 'R') or
+       (InputString[3] > '9') or (InputString[3] < '0') or
+       (InputString[4] > '9') or (InputString[4] < '0') then
+        begin
+        Exit;
+        end;
+
+     if length(InputString) = 6 then
+       if (InputString[5] < 'A') or (InputString[5] > 'Z') or
+         (InputString[6] < 'A') or (InputString[6] > 'Z') then
+          begin
+          Exit;
+          end;
+
+     Multiplier := Copy(InputString, 1, 4);
+     QTH := InputString;
+     GetDomQTH := True;
+     Exit;
+     end;
 
   if ActiveDomesticMult = GridFields then
-  begin
-    if (length(InputString) <> 4) or (InputString[1] < 'A') or (InputString[1] > 'R') or
-      (InputString[2] < 'A') or (InputString[2] > 'R') or
-      (InputString[3] > '9') or (InputString[3] < '0') or
-      (InputString[4] > '9') or (InputString[4] < '0') then
-      Exit;
+     begin
+     if (length(InputString) <> 4) or (InputString[1] < 'A') or (InputString[1] > 'R') or
+       (InputString[2] < 'A') or (InputString[2] > 'R') or
+       (InputString[3] > '9') or (InputString[3] < '0') or
+       (InputString[4] > '9') or (InputString[4] < '0') then
+        begin
+        Exit;
+        end;
 
-    Multiplier := Copy(InputString, 1, 2);
-    QTH := InputString;
-    GetDomQTH := True;
-    Exit;
-  end;
+     Multiplier := Copy(InputString, 1, 2);
+     QTH := InputString;
+     GetDomQTH := True;
+     Exit;
+     end;
 
   Index := RecordPointerIndex(InputString[1]);
 
@@ -363,15 +375,17 @@ begin
 
     repeat
       if CurrentPrefixRecord^.Prefix = InputString then
-      begin
-        QTH := CurrentPrefixRecord^.DomQTH;
-        Multiplier := CurrentPrefixRecord^.Multiplier;
-        GetDomQTH := True;
-        Exit;
-      end;
+         begin
+         QTH := CurrentPrefixRecord^.DomQTH;
+         Multiplier := CurrentPrefixRecord^.Multiplier;
+         GetDomQTH := True;
+         Exit;
+         end;
 
       if CurrentPrefixRecord <> nil then
-        CurrentPrefixRecord := CurrentPrefixRecord^.NextRecord;
+         begin
+         CurrentPrefixRecord := CurrentPrefixRecord^.NextRecord;
+         end;
     until CurrentPrefixRecord = nil;
 
 //    Delete(InputString, length(InputString), 1);
@@ -399,18 +413,20 @@ begin
   Val(FirstLetter, TempInt, Result1);
 
   if Result1 = 0 then
-  begin
-    RecordPointerIndex := TempInt + 1;
-    Exit;
-  end
+     begin
+     RecordPointerIndex := TempInt + 1;
+     Exit;
+     end
   else
     if FirstLetter in ['A'..'Z'] then
-    begin
-      TempInt := Ord(FirstLetter) - Ord('A') + 11;
-      RecordPointerIndex := TempInt;
-    end
+       begin
+       TempInt := Ord(FirstLetter) - Ord('A') + 11;
+       RecordPointerIndex := TempInt;
+       end
     else
-      RecordPointerIndex := -1;
+       begin
+       RecordPointerIndex := -1;
+       end;
 end;
 
 function GetNextPrefix(var FileString: ShortString {Str160};
@@ -420,28 +436,28 @@ begin
   GetNextPrefix := False;
 
   if FileString = '' then
-  begin
-    PrefixString := '';
-    Exit;
-  end;
+     begin
+     PrefixString := '';
+     Exit;
+     end;
 
   if StringHas(FileString, ',') then
-  begin
-    PrefixString := PrecedingString(FileString, ',');
-    FileString := PostcedingString(FileString, ',');
-    GetRidOfPrecedingSpaces(FileString);
-  end
+     begin
+     PrefixString := PrecedingString(FileString, ',');
+     FileString := PostcedingString(FileString, ',');
+     GetRidOfPrecedingSpaces(FileString);
+     end
   else
-  begin
-    PrefixString := FileString;
-    FileString := '';
-  end;
+     begin
+     PrefixString := FileString;
+     FileString := '';
+     end;
 
   if StringHas(PrefixString, '(') then
-  begin
-    PrefixString := PrecedingString(PrefixString, '(');
-    GetRidOfPostcedingSpaces(PrefixString);
-  end;
+     begin
+     PrefixString := PrecedingString(PrefixString, '(');
+     GetRidOfPostcedingSpaces(PrefixString);
+     end;
 
   GetNextPrefix := PrefixString <> '';
 end;
@@ -460,38 +476,42 @@ begin
   ReadDomQTHFile := False;
 
   if not IncludedFile then
-    NumberRemainingMults := 0;
+     begin
+     NumberRemainingMults := 0;
+     end;
 
 //  if RemainingDomMults = nil then New(RemainingDomMults);
 //  if not IncludedFile then Windows.ZeroMemory(RemainingDomMults, SizeOf(RemainingDomMultArrayType));
 
   if not IncludedFile then
-    for RecordPointer := 1 to 36 do //KK1L: 6.72 1-36 from 1-26 to allow for numbers in DOM file
-    begin
-      if FirstPrefixRecord[RecordPointer] <> nil then
-      begin
-        CurrentRecord := FirstPrefixRecord[RecordPointer];
-        NextRecord := FirstPrefixRecord[RecordPointer]^.NextRecord;
-
-        while CurrentRecord <> nil do
+     begin
+     for RecordPointer := 1 to 36 do //KK1L: 6.72 1-36 from 1-26 to allow for numbers in DOM file
         begin
-          Dispose(CurrentRecord);
-          CurrentRecord := NextRecord;
-          NextRecord := CurrentRecord^.NextRecord;
-        end;
-      end;
+        if FirstPrefixRecord[RecordPointer] <> nil then
+           begin
+           CurrentRecord := FirstPrefixRecord[RecordPointer];
+           NextRecord := FirstPrefixRecord[RecordPointer]^.NextRecord;
 
-      FirstPrefixRecord[RecordPointer] := nil;
-      LastPrefixRecord[RecordPointer] := nil;
-    end;
+           while CurrentRecord <> nil do
+              begin
+              Dispose(CurrentRecord);
+              CurrentRecord := NextRecord;
+              NextRecord := CurrentRecord^.NextRecord;
+              end;
+           end;
+
+        FirstPrefixRecord[RecordPointer] := nil;
+        LastPrefixRecord[RecordPointer] := nil;
+        end;
+     end;
 
   if not EnumerateLinesInFile(FileName, EnumDOMFILE, False) then
 
 //  if not OpenFileForRead(FileRead, FileName) then
-  begin
-    UnableToFindFileMessage(FileName);
-    Exit;
-  end;
+     begin
+     UnableToFindFileMessage(FileName);
+     Exit;
+     end;
 
   //  NumberRemainingMults:=NumberRemainingMults;
   ReadDomQTHFile := True;
@@ -508,23 +528,23 @@ begin
 //  DomQTHTable.ActiveDomQTHFile := '';
 
   for RecordPointer := 1 to 36 do {KK1L: 6.72 36 from 26. Allows for numbers in DOM file.}
-  begin
-    if DomQTHTable.FirstPrefixRecord[RecordPointer] <> nil then
-    begin
-      CurrentRecord := DomQTHTable.FirstPrefixRecord[RecordPointer];
-      NextRecord := DomQTHTable.FirstPrefixRecord[RecordPointer]^.NextRecord;
+     begin
+     if DomQTHTable.FirstPrefixRecord[RecordPointer] <> nil then
+        begin
+        CurrentRecord := DomQTHTable.FirstPrefixRecord[RecordPointer];
+        NextRecord := DomQTHTable.FirstPrefixRecord[RecordPointer]^.NextRecord;
 
-      while CurrentRecord <> nil do
-      begin
-        CurrentRecord := nil;
-        CurrentRecord := NextRecord;
-        NextRecord := CurrentRecord^.NextRecord;
-      end;
-    end;
+        while CurrentRecord <> nil do
+           begin
+           CurrentRecord := nil;
+           CurrentRecord := NextRecord;
+           NextRecord := CurrentRecord^.NextRecord;
+           end;
+        end;
 
-    DomQTHTable.FirstPrefixRecord[RecordPointer] := nil;
-    DomQTHTable.LastPrefixRecord[RecordPointer] := nil;
-  end;
+     DomQTHTable.FirstPrefixRecord[RecordPointer] := nil;
+     DomQTHTable.LastPrefixRecord[RecordPointer] := nil;
+     end;
 
 //  DomQTHTable.RemainingDomMults := nil;
 end;
@@ -543,97 +563,113 @@ begin
   GetRidOfPrecedingSpaces(FileString^);
 
   if Copy(FileString^, 1, length(incfile)) = incfile then
-  begin
-    TempString := Copy(FileString^, length(incfile) + 2, 200);
-    TF.Format(TempFileName, '%sDOM\%s', TR4W_PATH_NAME, @FileString^[length(incfile) + 2]);
-    DomQTHTable.ReadDomQTHFile(TempFileName, True);
-  end;
+     begin
+     TempString := Copy(FileString^, length(incfile) + 2, 200);
+     TF.Format(TempFileName, '%sDOM\%s', TR4W_PATH_NAME, @FileString^[length(incfile) + 2]);
+     DomQTHTable.ReadDomQTHFile(TempFileName, True);
+     end;
 //todo process ;
   if StringHas(FileString^, '=') then
-  begin
-    TempString := PrecedingString(FileString^, '=');
+     begin
+     TempString := PrecedingString(FileString^, '=');
 
-    GetRidOfPrecedingSpaces(TempString);
-    GetRidOfPostcedingSpaces(TempString);
+     GetRidOfPrecedingSpaces(TempString);
+     GetRidOfPostcedingSpaces(TempString);
 
-    if StringHas(TempString, '>') then
-    begin
-      DomQTHName := PrecedingString(TempString, '>');
-      Multiplier := PostcedingString(TempString, '>');
+     if StringHas(TempString, '>') then
+        begin
+        DomQTHName := PrecedingString(TempString, '>');
+        Multiplier := PostcedingString(TempString, '>');
 
-      GetRidOfPrecedingSpaces(Multiplier);
-      GetRidOfPostcedingSpaces(DomQTHName);
+        GetRidOfPrecedingSpaces(Multiplier);
+        GetRidOfPostcedingSpaces(DomQTHName);
 
-      if MultipliersIsCounties then
-        Multiplier := DomQTHName;
-              // Added in 6.30
-//?
+        if MultipliersIsCounties then
+           begin
+           Multiplier := DomQTHName;
+           end;
+                // Added in 6.30
+  //?
 
-//        if NumberRemainingMults > 0 then
-//          for RemainingMult := 0 to NumberRemainingMults - 1 do
-//            if RemainingDomMults^[RemainingMult].ID = Multiplier then
-//              goto AlreadyInList;
+  //        if NumberRemainingMults > 0 then
+  //          for RemainingMult := 0 to NumberRemainingMults - 1 do
+  //            if RemainingDomMults^[RemainingMult].ID = Multiplier then
+  //              goto AlreadyInList;
 
-//        if NumberRemainingMults < MaxNumberRemainingDomQTHs then
-//        begin
-//          RemainingDomMults^[NumberRemainingMults].ID := Multiplier;
-//          RemainingDomMults^[NumberRemainingMults].Name := Multiplier; //?
-//          inc(NumberRemainingMults);
-//        end;
+  //        if NumberRemainingMults < MaxNumberRemainingDomQTHs then
+  //        begin
+  //          RemainingDomMults^[NumberRemainingMults].ID := Multiplier;
+  //          RemainingDomMults^[NumberRemainingMults].Name := Multiplier; //?
+  //          inc(NumberRemainingMults);
+  //        end;
 
-      AlreadyInList:
+        AlreadyInList:
 
-    end
-    else
-    begin
+        end
+     else
+        begin
 
-      DomQTHName := TempString;
-      Multiplier := TempString;
+        DomQTHName := TempString;
+        Multiplier := TempString;
 
-//        if DomQTHName <> '' then //wli
-//          if NumberRemainingMults < MaxNumberRemainingDomQTHs then
-//          begin
-//            RemainingDomMults^[NumberRemainingMults].ID := DomQTHName;
-//            RemainingDomMults^[NumberRemainingMults].Name := DomQTHName;
-//            inc(NumberRemainingMults);
-//          end;
+  //        if DomQTHName <> '' then //wli
+  //          if NumberRemainingMults < MaxNumberRemainingDomQTHs then
+  //          begin
+  //            RemainingDomMults^[NumberRemainingMults].ID := DomQTHName;
+  //            RemainingDomMults^[NumberRemainingMults].Name := DomQTHName;
+  //            inc(NumberRemainingMults);
+  //          end;
 
-    end;
+        end;
 
-    Multiplier[Ord(Multiplier[0]) + 1] := #0;
-    MultIndex := mo.DomList.AddString(Multiplier, NoBand, NoMode, True);
+     Multiplier[Ord(Multiplier[0]) + 1] := #0;
+     MultIndex := mo.DomList.AddString(Multiplier, NoBand, NoMode, True);
 
-    FileString^ := PostcedingString(FileString^, '=');
+     FileString^ := PostcedingString(FileString^, '=');
 
-    while FileString^ <> '' do
-    begin
-      if StringHas(FileString^, ',') then
-        DomName := PrecedingString(FileString^, ',')
-      else
-        DomName := FileString^;
+     while FileString^ <> '' do
+        begin
+        if StringHas(FileString^, ',') then
+           begin
+           DomName := PrecedingString(FileString^, ',')
+           end
+        else
+           begin
+           DomName := FileString^;
+           end;
 
-      DomQTHString := UpperCase(DomName);
+        DomQTHString := UpperCase(DomName);
 
-      GetRidOfPrecedingSpaces(DomQTHString);
-      GetRidOfPostcedingSpaces(DomQTHString);
+        GetRidOfPrecedingSpaces(DomQTHString);
+        GetRidOfPostcedingSpaces(DomQTHString);
 
-      GetRidOfPrecedingSpaces(DomName);
-      GetRidOfPostcedingSpaces(DomName);
+        GetRidOfPrecedingSpaces(DomName);
+        GetRidOfPostcedingSpaces(DomName);
 
-      if DomQTHString[1] <> '^' then DomQTHTable.AddNewPrefixRecord(DomQTHString, DomQTHName, Multiplier)
-      else
-      begin
-        if length(DomQTHString) > tRemMultsColumnWidth then tRemMultsColumnWidth := length(DomName);
-        mo.DomList.FList[MultIndex].FAltName := Copy(DomQTHString, 2, 32);
-//          RemainingDomMults^[NumberRemainingMults - 1].Name := Copy(DomName, 2, 32);
-      end;
+        if DomQTHString[1] <> '^' then
+           begin
+           DomQTHTable.AddNewPrefixRecord(DomQTHString, DomQTHName, Multiplier)
+           end
+        else
+           begin
+           if length(DomQTHString) > tRemMultsColumnWidth then
+              begin
+              tRemMultsColumnWidth := length(DomName);
+              end;
+           mo.DomList.FList[MultIndex].FAltName := Copy(DomQTHString, 2, 32);
+   //          RemainingDomMults^[NumberRemainingMults - 1].Name := Copy(DomName, 2, 32);
+           end;
 
-      if StringHas(FileString^, ',') then
-        FileString^ := PostcedingString(FileString^, ',')
-      else
-        FileString^ := '';
-    end;
-  end;
+        if StringHas(FileString^, ',') then
+           begin
+           FileString^ := PostcedingString(FileString^, ',')
+           end
+        else
+           begin
+           FileString^ := '';
+           end;
+        end;
+     end;
 
 end;
 

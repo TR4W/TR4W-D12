@@ -554,116 +554,188 @@ begin
     }
     ACT:
       if AutoCallTerminate then
-        RESULT := ACT1
+         begin
+         RESULT := ACT1
+         end
       else
-        RESULT := ACT2;
+         begin
+         RESULT := ACT2;
+         end;
 
     AAD:
       if K5KA.ModeEnabled then
-        RESULT := AAD1
+         begin
+         RESULT := AAD1
+         end
       else
-        RESULT := AAD2;
+         begin
+         RESULT := AAD2;
+         end;
 
     ADP:
       if AutoDisplayDupeQSO then
-        RESULT := ADP1
+         begin
+         RESULT := ADP1
+         end
       else
-        RESULT := ADP2;
+         begin
+         RESULT := ADP2;
+         end;
 
     ADE:
       if AutoDupeEnableCQ then
-        RESULT := ADE1
+         begin
+         RESULT := ADE1
+         end
       else
-        RESULT := ADE2;
+         begin
+         RESULT := ADE2;
+         end;
 
     ADS:
       if AutoDupeEnableSandP then
-        RESULT := ADS1
+         begin
+         RESULT := ADS1
+         end
       else
-        RESULT := ADS2;
+         begin
+         RESULT := ADS2;
+         end;
 
     AQI:
       if AutoQSLInterval > 0 then
-        RESULT := AQI1
+         begin
+         RESULT := AQI1
+         end
       else
-        RESULT := AQI2;
+         begin
+         RESULT := AQI2;
+         end;
 
     AQD:
       if AutoQSONumberDecrement then
-        RESULT := AQD1
+         begin
+         RESULT := AQD1
+         end
       else
-        RESULT := AQD2;
+         begin
+         RESULT := AQD2;
+         end;
 
     ASP:
       if AutoSAPEnable then
-        RESULT := ASP1
+         begin
+         RESULT := ASP1
+         end
       else
-        RESULT := ASP2;
+         begin
+         RESULT := ASP2;
+         end;
 
     ASR: RESULT := ASR1;
 
     Arc:
       if AutoReturnToCQMode then
-        RESULT := ARC1
+         begin
+         RESULT := ARC1
+         end
       else
-        RESULT := ARC2;
+         begin
+         RESULT := ARC2;
+         end;
 
     asc:
       if AutoSendCharacterCount = 0 then
-        RESULT := ASC1
+         begin
+         RESULT := ASC1
+         end
       else
-        RESULT := ASC2;
+         begin
+         RESULT := ASC2;
+         end;
 
     ATI:
       if AutoTimeIncrementQSOs > 0 then
-        RESULT := ATI1
+         begin
+         RESULT := ATI1
+         end
       else
-        RESULT := ATI2;
+         begin
+         RESULT := ATI2;
+         end;
 
     BEN:
       if BackCopyEnable then
-        RESULT := BEN1
+         begin
+         RESULT := BEN1
+         end
       else
-        RESULT := BEN2;
+         begin
+         RESULT := BEN2;
+         end;
 
     BAB:
       if BandMapAllBands then
-        RESULT := BAB1
+         begin
+         RESULT := BAB1
+         end
       else
-        RESULT := BAB2;
+         begin
+         RESULT := BAB2;
+         end;
 
     BAM:
       if BandMapAllModes then
-        RESULT := BAM1
+         begin
+         RESULT := BAM1
+         end
       else
-        RESULT := BAM2;
+         begin
+         RESULT := BAM2;
+         end;
 
     BCW:
       if BandMapCallWindowEnable then
-        RESULT := BCW1
+         begin
+         RESULT := BCW1
+         end
       else
-        RESULT := BCW2;
+         begin
+         RESULT := BCW2;
+         end;
 
     BMD: RESULT := BMD1;
 
     BCQ:
       if BandMapDisplayCQ then
-        RESULT := BCQ1
+         begin
+         RESULT := BCQ1
+         end
       else
-        RESULT := BCQ2;
+         begin
+         RESULT := BCQ2;
+         end;
 
     BDD:
       if BandMapDupeDisplay then
-        RESULT := BDD1
+         begin
+         RESULT := BDD1
+         end
       else
-        RESULT := BDD2;
+         begin
+         RESULT := BDD2;
+         end;
 
     BME:
       if BandMapEnable then
         //            Result := ('Band map enabled (needs 42/50 lines)')
-        RESULT := BME1
+         begin
+         RESULT := BME1
+         end
       else
-        RESULT := BME2;
+         begin
+         RESULT := BME2;
+         end;
 
     BMG: RESULT := BMG1;
 
@@ -674,14 +746,22 @@ begin
 
     BNA:
       if BeepEnable then
-        RESULT := BNA1
+         begin
+         RESULT := BNA1
+         end
       else
-        RESULT := BNA2;
+         begin
+         RESULT := BNA2;
+         end;
     BET:
       if BeepEvery10QSOs then
-        RESULT := BET1
+         begin
+         RESULT := BET1
+         end
       else
-        RESULT := BET2;
+         begin
+         RESULT := BET2;
+         end;
 
     {      BRL:
              if BigRemainingList then
@@ -691,35 +771,55 @@ begin
     }
     BPD:
       if Packet.BroadcastAllPacketData then
-        RESULT := BPD1
+         begin
+         RESULT := BPD1
+         end
       else
-        RESULT := BPD2;
+         begin
+         RESULT := BPD2;
+         end;
 
     SAS:
       if CallWindowShowAllSpots then
-        RESULT := SAS1
+         begin
+         RESULT := SAS1
+         end
       else
-        RESULT := SAS2;
+         begin
+         RESULT := SAS2;
+         end;
 
     CAU:
       if CallsignUpdateEnable then
-        RESULT := CAU1
+         begin
+         RESULT := CAU1
+         end
       else
-        RESULT := CAU2;
+         begin
+         RESULT := CAU2;
+         end;
 
     //    CAL: Result := ('Send your callsign to telnet server as login');
 
     CCA:
       if tr4w_CustomCaret then
-        RESULT := CCA1
+         begin
+         RESULT := CCA1
+         end
       else
-        RESULT := CCA2;
+         begin
+         RESULT := CCA2;
+         end;
 
     CLF:
       if CheckLogFileSize then
-        RESULT := CLF1
+         begin
+         RESULT := CLF1
+         end
       else
-        RESULT := CLF2;
+         begin
+         RESULT := CLF2;
+         end;
 
     {      CDE:
              if ColumnDupeSheetEnable then
@@ -734,18 +834,26 @@ begin
 
     CID:
       if ComputerID = CHR(0) then
-        RESULT := ('No computer ID set (used for multi')
+         begin
+         RESULT := ('No computer ID set (used for multi')
+         end
       else
-        RESULT := ('Computer ID as shown appears in log');
+         begin
+         RESULT := ('Computer ID as shown appears in log');
+         end;
 
     CNA: RESULT := CNA1;
 
     CEC:
       if ConfirmEditChanges then
         //        Result := ('Prompt for Y key when exiting AltE')
-        RESULT := CEC1
+         begin
+         RESULT := CEC1
+         end
       else
-        RESULT := CEC2;
+         begin
+         RESULT := CEC2;
+         end;
 
     CIF: RESULT := CIF1;
 
@@ -753,37 +861,55 @@ begin
 
     CWE:
       if CWEnable then
-        RESULT := CWE1
+         begin
+         RESULT := CWE1
+         end
       else
-        RESULT := CWE2;
+         begin
+         RESULT := CWE2;
+         end;
 
     CWS:
       if CWSpeedFromDataBase then
-        RESULT := CWS1
+         begin
+         RESULT := CWS1
+         end
       else
-        RESULT := CWS2;
+         begin
+         RESULT := CWS2;
+         end;
 
     CSI: RESULT := CSI1;
 
     CWT:
       begin
         if CWTone > 0 then
-          RESULT := CWT1
+           begin
+           RESULT := CWT1
+           end
         else
           RESULT := CWT2; NoSound;
       end;
 
     DEE:
       if DEEnable then
-        RESULT := DEE1
+         begin
+         RESULT := DEE1
+         end
       else
-        RESULT := DEE2;
+         begin
+         RESULT := DEE2;
+         end;
 
     DIG:
       if DigitalModeEnable then
-        RESULT := DIG1
+         begin
+         RESULT := DIG1
+         end
       else
-        RESULT := DIG2;
+         begin
+         RESULT := DIG2;
+         end;
 
     DIS: case DistanceMode of
         NoDistanceDisplay: RESULT := DIS1;
@@ -795,9 +921,13 @@ begin
 
     DAR:
       if Sheet.tAutoReset then
-        RESULT := DAR1
+         begin
+         RESULT := DAR1
+         end
       else
-        RESULT := DAR2;
+         begin
+         RESULT := DAR2;
+         end;
 
     DCS: case DupeCheckSound of
         DupeCheckNoSound: RESULT := DCS1;
@@ -820,18 +950,26 @@ begin
     DVE:
       begin
         if DVPEnable then
-          RESULT := DVE1
+           begin
+           RESULT := DVE1
+           end
         else
-          RESULT := DVE2;
+           begin
+           RESULT := DVE2;
+           end;
         DisplayCodeSpeed;
       end;
     //      DVP: Result := ('DVP PATH = ');
 
     EES:
       if EscapeExitsSearchAndPounce then
-        RESULT := EES1
+         begin
+         RESULT := EES1
+         end
       else
-        RESULT := EES2;
+         begin
+         RESULT := EES2;
+         end;
     {
   EEE:
     if EthernetNetworkEnable then
@@ -842,22 +980,34 @@ begin
 
     EME:
       if ExchangeMemoryEnable then
-        RESULT := EME1
+         begin
+         RESULT := EME1
+         end
       else
-        RESULT := EME2;
+         begin
+         RESULT := EME2;
+         end;
 
     FWE:
       if FarnsworthEnable then
-        RESULT := FWE1
+         begin
+         RESULT := FWE1
+         end
       else
-        RESULT := FWE2;
+         begin
+         RESULT := FWE2;
+         end;
 
     FWS: RESULT := FWS1;
     FSF:
       if FloppyFileSaveFrequency = 0 then
-        RESULT := FSF1
+         begin
+         RESULT := FSF1
+         end
       else
-        RESULT := FSF2;
+         begin
+         RESULT := FSF2;
+         end;
 
     FSE: RESULT := FSE1;
 
@@ -883,27 +1033,43 @@ begin
 
     FME:
       if FrequencyMemoryEnable then
-        RESULT := FME1
+         begin
+         RESULT := FME1
+         end
       else
-        RESULT := FME2;
+         begin
+         RESULT := FME2;
+         end;
 
     FCR:
       if Radio1.FT1000MPCWReverse then
-        RESULT := FCR1
+         begin
+         RESULT := FCR1
+         end
       else
-        RESULT := FCR2;
+         begin
+         RESULT := FCR2;
+         end;
 
     GMC:
       if GridMapCenter = '' then
-        RESULT := GMC1
+         begin
+         RESULT := GMC1
+         end
       else
-        RESULT := GMC2;
+         begin
+         RESULT := GMC2;
+         end;
 
     HFE:
       if HFBandEnable then
-        RESULT := HFE1
+         begin
+         RESULT := HFE1
+         end
       else
-        RESULT := HFE2;
+         begin
+         RESULT := HFE2;
+         end;
 
     HDP: case HourDisplay of
         ThisHour: RESULT := HDP1;
@@ -916,15 +1082,23 @@ begin
 
     ITE:
       if IncrementTimeEnable then
-        RESULT := ITE1
+         begin
+         RESULT := ITE1
+         end
       else
-        RESULT := ITE2;
+         begin
+         RESULT := ITE2;
+         end;
 
     IFE:
       if IntercomFileenable then
-        RESULT := IFE1
+         begin
+         RESULT := IFE1
+         end
       else
-        RESULT := IFE2;
+         begin
+         RESULT := IFE2;
+         end;
 
     {    IEX: case ActiveInitialExchange of
             NoInitialExchange: Result := ('Only exchange memory used');
@@ -947,9 +1121,13 @@ begin
           //KK1L: 6.70 KK1L: 6.73 Changed wording to cover expansion of feature to ALL initial exhanges
     IXO:
       if InitialExchangeOverwrite then
-        RESULT := IXO1
+         begin
+         RESULT := IXO1
+         end
       else
-        RESULT := IXO2;
+         begin
+         RESULT := IXO2;
+         end;
 
     IEC: case InitialExchangeCursorPos of
         AtStart: RESULT := IEC1;
@@ -966,63 +1144,99 @@ begin
 
     KCM:
       if KeypadCWMemories then
-        RESULT := KCM1
+         begin
+         RESULT := KCM1
+         end
       else
-        RESULT := KCM1;
+         begin
+         RESULT := KCM1;
+         end;
 
     LDZ:
       if LeadingZeros > 0 then
-        RESULT := LDZ1
+         begin
+         RESULT := LDZ1
+         end
       else
-        RESULT := LDZ2;
+         begin
+         RESULT := LDZ2;
+         end;
 
     LZC: RESULT := LZC1;
 
     LCI:
       if LeaveCursorInCallWindow then
-        RESULT := LCI1
+         begin
+         RESULT := LCI1
+         end
       else
-        RESULT := LCI2;
+         begin
+         RESULT := LCI2;
+         end;
 
     LFE:
       if LogFrequencyEnable then
-        RESULT := LFE1
+         begin
+         RESULT := LFE1
+         end
       else
-        RESULT := LFE2;
+         begin
+         RESULT := LFE2;
+         end;
 
     LRS: RESULT := LRS1;
 
     LDQ:
       if LiteralDomesticQTH then
-        RESULT := LDQ1
+         begin
+         RESULT := LDQ1
+         end
       else
-        RESULT := LDQ2;
+         begin
+         RESULT := LDQ2;
+         end;
 
     LRT: RESULT := LRT1;
 
     LSE:
       if LogWithSingleEnter then
-        RESULT := LSE1
+         begin
+         RESULT := LSE1
+         end
       else
-        RESULT := LSE2;
+         begin
+         RESULT := LSE2;
+         end;
 
     LFR:
       if LookForRSTSent then
-        RESULT := LFR1
+         begin
+         RESULT := LFR1
+         end
       else
-        RESULT := LFR2;
+         begin
+         RESULT := LFR2;
+         end;
 
     MSE:
       if MessageEnable then
-        RESULT := MSE1
+         begin
+         RESULT := MSE1
+         end
       else
-        RESULT := MSE2;
+         begin
+         RESULT := MSE2;
+         end;
 
     MCF:
       if tMissCallsFileEnable then
-        RESULT := MCF1
+         begin
+         RESULT := MCF1
+         end
       else
-        RESULT := MCF2;
+         begin
+         RESULT := MCF2;
+         end;
 
     {      MEN:
              if MouseEnable then
@@ -1038,16 +1252,24 @@ begin
 
     MMO:
       if MultiMultsOnly then
-        RESULT := MMO1
+         begin
+         RESULT := MMO1
+         end
       else
-        RESULT := MMO2;
+         begin
+         RESULT := MMO2;
+         end;
     MRT: RESULT := MRT1;
 
     MUM:
       if MultiUpdateMultDisplay then
-        RESULT := MUM1
+         begin
+         RESULT := MUM1
+         end
       else
-        RESULT := MUM2;
+         begin
+         RESULT := MUM2;
+         end;
 
     {    MBA:
           if MultipleBandsEnabled then
@@ -1070,61 +1292,95 @@ begin
     MZN: RESULT := MZN1;
     NFE:
       if NameFlagEnable then
-        RESULT := NFE1
+         begin
+         RESULT := NFE1
+         end
       else
-        RESULT := NFE2;
+         begin
+         RESULT := NFE2;
+         end;
 
     NLQ:
       if NoLog then
-        RESULT := NLQ1
+         begin
+         RESULT := NLQ1
+         end
       else
-        RESULT := NLQ2;
+         begin
+         RESULT := NLQ2;
+         end;
 
     NPP:
       if NoPollDuringPTT then
-        RESULT := NPP1
+         begin
+         RESULT := NPP1
+         end
       else
-        RESULT := NPP2;
+         begin
+         RESULT := NPP2;
+         end;
 
     PAL:
       if PacketAddLF then
-        RESULT := PAL1
+         begin
+         RESULT := PAL1
+         end
       else
-        RESULT := PAL2;
+         begin
+         RESULT := PAL2;
+         end;
 
     PAR:
       if PacketAutoCR then
-        RESULT := PAR1
+         begin
+         RESULT := PAR1
+         end
       else
-        RESULT := PAR2;
+         begin
+         RESULT := PAR2;
+         end;
 
     PBS:
       if Packet.PacketBandSpots then
-        RESULT := PBS1
+         begin
+         RESULT := PBS1
+         end
       else
-        RESULT := PBS2;
+         begin
+         RESULT := PBS2;
+         end;
 
     PBP:
       if Packet.PacketBeep then
-        RESULT := PBP1
+         begin
+         RESULT := PBP1
+         end
       else
-        RESULT := PBP2;
+         begin
+         RESULT := PBP2;
+         end;
 
     PLF:
       if Packet.PacketLogFileName = '' then
-        RESULT := PLF1
+         begin
+         RESULT := PLF1
+         end
       else
-        RESULT := PLF2;
+         begin
+         RESULT := PLF2;
+         end;
 
     PRM:
       if PacketReturnPerMinute = 0 then
-        RESULT := PRM1
+         begin
+         RESULT := PRM1
+         end
       else
-      begin
-        // Issue #997: asm wsprintf-push -> TF.Format (PRM2 = '...%u minutes').
-        TF.Format(wsprintfBuffer, PRM2, PacketReturnPerMinute);
-        RESULT := wsprintfBuffer;
-      end;
+         begin
+         // Issue #997: asm wsprintf-push -> TF.Format (PRM2 = '...%u minutes').
+         TF.Format(wsprintfBuffer, PRM2, PacketReturnPerMinute);
+         RESULT := wsprintfBuffer;
+         end;
 
     psc: RESULT := PSC1;
 
@@ -1132,33 +1388,53 @@ begin
 
     PKD:
       if PacketSpotDisable then
-        RESULT := PKD1
+         begin
+         RESULT := PKD1
+         end
       else
-        RESULT := PKD2;
+         begin
+         RESULT := PKD2;
+         end;
 
     PSE:
       if PacketSpotEditEnable then
-        RESULT := PSE1
+         begin
+         RESULT := PSE1
+         end
       else
-        RESULT := PSE2;
+         begin
+         RESULT := PSE2;
+         end;
 
     SPO:
       if PacketSpotPrefixOnly then
-        RESULT := SPO1
+         begin
+         RESULT := SPO1
+         end
       else
-        RESULT := SPO2;
+         begin
+         RESULT := SPO2;
+         end;
 
     PSP:
       if Packet.PacketSpots = AllSpots then
-        RESULT := PSP1
+         begin
+         RESULT := PSP1
+         end
       else
-        RESULT := PSP2;
+         begin
+         RESULT := PSP2;
+         end;
 
     PBE:
       if PaddleBug then
-        RESULT := PBE1
+         begin
+         RESULT := PBE1
+         end
       else
-        RESULT := PBE2;
+         begin
+         RESULT := PBE2;
+         end;
 
     PHC: RESULT := PHC1;
 
@@ -1166,15 +1442,23 @@ begin
 
     PSD:
       if PaddleSpeed = 0 then
-        RESULT := PSD1
+         begin
+         RESULT := PSD1
+         end
       else
-        RESULT := PSD2;
+         begin
+         RESULT := PSD2;
+         end;
 
     PCE:
       if PartialCallEnable then
-        RESULT := PCE1
+         begin
+         RESULT := PCE1
+         end
       else
-        RESULT := PCE2;
+         begin
+         RESULT := PCE2;
+         end;
     {
         PCL:
           if PartialCallLoadLogEnable then
@@ -1184,15 +1468,23 @@ begin
     }
     PCM:
       if PartialCallMultsEnable then
-        RESULT := PCM1
+         begin
+         RESULT := PCM1
+         end
       else
-        RESULT := PCM2;
+         begin
+         RESULT := PCM2;
+         end;
 
     PCA:
       if PossibleCallEnable then
-        RESULT := PCA1
+         begin
+         RESULT := PCA1
+         end
       else
-        RESULT := PCA2;
+         begin
+         RESULT := PCA2;
+         end;
 
     PCN: case CD.PossibleCallAction of
         AnyCall: RESULT := PCN1;
@@ -1203,24 +1495,36 @@ begin
     //W_L_I    PEN:      if PrinterEnabled then        Result:=('Each QSO off editable window is printed')      else        Result:=('Real time printing is disabled');
     PBL:
       if PTTLockout then
-        RESULT := PBL1
+         begin
+         RESULT := PBL1
+         end
       else
-        RESULT := PBL2;
+         begin
+         RESULT := PBL2;
+         end;
 
     PTT:
       if PTTEnable then
-        RESULT := PTT1
+         begin
+         RESULT := PTT1
+         end
       else
-        RESULT := PTT2;
+         begin
+         RESULT := PTT2;
+         end;
 
     //      PTD: Result := ('PTT delay before CW sent (* 1.7 ms)');
     PTD: RESULT := PTD1;
 
     PVC:
       if tPTTViaCommand then
-        RESULT := PVC1
+         begin
+         RESULT := PVC1
+         end
       else
-        RESULT := PVC2;
+         begin
+         RESULT := PVC2;
+         end;
 
     QMD: case ParameterOkayMode of
         Standard: RESULT := QMD1;
@@ -1230,27 +1534,43 @@ begin
 
     QNB:
       if QSONumberByBand then
-        RESULT := QNB1
+         begin
+         RESULT := QNB1
+         end
       else
-        RESULT := QNB2;
+         begin
+         RESULT := QNB2;
+         end;
 
     QES:
       if QTCExtraSpace then
-        RESULT := QES1
+         begin
+         RESULT := QES1
+         end
       else
-        RESULT := QES2;
+         begin
+         RESULT := QES2;
+         end;
 
     QRS:
       if QTCQRS then
-        RESULT := QRS1
+         begin
+         RESULT := QRS1
+         end
       else
-        RESULT := QRS2;
+         begin
+         RESULT := QRS2;
+         end;
 
     QSX:
       if QSXEnable then
-        RESULT := QSX1
+         begin
+         RESULT := QSX1
+         end
       else
-        RESULT := QSX2;
+         begin
+         RESULT := QSX2;
+         end;
 
     QMC: RESULT := QMC1;
 
@@ -1258,9 +1578,13 @@ begin
 
     R1FA:
       if Radio1.FrequencyAdder <> 0 then
-        RESULT := R1FA1
+         begin
+         RESULT := R1FA1
+         end
       else
-        RESULT := R1FA2;
+         begin
+         RESULT := R1FA2;
+         end;
 
 //    R1ID: Result := ('Char appended to QSO number for rig 1');
 
@@ -1283,9 +1607,13 @@ begin
 
     R2FA:
       if Radio2.FrequencyAdder <> 0 then
-        RESULT := R2FA1
+         begin
+         RESULT := R2FA1
+         end
       else
-        RESULT := R2FA2;
+         begin
+         RESULT := R2FA2;
+         end;
 
 //    R2ID: Result := ('Char appended to QSO number for rig 2');
 
@@ -1306,9 +1634,13 @@ begin
     }
     RCQ:
       if RandomCQMode then
-        RESULT := RCQ1
+         begin
+         RESULT := RCQ1
+         end
       else
-        RESULT := RCQ2;
+         begin
+         RESULT := RCQ2;
+         end;
 
     RDS: case RateDisplay of
         QSOs: RESULT := RDS1;
@@ -1324,78 +1656,120 @@ begin
 
     SHE:
       if SayHiEnable then
-        RESULT := SHE1
+         begin
+         RESULT := SHE1
+         end
       else
-        RESULT := SHE2;
+         begin
+         RESULT := SHE2;
+         end;
 
     SHC: RESULT := SHC1;
 
     SCS:
       if CD.CountryString = '' then
-        RESULT := SCS1
+         begin
+         RESULT := SCS1
+         end
       else
-        RESULT := SCS2;
+         begin
+         RESULT := SCS2;
+         end;
 
     SML:
       if SCPMinimumLetters = 0 then
-        RESULT := SML1
+         begin
+         RESULT := SML1
+         end
       else
-        RESULT := SML2;
+         begin
+         RESULT := SML2;
+         end;
 
     SAD:
       if SendAltDSpotsToPacket then
-        RESULT := SAD1
+         begin
+         RESULT := SAD1
+         end
       else
-        RESULT := SAD2;
+         begin
+         RESULT := SAD2;
+         end;
 
     SCF:
       if SendCompleteFourLetterCall then
-        RESULT := SCF1
+         begin
+         RESULT := SCF1
+         end
       else
-        RESULT := SCF2;
+         begin
+         RESULT := SCF2;
+         end;
 
     SSN:
       if StartSendingNowKey <> ' ' then
-      begin
-        // Issue #997: asm wsprintf-push -> TF.Format. SSN1 = 'Use a %c key...';
-        // the Format(...; c: Char) overload handles %c (StartSendingNowKey is Char).
-        TF.Format(wsprintfBuffer, SSN1, StartSendingNowKey);
-        RESULT := wsprintfBuffer;
-      end
+         begin
+         // Issue #997: asm wsprintf-push -> TF.Format. SSN1 = 'Use a %c key...';
+         // the Format(...; c: Char) overload handles %c (StartSendingNowKey is Char).
+         TF.Format(wsprintfBuffer, SSN1, StartSendingNowKey);
+         RESULT := wsprintfBuffer;
+         end
       else
-        RESULT := SSN2;
+         begin
+         RESULT := SSN2;
+         end;
 
     SPS:
       if StereoPinState then
-        RESULT := SPS1
+         begin
+         RESULT := SPS1
+         end
       else
-        RESULT := SPS2;
+         begin
+         RESULT := SPS2;
+         end;
 
     SQI:
       if SendQSOImmediately then
-        RESULT := SQI1
+         begin
+         RESULT := SQI1
+         end
       else
-        RESULT := SQI2;
+         begin
+         RESULT := SQI2;
+         end;
 
     SIA: RESULT := SIA1;
     SPA: RESULT := SPA1;
     SEP: RESULT := SEP1;
     SKE:
       if ShiftKeyEnable then
-        RESULT := SKE1
+         begin
+         RESULT := SKE1
+         end
       else
-        RESULT := SKE2;
+         begin
+         RESULT := SKE2;
+         end;
 
     SIN:
       if ShortIntegers then
-        RESULT := SIN1
+         begin
+         RESULT := SIN1
+         end
       else
-        RESULT := SIN2;
+         begin
+         RESULT := SIN2;
+         end;
     SLG:
       if tLogLogGridlines then
-        RESULT := SLG1
+         begin
+         RESULT := SLG1
+         end
       else
-        RESULT := SLG2;
+         begin
+         RESULT := SLG2;
+         end;
 
     {
         SSP:
@@ -1413,47 +1787,75 @@ begin
 
     SRM:
       if not TwoRadioMode then
-        RESULT := SRM1
+         begin
+         RESULT := SRM1
+         end
       else
-        RESULT := SRM2;
+         begin
+         RESULT := SRM2;
+         end;
 
     SAB:
       if SkipActiveBand then
-        RESULT := SAB1
+         begin
+         RESULT := SAB1
+         end
       else
-        RESULT := SAB2;
+         begin
+         RESULT := SAB2;
+         end;
 
     SMC: RESULT := SMC1;
 
     SBD:
       if SpaceBarDupeCheckEnable then
-        RESULT := SBD1
+         begin
+         RESULT := SBD1
+         end
       else
-        RESULT := SBD2;
+         begin
+         RESULT := SBD2;
+         end;
 
     SQR:
       if SprintQSYRule then
-        RESULT := SQR1
+         begin
+         RESULT := SQR1
+         end
       else
-        RESULT := SQR2;
+         begin
+         RESULT := SQR2;
+         end;
 
     SRP:
       if SwapPacketSpotRadios then
-        RESULT := SRP1
+         begin
+         RESULT := SRP1
+         end
       else
-        RESULT := SRP2;
+         begin
+         RESULT := SRP2;
+         end;
 
     SWP:
       if SwapPaddles then
-        RESULT := SWP1
+         begin
+         RESULT := SWP1
+         end
       else
-        RESULT := SWP2;
+         begin
+         RESULT := SWP2;
+         end;
 
     SWR:
       if SwapRadioRelaySense then
-        RESULT := SWR1
+         begin
+         RESULT := SWR1
+         end
       else
-        RESULT := SWR2;
+         begin
+         RESULT := SWR2;
+         end;
     {
         TAB: case TabMode of
             NormalTabMode: RESULT := ('When edit, tab moves to next field');
@@ -1469,27 +1871,43 @@ begin
 
     TDE:
       if TuneDupeCheckEnable then
-        RESULT := TDE1
+         begin
+         RESULT := TDE1
+         end
       else
-        RESULT := TDE2;
+         begin
+         RESULT := TDE2;
+         end;
 
     TWD:
       if TuneWithDits then
-        RESULT := TWD1
+         begin
+         RESULT := TWD1
+         end
       else
-        RESULT := TWD2;
+         begin
+         RESULT := TWD2;
+         end;
 
     TRM:
       if TwoRadioMode {TwoRadioState <> TwoRadiosDisabled} then
-        RESULT := TRM1
+         begin
+         RESULT := TRM1
+         end
       else
-        RESULT := TRM2;
+         begin
+         RESULT := TRM2;
+         end;
 
     URF:
       if UpdateRestartFileEnable then
-        RESULT := URF1
+         begin
+         RESULT := URF1
+         end
       else
-        RESULT := URF2;
+         begin
+         RESULT := URF2;
+         end;
 
     {      UBC:
              if UseBIOSKeyCalls then
@@ -1499,9 +1917,13 @@ begin
     }
     URS:
       if tUseRecordedSigns then
-        RESULT := URS1
+         begin
+         RESULT := URS1
+         end
       else
-        RESULT := URS2;
+         begin
+         RESULT := URS2;
+         end;
 
     UIS: case UserInfoShown of
         NoUserInfo: RESULT := UIS1;
@@ -1541,9 +1963,13 @@ begin
     }
     VBE:
       if VHFBandsEnabled then
-        RESULT := VBE1
+         begin
+         RESULT := VBE1
+         end
       else
-        RESULT := VBE2;
+         begin
+         RESULT := VBE2;
+         end;
 
     {      VDS:
              if VisibleDupesheetEnable then
@@ -1553,37 +1979,53 @@ begin
     }
     WFS:
       if WaitForStrength then
-        RESULT := WFS1
+         begin
+         RESULT := WFS1
+         end
       else
-        RESULT := WFS2;
+         begin
+         RESULT := WFS2;
+         end;
 
     WUT:
       if WakeUpTimeOut = 0 then
-        RESULT := WUT1
+         begin
+         RESULT := WUT1
+         end
       else
-        RESULT := WUT2;
+         begin
+         RESULT := WUT2;
+         end;
 
     WBE:
       if WARCBandsEnabled then
-        RESULT := WBE1
+         begin
+         RESULT := WBE1
+         end
       else
-        RESULT := WBE2;
+         begin
+         RESULT := WBE2;
+         end;
 
     WEI: RESULT := WEI1;
 
     WCP:
       if WildCardPartials then
-        RESULT := WCP1
+         begin
+         RESULT := WCP1
+         end
       else
-        RESULT := WCP2;
+         begin
+         RESULT := WCP2;
+         end;
 
   end;
 
   if Active then
-  begin
-      //W_L_I         TextColor (ActiveColor);
-      //W_L_I         TextBackground (ActiveBackground);
-  end;
+     begin
+     //W_L_I         TextColor (ActiveColor);
+     //W_L_I         TextBackground (ActiveBackground);
+     end;
 
 end;
 

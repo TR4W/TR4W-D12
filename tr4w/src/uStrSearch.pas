@@ -72,9 +72,9 @@ var
 begin
   q := p;
   while q^ <> #0 do
-    begin
-    Inc(q);
-    end;
+     begin
+     Inc(q);
+     end;
   Result := q - p;
 end;
 
@@ -96,23 +96,23 @@ begin
   p1 := Str1;
   p2 := Str2;
   while (p1^ <> #0) and (p1^ = p2^) do
-    begin
-    Inc(p1);
-    Inc(p2);
-    end;
+     begin
+     Inc(p1);
+     Inc(p2);
+     end;
 
   if p1^ < p2^ then
-    begin
-    Result := -1;
-    end
+     begin
+     Result := -1;
+     end
   else if p1^ > p2^ then
-    begin
-    Result := 1;
-    end
+     begin
+     Result := 1;
+     end
   else
-    begin
-    Result := 0;
-    end;
+     begin
+     Result := 0;
+     end;
 end;
 
 function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
@@ -127,38 +127,46 @@ begin
   // looks for a literal '?'). See uTestStrSearch for the frozen cases.
   Result := nil;
   if (Str1 = nil) or (Str2 = nil) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   Len2 := PAnsiLen(Str2);
   if Len2 = 0 then          // empty pattern -> nil (matches the asm)
-    Exit;
+     begin
+     Exit;
+     end;
 
   Len1 := PAnsiLen(Str1);
   if Len1 < Len2 then       // pattern longer than text -> nil
-    Exit;
+     begin
+     Exit;
+     end;
 
   for i := 0 to Len1 - Len2 do
-    begin
-    // First character is literal (no wildcard), exactly as the asm scan.
-    if Str1[i] <> Str2[0] then
-      Continue;
-
-    Matched := True;
-    for j := 1 to Len2 - 1 do
-      begin
-      if (Str1[i + j] <> Str2[j]) and (Str2[j] <> '?') then
+     begin
+     // First character is literal (no wildcard), exactly as the asm scan.
+     if Str1[i] <> Str2[0] then
         begin
-        Matched := False;
-        Break;
+        Continue;
         end;
-      end;
 
-    if Matched then
-      begin
-      Result := Str1 + i;
-      Exit;
-      end;
-    end;
+     Matched := True;
+     for j := 1 to Len2 - 1 do
+        begin
+        if (Str1[i + j] <> Str2[j]) and (Str2[j] <> '?') then
+           begin
+           Matched := False;
+           Break;
+           end;
+        end;
+
+     if Matched then
+        begin
+        Result := Str1 + i;
+        Exit;
+        end;
+     end;
 end;
 
 // StrPos removed (D12): it was a pure System.AnsiStrings.StrPos forwarder;
@@ -174,10 +182,12 @@ begin
   // exactly as the original asm (CMP 'a'/'z'; JB/JA skip). Equivalence frozen
   // by uTestStrSearch.
   for i := 1 to Length(Str) do
-    begin
-    if Str[i] in ['a'..'z'] then
-      Str[i] := AnsiChar(Ord(Str[i]) - $20);
-    end;
+     begin
+     if Str[i] in ['a'..'z'] then
+        begin
+        Str[i] := AnsiChar(Ord(Str[i]) - $20);
+        end;
+     end;
 end;
 
 end.

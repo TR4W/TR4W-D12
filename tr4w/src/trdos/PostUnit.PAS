@@ -427,15 +427,15 @@ procedure WriteADIFField( sFieldName: string; sFieldValue: string );
     sBuffer: string;
   begin
   if length( sFieldValue ) > 0 then
-    begin
-    sBuffer := sysutils.Format( '<%s:%u>%s ',
-       [ sFieldName, length( sFieldValue ), sFieldValue ] );
-    sWriteFileFromString( tReportFileWrite, sBuffer );
-    end
+     begin
+     sBuffer := sysutils.Format( '<%s:%u>%s ',
+        [ sFieldName, length( sFieldValue ), sFieldValue ] );
+     sWriteFileFromString( tReportFileWrite, sBuffer );
+     end
   else
-    begin
-    DEBUGMSG( '[WriteADIFField] ' + sFieldName + ' value is blank - skipping' );
-    end;
+     begin
+     DEBUGMSG( '[WriteADIFField] ' + sFieldName + ' value is blank - skipping' );
+     end;
   end;
 
 // For state-based QSO parties, return the host state's 2-letter ADIF
@@ -494,19 +494,25 @@ procedure CreateCabrilloFile;
 
   if Contest = IOTA then
     if TF.SendDlgItemMessage( CreateCabrilloWindow, 120, CB_GETCURSEL ) = 1 then
-      SetTransmittersId := true;
+       begin
+       SetTransmittersId := true;
+       end;
 
   if SetTransmittersId then
-    SetTransmittersIdentifiers;
+     begin
+     SetTransmittersIdentifiers;
+     end;
 
   // if FileExists(tReportsFilename) then if not OkayToDeleteExistingFile(tReportsFilename) then Exit;
   if not tGenerateSummaryPortionOfCabrilloFile then
-    Exit;
+     begin
+     Exit;
+     end;
   if not tGenerateLogPortionOfCabrilloFile then
-    begin
-    CloseHandle( tReportFileWrite );
-    Exit;
-    end;
+     begin
+     CloseHandle( tReportFileWrite );
+     Exit;
+     end;
   CloseHandle( tReportFileWrite );
   PreviewFileNameAddress := tReportsFilename;
   PreviewFileIsCabrillo  := true;
@@ -516,31 +522,31 @@ procedure CreateCabrilloFile;
      ( YesOrNo( 0,
      'Do you want to upload your Cabrillo file to SuperChecklPartial?' { TC_WANTTOCONVERTLOG } )
      = IDYES ) then
-    begin
-    scp := TSCPUpload.Create( true, logger );
-    try
-      if scp.SendFile( tReportsFilename ) then
-        begin
-        logger.Info( '%s file uploaded to SCP', [ tReportsFilename ] );
-        // ShowMessage('Log file successfully uploaded to SuperCheckPartial');
-        MessageBoxW( tr4whandle,
-           'Log file successfully uploaded to SuperCheckPartial', nil,
-           MB_OK or MB_ICONINFORMATION { or MB_RTLREADING } or MB_TASKMODAL );
-        end
-      else
-        begin
-        logger.Error( 'Error sending %s to SCP', [ tReportsFilename ] );
-        logger.Error( scp.errorResult );
-        // ShowMessage(PChar('Error uploading log file to SuperCheckPartial' + #13#10 + scp.errorResult));
-        MessageBoxW( tr4whandle,
-           pchar( 'Error uploading log file to SuperCheckPartial' + #13#10 +
-           scp.errorResult ), nil, MB_OK or
-           MB_ICONINFORMATION { or MB_RTLREADING } or MB_TASKMODAL );
-        end;
-    finally
-      scp.Free;
-    end;
-    end;
+     begin
+     scp := TSCPUpload.Create( true, logger );
+     try
+       if scp.SendFile( tReportsFilename ) then
+          begin
+          logger.Info( '%s file uploaded to SCP', [ tReportsFilename ] );
+          // ShowMessage('Log file successfully uploaded to SuperCheckPartial');
+          MessageBoxW( tr4whandle,
+             'Log file successfully uploaded to SuperCheckPartial', nil,
+             MB_OK or MB_ICONINFORMATION { or MB_RTLREADING } or MB_TASKMODAL );
+          end
+       else
+          begin
+          logger.Error( 'Error sending %s to SCP', [ tReportsFilename ] );
+          logger.Error( scp.errorResult );
+          // ShowMessage(PChar('Error uploading log file to SuperCheckPartial' + #13#10 + scp.errorResult));
+          MessageBoxW( tr4whandle,
+             pchar( 'Error uploading log file to SuperCheckPartial' + #13#10 +
+             scp.errorResult ), nil, MB_OK or
+             MB_ICONINFORMATION { or MB_RTLREADING } or MB_TASKMODAL );
+          end;
+     finally
+       scp.Free;
+     end;
+     end;
 
   end;
 
@@ -550,7 +556,9 @@ function CheckLog: boolean;
   // if not CheckForTempFile then exit;
 
   if not CalculateTotals then
-    Exit;
+     begin
+     Exit;
+     end;
   // if not CheckLogForContacts then exit;
 
   Result := true;
@@ -559,10 +567,14 @@ function CheckLog: boolean;
 procedure SummarySheet;
   begin
   if not CheckLog then
-    Exit;
+     begin
+     Exit;
+     end;
   MakeReportFileName( 'Summary.txt' );
   if not tOpenFileForWrite( tReportFileWrite, @ReportsFilename[ 1 ] ) then
-    Exit;
+     begin
+     Exit;
+     end;
   WriteTitleBlockToSummarySheet;
   WriteScoreInformationToSummarySheet;
   CloseHandle( tReportFileWrite );
@@ -608,18 +620,26 @@ procedure ExportTo3830Scores;
       for mm := Low( RemainingMultiplierType )
          to High( RemainingMultiplierType ) do
         if MultByMode then
-          Result := Result + mo.MTotals[ b, CW, mm ] + mo.MTotals
-             [ b, Phone, mm ] + mo.MTotals[ b, Digital, mm ]
+           begin
+           Result := Result + mo.MTotals[ b, CW, mm ] + mo.MTotals
+              [ b, Phone, mm ] + mo.MTotals[ b, Digital, mm ]
+           end
         else
-          Result := Result + mo.MTotals[ b, Both, mm ];
+           begin
+           Result := Result + mo.MTotals[ b, Both, mm ];
+           end;
       end;
 
   begin
   if not CheckLog then
-    Exit;
+     begin
+     Exit;
+     end;
   MakeReportFileName( '3830Score.txt' );
   if not tOpenFileForWrite( tReportFileWrite, @ReportsFilename[ 1 ] ) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // RawQSOTotals[band, Phone] already includes FM (folded in by LoadTotalCount).
   showCW  := RawQSOTotals[ AllBands, CW ] > 0;
@@ -635,19 +655,31 @@ procedure ExportTo3830Scores;
   // emit blank lines so the operator types them directly on 3830's form.
   if GetPrivateProfileStringA( 'REPORT', '_OPERATORS', nil, iniBuf,
      SizeOf( iniBuf ), TR4W_INI_FILENAME ) > 0 then
-    operatorsStr := string( iniBuf )
+     begin
+     operatorsStr := string( iniBuf )
+     end
   else
-    operatorsStr := '';
+     begin
+     operatorsStr := '';
+     end;
   if GetPrivateProfileStringA( 'REPORT', '_CATEGORY-OPERATOR', nil, iniBuf,
      SizeOf( iniBuf ), TR4W_INI_FILENAME ) > 0 then
-    classStr := string( iniBuf )
+     begin
+     classStr := string( iniBuf )
+     end
   else
-    classStr := '';
+     begin
+     classStr := '';
+     end;
   if GetPrivateProfileStringA( 'REPORT', '_CATEGORY-POWER', nil, iniBuf,
      SizeOf( iniBuf ), TR4W_INI_FILENAME ) > 0 then
-    powerStr := string( iniBuf )
+     begin
+     powerStr := string( iniBuf )
+     end
   else
-    powerStr := '';
+     begin
+     powerStr := '';
+     end;
 
   buf := buf + sysutils.Format( 'Call Used: %s'#13#10, [ string( MyCall ) ] );
   buf := buf + sysutils.Format( 'Operators: %s'#13#10, [ operatorsStr ] );
@@ -657,13 +689,21 @@ procedure ExportTo3830Scores;
   // Header row
   buf := buf + '     ';
   if showCW then
-    buf := buf + '    CW Qs';
+     begin
+     buf := buf + '    CW Qs';
+     end;
   if showPh then
-    buf := buf + '    Ph Qs';
+     begin
+     buf := buf + '    Ph Qs';
+     end;
   if showDig then
-    buf := buf + '   Dig Qs';
+     begin
+     buf := buf + '   Dig Qs';
+     end;
   if MultByBand then
-    buf := buf + '    Mults';
+     begin
+     buf := buf + '    Mults';
+     end;
   buf   := buf + #13#10;
 
   sumCW        := 0;
@@ -673,103 +713,133 @@ procedure ExportTo3830Scores;
 
   // Standard 8 HF/Low-band rows (always shown, even when zero)
   for i := Low( STD_BANDS ) to High( STD_BANDS ) do
-    begin
-    Band      := STD_BANDS[ i ];
-    bandQsCW  := RawQSOTotals[ Band, CW ];
-    bandQsPh  := RawQSOTotals[ Band, Phone ];
-    bandQsDig := RawQSOTotals[ Band, Digital ];
+     begin
+     Band      := STD_BANDS[ i ];
+     bandQsCW  := RawQSOTotals[ Band, CW ];
+     bandQsPh  := RawQSOTotals[ Band, Phone ];
+     bandQsDig := RawQSOTotals[ Band, Digital ];
 
-    buf := buf + sysutils.Format( '%4s ', [ STD_BAND_LABELS[ i ] ] );
-    if showCW then
-      buf := buf + sysutils.Format( '%9d', [ bandQsCW ] );
-    if showPh then
-      buf := buf + sysutils.Format( '%9d', [ bandQsPh ] );
-    if showDig then
-      buf := buf + sysutils.Format( '%9d', [ bandQsDig ] );
-    if MultByBand then
-      begin
-      bandMults    := CalcBandMults( Band );
-      buf          := buf + sysutils.Format( '%9d', [ bandMults ] );
-      sumBandMults := sumBandMults + bandMults;
-      end;
-    buf := buf + #13#10#13#10; // blank line between rows for readability
+     buf := buf + sysutils.Format( '%4s ', [ STD_BAND_LABELS[ i ] ] );
+     if showCW then
+        begin
+        buf := buf + sysutils.Format( '%9d', [ bandQsCW ] );
+        end;
+     if showPh then
+        begin
+        buf := buf + sysutils.Format( '%9d', [ bandQsPh ] );
+        end;
+     if showDig then
+        begin
+        buf := buf + sysutils.Format( '%9d', [ bandQsDig ] );
+        end;
+     if MultByBand then
+        begin
+        bandMults    := CalcBandMults( Band );
+        buf          := buf + sysutils.Format( '%9d', [ bandMults ] );
+        sumBandMults := sumBandMults + bandMults;
+        end;
+     buf := buf + #13#10#13#10; // blank line between rows for readability
 
-    sumCW  := sumCW + bandQsCW;
-    sumPh  := sumPh + bandQsPh;
-    sumDig := sumDig + bandQsDig;
-    end;
+     sumCW  := sumCW + bandQsCW;
+     sumPh  := sumPh + bandQsPh;
+     sumDig := sumDig + bandQsDig;
+     end;
 
   // Extra VHF/UHF rows beyond 2m, only if they have QSOs
   for Band := Band222 to Band24G do
-    begin
-    bandQsCW  := RawQSOTotals[ Band, CW ];
-    bandQsPh  := RawQSOTotals[ Band, Phone ];
-    bandQsDig := RawQSOTotals[ Band, Digital ];
-    if ( bandQsCW + bandQsPh + bandQsDig ) = 0 then
-      Continue;
+     begin
+     bandQsCW  := RawQSOTotals[ Band, CW ];
+     bandQsPh  := RawQSOTotals[ Band, Phone ];
+     bandQsDig := RawQSOTotals[ Band, Digital ];
+     if ( bandQsCW + bandQsPh + bandQsDig ) = 0 then
+        begin
+        Continue;
+        end;
 
-    buf := buf + sysutils.Format( '%4s ', [ BandStringsArray[ Band ] ] );
-    if showCW then
-      buf := buf + sysutils.Format( '%9d', [ bandQsCW ] );
-    if showPh then
-      buf := buf + sysutils.Format( '%9d', [ bandQsPh ] );
-    if showDig then
-      buf := buf + sysutils.Format( '%9d', [ bandQsDig ] );
-    if MultByBand then
-      begin
-      bandMults    := CalcBandMults( Band );
-      buf          := buf + sysutils.Format( '%9d', [ bandMults ] );
-      sumBandMults := sumBandMults + bandMults;
-      end;
-    buf := buf + #13#10#13#10; // blank line between rows for readability
+     buf := buf + sysutils.Format( '%4s ', [ BandStringsArray[ Band ] ] );
+     if showCW then
+        begin
+        buf := buf + sysutils.Format( '%9d', [ bandQsCW ] );
+        end;
+     if showPh then
+        begin
+        buf := buf + sysutils.Format( '%9d', [ bandQsPh ] );
+        end;
+     if showDig then
+        begin
+        buf := buf + sysutils.Format( '%9d', [ bandQsDig ] );
+        end;
+     if MultByBand then
+        begin
+        bandMults    := CalcBandMults( Band );
+        buf          := buf + sysutils.Format( '%9d', [ bandMults ] );
+        sumBandMults := sumBandMults + bandMults;
+        end;
+     buf := buf + #13#10#13#10; // blank line between rows for readability
 
-    sumCW  := sumCW + bandQsCW;
-    sumPh  := sumPh + bandQsPh;
-    sumDig := sumDig + bandQsDig;
-    end;
+     sumCW  := sumCW + bandQsCW;
+     sumPh  := sumPh + bandQsPh;
+     sumDig := sumDig + bandQsDig;
+     end;
 
   // Total row
   buf := buf + 'Total';
   if showCW then
-    buf := buf + sysutils.Format( '%9d', [ sumCW ] );
+     begin
+     buf := buf + sysutils.Format( '%9d', [ sumCW ] );
+     end;
   if showPh then
-    buf := buf + sysutils.Format( '%9d', [ sumPh ] );
+     begin
+     buf := buf + sysutils.Format( '%9d', [ sumPh ] );
+     end;
   if showDig then
-    buf := buf + sysutils.Format( '%9d', [ sumDig ] );
+     begin
+     buf := buf + sysutils.Format( '%9d', [ sumDig ] );
+     end;
   if MultByBand then
-    buf := buf + sysutils.Format( '%9d', [ sumBandMults ] );
+     begin
+     buf := buf + sysutils.Format( '%9d', [ sumBandMults ] );
+     end;
   buf   := buf + #13#10#13#10;
 
   // Mults summary
   if MultByMode then
-    begin
-    cwMults  := 0;
-    phMults  := 0;
-    digMults := 0;
-    for m    := Low( RemainingMultiplierType )
-       to High( RemainingMultiplierType ) do
-      begin
-      cwMults  := cwMults + mo.MTotals[ AllBands, CW, m ];
-      phMults  := phMults + mo.MTotals[ AllBands, Phone, m ];
-      digMults := digMults + mo.MTotals[ AllBands, Digital, m ];
-      end;
-    if showCW then
-      buf := buf + sysutils.Format( 'CW Mults: %d'#13#10, [ cwMults ] );
-    if showPh then
-      buf := buf + sysutils.Format( 'Ph Mults: %d'#13#10, [ phMults ] );
-    if showDig then
-      buf      := buf + sysutils.Format( 'Dig Mults: %d'#13#10, [ digMults ] );
-    totalMults := cwMults + phMults + digMults;
-    buf := buf + sysutils.Format( 'Total Mults: %d'#13#10, [ totalMults ] );
-    end
+     begin
+     cwMults  := 0;
+     phMults  := 0;
+     digMults := 0;
+     for m    := Low( RemainingMultiplierType )
+        to High( RemainingMultiplierType ) do
+        begin
+        cwMults  := cwMults + mo.MTotals[ AllBands, CW, m ];
+        phMults  := phMults + mo.MTotals[ AllBands, Phone, m ];
+        digMults := digMults + mo.MTotals[ AllBands, Digital, m ];
+        end;
+     if showCW then
+        begin
+        buf := buf + sysutils.Format( 'CW Mults: %d'#13#10, [ cwMults ] );
+        end;
+     if showPh then
+        begin
+        buf := buf + sysutils.Format( 'Ph Mults: %d'#13#10, [ phMults ] );
+        end;
+     if showDig then
+        begin
+        buf      := buf + sysutils.Format( 'Dig Mults: %d'#13#10, [ digMults ] );
+        end;
+     totalMults := cwMults + phMults + digMults;
+     buf := buf + sysutils.Format( 'Total Mults: %d'#13#10, [ totalMults ] );
+     end
   else
-    begin
-    totalMults := 0;
-    for m      := Low( RemainingMultiplierType )
-       to High( RemainingMultiplierType ) do
-      totalMults := totalMults + mo.MTotals[ AllBands, Both, m ];
-    buf          := buf + sysutils.Format( 'Mults: %d'#13#10, [ totalMults ] );
-    end;
+     begin
+     totalMults := 0;
+     for m      := Low( RemainingMultiplierType )
+        to High( RemainingMultiplierType ) do
+        begin
+        totalMults := totalMults + mo.MTotals[ AllBands, Both, m ];
+        end;
+     buf          := buf + sysutils.Format( 'Mults: %d'#13#10, [ totalMults ] );
+     end;
 
   buf := buf + sysutils.Format( 'Total Score: %d'#13#10, [ TotalScore ] );
 
@@ -787,13 +857,13 @@ function ContestFriendlyParens: string;
   begin
   sFriendly := string( ContestsArray[ Contest ].FriendlyName );
   if sFriendly <> '' then
-    begin
-    Result := ' (' + sFriendly + ')';
-    end
+     begin
+     Result := ' (' + sFriendly + ')';
+     end
   else
-    begin
-    Result := '';
-    end;
+     begin
+     Result := '';
+     end;
   end;
 
 procedure WriteTitleBlockToSummarySheet;
@@ -814,21 +884,25 @@ procedure WriteTitleBlockToSummarySheet;
 
   // for i := 147 to 167 - 2 + 2 do
   for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
-    begin
-    if ErmakSpecification then
-      if TempTag = ctOperators then
+     begin
+     if ErmakSpecification then
+       if TempTag = ctOperators then
+          begin
+          Continue;
+          end;
+
+     Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( TempTag ) + 200,
+        @TempBuffer2, SizeOf( TempBuffer2 ) );
+     if TempBuffer2[ 0 ] = #0 then
+        begin
         Continue;
+        end;
 
-    Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( TempTag ) + 200,
-       @TempBuffer2, SizeOf( TempBuffer2 ) );
-    if TempBuffer2[ 0 ] = #0 then
-      Continue;
+     nNumberOfBytesToWrite := TF.Format( wsprintfBuffer, '%22s: %s'#13#10,
+        @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ], TempBuffer2 );
 
-    nNumberOfBytesToWrite := TF.Format( wsprintfBuffer, '%22s: %s'#13#10,
-       @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ], TempBuffer2 );
-
-    sWriteFile( tReportFileWrite, wsprintfBuffer, nNumberOfBytesToWrite );
-    end;
+     sWriteFile( tReportFileWrite, wsprintfBuffer, nNumberOfBytesToWrite );
+     end;
 
   // Footer built as a plain string -- replaces the prior inline-asm wsprintf
   // arg pushing.  The run/search counts had been read from raw byte offsets
@@ -870,95 +944,103 @@ procedure WriteScoreInformationToSummarySheet;
   sWriteFile( tReportFileWrite, h, length( h ) ); // QSO part of header
 
   for m := Low( RemainingMultiplierType ) to High( RemainingMultiplierType ) do
-    begin
-    if mo.MTotals[ AllBands, Both, m ] = 0 then
-      begin
-      Continue;
-      end;
-    sWriteFileFromString( tReportFileWrite, sysutils.Format( '%10s',
-       [ string( mn[ m ] ) ] ) );
-    end;
+     begin
+     if mo.MTotals[ AllBands, Both, m ] = 0 then
+        begin
+        Continue;
+        end;
+     sWriteFileFromString( tReportFileWrite, sysutils.Format( '%10s',
+        [ string( mn[ m ] ) ] ) );
+     end;
 
   sWriteFile( tReportFileWrite, breakline, length( breakline ) );
 
   for Band   := Band160 to AllBands do
-    for Mode := CW to Phone do
-      if RawQSOTotals[ Band, Mode ] > 0 then
-        begin
-
-        BString := BandStringsArray[ Band ];
-        MString := ModeStringArray[ Mode ];
-
-        TempMode := Mode;
-        if Band = AllBands then
+     begin
+     for Mode := CW to Phone do
+       if RawQSOTotals[ Band, Mode ] > 0 then
           begin
-          if TotalLine then
-            Continue;
-          sWriteFile( tReportFileWrite, breakline, length( breakline ) );
-          sWriteFileFromString( tReportFileWrite, #13#10 );
-          TempMode  := Both;
-          TotalLine := true;
-          BString   := 'Total'; // 4.97.8
-          MString   := nil;
-          end;
 
-        SumInteger := QSOPointTotals[ Band, TempMode ];
-        // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString
-        // (removes the asm, the custom Format function, and the PChar buffer in one).
-        // Arg order matches the original right-to-left pushes: %5s=BString,
-        // %4s=MString, %8d=RawQSOTotals, %12d=PostQSOTotals, %8d=QSOPointTotals.
-        sWriteFileFromString( tReportFileWrite,
-           sysutils.Format( #13#10' %5s%4s %8d  %12d %8d', [ string( BString ),
-           string( MString ), RawQSOTotals[ Band, TempMode ],
-           PostQSOTotals[ Band, TempMode ], SumInteger ] ) );
-        if Contest = WINTERFIELDDAY then
-          begin
-          inc( totalMults );
-          end;
+          BString := BandStringsArray[ Band ];
+          MString := ModeStringArray[ Mode ];
 
-        for m := Low( RemainingMultiplierType )
-           to High( RemainingMultiplierType ) do
-          begin
-          if mo.MTotals[ AllBands, Both, m ] = 0 then
-            begin
-            Continue;
-            end;
+          TempMode := Mode;
+          if Band = AllBands then
+             begin
+             if TotalLine then
+                begin
+                Continue;
+                end;
+             sWriteFile( tReportFileWrite, breakline, length( breakline ) );
+             sWriteFileFromString( tReportFileWrite, #13#10 );
+             TempMode  := Both;
+             TotalLine := true;
+             BString   := 'Total'; // 4.97.8
+             MString   := nil;
+             end;
+
+          SumInteger := QSOPointTotals[ Band, TempMode ];
+          // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString
+          // (removes the asm, the custom Format function, and the PChar buffer in one).
+          // Arg order matches the original right-to-left pushes: %5s=BString,
+          // %4s=MString, %8d=RawQSOTotals, %12d=PostQSOTotals, %8d=QSOPointTotals.
+          sWriteFileFromString( tReportFileWrite,
+             sysutils.Format( #13#10' %5s%4s %8d  %12d %8d', [ string( BString ),
+             string( MString ), RawQSOTotals[ Band, TempMode ],
+             PostQSOTotals[ Band, TempMode ], SumInteger ] ) );
           if Contest = WINTERFIELDDAY then
-            // or any contest where it is one mults if QSOs on this band/mode
-            begin
-            if TotalLine then
-              begin
-              sWriteFileFromString( tReportFileWrite,
-                 sysutils.Format( '%10d', [ totalMults ] ) );
-              end
-            else
-              begin
-              sWriteFileFromString( tReportFileWrite,
-                 sysutils.Format( '%10d', [ 1 ] ) );
-              end;
-            end
-          else
-            begin
-            sWriteFileFromString( tReportFileWrite,
-               sysutils.Format( '%10d', [ mo.MTotals[ Band, TempMode, m ] ] ) );
-            end;
+             begin
+             inc( totalMults );
+             end;
+
+          for m := Low( RemainingMultiplierType )
+             to High( RemainingMultiplierType ) do
+             begin
+             if mo.MTotals[ AllBands, Both, m ] = 0 then
+                begin
+                Continue;
+                end;
+             if Contest = WINTERFIELDDAY then
+               // or any contest where it is one mults if QSOs on this band/mode
+                begin
+                if TotalLine then
+                   begin
+                   sWriteFileFromString( tReportFileWrite,
+                      sysutils.Format( '%10d', [ totalMults ] ) );
+                   end
+                else
+                   begin
+                   sWriteFileFromString( tReportFileWrite,
+                      sysutils.Format( '%10d', [ 1 ] ) );
+                   end;
+                end
+             else
+                begin
+                sWriteFileFromString( tReportFileWrite,
+                   sysutils.Format( '%10d', [ mo.MTotals[ Band, TempMode, m ] ] ) );
+                end;
+             end;
           end;
-        end;
+     end;
   // sWriteFile(tReportFileWrite, breakline, length(breakline));
   if QTCEnable then
-    begin
-    sWriteFileFromString( tReportFileWrite,
-       sysutils.Format( #13#10#13#10'    There were %d QTC points.',
-       [ TotalNumberQTCsProcessed ] ) );
-    end;
+     begin
+     sWriteFileFromString( tReportFileWrite,
+        sysutils.Format( #13#10#13#10'    There were %d QTC points.',
+        [ TotalNumberQTCsProcessed ] ) );
+     end;
   if Contest <> ARRLFIELDDAY then
-    sWriteFileFromString( tReportFileWrite,
-       sysutils.Format( #13#10#13#10'    Claimed Score = %d points.',
-       [ TotalScore ] ) ) // 4.108.9
+     begin
+     sWriteFileFromString( tReportFileWrite,
+        sysutils.Format( #13#10#13#10'    Claimed Score = %d points.',
+        [ TotalScore ] ) ) // 4.108.9
+     end
   else
-    sWriteFileFromString( tReportFileWrite,
-       sysutils.Format( #13#10#13#10'     Claimed Score = %d points.',
-       [ SumInteger ] ) ); // 4.108.9
+     begin
+     sWriteFileFromString( tReportFileWrite,
+        sysutils.Format( #13#10#13#10'     Claimed Score = %d points.',
+        [ SumInteger ] ) ); // 4.108.9
+     end;
   end;
 
 function CalculateTotals: boolean;
@@ -978,85 +1060,103 @@ function CalculateTotals: boolean;
   begin
 
   if pos( 'CQ-WW', ContestName ) <> 0 then // n4af 4.35.3
-    Min := 60
+     begin
+     Min := 60
+     end
   else
-    Min       := 30;
+     begin
+     Min       := 30;
+     end;
   NumberDates := 0;
   // OperatingTime := 0;
   CalculateTotals := False;
   ZeroMemory( @TimeSpentByBand, SizeOf( TimeSpentByBand ) );
   for Band   := Band160 to AllBands do
-    for Mode := CW to Both do
-      begin
-      PostQSOTotals[ Band, Mode ]  := 0;
-      RawQSOTotals[ Band, Mode ]   := 0;
-      QSOPointTotals[ Band, Mode ] := 0;
-      end;
+     begin
+     for Mode := CW to Both do
+        begin
+        PostQSOTotals[ Band, Mode ]  := 0;
+        RawQSOTotals[ Band, Mode ]   := 0;
+        QSOPointTotals[ Band, Mode ] := 0;
+        end;
+     end;
 
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
   FirstRecord  := true;
   PreviousBand := NoBand;
 
   ReadVersionBlock;
 1:
   if ReadLogFile then
-    begin
-    if TempRXData.ceQSO_Deleted = true then
-      goto 1;
-    if TempRXData.ceQSO_Skiped then
-      goto 1;
-    if TempRXData.ceRecordKind <> rkQSO then
-      goto 1;
-
-    TempMode := TempRXData.Mode;
-    if TempMode = FM then
-      TempMode := Phone;
-
-    inc( RawQSOTotals[ TempRXData.Band, TempMode ] );
-    inc( RawQSOTotals[ TempRXData.Band, Both ] );
-    inc( RawQSOTotals[ AllBands, TempMode ] );
-    inc( RawQSOTotals[ AllBands, Both ] );
-
-    if GoodLookingQSO then
-      if TempRXData.ceDupe = False then
+     begin
+     if TempRXData.ceQSO_Deleted = true then
         begin
-
-        if not FirstRecord then
-          begin
-          TimeDifference := QSOTimeToSeconds( TempRXData.tSysTime ) -
-             QSOTimeToSeconds( PreviousQSOTime );
-          if TimeDifference <= Min { min } * 60 then // n4af 4.35.3
-            // OperatingTime := OperatingTime + TimeDifference;
-            begin
-            if PreviousBand = TempRXData.Band then
-              inc( TimeSpentByBand[ TempRXData.Band ], TimeDifference );
-            inc( TimeSpentByBand[ AllBands ], TimeDifference );
-            end;
-          PreviousBand := TempRXData.Band;
-          end;
-
-        PreviousQSOTime := TempRXData.tSysTime;
-
-        FirstRecord := False;
-        CheckForNewContestDate( TempRXData.tSysTime );
-
-        inc( PostQSOTotals[ TempRXData.Band, TempMode ] );
-        inc( PostQSOTotals[ TempRXData.Band, Both ] );
-        inc( PostQSOTotals[ AllBands, TempMode ] );
-        inc( PostQSOTotals[ AllBands, Both ] );
-
-        QSOPointTotals[ TempRXData.Band, TempMode ] :=
-           QSOPointTotals[ TempRXData.Band, TempMode ] + TempRXData.QSOPoints;
-        QSOPointTotals[ TempRXData.Band, Both ] :=
-           QSOPointTotals[ TempRXData.Band, Both ] + TempRXData.QSOPoints;
-        QSOPointTotals[ AllBands, TempMode ] :=
-           QSOPointTotals[ AllBands, TempMode ] + TempRXData.QSOPoints;
-        QSOPointTotals[ AllBands, Both ] := QSOPointTotals[ AllBands, Both ] +
-           TempRXData.QSOPoints;
+        goto 1;
         end;
-    goto 1;
-    end;
+     if TempRXData.ceQSO_Skiped then
+        begin
+        goto 1;
+        end;
+     if TempRXData.ceRecordKind <> rkQSO then
+        begin
+        goto 1;
+        end;
+
+     TempMode := TempRXData.Mode;
+     if TempMode = FM then
+        begin
+        TempMode := Phone;
+        end;
+
+     inc( RawQSOTotals[ TempRXData.Band, TempMode ] );
+     inc( RawQSOTotals[ TempRXData.Band, Both ] );
+     inc( RawQSOTotals[ AllBands, TempMode ] );
+     inc( RawQSOTotals[ AllBands, Both ] );
+
+     if GoodLookingQSO then
+       if TempRXData.ceDupe = False then
+          begin
+
+          if not FirstRecord then
+             begin
+             TimeDifference := QSOTimeToSeconds( TempRXData.tSysTime ) -
+                QSOTimeToSeconds( PreviousQSOTime );
+             if TimeDifference <= Min { min } * 60 then // n4af 4.35.3
+               // OperatingTime := OperatingTime + TimeDifference;
+                begin
+                if PreviousBand = TempRXData.Band then
+                   begin
+                   inc( TimeSpentByBand[ TempRXData.Band ], TimeDifference );
+                   end;
+                inc( TimeSpentByBand[ AllBands ], TimeDifference );
+                end;
+             PreviousBand := TempRXData.Band;
+             end;
+
+          PreviousQSOTime := TempRXData.tSysTime;
+
+          FirstRecord := False;
+          CheckForNewContestDate( TempRXData.tSysTime );
+
+          inc( PostQSOTotals[ TempRXData.Band, TempMode ] );
+          inc( PostQSOTotals[ TempRXData.Band, Both ] );
+          inc( PostQSOTotals[ AllBands, TempMode ] );
+          inc( PostQSOTotals[ AllBands, Both ] );
+
+          QSOPointTotals[ TempRXData.Band, TempMode ] :=
+             QSOPointTotals[ TempRXData.Band, TempMode ] + TempRXData.QSOPoints;
+          QSOPointTotals[ TempRXData.Band, Both ] :=
+             QSOPointTotals[ TempRXData.Band, Both ] + TempRXData.QSOPoints;
+          QSOPointTotals[ AllBands, TempMode ] :=
+             QSOPointTotals[ AllBands, TempMode ] + TempRXData.QSOPoints;
+          QSOPointTotals[ AllBands, Both ] := QSOPointTotals[ AllBands, Both ] +
+             TempRXData.QSOPoints;
+          end;
+     goto 1;
+     end;
   CloseLogFile;
   // OperatingTime := OperatingTime div 60;
   CalculateTotals := true;
@@ -1069,24 +1169,26 @@ procedure CheckForNewContestDate( Date: TQSOTime );
 
   begin
   if NumberDates = 0 then
-    begin
-    ContestDates[ 0 ] := Date;
-    inc( NumberDates );
-    Exit;
-    end;
+     begin
+     ContestDates[ 0 ] := Date;
+     inc( NumberDates );
+     Exit;
+     end;
 
   for Index := 0 to NumberDates - 1 do
     if ContestDates[ Index ].qtDay = Date.qtDay then
-      Exit;
+       begin
+       Exit;
+       end;
 
   ContestDates[ NumberDates ] := Date;
   inc( NumberDates );
 
   if ( NumberDates > 10 ) and ( Contest <> GENERALQSO ) then // 4.72.1
-    begin
-    showwarning( TC_TOOMANYCONTESTDATES );
-    // halt;
-    end;
+     begin
+     showwarning( TC_TOOMANYCONTESTDATES );
+     // halt;
+     end;
 
   end;
 
@@ -1136,11 +1238,15 @@ procedure ScoreByHour;
   begin
 
   if not CheckLog then
-    Exit;
+     begin
+     Exit;
+     end;
   MakeReportFileName( 'HourTotals.txt' );
   New( LogHourTotals );
   if GenerateAllTotalsPerHour then
-    PrintHourTotals;
+     begin
+     PrintHourTotals;
+     end;
   Dispose( LogHourTotals );
 
   end;
@@ -1162,19 +1268,21 @@ function GenerateAllTotalsPerHour: boolean;
   { Initialize the time on band status }
 
   with PLeftOnBiState do
-    begin
-    LastBand       := NoBand;
-    LastMode       := NoMode;
-    LastDateString := '';
-    LastTimeString := '';
-    LastHourIndex  := -1;
-    DoingBreak     := False;
-    end;
+     begin
+     LastBand       := NoBand;
+     LastMode       := NoMode;
+     LastDateString := '';
+     LastTimeString := '';
+     LastHourIndex  := -1;
+     DoingBreak     := False;
+     end;
   Windows.ZeroMemory( @PLeftOnBiState.BandsThisMinute,
      SizeOf( PLeftOnBiState.BandsThisMinute ) );
 
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
 
   { Initialize variables }
 
@@ -1188,69 +1296,79 @@ function GenerateAllTotalsPerHour: boolean;
 1:
 
   if ReadLogFile then
-    begin
-    if GoodLookingQSO then
-      begin
-      if LastHourProcessed <> TempRXData.tSysTime.qtHour then
+     begin
+     if GoodLookingQSO then
         begin
-        if CurrentHourIndex = 49 then
-          begin
-          ShowMessage( TC_MORETHAN50DIFFERENTHOURSINTHISLOG );
-          Exit;
-          end;
+        if LastHourProcessed <> TempRXData.tSysTime.qtHour then
+           begin
+           if CurrentHourIndex = 49 then
+              begin
+              ShowMessage( TC_MORETHAN50DIFFERENTHOURSINTHISLOG );
+              Exit;
+              end;
 
-        if LastHourProcessed <> UNKNOWN_COUNTRY then
-          inc( CurrentHourIndex );
+           if LastHourProcessed <> UNKNOWN_COUNTRY then
+              begin
+              inc( CurrentHourIndex );
+              end;
 
-        LogHourTotals^[ CurrentHourIndex ].HourName :=
-           IntToStr( TempRXData.tSysTime.qtHour );
-        LastHourProcessed := TempRXData.tSysTime.qtHour;
+           LogHourTotals^[ CurrentHourIndex ].HourName :=
+              IntToStr( TempRXData.tSysTime.qtHour );
+           LastHourProcessed := TempRXData.tSysTime.qtHour;
+           end;
+
+        inc( TotalLogQSOs );
+
+        inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ TempRXData.Band,
+           TempRXData.Mode ] );
+        inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ AllBands,
+           TempRXData.Mode ] );
+        inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ TempRXData.Band, Both ] );
+        inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ AllBands, Both ] );
+
+        inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
+           TempRXData.Mode ], TempRXData.QSOPoints );
+        inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ AllBands,
+           TempRXData.Mode ], TempRXData.QSOPoints );
+        inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
+           Both ], TempRXData.QSOPoints );
+        inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ AllBands, Both ],
+           TempRXData.QSOPoints );
+
+        TempMults := 0;
+        if TempRXData.DXMult then
+           begin
+           inc( TempMults );
+           end;
+        if TempRXData.DomesticMult then
+           begin
+           inc( TempMults );
+           end;
+        if TempRXData.ZoneMult then
+           begin
+           inc( TempMults );
+           end;
+        if TempRXData.PrefixMult then
+           begin
+           inc( TempMults );
+           end;
+
+        if TempMults <> 0 then
+          // if (TempRXData.DXMult or TempRXData.DomesticMult or TempRXData.ZoneMult or TempRXData.PrefixMult) then
+           begin
+           inc( LogHourTotals^[ CurrentHourIndex ].Mults[ TempRXData.Band,
+              TempRXData.Mode ], TempMults );
+           inc( LogHourTotals^[ CurrentHourIndex ].Mults[ AllBands,
+              TempRXData.Mode ], TempMults );
+           inc( LogHourTotals^[ CurrentHourIndex ].Mults[ TempRXData.Band, Both ],
+              TempMults );
+           inc( LogHourTotals^[ CurrentHourIndex ].Mults[ AllBands, Both ],
+              TempMults );
+           end;
+
         end;
-
-      inc( TotalLogQSOs );
-
-      inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ TempRXData.Band,
-         TempRXData.Mode ] );
-      inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ AllBands,
-         TempRXData.Mode ] );
-      inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ TempRXData.Band, Both ] );
-      inc( LogHourTotals^[ CurrentHourIndex ].QSOs[ AllBands, Both ] );
-
-      inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
-         TempRXData.Mode ], TempRXData.QSOPoints );
-      inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ AllBands,
-         TempRXData.Mode ], TempRXData.QSOPoints );
-      inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ TempRXData.Band,
-         Both ], TempRXData.QSOPoints );
-      inc( LogHourTotals^[ CurrentHourIndex ].QSOPoints[ AllBands, Both ],
-         TempRXData.QSOPoints );
-
-      TempMults := 0;
-      if TempRXData.DXMult then
-        inc( TempMults );
-      if TempRXData.DomesticMult then
-        inc( TempMults );
-      if TempRXData.ZoneMult then
-        inc( TempMults );
-      if TempRXData.PrefixMult then
-        inc( TempMults );
-
-      if TempMults <> 0 then
-        // if (TempRXData.DXMult or TempRXData.DomesticMult or TempRXData.ZoneMult or TempRXData.PrefixMult) then
-        begin
-        inc( LogHourTotals^[ CurrentHourIndex ].Mults[ TempRXData.Band,
-           TempRXData.Mode ], TempMults );
-        inc( LogHourTotals^[ CurrentHourIndex ].Mults[ AllBands,
-           TempRXData.Mode ], TempMults );
-        inc( LogHourTotals^[ CurrentHourIndex ].Mults[ TempRXData.Band, Both ],
-           TempMults );
-        inc( LogHourTotals^[ CurrentHourIndex ].Mults[ AllBands, Both ],
-           TempMults );
-        end;
-
-      end;
-    goto 1;
-    end;
+     goto 1;
+     end;
 
   FinishOutLastHour;
   CheckTimeOnByBand( CurrentHourIndex );
@@ -1290,16 +1408,24 @@ procedure PrintHourTotals;
   Write( FileWrite,
      'HR     160       80       40       20       15       10   HR TOT CUM TOTAL' );
   if ShowScore then
-    WriteLn( FileWrite, '  SCORE' )
+     begin
+     WriteLn( FileWrite, '  SCORE' )
+     end
   else
-    WriteLn( FileWrite, '' );
+     begin
+     WriteLn( FileWrite, '' );
+     end;
 
   Write( FileWrite,
      '--   -------  -------  -------  -------  -------  ------- ------ ---------' );
   if ShowScore then
-    WriteLn( FileWrite, '  -----' )
+     begin
+     WriteLn( FileWrite, '  -----' )
+     end
   else
-    WriteLn( FileWrite, '' );
+     begin
+     WriteLn( FileWrite, '' );
+     end;
 
   HourIndex := 0;
 
@@ -1310,123 +1436,147 @@ procedure PrintHourTotals;
   DoingDay1 := true;
 
   for Band := Band160 to Band10 do
-    begin
-    Day1QSOTotals[ Band ]  := 0;
-    Day1MultTotals[ Band ] := 0;
-    Day2QSOTotals[ Band ]  := 0;
-    Day2MultTotals[ Band ] := 0;
-    end;
+     begin
+     Day1QSOTotals[ Band ]  := 0;
+     Day1MultTotals[ Band ] := 0;
+     Day2QSOTotals[ Band ]  := 0;
+     Day2MultTotals[ Band ] := 0;
+     end;
 
   while LogHourTotals^[ HourIndex ].HourName <> '' do
-    begin
-    inc( LastHourPrinted );
+     begin
+     inc( LastHourPrinted );
 
-    if ( HourIndex > 0 ) and ( LastHourPrinted > 23 ) then
-      begin
-      DoingDay1       := False;
-      LastHourPrinted := 0;
-      end;
-
-    Val( LogHourTotals^[ HourIndex ].HourName, ThisHour, Result );
-
-    if HourIndex = 0 then
-      LastHourPrinted := ThisHour;
-
-    while ThisHour <> LastHourPrinted do
-      begin
-      Write( FileWrite, LastHourPrinted:2 );
-      for Band := Band160 to Band10 do
-        Write( FileWrite, '     --- ' );
-      Write( FileWrite, '    --- ' );
-      Write( FileWrite, TotalContacts:6, '/', totalMults );
-
-      if totalMults < 10 then
-        Write( FileWrite, ' ' );
-      if totalMults < 100 then
-        Write( FileWrite, ' ' );
-
-      if ShowScore then
+     if ( HourIndex > 0 ) and ( LastHourPrinted > 23 ) then
         begin
-        Score := TotalQSOPoints * totalMults / 1000000;
-        WriteLn( FileWrite, Score:6:3, ' M' );
-        end
-      else
-        WriteLn( FileWrite );
-
-      inc( LastHourPrinted );
-      if LastHourPrinted > 23 then
+        DoingDay1       := False;
         LastHourPrinted := 0;
-      end;
-
-    TotalContacts := TotalContacts + LogHourTotals^[ HourIndex ].QSOs
-       [ AllBands, Both ];
-    totalMults := totalMults + LogHourTotals^[ HourIndex ].Mults
-       [ AllBands, Both ];
-    TotalQSOPoints := TotalQSOPoints + LogHourTotals^[ HourIndex ].QSOPoints
-       [ AllBands, Both ];
-
-    if DoingDay1 then
-      begin
-
-      for TempBand := Band160 to Band10 do
-        begin
-        Day1QSOTotals[ TempBand ] := Day1QSOTotals[ TempBand ] + LogHourTotals^
-           [ HourIndex ].QSOs[ TempBand, Both ];
-        Day1MultTotals[ TempBand ] := Day1MultTotals[ TempBand ] +
-           LogHourTotals^[ HourIndex ].Mults[ TempBand, Both ];
         end;
-      end
-    else
-      begin
-      for TempBand := Band160 to Band10 do
+
+     Val( LogHourTotals^[ HourIndex ].HourName, ThisHour, Result );
+
+     if HourIndex = 0 then
         begin
-        Day2QSOTotals[ TempBand ] := Day2QSOTotals[ TempBand ] + LogHourTotals^
-           [ HourIndex ].QSOs[ TempBand, Both ];
-        Day2MultTotals[ TempBand ] := Day2MultTotals[ TempBand ] +
-           LogHourTotals^[ HourIndex ].Mults[ TempBand, Both ];
+        LastHourPrinted := ThisHour;
         end;
-      end;
 
-    with LogHourTotals^[ HourIndex ] do
-      begin
-      Write( FileWrite, ThisHour:2 );
-
-      for Band := Band160 to Band10 do
+     while ThisHour <> LastHourPrinted do
         begin
-        if QSOs[ Band, Both ] > 0 then
-          begin
-          Write( FileWrite, QSOs[ Band, Both ]:6, '/', Mults[ Band, Both ] );
-          if Mults[ Band, Both ] < 10 then
-            Write( FileWrite, ' ' );
-          end
+        Write( FileWrite, LastHourPrinted:2 );
+        for Band := Band160 to Band10 do
+           begin
+           Write( FileWrite, '     --- ' );
+           end;
+        Write( FileWrite, '    --- ' );
+        Write( FileWrite, TotalContacts:6, '/', totalMults );
+
+        if totalMults < 10 then
+           begin
+           Write( FileWrite, ' ' );
+           end;
+        if totalMults < 100 then
+           begin
+           Write( FileWrite, ' ' );
+           end;
+
+        if ShowScore then
+           begin
+           Score := TotalQSOPoints * totalMults / 1000000;
+           WriteLn( FileWrite, Score:6:3, ' M' );
+           end
         else
-          Write( FileWrite, '     --- ' );
+           begin
+           WriteLn( FileWrite );
+           end;
+
+        inc( LastHourPrinted );
+        if LastHourPrinted > 23 then
+           begin
+           LastHourPrinted := 0;
+           end;
         end;
 
-      Write( FileWrite, QSOs[ AllBands, Both ]:5, '/',
-         Mults[ AllBands, Both ] );
+     TotalContacts := TotalContacts + LogHourTotals^[ HourIndex ].QSOs
+        [ AllBands, Both ];
+     totalMults := totalMults + LogHourTotals^[ HourIndex ].Mults
+        [ AllBands, Both ];
+     TotalQSOPoints := TotalQSOPoints + LogHourTotals^[ HourIndex ].QSOPoints
+        [ AllBands, Both ];
 
-      if Mults[ AllBands, Both ] < 10 then
-        Write( FileWrite, ' ' );
-
-      Write( FileWrite, TotalContacts:6, '/', totalMults );
-
-      if totalMults < 10 then
-        Write( FileWrite, ' ' );
-      if totalMults < 100 then
-        Write( FileWrite, ' ' );
-      if ShowScore then
+     if DoingDay1 then
         begin
-        Score := TotalQSOPoints * totalMults / 1000000;
-        WriteLn( FileWrite, Score:6:3, ' M' );
-        end
-      else
-        WriteLn( FileWrite );
-      end;
 
-    Val( LogHourTotals^[ HourIndex ].HourName, LastHourPrinted, Result );
-    inc( HourIndex );
-    end;
+        for TempBand := Band160 to Band10 do
+           begin
+           Day1QSOTotals[ TempBand ] := Day1QSOTotals[ TempBand ] + LogHourTotals^
+              [ HourIndex ].QSOs[ TempBand, Both ];
+           Day1MultTotals[ TempBand ] := Day1MultTotals[ TempBand ] +
+              LogHourTotals^[ HourIndex ].Mults[ TempBand, Both ];
+           end;
+        end
+     else
+        begin
+        for TempBand := Band160 to Band10 do
+           begin
+           Day2QSOTotals[ TempBand ] := Day2QSOTotals[ TempBand ] + LogHourTotals^
+              [ HourIndex ].QSOs[ TempBand, Both ];
+           Day2MultTotals[ TempBand ] := Day2MultTotals[ TempBand ] +
+              LogHourTotals^[ HourIndex ].Mults[ TempBand, Both ];
+           end;
+        end;
+
+     with LogHourTotals^[ HourIndex ] do
+        begin
+        Write( FileWrite, ThisHour:2 );
+
+        for Band := Band160 to Band10 do
+           begin
+           if QSOs[ Band, Both ] > 0 then
+              begin
+              Write( FileWrite, QSOs[ Band, Both ]:6, '/', Mults[ Band, Both ] );
+              if Mults[ Band, Both ] < 10 then
+                 begin
+                 Write( FileWrite, ' ' );
+                 end;
+              end
+           else
+              begin
+              Write( FileWrite, '     --- ' );
+              end;
+           end;
+
+        Write( FileWrite, QSOs[ AllBands, Both ]:5, '/',
+           Mults[ AllBands, Both ] );
+
+        if Mults[ AllBands, Both ] < 10 then
+           begin
+           Write( FileWrite, ' ' );
+           end;
+
+        Write( FileWrite, TotalContacts:6, '/', totalMults );
+
+        if totalMults < 10 then
+           begin
+           Write( FileWrite, ' ' );
+           end;
+        if totalMults < 100 then
+           begin
+           Write( FileWrite, ' ' );
+           end;
+        if ShowScore then
+           begin
+           Score := TotalQSOPoints * totalMults / 1000000;
+           WriteLn( FileWrite, Score:6:3, ' M' );
+           end
+        else
+           begin
+           WriteLn( FileWrite );
+           end;
+        end;
+
+     Val( LogHourTotals^[ HourIndex ].HourName, LastHourPrinted, Result );
+     inc( HourIndex );
+     end;
 
   TotalDay1QSOs := Day1QSOTotals[ Band160 ] + Day1QSOTotals[ Band80 ] +
      Day1QSOTotals[ Band40 ] + Day1QSOTotals[ Band20 ] + Day1QSOTotals[ Band15 ]
@@ -1447,45 +1597,57 @@ procedure PrintHourTotals;
   Write( FileWrite, 'D1' );
 
   for Band := Band160 to Band10 do
-    begin
-    Write( FileWrite, Day1QSOTotals[ Band ]:5, '/', Day1MultTotals[ Band ] );
-    if Day1MultTotals[ Band ] < 10 then
-      Write( FileWrite, ' ' );
-    if Day1MultTotals[ Band ] < 100 then
-      Write( FileWrite, ' ' );
-    end;
+     begin
+     Write( FileWrite, Day1QSOTotals[ Band ]:5, '/', Day1MultTotals[ Band ] );
+     if Day1MultTotals[ Band ] < 10 then
+        begin
+        Write( FileWrite, ' ' );
+        end;
+     if Day1MultTotals[ Band ] < 100 then
+        begin
+        Write( FileWrite, ' ' );
+        end;
+     end;
 
   WriteLn( FileWrite, '        ', TotalDay1QSOs:6, '/', TotalDay1Mults );
 
   if not DoingDay1 then
-    begin
-    Write( FileWrite, 'D2' );
+     begin
+     Write( FileWrite, 'D2' );
 
-    for Band := Band160 to Band10 do
-      begin
-      Write( FileWrite, Day2QSOTotals[ Band ]:5, '/', Day2MultTotals[ Band ] );
-      if Day2MultTotals[ Band ] < 10 then
-        Write( FileWrite, ' ' );
-      if Day2MultTotals[ Band ] < 100 then
-        Write( FileWrite, ' ' );
-      end;
+     for Band := Band160 to Band10 do
+        begin
+        Write( FileWrite, Day2QSOTotals[ Band ]:5, '/', Day2MultTotals[ Band ] );
+        if Day2MultTotals[ Band ] < 10 then
+           begin
+           Write( FileWrite, ' ' );
+           end;
+        if Day2MultTotals[ Band ] < 100 then
+           begin
+           Write( FileWrite, ' ' );
+           end;
+        end;
 
-    WriteLn( FileWrite, '        ', TotalDay2QSOs:6, '/', TotalDay2Mults );
-    end;
+     WriteLn( FileWrite, '        ', TotalDay2QSOs:6, '/', TotalDay2Mults );
+     end;
 
   Write( FileWrite, 'TO' );
 
   for Band := Band160 to Band10 do
     // if Band >= Band40 then
-    begin
-    Write( FileWrite, ( Day1QSOTotals[ Band ] + Day2QSOTotals[ Band ] ):5, '/',
-       Day1MultTotals[ Band ] + Day2MultTotals[ Band ] );
+     begin
+     Write( FileWrite, ( Day1QSOTotals[ Band ] + Day2QSOTotals[ Band ] ):5, '/',
+        Day1MultTotals[ Band ] + Day2MultTotals[ Band ] );
 
-    if Day1MultTotals[ Band ] + Day2MultTotals[ Band ] < 10 then
-      Write( FileWrite, ' ' );
-    if Day1MultTotals[ Band ] + Day2MultTotals[ Band ] < 100 then
-      Write( FileWrite, ' ' );
-    end;
+     if Day1MultTotals[ Band ] + Day2MultTotals[ Band ] < 10 then
+        begin
+        Write( FileWrite, ' ' );
+        end;
+     if Day1MultTotals[ Band ] + Day2MultTotals[ Band ] < 100 then
+        begin
+        Write( FileWrite, ' ' );
+        end;
+     end;
 
   WriteLn( FileWrite, '        ', TotalDay1QSOs + TotalDay2QSOs:6, '/',
      TotalDay1Mults + TotalDay2Mults );
@@ -1508,20 +1670,22 @@ procedure FinishOutLastHour;
 
   begin
   with PLeftOnBiState do
-    begin
+     begin
 
-    LastMinuteString := PostcedingString( LastTimeString, ':' );
+     LastMinuteString := PostcedingString( LastTimeString, ':' );
 
-    Val( LastMinuteString, LastMinute, Result );
+     Val( LastMinuteString, LastMinute, Result );
 
-    if ( LastMinute >= 50 ) and ( LastMinute < 59 ) then
-      for Minute := LastMinute + 1 to 59 do
+     if ( LastMinute >= 50 ) and ( LastMinute < 59 ) then
         begin
-        inc( LogHourTotals^[ LastHourIndex ].Minutes[ LastBand, Both ] );
-        inc( LogHourTotals^[ LastHourIndex ].Minutes[ AllBands, Both ] );
+        for Minute := LastMinute + 1 to 59 do
+           begin
+           inc( LogHourTotals^[ LastHourIndex ].Minutes[ LastBand, Both ] );
+           inc( LogHourTotals^[ LastHourIndex ].Minutes[ AllBands, Both ] );
+           end;
         end;
 
-    end;
+     end;
   end;
 
 procedure CheckTimeOnByBand( LastHour: integer );
@@ -1538,32 +1702,34 @@ procedure CheckTimeOnByBand( LastHour: integer );
 
   begin
   for HourIndex := 0 to LastHour do
-    begin
-    HourTotal        := 0;
-    BiggestBand      := NoBand;
-    BiggestBandTotal := 0;
+     begin
+     HourTotal        := 0;
+     BiggestBand      := NoBand;
+     BiggestBandTotal := 0;
 
-    for Band := Band160 to BandLight do
-      begin
-      HourTotal := HourTotal + LogHourTotals^[ HourIndex ].Minutes
-         [ Band, Both ];
-
-      if LogHourTotals^[ HourIndex ].Minutes[ Band, Both ] > BiggestBandTotal
-      then
+     for Band := Band160 to BandLight do
         begin
-        BiggestBandTotal := LogHourTotals^[ HourIndex ].Minutes[ Band, Both ];
-        BiggestBand      := Band;
+        HourTotal := HourTotal + LogHourTotals^[ HourIndex ].Minutes
+           [ Band, Both ];
+
+        if LogHourTotals^[ HourIndex ].Minutes[ Band, Both ] > BiggestBandTotal
+        then
+           begin
+           BiggestBandTotal := LogHourTotals^[ HourIndex ].Minutes[ Band, Both ];
+           BiggestBand      := Band;
+           end;
         end;
-      end;
 
-    Correction := LogHourTotals^[ HourIndex ].Minutes[ AllBands, Both ] -
-       HourTotal;
+     Correction := LogHourTotals^[ HourIndex ].Minutes[ AllBands, Both ] -
+        HourTotal;
 
-    if Correction <> 0 then
-      LogHourTotals^[ HourIndex ].Minutes[ BiggestBand, Both ] :=
-         LogHourTotals^[ HourIndex ].Minutes[ BiggestBand, Both ] + Correction;
+     if Correction <> 0 then
+        begin
+        LogHourTotals^[ HourIndex ].Minutes[ BiggestBand, Both ] :=
+           LogHourTotals^[ HourIndex ].Minutes[ BiggestBand, Both ] + Correction;
+        end;
 
-    end;
+     end;
   end;
 
 procedure ContinentReport;
@@ -1592,63 +1758,77 @@ procedure ContinentReport;
   Windows.ZeroMemory( @TempQSOTotals, SizeOf( TempQSOTotals ) );
   Windows.ZeroMemory( @ContTotals, SizeOf( ContTotals ) );
   if not OpenFileForWrite( FileWrite, ReportsFilename ) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
 
   TotalLogQSOs := 0;
   ReadVersionBlock;
 1:
   if ReadLogFile then
-    begin
-    // if CorrectContestExchange then
-    if GoodLookingQSO then
-      begin
-      inc( TempQSOTotals[ TempRXData.Band ] );
+     begin
+     // if CorrectContestExchange then
+     if GoodLookingQSO then
+        begin
+        inc( TempQSOTotals[ TempRXData.Band ] );
 
-      Call := StandardCallFormat( TempRXData.Callsign, true );
+        Call := StandardCallFormat( TempRXData.Callsign, true );
 
-      ID := TempRXData.QTH.CountryID;
-      // if ID = 'UA' then
-      // ListContinent := UA
-      // else
-      if ID = 'K' then
-        ListContinent := USA
-      else
-        if ID = 'VE' then
-          ListContinent := Canada
+        ID := TempRXData.QTH.CountryID;
+        // if ID = 'UA' then
+        // ListContinent := UA
+        // else
+        if ID = 'K' then
+           begin
+           ListContinent := USA
+           end
         else
-          if ID = 'JA' then
-            ListContinent := Japan
+          if ID = 'VE' then
+             begin
+             ListContinent := Canada
+             end
           else
-            case TempRXData.QTH.Continent of
-              NorthAmerica:
-                ListContinent := na;
-              SouthAmerica:
-                ListContinent := SA;
-              Europe:
-                ListContinent := eu;
-              Africa:
-                ListContinent := af;
-              Asia:
-                ListContinent := ASI;
-              Oceania:
-                ListContinent := OC;
-              else
-                ListContinent := UK;
-            end;
+            if ID = 'JA' then
+               begin
+               ListContinent := Japan
+               end
+            else
+               begin
+               case TempRXData.QTH.Continent of
+                 NorthAmerica:
+                   ListContinent := na;
+                 SouthAmerica:
+                   ListContinent := SA;
+                 Europe:
+                   ListContinent := eu;
+                 Africa:
+                   ListContinent := af;
+                 Asia:
+                   ListContinent := ASI;
+                 Oceania:
+                   ListContinent := OC;
+                 else
+                   ListContinent := UK;
+               end;
+               end;
 
-      inc( ContTotals[ TempRXData.Band, ListContinent ] );
+        inc( ContTotals[ TempRXData.Band, ListContinent ] );
 
-      if ListContinent = UK then
-        if ContTotals[ TempRXData.Band, UK ] <= MaxUnknownCalls then
-          UnknownCalls[ TempRXData.Band, ContTotals[ TempRXData.Band, UK ] -
-             1 ] := Call;
+        if ListContinent = UK then
+          if ContTotals[ TempRXData.Band, UK ] <= MaxUnknownCalls then
+             begin
+             UnknownCalls[ TempRXData.Band, ContTotals[ TempRXData.Band, UK ] -
+                1 ] := Call;
+             end;
 
-      end;
-    goto 1;
-    end;
+        end;
+     goto 1;
+     end;
   CloseLogFile;
 
   WriteLn( FileWrite );
@@ -1665,26 +1845,28 @@ procedure ContinentReport;
   end;
 
   for Cont := USA to UK do
-    begin
-    Write( FileWrite, '  ' + ContListNames[ Cont ] + ' calls =' );
+     begin
+     Write( FileWrite, '  ' + ContListNames[ Cont ] + ' calls =' );
 
-    // if not DoingDupingFile then
-    begin
-    AllBandTotal := 0;
+     // if not DoingDupingFile then
+     begin
+     AllBandTotal := 0;
 
-    for Band := Band160 to Band10 do
-      begin
-      Write( FileWrite, ContTotals[ Band, Cont ]:6 );
-      AllBandTotal := ContTotals[ Band, Cont ] + AllBandTotal;
-      end;
+     for Band := Band160 to Band10 do
+        begin
+        Write( FileWrite, ContTotals[ Band, Cont ]:6 );
+        AllBandTotal := ContTotals[ Band, Cont ] + AllBandTotal;
+        end;
 
-    WriteLn( FileWrite, AllBandTotal:7 );
-    end;
-    // else
-    // WriteLn(FileWrite, ContTotals[Band160, Cont]: 6);
-    if Cont = OC then
-      WriteLn( FileWrite, '' );
-    end;
+     WriteLn( FileWrite, AllBandTotal:7 );
+     end;
+     // else
+     // WriteLn(FileWrite, ContTotals[Band160, Cont]: 6);
+     if Cont = OC then
+        begin
+        WriteLn( FileWrite, '' );
+        end;
+     end;
 
   WriteLn( FileWrite, '' );
 
@@ -1694,10 +1876,10 @@ procedure ContinentReport;
   begin
   AllBandTotal := 0;
   for Band     := Band160 to Band12 do
-    begin
-    Write( FileWrite, TempQSOTotals[ Band ]:6 );
-    AllBandTotal := TempQSOTotals[ Band ] + AllBandTotal;
-    end;
+     begin
+     Write( FileWrite, TempQSOTotals[ Band ]:6 );
+     AllBandTotal := TempQSOTotals[ Band ] + AllBandTotal;
+     end;
   WriteLn( FileWrite, AllBandTotal:7 );
   end;
   // else
@@ -1707,20 +1889,22 @@ procedure ContinentReport;
 
   for Band := Band160 to Band10 do
     if ContTotals[ Band, UK ] > 0 then
-      begin
-      // TempString := BandString[Band];
-      // GetRidOfPrecedingSpaces(TempString);
-      // if not DoingDupingFile then
-      Write( FileWrite, 'Unknowns on ', BandStringsArray[ Band ], ' = ' );
-      // else
-      // Write(FileWrite, 'Unknowns = ');
+       begin
+       // TempString := BandString[Band];
+       // GetRidOfPrecedingSpaces(TempString);
+       // if not DoingDupingFile then
+       Write( FileWrite, 'Unknowns on ', BandStringsArray[ Band ], ' = ' );
+       // else
+       // Write(FileWrite, 'Unknowns = ');
 
-      for CallAddress := 0 to ContTotals[ Band, UK ] - 1 do
-        if CallAddress < MaxUnknownCalls then
-          Write( FileWrite, UnknownCalls[ Band, CallAddress ], ' ' );
+       for CallAddress := 0 to ContTotals[ Band, UK ] - 1 do
+         if CallAddress < MaxUnknownCalls then
+            begin
+            Write( FileWrite, UnknownCalls[ Band, CallAddress ], ' ' );
+            end;
 
-      WriteLn( FileWrite );
-      end;
+       WriteLn( FileWrite );
+       end;
 
   Close( FileWrite );
   FilePreview;
@@ -1736,7 +1920,9 @@ procedure QSOsByCountryByBand;
   // GenerateCountryMultiplierTotals;
   // if not CheckLog then exit;
   if GenerateCountryMultiplierTotals then
-    PrintQSOsByCountry;
+     begin
+     PrintQSOsByCountry;
+     end;
   Dispose( CountryMultTotals );
   // windows.FreeResource()
 
@@ -1754,32 +1940,36 @@ function GenerateCountryMultiplierTotals: boolean;
   GenerateCountryMultiplierTotals := False;
   Windows.ZeroMemory( CountryMultTotals, SizeOf( CountryMultiplierArray ) );
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
   ReadVersionBlock;
   TotalLogQSOs := 0;
 1:
   if ReadLogFile then
-    begin
-    if GoodLookingQSO then
-      begin
-      inc( TotalLogQSOs );
-      if TempRXData.QTH.Country <= MaxCountries - 1 then
-        if TempRXData.QTH.Country > 0 then
-          begin
-          if CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
-             .TotalQSOs = 0 then
-            CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
-               .FirstCall := TempRXData.Callsign;
+     begin
+     if GoodLookingQSO then
+        begin
+        inc( TotalLogQSOs );
+        if TempRXData.QTH.Country <= MaxCountries - 1 then
+          if TempRXData.QTH.Country > 0 then
+             begin
+             if CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
+                .TotalQSOs = 0 then
+                begin
+                CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
+                   .FirstCall := TempRXData.Callsign;
+                end;
 
-          if TempRXData.QTH.Country <> MAXWORD { >= 0 } then
-            begin
-            inc( CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
-               .TotalQSOs );
-            end;
-          end;
-      end;
-    goto 1;
-    end;
+             if TempRXData.QTH.Country <> MAXWORD { >= 0 } then
+                begin
+                inc( CountryMultTotals^[ TempRXData.Band, TempRXData.QTH.Country ]
+                   .TotalQSOs );
+                end;
+             end;
+        end;
+     goto 1;
+     end;
   CloseLogFile;
   GenerateCountryMultiplierTotals := true;
   end;
@@ -1814,42 +2004,46 @@ procedure PrintQSOsByCountry;
 
   // while ctyGetCountryID(CountryIndex) <> '' do
   while CountryIndex < CTY.ctyNumberCountries do
-    begin
+     begin
 
-    if ( CountryMultTotals^[ Band160, CountryIndex ].TotalQSOs > 0 ) or
-       ( CountryMultTotals^[ Band80, CountryIndex ].TotalQSOs > 0 ) or
-       ( CountryMultTotals^[ Band40, CountryIndex ].TotalQSOs > 0 ) or
-       ( CountryMultTotals^[ Band20, CountryIndex ].TotalQSOs > 0 ) or
-       ( CountryMultTotals^[ Band15, CountryIndex ].TotalQSOs > 0 ) or
-       ( CountryMultTotals^[ Band10, CountryIndex ].TotalQSOs > 0 ) then
+     if ( CountryMultTotals^[ Band160, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals^[ Band80, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals^[ Band40, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals^[ Band20, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals^[ Band15, CountryIndex ].TotalQSOs > 0 ) or
+        ( CountryMultTotals^[ Band10, CountryIndex ].TotalQSOs > 0 ) then
 
-      begin
-      inc( Count );
-      TotalCountryQSOs := 0;
-      tCountryName     := ctyGetCountryNamePchar( CountryIndex );
-      tCountryID       := @CTY.ctyTable[ CountryIndex ].ID[ 1 ];
-      // Issue #998: asm-push wsprintf -> SysUtils.Format, written straight to the
-      // text file. %4u=Count, %-23s=country name, %-5s=country ID.
-      Write( FileWrite, sysutils.Format( '%4u %-23s %-5s',
-         [ Count, string( tCountryName ), string( tCountryID ) ] ) );
-
-      for TempBand := Band160 to Band10 do
         begin
-        if CountryMultTotals^[ TempBand, CountryIndex ].TotalQSOs > 0 then
-          Write( FileWrite, CountryMultTotals^[ TempBand, CountryIndex ]
-             .TotalQSOs:5 )
-        else
-          Write( FileWrite, '    -' );
-        TotalCountryQSOs := TotalCountryQSOs + CountryMultTotals^
-           [ TempBand, CountryIndex ].TotalQSOs;
+        inc( Count );
+        TotalCountryQSOs := 0;
+        tCountryName     := ctyGetCountryNamePchar( CountryIndex );
+        tCountryID       := @CTY.ctyTable[ CountryIndex ].ID[ 1 ];
+        // Issue #998: asm-push wsprintf -> SysUtils.Format, written straight to the
+        // text file. %4u=Count, %-23s=country name, %-5s=country ID.
+        Write( FileWrite, sysutils.Format( '%4u %-23s %-5s',
+           [ Count, string( tCountryName ), string( tCountryID ) ] ) );
+
+        for TempBand := Band160 to Band10 do
+           begin
+           if CountryMultTotals^[ TempBand, CountryIndex ].TotalQSOs > 0 then
+              begin
+              Write( FileWrite, CountryMultTotals^[ TempBand, CountryIndex ]
+                 .TotalQSOs:5 )
+              end
+           else
+              begin
+              Write( FileWrite, '    -' );
+              end;
+           TotalCountryQSOs := TotalCountryQSOs + CountryMultTotals^
+              [ TempBand, CountryIndex ].TotalQSOs;
+           end;
+
+        Write( FileWrite, TotalCountryQSOs:7 );
+        WriteLn( FileWrite, ( ( TotalCountryQSOs * 100 ) / TotalLogQSOs ):8:2 );
+
         end;
-
-      Write( FileWrite, TotalCountryQSOs:7 );
-      WriteLn( FileWrite, ( ( TotalCountryQSOs * 100 ) / TotalLogQSOs ):8:2 );
-
-      end;
-    inc( CountryIndex );
-    end;
+     inc( CountryIndex );
+     end;
 
   // Write(FileWrite, ' ');
   Close( FileWrite );
@@ -1862,7 +2056,9 @@ procedure ExportToEDI;
     Band: BandType;
   begin
   for Band := Band160 to BandLight do
-    ExportToEDIByBand( Band );
+     begin
+     ExportToEDIByBand( Band );
+     end;
   end;
 
 procedure ExportToEDIByBand( Band: BandType );
@@ -1876,30 +2072,36 @@ procedure ExportToEDIByBand( Band: BandType );
     EDI_DupeArray: array [ boolean ] of PAnsiChar = ( nil, 'D' );
   begin
   if QSOTotals[ Band, Both ] = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
 
   TF.Format( tReportsFilename, '%s%s_%s.EDI', TR4W_LOG_PATH_NAME, @MyCall[ 1 ],
      BandStringsArrayWithOutSpaces[ Band ] );
 
   DeleteSlashes( tReportsFilename );
   if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   if not OpenLogFile then
-    begin
-    CloseHandle( tReportFileWrite );
-    Exit;
-    end;
+     begin
+     CloseHandle( tReportFileWrite );
+     Exit;
+     end;
 
   Windows.ZeroMemory( @wsprintfBuffer, SizeOf( wsprintfBuffer ) );
   for TempTag := ctAddress to ctAddressCountry do
-    begin
-    if Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( TempTag ) + 200,
-       @TempBuffer1, SizeOf( TempBuffer1 ) ) = 0 then
-      Continue;
-    Windows.lstrcatA( wsprintfBuffer, TempBuffer1 );
-    Windows.lstrcatA( wsprintfBuffer, ' ' );
-    end;
+     begin
+     if Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( TempTag ) + 200,
+        @TempBuffer1, SizeOf( TempBuffer1 ) ) = 0 then
+        begin
+        Continue;
+        end;
+     Windows.lstrcatA( wsprintfBuffer, TempBuffer1 );
+     Windows.lstrcatA( wsprintfBuffer, ' ' );
+     end;
 
   Windows.GetDlgItemTextA( CreateCabrilloWindow, integer( ctName ) + 200,
      @TempBuffer1, SizeOf( TempBuffer1 ) );
@@ -1921,55 +2123,57 @@ procedure ExportToEDIByBand( Band: BandType );
   ReadVersionBlock;
 1:
   if ReadLogFile then
-    begin
-    if GoodLookingQSO then
-      begin
-      if TempRXData.Band <> Band then
-        goto 1;
-      // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-      // date (Year/Month/Day), time (Hour/Minute), callsign, mode code,
-      // rst-sent, sent-qso#, rst-rcvd, rcvd-qso#, rcvd-WWL, qso-points,
-      // new-WWL, new-DXCC, dupe.  %02d -> %.2d (always non-negative here).
-      // The new/dupe flag arrays are nil when false -> string(nil) = '' (EDI
-      // blank field).
-      //
-      // The two QSO-number fields were C '%03d' = zero-pad to WIDTH 3 with the
-      // sign counted in the width (-1 -> "-01").  Delphi '%.3d' pads DIGITS
-      // (-1 -> "-001"), which differs for negatives (the "no serial" sentinel
-      // is -1).  We reproduce C semantics with '%.*d' and precision = 3 minus
-      // the sign character, supplied as an argument before each value.
-      sWriteFileFromString( tReportFileWrite,
-         sysutils.Format( '%.2d%.2d%.2d;' + { date }
-         '%.2d%.2d;' + { time }
-         '%s;' + { callsign }
-         '%d;' + { mode code }
-         '%d;' + { rst sent }
-         '%.*d;' + { sent qso number (C %03d) }
-         '%d;' + { rst received }
-         '%.*d;' + { received qso number (C %03d) }
-         ';' + { Received Exchange }
-         '%s;' + { Received WWL }
-         '%d;' + { QSO points }
-         ';' + { New-Exchange }
-         '%s;' + { New-WWL }
-         '%s;' + { New-DXCC }
-         '%s' + { Duplicate-QSO }
-         #13#10, [ TempRXData.tSysTime.qtYear, TempRXData.tSysTime.qtMonth,
-         TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
-         TempRXData.tSysTime.qtMinute,
-         string( PAnsiChar( @TempRXData.Callsign[ 1 ] ) ),
-         EDI_ModeCodes[ TempRXData.Mode ], TempRXData.RSTSent,
-         3 - Ord( TempRXData.NumberSent < 0 ), TempRXData.NumberSent,
-         TempRXData.RSTReceived, 3 - Ord( TempRXData.NumberReceived < 0 ),
-         TempRXData.NumberReceived,
-         string( PAnsiChar( @TempRXData.QTHString[ 1 ] ) ),
-         TempRXData.QSOPoints, string( EDI_NewArray[ TempRXData.DomesticMult ]
-         ), string( EDI_NewArray[ TempRXData.DXMult ] ),
-         string( EDI_DupeArray[ TempRXData.ceDupe ] ) ] ) );
+     begin
+     if GoodLookingQSO then
+        begin
+        if TempRXData.Band <> Band then
+           begin
+           goto 1;
+           end;
+        // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
+        // date (Year/Month/Day), time (Hour/Minute), callsign, mode code,
+        // rst-sent, sent-qso#, rst-rcvd, rcvd-qso#, rcvd-WWL, qso-points,
+        // new-WWL, new-DXCC, dupe.  %02d -> %.2d (always non-negative here).
+        // The new/dupe flag arrays are nil when false -> string(nil) = '' (EDI
+        // blank field).
+        //
+        // The two QSO-number fields were C '%03d' = zero-pad to WIDTH 3 with the
+        // sign counted in the width (-1 -> "-01").  Delphi '%.3d' pads DIGITS
+        // (-1 -> "-001"), which differs for negatives (the "no serial" sentinel
+        // is -1).  We reproduce C semantics with '%.*d' and precision = 3 minus
+        // the sign character, supplied as an argument before each value.
+        sWriteFileFromString( tReportFileWrite,
+           sysutils.Format( '%.2d%.2d%.2d;' + { date }
+           '%.2d%.2d;' + { time }
+           '%s;' + { callsign }
+           '%d;' + { mode code }
+           '%d;' + { rst sent }
+           '%.*d;' + { sent qso number (C %03d) }
+           '%d;' + { rst received }
+           '%.*d;' + { received qso number (C %03d) }
+           ';' + { Received Exchange }
+           '%s;' + { Received WWL }
+           '%d;' + { QSO points }
+           ';' + { New-Exchange }
+           '%s;' + { New-WWL }
+           '%s;' + { New-DXCC }
+           '%s' + { Duplicate-QSO }
+           #13#10, [ TempRXData.tSysTime.qtYear, TempRXData.tSysTime.qtMonth,
+           TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
+           TempRXData.tSysTime.qtMinute,
+           string( PAnsiChar( @TempRXData.Callsign[ 1 ] ) ),
+           EDI_ModeCodes[ TempRXData.Mode ], TempRXData.RSTSent,
+           3 - Ord( TempRXData.NumberSent < 0 ), TempRXData.NumberSent,
+           TempRXData.RSTReceived, 3 - Ord( TempRXData.NumberReceived < 0 ),
+           TempRXData.NumberReceived,
+           string( PAnsiChar( @TempRXData.QTHString[ 1 ] ) ),
+           TempRXData.QSOPoints, string( EDI_NewArray[ TempRXData.DomesticMult ]
+           ), string( EDI_NewArray[ TempRXData.DXMult ] ),
+           string( EDI_DupeArray[ TempRXData.ceDupe ] ) ] ) );
 
-      end;
-    goto 1;
-    end;
+        end;
+     goto 1;
+     end;
   CloseHandle( tReportFileWrite );
   CloseLogFile;
 
@@ -2025,52 +2229,62 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // see without taking a trdos dependency.  POTA's own SRX_STRING is
   // emitted further down -- this branch handles every other contest.
   if rec.ceContest <> POTA then
-    begin
-    if ExchangeInformation.RST then
-      Result := Result + EmitADIFField( 'SRX_STRING', ResolveSRXString( rec ) )
-    else
-      Result := Result + EmitADIFField( 'SRX_STRING',
-         string( rec.ExchString ) );
-    end;
+     begin
+     if ExchangeInformation.RST then
+        begin
+        Result := Result + EmitADIFField( 'SRX_STRING', ResolveSRXString( rec ) )
+        end
+     else
+        begin
+        Result := Result + EmitADIFField( 'SRX_STRING',
+           string( rec.ExchString ) );
+        end;
+     end;
 
   // ----- POTA-specific (uADIF skips SRX_STRING for POTA) -----
   if rec.ceContest = POTA then
-    begin
-    Result := Result + EmitADIFField( 'MY_SIG', 'POTA' );
-    Result := Result + EmitADIFField( 'MY_SIG_INFO', string( MyPark ) );
-    Result := Result + EmitADIFField( 'MY_POTA_REF', string( MyPark ) );
-    if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
-      Result := Result + EmitADIFField( 'SRX_STRING', string( rec.QTHString ) )
-    else
-      begin
-      Result := Result + EmitADIFField( 'SRX_STRING',
-         string( rec.ExchString ) );
-      if LooksLikeAState( string( rec.ExchString ) ) then
+     begin
+     Result := Result + EmitADIFField( 'MY_SIG', 'POTA' );
+     Result := Result + EmitADIFField( 'MY_SIG_INFO', string( MyPark ) );
+     Result := Result + EmitADIFField( 'MY_POTA_REF', string( MyPark ) );
+     if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
         begin
-        Result := Result + EmitADIFField( 'DXCC', '291' );
-        // Yes, hard-coded to US country ARRL code
-        Result := Result + EmitADIFField( 'STATE', string( rec.ExchString ) );
+        Result := Result + EmitADIFField( 'SRX_STRING', string( rec.QTHString ) )
         end
-      else
+     else
         begin
-        exchForGrid := rec.ExchString;
-        if LooksLikeAGrid( exchForGrid ) then
-          Result := Result + EmitADIFField( 'GRIDSQUARE',
-             string( rec.ExchString ) );
+        Result := Result + EmitADIFField( 'SRX_STRING',
+           string( rec.ExchString ) );
+        if LooksLikeAState( string( rec.ExchString ) ) then
+           begin
+           Result := Result + EmitADIFField( 'DXCC', '291' );
+           // Yes, hard-coded to US country ARRL code
+           Result := Result + EmitADIFField( 'STATE', string( rec.ExchString ) );
+           end
+        else
+           begin
+           exchForGrid := rec.ExchString;
+           if LooksLikeAGrid( exchForGrid ) then
+              begin
+              Result := Result + EmitADIFField( 'GRIDSQUARE',
+                 string( rec.ExchString ) );
+              end;
+           end;
         end;
-      end;
-    end;
+     end;
 
   // ----- CNTY (state QP with FAltName loaded from <state>_cty.dom) -----
   stateCode := GetStateForContest( rec.ceContest );
   if ( stateCode <> '' ) and ( rec.QTHString <> '' ) and
      ( length( rec.QTHString ) <> 2 ) then
-    begin
-    if mo.DomList.FindMult( rec.QTHString, cntyIdx ) and
-       ( mo.DomList.FList[ cntyIdx ].FAltName <> '' ) then
-      Result := Result + EmitADIFField( 'CNTY',
-         stateCode + ',' + mo.DomList.FList[ cntyIdx ].FAltName );
-    end;
+     begin
+     if mo.DomList.FindMult( rec.QTHString, cntyIdx ) and
+        ( mo.DomList.FList[ cntyIdx ].FAltName <> '' ) then
+        begin
+        Result := Result + EmitADIFField( 'CNTY',
+           stateCode + ',' + mo.DomList.FList[ cntyIdx ].FAltName );
+        end;
+     end;
 
   // ----- Contest-specific primary-location field -----
   //
@@ -2080,108 +2294,126 @@ function EmitContestSpecificTailForExport( const rec: ContestExchange ): string;
   // the original ExportToADIF output.  A few contests deliberately suppress
   // any location field (CQ160, NA-SPRINT, NAQSO).
   if rec.QTHString <> '' then
-    begin
-    qthForGrid := rec.DomesticQTH;
-    if LooksLikeAGrid( qthForGrid ) and ( ActiveDomesticMult <> RDADistrict )
-    then
-      Result := Result + EmitADIFField( 'GRIDSQUARE',
-         string( rec.DomesticQTH ) )
-    else
-      case rec.ceContest of
-        WAG:
-          Result := Result + EmitADIFField( 'DOK', string( rec.QTHString ) );
-        ARRL160:
-          if ( rec.QTH.CountryID = 'K' ) or ( rec.QTH.CountryID = 'VE' ) then
-            Result := Result + EmitADIFField( 'ARRL_SECT',
-               string( rec.QTHString ) );
-        ARRLFIELDDAY, WINTERFIELDDAY:
-          begin
-          if rec.QTHString <> 'DX' then
+     begin
+     qthForGrid := rec.DomesticQTH;
+     if LooksLikeAGrid( qthForGrid ) and ( ActiveDomesticMult <> RDADistrict )
+     then
+        begin
+        Result := Result + EmitADIFField( 'GRIDSQUARE',
+           string( rec.DomesticQTH ) )
+        end
+     else
+        begin
+        case rec.ceContest of
+          WAG:
+            Result := Result + EmitADIFField( 'DOK', string( rec.QTHString ) );
+          ARRL160:
+            if ( rec.QTH.CountryID = 'K' ) or ( rec.QTH.CountryID = 'VE' ) then
+               begin
+               Result := Result + EmitADIFField( 'ARRL_SECT',
+                  string( rec.QTHString ) );
+               end;
+          ARRLFIELDDAY, WINTERFIELDDAY:
             begin
-            if rec.QTH.CountryID = 'K' then
-              begin
-              Result := Result + EmitADIFField( 'DXCC', '291' );
-              // Yes, hard-coded to US country ARRL code    ny4i
-              Result := Result + EmitADIFField( 'STATE',
-                 GetStateFromSection( rec.QTHString ) );
-              end
-            else
-              if rec.QTH.CountryID = 'VE' then
-                begin
-                Result := Result + EmitADIFField( 'DXCC', '1' );
-                // Yes, hard-coded to VE country ARRL code    ny4i
-                Result := Result + EmitADIFField( 'STATE',
-                   GetStateFromSection( rec.QTHString ) );
-                end;
-            Result := Result + EmitADIFField( 'ARRL_SECT',
-               string( rec.QTHString ) );
-            Result := Result + EmitADIFField( 'CLASS', string( rec.ceClass ) );
+            if rec.QTHString <> 'DX' then
+               begin
+               if rec.QTH.CountryID = 'K' then
+                  begin
+                  Result := Result + EmitADIFField( 'DXCC', '291' );
+                  // Yes, hard-coded to US country ARRL code    ny4i
+                  Result := Result + EmitADIFField( 'STATE',
+                     GetStateFromSection( rec.QTHString ) );
+                  end
+               else
+                 if rec.QTH.CountryID = 'VE' then
+                    begin
+                    Result := Result + EmitADIFField( 'DXCC', '1' );
+                    // Yes, hard-coded to VE country ARRL code    ny4i
+                    Result := Result + EmitADIFField( 'STATE',
+                       GetStateFromSection( rec.QTHString ) );
+                    end;
+               Result := Result + EmitADIFField( 'ARRL_SECT',
+                  string( rec.QTHString ) );
+               Result := Result + EmitADIFField( 'CLASS', string( rec.ceClass ) );
+               end;
+            // No STX_STRING here (#1050).  It is already emitted once above
+            // from GetMyExchangeForExport, which builds "<class> <section>" for
+            // both FD and WFD (AE = ClassDomesticOrDXQTHExchange).  The
+            // former extra emission here produced a duplicate STX_STRING
+            // tag once the general emitter was fixed to run per-record
+            // (#1049) -- before that the general one was the broken
+            // "Error generating my exchange" default, so this explicit
+            // copy was the one that "won on parse".  Now redundant.
             end;
-          // No STX_STRING here (#1050).  It is already emitted once above
-          // from GetMyExchangeForExport, which builds "<class> <section>" for
-          // both FD and WFD (AE = ClassDomesticOrDXQTHExchange).  The
-          // former extra emission here produced a duplicate STX_STRING
-          // tag once the general emitter was fixed to run per-record
-          // (#1049) -- before that the general one was the broken
-          // "Error generating my exchange" default, so this explicit
-          // copy was the one that "won on parse".  Now redundant.
-          end;
-        ARRLSSCW, ARRLSSSSB:
-          if rec.QTHString <> 'DX' then
-            Result := Result + EmitADIFField( 'ARRL_SECT',
+          ARRLSSCW, ARRLSSSSB:
+            if rec.QTHString <> 'DX' then
+               begin
+               Result := Result + EmitADIFField( 'ARRL_SECT',
+                  string( rec.QTHString ) );
+               end;
+          CQ160CW, CQ160SSB, NASPRINTCW, SPRINTSSB, NASPRINTRTTY, NAQSOCW,
+             NAQSOSSB, NAQSORTTY:
+            ; // legacy: no extra location field
+          POTA:
+            if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
+               begin
+               Result := Result + EmitADIFField( 'SIG', 'POTA' );
+               Result := Result + EmitADIFField( 'SIG_INFO',
+                  string( rec.QTHString ) );
+               Result := Result + EmitADIFField( 'POTA_REF',
+                  string( rec.QTHString ) );
+               end;
+          IOTA:
+            Result := Result + EmitADIFField( 'IOTA', string( rec.DomesticQTH ) );
+          IARU:
+            Result := Result + EmitADIFField( 'APP_TR4W_HQ',
                string( rec.QTHString ) );
-        CQ160CW, CQ160SSB, NASPRINTCW, SPRINTSSB, NASPRINTRTTY, NAQSOCW,
-           NAQSOSSB, NAQSORTTY:
-          ; // legacy: no extra location field
-        POTA:
-          if LooksLikeAPOTAPark( string( rec.QTHString ) ) then
-            begin
-            Result := Result + EmitADIFField( 'SIG', 'POTA' );
-            Result := Result + EmitADIFField( 'SIG_INFO',
+          ARRLDIGI, WWDIGI, BATAVIA_FT8:
+            Result := Result + EmitADIFField( 'GRIDSQUARE',
                string( rec.QTHString ) );
-            Result := Result + EmitADIFField( 'POTA_REF',
-               string( rec.QTHString ) );
-            end;
-        IOTA:
-          Result := Result + EmitADIFField( 'IOTA', string( rec.DomesticQTH ) );
-        IARU:
-          Result := Result + EmitADIFField( 'APP_TR4W_HQ',
-             string( rec.QTHString ) );
-        ARRLDIGI, WWDIGI, BATAVIA_FT8:
-          Result := Result + EmitADIFField( 'GRIDSQUARE',
-             string( rec.QTHString ) );
-        else
-          // Default: uADIF already emitted <QTH:...>.  Nothing more.
-          ;
-      end;
-    end;
+          else
+            // Default: uADIF already emitted <QTH:...>.  Nothing more.
+            ;
+        end;
+        end;
+     end;
 
   // ----- CQZ / ITUZ (zone) -----
   if rec.Zone <> DUMMYZONE then
-    begin
-    if ActiveZoneMult = CQZones then
-      Result := Result + EmitADIFField( 'CQZ', sysutils.Format( '%.2d',
-         [ rec.Zone ] ) )
-    else
-      if ActiveZoneMult = ITUZones then
-        Result := Result + EmitADIFField( 'ITUZ',
-           sysutils.Format( '%.2d', [ rec.Zone ] ) )
-      else
-        if ( ActiveZoneMult = NoZoneMults ) and ExchangeInformation.Zone then
+     begin
+     if ActiveZoneMult = CQZones then
+        begin
+        Result := Result + EmitADIFField( 'CQZ', sysutils.Format( '%.2d',
+           [ rec.Zone ] ) )
+        end
+     else
+       if ActiveZoneMult = ITUZones then
           begin
-          if CTY.ctyZoneMode = CQZoneMode then
-            Result := Result + EmitADIFField( 'CQZ',
-               sysutils.Format( '%.2d', [ rec.Zone ] ) )
-          else
-            Result := Result + EmitADIFField( 'ITUZ',
-               sysutils.Format( '%.2d', [ rec.Zone ] ) );
-          end;
-    end;
+          Result := Result + EmitADIFField( 'ITUZ',
+             sysutils.Format( '%.2d', [ rec.Zone ] ) )
+          end
+       else
+         if ( ActiveZoneMult = NoZoneMults ) and ExchangeInformation.Zone then
+            begin
+            if CTY.ctyZoneMode = CQZoneMode then
+               begin
+               Result := Result + EmitADIFField( 'CQZ',
+                  sysutils.Format( '%.2d', [ rec.Zone ] ) )
+               end
+            else
+               begin
+               Result := Result + EmitADIFField( 'ITUZ',
+                  sysutils.Format( '%.2d', [ rec.Zone ] ) );
+               end;
+            end;
+     end;
 
   // ----- STATION_CALLSIGN (when operator differs from MyCall) -----
   if ( rec.ceOperator <> '' ) and ( string( rec.ceOperator ) <> string( MyCall ) )
   then
-    Result := Result + EmitADIFField( 'STATION_CALLSIGN', string( MyCall ) );
+     begin
+     Result := Result + EmitADIFField( 'STATION_CALLSIGN', string( MyCall ) );
+     end;
   end;
 
 procedure ExportToADIF;
@@ -2195,13 +2427,15 @@ procedure ExportToADIF;
   tReportsFilename[ Windows.lstrlenA( tReportsFilename ) - 3 ] := #0;
   lstrcatA( tReportsFilename, 'ADI' );
   if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   if not OpenLogFile then
-    begin
-    CloseHandle( tReportFileWrite );
-    Exit;
-    end;
+     begin
+     CloseHandle( tReportFileWrite );
+     Exit;
+     end;
 
   // Banner lines (pre-header, kept for compatibility with older ADIF
   // consumers that expect the "Created by TR4W..." comment).
@@ -2214,13 +2448,13 @@ procedure ExportToADIF;
   SetLength( records, 0 );
   ReadVersionBlock;
   while ReadLogFile do
-    begin
-    if GoodLookingQSO then
-      begin
-      SetLength( records, length( records ) + 1 );
-      records[ High( records ) ] := TempRXData;
-      end;
-    end;
+     begin
+     if GoodLookingQSO then
+        begin
+        SetLength( records, length( records ) + 1 );
+        records[ High( records ) ] := TempRXData;
+        end;
+     end;
 
   // Build the whole ADIF document (header + records + tail extras) and
   // write it as one block.  The per-record body lives in
@@ -2246,13 +2480,15 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
   tReportsFilename[ Windows.lstrlenA( tReportsFilename ) - 3 ] := #0;
   lstrcatA( tReportsFilename, 'CSV' );
   if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   if not OpenLogFile then
-    begin
-    CloseHandle( tReportFileWrite );
-    Exit;
-    end;
+     begin
+     CloseHandle( tReportFileWrite );
+     Exit;
+     end;
 
 
   // nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @ContestTitle[1]);
@@ -2264,26 +2500,26 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
 1:
 
   if ReadLogFile then
-    begin
-    if GoodLookingQSO then
-      begin
-      // Issue #998: asm-push wsprintf -> SysUtils.Format, written INSIDE the
-      // GoodLookingQSO guard.  The old write sat outside the guard and re-emitted
-      // the stale buffer for skipped/deleted/non-QSO records; now only good QSOs
-      // are written.  cdecl arg order: callsign, band, mode, year, month, day,
-      // hour, minute, second, rst-sent, rst-rcvd, contest name.  %02d -> %.2d.
-      sWriteFileFromString( tReportFileWrite,
-         sysutils.Format( '%s,%s,%s,%u%.2d%.2d,%.2d%.2d%.2d,%u,%u,%s'#13#10,
-         [ string( PAnsiChar( @TempRXData.Callsign[ 1 ] ) ),
-         string( ADIFBANDSTRINGSARRAY[ TempRXData.Band ] ),
-         string( ADIFModeString[ TempRXData.Mode ] ), TempRXData.tSysTime.qtYear
-         + 2000, TempRXData.tSysTime.qtMonth, TempRXData.tSysTime.qtDay,
-         TempRXData.tSysTime.qtHour, TempRXData.tSysTime.qtMinute,
-         TempRXData.tSysTime.qtSecond, TempRXData.RSTSent,
-         TempRXData.RSTReceived, string( ContestTypeSA[ Contest ] ) ] ) );
-      end;
-    goto 1;
-    end;
+     begin
+     if GoodLookingQSO then
+        begin
+        // Issue #998: asm-push wsprintf -> SysUtils.Format, written INSIDE the
+        // GoodLookingQSO guard.  The old write sat outside the guard and re-emitted
+        // the stale buffer for skipped/deleted/non-QSO records; now only good QSOs
+        // are written.  cdecl arg order: callsign, band, mode, year, month, day,
+        // hour, minute, second, rst-sent, rst-rcvd, contest name.  %02d -> %.2d.
+        sWriteFileFromString( tReportFileWrite,
+           sysutils.Format( '%s,%s,%s,%u%.2d%.2d,%.2d%.2d%.2d,%u,%u,%s'#13#10,
+           [ string( PAnsiChar( @TempRXData.Callsign[ 1 ] ) ),
+           string( ADIFBANDSTRINGSARRAY[ TempRXData.Band ] ),
+           string( ADIFModeString[ TempRXData.Mode ] ), TempRXData.tSysTime.qtYear
+           + 2000, TempRXData.tSysTime.qtMonth, TempRXData.tSysTime.qtDay,
+           TempRXData.tSysTime.qtHour, TempRXData.tSysTime.qtMinute,
+           TempRXData.tSysTime.qtSecond, TempRXData.RSTSent,
+           TempRXData.RSTReceived, string( ContestTypeSA[ Contest ] ) ] ) );
+        end;
+     goto 1;
+     end;
 
   CloseHandle( tReportFileWrite );
   CloseLogFile;
@@ -2323,24 +2559,24 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             section: PAnsiChar;
           begin
           if CreateCabrilloWindow <> 0 then
-            begin
-            Result := Windows.GetDlgItemTextA( CreateCabrilloWindow,
-               integer( Tag ) + 200, @TempBuffer2, SizeOf( TempBuffer2 ) );
-            end
+             begin
+             Result := Windows.GetDlgItemTextA( CreateCabrilloWindow,
+                integer( Tag ) + 200, @TempBuffer2, SizeOf( TempBuffer2 ) );
+             end
           else
-            begin
-            if ErmakSpecification then
-              begin
-              section := ERMAKSECTION;
-              end
-            else
-              begin
-              section := CABRILLOSECTION;
-              end;
-            Result := GetPrivateProfileStringA( section,
-               CabrilloTagsArray[ Tag ].ctrTag, nil, @TempBuffer2,
-               SizeOf( TempBuffer2 ), TR4W_INI_FILENAME );
-            end;
+             begin
+             if ErmakSpecification then
+                begin
+                section := ERMAKSECTION;
+                end
+             else
+                begin
+                section := CABRILLOSECTION;
+                end;
+             Result := GetPrivateProfileStringA( section,
+                CabrilloTagsArray[ Tag ].ctrTag, nil, @TempBuffer2,
+                SizeOf( TempBuffer2 ), TR4W_INI_FILENAME );
+             end;
           end;
 
       begin
@@ -2348,31 +2584,37 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
 
       if ( Contest = ARRL10 ) or ( Contest = WINTERFIELDDAY ) then
         if GetCabrilloTagText( ctLocation ) = 0 then
-          begin
-          showwarning( 'LOCATION field is empty.' );
-          Exit;
-          end;
+           begin
+           showwarning( 'LOCATION field is empty.' );
+           Exit;
+           end;
 
       if not tOpenFileForWrite( tReportFileWrite, tReportsFilename ) then
-        Exit;
+         begin
+         Exit;
+         end;
       T2 := @MyCall[ 1 ];
       if length( ContestsArray[ Contest ].CABName ) = 0 then
-        begin
-        T3 := ContestTypeSA[ Contest ]
-        end
+         begin
+         T3 := ContestTypeSA[ Contest ]
+         end
       else
-        begin
-        T3 := ContestsArray[ Contest ].CABName; // NY4I
-        end;
+         begin
+         T3 := ContestsArray[ Contest ].CABName; // NY4I
+         end;
 
       // T3 := ContestTypeSA[contest];        // 4.78.2
       if Contest = GENERALQSO then
         // 4.78.3        // ALLOW CUSTOM CONFIG Contest Title or Contest Name
         if length( ContestTitle ) <> 0 then
-          T3 := ContestTitle
+           begin
+           T3 := ContestTitle
+           end
         else
           if length( ContestName ) <> 0 then // 4.78.3
-            T3 := ContestName;
+             begin
+             T3 := ContestName;
+             end;
 
       // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString.
       // %s=CALLSIGN(T2), %s=CONTEST(T3), %d=CLAIMED-SCORE(TotalScore).
@@ -2383,97 +2625,109 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          [ string( T2 ), T3, TotalScore ] ) );
 
       for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
-        begin
-        if ErmakSpecification then
-          if TempTag = ctOperators then
-            Continue;
-
-        GetCabrilloTagText( TempTag );
-        // if TempBuffer2[0] = #0 then Continue;
-        if TempTag = ctOperators then
-          begin;
-          end
-        else
-          if TempBuffer2[ 0 ] = #0 then
-            begin
-            Continue;
-            end;
-
-        if Contest = WINTERFIELDDAY then
-          begin
-          if TempTag = ctLocation then
-            begin
-            sWriteFileFromString( tReportFileWrite,
-               'ARRL-SECTION: ' + TempBuffer2 + #13#10 );
-            sWriteFileFromString( tReportFileWrite, 'X-EXCHANGE: ' + MyFDClass
-               + #13#10 );
-            end;
-          end;
-        TempPchar := @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ];
-        if TempTag = ctOperators then
-          begin
-          uAnsiStr.StrPCopy( TempBuffer2, GetOperatorsFromLog );
-          // Issue #998 (was custom Format '%s')
-          end;
-        // Issue #998: %s=tag(TempPchar), %s=value(TempBuffer2).
-        sWriteFileFromString( tReportFileWrite, sysutils.Format( '%s: %s'#13#10,
-           [ string( TempPchar ), string( PAnsiChar( @TempBuffer2 ) ) ] ) );
-        end;
-
-      if MyGrid <> '' then
-        begin
-        sWriteFileFromString( tReportFileWrite, 'GRID-LOCATOR: ' + MyGrid
-           + #13#10 );
-        end;
-
-      if ErmakSpecification then
-        for Operator         := 1 to 10 do
-          for TempErmakField := Low( TErmakFields ) to High( TErmakFields ) do
-            begin
-            ControlID := integer( TempErmakField ) + ( Operator ) * 100;
-            // Issue #998: builds the INI key into TempBuffer2 (not file output).
-            // OPERATORINFO is C '_OP_INFO_%03u' (zero-pad); Delphi Format uses '%.3u'.
-            uAnsiStr.StrPCopy( TempBuffer2,
-               sysutils.Format( '_OP_INFO_%.3u', [ ControlID ] ) );
-            TempInteger := GetPrivateProfileStringA( ERMAKSECTION, TempBuffer2,
-               '?', TempBuffer1, SizeOf( TempBuffer1 ), TR4W_INI_FILENAME );
-            TempPchar := @TempBuffer1[ 0 ];
-            if TempErmakField = efOp then
+         begin
+         if ErmakSpecification then
+           if TempTag = ctOperators then
               begin
-              if TempBuffer1[ 0 ] <> '1' then
-                Break;
-              sWriteFile( tReportFileWrite, op, length( op ) );
               Continue;
               end;
 
-            if TempErmakField = efLevel then
-              if TempBuffer1[ 0 ] in [ '0' .. '7' ] then
-                begin
-                TempPchar   := ZVANIYA[ Ord( TempBuffer1[ 0 ] ) - Ord( '0' ) ];
-                TempInteger := Windows.lstrlenA( TempPchar );
-                end;
-
-            if TempErmakField = efTrainer then
+         GetCabrilloTagText( TempTag );
+         // if TempBuffer2[0] = #0 then Continue;
+         if TempTag = ctOperators then
+           begin;
+           end
+         else
+           if TempBuffer2[ 0 ] = #0 then
               begin
-              if TempBuffer1[ 0 ] = '1' then
-                begin
-                TempPchar   := '??????';
-                TempInteger := 6;
-                end
-              else
-                begin
-                TempPchar   := nil;
-                TempInteger := 0;
-                end;
-
+              Continue;
               end;
 
-            sWriteFile( tReportFileWrite, TempPchar^, TempInteger );
-            if TempErmakField <> High( TErmakFields ) then
-              sWriteFileFromString( tReportFileWrite, ', ' )
-            else
-              sWriteFileFromString( tReportFileWrite, #13#10 );
+         if Contest = WINTERFIELDDAY then
+            begin
+            if TempTag = ctLocation then
+               begin
+               sWriteFileFromString( tReportFileWrite,
+                  'ARRL-SECTION: ' + TempBuffer2 + #13#10 );
+               sWriteFileFromString( tReportFileWrite, 'X-EXCHANGE: ' + MyFDClass
+                  + #13#10 );
+               end;
             end;
+         TempPchar := @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ];
+         if TempTag = ctOperators then
+            begin
+            uAnsiStr.StrPCopy( TempBuffer2, GetOperatorsFromLog );
+            // Issue #998 (was custom Format '%s')
+            end;
+         // Issue #998: %s=tag(TempPchar), %s=value(TempBuffer2).
+         sWriteFileFromString( tReportFileWrite, sysutils.Format( '%s: %s'#13#10,
+            [ string( TempPchar ), string( PAnsiChar( @TempBuffer2 ) ) ] ) );
+         end;
+
+      if MyGrid <> '' then
+         begin
+         sWriteFileFromString( tReportFileWrite, 'GRID-LOCATOR: ' + MyGrid
+            + #13#10 );
+         end;
+
+      if ErmakSpecification then
+         begin
+         for Operator         := 1 to 10 do
+            begin
+            for TempErmakField := Low( TErmakFields ) to High( TErmakFields ) do
+               begin
+               ControlID := integer( TempErmakField ) + ( Operator ) * 100;
+               // Issue #998: builds the INI key into TempBuffer2 (not file output).
+               // OPERATORINFO is C '_OP_INFO_%03u' (zero-pad); Delphi Format uses '%.3u'.
+               uAnsiStr.StrPCopy( TempBuffer2,
+                  sysutils.Format( '_OP_INFO_%.3u', [ ControlID ] ) );
+               TempInteger := GetPrivateProfileStringA( ERMAKSECTION, TempBuffer2,
+                  '?', TempBuffer1, SizeOf( TempBuffer1 ), TR4W_INI_FILENAME );
+               TempPchar := @TempBuffer1[ 0 ];
+               if TempErmakField = efOp then
+                  begin
+                  if TempBuffer1[ 0 ] <> '1' then
+                     begin
+                     Break;
+                     end;
+                  sWriteFile( tReportFileWrite, op, length( op ) );
+                  Continue;
+                  end;
+
+               if TempErmakField = efLevel then
+                 if TempBuffer1[ 0 ] in [ '0' .. '7' ] then
+                    begin
+                    TempPchar   := ZVANIYA[ Ord( TempBuffer1[ 0 ] ) - Ord( '0' ) ];
+                    TempInteger := Windows.lstrlenA( TempPchar );
+                    end;
+
+               if TempErmakField = efTrainer then
+                  begin
+                  if TempBuffer1[ 0 ] = '1' then
+                     begin
+                     TempPchar   := '??????';
+                     TempInteger := 6;
+                     end
+                  else
+                     begin
+                     TempPchar   := nil;
+                     TempInteger := 0;
+                     end;
+
+                  end;
+
+               sWriteFile( tReportFileWrite, TempPchar^, TempInteger );
+               if TempErmakField <> High( TErmakFields ) then
+                  begin
+                  sWriteFileFromString( tReportFileWrite, ', ' )
+                  end
+               else
+                  begin
+                  sWriteFileFromString( tReportFileWrite, #13#10 );
+                  end;
+               end;
+            end;
+         end;
 
       Result := true;
       end;
@@ -2525,7 +2779,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       pnr              := 0;
       if ( Contest = NAQSOCW ) or ( Contest = NAQSOSSB ) or
          ( Contest = NAQSORTTY ) then
-        TransmitterIDPos := 92; // 4.67.7
+         begin
+         TransmitterIDPos := 92; // 4.67.7
+         end;
       // if Contest =  NAQPCW  then TransmitterIDPos := 92;
       contacts := 0;
       Result   := False;
@@ -2533,7 +2789,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       logger.Info( 'In tGenerateLogPortionOfCabrilloFile' );
 
       if not OpenLogFile then
-        Exit;
+         begin
+         Exit;
+         end;
 
       ReadVersionBlock;
 
@@ -2548,266 +2806,296 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           previousqsonr := 0;
         1:
           if ReadLogFile then
-            begin
-            inc( contacts );
-            // slOperators.Add(TempRXData.ceOperator);
+             begin
+             inc( contacts );
+             // slOperators.Add(TempRXData.ceOperator);
 
-            HisCallsign := @TempRXData.Callsign[ 1 ];
+             HisCallsign := @TempRXData.Callsign[ 1 ];
 
-            if TempRXData.RSTSent < 25 then
-              begin
-              if WSJTXEnabled then
+             if TempRXData.RSTSent < 25 then
                 begin
-                RSTSent := sysutils.Format( '%d',
-                   [ wsjtx.ConvertSNRToRST( TempRXData.RSTSent ) ] );
+                if WSJTXEnabled then
+                   begin
+                   RSTSent := sysutils.Format( '%d',
+                      [ wsjtx.ConvertSNRToRST( TempRXData.RSTSent ) ] );
+                   end
+                else
+                   begin
+                   RSTSent := '599';
+                   logger.Info
+                      ( 'RSTSent was less than 25 but WSJTXEnabled is FALSE' );
+                   end;
                 end
-              else
+             else
                 begin
-                RSTSent := '599';
-                logger.Info
-                   ( 'RSTSent was less than 25 but WSJTXEnabled is FALSE' );
+                RSTSent := sysutils.Format( '%d', [ TempRXData.RSTSent ] );
                 end;
-              end
-            else
-              begin
-              RSTSent := sysutils.Format( '%d', [ TempRXData.RSTSent ] );
-              end;
 
-            if ( TempRXData.ExtMode in [ eFT8, eMFSK, eJT65 ] ) and
-               ( TempRXData.RSTReceived < 25 ) then
-              begin
-              if WSJTXEnabled then
+             if ( TempRXData.ExtMode in [ eFT8, eMFSK, eJT65 ] ) and
+                ( TempRXData.RSTReceived < 25 ) then
                 begin
-                RSTReceived := sysutils.Format( '%d',
-                   [ wsjtx.ConvertSNRToRST( TempRXData.RSTReceived ) ] );
+                if WSJTXEnabled then
+                   begin
+                   RSTReceived := sysutils.Format( '%d',
+                      [ wsjtx.ConvertSNRToRST( TempRXData.RSTReceived ) ] );
+                   end
+                else
+                   begin
+                   RSTReceived := '599';
+                   end;
                 end
-              else
+             else
                 begin
-                RSTReceived := '599';
+                RSTReceived := sysutils.Format( '%d', [ TempRXData.RSTReceived ] );
                 end;
-              end
-            else
-              begin
-              RSTReceived := sysutils.Format( '%d', [ TempRXData.RSTReceived ] );
-              end;
 
-            nrReceived := TempRXData.NumberReceived;
-            nrSent     := TempRXData.NumberSent;
-            if tShowFrequencyinLog then
-              begin
-              if ( TempRXData.Frequency = 0 ) then
-                // Get base frequency from band
+             nrReceived := TempRXData.NumberReceived;
+             nrSent     := TempRXData.NumberSent;
+             if tShowFrequencyinLog then
+                begin
+                if ( TempRXData.Frequency = 0 ) then
+                  // Get base frequency from band
+                   begin
+                   Freq := tCabrilloFreqString[ TempRXData.Band ];
+                   // https://wwrof.org/cabrillo/cabrillo-qso-data/
+                   end
+                else
+                   begin
+                   if ( TempRXData.Frequency > 0 ) and
+                      ( TempRXData.Frequency < 30000000 ) then
+                      begin
+                      Freq := inttopchar( TempRXData.Frequency div 1000 );
+                      end
+                   else
+                      begin // Per the Cabrillo spec, if above 30 Mhz, do not use actual frequency
+                      Freq := tCabrilloFreqString[ TempRXData.Band ];
+                      // https://wwrof.org/cabrillo/cabrillo-qso-data/
+                      end;
+                   end;
+                end
+             else
                 begin
                 Freq := tCabrilloFreqString[ TempRXData.Band ];
-                // https://wwrof.org/cabrillo/cabrillo-qso-data/
-                end
-              else
-                begin
-                if ( TempRXData.Frequency > 0 ) and
-                   ( TempRXData.Frequency < 30000000 ) then
-                  begin
-                  Freq := inttopchar( TempRXData.Frequency div 1000 );
-                  end
-                else
-                  begin // Per the Cabrillo spec, if above 30 Mhz, do not use actual frequency
-                  Freq := tCabrilloFreqString[ TempRXData.Band ];
-                  // https://wwrof.org/cabrillo/cabrillo-qso-data/
-                  end;
                 end;
-              end
-            else
-              begin
-              Freq := tCabrilloFreqString[ TempRXData.Band ];
-              end;
 
-            // This was just assuming any digital contact was RY which is obviously not true.
-            if TempRXData.Mode = Digital then
-              begin
-              case TempRXData.ExtMode of
-                eNoMode, eRTTY:
-                  begin
-                  ModeString := 'RY';
-                  end;
-                else
-                  begin
-                  ModeString := 'DG';
-                  end;
-              end; // case
-              end
-            else
-              if TempRXData.Mode = FM then
+             // This was just assuming any digital contact was RY which is obviously not true.
+             if TempRXData.Mode = Digital then
                 begin
-                if Contest = WINTERFIELDDAY then
+                case TempRXData.ExtMode of
+                  eNoMode, eRTTY:
+                    begin
+                    ModeString := 'RY';
+                    end;
+                  else
+                    begin
+                    ModeString := 'DG';
+                    end;
+                end; // case
+                end
+             else
+               if TempRXData.Mode = FM then
                   begin
-                  ModeString := 'PH';
+                  if Contest = WINTERFIELDDAY then
+                     begin
+                     ModeString := 'PH';
+                     end
+                  else
+                     begin
+                     ModeString := tCabrilloModeString[ TempRXData.Mode ];
+                     end;
                   end
-                else
+               else
                   begin
                   ModeString := tCabrilloModeString[ TempRXData.Mode ];
                   end;
-                end
-              else
-                begin
-                ModeString := tCabrilloModeString[ TempRXData.Mode ];
-                end;
 
-            if DoingDomesticMults then
-              begin
-              if LiteralDomesticQTH then
-                csQTHString := @TempRXData.QTHString[ 1 ]
-              else
-                if ContestName = 'WWDIGI' then
-                  csQTHString := @TempRXData.QTHString[ 1 ]
+             if DoingDomesticMults then
+                begin
+                if LiteralDomesticQTH then
+                   begin
+                   csQTHString := @TempRXData.QTHString[ 1 ]
+                   end
                 else
-                  if ContestName = 'LABRE' then
-                    csQTHString := @TempRXData.QTHString[ 1 ]
+                  if ContestName = 'WWDIGI' then
+                     begin
+                     csQTHString := @TempRXData.QTHString[ 1 ]
+                     end
                   else
-                    csQTHString := @TempRXData.DomesticQTH[ 1 ] { DomMultQTH };
-              end
-            else
-              csQTHString := @TempRXData.QTHString[ 1 ];
-
-            if Contest in [ CUPRFCW, CUPRFSSB ] then
-              csQTHString := @TempRXData.QTHString[ 1 ];
-
-            if ContestName = 'EURASIA' then
-              csQTHString := @( TempRXData.QTHString[ 1 ] );
-
-            if Contest in [ CALQSOPARTY ] then
-              begin
-
-              csQTHString := @TempRXData.QTHString[ 1 ];
-              // else
-              // csQTHString := @TempRXData.DomMultQTH[1];
-              if TempRXData.DomMultQTH = '' then
+                    if ContestName = 'LABRE' then
+                       begin
+                       csQTHString := @TempRXData.QTHString[ 1 ]
+                       end
+                    else
+                       begin
+                       csQTHString := @TempRXData.DomesticQTH[ 1 ] { DomMultQTH };
+                       end;
+                end
+             else
                 begin
-                TempRXData.DomMultQTH := 'DX';
-                csQTHString           := 'DX';
+                csQTHString := @TempRXData.QTHString[ 1 ];
                 end;
-              end;
 
-            if GoodLookingQSO then
-              begin
+             if Contest in [ CUPRFCW, CUPRFSSB ] then
+                begin
+                csQTHString := @TempRXData.QTHString[ 1 ];
+                end;
 
-              { Make First part }
-              // Issue #998: asm-push wsprintf -> SysUtils.Format; the CABRILLO_FIRST_PART
-              // PChar buffer is replaced by the local sFirstPart string.  cdecl arg
-              // order: freq, mode, year, month, day, hour, minute, mycall.  %02d -> %.2d
-              // (date/time fields are always non-negative).
-              // Issue #750: X-QSO records use the 'X-QSO:' prefix instead of 'QSO:';
-              // only the literal prefix differs (the 2-char-wider prefix shifts later
-              // columns by 2 -- Cabrillo parsers tolerate X-QSO column alignment).
-              if TempRXData.ceXQSO then
-                sPrefix := 'X-QSO: '
-              else
-                sPrefix  := 'QSO: ';
-              sFirstPart :=
-                 sysutils.Format
-                 ( sPrefix + '%5s %s %d-%.2d-%.2d %.2d%.2d %-7s ',
-                 [ string( Freq ), string( ModeString ),
-                 TempRXData.tSysTime.qtYear + 2000, TempRXData.tSysTime.qtMonth,
-                 TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
-                 TempRXData.tSysTime.qtMinute,
-                 string( PAnsiChar( @MyCall[ 1 ] ) ) ] );
-              {
+             if ContestName = 'EURASIA' then
+                begin
+                csQTHString := @( TempRXData.QTHString[ 1 ] );
+                end;
+
+             if Contest in [ CALQSOPARTY ] then
+                begin
+
+                csQTHString := @TempRXData.QTHString[ 1 ];
+                // else
+                // csQTHString := @TempRXData.DomMultQTH[1];
+                if TempRXData.DomMultQTH = '' then
+                   begin
+                   TempRXData.DomMultQTH := 'DX';
+                   csQTHString           := 'DX';
+                   end;
+                end;
+
+             if GoodLookingQSO then
+                begin
+
+                { Make First part }
+                // Issue #998: asm-push wsprintf -> SysUtils.Format; the CABRILLO_FIRST_PART
+                // PChar buffer is replaced by the local sFirstPart string.  cdecl arg
+                // order: freq, mode, year, month, day, hour, minute, mycall.  %02d -> %.2d
+                // (date/time fields are always non-negative).
+                // Issue #750: X-QSO records use the 'X-QSO:' prefix instead of 'QSO:';
+                // only the literal prefix differs (the 2-char-wider prefix shifts later
+                // columns by 2 -- Cabrillo parsers tolerate X-QSO column alignment).
+                if TempRXData.ceXQSO then
+                   begin
+                   sPrefix := 'X-QSO: '
+                   end
+                else
+                   begin
+                   sPrefix  := 'QSO: ';
+                   end;
+                sFirstPart :=
+                   sysutils.Format
+                   ( sPrefix + '%5s %s %d-%.2d-%.2d %.2d%.2d %-7s ',
+                   [ string( Freq ), string( ModeString ),
+                   TempRXData.tSysTime.qtYear + 2000, TempRXData.tSysTime.qtMonth,
+                   TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
+                   TempRXData.tSysTime.qtMinute,
+                   string( PAnsiChar( @MyCall[ 1 ] ) ) ] );
+                {
                 ActiveExchange := RSTQSONumberExchange;
                 nrReceived := StrToIntDef(TempRXData.ceClass, 0);
                 Windows.ZeroMemory(@CABRILLO_RST_RCVD, SizeOf(CABRILLO_RST_RCVD));
                 Windows.lstrcat(CABRILLO_RST_RCVD, '599');
               }
-              { Make Exchanges Strings }
-              // Issue #998 capstone: the per-exchange MYEX/HISEX builder was extracted
-              // into uCabrilloExchange.FormatCabrilloExchange (dependency-light + unit-
-              // tested).  Build the My-station record and pass the per-QSO derived
-              // strings; it fills CABRILLO_MYEX / CABRILLO_HISEX (and carries pnr).
-              myStationEx.MyState      := string( MyState );
-              myStationEx.MyGrid       := string( MyGrid );
-              myStationEx.MyName       := string( MyName );
-              myStationEx.MyZone       := string( MyZone );
-              myStationEx.MyFDClass    := string( MyFDClass );
-              myStationEx.MySection    := string( MySection );
-              myStationEx.MyCheck      := string( MyCheck );
-              myStationEx.MyPrec       := string( MyPrec );
-              myStationEx.MyFOCNumber  := string( MyFOCNumber );
-              myStationEx.MyPostalCode := string( MyPostalCode );
-              FormatCabrilloExchange( ActiveExchange, Contest, ContestTitle,
-                 ContestName, TempRXData, myStationEx, RSTSent,
-                 RSTReceived, string( csQTHString ),
-                 string( PAnsiChar( @PreviousQTHString[ 1 ] ) ), contacts, pnr,
-                 CABRILLO_MYEX, CABRILLO_HISEX );
-              // ----------------------------
+                { Make Exchanges Strings }
+                // Issue #998 capstone: the per-exchange MYEX/HISEX builder was extracted
+                // into uCabrilloExchange.FormatCabrilloExchange (dependency-light + unit-
+                // tested).  Build the My-station record and pass the per-QSO derived
+                // strings; it fills CABRILLO_MYEX / CABRILLO_HISEX (and carries pnr).
+                myStationEx.MyState      := string( MyState );
+                myStationEx.MyGrid       := string( MyGrid );
+                myStationEx.MyName       := string( MyName );
+                myStationEx.MyZone       := string( MyZone );
+                myStationEx.MyFDClass    := string( MyFDClass );
+                myStationEx.MySection    := string( MySection );
+                myStationEx.MyCheck      := string( MyCheck );
+                myStationEx.MyPrec       := string( MyPrec );
+                myStationEx.MyFOCNumber  := string( MyFOCNumber );
+                myStationEx.MyPostalCode := string( MyPostalCode );
+                FormatCabrilloExchange( ActiveExchange, Contest, ContestTitle,
+                   ContestName, TempRXData, myStationEx, RSTSent,
+                   RSTReceived, string( csQTHString ),
+                   string( PAnsiChar( @PreviousQTHString[ 1 ] ) ), contacts, pnr,
+                   CABRILLO_MYEX, CABRILLO_HISEX );
+                // ----------------------------
 
-              // Issue #998: StrUpper (ASCII a-z only) on the old PChar buffer -> UpperCase
-              // on the string (also ASCII a-z; Cabrillo exchanges are ASCII so identical).
-              CABRILLO_HISEX := UpperCase( CABRILLO_HISEX );
+                // Issue #998: StrUpper (ASCII a-z only) on the old PChar buffer -> UpperCase
+                // on the string (also ASCII a-z; Cabrillo exchanges are ASCII so identical).
+                CABRILLO_HISEX := UpperCase( CABRILLO_HISEX );
 
-              if CategoryOperator = coMULTIOP then
-                if TempRXData.cecomputerid = ComputerID then // 4.73.6
+                if CategoryOperator = coMULTIOP then
+                  if TempRXData.cecomputerid = ComputerID then // 4.73.6
 
-                  T4 := '1'
+                     begin
+                     T4 := '1'
+                     end
+                  else
+                     begin
+                     T4 := '0';
+                     end;
+                if CategoryOperator <> coMULTIOP then
+                   begin
+                   T4 := '';
+                   end;
+                // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
+                // first-part, my-exchange, his-callsign, his-exchange, multi-op flag.
+                // ARKTIKA_SPRING uses a narrower layout that consumes only the first 4
+                // args (the multi-op flag is omitted); Delphi Format ignores the extra
+                // trailing argument, so a single arg list serves both formats.
+                if Contest = ARKTIKA_SPRING then
+                   begin
+                   sFmt := '%s%-12s%-10s%-10s'#13#10 // 4.100.3
+                   end
                 else
-                  T4 := '0';
-              if CategoryOperator <> coMULTIOP then
-                T4 := '';
-              // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-              // first-part, my-exchange, his-callsign, his-exchange, multi-op flag.
-              // ARKTIKA_SPRING uses a narrower layout that consumes only the first 4
-              // args (the multi-op flag is omitted); Delphi Format ignores the extra
-              // trailing argument, so a single arg list serves both formats.
-              if Contest = ARKTIKA_SPRING then
-                sFmt := '%s%-12s%-10s%-10s'#13#10 // 4.100.3
-              else
-                sFmt := '%s%s%-15s%-10s %-5s'#13#10; // 4.100.3
-              sWriteFileFromString( tReportFileWrite,
-                 sysutils.Format( sFmt, [ sFirstPart, CABRILLO_MYEX,
-                 string( HisCallsign ), CABRILLO_HISEX, string( T4 ) ] ) );
+                   begin
+                   sFmt := '%s%s%-15s%-10s %-5s'#13#10; // 4.100.3
+                   end;
+                sWriteFileFromString( tReportFileWrite,
+                   sysutils.Format( sFmt, [ sFirstPart, CABRILLO_MYEX,
+                   string( HisCallsign ), CABRILLO_HISEX, string( T4 ) ] ) );
 
-              previousqsonr := nrReceived mod 1000;
-              end;
-
-            Windows.ZeroMemory( @PreviousQTHString,
-               SizeOf( PreviousQTHString ) );
-            PreviousQTHString := TempRXData.QTHString;
-
-            if TempRXData.ceRecordKind in [ rkQTCR, rkQTCS ] then
-              begin
-
-              cKids                := @TempRXData.Kids[ 1 ];
-              cRandomCharsReceived := @TempRXData.RandomCharsReceived[ 1 ];
-              // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString
-              // (last asm block in this unit).  QTC: freq mode date time <call1>
-              // <randomchars> <call2> <sentNr> <kids> <rcvdNr>.  For rkQTCR the
-              // from/to calls are MyCall/HisCallsign; for rkQTCS they swap.
-              // %02d -> %.2d (date/time), %04u -> %.4u (sent number).
-              if TempRXData.ceRecordKind = rkQTCR then
-                begin
-                sCall1 := string( PAnsiChar( @MyCall[ 1 ] ) );
-                sCall2 := string( HisCallsign );
-                end
-              else
-                begin
-                sCall1 := string( HisCallsign );
-                sCall2 := string( PAnsiChar( @MyCall[ 1 ] ) );
+                previousqsonr := nrReceived mod 1000;
                 end;
-              sWriteFileFromString( tReportFileWrite,
-                 sysutils.Format
-                 ( 'QTC: %5s %s %d-%.2d-%.2d %.2d%.2d %-14s%-11s%-14s%.4u %-14s%u'#13#10,
-                 [ string( Freq ), string( ModeString ),
-                 TempRXData.tSysTime.qtYear + 2000, TempRXData.tSysTime.qtMonth,
-                 TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
-                 TempRXData.tSysTime.qtMinute, sCall1,
-                 string( cRandomCharsReceived ), sCall2, nrSent,
-                 string( cKids ), nrReceived ] ) );
-              end;
-            goto 1;
-            end;
+
+             Windows.ZeroMemory( @PreviousQTHString,
+                SizeOf( PreviousQTHString ) );
+             PreviousQTHString := TempRXData.QTHString;
+
+             if TempRXData.ceRecordKind in [ rkQTCR, rkQTCS ] then
+                begin
+
+                cKids                := @TempRXData.Kids[ 1 ];
+                cRandomCharsReceived := @TempRXData.RandomCharsReceived[ 1 ];
+                // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString
+                // (last asm block in this unit).  QTC: freq mode date time <call1>
+                // <randomchars> <call2> <sentNr> <kids> <rcvdNr>.  For rkQTCR the
+                // from/to calls are MyCall/HisCallsign; for rkQTCS they swap.
+                // %02d -> %.2d (date/time), %04u -> %.4u (sent number).
+                if TempRXData.ceRecordKind = rkQTCR then
+                   begin
+                   sCall1 := string( PAnsiChar( @MyCall[ 1 ] ) );
+                   sCall2 := string( HisCallsign );
+                   end
+                else
+                   begin
+                   sCall1 := string( HisCallsign );
+                   sCall2 := string( PAnsiChar( @MyCall[ 1 ] ) );
+                   end;
+                sWriteFileFromString( tReportFileWrite,
+                   sysutils.Format
+                   ( 'QTC: %5s %s %d-%.2d-%.2d %.2d%.2d %-14s%-11s%-14s%.4u %-14s%u'#13#10,
+                   [ string( Freq ), string( ModeString ),
+                   TempRXData.tSysTime.qtYear + 2000, TempRXData.tSysTime.qtMonth,
+                   TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
+                   TempRXData.tSysTime.qtMinute, sCall1,
+                   string( cRandomCharsReceived ), sCall2, nrSent,
+                   string( cKids ), nrReceived ] ) );
+                end;
+             goto 1;
+             end;
           sWriteFileFromString( tReportFileWrite, 'END-OF-LOG: ' );
 
           CloseLogFile;
           Result := true;
         except
           on E: Exception do
-            DEBUGMSG( E.ClassName + ' error raised with message ' + E.Message );
+             begin
+             DEBUGMSG( E.ClassName + ' error raised with message ' + E.Message );
+             end;
         end;
       finally
         FreeANdNil( slOperators );
@@ -2830,7 +3118,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       begin
       New( CountryMultTotals );
       if GenerateCountryMultiplierTotals then
-        PrintFirstCountryMultiplierCallsigns;
+         begin
+         PrintFirstCountryMultiplierCallsigns;
+         end;
       Dispose( CountryMultTotals );
       end;
 
@@ -2850,55 +3140,55 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       CountryIndex := 0;
 
       while CountryIndex < CTY.ctyNumberCountries do
-        begin
+         begin
 
-        if ( CountryMultTotals^[ Band160, CountryIndex ].TotalQSOs > 0 ) or
-           ( CountryMultTotals^[ Band80, CountryIndex ].TotalQSOs > 0 ) or
-           ( CountryMultTotals^[ Band40, CountryIndex ].TotalQSOs > 0 ) or
-           ( CountryMultTotals^[ Band20, CountryIndex ].TotalQSOs > 0 ) or
-           ( CountryMultTotals^[ Band15, CountryIndex ].TotalQSOs > 0 ) or
-           ( CountryMultTotals^[ Band10, CountryIndex ].TotalQSOs > 0 ) then
+         if ( CountryMultTotals^[ Band160, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals^[ Band80, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals^[ Band40, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals^[ Band20, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals^[ Band15, CountryIndex ].TotalQSOs > 0 ) or
+            ( CountryMultTotals^[ Band10, CountryIndex ].TotalQSOs > 0 ) then
 
-          begin
-
-          if ( ( Lines >= 55 ) or ( Lines = 0 ) ) then
             begin
-            Write( FileWrite, ' ' );
 
-            WriteLnVarCenter( FileWrite,
-               'COUNTRIES WORKED - WITH CALL OF FIRST STATION WORKED' );
-            WriteLn( FileWrite );
-            WriteLnVarCenter( FileWrite, ContestTitle );
-            WriteLn( FileWrite );
+            if ( ( Lines >= 55 ) or ( Lines = 0 ) ) then
+               begin
+               Write( FileWrite, ' ' );
+
+               WriteLnVarCenter( FileWrite,
+                  'COUNTRIES WORKED - WITH CALL OF FIRST STATION WORKED' );
+               WriteLn( FileWrite );
+               WriteLnVarCenter( FileWrite, ContestTitle );
+               WriteLn( FileWrite );
+               WriteLn( FileWrite,
+                  'Prefix   160         80          40          20          15          10' );
+               WriteLn( FileWrite,
+                  '------ --------    --------    --------    --------    --------    --------' );
+               Lines := 5;
+               end;
+
+            Prefix := CTY.ctyTable[ CountryIndex ].ID;
+            // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
+            // %-6s=Prefix, then the FirstCall for bands 160/80/40/20/15/10.
             WriteLn( FileWrite,
-               'Prefix   160         80          40          20          15          10' );
-            WriteLn( FileWrite,
-               '------ --------    --------    --------    --------    --------    --------' );
-            Lines := 5;
+               sysutils.Format( '%-6s %-11s %-11s %-11s %-11s %-11s %-11s',
+               [ Prefix, string( PAnsiChar( @CountryMultTotals^[ Band160,
+               CountryIndex ].FirstCall[ 1 ] ) ),
+               string( PAnsiChar( @CountryMultTotals^[ Band80,
+               CountryIndex ].FirstCall[ 1 ] ) ),
+               string( PAnsiChar( @CountryMultTotals^[ Band40,
+               CountryIndex ].FirstCall[ 1 ] ) ),
+               string( PAnsiChar( @CountryMultTotals^[ Band20,
+               CountryIndex ].FirstCall[ 1 ] ) ),
+               string( PAnsiChar( @CountryMultTotals^[ Band15,
+               CountryIndex ].FirstCall[ 1 ] ) ),
+               string( PAnsiChar( @CountryMultTotals^[ Band10,
+               CountryIndex ].FirstCall[ 1 ] ) ) ] ) );
+            inc( Lines );
             end;
 
-          Prefix := CTY.ctyTable[ CountryIndex ].ID;
-          // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-          // %-6s=Prefix, then the FirstCall for bands 160/80/40/20/15/10.
-          WriteLn( FileWrite,
-             sysutils.Format( '%-6s %-11s %-11s %-11s %-11s %-11s %-11s',
-             [ Prefix, string( PAnsiChar( @CountryMultTotals^[ Band160,
-             CountryIndex ].FirstCall[ 1 ] ) ),
-             string( PAnsiChar( @CountryMultTotals^[ Band80,
-             CountryIndex ].FirstCall[ 1 ] ) ),
-             string( PAnsiChar( @CountryMultTotals^[ Band40,
-             CountryIndex ].FirstCall[ 1 ] ) ),
-             string( PAnsiChar( @CountryMultTotals^[ Band20,
-             CountryIndex ].FirstCall[ 1 ] ) ),
-             string( PAnsiChar( @CountryMultTotals^[ Band15,
-             CountryIndex ].FirstCall[ 1 ] ) ),
-             string( PAnsiChar( @CountryMultTotals^[ Band10,
-             CountryIndex ].FirstCall[ 1 ] ) ) ] ) );
-          inc( Lines );
-          end;
-
-        inc( CountryIndex );
-        end;
+         inc( CountryIndex );
+         end;
 
       Write( FileWrite, ' ' );
       Close( FileWrite );
@@ -2911,7 +3201,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       New( CountryMultTotals );
       MakeReportFileName( 'FirstCallInEachZone.txt' );
       if GenerateZoneMultiplierTotals then
-        PrintFirstZoneMultiplierCallsigns;
+         begin
+         PrintFirstZoneMultiplierCallsigns;
+         end;
 
       Dispose( CountryMultTotals );
 
@@ -2930,30 +3222,34 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       GenerateZoneMultiplierTotals := False;
       Windows.ZeroMemory( CountryMultTotals, SizeOf( CountryMultiplierArray ) );
       if not OpenLogFile then
-        Exit;
+         begin
+         Exit;
+         end;
       // TotalLogQSOs := 0;
       ReadVersionBlock;
     1:
       if ReadLogFile then
-        begin
-        if GoodLookingQSO then
-          begin
-          // inc(TotalLogQSOs);
-          if ( TempRXData.Zone > 0 ) and ( TempRXData.Zone <= 100 ) then
+         begin
+         if GoodLookingQSO then
             begin
-            if TempRXData.ZoneMult then
-              if CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ]
-                 .TotalQSOs = 0 then
-                CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ].FirstCall
-                   := TempRXData.Callsign;
+            // inc(TotalLogQSOs);
+            if ( TempRXData.Zone > 0 ) and ( TempRXData.Zone <= 100 ) then
+               begin
+               if TempRXData.ZoneMult then
+                 if CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ]
+                    .TotalQSOs = 0 then
+                    begin
+                    CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ].FirstCall
+                       := TempRXData.Callsign;
+                    end;
 
-            // if TempRXData.QTH.Country >= 0 then
-            inc( CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ]
-               .TotalQSOs );
+               // if TempRXData.QTH.Country >= 0 then
+               inc( CountryMultTotals^[ TempRXData.Band, TempRXData.Zone ]
+                  .TotalQSOs );
+               end;
             end;
-          end;
-        goto 1;
-        end;
+         goto 1;
+         end;
       CloseLogFile;
       GenerateZoneMultiplierTotals := true;
       end;
@@ -2983,48 +3279,56 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       MaxNumberOfZones := 40;
 
       for Band        := Band160 to Band10 do
-        for ZoneIndex := 41 to 100 do
-          if CountryMultTotals^[ Band, ZoneIndex ].TotalQSOs > 0 then
-            MaxNumberOfZones := ZoneIndex;
+         begin
+         for ZoneIndex := 41 to 100 do
+           if CountryMultTotals^[ Band, ZoneIndex ].TotalQSOs > 0 then
+              begin
+              MaxNumberOfZones := ZoneIndex;
+              end;
+         end;
 
       if ( MaxNumberOfZones > 40 ) then
         if MaxNumberOfZones <= 75 then
-          MaxNumberOfZones := 75
+           begin
+           MaxNumberOfZones := 75
+           end
         else
-          MaxNumberOfZones := 100;
+           begin
+           MaxNumberOfZones := 100;
+           end;
 
       for ZoneIndex := 1 to MaxNumberOfZones do
-        begin
-        if ( ( Lines >= 55 ) or ( Lines = 0 ) ) then
-          begin
-          Write( FileWrite, ' ' );
+         begin
+         if ( ( Lines >= 55 ) or ( Lines = 0 ) ) then
+            begin
+            Write( FileWrite, ' ' );
 
-          WriteLnVarCenter( FileWrite,
-             'ZONES WORKED - WITH CALL OF FIRST STATION WORKED' );
-          WriteLn( FileWrite );
-          WriteLnVarCenter( FileWrite, ContestTitle );
-          WriteLn( FileWrite );
-          WriteLn( FileWrite,
-             'Zone   160         80          40          20          15          10' );
-          WriteLn( FileWrite,
-             '---- --------    --------    --------    --------    --------    --------' );
-          Lines := 5;
-          end;
-        // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-        // %-4u=ZoneIndex, then the FirstCall for bands 160/80/40/20/15/10.
-        TempString := sysutils.Format
-           ( '%-4u %-11s %-11s %-11s %-11s %-11s %-11s',
-           [ ZoneIndex, string( PAnsiChar( @CountryMultTotals^[ Band160,
-           ZoneIndex ].FirstCall[ 1 ] ) ),
-           string( PAnsiChar( @CountryMultTotals^[ Band80, ZoneIndex ].FirstCall
-           [ 1 ] ) ), string( PAnsiChar( @CountryMultTotals^[ Band40,
-           ZoneIndex ].FirstCall[ 1 ] ) ),
-           string( PAnsiChar( @CountryMultTotals^[ Band20, ZoneIndex ].FirstCall
-           [ 1 ] ) ), string( PAnsiChar( @CountryMultTotals^[ Band15,
-           ZoneIndex ].FirstCall[ 1 ] ) ),
-           string( PAnsiChar( @CountryMultTotals^[ Band10,
-           ZoneIndex ].FirstCall[ 1 ] ) ) ] );
-        {
+            WriteLnVarCenter( FileWrite,
+               'ZONES WORKED - WITH CALL OF FIRST STATION WORKED' );
+            WriteLn( FileWrite );
+            WriteLnVarCenter( FileWrite, ContestTitle );
+            WriteLn( FileWrite );
+            WriteLn( FileWrite,
+               'Zone   160         80          40          20          15          10' );
+            WriteLn( FileWrite,
+               '---- --------    --------    --------    --------    --------    --------' );
+            Lines := 5;
+            end;
+         // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
+         // %-4u=ZoneIndex, then the FirstCall for bands 160/80/40/20/15/10.
+         TempString := sysutils.Format
+            ( '%-4u %-11s %-11s %-11s %-11s %-11s %-11s',
+            [ ZoneIndex, string( PAnsiChar( @CountryMultTotals^[ Band160,
+            ZoneIndex ].FirstCall[ 1 ] ) ),
+            string( PAnsiChar( @CountryMultTotals^[ Band80, ZoneIndex ].FirstCall
+            [ 1 ] ) ), string( PAnsiChar( @CountryMultTotals^[ Band40,
+            ZoneIndex ].FirstCall[ 1 ] ) ),
+            string( PAnsiChar( @CountryMultTotals^[ Band20, ZoneIndex ].FirstCall
+            [ 1 ] ) ), string( PAnsiChar( @CountryMultTotals^[ Band15,
+            ZoneIndex ].FirstCall[ 1 ] ) ),
+            string( PAnsiChar( @CountryMultTotals^[ Band10,
+            ZoneIndex ].FirstCall[ 1 ] ) ) ] );
+         {
           Str(ZoneIndex: 3, TempString);
 
           TempString := TempString + '  ';
@@ -3057,9 +3361,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           if CountryMultTotals^[Band10, ZoneIndex].TotalQSOs > 0 then
           TempString := TempString + CountryMultTotals^[Band10, ZoneIndex].FirstCall;
         }
-        WriteLn( FileWrite, TempString );
-        inc( Lines );
-        end;
+         WriteLn( FileWrite, TempString );
+         inc( Lines );
+         end;
 
       // Write(FileWrite, ' ');
       Close( FileWrite );
@@ -3085,36 +3389,38 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       NumberBadZones := 0;
       MakeReportFileName( 'PossibleBadZone.txt' );
       if not OpenLogFile then
-        Exit;
+         begin
+         Exit;
+         end;
 
       if not OpenFileForWrite( FileWrite, ReportsFilename ) then
-        begin
-        CloseLogFile;
-        Exit;
-        end;
+         begin
+         CloseLogFile;
+         Exit;
+         end;
 
       QSONumber := 0;
 
       ReadVersionBlock;
     1:
       if ReadLogFile then
-        begin
+         begin
 
-        if GoodLookingQSO then
+         if GoodLookingQSO then
 
-          begin
-          inc( QSONumber );
-          ctyLocateCall( TempRXData.Callsign, Location );
-          if TempRXData.Zone <> Location.Zone then
             begin
-            WriteLn( FileWrite, TempRXData.Callsign:10 );
-            inc( NumberBadZones );
+            inc( QSONumber );
+            ctyLocateCall( TempRXData.Callsign, Location );
+            if TempRXData.Zone <> Location.Zone then
+               begin
+               WriteLn( FileWrite, TempRXData.Callsign:10 );
+               inc( NumberBadZones );
+               end;
+
             end;
 
-          end;
-
-        goto 1;
-        end;
+         goto 1;
+         end;
       CloseLogFile;
       WriteLn( FileWrite, 'There were ', NumberBadZones,
          ' questionable zones found.' );
@@ -3151,13 +3457,15 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         sr: PAnsiChar;
       begin
       if not OpenLogFile then
-        Exit;
+         begin
+         Exit;
+         end;
       MakeReportFileName( 'BandChange.txt' );
       if not tOpenFileForWrite( FileWrite, @ReportsFilename[ 1 ] ) then
-        begin
-        CloseLogFile;
-        Exit;
-        end;
+         begin
+         CloseLogFile;
+         Exit;
+         end;
       QSONumber         := 0;
       NumberBandChanges := 0;
       LastBandChangeQSO := -100;
@@ -3169,24 +3477,24 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       ReadVersionBlock;
     1:
       if ReadLogFile then
-        begin
+         begin
 
-        if GoodLookingQSO then
+         if GoodLookingQSO then
 
-          begin
-          if FirstQSO then
             begin
-            LastBand := TempRXData.Band;
-            LastMode := TempRXData.Mode;
-            FirstQSO := False;
-            end;
-          inc( QSONumber );
+            if FirstQSO then
+               begin
+               LastBand := TempRXData.Band;
+               LastMode := TempRXData.Mode;
+               FirstQSO := False;
+               end;
+            inc( QSONumber );
 
-          if ( LastBand <> TempRXData.Band ) or ( LastMode <> TempRXData.Mode )
-          then
-            begin
-            inc( NumberBandChanges );
-            {
+            if ( LastBand <> TempRXData.Band ) or ( LastMode <> TempRXData.Mode )
+            then
+               begin
+               inc( NumberBandChanges );
+               {
               Write(FileWrite, NumberBandChanges: 4, '. ',
               TempRXData.NumberSent: 5,
               '  Band change from ',
@@ -3195,41 +3503,41 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
               TempRXData.tSysTime.wHour: 2, ':', TempRXData.tSysTime.wMinute: 02,
               '.');
             }
-            sr := '';
-            if LastBandChangeQSO + 1 = QSONumber then
-              begin
-              sr := '  *';
-              inc( NumberTwoXmtrQSOs );
-              end;
+               sr := '';
+               if LastBandChangeQSO + 1 = QSONumber then
+                  begin
+                  sr := '  *';
+                  inc( NumberTwoXmtrQSOs );
+                  end;
 
-            // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-            // NumberBandChanges, fromBand, fromMode, toBand, toMode, Hour, Minute, sr
-            // (%02d -> %.2d zero-pad).
-            sWriteFileFromString( FileWrite,
-               sysutils.Format
-               ( '%4d.  Band change from %s%s to %s%s at %.2d:%.2d.%s'#13#10,
-               [ NumberBandChanges, string( BandStringsArray[ LastBand ] ),
-               string( ModeStringArray[ LastMode ] ),
-               string( BandStringsArray[ TempRXData.Band ] ),
-               string( ModeStringArray[ TempRXData.Mode ] ),
-               TempRXData.tSysTime.qtHour, TempRXData.tSysTime.qtMinute,
-               string( sr ) ] ) );
+               // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
+               // NumberBandChanges, fromBand, fromMode, toBand, toMode, Hour, Minute, sr
+               // (%02d -> %.2d zero-pad).
+               sWriteFileFromString( FileWrite,
+                  sysutils.Format
+                  ( '%4d.  Band change from %s%s to %s%s at %.2d:%.2d.%s'#13#10,
+                  [ NumberBandChanges, string( BandStringsArray[ LastBand ] ),
+                  string( ModeStringArray[ LastMode ] ),
+                  string( BandStringsArray[ TempRXData.Band ] ),
+                  string( ModeStringArray[ TempRXData.Mode ] ),
+                  TempRXData.tSysTime.qtHour, TempRXData.tSysTime.qtMinute,
+                  string( sr ) ] ) );
 
-            // WriteLn(FileWrite);
-            LastBandChangeQSO := QSONumber;
+               // WriteLn(FileWrite);
+               LastBandChangeQSO := QSONumber;
+               end;
+            LastBand := TempRXData.Band;
+            LastMode := TempRXData.Mode;
             end;
-          LastBand := TempRXData.Band;
-          LastMode := TempRXData.Mode;
-          end;
-        goto 1;
-        end;
+         goto 1;
+         end;
       if NumberTwoXmtrQSOs > 0 then
-        begin
+         begin
 
-        sWriteFileFromString( FileWrite,
-           sysutils.Format( #13#10'There were %d second radio QSOs made.',
-           [ NumberTwoXmtrQSOs ] ) );
-        end;
+         sWriteFileFromString( FileWrite,
+            sysutils.Format( #13#10'There were %d second radio QSOs made.',
+            [ NumberTwoXmtrQSOs ] ) );
+         end;
 
       CloseLogFile;
       CloseHandle( FileWrite );
@@ -3241,15 +3549,25 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       Result := False;
 
       if TempRXData.ceRecordKind <> rkQSO then
-        Exit;
+         begin
+         Exit;
+         end;
       if TempRXData.ceQSO_Skiped = true then
-        Exit;
+         begin
+         Exit;
+         end;
       if TempRXData.Band = NoBand then
-        Exit;
+         begin
+         Exit;
+         end;
       if TempRXData.Mode = NoMode then
-        Exit;
+         begin
+         Exit;
+         end;
       if TempRXData.ceQSO_Deleted = true then
-        Exit;
+         begin
+         Exit;
+         end;
 
       Result := true;
       end;
@@ -3275,33 +3593,35 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       begin
       MakeReportFileName( 'Notes.txt' );
       if not OpenLogFile then
-        Exit;
+         begin
+         Exit;
+         end;
 
       if not tOpenFileForWrite( tReportFileWrite, @ReportsFilename[ 1 ] ) then
-        begin
-        CloseLogFile;
-        Exit;
-        end;
+         begin
+         CloseLogFile;
+         Exit;
+         end;
 
       ReadVersionBlock;
     1:
       if ReadLogFile then
-        begin
-        if TempRXData.ceRecordKind = rkNote then
-          begin
-          Minutes := TempRXData.tSysTime.qtMinute;
-          Hour    := TempRXData.tSysTime.qtHour;
-          Note    := @TempRXData.Prefix;
-          // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
-          // %s=date, %02u=Hour, %02u=Minutes, %s=Note (%02u -> %.2u zero-pad).
-          sWriteFileFromString( tReportFileWrite,
-             sysutils.Format( '%s %.2u:%.2u: %s'#13#10,
-             [ string( tGetDateFormat( TempRXData.tSysTime ) ), Hour, Minutes,
-             string( Note ) ] ) );
-          end;
+         begin
+         if TempRXData.ceRecordKind = rkNote then
+            begin
+            Minutes := TempRXData.tSysTime.qtMinute;
+            Hour    := TempRXData.tSysTime.qtHour;
+            Note    := @TempRXData.Prefix;
+            // Issue #998: asm-push wsprintf -> SysUtils.Format. cdecl arg order is
+            // %s=date, %02u=Hour, %02u=Minutes, %s=Note (%02u -> %.2u zero-pad).
+            sWriteFileFromString( tReportFileWrite,
+               sysutils.Format( '%s %.2u:%.2u: %s'#13#10,
+               [ string( tGetDateFormat( TempRXData.tSysTime ) ), Hour, Minutes,
+               string( Note ) ] ) );
+            end;
 
-        goto 1;
-        end;
+         goto 1;
+         end;
       CloseLogFile;
       CloseHandle( tReportFileWrite );
       FilePreview;
@@ -3386,281 +3706,285 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         }
 
         if GoodLookingQSO then
-          begin
+           begin
 
-          { Make Exchanges Strings }
-          case ActiveExchange of
-            GridExchange, Grid2Exchange:
-              begin
-              Result := cMyGrid;
-              // TF.Format(CABRILLO_MYEX, '%-11s', cMyGrid);
-              end;
+           { Make Exchanges Strings }
+           case ActiveExchange of
+             GridExchange, Grid2Exchange:
+               begin
+               Result := cMyGrid;
+               // TF.Format(CABRILLO_MYEX, '%-11s', cMyGrid);
+               end;
 
-            RSTNameAndQTHExchange:
-              begin
-              Result := sysutils.Format( '%-3d %-5s %-7s',
-                 [ TempRXData.RSTSent, cMyName, cMyState ] );
-              end;
+             RSTNameAndQTHExchange:
+               begin
+               Result := sysutils.Format( '%-3d %-5s %-7s',
+                  [ TempRXData.RSTSent, cMyName, cMyState ] );
+               end;
 
-            QSONumberAndNameExchange:
-              begin
-              Result := sysutils.Format( '%-3d %-7s', [ nrSent, cMyName ] );
-              end;
+             QSONumberAndNameExchange:
+               begin
+               Result := sysutils.Format( '%-3d %-7s', [ nrSent, cMyName ] );
+               end;
 
-            RSTAndPostalCodeExchange:
-              begin
-              if contacts = 1 then
-                begin
-                Result := sysutils.Format( '%-3d %-10s',
-                   [ TempRXData.RSTSent, MyPostalCode ] );
-                end
-              else
-                begin
-                Result := sysutils.Format( '%-3d %-10s',
-                   [ TempRXData.RSTSent, PreviousQTHString ] );
-                end;
-              end;
-
-            RSTQSONumberAndGridSquareExchange:
-              begin
-              Result := sysutils.Format( '%-3d %-4d %-7s',
-                 [ TempRXData.RSTSent, nrSent, cMyGrid ] );
-              end;
-
-            RSTQSONumberOrDomesticQTHExchange: // n4af 4.40.6
-              begin
-              if cMyState[ 1 ] <> '' then
-                begin
-                Result := sysutils.Format( '%-3d  %-5s',
-                   [ TempRXData.RSTSent, cMyState ] );
-                end
-              else
-                if cMyState[ 1 ] = '' then
+             RSTAndPostalCodeExchange:
+               begin
+               if contacts = 1 then
                   begin
-                  Result := sysutils.Format( '%-3d  %-6d',
-                     [ TempRXData.RSTSent, nrSent ] );
+                  Result := sysutils.Format( '%-3d %-10s',
+                     [ TempRXData.RSTSent, MyPostalCode ] );
+                  end
+               else
+                  begin
+                  Result := sysutils.Format( '%-3d %-10s',
+                     [ TempRXData.RSTSent, PreviousQTHString ] );
                   end;
-              end;
+               end;
 
-            RSTPrefectureExchange:
-              Result := sysutils.Format( '%-3d %-7d',
-                 [ TempRXData.RSTSent, cMyZone ] );
+             RSTQSONumberAndGridSquareExchange:
+               begin
+               Result := sysutils.Format( '%-3d %-4d %-7s',
+                  [ TempRXData.RSTSent, nrSent, cMyGrid ] );
+               end;
 
-            NameAndDomesticOrDXQTHExchange:
-              Result := sysutils.Format( '  %-10s %-4s',
-                 [ cMyName, cMyState ] );
-
-            QSONumberPrecedenceCheckDomesticQTHExchange:
-              begin
-              CID_TWO_BYTES[ 0 ] := TempRXData.Precedence;
-              // csName := CID_TWO_BYTES;
-
-              cMyName := @MyPrec[ 1 ];
-              // csCheck := {inttopchar}(TempRXData.Check);
-              cMyCheck := @MyCheck[ 1 ];
-              // cMyState := @MySection[1];
-
-              Result := sysutils.Format( '%-4d %s %s %-3s ',
-                 [ nrSent, cMyName, cMyCheck, MySection ] );
-              end;
-
-            QSONumberNameDomesticOrDXQTHExchange:
-              begin
-              // csName := @TempRXData.Name[1];
-              cMyName := @MyName[ 1 ];
-              if MyState = '' then
-                cMyState := 'DX';
-              if TempRXData.QTHString = '' then
-                csQTHString := 'DX';
-              Result        := sysutils.Format( '%-4d %-7s %-8s',
-                 [ nrSent, cMyName, cMyState ] );
-              end;
-            QSONumberAndAgeExchange:
-              begin
-              Result := sysutils.Format( '%-4d %-8s', [ nrSent, cMyState ] );
-              end;
-
-            RSTAgeAndPossibleSK:
-              Result := sysutils.Format( '%-3d %-16s',
-                 [ TempRXData.RSTSent, cMyState ] );
-
-            RSTAgeExchange:
-              Result := sysutils.Format( '%-3d %-7s',
-                 [ TempRXData.RSTSent, cMyState ] );
-
-            AgeAndQSONumberExchange: // 4.55.4
-              Result := sysutils.Format( '%-3d %-2s %03d      ',
-                 [ cMyState, nrSent ] );
-
-            RSTAndPOTAPark:
-              Result := cMyPark;
-
-            RSTPowerExchange:
-              begin
-              csPower := @TempRXData.Power[ 1 ];
-              if Contest = FOCMARATHON then
-                begin
-                cMyFOCNumber := @MyFOCNumber[ 1 ];
-                crFOCNr      := @TempRXData.Power[ 1 ];
-                Result       := sysutils.Format( '%-3d %-7s',
-                   [ TempRXData.RSTSent, cMyFOCNumber ] );
-                end
-              else
-                if Contest <> FOCMARATHON then
+             RSTQSONumberOrDomesticQTHExchange: // n4af 4.40.6
+               begin
+               if cMyState[ 1 ] <> '' then
                   begin
-                  Result := sysutils.Format( '%-3d %-7s',
+                  Result := sysutils.Format( '%-3d  %-5s',
                      [ TempRXData.RSTSent, cMyState ] );
-                  end;
-              end;
-            RSTAndOrGridExchange:
-              begin
-              Result := sysutils.Format( '%-3d %-7s',
-                 [ TempRXData.RSTSent, cMyGrid ] );
-              end;
+                  end
+               else
+                 if cMyState[ 1 ] = '' then
+                    begin
+                    Result := sysutils.Format( '%-3d  %-6d',
+                       [ TempRXData.RSTSent, nrSent ] );
+                    end;
+               end;
 
-            QSONumberAndGridSquare:
-              Result := sysutils.Format( '%-3s %-7s', [ nrSent, cMyState ] );
+             RSTPrefectureExchange:
+               Result := sysutils.Format( '%-3d %-7d',
+                  [ TempRXData.RSTSent, cMyZone ] );
 
-            QSONumberDomesticOrDXQTHExchange, QSONumberDomesticQTHExchange:
-              Result := sysutils.Format( '%-4s %-6d', [ cMyState, nrSent ] );
+             NameAndDomesticOrDXQTHExchange:
+               Result := sysutils.Format( '  %-10s %-4s',
+                  [ cMyName, cMyState ] );
 
-            QSONumberAndPossibleDomesticQTHExchange,
-               RSTQSONumberAndDomesticQTHExchange,
-               RSTQSONumberAndPossibleDomesticQTHExchange:
-              if cMyState = 'TRC' then
-                begin
-                Result := sysutils.Format( '%-3d %d%-6s',
-                   [ TempRXData.RSTSent, nrSent, cMyState ] );
-                end
-              else
-                begin
-                Result := sysutils.Format( '%-3d %-4d %-6s ',
-                   [ TempRXData.RSTSent, nrSent, cMyState ] );
-                end;
+             QSONumberPrecedenceCheckDomesticQTHExchange:
+               begin
+               CID_TWO_BYTES[ 0 ] := TempRXData.Precedence;
+               // csName := CID_TWO_BYTES;
 
-            RSTZoneAndPossibleDomesticQTHExchange:
-              begin
-              if MyState = '' then
-                begin
-                cMyState := 'DX';
-                end;
-              Result := sysutils.Format( '%-3d %02u %-4s',
-                 [ TempRXData.RSTSent, MyZone, cMyState ] );
-              end;
-            RSTZoneOrDomesticQTH, RSTZoneOrSocietyExchange:
-              if MyState <> '' then
-                begin
-                Result := sysutils.Format( '%-3d %-7s',
-                   [ TempRXData.RSTSent, cMyState ] );
-                end
-              else
-                begin
-                Result := sysutils.Format( '%-3d %-7d',
-                   [ TempRXData.RSTSent, cMyZone ] );
-                end;
+               cMyName := @MyPrec[ 1 ];
+               // csCheck := {inttopchar}(TempRXData.Check);
+               cMyCheck := @MyCheck[ 1 ];
+               // cMyState := @MySection[1];
 
-            QSONumberAndCoordinatesSum: { RFASCHAMPIONSHIP }
-              Result := sysutils.Format( '%-3s %03d    ',
-                 [ cMyState, nrSent ] );
-            QSONumberAndGeoCoordinates:
-              Result := cMyState;
+               Result := sysutils.Format( '%-4d %s %s %-3s ',
+                  [ nrSent, cMyName, cMyCheck, MySection ] );
+               end;
 
-            ClassDomesticOrDXQTHExchange:
-              Result := sysutils.Format( '%-3s %-7s ',
-                 [ MyFDClass, MySection ] );
-
-            RSTQSONumberExchange:
-              Result := sysutils.Format( '%-3d %03d ',
-                 [ TempRXData.RSTSent, nrSent ] ); // issue 177
-
-            RSTAndContinentExchange:
-              Result := sysutils.Format( '%-3d %-7s',
-                 [ TempRXData.RSTSent, cMyState ] );
-
-            RSTDomesticQTHExchange:
-              if Contest in [ CQVHF { , MMAA } ] then
-                begin
-                Result := sysutils.Format( '%-3d %-7s',
-                   [ TempRXData.RSTSent, cMyGrid ] );
-                end
-              else
-                begin
-                if MyState = '' then
+             QSONumberNameDomesticOrDXQTHExchange:
+               begin
+               // csName := @TempRXData.Name[1];
+               cMyName := @MyName[ 1 ];
+               if MyState = '' then
                   begin
                   cMyState := 'DX';
                   end;
-                if Contest in [ SPDX, PACC ] then
+               if TempRXData.QTHString = '' then
                   begin
-                  MyState := inttopchar( nrSent );
+                  csQTHString := 'DX';
                   end;
-                Result := sysutils.Format( '%-3d %-7s',
-                   [ TempRXData.RSTSent, MyState ] ); // 4.97.5
-                end;
+               Result        := sysutils.Format( '%-4d %-7s %-8s',
+                  [ nrSent, cMyName, cMyState ] );
+               end;
+             QSONumberAndAgeExchange:
+               begin
+               Result := sysutils.Format( '%-4d %-8s', [ nrSent, cMyState ] );
+               end;
 
-            RSTDomesticOrDXQTHExchange:
-              Result := sysutils.Format( '%-3d %-7s',
-                 [ TempRXData.RSTSent, cMyState ] );
+             RSTAgeAndPossibleSK:
+               Result := sysutils.Format( '%-3d %-16s',
+                  [ TempRXData.RSTSent, cMyState ] );
 
-            QSONumberAndZone:
-              Result := sysutils.Format( '  %s    %03d ',
-                 [ cMyState, nrSent ] );
+             RSTAgeExchange:
+               Result := sysutils.Format( '%-3d %-7s',
+                  [ TempRXData.RSTSent, cMyState ] );
 
-            RSTZoneExchange:
-              Result := sysutils.Format( '%-3d %-7.2d',
-                 [ TempRXData.RSTSent, cMyZone ] );
+             AgeAndQSONumberExchange: // 4.55.4
+               Result := sysutils.Format( '%-3d %-2s %03d      ',
+                  [ cMyState, nrSent ] );
 
-            QSONumberAndPreviousQSONumber:
-              begin
-              // hisnr := (nrreceived div 1000);    // 4.53.2
-              // rxnr := (nrreceived mod 1000);    // 4.53.2
-              Result := sysutils.Format( '%-.3u%-7.3d', [ pnr, nrSent ] );
-              end;
+             RSTAndPOTAPark:
+               Result := cMyPark;
 
-            RSTAndQSONumberOrFrenchDepartmentExchange,
-               RSTAndQSONumberOrDomesticQTHExchange,
-               RSTDomesticQTHOrQSONumberExchange:
-              begin
-              if ( MyState <> '' ) and ( Contest <> PCC ) then // 4.83.2
-                begin
-                Result := sysutils.Format( '%-3d %-7s',
-                   [ TempRXData.RSTSent, cMyState ] );
-                end
-              else
-                if StringIsAllNumbers( MyState ) then
+             RSTPowerExchange:
+               begin
+               csPower := @TempRXData.Power[ 1 ];
+               if Contest = FOCMARATHON then
                   begin
-                  Result := sysutils.Format( '%-4d %03u/M   ',
-                     [ TempRXData.RSTSent, nrSent ] );
+                  cMyFOCNumber := @MyFOCNumber[ 1 ];
+                  crFOCNr      := @TempRXData.Power[ 1 ];
+                  Result       := sysutils.Format( '%-3d %-7s',
+                     [ TempRXData.RSTSent, cMyFOCNumber ] );
                   end
-                else
-                  begin
-                  Result := sysutils.Format( '%-4d %03u   ',
-                     [ TempRXData.RSTSent, nrSent ] );
-                  end;
-              end;
-            // Exchanges not yet implemented
-            CheckAndChapterOrQTHExchange, KidsDayExchange,
-               NameQTHAndPossibleTenTenNumber,
-               NameAndPossibleGridSquareExchange, NZFieldDayExchange,
-               RSTAndGrid3Exchange, QSONumberNameChapterAndQTHExchange,
-               RSTALLJAPrefectureAndPrecedenceExchange, RSTAndDOMESTICQTH,
-            // n4af
-            RSTAndFOCNumberExchange, // n4af
-            RSTAndGridExchange,
-               RSTAndSerialNumberAndGridandPossibleMemberNumber,
-               RSTNameAndPossibleFOCNumber, RSTPossibleDomesticQTHAndPower,
-               RSTQSONumberAndRandomCharactersExchange,
-            // RSTQSONumberOrDomesticQTHExchange,
-            RSTQTHNameAndFistsNumberOrPowerExchange, RSTQTHExchange,
-               RSTLongJAPrefectureExchange, RSTAndGridSquareOrRDAExchange:
-              begin
-              Result := 'None';
-              logger.Error
-                 ( '[] MyExchange ADIF not yet implemented for exchange %s',
-                 [ ActiveExchangeArray[ ActiveExchange ] ] );
-              end;
+               else
+                 if Contest <> FOCMARATHON then
+                    begin
+                    Result := sysutils.Format( '%-3d %-7s',
+                       [ TempRXData.RSTSent, cMyState ] );
+                    end;
+               end;
+             RSTAndOrGridExchange:
+               begin
+               Result := sysutils.Format( '%-3d %-7s',
+                  [ TempRXData.RSTSent, cMyGrid ] );
+               end;
 
-          end; // of case ActiveExchange
-          end;
+             QSONumberAndGridSquare:
+               Result := sysutils.Format( '%-3s %-7s', [ nrSent, cMyState ] );
+
+             QSONumberDomesticOrDXQTHExchange, QSONumberDomesticQTHExchange:
+               Result := sysutils.Format( '%-4s %-6d', [ cMyState, nrSent ] );
+
+             QSONumberAndPossibleDomesticQTHExchange,
+                RSTQSONumberAndDomesticQTHExchange,
+                RSTQSONumberAndPossibleDomesticQTHExchange:
+               if cMyState = 'TRC' then
+                  begin
+                  Result := sysutils.Format( '%-3d %d%-6s',
+                     [ TempRXData.RSTSent, nrSent, cMyState ] );
+                  end
+               else
+                  begin
+                  Result := sysutils.Format( '%-3d %-4d %-6s ',
+                     [ TempRXData.RSTSent, nrSent, cMyState ] );
+                  end;
+
+             RSTZoneAndPossibleDomesticQTHExchange:
+               begin
+               if MyState = '' then
+                  begin
+                  cMyState := 'DX';
+                  end;
+               Result := sysutils.Format( '%-3d %02u %-4s',
+                  [ TempRXData.RSTSent, MyZone, cMyState ] );
+               end;
+             RSTZoneOrDomesticQTH, RSTZoneOrSocietyExchange:
+               if MyState <> '' then
+                  begin
+                  Result := sysutils.Format( '%-3d %-7s',
+                     [ TempRXData.RSTSent, cMyState ] );
+                  end
+               else
+                  begin
+                  Result := sysutils.Format( '%-3d %-7d',
+                     [ TempRXData.RSTSent, cMyZone ] );
+                  end;
+
+             QSONumberAndCoordinatesSum: { RFASCHAMPIONSHIP }
+               Result := sysutils.Format( '%-3s %03d    ',
+                  [ cMyState, nrSent ] );
+             QSONumberAndGeoCoordinates:
+               Result := cMyState;
+
+             ClassDomesticOrDXQTHExchange:
+               Result := sysutils.Format( '%-3s %-7s ',
+                  [ MyFDClass, MySection ] );
+
+             RSTQSONumberExchange:
+               Result := sysutils.Format( '%-3d %03d ',
+                  [ TempRXData.RSTSent, nrSent ] ); // issue 177
+
+             RSTAndContinentExchange:
+               Result := sysutils.Format( '%-3d %-7s',
+                  [ TempRXData.RSTSent, cMyState ] );
+
+             RSTDomesticQTHExchange:
+               if Contest in [ CQVHF { , MMAA } ] then
+                  begin
+                  Result := sysutils.Format( '%-3d %-7s',
+                     [ TempRXData.RSTSent, cMyGrid ] );
+                  end
+               else
+                  begin
+                  if MyState = '' then
+                     begin
+                     cMyState := 'DX';
+                     end;
+                  if Contest in [ SPDX, PACC ] then
+                     begin
+                     MyState := inttopchar( nrSent );
+                     end;
+                  Result := sysutils.Format( '%-3d %-7s',
+                     [ TempRXData.RSTSent, MyState ] ); // 4.97.5
+                  end;
+
+             RSTDomesticOrDXQTHExchange:
+               Result := sysutils.Format( '%-3d %-7s',
+                  [ TempRXData.RSTSent, cMyState ] );
+
+             QSONumberAndZone:
+               Result := sysutils.Format( '  %s    %03d ',
+                  [ cMyState, nrSent ] );
+
+             RSTZoneExchange:
+               Result := sysutils.Format( '%-3d %-7.2d',
+                  [ TempRXData.RSTSent, cMyZone ] );
+
+             QSONumberAndPreviousQSONumber:
+               begin
+               // hisnr := (nrreceived div 1000);    // 4.53.2
+               // rxnr := (nrreceived mod 1000);    // 4.53.2
+               Result := sysutils.Format( '%-.3u%-7.3d', [ pnr, nrSent ] );
+               end;
+
+             RSTAndQSONumberOrFrenchDepartmentExchange,
+                RSTAndQSONumberOrDomesticQTHExchange,
+                RSTDomesticQTHOrQSONumberExchange:
+               begin
+               if ( MyState <> '' ) and ( Contest <> PCC ) then // 4.83.2
+                  begin
+                  Result := sysutils.Format( '%-3d %-7s',
+                     [ TempRXData.RSTSent, cMyState ] );
+                  end
+               else
+                 if StringIsAllNumbers( MyState ) then
+                    begin
+                    Result := sysutils.Format( '%-4d %03u/M   ',
+                       [ TempRXData.RSTSent, nrSent ] );
+                    end
+                 else
+                    begin
+                    Result := sysutils.Format( '%-4d %03u   ',
+                       [ TempRXData.RSTSent, nrSent ] );
+                    end;
+               end;
+             // Exchanges not yet implemented
+             CheckAndChapterOrQTHExchange, KidsDayExchange,
+                NameQTHAndPossibleTenTenNumber,
+                NameAndPossibleGridSquareExchange, NZFieldDayExchange,
+                RSTAndGrid3Exchange, QSONumberNameChapterAndQTHExchange,
+                RSTALLJAPrefectureAndPrecedenceExchange, RSTAndDOMESTICQTH,
+             // n4af
+             RSTAndFOCNumberExchange, // n4af
+             RSTAndGridExchange,
+                RSTAndSerialNumberAndGridandPossibleMemberNumber,
+                RSTNameAndPossibleFOCNumber, RSTPossibleDomesticQTHAndPower,
+                RSTQSONumberAndRandomCharactersExchange,
+             // RSTQSONumberOrDomesticQTHExchange,
+             RSTQTHNameAndFistsNumberOrPowerExchange, RSTQTHExchange,
+                RSTLongJAPrefectureExchange, RSTAndGridSquareOrRDAExchange:
+               begin
+               Result := 'None';
+               logger.Error
+                  ( '[] MyExchange ADIF not yet implemented for exchange %s',
+                  [ ActiveExchangeArray[ ActiveExchange ] ] );
+               end;
+
+           end; // of case ActiveExchange
+           end;
       except
       end;
       end;
@@ -3672,7 +3996,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       begin
       Result := '';
       if not OpenLogFile then
-        Exit;
+         begin
+         Exit;
+         end;
 
       ReadVersionBlock;
 
@@ -3683,33 +4009,35 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
           slOperators.Sorted     := False;
 
           while ReadLogFile do
-            begin
-            // slOperators.Add(TempRXData.ceOperator);
-            slOperators.Values[ TempRXData.ceOperator ] :=
-               IntToStr( StrToIntDef( slOperators.Values
-               [ TempRXData.ceOperator ], 0 ) + 1 );
-            end;
+             begin
+             // slOperators.Add(TempRXData.ceOperator);
+             slOperators.Values[ TempRXData.ceOperator ] :=
+                IntToStr( StrToIntDef( slOperators.Values
+                [ TempRXData.ceOperator ], 0 ) + 1 );
+             end;
           CloseLogFile;
           logger.debug( 'Before operators sort' );
           for Index := 0 to slOperators.Count - 1 do
-            begin
-            logger.debug( '   %s', [ slOperators.Names[ Index ] ] );
-            end;
+             begin
+             logger.debug( '   %s', [ slOperators.Names[ Index ] ] );
+             end;
           slOperators.CustomSort( SLOperatorsSortProc );
           // Result := slOperators.DelimitedText;
           logger.debug( 'After operators sort' );
           for Index := 0 to slOperators.Count - 1 do
-            begin
-            logger.debug( '[%d]   %s', [ Index, slOperators.Names[ Index ] ] );
-            Result := Result + slOperators.Names[ Index ];
-            if Index < ( slOperators.Count - 1 ) then
-              begin
-              Result := Result + ', ';
-              end;
-            end;
+             begin
+             logger.debug( '[%d]   %s', [ Index, slOperators.Names[ Index ] ] );
+             Result := Result + slOperators.Names[ Index ];
+             if Index < ( slOperators.Count - 1 ) then
+                begin
+                Result := Result + ', ';
+                end;
+             end;
         except
           on E: Exception do
-            logger.Error( 'Exception in GetOperatorsFromLog ', E );
+             begin
+             logger.Error( 'Exception in GetOperatorsFromLog ', E );
+             end;
         end;
       finally
         FreeANdNil( slOperators );
@@ -3779,22 +4107,32 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
       State := 0;
 
       for i := 1 to length( s ) do
-        begin
+         begin
 
-        if s[ i ] = ' ' then
-          inc( State )
-        else
-          State := 0;
+         if s[ i ] = ' ' then
+            begin
+            inc( State )
+            end
+         else
+            begin
+            State := 0;
+            end;
 
-        if State < 2 then
-          Result[ i - j ] := s[ i ]
-        else
-          inc( j );
+         if State < 2 then
+            begin
+            Result[ i - j ] := s[ i ]
+            end
+         else
+            begin
+            inc( j );
+            end;
 
-        end;
+         end;
 
       if j > 0 then
-        SetLength( Result, length( s ) - j );
+         begin
+         SetLength( Result, length( s ) - j );
+         end;
       end;
 
 end.

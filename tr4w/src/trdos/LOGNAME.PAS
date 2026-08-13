@@ -245,66 +245,66 @@ var
 
 begin
   if (length(Name) < 2) or (length(Name) > 6) then
-  begin
-    CommonName := False;
-    exit;
-  end;
+     begin
+     CommonName := False;
+     exit;
+     end;
 
   CompressFormat(Name, CompName);
 
   if CompName[1] = 0 then
-  begin
-    if CompName[2] = 0 then
-    begin
-      if CompName[3] < $80 then
-      begin
-        StartAddress := 0;
-        StopAddress := 40;
-      end
-      else
-      begin
-        StartAddress := 41;
-        StopAddress := 68;
-      end;
-    end
-    else
-    begin
-      if CompName[2] < $18 then
-      begin
-        StartAddress := 69;
-        StopAddress := 127;
-      end
-      else
-      begin
-        StartAddress := 128;
-        StopAddress := 170;
-      end;
-    end;
-  end
+     begin
+     if CompName[2] = 0 then
+        begin
+        if CompName[3] < $80 then
+           begin
+           StartAddress := 0;
+           StopAddress := 40;
+           end
+        else
+           begin
+           StartAddress := 41;
+           StopAddress := 68;
+           end;
+        end
+     else
+        begin
+        if CompName[2] < $18 then
+           begin
+           StartAddress := 69;
+           StopAddress := 127;
+           end
+        else
+           begin
+           StartAddress := 128;
+           StopAddress := 170;
+           end;
+        end;
+     end
   else
-  begin
-    if CompName[1] < 4 then
-    begin
-      StartAddress := 171;
-      StopAddress := 214;
-    end
-    else
-    begin
-      StartAddress := 215;
-      StopAddress := 255;
-    end;
-  end;
+     begin
+     if CompName[1] < 4 then
+        begin
+        StartAddress := 171;
+        StopAddress := 214;
+        end
+     else
+        begin
+        StartAddress := 215;
+        StopAddress := 255;
+        end;
+     end;
 
   for Address := StartAddress to StopAddress do
     if (CommonNameList[Address][4] = CompName[4]) and
       (CommonNameList[Address][3] = CompName[3]) and
       (CommonNameList[Address][2] = CompName[2]) and
       (CommonNameList[Address][1] = CompName[1]) then
-    begin
-      NameAddress := Address;
-      CommonName := true;
-      exit;
-    end;
+       begin
+       NameAddress := Address;
+       CommonName := true;
+       exit;
+       end;
 
   CommonName := False;
 end;
@@ -318,23 +318,45 @@ begin
   TempCall := UpperCase(StandardCallFormat(Call, true));
 
   if StringHas(TempCall, '/') then
-    TempCall := PostcedingString(TempCall, '/');
+     begin
+     TempCall := PostcedingString(TempCall, '/');
+     end;
 
   if StringHas(TempCall, '/') then
-    TempCall := PrecedingString(TempCall, '/');
+     begin
+     TempCall := PrecedingString(TempCall, '/');
+     end;
 
-  if length(TempCall) > 6 then TempCall[0] := CHR(6);
+  if length(TempCall) > 6 then
+     begin
+     TempCall[0] := CHR(6);
+     end;
   StandardNameCallFormat := TempCall;
 end;
 
 procedure NameDictionary.Abort;
 
 begin
-  if CommonCalls <> nil then Dispose(CommonCalls);
-  if CommonNames <> nil then Dispose(CommonNames);
-  if UnCommonCalls <> nil then Dispose(UncommonCalls);
-  if UnCommonNames <> nil then Dispose(UncommonNames);
-  if ClubCalls <> nil then Dispose(ClubCalls);
+  if CommonCalls <> nil then
+     begin
+     Dispose(CommonCalls);
+     end;
+  if CommonNames <> nil then
+     begin
+     Dispose(CommonNames);
+     end;
+  if UnCommonCalls <> nil then
+     begin
+     Dispose(UncommonCalls);
+     end;
+  if UnCommonNames <> nil then
+     begin
+     Dispose(UncommonNames);
+     end;
+  if ClubCalls <> nil then
+     begin
+     Dispose(ClubCalls);
+     end;
 
   CommonCalls := nil;
   CommonNames := nil;
@@ -354,26 +376,26 @@ begin
   CompressFormat(Call, TempBytes);
 
   if NumberClubCalls = 0 then
-  begin
-    ClubCalls^[NumberClubCalls] := TempBytes;
-    inc(NumberClubCalls);
-    inc(TotalCalls);
-    exit;
-  end;
+     begin
+     ClubCalls^[NumberClubCalls] := TempBytes;
+     inc(NumberClubCalls);
+     inc(TotalCalls);
+     exit;
+     end;
 
   if NumberClubCalls < MaxClubCalls then
-  begin
-    for CallAddress := 0 to NumberClubCalls - 1 do
-      if (ClubCalls^[CallAddress][4] = TempBytes[4]) and
-        (ClubCalls^[CallAddress][3] = TempBytes[3]) and
-        (ClubCalls^[CallAddress][2] = TempBytes[2]) and
-        (ClubCalls^[CallAddress][1] = TempBytes[1]) then exit;
+     begin
+     for CallAddress := 0 to NumberClubCalls - 1 do
+       if (ClubCalls^[CallAddress][4] = TempBytes[4]) and
+         (ClubCalls^[CallAddress][3] = TempBytes[3]) and
+         (ClubCalls^[CallAddress][2] = TempBytes[2]) and
+         (ClubCalls^[CallAddress][1] = TempBytes[1]) then exit;
 
-    ClubCalls^[NumberClubCalls] := TempBytes;
-    inc(NumberClubCalls);
-    inc(TotalCalls);
-    AddClubCall := true;
-  end;
+     ClubCalls^[NumberClubCalls] := TempBytes;
+     inc(NumberClubCalls);
+     inc(TotalCalls);
+     AddClubCall := true;
+     end;
 end;
 
 function NameDictionary.AddName(Call: CallString; Name: Str80): boolean;
@@ -390,10 +412,10 @@ begin
   Call := StandardNameCallFormat(Call);
 
   if (ClubCall(Call)) or (Name = 'CLUB') then
-  begin
-    AddName := AddClubCall(Call);
-    exit;
-  end;
+     begin
+     AddName := AddClubCall(Call);
+     exit;
+     end;
 
   NameCode := GetNameCode(Call);
 
@@ -406,171 +428,175 @@ begin
   Suffix[2] := CompCall[4];
 
   if CommonName(Name, NameAddress) then
-  begin
-    if CommonTotals[NameCode] = 0 then
-    begin
-      CommonCalls^[NameCode, 0][1] := $FF;
-      CommonCalls^[NameCode, 0][2] := $FF;
-      CommonNames^[NameCode, 0] := $F;
-
-      CommonCalls^[NameCode, 1] := Prefix;
-
-      CommonCalls^[NameCode, 2] := Suffix;
-      CommonNames^[NameCode, 2] := NameAddress;
-
-      CommonTotals[NameCode] := 3;
-
-      AddName := true;
-      inc(TotalCalls);
-      exit;
-    end;
-
-    if CommonTotals[NameCode] < (MaximumArrayCommonNames - 3) then
-    begin
-      PrefixFlag := False;
-
-      for Address := 0 to CommonTotals[NameCode] - 1 do
-      begin
-        if PrefixFlag then
+     begin
+     if CommonTotals[NameCode] = 0 then
         begin
-          if (CommonCalls^[NameCode, Address][1] = Prefix[1]) and
-            (CommonCalls^[Namecode, Address][2] = Prefix[2]) then
-          begin
-//wli            inc(Address);
+        CommonCalls^[NameCode, 0][1] := $FF;
+        CommonCalls^[NameCode, 0][2] := $FF;
+        CommonNames^[NameCode, 0] := $F;
 
-            Move(CommonCalls^[NameCode, Address],
-              CommonCalls^[Namecode, Address + 1],
-              (CommonTotals[NameCode] - Address) * 2);
+        CommonCalls^[NameCode, 1] := Prefix;
 
-            Move(CommonNames^[NameCode, Address],
-              CommonNames^[Namecode, Address + 1],
-              CommonTotals[NameCode] - Address);
+        CommonCalls^[NameCode, 2] := Suffix;
+        CommonNames^[NameCode, 2] := NameAddress;
 
-            CommonCalls^[NameCode, Address] := Suffix;
-            CommonNames^[NameCode, Address] := NameAddress;
+        CommonTotals[NameCode] := 3;
 
-            inc(CommonTotals[NameCode]);
-            inc(TotalCalls);
-            AddName := true;
-            exit;
-          end;
-
-          PrefixFlag := False;
+        AddName := true;
+        inc(TotalCalls);
+        exit;
         end;
 
-        if (CommonCalls^[NameCode, Address][2] = $FF) and
-          (CommonCalls^[NameCode, Address][1] = $FF) and
-          (CommonNames^[NameCode, Address] = $F) then
-          PrefixFlag := true;
+     if CommonTotals[NameCode] < (MaximumArrayCommonNames - 3) then
+        begin
+        PrefixFlag := False;
 
-      end;
+        for Address := 0 to CommonTotals[NameCode] - 1 do
+           begin
+           if PrefixFlag then
+              begin
+              if (CommonCalls^[NameCode, Address][1] = Prefix[1]) and
+                (CommonCalls^[Namecode, Address][2] = Prefix[2]) then
+                 begin
+                 //wli            inc(Address);
 
-      { Prefix not found, so add it at end of list.  First do prefix code }
+                             Move(CommonCalls^[NameCode, Address],
+                               CommonCalls^[Namecode, Address + 1],
+                               (CommonTotals[NameCode] - Address) * 2);
 
-      CommonCalls^[NameCode, CommonTotals[NameCode]][1] := $FF;
-      CommonCalls^[NameCode, CommonTotals[NameCode]][2] := $FF;
-      CommonNames^[NameCode, CommonTotals[NameCode]] := $F;
-      inc(CommonTotals[NameCode]);
+                             Move(CommonNames^[NameCode, Address],
+                               CommonNames^[Namecode, Address + 1],
+                               CommonTotals[NameCode] - Address);
 
-      CommonCalls^[NameCode, CommonTotals[NameCode]] := Prefix;
-      inc(CommonTotals[NameCode]);
+                             CommonCalls^[NameCode, Address] := Suffix;
+                             CommonNames^[NameCode, Address] := NameAddress;
 
-      CommonCalls^[NameCode, CommonTotals[NameCode]] := Suffix;
-      CommonNames^[NameCode, CommonTotals[NameCode]] := NameAddress;
-      inc(CommonTotals[NameCode]);
+                             inc(CommonTotals[NameCode]);
+                             inc(TotalCalls);
+                             AddName := true;
+                             exit;
+                 end;
 
-      inc(TotalCalls);
-      AddName := true;
-    end;
-    exit; { No room to add a call }
-  end
+              PrefixFlag := False;
+              end;
+
+           if (CommonCalls^[NameCode, Address][2] = $FF) and
+             (CommonCalls^[NameCode, Address][1] = $FF) and
+             (CommonNames^[NameCode, Address] = $F) then
+              begin
+              PrefixFlag := true;
+              end;
+
+           end;
+
+        { Prefix not found, so add it at end of list.  First do prefix code }
+
+        CommonCalls^[NameCode, CommonTotals[NameCode]][1] := $FF;
+        CommonCalls^[NameCode, CommonTotals[NameCode]][2] := $FF;
+        CommonNames^[NameCode, CommonTotals[NameCode]] := $F;
+        inc(CommonTotals[NameCode]);
+
+        CommonCalls^[NameCode, CommonTotals[NameCode]] := Prefix;
+        inc(CommonTotals[NameCode]);
+
+        CommonCalls^[NameCode, CommonTotals[NameCode]] := Suffix;
+        CommonNames^[NameCode, CommonTotals[NameCode]] := NameAddress;
+        inc(CommonTotals[NameCode]);
+
+        inc(TotalCalls);
+        AddName := true;
+        end;
+     exit; { No room to add a call }
+     end
 
   else
-  begin
-    if UnCommonTotals[NameCode] = 0 then
-    begin
-      UnCommonCalls^[NameCode, 0][1] := $FF;
-      UnCommonCalls^[NameCode, 0][2] := $FF;
-      UnCommonNames^[NameCode, 0][1] := $FF;
-      UnCommonNames^[NameCode, 0][2] := $FF;
-
-      UnCommonCalls^[NameCode, 1] := Prefix;
-
-      UnCommonCalls^[NameCode, 2] := Suffix;
-      UnCommonNames^[NameCode, 2] := CompName;
-
-      UnCommonTotals[NameCode] := 3;
-      inc(TotalCalls);
-      AddName := true;
-      exit;
-    end;
-
-    if UnCommonTotals[NameCode] < (MaximumArrayUnCommonNames - 3) then
-    begin
-      PrefixFlag := False;
-
-      for Address := 0 to UnCommonTotals[NameCode] - 1 do
-      begin
-        if PrefixFlag then
+     begin
+     if UnCommonTotals[NameCode] = 0 then
         begin
-          if (UnCommonCalls^[NameCode, Address][1] = Prefix[1]) and
-            (UnCommonCalls^[Namecode, Address][2] = Prefix[2]) then
-          begin
-//wli            inc(Address);
+        UnCommonCalls^[NameCode, 0][1] := $FF;
+        UnCommonCalls^[NameCode, 0][2] := $FF;
+        UnCommonNames^[NameCode, 0][1] := $FF;
+        UnCommonNames^[NameCode, 0][2] := $FF;
 
-            Move(UnCommonCalls^[NameCode, Address],
-              UnCommonCalls^[Namecode, Address + 1],
-              (UnCommonTotals[NameCode] - Address) * 2);
+        UnCommonCalls^[NameCode, 1] := Prefix;
 
-            Move(UnCommonNames^[NameCode, Address],
-              UnCommonNames^[Namecode, Address + 1],
-              (UnCommonTotals[NameCode] - Address) * 4);
+        UnCommonCalls^[NameCode, 2] := Suffix;
+        UnCommonNames^[NameCode, 2] := CompName;
 
-            UnCommonCalls^[NameCode, Address] := Suffix;
-            UnCommonNames^[NameCode, Address] := CompName;
-
-            inc(UnCommonTotals[NameCode]);
-            inc(TotalCalls);
-            AddName := true;
-            exit;
-          end;
-
-          PrefixFlag := False;
+        UnCommonTotals[NameCode] := 3;
+        inc(TotalCalls);
+        AddName := true;
+        exit;
         end;
 
-        if (UnCommonCalls^[NameCode, Address][2] = $FF) and
-          (UnCommonCalls^[NameCode, Address][1] = $FF) and
-          (UnCommonNames^[NameCode, Address][1] = $FF) and
-          (UnCommonNames^[NameCode, Address][2] = $FF) then
-          PrefixFlag := true;
+     if UnCommonTotals[NameCode] < (MaximumArrayUnCommonNames - 3) then
+        begin
+        PrefixFlag := False;
 
-      end;
+        for Address := 0 to UnCommonTotals[NameCode] - 1 do
+           begin
+           if PrefixFlag then
+              begin
+              if (UnCommonCalls^[NameCode, Address][1] = Prefix[1]) and
+                (UnCommonCalls^[Namecode, Address][2] = Prefix[2]) then
+                 begin
+                 //wli            inc(Address);
 
-      { Prefix not found, so add it at end of list.  First do prefix code }
+                             Move(UnCommonCalls^[NameCode, Address],
+                               UnCommonCalls^[Namecode, Address + 1],
+                               (UnCommonTotals[NameCode] - Address) * 2);
 
-      UnCommonCalls^[NameCode, UnCommonTotals[NameCode]][1] := $FF;
-      UnCommonCalls^[NameCode, UnCommonTotals[NameCode]][2] := $FF;
-      UnCommonNames^[NameCode, UnCommonTotals[NameCode]][1] := $FF;
-      UnCommonNames^[NameCode, UnCommonTotals[NameCode]][2] := $FF;
-      inc(UnCommonTotals[NameCode]);
+                             Move(UnCommonNames^[NameCode, Address],
+                               UnCommonNames^[Namecode, Address + 1],
+                               (UnCommonTotals[NameCode] - Address) * 4);
 
-      { Now add the new prefix }
+                             UnCommonCalls^[NameCode, Address] := Suffix;
+                             UnCommonNames^[NameCode, Address] := CompName;
 
-      UnCommonCalls^[NameCode, UnCommonTotals[NameCode]] := Prefix;
-      inc(UnCommonTotals[NameCode]);
+                             inc(UnCommonTotals[NameCode]);
+                             inc(TotalCalls);
+                             AddName := true;
+                             exit;
+                 end;
 
-      { Put the suffix and name on }
+              PrefixFlag := False;
+              end;
 
-      UnCommonCalls^[NameCode, UnCommonTotals[NameCode]] := Suffix;
-      UnCommonNames^[NameCode, UnCommonTotals[NameCode]] := CompName;
-      inc(UnCommonTotals[NameCode]);
+           if (UnCommonCalls^[NameCode, Address][2] = $FF) and
+             (UnCommonCalls^[NameCode, Address][1] = $FF) and
+             (UnCommonNames^[NameCode, Address][1] = $FF) and
+             (UnCommonNames^[NameCode, Address][2] = $FF) then
+              begin
+              PrefixFlag := true;
+              end;
 
-      inc(TotalCalls);
-      AddName := true;
-    end;
+           end;
 
-    exit; { No room to add a call }
-  end;
+        { Prefix not found, so add it at end of list.  First do prefix code }
+
+        UnCommonCalls^[NameCode, UnCommonTotals[NameCode]][1] := $FF;
+        UnCommonCalls^[NameCode, UnCommonTotals[NameCode]][2] := $FF;
+        UnCommonNames^[NameCode, UnCommonTotals[NameCode]][1] := $FF;
+        UnCommonNames^[NameCode, UnCommonTotals[NameCode]][2] := $FF;
+        inc(UnCommonTotals[NameCode]);
+
+        { Now add the new prefix }
+
+        UnCommonCalls^[NameCode, UnCommonTotals[NameCode]] := Prefix;
+        inc(UnCommonTotals[NameCode]);
+
+        { Put the suffix and name on }
+
+        UnCommonCalls^[NameCode, UnCommonTotals[NameCode]] := Suffix;
+        UnCommonNames^[NameCode, UnCommonTotals[NameCode]] := CompName;
+        inc(UnCommonTotals[NameCode]);
+
+        inc(TotalCalls);
+        AddName := true;
+        end;
+
+     exit; { No room to add a call }
+     end;
 end;
 
 procedure NameDictionary.DeleteName(Callsign: CallString);
@@ -590,95 +616,101 @@ begin
   Address := FindCommonCallAddress(TempBytes, NameCode);
 
   if Address <> -1 then
-  begin
-    if (CommonCalls^[NameCode, Address - 2][1] = $FF) and
-      (CommonCalls^[NameCode, Address - 2][2] = $FF) and
-      (CommonCalls^[NameCode, Address + 1][1] = $FF) and
-      (CommonCalls^[NameCode, Address + 1][2] = $FF) then
-    begin
-      Move(CommonCalls^[NameCode, Address + 1],
-        CommonCalls^[NameCode, Address - 2],
-        (CommonTotals[NameCode] - Address - 1) * 2);
+     begin
+     if (CommonCalls^[NameCode, Address - 2][1] = $FF) and
+       (CommonCalls^[NameCode, Address - 2][2] = $FF) and
+       (CommonCalls^[NameCode, Address + 1][1] = $FF) and
+       (CommonCalls^[NameCode, Address + 1][2] = $FF) then
+        begin
+        Move(CommonCalls^[NameCode, Address + 1],
+          CommonCalls^[NameCode, Address - 2],
+          (CommonTotals[NameCode] - Address - 1) * 2);
 
-      Move(CommonNames^[NameCode, Address + 1],
-        CommonNames^[NameCode, Address - 2],
-        CommonTotals[NameCode] - Address - 1);
+        Move(CommonNames^[NameCode, Address + 1],
+          CommonNames^[NameCode, Address - 2],
+          CommonTotals[NameCode] - Address - 1);
 
-      Dec(CommonTotals[NameCode]);
-      Dec(CommonTotals[NameCode]);
-      Dec(CommonTotals[NameCode]);
-      Dec(TotalCalls);
-    end
-    else
-    begin
-      Move(CommonCalls^[NameCode, Address + 1],
-        CommonCalls^[NameCode, Address],
-        (CommonTotals[NameCode] - Address - 1) * 2);
+        Dec(CommonTotals[NameCode]);
+        Dec(CommonTotals[NameCode]);
+        Dec(CommonTotals[NameCode]);
+        Dec(TotalCalls);
+        end
+     else
+        begin
+        Move(CommonCalls^[NameCode, Address + 1],
+          CommonCalls^[NameCode, Address],
+          (CommonTotals[NameCode] - Address - 1) * 2);
 
-      Move(CommonNames^[NameCode, Address + 1],
-        CommonNames^[NameCode, Address],
-        CommonTotals[NameCode] - Address - 1);
+        Move(CommonNames^[NameCode, Address + 1],
+          CommonNames^[NameCode, Address],
+          CommonTotals[NameCode] - Address - 1);
 
-      Dec(CommonTotals[NameCode]);
-      Dec(TotalCalls);
-    end;
+        Dec(CommonTotals[NameCode]);
+        Dec(TotalCalls);
+        end;
 
-    exit;
-  end;
+     exit;
+     end;
 
   Address := FindUnCommonCallAddress(TempBytes, NameCode);
 
   if Address <> -1 then
-  begin
-    if (UnCommonCalls^[NameCode, Address - 2][1] = $FF) and
-      (UnCommonCalls^[NameCode, Address - 2][2] = $FF) and
-      (UnCommonCalls^[NameCode, Address + 1][1] = $FF) and
-      (UnCommonCalls^[NameCode, Address + 1][2] = $FF) then
-    begin
-      Move(UnCommonCalls^[NameCode, Address + 1],
-        UnCommonCalls^[NameCode, Address - 2],
-        (UnCommonTotals[NameCode] - Address - 1) * 2);
+     begin
+     if (UnCommonCalls^[NameCode, Address - 2][1] = $FF) and
+       (UnCommonCalls^[NameCode, Address - 2][2] = $FF) and
+       (UnCommonCalls^[NameCode, Address + 1][1] = $FF) and
+       (UnCommonCalls^[NameCode, Address + 1][2] = $FF) then
+        begin
+        Move(UnCommonCalls^[NameCode, Address + 1],
+          UnCommonCalls^[NameCode, Address - 2],
+          (UnCommonTotals[NameCode] - Address - 1) * 2);
 
-      Move(UnCommonNames^[NameCode, Address + 1],
-        UnCommonNames^[NameCode, Address - 2],
-        (UnCommonTotals[NameCode] - Address - 1) * 4);
+        Move(UnCommonNames^[NameCode, Address + 1],
+          UnCommonNames^[NameCode, Address - 2],
+          (UnCommonTotals[NameCode] - Address - 1) * 4);
 
-      Dec(UnCommonTotals[NameCode]);
-      Dec(UnCommonTotals[NameCode]);
-      Dec(UnCommonTotals[NameCode]);
-      Dec(TotalCalls);
-    end
-    else
-    begin
-      Move(UnCommonCalls^[NameCode, Address + 1],
-        UnCommonCalls^[NameCode, Address],
-        (UnCommonTotals[NameCode] - Address - 1) * 2);
+        Dec(UnCommonTotals[NameCode]);
+        Dec(UnCommonTotals[NameCode]);
+        Dec(UnCommonTotals[NameCode]);
+        Dec(TotalCalls);
+        end
+     else
+        begin
+        Move(UnCommonCalls^[NameCode, Address + 1],
+          UnCommonCalls^[NameCode, Address],
+          (UnCommonTotals[NameCode] - Address - 1) * 2);
 
-      Move(UnCommonNames^[NameCode, Address + 1],
-        UnCommonNames^[NameCode, Address],
-        (UnCommonTotals[NameCode] - Address - 1) * 4);
+        Move(UnCommonNames^[NameCode, Address + 1],
+          UnCommonNames^[NameCode, Address],
+          (UnCommonTotals[NameCode] - Address - 1) * 4);
 
-      Dec(UnCommonTotals[NameCode]);
-      Dec(TotalCalls);
-    end;
+        Dec(UnCommonTotals[NameCode]);
+        Dec(TotalCalls);
+        end;
 
-    exit;
-  end;
+     exit;
+     end;
 
   if NumberClubCalls > 0 then
-    for NamePointer := 0 to NumberClubCalls - 1 do
-      if (ClubCalls^[NamePointer][4] = TempBytes[4]) and
-        (ClubCalls^[NamePointer][3] = TempBytes[3]) and
-        (ClubCalls^[NamePointer][2] = TempBytes[2]) and
-        (ClubCalls^[NamePointer][1] = TempBytes[1]) then
-      begin
-        if NamePointer < NumberClubCalls - 1 then
-          for Offset := NamePointer to NumberClubCalls - 2 do
-            ClubCalls^[Offset] := ClubCalls^[Offset + 1];
-        Dec(NumberClubCalls);
-        Dec(TotalCalls);
-        exit;
-      end;
+     begin
+     for NamePointer := 0 to NumberClubCalls - 1 do
+       if (ClubCalls^[NamePointer][4] = TempBytes[4]) and
+         (ClubCalls^[NamePointer][3] = TempBytes[3]) and
+         (ClubCalls^[NamePointer][2] = TempBytes[2]) and
+         (ClubCalls^[NamePointer][1] = TempBytes[1]) then
+          begin
+          if NamePointer < NumberClubCalls - 1 then
+             begin
+             for Offset := NamePointer to NumberClubCalls - 2 do
+                begin
+                ClubCalls^[Offset] := ClubCalls^[Offset + 1];
+                end;
+             end;
+          Dec(NumberClubCalls);
+          Dec(TotalCalls);
+          exit;
+          end;
+     end;
 
   WriteLn('Sorry, I could not find ', Callsign, '.');
 end;
@@ -687,13 +719,13 @@ procedure NameDictionary.DumpNames;
 
 begin
   if (not NamesCleared) and ArraysSetUp then
-  begin
-    NamesCleared := true;
-    Dispose(CommonNames);
-    Dispose(UncommonNames);
-    NameMemoryDisable := true;
-    ArraysSetUp := False;
-  end;
+     begin
+     NamesCleared := true;
+     Dispose(CommonNames);
+     Dispose(UncommonNames);
+     NameMemoryDisable := true;
+     ArraysSetUp := False;
+     end;
 end;
 
 function NameDictionary.FindCommonCallAddress(Call: fourBYTEs; NameCode: integer): integer;
@@ -709,45 +741,47 @@ begin
   PrefixFlag := False;
 
   if CommonTotals[NameCode] > 0 then
-    for Address := 0 to CommonTotals[NameCode] - 1 do
-    begin
-      if MatchPrefixFlag then
-      begin
-        if (CommonCalls^[NameCode, Address][2] = Call[4]) and
-          (CommonCalls^[NameCode, Address][1] = Call[3]) then
+     begin
+     for Address := 0 to CommonTotals[NameCode] - 1 do
         begin
-          FindCommonCallAddress := Address;
-          exit;
-        end;
+        if MatchPrefixFlag then
+           begin
+           if (CommonCalls^[NameCode, Address][2] = Call[4]) and
+             (CommonCalls^[NameCode, Address][1] = Call[3]) then
+              begin
+              FindCommonCallAddress := Address;
+              exit;
+              end;
 
-        if (CommonCalls^[NameCode, Address][2] = $FF) and
-          (CommonCalls^[NameCode, Address][1] = $FF) and
+           if (CommonCalls^[NameCode, Address][2] = $FF) and
+             (CommonCalls^[NameCode, Address][1] = $FF) and
+             (CommonNames^[NameCode, Address] = $F) then
+              begin
+              MatchPrefixFlag := False;
+              PrefixFlag := true;
+              end;
+
+           Continue;
+           end;
+
+        if PrefixFlag then
+           begin
+           MatchPrefixFlag := (CommonCalls^[NameCode, Address][1] = Call[1]) and
+             (CommonCalls^[NameCode, Address][2] = Call[2]);
+           PrefixFlag := False;
+           Continue;
+           end;
+
+        if (CommonCalls^[NameCode, Address][1] = $FF) and
+          (CommonCalls^[NameCode, Address][2] = $FF) and
           (CommonNames^[NameCode, Address] = $F) then
-        begin
-          MatchPrefixFlag := False;
-          PrefixFlag := true;
+           begin
+           MatchPrefixFlag := False;
+           PrefixFlag := true;
+           Continue;
+           end;
         end;
-
-        Continue;
-      end;
-
-      if PrefixFlag then
-      begin
-        MatchPrefixFlag := (CommonCalls^[NameCode, Address][1] = Call[1]) and
-          (CommonCalls^[NameCode, Address][2] = Call[2]);
-        PrefixFlag := False;
-        Continue;
-      end;
-
-      if (CommonCalls^[NameCode, Address][1] = $FF) and
-        (CommonCalls^[NameCode, Address][2] = $FF) and
-        (CommonNames^[NameCode, Address] = $F) then
-      begin
-        MatchPrefixFlag := False;
-        PrefixFlag := true;
-        Continue;
-      end;
-    end;
+     end;
 end;
 
 function NameDictionary.FindUncommonCallAddress(AddCall: fourBYTEs; NameCode: integer): integer;
@@ -769,47 +803,49 @@ begin
   PrefixFlag := False;
 
   if UnCommonTotals[NameCode] > 0 then
-    for Address := 0 to UnCommonTotals[NameCode] - 1 do
-    begin
-      if MatchPrefixFlag then
-      begin
-        if (UnCommonCalls^[NameCode, Address][1] = Suffix[1]) and
-          (UnCommonCalls^[NameCode, Address][2] = Suffix[2]) then
+     begin
+     for Address := 0 to UnCommonTotals[NameCode] - 1 do
         begin
-          FindUnCommonCallAddress := Address;
-          exit;
-        end;
+        if MatchPrefixFlag then
+           begin
+           if (UnCommonCalls^[NameCode, Address][1] = Suffix[1]) and
+             (UnCommonCalls^[NameCode, Address][2] = Suffix[2]) then
+              begin
+              FindUnCommonCallAddress := Address;
+              exit;
+              end;
+
+           if (UnCommonCalls^[NameCode, Address][1] = $FF) and
+             (UnCommonCalls^[NameCode, Address][2] = $FF) and
+             (UnCommonNames^[NameCode, Address][1] = $FF) and
+             (UnCommonNames^[NameCode, Address][2] = $FF) then
+              begin
+              MatchPrefixFlag := False;
+              PrefixFlag := true;
+              end;
+
+           Continue;
+           end;
+
+        if PrefixFlag then
+           begin
+           MatchPrefixFlag := (UnCommonCalls^[NameCode, Address][1] = Prefix[1]) and
+             (UnCommonCalls^[NameCode, Address][2] = Prefix[2]);
+           PrefixFlag := False;
+           Continue;
+           end;
 
         if (UnCommonCalls^[NameCode, Address][1] = $FF) and
           (UnCommonCalls^[NameCode, Address][2] = $FF) and
-          (UnCommonNames^[NameCode, Address][1] = $FF) and
-          (UnCommonNames^[NameCode, Address][2] = $FF) then
-        begin
-          MatchPrefixFlag := False;
-          PrefixFlag := true;
+          (UnCommonNames^[NameCode, Address][2] = $FF) and
+          (UnCommonNames^[NameCode, Address][1] = $FF) then
+           begin
+           MatchPrefixFlag := False;
+           PrefixFlag := true;
+           Continue;
+           end;
         end;
-
-        Continue;
-      end;
-
-      if PrefixFlag then
-      begin
-        MatchPrefixFlag := (UnCommonCalls^[NameCode, Address][1] = Prefix[1]) and
-          (UnCommonCalls^[NameCode, Address][2] = Prefix[2]);
-        PrefixFlag := False;
-        Continue;
-      end;
-
-      if (UnCommonCalls^[NameCode, Address][1] = $FF) and
-        (UnCommonCalls^[NameCode, Address][2] = $FF) and
-        (UnCommonNames^[NameCode, Address][2] = $FF) and
-        (UnCommonNames^[NameCode, Address][1] = $FF) then
-      begin
-        MatchPrefixFlag := False;
-        PrefixFlag := true;
-        Continue;
-      end;
-    end;
+     end;
 end;
 
 function NameDictionary.GetName(Call: CallString): Str80;
@@ -834,26 +870,30 @@ begin
   Address := FindCommonCallAddress(TempBytes, NameCode);
 
   if Address <> -1 then
-  begin
-    GetName := ExpandedString(CommonNameList[CommonNames^[NameCode, Address]]);
-    exit;
-  end;
+     begin
+     GetName := ExpandedString(CommonNameList[CommonNames^[NameCode, Address]]);
+     exit;
+     end;
 
   Address := FindUncommonCallAddress(TempBytes, NameCode);
 
   if Address <> -1 then
-  begin
-    GetName := ExpandedString(UnCommonNames^[NameCode, Address]);
-    exit;
-  end;
+     begin
+     GetName := ExpandedString(UnCommonNames^[NameCode, Address]);
+     exit;
+     end;
 
   if NumberClubCalls > 0 then
-    for NamePointer := 0 to NumberClubCalls - 1 do
-      if (ClubCalls^[NamePointer][4] = TempBytes[4]) and
-        (ClubCalls^[NamePointer][3] = TempBytes[3]) and
-        (ClubCalls^[NamePointer][2] = TempBytes[2]) and
-        (ClubCalls^[NamePointer][1] = TempBytes[1]) then
-        GetName := 'CLUB';
+     begin
+     for NamePointer := 0 to NumberClubCalls - 1 do
+       if (ClubCalls^[NamePointer][4] = TempBytes[4]) and
+         (ClubCalls^[NamePointer][3] = TempBytes[3]) and
+         (ClubCalls^[NamePointer][2] = TempBytes[2]) and
+         (ClubCalls^[NamePointer][1] = TempBytes[1]) then
+          begin
+          GetName := 'CLUB';
+          end;
+     end;
 end;
 
 function NameDictionary.GetRandomCall: CallString;
@@ -865,141 +905,145 @@ var
 
 begin
   if TotalCalls < 100 then
-  begin
-    case Random(20) of
-      0: GetRandomCall := 'G3FXB';
-      1: GetRandomCall := 'N6TR';
-      2: GetRandomCall := 'ZD8Z';
-      3: GetRandomCall := 'F6IMS';
-      4: GetRandomCall := '9Y4XX';
-      5: GetRandomCall := 'EA9IE';
-      6: GetRandomCall := 'FR5DX';
-      7: GetRandomCall := 'VK6HD';
-      8: GetRandomCall := 'JA8RWU';
-      9: GetRandomCall := 'K6NA/KL7';
-      10: GetRandomCall := 'N6AA';
-      11: GetRandomCall := 'NJ2L';
-      12: GetRandomCall := 'WN4KKN';
-      13: GetRandomCall := 'N5AU';
-      14: GetRandomCall := 'K1AR';
-      15: GetRandomCall := 'W7RM';
-      16: GetRandomCall := '4U1ITU';
-      17: GetRandomCall := 'N6ZZ';
-      18: GetRandomCall := 'WA6OTU';
-      19: GetRandomCall := 'AA6RX';
-    end;
-    exit;
-  end;
+     begin
+     case Random(20) of
+       0: GetRandomCall := 'G3FXB';
+       1: GetRandomCall := 'N6TR';
+       2: GetRandomCall := 'ZD8Z';
+       3: GetRandomCall := 'F6IMS';
+       4: GetRandomCall := '9Y4XX';
+       5: GetRandomCall := 'EA9IE';
+       6: GetRandomCall := 'FR5DX';
+       7: GetRandomCall := 'VK6HD';
+       8: GetRandomCall := 'JA8RWU';
+       9: GetRandomCall := 'K6NA/KL7';
+       10: GetRandomCall := 'N6AA';
+       11: GetRandomCall := 'NJ2L';
+       12: GetRandomCall := 'WN4KKN';
+       13: GetRandomCall := 'N5AU';
+       14: GetRandomCall := 'K1AR';
+       15: GetRandomCall := 'W7RM';
+       16: GetRandomCall := '4U1ITU';
+       17: GetRandomCall := 'N6ZZ';
+       18: GetRandomCall := 'WA6OTU';
+       19: GetRandomCall := 'AA6RX';
+     end;
+     exit;
+     end;
 
   NameCode := Random(NumberArrays);
 
   if Random(100) < 72 then { Use common name array 72 percent of the time }
-  begin
-    if CommonTotals[NameCode] > 0 then
-    begin
-      NamePointer := Random(CommonTotals[NameCode] - 1);
+     begin
+     if CommonTotals[NameCode] > 0 then
+        begin
+        NamePointer := Random(CommonTotals[NameCode] - 1);
 
-      if (CommonCalls^[NameCode, NamePointer][1] = $FF) and
-        (CommonCalls^[NameCode, NamePointer][2] = $FF) and
-        (CommonNames^[NameCode, NamePointer] = $F) then
-      begin
-        inc(NamePointer);
-        Prefix := CommonCalls^[NameCode, NamePointer];
-        inc(NamePointer);
+        if (CommonCalls^[NameCode, NamePointer][1] = $FF) and
+          (CommonCalls^[NameCode, NamePointer][2] = $FF) and
+          (CommonNames^[NameCode, NamePointer] = $F) then
+           begin
+           inc(NamePointer);
+           Prefix := CommonCalls^[NameCode, NamePointer];
+           inc(NamePointer);
+           Suffix := CommonCalls^[NameCode, NamePointer];
+           Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
+           GetRidOfPrecedingSpaces(Call);
+           GetRandomCall := Call;
+           exit;
+           end
+        else
+          if (CommonCalls^[NameCode, NamePointer - 1][1] = $FF) and
+            (CommonCalls^[NameCode, NamePointer - 1][2] = $FF) and
+            (CommonNames^[NameCode, NamePointer - 1] = $F) then
+             begin
+             Prefix := CommonCalls^[NameCode, NamePointer];
+             inc(NamePointer);
+             Suffix := CommonCalls^[NameCode, NamePointer];
+             Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
+             GetRidOfPrecedingSpaces(Call);
+             GetRandomCall := Call;
+             exit;
+             end;
+
         Suffix := CommonCalls^[NameCode, NamePointer];
+
+        repeat
+          Dec(NamePointer);
+        until (CommonCalls^[NameCode, NamePointer - 1][1] = $FF) and
+          (CommonCalls^[NameCode, NamePointer - 1][2] = $FF) and
+          (CommonNames^[NameCode, NamePointer - 1] = $F);
+
+        Prefix := CommonCalls^[NameCode, NamePointer];
+
         Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
         GetRidOfPrecedingSpaces(Call);
+
         GetRandomCall := Call;
-        exit;
-      end
-      else
-        if (CommonCalls^[NameCode, NamePointer - 1][1] = $FF) and
-          (CommonCalls^[NameCode, NamePointer - 1][2] = $FF) and
-          (CommonNames^[NameCode, NamePointer - 1] = $F) then
+        end
+     else
         begin
-          Prefix := CommonCalls^[NameCode, NamePointer];
-          inc(NamePointer);
-          Suffix := CommonCalls^[NameCode, NamePointer];
-          Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
-          GetRidOfPrecedingSpaces(Call);
-          GetRandomCall := Call;
-          exit;
+        GetRandomCall := 'WB6ZVC';
         end;
-
-      Suffix := CommonCalls^[NameCode, NamePointer];
-
-      repeat
-        Dec(NamePointer);
-      until (CommonCalls^[NameCode, NamePointer - 1][1] = $FF) and
-        (CommonCalls^[NameCode, NamePointer - 1][2] = $FF) and
-        (CommonNames^[NameCode, NamePointer - 1] = $F);
-
-      Prefix := CommonCalls^[NameCode, NamePointer];
-
-      Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
-      GetRidOfPrecedingSpaces(Call);
-
-      GetRandomCall := Call;
-    end
-    else
-      GetRandomCall := 'WB6ZVC';
-  end
+     end
 
   else
-  begin
-    if UnCommonTotals[NameCode] > 0 then
-    begin
-      NamePointer := Random(UnCommonTotals[NameCode] - 1);
+     begin
+     if UnCommonTotals[NameCode] > 0 then
+        begin
+        NamePointer := Random(UnCommonTotals[NameCode] - 1);
 
-      if (UnCommonCalls^[NameCode, NamePointer][1] = $FF) and
-        (UnCommonCalls^[NameCode, NamePointer][2] = $FF) and
-        (UnCommonNames^[NameCode, NamePointer][1] = $FF) and
-        (UnCommonNames^[NameCode, NamePointer][2] = $FF) then
-      begin
-        inc(NamePointer);
-        Prefix := UnCommonCalls^[NameCode, NamePointer];
-        inc(NamePointer);
+        if (UnCommonCalls^[NameCode, NamePointer][1] = $FF) and
+          (UnCommonCalls^[NameCode, NamePointer][2] = $FF) and
+          (UnCommonNames^[NameCode, NamePointer][1] = $FF) and
+          (UnCommonNames^[NameCode, NamePointer][2] = $FF) then
+           begin
+           inc(NamePointer);
+           Prefix := UnCommonCalls^[NameCode, NamePointer];
+           inc(NamePointer);
+           Suffix := UnCommonCalls^[NameCode, NamePointer];
+           Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
+           GetRidOfPrecedingSpaces(Call);
+           GetRandomCall := Call;
+           exit;
+           end
+        else
+          if (UnCommonCalls^[NameCode, NamePointer - 1][1] = $FF) and
+            (UnCommonCalls^[NameCode, NamePointer - 1][2] = $FF) and
+            (UnCommonNames^[NameCode, NamePointer - 1][1] = $FF) and
+            (UnCommonNames^[NameCode, NamePointer - 1][2] = $FF) then
+             begin
+             Prefix := UnCommonCalls^[NameCode, NamePointer];
+             inc(NamePointer);
+             Suffix := UnCommonCalls^[NameCode, NamePointer];
+             Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
+             GetRidOfPrecedingSpaces(Call);
+             GetRandomCall := Call;
+             exit;
+             end;
+
         Suffix := UnCommonCalls^[NameCode, NamePointer];
-        Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
-        GetRidOfPrecedingSpaces(Call);
-        GetRandomCall := Call;
-        exit;
-      end
-      else
-        if (UnCommonCalls^[NameCode, NamePointer - 1][1] = $FF) and
+
+        repeat
+          Dec(NamePointer);
+        until (UnCommonCalls^[NameCode, NamePointer - 1][1] = $FF) and
           (UnCommonCalls^[NameCode, NamePointer - 1][2] = $FF) and
           (UnCommonNames^[NameCode, NamePointer - 1][1] = $FF) and
-          (UnCommonNames^[NameCode, NamePointer - 1][2] = $FF) then
+          (UnCommonNames^[NameCode, NamePointer - 1][2] = $FF);
+
+        Prefix := UnCommonCalls^[NameCode, NamePointer];
+
+        Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
+        GetRidOfPrecedingSpaces(Call);
+
+        GetRandomCall := Call;
+        end
+     else
         begin
-          Prefix := UnCommonCalls^[NameCode, NamePointer];
-          inc(NamePointer);
-          Suffix := UnCommonCalls^[NameCode, NamePointer];
-          Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
-          GetRidOfPrecedingSpaces(Call);
-          GetRandomCall := Call;
-          exit;
+        GetRandomCall := 'WA6TUT';
         end;
 
-      Suffix := UnCommonCalls^[NameCode, NamePointer];
-
-      repeat
-        Dec(NamePointer);
-      until (UnCommonCalls^[NameCode, NamePointer - 1][1] = $FF) and
-        (UnCommonCalls^[NameCode, NamePointer - 1][2] = $FF) and
-        (UnCommonNames^[NameCode, NamePointer - 1][1] = $FF) and
-        (UnCommonNames^[NameCode, NamePointer - 1][2] = $FF);
-
-      Prefix := UnCommonCalls^[NameCode, NamePointer];
-
-      Call := ExpandTwoBytes(Prefix) + ExpandTwoBytes(Suffix);
-      GetRidOfPrecedingSpaces(Call);
-
-      GetRandomCall := Call;
-    end
-    else
-      GetRandomCall := 'WA6TUT';
-
-  end;
+     end;
 end;
 
 procedure NameDictionary.InputASCIIFile;
@@ -1043,94 +1087,107 @@ begin
   Ask := Key = 'Y';
 
   if OpenFileForRead(FileRead, InputFileName) then
-  begin
-    ReadLn(FileRead, TempString);
-    TempString := UpperCase(TempString);
+     begin
+     ReadLn(FileRead, TempString);
+     TempString := UpperCase(TempString);
 
-    TestString := RemoveFirstString(TempString);
+     TestString := RemoveFirstString(TempString);
 
-    if UpperCase(TestString) <> 'FORMAT' then
-    begin
-      SHOWMESSAGE('Missing format statement at start of this file!!');
+     if UpperCase(TestString) <> 'FORMAT' then
+        begin
+        SHOWMESSAGE('Missing format statement at start of this file!!');
 
-      repeat
-        Key := UpCase(GetKey('Was this file generated by the name editor? (Y/N) : '));
-        if (Key = EscapeKey) or (Key = 'N') then exit;
-      until (Key = 'Y');
-      WriteLn;
+        repeat
+          Key := UpCase(GetKey('Was this file generated by the name editor? (Y/N) : '));
+          if (Key = EscapeKey) or (Key = 'N') then exit;
+        until (Key = 'Y');
+        WriteLn;
 
-      CallColumn := 1;
-      NameColumn := 2;
-      Close(FileRead);
-      OpenFileForRead(FileRead, InputFileName);
-    end
-    else
-    begin
-      CallColumn := RemoveFirstLongInteger(TempString);
-      NameColumn := RemoveFirstLongInteger(TempString);
-    end;
+        CallColumn := 1;
+        NameColumn := 2;
+        Close(FileRead);
+        OpenFileForRead(FileRead, InputFileName);
+        end
+     else
+        begin
+        CallColumn := RemoveFirstLongInteger(TempString);
+        NameColumn := RemoveFirstLongInteger(TempString);
+        end;
 
-    while not Eof(FileRead) do
-    begin
-//      PinWheel;
-      ReadLn(FileRead, TempString);
+     while not Eof(FileRead) do
+        begin
+        //      PinWheel;
+              ReadLn(FileRead, TempString);
 
-      Call := '';
-      Name := '';
-      Column := 0;
+              Call := '';
+              Name := '';
+              Column := 0;
 
-      while ((Call = '') or (Name = '')) and (TempString <> '') do
-      begin
-        TestString := RemoveFirstString(TempString);
-        inc(Column);
-        if Column = CallColumn then Call := TestString;
-        if Column = NameColumn then Name := TestString;
-      end;
+              while ((Call = '') or (Name = '')) and (TempString <> '') do
+                 begin
+                 TestString := RemoveFirstString(TempString);
+                 inc(Column);
+                 if Column = CallColumn then
+                    begin
+                    Call := TestString;
+                    end;
+                 if Column = NameColumn then
+                    begin
+                    Name := TestString;
+                    end;
+                 end;
 
-      if (Call <> '') and (Name <> '') then
-      begin
-        DatabaseName := GetName(Call);
+              if (Call <> '') and (Name <> '') then
+                 begin
+                 DatabaseName := GetName(Call);
 
-//        GoToXY(1, WhereY);
+         //        GoToXY(1, WhereY);
 
-        if DataBaseName <> Name then
-          if DataBaseName = '' then
-          begin
-            if AddName(Call, Name) then
-              inc(NumberNamesAdded);
-          end
-          else
-          begin
-            WriteLn(Call, '  Database name = ', DataBaseName,
-              '  Name from file = ', Name);
+                 if DataBaseName <> Name then
+                   if DataBaseName = '' then
+                      begin
+                      if AddName(Call, Name) then
+                         begin
+                         inc(NumberNamesAdded);
+                         end;
+                      end
+                   else
+                      begin
+                      WriteLn(Call, '  Database name = ', DataBaseName,
+                        '  Name from file = ', Name);
 
-            if Ask then
-            begin
+                      if Ask then
+                         begin
 
-              repeat
-                Key := UpCase(GetKey('Use (D)atabase or (F)ile name? (D/F) : ' + Beep));
-                if Key = EscapeKey then exit;
-              until (Key = 'D') or (Key = 'F');
+                         repeat
+                           Key := UpCase(GetKey('Use (D)atabase or (F)ile name? (D/F) : ' + Beep));
+                           if Key = EscapeKey then exit;
+                         until (Key = 'D') or (Key = 'F');
 
-//              GoToXY(1, WhereY);
-//              ClrEol;
-//              GoToXY(1, WhereY - 1);
-//              ClrEol;
+           //              GoToXY(1, WhereY);
+           //              ClrEol;
+           //              GoToXY(1, WhereY - 1);
+           //              ClrEol;
 
-              if Key = 'F' then
-              begin
-                DeleteName(Call);
-                if AddName(Call, Name) then inc(NumberNamesAdded);
-              end;
-            end;
-          end;
-      end;
-    end;
+                         if Key = 'F' then
+                            begin
+                            DeleteName(Call);
+                            if AddName(Call, Name) then
+                               begin
+                               inc(NumberNamesAdded);
+                               end;
+                            end;
+                         end;
+                      end;
+                 end;
+        end;
 
-    Close(FileRead);
-  end
+     Close(FileRead);
+     end
   else
-    SHOWMESSAGE('Unable to find ' + InputFileName + '!!');
+     begin
+     SHOWMESSAGE('Unable to find ' + InputFileName + '!!');
+     end;
 
   WriteLn('There were ', NumberNamesAdded, ' names added to the database.');
 end;
@@ -1143,23 +1200,27 @@ var
 
 begin
   if FileExists('\log\name\names.cmq') then
-    Directory := '\log\name'
+     begin
+     Directory := '\log\name'
+     end
   else
-  begin
-    Directory := FindDirectory('NAMES.CMQ');
+     begin
+     Directory := FindDirectory('NAMES.CMQ');
 
-    if Directory = '' then
-      Directory := FindDirectory('TR.OVR');
-  end;
+     if Directory = '' then
+        begin
+        Directory := FindDirectory('TR.OVR');
+        end;
+     end;
 
   CMQFileName := Directory + '\NAMES.CMQ';
   CMQBackUpFileName := Directory + '\NAMESBAK.CMQ';
 
   for NameCode := 0 to NumberArrays - 1 do
-  begin
-    CommonTotals[NameCode] := 0;
-    UncommonTotals[NameCode] := 0;
-  end;
+     begin
+     CommonTotals[NameCode] := 0;
+     UncommonTotals[NameCode] := 0;
+     end;
 
   NumberClubCalls := 0;
 end;
@@ -1184,18 +1245,30 @@ begin
     New(CommonCalls);
   end;
 }
-  if UnCommonCalls = nil then New(UncommonCalls);
-  if ClubCalls = nil then New(ClubCalls);
-  if CommonNames = nil then New(CommonNames);
-  if UncommonNames = nil then New(UncommonNames);
+  if UnCommonCalls = nil then
+     begin
+     New(UncommonCalls);
+     end;
+  if ClubCalls = nil then
+     begin
+     New(ClubCalls);
+     end;
+  if CommonNames = nil then
+     begin
+     New(CommonNames);
+     end;
+  if UncommonNames = nil then
+     begin
+     New(UncommonNames);
+     end;
 
   ArraysSetUp := true;
 
   if ReLoad then
-  begin
-    WriteLn('There were a total of ', TotalCalls, ' calls loaded into the name database.');
-    Load := true;
-  end;
+     begin
+     WriteLn('There were a total of ', TotalCalls, ' calls loaded into the name database.');
+     Load := true;
+     end;
 end;
 
 procedure NameDictionary.ComputeTotalCalls;
@@ -1207,24 +1280,32 @@ begin
   TotalCalls := 0;
 
   for NameCode := 0 to NumberArrays - 1 do
-  begin
-    TotalCalls := TotalCalls + CommonTotals[NameCode] + UnCommonTotals[NameCode];
+     begin
+     TotalCalls := TotalCalls + CommonTotals[NameCode] + UnCommonTotals[NameCode];
 
-    if CommonTotals[NameCode] > 0 then
-      for Address := 0 to CommonTotals[NameCode] - 1 do
-        if (CommonCalls^[NameCode, Address][1] = $FF) and
-          (CommonCalls^[NameCode, Address][2] = $FF) and
-          (CommonNames^[NameCode, Address] = $F) then
-          TotalCalls := TotalCalls - 2;
+     if CommonTotals[NameCode] > 0 then
+        begin
+        for Address := 0 to CommonTotals[NameCode] - 1 do
+          if (CommonCalls^[NameCode, Address][1] = $FF) and
+            (CommonCalls^[NameCode, Address][2] = $FF) and
+            (CommonNames^[NameCode, Address] = $F) then
+             begin
+             TotalCalls := TotalCalls - 2;
+             end;
+        end;
 
-    if UnCommonTotals[NameCode] > 0 then
-      for Address := 0 to UnCommonTotals[NameCode] - 1 do
-        if (UnCommonCalls^[NameCode, Address][1] = $FF) and
-          (UnCommonCalls^[NameCode, Address][2] = $FF) and
-          (UnCommonNames^[NameCode, Address][1] = $FF) and
-          (UnCommonNames^[NameCode, Address][2] = $FF) then
-          TotalCalls := TotalCalls - 2;
-  end;
+     if UnCommonTotals[NameCode] > 0 then
+        begin
+        for Address := 0 to UnCommonTotals[NameCode] - 1 do
+          if (UnCommonCalls^[NameCode, Address][1] = $FF) and
+            (UnCommonCalls^[NameCode, Address][2] = $FF) and
+            (UnCommonNames^[NameCode, Address][1] = $FF) and
+            (UnCommonNames^[NameCode, Address][2] = $FF) then
+             begin
+             TotalCalls := TotalCalls - 2;
+             end;
+        end;
+     end;
   TotalCalls := TotalCalls + NumberClubCalls;
 end;
 
@@ -1239,59 +1320,62 @@ begin
   NumberClubCalls := 0;
 
   for NameCode := 0 to NumberArrays - 1 do
-  begin
-    CommonTotals[NameCode] := 0;
-    UncommonTotals[NameCode] := 0;
-  end;
+     begin
+     CommonTotals[NameCode] := 0;
+     UncommonTotals[NameCode] := 0;
+     end;
 
   if FileExists(CMQFileName) then
-  begin
-    Assign(FileRead, CMQFileName);
-    Reset(FileRead, 1);
-    BlockRead(FileRead, CommonTotals, SizeOf(CommonTotals), Result1);
-    BlockRead(FileRead, UncommonTotals, SizeOf(UncommonTotals), Result1);
+     begin
+     Assign(FileRead, CMQFileName);
+     Reset(FileRead, 1);
+     BlockRead(FileRead, CommonTotals, SizeOf(CommonTotals), Result1);
+     BlockRead(FileRead, UncommonTotals, SizeOf(UncommonTotals), Result1);
 
-    for NameCode := 0 to NumberArrays - 1 do
-    begin
-      BlockRead(FileRead, CommonCalls^[NameCode], SizeOf(CommonCalls^[NameCode]), Result1);
-      BlockRead(FileRead, CommonNames^[NameCode], SizeOf(CommonNames^[NameCode]), Result1);
-      BlockRead(FileRead, UncommonCalls^[NameCode], SizeOf(UncommonCalls^[NameCode]), Result1);
-      BlockRead(FileRead, UncommonNames^[NameCode], SizeOf(UncommonNames^[NameCode]), Result1);
-    end;
+     for NameCode := 0 to NumberArrays - 1 do
+        begin
+        BlockRead(FileRead, CommonCalls^[NameCode], SizeOf(CommonCalls^[NameCode]), Result1);
+        BlockRead(FileRead, CommonNames^[NameCode], SizeOf(CommonNames^[NameCode]), Result1);
+        BlockRead(FileRead, UncommonCalls^[NameCode], SizeOf(UncommonCalls^[NameCode]), Result1);
+        BlockRead(FileRead, UncommonNames^[NameCode], SizeOf(UncommonNames^[NameCode]), Result1);
+        end;
 
-    if not Eof(FileRead) then
-    begin
-      BlockRead(FileRead, NumberClubCalls, SizeOf(NumberClubCalls), Result1);
-      BlockRead(FileRead, ClubCalls^, SizeOf(ClubCalls^), Result1);
-    end;
+     if not Eof(FileRead) then
+        begin
+        BlockRead(FileRead, NumberClubCalls, SizeOf(NumberClubCalls), Result1);
+        BlockRead(FileRead, ClubCalls^, SizeOf(ClubCalls^), Result1);
+        end;
 
-    Close(FileRead);
-    ComputeTotalCalls;
-    ReLoad := true;
-  end
+     Close(FileRead);
+     ComputeTotalCalls;
+     ReLoad := true;
+     end
   else
-  begin
-    WriteLn;
-    WriteLn('The file names.cmq was not found.', Beep);
-    WriteLn;
-    WriteLn('This is normal if you are just starting out with the program.  If you are');
-    WriteLn('upgrading from a very old version of the program you might want to read on.');
-    WriteLn;
-    WriteLn('This version of the program uses a new name database format to save memory.');
-    WriteLn('To put your old names (from names.cmp) into the new format, you must use a');
-    WriteLn('previous version of the name editor in POST (4.18 or older) to create an');
-    WriteLn('ASCII list of the names and callsigns.  Then you need to read that file');
-    WriteLn('into the new database using the name editor with this version.');
-    WriteLn;
-    WriteLn('It is also possible names.cmq was not found because the directory it is in');
-    WriteLn('does not appear in your path statement.');
-    WriteLn;
-//    WaitForKeyPressed;
+     begin
+     WriteLn;
+     WriteLn('The file names.cmq was not found.', Beep);
+     WriteLn;
+     WriteLn('This is normal if you are just starting out with the program.  If you are');
+     WriteLn('upgrading from a very old version of the program you might want to read on.');
+     WriteLn;
+     WriteLn('This version of the program uses a new name database format to save memory.');
+     WriteLn('To put your old names (from names.cmp) into the new format, you must use a');
+     WriteLn('previous version of the name editor in POST (4.18 or older) to create an');
+     WriteLn('ASCII list of the names and callsigns.  Then you need to read that file');
+     WriteLn('into the new database using the name editor with this version.');
+     WriteLn;
+     WriteLn('It is also possible names.cmq was not found because the directory it is in');
+     WriteLn('does not appear in your path statement.');
+     WriteLn;
+ //    WaitForKeyPressed;
 
-    ReLoad := False;
-  end;
+     ReLoad := False;
+     end;
 
-  if NameMemoryDisable then DumpNames;
+  if NameMemoryDisable then
+     begin
+     DumpNames;
+     end;
 end;
 
 procedure NameDictionary.MakeASCIIList(FileName: Str80);
@@ -1304,117 +1388,123 @@ var
 
 begin
   if OpenFileForWrite(FileWrite, FileName) then
-  begin
-    for NameCode := 0 to NumberArrays - 1 do
-    begin
-      PrefixFlag := False;
-
-      if CommonTotals[NameCode] > 0 then
-        for Address := 0 to CommonTotals[NameCode] - 1 do
+     begin
+     for NameCode := 0 to NumberArrays - 1 do
         begin
-          if PrefixFlag then
-          begin
-            TempBytes[1] := CommonCalls^[Namecode, Address][1];
-            TempBytes[2] := CommonCalls^[Namecode, Address][2];
+        PrefixFlag := False;
 
-            PrefixFlag := False;
+        if CommonTotals[NameCode] > 0 then
+           begin
+           for Address := 0 to CommonTotals[NameCode] - 1 do
+              begin
+              if PrefixFlag then
+                 begin
+                 TempBytes[1] := CommonCalls^[Namecode, Address][1];
+                 TempBytes[2] := CommonCalls^[Namecode, Address][2];
 
-            if (CommonCalls^[NameCode, Address][1] = $FF) and
-              (CommonCalls^[NameCode, Address][2] = $FF) and
-              (CommonNames^[Namecode, Address] = $F) then
-            begin
-//              ReportError('Consequetive Prefix flags found!!');
-//              WriteLn('CommonArray = ', NameCode, '  Address = ', Address);
-              halt;
-            end;
+                 PrefixFlag := False;
 
-            Continue;
-          end;
+                 if (CommonCalls^[NameCode, Address][1] = $FF) and
+                   (CommonCalls^[NameCode, Address][2] = $FF) and
+                   (CommonNames^[Namecode, Address] = $F) then
+                    begin
+                    //              ReportError('Consequetive Prefix flags found!!');
+                    //              WriteLn('CommonArray = ', NameCode, '  Address = ', Address);
+                                  halt;
+                    end;
 
-          if (CommonCalls^[NameCode, Address][1] = $FF) and
-            (CommonCalls^[NameCode, Address][2] = $FF) and
-            (CommonNames^[Namecode, Address] = $F) then
-          begin
-            PrefixFlag := true;
-            Continue;
-          end
-          else
-            if Address = 0 then
-            begin
-//              ReportError('First entry is not prefix flag!!');
-//              WriteLn('CommonArray = ', NameCode, '  Address = ', Address);
-              halt;
-            end;
+                 Continue;
+                 end;
 
-          TempBytes[3] := CommonCalls^[Namecode, Address][1];
-          TempBytes[4] := CommonCalls^[Namecode, Address][2];
+              if (CommonCalls^[NameCode, Address][1] = $FF) and
+                (CommonCalls^[NameCode, Address][2] = $FF) and
+                (CommonNames^[Namecode, Address] = $F) then
+                 begin
+                 PrefixFlag := true;
+                 Continue;
+                 end
+              else
+                if Address = 0 then
+                   begin
+                   //              ReportError('First entry is not prefix flag!!');
+                   //              WriteLn('CommonArray = ', NameCode, '  Address = ', Address);
+                                 halt;
+                   end;
 
-          WriteLn(FileWrite,
-            ExpandedString(TempBytes), ' ',
-            ExpandedString(CommonNameList[CommonNames^[NameCode, Address]]));
-        end;
+              TempBytes[3] := CommonCalls^[Namecode, Address][1];
+              TempBytes[4] := CommonCalls^[Namecode, Address][2];
 
-      PrefixFlag := False;
+              WriteLn(FileWrite,
+                ExpandedString(TempBytes), ' ',
+                ExpandedString(CommonNameList[CommonNames^[NameCode, Address]]));
+              end;
+           end;
 
-      if UnCommonTotals[NameCode] > 0 then
-        for Address := 0 to UnCommonTotals[NameCode] - 1 do
-        begin
-          if PrefixFlag then
-          begin
-            TempBytes[1] := UnCommonCalls^[Namecode, Address][1];
-            TempBytes[2] := UnCommonCalls^[Namecode, Address][2];
+        PrefixFlag := False;
 
-            PrefixFlag := False;
+        if UnCommonTotals[NameCode] > 0 then
+          for Address := 0 to UnCommonTotals[NameCode] - 1 do
+             begin
+             if PrefixFlag then
+                begin
+                TempBytes[1] := UnCommonCalls^[Namecode, Address][1];
+                TempBytes[2] := UnCommonCalls^[Namecode, Address][2];
 
-            if (UnCommonCalls^[NameCode, Address][1] = $FF) and
-              (UnCommonCalls^[NameCode, Address][2] = $FF) and
-              (UnCommonNames^[Namecode, Address][1] = $FF) and
-              (UnCommonNames^[Namecode, Address][2] = $FF) then
-            begin
-//              ReportError('Consequetive Prefix flags found!!');
-//              WriteLn('UnCommonArray = ', NameCode, '  Address = ', Address);
-              halt;
-            end;
+                PrefixFlag := False;
 
-            Continue;
-          end;
+                if (UnCommonCalls^[NameCode, Address][1] = $FF) and
+                  (UnCommonCalls^[NameCode, Address][2] = $FF) and
+                  (UnCommonNames^[Namecode, Address][1] = $FF) and
+                  (UnCommonNames^[Namecode, Address][2] = $FF) then
+                   begin
+                   //              ReportError('Consequetive Prefix flags found!!');
+                   //              WriteLn('UnCommonArray = ', NameCode, '  Address = ', Address);
+                                 halt;
+                   end;
 
-          if (UnCommonCalls^[NameCode, Address][1] = $FF) and
-            (UnCommonCalls^[NameCode, Address][2] = $FF) and
-            (UnCommonNames^[Namecode, Address][1] = $FF) and
-            (UnCommonNames^[Namecode, Address][2] = $FF) then
-          begin
-            PrefixFlag := true;
-            Continue;
-          end
-          else
-            if Address = 0 then
-            begin
-{              ReportError('First entry is not prefix flag!!');
+                Continue;
+                end;
+
+             if (UnCommonCalls^[NameCode, Address][1] = $FF) and
+               (UnCommonCalls^[NameCode, Address][2] = $FF) and
+               (UnCommonNames^[Namecode, Address][1] = $FF) and
+               (UnCommonNames^[Namecode, Address][2] = $FF) then
+                begin
+                PrefixFlag := true;
+                Continue;
+                end
+             else
+               if Address = 0 then
+                  begin
+                  {              ReportError('First entry is not prefix flag!!');
               WriteLn('UnCommonArray = ', NameCode, '  Address = ', Address);
               WriteLn(UnCommonCalls^[NameCode, Address][1]);
               WriteLn(UnCommonCalls^[NameCode, Address][2]);
               WriteLn(UnCommonNames^[Namecode, Address][1]);
               WriteLn(UnCommonNames^[Namecode, Address][2]);
 }              halt;
-            end;
+                  end;
 
-          TempBytes[3] := UnCommonCalls^[Namecode, Address][1];
-          TempBytes[4] := UnCommonCalls^[Namecode, Address][2];
+             TempBytes[3] := UnCommonCalls^[Namecode, Address][1];
+             TempBytes[4] := UnCommonCalls^[Namecode, Address][2];
 
-          WriteLn(FileWrite,
-            ExpandedString(TempBytes), ' ',
-            ExpandedString(UnCommonNames^[NameCode, Address]));
+             WriteLn(FileWrite,
+               ExpandedString(TempBytes), ' ',
+               ExpandedString(UnCommonNames^[NameCode, Address]));
+             end;
+
         end;
 
-    end;
+     if NumberClubCalls > 0 then
+        begin
+        for Address := 0 to NumberClubCalls - 1 do
+           begin
+           WriteLn(FileWrite, ExpandedString(ClubCalls^[Address]), ' CLUB');
+           end;
+        end;
 
-    if NumberClubCalls > 0 then
-      for Address := 0 to NumberClubCalls - 1 do
-        WriteLn(FileWrite, ExpandedString(ClubCalls^[Address]), ' CLUB');
-
-    Close(FileWrite);
-  end;
+     Close(FileWrite);
+     end;
 end;
 
 procedure NameDictionary.Save;
@@ -1453,7 +1543,9 @@ begin
   if NamesCleared then exit;
 
   if FileExists(CMQFileName) then
-    RenameFile(CMQFileName, CMQBackUpFileName);
+     begin
+     RenameFile(CMQFileName, CMQBackUpFileName);
+     end;
 
   Assign(FileWrite, CMQFileName);
   ReWrite(FileWrite, 1);
@@ -1465,19 +1557,23 @@ begin
   LargestUncommonArray := 0;
 
   for NameCode := 0 to NumberArrays - 1 do
-  begin
-    BlockWrite(FileWrite, CommonCalls^[NameCode], SizeOf(CommonCalls^[NameCode]), Result);
-    BlockWrite(FileWrite, CommonNames^[NameCode], SizeOf(CommonNames^[NameCode]), Result);
-    BlockWrite(FileWrite, UncommonCalls^[NameCode], SizeOf(UncommonCalls^[NameCode]), Result);
-    BlockWrite(FileWrite, UncommonNames^[NameCode], SizeOf(UncommonNames^[NameCode]), Result);
+     begin
+     BlockWrite(FileWrite, CommonCalls^[NameCode], SizeOf(CommonCalls^[NameCode]), Result);
+     BlockWrite(FileWrite, CommonNames^[NameCode], SizeOf(CommonNames^[NameCode]), Result);
+     BlockWrite(FileWrite, UncommonCalls^[NameCode], SizeOf(UncommonCalls^[NameCode]), Result);
+     BlockWrite(FileWrite, UncommonNames^[NameCode], SizeOf(UncommonNames^[NameCode]), Result);
 
-    if CommonTotals[NameCode] > LargestCommonArray then
-      LargestCommonArray := CommonTotals[NameCode];
+     if CommonTotals[NameCode] > LargestCommonArray then
+        begin
+        LargestCommonArray := CommonTotals[NameCode];
+        end;
 
-    if UncommonTotals[NameCode] > LargestUncommonArray then
-      LargestUncommonArray := UncommonTotals[NameCode];
+     if UncommonTotals[NameCode] > LargestUncommonArray then
+        begin
+        LargestUncommonArray := UncommonTotals[NameCode];
+        end;
 
-  end;
+     end;
 
   BlockWrite(FileWrite, NumberClubCalls, SizeOf(NumberClubCalls), Result);
   BlockWrite(FileWrite, ClubCalls^, SizeOf(ClubCalls^), Result);
@@ -1493,16 +1589,20 @@ begin
   GetRidOfPrecedingSpaces(Call);
 
   if PossCallList.NumberPossibleCalls < 12 then
-  begin
-    if PossCallList.NumberPossibleCalls > 0 then
-      for Entry := 0 to PossCallList.NumberPossibleCalls - 1 do
-        if PossCallList.List[Entry].Call = Call then
-          exit;
+     begin
+     if PossCallList.NumberPossibleCalls > 0 then
+        begin
+        for Entry := 0 to PossCallList.NumberPossibleCalls - 1 do
+          if PossCallList.List[Entry].Call = Call then
+             begin
+             exit;
+             end;
+        end;
 
-    PossCallList.List[PossCallList.NumberPossibleCalls].Call := Call;
-    PossCallList.List[PossCallList.NumberPossibleCalls].Dupe := False;
-    inc(PossCallList.NumberPossibleCalls);
-  end;
+     PossCallList.List[PossCallList.NumberPossibleCalls].Call := Call;
+     PossCallList.List[PossCallList.NumberPossibleCalls].Dupe := False;
+     inc(PossCallList.NumberPossibleCalls);
+     end;
 end;
 
 procedure NameDictionary.MakePossibleCallList(Call: CallString; var PossCallList: PossibleCallRecord);
@@ -1524,140 +1624,160 @@ begin
   Prefix := Copy(Call, 1, length(Call) - 3);
 
   for NameCode := 0 to NumberArrays - 1 do
-  begin
-    PrefixFlag := False;
+     begin
+     PrefixFlag := False;
 
-    if CommonTotals[NameCode] > 0 then
-    begin
-      for Address := 0 to CommonTotals[NameCode] - 1 do
-      begin
-        if PrefixFlag then
+     if CommonTotals[NameCode] > 0 then
         begin
-          ListPrefix := ExpandTwoBytes(CommonCalls^[Namecode, Address]);
-          GetRidOfPrecedingSpaces(ListPrefix);
-
-          if ListPrefix = Prefix then
-          begin
-            for Index := Address + 1 to CommonTotals[NameCode] - 1 do
-            begin
-              if (CommonCalls^[NameCode, Index][1] = $FF) and
-                (CommonCalls^[NameCode, Index][2] = $FF) and
-                (CommonNames^[Namecode, Index] = $F) then
-                Break;
-
-              TestCall := ExpandTwoBytes(CommonCalls^[NameCode, Index]);
-
-              if SimilarCall(TestCall, Suffix) then
-                AddCallToPossibleList(Prefix + TestCall, PossCallList);
-            end;
-          end
-          else
-            if SimilarCall(ListPrefix, Prefix) then
-            begin
-              for Index := Address + 2 to CommonTotals[NameCode] - 1 do
+        for Address := 0 to CommonTotals[NameCode] - 1 do
+           begin
+           if PrefixFlag then
               begin
-                if (CommonCalls^[NameCode, Index][1] = $FF) and
-                  (CommonCalls^[NameCode, Index][2] = $FF) and
-                  (CommonNames^[Namecode, Index] = $F) then
-                  Break;
+              ListPrefix := ExpandTwoBytes(CommonCalls^[Namecode, Address]);
+              GetRidOfPrecedingSpaces(ListPrefix);
 
-                TestCall := ExpandTwoBytes(CommonCalls^[NameCode, Index]);
+              if ListPrefix = Prefix then
+                 begin
+                 for Index := Address + 1 to CommonTotals[NameCode] - 1 do
+                    begin
+                    if (CommonCalls^[NameCode, Index][1] = $FF) and
+                      (CommonCalls^[NameCode, Index][2] = $FF) and
+                      (CommonNames^[Namecode, Index] = $F) then
+                       begin
+                       Break;
+                       end;
 
-                if TestCall = Suffix then
-                  AddCallToPossibleList(ListPrefix + Suffix, PossCallList);
+                    TestCall := ExpandTwoBytes(CommonCalls^[NameCode, Index]);
 
+                    if SimilarCall(TestCall, Suffix) then
+                       begin
+                       AddCallToPossibleList(Prefix + TestCall, PossCallList);
+                       end;
+                    end;
+                 end
+              else
+                if SimilarCall(ListPrefix, Prefix) then
+                   begin
+                   for Index := Address + 2 to CommonTotals[NameCode] - 1 do
+                      begin
+                      if (CommonCalls^[NameCode, Index][1] = $FF) and
+                        (CommonCalls^[NameCode, Index][2] = $FF) and
+                        (CommonNames^[Namecode, Index] = $F) then
+                         begin
+                         Break;
+                         end;
+
+                      TestCall := ExpandTwoBytes(CommonCalls^[NameCode, Index]);
+
+                      if TestCall = Suffix then
+                         begin
+                         AddCallToPossibleList(ListPrefix + Suffix, PossCallList);
+                         end;
+
+                      end;
+                   end;
+
+              PrefixFlag := False;
               end;
-            end;
 
-          PrefixFlag := False;
-        end;
-
-        if (CommonCalls^[NameCode, Address][1] = $FF) and
-          (CommonCalls^[NameCode, Address][2] = $FF) and
-          (CommonNames^[Namecode, Address] = $F) then
-        begin
-          PrefixFlag := true;
-          Continue;
-        end;
-
-      end;
-
-      PrefixFlag := False;
-    end;
-
-    if UnCommonTotals[NameCode] > 0 then
-    begin
-      for Address := 0 to UnCommonTotals[NameCode] - 1 do
-      begin
-        if PrefixFlag then
-        begin
-          ListPrefix := ExpandTwoBytes(UnCommonCalls^[Namecode, Address]);
-          GetRidOfPrecedingSpaces(ListPrefix);
-
-          if ListPrefix = Prefix then
-          begin
-            for Index := Address + 1 to UnCommonTotals[NameCode] - 1 do
-            begin
-              if (UnCommonCalls^[NameCode, Index][1] = $FF) and
-                (UnCommonCalls^[NameCode, Index][2] = $FF) and
-                (UnCommonNames^[Namecode, Index][1] = $FF) and
-                (UnCommonNames^[Namecode, Index][2] = $FF) then
-                Break;
-
-              TestCall := ExpandTwoBytes(UnCommonCalls^[NameCode, Index]);
-
-              if SimilarCall(TestCall, Suffix) then
-                AddCallToPossibleList(Prefix + TestCall, PossCallList);
-            end;
-          end
-          else
-            if SimilarCall(ListPrefix, Prefix) then
-            begin
-              for Index := Address + 2 to UnCommonTotals[NameCode] - 1 do
+           if (CommonCalls^[NameCode, Address][1] = $FF) and
+             (CommonCalls^[NameCode, Address][2] = $FF) and
+             (CommonNames^[Namecode, Address] = $F) then
               begin
-                if (UnCommonCalls^[NameCode, Index][1] = $FF) and
-                  (UnCommonCalls^[NameCode, Index][2] = $FF) and
-                  (UnCommonNames^[Namecode, Index][1] = $FF) and
-                  (UnCommonNames^[Namecode, Index][2] = $FF) then
-                  Break;
-
-                TestCall := ExpandTwoBytes(UnCommonCalls^[NameCode, Index]);
-
-                if TestCall = Suffix then
-                  AddCallToPossibleList(ListPrefix + Suffix, PossCallList);
-
+              PrefixFlag := true;
+              Continue;
               end;
-            end;
 
-          PrefixFlag := False;
+           end;
+
+        PrefixFlag := False;
         end;
 
-        if (UnCommonCalls^[NameCode, Address][1] = $FF) and
-          (UnCommonCalls^[NameCode, Address][2] = $FF) and
-          (UnCommonNames^[Namecode, Address][1] = $FF) and
-          (UnCommonNames^[Namecode, Address][2] = $FF) then
+     if UnCommonTotals[NameCode] > 0 then
         begin
-          PrefixFlag := true;
-          Continue;
+        for Address := 0 to UnCommonTotals[NameCode] - 1 do
+           begin
+           if PrefixFlag then
+              begin
+              ListPrefix := ExpandTwoBytes(UnCommonCalls^[Namecode, Address]);
+              GetRidOfPrecedingSpaces(ListPrefix);
+
+              if ListPrefix = Prefix then
+                 begin
+                 for Index := Address + 1 to UnCommonTotals[NameCode] - 1 do
+                    begin
+                    if (UnCommonCalls^[NameCode, Index][1] = $FF) and
+                      (UnCommonCalls^[NameCode, Index][2] = $FF) and
+                      (UnCommonNames^[Namecode, Index][1] = $FF) and
+                      (UnCommonNames^[Namecode, Index][2] = $FF) then
+                       begin
+                       Break;
+                       end;
+
+                    TestCall := ExpandTwoBytes(UnCommonCalls^[NameCode, Index]);
+
+                    if SimilarCall(TestCall, Suffix) then
+                       begin
+                       AddCallToPossibleList(Prefix + TestCall, PossCallList);
+                       end;
+                    end;
+                 end
+              else
+                if SimilarCall(ListPrefix, Prefix) then
+                   begin
+                   for Index := Address + 2 to UnCommonTotals[NameCode] - 1 do
+                      begin
+                      if (UnCommonCalls^[NameCode, Index][1] = $FF) and
+                        (UnCommonCalls^[NameCode, Index][2] = $FF) and
+                        (UnCommonNames^[Namecode, Index][1] = $FF) and
+                        (UnCommonNames^[Namecode, Index][2] = $FF) then
+                         begin
+                         Break;
+                         end;
+
+                      TestCall := ExpandTwoBytes(UnCommonCalls^[NameCode, Index]);
+
+                      if TestCall = Suffix then
+                         begin
+                         AddCallToPossibleList(ListPrefix + Suffix, PossCallList);
+                         end;
+
+                      end;
+                   end;
+
+              PrefixFlag := False;
+              end;
+
+           if (UnCommonCalls^[NameCode, Address][1] = $FF) and
+             (UnCommonCalls^[NameCode, Address][2] = $FF) and
+             (UnCommonNames^[Namecode, Address][1] = $FF) and
+             (UnCommonNames^[Namecode, Address][2] = $FF) then
+              begin
+              PrefixFlag := true;
+              Continue;
+              end;
+
+           end;
+
+        PrefixFlag := False;
         end;
 
-      end;
-
-      PrefixFlag := False;
-    end;
-
-  end;
+     end;
 
   if NumberClubCalls > 0 then
-    for Address := 0 to NumberClubCalls - 1 do
-    begin
-      if NumBytes(Addr(TestBytes), Addr(ClubCalls^[Address])) >= 2 then
-      begin
-        TempCall := ExpandedString(ClubCalls^[Address]);
-        if SimilarCall(TempCall, TestCall) then
-          AddCallToPossibleList(TempCall, PossCallList);
-      end;
-    end;
+     begin
+     for Address := 0 to NumberClubCalls - 1 do
+        begin
+        if NumBytes(Addr(TestBytes), Addr(ClubCalls^[Address])) >= 2 then
+           begin
+           TempCall := ExpandedString(ClubCalls^[Address]);
+           if SimilarCall(TempCall, TestCall) then
+              begin
+              AddCallToPossibleList(TempCall, PossCallList);
+              end;
+           end;
+        end;
+     end;
 
 end;
 

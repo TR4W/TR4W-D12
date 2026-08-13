@@ -117,66 +117,78 @@ begin
         CreateOKCancelButtons(hwnddlg);
 
         for TempErmakField := Low(TErmakFields) to High(TErmakFields) do
-        begin
-          tCreateStaticWindow(eOpFields[TempErmakField], defStyle, Left, 10, eOpFieldsLength[TempErmakField], 30, hwnddlg, integer(TempErmakField));
-          inc(Left, eOpFieldsLength[TempErmakField] + 1);
-        end;
+           begin
+           tCreateStaticWindow(eOpFields[TempErmakField], defStyle, Left, 10, eOpFieldsLength[TempErmakField], 30, hwnddlg, integer(TempErmakField));
+           inc(Left, eOpFieldsLength[TempErmakField] + 1);
+           end;
 
         for Operator := 1 to 10 do
-        begin
-          Left := FIRSTLEFT;
-          Top := 20 + Operator * (FIELDHEIGTH + 1);
+           begin
+           Left := FIRSTLEFT;
+           Top := 20 + Operator * (FIELDHEIGTH + 1);
 
-          for TempErmakField := Low(TErmakFields) to High(TErmakFields) do
-          begin
-            ControlID := integer(TempErmakField) + (Operator) * 100;
+           for TempErmakField := Low(TErmakFields) to High(TErmakFields) do
+              begin
+              ControlID := integer(TempErmakField) + (Operator) * 100;
 
-            TF.Format(TempBuffer2, OPERATORINFO, ControlID);
+              TF.Format(TempBuffer2, OPERATORINFO, ControlID);
 
-            TempInteger := GetPrivateProfileStringA(ERMAKSECTION, TempBuffer2, nil, TempBuffer1, SizeOf(TempBuffer1), TR4W_INI_FILENAME);
+              TempInteger := GetPrivateProfileStringA(ERMAKSECTION, TempBuffer2, nil, TempBuffer1, SizeOf(TempBuffer1), TR4W_INI_FILENAME);
 
-            case TempErmakField of
-              efOp:
-                begin
-                  TF.Format(TempBuffer2, '�������� %u', Operator);
-                  tCreateButtonWindow(WS_EX_STATICEDGE, TempBuffer2, BS_AUTOCHECKBOX + WS_CHILD + WS_VISIBLE + WS_TABSTOP, 10, Top, 89, FIELDHEIGTH, hwnddlg, ControlID);
-                  Windows.SendDlgItemMessage(hwnddlg, ControlID, BM_SETCHECK, integer(TempBuffer1[0] = '1'), 0);
-                end;
+              case TempErmakField of
+                efOp:
+                  begin
+                    TF.Format(TempBuffer2, '�������� %u', Operator);
+                    tCreateButtonWindow(WS_EX_STATICEDGE, TempBuffer2, BS_AUTOCHECKBOX + WS_CHILD + WS_VISIBLE + WS_TABSTOP, 10, Top, 89, FIELDHEIGTH, hwnddlg, ControlID);
+                    Windows.SendDlgItemMessage(hwnddlg, ControlID, BM_SETCHECK, integer(TempBuffer1[0] = '1'), 0);
+                  end;
 
-              efLevel:
-                begin
-                  CreateWindowExW(0, COMBOBOX, nil, CBS_DROPDOWNLIST or WS_DISABLED or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP, Left, Top, eOpFieldsLength[efLevel], 200, hwnddlg, ControlID, hInstance, nil);
-                  // Issue #997: asm tWM_SETFONT (EAX = the combobox just created above)
-                  // -> re-fetch that control by its child id (ControlID) and set its font.
-                  tWM_SETFONT(GetDlgItem(hwnddlg, ControlID), MSSansSerifFont);
-                  for TempInteger := 0 to 7 do
-                    tCB_ADDSTRING_PCHAR(hwnddlg, ControlID, ZVANIYA[TempInteger]);
-                  if TempBuffer1[0] in ['0'..'7'] then
-                    tCB_SETCURSEL(hwnddlg, ControlID, Ord(TempBuffer1[0]) - Ord('0'))
-                  else
-                    tCB_SETCURSEL(hwnddlg, ControlID, 1)
-                end;
+                efLevel:
+                  begin
+                    CreateWindowExW(0, COMBOBOX, nil, CBS_DROPDOWNLIST or WS_DISABLED or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP, Left, Top, eOpFieldsLength[efLevel], 200, hwnddlg, ControlID, hInstance, nil);
+                    // Issue #997: asm tWM_SETFONT (EAX = the combobox just created above)
+                    // -> re-fetch that control by its child id (ControlID) and set its font.
+                    tWM_SETFONT(GetDlgItem(hwnddlg, ControlID), MSSansSerifFont);
+                    for TempInteger := 0 to 7 do
+                       begin
+                       tCB_ADDSTRING_PCHAR(hwnddlg, ControlID, ZVANIYA[TempInteger]);
+                       end;
+                    if TempBuffer1[0] in ['0'..'7'] then
+                       begin
+                       tCB_SETCURSEL(hwnddlg, ControlID, Ord(TempBuffer1[0]) - Ord('0'))
+                       end
+                    else
+                       begin
+                       tCB_SETCURSEL(hwnddlg, ControlID, 1)
+                       end
+                  end;
 
-              efName1, efName2, efName3, efYear, efCallsign, efCategory:
-                begin
-                  h := tCreateEditWindow(WS_EX_STATICEDGE, TempBuffer1, ec, Left, Top, eOpFieldsLength[TempErmakField], FIELDHEIGTH, hwnddlg, ControlID);
-                  if TempErmakField in [efYear, efCategory] then Windows.SetWindowLong(h, GWL_STYLE, ec + ES_NUMBER);
-                  if TempErmakField in [efCallsign] then Windows.SetWindowLong(h, GWL_STYLE, ec + ES_UPPERCASE);
-                  SendMessage(h, EM_LIMITTEXT, eOpFieldsLimit[TempErmakField], 0);
-                end;
+                efName1, efName2, efName3, efYear, efCallsign, efCategory:
+                  begin
+                    h := tCreateEditWindow(WS_EX_STATICEDGE, TempBuffer1, ec, Left, Top, eOpFieldsLength[TempErmakField], FIELDHEIGTH, hwnddlg, ControlID);
+                    if TempErmakField in [efYear, efCategory] then
+                       begin
+                       Windows.SetWindowLong(h, GWL_STYLE, ec + ES_NUMBER);
+                       end;
+                    if TempErmakField in [efCallsign] then
+                       begin
+                       Windows.SetWindowLong(h, GWL_STYLE, ec + ES_UPPERCASE);
+                       end;
+                    SendMessage(h, EM_LIMITTEXT, eOpFieldsLimit[TempErmakField], 0);
+                  end;
 
-              efTrainer:
-                begin
-                  tCreateButtonWindow(0, '', BS_RIGHTBUTTON + BS_AUTORADIOBUTTON + WS_DISABLED + WS_CHILD + WS_VISIBLE + WS_TABSTOP, Left, Top, eOpFieldsLength[TempErmakField], FIELDHEIGTH, hwnddlg, ControlID);
-                  Windows.SendDlgItemMessage(hwnddlg, ControlID, BM_SETCHECK, integer(TempBuffer1[0] = '1'), 0);
-                end;
-            end;
+                efTrainer:
+                  begin
+                    tCreateButtonWindow(0, '', BS_RIGHTBUTTON + BS_AUTORADIOBUTTON + WS_DISABLED + WS_CHILD + WS_VISIBLE + WS_TABSTOP, Left, Top, eOpFieldsLength[TempErmakField], FIELDHEIGTH, hwnddlg, ControlID);
+                    Windows.SendDlgItemMessage(hwnddlg, ControlID, BM_SETCHECK, integer(TempBuffer1[0] = '1'), 0);
+                  end;
+              end;
 
-            inc(Left, eOpFieldsLength[TempErmakField] + 1);
-          end;
-          SetErmakFieldEnabled(Operator * 100);
+              inc(Left, eOpFieldsLength[TempErmakField] + 1);
+              end;
+           SetErmakFieldEnabled(Operator * 100);
 
-        end;
+           end;
 
       end;
 
@@ -190,42 +202,48 @@ begin
       begin
         if HiWord(wParam) = BN_CLICKED then
           if (LoWord(wParam) mod 100) = 0 then
-            SetErmakFieldEnabled(LoWord(wParam));
+             begin
+             SetErmakFieldEnabled(LoWord(wParam));
+             end;
 
         case wParam of
 
           1: begin
 
               for Operator := 1 to 10 do
-                for TempErmakField := Low(TErmakFields) to High(TErmakFields) do
-                begin
-                  ControlID := integer(TempErmakField) + (Operator) * 100;
-                  case TempErmakField of
-                    efOp, efTrainer:
-                      begin
-                        TempInteger := TF.SendDlgItemMessage(hwnddlg, ControlID, BM_GETCHECK);
-
-//                        if TempErmakField = efOp then if TempInteger = BST_UNCHECKED then Break;
-                        TF.Format(wsprintfBuffer, '%d', TempInteger);
-                      end;
-
-                    efLevel:
-                      begin
-                        TempInteger := TF.SendDlgItemMessage(hwnddlg, ControlID, CB_GETCURSEL);
-                        TF.Format(wsprintfBuffer, '%d', TempInteger);
-                      end;
-                  else
+                 begin
+                 for TempErmakField := Low(TErmakFields) to High(TErmakFields) do
                     begin
-                      Windows.GetDlgItemTextA(hwnddlg, ControlID, wsprintfBuffer, SizeOf(wsprintfBuffer));
+                    ControlID := integer(TempErmakField) + (Operator) * 100;
+                    case TempErmakField of
+                      efOp, efTrainer:
+                        begin
+                          TempInteger := TF.SendDlgItemMessage(hwnddlg, ControlID, BM_GETCHECK);
+
+  //                        if TempErmakField = efOp then if TempInteger = BST_UNCHECKED then Break;
+                          TF.Format(wsprintfBuffer, '%d', TempInteger);
+                        end;
+
+                      efLevel:
+                        begin
+                          TempInteger := TF.SendDlgItemMessage(hwnddlg, ControlID, CB_GETCURSEL);
+                          TF.Format(wsprintfBuffer, '%d', TempInteger);
+                        end;
+                    else
+                      begin
+                        Windows.GetDlgItemTextA(hwnddlg, ControlID, wsprintfBuffer, SizeOf(wsprintfBuffer));
+                      end;
                     end;
-                  end;
 
-                  TF.Format(TempBuffer1, OPERATORINFO, ControlID);
+                    TF.Format(TempBuffer1, OPERATORINFO, ControlID);
 
-                  if wsprintfBuffer[0] <> #0 then
-                    WritePrivateProfileStringA(ERMAKSECTION, TempBuffer1, wsprintfBuffer, TR4W_INI_FILENAME);
+                    if wsprintfBuffer[0] <> #0 then
+                       begin
+                       WritePrivateProfileStringA(ERMAKSECTION, TempBuffer1, wsprintfBuffer, TR4W_INI_FILENAME);
+                       end;
 
-                end;
+                    end;
+                 end;
 
               goto ExitAndClose;
             end;
@@ -243,9 +261,9 @@ var
 begin
   bEnable := Windows.SendDlgItemMessage(ErmakWindow, Field, BM_GETCHECK, 0, 0) = BST_CHECKED;
   for i := Field + 1 + integer(Low(TErmakFields)) to Field + 1 + integer(High(TErmakFields)) do
-  begin
-    Windows.EnableWindow(Windows.GetDlgItem(ErmakWindow, i), bEnable);
-  end;
+     begin
+     Windows.EnableWindow(Windows.GetDlgItem(ErmakWindow, i), bEnable);
+     end;
 end;
 
 end.

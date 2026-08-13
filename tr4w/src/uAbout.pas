@@ -79,7 +79,9 @@ function AboutDlgProc( hwnddlg: HWND; Msg: UINT; wParam: wParam;
       end;
     WM_COMMAND:
       if wParam = 2 then
-        goto 1;
+         begin
+         goto 1;
+         end;
     WM_CLOSE:
       begin
     1:
@@ -176,7 +178,9 @@ draw:
   SwapBuffers( OGLDC );
   Sleep( 10 );
   if tid = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   goto draw;
   DeleteObject( myFont );
 

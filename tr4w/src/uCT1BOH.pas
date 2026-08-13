@@ -79,13 +79,13 @@ begin
         ListView_InsertColumn(hLV, 0, lvc);
         counter := 0;
         for Band := 1 to 7 do
-        begin
+           begin
 
-          lvc.pszText := BandStringsArrayWithOutSpaces[ca[Band]];
-          lvc.cx := 75;
-          ListView_InsertColumn(hLV, counter + 1, lvc);
-          inc(counter);
-        end;
+           lvc.pszText := BandStringsArrayWithOutSpaces[ca[Band]];
+           lvc.cx := 75;
+           ListView_InsertColumn(hLV, counter + 1, lvc);
+           inc(counter);
+           end;
         {Time ON}
         lvi.iItem := 1;
         lvi.iSubItem := 0;
@@ -96,59 +96,72 @@ begin
         lvi.Mask := LVIF_TEXT;
         CalculateTotals;
         for Band := 1 to 7 do
-        begin
-{
+           begin
+           {
           if TotalTimeOn = 0 then
             Percent := 0
           else
             Percent := round((TimeSpentByBand[ca[Band]] / TotalTimeOn) * 100);
 }
-          lvi.iItem := 0;
-          lvi.iSubItem := Band;
-//          lvi.pszText := CT1BOHInfoString(TimeSpentByBand[Band], Percent);
-          // boundary: this ListView is still LV_ITEMA; hold the time text in a
-          // function-scoped AnsiString so pszText stays valid through
-          // ListView_SetItem (the string result is a statement-scoped temporary).
-          // W-flip tracked with the ListView A->W surface.
-          TimeAnsi := AnsiString(MillisecondsToFormattedString(TimeSpentByBand[ca[Band]] * 1000, False));
-          lvi.pszText := PAnsiChar(TimeAnsi);
-          ListView_SetItem(hLV, lvi);
-          BandTotals[ca[Band]] := 0;
-//          for Continent := NorthAmerica to Oceania do
-          for Continent := NorthAmerica to High(ContinentType) do
-            BandTotals[ca[Band]] := BandTotals[ca[Band]] + ContinentQSOCount[ca[Band], Continent];
-        end;
+                     lvi.iItem := 0;
+                     lvi.iSubItem := Band;
+           //          lvi.pszText := CT1BOHInfoString(TimeSpentByBand[Band], Percent);
+                     // boundary: this ListView is still LV_ITEMA; hold the time text in a
+                     // function-scoped AnsiString so pszText stays valid through
+                     // ListView_SetItem (the string result is a statement-scoped temporary).
+                     // W-flip tracked with the ListView A->W surface.
+                     TimeAnsi := AnsiString(MillisecondsToFormattedString(TimeSpentByBand[ca[Band]] * 1000, False));
+                     lvi.pszText := PAnsiChar(TimeAnsi);
+                     ListView_SetItem(hLV, lvi);
+                     BandTotals[ca[Band]] := 0;
+           //          for Continent := NorthAmerica to Oceania do
+                     for Continent := NorthAmerica to High(ContinentType) do
+                        begin
+                        BandTotals[ca[Band]] := BandTotals[ca[Band]] + ContinentQSOCount[ca[Band], Continent];
+                        end;
+           end;
         for Continent := NorthAmerica to High(ContinentType) do
 //        for Continent := NorthAmerica to Oceania do
-        begin
-          lvi.iSubItem := 0;
-          lvi.iItem := Ord(Continent);
-          lvi.pszText := tContinentArray[Continent];
-          ListView_InsertItem(hLV, lvi);
-          for Band := 1 to 7 do
-          begin
-            if BandTotals[ca[Band]] = 0 then
-              Percent := 0
-            else
-              Percent := round((ContinentQSOCount[ca[Band], Continent] / BandTotals[ca[Band]]) * 100);
-            lvi.iItem := Ord(Continent);
-            lvi.iSubItem := Band;
-            lvi.pszText := CT1BOHInfoString(ContinentQSOCount[ca[Band], Continent], Percent);
-            ListView_SetItem(hLV, lvi);
-          end;
-        end;
+           begin
+           lvi.iSubItem := 0;
+           lvi.iItem := Ord(Continent);
+           lvi.pszText := tContinentArray[Continent];
+           ListView_InsertItem(hLV, lvi);
+           for Band := 1 to 7 do
+              begin
+              if BandTotals[ca[Band]] = 0 then
+                 begin
+                 Percent := 0
+                 end
+              else
+                 begin
+                 Percent := round((ContinentQSOCount[ca[Band], Continent] / BandTotals[ca[Band]]) * 100);
+                 end;
+              lvi.iItem := Ord(Continent);
+              lvi.iSubItem := Band;
+              lvi.pszText := CT1BOHInfoString(ContinentQSOCount[ca[Band], Continent], Percent);
+              ListView_SetItem(hLV, lvi);
+              end;
+           end;
       end;
     WM_COMMAND:
-      if wParam = 2 then goto 1;
+      if wParam = 2 then
+         begin
+         goto 1;
+         end;
     WM_CLOSE: 1: EndDialog(hwnddlg, 0);
   end;
 end;
 function CT1BOHInfoString(QSOs: integer; Percents: integer): PAnsiChar;
 begin
   if QSOs = 0 then
-    wsprintfBuffer[0] := #0
+     begin
+     wsprintfBuffer[0] := #0
+     end
   else
-    TF.Format(wsprintfBuffer, '%u (%u%%)', QSOs, Percents);
+     begin
+     TF.Format(wsprintfBuffer, '%u (%u%%)', QSOs, Percents);
+     end;
   Result := wsprintfBuffer;
 end;
 end.

@@ -46,28 +46,28 @@ function WordValueFromCharacter(Character: Char): Word;
 begin
   if (Character = CHR(0)) or (Character = ' ') or
     (Character = '/') or (Character = '?') then
-  begin
-    WordValueFromCharacter := 0;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := 0;
+     Exit;
+     end;
 
   if Character in ['A'..'Z'] then
-  begin
-    WordValueFromCharacter := Ord(Character) - Ord('A') + 11;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := Ord(Character) - Ord('A') + 11;
+     Exit;
+     end;
 
   if Character in ['a'..'z'] then
-  begin
-    WordValueFromCharacter := Ord(Character) - Ord('a') + 11;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := Ord(Character) - Ord('a') + 11;
+     Exit;
+     end;
 
   if Character in ['0'..'9'] then
-  begin
-    WordValueFromCharacter := Ord(Character) - Ord('0') + 1;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := Ord(Character) - Ord('0') + 1;
+     Exit;
+     end;
 
   // Verbatim from tree.pas: originally a single extended char that a past UTF-8
   // conversion mangled into U+FFFD (bytes EF BF BD). Delphi 7 reads that as a
@@ -75,10 +75,10 @@ begin
   // matches today. Represented as explicit bytes to preserve that behavior
   // exactly without an encoding-fragile literal in this file. (Flagged for D12.)
   if Character = #$EF#$BF#$BD then
-  begin
-    WordValueFromCharacter := 1;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := 1;
+     Exit;
+     end;
 
   WordValueFromCharacter := 0;
 end;
@@ -93,24 +93,24 @@ var
 
 begin
   if ((Input = '') or (length(Input) > 3)) then
-  begin
-    Output[1] := 0;
-    Output[2] := 0;
-    Exit;
-  end;
+     begin
+     Output[1] := 0;
+     Output[2] := 0;
+     Exit;
+     end;
 
   Multiplier := 1;
   Sum := 0;
   LoopCount := 0;
 
   for CharPosition := length(Input) downto 1 do
-  begin
-    Value := WordValueFromCharacter(Input[CharPosition]);
-    Sum := Sum + Value * Multiplier;
-    inc(LoopCount);
-    if LoopCount >= 3 then Break;
-    Multiplier := Multiplier * 37;
-  end;
+     begin
+     Value := WordValueFromCharacter(Input[CharPosition]);
+     Sum := Sum + Value * Multiplier;
+     inc(LoopCount);
+     if LoopCount >= 3 then Break;
+     Multiplier := Multiplier * 37;
+     end;
 
   Output[2] := Lo(Sum);
   Output[1] := Hi(Sum);
@@ -127,22 +127,27 @@ var
 
 begin
   if Call = '' then
-  begin
-    Output[1] := 0;
-    Output[2] := 0;
-    Output[3] := 0;
-    Output[4] := 0;
-    Exit;
-  end;
+     begin
+     Output[1] := 0;
+     Output[2] := 0;
+     Output[3] := 0;
+     Output[4] := 0;
+     Exit;
+     end;
 
   // Upcase ASCII 'a'..'z' in place (native string).  Was uStrSearch.StrU on a
   // ShortString; inlined here as the same a..z/$20 rule so the unit needs no
   // uStrSearch dependency.  Byte-identical; frozen by uTestCallCompress.
   for i := 1 to Length(Call) do
     if (Call[i] >= 'a') and (Call[i] <= 'z') then
-      Call[i] := Char(Ord(Call[i]) - $20);
+       begin
+       Call[i] := Char(Ord(Call[i]) - $20);
+       end;
 
-  while length(Call) < 6 do Call := ' ' + Call;
+  while length(Call) < 6 do
+     begin
+     Call := ' ' + Call;
+     end;
 
   CompressThreeCharacters(Copy(Call, 1, 3), TempBytes);
   Output[1] := TempBytes[1];

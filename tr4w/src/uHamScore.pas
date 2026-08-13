@@ -195,7 +195,9 @@ var
 function GetModuleLogger: TLogLogger;
 begin
   if ModuleLogger = nil then
-    ModuleLogger := TLogLogger.GetLogger('TR4WDebugLog.HamScore');
+     begin
+     ModuleLogger := TLogLogger.GetLogger('TR4WDebugLog.HamScore');
+     end;
   Result := ModuleLogger;
 end;
 
@@ -213,18 +215,18 @@ begin
   // so we don't break the server's XML parser.
   Result := '';
   for i := 1 to Length(s) do
-  begin
-    c := s[i];
-    case c of
-      '<': Result := Result + '&lt;';
-      '>': Result := Result + '&gt;';
-      '&': Result := Result + '&amp;';
-      '"': Result := Result + '&quot;';
-      '''': Result := Result + '&apos;';
-    else
-      Result := Result + c;
-    end;
-  end;
+     begin
+     c := s[i];
+     case c of
+       '<': Result := Result + '&lt;';
+       '>': Result := Result + '&gt;';
+       '&': Result := Result + '&amp;';
+       '"': Result := Result + '&quot;';
+       '''': Result := Result + '&apos;';
+     else
+       Result := Result + c;
+     end;
+     end;
 end;
 
 // Map a QSO mode to the RTC <mode> string.  Spec examples list:
@@ -233,31 +235,35 @@ end;
 function MapModeForRTC(const RXData: ContestExchange): AnsiString;
 begin
   if RXData.ExtMode <> eNoMode then
-    case RXData.ExtMode of
-      eCW, eCW_R:               Result := 'CW';
-      eRTTY, eRTTY_R:           Result := 'RTTY';
-      eFT8:                     Result := 'FT8';
-      eFT4:                     Result := 'FT4';
-      eJT65:                    Result := 'JT65';
-      ePSK31, ePSK63, ePSK_R:   Result := 'PSK';
-      eMFSK, eJS8:              Result := 'DATA';
-      eSSB, eUSB, eLSB:         Result := 'PH';
-      eFM, eFM_N, eData_FM:     Result := 'FM';
-      eAM, eAM_N:               Result := 'AM';
-      eC4FM:                    Result := 'C4FM';
-      eDStar:                   Result := 'DSTAR';
-    else
-      Result := 'CW';
-    end
+     begin
+     case RXData.ExtMode of
+       eCW, eCW_R:               Result := 'CW';
+       eRTTY, eRTTY_R:           Result := 'RTTY';
+       eFT8:                     Result := 'FT8';
+       eFT4:                     Result := 'FT4';
+       eJT65:                    Result := 'JT65';
+       ePSK31, ePSK63, ePSK_R:   Result := 'PSK';
+       eMFSK, eJS8:              Result := 'DATA';
+       eSSB, eUSB, eLSB:         Result := 'PH';
+       eFM, eFM_N, eData_FM:     Result := 'FM';
+       eAM, eAM_N:               Result := 'AM';
+       eC4FM:                    Result := 'C4FM';
+       eDStar:                   Result := 'DSTAR';
+     else
+       Result := 'CW';
+     end
+     end
   else
-    case RXData.Mode of
-      CW:      Result := 'CW';
-      Phone:   Result := 'PH';
-      Digital: Result := 'RTTY';   // generic digital fallback
-      FM:      Result := 'FM';
-    else
-      Result := 'CW';
-    end;
+     begin
+     case RXData.Mode of
+       CW:      Result := 'CW';
+       Phone:   Result := 'PH';
+       Digital: Result := 'RTTY';   // generic digital fallback
+       FM:      Result := 'FM';
+     else
+       Result := 'CW';
+     end;
+     end;
 end;
 
 // Map BandType to the MHz integer string the spec lists:
@@ -284,10 +290,22 @@ end;
 function CountMultipliers(const RXData: ContestExchange): Integer;
 begin
   Result := 0;
-  if RXData.DXMult       then Inc(Result);
-  if RXData.DomesticMult then Inc(Result);
-  if RXData.PrefixMult   then Inc(Result);
-  if RXData.ZoneMult     then Inc(Result);
+  if RXData.DXMult       then
+     begin
+     Inc(Result);
+     end;
+  if RXData.DomesticMult then
+     begin
+     Inc(Result);
+     end;
+  if RXData.PrefixMult   then
+     begin
+     Inc(Result);
+     end;
+  if RXData.ZoneMult     then
+     begin
+     Inc(Result);
+     end;
 end;
 
 function FormatTimestamp(const tSysTime: TQSOTime): AnsiString;
@@ -356,9 +374,13 @@ begin
   // posted to multiple in the same session.  Prefer ADIFName when set,
   // else the internal name.
   if Length(ContestsArray[Contest].ADIFName) = 0 then
-    sContest := ContestTypeSA[Contest]
+     begin
+     sContest := ContestTypeSA[Contest]
+     end
   else
-    sContest := ContestsArray[Contest].ADIFName;
+     begin
+     sContest := ContestsArray[Contest].ADIFName;
+     end;
 
   Result :=
     '<deletelog>' + sLineBreak +
@@ -418,7 +440,10 @@ var i: Integer;
 begin
   if list = nil then Exit;
   for i := 0 to list.Count - 1 do
-    if list[i] <> nil then TRTCContact(list[i]).Free;
+    if list[i] <> nil then
+       begin
+       TRTCContact(list[i]).Free;
+       end;
   list.Clear;
 end;
 
@@ -500,7 +525,9 @@ begin
   FQueueLock.Acquire;
   try
     for i := 0 to FPending.Count - 1 do
-      Result.Add(FPending[i]);
+       begin
+       Result.Add(FPending[i]);
+       end;
     FPending.Clear;
   finally
     FQueueLock.Release;
@@ -515,19 +542,28 @@ var
   combined: TList;
 begin
   if (snapshot = nil) or (snapshot.Count = 0) then
-  begin
-    snapshot.Free;
-    Exit;
-  end;
+     begin
+     snapshot.Free;
+     Exit;
+     end;
 
   FQueueLock.Acquire;
   try
     combined := TList.Create;
     try
-      for i := 0 to snapshot.Count - 1 do combined.Add(snapshot[i]);
-      for i := 0 to FPending.Count - 1 do combined.Add(FPending[i]);
+      for i := 0 to snapshot.Count - 1 do
+         begin
+         combined.Add(snapshot[i]);
+         end;
+      for i := 0 to FPending.Count - 1 do
+         begin
+         combined.Add(FPending[i]);
+         end;
       FPending.Clear;
-      for i := 0 to combined.Count - 1 do FPending.Add(combined[i]);
+      for i := 0 to combined.Count - 1 do
+         begin
+         FPending.Add(combined[i]);
+         end;
     finally
       combined.Free;
     end;
@@ -552,11 +588,11 @@ begin
     dynResults := uGetScores.BuildDynamicResultsXml;
   except
     on E: Exception do
-    begin
-      FLogger.Warn('[HamScore] dynamicresults build failed: %s -- sending shell',
-        [E.Message]);
-      dynResults := '<dynamicresults></dynamicresults>';
-    end;
+       begin
+       FLogger.Warn('[HamScore] dynamicresults build failed: %s -- sending shell',
+         [E.Message]);
+       dynResults := '<dynamicresults></dynamicresults>';
+       end;
   end;
 
   // RTC 3.0 (issue #920): wrap the whole post -- <dynamicresults> and any
@@ -568,12 +604,16 @@ begin
             dynResults + sLineBreak;
 
   if snapshot <> nil then
-    for i := 0 to snapshot.Count - 1 do
-    begin
-      contact := TRTCContact(snapshot[i]);
-      if contact <> nil then
-        Result := Result + contact.XmlBody;
-    end;
+     begin
+     for i := 0 to snapshot.Count - 1 do
+        begin
+        contact := TRTCContact(snapshot[i]);
+        if contact <> nil then
+           begin
+           Result := Result + contact.XmlBody;
+           end;
+        end;
+     end;
 
   Result := Result + '</rtc>' + sLineBreak;
 end;
@@ -591,9 +631,13 @@ begin
 
   // Username defaults to MyCall when the operator left HAMSCORE USERNAME blank.
   if FUsername <> '' then
-    effectiveUser := FUsername
+     begin
+     effectiveUser := FUsername
+     end
   else
-    effectiveUser := string(MyCall);
+     begin
+     effectiveUser := string(MyCall);
+     end;
 
   http := TIdHTTP.Create(nil);
   ssl  := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
@@ -601,10 +645,10 @@ begin
   resp := TStringStream.Create('');
   try
     if AnsiStartsText('https://', FURL) then
-      begin
-      ssl.SSLOptions.Method := sslvTLSv1_2;
-      http.IOHandler := ssl;
-      end;
+       begin
+       ssl.SSLOptions.Method := sslvTLSv1_2;
+       http.IOHandler := ssl;
+       end;
 
     http.HandleRedirects        := True;
     http.Request.UserAgent      := 'TR4W RTC ' + string(TR4W_CURRENTVERSION_NUMBER);
@@ -629,10 +673,10 @@ begin
         [FURL, Result, responseBody]);
     except
       on E: Exception do
-      begin
-        FLogger.Warn('[HamScore] POST %s failed: %s', [FURL, E.Message]);
-        Result := 0;
-      end;
+         begin
+         FLogger.Warn('[HamScore] POST %s failed: %s', [FURL, E.Message]);
+         Result := 0;
+         end;
     end;
   finally
     body.Free;
@@ -646,11 +690,17 @@ end;
 // the server's responses are always single-line objects with quoted strings.
 function THamScoreUploader.ResponseStatusKind(const responseBody: string): string;
 begin
-  if Pos('"Status":"CFM"',       responseBody) > 0 then Result := 'CFM'
+  if Pos('"Status":"CFM"',       responseBody) > 0 then
+     begin
+     Result := 'CFM'
+     end
   else if Pos('"Status":"OK"',         responseBody) > 0 then Result := 'OK'
   else if Pos('"Status":"ResyncLog"',  responseBody) > 0 then Result := 'ResyncLog'
   else if Pos('"Status":"Error"',      responseBody) > 0 then Result := 'Error'
-  else Result := '';
+  else
+     begin
+     Result := '';
+     end;
 end;
 
 // RTC 3.0 (issue #920): extract the Description field that accompanies
@@ -691,81 +741,87 @@ begin
     httpCode := PostToServer(payload, responseBody);
 
     if httpCode = 0 then
-    begin
-      // Network error -- keep snapshot for next cycle.
-      FLogger.Info('[HamScore] Cycle: network error, %d QSO(s) retained for retry',
-        [snapshot.Count]);
-      SetCycleStatus(Format('Network error -- %d QSO(s) retained', [snapshot.Count]));
-      RestorePending(snapshot);
-      snapshot := nil;   // ownership transferred
-      Exit;
-    end;
+       begin
+       // Network error -- keep snapshot for next cycle.
+       FLogger.Info('[HamScore] Cycle: network error, %d QSO(s) retained for retry',
+         [snapshot.Count]);
+       SetCycleStatus(Format('Network error -- %d QSO(s) retained', [snapshot.Count]));
+       RestorePending(snapshot);
+       snapshot := nil;   // ownership transferred
+       Exit;
+       end;
 
     if (httpCode < 200) or (httpCode >= 300) then
-    begin
-      FLogger.Warn('[HamScore] Cycle: HTTP %d, %d QSO(s) retained',
-        [httpCode, snapshot.Count]);
-      SetCycleStatus(Format('HTTP %d -- %d QSO(s) retained', [httpCode, snapshot.Count]));
-      RestorePending(snapshot);
-      snapshot := nil;
-      Exit;
-    end;
+       begin
+       FLogger.Warn('[HamScore] Cycle: HTTP %d, %d QSO(s) retained',
+         [httpCode, snapshot.Count]);
+       SetCycleStatus(Format('HTTP %d -- %d QSO(s) retained', [httpCode, snapshot.Count]));
+       RestorePending(snapshot);
+       snapshot := nil;
+       Exit;
+       end;
 
     status := ResponseStatusKind(responseBody);
     if (status = 'CFM') or ((status = 'OK') and not hadQSOs) then
-    begin
-      // RTC 3.0 (issue #920): a CFM may still carry a Description -- the
-      // server uses it to signal warnings like "Exchange error" while still
-      // accepting the QSO.  Surface it to the operator if present.
-      description := ExtractDescription(responseBody);
-      FLogger.Info('[HamScore] Cycle CFM (%d QSO(s) confirmed)%s',
-        [snapshot.Count,
-         IfThen(description <> '', ' -- warning: ' + description, '')]);
-      if status = 'CFM' then
-        if description <> '' then
-          SetCycleStatus(Format('CFM (warning: %s) -- %d QSO(s) confirmed',
-            [description, snapshot.Count]))
-        else
-          SetCycleStatus(Format('CFM -- %d QSO(s) confirmed', [snapshot.Count]))
-      else
-        SetCycleStatus('OK -- score-only post accepted');
-      // snapshot will be freed in finally -- contacts are released
-      Exit;
-    end;
+       begin
+       // RTC 3.0 (issue #920): a CFM may still carry a Description -- the
+       // server uses it to signal warnings like "Exchange error" while still
+       // accepting the QSO.  Surface it to the operator if present.
+       description := ExtractDescription(responseBody);
+       FLogger.Info('[HamScore] Cycle CFM (%d QSO(s) confirmed)%s',
+         [snapshot.Count,
+          IfThen(description <> '', ' -- warning: ' + description, '')]);
+       if status = 'CFM' then
+         if description <> '' then
+            begin
+            SetCycleStatus(Format('CFM (warning: %s) -- %d QSO(s) confirmed',
+              [description, snapshot.Count]))
+            end
+         else
+            begin
+            SetCycleStatus(Format('CFM -- %d QSO(s) confirmed', [snapshot.Count]))
+            end
+       else
+          begin
+          SetCycleStatus('OK -- score-only post accepted');
+          end;
+       // snapshot will be freed in finally -- contacts are released
+       Exit;
+       end;
 
     if status = 'ResyncLog' then
-    begin
-      // Future: trigger a full resync flow.  For now, log and retain so a
-      // manual Tools-menu resync remains the operator's escape hatch.
-      FLogger.Warn('[HamScore] Server requested ResyncLog -- retaining queue, ' +
-        'use Tools menu HamScore Resync to comply');
-      SetCycleStatus('ResyncLog requested -- use Tools menu Resync');
-      RestorePending(snapshot);
-      snapshot := nil;
-      Exit;
-    end;
+       begin
+       // Future: trigger a full resync flow.  For now, log and retain so a
+       // manual Tools-menu resync remains the operator's escape hatch.
+       FLogger.Warn('[HamScore] Server requested ResyncLog -- retaining queue, ' +
+         'use Tools menu HamScore Resync to comply');
+       SetCycleStatus('ResyncLog requested -- use Tools menu Resync');
+       RestorePending(snapshot);
+       snapshot := nil;
+       Exit;
+       end;
 
     if status = 'Error' then
-    begin
-      // RTC 3.0 (issue #920): surface the Description rather than the raw
-      // JSON envelope when present.
-      description := ExtractDescription(responseBody);
-      if description <> '' then
-        begin
-        FLogger.Error('[HamScore] Server error: %s -- retaining %d QSO(s)',
-          [description, snapshot.Count]);
-        SetCycleStatus('Server error: ' + description);
-        end
-      else
-        begin
-        FLogger.Error('[HamScore] Server error: %s -- retaining %d QSO(s)',
-          [responseBody, snapshot.Count]);
-        SetCycleStatus('Server error: ' + responseBody);
-        end;
-      RestorePending(snapshot);
-      snapshot := nil;
-      Exit;
-    end;
+       begin
+       // RTC 3.0 (issue #920): surface the Description rather than the raw
+       // JSON envelope when present.
+       description := ExtractDescription(responseBody);
+       if description <> '' then
+          begin
+          FLogger.Error('[HamScore] Server error: %s -- retaining %d QSO(s)',
+            [description, snapshot.Count]);
+          SetCycleStatus('Server error: ' + description);
+          end
+       else
+          begin
+          FLogger.Error('[HamScore] Server error: %s -- retaining %d QSO(s)',
+            [responseBody, snapshot.Count]);
+          SetCycleStatus('Server error: ' + responseBody);
+          end;
+       RestorePending(snapshot);
+       snapshot := nil;
+       Exit;
+       end;
 
     // No recognised status (server might be down/proxied).  Keep retrying.
     FLogger.Warn('[HamScore] Unexpected response, retaining %d QSO(s): %s',
@@ -775,10 +831,10 @@ begin
     snapshot := nil;
   finally
     if snapshot <> nil then
-    begin
-      FreeContactList(snapshot);
-      snapshot.Free;
-    end;
+       begin
+       FreeContactList(snapshot);
+       snapshot.Free;
+       end;
   end;
 end;
 
@@ -796,22 +852,22 @@ begin
   handles[1] := FCycleEvent;
   try
     while not Terminated do
-    begin
-      waitRet := WaitForMultipleObjects(2, @handles, False, Cardinal(FCycleMs));
-      if Terminated then Break;
-      if waitRet = WAIT_OBJECT_0 then Break;     // FStopEvent
-      // Either FCycleEvent fired (waitRet = WAIT_OBJECT_0+1) or the 2-minute
-      // timer expired (WAIT_TIMEOUT).  Both run a cycle.
-      try
-        DoCycle;
-      except
-        on E: Exception do
-        begin
-          FLogger.Error('[HamScore] DoCycle exception: %s', [E.Message]);
-          SetCycleStatus('Exception: ' + E.Message);
-        end;
-      end;
-    end;
+       begin
+       waitRet := WaitForMultipleObjects(2, @handles, False, Cardinal(FCycleMs));
+       if Terminated then Break;
+       if waitRet = WAIT_OBJECT_0 then Break;     // FStopEvent
+       // Either FCycleEvent fired (waitRet = WAIT_OBJECT_0+1) or the 2-minute
+       // timer expired (WAIT_TIMEOUT).  Both run a cycle.
+       try
+         DoCycle;
+       except
+         on E: Exception do
+            begin
+            FLogger.Error('[HamScore] DoCycle exception: %s', [E.Message]);
+            SetCycleStatus('Exception: ' + E.Message);
+            end;
+       end;
+       end;
   finally
     FLogger.Info('[HamScore] Worker thread exiting');
   end;
@@ -827,13 +883,15 @@ begin
   if not HamScoreEnable then Exit;
 
   if HamScorePassword = '' then
-  begin
-    GetModuleLogger.Warn('[HamScore] HAMSCORE ENABLE = TRUE but HAMSCORE PASSWORD is empty -- uploader not started');
-    Exit;
-  end;
+     begin
+     GetModuleLogger.Warn('[HamScore] HAMSCORE ENABLE = TRUE but HAMSCORE PASSWORD is empty -- uploader not started');
+     Exit;
+     end;
 
   if HamScoreURL = '' then
-    HamScoreURL := 'http://scoredistributor.net/';   // RTC 3.0 default (issue #920)
+     begin
+     HamScoreURL := 'http://scoredistributor.net/';   // RTC 3.0 default (issue #920)
+     end;
 
   Uploader := THamScoreUploader.Create(
     string(HamScoreURL),
@@ -979,7 +1037,9 @@ var
   begin
     hCtrl := GetDlgItem(hwnddlg, ctrlId);
     if hCtrl <> 0 then
-      Windows.MoveWindow(hCtrl, x, yy, w, h, False);
+       begin
+       Windows.MoveWindow(hCtrl, x, yy, w, h, False);
+       end;
   end;
 
 begin
@@ -1012,7 +1072,10 @@ begin
     // is dragged very small.
     statusTop    := y;
     statusHeight := ch - statusTop - PAD - BTN_H - GROUP_GAP;
-    if statusHeight < MIN_STATUS_H then statusHeight := MIN_STATUS_H;
+    if statusHeight < MIN_STATUS_H then
+       begin
+       statusHeight := MIN_STATUS_H;
+       end;
     Move(HAMSCORE_EDIT_STATUS_VAL, PAD, statusTop, cw - 2*PAD, statusHeight);
 
     // Buttons anchored to bottom-left.
@@ -1050,14 +1113,14 @@ var
   user:      string;
 begin
   if Uploader = nil then
-    begin
-    SetTextIfChanged(hwnddlg, HAMSCORE_LBL_URL,        'URL: (uploader not running -- HAMSCORE ENABLE = FALSE or password missing)');
-    SetTextIfChanged(hwnddlg, HAMSCORE_LBL_USERNAME,   'User: --');
-    SetTextIfChanged(hwnddlg, HAMSCORE_LBL_QUEUE_VAL,  '--');
-    SetTextIfChanged(hwnddlg, HAMSCORE_EDIT_STATUS_VAL,'Disabled');
-    SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL,'');
-    Exit;
-    end;
+     begin
+     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_URL,        'URL: (uploader not running -- HAMSCORE ENABLE = FALSE or password missing)');
+     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_USERNAME,   'User: --');
+     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_QUEUE_VAL,  '--');
+     SetTextIfChanged(hwnddlg, HAMSCORE_EDIT_STATUS_VAL,'Disabled');
+     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL,'');
+     Exit;
+     end;
 
   pendCount := Uploader.GetPendingCount;
   status    := Uploader.GetLastCycleStatus;
@@ -1065,17 +1128,23 @@ begin
   url       := Uploader.URL;
   user      := Uploader.Username;
   if user = '' then
-    user := string(MyCall) + ' (default; HAMSCORE USERNAME empty)';
+     begin
+     user := string(MyCall) + ' (default; HAMSCORE USERNAME empty)';
+     end;
 
   SetTextIfChanged(hwnddlg, HAMSCORE_LBL_URL,         'URL: ' + url);
   SetTextIfChanged(hwnddlg, HAMSCORE_LBL_USERNAME,    'User: ' + user);
   SetTextIfChanged(hwnddlg, HAMSCORE_LBL_QUEUE_VAL,   IntToStr(pendCount));
   SetTextIfChanged(hwnddlg, HAMSCORE_EDIT_STATUS_VAL, status);
   if lastTime = 0 then
-    SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL, 'Last cycle: never')
+     begin
+     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL, 'Last cycle: never')
+     end
   else
-    SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL,
-      'Last cycle: ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', lastTime));
+     begin
+     SetTextIfChanged(hwnddlg, HAMSCORE_LBL_LASTRUN_VAL,
+       'Last cycle: ' + FormatDateTime('yyyy-mm-dd hh:nn:ss', lastTime));
+     end;
 end;
 
 function HamScoreDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -1114,7 +1183,9 @@ begin
       // No-op when the window is being minimized (we don't have valid
       // client dimensions then).
       if wParam <> SIZE_MINIMIZED then
-        HamScoreLayoutControls(hwnddlg);
+         begin
+         HamScoreLayoutControls(hwnddlg);
+         end;
 
     WM_GETMINMAXINFO:
       // Stop the operator from dragging the window so small that the
@@ -1136,10 +1207,10 @@ begin
           HAMSCORE_BTN_PUSH_NOW:
             begin
               if Uploader <> nil then
-                begin
-                Uploader.PushNow;
-                SetTextSafe(hwnddlg, HAMSCORE_EDIT_STATUS_VAL, 'Push Now signaled -- cycle will run shortly');
-                end;
+                 begin
+                 Uploader.PushNow;
+                 SetTextSafe(hwnddlg, HAMSCORE_EDIT_STATUS_VAL, 'Push Now signaled -- cycle will run shortly');
+                 end;
             end;
 
           HAMSCORE_BTN_RESYNC:
@@ -1154,7 +1225,10 @@ begin
                 '<deletelog> queued -- use Tools menu Resync to enqueue all QSOs');
             end;
         end;
-        if HiWord(wParam) = BN_CLICKED then FrmSetFocus;
+        if HiWord(wParam) = BN_CLICKED then
+           begin
+           FrmSetFocus;
+           end;
       end;
 
     WM_CLOSE:

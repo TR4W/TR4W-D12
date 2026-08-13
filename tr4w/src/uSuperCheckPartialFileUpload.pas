@@ -279,7 +279,7 @@ begin
       finally
          fs.Free;
       end;
-    end;
+      end;
 end;
 
 function TSCPUpload.GetHashSHA256(_string: string): string;
@@ -287,14 +287,14 @@ function TSCPUpload.GetHashSHA256(_string: string): string;
    sha: TIdHashSHA256;
   begin
    if TIdHashSHA256.IsAvailable then
-    begin
-     sha:= TIdHashSHA256.Create;
-     try
-      Result:= sha.HashStringAsHex(_string);
-     finally
-      sha.Free;
-     end;
-    end;
+      begin
+      sha:= TIdHashSHA256.Create;
+      try
+       Result:= sha.HashStringAsHex(_string);
+      finally
+       sha.Free;
+      end;
+      end;
   end;
 
 function TSCPUpload.SSLIOHandlerVerifyPeer(ThePeerCert: TIdX509; AOk: Boolean; ADepth, AError: Integer): Boolean;

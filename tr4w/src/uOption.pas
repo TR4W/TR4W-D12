@@ -115,17 +115,17 @@ begin
         SettingshLV := tWM_SETFONT(CreateListView2(0, 0, 548, 432, hwnddlg), MainFixedFont);
 
         for TempInteger := 0 to 4 do
-        begin
-          St := 0;
-          M := 200 + TempInteger;
-          if TempInteger = 0 then
-          begin
-            St := BS_DEFPUSHBUTTON or BS_NOTIFY or BS_CENTER;
-            m := 1;
-          end;
+           begin
+           St := 0;
+           M := 200 + TempInteger;
+           if TempInteger = 0 then
+              begin
+              St := BS_DEFPUSHBUTTON or BS_NOTIFY or BS_CENTER;
+              m := 1;
+              end;
 
-          CreateButton(St, l[TempInteger], TempInteger * 110 + 5, 470, 107, hwnddlg, M);
-        end;
+           CreateButton(St, l[TempInteger], TempInteger * 110 + 5, 470, 107, hwnddlg, M);
+           end;
 
         // Issue #783 -- "Show passwords" checkbox lives on the dialog itself
         // (NOT inside the listview), so it stays visible regardless of how far
@@ -160,13 +160,16 @@ begin
         TempInteger := 0;
 
         if CommandToSet <> nil then
-        begin
-          plvfi.Flags := LVFI_STRING;
-          plvfi.psz := CommandToSet;
-          TempInteger := ListView_FindItem(SettingshLV, -1, plvfi);
-          if TempInteger = -1 then TempInteger := 0;
-          CommandToSet := nil;
-        end;
+           begin
+           plvfi.Flags := LVFI_STRING;
+           plvfi.psz := CommandToSet;
+           TempInteger := ListView_FindItem(SettingshLV, -1, plvfi);
+           if TempInteger = -1 then
+              begin
+              TempInteger := 0;
+              end;
+           CommandToSet := nil;
+           end;
 
         Settingslvi.Mask := LVIF_STATE;
         Settingslvi.stateMask := LVIS_FOCUSED or LVIS_SELECTED;
@@ -187,9 +190,9 @@ begin
           202:
             begin
               for TempInteger := 0 to CommandsArraySize - 1 do if Changed[TempInteger] = True then
-                begin
-                  SaveValue2(TempInteger);
-                end;
+                                                                  begin
+                                                                  SaveValue2(TempInteger);
+                                                                  end;
               SendMessage(SettingshLV, LVM_UPDATE, 0, 0);
 
               EnableWindowFalse(hwnddlg, 202);
@@ -222,10 +225,10 @@ begin
 
         if SomeCommandWasChanged then
           if CommandsFilter = cfWK then
-          begin
-            wkClose;
-            wkOpen;
-          end;
+             begin
+             wkClose;
+             wkOpen;
+             end;
 
 //        SendMessage(SettingshLV, LVM_FIRST + 160, 0, 0);
         EndDialog(hwnddlg, 0);
@@ -261,18 +264,22 @@ begin
   if SettingshLV = 0 then Exit;
   rowCount := ListView_GetItemCount(SettingshLV);
   for row := 0 to rowCount - 1 do
-    begin
-    cmd := IndexArray[row + 1];   // IndexArray is 1-based
-    if (cmd <= 0) or (cmd > CommandsArraySize) then Continue;
-    if CFGCA[cmd].crType <> ctPassword then Continue;
+     begin
+     cmd := IndexArray[row + 1];   // IndexArray is 1-based
+     if (cmd <= 0) or (cmd > CommandsArraySize) then Continue;
+     if CFGCA[cmd].crType <> ctPassword then Continue;
 
-    if ShowPasswords then
-      // D12: skip the leading marker byte; tLVSetText copies internally, so the
-      // old writable-buffer (ZeroMemory + lstrcpynA into buf) is gone.
-      tLVSetText(SettingshLV, row, VALUE_FIELD, string(PAnsiChar(Integer(CFGCA[cmd].crAddress) + 1)))
-    else
-      tLVSetText(SettingshLV, row, VALUE_FIELD, string(PASSWORD_MASK));
-    end;
+     if ShowPasswords then
+       // D12: skip the leading marker byte; tLVSetText copies internally, so the
+       // old writable-buffer (ZeroMemory + lstrcpynA into buf) is gone.
+        begin
+        tLVSetText(SettingshLV, row, VALUE_FIELD, string(PAnsiChar(Integer(CFGCA[cmd].crAddress) + 1)))
+        end
+     else
+        begin
+        tLVSetText(SettingshLV, row, VALUE_FIELD, string(PASSWORD_MASK));
+        end;
+     end;
 end;
 
 procedure CommandsToListView2(f:cfgfunc  );
@@ -292,12 +299,18 @@ begin
   Settingslvc.Mask := LVCF_TEXT or LVCF_WIDTH or LVCF_FMT;
   Settingslvc.pszText := TC_COMMAND;
   Settingslvc.cx := 225;
-  if CommandsFilter = cfCol then Settingslvc.cx := 275;
+  if CommandsFilter = cfCol then
+     begin
+     Settingslvc.cx := 275;
+     end;
   uCommctrl.ListView_InsertColumnA(SettingshLV, COMMAND_FIELD, Settingslvc);
 
   Settingslvc.pszText := TC_VALUE;
   Settingslvc.cx := 220;
-  if CommandsFilter = cfCol then Settingslvc.cx := 170;
+  if CommandsFilter = cfCol then
+     begin
+     Settingslvc.cx := 170;
+     end;
   uCommctrl.ListView_InsertColumnA(SettingshLV, VALUE_FIELD, Settingslvc);
 
   Settingslvc.pszText := '#';
@@ -312,33 +325,33 @@ begin
   i := 0;
 
   if CommandsFilter = cfCol then
-  begin
-    for TempWindowElement := Low(TMainWindowElement) to High(TMainWindowElement) do
-    begin
-      {color begin}
-      inc(i);
-      tLVInsertRow(SettingshLV, i - 1, SysUtils.Format('%s WINDOW COLOR', [string(TWindows[TempWindowElement].mweName)]));
-      tLVSetText(SettingshLV, i - 1, VALUE_FIELD, string(tr4wColorsSA[TWindows[TempWindowElement].mweColor]));
-      tLVSetText(SettingshLV, i - 1, NUMBER_FIELD, IntToStr(i));
-      {color end}
+     begin
+     for TempWindowElement := Low(TMainWindowElement) to High(TMainWindowElement) do
+        begin
+        {color begin}
+        inc(i);
+        tLVInsertRow(SettingshLV, i - 1, SysUtils.Format('%s WINDOW COLOR', [string(TWindows[TempWindowElement].mweName)]));
+        tLVSetText(SettingshLV, i - 1, VALUE_FIELD, string(tr4wColorsSA[TWindows[TempWindowElement].mweColor]));
+        tLVSetText(SettingshLV, i - 1, NUMBER_FIELD, IntToStr(i));
+        {color end}
 
-      inc(i);
-      {background begin}
-      tLVInsertRow(SettingshLV, i - 1, SysUtils.Format('%s WINDOW BACKGROUND', [string(TWindows[TempWindowElement].mweName)]));
-      tLVSetText(SettingshLV, i - 1, VALUE_FIELD, string(tr4wColorsSA[TWindows[TempWindowElement].mweBackG]));
-      tLVSetText(SettingshLV, i - 1, NUMBER_FIELD, IntToStr(i));
-      {background end}
+        inc(i);
+        {background begin}
+        tLVInsertRow(SettingshLV, i - 1, SysUtils.Format('%s WINDOW BACKGROUND', [string(TWindows[TempWindowElement].mweName)]));
+        tLVSetText(SettingshLV, i - 1, VALUE_FIELD, string(tr4wColorsSA[TWindows[TempWindowElement].mweBackG]));
+        tLVSetText(SettingshLV, i - 1, NUMBER_FIELD, IntToStr(i));
+        {background end}
 
-    end;
+        end;
 
-    // ALERT COLOR — standalone entry (not a TMainWindowElement pair)
-    inc(i);
-    tLVInsertRow(SettingshLV, i - 1, 'ALERT COLOR');
-    tLVSetText(SettingshLV, i - 1, VALUE_FIELD, string(tr4wColorsSA[AlertColor]));
-    tLVSetText(SettingshLV, i - 1, NUMBER_FIELD, IntToStr(i));
+     // ALERT COLOR — standalone entry (not a TMainWindowElement pair)
+     inc(i);
+     tLVInsertRow(SettingshLV, i - 1, 'ALERT COLOR');
+     tLVSetText(SettingshLV, i - 1, VALUE_FIELD, string(tr4wColorsSA[AlertColor]));
+     tLVSetText(SettingshLV, i - 1, NUMBER_FIELD, IntToStr(i));
 
-    Exit;
-  end;
+     Exit;
+     end;
 
   for Command := 1 to CommandsArraySize do
     // Three reasons a row is hidden from Ctrl-J, and they are NOT the same:
@@ -348,89 +361,101 @@ begin
     //           so the ini value remains the transport.
     if not (CFGCA[Command].crS in [csRem, csOwned, csJSON]) then
       if CFGCA[Command].crType in [ctFreqList, ctURL, ctCaseSensitive, ctPassword, ctPortLPT, ctDirectory, ctFileName, ctAlphaChar, ctChar, ctBand, ctReal, ctByte, ctInteger, ctMessage, ctWord, ctString, ctBoolean, ctOther, ctMultiplier] then
-      begin
+         begin
 
-//        if CommandsFilter <> cfAll then
-        if CFGCA[Command].cfFunc <> CommandsFilter then Continue;
+         //        if CommandsFilter <> cfAll then
+                 if CFGCA[Command].cfFunc <> CommandsFilter then Continue;
 
-//        if pos('WINDOW',CFGCA[Command].crCommand) = 0 then Continue;
+         //        if pos('WINDOW',CFGCA[Command].crCommand) = 0 then Continue;
 
-        inc(i);
+                 inc(i);
 
-        IndexArray[i] := Command;
+                 IndexArray[i] := Command;
 
-        // D12: COMMAND field creates the row; VALUE/NUMBER/FILE set via the
-        // native-string helper (no PChar/AnsiString at the call site).
-        tLVInsertRow(SettingshLV, i - 1, string(CFGCA[Command].crCommand));
-{-----------------------------------------------}
-        valueStr := '';
+                 // D12: COMMAND field creates the row; VALUE/NUMBER/FILE set via the
+                 // native-string helper (no PChar/AnsiString at the call site).
+                 tLVInsertRow(SettingshLV, i - 1, string(CFGCA[Command].crCommand));
+         {-----------------------------------------------}
+                 valueStr := '';
 
-        if CFGCA[Command].crKind in [ckArray] then
-          valueStr := IntToStr(ArrayRecordArray[integer(CFGCA[Command].crAddress)].arVar^);
+                 if CFGCA[Command].crKind in [ckArray] then
+                    begin
+                    valueStr := IntToStr(ArrayRecordArray[integer(CFGCA[Command].crAddress)].arVar^);
+                    end;
 
-        if CFGCA[Command].crKind in [ckNormal, ckList] then
-        begin
+                 if CFGCA[Command].crKind in [ckNormal, ckList] then
+                    begin
 
-          case CFGCA[Command].crType of
-            ctFreqList:
-              valueStr := '...';
+                    case CFGCA[Command].crType of
+                      ctFreqList:
+                        valueStr := '...';
 
-            ctDirectory, ctFileName:
-              valueStr := string(PAnsiChar(CFGCA[Command].crAddress));
+                      ctDirectory, ctFileName:
+                        valueStr := string(PAnsiChar(CFGCA[Command].crAddress));
 
-            ctURL, ctMessage, ctString, ctCaseSensitive:
-              // boundary: config value stored with a leading marker byte; skip it (was inc(pszText))
-              valueStr := string(PAnsiChar(CFGCA[Command].crAddress) + 1);
+                      ctURL, ctMessage, ctString, ctCaseSensitive:
+                        // boundary: config value stored with a leading marker byte; skip it (was inc(pszText))
+                        valueStr := string(PAnsiChar(CFGCA[Command].crAddress) + 1);
 
-            ctPassword:                                                   // Issue #783
-              // Mask the value unless the operator ticked "Show passwords".
-              // Initial population only -- toggling the checkbox later
-              // calls RefreshPasswordRows to update without rebuilding.
-              if ShowPasswords then
-                valueStr := string(PAnsiChar(CFGCA[Command].crAddress) + 1)
-              else
-                valueStr := string(PASSWORD_MASK);
+                      ctPassword:                                                   // Issue #783
+                        // Mask the value unless the operator ticked "Show passwords".
+                        // Initial population only -- toggling the checkbox later
+                        // calls RefreshPasswordRows to update without rebuilding.
+                        if ShowPasswords then
+                           begin
+                           valueStr := string(PAnsiChar(CFGCA[Command].crAddress) + 1)
+                           end
+                        else
+                           begin
+                           valueStr := string(PASSWORD_MASK);
+                           end;
 
-            ctBoolean:
-              valueStr := string(BA[PBoolean(CFGCA[Command].crAddress)^]);
+                      ctBoolean:
+                        valueStr := string(BA[PBoolean(CFGCA[Command].crAddress)^]);
 
-            ctReal:
-              // D12: RealToStr2 returns string; was a dangling PAnsiChar(AnsiString(...)) temp
-              valueStr := RealToStr2(PDouble(CFGCA[Command].crAddress)^);
+                      ctReal:
+                        // D12: RealToStr2 returns string; was a dangling PAnsiChar(AnsiString(...)) temp
+                        valueStr := RealToStr2(PDouble(CFGCA[Command].crAddress)^);
 
-            ctInteger:
-              valueStr := IntToStr(PInteger(CFGCA[Command].crAddress)^);
+                      ctInteger:
+                        valueStr := IntToStr(PInteger(CFGCA[Command].crAddress)^);
 
-            ctWord:
-              valueStr := IntToStr(PWORD(CFGCA[Command].crAddress)^);
+                      ctWord:
+                        valueStr := IntToStr(PWORD(CFGCA[Command].crAddress)^);
 
-            ctByte:
-              valueStr := IntToStr(PByte(CFGCA[Command].crAddress)^);
+                      ctByte:
+                        valueStr := IntToStr(PByte(CFGCA[Command].crAddress)^);
 
-            ctChar, ctAlphaChar:
-              if PAnsiChar(CFGCA[Command].crAddress)^ = ' ' then
-                valueStr := 'SPACE'
-              else
-                valueStr := Char(PAnsiChar(CFGCA[Command].crAddress)^);
+                      ctChar, ctAlphaChar:
+                        if PAnsiChar(CFGCA[Command].crAddress)^ = ' ' then
+                           begin
+                           valueStr := 'SPACE'
+                           end
+                        else
+                           begin
+                           valueStr := Char(PAnsiChar(CFGCA[Command].crAddress)^);
+                           end;
 
-          end;
+                    end;
 
-          if CFGCA[Command].crKind = ckList then
-          begin
-            TempInteger := integer(CFGCA[Command].crAddress);
-            p := PAnsiChar(ListParamArray[TempInteger].lpArray) + (ListParamArray[TempInteger].lpVar^ * 4);
-            p := Pointer(p^);
-            valueStr := string(PAnsiChar(p));
-          end;
+                    if CFGCA[Command].crKind = ckList then
+                       begin
+                       TempInteger := integer(CFGCA[Command].crAddress);
+                       p := PAnsiChar(ListParamArray[TempInteger].lpArray) + (ListParamArray[TempInteger].lpVar^ * 4);
+                       p := Pointer(p^);
+                       valueStr := string(PAnsiChar(p));
+                       end;
 
-        end;
-        tLVSetText(SettingshLV, i - 1, VALUE_FIELD, valueStr);
-{-----------------------------------------------}
-        tLVSetText(SettingshLV, i - 1, NUMBER_FIELD, IntToStr(i));
+                    end;
+                 tLVSetText(SettingshLV, i - 1, VALUE_FIELD, valueStr);
+         {-----------------------------------------------}
+                 tLVSetText(SettingshLV, i - 1, NUMBER_FIELD, IntToStr(i));
 
-        if CFGCA[Command].crC = 1 then
-          tLVSetText(SettingshLV, i - 1, FILE_FIELD, 'CFG');
-      end;
+                 if CFGCA[Command].crC = 1 then
+                    begin
+                    tLVSetText(SettingshLV, i - 1, FILE_FIELD, 'CFG');
+                    end;
+         end;
 
 end;
 
@@ -454,61 +479,73 @@ begin
   Row := SendMessage(SettingshLV, LVM_GETNEXTITEM, -1, 1);
 
   if CommandsFilter = cfCol then
-  begin
-    // ALERT COLOR is the last row — past the end of the TMainWindowElement pairs
-    if Row >= (Ord(High(TMainWindowElement)) + 1) * 2 then
-       begin
-       if AlertColor = High(tr4wColors) then
-          AlertColor := Low(tr4wColors)
-       else
-          Inc(AlertColor);
-       tLVSetText(SettingshLV, Row, VALUE_FIELD, string(tr4wColorsSA[AlertColor]));
-       goto EnableButtons;
-       end;
+     begin
+     // ALERT COLOR is the last row — past the end of the TMainWindowElement pairs
+     if Row >= (Ord(High(TMainWindowElement)) + 1) * 2 then
+        begin
+        if AlertColor = High(tr4wColors) then
+           begin
+           AlertColor := Low(tr4wColors)
+           end
+        else
+           begin
+           Inc(AlertColor);
+           end;
+        tLVSetText(SettingshLV, Row, VALUE_FIELD, string(tr4wColorsSA[AlertColor]));
+        goto EnableButtons;
+        end;
 
-    TempInteger := Row div 2; //window
-    if (Row mod 2) = 0 then
-      TempColor := @TWindows[TMainWindowElement(TempInteger)].mweColor //1-back
-    else
-      TempColor := @TWindows[TMainWindowElement(TempInteger)].mweBackG;
-    if TempColor^ = High(tr4wColors) then TempColor^ := Low(tr4wColors) else inc(TempColor^);
+     TempInteger := Row div 2; //window
+     if (Row mod 2) = 0 then
+        begin
+        TempColor := @TWindows[TMainWindowElement(TempInteger)].mweColor //1-back
+        end
+     else
+        begin
+        TempColor := @TWindows[TMainWindowElement(TempInteger)].mweBackG;
+        end;
+     if TempColor^ = High(tr4wColors) then TempColor^ := Low(tr4wColors) else inc(TempColor^);
 
-    if TWindows[TMainWindowElement(TempInteger)].mweiStyle = 1 then
-//   if TMainWindowElement(TempInteger) = mweEditableLog then
-      SetListViewColor(TMainWindowElement(TempInteger))
-    else
+     if TWindows[TMainWindowElement(TempInteger)].mweiStyle = 1 then
+ //   if TMainWindowElement(TempInteger) = mweEditableLog then
+        begin
+        SetListViewColor(TMainWindowElement(TempInteger))
+        end
+     else
 
-      Windows.InvalidateRect(wh[TMainWindowElement(TempInteger)], nil, False);
-//    Windows.FlashWindow(wh[TMainWindowElement(TempInteger)], false);
+        begin
+        Windows.InvalidateRect(wh[TMainWindowElement(TempInteger)], nil, False);
+        end;
+ //    Windows.FlashWindow(wh[TMainWindowElement(TempInteger)], false);
 
-    tLVSetText(SettingshLV, Row, VALUE_FIELD, string(tr4wColorsSA[TempColor^]));
+     tLVSetText(SettingshLV, Row, VALUE_FIELD, string(tr4wColorsSA[TempColor^]));
 
-    if TWindows[TMainWindowElement(TempInteger)].mweName = 'QSO B4' then
-       begin
-       logger.Debug('Change of Foreground QSOB4 color');
-       // Send colors for Dupes (QSOB4)
-       //rgb := ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweBackG]);
-       if assigned(wsjtx) then
-          begin
-          wsjtx.SetDupeBackgroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweBackG]));
-       //rgb := ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweColor]);
-          wsjtx.SetDupeForegroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweColor]));
-          end;
-       end
-    else if TWindows[TMainWindowElement(TempInteger)].mweName = 'MULT' then
-       begin
-       // Send colors for multipliers
-       //rgb := ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweBackG]);
-       if assigned(wsjtx) then
-          begin
-          wsjtx.SetMultBackgroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweBackG]));
-       //rgb := ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweColor]);
-          wsjtx.SetMultForegroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweColor]));
-          end;
-       end;
+     if TWindows[TMainWindowElement(TempInteger)].mweName = 'QSO B4' then
+        begin
+        logger.Debug('Change of Foreground QSOB4 color');
+        // Send colors for Dupes (QSOB4)
+        //rgb := ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweBackG]);
+        if assigned(wsjtx) then
+           begin
+           wsjtx.SetDupeBackgroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweBackG]));
+        //rgb := ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweColor]);
+           wsjtx.SetDupeForegroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweColor]));
+           end;
+        end
+     else if TWindows[TMainWindowElement(TempInteger)].mweName = 'MULT' then
+        begin
+        // Send colors for multipliers
+        //rgb := ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweBackG]);
+        if assigned(wsjtx) then
+           begin
+           wsjtx.SetMultBackgroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweBackG]));
+        //rgb := ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweColor]);
+           wsjtx.SetMultForegroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweColor]));
+           end;
+        end;
 
 
-{
+ {
     Index2 := integer(CFGCA[Index].crAddress);
     if ListParamArray[Index2].lpVar^ = High(tr4wColors) then
       ListParamArray[Index2].lpVar^ := 0 else inc(ListParamArray[Index2].lpVar^);
@@ -516,8 +553,8 @@ begin
     p := Pointer(p^);
     tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(p)));
 }
-    goto EnableButtons;
-  end;
+     goto EnableButtons;
+     end;
 
   Index := IndexArray[Row + 1];
 
@@ -526,218 +563,245 @@ begin
   if
     (CFGCA[Index].crType in [ctFreqList, ctURL, ctCaseSensitive, ctPassword, ctDirectory, ctFileName, ctAlphaChar, ctChar, ctBoolean, ctString, ctByte, ctInteger, ctReal, ctWord])
     or (CFGCA[Index].crKind in [ckArray, ckList]) then
-  begin
+     begin
 
-    if CFGCA[Index].crKind = ckList then
-    begin
-      Index2 := integer(CFGCA[Index].crAddress);
-      if ListParamArray[Index2].lpVar^ = ListParamArray[Index2].lpLength then
-        ListParamArray[Index2].lpVar^ := 0 else inc(ListParamArray[Index2].lpVar^);
-      p := PAnsiChar(ListParamArray[Index2].lpArray) + (ListParamArray[Index2].lpVar^ * 4);
-      p := Pointer(p^);
-      tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(p)));
-      goto Change;
-    end;
-
-    if CFGCA[Index].crKind in [ckArray] then
-    begin
-      Index2 := integer(CFGCA[Index].crAddress);
-      for c := 0 to ArrayRecordArray[Index2].arArrayLength do
-      begin
-//        if PChar(PChar(ArrayRecordArray[Index2].arArrayPtr) + (c * 4))^ = Char(ArrayRecordArray[Index2].arVar^) then
-        if PInteger(integer(ArrayRecordArray[Index2].arArrayPtr) + (c * 4))^ = integer(ArrayRecordArray[Index2].arVar^) then
-          Break;
-      end;
-
-      if (c) = ArrayRecordArray[Index2].arArrayLength - 0 then c := 0 else inc(c);
-      ArrayRecordArray[Index2].arVar^ := PInteger(PAnsiChar(ArrayRecordArray[Index2].arArrayPtr) + (c * 4))^;
-      tLVSetText(SettingshLV, Row, 1, IntToStr(ArrayRecordArray[Index2].arVar^));
-      goto Change;
-    end;
-
-    case CFGCA[Index].crType of
-      ctBoolean:
+     if CFGCA[Index].crKind = ckList then
         begin
-          InvertBoolean(PBoolean(CFGCA[Index].crAddress)^);
-          tLVSetText(SettingshLV, Row, 1, string(BA[PBoolean(CFGCA[Index].crAddress)^]));
+        Index2 := integer(CFGCA[Index].crAddress);
+        if ListParamArray[Index2].lpVar^ = ListParamArray[Index2].lpLength then
+          ListParamArray[Index2].lpVar^ := 0 else inc(ListParamArray[Index2].lpVar^);
+        p := PAnsiChar(ListParamArray[Index2].lpArray) + (ListParamArray[Index2].lpVar^ * 4);
+        p := Pointer(p^);
+        tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(p)));
+        goto Change;
         end;
 
-      ctByte:
+     if CFGCA[Index].crKind in [ckArray] then
         begin
-          Windows.ZeroMemory(@TempString, SizeOf(TempString));
-          tInputDialogPreviousValue := IntToStr(PByte(CFGCA[Index].crAddress)^);
-          TempInteger := QuickEditInteger(TC_NEWVALUE, 5);
-          if TempInteger = -1 then Exit;
+        Index2 := integer(CFGCA[Index].crAddress);
+        for c := 0 to ArrayRecordArray[Index2].arArrayLength do
+           begin
+           //        if PChar(PChar(ArrayRecordArray[Index2].arArrayPtr) + (c * 4))^ = Char(ArrayRecordArray[Index2].arVar^) then
+                   if PInteger(integer(ArrayRecordArray[Index2].arArrayPtr) + (c * 4))^ = integer(ArrayRecordArray[Index2].arVar^) then
+                      begin
+                      Break;
+                      end;
+           end;
 
-          ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
-          if CheckCommand(@TempBuffer1, IntToStr(TempInteger)) then
-          begin
-            PByte(CFGCA[Index].crAddress)^ := TempInteger;
-            tLVSetText(SettingshLV, Row, 1, IntToStr(TempInteger));
-          end
-          else
-            Exit;
+        if (c) = ArrayRecordArray[Index2].arArrayLength - 0 then c := 0 else inc(c);
+        ArrayRecordArray[Index2].arVar^ := PInteger(PAnsiChar(ArrayRecordArray[Index2].arArrayPtr) + (c * 4))^;
+        tLVSetText(SettingshLV, Row, 1, IntToStr(ArrayRecordArray[Index2].arVar^));
+        goto Change;
         end;
 
-      ctWord:
-        begin
-          Windows.ZeroMemory(@TempString, SizeOf(TempString));
-          tInputDialogPreviousValue := IntToStr(PWORD(CFGCA[Index].crAddress)^);
-          TempInteger := QuickEditInteger(TC_NEWVALUE, 5);
-          if TempInteger = -1 then Exit;
+     case CFGCA[Index].crType of
+       ctBoolean:
+         begin
+           InvertBoolean(PBoolean(CFGCA[Index].crAddress)^);
+           tLVSetText(SettingshLV, Row, 1, string(BA[PBoolean(CFGCA[Index].crAddress)^]));
+         end;
 
-          ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
-          if CheckCommand(@TempBuffer1, IntToStr(TempInteger)) then
-          begin
-            PWORD(CFGCA[Index].crAddress)^ := TempInteger;
-            tLVSetText(SettingshLV, Row, 1, IntToStr(TempInteger));
-          end
-          else
-            Exit;
-        end;
+       ctByte:
+         begin
+           Windows.ZeroMemory(@TempString, SizeOf(TempString));
+           tInputDialogPreviousValue := IntToStr(PByte(CFGCA[Index].crAddress)^);
+           TempInteger := QuickEditInteger(TC_NEWVALUE, 5);
+           if TempInteger = -1 then Exit;
 
-      ctReal:
-        begin
-          Windows.ZeroMemory(@TempString, SizeOf(TempString));
+           ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
+           if CheckCommand(@TempBuffer1, IntToStr(TempInteger)) then
+              begin
+              PByte(CFGCA[Index].crAddress)^ := TempInteger;
+              tLVSetText(SettingshLV, Row, 1, IntToStr(TempInteger));
+              end
+           else
+              begin
+              Exit;
+              end;
+         end;
 
-          Val(tInputDialogPreviousValue, PDouble(CFGCA[Index].crAddress)^, TempInteger);
-          TempReal := QuickEditReal(TC_NEWVALUE, 9);
-          if TempReal = -1 then Exit;
+       ctWord:
+         begin
+           Windows.ZeroMemory(@TempString, SizeOf(TempString));
+           tInputDialogPreviousValue := IntToStr(PWORD(CFGCA[Index].crAddress)^);
+           TempInteger := QuickEditInteger(TC_NEWVALUE, 5);
+           if TempInteger = -1 then Exit;
 
-          ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
-          Str(TempReal: 2: 2, TempString);
-          if CheckCommand(@TempBuffer1, TempString) then
-          begin
-            PDouble(CFGCA[Index].crAddress)^ := TempReal;
+           ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
+           if CheckCommand(@TempBuffer1, IntToStr(TempInteger)) then
+              begin
+              PWORD(CFGCA[Index].crAddress)^ := TempInteger;
+              tLVSetText(SettingshLV, Row, 1, IntToStr(TempInteger));
+              end
+           else
+              begin
+              Exit;
+              end;
+         end;
 
-            tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(@TempString[1])));
-          end
-          else
-            Exit;
-        end;
+       ctReal:
+         begin
+           Windows.ZeroMemory(@TempString, SizeOf(TempString));
 
-      ctInteger:
-        begin
-          Windows.ZeroMemory(@TempString, SizeOf(TempString));
-          tInputDialogPreviousValue := IntToStr(PInteger(CFGCA[Index].crAddress)^);
-          TempInteger := QuickEditInteger(TC_NEWVALUE, 9);
-          if TempInteger = -1 then Exit;
+           Val(tInputDialogPreviousValue, PDouble(CFGCA[Index].crAddress)^, TempInteger);
+           TempReal := QuickEditReal(TC_NEWVALUE, 9);
+           if TempReal = -1 then Exit;
 
-          ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
-          if CheckCommand(@TempBuffer1, IntToStr(TempInteger)) then
-          begin
-            PInteger(CFGCA[Index].crAddress)^ := TempInteger;
-            tLVSetText(SettingshLV, Row, 1, IntToStr(TempInteger));
-          end
-          else
-            Exit;
-        end;
+           ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
+           Str(TempReal: 2: 2, TempString);
+           if CheckCommand(@TempBuffer1, TempString) then
+              begin
+              PDouble(CFGCA[Index].crAddress)^ := TempReal;
 
-      ctAlphaChar, ctChar:
-        begin
-          Windows.ZeroMemory(@TempString, SizeOf(TempString));
-          TempString := QuickEditResponse(TC_NEWVALUE, 1);
-          if TempString = '' then Exit;
-
-          ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
-          if CheckCommand(@TempBuffer1, TempString) then
-          begin
-            PAnsiChar(CFGCA[Index].crAddress)^ := TempString[1];
-            if TempString[1] = ' ' then
-            begin
-              Windows.ZeroMemory(@TempString, SizeOf(TempString));
-              TempString := 'SPACE';
-            end;
-            tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(@TempString[1])));
-          end;
-        end;
-
-      ctDirectory:
-        begin
-          SelectFolder(settingswindowhandle, FileNameType(CFGCA[Index].crAddress^));
-          SetFocus(settingswindowhandle);
-          tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(CFGCA[Index].crAddress)));
-        end;
-
-      ctFileName:
-        begin
-          if not OpenFileDlg(nil, settingswindowhandle, nil, FileNameType(CFGCA[Index].crAddress^), OFN_HideReadOnly) then Exit;   // issue 289
-          tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(CFGCA[Index].crAddress)));
-        end;
-
-      ctFreqList:
-        begin
-//          tDialogBox(44, @BMCFDlgProc);
-//          DialogBox(hInstance, MAKEINTRESOURCE(44), settingswindowhandle, @BMCFDlgProc);
-          CreateModalDialog(200, 155, settingswindowhandle, @BMCFDlgProc, 0);
-          Exit;
-        end;
-
-      ctURL, ctString, ctCaseSensitive, ctPassword:
-        begin
-          Windows.ZeroMemory(@TempString, SizeOf(TempString));
-
-          if CFGCA[Index].crType in [ctURL, ctCaseSensitive, ctPassword] then tInputDialogLowerCase := True;
-
-          // Issue #783 -- ctPassword + "Show passwords" off: pre-fill with the
-          // password mask and tell the input dialog to mask its input field
-          // with '*'.  Pre-fill is the mask only when there is an existing
-          // value; an empty field stays empty so the operator does not see
-          // misleading asterisks for a never-set password.
-          if (CFGCA[Index].crType = ctPassword) and (not ShowPasswords) then
-            begin
-            tInputDialogPassword := True;
-            if Length(pShortString(CFGCA[Index].crAddress)^) > 0 then
-              tInputDialogPreviousValue := PASSWORD_MASK
-            else
-              tInputDialogPreviousValue := '';
-            end
-          else
-            tInputDialogPreviousValue := pShortString(CFGCA[Index].crAddress)^;
-
-          TempString := QuickEditResponse(TC_NEWVALUE, CFGCA[Index].crMax);
-
-          if TempString = '' then Exit;
-
-          // If the operator hit OK without changing the masked pre-fill, we
-          // would otherwise overwrite the real password with literal '****'.
-          // Detect and skip.
-          if (CFGCA[Index].crType = ctPassword) and (not ShowPasswords) and
-             (TempString = PASSWORD_MASK) then
-            Exit;
-
-          ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
-          if CheckCommand(@TempBuffer1, TempString {CMD}) then
-          begin
-            pShortString(CFGCA[Index].crAddress)^ := TempString;
-            // For ctPassword, route through RefreshPasswordRows so the
-            // listview honours the current "Show passwords" state instead
-            // of leaking the new value in the clear.
-            if CFGCA[Index].crType = ctPassword then
-              RefreshPasswordRows(settingswindowhandle)
-            else
               tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(@TempString[1])));
-          end;
+              end
+           else
+              begin
+              Exit;
+              end;
+         end;
+
+       ctInteger:
+         begin
+           Windows.ZeroMemory(@TempString, SizeOf(TempString));
+           tInputDialogPreviousValue := IntToStr(PInteger(CFGCA[Index].crAddress)^);
+           TempInteger := QuickEditInteger(TC_NEWVALUE, 9);
+           if TempInteger = -1 then Exit;
+
+           ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
+           if CheckCommand(@TempBuffer1, IntToStr(TempInteger)) then
+              begin
+              PInteger(CFGCA[Index].crAddress)^ := TempInteger;
+              tLVSetText(SettingshLV, Row, 1, IntToStr(TempInteger));
+              end
+           else
+              begin
+              Exit;
+              end;
+         end;
+
+       ctAlphaChar, ctChar:
+         begin
+           Windows.ZeroMemory(@TempString, SizeOf(TempString));
+           TempString := QuickEditResponse(TC_NEWVALUE, 1);
+           if TempString = '' then Exit;
+
+           ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
+           if CheckCommand(@TempBuffer1, TempString) then
+              begin
+              PAnsiChar(CFGCA[Index].crAddress)^ := TempString[1];
+              if TempString[1] = ' ' then
+                 begin
+                 Windows.ZeroMemory(@TempString, SizeOf(TempString));
+                 TempString := 'SPACE';
+                 end;
+              tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(@TempString[1])));
+              end;
+         end;
+
+       ctDirectory:
+         begin
+           SelectFolder(settingswindowhandle, FileNameType(CFGCA[Index].crAddress^));
+           SetFocus(settingswindowhandle);
+           tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(CFGCA[Index].crAddress)));
+         end;
+
+       ctFileName:
+         begin
+           if not OpenFileDlg(nil, settingswindowhandle, nil, FileNameType(CFGCA[Index].crAddress^), OFN_HideReadOnly) then Exit;   // issue 289
+           tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(CFGCA[Index].crAddress)));
+         end;
+
+       ctFreqList:
+         begin
+ //          tDialogBox(44, @BMCFDlgProc);
+ //          DialogBox(hInstance, MAKEINTRESOURCE(44), settingswindowhandle, @BMCFDlgProc);
+           CreateModalDialog(200, 155, settingswindowhandle, @BMCFDlgProc, 0);
+           Exit;
+         end;
+
+       ctURL, ctString, ctCaseSensitive, ctPassword:
+         begin
+           Windows.ZeroMemory(@TempString, SizeOf(TempString));
+
+           if CFGCA[Index].crType in [ctURL, ctCaseSensitive, ctPassword] then
+              begin
+              tInputDialogLowerCase := True;
+              end;
+
+           // Issue #783 -- ctPassword + "Show passwords" off: pre-fill with the
+           // password mask and tell the input dialog to mask its input field
+           // with '*'.  Pre-fill is the mask only when there is an existing
+           // value; an empty field stays empty so the operator does not see
+           // misleading asterisks for a never-set password.
+           if (CFGCA[Index].crType = ctPassword) and (not ShowPasswords) then
+              begin
+              tInputDialogPassword := True;
+              if Length(pShortString(CFGCA[Index].crAddress)^) > 0 then
+                 begin
+                 tInputDialogPreviousValue := PASSWORD_MASK
+                 end
+              else
+                 begin
+                 tInputDialogPreviousValue := '';
+                 end;
+              end
+           else
+              begin
+              tInputDialogPreviousValue := pShortString(CFGCA[Index].crAddress)^;
+              end;
+
+           TempString := QuickEditResponse(TC_NEWVALUE, CFGCA[Index].crMax);
+
+           if TempString = '' then Exit;
+
+           // If the operator hit OK without changing the masked pre-fill, we
+           // would otherwise overwrite the real password with literal '****'.
+           // Detect and skip.
+           if (CFGCA[Index].crType = ctPassword) and (not ShowPasswords) and
+              (TempString = PASSWORD_MASK) then
+              begin
+              Exit;
+              end;
+
+           ListView_GetItemText(SettingshLV, Row, 0, @TempBuffer1[1], 40);
+           if CheckCommand(@TempBuffer1, TempString {CMD}) then
+              begin
+              pShortString(CFGCA[Index].crAddress)^ := TempString;
+              // For ctPassword, route through RefreshPasswordRows so the
+              // listview honours the current "Show passwords" state instead
+              // of leaking the new value in the clear.
+              if CFGCA[Index].crType = ctPassword then
+                 begin
+                 RefreshPasswordRows(settingswindowhandle)
+                 end
+              else
+                 begin
+                 tLVSetText(SettingshLV, Row, 1, string(PAnsiChar(@TempString[1])));
+                 end;
+              end;
+         end;
+     end;
+
+     Change:
+     if CFGCA[Index].crP <> 0 then
+        begin
+        // Issue #997: asm `call P` (untyped Pointer change-handler) -> typed
+        // call, guarded against a nil entry in the CommandsProcArray definition.
+        @cmdProc := CommandsProcArray[CFGCA[Index].crP];
+        if Assigned(cmdProc) then
+           begin
+           cmdProc;
+           end;
         end;
-    end;
 
-    Change:
-    if CFGCA[Index].crP <> 0 then
-    begin
-      // Issue #997: asm `call P` (untyped Pointer change-handler) -> typed
-      // call, guarded against a nil entry in the CommandsProcArray definition.
-      @cmdProc := CommandsProcArray[CFGCA[Index].crP];
-      if Assigned(cmdProc) then
-         cmdProc;
-    end;
-
-    EnableButtons:
-    Changed[Row] := True;
-    SomeCommandWasChanged := True;
-//    if CFGCA[Index].crJ = 1 then tShouldRestartProgram := True;
-    EnableWindowTrue(settingswindowhandle, 201);
-    EnableWindowTrue(settingswindowhandle, 202);
-  end;
+     EnableButtons:
+     Changed[Row] := True;
+     SomeCommandWasChanged := True;
+ //    if CFGCA[Index].crJ = 1 then tShouldRestartProgram := True;
+     EnableWindowTrue(settingswindowhandle, 201);
+     EnableWindowTrue(settingswindowhandle, 202);
+     end;
 end;
 
 procedure SaveValue2(Row: integer);
@@ -754,7 +818,9 @@ begin
   // Issue #997: asm `cmp eax,0 / jz NoText` tested the char count returned by
   // the VALUE_FIELD ListView_GetItemText -> test that result directly.
   if ListView_GetItemText(SettingshLV, Row, VALUE_FIELD, @TempBuffer2, SizeOf(TempBuffer2)) = 0 then
+     begin
      goto NoText;
+     end;
 
   p := TR4W_INI_FILENAME;
   lpAppName := _COMMANDS;
@@ -765,7 +831,10 @@ begin
   else
     begin
       tShouldRestartProgram := CFGCA[Index].crJ = 1;
-      if CFGCA[Index].crC = 1 then p := TR4W_CFG_FILENAME;
+      if CFGCA[Index].crC = 1 then
+         begin
+         p := TR4W_CFG_FILENAME;
+         end;
     end;
   end;
 {
@@ -787,38 +856,43 @@ var
   Index                                 : integer;
 begin
   if Msg = WM_NOTIFY then
-  begin
+     begin
 
-    with PNMHdr(lParam)^ do
-//      if (hWndFrom = SettingshLV) then
-      case code of
-        LVN_ITEMCHANGED: ShowHelpMessageForCommand;
-        NM_DBLCLK: ChangeValue2;
-        NM_CUSTOMDRAW:
-          begin
-            lplvcd := PNMLVCustomDraw(lParam);
+     with PNMHdr(lParam)^ do
+ //      if (hWndFrom = SettingshLV) then
+        begin
+        case code of
+          LVN_ITEMCHANGED: ShowHelpMessageForCommand;
+          NM_DBLCLK: ChangeValue2;
+          NM_CUSTOMDRAW:
+            begin
+              lplvcd := PNMLVCustomDraw(lParam);
 
-            case lplvcd.nmcd.dwDrawStage of
-              CDDS_PREPAINT:
-                begin
-                  Result := CDRF_NOTIFYITEMDRAW;
-                  Exit;
-                end;
-              CDDS_ITEMPREPAINT:
-                begin
-                  if CommandsFilter <> cfCol then
+              case lplvcd.nmcd.dwDrawStage of
+                CDDS_PREPAINT:
                   begin
-                    Index := IndexArray[lplvcd.nmcd.dwItemSpec + 1];
-                    if (CFGCA[Index].crJ in [2, 3]) {RO} then lplvcd.clrText := $00B0B0B0;
-                    if CFGCA[Index].crJ = 1 then lplvcd.clrText := $00FF0000;
+                    Result := CDRF_NOTIFYITEMDRAW;
+                    Exit;
                   end;
-                  if Changed[lplvcd.nmcd.dwItemSpec {Index}] then lplvcd.clrTextBk := $0000FFFF;
-                end;
+                CDDS_ITEMPREPAINT:
+                  begin
+                    if CommandsFilter <> cfCol then
+                       begin
+                       Index := IndexArray[lplvcd.nmcd.dwItemSpec + 1];
+                       if (CFGCA[Index].crJ in [2, 3]) {RO} then lplvcd.clrText := $00B0B0B0;
+                       if CFGCA[Index].crJ = 1 then
+                          begin
+                          lplvcd.clrText := $00FF0000;
+                          end;
+                       end;
+                    if Changed[lplvcd.nmcd.dwItemSpec {Index}] then lplvcd.clrTextBk := $0000FFFF;
+                  end;
+              end;
             end;
-          end;
 
-      end;
-  end;
+        end;
+        end;
+     end;
 
   Result := CallWindowProc(OldSLVProc, hwnddlg, Msg, wParam, lParam);
 end;

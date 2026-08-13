@@ -87,21 +87,26 @@ begin
   LastEntry := FirstEntryDisplayed;
 
   if LastEntry < LastMenuEntry then
-    for Line := 1 to 16 do
-    begin
-      if LastEntry = Pred(LastMenuEntry) then Break;
-      LastEntry := Succ(LastEntry);
-    end;
+     begin
+     for Line := 1 to 16 do
+        begin
+        if LastEntry = Pred(LastMenuEntry) then Break;
+        LastEntry := Succ(LastEntry);
+        end;
+     end;
 
   for Entry := FirstEntryDisplayed to LastEntry do
-  begin
-    if Entry > FirstEntryDisplayed then WriteLn;
-      //      DisplayStatusLine(Entry, Entry = ActiveEntry);
+     begin
+     if Entry > FirstEntryDisplayed then
+        begin
+        WriteLn;
+        end;
+       //      DisplayStatusLine(Entry, Entry = ActiveEntry);
 
-            //{WLI}        WHILE WhereX < 40 DO Write (' ');
+             //{WLI}        WHILE WhereX < 40 DO Write (' ');
 
-    DisplayInfoLine(Entry, Entry = ActiveEntry);
-  end;
+     DisplayInfoLine(Entry, Entry = ActiveEntry);
+     end;
 end;
 
 function ProcessInput(ActiveLine: MenuEntryType): boolean;
@@ -142,7 +147,10 @@ begin
     AQI:
       begin
         inc(AutoQSLInterval);
-        if AutoQSLInterval > 6 then AutoQSLInterval := 0;
+        if AutoQSLInterval > 6 then
+           begin
+           AutoQSLInterval := 0;
+           end;
         AutoQSLCount := AutoQSLInterval;
       end;
 
@@ -156,7 +164,9 @@ begin
       begin {KK1L: 6.72}
         TempInt := QuickEditInteger(TC_NEWAUTOSAPENABLESENSITIVITYINHZSEC, 5);
         if (TempInt > 9) and (TempInt < 10001) then
-          AutoSAPEnableRate := TempInt;
+           begin
+           AutoSAPEnableRate := TempInt;
+           end;
       end;
     Arc: InvertBoolean(AutoReturnToCQMode); // := not AutoReturnToCQMode;
 
@@ -165,12 +175,14 @@ begin
         inc(AutoSendCharacterCount);
 
         if AutoSendCharacterCount > 6 then
-        begin
-          AutoSendCharacterCount := 0;
-          AutoSendEnable := False;
-        end
+           begin
+           AutoSendCharacterCount := 0;
+           AutoSendEnable := False;
+           end
         else
-          AutoSendEnable := True;
+           begin
+           AutoSendEnable := True;
+           end;
 
         DisplayAutoSendCharacterCount;
       end;
@@ -178,7 +190,10 @@ begin
     ATI:
       begin
         inc(AutoTimeIncrementQSOs);
-        if (AutoTimeIncrementQSOs > 6) then AutoTimeIncrementQSOs := 0;
+        if (AutoTimeIncrementQSOs > 6) then
+           begin
+           AutoTimeIncrementQSOs := 0;
+           end;
       end;
 
     BEN:
@@ -233,15 +248,15 @@ begin
       begin
         TempInt := QuickEditInteger(TC_NEWBANDMAPDECAYTIMEMINUTES, 3);
         if TempInt <> -1 then
-        begin
-          BandMapDecayValue := TempInt; {KK1L: 6.65}
-          BandMapDecayMultiplier := (BandMapDecayValue div 64) + 1; {KK1L: 6.65}
-          BandMapDecayTime := BandMapDecayValue div BandMapDecayMultiplier; {KK1L: 6.65}
-          SpotsList.ResetSpotsTimes;
-            //ResetBandMapTimes; {KK1L: 6.70 Need to set BM times to new decay time}
-            {ForcedEntry := True; {KK1L: 6.70 Switch to add comment since I wrote the entry automatically}
-            {WriteParameterToLOGCFGFile (LogConfigFileName, ActiveLine); {KK1L: 6.70}
-        end;
+           begin
+           BandMapDecayValue := TempInt; {KK1L: 6.65}
+           BandMapDecayMultiplier := (BandMapDecayValue div 64) + 1; {KK1L: 6.65}
+           BandMapDecayTime := BandMapDecayValue div BandMapDecayMultiplier; {KK1L: 6.65}
+           SpotsList.ResetSpotsTimes;
+             //ResetBandMapTimes; {KK1L: 6.70 Need to set BM times to new decay time}
+             {ForcedEntry := True; {KK1L: 6.70 Switch to add comment since I wrote the entry automatically}
+             {WriteParameterToLOGCFGFile (LogConfigFileName, ActiveLine); {KK1L: 6.70}
+           end;
       end;
 
     BCQ: InvertBoolean(BandMapDisplayCQ); // := not BandMapDisplayCQ;
@@ -256,7 +271,9 @@ begin
       begin
         TempInt := QuickEditInteger(TC_NEWBANDMAPGUARDBANDHERTZ, 6);
         if TempInt <> -1 then
-          BandMapGuardBand := TempInt;
+           begin
+           BandMapGuardBand := TempInt;
+           end;
       end;
 
     {KK1L: 6.64}
@@ -309,22 +326,28 @@ begin
     CID:
       begin
         if NetSocket <> 0 then
-        begin
-          ShowMessage(TC_YOUCANONLYCHANGETHISWHENCLIENTDISC);
-          Exit;
-        end;
+           begin
+           ShowMessage(TC_YOUCANONLYCHANGETHISWHENCLIENTDISC);
+           Exit;
+           end;
         TempString := QuickEditResponse(TC_COMPUTERIDAZRETURNNONE, 1);
 
         if length(TempString) > 0 then
-        begin
-          TempChar := TempString[1];
-          if TempChar in ['A'..'Z'] then
-            ComputerID := TempChar
-          else
-            ComputerID := CHR(0);
-        end
+           begin
+           TempChar := TempString[1];
+           if TempChar in ['A'..'Z'] then
+              begin
+              ComputerID := TempChar
+              end
+           else
+              begin
+              ComputerID := CHR(0);
+              end;
+           end
         else
-          ComputerID := CHR(0);
+           begin
+           ComputerID := CHR(0);
+           end;
 
         tDispalyMyComputerID;
       end;
@@ -348,18 +371,20 @@ begin
       begin {KK1L: 6.72}
         TempInt := QuickEditInteger(TC_NEWCWINCREMENT, 3);
         if (TempInt > 0) and (TempInt < 11) then
-          CodeSpeedIncrement := TempInt;
+           begin
+           CodeSpeedIncrement := TempInt;
+           end;
       end;
 
     CWT:
       begin
         TempInt := QuickEditInteger(TC_NEWCWMONITORTONE, 6);
         if TempInt <> -1 then
-        begin
-          CWTone := TempInt;
-            //        AddStringToBuffer('', CWTone);
-          MonitorTone := TempInt; //wli
-        end;
+           begin
+           CWTone := TempInt;
+             //        AddStringToBuffer('', CWTone);
+           MonitorTone := TempInt; //wli
+           end;
       end;
     DEE: InvertBoolean(DEEnable); // := not DEEnable;
     DIG: InvertBoolean(DigitalModeEnable); // := not DigitalModeEnable;
@@ -382,7 +407,10 @@ begin
 
     DVE:
       begin
-        if DVPSetUp then InvertBoolean(DVPEnable);
+        if DVPSetUp then
+           begin
+           InvertBoolean(DVPEnable);
+           end;
         {wli
         if  not  DVPActive DVPSetUp then
         begin
@@ -419,14 +447,18 @@ begin
       begin
         TempInt := QuickEditInteger(TC_NEWFARNSWORTHSPEEDCUTINVALUE, 2);
         if TempInt <> -1 then
-          FarnsworthSpeed := TempInt;
+           begin
+           FarnsworthSpeed := TempInt;
+           end;
       end;
 
     FSF:
       begin
         TempInt := QuickEditInteger(TC_NEWFLOPPYFILESAVEFREQUENCY, 5);
         if TempInt <> -1 then
-          FloppyFileSaveFrequency := TempInt;
+           begin
+           FloppyFileSaveFrequency := TempInt;
+           end;
       end;
 
     FSE:
@@ -471,7 +503,9 @@ begin
       begin
         TempString := QuickEditResponse(TC_NEWCENTERFORGRIDMAP, 4);
         if GoodLookingGrid(TempString) or (TempString = '') then
-          GridMapCenter := TempString;
+           begin
+           GridMapCenter := TempString;
+           end;
       end;
 
     HFE: InvertBoolean(HFBandEnable); // := not HFBandEnable;
@@ -525,9 +559,13 @@ begin
 
     IEC:
       if InitialExchangeCursorPos = AtEnd then
-        InitialExchangeCursorPos := AtStart
+         begin
+         InitialExchangeCursorPos := AtStart
+         end
       else
-        InitialExchangeCursorPos := AtEnd;
+         begin
+         InitialExchangeCursorPos := AtEnd;
+         end;
 
     //    KNE: InvertBoolean(K1EANetworkEnable); // := not K1EANetworkEnable;
     {
@@ -584,7 +622,9 @@ begin
       begin
         TempString := QuickEditResponse(TC_NEWGRIDSQUARE, 4);
         if GoodLookingGrid(TempString) or (TempString = '') then
-          MyGrid := tMakeGridFromString(TempString);
+           begin
+           MyGrid := tMakeGridFromString(TempString);
+           end;
       end;
 
 
@@ -598,7 +638,9 @@ begin
       begin
         inc(MultReportMinimumBands);
         if MultReportMinimumBands >= 6 then
-          MultReportMinimumBands := 2;
+           begin
+           MultReportMinimumBands := 2;
+           end;
       end;
 
     MIM:
@@ -606,9 +648,13 @@ begin
         MultiInfoMessage := QuickEditResponse(TC_NEWMULTIINFOMESSAGE15CHARSMAX, 15);
 
         if OpMode = CQOpMode then
-          CreateAndSendCQMultiInfoMessage
+           begin
+           CreateAndSendCQMultiInfoMessage
+           end
         else
-          CreateAndSendSAPMultiInfoMessage;
+           begin
+           CreateAndSendSAPMultiInfoMessage;
+           end;
       end;
 
     MMO: InvertBoolean(MultiMultsOnly); // := not MultiMultsOnly;
@@ -623,7 +669,10 @@ begin
     MRT:
       begin
         TempInt := QuickEditInteger('new multi retry timeout (minimum 3 seconds)', 6);
-        if TempInt >= 3 then MultiRetryTime := TempInt;
+        if TempInt >= 3 then
+           begin
+           MultiRetryTime := TempInt;
+           end;
       end;
 
     MUM: InvertBoolean(MultiUpdateMultDisplay); // := not MultiUpdateMultDisplay;
@@ -644,7 +693,9 @@ begin
       begin
         inc(PacketReturnPerMinute);
         if PacketReturnPerMinute > 10 then
-          PacketReturnPerMinute := 0;
+           begin
+           PacketReturnPerMinute := 0;
+           end;
       end;
 
     psc:
@@ -658,23 +709,33 @@ begin
 
     PSP:
       if Packet.PacketSpots = AllSpots then
-        Packet.PacketSpots := MultSpots
+         begin
+         Packet.PacketSpots := MultSpots
+         end
       else
-        Packet.PacketSpots := AllSpots;
+         begin
+         Packet.PacketSpots := AllSpots;
+         end;
 
     PBE: PaddleBug := not PaddleBug;
 
     PHC:
       begin
         TempInt := QuickEditInteger(TC_NEWPTTHOLDCOUNT, 4);
-        if TempInt <> -1 then PaddlePTTHoldCount := TempInt;
+        if TempInt <> -1 then
+           begin
+           PaddlePTTHoldCount := TempInt;
+           end;
         PaddlePTTOffTimerCount := ElementLength * PaddlePTTHoldCount
       end;
 
     PMT:
       begin
         TempInt := QuickEditInteger(TC_NEWPADDLEMONITORTONE, 4);
-        if TempInt <> -1 then PaddleMonitorTone := TempInt;
+        if TempInt <> -1 then
+           begin
+           PaddleMonitorTone := TempInt;
+           end;
         NoSound;
       end;
 
@@ -683,17 +744,17 @@ begin
         TempInt := QuickEditInteger(TC_NEWPADDLESPEED0TODISABLE, 4);
 
         if TempInt <> -1 then
-        begin
-          PaddleSpeed := TempInt;
-          // STAYS a direct CPUKeyer call (not the keyer factory): paddle speed
-          // is a CPU-keyer-only concept.  Routing it through LogCW.SetSpeed
-          // would clobber CodeSpeed/DisplayedCodeSpeed -- the operator's
-          // keyboard-CW speed -- and push the paddle speed at the radio and
-          // WinKeyer.  When paddles join the factory this becomes a
-          // SetPaddleSpeed virtual.
-          CPUKeyer.SetSpeed(PaddleSpeed);
-          tSetPaddleElementLength;
-        end;
+           begin
+           PaddleSpeed := TempInt;
+           // STAYS a direct CPUKeyer call (not the keyer factory): paddle speed
+           // is a CPU-keyer-only concept.  Routing it through LogCW.SetSpeed
+           // would clobber CodeSpeed/DisplayedCodeSpeed -- the operator's
+           // keyboard-CW speed -- and push the paddle speed at the radio and
+           // WinKeyer.  When paddles join the factory this becomes a
+           // SetPaddleSpeed virtual.
+           CPUKeyer.SetSpeed(PaddleSpeed);
+           tSetPaddleElementLength;
+           end;
       end;
 
     PCE: InvertBoolean(PartialCallEnable); // := not PartialCallEnable;
@@ -715,7 +776,10 @@ begin
     PTD:
       begin
         TempInt := QuickEditInteger(TC_PTTDELAYCOUNT, 4);
-        if TempInt <> -1 then PTTTurnOnDelay := TempInt;
+        if TempInt <> -1 then
+           begin
+           PTTTurnOnDelay := TempInt;
+           end;
       end;
 
     PVC: InvertBoolean(tPTTViaCommand);
@@ -737,7 +801,9 @@ begin
         TempString := QuickEditResponse(TC_KEYBOARDCHARACTERTOUSEFORQUESTION, 1);
 
         if length(TempString) > 0 then
-          QuestionMarkChar := TempString[1];
+           begin
+           QuestionMarkChar := TempString[1];
+           end;
       end;
     {
         R1CP:
@@ -758,7 +824,9 @@ begin
         TempLongInt := QuickEditInteger(TC_RADIO1FREQUENCYADDER, 11);
 
         if TempLongInt <> -1 then
-          Radio1.FrequencyAdder := TempLongInt;
+           begin
+           Radio1.FrequencyAdder := TempLongInt;
+           end;
       end;
 {
     R1ID:
@@ -819,7 +887,9 @@ begin
         TempLongInt := QuickEditInteger(TC_RADIO2FREQUENCYADDER, 11);
 
         if TempLongInt <> -1 then
-          Radio2.FrequencyAdder := TempLongInt;
+           begin
+           Radio2.FrequencyAdder := TempLongInt;
+           end;
       end;
 {
     R2ID:
@@ -887,7 +957,10 @@ begin
     SHC:
       begin
         TempInt := QuickEditInteger(TC_NEWSAYHIRATECUTOFF, 5);
-        if TempInt <> -1 then SayHiRateCutOff := TempInt;
+        if TempInt <> -1 then
+           begin
+           SayHiRateCutOff := TempInt;
+           end;
       end;
 
     SCS:
@@ -896,18 +969,25 @@ begin
 
         if CD.CountryString <> '' then
           if Copy(CD.CountryString, length(CD.CountryString), 1) <> ',' then
-            CD.CountryString := CD.CountryString + ',';
+             begin
+             CD.CountryString := CD.CountryString + ',';
+             end;
       end;
 
     SML:
       if not WRTC2002 then {KK1L: 6.68 Keep WRTC folks from using SCP}
-        case SCPMinimumLetters of
-          0: SCPMinimumLetters := 3;
-          3: SCPMinimumLetters := 4;
-          4: SCPMinimumLetters := 5;
-        else SCPMinimumLetters := 0;
-        end
-      else SCPMinimumLetters := 0;
+         begin
+         case SCPMinimumLetters of
+           0: SCPMinimumLetters := 3;
+           3: SCPMinimumLetters := 4;
+           4: SCPMinimumLetters := 5;
+         else SCPMinimumLetters := 0;
+         end
+         end
+      else
+         begin
+         SCPMinimumLetters := 0;
+         end;
 
     SAD: InvertBoolean(SendAltDSpotsToPacket); // := not SendAltDSpotsToPacket;
 
@@ -917,7 +997,9 @@ begin
       begin
         TempString := QuickEditResponse(TC_KEYBOARDCHARACTERTOSTARTSENDING, 1);
         if TempString <> '' then
-          StartSendingNowKey := TempString[1];
+           begin
+           StartSendingNowKey := TempString[1];
+           end;
       end;
 
     SPS: InvertBoolean(StereoPinState); // := not StereoPinState; {KK1L: 6.71}
@@ -934,10 +1016,10 @@ begin
         TempString := QuickEditResponse(TC_NETWORKSERVERADDRESS, 40);
         //        if length(TempString) > 1 then if (TempString[1] = '\') and (TempString[2] = '\') then TempString := Copy(TempString, 3, 255);
         if TempString <> '' then
-        begin
-          Windows.ZeroMemory(@ServerAddress, SizeOf(ServerAddress));
-          ServerAddress := TempString;
-        end;
+           begin
+           Windows.ZeroMemory(@ServerAddress, SizeOf(ServerAddress));
+           ServerAddress := TempString;
+           end;
       end;
 
     SPA:
@@ -945,13 +1027,18 @@ begin
         TempString := QuickEditResponse(TC_NEWSERVERPASSWORD10CHARS, 10);
         if (length(TempString) = 10) then
           if pos(' ', TempString) = 0 then
-            ServerPassword := TempString;
+             begin
+             ServerPassword := TempString;
+             end;
       end;
 
     SEP:
       begin
         TempInt := QuickEditInteger(TC_NETWORKSERVERPORT, 5);
-        if TempInt <> -1 then ServerPort := TempInt;
+        if TempInt <> -1 then
+           begin
+           ServerPort := TempInt;
+           end;
       end;
 
     SKE: InvertBoolean(ShiftKeyEnable); // := not ShiftKeyEnable;
@@ -977,7 +1064,9 @@ begin
         TempString := QuickEditResponse(TC_KEYBOARDCHARACTERTOUSEFORSLASH, 1);
 
         if length(TempString) > 0 then
-          SlashMarkChar := TempString[1];
+           begin
+           SlashMarkChar := TempString[1];
+           end;
       end;
 
     SBD: InvertBoolean(SpaceBarDupeCheckEnable); // := not SpaceBarDupeCheckEnable;
@@ -1002,20 +1091,22 @@ begin
         TempString := QuickEditResponse(TC_NEWOFFTIMEVALUEMINUTES, 6);
 
         if StringHas(TempString, ':') then
-        begin
-          Val(PrecedingString(TempString, ':'), TempHour, Result1);
-          if Result1 = 0 then
-          begin
-            Val(PostcedingString(TempString, ':'), TempMinute, Result1);
-            if Result1 = 0 then
-              TotalOffTime := TempHour * 60 + TempMinute;
-          end;
-        end
+           begin
+           Val(PrecedingString(TempString, ':'), TempHour, Result1);
+           if Result1 = 0 then
+              begin
+              Val(PostcedingString(TempString, ':'), TempMinute, Result1);
+              if Result1 = 0 then
+                 begin
+                 TotalOffTime := TempHour * 60 + TempMinute;
+                 end;
+              end;
+           end
         else
-        begin
-          Val(TempString, TempMinute, Result1);
-          if Result1 = 0 then TotalOffTime := TempMinute {TempInt};
-        end;
+           begin
+           Val(TempString, TempMinute, Result1);
+           if Result1 = 0 then TotalOffTime := TempMinute {TempInt};
+           end;
       end;
 
     TDE:
@@ -1044,9 +1135,13 @@ begin
         //            if UserInfoShown > CustomInfo then UserInfoShown := NoUserInfo;
 
         if UserInfoShown <> CustomInfo then
-          inc(UserInfoShown)
+           begin
+           inc(UserInfoShown)
+           end
         else
-          UserInfoShown := NoUserInfo;
+           begin
+           UserInfoShown := NoUserInfo;
+           end;
 
       end;
     URS: InvertBoolean(tUseRecordedSigns);
@@ -1066,7 +1161,9 @@ begin
       begin
         TempInt := QuickEditInteger(TC_NEWVALUEFORWAKEUPTIMEOUT, 5);
         if TempInt <> -1 then
-          WakeUpTimeOut := TempInt;
+           begin
+           WakeUpTimeOut := TempInt;
+           end;
       end;
 
     WBE:
@@ -1081,7 +1178,9 @@ begin
         //W_L_I        Write(TempReal, ' ');
         if TempReal >= 0.5 then
           if TempReal <= 1.5 then
-            Weight := TempReal;
+             begin
+             Weight := TempReal;
+             end;
       end;
 
     WCP: InvertBoolean(WildCardPartials); // := not WildCardPartials;
@@ -1100,12 +1199,12 @@ begin
   OpenFileForAppend(FileWrite, FileName);
 
   if ForcedEntry then {KK1L: 6.70} {KK1L: 6.70 turned this off. Chose to save value in BANDMAP.BIN}
-  begin
-    case Line of
-      BMD: WriteLn(FileWrite, ';**Added automatically to keep band map decay consistent');
-    end;
-    ForcedEntry := False; {KK1L: 6.70 Done using the switch}
-  end;
+     begin
+     case Line of
+       BMD: WriteLn(FileWrite, ';**Added automatically to keep band map decay consistent');
+     end;
+     ForcedEntry := False; {KK1L: 6.70 Done using the switch}
+     end;
 
   Write(FileWrite, Description(Line), ' = ');
 
@@ -1253,9 +1352,13 @@ begin
 
     IEC:
       if InitialExchangeCursorPos = AtStart then
-        WriteLn(FileWrite, 'AT START')
+         begin
+         WriteLn(FileWrite, 'AT START')
+         end
       else
-        WriteLn(FileWrite, 'AT END');
+         begin
+         WriteLn(FileWrite, 'AT END');
+         end;
 
     //    KNE: WriteLn(FileWrite, K1EANetworkEnable);
     //    KSI: WriteLn(FileWrite, K1EAStationID);
@@ -1302,9 +1405,13 @@ begin
 
     PSP:
       if Packet.PacketSpots = AllSpots then
-        WriteLn(FileWrite, 'ALL')
+         begin
+         WriteLn(FileWrite, 'ALL')
+         end
       else
-        WriteLn(FileWrite, 'MULT');
+         begin
+         WriteLn(FileWrite, 'MULT');
+         end;
 
     PBE: WriteLn(FileWrite, PaddleBug);
 
@@ -1411,9 +1518,13 @@ begin
 
     TRM:
       if TwoRadioState <> TwoRadiosDisabled then
-        WriteLn(FileWrite, 'TRUE')
+         begin
+         WriteLn(FileWrite, 'TRUE')
+         end
       else
-        WriteLn(FileWrite, 'FALSE');
+         begin
+         WriteLn(FileWrite, 'FALSE');
+         end;
 
     URF: WriteLn(FileWrite, UpdateRestartFileEnable);
     //      UBC: WriteLn(FileWrite, UseBIOSKeyCalls);
@@ -1667,9 +1778,13 @@ begin
 
     PSP:
       if Packet.PacketSpots = AllSpots then
-        TempString := 'ALL'
+         begin
+         TempString := 'ALL'
+         end
       else
-        TempString := 'MULT';
+         begin
+         TempString := 'MULT';
+         end;
 
     PBE: TempStringIsTrue := PaddleBug;
     PMT: Str(PaddleMonitorTone, TempString);
@@ -1813,7 +1928,10 @@ begin
     WCP: TempStringIsTrue := WildCardPartials;
   else TempString := '';
   end;
-  if TempStringIsTrue = True then TempString := 'TRUE';
+  if TempStringIsTrue = True then
+     begin
+     TempString := 'TRUE';
+     end;
   {
   asm
   cmp ebx,1
@@ -1841,20 +1959,20 @@ var
 
 begin
   while EntryString <> '' do
-  begin
-    for Entry := NoMenuEntry to LastMenuEntry do
-      if Copy(Description(Entry), 1, length(EntryString)) = EntryString then
-      begin
-            //W_L_I                 IF Entry = LastMenuEntry THEN Entry := Pred (Entry);
+     begin
+     for Entry := NoMenuEntry to LastMenuEntry do
+       if Copy(Description(Entry), 1, length(EntryString)) = EntryString then
+          begin
+          //W_L_I                 IF Entry = LastMenuEntry THEN Entry := Pred (Entry);
 
-        GetActiveLineFromEntryString := Entry;
-        Exit;
-      end;
+      GetActiveLineFromEntryString := Entry;
+      Exit;
+          end;
 
-      { Not found - Delete last letter and go from there }
+       { Not found - Delete last letter and go from there }
 
-    Delete(EntryString, length(EntryString), 1);
-  end;
+     Delete(EntryString, length(EntryString), 1);
+     end;
 
   { No good - go to first line }
 

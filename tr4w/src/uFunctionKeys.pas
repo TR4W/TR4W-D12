@@ -132,11 +132,13 @@ begin
 }
         if (lobyte(PDrawItemStruct(lParam).itemState) = ODS_SELECTED or ODS_FOCUS) then
 
-          TempCardinal := EDGE_SUNKEN
+           begin
+           TempCardinal := EDGE_SUNKEN
+           end
         else
-        begin
-          TempCardinal := {EDGE_RAISED; //} EDGE_ETCHED;
-        end;
+           begin
+           TempCardinal := {EDGE_RAISED; //} EDGE_ETCHED;
+           end;
 
         DrawEdge(FKDRAWITEMSTRUCT^.HDC, FKDRAWITEMSTRUCT^.rcItem, TempCardinal, BF_TOPLEFT or BF_BOTTOMRIGHT);
 
@@ -171,10 +173,10 @@ begin
         Windows.SetTextColor(FKDRAWITEMSTRUCT^.HDC, TempColor);
 }
         if (lobyte(FKDRAWITEMSTRUCT^.itemState) = ODS_SELECTED or ODS_FOCUS) then
-        begin
-          FKDRAWITEMSTRUCT^.rcItem.Bottom := FKDRAWITEMSTRUCT^.rcItem.Bottom + delta;
-          FKDRAWITEMSTRUCT^.rcItem.Right := FKDRAWITEMSTRUCT^.rcItem.Right + delta;
-        end;
+           begin
+           FKDRAWITEMSTRUCT^.rcItem.Bottom := FKDRAWITEMSTRUCT^.rcItem.Bottom + delta;
+           FKDRAWITEMSTRUCT^.rcItem.Right := FKDRAWITEMSTRUCT^.rcItem.Right + delta;
+           end;
         Windows.DrawTextA(
           FKDRAWITEMSTRUCT^.HDC,
           @ButtonsText[FKDRAWITEMSTRUCT^.CtlID][1],
@@ -190,12 +192,15 @@ begin
         Height := temprect.Bottom - temprect.Top;
         Left := 0;
         for i := 112 to 123 do
-        begin
+           begin
 
-          Windows.MoveWindow(KeysHandles[i], Left, 0, Width, Height, True);
-          inc(Left, Width + 1);
-          if (i = 115) or (i = 119) then inc(Left, 10);
-        end;
+           Windows.MoveWindow(KeysHandles[i], Left, 0, Width, Height, True);
+           inc(Left, Width + 1);
+           if (i = 115) or (i = 119) then
+              begin
+              inc(Left, 10);
+              end;
+           end;
 //        Windows.MoveWindow(FKCloseButton, temprect.Right - temprect.Left - ClosrButWidth, 0, ClosrButWidth, ClosrButWidth, True);
         InvalidateRect(hwnddlg, nil, False);
       end;
@@ -205,11 +210,11 @@ begin
         tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndHandle := hwnddlg;
 
         for i := 112 to 123 do
-        begin
-          KeysHandles[i] := tCreateButtonWindow(0, '', BS_OWNERDRAW or BS_AUTORADIOBUTTON or BS_PUSHLIKE or BS_LEFT or WS_CHILD or WS_VISIBLE or BS_NOTIFY, 0, 0, 0, 0, hwnddlg, i);
-          // Issue #997: asm tWM_SETFONT -> TF helper (EAX = KeysHandles[i] above).
-          tWM_SETFONT(KeysHandles[i], MainFixedFont);
-        end;
+           begin
+           KeysHandles[i] := tCreateButtonWindow(0, '', BS_OWNERDRAW or BS_AUTORADIOBUTTON or BS_PUSHLIKE or BS_LEFT or WS_CHILD or WS_VISIBLE or BS_NOTIFY, 0, 0, 0, 0, hwnddlg, i);
+           // Issue #997: asm tWM_SETFONT -> TF helper (EAX = KeysHandles[i] above).
+           tWM_SETFONT(KeysHandles[i], MainFixedFont);
+           end;
 //        FKCloseButton := tCreateButtonWindow(0, nil, BS_OWNERDRAW or BS_PUSHLIKE or WS_CHILD or WS_VISIBLE or BS_NOTIFY, 0, 0, 0, 0, hwnddlg, FKCloseButtonID);
 
         ShowFMessages(0);
@@ -225,19 +230,19 @@ begin
 //        if wParam = FKCloseButtonID then goto 1;
         if HiWord(wParam) = BN_CLICKED then
           if LoWord(wParam) in [112..123] then
-          begin
-            // FIRST instruction after Windows tells us the button was clicked.
-            // Timestamp this against the '[ <radio> TX]' / '[wkSendByte]' trace
-            // to measure the click -> CW latency NY4I reported (2026-07-31);
-            // FrmSetFocus and ProcessFuntionKeys both run after this point, so
-            // anything between the two timestamps is ours, not Windows'.
-            logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d received',
-                         [LoWord(wParam) - 111]);
-            FrmSetFocus;
-            ProcessFuntionKeys(LoWord(wParam));
-            logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d dispatched',
-                         [LoWord(wParam) - 111]);
-          end;
+             begin
+             // FIRST instruction after Windows tells us the button was clicked.
+             // Timestamp this against the '[ <radio> TX]' / '[wkSendByte]' trace
+             // to measure the click -> CW latency NY4I reported (2026-07-31);
+             // FrmSetFocus and ProcessFuntionKeys both run after this point, so
+             // anything between the two timestamps is ours, not Windows'.
+             logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d received',
+                          [LoWord(wParam) - 111]);
+             FrmSetFocus;
+             ProcessFuntionKeys(LoWord(wParam));
+             logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d dispatched',
+                          [LoWord(wParam) - 111]);
+             end;
       end;
   end;
 
@@ -255,36 +260,57 @@ begin
 
   if not tWindowsExist(tw_FUNCTIONKEYSWINDOW_INDEX) then Exit;
   TempMode := ActiveMode;
-  if TempMode = FM then TempMode := Phone;
-  if TempMode = Digital then TempMode := CW;
+  if TempMode = FM then
+     begin
+     TempMode := Phone;
+     end;
+  if TempMode = Digital then
+     begin
+     TempMode := CW;
+     end;
 
   if not (TempMode in [CW, Phone {, FM, Digital}]) then Exit;
   plus := VirtualKey;
   for i := 112 to 123 do
-  begin
-    b := CHR(i + plus);
-    if OpMode2 {OpMode} = CQOpMode then
-    begin
-      if ((CQCaptionMemory[TempMode, b] <> nil) and (CQCaptionMemory[TempMode, b]^ <> '')) then
-        s := CQCaptionMemory[TempMode, b]^
-      else
-        s := GetCQMemoryString(TempMode, b);
-    end
-    else
-    begin
-      if ((EXCaptionMemory[TempMode, b] <> nil) and (EXCaptionMemory[TempMode, b]^ <> '')) then
-        s := EXCaptionMemory[TempMode, b]^
-      else
-        s := GetEXMemoryString(TempMode, b);
-    end;
-    PosOfAmp := tPos(s, '&');
-    if PosOfAmp <> 0 then Insert('&', s, PosOfAmp);
-    if tIncludeFKeyNumber then
-      ButtonsText[i] := 'F' + IntToStr(i - 111) + #13#10 + s
-    else
-      ButtonsText[i] := s;
-    InvalidateRect(KeysHandles[i], nil, False);
-  end;
+     begin
+     b := CHR(i + plus);
+     if OpMode2 {OpMode} = CQOpMode then
+        begin
+        if ((CQCaptionMemory[TempMode, b] <> nil) and (CQCaptionMemory[TempMode, b]^ <> '')) then
+           begin
+           s := CQCaptionMemory[TempMode, b]^
+           end
+        else
+           begin
+           s := GetCQMemoryString(TempMode, b);
+           end;
+        end
+     else
+        begin
+        if ((EXCaptionMemory[TempMode, b] <> nil) and (EXCaptionMemory[TempMode, b]^ <> '')) then
+           begin
+           s := EXCaptionMemory[TempMode, b]^
+           end
+        else
+           begin
+           s := GetEXMemoryString(TempMode, b);
+           end;
+        end;
+     PosOfAmp := tPos(s, '&');
+     if PosOfAmp <> 0 then
+        begin
+        Insert('&', s, PosOfAmp);
+        end;
+     if tIncludeFKeyNumber then
+        begin
+        ButtonsText[i] := 'F' + IntToStr(i - 111) + #13#10 + s
+        end
+     else
+        begin
+        ButtonsText[i] := s;
+        end;
+     InvalidateRect(KeysHandles[i], nil, False);
+     end;
 end;
 
 // Resolve which Alt-P editor row the on-screen function-key button `h` maps to,
@@ -305,14 +331,22 @@ begin
      if h = KeysHandles[i] then
         begin
         if OpMode = SearchAndPounceOpMode then
+           begin
            MesWindow := ExMsgWin
+           end
         else
+           begin
            MesWindow := CQMsgWin;
+           end;
         plus := 0;
         if (GetKeyState(VK_MENU) and $8000) <> 0 then
+           begin
            plus := 24
+           end
         else if (GetKeyState(VK_CONTROL) and $8000) <> 0 then
+           begin
            plus := 12;
+           end;
         Result := (i - 112) + plus;
         Break;
         end;
@@ -381,7 +415,9 @@ begin
   caption := TC_EDITFUNCTIONKEY;
   p := Pos('%s', caption);
   if p > 0 then
+     begin
      caption := Copy(caption, 1, p - 1) + keyName + Copy(caption, p + 2, Length(caption));
+     end;
 
   hMenu := Windows.CreatePopupMenu;
   Windows.AppendMenuW(hMenu, MF_STRING, ID_EDITFKEY, PChar(caption));

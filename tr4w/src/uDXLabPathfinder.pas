@@ -125,7 +125,9 @@ begin
   Inc(p, Length(tag));
   q := p;
   while (q <= Length(cmd)) and (cmd[q] <> '>') do
-    Inc(q);
+     begin
+     Inc(q);
+     end;
   if q > Length(cmd) then Exit;
   lenVal := StrToIntDef(Copy(cmd, p, q - p), 0);
   if lenVal <= 0 then Exit;
@@ -174,17 +176,17 @@ begin
         logger.debug('[uDXLabPathfinder] XTYP_EXECUTE received hData=%d', [hData]);
         Result := DDE_FACK;
         if hData = 0 then
-        begin
-          logger.debug('[uDXLabPathfinder] XTYP_EXECUTE: hData is nil, ignoring');
-          Exit;
-        end;
+           begin
+           logger.debug('[uDXLabPathfinder] XTYP_EXECUTE: hData is nil, ignoring');
+           Exit;
+           end;
         dataSize := DdeGetData(hData, nil, 0, 0);
         logger.debug('[uDXLabPathfinder] XTYP_EXECUTE: dataSize=%d', [dataSize]);
         if (dataSize = 0) or (dataSize > SizeOf(buf)) then
-        begin
-          logger.debug('[uDXLabPathfinder] XTYP_EXECUTE: bad dataSize, ignoring');
-          Exit;
-        end;
+           begin
+           logger.debug('[uDXLabPathfinder] XTYP_EXECUTE: bad dataSize, ignoring');
+           Exit;
+           end;
         FillChar(buf, SizeOf(buf), 0);
         DdeGetData(hData, @buf, dataSize, 0);
         cmd      := string(PAnsiChar(@buf));
@@ -192,11 +194,11 @@ begin
         callsign := ParseCallsign(cmd);
         logger.debug('[uDXLabPathfinder] XTYP_EXECUTE: parsed callsign="%s"', [callsign]);
         if callsign <> '' then
-        begin
-          cs := callsign;
-          logger.debug('[uDXLabPathfinder] Calling PutCallToCallWindow with "%s"', [callsign]);
-          PutCallToCallWindow(cs);
-        end;
+           begin
+           cs := callsign;
+           logger.debug('[uDXLabPathfinder] Calling PutCallToCallWindow with "%s"', [callsign]);
+           PutCallToCallWindow(cs);
+           end;
       end;
 
     XTYP_ADVSTART:
@@ -222,29 +224,39 @@ begin
   hszSvc := DdeCreateStringHandleA(GInstId, 'SpotCollector', CP_WINANSI_);
   hszTop := DdeCreateStringHandleA(GInstId, 'DDEClient',     CP_WINANSI_);
   if (hszSvc = 0) or (hszTop = 0) then
-  begin
-    logger.debug('[uDXLabPathfinder] InformSpotCollector: failed to create string handles');
-    if hszSvc <> 0 then DdeFreeStringHandle(GInstId, hszSvc);
-    if hszTop <> 0 then DdeFreeStringHandle(GInstId, hszTop);
-    Exit;
-  end;
+     begin
+     logger.debug('[uDXLabPathfinder] InformSpotCollector: failed to create string handles');
+     if hszSvc <> 0 then
+        begin
+        DdeFreeStringHandle(GInstId, hszSvc);
+        end;
+     if hszTop <> 0 then
+        begin
+        DdeFreeStringHandle(GInstId, hszTop);
+        end;
+     Exit;
+     end;
   hConv := DdeConnect(GInstId, hszSvc, hszTop, nil);
   if hConv = 0 then
-  begin
-    logger.debug('[uDXLabPathfinder] InformSpotCollector: DdeConnect failed - SpotCollector not running?');
-  end
+     begin
+     logger.debug('[uDXLabPathfinder] InformSpotCollector: DdeConnect failed - SpotCollector not running?');
+     end
   else
-  begin
-    cmd := Format('%.3d', [QSLINFO_SERVER_ID]) + 'start' + #0;
-    logger.debug('[uDXLabPathfinder] InformSpotCollector: sending "%s"', [string(cmd)]);
-    hResult := DdeClientTransaction(PAnsiChar(cmd), Length(cmd), hConv,
-                                    0, 0, XTYP_EXECUTE, 5000, nil);
-    if hResult <> 0 then
-      logger.debug('[uDXLabPathfinder] InformSpotCollector: handshake OK')
-    else
-      logger.debug('[uDXLabPathfinder] InformSpotCollector: handshake FAILED');
-    DdeDisconnect(hConv);
-  end;
+     begin
+     cmd := Format('%.3d', [QSLINFO_SERVER_ID]) + 'start' + #0;
+     logger.debug('[uDXLabPathfinder] InformSpotCollector: sending "%s"', [string(cmd)]);
+     hResult := DdeClientTransaction(PAnsiChar(cmd), Length(cmd), hConv,
+                                     0, 0, XTYP_EXECUTE, 5000, nil);
+     if hResult <> 0 then
+        begin
+        logger.debug('[uDXLabPathfinder] InformSpotCollector: handshake OK')
+        end
+     else
+        begin
+        logger.debug('[uDXLabPathfinder] InformSpotCollector: handshake FAILED');
+        end;
+     DdeDisconnect(hConv);
+     end;
   DdeFreeStringHandle(GInstId, hszSvc);
   DdeFreeStringHandle(GInstId, hszTop);
 end;
@@ -263,59 +275,67 @@ begin
   logger.debug('[uDXLabPathfinder] StartDXLabPathfinder called');
 
   if GRunning then
-  begin
-    logger.debug('[uDXLabPathfinder] Already running, returning true');
-    Result := true;
-    Exit;
-  end;
+     begin
+     logger.debug('[uDXLabPathfinder] Already running, returning true');
+     Result := true;
+     Exit;
+     end;
 
   // Check if the real PathFinder is already running — if so, do nothing
   checkInst := 0;
   if DdeInitializeA(checkInst, nil, APPCMD_CLIENTONLY, 0) = DMLERR_NO_ERROR then
-  begin
-    hszSvc := DdeCreateStringHandleA(checkInst, 'Pathfinder', CP_WINANSI_);
-    hszTop := DdeCreateStringHandleA(checkInst, 'DDEServer',  CP_WINANSI_);
-    hTest  := 0;
-    if (hszSvc <> 0) and (hszTop <> 0) then
-      hTest := DdeConnect(checkInst, hszSvc, hszTop, nil);
-    if hszSvc <> 0 then DdeFreeStringHandle(checkInst, hszSvc);
-    if hszTop <> 0 then DdeFreeStringHandle(checkInst, hszTop);
-    if hTest <> 0 then
-    begin
-      DdeDisconnect(hTest);
-      DdeUninitialize(checkInst);
-      logger.debug('[uDXLabPathfinder] Real PathFinder already running - not registering');
-      Exit;
-    end;
-    DdeUninitialize(checkInst);
-  end;
+     begin
+     hszSvc := DdeCreateStringHandleA(checkInst, 'Pathfinder', CP_WINANSI_);
+     hszTop := DdeCreateStringHandleA(checkInst, 'DDEServer',  CP_WINANSI_);
+     hTest  := 0;
+     if (hszSvc <> 0) and (hszTop <> 0) then
+        begin
+        hTest := DdeConnect(checkInst, hszSvc, hszTop, nil);
+        end;
+     if hszSvc <> 0 then
+        begin
+        DdeFreeStringHandle(checkInst, hszSvc);
+        end;
+     if hszTop <> 0 then
+        begin
+        DdeFreeStringHandle(checkInst, hszTop);
+        end;
+     if hTest <> 0 then
+        begin
+        DdeDisconnect(hTest);
+        DdeUninitialize(checkInst);
+        logger.debug('[uDXLabPathfinder] Real PathFinder already running - not registering');
+        Exit;
+        end;
+     DdeUninitialize(checkInst);
+     end;
 
   // Register TR4W as the "Pathfinder" DDE server
   logger.debug('[uDXLabPathfinder] Calling DdeInitializeA as server');
   if DdeInitializeA(GInstId, @DdeCallback, APPCLASS_STANDARD, 0) <> DMLERR_NO_ERROR then
-  begin
-    logger.debug('[uDXLabPathfinder] DdeInitializeA failed');
-    Exit;
-  end;
+     begin
+     logger.debug('[uDXLabPathfinder] DdeInitializeA failed');
+     Exit;
+     end;
 
   GHszSvc := DdeCreateStringHandleA(GInstId, 'Pathfinder', CP_WINANSI_);
   if GHszSvc = 0 then
-  begin
-    logger.debug('[uDXLabPathfinder] DdeCreateStringHandleA for Pathfinder failed');
-    DdeUninitialize(GInstId);
-    GInstId := 0;
-    Exit;
-  end;
+     begin
+     logger.debug('[uDXLabPathfinder] DdeCreateStringHandleA for Pathfinder failed');
+     DdeUninitialize(GInstId);
+     GInstId := 0;
+     Exit;
+     end;
 
   if DdeNameService(GInstId, GHszSvc, 0, DNS_REGISTER) = 0 then
-  begin
-    logger.debug('[uDXLabPathfinder] DdeNameService registration failed');
-    DdeFreeStringHandle(GInstId, GHszSvc);
-    GHszSvc := 0;
-    DdeUninitialize(GInstId);
-    GInstId := 0;
-    Exit;
-  end;
+     begin
+     logger.debug('[uDXLabPathfinder] DdeNameService registration failed');
+     DdeFreeStringHandle(GInstId, GHszSvc);
+     GHszSvc := 0;
+     DdeUninitialize(GInstId);
+     GInstId := 0;
+     Exit;
+     end;
 
   GRunning := true;
   Result   := true;
@@ -329,16 +349,16 @@ begin
   logger.debug('[uDXLabPathfinder] StopDXLabPathfinder called');
   if not GRunning then Exit;
   if GHszSvc <> 0 then
-  begin
-    DdeNameService(GInstId, GHszSvc, 0, DNS_UNREGISTER);
-    DdeFreeStringHandle(GInstId, GHszSvc);
-    GHszSvc := 0;
-  end;
+     begin
+     DdeNameService(GInstId, GHszSvc, 0, DNS_UNREGISTER);
+     DdeFreeStringHandle(GInstId, GHszSvc);
+     GHszSvc := 0;
+     end;
   if GInstId <> 0 then
-  begin
-    DdeUninitialize(GInstId);
-    GInstId := 0;
-  end;
+     begin
+     DdeUninitialize(GInstId);
+     GInstId := 0;
+     end;
   GRunning := false;
   logger.debug('[uDXLabPathfinder] Stopped');
 end;

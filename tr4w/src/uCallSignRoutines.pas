@@ -79,17 +79,26 @@ uses uCTYDAT;
 function ARRLSectionCountry(CountryID: string): boolean;
 begin
   Result := False;
-  if pos(' ' + CountryID + ' ', ARRLSectionCountryString) <> 0 then Result := True;
+  if pos(' ' + CountryID + ' ', ARRLSectionCountryString) <> 0 then
+     begin
+     Result := True;
+     end;
 end;
 function BlackSeaRegionCountry(CountryID: string): boolean;
 begin
   Result := False;
-  if pos(' ' + CountryID + ' ', BlackSeaCountriesString) <> 0 then Result := True;
+  if pos(' ' + CountryID + ' ', BlackSeaCountriesString) <> 0 then
+     begin
+     Result := True;
+     end;
 end;
 function CISCountry(CountryID: string): boolean;
 begin
   Result := False;
-  if pos(' ' + CountryID + ' ', CISCountries) <> 0 then Result := True;
+  if pos(' ' + CountryID + ' ', CISCountries) <> 0 then
+     begin
+     Result := True;
+     end;
 end;
 function UBACountry(CountryID: string): boolean;
 begin
@@ -98,12 +107,18 @@ end;
 function ScandinavianCountry(CountryID: string): boolean;
 begin
   Result := False;
-  if pos(' ' + CountryID + ' ', ScandinavianCountries) <> 0 then Result := True;
+  if pos(' ' + CountryID + ' ', ScandinavianCountries) <> 0 then
+     begin
+     Result := True;
+     end;
 end;
 function IndonesianCountry(CountryID: string): boolean;         // 4.64.1
 begin
   Result := False;
-  if pos(' ' + CountryID + ' ', IndonesianCountries) <> 0 then Result := True;
+  if pos(' ' + CountryID + ' ', IndonesianCountries) <> 0 then
+     begin
+     Result := True;
+     end;
 end;
 function GetNumber(Call: string): Char;
 { This function will look at the callsign passed to it and return the
@@ -113,13 +128,16 @@ function GetNumber(Call: string): Char;
 var
   CharPtr                               : integer;
 begin
-  if StringHas(Call, '/') then Call := PrecedingString(Call, '/');
+  if StringHas(Call, '/') then
+     begin
+     Call := PrecedingString(Call, '/');
+     end;
   for CharPtr := length(Call) downto 1 do
     if Call[CharPtr] in ['0'..'9'] then
-    begin
-      GetNumber := Call[CharPtr];
-      Exit;
-    end ;
+       begin
+       GetNumber := Call[CharPtr];
+       Exit;
+       end ;
   GetNumber := #0;
 end;
 function GetFirstSuffixLetter(Call: string): Char;
@@ -132,20 +150,20 @@ var
   TempString                            : string;
 begin
   if StringHas(Call, '/') then
-  begin
-    TempString := PostcedingString(Call, '/');
-    GetFirstSuffixLetter := GetFirstSuffixLetter(TempString);
-  end
+     begin
+     TempString := PostcedingString(Call, '/');
+     GetFirstSuffixLetter := GetFirstSuffixLetter(TempString);
+     end
   else
-  begin
-    for CharPtr := length(Call) - 1 downto 1 do
-      if Call[CharPtr] in ['0'..'9'] then
-      begin
-        GetFirstSuffixLetter := Call[CharPtr + 1];
-        Exit;
-      end;
-  GetFirstSuffixLetter := #0;
-  end;
+     begin
+     for CharPtr := length(Call) - 1 downto 1 do
+       if Call[CharPtr] in ['0'..'9'] then
+          begin
+          GetFirstSuffixLetter := Call[CharPtr + 1];
+          Exit;
+          end;
+   GetFirstSuffixLetter := #0;
+     end;
 end;
 function OKOMStation(ID: string): boolean;
 begin
@@ -159,7 +177,9 @@ begin
   Result := False;
 //  if length(ID) > 1 then
     if ((ID[1] = 'G') or (ID[1] = 'M') or ((ID[1] = 'E') and (ID[2] = 'I')) or (ID[1] = '2')) then
-     Result := True;
+       begin
+       Result := True;
+       end;
 end;
 function SpanishStation(ID: string): boolean;
 begin
@@ -176,10 +196,13 @@ function RussianID(ID: string): boolean;
 begin
   Result := False;
   if length(ID) > 1 then
-  begin
-    if ID[1] = 'R' then Result := True;
-    if ID[1] = 'U' then if ID[2] = 'A' then Result := True;
-  end;
+     begin
+     if ID[1] = 'R' then
+        begin
+        Result := True;
+        end;
+     if ID[1] = 'U' then if ID[2] = 'A' then Result := True;
+     end;
 end;
 {
 function getRussianRegion(Callsign: CallString): RussianRegionType;
@@ -215,89 +238,96 @@ var
   l                                     : integer;
 begin
   if not StringHas(Call, '/') then
-  begin
-    StandardCallFormat := Call;
-    Exit;
-  end;
+     begin
+     StandardCallFormat := Call;
+     Exit;
+     end;
   l := length(Call);
   {/P /M /N /T}
   if l > 2 then if Call[l - 1] = '/' then if Call[l] in ['P', 'M', 'N', 'T'] then
-      begin
-        SetLength(Call, l - 2);
-        goto 1;
-      end;
+                                             begin
+                                             SetLength(Call, l - 2);
+                                             goto 1;
+                                             end;
   {/AG /AA /AE}  // was PWORD(@Call[l-2])^ = $412F ("/A"); rewritten for `string`
   if l > 3 then if (Call[l - 2] = '/') and (Call[l - 1] = 'A') then if Call[l] in ['A', 'G', 'E'] then
-      begin
-        SetLength(Call, l - 3);
-        goto 1;
-      end;
+                                                                       begin
+                                                                       SetLength(Call, l - 3);
+                                                                       goto 1;
+                                                                       end;
   {/QRP}  // was PInteger(@Call[l-3])^ = $5052512F ("/QRP"); rewritten for `string`
   if l > 4 then if (Call[l - 3] = '/') and (Call[l - 2] = 'Q') and (Call[l - 1] = 'R') and (Call[l] = 'P') then
-    begin
-      SetLength(Call, l - 4);
-      goto 1;
-    end;
+                   begin
+                   SetLength(Call, l - 4);
+                   goto 1;
+                   end;
   1:
   if not StringHas(Call, '/') then
-  begin
-    StandardCallFormat := Call;
-    Exit;
-  end;
+     begin
+     StandardCallFormat := Call;
+     Exit;
+     end;
   FirstPart := PrecedingString(Call, '/');
   SecondPart := PostcedingString(Call, '/');
   if SecondPart = 'MOBILE' then {KK1L: 6.71 Added per Tree request}
-  begin
-    StandardCallFormat := FirstPart;
-    Exit;
-  end;
+     begin
+     StandardCallFormat := FirstPart;
+     Exit;
+     end;
   if SecondPart = 'MM' then
-  begin
-    StandardCallFormat := 'MM/' + FirstPart;
-    Exit;
-  end;
+     begin
+     StandardCallFormat := 'MM/' + FirstPart;
+     Exit;
+     end;
   if SecondPart = 'R' then
-  begin
-    StandardCallFormat := FirstPart + '/' + SecondPart;
-    Exit;
-  end;
+     begin
+     StandardCallFormat := FirstPart + '/' + SecondPart;
+     Exit;
+     end;
 
   if length(Call) = 11 then if (Call[1] = 'V') and (Call[2] = 'U') and (Call[7] = '/') then if Call[8] in ['0', '9'] then
-      begin
-        StandardCallFormat := Call;
-        Exit;
-      end;
+                                                                                               begin
+                                                                                               StandardCallFormat := Call;
+                                                                                               Exit;
+                                                                                               end;
   if length(SecondPart) = 1 then
     if SecondPart[1] in ['0'..'9'] then
-    begin
-      if Complete then
-      begin
-        TempPrefixString := GetPrefix(FirstPart);
-        Delete(TempPrefixString, length(TempPrefixString), 1);
-        SecondPart := TempPrefixString + SecondPart;
-        StandardCallFormat := SecondPart + '/' + FirstPart;
-      end
-      else
-        StandardCallFormat := Call;
-      Exit;
-    end
+       begin
+       if Complete then
+          begin
+          TempPrefixString := GetPrefix(FirstPart);
+          Delete(TempPrefixString, length(TempPrefixString), 1);
+          SecondPart := TempPrefixString + SecondPart;
+          StandardCallFormat := SecondPart + '/' + FirstPart;
+          end
+       else
+          begin
+          StandardCallFormat := Call;
+          end;
+       Exit;
+       end
     else
-    begin
-      if SecondPart[1] in ['F', 'G', 'I', 'K', 'N', 'W'] then StandardCallFormat := SecondPart[1] + '/' + FirstPart
-      else
-        StandardCallFormat := FirstPart;
-      Exit;
-    end;
+       begin
+       if SecondPart[1] in ['F', 'G', 'I', 'K', 'N', 'W'] then
+          begin
+          StandardCallFormat := SecondPart[1] + '/' + FirstPart
+          end
+       else
+          begin
+          StandardCallFormat := FirstPart;
+          end;
+       Exit;
+       end;
   if length(FirstPart) > length(SecondPart) then
-  begin
-    StandardCallFormat := SecondPart + '/' + FirstPart;
-    Exit;
-  end;
+     begin
+     StandardCallFormat := SecondPart + '/' + FirstPart;
+     Exit;
+     end;
   if length(FirstPart) <= length(SecondPart) then
-  begin
-    StandardCallFormat := Call;
-    Exit;
-  end;
+     begin
+     StandardCallFormat := Call;
+     Exit;
+     end;
 end;
 function GetPrefix(Call: string): string;
 { This function will return the prefix for the call passed to it. This is
@@ -309,63 +339,65 @@ var
 begin
   for CallPointer := 1 to length(Call) do
     if Call[CallPointer] = '/' then
-    begin
-      FirstPart := Call;
-        //{WLI}            FirstPart [0] := Chr (CallPointer - 1);
-      FirstPart := Copy(FirstPart, 1, CallPointer - 1);
-      SecondPart := '';
-      for Count := CallPointer + 1 to length(Call) do
-        SecondPart := SecondPart + Call[Count];
-      if length(SecondPart) = 1 then
-        if (SecondPart >= '0') and (SecondPart <= '9') then
-        begin
-          TempString := GetPrefix(FirstPart);
-              //{WLI}                    TempString [0] := Chr (Length (TempString) - 1);
-          TempString := Copy(TempString, 1, length(TempString) - 1);
-          GetPrefix := TempString + SecondPart;
+       begin
+       FirstPart := Call;
+         //{WLI}            FirstPart [0] := Chr (CallPointer - 1);
+       FirstPart := Copy(FirstPart, 1, CallPointer - 1);
+       SecondPart := '';
+       for Count := CallPointer + 1 to length(Call) do
+          begin
+          SecondPart := SecondPart + Call[Count];
+          end;
+       if length(SecondPart) = 1 then
+         if (SecondPart >= '0') and (SecondPart <= '9') then
+            begin
+            TempString := GetPrefix(FirstPart);
+                //{WLI}                    TempString [0] := Chr (Length (TempString) - 1);
+            TempString := Copy(TempString, 1, length(TempString) - 1);
+            GetPrefix := TempString + SecondPart;
+            Exit;
+            end
+         else
+            begin
+            //         GetPrefix := GetPrefix(FirstPart);
+                     Exit;
+            end;
+         {KK1L: 6.68 Added AM check to allow /AM as aeronautical mobile rather than Spain}
+       if (Copy(SecondPart, 1, 2) = 'MM') or (Copy(SecondPart, 1, 2) = 'AM') then
+          begin
+          GetPrefix := GetPrefix(FirstPart);
           Exit;
-        end
-        else
-        begin
- //         GetPrefix := GetPrefix(FirstPart);
+          end;
+       if length(FirstPart) > length(SecondPart) then
+          begin
+          GetPrefix := GetPrefix(SecondPart);
           Exit;
-        end;
-        {KK1L: 6.68 Added AM check to allow /AM as aeronautical mobile rather than Spain}
-      if (Copy(SecondPart, 1, 2) = 'MM') or (Copy(SecondPart, 1, 2) = 'AM') then
-      begin
-        GetPrefix := GetPrefix(FirstPart);
-        Exit;
-      end;
-      if length(FirstPart) > length(SecondPart) then
-      begin
-        GetPrefix := GetPrefix(SecondPart);
-        Exit;
-      end;
-      if length(FirstPart) <= length(SecondPart) then
-      begin
-        GetPrefix := GetPrefix(FirstPart);
-        Exit;
-      end;
-    end;
+          end;
+       if length(FirstPart) <= length(SecondPart) then
+          begin
+          GetPrefix := GetPrefix(FirstPart);
+          Exit;
+          end;
+       end;
   { Call does not have portable sign.  Find natural prefix. }
   if not StringHasNumber(Call) then
-  begin
-    GetPrefix := Call + '0';
-    Exit;
-  end;
+     begin
+     GetPrefix := Call + '0';
+     Exit;
+     end;
   for CallPointer := length(Call) downto 2 do
     if Call[CallPointer] <= '9' then
-    begin
-      GetPrefix := Call;
-        //{WLI}            GetPrefix [0] := CHR (CallPointer);
-      Result := Copy(Call, 1, CallPointer);
-      Exit;
-    end;
+       begin
+       GetPrefix := Call;
+         //{WLI}            GetPrefix [0] := CHR (CallPointer);
+       Result := Copy(Call, 1, CallPointer);
+       Exit;
+       end;
   if (Call[1] <= '9') and (length(Call) = 2) then
-  begin
-    GetPrefix := Call + '0';
-    Exit;
-  end;
+     begin
+     GetPrefix := Call + '0';
+     Exit;
+     end;
   GetPrefix := ''; { We have no idea what the prefix is }
 end;
 function GetOblast(Call: string): string;
@@ -375,27 +407,36 @@ var
   c2                                    : Char;
 begin
   Call := StandardCallFormat(Call, False);
-  if StringHas(Call, '/') then Call := PrecedingString(Call, '/');
+  if StringHas(Call, '/') then
+     begin
+     Call := PrecedingString(Call, '/');
+     end;
   c1 := #0;
   c2 := #0;
   for i := 2 to length(Call) do
-  begin
-    if c1 <> #0 then
-    begin
-      if Call[i] in ['A'..'Z'] then
-      begin
-        c2 := Call[i];
-        Break;
-      end;
-      Continue;
-    end;
-    if Call[i] in ['0'..'9'] then
-      c1 := Call[i];
-  end;
+     begin
+     if c1 <> #0 then
+        begin
+        if Call[i] in ['A'..'Z'] then
+           begin
+           c2 := Call[i];
+           Break;
+           end;
+        Continue;
+        end;
+     if Call[i] in ['0'..'9'] then
+        begin
+        c1 := Call[i];
+        end;
+     end;
   if (c1 = #0) or (c2 = #0) then
-    Result := ''
+     begin
+     Result := ''
+     end
   else
-    Result := c1 + c2;   // was Result[0]:=#2; Result[1]:=c1; Result[2]:=c2; (ShortString length-byte)
+     begin
+     Result := c1 + c2;   // was Result[0]:=#2; Result[1]:=c1; Result[2]:=c2; (ShortString length-byte)
+     end;
 end;
 function GetRussiaOblastID(Call: string): string; //
 var
@@ -429,18 +470,22 @@ var
 begin
   TempCall := StandardCallFormat(Call, True);
   if StringHas(TempCall, '/') then
-    TempCall := PostcedingString(TempCall, '/');
+     begin
+     TempCall := PostcedingString(TempCall, '/');
+     end;
   if length(TempCall) <= 2 then
-  begin
-    TempCall := PrecedingString(StandardCallFormat(Call, True), '/');
-    if length(TempCall) >= 3 then
-    begin
-      RootCall := TempCall;
-      Exit;
-    end;
-  end;
+     begin
+     TempCall := PrecedingString(StandardCallFormat(Call, True), '/');
+     if length(TempCall) >= 3 then
+        begin
+        RootCall := TempCall;
+        Exit;
+        end;
+     end;
   if StringHas(TempCall, '/') then
-    TempCall := PrecedingString(TempCall, '/');
+     begin
+     TempCall := PrecedingString(TempCall, '/');
+     end;
   {   IF Length (TempCall) > 6 THEN TempCall [0] := Chr (6); }
   RootCall := TempCall;
 end;
@@ -459,29 +504,38 @@ var
   NumberDifferentChars, NumberTestChars, TestChar: integer;
   c1, c2                                : string;
 begin
-  if pos('/', Call1) > 0 then Call1 := RootCall(Call1);
-  if pos('/', Call2) > 0 then Call2 := RootCall(Call2);
+  if pos('/', Call1) > 0 then
+     begin
+     Call1 := RootCall(Call1);
+     end;
+  if pos('/', Call2) > 0 then
+     begin
+     Call2 := RootCall(Call2);
+     end;
   SimilarCall := False;
   if Abs(length(Call1) - length(Call2)) > 1 then Exit;
   NumberTestChars := length(Call1);
-  if (length(Call2) > NumberTestChars) then inc(NumberTestChars);
+  if (length(Call2) > NumberTestChars) then
+     begin
+     inc(NumberTestChars);
+     end;
   { NumberTestChars is equal to length of longest call. }
   NumberDifferentChars := 0;
   for TestChar := NumberTestChars downto 1 do
-  begin
-    c1 := Copy(Call1, TestChar, 1);
-    c2 := Copy(Call2, TestChar, 1);
-    if (c1 <> c2) and (c1 <> '?') and (c2 <> '?') then
-    begin
-      inc(NumberDifferentChars);
-      if (NumberDifferentChars) = 2 then Break;
-    end;
-  end;
+     begin
+     c1 := Copy(Call1, TestChar, 1);
+     c2 := Copy(Call2, TestChar, 1);
+     if (c1 <> c2) and (c1 <> '?') and (c2 <> '?') then
+        begin
+        inc(NumberDifferentChars);
+        if (NumberDifferentChars) = 2 then Break;
+        end;
+     end;
   if NumberDifferentChars <= 1 then
-  begin
-    SimilarCall := True;
-    Exit;
-  end;
+     begin
+     SimilarCall := True;
+     Exit;
+     end;
   { Let's see if either call shows up in the other - finds I4COM PI4COM }
   if (pos(Call1, Call2) = 0) and (pos(Call2, Call1) = 0) then Exit;
   SimilarCall := True;
@@ -500,35 +554,41 @@ begin
     8:
       if ((Call[2] = '/') or (Call[2] = '-')) and
         ((Call[6] = '/') or (Call[6] = '-')) then
-        Exit;
+         begin
+         Exit;
+         end;
     9:
       if ((Call[3] = '/') or (Call[3] = '-')) and
         ((Call[7] = '/') or (Call[7] = '-')) then
-        Exit;
+         begin
+         Exit;
+         end;
   end;
   if Call = 'RAEM' then
-  begin
-    GoodCallSyntax := True;
-    Exit;
-  end;
+     begin
+     GoodCallSyntax := True;
+     Exit;
+     end;
   for CharacterPointer := 1 to length(Call) do
     if not ValidCallCharacter(Call[CharacterPointer]) then Exit;
   for CharacterPointer := 1 to length(Call) do
     if Call[CharacterPointer] = '/' then
-    begin
-      if CharacterPointer = 1 then Exit;
-      if CharacterPointer = length(Call) then Exit;
-      GoodCallSyntax := True;
-      Exit;
-    end;
+       begin
+       if CharacterPointer = 1 then Exit;
+       if CharacterPointer = length(Call) then Exit;
+       GoodCallSyntax := True;
+       Exit;
+       end;
   if (Call[1] <= '9') and (Call[2] <= '9') then Exit;
   if length(Call) = 3 then
-  begin
-    if
-      ((Call[2] < '0') or (Call[2] > '9')) and
-      ((Call[3] < '0') or (Call[3] > '9')) then
-      Exit;
-  end ;
+     begin
+     if
+       ((Call[2] < '0') or (Call[2] > '9')) and
+       ((Call[3] < '0') or (Call[3] > '9')) then
+        begin
+        Exit;
+        end;
+     end ;
   { //n4af 4.38.3
   else
     if

@@ -271,7 +271,10 @@ end;
 
 procedure DestroyDlPortio;
 begin
-  if (IsLoaded) then CloseDriver;
+  if (IsLoaded) then
+     begin
+     CloseDriver;
+     end;
 end;
 
 function ConnectSCM: boolean;
@@ -292,20 +295,20 @@ begin
 
   // If we're not in administrator mode, try and reconnect
   if ((hSCMan = 0) and (GetLastError = ERROR_ACCESS_DENIED)) then
-  begin
-    scAccess := SC_MANAGER_CONNECT or
-      SC_MANAGER_QUERY_LOCK_STATUS or
-      SC_MANAGER_ENUMERATE_SERVICE;
+     begin
+     scAccess := SC_MANAGER_CONNECT or
+       SC_MANAGER_QUERY_LOCK_STATUS or
+       SC_MANAGER_ENUMERATE_SERVICE;
 
-      // Connect to the SCM
-    hSCMan := OpenSCManager(nil, nil, scAccess);
-  end;
+       // Connect to the SCM
+     hSCMan := OpenSCManager(nil, nil, scAccess);
+     end;
 
   if (hSCMan = 0) then
-  begin
-    dwStatus := GetLastError;
-    FLastError := 'ConnectSCM';
-  end;
+     begin
+     dwStatus := GetLastError;
+     FLastError := 'ConnectSCM';
+     end;
 
   RESULT := (dwStatus = 0); // Success == 0
 end;
@@ -317,11 +320,11 @@ procedure DisconnectSCM;
 //---------------------------------------------------------------------------
 begin
   if (hSCMan <> 0) then
-  begin
-      // Disconnect from our local Service Control Manager
-    CloseServiceHandle(hSCMan);
-    hSCMan := 0;
-  end;
+     begin
+     // Disconnect from our local Service Control Manager
+   CloseServiceHandle(hSCMan);
+   hSCMan := 0;
+     end;
 end;
 
 //---------------------------------------------------------------------------
@@ -339,12 +342,12 @@ begin
 
   hService := OpenService(hSCMan, DRIVER_NAME, SERVICE_QUERY_STATUS);
   if (hService <> 0) then
-  begin
-    FDrvPrevInst := True; // Driver previously installed, don't remove
-    CloseServiceHandle(hService); // Close the service
-    RESULT := True; // Success
-    Exit;
-  end;
+     begin
+     FDrvPrevInst := True; // Driver previously installed, don't remove
+     CloseServiceHandle(hService); // Close the service
+     RESULT := True; // Success
+     Exit;
+     end;
 
   // Add to our Service Control Manager's database
   hService := CreateService(
@@ -360,11 +363,18 @@ begin
     nil, nil, nil, nil);
 
   if (hService = 0) then
-    dwStatus := GetLastError
+     begin
+     dwStatus := GetLastError
+     end
   else
-    CloseServiceHandle(hService);
+     begin
+     CloseServiceHandle(hService);
+     end;
 
-  if (dwStatus <> 0) then FLastError := 'DriverInstall';
+  if (dwStatus <> 0) then
+     begin
+     FLastError := 'DriverInstall';
+     end;
 
   RESULT := (dwStatus = 0);
 end;
@@ -382,30 +392,37 @@ begin
 
   hService := OpenService(hSCMan, DRIVER_NAME, SERVICE_QUERY_STATUS);
   if ((hService <> 0) and (QueryServiceStatus(hService, sStatus))) then
-  begin
-      // Got the service status, now check it
-    if (sStatus.dwCurrentState = SERVICE_RUNNING) then
-    begin
+     begin
+     // Got the service status, now check it
+   if (sStatus.dwCurrentState = SERVICE_RUNNING) then
+      begin
       FDrvPrevStart := True; // Driver was previously started
       CloseServiceHandle(hService); // Close service
       RESULT := True; // Success
       Exit;
-    end
-    else if (sStatus.dwCurrentState = SERVICE_STOPPED) then
-    begin
-          // Driver was stopped. Start the driver.
-      CloseServiceHandle(hService);
-      hService := OpenService(hSCMan, DRIVER_NAME, SERVICE_START);
-      if (not StartService(hService, 0, lpServiceArgVectors)) then
-        dwStatus := GetLastError;
-      CloseServiceHandle(hService); // Close service
-    end
-    else dwStatus := $FFFFFFFF; // Can't run the service
-  end
+      end
+   else if (sStatus.dwCurrentState = SERVICE_STOPPED) then
+      begin
+      // Driver was stopped. Start the driver.
+  CloseServiceHandle(hService);
+  hService := OpenService(hSCMan, DRIVER_NAME, SERVICE_START);
+  if (not StartService(hService, 0, lpServiceArgVectors)) then
+     begin
+     dwStatus := GetLastError;
+     end;
+  CloseServiceHandle(hService); // Close service
+      end
+   else dwStatus := $FFFFFFFF; // Can't run the service
+     end
   else
-    dwStatus := GetLastError;
+     begin
+     dwStatus := GetLastError;
+     end;
 
-  if (dwStatus <> 0) then FLastError := 'DriverStart';
+  if (dwStatus <> 0) then
+     begin
+     FLastError := 'DriverStart';
+     end;
 
   RESULT := (dwStatus = 0); // Success == 0
 end;
@@ -421,25 +438,30 @@ begin
   // If we didn't start the driver, then don't stop it.
   // Pretend we stopped it, by indicating success.
   if (FDrvPrevStart) then
-  begin
-    RESULT := True;
-    Exit;
-  end;
+     begin
+     RESULT := True;
+     Exit;
+     end;
 
   // Get a handle to the service to stop
   hService := OpenService(hSCMan, DRIVER_NAME, SERVICE_STOP or SERVICE_QUERY_STATUS);
 
   if (hService <> 0) then
-  begin
-      // Stop the driver, then close the service
-    temp := ControlService(hService, SERVICE_CONTROL_STOP, ServiceStatus);
-    if (not temp) then
+     begin
+     // Stop the driver, then close the service
+   temp := ControlService(hService, SERVICE_CONTROL_STOP, ServiceStatus);
+   if (not temp) then
+      begin
       dwStatus := GetLastError();
-    CloseServiceHandle(hService);
-  end else
+      end;
+   CloseServiceHandle(hService);
+     end else
     dwStatus := GetLastError;
 
-  if (dwStatus <> 0) then FLastError := 'DriverStop';
+  if (dwStatus <> 0) then
+     begin
+     FLastError := 'DriverStop';
+     end;
   RESULT := (dwStatus = 0); // Success == 0
 end;
 
@@ -453,24 +475,32 @@ begin
   // If we didn't install the driver, then don't remove it.
   // Pretend we removed it, by indicating success.
   if (FDrvPrevInst) then
-  begin
-    RESULT := True;
-    Exit;
-  end;
+     begin
+     RESULT := True;
+     Exit;
+     end;
 
   // Get a handle to the service to stop
   hService := OpenService(hSCMan, DRIVER_NAME, DLPIODelete);
 
   if (hService <> 0) then
-  begin
-    temp := DeleteService(hService);
-    if (not temp) then dwStatus := GetLastError;
-    CloseServiceHandle(hService);
-  end
+     begin
+     temp := DeleteService(hService);
+     if (not temp) then
+        begin
+        dwStatus := GetLastError;
+        end;
+     CloseServiceHandle(hService);
+     end
   else
-    dwStatus := GetLastError;
+     begin
+     dwStatus := GetLastError;
+     end;
 
-  if (dwStatus <> 0) then FLastError := 'DriverRemove';
+  if (dwStatus <> 0) then
+     begin
+     FLastError := 'DriverRemove';
+     end;
 
   RESULT := (dwStatus = 0);
 end;
@@ -500,29 +530,29 @@ begin
 
   // If we're running Windows NT, install the driver then start it
   if (FRunningWinNT) then
-  begin
-      // Connect to the Service Control Manager
-    if (not ConnectSCM) then Exit;
+     begin
+     // Connect to the Service Control Manager
+   if (not ConnectSCM) then Exit;
 
-      // Install the driver
-    if (not DriverInstall) then
-    begin
-          // Driver install failed, so disconnect from the SCM
-      DisconnectSCM;
-      RESULT := False;
-      Exit;
-    end;
+     // Install the driver
+   if (not DriverInstall) then
+      begin
+      // Driver install failed, so disconnect from the SCM
+  DisconnectSCM;
+  RESULT := False;
+  Exit;
+      end;
 
-      // Start the driver
-    if (not DriverStart) then
-    begin
-          // Driver start failed, so remove it then disconnect from SCM
-      DriverRemove;
-      DisconnectSCM;
-          //      Exit;
-      NoDLPortioMessage;
-    end;
-  end;
+     // Start the driver
+   if (not DriverStart) then
+      begin
+      // Driver start failed, so remove it then disconnect from SCM
+  DriverRemove;
+  DisconnectSCM;
+      //      Exit;
+  NoDLPortioMessage;
+      end;
+     end;
 
   // Load DLL library
 //  LibraryFileName := LIBRARY_FILENAME;
@@ -532,37 +562,40 @@ begin
 
   FDLLInst := LoadLibrary(LIBRARY_FILENAME);
   if (FDLLInst <> 0) then
-  begin
-    @DlReadByte := GetProcAddress(FDLLInst, 'DlPortReadPortUchar');
-    @DlWriteByte := GetProcAddress(FDLLInst, 'DlPortWritePortUchar');
+     begin
+     @DlReadByte := GetProcAddress(FDLLInst, 'DlPortReadPortUchar');
+     @DlWriteByte := GetProcAddress(FDLLInst, 'DlPortWritePortUchar');
 
-      // Make sure all our functions are there
-    if ((@DlReadByte <> nil) and (@DlWriteByte <> nil)) then FActiveHW := True;
-  end;
+       // Make sure all our functions are there
+     if ((@DlReadByte <> nil) and (@DlWriteByte <> nil)) then
+        begin
+        FActiveHW := True;
+        end;
+     end;
 
   // Did we fail?
   if (not FActiveHW) then
-  begin
-      // If we're running Windows NT, stop the driver then remove it
-      // Forget about any return (error) values we might get...
-    if (FRunningWinNT) then
-    begin
+     begin
+     // If we're running Windows NT, stop the driver then remove it
+     // Forget about any return (error) values we might get...
+   if (FRunningWinNT) then
+      begin
       DriverStop;
       DriverRemove;
       DisconnectSCM;
-    end;
+      end;
 
-      // Free the library
-    if (FDLLInst <> 0) then
-    begin
+     // Free the library
+   if (FDLLInst <> 0) then
+      begin
       FreeLibrary(FDLLInst);
       FDLLInst := 0;
-    end;
-    FLastError := 'OpenDriver';
-    dwStatus := GetLastError;
-    NoDLPortioMessage;
+      end;
+   FLastError := 'OpenDriver';
+   dwStatus := GetLastError;
+   NoDLPortioMessage;
 
-  end;
+     end;
 end;
 
 procedure CloseDriver;
@@ -572,11 +605,11 @@ begin
 
   // If we're running Windows NT, stop the driver then remove it
   if (FRunningWinNT) then
-  begin
-    if (not DriverStop) then Exit;
-    if (not DriverRemove) then Exit;
-    DisconnectSCM;
-  end;
+     begin
+     if (not DriverStop) then Exit;
+     if (not DriverRemove) then Exit;
+     DisconnectSCM;
+     end;
 
   // Free the library
   if (not FreeLibrary(FDLLInst)) then Exit;
@@ -591,9 +624,13 @@ var
 begin
   for Index := 1 to NumPorts do
     if (Ports[Index].fWrite) then
-      DlWriteByte(Ports[Index].PortAddr, Ports[Index].PortData)
+       begin
+       DlWriteByte(Ports[Index].PortAddr, Ports[Index].PortData)
+       end
     else
-      Ports[Index].PortData := DlReadByte(Ports[Index].PortAddr);
+       begin
+       Ports[Index].PortData := DlReadByte(Ports[Index].PortAddr);
+       end;
 end;
 
 procedure PortCommand(Ports: array of TPortCommand; NumPorts: Word);
@@ -601,14 +638,16 @@ var
   Index                                 : Word;
 begin
   for Index := 1 to NumPorts do
-    case (Ports[Index].PortMode) of
-      tmReadByte: Ports[Index].PortData := DlReadByte(Ports[Index].PortAddr);
-      //      tmReadWord: Ports[Index].PortData := DlReadWord(Ports[Index].PortAddr);
-      //      tmReadDWord: Ports[Index].PortData := DlReadDWord(Ports[Index].PortAddr);
-      tmWriteByte: DlWriteByte(Ports[Index].PortAddr, Ports[Index].PortData);
-      //      tmWriteWord: DlWriteWord(Ports[Index].PortAddr, Ports[Index].PortData);
-      //      tmWriteDWord: DlWriteDWord(Ports[Index].PortAddr, Ports[Index].PortData);
-    end;
+     begin
+     case (Ports[Index].PortMode) of
+       tmReadByte: Ports[Index].PortData := DlReadByte(Ports[Index].PortAddr);
+       //      tmReadWord: Ports[Index].PortData := DlReadWord(Ports[Index].PortAddr);
+       //      tmReadDWord: Ports[Index].PortData := DlReadDWord(Ports[Index].PortAddr);
+       tmWriteByte: DlWriteByte(Ports[Index].PortAddr, Ports[Index].PortData);
+       //      tmWriteWord: DlWriteWord(Ports[Index].PortAddr, Ports[Index].PortData);
+       //      tmWriteDWord: DlWriteDWord(Ports[Index].PortAddr, Ports[Index].PortData);
+     end;
+     end;
 end;
 
 procedure NoDLPortioMessage;

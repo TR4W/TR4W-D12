@@ -990,22 +990,22 @@ begin
   sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
   for Version := 0 to TOATALVERSION2 - 1 {+1} do
-  begin
-    nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
-    sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+     begin
+     nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
+     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-    nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
-    sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+     nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
+     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-    sWriteFileFromString(h, '<ul>');
-    for Feature := 0 to MAXFEATURES - 1 do
-    begin
-      if V[Version].hrV[Feature].hrFeature = ftUndef then Continue;
-      nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
-      sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
-    end;
-    sWriteFileFromString(h, '</ul>');
-  end;
+     sWriteFileFromString(h, '<ul>');
+     for Feature := 0 to MAXFEATURES - 1 do
+        begin
+        if V[Version].hrV[Feature].hrFeature = ftUndef then Continue;
+        nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
+        sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+        end;
+     sWriteFileFromString(h, '</ul>');
+     end;
 
   nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s', ']]></content></cms>');
   sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
@@ -1076,48 +1076,50 @@ begin
   AdInserted := False;
 
   for Version := 0 to TOATALVERSION2 - 1 do
-  begin
-    nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
-    sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+     begin
+     nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
+     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-    nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
-    sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+     nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
+     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-    sWriteFileFromString(h, '<ul>');
-    for Feature := 0 to MAXFEATURES - 1 do
-    begin
-      if V[Version].hrV[Feature].hrFeature = ftUndef then Continue;
-      nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
-      sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
-      inc(InsertedFeatures);
-    end;
-    sWriteFileFromString(h, '</ul>');
-
-    if InsertedFeatures > FEATURES_IN_COLUMN * 2 then
-      Break;
-
-    if not secondcolumn then
-    begin
-      if InsertedFeatures > FEATURES_IN_COLUMN then
-      begin
-
-        nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s', '</td><td style="width:340px;vertical-align:top">');
+     sWriteFileFromString(h, '<ul>');
+     for Feature := 0 to MAXFEATURES - 1 do
+        begin
+        if V[Version].hrV[Feature].hrFeature = ftUndef then Continue;
+        nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
         sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
-        secondcolumn := True;
+        inc(InsertedFeatures);
+        end;
+     sWriteFileFromString(h, '</ul>');
 
-        //sWriteFile(h, AD_CODE, length(AD_CODE));
+     if InsertedFeatures > FEATURES_IN_COLUMN * 2 then
+        begin
+        Break;
+        end;
 
-      end;
-    end
-    else
-    begin
-      if not AdInserted then
-      begin
+     if not secondcolumn then
+        begin
+        if InsertedFeatures > FEATURES_IN_COLUMN then
+           begin
 
-      end;
-    end;
+           nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s', '</td><td style="width:340px;vertical-align:top">');
+           sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+           secondcolumn := True;
 
-  end;
+           //sWriteFile(h, AD_CODE, length(AD_CODE));
+
+           end;
+        end
+     else
+        begin
+        if not AdInserted then
+           begin
+
+           end;
+        end;
+
+     end;
 
   nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s',
 

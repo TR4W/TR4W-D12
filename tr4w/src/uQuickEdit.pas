@@ -62,24 +62,33 @@ begin
 
         Offset := -4;
         for TempColumn := Low(LogColumnsType) to High(LogColumnsType) do
-        begin
-          if not ColumnsArray[TempColumn].Enable then Continue;
-          Width := ListView_GetColumnWidth(wh[mweEditableLog], ColumnsArray[TempColumn].pos);
-          ListView_GetItemText(wh[mweEditableLog], 1, ColumnsArray[TempColumn].pos, @TempBuffer1, SizeOf(TempBuffer1));
-          Align := ES_LEFT;
-          if ColumnsArray[TempColumn].Align = LVCFMT_CENTER then Align := ES_CENTER;
-          if ColumnsArray[TempColumn].Align = LVCFMT_RIGHT then Align := ES_RIGHT;
+           begin
+           if not ColumnsArray[TempColumn].Enable then Continue;
+           Width := ListView_GetColumnWidth(wh[mweEditableLog], ColumnsArray[TempColumn].pos);
+           ListView_GetItemText(wh[mweEditableLog], 1, ColumnsArray[TempColumn].pos, @TempBuffer1, SizeOf(TempBuffer1));
+           Align := ES_LEFT;
+           if ColumnsArray[TempColumn].Align = LVCFMT_CENTER then
+              begin
+              Align := ES_CENTER;
+              end;
+           if ColumnsArray[TempColumn].Align = LVCFMT_RIGHT then
+              begin
+              Align := ES_RIGHT;
+              end;
 
-          h := tCreateEditWindow(WS_EX_STATICEDGE, TempBuffer1, Align + WS_TABSTOP + WS_CHILD + WS_VISIBLE, Offset, 0, Width, 21, hwnddlg, 0);
-          tWM_SETFONT(h, MainFont);
-          Offset := Offset + Width;
-        end;
+           h := tCreateEditWindow(WS_EX_STATICEDGE, TempBuffer1, Align + WS_TABSTOP + WS_CHILD + WS_VISIBLE, Offset, 0, Width, 21, hwnddlg, 0);
+           tWM_SETFONT(h, MainFont);
+           Offset := Offset + Width;
+           end;
 
       end;
 
     WM_COMMAND:
       begin
-        if wParam = 2 then goto 1;
+        if wParam = 2 then
+           begin
+           goto 1;
+           end;
 //        if HiWord(wParam) = LBN_DBLCLK then ProcessMenu(menu_send_message);
       end;
 

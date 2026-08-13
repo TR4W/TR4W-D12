@@ -106,22 +106,22 @@ begin
   Count := 1;
 
   while Count <= length(TempString) - 3 do
-  begin
-    if (TempString[Count] = '<') and (TempString[Count + 3] = '>') then
-    begin
-      NumericString := UpperCase(Copy(TempString, Count + 1, 2));
+     begin
+     if (TempString[Count] = '<') and (TempString[Count + 3] = '>') then
+        begin
+        NumericString := UpperCase(Copy(TempString, Count + 1, 2));
 
-      HexToInteger(NumericString, NumericValue, Result);
+        HexToInteger(NumericString, NumericValue, Result);
 
-      if Result = 0 then
-      begin
-        Delete(TempString, Count, 4);
-        Insert(AnsiChar(NumericValue), TempString, Count);
-      end;
-    end;
+        if Result = 0 then
+           begin
+           Delete(TempString, Count, 4);
+           Insert(AnsiChar(NumericValue), TempString, Count);
+           end;
+        end;
 
-    inc(Count);
-  end;
+     inc(Count);
+     end;
 end;
 
 function ProcessConfigInstructions1(ID: Str80; CMD: ShortString): boolean;
@@ -130,10 +130,10 @@ begin
   ProcessConfigInstructions1 := False;
 
   if CheckCommand(@ID, CMD) then
-  begin
-    ProcessConfigInstructions1 := True;
-    Exit;
-  end;
+     begin
+     ProcessConfigInstructions1 := True;
+     Exit;
+     end;
 
 
 
@@ -147,10 +147,10 @@ begin
   ProcessConfigInstructions3 := False; //wli
 
   if CheckCommand(@ID, CMD) then
-  begin
-    ProcessConfigInstructions3 := True;
-    Exit;
-  end;
+     begin
+     ProcessConfigInstructions3 := True;
+     Exit;
+     end;
 
 
 
@@ -164,22 +164,25 @@ var
   CMD                                   : ShortString;
 begin
   if FileString = '' then
-  begin
-    ProcessConfigInstruction := True;
-    Exit;
-  end;
+     begin
+     ProcessConfigInstruction := True;
+     Exit;
+     end;
 
   if FileString[1] in [';', '[' {, '_'}] then
-  begin
-    ProcessConfigInstruction := True;
-    Exit;
-  end;
+     begin
+     ProcessConfigInstruction := True;
+     Exit;
+     end;
 
 
 
   ProcessConfigInstruction := CheckCommand(@ID, CMD);
 
-  if ID = '' then ProcessConfigInstruction := True;
+  if ID = '' then
+     begin
+     ProcessConfigInstruction := True;
+     end;
 end;
 
 function ProcessRadioTypeold(CMD: ShortString; RadioPointer: RadioPtr): boolean;
@@ -190,9 +193,18 @@ function GetLPTPortFromChar(port: ShortString): PortType;
 begin
   Result := NoPort;
   if PInteger(@port[1])^ = $454E4F4E {NONE} then Exit;
-  if port[1] = '1' then Result := Parallel1;
-  if port[1] = '2' then Result := Parallel2;
-  if port[1] = '3' then Result := Parallel3;
+  if port[1] = '1' then
+     begin
+     Result := Parallel1;
+     end;
+  if port[1] = '2' then
+     begin
+     Result := Parallel2;
+     end;
+  if port[1] = '3' then
+     begin
+     Result := Parallel3;
+     end;
 end;
 
 end.

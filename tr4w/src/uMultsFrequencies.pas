@@ -66,20 +66,25 @@ begin
       begin
 
         with PNMHdr(lp)^ do
-          case code of
-            NM_DBLCLK:
-              begin
-                I := SendMessage(MultsFrequenciesHandle, LVM_GETNEXTITEM, -1, 1);
-                if I > 5 then Mode := Phone else Mode := CW;
-                if I > 5 then I := I - 6;
-                Band := BandType(I);
-                if MF[Mode, Band] = 0 then Exit;
-                SetRadioFreq(ActiveRadio, MF[Mode, Band], Mode, 'A');
-//                tSetWindowText(CallWindowHandle, VisibleLog.LastCallsign);
-//                PlaceCaretToTheEnd(CallWindowHandle);
-              end;
-            NM_RELEASEDCAPTURE: FrmSetFocus;
-          end;
+           begin
+           case code of
+             NM_DBLCLK:
+               begin
+                 I := SendMessage(MultsFrequenciesHandle, LVM_GETNEXTITEM, -1, 1);
+                 if I > 5 then Mode := Phone else Mode := CW;
+                 if I > 5 then
+                    begin
+                    I := I - 6;
+                    end;
+                 Band := BandType(I);
+                 if MF[Mode, Band] = 0 then Exit;
+                 SetRadioFreq(ActiveRadio, MF[Mode, Band], Mode, 'A');
+ //                tSetWindowText(CallWindowHandle, VisibleLog.LastCallsign);
+ //                PlaceCaretToTheEnd(CallWindowHandle);
+               end;
+             NM_RELEASEDCAPTURE: FrmSetFocus;
+           end;
+           end;
       end;
 
     WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lp, hwnddlg);
@@ -111,24 +116,26 @@ begin
         elvi.Mask := LVIF_TEXT;
 
         for Mode := Phone downto CW do
-          for Band := Band10 downto Band160 do
-          begin
-            if Mode = Digital then Continue;
+           begin
+           for Band := Band10 downto Band160 do
+              begin
+              if Mode = Digital then Continue;
 
-            elvi.iItem := 0; ;
-            elvi.iSubItem := 0;
-            elvi.pszText := BandStringsArray[Band];
-            ListView_InsertItem(MultsFrequenciesHandle, elvi);
+              elvi.iItem := 0; ;
+              elvi.iSubItem := 0;
+              elvi.pszText := BandStringsArray[Band];
+              ListView_InsertItem(MultsFrequenciesHandle, elvi);
 
-            elvi.iSubItem := 1;
-            elvi.pszText := ModeString[Mode];
-            ListView_SetItem(MultsFrequenciesHandle, elvi);
+              elvi.iSubItem := 1;
+              elvi.pszText := ModeString[Mode];
+              ListView_SetItem(MultsFrequenciesHandle, elvi);
 
-            elvi.iSubItem := 2;
-            elvi.pszText := '0';
-            ListView_SetItem(MultsFrequenciesHandle, elvi);
+              elvi.iSubItem := 2;
+              elvi.pszText := '0';
+              ListView_SetItem(MultsFrequenciesHandle, elvi);
 
-          end;
+              end;
+           end;
 
         DisplayMultsFrequencies;
       end;

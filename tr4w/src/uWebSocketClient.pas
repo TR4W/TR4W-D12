@@ -397,7 +397,7 @@ begin
          begin
          logger.Error('[WebSocket] send failed: %s', [E.Message]);
          DropLink;
-      end;
+         end;
    end;
 end;
 
@@ -414,7 +414,7 @@ begin
          begin
          logger.Debug('[WebSocket] ping failed: %s', [E.Message]);
          DropLink;
-      end;
+         end;
    end;
 end;
 

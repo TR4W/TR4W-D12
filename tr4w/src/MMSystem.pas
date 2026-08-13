@@ -1537,7 +1537,7 @@ type
       wPid: WORD;                                   {      " }
       vDriverVersion: MMVERSION;                    {      " }
       szPname: array[0..MAXPNAMELEN - 1] of AnsiChar;  {      " }
-	 end;
+  end;
   end;
   {$EXTERNALSYM tagMIXERLINEW}
   tagMIXERLINEW = record
@@ -1560,7 +1560,7 @@ type
       wPid: WORD;                                   {      " }
       vDriverVersion: MMVERSION;                    {      " }
       szPname: array[0..MAXPNAMELEN - 1] of WideChar;  {      " }
-	 end;
+  end;
   end;
   {$EXTERNALSYM tagMIXERLINE}
   tagMIXERLINE = tagMIXERLINEA;
@@ -1939,10 +1939,10 @@ type
     dwControlID: DWORD;    { control id to get/set details on }
     cChannels: DWORD;      { number of channels in paDetails array }
     case Integer of
-	   0: (hwndOwner: HWND);        { for MIXER_SETCONTROLDETAILSF_CUSTOM }
-	   1: (cMultipleItems: DWORD;   { if _MULTIPLE, the number of items per channel }
-	       cbDetails: DWORD;        { size of _one_ details_XX struct }
-	       paDetails: Pointer);     { pointer to array of details_XX structs }
+    0: (hwndOwner: HWND);        { for MIXER_SETCONTROLDETAILSF_CUSTOM }
+    1: (cMultipleItems: DWORD;   { if _MULTIPLE, the number of items per channel }
+        cbDetails: DWORD;        { size of _one_ details_XX struct }
+        paDetails: Pointer);     { pointer to array of details_XX structs }
   end;
 
   PMixerControlDetailsListTextA = ^TMixerControlDetailsListTextA;

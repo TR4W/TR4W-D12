@@ -83,30 +83,30 @@ begin
       begin
         MDIS := Pointer(lParam);
         if (MDIS^.itemAction = ODA_FOCUS) then
-        begin
-          DrawFocusRect(MDIS^.HDC, MDIS^.rcItem);
-          Exit;
-        end;
+           begin
+           DrawFocusRect(MDIS^.HDC, MDIS^.rcItem);
+           Exit;
+           end;
 
         if MDIS^.itemAction = ODA_DRAWENTIRE then
-        begin
-          i := SendMessageA(MDIS^.hwndItem, LB_GETTEXT, MDIS^.ItemID, integer(@CallsBuf));
+           begin
+           i := SendMessageA(MDIS^.hwndItem, LB_GETTEXT, MDIS^.ItemID, integer(@CallsBuf));
 
-          if SendMessage(MDIS^.hwndItem, LB_GETITEMDATA, MDIS^.ItemID, 0) = 1 then
-          begin
-            TempColor := trWhite;
-            GradientRect(MDIS^.HDC, MDIS^.rcItem, tr4wColorsArray[SCPDupeColor], tr4wColorsArray[trWhite {SCPDupeBackground}], gdHorizontal);
-          end
-          else
-          begin
-            TempColor := trBlack;
-          end;
+           if SendMessage(MDIS^.hwndItem, LB_GETITEMDATA, MDIS^.ItemID, 0) = 1 then
+              begin
+              TempColor := trWhite;
+              GradientRect(MDIS^.HDC, MDIS^.rcItem, tr4wColorsArray[SCPDupeColor], tr4wColorsArray[trWhite {SCPDupeBackground}], gdHorizontal);
+              end
+           else
+              begin
+              TempColor := trBlack;
+              end;
 
-          Windows.SetTextColor(MDIS^.HDC, tr4wColorsArray[TempColor]);
-          SetBkMode(MDIS^.HDC, TRANSPARENT);
-          Windows.TextOutA(MDIS^.HDC, MDIS^.rcItem.Left + 2, MDIS^.rcItem.Top, CallsBuf, i);
-          Result := True;
-        end;
+           Windows.SetTextColor(MDIS^.HDC, tr4wColorsArray[TempColor]);
+           SetBkMode(MDIS^.HDC, TRANSPARENT);
+           Windows.TextOutA(MDIS^.HDC, MDIS^.rcItem.Left + 2, MDIS^.rcItem.Top, CallsBuf, i);
+           Result := True;
+           end;
       end;
 
     WM_INITDIALOG:
@@ -116,7 +116,10 @@ begin
         // Issue #997: asm tWM_SETFONT -> TF helper (EAX = MasterListBox above).
         tWM_SETFONT(MasterListBox, MainFixedFont);
         tLB_SETCOLUMNWIDTH(hwnddlg, 80);
-        if SCPMinimumLetters = 0 then SCPMinimumLetters := 3;
+        if SCPMinimumLetters = 0 then
+           begin
+           SCPMinimumLetters := 3;
+           end;
 //        Windows.SendMessage(MasterListBox, LB_GETITEMRECT, 0, integer(@masterrect));
 //        OneMasterItemWeight := masterrect.Right * masterrect.Bottom;
       end;

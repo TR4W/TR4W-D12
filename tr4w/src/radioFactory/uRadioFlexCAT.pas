@@ -260,7 +260,10 @@ function TFlexCAT.ModeNumToMode(const s: string): TRadioMode;
 begin
    // Guide 3.3.20.  Note BOTH CW variants: the Flex distinguishes CWL and CWU as
    // tuning styles, and TR4W's rmCW/rmCWRev is the closest pair.
-   if s = FLEXMODE_LSB then       Result := rmLSB
+   if s = FLEXMODE_LSB then
+      begin
+      Result := rmLSB
+      end
    else if s = FLEXMODE_USB then  Result := rmUSB
    else if s = FLEXMODE_CWL then  Result := rmCW
    else if s = FLEXMODE_CWU then  Result := rmCWRev

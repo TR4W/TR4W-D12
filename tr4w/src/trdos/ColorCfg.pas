@@ -60,193 +60,311 @@ begin
   ValidColorCommand := True;
 
   if CMD = 'ALARM WINDOW COLOR' then
-    ColorColors.AlarmWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.AlarmWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'ALARM WINDOW BACKGROUND' then
-    ColorColors.AlarmWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.AlarmWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'BAND MAP WINDOW COLOR' then
-    ColorColors.BandMapWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.BandMapWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'BAND MAP WINDOW BACKGROUND' then
-    ColorColors.BandMapWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.BandMapWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'BAND MODE WINDOW COLOR' then
-    ColorColors.BandModeWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.BandModeWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'BAND MODE WINDOW BACKGROUND' then
-    ColorColors.BandModeWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.BandModeWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'BEAM HEADING WINDOW COLOR' then
-    ColorColors.BeamHeadingWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.BeamHeadingWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'BEAM HEADING WINDOW BACKGROUND' then
-    ColorColors.BeamHeadingWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.BeamHeadingWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'BIG WINDOW COLOR' then
-    ColorColors.BigWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.BigWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'BIG WINDOW BACKGROUND' then
-    ColorColors.BigWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.BigWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'CALL WINDOW COLOR' then
-    ColorColors.CallWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.CallWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'CALL WINDOW BACKGROUND' then
-    ColorColors.CallWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.CallWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'CLOCK WINDOW COLOR' then
-    ColorColors.ClockWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.ClockWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'CLOCK WINDOW BACKGROUND' then
-    ColorColors.ClockWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.ClockWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'CODE SPEED WINDOW COLOR' then
-    ColorColors.CodeSpeedWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.CodeSpeedWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'CODE SPEED WINDOW BACKGROUND' then
-    ColorColors.CodeSpeedWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.CodeSpeedWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'CONTEST TITLE WINDOW COLOR' then
-    ColorColors.ContestTitleWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.ContestTitleWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'CONTEST TITLE WINDOW BACKGROUND' then
-    ColorColors.ContestTitleWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.ContestTitleWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'DATE WINDOW COLOR' then
-    ColorColors.DateWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.DateWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'DATE WINDOW BACKGROUND' then
-    ColorColors.DateWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.DateWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'DUPE INFO WINDOW COLOR' then
-    ColorColors.DupeInfoWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.DupeInfoWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'DUPE INFO WINDOW BACKGROUND' then
-    ColorColors.DupeInfoWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.DupeInfoWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'DUPESHEET WINDOW COLOR' then
-    ColorColors.DupeSheetWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.DupeSheetWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'DUPESHEET WINDOW BACKGROUND' then
-    ColorColors.DupeSheetWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.DupeSheetWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'EDITABLE LOG WINDOW COLOR' then
-    ColorColors.EditableLogWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.EditableLogWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'EDITABLE LOG WINDOW BACKGROUND' then
-    ColorColors.EditableLogWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.EditableLogWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'EXCHANGE WINDOW COLOR' then
-    ColorColors.ExchangeWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.ExchangeWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'EXCHANGE WINDOW BACKGROUND' then
-    ColorColors.ExchangeWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.ExchangeWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'EXCHANGE WINDOW S&P BACKGROUND' then
-    ColorColors.ExchangeSAndPWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.ExchangeSAndPWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'FREE MEMORY WINDOW COLOR' then
-    ColorColors.FreeMemoryWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.FreeMemoryWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'FREE MEMORY WINDOW BACKGROUND' then
-    ColorColors.FreeMemoryWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.FreeMemoryWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'FUNCTION KEY WINDOW COLOR' then
-    ColorColors.FunctionKeyWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.FunctionKeyWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'FUNCTION KEY WINDOW BACKGROUND' then
-    ColorColors.FunctionKeyWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.FunctionKeyWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'INSERT WINDOW COLOR' then
-    ColorColors.InsertWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.InsertWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'INSERT WINDOW BACKGROUND' then
-    ColorColors.InsertWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.InsertWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'MULTIPLIER INFORMATION WINDOW COLOR' then
-    ColorColors.MultiplierInformationWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.MultiplierInformationWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'MULTIPLIER INFORMATION WINDOW BACKGROUND' then
-    ColorColors.MultiplierInformationWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.MultiplierInformationWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'NAME PERCENTAGE WINDOW COLOR' then
-    ColorColors.NamePercentageWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.NamePercentageWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'NAME PERCENTAGE WINDOW BACKGROUND' then
-    ColorColors.NamePercentageWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.NamePercentageWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'NAME SENT WINDOW COLOR' then
-    ColorColors.NameSentWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.NameSentWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'NAME SENT WINDOW BACKGROUND' then
-    ColorColors.NameSentWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.NameSentWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'POSSIBLE CALL WINDOW COLOR' then
-    ColorColors.PossibleCallWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.PossibleCallWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'POSSIBLE CALL WINDOW BACKGROUND' then
-    ColorColors.PossibleCallWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.PossibleCallWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'POSSIBLE CALL WINDOW DUPE COLOR' then
-    ColorColors.PossibleCallWindowDupeColor := GetColorInteger(ID);
+     begin
+     ColorColors.PossibleCallWindowDupeColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'POSSIBLE CALL WINDOW DUPE BACKGROUND' then
-    ColorColors.PossibleCallWindowDupeBackground := GetColorInteger(ID);
+     begin
+     ColorColors.PossibleCallWindowDupeBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'QSO INFORMATION WINDOW COLOR' then
-    ColorColors.QSOInformationWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.QSOInformationWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'QSO INFORMATION WINDOW BACKGROUND' then
-    ColorColors.QSOInformationWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.QSOInformationWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'QSO NUMBER WINDOW COLOR' then
-    ColorColors.QSONumberWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.QSONumberWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'QSO NUMBER WINDOW BACKGROUND' then
-    ColorColors.QSONumberWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.QSONumberWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'QTC NUMBER WINDOW COLOR' then
-    ColorColors.QTCNumberWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.QTCNumberWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'QTC NUMBER WINDOW BACKGROUND' then
-    ColorColors.QTCNumberWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.QTCNumberWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'QUICK COMMAND WINDOW COLOR' then
-    ColorColors.QuickCommandWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.QuickCommandWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'QUICK COMMAND WINDOW BACKGROUND' then
-    ColorColors.QuickCommandWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.QuickCommandWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'RADIO WINDOW COLOR' then {KK1L: 6.73}
-  begin
-    ColorColors.RadioOneWindowColor := GetColorInteger(ID);
-    ColorColors.RadioTwoWindowColor := GetColorInteger(ID);
-  end;
+     begin
+     ColorColors.RadioOneWindowColor := GetColorInteger(ID);
+     ColorColors.RadioTwoWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'RADIO WINDOW BACKGROUND' then {KK1L: 6.73}
-  begin
-    ColorColors.RadioOneWindowBackground := GetColorInteger(ID);
-    ColorColors.RadioTwoWindowColor := GetColorInteger(ID);
-  end;
+     begin
+     ColorColors.RadioOneWindowBackground := GetColorInteger(ID);
+     ColorColors.RadioTwoWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'RADIO ONE WINDOW COLOR' then {KK1L: 6.73}
-    ColorColors.RadioOneWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.RadioOneWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'RADIO ONE WINDOW BACKGROUND' then {KK1L: 6.73}
-    ColorColors.RadioOneWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.RadioOneWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'RADIO TWO WINDOW COLOR' then {KK1L: 6.73}
-    ColorColors.RadioTwoWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.RadioTwoWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'RADIO TWO WINDOW BACKGROUND' then {KK1L: 6.73}
-    ColorColors.RadioTwoWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.RadioTwoWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'RATE WINDOW COLOR' then
-    ColorColors.RateWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.RateWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'RATE WINDOW BACKGROUND' then
-    ColorColors.RateWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.RateWindowBackground := GetColorInteger(ID);
+     end;
 
 //  if CMD = 'RTTY WINDOW COLOR' then
 //    ColorColors.RTTYWindowColor := GetColorInteger(ID);
@@ -261,41 +379,69 @@ begin
 //    ColorColors.RTTYInverseWindowBackground := GetColorInteger(ID);
 
   if CMD = 'REMAINING MULTS WINDOW SUBDUE COLOR' then
-    ColorColors.RemainingMultsWindowSubdue := GetColorInteger(ID);
+     begin
+     ColorColors.RemainingMultsWindowSubdue := GetColorInteger(ID);
+     end;
 
   if CMD = 'REMAINING MULTS WINDOW COLOR' then
-    ColorColors.RemainingMultsWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.RemainingMultsWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'REMAINING MULTS WINDOW BACKGROUND' then
-    ColorColors.RemainingMultsWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.RemainingMultsWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'TOTAL WINDOW COLOR' then
-    ColorColors.TotalWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.TotalWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'TOTAL WINDOW BACKGROUND' then
-    ColorColors.TotalWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.TotalWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'TOTAL SCORE WINDOW COLOR' then
-    ColorColors.TotalScoreWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.TotalScoreWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'TOTAL SCORE WINDOW BACKGROUND' then
-    ColorColors.TotalScoreWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.TotalScoreWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'USER INFO WINDOW COLOR' then
-    ColorColors.UserInfoWindowColor := GetColorInteger(ID);
+     begin
+     ColorColors.UserInfoWindowColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'USER INFO WINDOW BACKGROUND' then
-    ColorColors.UserInfoWindowBackground := GetColorInteger(ID);
+     begin
+     ColorColors.UserInfoWindowBackground := GetColorInteger(ID);
+     end;
 
   if CMD = 'WHOLE SCREEN WINDOW COLOR' then
-    ColorColors.WholeScreenColor := GetColorInteger(ID);
+     begin
+     ColorColors.WholeScreenColor := GetColorInteger(ID);
+     end;
 
   if CMD = 'WHOLE SCREEN WINDOW BACKGROUND' then
-    ColorColors.WholeScreenBackground := GetColorInteger(ID);
+     begin
+     ColorColors.WholeScreenBackground := GetColorInteger(ID);
+     end;
 
-  if CMD = 'SCP WINDOW DUPE COLOR' then SCPDupeColor := GetColorInteger(ID);
+  if CMD = 'SCP WINDOW DUPE COLOR' then
+     begin
+     SCPDupeColor := GetColorInteger(ID);
+     end;
 
-  if CMD = 'SCP WINDOW DUPE BACKGROUND' then SCPDupeBackground := GetColorInteger(ID);
+  if CMD = 'SCP WINDOW DUPE BACKGROUND' then
+     begin
+     SCPDupeBackground := GetColorInteger(ID);
+     end;
 end;
 
 end.

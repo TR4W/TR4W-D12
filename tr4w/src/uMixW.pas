@@ -74,7 +74,10 @@ begin
         CoBuildVersion;
         CoInitialize(nil);
         DisplayMixWConnection;
-        if not MixWLoaded then goto con;
+        if not MixWLoaded then
+           begin
+           goto con;
+           end;
 
       end;
 
@@ -119,10 +122,10 @@ begin
   CLSIDFromProgID(PWideChar(WideString('MixW2.Application')), ClassID);
   GetActiveObject(ClassID, nil, Unknown);
   if Unknown = nil then
-  begin
-    MixWLoaded := False;
-    Exit;
-  end;
+     begin
+     MixWLoaded := False;
+     Exit;
+     end;
   Unknown.QueryInterface(IDispatch, RESULT);
 end;
 {$ENDIF}
@@ -141,7 +144,10 @@ procedure SendMessageToMixW(mess: string);
 begin
  {$IFDEF MIXWMODE}
   try
-    if MixWLoaded then MixW.ExecuteMacros(mess);
+    if MixWLoaded then
+       begin
+       MixW.ExecuteMacros(mess);
+       end;
   except
     begin
       MixWLoaded := False;
