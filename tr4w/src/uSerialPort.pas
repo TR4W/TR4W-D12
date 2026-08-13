@@ -1,5 +1,15 @@
 unit uSerialPort;
 
+{$IFDEF FPC}
+  // FPC only; Delphi does not recognise $MODESWITCH and never sees this.
+  // Without it the unit compiles with an 8-bit `string`, and PWideChar(PortStr)
+  // below silently reinterprets AnsiString bytes as UTF-16 -- CreateFileW then
+  // fails with ERROR_INVALID_NAME (123) and no diagnostic anywhere.  Delphi's
+  // `string` is always UnicodeString, so this only restates what D12 does.
+  {$MODE Delphi}
+  {$MODESWITCH UnicodeStrings}
+{$ENDIF}
+
 interface
 
 uses
