@@ -435,12 +435,34 @@ mean the migration never finishes. Each is a **post-D12 project**.
 
 ## 8. Evidence debt (small, do before sign-off)
 
-- **P2-9** — the IARU golden fixture passes purely by list membership, and `is_known`
+- ~~**P2-9** — the IARU golden fixture passes purely by list membership, and `is_known`
   overrides `GOLDEN_STRICT`, so an aborted export is masked identically to a known
-  divergence. Regenerate `iaru_hf_2026_ny4i` so the divergence is *demonstrated*.
+  divergence. Regenerate `iaru_hf_2026_ny4i` so the divergence is *demonstrated*.~~
+  **DONE 2026-08-13.** Two separate defects were behind this, not one:
+
+  1. `iaru_hf_2026_ny4i` sat in `export-d12-corpus.sh`'s `SKIP` list ("pops an
+     interactive dialog"), and that listing had gone **stale** — the set exports
+     cleanly today (exit 0, both artifacts, no dialog). While it was skipped its
+     divergence was asserted by `known-divergences.txt` and never once shown. It
+     now exports and the diff is real: the sent zone falls back to MY STATE
+     (`59  8` → `59  FL`) while the received zones (8, 27) read correctly —
+     exactly what the file claims. `SKIP` is now empty.
+  2. `is_known` excused a **missing candidate**, so "exports and differs for a
+     tracked reason" and "produced nothing at all" were the same result — on the
+     oracle every other check in this tree leans on. A missing candidate is now a
+     strict FAIL for **every** set, with no exemption. Verified by hiding a known
+     set's candidate: it reported `KNOWN` before and `FAIL` after.
+
+  Corpus after the fix, on **both** compilers: 22 passed, 0 failed, 4
+  known-divergence — the same headline as before, with every row now backed by a
+  diff instead of by list membership.
 - **P2-10** — file the 4 benign golden divergences (2 contests × 2 formats; sent
   exchange rebuilt from the `MyZone` session global) as a tracked issue. Pre-existing
-  D7 quirk, not introduced by D12.
+  D7 quirk, not introduced by D12. **Documented in full** at the foot of
+  `tr4w/test/corpus/known-divergences.txt` (2026-08-13), including the demonstrated
+  diff and the fix direction — store the sent exchange with the QSO instead of
+  rebuilding it from session globals at export time. **Still to be filed as an
+  issue.**
 - **A-5** — the doc/version staleness above.
 
 ---

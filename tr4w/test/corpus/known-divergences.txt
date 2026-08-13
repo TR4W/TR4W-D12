@@ -12,3 +12,30 @@
 # session global, not the conversion.
 iaru_hf_2026_ny4i       event-source: sent zone -> MY STATE fallback (MyZone 0 in session)
 general_qso_2026_w1aw4  event-source: MY STATE appended to sent exchange
+
+# ---------------------------------------------------------------------------
+# 2026-08-13 -- all four rows are now DEMONSTRATED, not asserted.
+#
+# iaru_hf_2026_ny4i used to sit in export-d12-corpus.sh's SKIP list ("pops an
+# interactive dialog"), so it produced no candidate and run-golden-diff.sh
+# reported it KNOWN on the strength of this file alone.  That listing had gone
+# stale: the set exports cleanly (exit 0, both artifacts, no dialog).  Its
+# divergence is exactly what is claimed above -- the SENT zone falls back to
+# MY STATE, while the RECEIVED zones are read correctly:
+#
+#   D7-ref   QSO:  1800 PH 2026-07-05 1912 NY4I    59  8   W1AW  59  8   1
+#   D12-cand QSO:  1800 PH 2026-07-05 1912 NY4I    59  FL  W1AW  59  8   1
+#   D7-ref   QSO:  1800 PH 2026-07-05 1912 NY4I    59  8   F4HQ  59  27  1
+#   D12-cand QSO:  1800 PH 2026-07-05 1912 NY4I    59  FL  F4HQ  59  27  1
+#
+# A row here now means ONLY "this set exports and the diff is tracked".  It no
+# longer excuses a MISSING candidate -- that is a strict FAIL for every set,
+# with no exemption.  If a set ever genuinely cannot be exported, do not add it
+# here: that is a different fact and needs its own mechanism, or the oracle
+# goes back to being unable to tell "differs as expected" from "produced
+# nothing".
+#
+# STILL OPEN (P2-10): these four are a pre-existing D7 quirk, not a D12
+# conversion defect -- the sent exchange is rebuilt from MY-station session
+# globals at export time instead of being stored per QSO.  The fix is to store
+# the sent exchange with the QSO.  Worth a tracked issue; not filed yet.
