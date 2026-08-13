@@ -159,7 +159,7 @@ begin
         CreateStatic(RC_PRESSMKYWTR, 5, 5, 220, hwnddlg, 103);
         CreateStatic(RC_NUMBEROSOLT, 5, 45, 220, hwnddlg, 105);
 
-        tWM_SETFONT(CreateWindow('msctls_hotkey32', nil, WS_CHILD or WS_VISIBLE or WS_TABSTOP, 230, 5, 50, 21, hwnddlg, 107, hInstance, nil), MSSansSerifFont);
+        tWM_SETFONT(CreateWindowW('msctls_hotkey32', nil, WS_CHILD or WS_VISIBLE or WS_TABSTOP, 230, 5, 50, 21, hwnddlg, 107, hInstance, nil), MSSansSerifFont);
         CreateEdit(0, 230, 45, 50, 21, hwnddlg, 106);
 
         CreateOKCancelButtons(hwnddlg);

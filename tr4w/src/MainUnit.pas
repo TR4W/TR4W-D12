@@ -8713,7 +8713,7 @@ const
 var
   ti: TOOLINFO;
 begin
-  Result := CreateWindow(TOOLTIPS_CLASS, nil, WS_POPUP or TTS_NOPREFIX
+  Result := CreateWindowW(TOOLTIPS_CLASS, nil, WS_POPUP or TTS_NOPREFIX
     {or TTS_BALLOON } or TTS_ALWAYSTIP, 100, 100, 100, 100, Control, 0,
     hInstance,
     nil);

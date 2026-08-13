@@ -34,7 +34,15 @@ uses
   SysUtils,
   Classes,
   WinInet,
+{$IFDEF FPC}
+  // FPC's fcl-base spells it base64/EncodeStringBase64; Delphi's RTL spells it
+  // EncdDecd/EncodeString.  One call site, one line different -- shimmed here
+  // rather than owned, because both RTLs already have a correct RFC 4648
+  // encoder and re-implementing one would be gold-plating, not portability.
+  base64;
+{$ELSE}
   EncdDecd;
+{$ENDIF}
 
 function SslInet(Const AServer, AUrl, AData, ALogin, APass: AnsiString; isSSL: Boolean = True): AnsiString;
 
@@ -55,14 +63,14 @@ begin
 
   Result := '';
 
-  pSession := InternetOpen(nil, INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  pSession := InternetOpenW(nil, INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
 
   if Assigned(pSession) then
     try
 
      case isSSL of
-       True  :  pConnection := InternetConnect(pSession, PChar(AServer), INTERNET_DEFAULT_HTTPS_PORT, nil, nil, INTERNET_SERVICE_HTTP, 0, 0);
-       False :  pConnection := InternetConnect(pSession, PChar(AServer), INTERNET_DEFAULT_HTTP_PORT, nil, nil, INTERNET_SERVICE_HTTP, 0, 0);
+       True  :  pConnection := InternetConnectW(pSession, PChar(AServer), INTERNET_DEFAULT_HTTPS_PORT, nil, nil, INTERNET_SERVICE_HTTP, 0, 0);
+       False :  pConnection := InternetConnectW(pSession, PChar(AServer), INTERNET_DEFAULT_HTTP_PORT, nil, nil, INTERNET_SERVICE_HTTP, 0, 0);
      end;
 
     if Assigned(pConnection) then
@@ -74,14 +82,18 @@ begin
           sMethod := 'POST';
 
         case isSSL of
-          True  : pRequest := HTTPOpenRequest(pConnection, PChar(sMethod), PChar(AURL), nil, nil, nil, INTERNET_FLAG_SECURE  or INTERNET_FLAG_KEEP_CONNECTION, 0);
-          False : pRequest := HTTPOpenRequest(pConnection, PChar(sMethod), PChar(AURL), nil, nil, nil, INTERNET_SERVICE_HTTP, 0);
+          True  : pRequest := HTTPOpenRequestW(pConnection, PChar(sMethod), PChar(AURL), nil, nil, nil, INTERNET_FLAG_SECURE  or INTERNET_FLAG_KEEP_CONNECTION, 0);
+          False : pRequest := HTTPOpenRequestW(pConnection, PChar(sMethod), PChar(AURL), nil, nil, nil, INTERNET_SERVICE_HTTP, 0);
         end;
 
         if Assigned(pRequest) then
           try
 
+{$IFDEF FPC}
+            authEncode := base64.EncodeStringBase64(ALogin + ':' + APass);
+{$ELSE}
             authEncode := EncdDecd.EncodeString(ALogin + ':' + APass);
+{$ENDIF}
 
             Header := TStringStream.Create('');
 
@@ -92,9 +104,9 @@ begin
               WriteString('Connection: close' + sLineBreak + sLineBreak);
             end;
 
-            HttpAddRequestHeaders(pRequest, PChar(Header.DataString), Length(Header.DataString), HTTP_ADDREQ_FLAG_ADD);
+            HttpAddRequestHeadersW(pRequest, PChar(Header.DataString), Length(Header.DataString), HTTP_ADDREQ_FLAG_ADD);
 
-            if HTTPSendRequest(pRequest, nil, 0, Pointer(AData), Length(AData)) then
+            if HTTPSendRequestW(pRequest, nil, 0, Pointer(AData), Length(AData)) then
             begin
 
               BufStream := TMemoryStream.Create;

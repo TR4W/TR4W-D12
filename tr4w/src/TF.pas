@@ -1166,12 +1166,12 @@ end;
 
 function Createmsctls_progress32(X, Y, Width, Height: integer; hwndParent: HWND; HMENU: HMENU): HWND;
 begin
-  Result := CreateWindow('msctls_progress32', nil, WS_CHILD or WS_VISIBLE or PBS_SMOOTH, X, Y, Width, Height, hwndParent, HMENU, hInstance, nil);
+  Result := CreateWindowW('msctls_progress32', nil, WS_CHILD or WS_VISIBLE or PBS_SMOOTH, X, Y, Width, Height, hwndParent, HMENU, hInstance, nil);
 end;
 
 function CreateRichEdit(hwndParent: HWND): HWND;
 begin
-  Result := CreateWindow('RichEdit', nil,
+  Result := CreateWindowW('RichEdit', nil,
     ES_MULTILINE or ES_AUTOVSCROLL or ES_NOHIDESEL or ES_READONLY or ES_SAVESEL or WS_CHILD or WS_VISIBLE or WS_BORDER or WS_VSCROLL or WS_HSCROLL,
     0, 0, 0, 0, hwndParent, 101, hInstance, nil);
   tWM_SETFONT(Result, LucidaConsoleFont);
