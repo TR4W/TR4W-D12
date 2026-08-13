@@ -184,7 +184,7 @@ begin
         tCreateStaticWindow('MY CALL', WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE, 270, 5, 155 + 20, h, hwnddlg, 0);
 
         tCreateStaticWindow('CONTEST', WS_CHILD or SS_NOTIFY or SS_RIGHT or SS_NOPREFIX or WS_VISIBLE, 270, 33, 155 + 20, h, hwnddlg, 0);
-        tWM_SETFONT(CreateWindow(StaticPChar, nil, SS_SUNKEN or SS_center or WS_CHILD or WS_VISIBLE, 305, 95, 300, 40, hwnddlg, 106, hInstance, nil), MSSansSerifFont);
+        tWM_SETFONT(CreateWindowW(StaticPChar, nil, SS_SUNKEN or SS_center or WS_CHILD or WS_VISIBLE, 305, 95, 300, 40, hwnddlg, 106, hInstance, nil), MSSansSerifFont);
 
         {MY CALL}
         CreateEdit(ES_UPPERCASE, 455, 5, 150, 23, hwnddlg, NC_CALL_EDIT);

@@ -14,9 +14,20 @@
 #     bash tr4w/test/corpus/export-d12-corpus.sh arrl_fd_2026_ny4i   # one set (smoke test)
 #
 # Override the D12 log-staging root with env D12_ROOT.
+#
+# Override the binary under test with env TR4W_EXE (a file name inside
+# tr4w/target, not a path).  That is how the FPC-built app is put through the
+# same 26 byte-comparisons as the Delphi one:
+#
+#     TR4W_EXE=tr4w_fpc.exe bash tr4w/test/corpus/export-d12-corpus.sh
+#
+# The references are the SAME frozen D7 files either way -- the point is that
+# a second compiler has to reproduce them byte for byte, not that it has to
+# agree with whatever the first compiler happened to emit.
 set -u
 here="tr4w/test/corpus"
-EXE="tr4w/target/tr4w.exe"
+EXE_NAME="${TR4W_EXE:-tr4w.exe}"
+EXE="tr4w/target/$EXE_NAME"
 D12_ROOT="${D12_ROOT:-/c/tr4w-d12/D7-LogFilesForTesting}"
 ONLY="${1:-}"
 # Sets whose load pops an interactive dialog would BLOCK batch -- skip them.
@@ -52,7 +63,7 @@ for m in "$here"/*/manifest.json; do
    # run from target/ so the app resolves CTY.DAT + support files as usual
    # MSYS_NO_PATHCONV: stop Git Bash from mangling the /EXPORT flag into a path.
    # per-set timeout: a stray load dialog can't hang the whole run
-   ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 ./tr4w.exe "$(towin "$cfg")" /EXPORT >/dev/null 2>&1 )
+   ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$cfg")" /EXPORT >/dev/null 2>&1 )
    n=$((n+1))
 done
 echo "exported $n set(s)"; echo

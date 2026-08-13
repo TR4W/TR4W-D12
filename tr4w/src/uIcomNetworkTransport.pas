@@ -355,7 +355,7 @@ begin
     CreateSockets;
 
     // Create timer window — store Self in GWL_USERDATA for per-instance dispatch
-    FTimerWnd := CreateWindow(TIMER_WND_CLASS, '', 0,
+    FTimerWnd := CreateWindowW(TIMER_WND_CLASS, '', 0,
       0, 0, 0, 0, 0, 0, HInstance, nil);
     if FTimerWnd = 0 then
     begin

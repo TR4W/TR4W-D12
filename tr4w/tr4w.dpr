@@ -87,7 +87,6 @@ uses
   uRotatorAlfaSpid in 'src\rotatorFactory\uRotatorAlfaSpid.pas',
   uRotatorPSTRotator in 'src\rotatorFactory\uRotatorPSTRotator.pas',
   uSettingsRegistry in 'src\uSettingsRegistry.pas',
-  uSettingsBinding in 'src\uSettingsBinding.pas',
   uSettingsLegacy in 'src\uSettingsLegacy.pas',
   uSettingsDeclarations in 'src\uSettingsDeclarations.pas',
   uRadioConfigStore in 'src\uRadioConfigStore.pas',
@@ -101,6 +100,16 @@ uses
   // FMX coexistence spike -- see docs\FMX_WIN32_COEXISTENCE.md.  FMX.Forms is
   // needed for Application.Initialize; the spike form is opened on demand by
   // the FMXTEST call-window command and never at startup.
+  //
+  // EXCLUDED UNDER FPC.  FMX has no FPC equivalent; the LCL is the intended
+  // replacement and that port is not done.  Nothing on the headless /EXPORT
+  // path -- which is what the golden-master corpus drives -- ever creates a
+  // form, so an FPC build without these can still answer the question the
+  // corpus asks.  An FPC build is therefore ENGINE-ONLY and cannot be shipped:
+  // the four settings dialogs and the two spike commands are simply absent.
+  // This guard comes out with the LCL port.  MainUnit already carries the
+  // matching guards for the commands that open these forms.
+{$IFNDEF FPC}
   FMX.Forms,
   uFMXCoexist in 'src\ui\fmx\uFMXCoexist.pas',
   uFMXSpikeForm in 'src\ui\fmx\uFMXSpikeForm.pas',
@@ -111,7 +120,12 @@ uses
   uRadioEditForm in 'src\ui\fmx\uRadioEditForm.pas' {RadioEditForm},
   uKeyerEditForm in 'src\ui\fmx\uKeyerEditForm.pas' {frmKeyerEdit},
   uUDPDestinationEditForm in 'src\ui\fmx\uUDPDestinationEditForm.pas' {frmUDPDestinationEdit},
+  // TSettingBindings binds FMX controls to settings, so it belongs with the
+  // forms.  RegisterLegacySetting moved to uSettingsLegacy, which has no FMX
+  // and stays in the build.
+  uSettingsBinding in 'src\uSettingsBinding.pas',
   uPrefsForm in 'src\ui\fmx\uPrefsForm.pas' {PrefsForm},
+{$ENDIF}
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
   VC in 'src\VC.pas',
@@ -324,7 +338,15 @@ uses
   //uRemMults_DOM in 'src\uRemMults_DOM.pas',
   //uRemMults_DX in 'src\uRemMults_DX.pas',
   //uRemMults_Zone in 'src\uRemMults_Zone.pas',
+{$IFNDEF FPC}
+  // The OpenGL About box.  OGLVERSION is False (VC.pas), so its only caller
+  // -- MainUnit's menu_about arm -- is compiled out and the About menu is a
+  // MessageBox; the unit is linked and never entered.  Excluded under FPC
+  // rather than ported because Delphi's Winapi.OpenGL and FPC's GL are
+  // different bindings and there is nothing behind this to test them with.
+  // If OGLVERSION is ever turned on, this needs a real decision.
   uAbout in 'src\uAbout.pas',
+{$ENDIF}
   uHardWare in 'src\uHardWare.pas',
   uReminder in 'src\uReminder.pas',
   // uSCP: never referenced anywhere, was never compiled prior to this session - orphaned code
@@ -739,6 +761,10 @@ begin
    // it does not start a message loop and does not create a main form.  The
    // loop below stays TR4W's own -- Application.Run is never called, and there
    // is deliberately no Application.CreateForm anywhere.
+   //
+   // Both calls go with the FMX units under FPC -- see the uses clause.  They
+   // only REGISTER services for forms that build cannot create.
+{$IFNDEF FPC}
    FMX.Forms.Application.Initialize;
 
    // ...and then tell FMX the application is running, because Application.Run
@@ -746,6 +772,7 @@ begin
    // form stays Active=False and its edits never show a caret.  See
    // uFMXCoexist.TellFMXTheApplicationIsRunning for the full chain.
    TellFMXTheApplicationIsRunning;
+{$ENDIF}
 
    // Check for another running instance BEFORE opening any shared files
    // (log file, etc.) to avoid an EFOpenError crash on the second instance.
@@ -756,7 +783,7 @@ begin
       end;
    if GetLastError = ERROR_ALREADY_EXISTS then
       begin
-      MessageBox(0, Pchar(TC_RUNWARN), tr4w_ClassName, MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
+      MessageBoxW(0, Pchar(TC_RUNWARN), tr4w_ClassName, MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
       Exit;
       end;
 
@@ -811,7 +838,7 @@ begin
   TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
 
  Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
-  LuconSZLoadded := AddFontResource(TR4W_LC_FILENAME) <> 0;
+  LuconSZLoadded := AddFontResourceW(TR4W_LC_FILENAME) <> 0;
   MainFixedFont := tCreateFont(15, FW_BOLD * Ord(BoldFont), @MainFontName[1]);
   MSSansSerifFont := tCreateFont(15, FW_DONTCARE, 'MS Sans Serif');
   CreateDirectoryIfNotExist;
@@ -980,11 +1007,19 @@ begin
   SetWindowSize;
   CreateFonts;
 
+  // Set OUTSIDE the `with`, deliberately.  Inside it, the bare name HInstance
+  // binds to WNDCLASS's OWN hInstance field, not to the module handle -- which
+  // is why this used to read SysInit.hInstance.  SysInit is a Delphi-only unit
+  // (FPC keeps HInstance in System), and rather than pick a qualifier that has
+  // to be right on two compilers, the assignment simply moves to where the
+  // unqualified name is already unambiguous.
+  tr4w_WinClass.hInstance := HInstance;
+
   with tr4w_WinClass do
   begin
-    HICON := LoadIcon(SysInit.hInstance, MAKEINTRESOURCE('MAINICON'));
+    // a NAMED resource -- MAKEINTRESOURCE on a string was always a no-op
+    HICON := LoadIconW(tr4w_WinClass.hInstance, 'MAINICON');
     lpfnWndProc := @WindowProc;
-    hInstance := SysInit.hInstance;
     HCURSOR := LoadCursor(0, IDC_ARROW);
     hbrBackground := tr4wBrushArray[TWindows[mweWholeScreen].mweBackG {trBtnFace}];
   end;
@@ -1211,10 +1246,14 @@ begin
     // treats F-keys and the numeric keypad as CW memories, all of which would
     // steal keystrokes from a text box in another window.  One test closes
     // every such leak at once.  See uFMXCoexist.
+    // No FMX under FPC -- the units are excluded from the project, so there is
+    // no FMX window for a message to belong to.  See tr4w.dpr's uses clause.
+{$IFNDEF FPC}
     if MessageIsForFMXWindow(Msg) then
        begin
        goto TransMess;
        end;
+{$ENDIF}
 
     // Issue #23 -- when a clipboard/edit key (Ctrl-C/V/X/A/Z) is pressed with
     // the DX Cluster command field focused, skip the main accelerator table so

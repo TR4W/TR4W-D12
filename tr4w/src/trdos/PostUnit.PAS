@@ -2487,8 +2487,15 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         1;
       var
         HisCallsign: PAnsiChar;
-        RSTSent: pchar;
-        RSTReceived: pchar;
+        // STRINGS, not PChar.  Both were `pchar(sysutils.Format(...))`, which
+        // takes the address of a TEMPORARY string whose reference count drops
+        // to zero at the end of that statement -- a dangling pointer read a few
+        // hundred lines later by FormatCabrilloExchange.  Delphi's allocator
+        // happened not to reuse the block in between, so it worked by luck.
+        // FPC's does reuse it, and the Cabrillo RST column came out holding
+        // MyState -- '599 001' became 'FL  001' -- across six corpus sets.
+        RSTSent: string;
+        RSTReceived: string;
         Freq: PAnsiChar;
         ModeString: PAnsiChar;
         csQTHString: PAnsiChar;
@@ -2551,21 +2558,19 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
               begin
               if WSJTXEnabled then
                 begin
-                RSTSent :=
-                   pchar( sysutils.Format( '%d',
-                   [ wsjtx.ConvertSNRToRST( TempRXData.RSTSent ) ] ) );
+                RSTSent := sysutils.Format( '%d',
+                   [ wsjtx.ConvertSNRToRST( TempRXData.RSTSent ) ] );
                 end
               else
                 begin
-                RSTSent := pchar( sysutils.Format( '%d', [ 599 ] ) );
+                RSTSent := '599';
                 logger.Info
                    ( 'RSTSent was less than 25 but WSJTXEnabled is FALSE' );
                 end;
               end
             else
               begin
-              RSTSent :=
-                 pchar( sysutils.Format( '%d', [ TempRXData.RSTSent ] ) );
+              RSTSent := sysutils.Format( '%d', [ TempRXData.RSTSent ] );
               end;
 
             if ( TempRXData.ExtMode in [ eFT8, eMFSK, eJT65 ] ) and
@@ -2573,9 +2578,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
               begin
               if WSJTXEnabled then
                 begin
-                RSTReceived :=
-                   pchar( sysutils.Format( '%d',
-                   [ wsjtx.ConvertSNRToRST( TempRXData.RSTReceived ) ] ) );
+                RSTReceived := sysutils.Format( '%d',
+                   [ wsjtx.ConvertSNRToRST( TempRXData.RSTReceived ) ] );
                 end
               else
                 begin
@@ -2584,8 +2588,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
               end
             else
               begin
-              RSTReceived :=
-                 pchar( sysutils.Format( '%d', [ TempRXData.RSTReceived ] ) );
+              RSTReceived := sysutils.Format( '%d', [ TempRXData.RSTReceived ] );
               end;
 
             nrReceived := TempRXData.NumberReceived;
@@ -2728,8 +2731,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
               myStationEx.MyFOCNumber  := string( MyFOCNumber );
               myStationEx.MyPostalCode := string( MyPostalCode );
               FormatCabrilloExchange( ActiveExchange, Contest, ContestTitle,
-                 ContestName, TempRXData, myStationEx, string( RSTSent ),
-                 string( RSTReceived ), string( csQTHString ),
+                 ContestName, TempRXData, myStationEx, RSTSent,
+                 RSTReceived, string( csQTHString ),
                  string( PAnsiChar( @PreviousQTHString[ 1 ] ) ), contacts, pnr,
                  CABRILLO_MYEX, CABRILLO_HISEX );
               // ----------------------------
