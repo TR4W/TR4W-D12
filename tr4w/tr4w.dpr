@@ -1,5 +1,6 @@
 program tr4w;
 {$IMPORTEDDATA OFF}
+{$I src\tr4w.inc}
 
 // VERSIONINFO PE resource (Windows Properties dialog: File version /
 // Product name / Language / Copyright fields).  Generated per-build
@@ -343,17 +344,19 @@ uses
   NetworkMessageUtils in 'src\utils\NetworkMessageUtils.pas';
   //cty in 'src\cty.pas';  // Excluded: unit name 'cty' conflicts with global variable 'CTY' from uCTYDAT
 
-{$IF LANG = 'ENG'}{$R res\tr4w_eng.res}{$IFEND}
-{$IF LANG = 'RUS'}{$R res\tr4w_rus.res}{$IFEND}
-{$IF LANG = 'SER'}{$R res\tr4w_ser.res}{$IFEND}
-{$IF LANG = 'ESP'}{$R res\tr4w_esp.res}{$IFEND}
-{$IF LANG = 'MNG'}{$R res\tr4w_mng.res}{$IFEND}
-{$IF LANG = 'POL'}{$R res\tr4w_pol.res}{$IFEND}
-{$IF LANG = 'CZE'}{$R res\tr4w_cze.res}{$IFEND}
-{$IF LANG = 'ROM'}{$R res\tr4w_rom.res}{$IFEND}
-{$IF LANG = 'CHN'}{$R res\tr4w_chn.res}{$IFEND}
-{$IF LANG = 'GER'}{$R res\tr4w_ger.res}{$IFEND}
-{$IF LANG = 'UKR'}{$R res\tr4w_ukr.res}{$IFEND}
+{ LANG_<xxx>, not the LANG string constant -- see the note in src\tr4w.inc.
+  LANG_ENG is derived by that include, which is pulled in at the top of this file. }
+{$IFDEF LANG_ENG}{$R res\tr4w_eng.res}{$ENDIF}
+{$IFDEF LANG_RUS}{$R res\tr4w_rus.res}{$ENDIF}
+{$IFDEF LANG_SER}{$R res\tr4w_ser.res}{$ENDIF}
+{$IFDEF LANG_ESP}{$R res\tr4w_esp.res}{$ENDIF}
+{$IFDEF LANG_MNG}{$R res\tr4w_mng.res}{$ENDIF}
+{$IFDEF LANG_POL}{$R res\tr4w_pol.res}{$ENDIF}
+{$IFDEF LANG_CZE}{$R res\tr4w_cze.res}{$ENDIF}
+{$IFDEF LANG_ROM}{$R res\tr4w_rom.res}{$ENDIF}
+{$IFDEF LANG_CHN}{$R res\tr4w_chn.res}{$ENDIF}
+{$IFDEF LANG_GER}{$R res\tr4w_ger.res}{$ENDIF}
+{$IFDEF LANG_UKR}{$R res\tr4w_ukr.res}{$ENDIF}
 
 {$R 'Win11.res'}
 

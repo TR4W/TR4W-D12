@@ -102,7 +102,7 @@ procedure EnumCLUSTERCOMMANDSTXT(FileString: PShortString);
 
 const
   MAXITEMSINTELNETPOPUPMENU = 70;
-  TELNETBUTTONS = 6{$IF LANG = 'RUS'} + 1{$IFEND};
+  TELNETBUTTONS = 6{$IFDEF LANG_RUS} + 1{$ENDIF};
 
 var
   ItemsInTelnetPopupMenu: integer;
@@ -171,7 +171,7 @@ var
     dwData: 0;
     iString: 5;
     )
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
     ,
     (iBitmap: - 1; //VIEW_SORTNAME;
     idCommand: 207;
@@ -181,7 +181,7 @@ var
     iString: 6;
     )
 
-{$IFEND}
+{$ENDIF}
     {
         (iBitmap: VIEW_PARENTFOLDER;
         idCommand: 207;
@@ -890,7 +890,7 @@ begin
           TELNETBUTTONS, 0, 0, 0, 0, SizeOf(TTBButton));
 
         SendMessage(TelToolbar, TB_ADDSTRING, 0,
-          integer(PAnsiChar(TC_TELNET{$IF LANG = 'RUS'} + '?'#0#0{$IFEND})));
+          integer(PAnsiChar(TC_TELNET{$IFDEF LANG_RUS} + '?'#0#0{$ENDIF})));
         EnableTelnetToolbatButtons(False);
 
         TelnetListBox := Get101Window(hwnddlg);
@@ -1010,9 +1010,9 @@ begin
 //          205: SendViaSocket('SH/USERS');
           206: SendViaTelnetSocket('SH/DX 50'); //n4af 04-11-2014
 
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
           207: ShowHelp('ru_dxcluster');
-{$IFEND}
+{$ENDIF}
 
           //          DialogBox(hInstance, MAKEINTRESOURCE(44), hwnddlg, @SpotsFilterDlgProc);
           200: StartTelnetConnect;   // Issue #23 -- launch the DX cluster I/O thread

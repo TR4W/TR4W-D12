@@ -221,9 +221,9 @@ begin
         Windows.SetTimer(hwnddlg, 1, 50, nil);
       end;
 
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
     WM_HELP: ShowHelp('ru_fileviewwindow');
-{$IFEND}
+{$ENDIF}
 
     WM_COMMAND:
 

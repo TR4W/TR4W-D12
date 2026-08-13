@@ -82,9 +82,9 @@ begin
   case Msg of
 //    WM_HELP: tWinHelp(49);
 
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
     WM_HELP: ShowHelp('ru_beaconsmonitor');
-{$IFEND}
+{$ENDIF}
     WM_INITDIALOG:
       begin
 

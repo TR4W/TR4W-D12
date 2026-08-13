@@ -555,9 +555,9 @@ begin
         BeginNewContest(hwnddlg);
 
         case wParam of
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
 //          104: ShowHelp('ru_selectingacontest');
-{$IFEND}
+{$ENDIF}
           NC_BUTTON_CANCEL, 2: goto ExitAndClose;
           NC_BUTTON_OK: SaveNewContest(hwnddlg);
         end;

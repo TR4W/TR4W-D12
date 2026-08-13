@@ -21,6 +21,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
  }
 
 unit MainUnit;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -476,8 +477,8 @@ const
 
   // 'Log format version - v.1.' + LOGVERSION4 + #13 +
   // 'Compiler directives: ['{$IFOPT I+} + 'I'{$ENDIF}{$IFOPT R+} + 'R'{$ENDIF}{$IFOPT Q+} + 'Q'{$ENDIF} + ']'
-{$IF LANG <> 'ENG'} + #13'Language: ' + TC_TRANSLATION_LANGUAGE + ' (by ' +
-  TC_TRANSLATION_AUTHOR + ')'{$IFEND} + #13#10 +
+{$IFNDEF LANG_ENG} + #13'Language: ' + TC_TRANSLATION_LANGUAGE + ' (by ' +
+  TC_TRANSLATION_AUTHOR + ')'{$ENDIF} + #13#10 +
   'On basis of the source code of the TRLog v.6.80 UA4WLI + Larry Tyree N6TR' + #13
     + //n4af 4.30.0
   'Current development team = N4AF, NY4I, UR7QM '; //n4af 4.30.0
@@ -3266,13 +3267,15 @@ begin
  18, 0, 0, 0,
  FW_DONTCARE,
  0, 0, 0,
- {$IF LANG = 'UKR'}
+ {$IFDEF LANG_UKR}
  EastEurope_Charset
- {$ELSEIF LANG = 'RUS'}
- russian_charset
  {$ELSE}
+   {$IFDEF LANG_RUS}
+ russian_charset
+   {$ELSE}
  DEFAULT_CHARSET
-{$IFEND}
+   {$ENDIF}
+{$ENDIF}
 
 ,
  OUT_DEFAULT_PRECIS,
@@ -4083,12 +4086,12 @@ begin
     menu_home_page:
       OpenUrl('http://www.tr4w.net/'); // n4af 04.42.5
 
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
     menu_contents:
       // WinHelp(tr4whandle, TR4W_HLP_FILENAME, HELP_CONTENTS, 0);
       // Shellexecute(0, 'open', TR4W_HLP_FILENAME, nil, nil, SW_SHOWNORMAL);
       ShowHelp('index');
-{$IFEND}
+{$ENDIF}
 
     menu_download_latest_cty_dat:
       begin
@@ -7193,9 +7196,9 @@ begin
  TR4W_CURRENTVERSIONDATE +
 }
 
-{$IF LANG = 'ENG'}
+{$IFDEF LANG_ENG}
 // ')' +
-{$IFEND}
+{$ENDIF}
 {
  '.' +
  #13 +
@@ -8490,16 +8493,16 @@ begin
 end;
 
 procedure ShowHelp(Topic: PChar);
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
 var
   HelpBuffer: string;
-{$IFEND}
+{$ENDIF}
 begin
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
   HelpBuffer := SysUtils.Format('%str4w_manual_' + LANG + '.chm::/%s.html',
     [string(TR4W_PATH_NAME), string(Topic)]);
   HtmlHelp.hh(tr4whandle {GetDesktopWindow()}, PChar(HelpBuffer), HH_DISPLAY_TOPIC, 0);
-{$IFEND}
+{$ENDIF}
 end;
 
 procedure RunExplorer(Command: PAnsiChar);

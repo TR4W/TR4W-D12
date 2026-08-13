@@ -330,7 +330,7 @@ begin
 
 end;
 
-{$IF  LANG = 'RUS'}
+{$IFDEF LANG_RUS}
 
 initialization
 {
@@ -349,6 +349,6 @@ finalization
       FreeLibrary(OCXHandle);
   end;
 }
-{$IFEND}
+{$ENDIF}
 end.
 

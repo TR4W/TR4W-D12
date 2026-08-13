@@ -88,9 +88,9 @@ begin
 //        UnregisterHotKey(hwnddlg, 1);
         EndDialog(hwnddlg, 0);
       end;
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
     WM_HELP: ShowHelp('ru_windowscontrol');
-{$IFEND}
+{$ENDIF}
 
     WM_COMMAND:
 
