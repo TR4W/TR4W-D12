@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogStuff;
+{$I ..\tr4w.inc}
 
 { This unit has a bunch of subroutines that are generic for the logging
   program.  They are stuck here because they can stand alone, or need
@@ -637,10 +638,10 @@ function DomStringParse(InputString: Str14): string; //Gav 4.44.8
 function DVKRecentlyStarted(MaxElaspedSec100: LONGINT): boolean;
 procedure DVKStamp;
 
-function GetCorrectedCallFromExchangeString(var ExchangeString: ShortString
+function GetCorrectedCallFromExchangeString(var ExchangeString: OpenString
   {Str80}): Str80;
 function GetMultiPortCommand: string;
-function GetSentRSTFromExchangeString(var ExchangeString: ShortString {Str40}):
+function GetSentRSTFromExchangeString(var ExchangeString: OpenString {Str40}):
   smallInt {Word};
 
 procedure IncrementQTCCount(Call: CallString);
@@ -1347,6 +1348,16 @@ var
   TempString, TempString2: Str10 {Str20};
   isClassValid: boolean;
   dx: boolean;
+
+  // ParseExchange writes up to 10 characters through a `var Str10`, and
+  // RXData.ceClass is a string[3] -- FOUR bytes.  The two calls below used to
+  // pass Str10(RXData.ceClass), a variable typecast that Delphi accepts
+  // silently and that lets ParseExchange write SEVEN BYTES PAST the field,
+  // over ZERO_04, Precedence, ceRadio and Check.  Parsing into a correctly
+  // sized local and assigning back truncates instead, which is the defined
+  // Pascal behaviour and what the 3-character field was asking for.
+  // (FPC rejects the cast outright: "Typecast has different size (4 -> 11)".)
+  classTemp: Str10;
 begin
   ProcessClassAndDomesticOrDXQTHExchange := False;
   logger.debug('Entered ProcessClassAndDomesticOrDXQTHExchange with Exchange of (%s)', [Exchange]);
@@ -1356,8 +1367,9 @@ begin
     Windows.ZeroMemory(@RXData.ceClass, SizeOf(RXData.ceClass));
     // Both ZOT added to prevent errors with bad data in log from corrected entry ny4i
     Windows.ZeroMemory(@RXData.QTHString, SizeOf(RXData.QTHString));
-    ParseExchange(Exchange, Str10(RXData.ceClass), RXData.QTHString,
-      TempString);
+    classTemp := '';
+    ParseExchange(Exchange, classTemp, RXData.QTHString, TempString);
+    RXData.ceClass := classTemp;   // truncates to 3; see classTemp's note
 
     if RXData.QTHString[1] in ['0'..'9'] then
       // This is the code that flips it around if given in section class order // ny4i
@@ -1397,7 +1409,9 @@ begin
     // Both ZOT added to prevent errors with bad data in log from corrected entry ny4i
     Windows.ZeroMemory(@RXData.QTHString, SizeOf(RXData.QTHString));
 
-    ParseExchange(Exchange, Str10(RXData.ceClass), TempString, TempString2);
+    classTemp := '';
+    ParseExchange(Exchange, classTemp, TempString, TempString2);
+    RXData.ceClass := classTemp;   // truncates to 3; see classTemp's note
     // It used to be that only IARu Region 2 send a class butr the current ARRL FD rules simpl;y
     // state the following:
     //  DX stations send operating class and the term DX (i.e. 2A DX).
@@ -3980,7 +3994,7 @@ begin
   LooksLikePower := True;
 end;
 
-function ProcessRSTPossibleDomesticQTHAndPowerExchange(Exchange: Str80; var
+function ProcessRSTPossibleDomesticQTHAndPowerExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 
 { RST MaybeQTH and Power.  Power will either have numbers and a W in it, or
@@ -4657,7 +4671,7 @@ begin
   end;
 end;
 
-function ProcessRSTAndQSONumberOrDomesticQTHExchange(Exchange: Str80; var
+function ProcessRSTAndQSONumberOrDomesticQTHExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 
 label
@@ -5092,19 +5106,19 @@ begin
   if TR4W_FLOPPY_FILENAME[0] = #0 then
      Exit;
 
-  Format(QuickDisplayBuffer, TC_SAVINGTO, TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
+  TF.Format(QuickDisplayBuffer, TC_SAVINGTO, TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME);
   QuickDisplay(QuickDisplayBuffer);
 
   if not Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
      begin
      ErrorMsg := SysUtils.SysErrorMessage(GetLastError);
-     Format(QuickDisplayBuffer, '%s: %s', TR4W_FLOPPY_FILENAME, PAnsiChar(ErrorMsg));
+     TF.Format(QuickDisplayBuffer, '%s: %s', TR4W_FLOPPY_FILENAME, PAnsiChar(ErrorMsg));
      QuickDisplay(QuickDisplayBuffer);
      DoABeep(Warning);
      end
   else
      begin
-     Format(QuickDisplayBuffer, TC_FILESAVEDTOSUCCESSFULLY, TR4W_FLOPPY_FILENAME);
+     TF.Format(QuickDisplayBuffer, TC_FILESAVEDTOSUCCESSFULLY, TR4W_FLOPPY_FILENAME);
      QuickDisplay(QuickDisplayBuffer);
      end;
   {
@@ -5165,7 +5179,7 @@ begin
 
 end;
 
-function GetCorrectedCallFromExchangeString(var ExchangeString: ShortString
+function GetCorrectedCallFromExchangeString(var ExchangeString: OpenString
   {Str80}): Str80;
 
 var
@@ -7996,7 +8010,7 @@ begin
           inc(RXData.QSOPoints, 2);
 
       end;
-    
+    
       UNDXQSOPointMethod:
       begin
         if RXData.QTH.Continent <> MyContinent then
@@ -9130,7 +9144,7 @@ begin
 
 end;
 
-function GetSentRSTFromExchangeString(var ExchangeString: ShortString {Str40}):
+function GetSentRSTFromExchangeString(var ExchangeString: OpenString {Str40}):
   smallInt {Word};
 
 var

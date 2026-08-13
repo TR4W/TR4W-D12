@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LOGPROM;
+{$I ..\tr4w.inc}
 
 {$O+}
 {$F+}

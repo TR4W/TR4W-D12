@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogWind;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 interface
@@ -924,7 +925,7 @@ function GetRecordForBandMapCursor(var Entry: BandMapEntryPointer;
 procedure IncrementTime(Count: integer);
 procedure tCalculateRate();
 procedure LoadBandMap;
-procedure LookForOnDeckCall(var ExchangeString: ShortString {Str80});
+procedure LookForOnDeckCall(var ExchangeString: OpenString {Str80});
 procedure NextBandMapEntry ;
 procedure BMFirst;
 function NextNonDupeEntryInBandMap(Band: BandType; Mode: ModeType): boolean;
@@ -1263,7 +1264,7 @@ var
   StartBand, StopBand                   : BandType;
   StartMode, StopMode                   : ModeType;
 
-procedure LookForOnDeckCall(var ExchangeString: ShortString {Str80});
+procedure LookForOnDeckCall(var ExchangeString: OpenString {Str80});
 
 var
   TempString, WordString                : Str40;
@@ -1502,7 +1503,7 @@ begin
 
   UpdateTotals2;
 
-  Format(wsprintfBuffer, TWO_STRINGS, BandStringsArray[Band], ModeStringArray[Mode]);
+  TF.Format(wsprintfBuffer, TWO_STRINGS, BandStringsArray[Band], ModeStringArray[Mode]);
 
   SetMainWindowText(mweBandMode, wsprintfBuffer);
 
@@ -1532,7 +1533,7 @@ end;
 
 procedure DisplayContestTitle;
 begin
-  Format(wsprintfBuffer, TR4W_CURRENTVERSION + ' - %s'{$IF tDebugMode} + ' - DEBUG MODE'{$IFEND}, @ContestTitle[1]);
+  TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + ' - %s'{$IF tDebugMode} + ' - DEBUG MODE'{$IFEND}, @ContestTitle[1]);
   Windows.SetWindowTextA(tr4whandle, wsprintfBuffer);
 end;
 
@@ -1557,7 +1558,7 @@ begin
        begin
        tPChar := '%u NO CW';
        end;
-    Format(wsprintfBuffer, tPChar, CodeSpeed);
+    TF.Format(wsprintfBuffer, tPChar, CodeSpeed);
     SetMainWindowText(mweCodeSpeed, wsprintfBuffer);
     ActiveRadioPtr.SpeedMemory := CodeSpeed;
   end;
@@ -1739,7 +1740,7 @@ begin
   // numbers sent + 1), NOT a QSO count.  Count-based display reverted the number
   // whenever a QSO stopped counting (X-QSO, mid-log delete).  NextSerialToSend
   // also returns ServerSerialNumber in networked mode, matching the old value.
-  Format(wsprintfBuffer, QSONumberStringArray[AutoQSONumberDecrement], NextSerialToSend);
+  TF.Format(wsprintfBuffer, QSONumberStringArray[AutoQSONumberDecrement], NextSerialToSend);
   if ServerSerialNumber <> 0 then
     if PreviousSerialNumberType = sntReserved then
       Windows.lstrcatA(wsprintfBuffer, 'L');
@@ -1749,7 +1750,7 @@ end;
 
 procedure DisplayQTCNumber(QTCNumber: integer);
 begin
-  Format(wsprintfBuffer, TC_HAVEQTCS, QTCNumber);
+  TF.Format(wsprintfBuffer, TC_HAVEQTCS, QTCNumber);
   SetMainWindowText(mweUserInfo, wsprintfBuffer);
 end;
 
@@ -1787,10 +1788,10 @@ end;
 procedure DisplayQSOsByOpMode;
 begin
 
-  Format(wsprintfBuffer, ' CQ: %u', tRestartInfo.riQSOByOpMode[CQOpMode]);
+  TF.Format(wsprintfBuffer, ' CQ: %u', tRestartInfo.riQSOByOpMode[CQOpMode]);
   SetMainWindowText(mweCQQSOCounter, wsprintfBuffer);
 
-  Format(wsprintfBuffer, ' SP: %u', tRestartInfo.riQSOByOpMode[SearchAndPounceOpMode]);
+  TF.Format(wsprintfBuffer, ' SP: %u', tRestartInfo.riQSOByOpMode[SearchAndPounceOpMode]);
   SetMainWindowText(mweSPQSOCounter, wsprintfBuffer);
 end;
 
@@ -1803,17 +1804,17 @@ begin
     ThisHour:
       begin
         TempInteger := TotalThisHour;
-        Format(wsprintfBuffer, TC_THISHR, TotalThisHour);
+        TF.Format(wsprintfBuffer, TC_THISHR, TotalThisHour);
       end;
     LastSixtyMins:
       begin
         TempInteger := TotalLastSixty;
-        Format(wsprintfBuffer, TC_LAST60, TotalLastSixty);
+        TF.Format(wsprintfBuffer, TC_LAST60, TotalLastSixty);
       end;
     BandChanges, BandChangesThisComputer:
       begin
         TempInteger := tThisHourBandChanges;
-        Format(wsprintfBuffer, TC_BAND_CHANGES, tThisHourBandChanges);
+        TF.Format(wsprintfBuffer, TC_BAND_CHANGES, tThisHourBandChanges);
       end;
   end;
   SetMainWindowText(mweHourRate, wsprintfBuffer);
@@ -1845,7 +1846,7 @@ begin
       }
       //    tSetWindowText(RateWindowHandle, 'Rate = ' + IntToStr(Rate));
 
-    Format(wsprintfBuffer, TC_RATE, Rate);
+    TF.Format(wsprintfBuffer, TC_RATE, Rate);
 
     SetMainWindowText(mweRate, wsprintfBuffer);
     SendMessage(RateProgressBar, PBM_SETPOS, Rate, 0);
@@ -1854,7 +1855,7 @@ end;
 
 procedure DisplayAutoQSLInterval;
 begin
-  Format(QuickDisplayBuffer, 'AUTO QSL INTERVAL = %u', AutoQSLInterval);
+  TF.Format(QuickDisplayBuffer, 'AUTO QSL INTERVAL = %u', AutoQSLInterval);
   SetTextInQuickCommandWindow(QuickDisplayBuffer);
 end;
 
@@ -1871,7 +1872,7 @@ begin
   // note below).  The old code relied on `Score := TotalScore` leaving the value
   // in EAX for the `push eax` -- a fragile Delphi-7 codegen assumption that 64-bit
   // would break.  TC_PTS = '%d Pts'.
-  Format(wsprintfBuffer, TC_PTS, Score);
+  TF.Format(wsprintfBuffer, TC_PTS, Score);
   SetMainWindowText(mweTotalScore, wsprintfBuffer);
 
   //  tSetWindowText(TotalScoreWindowHandle, IntToStr(Score) + ' Pts');
@@ -1939,7 +1940,7 @@ var
   h                                     : HWND;
  // Window                                : Byte;
 begin
-  Format(IQPrompt, TC_ENTER, Prompt);
+  TF.Format(IQPrompt, TC_ENTER, Prompt);
   IQMaxInputLength := MaxInputLength;
   if settingswindowhandle <> 0 then
     h := settingswindowhandle
@@ -3044,7 +3045,7 @@ begin
   tBandMapPlaceHolder[0] := CHR(8);
   tGetSystemTime;
 
-  Format(@tBandMapPlaceHolder[1], 'NEW %02u%02u', UTC.wMinute, UTC.wSecond);
+  TF.Format(@tBandMapPlaceHolder[1], 'NEW %02u%02u', UTC.wMinute, UTC.wSecond);
 
   tCreateAndAddNewSpot(tBandMapPlaceHolder, False, ActiveRadioPtr);
   DisplayBandMap;
@@ -3645,7 +3646,7 @@ end;
 
 procedure DispalayDupe;
 begin
-  Format(QuickDisplayBuffer, TC_ISADUPE, @CallWindowString[1]);
+  TF.Format(QuickDisplayBuffer, TC_ISADUPE, @CallWindowString[1]);
 
 //  DispalayB4(SW_HIDE);
   QuickDisplay(QuickDisplayBuffer);
@@ -3739,7 +3740,7 @@ begin
   asm add esp,20
   end;
 }
-  Format(wsprintfBuffer, '%02u:%02u %s', integer(LOCAL.wHour), integer(LOCAL.wMinute), PCharDayTags[LOCAL.wDayOfWeek]);
+  TF.Format(wsprintfBuffer, '%02u:%02u %s', integer(LOCAL.wHour), integer(LOCAL.wMinute), PCharDayTags[LOCAL.wDayOfWeek]);
   1:
   SetMainWindowText(mweLocalTime, wsprintfBuffer);
 end;
@@ -3884,7 +3885,7 @@ var
 begin
   Windows.ZeroMemory(@ID, SizeOf(ID));
   ID := KeyId(AutoCQMemory);
-  Format(QuickDisplayBuffer, TC_REPEATING, @ID[1], AutoCQDelayTime);
+  TF.Format(QuickDisplayBuffer, TC_REPEATING, @ID[1], AutoCQDelayTime);
   SetTextInQuickCommandWindow(QuickDisplayBuffer);
 end;
 
@@ -4002,7 +4003,7 @@ end;
 
 procedure tDisplayCQTotal;
 begin
-  Format(wsprintfBuffer, TC_CQTOTAL, tRestartInfo.riCQTotalCounter);
+  TF.Format(wsprintfBuffer, TC_CQTOTAL, tRestartInfo.riCQTotalCounter);
   SetMainWindowText(mweCQTotal, wsprintfBuffer);
 end;
 
@@ -4126,7 +4127,7 @@ begin
   IntegerTime := UTC.wMinute mod TourDuration;
   Windows.SendMessage(TorDurationPrBarWindow, PBM_SETPOS, IntegerTime, 0);
 
-  Format(TempBuffer2, TC_NEWTOUR, IntegerTime, TourDuration);
+  TF.Format(TempBuffer2, TC_NEWTOUR, IntegerTime, TourDuration);
 
 //  Windows.SetDlgItemTextA(ReminderDlgHandle, 102, TempBuffer2);
   Windows.SetWindowTextA(TorDurationWindow, TempBuffer2);

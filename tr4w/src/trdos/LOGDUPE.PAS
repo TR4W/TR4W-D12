@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogDupe;
+{$I ..\tr4w.inc}
 
 { This unit contains the objects DupeSheet and MultSheet.  It has all
   of the methods required to use them. }
@@ -1408,10 +1409,10 @@ begin
      end;
 
    { Changed this from the MessageBox to a QuickDisplay - Much less intrusive - NY4I 2026JUL07 }
-  //TempInteger := Format(wsprintfBuffer, '%s:'#13#10 + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
+  //TempInteger := TF.Format(wsprintfBuffer, '%s:'#13#10 + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
   if InitialExCallsigns > 0 then
      begin
-     Format(wsprintfBuffer, '%s:' + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
+     TF.Format(wsprintfBuffer, '%s:' + TC_THEREWERECALLS, TR4W_INITIALEX_FILENAME, InitialExCallsigns, InitialExDupes);
      QuickDisplay(wsprintfBuffer);
      end;
  // ShowMessage(wsprintfBuffer);
@@ -1725,7 +1726,7 @@ begin
   begin
     CloseHandle(h);
 
-    Format(wsprintfBuffer, TC_DIFVERSION, _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
+    TF.Format(wsprintfBuffer, TC_DIFVERSION, _RESTARTBIN, @RestartVersionNumber[1], @RestartVersion[1]);
 
     ShowMessage(wsprintfBuffer);
     Exit;

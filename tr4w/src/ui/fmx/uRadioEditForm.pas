@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioEditForm;
+{$I ..\..\tr4w.inc}
 
 {
   The Radio editor: one radio DEFINITION, edited in isolation.

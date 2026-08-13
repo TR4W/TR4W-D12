@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uQTCR;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -115,7 +116,7 @@ begin
         QTCRCallsignWndHandle := tCreateEditWindow(WS_EX_STATICEDGE, QTCCallsign, WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE or ES_UPPERCASE, QTCLEFT + QTCWIDTHARRAY[1] + QTCROWSDIS + QTCWIDTHARRAY[2] + QTCROWSDIS, 5, 120, 18, hwnddlg, 88);
         OldQTCREditProc := Pointer(Windows.SetWindowLong(QTCRCallsignWndHandle, GWL_WNDPROC, integer(@NewQTCREditProc)));
         // Issue #997: asm wsprintf-push -> TF.Format (MaxQTCsThisStation is integer).
-        Format(wsprintfBuffer, TC_ENTERQTCMAXOF, MaxQTCsThisStation);
+        TF.Format(wsprintfBuffer, TC_ENTERQTCMAXOF, MaxQTCsThisStation);
         tCreateStaticWindow(wsprintfBuffer, WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE, 212, 5, 140, 18, hwnddlg, 10);
         QTCNrWndHandle := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_CENTER or WS_VISIBLE, 355, 5, 90, 18, hwnddlg, 73);
         OldQTCREditProc := Pointer(Windows.SetWindowLong(QTCNrWndHandle, GWL_WNDPROC, integer(@NewQTCREditProc)));
@@ -133,7 +134,7 @@ begin
             r + 9
             );
 
-          h := CreateWindowEx(
+          h := CreateWindowExW(
             WS_EX_STATICEDGE,
             EditPChar,
             nil,
@@ -148,7 +149,7 @@ begin
           tWM_SETFONT(h, MainWindowEditFont);
           OldQTCREditProc := Pointer(Windows.SetWindowLong(h, GWL_WNDPROC, integer(@NewQTCREditProc)));
 
-          h := CreateWindowEx(
+          h := CreateWindowExW(
             WS_EX_STATICEDGE,
             EditPChar,
             nil,
@@ -163,7 +164,7 @@ begin
           tWM_SETFONT(h, MainWindowEditFont);
           OldQTCREditProc := Pointer(Windows.SetWindowLong(h, GWL_WNDPROC, integer(@NewQTCREditProc)));
 
-          h := CreateWindowEx(
+          h := CreateWindowExW(
             WS_EX_STATICEDGE,
             EditPChar,
             nil,
@@ -203,7 +204,7 @@ begin
 
         end;
         // Issue #997: asm wsprintf-push -> TF.Format.
-        Format(wsprintfBuffer, '&DE %s', @MyCall[1]);
+        TF.Format(wsprintfBuffer, '&DE %s', @MyCall[1]);
         SetDlgItemTextA(hwnddlg, 96, wsprintfBuffer);
         SetFocus(QTCNrWndHandle);
         QTCsReceived := 0;

@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogK1EA;
+{$I ..\tr4w.inc}
 
 {$F+}
 {$IMPORTEDDATA OFF}
@@ -418,7 +419,8 @@ uses
   LogWind,
   LogStuff,
   LOGSUBS1,
-  LogRadio;
+  LogRadio,
+  Classes;   // MainThreadID -- Delphi puts it in System, FPC in Classes
 
 const
   ParallelOutputPullupOffset            = 5;

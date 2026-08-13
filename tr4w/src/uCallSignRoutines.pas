@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uCallSignRoutines;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 {
   Phase 2.5 (D12 string modernization PoC): this leaf, ASCII-only callsign

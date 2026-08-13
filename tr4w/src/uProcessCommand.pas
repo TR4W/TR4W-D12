@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uProcessCommand;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -260,7 +261,7 @@ begin
            cmdProc;
 
         // Issue #997: asm wsprintf-push -> TF.Format.
-        Format(QuickDisplayBuffer, '"%s" command is executed.', PAnsiChar(sCommandsArray[i].caCommand));
+        TF.Format(QuickDisplayBuffer, '"%s" command is executed.', PAnsiChar(sCommandsArray[i].caCommand));
         QuickDisplay(QuickDisplayBuffer);
 
         Break;
@@ -644,7 +645,7 @@ begin
           @cmdProc := CommandsProcArray[CFGCA[i].crP];
           if Assigned(cmdProc) then
              cmdProc;
-          Format(QuickDisplayBuffer, '%s=%s', @scFileName[1], BA[PBoolean(CFGCA[i].crAddress)^]);
+          TF.Format(QuickDisplayBuffer, '%s=%s', @scFileName[1], BA[PBoolean(CFGCA[i].crAddress)^]);
           QuickDisplay(QuickDisplayBuffer);
         end;
         Break;

@@ -1,4 +1,5 @@
 unit uTestWebSocketFraming;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins uWebSocketFraming -- RFC 6455 frame encode/decode, reassembly, and the

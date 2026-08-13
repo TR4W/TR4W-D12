@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uUDPBroadcaster;
+{$I tr4w.inc}
 
 {
   Owns the UDP broadcast DECISIONS: is this stream switched on, where does it

@@ -1,4 +1,5 @@
 unit uTestYaesuASCII;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for the Yaesu ASCII CAT drivers -- uRadioYaesuASCII (TYaesuSerial),

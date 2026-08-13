@@ -18,6 +18,7 @@
 If not, ref: 
 http://www.gnu.org/licenses/gpl-3.0.txt
  }unit uOption;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -171,7 +172,7 @@ begin
         Settingslvi.stateMask := LVIS_FOCUSED or LVIS_SELECTED;
         Settingslvi.State := LVIS_SELECTED or LVIS_FOCUSED;
         SendMessage(SettingshLV, LVM_SETITEMSTATE, TempInteger, LONGINT(@Settingslvi));
-        ListView_EnsureVisible(SettingshLV, TempInteger, False);
+        uCommctrl.ListView_EnsureVisible(SettingshLV, TempInteger, False);
         Windows.ZeroMemory(@Changed, SizeOf(Changed));
       end;
 
@@ -292,20 +293,20 @@ begin
   Settingslvc.pszText := TC_COMMAND;
   Settingslvc.cx := 225;
   if CommandsFilter = cfCol then Settingslvc.cx := 275;
-  ListView_InsertColumn(SettingshLV, COMMAND_FIELD, Settingslvc);
+  uCommctrl.ListView_InsertColumnA(SettingshLV, COMMAND_FIELD, Settingslvc);
 
   Settingslvc.pszText := TC_VALUE;
   Settingslvc.cx := 220;
   if CommandsFilter = cfCol then Settingslvc.cx := 170;
-  ListView_InsertColumn(SettingshLV, VALUE_FIELD, Settingslvc);
+  uCommctrl.ListView_InsertColumnA(SettingshLV, VALUE_FIELD, Settingslvc);
 
   Settingslvc.pszText := '#';
   Settingslvc.cx := 35;
-  ListView_InsertColumn(SettingshLV, NUMBER_FIELD, Settingslvc);
+  uCommctrl.ListView_InsertColumnA(SettingshLV, NUMBER_FIELD, Settingslvc);
 
   Settingslvc.pszText := RC_FILE;
   Settingslvc.cx := 45;
-  ListView_InsertColumn(SettingshLV, FILE_FIELD, Settingslvc);
+  uCommctrl.ListView_InsertColumnA(SettingshLV, FILE_FIELD, Settingslvc);
 
   Settingslvi.Mask := LVIF_TEXT;
   i := 0;
@@ -843,11 +844,11 @@ begin
 
   if CFGCA[Index].crNetwork = 0 then
      begin
-     Format(wsprintfBuffer, '%s %s %s', tempprintfBuffer, #13#10#13#10, 'NOT sent to network');
+     TF.Format(wsprintfBuffer, '%s %s %s', tempprintfBuffer, #13#10#13#10, 'NOT sent to network');
      end
   else
      begin
-     Format(wsprintfBuffer, '%s %s %s', tempprintfBuffer, #13#10#13#10, 'Sent to Network');
+     TF.Format(wsprintfBuffer, '%s %s %s', tempprintfBuffer, #13#10#13#10, 'Sent to Network');
      end;
   Windows.SetDlgItemTextA(settingswindowhandle, 105, wsprintfBuffer);
   GetPrivateProfileStringA(TempBuffer1, 'DEFAULT', nil, wsprintfBuffer, SizeOf(wsprintfBuffer), TR4W_COMM_HELP_FILENAME);

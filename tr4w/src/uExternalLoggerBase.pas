@@ -1,4 +1,5 @@
 unit uExternalLoggerBase;
+{$I tr4w.inc}
 
 interface
 
@@ -94,8 +95,8 @@ Type
 
       // Issue #957 -- outbound operation queue + its sender thread.
       FOpQueue: TList;              // of TExternalLogOp (owned; freed after processing)
-      FQueueLock: TCriticalSection; // guards FOpQueue
-      FQueueEvent: TEvent;          // signalled when an op is enqueued
+      FQueueLock: SyncObjs.TCriticalSection; // guards FOpQueue
+      FQueueEvent: SyncObjs.TEvent;          // signalled when an op is enqueued
       FSenderThread: TSenderThread;
       FShuttingDown: boolean;
 
@@ -114,7 +115,7 @@ Type
       function GetIsConnected: boolean;
       procedure OnLoggerConnected(Sender:TObject);
       procedure OnLoggerDisconnected(Sender: TObject);
-      procedure OnLoggerStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: string);
+      procedure OnLoggerStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: TIdText);
 
    protected
       readTerminator: string;
@@ -249,7 +250,7 @@ begin
       end;
 end;
 
-procedure TExternalLoggerBase.OnLoggerStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: string);
+procedure TExternalLoggerBase.OnLoggerStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: TIdText);
 begin
    logger.trace('Received text from external logger: [%s]',[AStatusText]);
 end;
@@ -554,8 +555,8 @@ procedure TExternalLoggerBase.InitOutboundQueue;
 begin
    FShuttingDown := False;
    FOpQueue := TList.Create;
-   FQueueLock := TCriticalSection.Create;
-   FQueueEvent := TEvent.Create(nil, False, False, '');   // auto-reset, initially clear
+   FQueueLock := SyncObjs.TCriticalSection.Create;
+   FQueueEvent := SyncObjs.TEvent.Create(nil, False, False, '');   // auto-reset, initially clear
    FSenderThread := TSenderThread.Create(Self);           // starts immediately
 end;
 

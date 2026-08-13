@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioElecraftKX3;
+{$I ..\tr4w.inc}
 
 {
   Elecraft KX3 (serial CAT).  A thin per-model subclass of TElecraftSerial.

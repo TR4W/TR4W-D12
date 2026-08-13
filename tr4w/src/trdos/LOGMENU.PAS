@@ -17,6 +17,7 @@
      Public License along with TR4W.  If not, see
  <http: www.gnu.org/licenses/>.
  }unit LOGMENU;
+{$I ..\tr4w.inc}
 
 {$O+}
 {$F+}

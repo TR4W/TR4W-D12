@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uMMTTY;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 
 interface
@@ -192,7 +193,7 @@ begin
 
 //        if TR4W_MMTTYPATH[0] = #0 then SetCommand('MMTTY ENGINE');
 
-        Format(wsprintfBuffer, '"%s" -t -s -u -r', TR4W_MMTTYPATH);
+        TF.Format(wsprintfBuffer, '"%s" -t -s -u -r', TR4W_MMTTYPATH);
 {
 -t FFT spectrum, Waterfall, and XY scope are displayed.
 -s Control menus are displayed in addition to the above components.

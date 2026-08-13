@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uDupesheet;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -184,7 +185,7 @@ begin
           ShowWindow(tHWND, SW_HIDE);
           for c := 0 to 9 do
           begin
-            CreateWindowEx(0, LISTBOX, nil, WS_CHILD or WS_VISIBLE  or LBS_EXTENDEDSEL  or LBS_NOINTEGRALHEIGHT or LBS_NOSEL or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS,
+            CreateWindowExW(0, LISTBOX, nil, WS_CHILD or WS_VISIBLE  or LBS_EXTENDEDSEL  or LBS_NOINTEGRALHEIGHT or LBS_NOSEL or LBS_OWNERDRAWFIXED or LBS_HASSTRINGS,
               c * 50, 100, 50, 200, hwnddlg, 48 + c, hInstance, nil);
             // Issue #997: asm tWM_SETFONT (EAX = the listbox just created above)
             // -> re-fetch that control by its child id (48 + c) and set its font.

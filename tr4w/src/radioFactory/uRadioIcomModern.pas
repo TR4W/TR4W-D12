@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioIcomModern;
+{$I ..\tr4w.inc}
 
 {
   The MODERN CI-V read profile, shared by the current Icoms (IC-705, 7100, 7300,

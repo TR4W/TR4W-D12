@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uFMXFormHelpers;
+{$I ..\..\tr4w.inc}
 
 {
   Captions and control-building helpers shared by the FMX preferences windows.

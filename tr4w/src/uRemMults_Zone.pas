@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uRemMults_Zone;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -66,9 +67,9 @@ begin
         // Issue #997: asm control-flow + wsprintf -> Pascal. The zone label is
         // Index, +1 unless ActiveZoneMult = EUHFCYear (the asm's `jz @@1` skip).
         if ActiveZoneMult = EUHFCYear then
-           Format(RemMultsBuf, '%02u', Index)
+           TF.Format(RemMultsBuf, '%02u', Index)
         else
-           Format(RemMultsBuf, '%02u', Index + 1);
+           TF.Format(RemMultsBuf, '%02u', Index + 1);
         p := @RemMultsBuf;
 
         I := Windows.lstrlenA(p);

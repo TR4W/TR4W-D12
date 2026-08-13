@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit tr4wserverUnit;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -472,11 +473,11 @@ begin
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket <> 0 then
     begin
-      Format(DisplayBuffer, '%s: %s', ClientsSoocketsArray[i].clIPAdr, ClientsSoocketsArray[i].clName);
+      TF.Format(DisplayBuffer, '%s: %s', ClientsSoocketsArray[i].clIPAdr, ClientsSoocketsArray[i].clName);
       Windows.SendDlgItemMessageA(ApplicationHandle, 109, LB_ADDSTRING, 0, integer(@DisplayBuffer));
     end;
 
-  Format(DisplayBuffer, 'TR4WSERVER [%d]', nclients);
+  TF.Format(DisplayBuffer, 'TR4WSERVER [%d]', nclients);
   Windows.SetWindowTextA(ApplicationHandle, DisplayBuffer);
   Windows.SetDlgItemInt(ApplicationHandle, tsCLIENTS, nclients, False);
 end;

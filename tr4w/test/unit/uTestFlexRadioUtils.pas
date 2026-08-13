@@ -1,4 +1,5 @@
 unit uTestFlexRadioUtils;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for uFlexRadioUtils — pure SmartSDR protocol utility functions.

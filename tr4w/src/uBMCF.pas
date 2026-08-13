@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uBMCF;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -115,17 +116,17 @@ begin
               if TempColumn = 1 then
               begin
                 BandMapModeCutoffFrequency[TempBand] := TempFreq;
-                TempPos := TempPos + Format(@wsprintfBuffer[TempPos], 'BAND MAP CUTOFF FREQUENCY=%u', TempFreq) + 1;
+                TempPos := TempPos + TF.Format(@wsprintfBuffer[TempPos], 'BAND MAP CUTOFF FREQUENCY=%u', TempFreq) + 1;
               end;
               if TempColumn = 2 then
               begin
                 DefaultFreqMemory[TempBand, CW] := TempFreq;
-                TempPos := TempPos + Format(@wsprintfBuffer[TempPos], 'FREQUENCY MEMORY=%u', TempFreq) + 1;
+                TempPos := TempPos + TF.Format(@wsprintfBuffer[TempPos], 'FREQUENCY MEMORY=%u', TempFreq) + 1;
               end;
               if TempColumn = 3 then
               begin
                 DefaultFreqMemory[TempBand, Phone] := TempFreq;
-                TempPos := TempPos + Format(@wsprintfBuffer[TempPos], 'FREQUENCY MEMORY=SSB %u', TempFreq) + 1;
+                TempPos := TempPos + TF.Format(@wsprintfBuffer[TempPos], 'FREQUENCY MEMORY=SSB %u', TempFreq) + 1;
               end;
 
             end;

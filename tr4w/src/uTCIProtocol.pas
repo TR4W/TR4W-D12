@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uTCIProtocol;
+{$I tr4w.inc}
 
 {
   THE TCI GRAMMAR.  Pure: no sockets, no radio, no logging.
@@ -133,6 +134,14 @@ type
    end;
 
 { -------------------------------------------------------------- parsing -- }
+
+{ The one tokenizer both the TCI client and the TCI server use.  Exported
+  rather than kept private because uRadioTCI (the client) needs exactly this
+  split, and the alternative -- StrUtils.SplitString -- returns the RTL's own
+  TStringDynArray, whose element type is AnsiString under FPC and string under
+  Delphi.  A difference in how arguments split is a difference in the wire
+  grammar, so there is one implementation of it with no RTL in the path. }
+function SplitOnChar(const S: string; Sep: Char): TArray<string>;
 
 function TCIParse(const Cmd: string): TTCICommand;
 

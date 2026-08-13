@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uNet;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -261,7 +262,7 @@ begin
           // by the existing WM_TIMER path which calls TryConnectToNetwork
           // every tNetStatusUpdateInterval ms while NetSocket = 0.
           ShowConnectionStatus(TC_DISCONNECTEDFROM);
-          Format(wsprintfBuffer, TC_CONNECTIONTOTR4WSERVERLOST, @ServerAddress[1], ServerPort);
+          TF.Format(wsprintfBuffer, TC_CONNECTIONTOTR4WSERVERLOST, @ServerAddress[1], ServerPort);
           QuickDisplay(wsprintfBuffer);
           Exit;
         end;
@@ -737,7 +738,7 @@ begin
     elvc.fmt := NetColumnsArray[i].fmt;
     elvc.pszText := NetColumnsArray[i].Text;
     elvc.cx := NetColumnsArray[i].Width;
-    ListView_InsertColumn(wh[mweNetwork], i, elvc);
+    uCommctrl.ListView_InsertColumnA(wh[mweNetwork], i, elvc);
   end;
 end;
 
@@ -786,7 +787,7 @@ begin
         p := BandStringsArrayWithOutSpaces[StatusArray[Index].ssCurrentBand];
         asm push p end;
 }
-        Format(@TempBuffer, '%s%s', BandStringsArrayWithOutSpaces[StatusArray[Index].ssCurrentBand], ModeStringArray[StatusArray[Index].ssCurrentMode]);
+        TF.Format(@TempBuffer, '%s%s', BandStringsArrayWithOutSpaces[StatusArray[Index].ssCurrentBand], ModeStringArray[StatusArray[Index].ssCurrentMode]);
 
         tLVSetText(h, i, 2, string(PAnsiChar(@TempBuffer)));
 
@@ -970,7 +971,7 @@ end;
 
 procedure ShowConnectionStatus(Operation: PAnsiChar);
 begin
-  Format(@NetBuffer, TC_NETWORK, Operation, @ServerAddress[1], ServerPort);
+  TF.Format(@NetBuffer, TC_NETWORK, Operation, @ServerAddress[1], ServerPort);
   Windows.SetWindowTextA(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, @NetBuffer);
 end;
 
@@ -1094,7 +1095,7 @@ begin
   case ServMess.smMessage of
     SM_SERVERLOG_CHANGED_MESSAGE:
       begin
-        Format(QuickDisplayBuffer, TC_SERVER_LOG_CHANGED, ServMess.smParam);
+        TF.Format(QuickDisplayBuffer, TC_SERVER_LOG_CHANGED, ServMess.smParam);
         QuickDisplay(QuickDisplayBuffer);
       end;
     SM_CLEARALLLOGS_MESSAGE: QuickDisplay(TC_ALL_LOGS_NETWORK_CLEARED);

@@ -1,4 +1,5 @@
 unit uExternalLoggerManager;
+{$I tr4w.inc}
 
 {
   External Logger Manager - Manages multiple external logger instances

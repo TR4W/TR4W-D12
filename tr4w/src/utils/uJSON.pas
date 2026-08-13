@@ -64,7 +64,14 @@ type
    TJSONArray  = fpjson.TJSONArray;
    TJSONString = fpjson.TJSONString;
    TJSONBool   = TJSONBoolean;
-   TJSONNumber = TJSONIntegerNumber;
+
+   // fpjson.TJSONNumber is the ABSTRACT base over integer/int64/qword/float,
+   // which is what Delphi's TJSONNumber also is.  Aliasing the concrete
+   // TJSONIntegerNumber instead would have been a silent behaviour change: a
+   // value written as 1.0 parses to TJSONFloatNumber, so every `v is TJSONNumber`
+   // guard in the config stores would have said no and fallen back to the
+   // default.
+   TJSONNumber = fpjson.TJSONNumber;
 
    // Supplies the Delphi spellings on top of fpjson so the call sites need no
    // edit.  Delphi already has all of these, which is why the helper is FPC-only.
@@ -75,12 +82,34 @@ type
       function GetValue(const aName: string): TJSONData;
       function FindValue(const aName: string): TJSONData;
       function Format(aIndent: integer): string;
+      function ToJSON: string;
       class function ParseJSONValue(const aText: string): TJSONData;
    end;
 
    TJSONArrayHelper = class helper for TJSONArray
    public
       procedure AddElement(aValue: TJSONData);
+      // Delphi's TJSONAncestor.ToJSON; fpjson spells it AsJSON.  Declared on
+      // BOTH helpers rather than on a TJSONData helper, because a type can have
+      // only one active class helper and the object/array ones would hide it.
+      function ToJSON: string;
+   end;
+
+   // Two differences behind one alias.
+   //
+   // Delphi spells the accessor AsInt; fpjson spells it AsInteger.
+   //
+   // And Delphi's TJSONNumber is concrete -- TJSONNumber.Create(42) builds a
+   // number -- while fpjson's is the abstract base and only its descendants
+   // construct.  These class functions restore the Delphi spelling by picking
+   // the right descendant, which also keeps an integer an INTEGER in the file:
+   // routing everything through TJSONFloatNumber would write baudRate as
+   // 9600.0 and change every config file on first save.
+   TJSONNumberHelper = class helper for TJSONNumber
+   public
+      function AsInt: integer;
+      class function Create(aValue: Int64): TJSONNumber; overload;
+      class function Create(aValue: Double): TJSONNumber; overload;
    end;
 {$ELSE}
    TJSONValue  = System.JSON.TJSONValue;
@@ -134,6 +163,32 @@ end;
 procedure TJSONArrayHelper.AddElement(aValue: TJSONData);
 begin
    Add(aValue);
+end;
+
+function TJSONArrayHelper.ToJSON: string;
+begin
+   Result := AsJSON;
+end;
+
+function TJSONObjectHelper.ToJSON: string;
+begin
+   Result := AsJSON;
+end;
+
+function TJSONNumberHelper.AsInt: integer;
+begin
+   // AsInteger truncates a float the same way Delphi's AsInt does.
+   Result := AsInteger;
+end;
+
+class function TJSONNumberHelper.Create(aValue: Int64): TJSONNumber;
+begin
+   Result := TJSONInt64Number.Create(aValue);
+end;
+
+class function TJSONNumberHelper.Create(aValue: Double): TJSONNumber;
+begin
+   Result := TJSONFloatNumber.Create(aValue);
 end;
 
 function TJSONObjectHelper.Format(aIndent: integer): string;

@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uGetServerLog;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -121,10 +122,10 @@ var
 begin
   for counter := 1 to 1000 do
   begin
-    Format(TempBuffer2, '%sLOGBACKUP_%03d.TRW', TR4W_LOG_PATH_NAME, counter);
+    TF.Format(TempBuffer2, '%sLOGBACKUP_%03d.TRW', TR4W_LOG_PATH_NAME, counter);
     if Windows.CopyFileA(TR4W_LOG_FILENAME, TempBuffer2, True) = True then
     begin
-      Format(TempBuffer2, '%sRSTBACKUP_%03d.RST', TR4W_LOG_PATH_NAME, counter);
+      TF.Format(TempBuffer2, '%sRSTBACKUP_%03d.RST', TR4W_LOG_PATH_NAME, counter);
       Windows.CopyFileA(TR4W_RST_FILENAME, TempBuffer2, False);
       Break;
     end;

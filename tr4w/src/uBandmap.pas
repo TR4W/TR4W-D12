@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uBandmap;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -672,7 +673,7 @@ begin
   Spot := SpotsList.Get(i);
   SetTextInBMSB(0, @Spot.FCall[1]);
 
-  Format(wsprintfBuffer, TC_MIN, Spot.FMinutesLeft);
+  TF.Format(wsprintfBuffer, TC_MIN, Spot.FMinutesLeft);
 
   SetTextInBMSB(1, wsprintfBuffer);
 
@@ -685,7 +686,7 @@ begin
   //  TempString := CountryTable.GetCountryName(CountryTable.GetCountry(Spot.FCall, True));
   SetTextInBMSB(2, ctyGetCountryNamePchar(ctyGetCountry(Spot.FCall)));
 
-  Format(wsprintfBuffer, TC_SOURCE, @Spot.FSourceCall[1]);
+  TF.Format(wsprintfBuffer, TC_SOURCE, @Spot.FSourceCall[1]);
 
   SetTextInBMSB(3, wsprintfBuffer);
 

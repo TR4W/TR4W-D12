@@ -16,6 +16,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 }
 
 unit uRadioYaesuASCII;
+{$I ..\tr4w.inc}
 
 {
   Yaesu serial CAT -- ASCII/text family BASE (legacy rtYaesu3 + rtYaesu4).  The

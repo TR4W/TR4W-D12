@@ -1,4 +1,5 @@
 unit uTestADIFRegression;
+{$I ..\..\src\tr4w.inc}
 
 {
   Targeted regression tests for ADIF bugs fixed during the 4.147.x cycle.

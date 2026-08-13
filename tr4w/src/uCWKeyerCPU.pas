@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uCWKeyerCPU;
+{$I tr4w.inc}
 
 {
   CPU keyer adapter -- the software dit/dah engine toggling DTR/RTS/LPT

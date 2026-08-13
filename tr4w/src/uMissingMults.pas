@@ -18,7 +18,8 @@
 If not, ref: 
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
-unit uMissingMults; {Missing Mults Report WinAPI}
+unit uMissingMults;
+{$I tr4w.inc} {Missing Mults Report WinAPI}
 {$IMPORTEDDATA OFF}
 interface
 

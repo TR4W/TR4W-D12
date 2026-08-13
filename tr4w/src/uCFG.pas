@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uCFG;
+{$I tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -1527,7 +1528,7 @@ begin
                            // Val check below, so the defensive catch for typos is preserved.
                            if CustomCMD = '' then
                               begin
-                              Format(wsprintfBuffer, TC_PARAMETERHASNOVALUE, @Command[1]);
+                              TF.Format(wsprintfBuffer, TC_PARAMETERHASNOVALUE, @Command[1]);
                               showwarning(wsprintfBuffer);
                               logger.Warn('[CheckCommand] %s has no value -- left at its default', [pshortstring(Command)^]);
                               Result := True;

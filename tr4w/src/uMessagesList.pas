@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uMessagesList;
+{$I tr4w.inc}
 
 interface
 
@@ -142,7 +143,7 @@ begin
 
         for i := 0 to sCommands - 1 do
         begin
-          Format(wsprintfBuffer, '%s', sCommandsArray[i].caCommand);
+          TF.Format(wsprintfBuffer, '%s', sCommandsArray[i].caCommand);
           tLB_ADDSTRING(TempHWND, wsprintfBuffer);
         end;
 

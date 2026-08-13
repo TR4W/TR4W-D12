@@ -1,4 +1,5 @@
 unit uTestSettingsRegistry;
+{$I ..\..\src\tr4w.inc}
 
 {
   The settings registry -- what replaces CFGCA's untyped-pointer table.

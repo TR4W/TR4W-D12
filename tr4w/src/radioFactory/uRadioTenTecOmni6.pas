@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioTenTecOmni6;
+{$I ..\tr4w.inc}
 
 {
   Ten-Tec Omni VI (CI-V) -- CI-V address $04.

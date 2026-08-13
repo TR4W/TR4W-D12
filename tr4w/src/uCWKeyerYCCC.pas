@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uCWKeyerYCCC;
+{$I tr4w.inc}
 
 {
   YCCC SO2R+ box adapter -- thin delegation onto uYCCCSO2R.  Preserved quirks

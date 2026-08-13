@@ -1,4 +1,5 @@
 unit uTestADIF;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for uADIF.pas — the ADIF field-list lexer.

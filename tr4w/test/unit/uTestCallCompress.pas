@@ -1,4 +1,5 @@
 unit uTestCallCompress;
+{$I ..\..\src\tr4w.inc}
 
 {
   Golden tests for uCallCompress (pre-migration test net).

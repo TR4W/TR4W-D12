@@ -14,6 +14,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LOGSUBS2;
+{$I ..\tr4w.inc}
 {$IMPORTEDDATA OFF}
 { $ O + }
 interface
@@ -461,7 +462,7 @@ begin
     if isDupe and (DupeInfoCall <> MyCall) then   // n4af issue158
     begin
       DupeInfoCallWindowState := diDupe;
-      Format(wsprintfBuffer, '%s DUPE!! on %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
+      TF.Format(wsprintfBuffer, '%s DUPE!! on %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
       SetMainWindowText(mweDupeInfoCall, wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]});
       if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
  //      tClearDupeInfoCall;
@@ -476,7 +477,7 @@ begin
         if DupeCheckSound = DupeCheckGratsIfMult then DoABeep(BeepCongrats);
         DupeInfoCallWindowState := diNotDupeMult;
       end;
-      Format(wsprintfBuffer, '%s OK!!'#13#10'Space bar for %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
+      TF.Format(wsprintfBuffer, '%s OK!!'#13#10'Space bar for %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
       SetMainWindowText(mweDupeInfoCall, wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]});
       if TwoRadioState <> TwoRadiosDisabled then TwoRadioState := CallReady;
     end;
@@ -725,7 +726,10 @@ begin
 //  SaveMissedWAVCallsigns;
 //  CallsignsList.Destroy;
 //  SpotsList.Destroy;
-  if LuconSZLoadded then RemoveFontResource(TR4W_LC_FILENAME);
+  if LuconSZLoadded then
+     begin
+     RemoveFontResourceW(TR4W_LC_FILENAME);
+     end;
 {$IF SCPDEBUG}
   if scpLoaded then
      begin
@@ -1448,7 +1452,7 @@ begin
               RXData.QSOPoints := 0;
                     //                              if ReminderPostedCount = 0 then
               begin
-                Format(QuickDisplayBuffer, TC_YOUALREADYWORKEDIN, @RXData.Callsign[1], @RXData.DomMultQTH[1]);
+                TF.Format(QuickDisplayBuffer, TC_YOUALREADYWORKEDIN, @RXData.Callsign[1], @RXData.DomMultQTH[1]);
                 QuickDisplay(QuickDisplayBuffer);
                 if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
                       //                                    ReminderPostedCount := 60;
@@ -1460,7 +1464,7 @@ begin
       begin
             //                  if ReminderPostedCount = 0 then
         begin
-          Format(QuickDisplayBuffer, TC_ISADUPEANDWILLBELOGGEDWITHZERO, @RXData.Callsign[1]);
+          TF.Format(QuickDisplayBuffer, TC_ISADUPEANDWILLBELOGGEDWITHZERO, @RXData.Callsign[1]);
           QuickDisplay(QuickDisplayBuffer);
           if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
         end;
@@ -3253,7 +3257,7 @@ begin
          end;
       CloseLogFile;
       Logger.Info('%d records sent to UDP',[nCount]);
-      Format(QuickDisplayBuffer, '%d log records sent to UDP', nCount);
+      TF.Format(QuickDisplayBuffer, '%d log records sent to UDP', nCount);
       QuickDisplay(QuickDisplayBuffer);
    finally
       FormatSettings.DecimalSeparator := SaveDecimalSeparator;

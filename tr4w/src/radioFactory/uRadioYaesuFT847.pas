@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT847;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FT-847 -- shares the FT-817's 5-byte transport and its MAIN-VFO opcodes,

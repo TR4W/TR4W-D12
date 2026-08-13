@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uSettingsDeclarations;
+{$I tr4w.inc}
 
 {
   WHAT SETTINGS EXIST, and what each one is called.
@@ -66,7 +67,7 @@ implementation
 
 uses
    uSettingsRegistry,
-   uSettingsBinding;
+   uSettingsLegacy;   // RegisterLegacySetting -- no FMX
 
 var
    GDeclared: boolean = False;

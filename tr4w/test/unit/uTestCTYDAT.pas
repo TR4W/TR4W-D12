@@ -1,4 +1,5 @@
 unit uTestCTYDAT;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for uCTYDAT callsign -> DXCC entity lookup (Issue #1033,

@@ -18,7 +18,8 @@
 If not, ref: 
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
- unit uAutoCQ; {AutoCQ WinAPI}
+ unit uAutoCQ;
+{$I tr4w.inc} {AutoCQ WinAPI}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -111,7 +112,7 @@ type
 {$EXTERNALSYM NM_UPDOWN}
   NM_UPDOWN = _NM_UPDOWN;
 
-  (*Горячие клавишы*)
+  (*пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ*)
 const
   HOTKEYF_SHIFT                         = $01;
   HOTKEYF_CONTROL                       = $02;

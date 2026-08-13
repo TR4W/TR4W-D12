@@ -1,4 +1,5 @@
 unit uTestRegistryTaxonomy;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins the registry-derived taxonomy that replaced the InitRadios sets.

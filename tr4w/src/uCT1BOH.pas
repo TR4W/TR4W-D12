@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uCT1BOH;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 uses
@@ -147,7 +148,7 @@ begin
   if QSOs = 0 then
     wsprintfBuffer[0] := #0
   else
-    Format(wsprintfBuffer, '%u (%u%%)', QSOs, Percents);
+    TF.Format(wsprintfBuffer, '%u (%u%%)', QSOs, Percents);
   Result := wsprintfBuffer;
 end;
 end.

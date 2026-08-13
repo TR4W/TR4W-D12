@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LOGDVP;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 interface
@@ -449,7 +450,7 @@ begin
     if StringIsAllNumbers(DVPMessagesArray[Index]) then
     begin
 
-      Format(WAVFile, 'FULLSERIALNUMBERS\%s.WAV', p);
+      TF.Format(WAVFile, 'FULLSERIALNUMBERS\%s.WAV', p);
 
       TempPlayResult := PlayWAVFile(WAVFile, False);
       if TempPlayResult = prExitThread then goto ExitLabel;
@@ -461,7 +462,7 @@ begin
           TempChar := DVPMessagesArray[Index][i];
           // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload);
           // TempChar is an ASCII letter/digit/'_', so %c output == the old %C.
-          Format(WAVFile, 'LETTERSANDNUMBERS\%c.WAV', TempChar);
+          TF.Format(WAVFile, 'LETTERSANDNUMBERS\%c.WAV', TempChar);
           if PlayWAVFile(WAVFile, True) = prExitThread then goto ExitLabel;
         end;
       end;
@@ -471,7 +472,7 @@ begin
 
       //Callsign
 
-    Format(WAVFile, 'FULLCALLSIGNS\%s.WAV', p);
+    TF.Format(WAVFile, 'FULLCALLSIGNS\%s.WAV', p);
 
     TempPlayResult := PlayWAVFile(WAVFile, False);
     if TempPlayResult = prExitThread then goto ExitLabel;
@@ -484,7 +485,7 @@ begin
         TempChar := DVPMessagesArray[Index][i];
         if TempChar = '/' then TempChar := '_';
         // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload).
-        Format(WAVFile, 'LETTERSANDNUMBERS\%c.WAV', TempChar);
+        TF.Format(WAVFile, 'LETTERSANDNUMBERS\%c.WAV', TempChar);
         if PlayWAVFile(WAVFile, True) = prExitThread then goto ExitLabel;
       end;
     end;

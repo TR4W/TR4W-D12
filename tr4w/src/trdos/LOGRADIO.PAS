@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogRadio;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -1511,7 +1512,6 @@ var
 
   // i: integer;
   // s: string;
-   Buf: array[0..100 * 2] of Char;
    nLen: integer;
 
 begin
@@ -1553,18 +1553,16 @@ begin
             if (Self.tFactoryObject <> nil) and
                Self.tFactoryObject.SerialProtocolIsBinary then
                begin
-               BinToHex(@Buffer,Buf,nLen);
-               Buf[(nLen*2) - 2] := #0;
-               logger.trace(Format('[%s] Calling WriteFile to write %u bytes <%s>',[RadioName,nNumberOfBytesToWrite,Buf]));
+               logger.trace(Format('[%s] Calling WriteFile to write %u bytes <%s>',
+                  [RadioName, nNumberOfBytesToWrite, BinToHexStr(Buffer, nLen)]));
                end
             else
                begin
                // Hex alongside the text so non-printable control bytes are visible
                // -- e.g. the K3 keyer-abort 'KY <04>;RX;' (Chr(4)) shows as plain
                // 'KY ;RX;' in a text-only trace, hiding the control byte entirely.
-               BinToHex(@Buffer,Buf,nLen);
-               Buf[nLen * 2] := #0;
-               logger.trace(Format('[%s] Calling WriteFile to write %u bytes <%s> hex[%s]',[RadioName,nNumberOfBytesToWrite,debugStr,Buf]));
+               logger.trace(Format('[%s] Calling WriteFile to write %u bytes <%s> hex[%s]',
+                  [RadioName, nNumberOfBytesToWrite, debugStr, BinToHexStr(Buffer, nLen)]));
                end;
             end;
          end;

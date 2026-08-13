@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioElecraftBase;
+{$I ..\tr4w.inc}
 
 {
   What every Elecraft radio has in common, regardless of how it is connected.

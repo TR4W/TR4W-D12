@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uTCIServer;
+{$I tr4w.inc}
 
 {
   TR4W AS A TCI SERVER -- the bridge between TCI clients and our radio.

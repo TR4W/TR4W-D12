@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LOGHP;
+{$I ..\tr4w.inc}
 
 {$O+}
 {$F+}

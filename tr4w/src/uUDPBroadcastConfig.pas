@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uUDPBroadcastConfig;
+{$I tr4w.inc}
 
 {
   The UDP broadcast settings, as a value that can be stored, compared and

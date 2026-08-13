@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uErmak;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -130,21 +131,21 @@ begin
           begin
             ControlID := integer(TempErmakField) + (Operator) * 100;
 
-            Format(TempBuffer2, OPERATORINFO, ControlID);
+            TF.Format(TempBuffer2, OPERATORINFO, ControlID);
 
             TempInteger := GetPrivateProfileStringA(ERMAKSECTION, TempBuffer2, nil, TempBuffer1, SizeOf(TempBuffer1), TR4W_INI_FILENAME);
 
             case TempErmakField of
               efOp:
                 begin
-                  Format(TempBuffer2, '�������� %u', Operator);
+                  TF.Format(TempBuffer2, '�������� %u', Operator);
                   tCreateButtonWindow(WS_EX_STATICEDGE, TempBuffer2, BS_AUTOCHECKBOX + WS_CHILD + WS_VISIBLE + WS_TABSTOP, 10, Top, 89, FIELDHEIGTH, hwnddlg, ControlID);
                   Windows.SendDlgItemMessage(hwnddlg, ControlID, BM_SETCHECK, integer(TempBuffer1[0] = '1'), 0);
                 end;
 
               efLevel:
                 begin
-                  CreateWindowEx(0, COMBOBOX, nil, CBS_DROPDOWNLIST or WS_DISABLED or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP, Left, Top, eOpFieldsLength[efLevel], 200, hwnddlg, ControlID, hInstance, nil);
+                  CreateWindowExW(0, COMBOBOX, nil, CBS_DROPDOWNLIST or WS_DISABLED or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP, Left, Top, eOpFieldsLength[efLevel], 200, hwnddlg, ControlID, hInstance, nil);
                   // Issue #997: asm tWM_SETFONT (EAX = the combobox just created above)
                   // -> re-fetch that control by its child id (ControlID) and set its font.
                   tWM_SETFONT(GetDlgItem(hwnddlg, ControlID), MSSansSerifFont);
@@ -205,13 +206,13 @@ begin
                         TempInteger := TF.SendDlgItemMessage(hwnddlg, ControlID, BM_GETCHECK);
 
 //                        if TempErmakField = efOp then if TempInteger = BST_UNCHECKED then Break;
-                        Format(wsprintfBuffer, '%d', TempInteger);
+                        TF.Format(wsprintfBuffer, '%d', TempInteger);
                       end;
 
                     efLevel:
                       begin
                         TempInteger := TF.SendDlgItemMessage(hwnddlg, ControlID, CB_GETCURSEL);
-                        Format(wsprintfBuffer, '%d', TempInteger);
+                        TF.Format(wsprintfBuffer, '%d', TempInteger);
                       end;
                   else
                     begin
@@ -219,7 +220,7 @@ begin
                     end;
                   end;
 
-                  Format(TempBuffer1, OPERATORINFO, ControlID);
+                  TF.Format(TempBuffer1, OPERATORINFO, ControlID);
 
                   if wsprintfBuffer[0] <> #0 then
                     WritePrivateProfileStringA(ERMAKSECTION, TempBuffer1, wsprintfBuffer, TR4W_INI_FILENAME);

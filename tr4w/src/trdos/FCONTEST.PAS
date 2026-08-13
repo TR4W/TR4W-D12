@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit FCONTEST;
+{$I ..\tr4w.inc}
 
 { PLEASE NOTE!!  This file is included with the TR Logging Program as a
   reference document.  It is intended to show you the default values for
@@ -84,14 +85,14 @@ var
   i: integer;
 begin
 
-  Format(TR4W_POS_FILENAME, '%ssettings\tr4w.pos', TR4W_PATH_NAME);
-  Format(TR4W_BANDMAPBIN_FILENAME, '%sbandmap.bin', TR4W_PATH_NAME);
+  TF.Format(TR4W_POS_FILENAME, '%ssettings\tr4w.pos', TR4W_PATH_NAME);
+  TF.Format(TR4W_BANDMAPBIN_FILENAME, '%sbandmap.bin', TR4W_PATH_NAME);
 
   //  asm push offset TR4W_PATH_NAME  end;
   //  wsprintf(TR4W_IODRIVER_FILENAME, '%sTR4WIO.SYS');
   //  asm add esp,12  end;
 
-  Format(TR4W_COMM_HELP_FILENAME, '%scommands_help_' + LANG + '.ini',
+  TF.Format(TR4W_COMM_HELP_FILENAME, '%scommands_help_' + LANG + '.ini',
     TR4W_PATH_NAME);
 
   Windows.CopyMemory(@TR4W_LOG_PATH_NAME, @TR4W_CFG_FILENAME,
@@ -107,39 +108,39 @@ begin
     begin
       TR4W_LOG_PATH_NAME[i] := #0;
 
-      Format(TR4W_LOG_FILENAME, '%s.TRW', TR4W_LOG_PATH_NAME);
-      Format(TR4W_RST_FILENAME, '%s.RST', TR4W_LOG_PATH_NAME);
-      Format(TR4W_DOM_FILENAME, '%s.DOM', TR4W_LOG_PATH_NAME); // 4.100.2
+      TF.Format(TR4W_LOG_FILENAME, '%s.TRW', TR4W_LOG_PATH_NAME);
+      TF.Format(TR4W_RST_FILENAME, '%s.RST', TR4W_LOG_PATH_NAME);
+      TF.Format(TR4W_DOM_FILENAME, '%s.DOM', TR4W_LOG_PATH_NAME); // 4.100.2
     end;
   end;
 
-  Format(TR4W_SYN_FILENAME, '%sSERVERLOG.TMP', TR4W_LOG_PATH_NAME);
-  Format(TR4W_REMAININGMULTS_FILENAME, '%sREMAININGMULTS.TXT',
+  TF.Format(TR4W_SYN_FILENAME, '%sSERVERLOG.TMP', TR4W_LOG_PATH_NAME);
+  TF.Format(TR4W_REMAININGMULTS_FILENAME, '%sREMAININGMULTS.TXT',
     TR4W_LOG_PATH_NAME);
 
-  Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_LOG_PATH_NAME);
+  TF.Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_LOG_PATH_NAME);
 
   if not FileExists(TR4W_CTY_FILENAME) then
   begin
-    Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_PATH_NAME);
+    TF.Format(TR4W_CTY_FILENAME, '%sCTY.DAT', TR4W_PATH_NAME);
       // n4af issue  # 219  & 212
   end;
 
-  Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_LOG_PATH_NAME);
+  TF.Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_LOG_PATH_NAME);
 
   if not FileExists(CD.ActiveFilename) then
   begin
-    Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_PATH_NAME);
+    TF.Format(CD.ActiveFilename, '%sTRMASTER.DTA', TR4W_PATH_NAME);
     if not FileExists(CD.ActiveFilename) then
     begin
-      Format(@CD.ActiveFilename, '%sMASTER.DTA', TR4W_PATH_NAME);
+      TF.Format(@CD.ActiveFilename, '%sMASTER.DTA', TR4W_PATH_NAME);
     end;
 
   end;
 
 {$IF MAKE_DEFAULT_VALUES = false}
 
-  Format(TR4W_MP3PATH, '%sMP3', TR4W_LOG_PATH_NAME);
+  TF.Format(TR4W_MP3PATH, '%sMP3', TR4W_LOG_PATH_NAME);
 
 {$IFEND}
 
@@ -161,8 +162,8 @@ begin
   //  LogConfigFileName := TempFoldername + FileRoot + '.CFG';
   //  LogRestartFileName := TempFoldername + FileRoot + '.RST';
 
-  Format(TR4W_INTERCOM_FILENAME, '%sINTERCOM.TXT', TR4W_LOG_PATH_NAME);
-  Format(TR4W_DEFMESSAGES_FILENAME, '%sCOMMONMESSAGES.INI', TR4W_PATH_NAME);
+  TF.Format(TR4W_INTERCOM_FILENAME, '%sINTERCOM.TXT', TR4W_LOG_PATH_NAME);
+  TF.Format(TR4W_DEFMESSAGES_FILENAME, '%sCOMMONMESSAGES.INI', TR4W_PATH_NAME);
 
 end;
 
@@ -330,7 +331,7 @@ begin
       else
       begin
         Windows.ZeroMemory(@TmpBuf, SizeOf(TmpBuf));
-        Format(TmpBuf, '%s_cty',
+        TF.Format(TmpBuf, '%s_cty',
           QSOParties[ContestsArray[Contest].p].InsideStateDOMFile);
         TempDomesticQTHDataFileName := @TmpBuf;
           //QSOParties[ContestsArray[Contest].p].OutsideStateDOMFile;
@@ -1737,7 +1738,7 @@ end;
 
 procedure SetContestTitle;
 begin
-  ContestTitle[0] := AnsiChar(Format(@ContestTitle[1], '%s %s %s', GetYearString,
+  ContestTitle[0] := AnsiChar(TF.Format(@ContestTitle[1], '%s %s %s', GetYearString,
     @ContestName[1], @MyCall[1]));
 end;
 
@@ -1766,7 +1767,7 @@ begin
   if Contest = DUMMYCONTEST then
     Exit;
   InState := False;
-  Format(TempFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME,
+  TF.Format(TempFileName, '%sDOM\%s.DOM', TR4W_PATH_NAME,
     ContestsArray[Contest].DF);
   if not EnumerateLinesInFile(TempFileName, EnumDOM2, True) then
     Exit;

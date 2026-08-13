@@ -1,4 +1,5 @@
 unit uTestCabrilloExchange;
+{$I ..\..\src\tr4w.inc}
 
 {
   Golden-line unit tests for uCabrilloExchange.FormatCabrilloExchange.

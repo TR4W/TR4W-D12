@@ -1,4 +1,5 @@
 unit uTestBandLookup;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for uBandLookup.CalculateBandMode.

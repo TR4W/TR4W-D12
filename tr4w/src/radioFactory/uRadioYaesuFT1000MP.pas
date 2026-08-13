@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT1000MP;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FT-1000MP (and Mark V).  Old binary CAT -- shares only the 5-byte

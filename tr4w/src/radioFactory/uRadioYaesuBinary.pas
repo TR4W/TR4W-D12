@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuBinary;
+{$I ..\tr4w.inc}
 
 {
   Yaesu OLD BINARY CAT -- the SHARED TRANSPORT base only.

@@ -1,4 +1,5 @@
 unit uTestYaesuBinary;
+{$I ..\..\src\tr4w.inc}
 
 {
   Guards the FT-817 group's CAPABILITY FLAGS -- the small-rig old-binary Yaesus

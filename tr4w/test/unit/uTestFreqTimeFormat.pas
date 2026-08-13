@@ -1,4 +1,5 @@
 unit uTestFreqTimeFormat;
+{$I ..\..\src\tr4w.inc}
 
 {
   Golden-master tests for uFreqTimeFormat (frequency & time formatters extracted

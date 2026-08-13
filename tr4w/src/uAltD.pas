@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uAltD;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 
 interface
@@ -63,7 +64,7 @@ begin
 
         Windows.SetWindowTextA(hwnddlg, RC_DUPECHECKOAR);
 
-        Format(TempBuffer1, TC_ENTERCALLTOBECHECKEDON, BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
+        TF.Format(TempBuffer1, TC_ENTERCALLTOBECHECKEDON, BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
           CreateStatic(TempBuffer1, 15, 3, 250, hwnddlg, 102);
 
 

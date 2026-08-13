@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uCWFraming;
+{$I ..\tr4w.inc}
 
 {
   HOW A CW-BY-CAT MESSAGE IS CUT UP -- chunking and padding, and nothing else.

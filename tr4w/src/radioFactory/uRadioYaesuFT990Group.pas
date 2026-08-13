@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT990Group;
+{$I ..\tr4w.inc}
 
 {
   SHARED BASE for the Yaesu FT-990 and FT-1000 -- registers NOTHING.

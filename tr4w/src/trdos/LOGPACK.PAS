@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogPack;
+{$I ..\tr4w.inc}
 
 { This unit has most of the stuff used to make the packet work.  }
 

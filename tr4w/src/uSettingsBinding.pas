@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uSettingsBinding;
+{$I tr4w.inc}
 
 {
   BINDS A CONTROL TO A SETTING, so a panel declares WHAT it edits and never how.
@@ -106,97 +107,10 @@ type
       function Count: integer;
    end;
 
-{ Registers a CFGCA row as a setting under a modern key.
-
-  aKey is the JSON/store key ('operating.cw.sayHi'); aCommand is the CFGCA row
-  ('SAY HI ENABLE').  The two are deliberately different: the key is ours and
-  stable, the command is the legacy spelling and will eventually go. }
-function RegisterLegacySetting(const aKey, aCommand, aCaption: string): TSettingBase;
-
 implementation
 
 uses
-   uCFG,
    MainUnit;   // logger
-
-type
-   { A CFGCA row wearing the registry's interface.  See the unit header for why
-     this is one class rather than a closure per row. }
-   TLegacySetting = class(TSettingBase)
-   private
-      FCommand: string;
-   public
-      constructor Create(const aKey, aCommand, aCaption: string);
-      function AsText: string; override;
-      function TrySetText(const aText: string; out aError: string): boolean; override;
-      function AllowedValues: TArray<string>; override;
-      property Command: string read FCommand;
-   end;
-
-{ ---------------------------------------------------------- TLegacySetting - }
-
-constructor TLegacySetting.Create(const aKey, aCommand, aCaption: string);
-var
-   idx: integer;
-begin
-   inherited Create(aKey, aCaption);
-   FCommand := aCommand;
-
-   idx := FindCFGCommand(aCommand);
-   if idx < 0 then
-      begin
-      // Loud at registration.  A mistyped command name would otherwise present
-      // as a control that reads blank and silently discards what is typed into
-      // it -- and it would do so only when that panel is opened.
-      raise Exception.CreateFmt('Setting "%s": no CFGCA command called "%s"',
-                                [aKey, aCommand]);
-      end;
-
-   // crJ:1 is the table's way of saying "restart required".  Lifting it here
-   // means a UI can say so without every panel hard-coding which of its fields
-   // are which.
-   NeedsRestart := (CFGCA[idx].crJ = 1);
-end;
-
-function TLegacySetting.AsText: string;
-begin
-   Result := CFGCommandValueAsString(FCommand);
-end;
-
-function TLegacySetting.AllowedValues: TArray<string>;
-begin
-   // Only ckArray rows answer this today.  ckList rows have a spelling list
-   // too, but it lives in a different array reached through a different index,
-   // and those are being converted to TEnumSetting rather than taught here --
-   // adding a second lookup would be extending the design we are leaving.
-   Result := CFGCommandAllowedValues(FCommand);
-end;
-
-function TLegacySetting.TrySetText(const aText: string; out aError: string): boolean;
-begin
-   aError := '';
-
-   // Through CheckCommand, not by assignment: it is what enforces crMin/crMax,
-   // runs the row's crA hook, and knows which typed global the value belongs
-   // in.  Bypassing it is what the SCP MINIMUM LETTERS access violation came
-   // from.
-   Result := SetCFGCommandValue(FCommand, aText);
-   if not Result then
-      begin
-      aError := Format('%s does not accept "%s"', [FCommand, aText]);
-      Exit;
-      end;
-
-   if Assigned(OnApply) then
-      begin
-      OnApply();
-      end;
-end;
-
-function RegisterLegacySetting(const aKey, aCommand, aCaption: string): TSettingBase;
-begin
-   Result := RegisterSetting(TLegacySetting.Create(aKey, aCommand, aCaption));
-end;
 
 { --------------------------------------------------------- TSettingBinding - }
 

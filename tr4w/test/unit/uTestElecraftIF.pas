@@ -1,4 +1,5 @@
 unit uTestElecraftIF;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for uElecraftIF -- the shared Elecraft IF decode.

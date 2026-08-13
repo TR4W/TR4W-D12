@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uIcomNetworkTypes;
+{$I tr4w.inc}
 
 {
   Icom Network Protocol Types and Constants

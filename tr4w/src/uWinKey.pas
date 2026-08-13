@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uWinKey;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -732,7 +733,7 @@ begin
           Top := c * CC + w4 * CC;
           tCreateStaticWindow(WK2ComboSettingsNamesArray[c], LeftVisNoSunStyle, o {* 2 + w}, Top, w, 17, hwnddlg, 100 + High(WK2SettingsNamesArray) + c);
 
-          CreateWindowEx(
+          CreateWindowExW(
             WS_EX_STATICEDGE,
             COMBOBOX,
             nil,
@@ -778,7 +779,7 @@ begin
         for c := 1 to MAX_SERIAL_PORT do
         begin
           // Issue #997: asm wsprintf-push -> TF.Format (c is the integer loop var).
-          Format(@wkREADBuffer, 'SERIAL %u', c);
+          TF.Format(@wkREADBuffer, 'SERIAL %u', c);
           tCB_ADDSTRING_PCHAR(hwnddlg, PORT_CB, string(PAnsiChar(@wkREADBuffer[0])));
         end;
         tCB_SETCURSEL(hwnddlg, PORT_CB, Cardinal(WinKeySettings.wksWinKey2Port));
@@ -1166,7 +1167,7 @@ begin
   Result := False;
   // Issue #997: asm wsprintf-push -> TF.Format (_COM = '\\.\COM%u', same as
   // tree.pas). wksWinKey2Port is a PortType enum -> Ord = the port number.
-  Format(@wkREADBuffer, _COM, Ord(WinKeySettings.wksWinKey2Port));
+  TF.Format(@wkREADBuffer, _COM, Ord(WinKeySettings.wksWinKey2Port));
   WinKeyHandle := CreateFileA(@wkREADBuffer, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL {FILE_FLAG_OVERLAPPED}, 0);
   if WinKeyHandle = INVALID_HANDLE_VALUE then
   begin

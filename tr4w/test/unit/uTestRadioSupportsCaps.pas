@@ -1,4 +1,5 @@
 unit uTestRadioSupportsCaps;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins rcCWByCAT / rcPlayDVK / rcCWSpeedSync against the LOGRADIO sets they were

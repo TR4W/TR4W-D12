@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRotatorControl;
+{$I tr4w.inc}
 
 {
   WHICH ROTATOR TURNS, and how the bytes get out.

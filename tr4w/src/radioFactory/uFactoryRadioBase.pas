@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uFactoryRadioBase;
+{$I ..\tr4w.inc}
 
 interface
 
@@ -329,7 +330,7 @@ Type TFactoryRadioBase = class(TObject)
       function  GetPTTviaCAT: boolean;
       procedure OnRadioConnected(Sender:TObject);
       procedure OnRadioDisconnected(Sender: TObject);
-      procedure OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: string);
+      procedure OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: TIdText);
       //procedure IdThreadComponentRun(Sender: TIdThreadComponent);
 
    protected
@@ -1218,7 +1219,7 @@ begin
       end;  }
 end;
 
-procedure TFactoryRadioBase.OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: string);
+procedure TFactoryRadioBase.OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: TIdText);
 begin
    logger.trace('Received text from radio: [%s]',[AStatusText]);
 end;

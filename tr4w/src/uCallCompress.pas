@@ -1,4 +1,5 @@
 unit uCallCompress;
+{$I tr4w.inc}
 
 {
   Callsign compression -- extracted VERBATIM from tree.pas (Issue: pre-migration

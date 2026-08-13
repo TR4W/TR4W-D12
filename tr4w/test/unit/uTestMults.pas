@@ -1,4 +1,5 @@
 unit uTestMults;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for uMults multiplier add / check / count (Issue #1034,

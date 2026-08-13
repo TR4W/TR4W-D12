@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uMP3Recorder;
+{$I tr4w.inc}
 
 interface
 uses
@@ -386,7 +387,7 @@ begin
 
         MP3RECWNDHND := hwnddlg;
 
-        Format(TR4W_TEMP_MP3_FILENAME, 'MP3 Recorder (%ukbps)', RecorderBitrate);
+        TF.Format(TR4W_TEMP_MP3_FILENAME, 'MP3 Recorder (%ukbps)', RecorderBitrate);
 
         Windows.SetWindowTextA(hwnddlg, TR4W_TEMP_MP3_FILENAME);
 
@@ -577,7 +578,7 @@ end;
 
 procedure OpenTempMP3File;
 begin
-  Format(TR4W_TEMP_MP3_FILENAME, '%s\TEMP_%02u_%02u.MP3', TR4W_MP3PATH, UTC.wHour, UTC.wDay);
+  TF.Format(TR4W_TEMP_MP3_FILENAME, '%s\TEMP_%02u_%02u.MP3', TR4W_MP3PATH, UTC.wHour, UTC.wDay);
   TempMP3FileHandle := CreateFileA(TR4W_TEMP_MP3_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   RecorderStartTime := Windows.GetTickCount;
 end;
@@ -589,7 +590,7 @@ end;
 
 function MakeMP3Filename(CE: ContestExchangePtr): PAnsiChar;
 begin
-  Format(TR4W_GET_MP3_FILENAME, '%s\%u%02u%02u_%02u%02u%02u_%sm_%s.MP3',
+  TF.Format(TR4W_GET_MP3_FILENAME, '%s\%u%02u%02u_%02u%02u%02u_%sm_%s.MP3',
 
     TR4W_MP3PATH,
     CE.tSysTime.qtYear + 2000,
@@ -617,8 +618,8 @@ begin
   ID3TAG.Tag[1] := 'A';
   ID3TAG.Tag[2] := 'G';
 
-  Format(ID3TAG.Year, '%u', CE.tSysTime.qtYear + 2000);
-  Format(ID3TAG.Artist, 'QSO with %s', @CE.Callsign[1]);
+  TF.Format(ID3TAG.Year, '%u', CE.tSysTime.qtYear + 2000);
+  TF.Format(ID3TAG.Artist, 'QSO with %s', @CE.Callsign[1]);
 
   Windows.lstrcpyA(@ID3TAG.Album, ContestTypeSA[Contest]);
   Windows.lstrcpyA(@ID3TAG.comment, TR4W_CURRENTVERSION);

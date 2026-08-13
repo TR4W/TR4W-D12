@@ -1,4 +1,5 @@
 unit uStrSearch;
+{$I tr4w.inc}
 
 {
   String helpers (PChar substring search + ShortString upcase) extracted from

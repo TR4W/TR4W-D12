@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioConfigStore;
+{$I tr4w.inc}
 
 {
   A LIBRARY OF RADIO DEFINITIONS, and the station profiles that put two of them
@@ -68,7 +69,7 @@ uses
    SysUtils,
    StrUtils,      // StartsText, for the section-name prefixes
    Classes,
-   System.IOUtils,       // TFile -- whole-file read/write for the JSON store
+   uFileText,            // whole-file UTF-8 read/write -- see the BOM note in that unit
    IniFiles,
    uJSON,          // the format of record for settings\tr4w.json
    Generics.Collections;
@@ -2029,7 +2030,7 @@ begin
       // letting this default to the machine's ANSI codepage would mangle a
       // non-ASCII radio name differently on different machines -- the same
       // class of bug the lang files hit.
-      text := TFile.ReadAllText(aFileName, TEncoding.UTF8);
+      text := ReadAllTextUTF8(aFileName);
    except
       on E: Exception do
          begin
@@ -2087,7 +2088,7 @@ begin
       // Note this is the OPPOSITE of the rule for src\lang\*.pas, which must
       // KEEP their BOM.  Same three bytes, opposite requirement, and neither
       // produces a diagnostic when it is wrong.
-      TFile.WriteAllBytes(aFileName, TEncoding.UTF8.GetBytes(root.Format(2)));
+      WriteAllTextUTF8(aFileName, root.Format(2));
    finally
       root.Free;
    end;

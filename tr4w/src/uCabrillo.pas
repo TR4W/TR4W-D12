@@ -1,4 +1,5 @@
 unit uCabrillo;
+{$I tr4w.inc}
 
 {
   Cabrillo line builders for use outside the final-log writer.

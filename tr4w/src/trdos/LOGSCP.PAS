@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LogSCP;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 interface
@@ -1057,14 +1058,14 @@ begin
         if FilePos(FileRead) <> StartingOffset then
         begin
           Close(FileRead);
-          Assign(FileRead, ActiveFilename);
+          Assign(FileRead, string(ActiveFilename));
           Reset(FileRead, 1);
           Seek(FileRead, StartingOffset);
         end;
       end
       else
       begin
-        Assign(FileRead, ActiveFilename);
+        Assign(FileRead, string(ActiveFilename));
         Reset(FileRead, 1);
         Seek(FileRead, StartingOffset);
       end;
@@ -2125,14 +2126,14 @@ begin
         if FilePos(FileRead) <> StartingOffset then
         begin
           Close(FileRead);
-          Assign(FileRead, ActiveFilename);
+          Assign(FileRead, string(ActiveFilename));
           Reset(FileRead, 1);
           Seek(FileRead, StartingOffset);
         end;
       end
       else
       begin
-        Assign(FileRead, ActiveFilename);
+        Assign(FileRead, string(ActiveFilename));
         Reset(FileRead, 1);
         Seek(FileRead, StartingOffset);
       end;
@@ -3005,14 +3006,14 @@ begin
         if FilePos(FileRead) <> StartingOffset then
         begin
           Close(FileRead);
-          Assign(FileRead, ActiveFilename);
+          Assign(FileRead, string(ActiveFilename));
           Reset(FileRead, 1);
           Seek(FileRead, StartingOffset);
         end;
       end
       else
       begin
-        Assign(FileRead, ActiveFilename);
+        Assign(FileRead, string(ActiveFilename));
         Reset(FileRead, 1);
         Seek(FileRead, StartingOffset);
       end;

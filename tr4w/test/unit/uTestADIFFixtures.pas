@@ -1,4 +1,5 @@
 unit uTestADIFFixtures;
+{$I ..\..\src\tr4w.inc}
 
 {
   ADIF import fixture-based tests.

@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uInputQuery;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -56,7 +57,7 @@ begin
         CreateOKCancelButtons(hwnddlg);
 
         CreateStatic(IQPrompt, l , 10, w , hwnddlg, 102);
-        CreateWindow(StaticPChar, nil, SS_ICON or WS_CHILD or WS_VISIBLE, 3, 10, 32, 32, hwnddlg, 106, hInstance, nil);
+        CreateWindowW(StaticPChar, nil, SS_ICON or WS_CHILD or WS_VISIBLE, 3, 10, 32, 32, hwnddlg, 106, hInstance, nil);
 
         dwNewLong := MainStyle;
 
@@ -77,7 +78,7 @@ begin
         // to compute the ordinal; under a 2-byte PWideChar that stride doubles
         // and selects the wrong icon.  Compute the ordinal in integer space,
         // then cast to a resource pointer (LoadIconW accepts the ordinal form).
-        SendDlgItemMessage(hwnddlg, 106, STM_SETIMAGE, IMAGE_ICON, LoadIcon(0, PChar(integer(IDI_QUESTION) + integer(tInputDialogWarning))));
+        SendDlgItemMessage(hwnddlg, 106, STM_SETIMAGE, IMAGE_ICON, LoadIconW(0, PChar(integer(IDI_QUESTION) + integer(tInputDialogWarning))));
 
         Windows.SetWindowLong(Get101Window(hwnddlg), GWL_STYLE, dwNewLong);
         SetDlgItemTextA(hwnddlg, 101, @tInputDialogPreviousValue[1]);

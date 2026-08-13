@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT890;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FT-890.

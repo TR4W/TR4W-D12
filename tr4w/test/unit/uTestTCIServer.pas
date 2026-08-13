@@ -1,4 +1,5 @@
 unit uTestTCIServer;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins uTCIServer's WIRE BEHAVIOUR by driving it with a real WebSocket client

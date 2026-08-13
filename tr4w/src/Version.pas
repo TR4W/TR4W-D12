@@ -16,6 +16,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit version;
+{$I tr4w.inc}
 interface
 const
   TR4W_CURRENTVERSION_NUMBER            = '5.0.0';

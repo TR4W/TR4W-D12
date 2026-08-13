@@ -19,6 +19,7 @@
 }
 
 unit PostUnit;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 
@@ -484,7 +485,7 @@ procedure CreateCabrilloFile;
   begin
 
   SetTransmittersId := False;
-  Format( tReportsFilename, '%s%s.LOG', TR4W_LOG_PATH_NAME, @MyCall[ 1 ] );
+  TF.Format( tReportsFilename, '%s%s.LOG', TR4W_LOG_PATH_NAME, @MyCall[ 1 ] );
   DeleteSlashes( tReportsFilename );
 
   Windows.ZeroMemory( @Radio1IDs, SizeOf( Radio1IDs ) );
@@ -522,7 +523,7 @@ procedure CreateCabrilloFile;
         begin
         logger.Info( '%s file uploaded to SCP', [ tReportsFilename ] );
         // ShowMessage('Log file successfully uploaded to SuperCheckPartial');
-        MessageBox( tr4whandle,
+        MessageBoxW( tr4whandle,
            'Log file successfully uploaded to SuperCheckPartial', nil,
            MB_OK or MB_ICONINFORMATION { or MB_RTLREADING } or MB_TASKMODAL );
         end
@@ -531,7 +532,7 @@ procedure CreateCabrilloFile;
         logger.Error( 'Error sending %s to SCP', [ tReportsFilename ] );
         logger.Error( scp.errorResult );
         // ShowMessage(PChar('Error uploading log file to SuperCheckPartial' + #13#10 + scp.errorResult));
-        MessageBox( tr4whandle,
+        MessageBoxW( tr4whandle,
            pchar( 'Error uploading log file to SuperCheckPartial' + #13#10 +
            scp.errorResult ), nil, MB_OK or
            MB_ICONINFORMATION { or MB_RTLREADING } or MB_TASKMODAL );
@@ -823,7 +824,7 @@ procedure WriteTitleBlockToSummarySheet;
     if TempBuffer2[ 0 ] = #0 then
       Continue;
 
-    nNumberOfBytesToWrite := Format( wsprintfBuffer, '%22s: %s'#13#10,
+    nNumberOfBytesToWrite := TF.Format( wsprintfBuffer, '%22s: %s'#13#10,
        @CabrilloTagsArray[ TempTag ].ctrTag[ 1 ], TempBuffer2 );
 
     sWriteFile( tReportFileWrite, wsprintfBuffer, nNumberOfBytesToWrite );
@@ -1877,7 +1878,7 @@ procedure ExportToEDIByBand( Band: BandType );
   if QSOTotals[ Band, Both ] = 0 then
     Exit;
 
-  Format( tReportsFilename, '%s%s_%s.EDI', TR4W_LOG_PATH_NAME, @MyCall[ 1 ],
+  TF.Format( tReportsFilename, '%s%s_%s.EDI', TR4W_LOG_PATH_NAME, @MyCall[ 1 ],
      BandStringsArrayWithOutSpaces[ Band ] );
 
   DeleteSlashes( tReportsFilename );
@@ -2254,8 +2255,8 @@ procedure ExportToCSV; // n4af 04/18/14 new procedure added
     end;
 
 
-  // nNumberOfBytesToWrite := Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @ContestTitle[1]);
-  // NumberOfBytesToWrite := Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @ContestTitle[1]);
+  // nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @ContestTitle[1]);
+  // NumberOfBytesToWrite := TF.Format(wsprintfBuffer, TR4W_CURRENTVERSION + #13#10#13#10#13#10, @ContestTitle[1]);
 
   // sWriteFile(tReportFileWrite, wsprintfBuffer, nNumberOfBytesToWrite);
 
@@ -3389,7 +3390,7 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             GridExchange, Grid2Exchange:
               begin
               Result := cMyGrid;
-              // Format(CABRILLO_MYEX, '%-11s', cMyGrid);
+              // TF.Format(CABRILLO_MYEX, '%-11s', cMyGrid);
               end;
 
             RSTNameAndQTHExchange:

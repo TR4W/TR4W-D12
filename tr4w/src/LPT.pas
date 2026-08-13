@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit LPT;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -69,7 +70,7 @@ begin
         begin
           Top := c * (17 + 8);
 
-          Format(wsprintfBuffer, 'LPT%u BASE ADDRESS', c);
+          TF.Format(wsprintfBuffer, 'LPT%u BASE ADDRESS', c);
 
           tCreateStaticWindow(wsprintfBuffer, LeftVisNoSunStyle, 10, Top, 180, 17, hwnddlg, 100 + c);
           tCreateEditWindow(WS_EX_STATICEDGE, '', ES_UPPERCASE or ES_NUMBER or WS_TABSTOP or WS_CHILD or SS_center or WS_VISIBLE, 200, Top, 80, 17, hwnddlg, 200 + c);
@@ -82,7 +83,7 @@ begin
         begin
           Top := c * (17 + 8) + 100;
 
-          Format(wsprintfBuffer, '%s PORT', LPTPortNamesArray[c]);
+          TF.Format(wsprintfBuffer, '%s PORT', LPTPortNamesArray[c]);
 
           tCreateStaticWindow(wsprintfBuffer, LeftVisNoSunStyle, 10, Top, 180, 17, hwnddlg, 103 + c);
           Style := CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP;

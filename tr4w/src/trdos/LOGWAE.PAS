@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LOGWAE;
+{$I ..\tr4w.inc}
 
 {$IMPORTEDDATA OFF}
 interface
@@ -415,7 +416,7 @@ begin
     DoABeep(Warning);
     p := @QTCCallsign[1];
     // Issue #997: asm wsprintf-push -> TF.Format.
-    Format(wsprintfBuffer, TC_SORRYYOUALREADYHAVE10QTCSWITH, p);
+    TF.Format(wsprintfBuffer, TC_SORRYYOUALREADYHAVE10QTCSWITH, p);
     QuickDisplay(wsprintfBuffer);
     Exit;
   end;
@@ -542,7 +543,7 @@ begin
     push QTCNumber
     end;
 }
-    QRVString[0] := AnsiChar(Format(@QRVString[1], 'QTC %u/%u', QTCNumber, NumberMessagesToBeSent));
+    QRVString[0] := AnsiChar(TF.Format(@QRVString[1], 'QTC %u/%u', QTCNumber, NumberMessagesToBeSent));
 //    asm add esp,16 end;
 
     // Issue #997: asm `lea eax,[QRVString]; call SendStringAndStop` -> direct call.
@@ -551,7 +552,7 @@ begin
 
     // Issue #997: asm wsprintf-push -> TF.Format. TC_ISQRVFOR = 'Is %s QRV for %s?';
     // cdecl-reverse pushes -> arg1=QTCCallsign, arg2=QRVString.
-    Format(wsprintfBuffer, TC_ISQRVFOR, @QTCCallsign[1], @QRVString[1]);
+    TF.Format(wsprintfBuffer, TC_ISQRVFOR, @QTCCallsign[1], @QRVString[1]);
 
     if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
     //tDialogBox(63, @QTCSDlgProc);

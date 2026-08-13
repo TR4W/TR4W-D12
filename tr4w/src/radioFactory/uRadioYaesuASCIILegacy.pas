@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuASCIILegacy;
+{$I ..\tr4w.inc}
 
 {
   Yaesu ASCII CAT -- the OLDER generation (legacy rtYaesu2): FT-450, FT-950,

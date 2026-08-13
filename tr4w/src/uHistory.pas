@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uHistory;
+{$I tr4w.inc}
 
 interface
 
@@ -977,7 +978,7 @@ begin
   h := CreateFile(BASE + 'CMS\xml\releases.xml', GENERIC_READ + GENERIC_WRITE, FILE_SHARE_READ + FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
   if h = INVALID_HANDLE_VALUE then Exit;
 
-  nNumberOfBytesToWrite := Format(wsprintfBuffer, '%s',
+  nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s',
 
     '<?xml version="1.0" encoding="UTF-8"?>' +
     '<cms>' +
@@ -990,23 +991,23 @@ begin
 
   for Version := 0 to TOATALVERSION2 - 1 {+1} do
   begin
-    nNumberOfBytesToWrite := Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
+    nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-    nNumberOfBytesToWrite := Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
+    nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
     sWriteFileFromString(h, '<ul>');
     for Feature := 0 to MAXFEATURES - 1 do
     begin
       if V[Version].hrV[Feature].hrFeature = ftUndef then Continue;
-      nNumberOfBytesToWrite := Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
+      nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
       sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
     end;
     sWriteFileFromString(h, '</ul>');
   end;
 
-  nNumberOfBytesToWrite := Format(wsprintfBuffer, '%s', ']]></content></cms>');
+  nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s', ']]></content></cms>');
   sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
   CloseHandle(h);
 end;
@@ -1058,7 +1059,7 @@ begin
   h := CreateFile(BASE + 'CMS\xml\latest-releases-notes.xml', GENERIC_READ + GENERIC_WRITE, FILE_SHARE_READ + FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
   if h = INVALID_HANDLE_VALUE then Exit;
 
-  nNumberOfBytesToWrite := Format(wsprintfBuffer, '%s',
+  nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s',
     '<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">' +
     '<xsl:template name="latestReleases">' +
     '<table cellpadding="20" cellspacing="10" style="font-size:8pt">' +
@@ -1076,17 +1077,17 @@ begin
 
   for Version := 0 to TOATALVERSION2 - 1 do
   begin
-    nNumberOfBytesToWrite := Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
+    nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<b>Version %s</b>', V[Version].hrVersion);
     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
-    nNumberOfBytesToWrite := Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
+    nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<i> (%02u-%s-%u)</i>', V[Version].hrDay, MonthTags[V[Version].hrMonth], V[Version].hrYear);
     sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
 
     sWriteFileFromString(h, '<ul>');
     for Feature := 0 to MAXFEATURES - 1 do
     begin
       if V[Version].hrV[Feature].hrFeature = ftUndef then Continue;
-      nNumberOfBytesToWrite := Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
+      nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '<li>%s: %s.</li>', FID[V[Version].hrV[Feature].hrFeature], V[Version].hrV[Feature].hrDescription);
       sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
       inc(InsertedFeatures);
     end;
@@ -1100,7 +1101,7 @@ begin
       if InsertedFeatures > FEATURES_IN_COLUMN then
       begin
 
-        nNumberOfBytesToWrite := Format(wsprintfBuffer, '%s', '</td><td style="width:340px;vertical-align:top">');
+        nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s', '</td><td style="width:340px;vertical-align:top">');
         sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
         secondcolumn := True;
 
@@ -1118,7 +1119,7 @@ begin
 
   end;
 
-  nNumberOfBytesToWrite := Format(wsprintfBuffer, '%s',
+  nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%s',
 
     '</td><td/></tr>' +
 

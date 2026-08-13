@@ -1,4 +1,5 @@
 unit uTestSerialParams;
+{$I ..\..\src\tr4w.inc}
 
 {
   Pins every radio's SERIAL DEFAULTS against the legacy they were derived from.

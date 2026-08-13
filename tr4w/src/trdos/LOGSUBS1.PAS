@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit LOGSUBS1;
+{$I ..\tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 

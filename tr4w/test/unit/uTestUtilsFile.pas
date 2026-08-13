@@ -1,4 +1,5 @@
 unit uTestUtilsFile;
+{$I ..\..\src\tr4w.inc}
 
 {
   Unit tests for utils_file.sWriteFileFromString.
@@ -45,11 +46,11 @@ var
    got     : DWORD;
 begin
    Result := '';
-   GetTempPath(MAX_PATH, tmpDir);
-   GetTempFileName(tmpDir, 'tr4', 0, tmpFile);   // creates a unique temp file
+   GetTempPathW(MAX_PATH, tmpDir);
+   GetTempFileNameW(tmpDir, 'tr4', 0, tmpFile);   // creates a unique temp file
 
    // Write phase
-   h := CreateFile(tmpFile, GENERIC_WRITE, 0, nil, CREATE_ALWAYS,
+   h := CreateFileW(tmpFile, GENERIC_WRITE, 0, nil, CREATE_ALWAYS,
                    FILE_ATTRIBUTE_TEMPORARY, 0);
    Check(h <> INVALID_HANDLE_VALUE, 'temp file opened for write');
    try
@@ -60,7 +61,7 @@ begin
 
    // Read phase -- request more than we wrote so a length mismatch (extra
    // garbage bytes) would be visible, not silently clipped.
-   h := CreateFile(tmpFile, GENERIC_READ, 0, nil, OPEN_EXISTING, 0, 0);
+   h := CreateFileW(tmpFile, GENERIC_READ, 0, nil, OPEN_EXISTING, 0, 0);
    Check(h <> INVALID_HANDLE_VALUE, 'temp file opened for read');
    try
       SetLength(buf, Length(s) + 64);
@@ -70,7 +71,7 @@ begin
       Result := buf;
    finally
       CloseHandle(h);
-      DeleteFile(tmpFile);
+      Windows.DeleteFileW(tmpFile);
    end;
 end;
 

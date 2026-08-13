@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uIcomCIV;
+{$I tr4w.inc}
 
 {
   Pure CI-V utility functions for Icom radio control.

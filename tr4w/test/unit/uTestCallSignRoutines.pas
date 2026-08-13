@@ -1,4 +1,5 @@
 unit uTestCallSignRoutines;
+{$I ..\..\src\tr4w.inc}
 
 {
   Tests for uCallSignRoutines callsign-parsing (pre-migration test net).

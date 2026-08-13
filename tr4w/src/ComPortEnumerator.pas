@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit ComPortEnumerator;
+{$I tr4w.inc}
 
 {
   Enumerates the serial ports Windows currently reports, with their friendly
@@ -57,6 +58,12 @@ unit ComPortEnumerator;
   SetupAPI declarations in the product are private to System.Win.Bluetooth), so
   the handful of imports needed are declared below.  They are `delayed` so a
   machine without setupapi.dll still loads TR4W.
+
+  FPC 3.2.2 has no `delayed`, so under FPC the imports bind at load time and
+  that guarantee is lost.  It is guarded rather than dropped because dropping it
+  would silently give up the Delphi build's property too.  If the FPC build ever
+  becomes the shipping one, the replacement is an explicit LoadLibrary +
+  GetProcAddress table in this unit -- not removing the directive.
 }
 
 interface
@@ -65,7 +72,8 @@ uses
    Windows,
    SysUtils,
    Classes,
-   VC;   // for MAX_SERIAL_PORT -- see below
+   VC,   // for MAX_SERIAL_PORT -- see below
+   uWin32Compat;   // RegisterDeviceNotificationW -- the FPC gap list
 
 const
    // Highest COM number TR4W can address, taken from the PortType enum itself
@@ -202,30 +210,30 @@ type
 
 function SetupDiGetClassDevsW(ClassGuid: PGUID; Enumerator: PWideChar;
    hwndParent: HWND; Flags: DWORD): HDEVINFO; stdcall;
-   external SetupApiDll name 'SetupDiGetClassDevsW' delayed;
+   external SetupApiDll name 'SetupDiGetClassDevsW'{$IFNDEF FPC} delayed{$ENDIF};
 
 function SetupDiEnumDeviceInfo(DeviceInfoSet: HDEVINFO; MemberIndex: DWORD;
    var DeviceInfoData: SP_DEVINFO_DATA): BOOL; stdcall;
-   external SetupApiDll name 'SetupDiEnumDeviceInfo' delayed;
+   external SetupApiDll name 'SetupDiEnumDeviceInfo'{$IFNDEF FPC} delayed{$ENDIF};
 
 function SetupDiDestroyDeviceInfoList(DeviceInfoSet: HDEVINFO): BOOL; stdcall;
-   external SetupApiDll name 'SetupDiDestroyDeviceInfoList' delayed;
+   external SetupApiDll name 'SetupDiDestroyDeviceInfoList'{$IFNDEF FPC} delayed{$ENDIF};
 
 function SetupDiGetDeviceRegistryPropertyW(DeviceInfoSet: HDEVINFO;
    const DeviceInfoData: SP_DEVINFO_DATA; Property_: DWORD;
    PropertyRegDataType: PDWORD; PropertyBuffer: PByte; PropertyBufferSize: DWORD;
    RequiredSize: PDWORD): BOOL; stdcall;
-   external SetupApiDll name 'SetupDiGetDeviceRegistryPropertyW' delayed;
+   external SetupApiDll name 'SetupDiGetDeviceRegistryPropertyW'{$IFNDEF FPC} delayed{$ENDIF};
 
 function SetupDiGetDeviceInstanceIdW(DeviceInfoSet: HDEVINFO;
    const DeviceInfoData: SP_DEVINFO_DATA; DeviceInstanceId: PWideChar;
    DeviceInstanceIdSize: DWORD; RequiredSize: PDWORD): BOOL; stdcall;
-   external SetupApiDll name 'SetupDiGetDeviceInstanceIdW' delayed;
+   external SetupApiDll name 'SetupDiGetDeviceInstanceIdW'{$IFNDEF FPC} delayed{$ENDIF};
 
 function SetupDiOpenDevRegKey(DeviceInfoSet: HDEVINFO;
    const DeviceInfoData: SP_DEVINFO_DATA; Scope, HwProfile, KeyType: DWORD;
    samDesired: REGSAM): HKEY; stdcall;
-   external SetupApiDll name 'SetupDiOpenDevRegKey' delayed;
+   external SetupApiDll name 'SetupDiOpenDevRegKey'{$IFNDEF FPC} delayed{$ENDIF};
 
 // ---------------------------------------------------------------------------
 
@@ -261,7 +269,7 @@ begin
    filter.dbcc_size       := SizeOf(filter);
    filter.dbcc_devicetype := DBT_DEVTYP_DEVICEINTERFACE;
    filter.dbcc_classguid  := GUID_DEVINTERFACE_COMPORT;
-   Result := Pointer(Windows.RegisterDeviceNotification(AWnd, @filter,
+   Result := Pointer(RegisterDeviceNotificationW(AWnd, @filter,
                                                 DEVICE_NOTIFY_WINDOW_HANDLE));
 end;
 
@@ -269,7 +277,7 @@ procedure UnregisterComPortNotification(var AHandle: Pointer);
 begin
    if AHandle <> nil then
       begin
-      Windows.UnregisterDeviceNotification(HDEVNOTIFY(AHandle));
+      UnregisterDeviceNotification(HDEVNOTIFY(AHandle));
       AHandle := nil;
       end;
 end;
@@ -285,7 +293,7 @@ var
 begin
    Result := 0;
    trimmed := UpperCase(Trim(APortName));
-   if not trimmed.StartsWith('COM') then
+   if Copy(trimmed, 1, 3) <> 'COM' then
       begin
       Exit;
       end;

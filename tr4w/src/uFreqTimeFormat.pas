@@ -1,4 +1,5 @@
 unit uFreqTimeFormat;
+{$I tr4w.inc}
 
 { Issue #997 / migration Tier-1 extraction.
 

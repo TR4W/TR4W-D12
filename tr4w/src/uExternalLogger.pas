@@ -1,4 +1,5 @@
 unit uExternalLogger;
+{$I tr4w.inc}
 
 interface
 uses uExternalLoggerBase, StrUtils, SysUtils, Math, TF, VC, LOGSUBS2, LogWind, LogDupe, Tree, uCFG, PostUnit,

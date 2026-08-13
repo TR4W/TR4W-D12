@@ -1,4 +1,5 @@
 unit utils_text;
+{$I ..\tr4w.inc}
 
 interface
 uses VC, SysUtils;
@@ -27,6 +28,20 @@ function pPos(c: AnsiChar; p: PAnsiChar): integer;         // boundary: raw PAns
 
 function StrComp(const Str1, Str2: PAnsiChar): integer;    // boundary: PAnsiChar
 procedure StrUpper(Str: PAnsiChar);                        // boundary: PAnsiChar (ASCII a-z only)
+
+// DataLen bytes as uppercase hex digits, unseparated -- 'KY 04' -> '4B592004'.
+//
+// Replaces Classes.BinToHex at the trace-logging call sites.  BinToHex writes
+// through a PChar into a caller-supplied buffer, which means the caller has to
+// size the buffer, terminate it by hand and get the *2 arithmetic right (the
+// two call sites in LOGRADIO wrote their terminator at DIFFERENT offsets, one
+// of them two bytes early).  A function that returns a string cannot get any
+// of that wrong, and it is what the logger wants anyway.
+//
+// Unseparated deliberately, to keep the existing log lines byte-identical.
+// uIcomNetworkTransport.BytesToHexStr is a SPACE-separated variant used for
+// packet dumps; the two formats are read by different eyes, so they stay apart.
+function BinToHexStr(const Data; DataLen: integer): string;
 
 implementation
 
@@ -365,5 +380,28 @@ begin
   result := dReturn;
 
 end;
+
+function BinToHexStr(const Data; DataLen: integer): string;
+const
+   HexDigits: array[0..15] of Char = ('0','1','2','3','4','5','6','7',
+                                      '8','9','A','B','C','D','E','F');
+var
+   bytes : array[0..MaxInt - 1] of Byte absolute Data;
+   i     : integer;
+begin
+   Result := '';
+   if DataLen <= 0 then
+      begin
+      Exit;
+      end;
+
+   SetLength(Result, DataLen * 2);
+   for i := 0 to DataLen - 1 do
+      begin
+      Result[(i * 2) + 1] := HexDigits[bytes[i] shr 4];
+      Result[(i * 2) + 2] := HexDigits[bytes[i] and $0F];
+      end;
+end;
+
 end.
 

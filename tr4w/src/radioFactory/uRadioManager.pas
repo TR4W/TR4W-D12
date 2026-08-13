@@ -1,4 +1,5 @@
 unit uRadioManager;
+{$I ..\tr4w.inc}
 
 {
   Radio Manager - Manages multiple radio instances

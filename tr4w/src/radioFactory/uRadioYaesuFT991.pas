@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT991;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FT-991 / FT-991A -- lead model of the legacy rtYaesu3 group (FT-891,

@@ -1,4 +1,5 @@
 unit uTestAutoInfo;
+{$I ..\..\src\tr4w.inc}
 
 {
   Auto-info level resolution across the Elecraft family.

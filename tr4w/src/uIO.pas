@@ -24,6 +24,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 
 unit uIO;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -131,7 +132,7 @@ begin
       end;
    inpout32LoadAttempted := True;
 
-   IOPlugin := LoadLibrary(PChar('inpout32.dll' + #0));
+   IOPlugin := LoadLibraryW('inpout32.dll');
    if (IOPlugin <> 0) then
       begin
       DlWriteByte := TDlPortWritePortUchar(GetProcAddress(IOPlugin, 'Out32'));

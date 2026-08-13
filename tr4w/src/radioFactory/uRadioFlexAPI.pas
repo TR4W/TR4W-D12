@@ -1,4 +1,5 @@
 unit uRadioFlexAPI;
+{$I ..\tr4w.inc}
 
 {
   SmartSDR Ethernet API driver (TCP 4992) -- one of TWO Flex protocol drivers.

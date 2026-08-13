@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioKYBase;
+{$I ..\tr4w.inc}
 
 {
   THE "KY" CW COMMAND -- the base for every radio that keys CW by sending

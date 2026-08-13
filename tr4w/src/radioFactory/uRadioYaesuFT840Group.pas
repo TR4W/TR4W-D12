@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFT840Group;
+{$I ..\tr4w.inc}
 
 {
   SHARED BASE for the Yaesu FT-840, FT-890 and FT-900 -- registers NOTHING.

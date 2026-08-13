@@ -1,4 +1,5 @@
 unit uCTYUpdate;
+{$I tr4w.inc}
 {
   CTY.DAT version check and automatic download.
 

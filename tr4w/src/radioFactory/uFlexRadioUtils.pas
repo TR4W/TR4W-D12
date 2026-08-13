@@ -1,4 +1,5 @@
 unit uFlexRadioUtils;
+{$I ..\tr4w.inc}
 
 {
   Pure utility functions for FlexRadio 6000 SmartSDR TCP protocol.

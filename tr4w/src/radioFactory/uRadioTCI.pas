@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioTCI;
+{$I ..\tr4w.inc}
 
 {
   TCI (Transceiver Control Interface) -- ExpertSDR2 / Thetis / AetherSDR.
@@ -151,7 +152,9 @@ type
 implementation
 
 uses
-   MainUnit, LogWind;   // logger; QuickDisplayError
+   MainUnit, LogWind,   // logger; QuickDisplayError
+   uTCIProtocol;        // SplitOnChar -- StrUtils.SplitString returns the RTL's
+                        // own TStringDynArray, which is AnsiString under FPC
 
 const
    // TR4W drives receiver 0 only.  TCI supports several ("trx"), but a contest
@@ -481,7 +484,7 @@ begin
       name := LowerCase(Trim(Copy(Cmd, 1, p - 1)));
       argsPart := Copy(Cmd, p + 1, Length(Cmd));
       end;
-   args := SplitString(argsPart, ',');
+   args := SplitOnChar(argsPart, ',');
 
    // HIGH-RATE TELEMETRY WE NEVER USE.  Measured on NY4I's 2026-08-02 capture:
    // 68 of 129 commands (53%) were rx_smeter alone.  TCI has no client-side

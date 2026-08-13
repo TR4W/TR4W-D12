@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit ColorCfg;
+{$I ..\tr4w.inc}
 
 interface
 

@@ -15,6 +15,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
 }
 unit uRadioYaesuFTDX5000;
+{$I ..\tr4w.inc}
 
 {
   Yaesu FTDX-5000 -- rtYaesu2 generation.  Protocol lives in uRadioYaesuASCIILegacy.

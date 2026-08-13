@@ -1,4 +1,5 @@
 unit uTestWebSocketLoopback;
+{$I ..\..\src\tr4w.inc}
 
 {
   Drives TR4W's own WebSocket CLIENT against TR4W's own WebSocket SERVER over

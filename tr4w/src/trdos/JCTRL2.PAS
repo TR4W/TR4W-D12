@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit JCtrl2;
+{$I ..\tr4w.inc}
 
 {$O+}
 {$F+}
