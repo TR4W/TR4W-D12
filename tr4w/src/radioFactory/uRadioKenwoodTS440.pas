@@ -72,13 +72,13 @@ procedure TKenwoodTS440Radio.Split(splitOn: boolean);
 begin
   // NOT `inherited` -- the base sends FR0;FT1; and moves the active VFO.
   if splitOn then
-    begin
-    Self.SendToRadio('SP1;');
-    end
+     begin
+     Self.SendToRadio('SP1;');
+     end
   else
-    begin
-    Self.SendToRadio('SP0;');
-    end;
+     begin
+     Self.SendToRadio('SP0;');
+     end;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

@@ -664,7 +664,10 @@ var
    m: string;
 begin
    m := LowerCase(Trim(s));
-   if m = 'cw' then Result := rmCW
+   if m = 'cw' then
+      begin
+      Result := rmCW
+      end
    else if m = 'cwr' then Result := rmCWRev
    else if m = 'usb' then Result := rmUSB
    else if m = 'lsb' then Result := rmLSB

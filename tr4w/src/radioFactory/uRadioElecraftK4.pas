@@ -244,7 +244,9 @@ begin
       end;
    Self.SendToRadio(Format('%2s%.11d;',[sCmd,freq]));
    if mode <> rmNone then
+      begin
       Self.SetMode(mode, vfo);
+      end;
 end;
 
 procedure TK4Radio.SetMode(mode:TRadioMode; vfo: TVFO = nrVFOA);
@@ -581,7 +583,9 @@ begin
             end;
          // If currently in a data mode, sync vfo.mode with the new sub-mode.
          if vfo.mode in [rmData, rmDataRev, rmFSK, rmFSKRev, rmPSK, rmPSKRev, rmAFSK, rmAFSKRev] then
+            begin
             vfo.mode := vfo.datamode;
+            end;
          end;
       4: begin             // FA
          hz := StrToIntDef(AnsiLeftStr(sData,11),-9);
@@ -632,9 +636,13 @@ begin
          // For DATA mode (6), the sub-mode comes separately via DT response.
          // Use the already-known vfo.datamode to avoid a spurious ModeStrToMode error.
          if AnsiLeftStr(sData,1) = '6' then
+            begin
             vfo.mode := vfo.datamode
+            end
          else
+            begin
             vfo.mode := Self.ModeStrToMode(AnsiLeftStr(sData,1),' ');
+            end;
          end;
       11:begin              // RT
          vfo.RITState := AnsiLeftStr(sData,1) = '1';
@@ -830,17 +838,25 @@ begin
    // Now rigLabel is set by LOGRADIO — reinitialize logger with the radio's identity.
    // Inherits root appender and format; category name appears in every log line.
    if Self.rigLabel <> '' then
+      begin
       logger := TLogLogger.GetLogger('TR4WDebugLog.K4-' + Self.rigLabel)
+      end
    else
+      begin
       logger := TLogLogger.GetLogger('TR4WDebugLog.K4-Radio');
+      end;
 
    // Serial takes the operator's level (default 2, set by ApplyAutoInfoLevel).
    // NOT 5: AI5 is the K4's network-side firehose and would flood a serial
    // port.  Network is always 5 and is not the operator's to change.
    if Self.serialPort <> NoPort then
+      begin
       Self.SetAIMode(FAutoInfoLevel)
+      end
    else
+      begin
       Self.SetAIMode(5);
+      end;
    logger.debug('[TK4Radio.Initialize] Sending KS;BN;RT;XT;RO;FT;ID;MD;DT$;IF;FP; to radio');
    Self.SendToRadio('KS;BN;RT;XT;RO;FT;ID;MD;DT;IF;FP;');
    Self.SendToRadio('BN$;RT$;XT$;RO$;MD$;DT$;IF$;FP$;');

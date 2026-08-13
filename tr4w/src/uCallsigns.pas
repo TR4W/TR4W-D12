@@ -134,9 +134,13 @@ var
   Index                                 : integer;
 begin
   if FindCallsign(Call, Index) then
-    Result := FList^[Index].FInExchange
+     begin
+     Result := FList^[Index].FInExchange
+     end
      else
-      Result := '';
+        begin
+        Result := '';
+        end;
 end;
 
 function TCallsignsList.AddIniitialExchange(const Call: string; const InitialExchangeString: string): boolean;
@@ -146,10 +150,10 @@ var
   Index                                 : integer;
 begin
   if FindCallsign(Call, Index) then
-  begin
-    Result := False;
-    goto Add;
-  end;
+     begin
+     Result := False;
+     goto Add;
+     end;
   if Count = MAXCALLSIGNSINLIST then Exit;
   InsertCallsign(Index, Call);
   Result := True;
@@ -163,7 +167,10 @@ var
 begin
   Result := 0;
   for i := 0 to Count - 1 do
-    if FList^[i].FQSOs > 0 then inc(Result);
+    if FList^[i].FQSOs > 0 then
+       begin
+       inc(Result);
+       end;
 end;
 
 function TCallsignsList.AddCallsign(const s: string; Mode: ModeType; Band: BandType; JustAddToList: boolean): integer;
@@ -174,12 +181,17 @@ var
 
 begin
 
-  if FindCallsign(s, Result) then goto Add;
+  if FindCallsign(s, Result) then
+     begin
+     goto Add;
+     end;
   if Count = MAXCALLSIGNSINLIST then Exit;
   InsertCallsign(Result, s);
   Add:
  if   FList^[Result].FQSOs < 255 then  //n4af 4.35.8
-  inc(FList^[Result].FQSOs);
+    begin
+    inc(FList^[Result].FQSOs);
+    end;
 
   if JustAddToList then Exit;
 
@@ -205,18 +217,23 @@ var
 begin
   Result := False;
   if FindCallsign(s, Index) then
-  begin
-//    TempMode := Mode;
-    if QSOByMode then TempMode := Mode else TempMode := Both;
-    if QSOByBand then TempBand := Band else TempBand := AllBands;
+     begin
+     //    TempMode := Mode;
+         if QSOByMode then TempMode := Mode else TempMode := Both;
+         if QSOByBand then TempBand := Band else TempBand := AllBands;
 
-    if TempMode = FM then TempMode := Phone;
+         if TempMode = FM then
+            begin
+            TempMode := Phone;
+            end;
 
-    Result := (FList^[Index].FDupesArray[TempMode {Mode}] and (1 shl Ord(TempBand))) <> 0;
-    IndexInList := Index;
-  end
+         Result := (FList^[Index].FDupesArray[TempMode {Mode}] and (1 shl Ord(TempBand))) <> 0;
+         IndexInList := Index;
+     end
   else
-    IndexInList := -1;
+     begin
+     IndexInList := -1;
+     end;
 end;
 {
 procedure TCallsignsList.Clear;
@@ -268,21 +285,23 @@ var
   l := 0;
   h := FCount - 1;
   while l <= h do
-  begin
-    i := (l + h) shr 1;
-    c := CompareStrings(FList^[i].FCall, s);
-    if c < 0 then
-     l := i + 1
-     else
-    begin
-      h := i - 1;
-      if c = 0 then
-      begin
-        Result := True;
-        l := i;
-      end;
-    end;
-  end;
+     begin
+     i := (l + h) shr 1;
+     c := CompareStrings(FList^[i].FCall, s);
+     if c < 0 then
+        begin
+        l := i + 1
+        end
+      else
+         begin
+         h := i - 1;
+         if c = 0 then
+            begin
+            Result := True;
+            l := i;
+            end;
+         end;
+     end;
   Index := l;
 end;
 
@@ -296,18 +315,18 @@ begin
   i := -1; //4.67.3
   h := FCount - 1;
   while i <= h do
-  begin
-    i := (i + 1);
-  lstr := laststring(Flist[i].Finexchange);
-   c := CompareStrings(lstr, s);
-    if c = 0 then
-    begin
-    Result := True;
-    CallWindowString :=  flist^[i].FCall;
+     begin
+     i := (i + 1);
+   lstr := laststring(Flist[i].Finexchange);
+    c := CompareStrings(lstr, s);
+     if c = 0 then
+        begin
+        Result := True;
+        CallWindowString :=  flist^[i].FCall;
     
-    exit; 
-      end;
-    end;
+        exit; 
+        end;
+     end;
   end;
 
 
@@ -344,17 +363,24 @@ var
 begin
   if FCapacity > 64 then delta := FCapacity div 4 else
     if FCapacity > 8 then delta := 16 else
-      delta := 4;
+                                         begin
+                                         delta := 4;
+                                         end;
   SetCapacity(FCapacity + delta);
 end;
 
 procedure TCallsignsList.InsertCallsign(Index: integer; const s: CallString);
 begin
 
-  if FCount = FCapacity then Grow;
+  if FCount = FCapacity then
+     begin
+     Grow;
+     end;
   if Index < FCount then
-    System.Move(FList^[Index], FList^[Index + 1],
-      (FCount - Index) * SizeOf(TCallsignItem));
+     begin
+     System.Move(FList^[Index], FList^[Index + 1],
+       (FCount - Index) * SizeOf(TCallsignItem));
+     end;
 
   Windows.ZeroMemory(@FList^[Index], SizeOf(FList^[Index]));
   FList^[Index].FCall := s;
@@ -474,22 +500,28 @@ begin
   if length(Call) < 2 then Exit;
   Result := 0;
   for Index := 0 to FCount - 1 do
-  begin
-    if pos(Call, FList^[Index].FCall) > 0 then
-    begin
-//      if QSOByMode then TempMode := ActiveMode else TempMode := Both;
-//      if TempMode = FM then TempMode := Phone;
-      PossibleCallList.List[Result].Call := FList^[Index].FCall;
-      PossibleCallList.List[Result].Dupe :=
-        CallsignIsDupe(FList^[Index].FCall, ActiveBand, ActiveMode, TempIndex);
-//      (FList^[Index].FDupesArray[TempMode] and (1 shl Ord(ActiveBand))) <> 0;
-      SendMessage(wh[mwePossibleCall], LB_ADDSTRING, 0, Result);
-      inc(Result);
-      if Result = MaxCallsignsInPossibleCallsList then goto 1;
-    end;
-  end;
+     begin
+     if pos(Call, FList^[Index].FCall) > 0 then
+        begin
+        //      if QSOByMode then TempMode := ActiveMode else TempMode := Both;
+        //      if TempMode = FM then TempMode := Phone;
+              PossibleCallList.List[Result].Call := FList^[Index].FCall;
+              PossibleCallList.List[Result].Dupe :=
+                CallsignIsDupe(FList^[Index].FCall, ActiveBand, ActiveMode, TempIndex);
+        //      (FList^[Index].FDupesArray[TempMode] and (1 shl Ord(ActiveBand))) <> 0;
+              SendMessage(wh[mwePossibleCall], LB_ADDSTRING, 0, Result);
+              inc(Result);
+              if Result = MaxCallsignsInPossibleCallsList then
+                 begin
+                 goto 1;
+                 end;
+        end;
+     end;
   1:
-  if Result > 0 then SendMessage(wh[mwePossibleCall], LB_SETCURSEL, 0, 0);
+  if Result > 0 then
+     begin
+     SendMessage(wh[mwePossibleCall], LB_SETCURSEL, 0, 0);
+     end;
 end;
 
 procedure TCallsignsList.DisplayDupeSheet(Radio: RadioPtr {dBand: BandType; dMode: ModeType});
@@ -515,9 +547,16 @@ begin
   Mode := Radio.ModeMemory;
 
   if not ColumnDupeSheetEnable then      //n4af 04.33.7 reactive columndupesheetenable
-  SendMessage(VDListBox, LB_RESETCONTENT, 0, 0) 
+     begin
+     SendMessage(VDListBox, LB_RESETCONTENT, 0, 0) 
+     end
   else
-    for Index := 48 to 57 do SendDlgItemMessage(TempDSHandle, Index, LB_RESETCONTENT, 0, 0);
+     begin
+     for Index := 48 to 57 do
+        begin
+        SendDlgItemMessage(TempDSHandle, Index, LB_RESETCONTENT, 0, 0);
+        end;
+     end;
 
    SendMessage(VDListBox, WM_SETREDRAW, wParam(False), 0);
 
@@ -531,17 +570,21 @@ begin
         for i := 0 to length(FList^[Index].FCall) do        // 4.79.3
           if FList^[Index].FCall[i - 1] in ['A'..'Z'] then
             if FList^[Index].FCall[i] in ['0'..'9'] then
-            begin
-              if FList^[Index].FCall[i] = TempChar then
-              begin
-            if ColumnDupeSheetEnable then
-             SendDlgItemMessageA(TempDSHandle, Ord(FList^[Index].FCall[i]), LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]))
-           else
-                Item := SendMessageA(VDListBox, LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]));
-                SendMessage(VDListBox, LB_SETITEMDATA, Item, Ord(TempChar));
-              end;
-              Break;
-            end;
+               begin
+               if FList^[Index].FCall[i] = TempChar then
+                  begin
+                  if ColumnDupeSheetEnable then
+                     begin
+                     SendDlgItemMessageA(TempDSHandle, Ord(FList^[Index].FCall[i]), LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]))
+                     end
+                 else
+                    begin
+                    Item := SendMessageA(VDListBox, LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]));
+                    end;
+                      SendMessage(VDListBox, LB_SETITEMDATA, Item, Ord(TempChar));
+                  end;
+               Break;
+               end;
       end;
       
     end;
@@ -579,15 +622,15 @@ var
   Index                                 : integer;
 begin
   for Index := 0 to FCount - 1 do
-  begin
-    Windows.ZeroMemory(@FList^[Index].FDupesArray, SizeOf(TDupesArray));
-    FList^[Index].FQSOs := 0;
-      {
+     begin
+     Windows.ZeroMemory(@FList^[Index].FDupesArray, SizeOf(TDupesArray));
+     FList^[Index].FQSOs := 0;
+       {
             for Band := Band160 to AllBands do
               for Mode := CW to Both do
                 FList^[Index].FDupesArray[Mode, Band] := 0;
       }
-  end;
+     end;
 end;
 
 begin

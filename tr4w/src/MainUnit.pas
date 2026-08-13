@@ -562,9 +562,13 @@ begin
   // to the ANSI entry point under FPC's windows unit.
   GetComputerNameW(arrCh, c1);
   if c1 > 0 then
-    result := arrCh
+     begin
+     result := arrCh
+     end
   else
-    result := '';
+     begin
+     result := '';
+     end;
 end;
 
 // Logs additional QSO records when the operator entered multiple POTA park
@@ -593,38 +597,41 @@ procedure DrainPendingMultiQSORefs;
 var
   TempRX : ContestExchange;
 begin
-  if (not HasPendingParks) and (not HasPendingCounties) then
-    Exit;
+  if (not HasPendingParks)     and 
+     (not HasPendingCounties) then
+     begin
+     Exit;
+     end;
   TempRX := ReceivedData;
   while HasPendingParks do
-    begin
-    TempRX.QTHString := DequeuePendingPark;
-    TempRX.ExchString := PerQSOExchString(TempRX);   // Issue #889
-    LogContact(TempRX, True);
-    end;
+     begin
+     TempRX.QTHString := DequeuePendingPark;
+     TempRX.ExchString := PerQSOExchString(TempRX);   // Issue #889
+     LogContact(TempRX, True);
+     end;
   while HasPendingCounties do
-    begin
-    TempRX.QTHString := DequeuePendingCounty;
-    FoundDomesticQTH(TempRX);  // refresh DomMultQTH/DomesticQTH
-    TempRX.ExchString := PerQSOExchString(TempRX);   // Issue #889
-    // QSO-party rule: a station that changes county is a new station and
-    // is NOT a dupe of an earlier QSO with the same call.  The follow-up
-    // county records share callsign+band+mode with the first one, so the
-    // generic dupe check would otherwise flag them, blank their points,
-    // and emit "AF4O is a dupe and will be logged with zero QSO points."
-    // Setting ceClearDupeSheet=True bypasses both LogContact's and
-    // tUpdateLog(actRescore)'s dupe-stamping for this record only.
-    TempRX.ceClearDupeSheet := True;
-    // NumberSent is intentionally NOT incremented for county-line follow-up
-    // records: per CQ Magazine guidance for the California QSO Party (and
-    // other state QPs that combine serial numbers with county-line ops),
-    // ALL legs of a single on-air exchange share the one transmitted serial
-    // number.  Both records inherit it from the first.  See issue #892 for
-    // the related "next station's serial jumps by N" question, which is a
-    // separate architectural concern (TotalContacts/QSOTotals is bumped per
-    // LogContact call rather than per distinct station worked).
-    LogContact(TempRX, True);
-    end;
+     begin
+     TempRX.QTHString := DequeuePendingCounty;
+     FoundDomesticQTH(TempRX);  // refresh DomMultQTH/DomesticQTH
+     TempRX.ExchString := PerQSOExchString(TempRX);   // Issue #889
+     // QSO-party rule: a station that changes county is a new station and
+     // is NOT a dupe of an earlier QSO with the same call.  The follow-up
+     // county records share callsign+band+mode with the first one, so the
+     // generic dupe check would otherwise flag them, blank their points,
+     // and emit "AF4O is a dupe and will be logged with zero QSO points."
+     // Setting ceClearDupeSheet=True bypasses both LogContact's and
+     // tUpdateLog(actRescore)'s dupe-stamping for this record only.
+     TempRX.ceClearDupeSheet := True;
+     // NumberSent is intentionally NOT incremented for county-line follow-up
+     // records: per CQ Magazine guidance for the California QSO Party (and
+     // other state QPs that combine serial numbers with county-line ops),
+     // ALL legs of a single on-air exchange share the one transmitted serial
+     // number.  Both records inherit it from the first.  See issue #892 for
+     // the related "next station's serial jumps by N" question, which is a
+     // separate architectural concern (TotalContacts/QSOTotals is bumped per
+     // LogContact call rather than per distinct station worked).
+     LogContact(TempRX, True);
+     end;
 end;
 
 // State-QP rover slash-in-call ("KG1S/MON"):
@@ -690,7 +697,9 @@ begin
         logger.Info('[ctyLocateCallStripRover] suffix=[%s] FoundDomesticQTH=%s',
                     [ProbeSuffix, BoolToStr(FoundQTH, True)]);
         if FoundQTH then
+           begin
            LookupCall := Copy(string(LookupCall), 1, SlashPos - 1);
+           end;
         end;
      end
   else
@@ -715,23 +724,31 @@ begin
   if not ((ActiveExchange = RSTDomesticQTHExchange) or
           (ActiveExchange = RSTQTHExchange) or
           (ActiveExchange = RSTDomesticOrDXQTHExchange)) then
+     begin
      Exit;
+     end;
 
   CallStr := string(CallWindowString);
   SlashPos := Pos('/', CallStr);
   if SlashPos = 0 then
+     begin
      Exit;
+     end;
 
   RoverCounty := UpperCase(Copy(CallStr, SlashPos + 1, Length(CallStr) - SlashPos));
   if RoverCounty = '' then
+     begin
      Exit;
+     end;
 
   // Validate the suffix against the domestic-mults table using a scratch
   // ContestExchange so we don't disturb any global state.
   FillChar(ProbeRX, SizeOf(ProbeRX), 0);
   ProbeRX.QTHString := RoverCounty;
   if not FoundDomesticQTH(ProbeRX) then
+     begin
      Exit;  // /M, /P, /4 or any non-county suffix — leave alone
+     end;
 
   Result := True;
 end;
@@ -754,9 +771,13 @@ var
   RoverCounty : string;
 begin
   if ExchangeWindowString <> '' then
+     begin
      Exit;
+     end;
   if not DetectRoverSlashInCall(RoverCounty) then
+     begin
      Exit;
+     end;
   ExchangeWindowString := RoverCounty;
   // The string() step is what Delphi was doing implicitly: PChar() of a
   // ShortString is not a legal cast, PChar() of a string expression is.
@@ -765,7 +786,9 @@ begin
   // fires when ExchangeWindowString is empty (which won't be true after
   // we just populated it), so we have to do it ourselves here.
   if not LeaveCursorInCallWindow then
+     begin
      tExchangeWindowSetFocus;
+     end;
 end;
 
 function TryLogContact: boolean;
@@ -775,78 +798,85 @@ var
   // the call and pre-fill the exchange after the caller's window clears.
   SavedCall    : CallString;
   SavedRSTSent : Integer;
-  begin
-  Result := False;
+begin
+   Result := False;
 
-  if ParametersOkay(CallWindowString, ExchangeWindowString, ActiveBand,
-    ActiveMode, ActiveRadioPtr.LastDisplayedFreq
-    {LastDisplayedFreq[ActiveRadio]},
-    ReceivedData) then
-  begin
+   if ParametersOkay(CallWindowString, ExchangeWindowString, ActiveBand,
+                     ActiveMode, ActiveRadioPtr.LastDisplayedFreq
+                    {LastDisplayedFreq[ActiveRadio]},
+                    ReceivedData) then
+      begin
 {$IF MORSERUNNER}
-    if MorseRunnerWindow <> 0 then
-      Windows.SendMessage(MorseRunner_Number, WM_KEYDOWN, VK_RETURN, 0);
+      if MorseRunnerWindow <> 0 then
+         begin
+         Windows.SendMessage(MorseRunner_Number, WM_KEYDOWN, VK_RETURN, 0);
+         end;
 {$IFEND}
-    ReceivedData.ceSearchAndPounce := OpMode = SearchAndPounceOpMode;
-    ReceivedData.ceComputerID := ComputerID;
+      ReceivedData.ceSearchAndPounce := OpMode = SearchAndPounceOpMode;
+      ReceivedData.ceComputerID := ComputerID;
 
     // Issue #889: when this is a multi-county or multi-park entry, the
     // parser has queued additional refs and ParametersOkay just stamped
     // ReceivedData.ExchString with the COMBINED original input
     // (e.g. "57 PIN/HIL").  Rewrite to per-QSO form for the first QSO so
     // each ADIF SRX_STRING reflects only its own ref.
-    if HasPendingParks or HasPendingCounties then
-       ReceivedData.ExchString := PerQSOExchString(ReceivedData);
+      if HasPendingParks or HasPendingCounties then
+         begin
+         ReceivedData.ExchString := PerQSOExchString(ReceivedData);
+         end;
 
-    LogContact(ReceivedData, True);
-    DrainPendingMultiQSORefs;
+      LogContact(ReceivedData, True);
+      DrainPendingMultiQSORefs;
 
     // Capture before ClearContestExchange zeroes out ReceivedData.
     // Needed for 2fer refill below.
-    SavedCall    := ReceivedData.Callsign;
-    SavedRSTSent := ReceivedData.RSTSent;
+      SavedCall    := ReceivedData.Callsign;
+      SavedRSTSent := ReceivedData.RSTSent;
 
-    tElapsedTimeFromLastQSO := Windows.GetTickCount;
-    UpdateWindows;
+      tElapsedTimeFromLastQSO := Windows.GetTickCount;
+      UpdateWindows;
     // It is not clear to me why we would call SHowStationInformation again.
-    ShowStationInformation(@ReceivedData.Callsign);
-    ClearContestExchange(ReceivedData);
-    LastTwoLettersCrunchedOn := '';
-    CallAlreadySent := False;
-    ExchangeHasBeenSent := False;
-    EditingCallsignSent := False;
-    SeventyThreeMessageSent := False;
-    EscapeDeletedCallEntry := CallWindowString;
+      ShowStationInformation(@ReceivedData.Callsign);
+      ClearContestExchange(ReceivedData);
+      LastTwoLettersCrunchedOn := '';
+      CallAlreadySent := False;
+      ExchangeHasBeenSent := False;
+      EditingCallsignSent := False;
+      SeventyThreeMessageSent := False;
+      EscapeDeletedCallEntry := CallWindowString;
 
-    if (CallWindowString = DupeInfoCall) and (CallWindowString <> MyCall) then
+      if (CallWindowString = DupeInfoCall) and 
+         (CallWindowString <> MyCall)      then
       // n4af issue 158
-    begin
-      DupeInfoCallWindowState := diNone;
-      SetMainWindowText(mweDupeInfoCall, '');
-    end;
+         begin
+         DupeInfoCallWindowState := diNone;
+         SetMainWindowText(mweDupeInfoCall, '');
+         end;
     // showint(1);
-    tCleareCallWindow;
+      tCleareCallWindow;
     // showint(2);
 
-    tCleareExchangeWindow;
+      tCleareExchangeWindow;
 
-    tCallWindowSetFocus;
-    CleanUpDisplay;
+      tCallWindowSetFocus;
+      CleanUpDisplay;
 
     // A prior bad-exchange attempt (e.g. TC_IMPROPERARRLFIELDDAYCLASS) leaves
     // an error in the QuickCommand window on its own 30s flash timer.  Once a
     // corrected QSO is logged that error is stale, so clear it now.
-    ClearQuickDisplayText;
+      ClearQuickDisplayText;
 
-    Result := True;
+      Result := True;
 
-    if OpMode = SearchAndPounceOpMode then
-      SendSerialNumberChange(sntReserved);
+      if OpMode = SearchAndPounceOpMode then
+         begin
+         SendSerialNumberChange(sntReserved);
+         end;
 
-    SendSerialNumberChange(sntFree);
-    StationInformationCall := '';
+      SendSerialNumberChange(sntFree);
+      StationInformationCall := '';
     // Moved this to the very end of the process to log a contact. ny4i
-  end;
+      end;
 end;
 
 procedure ResetRadioPorts;
@@ -864,34 +894,38 @@ procedure Escape_proc;
 begin
 
   if CallWindowString <> '' then
-    Call_Found := True
+     begin
+     Call_Found := True
+     end
   else
-    Call_Found := False;
+     begin
+     Call_Found := False;
+     end;
 
   if ActiveMode in [Phone, FM] then
-  begin
-    if ActiveRadioPtr^.HasCapability(rcPlayDVK) { and
+     begin
+     if ActiveRadioPtr^.HasCapability(rcPlayDVK) { and
     (ActiveRadioPtr^.tPTTStatus = PTT_ON) } then
-    begin
-      ActiveRadioPtr^.MemoryKeyer(0); // Playing memory 0 stops the message.
-    end;
-  end;
+        begin
+        ActiveRadioPtr^.MemoryKeyer(0); // Playing memory 0 stops the message.
+        end;
+     end;
 
   if (ActiveMode = CW) then
     // ny4i Issue 130 and (IsCWByCATActive) then // n4af 4.45.5 proposed to allow
-  begin
-    // B5: Esc always stops a radio that is CAT-sending.  The active/inactive
-    // pair that stood here is the CAT adapter's StopSending body, verbatim.
-    KeyerCAT.StopSending;
-  end;
+     begin
+     // B5: Esc always stops a radio that is CAT-sending.  The active/inactive
+     // pair that stood here is the CAT adapter's StopSending body, verbatim.
+     KeyerCAT.StopSending;
+     end;
 
   // SetOpMode(CQOpMode); // n4af 4.46.12
 
 {$IF MORSERUNNER}
   if MorseRunnerWindow <> 0 then
-  begin
-    Windows.SendMessage(MorseRunnerWindow, WM_COMMAND, 0, 0);
-  end;
+     begin
+     Windows.SendMessage(MorseRunnerWindow, WM_COMMAND, 0, 0);
+     end;
   Exit;
 {$IFEND}
 
@@ -900,10 +934,10 @@ begin
 {$IF MMTTYMODE}
   if ActiveMode = Digital then
     if MMTTY.mmttyTXIsOn then
-    begin
-      PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_IMMEDIATELY);
-      Exit;
-    end;
+       begin
+       PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_IMMEDIATELY);
+       Exit;
+       end;
 {$IFEND}
 
   // B1: the busy test is now the facade's -- CWStillBeingSent asks exactly the
@@ -917,101 +951,111 @@ begin
   // still going out.
   if ((ActiveMode = CW) and CWStillBeingSent) or
     ((ActiveMode in [Phone, FM]) and (DVPOn = True)) then
-  begin
-    if tAutoSendMode then
-      EditingCallsignSent := True;
-    tAutoSendMode := False;
-    FlushCWBufferAndClearPTT('MainUnit: typing while CW still being sent'); //n4af 4.33.3
+     begin
+     if tAutoSendMode then
+        begin
+        EditingCallsignSent := True;
+        end;
+     tAutoSendMode := False;
+     FlushCWBufferAndClearPTT('MainUnit: typing while CW still being sent'); //n4af 4.33.3
 
-    if DVPOn then
-    begin
-      tExitFromDVPThread := True;
-      sndPlaySound(nil, SND_ASYNC);
-      Windows.SetEvent(tDVP_Event);
-      timeKillEvent(tDVPTimerEventID);
-      DVPOn := False;
-      PTTOff;
-      DisplayCodeSpeed;
-    end;
-    exit; // 4.97.4
-  end;
+     if DVPOn then
+        begin
+        tExitFromDVPThread := True;
+        sndPlaySound(nil, SND_ASYNC);
+        Windows.SetEvent(tDVP_Event);
+        timeKillEvent(tDVPTimerEventID);
+        DVPOn := False;
+        PTTOff;
+        DisplayCodeSpeed;
+        end;
+     exit; // 4.97.4
+     end;
 
   if ActiveRadioPtr^.tTwoRadioMode = TR2 then
     if (not Call_Found) then
-    begin
-      tCleareCallWindow;
-      tCleareExchangeWindow;
-      tCallWindowSetFocus;
-      ActiveRadioPtr^.tTwoRadioMode := TR0;
-      InActiveRadioPtr^.tTwoRadioMode := TR0;
-      SwapRadios;
-      SetOpMode(CQOpMode);
-      Exit;
-    end;
+       begin
+       tCleareCallWindow;
+       tCleareExchangeWindow;
+       tCallWindowSetFocus;
+       ActiveRadioPtr^.tTwoRadioMode := TR0;
+       InActiveRadioPtr^.tTwoRadioMode := TR0;
+       SwapRadios;
+       SetOpMode(CQOpMode);
+       Exit;
+       end;
 
   // if tr4w_ExchangeWindowActive then
   if ActiveMainWindow = awExchangeWindow then
     // if ExchangeWindowString <> '' then // 4.97.2
-  begin
-    tCleareExchangeWindow;
-    tCallWindowSetFocus;
-    Exit;
-  end;
+     begin
+     tCleareExchangeWindow;
+     tCallWindowSetFocus;
+     Exit;
+     end;
 
   if Call_Found = True then
-  begin
-    EscapeDeletedCallEntry := CallWindowString;
-    tCleareCallWindow;
-    EditingCallsignSent := False;
-    CallAlreadySent := False;
-    ExchangeHasBeenSent := False;
-    SeventyThreeMessageSent := False;
-    ClearInfoWindows;
-    if OpMode = CQOpMode then
-    begin
-      if OpMode2 = SearchAndPounceOpMode then
-        if (not Call_Found) then
+     begin
+     EscapeDeletedCallEntry := CallWindowString;
+     tCleareCallWindow;
+     EditingCallsignSent := False;
+     CallAlreadySent := False;
+     ExchangeHasBeenSent := False;
+     SeventyThreeMessageSent := False;
+     ClearInfoWindows;
+     if OpMode = CQOpMode then
         begin
-          OpMode2 := CQOpMode;
-          ShowFMessages(0);
+        if OpMode2 = SearchAndPounceOpMode then
+          if (not Call_Found) then
+             begin
+             OpMode2 := CQOpMode;
+             ShowFMessages(0);
+             end;
         end;
-    end;
-  end;
+     end;
 
   if ExchangeWindowString <> '' then
-  begin
-    tCleareExchangeWindow;
-    Exit; //4.90.5
-  end;
+     begin
+     tCleareExchangeWindow;
+     Exit; //4.90.5
+     end;
 
   if ActiveRadioPtr^.tTwoRadioMode = TR1 then
-  begin
-    ActiveRadioPtr^.tTwoRadioMode := TR0;
-    InActiveRadioPtr^.tTwoRadioMode := TR0;
-    SwapRadios;
-    if OpMode = SearchAndPounceOpMode then
-      if (not Call_Found) then
-        SetOpMode(CQOpMode);
-  end;
+     begin
+     ActiveRadioPtr^.tTwoRadioMode := TR0;
+     InActiveRadioPtr^.tTwoRadioMode := TR0;
+     SwapRadios;
+     if OpMode = SearchAndPounceOpMode then
+       if (not Call_Found) then
+          begin
+          SetOpMode(CQOpMode);
+          end;
+     end;
 
   if tPreviousDupeQSOsShowed then
-    ShowPreviousDupeQSOsWnd(False); //DestroyPreviousDupeQSOsWnd;
+     begin
+     ShowPreviousDupeQSOsWnd(False); //DestroyPreviousDupeQSOsWnd;
+     end;
 
   if Call_Found = False then
-  begin
-    ClearMasterListBox;
-    ClearAltD; // n4af 4.65.2
-    tClearDupeInfoCall; //n4af 4.65.2
-  end;
+     begin
+     ClearMasterListBox;
+     ClearAltD; // n4af 4.65.2
+     tClearDupeInfoCall; //n4af 4.65.2
+     end;
   if TwoRadioState = CallReady then
-    TwoRadioState := Idle;
+     begin
+     TwoRadioState := Idle;
+     end;
 
   tCallWindowSetFocus;
 
   if OpMode = SearchAndPounceOpMode then
     if not Call_Found then
       if (EscapeExitsSearchAndPounce) then
-        SetOpMode(CQOpMode);
+         begin
+         SetOpMode(CQOpMode);
+         end;
 
 end;
 
@@ -1019,87 +1063,105 @@ procedure SpaceBarProc2;
 begin
   if (DupeInfoCall = '') and (CallWindowString = '') and (OpMode = SearchAndPounceOpMode) then // 4.102.3
     if not DEEnable then
-      SendStringAndStop(MyCall)
+       begin
+       SendStringAndStop(MyCall)
+       end
     else
-      SendStringAndStop(DEPlusMyCall);
+       begin
+       SendStringAndStop(DEPlusMyCall);
+       end;
 
   if (DupeInfoCall <> '') and (CallWindowString = '') then
-  begin
-    ActiveRadioPtr^.StopSendingCW;
-    inActiveRadioPtr^.StopSendingCW;
+     begin
+     ActiveRadioPtr^.StopSendingCW;
+     inActiveRadioPtr^.StopSendingCW;
 
-    if TwoRadioMode then
-    begin
-      SwitchNext := False; // 4.56.1
-      InActiveRadioPtr^.tTwoRadioMode := TR2;
-    end
-    else
-      InActiveRadioPtr^.tTwoRadioMode := TR1;
-
-    SwapRadios;
-    SetOpMode(SearchAndPounceOpMode);
-    PutCallToCallWindow(DupeInfoCall);
-    ShowStationInformation(@DupeInfoCall);
-    if TwoRadioMode then
-    begin
-      Send_DE;
-      if (length(CallWindowString) >= 3) and (ExchangeWindowString = '') then
-      begin
-        tExchangeWindowSetFocus;
-        tSetExchWindInitExchangeEntry;
-        CheckAndSetInitialExchangeCursorPos;
-      end;
-    end;
-    ShowStationInformation(@CallWindowString);
-    DisplayGridSquareStatus(CallWindowString);
-  end
-  else
-  begin
-    if (OpMode <> SearchAndPounceOpMode) and ((CallWindowString = '') or not SpaceBarDupeCheckEnable) then
-    begin
-      if CWStillBeingSent then
-        FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
-
-      SetUpToSendOnActiveRadio;
-
-      InactiveRigCallingCQ := False;
-
-      if MessageEnable then
-      begin
-        if ActiveMode = CW then
+     if TwoRadioMode then
         begin
-          if DEEnable then
-            SendStringAndStop(DEPlusMyCall)
-          else
-            SendStringAndStop(MyCall);
+        SwitchNext := False; // 4.56.1
+        InActiveRadioPtr^.tTwoRadioMode := TR2;
         end
-        else if ActiveMode = Digital then
-          SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
+     else
+        begin
+        InActiveRadioPtr^.tTwoRadioMode := TR1;
+        end;
+
+     SwapRadios;
+     SetOpMode(SearchAndPounceOpMode);
+     PutCallToCallWindow(DupeInfoCall);
+     ShowStationInformation(@DupeInfoCall);
+     if TwoRadioMode then
+        begin
+        Send_DE;
+        if (length(CallWindowString) >= 3) and (ExchangeWindowString = '') then
+           begin
+           tExchangeWindowSetFocus;
+           tSetExchWindInitExchangeEntry;
+           CheckAndSetInitialExchangeCursorPos;
+           end;
+        end;
+     ShowStationInformation(@CallWindowString);
+     DisplayGridSquareStatus(CallWindowString);
+     end
+  else
+     begin
+     if (OpMode <> SearchAndPounceOpMode) and ((CallWindowString = '') or not SpaceBarDupeCheckEnable) then
+        begin
+        if CWStillBeingSent then
+           begin
+           FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
+           end;
+
+        SetUpToSendOnActiveRadio;
+
+        InactiveRigCallingCQ := False;
+
+        if MessageEnable then
+           begin
+           if ActiveMode = CW then
+              begin
+              if DEEnable then
+                 begin
+                 SendStringAndStop(DEPlusMyCall)
+                 end
+              else
+                 begin
+                 SendStringAndStop(MyCall);
+                 end;
+              end
+           else if ActiveMode = Digital then
+              begin
+              SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
+              end
+           else
+           end;
+
+        KeyStamp(F1);
+        DisplayNextQSONumber;
+        ClearContestExchange(ReceivedData);
+        ExchangeHasBeenSent := False;
+        SetOpMode(SearchAndPounceOpMode);
+
+        DisplayAutoSendCharacterCount;
+        EscapeDeletedCallEntry := CallWindowString;
+        end
+     else
+        begin
+        if (StartSendingNowKey = ' ') and (OpMode = CQOpMode) then
+           begin
+           StartSendingNow(True)
+           end
         else
-      end;
-
-      KeyStamp(F1);
-      DisplayNextQSONumber;
-      ClearContestExchange(ReceivedData);
-      ExchangeHasBeenSent := False;
-      SetOpMode(SearchAndPounceOpMode);
-
-      DisplayAutoSendCharacterCount;
-      EscapeDeletedCallEntry := CallWindowString;
-    end
-    else
-    begin
-      if (StartSendingNowKey = ' ') and (OpMode = CQOpMode) then
-        StartSendingNow(True)
-      else
-        WindowDupeCheck;
-      tempRXData.Callsign := CallWindowString;
-      if UDPBroadcaster.Enabled(usLookup) then
-      begin
-        LookupInfoToUDP(tempRXData);
-      end;
-    end;
-  end;
+           begin
+           WindowDupeCheck;
+           end;
+        tempRXData.Callsign := CallWindowString;
+        if UDPBroadcaster.Enabled(usLookup) then
+           begin
+           LookupInfoToUDP(tempRXData);
+           end;
+        end;
+     end;
 end;
 
 procedure SpaceBarProc;
@@ -1107,94 +1169,104 @@ procedure SpaceBarProc;
 begin
 
   if (DupeInfoCall <> '') and (CallWindowString = '') then
-  begin
+     begin
 
-    FlushCWBufferAndClearPTT('MainUnit: DupeInfoCall set with an empty call window');
+     FlushCWBufferAndClearPTT('MainUnit: DupeInfoCall set with an empty call window');
 
-    if (TwoRadioState = CallReady) then
-      CheckTwoRadioState(SpaceBarPressed)
-        {KK1L: 6.73 Should modify to handle Alt-D from SAP mode}
-    else
-    begin
-      SwapRadios; { Changes band/mode and display }
-    end;
+     if (TwoRadioState = CallReady) then
+        begin
+        CheckTwoRadioState(SpaceBarPressed)
+        end
+         {KK1L: 6.73 Should modify to handle Alt-D from SAP mode}
+     else
+        begin
+        SwapRadios; { Changes band/mode and display }
+        end;
 
-    if TwoRadioState <> CallReady then
-    begin
-      SetOpMode(SearchAndPounceOpMode);
-      ShowStationInformation(@CallWindowString);
-      DisplayGridSquareStatus(CallWindowString);
-      VisibleLog.DoPossibleCalls(CallWindowString);
+     if TwoRadioState <> CallReady then
+        begin
+        SetOpMode(SearchAndPounceOpMode);
+        ShowStationInformation(@CallWindowString);
+        DisplayGridSquareStatus(CallWindowString);
+        VisibleLog.DoPossibleCalls(CallWindowString);
 
-      if (length(CallWindowString) >= 3) and (ExchangeWindowString = '') then
-      begin
-        tExchangeWindowSetFocus;
-        tSetExchWindInitExchangeEntry;
-        CheckAndSetInitialExchangeCursorPos;
-      end;
+        if (length(CallWindowString) >= 3) and (ExchangeWindowString = '') then
+           begin
+           tExchangeWindowSetFocus;
+           tSetExchWindInitExchangeEntry;
+           CheckAndSetInitialExchangeCursorPos;
+           end;
 
-      DisplayNextQSONumber;
-      ClearContestExchange(ReceivedData);
-      ExchangeHasBeenSent := False;
+        DisplayNextQSONumber;
+        ClearContestExchange(ReceivedData);
+        ExchangeHasBeenSent := False;
 
-      DisplayAutoSendCharacterCount;
-    end;
-  end
+        DisplayAutoSendCharacterCount;
+        end;
+     end
 
     { Still a SpaceBar, but not doing DupeInfoCall }
 
-  else if ((OpMode <> SearchAndPounceOpMode) and ((CallWindowString = '') or not
-    SpaceBarDupeCheckEnable)) then
-  begin
+  else if ((OpMode <> SearchAndPounceOpMode)                        and 
+          ((CallWindowString = '') or not SpaceBarDupeCheckEnable)) then
+     begin
 
-    FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
+     FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
 
-    SetUpToSendOnActiveRadio;
+     SetUpToSendOnActiveRadio;
 
-    InactiveRigCallingCQ := False;
+     InactiveRigCallingCQ := False;
 
-    if MessageEnable then
-    begin
-      if ActiveMode = CW then
-      begin
-        if DEEnable then
-          SendStringAndStop(DEPlusMyCall)
+     if MessageEnable then
+        begin
+        if ActiveMode = CW then
+           begin
+           if DEEnable then
+              begin
+              SendStringAndStop(DEPlusMyCall)
+              end
+           else
+              begin
+              SendStringAndStop(MyCall);
+              end;
+           end
+        else if ActiveMode = Digital then
+           begin
+           SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
+           end
         else
-          SendStringAndStop(MyCall);
-      end
-      else if ActiveMode = Digital then
-        SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
-      else
-        //wli SendFunctionKeyMessage (F1, SearchAndPounceOpMode);
-    end;
+          //wli SendFunctionKeyMessage (F1, SearchAndPounceOpMode);
+        end;
 
-    KeyStamp(F1);
+     KeyStamp(F1);
 
-    // repeat
-    // PutUpExchangeWindow;
-    DisplayNextQSONumber;
-    ClearContestExchange(ReceivedData);
-    ExchangeHasBeenSent := False;
-    // until not SearchAndPounce;
-    SetOpMode(SearchAndPounceOpMode);
-    ClearContestExchange(ReceivedData);
+     // repeat
+     // PutUpExchangeWindow;
+     DisplayNextQSONumber;
+     ClearContestExchange(ReceivedData);
+     ExchangeHasBeenSent := False;
+     // until not SearchAndPounce;
+     SetOpMode(SearchAndPounceOpMode);
+     ClearContestExchange(ReceivedData);
 
-    // RemoveWindow(ExchangeWindow);
+     // RemoveWindow(ExchangeWindow);
 
-    DisplayAutoSendCharacterCount;
+     DisplayAutoSendCharacterCount;
 
-    EscapeDeletedCallEntry := CallWindowString;
+     EscapeDeletedCallEntry := CallWindowString;
 
-    // if CallWindowString = '' then ResetSavedWindowListAndPutUpCallWindow;
-  end
+     // if CallWindowString = '' then ResetSavedWindowListAndPutUpCallWindow;
+     end
   else
-  begin
-    if WindowDupeCheck then //RemoveWindow(ExchangeWindow);
-      // Windows.SetWindowTextA(ExchangeWindowHandle, '');
-      SetMainWindowText(mweExchange, '');
-    // RestorePreviousWindow;
+     begin
+     if WindowDupeCheck then //RemoveWindow(ExchangeWindow);
+       // Windows.SetWindowTextA(ExchangeWindowHandle, '');
+        begin
+        SetMainWindowText(mweExchange, '');
+        end;
+     // RestorePreviousWindow;
 
-  end;
+     end;
 end;
 
 procedure SetOpMode(OperationMode: OpModeType);
@@ -1205,7 +1277,9 @@ begin
   SearchAndPounceMode := OpMode = SearchAndPounceOpMode;
   SetMainWindowText(mweOpMode, OpModeString[OperationMode]);
   if OperationMode = CQOpMode then
-    EditingCallsignSent := False;
+     begin
+     EditingCallsignSent := False;
+     end;
   tCallWindowSetFocus;
   DisplayAutoSendCharacterCount;
   InvalidateRect(wh[mweExchange], nil, False);
@@ -1215,170 +1289,205 @@ end;
 
 procedure ReturnInCQOpMode;
 begin
-  if InactiveRigCallingCQ and Switch then // n4af 4.44.10
-  begin
-    Switch := False;
-    CheckInactiveRigCallingCQ; // swapradios
-    InactiveRigCallingCQ := False; // n4af 4.44.3
-    if (length(CallWindowString) > 0) then
-      exit; // n4af 4.44.2
-  end;
+  if InactiveRigCallingCQ and 
+     Switch               then // n4af 4.44.10
+     begin
+     Switch := False;
+     CheckInactiveRigCallingCQ; // swapradios
+     InactiveRigCallingCQ := False; // n4af 4.44.3
+     if (length(CallWindowString) > 0) then
+        begin
+        exit; // n4af 4.44.2
+        end;
+     end;
 
-  if (length(CallWindowString) = 0) and (length(ExchangeWindowString) = 0) then
-  begin
-    if MessageEnable then
-    begin
-      TryKillAutoCQ;
-      SendFunctionKeyMessage(F1, CQOpMode);
-      InactiveRigCallingCQ := False; // n4af 4.44.3
-    end;
-    Exit;
-  end;
+  if (length(CallWindowString) = 0)     and 
+     (length(ExchangeWindowString) = 0) then
+     begin
+     if MessageEnable then
+        begin
+        TryKillAutoCQ;
+        SendFunctionKeyMessage(F1, CQOpMode);
+        InactiveRigCallingCQ := False; // n4af 4.44.3
+        end;
+     Exit;
+     end;
 
   // State-QP rover (KG1S/MON): if call has /COUNTY suffix and exchange
   // is empty, copy the county to the exchange and move focus there so
   // the operator can confirm with another Enter.
   PrefillExchangeFromRoverCallSuffix;
-
-  if (length(CallWindowString) <> 0) and (length(ExchangeWindowString) = 0) and
-    SwitchNext then // 4.52.8
-    if tAutoSendMode and (AutoSendCharacterCount > 0) then
-    begin
-      SwitchNext := False;
-      InactiveRigCallingCQ := False;
-      CallAlreadySent := True;
-      SwapRadios;
-    end;
+   
+  if (length(CallWindowString) <> 0)    and 
+     (length(ExchangeWindowString) = 0) and
+     SwitchNext                         then // 4.52.8
+     begin
+     if tAutoSendMode                and 
+        (AutoSendCharacterCount > 0) then
+        begin
+        SwitchNext := False;
+        InactiveRigCallingCQ := False;
+        CallAlreadySent := True;
+        SwapRadios;
+        end;
+     end;
 
   if SCPMinimumLetters > 0 then
-  begin
-    DisplayUserInfo(CallWindowString);
-    ShowName(CallWindowString);
-  end;
+     begin
+     DisplayUserInfo(CallWindowString);
+     ShowName(CallWindowString);
+     end;
   DisplayGridSquareStatus(CallWindowString);
 
   if Contest <> GENERALQSO then
-  begin
-    ShowStationInformation(@CallWindowString); //gav 4.44.8
-    VisibleLog.DoPossibleCalls(CallWindowString);
-  end;
+     begin
+     ShowStationInformation(@CallWindowString); //gav 4.44.8
+     VisibleLog.DoPossibleCalls(CallWindowString);
+     end;
 
-  if AutoDupeEnableCQ and tCallWindowStringIsDupe then
-  begin
-    CallAlreadySent := False;
-    // ShowFMessages(0);
-    // FlashCallWindow;
-    // EscapeDeletedCallEntry := CallWindowString;
-    // if tAutoSendMode = True then CallAlreadySent := True;
-    // if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
-    // if tAutoSendMode = True then CallAlreadySent := True;
-    // tAutoSendMode := False;
-    SendB4;
-    // DispalayDupe; // 4.108.6
-    // tCleareCallWindow;
-  end;
+  if AutoDupeEnableCQ        and 
+     tCallWindowStringIsDupe then
+     begin
+     CallAlreadySent := False;
+     // ShowFMessages(0);
+     // FlashCallWindow;
+     // EscapeDeletedCallEntry := CallWindowString;
+     // if tAutoSendMode = True then CallAlreadySent := True;
+     // if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
+     // if tAutoSendMode = True then CallAlreadySent := True;
+     // tAutoSendMode := False;
+     SendB4;
+     // DispalayDupe; // 4.108.6
+     // tCleareCallWindow;
+     end;
   if CallAlreadySent = False then
-  begin
-    if ActiveMode in [CW, Digital] then // WLI
-    begin
-      OpMode2 := SearchAndPounceOpMode;
-      ShowFMessages(0);
-    end;
-    if ActiveMode = Digital then
-      SendMessageToMixW('<TX>');
-    // CheckInactiveRigCallingCQ;
-    if not tAutoSendMode then
-      if MessageEnable then
-      begin
-        SetSpeed(DisplayedCodeSpeed); // 4.106.1
-        if not SendCrypticMessage(CallWindowString) then
-          Exit;
-      end;
-    tAutoSendMode := False;
-    CallAlreadySent := True;
-    ExchangeHasBeenSent := True;
-    CallsignICameBackTo := CallWindowString;
-    if MessageEnable then
-      AddOnCQExchange;
+     begin
+     if ActiveMode in [CW, Digital] then // WLI
+        begin
+        OpMode2 := SearchAndPounceOpMode;
+        ShowFMessages(0);
+        end;
+     if ActiveMode = Digital then
+        begin
+        SendMessageToMixW('<TX>');
+        end;
+     // CheckInactiveRigCallingCQ;
+     if not tAutoSendMode then
+        begin
+        if MessageEnable then
+           begin
+           SetSpeed(DisplayedCodeSpeed); // 4.106.1
+           if not SendCrypticMessage(CallWindowString) then
+              begin
+              Exit;
+              end;
+           end;
+        end;
+     tAutoSendMode := False;
+     CallAlreadySent := True;
+     ExchangeHasBeenSent := True;
+     CallsignICameBackTo := CallWindowString;
+     if MessageEnable then
+        begin
+        AddOnCQExchange;
+        end;
 
-    if QTCsEnabled then
-      DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
+     if QTCsEnabled then
+        begin
+        DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
+        end;
 
-    if (ExchangeWindowString = '') and (ExchangeMemoryEnable) then // 4.83.3
-    begin
-      if not LeaveCursorInCallWindow then
-        tExchangeWindowSetFocus;
-      tSetExchWindInitExchangeEntry; // 4.83.9
-      CheckAndSetInitialExchangeCursorPos;
-    end;
+     if (ExchangeWindowString = '') and 
+        (ExchangeMemoryEnable)      then // 4.83.3
+        begin
+        if not LeaveCursorInCallWindow then
+           begin
+           tExchangeWindowSetFocus;
+           end;
+        tSetExchWindInitExchangeEntry; // 4.83.9
+        CheckAndSetInitialExchangeCursorPos;
+        end;
 
-    if not LogWithSingleEnter then
-      Exit;
-  end;
+     if not LogWithSingleEnter then
+        begin
+        Exit;
+        end;
+     end;
 
   // IF K5KA.ModeEnabled THEN DupeCheckOnInactiveRadio;
 
   if ExchangeHasBeenSent = False then
     if MessageEnable and not BeSilent then
       if not (DebugFlag and (CWTone = 0)) then
-      begin
-        // Frm.ExchangeWindow . SetFocus;
-        tExchangeWindowSetFocus;
-        CallsignICameBackTo := CallWindowString;
-        tAutoSendMode := False;
-        AddOnCQExchange;
-      end;
+         begin
+         // Frm.ExchangeWindow . SetFocus;
+         tExchangeWindowSetFocus;
+         CallsignICameBackTo := CallWindowString;
+         tAutoSendMode := False;
+         AddOnCQExchange;
+         end;
 
   if ParametersOkay(CallWindowString, ExchangeWindowString, ActiveBand,
     ActiveMode, ActiveRadioPtr.LastDisplayedFreq, ReceivedData) then
-  begin
-    if ActiveMode = CW then
-    begin
+     begin
+     if ActiveMode = CW then
+        begin
 
-      if not Send73Message then
+        if not Send73Message then
+           begin
+           Exit;
+           end;
+        OpMode2 := CQOpMode;
+        ShowFMessages(0);
+
+        //SendCorrectCallIfNeeded;
+
+        end
+
+     else
+       {................phone.....................}
+       if MessageEnable and 
+          not BeSilent then
+          begin
+          if QuickQSL <> NoQuickQSLKey then
+             begin
+             SendCrypticMessage(QuickQSLPhoneMessage)
+             end
+          else
+             begin
+             Send73Message;
+             end;
+          end;
+     {................phone.....................}
+
+     if DualingCQState = DualGettingExchange then
+        begin
+        DualingCQState := DualSendingQSL;
+        end;
+     BeSilent := False;
+
+     if not TailEnding then
+        begin
+        // ReceivedData.ceSearchAndPounce := False;
+        TryLogContact;
+        ShowStationInformation(@ReceivedData.Callsign);
+        UpdateTotals2;
+
+        //{WLI}
+
+        EscapeDeletedCallEntry := CallWindowString;
+        tCleareCallWindow;
+        tCleareExchangeWindow;
+        tCallWindowSetFocus;
+        // sendmessage(CallWindowHandle,wm_setfocus,0,0);
+        // CallWindow . SetFocus;
+        if OnDeckCall <> '' then // 4.102.4
+           begin
+           PutCallToCallWindow(OnDeckCall);
+           end;
         Exit;
-      OpMode2 := CQOpMode;
-      ShowFMessages(0);
-
-      //SendCorrectCallIfNeeded;
-
-    end
-
-    else
-      {................phone.....................}if MessageEnable and not
-      BeSilent then
-      begin
-        if QuickQSL <> NoQuickQSLKey then
-          SendCrypticMessage(QuickQSLPhoneMessage)
-        else
-          Send73Message;
-      end;
-    {................phone.....................}
-
-    if DualingCQState = DualGettingExchange then
-      DualingCQState := DualSendingQSL;
-    BeSilent := False;
-
-    if not TailEnding then
-    begin
-      // ReceivedData.ceSearchAndPounce := False;
-      TryLogContact;
-      ShowStationInformation(@ReceivedData.Callsign);
-      UpdateTotals2;
-
-      //{WLI}
-
-      EscapeDeletedCallEntry := CallWindowString;
-      tCleareCallWindow;
-      tCleareExchangeWindow;
-      tCallWindowSetFocus;
-      // sendmessage(CallWindowHandle,wm_setfocus,0,0);
-      // CallWindow . SetFocus;
-      if OnDeckCall <> '' then // 4.102.4
-        PutCallToCallWindow(OnDeckCall);
-      Exit;
-    end;
-  end;
+        end;
+     end;
 end;
 
 procedure ReturnInSAPOpMode;
@@ -1397,23 +1506,25 @@ begin
   loop:
   if (ExchangeWindowString = '') and (CallWindowString = '') then
     if AutoReturnToCQMode then
-    begin
-      //     tClearDupeInfoCall; // 4.126.1
-      //     clearAltD;         //4.126.1
-      NameCallsignPutUp := '';
-      CleanUpDisplay;
-      if ActiveRadioPtr^.tTwoRadioMode = TR1 then
-      begin
-        ActiveRadioPtr^.tTwoRadioMode := TR0;
-        InActiveRadioPtr^.tTwoRadioMode := TR0;
-        SwapRadios;
-      end;
+       begin
+       //     tClearDupeInfoCall; // 4.126.1
+       //     clearAltD;         //4.126.1
+       NameCallsignPutUp := '';
+       CleanUpDisplay;
+       if ActiveRadioPtr^.tTwoRadioMode = TR1 then
+          begin
+          ActiveRadioPtr^.tTwoRadioMode := TR0;
+          InActiveRadioPtr^.tTwoRadioMode := TR0;
+          SwapRadios;
+          end;
 
-      SetOpMode(CQOpMode);
-      if MessageEnable then
-        SendFunctionKeyMessage(F1, OpMode);
-      Exit;
-    end;
+       SetOpMode(CQOpMode);
+       if MessageEnable then
+          begin
+          SendFunctionKeyMessage(F1, OpMode);
+          end;
+       Exit;
+       end;
 
   // State-QP rover (KG1S/MON): if call has /COUNTY suffix and exchange
   // is empty, copy the county to the exchange and move focus there so
@@ -1422,47 +1533,55 @@ begin
 
   // if tr4w_CallWindowActive then
   if (length(CallWindowString) >= 3) then
-  begin
-    tCreateAndAddNewSpot(CallWindowString, tCallWindowStringIsDupe,
-      ActiveRadioPtr);
-    if not AutoDupeEnableSandP then // n4af 4.49.5
-      tExchangeWindowSetFocus; // n4af issue155 4.47.12
-  end;
+     begin
+     tCreateAndAddNewSpot(CallWindowString, tCallWindowStringIsDupe,
+       ActiveRadioPtr);
+     if not AutoDupeEnableSandP then // n4af 4.49.5
+        begin
+        tExchangeWindowSetFocus; // n4af issue155 4.47.12
+        end;
+     end;
   if (ExchangeWindowString = '') then
     if (length(CallWindowString) >= 3) and
       ((not tCallWindowStringIsDupe) or
       (not AutoDupeEnableSandP)) then
 
-    begin
-      // ExchangeHasBeenSent := False;
-      if GoodCallSyntax(CallWindowString) then
-      begin
-        if not Send_DE then
-          Exit;
-        tExchangeWindowSetFocus;
-      end;
-    end;
+       begin
+       // ExchangeHasBeenSent := False;
+       if GoodCallSyntax(CallWindowString) then
+          begin
+          if not Send_DE then
+             begin
+             Exit;
+             end;
+          tExchangeWindowSetFocus;
+          end;
+       end;
 
   if QTCsEnabled then
-    DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
+     begin
+     DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
+     end;
 
   if tCallWindowStringIsDupe and {not }AutoDupeEnableSandP then
-  begin
-    DispalayDupe;
-    // if WindowDupeCheck then
-    Exit;
-  end;
+     begin
+     DispalayDupe;
+     // if WindowDupeCheck then
+     Exit;
+     end;
 
   DisplayGridSquareStatus(CallWindowString);
   ShowStationInformation(@CallWindowString);
 
   if (ExchangeWindowString = '') {and (ExchangeMemoryEnable)} then // 4.84.1
-  begin
-    if ExchangeMemoryEnable then
-      tSetExchWindInitExchangeEntry;
-    CheckAndSetInitialExchangeCursorPos;
-    Exit;
-  end;
+     begin
+     if ExchangeMemoryEnable then
+        begin
+        tSetExchWindInitExchangeEntry;
+        end;
+     CheckAndSetInitialExchangeCursorPos;
+     Exit;
+     end;
 
   VisibleLog.DoPossibleCalls(CallWindowString);
   // DDX(MaybeRespondToMyCall);
@@ -1472,105 +1591,123 @@ begin
   if MessageEnable and (not ExchangeHasBeenSent) and (not BeSilent) and
     MessageEnable then
 
-  begin
-    if ActiveMode = Digital then
-      // ny4i Issue153 Just reformatted these few 'IFs' for readability
-    begin
-      SendMessageToMixW('<TX>');
-    end;
+     begin
+     if ActiveMode = Digital then
+       // ny4i Issue153 Just reformatted these few 'IFs' for readability
+        begin
+        SendMessageToMixW('<TX>');
+        end;
 
-    // Multi-county exchanges (e.g. "DAL/BAY", "DAL BAY") are handled at the
-    // parser level: ProcessRSTAndDomesticQTHExchange splits and queues the
-    // extras, and the drain loop in TryLogContact logs the additional QSOs
-    // immediately.  No pre-split is needed here -- Issue #885.
+     // Multi-county exchanges (e.g. "DAL/BAY", "DAL BAY") are handled at the
+     // parser level: ProcessRSTAndDomesticQTHExchange splits and queues the
+     // extras, and the drain loop in TryLogContact logs the additional QSOs
+     // immediately.  No pre-split is needed here -- Issue #885.
 
-    if ActiveMode in [CW, Digital] then
+     if ActiveMode in [CW, Digital] then
 
-      if not SendCrypticMessage(SearchAndPounceExchange) then
-        Exit;
+       if not SendCrypticMessage(SearchAndPounceExchange) then
+          begin
+          Exit;
+          end;
 
-    if ActiveMode = Digital then
-    begin
-      SendMessageToMixW('<RXANDCLEAR>');
-    end;
+     if ActiveMode = Digital then
+        begin
+        SendMessageToMixW('<RXANDCLEAR>');
+        end;
 
-    if ActiveMode in [Phone, FM] then
-    begin
-      SendCrypticMessage(SearchAndPouncePhoneExchange);
-    end;
+     if ActiveMode in [Phone, FM] then
+        begin
+        SendCrypticMessage(SearchAndPouncePhoneExchange);
+        end;
 
-    ExchangeHasBeenSent := True;
+     ExchangeHasBeenSent := True;
 
-    //if activeradioptr^.cwbycat then backtoinactiveradioafterqso; // ny4i Issue130 Moving this to after LogContact
-    {TODO } // Uncomment above and comment below to check for CWBC_AutoSend ny4i 9-mar-2016
-    //if activeradioptr^.cwbycat then backtoinactiveradioafterqso; // ny4i Issue153 commented out
+     //if activeradioptr^.cwbycat then backtoinactiveradioafterqso; // ny4i Issue130 Moving this to after LogContact
+     {TODO } // Uncomment above and comment below to check for CWBC_AutoSend ny4i 9-mar-2016
+     //if activeradioptr^.cwbycat then backtoinactiveradioafterqso; // ny4i Issue153 commented out
 
-  end;
+     end;
 
   if TryLogContact then
-  begin
-    if ActiveRadioPtr^.tTwoRadioMode = TR2 then
-      ActiveRadioPtr^.tTwoRadioMode := TR3;
-    // TwoRadioState := SendingExchange;
-    if ReceivedData.DomesticMult or ReceivedData.DXMult or ReceivedData.ZoneMult
-      then
-      VisibleLog.ShowRemainingMultipliers;
-    if ReceivedData.DomesticMult then
-      VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
-    if SprintQSYRule then
-    begin
-      QuickDisplay(TC_SPRINTQSYRULE);
-      if OpMode = SearchAndPounceOpMode then
-        SetOpMode(CQOpMode);
-    end;
-  end;
+     begin
+     if ActiveRadioPtr^.tTwoRadioMode = TR2 then
+        begin
+        ActiveRadioPtr^.tTwoRadioMode := TR3;
+        end;
+     // TwoRadioState := SendingExchange;
+     if ReceivedData.DomesticMult or ReceivedData.DXMult or ReceivedData.ZoneMult
+       then
+        begin
+        VisibleLog.ShowRemainingMultipliers;
+        end;
+     if ReceivedData.DomesticMult then
+        begin
+        VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
+        end;
+     if SprintQSYRule then
+        begin
+        QuickDisplay(TC_SPRINTQSYRULE);
+        if OpMode = SearchAndPounceOpMode then
+           begin
+           SetOpMode(CQOpMode);
+           end;
+        end;
+     end;
   if (ActiveExchange = RSTDomesticQTHExchange) or (ActiveExchange =
     RSTQTHEXCHANGE) then
-  begin
-    if (IsAlpha(S2)) and (S2 <> '') then
-    begin
+     begin
+     if (IsAlpha(S2)) and (S2 <> '') then
+        begin
 
-      CallWindowString := callw;
-      // S3 := '';
-      exchangewindowstring := s1;
-      BeSilent := True;
-   //   S2 := '';
-      goto loop;
-    end;
-  end;
+        CallWindowString := callw;
+        // S3 := '';
+        exchangewindowstring := s1;
+        BeSilent := True;
+     //   S2 := '';
+        goto loop;
+        end;
+     end;
 end;
 
 function Send_DE: boolean;
 begin
   Result := True;
   if ActiveMode = CW then
-  begin
-    // SetSpeed(DisplayedCodeSpeed);
-    // InactiveRigCallingCQ := False;
-    if MessageEnable and not BeSilent then
-    begin
-      if DEEnable then
-        Result := SendCrypticMessage(DEPlusMyCall)
-      else
-        Result := SendCrypticMessage(MyCall);
-      // DebugMsg('<<<<SendCrypticMessage(MyCall)');
-      KeyStamp(F1);
-    end;
-    Exit;
-  end;
+     begin
+     // SetSpeed(DisplayedCodeSpeed);
+     // InactiveRigCallingCQ := False;
+     if MessageEnable and not BeSilent then
+        begin
+        if DEEnable then
+           begin
+           Result := SendCrypticMessage(DEPlusMyCall)
+           end
+        else
+           begin
+           Result := SendCrypticMessage(MyCall);
+           end;
+        // DebugMsg('<<<<SendCrypticMessage(MyCall)');
+        KeyStamp(F1);
+        end;
+     Exit;
+     end;
 
   if ActiveMode = Digital then
-    SendCrypticMessage(#13#10 + CallWindowString + ' DE ' + MyCall + ' ' +
-      MyCall)
+     begin
+     SendCrypticMessage(#13#10 + CallWindowString + ' DE ' + MyCall + ' ' +
+       MyCall)
+     end
 
   else
-  begin
-    if DVKEnable and MessageEnable and not BeSilent then
-      SendFunctionKeyMessage(F1, SearchAndPounceOpMode);
-    // if (ActiveDVKPort <> NoPort) and not BeSilent then
-    {KK1L: 6.73 Added mode to GetExMemoryString}
-    //{WLI} (GetEXMemoryString (ActiveMode, F1));
-  end;
+     begin
+     if DVKEnable and MessageEnable and not BeSilent then
+        begin
+        SendFunctionKeyMessage(F1, SearchAndPounceOpMode);
+        end;
+     // if (ActiveDVKPort <> NoPort) and not BeSilent then
+     {KK1L: 6.73 Added mode to GetExMemoryString}
+     //{WLI} (GetEXMemoryString (ActiveMode, F1));
+     end;
 
 end;
 
@@ -1579,52 +1716,58 @@ var
   QTC: integer;
 begin
   if AutoDisplayDupeQSO then
-  begin
-    ShowPreviousDupeQSOs(CallWindowString, ActiveBand, ActiveMode);
-    // EditableLogDisplayed := True;
-  end;
+     begin
+     ShowPreviousDupeQSOs(CallWindowString, ActiveBand, ActiveMode);
+     // EditableLogDisplayed := True;
+     end;
 
   if ActiveMode in [CW, Digital] then //wli issue 276
-  begin
-    if QTCsEnabled then
-    begin
-      QTC := NumberQTCsThisStation(StandardCallFormat(CallWindowString, False));
-      DisplayQTCNumber(QTC);
-      if QTC < 10 then
-      begin
-        if QTCsEnabled and (MyContinent = Europe) then
+     begin
+     if QTCsEnabled then
         begin
-          AddStringToBuffer(' B4 ', CWTone);
-          // WAEQTC (CallWindowString);
-        end
-        else if MessageEnable and not BeSilent then
-          SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage);
-      end;
-      // else
-      // if MessageEnable and not BeSilent then
-      // SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage);
+        QTC := NumberQTCsThisStation(StandardCallFormat(CallWindowString, False));
+        DisplayQTCNumber(QTC);
+        if QTC < 10 then
+           begin
+           if QTCsEnabled and (MyContinent = Europe) then
+              begin
+              AddStringToBuffer(' B4 ', CWTone);
+              // WAEQTC (CallWindowString);
+              end
+           else if MessageEnable and not BeSilent then
+              begin
+              SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage);
+              end;
+           end;
+        // else
+        // if MessageEnable and not BeSilent then
+        // SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage);
 
-    end
-    else if MessageEnable and not BeSilent then
-      { if CallAlreadySent = False then
+        end
+     else if MessageEnable and not BeSilent then
+       { if CallAlreadySent = False then
       SendCrypticMessage(CallWindowString + ' ' + QSOBeforeMessage)
       else
       SendCrypticMessage(QSOBeforeMessage); }
-      if DualingCQState <> NoDualingCQs then
-        DualingCQState := SendingDupeMessage;
-  end;
+       if DualingCQState <> NoDualingCQs then
+          begin
+          DualingCQState := SendingDupeMessage;
+          end;
+     end;
 
   if ActiveMode = Phone then
-  begin
-    //wli
-    SendCrypticMessage(QSOBeforePhoneMessage);
+     begin
+     //wli
+     SendCrypticMessage(QSOBeforePhoneMessage);
 
-    // Write (' DUPE!!');
-    EscapeDeletedCallEntry := CallWindowString;
+     // Write (' DUPE!!');
+     EscapeDeletedCallEntry := CallWindowString;
 
-    if QTCsEnabled then
-      DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)))
-  end;
+     if QTCsEnabled then
+        begin
+        DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)))
+        end
+     end;
 
   CallAlreadySent := False;
   SeventyThreeMessageSent := False;
@@ -1641,7 +1784,9 @@ var
 begin
   FindAndSaveRectOfAllWindows;
   if not tOpenFileForWrite(h, TR4W_POS_FILENAME) then
-    Exit;
+     begin
+     Exit;
+     end;
   sWriteFile(h, tr4w_WindowsArray, SizeOf(tr4w_WindowsArray));
   CloseHandle(h);
 end;
@@ -1947,9 +2092,13 @@ begin
   Exit;
 {$IFEND}
   if not TF.tOpenFileForRead(h, TR4W_POS_FILENAME) then
-    goto 2;
+     begin
+     goto 2;
+     end;
   if Windows.GetFileSize(h, nil) <> SizeOf(tr4w_WindowsArray) then
-    goto 1;
+     begin
+     goto 1;
+     end;
   Windows.ReadFile(h, tr4w_WindowsArray, SizeOf(tr4w_WindowsArray),
     pNumberOfBytesRead, nil);
   1:
@@ -1957,50 +2106,56 @@ begin
   2:
   for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
     if tr4w_WindowsArray[i].WndRect.Right = 0 then
-    begin
-      tr4w_WindowsArray[i].WndRect.Top := 400;
-      tr4w_WindowsArray[i].WndRect.Left := Ord(i) * 30;
-      tr4w_WindowsArray[i].WndRect.Right := Ord(i) * 30 + 220;
-      tr4w_WindowsArray[i].WndRect.Bottom := 600;
-    end;
+       begin
+       tr4w_WindowsArray[i].WndRect.Top := 400;
+       tr4w_WindowsArray[i].WndRect.Left := Ord(i) * 30;
+       tr4w_WindowsArray[i].WndRect.Right := Ord(i) * 30 + 220;
+       tr4w_WindowsArray[i].WndRect.Bottom := 600;
+       end;
   // Issue #783 Phase 4: give the HamScore status window enough room for
   // the URL line and the multi-line status edit.  Default 220 x N is too
   // narrow / short.  Min: 410 wide x 270 tall.
   if tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Right -
      tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Left < 410 then
-    tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Right :=
-      tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Left + 410;
+     begin
+     tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Right :=
+       tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Left + 410;
+     end;
   if tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Bottom -
      tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Top < 270 then
-    tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Bottom :=
-      tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Top + 270;
+     begin
+     tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Bottom :=
+       tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Top + 270;
+     end;
 
   if tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Right = 0 then
-  begin
-    Left := (GetSystemMetrics(SM_CXSCREEN) - 46 * 17) div 2;
-    tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Top := 100;
-    tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Left := Left;
+     begin
+     Left := (GetSystemMetrics(SM_CXSCREEN) - 46 * 17) div 2;
+     tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Top := 100;
+     tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Left := Left;
 
-    tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndVisible := True;
-    tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndRect.Top := 24 * 17 + 100;
-    tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndRect.Left := Left;
-    tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndRect.Right := 46 * 17 +
-      Left;
-    tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndRect.Bottom := 24 * 17 +
-      130 + 40;
+     tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndVisible := True;
+     tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndRect.Top := 24 * 17 + 100;
+     tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndRect.Left := Left;
+     tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndRect.Right := 46 * 17 +
+       Left;
+     tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndRect.Bottom := 24 * 17 +
+       130 + 40;
 
-    tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndRect.Right := 500;
-    tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndRect.Right := 650;
-  end;
+     tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndRect.Right := 500;
+     tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndRect.Right := 650;
+     end;
   // Issue #739: validate every restored rect against the current monitor layout
   // so a window saved on a now-absent monitor is pulled back on-screen (cascaded).
   CascadeIndex := 0;
   for i := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
-  begin
-    EnsureRectOnScreen(i, CascadeIndex);
-  end;
+     begin
+     EnsureRectOnScreen(i, CascadeIndex);
+     end;
   for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
-    tr4w_WindowsArray[i].WndHandle := 0;
+     begin
+     tr4w_WindowsArray[i].WndHandle := 0;
+     end;
 
   tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndProcAdr := @BandmapDlgProc;
   tr4w_WindowsArray[tw_DUPESHEETWINDOW1_INDEX].WndProcAdr := @DupesheetDlgProc;
@@ -2087,17 +2242,17 @@ begin
   // if GetKeyState(VK_CONTROL or VK_MENU) < -126 then Exit;
 
   if GetKeyState(VK_CONTROL) < -126 then
-  begin
-    Key := Key + 12;
-    Result := 1;
-    Exit;
-  end;
+     begin
+     Key := Key + 12;
+     Result := 1;
+     Exit;
+     end;
 
   if GetKeyState(VK_MENU) < -126 then
-  begin
-    Key := Key + 24;
-    Result := 2;
-  end;
+     begin
+     Key := Key + 24;
+     Result := 2;
+     end;
 
 end;
 
@@ -2136,89 +2291,96 @@ begin
   Result := False;
   logger.debug('[TuneOnFreq] Enter: CallWindowString="%s"', [CallWindowString]);
   if CheckCommandInCallsignWindow then
-  begin
-    tCleareCallWindow;
-    Result := True;
-    Exit;
-  end;
+     begin
+     tCleareCallWindow;
+     Result := True;
+     Exit;
+     end;
   if length(CallWindowString) < 2 then
-  begin
-    logger.debug('[TuneOnFreq] Exit: length < 2');
-    Exit;
-  end;
+     begin
+     logger.debug('[TuneOnFreq] Exit: length < 2');
+     Exit;
+     end;
 
   TempVFO := 'A';
   TempString := CallWindowString;
 
   if TempString[length(TempString)] = 'B' then
-  begin
-    TempVFO := 'B';
-    TempString[0] := AnsiChar(Ord(TempString[0]) - 1);
-  end;
+     begin
+     TempVFO := 'B';
+     TempString[0] := AnsiChar(Ord(TempString[0]) - 1);
+     end;
 
   if StringIsAllNumbersOrDecimal(TempString) = False then
-  begin
-    logger.debug('[TuneOnFreq] Exit: not all numbers/decimal, TempString="%s"', [TempString]);
-    Exit;
-  end;
+     begin
+     logger.debug('[TuneOnFreq] Exit: not all numbers/decimal, TempString="%s"', [TempString]);
+     Exit;
+     end;
 
   TempBand := ActiveBand;
   logger.debug('[TuneOnFreq] TempBand=%d, TempString="%s"', [Ord(TempBand), TempString]);
 
   if not (TempBand in [Band160..Band2]) then
-  begin
-    // READ ONCE.  This tried the radio's frequency shifted up, then the same
-    // frequency shifted down, then logged it -- three separate reads of a value
-    // the polling thread is free to change between them.  A QSY landing in the
-    // middle made the -QSYSHIFT fallback probe a DIFFERENT base frequency than
-    // the +QSYSHIFT attempt, so the two halves of one decision disagreed, and
-    // the diagnostic printed a third value again.
-    //
-    // A single aligned 32-bit read is atomic, so this never tore; the defect
-    // was assuming three reads of one field return the same answer.
-    FilteredFreq := ActiveRadioPtr.FilteredStatus.Freq;
+     begin
+     // READ ONCE.  This tried the radio's frequency shifted up, then the same
+     // frequency shifted down, then logged it -- three separate reads of a value
+     // the polling thread is free to change between them.  A QSY landing in the
+     // middle made the -QSYSHIFT fallback probe a DIFFERENT base frequency than
+     // the +QSYSHIFT attempt, so the two halves of one decision disagreed, and
+     // the diagnostic printed a third value again.
+     //
+     // A single aligned 32-bit read is atomic, so this never tore; the defect
+     // was assuming three reads of one field return the same answer.
+     FilteredFreq := ActiveRadioPtr.FilteredStatus.Freq;
 
-    GetBandMapBandModeFromFrequency(FilteredFreq + QSYSHIFT, TempBand, TempMode);
+     GetBandMapBandModeFromFrequency(FilteredFreq + QSYSHIFT, TempBand, TempMode);
 
-    if not (TempBand in [Band160..Band2]) then
-      GetBandMapBandModeFromFrequency(FilteredFreq - QSYSHIFT, TempBand, TempMode);
+     if not (TempBand in [Band160..Band2]) then
+        begin
+        GetBandMapBandModeFromFrequency(FilteredFreq - QSYSHIFT, TempBand, TempMode);
+        end;
 
-    if not (TempBand in [Band160..Band2]) then
-    begin
-      logger.debug('[TuneOnFreq] Exit: TempBand not in HF range after fallback, FilteredFreq=%d', [FilteredFreq]);
-      Exit;
-    end;
-  end;
+     if not (TempBand in [Band160..Band2]) then
+        begin
+        logger.debug('[TuneOnFreq] Exit: TempBand not in HF range after fallback, FilteredFreq=%d', [FilteredFreq]);
+        Exit;
+        end;
+     end;
 
   TempFreq := StrToIntDef(TempString, 0);
   //3500
   // 620
   // 34
-  if (TempFreq >= 0) and (TempFreq <= 999) then
-  begin
-    if TempFreq < 100 then
-    begin
-      TempFreq := TempFreq * 1000 + StartingFrequencies[TempBand];
-    end
-    else
-      TempFreq := TempFreq * 1000 + (StartingFrequencies[TempBand] div 1000000)
-        * 1000000;
-  end
+  if (TempFreq >= 0)   and 
+     (TempFreq <= 999) then
+     begin
+     if TempFreq < 100 then
+        begin
+        TempFreq := TempFreq * 1000 + StartingFrequencies[TempBand];
+        end
+     else
+        begin
+        TempFreq := TempFreq * 1000 + (StartingFrequencies[TempBand] div 1000000)
+          * 1000000;
+        end;
+     end
   else
-    TempFreq := TempFreq * 1000;
+     begin
+     TempFreq := TempFreq * 1000;
+     end;
 
   logger.debug('[TuneOnFreq] TempFreq=%u before GetBandMap', [TempFreq]);
   GetBandMapBandModeFromFrequency(TempFreq, TempBand, TempMode);
   logger.debug('[TuneOnFreq] After GetBandMap: TempBand=%d, TempMode=%d', [Ord(TempBand), Ord(TempMode)]);
   if TempBand <> NoBand then
-  begin
-    SetRadioFreq(ActiveRadio, TempFreq, TempMode, TempVFO);
-    tCleareCallWindow; // 4.139.2
-    Result := True;
-    logger.debug('[TuneOnFreqFromCallWindow] Clearing Mults and QSO Needs Headers');
-    SetMainWindowText(mweMultNeedsHeader, PAnsiChar(''));
-    SetMainWindowText(mweQSONeedsHeader, PAnsiChar(''));
-  end;
+     begin
+     SetRadioFreq(ActiveRadio, TempFreq, TempMode, TempVFO);
+     tCleareCallWindow; // 4.139.2
+     Result := True;
+     logger.debug('[TuneOnFreqFromCallWindow] Clearing Mults and QSO Needs Headers');
+     SetMainWindowText(mweMultNeedsHeader, PAnsiChar(''));
+     SetMainWindowText(mweQSONeedsHeader, PAnsiChar(''));
+     end;
 
   {
   i := 0;
@@ -2257,51 +2419,51 @@ var
   iconic: boolean;
 begin
   for tipos := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
-  begin
-    TempBool := Windows.GetWindowRect(tr4w_WindowsArray[tipos].WndHandle,
-      temprect);
-    tr4w_WindowsArray[tipos].WndVisible := TempBool;
-    if not TempBool then
-    begin
-      if logger.IsTraceEnabled then
-      begin
-        logger.Trace('[SaveRect] %s (idx=%d) hWnd=%d GetWindowRect=FAIL -> keep saved',
-          [WindowNames[tipos], Ord(tipos), tr4w_WindowsArray[tipos].WndHandle]);
-      end;
-      Continue;
-    end;
-    iconic := IsIconic(tr4w_WindowsArray[tipos].WndHandle);
-    if logger.IsTraceEnabled then
-    begin
-      logger.Trace('[SaveRect] %s (idx=%d) live=(%d,%d,%d,%d) iconic=%d reloc=%d savedWndRect=(%d,%d,%d,%d)',
-        [WindowNames[tipos], Ord(tipos), temprect.Left, temprect.Top, temprect.Right, temprect.Bottom,
-         Ord(iconic), Ord(RelocState[tipos].Relocated),
-         tr4w_WindowsArray[tipos].WndRect.Left, tr4w_WindowsArray[tipos].WndRect.Top,
-         tr4w_WindowsArray[tipos].WndRect.Right, tr4w_WindowsArray[tipos].WndRect.Bottom]);
-    end;
-    // Issue #739: if we relocated this window at startup because its saved
-    // monitor was absent, and the user did not move it this session, keep the
-    // ORIGINAL saved rect so reconnecting that display restores the layout.
-    if RelocState[tipos].Relocated and
-       PositionsMatch(temprect, tr4w_WindowsArray[tipos].WndRect) then
-    begin
-      if logger.IsTraceEnabled then
-      begin
-        logger.Trace('[SaveRect] %s (idx=%d) PRESERVE -> orig=(%d,%d,%d,%d)',
-          [WindowNames[tipos], Ord(tipos), RelocState[tipos].OrigRect.Left, RelocState[tipos].OrigRect.Top,
-           RelocState[tipos].OrigRect.Right, RelocState[tipos].OrigRect.Bottom]);
-      end;
-      tr4w_WindowsArray[tipos].WndRect := RelocState[tipos].OrigRect;
-      Continue;
-    end;
-    // Issue #739: save any non-minimized position, including negative X/Y on a
-    // monitor placed left of / above the primary.  IsIconic skips only minimized
-    // windows (which report a -32000 sentinel rect).
-    if not iconic then
-    begin
-      tr4w_WindowsArray[tipos].WndRect := temprect;
-    end;
-  end;
+     begin
+     TempBool := Windows.GetWindowRect(tr4w_WindowsArray[tipos].WndHandle,
+       temprect);
+     tr4w_WindowsArray[tipos].WndVisible := TempBool;
+     if not TempBool then
+        begin
+        if logger.IsTraceEnabled then
+           begin
+           logger.Trace('[SaveRect] %s (idx=%d) hWnd=%d GetWindowRect=FAIL -> keep saved',
+             [WindowNames[tipos], Ord(tipos), tr4w_WindowsArray[tipos].WndHandle]);
+           end;
+        Continue;
+        end;
+     iconic := IsIconic(tr4w_WindowsArray[tipos].WndHandle);
+     if logger.IsTraceEnabled then
+        begin
+        logger.Trace('[SaveRect] %s (idx=%d) live=(%d,%d,%d,%d) iconic=%d reloc=%d savedWndRect=(%d,%d,%d,%d)',
+          [WindowNames[tipos], Ord(tipos), temprect.Left, temprect.Top, temprect.Right, temprect.Bottom,
+           Ord(iconic), Ord(RelocState[tipos].Relocated),
+           tr4w_WindowsArray[tipos].WndRect.Left, tr4w_WindowsArray[tipos].WndRect.Top,
+           tr4w_WindowsArray[tipos].WndRect.Right, tr4w_WindowsArray[tipos].WndRect.Bottom]);
+        end;
+     // Issue #739: if we relocated this window at startup because its saved
+     // monitor was absent, and the user did not move it this session, keep the
+     // ORIGINAL saved rect so reconnecting that display restores the layout.
+     if RelocState[tipos].Relocated and
+        PositionsMatch(temprect, tr4w_WindowsArray[tipos].WndRect) then
+        begin
+        if logger.IsTraceEnabled then
+           begin
+           logger.Trace('[SaveRect] %s (idx=%d) PRESERVE -> orig=(%d,%d,%d,%d)',
+             [WindowNames[tipos], Ord(tipos), RelocState[tipos].OrigRect.Left, RelocState[tipos].OrigRect.Top,
+              RelocState[tipos].OrigRect.Right, RelocState[tipos].OrigRect.Bottom]);
+           end;
+        tr4w_WindowsArray[tipos].WndRect := RelocState[tipos].OrigRect;
+        Continue;
+        end;
+     // Issue #739: save any non-minimized position, including negative X/Y on a
+     // monitor placed left of / above the primary.  IsIconic skips only minimized
+     // windows (which report a -32000 sentinel rect).
+     if not iconic then
+        begin
+        tr4w_WindowsArray[tipos].WndRect := temprect;
+        end;
+     end;
 end;
 
 procedure sm1;
@@ -2313,13 +2475,13 @@ function TryKillAutoCQ: boolean;
 begin
   Result := False;
   if tAutoCQMode = True then
-  begin
-    Windows.KillTimer(tr4whandle, AUTOCQ_TIMER_HANDLE);
-    tAutoCQMode := False;
-    SetMainWindowText(mweOpMode, 'CQ');
-    QuickDisplay('');
-    Result := True;
-  end;
+     begin
+     Windows.KillTimer(tr4whandle, AUTOCQ_TIMER_HANDLE);
+     tAutoCQMode := False;
+     SetMainWindowText(mweOpMode, 'CQ');
+     QuickDisplay('');
+     Result := True;
+     end;
 
 end;
 
@@ -2327,14 +2489,14 @@ procedure RunAutoCQ;
 
 begin
   if tAutoCQMode = False then
-  begin
-    SetUpToSendOnActiveRadio;
-    SetOpMode(CQOpMode);
-    tAutoCQMode := True;
-    SetMainWindowText(mweOpMode, 'AutoCQ');
-    SendFunctionKeyMessage(AutoCQMemory, OpMode);
-    tDisplayAutoCQStatus;
-  end;
+     begin
+     SetUpToSendOnActiveRadio;
+     SetOpMode(CQOpMode);
+     tAutoCQMode := True;
+     SetMainWindowText(mweOpMode, 'AutoCQ');
+     SendFunctionKeyMessage(AutoCQMemory, OpMode);
+     tDisplayAutoCQStatus;
+     end;
 end;
 
 procedure TestMP;
@@ -2354,95 +2516,113 @@ begin
     ;
   // PartialRadioResponse := ' ' + PartialRadioResponse;
   with Radio1.CurrentStatus do
-  begin
-    F1 := Ord(PartialRadioResponse[2]);
-    F1 := F1 * 256 * 256 * 256;
-    F2 := Ord(PartialRadioResponse[3]);
-    F2 := F2 * 256 * 256;
-    F3 := Ord(PartialRadioResponse[4]);
-    F3 := F3 * 256;
+     begin
+     F1 := Ord(PartialRadioResponse[2]);
+     F1 := F1 * 256 * 256 * 256;
+     F2 := Ord(PartialRadioResponse[3]);
+     F2 := F2 * 256 * 256;
+     F3 := Ord(PartialRadioResponse[4]);
+     F3 := F3 * 256;
 
-    TempFreq := F1 + F2 + F3 + Ord(PartialRadioResponse[5]);
+     TempFreq := F1 + F2 + F3 + Ord(PartialRadioResponse[5]);
 
-    { Frequency corrections }
+     { Frequency corrections }
 
-    if Radio1.RadioModel = FT1000MP then
-      TempFreq := round(TempFreq * 0.625);
-    if Radio1.RadioModel = FT100 then
-      TempFreq := round(TempFreq * 1.25);
+     if Radio1.RadioModel = FT1000MP then
+        begin
+        TempFreq := round(TempFreq * 0.625);
+        end;
+     if Radio1.RadioModel = FT100 then
+        begin
+        TempFreq := round(TempFreq * 1.25);
+        end;
 
-    { Calculate default band/mode }
+     { Calculate default band/mode }
 
-    CalculateBandMode(TempFreq, TempBand, TempMode);
+     CalculateBandMode(TempFreq, TempBand, TempMode);
 
-    { Look at band/mode information from radio }
+     { Look at band/mode information from radio }
 
-    if Radio1.RadioModel = FT1000MP then
-      case (Ord(PartialRadioResponse[8]) and $07) of
-        2, 5, 6: TempMode := CW;
-      else
-        TempMode := Phone;
-      end;
+     if Radio1.RadioModel = FT1000MP then
+        begin
+        case (Ord(PartialRadioResponse[8]) and $07) of
+          2, 5, 6: TempMode := CW;
+        else
+          TempMode := Phone;
+        end;
+        end;
 
-    if Radio1.RadioModel = FT100 then
-      case (Ord(PartialRadioResponse[6]) and $07) of
-        2, 3, 5: TempMode := CW;
-      else
-        TempMode := Phone;
-      end;
+     if Radio1.RadioModel = FT100 then
+        begin
+        case (Ord(PartialRadioResponse[6]) and $07) of
+          2, 3, 5: TempMode := CW;
+        else
+          TempMode := Phone;
+        end;
+        end;
 
-    VFO[VFOA].Frequency := TempFreq;
-    VFO[VFOA].Band := TempBand;
-    VFO[VFOA].Mode := TempMode;
+     VFO[VFOA].Frequency := TempFreq;
+     VFO[VFOA].Band := TempBand;
+     VFO[VFOA].Mode := TempMode;
 
-    Delete(PartialRadioResponse, 1, 16);
-    if PartialRadioResponse[2] = #$20 then
-      PartialRadioResponse[2] := #0;
-    F1 := Ord(PartialRadioResponse[2]);
-    F1 := F1 * 256 * 256 * 256;
-    F2 := Ord(PartialRadioResponse[3]);
-    F2 := F2 * 256 * 256;
-    F3 := Ord(PartialRadioResponse[4]);
-    F3 := F3 * 256;
+     Delete(PartialRadioResponse, 1, 16);
+     if PartialRadioResponse[2] = #$20 then
+        begin
+        PartialRadioResponse[2] := #0;
+        end;
+     F1 := Ord(PartialRadioResponse[2]);
+     F1 := F1 * 256 * 256 * 256;
+     F2 := Ord(PartialRadioResponse[3]);
+     F2 := F2 * 256 * 256;
+     F3 := Ord(PartialRadioResponse[4]);
+     F3 := F3 * 256;
 
-    TempFreq := F1 + F2 + F3 + Ord(PartialRadioResponse[5]);
+     TempFreq := F1 + F2 + F3 + Ord(PartialRadioResponse[5]);
 
-    { Frequency corrections }
-   {
+     { Frequency corrections }
+    {
    11270352 MUST
    548141268
    7043.970
    }
-    if Radio1.RadioModel = FT1000MP then
-      TempFreq := round(TempFreq * 0.625);
-    if Radio1.RadioModel = FT100 then
-      TempFreq := round(TempFreq * 1.25);
+     if Radio1.RadioModel = FT1000MP then
+        begin
+        TempFreq := round(TempFreq * 0.625);
+        end;
+     if Radio1.RadioModel = FT100 then
+        begin
+        TempFreq := round(TempFreq * 1.25);
+        end;
 
-    { Calculate default band/mode }
+     { Calculate default band/mode }
 
-    CalculateBandMode(TempFreq, TempBand, TempMode);
+     CalculateBandMode(TempFreq, TempBand, TempMode);
 
-    { Look at band/mode information from radio }
+     { Look at band/mode information from radio }
 
-    if Radio1.RadioModel = FT1000MP then
-      case (Ord(PartialRadioResponse[8]) and $07) of
-        2, 5, 6: TempMode := CW;
-      else
-        TempMode := Phone;
-      end;
+     if Radio1.RadioModel = FT1000MP then
+        begin
+        case (Ord(PartialRadioResponse[8]) and $07) of
+          2, 5, 6: TempMode := CW;
+        else
+          TempMode := Phone;
+        end;
+        end;
 
-    if Radio1.RadioModel = FT100 then
-      case (Ord(PartialRadioResponse[6]) and $07) of
-        2, 3, 5: TempMode := CW;
-      else
-        TempMode := Phone;
-      end;
+     if Radio1.RadioModel = FT100 then
+        begin
+        case (Ord(PartialRadioResponse[6]) and $07) of
+          2, 3, 5: TempMode := CW;
+        else
+          TempMode := Phone;
+        end;
+        end;
 
-    VFO[VFOB].Frequency := TempFreq;
-    VFO[VFOB].Band := TempBand;
-    VFO[VFOB].Mode := TempMode;
+     VFO[VFOB].Frequency := TempFreq;
+     VFO[VFOB].Band := TempBand;
+     VFO[VFOB].Mode := TempMode;
 
-  end;
+     end;
 
 end;
 
@@ -2464,15 +2644,15 @@ var
 begin
   Value := Windows.GetDlgItemInt(tr4whandle, EXCHANGEWINDOWID, lpTranslated, False);
   if lpTranslated then
-  begin
-    // Issue #997: asm `inc eax; push eax; wsprintf(' %u')` -> TF.Format. The
-    // Integer() cast is load-bearing: it forces the TF.Format(...; i: integer)
-    // wsprintfA overload. Without it, the Cardinal arg can bind a different
-    // overload and the field doesn't update.
-    TF.Format(wsprintfBuffer, ' %u', Integer(Value + 1));
-    SetMainWindowText(mweExchange, wsprintfBuffer);
-    PlaceCaretToTheEnd(wh[mweExchange]);
-  end;
+     begin
+     // Issue #997: asm `inc eax; push eax; wsprintf(' %u')` -> TF.Format. The
+     // Integer() cast is load-bearing: it forces the TF.Format(...; i: integer)
+     // wsprintfA overload. Without it, the Cardinal arg can bind a different
+     // overload and the field doesn't update.
+     TF.Format(wsprintfBuffer, ' %u', Integer(Value + 1));
+     SetMainWindowText(mweExchange, wsprintfBuffer);
+     PlaceCaretToTheEnd(wh[mweExchange]);
+     end;
 end;
 
 procedure tr4w_alt_n_transmit_frequency;
@@ -2492,52 +2672,60 @@ begin
     // Consult the radio's state as well: CurrentStatus.Split is read back on radios
     // that report split and mirrors the commanded state on those that don't, so this
     // is a superset of InSplit and cannot regress a radio that worked before.
-    if InSplit or ActiveRadioPtr.CurrentStatus.Split then
-    begin
-      PutRadioOutOfSplit(ActiveRadio); // n4af 4.47.5
-      PutRadioOutOfSplit(InActiveRadio);
-      // THE RADIO IS THE SOURCE OF TRUTH.  For a radio that REPORTS split,
-      // InSplit is not maintained at all -- the condition above already reads
-      // ActiveRadioPtr.CurrentStatus.Split, so the radio's own broadcast drives
-      // everything and the program cannot show a state the rig is not in.
-      //
-      // Only a radio that CANNOT report split needs the shadow flag, because
-      // there the commanded state is the only state there is.
-      //
-      // Do NOT simply skip the clear for reporting radios: NOTHING else in the
-      // program writes InSplit (it is assigned in exactly three places, all
-      // here), so leaving it True stranded the flag and every later '-' re-ran
-      // this branch and appeared to do nothing.
-      if not ActiveRadioPtr.HasCapability(rcReadSplit) then
-         begin
-         InSplit := False;
-         end;
-      exit;
-    end;
+    if InSplit                            or 
+       ActiveRadioPtr.CurrentStatus.Split then
+       begin
+       PutRadioOutOfSplit(ActiveRadio); // n4af 4.47.5
+       PutRadioOutOfSplit(InActiveRadio);
+       // THE RADIO IS THE SOURCE OF TRUTH.  For a radio that REPORTS split,
+       // InSplit is not maintained at all -- the condition above already reads
+       // ActiveRadioPtr.CurrentStatus.Split, so the radio's own broadcast drives
+       // everything and the program cannot show a state the rig is not in.
+       //
+       // Only a radio that CANNOT report split needs the shadow flag, because
+       // there the commanded state is the only state there is.
+       //
+       // Do NOT simply skip the clear for reporting radios: NOTHING else in the
+       // program writes InSplit (it is assigned in exactly three places, all
+       // here), so leaving it True stranded the flag and every later '-' re-ran
+       // this branch and appeared to do nothing.
+       if not ActiveRadioPtr.HasCapability(rcReadSplit) then
+          begin
+          InSplit := False;
+          end;
+       exit;
+       end;
 
     Freq := QuickEditFreq(TC_TRANSMITFREQUENCYKILOHERTZ, 10);
 
     RadioToSet := ActiveRadioPtr {ActiveRadio};
 
     if Freq < -2 then
-    begin
-      Freq := Freq * (-1);
-      RadioToSet := InActiveRadioPtr {InactiveRadio};
-    end;
+       begin
+       Freq := Freq * (-1);
+       RadioToSet := InActiveRadioPtr {InactiveRadio};
+       end;
 
     if (Freq = 0) then
-      PutRadioOutOfSplit(ActiveRadio);
+       begin
+       PutRadioOutOfSplit(ActiveRadio);
+       end;
     if (Freq = -0) then
-      PutRadioOutOfSplit(InactiveRadio);
-    if (Freq > 1000) and (Freq < 1000000) then
-      case RadioToSet.BandMemory {BandMemory[RadioToSet]} of
-        Band80: Freq := Freq + 3000000;
-        //      Band60: Freq := Freq  +5300000;
-        Band40: Freq := Freq + 7000000;
-        Band20: Freq := Freq + 14000000;
-        Band15: Freq := Freq + 21000000;
-        Band10: Freq := Freq + 28000000;
-      end;
+       begin
+       PutRadioOutOfSplit(InactiveRadio);
+       end;
+    if (Freq > 1000)    and 
+       (Freq < 1000000) then
+       begin
+       case RadioToSet.BandMemory {BandMemory[RadioToSet]} of
+         Band80: Freq := Freq + 3000000;
+         //      Band60: Freq := Freq  +5300000;
+         Band40: Freq := Freq + 7000000;
+         Band20: Freq := Freq + 14000000;
+         Band15: Freq := Freq + 21000000;
+         Band10: Freq := Freq + 28000000;
+         end;
+       end;
     // Same rule as the exit branch: a reporting radio's split state comes
     // from the radio, so do not shadow it here either.
     if not RadioToSet.HasCapability(rcReadSplit) then
@@ -2545,20 +2733,20 @@ begin
        InSplit := True;
        end;
     if Freq > 1000000 then
-    begin
-      // SetRadioFreq(ActiveRadio, Freq, ActiveMode, 'B');
-      RadioToSet.SetRadioFreq(Freq, RadioToSet.ModeMemory, 'B');
-      // SetRadioFreq(RadioToSet, Freq, ModeMemory[RadioToSet], 'B'); {KK1L: 6.73}
-      // PutRadioIntoSplit(RadioToSet); {KK1L: 6.73}
-      RadioToSet.PutRadioIntoSplit;
-      SplitFreq := Freq;
-      // Same rule as the exit branch: a reporting radio's split state comes
-      // from the radio, so do not shadow it here either.
-      if not RadioToSet.HasCapability(rcReadSplit) then
-         begin
-         InSplit := True;
-         end;
-    end;
+       begin
+       // SetRadioFreq(ActiveRadio, Freq, ActiveMode, 'B');
+       RadioToSet.SetRadioFreq(Freq, RadioToSet.ModeMemory, 'B');
+       // SetRadioFreq(RadioToSet, Freq, ModeMemory[RadioToSet], 'B'); {KK1L: 6.73}
+       // PutRadioIntoSplit(RadioToSet); {KK1L: 6.73}
+       RadioToSet.PutRadioIntoSplit;
+       SplitFreq := Freq;
+       // Same rule as the exit branch: a reporting radio's split state comes
+       // from the radio, so do not shadow it here either.
+       if not RadioToSet.HasCapability(rcReadSplit) then
+          begin
+          InSplit := True;
+          end;
+       end;
     BandMapCursorFrequency := Freq; {KK1L: 6.68 Band map tracks transmit freq}
     DisplayBandMap;
   end;
@@ -2567,28 +2755,34 @@ end;
 procedure tr4w_toggle_sidetone;
 begin
   if (ActiveMode = Phone) and DVPActive then
-    ReviewBackCopyFiles
+     begin
+     ReviewBackCopyFiles
+     end
   else if CWTone <> 0 then
-  begin
-    OldCWTone := CWTone;
-    CWTone := 0;
-    AddStringToBuffer('', CWTone);
-    NoSound;
-  end
+     begin
+     OldCWTone := CWTone;
+     CWTone := 0;
+     AddStringToBuffer('', CWTone);
+     NoSound;
+     end
   else
-  begin
-    if OldCWTone = 0 then
-      OldCWTone := 700;
-    CWTone := OldCWTone;
-    AddStringToBuffer('', CWTone);
-  end;
+     begin
+     if OldCWTone = 0 then
+        begin
+        OldCWTone := 700;
+        end;
+     CWTone := OldCWTone;
+     AddStringToBuffer('', CWTone);
+     end;
 end;
 
 procedure tClearDupesheet_Ctrl_K;
 begin
   tInputDialogWarning := True;
   if QuickEditResponse(TC_YESTOCLEARTHEDUPESHEET, 3) = 'YES' then
-    tClearDupesheet;
+     begin
+     tClearDupesheet;
+     end;
 end;
 
 procedure tClearDupesheet;
@@ -2623,9 +2817,13 @@ begin
   i := length(s);
   logger.info('******* User added note: [%s]', [s]);
   if i = 0 then
-    Exit
+     begin
+     Exit;
+     end
   else if i > 80 then
-    i := 80;
+     begin
+     i := 80;
+     end;
   Windows.ZeroMemory(@TempRXData, SizeOf(ContestExchange));
   TempRXData.ceRecordKind := rkNote;
   Windows.MoveMemory(@TempRXData.Prefix, @s[1], i);
@@ -2666,43 +2864,45 @@ begin
   PutAllRadiosIntoReceive;
 
   if IsDXLabPathfinderRunning then
-    StopDXLabPathfinder;
+     begin
+     StopDXLabPathfinder;
+     end;
   if Assigned(wsjtx) then
-  begin
-    wsjtx.Stop;
-    FreeAndNil(wsjtx);
-  end;
+     begin
+     wsjtx.Stop;
+     FreeAndNil(wsjtx);
+     end;
 
   // Before the radios go away.  Stop detaches the polling hook first, so the
   // poll loop cannot enter a server that is tearing its sessions down, and
   // each session's disconnect unkeys a transmitter that client was holding.
   if Assigned(TCIServer) then
-  begin
-    TCIServer.Stop;
-    FreeAndNil(TCIServer);
-  end;
+     begin
+     TCIServer.Stop;
+     FreeAndNil(TCIServer);
+     end;
 
   if assigned(externalLogger) then
-  begin
-    FreeAndNil(externalLogger);
-  end;
+     begin
+     FreeAndNil(externalLogger);
+     end;
 
   if Radio1.tFactoryObject <> nil then
-  begin
-    FreeAndNil(Radio1.tFactoryObject);
-  end;
+     begin
+     FreeAndNil(Radio1.tFactoryObject);
+     end;
 
   if Radio2.tFactoryObject <> nil then
-  begin
-    FreeAndNil(Radio2.tFactoryObject);
-  end;
+     begin
+     FreeAndNil(Radio2.tFactoryObject);
+     end;
 
 
   if Assigned(logger) then
-  begin
-    logger.Info('------------------------------Program shutdown----------------------------');
-    FreeAndNil(logger);
-  end;
+     begin
+     logger.Info('------------------------------Program shutdown----------------------------');
+     FreeAndNil(logger);
+     end;
   Windows.UnregisterClass(tr4w_ClassName, hInstance);
   // ny4i Issue 145. UnregisterClass was not qualifies and it conflicted with classes.UnregisterClass
   ExitProcess(hInstance);
@@ -2716,16 +2916,20 @@ label
   1;
 begin
   if VHFBandsEnabled then
-  begin
-    1:
-    Grid := RemoveFirstString(WindowString);
-    if Grid = '' then
-      Exit;
-    if length(Grid) >= 4 then
-      if LooksLikeAGrid(Grid) then
-        DisplayBeamHeading(CallWindowString, Grid);
-    goto 1;
-  end;
+     begin
+     1:
+     Grid := RemoveFirstString(WindowString);
+     if Grid = '' then
+        begin
+        Exit;
+        end;
+     if length(Grid) >= 4 then
+       if LooksLikeAGrid(Grid) then
+          begin
+          DisplayBeamHeading(CallWindowString, Grid);
+          end;
+     goto 1;
+     end;
 end;
 
 procedure ExchangeWindowChange;
@@ -2737,40 +2941,46 @@ begin
   ExchangeWindowString[0] := AnsiChar(Windows.GetWindowTextA(wh[mweExchange],
     @ExchangeWindowString[1], SizeOf(ExchangeWindowString)));
   if VHFBandsEnabled then
-    ShowBeamAndHeadingInVHFContest(ExchangeWindowString);
+     begin
+     ShowBeamAndHeadingInVHFContest(ExchangeWindowString);
+     end;
 
   if DomesticCountryCall(CallWindowString) then
     if DoingDomesticMults then
-    begin
-      TempString := ExchangeWindowString;
-      while TempString <> '' do
-      begin
-        TestString := RemoveFirstString(TempString);
+       begin
+       TempString := ExchangeWindowString;
+       while TempString <> '' do
+          begin
+          TestString := RemoveFirstString(TempString);
 
-        // if Contest in [NAQSOCW, NAQSOSSB] then
-        // if TempString <> '' then Continue;
+          // if Contest in [NAQSOCW, NAQSOSSB] then
+          // if TempString <> '' then Continue;
 
-        // if ActiveDomesticMult = RDADistrict then
-        // if length(TestString) <> 4 then TestString := '';
-        if TestString = '' then
-          Exit;
-        logger.debug('[ExchangeWindowChange] Setting TempExchange.QTHString to (%s)', [TestString]);
-        TempExchange.QTHString := TestString;
-        DQTH := FoundDomesticQTH(TempExchange);
-        if not DQTH then
-        begin
-          DispalayNewMult(SW_HIDE);
-          //Exit;
-          Continue;
+          // if ActiveDomesticMult = RDADistrict then
+          // if length(TestString) <> 4 then TestString := '';
+          if TestString = '' then
+             begin
+             Exit;
+             end;
+          logger.debug('[ExchangeWindowChange] Setting TempExchange.QTHString to (%s)', [TestString]);
+          TempExchange.QTHString := TestString;
+          DQTH := FoundDomesticQTH(TempExchange);
+          if not DQTH then
+             begin
+             DispalayNewMult(SW_HIDE);
+             //Exit;
+             Continue;
 
-        end;
-        // if not DQTH then TempExchange.DomMultQTH := '' ;
-        // strU(TempExchange.DomMultQTH);
-        VisibleLog.SetMultStatus(CallWindowString, TempExchange.DomMultQTH);
-        if DQTH then
-          Exit;
-      end;
-    end;
+             end;
+          // if not DQTH then TempExchange.DomMultQTH := '' ;
+          // strU(TempExchange.DomMultQTH);
+          VisibleLog.SetMultStatus(CallWindowString, TempExchange.DomMultQTH);
+          if DQTH then
+             begin
+             Exit;
+             end;
+          end;
+       end;
 
   // POTA: look up park name from exchange as typed and show via QuickDisplay.
   if (ActiveExchange = RSTAndPOTAPark) and POTAParksLoaded then
@@ -2793,8 +3003,10 @@ begin
 
 {$IF MORSERUNNER}
   if MorseRunnerWindow <> 0 then
-    Windows.SendMessageA(MorseRunner_Number, WM_SETTEXT, 0,
-      integer(@ExchangeWindowString[1]));
+     begin
+     Windows.SendMessageA(MorseRunner_Number, WM_SETTEXT, 0,
+       integer(@ExchangeWindowString[1]));
+     end;
 {$IFEND}
 end;
 
@@ -2806,46 +3018,46 @@ begin
   ARF := ActiveRadioPtr.CurrentStatus.Freq div 1000;
 
   if (ARF > 3650) and (ARF < 3700) then
-  begin
-    QuickDisplay(TC_WagWarn); // 4.90.3
-    exit;
-  end;
+     begin
+     QuickDisplay(TC_WagWarn); // 4.90.3
+     exit;
+     end;
 
   if (ARF > 7043) and (ARF < 7080) then
-  begin
-    QuickDisplay(TC_WagWarn);
-    exit;
-  end;
+     begin
+     QuickDisplay(TC_WagWarn);
+     exit;
+     end;
 
   if (ARF > 7080) and (ARF < 7143) then
-  begin
-    QuickDisplay(TC_WagWarn);
-    exit;
-  end;
+     begin
+     QuickDisplay(TC_WagWarn);
+     exit;
+     end;
 
   if (ARF > 14060) and (ARF < 14125) then
-  begin
-    QuickDisplay(TC_WagWarn);
-    exit;
-  end;
+     begin
+     QuickDisplay(TC_WagWarn);
+     exit;
+     end;
 
   if (ARF > 14280) and (ARF < 14350) then
-  begin
-    QuickDisplay(TC_WagWarn);
-    exit;
-  end;
+     begin
+     QuickDisplay(TC_WagWarn);
+     exit;
+     end;
 
   if (ARF > 21347) and (ARF < 21450) then
-  begin
-    QuickDisplay(TC_WagWarn);
-    exit;
-  end;
+     begin
+     QuickDisplay(TC_WagWarn);
+     exit;
+     end;
 
   if (ARF > 28225) and (ARF < 28400) then
-  begin
-    QuickDisplay(TC_WagWarn);
-    exit;
-  end;
+     begin
+     QuickDisplay(TC_WagWarn);
+     exit;
+     end;
 end;
 
 procedure CallWindowChange;
@@ -2862,14 +3074,18 @@ begin
 
   // SetMainWindowText(mweUserInfo, nil); //N4AF 4.31.3
   if Contest = WAG then //n4af 4.31.4
-    WagCheck; //n4af
+     begin
+     WagCheck; //n4af
+     end;
 
   CallWindowString[0] := AnsiChar(Windows.SendMessageA(wh[mweCall], WM_GETTEXT,
     CallstringLength, integer(@CallWindowString[1])));
 
   CallWindowEmpty := CallWindowString[0] = #0;
   if CallWindowEmpty then
-    CallsignIsTypedByOperator := False;
+     begin
+     CallsignIsTypedByOperator := False;
+     end;
 
   CallsignIsPastedFromBandMap := False;
 
@@ -2878,18 +3094,18 @@ begin
   // if VHFBandsEnabled then ShowBeamAndHeadingInVHFContest(CallWindowString);
 
   if CallWindowString = '' then
-  begin
-    Windows.ShowWindow(wh[mweNewMultStatus], SW_HIDE);
-    if OpMode = CQOpMode then
-    begin
-      if OpMode2 = SearchAndPounceOpMode then
-      begin
-        OpMode2 := CQOpMode;
-        ShowFMessages(0);
-        tCleareExchangeWindow;
-      end;
-    end;
-  end;
+     begin
+     Windows.ShowWindow(wh[mweNewMultStatus], SW_HIDE);
+     if OpMode = CQOpMode then
+        begin
+        if OpMode2 = SearchAndPounceOpMode then
+           begin
+           OpMode2 := CQOpMode;
+           ShowFMessages(0);
+           tCleareExchangeWindow;
+           end;
+        end;
+     end;
 
   CallsignsList.CreatePartialsList(CallWindowString);
 
@@ -2903,26 +3119,34 @@ begin
       nil));
 {$ELSE}
     if (SCPMinimumLetters > 0) then
-    begin
-      ClearMasterListBox;
-      if VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr)
-        then
-        nCmdShow := SW_SHOWNORMAL;
-    end;
+       begin
+       ClearMasterListBox;
+       if VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr)
+         then
+          begin
+          nCmdShow := SW_SHOWNORMAL;
+          end;
+       end;
 {$IFEND}
   end;
 
   Windows.ShowWindow(wh[mweMasterStatus], nCmdShow);
   if not InactiveRigCallingCQ then //n4af 04.40.2
-    ShowInformation;
+     begin
+     ShowInformation;
+     end;
 
   if tShowTypedCallsign then
-    SendStationStatus(sstCallsign);
+     begin
+     SendStationStatus(sstCallsign);
+     end;
 
 {$IF MORSERUNNER}
   if MorseRunnerWindow <> 0 then
-    Windows.SendMessageA(MorseRunner_Callsign, WM_SETTEXT, 0,
-      integer(@CallWindowString[1]));
+     begin
+     Windows.SendMessageA(MorseRunner_Callsign, WM_SETTEXT, 0,
+       integer(@CallWindowString[1]));
+     end;
 {$IFEND}
 
 end;
@@ -2934,30 +3158,30 @@ var
 begin
   w := (ws * 2);
   for Band := Band160 to Band10 do
-  begin
-    QSONeedWindowsHandles1[Band] := CreateTR4WStaticWindow(MainWindowChildsWidth
-      - RightTopWidth + (integer(Band) + 1) * w, ws, w - 2,
-      QSOMULTSWINDOWSTYLE);
-    Windows.SetWindowTextA(QSONeedWindowsHandles1[Band], BandStringsArray[Band])
-  end;
+     begin
+     QSONeedWindowsHandles1[Band] := CreateTR4WStaticWindow(MainWindowChildsWidth
+       - RightTopWidth + (integer(Band) + 1) * w, ws, w - 2,
+       QSOMULTSWINDOWSTYLE);
+     Windows.SetWindowTextA(QSONeedWindowsHandles1[Band], BandStringsArray[Band])
+     end;
   QSONeedWindowHandle1 := CreateTR4WStaticWindow(MainWindowChildsWidth -
     RightTopWidth, ws, w, QSOMULTSMODEWINDOWSTYLE);
   Windows.SetWindowTextA(QSONeedWindowHandle1, nil);
 
   if QSOByMode then
-  begin
-    for Band := Band160 to Band10 do
-    begin
-      QSONeedWindowsHandles2[Band] :=
-        CreateTR4WStaticWindow(MainWindowChildsWidth - RightTopWidth +
-        (integer(Band) + 1) * w, ws * 2, w - 2, QSOMULTSWINDOWSTYLE);
-      Windows.SetWindowTextA(QSONeedWindowsHandles2[Band], BandStringsArray[Band])
-    end;
-    QSONeedWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
-      RightTopWidth, ws * 2, w, QSOMULTSMODEWINDOWSTYLE);
-    Windows.SetWindowTextA(QSONeedWindowHandle1, 'CW:');
-    Windows.SetWindowTextA(QSONeedWindowHandle2, 'SSB:');
-  end;
+     begin
+     for Band := Band160 to Band10 do
+        begin
+        QSONeedWindowsHandles2[Band] :=
+          CreateTR4WStaticWindow(MainWindowChildsWidth - RightTopWidth +
+          (integer(Band) + 1) * w, ws * 2, w - 2, QSOMULTSWINDOWSTYLE);
+        Windows.SetWindowTextA(QSONeedWindowsHandles2[Band], BandStringsArray[Band])
+        end;
+     QSONeedWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
+       RightTopWidth, ws * 2, w, QSOMULTSMODEWINDOWSTYLE);
+     Windows.SetWindowTextA(QSONeedWindowHandle1, 'CW:');
+     Windows.SetWindowTextA(QSONeedWindowHandle2, 'SSB:');
+     end;
 end;
 
 procedure CreateMultsWindows;
@@ -2967,31 +3191,31 @@ var
 begin
   w := (ws * 2);
   for Band := Band160 to Band10 do
-  begin
-    MultsWindowsHandles1[Band] := CreateTR4WStaticWindowID(MainWindowChildsWidth
-      - RightTopWidth + (integer(Band) + 1) * w, ws * 4, w - 2,
-      QSOMULTSWINDOWSTYLE, MULTSARRAYWINDOW);
-    Windows.SetWindowTextA(MultsWindowsHandles1[Band], BandStringsArray[Band])
-  end;
+     begin
+     MultsWindowsHandles1[Band] := CreateTR4WStaticWindowID(MainWindowChildsWidth
+       - RightTopWidth + (integer(Band) + 1) * w, ws * 4, w - 2,
+       QSOMULTSWINDOWSTYLE, MULTSARRAYWINDOW);
+     Windows.SetWindowTextA(MultsWindowsHandles1[Band], BandStringsArray[Band])
+     end;
   MultWindowHandle1 := CreateTR4WStaticWindow(MainWindowChildsWidth -
     RightTopWidth, ws * 4, w, QSOMULTSMODEWINDOWSTYLE);
   Windows.SetWindowTextA(MultWindowHandle1, 'Both:');
 
   if MultByMode then
-  begin
-    for Band := Band160 to Band10 do
-    begin
-      MultsWindowsHandles2[Band] :=
-        CreateTR4WStaticWindowID(MainWindowChildsWidth - RightTopWidth +
-        (integer(Band) + 1) * w, ws * 5, w - 2, QSOMULTSWINDOWSTYLE,
-        MULTSARRAYWINDOW);
-      Windows.SetWindowTextA(MultsWindowsHandles2[Band], BandStringsArray[Band])
-    end;
-    MultWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
-      RightTopWidth, ws * 5, w, QSOMULTSMODEWINDOWSTYLE);
-    Windows.SetWindowTextA(MultWindowHandle1, 'CW:');
-    Windows.SetWindowTextA(MultWindowHandle2, 'SSB:');
-  end;
+     begin
+     for Band := Band160 to Band10 do
+        begin
+        MultsWindowsHandles2[Band] :=
+          CreateTR4WStaticWindowID(MainWindowChildsWidth - RightTopWidth +
+          (integer(Band) + 1) * w, ws * 5, w - 2, QSOMULTSWINDOWSTYLE,
+          MULTSARRAYWINDOW);
+        Windows.SetWindowTextA(MultsWindowsHandles2[Band], BandStringsArray[Band])
+        end;
+     MultWindowHandle2 := CreateTR4WStaticWindow(MainWindowChildsWidth -
+       RightTopWidth, ws * 5, w, QSOMULTSMODEWINDOWSTYLE);
+     Windows.SetWindowTextA(MultWindowHandle1, 'CW:');
+     Windows.SetWindowTextA(MultWindowHandle2, 'SSB:');
+     end;
 end;
 
 
@@ -3016,7 +3240,9 @@ var
    Rgn: HRGN;
 begin
    if tr4whandle = 0 then
+      begin
       Exit;
+      end;
 
    { Try Windows 11 DWM path first }
    hr := -1; { assume failure until proven otherwise }
@@ -3078,28 +3304,32 @@ begin
     {SWP_SHOWWINDOW or }SWP_NOMOVE);
    { Round the four corners of the main window - radius 12px, adjust as needed }
   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
-  begin
-    if TWindows[e].mweiStyle <= 2 then
-      Continue;
-    wh[e] :=
+     begin
+     if TWindows[e].mweiStyle <= 2 then
+        begin
+        Continue;
+        end;
+     wh[e] :=
 
-    // Result := tCreateStaticWindow(nil, Style, X, Y, w, StaticWindowHeight, tr4whandle, 0);
+     // Result := tCreateStaticWindow(nil, Style, X, Y, w, StaticWindowHeight, tr4whandle, 0);
 
-    tCreateStaticWindow(
-      '',
-      TWindows[e].mweiStyle and (not (Cardinal(NoBorder) * SS_SUNKEN))
-      {or SS_ETCHEDFRAME},
-      TWindows[e].mweiX * ws,
-      TWindows[e].mweiY * ws + TWindows[e].mweB * EditableLogHeight,
-      round(TWindows[e].mweiWidth * ws),
-      TWindows[e].mweiHeight * ws,
-      tr4whandle, 0
-      );
-    tWM_SETFONT(wh[e], MainFont);
+     tCreateStaticWindow(
+       '',
+       TWindows[e].mweiStyle and (not (Cardinal(NoBorder) * SS_SUNKEN))
+       {or SS_ETCHEDFRAME},
+       TWindows[e].mweiX * ws,
+       TWindows[e].mweiY * ws + TWindows[e].mweB * EditableLogHeight,
+       round(TWindows[e].mweiWidth * ws),
+       TWindows[e].mweiHeight * ws,
+       tr4whandle, 0
+       );
+     tWM_SETFONT(wh[e], MainFont);
 
-    if TWindows[e].mweText <> nil then
-      SetMainWindowText(e, TWindows[e].mweText)
-  end;
+     if TWindows[e].mweText <> nil then
+        begin
+        SetMainWindowText(e, TWindows[e].mweText)
+        end
+     end;
 
   tWM_SETFONT(wh[mweAutoSendCount], SymbolFont);
   DisplayAutoSendCharacterCount;
@@ -3131,20 +3361,20 @@ begin
   SendMessage(wh[mweExchange], EM_LIMITTEXT, 35, 0);
 
   if TourDuration <> 0 then
-  begin
-    // Windows.GetWindowRect(wh[mweQuickCommand], temprect);
-    Windows.SetWindowPos(wh[mweQuickCommand], HWND_TOP, 0, EditableLogHeight + ws
-      * 12, ws * 33, ws, SWP_SHOWWINDOW);
-    TorDurationWindow := CreateTR4WStaticWindow(38 * ws {col9}, EditableLogHeight
-      + ws * 12 {Line7}, 8 * ws, defStyle);
-    TorDurationPrBarWindow := CreateProgress32InMainWindow(33 * ws {col8},
-      EditableLogHeight + ws * 12 {Line7}, $0000FFFF);
-    SendMessage(TorDurationPrBarWindow, PBM_SETRANGE, 0, MakeLParam(0,
-      TourDuration));
-    SendMessage(TorDurationPrBarWindow, PBM_SETBKCOLOR, 0, $000000);
-    SendMessage(TorDurationPrBarWindow, PBM_SETSTEP, 1, 0);
-    ShowTourDuration;
-  end;
+     begin
+     // Windows.GetWindowRect(wh[mweQuickCommand], temprect);
+     Windows.SetWindowPos(wh[mweQuickCommand], HWND_TOP, 0, EditableLogHeight + ws
+       * 12, ws * 33, ws, SWP_SHOWWINDOW);
+     TorDurationWindow := CreateTR4WStaticWindow(38 * ws {col9}, EditableLogHeight
+       + ws * 12 {Line7}, 8 * ws, defStyle);
+     TorDurationPrBarWindow := CreateProgress32InMainWindow(33 * ws {col8},
+       EditableLogHeight + ws * 12 {Line7}, $0000FFFF);
+     SendMessage(TorDurationPrBarWindow, PBM_SETRANGE, 0, MakeLParam(0,
+       TourDuration));
+     SendMessage(TorDurationPrBarWindow, PBM_SETBKCOLOR, 0, $000000);
+     SendMessage(TorDurationPrBarWindow, PBM_SETSTEP, 1, 0);
+     ShowTourDuration;
+     end;
 
   wh[mwePossibleCall] := CreateWindowExW(0, LISTBOX, nil,
     LBS_NOTIFY or LBS_OWNERDRAWFIXED or {LBS_HASSTRINGS or }LBS_NOINTEGRALHEIGHT
@@ -3166,24 +3396,32 @@ begin
     menu_WA7BNM_calendar, wsprintfBuffer);
   if (pos('CQ-WW', ContestTypeSA[Contest]) <> 0) or (pos('IARU-HF',
     ContestTypeSA[Contest]) <> 0) then //n4af 4.35.5 // 4.115.4
-    T1 := 3600000 // 60 min break criteria
+     begin
+     T1 := 3600000 // 60 min break criteria
+     end
   else
-    T1 := 1800000; // normal 30min break
+     begin
+     T1 := 1800000; // normal 30min break
+     end;
   if ContestsArray[Contest].QRZRUID = 0 then
-    Windows.EnableMenuItem(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND or
-      MF_GRAYED);
+     begin
+     Windows.EnableMenuItem(tr4w_main_menu, menu_qrzru_calendar, MF_BYCOMMAND or
+       MF_GRAYED);
+     end;
   if ContestsArray[Contest].WA7BNM = 0 then
-    Windows.EnableMenuItem(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND or
-      MF_GRAYED);
+     begin
+     Windows.EnableMenuItem(tr4w_main_menu, menu_WA7BNM_calendar, MF_BYCOMMAND or
+       MF_GRAYED);
+     end;
   if Contest = WRTC then
-  begin
-    Windows.EnableMenuItem(tr4w_main_menu, menu_windows_trmasterdta, MF_BYCOMMAND
-      or MF_GRAYED);
-    Windows.EnableMenuItem(tr4w_main_menu, menu_windows_telnet, MF_BYCOMMAND or
-      MF_GRAYED);
-    Windows.EnableMenuItem(tr4w_main_menu, menu_windows_getscores, MF_BYCOMMAND
-      or MF_GRAYED);
-  end;
+     begin
+     Windows.EnableMenuItem(tr4w_main_menu, menu_windows_trmasterdta, MF_BYCOMMAND
+       or MF_GRAYED);
+     Windows.EnableMenuItem(tr4w_main_menu, menu_windows_telnet, MF_BYCOMMAND or
+       MF_GRAYED);
+     Windows.EnableMenuItem(tr4w_main_menu, menu_windows_getscores, MF_BYCOMMAND
+       or MF_GRAYED);
+     end;
 
   EnableNetworkMenuItem(MF_GRAYED + MF_BYPOSITION);
 
@@ -3197,8 +3435,10 @@ begin
 {$IFEND}
 
   if not (Contest in [DARCWAEDCCW..DARCWAEDCSSB]) then
-    Windows.EnableMenuItem(tr4w_main_menu, menu_ctrl_qtcfunctions, MF_BYCOMMAND
-      or MF_GRAYED);
+     begin
+     Windows.EnableMenuItem(tr4w_main_menu, menu_ctrl_qtcfunctions, MF_BYCOMMAND
+       or MF_GRAYED);
+     end;
 
   // Remove POTA-specific menu items entirely when not in a POTA contest.
   // DeleteMenu is used rather than MF_GRAYED so the items are invisible —
@@ -3233,7 +3473,9 @@ var
 begin
   for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do  // Issue #783 -- include HamScore in restore
     if tr4w_WindowsArray[i].WndVisible then
-      OpenTR4WWindow(i);
+       begin
+       OpenTR4WWindow(i);
+       end;
   Windows.SetWindowPos(tr4whandle, HWND_TOP,
     tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Left,
     tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Top, 0, 0, SWP_NOSIZE or
@@ -3323,70 +3565,82 @@ begin
   TempWindowColor := tr4wColorsArray[TWindows[mweWholeScreen].mweColor];
 
   if CheckWindowAndColor(HWND(lParam), TempBrush, TempWindowColor) then
-  begin
+     begin
 
-    if lParam = integer(wh[mweExchange]) then
-      if OpMode = SearchAndPounceOpMode then
-        TempBrush := tr4wBrushArray[trGreen];
-
-    if DupeInfoCallWindowState <> diNone then
-      if lParam = integer(wh[mweDupeInfoCall]) then
-        TempBrush :=
-          tr4wBrushArray[DupeInfoCallWindowColorArray[DupeInfoCallWindowState]];
-
-    if lParam = integer(wh[mwePTTStatus]) then
-    begin
-      if ActiveRadioPtr.tPTTStatus = PTT_ON then
-      begin
-        if ActiveRadio = RadioOne then
-          TempBrush := tr4wBrushArray[trRed] // n4af 4.46.4
-        else
-          TempBrush := tr4wBrushArray[trYellow];
-      end;
-    end;
-
-    if lParam = integer(wh[mweWSJTX]) then
-    begin
-      if Assigned(wsjtx) then
-      begin
-        if wsjtx.Connected then
-        begin
-          SetMainWindowText(mweWSJTX, 'WSJTX');
+     if lParam = integer(wh[mweExchange]) then
+       if OpMode = SearchAndPounceOpMode then
+          begin
           TempBrush := tr4wBrushArray[trGreen];
-        end
-        else
+          end;
+
+     if DupeInfoCallWindowState <> diNone then
+       if lParam = integer(wh[mweDupeInfoCall]) then
+          begin
+          TempBrush :=
+            tr4wBrushArray[DupeInfoCallWindowColorArray[DupeInfoCallWindowState]];
+          end;
+
+     if lParam = integer(wh[mwePTTStatus]) then
         begin
-          TempBrush := tr4wBrushArray[trRed];
+        if ActiveRadioPtr.tPTTStatus = PTT_ON then
+           begin
+           if ActiveRadio = RadioOne then
+              begin
+              TempBrush := tr4wBrushArray[trRed] // n4af 4.46.4
+              end
+           else
+              begin
+              TempBrush := tr4wBrushArray[trYellow];
+              end;
+           end;
         end;
-      end;
-    end;
 
-    if (lParam = integer(wh[mweRadioOneFreq])) or
-       (lParam = integer(wh[mweRadioOne])) then
-       begin
-       if Radio1.RadioDisconnected then
-          TempWindowColor := tr4wColorsArray[AlertColor];
-       end;
+     if lParam = integer(wh[mweWSJTX]) then
+        begin
+        if Assigned(wsjtx) then
+           begin
+           if wsjtx.Connected then
+              begin
+              SetMainWindowText(mweWSJTX, 'WSJTX');
+              TempBrush := tr4wBrushArray[trGreen];
+              end
+           else
+              begin
+              TempBrush := tr4wBrushArray[trRed];
+              end;
+           end;
+        end;
 
-    if (lParam = integer(wh[mweRadioTwoFreq])) or
-       (lParam = integer(wh[mweRadioTwo])) then
-       begin
-       if Radio2.RadioDisconnected then
-          TempWindowColor := tr4wColorsArray[AlertColor];
-       end;
+     if (lParam = integer(wh[mweRadioOneFreq])) or
+        (lParam = integer(wh[mweRadioOne])) then
+        begin
+        if Radio1.RadioDisconnected then
+           begin
+           TempWindowColor := tr4wColorsArray[AlertColor];
+           end;
+        end;
 
-    goto DrawWindow;
-  end;
+     if (lParam = integer(wh[mweRadioTwoFreq])) or
+        (lParam = integer(wh[mweRadioTwo])) then
+        begin
+        if Radio2.RadioDisconnected then
+           begin
+           TempWindowColor := tr4wColorsArray[AlertColor];
+           end;
+        end;
+
+     goto DrawWindow;
+     end;
 
   if TotWinCurrrentColumn in [1..7] then
-  begin
-    if lParam = integer(TotWinheadHandles[TotWinCurrrentColumn]) then
-    begin
-      TempBrush := tr4wBrushArray[trBlue];
-      TempWindowColor := tr4wColorsArray[trWhite];
-      goto DrawWindow;
-    end;
-    {
+     begin
+     if lParam = integer(TotWinheadHandles[TotWinCurrrentColumn]) then
+        begin
+        TempBrush := tr4wBrushArray[trBlue];
+        TempWindowColor := tr4wColorsArray[trWhite];
+        goto DrawWindow;
+        end;
+     {
     if (lParam = integer(TotWinHandles[TotWinCurrrentColumn, 0])) or
     (lParam = integer(TotWinHandles[TotWinCurrrentColumn, 1])) or
     (lParam = integer(TotWinHandles[TotWinCurrrentColumn, 2])) or
@@ -3396,16 +3650,16 @@ begin
     goto DrawWindow;
     end;
     }
-  end;
+     end;
 
   if Windows.GetDlgCtrlID(HWND(lParam)) = MULTSARRAYWINDOW then
-  begin
-    TempBrush := tr4wBrushArray[TWindows[mweNewMultStatus].mweBackG];
-    //tr4wBrushArray[trYellow];
-    TempWindowColor := tr4wColorsArray[TWindows[mweNewMultStatus].mweColor];
-    //tr4wColorsArray[trBlack];
-    goto DrawWindow;
-  end;
+     begin
+     TempBrush := tr4wBrushArray[TWindows[mweNewMultStatus].mweBackG];
+     //tr4wBrushArray[trYellow];
+     TempWindowColor := tr4wColorsArray[TWindows[mweNewMultStatus].mweColor];
+     //tr4wColorsArray[trBlack];
+     goto DrawWindow;
+     end;
 
   // Exit;
 
@@ -3464,14 +3718,18 @@ begin
 
   if LowordWparam >= menu_windows_bandmap then
     if LowordWparam <= menu_windows_hamscore then  // Issue #783 -- extended past dupesheet2
-    begin
-      ID := WindowsType(LowordWparam - menu_windows_bandmap + 1);
-      if not tWindowsExist(ID) then
-        OpenTR4WWindow(ID)
-      else
-        CloseTR4WWindow(ID);
-      Exit;
-    end;
+       begin
+       ID := WindowsType(LowordWparam - menu_windows_bandmap + 1);
+       if not tWindowsExist(ID) then
+          begin
+          OpenTR4WWindow(ID)
+          end
+       else
+          begin
+          CloseTR4WWindow(ID);
+          end;
+       Exit;
+       end;
 
   case LowordWparam of
     menu_alt_increment_time_1..menu_alt_increment_time_0:
@@ -3572,7 +3830,9 @@ begin
       begin
         tAltE;
         if SO2R_Swap then
-          processreturn;
+           begin
+           processreturn;
+           end;
       end;
 
     menu_alt_savetofloppy:
@@ -3589,7 +3849,9 @@ begin
         InvertBoolean(MultiplierAlarm);
 
         if MultiplierAlarm then
-          DoABeep(BeepCongrats);
+           begin
+           DoABeep(BeepCongrats);
+           end;
       end;
     menu_alt_p: OpenListOfMessages;
     menu_alt_killcw: ToggleCW(True);
@@ -3606,7 +3868,9 @@ begin
         // if ActiveMode = CW then
         if tAutoCQMode = False then
           // tDialogBox(70, @AutoCQDlgProc);
-          CreateModalDialog(145, 60, tr4whandle, @AutoCQDlgProc, 0);
+           begin
+           CreateModalDialog(145, 60, tr4whandle, @AutoCQDlgProc, 0);
+           end;
         //QuickDisplay('Enter Time XX:YY GMT:');
         //Readln(junk);
       end;
@@ -3619,10 +3883,10 @@ begin
 
     menu_alt_setnettime:
       if YesOrNo(tr4whandle, TC_SENDTIMETOCOMPUTERSONTHENETWORK) = IDYES then
-      begin
-        Windows.GetSystemTime(NetTimeSync.tsTime);
-        SendToNet(NetTimeSync, SizeOf(NetTimeSync));
-      end;
+         begin
+         Windows.GetSystemTime(NetTimeSync.tsTime);
+         SendToNet(NetTimeSync, SizeOf(NetTimeSync));
+         end;
 
     menu_alt_flushlogtodisk:
       begin
@@ -3647,7 +3911,9 @@ begin
     menu_alt_toogleautosend:
       begin
         if AutoSendCharacterCount > 0 then
-          InvertBoolean(AutoSendEnable);
+           begin
+           InvertBoolean(AutoSendEnable);
+           end;
         DisplayAutoSendCharacterCount;
       end;
 
@@ -3685,15 +3951,15 @@ begin
     menu_ctrl_ptt: // 4.53.9
       begin
         if PTT_Set then
-        begin
-          PTTOFF;
-          PTT_Set := False;
-        end
+           begin
+           PTTOFF;
+           PTT_Set := False;
+           end
         else
-        begin
-          PTTON;
-          PTT_Set := True;
-        end;
+           begin
+           PTTON;
+           PTT_Set := True;
+           end;
       end;
 
     menu_ctrl_sendkeyboardinput:
@@ -3714,9 +3980,13 @@ begin
              end;
         tCardinal := tr4whandle;
         if QTCRWindow <> 0 then
-          tCardinal := QTCRWindow;
+           begin
+           tCardinal := QTCRWindow;
+           end;
         if QTCSWindow <> 0 then
-          tCardinal := QTCSWindow;
+           begin
+           tCardinal := QTCSWindow;
+           end;
         // DialogBox(hInstance, MAKEINTRESOURCE(60), tCardinal, @SendKeyboardCWDlgProc);
         CreateModalDialog(230, 20, tCardinal, @SendKeyboardCWDlgProc, 0);
         SetFocus(focus);
@@ -3736,7 +4006,9 @@ begin
     menu_ctrl_missmultsreport:
       begin
         if (ActiveDXMult = NoDXMults) or (not MultByBand) then
-          Exit;
+           begin
+           Exit;
+           end;
         tDialogBox(74 {45}, @MissingMultsReportProc);
       end;
 
@@ -3764,7 +4036,9 @@ begin
     menu_ctrl_recalllastentry:
 
       if EscapeDeletedCallEntry <> '' then
-        PutCallToCallWindow(EscapeDeletedCallEntry);
+         begin
+         PutCallToCallWindow(EscapeDeletedCallEntry);
+         end;
 
     menu_ctrl_refreshbandmap:
       // UpdateBlinkingBandMapCall;
@@ -3773,77 +4047,81 @@ begin
     menu_ctrl_cursorinbandmap:
       begin
         if tWindowsExist(tw_BANDMAPWINDOW_INDEX) then
-          begin
-          BandMapSettingFocus := True;
-          Windows.SetFocus(BandMapListBox);
-          BandMapSettingFocus := False;
-          end;
+           begin
+           BandMapSettingFocus := True;
+           Windows.SetFocus(BandMapListBox);
+           BandMapSettingFocus := False;
+           end;
       end;
 
     menu_ctrl_cursorintelnet:
       begin
         if TelnetListBox = 0 then
-          Exit;
+           begin
+           Exit;
+           end;
 
         // if tr4w_CallWindowActive or tr4w_ExchangeWindowActive then
         {?}
         // if ActiveMainWindow in [awExchangeWindow, awCallWindow] then
         if Windows.GetFocus <> TelnetListBox then
-        begin
-          Windows.SetFocus(TelnetListBox);
-          LowordWparam := Windows.SendMessage(TelnetListBox, LB_GETCURSEL, 0,
-            0);
-          if (LowordWparam = LB_ERR) or (LowordWparam <
-            Windows.SendMessage(TelnetListBox, LB_GETTOPINDEX, 0, 0)) then
-          begin
-            LowordWparam := Windows.SendMessage(TelnetListBox, LB_GETCOUNT, 0, 0)
-              - 1;
-            Windows.SendMessage(TelnetListBox, LB_SETCURSEL, LowordWparam, 0);
-            ActiveMainWindow := awUnknown;
-          end;
-        end
+           begin
+           Windows.SetFocus(TelnetListBox);
+           LowordWparam := Windows.SendMessage(TelnetListBox, LB_GETCURSEL, 0,
+             0);
+           if (LowordWparam = LB_ERR) or (LowordWparam <
+             Windows.SendMessage(TelnetListBox, LB_GETTOPINDEX, 0, 0)) then
+              begin
+              LowordWparam := Windows.SendMessage(TelnetListBox, LB_GETCOUNT, 0, 0)
+                - 1;
+              Windows.SendMessage(TelnetListBox, LB_SETCURSEL, LowordWparam, 0);
+              ActiveMainWindow := awUnknown;
+              end;
+           end
         else
-        begin
-          FrmSetFocus;
-          Exit;
-        end;
+           begin
+           FrmSetFocus;
+           Exit;
+           end;
 
       end;
 
     menu_ctrl_incAQSLinterval:
       if AutoQSLInterval < 6 then
-      begin
-        inc(AutoQSLInterval);
-        AutoQSLCount := AutoQSLInterval;
-        DisplayAutoQSLInterval;
-      end;
+         begin
+         inc(AutoQSLInterval);
+         AutoQSLCount := AutoQSLInterval;
+         DisplayAutoQSLInterval;
+         end;
 
     menu_ctrl_decAQSLinterval:
       if AutoQSLInterval > 0 then
-      begin
-        dec(AutoQSLInterval);
-        AutoQSLCount := AutoQSLInterval;
-        DisplayAutoQSLInterval;
-      end;
+         begin
+         dec(AutoQSLInterval);
+         AutoQSLCount := AutoQSLInterval;
+         DisplayAutoQSLInterval;
+         end;
 
     menu_ctrl_showCallsign:
       begin
         if CallWindowString <> '' then
-        begin
-          TF.Format(wsprintfBuffer, 'Callsign %s', @CallWindowString[1]);
-          ShowMessage(wsprintfBuffer);
-        end
+           begin
+           TF.Format(wsprintfBuffer, 'Callsign %s', @CallWindowString[1]);
+           ShowMessage(wsprintfBuffer);
+           end
         else
-          ShowMessage('Empty');
+           begin
+           ShowMessage('Empty');
+           end;
       end;
 
     menu_ctrl_showSpeed:
       begin
         if ActiveMode = CW then
-        begin
-          TF.Format(wsprintfBuffer, 'Speed %u', CodeSpeed);
-          ShowMessage(wsprintfBuffer);
-        end;
+           begin
+           TF.Format(wsprintfBuffer, 'Speed %u', CodeSpeed);
+           ShowMessage(wsprintfBuffer);
+           end;
       end;
 
     menu_ctrl_showBand:
@@ -3886,7 +4164,9 @@ begin
         NetIntercomMessage.imMessage :=
           QuickEditResponse(TC_MESSAGETOSENDVIANETWORK, 80);
         if NetIntercomMessage.imMessage <> '' then
-          SendToNet(NetIntercomMessage, SizeOf(NetIntercomMessage));
+           begin
+           SendToNet(NetIntercomMessage, SizeOf(NetIntercomMessage));
+           end;
       end;
 
     menu_ctrl_ct1bohscreen:
@@ -3910,35 +4190,45 @@ begin
 
     menu_inactiveradio_cwspeedup:
       if InActiveRadioPtr.SpeedMemory < (99 - CodeSpeedIncrement) then
-        inc(InActiveRadioPtr.SpeedMemory, CodeSpeedIncrement);
+         begin
+         inc(InActiveRadioPtr.SpeedMemory, CodeSpeedIncrement);
+         end;
 
     menu_inactiveradio_cwspeeddown:
       if InActiveRadioPtr.SpeedMemory > (CodeSpeedIncrement + 1) then
-        dec(InActiveRadioPtr.SpeedMemory, CodeSpeedIncrement);
+         begin
+         dec(InActiveRadioPtr.SpeedMemory, CodeSpeedIncrement);
+         end;
 
     menu_cwspeedup:
       begin
         if tAutoCQMode = True then
-        begin
-          inc(AutoCQDelayTime, 500);
-          tDisplayAutoCQStatus;
-          Exit;
-        end;
+           begin
+           inc(AutoCQDelayTime, 500);
+           tDisplayAutoCQStatus;
+           Exit;
+           end;
         if ActiveMode = CW then
-          SpeedUp;
+           begin
+           SpeedUp;
+           end;
       end;
 
     menu_cwspeeddown:
       begin
         if tAutoCQMode = True then
-        begin
-          if AutoCQDelayTime > 500 then
-            dec(AutoCQDelayTime, 500);
-          tDisplayAutoCQStatus;
-          Exit;
-        end;
+           begin
+           if AutoCQDelayTime > 500 then
+              begin
+              dec(AutoCQDelayTime, 500);
+              end;
+           tDisplayAutoCQStatus;
+           Exit;
+           end;
         if ActiveMode = CW then
-          SlowDown;
+           begin
+           SlowDown;
+           end;
       end;
 
     menu_syncpctime:
@@ -4029,7 +4319,9 @@ begin
         //tDialogBox(57, @WindowsManagerDlgProc);
         CreateModalDialog(150, 120, tr4whandle, @WindowsManagerDlgProc, 0);
         if ManageWindow = 0 then
-          Exit;
+           begin
+           Exit;
+           end;
         Windows.GetWindowRect(ManageWindow, tr4w_TempRect);
         SendMessage(ManageWindow, $313, 0, MakeLong(tr4w_TempRect.Left,
           tr4w_TempRect.Top + 20));
@@ -4055,7 +4347,9 @@ begin
     menu_trlog:
       begin
         if EscapeDeletedCallEntry <> '' then
-          PutCallToCallWindow(EscapeDeletedCallEntry);
+           begin
+           PutCallToCallWindow(EscapeDeletedCallEntry);
+           end;
       end;
 
     menu_initial_ex_list:
@@ -4081,7 +4375,9 @@ begin
 
     menu_clear_log:
       if YesOrNo(tr4whandle, TC_REALLYWANTTOCLEARTHELOG) = IDYES then
-        ClearLog;
+         begin
+         ClearLog;
+         end;
 
 {$IF OGLVERSION}
     menu_about:
@@ -4166,33 +4462,33 @@ begin
         Windows.ZeroMemory(@TempCallstring, SizeOf(TempCallstring));
         TempCallstring := QuickEditResponse(TC_CURRENT_OPERATOR_CALLSIGN, 6);
         if length(TempCallstring) > 0 then
-        begin
-          if IsValidUSPrefix(TempCallString) then
-          begin
-            if IsValidUSCallsign(TempCallString) then
-            begin
+           begin
+           if IsValidUSPrefix(TempCallString) then
+              begin
+              if IsValidUSCallsign(TempCallString) then
+                 begin
+                 Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
+                 SetMainWindowText(mweCurrentOperator, CurrentOperator);
+                 Sheet.SaveRestartFile; // Issue 661 ny4i
+                 SendStationStatus(sstOperator);
+                 end
+              else
+                 begin
+                 ShowMessage('Login call does not look like a callsign');
+                 end;
+              end
+           else if IsValidCallsign(TempCallString) then
+              begin
               Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
               SetMainWindowText(mweCurrentOperator, CurrentOperator);
               Sheet.SaveRestartFile; // Issue 661 ny4i
               SendStationStatus(sstOperator);
-            end
-            else
-            begin
+              end
+           else
+              begin
               ShowMessage('Login call does not look like a callsign');
-            end;
-          end
-          else if IsValidCallsign(TempCallString) then
-          begin
-            Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
-            SetMainWindowText(mweCurrentOperator, CurrentOperator);
-            Sheet.SaveRestartFile; // Issue 661 ny4i
-            SendStationStatus(sstOperator);
-          end
-          else
-          begin
-            ShowMessage('Login call does not look like a callsign');
-          end;
-        end;
+              end;
+           end;
         // ShowMessage(CurrentOperator);
       end;
 
@@ -4295,22 +4591,28 @@ begin
           // gave length 67 -- so the pointer happened to land right while the
           // length was garbage.  Both GetRidOfPrecedingSpaces and
           // OpenFileForRead_old inside LoadInSeparateConfigFile use that length.
-          ExecuteConfigurationFile(PAnsiChar(@TR4W_EXECONFIGFILE_FILENAME[0]));
+           begin
+           ExecuteConfigurationFile(PAnsiChar(@TR4W_EXECONFIGFILE_FILENAME[0]));
+           end;
       end;
 
     menu_ctrl_shdxcallsign:
       begin
         Windows.ZeroMemory(@TempCallstring, SizeOf(TempCallstring));
         if CallWindowString <> '' then
-          TempCallstring := CallWindowString
+           begin
+           TempCallstring := CallWindowString
+           end
         else
-          TempCallstring := VisibleLog.LastEntry(False, letCallsign);
+           begin
+           TempCallstring := VisibleLog.LastEntry(False, letCallsign);
+           end;
 
         if TempCallstring <> '' then
-        begin
-          TF.Format(wsprintfBuffer, 'SH/DX %s 5', @TempCallstring[1]);
-          SendViaTelnetSocket(wsprintfBuffer);
-        end;
+           begin
+           TF.Format(wsprintfBuffer, 'SH/DX %s 5', @TempCallstring[1]);
+           SendViaTelnetSocket(wsprintfBuffer);
+           end;
       end;
 
   end;
@@ -4321,18 +4623,22 @@ begin
 {$IF NOT MORSERUNNER}
   if lowparam = menu_spmode_ortab then
     if OpMode = CQOpMode then
-    begin
-      SetOpMode(SearchAndPounceOpMode);
-      Exit;
-    end;
+       begin
+       SetOpMode(SearchAndPounceOpMode);
+       Exit;
+       end;
 {$IFEND}
 
   // ChangeFocus('ProcessTAB');
 
   if ActiveMainWindow = awCallWindow then
-    tExchangeWindowSetFocus
+     begin
+     tExchangeWindowSetFocus
+     end
   else if ActiveMainWindow = awExchangeWindow then
-    tCallWindowSetFocus;
+     begin
+     tCallWindowSetFocus;
+     end;
   {
   if tr4w_CallWindowActive then
   begin
@@ -4352,12 +4658,12 @@ procedure ProcessKeyDownTerm; // 4.46.2
 begin
   if activeradioptr^.cwbycat and autosendenable and autocallterminate then
     if length(CallWindowString) = AutoSendCharacterCount then
-    begin
-      tExchangeWindowSetFocus;
-      tSetExchWindInitExchangeEntry;
-      CheckAndSetInitialExchangeCursorPos;
-      processreturn;
-    end;
+       begin
+       tExchangeWindowSetFocus;
+       tSetExchWindInitExchangeEntry;
+       CheckAndSetInitialExchangeCursorPos;
+       processreturn;
+       end;
 end;
 
 procedure ProcessReturn;
@@ -4371,126 +4677,138 @@ begin
   tDispalyOnAirTime;
   TempHWND := Windows.GetFocus;
   if {TempHWND}Windows.GetParent(TempHWND) = TelnetCommandWindow then
-  begin
-    // Was `TelnetSock <> 0`.  The raw socket handle is gone; ask uTelnet
-    // whether the cluster link is up (uDXClusterClient owns the socket).
-    if TelnetIsConnected then
-       begin
-       PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
-         WM_COMMAND, 104, TempHWND);
-       end;
-    Exit;
-  end;
+     begin
+     // Was `TelnetSock <> 0`.  The raw socket handle is gone; ask uTelnet
+     // whether the cluster link is up (uDXClusterClient owns the socket).
+     if TelnetIsConnected then
+        begin
+        PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle,
+          WM_COMMAND, 104, TempHWND);
+        end;
+     Exit;
+     end;
 
   if TempHWND = BandMapListBox then
-  begin
-    PostMessage(tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndHandle, WM_COMMAND,
-      131173, TempHWND);
-    Exit;
-  end;
+     begin
+     PostMessage(tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndHandle, WM_COMMAND,
+       131173, TempHWND);
+     Exit;
+     end;
 
   if TempHWND = TelnetListBox then
-  begin
-    PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, WM_COMMAND,
-      131173, TempHWND);
-    Exit;
-  end;
+     begin
+     PostMessage(tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndHandle, WM_COMMAND,
+       131173, TempHWND);
+     Exit;
+     end;
 
   // if tr4w_ExchangeWindowActive = False then if tr4w_CallWindowActive = False then
   if ActiveMainWindow = awEditableLog then
     if TempHWND = wh[mweEditableLog] then
-    begin
-      EditableLogWindowDblClick;
-      Exit;
-    end;
+       begin
+       EditableLogWindowDblClick;
+       Exit;
+       end;
 
   // check if membership # entered
   // n4af 4.67.2 check for reverse lookup of membership #
   // 4.67.3 look for member # in trmaster.asc
   if (CallWindowString[1]) = 'R' then
-  begin
-    RevNr := copy(CallWindowString, 2, length(callwindowstring) - 1);
-    if StringIsAllNumbers(RevNr) then
-    begin
-      if not CallsignsList.FindNumber(RevNr) then
+     begin
+     RevNr := copy(CallWindowString, 2, length(callwindowstring) - 1);
+     if StringIsAllNumbers(RevNr) then
+        begin
+        if not CallsignsList.FindNumber(RevNr) then
+           begin
+           exit;
+           end;
+        PutCallToCallWindow(CallWindowString);
         exit;
-      PutCallToCallWindow(CallWindowString);
-      exit;
-    end;
-  end;
+        end;
+     end;
   SetFreq:
   if TuneOnFreqFromCallWindow then
-    Exit;
+     begin
+     Exit;
+     end;
   if CallWindowString = 'TXON' then
-  begin
-    logger.debug('Calling tPTTVIACAT with true');
-    tPTTVIACAT(true);
-  end
+     begin
+     logger.debug('Calling tPTTVIACAT with true');
+     tPTTVIACAT(true);
+     end
   else if CallWindowString = 'TXOFF' then
-  begin
-    tPTTVIACAT(false);
-  end;
+     begin
+     tPTTVIACAT(false);
+     end;
   if (ActiveExchange = RSTDomesticQTHExchange) then
     if (CallWindowString <> '') and (ExchangeWindowString <> '') then
-      ParseFourFields(ExchangeWindowString, s1, s2, s3, s4);
+       begin
+       ParseFourFields(ExchangeWindowString, s1, s2, s3, s4);
+       end;
   {    if S3 <> '' then
        begin
         ExchangeWindowString := S3
 
       }
   if OpMode = CQOpMode then
-  begin
-    ctyGetCountryID(callwindowstring);
-    if SwitchNext then //4.52.3
-    begin
-      if (CallWindowString <> '') then // 4.92.2
-      begin
-        SwitchNext := False; // 4.92.2
-        Switch := False;
-        // B1: ask the ACTIVE keyer (was WKBusy or CWThreadID -- CAT and YCCC
-        // were simply missing here, so a CQ advance could interrupt CW they
-        // were still sending).  4.52.4 issue 192
-        if CWStillBeingSent then
+     begin
+     ctyGetCountryID(callwindowstring);
+     if SwitchNext then //4.52.3
         begin
-          FlushCWBuffer;
-          ReturnInCQOpMode;
-          exit;
-        end
-        else
-          swapradios;
-        if (AutoSendEnable) and (AutoSendCharacterCount > 0) then
-        begin // end 4.52.4
-          SwapRadios;
-          InactiveRigCallingCQ := False;
+        if (CallWindowString <> '') then // 4.92.2
+           begin
+           SwitchNext := False; // 4.92.2
+           Switch := False;
+           // B1: ask the ACTIVE keyer (was WKBusy or CWThreadID -- CAT and YCCC
+           // were simply missing here, so a CQ advance could interrupt CW they
+           // were still sending).  4.52.4 issue 192
+           if CWStillBeingSent then
+              begin
+              FlushCWBuffer;
+              ReturnInCQOpMode;
+              exit;
+              end
+           else
+              begin
+              swapradios;
+              end;
+           if (AutoSendEnable) and (AutoSendCharacterCount > 0) then
+              begin // end 4.52.4
+              SwapRadios;
+              InactiveRigCallingCQ := False;
+              end;
+           end;
         end;
-      end;
-    end;
 
-    if switch = False then // n4af 4.44.7
-      InactiveRigCallingCQ := False // n4af 4.42.11
-    else
-    begin
-      if autosendenable then // n4af 4.44.7
-      begin // do not swap yet if autosend
-        switch := False;
-        ReturnInCQOpMode;
-        exit;
-      end;
-      checkinactiverigcallingcq;
-      Switch := False;
-      if CallWindowString = '' then // 4.52.3
-        SwitchNext := False;
-      // exit;
-    end;
-    ReturnInCQOpMode;
-    Exit;
-  end;
+     if switch = False then // n4af 4.44.7
+        begin
+        InactiveRigCallingCQ := False // n4af 4.42.11
+        end
+     else
+        begin
+        if autosendenable then // n4af 4.44.7
+           begin // do not swap yet if autosend
+           switch := False;
+           ReturnInCQOpMode;
+           exit;
+           end;
+        checkinactiverigcallingcq;
+        Switch := False;
+        if CallWindowString = '' then // 4.52.3
+           begin
+           SwitchNext := False;
+           end;
+        // exit;
+        end;
+     ReturnInCQOpMode;
+     Exit;
+     end;
 
   if OpMode = SearchAndPounceOpMode then
-  begin
-    ReturnInSAPOpMode;
-    // Exit;
-  end;
+     begin
+     ReturnInSAPOpMode;
+     // Exit;
+     end;
 
 end;
 
@@ -4525,15 +4843,17 @@ begin
   logger.trace('[CallWindowKeyDownProc] Key pressed = ' + key);
   if tAutoCQMode then
     if TryKillAutoCQ then
-      Escape_proc;
+       begin
+       Escape_proc;
+       end;
 
   if key = '-' then
-  begin
-    tr4w_alt_n_transmit_frequency; // Note this is a toggle
-    tCleareCallWindow;
-    CallWindowCharConsumed := True; // prevent WM_CHAR from inserting '-' into the cleared field
-    Exit;
-  end;
+     begin
+     tr4w_alt_n_transmit_frequency; // Note this is a toggle
+     tCleareCallWindow;
+     CallWindowCharConsumed := True; // prevent WM_CHAR from inserting '-' into the cleared field
+     Exit;
+     end;
 
   // '=' repeat-last-CW-message is handled centrally in the main message loop
   // (tr4w.dpr WM_CHAR) so it works in both the call and exchange windows.
@@ -4544,95 +4864,101 @@ begin
         if ActiveMode = CW then
           if CallWindowString <> '' then
             // if (not StringHas(CallWindowString, '/')) then
-          begin
-            if MessageEnable then
-            begin
-              CheckInactiveRigCallingCQ;
-              DebugMsg('[CallWindowKeyDownProc] Call AddStringToBuffer with ' +
-                CallWindowString);
-              AddStringToBuffer(CallWindowString, CWTone);
-              if IsCWByCATActive then
-              begin
-                DebugMsg('[CallWindowKeyDownProc] Calling AddStringToBuffer with CWByCATBufferTerminator');
-                AddStringToBuffer(CWByCATBufferTerminator, CWTone);
-              end;
-              // PTTForceOn;
-              tAutoSendMode := True;
-            end;
-          end;
+             begin
+             if MessageEnable then
+                begin
+                CheckInactiveRigCallingCQ;
+                DebugMsg('[CallWindowKeyDownProc] Call AddStringToBuffer with ' +
+                  CallWindowString);
+                AddStringToBuffer(CallWindowString, CWTone);
+                if IsCWByCATActive then
+                   begin
+                   DebugMsg('[CallWindowKeyDownProc] Calling AddStringToBuffer with CWByCATBufferTerminator');
+                   AddStringToBuffer(CWByCATBufferTerminator, CWTone);
+                   end;
+                // PTTForceOn;
+                tAutoSendMode := True;
+                end;
+             end;
   // autosend code here
   if (tAutoSendMode = True) then
-  begin
-    if Key = BackSpace then
-    begin
-      if EditingCallsignSent then
-      begin
-        // if length(CallWindowString) > 0 then
-       { begin
+     begin
+     if Key = BackSpace then
+        begin
+        if EditingCallsignSent then
+           begin
+           // if length(CallWindowString) > 0 then
+          { begin
         // Delete(CallWindowString, length(CallWindowString), 1);
         end }
-      end
+           end
 
-      else if (CWEnabled and DeleteLastCharacter) or not CWEnabled then
-      begin
-      end
-      else
-      begin
-        logger.trace('[CallWindowKeyDownProc] Calling AddStringToBuffer with !');
-        AddStringToBuffer('!', CWTone);
-        EditingCallsignSent := True;
-      end;
+        else if (CWEnabled and DeleteLastCharacter) or not CWEnabled then
+           begin
+           end
+        else
+           begin
+           logger.trace('[CallWindowKeyDownProc] Calling AddStringToBuffer with !');
+           AddStringToBuffer('!', CWTone);
+           EditingCallsignSent := True;
+           end;
 
-    end
-    else
-    begin
-      if Key <> StartSendingNowKey then
-      begin
-        // B2: the three-way keyer branch that stood here (CAT sends the char
-        // plus its terminator, WinKeyer sends UpCase'd, CPU buffers the raw
-        // char) is now the adapters' SendChar bodies, each preserved verbatim
-        // -- including the YCCC oddity that autosend chars go to the CPU keyer
-        // because no YCCC arm ever existed here (quirk Q4).
-        ActiveCWKeyer.SendChar(Key);
-      end;
-      EditingCallsignSent := False;
-    end;
-  end;
+        end
+     else
+        begin
+        if Key <> StartSendingNowKey then
+           begin
+           // B2: the three-way keyer branch that stood here (CAT sends the char
+           // plus its terminator, WinKeyer sends UpCase'd, CPU buffers the raw
+           // char) is now the adapters' SendChar bodies, each preserved verbatim
+           // -- including the YCCC oddity that autosend chars go to the CPU keyer
+           // because no YCCC arm ever existed here (quirk Q4).
+           ActiveCWKeyer.SendChar(Key);
+           end;
+        EditingCallsignSent := False;
+        end;
+     end;
   if (SwitchNext {and (CallWindowString<>'')} and CWStillBeingSent) then
     // B1: was (CWThreadID <> 0) or wkBUSY or ActiveRadioPtr.CWByCAT_Sending;
     // now the active keyer only -- adds YCCC, and a stale latch on an
     // unselected backend no longer blocks the swap.  4.52.10
-  begin
-    FlushCWBuffer;
-    SwapRadios;
-    logger.trace('[CallWindowKeyDownProc] SwapExit');
-    exit;
-  end;
+     begin
+     FlushCWBuffer;
+     SwapRadios;
+     logger.trace('[CallWindowKeyDownProc] SwapExit');
+     exit;
+     end;
   // CallsignsList.CreatePartialsList(CallWindowString);
   p := wh[mwePossibleCall];
   c := wh[mweCall];
   if not InsertMode then
-    EditSetSelLength(c, 1);
+     begin
+     EditSetSelLength(c, 1);
+     end;
   if CWStillBeingSent then
     // B1: same substitution as above.  4.52.10
-  begin
-    Switch := False;
-    SwitchNext := False;
-    InactiveRigCallingCQ := False;
-    InactiveSwapRadio := False;
-  end;
+     begin
+     Switch := False;
+     SwitchNext := False;
+     InactiveRigCallingCQ := False;
+     InactiveSwapRadio := False;
+     end;
 
   itempos := SendMessage(p, LB_GETCURSEL, 0, 0);
   logger.trace('[CallWindowKeyDownProc] itemrpos');
   if Key = PossibleCallLeftKey then
-    dec(itempos);
+     begin
+     dec(itempos);
+     end;
   if Key = PossibleCallRightKey then
-  begin
-    inc(itempos);
-    logger.trace('[CallWindowKeyDownProc] itemright set ' + Key);
-  end;
+     begin
+     inc(itempos);
+     logger.trace('[CallWindowKeyDownProc] itemright set ' + Key);
+     end;
   if itempos = -1 then
-    itempos := 0;
+     begin
+     itempos := 0;
+     end;
   SendMessage(p, LB_SETCURSEL, itempos, 0);
 
   itempos := SendMessage(p, LB_GETCURSEL, 0, 0);
@@ -4640,23 +4966,23 @@ begin
   if Key = PossibleCallAcceptKey then
 
     if SendMessage(p, LB_GETCOUNT, 0, 0) > 0 then
-    begin
-      logger.trace('[CallWindowKeyDownProc] PutCallToCallWindow ' + Key);
-      PutCallToCallWindow(LogSCP.PossibleCallList.List[itempos].Call);
-    end;
+       begin
+       logger.trace('[CallWindowKeyDownProc] PutCallToCallWindow ' + Key);
+       PutCallToCallWindow(LogSCP.PossibleCallList.List[itempos].Call);
+       end;
 
 end;
 
 procedure CallWindowKeyUpProc;
 begin
   if AutoSendEnable then
-  begin
-    if AutoSendCharacterCount = length(CallWindowString) then
-    begin
-      DebugMsg('[CallWindowKeyUpProc] Calling StartSendingNow with False');
-      StartSendingNow(False);
-    end;
-  end;
+     begin
+     if AutoSendCharacterCount = length(CallWindowString) then
+        begin
+        DebugMsg('[CallWindowKeyUpProc] Calling StartSendingNow with False');
+        StartSendingNow(False);
+        end;
+     end;
 end;
 
 {------------------------------------------------------------------------------}
@@ -4674,11 +5000,17 @@ begin
   Key := Char(wParam);
   itempos := SendMessage(p, LB_GETCURSEL, 0, 0);
   if Key = PossibleCallLeftKey then
-    dec(itempos);
+     begin
+     dec(itempos);
+     end;
   if Key = PossibleCallRightKey then
-    inc(itempos);
+     begin
+     inc(itempos);
+     end;
   if itempos = -1 then
-    itempos := 0;
+     begin
+     itempos := 0;
+     end;
   SendMessage(p, LB_SETCURSEL, itempos, 0);
 
   itempos := SendMessage(p, LB_GETCURSEL, 0, 0);
@@ -4686,7 +5018,9 @@ begin
   if Key = PossibleCallAcceptKey then
 
     if SendMessage(p, LB_GETCOUNT, 0, 0) > 0 then
-      PutCallToCallWindow(LogSCP.PossibleCallList.List[itempos].Call);
+       begin
+       PutCallToCallWindow(LogSCP.PossibleCallList.List[itempos].Call);
+       end;
 
   // If the contest type uses sections and we see a section starting to be typed,
   // start pre-filling the fields where the cals are placed for SCP
@@ -4734,36 +5068,42 @@ begin
   if Contest = WRTC then
     if ID in [tw_MASTERWINDOW_INDEX, tw_TELNETWINDOW_INDEX,
       tw_POSTSCORESWINDOW_INDEX] then
-      Exit;
+       begin
+       Exit;
+       end;
 
 {$IF NOT MMTTYMODE}
   if ID = tw_MMTTYWINDOW_INDEX then
-    Exit;
+     begin
+     Exit;
+     end;
 {$IFEND}
 
   if ID = tw_NETWINDOW_INDEX then
     if not (ComputerID in ['A'..'Z']) then
-    begin
-      // showwarning(TC_SETCOMPUTERIDVALUE);
+       begin
+       // showwarning(TC_SETCOMPUTERIDVALUE);
 
-      SetCommand('COMPUTER ID');
-      Exit;
-    end;
+       SetCommand('COMPUTER ID');
+       Exit;
+       end;
 
 {$IF MMTTYMODE}
   if ID = tw_MMTTYWINDOW_INDEX then
-  begin
-    if TR4W_MMTTYPATH[0] = #0 then
-    begin
-      SetCommand('MMTTY ENGINE');
-      Exit;
-    end;
-    RichEditOperation(True);
-  end;
+     begin
+     if TR4W_MMTTYPATH[0] = #0 then
+        begin
+        SetCommand('MMTTY ENGINE');
+        Exit;
+        end;
+     RichEditOperation(True);
+     end;
 {$IFEND}
 
   if tWindowsExist(ID) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   Windows.CheckMenuItem(tr4w_main_menu, 10199 + Ord(ID), MF_CHECKED);
   tr4w_WindowsArray[ID].WndVisible := True;
@@ -4785,10 +5125,10 @@ begin
 
   for i := 0 to SizeOf(TempBuffer1) - 1 do
     if TempBuffer1[i] = #9 then
-    begin
-      TempBuffer1[i] := #0;
-      Break;
-    end;
+       begin
+       TempBuffer1[i] := #0;
+       Break;
+       end;
 
   Windows.SetWindowTextA(h, TempBuffer1);
   {
@@ -4800,49 +5140,55 @@ begin
 
   if NoCaption then
     // if ID <> tw_FUNCTIONKEYSWINDOW_INDEX then
-    Windows.SetWindowLong(h, GWL_STYLE, GetWindowLong(h, GWL_STYLE) -
-   //   WS_CAPTION);
-        WS_POPUP);
+     begin
+     Windows.SetWindowLong(h, GWL_STYLE, GetWindowLong(h, GWL_STYLE) -
+    //   WS_CAPTION);
+         WS_POPUP);
+     end;
 
   Radio := nil;
   if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
-    Radio := @Radio1;
+     begin
+     Radio := @Radio1;
+     end;
   if ID = tw_RADIOINTERFACEWINDOW2_INDEX then
-    Radio := @Radio2;
+     begin
+     Radio := @Radio2;
+     end;
 
   if Radio <> nil then
-  begin
-    Radio.tRadioInterfaceWndHandle := h;
-    Radio.RITWndHandle := Windows.GetDlgItem(h, 121);
-    Radio.XITWndHandle := Windows.GetDlgItem(h, 122);
-    Radio.SplitWndHandle := Windows.GetDlgItem(h, 123);
-    // Dynamically create mode labels to the right of each VFO frequency (Issue #566).
-    // VFO A mode: right of control 102
-    Windows.GetWindowRect(Windows.GetDlgItem(h, 102), temprect);
-    ctrlPt.X := temprect.Right + 4;
-    ctrlPt.Y := temprect.Top;
-    Windows.ScreenToClient(h, ctrlPt);
-    hMode := Windows.CreateWindow('STATIC', '',
-       WS_CHILD or WS_VISIBLE or SS_LEFT,
-       ctrlPt.X, ctrlPt.Y,
-       55, temprect.Bottom - temprect.Top,
-       h, 0, hInstance, nil);
-    Windows.SendMessage(hMode, WM_SETFONT, Windows.SendMessage(h, WM_GETFONT, 0, 0), 1);
-    Radio.ModeVFOAWndHandle := hMode;
-    // VFO B mode: right of control 104
-    Windows.GetWindowRect(Windows.GetDlgItem(h, 104), temprect);
-    ctrlPt.X := temprect.Right + 4;
-    ctrlPt.Y := temprect.Top;
-    Windows.ScreenToClient(h, ctrlPt);
-    hMode := Windows.CreateWindow('STATIC', '',
-       WS_CHILD or WS_VISIBLE or SS_LEFT,
-       ctrlPt.X, ctrlPt.Y,
-       55, temprect.Bottom - temprect.Top,
-       h, 0, hInstance, nil);
-    Windows.SendMessage(hMode, WM_SETFONT, Windows.SendMessage(h, WM_GETFONT, 0, 0), 1);
-    Radio.ModeVFOBWndHandle := hMode;
-    DisplayCurrentStatus(Radio);
-  end;
+     begin
+     Radio.tRadioInterfaceWndHandle := h;
+     Radio.RITWndHandle := Windows.GetDlgItem(h, 121);
+     Radio.XITWndHandle := Windows.GetDlgItem(h, 122);
+     Radio.SplitWndHandle := Windows.GetDlgItem(h, 123);
+     // Dynamically create mode labels to the right of each VFO frequency (Issue #566).
+     // VFO A mode: right of control 102
+     Windows.GetWindowRect(Windows.GetDlgItem(h, 102), temprect);
+     ctrlPt.X := temprect.Right + 4;
+     ctrlPt.Y := temprect.Top;
+     Windows.ScreenToClient(h, ctrlPt);
+     hMode := Windows.CreateWindow('STATIC', '',
+        WS_CHILD or WS_VISIBLE or SS_LEFT,
+        ctrlPt.X, ctrlPt.Y,
+        55, temprect.Bottom - temprect.Top,
+        h, 0, hInstance, nil);
+     Windows.SendMessage(hMode, WM_SETFONT, Windows.SendMessage(h, WM_GETFONT, 0, 0), 1);
+     Radio.ModeVFOAWndHandle := hMode;
+     // VFO B mode: right of control 104
+     Windows.GetWindowRect(Windows.GetDlgItem(h, 104), temprect);
+     ctrlPt.X := temprect.Right + 4;
+     ctrlPt.Y := temprect.Top;
+     Windows.ScreenToClient(h, ctrlPt);
+     hMode := Windows.CreateWindow('STATIC', '',
+        WS_CHILD or WS_VISIBLE or SS_LEFT,
+        ctrlPt.X, ctrlPt.Y,
+        55, temprect.Bottom - temprect.Top,
+        h, 0, hInstance, nil);
+     Windows.SendMessage(hMode, WM_SETFONT, Windows.SendMessage(h, WM_GETFONT, 0, 0), 1);
+     Radio.ModeVFOBWndHandle := hMode;
+     DisplayCurrentStatus(Radio);
+     end;
 
   TempFlag := SWP_SHOWWINDOW;
   // if ID in [tw_RADIOINTERFACEWINDOW1_INDEX, tw_RADIOINTERFACEWINDOW2_INDEX, tw_MP3RECORDER, tw_GETSCORESWINDOW_INDEX]
@@ -4857,13 +5203,13 @@ begin
 
   if NoCaption then
     if TempFlag = NORESIZEEDWINDOW then
-    begin
-      Windows.GetWindowRect(h, temprect);
-      temprect.Bottom := temprect.Bottom - GetSystemMetrics(SM_CYSMCAPTION);
-      Windows.SetWindowPos(h, HWND_TOP, temprect.Left, temprect.Top,
-        temprect.Right - temprect.Left, temprect.Bottom - temprect.Top,
-        SWP_SHOWWINDOW);
-    end;
+       begin
+       Windows.GetWindowRect(h, temprect);
+       temprect.Bottom := temprect.Bottom - GetSystemMetrics(SM_CYSMCAPTION);
+       Windows.SetWindowPos(h, HWND_TOP, temprect.Left, temprect.Top,
+         temprect.Right - temprect.Left, temprect.Bottom - temprect.Top,
+         SWP_SHOWWINDOW);
+       end;
 
   FrmSetFocus;
 end;
@@ -4872,19 +5218,27 @@ procedure CheckNumber;
 begin
   if StringIsAllNumbers(CallWindowString) then
     if CallsignsList.FindNumber(CallWindowString) then
-      PutCallToCallWindow(CallWindowString);
+       begin
+       PutCallToCallWindow(CallWindowString);
+       end;
 
 end;
 
 procedure CloseTR4WWindow(ID: WindowsType);
 begin
   if not tWindowsExist(ID) then
-    Exit;
+     begin
+     Exit;
+     end;
   FindAndSaveRectOfAllWindows;
   if tr4w_WindowsArray[ID].WndHandle = Radio1.tRadioInterfaceWndHandle then
-    Radio1.tRadioInterfaceWndHandle := 0;
+     begin
+     Radio1.tRadioInterfaceWndHandle := 0;
+     end;
   if tr4w_WindowsArray[ID].WndHandle = Radio2.tRadioInterfaceWndHandle then
-    Radio2.tRadioInterfaceWndHandle := 0;
+     begin
+     Radio2.tRadioInterfaceWndHandle := 0;
+     end;
   DestroyWindow(tr4w_WindowsArray[ID].WndHandle);
   tr4w_WindowsArray[ID].WndHandle := 0;
   tr4w_WindowsArray[ID].WndVisible := False;
@@ -4931,14 +5285,20 @@ begin
 {$IF MORSERUNNER}
   if Key in [VK_F1..VK_F8] then
     if MorseRunnerWindow <> 0 then
-      Windows.SendMessage(MorseRunnerWindow, WM_COMMAND, Key - 96, 0);
+       begin
+       Windows.SendMessage(MorseRunnerWindow, WM_COMMAND, Key - 96, 0);
+       end;
   Exit;
 {$IFEND}
 
   if (OpMode2 = SearchAndPounceOpMode) then
-    ProcessExchangeFunctionKey(CHR(Key))
+     begin
+     ProcessExchangeFunctionKey(CHR(Key))
+     end
   else
-    SendFunctionKeyMessage(CHR(Key), OpMode);
+     begin
+     SendFunctionKeyMessage(CHR(Key), OpMode);
+     end;
 end;
 
 procedure CreateDirectoryIfNotExist;
@@ -4951,7 +5311,9 @@ begin
   //GetLastError = Cannot create a file when that file already exist s.
 
   for i := 0 to length(DirArray) - 1 do
-    Windows.CreateDirectoryA(DirArray[i], nil);
+     begin
+     Windows.CreateDirectoryA(DirArray[i], nil);
+     end;
   // Windows.CreateDirectoryA(GetYearString, nil);
 
 end;
@@ -4959,13 +5321,19 @@ end;
 procedure CheckAndSetInitialExchangeCursorPos;
 begin
   if InitialExchangeCursorPos = AtEnd then
-    PlaceCaretToTheEnd(wh[mweExchange]);
+     begin
+     PlaceCaretToTheEnd(wh[mweExchange]);
+     end;
   if InitialExchangeCursorPos = AtStart then
     // SetCursorPos(0,1); // n4af 4.42.7
-    SendMessage(wh[mweExchange], EM_SETSEL, 0, 0); // 4.108.8
+     begin
+     SendMessage(wh[mweExchange], EM_SETSEL, 0, 0); // 4.108.8
+     end;
 
   if InitialExchangeOverwrite then
-    Windows.SendMessage(wh[mweExchange], EM_SETSEL, 0, -1);
+     begin
+     Windows.SendMessage(wh[mweExchange], EM_SETSEL, 0, -1);
+     end;
 end;
 
 procedure ClearInfoWindows;
@@ -4996,7 +5364,9 @@ begin
 
   Stop := GetCPU;
   if Stop - Start < MAXLONG then
-    Windows.SetWindowTextA(CPUButtonHandle, inttopchar(Stop - Start));
+     begin
+     Windows.SetWindowTextA(CPUButtonHandle, inttopchar(Stop - Start));
+     end;
 
 end;
 
@@ -5005,37 +5375,53 @@ begin
   EscapeCommFunction(hFile, Cardinal(dwFunc));
 {$IF tKeyerDebug}
   if (hFile = Radio1.tCATPortHandle) or (hFile = Radio1.tKeyerPortHandle) then
-  begin
-    if dwFunc = SETRTS then
-      Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 102, BM_SETCHECK,
-        BST_CHECKED, 0);
-    if dwFunc = CLRRTS then
-      Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 102, BM_SETCHECK,
-        BST_UNCHECKED, 0);
+     begin
+     if dwFunc = SETRTS then
+        begin
+        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 102, BM_SETCHECK,
+          BST_CHECKED, 0);
+        end;
+     if dwFunc = CLRRTS then
+        begin
+        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 102, BM_SETCHECK,
+          BST_UNCHECKED, 0);
+        end;
 
-    if dwFunc = SETDTR then
-      Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 103, BM_SETCHECK,
-        BST_CHECKED, 0);
-    if dwFunc = CLRDTR then
-      Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 103, BM_SETCHECK,
-        BST_UNCHECKED, 0);
-  end;
+     if dwFunc = SETDTR then
+        begin
+        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 103, BM_SETCHECK,
+          BST_CHECKED, 0);
+        end;
+     if dwFunc = CLRDTR then
+        begin
+        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 103, BM_SETCHECK,
+          BST_UNCHECKED, 0);
+        end;
+     end;
   if (hFile = Radio2.tCATPortHandle) or (hFile = Radio2.tKeyerPortHandle) then
-  begin
-    if dwFunc = SETRTS then
-      Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 105, BM_SETCHECK,
-        BST_CHECKED, 0);
-    if dwFunc = CLRRTS then
-      Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 105, BM_SETCHECK,
-        BST_UNCHECKED, 0);
+     begin
+     if dwFunc = SETRTS then
+        begin
+        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 105, BM_SETCHECK,
+          BST_CHECKED, 0);
+        end;
+     if dwFunc = CLRRTS then
+        begin
+        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 105, BM_SETCHECK,
+          BST_UNCHECKED, 0);
+        end;
 
-    if dwFunc = SETDTR then
-      Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 106, BM_SETCHECK,
-        BST_CHECKED, 0);
-    if dwFunc = CLRDTR then
-      Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 106, BM_SETCHECK,
-        BST_UNCHECKED, 0);
-  end;
+     if dwFunc = SETDTR then
+        begin
+        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 106, BM_SETCHECK,
+          BST_CHECKED, 0);
+        end;
+     if dwFunc = CLRDTR then
+        begin
+        Windows.SendDlgItemMessage(tKeyerDebugWindowHandle, 106, BM_SETCHECK,
+          BST_UNCHECKED, 0);
+        end;
+     end;
 {$IFEND}
 
 end;
@@ -5065,13 +5451,15 @@ var
   p: integer;
 begin
   if ExchangeErrorToken = '' then
-    Exit;
+     begin
+     Exit;
+     end;
   p := Pos(ExchangeErrorToken, ExchangeWindowString);
   if p > 0 then
-  begin
-    p := (p - 1) + Length(ExchangeErrorToken);   // 0-based caret just past the token
-    Windows.SendMessage(wh[mweExchange], EM_SETSEL, p, p);
-  end;
+     begin
+     p := (p - 1) + Length(ExchangeErrorToken);   // 0-based caret just past the token
+     Windows.SendMessage(wh[mweExchange], EM_SETSEL, p, p);
+     end;
 end;
 
 function ParametersOkay(Call: CallString;
@@ -5114,12 +5502,12 @@ begin
   ExchangeErrorToken := '';   // Issue #1010
 
   if NoLog then
-  begin
-    ParametersOkay := False;
-    QuickDisplay(TC_SORRYNOLOG);
-    DoABeep(ThreeHarmonics);
-    Exit;
-  end;
+     begin
+     ParametersOkay := False;
+     QuickDisplay(TC_SORRYNOLOG);
+     DoABeep(ThreeHarmonics);
+     Exit;
+     end;
 
   LogBadQSOString := '';
 
@@ -5129,123 +5517,143 @@ begin
   RData.Callsign := Call;
   if (ExchangeString = '') and not (ActiveExchange in [RSTNameAndQTHExchange,
     RSTAndPOTAPark]) then // These two exchanges allow blank exchanges
-  begin
-    logger.debug('Exiting ParametersOkay early: ExchangeString=<%s>',
-      [ExchangeString]);
-    Exit;
-  end;
+     begin
+     logger.debug('Exiting ParametersOkay early: ExchangeString=<%s>',
+       [ExchangeString]);
+     Exit;
+     end;
   { if length(ExchangeString) > 5 then // 4.96.3
   CallsignUpdateEnable := False;}
   if CallsignUpdateEnable then
-  begin // This looks like the secxond line should be under IF but it was not.
-    RData.Callsign := GetCorrectedCallFromExchangeString(ExchangeString);
-    RData.Callsign[Ord(RData.Callsign[0]) + 1] := #0;
-  end;
+     begin // This looks like the secxond line should be under IF but it was not.
+     RData.Callsign := GetCorrectedCallFromExchangeString(ExchangeString);
+     RData.Callsign[Ord(RData.Callsign[0]) + 1] := #0;
+     end;
 
   RST := GetSentRSTFromExchangeString(ExchangeString);
 
   if RST <> 0 then
-    RData.RSTSent := RST;
+     begin
+     RData.RSTSent := RST;
+     end;
 
   if RData.Callsign = '' then
-    RData.Callsign := Call
+     begin
+     RData.Callsign := Call
+     end
   else
-  begin
-  end;
+     begin
+     end;
   logger.debug('[ParametersOkay] Setting RData.QTHString to zero');
   Windows.ZeroMemory(@RData.QTHString, SizeOf(RData.QTHString));
 
   if ParameterOkayMode = QSLAndLog then
-  begin
-    RData.Band := Band;
-    RData.Mode := Mode;
-    if RData.ExtMode = eNoMode then
-    begin
-      if ActiveRadioPtr^.nextExtendedMode = eNoMode then
-      begin
-        SetExtendedModeFromMode(RData);
-      end;
-    end;
+     begin
+     RData.Band := Band;
+     RData.Mode := Mode;
+     if RData.ExtMode = eNoMode then
+        begin
+        if ActiveRadioPtr^.nextExtendedMode = eNoMode then
+           begin
+           SetExtendedModeFromMode(RData);
+           end;
+        end;
 
-    // Not the way to do this as the radio does not know the extendedMode--just Mode. NY4I
-    //RData.ExtMode := ActiveRadioptr.CurrentStatus.ExtendedMode; // 4.93.3
-    RData.NumberSent := NextSerialToSend;  // Issue #954: highest sent serial + 1, not a QSO count
-    RData.Frequency := Freq;
+     // Not the way to do this as the radio does not know the extendedMode--just Mode. NY4I
+     //RData.ExtMode := ActiveRadioptr.CurrentStatus.ExtendedMode; // 4.93.3
+     RData.NumberSent := NextSerialToSend;  // Issue #954: highest sent serial + 1, not a QSO count
+     RData.Frequency := Freq;
 
-    if ActiveMode in [Phone, FM] then
-      DefaultRST := 59
-    else
-      DefaultRST := 599;
+     if ActiveMode in [Phone, FM] then
+        begin
+        DefaultRST := 59
+        end
+     else
+        begin
+        DefaultRST := 599;
+        end;
 
-    if RData.RSTSent = 0 then
-      if ActiveMode = Phone then
-        RData.RSTSent := (LogRSSent)
-      else
-        RData.RSTSent := (LogRSTSent);
+     if RData.RSTSent = 0 then
+       if ActiveMode = Phone then
+          begin
+          RData.RSTSent := (LogRSSent)
+          end
+       else
+          begin
+          RData.RSTSent := (LogRSTSent);
+          end;
 
-    // LocateCall(RData.Callsign, RData.QTH, True);
+     // LocateCall(RData.Callsign, RData.QTH, True);
 
-    if DoingDXMults then
-      GetDXQTH(RData);
+     if DoingDXMults then
+        begin
+        GetDXQTH(RData);
+        end;
 
-    if DoingPrefixMults then
-      SetPrefix(RData);
+     if DoingPrefixMults then
+        begin
+        SetPrefix(RData);
+        end;
 
-    GetRidOfPrecedingSpaces(ExchangeString);
-    GetRidOfPostcedingSpaces(ExchangeString);
+     GetRidOfPrecedingSpaces(ExchangeString);
+     GetRidOfPostcedingSpaces(ExchangeString);
 
-    ParametersOkay := True;
-    LogBadQSOString := ExchangeString;
-    logger.debug('Calling ProcessExchange from ParametersOkay QSLAndLog');
-    ProcessExchange(ExchangeString, RData); {wli}
-    CalculateQSOPoints(RData);
-    Exit;
-  end;
+     ParametersOkay := True;
+     LogBadQSOString := ExchangeString;
+     logger.debug('Calling ProcessExchange from ParametersOkay QSLAndLog');
+     ProcessExchange(ExchangeString, RData); {wli}
+     CalculateQSOPoints(RData);
+     Exit;
+     end;
 
   if not GoodCallSyntax(RData.Callsign) then
-  begin
-    TF.Format(QuickDisplayBuffer, TC_HASIMPROPERSYNTAX, @RData.Callsign[1]);
-    QuickDisplay(QuickDisplayBuffer);
-    DoABeep(Warning);
-    Exit;
-  end;
+     begin
+     TF.Format(QuickDisplayBuffer, TC_HASIMPROPERSYNTAX, @RData.Callsign[1]);
+     QuickDisplay(QuickDisplayBuffer);
+     DoABeep(Warning);
+     Exit;
+     end;
 
   RData.Band := Band;
   RData.Mode := Mode;
   if RData.ExtMode = eNoMode then
     // if ExtMode was already set, no reason to look to the radio for it. WSJT-X sets it for example ny4i Issue 658
-  begin
-    if ActiveRadioPtr^.CurrentStatus.ExtendedMode = eNoMode then
-      // This should have been set by radio object but what is nextExtendedMode
-    begin
-      SetExtendedModeFromMode(RData);
-    end
-    else
-    begin
-      Rdata.ExtMode := ActiveRadioPtr^.CurrentStatus.ExtendedMode;
-    end;
-  end;
+     begin
+     if ActiveRadioPtr^.CurrentStatus.ExtendedMode = eNoMode then
+       // This should have been set by radio object but what is nextExtendedMode
+        begin
+        SetExtendedModeFromMode(RData);
+        end
+     else
+        begin
+        Rdata.ExtMode := ActiveRadioPtr^.CurrentStatus.ExtendedMode;
+        end;
+     end;
   // ny4i Don't do this please - Issue 466 -=> Rdata.ExtMode := ActiveRadioptr^.CurrentStatus.ExtendedMode ; // 4.93.3
   RData.NumberSent := NextSerialToSend;  // Issue #954: highest sent serial + 1, not a QSO count
   RData.Frequency := Freq;
 
   if RData.RSTSent = 0 then
-  begin
-    Windows.ZeroMemory(@RData.RSTSent, SizeOf(RData.RSTSent));
-    if ActiveMode in [Phone, FM] then
-    begin
-      RData.RSTSent := LogRSSent;
-    end
-    else
-    begin
-      RData.RSTSent := LogRSTSent;
-    end;
-  end;
+     begin
+     Windows.ZeroMemory(@RData.RSTSent, SizeOf(RData.RSTSent));
+     if ActiveMode in [Phone, FM] then
+        begin
+        RData.RSTSent := LogRSSent;
+        end
+     else
+        begin
+        RData.RSTSent := LogRSTSent;
+        end;
+     end;
 
   if ActiveMode in [Phone, FM] then
-    DefaultRST := 59
+     begin
+     DefaultRST := 59
+     end
   else
-    DefaultRST := 599;
+     begin
+     DefaultRST := 599;
+     end;
 
   // State-QP rover (KG1S/MON): use ctyLocateCallStripRover so the
   // country/zone lookup runs on the bare call (KG1S) instead of the
@@ -5254,25 +5662,37 @@ begin
   ctyLocateCallStripRover(RData.Callsign, RData.QTH);
 
   if DoingDXMults then
-    GetDXQTH(RData);
+     begin
+     GetDXQTH(RData);
+     end;
 
   if DoingPrefixMults then
-    SetPrefix(RData);
+     begin
+     SetPrefix(RData);
+     end;
   case ActivePrefixMult of
     BelgiumPrefixes: if RData.QTH.CountryID = 'ON' then
-        RData.Prefix := RData.QTH.Prefix;
+                        begin
+                        RData.Prefix := RData.QTH.Prefix;
+                        end;
     SACDistricts: RData.Prefix := SACDistrict(RData.QTH);
     IndonesianDistricts:
       begin
         RData.Prefix := IndonesianDistrict(Rdata.QTH); // 4.64.1
         if (Contest = YBDX) and (IndonesianCountry(MyCountry)) then
-          SetPrefix(RData);
+           begin
+           SetPrefix(RData);
+           end;
       end;
     Prefix: RData.Prefix := RData.QTH.Prefix;
     SouthAmericanPrefixes: if RData.QTH.Continent = SouthAmerica then
-        RData.Prefix := RData.QTH.Prefix;
+                              begin
+                              RData.Prefix := RData.QTH.Prefix;
+                              end;
     NonSouthAmericanPrefixes: if RData.QTH.Continent <> SouthAmerica then
-        RData.Prefix := RData.QTH.Prefix;
+                                 begin
+                                 RData.Prefix := RData.QTH.Prefix;
+                                 end;
   end;
 
   GetRidOfPrecedingSpaces(ExchangeString);
@@ -5281,19 +5701,25 @@ begin
   ParametersOkay := ProcessExchange(ExchangeString, RData);
 
   if ExchangeErrorMessage <> nil then
-  begin
-    QuickDisplayError(ExchangeErrorMessage);
-    PositionExchangeCursorAtErrorToken;   // Issue #1010: caret after the offending token
-  end;
+     begin
+     QuickDisplayError(ExchangeErrorMessage);
+     PositionExchangeCursorAtErrorToken;   // Issue #1010: caret after the offending token
+     end;
 
   if Result = False then
-    Exit;
+     begin
+     Exit;
+     end;
 
   if RData.RSTReceived = 0 then
     if ActiveMode in [Phone, FM] then
-      RData.RSTReceived := LogRSSent
+       begin
+       RData.RSTReceived := LogRSSent
+       end
     else
-      RData.RSTReceived := LogRSTSent;
+       begin
+       RData.RSTReceived := LogRSTSent;
+       end;
 
   RData.ExchString := ExchangeString;
   CalculateQSOPoints(Rdata);
@@ -5310,45 +5736,45 @@ var
 begin
 
   if (PCDRAWITEMSTRUCT^.itemAction = ODA_FOCUS) then
-  begin
-    DrawFocusRect(PCDRAWITEMSTRUCT^.HDC, PCDRAWITEMSTRUCT^.rcItem);
-    Exit;
-  end;
+     begin
+     DrawFocusRect(PCDRAWITEMSTRUCT^.HDC, PCDRAWITEMSTRUCT^.rcItem);
+     Exit;
+     end;
 
   if lobyte(PCDRAWITEMSTRUCT^.itemState) = ODS_SELECTED then
-  begin
-    Pen := CreatePen(PS_SOLID, nWidth, $FF0000 {RGB(255, 0, 0)});
-    SetBkMode(PCDRAWITEMSTRUCT^.HDC, TRANSPARENT);
-    PenOld := SelectObject(PCDRAWITEMSTRUCT^.HDC, Pen);
+     begin
+     Pen := CreatePen(PS_SOLID, nWidth, $FF0000 {RGB(255, 0, 0)});
+     SetBkMode(PCDRAWITEMSTRUCT^.HDC, TRANSPARENT);
+     PenOld := SelectObject(PCDRAWITEMSTRUCT^.HDC, Pen);
 
-    Rectangle(PCDRAWITEMSTRUCT^.HDC,
-      PCDRAWITEMSTRUCT^.rcItem.Left + 1,
-      PCDRAWITEMSTRUCT^.rcItem.Top + 1,
-      PCDRAWITEMSTRUCT^.rcItem.Right,
-      PCDRAWITEMSTRUCT^.rcItem.Bottom);
+     Rectangle(PCDRAWITEMSTRUCT^.HDC,
+       PCDRAWITEMSTRUCT^.rcItem.Left + 1,
+       PCDRAWITEMSTRUCT^.rcItem.Top + 1,
+       PCDRAWITEMSTRUCT^.rcItem.Right,
+       PCDRAWITEMSTRUCT^.rcItem.Bottom);
 
-    SelectObject(PCDRAWITEMSTRUCT^.HDC, PenOld);
-    DeleteObject(Pen);
+     SelectObject(PCDRAWITEMSTRUCT^.HDC, PenOld);
+     DeleteObject(Pen);
 
-    PCDRAWITEMSTRUCT^.rcItem.Top := PCDRAWITEMSTRUCT^.rcItem.Top + nWidth;
-    PCDRAWITEMSTRUCT^.rcItem.Left := PCDRAWITEMSTRUCT^.rcItem.Left + nWidth;
-    PCDRAWITEMSTRUCT^.rcItem.Right := PCDRAWITEMSTRUCT^.rcItem.Right - nWidth;
-    PCDRAWITEMSTRUCT^.rcItem.Bottom := PCDRAWITEMSTRUCT^.rcItem.Bottom - nWidth;
-  end;
+     PCDRAWITEMSTRUCT^.rcItem.Top := PCDRAWITEMSTRUCT^.rcItem.Top + nWidth;
+     PCDRAWITEMSTRUCT^.rcItem.Left := PCDRAWITEMSTRUCT^.rcItem.Left + nWidth;
+     PCDRAWITEMSTRUCT^.rcItem.Right := PCDRAWITEMSTRUCT^.rcItem.Right - nWidth;
+     PCDRAWITEMSTRUCT^.rcItem.Bottom := PCDRAWITEMSTRUCT^.rcItem.Bottom - nWidth;
+     end;
 
   if PossibleCallList.List[PCDRAWITEMSTRUCT^.ItemID].Dupe then
-  begin
-    TempColor := clred;
-    Windows.SetTextColor(PCDRAWITEMSTRUCT^.HDC, $00FFFFFF);
-    // InflateRect(PCDRAWITEMSTRUCT^.rcItem,-1,-1);
-  end
+     begin
+     TempColor := clred;
+     Windows.SetTextColor(PCDRAWITEMSTRUCT^.HDC, $00FFFFFF);
+     // InflateRect(PCDRAWITEMSTRUCT^.rcItem,-1,-1);
+     end
   else
-  begin
-    TempColor := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
-    //clbtnface;
-    Windows.SetTextColor(PCDRAWITEMSTRUCT^.HDC,
-      tr4wColorsArray[TWindows[mwePossibleCall].mweColor] { $ 00000000});
-  end;
+     begin
+     TempColor := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
+     //clbtnface;
+     Windows.SetTextColor(PCDRAWITEMSTRUCT^.HDC,
+       tr4wColorsArray[TWindows[mwePossibleCall].mweColor] { $ 00000000});
+     end;
 
   GradientRect(PCDRAWITEMSTRUCT^.HDC, PCDRAWITEMSTRUCT^.rcItem, TempColor,
     TempColor {tr4wColorsArray[TWindows[mwePossibleCall].mweBackG]},
@@ -5373,59 +5799,65 @@ begin
   // Bounds from the arrays themselves, so widening the grid is a one-line
   // change in VC.pas rather than a hunt for every loop that repeated a literal.
   for r := 0 to High(TotWinHandles[0]) do
-    begin
-    for c := 0 to High(TotWinHandles) do
-    begin
+     begin
+     for c := 0 to High(TotWinHandles) do
+        begin
 
-      if c = 0 then
-      begin
-        LabelWidth := ws * 5 {ws2 * 20};
-        Right := 0;
-      end
-      else
-      begin
-        LabelWidth := round(ws * w) {ws2 * 10};
-        if c = 7 then
-          LabelWidth := round(ws * 3);
-        Right := round(ws * 2.5); //ws2 * 10 + 2 - 2;
-      end;
+        if c = 0 then
+           begin
+           LabelWidth := ws * 5 {ws2 * 20};
+           Right := 0;
+           end
+        else
+           begin
+           LabelWidth := round(ws * w) {ws2 * 10};
+           if c = 7 then
+              begin
+              LabelWidth := round(ws * 3);
+              end;
+           Right := round(ws * 2.5); //ws2 * 10 + 2 - 2;
+           end;
 
-      TotWinHandles[c, r] :=
-        CreateTR4WStaticWindow(
-        Right + c * (round(ws * w)),
-        ws * 2 + r * ws,
-        LabelWidth,
-        defStyle and (not (Cardinal(NoBorder) * SS_SUNKEN))
-        );
+        TotWinHandles[c, r] :=
+          CreateTR4WStaticWindow(
+          Right + c * (round(ws * w)),
+          ws * 2 + r * ws,
+          LabelWidth,
+          defStyle and (not (Cardinal(NoBorder) * SS_SUNKEN))
+          );
 
-    end;
-    end;
+        end;
+     end;
   for c := 1 to 7 do
-  begin
-    X := Right + c * (round(ws * w) {+ 2});
-    if c = 7 then
-      TotWinheadHandles[7] :=
-        tCreateStaticWindow('',
-        (defStyle + SS_CENTERIMAGE) and (not (Cardinal(NoBorder) * SS_SUNKEN))
-        , X, 0, round(ws * 3) {ws2 * 10}, ws * 2, tr4whandle, 0)
-    else
+     begin
+     X := Right + c * (round(ws * w) {+ 2});
+     if c = 7 then
+        begin
+        TotWinheadHandles[7] :=
+          tCreateStaticWindow('',
+          (defStyle + SS_CENTERIMAGE) and (not (Cardinal(NoBorder) * SS_SUNKEN))
+          , X, 0, round(ws * 3) {ws2 * 10}, ws * 2, tr4whandle, 0)
+        end
+     else
 
-      TotWinheadHandles[c] :=
+        begin
+        TotWinheadHandles[c] :=
 
-      tCreateStaticWindow(
+        tCreateStaticWindow(
 
-        '',
-        (defStyle + SS_CENTERIMAGE) and (not (Cardinal(NoBorder) * SS_SUNKEN)),
-        X,
-        0,
-        round(ws * w) {ws2 * 10},
-        ws * 2,
-        tr4whandle,
-        999 + c);
-    // Issue #997: asm tWM_SETFONT (EAX = TotWinheadHandles[c]; both branches store it).
-    tWM_SETFONT(TotWinheadHandles[c], MainFont);
+          '',
+          (defStyle + SS_CENTERIMAGE) and (not (Cardinal(NoBorder) * SS_SUNKEN)),
+          X,
+          0,
+          round(ws * w) {ws2 * 10},
+          ws * 2,
+          tr4whandle,
+          999 + c);
+        end;
+     // Issue #997: asm tWM_SETFONT (EAX = TotWinheadHandles[c]; both branches store it).
+     tWM_SETFONT(TotWinheadHandles[c], MainFont);
 
-  end;
+     end;
 
   // TotalScoreWindowHandle := CreateTR4WStaticWindow(X, 0, MainWindowChildsWidth - RightTopWidth - X, defStyle);
   {
@@ -5460,7 +5892,9 @@ end;
 procedure ChangeCaret(h: HWND);
 begin
   if tr4w_CustomCaret = False then
-    Exit;
+     begin
+     Exit;
+     end;
   CreateCaret(h, CursorBitmap, ws - 4, MainWindowEditHeight);
   ShowCaret(h);
 end;
@@ -5473,19 +5907,27 @@ begin
   IndexOfItemInLogForEdit := ListView_GetNextItem(wh[mweEditableLog], -1,
     LVNI_SELECTED);
   if IndexOfItemInLogForEdit = -1 then
-    Exit;
+     begin
+     Exit;
+     end;
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
   Size := Windows.GetFileSize(LogHandle, nil);
   CloseLogFile;
 
   if Size > LinesInEditableLog * SizeOf(ContestExchange) + SizeOf(TLogHeader)
     then
-    IndexOfItemInLogForEdit := Size - LinesInEditableLog *
-      SizeOf(ContestExchange) + IndexOfItemInLogForEdit * SizeOf(ContestExchange)
+     begin
+     IndexOfItemInLogForEdit := Size - LinesInEditableLog *
+       SizeOf(ContestExchange) + IndexOfItemInLogForEdit * SizeOf(ContestExchange)
+     end
   else
-    IndexOfItemInLogForEdit := IndexOfItemInLogForEdit * SizeOf(ContestExchange)
-      + SizeOf(TLogHeader);
+     begin
+     IndexOfItemInLogForEdit := IndexOfItemInLogForEdit * SizeOf(ContestExchange)
+       + SizeOf(TLogHeader);
+     end;
 
   ;
 
@@ -5560,7 +6002,9 @@ begin
   // Str80 local, its ZeroMemory, and the @ie[1] ASCIIZ view are all gone.
   SetMainWindowText(mweExchange, InitialExchangeEntry(CallWindowString));
   if LeaveCursorInCallWindow then
-    tCallWindowSetFocus;
+     begin
+     tCallWindowSetFocus;
+     end;
 end;
 
 procedure HandleRepeatPOTAParks;
@@ -5595,7 +6039,9 @@ var
 begin
   Windows.GetClientRect(Parent, TR);
   if Parent = tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndHandle then
-    TR.Bottom := TR.Bottom - 25;
+     begin
+     TR.Bottom := TR.Bottom - 25;
+     end;
   Windows.SetWindowPos(Windows.GetDlgItem(Parent, 101), HWND_TOP, 0, 0, TR.Right
     - TR.Left, TR.Bottom - TR.Top, SWP_SHOWWINDOW);
 end;
@@ -5719,7 +6165,9 @@ begin
   //tDialogBox(69, @FullLogDlgProc);
   CreateModalDialog(450, 300, tr4whandle, @FullLogDlgProc, 0);
   if CreateCabrilloWindow <> 0 then
-    Windows.SetFocus(CreateCabrilloWindow);
+     begin
+     Windows.SetFocus(CreateCabrilloWindow);
+     end;
 end;
 
 procedure tCallWindowSetFocus;
@@ -5759,12 +6207,12 @@ begin
   begin
     h := Windows.SetFocus(wh[mweExchange]);
     if h = 0 then
-    begin
-      if not Windows.SetForegroundWindow(wh[mweExchange]) then
-      begin
-        DebugMsg('SetForegroundWindow Failed');
-      end;
-    end;
+       begin
+       if not Windows.SetForegroundWindow(wh[mweExchange]) then
+          begin
+          DebugMsg('SetForegroundWindow Failed');
+          end;
+       end;
 
 {$IF MORSERUNNER}
     // Windows.SendMessage(MorseRunner_Number, WM_SETFOCUS, 0, 0);
@@ -5776,7 +6224,9 @@ end;
 procedure tRuntPaddleAndFootSwitchThread;
 begin
   if tPaddleFootSwitchThread <> INVALID_HANDLE_VALUE then
-    Exit;
+     begin
+     Exit;
+     end;
   tExitFromPaddleFootSwitchThread := False;
   logger.Info('Calling tCreateThread from tRuntPaddleAndFootSwitchThread');
   tPaddleFootSwitchThread := tCreateThread(@tPaddleFootSwitchThreadProc,
@@ -5807,10 +6257,10 @@ begin
   ClearAltD; // 4.65.2
   tClearDupeInfoCall; // 4.65.2
   if OpMode = CQOpMode then
-  begin
-    OpMode2 := CQOpMode;
-    ShowFMessages(0);
-  end;
+     begin
+     OpMode2 := CQOpMode;
+     ShowFMessages(0);
+     end;
 end;
 
 function CreateCallOrExchangeWin(Top, ID: integer): HWND;
@@ -5858,7 +6308,9 @@ begin
     0
     );
   if LogHandle = INVALID_HANDLE_VALUE then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // PreviousBand := NoBand;
   CurrentRecord := 0;
@@ -5869,161 +6321,185 @@ begin
   Size := Windows.GetFileSize(LogHandle, nil);
 
   if Size >= SizeOf(TLogHeader) then
-  begin
-    Windows.ReadFile(LogHandle, TempBuffer1, SizeOf(TLogHeader),
-      pNumberOfBytesRead, nil);
-    TempBuffer1[4] := #0; //temp
-    if PInteger(@TempBuffer1)^ <> CURRENTVERSIONASINTEGER then
-    begin
-      // If the file is NEWER than this program we cannot safely open or convert
-      // it. Show a clear error and stop — never attempt a downgrade conversion.
-      if StrPas(TempBuffer1) > LOGVERSION then
-         begin
-         logger.Fatal('Log file version ' + StrPas(TempBuffer1) +
-            ' is newer than this program (' + LOGVERSION + ').' +
-            ' Upgrade TR4W to open this log.');
-         ShowMessage(
-            'This log file was created by a newer version of TR4W (' +
-            StrPas(TempBuffer1) + ').' + #13#10 +
-            'This program understands up to version ' + LOGVERSION + '.' + #13#10 +
-            'Please upgrade TR4W to open this log.');
-         CloseLogFile;
-         Halt;
-         end;
+     begin
+     Windows.ReadFile(LogHandle, TempBuffer1, SizeOf(TLogHeader),
+       pNumberOfBytesRead, nil);
+     TempBuffer1[4] := #0; //temp
+     if PInteger(@TempBuffer1)^ <> CURRENTVERSIONASINTEGER then
+        begin
+        // If the file is NEWER than this program we cannot safely open or convert
+        // it. Show a clear error and stop — never attempt a downgrade conversion.
+        if StrPas(TempBuffer1) > LOGVERSION then
+           begin
+           logger.Fatal('Log file version ' + StrPas(TempBuffer1) +
+              ' is newer than this program (' + LOGVERSION + ').' +
+              ' Upgrade TR4W to open this log.');
+           ShowMessage(
+              'This log file was created by a newer version of TR4W (' +
+              StrPas(TempBuffer1) + ').' + #13#10 +
+              'This program understands up to version ' + LOGVERSION + '.' + #13#10 +
+              'Please upgrade TR4W to open this log.');
+           CloseLogFile;
+           Halt;
+           end;
  
-      TF.Format(wsprintfBuffer, TC_DIFVERSION, _LOGFILE, LogHeader.lhVersionString,
-        TempBuffer1);
-      showwarning(wsprintfBuffer);
-      CloseLogFile;
-      if not AskConvertLog(TempBuffer1) then
-      begin
-        logger.Fatal(wsprintfBuffer);
-        halt;
-      end
-      else
-      begin
-        goto start;
-      end;
-    end
-    else
-    begin
-      (* When adding something to ContestExchange, this causes an error since
+        TF.Format(wsprintfBuffer, TC_DIFVERSION, _LOGFILE, LogHeader.lhVersionString,
+          TempBuffer1);
+        showwarning(wsprintfBuffer);
+        CloseLogFile;
+        if not AskConvertLog(TempBuffer1) then
+           begin
+           logger.Fatal(wsprintfBuffer);
+           halt;
+           end
+        else
+           begin
+           goto start;
+           end;
+        end
+     else
+        begin
+        (* When adding something to ContestExchange, this causes an error since
       the size is wrong. From this code, it appears the the TRW file is
       simply a serialization of the ContestExchanges. So the size of the
       file should always be evenly divisible by the SizeOf(ContestExchange).
       NY4I 3 JUL 2020
       *)
-      if (Size mod SizeOf(ContestExchange)) <> 0 {SizeOf(TLogHeader)} then
-      begin
-        showwarning(TC_ERRORINLOGFILE);
-        CloseLogFile;
-        logger.Fatal('Log file is not the correct size');
-        halt; // 4.84.3
-      end;
+        if (Size mod SizeOf(ContestExchange)) <> 0 {SizeOf(TLogHeader)} then
+           begin
+           showwarning(TC_ERRORINLOGFILE);
+           CloseLogFile;
+           logger.Fatal('Log file is not the correct size');
+           halt; // 4.84.3
+           end;
 
-    end;
-  end
+        end;
+     end
   else
-  begin
-    // LogHeader.lhContest := Contest;
-    sWriteFile(LogHandle, LogHeader, SizeOf(TLogHeader));
-    goto 2;
-  end;
+     begin
+     // LogHeader.lhContest := Contest;
+     sWriteFile(LogHandle, LogHeader, SizeOf(TLogHeader));
+     goto 2;
+     end;
 
   FirstRecord := (Size div SizeOf(ContestExchange)) - 1;
   if FirstRecord > LinesInEditableLog then
-    FirstRecord := FirstRecord - LinesInEditableLog
+     begin
+     FirstRecord := FirstRecord - LinesInEditableLog
+     end
   else
-    FirstRecord := 0;
+     begin
+     FirstRecord := 0;
+     end;
   Sheet.DisposeOfMemoryAndZeroTotals;
   // LoadingInLogFile := True;
   1:
   if ReadLogFile then
-  begin
-    if CurrentRecord >= FirstRecord then
-      tAddContestExchangeToLog(TempRXData, wh[mweEditableLog], tLogIndex);
-
-    if TempRXData.ceSendToServer = False then
-      inc(tUSQ);
-    if TempRXData.ceNeedSendToServerAE = True then
-      inc(tUSQE);
-
-    inc(tRestartInfo.riTotalRecordsInLog);
-    // if tRestartInfo.riTotalRecordsInLog = 3057 then
-    // tRestartInfo.riTotalRecordsInLog := 3057;
-    // if tTotalRecordsInLog mod 1000 = 0 then DispalyLoadedQSOs(tTotalRecordsInLog);
-    if TempRXData.ceRecordKind in [rkQTCR, rkQTCS] then
-      IncrementQTCCount(TempRXData.Callsign);
-
-    if TempRXData.ceRecordKind = rkQTCS then
-      NumberQTCBooksSent := TempRXData.QSOPoints;
-
-    if TempRXData.ceRecordKind = rkQSO then
-      if (not TempRXData.ceQSO_Skiped) and (TempRXData.Band <> NoBand) and
-        (TempRXData.Mode <> NoMode) then
-      begin
-        // Issue #954: feed the serial high-water mark.  This counts every
-        // non-deleted QSO that consumed a number -- INCLUDING X-QSO -- which is
-        // exactly why it lives OUTSIDE the #750 guard below: marking a QSO X-QSO
-        // (or deleting a mid-log QSO) must not roll the sent serial backward.
-        // Range/sentinel filtering is handled inside UpdateMaxSerialSent.
-        if not TempRXData.ceQSO_Deleted then
-          UpdateMaxSerialSent(TempRXData.Band, TempRXData.NumberSent);
-        // Issue #750: X-QSO records are kept in the log (and the
-        // editable log view -- they paint grayed) but contribute
-        // nothing to QSOTotals, multipliers, points, or the dupe
-        // sheet.  tUpdateLog(actRescore) has the same guard for the
-        // same reason; this load-time path (LoadinLog) also needs
-        // it so totals are correct after a fresh log open / load.
-        if (TempRXData.ceQSO_Deleted = False) and
-           (TempRXData.ceXQSO        = False) then
+     begin
+     if CurrentRecord >= FirstRecord then
         begin
-          TempMode := TempRXData.Mode;
-          if TempMode = FM then
-            TempMode := Phone;
-          inc(QSOTotals[TempRXData.Band, TempMode]);
-          inc(QSOTotals[TempRXData.Band, Both]);
-          inc(QSOTotals[AllBands, TempMode]);
-
-          if (SingleBand = TempRXData.Band) or (SingleBand = AllBands) then
-            TotalQSOPoints := TotalQSOPoints + TempRXData.QSOPoints;
-
-          if Contest = MOQSOPARTY then
-             CheckMOQSOPartyBonusStation(TempRXData.Callsign);
-
-          Sheet.AddQSOToSheets(@TempRXData, True);
-          CallsignsList.AddCallsign(TempRXData.Callsign, TempMode,
-            TempRXData.Band, TempRXData.ceClearDupeSheet);
-          if not IntitialExLoaded then
-            CallsignsList.AddIniitialExchange(TempRXData.Callsign,
-              GetInitialExchangeStringFromContestExchange(TempRXData));
-
-          if TempRXData.Band in [Band160..Band10] then // 4.115.3
-          begin
-            inc(ContinentQSOCount[TempRXData.Band, TempRXData.QTH.Continent]);
-            inc(ContinentQSOCount[AllBands, TempRXData.QTH.Continent]);
-            inc(TimeSpentByBand[TempRXData.Band]);
-            // PreviousBand := TempRXData.Band;
-          end;
-          // Issue #750 follow-up: this increment was previously OUTSIDE
-          // the X-QSO guard, so the score grid's "All" column counted
-          // X-QSO records even though every per-band/per-mode counter
-          // skipped them. Moved inside so the totals are consistent.
-          inc(QSOTotals[AllBands, Both]);
+        tAddContestExchangeToLog(TempRXData, wh[mweEditableLog], tLogIndex);
         end;
-      end;
-    // else
-    // asm nop end;
 
-    inc(CurrentRecord);
-    {                                              c
+     if TempRXData.ceSendToServer = False then
+        begin
+        inc(tUSQ);
+        end;
+     if TempRXData.ceNeedSendToServerAE = True then
+        begin
+        inc(tUSQE);
+        end;
+
+     inc(tRestartInfo.riTotalRecordsInLog);
+     // if tRestartInfo.riTotalRecordsInLog = 3057 then
+     // tRestartInfo.riTotalRecordsInLog := 3057;
+     // if tTotalRecordsInLog mod 1000 = 0 then DispalyLoadedQSOs(tTotalRecordsInLog);
+     if TempRXData.ceRecordKind in [rkQTCR, rkQTCS] then
+        begin
+        IncrementQTCCount(TempRXData.Callsign);
+        end;
+
+     if TempRXData.ceRecordKind = rkQTCS then
+        begin
+        NumberQTCBooksSent := TempRXData.QSOPoints;
+        end;
+
+     if TempRXData.ceRecordKind = rkQSO then
+       if (not TempRXData.ceQSO_Skiped) and (TempRXData.Band <> NoBand) and
+         (TempRXData.Mode <> NoMode) then
+          begin
+          // Issue #954: feed the serial high-water mark.  This counts every
+          // non-deleted QSO that consumed a number -- INCLUDING X-QSO -- which is
+          // exactly why it lives OUTSIDE the #750 guard below: marking a QSO X-QSO
+          // (or deleting a mid-log QSO) must not roll the sent serial backward.
+          // Range/sentinel filtering is handled inside UpdateMaxSerialSent.
+          if not TempRXData.ceQSO_Deleted then
+             begin
+             UpdateMaxSerialSent(TempRXData.Band, TempRXData.NumberSent);
+             end;
+          // Issue #750: X-QSO records are kept in the log (and the
+          // editable log view -- they paint grayed) but contribute
+          // nothing to QSOTotals, multipliers, points, or the dupe
+          // sheet.  tUpdateLog(actRescore) has the same guard for the
+          // same reason; this load-time path (LoadinLog) also needs
+          // it so totals are correct after a fresh log open / load.
+          if (TempRXData.ceQSO_Deleted = False) and
+             (TempRXData.ceXQSO        = False) then
+             begin
+             TempMode := TempRXData.Mode;
+             if TempMode = FM then
+                begin
+                TempMode := Phone;
+                end;
+             inc(QSOTotals[TempRXData.Band, TempMode]);
+             inc(QSOTotals[TempRXData.Band, Both]);
+             inc(QSOTotals[AllBands, TempMode]);
+
+             if (SingleBand = TempRXData.Band) or (SingleBand = AllBands) then
+                begin
+                TotalQSOPoints := TotalQSOPoints + TempRXData.QSOPoints;
+                end;
+
+             if Contest = MOQSOPARTY then
+                begin
+                CheckMOQSOPartyBonusStation(TempRXData.Callsign);
+                end;
+
+             Sheet.AddQSOToSheets(@TempRXData, True);
+             CallsignsList.AddCallsign(TempRXData.Callsign, TempMode,
+               TempRXData.Band, TempRXData.ceClearDupeSheet);
+             if not IntitialExLoaded then
+                begin
+                CallsignsList.AddIniitialExchange(TempRXData.Callsign,
+                  GetInitialExchangeStringFromContestExchange(TempRXData));
+                end;
+
+             if TempRXData.Band in [Band160..Band10] then // 4.115.3
+                begin
+                inc(ContinentQSOCount[TempRXData.Band, TempRXData.QTH.Continent]);
+                inc(ContinentQSOCount[AllBands, TempRXData.QTH.Continent]);
+                inc(TimeSpentByBand[TempRXData.Band]);
+                // PreviousBand := TempRXData.Band;
+                end;
+             // Issue #750 follow-up: this increment was previously OUTSIDE
+             // the X-QSO guard, so the score grid's "All" column counted
+             // X-QSO records even though every per-band/per-mode counter
+             // skipped them. Moved inside so the totals are consistent.
+             inc(QSOTotals[AllBands, Both]);
+             end;
+          end;
+     // else
+     // asm nop end;
+
+     inc(CurrentRecord);
+     {                                              c
     if CurrentRecord = 1976 then
     asm
     nop
     end;
     }
-    goto 1;
-  end;
+     goto 1;
+     end;
   2:
   // LoadingInLogFile := False;
   CloseLogFile;
@@ -6034,16 +6510,18 @@ begin
   Sheet.SaveRestartFile;
 
   if tRestartInfo.riTotalRecordsInLog > 0 then
-    EnsureListViewColumnVisible(wh[mweEditableLog]);
+     begin
+     EnsureListViewColumnVisible(wh[mweEditableLog]);
+     end;
   ReCalculateHourDisplay;
 {$IF tDebugMode}
   QuickDisplay(inttopchar(Windows.GetTickCount - T1));
   // showint(m);
 {$IFEND}
   if contest = RADIOYOC then // 4.53.2 // 4.72.9
-  begin
-    PrevNr := copy(IntToStr(TempRXData.NumberReceived), 1, 3); // 4.53.2
-  end;
+     begin
+     PrevNr := copy(IntToStr(TempRXData.NumberReceived), 1, 3); // 4.53.2
+     end;
 end;
 
 function CreateEditableLog(Parent: HWND; X, Y, Width, Height: integer;
@@ -6061,9 +6539,13 @@ const
     WS_TABSTOP;
 begin
   if DefaultSize then
-    Style := style2
+     begin
+     Style := style2
+     end
   else
-    Style := style1;
+     begin
+     Style := style1;
+     end;
   Factor := ws;
   Result := CreateWindowExW(Cardinal(not NoBorder) * WS_EX_STATICEDGE,
     WC_LISTVIEW, nil, Style + integer(NoColumnHeader) * LVS_NOCOLUMNHEADER, X,
@@ -6072,22 +6554,22 @@ begin
   // Issue #997: asm tWM_SETFONT (EAX = Result above).
   tWM_SETFONT(Result, MainFont);
   if DefaultSize then
-  begin
-    Factor := 17;
-    tWM_SETFONT(Result, MainFixedFont);
-  end;
+     begin
+     Factor := 17;
+     tWM_SETFONT(Result, MainFixedFont);
+     end;
   ListView_SetExtendedListViewStyle(Result, LVS_EX_FULLROWSELECT);
   // ListView_SetExtendedListViewStyle(Result, LVS_EX_TRACKSELECT );
 
   elvc.Mask := LVCF_TEXT or LVCF_WIDTH or LVCF_FMT;
   for Column := logColBand to High(LogColumnsType) {Pred(logColDummy)} do
     if ColumnsArray[Column].Enable then
-    begin
-      elvc.fmt := ColumnsArray[Column].Align;
-      elvc.pszText := ColumnsArray[Column].Text;
-      elvc.cx := ColumnsArray[Column].Width * Factor;
-      uCommctrl.ListView_InsertColumnA(Result, ColumnsArray[Column].pos, elvc);
-    end;
+       begin
+       elvc.fmt := ColumnsArray[Column].Align;
+       elvc.pszText := ColumnsArray[Column].Text;
+       elvc.cx := ColumnsArray[Column].Width * Factor;
+       uCommctrl.ListView_InsertColumnA(Result, ColumnsArray[Column].pos, elvc);
+       end;
 
   Windows.SendMessage(Result, LVM_SETSELECTEDCOLUMN,
     ColumnsArray[logColCallsign].pos, 0);
@@ -6144,9 +6626,13 @@ begin
    lvi.iItem    := rowIndex;
    lvi.iSubItem := 0;
    if isXQSO then
+      begin
       lvi.lParam := 1
+      end
    else
+      begin
       lvi.lParam := 0;
+      end;
    SendMessage(ListViewHandle, LVM_SETITEM, 0, LPARAM(@lvi));
 end;
 
@@ -6178,27 +6664,27 @@ begin
   // column would render.  Issue #750 v0.1 hit exactly that bug.
 
   if RXData.ceRecordKind = rkNote then
-  begin
-    elvi.pszText := RC_NOTE;
-    ListView_InsertItem(ListViewHandle, elvi);
-    elvi.iSubItem := ColumnsArray[logColCallsign].pos; //(logColCallsign);
-    elvi.pszText := @RXData.Prefix;
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.pszText := RC_NOTE;
+     ListView_InsertItem(ListViewHandle, elvi);
+     elvi.iSubItem := ColumnsArray[logColCallsign].pos; //(logColCallsign);
+     elvi.pszText := @RXData.Prefix;
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if RXData.ceQSO_Skiped then
-  begin
-    elvi.pszText := nil;
-    ListView_InsertItem(ListViewHandle, elvi);
-    Exit;
-  end;
+     begin
+     elvi.pszText := nil;
+     ListView_InsertItem(ListViewHandle, elvi);
+     Exit;
+     end;
 
   if RXData.ceQSO_Deleted then
-  begin
-    elvi.pszText := RC_DELETED;
-    ListView_InsertItem(ListViewHandle, elvi);
-    Exit;
-  end;
+     begin
+     elvi.pszText := RC_DELETED;
+     ListView_InsertItem(ListViewHandle, elvi);
+     Exit;
+     end;
 
   // if RXData.ceFMMode then TempMode := FM else TempMode := RXData.Mode;
 
@@ -6241,242 +6727,254 @@ begin
   ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
 
   if RXData.ceRecordKind = rkNote then
-    Exit;
+     begin
+     Exit;
+     end;
   if RXData.NumberSent <> -1 then
-  begin
-    elvi.iSubItem := ColumnsArray[logColNumberSent].pos; //Ord(logColNumberSent);
-    elvi.pszText := inttopchar(RXData.NumberSent {+10020});
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColNumberSent].pos; //Ord(logColNumberSent);
+     elvi.pszText := inttopchar(RXData.NumberSent {+10020});
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   elvi.iSubItem := ColumnsArray[logColCallsign].pos; //Ord(logColCallsign);
 
   if RXData.ceRecordKind in [rkQTCR, rkQTCS] then
-  begin
-    TF.Format(LogDisplayBuffer, 'QTC: %s', @RXData.Callsign[1]);
-    elvi.pszText := LogDisplayBuffer;
-  end
+     begin
+     TF.Format(LogDisplayBuffer, 'QTC: %s', @RXData.Callsign[1]);
+     elvi.pszText := LogDisplayBuffer;
+     end
   else
-    elvi.pszText := @RXData.Callsign[1]; //@RXData.Callsign[1];
+     begin
+     elvi.pszText := @RXData.Callsign[1]; //@RXData.Callsign[1];
+     end;
   ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
 
   if ColumnsArray[logColNumberReceive].Enable then
     if RXData.NumberReceived <> -1 then
-    begin
-      elvi.iSubItem := ColumnsArray[logColNumberReceive].pos;
-      //Ord(logColNumberReceive);
-      elvi.pszText := inttopchar(RXData.NumberReceived);
-      ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-    end;
+       begin
+       elvi.iSubItem := ColumnsArray[logColNumberReceive].pos;
+       //Ord(logColNumberReceive);
+       elvi.pszText := inttopchar(RXData.NumberReceived);
+       ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+       end;
 
   if RXData.ceRecordKind in [rkQTCR, rkQTCS] then
-  begin
-    elvi.iSubItem := ColumnsArray[logColQTC].pos; //Ord(logColQTC);
-    TF.Format(LogDisplayBuffer, '%04d %s', RXData.NumberSent, @RXData.Kids[1]);
-    elvi.pszText := LogDisplayBuffer;
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     begin
+     elvi.iSubItem := ColumnsArray[logColQTC].pos; //Ord(logColQTC);
+     TF.Format(LogDisplayBuffer, '%04d %s', RXData.NumberSent, @RXData.Kids[1]);
+     elvi.pszText := LogDisplayBuffer;
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
 
-    elvi.iSubItem := ColumnsArray[logColNumberSent].pos; //Ord(logColNumberSent);
-    elvi.pszText := @RXData.RandomCharsReceived[1];
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-    Exit;
-  end;
+     elvi.iSubItem := ColumnsArray[logColNumberSent].pos; //Ord(logColNumberSent);
+     elvi.pszText := @RXData.RandomCharsReceived[1];
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     Exit;
+     end;
 
   if ColumnsArray[logColClass].Enable then
-  begin
-    elvi.iSubItem := ColumnsArray[logColClass].pos; //Ord(logColDXMult);
-    elvi.pszText := @RXData.ceClass[1];
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColClass].pos; //Ord(logColDXMult);
+     elvi.pszText := @RXData.ceClass[1];
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if ColumnsArray[logColDXMult].Enable then
-  begin
-    elvi.iSubItem := ColumnsArray[logColDXMult].pos; //Ord(logColDXMult);
-    elvi.pszText := @RXData.DXQTH[1];
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColDXMult].pos; //Ord(logColDXMult);
+     elvi.pszText := @RXData.DXQTH[1];
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if ColumnsArray[logColZoneMult].Enable then
-  begin
-    if RXData.Zone <> DUMMYZONE then
-    begin
-      elvi.iSubItem := ColumnsArray[logColZoneMult].pos; //Ord(logColZoneMult);
-      elvi.pszText := inttopchar(RXData.Zone);
-      ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-    end;
-  end;
+     begin
+     if RXData.Zone <> DUMMYZONE then
+        begin
+        elvi.iSubItem := ColumnsArray[logColZoneMult].pos; //Ord(logColZoneMult);
+        elvi.pszText := inttopchar(RXData.Zone);
+        ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+        end;
+     end;
 
   if ((ColumnsArray[logColPower].Enable) and (Contest <> FOCMARATHON)) then
     //n4af 4.32.5
-  begin
-    if RXData.Power <> '' then
-    begin
-      elvi.iSubItem := ColumnsArray[logColPower].pos;
-      elvi.pszText := @RXData.Power[1];
-      ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-    end;
-  end
+     begin
+     if RXData.Power <> '' then
+        begin
+        elvi.iSubItem := ColumnsArray[logColPower].pos;
+        elvi.pszText := @RXData.Power[1];
+        ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+        end;
+     end
   else if (ColumnsArray[logColFOC].Enable) then
-  begin
-    elvi.iSubItem := ColumnsArray[logColFOC].pos;
-    elvi.pszText := @RXData.Power[1];
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     begin
+     elvi.iSubItem := ColumnsArray[logColFOC].pos;
+     elvi.pszText := @RXData.Power[1];
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
 
-  end;
+     end;
 
   if ColumnsArray[logColPrefixMult].Enable then
-  begin
-    elvi.iSubItem := ColumnsArray[logColPrefixMult].pos; //Ord(logColPrefixMult);
-    elvi.pszText := @RXData.Prefix[1];
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColPrefixMult].pos; //Ord(logColPrefixMult);
+     elvi.pszText := @RXData.Prefix[1];
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   Mults := 0;
   if RXData.DXMult then
     if RXdata.DomesticMult then
-      goto Domestic //n4af
+       begin
+       goto Domestic //n4af
+       end
     else
-    begin
-      MultString[Mults] := 'x';
-      inc(Mults);
-    end;
+       begin
+       MultString[Mults] := 'x';
+       inc(Mults);
+       end;
   Domestic:
 
   if RXData.DomesticMult then
-  begin
-    MultString[Mults] := 'd';
-    inc(Mults);
-  end;
+     begin
+     MultString[Mults] := 'd';
+     inc(Mults);
+     end;
 
   if RXData.ZoneMult then
-  begin
-    MultString[Mults] := 'z';
-    inc(Mults);
-  end;
+     begin
+     MultString[Mults] := 'z';
+     inc(Mults);
+     end;
 
   if RXData.PrefixMult then
-  begin
-    MultString[Mults] := 'p';
-    inc(Mults);
-  end;
+     begin
+     MultString[Mults] := 'p';
+     inc(Mults);
+     end;
 
   // Mults := Ord(RXData.DXMult) + Ord(RXData.DomesticMult) + Ord(RXData.ZoneMult) + Ord(RXData.PrefixMult);
 
   if Mults <> 0 then
-  begin
-    MultString[Mults] := #0;
-    elvi.iSubItem := ColumnsArray[logColTotalMults].pos; //Ord(logColTotalMults);
-    elvi.pszText := MultString; //inttopchar(Mults);
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     MultString[Mults] := #0;
+     elvi.iSubItem := ColumnsArray[logColTotalMults].pos; //Ord(logColTotalMults);
+     elvi.pszText := MultString; //inttopchar(Mults);
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if ColumnsArray[logColPrecedence].Enable then
-  begin
-    elvi.iSubItem := ColumnsArray[logColPrecedence].pos; //rd(logColPrecedence);
-    CID_TWO_BYTES[0] := RXData.Precedence;
-    elvi.pszText := CID_TWO_BYTES;
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColPrecedence].pos; //rd(logColPrecedence);
+     CID_TWO_BYTES[0] := RXData.Precedence;
+     elvi.pszText := CID_TWO_BYTES;
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if ColumnsArray[logColCheck].Enable then
-  begin
-    // if RXData.Check <> 0 then //n4af 4.34.7
-    begin
-      elvi.iSubItem := ColumnsArray[logColCheck].pos; //Ord(logColCheck);
-      elvi.pszText := inttopchar(RXData.Check);
-      ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-    end;
-  end;
+     begin
+     // if RXData.Check <> 0 then //n4af 4.34.7
+     begin
+       elvi.iSubItem := ColumnsArray[logColCheck].pos; //Ord(logColCheck);
+       elvi.pszText := inttopchar(RXData.Check);
+       ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
+     end;
 
   if ColumnsArray[logColChapter].Enable then
-  begin
-    if RXData.Chapter <> '' then
-    begin
-      elvi.iSubItem := ColumnsArray[logColChapter].pos; //Ord(logColCheck);
-      elvi.pszText := @RXData.Chapter[1];
-      ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-    end;
-  end;
+     begin
+     if RXData.Chapter <> '' then
+        begin
+        elvi.iSubItem := ColumnsArray[logColChapter].pos; //Ord(logColCheck);
+        elvi.pszText := @RXData.Chapter[1];
+        ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+        end;
+     end;
 
   if ColumnsArray[logColQTH].Enable then
-  begin
-    elvi.iSubItem := ColumnsArray[logColQTH].pos; //Ord(logColQTH);
-    if DoingDomesticMults then
-    begin
-      if LiteralDomesticQTH then
-        elvi.pszText := @RXData.QTHString[1]
-      else
-        elvi.pszText := @RXData.DomesticQTH {DomMultQTH} [1];
-    end
-    else
-      elvi.pszText := @RXData.QTHString[1];
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColQTH].pos; //Ord(logColQTH);
+     if DoingDomesticMults then
+        begin
+        if LiteralDomesticQTH then
+           begin
+           elvi.pszText := @RXData.QTHString[1]
+           end
+        else
+           begin
+           elvi.pszText := @RXData.DomesticQTH {DomMultQTH} [1];
+           end;
+        end
+     else
+        begin
+        elvi.pszText := @RXData.QTHString[1];
+        end;
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   elvi.iSubItem := ColumnsArray[logColPoints].pos; //Ord(logColPoints);
   elvi.pszText := inttopchar(RXData.QSOPoints);
   ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
 
   if ColumnsArray[logColAge].Enable then
-  begin
-    // if RXData.Age <> 0 then // 4.99.3
-    begin
-      elvi.iSubItem := ColumnsArray[logColAge].pos; //Ord(logColAge);
-      elvi.pszText := inttopchar(RXData.Age);
-      ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-    end;
-  end;
+     begin
+     // if RXData.Age <> 0 then // 4.99.3
+     begin
+       elvi.iSubItem := ColumnsArray[logColAge].pos; //Ord(logColAge);
+       elvi.pszText := inttopchar(RXData.Age);
+       ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
+     end;
 
   if ColumnsArray[logColKids].Enable then
-  begin
-    elvi.iSubItem := ColumnsArray[logColKids].pos; //Ord(logColAge);
-    elvi.pszText := @RXData.Kids[1];
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColKids].pos; //Ord(logColAge);
+     elvi.pszText := @RXData.Kids[1];
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if ColumnsArray[logColName].Enable then
-  begin
-    if RXData.Name <> '' then
-    begin
-      elvi.iSubItem := ColumnsArray[logColName].pos; //Ord(logColName);
-      elvi.pszText := @RXData.Name[1];
-      ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-    end;
-  end;
+     begin
+     if RXData.Name <> '' then
+        begin
+        elvi.iSubItem := ColumnsArray[logColName].pos; //Ord(logColName);
+        elvi.pszText := @RXData.Name[1];
+        ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+        end;
+     end;
   if RXData.ceSearchAndPounce then
     // if RXData.tSearchAndPounce then
-  begin
-    elvi.iSubItem := ColumnsArray[logColSearchAndPounce].pos;
-    //Ord(logColSearchAndPounce);
-    elvi.pszText := '$';
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColSearchAndPounce].pos;
+     //Ord(logColSearchAndPounce);
+     elvi.pszText := '$';
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if RXData.ceDupe then
-  begin
-    elvi.iSubItem := ColumnsArray[logColDupe].pos; //Ord(logColDupe);
-    elvi.pszText := 'D';
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColDupe].pos; //Ord(logColDupe);
+     elvi.pszText := 'D';
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if RXData.Frequency <> 0 then
-  begin
-    elvi.iSubItem := ColumnsArray[logColFreq].pos; //Ord(logColFreq);
-    // boundary: log ListView is still LV_ITEMA; hold the freq text in a
-    // function-scoped AnsiString so pszText stays valid through ListView_SetItem
-    // (FreqToPChar now returns a managed string temporary that dies at statement
-    // end).  W-flip tracked with the ListView A->W surface.
-    FreqAnsi := AnsiString(FreqToPChar {FreqToPCharWithoutHZ}(RXData.Frequency));
-    elvi.pszText := PAnsiChar(FreqAnsi);
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColFreq].pos; //Ord(logColFreq);
+     // boundary: log ListView is still LV_ITEMA; hold the freq text in a
+     // function-scoped AnsiString so pszText stays valid through ListView_SetItem
+     // (FreqToPChar now returns a managed string temporary that dies at statement
+     // end).  W-flip tracked with the ListView A->W surface.
+     FreqAnsi := AnsiString(FreqToPChar {FreqToPCharWithoutHZ}(RXData.Frequency));
+     elvi.pszText := PAnsiChar(FreqAnsi);
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   if RXData.ceOperator[0] <> #0 then
-  begin
-    elvi.iSubItem := ColumnsArray[logColOperator].pos;
-    elvi.pszText := RXData.ceOperator;
-    ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
-  end;
+     begin
+     elvi.iSubItem := ColumnsArray[logColOperator].pos;
+     elvi.pszText := RXData.ceOperator;
+     ListView_SetItem(ListViewHandle, elvi);   // Issue #997: was asm call setitem
+     end;
 
   // Issue #750: stash the X-QSO flag on the just-built row so the
   // NM_CUSTOMDRAW handler (tr4w.dpr WM_NOTIFY) can gray out X-QSO
@@ -6494,7 +6992,9 @@ procedure LogEnsureVisible;
 begin
 
   if ActiveMainWindow <> awEditableLog then
-    uCommctrl.ListView_EnsureVisible(wh[mweEditableLog], tLogIndex - 1, True);
+     begin
+     uCommctrl.ListView_EnsureVisible(wh[mweEditableLog], tLogIndex - 1, True);
+     end;
 end;
 
 procedure GenerateCallsignsList(FileName: PAnsiChar);
@@ -6507,28 +7007,30 @@ var
 begin
   // MakeReportFileName('CUSTOM_INITIAL.EX');
   if not tOpenFileForWrite(h, FileName {@ReportsFilename[1]}) then
-    Exit;
+     begin
+     Exit;
+     end;
   sWriteFileFromString(h, ';callsign exchange'#13#10#13#10);
   for i := 0 to CallsignsList.Count - 1 do
-  begin
-    Windows.ZeroMemory(@InitialExchange, SizeOf(InitialExchange));
-    InitialExchange := CallsignsList.GetIniitialExchangeByIndex(i);
-    if InitialExchange <> '' then
+     begin
+     Windows.ZeroMemory(@InitialExchange, SizeOf(InitialExchange));
+     InitialExchange := CallsignsList.GetIniitialExchangeByIndex(i);
+     if InitialExchange <> '' then
 
-    begin
-      Windows.ZeroMemory(@Callsign, SizeOf(Callsign));
-      Callsign := CallsignsList.Get(i);
-      // if tPos(Callsign, '/') = 0 then
-      begin
-        //if StringHas(InitialExchange, '255 ') then
-        // InitialExchange := GetLastString(initialexchange); // 4.90.6
-        nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%-15s %s'#13#10,
-          @Callsign[1], @InitialExchange[1]);
-        sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
-      end;
+        begin
+        Windows.ZeroMemory(@Callsign, SizeOf(Callsign));
+        Callsign := CallsignsList.Get(i);
+        // if tPos(Callsign, '/') = 0 then
+        begin
+          //if StringHas(InitialExchange, '255 ') then
+          // InitialExchange := GetLastString(initialexchange); // 4.90.6
+          nNumberOfBytesToWrite := TF.Format(wsprintfBuffer, '%-15s %s'#13#10,
+            @Callsign[1], @InitialExchange[1]);
+          sWriteFile(h, wsprintfBuffer, nNumberOfBytesToWrite);
+        end;
 
-    end;
-  end;
+        end;
+     end;
   CloseHandle(h);
 end;
 
@@ -6543,36 +7045,38 @@ var
 begin
   MakeReportFileName('ALLCALLSIGNS.TXT');
   if not tOpenFileForWrite(h, @ReportsFilename[1]) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
     #13#10' %s'#13#10#13#10' Unique callsigns: %u '#13#10, @ContestTitle[1],
     CallsignsList.GetTotalWorkedStations));
 
   for QSOs := 20 downto 1 do
-  begin
-    WriteHeader := True;
-    counter := 0;
-    for i := 0 to CallsignsList.Count - 1 do
-    begin
-      if CallsignsList.GetQSOs(i) = QSOs then
-      begin
-        inc(counter);
-        if WriteHeader then
+     begin
+     WriteHeader := True;
+     counter := 0;
+     for i := 0 to CallsignsList.Count - 1 do
         begin
+        if CallsignsList.GetQSOs(i) = QSOs then
+           begin
+           inc(counter);
+           if WriteHeader then
+              begin
 
-          sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
-            #13#10#13#10' %u QSOs:'#13#10' -----------------'#13#10#13#10,
-            QSOs));
+              sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
+                #13#10#13#10' %u QSOs:'#13#10' -----------------'#13#10#13#10,
+                QSOs));
+              end;
+           ZeroMemory(@TempCall, SizeOf(TempCall));
+           TempCall := CallsignsList.Get(i);
+           sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
+             ' %4u. %s '#13#10, counter, @TempCall[1]));
+           WriteHeader := False;
+           end;
         end;
-        ZeroMemory(@TempCall, SizeOf(TempCall));
-        TempCall := CallsignsList.Get(i);
-        sWriteFile(h, wsprintfBuffer, TF.Format(wsprintfBuffer,
-          ' %4u. %s '#13#10, counter, @TempCall[1]));
-        WriteHeader := False;
-      end;
-    end;
-  end;
+     end;
 
   CloseHandle(h);
   FilePreview;
@@ -6583,11 +7087,15 @@ label
   1;
 begin
   if tPreviousDupeQSOsShowed then
-    Exit;
+     begin
+     Exit;
+     end;
   Act_Freq := ActiveRadioPtr.filteredstatus.freq;
   Act_Band := ActiveBand;
   if InactiveRadioptr.LastDisplayedFreq = 0 then
-    goto 1;
+     begin
+     goto 1;
+     end;
   inAct_Band := InActiveRadioPtr.BandMemory;
 
   InAct_Freq := InactiveRadioptr.LastDisplayedFreq;
@@ -6671,119 +7179,131 @@ var
 begin
 
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
   LogSize := Windows.GetFileSize(LogHandle, nil);
   if UpdAction <> actGetCRC32 then
-  begin
-    if LogSize <= SizeOf(TLogHeader) then
-      goto 2;
-    LogSize := ((LogSize - SizeOf(TLogHeader)) div SizeOfContestExchange);
-  end;
+     begin
+     if LogSize <= SizeOf(TLogHeader) then
+        begin
+        goto 2;
+        end;
+     LogSize := ((LogSize - SizeOf(TLogHeader)) div SizeOfContestExchange);
+     end;
   QSOCounter := 0;
   MapFin := Windows.CreateFileMapping(LogHandle, nil, PAGE_READWRITE, 0, 0,
     nil);
   if MapFin = 0 then
-    goto 2;
+     begin
+     goto 2;
+     end;
 
   MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_ALL_ACCESS, 0, 0, 0);
   if MapBase = nil then
-    goto 3;
+     begin
+     goto 3;
+     end;
   // Issue #997: asm pointer-arith that assumed EAX still held MapViewOfFile's
   // return -> explicit (same pattern as the advance-by-record near the end of
   // this function).
   RescoredRXData := Pointer(Cardinal(MapBase) + SizeOfTLogHeader);
 
   if UpdAction = actGetCRC32 then
-  begin
-    tCRC32 := GetCRC32(MapBase^, LogSize);
-    goto 4;
-  end;
+     begin
+     tCRC32 := GetCRC32(MapBase^, LogSize);
+     goto 4;
+     end;
 
   if UpdAction = actRescore then
-  begin
-    // LoadingInLogFile := True;
-    Sheet.DisposeOfMemoryAndZeroTotals;
-  end;
+     begin
+     // LoadingInLogFile := True;
+     Sheet.DisposeOfMemoryAndZeroTotals;
+     end;
   1:
 
   if RescoredRXData^.ceRecordKind = rkQSO then
-  begin
-    if UpdAction = actSetClearDupesheetBit then
-      RescoredRXData^.ceClearDupeSheet := True;
-
-    if UpdAction = actResetClearDupesheetBit then
-      RescoredRXData^.ceClearDupeSheet := False;
-
-    if UpdAction = actRescore then
-      // Issue #750: X-QSO records stay in the log (for NIL protection
-      // of the worked station) but are deliberately excluded from
-      // every scoring artifact -- the rescore rebuilds the dupe
-      // sheet, mult sheet, and totals from this loop, so skipping
-      // X-QSO from the main scoring path makes them invisible to
-      // dupe checking, mults, and totals.  We ALSO zero out the
-      // record's own QSOPoints and ceDupe fields so the editable log
-      // displays a consistent "0" in the Pts column for every
-      // X-QSO record (matches DXLog.net's convention -- N1MM keeps
-      // the historical points, but a consistent visual signal is
-      // more useful at a glance).  The contact still exports to
-      // ADIF and Cabrillo (with the `X-QSO:` prefix instead of `QSO:`).
-      if RescoredRXData^.ceQSO_Deleted = False then
-        if RescoredRXData^.ceQSO_Skiped = False then
-        if RescoredRXData^.ceXQSO then
-          begin
-          RescoredRXData^.QSOPoints := 0;
-          RescoredRXData^.ceDupe    := False;
-          end
-        else
+     begin
+     if UpdAction = actSetClearDupesheetBit then
         begin
-          // Snapshot before rescore so we can report what (if anything) changed.
-          beforeCountryID  := RescoredRXData^.QTH.CountryID;
-          beforePrefix     := RescoredRXData^.Prefix;
-          beforeDXQTH      := RescoredRXData^.DXQTH;
-          beforeDomMult    := RescoredRXData^.DomesticMult;
-          beforeDXMult     := RescoredRXData^.DXMult;
-          beforePrefixMult := RescoredRXData^.PrefixMult;
-          beforeZoneMult   := RescoredRXData^.ZoneMult;
-          beforeQSOPoints  := RescoredRXData^.QSOPoints;
-          beforeDupe       := RescoredRXData^.ceDupe;
+        RescoredRXData^.ceClearDupeSheet := True;
+        end;
 
-          if DoingPrefixMults then
-          begin
-            Windows.ZeroMemory(@RescoredRXData.QTH, SizeOf(RescoredRXData.QTH));
-            Windows.ZeroMemory(@RescoredRXData.DXQTH,
-              SizeOf(RescoredRXData.DXQTH));
-            // State-QP rover (KG1S/MON): strip suffix for country lookup so
-            // /M doesn't get misread as a GB prefix.  Without this the
-            // rescore wipes the correct USA lookup done at log-time and
-            // restamps the record as DX=G.
-            ctyLocateCallStripRover(RescoredRXData^.Callsign, RescoredRXData.QTH);
-            SetPrefix(RescoredRXData^);
-          end;
-          // if (RXData.Prefix <> '') and DoingPrefixMults then
-          {
+     if UpdAction = actResetClearDupesheetBit then
+        begin
+        RescoredRXData^.ceClearDupeSheet := False;
+        end;
+
+     if UpdAction = actRescore then
+       // Issue #750: X-QSO records stay in the log (for NIL protection
+       // of the worked station) but are deliberately excluded from
+       // every scoring artifact -- the rescore rebuilds the dupe
+       // sheet, mult sheet, and totals from this loop, so skipping
+       // X-QSO from the main scoring path makes them invisible to
+       // dupe checking, mults, and totals.  We ALSO zero out the
+       // record's own QSOPoints and ceDupe fields so the editable log
+       // displays a consistent "0" in the Pts column for every
+       // X-QSO record (matches DXLog.net's convention -- N1MM keeps
+       // the historical points, but a consistent visual signal is
+       // more useful at a glance).  The contact still exports to
+       // ADIF and Cabrillo (with the `X-QSO:` prefix instead of `QSO:`).
+       if RescoredRXData^.ceQSO_Deleted = False then
+         if RescoredRXData^.ceQSO_Skiped = False then
+         if RescoredRXData^.ceXQSO then
+            begin
+            RescoredRXData^.QSOPoints := 0;
+            RescoredRXData^.ceDupe    := False;
+            end
+         else
+            begin
+            // Snapshot before rescore so we can report what (if anything) changed.
+            beforeCountryID  := RescoredRXData^.QTH.CountryID;
+            beforePrefix     := RescoredRXData^.Prefix;
+            beforeDXQTH      := RescoredRXData^.DXQTH;
+            beforeDomMult    := RescoredRXData^.DomesticMult;
+            beforeDXMult     := RescoredRXData^.DXMult;
+            beforePrefixMult := RescoredRXData^.PrefixMult;
+            beforeZoneMult   := RescoredRXData^.ZoneMult;
+            beforeQSOPoints  := RescoredRXData^.QSOPoints;
+            beforeDupe       := RescoredRXData^.ceDupe;
+
+            if DoingPrefixMults then
+               begin
+               Windows.ZeroMemory(@RescoredRXData.QTH, SizeOf(RescoredRXData.QTH));
+               Windows.ZeroMemory(@RescoredRXData.DXQTH,
+                 SizeOf(RescoredRXData.DXQTH));
+               // State-QP rover (KG1S/MON): strip suffix for country lookup so
+               // /M doesn't get misread as a GB prefix.  Without this the
+               // rescore wipes the correct USA lookup done at log-time and
+               // restamps the record as DX=G.
+               ctyLocateCallStripRover(RescoredRXData^.Callsign, RescoredRXData.QTH);
+               SetPrefix(RescoredRXData^);
+               end;
+            // if (RXData.Prefix <> '') and DoingPrefixMults then
+            {
           if RescoredRXData^.Callsign = 'RP7X' then
           asm
           nop
           end;
           }
 
-          if DoingZoneMults or DoingDXMults then
-          begin
-            Windows.ZeroMemory(@RescoredRXData.QTH, SizeOf(RescoredRXData.QTH));
-            Windows.ZeroMemory(@RescoredRXData.DXQTH,
-              SizeOf(RescoredRXData.DXQTH));
-            // State-QP rover (KG1S/MON): strip suffix for country lookup so
-            // /M doesn't get misread as a GB prefix.  Without this the
-            // rescore wipes the correct USA lookup done at log-time and
-            // restamps the record as DX=G.
-            ctyLocateCallStripRover(RescoredRXData^.Callsign, RescoredRXData.QTH);
-            GetDXQTH(RescoredRXData^);
-            //.DXQTH := RescoredRXData.QTH.CountryID;
-          end;
+            if DoingZoneMults or DoingDXMults then
+               begin
+               Windows.ZeroMemory(@RescoredRXData.QTH, SizeOf(RescoredRXData.QTH));
+               Windows.ZeroMemory(@RescoredRXData.DXQTH,
+                 SizeOf(RescoredRXData.DXQTH));
+               // State-QP rover (KG1S/MON): strip suffix for country lookup so
+               // /M doesn't get misread as a GB prefix.  Without this the
+               // rescore wipes the correct USA lookup done at log-time and
+               // restamps the record as DX=G.
+               ctyLocateCallStripRover(RescoredRXData^.Callsign, RescoredRXData.QTH);
+               GetDXQTH(RescoredRXData^);
+               //.DXQTH := RescoredRXData.QTH.CountryID;
+               end;
 
-          {rk4wwq}
-          // RescoredRXData.ceContest := Contest;
-          {
+            {rk4wwq}
+            // RescoredRXData.ceContest := Contest;
+            {
           if RescoredRXData.Zone = 255 then
           begin
           if (RescoredRXData.NumberReceived > 999) and (RescoredRXData.NumberReceived < 9999) then
@@ -6794,74 +7314,78 @@ begin
           end;
           end;
           }
-          {rk4wwq}
+            {rk4wwq}
 
-          if RescoredRXData^.id = '' then
-             RescoredRXData^.id := GetGUID;
+            if RescoredRXData^.id = '' then
+               begin
+               RescoredRXData^.id := GetGUID;
+               end;
 
-          Sheet.SetMultFlags(RescoredRXData^);
-          CalculateQSOPoints(RescoredRXData^);
-          if (not tAllowDupeQSOs) and (RescoredRXData^.ceClearDupeSheet = False)
-            and (VisibleLog.CallIsADupe(RescoredRXData^.Callsign,
-            RescoredRXData^.Band, RescoredRXData^.Mode)) then
-          begin
-            RescoredRXData^.QSOPoints := 0;
-            RescoredRXData^.ceDupe := True;
-          end
-          else
-            RescoredRXData^.ceDupe := False;
+            Sheet.SetMultFlags(RescoredRXData^);
+            CalculateQSOPoints(RescoredRXData^);
+            if (not tAllowDupeQSOs) and (RescoredRXData^.ceClearDupeSheet = False)
+              and (VisibleLog.CallIsADupe(RescoredRXData^.Callsign,
+              RescoredRXData^.Band, RescoredRXData^.Mode)) then
+               begin
+               RescoredRXData^.QSOPoints := 0;
+               RescoredRXData^.ceDupe := True;
+               end
+            else
+               begin
+               RescoredRXData^.ceDupe := False;
+               end;
 
-          // Report whenever actRescore actually mutated a record.  One line
-          // per changed record makes silent rescore-induced corruption
-          // (rover-call DX=G, mult-flag flip, points change, etc.) visible.
-          if (beforeCountryID  <> RescoredRXData^.QTH.CountryID) or
-             (beforePrefix     <> RescoredRXData^.Prefix)        or
-             (beforeDXQTH      <> RescoredRXData^.DXQTH)         or
-             (beforeDomMult    <> RescoredRXData^.DomesticMult)  or
-             (beforeDXMult     <> RescoredRXData^.DXMult)        or
-             (beforePrefixMult <> RescoredRXData^.PrefixMult)    or
-             (beforeZoneMult   <> RescoredRXData^.ZoneMult)      or
-             (beforeQSOPoints  <> RescoredRXData^.QSOPoints)     or
-             (beforeDupe       <> RescoredRXData^.ceDupe) then
-             begin
-             logger.Info('[actRescore] %s [%d] changed: ' +
-                'CountryID [%s]->[%s] Prefix [%s]->[%s] DXQTH [%s]->[%s] ' +
-                'DomMult %s->%s DXMult %s->%s PrefixMult %s->%s ZoneMult %s->%s ' +
-                'QSOPoints %d->%d Dupe %s->%s',
-                [string(RescoredRXData^.Callsign), QSOCounter,
-                 string(beforeCountryID),  string(RescoredRXData^.QTH.CountryID),
-                 string(beforePrefix),     string(RescoredRXData^.Prefix),
-                 string(beforeDXQTH),      string(RescoredRXData^.DXQTH),
-                 BoolToStr(beforeDomMult,    True), BoolToStr(RescoredRXData^.DomesticMult, True),
-                 BoolToStr(beforeDXMult,     True), BoolToStr(RescoredRXData^.DXMult,       True),
-                 BoolToStr(beforePrefixMult, True), BoolToStr(RescoredRXData^.PrefixMult,   True),
-                 BoolToStr(beforeZoneMult,   True), BoolToStr(RescoredRXData^.ZoneMult,     True),
-                 beforeQSOPoints, RescoredRXData^.QSOPoints,
-                 BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData^.ceDupe, True)]);
-             end;
+            // Report whenever actRescore actually mutated a record.  One line
+            // per changed record makes silent rescore-induced corruption
+            // (rover-call DX=G, mult-flag flip, points change, etc.) visible.
+            if (beforeCountryID  <> RescoredRXData^.QTH.CountryID) or
+               (beforePrefix     <> RescoredRXData^.Prefix)        or
+               (beforeDXQTH      <> RescoredRXData^.DXQTH)         or
+               (beforeDomMult    <> RescoredRXData^.DomesticMult)  or
+               (beforeDXMult     <> RescoredRXData^.DXMult)        or
+               (beforePrefixMult <> RescoredRXData^.PrefixMult)    or
+               (beforeZoneMult   <> RescoredRXData^.ZoneMult)      or
+               (beforeQSOPoints  <> RescoredRXData^.QSOPoints)     or
+               (beforeDupe       <> RescoredRXData^.ceDupe) then
+               begin
+               logger.Info('[actRescore] %s [%d] changed: ' +
+                  'CountryID [%s]->[%s] Prefix [%s]->[%s] DXQTH [%s]->[%s] ' +
+                  'DomMult %s->%s DXMult %s->%s PrefixMult %s->%s ZoneMult %s->%s ' +
+                  'QSOPoints %d->%d Dupe %s->%s',
+                  [string(RescoredRXData^.Callsign), QSOCounter,
+                   string(beforeCountryID),  string(RescoredRXData^.QTH.CountryID),
+                   string(beforePrefix),     string(RescoredRXData^.Prefix),
+                   string(beforeDXQTH),      string(RescoredRXData^.DXQTH),
+                   BoolToStr(beforeDomMult,    True), BoolToStr(RescoredRXData^.DomesticMult, True),
+                   BoolToStr(beforeDXMult,     True), BoolToStr(RescoredRXData^.DXMult,       True),
+                   BoolToStr(beforePrefixMult, True), BoolToStr(RescoredRXData^.PrefixMult,   True),
+                   BoolToStr(beforeZoneMult,   True), BoolToStr(RescoredRXData^.ZoneMult,     True),
+                   beforeQSOPoints, RescoredRXData^.QSOPoints,
+                   BoolToStr(beforeDupe, True), BoolToStr(RescoredRXData^.ceDupe, True)]);
+               end;
 
-          Sheet.AddQSOToSheets(@RescoredRXData^, False);
-          CallsignsList.AddCallsign(RescoredRXData^.Callsign,
-            RescoredRXData^.Mode, RescoredRXData^.Band,
-            RescoredRXData^.ceClearDupeSheet);
+            Sheet.AddQSOToSheets(@RescoredRXData^, False);
+            CallsignsList.AddCallsign(RescoredRXData^.Callsign,
+              RescoredRXData^.Mode, RescoredRXData^.Band,
+              RescoredRXData^.ceClearDupeSheet);
+            end;
+
+     if UpdAction = actClearMults then
+        begin
+        RescoredRXData^.ceClearMultSheet := True;
+        RescoredRXData^.DomesticMult := False;
+        RescoredRXData^.DXMult := False;
+        RescoredRXData^.PrefixMult := False;
+        RescoredRXData^.ZoneMult := False;
         end;
-
-    if UpdAction = actClearMults then
-    begin
-      RescoredRXData^.ceClearMultSheet := True;
-      RescoredRXData^.DomesticMult := False;
-      RescoredRXData^.DXMult := False;
-      RescoredRXData^.PrefixMult := False;
-      RescoredRXData^.ZoneMult := False;
-    end;
-  end;
+     end;
   inc(QSOCounter);
   if QSOCounter <> LogSize then
-  begin
-    // Issue #997: asm pointer arith -> Pascal (advance to the next log record).
-    RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
-    goto 1;
-  end;
+     begin
+     // Issue #997: asm pointer arith -> Pascal (advance to the next log record).
+     RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
+     goto 1;
+     end;
   4:
   FlushViewOfFile(MapBase, 0);
   Windows.UnmapViewOfFile(MapBase);
@@ -6871,11 +7395,11 @@ begin
   CloseLogFile;
 
   if UpdAction = actRescore then
-  begin
-    Sheet.SetUpRemainingMultiplierArrays;
-    Sheet.SaveRestartFile;
-    // LoadingInLogFile := False;
-  end;
+     begin
+     Sheet.SetUpRemainingMultiplierArrays;
+     Sheet.SaveRestartFile;
+     // LoadingInLogFile := False;
+     end;
 end;
 
 procedure WINDOWPOSCHANGINGPROC(var p: PWindowPos);
@@ -6883,13 +7407,21 @@ const
   f = 20;
 begin
   if (p.X < f) and (p.X > -f) then
-    p.X := 0;
+     begin
+     p.X := 0;
+     end;
   if (p.Y < f) and (p.Y > -f) then
-    p.Y := 0;
+     begin
+     p.Y := 0;
+     end;
   if Abs(tWorkingAreaRect.Bottom - (p.cy + p.Y)) < f then
-    p.Y := tWorkingAreaRect.Bottom - p.cy;
+     begin
+     p.Y := tWorkingAreaRect.Bottom - p.cy;
+     end;
   if Abs(tWorkingAreaRect.Right - (p.cx + p.X)) < f then
-    p.X := tWorkingAreaRect.Right - p.cx;
+     begin
+     p.X := tWorkingAreaRect.Right - p.cx;
+     end;
 end;
 
 function tSetFilePointer(lDistanceToMove: LONGINT; dwMoveMethod: DWORD):
@@ -6915,7 +7447,9 @@ begin
     );
   Result := h <> INVALID_HANDLE_VALUE;
   if Result = True then
-    LogHandle := h;
+     begin
+     LogHandle := h;
+     end;
 end;
 
 procedure CloseLogFile;
@@ -6974,7 +7508,9 @@ begin
     if Selection.StartPos = length(ExchangeWindowString) then
       if (Selection.StartPos = 0) or
         (ExchangeWindowString[length(ExchangeWindowString)] <> ' ') then
-        PostMessage(wh[mweExchange], WM_KEYDOWN, 32, 0);
+         begin
+         PostMessage(wh[mweExchange], WM_KEYDOWN, 32, 0);
+         end;
 
 end;
 
@@ -6995,7 +7531,9 @@ begin
   DispalayB4(integer(tCallWindowStringIsDupe));
 
   if not CallsignsList.FindCallsign(CallWindowString, Index) then
-    Exit;
+     begin
+     Exit;
+     end;
   QSOs := CallsignsList.GetQSOs(Index);
   DisplayQSOsWithThisStation(QSOs);
 end;
@@ -7003,7 +7541,9 @@ end;
 procedure QuickQSLProcedure(Key: Char);
 begin
   if CallWindowString = '' then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // if (Key = QuickQSLKey1) or (Key = QuickQSLKey2) then
   begin
@@ -7011,23 +7551,29 @@ begin
       ActiveMode, ActiveRadioPtr.LastDisplayedFreq, ReceivedData) then
       // if ProcessExchange(ExchangeWindowString, ReceivedData) then
 
-    begin
-      if MessageEnable then
-      begin
+       begin
+       if MessageEnable then
+          begin
 
-        SendCorrectCallIfNeeded;
-        if Key = QuickQSLKey1 then
-        begin
-          if ActiveMode = Phone then
-            SendCrypticMessage(QuickQSLPhoneMessage)
-          else
-            SendCrypticMessage(QuickQSLMessage1);
-        end;
-        if Key = QuickQSLKey2 then
-          SendCrypticMessage(QuickQSLMessage2);
-      end;
-      TryLogContact;
-    end;
+          SendCorrectCallIfNeeded;
+          if Key = QuickQSLKey1 then
+             begin
+             if ActiveMode = Phone then
+                begin
+                SendCrypticMessage(QuickQSLPhoneMessage)
+                end
+             else
+                begin
+                SendCrypticMessage(QuickQSLMessage1);
+                end;
+             end;
+          if Key = QuickQSLKey2 then
+             begin
+             SendCrypticMessage(QuickQSLMessage2);
+             end;
+          end;
+       TryLogContact;
+       end;
   end;
 end;
 
@@ -7036,7 +7582,9 @@ begin
 
   if AutoSendCharacterCount > LoWord(Windows.SendMessage(wh[mweCall], EM_GETSEL,
     0, 0)) then
-    Exit;
+     begin
+     Exit;
+     end;
 
   if not CheckPTTLockout then
     if (CallWindowString <> '') then
@@ -7047,12 +7595,14 @@ begin
               if (not StringIsAllNumbersOrDecimal(CallWindowString)) then
                 // if StringHasNumber(CallWindowString) then
                 if not (CallWindowString[1] = '\') then
-                begin
-                  if not FromKeyBoard then
-                    if StringHas(CallWindowString, '/') then
-                      Exit;
-                  CallWindowKeyDownProc(integer(StartSendingNowKey));
-                end;
+                   begin
+                   if not FromKeyBoard then
+                     if StringHas(CallWindowString, '/') then
+                        begin
+                        Exit;
+                        end;
+                   CallWindowKeyDownProc(integer(StartSendingNowKey));
+                   end;
 end;
 
 function NewCallWindowProcedure(hwnddlg: HWND; Msg: UINT; wParam: wParam;
@@ -7065,9 +7615,13 @@ begin
     WM_CHAR:
       begin
         if Char(wParam) = StartSendingNowKey then
-          CallWindowKeyDownProc(wParam);
+           begin
+           CallWindowKeyDownProc(wParam);
+           end;
         if (Char(wParam) = QuickQSLKey1) or (Char(wParam) = QuickQSLKey2) then
-          QuickQSLProcedure(Char(wParam));
+           begin
+           QuickQSLProcedure(Char(wParam));
+           end;
         // wParam := CallsignChar(wParam, False);
       end;
 
@@ -7075,13 +7629,17 @@ begin
       begin
         if KeypadCWMemories then
           if wParam in [VK_NUMPAD0..VK_NUMPAD9] then
-          begin
-            if wParam <> VK_NUMPAD0 then
-              ProcessFuntionKeys(wParam + 27)
-            else
-              ProcessFuntionKeys(wParam + 37);
-            Exit;
-          end;
+             begin
+             if wParam <> VK_NUMPAD0 then
+                begin
+                ProcessFuntionKeys(wParam + 27)
+                end
+             else
+                begin
+                ProcessFuntionKeys(wParam + 37);
+                end;
+             Exit;
+             end;
       end;
   end;
   // if Msg = WM_KEYDOWN then showint(wParam);
@@ -7096,7 +7654,9 @@ begin
   // Windows.CopyFileA(NewLogFileName, 'NewLogFileName', False);
   ReplaceLogByServerLog(False);
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
 
   Windows.ZeroMemory(@tRestartInfo, SizeOf(tRestartInfo));
   ReadVersionBlock;
@@ -7105,10 +7665,10 @@ begin
 
   LoadinLog;
   if wh[mweStations] <> 0 then
-  begin
-    SendMessage(wh[mweStations], LVM_DELETEALLITEMS, 0, 0);
-    FillStationsColumn;
-  end;
+     begin
+     SendMessage(wh[mweStations], LVM_DELETEALLITEMS, 0, 0);
+     FillStationsColumn;
+     end;
   SendStationStatus(sstQSOs);
 end;
 {
@@ -7153,27 +7713,29 @@ var
 begin
 
   if not tOpenFileForWrite(h, 'C:\test.trw') then
-    Exit;
+     begin
+     Exit;
+     end;
   sWriteFile(h, LogHeader, SizeOfTLogHeader);
 
   for i := 1 to 30000 do
-  begin
+     begin
 
-    ClearContestExchange(TempRXData);
-    tGetQSOSystemTime(TempRXData.tSysTime);
-    TempRXData.Band := Band40;
-    TempRXData.Band := BandType(Random(6));
-    TempRXData.Mode := ModeType(Random(2));
-    SetExtendedModeFromMode(TempRXData);
-    TempRXData.Callsign := CD.GetRandomCall;
-    TempRXData.NumberSent := i;
-    ctyLocateCall(TempRXData.Callsign, TempRXData.QTH);
-    TempRXData.DXQTH := TempRXData.QTH.CountryID;
-    TempRXData.Zone := ctyGetCQZone(TempRXData.Callsign);
-    TempRXData.NumberSent := i;
-    TempRXData.NumberReceived := i + 100;
-    sWriteFile(h, TempRXData, SizeOf(ContestExchange));
-  end;
+     ClearContestExchange(TempRXData);
+     tGetQSOSystemTime(TempRXData.tSysTime);
+     TempRXData.Band := Band40;
+     TempRXData.Band := BandType(Random(6));
+     TempRXData.Mode := ModeType(Random(2));
+     SetExtendedModeFromMode(TempRXData);
+     TempRXData.Callsign := CD.GetRandomCall;
+     TempRXData.NumberSent := i;
+     ctyLocateCall(TempRXData.Callsign, TempRXData.QTH);
+     TempRXData.DXQTH := TempRXData.QTH.CountryID;
+     TempRXData.Zone := ctyGetCQZone(TempRXData.Callsign);
+     TempRXData.NumberSent := i;
+     TempRXData.NumberReceived := i + 100;
+     sWriteFile(h, TempRXData, SizeOf(ContestExchange));
+     end;
   CloseHandle(h);
 end;
 
@@ -7184,24 +7746,30 @@ var
   MaskInserted: boolean;
 begin
   if CompleteCallsignMask = '' then
-    Exit;
+     begin
+     Exit;
+     end;
   if pos('*', CompleteCallsignMask) = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   MaskInserted := False;
   TempCallsign := '';
   for MaskPos := 1 to length(CompleteCallsignMask) do
-  begin
-    if CompleteCallsignMask[MaskPos] <> '*' then
-    begin
-      TempCallsign := TempCallsign + CompleteCallsignMask[MaskPos];
-    end
-    else
-    begin
-      if MaskInserted = False then
-        TempCallsign := TempCallsign + CallWindowString;
-      MaskInserted := True;
-    end;
-  end;
+     begin
+     if CompleteCallsignMask[MaskPos] <> '*' then
+        begin
+        TempCallsign := TempCallsign + CompleteCallsignMask[MaskPos];
+        end
+     else
+        begin
+        if MaskInserted = False then
+           begin
+           TempCallsign := TempCallsign + CallWindowString;
+           end;
+        MaskInserted := True;
+        end;
+     end;
   PutCallToCallWindow(TempCallsign);
 end;
 
@@ -7243,7 +7811,9 @@ end;
 procedure tGetSystemTime;
 begin
   if not tHandLogMode then
-    GetSystemTime(UTC);
+     begin
+     GetSystemTime(UTC);
+     end;
 {$IF tDebugMode}
   // inc(GetSystemTimeCounter);
   // Windows.SetWindowTextA(tr4whandle, inttopchar(GetSystemTimeCounter));
@@ -7266,7 +7836,9 @@ end;
 procedure SystemTimeChanging;
 begin
   if not tHandLogMode then
-    GetSystemTime(UTC);
+     begin
+     GetSystemTime(UTC);
+     end;
   SetMainWindowText(mweClock, GetTimeString);
   SetMainWindowText(mweFullTime, GetFullTimeString(False));
   SetMainWindowText(mweDate, GetDateString);
@@ -7297,7 +7869,9 @@ begin
 
   Result := SendRecordToServer(NET_QSOINFO_ID, CE);
   if not Result then
-    inc(tUSQ);
+     begin
+     inc(tUSQ);
+     end;
 
   tAddQSOToLog(CE);
 end;
@@ -7332,10 +7906,10 @@ begin
     [Call]);
   Call[Ord(Call[0]) + 1] := #0;
   if call = MyCall then
-  begin
-    logger.debug('[PutCallToCallWindow] Exiting early because call (%s) = MyCall (%s)', [call, MyCall]);
-    exit; // n4af issue 158
-  end;
+     begin
+     logger.debug('[PutCallToCallWindow] Exiting early because call (%s) = MyCall (%s)', [call, MyCall]);
+     exit; // n4af issue 158
+     end;
   logger.debug('Calling Windows.SetWindowText wh[mweCall] to %s',[call]);
   Windows.SetWindowTextA(wh[mweCall], @Call[1]);
   PlaceCaretToTheEnd(wh[mweCall]);
@@ -7362,9 +7936,13 @@ begin
   ColumnsArray[logColName].Enable := ExchangeInformation.Name;
   ColumnsArray[logColZoneMult].Enable := ExchangeInformation.Zone;
   if Contest <> FOCMARATHON then //n4af 4.32.5
-    ColumnsArray[logColPower].Enable := ExchangeInformation.Power;
+     begin
+     ColumnsArray[logColPower].Enable := ExchangeInformation.Power;
+     end;
   if Contest = FOCMARATHON then //n4af 4.32.5
-    ColumnsArray[logColFOC].Enable := ExchangeInformation.Power; //n4af 4.32.5
+     begin
+     ColumnsArray[logColFOC].Enable := ExchangeInformation.Power; //n4af 4.32.5
+     end;
   ColumnsArray[logColChapter].Enable := ExchangeInformation.Chapter;
 
   ColumnsArray[logColNumberReceive].Enable := ExchangeInformation.QSONumber;
@@ -7375,10 +7953,10 @@ begin
   i := -1;
   for TempColumn := logColBand to High(LogColumnsType) {Pred(logColDummy)} do
     if ColumnsArray[TempColumn].Enable then
-    begin
-      inc(i);
-      ColumnsArray[TempColumn].pos := i;
-    end;
+       begin
+       inc(i);
+       ColumnsArray[TempColumn].pos := i;
+       end;
 end;
 
 procedure EnsureListViewColumnVisible(h: HWND);
@@ -7388,20 +7966,22 @@ var
 begin
   for TempColumn := logColBand to High(LogColumnsType) do
     if ColumnsArray[TempColumn].Enable then
-      begin
-      if ColumnWidthOverride[TempColumn] > 0 then
-         begin
-         // User has manually sized this column — restore their saved width
-         ListView_SetColumnWidth(h, ColumnsArray[TempColumn].pos, ColumnWidthOverride[TempColumn]);
-         ActualWidth := ListView_GetColumnWidth(h, ColumnsArray[TempColumn].pos);
-         logger.Debug('EnsureListViewColumnVisible: %s pos=%d override=%d actual=%d',
-            [ColumnsArray[TempColumn].Text, ColumnsArray[TempColumn].pos,
-             ColumnWidthOverride[TempColumn], ActualWidth]);
-         end
-      else if (TempColumn >= logColNumberReceive) and ColumnAutoSize then
-        // Original auto-size behavior: unchanged from before Issue 866
-        ListView_SetColumnWidth(h, integer(TempColumn), LVSCW_AUTOSIZE_USEHEADER);
-      end;
+       begin
+       if ColumnWidthOverride[TempColumn] > 0 then
+          begin
+          // User has manually sized this column — restore their saved width
+          ListView_SetColumnWidth(h, ColumnsArray[TempColumn].pos, ColumnWidthOverride[TempColumn]);
+          ActualWidth := ListView_GetColumnWidth(h, ColumnsArray[TempColumn].pos);
+          logger.Debug('EnsureListViewColumnVisible: %s pos=%d override=%d actual=%d',
+             [ColumnsArray[TempColumn].Text, ColumnsArray[TempColumn].pos,
+              ColumnWidthOverride[TempColumn], ActualWidth]);
+          end
+       else if (TempColumn >= logColNumberReceive) and ColumnAutoSize then
+         // Original auto-size behavior: unchanged from before Issue 866
+          begin
+          ListView_SetColumnWidth(h, integer(TempColumn), LVSCW_AUTOSIZE_USEHEADER);
+          end;
+       end;
 end;
 
 procedure SaveColumnWidthToConfig(ColIndex: Integer; NewWidth: Integer);
@@ -7445,7 +8025,9 @@ begin
      LoadInSeparateConfigFile(f, FirstCommand, MyCall);
      end;
   if ClearDupeSheetCommandGiven then
-    tClearDupesheet;
+     begin
+     tClearDupesheet;
+     end;
   RunningConfigFile := False;
 
 end;
@@ -7490,22 +8072,22 @@ begin
   guard := 0;
   while (ListView_GetCountPerPage(wh[mweEditableLog]) > LinesInEditableLog)
         and (guard < 200) do
-    begin
-    h := h - 1;
-    Inc(guard);
-    Windows.SetWindowPos(wh[mweEditableLog], HWND_TOP, 0, ws * 7,
-      MainWindowChildsWidth, h, SWP_SHOWWINDOW);
-    end;
+     begin
+     h := h - 1;
+     Inc(guard);
+     Windows.SetWindowPos(wh[mweEditableLog], HWND_TOP, 0, ws * 7,
+       MainWindowChildsWidth, h, SWP_SHOWWINDOW);
+     end;
 
   guard := 0;
   while (ListView_GetCountPerPage(wh[mweEditableLog]) < LinesInEditableLog)
         and (guard < 200) do
-    begin
-    h := h + 1;
-    Inc(guard);
-    Windows.SetWindowPos(wh[mweEditableLog], HWND_TOP, 0, ws * 7,
-      MainWindowChildsWidth, h, SWP_SHOWWINDOW);
-    end;
+     begin
+     h := h + 1;
+     Inc(guard);
+     Windows.SetWindowPos(wh[mweEditableLog], HWND_TOP, 0, ws * 7,
+       MainWindowChildsWidth, h, SWP_SHOWWINDOW);
+     end;
 end;
 
 function CheckCommandInCallsignWindow: boolean;
@@ -7541,13 +8123,13 @@ begin
       // quick-display text is parameterized (Issue 380 cleanup). Left inline for now.
       begin
         if CWEnabled or CWEnable then
-        begin
-          QuickDisplay('CW Off');
-          FlushCWBufferAndClearPTT('MainUnit: CW turned Off');
-          CWEnabled := False;
-          CWEnable := false;
-          DisplayCodeSpeed;
-        end;
+           begin
+           QuickDisplay('CW Off');
+           FlushCWBufferAndClearPTT('MainUnit: CW turned Off');
+           CWEnabled := False;
+           CWEnable := false;
+           DisplayCodeSpeed;
+           end;
       end;
     5:
       // TODO: candidate for LogCW.SetCWState(True, ...) (Issue 380 cleanup). Left inline for now.
@@ -7589,7 +8171,9 @@ procedure ClearMultSheet_CtrlC;
 begin
   tInputDialogWarning := True;
   if QuickEditResponse(TC_CLEARMULTTOCLEARMULTSHEET, 9) = 'CLEARMULT' then
-    tClearMultSheet;
+     begin
+     tClearMultSheet;
+     end;
 end;
 
 procedure tClearMultSheet;
@@ -7614,37 +8198,49 @@ begin
   TempHour := UTC.wHour;
   tThisHourBandChanges := 0;
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
   begin
     TempFileSize := (Windows.GetFileSize(LogHandle, nil) div 256) * -1;
     1:
     tSetFilePointer(FilePointer * SizeOf(ContestExchange), FILE_END);
     if ReadLogFile then
-    begin
-      if GoodLookingQSO then
-      begin
-        if TempHour = TempRXData.tSysTime.qtHour then
-        begin
-          if tThisHourPreviousBand = NoBand then
-            tThisHourPreviousBand := TempRXData.Band;
-          if TempBand <> TempRXData.Band then
+       begin
+       if GoodLookingQSO then
           begin
-            if HourDisplay = BandChangesThisComputer then
-              if TempRXData.ceComputerID <> ComputerID then
-                goto 3;
-            if TempBand <> NoBand then
-              inc(tThisHourBandChanges);
-            TempBand := TempRXData.Band;
+          if TempHour = TempRXData.tSysTime.qtHour then
+             begin
+             if tThisHourPreviousBand = NoBand then
+                begin
+                tThisHourPreviousBand := TempRXData.Band;
+                end;
+             if TempBand <> TempRXData.Band then
+                begin
+                if HourDisplay = BandChangesThisComputer then
+                  if TempRXData.ceComputerID <> ComputerID then
+                     begin
+                     goto 3;
+                     end;
+                if TempBand <> NoBand then
+                   begin
+                   inc(tThisHourBandChanges);
+                   end;
+                TempBand := TempRXData.Band;
+                end;
+             end
+          else
+             begin
+             goto 2;
+             end;
           end;
-        end
-        else
-          goto 2;
-      end;
-      3:
-      dec(FilePointer);
-      if FilePointer <> TempFileSize then
-        goto 1;
-    end;
+       3:
+       dec(FilePointer);
+       if FilePointer <> TempFileSize then
+          begin
+          goto 1;
+          end;
+       end;
     2:
     CloseLogFile;
   end;
@@ -7661,9 +8257,13 @@ begin
   // windows.ZeroMemory(@RemMultsColumnWidthArray, sizeof(RemMultsColumnWidthArray));
 
   if (tShowDomesticMultiplierName) or (DoingPrefixMults) then
-    Width := PREFIXCOLUMNWIDTH
+     begin
+     Width := PREFIXCOLUMNWIDTH
+     end
   else
-    Width := BASECOLUMNWIDTH;
+     begin
+     Width := BASECOLUMNWIDTH;
+     end;
 
   tLB_SETCOLUMNWIDTH(tr4w_WindowsArray[tw_REMMULTSWINDOW_INDEX].WndHandle,
     Width);
@@ -7744,16 +8344,18 @@ begin
     // keying.  n4af 4.52.6
     if ((length(CallWindowString) > 0) {or (InactiveSwapRadio)}) and
        (not CWStillBeingSent) then
-    begin
-      InactiveRigCallingCQ := False;
-      scWk_Reset;
-      SwapRadios;
-      SwitchNext := False; // 4.52.8
-      if (not AutoSendEnable) or (not AutoSendCharacterCount > 0) then
-        //n4af 4.42.10 Redrive dupe check
-        ReturninCQopmode;
-      ShowInformation;
-    end;
+       begin
+       InactiveRigCallingCQ := False;
+       scWk_Reset;
+       SwapRadios;
+       SwitchNext := False; // 4.52.8
+       if (not AutoSendEnable) or (not AutoSendCharacterCount > 0) then
+         //n4af 4.42.10 Redrive dupe check
+          begin
+          ReturninCQopmode;
+          end;
+       ShowInformation;
+       end;
   // pRadio := ActiveRadioPtr;
   // if ((ActiveMode = CW) and autosendenable and (not WKBusy)) then
   // {((CWThreadID <> 0) or wkBUSY or pRadio.CWByCAT_Sending))} then
@@ -7772,15 +8374,15 @@ begin
   Result := False;
   for TempWindowElement := Low(TMainWindowElement) to High(TMainWindowElement)
     do
-  begin
-    if wh[TempWindowElement] = Window then
-    begin
-      Brush := tr4wBrushArray[TWindows[TempWindowElement].mweBackG];
-      Color := tr4wColorsArray[TWindows[TempWindowElement].mweColor];
-      Result := True;
-      Break;
-    end;
-  end;
+     begin
+     if wh[TempWindowElement] = Window then
+        begin
+        Brush := tr4wBrushArray[TWindows[TempWindowElement].mweBackG];
+        Color := tr4wColorsArray[TWindows[TempWindowElement].mweColor];
+        Result := True;
+        Break;
+        end;
+     end;
 
 end;
 
@@ -7810,10 +8412,14 @@ var
 begin
   // fix up operator
   if exch.ceOperator = '' then
-    exch.ceOperator := currentOperator;
+     begin
+     exch.ceOperator := currentOperator;
+     end;
 
   if Length(temps.SRX_String) > 0 then
-    exch.ExchString := temps.SRX_String;
+     begin
+     exch.ExchString := temps.SRX_String;
+     end;
 
   case exch.ceContest of
     GENERALQSO:
@@ -7821,11 +8427,11 @@ begin
       // WSJT-X does not always include PROGRAMID, so gating on FromWSJTX
       // caused ExchString to stay empty when PROGRAMID was absent.
       if temps.GridSquare <> '' then
-        begin
-        exch.ExchString  := temps.GridSquare;
-        exch.QTHString   := temps.GridSquare;
-        exch.DomesticQTH := temps.GridSquare;
-        end;
+         begin
+         exch.ExchString  := temps.GridSquare;
+         exch.QTHString   := temps.GridSquare;
+         exch.DomesticQTH := temps.GridSquare;
+         end;
 
     WAG:
       exch.QTHString := temps.SRX_String;
@@ -7838,10 +8444,14 @@ begin
         logger.Debug('[ParseADIF] exch.QTH.CountryID = %s',
                      [exch.QTH.CountryID]);
         if (exch.QTH.CountryID = 'K') or (exch.QTH.CountryID = 'VE') then
-          exch.QTHString := IntToStr(exch.RSTReceived) + ' ' + temps.State
+           begin
+           exch.QTHString := IntToStr(exch.RSTReceived) + ' ' + temps.State
+           end
         else
-          exch.QTHString := IntToStr(exch.RSTReceived) + ' ' +
-                            IntToStr(exch.NumberReceived);
+           begin
+           exch.QTHString := IntToStr(exch.RSTReceived) + ' ' +
+                             IntToStr(exch.NumberReceived);
+           end;
         exch.ExchString := exch.QTHString;
       end;
 
@@ -7877,28 +8487,36 @@ begin
 
     UKRAINIAN, OKDX, LZDX:
       if IsAlpha(temps.SRX_String) then
-        exch.DomesticQTH := temps.SRX_String
+         begin
+         exch.DomesticQTH := temps.SRX_String
+         end
       else
-        exch.QTHString := temps.SRX_String;
+         begin
+         exch.QTHString := temps.SRX_String;
+         end;
 
     POTA:
       if IsValidPOTAPark(temps.POTARef) then
-        begin
-        if Length(temps.POTARef) = 0 then
-          begin
-          if AnsiUpperCase(temps.SIG) = 'POTA' then
-            if IsValidPOTAPark(temps.SIG_Info) then
-              exch.QTHString := temps.SIG_Info;
-          end
-        else
-          exch.QTHString := temps.POTARef;
-        end
+         begin
+         if Length(temps.POTARef) = 0 then
+            begin
+            if AnsiUpperCase(temps.SIG) = 'POTA' then
+              if IsValidPOTAPark(temps.SIG_Info) then
+                 begin
+                 exch.QTHString := temps.SIG_Info;
+                 end;
+            end
+         else
+            begin
+            exch.QTHString := temps.POTARef;
+            end;
+         end
       else
         if LooksLikeAState(temps.State) then
-          begin
-          exch.QTHString   := temps.State;
-          exch.DomesticQTH := temps.State;
-          end;
+           begin
+           exch.QTHString   := temps.State;
+           exch.DomesticQTH := temps.State;
+           end;
 
     WWDIGI, ARRLDIGI:
       begin
@@ -7912,33 +8530,39 @@ begin
        (ActiveExchange = Grid2Exchange) or
        (ActiveExchange = RSTAndGrid3Exchange) or
        (ActiveExchange = GridExchange) then
-      begin
-      exch.QTHString   := temps.GridSquare;
-      exch.DomesticQTH := temps.GridSquare;
-      exch.ExchString  := IntToStr(exch.RSTReceived) + ' ' + temps.GridSquare;
-      end
+       begin
+       exch.QTHString   := temps.GridSquare;
+       exch.DomesticQTH := temps.GridSquare;
+       exch.ExchString  := IntToStr(exch.RSTReceived) + ' ' + temps.GridSquare;
+       end
     else if DoingDomesticMults then
-      begin
-      if exch.QTHString <> '' then
-        // ADIF QTH tag carries the county/state code unambiguously
-        // for state QSO parties.  Prefer it when present -- the
-        // alpha-prefix-of-SRX_STRING heuristic below was already
-        // unreliable, and now fails outright because SRX_STRING is
-        // normalized to include a leading RST ("59 MON") on export.
-        exch.DomesticQTH := exch.QTHString
-      else
-        begin
-        // Legacy fallback for ADIF imports that lack a QTH tag.
-        // Loads DomesticQTH with the ALPHA prefix of SRX_STRING.
-        j := 1;
-        while (j <= Length(temps.SRX_String)) and
-              not (temps.SRX_String[j] in ['0'..'9']) do
-          Inc(j);
-        exch.DomesticQTH := Copy(temps.SRX_String, 1, j - 1);
-        end;
-      end
+       begin
+       if exch.QTHString <> '' then
+         // ADIF QTH tag carries the county/state code unambiguously
+         // for state QSO parties.  Prefer it when present -- the
+         // alpha-prefix-of-SRX_STRING heuristic below was already
+         // unreliable, and now fails outright because SRX_STRING is
+         // normalized to include a leading RST ("59 MON") on export.
+          begin
+          exch.DomesticQTH := exch.QTHString
+          end
+       else
+          begin
+          // Legacy fallback for ADIF imports that lack a QTH tag.
+          // Loads DomesticQTH with the ALPHA prefix of SRX_STRING.
+          j := 1;
+          while (j <= Length(temps.SRX_String)) and
+                not (temps.SRX_String[j] in ['0'..'9']) do
+             begin
+             Inc(j);
+             end;
+          exch.DomesticQTH := Copy(temps.SRX_String, 1, j - 1);
+          end;
+       end
     else
-      exch.ExchString := temps.SRX_String;
+       begin
+       exch.ExchString := temps.SRX_String;
+       end;
   end;
 end;
 
@@ -8021,26 +8645,26 @@ begin
      end;
 
   if not FileExists(adifFileName) then
-  begin
-    ShowMessage({TC_IMPORTFILENOTFOUND} 'The import file is not available' + ' '
-      + adifFileName);
-    exit;
-  end;
+     begin
+     ShowMessage({TC_IMPORTFILENOTFOUND} 'The import file is not available' + ' '
+       + adifFileName);
+     exit;
+     end;
 
   if not OpenLogFile then
-  begin
-    ShowMessage({TC_CANNOTOPENLOG} 'Cannot open log file');
+     begin
+     ShowMessage({TC_CANNOTOPENLOG} 'Cannot open log file');
 
-    exit;
-  end;
+     exit;
+     end;
   tSetFilePointer(0, FILE_END);
   // Now open te file and process
 
   if not FileExists(adifFileName) then
-  begin
-    DebugMsg('In ImportADIF, ADIF file ' + adifFilename + ' does not exists');
-    Exit;
-  end;
+     begin
+     DebugMsg('In ImportADIF, ADIF file ' + adifFilename + ' does not exists');
+     Exit;
+     end;
 
   AssignFile(adif, adifFileName);
   //ReWrite(adif);
@@ -8050,57 +8674,61 @@ begin
   try
     seenCallBandMode.CaseSensitive := False;
     while not Eof(adif) do
-    begin
-      ReadLn(adif, sBuffer);
-      if not FoundEOH then
-      begin
-        if trim(AnsiUpperCase(sBuffer)) = '<EOH>' then
-        begin
-          FoundEOH := true;
-        end;
-      end
-      else
-      begin
-        ClearContestExchange(TempRXData);
-        if ParseADIFRecord(sBuffer, TempRXData) then // processed a record if true
-        begin
-          // State-QP rover (KG1S/MON): strip suffix for country lookup so
-          // the /M tail isn't misread as a GB prefix indicator.  Without
-          // this wrapper the post-ParseADIFRecord lookup overwrites the
-          // QTH set inside ParseADIFRecord and we end up with DX=G.
-          ctyLocateCallStripRover(TempRXData.Callsign, TempRXData.QTH);
-
-          // County-line follow-up detection.  If the imported record
-          // reuses (call|band|mode) with a different QTHString AND the
-          // contest's CountyLineAllowed flag is True (see VC.pas), set
-          // ceClearDupeSheet so the post-import rescore does not
-          // dupe-flag this record.  Otherwise leave the flag alone --
-          // the standard dupe check stays in effect.
-          cbmKey := string(TempRXData.Callsign) + '|' +
-                    IntToStr(Ord(TempRXData.Band)) + '|' +
-                    IntToStr(Ord(TempRXData.Mode));
-          cbmKeyIdx := seenCallBandMode.IndexOfName(cbmKey);
-          if cbmKeyIdx >= 0 then
-            begin
-            priorQTHForKey := seenCallBandMode.ValueFromIndex[cbmKeyIdx];
-            if (priorQTHForKey <> string(TempRXData.QTHString)) and
-               ContestsArray[TempRXData.ceContest].CountyLineAllowed then
-              TempRXData.ceClearDupeSheet := True;
-            end
-          else
-            seenCallBandMode.Add(cbmKey + '=' + string(TempRXData.QTHString));
-
-          CalculateQSOPoints(TempRXData);
-          tWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange),
-            lpNumberOfBytesWritten);
-          inc(QSOCounter);
-          if QSOCounter mod 100 = 0 then
+       begin
+       ReadLn(adif, sBuffer);
+       if not FoundEOH then
           begin
-            DisplayLoadedQSOs;
+          if trim(AnsiUpperCase(sBuffer)) = '<EOH>' then
+             begin
+             FoundEOH := true;
+             end;
+          end
+       else
+          begin
+          ClearContestExchange(TempRXData);
+          if ParseADIFRecord(sBuffer, TempRXData) then // processed a record if true
+             begin
+             // State-QP rover (KG1S/MON): strip suffix for country lookup so
+             // the /M tail isn't misread as a GB prefix indicator.  Without
+             // this wrapper the post-ParseADIFRecord lookup overwrites the
+             // QTH set inside ParseADIFRecord and we end up with DX=G.
+             ctyLocateCallStripRover(TempRXData.Callsign, TempRXData.QTH);
+
+             // County-line follow-up detection.  If the imported record
+             // reuses (call|band|mode) with a different QTHString AND the
+             // contest's CountyLineAllowed flag is True (see VC.pas), set
+             // ceClearDupeSheet so the post-import rescore does not
+             // dupe-flag this record.  Otherwise leave the flag alone --
+             // the standard dupe check stays in effect.
+             cbmKey := string(TempRXData.Callsign) + '|' +
+                       IntToStr(Ord(TempRXData.Band)) + '|' +
+                       IntToStr(Ord(TempRXData.Mode));
+             cbmKeyIdx := seenCallBandMode.IndexOfName(cbmKey);
+             if cbmKeyIdx >= 0 then
+                begin
+                priorQTHForKey := seenCallBandMode.ValueFromIndex[cbmKeyIdx];
+                if (priorQTHForKey <> string(TempRXData.QTHString)) and
+                   ContestsArray[TempRXData.ceContest].CountyLineAllowed then
+                   begin
+                   TempRXData.ceClearDupeSheet := True;
+                   end;
+                end
+             else
+                begin
+                seenCallBandMode.Add(cbmKey + '=' + string(TempRXData.QTHString));
+                end;
+
+             CalculateQSOPoints(TempRXData);
+             tWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange),
+               lpNumberOfBytesWritten);
+             inc(QSOCounter);
+             if QSOCounter mod 100 = 0 then
+                begin
+                DisplayLoadedQSOs;
+                end;
+             end;
           end;
-        end;
-      end;
-    end;
+       end;
   finally
     seenCallBandMode.Free;
   end;
@@ -8462,15 +9090,17 @@ var
   i: integer;
 begin
   if CallWindowString = '' then
-    Exit;
+     begin
+     Exit;
+     end;
   for i := 1 to CallstringLength do
-  begin
-    if CallWindowString[i] = '?' then
-    begin
-      SendMessage(wh[mweCall], EM_SETSEL, i - 1, i);
-      Break;
-    end;
-  end;
+     begin
+     if CallWindowString[i] = '?' then
+        begin
+        SendMessage(wh[mweCall], EM_SETSEL, i - 1, i);
+        Break;
+        end;
+     end;
 end;
 
 procedure ChangeFocus(Text: PAnsiChar);
@@ -8495,7 +9125,9 @@ procedure SetCommand(c: PAnsiChar);
 begin
   TF.Format(TempBuffer1, TC_SET_VALUE_OF_SET_NOW, c);
   if YesOrNo(tr4whandle, TempBuffer1) = IDno then
-    Exit;
+     begin
+     Exit;
+     end;
   CommandToSet := c;
   ProcessMenu(menu_options);
 end;
@@ -8512,16 +9144,18 @@ var
 begin
   for i := 1 to CommandsArraySize do
     if CFGCA[i].crAddress = Command then
-    begin
-      InvertBoolean(Command^);
-      Windows.WritePrivateProfileStringA(_COMMANDS, CFGCA[i].crCommand,
-        BA[Command^], TR4W_INI_FILENAME);
-      // Issue #997: asm `call p` (untyped Pointer change-handler) -> typed call,
-      // nil-guarded against a nil entry in the CommandsProcArray definition.
-      @cmdProc := CommandsProcArray[CFGCA[i].crP];
-      if Assigned(cmdProc) then
-         cmdProc;
-    end;
+       begin
+       InvertBoolean(Command^);
+       Windows.WritePrivateProfileStringA(_COMMANDS, CFGCA[i].crCommand,
+         BA[Command^], TR4W_INI_FILENAME);
+       // Issue #997: asm `call p` (untyped Pointer change-handler) -> typed call,
+       // nil-guarded against a nil entry in the CommandsProcArray definition.
+       @cmdProc := CommandsProcArray[CFGCA[i].crP];
+       if Assigned(cmdProc) then
+          begin
+          cmdProc;
+          end;
+       end;
 end;
 
 procedure ShowHelp(Topic: PChar);
@@ -8543,9 +9177,13 @@ var
 begin
 
   if strpos(Command, '.') <> nil then
-    TempPchar := 'explorer /select, %s'
+     begin
+     TempPchar := 'explorer /select, %s'
+     end
   else
-    TempPchar := 'explorer %s';
+     begin
+     TempPchar := 'explorer %s';
+     end;
 
   TF.Format(wsprintfBuffer, TempPchar, Command);
   WinExec(wsprintfBuffer, SW_SHOW);
@@ -8718,18 +9356,18 @@ begin
     hInstance,
     nil);
   if Result <> 0 then
-  begin
-    SetWindowPos(Result, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE or SWP_NOMOVE
-      or SWP_NOSIZE);
-    Windows.ZeroMemory(@ti, SizeOf(ti));
-    ti.cbSize := SizeOf(ti);
-    //ti.uFlags := 0;//TTF_ABSOLUTE or TTF_TRACK;
-    ti.uFlags := {TTF_CENTERTIP or }TTF_TRANSPARENT or TTF_SUBCLASS;
-    ti.HWND := Control;
-    ti.lpszText := Text;
-    Windows.GetClientRect(Control, ti.rect);
-    SendMessage(Result, TTM_ADDTOOL, 0, integer(@ti));
-  end;
+     begin
+     SetWindowPos(Result, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOACTIVATE or SWP_NOMOVE
+       or SWP_NOSIZE);
+     Windows.ZeroMemory(@ti, SizeOf(ti));
+     ti.cbSize := SizeOf(ti);
+     //ti.uFlags := 0;//TTF_ABSOLUTE or TTF_TRACK;
+     ti.uFlags := {TTF_CENTERTIP or }TTF_TRANSPARENT or TTF_SUBCLASS;
+     ti.HWND := Control;
+     ti.lpszText := Text;
+     Windows.GetClientRect(Control, ti.rect);
+     SendMessage(Result, TTM_ADDTOOL, 0, integer(@ti));
+     end;
 end;
 
 {$IF MORSERUNNER}
@@ -8739,7 +9377,9 @@ begin
   Result := False;
   MorseRunnerWindow := Windows.FindWindow('TMainForm', 'Morse Runner');
   if MorseRunnerWindow = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   MorseRunnerWindowsCounter := 0;
   EnumChildWindows(MorseRunnerWindow, @EnumMorseRunnerChildProc, 0);
 end;
@@ -8748,17 +9388,25 @@ function EnumMorseRunnerChildProc(wnd: HWND; l: lParam): BOOL; stdcall;
 begin
   Windows.GetClassNameA(wnd, wsprintfBuffer, SizeOf(wsprintfBuffer));
   if Windows.lstrcmpA(wsprintfBuffer, 'TEdit') = 0 then
-  begin
-    if MorseRunnerWindowsCounter = 0 then
-      MorseRunner_MyCallsign := wnd;
-    if MorseRunnerWindowsCounter = 1 then
-      MorseRunner_Number := wnd;
-    if MorseRunnerWindowsCounter = 2 then
-      MorseRunner_RST := wnd;
-    if MorseRunnerWindowsCounter = 3 then
-      MorseRunner_Callsign := wnd;
-    inc(MorseRunnerWindowsCounter);
-  end;
+     begin
+     if MorseRunnerWindowsCounter = 0 then
+        begin
+        MorseRunner_MyCallsign := wnd;
+        end;
+     if MorseRunnerWindowsCounter = 1 then
+        begin
+        MorseRunner_Number := wnd;
+        end;
+     if MorseRunnerWindowsCounter = 2 then
+        begin
+        MorseRunner_RST := wnd;
+        end;
+     if MorseRunnerWindowsCounter = 3 then
+        begin
+        MorseRunner_Callsign := wnd;
+        end;
+     inc(MorseRunnerWindowsCounter);
+     end;
   Result := True;
 
 end;
@@ -8782,13 +9430,15 @@ begin
   TempFunc(TR4W_LOG_FILENAME, CreatedReport, ReLoadLog, MakeRescore,
     ExchangeInformation, ActiveExchange, 0, 0, 0);
   if ReLoadLog then
-    LoadinLog;
+     begin
+     LoadinLog;
+     end;
 
   if CreatedReport <> nil then
-  begin
-    PreviewFileNameAddress := CreatedReport; //TR4W_CFG_FILENAME;
-    FilePreview;
-  end;
+     begin
+     PreviewFileNameAddress := CreatedReport; //TR4W_CFG_FILENAME;
+     FilePreview;
+     end;
 
   FreeLibrary(module);
 
@@ -8810,38 +9460,44 @@ begin
 
   hFindFile := Windows.FindFirstFileA(TempBuffer1, lpFindFileData);
   if hFindFile <> INVALID_HANDLE_VALUE then
-    goto 1
+     begin
+     goto 1
+     end
   else
-    Exit;
+     begin
+     Exit;
+     end;
 
   Next:
   if FindNextFileA(hFindFile, lpFindFileData) then
-  begin
-    1:
-    TF.Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME,
-      lpFindFileData.cFileName);
+     begin
+     1:
+     TF.Format(TempBuffer1, '%sPlugins\%s', TR4W_PATH_NAME,
+       lpFindFileData.cFileName);
 
-    module := LoadLibraryA(TempBuffer1);
-    TempFunc := GetProcAddress(module, 'tr4wGetPlugin');
-    if @TempFunc <> nil then
-    begin
-      if LoadedPlugins = 0 then
-      begin
-        pop := CreatePopupMenu;
-        Windows.InsertMenuA(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_POPUP,
-          pop, 'Plugins');
-      end;
-      inc(LoadedPlugins);
-      Windows.AppendMenuA(pop, MF_STRING, 10700 + LoadedPlugins, TempFunc());
-      Windows.lstrcatA(PluginsArray[LoadedPlugins], lpFindFileData.cFileName);
-    end;
-    FreeLibrary(module);
-    goto Next;
-  end;
+     module := LoadLibraryA(TempBuffer1);
+     TempFunc := GetProcAddress(module, 'tr4wGetPlugin');
+     if @TempFunc <> nil then
+        begin
+        if LoadedPlugins = 0 then
+           begin
+           pop := CreatePopupMenu;
+           Windows.InsertMenuA(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_POPUP,
+             pop, 'Plugins');
+           end;
+        inc(LoadedPlugins);
+        Windows.AppendMenuA(pop, MF_STRING, 10700 + LoadedPlugins, TempFunc());
+        Windows.lstrcatA(PluginsArray[LoadedPlugins], lpFindFileData.cFileName);
+        end;
+     FreeLibrary(module);
+     goto Next;
+     end;
   Windows.FindClose(hFindFile);
   if LoadedPlugins > 0 then
-    Windows.InsertMenuA(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_SEPARATOR,
-      0, nil);
+     begin
+     Windows.InsertMenuA(tr4w_main_menu, menu_exit, MF_BYCOMMAND or MF_SEPARATOR,
+       0, nil);
+     end;
 
 end;
 
@@ -8849,22 +9505,22 @@ procedure RichEditOperation(Load: boolean);
 begin
 
   if Load then
-  begin
-    if RichEditObject.reLibModule = 0 then
-    begin
-      RichEditObject.reLibModule := Windows.LoadLibrary('RICHED32.DLL');
-    end;
-    inc(RichEditObject.reUsers);
-  end
+     begin
+     if RichEditObject.reLibModule = 0 then
+        begin
+        RichEditObject.reLibModule := Windows.LoadLibrary('RICHED32.DLL');
+        end;
+     inc(RichEditObject.reUsers);
+     end
   else
-  begin
-    dec(RichEditObject.reUsers);
-    if RichEditObject.reUsers = 0 then
-    begin
-      FreeLibrary(RichEditObject.reLibModule);
-      RichEditObject.reLibModule := 0;
-    end;
-  end;
+     begin
+     dec(RichEditObject.reUsers);
+     if RichEditObject.reUsers = 0 then
+        begin
+        FreeLibrary(RichEditObject.reLibModule);
+        RichEditObject.reLibModule := 0;
+        end;
+     end;
 
 end;
 
@@ -8882,7 +9538,9 @@ procedure RenameCommand(Old, New: PAnsiChar);
 begin
   if GetPrivateProfileStringA(_COMMANDS, Old, nil, TempBuffer1,
     SizeOf(TempBuffer1), TR4W_INI_FILENAME) = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   Windows.WritePrivateProfileStringA(_COMMANDS, Old, nil, TR4W_INI_FILENAME);
   Windows.WritePrivateProfileStringA(_COMMANDS, New, TempBuffer1,
     TR4W_INI_FILENAME);
@@ -8906,62 +9564,74 @@ var
 begin
   DebugMsg('Enter MainUnit.PTTOn');
   if not PTTEnable then
-  begin
+     begin
 
-    if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
-      if DriverIsLoaded() then
-      begin
-        TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-        DriverBitOperation(TempByte, STROBE_SIGNAL, boSet1);
-        SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-      end;
+     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
+       if DriverIsLoaded() then
+          begin
+          TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
+          DriverBitOperation(TempByte, STROBE_SIGNAL, boSet1);
+          SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
+          end;
 
-    Exit;
-  end;
+     Exit;
+     end;
 
   begin
     if wkTurnPTT(True) then
-      goto DrawPTTLabel;
+       begin
+       goto DrawPTTLabel;
+       end;
     if tPTTVIACAT(True) then
-      goto DrawPTTLabel;
+       begin
+       goto DrawPTTLabel;
+       end;
     TempPortInterface := tGetPortType(ActiveRadioPtr.tKeyerPort);
     if TempPortInterface <> NoInterface then
-    begin
-      if TempPortInterface = SerialInterface then
-      begin
-        TempPTTValue := 0;
-        if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_PTT then
-          TempPTTValue := SETRTS;
-        if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_PTT then
-          TempPTTValue := SETDTR;
+       begin
+       if TempPortInterface = SerialInterface then
+          begin
+          TempPTTValue := 0;
+          if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_PTT then
+             begin
+             TempPTTValue := SETRTS;
+             end;
+          if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_PTT then
+             begin
+             TempPTTValue := SETDTR;
+             end;
 
-        if TempPTTValue = 0 then
+          if TempPTTValue = 0 then
+             begin
+             Exit;
+             end;
+          if ActiveRadioPtr.tKeyerPortHandle <> INVALID_HANDLE_VALUE then
+             begin
+             TREscapeCommFunction(ActiveRadioPtr.tKeyerPortHandle, TempPTTValue);
+             goto DrawPTTLabel;
+             end;
           Exit;
-        if ActiveRadioPtr.tKeyerPortHandle <> INVALID_HANDLE_VALUE then
-        begin
-          TREscapeCommFunction(ActiveRadioPtr.tKeyerPortHandle, TempPTTValue);
-          goto DrawPTTLabel;
-        end;
-        Exit;
-      end;
+          end;
 
-      if not DriverIsLoaded() then
-        Exit;
+       if not DriverIsLoaded() then
+          begin
+          Exit;
+          end;
 
-      TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-      DriverBitOperation(TempByte, STROBE_SIGNAL, boSet1);
-      DriverBitOperation(TempByte, PTT_SIGNAL, boSet1);
-      // TempByte := TempByte or BIT0; //1pin (Inverted)
-      // TempByte := TempByte or BIT2; //16pin
-      SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
+       TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
+       DriverBitOperation(TempByte, STROBE_SIGNAL, boSet1);
+       DriverBitOperation(TempByte, PTT_SIGNAL, boSet1);
+       // TempByte := TempByte or BIT0; //1pin (Inverted)
+       // TempByte := TempByte or BIT2; //16pin
+       SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
 
-      DrawPTTLabel:
-      logger.debug('Entering Main.PTTOn');
-      ActiveRadioPtr.tPTTStatus := PTT_ON;
-      PTTStatusChanged;
+       DrawPTTLabel:
+       logger.debug('Entering Main.PTTOn');
+       ActiveRadioPtr.tPTTStatus := PTT_ON;
+       PTTStatusChanged;
 
-      Sleep(PTTTurnOnDelay);
-    end;
+       Sleep(PTTTurnOnDelay);
+       end;
   end;
 end;
 
@@ -8975,62 +9645,74 @@ var
 begin
   DebugMsg('Enter MainUnit.PTTOff');
   if not PTTEnable then
-  begin
-    if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
-      if DriverIsLoaded() then
-      begin
-        TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-        DriverBitOperation(TempByte, STROBE_SIGNAL, boSet0);
-        SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
-      end;
+     begin
+     if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
+       if DriverIsLoaded() then
+          begin
+          TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
+          DriverBitOperation(TempByte, STROBE_SIGNAL, boSet0);
+          SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
+          end;
 
-    Exit;
+     Exit;
 
-  end;
+     end;
   if IsCWByCATActive(ActiveRadioPtr) then // ny4i Issue 131
-  begin
-    DEBUGMsg('Stopping CW from PTTOff');
-    ActiveRadioPtr^.StopSendingCW;
-    goto DrawPTTLabel; // Fix this goto...Put the code below in an IF... TODO
-  end;
+     begin
+     DEBUGMsg('Stopping CW from PTTOff');
+     ActiveRadioPtr^.StopSendingCW;
+     goto DrawPTTLabel; // Fix this goto...Put the code below in an IF... TODO
+     end;
   if wkTurnPTT(False) then
-    goto DrawPTTLabel;
+     begin
+     goto DrawPTTLabel;
+     end;
   if tPTTVIACAT(False) then
-    goto DrawPTTLabel;
+     begin
+     goto DrawPTTLabel;
+     end;
   TempPortInterface := tGetPortType(ActiveRadioPtr.tKeyerPort);
   if TempPortInterface <> NoInterface then
-  begin
-    if TempPortInterface = SerialInterface then
-    begin
-      PTT_value := 0;
-      if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_PTT then
-        PTT_value := CLRRTS;
-      if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_PTT then
-        PTT_value := CLRDTR;
-      if PTT_value = 0 then
+     begin
+     if TempPortInterface = SerialInterface then
+        begin
+        PTT_value := 0;
+        if ActiveRadioPtr.tr4w_keyer_rts_state = RtsDtr_PTT then
+           begin
+           PTT_value := CLRRTS;
+           end;
+        if ActiveRadioPtr.tr4w_keyer_DTR_state = RtsDtr_PTT then
+           begin
+           PTT_value := CLRDTR;
+           end;
+        if PTT_value = 0 then
+           begin
+           Exit;
+           end;
+
+        if ActiveRadioPtr.tKeyerPortHandle <> INVALID_HANDLE_VALUE then
+           begin
+           TREscapeCommFunction(ActiveRadioPtr.tKeyerPortHandle, PTT_value);
+           goto DrawPTTLabel;
+           end;
         Exit;
+        end;
 
-      if ActiveRadioPtr.tKeyerPortHandle <> INVALID_HANDLE_VALUE then
-      begin
-        TREscapeCommFunction(ActiveRadioPtr.tKeyerPortHandle, PTT_value);
-        goto DrawPTTLabel;
-      end;
-      Exit;
-    end;
+     if not DriverIsLoaded() then
+        begin
+        Exit;
+        end;
 
-    if not DriverIsLoaded() then
-      Exit;
+     TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
+     DriverBitOperation(TempByte, STROBE_SIGNAL, boSet0);
+     DriverBitOperation(TempByte, PTT_SIGNAL, boSet0);
+     SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
 
-    TempByte := GetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl);
-    DriverBitOperation(TempByte, STROBE_SIGNAL, boSet0);
-    DriverBitOperation(TempByte, PTT_SIGNAL, boSet0);
-    SetPortByte(ActiveRadioPtr.tKeyerPortHandle, otControl, TempByte);
+     DrawPTTLabel:
+     ActiveRadioPtr.tPTTStatus := PTT_OFF;
+     PTTStatusChanged;
 
-    DrawPTTLabel:
-    ActiveRadioPtr.tPTTStatus := PTT_OFF;
-    PTTStatusChanged;
-
-  end;
+     end;
 end;
 
 procedure DebugRadioTempBuffer(sDecorator: string; var bRay: array of AnsiChar);
@@ -9065,9 +9747,13 @@ begin
     AssignFile(myFile, aFilePath);
     try
       if FileExists(aFilePath) then
-        Append(myFile)
+         begin
+         Append(myFile)
+         end
       else
-        Rewrite(myFile);
+         begin
+         Rewrite(myFile);
+         end;
       WriteLn(myFile, FormatDateTime('dd-mmm-yyyy hh:nn:ss.zzz', Now) + ': ' +
         ALine);
       Flush(myFile);
@@ -9133,13 +9819,13 @@ var
   ptr: RadioPtr;
 begin
   if not Assigned(theRadio) then
-  begin
-    ptr := ActiveRadioPtr;
-  end
+     begin
+     ptr := ActiveRadioPtr;
+     end
   else
-  begin
-    ptr := theRadio;
-  end;
+     begin
+     ptr := theRadio;
+     end;
   // TWO INDEPENDENT FACTS, both required.  ptr.CWByCAT is the OPERATOR's config
   // setting -- what they want.  rcCWByCAT is what the RADIO can do.  A user can
   // switch the option on for a radio that cannot key CW over CAT, and the
@@ -9292,23 +9978,35 @@ var
 begin
   isNegative := false;
   if n < 0 then
-  begin
-    isNegative := true;
-    n := n * -1;
-  end;
+     begin
+     isNegative := true;
+     n := n * -1;
+     end;
   if n > 9999 then
-    Result := 5
+     begin
+     Result := 5
+     end
   else if n > 999 then
-    Result := 4
+     begin
+     Result := 4
+     end
   else if n > 99 then
-    Result := 3
+     begin
+     Result := 3
+     end
   else if n > 9 then
-    Result := 2
+     begin
+     Result := 2
+     end
   else
-    Result := 1;
+     begin
+     Result := 1;
+     end;
 
   if isNegative then
-    Result := Result + 1;
+     begin
+     Result := Result + 1;
+     end;
 end;
 
 (*----------------------------------------------------------------------------*)
@@ -9599,26 +10297,26 @@ end;
 procedure SetExtendedModeFromMode(RData: ContestExchange);
 begin
   if RData.ExtMode = eNoMode then
-  begin
-    if RData.Mode = PHONE then
-      // We cannot really pick eUSB here. It depends upon the radio mode
-    begin
-      RData.ExtMode := eSSB;
-      // Maybe call someting to guess based on the freqwuency but set it ahead of time
-    end
-    else if RData.Mode = CW then
-    begin
-      RData.ExtMode := eCW;
-    end
-    else if RData.Mode = Digital then
-    begin
-      RData.ExtMode := eDATA;
-    end
-    else if RData.Mode = FM then
-    begin
-      RData.ExtMode := eFM;
-    end;
-  end;
+     begin
+     if RData.Mode = PHONE then
+       // We cannot really pick eUSB here. It depends upon the radio mode
+        begin
+        RData.ExtMode := eSSB;
+        // Maybe call someting to guess based on the freqwuency but set it ahead of time
+        end
+     else if RData.Mode = CW then
+        begin
+        RData.ExtMode := eCW;
+        end
+     else if RData.Mode = Digital then
+        begin
+        RData.ExtMode := eDATA;
+        end
+     else if RData.Mode = FM then
+        begin
+        RData.ExtMode := eFM;
+        end;
+     end;
 
 end;
 
@@ -9633,9 +10331,9 @@ begin
         ProcessClassAndDomesticOrDXQTHExchange(fieldValue, exch);
         exch.exchString := fieldValue;
         if length(exch.DomesticQTH) = 0 then
-        begin
-          exch.DomesticQTH := exch.QTHString;
-        end;
+           begin
+           exch.DomesticQTH := exch.QTHString;
+           end;
       end;
   end; // case
 end;
@@ -9649,12 +10347,12 @@ begin
   Result := False;
   IsWow64Process := GetProcAddress(GetModuleHandle(Kernel32), 'IsWow64Process');
   if Assigned(IsWow64Process) then
-  begin
-    if IsWow64Process(GetCurrentProcess, Wow64Process) then
-    begin
-      Result := Wow64Process;
-    end;
-  end;
+     begin
+     if IsWow64Process(GetCurrentProcess, Wow64Process) then
+        begin
+        Result := Wow64Process;
+        end;
+     end;
 end;
 
 // Written in terms of the ENUM MEMBERS, not raw ordinals.  The previous version
@@ -9667,18 +10365,18 @@ function ConvertPortTypeToCOMString(port: PortType): string;
 begin
   Result := '';
   if port in SerialPorts then
-  begin
-    // Serial1 is ordinal 1, so the COM number IS the ordinal.
-    Result := 'COM' + IntToStr(Ord(port));
-  end
+     begin
+     // Serial1 is ordinal 1, so the COM number IS the ordinal.
+     Result := 'COM' + IntToStr(Ord(port));
+     end
   else if port = Network then
-  begin
-    Result := 'socket';
-  end
+     begin
+     Result := 'socket';
+     end
   else if port in [Parallel1, Parallel2, Parallel3] then
-  begin
-    Result := 'LPT' + IntToStr(Ord(port) - Ord(Parallel1) + 1);
-  end;
+     begin
+     Result := 'LPT' + IntToStr(Ord(port) - Ord(Parallel1) + 1);
+     end;
 end;
 {
 procedure SelectFileOfFolder(Parent: HWND; FileName: PChar; Mask: PChar; SelectType: CFGType);

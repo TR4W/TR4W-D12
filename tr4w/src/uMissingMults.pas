@@ -43,7 +43,10 @@ begin
       VisibleLog.ShowMissingMultiplierReport(hwnddlg);
 
     WM_COMMAND:
-      if wParam = 2 then goto 1;
+      if wParam = 2 then
+         begin
+         goto 1;
+         end;
 
     WM_CLOSE: 1: EndDialog(hwnddlg, 0);
 

@@ -269,26 +269,30 @@ begin
       end;
 {$IF MMTTYMODE}
   if ActiveMode = Digital then
-  begin
-//    SendMessageToMixW(Msg);
-    if ActiveRadioPtr.tPTTStatus = PTT_OFF then
-      if PTTEnable then
-      begin
-        logger.debug('Calling PTTOn from AddStringToBuffer');
-        PTTOn;
-        PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_TX);
-      end;
+     begin
+     //    SendMessageToMixW(Msg);
+         if ActiveRadioPtr.tPTTStatus = PTT_OFF then
+           if PTTEnable then
+              begin
+              logger.debug('Calling PTTOn from AddStringToBuffer');
+              PTTOn;
+              PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_TX);
+              end;
 
-//    if MMTTY_FIRST_TX_CHAR then ProcessMMTTYMessage(TXM_CHAR, 13);
-//    MMTTY_FIRST_TX_CHAR                                   := False;
-    for i                                                   := 1 to length(Msg) do
-      PostMmttyMessage(RXM_CHAR, integer(Msg[i]));
+     //    if MMTTY_FIRST_TX_CHAR then ProcessMMTTYMessage(TXM_CHAR, 13);
+     //    MMTTY_FIRST_TX_CHAR                                   := False;
+         for i                                                   := 1 to length(Msg) do
+            begin
+            PostMmttyMessage(RXM_CHAR, integer(Msg[i]));
+            end;
 
-    if not ControlAMode then
-      PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);
+         if not ControlAMode then
+            begin
+            PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);
+            end;
 
-    Exit;
-  end;
+         Exit;
+     end;
 {$IFEND}
 
   if CWEnable and CWEnabled then
@@ -498,31 +502,31 @@ procedure SendStringAndStop(Msg: Str160);
 
 begin
   if ActiveMode = CW then
-  begin
-    if CWEnable and CWEnabled then
-    begin
-          //            CPUKeyer.AddStringToCWBuffer (MSG, CWTone);
-      AddStringToBuffer(Msg, CWTone);
-      if IsCWByCATActive then
-         begin
-         // Q7 no longer bypasses the factory: the terminator goes through the
-         // CAT keyer like everything else now that the send logic lives there.
-         uCWKeyerCAT.CWByCATSend(ActiveRadioPtr, CWByCATBufferTerminator); // ny4i Issue 149 This closes and sends the buffer
-         end;
-    end;
-    Exit;
-  end;
+     begin
+     if CWEnable and CWEnabled then
+        begin
+        //            CPUKeyer.AddStringToCWBuffer (MSG, CWTone);
+    AddStringToBuffer(Msg, CWTone);
+    if IsCWByCATActive then
+       begin
+       // Q7 no longer bypasses the factory: the terminator goes through the
+       // CAT keyer like everything else now that the send logic lives there.
+       uCWKeyerCAT.CWByCATSend(ActiveRadioPtr, CWByCATBufferTerminator); // ny4i Issue 149 This closes and sends the buffer
+       end;
+        end;
+     Exit;
+     end;
 
   if (ActiveMode = Digital) then
-  begin
-    SendMessageToMixW('<TX>' + Msg + '<RXANDCLEAR>');
-      {
+     begin
+     SendMessageToMixW('<TX>' + Msg + '<RXANDCLEAR>');
+       {
       PTTOn;
       PostMmttyMessage(RXM_PTT, $00000002);
       AddStringToBuffer(Msg, CWTone);
       PostMessage(MMTTYEXE_Handle, MSG_MMTTY, RXM_PTT, $00000001);
       }
-  end;
+     end;
 
   {
     if (ActiveMode = Digital) and (ActiveRTTYPort <> NoPort) then
@@ -556,22 +560,22 @@ begin
   //
   
   if Speed > 0 then
-  begin
-    CodeSpeed                                               := Speed;
-    KeyerCPU.SetSpeed(Speed);
-    // Radio speed-sync stays HERE, not in the CAT adapter: it is orthogonal to
-    // which keyer keys (it must fire even while the WinKeyer is keying).
-    if ActiveRadioPtr.CWSpeedSync then
-       begin
-       ActiveRadioPtr.SetRadioCWSpeed(Speed);
-       end;
-    tSetPaddleElementLength;
-    // Broadcast, same order as before.  KeyerWinKey.SetSpeed calls wkSetSpeed
-    // unconditionally (Q5, handle-guarded internally); KeyerYCCC.SetSpeed is a
-    // no-op, preserving the commented-out YCCCSetSpeed (Q2).
-    KeyerWinKey.SetSpeed(Speed);
-    KeyerYCCC.SetSpeed(Speed);
-  end;
+     begin
+     CodeSpeed                                               := Speed;
+     KeyerCPU.SetSpeed(Speed);
+     // Radio speed-sync stays HERE, not in the CAT adapter: it is orthogonal to
+     // which keyer keys (it must fire even while the WinKeyer is keying).
+     if ActiveRadioPtr.CWSpeedSync then
+        begin
+        ActiveRadioPtr.SetRadioCWSpeed(Speed);
+        end;
+     tSetPaddleElementLength;
+     // Broadcast, same order as before.  KeyerWinKey.SetSpeed calls wkSetSpeed
+     // unconditionally (Q5, handle-guarded internally); KeyerYCCC.SetSpeed is a
+     // no-op, preserving the commented-out YCCCSetSpeed (Q2).
+     KeyerWinKey.SetSpeed(Speed);
+     KeyerYCCC.SetSpeed(Speed);
+     end;
 end;
 
 procedure SetPTT;
@@ -590,10 +594,10 @@ var
 begin
   WPM                                                       := QuickEditInteger(TC_WPMCODESPEED, 2);
   if WPM <> -1 then
-  begin
-    SetSpeed(WPM);
-    DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
-  end;
+     begin
+     SetSpeed(WPM);
+     DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
+     end;
 end;
 
 procedure DisplayBuffer(Buffer: SendBufferType;
@@ -607,19 +611,22 @@ begin
   //    ClrScr;
 
   if BufferStart = BufferEnd then
-  begin
-    Write('Buffer empty - type something to start sending or RETURN to stop');
-    Exit;
-  end;
+     begin
+     Write('Buffer empty - type something to start sending or RETURN to stop');
+     Exit;
+     end;
 
   BufferAddress                                             := BufferStart;
 
   while BufferAddress <> BufferEnd do
-  begin
-    Write(Buffer[BufferAddress]);
-    inc(BufferAddress);
-    if BufferAddress = 256 then BufferAddress               := 0;
-  end;
+     begin
+     Write(Buffer[BufferAddress]);
+     inc(BufferAddress);
+     if BufferAddress = 256 then
+        begin
+        BufferAddress               := 0;
+        end;
+     end;
 end;
 
 procedure SendKeyboardInput;
@@ -660,103 +667,120 @@ begin
     repeat
       //         if ActiveMultiPort <> NoPort then
       if ElaspedSec100(TimeMark) > 3000 then { 30 second timeout }
-      begin
-//        CPUKeyer.PTTUnForce;
-        CPUKeyer.FlushCWBuffer;
-          //          RemoveAndRestorePreviousWindow;
-        Exit;
-      end;
+         begin
+         //        CPUKeyer.PTTUnForce;
+                 CPUKeyer.FlushCWBuffer;
+                   //          RemoveAndRestorePreviousWindow;
+                 Exit;
+         end;
 
       UpdateTimeAndRateDisplays(True, False);
 
       if CPUKeyer.BufferEmpty then
         if BufferStart <> BufferEnd then
-        begin
-          CPUKeyer.AddCharacterToCWBuffer(Buffer[BufferStart]);
-          inc(BufferStart);
-          if BufferStart = 256 then BufferStart             := 0;
-          DisplayBuffer(Buffer, BufferStart, BufferEnd);
-        end;
+           begin
+           CPUKeyer.AddCharacterToCWBuffer(Buffer[BufferStart]);
+           inc(BufferStart);
+           if BufferStart = 256 then
+              begin
+              BufferStart             := 0;
+              end;
+           DisplayBuffer(Buffer, BufferStart, BufferEnd);
+           end;
 
     until NewKeyPressed;
     Key                                                     := UpCase(NewReadKey);
 
     if Key >= ' ' then
-    begin
-        //            IF BufferStart = BufferEnd THEN ClrScr;
-      Buffer[BufferEnd]                                     := Key;
-      inc(BufferEnd);
-      if BufferEnd = 256 then BufferEnd                     := 0;
-      Write(Key);
-    end
+       begin
+       //            IF BufferStart = BufferEnd THEN ClrScr;
+     Buffer[BufferEnd]                                     := Key;
+     inc(BufferEnd);
+     if BufferEnd = 256 then
+        begin
+        BufferEnd                     := 0;
+        end;
+     Write(Key);
+       end
     else
-      case Key of
-        CarriageReturn:
-          begin
-            while BufferStart <> BufferEnd do
-            begin
-              InactiveRigCallingCQ                          := False; // n4af 4.42.11
-              CPUKeyer.AddCharacterToCWBuffer(Buffer[BufferStart]);
-              inc(BufferStart);
-              if BufferStart = 256 then BufferStart         := 0;
-            end;
+       begin
+       case Key of
+         CarriageReturn:
+           begin
+             while BufferStart <> BufferEnd do
+                begin
+                InactiveRigCallingCQ                          := False; // n4af 4.42.11
+                CPUKeyer.AddCharacterToCWBuffer(Buffer[BufferStart]);
+                inc(BufferStart);
+                if BufferStart = 256 then
+                   begin
+                   BufferStart         := 0;
+                   end;
+                end;
 
-//            CPUKeyer.PTTUnForce;
-            //            RemoveAndRestorePreviousWindow;
-            Exit;
-          end;
+ //            CPUKeyer.PTTUnForce;
+             //            RemoveAndRestorePreviousWindow;
+             Exit;
+           end;
 
-        BackSpace:
-          if BufferEnd <> BufferStart then
-          begin
-            dec(BufferEnd);
-            if BufferEnd < 0 then BufferEnd                 := 255;
-            DisplayBuffer(Buffer, BufferStart, BufferEnd);
-          end;
-
-        EscapeKey:
-          begin
-//            CPUKeyer.PTTUnForce;
-            CPUKeyer.FlushCWBuffer;
-            //            RemoveAndRestorePreviousWindow;
-            Exit;
-          end;
-
-        NullKey:
-          case NewReadKey of
-            F10:
+         BackSpace:
+           if BufferEnd <> BufferStart then
               begin
-//                CPUKeyer.PTTUnForce;
-                CPUKeyer.FlushCWBuffer;
-                //                RemoveAndRestorePreviousWindow;
-                Exit;
+              dec(BufferEnd);
+              if BufferEnd < 0 then
+                 begin
+                 BufferEnd                 := 255;
+                 end;
+              DisplayBuffer(Buffer, BufferStart, BufferEnd);
               end;
 
-            PageUpKey:
-              if CodeSpeed < 96 then
-              begin
-                SetSpeed(CodeSpeed + 3);
-                DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
-              end;
+         EscapeKey:
+           begin
+ //            CPUKeyer.PTTUnForce;
+             CPUKeyer.FlushCWBuffer;
+             //            RemoveAndRestorePreviousWindow;
+             Exit;
+           end;
 
-            PageDownKey:
-              if CodeSpeed > 4 then
-              begin
-                SetSpeed(CodeSpeed - 3);
-                DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
-              end;
+         NullKey:
+           case NewReadKey of
+             F10:
+               begin
+ //                CPUKeyer.PTTUnForce;
+                 CPUKeyer.FlushCWBuffer;
+                 //                RemoveAndRestorePreviousWindow;
+                 Exit;
+               end;
 
-            DeleteKey:
-              if BufferEnd <> BufferStart then
-              begin
-                dec(BufferEnd);
-                if BufferEnd < 0 then BufferEnd             := 255;
-                DisplayBuffer(Buffer, BufferStart, BufferEnd);
-              end;
+             PageUpKey:
+               if CodeSpeed < 96 then
+                  begin
+                  SetSpeed(CodeSpeed + 3);
+                  DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
+                  end;
 
-          end;
+             PageDownKey:
+               if CodeSpeed > 4 then
+                  begin
+                  SetSpeed(CodeSpeed - 3);
+                  DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
+                  end;
 
-      end;
+             DeleteKey:
+               if BufferEnd <> BufferStart then
+                  begin
+                  dec(BufferEnd);
+                  if BufferEnd < 0 then
+                     begin
+                     BufferEnd             := 255;
+                     end;
+                  DisplayBuffer(Buffer, BufferStart, BufferEnd);
+                  end;
+
+           end;
+
+       end;
+       end;
 
   until False;
 end;
@@ -805,26 +829,32 @@ begin
         //            WriteLnCenter ('CQ FUNCTION KEY MEMORY STATUS');
 
         for Key                                             := F1 to F12 do
-        begin
-          Str(Ord(Key) - Ord(F1) + 1, TempString);
-          TempString                                        := 'F' + TempString + ' - ';
+           begin
+           Str(Ord(Key) - Ord(F1) + 1, TempString);
+           TempString                                        := 'F' + TempString + ' - ';
 
-          if (ActiveMode = CW) or (ActiveMode = Digital) then
-          begin
-            if GetCQMemoryString(CW, Key) <> '' then {KK1L: 6.73 Added Mode}
-              TempString                                    := TempString + GetCQMemoryString(CW, Key); {KK1L: 6.73 Added Mode}
+           if (ActiveMode = CW) or (ActiveMode = Digital) then
+              begin
+              if GetCQMemoryString(CW, Key) <> '' then {KK1L: 6.73 Added Mode}
+                 begin
+                 TempString                                    := TempString + GetCQMemoryString(CW, Key); {KK1L: 6.73 Added Mode}
+                 end;
 
-          end
-          else
-            if GetCQMemoryString(Phone, Key) <> '' then
-              TempString                                    := TempString {+ DVPPath} + GetCQMemoryString(Phone, Key); {KK1L: 6.73 Added Mode}
+              end
+           else
+             if GetCQMemoryString(Phone, Key) <> '' then
+                begin
+                TempString                                    := TempString {+ DVPPath} + GetCQMemoryString(Phone, Key); {KK1L: 6.73 Added Mode}
+                end;
 
-          if length(TempString) > 79 then
-            TempString                                      := Copy(TempString, 1, 78) + '+';
-//          Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
-            //                ClrEol;
-            //                WriteLn (TempString);
-        end;
+           if length(TempString) > 79 then
+              begin
+              TempString                                      := Copy(TempString, 1, 78) + '+';
+              end;
+ //          Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
+             //                ClrEol;
+             //                WriteLn (TempString);
+           end;
       end;
 
     AltKeys:
@@ -832,19 +862,23 @@ begin
         //            WriteLnCenter ('ALT-CQ FUNCTION KEY MEMORY STATUS');
 
         for Key                                             := AltF1 to AltF12 do
-        begin
-          Str(Ord(Key) - Ord(AltF1) + 1, TempString);
-          TempString                                        := 'Alt-F' + TempString + ' - ';
+           begin
+           Str(Ord(Key) - Ord(AltF1) + 1, TempString);
+           TempString                                        := 'Alt-F' + TempString + ' - ';
 
-          if GetCQMemoryString(ActiveMode, Key) <> '' then {KK1L: 6.73 Added Mode}
-            TempString                                      := TempString + GetCQMemoryString(ActiveMode, Key); {KK1L: 6.73 Added Mode}
+           if GetCQMemoryString(ActiveMode, Key) <> '' then {KK1L: 6.73 Added Mode}
+              begin
+              TempString                                      := TempString + GetCQMemoryString(ActiveMode, Key); {KK1L: 6.73 Added Mode}
+              end;
 
-          if length(TempString) > 79 then
-            TempString                                      := Copy(TempString, 1, 78) + '+';
-//          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 24], PAnsiChar(AnsiString(TempString)));
-            //                ClrEol;
-            //                WriteLn (TempString);
-        end;
+           if length(TempString) > 79 then
+              begin
+              TempString                                      := Copy(TempString, 1, 78) + '+';
+              end;
+ //          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 24], PAnsiChar(AnsiString(TempString)));
+             //                ClrEol;
+             //                WriteLn (TempString);
+           end;
       end;
 
     ControlKeys:
@@ -852,19 +886,23 @@ begin
         //            WriteLnCenter ('CONTROL-CQ FUNCTION KEY MEMORY STATUS');
 
         for Key                                             := ControlF1 to ControlF12 do
-        begin
-          Str(Ord(Key) - Ord(ControlF1) + 1, TempString);
-          TempString                                        := 'Ctrl-F' + TempString + ' - ';
+           begin
+           Str(Ord(Key) - Ord(ControlF1) + 1, TempString);
+           TempString                                        := 'Ctrl-F' + TempString + ' - ';
 
-          if GetCQMemoryString(ActiveMode, Key) <> '' then {KK1L: 6.73 Added mode}
-            TempString                                      := TempString + GetCQMemoryString(ActiveMode, Key); {KK1L: 6.73 Added mode}
+           if GetCQMemoryString(ActiveMode, Key) <> '' then {KK1L: 6.73 Added mode}
+              begin
+              TempString                                      := TempString + GetCQMemoryString(ActiveMode, Key); {KK1L: 6.73 Added mode}
+              end;
 
-          if length(TempString) > 79 then
-            TempString                                      := Copy(TempString, 1, 78) + '+';
-//          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 12], PAnsiChar(AnsiString(TempString)));
-            //                ClrEol;
-            //                WriteLn (TempString);
-        end;
+           if length(TempString) > 79 then
+              begin
+              TempString                                      := Copy(TempString, 1, 78) + '+';
+              end;
+ //          Windows.SetWindowTextA(MessagesValues[Ord(Key) - 12], PAnsiChar(AnsiString(TempString)));
+             //                ClrEol;
+             //                WriteLn (TempString);
+           end;
       end;
   end;
 end;
@@ -885,44 +923,54 @@ begin
         //            WriteLnCenter ('EXCHANGE FUNCTION KEY MEMORY STATUS');
 
         if ActiveMode = CW then
-        begin
-//          Windows.SetWindowTextA(MessagesValues[VK_F1], 'F1 - Set by the MY CALL statement in config file' {TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG});
-//          Windows.SetWindowTextA(MessagesValues[VK_F2], 'F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE' {TC_F2SETBYSPEXCHANGEANDREPEATSP});
-            //                  WriteLn('F1 - Set by the MY CALL statement in config file');
-            //                  WriteLn('F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE');
+           begin
+           //          Windows.SetWindowTextA(MessagesValues[VK_F1], 'F1 - Set by the MY CALL statement in config file' {TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG});
+           //          Windows.SetWindowTextA(MessagesValues[VK_F2], 'F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE' {TC_F2SETBYSPEXCHANGEANDREPEATSP});
+                       //                  WriteLn('F1 - Set by the MY CALL statement in config file');
+                       //                  WriteLn('F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE');
 
-          for Key                                           := F3 to F12 do
-          begin
-            Str(Ord(Key) - Ord(F1) + 1, TempString);
-            TempString                                      := 'F' + TempString + ' - ';
+                     for Key                                           := F3 to F12 do
+                        begin
+                        Str(Ord(Key) - Ord(F1) + 1, TempString);
+                        TempString                                      := 'F' + TempString + ' - ';
+
+                            {KK1L: 6.73 Added mode to GetExMemoryString}
+                        if GetEXMemoryString(ActiveMode, Key) <> '' then
+                           begin
+                           TempString                                    := TempString + GetEXMemoryString(ActiveMode, Key);
+                           end;
+
+                        if length(TempString) > 79 then
+                           begin
+                           TempString                                    := Copy(TempString, 1, 78) + '+';
+                           end;
+            //            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
+                            //                    ClrEol;
+                            //                    WriteLn (TempString);
+                        end;
+           end
+        else
+           begin
+           for Key                                           := F1 to F12 do
+              begin
+              Str(Ord(Key) - Ord(F1) + 1, TempString);
+              TempString                                      := 'F' + TempString + ' - ';
 
                 {KK1L: 6.73 Added mode to GetExMemoryString}
-            if GetEXMemoryString(ActiveMode, Key) <> '' then
-              TempString                                    := TempString + GetEXMemoryString(ActiveMode, Key);
+              if GetEXMemoryString(ActiveMode, Key) <> '' then
+                 begin
+                 TempString                                    := TempString {+ DVPPath} + GetEXMemoryString(ActiveMode, Key);
+                 end;
 
-            if length(TempString) > 79 then
-              TempString                                    := Copy(TempString, 1, 78) + '+';
-//            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
+              if length(TempString) > 79 then
+                 begin
+                 TempString                                    := Copy(TempString, 1, 78) + '+';
+                 end;
+  //            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
                 //                    ClrEol;
                 //                    WriteLn (TempString);
-          end;
-        end
-        else
-          for Key                                           := F1 to F12 do
-          begin
-            Str(Ord(Key) - Ord(F1) + 1, TempString);
-            TempString                                      := 'F' + TempString + ' - ';
-
-              {KK1L: 6.73 Added mode to GetExMemoryString}
-            if GetEXMemoryString(ActiveMode, Key) <> '' then
-              TempString                                    := TempString {+ DVPPath} + GetEXMemoryString(ActiveMode, Key);
-
-            if length(TempString) > 79 then
-              TempString                                    := Copy(TempString, 1, 78) + '+';
-//            Windows.SetWindowTextA(MessagesValues[Ord(Key)], PAnsiChar(AnsiString(TempString)));
-              //                    ClrEol;
-              //                    WriteLn (TempString);
-          end;
+              end;
+           end;
       end;
 
     AltKeys:
@@ -930,19 +978,23 @@ begin
         //            WriteLnCenter ('ALT-EXCHANGE FUNCTION KEY MEMORY STATUS');
 
         for Key                                             := AltF1 to AltF12 do
-        begin
-          Str(Ord(Key) - Ord(AltF1) + 1, TempString);
-          TempString                                        := 'Alt-F' + TempString + ' - ';
+           begin
+           Str(Ord(Key) - Ord(AltF1) + 1, TempString);
+           TempString                                        := 'Alt-F' + TempString + ' - ';
 
-            {KK1L: 6.73 Added mode to GetExMemoryString}
-          if GetEXMemoryString(ActiveMode, Key) <> '' then
-            TempString                                      := TempString + GetEXMemoryString(ActiveMode, Key);
+             {KK1L: 6.73 Added mode to GetExMemoryString}
+           if GetEXMemoryString(ActiveMode, Key) <> '' then
+              begin
+              TempString                                      := TempString + GetEXMemoryString(ActiveMode, Key);
+              end;
 
-          if length(TempString) > 79 then
-            TempString                                      := Copy(TempString, 1, 78) + '+';
-            //                 ClrEol;
-            //                WriteLn (TempString);
-        end;
+           if length(TempString) > 79 then
+              begin
+              TempString                                      := Copy(TempString, 1, 78) + '+';
+              end;
+             //                 ClrEol;
+             //                WriteLn (TempString);
+           end;
       end;
 
     ControlKeys:
@@ -950,19 +1002,23 @@ begin
         //            WriteLnCenter ('CONTROL-EXCHANGE FUNCTION KEY MEMORY STATUS');
 
         for Key                                             := ControlF1 to ControlF12 do
-        begin
-          Str(Ord(Key) - Ord(ControlF1) + 1, TempString);
-          TempString                                        := 'Ctrl-F' + TempString + ' - ';
+           begin
+           Str(Ord(Key) - Ord(ControlF1) + 1, TempString);
+           TempString                                        := 'Ctrl-F' + TempString + ' - ';
 
-            {KK1L: 6.73 Added mode to GetExMemoryString}
-          if GetEXMemoryString(ActiveMode, Key) <> '' then
-            TempString                                      := TempString + GetEXMemoryString(ActiveMode, Key);
+             {KK1L: 6.73 Added mode to GetExMemoryString}
+           if GetEXMemoryString(ActiveMode, Key) <> '' then
+              begin
+              TempString                                      := TempString + GetEXMemoryString(ActiveMode, Key);
+              end;
 
-          if length(TempString) > 79 then
-            TempString                                      := Copy(TempString, 1, 78) + '+';
-            //    ClrEol;
-             //  WriteLn (TempString);
-        end;
+           if length(TempString) > 79 then
+              begin
+              TempString                                      := Copy(TempString, 1, 78) + '+';
+              end;
+             //    ClrEol;
+              //  WriteLn (TempString);
+           end;
       end;
   end;
 end;
@@ -976,7 +1032,7 @@ begin
 //  Windows.SetDlgItemTextA(MemProgHWND, 102, TC_NUMBERORLETTEROFMESSAGETOBEPROGRAM);
 
   if (ActiveMode = CW) or (ActiveMode = Digital) then
-  begin
+     begin
       //         GoToXY(1, 1);
       //         WriteLnCenter('OTHER CW MESSAGE MEMORY STATUS');
 
@@ -1045,7 +1101,7 @@ begin
       //            'D. Short 9 = ', Short9);
   end
   else
-  begin
+     begin
       //         GoToXY(1, 1);
       //         WriteLnCenter('OTHER SSB MESSAGE MEMORY STATUS');
 //    Windows.SetWindowTextA(MemProgHWND, TC_OTHERSSBMESSAGEMEMORYSTATUS);
@@ -1121,10 +1177,22 @@ begin
   DVPOn                                                     := True;
 
   MemoryString                                              := UpperCase(MemoryString);
-  if MemoryString = 'DVK1' then StartDVK(1);
-  if MemoryString = 'DVK2' then StartDVK(2);
-  if MemoryString = 'DVK3' then StartDVK(3);
-  if MemoryString = 'DVK4' then StartDVK(4);
+  if MemoryString = 'DVK1' then
+     begin
+     StartDVK(1);
+     end;
+  if MemoryString = 'DVK2' then
+     begin
+     StartDVK(2);
+     end;
+  if MemoryString = 'DVK3' then
+     begin
+     StartDVK(3);
+     end;
+  if MemoryString = 'DVK4' then
+     begin
+     StartDVK(4);
+     end;
   if MemoryString = 'DVK5' then StartDVK(5); {KK1L: 6.71}
   if MemoryString = 'DVK6' then StartDVK(6); {KK1L: 6.71}
   {IF MemoryString = 'DVK7' THEN StartDVK (7); {KK1L: 6.71}{KK1L: 6.72 removed}
@@ -1141,10 +1209,22 @@ begin
 
   DVKEnableWrite;
 
-  if MemoryString = 'DVK1' then StartDVK(1);
-  if MemoryString = 'DVK2' then StartDVK(2);
-  if MemoryString = 'DVK3' then StartDVK(3);
-  if MemoryString = 'DVK4' then StartDVK(4);
+  if MemoryString = 'DVK1' then
+     begin
+     StartDVK(1);
+     end;
+  if MemoryString = 'DVK2' then
+     begin
+     StartDVK(2);
+     end;
+  if MemoryString = 'DVK3' then
+     begin
+     StartDVK(3);
+     end;
+  if MemoryString = 'DVK4' then
+     begin
+     StartDVK(4);
+     end;
   if MemoryString = 'DVK5' then StartDVK(5); {KK1L: 6.71}
   if MemoryString = 'DVK6' then StartDVK(6); {KK1L: 6.71}
   {IF MemoryString = 'DVK7' THEN StartDVK (7); {KK1L: 6.71}{KK1L: 6.72 removed}
@@ -1186,10 +1266,10 @@ begin
 
     //      if ActiveMultiPort <> NoPort then
     if ElaspedSec100(TimeMark) > 3000 then
-    begin
-        //        RemoveAndRestorePreviousWindow;
-      Exit;
-    end;
+       begin
+       //        RemoveAndRestorePreviousWindow;
+     Exit;
+       end;
 
   until (Key = 'C') or (Key = 'E') or (Key = 'O') or (Key = EscapeKey);
 
@@ -1201,9 +1281,13 @@ begin
   //  SaveSetAndClearActiveWindow(BigWindow);
 
   if (ActiveMode = CW) or (ActiveMode = Digital) then
-    DisplayCrypticCWMenu
+     begin
+     DisplayCrypticCWMenu
+     end
   else
-    DisplayCrypticSSBMenu;
+     begin
+     DisplayCrypticSSBMenu;
+     end;
 
   VisibleDupeSheetRemoved                                   := True;
 
@@ -1221,10 +1305,10 @@ begin
           repeat
             //                  if ActiveMultiPort <> NoPort then
             if ElaspedSec100(TimeMark) > 3000 then
-            begin
-                //                RemoveAndRestorePreviousWindow;
-              Exit;
-            end;
+               begin
+               //                RemoveAndRestorePreviousWindow;
+             Exit;
+               end;
 
           until NewKeyPressed;
           FunctionKey                                       := UpCase(NewReadKey);
@@ -1232,10 +1316,10 @@ begin
         until (FunctionKey = NullKey) or (FunctionKey = EscapeKey);
 
         if FunctionKey = EscapeKey then
-        begin
-            //          RemoveAndRestorePreviousWindow;
-          Exit;
-        end;
+           begin
+           //          RemoveAndRestorePreviousWindow;
+         Exit;
+           end;
 
         FunctionKey                                         := NewReadKey;
 
@@ -1243,76 +1327,80 @@ begin
           ((FunctionKey >= ControlF1) and (FunctionKey <= ControlF10)) or
           ((FunctionKey >= AltF1) and (FunctionKey <= AltF10)) or
           ((FunctionKey >= F11) and (FunctionKey <= AltF12)) then
-        begin
-          if FunctionKey >= AltF1 then
-          begin
-            if KeyStatus <> AltKeys then
-            begin
-              KeyStatus                                     := AltKeys;
-              ShowCQFunctionKeyStatus;
-            end;
-          end
-          else
-            if FunctionKey >= ControlF1 then
-            begin
-              if KeyStatus <> ControlKeys then
+           begin
+           if FunctionKey >= AltF1 then
               begin
-                KeyStatus                                   := ControlKeys;
-                ShowCQFunctionKeyStatus;
-              end;
-            end
-            else
-              if KeyStatus <> NormalKeys then
-              begin
-                KeyStatus                                   := NormalKeys;
-                ShowCQFunctionKeyStatus;
-              end;
-
-            //                            SaveSetAndClearActiveWindow(QuickCommandWindow);
-
-          repeat
-            TempString                                      := LineInput('Msg = ',
-              GetCQMemoryString(ActiveMode, FunctionKey), {KK1L: 6.73 Added mode}
-              True,
-              (ActiveMode = Phone) and (DVKEnable or (ActiveDVKPort <> NoPort)));
-
-            if TempString[1] = NullKey then
-              if DVKEnable then
-              begin
-                    //                case TempString[2] of
-                               {KK1L: 6.73 Added mode}
-                    //                  AltW: DVPRecordMessage(GetCQMemoryString(ActiveMode, FunctionKey), False);
-                               {KK1L: 6.73 Added mode}
-                    //                  AltR: DVPListenMessage(GetCQMemoryString(ActiveMode, FunctionKey), true);
-                    //                end;
+              if KeyStatus <> AltKeys then
+                 begin
+                 KeyStatus                                     := AltKeys;
+                 ShowCQFunctionKeyStatus;
+                 end;
               end
-              else
+           else
+             if FunctionKey >= ControlF1 then
+                begin
+                if KeyStatus <> ControlKeys then
+                   begin
+                   KeyStatus                                   := ControlKeys;
+                   ShowCQFunctionKeyStatus;
+                   end;
+                end
+             else
+               if KeyStatus <> NormalKeys then
+                  begin
+                  KeyStatus                                   := NormalKeys;
+                  ShowCQFunctionKeyStatus;
+                  end;
+
+             //                            SaveSetAndClearActiveWindow(QuickCommandWindow);
+
+           repeat
+             TempString                                      := LineInput('Msg = ',
+               GetCQMemoryString(ActiveMode, FunctionKey), {KK1L: 6.73 Added mode}
+               True,
+               (ActiveMode = Phone) and (DVKEnable or (ActiveDVKPort <> NoPort)));
+
+             if TempString[1] = NullKey then
+               if DVKEnable then
+                  begin
+                  //                case TempString[2] of
+                             {KK1L: 6.73 Added mode}
+                  //                  AltW: DVPRecordMessage(GetCQMemoryString(ActiveMode, FunctionKey), False);
+                             {KK1L: 6.73 Added mode}
+                  //                  AltR: DVPListenMessage(GetCQMemoryString(ActiveMode, FunctionKey), true);
+                  //                end;
+                  end
+               else
+                  begin
+                  if ActiveDVKPort <> NoPort then
+                        //                  case TempString[2] of
+                                    {KK1L: 6.73 Added mode}
+                        //                    AltW: DVKRecordMessage(GetCQMemoryString(ActiveMode, FunctionKey));
+                                    {KK1L: 6.73 Added mode}
+                        //                    AltR: DVKListenMessage(GetCQMemoryString(ActiveMode, FunctionKey));
+                  end;
+               //              end;
+
+           until (TempString[1] <> NullKey);
+
+           if (TempString <> EscapeKey) and
+               {KK1L: 6.73 Added mode}
+           (GetCQMemoryString(ActiveMode, FunctionKey) <> TempString) then
               begin
-                if ActiveDVKPort <> NoPort then
-                      //                  case TempString[2] of
-                                  {KK1L: 6.73 Added mode}
-                      //                    AltW: DVKRecordMessage(GetCQMemoryString(ActiveMode, FunctionKey));
-                                  {KK1L: 6.73 Added mode}
-                      //                    AltR: DVKListenMessage(GetCQMemoryString(ActiveMode, FunctionKey));
+              SetCQMemoryString(ActiveMode, FunctionKey, TempString);
+
+              if ActiveMode = Phone then
+                 begin
+                 AppendConfigFile('CQ SSB MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
+                 end
+              else
+                 begin
+                 AppendConfigFile('CQ MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString);
+                 end;
               end;
-              //              end;
 
-          until (TempString[1] <> NullKey);
-
-          if (TempString <> EscapeKey) and
-              {KK1L: 6.73 Added mode}
-          (GetCQMemoryString(ActiveMode, FunctionKey) <> TempString) then
-          begin
-            SetCQMemoryString(ActiveMode, FunctionKey, TempString);
-
-            if ActiveMode = Phone then
-              AppendConfigFile('CQ SSB MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
-            else
-              AppendConfigFile('CQ MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString);
-          end;
-
-            //          RemoveAndRestorePreviousWindow;
-        end;
+             //          RemoveAndRestorePreviousWindow;
+           end;
       until False;
 
     'E': repeat
@@ -1327,20 +1415,20 @@ begin
           repeat
             //                  if ActiveMultiPort <> NoPort then
             if ElaspedSec100(TimeMark) > 3000 then
-            begin
-                //                RemoveAndRestorePreviousWindow;
-              Exit;
-            end;
+               begin
+               //                RemoveAndRestorePreviousWindow;
+             Exit;
+               end;
 
           until NewKeyPressed;
           FunctionKey                                       := UpCase(NewReadKey);
         until (FunctionKey = NullKey) or (FunctionKey = EscapeKey);
 
         if FunctionKey = EscapeKey then
-        begin
-            //          RemoveAndRestorePreviousWindow;
-          Exit;
-        end;
+           begin
+           //          RemoveAndRestorePreviousWindow;
+         Exit;
+           end;
 
         FunctionKey                                         := NewReadKey;
 
@@ -1348,71 +1436,75 @@ begin
           ((FunctionKey >= ControlF1) and (FunctionKey <= ControlF10)) or
           ((FunctionKey >= AltF1) and (FunctionKey <= AltF10)) or
           ((FunctionKey >= F11) and (FunctionKey <= AltF12)) then
-        begin
-          if FunctionKey >= AltF1 then
-          begin
-            if KeyStatus <> AltKeys then
-            begin
-              KeyStatus                                     := AltKeys;
-              ShowExFunctionKeyStatus;
-            end;
-          end
-          else
-            if FunctionKey >= ControlF1 then
-            begin
-              if KeyStatus <> ControlKeys then
+           begin
+           if FunctionKey >= AltF1 then
               begin
-                KeyStatus                                   := ControlKeys;
-                ShowExFunctionKeyStatus;
-              end;
-            end
-            else
-              if KeyStatus <> NormalKeys then
-              begin
-                KeyStatus                                   := NormalKeys;
-                ShowExFunctionKeyStatus;
-              end;
-
-            //          SaveSetAndClearActiveWindow(QuickCommandWindow);
-
-          repeat
-            TempString                                      := LineInput('Msg = ',
-                {KK1L: 6.73 Added mode to GetExMemoryString}
-              GetEXMemoryString(ActiveMode, FunctionKey),
-              True,
-              (ActiveMode = Phone) and (DVKEnable or (ActiveDVKPort <> NoPort)));
-
-            if TempString[1] = NullKey then
-              if DVKEnable then
-              begin
-                    //                case TempString[2] of
-                               {KK1L: 6.73 Added mode to GetExMemoryString}
-                    //                  AltW: DVPRecordMessage(GetEXMemoryString(ActiveMode, FunctionKey), False);
-                    //                  AltR: DVPListenMessage(GetEXMemoryString(ActiveMode, FunctionKey), true);
-                    //                end;
+              if KeyStatus <> AltKeys then
+                 begin
+                 KeyStatus                                     := AltKeys;
+                 ShowExFunctionKeyStatus;
+                 end;
               end
+           else
+             if FunctionKey >= ControlF1 then
+                begin
+                if KeyStatus <> ControlKeys then
+                   begin
+                   KeyStatus                                   := ControlKeys;
+                   ShowExFunctionKeyStatus;
+                   end;
+                end
+             else
+               if KeyStatus <> NormalKeys then
+                  begin
+                  KeyStatus                                   := NormalKeys;
+                  ShowExFunctionKeyStatus;
+                  end;
+
+             //          SaveSetAndClearActiveWindow(QuickCommandWindow);
+
+           repeat
+             TempString                                      := LineInput('Msg = ',
+                 {KK1L: 6.73 Added mode to GetExMemoryString}
+               GetEXMemoryString(ActiveMode, FunctionKey),
+               True,
+               (ActiveMode = Phone) and (DVKEnable or (ActiveDVKPort <> NoPort)));
+
+             if TempString[1] = NullKey then
+               if DVKEnable then
+                  begin
+                  //                case TempString[2] of
+                             {KK1L: 6.73 Added mode to GetExMemoryString}
+                  //                  AltW: DVPRecordMessage(GetEXMemoryString(ActiveMode, FunctionKey), False);
+                  //                  AltR: DVPListenMessage(GetEXMemoryString(ActiveMode, FunctionKey), true);
+                  //                end;
+                  end
+               else
+                   //               if ActiveDVKPort <> NoPort then
+                  //                  case TempString[2] of
+                             {KK1L: 6.73 Added mode to GetExMemoryString}
+                  //                    AltW: DVKRecordMessage(GetEXMemoryString(ActiveMode, FunctionKey));
+                  //                    AltR: DVKListenMessage(GetEXMemoryString(ActiveMode, FunctionKey));
+                  //                  end;
+
+           until (TempString[1] <> NullKey);
+
+           if TempString <> EscapeKey then
+              begin
+              SetEXMemoryString(ActiveMode, FunctionKey, TempString);
+
+              if ActiveMode = Phone then
+                 begin
+                 AppendConfigFile('EX SSB MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
+                 end
               else
-                  //               if ActiveDVKPort <> NoPort then
-                 //                  case TempString[2] of
-                            {KK1L: 6.73 Added mode to GetExMemoryString}
-                 //                    AltW: DVKRecordMessage(GetEXMemoryString(ActiveMode, FunctionKey));
-                 //                    AltR: DVKListenMessage(GetEXMemoryString(ActiveMode, FunctionKey));
-                 //                  end;
+                 begin
+                 AppendConfigFile('EX MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
+                 end
+              end;
 
-          until (TempString[1] <> NullKey);
-
-          if TempString <> EscapeKey then
-          begin
-            SetEXMemoryString(ActiveMode, FunctionKey, TempString);
-
-            if ActiveMode = Phone then
-              AppendConfigFile('EX SSB MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
-            else
-              AppendConfigFile('EX MEMORY ' + KeyId(FunctionKey) + ' = ' + TempString)
-          end;
-
-            //          RemoveAndRestorePreviousWindow;
-        end;
+             //          RemoveAndRestorePreviousWindow;
+           end;
       until False;
 
     'O': repeat
@@ -1427,10 +1519,10 @@ begin
           repeat
             //                  if ActiveMultiPort <> NoPort then
             if ElaspedSec100(TimeMark) > 3000 then
-            begin
-                //                RemoveAndRestorePreviousWindow;
-              Exit;
-            end;
+               begin
+               //                RemoveAndRestorePreviousWindow;
+             Exit;
+               end;
 
           until NewKeyPressed;
           //                     FunctionKey                := Upcase (ReadKey);
@@ -1439,10 +1531,10 @@ begin
           (FunctionKey = EscapeKey);
 
         if FunctionKey = EscapeKey then
-        begin
-            //          RemoveAndRestorePreviousWindow;
-          Exit;
-        end;
+           begin
+           //          RemoveAndRestorePreviousWindow;
+         Exit;
+           end;
 
         //        SaveSetAndClearActiveWindow(QuickCommandWindow);
 
@@ -1450,434 +1542,450 @@ begin
           '1':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ',
-                  CorrectedCallMessage,
-                  True,
-                  False);
+                 begin
+                 TempString                                  := LineInput('Msg = ',
+                   CorrectedCallMessage,
+                   True,
+                   False);
 
-                if TempString <> EscapeKey then
-                begin
-                  CorrectedCallMessage                      := TempString;
-                  AppendConfigFile('CALL OK NOW MESSAGE = ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    CorrectedCallPhoneMessage,
-                    True,
-                    True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 if TempString <> EscapeKey then
                     begin
-                          {                      case TempString[2] of
+                    CorrectedCallMessage                      := TempString;
+                    AppendConfigFile('CALL OK NOW MESSAGE = ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     CorrectedCallPhoneMessage,
+                     True,
+                     True);
+
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
+                        {                      case TempString[2] of
                                                   AltW: DVPRecordMessage(CorrectedCallPhoneMessage, False);
                                                   AltR: DVPListenMessage(CorrectedCallPhoneMessage, true);
                                                 end;
                                               }
-                    end
-                    else
-                        //                    if ActiveDVKPort <> NoPort then
-                      //                        case TempString[2] of
-                      //                          AltW: DVKRecordMessage(CorrectedCallPhoneMessage);
-                      //                          AltR: DVKListenMessage(CorrectedCallPhoneMessage);
-                      //                        end;
+                        end
+                     else
+                         //                    if ActiveDVKPort <> NoPort then
+                       //                        case TempString[2] of
+                       //                          AltW: DVKRecordMessage(CorrectedCallPhoneMessage);
+                       //                          AltR: DVKListenMessage(CorrectedCallPhoneMessage);
+                       //                        end;
 
-                until (TempString[1] <> NullKey);
+                 until (TempString[1] <> NullKey);
 
-                if TempString <> EscapeKey then
-                begin
-                  CorrectedCallPhoneMessage                 := TempString;
-                  AppendConfigFile('CALL OK NOW SSB MESSAGE = ' + TempString);
-                end;
-              end;
+                 if TempString <> EscapeKey then
+                    begin
+                    CorrectedCallPhoneMessage                 := TempString;
+                    AppendConfigFile('CALL OK NOW SSB MESSAGE = ' + TempString);
+                    end;
+                 end;
             end;
 
           '2':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ', CQExchange, True, False);
-                if TempString <> EscapeKey then
-                begin
-                  CQExchange                                := TempString;
-                  AppendConfigFile('CQ EXCHANGE = ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    CQPhoneExchange,
-                    True,
-                    True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 begin
+                 TempString                                  := LineInput('Msg = ', CQExchange, True, False);
+                 if TempString <> EscapeKey then
                     begin
-                      case TempString[2] of
-                        AltW: DVPRecordMessage(CQPhoneExchange, False);
-                        AltR: DVPListenMessage(CQPhoneExchange, True);
-                      end;
-                    end
-                    else
-                      if ActiveDVKPort <> NoPort then
+                    CQExchange                                := TempString;
+                    AppendConfigFile('CQ EXCHANGE = ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     CQPhoneExchange,
+                     True,
+                     True);
+
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
                         case TempString[2] of
-                          AltW: DVKRecordMessage(CQPhoneExchange);
-                          AltR: DVKLIstenMessage(CQPhoneExchange);
+                          AltW: DVPRecordMessage(CQPhoneExchange, False);
+                          AltR: DVPListenMessage(CQPhoneExchange, True);
                         end;
+                        end
+                     else
+                       if ActiveDVKPort <> NoPort then
+                          begin
+                          case TempString[2] of
+                            AltW: DVKRecordMessage(CQPhoneExchange);
+                            AltR: DVKLIstenMessage(CQPhoneExchange);
+                          end;
+                          end;
 
-                until (TempString[1] <> NullKey);
+                 until (TempString[1] <> NullKey);
 
-                if TempString <> EscapeKey then
-                begin
-                  CQPhoneExchange                           := TempString;
-                  AppendConfigFile('CQ SSB EXCHANGE = ' + TempString);
-                end;
-              end;
+                 if TempString <> EscapeKey then
+                    begin
+                    CQPhoneExchange                           := TempString;
+                    AppendConfigFile('CQ SSB EXCHANGE = ' + TempString);
+                    end;
+                 end;
             end;
 
           '3':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ', CQExchangeNameKnown, True, False);
-                if TempString <> EscapeKey then
-                begin
-                  CQExchangeNameKnown                       := TempString;
-                  AppendConfigFile('CQ EXCHANGE NAME KNOWN = ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    CQPhoneExchangeNameKnown,
-                    True,
-                    True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 begin
+                 TempString                                  := LineInput('Msg = ', CQExchangeNameKnown, True, False);
+                 if TempString <> EscapeKey then
                     begin
-                      case TempString[2] of
-                        AltW: DVPRecordMessage(CQPhoneExchangeNameKnown, False);
-                        AltR: DVPListenMessage(CQPhoneExchangeNameKnown, True);
-                      end;
-                    end
-                    else
-                      if ActiveDVKPort <> NoPort then
-                        case TempString[2] of
-                          AltW: DVKRecordMessage(CQPhoneExchangeNameKnown);
-                          AltR: DVKLIstenMessage(CQPhoneExchangeNameKnown);
-                        end;
-                until (TempString[1] <> NullKey);
+                    CQExchangeNameKnown                       := TempString;
+                    AppendConfigFile('CQ EXCHANGE NAME KNOWN = ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     CQPhoneExchangeNameKnown,
+                     True,
+                     True);
 
-                if TempString <> EscapeKey then
-                begin
-                  CQPhoneExchangeNameKnown                  := TempString;
-                  AppendConfigFile('CQ SSB EXCHANGE NAME KNOWN = ' + TempString);
-                end;
-              end;
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
+                        case TempString[2] of
+                          AltW: DVPRecordMessage(CQPhoneExchangeNameKnown, False);
+                          AltR: DVPListenMessage(CQPhoneExchangeNameKnown, True);
+                        end;
+                        end
+                     else
+                       if ActiveDVKPort <> NoPort then
+                          begin
+                          case TempString[2] of
+                            AltW: DVKRecordMessage(CQPhoneExchangeNameKnown);
+                            AltR: DVKLIstenMessage(CQPhoneExchangeNameKnown);
+                          end;
+                          end;
+                 until (TempString[1] <> NullKey);
+
+                 if TempString <> EscapeKey then
+                    begin
+                    CQPhoneExchangeNameKnown                  := TempString;
+                    AppendConfigFile('CQ SSB EXCHANGE NAME KNOWN = ' + TempString);
+                    end;
+                 end;
             end;
 
           '4':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ', QSLMessage, True, False);
-                if TempString <> EscapeKey then
-                begin
-                  QSLMessage                                := TempString;
-                  AppendConfigFile('QSL MESSAGE = ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    QSLPhoneMessage,
-                    True, True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 begin
+                 TempString                                  := LineInput('Msg = ', QSLMessage, True, False);
+                 if TempString <> EscapeKey then
                     begin
-                      case TempString[2] of
-                        AltW: DVPRecordMessage(QSLPhoneMessage, False);
-                        AltR: DVPListenMessage(QSLPhoneMessage, True);
-                      end;
-                    end
-                    else
-                      if ActiveDVKPort <> NoPort then
-                        case TempString[2] of
-                          AltW: DVKRecordMessage(QSLPhoneMessage);
-                          AltR: DVKLIstenMessage(QSLPhoneMessage);
-                        end;
-                until (TempString[1] <> NullKey);
+                    QSLMessage                                := TempString;
+                    AppendConfigFile('QSL MESSAGE = ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     QSLPhoneMessage,
+                     True, True);
 
-                if TempString <> EscapeKey then
-                begin
-                  QSLPhoneMessage                           := TempString;
-                  AppendConfigFile('QSL SSB MESSAGE = ' + TempString);
-                end;
-              end;
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
+                        case TempString[2] of
+                          AltW: DVPRecordMessage(QSLPhoneMessage, False);
+                          AltR: DVPListenMessage(QSLPhoneMessage, True);
+                        end;
+                        end
+                     else
+                       if ActiveDVKPort <> NoPort then
+                          begin
+                          case TempString[2] of
+                            AltW: DVKRecordMessage(QSLPhoneMessage);
+                            AltR: DVKLIstenMessage(QSLPhoneMessage);
+                          end;
+                          end;
+                 until (TempString[1] <> NullKey);
+
+                 if TempString <> EscapeKey then
+                    begin
+                    QSLPhoneMessage                           := TempString;
+                    AppendConfigFile('QSL SSB MESSAGE = ' + TempString);
+                    end;
+                 end;
             end;
 
           '5':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ', QSOBeforeMessage, True, False);
-                if TempString <> EscapeKey then
-                begin
-                  QSOBeforeMessage                          := TempString;
-                  AppendConfigFile('QSO BEFORE MESSAGE = ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    QSOBeforePhoneMessage,
-                    True, True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 begin
+                 TempString                                  := LineInput('Msg = ', QSOBeforeMessage, True, False);
+                 if TempString <> EscapeKey then
                     begin
-                      case TempString[2] of
-                        AltW: DVPRecordMessage(QSOBeforePhoneMessage, False);
-                        AltR: DVPListenMessage(QSOBeforePhoneMessage, True);
-                      end;
-                    end
-                    else
-                      if ActiveDVKPort <> NoPort then
-                        case TempString[2] of
-                          AltW: DVKRecordMessage(QSOBeforePhoneMessage);
-                          AltR: DVKLIstenMessage(QSOBeforePhoneMessage);
-                        end;
-                until (TempString[1] <> NullKey);
+                    QSOBeforeMessage                          := TempString;
+                    AppendConfigFile('QSO BEFORE MESSAGE = ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     QSOBeforePhoneMessage,
+                     True, True);
 
-                if TempString <> EscapeKey then
-                begin
-                  QSOBeforePhoneMessage                     := TempString;
-                  AppendConfigFile('QSO BEFORE SSB MESSAGE = ' + TempString);
-                end;
-              end;
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
+                        case TempString[2] of
+                          AltW: DVPRecordMessage(QSOBeforePhoneMessage, False);
+                          AltR: DVPListenMessage(QSOBeforePhoneMessage, True);
+                        end;
+                        end
+                     else
+                       if ActiveDVKPort <> NoPort then
+                          begin
+                          case TempString[2] of
+                            AltW: DVKRecordMessage(QSOBeforePhoneMessage);
+                            AltR: DVKLIstenMessage(QSOBeforePhoneMessage);
+                          end;
+                          end;
+                 until (TempString[1] <> NullKey);
+
+                 if TempString <> EscapeKey then
+                    begin
+                    QSOBeforePhoneMessage                     := TempString;
+                    AppendConfigFile('QSO BEFORE SSB MESSAGE = ' + TempString);
+                    end;
+                 end;
             end;
 
           '6':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ', QuickQSLMessage1, True, False);
-                if TempString <> EscapeKey then
-                begin
-                  QuickQSLMessage1                          := TempString;
-                  AppendConfigFile('QUICK QSL MESSAGE= ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    QuickQSLPhoneMessage,
-                    True, True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 begin
+                 TempString                                  := LineInput('Msg = ', QuickQSLMessage1, True, False);
+                 if TempString <> EscapeKey then
                     begin
-                      case TempString[2] of
-                        AltW: DVPRecordMessage(QuickQSLPhoneMessage, False);
-                        AltR: DVPListenMessage(QuickQSLPhoneMessage, True);
-                      end;
-                    end
-                    else
-                      if ActiveDVKPort <> NoPort then
-                        case TempString[2] of
-                          AltW: DVKRecordMessage(QuickQSLPhoneMessage);
-                          AltR: DVKLIstenMessage(QuickQSLPhoneMessage);
-                        end;
-                until (TempString[1] <> NullKey);
+                    QuickQSLMessage1                          := TempString;
+                    AppendConfigFile('QUICK QSL MESSAGE= ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     QuickQSLPhoneMessage,
+                     True, True);
 
-                if TempString <> EscapeKey then
-                begin
-                  QuickQSLPhoneMessage                      := TempString;
-                  AppendConfigFile('QUICK QSL SSB MESSAGE = ' + TempString);
-                end;
-              end;
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
+                        case TempString[2] of
+                          AltW: DVPRecordMessage(QuickQSLPhoneMessage, False);
+                          AltR: DVPListenMessage(QuickQSLPhoneMessage, True);
+                        end;
+                        end
+                     else
+                       if ActiveDVKPort <> NoPort then
+                          begin
+                          case TempString[2] of
+                            AltW: DVKRecordMessage(QuickQSLPhoneMessage);
+                            AltR: DVKLIstenMessage(QuickQSLPhoneMessage);
+                          end;
+                          end;
+                 until (TempString[1] <> NullKey);
+
+                 if TempString <> EscapeKey then
+                    begin
+                    QuickQSLPhoneMessage                      := TempString;
+                    AppendConfigFile('QUICK QSL SSB MESSAGE = ' + TempString);
+                    end;
+                 end;
             end;
 
           '7':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ', RepeatSearchAndPounceExchange, True, False);
-                if TempString <> EscapeKey then
-                begin
-                  RepeatSearchAndPounceExchange             := TempString;
-                  AppendConfigFile('REPEAT S&P EXCHANGE = ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    RepeatSearchAndPouncePhoneExchange,
-                    True, True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 begin
+                 TempString                                  := LineInput('Msg = ', RepeatSearchAndPounceExchange, True, False);
+                 if TempString <> EscapeKey then
                     begin
-                      case TempString[2] of
-                        AltW: DVPRecordMessage(RepeatSearchAndPouncePhoneExchange, False);
-                        AltR: DVPListenMessage(RepeatSearchAndPouncePhoneExchange, True);
-                      end;
-                    end
-                    else
-                      if ActiveDVKPort <> NoPort then
-                        case TempString[2] of
-                          AltW: DVKRecordMessage(RepeatSearchAndPouncePhoneExchange);
-                          AltR: DVKLIstenMessage(RepeatSearchAndPouncePhoneExchange);
-                        end;
-                until (TempString[1] <> NullKey);
+                    RepeatSearchAndPounceExchange             := TempString;
+                    AppendConfigFile('REPEAT S&P EXCHANGE = ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     RepeatSearchAndPouncePhoneExchange,
+                     True, True);
 
-                if TempString <> EscapeKey then
-                begin
-                  RepeatSearchAndPouncePhoneExchange        := TempString;
-                  AppendConfigFile('REPEAT S&P SSB EXCHANGE = ' + TempString);
-                end;
-              end;
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
+                        case TempString[2] of
+                          AltW: DVPRecordMessage(RepeatSearchAndPouncePhoneExchange, False);
+                          AltR: DVPListenMessage(RepeatSearchAndPouncePhoneExchange, True);
+                        end;
+                        end
+                     else
+                       if ActiveDVKPort <> NoPort then
+                          begin
+                          case TempString[2] of
+                            AltW: DVKRecordMessage(RepeatSearchAndPouncePhoneExchange);
+                            AltR: DVKLIstenMessage(RepeatSearchAndPouncePhoneExchange);
+                          end;
+                          end;
+                 until (TempString[1] <> NullKey);
+
+                 if TempString <> EscapeKey then
+                    begin
+                    RepeatSearchAndPouncePhoneExchange        := TempString;
+                    AppendConfigFile('REPEAT S&P SSB EXCHANGE = ' + TempString);
+                    end;
+                 end;
             end;
 
           '8':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ', SearchAndPounceExchange, True, False);
-                if TempString <> EscapeKey then
-                begin
-                  SearchAndPounceExchange                   := TempString;
-                  AppendConfigFile('S&P EXCHANGE = ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    SearchAndPouncePhoneExchange,
-                    True, True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 begin
+                 TempString                                  := LineInput('Msg = ', SearchAndPounceExchange, True, False);
+                 if TempString <> EscapeKey then
                     begin
-                      case TempString[2] of
-                        AltW: DVPRecordMessage(SearchAndPouncePhoneExchange, False);
-                        AltR: DVPListenMessage(SearchAndPouncePhoneExchange, True);
-                      end;
-                    end
-                    else
-                      if ActiveDVKPort <> NoPort then
-                        case TempString[2] of
-                          AltW: DVKRecordMessage(SearchAndPouncePhoneExchange);
-                          AltR: DVKLIstenMessage(SearchAndPouncePhoneExchange);
-                        end;
-                until (TempString[1] <> NullKey);
+                    SearchAndPounceExchange                   := TempString;
+                    AppendConfigFile('S&P EXCHANGE = ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     SearchAndPouncePhoneExchange,
+                     True, True);
 
-                if TempString <> EscapeKey then
-                begin
-                  SearchAndPouncePhoneExchange              := TempString;
-                  AppendConfigFile('S&P SSB EXCHANGE = ' + TempString);
-                end;
-              end;
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
+                        case TempString[2] of
+                          AltW: DVPRecordMessage(SearchAndPouncePhoneExchange, False);
+                          AltR: DVPListenMessage(SearchAndPouncePhoneExchange, True);
+                        end;
+                        end
+                     else
+                       if ActiveDVKPort <> NoPort then
+                          begin
+                          case TempString[2] of
+                            AltW: DVKRecordMessage(SearchAndPouncePhoneExchange);
+                            AltR: DVKLIstenMessage(SearchAndPouncePhoneExchange);
+                          end;
+                          end;
+                 until (TempString[1] <> NullKey);
+
+                 if TempString <> EscapeKey then
+                    begin
+                    SearchAndPouncePhoneExchange              := TempString;
+                    AppendConfigFile('S&P SSB EXCHANGE = ' + TempString);
+                    end;
+                 end;
             end;
 
           '9':
             begin
               if ActiveMode <> Phone then
-              begin
-                TempString                                  := LineInput('Msg = ', TailEndMessage, True, False);
-                if TempString <> EscapeKey then
-                begin
-                  TailEndMessage                            := TempString;
-                  AppendConfigFile('TAIL END MESSAGE = ' + TempString);
-                end;
-              end
-              else
-              begin
-                repeat
-                  TempString                                := LineInput('Msg = ',
-                    TailEndPhoneMessage,
-                    True, True);
-
-                  if TempString[1] = NullKey then
-                    if DVKEnable then
+                 begin
+                 TempString                                  := LineInput('Msg = ', TailEndMessage, True, False);
+                 if TempString <> EscapeKey then
                     begin
-                      case TempString[2] of
-                        AltW: DVPRecordMessage(TailEndPhoneMessage, False);
-                        AltR: DVPListenMessage(TailEndPhoneMessage, True);
-                      end;
-                    end
-                    else
-                      if ActiveDVKPort <> NoPort then
-                        case TempString[2] of
-                          AltW: DVKRecordMessage(TailEndPhoneMessage);
-                          AltR: DVKLIstenMessage(TailEndPhoneMessage);
-                        end;
-                until (TempString[1] <> NullKey);
+                    TailEndMessage                            := TempString;
+                    AppendConfigFile('TAIL END MESSAGE = ' + TempString);
+                    end;
+                 end
+              else
+                 begin
+                 repeat
+                   TempString                                := LineInput('Msg = ',
+                     TailEndPhoneMessage,
+                     True, True);
 
-                if TempString <> EscapeKey then
-                begin
-                  TailEndPhoneMessage                       := TempString;
-                  AppendConfigFile('TAIL END SSB MESSAGE = ' + TempString);
-                end;
-              end;
+                   if TempString[1] = NullKey then
+                     if DVKEnable then
+                        begin
+                        case TempString[2] of
+                          AltW: DVPRecordMessage(TailEndPhoneMessage, False);
+                          AltR: DVPListenMessage(TailEndPhoneMessage, True);
+                        end;
+                        end
+                     else
+                       if ActiveDVKPort <> NoPort then
+                          begin
+                          case TempString[2] of
+                            AltW: DVKRecordMessage(TailEndPhoneMessage);
+                            AltR: DVKLIstenMessage(TailEndPhoneMessage);
+                          end;
+                          end;
+                 until (TempString[1] <> NullKey);
+
+                 if TempString <> EscapeKey then
+                    begin
+                    TailEndPhoneMessage                       := TempString;
+                    AppendConfigFile('TAIL END SSB MESSAGE = ' + TempString);
+                    end;
+                 end;
             end;
 
           'A':
             if ActiveMode <> Phone then
-            begin
-              TempString                                    := LineInput('Enter character for short zeros : ', '', True, False);
-              if (TempString <> EscapeKey) and (TempString <> '') then
-              begin
-                Short0                                      := TempString[1];
-                AppendConfigFile('SHORT 0 = ' + Short0);
-              end;
-            end;
+               begin
+               TempString                                    := LineInput('Enter character for short zeros : ', '', True, False);
+               if (TempString <> EscapeKey) and (TempString <> '') then
+                  begin
+                  Short0                                      := TempString[1];
+                  AppendConfigFile('SHORT 0 = ' + Short0);
+                  end;
+               end;
 
           'B':
             if ActiveMode <> Phone then
-            begin
-              TempString                                    := LineInput('Enter character for short ones : ', '', True, False);
-              if (TempString <> EscapeKey) and (TempString <> '') then
-              begin
-                Short1                                      := TempString[1];
-                AppendConfigFile('SHORT 1 = ' + Short1);
-              end;
-            end;
+               begin
+               TempString                                    := LineInput('Enter character for short ones : ', '', True, False);
+               if (TempString <> EscapeKey) and (TempString <> '') then
+                  begin
+                  Short1                                      := TempString[1];
+                  AppendConfigFile('SHORT 1 = ' + Short1);
+                  end;
+               end;
 
           'C':
             if ActiveMode <> Phone then
-            begin
-              TempString                                    := LineInput('Enter character for short twos : ', '', True, False);
-              if (TempString <> EscapeKey) and (TempString <> '') then
-              begin
-                Short2                                      := TempString[1];
-                AppendConfigFile('SHORT 2 = ' + Short2);
-              end;
-            end;
+               begin
+               TempString                                    := LineInput('Enter character for short twos : ', '', True, False);
+               if (TempString <> EscapeKey) and (TempString <> '') then
+                  begin
+                  Short2                                      := TempString[1];
+                  AppendConfigFile('SHORT 2 = ' + Short2);
+                  end;
+               end;
 
           'D':
             if ActiveMode <> Phone then
-            begin
-              TempString                                    := LineInput('Enter character for short nines : ', '', True, False);
-              if (TempString <> EscapeKey) and (TempString <> '') then
-              begin
-                Short9                                      := TempString[1];
-                AppendConfigFile('SHORT 9 = ' + Short9);
-              end;
-            end;
+               begin
+               TempString                                    := LineInput('Enter character for short nines : ', '', True, False);
+               if (TempString <> EscapeKey) and (TempString <> '') then
+                  begin
+                  Short9                                      := TempString[1];
+                  AppendConfigFile('SHORT 9 = ' + Short9);
+                  end;
+               end;
 
         end; { of case }
 
@@ -1893,12 +2001,17 @@ function GetCQMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 
 begin
   {Mode                                                     := ActiveMode;}{KK1L: 6.73 Removed}
 
-  if Mode = Digital then Mode                               := CW;
+  if Mode = Digital then
+     begin
+     Mode                               := CW;
+     end;
 
   GetCQMemoryString                                         := '';
   if Mode < Both then
      if CQMemory[Mode, Key] <> nil then
-      GetCQMemoryString                                     := CQMemory[Mode, Key]^;
+        begin
+        GetCQMemoryString                                     := CQMemory[Mode, Key]^;
+        end;
 
     
 end;
@@ -1910,20 +2023,33 @@ function GetEXMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 
 begin
   {Mode                                                     := ActiveMode;}{KK1L: 6.73 Removed}
 
-  if Mode = Digital then Mode                               := CW;
+  if Mode = Digital then
+     begin
+     Mode                               := CW;
+     end;
 
   if EXMemory[Mode, Key] <> nil then
-    GetEXMemoryString                                       := EXMemory[Mode, Key]^
+     begin
+     GetEXMemoryString                                       := EXMemory[Mode, Key]^
+     end
   else
-    GetEXMemoryString                                       := ''
+     begin
+     GetEXMemoryString                                       := ''
+     end
 end;
 
 procedure SetCQCaptionMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString);
 
 begin
-  if Mode = Digital then Mode                               := CW;
+  if Mode = Digital then
+     begin
+     Mode                               := CW;
+     end;
 
-  if CQCaptionMemory[Mode, Key] = nil then New(CQCaptionMemory[Mode, Key]);
+  if CQCaptionMemory[Mode, Key] = nil then
+     begin
+     New(CQCaptionMemory[Mode, Key]);
+     end;
   CQCaptionMemory[Mode, Key]^                               := MemoryString;
   CQCaptionMemory[Mode, Key]^[length(MemoryString) + 1]     := #0;
 end;
@@ -1931,8 +2057,14 @@ end;
 procedure SetEXCaptionMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString);
 
 begin
-  if Mode = Digital then Mode                               := CW;
-  if EXCaptionMemory[Mode, Key] = nil then New(EXCaptionMemory[Mode, Key]);
+  if Mode = Digital then
+     begin
+     Mode                               := CW;
+     end;
+  if EXCaptionMemory[Mode, Key] = nil then
+     begin
+     New(EXCaptionMemory[Mode, Key]);
+     end;
   EXCaptionMemory[Mode, Key]^                               := MemoryString;
   EXCaptionMemory[Mode, Key]^[length(MemoryString) + 1]     := #0;
 end;
@@ -1940,9 +2072,15 @@ end;
 procedure SetCQMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString {Str80});
 
 begin
-  if Mode = Digital then Mode                               := CW;
+  if Mode = Digital then
+     begin
+     Mode                               := CW;
+     end;
 
-  if CQMemory[Mode, Key] = nil then New(CQMemory[Mode, Key]);
+  if CQMemory[Mode, Key] = nil then
+     begin
+     New(CQMemory[Mode, Key]);
+     end;
   {KK1L: 6.72 NOTE This is where I should interpret the string just as if it were being read from LOGCFG.DAT}
   SniffOutControlCharacters(MemoryString); {KK1L: 6.72}
   CQMemory[Mode, Key]^                                      := MemoryString;
@@ -1952,9 +2090,15 @@ end;
 procedure SetEXMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString {Str80});
 
 begin
-  if Mode = Digital then Mode                               := CW;
+  if Mode = Digital then
+     begin
+     Mode                               := CW;
+     end;
 
-  if EXMemory[Mode, Key] = nil then New(EXMemory[Mode, Key]);
+  if EXMemory[Mode, Key] = nil then
+     begin
+     New(EXMemory[Mode, Key]);
+     end;
   {KK1L: 6.72 NOTE This is where I should interpret the string just as if it were being read from LOGCFG.DAT}
   SniffOutControlCharacters(MemoryString); {KK1L: 6.72}
   EXMemory[Mode, Key]^                                      := MemoryString;
@@ -2000,60 +2144,60 @@ begin
       end;
   }
   if ActiveRadio = RadioOne then
-  begin
-    if not SendingOnRadioOne then
-    begin
-      FlushCWBufferAndClearPTT('LogCW: SetUpToSendOn*Radio - clear CW on the radio being left');
-//      ActiveKeyerPort                                     := Radio1.tKeyerPort;
-//      tActiveKeyerHandle                                  := Radio1.tKeyerPortHandle;
-      SerialInvert                                          := Radio1SerialInvert;
-          {CodeSpeed                                        := RadioOneSpeed;}
-      if not Radio1.CWSpeedSync then     // ny4i: radio is master → don't push speed back
-         begin
-         CodeSpeed := Radio1.SpeedMemory; {KK1L: 6.73}
-         SetSpeed(CodeSpeed);
-         end
-      else
-         begin
-         CodeSpeed := Radio1.SpeedMemory; {KK1L: 6.73}
-         end;
-          {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioOne] for split mode SO2R}
-          {KK1L: 6.72 Moved this to SendCrypticMessage to only handle CTRL-A requests      }
-          {           SwapRadios is run prior to coming here for SO2R and that hoses things}
-          {ActiveMode                                       := ModeMemory [RadioOne]; {KK1L: 6.71 for split mode SO2R}
-      SendingOnRadioOne                                     := True;
-      SendingOnRadioTwo                                     := False;
-      SetRelayForActiveRadio(ActiveRadio);
-    end;
-  end
+     begin
+     if not SendingOnRadioOne then
+        begin
+        FlushCWBufferAndClearPTT('LogCW: SetUpToSendOn*Radio - clear CW on the radio being left');
+  //      ActiveKeyerPort                                     := Radio1.tKeyerPort;
+  //      tActiveKeyerHandle                                  := Radio1.tKeyerPortHandle;
+        SerialInvert                                          := Radio1SerialInvert;
+            {CodeSpeed                                        := RadioOneSpeed;}
+        if not Radio1.CWSpeedSync then     // ny4i: radio is master → don't push speed back
+           begin
+           CodeSpeed := Radio1.SpeedMemory; {KK1L: 6.73}
+           SetSpeed(CodeSpeed);
+           end
+        else
+           begin
+           CodeSpeed := Radio1.SpeedMemory; {KK1L: 6.73}
+           end;
+            {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioOne] for split mode SO2R}
+            {KK1L: 6.72 Moved this to SendCrypticMessage to only handle CTRL-A requests      }
+            {           SwapRadios is run prior to coming here for SO2R and that hoses things}
+            {ActiveMode                                       := ModeMemory [RadioOne]; {KK1L: 6.71 for split mode SO2R}
+        SendingOnRadioOne                                     := True;
+        SendingOnRadioTwo                                     := False;
+        SetRelayForActiveRadio(ActiveRadio);
+        end;
+     end
 
   else { Radio Two }
 
     if not SendingOnRadioTwo then
-    begin
-      FlushCWBufferAndClearPTT('LogCW: SetUpToSendOn*Radio - clear CW on the radio being left');
+       begin
+       FlushCWBufferAndClearPTT('LogCW: SetUpToSendOn*Radio - clear CW on the radio being left');
 
-//      ActiveKeyerPort                                     := Radio2.tKeyerPort;
-//      tActiveKeyerHandle                                  := Radio2.tKeyerPortHandle;
-      SerialInvert                                          := Radio2SerialInvert;
-        {CodeSpeed                                          := RadioTwoSpeed;}
-      if not Radio2.CWSpeedSync then     // ny4i: radio is master → don't push speed back
-         begin
-         CodeSpeed := Radio2.SpeedMemory; {KK1L: 6.73}
-         SetSpeed(CodeSpeed);
-         end
-      else
-         begin
-         CodeSpeed := Radio2.SpeedMemory; {KK1L: 6.73}
-         end;
-        {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioTwo] for split mode SO2R}
-        {KK1L: 6.72 Moved this to SendCrypticMessage to only handle CTRL-A requests      }
-        {           SwapRadios is run prior to coming here for SO2R and that hoses things}
-        {ActiveMode                                         := ModeMemory [RadioTwo]; {KK1L: 6.71 for split mode SO2R}
-      SendingOnRadioOne                                     := False;
-      SendingOnRadioTwo                                     := True;
-      SetRelayForActiveRadio(ActiveRadio);
-    end;
+ //      ActiveKeyerPort                                     := Radio2.tKeyerPort;
+ //      tActiveKeyerHandle                                  := Radio2.tKeyerPortHandle;
+       SerialInvert                                          := Radio2SerialInvert;
+         {CodeSpeed                                          := RadioTwoSpeed;}
+       if not Radio2.CWSpeedSync then     // ny4i: radio is master → don't push speed back
+          begin
+          CodeSpeed := Radio2.SpeedMemory; {KK1L: 6.73}
+          SetSpeed(CodeSpeed);
+          end
+       else
+          begin
+          CodeSpeed := Radio2.SpeedMemory; {KK1L: 6.73}
+          end;
+         {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioTwo] for split mode SO2R}
+         {KK1L: 6.72 Moved this to SendCrypticMessage to only handle CTRL-A requests      }
+         {           SwapRadios is run prior to coming here for SO2R and that hoses things}
+         {ActiveMode                                         := ModeMemory [RadioTwo]; {KK1L: 6.71 for split mode SO2R}
+       SendingOnRadioOne                                     := False;
+       SendingOnRadioTwo                                     := True;
+       SetRelayForActiveRadio(ActiveRadio);
+       end;
     // If this line really wantsa to send F1 upon if CWByCat, it would beed to call IsActiveCWByCAT
     // but as this code is called in other places, I do not believe this is the right thing to do.
     // ny4i
@@ -2091,41 +2235,41 @@ begin
   end;
 }
   if ActiveRadio = RadioOne then
-  begin
-    if not SendingOnRadioTwo then
-    begin
-      FlushCWBufferAndClearPTT('LogCW: SetUpToSendOnInactiveRadio - clear CW on the active radio');
-//      ActiveKeyerPort                                     := Radio2.tKeyerPort;
-//      tActiveKeyerHandle                                  := Radio2.tKeyerPortHandle;
-      SerialInvert                                          := Radio2SerialInvert;
-          {CodeSpeed                                        := RadioTwoSpeed;}
-      CodeSpeed                                             := Radio2.SpeedMemory; {KK1L: 6.73}
-      SetSpeed(CodeSpeed);
-      SetRelayForActiveRadio(RadioTwo);
-          {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioTwo] for split mode SO2R}
-          {ActiveMode                                       := ModeMemory [RadioTwo]; {KK1L: 6.71 for split mode SO2R}
-      SendingOnRadioOne                                     := False;
-      SendingOnRadioTwo                                     := True;
-    end;
-  end
+     begin
+     if not SendingOnRadioTwo then
+        begin
+        FlushCWBufferAndClearPTT('LogCW: SetUpToSendOnInactiveRadio - clear CW on the active radio');
+  //      ActiveKeyerPort                                     := Radio2.tKeyerPort;
+  //      tActiveKeyerHandle                                  := Radio2.tKeyerPortHandle;
+        SerialInvert                                          := Radio2SerialInvert;
+            {CodeSpeed                                        := RadioTwoSpeed;}
+        CodeSpeed                                             := Radio2.SpeedMemory; {KK1L: 6.73}
+        SetSpeed(CodeSpeed);
+        SetRelayForActiveRadio(RadioTwo);
+            {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioTwo] for split mode SO2R}
+            {ActiveMode                                       := ModeMemory [RadioTwo]; {KK1L: 6.71 for split mode SO2R}
+        SendingOnRadioOne                                     := False;
+        SendingOnRadioTwo                                     := True;
+        end;
+     end
 
   else { Active radio = radio two }
 
     if not SendingOnRadioOne then
-    begin
-      FlushCWBufferAndClearPTT('LogCW: SetUpToSendOnInactiveRadio - clear CW on the active radio');
-//      ActiveKeyerPort                                     := Radio1.tKeyerPort;
-//      tActiveKeyerHandle                                  := Radio1.tKeyerPortHandle;
-      SerialInvert                                          := Radio1SerialInvert;
-        {CodeSpeed                                          := RadioOneSpeed;}
-      CodeSpeed                                             := Radio1.SpeedMemory; {KK1L: 6.73}
-      SetSpeed(CodeSpeed);
-      SetRelayForActiveRadio(RadioOne);
-        {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioOne] for split mode SO2R}
-        {ActiveMode                                         := ModeMemory [RadioOne]; {KK1L: 6.71 for split mode SO2R}
-      SendingOnRadioOne                                     := True;
-      SendingOnRadioTwo                                     := False;
-    end;
+       begin
+       FlushCWBufferAndClearPTT('LogCW: SetUpToSendOnInactiveRadio - clear CW on the active radio');
+ //      ActiveKeyerPort                                     := Radio1.tKeyerPort;
+ //      tActiveKeyerHandle                                  := Radio1.tKeyerPortHandle;
+       SerialInvert                                          := Radio1SerialInvert;
+         {CodeSpeed                                          := RadioOneSpeed;}
+       CodeSpeed                                             := Radio1.SpeedMemory; {KK1L: 6.73}
+       SetSpeed(CodeSpeed);
+       SetRelayForActiveRadio(RadioOne);
+         {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioOne] for split mode SO2R}
+         {ActiveMode                                         := ModeMemory [RadioOne]; {KK1L: 6.71 for split mode SO2R}
+       SendingOnRadioOne                                     := True;
+       SendingOnRadioTwo                                     := False;
+       end;
 
   wkSetKeyerOutput(InActiveRadioPtr);
 

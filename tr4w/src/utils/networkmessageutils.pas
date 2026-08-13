@@ -119,11 +119,14 @@ var
 begin
   Unpack(AData,index,length);
   if length <> LongInt($ffffffff) then
-  begin
-    AString := BytesToString(AData,index,length,enUtf8);
-    index := index + length;
-  end
-  else AString := '';
+     begin
+     AString := BytesToString(AData,index,length,enUtf8);
+     index := index + length;
+     end
+  else
+     begin
+     AString := '';
+     end;
 end;
 
 procedure Unpack(const AData: TIdBytes; var index: Integer; var AValue: QWord);
@@ -230,9 +233,13 @@ var
    temp: ShortInt;
 begin
   if AFlag then
-  temp := -1
+     begin
+     temp := -1
+     end
   else
-  temp := 0;
+     begin
+     temp := 0;
+     end;
   AppendBytes(AData,ToBytes(temp));
 end;
 

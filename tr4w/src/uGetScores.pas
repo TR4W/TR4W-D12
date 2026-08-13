@@ -113,14 +113,23 @@ begin
 
     WM_COMMAND:
       begin
-        if wParam = 101 then RunPOSTGetScoresThread;
-        if wParam = 106 then OpenUrl(@GetScoresSeverReadingAddress[1]);
+        if wParam = 101 then
+           begin
+           RunPOSTGetScoresThread;
+           end;
+        if wParam = 106 then
+           begin
+           OpenUrl(@GetScoresSeverReadingAddress[1]);
+           end;
 
 {$IFDEF LANG_RUS}
 //        if wParam = 104 then ShowHelp('ru_getscores');
 {$ENDIF}
 
-        if HiWord(wParam) = BN_CLICKED then FrmSetFocus;
+        if HiWord(wParam) = BN_CLICKED then
+           begin
+           FrmSetFocus;
+           end;
       end;
     WM_CLOSE: 1:
       begin
@@ -225,26 +234,26 @@ var
 begin
   p := nil;
   if AnswerLength < 1 then
-  begin
-    p := TC_NOANSWERFROMSERVER;
-    goto 1;
-  end;
+     begin
+     p := TC_NOANSWERFROMSERVER;
+     goto 1;
+     end;
 
   for i := 0 to AnswerLength - 1 - 4 do
     if GetScoresBuffer[i] in [#13, #10] then
-    begin
-      GetScoresBuffer[i] := #0;
-      p := @GetScoresBuffer[13];
-      Break;
-    end;
+       begin
+       GetScoresBuffer[i] := #0;
+       p := @GetScoresBuffer[13];
+       Break;
+       end;
 
   for i := 0 to AnswerLength - 1 - 4 do
-  begin
-//    TempInteger := PInteger(@GetScoresBuffer[i])^;
-//    if TempInteger = $462D4B4F then {OK-F} p := TC_UPLOADEDSUCCESSFULLY;
-//    if TempInteger = $6176614A then {Java} p := TC_UPLOADEDSUCCESSFULLY;
-//    if TempInteger = $4C494146 then {FAIL} p := TC_FAILEDTOLOAD;
-  end;
+     begin
+     //    TempInteger := PInteger(@GetScoresBuffer[i])^;
+     //    if TempInteger = $462D4B4F then {OK-F} p := TC_UPLOADEDSUCCESSFULLY;
+     //    if TempInteger = $6176614A then {Java} p := TC_UPLOADEDSUCCESSFULLY;
+     //    if TempInteger = $4C494146 then {FAIL} p := TC_FAILEDTOLOAD;
+     end;
   1:
   ShowGetScoresStatus(p);
 end;
@@ -293,9 +302,13 @@ var
    begin
    n := GetPrivateProfileStringA(CABRILLOSECTION, Key, nil, buf, SizeOf(buf), TR4W_INI_FILENAME);
    if n = 0 then
+      begin
       Result := ''
+      end
    else
+      begin
       Result := Trim(string(buf));
+      end;
    end;
 
 // Issue #930 -- escape XML special chars so user-entered strings (club name,
@@ -347,9 +360,13 @@ begin
   nQSOs  := 0;
 
   if Length(ContestsArray[Contest].ADIFName) = 0 then
-    sContest := ContestTypeSA[Contest]
+     begin
+     sContest := ContestTypeSA[Contest]
+     end
   else
-    sContest := ContestsArray[Contest].ADIFName;
+     begin
+     sContest := ContestsArray[Contest].ADIFName;
+     end;
 
   // <ops> = MyCall (single-op) -- issue #930.  Multi-op operator-list comes
   // from the Cabrillo summary _OPERATORS in production use; defer until users
@@ -359,7 +376,9 @@ begin
   sClub    := ReadCabrilloSummaryField('_CLUB');
   sOverlay := ReadCabrilloSummaryField('_CATEGORY-OVERLAY');
   if sOverlay = '' then
-    sOverlay := 'N/A';
+     begin
+     sOverlay := 'N/A';
+     end;
 
   Result := AnsiString(Format(
     '<dynamicresults>' +
@@ -374,7 +393,9 @@ begin
      XmlEscape(string(MyCall))]));
 
   if sClub <> '' then
-    Result := Result + AnsiString('<club>' + XmlEscape(sClub) + '</club>');
+     begin
+     Result := Result + AnsiString('<club>' + XmlEscape(sClub) + '</club>');
+     end;
 
   Result := Result + AnsiString(Format(
     '<class ops="%s" mode="%s" power="%s" bands="%s" transmitter="%s" assisted="%s" overlay="%s"></class>',
@@ -406,19 +427,27 @@ begin
   //                    <grid4> when 4 chars; nothing when empty.
   sDXCC    := '';
   if MyCall <> '' then
+     begin
      sDXCC := ctyGetCountryID(MyCall);
+     end;
 
   sSection := Trim(string(MySection));
   if sSection = '' then
+     begin
      sSection := ReadCabrilloSummaryField('_LOCATION');
+     end;
 
   sState := Trim(string(MyState));
   if sState = '' then
+     begin
      sState := ReadCabrilloSummaryField('_ADDRESS-STATE-PROVINCE');
+     end;
 
   sZone := '';
   if MyCall <> '' then
+     begin
      sZone := IntToStr(ctyGetCQZone(MyCall));
+     end;
 
   // Grid: emit <grid6> when MyGrid has the subsquare (6+ chars), <grid4>
   // when only the 4-char square is known.  The New Contest dialog
@@ -430,71 +459,99 @@ begin
 
   qth := '';
   if sDXCC <> '' then
-    qth := qth + '<dxcccountry>' + XmlEscape(string(sDXCC)) + '</dxcccountry>';
+     begin
+     qth := qth + '<dxcccountry>' + XmlEscape(string(sDXCC)) + '</dxcccountry>';
+     end;
   if sZone <> '' then
-    qth := qth + '<cqzone>' + XmlEscape(sZone) + '</cqzone>';
+     begin
+     qth := qth + '<cqzone>' + XmlEscape(sZone) + '</cqzone>';
+     end;
   if MyITUZone > 0 then
-    qth := qth + '<iaruzone>' + IntToStr(MyITUZone) + '</iaruzone>'
+     begin
+     qth := qth + '<iaruzone>' + IntToStr(MyITUZone) + '</iaruzone>'
+     end
   else if MyCall <> '' then
-    qth := qth + '<iaruzone>' + IntToStr(ctyGetITUZone(MyCall)) + '</iaruzone>';
+     begin
+     qth := qth + '<iaruzone>' + IntToStr(ctyGetITUZone(MyCall)) + '</iaruzone>';
+     end;
   if sSection <> '' then
-    qth := qth + '<arrlsection>' + XmlEscape(sSection) + '</arrlsection>';
+     begin
+     qth := qth + '<arrlsection>' + XmlEscape(sSection) + '</arrlsection>';
+     end;
   if sState <> '' then
-    qth := qth + '<stprvoth>' + XmlEscape(sState) + '</stprvoth>';
+     begin
+     qth := qth + '<stprvoth>' + XmlEscape(sState) + '</stprvoth>';
+     end;
   if Length(sGrid4) >= 6 then
-    qth := qth + '<grid6>' +
-      XmlEscape(UpperCase(Copy(sGrid4, 1, 4)) + LowerCase(Copy(sGrid4, 5, 2))) +
-      '</grid6>'
+     begin
+     qth := qth + '<grid6>' +
+       XmlEscape(UpperCase(Copy(sGrid4, 1, 4)) + LowerCase(Copy(sGrid4, 5, 2))) +
+       '</grid6>'
+     end
   else if Length(sGrid4) >= 4 then
-    qth := qth + '<grid4>' + XmlEscape(UpperCase(Copy(sGrid4, 1, 4))) + '</grid4>';
+     begin
+     qth := qth + '<grid4>' + XmlEscape(UpperCase(Copy(sGrid4, 1, 4))) + '</grid4>';
+     end;
   if qth <> '' then
-    Result := Result + AnsiString('<qth>' + qth + '</qth>');
+     begin
+     Result := Result + AnsiString('<qth>' + qth + '</qth>');
+     end;
 
   Result := Result + AnsiString('<breakdown>');
 
   // Per-band/mode <qso> rows + <total>.
   for TempBand := Band160 to AllBands do
-    for TempMode := CW to Phone do
-    begin
-      if QSOTotals[TempBand, TempMode] = 0 then Continue;
+     begin
+     for TempMode := CW to Phone do
+        begin
+        if QSOTotals[TempBand, TempMode] = 0 then Continue;
 
-      if TempBand = AllBands then
-        begin
-        BandStr := 'total';
-        nQSOs   := nTotal;
-        end
-      else
-        begin
-        BandStr := string(BandStringsArrayWithOutSpaces[TempBand]);
-        nQSOs   := QSOTotals[TempBand, TempMode];
-        nTotal  := nTotal + nQSOs;
+        if TempBand = AllBands then
+           begin
+           BandStr := 'total';
+           nQSOs   := nTotal;
+           end
+        else
+           begin
+           BandStr := string(BandStringsArrayWithOutSpaces[TempBand]);
+           nQSOs   := QSOTotals[TempBand, TempMode];
+           nTotal  := nTotal + nQSOs;
+           end;
+
+        Result := Result + AnsiString(Format(
+          '<qso band="%s" mode="%s">%d</qso>',
+          [BandStr, RTCModeStr[TempMode], nQSOs]));
         end;
-
-      Result := Result + AnsiString(Format(
-        '<qso band="%s" mode="%s">%d</qso>',
-        [BandStr, RTCModeStr[TempMode], nQSOs]));
-    end;
+     end;
 
   Result := Result + AnsiString(Format(
     '<qso band="total" mode="ALL">%d</qso>', [nQSOs]));
 
   // Per-band/mode <mult> rows.
   for TempBand := Band160 to AllBands do
-    for TempMode := CW to Both do
-      for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
-      begin
-        if mo.MTotals[TempBand, TempMode, m] = 0 then Continue;
+     begin
+     for TempMode := CW to Both do
+        begin
+        for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
+           begin
+           if mo.MTotals[TempBand, TempMode, m] = 0 then Continue;
 
-        if TempBand = AllBands then
-          BandStr := 'total'
-        else
-          BandStr := string(BandStringsArrayWithOutSpaces[TempBand]);
+           if TempBand = AllBands then
+              begin
+              BandStr := 'total'
+              end
+           else
+              begin
+              BandStr := string(BandStringsArrayWithOutSpaces[TempBand]);
+              end;
 
-        Result := Result + AnsiString(Format(
-          '<mult band="%s" mode="%s" type="%s">%d</mult>',
-          [BandStr, RTCModeStr[TempMode], RTCMultStr[m],
-           mo.MTotals[TempBand, TempMode, m]]));
-      end;
+           Result := Result + AnsiString(Format(
+             '<mult band="%s" mode="%s" type="%s">%d</mult>',
+             [BandStr, RTCModeStr[TempMode], RTCMultStr[m],
+              mo.MTotals[TempBand, TempMode, m]]));
+           end;
+        end;
+     end;
 
   // Per-band <point> totals + grand total -- issue #930.  Mirrors the WRTC
   // UDP emitter in LOGSUBS2 (SendScoreToUDP) which uses QSOPointTotals.
@@ -502,9 +559,13 @@ begin
      begin
      if QSOPointTotals[TempBand, Both] = 0 then Continue;
      if TempBand = AllBands then
+        begin
         BandStr := 'total'
+        end
      else
+        begin
         BandStr := string(BandStringsArrayWithOutSpaces[TempBand]);
+        end;
      Result := Result + AnsiString(Format(
         '<point band="%s" mode="ALL">%d</point>',
         [BandStr, QSOPointTotals[TempBand, Both]]));

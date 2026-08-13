@@ -88,9 +88,15 @@ begin
               SyncMode := True;
               EnableWindowFalse(hwnddlg, 102);
               NewServerLogHandle := CreateFileA(TR4W_SYN_FILENAME, GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
-              if NewServerLogHandle = INVALID_HANDLE_VALUE then goto CloseLabel;
+              if NewServerLogHandle = INVALID_HANDLE_VALUE then
+                 begin
+                 goto CloseLabel;
+                 end;
               logger.Info('Calling tCreateThread from GetServerLogDlgProc');
-              if LogSyncThreadID = 0 then tCreateThread(@RunSyncThread, LogSyncThreadID);
+              if LogSyncThreadID = 0 then
+                 begin
+                 tCreateThread(@RunSyncThread, LogSyncThreadID);
+                 end;
               logger.Info('Created LogSync thread with threadid of %d',[LogSyncThreadID] );
             end;
           103: goto CloseLabel;
@@ -108,7 +114,9 @@ begin
       begin
 
         if NewServerLogHandle <> INVALID_HANDLE_VALUE then
-          CloseHandle(NewServerLogHandle);
+           begin
+           CloseHandle(NewServerLogHandle);
+           end;
         EndDialog(hwnddlg, 0);
       end;
 
@@ -121,20 +129,20 @@ var
   counter                               : Cardinal;
 begin
   for counter := 1 to 1000 do
-  begin
-    TF.Format(TempBuffer2, '%sLOGBACKUP_%03d.TRW', TR4W_LOG_PATH_NAME, counter);
-    if Windows.CopyFileA(TR4W_LOG_FILENAME, TempBuffer2, True) = True then
-    begin
-      TF.Format(TempBuffer2, '%sRSTBACKUP_%03d.RST', TR4W_LOG_PATH_NAME, counter);
-      Windows.CopyFileA(TR4W_RST_FILENAME, TempBuffer2, False);
-      Break;
-    end;
-  end;
+     begin
+     TF.Format(TempBuffer2, '%sLOGBACKUP_%03d.TRW', TR4W_LOG_PATH_NAME, counter);
+     if Windows.CopyFileA(TR4W_LOG_FILENAME, TempBuffer2, True) = True then
+        begin
+        TF.Format(TempBuffer2, '%sRSTBACKUP_%03d.RST', TR4W_LOG_PATH_NAME, counter);
+        Windows.CopyFileA(TR4W_RST_FILENAME, TempBuffer2, False);
+        Break;
+        end;
+     end;
   if Replace then
-  begin
-    Windows.CopyFileA(TR4W_SYN_FILENAME, TR4W_LOG_FILENAME, False);
-    LoadinLog;
-  end;
+     begin
+     Windows.CopyFileA(TR4W_SYN_FILENAME, TR4W_LOG_FILENAME, False);
+     LoadinLog;
+     end;
   SendStationStatus(sstQSOs);
 end;
 
@@ -157,7 +165,10 @@ begin
 
   FirstPacket := True;
 
-  if not GetConnection(LogSyncSocket, @ServerAddress[1], ServerPort + 1, SOCK_STREAM) then goto e;
+  if not GetConnection(LogSyncSocket, @ServerAddress[1], ServerPort + 1, SOCK_STREAM) then
+     begin
+     goto e;
+     end;
 {
   LogSyncSocket :=GetSocket;// socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   tr4w_saddr.sin_addr.S_addr := inet_addr(tgethostbyname(@ServerAddress[1]));
@@ -176,74 +187,95 @@ begin
   1:
   i := WSAWaitForMultipleEvents(1, @tGetNetLogEvent, False, 2000, True);
   if i = 0 then
-  begin
+     begin
 
-    i := recv(LogSyncSocket, SyncNetBuffer, SizeOf(SyncNetBuffer), 0);
-    if i > 0 then
-    begin
-      Offset := 0;
-      if FirstPacket then
-      begin
-        Offset := SizeOf(Cardinal);
-        FirstPacket := False;
-        LogSize := PInteger(@SyncNetBuffer)^;
-       end;
-      sWriteFile(NewServerLogHandle, SyncNetBuffer[Offset], i - Offset);
-      TotalBytes := TotalBytes + i - Offset;
-      if not HeadlessSyncMode then
-        tSetDlgItemIntFalse(GetServerLogWnd, 108, TotalBytes);
-    end;
-    if i <> 0 then
-      goto 1;
-  end;
+     i := recv(LogSyncSocket, SyncNetBuffer, SizeOf(SyncNetBuffer), 0);
+     if i > 0 then
+        begin
+        Offset := 0;
+        if FirstPacket then
+           begin
+           Offset := SizeOf(Cardinal);
+           FirstPacket := False;
+           LogSize := PInteger(@SyncNetBuffer)^;
+           end;
+        sWriteFile(NewServerLogHandle, SyncNetBuffer[Offset], i - Offset);
+        TotalBytes := TotalBytes + i - Offset;
+        if not HeadlessSyncMode then
+           begin
+           tSetDlgItemIntFalse(GetServerLogWnd, 108, TotalBytes);
+           end;
+        end;
+     if i <> 0 then
+        begin
+        goto 1;
+        end;
+     end;
   WSACloseEvent(tGetNetLogEvent);
   closesocket(LogSyncSocket);
 
   if TotalBytes > SizeOfTLogHeader then
-  begin
-    if (LogSize <> TotalBytes) or ((TotalBytes - SizeOfTLogHeader) mod SizeOf(ContestExchange) <> 0) then
-    begin
-      if HeadlessSyncMode then
-        logger.Error('Auto-sync: failed to receive server log (size=%d, expected=%d)', [TotalBytes, LogSize])
-      else
-        showwarning(TC_FAILEDTORECEIVESERVERLOG);
-      goto e;
-    end;
-    if (not HeadlessSyncMode) and showresverlogcontent then
-      SendMessage(ServerLogListView, LVM_SETITEMCOUNT, TotalBytes div SizeOf(ContestExchange), 0);
-    Windows.SetFilePointer(NewServerLogHandle, SizeOfTLogHeader, nil, FILE_BEGIN);
-
-    IndexInServerLogListView := 0;
-    if not HeadlessSyncMode then
-      tSetWindowRedraw(ServerLogListView, False);
-    2:
-    Windows.ReadFile(NewServerLogHandle, TempRXData, SizeOf(ContestExchange), lpNumberOfBytesWritten, nil);
-    if lpNumberOfBytesWritten = SizeOf(ContestExchange) then
-    begin
-      inc(TotalRecords);
-      if ((TempRXData.Band <> NoBand) and
-        (TempRXData.Mode <> NoMode) and
-        (not TempRXData.ceQSO_Deleted)) and
-        (TempRXData.ceQSO_Skiped = False) then inc(TotalQ);
-
-      if not HeadlessSyncMode then
+     begin
+     if (LogSize <> TotalBytes) or ((TotalBytes - SizeOfTLogHeader) mod SizeOf(ContestExchange) <> 0) then
         begin
-        if TotalRecords mod 10 = 0 then
-          tSetDlgItemIntFalse(GetServerLogWnd, 101, TotalRecords);
-        if showresverlogcontent then
-          tAddContestExchangeToLog(TempRXData, ServerLogListView, IndexInServerLogListView);
+        if HeadlessSyncMode then
+           begin
+           logger.Error('Auto-sync: failed to receive server log (size=%d, expected=%d)', [TotalBytes, LogSize])
+           end
+        else
+           begin
+           showwarning(TC_FAILEDTORECEIVESERVERLOG);
+           end;
+        goto e;
         end;
-      goto 2;
-    end;
-    if not HeadlessSyncMode then
-      tSetWindowRedraw(ServerLogListView, True);
-  end;
+     if (not HeadlessSyncMode) and showresverlogcontent then
+        begin
+        SendMessage(ServerLogListView, LVM_SETITEMCOUNT, TotalBytes div SizeOf(ContestExchange), 0);
+        end;
+     Windows.SetFilePointer(NewServerLogHandle, SizeOfTLogHeader, nil, FILE_BEGIN);
+
+     IndexInServerLogListView := 0;
+     if not HeadlessSyncMode then
+        begin
+        tSetWindowRedraw(ServerLogListView, False);
+        end;
+     2:
+     Windows.ReadFile(NewServerLogHandle, TempRXData, SizeOf(ContestExchange), lpNumberOfBytesWritten, nil);
+     if lpNumberOfBytesWritten = SizeOf(ContestExchange) then
+        begin
+        inc(TotalRecords);
+        if ((TempRXData.Band <> NoBand) and
+          (TempRXData.Mode <> NoMode) and
+          (not TempRXData.ceQSO_Deleted)) and
+          (TempRXData.ceQSO_Skiped = False) then inc(TotalQ);
+
+        if not HeadlessSyncMode then
+           begin
+           if TotalRecords mod 10 = 0 then
+              begin
+              tSetDlgItemIntFalse(GetServerLogWnd, 101, TotalRecords);
+              end;
+           if showresverlogcontent then
+              begin
+              tAddContestExchangeToLog(TempRXData, ServerLogListView, IndexInServerLogListView);
+              end;
+           end;
+        goto 2;
+        end;
+     if not HeadlessSyncMode then
+        begin
+        tSetWindowRedraw(ServerLogListView, True);
+        end;
+     end;
   if not HeadlessSyncMode then
-    begin
-    tSetDlgItemIntFalse(GetServerLogWnd, 101, TotalRecords);
-    tSetDlgItemIntFalse(GetServerLogWnd, 109, TotalQ);
-    if TotalQ > 0 then EnableWindowTrue(GetServerLogWnd, 107);
-    end;
+     begin
+     tSetDlgItemIntFalse(GetServerLogWnd, 101, TotalRecords);
+     tSetDlgItemIntFalse(GetServerLogWnd, 109, TotalQ);
+     if TotalQ > 0 then
+        begin
+        EnableWindowTrue(GetServerLogWnd, 107);
+        end;
+     end;
   e:
   LogSyncThreadID := 0;
   // Issue #912: headless mode drives the replace from the UI thread via
@@ -252,25 +284,25 @@ begin
   // SendMessage blocks here until the UI handler returns, which is fine -
   // the worker thread is about to exit anyway.
   if HeadlessSyncMode then
-    begin
-    if TotalQ > 0 then
-      begin
-      logger.Info('Auto-sync: download complete (%d records, %d QSOs).  Marshalling replace to UI thread.',
-                  [TotalRecords, TotalQ]);
-      SendMessage(tr4whandle, WM_USER_HEADLESS_SYNC_REPLACE, 0, 0);
-      end
-    else
-      begin
-      logger.Warn('Auto-sync: download produced %d records and %d QSOs - skipping replace.',
-                  [TotalRecords, TotalQ]);
-      if NewServerLogHandle <> INVALID_HANDLE_VALUE then
+     begin
+     if TotalQ > 0 then
         begin
-        CloseHandle(NewServerLogHandle);
-        NewServerLogHandle := INVALID_HANDLE_VALUE;
+        logger.Info('Auto-sync: download complete (%d records, %d QSOs).  Marshalling replace to UI thread.',
+                    [TotalRecords, TotalQ]);
+        SendMessage(tr4whandle, WM_USER_HEADLESS_SYNC_REPLACE, 0, 0);
+        end
+     else
+        begin
+        logger.Warn('Auto-sync: download produced %d records and %d QSOs - skipping replace.',
+                    [TotalRecords, TotalQ]);
+        if NewServerLogHandle <> INVALID_HANDLE_VALUE then
+           begin
+           CloseHandle(NewServerLogHandle);
+           NewServerLogHandle := INVALID_HANDLE_VALUE;
+           end;
+        HeadlessSyncMode := False;
         end;
-      HeadlessSyncMode := False;
-      end;
-    end;
+     end;
 end;
 
 end.

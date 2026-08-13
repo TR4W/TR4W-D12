@@ -85,7 +85,9 @@ begin
         SendMessage(AltDEditWindowHandle, EM_LIMITTEXT, 12, 0);
          OldAltDEditProc := Pointer(Windows.SetWindowLong(AltDEditWindowHandle, GWL_WNDPROC, integer(@NewAltDEditProc)));
          if AltDBufferEnable then
-          Windows.SetWindowTextA(AltDEditWindowHandle, @DupeInfoCall[1]);
+            begin
+            Windows.SetWindowTextA(AltDEditWindowHandle, @DupeInfoCall[1]);
+            end;
       end;
 
     WM_CTLCOLOREDIT:
@@ -98,25 +100,25 @@ begin
     WM_COMMAND:
       begin
         if HiWord(wParam) = EN_CHANGE then
-        begin
-      //    tClearDupeInfoCall;   4.39.4
-          DupeInfoCall[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @DupeInfoCall[1], SizeOf(DupeInfoCall) - 1));
-//          DupeInfoCall := GetDialogItemText(hwnddlg, 101);
-          if SCPMinimumLetters > 0 then
-          begin
-            ClearMasterListBox;
-            VisibleLog.SuperCheckPartial(DupeInfoCall, True, InActiveRadioPtr);
-          end;
-          CallsignsList.CreatePartialsList(DupeInfoCall);
-        end;
+           begin
+           //    tClearDupeInfoCall;   4.39.4
+               DupeInfoCall[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @DupeInfoCall[1], SizeOf(DupeInfoCall) - 1));
+     //          DupeInfoCall := GetDialogItemText(hwnddlg, 101);
+               if SCPMinimumLetters > 0 then
+                  begin
+                  ClearMasterListBox;
+                  VisibleLog.SuperCheckPartial(DupeInfoCall, True, InActiveRadioPtr);
+                  end;
+               CallsignsList.CreatePartialsList(DupeInfoCall);
+           end;
         case wParam of
           1, 2:
             begin
               if wParam = 2 then
-              begin
-                tClearDupeInfoCall;
-                ClearAltD; // 4.53.7
-             end;
+                 begin
+                 tClearDupeInfoCall;
+                 ClearAltD; // 4.53.7
+                 end;
               goto 1;
             end;
         end;
@@ -133,9 +135,9 @@ end;
 function NewAltDEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
 begin
    if Msg = WM_CHAR then
-  begin
-    if KeyboardCallsignChar(wParam, False) = False then Exit;
-  end;
+      begin
+      if KeyboardCallsignChar(wParam, False) = False then Exit;
+      end;
   {$RangeChecks OFF}     // 4.79.4
   Result := CallWindowProc(OldAltDEditProc, hwnddlg, Msg, wParam, lParam);
 

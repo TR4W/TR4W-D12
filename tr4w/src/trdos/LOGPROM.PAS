@@ -76,8 +76,8 @@ begin
   WriteLn;
 
   if TypeKey = 'S' then
-  begin
-      {        TextColor (Cyan);
+     begin
+     {        TextColor (Cyan);
 
               WriteLn;
               WriteLn ('If you are keying a negative voltage radio with a serial port, you can have');
@@ -85,51 +85,53 @@ begin
               WriteLn ('To use the INVERT option, add 4 to the port number (i.e. ports 5 to 8).');
               WriteLn;
       }
-    repeat
-      PortKey := UpCase(GetKey('Which serial port are you going to use for radio one? (1-4) : '));
-    until (PortKey = '1') or (PortKey = '2') or (PortKey = '3') or (PortKey = '4') or
-      (PortKey = '5') or (PortKey = '6') or (PortKey = '7') or (PortKey = '8');
+   repeat
+     PortKey := UpCase(GetKey('Which serial port are you going to use for radio one? (1-4) : '));
+   until (PortKey = '1') or (PortKey = '2') or (PortKey = '3') or (PortKey = '4') or
+     (PortKey = '5') or (PortKey = '6') or (PortKey = '7') or (PortKey = '8');
 
-    WriteLn;
+   WriteLn;
 
-    case PortKey of
-      '1': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 1');
-      '2': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 2');
-      '3': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 3');
-      '4': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 4');
-      '5': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 1 INVERT');
-      '6': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 2 INVERT');
-      '7': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 3 INVERT');
-      '8': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 4 INVERT');
-    end;
-  end
+   case PortKey of
+     '1': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 1');
+     '2': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 2');
+     '3': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 3');
+     '4': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 4');
+     '5': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 1 INVERT');
+     '6': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 2 INVERT');
+     '7': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 3 INVERT');
+     '8': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = SERIAL 4 INVERT');
+   end;
+     end
   else
-  begin
-    repeat
-      PortKey := UpCase(GetKey('Which parallel port are you going to use for radio one? (1-3) : '));
-    until (PortKey = '1') or (PortKey = '2') or (PortKey = '3');
-    WriteLn;
+     begin
+     repeat
+       PortKey := UpCase(GetKey('Which parallel port are you going to use for radio one? (1-3) : '));
+     until (PortKey = '1') or (PortKey = '2') or (PortKey = '3');
+     WriteLn;
 
-    case PortKey of
-      '1': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = PARALLEL 1');
-      '2': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = PARALLEL 2');
-      '3': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = PARALLEL 3');
-    end;
+     case PortKey of
+       '1': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = PARALLEL 1');
+       '2': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = PARALLEL 2');
+       '3': WriteLn(FileWrite, 'KEYER RADIO ONE OUTPUT PORT = PARALLEL 3');
+     end;
 
-    repeat
-      PaddleKey := UpCase(GetKey
-        ('Do you want to enable the paddle input for this parallel port? (Y/N) : '));
-      if PaddleKey = EscapeKey then Exit;
-    until (PaddleKey = 'Y') or (PaddleKey = 'N');
-    WriteLn;
+     repeat
+       PaddleKey := UpCase(GetKey
+         ('Do you want to enable the paddle input for this parallel port? (Y/N) : '));
+       if PaddleKey = EscapeKey then Exit;
+     until (PaddleKey = 'Y') or (PaddleKey = 'N');
+     WriteLn;
 
-    if PaddleKey = 'Y' then
-      case PortKey of
-        '1': WriteLn(FileWrite, 'PADDLE PORT = 1');
-        '2': WriteLn(FileWrite, 'PADDLE PORT = 2');
-        '3': WriteLn(FileWrite, 'PADDLE PORT = 3');
-      end;
-  end;
+     if PaddleKey = 'Y' then
+        begin
+        case PortKey of
+          '1': WriteLn(FileWrite, 'PADDLE PORT = 1');
+          '2': WriteLn(FileWrite, 'PADDLE PORT = 2');
+          '3': WriteLn(FileWrite, 'PADDLE PORT = 3');
+        end;
+        end;
+     end;
 
   WriteLn;
 
@@ -148,8 +150,8 @@ begin
   WriteLn;
 
   if TypeKey = 'S' then
-  begin
-      {        TextColor (Cyan);
+     begin
+     {        TextColor (Cyan);
 
               WriteLn;
               WriteLn ('If you are keying a negative voltage radio with a serial port, you can have');
@@ -157,50 +159,52 @@ begin
               WriteLn ('To use the INVERT option, add 4 to the port number (i.e. ports 5 to 8).');
               WriteLn;
       }
-    repeat
-      PortKey := UpCase(GetKey('Which serial port are you going to use? (1-4) : '));
-    until (PortKey = '1') or (PortKey = '2') or (PortKey = '3') or (PortKey = '4');
-    WriteLn;
+   repeat
+     PortKey := UpCase(GetKey('Which serial port are you going to use? (1-4) : '));
+   until (PortKey = '1') or (PortKey = '2') or (PortKey = '3') or (PortKey = '4');
+   WriteLn;
 
-    case PortKey of
-      '1': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 1');
-      '2': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 2');
-      '3': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 3');
-      '4': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 4');
-      '5': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 1 INVERT');
-      '6': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 2 INVERT');
-      '7': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 3 INVERT');
-      '8': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 4 INVERT');
-    end;
+   case PortKey of
+     '1': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 1');
+     '2': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 2');
+     '3': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 3');
+     '4': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 4');
+     '5': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 1 INVERT');
+     '6': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 2 INVERT');
+     '7': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 3 INVERT');
+     '8': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = SERIAL 4 INVERT');
+   end;
 
-  end
+     end
   else
-  begin
-    repeat
-      PortKey := UpCase(GetKey('Which parallel port are you going to use? (1-3) : '));
-    until (PortKey = '1') or (PortKey = '2') or (PortKey = '3');
-    WriteLn;
+     begin
+     repeat
+       PortKey := UpCase(GetKey('Which parallel port are you going to use? (1-3) : '));
+     until (PortKey = '1') or (PortKey = '2') or (PortKey = '3');
+     WriteLn;
 
-    case PortKey of
-      '1': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = PARALLEL 1');
-      '2': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = PARALLEL 2');
-      '3': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = PARALLEL 3');
-    end;
+     case PortKey of
+       '1': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = PARALLEL 1');
+       '2': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = PARALLEL 2');
+       '3': WriteLn(FileWrite, 'KEYER RADIO TWO OUTPUT PORT = PARALLEL 3');
+     end;
 
-    repeat
-      PaddleKey := UpCase(GetKey
-        ('Do you want to enable the paddle input for this parallel port? (Y/N) : '));
-      if PaddleKey = EscapeKey then Exit;
-    until (PaddleKey = 'Y') or (PaddleKey = 'N');
-    WriteLn;
+     repeat
+       PaddleKey := UpCase(GetKey
+         ('Do you want to enable the paddle input for this parallel port? (Y/N) : '));
+       if PaddleKey = EscapeKey then Exit;
+     until (PaddleKey = 'Y') or (PaddleKey = 'N');
+     WriteLn;
 
-    if PaddleKey = 'Y' then
-      case PortKey of
-        '1': WriteLn(FileWrite, 'PADDLE PORT = 1');
-        '2': WriteLn(FileWrite, 'PADDLE PORT = 2');
-        '3': WriteLn(FileWrite, 'PADDLE PORT = 3');
-      end;
-  end;
+     if PaddleKey = 'Y' then
+        begin
+        case PortKey of
+          '1': WriteLn(FileWrite, 'PADDLE PORT = 1');
+          '2': WriteLn(FileWrite, 'PADDLE PORT = 2');
+          '3': WriteLn(FileWrite, 'PADDLE PORT = 3');
+        end;
+        end;
+     end;
 end;
 
 procedure SetUpRadioStuff;
@@ -249,7 +253,9 @@ begin
         Address := GetValue('Enter receiver address for this radio (check you manual) : ');
 
         if Address >= 0 then
-          WriteLn(FileWrite, 'RADIO ONE RECEIVER ADDRESS = ', Address);
+           begin
+           WriteLn(FileWrite, 'RADIO ONE RECEIVER ADDRESS = ', Address);
+           end;
 
       end;
 
@@ -303,7 +309,9 @@ begin
         Address := GetValue('Enter receiver address for this radio (check you manual) : ');
 
         if Address >= 0 then
-          WriteLn(FileWrite, 'RADIO TWO RECEIVER ADDRESS = ', Address);
+           begin
+           WriteLn(FileWrite, 'RADIO TWO RECEIVER ADDRESS = ', Address);
+           end;
 
       end;
 
@@ -453,7 +461,10 @@ var
   Row, col                    : integer;
 
 begin
-  while length(Contest) < 20 do Contest := Contest + ' ';
+  while length(Contest) < 20 do
+     begin
+     Contest := Contest + ' ';
+     end;
 
   //  NoCursor;
   col := (Entry div NumberRows) * 20 + 1;
@@ -472,7 +483,10 @@ var
   Row, col                    : integer;
 
 begin
-  while length(Contest) < 20 do Contest := Contest + ' ';
+  while length(Contest) < 20 do
+     begin
+     Contest := Contest + ' ';
+     end;
 
   col := (Entry div NumberRows) * 20 + 1;
   Row := (Entry mod NumberRows);
@@ -595,21 +609,21 @@ begin
   { Sort them in case I put one in the wrong place or the end }
 
   if NumberContests > 1 then
-  begin
-    Index := NumberContests - 2;
+     begin
+     Index := NumberContests - 2;
 
-    for BubbleCount := 1 to NumberContests - 1 do
-    begin
-      for Address := 0 to Index do
-        if Contests[Address] > Contests[Address + 1] then
+     for BubbleCount := 1 to NumberContests - 1 do
         begin
-          TempString := Contests[Address + 1];
-          Contests[Address + 1] := Contests[Address];
-          Contests[Address] := TempString;
+        for Address := 0 to Index do
+          if Contests[Address] > Contests[Address + 1] then
+             begin
+             TempString := Contests[Address + 1];
+             Contests[Address + 1] := Contests[Address];
+             Contests[Address] := TempString;
+             end;
+        dec(Index);
         end;
-      dec(Index);
-    end;
-  end;
+     end;
 
   NumberRows := NumberContests div 4 + 1;
 
@@ -618,7 +632,9 @@ begin
   InverseVideo(0, StartY, NumberRows, Contests[0]);
 
   for Entry := 1 to NumberContests - 1 do
-    NormalVideo(Entry, StartY, NumberRows, Contests[Entry]);
+     begin
+     NormalVideo(Entry, StartY, NumberRows, Contests[Entry]);
+     end;
 
   ActiveEntry := 0;
 
@@ -649,7 +665,9 @@ begin
 
       BackSpace:
         if EntryString <> '' then
-          Delete(EntryString, length(EntryString), 1);
+           begin
+           Delete(EntryString, length(EntryString), 1);
+           end;
 
       NullKey:
         begin
@@ -658,39 +676,41 @@ begin
           case Key of
             DeleteKey:
               if EntryString <> '' then
-                Delete(EntryString, length(EntryString), 1);
+                 begin
+                 Delete(EntryString, length(EntryString), 1);
+                 end;
 
             RightArrow:
               if ActiveEntry < NumberContests - NumberRows then
-              begin
-                NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-                ActiveEntry := ActiveEntry + NumberRows;
-                InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-              end;
+                 begin
+                 NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+                 ActiveEntry := ActiveEntry + NumberRows;
+                 InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+                 end;
 
             LeftArrow:
               if ActiveEntry >= NumberRows then
-              begin
-                NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-                ActiveEntry := ActiveEntry - NumberRows;
-                InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-              end;
+                 begin
+                 NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+                 ActiveEntry := ActiveEntry - NumberRows;
+                 InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+                 end;
 
             UpArrow:
               if ActiveEntry > 0 then
-              begin
-                NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-                ActiveEntry := ActiveEntry - 1;
-                InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-              end;
+                 begin
+                 NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+                 ActiveEntry := ActiveEntry - 1;
+                 InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+                 end;
 
             DownArrow:
               if ActiveEntry + 1 < NumberContests then
-              begin
-                NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-                ActiveEntry := ActiveEntry + 1;
-                InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-              end;
+                 begin
+                 NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+                 ActiveEntry := ActiveEntry + 1;
+                 InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+                 end;
 
             HomeKey:
               begin
@@ -711,18 +731,18 @@ begin
 
     else
       if ((Key >= 'A') and (Key <= 'Z')) or (Key = ' ') or ((Key >= '0') or (Key <= '9')) then
-      begin
-        EntryString := EntryString + Key;
+         begin
+         EntryString := EntryString + Key;
 
-        for Entry := 0 to NumberContests - 1 do
-          if Copy(Contests[Entry], 1, length(EntryString)) = EntryString then
-          begin
-            NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-            ActiveEntry := Entry;
-            InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
-            Break;
-          end;
-      end;
+         for Entry := 0 to NumberContests - 1 do
+           if Copy(Contests[Entry], 1, length(EntryString)) = EntryString then
+              begin
+              NormalVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+              ActiveEntry := Entry;
+              InverseVideo(ActiveEntry, StartY, NumberRows, Contests[ActiveEntry]);
+              Break;
+              end;
+         end;
     end;
   until False;
 end;
@@ -782,7 +802,7 @@ begin
   //  end;
 
   if UpperCase(ContestName) = 'NEW ENGLAND QSO' then
-  begin
+     begin
       //    repeat
     if YesOrNo(0, 'Are you in New England?') = IDYES then
         {
@@ -796,10 +816,10 @@ begin
             WriteLn;
             if Key = 'Y' then
             }
-    begin
+       begin
 
-      MyState := GetResponse('Enter your New England state abreviation (ME, NH, VT, MA, CT, RI): ');
-          {        until (UpperCase(Copy(MyState, 1, 2)) = 'ME') or
+       MyState := GetResponse('Enter your New England state abreviation (ME, NH, VT, MA, CT, RI): ');
+           {        until (UpperCase(Copy(MyState, 1, 2)) = 'ME') or
                     (UpperCase(Copy(MyState, 1, 2)) = 'NH') or
                     (UpperCase(Copy(MyState, 1, 2)) = 'VT') or
                     (UpperCase(Copy(MyState, 1, 2)) = 'MA') or
@@ -807,141 +827,143 @@ begin
                     (UpperCase(Copy(MyState, 1, 2)) = 'RI');
                 end;
                }MyState := (UpperCase(Copy(MyState, 1, 2)));
-    end;
+       end;
 
       {KK1L: 6.69}
     if UpperCase(ContestName) = 'FIELD DAY' then
-    begin
-      Key := UpCase(GetKey('Are you operating from North or South America? (Y/N) : '));
-      if Key = 'Y' then
-      begin
-        MyFDClass := UpperCase(GetResponse('Enter your Field Day Class (2A, 1D, 34A, etc) : '));
-        MySection := UpperCase(GetResponse('Enter your ARRL section or "DX" : '));
-        WriteLn('Thanks!!  I will use this information to generate your CW messages.');
-      end
-      else
-        MyFDClass := 'DX';
-    end;
+       begin
+       Key := UpCase(GetKey('Are you operating from North or South America? (Y/N) : '));
+       if Key = 'Y' then
+          begin
+          MyFDClass := UpperCase(GetResponse('Enter your Field Day Class (2A, 1D, 34A, etc) : '));
+          MySection := UpperCase(GetResponse('Enter your ARRL section or "DX" : '));
+          WriteLn('Thanks!!  I will use this information to generate your CW messages.');
+          end
+       else
+          begin
+          MyFDClass := 'DX';
+          end;
+       end;
 
     if UpperCase(ContestName) = 'CAL QSO PARTY' then
-    begin
-      repeat
-        Key := UpCase(GetKey('Are you in California? (Y/N) : '));
+       begin
+       repeat
+         Key := UpCase(GetKey('Are you in California? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then MyState := 'CA' else MyState := '';
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then MyState := 'CA' else MyState := '';
+       end;
 
       {KK1L: 6.71 One user configured WRTC instead of IARU. This is an attempt to eliminate that error.}
     if pos('WRTC', UpperCase(ContestName)) > 0 then
-    begin
-      repeat
-        WriteLn('WRTC is by invitation only. It is different than the IARU HF Championship.');
-        Key := UpCase(GetKey('Did you really mean to configure the IARU HF Championship instead? (Y/N) : '));
+       begin
+       repeat
+         WriteLn('WRTC is by invitation only. It is different than the IARU HF Championship.');
+         Key := UpCase(GetKey('Did you really mean to configure the IARU HF Championship instead? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then
-      begin
-        ContestName := 'IARU';
-        WriteLn;
-        WriteLn('I will set you up for the IARU HF Championship.');
-        WriteLn;
-      end;
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then
+          begin
+          ContestName := 'IARU';
+          WriteLn;
+          WriteLn('I will set you up for the IARU HF Championship.');
+          WriteLn;
+          end;
+       end;
 
     if UpperCase(ContestName) = 'FLORIDA QSO PARTY' then
-    begin
-      repeat
-        Key := UpCase(GetKey('Are you in Florida? (Y/N) : '));
+       begin
+       repeat
+         Key := UpCase(GetKey('Are you in Florida? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then MyState := 'FL' else MyState := '';
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then MyState := 'FL' else MyState := '';
+       end;
 
     if UpperCase(ContestName) = 'MICH QSO PARTY' then
-    begin
-      repeat
-        Key := UpCase(GetKey('Are you in Michigan? (Y/N) : '));
+       begin
+       repeat
+         Key := UpCase(GetKey('Are you in Michigan? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then MyState := 'MI' else MyState := '';
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then MyState := 'MI' else MyState := '';
+       end;
 
     if UpperCase(ContestName) = 'MINN QSO PARTY' then
-    begin
-      repeat
-        Key := UpCase(GetKey('Are you in Minnesota? (Y/N) : '));
+       begin
+       repeat
+         Key := UpCase(GetKey('Are you in Minnesota? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then MyState := 'MN' else MyState := '';
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then MyState := 'MN' else MyState := '';
+       end;
 
     if UpperCase(ContestName) = 'OHIO QSO PARTY' then
-    begin
-      repeat
-        Key := UpCase(GetKey('Are you in Ohio? (Y/N) : '));
+       begin
+       repeat
+         Key := UpCase(GetKey('Are you in Ohio? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then MyState := 'OH' else MyState := '';
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then MyState := 'OH' else MyState := '';
+       end;
 
     if UpperCase(ContestName) = 'SALMON RUN' then
-    begin
-      repeat
-        Key := UpCase(GetKey('Are you in Washington? (Y/N) : '));
+       begin
+       repeat
+         Key := UpCase(GetKey('Are you in Washington? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then MyState := 'WA' else MyState := '';
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then MyState := 'WA' else MyState := '';
+       end;
 {
     if UpperCase(ContestName) = 'STEW PERRY' then
     begin
@@ -949,59 +971,59 @@ begin
     end;
 }
     if UpperCase(ContestName) = 'WISCONSIN QSO PARTY' then
-    begin
-      repeat
-        Key := UpCase(GetKey('Are you in Wisconsin? (Y/N) : '));
+       begin
+       repeat
+         Key := UpCase(GetKey('Are you in Wisconsin? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then MyState := 'WI' else MyState := '';
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then MyState := 'WI' else MyState := '';
+       end;
 
     if UpperCase(ContestName) = 'ARRL 10' then
       if (MyCountry = 'K') or (MyCountry = 'VE') or
         (MyCountry = 'KH6') or (MyCountry = 'KL') then
-      begin
-        MyState := UpperCase(GetResponse('Enter the QTH that you want to send : '));
-        WriteLn('Thanks!!  I will use this information to generate your CW messages.');
-      end;
+         begin
+         MyState := UpperCase(GetResponse('Enter the QTH that you want to send : '));
+         WriteLn('Thanks!!  I will use this information to generate your CW messages.');
+         end;
 
     if UpperCase(ContestName) = 'SWEEPSTAKES' then
-    begin
-      MyPrec := UpperCase(GetResponse('Enter your precedence : '));
-      MyCheck := UpperCase(GetResponse('Enter your check (last two digits of year licensed) : '));
-      MySection := UpperCase(GetResponse('Enter your ARRL section : '));
-      WriteLn('Thanks!!  I will use this information to generate your CW messages.');
-    end;
+       begin
+       MyPrec := UpperCase(GetResponse('Enter your precedence : '));
+       MyCheck := UpperCase(GetResponse('Enter your check (last two digits of year licensed) : '));
+       MySection := UpperCase(GetResponse('Enter your ARRL section : '));
+       WriteLn('Thanks!!  I will use this information to generate your CW messages.');
+       end;
 
     if UpperCase(ContestName) = 'SPRINT' then
-    begin
-      MyName := UpperCase(GetResponse('Enter the name you want to use : '));
-      MyState := UpperCase(GetResponse('Enter your QTH that you want to send : '));
-      WriteLn('Thanks!!  I will use this information to generate your CW messages.');
-    end;
+       begin
+       MyName := UpperCase(GetResponse('Enter the name you want to use : '));
+       MyState := UpperCase(GetResponse('Enter your QTH that you want to send : '));
+       WriteLn('Thanks!!  I will use this information to generate your CW messages.');
+       end;
 
     if UpperCase(ContestName) = 'TEXAS QSO PARTY' then
-    begin
-      repeat
-        Key := UpCase(GetKey('Are you in Texas? (Y/N) : '));
+       begin
+       repeat
+         Key := UpCase(GetKey('Are you in Texas? (Y/N) : '));
 
-        if Key = EscapeKey then
-        begin
-                //                TextMode (LastMode);
-          halt;
-        end;
+         if Key = EscapeKey then
+            begin
+            //                TextMode (LastMode);
+      halt;
+            end;
 
-      until (Key = 'Y') or (Key = 'N');
-      WriteLn;
-      if Key = 'Y' then MyState := 'TX' else MyState := '';
-    end;
+       until (Key = 'Y') or (Key = 'N');
+       WriteLn;
+       if Key = 'Y' then MyState := 'TX' else MyState := '';
+       end;
       {
           TextColor (Cyan);
 
@@ -1019,33 +1041,44 @@ begin
     repeat
       FileName := GetResponse('Enter filename or just RETURN to use the default names : ');
 
-      if StringHas(FileName, '.') then FileName := PrecedingString(FileName, '.');
+      if StringHas(FileName, '.') then
+         begin
+         FileName := PrecedingString(FileName, '.');
+         end;
 
       if FileName = '' then
-        FileName := 'LOGCFG.DAT'
+         begin
+         FileName := 'LOGCFG.DAT'
+         end
       else
-        FileName := FileName + '.CFG';
+         begin
+         FileName := FileName + '.CFG';
+         end;
 
       if FileExists(@FileName[1]) then
-      begin
-        repeat
-          Key := UpCase(GetKey(FileName + ' already exists.  Okay to overwrite? (Y/N) : '));
+         begin
+         repeat
+           Key := UpCase(GetKey(FileName + ' already exists.  Okay to overwrite? (Y/N) : '));
 
-          if Key = EscapeKey then
-          begin
-                  //                TextMode (LastMode);
-            halt;
-          end;
+           if Key = EscapeKey then
+              begin
+              //                TextMode (LastMode);
+        halt;
+              end;
 
-        until (Key = 'Y') or (Key = 'N');
-      end;
+         until (Key = 'Y') or (Key = 'N');
+         end;
 
     until (not FileExists(@FileName[1])) or (Key = 'Y');
 
     if FileName = 'LOGCFG.DAT' then
-      DeleteFile('RESTART.BIN')
+       begin
+       DeleteFile('RESTART.BIN')
+       end
     else
-      DeleteFile(PrecedingString(FileName, '.') + '.RST');
+       begin
+       DeleteFile(PrecedingString(FileName, '.') + '.RST');
+       end;
 
 //    SetUpFileNames(PrecedingString(FileName, '.'));
 
@@ -1053,12 +1086,30 @@ begin
 
     WriteLn(FileWrite, 'MY CALL = ', MyCall);
 
-    if MyQTH <> '' then WriteLn(FileWrite, 'MY QTH = ', MyQTH);
-    if MyState <> '' then WriteLn(FileWrite, 'MY STATE = ', MyState);
-    if MyName <> '' then WriteLn(FileWrite, 'MY NAME = ', MyName);
-    if MyPrec <> '' then WriteLn(FileWrite, 'MY PREC = ', MyPrec);
-    if MyCheck <> '' then WriteLn(FileWrite, 'MY CHECK = ', MyCheck);
-    if MySection <> '' then WriteLn(FileWrite, 'MY SECTION = ', MySection);
+    if MyQTH <> '' then
+       begin
+       WriteLn(FileWrite, 'MY QTH = ', MyQTH);
+       end;
+    if MyState <> '' then
+       begin
+       WriteLn(FileWrite, 'MY STATE = ', MyState);
+       end;
+    if MyName <> '' then
+       begin
+       WriteLn(FileWrite, 'MY NAME = ', MyName);
+       end;
+    if MyPrec <> '' then
+       begin
+       WriteLn(FileWrite, 'MY PREC = ', MyPrec);
+       end;
+    if MyCheck <> '' then
+       begin
+       WriteLn(FileWrite, 'MY CHECK = ', MyCheck);
+       end;
+    if MySection <> '' then
+       begin
+       WriteLn(FileWrite, 'MY SECTION = ', MySection);
+       end;
     if MyFDClass <> '' then WriteLn(FileWrite, 'MY FD CLASS = ', MyFDClass); {KK1L: 6.69}
 
     WriteLn(FileWrite, 'CONTEST = ', ContestName);
@@ -1069,38 +1120,43 @@ begin
       ColorKey := UpCase(GetKey('Do you want to use the Color or Monochrome palette? (C/M) : '));
 
       if Key = EscapeKey then
-      begin
-            //                TextMode (LastMode);
-        halt;
-      end;
+         begin
+         //                TextMode (LastMode);
+     halt;
+         end;
 
     until (ColorKey = 'C') or (ColorKey = 'M');
     WriteLn;
 
-    if ColorKey = 'C' then WriteLn(FileWrite, 'DISPLAY MODE = COLOR');
+    if ColorKey = 'C' then
+       begin
+       WriteLn(FileWrite, 'DISPLAY MODE = COLOR');
+       end;
 
     repeat
       SimulatorKey := UpCase(GetKey('Do you want to use the simulator? (Y/N) : '));
 
       if Key = EscapeKey then
-      begin
-            //                TextMode (LastMode);
-        halt;
-      end;
+         begin
+         //                TextMode (LastMode);
+     halt;
+         end;
 
     until (SimulatorKey = 'Y') or (SimulatorKey = 'N');
     WriteLn;
 
     if SimulatorKey = 'Y' then
-      WriteLn(FileWrite, 'SIMULATOR ENABLE = TRUE')
+       begin
+       WriteLn(FileWrite, 'SIMULATOR ENABLE = TRUE')
+       end
 
     else
-    begin
-      SetUpCWStuff;
-      SetUpRadioStuff;
-      SetUpPacketStuff;
-      SetUpMultiStuff;
-    end;
+       begin
+       SetUpCWStuff;
+       SetUpRadioStuff;
+       SetUpPacketStuff;
+       SetUpMultiStuff;
+       end;
 
     Close(FileWrite);
 
@@ -1114,10 +1170,10 @@ begin
 //    OpenFileForRead(FileRead, LogConfigFileName);
 
     while not Eof(FileRead) do
-    begin
-      ReadLn(FileRead, FileString);
-      WriteLn(FileString);
-    end;
+       begin
+       ReadLn(FileRead, FileString);
+       WriteLn(FileString);
+       end;
 
     Close(FileRead);
       //    WaitForKeyPressed;

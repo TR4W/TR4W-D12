@@ -179,13 +179,13 @@ begin
      { LogString is now what popped off the top of the editable window }
   GetRidOfPostcedingSpaces(LogString);
   if LogString <> '' then
-  begin
-    PutContactIntoLogFile(LogString);
-    if ParseExchangeIntoContestExchange(LogString, RData) then
-    begin
-      ProcessPartialCallAndInitialExchange(RData);
-           end;
-  end;
+     begin
+     PutContactIntoLogFile(LogString);
+     if ParseExchangeIntoContestExchange(LogString, RData) then
+        begin
+        ProcessPartialCallAndInitialExchange(RData);
+        end;
+     end;
 end;
 procedure ProcessCallWindowCommand(Command: Str80);
 { This procedure gets called if a command in the call window was typed in
@@ -204,7 +204,10 @@ begin
       SendMultiMessage('G' + K1EAStationID + ' ' + TempString);
     end;
   }
-  if Command = 'RADIO' then TestRadioInterface;
+  if Command = 'RADIO' then
+     begin
+     TestRadioInterface;
+     end;
   {   Disabled in 6.46
       IF TakingABreak AND ((Command = 'TIMEON') OR (Command = 'ON')) THEN
           BEGIN
@@ -245,13 +248,13 @@ begin
   Dupe := VisibleLog.CallIsADupe(CallWindowString, ActiveBand, ActiveMode);
   {if not Dupe then }tCreateAndAddNewSpot(CallWindowString, Dupe, ActiveRadioPtr);
   if Dupe then
-  begin
-//    if AutoDupeEnableSandP then //wli
-    begin
-      tCallWindowSetFocus;
-      WindowDupeCheck := True;
-      DispalayDupe;
-{
+     begin
+     //    if AutoDupeEnableSandP then //wli
+         begin
+           tCallWindowSetFocus;
+           WindowDupeCheck := True;
+           DispalayDupe;
+     {
       asm
       lea eax,[CallWindowString+1]
       push eax
@@ -261,42 +264,42 @@ begin
       end;
       QuickDisplay(QuickDisplayBuffer);
 }
-//      DispalayB4(SW_HIDE);
-//      Windows.ShowWindow(B4StatusWindowHandle, SW_HIDE);
-//      if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
-      MarkTime(RememberTime);
-      if KeyRecentlyPressed(F1, 200) then FlushCWBufferAndClearPTT; { Withing two seconds }
-      ShowStationInformation(@CallWindowString);
-      DisplayGridSquareStatus(CallWindowString);
+     //      DispalayB4(SW_HIDE);
+     //      Windows.ShowWindow(B4StatusWindowHandle, SW_HIDE);
+     //      if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
+           MarkTime(RememberTime);
+           if KeyRecentlyPressed(F1, 200) then FlushCWBufferAndClearPTT; { Withing two seconds }
+           ShowStationInformation(@CallWindowString);
+           DisplayGridSquareStatus(CallWindowString);
 
-      VisibleLog.DoPossibleCalls(CallWindowString);
-      tCleareExchangeWindow;
+           VisibleLog.DoPossibleCalls(CallWindowString);
+           tCleareExchangeWindow;
 
-                   //    RemoveWindow(NameSentWindow);
-                   //    RemoveWindow(CountryNameWindow);
-    //    DisplayInsertMode(InsertMode);
-//      if not QTCsEnabled then
-//      begin
-//        EscapeDeletedCallEntry := CallWindowString;
-              //      CallWindowString := '';
-//      end;
-//      tCleareCallWindow;
-          //{WLI}        ClrScr;
-          //{WLI}        Write (CallWindowString);
-    end;
-  end
+                        //    RemoveWindow(NameSentWindow);
+                        //    RemoveWindow(CountryNameWindow);
+         //    DisplayInsertMode(InsertMode);
+     //      if not QTCsEnabled then
+     //      begin
+     //        EscapeDeletedCallEntry := CallWindowString;
+                   //      CallWindowString := '';
+     //      end;
+     //      tCleareCallWindow;
+               //{WLI}        ClrScr;
+               //{WLI}        Write (CallWindowString);
+         end;
+     end
   else
-  begin
-    StationInformationCall := '';
-    ShowStationInformation(@CallWindowString);
-    DisplayGridSquareStatus(CallWindowString);
+     begin
+     StationInformationCall := '';
+     ShowStationInformation(@CallWindowString);
+     DisplayGridSquareStatus(CallWindowString);
       
-    if DupeCheckSound = DupeCheckGratsIfMult then
-    begin
-      if VisibleLog.DetermineIfNewMult(CallWindowString, ActiveBand, ActiveMode)
-      {if TempInteger <> 0 }then DoABeep(BeepCongrats);
-    end;
-  end;
+     if DupeCheckSound = DupeCheckGratsIfMult then
+        begin
+        if VisibleLog.DetermineIfNewMult(CallWindowString, ActiveBand, ActiveMode)
+        {if TempInteger <> 0 }then DoABeep(BeepCongrats);
+        end;
+     end;
 end;
 function GoodCallPutUp: boolean;
 { This function will move the call with the cursors around it from the
@@ -311,43 +314,49 @@ begin
   GoodCallPutUp := False;
   with PossibleCallList do
     if NumberPossibleCalls > 0 then
-    begin
-      CallWindowString := List[CursorPosition].Call;
-        //      ClearWindow(ExchangeWindow);
-//      if ActiveWindow = ExchangeWindow then
-           //        RestorePreviousWindow;
-               //{WLI}            ClrScr;
-               //{WLI}            Write (CallWindowString);
-      if WindowDupeCheck then Exit;
-        //      ActivateExchangeWindow;
-      InitialExchange := InitialExchangeEntry(CallWindowString);
-      if InitialExchange <> '' then
-      begin
-            //{WLI}                ClrScr;
-        ExchangeWindowString := InitialExchange;
-            //{WLI}                Write (ExchangeWindowString);
-                            {TR6.74 - need to do this since IntialExchangeEntry does not }
-        if InitialExchangeOverwrite then
-          InitialExchangePutUp := ExchangeWindowString <> '';
-        if InitialExchangeCursorPos = AtEnd then
-               //                    GoToXY (Length (InitialExchange) + 1, 1)
-    //    else
-              //{WLI}                    GoToXY (1, 1);
-      end
-      else
+       begin
+       CallWindowString := List[CursorPosition].Call;
+         //      ClearWindow(ExchangeWindow);
+ //      if ActiveWindow = ExchangeWindow then
+            //        RestorePreviousWindow;
+                //{WLI}            ClrScr;
+                //{WLI}            Write (CallWindowString);
+       if WindowDupeCheck then Exit;
+         //      ActivateExchangeWindow;
+       InitialExchange := InitialExchangeEntry(CallWindowString);
+       if InitialExchange <> '' then
+          begin
+          //{WLI}                ClrScr;
+      ExchangeWindowString := InitialExchange;
           //{WLI}                Write (ExchangeWindowString);
- //         GoToXY (1,1);
-        ShowStationInformation(@CallWindowString);
-      DisplayGridSquareStatus(CallWindowString);
-      GoodCallPutUp := True;
-    end;
+                          {TR6.74 - need to do this since IntialExchangeEntry does not }
+      if InitialExchangeOverwrite then
+         begin
+         InitialExchangePutUp := ExchangeWindowString <> '';
+         end;
+      if InitialExchangeCursorPos = AtEnd then
+             //                    GoToXY (Length (InitialExchange) + 1, 1)
+  //    else
+            //{WLI}                    GoToXY (1, 1);
+          end
+       else
+           //{WLI}                Write (ExchangeWindowString);
+  //         GoToXY (1,1);
+          begin
+          ShowStationInformation(@CallWindowString);
+          end;
+       DisplayGridSquareStatus(CallWindowString);
+       GoodCallPutUp := True;
+       end;
 end;
 procedure ToggleStereoPin; {KK1L: 6.71}
 begin
   TF.InvertBoolean(StereoPinState);
   SetStereoPin(StereoControlPin, StereoPinState);
   if ycccActive then
+     begin
      YCCCSetStereo(StereoPinState);
+     end;
 end;
 
 { Handles OTRSP=RX1, OTRSP=RX2, OTRSP=RXA, OTRSP=RXI, OTRSP=STEREO function key commands }
@@ -387,39 +396,46 @@ end;
 procedure ToggleModes;
 begin
   if (MultipleModesEnabled) or (TotalContacts = 0) then
-  begin
-    case ActiveMode of
-      CW: if DigitalModeEnable then ActiveMode := Digital else ActiveMode := Phone;
-      Phone: if ActiveBand >= Band6 then ActiveMode := FM else ActiveMode := CW;
-      Digital: ActiveMode := Phone;
-    else ActiveMode := CW;
-    end;
+     begin
+     case ActiveMode of
+       CW: if DigitalModeEnable then ActiveMode := Digital else ActiveMode := Phone;
+       Phone: if ActiveBand >= Band6 then ActiveMode := FM else ActiveMode := CW;
+       Digital: ActiveMode := Phone;
+     else ActiveMode := CW;
+     end;
 
-    EditingCallsignSent := False;
-    DisplayBandMode(
-      ActiveBand,
-      ActiveMode,
-        True
-      );
-    DisplayCodeSpeed;
-      {KK1L: 6.73 This gets done in UpdateTimeAndRateDisplay. Only do if no radio connected.}
-     if ((ActiveRadio = RadioOne)  and ((Radio1.tCATPortType <> NoPort)) or (not Radio1.PollingEnable))  then
-      Radio1.ModeMemory {ModeMemory[RadioOne]} := ActiveMode
-    else
-      if (ActiveRadio = RadioTwo) and ((Radio2.tCATPortType = NoPort) or (not Radio2.PollingEnable)) then
-        Radio2.ModeMemory {ModeMemory[RadioTwo]} := ActiveMode;
-    UpdateTotals2;
-    CallsignsList.DisplayDupeSheet(ActiveRadioPtr);
-    if QSOByMode then VisibleDupeSheetChanged := True;
-    if MultByMode then
-    begin
-      VisibleLog.ShowRemainingMultipliers;
-      VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
-    end;
-    BandMapBand := ActiveBand;
-    BandMapMode := ActiveMode; {KK1L: 6.68 BM now tracks mode with no radio connected on mode change}
-    DisplayBandMap;
-  end;
+     EditingCallsignSent := False;
+     DisplayBandMode(
+       ActiveBand,
+       ActiveMode,
+         True
+       );
+     DisplayCodeSpeed;
+       {KK1L: 6.73 This gets done in UpdateTimeAndRateDisplay. Only do if no radio connected.}
+      if ((ActiveRadio = RadioOne)  and ((Radio1.tCATPortType <> NoPort)) or (not Radio1.PollingEnable))  then
+         begin
+         Radio1.ModeMemory {ModeMemory[RadioOne]} := ActiveMode
+         end
+     else
+       if (ActiveRadio = RadioTwo) and ((Radio2.tCATPortType = NoPort) or (not Radio2.PollingEnable)) then
+          begin
+          Radio2.ModeMemory {ModeMemory[RadioTwo]} := ActiveMode;
+          end;
+     UpdateTotals2;
+     CallsignsList.DisplayDupeSheet(ActiveRadioPtr);
+     if QSOByMode then
+        begin
+        VisibleDupeSheetChanged := True;
+        end;
+     if MultByMode then
+        begin
+        VisibleLog.ShowRemainingMultipliers;
+        VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
+        end;
+     BandMapBand := ActiveBand;
+     BandMapMode := ActiveMode; {KK1L: 6.68 BM now tracks mode with no radio connected on mode change}
+     DisplayBandMap;
+     end;
 end;
 procedure DupeCheckOnInactiveRadio(Tune: boolean);
 { This will perform a dupe check on the inactive radio }
@@ -429,10 +445,10 @@ var
 
 begin
   if not TwoRadioMode then
-  begin
-    QuickDisplay(TC_ALTDCOMMANDDISABLED);
-    Exit;
-  end;
+     begin
+     QuickDisplay(TC_ALTDCOMMANDDISABLED);
+     Exit;
+     end;
    RITEnable := False;
   { VER6.73 - Make up a string of the inactive CW Speed for display }
   Str(InActiveRadioPtr.SpeedMemory, SpeedString);
@@ -441,47 +457,61 @@ begin
  // DisplayBandMap; { Do we always want to do this?  What if already up? }    // 4.102.5
   
   if K5KA.AltDString <> '' then
-  begin
-    tClearDupeInfoCall;
-    DupeInfoCall := K5KA.AltDString;
-  end
+     begin
+     tClearDupeInfoCall;
+     DupeInfoCall := K5KA.AltDString;
+     end
   else
-  begin
-   if not Tune then
-//    tDialogBox(54, @AltDDlgProc);
-      CreateModalDialog(140, 50, tr4whandle, @AltDDlgProc, 0);
-  end;    
+     begin
+     if not Tune then
+  //    tDialogBox(54, @AltDDlgProc);
+        begin
+        CreateModalDialog(140, 50, tr4whandle, @AltDDlgProc, 0);
+        end;
+     end;    
   { Put the band map on the band/mode of the inactive radio }
   if (DupeInfoCall = MyCall) then exit;    // issue 158
   if (DupeInfoCall <> '') {and (DupeInfoCall <> EscapeKey)} then
-begin
-    DisplayGridSquareStatus(CallWindowString);
-    ShowStationInformation(@DupeInfoCall);                                          //gav 4.44.8
-    isDupe := VisibleLog.CallIsADupe(DupeInfoCall, InActiveRadioPtr.BandMemory, InActiveRadioPtr.ModeMemory);
-    if not Tune then tCreateAndAddNewSpot(DupeInfoCall, isDupe, InActiveRadioPtr);
-    if isDupe and (DupeInfoCall <> MyCall) then   // n4af issue158
-    begin
-      DupeInfoCallWindowState := diDupe;
-      TF.Format(wsprintfBuffer, '%s DUPE!! on %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
-      SetMainWindowText(mweDupeInfoCall, wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]});
-      if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
- //      tClearDupeInfoCall;
-  //      clearaltd; // 4.53.11  // 4.126.1
-     end
-    else
-    begin
-      DupeInfoCallWindowState := diNotDupe;
-      if VisibleLog.DetermineIfNewMult(DupeInfoCall, InActiveRadioPtr.BandMemory, InActiveRadioPtr.ModeMemory)
-      {if TempString <> 0 }then
-      begin
-        if DupeCheckSound = DupeCheckGratsIfMult then DoABeep(BeepCongrats);
-        DupeInfoCallWindowState := diNotDupeMult;
-      end;
-      TF.Format(wsprintfBuffer, '%s OK!!'#13#10'Space bar for %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
-      SetMainWindowText(mweDupeInfoCall, wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]});
-      if TwoRadioState <> TwoRadiosDisabled then TwoRadioState := CallReady;
-    end;
-  end;
+     begin
+     DisplayGridSquareStatus(CallWindowString);
+     ShowStationInformation(@DupeInfoCall);                                          //gav 4.44.8
+     isDupe := VisibleLog.CallIsADupe(DupeInfoCall, InActiveRadioPtr.BandMemory, InActiveRadioPtr.ModeMemory);
+     if not Tune then
+        begin
+        tCreateAndAddNewSpot(DupeInfoCall, isDupe, InActiveRadioPtr);
+        end;
+     if isDupe and (DupeInfoCall <> MyCall) then   // n4af issue158
+        begin
+        DupeInfoCallWindowState := diDupe;
+        TF.Format(wsprintfBuffer, '%s DUPE!! on %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
+        SetMainWindowText(mweDupeInfoCall, wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]});
+        if DupeCheckSound <> DupeCheckNoSound then
+           begin
+           DoABeep(ThreeHarmonics);
+           end;
+   //      tClearDupeInfoCall;
+    //      clearaltd; // 4.53.11  // 4.126.1
+        end
+     else
+        begin
+        DupeInfoCallWindowState := diNotDupe;
+        if VisibleLog.DetermineIfNewMult(DupeInfoCall, InActiveRadioPtr.BandMemory, InActiveRadioPtr.ModeMemory)
+        {if TempString <> 0 }then
+           begin
+           if DupeCheckSound = DupeCheckGratsIfMult then
+              begin
+              DoABeep(BeepCongrats);
+              end;
+           DupeInfoCallWindowState := diNotDupeMult;
+           end;
+        TF.Format(wsprintfBuffer, '%s OK!!'#13#10'Space bar for %s%s', @DupeInfoCall[1], BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
+        SetMainWindowText(mweDupeInfoCall, wsprintfBuffer {DupeInfoCall + ' DUPE!! on ' + BandStringsArray[InActiveRadioPtr.BandMemory] + ModeString[InActiveRadioPtr.ModeMemory]});
+        if TwoRadioState <> TwoRadiosDisabled then
+           begin
+           TwoRadioState := CallReady;
+           end;
+        end;
+     end;
  
   RITEnable := True;
 end;
@@ -496,9 +526,13 @@ begin
 //  inc(no);
 //  if no > 10 then Exit;
   if RemainingMultDisplay = rmPrefix then
-    RemainingMultDisplay := rmDomestic
+     begin
+     RemainingMultDisplay := rmDomestic
+     end
   else
-    RemainingMultDisplay := RemainingMultiplierType(Ord(RemainingMultDisplay) + 1);
+     begin
+     RemainingMultDisplay := RemainingMultiplierType(Ord(RemainingMultDisplay) + 1);
+     end;
   case RemainingMultDisplay of
     rmDomestic: if not DoingDomesticMults then goto Next;
     rmDX: if not DoingDXMults then goto Next;
@@ -524,38 +558,38 @@ begin
     (TempRXData.ceRecordKind <> rkQSO) or
     (TempRXData.ceQSO_Skiped <> tLastLogEntryIsDeleted)
     then
-  begin
-    CloseLogFile;
-    Exit;
-  end;
+     begin
+     CloseLogFile;
+     Exit;
+     end;
   if tLastLogEntryIsDeleted then
-  begin
+     begin
 
-    TempRXData.ceQSO_Skiped := False;
-    p := TC_YOUHAVERESTOREDTHELASTDELETED;
-    LogContactToUDP(TempRXData);
-    if Assigned(externalLogger) then
-       begin
-       externalLogger.LogQSO(TempRXData);
-       end;
-    // Issue #920 -- mirror restoration to HamScore as a (re-)contactinfo
-    // so the server sees the QSO come back with the same ID.
-    HamScoreOnLog(TempRXData);
-  end
+     TempRXData.ceQSO_Skiped := False;
+     p := TC_YOUHAVERESTOREDTHELASTDELETED;
+     LogContactToUDP(TempRXData);
+     if Assigned(externalLogger) then
+        begin
+        externalLogger.LogQSO(TempRXData);
+        end;
+     // Issue #920 -- mirror restoration to HamScore as a (re-)contactinfo
+     // so the server sees the QSO come back with the same ID.
+     HamScoreOnLog(TempRXData);
+     end
   else
-  begin
-    TempRXData.ceQSO_Skiped := True;
-    p := TC_YOUHAVEDELETEDTHELASTLOGENTRY;
-    SendDeletedContactToUDP(TempRXData);
-    if Assigned(externalLogger) then
-       begin
-       externalLogger.DeleteQSO(TempRXData);
-       end;
-    // Issue #920 -- mirror the deletion to HamScore via <contactdelete>.
-    // Previously only LogContact had a HamScore hook; ALT-Y deletes
-    // dropped silently from the server's view.
-    HamScoreOnDelete(TempRXData);
-  end;
+     begin
+     TempRXData.ceQSO_Skiped := True;
+     p := TC_YOUHAVEDELETEDTHELASTLOGENTRY;
+     SendDeletedContactToUDP(TempRXData);
+     if Assigned(externalLogger) then
+        begin
+        externalLogger.DeleteQSO(TempRXData);
+        end;
+     // Issue #920 -- mirror the deletion to HamScore via <contactdelete>.
+     // Previously only LogContact had a HamScore hook; ALT-Y deletes
+     // dropped silently from the server's view.
+     HamScoreOnDelete(TempRXData);
+     end;
   InvertBoolean(tLastLogEntryIsDeleted);
   tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_END);
   sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
@@ -778,127 +812,141 @@ begin
   repeat
     UpdateTimeAndRateDisplays(True, True);
     if NewKeyPressed then
-    begin
-      MarkTime(TimeMark);
-      Key := NewReadKey;
-      if Key = ControlB then
-      begin
-        if PacketAutoCR and (CommandLine <> '') then
-          if Packet.PacketSerialPort <> NoPort then
-            SendChar(Packet.PacketSerialPort, Key)
-          else
-            if {ActiveMultiPort } NoPort <> NoPort then
-            begin
-              if 1 = 1 {K1EANetworkEnable} then
-              begin
-                        //                SendMultiMessage('A' + K1EAStationID + CommandLine);
-              end
-              else
-                SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
-                  MultiPacketMessageToSend, CommandLine);
-            end;
-            //        RestorePreviousWindow;
-            //        RemoveWindow(BigWindow);
-//        VisibleLog.SetUpEditableLog;
-        UpdateTotals2;
-        VisibleLog.ShowRemainingMultipliers;
-        VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
-            {                  if VisibleDupesheetEnable then
+       begin
+       MarkTime(TimeMark);
+       Key := NewReadKey;
+       if Key = ControlB then
+          begin
+          if PacketAutoCR and (CommandLine <> '') then
+            if Packet.PacketSerialPort <> NoPort then
+               begin
+               SendChar(Packet.PacketSerialPort, Key)
+               end
+            else
+              if {ActiveMultiPort } NoPort <> NoPort then
+                 begin
+                 if 1 = 1 {K1EANetworkEnable} then
+                    begin
+                    //                SendMultiMessage('A' + K1EAStationID + CommandLine);
+                    end
+                 else
+                    begin
+                    SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
+                      MultiPacketMessageToSend, CommandLine);
+                    end;
+                 end;
+              //        RestorePreviousWindow;
+              //        RemoveWindow(BigWindow);
+  //        VisibleLog.SetUpEditableLog;
+          UpdateTotals2;
+          VisibleLog.ShowRemainingMultipliers;
+          VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
+              {                  if VisibleDupesheetEnable then
                                  begin
                                     VisibleDupeSheetChanged := true;
                                     VisibleLog.DisplayVisibleDupeSheet(ActiveBand, ActiveMode);
                                  end;
             }
-                              //        RemoveWindow(QuickCommandWindow);
-        PacketWindowUp := False;
-        RITEnable := True;
-        Exit;
-      end;
-      if Key = NullKey then
-      begin
-        Key := NewReadKey;
-            //        case Key of
-            //          AltA:
-            //            if (CallWindowString = '') and (LastSCPCall = '') then
-            //              SetAlarm
-            //            else
-            //              VisibleLog.SuperCheckPartial(CallWindowString, False, ActiveRadio);
-                                 {KK1L: 6.73 Added ActiveRadio}
-            //          AltB:
-            //            begin
-                                       //{WLI}                        RememberFrequency;
-            //              BandUp;
-                                       {KK1L: 6.73 NOTE the following statement is redundant. It is in BandUp and BandDown.}
-            //              if QSONumberByBand then
-            //                DisplayNextQSONumber(TotalContacts + 1);
-            //            end;
-            //          AltD:
-            //            if K1EANetworkEnable then
-            //              PassStationToCTNetwork
-            //            else
-            //              DupeCheckOnInactiveRadio;
-            //          AltK: ToggleCW(true);
-            //          AltM:
-            //            begin
-                                       //{WLI}                        RememberFrequency;
-            //              ToggleModes;
-            //            end;
-            //          AltR:
-            //            begin
-                                       //{WLI}                        SwapRadios;
-            //              InactiveRigCallingCQ := False;
-            //              Str(SpeedMemory[InactiveRadio], SpeedString); {KK1L: 6.73 Used to use a variable CheckSpeed}
-            //            end;
-            //          AltS: SetNewCodeSpeed;
-            //          AltT: TimeAndDateSet;
-            //          AltV:
-            //            begin
-                                       //{WLI}                        RememberFrequency;
-            //              BandDown;
-            //            end;
-            //          AltX: ExitProgram;
-            //          AltY:
-            //            begin
-            //              DeleteLastContact;
-            //              LastTwoLettersCrunchedOn := '';
-            //            end;
-            //          PageUpKey: SpeedUp;
-            //          PageDownKey: SlowDown;
-            //        else
-                                    //{WLI}                      SendFunctionKeyMessage (Key, OpMode);
-                                                          {KK1L: note: this is where to add switch to SAPMode if NextBandMap command}
-            //        end;
-      end
-      else
-      begin
-        if Packet.PacketSerialPort <> NoPort then
-          SendChar(Packet.PacketSerialPort, Key)
-        else
-          if Key <> BackSpace then
+                                //        RemoveWindow(QuickCommandWindow);
+          PacketWindowUp := False;
+          RITEnable := True;
+          Exit;
+          end;
+       if Key = NullKey then
           begin
-            if Key <> CarriageReturn then
-              Write(Key)
-            else
-              WriteLn(Key);
+          Key := NewReadKey;
+              //        case Key of
+              //          AltA:
+              //            if (CallWindowString = '') and (LastSCPCall = '') then
+              //              SetAlarm
+              //            else
+              //              VisibleLog.SuperCheckPartial(CallWindowString, False, ActiveRadio);
+                                   {KK1L: 6.73 Added ActiveRadio}
+              //          AltB:
+              //            begin
+                                         //{WLI}                        RememberFrequency;
+              //              BandUp;
+                                         {KK1L: 6.73 NOTE the following statement is redundant. It is in BandUp and BandDown.}
+              //              if QSONumberByBand then
+              //                DisplayNextQSONumber(TotalContacts + 1);
+              //            end;
+              //          AltD:
+              //            if K1EANetworkEnable then
+              //              PassStationToCTNetwork
+              //            else
+              //              DupeCheckOnInactiveRadio;
+              //          AltK: ToggleCW(true);
+              //          AltM:
+              //            begin
+                                         //{WLI}                        RememberFrequency;
+              //              ToggleModes;
+              //            end;
+              //          AltR:
+              //            begin
+                                         //{WLI}                        SwapRadios;
+              //              InactiveRigCallingCQ := False;
+              //              Str(SpeedMemory[InactiveRadio], SpeedString); {KK1L: 6.73 Used to use a variable CheckSpeed}
+              //            end;
+              //          AltS: SetNewCodeSpeed;
+              //          AltT: TimeAndDateSet;
+              //          AltV:
+              //            begin
+                                         //{WLI}                        RememberFrequency;
+              //              BandDown;
+              //            end;
+              //          AltX: ExitProgram;
+              //          AltY:
+              //            begin
+              //              DeleteLastContact;
+              //              LastTwoLettersCrunchedOn := '';
+              //            end;
+              //          PageUpKey: SpeedUp;
+              //          PageDownKey: SlowDown;
+              //        else
+                                      //{WLI}                      SendFunctionKeyMessage (Key, OpMode);
+                                                            {KK1L: note: this is where to add switch to SAPMode if NextBandMap command}
+              //        end;
           end
+       else
+          begin
+          if Packet.PacketSerialPort <> NoPort then
+             begin
+             SendChar(Packet.PacketSerialPort, Key)
+             end
           else
-                {                        IF WhereX > 1 THEN
+            if Key <> BackSpace then
+               begin
+               if Key <> CarriageReturn then
+                  begin
+                  Write(Key)
+                  end
+               else
+                  begin
+                  WriteLn(Key);
+                  end;
+               end
+            else
+                  {                        IF WhereX > 1 THEN
                                             BEGIN
                                             GoToXY (WhereX - 1, WhereY);
                                             Write (' ');
                                             GoToXY (WhereX - 1, WhereY);
                                             END;
                  }
-            if Key <> BackSpace then
-              CommandLine := CommandLine + Key
-            else
-              Delete(CommandLine, length(CommandLine), 1);
-      end;
-      if Key = CarriageReturn then
+              if Key <> BackSpace then
+                 begin
+                 CommandLine := CommandLine + Key
+                 end
+              else
+                 begin
+                 Delete(CommandLine, length(CommandLine), 1);
+                 end;
+          end;
+       if Key = CarriageReturn then
+          begin
+          //                  if (Packet.PacketSerialPort = NoPort) and (ActiveMultiPort <> NoPort) then
       begin
-            //                  if (Packet.PacketSerialPort = NoPort) and (ActiveMultiPort <> NoPort) then
-        begin
-              {
+            {
               if K1EANetworkEnable then
               begin
                 Delete(CommandLine, length(CommandLine), 1);
@@ -908,21 +956,23 @@ begin
                 SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
                   MultiPacketMessageToSend, CommandLine);
                   }
-        end;
-        CommandLine := '';
       end;
-    end;
+      CommandLine := '';
+          end;
+       end;
  //   Packet.CheckPacketBuffer(True);
 //    Packet.CheckPacketMessage;
     Sleep(4);
   until ({ActiveMultiPort}NoPort <> NoPort) and (ElaspedSec100(TimeMark) > 2000);
   if PacketAutoCR and (CommandLine <> '') then
     if Packet.PacketSerialPort <> NoPort then
-      SendChar(Packet.PacketSerialPort, Key)
+       begin
+       SendChar(Packet.PacketSerialPort, Key)
+       end
     else
       //         if ActiveMultiPort <> NoPort then
-    begin
-        {
+       begin
+       {
          if K1EANetworkEnable then
          begin
            Delete(CommandLine, length(CommandLine), 1);
@@ -932,7 +982,7 @@ begin
            SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
              MultiPacketMessageToSend, CommandLine);
          }
-    end;
+       end;
   //  RestorePreviousWindow;
   //  RemoveWindow(BigWindow);
 //  VisibleLog.SetUpEditableLog;
@@ -972,9 +1022,11 @@ begin
   CWEnabled := True;
   if not (((AutoCQMemory >= F1) and (AutoCQMemory <= AltF10)) or
     ((AutoCQMemory >= F11) and (AutoCQMemory <= AltF12))) then
-    Exit;
+     begin
+     Exit;
+     end;
   if AutoCQDelayTime > 0 then
-  begin
+     begin
            SetSpeed(DisplayedCodeSpeed);   // 4.49.3
     Write('Repeating ', KeyId(AutoCQMemory), '  Listen time = ',
       (AutoCQDelayTime / 2): 2: 1, ' - PgUp/Dn to adjust or ESCAPE     ');
@@ -982,45 +1034,49 @@ begin
     CQMemory := AutoCQMemory;
     repeat
       if FrequencyDisplayed then
-      begin
-        LastCQFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};
-        LastCQMode := ActiveMode;
-      end
+         begin
+         LastCQFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};
+         LastCQMode := ActiveMode;
+         end
       else
-        LastCQFrequency := 0;
+         begin
+         LastCQFrequency := 0;
+         end;
       if (AutoCQMemory = F1) and RandomCQMode then
-      begin
-        Count := 0;
-        repeat
-          inc(Count);
-          case Random(4) of
-            0: CQMemory := F1;
-            1: CQMemory := F2;
-            2: CQMemory := F3;
-            3: CQMemory := F4;
-          end;
-        until (GetCQMemoryString(ActiveMode, CQMemory) <> '') or (Count > 1000); {KK1L: 6.73 Added mode}
-      end;
+         begin
+         Count := 0;
+         repeat
+           inc(Count);
+           case Random(4) of
+             0: CQMemory := F1;
+             1: CQMemory := F2;
+             2: CQMemory := F3;
+             3: CQMemory := F4;
+           end;
+         until (GetCQMemoryString(ActiveMode, CQMemory) <> '') or (Count > 1000); {KK1L: 6.73 Added mode}
+         end;
       if ActiveMode <> Phone then
-      begin
-        TempString := GetCQMemoryString(ActiveMode, CQMemory); {KK1L: 6.73 Added mode}
-        if not SkipFirstMessage then
-          for CharacterCount := 1 to length(TempString) do
-          begin
-            SendChar := TempString[CharacterCount];
-            case SendChar of
-              '\': AddStringToBuffer(MyCall, CWTone);
-              '>': RITClear;
-            else AddStringToBuffer(SendChar, CWTone);
+         begin
+         TempString := GetCQMemoryString(ActiveMode, CQMemory); {KK1L: 6.73 Added mode}
+         if not SkipFirstMessage then
+            begin
+            for CharacterCount := 1 to length(TempString) do
+               begin
+               SendChar := TempString[CharacterCount];
+               case SendChar of
+                 '\': AddStringToBuffer(MyCall, CWTone);
+                 '>': RITClear;
+               else AddStringToBuffer(SendChar, CWTone);
+               end;
+               end;
             end;
-          end;
-      end
+         end
       else { Phone mode }
-      begin
-        TempString := GetCQMemoryString(ActiveMode, CQMemory); {KK1L: 6.73 Added mode}
-            {KK1L: 6.72 Pulled out the DVK code from the REPEAT...UNTIL. Can't tell end of DVK message}
-            {REPEAT {KK1L: 6.71}
-            {    IF DVPEnable THEN
+         begin
+         TempString := GetCQMemoryString(ActiveMode, CQMemory); {KK1L: 6.73 Added mode}
+             {KK1L: 6.72 Pulled out the DVK code from the REPEAT...UNTIL. Can't tell end of DVK message}
+             {REPEAT {KK1L: 6.71}
+             {    IF DVPEnable THEN
             {        BEGIN
             {        WHILE TempString <> '' DO
             {            BEGIN
@@ -1031,58 +1087,60 @@ begin
             {        END
             {    ELSE
             {        IF (NOT SkipFirstMessage) AND (ActiveDVKPort <> NoPort) THEN {KK1L: 6.71 added DVK check}
-            {            SendDVKMessage (TempString);
+             {            SendDVKMessage (TempString);
             {
             {    IF AutoCQLoopKeyCheck = EscapeKey THEN Exit; {KK1L: 6.71a Check if key fell out of loop or escape}
-            {
+             {
             {    Wait (20); {KK1L: 6.71}
-            {UNTIL NOT (DVPMessagePlaying OR DVKMessagePlaying); {KK1L: 6.71 should start timer at END of message}
-            {KK1L: 6.72 Replaced above with this}
-        if DVKEnable then
-          repeat
-            while TempString <> '' do
+             {UNTIL NOT (DVPMessagePlaying OR DVKMessagePlaying); {KK1L: 6.71 should start timer at END of message}
+             {KK1L: 6.72 Replaced above with this}
+         if DVKEnable then
             begin
-              FileName := RemoveFirstString(TempString);
-              GetRidOfPrecedingSpaces(FileName);
-//              if not SkipFirstMessage then DVPPlayMessage(FileName);
-            end;
-            if AutoCQLoopKeyCheck = EscapeKey then
+            repeat
+              while TempString <> '' do
+                 begin
+                 FileName := RemoveFirstString(TempString);
+                 GetRidOfPrecedingSpaces(FileName);
+   //              if not SkipFirstMessage then DVPPlayMessage(FileName);
+                 end;
+              if AutoCQLoopKeyCheck = EscapeKey then
+                 begin
+                 if DVKEnable and DVPMessagePlaying then {KK1L: 6.71b Kill DVP}
+                    begin
+                    TimeOut := 0;
+                    DVPStopPlayback;
+                    repeat
+                      Sleep(5);
+                      inc(TimeOut);
+                    until (not DVPMessagePlaying) or (TimeOut > 30);
+                    end;
+                 Exit;
+                 end;
+              Sleep(20);
+            until not DVPMessagePlaying
+            end
+         else
             begin
-              if DVKEnable and DVPMessagePlaying then {KK1L: 6.71b Kill DVP}
-              begin
-                TimeOut := 0;
-                DVPStopPlayback;
-                repeat
-                  Sleep(5);
-                  inc(TimeOut);
-                until (not DVPMessagePlaying) or (TimeOut > 30);
-              end;
-              Exit;
+            //wli                        if (not SkipFirstMessage) and (ActiveDVKPort <> NoPort) then SendDVKMessage(TempString);
+      if AutoCQLoopKeyCheck = EscapeKey then
+         begin
+         //wli                              if (ActiveDVKPort <> NoPort) then StartDVK(0); {KK1L: 6.71b Kill DVK}
+ Exit;
+         end;
             end;
-            Sleep(20);
-          until not DVPMessagePlaying
-        else
-        begin
-                //wli                        if (not SkipFirstMessage) and (ActiveDVKPort <> NoPort) then SendDVKMessage(TempString);
-          if AutoCQLoopKeyCheck = EscapeKey then
-          begin
-                    //wli                              if (ActiveDVKPort <> NoPort) then StartDVK(0); {KK1L: 6.71b Kill DVK}
-            Exit;
-          end;
-        end;
-        MarkTime(StartOfLastPhoneMessage); {KK1L: 6.72 Or End in the case of DVP}
-      end;
+         MarkTime(StartOfLastPhoneMessage); {KK1L: 6.72 Or End in the case of DVP}
+         end;
       SkipFirstMessage := False;
         {KK1L: 6.68 From here to REPEAT added to put autoCQ in band map and send multi info message.}
       if BandMapEnable and (Radio1.LastDisplayedFreq {LastDisplayedFreq[RadioOne]} <> 0) and (OpMode = CQOpMode) and BandMapDisplayCQ then
-      begin
-        Str(NextSerialToSend, QSONumberString);  // Issue #954
-        BandMapCursorFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};
-            //            NewBandMapEntry('CQ/ ' + QSONumberString, LastDisplayedFreq[ActiveRadio], 0, ActiveMode, False, False, BandMapDecayTime, True, MyCall);
-        tCreateAndAddNewSpot('CQ/ ' + QSONumberString, False, ActiveRadioPtr {?});
-        LastCQFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};
-        LastCQMode := ActiveMode;
-      end;
+         begin
+         Str(NextSerialToSend, QSONumberString);  // Issue #954
+         BandMapCursorFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};
+             //            NewBandMapEntry('CQ/ ' + QSONumberString, LastDisplayedFreq[ActiveRadio], 0, ActiveMode, False, False, BandMapDecayTime, True, MyCall);
+         tCreateAndAddNewSpot('CQ/ ' + QSONumberString, False, ActiveRadioPtr {?});
+         LastCQFrequency := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]};
+         LastCQMode := ActiveMode;
+         end;
         //            if ActiveMultiPort <> NoPort then CreateAndSendCQMultiInfoMessage;
       repeat
           {        if ActiveMode <> Phone then
@@ -1095,12 +1153,15 @@ begin
                   else
                    }TimeElasped := MicroTimeElapsed(StartOfLastPhoneMessage) div 50;
         if LastDisplayedTimeElasped <> TimeElasped then
-        begin
-              //{WLI}                     GoToXY (WhereX - 4, WhereY);
-          if TimeElasped < 20 then Write(' ');
-          Write((TimeElasped / 2): 2: 1);
-          LastDisplayedTimeElasped := TimeElasped;
-        end;
+           begin
+           //{WLI}                     GoToXY (WhereX - 4, WhereY);
+       if TimeElasped < 20 then
+          begin
+          Write(' ');
+          end;
+       Write((TimeElasped / 2): 2: 1);
+       LastDisplayedTimeElasped := TimeElasped;
+           end;
           { Allow for many commands to get processed - also see if an
             escape key was pressed. }
         if AutoCQLoopKeyCheck = EscapeKey then Exit;
@@ -1125,48 +1186,54 @@ begin
   repeat until NewKeyPressed;
   Key := UpCase(NewReadKey);
   if Key <> NullKey then
-  begin
-      //    RemoveAndRestorePreviousWindow;
-    Exit;
-  end;
+     begin
+     //    RemoveAndRestorePreviousWindow;
+   Exit;
+     end;
   Key := NewReadKey;
   if not (((Key >= F1) and (Key <= AltF10)) or ((Key >= F11) and (Key <= AltF12))) then
-  begin
-      //    RemoveAndRestorePreviousWindow;
-    Exit;
-  end;
+     begin
+     //    RemoveAndRestorePreviousWindow;
+   Exit;
+     end;
   AutoCQMemory := Key;
   repeat
     //{WLI}         ClrScr;
     if ActiveMode = Phone then
       if DVKEnable then {KK1L: 6.72 Now need to differentiate DVP and DVK}
         {Write ('Number of seconds between start of transmissions : ')}{KK1L: 6.71 fixed this in AutoCQResume}
-        Write('Number of seconds of listening time : ') {KK1L: 6.71 fixed this in AutoCQResume}
+         begin
+         Write('Number of seconds of listening time : ') {KK1L: 6.71 fixed this in AutoCQResume}
+         end
       else
-        Write('Number of seconds between start of transmissions : ') {KK1L: 6.72}
+         begin
+         Write('Number of seconds between start of transmissions : ') {KK1L: 6.72}
+         end
     else
-      Write('Number of seconds of listening time : ');
+       begin
+       Write('Number of seconds of listening time : ');
+       end;
     TempString := '';
     repeat
       repeat until NewKeyPressed;
       Key := UpCase(NewReadKey);
       if Key = EscapeKey then
-      begin
-          //        RemoveAndRestorePreviousWindow;
-        Exit;
-      end;
+         begin
+         //        RemoveAndRestorePreviousWindow;
+       Exit;
+         end;
       if Key = BackSpace then
         if length(TempString) > 0 then
-        begin
-          TempString[0] := AnsiChar(length(TempString) - 1);
-            //{WLI}                     GoToXY (WhereX - 1, WhereY);
-            //{WLI}                     ClrEol;
-        end;
+           begin
+           TempString[0] := AnsiChar(length(TempString) - 1);
+             //{WLI}                     GoToXY (WhereX - 1, WhereY);
+             //{WLI}                     ClrEol;
+           end;
       if (Key >= '0') and (Key <= '9') then
-      begin
-        TempString := TempString + Key;
-        Write(Key);
-      end;
+         begin
+         TempString := TempString + Key;
+         Write(Key);
+         end;
     until (length(TempString) = 2) or (Key = CarriageReturn);
     Val(TempString, Time, Result);
     Time := Time * 2;
@@ -1186,23 +1253,29 @@ begin
 //  if not PartialCallMultsEnable then Exit;
   if ActiveMainWindow <> awCallWindow then if ActiveDomesticMult <> GridSquares then Exit;          
   if length(WindowString^) < 2 then Exit;
-  if length(WindowString^) < 3 then DispalayNewMult(SW_HIDE);
+  if length(WindowString^) < 3 then
+     begin
+     DispalayNewMult(SW_HIDE);
+     end;
   if DoingDomesticMults then
-   begin                                           // Gav 4.44.8      Uncommented this section
-    TempString := WindowString^;
-    while TempString <> '' do
-    begin
-      TestString := RemoveFirstString(TempString);
-      TempExchange.QTHString := RemoveFirstString(TestString);
-      if not (StringIsAllNumbersOrSpaces(TempExchange.QTHString)) then
-        if FoundDomesticQTH(TempExchange) then
+     begin                                           // Gav 4.44.8      Uncommented this section
+     TempString := WindowString^;
+     while TempString <> '' do
         begin
-          VisibleLog.ShowDomesticMultiplierStatus(TempExchange.DomesticQTH);
-          Exit;
+        TestString := RemoveFirstString(TempString);
+        TempExchange.QTHString := RemoveFirstString(TestString);
+        if not (StringIsAllNumbersOrSpaces(TempExchange.QTHString)) then
+          if FoundDomesticQTH(TempExchange) then
+             begin
+             VisibleLog.ShowDomesticMultiplierStatus(TempExchange.DomesticQTH);
+             Exit;
+             end;
         end;
+     end
+ else
+    begin
+    VisibleLog.ShowMultiplierStatus(WindowString);
     end;
-  end
- else VisibleLog.ShowMultiplierStatus(WindowString);
 end;
 
 {KK1L: 6.68}
@@ -1211,18 +1284,20 @@ procedure GoToNextMultBandMapFrequency;
 begin
   if (CommandUseInactiveRadio) and {KK1L: 6.73}
     (NextMultiplierEntryInBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]}, InActiveRadioPtr.ModeMemory {ModeMemory[InactiveRadio]})) then
-    SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
+     begin
+     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
+     end
   else
     if NextMultiplierEntryInBandMap(ActiveBand, ActiveMode) then
-    begin
-      SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-      if ActiveWindow = ExchangeWindow then
-      begin
-            //{WLI}                 ClrScr;
-        ExchangeWindowString := '';
-            //        RestorePreviousWindow;
-      end;
-    end;
+       begin
+       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
+       if ActiveWindow = ExchangeWindow then
+          begin
+          //{WLI}                 ClrScr;
+      ExchangeWindowString := '';
+          //        RestorePreviousWindow;
+          end;
+       end;
 end;
 procedure GoToNextDisplayedBandMapFrequency;
 
@@ -1230,18 +1305,20 @@ begin
   if (CommandUseInactiveRadio) and {KK1L: 6.73}
     (NextNonDupeEntryInDisplayedBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
     InActiveRadioPtr.ModeMemory { ModeMemory[InactiveRadio]})) then
-    SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
+     begin
+     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
+     end
   else
     if NextNonDupeEntryInDisplayedBandMap(ActiveBand, ActiveMode) then
-    begin
-      SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-      if ActiveWindow = ExchangeWindow then
-      begin
-            //{WLI}                 ClrScr;
-        ExchangeWindowString := '';
-            //        RestorePreviousWindow;
-      end;
-    end;
+       begin
+       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
+       if ActiveWindow = ExchangeWindow then
+          begin
+          //{WLI}                 ClrScr;
+      ExchangeWindowString := '';
+          //        RestorePreviousWindow;
+          end;
+       end;
 end;
 {KK1L: 6.68}
 procedure GoToNextMultDisplayedBandMapFrequency;
@@ -1250,18 +1327,20 @@ begin
   if (CommandUseInactiveRadio) and {KK1L: 6.73}
     (NextMultiplierEntryInDisplayedBandMap(InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]},
     InActiveRadioPtr.ModeMemory {ModeMemory[InactiveRadio]})) then
-    SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
+     begin
+     SetUpBandMapEntry(BandMapCursorData, InactiveRadio)
+     end
   else
     if NextMultiplierEntryInDisplayedBandMap(ActiveBand, ActiveMode) then
-    begin
-      SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
-      if ActiveWindow = ExchangeWindow then
-      begin
-            //{WLI}                 ClrScr;
-        ExchangeWindowString := '';
-            //        RestorePreviousWindow;
-      end;
-    end;
+       begin
+       SetUpBandMapEntry(BandMapCursorData, ActiveRadio); {KK1L: Added ActiveRadio}
+       if ActiveWindow = ExchangeWindow then
+          begin
+          //{WLI}                 ClrScr;
+      ExchangeWindowString := '';
+          //        RestorePreviousWindow;
+          end;
+       end;
 end;
 function FoundCommand(var SendString: Str160): boolean;
 
@@ -1305,87 +1384,118 @@ begin
     F1:
       begin
         if (TwoRadioState = StationCalled) then
-          CheckTwoRadioState(F1Pressed)
+           begin
+           CheckTwoRadioState(F1Pressed)
+           end
         else
-        begin
+           begin
             
-          begin
-            if ActiveMode = CW then
-            begin
-              if not AllCWMessagesChainable then FlushCWBuffer;
-              if (KeyRecentlyPressed(F1, 600)) or (not DEEnable) then
-                SendCrypticMessage(MyCall)
-              else
-              begin
-                FlushCWBuffer;
-                SendCrypticMessage(DEPlusMyCall);
-              end;
-              KeyStamp(F1);
-            end
-            else
-              if ActiveMode = Digital then
-              begin
-              if DEEnable then     // wli issue 277
-                SendCrypticMessage(CallWindowString + ' DE ' + MyCall + ' ' + MyCall)
-              else
-                SendCrypticMessage(CallWindowString + ' ' + MyCall + ' ' + MyCall);
-              end
-              else
-                SendFunctionKeyMessage(F1, SearchAndPounceOpMode);
-            InactiveRigCallingCQ := False;
-          end;
-        end;
-        if length(CallWindowString) > 2 then tExchangeWindowSetFocus;
+           begin
+             if ActiveMode = CW then
+                begin
+                if not AllCWMessagesChainable then
+                   begin
+                   FlushCWBuffer;
+                   end;
+                if (KeyRecentlyPressed(F1, 600)) or (not DEEnable) then
+                   begin
+                   SendCrypticMessage(MyCall)
+                   end
+                else
+                   begin
+                   FlushCWBuffer;
+                   SendCrypticMessage(DEPlusMyCall);
+                   end;
+                KeyStamp(F1);
+                end
+             else
+               if ActiveMode = Digital then
+                  begin
+                  if DEEnable then     // wli issue 277
+                     begin
+                     SendCrypticMessage(CallWindowString + ' DE ' + MyCall + ' ' + MyCall)
+                     end
+                  else
+                     begin
+                     SendCrypticMessage(CallWindowString + ' ' + MyCall + ' ' + MyCall);
+                     end;
+                  end
+               else
+                  begin
+                  SendFunctionKeyMessage(F1, SearchAndPounceOpMode);
+                  end;
+             InactiveRigCallingCQ := False;
+           end;
+           end;
+        if length(CallWindowString) > 2 then
+           begin
+           tExchangeWindowSetFocus;
+           end;
         if ExchangeWindowString = '' then
-        begin
-          tSetExchWindInitExchangeEntry;
-          CheckAndSetInitialExchangeCursorPos;
-        end;
+           begin
+           tSetExchWindInitExchangeEntry;
+           CheckAndSetInitialExchangeCursorPos;
+           end;
         ExchangeHasBeenSent := False;
       end;
     F2:
       begin
         if TwoRadioState = StationCalled then
-          CheckTwoRadioState(F2Pressed)
+           begin
+           CheckTwoRadioState(F2Pressed)
+           end
         else
-        begin
-          if ActiveMode in [CW, Digital] then
-          begin
-            if ActiveMode = CW then
-              if not AllCWMessagesChainable then FlushCWBuffer;
-            if ExchangeHasBeenSent and (RepeatSearchAndPounceExchange <> '') then
-              SendCrypticMessage(RepeatSearchAndPounceExchange)
-            else
-            begin
-              if (ActiveWindow = CallWindow) and
-                (CallWindowString = '') and (ExchangeWindowString = '') then
+           begin
+           if ActiveMode in [CW, Digital] then
               begin
-                if RepeatSearchAndPounceExchange <> '' then
-                  SendCrypticMessage(RepeatSearchAndPounceExchange)
-                else
-                  SendCrypticMessage(SearchAndPounceExchange);
-                KeyStamp(ExtendedKey);
-                Exit;
-              end
+              if ActiveMode = CW then
+                if not AllCWMessagesChainable then
+                   begin
+                   FlushCWBuffer;
+                   end;
+              if ExchangeHasBeenSent and (RepeatSearchAndPounceExchange <> '') then
+                 begin
+                 SendCrypticMessage(RepeatSearchAndPounceExchange)
+                 end
               else
-                SendCrypticMessage(SearchAndPounceExchange);
-            end;
-          end
-          else
-//            SendFunctionKeyMessage(F2, SearchAndPounceOpMode);
-            SendCrypticMessage(SearchAndPouncePhoneExchange);
-          ExchangeHasBeenSent := True;
-        end;
+                 begin
+                 if (ActiveWindow = CallWindow) and
+                   (CallWindowString = '') and (ExchangeWindowString = '') then
+                    begin
+                    if RepeatSearchAndPounceExchange <> '' then
+                       begin
+                       SendCrypticMessage(RepeatSearchAndPounceExchange)
+                       end
+                    else
+                       begin
+                       SendCrypticMessage(SearchAndPounceExchange);
+                       end;
+                    KeyStamp(ExtendedKey);
+                    Exit;
+                    end
+                 else
+                    begin
+                    SendCrypticMessage(SearchAndPounceExchange);
+                    end;
+                 end;
+              end
+           else
+ //            SendFunctionKeyMessage(F2, SearchAndPounceOpMode);
+              begin
+              SendCrypticMessage(SearchAndPouncePhoneExchange);
+              end;
+           ExchangeHasBeenSent := True;
+           end;
 //        if K5KA.ModeEnabled then K5KA.State := KAMessageStarted;
       end;
   else
     begin
       SendFunctionKeyMessage(ExtendedKey, SearchAndPounceOpMode);
       if ExtendedKey = AltF10 then
-      begin
-        CallsignICameBackTo := CallWindowString;
-        ShowStationInformation(@CallWindowString);
-      end;
+         begin
+         CallsignICameBackTo := CallWindowString;
+         ShowStationInformation(@CallWindowString);
+         end;
     end;
   end;
   KeyStamp(ExtendedKey);
@@ -1411,10 +1521,13 @@ begin
 //  OldTotalScore := TotalScore;
   LastTwoLettersCrunchedOn := '';
   if AutoTimeIncrementQSOs > 0 then
-  begin
-    inc(AutoTimeQSOCount);
-    if AutoTimeQSOCount >= AutoTimeIncrementQSOs then IncrementTime(1);
-  end;
+     begin
+     inc(AutoTimeQSOCount);
+     if AutoTimeQSOCount >= AutoTimeIncrementQSOs then
+        begin
+        IncrementTime(1);
+        end;
+     end;
 //   if LastDeletedLogEntry <> '' then
 //      begin
 //         LastDeletedLogEntry := '';
@@ -1424,12 +1537,16 @@ begin
   WindowDupeCheckCall := RXData.Callsign;
   //  LastQSOLogged := RXData;
   if TenMinuteRule <> NoTenMinuteRule then
+     begin
      UpdateTenMinuteDate(rxData.band,rxData.Mode);
+     end;
   //  if not DDX(VerifyContact) then RXData.QSOPoints := 0;
      //  if not TailEnding then RemoveWindow(PossibleCallWindow);
   //  if Trace then Write('@');
   if MobileCall(RXData.Callsign) and (ActiveDomesticMult = DomesticFile) and (RXData.DomesticQTH <> '')then    // n4af 4.41.8 Add Q.P. Rover  // 4.98.6
+     begin
      RXData.Callsign := PrecedingString(RXData.Callsign,'/')  + '/' + RXData.DomesticQTH;  // n4af 4.41.7
+     end;
 
   // ceClearDupeSheet bypass: county-line / Nfer follow-up records carry
   // this flag so the dupe check below (and the matching one in
@@ -1439,101 +1556,122 @@ begin
     (VisibleLog.CallIsADupe(RXData.Callsign, RXData.Band, RXData.Mode) or
     ((ActiveDomesticMult = GridSquares) and RoverCall(RXData.Callsign) and (NumberGridSquaresInList > 0))) then
     if not (ActiveQSOPointMethod = AlwaysOnePointPerQSO) then
-    begin
-        //      if Trace then Write('#');
-      RXData.ceDupe := True;
-        //            RXData.tDupe := True;
-      if (ActiveDomesticMult = GridSquares) and RoverCall(RXData.Callsign) then
-      begin
-        if NumberGridSquaresInList > 0 then
-          for Address := 0 to NumberGridSquaresInList - 1 do
-            if RXData.DomesticQTH = GridSquareList[Address] then
-            begin
-              RXData.QSOPoints := 0;
-                    //                              if ReminderPostedCount = 0 then
-              begin
-                TF.Format(QuickDisplayBuffer, TC_YOUALREADYWORKEDIN, @RXData.Callsign[1], @RXData.DomMultQTH[1]);
-                QuickDisplay(QuickDisplayBuffer);
-                if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
-                      //                                    ReminderPostedCount := 60;
-              end;
-              Break;
-            end;
-      end
-      else
-      begin
-            //                  if ReminderPostedCount = 0 then
+       begin
+       //      if Trace then Write('#');
+     RXData.ceDupe := True;
+       //            RXData.tDupe := True;
+     if (ActiveDomesticMult = GridSquares) and RoverCall(RXData.Callsign) then
         begin
-          TF.Format(QuickDisplayBuffer, TC_ISADUPEANDWILLBELOGGEDWITHZERO, @RXData.Callsign[1]);
-          QuickDisplay(QuickDisplayBuffer);
-          if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
-        end;
-        RXData.QSOPoints := 0;
-      end;
+        if NumberGridSquaresInList > 0 then
+           begin
+           for Address := 0 to NumberGridSquaresInList - 1 do
+             if RXData.DomesticQTH = GridSquareList[Address] then
+                begin
+                RXData.QSOPoints := 0;
+                      //                              if ReminderPostedCount = 0 then
+                begin
+                  TF.Format(QuickDisplayBuffer, TC_YOUALREADYWORKEDIN, @RXData.Callsign[1], @RXData.DomMultQTH[1]);
+                  QuickDisplay(QuickDisplayBuffer);
+                  if DupeCheckSound <> DupeCheckNoSound then
+                     begin
+                     DoABeep(ThreeHarmonics);
+                     end;
+                        //                                    ReminderPostedCount := 60;
+                end;
+                Break;
+                end;
+           end;
+        end
+     else
+        begin
+        //                  if ReminderPostedCount = 0 then
+    begin
+      TF.Format(QuickDisplayBuffer, TC_ISADUPEANDWILLBELOGGEDWITHZERO, @RXData.Callsign[1]);
+      QuickDisplay(QuickDisplayBuffer);
+      if DupeCheckSound <> DupeCheckNoSound then
+         begin
+         DoABeep(ThreeHarmonics);
+         end;
     end;
+    RXData.QSOPoints := 0;
+        end;
+       end;
   VisibleLog.ProcessMultipliers(RXData);
   if MyComputer then
-    begin
-    RXData.Radio := ActiveRadioPtr^.RadioModel;
-    RXData.ceRadio := ActiveRadio;
-    tGetQSOSystemTime(RXData.tSysTime);
-    RXData.ceQSOID1 := STARTTIMEOFTHETR4W;
-    RXData.ceQSOID2 := Windows.GetTickCount;
-    RXData.ceOperator := CurrentOperator;
-    if RecorderDuration = rdEachQSO then
-      if SaveLastQSOToMP3File(@RXData) then
-        RXData.MP3Record := True;
-    if not SendRecordToServer(NET_QSOINFO_ID, RXData) then inc(tUSQ);
-    perfTimeStart := Now;
-    if UDPBroadcaster.Enabled(usContact) then
-       begin
-       LogContactToUDP(RXData);
-       end;
-    if ExternalLoggerEnabled then
-       begin
-       if Assigned(externalLogger) then
+     begin
+     RXData.Radio := ActiveRadioPtr^.RadioModel;
+     RXData.ceRadio := ActiveRadio;
+     tGetQSOSystemTime(RXData.tSysTime);
+     RXData.ceQSOID1 := STARTTIMEOFTHETR4W;
+     RXData.ceQSOID2 := Windows.GetTickCount;
+     RXData.ceOperator := CurrentOperator;
+     if RecorderDuration = rdEachQSO then
+       if SaveLastQSOToMP3File(@RXData) then
           begin
-          externalLogger.LogQSO(RXData);
+          RXData.MP3Record := True;
           end;
-       end;
-    // Issue #783 -- HamScore RTC realtime upload (cheap no-op when disabled).
-    HamScoreOnLog(RXData);
-    perfTimeStop := Now;
-    logger.Debug('Milliseconds to send UDP and TCP to external logger = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
-    end
+     if not SendRecordToServer(NET_QSOINFO_ID, RXData) then
+        begin
+        inc(tUSQ);
+        end;
+     perfTimeStart := Now;
+     if UDPBroadcaster.Enabled(usContact) then
+        begin
+        LogContactToUDP(RXData);
+        end;
+     if ExternalLoggerEnabled then
+        begin
+        if Assigned(externalLogger) then
+           begin
+           externalLogger.LogQSO(RXData);
+           end;
+        end;
+     // Issue #783 -- HamScore RTC realtime upload (cheap no-op when disabled).
+     HamScoreOnLog(RXData);
+     perfTimeStop := Now;
+     logger.Debug('Milliseconds to send UDP and TCP to external logger = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
+     end
   else
-    begin     // ny4i issue 82 - If the option is set, broadcast contacts received from the Network
-    if UDPBroadcaster.BroadcastAllQSOs then
-       begin
-       LogContactToUDP(RXData);
-       end;
-    // Issue #783 -- network-received QSOs also feed RTC if multi-op uplink is enabled.
-    HamScoreOnLog(RXData);
-    end;
+     begin     // ny4i issue 82 - If the option is set, broadcast contacts received from the Network
+     if UDPBroadcaster.BroadcastAllQSOs then
+        begin
+        LogContactToUDP(RXData);
+        end;
+     // Issue #783 -- network-received QSOs also feed RTC if multi-op uplink is enabled.
+     HamScoreOnLog(RXData);
+     end;
   if not tAddQSOToLog(RXData) then Exit;
   //if RXData.Band in [Band160..Band10] then
   inc(ContinentQSOCount[RXData.Band, RXData.QTH.Continent]);
   TempMode := RXData.Mode;
-  if TempMode = FM then TempMode := Phone;
+  if TempMode = FM then
+     begin
+     TempMode := Phone;
+     end;
   if ((RXData.Mode <> NoMode) and (RXData.Band <> NoBand) and (RXData.ceRecordKind = rkQSO)) then
-  begin
-    UpdateMaxSerialSent(RXData.Band, RXData.NumberSent);  // Issue #954: track highest sent serial
-    inc(QSOTotals[RXData.Band, TempMode]);
-    inc(QSOTotals[RXData.Band, Both]);
-    inc(QSOTotals[AllBands, TempMode]);
-    inc(QSOTotals[AllBands, Both]);
-    Sheet.SetMultFlags(RXData);
-    Sheet.AddQSOToSheets(@RXData, True);
-    CallsignsList.AddCallsign(RXData.Callsign, TempMode, RXData.Band, False);
-    CallsignsList.AddIniitialExchange(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
-    SendStationStatus(sstQSOs);
-  end;
+     begin
+     UpdateMaxSerialSent(RXData.Band, RXData.NumberSent);  // Issue #954: track highest sent serial
+     inc(QSOTotals[RXData.Band, TempMode]);
+     inc(QSOTotals[RXData.Band, Both]);
+     inc(QSOTotals[AllBands, TempMode]);
+     inc(QSOTotals[AllBands, Both]);
+     Sheet.SetMultFlags(RXData);
+     Sheet.AddQSOToSheets(@RXData, True);
+     CallsignsList.AddCallsign(RXData.Callsign, TempMode, RXData.Band, False);
+     CallsignsList.AddIniitialExchange(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
+     SendStationStatus(sstQSOs);
+     end;
   if SingleBand <> AllBands then
      begin
-     if RXData.Band = SingleBand then TotalQSOPoints := TotalQSOPoints + RXData.QSOPoints;
+     if RXData.Band = SingleBand then
+        begin
+        TotalQSOPoints := TotalQSOPoints + RXData.QSOPoints;
+        end;
      end
   else
+     begin
      TotalQSOPoints := TotalQSOPoints + RXData.QSOPoints;
+     end;
 
   if Contest = MOQSOPARTY then
      begin
@@ -1542,64 +1680,79 @@ begin
         (RXData.tSysTime.qtHour >= 14) and
         (RXData.tSysTime.qtHour < 20) and
         (MOQSOPartyPeakHourCount < 250) then
+        begin
         inc(MOQSOPartyPeakHourCount);
+        end;
      end;
   //  ProcessPartialCallAndInitialExchange(RXData);
     //  PushLogStringIntoEditableLogAndLogPopedQSO(LogString, True);
     //  if Trace then Write('&');
   if MyComputer then
     if not TailEnding then
-    begin
-//      ShowStationInformation(@RXData.Callsign);
-      UpdateStationStatus(RXData.Callsign, -1);
-    end;
+       begin
+       //      ShowStationInformation(@RXData.Callsign);
+             UpdateStationStatus(RXData.Callsign, -1);
+       end;
   if DoingDomesticMults and                                         // Gav 4.44.8   uncommented section
     (MultByBand or MultByMode) and
     (RXData.DomesticQTH <> '') then
-    VisibleLog.ShowDomesticMultiplierStatus(RXData.DomMultQTH);
+     begin
+     VisibleLog.ShowDomesticMultiplierStatus(RXData.DomMultQTH);
+     end;
   {Increment rate data}
   inc(NumberContactsThisMinute);
   NumberQSOPointsThisMinute := NumberQSOPointsThisMinute + RXData.QSOPoints;
   if RXData.Band in [Band160..Band10] then
     if RXData.ceRecordKind = rkQSO then
-    begin
-      inc(NumberBandQSOsThisMinute[RXData.Band]);
-      if HourDisplay = BandChangesThisComputer then if not MyComputer then goto 1;
-      if tThisHourPreviousBand <> RXData.Band then
-      begin
-        if tThisHourPreviousBand <> NoBand then inc(tThisHourBandChanges);
-        tThisHourPreviousBand := RXData.Band;
-        DisplayHour;
-      end;
-    end;
+       begin
+       inc(NumberBandQSOsThisMinute[RXData.Band]);
+       if HourDisplay = BandChangesThisComputer then if not MyComputer then goto 1;
+       if tThisHourPreviousBand <> RXData.Band then
+          begin
+          if tThisHourPreviousBand <> NoBand then
+             begin
+             inc(tThisHourBandChanges);
+             end;
+          tThisHourPreviousBand := RXData.Band;
+          DisplayHour;
+          end;
+       end;
   1:
   //    DisplayTotalScore (TotalScore);
   DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
   //  CheckAvailableMemory;
-  if BeepEvery10QSOs and (TotalContacts mod 10 = 0) then QuickBeep;
+  if BeepEvery10QSOs and (TotalContacts mod 10 = 0) then
+     begin
+     QuickBeep;
+     end;
   if FloppyFileSaveFrequency > 0 then
     if QSOTotals[AllBands, Both] > 0 then
       if QSOTotals[AllBands, Both] mod FloppyFileSaveFrequency = 0 then
-        SaveLogFileToFloppy;
-  if UpdateRestartFileEnable then Sheet.SaveRestartFile;
+         begin
+         SaveLogFileToFloppy;
+         end;
+  if UpdateRestartFileEnable then
+     begin
+     Sheet.SaveRestartFile;
+     end;
   BeSilent := False;
   NameCallsignPutUp := '';
   if CheckLogFileSize then
     if not LogFileLooksOkay then
-    begin
-      DoABeep(Warning);
-      showwarning(TC_LOGFILESIZECHECKFAILED);
-        //            ReminderPostedCount := 60;
-    end;
+       begin
+       DoABeep(Warning);
+       showwarning(TC_LOGFILESIZECHECKFAILED);
+         //            ReminderPostedCount := 60;
+       end;
   if CWSpeedFromDataBase and (RememberCWSpeed <> 0) then
-  begin
-    SetSpeed(RememberCWSpeed);
-    RememberCWSpeed := 0;
-    DisplayCodeSpeed;
-  end;
+     begin
+     SetSpeed(RememberCWSpeed);
+     RememberCWSpeed := 0;
+     DisplayCodeSpeed;
+     end;
   //  if (DDXState <> Off) and Debug and (CWTone = 0) then if Random(100) = 0 then BandUp;
   if BandMapEnable then
-  begin
+     begin
       //UpdateBandMapMultiplierStatus;
     SpotsList.UpdateSpotsMultiplierStatus;
       //        KK1L: 6.64 Need to change dupe status for this contact as well
@@ -1645,33 +1798,35 @@ begin
   tCleareExchangeWindow;
   //{WLI}    ExchangeWindowString := '';
   if DupeInfoCall <> '' then {KK1L: 6.73 Keeps SO2R message in line with reality}
-  begin
-      //    SaveAndSetActiveWindow(DupeInfoWindow);
-    WriteLn(DupeInfoCall + ' OK!!          ');
-    if (TwoRadioState = StationCalled) and (OpMode = CQOpMode) then
+     begin
+     //    SaveAndSetActiveWindow(DupeInfoWindow);
+   WriteLn(DupeInfoCall + ' OK!!          ');
+   if (TwoRadioState = StationCalled) and (OpMode = CQOpMode) then
+      begin
       Write('Enter to complete QSO    '); {KK1L: 6.73 The stuff normally following this should remain.}
-      //    RestorePreviousWindow;
-  end;
+      end;
+     //    RestorePreviousWindow;
+     end;
   {   Removed in 6.19 - I decided that it would be better to leave the
       cursor in the call window so you can call the guy with a RETURN.
       Whoops - we need this for two radio stuff.  Put back in if
       TwoRadioState = StationCalled. }
   if TwoRadioState = StationCalled then
-  begin
-      //{WLI}        ActivateExchangeWindow;
-    tSetExchWindInitExchangeEntry;
-      //{WLI}        ExchangeWindowString := InitialExchangeEntry (CallWindowString);
-      //{WLI}//        ClrScr;
-      //{WLI}        Write (ExchangeWindowString);
-              {TR6.74 - because InitialExchangeEntry no longer does this }
-      //{WLI}        IF InitialExchangeOverwrite THEN
-      //{WLI}            InitialExchangePutUp := ExchangeWindowString <> '';
-      //{WLI}        IF InitialExchangeCursorPos = AtStart THEN
-      //{WLI}            GoToXY (1, 1)
-      //{WLI}        ELSE
-      //{WLI}            GoToXY (1, Length (ExchangeWindowString) + 1);
-      //{WLI}        ExchangeWindowCursorPosition := WhereY;
-  end;
+     begin
+     //{WLI}        ActivateExchangeWindow;
+   tSetExchWindInitExchangeEntry;
+     //{WLI}        ExchangeWindowString := InitialExchangeEntry (CallWindowString);
+     //{WLI}//        ClrScr;
+     //{WLI}        Write (ExchangeWindowString);
+             {TR6.74 - because InitialExchangeEntry no longer does this }
+     //{WLI}        IF InitialExchangeOverwrite THEN
+     //{WLI}            InitialExchangePutUp := ExchangeWindowString <> '';
+     //{WLI}        IF InitialExchangeCursorPos = AtStart THEN
+     //{WLI}            GoToXY (1, 1)
+     //{WLI}        ELSE
+     //{WLI}            GoToXY (1, Length (ExchangeWindowString) + 1);
+     //{WLI}        ExchangeWindowCursorPosition := WhereY;
+     end;
   //    IF KeyRecentlyPressed (F1, 100) THEN DDX (MaybeRespondToMyCall);
   //{WLI}    SearchAndPounce := False;
   { Presumed exit value unless a QSO is finished
@@ -1711,80 +1866,91 @@ begin
     end;
 }
     if KeyPressedMemory = ' ' then
-    begin
-      Key := ' ';
-      KeyPressedMemory := CHR(0);
-    end
+       begin
+       Key := ' ';
+       KeyPressedMemory := CHR(0);
+       end
     else
       if ActiveWindow = CallWindow then
-        begin
-        // Issue #997: was asm nop (no-op then-branch)
-        end
+         begin
+         // Issue #997: was asm nop (no-op then-branch)
+         end
 //        WindowEditor(CallWindowString, Key, ExtendedKey)
       else
         //wli                WindowEditor(ExchangeWindowString, Key, ExtendedKey);
         if (Key = StartSendingNowKey) and (ActiveWindow = CallWindow) and (length(CallWindowString) >= 1) then
-        begin
-            //                  if ReminderPostedCount = 0 then
-          if AutoCallTerminate then
-            QuickDisplay('Continue entering characters.  Auto terminate active!!')
-          else
-            QuickDisplay('Continue entering characters and press RETURN when done.');
-          if length(CallWindowString) > 0 then
-          begin
-            if MessageEnable then
+           begin
+           //                  if ReminderPostedCount = 0 then
+         if AutoCallTerminate then
             begin
-              AddStringToBuffer(CallWindowString, CWTone);
-              if IsCWByCATActive then
-                 begin
-                 AddStringToBuffer(CWByCATBufferTerminator,CWTone);
-                 end;
-//              PTTForceOn;
+            QuickDisplay('Continue entering characters.  Auto terminate active!!')
+            end
+         else
+            begin
+            QuickDisplay('Continue entering characters and press RETURN when done.');
             end;
+         if length(CallWindowString) > 0 then
+            begin
+            if MessageEnable then
+               begin
+               AddStringToBuffer(CallWindowString, CWTone);
+               if IsCWByCATActive then
+                  begin
+                  AddStringToBuffer(CWByCATBufferTerminator,CWTone);
+                  end;
+ //              PTTForceOn;
+               end;
             if (SCPMinimumLetters > 0) and (not NewKeyPressed) then {KK1L: 6.73 Added ActiveRadio}
-              VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr);
+               begin
+               VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr);
+               end;
             repeat
               repeat
                 if (ActiveMode = CW) and CWEnabled {and (not ReadInLog)} and
                   AutoCallTerminate and not CWStillBeingSent then
-                begin
-                  CallAlreadySent := True;
-                  CallsignICameBackTo := CallWindowString;
-                  Exit;
-                end;
+                   begin
+                   CallAlreadySent := True;
+                   CallsignICameBackTo := CallWindowString;
+                   Exit;
+                   end;
               until NewKeyPressed {or ReadInLog};
               if 1 > 1 {ReadInLog} then
-              begin
-                if (length(ReadInCallsign) = length(CallWindowString)) and
-                  (length(ReadInCallsign) > 0) then
-                  TempKey := CarriageReturn
-                else
-                begin
-                  TempKey := ReadInCallsign[length(CallWindowString) + 1];
-                  Sleep(Random(400));
-                end;
-              end
-              else TempKey := AnsiChar(UpCase(NewReadKey));
+                 begin
+                 if (length(ReadInCallsign) = length(CallWindowString)) and
+                   (length(ReadInCallsign) > 0) then
+                    begin
+                    TempKey := CarriageReturn
+                    end
+                 else
+                    begin
+                    TempKey := ReadInCallsign[length(CallWindowString) + 1];
+                    Sleep(Random(400));
+                    end;
+                 end
+              else
+                 begin
+                 TempKey := AnsiChar(UpCase(NewReadKey));
+                 end;
               case TempKey of
                 BackSpace:
                   if EditingCallsignSent then
-                  begin
-                    if length(CallWindowString) > 0 then
-                    begin
-                      Delete(CallWindowString, length(CallWindowString), 1);
-                    end
-                  end
+                     begin
+                     if length(CallWindowString) > 0 then
+                        begin
+                        Delete(CallWindowString, length(CallWindowString), 1);
+                        end
+                     end
                   else
                     if (CWEnabled and DeleteLastCharacter) or not CWEnabled then
-                    begin
-                      Delete(CallWindowString, length(CallWindowString), 1);
-                    end
+                       begin
+                       Delete(CallWindowString, length(CallWindowString), 1);
+                       end
                     else
-                    begin
-                      AddStringToBuffer('!', CWTone);
-                      Delete(CallWindowString, length(CallWindowString), 1);
-                      EditingCallsignSent := True;
-                    end;
+                       begin
+                       AddStringToBuffer('!', CWTone);
+                       Delete(CallWindowString, length(CallWindowString), 1);
+                       EditingCallsignSent := True;
+                       end;
                 NullKey:
                   begin
                     CallAlreadySent := True;
@@ -1800,216 +1966,232 @@ begin
                   begin
                     if ((ActiveMode = CW) and CWStillBeingSent) or
                       ((ActiveMode = Phone) and (DVPMessagePlaying or DVKMessagePlaying)) then
-                    begin
-                      if ActiveMode = CW then
-                        FlushCWBufferAndClearPTT
-                      else
-                        if DVPActive then
-                        begin
-                          DVPStopPlayback;
-                          TimeOut := 0;
-                          repeat
-                            Sleep(5);
-                            inc(TimeOut);
-                          until (not DVPMessagePlaying) or (TimeOut > 60);
-                        end;
-                    end
+                       begin
+                       if ActiveMode = CW then
+                          begin
+                          FlushCWBufferAndClearPTT
+                          end
+                       else
+                         if DVPActive then
+                            begin
+                            DVPStopPlayback;
+                            TimeOut := 0;
+                            repeat
+                              Sleep(5);
+                              inc(TimeOut);
+                            until (not DVPMessagePlaying) or (TimeOut > 60);
+                            end;
+                       end
                     else
-                    begin
-                      FlushCWBufferAndClearPTT;
-                      EscapeDeletedCallEntry := CallWindowString;
-                      CallWindowString := '';
-                            //wli                                ClrScr;
-              //                      RemoveWindow(ExchangeWindow);
-//                                          if not VisibleDupesheetEnable then
-                      begin
-                              //                        RemoveWindow(QSOInformationWindow);
-                              //                        RemoveWindow(MultiplierInformationWindow);
-                      end;
-                      NameCallsignPutUp := '';
-                            //                      RemoveWindow(QuickCommandWindow);
-                      CleanUpDisplay;
-                    end;
+                       begin
+                       FlushCWBufferAndClearPTT;
+                       EscapeDeletedCallEntry := CallWindowString;
+                       CallWindowString := '';
+                             //wli                                ClrScr;
+               //                      RemoveWindow(ExchangeWindow);
+ //                                          if not VisibleDupesheetEnable then
+                       begin
+                               //                        RemoveWindow(QSOInformationWindow);
+                               //                        RemoveWindow(MultiplierInformationWindow);
+                       end;
+                       NameCallsignPutUp := '';
+                             //                      RemoveWindow(QuickCommandWindow);
+                       CleanUpDisplay;
+                       end;
                   end;
               else
                 if (ValidCallCharacter(Char(TempKey))) or (TempKey = '?') then
-                begin
-                  EditingCallsignSent := False;
-                  CallWindowString := CallWindowString + TempKey;
-                  AddStringToBuffer(TempKey, CWTone);
-                  Write(TempKey);
-                  if PartialCallEnable then
-                    if Sheet.TwoLetterCrunchProcess(CallWindowString) then
-                    begin
-                                {
+                   begin
+                   EditingCallsignSent := False;
+                   CallWindowString := CallWindowString + TempKey;
+                   AddStringToBuffer(TempKey, CWTone);
+                   Write(TempKey);
+                   if PartialCallEnable then
+                     if Sheet.TwoLetterCrunchProcess(CallWindowString) then
+                        begin
+                        {
                                   VisibleLog.GeneratePartialCallList(CallWindowString,
                                     ActiveBand,
                                     ActiveMode,
                                     PossibleCallList);
                                   DisplayPossibleCalls(PossibleCallList);
                                   }
-                    end;
-                  if (SCPMinimumLetters > 0) and (not NewKeyPressed) then {KK1L: 6.73 Added ActiveRadio}
-                    VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr);
-                end;
+                        end;
+                   if (SCPMinimumLetters > 0) and (not NewKeyPressed) then {KK1L: 6.73 Added ActiveRadio}
+                      begin
+                      VisibleLog.SuperCheckPartial(CallWindowString, True, ActiveRadioPtr);
+                      end;
+                   end;
               end; { of case }
             until TempKey = EscapeKey;
-          end;
-        end
+            end;
+           end
         else
           case Key of
             EscapeKey:
               begin
                 if ((ActiveMode = CW) and CWStillBeingSent) or
                   ((ActiveMode = Phone) and (DVPMessagePlaying or DVKMessagePlaying)) then
-                begin
-                  if ActiveMode = CW then
-                    FlushCWBufferAndClearPTT
-                  else
-                    if DVPActive then
-                    begin
-                      DVPStopPlayback;
-                      TimeOut := 0;
-                      repeat
-                        Sleep(5);
-                        inc(TimeOut);
-                      until (not DVPMessagePlaying) or (TimeOut > 60);
-                    end;
-                end
+                   begin
+                   if ActiveMode = CW then
+                      begin
+                      FlushCWBufferAndClearPTT
+                      end
+                   else
+                     if DVPActive then
+                        begin
+                        DVPStopPlayback;
+                        TimeOut := 0;
+                        repeat
+                          Sleep(5);
+                          inc(TimeOut);
+                        until (not DVPMessagePlaying) or (TimeOut > 60);
+                        end;
+                   end
                 else
                   if ActiveWindow = ExchangeWindow then
-                  begin
-                    if ExchangeWindowString <> '' then
-                    begin
-                      ExchangeWindowString := '';
-                          //wli                               ClrScr;
-                    end
-                    else
-                        //                      RemoveAndRestorePreviousWindow;
-                  end
+                     begin
+                     if ExchangeWindowString <> '' then
+                        begin
+                        ExchangeWindowString := '';
+                            //wli                               ClrScr;
+                        end
+                     else
+                         //                      RemoveAndRestorePreviousWindow;
+                     end
                   else
-                  begin
-                    EscapeDeletedCallEntry := CallWindowString;
-                    CallWindowString := '';
-                      //wli                           ClrScr;
-                    ExchangeWindowString := '';
-                      //                    RemoveWindow(ExchangeWindow);
-                      //                    RemoveWindow(QSOInformationWindow);
-                      //                    RemoveWindow(MultiplierInformationWindow);
-                      //                    RemoveWindow(QuickCommandWindow);
-                      //                    RemoveWindow(DupeInfoWindow);
-                    NameCallsignPutUp := '';
-                    tClearDupeInfoCall;
-                     clearaltd; // 4.53.11
-                      { This is new for 5.88 }
-                    if TwoRadioState = CallReady then
-                      TwoRadioState := Idle;
-                    CleanUpDisplay;
-                      //                    DisplayEditableLog(VisibleLog.LogEntries);
-                  end;
+                     begin
+                     EscapeDeletedCallEntry := CallWindowString;
+                     CallWindowString := '';
+                       //wli                           ClrScr;
+                     ExchangeWindowString := '';
+                       //                    RemoveWindow(ExchangeWindow);
+                       //                    RemoveWindow(QSOInformationWindow);
+                       //                    RemoveWindow(MultiplierInformationWindow);
+                       //                    RemoveWindow(QuickCommandWindow);
+                       //                    RemoveWindow(DupeInfoWindow);
+                     NameCallsignPutUp := '';
+                     tClearDupeInfoCall;
+                      clearaltd; // 4.53.11
+                       { This is new for 5.88 }
+                     if TwoRadioState = CallReady then
+                        begin
+                        TwoRadioState := Idle;
+                        end;
+                     CleanUpDisplay;
+                       //                    DisplayEditableLog(VisibleLog.LogEntries);
+                     end;
               end;
             SpaceBar:
               if (DupeInfoCall <> '') and (CallWindowString = '') then
-              begin
-                FlushCWBufferAndClearPTT;
-                if (TwoRadioState = CallReady) then
-                    //wli                        CheckTwoRadioState (SpaceBarPressed) {KK1L: 6.73 Should modify to handle Alt-D from SAP mode}
-                else
-                begin
-                      //wli                        SwapRadios;  { Changes band/mode and display }
-                  SpecialRadioSwap := True;
-                end;
-                if TwoRadioState <> CallReady then
-                begin
-                  CallWindowString := DupeInfoCall; {KK1L: 6.73 NOTE Why are these three lines here?. I know}
-                      //                  ResetSavedWindowListAndPutUpCallWindow; {                it puts a call in the window. Does it  }
-                  Write(CallWindowString); {                cover the on deck call case???         }
-                  ShowStationInformation(@CallWindowString);
-                  DisplayGridSquareStatus(CallWindowString);
-                  VisibleLog.DoPossibleCalls(CallWindowString);
-                  if (length(CallWindowString) >= 3) and (ExchangeWindowString = '') then
-                  begin
-                          //                    ActivateExchangeWindow;
-                    ExchangeWindowString := InitialExchangeEntry(CallWindowString);
-                          //wli                            ClrScr;
-                          //wli                            Write (ExchangeWindowString);
-                                                      {TR6.74 - need to do this since IntialExchangeEntry does not }
-                    if InitialExchangeOverwrite then
-                      InitialExchangePutUp := ExchangeWindowString <> '';
-                          //wli                            IF InitialExchangeCursorPos = AtStart THEN GoToXY (1, 1);
-                          //wli                            ExchangeWindowCursorPosition := WhereY;
-             //                    RestorePreviousWindow;
-                  end;
-                  repeat
-                        //                                    PutUpExchangeWindow;
-                    DisplayNextQSONumber;
-                    ClearContestExchange(ReceivedData);
-                    ExchangeHasBeenSent := False;
-                    SearchAndPounceStatus := SearchAndPounce;
-                  until (not SearchAndPounceStatus) or (TwoRadioState = SendingExchange);
-                  ClearContestExchange(ReceivedData); { To try and fix a problem
+                 begin
+                 FlushCWBufferAndClearPTT;
+                 if (TwoRadioState = CallReady) then
+                     //wli                        CheckTwoRadioState (SpaceBarPressed) {KK1L: 6.73 Should modify to handle Alt-D from SAP mode}
+                 else
+                    begin
+                    //wli                        SwapRadios;  { Changes band/mode and display }
+                SpecialRadioSwap := True;
+                    end;
+                 if TwoRadioState <> CallReady then
+                    begin
+                    CallWindowString := DupeInfoCall; {KK1L: 6.73 NOTE Why are these three lines here?. I know}
+                        //                  ResetSavedWindowListAndPutUpCallWindow; {                it puts a call in the window. Does it  }
+                    Write(CallWindowString); {                cover the on deck call case???         }
+                    ShowStationInformation(@CallWindowString);
+                    DisplayGridSquareStatus(CallWindowString);
+                    VisibleLog.DoPossibleCalls(CallWindowString);
+                    if (length(CallWindowString) >= 3) and (ExchangeWindowString = '') then
+                       begin
+                       //                    ActivateExchangeWindow;
+                 ExchangeWindowString := InitialExchangeEntry(CallWindowString);
+                       //wli                            ClrScr;
+                       //wli                            Write (ExchangeWindowString);
+                                                   {TR6.74 - need to do this since IntialExchangeEntry does not }
+                 if InitialExchangeOverwrite then
+                    begin
+                    InitialExchangePutUp := ExchangeWindowString <> '';
+                    end;
+                       //wli                            IF InitialExchangeCursorPos = AtStart THEN GoToXY (1, 1);
+                       //wli                            ExchangeWindowCursorPosition := WhereY;
+          //                    RestorePreviousWindow;
+                       end;
+                    repeat
+                          //                                    PutUpExchangeWindow;
+                      DisplayNextQSONumber;
+                      ClearContestExchange(ReceivedData);
+                      ExchangeHasBeenSent := False;
+                      SearchAndPounceStatus := SearchAndPounce;
+                    until (not SearchAndPounceStatus) or (TwoRadioState = SendingExchange);
+                    ClearContestExchange(ReceivedData); { To try and fix a problem
                       with Two Radio mode and DX
                       mults showing up in next QSO }
-                  if (TwoRadioState = SendingExchange) then
-                        //wli                            CheckTwoRadioState (ContactDone)
-                  else
-                    if SpecialRadioSwap then
-                    begin
-                            //wli                                SwapRadios;
-                      SpecialRadioSwap := False;
+                    if (TwoRadioState = SendingExchange) then
+                          //wli                            CheckTwoRadioState (ContactDone)
+                    else
+                      if SpecialRadioSwap then
+                         begin
+                         //wli                                SwapRadios;
+                   SpecialRadioSwap := False;
+                         end;
+                    DisplayAutoSendCharacterCount;
+                    if SearchAndPounceStatus then
+                       begin
+                       DupeInfoCall := '';
+                             //                    RemoveWindow(DupeInfoWindow);
+                       EscapeDeletedCallEntry := CallWindowString;
+                       CallWindowString := '';
+                             //                    RemoveWindow(ExchangeWindow);
+   //                    ResetSavedWindowListAndPutUpCallWindow;
+                       end;
                     end;
-                  DisplayAutoSendCharacterCount;
-                  if SearchAndPounceStatus then
-                  begin
-                    DupeInfoCall := '';
-                          //                    RemoveWindow(DupeInfoWindow);
-                    EscapeDeletedCallEntry := CallWindowString;
-                    CallWindowString := '';
-                          //                    RemoveWindow(ExchangeWindow);
-//                    ResetSavedWindowListAndPutUpCallWindow;
-                  end;
-                end;
-              end
+                 end
                   { Still a SpaceBar, but not doing DupeInfoCall }
               else
                 if (CallWindowString = '') or not SpaceBarDupeCheckEnable then
-                begin
-                  if CWStillBeingSent then FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
-                  SetUpToSendOnActiveRadio;
-                  InactiveRigCallingCQ := False;
-                  if MessageEnable then
-                  begin
-                    if ActiveMode = CW then
-                    begin
-                      if DEEnable then
-                        SendStringAndStop(DEPlusMyCall)
+                   begin
+                   if CWStillBeingSent then FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
+                   SetUpToSendOnActiveRadio;
+                   InactiveRigCallingCQ := False;
+                   if MessageEnable then
+                      begin
+                      if ActiveMode = CW then
+                         begin
+                         if DEEnable then
+                            begin
+                            SendStringAndStop(DEPlusMyCall)
+                            end
+                         else
+                            begin
+                            SendStringAndStop(MyCall);
+                            end;
+                         end
                       else
-                        SendStringAndStop(MyCall);
-                    end
-                    else
-                      if ActiveMode = Digital then
-                        SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
-                      else
-                            //wli            SendFunctionKeyMessage (F1, SearchAndPounceOpMode);
-                  end;
-                  KeyStamp(F1);
-                  repeat
-                      //                                 PutUpExchangeWindow;
-                    DisplayNextQSONumber;
-                    ClearContestExchange(ReceivedData);
-                    ExchangeHasBeenSent := False;
-                  until not SearchAndPounce;
-                  ClearContestExchange(ReceivedData);
-                    //                  RemoveWindow(ExchangeWindow);
-                  DisplayAutoSendCharacterCount;
-                  EscapeDeletedCallEntry := CallWindowString;
-                    //                  if CallWindowString = '' then                    ResetSavedWindowListAndPutUpCallWindow;
-                end
+                        if ActiveMode = Digital then
+                           begin
+                           SendStringAndStop(CallWindowString + ' DE ' + MyCall + ' KK')
+                           end
+                        else
+                              //wli            SendFunctionKeyMessage (F1, SearchAndPounceOpMode);
+                      end;
+                   KeyStamp(F1);
+                   repeat
+                       //                                 PutUpExchangeWindow;
+                     DisplayNextQSONumber;
+                     ClearContestExchange(ReceivedData);
+                     ExchangeHasBeenSent := False;
+                   until not SearchAndPounce;
+                   ClearContestExchange(ReceivedData);
+                     //                  RemoveWindow(ExchangeWindow);
+                   DisplayAutoSendCharacterCount;
+                   EscapeDeletedCallEntry := CallWindowString;
+                     //                  if CallWindowString = '' then                    ResetSavedWindowListAndPutUpCallWindow;
+                   end
                 else
-                begin
-                    //                  if WindowDupeCheck then RemoveWindow(ExchangeWindow);
-                    //                  RestorePreviousWindow;
-                end;
+                   begin
+                   //                  if WindowDupeCheck then RemoveWindow(ExchangeWindow);
+                   //                  RestorePreviousWindow;
+                   end;
             TabKey, ControlU:
               begin
                 repeat
@@ -2133,28 +2315,28 @@ begin
         }        
             CarriageReturn:
               if length(CallWindowString) > 1 then
-              begin
-                CallsignICameBackTo := CallWindowString;
-                Exit;
-              end
+                 begin
+                 CallsignICameBackTo := CallWindowString;
+                 Exit;
+                 end
               else
                 if length(CallWindowString) = 0 then
                   //wli                           if (ActiveMode = CW) or DVPEnable or (ActiveDVKPort <> NoPort) then
-                begin
-                  InactiveRigCallingCQ := False;
-                  SetUpToSendOnActiveRadio;
-                  if MessageEnable and not ((CWTone = 0) and DebugFlag) then
-                      //wli                                SendFunctionKeyMessage (F1, CQOpMode);
-                                                  { This is where the initial CQ gets sent if you
+                   begin
+                   InactiveRigCallingCQ := False;
+                   SetUpToSendOnActiveRadio;
+                   if MessageEnable and not ((CWTone = 0) and DebugFlag) then
+                       //wli                                SendFunctionKeyMessage (F1, CQOpMode);
+                                                   { This is where the initial CQ gets sent if you
                                                     are in debug mode! }
-{
+ {
                     if DDXState <> Off then
                     begin
                       DDXState := WaitingForCQ;
                       DDX(MaybeSendANewCall);
                     end
 }
-                end;
+                   end;
           end; { of case }
   until False;
 end;
@@ -2174,12 +2356,15 @@ begin
   LookingForCQExchange := True;
   //   if ReminderPostedCount = 0 then
   QuickDisplay('Enter exchange.  Press ENTER to log, ESCAPE to abort QSO.');
-  if ActiveMode = CW then PutUpExchangeMenu;
+  if ActiveMode = CW then
+     begin
+     PutUpExchangeMenu;
+     end;
   //  if K1EANetworkEnable then DisplayMultiMessages;
      //    SaveSetAndClearActiveWindow (ExchangeWindow);
   if ExchangeWindowString = '' then
-  begin
-{
+     begin
+     {
     if ReadInLog then
       ExchangeWindowString := ReadInLogExchange
     else
@@ -2187,12 +2372,14 @@ begin
       tSetExchWindInitExchangeEntry;
     end;
 }
-  end;
+     end;
   {KK1L: 6.73 I want to add a space in front of the InitialExchange for K9PG. I do this in InitialExchangeEntry.}
   {GetRidOfPrecedingSpaces (ExchangeWindowString);}
 //  DDX(SendExchange);
   if DualingCQState = WaitingForCallsignInput then
-    DualingCQState := DualSendingExchange;
+     begin
+     DualingCQState := DualSendingExchange;
+     end;
   //{WLI}    IF LogWithSingleEnter THEN
   begin
     if ParametersOkay(CallWindowString,
@@ -2201,17 +2388,19 @@ begin
       ActiveMode,
       ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]},
       ReceivedData) then
-    begin
-      GotExchange := True;
-        //            RemoveWindow (ExchangeWindow);
-      LookingForCQExchange := False;
-      Exit;
-    end;
+       begin
+       GotExchange := True;
+         //            RemoveWindow (ExchangeWindow);
+       LookingForCQExchange := False;
+       Exit;
+       end;
   end;
   { We are now ready to accept input.  The CQ EXCHANGE is being sent,
     all of the windows are setup and we are ready to go }
   if (ActiveMode = CW) and AlwaysCallBlindCQ then
-    SendExchangeKeyWhenCWHasStopped := F7;
+     begin
+     SendExchangeKeyWhenCWHasStopped := F7;
+     end;
   {    REPEAT
           IF ActiveWindow = CallWindow THEN
               BEGIN
@@ -2479,7 +2668,9 @@ var
   begin
 //  ReadInConfigFile('');
   if SayHiEnable then
-    DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
+     begin
+     DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
+     end;
   SetStereoPin(StereoControlPin, StereoPinState); {KK1L: 6.71}
   DisplayRadio(ActiveRadio);
   DisplayTotalScore {(TotalScore)};
@@ -2490,219 +2681,247 @@ var
     ExchangeHasBeenSent := False;
 //wli    LogBadQSOString := '';
     if TailEnding then
-    begin
-      PreviousQSOReceivedData := ReceivedData;
-      CallsignICameBackTo := TailEndCallString;
-      CallWindowString := TailEndCallString;
-        //wli            ClrScr;
-      Write(CallWindowString);
-      ClearContestExchange(ReceivedData);
-      ExchangeWindowString := '';
-    end
+       begin
+       PreviousQSOReceivedData := ReceivedData;
+       CallsignICameBackTo := TailEndCallString;
+       CallWindowString := TailEndCallString;
+         //wli            ClrScr;
+       Write(CallWindowString);
+       ClearContestExchange(ReceivedData);
+       ExchangeWindowString := '';
+       end
     else
-    begin
-//      Sheet.MultSheetTotals(MTotals);
-      UpdateTotals2;
-      if ReceivedData.DomesticMult or ReceivedData.DXMult or ReceivedData.ZoneMult then
-        VisibleLog.ShowRemainingMultipliers;
-      if ReceivedData.DomesticMult then VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
-      ClearContestExchange(ReceivedData);
-      GetInitialCall;
-      WindowDupeCheckCall := CallsignICameBackTo;
-    end;
+       begin
+       //      Sheet.MultSheetTotals(MTotals);
+             UpdateTotals2;
+             if ReceivedData.DomesticMult or ReceivedData.DXMult or ReceivedData.ZoneMult then
+                begin
+                VisibleLog.ShowRemainingMultipliers;
+                end;
+             if ReceivedData.DomesticMult then
+                begin
+                VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
+                end;
+             ClearContestExchange(ReceivedData);
+             GetInitialCall;
+             WindowDupeCheckCall := CallsignICameBackTo;
+       end;
     if (ActiveMode = CW) and (not TailEnding) and (not CallAlreadySent) then
-    begin
-      if MessageEnable and not BeSilent then
-        if not (DebugFlag and (CWTone = 0)) then
-          AddStringToBuffer(CallsignICameBackTo, CWTone);
-      CallAlreadySent := True;
-    end;
+       begin
+       if MessageEnable and not BeSilent then
+         if not (DebugFlag and (CWTone = 0)) then
+            begin
+            AddStringToBuffer(CallsignICameBackTo, CWTone);
+            end;
+       CallAlreadySent := True;
+       end;
 //    if (ActiveMode = Digital) and (not CallAlreadySent) then
 //      StartRTTYTransmission(CallsignICameBackTo + ' ');
     if DualingCQState = DualSendingCQ then
-    begin
-        //wli            SwapRadios;
-      DualingCQState := DualSendingExchange;
-    end;
+       begin
+       //wli            SwapRadios;
+     DualingCQState := DualSendingExchange;
+       end;
     {??????? ??????  ??????????? ? returnCQopMode}
     if AutoDupeEnableCQ and
       VisibleLog.CallIsADupe(CallsignICameBackTo, ActiveBand, ActiveMode) then
-    begin
+       begin
         //            if ReminderPostedCount = 0 then
 //      QuickDisplay(CallsignICameBackTo + ' is a dupe!!');
-      if DupeCheckSound <> DupeCheckNoSound then DoABeep(ThreeHarmonics);
+      if DupeCheckSound <> DupeCheckNoSound then
+         begin
+         DoABeep(ThreeHarmonics);
+         end;
       ShowName(CallsignICameBackTo);
       DisplayCountryName(CallsignICameBackTo);
       DisplayUserInfo(CallsignICameBackTo);
       if ActiveMode = CW then
-      begin
-        if QTCsEnabled then
-        begin
-          DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)));
-          if NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)) < 10 then
-          begin
-            if QTCsEnabled and (MyContinent = Europe) then
+         begin
+         if QTCsEnabled then
             begin
-              AddStringToBuffer(' B4 ', CWTone);
-                        //wli                            WAEQTC (CallWindowString);
-            end
+            DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)));
+            if NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)) < 10 then
+               begin
+               if QTCsEnabled and (MyContinent = Europe) then
+                  begin
+                  AddStringToBuffer(' B4 ', CWTone);
+                            //wli                            WAEQTC (CallWindowString);
+                  end
+               else
+                 if MessageEnable and not BeSilent then
+                           //wli                                SendCrypticMessage (QSOBeforeMessage);
+               end
             else
               if MessageEnable and not BeSilent then
-                        //wli                                SendCrypticMessage (QSOBeforeMessage);
-          end
-          else
-            if MessageEnable and not BeSilent then
-                    //wli                            SendCrypticMessage (QSOBeforeMessage);
-        end
-        else
-          if MessageEnable and not BeSilent then
-                //wli                        SendCrypticMessage (QSOBeforeMessage);
-            if DualingCQState <> NoDualingCQs then
-              DualingCQState := SendingDupeMessage;
-      end;
+                      //wli                            SendCrypticMessage (QSOBeforeMessage);
+            end
+         else
+           if MessageEnable and not BeSilent then
+                 //wli                        SendCrypticMessage (QSOBeforeMessage);
+             if DualingCQState <> NoDualingCQs then
+                begin
+                DualingCQState := SendingDupeMessage;
+                end;
+         end;
       if ActiveMode = Digital then
-        FinishRTTYTransmission(QSOBeforeMessage);
+         begin
+         FinishRTTYTransmission(QSOBeforeMessage);
+         end;
       if ActiveMode = Phone then
-      begin
-            //wli                SendCrypticMessage (QSOBeforePhoneMessage);
-        Write(' DUPE!!');
-        EscapeDeletedCallEntry := CallWindowString;
-        CallWindowString := '';
-        if QTCsEnabled then
-          DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)))
-        else
+         begin
+         //wli                SendCrypticMessage (QSOBeforePhoneMessage);
+     Write(' DUPE!!');
+     EscapeDeletedCallEntry := CallWindowString;
+     CallWindowString := '';
+     if QTCsEnabled then
         begin
-          MarkTime(RememberTime);
-          repeat
-            UpdateTimeAndRateDisplays(True, True);
-            Packet.CheckPacket;
-          until ElaspedSec100(RememberTime) >= 30;
-                //wli                    ClrScr;
+        DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)))
+        end
+     else
+        begin
+        MarkTime(RememberTime);
+        repeat
+          UpdateTimeAndRateDisplays(True, True);
+          Packet.CheckPacket;
+        until ElaspedSec100(RememberTime) >= 30;
+              //wli                    ClrScr;
         end;
-      end;
+         end;
       if AutoDisplayDupeQSO then
-      begin
-        ShowPreviousDupeQSOs(CallsignICameBackTo, ActiveBand, ActiveMode);
-//        EditableLogDisplayed := True;
-      end;
+         begin
+         ShowPreviousDupeQSOs(CallsignICameBackTo, ActiveBand, ActiveMode);
+ //        EditableLogDisplayed := True;
+         end;
       if TailEnding then
-      begin
-            //        ReceivedData.ceSearchAndPounce := False;
-        LogContact(PreviousQSOReceivedData, True);
-        TailEnding := False;
-      end;
+         begin
+         //        ReceivedData.ceSearchAndPounce := False;
+     LogContact(PreviousQSOReceivedData, True);
+     TailEnding := False;
+         end;
       if Contest <> GENERALQSO then
-      begin
-        VisibleLog.ShowMultiplierStatus(@CallsignICameBackTo);
-        VisibleLog.ShowQSOStatus(@CallsignICameBackTo);
-      end;
+         begin
+         VisibleLog.ShowMultiplierStatus(@CallsignICameBackTo);
+         VisibleLog.ShowQSOStatus(@CallsignICameBackTo);
+         end;
       DisplayUserInfo(CallsignICameBackTo);
       DisplayBeamHeading(CallsignICameBackTo, '');
     end
     else { not a dupe or not AutoDupeEnable }
-    begin
-      if MessageEnable and not BeSilent then
-        if not (DebugFlag and (CWTone = 0)) then
-            //wli                    AddOnCQExchange;
-          ShowName(CallsignICameBackTo);
-      DisplayGridSquareStatus(CallsignICameBackTo);
-      DisplayUserInfo(CallsignICameBackTo);
-      DisplayBeamHeading(CallsignICameBackTo, '');
-      DisplayCountryName(CallsignICameBackTo);
-      if QTCsEnabled then
-        DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
-      if Contest <> GENERALQSO then
-      begin
-        VisibleLog.ShowMultiplierStatus(@CallWindowString);
-        VisibleLog.ShowQSOStatus(@CallWindowString);
-      end;
-      VisibleLog.DoPossibleCalls(CallWindowString);
-      if TailEnding then
-      begin
-            //        ReceivedData.ceSearchAndPounce := False;
-        LogContact(PreviousQSOReceivedData, True);
-        TailEnding := False;
-      end;
-//      if K5KA.ModeEnabled then DupeCheckOnInactiveRadio(False);
-      if GotExchange then
-      begin
-        if TailEnding then
-        begin
-          TailEndCallString := '';
-                //wli                    SendCorrectCallIfNeeded;
-      //    if MessageEnable then AddStringToBuffer(TailEndMessage + ' ', CWTone);
-          repeat
-            repeat until NewKeyPressed;
-            TempKey := AnsiChar(UpCase(NewReadKey));
-            if TempKey <> CarriageReturn then
-              if ValidCallCharacter(Char(TempKey)) or (TempKey = '?') then
-              begin
-                if MessageEnable then
-                  AddStringToBuffer(TempKey, CWTone);
-                TailEndCallString := TailEndCallString + TempKey;
-              end;
-          until TempKey = CarriageReturn;
-          if TailEndCallString = '' then
-          begin
-            TailEnding := False;
-                    //            ReceivedData.ceSearchAndPounce := False;
-            LogContact(ReceivedData, True);
-          end;
-        end
-        else
-        begin
-          if ActiveMode = CW then
-          begin
-            RememberInactiveCQ := InactiveRigCallingCQ;
-                    //wli                        SendCorrectCallIfNeeded;
-            if not (DebugFlag and (CWTone = 0)) then
+       begin
+       if MessageEnable and not BeSilent then
+         if not (DebugFlag and (CWTone = 0)) then
+             //wli                    AddOnCQExchange;
             begin
-              if MessageEnable and not (BeSilent or TailEnding) then
-                if QuickQSL <> NoQuickQSLKey then
+            ShowName(CallsignICameBackTo);
+            end;
+       DisplayGridSquareStatus(CallsignICameBackTo);
+       DisplayUserInfo(CallsignICameBackTo);
+       DisplayBeamHeading(CallsignICameBackTo, '');
+       DisplayCountryName(CallsignICameBackTo);
+       if QTCsEnabled then
+          begin
+          DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
+          end;
+       if Contest <> GENERALQSO then
+          begin
+          VisibleLog.ShowMultiplierStatus(@CallWindowString);
+          VisibleLog.ShowQSOStatus(@CallWindowString);
+          end;
+       VisibleLog.DoPossibleCalls(CallWindowString);
+       if TailEnding then
+          begin
+          //        ReceivedData.ceSearchAndPounce := False;
+      LogContact(PreviousQSOReceivedData, True);
+      TailEnding := False;
+          end;
+ //      if K5KA.ModeEnabled then DupeCheckOnInactiveRadio(False);
+       if GotExchange then
+          begin
+          if TailEnding then
+             begin
+             TailEndCallString := '';
+                   //wli                    SendCorrectCallIfNeeded;
+         //    if MessageEnable then AddStringToBuffer(TailEndMessage + ' ', CWTone);
+             repeat
+               repeat until NewKeyPressed;
+               TempKey := AnsiChar(UpCase(NewReadKey));
+               if TempKey <> CarriageReturn then
+                 if ValidCallCharacter(Char(TempKey)) or (TempKey = '?') then
+                    begin
+                    if MessageEnable then
+                       begin
+                       AddStringToBuffer(TempKey, CWTone);
+                       end;
+                    TailEndCallString := TailEndCallString + TempKey;
+                    end;
+             until TempKey = CarriageReturn;
+             if TailEndCallString = '' then
                 begin
-                  if QuickQSL = QuickKey1 then
-                                //wli                                        SendCrypticMessage (QuickQSLMessage1)
-                  else
-                                //wli                                        SendCrypticMessage (QuickQSLMessage2);
-                end
-                else
-                  if ExchangeInformation.Age then
-                  begin
-                    if ReceivedData.Age = {'00'} 0 then
-                      Send88Message
-                    else
-                                  //wli                                            Send73Message;
-                  end
-                  else
-                              //wli                                        Send73Message;
-                    InactiveRigCallingCQ := RememberInactiveCQ;
-            end;
-          end
+                TailEnding := False;
+                        //            ReceivedData.ceSearchAndPounce := False;
+                LogContact(ReceivedData, True);
+                end;
+             end
           else
-            if MessageEnable and not BeSilent then
+             begin
+             if ActiveMode = CW then
+                begin
+                RememberInactiveCQ := InactiveRigCallingCQ;
+                        //wli                        SendCorrectCallIfNeeded;
+                if not (DebugFlag and (CWTone = 0)) then
+                   begin
+                   if MessageEnable and not (BeSilent or TailEnding) then
+                     if QuickQSL <> NoQuickQSLKey then
+                        begin
+                        if QuickQSL = QuickKey1 then
+                                      //wli                                        SendCrypticMessage (QuickQSLMessage1)
+                        else
+                                      //wli                                        SendCrypticMessage (QuickQSLMessage2);
+                        end
+                     else
+                       if ExchangeInformation.Age then
+                          begin
+                          if ReceivedData.Age = {'00'} 0 then
+                             begin
+                             Send88Message
+                             end
+                          else
+                                        //wli                                            Send73Message;
+                          end
+                       else
+                                   //wli                                        Send73Message;
+                          begin
+                          InactiveRigCallingCQ := RememberInactiveCQ;
+                          end;
+                   end;
+                end
+             else
+               if MessageEnable and not BeSilent then
+                  begin
+                  if QuickQSL <> NoQuickQSLKey then
+                            //wli                                SendCrypticMessage (QuickQSLPhoneMessage)
+                  else
+                            //                                Send73Message;
+                  end;
+             if DualingCQState = DualGettingExchange then
+                begin
+                DualingCQState := DualSendingQSL;
+                end;
+             BeSilent := False;
+             if not TailEnding then
+                begin
+                //            ReceivedData.ceSearchAndPounce := False;
+        LogContact(ReceivedData, True);
+                end;
+             end;
+          end
+       else
+         if CWSpeedFromDataBase and (RememberCWSpeed > 0) then
             begin
-              if QuickQSL <> NoQuickQSLKey then
-                        //wli                                SendCrypticMessage (QuickQSLPhoneMessage)
-              else
-                        //                                Send73Message;
+            SetSpeed(RememberCWSpeed);
+            RememberCWSpeed := 0;
             end;
-          if DualingCQState = DualGettingExchange then
-            DualingCQState := DualSendingQSL;
-          BeSilent := False;
-          if not TailEnding then
-          begin
-                    //            ReceivedData.ceSearchAndPounce := False;
-            LogContact(ReceivedData, True);
-          end;
-        end;
-      end
-      else
-        if CWSpeedFromDataBase and (RememberCWSpeed > 0) then
-        begin
-          SetSpeed(RememberCWSpeed);
-          RememberCWSpeed := 0;
-        end;
-    end;
+       end;
   until False;
 end;
 function tAddQSOToLog(RXData: ContestExchange): boolean;
@@ -2713,23 +2932,25 @@ begin
   if tPreviousDupeQSOsShowed then ShowPreviousDupeQSOsWnd(False); //DestroyPreviousDupeQSOsWnd;
   LogHandle := CreateFileA(TR4W_LOG_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, 0);
   if LogHandle = INVALID_HANDLE_VALUE then
-  begin
-//    showwarning(SysErrorMessage(GetLastError));
-    ShowSysErrorMessage('SAVE_LOG');
-    Exit;
-  end;
+     begin
+     //    showwarning(SysErrorMessage(GetLastError));
+         ShowSysErrorMessage('SAVE_LOG');
+         Exit;
+     end;
 //  if not OpenLogFile then Exit;
   tSetFilePointer(0, FILE_END);
   if tWriteFile(LogHandle, RXData, SizeOf(ContestExchange), lpNumberOfBytesWritten) then
     if lpNumberOfBytesWritten = SizeOf(ContestExchange) then
-      inc(tRestartInfo.riTotalRecordsInLog);
+       begin
+       inc(tRestartInfo.riTotalRecordsInLog);
+       end;
   CloseLogFile;
   tSetWindowRedraw(wh[mweEditableLog], False);
   if tLogIndex = LinesInEditableLog then
-  begin
-    ListView_DeleteItem(wh[mweEditableLog], 0);
-    tLogIndex := LinesInEditableLog - 1;
-  end;
+     begin
+     ListView_DeleteItem(wh[mweEditableLog], 0);
+     tLogIndex := LinesInEditableLog - 1;
+     end;
   tAddContestExchangeToLog(RXData, wh[mweEditableLog], tLogIndex);
   EnsureListViewColumnVisible(wh[mweEditableLog]);
   tSetWindowRedraw(wh[mweEditableLog], True);
@@ -2785,87 +3006,87 @@ QSOTotals[TempBand, TempMode] is accurate for the individual bands so just sum t
    // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
    // It guards CalculateTotals, which reads the whole log.
    if UDPBroadcaster.Enabled(usScore) then    // Issue 304 NY4I
-     begin
-     CalculateTotals;    // This reads the log so be careful how often it is done.
-     if length(ContestsArray[Contest].ADIFName) = 0 then
+      begin
+      CalculateTotals;    // This reads the log so be careful how often it is done.
+      if length(ContestsArray[Contest].ADIFName) = 0 then
          begin
          sContestName := ContestTypeSA[Contest]
          end
-     else
-        begin
-        sContestName := ContestsArray[Contest].ADIFName;
-        end;
-     sBuf := '<?xml version="1.0"?>' + sLineBreak +
-            '<dynamicresults>' +  sLineBreak +
-            #9 + '<soft>TR4W</soft>' + sLineBreak +
-            #9 + '<version>' + TR4W_CURRENTVERSION_NUMBER + '</version>' + sLineBreak +
-            #9 + '<contest>' + sContestName + '</contest>' +   sLineBreak +
-            #9 + '<call>' + MyCall + '</call>' + sLineBreak +
-            #9 + '<club>' + ' ' + '</club>' + sLineBreak +
-            #9 + '<class ops="' + tCategoryOperatorSA[CategoryOperator] + '" mode="' + tCategoryModeSA[CategoryMode] +
-                 '" power="' + tCategoryPowerSA[CategoryPower] + '" bands="' + tCategoryBandSA[CategoryBand] +
-                 '" transmitter="' + tCategoryTransmitterSA[CategoryTransmitter] +
-                 '" assisted="' + tCategoryAssistedSA[CategoryAssisted] + '"></class>' + sLineBreak +
-            #9 + '<breakdown>' + sLineBreak;
-  for TempBand := Band160 to AllBands do
-     begin
-     for TempMode := CW to Phone do {Both do} // Was Phone for a test do
-        begin
-        if QSOTotals[TempBand, TempMode] = 0 then Continue;
-        BandPchar := BandStringsArrayWithOutSpaces[TempBand];
-        if TempBand = AllBands then
-           begin
-           BandPchar := 'total';
-           nQSOs := nTotal;
-           end
-        else
-           begin
-           nQSOs := QSOTotals[TempBand, TempMode];
-           end;
-        nTotal := nTotal + QSOTotals[TempBand, TempMode];
-        if GetScoresModesArray[TempMode] <> 'ALL' then
-           begin
-           sBuf := sBuf + #9#9 + '<qso band="' + BandPChar +
-                              '" mode="' + GetScoresModesArray[TempMode] +
-                              '">' + IntToStr(nQSOs) + '</qso>' + sLineBreak;
-           end;
-        if Contest <> WRTC then
-           begin
-           for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
-              begin
-              sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
-                                        '" type="' +  GetScoresMults[m] + '">' + IntToStr(mo.MTotals[TempBand, TempMode, m]) +
-                                        '</mult>' + sLineBreak;
-              end;
-           end
-        else
-           begin // WRTC
-           if GetScoresModesArray[TempMode] = 'ALL' then
-              begin
-              for m := Succ(Low(RemainingMultiplierType)) to Succ(Succ(Low(RemainingMultiplierType))) do  // odd bit of code to select rmDomestic and rmDX
-                 begin
-                 sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
-                                           '" type="' + GetScoresMultsWRTC[m] + '">' +
-                                            IntToStr(mo.MTotals[TempBand, TempMode, m]) + '</mult>' + sLineBreak;
-                 end;
-              end;
-           end;
-        if GetScoresModesArray[TempMode] = 'ALL' then
-           begin
-           sBuf := sBuf + #9#9 + '<point band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] + '">' +
-                        IntToStr(QSOPointTotals[TempBand, TempMode]) + '</point>' + sLineBreak;
-           sBuf := sBuf + sLineBreak;
-           end;
-        end;
-        // After mode loop...
-     end;
-  sBuf := sBuf + #9 + '</breakdown>' + sLineBreak +
-                 #9 + '<score>' + IntToStr(TotalScore) + '</score>' + sLineBreak +
-                 #9 + '<timestamp>' + SystemTimeToString(UTC) + '</timestamp>' + sLineBreak +
-                 '</dynamicresults>' + sLineBreak;
-  logger.debug('[SendScoreToUDP] \n %s',[sBuf]);
-  UDPBroadcaster.Send(usScore, sBuf);
-  end;
+      else
+         begin
+         sContestName := ContestsArray[Contest].ADIFName;
+         end;
+      sBuf := '<?xml version="1.0"?>' + sLineBreak +
+             '<dynamicresults>' +  sLineBreak +
+             #9 + '<soft>TR4W</soft>' + sLineBreak +
+             #9 + '<version>' + TR4W_CURRENTVERSION_NUMBER + '</version>' + sLineBreak +
+             #9 + '<contest>' + sContestName + '</contest>' +   sLineBreak +
+             #9 + '<call>' + MyCall + '</call>' + sLineBreak +
+             #9 + '<club>' + ' ' + '</club>' + sLineBreak +
+             #9 + '<class ops="' + tCategoryOperatorSA[CategoryOperator] + '" mode="' + tCategoryModeSA[CategoryMode] +
+                  '" power="' + tCategoryPowerSA[CategoryPower] + '" bands="' + tCategoryBandSA[CategoryBand] +
+                  '" transmitter="' + tCategoryTransmitterSA[CategoryTransmitter] +
+                  '" assisted="' + tCategoryAssistedSA[CategoryAssisted] + '"></class>' + sLineBreak +
+             #9 + '<breakdown>' + sLineBreak;
+   for TempBand := Band160 to AllBands do
+      begin
+      for TempMode := CW to Phone do {Both do} // Was Phone for a test do
+         begin
+         if QSOTotals[TempBand, TempMode] = 0 then Continue;
+         BandPchar := BandStringsArrayWithOutSpaces[TempBand];
+         if TempBand = AllBands then
+            begin
+            BandPchar := 'total';
+            nQSOs := nTotal;
+            end
+         else
+            begin
+            nQSOs := QSOTotals[TempBand, TempMode];
+            end;
+         nTotal := nTotal + QSOTotals[TempBand, TempMode];
+         if GetScoresModesArray[TempMode] <> 'ALL' then
+            begin
+            sBuf := sBuf + #9#9 + '<qso band="' + BandPChar +
+                               '" mode="' + GetScoresModesArray[TempMode] +
+                               '">' + IntToStr(nQSOs) + '</qso>' + sLineBreak;
+            end;
+         if Contest <> WRTC then
+            begin
+            for m := Succ(Low(RemainingMultiplierType)) to High(RemainingMultiplierType) do
+               begin
+               sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
+                                         '" type="' +  GetScoresMults[m] + '">' + IntToStr(mo.MTotals[TempBand, TempMode, m]) +
+                                         '</mult>' + sLineBreak;
+               end;
+            end
+         else
+            begin // WRTC
+            if GetScoresModesArray[TempMode] = 'ALL' then
+               begin
+               for m := Succ(Low(RemainingMultiplierType)) to Succ(Succ(Low(RemainingMultiplierType))) do  // odd bit of code to select rmDomestic and rmDX
+                  begin
+                  sBuf := sBuf + #9#9 + '<mult band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] +
+                                            '" type="' + GetScoresMultsWRTC[m] + '">' +
+                                             IntToStr(mo.MTotals[TempBand, TempMode, m]) + '</mult>' + sLineBreak;
+                  end;
+               end;
+            end;
+         if GetScoresModesArray[TempMode] = 'ALL' then
+            begin
+            sBuf := sBuf + #9#9 + '<point band="' + BandPChar + '" mode="' + GetScoresModesArray[TempMode] + '">' +
+                         IntToStr(QSOPointTotals[TempBand, TempMode]) + '</point>' + sLineBreak;
+            sBuf := sBuf + sLineBreak;
+            end;
+         end;
+         // After mode loop...
+      end;
+   sBuf := sBuf + #9 + '</breakdown>' + sLineBreak +
+                  #9 + '<score>' + IntToStr(TotalScore) + '</score>' + sLineBreak +
+                  #9 + '<timestamp>' + SystemTimeToString(UTC) + '</timestamp>' + sLineBreak +
+                  '</dynamicresults>' + sLineBreak;
+   logger.debug('[SendScoreToUDP] \n %s',[sBuf]);
+   UDPBroadcaster.Send(usScore, sBuf);
+      end;
 end;
 procedure SendDeletedContactToUDP(RXData: ContestExchange);
 var
@@ -2873,25 +3094,25 @@ var
 begin
    // Enabled() here is an OPTIMISATION, not the rule -- Send tests it again.
    if UDPBroadcaster.Enabled(usContact) then  // Issue 165 NY4I
-     begin
-     sBuf := '<?xml version="1.0"?>' + sLineBreak +
-            '<contactdelete>' +  sLineBreak +
-            #9 + '<app>TR4W</app>' + sLineBreak +
-            #9 + '<timestamp>' +                      // 2008-01-01 07:04:00
-               SysUtils.format('20%0.2d-%0.2d-%0.2d %0.2d:%0.2d:%0.2d',[
-                      RxData.tSysTime.qtYear,
-                      RxData.tSysTime.qtMonth,
-                      RxData.tSysTime.qtDay,
-                      RxData.tSysTime.qtHour,
-                      RxData.tSysTime.qtMinute,
-                      RxData.tSysTime.qtSecond]) +
-            '</timestamp>' + sLineBreak +
-            #9 + '<call>' + RXData.Callsign + '</call>' + sLineBreak +
-            #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
-            #9 + '<StationName>' +  ComputerName + '</StationName>' + sLineBreak + // Issue 263 NY4I
-            #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
-      '</contactdelete>'+ sLineBreak ;
-      UDPBroadcaster.Send(usContact, sBuf);
+      begin
+      sBuf := '<?xml version="1.0"?>' + sLineBreak +
+             '<contactdelete>' +  sLineBreak +
+             #9 + '<app>TR4W</app>' + sLineBreak +
+             #9 + '<timestamp>' +                      // 2008-01-01 07:04:00
+                SysUtils.format('20%0.2d-%0.2d-%0.2d %0.2d:%0.2d:%0.2d',[
+                       RxData.tSysTime.qtYear,
+                       RxData.tSysTime.qtMonth,
+                       RxData.tSysTime.qtDay,
+                       RxData.tSysTime.qtHour,
+                       RxData.tSysTime.qtMinute,
+                       RxData.tSysTime.qtSecond]) +
+             '</timestamp>' + sLineBreak +
+             #9 + '<call>' + RXData.Callsign + '</call>' + sLineBreak +
+             #9 + '<contestnr>' + IntToStr(Ord(RxData.ceContest)) + '</contestnr>' + sLineBreak +
+             #9 + '<StationName>' +  ComputerName + '</StationName>' + sLineBreak + // Issue 263 NY4I
+             #9 + '<ID>' + RxData.id + '</ID>' + sLineBreak +
+       '</contactdelete>'+ sLineBreak ;
+       UDPBroadcaster.Send(usContact, sBuf);
       end;
 end;
 
@@ -2965,27 +3186,27 @@ begin
       end
    else
       begin
-         case RXData.Mode of
-            CW: sMode := 'CW';
-            Phone:
+      case RXData.Mode of
+         CW: sMode := 'CW';
+         Phone:
+            begin
+            if IntegerBetween(freq,5300000,5500000) then
                begin
-               if IntegerBetween(freq,5300000,5500000) then
-                  begin
-                  sMode := 'USB'; // 60m band is USB
-                  end
-               else if freq < 8000000 then
-                  begin
-                  sMode := 'LSB';
-                  end
-               else
-                  begin
-                  sMode := 'USB';
-                  end;
+               sMode := 'USB'; // 60m band is USB
+               end
+            else if freq < 8000000 then
+               begin
+               sMode := 'LSB';
+               end
+            else
+               begin
+               sMode := 'USB';
                end;
-            Digital: sMode := 'RTTY';
-            FM: sMode := 'FM';
-            else sMode := 'CW';
-          end; // of case
+            end;
+         Digital: sMode := 'RTTY';
+         FM: sMode := 'FM';
+         else sMode := 'CW';
+       end; // of case
       end;
     if RxData.ceComputerID = #0 then
        begin
@@ -2997,9 +3218,9 @@ begin
        end;
 
        if CurrentOperator[0] = #0 then
-       begin
-       sOperator := MyCall;
-       end
+          begin
+          sOperator := MyCall;
+          end
    else
       begin
       sOperator := CurrentOperator;
@@ -3194,26 +3415,28 @@ var
 begin
   nCount := 0;
   if not OpenLogFile then
-    begin
-    logger.Error('[SendFullLogToHamScore] Could not open log file');
-    CloseHandle(tReportFileWrite);
-    Exit;
-    end;
+     begin
+     logger.Error('[SendFullLogToHamScore] Could not open log file');
+     CloseHandle(tReportFileWrite);
+     Exit;
+     end;
   try
     ReadVersionBlock;
     while ReadLogFile do  // fills global TempRXData
-      begin
-      if GoodLookingQSO then
-        begin
-        Inc(nCount);
-        HamScoreOnLog(TempRXData);
-        end;
-      end;
+       begin
+       if GoodLookingQSO then
+          begin
+          Inc(nCount);
+          HamScoreOnLog(TempRXData);
+          end;
+       end;
     CloseLogFile;
     Logger.Info('[SendFullLogToHamScore] Enqueued %d QSO(s) for RTC resync', [nCount]);
   except
     on E: Exception do
-      Logger.Error('[SendFullLogToHamScore] %s', [E.Message]);
+       begin
+       Logger.Error('[SendFullLogToHamScore] %s', [E.Message]);
+       end;
   end;
 end;
 

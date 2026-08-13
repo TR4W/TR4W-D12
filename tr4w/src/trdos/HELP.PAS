@@ -156,26 +156,33 @@ var
 
 begin
   if ParamStr(2) = '' then
-    InputfileName := GetResponse('Enter file to uudecode : ')
+     begin
+     InputfileName := GetResponse('Enter file to uudecode : ')
+     end
   else
-    InputfileName := ParamStr(2);
+     begin
+     InputfileName := ParamStr(2);
+     end;
 
   if InputfileName = '' then Exit;
 
   if not OpenFileForRead(FileRead, InputfileName) then Exit;
 
-  if not Eof(FileRead) then ReadLn(FileRead, FileString);
+  if not Eof(FileRead) then
+     begin
+     ReadLn(FileRead, FileString);
+     end;
 
   while UpperCase(Copy(FileString, 1, 6)) <> 'BEGIN ' do
-    begin
-      ReadLn(FileRead, FileString);
+     begin
+     ReadLn(FileRead, FileString);
 
-      if Eof(FileRead) then
+     if Eof(FileRead) then
         begin
-          Close(FileRead);
-          Exit;
+        Close(FileRead);
+        Exit;
         end;
-    end;
+     end;
 
   { We have found the begin statement }
 
@@ -185,31 +192,33 @@ begin
   OutFileName := RemoveFirstString(FileString);
 
   if OutFileName = '' then
-    begin
-      Close(FileRead);
-      Exit;
-    end;
+     begin
+     Close(FileRead);
+     Exit;
+     end;
 
   { See if output file exists, and if so, make sure overwrite is okay }
 
   WriteLn('Output file = ', OutFileName);
 
   if FileExists(OutFileName) then
-    begin
-      repeat
-        Key := UpCase(GetKey(OutFileName + ' already exists.  Overwrite? (Y/N/) : '));
+     begin
+     repeat
+       Key := UpCase(GetKey(OutFileName + ' already exists.  Overwrite? (Y/N/) : '));
 
-        if (Key = EscapeKey) or (Key = 'N') then
+       if (Key = EscapeKey) or (Key = 'N') then
           begin
-            Close(FileRead);
-            Exit;
+          Close(FileRead);
+          Exit;
           end;
 
-      until Key = 'Y';
-      WriteLn;
-    end
+     until Key = 'Y';
+     WriteLn;
+     end
   else
-    WriteLn('Output file = ', OutFileName);
+     begin
+     WriteLn('Output file = ', OutFileName);
+     end;
 
   { Open output file }
 
@@ -217,52 +226,56 @@ begin
   ReWrite(FileWrite, 1);
 
   while not Eof(FileRead) do
-    begin
-      ReadLn(FileRead, FileString);
+     begin
+     ReadLn(FileRead, FileString);
 
-      if (FileString = '') or (UpperCase(FileString) = 'END') then Continue;
+     if (FileString = '') or (UpperCase(FileString) = 'END') then Continue;
 
-      if not (FileString[1] in [' ', '`']) then
+     if not (FileString[1] in [' ', '`']) then
         begin
-          Delete(FileString, 1, 1); { Get rid of length character }
+        Delete(FileString, 1, 1); { Get rid of length character }
 
-          for CharacterPointer := 1 to length(FileString) do
-            begin
-              if not (FileString[CharacterPointer] in [' '..'`']) then
-                begin
-                  Close(FileRead);
-                  Close(FileWrite);
-                  //                   ReportError ('Illegal character found!!');
-                  WriteLn(FileString);
-                  Exit;
-                end;
+        for CharacterPointer := 1 to length(FileString) do
+           begin
+           if not (FileString[CharacterPointer] in [' '..'`']) then
+              begin
+              Close(FileRead);
+              Close(FileWrite);
+              //                   ReportError ('Illegal character found!!');
+              WriteLn(FileString);
+              Exit;
+              end;
 
-              if FileString[CharacterPointer] = '`' then
-                FileString[CharacterPointer] := ' ';
-            end;
+           if FileString[CharacterPointer] = '`' then
+              begin
+              FileString[CharacterPointer] := ' ';
+              end;
+           end;
 
-          { We have legal characters - process 4 bytes at a time }
+        { We have legal characters - process 4 bytes at a time }
 
-          while FileString <> '' do
-            begin
+        while FileString <> '' do
+           begin
 
-              { Suppressed space at end of line protetion }
+           { Suppressed space at end of line protetion }
 
-              while length(FileString) < 4 do
-                FileString := FileString + ' ';
+           while length(FileString) < 4 do
+              begin
+              FileString := FileString + ' ';
+              end;
 
-              OutputByte1 := ((Ord(FileString[1]) - 32) shl 2) + ((Ord(FileString[2]) - 32) shr 4);
-              OutputByte2 := ((Ord(FileString[2]) - 32) shl 4) + ((Ord(FileString[3]) - 32) shr 2);
-              OutputByte3 := ((Ord(FileString[3]) - 32) shl 6) + ((Ord(FileString[4]) - 32));
+           OutputByte1 := ((Ord(FileString[1]) - 32) shl 2) + ((Ord(FileString[2]) - 32) shr 4);
+           OutputByte2 := ((Ord(FileString[2]) - 32) shl 4) + ((Ord(FileString[3]) - 32) shr 2);
+           OutputByte3 := ((Ord(FileString[3]) - 32) shl 6) + ((Ord(FileString[4]) - 32));
 
-              BlockWrite(FileWrite, OutputByte1, 1);
-              BlockWrite(FileWrite, OutputByte2, 1);
-              BlockWrite(FileWrite, OutputByte3, 1);
+           BlockWrite(FileWrite, OutputByte1, 1);
+           BlockWrite(FileWrite, OutputByte2, 1);
+           BlockWrite(FileWrite, OutputByte3, 1);
 
-              Delete(FileString, 1, 4);
-            end;
+           Delete(FileString, 1, 4);
+           end;
         end;
-    end;
+     end;
 
   Close(FileWrite);
   Close(FileRead);
@@ -286,166 +299,190 @@ var
 
 begin
   if ParamStr(2) = '' then
-    InputFile := GetResponse('Enter file to decode : ')
+     begin
+     InputFile := GetResponse('Enter file to decode : ')
+     end
   else
-    InputFile := ParamStr(2);
+     begin
+     InputFile := ParamStr(2);
+     end;
 
   if InputFile = '' then Exit;
 
   CharSet := 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
-  for n := 0 to 255 do t[n] := 0;
-  for n := 0 to 63 do t[Ord(CharSet[n + 1])] := n;
+  for n := 0 to 255 do
+     begin
+     t[n] := 0;
+     end;
+  for n := 0 to 63 do
+     begin
+     t[Ord(CharSet[n + 1])] := n;
+     end;
 
   NumberBytes := 0;
   OutputFile := '';
 
   if OpenFileForRead(FileRead, InputFile) then
-    begin
-      while not Eof(FileRead) do
+     begin
+     while not Eof(FileRead) do
         begin
-          ReadLn(FileRead, FileString);
-          FileString := UpperCase(FileString);
-          WriteLn(FileString);
+        ReadLn(FileRead, FileString);
+        FileString := UpperCase(FileString);
+        WriteLn(FileString);
 
-          if StringHas(FileString, 'NAME=') then
-            begin
+        if StringHas(FileString, 'NAME=') then
+           begin
+           OutputFile := PostcedingString(FileString, 'NAME=');
+
+           if OutputFile[1] = '"' then
+              begin
+              Delete(OutputFile, 1, 1);
+              end;
+
+           if StringHas(OutputFile, '"') then
+              begin
+              OutputFile := PrecedingString(OutputFile, '"')
+              end
+           else
+              begin
+              OutputFile := PrecedingString(OutputFile, ';');
+              end;
+
+           WriteLn('Output file command found = ', OutputFile);
+           end;
+
+        if (StringHas(FileString, 'CONTENT-TRANSFER-ENCOD') and
+          StringHas(FileString, 'BASE64')) then
+           begin
+           ReadLn(FileRead, FileString);
+
+           FileString := UpperCase(FileString);
+
+           if StringHas(FileString, 'NAME=') then
+              begin
               OutputFile := PostcedingString(FileString, 'NAME=');
 
               if OutputFile[1] = '"' then
-                Delete(OutputFile, 1, 1);
+                 begin
+                 Delete(OutputFile, 1, 1);
+                 end;
 
               if StringHas(OutputFile, '"') then
-                OutputFile := PrecedingString(OutputFile, '"')
+                 begin
+                 OutputFile := PrecedingString(OutputFile, '"')
+                 end
               else
-                OutputFile := PrecedingString(OutputFile, ';');
+                 begin
+                 OutputFile := PrecedingString(OutputFile, ';');
+                 end;
 
               WriteLn('Output file command found = ', OutputFile);
-            end;
+              end;
 
-          if (StringHas(FileString, 'CONTENT-TRANSFER-ENCOD') and
-            StringHas(FileString, 'BASE64')) then
-            begin
-              ReadLn(FileRead, FileString);
-
-              FileString := UpperCase(FileString);
-
-              if StringHas(FileString, 'NAME=') then
-                begin
-                  OutputFile := PostcedingString(FileString, 'NAME=');
-
-                  if OutputFile[1] = '"' then
-                    Delete(OutputFile, 1, 1);
-
-                  if StringHas(OutputFile, '"') then
-                    OutputFile := PrecedingString(OutputFile, '"')
-                  else
-                    OutputFile := PrecedingString(OutputFile, ';');
-
-                  WriteLn('Output file command found = ', OutputFile);
-                end;
+           if OutputFile = '' then
+              begin
+              OutputFile := GetResponse('Output file name = ');
 
               if OutputFile = '' then
-                begin
-                  OutputFile := GetResponse('Output file name = ');
+                 begin
+                 Close(FileRead);
+                 Exit;
+                 end;
+              end;
 
-                  if OutputFile = '' then
+           Assign(FileWrite, OutputFile);
+           ReWrite(FileWrite, 1);
+
+           Started := False;
+           LeftOverChars := '';
+
+           while not Eof(FileRead) do
+              begin
+              ReadLn(FileRead, FileString);
+
+              GetRidOfPrecedingSpaces(FileString);
+              GetRidOfPostcedingSpaces(FileString);
+
+              if Started and (FileString = '') then
+                 begin
+                 Close(FileWrite);
+                 Close(FileRead);
+                 WriteLn(NumberBytes, ' bytes saved to ', OutputFile);
+                 Exit;
+                 end;
+
+              if (length(FileString) > 40) and (not StringHas(FileString, '=')) then
+                 begin
+                 Started := True;
+                 end;
+
+              if Started then
+                 begin
+                 FileString := LeftOverChars + FileString;
+
+                 while length(FileString) >= 4 do
                     begin
-                      Close(FileRead);
-                      Exit;
+                    ByteValue := t[Ord(FileString[1])];
+
+                    { Push six bits to the left }
+
+                    ByteValue := ByteValue * 64;
+
+                    { Fill in next six bits }
+
+                    ByteValue := ByteValue + t[Ord(FileString[2])];
+
+                    { Four more shifts to get first byte in hi byte }
+
+                    ByteValue := ByteValue * 16;
+
+                    { Save first byte }
+
+                    SaveByte := Hi(ByteValue);
+                    BlockWrite(FileWrite, SaveByte, 1);
+
+                    { Push two more places to make room for six bits }
+
+                    ByteValue := ByteValue * 4;
+
+                    { Get next 6 bits }
+
+                    ByteValue := ByteValue + t[Ord(FileString[3])];
+
+                    { Push 6 times to make second byte }
+
+                    ByteValue := ByteValue * 64;
+
+                    { Save second byte }
+
+                    SaveByte := Hi(ByteValue);
+                    BlockWrite(FileWrite, SaveByte, 1);
+
+                    { Get last 6 bits and you have the byte in Lo }
+
+                    ByteValue := ByteValue + t[Ord(FileString[4])];
+
+                    { Save third byte }
+
+                    SaveByte := Lo(ByteValue);
+                    BlockWrite(FileWrite, SaveByte, 1);
+
+                    { Delete the bits we have processed }
+
+                    Delete(FileString, 1, 4);
+                    NumberBytes := NumberBytes + 3;
                     end;
-                end;
 
-              Assign(FileWrite, OutputFile);
-              ReWrite(FileWrite, 1);
-
-              Started := False;
-              LeftOverChars := '';
-
-              while not Eof(FileRead) do
-                begin
-                  ReadLn(FileRead, FileString);
-
-                  GetRidOfPrecedingSpaces(FileString);
-                  GetRidOfPostcedingSpaces(FileString);
-
-                  if Started and (FileString = '') then
-                    begin
-                      Close(FileWrite);
-                      Close(FileRead);
-                      WriteLn(NumberBytes, ' bytes saved to ', OutputFile);
-                      Exit;
-                    end;
-
-                  if (length(FileString) > 40) and (not StringHas(FileString, '=')) then
-                    Started := True;
-
-                  if Started then
-                    begin
-                      FileString := LeftOverChars + FileString;
-
-                      while length(FileString) >= 4 do
-                        begin
-                          ByteValue := t[Ord(FileString[1])];
-
-                          { Push six bits to the left }
-
-                          ByteValue := ByteValue * 64;
-
-                          { Fill in next six bits }
-
-                          ByteValue := ByteValue + t[Ord(FileString[2])];
-
-                          { Four more shifts to get first byte in hi byte }
-
-                          ByteValue := ByteValue * 16;
-
-                          { Save first byte }
-
-                          SaveByte := Hi(ByteValue);
-                          BlockWrite(FileWrite, SaveByte, 1);
-
-                          { Push two more places to make room for six bits }
-
-                          ByteValue := ByteValue * 4;
-
-                          { Get next 6 bits }
-
-                          ByteValue := ByteValue + t[Ord(FileString[3])];
-
-                          { Push 6 times to make second byte }
-
-                          ByteValue := ByteValue * 64;
-
-                          { Save second byte }
-
-                          SaveByte := Hi(ByteValue);
-                          BlockWrite(FileWrite, SaveByte, 1);
-
-                          { Get last 6 bits and you have the byte in Lo }
-
-                          ByteValue := ByteValue + t[Ord(FileString[4])];
-
-                          { Save third byte }
-
-                          SaveByte := Lo(ByteValue);
-                          BlockWrite(FileWrite, SaveByte, 1);
-
-                          { Delete the bits we have processed }
-
-                          Delete(FileString, 1, 4);
-                          NumberBytes := NumberBytes + 3;
-                        end;
-
-                      LeftOverChars := FileString;
-                    end;
-                end;
-              Close(FileWrite);
-            end;
+                 LeftOverChars := FileString;
+                 end;
+              end;
+           Close(FileWrite);
+           end;
         end;
-      Close(FileRead);
-      WriteLn(NumberBytes, ' bytes saved to ', OutputFile);
-    end;
+     Close(FileRead);
+     WriteLn(NumberBytes, ' bytes saved to ', OutputFile);
+     end;
 end;
 
 procedure LastQTCSent(var Call: CallString; var Time: Str20; var QSONumber: integer);
@@ -459,67 +496,67 @@ begin
   NumberQTCBooksSent := 0;
 
   if OpenFileForRead(FileRead, QTCFileName) then
-    begin
-      while not Eof(FileRead) do
+     begin
+     while not Eof(FileRead) do
         begin
-          ReadLn(FileRead, FileString);
+        ReadLn(FileRead, FileString);
 
-          GetRidOfPostcedingSpaces(FileString);
+        GetRidOfPostcedingSpaces(FileString);
 
-          if FileString = '' then Continue;
+        if FileString = '' then Continue;
 
-          if Copy(FileString, 1, 3) = 'QTC' then
-            begin
-              inc(NumberQTCBooksSent);
-              LastFirstString := '';
-              LastSecondString := '';
-              Continue;
-            end;
+        if Copy(FileString, 1, 3) = 'QTC' then
+           begin
+           inc(NumberQTCBooksSent);
+           LastFirstString := '';
+           LastSecondString := '';
+           Continue;
+           end;
 
-          TempString := Copy(FileString, 1, 40);
+        TempString := Copy(FileString, 1, 40);
 
-          if (Copy(TempString, 1, 3) = ' 1:') or
-            (Copy(TempString, 1, 3) = ' 2:') or
-            (Copy(TempString, 1, 3) = ' 3:') or
-            (Copy(TempString, 1, 3) = ' 4:') or
-            (Copy(TempString, 1, 3) = ' 5:') then
-            begin
-              RemoveFirstString(TempString);
-              LastFirstString := TempString;
-            end;
+        if (Copy(TempString, 1, 3) = ' 1:') or
+          (Copy(TempString, 1, 3) = ' 2:') or
+          (Copy(TempString, 1, 3) = ' 3:') or
+          (Copy(TempString, 1, 3) = ' 4:') or
+          (Copy(TempString, 1, 3) = ' 5:') then
+           begin
+           RemoveFirstString(TempString);
+           LastFirstString := TempString;
+           end;
 
-          TempString := Copy(FileString, 41, 30);
+        TempString := Copy(FileString, 41, 30);
 
-          if (Copy(TempString, 1, 3) = ' 6:') or
-            (Copy(TempString, 1, 3) = ' 7:') or
-            (Copy(TempString, 1, 3) = ' 8:') or
-            (Copy(TempString, 1, 3) = ' 9:') or
-            (Copy(TempString, 1, 3) = '10:') then
-            begin
-              RemoveFirstString(TempString);
-              LastSecondString := TempString;
-            end;
+        if (Copy(TempString, 1, 3) = ' 6:') or
+          (Copy(TempString, 1, 3) = ' 7:') or
+          (Copy(TempString, 1, 3) = ' 8:') or
+          (Copy(TempString, 1, 3) = ' 9:') or
+          (Copy(TempString, 1, 3) = '10:') then
+           begin
+           RemoveFirstString(TempString);
+           LastSecondString := TempString;
+           end;
         end;
 
-      Close(FileRead);
+     Close(FileRead);
 
-      if LastSecondString <> '' then
+     if LastSecondString <> '' then
         begin
-          Time := RemoveFirstString(LastSecondString);
-          Call := RemoveFirstString(LastSecondString);
-          QSONumber := RemoveFirstLongInteger(LastSecondString);
+        Time := RemoveFirstString(LastSecondString);
+        Call := RemoveFirstString(LastSecondString);
+        QSONumber := RemoveFirstLongInteger(LastSecondString);
         end
-      else
+     else
         begin
-          Time := RemoveFirstString(LastFirstString);
-          Call := RemoveFirstString(LastFirstString);
-          QSONumber := RemoveFirstLongInteger(LastFirstString);
+        Time := RemoveFirstString(LastFirstString);
+        Call := RemoveFirstString(LastFirstString);
+        QSONumber := RemoveFirstLongInteger(LastFirstString);
         end;
 
-      Insert(':', Time, 3);
+     Insert(':', Time, 3);
 
-      Exit;
-    end;
+     Exit;
+     end;
 
   Call := '';
   Time := '';
@@ -543,9 +580,13 @@ begin
   Val(Exchange, QSONumber, Result1);
 
   if Result1 = 0 then
-    GetLogEntryQSONumberReceived := QSONumber
+     begin
+     GetLogEntryQSONumberReceived := QSONumber
+     end
   else
-    GetLogEntryQSONumberReceived := 0;
+     begin
+     GetLogEntryQSONumberReceived := 0;
+     end;
 end;
 
 procedure LoadQTCDataFile;
@@ -640,14 +681,14 @@ var
 begin
   if NumberQTCStations > 0 then
     if OpenFileForWrite(FileWrite, QTCListFileName) then
-      begin
-        for Station := 0 to NumberQTCStations - 1 do
+       begin
+       for Station := 0 to NumberQTCStations - 1 do
           begin
-            WriteLn(FileWrite, BigExpandedString(QTCDataArray^[Station].Call));
-            WriteLn(FileWrite, QTCDataArray^[Station].NumberQTCs);
+          WriteLn(FileWrite, BigExpandedString(QTCDataArray^[Station].Call));
+          WriteLn(FileWrite, QTCDataArray^[Station].NumberQTCs);
           end;
-        Close(FileWrite);
-      end;
+       Close(FileWrite);
+       end;
 end;
 
 procedure AddReminder;
@@ -659,13 +700,13 @@ var
 
 begin
   if NumberReminderRecords >= MaximumReminderRecords then
-    begin
-      //    SaveSetAndClearActiveWindow(QuickCommandWindow);
-      QuickDisplay('Sorry, you have used up all your reminders!!');
-      //    Delay(2000);
-      //    RemoveAndRestorePreviousWindow;
-      Exit;
-    end;
+     begin
+     //    SaveSetAndClearActiveWindow(QuickCommandWindow);
+     QuickDisplay('Sorry, you have used up all your reminders!!');
+     //    Delay(2000);
+     //    RemoveAndRestorePreviousWindow;
+     Exit;
+     end;
 
   TimeString := QuickEditResponse('Enter time for reminder (XX:XX) : ', 12);
   if (TimeString = EscapeKey) or (Copy(TimeString, 3, 1) <> ':') then Exit;
@@ -677,7 +718,10 @@ begin
   DateString := UpperCase(QuickEditResponse('Enter day or date : ', 12));
   if (DateString = '') or (DateString = EscapeKey) then Exit;
 
-  if NumberReminderRecords = 0 then New(Reminders);
+  if NumberReminderRecords = 0 then
+     begin
+     New(Reminders);
+     end;
 
   Reminders^[NumberReminderRecords].DateString := '';
   Reminders^[NumberReminderRecords].DayString := '';
@@ -686,75 +730,104 @@ begin
   Val(TimeString, Reminders^[NumberReminderRecords].Time, Result);
 
   if StringHas(UpperCase(DateString), 'ALARM') then
-    begin
-      Reminders^[NumberReminderRecords].Alarm := True;
-      DateString := BracketedString(DateString, '', 'ALARM');
-    end;
+     begin
+     Reminders^[NumberReminderRecords].Alarm := True;
+     DateString := BracketedString(DateString, '', 'ALARM');
+     end;
 
   GetRidOfPostcedingSpaces(DateString);
   su(DateString);
 
   if StringHas(DateString, '-') then
-    begin
-      case length(DateString) of
-        8: if (DateString[2] <> '-') or (DateString[6] <> '-') then
+     begin
+     case length(DateString) of
+       8: if (DateString[2] <> '-') or (DateString[6] <> '-') then
+             begin
+             //          SaveSetAndClearActiveWindow(QuickCommandWindow);
+             QuickDisplay('Invalid date!!');
+             //          Delay(1000);
+             //          RestorePreviousWindow;
+             Exit;
+             end
+         else
             begin
-              //          SaveSetAndClearActiveWindow(QuickCommandWindow);
-              QuickDisplay('Invalid date!!');
-              //          Delay(1000);
-              //          RestorePreviousWindow;
-              Exit;
-            end
-          else
             DateString := '0' + DateString;
-
-        9: if (DateString[3] <> '-') or (DateString[7] <> '-') then
-            begin
-              //          SaveSetAndClearActiveWindow(QuickCommandWindow);
-              QuickDisplay('Invalid date!!');
-              //          Delay(1000);
-              //          RestorePreviousWindow;
-              Exit;
             end;
 
-        else
-          begin
-            //        SaveSetAndClearActiveWindow(QuickCommandWindow);
-            QuickDisplay('Invalid date!!');
-            //        Delay(1000);
-            //        RestorePreviousWindow;
-            Exit;
-          end;
-      end; { of case }
+       9: if (DateString[3] <> '-') or (DateString[7] <> '-') then
+             begin
+             //          SaveSetAndClearActiveWindow(QuickCommandWindow);
+             QuickDisplay('Invalid date!!');
+             //          Delay(1000);
+             //          RestorePreviousWindow;
+             Exit;
+             end;
 
-      Reminders^[NumberReminderRecords].DateString := DateString;
-    end
+       else
+         begin
+           //        SaveSetAndClearActiveWindow(QuickCommandWindow);
+           QuickDisplay('Invalid date!!');
+           //        Delay(1000);
+           //        RestorePreviousWindow;
+           Exit;
+         end;
+     end; { of case }
+
+     Reminders^[NumberReminderRecords].DateString := DateString;
+     end
   else
-    begin
-      if Copy(DateString, 1, 2) = 'MO' then DateString := 'MONDAY';
-      if Copy(DateString, 1, 2) = 'TU' then DateString := 'TUESDAY';
-      if Copy(DateString, 1, 2) = 'WE' then DateString := 'WEDNESDAY';
-      if Copy(DateString, 1, 2) = 'TH' then DateString := 'THURSDAY';
-      if Copy(DateString, 1, 2) = 'FR' then DateString := 'FRIDAY';
-      if Copy(DateString, 1, 2) = 'SA' then DateString := 'SATURDAY';
-      if Copy(DateString, 1, 2) = 'SU' then DateString := 'SUNDAY';
-
-      DayString := Copy(DateString, length(DateString) - 2, 3);
-
-      if (DayString <> 'DAY') and (DateString <> 'ALL') and (DateString <> 'TMW') then
+     begin
+     if Copy(DateString, 1, 2) = 'MO' then
         begin
-          //      SaveSetAndClearActiveWindow(QuickCommandWindow);
-          QuickDisplay('Invalid date!!');
-          //      Delay(1000);
-          //      RestorePreviousWindow;
-          Exit;
+        DateString := 'MONDAY';
+        end;
+     if Copy(DateString, 1, 2) = 'TU' then
+        begin
+        DateString := 'TUESDAY';
+        end;
+     if Copy(DateString, 1, 2) = 'WE' then
+        begin
+        DateString := 'WEDNESDAY';
+        end;
+     if Copy(DateString, 1, 2) = 'TH' then
+        begin
+        DateString := 'THURSDAY';
+        end;
+     if Copy(DateString, 1, 2) = 'FR' then
+        begin
+        DateString := 'FRIDAY';
+        end;
+     if Copy(DateString, 1, 2) = 'SA' then
+        begin
+        DateString := 'SATURDAY';
+        end;
+     if Copy(DateString, 1, 2) = 'SU' then
+        begin
+        DateString := 'SUNDAY';
         end;
 
-      if DateString = 'TODAY' then DateString := UpperCase(GetDayString);
-      if DateString = 'TMW' then DateString := UpperCase(GetTomorrowString);
+     DayString := Copy(DateString, length(DateString) - 2, 3);
 
-      Reminders^[NumberReminderRecords].DayString := DateString;
-    end;
+     if (DayString <> 'DAY') and (DateString <> 'ALL') and (DateString <> 'TMW') then
+        begin
+        //      SaveSetAndClearActiveWindow(QuickCommandWindow);
+        QuickDisplay('Invalid date!!');
+        //      Delay(1000);
+        //      RestorePreviousWindow;
+        Exit;
+        end;
+
+     if DateString = 'TODAY' then
+        begin
+        DateString := UpperCase(GetDayString);
+        end;
+     if DateString = 'TMW' then
+        begin
+        DateString := UpperCase(GetTomorrowString);
+        end;
+
+     Reminders^[NumberReminderRecords].DayString := DateString;
+     end;
 
   ReminderString := QuickEditResponse('Msg = ', 75);
   if (ReminderString = '') or (ReminderString = EscapeKey) then Exit;
@@ -803,28 +876,34 @@ var
 begin
   Directory := FindDirectory('name.dat');
 
-  if Directory = '' then Directory := FindDirectory('TR.EXE');
+  if Directory = '' then
+     begin
+     Directory := FindDirectory('TR.EXE');
+     end;
 
   if OpenFileForRead(FileRead, Directory + '\name.dat') then
-    begin
-      ReadLn(FileRead, UserNameString);
-      WriteLn('TR Program registered to ', UserNameString);
-      Close(FileRead);
-    end
+     begin
+     ReadLn(FileRead, UserNameString);
+     WriteLn('TR Program registered to ', UserNameString);
+     Close(FileRead);
+     end
   else
-    begin
-      Directory := FindDirectory('TR.OVR');
+     begin
+     Directory := FindDirectory('TR.OVR');
 
-      UserNameString := GetResponse('Please enter your name and call : ');
+     UserNameString := GetResponse('Please enter your name and call : ');
 
-      if UserNameString = '' then halt;
+     if UserNameString = '' then
+        begin
+        halt;
+        end;
 
-      OpenFileForWrite(FileWrite, Directory + '\name.dat');
-      WriteLn(FileWrite, UserNameString);
-      WriteLn(FileWrite, AddressString);
-      WriteLn(FileWrite, CityString);
-      Close(FileWrite);
-    end;
+     OpenFileForWrite(FileWrite, Directory + '\name.dat');
+     WriteLn(FileWrite, UserNameString);
+     WriteLn(FileWrite, AddressString);
+     WriteLn(FileWrite, CityString);
+     Close(FileWrite);
+     end;
 end;
 
 procedure LoopBackTest;
@@ -1548,19 +1627,21 @@ begin
   NumberLines := 0;
 
   while not Eof(LogFileRead) do
-    begin
-      Read(LogFileRead, FileChar);
+     begin
+     Read(LogFileRead, FileChar);
 
-      if FileChar = LineFeed then
+     if FileChar = LineFeed then
         begin
-          inc(NumberLines);
-          if NumberLines >= BigWindowRY - BigWindowLY + 1 then
-            Exit;
+        inc(NumberLines);
+        if NumberLines >= BigWindowRY - BigWindowLY + 1 then
+           begin
+           Exit;
+           end;
         end;
 
-      TextBuffer[BufferNumber]^.List[TextBuffer[BufferNumber]^.NumberChars] := FileChar;
-      inc(TextBuffer[BufferNumber]^.NumberChars);
-    end;
+     TextBuffer[BufferNumber]^.List[TextBuffer[BufferNumber]^.NumberChars] := FileChar;
+     inc(TextBuffer[BufferNumber]^.NumberChars);
+     end;
 end;
 
 procedure DisplayBuffer(BufferNumber: integer);
@@ -1572,8 +1653,12 @@ begin
   //  ClrScr;
 
   if TextBuffer[BufferNumber]^.NumberChars > 0 then
-    for Address := 0 to TextBuffer[BufferNumber]^.NumberChars - 1 do
-      Write(TextBuffer[BufferNumber]^.List[Address]);
+     begin
+     for Address := 0 to TextBuffer[BufferNumber]^.NumberChars - 1 do
+        begin
+        Write(TextBuffer[BufferNumber]^.List[Address]);
+        end;
+     end;
 
   DisplayedBuffer := BufferNumber;
 end;
@@ -1633,42 +1718,51 @@ procedure ShowNextPage;
 
 begin
   if NumberBuffers > 1 then { multiple buffers }
-    begin
-      inc(DisplayedBuffer); { is already loaded }
+     begin
+     inc(DisplayedBuffer); { is already loaded }
 
-      if DisplayedBuffer = NumberBuffers then { need to wrap to 0 }
-        DisplayedBuffer := 0;
-
-      if DisplayedBuffer <> FirstBuffer then
-        DisplayBuffer(DisplayedBuffer)
-      else
+     if DisplayedBuffer = NumberBuffers then { need to wrap to 0 }
         begin
-          Dec(DisplayedBuffer);
-          if DisplayedBuffer < 0 then DisplayedBuffer := NumberBuffers - 1;
+        DisplayedBuffer := 0;
         end;
 
-      LoadNextPage;
-    end
+     if DisplayedBuffer <> FirstBuffer then
+        begin
+        DisplayBuffer(DisplayedBuffer)
+        end
+     else
+        begin
+        Dec(DisplayedBuffer);
+        if DisplayedBuffer < 0 then
+           begin
+           DisplayedBuffer := NumberBuffers - 1;
+           end;
+        end;
+
+     LoadNextPage;
+     end
   else { we are using just one buffer }
     if not Eof(LogFileRead) then
-      begin
-        LoadPageBuffer(0);
-        DisplayBuffer(0);
-      end;
+       begin
+       LoadPageBuffer(0);
+       DisplayBuffer(0);
+       end;
 end;
 
 procedure ShowPreviousPage;
 
 begin
   if DisplayedBuffer <> FirstBuffer then
-    begin
-      Dec(DisplayedBuffer);
+     begin
+     Dec(DisplayedBuffer);
 
-      if DisplayedBuffer < 0 then { need to wrap }
+     if DisplayedBuffer < 0 then { need to wrap }
+        begin
         DisplayedBuffer := NumberBuffers - 1;
+        end;
 
-      DisplayBuffer(DisplayedBuffer);
-    end;
+     DisplayBuffer(DisplayedBuffer);
+     end;
 end;
 
 procedure ViewRadioDebug;
@@ -2559,34 +2653,34 @@ begin
   strU(@CountryID);
   WhereY := 1;
   while not Eof(FileRead) do
-    begin
-      ReadLn(FileRead, FileString);
+     begin
+     ReadLn(FileRead, FileString);
 
-      if UpperCase(FileString) = CountryID then
+     if UpperCase(FileString) = CountryID then
         begin
-          //      SaveSetAndClearActiveWindow(EditableLogWindow);
+        //      SaveSetAndClearActiveWindow(EditableLogWindow);
 
-          repeat
-            ReadLn(FileRead, FileString);
+        repeat
+          ReadLn(FileRead, FileString);
 
-            if FileString <> '' then
-              begin
-                //          if WhereX > 1 then WriteLn;
-                //          Write(FileString);
-                //          SendDlgItemMessage(tr4w_WindowsArray[tr4w_LAST5WINDOW_INDEX].tr4w_WndHandle, 101, LB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(FileString))));
-                //          SendMessage(_EditableLogWindow, LB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(FileString))));
-                inc(WhereY);
-              end;
+          if FileString <> '' then
+             begin
+             //          if WhereX > 1 then WriteLn;
+             //          Write(FileString);
+             //          SendDlgItemMessage(tr4w_WindowsArray[tr4w_LAST5WINDOW_INDEX].tr4w_WndHandle, 101, LB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(FileString))));
+             //          SendMessage(_EditableLogWindow, LB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(FileString))));
+             inc(WhereY);
+             end;
 
-          until (WhereY = 5) or (FileString = '');
+        until (WhereY = 5) or (FileString = '');
 
-          Close(FileRead);
-          //      RestorePreviousWindow;
-          Exit;
+        Close(FileRead);
+        //      RestorePreviousWindow;
+        Exit;
 
         end;
 
-    end;
+     end;
 
   Close(FileRead);
 end;

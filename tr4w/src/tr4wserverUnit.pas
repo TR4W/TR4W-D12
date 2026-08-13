@@ -308,7 +308,10 @@ label
 begin
   Result := False;
   ListenerSocket := socket(AF_INET, SOCK_STREAM, IPPROTO_IP {IPPROTO_TCP});
-  if ListenerSocket = INVALID_SOCKET then goto UnSucc;
+  if ListenerSocket = INVALID_SOCKET then
+     begin
+     goto UnSucc;
+     end;
   mysaddr.sin_family := AF_INET;
   mysaddr.sin_port := htons(PortNumber + 1);
   mysaddr.sin_addr.S_addr := 0;
@@ -316,8 +319,14 @@ begin
   // took `const Addr: PSockAddr`, so the old @mysaddr is now wrong.  TSockAddr
   // is `sockaddr` and mysaddr is `sockaddr_in` -- both 16 bytes -- and a var
   // parameter demands an EXACT type match, hence the cast.
-  if WinSock2.bind(ListenerSocket, TSockAddr(mysaddr), SizeOf(mysaddr)) <> 0 then goto UnSucc;
-  if listen(ListenerSocket, maxclients) <> 0 then goto UnSucc;
+  if WinSock2.bind(ListenerSocket, TSockAddr(mysaddr), SizeOf(mysaddr)) <> 0 then
+     begin
+     goto UnSucc;
+     end;
+  if listen(ListenerSocket, maxclients) <> 0 then
+     begin
+     goto UnSucc;
+     end;
 
   WSAAsyncSelect(ListenerSocket, ApplicationHandle, WM_SOCK_NET_SYNLISTNER, FD_ACCEPT);
   Result := True;
@@ -368,16 +377,19 @@ begin
   // is `sockaddr` and mysaddr is `sockaddr_in` -- both 16 bytes -- and a var
   // parameter demands an EXACT type match, hence the cast.
   if WinSock2.bind(ServerSocket, TSockAddr(mysaddr), SizeOf(mysaddr)) <> 0 then
-  begin
-    logger.Error('bind() failed on port ' + IntToStr(PortNumber) + ', error ' + IntToStr(GetLastError));
-    ServerMessageBox('bind() failed. Check that the port is not already in use. '
-                     + 'See tr4wserver.log for details.' + sLineBreak + sLineBreak
-                     + SysUtils.SysErrorMessage(GetLastError),
-                     MB_OK or MB_ICONWARNING or MB_TOPMOST);
-//    tf.ShowSysErrorMessage('BIND');
-    goto UnSucc;
-  end;
-  if listen(ServerSocket, maxclients) <> 0 then goto UnSucc;
+     begin
+     logger.Error('bind() failed on port ' + IntToStr(PortNumber) + ', error ' + IntToStr(GetLastError));
+     ServerMessageBox('bind() failed. Check that the port is not already in use. '
+                      + 'See tr4wserver.log for details.' + sLineBreak + sLineBreak
+                      + SysUtils.SysErrorMessage(GetLastError),
+                      MB_OK or MB_ICONWARNING or MB_TOPMOST);
+ //    tf.ShowSysErrorMessage('BIND');
+     goto UnSucc;
+     end;
+  if listen(ServerSocket, maxclients) <> 0 then
+     begin
+     goto UnSucc;
+     end;
   Windows.EnableWindow(GetDlgItem(ApplicationHandle, 103), False);
   Windows.EnableWindow(GetDlgItem(ApplicationHandle, 104), True);
   WSAAsyncSelect(ServerSocket, ApplicationHandle, WM_SOCK_NET_ACCEPT, FD_ACCEPT);
@@ -394,11 +406,11 @@ var
   i                                     : integer;
 begin
   for i := 1 to maxclients do if ClientsSoocketsArray[i].clSocket <> 0 then
-    begin
-      WSAAsyncSelect(ClientsSoocketsArray[i].clSocket, ApplicationHandle, 0, 0);
-      closesocket(ClientsSoocketsArray[i].clSocket);
-      ClientsSoocketsArray[i].clSocket := 0;
-    end;
+                                 begin
+                                 WSAAsyncSelect(ClientsSoocketsArray[i].clSocket, ApplicationHandle, 0, 0);
+                                 closesocket(ClientsSoocketsArray[i].clSocket);
+                                 ClientsSoocketsArray[i].clSocket := 0;
+                                 end;
   WSAAsyncSelect(ServerSocket, ApplicationHandle, 0, 0);
   closesocket(ServerSocket);
   nclients := 0;
@@ -411,12 +423,12 @@ var
 begin
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket <> 0 then
-    begin
-      if ToAll = False then if ClientsSoocketsArray[i].clSocket = From then Continue;
-      I2 := sSend(ClientsSoocketsArray[i].clSocket, ServerBuffer[Bufindex], Count, mt);
+       begin
+       if ToAll = False then if ClientsSoocketsArray[i].clSocket = From then Continue;
+       I2 := sSend(ClientsSoocketsArray[i].clSocket, ServerBuffer[Bufindex], Count, mt);
 
-      Sleep(0);
-    end;
+       Sleep(0);
+       end;
 end;
 
 procedure AddSocketToArray(soc: Cardinal; IP: PAnsiChar; Name: PAnsiChar);
@@ -425,15 +437,18 @@ var
 begin
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket = 0 then
-    begin
-      Windows.ZeroMemory(@ClientsSoocketsArray[i].clSocket, SizeOf(TClientEntry) - 4); //skip clSerialNumber
-      ClientsSoocketsArray[i].clSocket := soc;
-      lstrcpyA(@ClientsSoocketsArray[i].clIPAdr[0], IP);
-      lstrcpyA(@ClientsSoocketsArray[i].clName[0], Name);
-      if Name = nil then ClientsSoocketsArray[i].clName[0] := '?';
-      inc(nclients);
-      Break;
-    end;
+       begin
+       Windows.ZeroMemory(@ClientsSoocketsArray[i].clSocket, SizeOf(TClientEntry) - 4); //skip clSerialNumber
+       ClientsSoocketsArray[i].clSocket := soc;
+       lstrcpyA(@ClientsSoocketsArray[i].clIPAdr[0], IP);
+       lstrcpyA(@ClientsSoocketsArray[i].clName[0], Name);
+       if Name = nil then
+          begin
+          ClientsSoocketsArray[i].clName[0] := '?';
+          end;
+       inc(nclients);
+       Break;
+       end;
 end;
 
 procedure DeleteSocketFromArray(soc: Cardinal);
@@ -442,12 +457,12 @@ var
 begin
   for b := 1 to maxclients do
     if ClientsSoocketsArray[b].clSocket = soc then
-    begin
-      ClientsSoocketsArray[b].clSocket := 0;
-      SendDisconnectMessage(ClientsSoocketsArray[b].clID);
-      dec(nclients);
-      Break;
-    end;
+       begin
+       ClientsSoocketsArray[b].clSocket := 0;
+       SendDisconnectMessage(ClientsSoocketsArray[b].clID);
+       dec(nclients);
+       Break;
+       end;
 end;
 
 procedure DisplayRCVDBytes;
@@ -472,10 +487,10 @@ begin
   Windows.SendDlgItemMessage(ApplicationHandle, 109, LB_RESETCONTENT, 0, 0);
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket <> 0 then
-    begin
-      TF.Format(DisplayBuffer, '%s: %s', ClientsSoocketsArray[i].clIPAdr, ClientsSoocketsArray[i].clName);
-      Windows.SendDlgItemMessageA(ApplicationHandle, 109, LB_ADDSTRING, 0, integer(@DisplayBuffer));
-    end;
+       begin
+       TF.Format(DisplayBuffer, '%s: %s', ClientsSoocketsArray[i].clIPAdr, ClientsSoocketsArray[i].clName);
+       Windows.SendDlgItemMessageA(ApplicationHandle, 109, LB_ADDSTRING, 0, integer(@DisplayBuffer));
+       end;
 
   TF.Format(DisplayBuffer, 'TR4WSERVER [%d]', nclients);
   Windows.SetWindowTextA(ApplicationHandle, DisplayBuffer);
@@ -587,26 +602,26 @@ var
 begin
   FilePointer := -1;
   if OpenServerLog(OPEN_EXISTING) then
-  begin
-    1:
-    SetFilePointer(ServerLogHandle, FilePointer * SizeOf(ContestExchange), nil, FILE_END);
-    Windows.ReadFile(ServerLogHandle, TempCE, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
-    if pNumberOfBytesRead = SizeOf(ContestExchange) then
-    begin
-      if TempCE.ceQSOID1 = CE.ceQSOID1 then
-        if TempCE.ceQSOID2 = CE.ceQSOID2 then
+     begin
+     1:
+     SetFilePointer(ServerLogHandle, FilePointer * SizeOf(ContestExchange), nil, FILE_END);
+     Windows.ReadFile(ServerLogHandle, TempCE, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
+     if pNumberOfBytesRead = SizeOf(ContestExchange) then
         begin
-          SetFilePointer(ServerLogHandle, FilePointer * SizeOf(ContestExchange), nil, FILE_END);
-          WriteFile(ServerLogHandle, CE, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
-          ServerCRC32Changed := True;
-          goto 2;
+        if TempCE.ceQSOID1 = CE.ceQSOID1 then
+          if TempCE.ceQSOID2 = CE.ceQSOID2 then
+             begin
+             SetFilePointer(ServerLogHandle, FilePointer * SizeOf(ContestExchange), nil, FILE_END);
+             WriteFile(ServerLogHandle, CE, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
+             ServerCRC32Changed := True;
+             goto 2;
+             end;
+        dec(FilePointer);
+        goto 1;
         end;
-      dec(FilePointer);
-      goto 1;
-    end;
-    2:
-    CloseServerLog;
-  end;
+     2:
+     CloseServerLog;
+     end;
 end;
 {
 procedure SortServerLog;
@@ -687,20 +702,27 @@ begin
   Result := True;
   MSWSOCK_DLL := LoadLibrary('MSWSOCK.DLL');
   if MSWSOCK_DLL <> 0 then
-  begin
+     begin
 
-    @TransmitFile := GetProcAddress(MSWSOCK_DLL, 'TransmitFile');
-    if @TransmitFile = nil then Result := False;
+     @TransmitFile := GetProcAddress(MSWSOCK_DLL, 'TransmitFile');
+     if @TransmitFile = nil then
+        begin
+        Result := False;
+        end;
 
-//    @AcceptEx := GetProcAddress(MSWSOCK_DLL, 'AcceptEx');
-//    if @AcceptEx = nil then RESULT := False;
+ //    @AcceptEx := GetProcAddress(MSWSOCK_DLL, 'AcceptEx');
+ //    if @AcceptEx = nil then RESULT := False;
 
-  end
+     end
   else
-    Result := False;
+     begin
+     Result := False;
+     end;
 
   if Result = False then
-    ServerMessageBox('Failed to load in MSWSOCK.DLL', MB_OK or MB_ICONWARNING or MB_TOPMOST);
+     begin
+     ServerMessageBox('Failed to load in MSWSOCK.DLL', MB_OK or MB_ICONWARNING or MB_TOPMOST);
+     end;
 end;
 
 function TransmitServerLog(s: TSocket): DWORD; stdcall;
@@ -728,15 +750,15 @@ begin
   Windows.ReadFile(ServerLogHandle, ServerBuffer, SizeOf(ServerBuffer), TempCardinal, nil);
 
   if TempCardinal > 0 then
-  begin
+     begin
       //  WSAWaitForMultipleEvents(1, @tGetNetLogEvent, False, 5500, False);
       //  I := SELECT(0, nil, @ServerTFDSet, nil, @ServerTTimeVal);
 //      if I < 1 then r := r + I;
     i := sSend(s, ServerBuffer, TempCardinal, dmTransmitFile);
     if DWORD(i) = TempCardinal then
-    begin
-      Sleep(10);
-    end;
+       begin
+       Sleep(10);
+       end;
     goto 1;
   end;
   //  MessageBox(ApplicationHandle, PChar(IntToStr(r)), _TR4WSERVER, MB_OK or MB_ICONWARNING or MB_TOPMOST);
@@ -758,7 +780,10 @@ end;
 
 procedure CloseServerLog;
 begin
-  if ServerLogHandle <> INVALID_HANDLE_VALUE then CloseHandle(ServerLogHandle);
+  if ServerLogHandle <> INVALID_HANDLE_VALUE then
+     begin
+     CloseHandle(ServerLogHandle);
+     end;
   ServerLogHandle := INVALID_HANDLE_VALUE;
   ServerLogOpened := False;
 end;
@@ -776,13 +801,15 @@ var
 begin
   if ContestExchangesBufferIndex = 0 then Exit;
   if not OpenServerLog(OPEN_EXISTING) then
-  begin
-    ContestExchangesBufferIndex := 0;
-    Exit;
-  end;
+     begin
+     ContestExchangesBufferIndex := 0;
+     Exit;
+     end;
   SetFilePointer(ServerLogHandle, 0, nil, FILE_END);
   for c := 1 to ContestExchangesBufferIndex do
-    WriteFile(ServerLogHandle, ContestExchangesBuffer[c], SizeOf(ContestExchange), lpNumberOfBytesWritten, nil);
+     begin
+     WriteFile(ServerLogHandle, ContestExchangesBuffer[c], SizeOf(ContestExchange), lpNumberOfBytesWritten, nil);
+     end;
   FlushFileBuffers(ServerLogHandle);
   DisplayServerLogSize;
   CloseServerLog;
@@ -797,11 +824,11 @@ begin
   ServerLogFileInformation.liServerLogSize := Windows.GetFileSize(ServerLogHandle, nil);
   ServerLogFileInformation.liContest := DUMMYCONTEST;
   if ServerLogFileInformation.liServerLogSize > SizeOfTLogHeader then
-  begin
-    SetFilePointer(ServerLogHandle, SizeOfTLogHeader, nil, FILE_BEGIN);
-    Windows.ReadFile(ServerLogHandle, TempCE, SizeOf(TempCE), pNumberOfBytesRead, nil);
-    ServerLogFileInformation.liContest := TempCE.ceContest;
-  end;
+     begin
+     SetFilePointer(ServerLogHandle, SizeOfTLogHeader, nil, FILE_BEGIN);
+     Windows.ReadFile(ServerLogHandle, TempCE, SizeOf(TempCE), pNumberOfBytesRead, nil);
+     ServerLogFileInformation.liContest := TempCE.ceContest;
+     end;
   CloseServerLog;
   GetServerLogCRC32;
   ServerLogFileInformation.liSeverCRC32 := ServerCRC32;
@@ -859,12 +886,12 @@ var
 begin
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket <> 0 then
-    begin
-      ServerMessage.smMessage := SM_DISCONECT_CLIENT_MESSAGE;
-      ServerMessage.smParam := integer(Client);
-      sSend(ClientsSoocketsArray[i].clSocket, ServerMessage, SizeOf(ServerMessage), dmDisc);
-      Sleep(0);
-    end;
+       begin
+       ServerMessage.smMessage := SM_DISCONECT_CLIENT_MESSAGE;
+       ServerMessage.smParam := integer(Client);
+       sSend(ClientsSoocketsArray[i].clSocket, ServerMessage, SizeOf(ServerMessage), dmDisc);
+       Sleep(0);
+       end;
 end;
 
 procedure SetComputerID(ID: AnsiChar; s: TSocket);
@@ -873,10 +900,10 @@ var
 begin
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket = s then
-    begin
-      ClientsSoocketsArray[i].clID := ID;
-      Break;
-    end;
+       begin
+       ClientsSoocketsArray[i].clID := ID;
+       Break;
+       end;
 end;
 
 procedure SetStatus(Status: TClientStatus; s: TSocket);
@@ -885,10 +912,10 @@ var
 begin
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clSocket = s then
-    begin
-      ClientsSoocketsArray[i].clConnectedToTelnet := Status.csTelnet;
-      Break;
-    end;
+       begin
+       ClientsSoocketsArray[i].clConnectedToTelnet := Status.csTelnet;
+       Break;
+       end;
 end;
 
 procedure SendSpotViaNet(Status: TSendSpotViaNetwork; s: TSocket);
@@ -898,10 +925,10 @@ begin
   for i := 1 to maxclients do
     if ClientsSoocketsArray[i].clConnectedToTelnet then
       if ClientsSoocketsArray[i].clSocket <> s then
-      begin
-        sSend(ClientsSoocketsArray[i].clSocket, Status, SizeOf(Status), dmSpotViaNet);
-        Break;
-      end;
+         begin
+         sSend(ClientsSoocketsArray[i].clSocket, Status, SizeOf(Status), dmSpotViaNet);
+         Break;
+         end;
 end;
 
 function CorrectPassword(s: TSocket; BytesReceived: integer): boolean;
@@ -911,19 +938,21 @@ var
 begin
   Offset := 0;
   if BytesReceived > 10 then
-  begin
-    if PInteger(@ServerBuffer[0])^ = 542393671 {'GET '} then
-      if PInteger(@ServerBuffer[6])^ = 1397965136 {'PASS'} then
-          //          MessageBox(ApplicationHandle, @ServerBuffer, _TR4WSERVER, MB_OK or MB_ICONWARNING or MB_TOPMOST);
-        Offset := 11;
-  end;
+     begin
+     if PInteger(@ServerBuffer[0])^ = 542393671 {'GET '} then
+       if PInteger(@ServerBuffer[6])^ = 1397965136 {'PASS'} then
+           //          MessageBox(ApplicationHandle, @ServerBuffer, _TR4WSERVER, MB_OK or MB_ICONWARNING or MB_TOPMOST);
+          begin
+          Offset := 11;
+          end;
+     end;
   Result := False;
   for i := 0 to 9 do
     if ServerBuffer[i + Offset] <> tr4wServerPassword[i] then
-    begin
-      sSend(s, PASSTR4W, SizeOf(PASSTR4W), dmPass);
-      Exit;
-    end;
+       begin
+       sSend(s, PASSTR4W, SizeOf(PASSTR4W), dmPass);
+       Exit;
+       end;
   Result := True;
 end;
 {
@@ -983,7 +1012,10 @@ begin
   MapFin := Windows.CreateFileMapping(ServerLogHandle, nil, PAGE_READWRITE, 0, 0, nil);
   if MapFin = 0 then Exit;
   MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if MapBase = nil then goto 3;
+  if MapBase = nil then
+     begin
+     goto 3;
+     end;
 
   ServerCRC32 := uCRC32.GetCRC32(MapBase^, dwSize);
   ServerCRC32Changed := False;
@@ -1040,41 +1072,53 @@ begin
 
   LogSize := Windows.GetFileSize(ServerLogHandle, nil);
 
-  if LogSize <= SizeOf(TLogHeader) then goto 2;
+  if LogSize <= SizeOf(TLogHeader) then
+     begin
+     goto 2;
+     end;
   LogSize := ((LogSize - SizeOf(TLogHeader)) div SizeOfContestExchange);
   QSOCounter := 0;
 
   MapFin := Windows.CreateFileMapping(ServerLogHandle, nil, PAGE_READWRITE, 0, 0, nil);
-  if MapFin = 0 then goto 2;
+  if MapFin = 0 then
+     begin
+     goto 2;
+     end;
 
   MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if MapBase = nil then goto 3;
+  if MapBase = nil then
+     begin
+     goto 3;
+     end;
   // Issue #997: asm pointer-arith (EAX = MapViewOfFile return) -> explicit.
   RescoredRXData := Pointer(Cardinal(MapBase) + SizeOfTLogHeader);
 
   1:
 
   if RescoredRXData^.ceRecordKind = rkQSO then
-  begin
-    if UpdAction = actSetClearDupesheetBit then RescoredRXData^.ceClearDupeSheet := True;
+     begin
+     if UpdAction = actSetClearDupesheetBit then
+        begin
+        RescoredRXData^.ceClearDupeSheet := True;
+        end;
 
-    if UpdAction = actClearMults then
-    begin
-      RescoredRXData^.ceClearMultSheet := True;
-      RescoredRXData^.DomesticMult := False;
-      RescoredRXData^.DXMult := False;
-      RescoredRXData^.PrefixMult := False;
-      RescoredRXData^.ZoneMult := False;
-    end;
+     if UpdAction = actClearMults then
+        begin
+        RescoredRXData^.ceClearMultSheet := True;
+        RescoredRXData^.DomesticMult := False;
+        RescoredRXData^.DXMult := False;
+        RescoredRXData^.PrefixMult := False;
+        RescoredRXData^.ZoneMult := False;
+        end;
 
-  end;
+     end;
   inc(QSOCounter);
   if QSOCounter <> LogSize then
-  begin
-    // Issue #997: asm advance-by-one-record -> explicit pointer arithmetic.
-    RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
-    goto 1;
-  end;
+     begin
+     // Issue #997: asm advance-by-one-record -> explicit pointer arithmetic.
+     RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
+     goto 1;
+     end;
 
   Result := True;
   ServerCRC32Changed := True;
@@ -1114,19 +1158,22 @@ begin
   Next:
   Windows.ReadFile(ServerLogHandle, TempCE, SizeOf(ContestExchange), i, nil);
   if i = SizeOf(ContestExchange) then
-  begin
-    if NextNumberToSend < TempCE.NumberSent then NextNumberToSend := TempCE.NumberSent;
-    goto Next;
-  end;
+     begin
+     if NextNumberToSend < TempCE.NumberSent then
+        begin
+        NextNumberToSend := TempCE.NumberSent;
+        end;
+     goto Next;
+     end;
   CloseServerLog;
 
   NextNumberToSend := NextNumberToSend + 1;
 
   for i := 1 to MAXCLIENTS do
-  begin
-    ClientsSoocketsArray[i].clSerialNumber := NextNumberToSend;
-    ClientsSoocketsArray[i].clSerialNumberStatus := sntFree;
-  end;
+     begin
+     ClientsSoocketsArray[i].clSerialNumber := NextNumberToSend;
+     ClientsSoocketsArray[i].clSerialNumberStatus := sntFree;
+     end;
   SerialNumbersChanged;
 end;
 
@@ -1136,15 +1183,15 @@ var
 begin
   if not SerialNumberLockoutEnable then Exit;
   for i := 1 to maxclients do
-  begin
-    if ClientsSoocketsArray[i].clSocket <> 0 then
-      if ClientsSoocketsArray[i].clSerialNumberStatus = sntFree then
-      begin
-        ServerMessage.smMessage := SM_SERIAL_NUMBER_CHANGED;
-        ServerMessage.smParam := ClientsSoocketsArray[i].clSerialNumber;
-        sSend(ClientsSoocketsArray[i].clSocket, ServerMessage, SizeOf(ServerMessage), dmROLQ);
-      end;
-  end;
+     begin
+     if ClientsSoocketsArray[i].clSocket <> 0 then
+       if ClientsSoocketsArray[i].clSerialNumberStatus = sntFree then
+          begin
+          ServerMessage.smMessage := SM_SERIAL_NUMBER_CHANGED;
+          ServerMessage.smParam := ClientsSoocketsArray[i].clSerialNumber;
+          sSend(ClientsSoocketsArray[i].clSocket, ServerMessage, SizeOf(ServerMessage), dmROLQ);
+          end;
+     end;
 end;
 
 procedure UpdateSerialNumbersStatus(s: TSocket; Status: TSerialNumberType);
@@ -1153,16 +1200,21 @@ var
 begin
   if not SerialNumberLockoutEnable then Exit;
   for i := 1 to maxclients do
-  begin
-    if ClientsSoocketsArray[i].clSocket = s then
-    begin
-      ClientsSoocketsArray[i].clSerialNumberStatus := Status;
-      Break;
-    end;
-  end;
+     begin
+     if ClientsSoocketsArray[i].clSocket = s then
+        begin
+        ClientsSoocketsArray[i].clSerialNumberStatus := Status;
+        Break;
+        end;
+     end;
 
   if Status = sntReserved then
-    for i := 1 to maxclients do inc(ClientsSoocketsArray[i].clSerialNumber);
+     begin
+     for i := 1 to maxclients do
+        begin
+        inc(ClientsSoocketsArray[i].clSerialNumber);
+        end;
+     end;
 
   SerialNumbersChanged;
 

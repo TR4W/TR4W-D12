@@ -161,82 +161,88 @@ begin
     // makes the broadcast go out that NIC.  Mirrors the QK4 per-interface send.
     // The K4's reply (to the source port) is received on the same socket.
     for i := 0 to localIPs.Count - 1 do
-    begin
-      ip := localIPs[i];
-      if (ip = '') or (ip = '127.0.0.1') or (Pos(':', ip) > 0) then
-         Continue;   // skip blanks, loopback, and IPv6
+       begin
+       ip := localIPs[i];
+       if (ip = '') or (ip = '127.0.0.1') or (Pos(':', ip) > 0) then
+          begin
+          Continue;   // skip blanks, loopback, and IPv6
+          end;
 
-      client := TIdUDPClient.Create(nil);
-      try
-        client.BoundIP := ip;            // send out this specific interface
-        client.BroadcastEnabled := True;
-        client.ReceiveTimeout := 150;
-        client.SendBuffer('255.255.255.255', K4_DISCOVERY_PORT, SendBytes);
-        logger.Info('[K4Discovery] Sent findk4 from %s to 255.255.255.255:%d',
-                    [ip, K4_DISCOVERY_PORT]);
-        clients.Add(client);
-      except
-        on E: Exception do
-        begin
-          logger.Warn('[K4Discovery] Send from %s failed: %s', [ip, E.Message]);
-          client.Free;
-        end;
-      end;
-    end;
+       client := TIdUDPClient.Create(nil);
+       try
+         client.BoundIP := ip;            // send out this specific interface
+         client.BroadcastEnabled := True;
+         client.ReceiveTimeout := 150;
+         client.SendBuffer('255.255.255.255', K4_DISCOVERY_PORT, SendBytes);
+         logger.Info('[K4Discovery] Sent findk4 from %s to 255.255.255.255:%d',
+                     [ip, K4_DISCOVERY_PORT]);
+         clients.Add(client);
+       except
+         on E: Exception do
+            begin
+            logger.Warn('[K4Discovery] Send from %s failed: %s', [ip, E.Message]);
+            client.Free;
+            end;
+       end;
+       end;
 
     // Collect replies across all interface sockets for TimeoutMs.
     StartTime := GetTickCount;
     while (clients.Count > 0) and ((GetTickCount - StartTime) < LongWord(TimeoutMs)) do
-    begin
-      for c := 0 to clients.Count - 1 do
-      begin
-        client := TIdUDPClient(clients[c]);
-        try
-          SetLength(RecvBuf, 1024);
-          RecvLen := client.ReceiveBuffer(RecvBuf, PeerIP, PeerPort);
-
-          if RecvLen > 0 then
+       begin
+       for c := 0 to clients.Count - 1 do
           begin
-            SetString(Reply, PAnsiChar(@RecvBuf[0]), RecvLen);
-            logger.Debug('[K4Discovery] RX %d bytes from %s:%d = [%s]',
-                         [RecvLen, PeerIP, PeerPort, Reply]);
+          client := TIdUDPClient(clients[c]);
+          try
+            SetLength(RecvBuf, 1024);
+            RecvLen := client.ReceiveBuffer(RecvBuf, PeerIP, PeerPort);
 
-            if ParseResponse(Reply, Parsed) then
-            begin
-              isDuplicate := False;
-              for i := 0 to Result.Count - 1 do
-                 if PK4DiscoveredRadio(Result[i])^.IPAddress = Parsed.IPAddress then
-                    begin
-                    isDuplicate := True;
-                    Break;
-                    end;
+            if RecvLen > 0 then
+               begin
+               SetString(Reply, PAnsiChar(@RecvBuf[0]), RecvLen);
+               logger.Debug('[K4Discovery] RX %d bytes from %s:%d = [%s]',
+                            [RecvLen, PeerIP, PeerPort, Reply]);
 
-              if not isDuplicate then
-              begin
-                New(Radio);
-                Radio^ := Parsed;
-                Result.Add(Radio);
-                logger.Info('[K4Discovery] Found %s serial %s at %s',
-                            [Parsed.RigType, Parsed.SerialNumber, Parsed.IPAddress]);
-              end;
-            end
-            else
-              logger.Info('[K4Discovery] reply did not parse as K4: [%s]', [Reply]);
+               if ParseResponse(Reply, Parsed) then
+                  begin
+                  isDuplicate := False;
+                  for i := 0 to Result.Count - 1 do
+                     if PK4DiscoveredRadio(Result[i])^.IPAddress = Parsed.IPAddress then
+                        begin
+                        isDuplicate := True;
+                        Break;
+                        end;
+
+                  if not isDuplicate then
+                     begin
+                     New(Radio);
+                     Radio^ := Parsed;
+                     Result.Add(Radio);
+                     logger.Info('[K4Discovery] Found %s serial %s at %s',
+                                 [Parsed.RigType, Parsed.SerialNumber, Parsed.IPAddress]);
+                     end;
+                  end
+               else
+                  begin
+                  logger.Info('[K4Discovery] reply did not parse as K4: [%s]', [Reply]);
+                  end;
+               end;
+          except
+            on E: Exception do
+               begin
+               // ReceiveTimeout on this socket -- move to the next interface.
+               end;
           end;
-        except
-          on E: Exception do
-          begin
-            // ReceiveTimeout on this socket -- move to the next interface.
           end;
-        end;
-      end;
-    end;
+       end;
 
     logger.Info('[K4Discovery] Discovery complete: %d interface(s) probed, %d radio(s) found',
                 [clients.Count, Result.Count]);
   finally
     for c := 0 to clients.Count - 1 do
+       begin
        TIdUDPClient(clients[c]).Free;
+       end;
     clients.Free;
     TIdStack.DecUsage;
   end;

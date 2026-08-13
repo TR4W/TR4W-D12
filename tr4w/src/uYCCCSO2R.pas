@@ -738,8 +738,14 @@ end;
 
 procedure YCCCSetSpeed(wpm: integer);
 begin
-   if wpm < 2 then wpm := 2;
-   if wpm > 99 then wpm := 99;
+   if wpm < 2 then
+      begin
+      wpm := 2;
+      end;
+   if wpm > 99 then
+      begin
+      wpm := 99;
+      end;
    FKeyerSpeed := wpm;
    logger.Debug('YCCC CW speed ' + IntToStr(wpm) + ' wpm');
    YCCCSendCmd(CMD_KEYER_SPEED, FKeyerSpeed);

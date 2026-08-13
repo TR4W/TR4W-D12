@@ -278,65 +278,73 @@ begin
   if MMTTY.mmttyTXIsOn then Exit;
 
   if c in ['.', ' ', #13, #10] then
-  begin
+     begin
 
-    if MMTTY.mmttyCallProcess.cpEnable then
-      if MMTTY.mmttyCallProcess.cpPos in [3..8] then
-        if MMTTY.mmttyCallProcess.cpContainN then
-          if MMTTY.mmttyCallProcess.cpContainA then
-          begin
-            Windows.SetWindowTextA(tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndHandle, MMTTY.mmttyCallProcess.cpBuffer);
+     if MMTTY.mmttyCallProcess.cpEnable then
+       if MMTTY.mmttyCallProcess.cpPos in [3..8] then
+         if MMTTY.mmttyCallProcess.cpContainN then
+           if MMTTY.mmttyCallProcess.cpContainA then
+              begin
+              Windows.SetWindowTextA(tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndHandle, MMTTY.mmttyCallProcess.cpBuffer);
 
-            Windows.ZeroMemory(@MMTTY.mmttyLastCallsign, SizeOf(MMTTY.mmttyLastCallsign));
-            Windows.CopyMemory(@MMTTY.mmttyLastCallsign[1], @MMTTY.mmttyCallProcess.cpBuffer, MMTTY.mmttyCallProcess.cpPos);
-            MMTTY.mmttyLastCallsign[0] := AnsiChar(MMTTY.mmttyCallProcess.cpPos);
-            isDupe := VisibleLog.CallIsADupe(MMTTY.mmttyLastCallsign, ActiveBand, ActiveMode);
-//            PutCallToCallWindow(MMTTY.mmttyLastCallsign);
+              Windows.ZeroMemory(@MMTTY.mmttyLastCallsign, SizeOf(MMTTY.mmttyLastCallsign));
+              Windows.CopyMemory(@MMTTY.mmttyLastCallsign[1], @MMTTY.mmttyCallProcess.cpBuffer, MMTTY.mmttyCallProcess.cpPos);
+              MMTTY.mmttyLastCallsign[0] := AnsiChar(MMTTY.mmttyCallProcess.cpPos);
+              isDupe := VisibleLog.CallIsADupe(MMTTY.mmttyLastCallsign, ActiveBand, ActiveMode);
+  //            PutCallToCallWindow(MMTTY.mmttyLastCallsign);
 
-            SendMessage(MMTTY.mmttyRichEdit,
-              EM_SETSEL,
-              MMTTY.mmttyCallProcess.cpStartPos,
-              MMTTY.mmttyCallProcess.cpStartPos + MMTTY.mmttyCallProcess.cpPos + 1 - 1);
+              SendMessage(MMTTY.mmttyRichEdit,
+                EM_SETSEL,
+                MMTTY.mmttyCallProcess.cpStartPos,
+                MMTTY.mmttyCallProcess.cpStartPos + MMTTY.mmttyCallProcess.cpPos + 1 - 1);
 
-            MMTTY.mmttyCF.dwMask := CFM_COLOR + CFM_BOLD + CFM_STRIKEOUT;
-//            MMTTY.mmttyCF.crTextColor := $00FF0000;
-            //MMTTY.mmttyCF.crTextColor := $000000FF;
+              MMTTY.mmttyCF.dwMask := CFM_COLOR + CFM_BOLD + CFM_STRIKEOUT;
+  //            MMTTY.mmttyCF.crTextColor := $00FF0000;
+              //MMTTY.mmttyCF.crTextColor := $000000FF;
 
-            MMTTY.mmttyCF.dwEffects := CFE_BOLD;
-            if isDupe then
-            begin
-              MMTTY.mmttyCF.dwEffects := {CFE_STRIKEOUT + }CFE_BOLD;
-              MMTTY.mmttyCF.crTextColor := $000000FF;
-            end;
+              MMTTY.mmttyCF.dwEffects := CFE_BOLD;
+              if isDupe then
+                 begin
+                 MMTTY.mmttyCF.dwEffects := {CFE_STRIKEOUT + }CFE_BOLD;
+                 MMTTY.mmttyCF.crTextColor := $000000FF;
+                 end;
 
-            mmttyUpdateCharFormat;
+              mmttyUpdateCharFormat;
 
-            SendMessage(MMTTY.mmttyRichEdit, EM_SETSEL, -1, -1);
+              SendMessage(MMTTY.mmttyRichEdit, EM_SETSEL, -1, -1);
 
-//            MMTTY.mmttyCF.dwMask := CFM_COLOR + CFM_BOLD + CFM_STRIKEOUT;
-            MMTTY.mmttyCF.crTextColor := $00000000;
-            MMTTY.mmttyCF.dwEffects := 0;
-            mmttyUpdateCharFormat;
+  //            MMTTY.mmttyCF.dwMask := CFM_COLOR + CFM_BOLD + CFM_STRIKEOUT;
+              MMTTY.mmttyCF.crTextColor := $00000000;
+              MMTTY.mmttyCF.dwEffects := 0;
+              mmttyUpdateCharFormat;
 
-          end;
+              end;
 
-    Windows.ZeroMemory(@MMTTY.mmttyCallProcess, SizeOf(MMTTY.mmttyCallProcess));
-    MMTTY.mmttyCallProcess.cpEnable := True;
-    MMTTY.mmttyCallProcess.cpStartPos := MMTTY.mmttyCurrentPos;
-    Exit;
-  end;
+     Windows.ZeroMemory(@MMTTY.mmttyCallProcess, SizeOf(MMTTY.mmttyCallProcess));
+     MMTTY.mmttyCallProcess.cpEnable := True;
+     MMTTY.mmttyCallProcess.cpStartPos := MMTTY.mmttyCurrentPos;
+     Exit;
+     end;
 
-  if MMTTY.mmttyCallProcess.cpPos = 15 then MMTTY.mmttyCallProcess.cpEnable := False;
+  if MMTTY.mmttyCallProcess.cpPos = 15 then
+     begin
+     MMTTY.mmttyCallProcess.cpEnable := False;
+     end;
 
   if not MMTTY.mmttyCallProcess.cpEnable then Exit;
 
   MMTTY.mmttyCallProcess.cpBuffer[MMTTY.mmttyCallProcess.cpPos] := c;
 
-  if c in ['0'..'9'] then MMTTY.mmttyCallProcess.cpContainN := True
+  if c in ['0'..'9'] then
+     begin
+     MMTTY.mmttyCallProcess.cpContainN := True
+     end
   else
     if c in ['A'..'Z', {'a'..'z',} '/'] then MMTTY.mmttyCallProcess.cpContainA := True
     else
-      MMTTY.mmttyCallProcess.cpEnable := False;
+       begin
+       MMTTY.mmttyCallProcess.cpEnable := False;
+       end;
 
   inc(MMTTY.mmttyCallProcess.cpPos);
 
@@ -351,22 +359,22 @@ begin
     TXM_PTTEVENT:
       begin
         if lp = 0 then
-        begin
-          PTTOff;
-          MMTTY.mmttyTXIsOn := False;
+           begin
+           PTTOff;
+           MMTTY.mmttyTXIsOn := False;
 
-          MMTTY.mmttyCF.dwMask := CFM_COLOR;
-          MMTTY.mmttyCF.crTextColor := clblack;
-          mmttyUpdateCharFormat;
-          tStartAutoCQ;
-        end;
+           MMTTY.mmttyCF.dwMask := CFM_COLOR;
+           MMTTY.mmttyCF.crTextColor := clblack;
+           mmttyUpdateCharFormat;
+           tStartAutoCQ;
+           end;
         if lp = 1 then
-        begin
-          MMTTY.mmttyTXIsOn := True;
-          MMTTY.mmttyCF.dwMask := CFM_COLOR;
-          MMTTY.mmttyCF.crTextColor := $00AAAAAA;
-          mmttyUpdateCharFormat;
-        end;
+           begin
+           MMTTY.mmttyTXIsOn := True;
+           MMTTY.mmttyCF.dwMask := CFM_COLOR;
+           MMTTY.mmttyCF.crTextColor := $00AAAAAA;
+           mmttyUpdateCharFormat;
+           end;
       end;
 
     TXM_HANDLE:
@@ -399,15 +407,15 @@ function NewMMTTYRichEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: 
 begin
   Result := 0;
   if Msg = WM_LBUTTONDBLCLK then
-  begin
-    tCleareCallWindow;
-    PostMessage(MMTTY.MMTTYRichEdit, WM_COPY, 0, 0);
-    PostMessage(wh[mweCall], WM_PASTE, 0, 0);
-    PostMessage(wh[mweCall], WM_SETFOCUS, 0, 0);
+     begin
+     tCleareCallWindow;
+     PostMessage(MMTTY.MMTTYRichEdit, WM_COPY, 0, 0);
+     PostMessage(wh[mweCall], WM_PASTE, 0, 0);
+     PostMessage(wh[mweCall], WM_SETFOCUS, 0, 0);
 
-      //      Windows.SetFocus(CallWindowHandle);
-      //      Exit;
-  end;
+       //      Windows.SetFocus(CallWindowHandle);
+       //      Exit;
+     end;
   Result := CallWindowProc(OldMMTTYRichEditProc, hwnddlg, Msg, wParam, lParam);
 
 end;

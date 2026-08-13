@@ -370,20 +370,20 @@ begin
         tr4w_WindowsArray[tw_MP3RECORDER].WndHandle := hwnddlg;
         LAMEENCDLL := LoadLibrary('lame_enc.dll');
         if LAMEENCDLL <> 0 then
-        begin
-          @beInitStream := GetProcAddress(LAMEENCDLL, 'beInitStream');
-          @beEncodeChunk := GetProcAddress(LAMEENCDLL, 'beEncodeChunk');
-          @beCloseStream := GetProcAddress(LAMEENCDLL, 'beCloseStream');
-        end
+           begin
+           @beInitStream := GetProcAddress(LAMEENCDLL, 'beInitStream');
+           @beEncodeChunk := GetProcAddress(LAMEENCDLL, 'beEncodeChunk');
+           @beCloseStream := GetProcAddress(LAMEENCDLL, 'beCloseStream');
+           end
         else
-        begin
-          // Issue #997 (asm push/wsprintf/add esp -> StrPCopy + SysUtils.Format)
-          uAnsiStr.StrPCopy(TR4W_TEMP_MP3_FILENAME,
-            SysUtils.Format('LAME_ENC.DLL: %s ' + TC_LAME_ERROR + ':' + #13#10#13#10' http://www.tr4w.com/files/',
-              [SysErrorMessage(GetLastError)]));
-          showwarning(TR4W_TEMP_MP3_FILENAME);
-          goto 1;
-        end;
+           begin
+           // Issue #997 (asm push/wsprintf/add esp -> StrPCopy + SysUtils.Format)
+           uAnsiStr.StrPCopy(TR4W_TEMP_MP3_FILENAME,
+             SysUtils.Format('LAME_ENC.DLL: %s ' + TC_LAME_ERROR + ':' + #13#10#13#10' http://www.tr4w.com/files/',
+               [SysErrorMessage(GetLastError)]));
+           showwarning(TR4W_TEMP_MP3_FILENAME);
+           goto 1;
+           end;
 
         MP3RECWNDHND := hwnddlg;
 
@@ -394,10 +394,10 @@ begin
         Windows.CreateDirectoryA(TR4W_MP3PATH, nil);
 
         if RecorderEnable then
-        begin
-          SwapRecorderStatus;
-          Windows.SendDlgItemMessage(hwnddlg, 100, BM_SETCHECK, BST_CHECKED, 0);
-        end;
+           begin
+           SwapRecorderStatus;
+           Windows.SendDlgItemMessage(hwnddlg, 100, BM_SETCHECK, BST_CHECKED, 0);
+           end;
 
         SendDlgItemMessage(hwnddlg, 103, PBM_SETSTEP, 1, 0);
         SendDlgItemMessage(hwnddlg, 103, PBM_SETRANGE, 0, 0 or PeakProgressBarMaxValue shl 16);
@@ -412,7 +412,10 @@ begin
     WM_NCDESTROY:
       begin
         StopRecorder;
-        if LAMEENCDLL <> 0 then FreeLibrary(LAMEENCDLL);
+        if LAMEENCDLL <> 0 then
+           begin
+           FreeLibrary(LAMEENCDLL);
+           end;
       end;
 
     WM_CLOSE:
@@ -451,11 +454,12 @@ begin
 
 //  WriteFile(TempMP3FileHandle, TempWavHeader, SizeOf(TempWavHeader), dwWrite, nil);
 
-  for i := 0 to 1 do begin
-    whead[i].lpData := @WaveBuffer[i];
-    whead[i].dwBufferLength := bufsize;
-    whead[i].dwFlags := 0;
-  end;
+  for i := 0 to 1 do
+     begin
+     whead[i].lpData := @WaveBuffer[i];
+     whead[i].dwBufferLength := bufsize;
+     whead[i].dwFlags := 0;
+     end;
   wfx.wFormatTag := WAVE_FORMAT_PCM;
   wfx.nChannels := 1;
   wfx.nSamplesPerSec := Freq;
@@ -466,8 +470,14 @@ begin
 
   CheckMMError(waveinopen(@hwi, wave_mapper, @wfx, DWORD(@waveinproc), 0, callback_function));
 
-  for i := 0 to 1 do waveinprepareheader(hwi, @whead[i], SizeOf(whead[i]));
-  for i := 0 to 1 do waveinaddbuffer(hwi, @whead[i], SizeOf(whead[i]));
+  for i := 0 to 1 do
+     begin
+     waveinprepareheader(hwi, @whead[i], SizeOf(whead[i]));
+     end;
+  for i := 0 to 1 do
+     begin
+     waveinaddbuffer(hwi, @whead[i], SizeOf(whead[i]));
+     end;
   MP3RecorderMode := mprRec;
   CheckMMError(waveinstart(hwi));
 //  MP3RecorderUsed := True;
@@ -492,47 +502,53 @@ begin
     wim_data:
 
       for i := 0 to 1 do
-      begin
-        if ((whead[i].dwFlags and WHDR_DONE) = WHDR_DONE) and (MP3RecorderMode = mprRec) then
-        begin
-
-          waveinaddbuffer(hwi, @whead[i], SizeOf(whead[i]));
-
-          Done := 0;
-
-          NextEncode:
-          beEncodeChunk(hLame, dwSamples, whead[i].lpData[Done], pMP3OutputBuffer[0], toWrite);
-          WriteFile(TempMP3FileHandle, pMP3OutputBuffer[0], toWrite, dwWrite, nil);
-//          if toWrite <> dwWrite then sm;
-          Done := Done + dwSamples * SizeOf(SHORT);
-          if Done + dwSamples * SizeOf(SHORT) < whead[i].dwBytesRecorded then goto NextEncode;
-
-          if Done < whead[i].dwBytesRecorded then
-          begin
-            Temp576BufferPos := whead[i].dwBytesRecorded - Done;
-            beEncodeChunk(hLame, Temp576BufferPos div 2, whead[i].lpData[Done], pMP3OutputBuffer[0], toWrite);
-            if toWrite > 0 then
+         begin
+         if ((whead[i].dwFlags and WHDR_DONE) = WHDR_DONE) and (MP3RecorderMode = mprRec) then
             begin
-              WriteFile(TempMP3FileHandle, pMP3OutputBuffer[0], toWrite, dwWrite, nil);
-//              Windows.SetDlgItemInt(tr4whandle, 88, 0, False);
-            end
-            else
-//              Windows.SetDlgItemInt(tr4whandle, 88, Temp576BufferPos, False);
-          end;
 
-          Windows.SetDlgItemTextW(MP3RECWNDHND, 102, PChar(MillisecondsToFormattedString(Windows.GetTickCount - RecorderStartTime, False)));
-          MaxAmplitude := 0;
+            waveinaddbuffer(hwi, @whead[i], SizeOf(whead[i]));
 
-          for t := 0 to Freq - 1 do
-          begin
-            Amplitude := PData16(whead[i].lpData)^[t];
-            if Amplitude > MaxAmplitude then MaxAmplitude := Amplitude;
-          end;
-          mp3recSetProgressBarPosition(round(MaxAmplitude * (PeakProgressBarMaxValue * 2 / (1 shl 16))));
-          //SendDlgItemMessage(MP3RECWNDHND, 103, PBM_SETPOS, round(MaxAmplitude * (PeakProgressBarMaxValue * 2 / (1 shl 16))), 0);
+            Done := 0;
 
-        end;
-      end;
+            NextEncode:
+            beEncodeChunk(hLame, dwSamples, whead[i].lpData[Done], pMP3OutputBuffer[0], toWrite);
+            WriteFile(TempMP3FileHandle, pMP3OutputBuffer[0], toWrite, dwWrite, nil);
+  //          if toWrite <> dwWrite then sm;
+            Done := Done + dwSamples * SizeOf(SHORT);
+            if Done + dwSamples * SizeOf(SHORT) < whead[i].dwBytesRecorded then
+               begin
+               goto NextEncode;
+               end;
+
+            if Done < whead[i].dwBytesRecorded then
+               begin
+               Temp576BufferPos := whead[i].dwBytesRecorded - Done;
+               beEncodeChunk(hLame, Temp576BufferPos div 2, whead[i].lpData[Done], pMP3OutputBuffer[0], toWrite);
+               if toWrite > 0 then
+                  begin
+                  WriteFile(TempMP3FileHandle, pMP3OutputBuffer[0], toWrite, dwWrite, nil);
+    //              Windows.SetDlgItemInt(tr4whandle, 88, 0, False);
+                  end
+               else
+   //              Windows.SetDlgItemInt(tr4whandle, 88, Temp576BufferPos, False);
+               end;
+
+            Windows.SetDlgItemTextW(MP3RECWNDHND, 102, PChar(MillisecondsToFormattedString(Windows.GetTickCount - RecorderStartTime, False)));
+            MaxAmplitude := 0;
+
+            for t := 0 to Freq - 1 do
+               begin
+               Amplitude := PData16(whead[i].lpData)^[t];
+               if Amplitude > MaxAmplitude then
+                  begin
+                  MaxAmplitude := Amplitude;
+                  end;
+               end;
+            mp3recSetProgressBarPosition(round(MaxAmplitude * (PeakProgressBarMaxValue * 2 / (1 shl 16))));
+            //SendDlgItemMessage(MP3RECWNDHND, 103, PBM_SETPOS, round(MaxAmplitude * (PeakProgressBarMaxValue * 2 / (1 shl 16))), 0);
+
+            end;
+         end;
 
     wim_close:
       begin
@@ -556,7 +572,10 @@ begin
   CloseTempMP3File;
   MP3RecorderMode := mprStop;
   waveinreset(hwi);
-  for i := 0 to 1 do waveinunprepareheader(hwi, @whead[i], SizeOf(whead[i]));
+  for i := 0 to 1 do
+     begin
+     waveinunprepareheader(hwi, @whead[i], SizeOf(whead[i]));
+     end;
   waveinclose(hwi);
   Windows.SetDlgItemTextA(MP3RECWNDHND, 102, nil);
   SendDlgItemMessage(MP3RECWNDHND, 103, PBM_SETPOS, 0, 0);
@@ -566,13 +585,13 @@ end;
 procedure SwapRecorderStatus;
 begin
   if MP3RecorderMode = mprRec then
-  begin
-    StopRecorder;
-  end
+     begin
+     StopRecorder;
+     end
   else
-  begin
-    StartRecorder;
-  end;
+     begin
+     StartRecorder;
+     end;
   FrmSetFocus;
 end;
 

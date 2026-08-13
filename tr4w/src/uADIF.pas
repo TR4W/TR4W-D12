@@ -329,21 +329,29 @@ begin
       begin
       // Skip text between tags
       while (p <= sLen) and (s[p] <> '<') do
+         begin
          Inc(p);
+         end;
       if p > sLen then
+         begin
          Break;
+         end;
 
       Inc(p);  // skip '<'
 
       // Find matching '>'
       gtPos := p;
       while (gtPos <= sLen) and (s[gtPos] <> '>') do
+         begin
          Inc(gtPos);
+         end;
       if gtPos > sLen then
          begin
          // '<' without matching '>' — malformed; stop with what we have
          if Assigned(logger) then
+            begin
             logger.Warn('[ADIF lexer] unclosed tag at position %d', [p - 1]);
+            end;
          Exit;
          end;
 
@@ -366,14 +374,18 @@ begin
          Exit;
          end;
       if tagUpper = 'EOH' then
+         begin
          Continue;
+         end;
 
       // Parse '<NAME:LEN>' or '<NAME:LEN:TYPE>'
       colonPos := AnsiPos(':', tagBody);
       if colonPos = 0 then
          begin
          if Assigned(logger) then
+            begin
             logger.Warn('[ADIF lexer] tag without length: <%s>', [tagBody]);
+            end;
          Continue;
          end;
 
@@ -383,21 +395,27 @@ begin
       // Strip optional ':TYPE' suffix
       secondColon := AnsiPos(':', tagLenStr);
       if secondColon > 0 then
+         begin
          tagLenStr := Copy(tagLenStr, 1, secondColon - 1);
+         end;
 
       if not TryStrToInt(tagLenStr, tagLen) then
          begin
          if Assigned(logger) then
+            begin
             logger.Warn('[ADIF lexer] tag <%s> has non-numeric length [%s]',
                         [tagName, tagLenStr]);
+            end;
          Continue;
          end;
 
       if tagLen < 0 then
          begin
          if Assigned(logger) then
+            begin
             logger.Warn('[ADIF lexer] tag <%s> has negative length %d',
                         [tagName, tagLen]);
+            end;
          Continue;
          end;
 
@@ -408,8 +426,10 @@ begin
          value := Copy(s, p, sLen - p + 1);
          AppendField(fields, tagName, value);
          if Assigned(logger) then
+            begin
             logger.Warn('[ADIF lexer] tag <%s:%d> truncated; got %d bytes',
                         [tagName, tagLen, Length(value)]);
+            end;
          Exit;
          end;
 
@@ -438,7 +458,9 @@ begin
    // those PChar(nil) entries on string comparison, yielding a spurious
    // band.  No legitimate ADIF input has BAND=''.
    if sBand = '' then
+      begin
       Exit;
+      end;
    sBandLower := AnsiLowerCase(sBand);
    for iBand := Low(BandType) to High(BandType) do
       begin
@@ -655,9 +677,13 @@ begin
          qsoTime.qtHour   := Ord(SysUtils.StrToInt(MidStr(sTime, 1, 2)));
          qsoTime.qtMinute := Ord(SysUtils.StrToInt(MidStr(sTime, 3, 2)));
          if Length(sTime) = 6 then
+            begin
             qsoTime.qtSecond := Ord(SysUtils.StrToInt(MidStr(sTime, 5, 2)))
+            end
          else
+            begin
             qsoTime.qtSecond := 0;
+            end;
          Result := True;
       except
          Result := False;
@@ -709,31 +735,43 @@ var
 begin
    Result := False;
    if guid = '' then
+      begin
       Exit;
+      end;
 
    s := guid;
 
    // Strip optional surrounding braces
    if (Length(s) >= 2) and (s[1] = '{') and (s[Length(s)] = '}') then
+      begin
       s := Copy(s, 2, Length(s) - 2);
+      end;
 
    if (Length(s) <> 32) and (Length(s) <> 36) then
+      begin
       Exit;
+      end;
 
    hexCount := 0;
    for i := 1 to Length(s) do
       begin
       if s[i] in HEX_CHARS then
+         begin
          Inc(hexCount)
+         end
       else if s[i] = '-' then
          begin
          // Hyphens only at positions 9, 14, 19, 24 in 8-4-4-4-12 layout
          if (Length(s) <> 36) or
             ((i <> 9) and (i <> 14) and (i <> 19) and (i <> 24)) then
+            begin
             Exit;
+            end;
          end
       else
+         begin
          Exit;
+         end;
       end;
 
    Result := hexCount = 32;
@@ -878,7 +916,9 @@ begin
                // record, it carries the full rover form (KG1S/MON)
                // and we keep that instead of the bare CALL value.
                if not haveRoverCall then
+                  begin
                   exch.Callsign := AnsiUpperCase(fieldValue);
+                  end;
 
             tAdifAPP_TR4W_ROVERCALL:
                begin
@@ -899,7 +939,9 @@ begin
                begin
                contest := GetContestByADIFName(fieldValue);
                if ContestsArray[contest].ADIFName = fieldValue then
+                  begin
                   exch.ceContest := contest;
+                  end;
                end;
 
             tAdifCNTY:
@@ -944,7 +986,9 @@ begin
 
             tAdifPRECEDENCE:
                if Length(fieldValue) > 0 then
+                  begin
                   exch.Precedence := AnsiChar(fieldValue[1]);
+                  end;
 
             tAdifQSO_DATE:
                ADIFDateStringToQSOTime(fieldValue, exch.tSysTime);
@@ -960,7 +1004,9 @@ begin
                // sign is dropped (TR uses a Word; negative SNRs are
                // not representable in the legacy log format).
                if temps.FromWSJTX and (Pos('+', fieldValue) > 0) then
+                  begin
                   tempRST := AnsiMidStr(fieldValue, 2, Length(fieldValue));
+                  end;
                exch.RSTReceived := StrToIntDef(tempRST, 599);
                end;
 
@@ -968,7 +1014,9 @@ begin
                begin
                tempRST := fieldValue;
                if temps.FromWSJTX and (Pos('+', fieldValue) > 0) then
+                  begin
                   tempRST := AnsiMidStr(fieldValue, 2, Length(fieldValue));
+                  end;
                exch.RSTSent := StrToIntDef(tempRST, 599);
                end;
 
@@ -1014,20 +1062,28 @@ begin
 
             tAdifPROGRAMID:
                if fieldValue = 'WSJT-X' then
+                  begin
                   temps.FromWSJTX := True;
+                  end;
 
             tAdifAPP_N1MM_EXCHANGE1:
                // N1MM stores CLASS in APP_N1MM_EXCHANGE1 instead of
                // the standard CLASS field.  Map back depending on
                // the active contest.
                if exch.ceContest in [ARRLFIELDDAY, WINTERFIELDDAY] then
+                  begin
                   exch.ceClass := AnsiUpperCase(fieldValue)
+                  end
                else if exch.ceContest in [FOCMARATHON] then
+                  begin
                   exch.Power := fieldValue;
+                  end;
 
             tAdifAPP_N1MM_ID, tAdifAPP_TR4W_ID:
                if IsValidGUID(fieldValue) then
+                  begin
                   exch.id := fieldValue;
+                  end;
 
             tAdifSIG:
                temps.SIG := fieldValue;
@@ -1049,18 +1105,24 @@ begin
             // earlier field on the same record.
             tAdifAPP_TR4W_CLAIMEDQSO, tAdifAPP_N1MM_CLAIMEDQSO:
                if Trim(fieldValue) = '0' then
+                  begin
                   exch.ceXQSO := True;
+                  end;
 
             tAdifAPP_DXLOG_XQSO:
                if (Trim(fieldValue) = 'Y') or (Trim(fieldValue) = 'y') then
+                  begin
                   exch.ceXQSO := True;
+                  end;
 
          else
             // Unknown / unhandled field.  Silently accept anything
             // prefixed with APP_ (third-party extensions).  Log others.
             if Copy(fieldName, 1, 4) <> 'APP_' then
+               begin
                logger.Warn('[ApplyADIFFields] %s is present but no handler',
                            [fieldName]);
+               end;
          end;
 
       except
@@ -1120,23 +1182,31 @@ begin
    SetLength(records, 0);
    sLen := Length(s);
    if sLen = 0 then
+      begin
       Exit;
+      end;
 
    sUpper := AnsiUpperCase(s);
 
    // Skip optional ADIF header (everything up to and including <EOH>).
    eohPosUp := AnsiPos('<EOH>', sUpper);
    if eohPosUp > 0 then
+      begin
       p := eohPosUp + 5   // length of '<EOH>'
+      end
    else
+      begin
       p := 1;
+      end;
 
    while p <= sLen do
       begin
       // Find the next <EOR> (case-insensitive) starting at p.
       eorPosUp := PosEx('<EOR>', sUpper, p);
       if eorPosUp = 0 then
+         begin
          Break;  // no more complete records
+         end;
 
       recordEnd := eorPosUp + 5;  // include the '<EOR>' itself
       chunk := Copy(s, p, recordEnd - p);
@@ -1183,9 +1253,13 @@ end;
 function EmitADIFField(const name, value: string): string;
 begin
    if value = '' then
+      begin
       Result := ''
+      end
    else
+      begin
       Result := SysUtils.Format('<%s:%u>%s ', [name, Length(value), value]);
+      end;
 end;
 
 function EmitADIFHeader(const programVersion: string): string;
@@ -1206,7 +1280,9 @@ function PadInt(n: Integer; minLen: Integer): string;
 begin
    Result := IntToStr(n);
    while Length(Result) < minLen do
+      begin
       Result := '0' + Result;
+      end;
 end;
 
 // Determine the (MODE, SUBMODE) ADIF tag pair for a ContestExchange
@@ -1223,9 +1299,13 @@ begin
       // No extended mode -- use base Mode.  Special case kept from the
       // legacy export: Digital with no ExtMode emits as RTTY (issue 457).
       if rec.Mode = Digital then
+         begin
          modeStr := 'RTTY'
+         end
       else
+         begin
          modeStr := ADIFModeString[rec.Mode];
+         end;
       end
    else if rec.ExtMode = eUSB then
       begin
@@ -1248,7 +1328,9 @@ begin
       subModeStr := ExtendedModeStringArray[rec.ExtMode];
       end
    else
+      begin
       modeStr := ExtendedModeStringArray[rec.ExtMode];
+      end;
 end;
 
 // Format a frequency (Hz) as an ADIF FREQ string in MHz.  Uses '.'
@@ -1285,11 +1367,15 @@ begin
    roverFullCall := '';
    // Only relevant for state-QP exchanges.
    if not ContestsArray[rec.ceContest].CountyLineAllowed then
+      begin
       Exit;
+      end;
    callStr := bareCall;
    slashPos := Pos('/', callStr);
    if slashPos = 0 then
+      begin
       Exit;
+      end;
    suffix := Copy(callStr, slashPos + 1, Length(callStr) - slashPos);
    if (suffix <> '') and
       (UpperCase(suffix) = UpperCase(string(rec.QTHString))) then
@@ -1311,11 +1397,17 @@ begin
    rstStr := IntToStr(rec.RSTReceived);
    prefix := rstStr + ' ';
    if (exch <> '') and (Copy(exch, 1, Length(prefix)) = prefix) then
+      begin
       Result := exch
+      end
    else if exch = '' then
+      begin
       Result := rstStr
+      end
    else
+      begin
       Result := rstStr + ' ' + exch;
+      end;
 end;
 
 // ----- EmitADIFRecord -------------------------------------------------
@@ -1334,8 +1426,14 @@ begin
 
    // BAND string -- mirror the legacy 70cm/23cm rewrites.
    bandStr := string(ADIFBANDSTRINGSARRAY[rec.Band]);
-   if bandStr = '432' then bandStr := '70cm';
-   if bandStr = '1GH' then bandStr := '23cm';
+   if bandStr = '432' then
+      begin
+      bandStr := '70cm';
+      end;
+   if bandStr = '1GH' then
+      begin
+      bandStr := '23cm';
+      end;
 
    ResolveADIFModeSubmode(rec, modeStr, subModeStr);
    freqStr := FormatADIFFreq(rec.Frequency);
@@ -1367,7 +1465,9 @@ begin
 
    // APP_TR4W_ROVERCALL (full rover form, e.g. KG1S/MON)
    if roverFullCall <> '' then
+      begin
       Result := Result + EmitADIFField('APP_TR4W_ROVERCALL', roverFullCall);
+      end;
 
    // CONTEST_ID, unless POTA/GENERALQSO (legacy behaviour).
    // Mirror the fallback used by LOGSUBS2.PAS:2782, uGetScores.pas:435 and 564:
@@ -1379,17 +1479,23 @@ begin
    if not (rec.ceContest in [POTA, GENERALQSO]) then
       begin
       if Length(ContestsArray[rec.ceContest].ADIFName) = 0 then
+         begin
          Result := Result + EmitADIFField('CONTEST_ID',
             string(ContestTypeSA[rec.ceContest]))
+         end
       else
+         begin
          Result := Result + EmitADIFField('CONTEST_ID',
             string(ContestsArray[rec.ceContest].ADIFName));
+         end;
       end;
 
    // MODE / SUBMODE
    Result := Result + EmitADIFField('MODE', modeStr);
    if subModeStr <> '' then
+      begin
       Result := Result + EmitADIFField('SUBMODE', subModeStr);
+      end;
 
    // FREQ (locale-independent, '.' separator)
    Result := Result + EmitADIFField('FREQ', freqStr);
@@ -1417,29 +1523,43 @@ begin
    // correctly.  See Issue #1050.
    stateForQP := GetStateForContest(rec.ceContest);
    if (stateForQP <> '') and (rec.QTHString <> '') then
+      begin
       Result := Result + EmitADIFField('STATE', stateForQP);
+      end;
 
    // QTH - the "default" location field.  Always emit when QTHString
    // is non-empty.  Contests that prefer GRIDSQUARE/IOTA/ARRL_SECT
    // can override via the tail emitter.
    if rec.QTHString <> '' then
+      begin
       Result := Result + EmitADIFField('QTH', string(rec.QTHString));
+      end;
 
    // PRECEDENCE / CHECK
    if rec.Precedence <> #0 then
+      begin
       Result := Result + EmitADIFField('PRECEDENCE', string(rec.Precedence));
+      end;
    if rec.Check <> 0 then
+      begin
       Result := Result + EmitADIFField('CHECK', PadInt(rec.Check, 2));
+      end;
 
    // NAME / FOC_NUM / RX_PWR
    if rec.Name <> '' then
+      begin
       Result := Result + EmitADIFField('NAME', string(rec.Name));
+      end;
    if rec.Power <> '' then
       begin
       if rec.ceContest = FOCMARATHON then
+         begin
          Result := Result + EmitADIFField('FOC_NUM', string(rec.Power))
+         end
       else
+         begin
          Result := Result + EmitADIFField('RX_PWR', string(rec.Power));
+         end;
       end;
 
    // SRX / STX (numeric serials).  Two "unset" sentinels are in use:
@@ -1454,22 +1574,34 @@ begin
    // because PadInt(-1, 5) produces the literal string "000-1".
    if (rec.NumberReceived > 0)      and
       (rec.NumberReceived <> $FFFF) then
+      begin
       Result := Result + EmitADIFField('SRX', PadInt(rec.NumberReceived, 5));
+      end;
    if (rec.NumberSent > 0)      and
       (rec.NumberSent <> $FFFF) then
+      begin
       Result := Result + EmitADIFField('STX', PadInt(rec.NumberSent, 5));
+      end;
 
    if rec.TenTenNum <> $FFFF then
+      begin
       Result := Result + EmitADIFField('TEN_TEN', PadInt(rec.TenTenNum, 5));
+      end;
 
    if rec.Age <> 0 then
+      begin
       Result := Result + EmitADIFField('AGE', PadInt(rec.Age, 3));
+      end;
 
    // OPERATOR + APP_TR4W_ID
    if rec.ceOperator <> '' then
+      begin
       Result := Result + EmitADIFField('OPERATOR', string(rec.ceOperator));
+      end;
    if rec.id <> '' then
+      begin
       Result := Result + EmitADIFField('APP_TR4W_ID', string(rec.id));
+      end;
 
    // APP_TR4W_CLAIMEDQSO (Issue #750).  Mirrors N1MM's
    // APP_N1MM_CLAIMEDQSO convention: '1' = normal QSO, '0' = X-QSO
@@ -1481,7 +1613,9 @@ begin
    // sourced directly from rec.ceXQSO -- no MainUnit/trdos globals
    // needed -- and because round-trip tests use a nil tail emitter.
    if rec.ceXQSO then
+      begin
       Result := Result + EmitADIFField('APP_TR4W_CLAIMEDQSO', '0');
+      end;
 end;
 
 function ExportADIFToString(const records: TContestExchangeArray;
@@ -1495,7 +1629,9 @@ begin
       begin
       Result := Result + EmitADIFRecord(records[i]);
       if Assigned(tailEmitter) then
+         begin
          Result := Result + tailEmitter(records[i]);
+         end;
       Result := Result + '<EOR>'#13#10;
       end;
 end;

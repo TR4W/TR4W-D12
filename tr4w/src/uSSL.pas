@@ -96,7 +96,10 @@ label
 var
   TempMode                              : ModeType;
 begin
-  if FindMult(s, Result) then goto Add;
+  if FindMult(s, Result) then
+     begin
+     goto Add;
+     end;
   InsertMult(Result, s, Band, Mode);
   Add:
   if JustAdd then Exit;
@@ -105,7 +108,10 @@ begin
   // error under D12 range-checking (a silent past-the-array write in D7).
   // StringIsDupe already remaps FM->Phone; mirror it here.
   TempMode := Mode;
-  if TempMode = FM then TempMode := Phone;
+  if TempMode = FM then
+     begin
+     TempMode := Phone;
+     end;
   FList^[Result].FArray[TempMode] := FList^[Result].FArray[TempMode] or (1 shl Ord(Band));
   FList^[Result].FArray[Both] := FList^[Result].FArray[Both] or (1 shl Ord(Band));
   FList^[Result].FArray[TempMode] := FList^[Result].FArray[TempMode] or (1 shl Ord(AllBands));
@@ -115,13 +121,13 @@ end;
 procedure TSSL.Clear;
 begin
   if FCount <> 0 then
-  begin
+     begin
 
-    FCount := 0;
-    Windows.ZeroMemory(@TotalMults, SizeOf(TotalMults));
-//    FTotalMults := 0;
-    SetCapacity(0);
-  end;
+     FCount := 0;
+     Windows.ZeroMemory(@TotalMults, SizeOf(TotalMults));
+ //    FTotalMults := 0;
+     SetCapacity(0);
+     end;
 end;
 
 procedure TSSL.Delete(Index: integer);
@@ -129,7 +135,10 @@ begin
   if (Index < 0) or (Index >= FCount) then Exit; //Error(@SListIndexError, Index);
  
   dec(FCount);
-  if Index < FCount then System.Move(FList^[Index + 1], FList^[Index], (FCount - Index) * SizeOf(TStringItem));
+  if Index < FCount then
+     begin
+     System.Move(FList^[Index + 1], FList^[Index], (FCount - Index) * SizeOf(TStringItem));
+     end;
 end;
 
 function TSSL.StringIsDupeByIndex(IndexInList: integer; Band: BandType; Mode: ModeType): boolean;
@@ -139,7 +148,10 @@ begin
   // FM shares the Phone slot (see AddString): FArray is array[CW..NoMode] and
   // FM is outside it, so remap before indexing to avoid an out-of-bounds read.
   TempMode := Mode;
-  if TempMode = FM then TempMode := Phone;
+  if TempMode = FM then
+     begin
+     TempMode := Phone;
+     end;
   Result := (FList^[IndexInList].FArray[TempMode] and (1 shl Ord(Band))) <> 0;
 end;
 
@@ -150,14 +162,19 @@ var
 begin
   Result := False;
   if FindMult(s, Index) then
-  begin
-    TempMode := Mode;
-    if TempMode = FM then TempMode := Phone;
-    Result := (FList^[Index].FArray[TempMode] and (1 shl Ord(Band))) <> 0;
-    IndexInList := Index;
-  end
+     begin
+     TempMode := Mode;
+     if TempMode = FM then
+        begin
+        TempMode := Phone;
+        end;
+     Result := (FList^[Index].FArray[TempMode] and (1 shl Ord(Band))) <> 0;
+     IndexInList := Index;
+     end
   else
-    IndexInList := -1;
+     begin
+     IndexInList := -1;
+     end;
 end;
 
 function TSSL.FindMult(const s: string; var Index: integer): boolean;
@@ -168,19 +185,19 @@ begin
   l := 0;
   h := FCount - 1;
   while l <= h do
-  begin
-    i := (l + h) shr 1;
-    c := CompareStrings(FList^[i].FMult, s);
-    if c < 0 then l := i + 1 else
-    begin
-      h := i - 1;
-      if c = 0 then
-      begin
-        Result := True;
-        l := i;
-      end;
-    end;
-  end;
+     begin
+     i := (l + h) shr 1;
+     c := CompareStrings(FList^[i].FMult, s);
+     if c < 0 then l := i + 1 else
+                                 begin
+                                 h := i - 1;
+                                 if c = 0 then
+                                    begin
+                                    Result := True;
+                                    l := i;
+                                    end;
+                                 end;
+     end;
   Index := l;
 end;
 
@@ -200,16 +217,23 @@ var
 begin
   if FCapacity > 64 then delta := FCapacity div 4 else
     if FCapacity > 8 then delta := 16 else
-      delta := 4;
+                                         begin
+                                         delta := 4;
+                                         end;
   SetCapacity(FCapacity + delta);
 end;
 
 procedure TSSL.InsertMult(Index: integer; const s: Str10; Band: BandType; Mode: ModeType);
 begin
-  if FCount = FCapacity then Grow;
+  if FCount = FCapacity then
+     begin
+     Grow;
+     end;
   if Index < FCount then
-    System.Move(FList^[Index], FList^[Index + 1],
-      (FCount - Index) * SizeOf(TStringItem));
+     begin
+     System.Move(FList^[Index], FList^[Index + 1],
+       (FCount - Index) * SizeOf(TStringItem));
+     end;
 
   Windows.ZeroMemory(@FList^[Index], SizeOf(FList^[Index]));
   FList^[Index].FMult := s;
@@ -237,7 +261,10 @@ procedure TSSL.ClearDupes;
 var
   Index                                 : integer;
 begin
-  for Index := 0 to FCount - 1 do Windows.ZeroMemory(@FList^[Index].FArray, SizeOf(TDupesArray));
+  for Index := 0 to FCount - 1 do
+     begin
+     Windows.ZeroMemory(@FList^[Index].FArray, SizeOf(TDupesArray));
+     end;
 end;
 
 end.

@@ -57,7 +57,9 @@ begin
         tWM_SETFONT(CreateStatic(nil, 50, 30, 135, hwnddlg, 104), CATWindowFont);
 
         for i := 0 to 3 do
-          tWM_SETFONT(CreateStatic(l[i], 5 + i * 45, 55, 45, hwnddlg, 120 + i), MainFixedFont);
+           begin
+           tWM_SETFONT(CreateStatic(l[i], 5 + i * 45, 55, 45, hwnddlg, 120 + i), MainFixedFont);
+           end;
 
         // Status line for connection status messages (auth failures, etc.)
         tWM_SETFONT(CreateStatic(nil, 5, 75, 180, hwnddlg, 130), MainFixedFont);
@@ -69,25 +71,29 @@ begin
     WM_CLOSE:
       begin
         if hwnddlg = Radio1.tRadioInterfaceWndHandle then
-          CloseTR4WWindow(tw_RADIOINTERFACEWINDOW1_INDEX)
+           begin
+           CloseTR4WWindow(tw_RADIOINTERFACEWINDOW1_INDEX)
+           end
         else
-          CloseTR4WWindow(tw_RADIOINTERFACEWINDOW2_INDEX);
+           begin
+           CloseTR4WWindow(tw_RADIOINTERFACEWINDOW2_INDEX);
+           end;
       end;
 
     WM_CTLCOLORSTATIC, WM_CTLCOLORDLG:
       begin
         SetBkMode(HDC(wParam), TRANSPARENT);
         if hwnddlg = ActiveRadioPtr.tRadioInterfaceWndHandle then
-        begin
-          Result := BOOL(tr4wBrushArray[trLightBlue]);
-        end;
+           begin
+           Result := BOOL(tr4wBrushArray[trLightBlue]);
+           end;
         if Windows.GetDlgCtrlID(lParam) in [121..123] then
-          begin
-          if Windows.IsWindowEnabled(lParam) then
-             begin
-             Result := BOOL(tr4wBrushArray[trYellow]);
-             end;
-          end;
+           begin
+           if Windows.IsWindowEnabled(lParam) then
+              begin
+              Result := BOOL(tr4wBrushArray[trYellow]);
+              end;
+           end;
         if Windows.GetDlgCtrlID(lParam) = 130 then
            begin
            SetTextColor(HDC(wParam), RGB(255, 0, 0));

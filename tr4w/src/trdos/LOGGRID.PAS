@@ -75,10 +75,10 @@ begin
   end;
 }
   if length(Grid) = 4 then
-  begin
-    Grid[5] := 'L';
-    Grid[6] := 'L';
-  end;
+     begin
+     Grid[5] := 'L';
+     Grid[6] := 'L';
+     end;
 
   LonMin := (5 * (Ord(Grid[5]) - Ord('A'))) + 2.5; { center }
   londeg := 180 - (20 * (Ord(Grid[1]) - Ord('A'))) { tens of deg }
@@ -199,9 +199,13 @@ var
 
 begin
   if RadiusOfEarth > 0 then
-    al := RadiusOfEarth * 1000
+     begin
+     al := RadiusOfEarth * 1000
+     end
   else
-    al := DefaultRadiusOfEarth;
+     begin
+     al := DefaultRadiusOfEarth;
+     end;
 
   P1R := MyLat * D2R;
   P2R := HisLat * D2R;
@@ -232,14 +236,20 @@ begin
 
   { Anti divide by zero techniques }
 
-  if SD = 0 then SD := 0.000000001;
+  if SD = 0 then
+     begin
+     SD := 0.000000001;
+     end;
 
   t := DL / SD;
   U := 2.0 * KL * KL / (1.0 - TL);
 
   { Anti divide by zero techniques }
 
-  if TL = 0 then TL := 0.000000001;
+  if TL = 0 then
+     begin
+     TL := 0.000000001;
+     end;
 
   V := 2.0 * KK * KK / TL;
   d := 4.0 * t * t;
@@ -256,12 +266,24 @@ begin
   A2M1 := Pi2 - HAMBR - HAPBR;
 
   1:
-  if (A1M2 >= 0.0) and (A1M2 < Pi2) then goto 5
-  else goto 2;
+  if (A1M2 >= 0.0) and (A1M2 < Pi2) then
+     begin
+     goto 5
+     end
+  else
+     begin
+     goto 2;
+     end;
 
   2:
-  if A1M2 >= Pi2 then goto 3
-  else goto 4;
+  if A1M2 >= Pi2 then
+     begin
+     goto 3
+     end
+  else
+     begin
+     goto 4;
+     end;
 
   3: A1M2 := A1M2 - Pi2;
   goto 1;
@@ -270,12 +292,24 @@ begin
   goto 1;
 
   5:
-  if (A2M1 >= 0.0) and (A2M1 < Pi2) then goto 9
-  else goto 6;
+  if (A2M1 >= 0.0) and (A2M1 < Pi2) then
+     begin
+     goto 9
+     end
+  else
+     begin
+     goto 6;
+     end;
 
   6:
-  if A2M1 >= Pi2 then goto 7
-  else goto 8;
+  if A2M1 >= Pi2 then
+     begin
+     goto 7
+     end
+  else
+     begin
+     goto 8;
+     end;
 
   7: A2M1 := A2M1 - Pi2;
   goto 5;
@@ -298,17 +332,23 @@ var
   ShortHeading, LongHeading, Distance   : REAL;
 
 begin
-   if length(Grid1) <> 6 then Grid1 := Grid1 + 'LL';
+   if length(Grid1) <> 6 then
+      begin
+      Grid1 := Grid1 + 'LL';
+      end;
   strU(Grid1);
 
-  if length(Grid2) <> 6 then Grid2 := Grid2 + 'LL';
+  if length(Grid2) <> 6 then
+     begin
+     Grid2 := Grid2 + 'LL';
+     end;
   strU(Grid2);
 
   if Grid1 = Grid2 then
-  begin
-    GetDistanceBetweenGrids := 0;
-    Exit;
-  end;
+     begin
+     GetDistanceBetweenGrids := 0;
+     Exit;
+     end;
 
   ConvertGridToLatLon(Grid1, Lat1, Lon1);
   ConvertGridToLatLon(Grid2, Lat2, Lon2);
@@ -379,17 +419,23 @@ begin
 //  if (length(MyGrid) <> 4) and (length(MyGrid) <> 6) then Exit;
 //  if (length(HisGrid) <> 4) and (length(HisGrid) <> 6) then Exit;
 
-  if length(MyGrid) <> 6 then MyGrid := MyGrid + 'LL';
+  if length(MyGrid) <> 6 then
+     begin
+     MyGrid := MyGrid + 'LL';
+     end;
   strU(MyGrid);
 
-  if length(HisGrid) <> 6 then HisGrid := HisGrid + 'LL';
+  if length(HisGrid) <> 6 then
+     begin
+     HisGrid := HisGrid + 'LL';
+     end;
   strU(HisGrid);
 
   if HisGrid = MyGrid then
-  begin
-    GetBeamHeading := 0;
-    Exit;
-  end;
+     begin
+     GetBeamHeading := 0;
+     Exit;
+     end;
 
   ConvertGridToLatLon(MyGrid, Lat1, Lon1);
   ConvertGridToLatLon(HisGrid, Lat2, Lon2);
@@ -419,9 +465,13 @@ begin
 
   if Month > 2 then
     if (Year mod 4 = 0) and (Year <> 0) then { Leap year }
-      TempDay := TempDay - 1
+       begin
+       TempDay := TempDay - 1
+       end
     else
-      TempDay := TempDay - 2;
+       begin
+       TempDay := TempDay - 2;
+       end;
   DayOfYear := TempDay;
 end;
 
@@ -444,9 +494,13 @@ begin
   DOY := DayOfYear(Year, Month, Day);
 
   if Sunrise then
-    Doy1 := DOY + Lon / 360.0 + 0.25
+     begin
+     Doy1 := DOY + Lon / 360.0 + 0.25
+     end
   else
-    Doy1 := DOY + Lon / 360.0 + 0.75;
+     begin
+     Doy1 := DOY + Lon / 360.0 + 0.75;
+     end;
 
   { Calculate Solar Mean Anomaly - Anm }
 
@@ -465,10 +519,14 @@ begin
   { Force LONsol to be in the range 0 to 2pi by adding/subtracting 2pi }
 
   while LONsol > (2 * PI) do
-    LONsol := LONsol - (2 * PI);
+     begin
+     LONsol := LONsol - (2 * PI);
+     end;
 
   while LONsol < 0 do
-    LONsol := LONsol + (2 * PI);
+     begin
+     LONsol := LONsol + (2 * PI);
+     end;
 
   {   if (lonsol<0)
    lonsol += (2*PI);
@@ -481,13 +539,19 @@ begin
   RAsol := ArcTan(0.91746 * (SIN(LONsol) / cos(LONsol)));
 
   if (LONsol >= 0) and (LONsol <= (PI / 2)) then
-    RAsol := RAsol + (0 * PI)
+     begin
+     RAsol := RAsol + (0 * PI)
+     end
   else
     if (LONsol > (PI / 2)) and (LONsol <= (3 * PI) / 2) then
-      RAsol := RAsol + (1 * PI)
+       begin
+       RAsol := RAsol + (1 * PI)
+       end
     else
       if (LONsol > ((3 * PI) / 2)) then
-        RAsol := RAsol + (2 * PI);
+         begin
+         RAsol := RAsol + (2 * PI);
+         end;
 
   {   if (lonsol<(PI/2))
    k1 = 0;
@@ -513,14 +577,17 @@ begin
   {   t1 = -0.01483/(cos(atan(decsol))*cos(lat)) - decsol*tan(lat); }
 
   if (T1 > 1) or (T1 < -1) then
-  begin
-    CalculateTime := False;
-    Exit;
-  end;
+     begin
+     CalculateTime := False;
+     Exit;
+     end;
 
   T2 := -ArcTan(T1 / Sqrt(1 - (T1 * T1))) + (PI / 2);
 
-  if Sunrise then T2 := (2 * PI) - T2;
+  if Sunrise then
+     begin
+     T2 := (2 * PI) - T2;
+     end;
 
   {   t2 = -atan(t1/sqrt(1 - t1*t1)) + PI/2;
       if (sr == TRUE)
@@ -532,8 +599,14 @@ begin
 
   UTCrad := T3 + Lon * PI / 180;
 
-  if UTCrad < 0 then UTCrad := UTCrad + 2 * PI;
-  if UTCrad > 2 * PI then UTCrad := UTCrad - 2 * PI;
+  if UTCrad < 0 then
+     begin
+     UTCrad := UTCrad + 2 * PI;
+     end;
+  if UTCrad > 2 * PI then
+     begin
+     UTCrad := UTCrad - 2 * PI;
+     end;
 
   {   utcrad = t3 + lon*PI/180;
       if (utcrad < 0)
@@ -551,12 +624,15 @@ begin
   Minutes := round(Frac(UTC) * 60);
 
   if Minutes = 60 then
-  begin
-    Minutes := 0;
-    inc(Hours);
+     begin
+     Minutes := 0;
+     inc(Hours);
 
-    if Hours = 24 then Hours := 0;
-  end;
+     if Hours = 24 then
+        begin
+        Hours := 0;
+        end;
+     end;
   Result := True; //wli
 end;
 
@@ -571,55 +647,83 @@ begin
   GetDate(Year, Month, Day, DayOfWeek);
 
   if CalculateTime(Year, Month, Day, Lat, Lon, True, Hour, Minute) then
-  begin
-    Str(Hour, HourString);
-    Str(Minute, MinuteString);
-    if length(HourString) = 1 then HourString := '0' + HourString;
-    if length(MinuteString) = 1 then MinuteString := '0' + MinuteString;
-    SunString := HourString + MinuteString + 'z/';
-  end
+     begin
+     Str(Hour, HourString);
+     Str(Minute, MinuteString);
+     if length(HourString) = 1 then
+        begin
+        HourString := '0' + HourString;
+        end;
+     if length(MinuteString) = 1 then
+        begin
+        MinuteString := '0' + MinuteString;
+        end;
+     SunString := HourString + MinuteString + 'z/';
+     end
   else
-  begin
-    if Lat > 0 then
-    begin
-      if (Month >= 3) and (Month <= 9) then
-        GetSunriseSunsetString := TC_ALLSUN
-      else
-        GetSunriseSunsetString := TC_ALLDARK;
-    end
-    else
-      if (Month >= 3) and (Month <= 9) then
-        GetSunriseSunsetString := TC_ALLDARK
-      else
-        GetSunriseSunsetString := TC_ALLSUN;
-    Exit;
-  end;
+     begin
+     if Lat > 0 then
+        begin
+        if (Month >= 3) and (Month <= 9) then
+           begin
+           GetSunriseSunsetString := TC_ALLSUN
+           end
+        else
+           begin
+           GetSunriseSunsetString := TC_ALLDARK;
+           end;
+        end
+     else
+       if (Month >= 3) and (Month <= 9) then
+          begin
+          GetSunriseSunsetString := TC_ALLDARK
+          end
+       else
+          begin
+          GetSunriseSunsetString := TC_ALLSUN;
+          end;
+     Exit;
+     end;
 
   if CalculateTime(Year, Month, Day, Lat, Lon, False, Hour, Minute) then
-  begin
-    Str(Hour, HourString);
-    Str(Minute, MinuteString);
-    if length(HourString) = 1 then HourString := '0' + HourString;
-    if length(MinuteString) = 1 then MinuteString := '0' + MinuteString;
+     begin
+     Str(Hour, HourString);
+     Str(Minute, MinuteString);
+     if length(HourString) = 1 then
+        begin
+        HourString := '0' + HourString;
+        end;
+     if length(MinuteString) = 1 then
+        begin
+        MinuteString := '0' + MinuteString;
+        end;
 
-    SunString := SunString + HourString + MinuteString + 'z';
-  end
+     SunString := SunString + HourString + MinuteString + 'z';
+     end
   else
-  begin
-    if Lat > 0 then
-    begin
-      if (Month >= 3) and (Month <= 9) then
-        GetSunriseSunsetString := TC_ALLSUN
-      else
-        GetSunriseSunsetString := TC_ALLDARK;
-    end
-    else
-      if (Month >= 3) and (Month <= 9) then
-        GetSunriseSunsetString := TC_ALLDARK
-      else
-        GetSunriseSunsetString := TC_ALLSUN;
-    Exit;
-  end;
+     begin
+     if Lat > 0 then
+        begin
+        if (Month >= 3) and (Month <= 9) then
+           begin
+           GetSunriseSunsetString := TC_ALLSUN
+           end
+        else
+           begin
+           GetSunriseSunsetString := TC_ALLDARK;
+           end;
+        end
+     else
+       if (Month >= 3) and (Month <= 9) then
+          begin
+          GetSunriseSunsetString := TC_ALLDARK
+          end
+       else
+          begin
+          GetSunriseSunsetString := TC_ALLSUN;
+          end;
+     Exit;
+     end;
 
   GetSunriseSunsetString := SunString;
 end;
@@ -641,7 +745,10 @@ begin
   if length(Coordinates) < 4 then Exit;
   LatPos := 0;
   for CharPosition := 2 to 3 do
-    if (Coordinates[CharPosition] = 'N') or (Coordinates[CharPosition] = 'S') then LatPos := CharPosition;
+    if (Coordinates[CharPosition] = 'N') or (Coordinates[CharPosition] = 'S') then
+       begin
+       LatPos := CharPosition;
+       end;
 
   if LatPos = 0 then Exit;
   if (Coordinates[length(Coordinates)] <> 'O') and

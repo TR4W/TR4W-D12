@@ -95,7 +95,7 @@ begin
 
         for r := 0 to 17 do
           for c := 0 to 4 do
-          begin
+             begin
               //            Left := 10 + c * 67;
             BeaconsHandle[r, c] :=
               tCreateStaticWindow(
@@ -112,15 +112,15 @@ begin
         delta := 0;
         Top := 5;
         for c := 101 to 110 do
-        begin
-          if c > 105 then
-          begin
-            delta := 325;
-            Top := 320;
-          end;
-          tCreateButtonWindow(WS_EX_STATICEDGE, inttopchar(FreqArray[c]), BS_AUTORADIOBUTTON + BS_PUSHLIKE + WS_CHILD + WS_VISIBLE + WS_TABSTOP,
-            10 + (c - 101) * 65 - delta, Top, 62, 20, hwnddlg, c);
-        end;
+           begin
+           if c > 105 then
+              begin
+              delta := 325;
+              Top := 320;
+              end;
+           tCreateButtonWindow(WS_EX_STATICEDGE, inttopchar(FreqArray[c]), BS_AUTORADIOBUTTON + BS_PUSHLIKE + WS_CHILD + WS_VISIBLE + WS_TABSTOP,
+             10 + (c - 101) * 65 - delta, Top, 62, 20, hwnddlg, c);
+           end;
 
         Windows.SendDlgItemMessage(hwnddlg, 101, BM_SETCHECK, BST_CHECKED, 0);
 
@@ -134,18 +134,24 @@ begin
         //tGetSystemTime;
         //Sec := UTC.wSecond;
         //SendDlgItemMessage(hwnddlg, 99, PBM_SETPOS, (Sec mod 10) * 1000 + UTC.wMilliseconds, 0);
-        if UTC.wSecond mod 10 = 0 then ShowBeaconsNames(hwnddlg);
+        if UTC.wSecond mod 10 = 0 then
+           begin
+           ShowBeaconsNames(hwnddlg);
+           end;
       end;
     WM_COMMAND:
       begin
         if wParam > 100 then
-        begin
-          SetBeaconFreq(hwnddlg, wParam);
-          FC := wParam - 101;
-          ShowBeaconsNames(hwnddlg);
-//          if wParam > 105 then SetDlgItemText(hwnddlg, 98, nil);
-        end;
-        if wParam = 2 then goto ExitAndClose;
+           begin
+           SetBeaconFreq(hwnddlg, wParam);
+           FC := wParam - 101;
+           ShowBeaconsNames(hwnddlg);
+ //          if wParam > 105 then SetDlgItemText(hwnddlg, 98, nil);
+           end;
+        if wParam = 2 then
+           begin
+           goto ExitAndClose;
+           end;
 
       end;
 
@@ -170,17 +176,24 @@ var
 begin
   begin
     for r := 0 to 17 do
-      for c := 0 to 4 do
-        Windows.EnableWindow(BeaconsHandle[r, c], False);
+       begin
+       for c := 0 to 4 do
+          begin
+          Windows.EnableWindow(BeaconsHandle[r, c], False);
+          end;
+       end;
 
     r := (UTC.wMinute mod 3) * 6;
     r := r + UTC.wSecond div 10;
     for c := 0 to 4 do
-    begin
-      Windows.EnableWindow(BeaconsHandle[r, c], True);
-      if r = 0 then r := 18;
-      dec(r);
-    end;
+       begin
+       Windows.EnableWindow(BeaconsHandle[r, c], True);
+       if r = 0 then
+          begin
+          r := 18;
+          end;
+       dec(r);
+       end;
   end;
 end;
 

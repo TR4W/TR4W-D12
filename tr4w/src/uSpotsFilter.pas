@@ -112,12 +112,12 @@ begin
 
         elvi.Mask := LVIF_TEXT;
         for I := 0 to SpotsFiltersCount - 1 do
-        begin
-          elvi.iItem := I;
-          elvi.iSubItem := 0;
-          elvi.pszText := SpotsFiltersArray[I];
-          ListView_InsertItem(SpotsFilterListView, elvi);
-        end;
+           begin
+           elvi.iItem := I;
+           elvi.iSubItem := 0;
+           elvi.pszText := SpotsFiltersArray[I];
+           ListView_InsertItem(SpotsFilterListView, elvi);
+           end;
 
       end;
 
@@ -134,27 +134,31 @@ begin
             begin
               Selected := False;
               if Windows.SendDlgItemMessage(hwnddlg, 104, BM_GETCHECK, 0, 0) = 1 then
-                p := 'SET/FILTER DXBANDMODE/REJECT '
+                 begin
+                 p := 'SET/FILTER DXBANDMODE/REJECT '
+                 end
               else
-                p := 'SET/FILTER DXBANDMODE/PASS ';
+                 begin
+                 p := 'SET/FILTER DXBANDMODE/PASS ';
+                 end;
               Windows.ZeroMemory(@wsprintfBuffer, SizeOf(wsprintfBuffer));
               Windows.lstrcatA(wsprintfBuffer, p);
 
               for I := 0 to SpotsFiltersCount - 1 do
-              begin
-                if ListView_GetCheckState(SpotsFilterListView, I) <> 0 then
-                begin
-                  Selected := True;
-                  ListView_GetItemText(SpotsFilterListView, I, 0, TempBuffer1, 10);
-                  Windows.lstrcatA(wsprintfBuffer, TempBuffer1);
-                  Windows.lstrcatA(wsprintfBuffer, ',');
-                end;
-              end;
+                 begin
+                 if ListView_GetCheckState(SpotsFilterListView, I) <> 0 then
+                    begin
+                    Selected := True;
+                    ListView_GetItemText(SpotsFilterListView, I, 0, TempBuffer1, 10);
+                    Windows.lstrcatA(wsprintfBuffer, TempBuffer1);
+                    Windows.lstrcatA(wsprintfBuffer, ',');
+                    end;
+                 end;
               if Selected then
-              begin
-                wsprintfBuffer[Windows.lstrlenA(wsprintfBuffer) - 1] := #0;
-                SendViaSocket(wsprintfBuffer);
-              end;
+                 begin
+                 wsprintfBuffer[Windows.lstrlenA(wsprintfBuffer) - 1] := #0;
+                 SendViaSocket(wsprintfBuffer);
+                 end;
 
               goto 1;
             end;

@@ -137,17 +137,23 @@ var
   TempMode                         : ModeType;
 begin
   ActiveMode := LogWind.ActiveMode;
-  if ActiveMode = FM then ActiveMode := Phone;
+  if ActiveMode = FM then
+     begin
+     ActiveMode := Phone;
+     end;
  
 
   if Band = NoBand then
-  begin
-    ClearTotals(1);
-    Exit;
-  end;
+     begin
+     ClearTotals(1);
+     Exit;
+     end;
 //  col_title := BandStringsArrayWithOutSpaces[Band];
   inc(Column);
-  if Band = AllBands then Column := 7;
+  if Band = AllBands then
+     begin
+     Column := 7;
+     end;
   {
     if Band in [Band160..Band10] then Column := integer(Band) + 1;
 
@@ -172,62 +178,75 @@ begin
       end;
   }
   if Band = ActiveBand then
-  begin
-      //      Windows.SendMessage(TotWinheadHandles[Column], BM_SETCHECK, BST_CHECKED, 0);
-    TotWinCurrrentColumn := Column;
-  end;
+     begin
+     //      Windows.SendMessage(TotWinheadHandles[Column], BM_SETCHECK, BST_CHECKED, 0);
+   TotWinCurrrentColumn := Column;
+     end;
   Windows.SetWindowTextA(TotWinheadHandles[Column], {col_title} BandStringsArrayWithOutSpaces[Band]);
 
   Row := -1;
   MultDisplayEnable := True;
 
   if QSOByMode then
-  begin
+     begin
 
-    if (ActiveMode = CW) or ((QTotals[AllBands, CW] > 0) and (NumberDifferentMults < 3)) then iTotalTextOut(QTotals[Band, CW]);
-    if (ActiveMode = Phone) or ((QTotals[AllBands, Phone] > 0) and (NumberDifferentMults < 3)) then iTotalTextOut(QTotals[Band, Phone]);
-    if (ActiveMode = Digital) or ((QTotals[AllBands, Digital] > 0) and (NumberDifferentMults < 3)) then iTotalTextOut(QTotals[Band, Digital]);
-  end
+     if (ActiveMode = CW) or ((QTotals[AllBands, CW] > 0) and (NumberDifferentMults < 3)) then
+        begin
+        iTotalTextOut(QTotals[Band, CW]);
+        end;
+     if (ActiveMode = Phone) or ((QTotals[AllBands, Phone] > 0) and (NumberDifferentMults < 3)) then
+        begin
+        iTotalTextOut(QTotals[Band, Phone]);
+        end;
+     if (ActiveMode = Digital) or ((QTotals[AllBands, Digital] > 0) and (NumberDifferentMults < 3)) then
+        begin
+        iTotalTextOut(QTotals[Band, Digital]);
+        end;
+     end
   else
-    iTotalTextOut(QTotals[Band, Both]);
+     begin
+     iTotalTextOut(QTotals[Band, Both]);
+     end;
 
   if MultByMode then TempMode := ActiveMode else TempMode := Both;
 
   if (DoingDomesticMults) and (MultByBand or (Band = AllBands)) and MultDisplayEnable then
-  begin
-{
+     begin
+     {
     if MultByMode then
       iTotalTextOut(MTotals[Band, ActiveMode].NumberDomesticMults)
     else
       iTotalTextOut(MTotals[Band, Both].NumberDomesticMults);
 }
-    iTotalTextOut(mo.MTotals[Band, TempMode, rmDomestic]);
-  end;
+         iTotalTextOut(mo.MTotals[Band, TempMode, rmDomestic]);
+     end;
 
   if (DoingDXMults) and (MultByBand or (Band = AllBands)) and MultDisplayEnable {and (ActiveDXMult <> NoCountDXMults)} then
-  begin
-{
+     begin
+     {
     if MultByMode then
       iTotalTextOut(MTotals[Band, ActiveMode].NumberDXMults)
     else
       iTotalTextOut(MTotals[Band, Both].NumberDXMults);
 }
-    iTotalTextOut(mo.MTotals[Band, TempMode, rmDX]);
-  end;
+         iTotalTextOut(mo.MTotals[Band, TempMode, rmDX]);
+     end;
 
   if (DoingPrefixMults) and (MultByBand or (Band = AllBands)) and MultDisplayEnable then
-  begin
-{
+     begin
+     {
     if MultByMode then
       iTotalTextOut(MTotals[Band, ActiveMode].NumberPrefixMults)
     else
       iTotalTextOut(MTotals[Band, Both].NumberPrefixMults);
 }
-    iTotalTextOut(mo.MTotals[Band, TempMode, rmPrefix]);
-  end;
+         iTotalTextOut(mo.MTotals[Band, TempMode, rmPrefix]);
+     end;
 
   if (DoingZoneMults) and (MultByBand or (Band = AllBands)) and MultDisplayEnable then
-    iTotalTextOut(mo.MTotals[Band, TempMode, rmZone]);
+     begin
+     iTotalTextOut(mo.MTotals[Band, TempMode, rmZone]);
+     end;
 
 end;
 
@@ -253,7 +272,10 @@ var
   S2 : string;
 begin
   ActiveMode := LogWind.ActiveMode;
-  if ActiveMode = FM then ActiveMode := Phone;
+  if ActiveMode = FM then
+     begin
+     ActiveMode := Phone;
+     end;
   TotWinCurrrentColumn := -1;
   Column := 0;
   ClearTotals(0);
@@ -266,147 +288,211 @@ begin
 
   Row := -1;
   if QSOByMode then
-  begin
-  if Contest = OZCR_O   then      //n4af 04.34.8
-  if (QTotals[AllBands,CW] > 0) and (QTotals[AllBands,Phone]> 0)   then
-  begin
-  CWi  := (QTotals[AllBands,CW]) / ((Qtotals[AllBands,CW])+(Qtotals[AllBands,Phone])) * 100;
-  PHi  := ((QTotals[AllBands,Phone]) / (Qtotals[AllBands,CW]+Qtotals[AllBands,Phone]) * 100);
-  Str(round(CWi),s1);
-   S1 := concat('CW: ',s1,'%');
-    CWp := AnsiString(S1);
-   S2 := concat('PH: ',inttostr(round(PHi)),'%');
-    PHp := AnsiString(S2);
+     begin
+     if Contest = OZCR_O   then      //n4af 04.34.8
+     if (QTotals[AllBands,CW] > 0) and (QTotals[AllBands,Phone]> 0)   then
+        begin
+        CWi  := (QTotals[AllBands,CW]) / ((Qtotals[AllBands,CW])+(Qtotals[AllBands,Phone])) * 100;
+        PHi  := ((QTotals[AllBands,Phone]) / (Qtotals[AllBands,CW]+Qtotals[AllBands,Phone]) * 100);
+        Str(round(CWi),s1);
+         S1 := concat('CW: ',s1,'%');
+          CWp := AnsiString(S1);
+         S2 := concat('PH: ',inttostr(round(PHi)),'%');
+          PHp := AnsiString(S2);
 
-  WriteLeftColumnText(PAnsiChar(CWp));
-  WriteLeftColumnText(PAnsiChar(PHp));
-   goto skip;
-  end;
-  end;
+        WriteLeftColumnText(PAnsiChar(CWp));
+        WriteLeftColumnText(PAnsiChar(PHp));
+         goto skip;
+        end;
+     end;
   if QSOByMode then
-  begin
-    if (ActiveMode = CW) or ((QTotals[AllBands, CW] > 0) and (NumberDifferentMults < 3)) then WriteLeftColumnText('CW - ');
-    if (ActiveMode = Phone) or ((QTotals[AllBands, Phone] > 0) and (NumberDifferentMults < 3)) then WriteLeftColumnText(TC_SSBQSOS);
-    if (ActiveMode = Digital) or ((QTotals[AllBands, Digital] > 0) and (NumberDifferentMults < 3)) then WriteLeftColumnText(TC_DIGQSOS);
-  end
+     begin
+     if (ActiveMode = CW) or ((QTotals[AllBands, CW] > 0) and (NumberDifferentMults < 3)) then
+        begin
+        WriteLeftColumnText('CW - ');
+        end;
+     if (ActiveMode = Phone) or ((QTotals[AllBands, Phone] > 0) and (NumberDifferentMults < 3)) then
+        begin
+        WriteLeftColumnText(TC_SSBQSOS);
+        end;
+     if (ActiveMode = Digital) or ((QTotals[AllBands, Digital] > 0) and (NumberDifferentMults < 3)) then
+        begin
+        WriteLeftColumnText(TC_DIGQSOS);
+        end;
+     end
   else
-    WriteLeftColumnText(TC_QSOS);
+     begin
+     WriteLeftColumnText(TC_QSOS);
+     end;
   skip:
   if DoingDomesticMults then
-  begin
-    if MultByMode then
-    begin
-      if Contest = IARU then
-      begin
-        if ActiveMode = CW then WriteLeftColumnText('CW HQ');
-        if ActiveMode = Phone then WriteLeftColumnText('Ph HQ');
-      end
-      else
-      begin
-        if ActiveMode = CW then WriteLeftColumnText('CW Dom');
-        if ActiveMode = Phone then WriteLeftColumnText('Ph Dom');
-      end;
-    end
-    else
-    begin
-      begin
-        if Contest = IARU then WriteLeftColumnText(TC_HQMULTS)
+     begin
+     if MultByMode then
+        begin
+        if Contest = IARU then
+           begin
+           if ActiveMode = CW then
+              begin
+              WriteLeftColumnText('CW HQ');
+              end;
+           if ActiveMode = Phone then
+              begin
+              WriteLeftColumnText('Ph HQ');
+              end;
+           end
         else
-          if (Contest = RUSSIANDX) or (Contest = RU3AXMemorial) then WriteLeftColumnText(TC_OBLASTS)
+           begin
+           if ActiveMode = CW then
+              begin
+              WriteLeftColumnText('CW Dom');
+              end;
+           if ActiveMode = Phone then
+              begin
+              WriteLeftColumnText('Ph Dom');
+              end;
+           end;
+        end
+     else
+        begin
+        begin
+          if Contest = IARU then
+             begin
+             WriteLeftColumnText(TC_HQMULTS)
+             end
           else
-            WriteLeftColumnText(TC_DOMMULTS);
-      end;
-    end;
-  end;
+            if (Contest = RUSSIANDX) or (Contest = RU3AXMemorial) then
+               begin
+               WriteLeftColumnText(TC_OBLASTS)
+               end
+            else
+               begin
+               WriteLeftColumnText(TC_DOMMULTS);
+               end;
+        end;
+        end;
+     end;
 
   if DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
-  begin
-    if MultByMode then
-    begin
-      if ActiveMode = CW then WriteLeftColumnText('CW DX');
-      if ActiveMode = Phone then WriteLeftColumnText('Ph DX');
-    end
-    else
-      WriteLeftColumnText(TC_DXMULTS);
+     begin
+     if MultByMode then
+        begin
+        if ActiveMode = CW then
+           begin
+           WriteLeftColumnText('CW DX');
+           end;
+        if ActiveMode = Phone then
+           begin
+           WriteLeftColumnText('Ph DX');
+           end;
+        end
+     else
+        begin
+        WriteLeftColumnText(TC_DXMULTS);
+        end;
 
-  end;
+     end;
 
   if DoingPrefixMults then
-  begin
-    if MultByMode then
-    begin
-      if ActiveMode = CW then WriteLeftColumnText('CW Pfxs');
-      if ActiveMode = Phone then WriteLeftColumnText('Ph Pfxs');
-    end
-    else
-      WriteLeftColumnText(TC_PREFIX);
-  end;
+     begin
+     if MultByMode then
+        begin
+        if ActiveMode = CW then
+           begin
+           WriteLeftColumnText('CW Pfxs');
+           end;
+        if ActiveMode = Phone then
+           begin
+           WriteLeftColumnText('Ph Pfxs');
+           end;
+        end
+     else
+        begin
+        WriteLeftColumnText(TC_PREFIX);
+        end;
+     end;
 
   if DoingZoneMults then
-  begin
-    if MultByMode then
-    begin
-      if ActiveMode = CW then WriteLeftColumnText('CW Zone');
-      if ActiveMode = Phone then WriteLeftColumnText('Ph Zone');
-    end
-    else
-      WriteLeftColumnText(TC_ZONE);
-  //    WriteLeftColumnText('CW-Ratio');
-  //    WriteLeftColumnText('PH-Ratio');
-  end;
+     begin
+     if MultByMode then
+        begin
+        if ActiveMode = CW then
+           begin
+           WriteLeftColumnText('CW Zone');
+           end;
+        if ActiveMode = Phone then
+           begin
+           WriteLeftColumnText('Ph Zone');
+           end;
+        end
+     else
+        begin
+        WriteLeftColumnText(TC_ZONE);
+        end;
+   //    WriteLeftColumnText('CW-Ratio');
+   //    WriteLeftColumnText('PH-Ratio');
+     end;
 
   {--------------------------------------------------}
 
   if ActiveBand in [Band160..Band10] then
-  begin
-     for TempBand := Band160 to Band10 do DisplayBandTotals(TempBand);
-  end
+     begin
+     for TempBand := Band160 to Band10 do
+        begin
+        DisplayBandTotals(TempBand);
+        end;
+     end
   else
     if ActiveBand in [Band30..Band12] then
-    begin
-      DisplayBandTotals(Band30);
-      DisplayBandTotals(Band20);
-      DisplayBandTotals(Band17);
-      DisplayBandTotals(Band15);
-      DisplayBandTotals(Band12);
-      DisplayBandTotals(Band10);
-    end
+       begin
+       DisplayBandTotals(Band30);
+       DisplayBandTotals(Band20);
+       DisplayBandTotals(Band17);
+       DisplayBandTotals(Band15);
+       DisplayBandTotals(Band12);
+       DisplayBandTotals(Band10);
+       end
     else
       if
         ActiveBand in [Band6..Band1296] then
-      begin
-        for TempBand := Band6 to Band1296 do DisplayBandTotals(TempBand);
-      end
+         begin
+         for TempBand := Band6 to Band1296 do
+            begin
+            DisplayBandTotals(TempBand);
+            end;
+         end
       else
         if
           ActiveBand in [Band2304..BandLight] then
-        begin
-          for TempBand := Band2304 to BandLight do DisplayBandTotals(TempBand);
-        end;
+           begin
+           for TempBand := Band2304 to BandLight do
+              begin
+              DisplayBandTotals(TempBand);
+              end;
+           end;
   if ActiveBand = NoBand then
-  begin
-    DisplayBandTotals(NoBand);
-  end;
+     begin
+     DisplayBandTotals(NoBand);
+     end;
    DisplayBandTotals(AllBands);
  //  TotalTextOut('Ratio',column+1,0);
   if QTCsEnabled then
-  begin
-    WriteLeftColumnText('QTCs');
-    TotalTextOut(inttopchar(TotalNumberQTCsProcessed), Column, Row);
-    if MyContinent <> Europe then
-    begin
-      WriteLeftColumnText(TC_QTCPENDING);
-      TotalTextOut(inttopchar(TotalContacts - TotalNumberQTCsProcessed), Column, Row);
-    end
-    else
-    begin
+     begin
+     WriteLeftColumnText('QTCs');
+     TotalTextOut(inttopchar(TotalNumberQTCsProcessed), Column, Row);
+     if MyContinent <> Europe then
+        begin
+        WriteLeftColumnText(TC_QTCPENDING);
+        TotalTextOut(inttopchar(TotalContacts - TotalNumberQTCsProcessed), Column, Row);
+        end
+     else
+        begin
 
-//      TotalTextOut(inttopchar(TotalNumberQTCsProcessed), 1, col_counter);
-//      iTotalTextOut(TotalNumberQTCsProcessed);
+        //      TotalTextOut(inttopchar(TotalNumberQTCsProcessed), 1, col_counter);
+        //      iTotalTextOut(TotalNumberQTCsProcessed);
 
-    end;
+        end;
 
-{
+ {
     WriteLeftColumnText('QTCs');
     TotalTextOut(inttopchar(TotalNumberQTCsProcessed), 1, col_counter);
     if MyContinent <> Europe then
@@ -423,8 +509,11 @@ begin
           //      Write ('Number QTCs received = ', TotalNumberQTCsProcessed);
     end;
 }
-  end;
-  for i := 1 to 6 do InvalidateRect(TotWinheadHandles[i], nil, True);
+     end;
+  for i := 1 to 6 do
+     begin
+     InvalidateRect(TotWinheadHandles[i], nil, True);
+     end;
 end;
 
 procedure ClearTotals(StartColumn: integer);

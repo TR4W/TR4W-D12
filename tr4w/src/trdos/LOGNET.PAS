@@ -73,8 +73,8 @@ var
   NET_Buffer                            : array[1..90] of AnsiChar;
 begin
   if length(Message) > 0 then
-  begin
-      {
+     begin
+     {
       if K1EANetworkEnable then
       begin
 
@@ -91,41 +91,43 @@ begin
               //wli            Message := SlipMessage(Message);
         message := message;
        }
-           { If we don't have enough room for the message, we will have to
+          { If we don't have enough room for the message, we will have to
              wait until we do as we have no other choice.  }
 
-    if NetDebug then
-    begin
-          //{WLI}if CPUKeyer.SerialPortOutputBuffer[ActiveMultiPort].FreeSpace < length(Message) then
-          //{WLI}                SendMorse ('PBF PBF');
-
-          //{WLI}            SaveAndSetActiveWindow (BandMapWindow);
-          //{WLI}            GoToXY (1, 22);
-          //{WLI}            ClrEol;
-    end;
-
-      //{WLI}         while not CPUKeyer.SerialPortOutputBuffer[ActiveMultiPort].FreeSpace >= length(Message) do ;
-
-    for CharPointer := 1 to length(Message) do
-    begin
-          //               CPUKeyer.SerialPortOutputBuffer[ActiveMultiPort].AddEntry(Ord(Message[CharPointer]));
-      NET_Buffer[CharPointer] := AnsiChar(Message[CharPointer]);
-
-      if NetDebug then
+   if NetDebug then
       begin
-        BlockWrite(NetDebugBinaryOutput, NET_Buffer[CharPointer], 1);
+      //{WLI}if CPUKeyer.SerialPortOutputBuffer[ActiveMultiPort].FreeSpace < length(Message) then
+      //{WLI}                SendMorse ('PBF PBF');
 
-        if (Message[CharPointer] >= ' ') and
-          (Message[CharPointer] <= 'z') then
-          Write(Message[CharPointer]);
+      //{WLI}            SaveAndSetActiveWindow (BandMapWindow);
+      //{WLI}            GoToXY (1, 22);
+      //{WLI}            ClrEol;
       end;
-    end;
-    if NetSocket = 0 then Exit;
-    wassend := SendToNet(NET_Buffer, length(Message));
- //  if wassend + 1 <> CharPointer then         // 4.79.4 charpointer not used
-        //      showmessage('Can`t sent' + #13 + message + #13 + 'Check connection');
-                 //{WLI}         if NetDebug then  RestorePreviousWindow;
-  end;
+
+     //{WLI}         while not CPUKeyer.SerialPortOutputBuffer[ActiveMultiPort].FreeSpace >= length(Message) do ;
+
+   for CharPointer := 1 to length(Message) do
+      begin
+      //               CPUKeyer.SerialPortOutputBuffer[ActiveMultiPort].AddEntry(Ord(Message[CharPointer]));
+  NET_Buffer[CharPointer] := AnsiChar(Message[CharPointer]);
+
+  if NetDebug then
+     begin
+     BlockWrite(NetDebugBinaryOutput, NET_Buffer[CharPointer], 1);
+
+     if (Message[CharPointer] >= ' ') and
+       (Message[CharPointer] <= 'z') then
+        begin
+        Write(Message[CharPointer]);
+        end;
+     end;
+      end;
+   if NetSocket = 0 then Exit;
+   wassend := SendToNet(NET_Buffer, length(Message));
+//  if wassend + 1 <> CharPointer then         // 4.79.4 charpointer not used
+       //      showmessage('Can`t sent' + #13 + message + #13 + 'Check connection');
+                //{WLI}         if NetDebug then  RestorePreviousWindow;
+     end;
   
 end;
 

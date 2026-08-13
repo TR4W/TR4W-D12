@@ -56,30 +56,34 @@ begin
         DS := PDrawItemStruct(lParam);
 
         if (DS^.itemAction = ODA_FOCUS) then
-        begin
-          DrawFocusRect(DS^.HDC, DS^.rcItem);
-          Exit;
-        end;
+           begin
+           DrawFocusRect(DS^.HDC, DS^.rcItem);
+           Exit;
+           end;
 
         Index := SendMessage(DS^.hwndItem, LB_GETITEMDATA, DS^.ItemID, 0);
 
         if tShowDomesticMultiplierName then
-          p := @DomQTHTable.RemainingDomMults^[Index].Name[1]
+           begin
+           p := @DomQTHTable.RemainingDomMults^[Index].Name[1]
+           end
         else
-          p := @DomQTHTable.RemainingDomMults^[Index].ID[1];
+           begin
+           p := @DomQTHTable.RemainingDomMults^[Index].ID[1];
+           end;
 
         I := Windows.lstrlenA(p);
         if RemainingMultDisplayMode = HiLight then
 
           if not RemainingMultsDOM^[Index] then
-          begin
-            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowSubdue}]);
-            GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowSubdue}], tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowBackground}], gdHorizontal);
-          end
+             begin
+             Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowSubdue}]);
+             GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowSubdue}], tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowBackground}], gdHorizontal);
+             end
           else
-          begin
-            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
-          end;
+             begin
+             Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
+             end;
 
         SetBkMode(DS^.HDC, TRANSPARENT);
         Windows.TextOutA(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, I);

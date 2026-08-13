@@ -144,7 +144,10 @@ begin
       end;
     WM_COMMAND:
       begin
-        if wParam = 2 then goto 1;
+        if wParam = 2 then
+           begin
+           goto 1;
+           end;
         if lParam = 0 then if LoWord(wParam) = 1 then EditMessage;
       end;
     WM_CLOSE: 1: EndDialog(hwnddlg, 0);
@@ -152,9 +155,11 @@ begin
     WM_NOTIFY:
       begin
         with PNMHdr(lParam)^ do
-          case code of
-            NM_DBLCLK: EditMessage;
-          end;
+           begin
+           case code of
+             NM_DBLCLK: EditMessage;
+           end;
+           end;
       end;
   end;
 
@@ -179,7 +184,10 @@ begin
 //  if Mode in [CW, Digital] then ModeString := 'CW' else ModeString := 'SSB';
 
   TempMode := MessageMode;
-  if TempMode = Digital then TempMode := CW;
+  if TempMode = Digital then
+     begin
+     TempMode := CW;
+     end;
 
   case TempMode of
     Digital, CW: ModeString := 'CW';
@@ -193,127 +201,149 @@ begin
   if mt = CQMsgWin then
     OpModeString := 'CQ' else
     if mt = ExMsgWin then
-      OpModeString := 'EX'
+       begin
+       OpModeString := 'EX'
+       end
     else
-    begin
+       begin
 
-      for TempInt := 0 to NumberOfOtherMessages - 1 do
-      begin
-        elvi.Mask := LVIF_TEXT;
-        elvi.iItem := TempInt;
-        elvi.iSubItem := 0;
-
-        // Issue #997: asm wsprintf-push -> TF.Format. The format is a RUNTIME
-        // string (omCommand, e.g. 'CQ %s EXCHANGE'); TF.Format == wsprintfA so the
-        // runtime C format + ModeString work directly.
-        TF.Format(wsprintfBuffer, OthermessagesArray[TempInt].omCommand, ModeString);
-        elvi.pszText := wsprintfBuffer;
-
-        ListView_InsertItem(AltPListView, elvi);
-
-        elvi.iSubItem := 1;
-        if TempMode = Phone then
-        begin
-          elvi.pszText := @OthermessagesArray[TempInt].omSSBMessage^[1];
-          OthermessagesArray[TempInt].omSSBMessage^[Ord(OthermessagesArray[TempInt].omSSBMessage^[0]) + 1] := #0;
-        end
-        else
-        begin
-          elvi.pszText := @OthermessagesArray[TempInt].omCWMessage^[1];
-          OthermessagesArray[TempInt].omCWMessage^[Ord(OthermessagesArray[TempInt].omCWMessage^[0]) + 1] := #0;
-        end;
-
-        ListView_SetItem(AltPListView, elvi);
-
-      end;
-
-      if TempMode = CW then
-        for TempInt := 0 to NumberOfOtherShortMessages - 1 do
-        begin
-
-          elvi.iItem := TempInt + NumberOfOtherMessages;
+       for TempInt := 0 to NumberOfOtherMessages - 1 do
+          begin
+          elvi.Mask := LVIF_TEXT;
+          elvi.iItem := TempInt;
           elvi.iSubItem := 0;
-          elvi.pszText := OtherShortMessagesArray[TempInt].osmCommand;
+
+          // Issue #997: asm wsprintf-push -> TF.Format. The format is a RUNTIME
+          // string (omCommand, e.g. 'CQ %s EXCHANGE'); TF.Format == wsprintfA so the
+          // runtime C format + ModeString work directly.
+          TF.Format(wsprintfBuffer, OthermessagesArray[TempInt].omCommand, ModeString);
+          elvi.pszText := wsprintfBuffer;
+
           ListView_InsertItem(AltPListView, elvi);
 
           elvi.iSubItem := 1;
+          if TempMode = Phone then
+             begin
+             elvi.pszText := @OthermessagesArray[TempInt].omSSBMessage^[1];
+             OthermessagesArray[TempInt].omSSBMessage^[Ord(OthermessagesArray[TempInt].omSSBMessage^[0]) + 1] := #0;
+             end
+          else
+             begin
+             elvi.pszText := @OthermessagesArray[TempInt].omCWMessage^[1];
+             OthermessagesArray[TempInt].omCWMessage^[Ord(OthermessagesArray[TempInt].omCWMessage^[0]) + 1] := #0;
+             end;
 
-          wsprintfBuffer[0] := AnsiChar(OtherShortMessagesArray[TempInt].osmMessage[0]);
-          wsprintfBuffer[1] := #0;
-          elvi.pszText := wsprintfBuffer;
           ListView_SetItem(AltPListView, elvi);
-        end;
 
-      goto 1;
-    end;
+          end;
+
+       if TempMode = CW then
+          begin
+          for TempInt := 0 to NumberOfOtherShortMessages - 1 do
+             begin
+
+             elvi.iItem := TempInt + NumberOfOtherMessages;
+             elvi.iSubItem := 0;
+             elvi.pszText := OtherShortMessagesArray[TempInt].osmCommand;
+             ListView_InsertItem(AltPListView, elvi);
+
+             elvi.iSubItem := 1;
+
+             wsprintfBuffer[0] := AnsiChar(OtherShortMessagesArray[TempInt].osmMessage[0]);
+             wsprintfBuffer[1] := #0;
+             elvi.pszText := wsprintfBuffer;
+             ListView_SetItem(AltPListView, elvi);
+             end;
+          end;
+
+       goto 1;
+       end;
 
   for Key := F1 to AltF12 do
-  begin
-    elvi.Mask := LVIF_TEXT;
-    elvi.iItem := Ord(Key) - Ord(F1);
-    elvi.iSubItem := 0;
+     begin
+     elvi.Mask := LVIF_TEXT;
+     elvi.iItem := Ord(Key) - Ord(F1);
+     elvi.iSubItem := 0;
 
-    if Key in [F1..F12] then
-    begin
-      ButtonString := '';
-      TempInt := Ord(Key) - Ord(F1) + 1;
-    end;
+     if Key in [F1..F12] then
+        begin
+        ButtonString := '';
+        TempInt := Ord(Key) - Ord(F1) + 1;
+        end;
 
-    if Key in [ControlF1..ControlF12] then
-    begin
-      ButtonString := 'CONTROL';
-      TempInt := Ord(Key) - Ord(F1) + 1 - 12;
-    end;
+     if Key in [ControlF1..ControlF12] then
+        begin
+        ButtonString := 'CONTROL';
+        TempInt := Ord(Key) - Ord(F1) + 1 - 12;
+        end;
 
-    if Key in [AltF1..AltF12] then
-    begin
-      ButtonString := 'ALT';
-      TempInt := Ord(Key) - Ord(F1) + 1 - 24;
-    end;
+     if Key in [AltF1..AltF12] then
+        begin
+        ButtonString := 'ALT';
+        TempInt := Ord(Key) - Ord(F1) + 1 - 24;
+        end;
 
-    // Issue #997: asm wsprintf-push -> TF.Format. cdecl-reverse pushes ->
-    // OpModeString, ModeString, ButtonString, TempInt (%s %s MEMORY %sF%u).
-    TF.Format(wsprintfBuffer, '%s %s MEMORY %sF%u', OpModeString, ModeString, ButtonString, TempInt);
+     // Issue #997: asm wsprintf-push -> TF.Format. cdecl-reverse pushes ->
+     // OpModeString, ModeString, ButtonString, TempInt (%s %s MEMORY %sF%u).
+     TF.Format(wsprintfBuffer, '%s %s MEMORY %sF%u', OpModeString, ModeString, ButtonString, TempInt);
 
-    elvi.pszText := wsprintfBuffer;
-    ListView_InsertItem(AltPListView, elvi);
+     elvi.pszText := wsprintfBuffer;
+     ListView_InsertItem(AltPListView, elvi);
 
-    elvi.iSubItem := 1;
-    if mt = CQMsgWin then TempString := GetCQMemoryString(TempMode, Key);
-    if mt = ExMsgWin then
-    begin
-      TempString := GetEXMemoryString(TempMode, Key);
-      if Key = F1 then TempString := 'Set by the MY CALL';
-      if Key = F2 then TempString := 'Set by S&P EXCHANGE';
+     elvi.iSubItem := 1;
+     if mt = CQMsgWin then
+        begin
+        TempString := GetCQMemoryString(TempMode, Key);
+        end;
+     if mt = ExMsgWin then
+        begin
+        TempString := GetEXMemoryString(TempMode, Key);
+        if Key = F1 then
+           begin
+           TempString := 'Set by the MY CALL';
+           end;
+        if Key = F2 then
+           begin
+           TempString := 'Set by S&P EXCHANGE';
+           end;
 
-//  TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG  = 'F1 - Set by the MY CALL statement in config file';
-//  TC_F2SETBYSPEXCHANGEANDREPEATSP       = 'F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE';
-    end;
-    if TempString <> '' then
-    begin
-      TempString[Ord(TempString[0]) + 1] := #0;
-      elvi.pszText := @TempString[1];
-    end
-    else
-      elvi.pszText := nil;
-    ListView_SetItem(AltPListView, elvi);
+  //  TC_F1SETBYTHEMYCALLSTATEMENTINCONFIG  = 'F1 - Set by the MY CALL statement in config file';
+  //  TC_F2SETBYSPEXCHANGEANDREPEATSP       = 'F2 - Set by S&P EXCHANGE and REPEAT S&P EXCHANGE';
+        end;
+     if TempString <> '' then
+        begin
+        TempString[Ord(TempString[0]) + 1] := #0;
+        elvi.pszText := @TempString[1];
+        end
+     else
+        begin
+        elvi.pszText := nil;
+        end;
+     ListView_SetItem(AltPListView, elvi);
 
-    elvi.iSubItem := 2;
-    if mt = CQMsgWin then
-      TempMessagePointer := CQCaptionMemory[TempMode, Key];
-    if mt = ExMsgWin then TempMessagePointer := EXCaptionMemory[TempMode, Key];
+     elvi.iSubItem := 2;
+     if mt = CQMsgWin then
+        begin
+        TempMessagePointer := CQCaptionMemory[TempMode, Key];
+        end;
+     if mt = ExMsgWin then
+        begin
+        TempMessagePointer := EXCaptionMemory[TempMode, Key];
+        end;
 
-    if TempMessagePointer <> nil then
-    begin
-      TempString := TempMessagePointer^;
-      TempString[Ord(TempString[0]) + 1] := #0;
-      elvi.pszText := @TempString[1];
-    end
-    else
-      elvi.pszText := nil;
+     if TempMessagePointer <> nil then
+        begin
+        TempString := TempMessagePointer^;
+        TempString[Ord(TempString[0]) + 1] := #0;
+        elvi.pszText := @TempString[1];
+        end
+     else
+        begin
+        elvi.pszText := nil;
+        end;
 
-    ListView_SetItem(AltPListView, elvi);
-  end;
+     ListView_SetItem(AltPListView, elvi);
+     end;
   1:
   elvi.Mask := LVIF_STATE;
   elvi.stateMask := 3;

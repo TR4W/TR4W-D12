@@ -394,16 +394,19 @@ begin
 
   Windows.ZeroMemory(@QTCCallsign, 13);
   QTCCallsign := CallWindowString;
-  if QTCCallsign = '' then QTCCallsign := VisibleLog.LastEntry(False,letCallsign);
+  if QTCCallsign = '' then
+     begin
+     QTCCallsign := VisibleLog.LastEntry(False,letCallsign);
+     end;
 
   if QTCCallsign = '' then Exit;
 
   if not GoodCallSyntax(QTCCallsign) then
-  begin
-    DoABeep(Warning);
-    QuickDisplay(TC_INVALIDCALLSIGNINCALLWINDOW);
-    Exit;
-  end;
+     begin
+     DoABeep(Warning);
+     QuickDisplay(TC_INVALIDCALLSIGNINCALLWINDOW);
+     Exit;
+     end;
 
   QTCCallsign := StandardCallFormat(QTCCallsign, False);
 
@@ -412,20 +415,20 @@ begin
   NumberQTCsAlreadySent := NumberQTCsThisStation(QTCCallsign);
 
   if NumberQTCsAlreadySent >= 10 then
-  begin
-    DoABeep(Warning);
-    p := @QTCCallsign[1];
-    // Issue #997: asm wsprintf-push -> TF.Format.
-    TF.Format(wsprintfBuffer, TC_SORRYYOUALREADYHAVE10QTCSWITH, p);
-    QuickDisplay(wsprintfBuffer);
-    Exit;
-  end;
+     begin
+     DoABeep(Warning);
+     p := @QTCCallsign[1];
+     // Issue #997: asm wsprintf-push -> TF.Format.
+     TF.Format(wsprintfBuffer, TC_SORRYYOUALREADYHAVE10QTCSWITH, p);
+     QuickDisplay(wsprintfBuffer);
+     Exit;
+     end;
 
   MaxQTCsThisStation := 10 - NumberQTCsAlreadySent;
 //  Str(MaxQTCsThisStation, MaxQTCString);
 
   if MyContinent = Europe then // We are receiving QTCs
-  begin
+     begin
       {
           if NumberQTCsAlreadySent = 0 then
             SendStringAndStop('QTC?')
@@ -522,43 +525,46 @@ begin
 
   else
 
-  begin // We are sending QTCs
+     begin // We are sending QTCs
 
-    NumberMessagesToBeSent := NumberAvailableQTCsForThisCall(QTCCallsign);
+     NumberMessagesToBeSent := NumberAvailableQTCsForThisCall(QTCCallsign);
 
-    if NumberMessagesToBeSent = 0 then
-    begin
-      SendStringAndStop('QRU');
-      DoABeep(Warning);
-      QuickDisplay(TC_NOQTCSPENDINGQRU);
-      Exit;
-    end;
+     if NumberMessagesToBeSent = 0 then
+        begin
+        SendStringAndStop('QRU');
+        DoABeep(Warning);
+        QuickDisplay(TC_NOQTCSPENDINGQRU);
+        Exit;
+        end;
 
-    if NumberMessagesToBeSent > MaxQTCsThisStation then NumberMessagesToBeSent := MaxQTCsThisStation;
+     if NumberMessagesToBeSent > MaxQTCsThisStation then
+        begin
+        NumberMessagesToBeSent := MaxQTCsThisStation;
+        end;
 
-    QTCNumber := NumberQTCBooksSent + 1;
-{
+     QTCNumber := NumberQTCBooksSent + 1;
+ {
     asm
     push NumberMessagesToBeSent
     push QTCNumber
     end;
 }
-    QRVString[0] := AnsiChar(TF.Format(@QRVString[1], 'QTC %u/%u', QTCNumber, NumberMessagesToBeSent));
-//    asm add esp,16 end;
+     QRVString[0] := AnsiChar(TF.Format(@QRVString[1], 'QTC %u/%u', QTCNumber, NumberMessagesToBeSent));
+ //    asm add esp,16 end;
 
-    // Issue #997: asm `lea eax,[QRVString]; call SendStringAndStop` -> direct call.
-    SendStringAndStop(QRVString);
-    SendStringAndStop(' QRV?');
+     // Issue #997: asm `lea eax,[QRVString]; call SendStringAndStop` -> direct call.
+     SendStringAndStop(QRVString);
+     SendStringAndStop(' QRV?');
 
-    // Issue #997: asm wsprintf-push -> TF.Format. TC_ISQRVFOR = 'Is %s QRV for %s?';
-    // cdecl-reverse pushes -> arg1=QTCCallsign, arg2=QRVString.
-    TF.Format(wsprintfBuffer, TC_ISQRVFOR, @QTCCallsign[1], @QRVString[1]);
+     // Issue #997: asm wsprintf-push -> TF.Format. TC_ISQRVFOR = 'Is %s QRV for %s?';
+     // cdecl-reverse pushes -> arg1=QTCCallsign, arg2=QRVString.
+     TF.Format(wsprintfBuffer, TC_ISQRVFOR, @QTCCallsign[1], @QRVString[1]);
 
-    if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
-    //tDialogBox(63, @QTCSDlgProc);
-    CreateModalDialog(230, 160, tr4whandle, @QTCSDlgProc, 0);
+     if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
+     //tDialogBox(63, @QTCSDlgProc);
+     CreateModalDialog(230, 160, tr4whandle, @QTCSDlgProc, 0);
 
-      {
+       {
           ClearPTTForceOn;
 
           repeat
@@ -738,7 +744,7 @@ begin
           QTCNumber := NumberQTCBooksSent;
           DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(QTCCallsign, False)));
         }
-  end;
+     end;
   {
     SaveQTC:
 
@@ -865,23 +871,26 @@ begin
   QTCsToBeSendArray[1].qsID := NET_THIS_QTC_WAS__SEND_ID;
   1:
   if ReadLogFile then
-  begin
-    if GoodLookingQSO then
-      if TempRXData.ceDupe = False then
-      begin
-        if (TempRXData.ceWasSendInQTC = False) and (TempRXData.Callsign <> Call) then
-        begin
-          inc(QTCs);
-          QTCsToBeSendArray[QTCs].qsTime := TempRXData.tSysTime.qtHour * 100 + TempRXData.tSysTime.qtMinute;
-          QTCsToBeSendArray[QTCs].qsCall := TempRXData.Callsign;
-          QTCsToBeSendArray[QTCs].qsNumber := TempRXData.NumberReceived;
-          QTCsToBeSendArray[QTCs].qsQSOID1 := TempRXData.ceQSOID1;
-          QTCsToBeSendArray[QTCs].qsQSOID2 := TempRXData.ceQSOID2;
-        end;
-        if QTCs = 10 then goto 2;
-      end;
-    goto 1;
-  end;
+     begin
+     if GoodLookingQSO then
+       if TempRXData.ceDupe = False then
+          begin
+          if (TempRXData.ceWasSendInQTC = False) and (TempRXData.Callsign <> Call) then
+             begin
+             inc(QTCs);
+             QTCsToBeSendArray[QTCs].qsTime := TempRXData.tSysTime.qtHour * 100 + TempRXData.tSysTime.qtMinute;
+             QTCsToBeSendArray[QTCs].qsCall := TempRXData.Callsign;
+             QTCsToBeSendArray[QTCs].qsNumber := TempRXData.NumberReceived;
+             QTCsToBeSendArray[QTCs].qsQSOID1 := TempRXData.ceQSOID1;
+             QTCsToBeSendArray[QTCs].qsQSOID2 := TempRXData.ceQSOID2;
+             end;
+          if QTCs = 10 then
+             begin
+             goto 2;
+             end;
+          end;
+     goto 1;
+     end;
   2:
   CloseLogFile;
   Result := QTCs;

@@ -201,8 +201,14 @@ begin
         tLVSetText(LogCompareListView, 5, 2, string(ContestTypeSA[Contest]));
 
         DifferentContests := s^.liContest <> Contest;
-        if s^.liContest = DUMMYCONTEST then DifferentContests := False;
-        if DifferentContests then EnableWindowFalse(hwnddlg, 1);
+        if s^.liContest = DUMMYCONTEST then
+           begin
+           DifferentContests := False;
+           end;
+        if DifferentContests then
+           begin
+           EnableWindowFalse(hwnddlg, 1);
+           end;
         //if DifferentContests then Windows.PostMessage(tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, WM_CLOSE, 0, 0);
         Exit;
         // Issue #997: removed the `setitem:` label subroutine (was reached via
@@ -240,7 +246,10 @@ begin
         ExitAndClose:
 
         EndDialog(hwnddlg, 0);
-        if OpenGetServerLogDlg then tDialogBox(73, @GetServerLogDlgProc);
+        if OpenGetServerLogDlg then
+           begin
+           tDialogBox(73, @GetServerLogDlgProc);
+           end;
       end;
 
   end;

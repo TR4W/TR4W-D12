@@ -147,7 +147,10 @@ end;
 
 procedure DriverDestroy;
 begin
-  if DriverIsLoaded then FreeLibrary(IOPlugin);
+  if DriverIsLoaded then
+     begin
+     FreeLibrary(IOPlugin);
+     end;
   IOPlugin := 0;
   DlWriteByte := nil;
   DlReadByte := nil;
@@ -171,9 +174,9 @@ begin
   // guards on DriverIsLoaded(), so this chokepoint must be self-protecting.
   Result := 0;
   if not Assigned(DlReadByte) then
-    begin
-    Exit;
-    end;
+     begin
+     Exit;
+     end;
   Result := DlReadByte(Address + Word(Offset));
 end;
 
@@ -181,9 +184,9 @@ procedure SetPortByte(Address: Word; Offset: TOffsetType; data: Byte);
 begin
   // inpout32.dll absent/not loaded: pointer is nil -> no-op rather than crash.
   if not Assigned(DlWriteByte) then
-    begin
-    Exit;
-    end;
+     begin
+     Exit;
+     end;
   DlWriteByte(Address + Word(Offset), data);
 end;
 
@@ -214,9 +217,13 @@ begin
   if Operation = boSet0
     then
 //    Exclude(TByteSet(TempByte), integer(BitToSet))
-    TempByte := TempByte and not (1 shl Byte(BitToSet))
+     begin
+     TempByte := TempByte and not (1 shl Byte(BitToSet))
+     end
   else
-    TempByte := TempByte or (1 shl Byte(BitToSet));
+     begin
+     TempByte := TempByte or (1 shl Byte(BitToSet));
+     end;
 //    Include(TByteSet(TempByte), integer(BitToSet));
 end;
 
@@ -224,7 +231,10 @@ end;
 function OpenLPT(var PortHandle: HWND; LPT: PortType): boolean;
 begin
   Result := False;
-  if not DriverIsLoaded() then DriverCreate;
+  if not DriverIsLoaded() then
+     begin
+     DriverCreate;
+     end;
   if not DriverIsLoaded() then Exit;
   PortHandle := LPTBaseAA[LPT];
   Result := True;

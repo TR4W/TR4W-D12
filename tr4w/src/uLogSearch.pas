@@ -76,13 +76,17 @@ begin
         Windows.SetWindowTextA(hwnddlg, RC_SEARCHLOG);
 
         for i := 0 to 3 do
-        begin
-          CreateStatic(l[i], 5 + i * 170, 5, 50+10, hwnddlg, 0);
-          if i in [1..2] then
-            tCreateComboBoxWindow(CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_TABSTOP, 55+10 + i * 170, 5, 100, hwnddlg, 200 + i)
-              else
-               CreateEdit(ES_UPPERCASE, 55+10 + i * 170, 5, 100, 23, hwnddlg, 200 + i);
-        end;
+           begin
+           CreateStatic(l[i], 5 + i * 170, 5, 50+10, hwnddlg, 0);
+           if i in [1..2] then
+              begin
+              tCreateComboBoxWindow(CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_TABSTOP, 55+10 + i * 170, 5, 100, hwnddlg, 200 + i)
+              end
+               else
+                  begin
+                  CreateEdit(ES_UPPERCASE, 55+10 + i * 170, 5, 100, 23, hwnddlg, 200 + i);
+                  end;
+           end;
 
         CreateButton(BS_DEFPUSHBUTTON, RC_SEARCH, 690, 5, 60, hwnddlg, 103);
 
@@ -90,15 +94,24 @@ begin
 
         LogSearchWndHandle := hwnddlg;
         LogSearchListView := CreateEditableLog(hwnddlg, 1, 35, 770, 245, True);
-        for bt := Band160 to NoBand do tCB_ADDSTRING_PCHAR(hwnddlg, 202, BandStringsArray[bt]);
+        for bt := Band160 to NoBand do
+           begin
+           tCB_ADDSTRING_PCHAR(hwnddlg, 202, BandStringsArray[bt]);
+           end;
         tCB_SETCURSEL(hwnddlg, 202, Ord(AllBands));
 
-        for mt := CW to FM do tCB_ADDSTRING_PCHAR(hwnddlg, 201, ModeStringArray[mt]);
+        for mt := CW to FM do
+           begin
+           tCB_ADDSTRING_PCHAR(hwnddlg, 201, ModeStringArray[mt]);
+           end;
         tCB_SETCURSEL(hwnddlg, 201, Ord(Both));
 
         Windows.ZeroMemory(@TempString, SizeOf(TempString));
         TempString := CallWindowString;
-        if TempString = '' then TempString := EscapeDeletedCallEntry;
+        if TempString = '' then
+           begin
+           TempString := EscapeDeletedCallEntry;
+           end;
         Windows.SetDlgItemTextA(hwnddlg, 200, @TempString[1]);
         goto SearchStart;
       end;
@@ -128,31 +141,40 @@ begin
               ReadVersionBlock;
               NextRecord:
               if ReadLogFile then
-              begin
-                inc(CurrentRecord);
-                if tBand <> AllBands then if TempRXData.Band <> tBand then goto NextRecord;
-                if tMode <> Both then if TempRXData.Mode <> tMode then goto NextRecord;
-                if TempString[0] <> #0 then if pos(TempString, TempRXData.Callsign) = 0 then goto NextRecord;
-                if TempOperator[0] <> #0 then
-                  if StrComp(TempOperator, TempRXData.ceOperator) <> 0 then goto NextRecord;
+                 begin
+                 inc(CurrentRecord);
+                 if tBand <> AllBands then if TempRXData.Band <> tBand then goto NextRecord;
+                 if tMode <> Both then if TempRXData.Mode <> tMode then goto NextRecord;
+                 if TempString[0] <> #0 then if pos(TempString, TempRXData.Callsign) = 0 then goto NextRecord;
+                 if TempOperator[0] <> #0 then
+                   if StrComp(TempOperator, TempRXData.ceOperator) <> 0 then
+                      begin
+                      goto NextRecord;
+                      end;
 
-                if not (TempRXData.ceRecordKind in [rkQSO, rkQTCR, rkQTCS]) then goto NextRecord;
+                 if not (TempRXData.ceRecordKind in [rkQSO, rkQTCR, rkQTCS]) then
+                    begin
+                    goto NextRecord;
+                    end;
 
-                if Index <= MAXSEARCHINDEX then
-                begin
-                  tAddContestExchangeToLog(TempRXData, LogSearchListView, LogSearchListViewIndex);
-                  LogSearchIndexesArray[Index] := CurrentRecord * SizeOf(ContestExchange) + SizeOfTLogHeader;
-                  inc(Index);
-                  goto NextRecord;
-                end;
-              end;
+                 if Index <= MAXSEARCHINDEX then
+                    begin
+                    tAddContestExchangeToLog(TempRXData, LogSearchListView, LogSearchListViewIndex);
+                    LogSearchIndexesArray[Index] := CurrentRecord * SizeOf(ContestExchange) + SizeOfTLogHeader;
+                    inc(Index);
+                    goto NextRecord;
+                    end;
+                 end;
               CloseLogFile;
               // Issue #997: asm-push wsprintf -> SysUtils.Format.
               // TC_ENTRIESPERMS = '%u entries per %u ms'; args = index, elapsed ms.
               StrPCopy(wsprintfBuffer, SysUtils.Format(TC_ENTRIESPERMS,
                 [LogSearchListViewIndex, Windows.GetTickCount - StartCPU]));
               Windows.SetDlgItemTextA(hwnddlg, 104, wsprintfBuffer);
-              if LogSearchListViewIndex > 0 then EnsureListViewColumnVisible(LogSearchListView);
+              if LogSearchListViewIndex > 0 then
+                 begin
+                 EnsureListViewColumnVisible(LogSearchListView);
+                 end;
             end;
 
         end;
@@ -162,10 +184,12 @@ begin
     WM_NOTIFY:
       begin
         with PNMHdr(lParam)^ do
-          case code of
-            NM_DBLCLK: EditLogInSearch;
+           begin
+           case code of
+             NM_DBLCLK: EditLogInSearch;
 
-          end;
+           end;
+           end;
       end;
 
     WM_CLOSE: 1: EndDialog(hwnddlg, 0);

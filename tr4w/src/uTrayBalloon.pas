@@ -198,22 +198,28 @@ end;
 
 function ShowTrayTips(TipInfo: ShortString): boolean;
 begin
-  if Shell32LibHandle = 0 then Shell32LibHandle := LoadLibrary('shell32.dll');
+  if Shell32LibHandle = 0 then
+     begin
+     Shell32LibHandle := LoadLibrary('shell32.dll');
+     end;
   if Shell32LibHandle <> 0 then
-  begin
-    @tShell_NotifyIcon := GetProcAddress(Shell32LibHandle, 'Shell_NotifyIcon');
-    if @tShell_NotifyIcon <> nil then
-    begin
-      if TrayBallonDisplayed then Balloon_DeleteTrayIcon;
-      if Balloon_AddTrayIcon(tr4whandle, 11, tr4w_WinClass.HICON, WM_TRAYBALLON, 'TR4W') then
-         begin
-         if Balloon_ShowTrayTips(TipInfo) then
-            begin
-            TrayBallonDisplayed := True;
-            end;
-         end;
-    end;
-  end;
+     begin
+     @tShell_NotifyIcon := GetProcAddress(Shell32LibHandle, 'Shell_NotifyIcon');
+     if @tShell_NotifyIcon <> nil then
+        begin
+        if TrayBallonDisplayed then
+           begin
+           Balloon_DeleteTrayIcon;
+           end;
+        if Balloon_AddTrayIcon(tr4whandle, 11, tr4w_WinClass.HICON, WM_TRAYBALLON, 'TR4W') then
+           begin
+           if Balloon_ShowTrayTips(TipInfo) then
+              begin
+              TrayBallonDisplayed := True;
+              end;
+           end;
+        end;
+     end;
 end;
 
 end.

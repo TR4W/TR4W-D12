@@ -59,23 +59,32 @@ begin
         Windows.SetWindowTextA(hwnddlg, RC_MEMPROGFUNC);
 
         for i := 1 to 3 do
-        begin
-          CreateButton(BS_LEFT, ceoa[i], 30, -10 + i * 30, 350, hwnddlg, i + 100);
-        end;
+           begin
+           CreateButton(BS_LEFT, ceoa[i], 30, -10 + i * 30, 350, hwnddlg, i + 100);
+           end;
 
       end;
 
     WM_COMMAND:
       begin
-        if wParam = 2 then goto 1;
+        if wParam = 2 then
+           begin
+           goto 1;
+           end;
         if HiWord(wParam) = BN_CLICKED then
-        begin
-          MesWindow := CQMsgWin;
-          if LoWord(wParam) = 102 then MesWindow := ExMsgWin;
-          if LoWord(wParam) = 103 then MesWindow := OtherMsgWin;
-          EndDialog(hwnddlg, 0);
-          OpenListOfMessages;
-        end;
+           begin
+           MesWindow := CQMsgWin;
+           if LoWord(wParam) = 102 then
+              begin
+              MesWindow := ExMsgWin;
+              end;
+           if LoWord(wParam) = 103 then
+              begin
+              MesWindow := OtherMsgWin;
+              end;
+           EndDialog(hwnddlg, 0);
+           OpenListOfMessages;
+           end;
 
       end;
 

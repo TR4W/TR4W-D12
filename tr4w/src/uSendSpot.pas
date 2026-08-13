@@ -61,55 +61,60 @@ begin
       begin
         Windows.SetWindowTextA(hwnddlg, RC_SENDSPOT);
         for i := 1 to 3 do
-        begin
-          CreateStatic(l[i], 10, i * 30 - 20, 100, hwnddlg, 100 + i);
-          CreateEdit(0, 120, i * 30 - 20, 160, 23, hwnddlg, 106 + i);
-        end;
+           begin
+           CreateStatic(l[i], 10, i * 30 - 20, 100, hwnddlg, 100 + i);
+           CreateEdit(0, 120, i * 30 - 20, 160, 23, hwnddlg, 106 + i);
+           end;
 
         CreateButton(BS_AUTOCHECKBOX or BS_VCENTER, RC_CONTESTNAMEIC, 10, 100, 200, hwnddlg, 104);
 
         CreateOKCancelButtons(hwnddlg);
 
         if CallWindowString <> '' then
-          SetDlgItemTextA(hwnddlg, 107, @CallWindowString[1])
+           begin
+           SetDlgItemTextA(hwnddlg, 107, @CallWindowString[1])
+           end
         else
-        begin
-          Windows.ZeroMemory(@LastCallsign, SizeOf(LastCallsign));
-          LastCallsign := VisibleLog.LastEntry(True,letCallsign);
-          SetDlgItemTextA(hwnddlg, 107, @LastCallsign[1]);
-        end;
+           begin
+           Windows.ZeroMemory(@LastCallsign, SizeOf(LastCallsign));
+           LastCallsign := VisibleLog.LastEntry(True,letCallsign);
+           SetDlgItemTextA(hwnddlg, 107, @LastCallsign[1]);
+           end;
 
         Hz100 := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]} mod 100;
         i := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]} - Hz100;
-        if Hz100 >= 50 then i := i + 100;
+        if Hz100 >= 50 then
+           begin
+           i := i + 100;
+           end;
 
         SetDlgItemTextW(hwnddlg, 108, PChar(FreqToPChar(i)));
 
         if tContestNameInComment then
-        begin
-          Windows.SendDlgItemMessage(hwnddlg, 104, BM_SETCHECK, BST_CHECKED, 0);
-          Windows.SetDlgItemTextA(hwnddlg, 109, ContestTypeSA[Contest]);
-        end;
+           begin
+           Windows.SendDlgItemMessage(hwnddlg, 104, BM_SETCHECK, BST_CHECKED, 0);
+           Windows.SetDlgItemTextA(hwnddlg, 109, ContestTypeSA[Contest]);
+           end;
       end;
 
     WM_COMMAND:
       begin
         if ((HiWord(wParam) = BN_CLICKED) and (LoWord(wParam) = 104)) or (HiWord(wParam) = BM_SETCHECK) then
-        begin
+           begin
 
-          if TF.SendDlgItemMessage(hwnddlg, 104, BM_GETCHECK) = BST_CHECKED
-            then
-          begin
-            p := ContestTypeSA[Contest];
-            tContestNameInComment := True;
-          end
-          else
-          begin
-            p := nil;
-            tContestNameInComment := False;
-          end;
-          SetDlgItemTextA(hwnddlg, 109, p);
-        end;
+           if TF.SendDlgItemMessage(hwnddlg, 104, BM_GETCHECK) = BST_CHECKED
+             then
+              begin
+              p := ContestTypeSA[Contest];
+              tContestNameInComment := True;
+              end
+           else
+              begin
+              p := nil;
+              tContestNameInComment := False;
+              end;
+           SetDlgItemTextA(hwnddlg, 109, p);
+           end;
 
         case wParam of
 {$IFDEF LANG_RUS}
@@ -124,10 +129,10 @@ begin
               PInteger(@TempBuffer2)^ := $00005844 {DX#0#0};
               TempBuffer1[0] := ' ';
               for i := 107 to 109 do
-              begin
-                Windows.GetDlgItemTextA(hwnddlg, i, @TempBuffer1[1], SizeOf(TempBuffer1) - 1);
-                Windows.lstrcatA(TempBuffer2, TempBuffer1);
-              end;
+                 begin
+                 Windows.GetDlgItemTextA(hwnddlg, i, @TempBuffer1[1], SizeOf(TempBuffer1) - 1);
+                 Windows.lstrcatA(TempBuffer2, TempBuffer1);
+                 end;
               // Was `TelnetSock <> 0`: spot straight up the cluster link when
               // it is up, otherwise hand it to the TR4W network.  The raw
               // socket handle is gone; uTelnet answers for the link now.
@@ -136,11 +141,11 @@ begin
                  SendViaTelnetSocket(TempBuffer2);
                  end
               else
-              begin
-                Windows.ZeroMemory(@SendSpotViaNetwork.vnMessage, SizeOf(SendSpotViaNetwork.vnMessage));
-                Windows.CopyMemory(@SendSpotViaNetwork.vnMessage, @TempBuffer2, SizeOf(SendSpotViaNetwork.vnMessage) - 1);
-                SendToNet(SendSpotViaNetwork, SizeOf(SendSpotViaNetwork));
-              end;
+                 begin
+                 Windows.ZeroMemory(@SendSpotViaNetwork.vnMessage, SizeOf(SendSpotViaNetwork.vnMessage));
+                 Windows.CopyMemory(@SendSpotViaNetwork.vnMessage, @TempBuffer2, SizeOf(SendSpotViaNetwork.vnMessage) - 1);
+                 SendToNet(SendSpotViaNetwork, SizeOf(SendSpotViaNetwork));
+                 end;
 //              if I <> 0 then ShowSyserror(I);
               goto 1;
             end;

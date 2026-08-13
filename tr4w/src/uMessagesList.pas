@@ -56,9 +56,13 @@ begin
   // Skip leading spaces
   start := src;
   while start^ = ' ' do
-    Inc(start);
+     begin
+     Inc(start);
+     end;
   if start^ = #0 then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // Look for ' = ' separator beginning one character past start
   // so that a command that IS '=' (e.g. "  = = BT") is not treated
@@ -66,32 +70,38 @@ begin
   eqStart := nil;
   p := start + 1;
   while p^ <> #0 do
-    begin
-    if (p[0] = ' ') and (p[1] = '=') and (p[2] = ' ') then
-      begin
-      eqStart := p;
-      Break;
-      end;
-    Inc(p);
-    end;
+     begin
+     if (p[0] = ' ') and (p[1] = '=') and (p[2] = ' ') then
+        begin
+        eqStart := p;
+        Break;
+        end;
+     Inc(p);
+     end;
 
   if eqStart <> nil then
-    begin
-    p := eqStart;
-    while (p > start) and (p[-1] = ' ') do
-      Dec(p);
-    len := p - start;
-    end
+     begin
+     p := eqStart;
+     while (p > start) and (p[-1] = ' ') do
+        begin
+        Dec(p);
+        end;
+     len := p - start;
+     end
   else
-    begin
-    p := start + Windows.lstrlenA(start);
-    while (p > start) and (p[-1] = ' ') do
-      Dec(p);
-    len := p - start;
-    end;
+     begin
+     p := start + Windows.lstrlenA(start);
+     while (p > start) and (p[-1] = ' ') do
+        begin
+        Dec(p);
+        end;
+     len := p - start;
+     end;
 
   if len > 0 then
-    SetString(Result, start, len);
+     begin
+     SetString(Result, start, len);
+     end;
 end;
 
 // Fetch the text of the currently selected listbox item (ID 90) and store
@@ -110,10 +120,14 @@ begin
   lb := GetDlgItem(hwnddlg, 90);
   sel := SendMessage(lb, LB_GETCURSEL, 0, 0);
   if sel = -1 then
-    Exit;
+     begin
+     Exit;
+     end;
   textLen := SendMessage(lb, LB_GETTEXTLEN, sel, 0);
   if (textLen < 0) or (textLen >= SizeOf(buf)) then
-    Exit;
+     begin
+     Exit;
+     end;
   SendMessageA(lb, LB_GETTEXT, sel, Integer(@buf));
   LastSelectedCommand := GetInsertableCommand(@buf);
   Result := True;
@@ -142,10 +156,10 @@ begin
         TempHWND := CreateListBox(5, 5, 440, 280, hwnddlg, 90);
 
         for i := 0 to sCommands - 1 do
-        begin
-          TF.Format(wsprintfBuffer, '%s', sCommandsArray[i].caCommand);
-          tLB_ADDSTRING(TempHWND, wsprintfBuffer);
-        end;
+           begin
+           TF.Format(wsprintfBuffer, '%s', sCommandsArray[i].caCommand);
+           tLB_ADDSTRING(TempHWND, wsprintfBuffer);
+           end;
 
       end;
 
@@ -153,17 +167,23 @@ begin
       begin
       // Double-click on list box: insert selected command and close
       if (HiWord(wParam) = LBN_DBLCLK) and (LoWord(wParam) = 90) then
-        begin
-        if TryCaptureSelectedCommand(hwnddlg) then
-          EndDialog(hwnddlg, 1);
-        end;
+         begin
+         if TryCaptureSelectedCommand(hwnddlg) then
+            begin
+            EndDialog(hwnddlg, 1);
+            end;
+         end;
       case wParam of
         1:  // OK: insert if something is selected, otherwise just close
           begin
           if TryCaptureSelectedCommand(hwnddlg) then
-            EndDialog(hwnddlg, 1)
+             begin
+             EndDialog(hwnddlg, 1)
+             end
           else
-            goto 1;
+             begin
+             goto 1;
+             end;
           end;
         2: goto 1;  // Cancel
       end;

@@ -58,32 +58,36 @@ begin
         DS := PDrawItemStruct(lParam);
 
         if (DS^.itemAction = ODA_FOCUS) then
-        begin
-          DrawFocusRect(DS^.HDC, DS^.rcItem);
-          Exit;
-        end;
+           begin
+           DrawFocusRect(DS^.HDC, DS^.rcItem);
+           Exit;
+           end;
 
         Index := SendMessage(DS^.hwndItem, LB_GETITEMDATA, DS^.ItemID, 0);
         // Issue #997: asm control-flow + wsprintf -> Pascal. The zone label is
         // Index, +1 unless ActiveZoneMult = EUHFCYear (the asm's `jz @@1` skip).
         if ActiveZoneMult = EUHFCYear then
+           begin
            TF.Format(RemMultsBuf, '%02u', Index)
+           end
         else
+           begin
            TF.Format(RemMultsBuf, '%02u', Index + 1);
+           end;
         p := @RemMultsBuf;
 
         I := Windows.lstrlenA(p);
         if RemainingMultDisplayMode = HiLight then
 
           if not RemainingMultsZone^[Index] then
-          begin
-            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowSubdue}]);
-            GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[trRed {ColorColors.RemainingMultsWindowSubdue}], tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowBackground}], gdHorizontal);
-          end
+             begin
+             Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowSubdue}]);
+             GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[trRed {ColorColors.RemainingMultsWindowSubdue}], tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowBackground}], gdHorizontal);
+             end
           else
-          begin
-            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
-          end;
+             begin
+             Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
+             end;
 
         SetBkMode(DS^.HDC, TRANSPARENT);
         Windows.TextOutA(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, I);

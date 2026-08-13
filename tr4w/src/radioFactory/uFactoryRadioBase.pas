@@ -1143,7 +1143,9 @@ begin
    if serialPortObj <> nil then
       begin
       if serialPortObj.IsOpen then
+         begin
          serialPortObj.Close;
+         end;
       end;
 
    if rt <> nil then
@@ -1302,7 +1304,9 @@ begin
       try
          // Create serial port if needed
          if serialPortObj = nil then
+            begin
             serialPortObj := TSerialPort.Create(comPortName);
+            end;
 
          // For serial ports: if already open with reading thread, don't close/reopen
          // This prevents race conditions during reconnection attempts
@@ -1414,7 +1418,8 @@ begin
           socket.Connect;
           logger.Info('[TFactoryRadioBase.Connect] Connected successfully to network radio');
       except
-          on E: Exception do begin
+          on E: Exception do
+             begin
              logger.Error('[TFactoryRadioBase.Connect] Exception when connecting to radio (%s:%d]: %s', [socket.Host, socket.Port, E.Message]);
              // Try to disconnect to clear bad state for next attempt
              try
@@ -1422,7 +1427,7 @@ begin
              except
                 // Ignore disconnect errors
              end;
-          end;
+             end;
       end;
       end;
 end;
@@ -1842,7 +1847,9 @@ begin
          // For serial, port being "open" isn't enough - radio might be powered off
          // Check if we've received valid responses recently
          if not serialPortObj.IsOpen then
+            begin
             Result := false
+            end
          else if (Now - FLastValidResponse) * 86400 > SERIAL_RESPONSE_TIMEOUT then
             begin
             logger.Info('[GetIsConnected] Serial radio not responding (%.1f seconds since last valid response)',
@@ -1850,7 +1857,9 @@ begin
             Result := false;
             end
          else
+            begin
             Result := true;
+            end;
       except
          on E: Exception do
             begin
@@ -2134,9 +2143,13 @@ end;
 procedure TFactoryRadioBase.SetTransmitting(value: boolean);
 begin
    if value then
+      begin
       Self.radioState := rsTransmit
+      end
    else
+      begin
       Self.radioState := rsReceive;
+      end;
 end;
 
 function TFactoryRadioBase.GetVFO(whichVFO: TVFO): TRadioVFO;
@@ -2348,7 +2361,9 @@ begin
                         end;
                      end
                   else
+                     begin
                      Sleep(10);  // Brief sleep if no data
+                     end;
                except
                   on E: Exception do
                      begin
@@ -2406,7 +2421,7 @@ begin
                   FDisconnecting^ := True;  // Set disconnecting flag
                   end;
             end;
-            end
+               end
          else
             begin
             // Not connected - wait for polling thread to reconnect

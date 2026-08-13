@@ -56,10 +56,10 @@ begin
         DS := PDrawItemStruct(lParam);
 
         if (DS^.itemAction = ODA_FOCUS) then
-        begin
-          DrawFocusRect(DS^.HDC, DS^.rcItem);
-          Exit;
-        end;
+           begin
+           DrawFocusRect(DS^.HDC, DS^.rcItem);
+           Exit;
+           end;
 
         Index := SendMessage(DS^.hwndItem, LB_GETITEMDATA, DS^.ItemID, 0);
         p := CountryTable.RemainingDXMultTemplate^[Index];
@@ -67,14 +67,14 @@ begin
         if RemainingMultDisplayMode = HiLight then
 
           if not RemainingMultsDX^[Index] then
-          begin
-            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowSubdue}]);
-            GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[trBlue {ColorColors.RemainingMultsWindowSubdue}], tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowBackground}], gdHorizontal);
-          end
+             begin
+             Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowSubdue}]);
+             GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[trBlue {ColorColors.RemainingMultsWindowSubdue}], tr4wColorsArray[trWhite {ColorColors.RemainingMultsWindowBackground}], gdHorizontal);
+             end
           else
-          begin
-            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
-          end;
+             begin
+             Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
+             end;
 
         SetBkMode(DS^.HDC, TRANSPARENT);
         Windows.TextOutA(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, I);

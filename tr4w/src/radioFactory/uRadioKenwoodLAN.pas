@@ -437,39 +437,65 @@ begin
    // Replies are typically 2-character command + data + ';'. The semicolon
    // was already stripped by the reading thread (we set readTerminator).
    if AnsiStartsStr('FA', sMessage) then
+      begin
       ParseFAOrFBResponse(sMessage, nrVFOA)
+      end
    else if AnsiStartsStr('FB', sMessage) then
+      begin
       ParseFAOrFBResponse(sMessage, nrVFOB)
+      end
    else if AnsiStartsStr('OM', sMessage) then
+      begin
       ParseOMResponse(sMessage)
+      end
    else if AnsiStartsStr('KS', sMessage) then
+      begin
       ParseKSResponse(sMessage)
+      end
    else if AnsiStartsStr('TB', sMessage) then
+      begin
       ParseTBResponse(sMessage)
+      end
    else if AnsiStartsStr('FT', sMessage) then
+      begin
       ParseFTResponse(sMessage)
+      end
    else if AnsiStartsStr('FR', sMessage) then
       // Operating (RX) VFO -- pushed under AI2 on A/B. Tracked because the OM
       // mode reply is operating-VFO-relative (see ParseOMResponse).
+      begin
       ParseFRResponse(sMessage)
+      end
    else if AnsiStartsStr('RT', sMessage) then
+      begin
       ParseRTResponse(sMessage)
+      end
    else if AnsiStartsStr('XT', sMessage) then
+      begin
       ParseXTResponse(sMessage)
+      end
    else if AnsiStartsStr('RF', sMessage) then
       // RIT/XIT frequency offset, pushed unsolicited under AI2 as the knob turns.
+      begin
       ParseRFResponse(sMessage)
+      end
    else if AnsiStartsStr('TX', sMessage) then
       // Radio pushes TX0; when it goes to transmit (AI2). Surface it so the
       // main window's TX indicator updates.
+      begin
       Self.SetTransmitting(True)
+      end
    else if AnsiStartsStr('RX', sMessage) then
+      begin
       Self.SetTransmitting(False)
+      end
    else if AnsiStartsStr('PS', sMessage) then
       // Keepalive heartbeat response (PS1; = power on). No state to track;
       // the round-trip itself is what keeps the LAN connection from being
       // dropped by the radio's 10-second idle timeout.
+      begin
       logger.Trace('[%s.ProcessMessage] Keepalive ack: %s', [Self.rigLabel, sMessage])
+      end
    else if AnsiStartsStr('ID', sMessage) then
       begin
       // This class serves BOTH radios, so it must accept both identifiers:

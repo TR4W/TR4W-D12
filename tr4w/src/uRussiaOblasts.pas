@@ -516,7 +516,9 @@ begin
 
   if c1 = '2' then
     if c2 in ['F', 'K', 'C'] then
-      Result := rtUA2F;
+       begin
+       Result := rtUA2F;
+       end;
 
 end;
 {

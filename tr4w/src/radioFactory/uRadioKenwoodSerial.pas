@@ -142,14 +142,14 @@ begin
   Self.readTerminator := ';';
   Result := inherited Connect;
   if Self.IsConnected then
-    begin
-    // Seed the non-operating VFO's mode once, on the first IF (see ParseIF): the
-    // TS-570 reports only the operating VFO's mode, so we briefly flip RX to the
-    // other VFO to read it and then restore the operator's VFO.
-    FSeedOtherVFOMode := True;
-    // Prime the display: full status + both VFO frequencies.
-    Self.SendToRadio('IF;FA;FB;');
-    end;
+     begin
+     // Seed the non-operating VFO's mode once, on the first IF (see ParseIF): the
+     // TS-570 reports only the operating VFO's mode, so we briefly flip RX to the
+     // other VFO to read it and then restore the operator's VFO.
+     FSeedOtherVFOMode := True;
+     // Prime the display: full status + both VFO frequencies.
+     Self.SendToRadio('IF;FA;FB;');
+     end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -160,25 +160,25 @@ var
   prefix: string;
 begin
   if Length(msg) < 2 then
-    begin
-    Exit;
-    end;
+     begin
+     Exit;
+     end;
   // Any valid frame proves the radio is answering -> refresh serial liveness.
   Self.UpdateLastValidResponse;
 
   prefix := AnsiUpperCase(Copy(msg, 1, 2));
   if prefix = 'IF' then
-    begin
-    ParseIF(msg);
-    end
+     begin
+     ParseIF(msg);
+     end
   else if prefix = 'FA' then
-    begin
-    ParseFreqResponse(msg, nrVFOA);
-    end
+     begin
+     ParseFreqResponse(msg, nrVFOA);
+     end
   else if prefix = 'FB' then
-    begin
-    ParseFreqResponse(msg, nrVFOB);
-    end;
+     begin
+     ParseFreqResponse(msg, nrVFOB);
+     end;
   // IF carries only the operating VFO's mode; the other VFO's mode is seeded once
   // at connect by the brief FR flip in ParseIF (the TS-570 has no OM command --
   // it answers "?" to OM0;/OM1;).
@@ -191,14 +191,14 @@ var
   hz: integer;
 begin
   if Length(msg) < 13 then
-    begin
-    Exit;
-    end;
+     begin
+     Exit;
+     end;
   hz := StrToIntDef(Copy(msg, 3, 11), -1);
   if hz <= 0 then
-    begin
-    Exit;
-    end;
+     begin
+     Exit;
+     end;
   Self.vfo[whichVFO].frequency := hz;
   Self.vfo[whichVFO].band := FreqToRadioBand(hz);
 end;
@@ -216,30 +216,30 @@ begin
   L := Length(msg);
   // Need room for the RIT-sign field at L-18.
   if L < 25 then
-    begin
-    logger.Error('[%s.ParseIF] IF response too short (%d): %s', [Self.rigLabel, L, msg]);
-    Exit;
-    end;
+     begin
+     logger.Error('[%s.ParseIF] IF response too short (%d): %s', [Self.rigLabel, L, msg]);
+     Exit;
+     end;
 
   // Frequency of the RX (active) VFO: 11 digits right after "IF".
   hz := StrToIntDef(Copy(msg, 3, 11), -1);
 
   // Active (RX) VFO from the FR field.
   if msg[L - 6] = '1' then
-    begin
-    activeVFO := nrVFOB;
-    end
+     begin
+     activeVFO := nrVFOB;
+     end
   else
-    begin
-    activeVFO := nrVFOA;
-    end;
+     begin
+     activeVFO := nrVFOA;
+     end;
   Self.SetActiveVFO(activeVFO);
 
   if hz > 0 then
-    begin
-    Self.vfo[activeVFO].frequency := hz;
-    Self.vfo[activeVFO].band := FreqToRadioBand(hz);
-    end;
+     begin
+     Self.vfo[activeVFO].frequency := hz;
+     Self.vfo[activeVFO].band := FreqToRadioBand(hz);
+     end;
 
   // Mode of the active (RX) VFO. IF carries only one mode; the OTHER VFO's mode
   // is read separately via OM0;/OM1; (see ParseOM), because the VFOs can differ.
@@ -248,13 +248,13 @@ begin
 
   // TX / RX.
   if msg[L - 8] = '1' then
-    begin
-    Self.radioState := rsTransmit;
-    end
+     begin
+     Self.radioState := rsTransmit;
+     end
   else
-    begin
-    Self.radioState := rsReceive;
-    end;
+     begin
+     Self.radioState := rsReceive;
+     end;
 
   // Split (drives the "You are in SPLIT MODE" warning via CurrentStatus.Split).
   Self.SetSplitOn(msg[L - 4] <> '0');
@@ -266,9 +266,9 @@ begin
   // RIT/XIT offset: sign at L-18, 4-digit magnitude at L-17..L-14.
   ritMag := StrToIntDef(Copy(msg, L - 17, 4), 0);
   if msg[L - 18] = '-' then
-    begin
-    ritMag := -ritMag;
-    end;
+     begin
+     ritMag := -ritMag;
+     end;
   Self.localRITOffset := ritMag;
   Self.localXITOffset := ritMag;   // shared register on Kenwood
   Self.vfo[activeVFO].RITOffset := ritMag;
@@ -295,28 +295,28 @@ begin
   // worth making, so the seeding is simply skipped while split is on.  The cost
   // is VFO B's mode label, which the legacy path never had either.
   if FSeedOtherVFOMode then
-    begin
-    if Self.localSplitEnabled then
-      begin
-      // Do not re-arm: retrying on a later poll would just wait for the operator
-      // to drop split and then yank it again at a random moment.
-      FSeedOtherVFOMode := False;
-      logger.Debug('[%s.ParseIF] Split is on -- skipping the VFO-mode seed, ' +
-                   'because a bare FR cancels split on this radio', [Self.rigLabel]);
-      end
-    else
-      begin
-      FSeedOtherVFOMode := False;
-      if activeVFO = nrVFOA then
+     begin
+     if Self.localSplitEnabled then
         begin
-        Self.SendToRadio('FR1;IF;FR0;IF;');   // read VFO B, restore VFO A
+        // Do not re-arm: retrying on a later poll would just wait for the operator
+        // to drop split and then yank it again at a random moment.
+        FSeedOtherVFOMode := False;
+        logger.Debug('[%s.ParseIF] Split is on -- skipping the VFO-mode seed, ' +
+                     'because a bare FR cancels split on this radio', [Self.rigLabel]);
         end
-      else
+     else
         begin
-        Self.SendToRadio('FR0;IF;FR1;IF;');   // read VFO A, restore VFO B
+        FSeedOtherVFOMode := False;
+        if activeVFO = nrVFOA then
+           begin
+           Self.SendToRadio('FR1;IF;FR0;IF;');   // read VFO B, restore VFO A
+           end
+        else
+           begin
+           Self.SendToRadio('FR0;IF;FR1;IF;');   // read VFO A, restore VFO B
+           end;
         end;
-      end;
-    end;
+     end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -381,9 +381,9 @@ begin
     end;
   end;
   if mode <> rmNone then
-    begin
-    Self.SetMode(mode, vfo);
-    end;
+     begin
+     Self.SetMode(mode, vfo);
+     end;
 end;
 
 procedure TKenwoodSerial.SetMode(mode: TRadioMode; vfo: TVFO = nrVFOA);
@@ -392,10 +392,10 @@ var
 begin
   b := ModeToKenwoodByte(mode);
   if b = '' then
-    begin
-    logger.Error('[%s.SetMode] unsupported mode %d', [Self.rigLabel, Ord(mode)]);
-    Exit;
-    end;
+     begin
+     logger.Error('[%s.SetMode] unsupported mode %d', [Self.rigLabel, Ord(mode)]);
+     Exit;
+     end;
   // Standard Kenwood MD sets the mode of the current RX VFO; there is no
   // per-VFO mode set on the TS-570, so vfo is advisory here.
   Self.SendToRadio(Format('MD%s;', [b]));
@@ -410,14 +410,14 @@ end;
 procedure TKenwoodSerial.SetCWSpeed(speed: integer);
 begin
   if (speed >= 4) and (speed <= 60) then
-    begin
-    Self.localCWSpeed := speed;
-    Self.SendToRadio(Format('KS%.3d;', [speed]));
-    end
+     begin
+     Self.localCWSpeed := speed;
+     Self.SendToRadio(Format('KS%.3d;', [speed]));
+     end
   else
-    begin
-    logger.Error('[%s.SetCWSpeed] speed out of range (%d)', [Self.rigLabel, speed]);
-    end;
+     begin
+     logger.Error('[%s.SetCWSpeed] speed out of range (%d)', [Self.rigLabel, speed]);
+     end;
 end;
 
 // ---------------------------------------------------------------------------
@@ -481,13 +481,13 @@ begin
   // TS-570 has been benched through the factory, so matching the shipping
   // behaviour is the safe default rather than an improvement on it.
   if splitOn then
-    begin
-    Self.SendToRadio('FR0;FT1;');
-    end
+     begin
+     Self.SendToRadio('FR0;FT1;');
+     end
   else
-    begin
-    Self.SendToRadio('FR0;FT0;');
-    end;
+     begin
+     Self.SendToRadio('FR0;FT0;');
+     end;
   // FR0; moved the RX pointer to VFO A; keep the driver's own idea of the
   // active VFO in step or the next IF parse will disagree with the radio.
   Self.SetActiveVFO(nrVFOA);
@@ -517,9 +517,9 @@ var
 begin
   freq := BandToFreq(band);
   if freq > 0 then
-    begin
-    Self.SetFrequency(freq, vfo, rmNone);
-    end;
+     begin
+     Self.SetFrequency(freq, vfo, rmNone);
+     end;
 end;
 
 function TKenwoodSerial.ToggleBand(vfo: TVFO = nrVFOA): TRadioBand;

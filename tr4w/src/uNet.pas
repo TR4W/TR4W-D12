@@ -232,9 +232,9 @@ begin
     WM_TIMER:
       begin
         if NetSocket <> 0 then
-        begin
-//          SendStationStatus;
-{
+           begin
+           //          SendStationStatus;
+           {
           if _networktest then
           begin
             CallWindowString := CD.GetRandomCall;
@@ -242,9 +242,11 @@ begin
             TryLogContact;
           end;
 }
-        end
+           end
         else
-          TryConnectToNetwork;
+           begin
+           TryConnectToNetwork;
+           end;
 
       end;
 
@@ -253,19 +255,22 @@ begin
         i := recv(NetSocket, NetBuffer, SizeOf(NetBuffer), 0);
 //        if DifferentContests then Exit;
         if i <= 0 then
-        begin
-          NetDisconnect;
-          Windows.ZeroMemory(@StatusArray, SizeOf(StatusArray));
-          for i := 1 to 26 do DisplayClientStatus(i);
-          // Issue #910: replaced modal dialog (showwarning) with non-blocking
-          // QuickDisplay toast + title-bar update.  Auto-reconnect is handled
-          // by the existing WM_TIMER path which calls TryConnectToNetwork
-          // every tNetStatusUpdateInterval ms while NetSocket = 0.
-          ShowConnectionStatus(TC_DISCONNECTEDFROM);
-          TF.Format(wsprintfBuffer, TC_CONNECTIONTOTR4WSERVERLOST, @ServerAddress[1], ServerPort);
-          QuickDisplay(wsprintfBuffer);
-          Exit;
-        end;
+           begin
+           NetDisconnect;
+           Windows.ZeroMemory(@StatusArray, SizeOf(StatusArray));
+           for i := 1 to 26 do
+              begin
+              DisplayClientStatus(i);
+              end;
+           // Issue #910: replaced modal dialog (showwarning) with non-blocking
+           // QuickDisplay toast + title-bar update.  Auto-reconnect is handled
+           // by the existing WM_TIMER path which calls TryConnectToNetwork
+           // every tNetStatusUpdateInterval ms while NetSocket = 0.
+           ShowConnectionStatus(TC_DISCONNECTEDFROM);
+           TF.Format(wsprintfBuffer, TC_CONNECTIONTOTR4WSERVERLOST, @ServerAddress[1], ServerPort);
+           QuickDisplay(wsprintfBuffer);
+           Exit;
+           end;
 
         Bufindex := 1;
         nColor := 0;
@@ -279,13 +284,16 @@ begin
             begin
               StationStPtr := @NetBuffer[Bufindex];
               if StationStPtr^.ssComputerID in ['A'..'Z'] then
-              begin
-                ClientID := Ord(StationStPtr^.ssComputerID) - Ord('A') + 1;
-                if PosInClientsList[ClientID] = 0 then AddNewClient(ClientID);
-                StatusArray[ClientID] := StationStPtr^;
-                DisplayClientStatus(ClientID);
+                 begin
+                 ClientID := Ord(StationStPtr^.ssComputerID) - Ord('A') + 1;
+                 if PosInClientsList[ClientID] = 0 then
+                    begin
+                    AddNewClient(ClientID);
+                    end;
+                 StatusArray[ClientID] := StationStPtr^;
+                 DisplayClientStatus(ClientID);
 
-              end;
+                 end;
               Bufindex := Bufindex + SizeOf(TStationState);
               if Bufindex - 1 >= i then Exit;
             end;
@@ -317,11 +325,11 @@ begin
             begin
               ParameterToNetworkPtr := @NetBuffer[Bufindex];
               if CheckCommand(@ParameterToNetworkPtr^.pnCommand, ParameterToNetworkPtr^.pnValue) then
-              begin
-                Windows.WritePrivateProfileStringA(_COMMANDS, @ParameterToNetworkPtr^.pnCommand[1], @ParameterToNetworkPtr^.pnValue[1], TR4W_INI_FILENAME);
-//                ShowTrayTips();
-                QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
-              end;
+                 begin
+                 Windows.WritePrivateProfileStringA(_COMMANDS, @ParameterToNetworkPtr^.pnCommand[1], @ParameterToNetworkPtr^.pnValue[1], TR4W_INI_FILENAME);
+ //                ShowTrayTips();
+                 QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
+                 end;
               Bufindex := Bufindex + SizeOf(ParameterToNetwork);
               if Bufindex - 1 >= i then Exit;
             end;
@@ -334,15 +342,19 @@ begin
                 if NetTimeSyncPtr.tsTime.wMonth <= 12 then
                   if NetTimeSyncPtr.tsTime.wDay <= 31 then
                     if NetTimeSyncPtr.tsTime.wHour <= 23 then
-                    begin
+                       begin
 
-                      if Windows.SetSystemTime(NetTimeSyncPtr.tsTime) then
-                        QuickDisplay(TC_COMPUTERCLOCKISSYNCHRONIZED)
-                      else
-                        ShowSysErrorMessage('SET SYSTEM TIME');
-                      Bufindex := Bufindex + SizeOf(NetTimeSync);
-                      if Bufindex - 1 >= i then Exit;
-                    end;
+                       if Windows.SetSystemTime(NetTimeSyncPtr.tsTime) then
+                          begin
+                          QuickDisplay(TC_COMPUTERCLOCKISSYNCHRONIZED)
+                          end
+                       else
+                          begin
+                          ShowSysErrorMessage('SET SYSTEM TIME');
+                          end;
+                       Bufindex := Bufindex + SizeOf(NetTimeSync);
+                       if Bufindex - 1 >= i then Exit;
+                       end;
             end;
 
           NET_NETWORKDXSPOT_ID:
@@ -358,28 +370,30 @@ begin
             begin
               NetQSOInfoPtr := @NetBuffer[Bufindex];
               if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQSO then
-              begin
-                if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
-                begin
-                  LogContact(NetQSOInfoPtr^.qiInformation, False);
-                  UpdateWindows;
-                end;
-              end;
+                 begin
+                 if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
+                    begin
+                    LogContact(NetQSOInfoPtr^.qiInformation, False);
+                    UpdateWindows;
+                    end;
+                 end;
 
               if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkNote then
-              begin
-                tAddQSOToLog(NetQSOInfoPtr^.qiInformation);
-              end;
+                 begin
+                 tAddQSOToLog(NetQSOInfoPtr^.qiInformation);
+                 end;
 
               if NetQSOInfoPtr^.qiInformation.ceRecordKind in [rkQTCR, rkQTCS] then
-              begin
-                if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQTCS then
-                  NumberQTCBooksSent := NetQSOInfoPtr^.qiInformation.QSOPoints;
-                IncrementQTCCount(NetQSOInfoPtr^.qiInformation.Callsign);
-                tAddQSOToLog(NetQSOInfoPtr^.qiInformation);
-                DisplayTotalScore;
-                UpdateTotals2;
-              end;
+                 begin
+                 if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQTCS then
+                    begin
+                    NumberQTCBooksSent := NetQSOInfoPtr^.qiInformation.QSOPoints;
+                    end;
+                 IncrementQTCCount(NetQSOInfoPtr^.qiInformation.Callsign);
+                 tAddQSOToLog(NetQSOInfoPtr^.qiInformation);
+                 DisplayTotalScore;
+                 UpdateTotals2;
+                 end;
 
               Bufindex := Bufindex + SizeOf(NetQSOInfoToSend);
               if Bufindex - 1 >= i then Exit;
@@ -390,14 +404,14 @@ begin
               NetQSOInfoPtr := @NetBuffer[Bufindex];
 
               if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
-              begin
-                if FindAndUpdateQSOInLog(NetQSOInfoPtr^.qiInformation) then
-                  if tAllowAutoUpdate then
-                  begin
-                    tUpdateLog(actRescore);
-                    LoadinLog;
-                  end;
-              end;
+                 begin
+                 if FindAndUpdateQSOInLog(NetQSOInfoPtr^.qiInformation) then
+                   if tAllowAutoUpdate then
+                      begin
+                      tUpdateLog(actRescore);
+                      LoadinLog;
+                      end;
+                 end;
               Bufindex := Bufindex + SizeOf(NetQSOInfoToSend);
               if Bufindex - 1 >= i then Exit;
             end;
@@ -473,19 +487,22 @@ begin
 
         WordPtr := @NetBuffer[Bufindex];
         if WordPtr^ = NET_MESSAGESTATE_ID then
-        begin
-          MessageStatePtr := @NetBuffer[Bufindex];
-          if MessageStatePtr^.msComputerId in ['A'..'Z'] then
-          begin
-            ClientID := Ord(MessageStatePtr^.msComputerId) - Ord('A') + 1;
-            DisplayMessageStatus(ClientID, MessageStatePtr^);
-          end;
-          Bufindex := Bufindex + SizeOf(TMessageState);
-          if Bufindex - 1 >= i then Exit;
-        end;
+           begin
+           MessageStatePtr := @NetBuffer[Bufindex];
+           if MessageStatePtr^.msComputerId in ['A'..'Z'] then
+              begin
+              ClientID := Ord(MessageStatePtr^.msComputerId) - Ord('A') + 1;
+              DisplayMessageStatus(ClientID, MessageStatePtr^);
+              end;
+           Bufindex := Bufindex + SizeOf(TMessageState);
+           if Bufindex - 1 >= i then Exit;
+           end;
 {$IFEND}
         inc(nColor);
-        if nColor < 30 then goto CheckBuffer;
+        if nColor < 30 then
+           begin
+           goto CheckBuffer;
+           end;
 
       end;
 
@@ -510,10 +527,10 @@ end;
 procedure NetDisconnect;
 begin
   if NetSocket <> 0 then
-  begin
-    WSAAsyncSelect(NetSocket, tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, 0, 0);
-    closesocket(NetSocket);
-  end;
+     begin
+     WSAAsyncSelect(NetSocket, tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, 0, 0);
+     closesocket(NetSocket);
+     end;
   NetSocket := 0;
   ServerSerialNumber := 0;
   EnableNetworkMenuItem(MF_GRAYED + MF_BYPOSITION);
@@ -590,18 +607,28 @@ begin
   MyMessageState.msComputerId := ComputerID;
   MyMessageState.msID := NET_MESSAGESTATE_ID;
   if CWMessageToNetwork <> '' then
-    Windows.MoveMemory(@MyMessageState.msCWMessage[0], @CWMessageToNetwork[1], length(CWMessageToNetwork));
+     begin
+     Windows.MoveMemory(@MyMessageState.msCWMessage[0], @CWMessageToNetwork[1], length(CWMessageToNetwork));
+     end;
 
   MyMessageState.msCWMessage[length(CWMessageToNetwork)] := #0;
 
   i := CWBufferEnd - CWBufferStart;
-  if CWBufferEnd < CWBufferStart then i := i + CWBufferSize;
-  if i < 0 then i := 0;
+  if CWBufferEnd < CWBufferStart then
+     begin
+     i := i + CWBufferSize;
+     end;
+  if i < 0 then
+     begin
+     i := 0;
+     end;
   MyMessageState.msCWElements := i;
 
   SendToNet(MyMessageState, SizeOf(TMessageState));
   if MyMessageState.msCWElements < 1 then
-    KillTimer(tr4whandle, UPDATE_NET_CW_MESSAGE);
+     begin
+     KillTimer(tr4whandle, UPDATE_NET_CW_MESSAGE);
+     end;
 end;
 
 type
@@ -672,57 +699,61 @@ begin
   //I := WinSock2.WSAConnect(TempSocket, @tr4w_saddr, SizeOf(sockaddr_in), @ServerPassword, nil, nil, nil);
   if i = 0 then
 }
-  begin
-    NetSocket := TempSocket;
+     begin
+     NetSocket := TempSocket;
 
-    SendToNet(ServerPassword[1], 10);
-    Sleep(200);
-    ACK := 0;
-    recv(NetSocket, ACK, SizeOf(ACK), 0);
-    if ACK = $53534150 {PASS} then showwarning(TC_CONNECTTOTR4WSERVERFAILED);
-    if ACK <> $57345254 {TR4W} then goto 1;
-    i := 1;
-    WinSock2.setsockopt(NetSocket, IPPROTO_TCP, TCP_NODELAY, @i, SizeOf(integer));
-    WinSock2.WSAAsyncSelect(NetSocket, tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, WM_SOCK_NET, FD_READ or FD_CLOSE);
-    ZeroMemory(@StatusArray, SizeOf(StatusArray));
-    NetQSOInfoToSend.qiComputerID := Windows.GetTickCount;
+     SendToNet(ServerPassword[1], 10);
+     Sleep(200);
+     ACK := 0;
+     recv(NetSocket, ACK, SizeOf(ACK), 0);
+     if ACK = $53534150 {PASS} then showwarning(TC_CONNECTTOTR4WSERVERFAILED);
+     if ACK <> $57345254 {TR4W} then goto 1;
+     i := 1;
+     WinSock2.setsockopt(NetSocket, IPPROTO_TCP, TCP_NODELAY, @i, SizeOf(integer));
+     WinSock2.WSAAsyncSelect(NetSocket, tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle, WM_SOCK_NET, FD_READ or FD_CLOSE);
+     ZeroMemory(@StatusArray, SizeOf(StatusArray));
+     NetQSOInfoToSend.qiComputerID := Windows.GetTickCount;
 
-//    sCIDMESSAGE[4] := Char(Ord(ComputerID) - Ord('A') + 1);
-    ComputerNetID.ciComputerID := AnsiChar(Ord(ComputerID) - Ord('A') + 1);
-    SendToNet(ComputerNetID, SizeOf(ComputerNetID));
-    SendFullStationStatus;
-    SendClientStatus;
-    ServerMessage.smMessage := SM_GETSTATUS_MESSAGE;
-    SendToNet(ServerMessage, SizeOf(ServerMessage));
-//    SendStationStatus;
-    EnableNetworkMenuItem(MF_ENABLED + MF_BYPOSITION);
-    ShowConnectionStatus(TC_CONNECTEDTO);
-    if FConnectLogState <> nclsConnected then
-       begin
-       logger.Info('Connected to TR4WServer at %s:%d', [ServerAddress, ServerPort]);
-       FConnectLogState := nclsConnected;
-       end;
-  end
+ //    sCIDMESSAGE[4] := Char(Ord(ComputerID) - Ord('A') + 1);
+     ComputerNetID.ciComputerID := AnsiChar(Ord(ComputerID) - Ord('A') + 1);
+     SendToNet(ComputerNetID, SizeOf(ComputerNetID));
+     SendFullStationStatus;
+     SendClientStatus;
+     ServerMessage.smMessage := SM_GETSTATUS_MESSAGE;
+     SendToNet(ServerMessage, SizeOf(ServerMessage));
+ //    SendStationStatus;
+     EnableNetworkMenuItem(MF_ENABLED + MF_BYPOSITION);
+     ShowConnectionStatus(TC_CONNECTEDTO);
+     if FConnectLogState <> nclsConnected then
+        begin
+        logger.Info('Connected to TR4WServer at %s:%d', [ServerAddress, ServerPort]);
+        FConnectLogState := nclsConnected;
+        end;
+     end
   else
-  begin
-    closesocket(TempSocket);
-    1:
-    ShowConnectionStatus(TC_FAILEDTOCONNECTTO);
-    NetDisconnect;
-    if FConnectLogState <> nclsFailed then
-       begin
-       logger.Warn('Failed to connect to TR4WServer at %s:%d (will keep retrying silently)', [ServerAddress, ServerPort]);
-       FConnectLogState := nclsFailed;
-       end;
-  end;
+     begin
+     closesocket(TempSocket);
+     1:
+     ShowConnectionStatus(TC_FAILEDTOCONNECTTO);
+     NetDisconnect;
+     if FConnectLogState <> nclsFailed then
+        begin
+        logger.Warn('Failed to connect to TR4WServer at %s:%d (will keep retrying silently)', [ServerAddress, ServerPort]);
+        FConnectLogState := nclsFailed;
+        end;
+     end;
   2:
   // Issue #1041: log destruction at the same volume as creation -- debug on a
   // genuine (announced) attempt so create/destroy pair up in the log, trace
   // during the silent retry loop so it stays quiet.
   if FConnectThreadAnnounced then
+     begin
      logger.Debug('[ConnectThread] Thread %d destroyed, NetThreadID cleared', [GetCurrentThreadId])
+     end
   else
+     begin
      logger.Trace('[ConnectThread] Thread %d exiting, NetThreadID cleared', [GetCurrentThreadId]);
+     end;
   NetThreadID := 0;
 end;
 
@@ -734,12 +765,12 @@ begin
   CreateListView(tw_NETWINDOW_INDEX, mweNetwork, 0);
   elvc.Mask := LVCF_TEXT or LVCF_WIDTH or LVCF_FMT;
   for i := 0 to NetColumns - 1 do
-  begin
-    elvc.fmt := NetColumnsArray[i].fmt;
-    elvc.pszText := NetColumnsArray[i].Text;
-    elvc.cx := NetColumnsArray[i].Width;
-    uCommctrl.ListView_InsertColumnA(wh[mweNetwork], i, elvc);
-  end;
+     begin
+     elvc.fmt := NetColumnsArray[i].fmt;
+     elvc.pszText := NetColumnsArray[i].Text;
+     elvc.cx := NetColumnsArray[i].Width;
+     uCommctrl.ListView_InsertColumnA(wh[mweNetwork], i, elvc);
+     end;
 end;
 
 procedure DisplayClientStatus(Index: integer);
@@ -758,11 +789,13 @@ begin
   h := wh[mweNetwork];
 
   if StatusArray[Index].ssComputerID = #0 then
-  begin
-    for i2 := 0 to 7 do
-      tLVSetText(h, i, i2, '');
-    Exit;
-  end;
+     begin
+     for i2 := 0 to 7 do
+        begin
+        tLVSetText(h, i, i2, '');
+        end;
+     Exit;
+     end;
 
   //LastStatus := StatusArray[Index].ssType;
   case StatusArray[Index].ssType of
@@ -841,18 +874,18 @@ begin
     1:
     tSetFilePointer(FilePointer * SizeOf(ContestExchange), FILE_END);
     if ReadLogFile then
-    begin
-      if TempRXData.ceQSOID1 = RXData.ceQSOID1 then
-        if TempRXData.ceQSOID2 = RXData.ceQSOID2 then
-        begin
-          tSetFilePointer(FilePointer * SizeOf(ContestExchange), FILE_END);
-          sWriteFile(LogHandle, RXData, SizeOf(ContestExchange));
-          Result := True;
-          goto 2;
-        end;
-      dec(FilePointer);
-      goto 1;
-    end;
+       begin
+       if TempRXData.ceQSOID1 = RXData.ceQSOID1 then
+         if TempRXData.ceQSOID2 = RXData.ceQSOID2 then
+            begin
+            tSetFilePointer(FilePointer * SizeOf(ContestExchange), FILE_END);
+            sWriteFile(LogHandle, RXData, SizeOf(ContestExchange));
+            Result := True;
+            goto 2;
+            end;
+       dec(FilePointer);
+       goto 1;
+       end;
     2:
     CloseLogFile;
   end;
@@ -878,52 +911,61 @@ begin
 //  if b then
   begin
 
-    if s^.liLocalCRC32 <> s^.liSeverCRC32 then IdenticalLogs := False;
+    if s^.liLocalCRC32 <> s^.liSeverCRC32 then
+       begin
+       IdenticalLogs := False;
+       end;
 //IdenticalLogs=
 //    if tUSQ <> 0 then IdenticalLogs := False;
 //    if tUSQE <> 0 then IdenticalLogs := False;
 
     if not IdenticalLogs then
-      begin
-      // Issue #912: if SERVER AUTO SYNCHRONIZE LOG ON CONNECT is set, skip
-      // the "Difference in logs" dialog AND the GetServerLog dialog entirely
-      // and run the sync headlessly in a worker thread.  The replace happens
-      // on the UI thread via SendMessage (see WM_USER_HEADLESS_SYNC_REPLACE
-      // in tr4w.dpr) so LoadinLog's ListView access is thread-safe.
-      //
-      // Safety: only auto-sync when contests match (or server has no contest
-      // yet); otherwise fall through to the existing dialog so the operator
-      // sees the wrong-server warning.
-      if ServerAutoSynchronizeLogOnConnect and
-         ((s^.liContest = Contest) or (s^.liContest = DUMMYCONTEST)) then
-         begin
-         logger.Info('Auto-synchronizing local log from server (CRC mismatch: local %x, server %x)',
-                     [s^.liLocalCRC32, s^.liSeverCRC32]);
-         QuickDisplay(TC_AUTOSYNCHRONIZINGLOG);
-         NewServerLogHandle := CreateFileA(TR4W_SYN_FILENAME,
-                                          GENERIC_READ or GENERIC_WRITE,
-                                          FILE_SHARE_READ or FILE_SHARE_WRITE,
-                                          nil, CREATE_ALWAYS,
-                                          FILE_ATTRIBUTE_ARCHIVE, 0);
-         if NewServerLogHandle = INVALID_HANDLE_VALUE then
-            begin
-            logger.Error('Auto-sync: could not create %s', [TR4W_SYN_FILENAME]);
-            // Fall through to the existing dialog so the operator can react.
-            CreateModalDialog(220, 110, tr4whandle, @LogCompareDlgProc, integer(s));
-            end
-         else
-            begin
-            HeadlessSyncMode := True;
-            if LogSyncThreadID = 0 then
-               tCreateThread(@RunSyncThread, LogSyncThreadID);
-            end;
-         end
-      else
-//      DialogBoxParam(hInstance, MAKEINTRESOURCE(75), tr4whandle, @LogCompareDlgProc, integer(s))
-         CreateModalDialog(220, 110, tr4whandle, @LogCompareDlgProc, integer(s));
-      end
+       begin
+       // Issue #912: if SERVER AUTO SYNCHRONIZE LOG ON CONNECT is set, skip
+       // the "Difference in logs" dialog AND the GetServerLog dialog entirely
+       // and run the sync headlessly in a worker thread.  The replace happens
+       // on the UI thread via SendMessage (see WM_USER_HEADLESS_SYNC_REPLACE
+       // in tr4w.dpr) so LoadinLog's ListView access is thread-safe.
+       //
+       // Safety: only auto-sync when contests match (or server has no contest
+       // yet); otherwise fall through to the existing dialog so the operator
+       // sees the wrong-server warning.
+       if ServerAutoSynchronizeLogOnConnect and
+          ((s^.liContest = Contest) or (s^.liContest = DUMMYCONTEST)) then
+          begin
+          logger.Info('Auto-synchronizing local log from server (CRC mismatch: local %x, server %x)',
+                      [s^.liLocalCRC32, s^.liSeverCRC32]);
+          QuickDisplay(TC_AUTOSYNCHRONIZINGLOG);
+          NewServerLogHandle := CreateFileA(TR4W_SYN_FILENAME,
+                                           GENERIC_READ or GENERIC_WRITE,
+                                           FILE_SHARE_READ or FILE_SHARE_WRITE,
+                                           nil, CREATE_ALWAYS,
+                                           FILE_ATTRIBUTE_ARCHIVE, 0);
+          if NewServerLogHandle = INVALID_HANDLE_VALUE then
+             begin
+             logger.Error('Auto-sync: could not create %s', [TR4W_SYN_FILENAME]);
+             // Fall through to the existing dialog so the operator can react.
+             CreateModalDialog(220, 110, tr4whandle, @LogCompareDlgProc, integer(s));
+             end
+          else
+             begin
+             HeadlessSyncMode := True;
+             if LogSyncThreadID = 0 then
+                begin
+                tCreateThread(@RunSyncThread, LogSyncThreadID);
+                end;
+             end;
+          end
+       else
+ //      DialogBoxParam(hInstance, MAKEINTRESOURCE(75), tr4whandle, @LogCompareDlgProc, integer(s))
+          begin
+          CreateModalDialog(220, 110, tr4whandle, @LogCompareDlgProc, integer(s));
+          end;
+       end
     else
-      QuickDisplay(TC_SERVERANDLOCALLOGSAREIDENTICAL);
+       begin
+       QuickDisplay(TC_SERVERANDLOCALLOGSAREIDENTICAL);
+       end;
 
   end;
 
@@ -985,7 +1027,10 @@ var
 begin
   Windows.FillMemory(@ProgressBarArray[0], SizeOf(ProgressBarArray), Byte('|'));
   ProgressBarPos := Msg.msCWElements div 6;
-  if ProgressBarPos > SizeOf(ProgressBarArray) - 1 then ProgressBarPos := SizeOf(ProgressBarArray) - 1;
+  if ProgressBarPos > SizeOf(ProgressBarArray) - 1 then
+     begin
+     ProgressBarPos := SizeOf(ProgressBarArray) - 1;
+     end;
   ProgressBarArray[ProgressBarPos] := #0;
   i := PosInClientsList[Index] - 1;
   elvi.Mask := LVIF_TEXT;
@@ -998,7 +1043,9 @@ function SendToNet(var buf; Len: integer): integer;
 begin
   Result := 0;
   if NetSocket <> 0 then
-    Result := WinSock2.Send(NetSocket, buf, Len, 0);
+     begin
+     Result := WinSock2.Send(NetSocket, buf, Len, 0);
+     end;
 end;
 
 procedure CommitChangesInLocalLog;
@@ -1023,36 +1070,36 @@ begin
   ReadVersionBlock;
   1:
   if ReadLogFile then
-  begin
+     begin
 
-    if TempRXData.ceSendToServer = False then
-    begin
-      if SendRecordToServer(NET_OFFLINEQSO_ID, TempRXData) then
-      begin
-        UpdateRec;
-        dec(tUSQ)
-      end;
+     if TempRXData.ceSendToServer = False then
+        begin
+        if SendRecordToServer(NET_OFFLINEQSO_ID, TempRXData) then
+           begin
+           UpdateRec;
+           dec(tUSQ)
+           end;
 
-    end;
+        end;
 
-    if TempRXData.ceNeedSendToServerAE = True then
-    begin
-      if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
-      begin
-        UpdateRec;
-        dec(tUSQE)
-      end;
-    end;
+     if TempRXData.ceNeedSendToServerAE = True then
+        begin
+        if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
+           begin
+           UpdateRec;
+           dec(tUSQE)
+           end;
+        end;
 
-    goto 1;
-  end;
+     goto 1;
+     end;
 
   if SendedQSOs > 0 then
-  begin
-    ServerMessage.smMessage := SM_SERVERLOG_CHANGED_MESSAGE;
-    ServerMessage.smParam := SendedQSOs;
-    SendToNet(ServerMessage, SizeOf(ServerMessage));
-  end;
+     begin
+     ServerMessage.smMessage := SM_SERVERLOG_CHANGED_MESSAGE;
+     ServerMessage.smParam := SendedQSOs;
+     SendToNet(ServerMessage, SizeOf(ServerMessage));
+     end;
 
   CloseLogFile;
 end;
@@ -1077,16 +1124,16 @@ begin
 
   BytesSent := SendToNet(NetQSOInfoToSend, SizeOf(NetQSOInfoToSend)); // <> SizeOf(NetQSOInfoToSend)
   if BytesSent <> SizeOf(NetQSOInfoToSend) then
-  begin
-    rec.ceSendToServer := SendToServer;
-    rec.ceNeedSendToServerAE := SendToServerAE;
-  end
+     begin
+     rec.ceSendToServer := SendToServer;
+     rec.ceNeedSendToServerAE := SendToServerAE;
+     end
   else
-  begin
-    Result := True;
-//    if not SendToServer then dec(tUSQ);
-//    if not SendToServerAE then dec(tUSQE);
-  end;
+     begin
+     Result := True;
+ //    if not SendToServer then dec(tUSQ);
+ //    if not SendToServerAE then dec(tUSQE);
+     end;
 end;
 
 procedure ShowServerMessage(ServMess: TServerMessage);
@@ -1114,46 +1161,50 @@ var
   lplvcd                                : PNMLVCustomDraw;
 begin
   if Msg = WM_NOTIFY then
-  begin
-    with PNMHdr(lParam)^ do
-      case code of
-        NM_CUSTOMDRAW:
-          begin
-            lplvcd := PNMLVCustomDraw(lParam);
+     begin
+     with PNMHdr(lParam)^ do
+        begin
+        case code of
+          NM_CUSTOMDRAW:
+            begin
+              lplvcd := PNMLVCustomDraw(lParam);
 
-            case lplvcd.nmcd.dwDrawStage of
-              CDDS_PREPAINT:
-                begin
-                  Result := CDRF_NOTIFYITEMDRAW;
-                  Exit;
-                end;
-              CDDS_ITEMPREPAINT:
-              // (CDDS_SUBITEM or CDDS_PREPAINT):
-
-                begin
-                  //if StatusArray[CurrentDisplayedRow].ssPTTState = PTT_ON then
-                  //if LastStatus = sstPTT then
-                  if (StatusArray[CurrentDisplayedRow].ssStatusByte and (1 shl 0)) <> 0 then
-//                    if lplvcd.iSubItem = CurrentDisplayedRow then
+              case lplvcd.nmcd.dwDrawStage of
+                CDDS_PREPAINT:
                   begin
-                    if StatusArray[CurrentDisplayedRow].ssComputerID = ComputerID then
-                      lplvcd.clrTextBk := clYellow
-                    else
-                    begin
-//                        if (StatusArray[CurrentDisplayedRow].ssStatusByte and (1 shl 0)) <> 0 then
-//                          lplvcd.clrTextBk := clblue
-//                        else
-                      lplvcd.clrTextBk := clred;
-                      lplvcd.clrText := clwhite;
-                    end;
+                    Result := CDRF_NOTIFYITEMDRAW;
+                    Exit;
                   end;
+                CDDS_ITEMPREPAINT:
+                // (CDDS_SUBITEM or CDDS_PREPAINT):
 
-                end;
+                  begin
+                    //if StatusArray[CurrentDisplayedRow].ssPTTState = PTT_ON then
+                    //if LastStatus = sstPTT then
+                    if (StatusArray[CurrentDisplayedRow].ssStatusByte and (1 shl 0)) <> 0 then
+  //                    if lplvcd.iSubItem = CurrentDisplayedRow then
+                       begin
+                       if StatusArray[CurrentDisplayedRow].ssComputerID = ComputerID then
+                          begin
+                          lplvcd.clrTextBk := clYellow
+                          end
+                       else
+                          begin
+                          //                        if (StatusArray[CurrentDisplayedRow].ssStatusByte and (1 shl 0)) <> 0 then
+                          //                          lplvcd.clrTextBk := clblue
+                          //                        else
+                                                lplvcd.clrTextBk := clred;
+                                                lplvcd.clrText := clwhite;
+                          end;
+                       end;
+
+                  end;
+              end;
             end;
-          end;
 
-      end;
-  end;
+        end;
+        end;
+     end;
 
   Result := CallWindowProc(OldNetWndProc, hwnddlg, Msg, wParam, lParam);
 end;
@@ -1163,10 +1214,10 @@ var
   s                                     : StationStatusType;
 begin
   for s := Low(StationStatusType) to High(StationStatusType) do
-  begin
-    SendStationStatus(s);
-    Sleep(20);
-  end;
+     begin
+     SendStationStatus(s);
+     Sleep(20);
+     end;
 end;
 
 procedure SendSerialNumberChange(Status: TSerialNumberType);
@@ -1178,7 +1229,10 @@ begin
   ServerMessage.smParam := integer(Status);
   SendToNet(ServerMessage, SizeOf(ServerMessage));
   PreviousSerialNumberType := Status;
-  if Status = sntReserved then DisplayNextQSONumber;
+  if Status = sntReserved then
+     begin
+     DisplayNextQSONumber;
+     end;
 end;
 
 begin

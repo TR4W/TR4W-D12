@@ -77,9 +77,13 @@ var
    rcvExch  := BuildRxExchangeText(RXData);
 
    if RXData.ceXQSO then
+      begin
       sPrefix := 'X-QSO: '
+      end
    else
+      begin
       sPrefix := 'QSO: ';
+      end;
 
    // YYYY-MM-DD HHMM per Cabrillo spec (time is 4 digits, no colon).
    Result := AnsiString(Format(

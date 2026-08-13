@@ -87,11 +87,11 @@ begin
 
         elvc.fmt := LVCFMT_CENTER;
         for TempBand := Band160 to Band10 do
-        begin
-          elvc.pszText := BandStringsArrayWithOutSpaces[TempBand];
-          elvc.cx := 36;
-          uCommctrl.ListView_InsertColumnA(wh[mweStations], Ord(TempBand) + 1, elvc);
-        end;
+           begin
+           elvc.pszText := BandStringsArrayWithOutSpaces[TempBand];
+           elvc.cx := 36;
+           uCommctrl.ListView_InsertColumnA(wh[mweStations], Ord(TempBand) + 1, elvc);
+           end;
         FillStationsColumn;
       end;
 
@@ -126,12 +126,14 @@ begin
   end
   else
 }
-  begin
-    for Index := 0 to CallsignsList.Count - 1 do
-      if CallsignsList.GetQSOs(Index) > 0 then
-        AddCallsignToStationColumn(CallsignsList.Get(Index));
-    StationsListFileInUse := False;
-  end;
+     begin
+     for Index := 0 to CallsignsList.Count - 1 do
+       if CallsignsList.GetQSOs(Index) > 0 then
+          begin
+          AddCallsignToStationColumn(CallsignsList.Get(Index));
+          end;
+     StationsListFileInUse := False;
+     end;
   UpdateAllStationsList;
 end;
 
@@ -165,17 +167,19 @@ begin
   if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
   Call[length(Call) + 1] := #0;
   if i = -1 then
-  begin
-    ItemIndex := FindStationInCallsignColumn(Call);
+     begin
+     ItemIndex := FindStationInCallsignColumn(Call);
 
-    if ItemIndex = -1 then
-    begin
-      if StationsListFileInUse = False then ItemIndex := AddCallsignToStationColumn(Call) else Exit;
-    end
+     if ItemIndex = -1 then
+        begin
+        if StationsListFileInUse = False then ItemIndex := AddCallsignToStationColumn(Call) else Exit;
+        end
 
-  end
+     end
   else
-    ItemIndex := i;
+     begin
+     ItemIndex := i;
+     end;
   h := wh[mweStations];
 
   if not CallsignsList.FindCallsign(Call, Index) then Exit;
@@ -184,16 +188,16 @@ begin
   if QSOByMode then TempMode := ActiveMode else TempMode := Both;
 
   for TempIndex := 0 to 5 { BandType(Ord(StationsStartBand) + 5)} do
-  begin
-    QSOB4 := (da[TempMode] and (1 shl (Ord(StationsStartBand) + TempIndex))) <> 0;
-    if QSOB4 then p := '+' else p := nil;
-    ListView_SetItemText(h, ItemIndex, TempIndex + 1, p);
-  end;
+     begin
+     QSOB4 := (da[TempMode] and (1 shl (Ord(StationsStartBand) + TempIndex))) <> 0;
+     if QSOB4 then p := '+' else p := nil;
+     ListView_SetItemText(h, ItemIndex, TempIndex + 1, p);
+     end;
   if i = -1 then
-  begin
-    ListView_SetItemState(h, ItemIndex, LVIS_SELECTED, LVIS_SELECTED);
-    ListView_EnsureVisible(h, ItemIndex, False);
-  end;
+     begin
+     ListView_SetItemState(h, ItemIndex, LVIS_SELECTED, LVIS_SELECTED);
+     ListView_EnsureVisible(h, ItemIndex, False);
+     end;
 end;
 
 function FindStationInCallsignColumn(Call: CallString): integer;
@@ -216,17 +220,17 @@ begin
   if ActiveBand in [Band6..BandLight] then StationsStartBand := Band6 else StationsStartBand := Band160;
   elvc.Mask := LVCF_TEXT;
   for Index := 0 to 5 do
-  begin
-    elvc.pszText := BandStringsArrayWithOutSpaces[BandType(Index + Ord(StationsStartBand))];
-    ListView_SetColumn(wh[mweStations], Index + 1, elvc);
-  end;
+     begin
+     elvc.pszText := BandStringsArrayWithOutSpaces[BandType(Index + Ord(StationsStartBand))];
+     ListView_SetColumn(wh[mweStations], Index + 1, elvc);
+     end;
 
   tSetWindowRedraw(wh[mweStations], False);
   for Index := 0 to ListView_GetItemCount(wh[mweStations]) - 1 do
-  begin
-    Call[0] := ListView_GetItemText(wh[mweStations], Index, 0, @Call[1], 12);
-    UpdateStationStatus(CallString(Call), Index);
-  end;
+     begin
+     Call[0] := ListView_GetItemText(wh[mweStations], Index, 0, @Call[1], 12);
+     UpdateStationStatus(CallString(Call), Index);
+     end;
   tSetWindowRedraw(wh[mweStations], True);
   TF.Format(wsprintfBuffer, TC_STATIONSINMODE, ModeStringArray[ActiveMode]);
   Windows.SetWindowTextA(tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle, wsprintfBuffer);
@@ -259,10 +263,10 @@ end;
 procedure EnumSTATIONSTXT(FileString: PShortString);
 begin
   if FileString^[1] <> ';' then
-  begin
-    AddCallsignToStationColumn(FileString^);
-    StationsListFileInUse := True;
-  end;
+     begin
+     AddCallsignToStationColumn(FileString^);
+     StationsListFileInUse := True;
+     end;
 end;
 
 end.

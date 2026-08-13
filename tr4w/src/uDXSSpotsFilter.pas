@@ -66,29 +66,38 @@ begin
       begin
         DXSComandToSend := -1;
         for I := 0 to DXSSpotsFiltersCount - 1 do
-        begin
-          tCreateButtonWindow(
-            0,
-            DXSSpotsFiltersArray[I],
-            BS_AUTORADIOBUTTON or WS_CHILD or WS_VISIBLE or WS_TABSTOP,
-            10,
-            I * 20 + 20,
-            150,
-            20,
-            hwnddlg,
-            I + 100);
-        end;
+           begin
+           tCreateButtonWindow(
+             0,
+             DXSSpotsFiltersArray[I],
+             BS_AUTORADIOBUTTON or WS_CHILD or WS_VISIBLE or WS_TABSTOP,
+             10,
+             I * 20 + 20,
+             150,
+             20,
+             hwnddlg,
+             I + 100);
+           end;
 
       end;
 
     WM_COMMAND:
       begin
         if wParam = 1 then
-        begin
-          if DXSComandToSend <> -1 then SendViaSocket(DXSSpotsFiltersArray[DXSComandToSend]);
-        end;
-        if wParam = 2 then goto 1;
-        if wParam in [100..DXSSpotsFiltersCount - 1 + 100] then DXSComandToSend := wParam - 100;
+           begin
+           if DXSComandToSend <> -1 then
+              begin
+              SendViaSocket(DXSSpotsFiltersArray[DXSComandToSend]);
+              end;
+           end;
+        if wParam = 2 then
+           begin
+           goto 1;
+           end;
+        if wParam in [100..DXSSpotsFiltersCount - 1 + 100] then
+           begin
+           DXSComandToSend := wParam - 100;
+           end;
       end;
     WM_CLOSE: 1: EndDialog(hwnddlg, 0);
   end;

@@ -156,7 +156,9 @@ begin
    // BCD is LSB first — walk backwards to get MSB first decimal string.
    freqStr := '';
    for i := Length(bcd) downto 1 do
+      begin
       freqStr := freqStr + Format('%.2d', [IcomBCDToByte(Ord(bcd[i]))]);
+      end;
    Result := StrToInt64Def(freqStr, 0);
 end;
 
@@ -181,10 +183,19 @@ function IcomWPMToValue(wpm: Integer): Byte;
 var
    v: Integer;
 begin
-   if wpm < 6  then wpm := 6;
-   if wpm > 48 then wpm := 48;
+   if wpm < 6  then
+      begin
+      wpm := 6;
+      end;
+   if wpm > 48 then
+      begin
+      wpm := 48;
+      end;
    v := ((wpm - 6) * 255 + 21) div 42;
-   if v > 255 then v := 255;
+   if v > 255 then
+      begin
+      v := 255;
+      end;
    Result := Byte(v);
 end;
 

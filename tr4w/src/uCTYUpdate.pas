@@ -68,15 +68,21 @@ begin
    Result := 0;
    P := Pos('VER', S);
    if P = 0 then
+      begin
       Exit;
+      end;
    Inc(P, 3);  // advance past 'VER'
    if (P + 7) > Length(S) then
+      begin
       Exit;
+      end;
    Digits := '';
    for I := P to P + 7 do
       begin
       if not (S[I] in ['0'..'9']) then
+         begin
          Exit;
+         end;
       Digits := Digits + S[I];
       end;
    Result := StrToIntDef(Digits, 0);
@@ -108,25 +114,33 @@ begin
    // Narrow to the substring starting at the first <item>
    P := Pos('<item>', AXML);
    if P = 0 then
+      begin
       Exit;
+      end;
    Sub := Copy(AXML, P, Length(AXML));
 
    // Find <description> within that item
    P := Pos('<description>', Sub);
    if P = 0 then
+      begin
       Exit;
+      end;
    Inc(P, Length('<description>'));
    Sub := Copy(Sub, P, Length(Sub));
 
    // Trim at closing tag so we don't scan into the next item
    P := Pos('</description>', Sub);
    if P > 0 then
+      begin
       Sub := Copy(Sub, 1, P - 1);
+      end;
 
    // Extract VER\d{8} date
    ALatestDate := ParseVERDate(Sub);
    if ALatestDate = 0 then
+      begin
       Exit;
+      end;
 
    // Extract CTY-\d+ numeric build (for log display only)
    P := Pos('CTY-', Sub);
@@ -166,7 +180,9 @@ begin
    Reset(F);
    {$I+}
    if IOResult <> 0 then
+      begin
       Exit;
+      end;
    try
       while not EOF(F) do
          begin
@@ -175,10 +191,14 @@ begin
          // occurrences of 'VER' in the file.
          P := Pos('=VER', Line);
          if P = 0 then
+            begin
             Continue;
+            end;
          Inc(P, 4);  // advance past '=VER'
          if (P + 7) > Length(Line) then
+            begin
             Continue;
+            end;
          Digits := '';
          for I := P to P + 7 do
             begin
@@ -193,7 +213,9 @@ begin
             begin
             Result := StrToIntDef(Digits, 0);
             if Result > 0 then
+               begin
                Exit;
+               end;
             end;
          end;
    finally
@@ -350,9 +372,13 @@ end;
 procedure TCTYDownloadThread.Execute;
 begin
    if DownloadFileToPath(CTY_DOWNLOAD_URL, FTargetFile) then
+      begin
       PostMessage(FNotifyWnd, WM_CTY_DOWNLOAD_DONE, 1, 0)
+      end
    else
+      begin
       PostMessage(FNotifyWnd, WM_CTY_DOWNLOAD_DONE, 0, 0);
+      end;
 end;
 
 // ---------------------------------------------------------------------------

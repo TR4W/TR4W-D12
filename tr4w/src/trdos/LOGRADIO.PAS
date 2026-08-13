@@ -994,13 +994,13 @@ begin
      end;
 
   if IsCWByCATActive(InActiveRadioPtr) then
-  begin
-  if InActiveRadioPtr.CWByCAT_Sending then
      begin
-     InActiveRadioPtr.CWByCAT_Sending := false;
-     callInactive := true;
+     if InActiveRadioPtr.CWByCAT_Sending then
+        begin
+        InActiveRadioPtr.CWByCAT_Sending := false;
+        callInactive := true;
+        end;
      end;
-  end;
 
   if callInactive then
      begin
@@ -1072,13 +1072,13 @@ procedure LinkToActiveRadio(IntRadioType: InterfacedRadioType;
 begin
    if ActiveRadio = RadioOne then
       begin
-//      IntRadioType := Radio1.RadioModel;
-//      SerialPort := Radio1.tCATPortType;
+      //      IntRadioType := Radio1.RadioModel;
+      //      SerialPort := Radio1.tCATPortType;
       end
    else
       begin
-//      IntRadioType := Radio2.RadioModel;
-//      SerialPort := Radio2.tCATPortType;
+      //      IntRadioType := Radio2.RadioModel;
+      //      SerialPort := Radio2.tCATPortType;
       end;
 end;
 
@@ -1096,9 +1096,13 @@ var
 
 begin
    if ActiveRadio = RadioOne then
+      begin
       ActiveNetObj := Radio1.tFactoryObject
+      end
    else
+      begin
       ActiveNetObj := Radio2.tFactoryObject;
+      end;
 
    if ActiveNetObj <> nil then
       begin
@@ -1166,9 +1170,13 @@ var
 
 begin
    if ActiveRadio = RadioOne then
+      begin
       ActiveNetObj := Radio1.tFactoryObject
+      end
    else
+      begin
       ActiveNetObj := Radio2.tFactoryObject;
+      end;
 
    if ActiveNetObj <> nil then
       begin
@@ -1236,9 +1244,13 @@ var
 
 begin
    if ActiveRadio = RadioOne then
+      begin
       ActiveNetObj := Radio1.tFactoryObject
+      end
    else
+      begin
       ActiveNetObj := Radio2.tFactoryObject;
+      end;
 
    if ActiveNetObj <> nil then
       begin
@@ -1303,9 +1315,13 @@ var
 
 begin
    if ActiveRadio = RadioOne then
+      begin
       ActiveNetObj := Radio1.tFactoryObject
+      end
    else
+      begin
       ActiveNetObj := Radio2.tFactoryObject;
+      end;
 
    if ActiveNetObj <> nil then
       begin
@@ -1335,9 +1351,13 @@ var
 
 begin
    if ActiveRadio = RadioOne then
+      begin
       ActiveNetObj := Radio1.tFactoryObject
+      end
    else
+      begin
       ActiveNetObj := Radio2.tFactoryObject;
+      end;
 
    if ActiveNetObj <> nil then
       begin
@@ -2138,9 +2158,9 @@ begin
       end;
 
       if CurrentStatus.ExtendedMode = PreviousStatus.ExtendedMode then
-      begin
-      FilteredStatus.ExtendedMode := CurrentStatus.ExtendedMode;
-      end;
+         begin
+         FilteredStatus.ExtendedMode := CurrentStatus.ExtendedMode;
+         end;
 
    if CurrentStatus.Band = PreviousStatus.Band then
       begin
@@ -2414,7 +2434,7 @@ begin
 
    // Check if we should use HamLib Direct (works with both serial and network)
    if Self.UseHamLib then
-   begin
+      begin
       logger.Info('[%s.SetUpRadioInterface] Using HamLib Direct', [Self.RadioName]);
 
       // Create HamLib Direct radio via factory
@@ -2424,11 +2444,11 @@ begin
       Self.AdoptFactoryObject;
 
       if Self.tFactoryObject <> nil then
-      begin
-         if Self.tFactoryObject is THamLibDirect then
          begin
-            with THamLibDirect(Self.tFactoryObject) do
+         if Self.tFactoryObject is THamLibDirect then
             begin
+            with THamLibDirect(Self.tFactoryObject) do
+               begin
                // THE OPERATOR'S OVERRIDE NOW ACTUALLY WORKS.  RADIO n HAMLIB ID
                // has had a config command and a dialog row, but NOTHING read it
                // at connect -- this line always took the table value -- so
@@ -2465,36 +2485,40 @@ begin
 
                // Check if using network or serial connection
                if tCATPortType = Network then
-               begin
+                  begin
                   // Network connection
                   logger.Info('[%s] HamLib via network: %s:%d',
                               [Self.RadioName, Self.IPAddress, Self.RadioTCPPort]);
                   UseIPAddress := True;
                   IPAddress := Self.IPAddress;
                   IPPort := Self.RadioTCPPort;
-               end
+                  end
                else if tCATPortType in SerialPorts then
-               begin
+                  begin
                   // Serial connection
                   COMPortName := ConvertPortTypeToCOMString(Self.tCATPortType);
                   BaudRate := Self.RadioBaudRate;
                   logger.Info('[%s] HamLib via serial: %s at %d baud',
                               [Self.RadioName, COMPortName, BaudRate]);
                   UseIPAddress := False;
-               end;
+                  end;
 
                if Self.ReceiverAddress > 0 then
+                  begin
                   CIVAddress := IntToStr(Self.ReceiverAddress);
+                  end;
+               end;
             end;
-         end;
 
          // Connect the radio
          Self.tFactoryObject.Connect;
          logger.Info('[%s.SetUpRadioInterface] HamLib Direct connected', [Self.RadioName]);
-      end
+         end
       else
+         begin
          logger.error('[%s.SetUpRadioInterface] Failed to create HamLib Direct radio', [Self.RadioName]);
-   end
+         end;
+      end
    else if tCATPortType in SerialPorts then
       begin
       // Check if we should use modern radio class (e.g., K4, Icom) or legacy serial code
@@ -2679,7 +2703,7 @@ begin
          end;
 
       if Self.tFactoryObject <> nil then
-      begin
+         begin
          // rigLabel and StartupCommand are handed over by AdoptFactoryObject at
          // each construction site above, so the network path no longer sets
          // rigLabel here -- it was the only path that ever did.
@@ -2701,7 +2725,7 @@ begin
          // handles the very first connect as well.  Issue #436.
          logger.Info('[%s.SetUpRadioInterface] Network radio %s:%d configured; Connect deferred to polling thread (main thread not blocked)',
                      [Self.RadioName, Self.IPAddress, Self.RadioTCPPort]);
-      end
+         end
       else
          begin
          // A factory radio has no legacy fallback -- if the factory could not
@@ -2886,7 +2910,9 @@ begin
    // tell a COMMANDED QSY (bandmap/spot/typed freq -- a call may have been
    // placed deliberately) from a MANUAL dial QSY (which #795 wants to clear).
    if VFO = 'A' then
+      begin
       Self.tCommandedQSYFreq := Freq;
+      end;
 
    // The ~600-line `case rt of` that used to follow -- every family's own
    // frequency/mode encoding, and 12 of this unit's 22 per-model tests -- is

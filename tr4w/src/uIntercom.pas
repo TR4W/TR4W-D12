@@ -103,7 +103,10 @@ begin
 
     WM_COMMAND:
       begin
-        if HiWord(wParam) = LBN_DBLCLK then ProcessMenu(menu_send_message);
+        if HiWord(wParam) = LBN_DBLCLK then
+           begin
+           ProcessMenu(menu_send_message);
+           end;
       end;
 
     WM_CLOSE: 1:
@@ -122,7 +125,9 @@ var
   lpThreadId                       : DWORD;
 begin
   if tr4w_WindowsArray[tw_INTERCOMWINDOW_INDEX].WndHandle = 0 then
-    ProcessMenu(menu_windows_intercom);
+     begin
+     ProcessMenu(menu_windows_intercom);
+     end;
 
   // Issue #997: manual cdecl varargs push -> TF.Format (itself wsprintfA, so
   // identical marshalling). The asm pushes were right-to-left, so the format
@@ -132,16 +137,16 @@ begin
   stored := TF.Format(wsprintfBuffer, '%s %C :   %s', GetTimeString, Ord(Sender), mes);
 
   if IntercomFileenable then
-  begin
-    h := CreateFileA(TR4W_INTERCOM_FILENAME, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
-    if h <> INVALID_HANDLE_VALUE then
-    begin
-      SetFilePointer(h, 0, nil, FILE_END);
-      sWriteFile(h, wsprintfBuffer, stored);
-      sWriteFileFromString(h, #13#10);
-      CloseHandle(h);
-    end;
-  end;
+     begin
+     h := CreateFileA(TR4W_INTERCOM_FILENAME, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
+     if h <> INVALID_HANDLE_VALUE then
+        begin
+        SetFilePointer(h, 0, nil, FILE_END);
+        sWriteFile(h, wsprintfBuffer, stored);
+        sWriteFileFromString(h, #13#10);
+        CloseHandle(h);
+        end;
+     end;
   h := IntercomListBoxHandle;
   if h = 0 then Exit;
   LastItemInIntercomListBox := tLB_ADDSTRING(h, @wsprintfBuffer);
@@ -162,15 +167,15 @@ var
 //  SendMessage(h, LB_GETITEMRECT, LastItemInIntercomListBox, integer(@r));
 //  DC := Windows.GetWindowDC(h);
   while counter < 49 do
-  begin
-    SendMessage(h, LB_SETSEL, counter mod 2, LastItemInIntercomListBox);
+     begin
+     SendMessage(h, LB_SETSEL, counter mod 2, LastItemInIntercomListBox);
 
-//    Windows.TextOutA(DC, 0, r.Top, inttopchar(counter), 2);
-//Windows.InvertRect(DC, r);
-//    InvalidateRect(h, @r, true);
-    Sleep(150);
-    inc(counter);
-  end;
+ //    Windows.TextOutA(DC, 0, r.Top, inttopchar(counter), 2);
+ //Windows.InvertRect(DC, r);
+ //    InvalidateRect(h, @r, true);
+     Sleep(150);
+     inc(counter);
+     end;
 end;
 
 procedure EnumINTERCOMTXT(FileString: PShortString);

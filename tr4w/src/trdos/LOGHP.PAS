@@ -46,9 +46,13 @@ begin
   //    GoToXY (40, 1);
 
   if Mode = Degrees then
-    Write('Degrees mode (use M to toggle)')
+     begin
+     Write('Degrees mode (use M to toggle)')
+     end
   else
-    Write('Radian mode (use M to toggle)');
+     begin
+     Write('Radian mode (use M to toggle)');
+     end;
 end;
 
 procedure ShowStack;

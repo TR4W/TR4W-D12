@@ -112,71 +112,75 @@ begin
         QTCTXButtonsPChar[1] := @QRVString[1];
         {Custom buttons}
         for I := 0 to QTCCustomMessages do
-        begin
-          if I = 0 then
-            Number := BS_VCENTER or BS_MULTILINE or WS_TABSTOP or BS_PUSHBUTTON or BS_CENTER or WS_CHILD or WS_VISIBLE + BS_DEFPUSHBUTTON
-          else
-            Number := BS_PUSHBUTTON + BS_CENTER + BS_MULTILINE + WS_CHILD + WS_VISIBLE + WS_TABSTOP;
+           begin
+           if I = 0 then
+              begin
+              Number := BS_VCENTER or BS_MULTILINE or WS_TABSTOP or BS_PUSHBUTTON or BS_CENTER or WS_CHILD or WS_VISIBLE + BS_DEFPUSHBUTTON
+              end
+           else
+              begin
+              Number := BS_PUSHBUTTON + BS_CENTER + BS_MULTILINE + WS_CHILD + WS_VISIBLE + WS_TABSTOP;
+              end;
 
-          tCreateButtonWindow(
-            0,
-            QTCTXButtonsPChar[I],
-            Number,
-            5 + I * 55,
-            255,
-             53,
-      //      QTCHEIGHT * 2,
-        QTCHEIGHT * 4,       // n4af 04.40.2
-            hwnddlg,
-            I + 100
-            );
-        end;
+           tCreateButtonWindow(
+             0,
+             QTCTXButtonsPChar[I],
+             Number,
+             5 + I * 55,
+             255,
+              53,
+       //      QTCHEIGHT * 2,
+         QTCHEIGHT * 4,       // n4af 04.40.2
+             hwnddlg,
+             I + 100
+             );
+           end;
 
         QTCSWindow := hwnddlg;
         QTCWasSend := 0;
         LastSendedQTCHour := -1;
 
         for I := 1 to NumberMessagesToBeSent do
-        begin
-          Number := QTCsToBeSendArray[I].qsNumber;
-          Time := QTCsToBeSendArray[I].qsTime;
-          p := @QTCsToBeSendArray[I].qsCall[1];
-          // Issue #997: asm wsprintf-push -> TF.Format. cdecl-reverse -> Time, p, Number.
-          TF.Format(wsprintfBuffer, '%04u %-8s %u', Time, p, Number);       // n4af 04.40.2
-          {QTC}
-          tCreateStaticWindow
-            (
-            wsprintfBuffer,
-            WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_LEFT or WS_VISIBLE,
-             70,
+           begin
+           Number := QTCsToBeSendArray[I].qsNumber;
+           Time := QTCsToBeSendArray[I].qsTime;
+           p := @QTCsToBeSendArray[I].qsCall[1];
+           // Issue #997: asm wsprintf-push -> TF.Format. cdecl-reverse -> Time, p, Number.
+           TF.Format(wsprintfBuffer, '%04u %-8s %u', Time, p, Number);       // n4af 04.40.2
+           {QTC}
+           tCreateStaticWindow
+             (
+             wsprintfBuffer,
+             WS_CHILD or SS_SUNKEN or SS_NOTIFY or SS_LEFT or WS_VISIBLE,
+              70,
 
-           (I - 1) * (QTCHEIGHT + QTCROWSDIS) + 5,
-
-         410,     // n4af 4.32.4
-            QTCHEIGHT,
-            hwnddlg,
-            I + 200
-                    );
-          // Issue #997: asm tWM_SETFONT (EAX = the static window just created with
-          // child id I+200) -> re-fetch by id and set its font.
-          tWM_SETFONT(GetDlgItem(hwnddlg, I + 200), MainWindowEditFont);
-
-          // Issue #997: asm wsprintf-push -> TF.Format.
-          TF.Format(wsprintfBuffer, '&%u', i);
-          {ALT+x}
-          tCreateButtonWindow
-            (
-            WS_EX_STATICEDGE,
-            wsprintfBuffer,
-            WS_TABSTOP or WS_DISABLED or BS_PUSHBUTTON or BS_CENTER or WS_CHILD or WS_VISIBLE,
-             380 - 375,
             (I - 1) * (QTCHEIGHT + QTCROWSDIS) + 5,
-             55,
-           //40,      // 4.40.2
-            QTCHEIGHT,
-            hwnddlg,
-            I + 200);
-        end;
+
+          410,     // n4af 4.32.4
+             QTCHEIGHT,
+             hwnddlg,
+             I + 200
+                     );
+           // Issue #997: asm tWM_SETFONT (EAX = the static window just created with
+           // child id I+200) -> re-fetch by id and set its font.
+           tWM_SETFONT(GetDlgItem(hwnddlg, I + 200), MainWindowEditFont);
+
+           // Issue #997: asm wsprintf-push -> TF.Format.
+           TF.Format(wsprintfBuffer, '&%u', i);
+           {ALT+x}
+           tCreateButtonWindow
+             (
+             WS_EX_STATICEDGE,
+             wsprintfBuffer,
+             WS_TABSTOP or WS_DISABLED or BS_PUSHBUTTON or BS_CENTER or WS_CHILD or WS_VISIBLE,
+              380 - 375,
+             (I - 1) * (QTCHEIGHT + QTCROWSDIS) + 5,
+              55,
+            //40,      // 4.40.2
+             QTCHEIGHT,
+             hwnddlg,
+             I + 200);
+           end;
         SetDlgItemTextA(hwnddlg, 310, '1&0');
 
         ArrowWindow :=
@@ -197,9 +201,13 @@ begin
     WM_ACTIVATE:
       begin
         if LoWord(wParam) = WA_INACTIVE then
-          for I := QTC_HK_PAGEUP {QTC_HK_RETURN} to QTC_HK_F10 do UnregisterHotKey(hwnddlg, I)
+           begin
+           for I := QTC_HK_PAGEUP {QTC_HK_RETURN} to QTC_HK_F10 do UnregisterHotKey(hwnddlg, I)
+           end
         else
-          RegQTCSHotKeys;
+           begin
+           RegQTCSHotKeys;
+           end;
       end;
 
     WM_HOTKEY:
@@ -219,13 +227,16 @@ begin
     WM_CTLCOLORSTATIC:
       begin
         SetBkMode(HDC(wParam), TRANSPARENT);
-        if GetDlgCtrlID(lParam) <= QTCWasSend + 200 then RESULT := BOOL(tr4wBrushArray[trYellow]);
+        if GetDlgCtrlID(lParam) <= QTCWasSend + 200 then
+           begin
+           RESULT := BOOL(tr4wBrushArray[trYellow]);
+           end;
 
         if lParam = integer(ArrowWindow) then
-        begin
-          SetTextColor(HDC(wParam), $FFFFFF);
-          RESULT := BOOL(tr4wBrushArray[trBlue]);
-        end;
+           begin
+           SetTextColor(HDC(wParam), $FFFFFF);
+           RESULT := BOOL(tr4wBrushArray[trBlue]);
+           end;
       end;
     WM_CLOSE:
       begin
@@ -246,16 +257,19 @@ begin
 
           QTC_SEND_NEXT:
             begin
-              if QTCWasSend = NumberMessagesToBeSent - 1 then Windows.ShowWindow(ArrowWindow, SW_HIDE);
+              if QTCWasSend = NumberMessagesToBeSent - 1 then
+                 begin
+                 Windows.ShowWindow(ArrowWindow, SW_HIDE);
+                 end;
 
               if QTCWasSend = NumberMessagesToBeSent then
-              begin
-                // Issue #997: asm wsprintf-push -> TF.Format (cdecl-reverse: QTCNumber, QTCWasSend).
-                TF.Format(wsprintfBuffer, 'QSL %u/%u ?', QTCNumber, QTCWasSend);
-                if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
-                SaveQTCS;
-                Exit;
-              end ;
+                 begin
+                 // Issue #997: asm wsprintf-push -> TF.Format (cdecl-reverse: QTCNumber, QTCWasSend).
+                 TF.Format(wsprintfBuffer, 'QSL %u/%u ?', QTCNumber, QTCWasSend);
+                 if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
+                 SaveQTCS;
+                 Exit;
+                 end ;
               inc(QTCWasSend);
 
               EnableWindowTrue(hwnddlg, QTCWasSend + 200);
@@ -275,7 +289,10 @@ begin
             begin
               if QTCWasSend = 0 then Exit;
               TempString := IntToStr(QTCsToBeSendArray[QTCWasSend].qsTime);
-              while length(TempString) <> 4 do TempString := '0' + TempString;
+              while length(TempString) <> 4 do
+                 begin
+                 TempString := '0' + TempString;
+                 end;
               SendStringAndStop(TempString);
             end;
 
@@ -296,13 +313,22 @@ begin
           QTC_SEND_STOP:
             begin
               if YesOrNo(hwnddlg, TC_DOYOUREALLYWANTSTOPNOW) = IDno then Exit;
-              if QTCWasSend = 0 then goto ABORT_QTC;
+              if QTCWasSend = 0 then
+                 begin
+                 goto ABORT_QTC;
+                 end;
 
               // Issue #997: asm wsprintf-push -> TF.Format.
               TF.Format(wsprintfBuffer, TC_WASMESSAGENUMBERCONFIRMED, QTCWasSend);
 
-              if YesOrNo(hwnddlg, wsprintfBuffer) = IDno then dec(QTCWasSend);
-              if QTCWasSend < 1 then goto ABORT_QTC;
+              if YesOrNo(hwnddlg, wsprintfBuffer) = IDno then
+                 begin
+                 dec(QTCWasSend);
+                 end;
+              if QTCWasSend < 1 then
+                 begin
+                 goto ABORT_QTC;
+                 end;
               SaveQTCS;
             end;
           301..310: SendQTC(wParam - 300);
@@ -356,10 +382,13 @@ begin
   Format := FormatArray[QTCQRS, QTCExtraSpace, TempQTCMinutes];
 
   if QTCMinutes then
-  begin
-    if LastSendedQTCHour = (Time div 100) then Time := Time mod 100;
-    LastSendedQTCHour := QTCsToBeSendArray[QTC].qsTime div 100;
-  end;
+     begin
+     if LastSendedQTCHour = (Time div 100) then
+        begin
+        Time := Time mod 100;
+        end;
+     LastSendedQTCHour := QTCsToBeSendArray[QTC].qsTime div 100;
+     end;
 
   SetLength(TempString, 160);
   // Issue #997: asm wsprintf-push -> TF.Format (QUALIFIED -- the local var
@@ -375,29 +404,31 @@ var
 
 begin
   for I := 1 to QTCWasSend do 
-  begin
-    IncrementQTCCount(QTCCallsign);
-    Windows.ZeroMemory(@QTCRXData, SizeOf(ContestExchange));
-    QTCRXData.ceRecordKind := rkQTCS;
-//    tGetQSOSystemTime(QTCRXData.tSysTime);
-//    QTCRXData.Band := ActiveBand;
-//    QTCRXData.Mode := ActiveMode;
-//    QTCRXData.ceComputerID := ComputerID;
-    QTCRXData.Callsign := QTCCallsign;
-    {Time}
-    QTCRXData.NumberSent := QTCsToBeSendArray[I].qsTime;
-    {EU Callsign}
-    QTCRXData.Kids := QTCsToBeSendArray[I].qsCall;
-    {Number}
-    QTCRXData.NumberReceived := QTCsToBeSendArray[I].qsNumber;
-    {QTCNumber}
-    QTCRXData.RandomCharsReceived := IntToStr(QTCNumber) + '/' + IntToStr(NumberMessagesToBeSent);
-    {QTCNumberQTCBooksSent}
-    QTCRXData.QSOPoints := QTCNumber;
-//    tAddQSOToLog(QTCRXData);
-    if AddRecordToLogAndSendToNetwork(QTCRXData) then
-      Sleep(100);
-  end;
+     begin
+     IncrementQTCCount(QTCCallsign);
+     Windows.ZeroMemory(@QTCRXData, SizeOf(ContestExchange));
+     QTCRXData.ceRecordKind := rkQTCS;
+ //    tGetQSOSystemTime(QTCRXData.tSysTime);
+ //    QTCRXData.Band := ActiveBand;
+ //    QTCRXData.Mode := ActiveMode;
+ //    QTCRXData.ceComputerID := ComputerID;
+     QTCRXData.Callsign := QTCCallsign;
+     {Time}
+     QTCRXData.NumberSent := QTCsToBeSendArray[I].qsTime;
+     {EU Callsign}
+     QTCRXData.Kids := QTCsToBeSendArray[I].qsCall;
+     {Number}
+     QTCRXData.NumberReceived := QTCsToBeSendArray[I].qsNumber;
+     {QTCNumber}
+     QTCRXData.RandomCharsReceived := IntToStr(QTCNumber) + '/' + IntToStr(NumberMessagesToBeSent);
+     {QTCNumberQTCBooksSent}
+     QTCRXData.QSOPoints := QTCNumber;
+ //    tAddQSOToLog(QTCRXData);
+     if AddRecordToLogAndSendToNetwork(QTCRXData) then
+        begin
+        Sleep(100);
+        end;
+     end;
   inc(NumberQTCBooksSent);
   SetSendedQSOs;
   EndDialog(QTCSWindow, 0);
@@ -418,20 +449,28 @@ begin
   1:
   Windows.ReadFile(LogHandle, TempRXData, SizeOf(ContestExchange), pNumberOfBytesRead, nil);
   if pNumberOfBytesRead = SizeOf(ContestExchange) then
-  begin
-    if TempRXData.ceWasSendInQTC = True then goto 1;
-    if (TempRXData.ceQSOID1 = QTCsToBeSendArray[SignedQSOs].qsQSOID1) and (TempRXData.ceQSOID2 = QTCsToBeSendArray[SignedQSOs].qsQSOID2) then
-    begin
-      TempRXData.ceWasSendInQTC := True;
-      tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_CURRENT);
-      sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
-      if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
-        Sleep(50);
-      if SignedQSOs = QTCWasSend then goto 2;
-      inc(SignedQSOs);
-    end;
-    goto 1;
-  end;
+     begin
+     if TempRXData.ceWasSendInQTC = True then
+        begin
+        goto 1;
+        end;
+     if (TempRXData.ceQSOID1 = QTCsToBeSendArray[SignedQSOs].qsQSOID1) and (TempRXData.ceQSOID2 = QTCsToBeSendArray[SignedQSOs].qsQSOID2) then
+        begin
+        TempRXData.ceWasSendInQTC := True;
+        tSetFilePointer(-1 * SizeOf(ContestExchange), FILE_CURRENT);
+        sWriteFile(LogHandle, TempRXData, SizeOf(ContestExchange));
+        if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
+           begin
+           Sleep(50);
+           end;
+        if SignedQSOs = QTCWasSend then
+           begin
+           goto 2;
+           end;
+        inc(SignedQSOs);
+        end;
+     goto 1;
+     end;
   2:
   CloseLogFile;
 

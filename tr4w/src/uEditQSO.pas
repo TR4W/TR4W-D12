@@ -160,7 +160,9 @@ begin
         IndexInMap := IndexOfItemInLogForEdit;
 
         if not OpenLogFile then
-          goto 1;
+           begin
+           goto 1;
+           end;
 
         tSetFilePointer(IndexInMap, FILE_BEGIN);
         Windows.ReadFile(LogHandle, EditableQSORXData, SizeOf(ContestExchange),
@@ -168,24 +170,30 @@ begin
         CloseLogFile;
 
         if EditableQSORXData.ceRecordKind = rkNote then
-        begin
-          ShowNote(EditableQSORXData);
-          goto 1;
-        end;
+           begin
+           ShowNote(EditableQSORXData);
+           goto 1;
+           end;
 
         if EditableQSORXData.MP3Record then
           if FileExists(DeleteSlashes(MakeMP3Filename(@EditableQSORXData))) then
-            EnableWindowTrue(hwnddlg, FLD_PLAY_BUTTON);
+             begin
+             EnableWindowTrue(hwnddlg, FLD_PLAY_BUTTON);
+             end;
 
         if (EditableQSORXData.ceQSO_Skiped) or (EditableQSORXData.ceRecordKind
           <> rkQSO) then
-          goto 1;
+           begin
+           goto 1;
+           end;
 
         //        MakeEditWindows;
         //        EditabledLogFocused := True;
         for IndexInMap := 180 to 184 do            
-          Windows.SendDlgItemMessage(hwnddlg, IndexInMap, EM_SETLIMITTEXT, 2,
-            0);
+           begin
+           Windows.SendDlgItemMessage(hwnddlg, IndexInMap, EM_SETLIMITTEXT, 2,
+             0);
+           end;
         {ComputerID}
         Windows.SendDlgItemMessage(hwnddlg, FLD_COMPUTERID, EM_SETLIMITTEXT, 1,
           0);
@@ -212,35 +220,45 @@ begin
           @EditableQSORXData.Callsign[1]);
 
         for bt := Band160 to NoBand do
-          tCB_ADDSTRING_PCHAR(hwnddlg, FLD_BAND, BandStringsArrayWithOutSpaces
-            {BandStringsArray} [bt]);
+           begin
+           tCB_ADDSTRING_PCHAR(hwnddlg, FLD_BAND, BandStringsArrayWithOutSpaces
+             {BandStringsArray} [bt]);
+           end;
         if not SO2R_Swap then
-        tCB_SETCURSEL(hwnddlg, FLD_BAND, Ord(EditableQSORXData.Band))
+           begin
+           tCB_SETCURSEL(hwnddlg, FLD_BAND, Ord(EditableQSORXData.Band))
+           end
          else
+            begin
             tCB_SETCURSEL(hwnddlg, FLD_BAND, ord(inAct_Band));
+            end;
 
         // Add new modes from extended modes
         for extMode := Low(ExtendedModeType) to High(ExtendedModeType) do
-        begin
-          tCB_ADDSTRING_PCHAR(hwnddlg, FLD_MODE, ExtendedModeStringArray[extMode]);
-        end;
+           begin
+           tCB_ADDSTRING_PCHAR(hwnddlg, FLD_MODE, ExtendedModeStringArray[extMode]);
+           end;
         if EditableQSORXData.ExtMode = eNoMode then
-        begin
-          case EditableQSORXData.Mode of
-            CW: EditableQSORXData.ExtMode := eCW;
-            Phone: EditableQSORXData.ExtMode := eSSB;
-            Digital: EditableQSORXData.ExtMode := eRTTY;
-            FM: EditableQSORXData.ExtMode := eFM;
-          end; // of case
-        end;
+           begin
+           case EditableQSORXData.Mode of
+             CW: EditableQSORXData.ExtMode := eCW;
+             Phone: EditableQSORXData.ExtMode := eSSB;
+             Digital: EditableQSORXData.ExtMode := eRTTY;
+             FM: EditableQSORXData.ExtMode := eFM;
+           end; // of case
+           end;
 
         tCB_SETCURSEL(hwnddlg, FLD_MODE, Ord(EditableQSORXData.ExtMode));
 
 
         if not SO2R_Swap then
-        tSetDlgItemIntFalse(hwnddlg, FLD_FREQUENCY, EditableQSORXData.Frequency)
+           begin
+           tSetDlgItemIntFalse(hwnddlg, FLD_FREQUENCY, EditableQSORXData.Frequency)
+           end
            else
+              begin
               tSetDlgItemIntFalse(hwnddlg, FLD_FREQUENCY, inAct_Freq);
+              end;
 
         SendDlgItemMessage(hwnddlg, 180, DTM_SETFORMAT, 0, integer(PChar(f)));
 
@@ -263,11 +281,15 @@ begin
           Cardinal(EditableQSORXData.QSOPoints), True);
 
         if EditableQSORXData.Age <> 0 then
-          tSetDlgItemIntFalse(hwnddlg, FLD_AGE, EditableQSORXData.Age);
+           begin
+           tSetDlgItemIntFalse(hwnddlg, FLD_AGE, EditableQSORXData.Age);
+           end;
 
         if EditableQSORXData.Check <> 0 then
-          tSetDlgItemIntFalse(hwnddlg, FLD_CHECK,
-            Cardinal(EditableQSORXData.Check));
+           begin
+           tSetDlgItemIntFalse(hwnddlg, FLD_CHECK,
+             Cardinal(EditableQSORXData.Check));
+           end;
 
         Windows.SetDlgItemTextA(hwnddlg, FLD_CHAPTER,
           @EditableQSORXData.Chapter[1]);
@@ -292,8 +314,10 @@ begin
           Cardinal(EditableQSORXData.NumberSent), True);
 
         if EditableQSORXData.NumberReceived <> -1 then
-          tSetDlgItemIntFalse(hwnddlg, FLD_NUMBERRECEIVED,
-            EditableQSORXData.NumberReceived);
+           begin
+           tSetDlgItemIntFalse(hwnddlg, FLD_NUMBERRECEIVED,
+             EditableQSORXData.NumberReceived);
+           end;
 
         SetDlgItemTextA(hwnddlg, 148, @EditableQSORXData.DXQTH[1]);
 
@@ -305,8 +329,10 @@ begin
         SetDlgItemTextA(hwnddlg, FLD_PREFIX, @EditableQSORXData.Prefix[1]);
 
         if EditableQSORXData.Zone <> DUMMYZONE then
-          Windows.SetDlgItemTextA(hwnddlg, FLD_ZONE,
-            inttopchar(EditableQSORXData.Zone));
+           begin
+           Windows.SetDlgItemTextA(hwnddlg, FLD_ZONE,
+             inttopchar(EditableQSORXData.Zone));
+           end;
 
         Windows.SetDlgItemTextA(hwnddlg, FLD_NAME, @EditableQSORXData.Name[1]);
         //tSetDlgItemTypText(hwnddlg, FLD_NAME, @EditableQSORXData.Name);
@@ -323,12 +349,16 @@ begin
         Windows.SetDlgItemTextA(hwnddlg, FLD_PRECEDENCE, @CID_TWO_BYTES);
 
         if EditableQSORXData.Prefecture <> MAXBYTE then
-          Windows.SetDlgItemTextA(hwnddlg, FLD_PREFECTURE,
-            inttopchar(EditableQSORXData.Prefecture));
+           begin
+           Windows.SetDlgItemTextA(hwnddlg, FLD_PREFECTURE,
+             inttopchar(EditableQSORXData.Prefecture));
+           end;
 
         if EditableQSORXData.TenTenNum <> MAXWORD then
-          Windows.SetDlgItemTextA(hwnddlg, FLD_TENTENNUM,
-            inttopchar(EditableQSORXData.TenTenNum));
+           begin
+           Windows.SetDlgItemTextA(hwnddlg, FLD_TENTENNUM,
+             inttopchar(EditableQSORXData.TenTenNum));
+           end;
 
         tSetDlgItemIntSigned(hwnddlg, FLD_RSTSEND, EditableQSORXData.RSTSent);
         tSetDlgItemIntSigned(hwnddlg, FLD_RSTRECEIVED,
@@ -346,7 +376,9 @@ begin
           integer(EditableQSORXData.ZoneMult), 0);
 
         if EditableQSORXData.ceRadio = RadioTwo then
-          Windows.SetDlgItemTextA(hwnddlg, FLD_RADIO, 'RADIO TWO');
+           begin
+           Windows.SetDlgItemTextA(hwnddlg, FLD_RADIO, 'RADIO TWO');
+           end;
 
         SetDlgItemTextA(hwnddlg, FLD_OPERATOR, @EditableQSORXData.ceOperator);  // Issue 601 NY4I
 
@@ -359,7 +391,9 @@ begin
     WM_NOTIFY: //with PNMHdr(lParam)^ do
       if PNMHdr(lParam)^.code =
         DTN_DATETIMECHANGE then
-        EnableWindowTrue(hwnddlg, FLD_SAVE_BUTTON);
+         begin
+         EnableWindowTrue(hwnddlg, FLD_SAVE_BUTTON);
+         end;
 
     WM_COMMAND:
       begin
@@ -367,10 +401,10 @@ begin
           FLD_PLAY_BUTTON:
             begin
               if TR4W_MP3_PLAYER_FILENAME[0] = #0 then
-              begin
-                SetCommand('MP3 PLAYER');
-                Exit;
-              end;
+                 begin
+                 SetCommand('MP3 PLAYER');
+                 Exit;
+                 end;
 
               TF.Format(wsprintfBuffer, '"%s" "%s"', TR4W_MP3_PLAYER_FILENAME,
                 DeleteSlashes(MakeMP3Filename(@EditableQSORXData)));
@@ -383,47 +417,51 @@ begin
           FLD_SAVE_BUTTON:
             begin
               if SaveQSOToEditableLog then
-                goto 1;
+                 begin
+                 goto 1;
+                 end;
             end;
         end;
 
         if ((HiWord(wParam) = EN_CHANGE)) and (LoWord(wParam) = FLD_CALLSIGN)
           then
-        begin
-          TempString := GetDialogItemText(hwnddlg, FLD_CALLSIGN);
-          Windows.ZeroMemory(@EditableQSORXData.QTH,
-            SizeOf(EditableQSORXData.QTH));
-          ctyLocateCall(TempString, EditableQSORXData.QTH);
+           begin
+           TempString := GetDialogItemText(hwnddlg, FLD_CALLSIGN);
+           Windows.ZeroMemory(@EditableQSORXData.QTH,
+             SizeOf(EditableQSORXData.QTH));
+           ctyLocateCall(TempString, EditableQSORXData.QTH);
 
-          if DoingPrefixMults then
-          begin
-            Windows.ZeroMemory(@EditableQSORXData.Prefix,
-              SizeOf(EditableQSORXData.Prefix));
-            SetPrefix(EditableQSORXData);
-            Windows.SetDlgItemTextA(eq_handle, FLD_PREFIX,
-              @EditableQSORXData.Prefix[1])
-          end;
+           if DoingPrefixMults then
+              begin
+              Windows.ZeroMemory(@EditableQSORXData.Prefix,
+                SizeOf(EditableQSORXData.Prefix));
+              SetPrefix(EditableQSORXData);
+              Windows.SetDlgItemTextA(eq_handle, FLD_PREFIX,
+                @EditableQSORXData.Prefix[1])
+              end;
 
-          Windows.SetDlgItemTextA(hwnddlg, FLD_COUNTRYNAME,
-            ctyGetCountryNamePchar(ctyGetCountry(TempString)));
+           Windows.SetDlgItemTextA(hwnddlg, FLD_COUNTRYNAME,
+             ctyGetCountryNamePchar(ctyGetCountry(TempString)));
 
-          if ActiveDXMult <> NoDXMults then
-            Windows.SetDlgItemTextA(hwnddlg, FLD_DXQTH,
-              @EditableQSORXData.QTH.CountryID[1]);
-        end;
+           if ActiveDXMult <> NoDXMults then
+              begin
+              Windows.SetDlgItemTextA(hwnddlg, FLD_DXQTH,
+                @EditableQSORXData.QTH.CountryID[1]);
+              end;
+           end;
 
         case HiWord(wParam) of
           EN_CHANGE, CBN_EDITUPDATE, CBN_SELCHANGE, BN_CLICKED:
             begin
               if HiWord(wParam) = BN_CLICKED then
-              begin
-                //                wParam := 0;
-                //                RESULT := True;
-                //                exit;
-                //                asm
-                //                nop
-                //                end;
-              end;
+                 begin
+                 //                wParam := 0;
+                 //                RESULT := True;
+                 //                exit;
+                 //                asm
+                 //                nop
+                 //                end;
+                 end;
               //              if LoWord(wParam) <> 114 then
 
               EnableWindowTrue(hwnddlg, FLD_SAVE_BUTTON);
@@ -473,7 +511,9 @@ begin
   Result := True;
   if ConfirmEditChanges then
     if YesOrNo(eq_handle, TC_SAVECHANGES) = IDno then
-      Exit;
+       begin
+       Exit;
+       end;
 
   //EditableQSORXData.QTH
 
@@ -481,7 +521,9 @@ begin
     integer(@TempSysTime));
 
   if TempSysTime.wYear >= 2000 then
-    EditableQSORXData.tSysTime.qtYear := TempSysTime.wYear - 2000;
+     begin
+     EditableQSORXData.tSysTime.qtYear := TempSysTime.wYear - 2000;
+     end;
   EditableQSORXData.tSysTime.qtMonth := TempSysTime.wMonth;
   EditableQSORXData.tSysTime.qtDay := TempSysTime.wDay;
   //Time
@@ -497,27 +539,31 @@ begin
     FLD_CALLSIGN, @EditableQSORXData.Callsign[1], 12));
 
   if not GoodCallSyntax(EditableQSORXData.Callsign) then
-  begin
-    showwarning(TC_CHECKCALLSIGN);
-    Result := False;
-    Exit;
-  end;
+     begin
+     showwarning(TC_CHECKCALLSIGN);
+     Result := False;
+     Exit;
+     end;
 
   //  LocateCall(EditableQSORXData.Callsign, EditableQSORXData.QTH, true);
   if ActiveDXMult <> NoDXMults then
-  begin
-    ZeroMemory(@EditableQSORXData.DXQTH, SizeOf(EditableQSORXData.DXQTH));
-    EditableQSORXData.DXQTH := EditableQSORXData.QTH.CountryID;
-  end;
+     begin
+     ZeroMemory(@EditableQSORXData.DXQTH, SizeOf(EditableQSORXData.DXQTH));
+     EditableQSORXData.DXQTH := EditableQSORXData.QTH.CountryID;
+     end;
 
   //   Sheet.SetMultFlags(EditableQSORXData);
   CalculateQSOPoints(EditableQSORXData);
 
   {Band}
   if SO2R_Swap then
-    EditableQSORXData.Band := Inact_Band
+     begin
+     EditableQSORXData.Band := Inact_Band
+     end
   else
-    EditableQSORXData.Band := BandType(tCB_GETCURSEL(eq_handle, FLD_BAND));
+     begin
+     EditableQSORXData.Band := BandType(tCB_GETCURSEL(eq_handle, FLD_BAND));
+     end;
 
   {Mode}
   // Mode has an extendedMode so grab it and convert it to a modeType and store both
@@ -527,10 +573,14 @@ begin
 
   {Frequency}
   if SO2R_Swap then
-    lpNumberOfBytesWritten := inact_freq
+     begin
+     lpNumberOfBytesWritten := inact_freq
+     end
   else
-    lpNumberOfBytesWritten := Windows.GetDlgItemInt(eq_handle, FLD_FREQUENCY,
-      lpTranslated, False);
+     begin
+     lpNumberOfBytesWritten := Windows.GetDlgItemInt(eq_handle, FLD_FREQUENCY,
+       lpTranslated, False);
+     end;
   //if lpNumberOfBytesWritten < MAXDWORD then
   ZeroMemory(@EditableQSORXData.Frequency, SizeOf(EditableQSORXData.Frequency));
   EditableQSORXData.Frequency := lpNumberOfBytesWritten;
@@ -539,16 +589,18 @@ begin
   Windows.GetDlgItemTextA(eq_handle, FLD_COMPUTERID, @TempInteger, 2);
   EditableQSORXData.ceComputerID := PAnsiChar(@TempInteger)[0];
   if not (EditableQSORXData.ceComputerID in ['A'..'Z']) then
-    EditableQSORXData.ceComputerID := #0;
+     begin
+     EditableQSORXData.ceComputerID := #0;
+     end;
 
   {Age}
   lpNumberOfBytesWritten := Windows.GetDlgItemInt(eq_handle, FLD_AGE,
     lpTranslated, False);
   if lpNumberOfBytesWritten < MAXBYTE then
-  begin
-    ZeroMemory(@EditableQSORXData.Age, SizeOf(EditableQSORXData.Age));
-    EditableQSORXData.Age := lpNumberOfBytesWritten;
-  end;
+     begin
+     ZeroMemory(@EditableQSORXData.Age, SizeOf(EditableQSORXData.Age));
+     EditableQSORXData.Age := lpNumberOfBytesWritten;
+     end;
 
   {Chapter}
   ZeroMemory(@EditableQSORXData.Chapter, SizeOf(EditableQSORXData.Chapter));
@@ -571,11 +623,11 @@ begin
   TempInteger := integer(Windows.GetDlgItemInt(eq_handle, FLD_NUMBERRECEIVED,
     lpTranslated, True));
   if lpTranslated then
-  begin
-    ZeroMemory(@EditableQSORXData.NumberReceived,
-      SizeOf(EditableQSORXData.NumberReceived));
-    EditableQSORXData.NumberReceived := TempInteger;
-  end;
+     begin
+     ZeroMemory(@EditableQSORXData.NumberReceived,
+       SizeOf(EditableQSORXData.NumberReceived));
+     EditableQSORXData.NumberReceived := TempInteger;
+     end;
 
   {DomMultQTH}
 //  EditableQSORXData.DomMultQTH := GetDialogItemText(eq_handle, FLD_DOMMULTQTH);
@@ -590,18 +642,18 @@ begin
   TempByte := Byte(Windows.GetDlgItemInt(eq_handle, FLD_ZONE, lpTranslated,
     True));
   if lpTranslated then
-  begin
-    ZeroMemory(@EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone));
-    EditableQSORXData.Zone := TempByte
-  end
+     begin
+     ZeroMemory(@EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone));
+     EditableQSORXData.Zone := TempByte
+     end
   else
-  begin
-    if TempByte = 0 then
-    begin
-      ZeroMemory(@EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone));
-      EditableQSORXData.Zone := DUMMYZONE;
-    end;
-  end;
+     begin
+     if TempByte = 0 then
+        begin
+        ZeroMemory(@EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone));
+        EditableQSORXData.Zone := DUMMYZONE;
+        end;
+     end;
 
   {Name}
   ZeroMemory(@EditableQSORXData.Name, SizeOf(EditableQSORXData.Name));
@@ -616,11 +668,11 @@ begin
     FLD_QTHSTRING, @EditableQSORXData.QTHString[1],
     SizeOf(EditableQSORXData.QTHString) - 1));
   if DoingDomesticMults then
-  begin
-    FoundDomesticQTH(EditableQSORXData);
-      {then showwarning(TC_IMPROPERDOMESITCQTH)}
-    ;
-  end;
+     begin
+     FoundDomesticQTH(EditableQSORXData);
+       {then showwarning(TC_IMPROPERDOMESITCQTH)}
+     ;
+     end;
 
   {Postal Code}
 //  EditableQSORXData.PostalCode := GetDialogItemText(eq_handle, FLD_POSTALCODE);
@@ -641,40 +693,40 @@ begin
   TempByte := Byte(Windows.GetDlgItemInt(eq_handle, FLD_PREFECTURE,
     lpTranslated, True));
   if lpTranslated then
-  begin
-    ZeroMemory(@EditableQSORXData.Prefecture,
-      SizeOf(EditableQSORXData.Prefecture));
-    EditableQSORXData.Prefecture := TempByte;
-  end;
+     begin
+     ZeroMemory(@EditableQSORXData.Prefecture,
+       SizeOf(EditableQSORXData.Prefecture));
+     EditableQSORXData.Prefecture := TempByte;
+     end;
 
   {TenTenNum}
   TempWord := Word(Windows.GetDlgItemInt(eq_handle, FLD_TENTENNUM, lpTranslated,
     True));
   if lpTranslated then
-  begin
-    ZeroMemory(@EditableQSORXData.TenTenNum,
-      SizeOf(EditableQSORXData.TenTenNum));
-    EditableQSORXData.TenTenNum := TempWord;
-  end;
+     begin
+     ZeroMemory(@EditableQSORXData.TenTenNum,
+       SizeOf(EditableQSORXData.TenTenNum));
+     EditableQSORXData.TenTenNum := TempWord;
+     end;
 
   {RSTSent}
   TempInteger {TempWord} := {Word}Integer(Windows.GetDlgItemInt(eq_handle,
     FLD_RSTSEND, lpTranslated, True));
   if lpTranslated then
-  begin
-    ZeroMemory(@EditableQSORXData.RSTSent, SizeOf(EditableQSORXData.RSTSent));
-    EditableQSORXData.RSTSent := TempInteger {TempWord};
-  end;
+     begin
+     ZeroMemory(@EditableQSORXData.RSTSent, SizeOf(EditableQSORXData.RSTSent));
+     EditableQSORXData.RSTSent := TempInteger {TempWord};
+     end;
 
   {RSTReceived}
   TempInteger {TempWord} := {Word}Integer(Windows.GetDlgItemInt(eq_handle,
     FLD_RSTRECEIVED, lpTranslated, True));
   if lpTranslated then
-  begin
-    ZeroMemory(@EditableQSORXData.RSTReceived,
-      SizeOf(EditableQSORXData.RSTReceived));
-    EditableQSORXData.RSTReceived := TempInteger {TempWord};
-  end;
+     begin
+     ZeroMemory(@EditableQSORXData.RSTReceived,
+       SizeOf(EditableQSORXData.RSTReceived));
+     EditableQSORXData.RSTReceived := TempInteger {TempWord};
+     end;
 
   {Operator}
 
@@ -748,7 +800,9 @@ begin
      end;
 
   if not OpenLogFile then
-    Exit;
+     begin
+     Exit;
+     end;
 
   tSetFilePointer(IndexInMap, FILE_BEGIN);
 
@@ -758,18 +812,20 @@ begin
   sWriteFile(LogHandle, EditableQSORXData, SizeOf(ContestExchange));
   CloseLogFile;
   if FullLogEditHandle <> 0 then
-  begin
-    ListView_DeleteItem(LogEditListView, FullLogEditIndex);
-    tAddContestExchangeToLog(EditableQSORXData, LogEditListView,
-      FullLogEditIndex);
-    ListView_SetItemState(LogEditListView, FullLogEditIndex - 1, LVIS_FOCUSED or
-      LVIS_SELECTED, LVIS_FOCUSED or LVIS_SELECTED);
-  end;
+     begin
+     ListView_DeleteItem(LogEditListView, FullLogEditIndex);
+     tAddContestExchangeToLog(EditableQSORXData, LogEditListView,
+       FullLogEditIndex);
+     ListView_SetItemState(LogEditListView, FullLogEditIndex - 1, LVIS_FOCUSED or
+       LVIS_SELECTED, LVIS_FOCUSED or LVIS_SELECTED);
+     end;
 
   tUpdateLog(actRescore);
   LoadinLog;
   if FindStationInCallsignColumn(EditableQSORXData.Callsign) = -1 then
-    AddCallsignToStationColumn(EditableQSORXData.Callsign);
+     begin
+     AddCallsignToStationColumn(EditableQSORXData.Callsign);
+     end;
   UpdateAllStationsList;
   So2R_Swap := False;
  end;
@@ -778,19 +834,33 @@ function CheckSystemTimeRecord(Time: TQSOTime): boolean;
 begin
   Result := True;
   if not (Time.qtYear in [0..255]) then
-    Result := False;
+     begin
+     Result := False;
+     end;
   if not (Time.qtMonth in [1..12]) then
-    Result := False;
+     begin
+     Result := False;
+     end;
   if not (Time.qtDay in [1..31]) then
-    Result := False;
+     begin
+     Result := False;
+     end;
   if not (Time.qtHour in [0..23]) then
-    Result := False;
+     begin
+     Result := False;
+     end;
   if not (Time.qtMinute in [0..59]) then
-    Result := False;
+     begin
+     Result := False;
+     end;
   if not (Time.qtSecond in [0..59]) then
-    Result := False;
+     begin
+     Result := False;
+     end;
   if Result = False then
-    showwarning(TC_CHECKDATETIME);
+     begin
+     showwarning(TC_CHECKDATETIME);
+     end;
 end;
 
 procedure ShowNote(CE: ContestExchange);
@@ -806,22 +876,26 @@ begin
   MakeEditWindow('Callsign', ctString, @EditableQSORXData.Callsign[1]);
   inc(CurrentEditRow, 1);
   if ExchangeInformation.QTH then
-    MakeEditWindow('QTH', ctString, @EditableQSORXData.QTHString[1]);
+     begin
+     MakeEditWindow('QTH', ctString, @EditableQSORXData.QTHString[1]);
+     end;
   if ExchangeInformation.Power then
-    MakeEditWindow('Power', ctString, @EditableQSORXData.Power[1]);
+     begin
+     MakeEditWindow('Power', ctString, @EditableQSORXData.Power[1]);
+     end;
   // if ExchangeInformation.FOCNumber then MakeEditWindow('FOC', ctByte, @EditableQSORXData.FOCNumber[1]);
   if ExchangeInformation.RST then
-  begin
-    MakeEditWindow('RST recv', ctInteger {ctWord},
-      @EditableQSORXData.RSTReceived);
-    MakeEditWindow('RST sent', ctInteger {ctWord}, @EditableQSORXData.RSTSent);
-  end;
+     begin
+     MakeEditWindow('RST recv', ctInteger {ctWord},
+       @EditableQSORXData.RSTReceived);
+     MakeEditWindow('RST sent', ctInteger {ctWord}, @EditableQSORXData.RSTSent);
+     end;
 
   if ExchangeInformation.QSONumber then
-  begin
-    MakeEditWindow('Number recv', ctInteger, @EditableQSORXData.NumberReceived);
-    MakeEditWindow('Number sent', ctInteger, @EditableQSORXData.NumberSent);
-  end;
+     begin
+     MakeEditWindow('Number recv', ctInteger, @EditableQSORXData.NumberReceived);
+     MakeEditWindow('Number sent', ctInteger, @EditableQSORXData.NumberSent);
+     end;
 end;
 
 procedure MakeEditWindow(Caption: PAnsiChar; FType: CFGType; ValueAdr: Pointer);
@@ -831,17 +905,21 @@ var
 begin
   Value := PAnsiChar(ValueAdr);
   if FType in [ctWord, ctInteger] then
-  begin
-    if FType = ctWord then
-      w := PWORD(ValueAdr)^;
-    //    if FType = ctByte then w := PByte(ValueAdr)^;
-    if FType = ctInteger then
-      w := PDWORD(ValueAdr)^;
+     begin
+     if FType = ctWord then
+        begin
+        w := PWORD(ValueAdr)^;
+        end;
+     //    if FType = ctByte then w := PByte(ValueAdr)^;
+     if FType = ctInteger then
+        begin
+        w := PDWORD(ValueAdr)^;
+        end;
 
-    // Issue #997: asm-push wsprintf -> Format (single %d arg = W).
-    TF.Format(IntToPCharBuffer, '%d', W);
-    Value := IntToPCharBuffer;
-  end;
+     // Issue #997: asm-push wsprintf -> Format (single %d arg = W).
+     TF.Format(IntToPCharBuffer, '%d', W);
+     Value := IntToPCharBuffer;
+     end;
   tCreateStaticWindow(Caption, LeftStyle, 10, CurrentEditRow * 20 + 400, 70, ws,
     eq_handle, 0);
   tCreateEditWindow($00020004, Value, $50010088, 90, CurrentEditRow * 20 + 400,

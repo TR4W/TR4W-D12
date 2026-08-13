@@ -226,96 +226,101 @@ begin
   CommandUseInactiveRadio := False;
 
   while StringHas(SendString, ControlC) do
-  begin
-    if not StringHas(SendString, ControlD) then Exit;
+     begin
+     if not StringHas(SendString, ControlD) then Exit;
 
-    FoundCommand := StringHas(SendString, ControlD);
+     FoundCommand := StringHas(SendString, ControlD);
 
-    CommandString := {UpperCase}(BracketedString(SendString, ControlC, ControlD));
-    Delete(SendString, pos(ControlC, SendString), pos(ControlD, SendString) - pos(ControlC, SendString) + 1);
+     CommandString := {UpperCase}(BracketedString(SendString, ControlC, ControlD));
+     Delete(SendString, pos(ControlC, SendString), pos(ControlD, SendString) - pos(ControlC, SendString) + 1);
 
-    if Copy(CommandString, 1, 1) = ControlA then {KK1L: 6.73 Vector commands to inactive radio with CTRL-A}
-    begin
-      CommandUseInactiveRadio := True;
-      Delete(CommandString, 1, 1);
-    end;
+     if Copy(CommandString, 1, 1) = ControlA then {KK1L: 6.73 Vector commands to inactive radio with CTRL-A}
+        begin
+        CommandUseInactiveRadio := True;
+        Delete(CommandString, 1, 1);
+        end;
 
-    if StringHas(CommandString, '=') then
-    begin
-      scFileName := PostcedingString(CommandString, '=');
-      CommandString := PrecedingString(CommandString, '=');
-    end;
+     if StringHas(CommandString, '=') then
+        begin
+        scFileName := PostcedingString(CommandString, '=');
+        CommandString := PrecedingString(CommandString, '=');
+        end;
 
-    CommandString[Ord(CommandString[0]) + 1] := #0;
-    scFileName[length(scFileName) + 1] := #0;
+     CommandString[Ord(CommandString[0]) + 1] := #0;
+     scFileName[length(scFileName) + 1] := #0;
    
-    for i := 0 to sCommands - 1 do
-    begin
-      if utils_text.StrComp(sCommandsArray[i].caCommand, @CommandString[1]) = 0 then
-      begin
-        // Issue #997: asm `call p` (untyped Pointer command handler,
-        // parameterless) -> typed call, guarded against a nil entry in the
-        // command-table (sCommandsArray) definition.
-        @cmdProc := sCommandsArray[i].caAddress;
-        if Assigned(cmdProc) then
-           cmdProc;
+     for i := 0 to sCommands - 1 do
+        begin
+        if utils_text.StrComp(sCommandsArray[i].caCommand, @CommandString[1]) = 0 then
+           begin
+           // Issue #997: asm `call p` (untyped Pointer command handler,
+           // parameterless) -> typed call, guarded against a nil entry in the
+           // command-table (sCommandsArray) definition.
+           @cmdProc := sCommandsArray[i].caAddress;
+           if Assigned(cmdProc) then
+              begin
+              cmdProc;
+              end;
 
-        // Issue #997: asm wsprintf-push -> TF.Format.
-        TF.Format(QuickDisplayBuffer, '"%s" command is executed.', PAnsiChar(sCommandsArray[i].caCommand));
-        QuickDisplay(QuickDisplayBuffer);
+           // Issue #997: asm wsprintf-push -> TF.Format.
+           TF.Format(QuickDisplayBuffer, '"%s" command is executed.', PAnsiChar(sCommandsArray[i].caCommand));
+           QuickDisplay(QuickDisplayBuffer);
 
-        Break;
+           Break;
 
-      end;
-    end;
+           end;
+        end;
 
-      if ClearDupeSheetCommandGiven then
-      begin
-         tClearDupesheet;
+       if ClearDupeSheetCommandGiven then
+          begin
+          tClearDupesheet;
       
-              //        MoveEditableLogIntoLogFile;
-              //        UpdateTotals2;
-              //        Sheet.ClearDupeSheet;
-      end;
-
-    if CommandString = 'QSY' then CWMessageCommand := CWCommandQSY;
-
-    if Copy(CommandString, 1, 5) = 'SPEED' then
-    begin
-      Delete(CommandString, 1, 5);
-
-      if StringIsAllNumbers(CommandString) then
-      begin
-        Val(CommandString, TempInt, Result1);
-        SetSpeed(TempInt);
-        DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
-      end
-      else
-      begin
-        while Copy(CommandString, 1, 1) = '+' do
-        begin
-          Delete(CommandString, 1, 1);
-
-          if CodeSpeed < 99 then
-          begin
-            SetSpeed(CodeSpeed + 1);
-            DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
+               //        MoveEditableLogIntoLogFile;
+               //        UpdateTotals2;
+               //        Sheet.ClearDupeSheet;
           end;
+
+     if CommandString = 'QSY' then
+        begin
+        CWMessageCommand := CWCommandQSY;
         end;
 
-        while Copy(CommandString, 1, 1) = '-' do
+     if Copy(CommandString, 1, 5) = 'SPEED' then
         begin
-          Delete(CommandString, 1, 1);
+        Delete(CommandString, 1, 5);
 
-          if CodeSpeed > 1 then
-          begin
-            SetSpeed(CodeSpeed - 1);
-            DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
-          end;
+        if StringIsAllNumbers(CommandString) then
+           begin
+           Val(CommandString, TempInt, Result1);
+           SetSpeed(TempInt);
+           DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
+           end
+        else
+           begin
+           while Copy(CommandString, 1, 1) = '+' do
+              begin
+              Delete(CommandString, 1, 1);
+
+              if CodeSpeed < 99 then
+                 begin
+                 SetSpeed(CodeSpeed + 1);
+                 DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
+                 end;
+              end;
+
+           while Copy(CommandString, 1, 1) = '-' do
+              begin
+              Delete(CommandString, 1, 1);
+
+              if CodeSpeed > 1 then
+                 begin
+                 SetSpeed(CodeSpeed - 1);
+                 DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
+                 end;
+              end;
+           end;
         end;
-      end;
-    end;
-  end;
+     end;
 
   CommandUseInactiveRadio := False; {KK1L: 6.73 Put back to normal so other calls default to active radio}
 end;
@@ -337,7 +342,10 @@ end;
 
 procedure scCWMONITORON;
 begin
-  if OldCWTone = 0 then OldCWTone := 700;
+  if OldCWTone = 0 then
+     begin
+     OldCWTone := 700;
+     end;
   CWTone := OldCWTone;
   AddStringToBuffer('', CWTone);
 end;
@@ -345,11 +353,11 @@ end;
 procedure scCWMONITOROFF;
 begin
   if CWTone <> 0 then
-  begin
-    OldCWTone := CWTone;
-    CWTone := 0;
-    AddStringToBuffer('', CWTone);
-  end;
+     begin
+     OldCWTone := CWTone;
+     CWTone := 0;
+     AddStringToBuffer('', CWTone);
+     end;
 end;
 
 procedure scWINEXEC;
@@ -410,69 +418,77 @@ begin
       end
    else if ActiveRadioPtr.RadioModel in [IC78..IC9700, OMNI6] then
       begin
-//    ActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName;
-//    ActiveRadioPtr.CommandsTempBuffer
-      Windows.CopyMemory(@ActiveRadioPtr.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
-      ActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
-      ActiveRadioPtr.AddCommandToBuffer;
+      //    ActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName;
+      //    ActiveRadioPtr.CommandsTempBuffer
+            Windows.CopyMemory(@ActiveRadioPtr.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
+            ActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
+            ActiveRadioPtr.AddCommandToBuffer;
       end
    else
 //    WriteToSerialCATPort(scFileName, ActiveRadioPtr.tCATPortHandle);
+      begin
       ActiveRadioPtr.WriteToCATPort(scFileName[1], length(scFileName));
+      end;
 end;
 
 procedure scSRSI;
 begin
   if InActiveRadioPtr.tFactoryObject <> nil then
-    begin
-    InActiveRadioPtr.tFactoryObject.SendToRadio(scFileName);
-    end
+     begin
+     InActiveRadioPtr.tFactoryObject.SendToRadio(scFileName);
+     end
   else if InActiveRadioPtr.RadioModel in [IC78..IC9700, OMNI6] then
-    begin
-    Windows.CopyMemory(@InActiveRadioPtr.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
-    InActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
-    InActiveRadioPtr.AddCommandToBuffer;
-    end
+     begin
+     Windows.CopyMemory(@InActiveRadioPtr.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
+     InActiveRadioPtr.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
+     InActiveRadioPtr.AddCommandToBuffer;
+     end
 //    InActiveRadioPtr.ICOM_COMMAND_CUSTOM := scFileName
   else
 //    WriteToSerialCATPort(scFileName, InActiveRadioPtr.tCATPortHandle);
-    InActiveRadioPtr.WriteToCATPort(scFileName[1], length(scFileName));
+     begin
+     InActiveRadioPtr.WriteToCATPort(scFileName[1], length(scFileName));
+     end;
 end;
 
 procedure scSRS1;
 begin
   if Radio1.tFactoryObject <> nil then
-    begin
-    Radio1.tFactoryObject.SendToRadio(scFileName);
-    end
+     begin
+     Radio1.tFactoryObject.SendToRadio(scFileName);
+     end
   else if Radio1.RadioModel in [IC78..IC9700, OMNI6] then
-  begin
-    Windows.CopyMemory(@Radio1.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
-    Radio1.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
-    Radio1.AddCommandToBuffer;
-  end
+     begin
+     Windows.CopyMemory(@Radio1.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
+     Radio1.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
+     Radio1.AddCommandToBuffer;
+     end
 //    Radio1.ICOM_COMMAND_CUSTOM := scFileName
   else
 //    WriteToSerialCATPort(scFileName, Radio1.tCATPortHandle);
-    Radio1.WriteToCATPort(scFileName[1], length(scFileName));
+     begin
+     Radio1.WriteToCATPort(scFileName[1], length(scFileName));
+     end;
 end;
 
 procedure scSRS2;
 begin
   if Radio2.tFactoryObject <> nil then
-    begin
-    Radio2.tFactoryObject.SendToRadio(scFileName);
-    end
+     begin
+     Radio2.tFactoryObject.SendToRadio(scFileName);
+     end
   else if Radio2.RadioModel in [IC78..IC9700, OMNI6] then
-  begin
-    Windows.CopyMemory(@Radio2.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
-    Radio2.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
-    Radio2.AddCommandToBuffer;
-  end
+     begin
+     Windows.CopyMemory(@Radio2.CommandsTempBuffer[1], @scFileName[1], length(scFileName));
+     Radio2.CommandsTempBuffer[0] := AnsiChar(length(scFileName));
+     Radio2.AddCommandToBuffer;
+     end
 //    Radio2.ICOM_COMMAND_CUSTOM := scFileName
   else
 //    WriteToSerialCATPort(scFileName, Radio2.tCATPortHandle);
-    Radio2.WriteToCATPort(scFileName[1], length(scFileName));
+     begin
+     Radio2.WriteToCATPort(scFileName[1], length(scFileName));
+     end;
 end;
 
 procedure scPlayMessageActive;
@@ -634,23 +650,25 @@ var
 begin
   for i := 1 to CommandsArraySize do
     if utils_text.StrComp(@scFileName[1], CFGCA[i].crCommand) = 0 then
-      begin
-      if CFGCA[i].crType = ctBoolean then
-      begin
-        PBoolean(CFGCA[i].crAddress)^ := not PBoolean(CFGCA[i].crAddress)^;
-        if CFGCA[i].crP <> 0 then
-        begin
-          // Issue #997: asm `call P` (untyped Pointer change-handler) -> typed
-          // call, guarded against a nil entry in the CommandsProcArray definition.
-          @cmdProc := CommandsProcArray[CFGCA[i].crP];
-          if Assigned(cmdProc) then
-             cmdProc;
-          TF.Format(QuickDisplayBuffer, '%s=%s', @scFileName[1], BA[PBoolean(CFGCA[i].crAddress)^]);
-          QuickDisplay(QuickDisplayBuffer);
-        end;
-        Break;
-      end;
-      end;
+       begin
+       if CFGCA[i].crType = ctBoolean then
+          begin
+          PBoolean(CFGCA[i].crAddress)^ := not PBoolean(CFGCA[i].crAddress)^;
+          if CFGCA[i].crP <> 0 then
+             begin
+             // Issue #997: asm `call P` (untyped Pointer change-handler) -> typed
+             // call, guarded against a nil entry in the CommandsProcArray definition.
+             @cmdProc := CommandsProcArray[CFGCA[i].crP];
+             if Assigned(cmdProc) then
+                begin
+                cmdProc;
+                end;
+             TF.Format(QuickDisplayBuffer, '%s=%s', @scFileName[1], BA[PBoolean(CFGCA[i].crAddress)^]);
+             QuickDisplay(QuickDisplayBuffer);
+             end;
+          Break;
+          end;
+       end;
 end;
 
 procedure scWK_RESET;
@@ -661,13 +679,13 @@ end;
 procedure scSENDMESSAGE;
 begin
   if scFileName <> '' then
-  begin
-    NetIntercomMessage.imSender := ComputerID;
-    Windows.ZeroMemory(@NetIntercomMessage.imMessage, SizeOf(NetIntercomMessage.imMessage));
-    NetIntercomMessage.imMessage := scFileName;
-    SendToNet(NetIntercomMessage, SizeOf(NetIntercomMessage));
-    Exit;
-  end;
+     begin
+     NetIntercomMessage.imSender := ComputerID;
+     Windows.ZeroMemory(@NetIntercomMessage.imMessage, SizeOf(NetIntercomMessage.imMessage));
+     NetIntercomMessage.imMessage := scFileName;
+     SendToNet(NetIntercomMessage, SizeOf(NetIntercomMessage));
+     Exit;
+     end;
   ProcessMenu(menu_send_message);
 end;
 
@@ -733,7 +751,10 @@ begin
 {$IF MMTTYMODE}
   PutCallToCallWindow(MMTTY.mmttyLastCallsign);
   if tAutoCQMode and (length(MMTTY.mmttyLastCallsign) > 0) then      // wli issue 84 4.70.6
-    if TryKillAutoCQ then Escape_proc;
+    if TryKillAutoCQ then
+       begin
+       Escape_proc;
+       end;
 {$IFEND}
 end;
 

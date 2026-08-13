@@ -181,9 +181,18 @@ begin
             code := LoWord(SendDlgItemMessage(hwnddlg, 107, HKM_GETHOTKEY, 0, 0));
             if code = 0 then Exit;
             TempByte := lobyte(code);
-            if not (TempByte in [VK_F1..vk_f12]) then TempByte := VK_F1;
-            if hibyte(code) = HOTKEYF_CONTROL then TempByte := TempByte + 12;
-            if hibyte(code) = HOTKEYF_ALT then TempByte := TempByte + 24;
+            if not (TempByte in [VK_F1..vk_f12]) then
+               begin
+               TempByte := VK_F1;
+               end;
+            if hibyte(code) = HOTKEYF_CONTROL then
+               begin
+               TempByte := TempByte + 12;
+               end;
+            if hibyte(code) = HOTKEYF_ALT then
+               begin
+               TempByte := TempByte + 24;
+               end;
             AutoCQMemory := Char(TempByte);
             AutoCQDelayTime := GetDlgItemInt(hwnddlg, 106, lpTranslated, False) {* 1000};
             Windows.WritePrivateProfileStringA(_COMMANDS, 'AUTO-CQ DELAY TIME', inttopchar(AutoCQDelayTime), TR4W_INI_FILENAME);

@@ -98,17 +98,17 @@ begin
         DS := Pointer(lParam);
 
         if (DS^.itemAction = ODA_FOCUS) then
-        begin
-//          DrawFocusRect(DS^.HDC, DS^.rcItem);
+           begin
+           //          DrawFocusRect(DS^.HDC, DS^.rcItem);
 
-          Exit;
-        end;
+                     Exit;
+           end;
 
         if CleanSweep then
-        begin
-          Windows.TextOutA(DS^.HDC, 0, 0, TC_CLEANSWEEPCONGRATULATIONS, 31);
-          Exit;
-        end;
+           begin
+           Windows.TextOutA(DS^.HDC, 0, 0, TC_CLEANSWEEPCONGRATULATIONS, 31);
+           Exit;
+           end;
 
         // Issue #997: asm bit-extraction from the LB_GETITEMDATA result (rmt =
         // low byte, Index = high word) -> Pascal HiWord/LoWord. This is exactly
@@ -135,9 +135,13 @@ begin
               Windows.ZeroMemory(@TempCall, SizeOf(TempCall));
 
               if tShowDomesticMultiplierName and (mo.DomList.FList[Index].FAltName <> '') then
-                TempCall := mo.DomList.FList[Index].FAltName
+                 begin
+                 TempCall := mo.DomList.FList[Index].FAltName
+                 end
               else
-                TempCall := mo.DomList.Get(Index);
+                 begin
+                 TempCall := mo.DomList.Get(Index);
+                 end;
 
               p := @TempCall[1];
               // Why is this QD here? When the program first starts, it display a mut for no reason.
@@ -188,15 +192,15 @@ begin
 
           //if not RemainingMults[Index] then
           if Gradient then
-          begin
-//            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trLightGray]);
-            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite]);
-            GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[tr4wColors(Ord(rmt) * 1)], tr4wColorsArray[trWhite], gdHorizontal);
-          end
+             begin
+             //            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trLightGray]);
+                         Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite]);
+                         GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[tr4wColors(Ord(rmt) * 1)], tr4wColorsArray[trWhite], gdHorizontal);
+             end
           else
-          begin
-            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
-          end;
+             begin
+             Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
+             end;
 
         SetBkMode(DS^.HDC, TRANSPARENT);
 

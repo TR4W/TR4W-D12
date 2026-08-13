@@ -192,75 +192,83 @@ begin
         CreateOKCancelButtons(hwnddlg);
 
         if ErmakSpecification then
-        begin
-//          tCreateStaticWindow(KIR_, defStyle, 10, 5, 355, 20, hwnddlg, 0);
-          FormatSpecification := ERMAKSECTION;
-        end;
+           begin
+           //          tCreateStaticWindow(KIR_, defStyle, 10, 5, 355, 20, hwnddlg, 0);
+                     FormatSpecification := ERMAKSECTION;
+           end;
 
         for TempTag := Low(CabrilloTags) to High(CabrilloTags) do
-        begin
-          Top := 30 + integer(TempTag) * (TagHeight + 2);
-          tCreateStaticWindow(string(PAnsiChar(@CabrilloTagSArray[TempTag].ctrTag[1])), LeftStyle, 10, Top, 160, TagHeight, hwnddlg, integer(TempTag) + 100);
-          if ErmakSpecification and (TempTag = ctOperators) then
-          begin
-            tCreateButtonWindow(WS_EX_STATICEDGE, '������� ...', WS_TABSTOP or WS_CHILD or WS_VISIBLE, 173, Top, 190, TagHeight, hwnddlg, 3);
-            Continue;
-          end;
+           begin
+           Top := 30 + integer(TempTag) * (TagHeight + 2);
+           tCreateStaticWindow(string(PAnsiChar(@CabrilloTagSArray[TempTag].ctrTag[1])), LeftStyle, 10, Top, 160, TagHeight, hwnddlg, integer(TempTag) + 100);
+           if ErmakSpecification and (TempTag = ctOperators) then
+              begin
+              tCreateButtonWindow(WS_EX_STATICEDGE, '������� ...', WS_TABSTOP or WS_CHILD or WS_VISIBLE, 173, Top, 190, TagHeight, hwnddlg, 3);
+              Continue;
+              end;
 
-          if CabrilloTagSArray[TempTag].ctrList then
-          begin
-            TempHWND := tCreateComboBoxWindow(CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP, 173, Top, 190, hwnddlg, integer(TempTag) + 200);
+           if CabrilloTagSArray[TempTag].ctrList then
+              begin
+              TempHWND := tCreateComboBoxWindow(CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP, 173, Top, 190, hwnddlg, integer(TempTag) + 200);
 
-            for TempByte := 0 to CategoriesArray[TempTag].cvrCount do
-            begin
-              TempPointer := CategoriesArray[TempTag].cvrStart + TempByte * 4;
-              SendMessageA(TempHWND, CB_ADDSTRING, 0, integer(TempPointer^));
-            end;
+              for TempByte := 0 to CategoriesArray[TempTag].cvrCount do
+                 begin
+                 TempPointer := CategoriesArray[TempTag].cvrStart + TempByte * 4;
+                 SendMessageA(TempHWND, CB_ADDSTRING, 0, integer(TempPointer^));
+                 end;
 
-            if TempTag in [ctCategoryAssisted..ctCategoryPower] then
-              SendMessage(TempHWND, CB_SETCURSEL, integer(InitialTagsValuesArray[TempTag]^), 0)
-            else if CabrilloTagSArray[TempTag].ctrSave then
-            begin
-              // Issue #976: restore the saved value into ctrSave drop-downs
-              // that are outside the index-based range above (e.g.
-              // CATEGORY-STATION).  GetDlgItemText on exit saves it back.
-              if GetPrivateProfileStringA(FormatSpecification,
-                  CabrilloTagSArray[TempTag].ctrTag, nil, TempBuffer1,
-                  SizeOf(TempBuffer1), TR4W_INI_FILENAME) > 0 then
-                SendMessageA(TempHWND, CB_SELECTSTRING, -1, integer(@TempBuffer1));
-            end;
-          end
-          else
-          begin
-            TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_TABSTOP or WS_CHILD or SS_LEFT or WS_VISIBLE or ES_AUTOHSCROLL, 173, Top, 190, 20, hwnddlg, integer(TempTag) + 200);
-            ;
+              if TempTag in [ctCategoryAssisted..ctCategoryPower] then
+                 begin
+                 SendMessage(TempHWND, CB_SETCURSEL, integer(InitialTagsValuesArray[TempTag]^), 0)
+                 end
+              else if CabrilloTagSArray[TempTag].ctrSave then
+                 begin
+                 // Issue #976: restore the saved value into ctrSave drop-downs
+                 // that are outside the index-based range above (e.g.
+                 // CATEGORY-STATION).  GetDlgItemText on exit saves it back.
+                 if GetPrivateProfileStringA(FormatSpecification,
+                     CabrilloTagSArray[TempTag].ctrTag, nil, TempBuffer1,
+                     SizeOf(TempBuffer1), TR4W_INI_FILENAME) > 0 then
+                    begin
+                    SendMessageA(TempHWND, CB_SELECTSTRING, -1, integer(@TempBuffer1));
+                    end;
+                 end;
+              end
+           else
+              begin
+              TempHWND := tCreateEditWindow(WS_EX_STATICEDGE, '', WS_TABSTOP or WS_CHILD or SS_LEFT or WS_VISIBLE or ES_AUTOHSCROLL, 173, Top, 190, 20, hwnddlg, integer(TempTag) + 200);
+              ;
 
-            if CabrilloTagSArray[TempTag].ctrSave then
-            begin
-              TempCardinal := GetPrivateProfileStringA(FormatSpecification,
-                CabrilloTagSArray[TempTag].ctrTag,
-                nil,
-                TempBuffer1,
-                SizeOf(TempBuffer1),
-                TR4W_INI_FILENAME);
+              if CabrilloTagSArray[TempTag].ctrSave then
+                 begin
+                 TempCardinal := GetPrivateProfileStringA(FormatSpecification,
+                   CabrilloTagSArray[TempTag].ctrTag,
+                   nil,
+                   TempBuffer1,
+                   SizeOf(TempBuffer1),
+                   TR4W_INI_FILENAME);
 
-              if TempCardinal <> 0 then
-                Windows.SetWindowTextA(TempHWND, TempBuffer1);
-            end;
-          end;
-        end;
+                 if TempCardinal <> 0 then
+                    begin
+                    Windows.SetWindowTextA(TempHWND, TempBuffer1);
+                    end;
+                 end;
+              end;
+           end;
 
         if ErmakSpecification then
-        begin
-          tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryMode) + 200, 'DIGI');
-          tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryOperator) + 200, 'MULTI-OP-2');
-          tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryBand) + 200, '10M-15M-20M');
-          tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryBand) + 200, '80M-40M-160M');
+           begin
+           tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryMode) + 200, 'DIGI');
+           tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryOperator) + 200, 'MULTI-OP-2');
+           tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryBand) + 200, '10M-15M-20M');
+           tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryBand) + 200, '80M-40M-160M');
 
-          SendDlgItemMessage(hwnddlg, integer(ctCategoryOverlay) + 200, CB_RESETCONTENT, 0, 0);
-          for i := 0 to NumberErmakOverlayCategories - 1 do
-            tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryOverlay) + 200, ErmakOverlayCategory[i]);
-        end;
+           SendDlgItemMessage(hwnddlg, integer(ctCategoryOverlay) + 200, CB_RESETCONTENT, 0, 0);
+           for i := 0 to NumberErmakOverlayCategories - 1 do
+              begin
+              tCB_ADDSTRING_PCHAR(hwnddlg, integer(ctCategoryOverlay) + 200, ErmakOverlayCategory[i]);
+              end;
+           end;
 
         CabrilloSummaryProc := Pointer(lParam);
 
@@ -271,13 +279,13 @@ begin
         ExitAndClose:
         for TempTag := Low(CabrilloTags) to High(CabrilloTags) do
           if CabrilloTagSArray[TempTag].ctrSave then
-          begin
-            if Windows.GetDlgItemTextA(hwnddlg, integer(TempTag) + 200, TempBuffer1, SizeOf(TempBuffer1)) > 0 then
-               begin
-               WritePrivateProfileStringA(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1, TR4W_INI_FILENAME);
-               end;
+             begin
+             if Windows.GetDlgItemTextA(hwnddlg, integer(TempTag) + 200, TempBuffer1, SizeOf(TempBuffer1)) > 0 then
+                begin
+                WritePrivateProfileStringA(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1, TR4W_INI_FILENAME);
+                end;
 
-          end;
+             end;
 
         CreateCabrilloWindow := 0;
         EndDialog(hwnddlg, 0);
@@ -293,20 +301,22 @@ begin
               // the same as Cancel - the WM_CLOSE/ExitAndClose path saves
               // all ctrSave fields to tr4w.ini [REPORT] before closing.
               if CabrilloSummaryProc = nil then
-                goto ExitAndClose
+                 begin
+                 goto ExitAndClose
+                 end
               else
-              begin
-                // Issue #976: after the export callback finishes (it
-                // generates the Cabrillo file, opens it for review, and
-                // prompts for the SuperCheckPartial upload), close the dialog
-                // -- otherwise the user is dropped back at OK/Cancel and has
-                // to hit Cancel to finish a successful export.
-                // Issue #997: asm `call CabrilloSummaryProc` (untyped Pointer
-                // callback, parameterless) -> typed parameterless call.
-                @SummaryCallback := CabrilloSummaryProc;
-                SummaryCallback;
-                goto ExitAndClose;
-              end;
+                 begin
+                 // Issue #976: after the export callback finishes (it
+                 // generates the Cabrillo file, opens it for review, and
+                 // prompts for the SuperCheckPartial upload), close the dialog
+                 // -- otherwise the user is dropped back at OK/Cancel and has
+                 // to hit Cancel to finish a successful export.
+                 // Issue #997: asm `call CabrilloSummaryProc` (untyped Pointer
+                 // callback, parameterless) -> typed parameterless call.
+                 @SummaryCallback := CabrilloSummaryProc;
+                 SummaryCallback;
+                 goto ExitAndClose;
+                 end;
           2: goto ExitAndClose;
           3:
           //DialogBox(hInstance, MAKEINTRESOURCE(50), hwnddlg, @ErmakDlgProc);

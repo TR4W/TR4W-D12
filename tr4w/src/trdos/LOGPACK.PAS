@@ -210,16 +210,16 @@ begin
   BaseFreq := Trunc(PacketFrequency / 1000000) * 1000000;
 
   if QSXFreq < 10.0 then { Someone put mHz in? }
-  begin
-    QSXFreq := Int(QSXFreq * 1000000.0);
-    Exit;
-  end;
+     begin
+     QSXFreq := Int(QSXFreq * 1000000.0);
+     Exit;
+     end;
 
   if QSXFreq < 1000.0 then { Someone entered last three digits }
-  begin
-    QSXFreq := BaseFreq + (QSXFreq * 1000.0);
-    Exit;
-  end;
+     begin
+     QSXFreq := BaseFreq + (QSXFreq * 1000.0);
+     Exit;
+     end;
 
   { Someone entered the whole frequency in kilohertz }
 
@@ -248,91 +248,99 @@ begin
   strU(Notes);
 
   if StringHas(Notes, 'QSX') or StringHas(Notes, 'LISTENING') then
-  begin
-    if StringHas(Notes, 'QSX') then
-      TempString := PostcedingString(Notes, 'QSX')
-    else
-      if StringHas(Notes, 'LISTENING') then
-        TempString := PostcedingString(Notes, 'LISTENING');
+     begin
+     if StringHas(Notes, 'QSX') then
+        begin
+        TempString := PostcedingString(Notes, 'QSX')
+        end
+     else
+       if StringHas(Notes, 'LISTENING') then
+          begin
+          TempString := PostcedingString(Notes, 'LISTENING');
+          end;
 
-    FrequencyString := GetFirstString(TempString);
+     FrequencyString := GetFirstString(TempString);
 
-    if StringIsAllNumbersOrDecimal(FrequencyString) then
-    begin
-      if StringHas(FrequencyString, '.') then
-      begin
-        Val(FrequencyString, QSXFreq, Result1);
+     if StringIsAllNumbersOrDecimal(FrequencyString) then
+        begin
+        if StringHas(FrequencyString, '.') then
+           begin
+           Val(FrequencyString, QSXFreq, Result1);
 
-              { Convert MHz to Hz }
+                 { Convert MHz to Hz }
 
-        if QSXFreq < 1500 then { Assume MHz }
-          LookForQSXFrequency := round(QSXFreq * 1000000.0)
-        else
-          LookForQSXFrequency := round(QSXFreq * 1000.0);
-        Exit;
-      end;
+           if QSXFreq < 1500 then { Assume MHz }
+              begin
+              LookForQSXFrequency := round(QSXFreq * 1000000.0)
+              end
+           else
+              begin
+              LookForQSXFrequency := round(QSXFreq * 1000.0);
+              end;
+           Exit;
+           end;
 
-          { String is all numbers - probably in kHz }
+            { String is all numbers - probably in kHz }
 
-      if length(FrequencyString) >= 4 then { Entered complete kHz }
-      begin
-        Val(FrequencyString, QSXFreq, Result1);
+        if length(FrequencyString) >= 4 then { Entered complete kHz }
+           begin
+           Val(FrequencyString, QSXFreq, Result1);
 
-              { Convert KHz to Hz }
+                 { Convert KHz to Hz }
 
-        LookForQSXFrequency := round(QSXFreq * 1000.0);
-        Exit;
-      end;
+           LookForQSXFrequency := round(QSXFreq * 1000.0);
+           Exit;
+           end;
 
-      if length(FrequencyString) = 3 then { Entered kHz w/o MHz }
-      begin
-        Val(FrequencyString, QSXFreq, Result1);
+        if length(FrequencyString) = 3 then { Entered kHz w/o MHz }
+           begin
+           Val(FrequencyString, QSXFreq, Result1);
 
-              { Compute MHz part of PacketFrequency }
+                 { Compute MHz part of PacketFrequency }
 
-        BaseFreq := Trunc(PacketFrequency / 1000000) * 1000000;
+           BaseFreq := Trunc(PacketFrequency / 1000000) * 1000000;
 
-              { Add them together }
+                 { Add them together }
 
-        LookForQSXFrequency := round(BaseFreq + (QSXFreq * 1000.0));
-        Exit;
-      end;
-    end;
-  end;
+           LookForQSXFrequency := round(BaseFreq + (QSXFreq * 1000.0));
+           Exit;
+           end;
+        end;
+     end;
 
   if StringHas(Notes, 'UP') then
-  begin
-    TempString := PostcedingString(Notes, 'UP');
+     begin
+     TempString := PostcedingString(Notes, 'UP');
 
-    FrequencyString := GetFirstString(TempString);
+     FrequencyString := GetFirstString(TempString);
 
-    if length(FrequencyString) <= 2 then { Entered kHz offset }
-    begin
-      Val(FrequencyString, QSXFreq, Result1);
+     if length(FrequencyString) <= 2 then { Entered kHz offset }
+        begin
+        Val(FrequencyString, QSXFreq, Result1);
 
-          { Add them together }
+            { Add them together }
 
-      LookForQSXFrequency := round(PacketFrequency + (QSXFreq * 1000.0));
-      Exit;
-    end;
-  end;
+        LookForQSXFrequency := round(PacketFrequency + (QSXFreq * 1000.0));
+        Exit;
+        end;
+     end;
 
   if StringHas(Notes, 'DOWN') then
-  begin
-    TempString := PostcedingString(Notes, 'DOWN');
+     begin
+     TempString := PostcedingString(Notes, 'DOWN');
 
-    FrequencyString := GetFirstString(TempString);
+     FrequencyString := GetFirstString(TempString);
 
-    if length(FrequencyString) <= 2 then { Entered kHz offset }
-    begin
-      Val(FrequencyString, QSXFreq, Result1);
+     if length(FrequencyString) <= 2 then { Entered kHz offset }
+        begin
+        Val(FrequencyString, QSXFreq, Result1);
 
-          { Add them together }
+            { Add them together }
 
-      LookForQSXFrequency := round(PacketFrequency - (QSXFreq * 1000.0));
-      Exit;
-    end;
-  end;
+        LookForQSXFrequency := round(PacketFrequency - (QSXFreq * 1000.0));
+        Exit;
+        end;
+     end;
 
 end;
 
@@ -350,7 +358,9 @@ begin
   if LastString = '>' then Exit;
 
   if (FirstString = 'ALL') or StringHas(FirstString, MyCall) then
-    TalkOrAnnounceMessage := True;
+     begin
+     TalkOrAnnounceMessage := True;
+     end;
 end;
 
 function FoundDXSpot(InputString: ShortString; var DXSpot: DXSpotType): boolean;
@@ -377,56 +387,60 @@ begin
   RemoveFirstString(InputString); { de }
 
   with DXSpot do
-  begin
-    PacketString := InputString;
+     begin
+     PacketString := InputString;
 
-    SourceCall := UpperCase(RemoveFirstString(InputString));
-    SourceCall := PrecedingString(SourceCall, ':');
+     SourceCall := UpperCase(RemoveFirstString(InputString));
+     SourceCall := PrecedingString(SourceCall, ':');
 
-    FrequencyString := RemoveFirstString(InputString);
+     FrequencyString := RemoveFirstString(InputString);
 
-    Val(FrequencyString, TempFrequency, Result1);
+     Val(FrequencyString, TempFrequency, Result1);
 
-    if Result1 <> 0 then Exit;
+     if Result1 <> 0 then Exit;
 
-    if TempFrequency < MaxLongInt div 9 then
-      TempFrequency := TempFrequency * 1000; { Convert kHz to Hz }
+     if TempFrequency < MaxLongInt div 9 then
+        begin
+        TempFrequency := TempFrequency * 1000; { Convert kHz to Hz }
+        end;
 
-      { See if more than 2,000,000,000 Hz or 2 GHz }
+       { See if more than 2,000,000,000 Hz or 2 GHz }
 
-    if (TempFrequency > 2000000000) or (TempFrequency < 0) then
-      Exit;
+     if (TempFrequency > 2000000000) or (TempFrequency < 0) then
+        begin
+        Exit;
+        end;
 
-      { Convert real frequency to LONGINT }
+       { Convert real frequency to LONGINT }
 
-    Frequency := round(TempFrequency);
+     Frequency := round(TempFrequency);
 
-    Mode := ActiveMode; { In case on 160 }
+     Mode := ActiveMode; { In case on 160 }
 
-    CalculateBandMode(Frequency, Band, Mode);
+     CalculateBandMode(Frequency, Band, Mode);
 
-    if Band = NoBand then Exit;
-    if Mode = NoMode then Exit;
+     if Band = NoBand then Exit;
+     if Mode = NoMode then Exit;
 
-    GetRidOfPrecedingSpaces(InputString);
+     GetRidOfPrecedingSpaces(InputString);
 
-    Call := RemoveFirstString(InputString);
+     Call := RemoveFirstString(InputString);
 
-    if not GoodCallSyntax(Call) then Exit;
+     if not GoodCallSyntax(Call) then Exit;
 
-    TimeString := RemoveLastString(InputString);
+     TimeString := RemoveLastString(InputString);
 
-    GetRidOfPrecedingSpaces(InputString);
-    GetRidOfPostcedingSpaces(InputString);
+     GetRidOfPrecedingSpaces(InputString);
+     GetRidOfPostcedingSpaces(InputString);
 
-    Notes := InputString;
+     Notes := InputString;
 
-    QSXFrequency := LookForQSXFrequency(Frequency, Notes);
+     QSXFrequency := LookForQSXFrequency(Frequency, Notes);
 
-    SpotMode := NormalSpot;
+     SpotMode := NormalSpot;
 
-    FoundDXSpot := True;
-  end;
+     FoundDXSpot := True;
+     end;
 end;
 
 function ShowDXResponse(InputString: ShortString; var DXSpot: DXSpotType): boolean;
@@ -455,65 +469,74 @@ begin
   if StringHas(InputString, 'SH/DX') then Exit;
 
   with DXSpot do
-  begin
-    PacketString := InputString;
+     begin
+     PacketString := InputString;
 
-    FrequencyString := RemoveFirstString(InputString);
-    Call := RemoveFirstString(InputString);
-    DateString := RemoveFirstString(InputString);
-    TimeString := RemoveFirstString(InputString);
+     FrequencyString := RemoveFirstString(InputString);
+     Call := RemoveFirstString(InputString);
+     DateString := RemoveFirstString(InputString);
+     TimeString := RemoveFirstString(InputString);
 
-    SourceCall := RemoveLastString(InputString);
+     SourceCall := RemoveLastString(InputString);
 
-    Notes := InputString;
+     Notes := InputString;
 
-    if not GoodCallSyntax(Call) then Exit;
+     if not GoodCallSyntax(Call) then Exit;
 
-    if not StringHas(FrequencyString, '.') then Exit;
+     if not StringHas(FrequencyString, '.') then Exit;
 
-    Val(FrequencyString, TempFrequency, Result1);
-    if Result1 <> 0 then Exit;
+     Val(FrequencyString, TempFrequency, Result1);
+     if Result1 <> 0 then Exit;
 
-      { Look at the date and time syntax }
+       { Look at the date and time syntax }
 
-    if not StringHas(DateString, '-') then Exit;
+     if not StringHas(DateString, '-') then Exit;
 
-    if not StringHas(TimeString, 'Z') then Exit;
-    if not length(TimeString) = 5 then Exit;
-    if not StringIsAllNumbers(Copy(TimeString, 1, 4)) then Exit;
+     if not StringHas(TimeString, 'Z') then Exit;
+     if not length(TimeString) = 5 then Exit;
+     if not StringIsAllNumbers(Copy(TimeString, 1, 4)) then Exit;
 
-      { Convert the frequency }
+       { Convert the frequency }
 
-    if TempFrequency < MaxLongInt div 9 then
-      TempFrequency := TempFrequency * 1000; { Convert kHz to Hz }
+     if TempFrequency < MaxLongInt div 9 then
+        begin
+        TempFrequency := TempFrequency * 1000; { Convert kHz to Hz }
+        end;
 
-      { See if more than 2,000,000,000 Hz or 2 GHz }
+       { See if more than 2,000,000,000 Hz or 2 GHz }
 
-    if (TempFrequency > 2000000000) or (TempFrequency < 0) then
-      Exit;
+     if (TempFrequency > 2000000000) or (TempFrequency < 0) then
+        begin
+        Exit;
+        end;
 
-    Frequency := round(TempFrequency);
+     Frequency := round(TempFrequency);
 
-    Mode := ActiveMode; { In case on 160 }
+     Mode := ActiveMode; { In case on 160 }
 
-    CalculateBandMode(Frequency, Band, Mode);
+     CalculateBandMode(Frequency, Band, Mode);
 
-    if Band = NoBand then Exit;
-    if Mode = NoMode then Exit;
+     if Band = NoBand then Exit;
+     if Mode = NoMode then Exit;
 
-    QSXFrequency := LookForQSXFrequency(Frequency, Notes);
+     QSXFrequency := LookForQSXFrequency(Frequency, Notes);
 
-      { Get rid of <>'s around source call }
+       { Get rid of <>'s around source call }
 
-    if Copy(SourceCall, 1, 1) = '<' then Delete(SourceCall, 1, 1);
+     if Copy(SourceCall, 1, 1) = '<' then
+        begin
+        Delete(SourceCall, 1, 1);
+        end;
 
-    if Copy(SourceCall, length(SourceCall), 1) = '>' then
-      Delete(SourceCall, length(SourceCall), 1);
+     if Copy(SourceCall, length(SourceCall), 1) = '>' then
+        begin
+        Delete(SourceCall, length(SourceCall), 1);
+        end;
 
-    SpotMode := SHDXSpot;
+     SpotMode := SHDXSpot;
 
-    ShowDXResponse := True;
-  end;
+     ShowDXResponse := True;
+     end;
 
 end;
 
@@ -536,68 +559,77 @@ begin
   OH2AQFileInputSpot := False;
 
   with DXSpot do
-  begin
-    PacketString := InputString;
+     begin
+     PacketString := InputString;
 
-    SourceCall := RemoveFirstString(InputString);
-    FrequencyString := RemoveFirstString(InputString);
-    Call := RemoveFirstString(InputString);
+     SourceCall := RemoveFirstString(InputString);
+     FrequencyString := RemoveFirstString(InputString);
+     Call := RemoveFirstString(InputString);
 
-      { Get rid of date }
+       { Get rid of date }
 
-    RemoveLastString(InputString);
-    RemoveLastString(InputString);
-    RemoveLastString(InputString);
+     RemoveLastString(InputString);
+     RemoveLastString(InputString);
+     RemoveLastString(InputString);
 
-    TimeString := RemoveLastString(InputString) + 'Z';
+     TimeString := RemoveLastString(InputString) + 'Z';
 
-    Notes := InputString;
+     Notes := InputString;
 
-    if not GoodCallSyntax(Call) then Exit;
+     if not GoodCallSyntax(Call) then Exit;
 
-    if not StringHas(FrequencyString, '.') then Exit;
+     if not StringHas(FrequencyString, '.') then Exit;
 
-    Val(FrequencyString, TempFrequency, Result1);
-    if Result1 <> 0 then Exit;
+     Val(FrequencyString, TempFrequency, Result1);
+     if Result1 <> 0 then Exit;
 
-      { Look at the date and time syntax }
+       { Look at the date and time syntax }
 
-    if not StringHas(TimeString, 'Z') then Exit;
-    if not length(TimeString) = 5 then Exit;
-    if not StringIsAllNumbers(Copy(TimeString, 1, 4)) then Exit;
+     if not StringHas(TimeString, 'Z') then Exit;
+     if not length(TimeString) = 5 then Exit;
+     if not StringIsAllNumbers(Copy(TimeString, 1, 4)) then Exit;
 
-      { Convert the frequency }
+       { Convert the frequency }
 
-    if TempFrequency < MaxLongInt div 9 then
-      TempFrequency := TempFrequency * 1000; { Convert kHz to Hz }
+     if TempFrequency < MaxLongInt div 9 then
+        begin
+        TempFrequency := TempFrequency * 1000; { Convert kHz to Hz }
+        end;
 
-      { See if more than 2,000,000,000 Hz or 2 GHz }
+       { See if more than 2,000,000,000 Hz or 2 GHz }
 
-    if (TempFrequency > 2000000000) or (TempFrequency < 0) then
-      Exit;
+     if (TempFrequency > 2000000000) or (TempFrequency < 0) then
+        begin
+        Exit;
+        end;
 
-    Frequency := round(TempFrequency);
+     Frequency := round(TempFrequency);
 
-    Mode := ActiveMode; { In case on 160 }
+     Mode := ActiveMode; { In case on 160 }
 
-    CalculateBandMode(Frequency, Band, Mode);
+     CalculateBandMode(Frequency, Band, Mode);
 
-    if Band = NoBand then Exit;
-    if Mode = NoMode then Exit;
+     if Band = NoBand then Exit;
+     if Mode = NoMode then Exit;
 
-    QSXFrequency := LookForQSXFrequency(Frequency, Notes);
+     QSXFrequency := LookForQSXFrequency(Frequency, Notes);
 
-      { Get rid of <>'s around source call }
+       { Get rid of <>'s around source call }
 
-    if Copy(SourceCall, 1, 1) = '<' then Delete(SourceCall, 1, 1);
+     if Copy(SourceCall, 1, 1) = '<' then
+        begin
+        Delete(SourceCall, 1, 1);
+        end;
 
-    if Copy(SourceCall, length(SourceCall), 1) = '>' then
-      Delete(SourceCall, length(SourceCall), 1);
+     if Copy(SourceCall, length(SourceCall), 1) = '>' then
+        begin
+        Delete(SourceCall, length(SourceCall), 1);
+        end;
 
-    SpotMode := SHDXSpot;
+     SpotMode := SHDXSpot;
 
-    OH2AQFileInputSpot := True;
-  end;
+     OH2AQFileInputSpot := True;
+     end;
 
 end;
 
@@ -617,67 +649,76 @@ begin
   PacketFileInputSpot := False;
 
   with DXSpot do
-  begin
-    PacketString := InputString;
+     begin
+     PacketString := InputString;
 
-    FrequencyString := RemoveFirstString(InputString);
-    Call := RemoveFirstString(InputString);
+     FrequencyString := RemoveFirstString(InputString);
+     Call := RemoveFirstString(InputString);
 
-      { Get rid of date }
+       { Get rid of date }
 
-    RemoveFirstString(InputString);
+     RemoveFirstString(InputString);
 
-    TimeString := RemoveFirstString(InputString);
+     TimeString := RemoveFirstString(InputString);
 
-    SourceCall := RemoveLastString(InputString);
+     SourceCall := RemoveLastString(InputString);
 
-    Notes := InputString;
+     Notes := InputString;
 
-    if not GoodCallSyntax(Call) then Exit;
+     if not GoodCallSyntax(Call) then Exit;
 
-    if not StringHas(FrequencyString, '.') then Exit;
+     if not StringHas(FrequencyString, '.') then Exit;
 
-    Val(FrequencyString, TempFrequency, Result1);
-    if Result1 <> 0 then Exit;
+     Val(FrequencyString, TempFrequency, Result1);
+     if Result1 <> 0 then Exit;
 
-      { Look at the date and time syntax }
+       { Look at the date and time syntax }
 
-    if not StringHas(TimeString, 'Z') then Exit;
-    if not length(TimeString) = 5 then Exit;
-    if not StringIsAllNumbers(Copy(TimeString, 1, 4)) then Exit;
+     if not StringHas(TimeString, 'Z') then Exit;
+     if not length(TimeString) = 5 then Exit;
+     if not StringIsAllNumbers(Copy(TimeString, 1, 4)) then Exit;
 
-      { Convert the frequency }
+       { Convert the frequency }
 
-    if TempFrequency < MaxLongInt div 9 then
-      TempFrequency := TempFrequency * 1000; { Convert kHz to Hz }
+     if TempFrequency < MaxLongInt div 9 then
+        begin
+        TempFrequency := TempFrequency * 1000; { Convert kHz to Hz }
+        end;
 
-      { See if more than 2,000,000,000 Hz or 2 GHz }
+       { See if more than 2,000,000,000 Hz or 2 GHz }
 
-    if (TempFrequency > 2000000000) or (TempFrequency < 0) then
-      Exit;
+     if (TempFrequency > 2000000000) or (TempFrequency < 0) then
+        begin
+        Exit;
+        end;
 
-    Frequency := round(TempFrequency);
+     Frequency := round(TempFrequency);
 
-    Mode := ActiveMode; { In case on 160 }
+     Mode := ActiveMode; { In case on 160 }
 
-    CalculateBandMode(Frequency, Band, Mode);
+     CalculateBandMode(Frequency, Band, Mode);
 
-    if Band = NoBand then Exit;
-    if Mode = NoMode then Exit;
+     if Band = NoBand then Exit;
+     if Mode = NoMode then Exit;
 
-    QSXFrequency := LookForQSXFrequency(Frequency, Notes);
+     QSXFrequency := LookForQSXFrequency(Frequency, Notes);
 
-      { Get rid of <>'s around source call }
+       { Get rid of <>'s around source call }
 
-    if Copy(SourceCall, 1, 1) = '<' then Delete(SourceCall, 1, 1);
+     if Copy(SourceCall, 1, 1) = '<' then
+        begin
+        Delete(SourceCall, 1, 1);
+        end;
 
-    if Copy(SourceCall, length(SourceCall), 1) = '>' then
-      Delete(SourceCall, length(SourceCall), 1);
+     if Copy(SourceCall, length(SourceCall), 1) = '>' then
+        begin
+        Delete(SourceCall, length(SourceCall), 1);
+        end;
 
-    SpotMode := SHDXSpot;
+     SpotMode := SHDXSpot;
 
-    PacketFileInputSpot := True;
-  end;
+     PacketFileInputSpot := True;
+     end;
 
 end;
 
@@ -697,36 +738,43 @@ var
 
 begin
   while pos(CarriageReturn, PacketString) > 0 do
-    Delete(PacketString, pos(CarriageReturn, PacketString), 1);
+     begin
+     Delete(PacketString, pos(CarriageReturn, PacketString), 1);
+     end;
 
   while pos(LineFeed, PacketString) > 0 do
-    Delete(PacketString, pos(LineFeed, PacketString), 1);
+     begin
+     Delete(PacketString, pos(LineFeed, PacketString), 1);
+     end;
 
   GetRidOfPrecedingSpaces(PacketString);
 
   Message := UpperCase(PacketString);
 
   if FoundDXSpot(PacketString, DXSpot) or ShowDXResponse(PacketString, DXSpot) then
-  begin
-    ProcessPacketSpot(DXSpot);
-    Exit;
-  end;
+     begin
+     ProcessPacketSpot(DXSpot);
+     Exit;
+     end;
 
   { Might this be a talk or an announce message that I need to display? }
 
   if TalkOrAnnounceMessage(PacketString) then
-  begin
-    if PacketBeep then Write(Beep);
-      {
+     begin
+     if PacketBeep then
+        begin
+        Write(Beep);
+        end;
+       {
           if length(PacketString) > 72 then
             QuickDisplay(Copy(PacketString, 1, 72))
           else
             QuickDisplay(PacketString);
       }
-    QuickDisplay(string(PAnsiChar(@PacketString[1])));
-    Exit;
+     QuickDisplay(string(PAnsiChar(@PacketString[1])));
+     Exit;
 
-  end;
+     end;
 end;
 
 procedure PacketObject.CheckPacketBuffer(DisplayNewData: boolean);
@@ -811,65 +859,80 @@ begin
   { Remove any beeps - we don't want them in the display buffer. }
 
   while pos(ControlG, DisplayLine) > 0 do
-    Delete(DisplayLine, pos(ControlG, DisplayLine), 1);
+     begin
+     Delete(DisplayLine, pos(ControlG, DisplayLine), 1);
+     end;
 
   { Make sure we don't have any leading LineFeeds or CarriageReturns }
 
   while (Copy(DisplayLine, 1, 1) = LineFeed) or (Copy(DisplayLine, 1, 1) = CarriageReturn) do
-    Delete(DisplayLine, 1, 1);
+     begin
+     Delete(DisplayLine, 1, 1);
+     end;
 
   while pos(LineFeed, DisplayLine) > 0 do
-  begin
-    LineWidth := pos(LineFeed, DisplayLine);
+     begin
+     LineWidth := pos(LineFeed, DisplayLine);
 
-      { We are going to ignore the last two characters for now - they
+       { We are going to ignore the last two characters for now - they
         are assumed to be carriage return and line feed }
 
-    if LineWidth > 2 then { If more than just CR/LF }
-    begin
-      TempString := Copy(DisplayLine, 1, LineWidth - 2);
-
-      if LineWidth >= 80 then TempString := Copy(TempString, 1, 79);
-
-          { Send this message to the network if appropriate }
-
-//               if BroadcastAllPacketData and (Packet.PacketSerialPort <> NoPort) and (ActiveMultiPort <> NoPort) then
-//                  SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
-//                     MultiPacketReceivedMessage, TempString);
-
-          { Save this message to the packet log file if there is one }
-
-      if PacketLogFileName <> '' then
-        if OpenFileForAppend(FileWrite, PacketLogFileName) then
+     if LineWidth > 2 then { If more than just CR/LF }
         begin
-          WriteLn(FileWrite, TempString);
-          Close(FileWrite);
+        TempString := Copy(DisplayLine, 1, LineWidth - 2);
+
+        if LineWidth >= 80 then
+           begin
+           TempString := Copy(TempString, 1, 79);
+           end;
+
+            { Send this message to the network if appropriate }
+
+  //               if BroadcastAllPacketData and (Packet.PacketSerialPort <> NoPort) and (ActiveMultiPort <> NoPort) then
+  //                  SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
+  //                     MultiPacketReceivedMessage, TempString);
+
+            { Save this message to the packet log file if there is one }
+
+        if PacketLogFileName <> '' then
+          if OpenFileForAppend(FileWrite, PacketLogFileName) then
+             begin
+             WriteLn(FileWrite, TempString);
+             Close(FileWrite);
+             end;
+
+            { Put the message into the packet display buffer }
+
+        PacketDisplayBuffer[PacketDisplayBufferEnd] := TempString;
+        inc(PacketDisplayBufferEnd);
+
+        if PacketDisplayBufferEnd >= 13 then
+           begin
+           PacketDisplayBufferEnd := 0;
+           end;
+
+        if PacketDisplayBufferStart = PacketDisplayBufferEnd then
+           begin
+           inc(PacketDisplayBufferStart);
+           if PacketDisplayBufferStart >= 13 then
+              begin
+              PacketDisplayBufferStart := 0;
+              end;
+           end;
         end;
 
-          { Put the message into the packet display buffer }
+       { Remove the line we just processed from the string. }
 
-      PacketDisplayBuffer[PacketDisplayBufferEnd] := TempString;
-      inc(PacketDisplayBufferEnd);
+     Delete(DisplayLine, 1, LineWidth);
 
-      if PacketDisplayBufferEnd >= 13 then PacketDisplayBufferEnd := 0;
+       { Remove any leading line feeds or carriage returns }
 
-      if PacketDisplayBufferStart = PacketDisplayBufferEnd then
-      begin
-        inc(PacketDisplayBufferStart);
-        if PacketDisplayBufferStart >= 13 then PacketDisplayBufferStart := 0;
-      end;
-    end;
+     while (Copy(DisplayLine, 1, 1) = LineFeed) or (Copy(DisplayLine, 1, 1) = CarriageReturn) do
+        begin
+        Delete(DisplayLine, 1, 1);
+        end;
 
-      { Remove the line we just processed from the string. }
-
-    Delete(DisplayLine, 1, LineWidth);
-
-      { Remove any leading line feeds or carriage returns }
-
-    while (Copy(DisplayLine, 1, 1) = LineFeed) or (Copy(DisplayLine, 1, 1) = CarriageReturn) do
-      Delete(DisplayLine, 1, 1);
-
-  end;
+     end;
 end;
 
 procedure PacketObject.Init;
@@ -899,7 +962,10 @@ begin
 
   { If the ControlB window is up - display the message as it comes in }
 
-  if PacketWindowUp then WriteLn(MessageString);
+  if PacketWindowUp then
+     begin
+     WriteLn(MessageString);
+     end;
 
   { We feed the message to both PacketMessage and PacketDisplayLine for
     processing. }
@@ -921,44 +987,50 @@ var
 begin
   Result := ' ';
   with DXSpot do
-  begin
+     begin
 
-      //         if (Band = Band160) and StringHas(MyCall, 'N6TR') then
-      //            CheckForNewCountryForTreeOn160(Call);
+     //         if (Band = Band160) and StringHas(MyCall, 'N6TR') then
+     //            CheckForNewCountryForTreeOn160(Call);
 
-               { We ignore dupes, except to put on the band map if enabled.  We
+              { We ignore dupes, except to put on the band map if enabled.  We
                  don't send this around to the network because they will get the
                  information themselves from the packet spot. }
 
-    if VisibleLog.CallIsADupe(Call, Band, Mode) then
-    begin
+   if VisibleLog.CallIsADupe(Call, Band, Mode) then
+      begin
       Result := '*';
           //               if BandMapEnable then {Dupe, Mult} {Send to mult}
           //                  NewBandMapEntry(Call, Frequency, QSXFrequency, Mode, True, False, BandMapDecayTime, False, SourceCall);
       Exit;
-    end;
+      end;
 
-      { Call is not a dupe }
+     { Call is not a dupe }
 
-    if BandMapEnable or (PacketSpots = MultSpots) then
-    begin
+   if BandMapEnable or (PacketSpots = MultSpots) then
+      begin
       Mult := VisibleLog.DetermineIfNewMult(Call, Band, Mode);
 //      Mult := MultString <> 0;
-      if Mult then Result := '@';
-    end;
+      if Mult then
+         begin
+         Result := '@';
+         end;
+      end;
 
-      //         if BandMapEnable then            NewBandMapEntry(Call, Frequency, QSXFrequency, Mode, False, Mult, BandMapDecayTime, False, SourceCall);
+     //         if BandMapEnable then            NewBandMapEntry(Call, Frequency, QSXFrequency, Mode, False, Mult, BandMapDecayTime, False, SourceCall);
 
-    if (not PacketBandSpots) or (Band = ActiveBand) then
-      if (PacketSpots <> MultSpots) or Mult then PushPacketSpot(DXSpot);
+   if (not PacketBandSpots) or (Band = ActiveBand) then
+     if (PacketSpots <> MultSpots) or Mult then
+        begin
+        PushPacketSpot(DXSpot);
+        end;
 
-    if Call = MyCall then
-    begin
+   if Call = MyCall then
+      begin
       DoABeep(Congrats);
       Result := '#';
-    end;
+      end;
 
-  end;
+     end;
 end;
 
 procedure PacketObject.PushPacketSpot(DXSpot: DXSpotType);
@@ -969,7 +1041,7 @@ procedure PacketObject.PushPacketSpot(DXSpot: DXSpotType);
 begin
   with DXSpot do
     if SpotMode = NormalSpot then
-    begin
+       begin
         //wli            if PacketBeep then Write(Beep);
 
 //      QuickDisplay(SourceCall + ' says ' + Call + ' is on ' + FrequencyString + '  ' + Notes);
@@ -987,46 +1059,54 @@ begin
   with DXSpot do
     if SpotMode = NormalSpot then { Normal spot - put at the start }
 
-    begin
-      dec(PacketMemoryStart);
+       begin
+       dec(PacketMemoryStart);
 
-      if PacketMemoryStart < 0 then
-        PacketMemoryStart := PacketSpotListLength;
+       if PacketMemoryStart < 0 then
+          begin
+          PacketMemoryStart := PacketSpotListLength;
+          end;
 
-      PacketMemory[PacketMemoryStart].Call := Call;
-      PacketMemory[PacketMemoryStart].Frequency := Frequency;
-      PacketMemory[PacketMemoryStart].QSXFrequency := QSXFrequency;
-      PacketMemory[PacketMemoryStart].Time := TimeString;
+       PacketMemory[PacketMemoryStart].Call := Call;
+       PacketMemory[PacketMemoryStart].Frequency := Frequency;
+       PacketMemory[PacketMemoryStart].QSXFrequency := QSXFrequency;
+       PacketMemory[PacketMemoryStart].Time := TimeString;
 
-      if PacketMemoryStart = PacketMemoryEnd then
-      begin
-        dec(PacketMemoryEnd);
+       if PacketMemoryStart = PacketMemoryEnd then
+          begin
+          dec(PacketMemoryEnd);
 
-        if PacketMemoryEnd < 0 then
-          PacketMemoryEnd := PacketSpotListLength;
-      end;
-    end
+          if PacketMemoryEnd < 0 then
+             begin
+             PacketMemoryEnd := PacketSpotListLength;
+             end;
+          end;
+       end
 
     else { SH/DX response = put it at the end }
 
-    begin
-      PacketMemory[PacketMemoryEnd].Call := Call;
-      PacketMemory[PacketMemoryEnd].Frequency := Frequency;
-      PacketMemory[PacketMemoryEnd].QSXFrequency := QSXFrequency;
-      PacketMemory[PacketMemoryEnd].Time := TimeString;
-      inc(PacketMemoryEnd);
+       begin
+       PacketMemory[PacketMemoryEnd].Call := Call;
+       PacketMemory[PacketMemoryEnd].Frequency := Frequency;
+       PacketMemory[PacketMemoryEnd].QSXFrequency := QSXFrequency;
+       PacketMemory[PacketMemoryEnd].Time := TimeString;
+       inc(PacketMemoryEnd);
 
-      if PacketMemoryEnd > PacketSpotListLength then
-        PacketMemoryEnd := 0;
+       if PacketMemoryEnd > PacketSpotListLength then
+          begin
+          PacketMemoryEnd := 0;
+          end;
 
-      if PacketMemoryStart = PacketMemoryEnd then
-      begin
-        inc(PacketMemoryStart);
+       if PacketMemoryStart = PacketMemoryEnd then
+          begin
+          inc(PacketMemoryStart);
 
-        if PacketMemoryStart > PacketSpotListLength then
-          PacketMemoryStart := 0;
-      end;
-    end;
+          if PacketMemoryStart > PacketSpotListLength then
+             begin
+             PacketMemoryStart := 0;
+             end;
+          end;
+       end;
 end;
 
 procedure PacketObject.DeletePacketSpot(SpotAddress: integer);
@@ -1036,13 +1116,15 @@ var
 
 begin
   if SpotAddress = PacketMemoryStart then
-  begin
-    inc(PacketMemoryStart);
+     begin
+     inc(PacketMemoryStart);
 
-    if PacketMemoryStart > PacketSpotListLength then
-      PacketMemoryStart := 0;
-    Exit;
-  end;
+     if PacketMemoryStart > PacketSpotListLength then
+        begin
+        PacketMemoryStart := 0;
+        end;
+     Exit;
+     end;
 
   { This loop gets stuck!! }
 
@@ -1050,24 +1132,30 @@ begin
     SourceAddress := SpotAddress + 1; { Point to next cell }
 
     if SourceAddress > PacketSpotListLength then { See if we looped }
-      SourceAddress := 0;
+       begin
+       SourceAddress := 0;
+       end;
 
     if SourceAddress = PacketMemoryEnd then { We are done? }
-    begin
-      dec(PacketMemoryEnd);
+       begin
+       dec(PacketMemoryEnd);
 
-      if PacketMemoryEnd < 0 then { Back end up by one }
-        PacketMemoryEnd := PacketSpotListLength;
+       if PacketMemoryEnd < 0 then { Back end up by one }
+          begin
+          PacketMemoryEnd := PacketSpotListLength;
+          end;
 
-      Exit;
-    end;
+       Exit;
+       end;
 
     PacketMemory[SpotAddress] := PacketMemory[SourceAddress];
 
     inc(SpotAddress);
 
     if SpotAddress > PacketSpotListLength then
-      SpotAddress := 0;
+       begin
+       SpotAddress := 0;
+       end;
 
   until False;
 end;
@@ -1083,28 +1171,30 @@ var
 
 begin
   for Spot := 1 to PacketSpotListLength do
-  begin
-    PacketAddress := PacketMemoryStart + Spot - 1;
+     begin
+     PacketAddress := PacketMemoryStart + Spot - 1;
 
-    if PacketAddress > PacketSpotListLength then
-      PacketAddress := PacketAddress - (PacketSpotListLength + 1);
-
-    if PacketAddress = PacketMemoryEnd then Exit;
-
-    with PacketMemory[PacketAddress] do
-      if (Call = DeleteCall) then
-      begin
-        Mode := ActiveMode;
-
-        CalculateBandMode(Frequency, Band, Mode);
-
-        if (Band = DeleteBand) and (Mode = DeleteMode) then
+     if PacketAddress > PacketSpotListLength then
         begin
-          DeletePacketSpot(PacketAddress);
-          Exit;
+        PacketAddress := PacketAddress - (PacketSpotListLength + 1);
         end;
-      end;
-  end;
+
+     if PacketAddress = PacketMemoryEnd then Exit;
+
+     with PacketMemory[PacketAddress] do
+       if (Call = DeleteCall) then
+          begin
+          Mode := ActiveMode;
+
+          CalculateBandMode(Frequency, Band, Mode);
+
+          if (Band = DeleteBand) and (Mode = DeleteMode) then
+             begin
+             DeletePacketSpot(PacketAddress);
+             Exit;
+             end;
+          end;
+     end;
 end;
 
 procedure PacketObject.DisplayPacketDisplayBuffer;
@@ -1116,12 +1206,15 @@ begin
   Address := PacketDisplayBufferStart;
 
   while Address <> PacketDisplayBufferEnd do
-  begin
-    WriteLn(PacketDisplayBuffer[Address]);
+     begin
+     WriteLn(PacketDisplayBuffer[Address]);
 
-    inc(Address);
-    if Address >= 13 then Address := 0;
-  end;
+     inc(Address);
+     if Address >= 13 then
+        begin
+        Address := 0;
+        end;
+     end;
 
 end;
 

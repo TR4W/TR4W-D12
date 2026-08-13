@@ -93,7 +93,9 @@ end;
 procedure TSerialPort.CheckHandle;
 begin
   if not IsOpen then
-    raise ESerialError.Create('Serial port not open');
+     begin
+     raise ESerialError.Create('Serial port not open');
+     end;
 end;
 
 function TSerialPort.BaudToConst(ABaud: TSerialBaudRate): DWORD;
@@ -150,13 +152,19 @@ var
   PortStr: string;
 begin
   if IsOpen then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // For COM10+ you MUST use the \\.\ prefix
   if Pos('\\.\', FPortName) = 0 then
-    PortStr := '\\.\' + FPortName
+     begin
+     PortStr := '\\.\' + FPortName
+     end
   else
-    PortStr := FPortName;
+     begin
+     PortStr := FPortName;
+     end;
 
   FHandle := CreateFileW(
     PWideChar(PortStr),
@@ -168,18 +176,20 @@ begin
     0
   );
   if FHandle = INVALID_HANDLE_VALUE then
-    raise ESerialError.CreateFmt('Cannot open %s (error %d)',
-      [FPortName, GetLastError]);
+     begin
+     raise ESerialError.CreateFmt('Cannot open %s (error %d)',
+       [FPortName, GetLastError]);
+     end;
 
   // Configure line settings
   FillChar(DCB, SizeOf(DCB), 0);
   DCB.DCBlength := SizeOf(DCB);
   if not GetCommState(FHandle, DCB) then
-  begin
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
-    raise ESerialError.Create('GetCommState failed');
-  end;
+     begin
+     CloseHandle(FHandle);
+     FHandle := INVALID_HANDLE_VALUE;
+     raise ESerialError.Create('GetCommState failed');
+     end;
 
   DCB.BaudRate := BaudToConst(ABaud);
   DCB.ByteSize := ADataBits;
@@ -188,17 +198,19 @@ begin
   // Flags are set via Flags field in Delphi 7
   DCB.Flags := DCB.Flags or $0001;  // fBinary = 1
   if AParity <> spNone then
-    DCB.Flags := DCB.Flags or $0002;  // fParity = 1
+     begin
+     DCB.Flags := DCB.Flags or $0002;  // fParity = 1
+     end;
   // Disable DTR and RTS - not used for CAT control, raising them can interfere with radio
   DCB.Flags := DCB.Flags and not $0030;  // fDtrControl bits 4-5 = 0 (DTR_CONTROL_DISABLE)
   DCB.Flags := DCB.Flags and not $3000;  // fRtsControl bits 12-13 = 0 (RTS_CONTROL_DISABLE)
 
   if not SetCommState(FHandle, DCB) then
-  begin
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
-    raise ESerialError.Create('SetCommState failed');
-  end;
+     begin
+     CloseHandle(FHandle);
+     FHandle := INVALID_HANDLE_VALUE;
+     raise ESerialError.Create('SetCommState failed');
+     end;
 
   // Non-blocking timeouts for thread-based reading
   FillChar(Timeouts, SizeOf(Timeouts), 0);
@@ -209,11 +221,11 @@ begin
   Timeouts.WriteTotalTimeoutConstant   := 50;
 
   if not SetCommTimeouts(FHandle, Timeouts) then
-  begin
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
-    raise ESerialError.Create('SetCommTimeouts failed');
-  end;
+     begin
+     CloseHandle(FHandle);
+     FHandle := INVALID_HANDLE_VALUE;
+     raise ESerialError.Create('SetCommTimeouts failed');
+     end;
 
   // Clear buffers
   PurgeComm(FHandle, PURGE_RXCLEAR or PURGE_TXCLEAR);
@@ -232,13 +244,19 @@ var
   PortStr: string;
 begin
   if IsOpen then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // For COM10+ you MUST use the \\.\ prefix
   if Pos('\\.\', FPortName) = 0 then
-    PortStr := '\\.\' + FPortName
+     begin
+     PortStr := '\\.\' + FPortName
+     end
   else
-    PortStr := FPortName;
+     begin
+     PortStr := FPortName;
+     end;
 
   FHandle := CreateFileW(
     PWideChar(PortStr),
@@ -250,18 +268,20 @@ begin
     0
   );
   if FHandle = INVALID_HANDLE_VALUE then
-    raise ESerialError.CreateFmt('Cannot open %s (error %d)',
-      [FPortName, GetLastError]);
+     begin
+     raise ESerialError.CreateFmt('Cannot open %s (error %d)',
+       [FPortName, GetLastError]);
+     end;
 
   // Configure line settings
   FillChar(DCB, SizeOf(DCB), 0);
   DCB.DCBlength := SizeOf(DCB);
   if not GetCommState(FHandle, DCB) then
-  begin
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
-    raise ESerialError.Create('GetCommState failed');
-  end;
+     begin
+     CloseHandle(FHandle);
+     FHandle := INVALID_HANDLE_VALUE;
+     raise ESerialError.Create('GetCommState failed');
+     end;
 
   // Use raw values directly
   DCB.BaudRate := ABaudRate;
@@ -270,31 +290,43 @@ begin
 
   // Convert stop bits: 1=ONESTOPBIT(0), 2=TWOSTOPBITS(2)
   if AStopBits = 1 then
-    DCB.StopBits := ONESTOPBIT
+     begin
+     DCB.StopBits := ONESTOPBIT
+     end
   else if AStopBits = 2 then
-    DCB.StopBits := TWOSTOPBITS
+     begin
+     DCB.StopBits := TWOSTOPBITS
+     end
   else
-    DCB.StopBits := ONESTOPBIT;  // Default to 1
+     begin
+     DCB.StopBits := ONESTOPBIT;  // Default to 1
+     end;
 
   // Flags are set via Flags field in Delphi 7
   DCB.Flags := DCB.Flags or $0001;  // fBinary = 1
   if AParity <> 0 then  // 0 = no parity
-    DCB.Flags := DCB.Flags or $0002;  // fParity = 1
+     begin
+     DCB.Flags := DCB.Flags or $0002;  // fParity = 1
+     end;
   // DTR control: bits 4-5. 0=$00=DISABLE, 1=$10=ENABLE
   DCB.Flags := DCB.Flags and not $0030;  // clear fDtrControl bits first
   if ADtr then
-    DCB.Flags := DCB.Flags or $0010;     // DTR_CONTROL_ENABLE
+     begin
+     DCB.Flags := DCB.Flags or $0010;     // DTR_CONTROL_ENABLE
+     end;
   // RTS control: bits 12-13. 0=$0000=DISABLE, 1=$1000=ENABLE
   DCB.Flags := DCB.Flags and not $3000;  // clear fRtsControl bits first
   if ARts then
-    DCB.Flags := DCB.Flags or $1000;     // RTS_CONTROL_ENABLE
+     begin
+     DCB.Flags := DCB.Flags or $1000;     // RTS_CONTROL_ENABLE
+     end;
 
   if not SetCommState(FHandle, DCB) then
-  begin
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
-    raise ESerialError.Create('SetCommState failed');
-  end;
+     begin
+     CloseHandle(FHandle);
+     FHandle := INVALID_HANDLE_VALUE;
+     raise ESerialError.Create('SetCommState failed');
+     end;
 
   // Non-blocking timeouts for thread-based reading
   FillChar(Timeouts, SizeOf(Timeouts), 0);
@@ -305,11 +337,11 @@ begin
   Timeouts.WriteTotalTimeoutConstant   := 50;
 
   if not SetCommTimeouts(FHandle, Timeouts) then
-  begin
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
-    raise ESerialError.Create('SetCommTimeouts failed');
-  end;
+     begin
+     CloseHandle(FHandle);
+     FHandle := INVALID_HANDLE_VALUE;
+     raise ESerialError.Create('SetCommTimeouts failed');
+     end;
 
   // Clear buffers
   PurgeComm(FHandle, PURGE_RXCLEAR or PURGE_TXCLEAR);
@@ -318,24 +350,28 @@ end;
 procedure TSerialPort.Close;
 begin
   if IsOpen then
-  begin
-    CloseHandle(FHandle);
-    FHandle := INVALID_HANDLE_VALUE;
-  end;
+     begin
+     CloseHandle(FHandle);
+     FHandle := INVALID_HANDLE_VALUE;
+     end;
 end;
 
 function TSerialPort.Read(var Buffer; Count: DWORD): DWORD;
 begin
   CheckHandle;
   if not ReadFile(FHandle, Buffer, Count, Result, nil) then
-    raise ESerialError.CreateFmt('ReadFile failed (error %d)', [GetLastError]);
+     begin
+     raise ESerialError.CreateFmt('ReadFile failed (error %d)', [GetLastError]);
+     end;
 end;
 
 function TSerialPort.Write(const Buffer; Count: DWORD): DWORD;
 begin
   CheckHandle;
   if not WriteFile(FHandle, Buffer, Count, Result, nil) then
-    raise ESerialError.CreateFmt('WriteFile failed (error %d)', [GetLastError]);
+     begin
+     raise ESerialError.CreateFmt('WriteFile failed (error %d)', [GetLastError]);
+     end;
 end;
 
 function TSerialPort.ReadString(MaxLen: Integer): string;
@@ -346,15 +382,19 @@ var
 begin
   Result := '';
   if MaxLen > SizeOf(Buffer) then
-    Len := SizeOf(Buffer)
+     begin
+     Len := SizeOf(Buffer)
+     end
   else
-    Len := MaxLen;
+     begin
+     Len := MaxLen;
+     end;
 
   BytesRead := Read(Buffer, Len);
   if BytesRead > 0 then
-  begin
-    SetString(Result, Buffer, BytesRead);
-  end;
+     begin
+     SetString(Result, Buffer, BytesRead);
+     end;
 end;
 
 procedure TSerialPort.WriteString(const S: string);
@@ -369,7 +409,9 @@ end;
 procedure TSerialPort.WriteBytes(const Data: TBytes);
 begin
   if Length(Data) > 0 then
-    Write(Data[0], Length(Data));
+     begin
+     Write(Data[0], Length(Data));
+     end;
 end;
 
 function TSerialPort.ReadBytes(MaxLen: Integer): TBytes;
@@ -379,14 +421,20 @@ var
   Len: Integer;
 begin
   if MaxLen > SizeOf(Buffer) then
-    Len := SizeOf(Buffer)
+     begin
+     Len := SizeOf(Buffer)
+     end
   else
-    Len := MaxLen;
+     begin
+     Len := MaxLen;
+     end;
 
   BytesRead := Read(Buffer, Len);
   SetLength(Result, BytesRead);
   if BytesRead > 0 then
-    Move(Buffer[0], Result[0], BytesRead);
+     begin
+     Move(Buffer[0], Result[0], BytesRead);
+     end;
 end;
 
 end.

@@ -475,13 +475,17 @@ begin
   Result := 'unknown';
   hLib := GetModuleHandle(HAMLIB_DLL);
   if hLib = 0 then
-    hLib := LoadLibrary(HAMLIB_DLL);
+     begin
+     hLib := LoadLibrary(HAMLIB_DLL);
+     end;
   if hLib <> 0 then
-  begin
-    pVersion := GetProcAddress(hLib, 'hamlib_version2');
-    if pVersion <> nil then
-      Result := string(pVersion^);
-  end;
+     begin
+     pVersion := GetProcAddress(hLib, 'hamlib_version2');
+     if pVersion <> nil then
+        begin
+        Result := string(pVersion^);
+        end;
+     end;
 end;
 
 function RigErrorToString(errcode: Integer): string;
@@ -519,60 +523,104 @@ function RigModeToString(mode: rmode_t): string;
 begin
   // Check for composite modes first
   if mode = RIG_MODE_SSB then
-    Result := 'SSB'
+     begin
+     Result := 'SSB'
+     end
   else if mode = RIG_MODE_ECSS then
-    Result := 'ECSS'
+     begin
+     Result := 'ECSS'
+     end
   // Individual modes
   else if mode = RIG_MODE_AM then
-    Result := 'AM'
+     begin
+     Result := 'AM'
+     end
   else if mode = RIG_MODE_CW then
-    Result := 'CW'
+     begin
+     Result := 'CW'
+     end
   else if mode = RIG_MODE_USB then
-    Result := 'USB'
+     begin
+     Result := 'USB'
+     end
   else if mode = RIG_MODE_LSB then
-    Result := 'LSB'
+     begin
+     Result := 'LSB'
+     end
   else if mode = RIG_MODE_RTTY then
-    Result := 'RTTY'
+     begin
+     Result := 'RTTY'
+     end
   else if mode = RIG_MODE_FM then
-    Result := 'FM'
+     begin
+     Result := 'FM'
+     end
   else if mode = RIG_MODE_WFM then
-    Result := 'WFM'
+     begin
+     Result := 'WFM'
+     end
   else if mode = RIG_MODE_CWR then
-    Result := 'CWR'
+     begin
+     Result := 'CWR'
+     end
   else if mode = RIG_MODE_RTTYR then
-    Result := 'RTTYR'
+     begin
+     Result := 'RTTYR'
+     end
   else if mode = RIG_MODE_AMS then
-    Result := 'AMS'
+     begin
+     Result := 'AMS'
+     end
   else if mode = RIG_MODE_PKTLSB then
-    Result := 'PKT-LSB'
+     begin
+     Result := 'PKT-LSB'
+     end
   else if mode = RIG_MODE_PKTUSB then
-    Result := 'PKT-USB'
+     begin
+     Result := 'PKT-USB'
+     end
   else if mode = RIG_MODE_PKTFM then
-    Result := 'PKT-FM'
+     begin
+     Result := 'PKT-FM'
+     end
   else if mode = RIG_MODE_FAX then
-    Result := 'FAX'
+     begin
+     Result := 'FAX'
+     end
   else if mode = RIG_MODE_PKTAM then
-    Result := 'PKT-AM'
+     begin
+     Result := 'PKT-AM'
+     end
   else if mode = RIG_MODE_FMN then
-    Result := 'FMN'
+     begin
+     Result := 'FMN'
+     end
   else if mode = RIG_MODE_C4FM then
-    Result := 'C4FM'
+     begin
+     Result := 'C4FM'
+     end
   else if mode = RIG_MODE_DSTAR then
-    Result := 'D-STAR'
+     begin
+     Result := 'D-STAR'
+     end
   else if mode = RIG_MODE_NONE then
-    Result := 'NONE'
+     begin
+     Result := 'NONE'
+     end
   else
-    Result := Format('Mode($%x)', [mode]);
+     begin
+     Result := Format('Mode($%x)', [mode]);
+     end;
 end;
 
 function RigVFOToString(vfo: vfo_t): string;
 begin
   // Note: RIG_VFO_RX = RIG_VFO_CURR, so we check TX flag first
   if (vfo and RIG_VFO_TX_FLAG) <> 0 then
-  begin
-    Result := 'TX';
-    Exit;
-  end;
+     begin
+     Result := 'TX';
+     Exit;
+     end;
 
   case vfo of
     RIG_VFO_NONE:   Result := 'NONE';
@@ -628,7 +676,9 @@ var
   i: Integer;
 begin
   if rig = nil then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // Calculate pointer to pathname field
   pathnamePtr := PAnsiChar(Integer(rig) + PATHNAME_OFFSET);
@@ -638,11 +688,15 @@ begin
   sourceBytes := PAnsiChar(pathnameA);
   bytesToCopy := Length(pathnameA);
   if bytesToCopy > HAMLIB_FILPATHLEN - 1 then
-    bytesToCopy := HAMLIB_FILPATHLEN - 1;
+     begin
+     bytesToCopy := HAMLIB_FILPATHLEN - 1;
+     end;
 
   // Copy bytes
   for i := 0 to bytesToCopy - 1 do
-    pathnamePtr[i] := sourceBytes[i];
+     begin
+     pathnamePtr[i] := sourceBytes[i];
+     end;
 
   // Null terminate
   pathnamePtr[bytesToCopy] := #0;
@@ -656,7 +710,9 @@ var
 begin
   Result := '';
   if rig = nil then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // Calculate pointer to pathname field
   pathnamePtr := PAnsiChar(Integer(rig) + PATHNAME_OFFSET);
@@ -683,7 +739,9 @@ var
   timeoutPtr: PInteger;
 begin
   if rig = nil then
-    Exit;
+     begin
+     Exit;
+     end;
 
   // Calculate pointer to timeout field
   timeoutPtr := PInteger(Integer(rig) + TIMEOUT_OFFSET);

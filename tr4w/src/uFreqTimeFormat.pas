@@ -48,10 +48,10 @@ var
   hz                                    : integer;
 begin
   if i = 0 then
-  begin
-    Result := '';
-    Exit;
-  end;
+     begin
+     Result := '';
+     Exit;
+     end;
   hz := (i mod 1000) div 10;
   // Issue #997: asm wsprintf-push -> SysUtils.Format. khz = i div 1000.
   Result := SysUtils.Format('%u.%.2u', [i div 1000, hz]);
@@ -60,10 +60,10 @@ end;
 function FreqToPCharWithoutHZ(i: integer): string;
 begin
   if i = 0 then
-  begin
-    Result := '';
-    Exit;
-  end;
+     begin
+     Result := '';
+     Exit;
+     end;
 
   // Issue #997: asm wsprintf-push -> SysUtils.Format. khz = i div 1000.
   Result := SysUtils.Format('%6u', [i div 1000]);
@@ -96,9 +96,13 @@ begin
   // (Value = hours; a Cardinal msecs caps hours at ~1193, so it always fits the
   // 16-bit truncation the old asm did.)
   if WithMsec then
-    Result := SysUtils.Format('%.2u:%.2u:%.2u:%.3u', [Value, minuts, Seconds, milliseconds])
+     begin
+     Result := SysUtils.Format('%.2u:%.2u:%.2u:%.3u', [Value, minuts, Seconds, milliseconds])
+     end
   else
-    Result := SysUtils.Format('%.2u:%.2u:%.2u', [Value, minuts, Seconds]);
+     begin
+     Result := SysUtils.Format('%.2u:%.2u:%.2u', [Value, minuts, Seconds]);
+     end;
 end;
 
 function SystemTimeToString(SysTime: SYSTEMTIME): string;
@@ -118,9 +122,13 @@ begin
   // Issue #997: asm wsprintf-push -> SysUtils.Format (proven byte-identical to
   // the asm baseline by uTestFreqTimeFormat). %.2hu/%.3hu -> %.2u/%.3u.
   if WithMilliseconds then
-    Result := SysUtils.Format('%.2u:%.2u:%.2u:%.3u', [Hour, Minute, Second, Milliseconds])
+     begin
+     Result := SysUtils.Format('%.2u:%.2u:%.2u:%.3u', [Hour, Minute, Second, Milliseconds])
+     end
   else
-    Result := SysUtils.Format('%.2u:%.2u:%.2u', [Hour, Minute, Second]);
+     begin
+     Result := SysUtils.Format('%.2u:%.2u:%.2u', [Hour, Minute, Second]);
+     end;
 end;
 
 end.

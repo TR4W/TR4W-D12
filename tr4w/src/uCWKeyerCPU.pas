@@ -83,7 +83,10 @@ begin
       // stale EAX and never applied it.  The CW thread runs TIME_CRITICAL.
       SetThreadPriority(CWThreadHandle, THREAD_PRIORITY_TIME_CRITICAL);
 {$IF OZCR2008}
-      if tMessagesExhangeEnable then SetTimer(tr4whandle, UPDATE_NET_CW_MESSAGE, 250, @SendMessageStatus);
+      if tMessagesExhangeEnable then
+         begin
+         SetTimer(tr4whandle, UPDATE_NET_CW_MESSAGE, 250, @SendMessageStatus);
+         end;
 {$IFEND}
       end;
 end;

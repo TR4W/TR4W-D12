@@ -1080,15 +1080,22 @@ function CharacterFromIntegerValue(IntegerValue: integer): Char;
 begin
   Result := '?';
 
-  if IntegerValue = 0 then CharacterFromIntegerValue := ' ';
+  if IntegerValue = 0 then
+     begin
+     CharacterFromIntegerValue := ' ';
+     end;
 
   if IntegerValue >= 1 then
     if IntegerValue <= 10 then
-      Result := CHR(IntegerValue + 47);
+       begin
+       Result := CHR(IntegerValue + 47);
+       end;
 
   if IntegerValue >= 11 then
     if IntegerValue <= 36 then
-      Result := CHR(IntegerValue + 54);
+       begin
+       Result := CHR(IntegerValue + 54);
+       end;
 
   {
     case IntegerValue of
@@ -1144,34 +1151,34 @@ function WordValueFromCharacter(Character: AnsiChar): Word;
 begin
   if (Character = CHR(0)) or (Character = ' ') or
     (Character = '/') or (Character = '?') then
-  begin
-    WordValueFromCharacter := 0;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := 0;
+     Exit;
+     end;
 
   if Character in ['A'..'Z'] then
-  begin
-    WordValueFromCharacter := Ord(Character) - Ord('A') + 11;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := Ord(Character) - Ord('A') + 11;
+     Exit;
+     end;
 
   if Character in ['a'..'z'] then
-  begin
-    WordValueFromCharacter := Ord(Character) - Ord('a') + 11;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := Ord(Character) - Ord('a') + 11;
+     Exit;
+     end;
 
   if Character in ['0'..'9'] then
-  begin
-    WordValueFromCharacter := Ord(Character) - Ord('0') + 1;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := Ord(Character) - Ord('0') + 1;
+     Exit;
+     end;
 
   if Character = '�' then
-  begin
-    WordValueFromCharacter := 1;
-    Exit;
-  end;
+     begin
+     WordValueFromCharacter := 1;
+     Exit;
+     end;
 
   WordValueFromCharacter := 0;
 end;
@@ -1186,11 +1193,11 @@ var
 
 begin
   if ((Input = '') or (length(Input) > 3)) then
-  begin
-    Output[1] := 0;
-    Output[2] := 0;
-    Exit;
-  end;
+     begin
+     Output[1] := 0;
+     Output[2] := 0;
+     Exit;
+     end;
 
   Multiplier := 1;
   Sum := 0;
@@ -1204,13 +1211,13 @@ begin
         end;
   }
   for CharPosition := length(Input) downto 1 do
-  begin
-    Value := WordValueFromCharacter(Input[CharPosition]);
-    Sum := Sum + Value * Multiplier;
-    inc(LoopCount);
-    if LoopCount >= 3 then Break;
-    Multiplier := Multiplier * 37;
-  end;
+     begin
+     Value := WordValueFromCharacter(Input[CharPosition]);
+     Sum := Sum + Value * Multiplier;
+     inc(LoopCount);
+     if LoopCount >= 3 then Break;
+     Multiplier := Multiplier * 37;
+     end;
 
   Output[2] := Lo(Sum);
   Output[1] := Hi(Sum);
@@ -1225,25 +1232,40 @@ var
 
 begin
   TempInt1 := Input[1];
-  if TempInt1 < 0 then TempInt1 := TempInt1 + 256;
+  if TempInt1 < 0 then
+     begin
+     TempInt1 := TempInt1 + 256;
+     end;
   TempInt2 := Input[2];
-  if TempInt2 < 0 then TempInt2 := TempInt2 + 256;
+  if TempInt2 < 0 then
+     begin
+     TempInt2 := TempInt2 + 256;
+     end;
   Sum := TempInt1 * 256 + TempInt2;
 
   if Sum = 0 then
-  begin
-    ExpandTwoBytes := '';
-    Exit;
-  end;
+     begin
+     ExpandTwoBytes := '';
+     Exit;
+     end;
 
   TempString := CharacterFromIntegerValue(Sum div 1369);
-  if TempString[1] = CHR(0) then TempString := '';
+  if TempString[1] = CHR(0) then
+     begin
+     TempString := '';
+     end;
   Sum := Sum mod 1369;
   TempString := TempString + CharacterFromIntegerValue(Sum div 37);
-  if TempString[1] = CHR(0) then TempString := '';
+  if TempString[1] = CHR(0) then
+     begin
+     TempString := '';
+     end;
   Sum := Sum mod 37;
   TempString := TempString + CharacterFromIntegerValue(Sum);
-  if TempString[1] = CHR(0) then TempString := '';
+  if TempString[1] = CHR(0) then
+     begin
+     TempString := '';
+     end;
   ExpandTwoBytes := TempString;
 end;
 
@@ -1251,7 +1273,9 @@ procedure SixteenthNote(Pitch: integer);
 
 begin
   if Pitch > 0 then
-    SpeakerBeep(Pitch, Beat div 4);
+     begin
+     SpeakerBeep(Pitch, Beat div 4);
+     end;
   //  begin
   //    Sound(Pitch);
   //  end;
@@ -1263,7 +1287,9 @@ procedure EigthNote(Pitch: integer);
 
 begin
   if Pitch > 0 then
-    SpeakerBeep(Pitch, Beat div 2);
+     begin
+     SpeakerBeep(Pitch, Beat div 2);
+     end;
   //  begin
   //    Sound(Pitch);
   //  end;
@@ -1334,7 +1360,9 @@ begin
   TempBytes[2] := Input[8];
   TempString := TempString + ExpandTwoBytes(TempBytes);
   while (TempString[1] = ' ') and (length(TempString) > 1) do
-    Delete(TempString, 1, 1);
+     begin
+     Delete(TempString, 1, 1);
+     end;
   BigExpandedString := TempString;
 end;
 
@@ -1353,26 +1381,30 @@ begin
   BracketedString := '';
 
   if StartString <> '' then
-  begin
-    StartLocation := pos(StartString, LongString);
-    if StartLocation = 0 then Exit;
-  end
+     begin
+     StartLocation := pos(StartString, LongString);
+     if StartLocation = 0 then Exit;
+     end
   else
-    StartLocation := 0;
+     begin
+     StartLocation := 0;
+     end;
 
   if StartLocation > 0 then
-    Delete(LongString, 1, StartLocation + length(StartString) - 1);
+     begin
+     Delete(LongString, 1, StartLocation + length(StartString) - 1);
+     end;
 
   if StopString = '' then
-  begin
-    BracketedString := LongString;
-    Exit;
-  end
+     begin
+     BracketedString := LongString;
+     Exit;
+     end
   else
-  begin
-    StopLocation := pos(StopString, LongString);
-    if StopLocation = 0 then Exit;
-  end;
+     begin
+     StopLocation := pos(StopString, LongString);
+     if StopLocation = 0 then Exit;
+     end;
 
   BracketedString := Copy(LongString, 1, StopLocation - 1);
 end;
@@ -1431,57 +1463,68 @@ begin
     { See if the charaters are the same }
 
     if Format[FormatAddress] = Call[CallAddress] then
-    begin
-      if FormatAddress <= LengthFormat then inc(FormatAddress);
-      if CallAddress <= LengthCall then inc(CallAddress);
-      Continue;
-    end;
+       begin
+       if FormatAddress <= LengthFormat then
+          begin
+          inc(FormatAddress);
+          end;
+       if CallAddress <= LengthCall then
+          begin
+          inc(CallAddress);
+          end;
+       Continue;
+       end;
 
     { We have a mismatch.  If ? in format - count it like a match }
 
     if Format[FormatAddress] = '?' then
-    begin
-      if FormatAddress <= LengthFormat then inc(FormatAddress);
+       begin
+       if FormatAddress <= LengthFormat then
+          begin
+          inc(FormatAddress);
+          end;
 
-      if CallAddress <= LengthCall then
-        inc(CallAddress)
-      else
-      begin { We didn't have a character to match up with ? }
-        CallFitsFormat := False;
-        Exit;
-      end;
+       if CallAddress <= LengthCall then
+          begin
+          inc(CallAddress)
+          end
+       else
+          begin { We didn't have a character to match up with ? }
+          CallFitsFormat := False;
+          Exit;
+          end;
 
-      Continue;
-    end;
+       Continue;
+       end;
 
     { Now for the hard one - we are going to assume that only one
       * can be contained in the format statement }
 
     if Format[FormatAddress] = '*' then
-    begin
-      if FormatAddress = LengthFormat then { We are done }
-      begin
-        CallFitsFormat := True;
-        Exit;
-      end;
+       begin
+       if FormatAddress = LengthFormat then { We are done }
+          begin
+          CallFitsFormat := True;
+          Exit;
+          end;
 
-        { * found - not at end.  See if stuff after * matches }
+         { * found - not at end.  See if stuff after * matches }
 
-      Format := Copy(Format,
-        FormatAddress + 1,
-        LengthFormat - FormatAddress);
+       Format := Copy(Format,
+         FormatAddress + 1,
+         LengthFormat - FormatAddress);
 
-      Call := Copy(Call, length(Call) - length(Format) + 1, length(Format));
+       Call := Copy(Call, length(Call) - length(Format) + 1, length(Format));
 
-      if Call = Format then
-      begin
-        CallFitsFormat := True;
-        Exit;
-      end;
+       if Call = Format then
+          begin
+          CallFitsFormat := True;
+          Exit;
+          end;
 
-      CallFitsFormat := CallFitsFormat(Format, Call);
-      Exit;
-    end;
+       CallFitsFormat := CallFitsFormat(Format, Call);
+       Exit;
+       end;
 
     { We have a real mismatch - so return a FALSE value }
 
@@ -1600,8 +1643,12 @@ begin
   Sum := 0;
 
   if length(InputString) > 0 then
-    for Index := 1 to length(InputString) do
-      Sum := Sum + Ord(InputString[Index]);
+     begin
+     for Index := 1 to length(InputString) do
+        begin
+        Sum := Sum + Ord(InputString[Index]);
+        end;
+     end;
 
   CheckSum := Lo(Sum);
 end;
@@ -1615,8 +1662,12 @@ begin
   Sum := 0;
 
   if length(InputString) > 0 then
-    for Index := 1 to length(InputString) do
-      Sum := Sum + Ord(InputString[Index]);
+     begin
+     for Index := 1 to length(InputString) do
+        begin
+        Sum := Sum + Ord(InputString[Index]);
+        end;
+     end;
 
   CheckSumWord := Sum;
 end;
@@ -1656,15 +1707,17 @@ begin
 
   if (Position >= 1) and
     (Position < LogEntryMultWidth) then
-  begin
-    Position := Position + LogEntryMultAddress - 1;
+     begin
+     Position := Position + LogEntryMultAddress - 1;
 
-    for CharPointer := Position to Position + length(MultString) - 1 do
-      LogString[CharPointer] := ' ';
+     for CharPointer := Position to Position + length(MultString) - 1 do
+        begin
+        LogString[CharPointer] := ' ';
+        end;
 
-    DeleteMult := True;
-    Exit;
-  end;
+     DeleteMult := True;
+     Exit;
+     end;
 end;
 
 procedure MarkTime(var StartTime: Cardinal {TimeRecord});
@@ -1730,7 +1783,10 @@ begin
   TempBytes[1] := Input[3];
   TempBytes[2] := Input[4];
   TempString := TempString + ExpandTwoBytes(TempBytes);
-  while (TempString[1] = ' ') and (length(TempString) > 1) do Delete(TempString, 1, 1);
+  while (TempString[1] = ' ') and (length(TempString) > 1) do
+     begin
+     Delete(TempString, 1, 1);
+     end;
   ExpandedString := TempString;
 end;
 
@@ -1743,19 +1799,19 @@ begin
   TabPos := pos(TabKey, InputString);
 
   while TabPos > 0 do
-  begin
-    Delete(InputString, TabPos, 1);
-    Insert(' ', InputString, TabPos);
-    inc(TabPos);
+     begin
+     Delete(InputString, TabPos, 1);
+     Insert(' ', InputString, TabPos);
+     inc(TabPos);
 
-    while TabPos mod 8 <> 0 do
-    begin
-      Insert(' ', InputString, TabPos);
-      inc(TabPos);
-    end;
+     while TabPos mod 8 <> 0 do
+        begin
+        Insert(' ', InputString, TabPos);
+        inc(TabPos);
+        end;
 
-    TabPos := pos(TabKey, InputString);
-  end;
+     TabPos := pos(TabKey, InputString);
+     end;
 end;
 
 //procedure BigCursor;
@@ -1780,21 +1836,27 @@ begin
   TempString := '';
 
   if Message = '' then
-  begin
-    SlipMessage := '';
-    Exit;
-  end;
+     begin
+     SlipMessage := '';
+     Exit;
+     end;
 
   for CharPointer := 1 to length(Message) do
-  begin
-    if Message[CharPointer] = CHR(FrameEnd) then
-      TempString := Concat(TempString, CHR(FrameEscape), CHR(TransposedFrameEnd))
-    else
-      if Message[CharPointer] = CHR(FrameEscape) then
-        TempString := Concat(TempString, CHR(FrameEscape), CHR(TransposedFrameEscape))
-      else
-        TempString := TempString + Message[CharPointer];
-  end;
+     begin
+     if Message[CharPointer] = CHR(FrameEnd) then
+        begin
+        TempString := Concat(TempString, CHR(FrameEscape), CHR(TransposedFrameEnd))
+        end
+     else
+       if Message[CharPointer] = CHR(FrameEscape) then
+          begin
+          TempString := Concat(TempString, CHR(FrameEscape), CHR(TransposedFrameEscape))
+          end
+       else
+          begin
+          TempString := TempString + Message[CharPointer];
+          end;
+     end;
 
   SlipMessage := CHR(FrameEnd) + TempString + CHR(FrameEnd);
 end;
@@ -1808,9 +1870,13 @@ begin
   TempString := Copy(InputString, 1, 1);
 
   if length(TempString) > 0 then
-    FirstLetter := Char(TempString[1])
+     begin
+     FirstLetter := Char(TempString[1])
+     end
   else
-    FirstLetter := CHR(0);
+     begin
+     FirstLetter := CHR(0);
+     end;
 end;
 
 function LastLetter(InputString: Str160): Char;
@@ -1821,9 +1887,13 @@ var
 begin
   TempString := Copy(InputString, length(InputString), 1);
   if length(TempString) > 0 then
-    LastLetter := Char(TempString[1])
+     begin
+     LastLetter := Char(TempString[1])
+     end
   else
-    LastLetter := CHR(0);
+     begin
+     LastLetter := CHR(0);
+     end;
 end;
 
 
@@ -1832,23 +1902,74 @@ function GetColorInteger(ColorString: Str80): tr4wColors;
 
 begin
   ColorString := UpperCase(ColorString);
-  if ColorString = 'BLACK' then GetColorInteger := trBlack;
-  if ColorString = 'BLUE' then GetColorInteger := trBlue;
-  if ColorString = 'GREEN' then GetColorInteger := trGreen;
-  if ColorString = 'CYAN' then GetColorInteger := trCyan;
-  if ColorString = 'RED' then GetColorInteger := trRed;
-  if ColorString = 'MAGENTA' then GetColorInteger := trMagenta;
-  if ColorString = 'BROWN' then GetColorInteger := trBrown;
-  if ColorString = 'LIGHT GRAY' then GetColorInteger := trLightGray;
-  if ColorString = 'DARK GRAY' then GetColorInteger := trDarkGray;
-  if ColorString = 'LIGHT BLUE' then GetColorInteger := trLightBlue;
-  if ColorString = 'LIGHT GREEN' then GetColorInteger := trLightGreen;
-  if ColorString = 'LIGHT CYAN' then GetColorInteger := trLightCyan;
-  if ColorString = 'LIGHT RED' then GetColorInteger := trLightRed;
-  if ColorString = 'LIGHT MAGENTA' then GetColorInteger := trLightMagenta;
-  if ColorString = 'YELLOW' then GetColorInteger := trYellow;
-  if ColorString = 'WHITE' then GetColorInteger := trWhite;
-  if ColorString = 'BTNFACE' then GetColorInteger := trBtnFace;
+  if ColorString = 'BLACK' then
+     begin
+     GetColorInteger := trBlack;
+     end;
+  if ColorString = 'BLUE' then
+     begin
+     GetColorInteger := trBlue;
+     end;
+  if ColorString = 'GREEN' then
+     begin
+     GetColorInteger := trGreen;
+     end;
+  if ColorString = 'CYAN' then
+     begin
+     GetColorInteger := trCyan;
+     end;
+  if ColorString = 'RED' then
+     begin
+     GetColorInteger := trRed;
+     end;
+  if ColorString = 'MAGENTA' then
+     begin
+     GetColorInteger := trMagenta;
+     end;
+  if ColorString = 'BROWN' then
+     begin
+     GetColorInteger := trBrown;
+     end;
+  if ColorString = 'LIGHT GRAY' then
+     begin
+     GetColorInteger := trLightGray;
+     end;
+  if ColorString = 'DARK GRAY' then
+     begin
+     GetColorInteger := trDarkGray;
+     end;
+  if ColorString = 'LIGHT BLUE' then
+     begin
+     GetColorInteger := trLightBlue;
+     end;
+  if ColorString = 'LIGHT GREEN' then
+     begin
+     GetColorInteger := trLightGreen;
+     end;
+  if ColorString = 'LIGHT CYAN' then
+     begin
+     GetColorInteger := trLightCyan;
+     end;
+  if ColorString = 'LIGHT RED' then
+     begin
+     GetColorInteger := trLightRed;
+     end;
+  if ColorString = 'LIGHT MAGENTA' then
+     begin
+     GetColorInteger := trLightMagenta;
+     end;
+  if ColorString = 'YELLOW' then
+     begin
+     GetColorInteger := trYellow;
+     end;
+  if ColorString = 'WHITE' then
+     begin
+     GetColorInteger := trWhite;
+     end;
+  if ColorString = 'BTNFACE' then
+     begin
+     GetColorInteger := trBtnFace;
+     end;
 end;
 
 function GetDateString: PAnsiChar;
@@ -1924,10 +2045,10 @@ function GetLogEntryBand(LogEntry: Str160): BandType;
 
 begin
   if length(LogEntry) < 4 then
-  begin
-    GetLogEntryBand := NoBand;
-    Exit;
-  end;
+     begin
+     GetLogEntryBand := NoBand;
+     Exit;
+     end;
 
   //  TempString := Copy(LogEntry, 1, 3);
   Result := tGetBandFromString(Copy(LogEntry, 1, 3));
@@ -2069,12 +2190,18 @@ begin
   GetRidOfPrecedingSpaces(TempString);
 
   if TempString = '' then
-    TempString := Copy(LogEntry, LogEntryComputerIDAddress, LogEntryComputerIDWidth);
+     begin
+     TempString := Copy(LogEntry, LogEntryComputerIDAddress, LogEntryComputerIDWidth);
+     end;
 
   if TempString = '' then
-    GetLogEntryComputerID := CHR(0)
+     begin
+     GetLogEntryComputerID := CHR(0)
+     end
   else
-    GetLogEntryComputerID := Char(TempString[1]);
+     begin
+     GetLogEntryComputerID := Char(TempString[1]);
+     end;
 end;
 
 function GetLogEntryDateString(LogEntry: Str160): string;
@@ -2115,15 +2242,23 @@ begin
   TempString := Copy(LogEntry, LogEntryModeAddress, LogEntryModeWidth);
 
   if TempString = 'CW ' then
-    GetLogEntryMode := CW
+     begin
+     GetLogEntryMode := CW
+     end
   else
     if TempString = 'DIG' then
-      GetLogEntryMode := Digital
+       begin
+       GetLogEntryMode := Digital
+       end
     else
       if (TempString = 'SSB') or (TempString = 'FM ') then
-        GetLogEntryMode := Phone
+         begin
+         GetLogEntryMode := Phone
+         end
       else
-        GetLogEntryMode := NoMode;
+         begin
+         GetLogEntryMode := NoMode;
+         end;
 end;
 
 function GetLogEntryMultString(LogEntry: Str160): string;
@@ -2153,9 +2288,13 @@ begin
 
   Val(TempString, QSONumber, Result1);
   if Result1 = 0 then
-    GetLogEntryQSONumber := QSONumber
+     begin
+     GetLogEntryQSONumber := QSONumber
+     end
   else
-    GetLogEntryQSONumber := -1;
+     begin
+     GetLogEntryQSONumber := -1;
+     end;
 end;
 
 function GetLogEntryQSOPoints(LogEntry: Str160): integer;
@@ -2170,20 +2309,22 @@ begin
   Address := LogEntryPointsAddress + LogEntryPointsWidth;
 
   while (Copy(LogEntry, Address, 1) >= '0') and (Copy(LogEntry, Address, 1) <= '9') do
-  begin
-    TempString := TempString + LogEntry[Address];
-    inc(Address);
-  end;
+     begin
+     TempString := TempString + LogEntry[Address];
+     inc(Address);
+     end;
 
   GetRidOfPrecedingSpaces(TempString);
 
   if not StringIsAllNumbers(TempString) then
-    GetLogEntryQSOPoints := 0
+     begin
+     GetLogEntryQSOPoints := 0
+     end
   else
-  begin
-    Val(TempString, QSOPoints, Result1);
-    GetLogEntryQSOPoints := QSOPoints;
-  end;
+     begin
+     Val(TempString, QSOPoints, Result1);
+     GetLogEntryQSOPoints := QSOPoints;
+     end;
 end;
 
 function GetLogEntryRSTString(LogEntry: Str160): string;
@@ -2210,9 +2351,13 @@ begin
   Val(TempString, Time, Result1);
 
   if Result1 = 0 then
-    GetLogEntryIntegerTime := Time
+     begin
+     GetLogEntryIntegerTime := Time
+     end
   else
-    GetLogEntryIntegerTime := -1;
+     begin
+     GetLogEntryIntegerTime := -1;
+     end;
 end;
 
 function GetLogEntryTimeString(LogEntry: Str160): string;
@@ -2255,11 +2400,11 @@ begin
     Key := UpCase(GetKey(Prompt));
 
     if (Key = EscapeKey) or StringHas(ListString, Key + ',') then
-    begin
-      GetKeyResponse := Key;
-      WriteLn;
-      Exit;
-    end;
+       begin
+       GetKeyResponse := Key;
+       WriteLn;
+       Exit;
+       end;
   until False;
 end;
 
@@ -2320,9 +2465,13 @@ procedure GetRidOfPostcedingSpaces(var s: OpenString);
 begin
   while length(s) > 0 do
     if (s[length(s)] = ' ') or (s[length(s)] = TabKey) then
-      Delete(s, length(s), 1)
+       begin
+       Delete(s, length(s), 1)
+       end
     else
-      Exit;
+       begin
+       Exit;
+       end;
 end;
 
 procedure GetRidOfPrecedingSpaces(var s: OpenString);
@@ -2331,7 +2480,9 @@ begin
   if s = '' then Exit;
   {wli ���� >0}
   while ((s[1] = ' ') or (s[1] = TabKey)) and (length(s) >= 2) do
-    Delete(s, 1, 1);
+     begin
+     Delete(s, 1, 1);
+     end;
 end;
 
 function GetSuffix(Call: CallString): CallString;
@@ -2345,10 +2496,10 @@ begin
   TempString := '';
 
   while (Call[CharPointer] >= 'A') and (CharPointer > 0) do
-  begin
-    TempString := Call[CharPointer] + TempString;
-    dec(CharPointer);
-  end;
+     begin
+     TempString := Call[CharPointer] + TempString;
+     dec(CharPointer);
+     end;
 
   GetSuffix := TempString;
 end;
@@ -2396,9 +2547,13 @@ begin
   Val(TempString, TempValue, Result1);
 
   if Result1 = 0 then
-    GetReal := TempValue
+     begin
+     GetReal := TempValue
+     end
   else
-    GetReal := 0;
+     begin
+     GetReal := 0;
+     end;
 end;
 
 function GetYearString: PAnsiChar;
@@ -2432,35 +2587,35 @@ begin
   Result := 0;
 
   while length(InputString) > 0 do
-  begin
-    case UpCase(InputString[length(InputString)]) of
-      '0': OutputInteger := OutputInteger + Multiplier * 0;
-      '1': OutputInteger := OutputInteger + Multiplier * 1;
-      '2': OutputInteger := OutputInteger + Multiplier * 2;
-      '3': OutputInteger := OutputInteger + Multiplier * 3;
-      '4': OutputInteger := OutputInteger + Multiplier * 4;
-      '5': OutputInteger := OutputInteger + Multiplier * 5;
-      '6': OutputInteger := OutputInteger + Multiplier * 6;
-      '7': OutputInteger := OutputInteger + Multiplier * 7;
-      '8': OutputInteger := OutputInteger + Multiplier * 8;
-      '9': OutputInteger := OutputInteger + Multiplier * 9;
-      'A': OutputInteger := OutputInteger + Multiplier * 10;
-      'B': OutputInteger := OutputInteger + Multiplier * 11;
-      'C': OutputInteger := OutputInteger + Multiplier * 12;
-      'D': OutputInteger := OutputInteger + Multiplier * 13;
-      'E': OutputInteger := OutputInteger + Multiplier * 14;
-      'F': OutputInteger := OutputInteger + Multiplier * 15;
+     begin
+     case UpCase(InputString[length(InputString)]) of
+       '0': OutputInteger := OutputInteger + Multiplier * 0;
+       '1': OutputInteger := OutputInteger + Multiplier * 1;
+       '2': OutputInteger := OutputInteger + Multiplier * 2;
+       '3': OutputInteger := OutputInteger + Multiplier * 3;
+       '4': OutputInteger := OutputInteger + Multiplier * 4;
+       '5': OutputInteger := OutputInteger + Multiplier * 5;
+       '6': OutputInteger := OutputInteger + Multiplier * 6;
+       '7': OutputInteger := OutputInteger + Multiplier * 7;
+       '8': OutputInteger := OutputInteger + Multiplier * 8;
+       '9': OutputInteger := OutputInteger + Multiplier * 9;
+       'A': OutputInteger := OutputInteger + Multiplier * 10;
+       'B': OutputInteger := OutputInteger + Multiplier * 11;
+       'C': OutputInteger := OutputInteger + Multiplier * 12;
+       'D': OutputInteger := OutputInteger + Multiplier * 13;
+       'E': OutputInteger := OutputInteger + Multiplier * 14;
+       'F': OutputInteger := OutputInteger + Multiplier * 15;
 
-    else
-      begin
-        Result := 1;
-        Exit;
-      end;
-    end;
+     else
+       begin
+         Result := 1;
+         Exit;
+       end;
+     end;
 
-    Delete(InputString, length(InputString), 1);
-    Multiplier := Multiplier * 16;
-  end;
+     Delete(InputString, length(InputString), 1);
+     Multiplier := Multiplier * 16;
+     end;
 
   Result := 0;
 end;
@@ -2480,35 +2635,35 @@ begin
   Result := 0;
 
   while length(InputString) > 0 do
-  begin
-    case UpCase(InputString[length(InputString)]) of
-      '0': OutputInteger := OutputInteger + Multiplier * 0;
-      '1': OutputInteger := OutputInteger + Multiplier * 1;
-      '2': OutputInteger := OutputInteger + Multiplier * 2;
-      '3': OutputInteger := OutputInteger + Multiplier * 3;
-      '4': OutputInteger := OutputInteger + Multiplier * 4;
-      '5': OutputInteger := OutputInteger + Multiplier * 5;
-      '6': OutputInteger := OutputInteger + Multiplier * 6;
-      '7': OutputInteger := OutputInteger + Multiplier * 7;
-      '8': OutputInteger := OutputInteger + Multiplier * 8;
-      '9': OutputInteger := OutputInteger + Multiplier * 9;
-      'A': OutputInteger := OutputInteger + Multiplier * 10;
-      'B': OutputInteger := OutputInteger + Multiplier * 11;
-      'C': OutputInteger := OutputInteger + Multiplier * 12;
-      'D': OutputInteger := OutputInteger + Multiplier * 13;
-      'E': OutputInteger := OutputInteger + Multiplier * 14;
-      'F': OutputInteger := OutputInteger + Multiplier * 15;
+     begin
+     case UpCase(InputString[length(InputString)]) of
+       '0': OutputInteger := OutputInteger + Multiplier * 0;
+       '1': OutputInteger := OutputInteger + Multiplier * 1;
+       '2': OutputInteger := OutputInteger + Multiplier * 2;
+       '3': OutputInteger := OutputInteger + Multiplier * 3;
+       '4': OutputInteger := OutputInteger + Multiplier * 4;
+       '5': OutputInteger := OutputInteger + Multiplier * 5;
+       '6': OutputInteger := OutputInteger + Multiplier * 6;
+       '7': OutputInteger := OutputInteger + Multiplier * 7;
+       '8': OutputInteger := OutputInteger + Multiplier * 8;
+       '9': OutputInteger := OutputInteger + Multiplier * 9;
+       'A': OutputInteger := OutputInteger + Multiplier * 10;
+       'B': OutputInteger := OutputInteger + Multiplier * 11;
+       'C': OutputInteger := OutputInteger + Multiplier * 12;
+       'D': OutputInteger := OutputInteger + Multiplier * 13;
+       'E': OutputInteger := OutputInteger + Multiplier * 14;
+       'F': OutputInteger := OutputInteger + Multiplier * 15;
 
-    else
-      begin
-        Result := 1;
-        Exit;
-      end;
-    end;
+     else
+       begin
+         Result := 1;
+         Exit;
+       end;
+     end;
 
-    Delete(InputString, length(InputString), 1);
-    Multiplier := Multiplier * 16;
-  end;
+     Delete(InputString, length(InputString), 1);
+     Multiplier := Multiplier * 16;
+     end;
 
   Result := 0;
 end;
@@ -2600,10 +2755,10 @@ begin
   for CharPointer := length(InputString) downto 1 do
     if (InputString[CharPointer] = ' ') or
       (InputString[CharPointer] = ControlI) then
-    begin
-      LastString := Copy(InputString, CharPointer + 1, length(InputString) - CharPointer);
-      Exit;
-    end;
+       begin
+       LastString := Copy(InputString, CharPointer + 1, length(InputString) - CharPointer);
+       Exit;
+       end;
 
   LastString := InputString;
 end;
@@ -2628,32 +2783,45 @@ var
 begin
   Result := INVALID_HANDLE_VALUE;
   if tGetPortType(SerialPort) = SerialInterface then
-    com_port_name := Ord(SerialPort)
+     begin
+     com_port_name := Ord(SerialPort)
+     end
   else
-    Exit;
+     begin
+     Exit;
+     end;
   Result := TryToOpenCOMPort(com_port_name, dwFlagsAndAttributes);
   if Result = INVALID_HANDLE_VALUE then
-  begin
-    showwarning(SysUtils.Format('COM%d:'#13'%s', [com_port_name, SysUtils.SysErrorMessage(GetLastError)]));
-    Exit;
-  end;
+     begin
+     showwarning(SysUtils.Format('COM%d:'#13'%s', [com_port_name, SysUtils.SysErrorMessage(GetLastError)]));
+     Exit;
+     end;
 
   if not SetupComm(Result, 512, 512) then
-  begin
-    //showwarning('SetupComm');
-    Exit;
-  end;
+     begin
+     //showwarning('SetupComm');
+     Exit;
+     end;
 
   {-------DCB--------}
   if not GetCommState(Result, DCB) then
-  begin
-    Result := INVALID_HANDLE_VALUE;
-    Exit;
+     begin
+     Result := INVALID_HANDLE_VALUE;
+     Exit;
 
-  end;
-  if Parity = tNoParity then Parity_byte := 0;
-  if Parity = EvenParity then Parity_byte := 1;
-  if Parity = OddParity then Parity_byte := 2;
+     end;
+  if Parity = tNoParity then
+     begin
+     Parity_byte := 0;
+     end;
+  if Parity = EvenParity then
+     begin
+     Parity_byte := 1;
+     end;
+  if Parity = OddParity then
+     begin
+     Parity_byte := 2;
+     end;
 
   DCB.Parity := Parity_byte;
   DCB.BaudRate := BaudRate;
@@ -2661,17 +2829,20 @@ begin
   DCB.EvtChar := AnsiChar(EvtChar);
 
   WinAPIstopBits := ONESTOPBIT;
-  if StopBits = 2 then WinAPIstopBits := TWOSTOPBITS;
+  if StopBits = 2 then
+     begin
+     WinAPIstopBits := TWOSTOPBITS;
+     end;
 
   DCB.StopBits := WinAPIstopBits;
   DCB.Flags := dcb_Binary or dcb_DtrControlEnable or dcb_RtsControlEnable;
 
   if not SetCommState(Result, DCB) then
-  begin
-    Result := INVALID_HANDLE_VALUE;
-    Exit;
+     begin
+     Result := INVALID_HANDLE_VALUE;
+     Exit;
 
-  end;
+     end;
   {-------DCB--------}
 
   TREscapeCommFunction(Result, CLRDTR); //CW
@@ -3017,14 +3188,17 @@ begin
   Source := Pointer(s);
   Dest := Pointer(Result);
   while l <> 0 do
-  begin
-    ch := Source^;
-    if ch in ['A'..'Z'] then inc(ch, 32);
-    Dest^ := ch;
-    inc(Source);
-    inc(Dest);
-    dec(l);
-  end;
+     begin
+     ch := Source^;
+     if ch in ['A'..'Z'] then
+        begin
+        inc(ch, 32);
+        end;
+     Dest^ := ch;
+     inc(Source);
+     inc(Dest);
+     dec(l);
+     end;
 
 end;
 
@@ -3083,7 +3257,10 @@ begin
   Minutes := Minutes mod 60;
   Str(Hours, HourString);
   Str(Minutes, MinuteString);
-  while length(MinuteString) < 2 do MinuteString := '0' + MinuteString;
+  while length(MinuteString) < 2 do
+     begin
+     MinuteString := '0' + MinuteString;
+     end;
   MinutesToTimeString := HourString + ':' + MinuteString;
 end;
 
@@ -3140,14 +3317,16 @@ var
 
 begin
   if InputString = '' then
-  begin
-    NumberPartOfString := '';
-    Exit;
-  end;
+     begin
+     NumberPartOfString := '';
+     Exit;
+     end;
   TempString := '';
   for CharPointer := 1 to length(InputString) do
     if (InputString[CharPointer] >= '0') and (InputString[CharPointer] <= '9') then
-      TempString := TempString + InputString[CharPointer];
+       begin
+       TempString := TempString + InputString[CharPointer];
+       end;
   NumberPartOfString := TempString;
 end;
 
@@ -3206,16 +3385,16 @@ begin
 //  if Windows.FindFirstFileW(PChar(FileName), find_data) <> INVALID_HANDLE_VALUE then
      //    IF IORESULT{DosError}{WLI} = 0 THEN { FileExists }
   if FileExists(@FileName[1]) then
-  begin
+     begin
 
-    Assign(FileHandle, FileName);
-    Append(FileHandle);
-  end
+     Assign(FileHandle, FileName);
+     Append(FileHandle);
+     end
   else
-  begin
-    Assign(FileHandle, FileName);
-    ReWrite(FileHandle);
-  end;
+     begin
+     Assign(FileHandle, FileName);
+     ReWrite(FileHandle);
+     end;
 end;
 
 function OpenFileForRead_old(var FileHandle: Text; FileName: string {Str80}): boolean;
@@ -3261,14 +3440,18 @@ begin
   TempString := PostcedingString(Call, '/');
 
   if StringHas(TempString, '/') then
-    TempString := PostcedingString(TempString, '/');
+     begin
+     TempString := PostcedingString(TempString, '/');
+     end;
 
   if length(TempString) = 1 then
-  begin
-    TempChar := Char(TempString[1]);
-    if ((TempChar >= '0') and (TempChar <= '9')) or (TempChar = 'P') or (TempChar = 'M') then
-      PortableStation := True;
-  end;
+     begin
+     TempChar := Char(TempString[1]);
+     if ((TempChar >= '0') and (TempChar <= '9')) or (TempChar = 'P') or (TempChar = 'M') then
+        begin
+        PortableStation := True;
+        end;
+     end;
 end;
 
 function ReadChar(SerialPort: PortType): Char;
@@ -3354,19 +3537,23 @@ function RemoveFirstChar(var LongString: string): Char;
 
 begin
   while (LongString <> '') and ((Copy(LongString, 1, 1) = ' ') or (Copy(LongString, 1, 1) = TabKey)) do
-    Delete(LongString, 1, 1);
+     begin
+     Delete(LongString, 1, 1);
+     end;
 
   if LongString = '' then
-  begin
-    RemoveFirstChar := NullCharacter;
-    Exit;
-  end;
+     begin
+     RemoveFirstChar := NullCharacter;
+     Exit;
+     end;
 
   RemoveFirstChar := LongString[1];
   Delete(LongString, 1, 1);
 
   while (LongString <> '') and ((Copy(LongString, 1, 1) = ' ') or (Copy(LongString, 1, 1) = TabKey)) do
-    Delete(LongString, 1, 1);
+     begin
+     Delete(LongString, 1, 1);
+     end;
 end;
 
 function RemoveFirstLongInteger(var LongString: ShortString): LONGINT;
@@ -3380,9 +3567,13 @@ begin
   IntegerString := RemoveFirstString(LongString);
   Val(IntegerString, Number, Result1);
   if Result1 = 0 then
-    RemoveFirstLongInteger := Number
+     begin
+     RemoveFirstLongInteger := Number
+     end
   else
-    RemoveFirstLongInteger := 0;
+     begin
+     RemoveFirstLongInteger := 0;
+     end;
 end;
 
 function RemoveFirstReal(var LongString: ShortString): REAL;
@@ -3398,9 +3589,13 @@ begin
   Val(TempString, TempReal, Result1);
 
   if Result1 = 0 then
-    RemoveFirstReal := TempReal
+     begin
+     RemoveFirstReal := TempReal
+     end
   else
-    RemoveFirstReal := 0;
+     begin
+     RemoveFirstReal := 0;
+     end;
 end;
 
 function GetFirstString(LongString: string): string;
@@ -3412,33 +3607,37 @@ var
 
 begin
   if LongString = '' then
-  begin
-    GetFirstString := '';
-    Exit;
-  end;
+     begin
+     GetFirstString := '';
+     Exit;
+     end;
 
   FirstWordFound := False;
 
   for CharCount := 1 to length(LongString) do
     if FirstWordFound then
-    begin
-      if (LongString[CharCount] = ' ') or (LongString[CharCount] = TabKey) then
-      begin
-        GetFirstString := Copy(LongString, FirstWordCursor, CharCount - FirstWordCursor);
-        Exit;
-      end;
-    end
+       begin
+       if (LongString[CharCount] = ' ') or (LongString[CharCount] = TabKey) then
+          begin
+          GetFirstString := Copy(LongString, FirstWordCursor, CharCount - FirstWordCursor);
+          Exit;
+          end;
+       end
     else
       if (LongString[CharCount] <> ' ') and (LongString[CharCount] <> TabKey) then
-      begin
-        FirstWordFound := True;
-        FirstWordCursor := CharCount;
-      end;
+         begin
+         FirstWordFound := True;
+         FirstWordCursor := CharCount;
+         end;
 
   if FirstWordFound then
-    GetFirstString := Copy(LongString, FirstWordCursor, length(LongString) - FirstWordCursor + 1)
+     begin
+     GetFirstString := Copy(LongString, FirstWordCursor, length(LongString) - FirstWordCursor + 1)
+     end
   else
-    GetFirstString := '';
+     begin
+     GetFirstString := '';
+     end;
 end;
 
 function RemoveFirstString(var LongString: OpenString): Str80;
@@ -3451,39 +3650,45 @@ var
 begin
 
   if LongString = '' then
-  begin
-    RemoveFirstString := '';
-    Exit;
-  end;
+     begin
+     RemoveFirstString := '';
+     Exit;
+     end;
 
   for CharCount := 1 to length(LongString) do
     if (LongString[CharCount] = CarriageReturn) or
       (LongString[CharCount] = LineFeed) then
-      LongString[CharCount] := ' ';
+       begin
+       LongString[CharCount] := ' ';
+       end;
 
   FirstWordFound := False;
 
   for CharCount := 1 to length(LongString) do
     if FirstWordFound then
-    begin
-      if (LongString[CharCount] = ' ') or (LongString[CharCount] = TabKey) then
-      begin
-        RemoveFirstString := Copy(LongString, FirstWordCursor, CharCount - FirstWordCursor);
-        Delete(LongString, 1, CharCount);
-        Exit;
-      end;
-    end
+       begin
+       if (LongString[CharCount] = ' ') or (LongString[CharCount] = TabKey) then
+          begin
+          RemoveFirstString := Copy(LongString, FirstWordCursor, CharCount - FirstWordCursor);
+          Delete(LongString, 1, CharCount);
+          Exit;
+          end;
+       end
     else
       if (LongString[CharCount] <> ' ') and (LongString[CharCount] <> TabKey) then
-      begin
-        FirstWordFound := True;
-        FirstWordCursor := CharCount;
-      end;
+         begin
+         FirstWordFound := True;
+         FirstWordCursor := CharCount;
+         end;
 
   if FirstWordFound then
-    RemoveFirstString := Copy(LongString, FirstWordCursor, length(LongString) - FirstWordCursor + 1)
+     begin
+     RemoveFirstString := Copy(LongString, FirstWordCursor, length(LongString) - FirstWordCursor + 1)
+     end
   else
-    RemoveFirstString := '';
+     begin
+     RemoveFirstString := '';
+     end;
 
   LongString := '';
 end;
@@ -3493,21 +3698,23 @@ var
   CharPos                               : integer;
 begin
   if length(LongString) > 0 then
-  begin
-    GetRidOfPostcedingSpaces(LongString);
-    for CharPos := length(LongString) downto 1 do
-      if (LongString[CharPos] = ' ') or (LongString[CharPos] = TabKey) then
-      begin
-        RemoveLastString := Copy(LongString, CharPos + 1, length(LongString) - CharPos);
-        Delete(LongString, CharPos, length(LongString) - CharPos + 1);
-        Exit;
-      end;
+     begin
+     GetRidOfPostcedingSpaces(LongString);
+     for CharPos := length(LongString) downto 1 do
+       if (LongString[CharPos] = ' ') or (LongString[CharPos] = TabKey) then
+          begin
+          RemoveLastString := Copy(LongString, CharPos + 1, length(LongString) - CharPos);
+          Delete(LongString, CharPos, length(LongString) - CharPos + 1);
+          Exit;
+          end;
 
-    RemoveLastString := LongString;
-    LongString := '';
-  end
+     RemoveLastString := LongString;
+     LongString := '';
+     end
   else
-    RemoveLastString := '';
+     begin
+     RemoveLastString := '';
+     end;
 end;
 
 function GetLastString(LongString: ShortString): string;
@@ -3517,19 +3724,21 @@ var
 
 begin
   if length(LongString) > 0 then
-  begin
-    GetRidOfPostcedingSpaces(LongString);
-    for CharPos := length(LongString) downto 1 do
-      if (LongString[CharPos] = ' ') or (LongString[CharPos] = TabKey) then
-      begin
-        GetLastString := Copy(LongString, CharPos + 1, length(LongString) - CharPos);
-        Exit;
-      end;
+     begin
+     GetRidOfPostcedingSpaces(LongString);
+     for CharPos := length(LongString) downto 1 do
+       if (LongString[CharPos] = ' ') or (LongString[CharPos] = TabKey) then
+          begin
+          GetLastString := Copy(LongString, CharPos + 1, length(LongString) - CharPos);
+          Exit;
+          end;
 
-    GetLastString := LongString;
-  end
+     GetLastString := LongString;
+     end
   else
-    GetLastString := '';
+     begin
+     GetLastString := '';
+     end;
 end;
 
 procedure SendByte(SerialPort: PortType; ByteToSend: Byte);
@@ -3622,16 +3831,20 @@ begin
   ValidRST := False;
 
   if (Mode = CW) or (Mode = Digital) then
-    DefaultRST := 599
+     begin
+     DefaultRST := 599
+     end
   else
-    DefaultRST := 59;
+     begin
+     DefaultRST := 59;
+     end;
 
   if length(Ex) = 0 then
-  begin
-    RST := DefaultRST;
-    ValidRST := True;
-    Exit;
-  end;
+     begin
+     RST := DefaultRST;
+     ValidRST := True;
+     Exit;
+     end;
 
   Number := GetNumberFromCharBuffer(@Ex[1]);
 
@@ -3639,28 +3852,34 @@ begin
   //GetRidOfPrecedingSpaces(Ex);
   //showmessage(pchar(string(ex)));
   if Number in [1..9] then
-  begin
-    Number := 50 + Number;
-    if Mode = CW then Number := Number * 10 + 9;
-    RST := Number;
-    Result := True;
-    Exit;
-  end;
+     begin
+     Number := 50 + Number;
+     if Mode = CW then
+        begin
+        Number := Number * 10 + 9;
+        end;
+     RST := Number;
+     Result := True;
+     Exit;
+     end;
 
   if Number in [10..59] then
-  begin
-    if Mode = Phone then RST := Number;
-    Result := True;
-    Exit;
-  end;
+     begin
+     if Mode = Phone then
+        begin
+        RST := Number;
+        end;
+     Result := True;
+     Exit;
+     end;
 
   if (Number >= 100) and (Number <= 599) then
     if (Mode = CW) or (Mode = Digital) then
-    begin
-      RST := Number;
-      Result := True;
-      Exit;
-    end;
+       begin
+       RST := Number;
+       Result := True;
+       Exit;
+       end;
 
   //showint(number);
 {
@@ -3900,50 +4119,77 @@ begin
   Val(YearString, Year, Result);
 
   if MonthString = 'JAN' then
-    DateString := '1-FEB-' + YearString;
+     begin
+     DateString := '1-FEB-' + YearString;
+     end;
 
   if MonthString = 'FEB' then
-    DateString := '1-MAR-' + YearString;
+     begin
+     DateString := '1-MAR-' + YearString;
+     end;
 
   if MonthString = 'MAR' then
-    DateString := '1-APR-' + YearString;
+     begin
+     DateString := '1-APR-' + YearString;
+     end;
 
   if MonthString = 'APR' then
-    DateString := '1-MAY-' + YearString;
+     begin
+     DateString := '1-MAY-' + YearString;
+     end;
 
   if MonthString = 'MAY' then
-    DateString := '1-JUN-' + YearString;
+     begin
+     DateString := '1-JUN-' + YearString;
+     end;
 
   if MonthString = 'JUN' then
-    DateString := '1-JUL-' + YearString;
+     begin
+     DateString := '1-JUL-' + YearString;
+     end;
 
   if MonthString = 'JUL' then
-    DateString := '1-AUG-' + YearString;
+     begin
+     DateString := '1-AUG-' + YearString;
+     end;
 
   if MonthString = 'AUG' then
-    DateString := '1-SEP-' + YearString;
+     begin
+     DateString := '1-SEP-' + YearString;
+     end;
 
   if MonthString = 'SEP' then
-    DateString := '1-OCT-' + YearString;
+     begin
+     DateString := '1-OCT-' + YearString;
+     end;
 
   if MonthString = 'OCT' then
-    DateString := '1-NOV-' + YearString;
+     begin
+     DateString := '1-NOV-' + YearString;
+     end;
 
   if MonthString = 'NOV' then
-    DateString := '1-DEC-' + YearString;
+     begin
+     DateString := '1-DEC-' + YearString;
+     end;
 
   if MonthString = 'DEC' then
-  begin
-    inc(Year);
-    if Year > 99 then Year := 0;
+     begin
+     inc(Year);
+     if Year > 99 then
+        begin
+        Year := 0;
+        end;
 
-    Str(Year, YearString);
+     Str(Year, YearString);
 
-    while length(YearString) < 2 do
-      YearString := '0' + YearString;
+     while length(YearString) < 2 do
+        begin
+        YearString := '0' + YearString;
+        end;
 
-    DateString := '1-JAN-' + YearString;
-  end;
+     DateString := '1-JAN-' + YearString;
+     end;
 end;
 
 procedure IncrementMinute(var DateString: Str20; var TimeString: Str80);
@@ -3963,68 +4209,86 @@ begin
   inc(Minute);
 
   if Minute > 59 then
-  begin
-    Minute := 0;
-    inc(Hour);
+     begin
+     Minute := 0;
+     inc(Hour);
 
-    if Hour > 23 then
-    begin
-      Hour := 0;
-
-      Val(PrecedingString(DateString, '-'), Day, Result);
-      inc(Day);
-      Str(Day, DayString);
-
-      while length(DayString) < 2 do
-        DayString := '0' + DayString;
-
-      Delete(DateString, 1, pos('-', DateString) - 1);
-      Insert(DayString, DateString, 1);
-
-          { Now check for new month }
-
-      if Day > 28 then { All months have at least 28 days }
-      begin
-        MonthString := UpperCase(BracketedString(DateString, '-', '-'));
-
-        if (MonthString = 'JAN') or (MonthString = 'MAR') or
-          (MonthString = 'MAY') or (MonthString = 'JUL') or
-          (MonthString = 'AUG') or (MonthString = 'OCT') or
-          (MonthString = 'DEC') then
-          if Day > 31 then IncrementMonth(DateString);
-
-        if MonthString = 'FEB' then
+     if Hour > 23 then
         begin
-          YearString := Copy(DateString, length(DateString) - 1, 2);
-          Val(YearString, Year, Result);
+        Hour := 0;
 
-          if (Year mod 4 = 0) and (Year <> 0) then { Leap year }
-          begin
-            if Day > 29 then IncrementMonth(DateString);
-          end
-          else
-            if Day > 28 then IncrementMonth(DateString);
+        Val(PrecedingString(DateString, '-'), Day, Result);
+        inc(Day);
+        Str(Day, DayString);
 
+        while length(DayString) < 2 do
+           begin
+           DayString := '0' + DayString;
+           end;
+
+        Delete(DateString, 1, pos('-', DateString) - 1);
+        Insert(DayString, DateString, 1);
+
+            { Now check for new month }
+
+        if Day > 28 then { All months have at least 28 days }
+           begin
+           MonthString := UpperCase(BracketedString(DateString, '-', '-'));
+
+           if (MonthString = 'JAN') or (MonthString = 'MAR') or
+             (MonthString = 'MAY') or (MonthString = 'JUL') or
+             (MonthString = 'AUG') or (MonthString = 'OCT') or
+             (MonthString = 'DEC') then
+             if Day > 31 then
+                begin
+                IncrementMonth(DateString);
+                end;
+
+           if MonthString = 'FEB' then
+              begin
+              YearString := Copy(DateString, length(DateString) - 1, 2);
+              Val(YearString, Year, Result);
+
+              if (Year mod 4 = 0) and (Year <> 0) then { Leap year }
+                 begin
+                 if Day > 29 then
+                    begin
+                    IncrementMonth(DateString);
+                    end;
+                 end
+              else
+                if Day > 28 then
+                   begin
+                   IncrementMonth(DateString);
+                   end;
+
+              end;
+
+           if (MonthString = 'APR') or (MonthString = 'JUN') or
+             (MonthString = 'SEP') or (MonthString = 'NOV') then
+             if Day > 30 then
+                begin
+                IncrementMonth(DateString);
+                end;
+
+           end;
         end;
 
-        if (MonthString = 'APR') or (MonthString = 'JUN') or
-          (MonthString = 'SEP') or (MonthString = 'NOV') then
-          if Day > 30 then IncrementMonth(DateString);
-
-      end;
-    end;
-
-  end;
+     end;
 
   Str(Minute, MinuteString);
 
   while length(MinuteString) < 2 do
-    MinuteString := '0' + MinuteString;
+     begin
+     MinuteString := '0' + MinuteString;
+     end;
 
   Str(Hour, HourString);
 
   while length(HourString) < 2 do
-    HourString := '0' + HourString;
+     begin
+     HourString := '0' + HourString;
+     end;
 
   TimeString := HourString + ':' + MinuteString;
 end;
@@ -4130,20 +4394,28 @@ begin
   strU(Grid);
 
   for CharPosition := 1 to length(Grid) do
-    case CharPosition of
-      1, 2:
-        if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'R') then
-          Exit;
+     begin
+     case CharPosition of
+       1, 2:
+         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'R') then
+            begin
+            Exit;
+            end;
 
-      3, 4:
-        if (Grid[CharPosition] < '0') or (Grid[CharPosition] > '9') then
-          Exit;
+       3, 4:
+         if (Grid[CharPosition] < '0') or (Grid[CharPosition] > '9') then
+            begin
+            Exit;
+            end;
 
-      5, 6:
-        if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'Z') then
-          Exit;
+       5, 6:
+         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'Z') then
+            begin
+            Exit;
+            end;
 
-    end;
+     end;
+     end;
 
   GoodLookingGrid := True;
 end;
@@ -4164,20 +4436,28 @@ begin
   strU(Grid);
 
   for CharPosition := 1 to length(Grid) do
-    case CharPosition of
-      1, 2:
-        if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'R') then
-          Exit;
+     begin
+     case CharPosition of
+       1, 2:
+         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'R') then
+            begin
+            Exit;
+            end;
 
-      3, 4:
-        if (Grid[CharPosition] < '0') or (Grid[CharPosition] > '9') then
-          Exit;
+       3, 4:
+         if (Grid[CharPosition] < '0') or (Grid[CharPosition] > '9') then
+            begin
+            Exit;
+            end;
 
-      5, 6:
-        if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'Z') then
-          Exit;
+       5, 6:
+         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'Z') then
+            begin
+            Exit;
+            end;
 
-    end;
+     end;
+     end;
 
   GoodLookingGrid2 := True;
 end;
@@ -4201,18 +4481,24 @@ begin
     case CharPosition of
       1, 2:
       if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'R') then
-        exit;
+         begin
+         exit;
+         end;
         {   if (Grid[CharPosition] > 'R') then
 
          Exit; }
 
       3, 4:
         if (Grid[CharPosition] < '0') or (Grid[CharPosition] > '9') then
-          Exit;
+           begin
+           Exit;
+           end;
 
       5, 6:
         if (Grid[CharPosition] < 'A') or (Grid[CharPosition] > 'Z') then
-          Exit;
+           begin
+           Exit;
+           end;
 
     end;
 
@@ -4226,33 +4512,44 @@ begin
   GetSCPIntegerFromChar := -1;
 
   if InputChar in ['A'..'Z'] then
-  begin
-    GetSCPIntegerFromChar := Ord(InputChar) - Ord('A');
-    Exit;
-  end;
+     begin
+     GetSCPIntegerFromChar := Ord(InputChar) - Ord('A');
+     Exit;
+     end;
 
   if InputChar in ['0'..'9'] then
-  begin
-    GetSCPIntegerFromChar := Ord(InputChar) - Ord('0') + 26;
-    Exit;
-  end;
+     begin
+     GetSCPIntegerFromChar := Ord(InputChar) - Ord('0') + 26;
+     Exit;
+     end;
 
-  if InputChar = '/' then GetSCPIntegerFromChar := 36;
+  if InputChar = '/' then
+     begin
+     GetSCPIntegerFromChar := 36;
+     end;
 end;
 
 function GetSCPCharFromInteger(Index: integer): Char;
 
 begin
   if Index <= 25 then
-    GetSCPCharFromInteger := CHR(Ord('A') + Index)
+     begin
+     GetSCPCharFromInteger := CHR(Ord('A') + Index)
+     end
   else
     if Index <= 35 then
-      GetSCPCharFromInteger := CHR(Ord('0') + (Index - 26))
+       begin
+       GetSCPCharFromInteger := CHR(Ord('0') + (Index - 26))
+       end
     else
       if Index = 36 then
-        GetSCPCharFromInteger := '/'
+         begin
+         GetSCPCharFromInteger := '/'
+         end
       else
-        GetSCPCharFromInteger := CHR(0);
+         begin
+         GetSCPCharFromInteger := CHR(0);
+         end;
 end;
 
 function PartialCall(Pattern: CallString; Call: CallString): boolean;
@@ -4265,34 +4562,36 @@ var
 
 begin
   if pos(Pattern, Call) > 0 then
-  begin
-    PartialCall := True;
-    Exit;
-  end;
+     begin
+     PartialCall := True;
+     Exit;
+     end;
 
   if pos('?', Pattern) = 0 then
-  begin
-    PartialCall := False;
-    Exit;
-  end;
+     begin
+     PartialCall := False;
+     Exit;
+     end;
 
   for CharPos := 1 to length(Call) - length(Pattern) + 1 do
-  begin
-    if (Call[CharPos] = Pattern[1]) or (Pattern[1] = '?') then
-    begin
-      for ComparePos := 2 to length(Pattern) do
-        if (Call[CharPos + ComparePos - 1] <> Pattern[ComparePos]) and (Pattern[ComparePos] <> '?') then
-          goto NotAPartialCallHere;
+     begin
+     if (Call[CharPos] = Pattern[1]) or (Pattern[1] = '?') then
+        begin
+        for ComparePos := 2 to length(Pattern) do
+          if (Call[CharPos + ComparePos - 1] <> Pattern[ComparePos]) and (Pattern[ComparePos] <> '?') then
+             begin
+             goto NotAPartialCallHere;
+             end;
 
-          { We have a match! }
+            { We have a match! }
 
-      PartialCall := True;
-      Exit;
-    end;
+        PartialCall := True;
+        Exit;
+        end;
 
-    NotAPartialCallHere:
+     NotAPartialCallHere:
 
-  end;
+     end;
 
   PartialCall := False;
 end;
@@ -4303,28 +4602,28 @@ function CSV(Letter: CallString): integer;
 
 begin
   if Letter = '' then
-  begin
-    CSV := 0;
-    Exit;
-  end;
+     begin
+     CSV := 0;
+     Exit;
+     end;
 
   if Letter = '/' then
-  begin
-    CSV := 1;
-    Exit;
-  end;
+     begin
+     CSV := 1;
+     Exit;
+     end;
 
   if (Letter >= '0') and (Letter <= '9') then
-  begin
-    CSV := Ord(Letter[1]) - Ord('0') + 1;
-    Exit;
-  end;
+     begin
+     CSV := Ord(Letter[1]) - Ord('0') + 1;
+     Exit;
+     end;
 
   if (Letter >= 'A') and (Letter <= 'Z') then
-  begin
-    CSV := Ord(Letter[1]) - Ord('A') + 11;
-    Exit;
-  end;
+     begin
+     CSV := Ord(Letter[1]) - Ord('A') + 11;
+     Exit;
+     end;
 end;
 
 function CallSortValue(Call: CallString): LONGINT;
@@ -4339,13 +4638,15 @@ begin
   Total := 0;
 
   if Call = '' then
-  begin
-    CallSortValue := 0;
-    Exit;
-  end;
+     begin
+     CallSortValue := 0;
+     Exit;
+     end;
 
   for CharPos := 1 to 6 do
-    Total := CSV(Copy(Call, CharPos, 1)) + (Total * 37);
+     begin
+     Total := CSV(Copy(Call, CharPos, 1)) + (Total * 37);
+     end;
 
   CallSortValue := round(Total - 2147483648.0);
 end;
@@ -4370,61 +4671,61 @@ begin
     (Section = 'UT') or (Section = 'VA') or (Section = 'VT') or
     (Section = 'WI') or (Section = 'WV') or (Section = 'WY') or
     (Section = 'SC') then
-  begin
-    GetStateFromSection := Section;
-    Exit;
-  end;
+     begin
+     GetStateFromSection := Section;
+     Exit;
+     end;
 
   if (Section = 'EB') or (Section = 'LAX') or (Section = 'ORG') or
     (Section = 'SB') or (Section = 'SCV') or (Section = 'SDG') or
     (Section = 'SF') or (Section = 'SJV') or (Section = 'SV') then
-  begin
-    GetStateFromSection := 'CA';
-    Exit;
-  end;
+     begin
+     GetStateFromSection := 'CA';
+     Exit;
+     end;
 
   if (Section = 'EM') or (Section = 'WM') then
-  begin
-    GetStateFromSection := 'MA';
-    Exit;
-  end;
+     begin
+     GetStateFromSection := 'MA';
+     Exit;
+     end;
 
   if (Section = 'EN') or (Section = 'WNY') or (Section = 'NNY') or
     (Section = 'ENY') or (Section = 'NLI') then
-  begin
-    GetStateFromSection := 'NY';
-    Exit;
-  end;
+     begin
+     GetStateFromSection := 'NY';
+     Exit;
+     end;
 
   if (Section = 'EP') or (Section = 'WP') then
-  begin
-    GetStateFromSection := 'PA';
-    Exit;
-  end;
+     begin
+     GetStateFromSection := 'PA';
+     Exit;
+     end;
 
   if (Section = 'EW') or (Section = 'WWA') or (Section = 'EWA') then
-  begin
-    GetStateFromSection := 'WA';
-    Exit;
-  end;
+     begin
+     GetStateFromSection := 'WA';
+     Exit;
+     end;
 
   if (Section = 'NF') or (Section = 'SF') or (Section = 'WCF') then // ny4i 4.44.9...unrelated but I happened to notice this
-  begin
-    GetStateFromSection := 'FL';
-    Exit;
-  end;
+     begin
+     GetStateFromSection := 'FL';
+     Exit;
+     end;
 
   if (Section = 'NNJ') or (Section = 'SNJ') then
-  begin
-    GetStateFromSection := 'NJ';
-    Exit;
-  end;
+     begin
+     GetStateFromSection := 'NJ';
+     Exit;
+     end;
 
   if (Section = 'NTX') or (Section = 'STX') or (Section = 'WTX') then
-  begin
-    GetStateFromSection := 'TX';
-    Exit;
-  end;
+     begin
+     GetStateFromSection := 'TX';
+     Exit;
+     end;
 
   GetStateFromSection := '';
 end;
@@ -4547,7 +4848,9 @@ begin
   CenterSpaces := 40 - (length(Prompt) div 2);
 
   if CenterSpaces > 0 then for Space := 1 to CenterSpaces do
-      Prompt := ' ' + Prompt;
+                              begin
+                              Prompt := ' ' + Prompt;
+                              end;
 
   WriteLn(FileWrite, Prompt);
 end;
@@ -4569,19 +4872,23 @@ begin
   if Windows.FindFirstFileW(PChar(FileName), find_data) <> INVALID_HANDLE_VALUE then
 
     if s = '' then
-      Exit
+       begin
+       Exit
+       end
     else
-    begin
-        //wli         TempString := FExpand (S);
+       begin
+       //wli         TempString := FExpand (S);
 
-      while TempString[length(TempString)] <> '\' do
+     while TempString[length(TempString)] <> '\' do
+        begin
         Delete(TempString, length(TempString), 1);
+        end;
 
-      Delete(TempString, length(TempString), 1);
+     Delete(TempString, length(TempString), 1);
 
-      Directory := TempString;
-      FoundDirectory := True;
-    end;
+     Directory := TempString;
+     FoundDirectory := True;
+       end;
 
 end;
 
@@ -4609,16 +4916,16 @@ begin
   FindDirectory := '';
 
   if FoundDirectory(FileName, '.', Directory) then
-  begin
-    FindDirectory := Directory;
-    Exit;
-  end;
+     begin
+     FindDirectory := Directory;
+     Exit;
+     end;
 
   if FoundDirectory(FileName, '..', Directory) then
-  begin
-    FindDirectory := Directory;
-    Exit;
-  end;
+     begin
+     FindDirectory := Directory;
+     Exit;
+     end;
 
   //wli     IF FoundDirectory (FileName, GetEnv ('TRLOG'), Directory) THEN
   begin
@@ -4632,18 +4939,20 @@ begin
   TempString := ParamStr(0);
 
   if StringHas(TempString, '\') then
-  begin
-    while TempString[length(TempString)] <> '\' do
-      Delete(TempString, length(TempString), 1);
+     begin
+     while TempString[length(TempString)] <> '\' do
+        begin
+        Delete(TempString, length(TempString), 1);
+        end;
 
-    Delete(TempString, length(TempString), 1);
+     Delete(TempString, length(TempString), 1);
 
-    if FoundDirectory(FileName, TempString, Directory) then
-    begin
-      FindDirectory := Directory;
-      Exit;
-    end;
-  end;
+     if FoundDirectory(FileName, TempString, Directory) then
+        begin
+        FindDirectory := Directory;
+        Exit;
+        end;
+     end;
 
   //wli     IF FoundDirectory (FileName, GetEnv ('PATH'), Directory) THEN
   begin
@@ -4652,10 +4961,10 @@ begin
   end;
 
   if FoundDirectory(FileName, '\log\name', Directory) then
-  begin
-    FindDirectory := Directory;
-    Exit;
-  end;
+     begin
+     FindDirectory := Directory;
+     Exit;
+     end;
 
 end;
 
@@ -4705,14 +5014,20 @@ begin
   Result := NoBand;
   if BandStr = '' then Exit;
   Band := Copy(BandStr, 1, 3);
-  if length(Band) = 2 then Band := ' ' + Band;
-  if length(Band) = 1 then Band := '  ' + Band;
+  if length(Band) = 2 then
+     begin
+     Band := ' ' + Band;
+     end;
+  if length(Band) = 1 then
+     begin
+     Band := '  ' + Band;
+     end;
   for TempBandType := Band160 to NoBand do
     if BandStringsArray[TempBandType] = Band then
-    begin
-      Result := TempBandType;
-      Break;
-    end;
+       begin
+       Result := TempBandType;
+       Break;
+       end;
 end;
 
 procedure IncSystemTime(var St: SYSTEMTIME; Offset: int64);
@@ -4727,9 +5042,14 @@ end;
 procedure tGetQSOSystemTime(var Time: TQSOTime);
 begin
   tGetSystemTime;
-  if UTC.wYear < 2000 then Time.qtYear := 0
+  if UTC.wYear < 2000 then
+     begin
+     Time.qtYear := 0
+     end
   else
-    Time.qtYear := UTC.wYear - 2000;
+     begin
+     Time.qtYear := UTC.wYear - 2000;
+     end;
   Time.qtMonth := UTC.wMonth;
   Time.qtDay := UTC.wDay;
   Time.qtHour := UTC.wHour;
@@ -4754,34 +5074,36 @@ begin
   Result := False;
   if PTTLockout then
     if NetSocket <> 0 then
-      for c := 1 to 26 do
-        if ((StatusArray[c].ssStatusByte and (1 shl 0)) <> 0) //PTT
-          and ((StatusArray[c].ssStatusByte and (1 shl 3)) <> 0) //PTT LOCKOUT
-          then
-          if Ord(ComputerID) - 64 <> c then
-          begin
-            QuickDisplay('PTT LOCKOUT=TRUE');
-            Result := True;
-          end;
+       begin
+       for c := 1 to 26 do
+         if ((StatusArray[c].ssStatusByte and (1 shl 0)) <> 0) //PTT
+           and ((StatusArray[c].ssStatusByte and (1 shl 3)) <> 0) //PTT LOCKOUT
+           then
+           if Ord(ComputerID) - 64 <> c then
+              begin
+              QuickDisplay('PTT LOCKOUT=TRUE');
+              Result := True;
+              end;
+       end;
 end;
 
 function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
 begin
   Windows.ZeroMemory(@GETREALPATHBUFFER, SizeOf(GETREALPATHBUFFER));
   if pPos('\', TR4W_DVKPATH) = -1 then
-  begin
-    TF.Format(GETREALPATHBUFFER, '%s%s\', TR4W_PATH_NAME, Path);
-  end
+     begin
+     TF.Format(GETREALPATHBUFFER, '%s%s\', TR4W_PATH_NAME, Path);
+     end
   else
-  begin
-    TF.Format(GETREALPATHBUFFER, '%s\', Path);
-  end;
+     begin
+     TF.Format(GETREALPATHBUFFER, '%s\', Path);
+     end;
 
   if AddFolder <> nil then
-  begin
-    Windows.lstrcatA(GETREALPATHBUFFER, AddFolder);
-    Windows.lstrcatA(GETREALPATHBUFFER, '\');
-  end;
+     begin
+     Windows.lstrcatA(GETREALPATHBUFFER, AddFolder);
+     Windows.lstrcatA(GETREALPATHBUFFER, '\');
+     end;
 
   Windows.lstrcatA(GETREALPATHBUFFER, FileName);
 
@@ -4792,27 +5114,36 @@ function KeyboardCallsignChar(var Key: wParam; ExChWin: boolean): boolean;
 begin
   Result := False;
 
-  if Key in [Ord('0')..Ord('9'), Ord('a')..Ord('z'), Ord('A')..Ord('Z'), 191, Ord('/'), Ord('?'), VK_BACK, Ord('-')] then Result := True;
+  if Key in [Ord('0')..Ord('9'), Ord('a')..Ord('z'), Ord('A')..Ord('Z'), 191, Ord('/'), Ord('?'), VK_BACK, Ord('-')] then
+     begin
+     Result := True;
+     end;
 
   if ExChWin then
-  begin
-    if Key = Ord(' ') then Result := True;
-//    if Key in [134, 143, 132, 142, 148, 153] then RESULT := True;
-    if Key in [228, 196, 229, 197, 246, 214] then Result := True;
-  end;
+     begin
+     if Key = Ord(' ') then
+        begin
+        Result := True;
+        end;
+ //    if Key in [134, 143, 132, 142, 148, 153] then RESULT := True;
+     if Key in [228, 196, 229, 197, 246, 214] then
+        begin
+        Result := True;
+        end;
+     end;
 
 //  Key := 148;
   if Key = Ord(QuestionMarkChar) then
-  begin
-    Key := Ord('?');
-    Result := True;
-  end;
+     begin
+     Key := Ord('?');
+     Result := True;
+     end;
 
   if Key = Ord(SlashMarkChar) then
-  begin
-    Key := Ord('/');
-    Result := True;
-  end;
+     begin
+     Key := Ord('/');
+     Result := True;
+     end;
 
 end;
 
@@ -4824,31 +5155,40 @@ var
 begin
   Call := StandardCallFormat(Call, False);
 
-  if StringHas(Call, '/') then Call := PrecedingString(Call, '/');
+  if StringHas(Call, '/') then
+     begin
+     Call := PrecedingString(Call, '/');
+     end;
 
   c1 := #0;
   c2 := #0;
   for i := 2 to length(Call) do
-  begin
-    if c1 <> #0 then
-    begin
-      if Call[i] in ['A'..'Z'] then
-      begin
-        c2 := Call[i];
-        Break;
-      end;
-      Continue;
-    end;
+     begin
+     if c1 <> #0 then
+        begin
+        if Call[i] in ['A'..'Z'] then
+           begin
+           c2 := Call[i];
+           Break;
+           end;
+        Continue;
+        end;
 
-    if Call[i] in ['0'..'9'] then
-      c1 := Call[i];
-  end;
+     if Call[i] in ['0'..'9'] then
+        begin
+        c1 := Call[i];
+        end;
+     end;
 
   if (c1 = #0) or (c2 = #0) then
-    Result := ''
+     begin
+     Result := ''
+     end
   else
     // D12: native string; was ShortString length-byte + indexed chars
-    Result := Char(c1) + Char(c2);
+     begin
+     Result := Char(c1) + Char(c2);
+     end;
 {
   while Copy(Call, 1, 1) >= 'A' do
   begin
@@ -4880,16 +5220,22 @@ begin
   strU(rda);
 
   for CharPosition := 1 to 4 do
-    case CharPosition of
-      1, 2:
-        if not (rda[CharPosition] in ['A'..'Z']) then
-          Exit;
+     begin
+     case CharPosition of
+       1, 2:
+         if not (rda[CharPosition] in ['A'..'Z']) then
+            begin
+            Exit;
+            end;
 
-      3, 4:
-        if not (rda[CharPosition] in ['0'..'9']) then
-          Exit;
+       3, 4:
+         if not (rda[CharPosition] in ['0'..'9']) then
+            begin
+            Exit;
+            end;
 
-    end;
+     end;
+     end;
 
   result := True;
 end;
@@ -4901,11 +5247,13 @@ var
 begin
   Result := False;
   IsWow64Process := GetProcAddress(GetModuleHandle(Kernel32), 'IsWow64Process');
-  if Assigned(IsWow64Process) then begin
-    if IsWow64Process(GetCurrentProcess, Wow64Process) then begin
-      Result := Wow64Process;
-    end;
-  end;
+  if Assigned(IsWow64Process) then
+     begin
+     if IsWow64Process(GetCurrentProcess, Wow64Process) then
+        begin
+        Result := Wow64Process;
+        end;
+     end;
 end;
 
 {
@@ -4931,7 +5279,9 @@ function String2Hex(const Buffer: Ansistring): string;
    begin
      Result := '';
      for n := 1 to Length(Buffer) do
-       Result := UpperCase(Result + IntToHex(Ord(Buffer[n]), 2)) + ' ';
+        begin
+        Result := UpperCase(Result + IntToHex(Ord(Buffer[n]), 2)) + ' ';
+        end;
    end;
 
 end.

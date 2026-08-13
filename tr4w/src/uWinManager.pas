@@ -45,11 +45,11 @@ begin
   Result := True;
   if (Windows.GetParent(wnd) = tr4whandle) or (wnd = tr4whandle) then
     if IsWindowVisible(wnd) then
-    begin
-      Windows.GetWindowTextA(wnd, wsprintfBuffer, 100);
-//      if wnd = tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndHandle then Exit;
-      Windows.SendMessage(Manager, LB_SETITEMDATA, Windows.SendMessageA(Manager, LB_ADDSTRING, 0, integer(@wsprintfBuffer)), wnd);
-    end;
+       begin
+       Windows.GetWindowTextA(wnd, wsprintfBuffer, 100);
+ //      if wnd = tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndHandle then Exit;
+       Windows.SendMessage(Manager, LB_SETITEMDATA, Windows.SendMessageA(Manager, LB_ADDSTRING, 0, integer(@wsprintfBuffer)), wnd);
+       end;
 end;
 
 function WindowsManagerDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -97,8 +97,14 @@ begin
 
       begin
 
-        if HiWord(wParam) = LBN_SELCHANGE then goto FlashWind;
-        if HiWord(wParam) = LBN_DBLCLK then goto SelectItem;
+        if HiWord(wParam) = LBN_SELCHANGE then
+           begin
+           goto FlashWind;
+           end;
+        if HiWord(wParam) = LBN_DBLCLK then
+           begin
+           goto SelectItem;
+           end;
 
         case wParam of
           2:

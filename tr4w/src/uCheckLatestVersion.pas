@@ -57,35 +57,38 @@ const
     #13#10;                      // n4af 04.42.5
 begin
   if not GetConnection(TempSocket, 'tr4w.com', 80, SOCK_STREAM) then
-  begin
-    ShowSyserror(WSAGetLastError);
-    Exit;
-  end;
+     begin
+     ShowSyserror(WSAGetLastError);
+     Exit;
+     end;
 
   WinSock2.Send(TempSocket, wsprintfBuffer, TF.Format(wsprintfBuffer, checkVersionRequest, @MyCall[1], InterfacedRadioTypeSA[Radio1.RadioModel], InterfacedRadioTypeSA[Radio2.RadioModel], BA[CD.MasterFileExists]), 0);
   Windows.Sleep(2000);
   if WinSock2.recv(TempSocket, GetScoresBuffer, SizeOf(GetScoresBuffer), 0) <= 0 then
-  begin
-    ShowSyserror(WSAGetLastError);
-    goto 1;
-  end;
+     begin
+     ShowSyserror(WSAGetLastError);
+     goto 1;
+     end;
 
 //  ShowMessage(GetScoresBuffer);
   p := uAnsiStr.StrPos(GetScoresBuffer, #13#10#13#10);
   if p <> nil then
-  begin
-    inc(p, 4);
-//    ShowMessage(@TR4W_CURRENTVERSION[8]);
+     begin
+     inc(p, 4);
+ //    ShowMessage(@TR4W_CURRENTVERSION[8]);
 
-    if StrComp(p, @AnsiString(TR4W_CURRENTVERSION)[8]) <= 0 then
-    begin
-      ShowMessage(TC_YOU_ARE_USING_THE_LATEST_VERSION + ' - ' + TR4W_CURRENTVERSION_NUMBER + '.');
-      goto 1;
-    end;
+     if StrComp(p, @AnsiString(TR4W_CURRENTVERSION)[8]) <= 0 then
+        begin
+        ShowMessage(TC_YOU_ARE_USING_THE_LATEST_VERSION + ' - ' + TR4W_CURRENTVERSION_NUMBER + '.');
+        goto 1;
+        end;
 
-    TF.Format(wsprintfBuffer, TC_VERSIONONSERVER + ': %s. ' + TC_THISVERSION2 + ': ' + TR4W_CURRENTVERSION + '.'#13#10 + TC_DOWNLOADIT, p);
-    if YesOrNo(tr4whandle, wsprintfBuffer) = IDYES then OpenURL(TR4W_DOWNLOAD_LINK);
-  end;
+     TF.Format(wsprintfBuffer, TC_VERSIONONSERVER + ': %s. ' + TC_THISVERSION2 + ': ' + TR4W_CURRENTVERSION + '.'#13#10 + TC_DOWNLOADIT, p);
+     if YesOrNo(tr4whandle, wsprintfBuffer) = IDYES then
+        begin
+        OpenURL(TR4W_DOWNLOAD_LINK);
+        end;
+     end;
   1:
   closesocket(TempSocket);
 end;

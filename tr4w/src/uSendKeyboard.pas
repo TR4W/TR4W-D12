@@ -71,34 +71,41 @@ begin
         SendDlgItemMessage(hwnddlg, 101, EM_LIMITTEXT, 255, 0);
         OldSendKeyboardEditProc := Pointer(Windows.SetWindowLong(Get101Window(hwnddlg), GWL_WNDPROC, integer(@NewSendKeyboardEditProc)));
         ControlAMode := True;
-        if ActiveMode = Phone then Windows.SetWindowTextA(hwnddlg, TC_SENDINGSSBWAVFILENAME);
+        if ActiveMode = Phone then
+           begin
+           Windows.SetWindowTextA(hwnddlg, TC_SENDINGSSBWAVFILENAME);
+           end;
 //        Windows.SetDlgItemTextA(hwnddlg, 101, CHR(153));
       end;
 
     WM_COMMAND:
       begin
         if HiWord(wParam) = EN_CHANGE then
-        begin
-//          s := GetDialogItemText(hwnddlg, 101);
-          s[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @s[1], SizeOf(s) - 1));
-          if ActiveMode <> Phone then
-          begin
-            if s <> '' then
-            begin
-//              CPUKeyer.CodeSpeed := CPUKeyer.CodeSpeed;
-              newpos := length(s);
-              if newpos > oldpos then
-              begin
-                AddStringToBuffer(s[newpos], CWTone);
-              end
-              else
-                AddStringToBuffer(#8, CWTone);
-              oldpos := newpos;
-            end
-            else
-              oldpos := 0;
-          end;
-        end;
+           begin
+           //          s := GetDialogItemText(hwnddlg, 101);
+                     s[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @s[1], SizeOf(s) - 1));
+                     if ActiveMode <> Phone then
+                        begin
+                        if s <> '' then
+                           begin
+                           //              CPUKeyer.CodeSpeed := CPUKeyer.CodeSpeed;
+                                         newpos := length(s);
+                                         if newpos > oldpos then
+                                            begin
+                                            AddStringToBuffer(s[newpos], CWTone);
+                                            end
+                                         else
+                                            begin
+                                            AddStringToBuffer(#8, CWTone);
+                                            end;
+                                         oldpos := newpos;
+                           end
+                        else
+                           begin
+                           oldpos := 0;
+                           end;
+                        end;
+           end;
         case wParam of
 {
           102:
@@ -145,30 +152,43 @@ var
 begin
   if Msg = WM_KEYUP then
     if wParam = VK_RETURN then
-    begin
-      if ActiveMode = Phone then
-      begin
-        s := GetDialogItemText(hwnddlg, 101);
-        if s = '' then CloseSendKeyboardInputDialog(False);
-        if DVKEnable then
-          while s <> '' do
+       begin
+       if ActiveMode = Phone then
           begin
-            nextfilename := RemoveFirstString(s);
-            GetRidOfPrecedingSpaces(nextfilename);
-            SendCrypticDVPString(nextfilename + '.WAV');
+          s := GetDialogItemText(hwnddlg, 101);
+          if s = '' then
+             begin
+             CloseSendKeyboardInputDialog(False);
+             end;
+          if DVKEnable then
+             begin
+             while s <> '' do
+                begin
+                nextfilename := RemoveFirstString(s);
+                GetRidOfPrecedingSpaces(nextfilename);
+                SendCrypticDVPString(nextfilename + '.WAV');
+                end;
+             end;
           end;
-      end;
-      CloseSendKeyboardInputDialog(False);
-    end;
+       CloseSendKeyboardInputDialog(False);
+       end;
 
   if Msg = WM_KEYDOWN then
-  begin
-//    if wParam in [VK_F1..vk_f12] then ProcessFuntionKeys(wParam);
-    if wParam = VK_PRIOR then ProcessMenu(menu_cwspeedup);
-    if wParam = VK_NEXT then ProcessMenu(menu_cwspeeddown);
-  end;
+     begin
+     //    if wParam in [VK_F1..vk_f12] then ProcessFuntionKeys(wParam);
+         if wParam = VK_PRIOR then
+            begin
+            ProcessMenu(menu_cwspeedup);
+            end;
+         if wParam = VK_NEXT then
+            begin
+            ProcessMenu(menu_cwspeeddown);
+            end;
+     end;
   if Msg = WM_SYSKEYDOWN then if wParam = VK_F10 then
-    CloseSendKeyboardInputDialog(False); //Windows.PostMessage(SendKeyboardWindow, WM_CLOSE, 0, 0);
+                                 begin
+                                 CloseSendKeyboardInputDialog(False); //Windows.PostMessage(SendKeyboardWindow, WM_CLOSE, 0, 0);
+                                 end;
     {$RangeChecks Off}     // 4.79.4
    Result := CallWindowProc(OldSendKeyboardEditProc, hwnddlg, Msg, wParam, lParam);
    
@@ -186,18 +206,18 @@ begin
   // can cost ~300ms of serial/port teardown. CWStillBeingSent is keyer-mode
   // aware (CWByCAT / WinKeyer / YCCC / CPU keyer). Issue #1006.
   if StopSending and CWStillBeingSent then
-  begin
-    // B3: KeyerCPU.Flush is CPUKeyer.FlushCWBuffer, unchanged.  Deliberately
-    // NOT "upgraded" to the LogCW.FlushCWBuffer facade -- that would ALSO stop
-    // CAT sending and flush the YCCC box, which this site never did.
-    KeyerCPU.Flush;
-    // The WinKeyer clear used to reach this site THROUGH the CPU keyer's flush;
-    // it now lives in the WinKeyer's own adapter (task #22), so it has to be
-    // asked for explicitly or closing this dialog would stop keying the CPU
-    // port while leaving a sending WinKeyer running.  Self-guarded: a WinKeyer
-    // with nothing outstanding does no I/O.
-    KeyerWinKey.Flush;
-  end;
+     begin
+     // B3: KeyerCPU.Flush is CPUKeyer.FlushCWBuffer, unchanged.  Deliberately
+     // NOT "upgraded" to the LogCW.FlushCWBuffer facade -- that would ALSO stop
+     // CAT sending and flush the YCCC box, which this site never did.
+     KeyerCPU.Flush;
+     // The WinKeyer clear used to reach this site THROUGH the CPU keyer's flush;
+     // it now lives in the WinKeyer's own adapter (task #22), so it has to be
+     // asked for explicitly or closing this dialog would stop keying the CPU
+     // port while leaving a sending WinKeyer running.  Self-guarded: a WinKeyer
+     // with nothing outstanding does no I/O.
+     KeyerWinKey.Flush;
+     end;
 {$IF MMTTYMODE}
   PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);
 {$IFEND}

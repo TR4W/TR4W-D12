@@ -413,19 +413,25 @@ var
 begin
   // Clear output (assuming 16-byte array)
   for I := 0 to High(Output) do
-    Output[I] := 0;
+     begin
+     Output[I] := 0;
+     end;
 
   MaxLen := Length(Input);
   if MaxLen > 16 then
-    MaxLen := 16;
+     begin
+     MaxLen := 16;
+     end;
 
   for I := 1 to MaxLen do
-  begin
-    P := Ord(Input[I]) + (I - 1);  // Delphi strings are 1-based
-    if P > 126 then
-      P := 32 + (P mod 127);
-    Output[I - 1] := Sequence[P];
-  end;
+     begin
+     P := Ord(Input[I]) + (I - 1);  // Delphi strings are 1-based
+     if P > 126 then
+        begin
+        P := 32 + (P mod 127);
+        end;
+     Output[I - 1] := Sequence[P];
+     end;
 end;
 
 function CalculateMyId(LocalIP: LongWord; LocalPort: Word): LongWord;

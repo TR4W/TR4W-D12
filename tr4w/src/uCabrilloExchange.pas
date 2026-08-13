@@ -178,9 +178,13 @@ begin
     RSTAndPostalCodeExchange:
       begin
         if contacts = 1 then
-          SetMyEx('%-3s %-10s', [RSTSent, my.MyPostalCode])
+           begin
+           SetMyEx('%-3s %-10s', [RSTSent, my.MyPostalCode])
+           end
         else
-          SetMyEx('%-3s %-10s', [RSTSent, PrevQTH]);
+           begin
+           SetMyEx('%-3s %-10s', [RSTSent, PrevQTH]);
+           end;
         SetHisEx('%-3s %-10s', [RSTReceived, string(rx.QTHString)]);
       end;
 
@@ -234,7 +238,9 @@ begin
 
         SetMyEx('%-4d %s %s %-3s ', [nrSent, cMyName, cMyCheck, cMyState]);
         if nrReceived = -1 then
-          nrReceived := 0;
+           begin
+           nrReceived := 0;
+           end;
         SetHisEx('%-4d %s %.2u %-3s', [nrReceived, csName, csCheck, csQTHString]);
       end;
 
@@ -242,8 +248,14 @@ begin
       begin
         csName  := string(rx.Name);
         cMyName := my.MyName;
-        if my.MyState = '' then cMyState := 'DX';
-        if rx.QTHString = '' then csQTHString := 'DX';
+        if my.MyState = '' then
+           begin
+           cMyState := 'DX';
+           end;
+        if rx.QTHString = '' then
+           begin
+           csQTHString := 'DX';
+           end;
 
         SetMyEx('%-4d %-7s %-8s', [nrSent, cMyName, cMyState]);    // 4.88.3
         SetHisEx('%-4u %-5s %-4s', [nrReceived, csName, csQTHString]);  // 4.88.3
@@ -311,53 +323,76 @@ begin
 
     QSONumberDomesticOrDXQTHExchange, QSONumberDomesticQTHExchange:
       if (Contest = UKRAINECHAMPIONSHIP) or (Contest = CUPURAL) then
-        begin
-        SetMyEx('%-4s %-6.4d', [cMyState, nrSent]);
-        SetHisEx('%-4s %-6.4u', [csQTHString, nrReceived]);
-        end
+         begin
+         SetMyEx('%-4s %-6.4d', [cMyState, nrSent]);
+         SetHisEx('%-4s %-6.4u', [csQTHString, nrReceived]);
+         end
       else
-        begin
-        SetMyEx('%-4d %-6s', [nrSent, cMyState]);
-        SetHisEx('%-4.4u %-6s', [nrReceived, csQTHString]);
-        end;
+         begin
+         SetMyEx('%-4d %-6s', [nrSent, cMyState]);
+         SetHisEx('%-4.4u %-6s', [nrReceived, csQTHString]);
+         end;
 
     QSONumberAndPossibleDomesticQTHExchange, RSTQSONumberAndDomesticQTHExchange, RSTQSONumberAndPossibleDomesticQTHExchange:
       begin
         if cMyState = 'TRC' then      // 4.63.3
+           begin
            SetMyEx('%-3s %d%-6s', [RSTSent, nrSent, cMyState])
+           end
         else if ContestTitle = 'PGA' then       // 4.92.4
+           begin
            SetMyEx('%-3s %3.3d%s     ', [RSTSent, nrSent, cMyState])
+           end
         else
+           begin
            SetMyEx('%-3s %-4.4d %6s      ', [RSTSent, nrSent, cMyState]);
+           end;
 
         if Contest = UKEI then           // 4.58.2
           if rx.QTHString = '' then
-            csQTHString := '--';
+             begin
+             csQTHString := '--';
+             end;
 
         if Contest = IOTA then
-          begin
-          if csQTHString = '' then csQTHString := '------';
-          end;
+           begin
+           if csQTHString = '' then
+              begin
+              csQTHString := '------';
+              end;
+           end;
 
         if Contest = DARC10M then     // n4af 4.43.7
+           begin
            SetHisEx('%-3s %4.4d %3s', [RSTReceived, nrReceived, csQTHString])
+           end
         else if ContestTitle = 'PGA' then           // 4.92.4
+           begin
            SetHisEx('%-3s%5.3d%s', [RSTReceived, nrReceived, csQTHString])
+           end
         else if csQTHString = 'TRC' then      // 4.63.3
+           begin
            SetHisEx('%-3s%5d%-8s', [RSTReceived, nrReceived, csQTHString])
+           end
         else
+           begin
            SetHisEx('%-3s %4.4d %4s', [RSTReceived, nrReceived, csQTHString]);
+           end;
       end;
 
     RSTZoneAndPossibleDomesticQTHExchange:
       begin
         if my.MyState = '' then
-          cMyState := 'DX';
+           begin
+           cMyState := 'DX';
+           end;
 
         SetMyEx('%-3s %.2u %-4s', [RSTSent, cMyZone, cMyState]);
 
         if rx.QTHString = '' then
-          csQTHString := 'DX';
+           begin
+           csQTHString := 'DX';
+           end;
         SetHisEx('%-3s %.2u %-3s', [RSTReceived, HisZone, csQTHString]);
       end;
 
@@ -420,47 +455,56 @@ begin
     RSTDomesticQTHExchange:
       begin
         if Contest in [ CQVHF {, MMAA}] then
-          begin
-          SetHisEx(' %-7s', [csQTHString]);
-          SetMyEx('%-7s', [cMyGrid]);
-          end
+           begin
+           SetHisEx(' %-7s', [csQTHString]);
+           SetMyEx('%-7s', [cMyGrid]);
+           end
         else
-          begin
-          if my.MyState = '' then cMyState := 'DX';
-          if Contest in [SPDX, PACC] then cMyState := IntToStr(nrSent);
-          if rx.QTHString = '' then csQTHString := 'DX';
-          SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
-          SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
-          end;
+           begin
+           if my.MyState = '' then
+              begin
+              cMyState := 'DX';
+              end;
+           if Contest in [SPDX, PACC] then
+              begin
+              cMyState := IntToStr(nrSent);
+              end;
+           if rx.QTHString = '' then
+              begin
+              csQTHString := 'DX';
+              end;
+           SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
+           SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
+           end;
       end;
 
     RSTDomesticOrDXQTHExchange:
       begin
         if rx.QTHString = '' then
-          begin
-          if rx.DXQTH = '' then
-             begin
-             csQTHString := 'DX';
-             end
-          else
-             begin
-             if Contest = FLORIDAQSOPARTY then
-                begin
-                csQTHString := string(rx.QTH.Prefix);
-                end
-             else
-                begin
-                csQTHString := string(rx.DXQTH);
-                end;
-             end;
-          end
+           begin
+           if rx.DXQTH = '' then
+              begin
+              csQTHString := 'DX';
+              end
+           else
+              begin
+              if Contest = FLORIDAQSOPARTY then
+                 begin
+                 csQTHString := string(rx.QTH.Prefix);
+                 end
+              else
+                 begin
+                 csQTHString := string(rx.DXQTH);
+                 end;
+              end;
+           end
         else if rx.QTHString = 'DX' then
-          begin
-          if Contest = FLORIDAQSOPARTY then
-             begin
-             csQTHString := string(rx.QTH.Prefix);
-             end;
-          end;
+           begin
+           if Contest = FLORIDAQSOPARTY then
+              begin
+              csQTHString := string(rx.QTH.Prefix);
+              end;
+           end;
 
         SetHisEx('%-3s %-7s', [RSTReceived, csQTHString]);
         SetMyEx('%-3s %-7s', [RSTSent, cMyState]);
@@ -474,7 +518,10 @@ begin
 
     RSTZoneExchange:
       begin
-        if Contest in [JIDXSSB, JIDXCW] then cMyZone := StrToIntDef(my.MyState, 0);
+        if Contest in [JIDXSSB, JIDXCW] then
+           begin
+           cMyZone := StrToIntDef(my.MyState, 0);
+           end;
         SetHisEx('%-3s %-7.2d', [RSTReceived, HisZone]);   // 4.51.1 issue185
         SetMyEx('%-3s %-7.2d', [RSTSent, cMyZone]);        // 4.51.1 issue#185
       end;

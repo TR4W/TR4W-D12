@@ -66,17 +66,19 @@ var
 procedure QueuePendingCounty(const ACounty: string);
 begin
   if not Assigned(FPendingCounties) then
-    FPendingCounties := TStringList.Create;
+     begin
+     FPendingCounties := TStringList.Create;
+     end;
   FPendingCounties.Add(ACounty);
 end;
 
 function DequeuePendingCounty: string;
 begin
   if not Assigned(FPendingCounties) or (FPendingCounties.Count = 0) then
-    begin
-    Result := '';
-    Exit;
-    end;
+     begin
+     Result := '';
+     Exit;
+     end;
   Result := FPendingCounties[0];
   FPendingCounties.Delete(0);
 end;
@@ -89,15 +91,21 @@ end;
 function PendingCountiesCount: Integer;
 begin
   if Assigned(FPendingCounties) then
-    Result := FPendingCounties.Count
+     begin
+     Result := FPendingCounties.Count
+     end
   else
-    Result := 0;
+     begin
+     Result := 0;
+     end;
 end;
 
 procedure ClearPendingCounties;
 begin
   if Assigned(FPendingCounties) then
-    FPendingCounties.Clear;
+     begin
+     FPendingCounties.Clear;
+     end;
 end;
 
 initialization

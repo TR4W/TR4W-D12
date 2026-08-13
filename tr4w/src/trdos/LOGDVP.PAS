@@ -370,29 +370,29 @@ begin
   end;
 }
   if TF.tOpenFileForRead(h, FileName {WAVFileToPlay}) then
-  begin
-    if Windows.ReadFile(h, Head, SizeOf(WavHeader), lpNumberOfBytesRead, nil) = True then
-    begin
-      if lpNumberOfBytesRead = SizeOf(WavHeader) then
-      begin
-        Result := True;
-        r := int64(1000) * Head.BytesFollowing div Head.SampleRate div Head.BytesPerSample;
-        Duration := Trunc(r) + 100;
-      end;
-    end
-    else
-    begin
-      CloseHandle(h);
-      goto 1;
-    end;
-    CloseHandle(h);
-    Exit;
-  end;
+     begin
+     if Windows.ReadFile(h, Head, SizeOf(WavHeader), lpNumberOfBytesRead, nil) = True then
+        begin
+        if lpNumberOfBytesRead = SizeOf(WavHeader) then
+           begin
+           Result := True;
+           r := int64(1000) * Head.BytesFollowing div Head.SampleRate div Head.BytesPerSample;
+           Duration := Trunc(r) + 100;
+           end;
+        end
+     else
+        begin
+        CloseHandle(h);
+        goto 1;
+        end;
+     CloseHandle(h);
+     Exit;
+     end;
   1:
   if DisplayError then
-  begin
-    QuickDisplay(SysUtils.Format('%s : %s', [string(FileName), SysUtils.SysErrorMessage(GetLastError)]));
-  end;
+     begin
+     QuickDisplay(SysUtils.Format('%s : %s', [string(FileName), SysUtils.SysErrorMessage(GetLastError)]));
+     end;
 end;
 
 procedure tDVPPlayThreadproc;
@@ -414,23 +414,27 @@ begin
 
   PlayNextMessage:
   if DVPMessagesArray[Index][1] = '*' then
-  begin
-    Pauselenght := 0;
-    for i := 1 to length(DVPMessagesArray[Index]) do
-      if DVPMessagesArray[Index][i] = '*' then
-        Pauselenght := Pauselenght + 20
-      else
-        goto NextMessage;
-    Sleep(Pauselenght);
-    goto NextMessage;
-  end;
+     begin
+     Pauselenght := 0;
+     for i := 1 to length(DVPMessagesArray[Index]) do
+       if DVPMessagesArray[Index][i] = '*' then
+          begin
+          Pauselenght := Pauselenght + 20
+          end
+       else
+          begin
+          goto NextMessage;
+          end;
+     Sleep(Pauselenght);
+     goto NextMessage;
+     end;
 
   p := @DVPMessagesArray[Index][1];
 
      {Some WAV File}
   if StringHas(DVPMessagesArray[Index], '.WAV') then
-  begin
-{
+     begin
+     {
     asm
     push p
     lea  eax,TR4W_DVPPATH
@@ -440,59 +444,79 @@ begin
     asm add esp,16
     end;
 }
-    if PlayWAVFile(p, True) = prExitThread then goto ExitLabel;
-    goto NextMessage;
-  end;
+         if PlayWAVFile(p, True) = prExitThread then
+            begin
+            goto ExitLabel;
+            end;
+         goto NextMessage;
+     end;
 
   if tUseRecordedSigns then
-  begin
-      //QSO Number
-    if StringIsAllNumbers(DVPMessagesArray[Index]) then
-    begin
+     begin
+     //QSO Number
+   if StringIsAllNumbers(DVPMessagesArray[Index]) then
+      begin
 
       TF.Format(WAVFile, 'FULLSERIALNUMBERS\%s.WAV', p);
 
       TempPlayResult := PlayWAVFile(WAVFile, False);
-      if TempPlayResult = prExitThread then goto ExitLabel;
+      if TempPlayResult = prExitThread then
+         begin
+         goto ExitLabel;
+         end;
 
       if TempPlayResult = prCantPlay then
-      begin
-        for i := 1 to length(DVPMessagesArray[Index]) do
-        begin
-          TempChar := DVPMessagesArray[Index][i];
-          // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload);
-          // TempChar is an ASCII letter/digit/'_', so %c output == the old %C.
-          TF.Format(WAVFile, 'LETTERSANDNUMBERS\%c.WAV', TempChar);
-          if PlayWAVFile(WAVFile, True) = prExitThread then goto ExitLabel;
-        end;
-      end;
+         begin
+         for i := 1 to length(DVPMessagesArray[Index]) do
+            begin
+            TempChar := DVPMessagesArray[Index][i];
+            // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload);
+            // TempChar is an ASCII letter/digit/'_', so %c output == the old %C.
+            TF.Format(WAVFile, 'LETTERSANDNUMBERS\%c.WAV', TempChar);
+            if PlayWAVFile(WAVFile, True) = prExitThread then
+               begin
+               goto ExitLabel;
+               end;
+            end;
+         end;
 
       goto NextMessage;
-    end;
+      end;
 
-      //Callsign
+     //Callsign
 
-    TF.Format(WAVFile, 'FULLCALLSIGNS\%s.WAV', p);
+   TF.Format(WAVFile, 'FULLCALLSIGNS\%s.WAV', p);
 
-    TempPlayResult := PlayWAVFile(WAVFile, False);
-    if TempPlayResult = prExitThread then goto ExitLabel;
+   TempPlayResult := PlayWAVFile(WAVFile, False);
+   if TempPlayResult = prExitThread then
+      begin
+      goto ExitLabel;
+      end;
 
-    if TempPlayResult = prCantPlay then
-    begin
+   if TempPlayResult = prCantPlay then
+      begin
       tWriteCallsignToMissingCallsignsFile(p);
       for i := 1 to length(DVPMessagesArray[Index]) do
-      begin
-        TempChar := DVPMessagesArray[Index][i];
-        if TempChar = '/' then TempChar := '_';
-        // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload).
-        TF.Format(WAVFile, 'LETTERSANDNUMBERS\%c.WAV', TempChar);
-        if PlayWAVFile(WAVFile, True) = prExitThread then goto ExitLabel;
+         begin
+         TempChar := DVPMessagesArray[Index][i];
+         if TempChar = '/' then
+            begin
+            TempChar := '_';
+            end;
+         // Issue #997: asm wsprintf-push -> TF.Format. %C -> %c (Char overload).
+         TF.Format(WAVFile, 'LETTERSANDNUMBERS\%c.WAV', TempChar);
+         if PlayWAVFile(WAVFile, True) = prExitThread then
+            begin
+            goto ExitLabel;
+            end;
+         end;
       end;
-    end;
 
-  end
+     end
   else
-    Sleep(0);
+     begin
+     Sleep(0);
+     end;
 
 //  asm nop end;
 
@@ -535,19 +559,25 @@ begin
   p := GetRealPath(TR4W_DVKPATH, 'FULLCALLSIGNS\MISSINGCALLSIGNS.TXT', nil);
   h := CreateFileA(p, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   if h = INVALID_HANDLE_VALUE then
-  begin
-//    ShowSysErrorMessage(p);
-    Exit;
-  end;
+     begin
+     //    ShowSysErrorMessage(p);
+         Exit;
+     end;
 
   NextRead:
   Windows.ZeroMemory(@TempBuffer, SizeOf(TempBuffer));
   Windows.ReadFile(h, TempBuffer, SizeOf(TempBuffer), lpNumberOfBytesRead, nil);
   if lpNumberOfBytesRead > 0 then
-  begin
-    if strpos(TempBuffer, Callsign) <> nil then goto CallsignFound;
-    if lpNumberOfBytesRead = SizeOf(TempBuffer) then goto NextRead;
-  end;
+     begin
+     if strpos(TempBuffer, Callsign) <> nil then
+        begin
+        goto CallsignFound;
+        end;
+     if lpNumberOfBytesRead = SizeOf(TempBuffer) then
+        begin
+        goto NextRead;
+        end;
+     end;
 
   swriteFile(h, Callsign^, lstrlenA(Callsign));
   swriteFile(h, #13#10, 2);
@@ -570,7 +600,10 @@ begin
   end;
 }
   if not FileExists(lpszSoundName {WAVFileToPlay}) then Exit;
-  if ActiveRadioPtr.tPTTStatus = PTT_OFF then PTTOn;
+  if ActiveRadioPtr.tPTTStatus = PTT_OFF then
+     begin
+     PTTOn;
+     end;
   Result := sndPlaySoundA(lpszSoundName {WAVFileToPlay}, SND_ASYNC or SND_NODEFAULT);
 end;
 
@@ -587,36 +620,46 @@ begin
 
   if DVKLocalizedMessagesEnable then
     if CallWindowString <> '' then
-    begin
-      Windows.ZeroMemory(@countrtyId, SizeOf(countrtyId));
-      countrtyId := ctyGetCountryID(CallWindowString);
-      if (countrtyId <> '') then
-      begin
-        if (countrtyId[1] = 'U') and (countrtyId[2] = 'A') then countrtyId[3] := #0;
+       begin
+       Windows.ZeroMemory(@countrtyId, SizeOf(countrtyId));
+       countrtyId := ctyGetCountryID(CallWindowString);
+       if (countrtyId <> '') then
+          begin
+          if (countrtyId[1] = 'U') and (countrtyId[2] = 'A') then
+             begin
+             countrtyId[3] := #0;
+             end;
 
-        WAVFile := GetRealPath(TR4W_DVKPATH, f, @countrtyId[1]);
-      //ShowMessage(WAVFile);
-        if not FileExists(WAVFile) then WAVFile := nil;
-      end;
-    end;
+          WAVFile := GetRealPath(TR4W_DVKPATH, f, @countrtyId[1]);
+        //ShowMessage(WAVFile);
+          if not FileExists(WAVFile) then
+             begin
+             WAVFile := nil;
+             end;
+          end;
+       end;
 
   if WAVFile = nil then
-    WAVFile := GetRealPath(TR4W_DVKPATH, f, nil);
+     begin
+     WAVFile := GetRealPath(TR4W_DVKPATH, f, nil);
+     end;
 
   if tGetWAVDurationFromHeader(WAVFile, Duration, DisplayError) then
-  begin
-    if tsndPlaySound(WAVFile) = False then
-    begin
-      if DisplayError then
-        QuickDisplay(SysErrorMessage(GetLastError));
-    end
-    else
-    begin
-      tDVPTimerEventID := timeSetEvent(Duration, 0, TFNTimeCallBack(tDVP_Event), 0, TIME_CALLBACK_EVENT_SET);
-      WaitForSingleObject(tDVP_Event, 30000);
-      if tExitFromDVPThread then Result := prExitThread else Result := prOK;
-    end;
-  end;
+     begin
+     if tsndPlaySound(WAVFile) = False then
+        begin
+        if DisplayError then
+           begin
+           QuickDisplay(SysErrorMessage(GetLastError));
+           end;
+        end
+     else
+        begin
+        tDVPTimerEventID := timeSetEvent(Duration, 0, TFNTimeCallBack(tDVP_Event), 0, TIME_CALLBACK_EVENT_SET);
+        WaitForSingleObject(tDVP_Event, 30000);
+        if tExitFromDVPThread then Result := prExitThread else Result := prOK;
+        end;
+     end;
 end;
 
 end.

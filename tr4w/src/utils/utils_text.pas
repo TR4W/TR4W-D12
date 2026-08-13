@@ -55,9 +55,13 @@ begin
   SetLength(Result, Length(s));
   for i := 1 to Length(s) do
     if (s[i] >= 'a') and (s[i] <= 'z') then
-      Result[i] := Char(Ord(s[i]) - 32)
+       begin
+       Result[i] := Char(Ord(s[i]) - 32)
+       end
     else
-      Result[i] := s[i];
+       begin
+       Result[i] := s[i];
+       end;
 end;
 
 function StringHas(LongString: string; SearchString: string): boolean;
@@ -79,7 +83,9 @@ begin
    if InputString = '' then Exit;
 
    if bNoCase then
+      begin
       InputString := UpperCase(InputString);
+      end;
 
    for CharPos := 1 to length(InputString) do
       begin
@@ -104,10 +110,10 @@ begin
   for CharPos := 1 to length(InputString) do
 
     if (UpCase(InputString[CharPos]) <= 'Z') and (UpCase(InputString[CharPos]) >= 'A') then
-    begin
-      StringHasLetters := True;
-      Exit;
-    end;
+       begin
+       StringHasLetters := True;
+       Exit;
+       end;
 
   StringHasLetters := False;
 end;
@@ -120,10 +126,10 @@ var
 begin
   for CharPos := 1 to length(InputString) do
     if (InputString[CharPos] <= 'z') and (InputString[CharPos] >= 'a') then
-    begin
-      StringHasLowerCase := True;
-      Exit;
-    end;
+       begin
+       StringHasLowerCase := True;
+       Exit;
+       end;
 
   StringHasLowerCase := False;
 end;
@@ -140,10 +146,10 @@ begin
   for ChrPtr := 1 to length(Prompt) do
     //      if (Prompt[ChrPtr] >= '0') and (Prompt[ChrPtr] <= '9') then
     if tCharIsNumbers(Prompt[ChrPtr]) then
-    begin
-      StringHasNumber := True;
-      Exit;
-    end;
+       begin
+       StringHasNumber := True;
+       Exit;
+       end;
 end;
 
 function StringIsAllNumbers(InputString: string): boolean;
@@ -157,7 +163,9 @@ begin
 
   for CharPos := 1 to length(InputString) do
     if not tCharIsNumbers(InputString[CharPos]) then
-      Exit;
+       begin
+       Exit;
+       end;
 
   StringIsAllNumbers := True;
 end;
@@ -218,20 +226,20 @@ var
 
 begin
   if (InputString = '') or (not StringHas(InputString, ' ')) then
-  begin
-    StringWithFirstWordDeleted := '';
-    Exit;
-  end;
+     begin
+     StringWithFirstWordDeleted := '';
+     Exit;
+     end;
 
   repeat
     DeletedChar := InputString[1];
     Delete(InputString, 1, 1);
 
     if length(InputString) = 0 then
-    begin
-      StringWithFirstWordDeleted := '';
-      Exit;
-    end;
+       begin
+       StringWithFirstWordDeleted := '';
+       Exit;
+       end;
 
   until (DeletedChar = ' ') and (InputString[1] <> ' ');
   StringWithFirstWordDeleted := InputString;
@@ -247,11 +255,15 @@ begin
   Position := pos(Deliminator, LongString);
 
   if Position > 0 then
-    PostcedingString := Copy(LongString,
-      Position + length(Deliminator),
-      length(LongString) - Position - (length(Deliminator) - 1))
+     begin
+     PostcedingString := Copy(LongString,
+       Position + length(Deliminator),
+       length(LongString) - Position - (length(Deliminator) - 1))
+     end
   else
-    PostcedingString := '';
+     begin
+     PostcedingString := '';
+     end;
 end;
 
 function PrecedingString(LongString: string; Deliminator: string): string;
@@ -264,9 +276,13 @@ begin
   Position := pos(Deliminator, LongString);
 
   if Position >= 2 then
-    PrecedingString := Copy(LongString, 1, Position - 1)
+     begin
+     PrecedingString := Copy(LongString, 1, Position - 1)
+     end
   else
-    PrecedingString := '';
+     begin
+     PrecedingString := '';
+     end;
 end;
 
 function pPos(c: AnsiChar; p: PAnsiChar): integer;
@@ -275,14 +291,14 @@ var
 begin
   Result := -1;
   for i := 0 to 255 do
-  begin
-    if p[i] = #0 then Break;
-    if p[i] = c then
-    begin
-      Result := i;
-      Break;
-    end;
-  end;
+     begin
+     if p[i] = #0 then Break;
+     if p[i] = c then
+        begin
+        Result := i;
+        Break;
+        end;
+     end;
 end;
 
 function tPos(s: ShortString; c: AnsiChar): integer; //
@@ -293,10 +309,10 @@ begin
   if s = '' then Exit;
   for i := 1 to length(s) do
     if s[i] = c then
-    begin
-      Result := i;
-      Exit;
-    end;
+       begin
+       Result := i;
+       Exit;
+       end;
 end;
 
 {~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

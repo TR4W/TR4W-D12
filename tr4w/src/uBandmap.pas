@@ -162,7 +162,9 @@ begin
 
     WM_CONTEXTMENU:
       if HWND(wParam) = BandMapListBox then
-        ShowBandMapPopupMenu;
+         begin
+         ShowBandMapPopupMenu;
+         end;
 
     //    WM_ERASEBKGND: Result := True;
 
@@ -179,169 +181,195 @@ begin
 
     WM_DRAWITEM:
       if wParam <> 0 then
-      begin
-        BandmapDRAWITEMSTRUCT := Pointer(lParam);
-        begin
+         begin
+         BandmapDRAWITEMSTRUCT := Pointer(lParam);
+         begin
 
-          if (BandmapDRAWITEMSTRUCT^.itemAction = ODA_FOCUS) then
-          begin
-            DrawFocusRect(BandmapDRAWITEMSTRUCT^.HDC,
-              BandmapDRAWITEMSTRUCT^.rcItem);
-            Exit;
-          end;
+           if (BandmapDRAWITEMSTRUCT^.itemAction = ODA_FOCUS) then
+              begin
+              DrawFocusRect(BandmapDRAWITEMSTRUCT^.HDC,
+                BandmapDRAWITEMSTRUCT^.rcItem);
+              Exit;
+              end;
 
-          Windows.FillRect(BandmapDRAWITEMSTRUCT^.HDC,
-            BandmapDRAWITEMSTRUCT^.rcItem, BandMapBckgrndBrush);
-          memDC := BandmapDRAWITEMSTRUCT^.HDC;
+           Windows.FillRect(BandmapDRAWITEMSTRUCT^.HDC,
+             BandmapDRAWITEMSTRUCT^.rcItem, BandMapBckgrndBrush);
+           memDC := BandmapDRAWITEMSTRUCT^.HDC;
 
-          if not BandMapFreqWidthCalculated then
-          begin
+           if not BandMapFreqWidthCalculated then
+              begin
 
-            GetTextExtentPoint32(memDC, '28888.8', 7, Size);
-            if not BandMapDisplayGhz then // n4af 4.42.8
-              FreqRectWidth := Size.cx + BMWide
-            else
-              FreqRectWidth := Size.cx + BMWide + Ghz;
-            BandMapFreqWidthCalculated := True;
-          end;
+              GetTextExtentPoint32(memDC, '28888.8', 7, Size);
+              if not BandMapDisplayGhz then // n4af 4.42.8
+                 begin
+                 FreqRectWidth := Size.cx + BMWide
+                 end
+              else
+                 begin
+                 FreqRectWidth := Size.cx + BMWide + Ghz;
+                 end;
+              BandMapFreqWidthCalculated := True;
+              end;
 
-          SelectedItem := False;
+           SelectedItem := False;
 
-          {Rects}
-          temprect := BandmapDRAWITEMSTRUCT^.rcItem;
-          temprect.Top := temprect.Top + Shift;
-          temprect.Bottom := temprect.Bottom - Shift;
-          temprect.Right := temprect.Right - Shift;
-          temprect.Left := temprect.Left + Shift;
+           {Rects}
+           temprect := BandmapDRAWITEMSTRUCT^.rcItem;
+           temprect.Top := temprect.Top + Shift;
+           temprect.Bottom := temprect.Bottom - Shift;
+           temprect.Right := temprect.Right - Shift;
+           temprect.Left := temprect.Left + Shift;
 
-          FrequencyRect := temprect; // BandmapDRAWITEMSTRUCT^.rcItem;
-          CallsignRect := temprect; //BandmapDRAWITEMSTRUCT^.rcItem;
-          CheckRect := temprect; // BandmapDRAWITEMSTRUCT^.rcItem;
-          //          LeftFreqRect := TempRect;
+           FrequencyRect := temprect; // BandmapDRAWITEMSTRUCT^.rcItem;
+           CallsignRect := temprect; //BandmapDRAWITEMSTRUCT^.rcItem;
+           CheckRect := temprect; // BandmapDRAWITEMSTRUCT^.rcItem;
+           //          LeftFreqRect := TempRect;
 
-          //          LeftFreqRect.Right := LeftFreqRect.Left + 20;
+           //          LeftFreqRect.Right := LeftFreqRect.Left + 20;
 
-          FrequencyRect.Right := FrequencyRect.Left + FreqRectWidth;
-          CheckRect.Left := FrequencyRect.Right + 1;
-          CheckRect.Right := CheckRect.Left + CheckRectWidth;
-          CallsignRect.Left := CheckRect.Right + Shift;
+           FrequencyRect.Right := FrequencyRect.Left + FreqRectWidth;
+           CheckRect.Left := FrequencyRect.Right + 1;
+           CheckRect.Right := CheckRect.Left + CheckRectWidth;
+           CallsignRect.Left := CheckRect.Right + Shift;
 
-          ///            TempBandMapEntryPointer := Pointer(BandmapDRAWITEMSTRUCT^.itemData);
+           ///            TempBandMapEntryPointer := Pointer(BandmapDRAWITEMSTRUCT^.itemData);
 
-          Windows.SetTextColor(memDC, 0);
-          SetBkMode(memDC, TRANSPARENT);
+           Windows.SetTextColor(memDC, 0);
+           SetBkMode(memDC, TRANSPARENT);
 
-          Spot := SpotsList.Get(BandmapDRAWITEMSTRUCT^.itemData);
+           Spot := SpotsList.Get(BandmapDRAWITEMSTRUCT^.itemData);
 
-          SetBkMode(memDC, TRANSPARENT);
+           SetBkMode(memDC, TRANSPARENT);
 
-          CursorFontColor := clwhite;
+           CursorFontColor := clwhite;
 
-            if (Abs(spot.FFrequency - BandMapCursorFrequency) <=
-              BandMapGuardBand) then
-              //GAV added to change turn current spot in bandmap red
-              BandColor := clred ;
+             if (Abs(spot.FFrequency - BandMapCursorFrequency) <=
+               BandMapGuardBand) then
+               //GAV added to change turn current spot in bandmap red
+                begin
+                BandColor := clred ;
+                end;
 
-             if (Spot.FBand = InactiveRadioPtr.BandMemory) and TwoRadioMode or
-                (Spot.FBand = BandmapBand) and (not TwoRadioMode)  then
-                  BandColor := clblue
-             else
-                  BandColor := clsilver;
+              if (Spot.FBand = InactiveRadioPtr.BandMemory) and TwoRadioMode or
+                 (Spot.FBand = BandmapBand) and (not TwoRadioMode)  then
+                 begin
+                 BandColor := clblue
+                 end
+              else
+                 begin
+                 BandColor := clsilver;
+                 end;
 
-          if (lobyte(BandmapDRAWITEMSTRUCT^.itemState) = ODS_SELECTED) then
-            SelectedItem := True;
+           if (lobyte(BandmapDRAWITEMSTRUCT^.itemState) = ODS_SELECTED) then
+              begin
+              SelectedItem := True;
+              end;
 
-          if SelectedItem then
-          begin
-            DrawFrameControl(memDC, BandmapDRAWITEMSTRUCT^.rcItem, DFC_BUTTON,
-              DFCS_BUTTONPUSH);
-            {
+           if SelectedItem then
+              begin
+              DrawFrameControl(memDC, BandmapDRAWITEMSTRUCT^.rcItem, DFC_BUTTON,
+                DFCS_BUTTONPUSH);
+              {
             BandmapDRAWITEMSTRUCT^.rcItem.Bottom:=
             BandmapDRAWITEMSTRUCT^.rcItem.Bottom+100;
             DrawFrameControl(memDC, BandmapDRAWITEMSTRUCT^.rcItem, DFC_CAPTION	, DFCS_CAPTIONHELP);
             }
-            CursorFontColor := 0;
-            Windows.SetTextColor(memDC, $FFFFFF);
-            CallsignColor := 0;
-          end
-          else
-          begin
-            if BandmapDRAWITEMSTRUCT^.itemAction = ODA_SELECT then
-              if lobyte(BandmapDRAWITEMSTRUCT^.itemState) = 0 then
-                Windows.FillRect(memDC, BandmapDRAWITEMSTRUCT^.rcItem,
-                  BandMapBckgrndBrush);
-            GradientRect(memDC, FrequencyRect, BandColor, BandColor,
-              gdHorizontal);
-          end;
+              CursorFontColor := 0;
+              Windows.SetTextColor(memDC, $FFFFFF);
+              CallsignColor := 0;
+              end
+           else
+              begin
+              if BandmapDRAWITEMSTRUCT^.itemAction = ODA_SELECT then
+                if lobyte(BandmapDRAWITEMSTRUCT^.itemState) = 0 then
+                   begin
+                   Windows.FillRect(memDC, BandmapDRAWITEMSTRUCT^.rcItem,
+                     BandMapBckgrndBrush);
+                   end;
+              GradientRect(memDC, FrequencyRect, BandColor, BandColor,
+                gdHorizontal);
+              end;
 
-          {Draw Frequency}
-          Windows.SetTextColor(memDC, CursorFontColor);
+           {Draw Frequency}
+           Windows.SetTextColor(memDC, CursorFontColor);
 
-          Windows.DrawTextW
-            (memDC,
-            PChar(FreqToPChar2(Spot.FFrequency)),
-            -1,
-            FrequencyRect,
-            DT_END_ELLIPSIS + DT_SINGLELINE + DT_RIGHT + DT_VCENTER);
-          p := nil;
+           Windows.DrawTextW
+             (memDC,
+             PChar(FreqToPChar2(Spot.FFrequency)),
+             -1,
+             FrequencyRect,
+             DT_END_ELLIPSIS + DT_SINGLELINE + DT_RIGHT + DT_VCENTER);
+           p := nil;
 
-          if Spot.FMult then
-          begin
-            GradientRect(memDC, CheckRect, clred, clwhite, gdHorizontal);
-            p := 'M';
-          end;
+           if Spot.FMult then
+              begin
+              GradientRect(memDC, CheckRect, clred, clwhite, gdHorizontal);
+              p := 'M';
+              end;
 
-          //          if Spot.FLoudSignal then p := '+';
-          if Spot.FQSXFrequency <> 0 then
-            p := 'S';
-          if Spot.FDupe then
-            //            Ellipse(memDC, CheckRect.Left, CheckRect.Top, CheckRect.Right, CheckRect.Bottom);
-          begin
-            GradientRect(memDC, CheckRect, clYellow, clYellow, gdHorizontal);
-            p := 'D';
-          end;
+           //          if Spot.FLoudSignal then p := '+';
+           if Spot.FQSXFrequency <> 0 then
+              begin
+              p := 'S';
+              end;
+           if Spot.FDupe then
+             //            Ellipse(memDC, CheckRect.Left, CheckRect.Top, CheckRect.Right, CheckRect.Bottom);
+              begin
+              GradientRect(memDC, CheckRect, clYellow, clYellow, gdHorizontal);
+              p := 'D';
+              end;
 
-          if p <> nil then
-          begin
-            Windows.SetTextColor(memDC, 0);
-            Windows.DrawTextA(memDC, p, 1, CheckRect, DT_END_ELLIPSIS +
-              DT_SINGLELINE + DT_CENTER + DT_VCENTER);
-          end;
+           if p <> nil then
+              begin
+              Windows.SetTextColor(memDC, 0);
+              Windows.DrawTextA(memDC, p, 1, CheckRect, DT_END_ELLIPSIS +
+                DT_SINGLELINE + DT_CENTER + DT_VCENTER);
+              end;
 
-          if SelectedItem then
-            CallsignColor := 0
-          else
-          begin
-            if Spot.FMinutesLeft in [00..02] then
-            begin
-              GradientRect(memDC, CallsignRect, clblack, clblack, gdHorizontal);
-              CallsignColor := $FFFFFF;
-            end;
-            if Spot.FMinutesLeft in [03..10] then
-              CallsignColor := clblue;
-            if Spot.FMinutesLeft in [11..20] then
-              CallsignColor := $505050;
-            if Spot.FMinutesLeft in [21..30] then
-              CallsignColor := $808080;
-            if Spot.FMinutesLeft > 30 then
-              CallsignColor := $C0C0C0;
-          end;
+           if SelectedItem then
+              begin
+              CallsignColor := 0
+              end
+           else
+              begin
+              if Spot.FMinutesLeft in [00..02] then
+                 begin
+                 GradientRect(memDC, CallsignRect, clblack, clblack, gdHorizontal);
+                 CallsignColor := $FFFFFF;
+                 end;
+              if Spot.FMinutesLeft in [03..10] then
+                 begin
+                 CallsignColor := clblue;
+                 end;
+              if Spot.FMinutesLeft in [11..20] then
+                 begin
+                 CallsignColor := $505050;
+                 end;
+              if Spot.FMinutesLeft in [21..30] then
+                 begin
+                 CallsignColor := $808080;
+                 end;
+              if Spot.FMinutesLeft > 30 then
+                 begin
+                 CallsignColor := $C0C0C0;
+                 end;
+              end;
 
-          Windows.SetTextColor(memDC, CallsignColor);
+           Windows.SetTextColor(memDC, CallsignColor);
 
-          DrawCallsign:
-          CallsignRect.Left := CallsignRect.Left + 2;
-          Windows.DrawTextA(
-            memDC,
-            @Spot.FCall[1],
-            length(Spot.FCall),
-            CallsignRect,
-            DT_END_ELLIPSIS + DT_SINGLELINE + DT_LEFT + DT_VCENTER);
+           DrawCallsign:
+           CallsignRect.Left := CallsignRect.Left + 2;
+           Windows.DrawTextA(
+             memDC,
+             @Spot.FCall[1],
+             length(Spot.FCall),
+             CallsignRect,
+             DT_END_ELLIPSIS + DT_SINGLELINE + DT_LEFT + DT_VCENTER);
 
-          2:
+           2:
 
-        end;
-      end;
+         end;
+         end;
 
     WM_SIZE:
       begin
@@ -405,9 +433,13 @@ begin
               KillFocus; // Gav 4.47.4 #141
             end;
           205: if TwoRadioMode then
-              InvertBooleanCommand(@QSYInactiveRadio); // Gav     4.37.12
+                  begin
+                  InvertBooleanCommand(@QSYInactiveRadio); // Gav     4.37.12
+                  end;
           206: if TwoRadioMode then
-              InvertBooleanCommand(@BandMapSO2RDisplay); // 4.105.14
+                  begin
+                  InvertBooleanCommand(@BandMapSO2RDisplay); // 4.105.14
+                  end;
         end;
 
         case HiWord(wParam) of
@@ -433,28 +465,28 @@ begin
               spot := spotslist.Get(tempint);
 
               if TempInt = LB_ERR then
-              begin
-                logger.Trace('In BandMap::BandmapDlgProc, GetBMSelItemData = LB_ERR so exiting without changing radio');
-                Exit;
-              end;
+                 begin
+                 logger.Trace('In BandMap::BandmapDlgProc, GetBMSelItemData = LB_ERR so exiting without changing radio');
+                 Exit;
+                 end;
               if ((radio1.filteredstatus.freq <> 0) and (radio2.filteredstatus.freq <> 0)) and (QSYInactiveRadio) then
-              begin
-                InActiveRadioPtr.BandMemory := Spot.FBand;
-                tClearDupeInfoCall;              // issue 872: zero buffer before assign to prevent PChar read-past-end
-                ClearAltD;
-                dupeinfocall := spot.fcall;
-                dupecheckoninactiveradio(true);
-                logger.trace('[BandMap::BandmapDlgProc] Calling TuneRadioToSpot for Inactive Radio');
-                TuneRadioToSpot(SpotsList.Get(TempInt), InActiveRadio);
-                SetOpMode(CQOpMode);
+                 begin
+                 InActiveRadioPtr.BandMemory := Spot.FBand;
+                 tClearDupeInfoCall;              // issue 872: zero buffer before assign to prevent PChar read-past-end
+                 ClearAltD;
+                 dupeinfocall := spot.fcall;
+                 dupecheckoninactiveradio(true);
+                 logger.trace('[BandMap::BandmapDlgProc] Calling TuneRadioToSpot for Inactive Radio');
+                 TuneRadioToSpot(SpotsList.Get(TempInt), InActiveRadio);
+                 SetOpMode(CQOpMode);
 
-              end
+                 end
               else
            //   if (BandMapSO2RDisplay) or (not TwoRadioMode) then
-              begin
-                logger.trace('[BandMap::BandmapDlgProc] Calling TuneRadioToSpot for active Radio');
-                TuneRadioToSpot(SpotsList.Get(TempInt), ActiveRadio);
-              end;
+                 begin
+                 logger.trace('[BandMap::BandmapDlgProc] Calling TuneRadioToSpot for active Radio');
+                 TuneRadioToSpot(SpotsList.Get(TempInt), ActiveRadio);
+                 end;
               KillFocus; // Gav 4.47.4 #141
               Windows.SetFocus(wh[mweCall]); // 4.100.12
             end;
@@ -486,19 +518,33 @@ begin
   //  CheckUncheckAllBandMapPopupMenus;
 
   if BandMapAllBands then
-    Windows.CheckMenuItem(BandMapMenu, 66, MF_CHECKED);
+     begin
+     Windows.CheckMenuItem(BandMapMenu, 66, MF_CHECKED);
+     end;
   if BandMapAllModes then
-    Windows.CheckMenuItem(BandMapMenu, 77, MF_CHECKED);
+     begin
+     Windows.CheckMenuItem(BandMapMenu, 77, MF_CHECKED);
+     end;
   if BandMapDisplayCQ then
-    Windows.CheckMenuItem(BandMapMenu, 202, MF_CHECKED);
+     begin
+     Windows.CheckMenuItem(BandMapMenu, 202, MF_CHECKED);
+     end;
   if BandMapDupeDisplay then
-    Windows.CheckMenuItem(BandMapMenu, 68, MF_CHECKED);
+     begin
+     Windows.CheckMenuItem(BandMapMenu, 68, MF_CHECKED);
+     end;
   if BandMapMultsOnly then
-    Windows.CheckMenuItem(BandMapMenu, 69, MF_CHECKED);
+     begin
+     Windows.CheckMenuItem(BandMapMenu, 69, MF_CHECKED);
+     end;
   if QSYInactiveRadio and TwoRadioMode then
-    Windows.CheckMenuItem(BandMapMenu, 205, MF_CHECKED); //GAV  4.37.12
+     begin
+     Windows.CheckMenuItem(BandMapMenu, 205, MF_CHECKED); //GAV  4.37.12
+     end;
   if BandMapSO2RDisplay and TwoRadioMode then
-    Windows.CheckMenuItem(BandMapMenu, 206, MF_CHECKED); // 4.105.14
+     begin
+     Windows.CheckMenuItem(BandMapMenu, 206, MF_CHECKED); // 4.105.14
+     end;
   //  SetMenuItemBitmaps(tr4w_main_menu, menu_alt_swapmults, MF_BYCOMMAND,
   //    LoadImage(GetModuleHandle('comctl32.dll'), PChar(140), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR), 0);
 
@@ -525,10 +571,10 @@ const
 begin
   QZBOffset := 0; // 4.92.4
   if (OpMode = SearchAndPounceOpMode) then
-  begin
-    LastSPFrequency := ActiveRadioPtr^.LastDisplayedFreq;
-    LastSPMode := ActiveMode;
-  end;
+     begin
+     LastSPFrequency := ActiveRadioPtr^.LastDisplayedFreq;
+     LastSPMode := ActiveMode;
+     end;
 
   //?
   EntryBand := NoBand;
@@ -537,47 +583,47 @@ begin
     Spot.FFrequency]);
   GetBandMapBandModeFromFrequency(Spot.FFrequency, EntryBand, EntryMode);
   if (EntryBand = NoBand) then
-  begin
-    logger.trace('Exiting TuneRadioToSpot due to NoBand');
-    exit;
-  end;
+     begin
+     logger.trace('Exiting TuneRadioToSpot due to NoBand');
+     exit;
+     end;
   if ((radio1.filteredstatus.freq = 0) or (radio2.filteredstatus.freq = 0)) then
-  begin
-    BandMapSO2RDisplay := False;
-    QSYInActiveRadio := False;
-    InBandLock := False;
-  end;
+     begin
+     BandMapSO2RDisplay := False;
+     QSYInActiveRadio := False;
+     InBandLock := False;
+     end;
   if BandMapSO2RDisplay then
     // B1: was (not WKBusy).  This is the WIDEST of the B1 substitutions -- CPU,
     // CAT and YCCC keying now also block a same-band SO2R spot tune, where
     // before only the WinKeyer did.  4.105.15
     if (ActiveBand = Spot.FBand) and (not CWStillBeingSent) then
-    begin
-      Radio := ActiveRadio;
-      QSYInactiveRadio := False;
-    end
+       begin
+       Radio := ActiveRadio;
+       QSYInactiveRadio := False;
+       end
     else
-    begin
-      QSYInactiveRadio := True;
-      Radio := InactiveRadio;
-    end;
+       begin
+       QSYInactiveRadio := True;
+       Radio := InactiveRadio;
+       end;
   if ((InBandLock) and (TwoRadioMode)) then
-  begin
-    if QSYInactiveRadio then
-      if ((InActiveRadioPtr.BandMemory <> EntryBand) and (EntryBand =
-        ActiveRadioPtr.BandMemory)) then
-      begin
-        QuickDisplay(TC_2radio_warn);
-        exit;
-      end;
-    if not QSYInactiveRadio then
-      if ((ActiveBand <> EntryBand) and (EntryBand =
-        InActiveRadioPtr.BandMemory)) then // 4.92.1
-      begin
-        QuickDisplay(TC_2radio_warn);
-        exit;
-      end;
-  end;
+     begin
+     if QSYInactiveRadio then
+       if ((InActiveRadioPtr.BandMemory <> EntryBand) and (EntryBand =
+         ActiveRadioPtr.BandMemory)) then
+          begin
+          QuickDisplay(TC_2radio_warn);
+          exit;
+          end;
+     if not QSYInactiveRadio then
+       if ((ActiveBand <> EntryBand) and (EntryBand =
+         InActiveRadioPtr.BandMemory)) then // 4.92.1
+          begin
+          QuickDisplay(TC_2radio_warn);
+          exit;
+          end;
+     end;
 
   // Sleep(100);  4.92.4
   logger.trace('[TuneRadioToSpot] Calling SetRadioFreq %d', [(Spot.FFrequency +
@@ -585,37 +631,41 @@ begin
   SetRadioFreq(Radio, Spot.FFrequency + QZBOffset, EntryMode, 'A');
   PutRadioOutOfSplit(Radio);
   if (QZBRandomOffsetEnable and (EntryMode = CW)) then
-  begin
-    QZBOffset := Windows.GetTickCount mod (MAX_QZB_OFFSET * 2);
-    if QZBOffset > MAX_QZB_OFFSET then
-      QZBOffset := QZBOffset - MAX_QZB_OFFSET * 2;
-  end
+     begin
+     QZBOffset := Windows.GetTickCount mod (MAX_QZB_OFFSET * 2);
+     if QZBOffset > MAX_QZB_OFFSET then
+        begin
+        QZBOffset := QZBOffset - MAX_QZB_OFFSET * 2;
+        end;
+     end
   else
-    QZBOffset := 0;
+     begin
+     QZBOffset := 0;
+     end;
 
   if Spot.FQSXFrequency <> 0 then
-  begin
-    case BandMapSplitMode of
-      ByCutoffFrequency:
-        begin
-          SetRadioFreq(Radio, Spot.FQSXFrequency + QZBOffset, EntryMode, 'B');
-          SetRadioFreq(Radio, Spot.FFrequency, EntryMode, 'A');
-        end;
-      AlwaysPhone:
-        begin
-          SetRadioFreq(Radio, Spot.FQSXFrequency + QZBOffset, Phone, 'B');
-          SetRadioFreq(Radio, Spot.FFrequency, Phone, 'A');
-        end;
-    end;
-    PutRadioIntoSplit(Radio);
-  end;
+     begin
+     case BandMapSplitMode of
+       ByCutoffFrequency:
+         begin
+           SetRadioFreq(Radio, Spot.FQSXFrequency + QZBOffset, EntryMode, 'B');
+           SetRadioFreq(Radio, Spot.FFrequency, EntryMode, 'A');
+         end;
+       AlwaysPhone:
+         begin
+           SetRadioFreq(Radio, Spot.FQSXFrequency + QZBOffset, Phone, 'B');
+           SetRadioFreq(Radio, Spot.FFrequency, Phone, 'A');
+         end;
+     end;
+     PutRadioIntoSplit(Radio);
+     end;
 
   if Radio = InactiveRadio then
-  begin
-    InActiveRadioPtr.BandMemory := Spot.FBand; //Gav 4.37
-    InActiveRadioPtr.ModeMemory := Spot.FMode; //Gav 4.37
- //   Exit;  // .126.8
-  end;
+     begin
+     InActiveRadioPtr.BandMemory := Spot.FBand; //Gav 4.37
+     InActiveRadioPtr.ModeMemory := Spot.FMode; //Gav 4.37
+  //   Exit;  // .126.8
+     end;
   tCleareExchangeWindow;
   tCallWindowSetFocus;
   CallAlreadySent := False;
@@ -623,16 +673,24 @@ begin
   SetOpMode(SearchAndPounceOpMode);
 
   if PInteger(@Spot.FCall[1])^ = tCQAsInteger then
-    Exit;
+     begin
+     Exit;
+     end;
   if PInteger(@Spot.FCall[1])^ = tNEWAsInteger then
-    Exit;
+     begin
+     Exit;
+     end;
     if not QSYInactiveRadio then
    //  tSetExchWindInitExchangeEntry ; // 4.138.2
-     PutCallToCallWindow(Spot.FCall);
+       begin
+       PutCallToCallWindow(Spot.FCall);
+       end;
   
 
   if not QSOByMode then
-    EntryMode := Both;
+     begin
+     EntryMode := Both;
+     end;
   DispalayB4(integer(
     //  CallsignsList.CallsignIsDupe(CallWindowString, EntryBand, EntryMode, Index)
     VisibleLog.CallIsADupe(CallWindowString, EntryBand, EntryMode)
@@ -645,10 +703,14 @@ var
 begin
   i := SendMessage(BandMapListBox, LB_GETCURSEL, 0, 0);
   if i = LB_ERR then
-    Exit;
+     begin
+     Exit;
+     end;
   spotsList.Delete(SendMessage(BandMapListBox, LB_GETITEMDATA, i, 0));
   if tLB_SETCURSEL(BandMapListBox, i) = LB_ERR then
-    tLB_SETCURSEL(BandMapListBox, i - 1);
+     begin
+     tLB_SETCURSEL(BandMapListBox, i - 1);
+     end;
   ShowSpotInfo;
   DisplayBandMap;
 end;
@@ -668,7 +730,9 @@ begin
   i := GetBMSelItemData;
   //SendMessage(BandMapListBox, LB_GETITEMDATA, tLB_GETCURSEL(BandMapListBox), 0);
   if i = LB_ERR then
-    Exit;
+     begin
+     Exit;
+     end;
 
   Spot := SpotsList.Get(i);
   SetTextInBMSB(0, @Spot.FCall[1]);
@@ -679,9 +743,13 @@ begin
 
   i := PInteger(@Spot.FCall[1])^;
   if i = tCQAsInteger then
-    Exit;
+     begin
+     Exit;
+     end;
   if i = tNEWAsInteger then
-    Exit;
+     begin
+     Exit;
+     end;
 
   //  TempString := CountryTable.GetCountryName(CountryTable.GetCountry(Spot.FCall, True));
   SetTextInBMSB(2, ctyGetCountryNamePchar(ctyGetCountry(Spot.FCall)));
@@ -698,7 +766,9 @@ var
   i: integer;
 begin
   for i := 0 to 4 do
-    SetTextInBMSB(i, nil);
+     begin
+     SetTextInBMSB(i, nil);
+     end;
 end;
 
 procedure KillFocus; // Gav 4.47.4 #141
@@ -719,11 +789,15 @@ end;
 function GetBMSelItemData: integer;
 begin
   if BandMapListBox = 0 then
-    Exit;
+     begin
+     Exit;
+     end;
   begin
     Result := SendMessage(BandMapListBox, LB_GETCURSEL, 0, 0);
     if Result = LB_ERR then
-      Exit;
+       begin
+       Exit;
+       end;
     Result := SendMessage(BandMapListBox, LB_GETITEMDATA, Result, 0);
   end;
 
@@ -736,13 +810,17 @@ begin
   //WM_ERASEBKGND WM_PAINT WM_SETREDRAW WM_NCPAINT
   Result := 0;
   if Msg = WM_MOUSEWHEEL then
-  begin
-    if wParam > 0 then
-      VFOBumpUp
-    else
-      VFOBumpDown;
-    Exit;
-  end;
+     begin
+     if wParam > 0 then
+        begin
+        VFOBumpUp
+        end
+     else
+        begin
+        VFOBumpDown;
+        end;
+     Exit;
+     end;
   Result := CallWindowProc(OLDBMLBPROC, hwnddlg, Msg, wParam, lParam);
 
 end;
