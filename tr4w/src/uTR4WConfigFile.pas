@@ -48,7 +48,7 @@ interface
 uses
    SysUtils,
    Classes,
-   System.JSON,
+   uJSON,
    System.IOUtils,
    IniFiles,
    uRadioConfigStore,

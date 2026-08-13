@@ -53,7 +53,7 @@ unit uUDPBroadcastConfig;
   facility, it cannot disagree with any individual destination, and it is the
   only thing standing between an operator and deleting rows to go quiet.
 
-  RTL ONLY, deliberately -- System.JSON, SysUtils, IniFiles and nothing of
+  RTL ONLY, deliberately -- uJSON, SysUtils, IniFiles and nothing of
   TR4W's.  That is what lets the whole thing be unit-tested without booting the
   application's globals, exactly as the radio and keyer stores are.  Pushing the
   values into those globals is uUDPBroadcastApply's job, and it is the only unit
@@ -84,7 +84,7 @@ uses
    Classes,
    Generics.Collections,
    IniFiles,
-   System.JSON;
+   uJSON;
 
 const
    // From LOGSTUFF.PAS's initialisers -- see the unit header.
@@ -657,7 +657,7 @@ begin
          begin
          // A name this build does not know is SKIPPED, not guessed at: sending
          // contacts to something expecting scores is worse than not sending.
-         if UDPStreamFromName(TJSONArray(arr).Items[i].Value, st) then
+         if UDPStreamFromName(JSONText(TJSONArray(arr).Items[i]), st) then
             begin
             Include(Result, st);
             end;
@@ -665,7 +665,7 @@ begin
       Exit;
       end;
 
-   if UDPStreamFromName(aObj.GetValue<string>(J_STREAM_LEGACY, ''), st) then
+   if UDPStreamFromName(JSONGetStr(aObj, J_STREAM_LEGACY, ''), st) then
       begin
       Include(Result, st);
       end;
@@ -730,8 +730,8 @@ begin
          Continue;
          end;
 
-      address := obj.GetValue<string>(J_ADDRESS, UDP_DEFAULT_ADDRESS);
-      port    := obj.GetValue<integer>(J_PORT, UDP_DEFAULT_PORT);
+      address := JSONGetStr(obj, J_ADDRESS, UDP_DEFAULT_ADDRESS);
+      port    := JSONGetInt(obj, J_PORT, UDP_DEFAULT_PORT);
 
       // MERGED by endpoint.  A file in the first cut of this format stored one
       // row per stream, so the same address and port appears up to six times --

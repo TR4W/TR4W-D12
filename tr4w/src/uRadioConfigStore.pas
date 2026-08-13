@@ -70,7 +70,7 @@ uses
    Classes,
    System.IOUtils,       // TFile -- whole-file read/write for the JSON store
    IniFiles,
-   System.JSON,          // the format of record for settings\tr4w.json
+   uJSON,          // the format of record for settings\tr4w.json
    Generics.Collections;
 
 const
@@ -1582,7 +1582,7 @@ begin
    v := aObj.GetValue(aKey);
    if (v <> nil) and (v is TJSONString) then
       begin
-      Result := TJSONString(v).Value;
+      Result := JSONText(v);
       end;
 end;
 
@@ -1915,8 +1915,8 @@ begin
       commands := TJSONObject(v);
       for i := 0 to commands.Count - 1 do
          begin
-         FCommands.Values[commands.Pairs[i].JsonString.Value] :=
-            commands.Pairs[i].JsonValue.Value;
+         FCommands.Values[JSONPairName(commands, i)] :=
+            JSONText(JSONPairValue(commands, i));
          end;
       end;
 

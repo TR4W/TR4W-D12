@@ -32,6 +32,7 @@ uses
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
    uAnsiStr             in '..\..\src\utils\uAnsiStr.pas',
+   uJSON                in '..\..\src\utils\uJSON.pas',
    uTestAnsiStr         in 'uTestAnsiStr.pas',
    utils_text           in '..\..\src\utils\utils_text.pas',
    uTestUtilsText       in 'uTestUtilsText.pas',
