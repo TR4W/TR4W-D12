@@ -64,15 +64,33 @@ Retiring a key is not just about `CheckCommand`, because the table has other rea
    inbound network values (`uNet.pas:318`) all arrive here. Respects `crS`.
 2. **The Ctrl+J Options dialog** (`uOption.pas`, bound at `uMenu.pas:42`). Respects `crS` —
    hides `csRem` and `csOwned` (`uOption.pas:343`).
-3. **`BOOLSWAP`** (`uProcessCommand.pas:628`) — the CW-message macro
-   `BOOLSWAP=<command name>`. **IGNORES `crS` COMPLETELY.** It walks `CFGCA` by name and,
-   for any `ctBoolean` row, flips the value **directly at `crAddress`**, then calls `crP`.
+3. ~~**`BOOLSWAP`** — **IGNORES `crS` COMPLETELY.**~~ **NO LONGER TRUE (2026-08-13).**
+   `scBOOLSWAP` now goes through `SetCFGCommandValue`, so it respects `crS` like every
+   other writer, and refuses a `csJSON` row out loud instead of flipping its legacy
+   global behind the JSON store's back.
 
-**So retiring a boolean does not stop `BOOLSWAP` from setting it.** A key marked `csJSON`
-would still be flipped from a function-key message, writing to a legacy global while JSON
-believes it owns the setting — the two-owners bug via a path nobody would think to check.
-Any boolean that moves to JSON needs `BOOLSWAP` taught about the new store, or its legacy
-variable kept live and driven by the JSON layer.
+   It was also **unreachable**, and had been since it was documented in 2010. Dispatch
+   matches `caCommand` with an exact `StrComp`, and `FoundCommand` splits the typed
+   command on `=` *before* comparing — so the compared string never contains `=`.
+   The only row pointing at `scBOOLSWAP` was `' < = SK'`, which does. A reachable
+   `'BOOLSWAP'` row was added alongside the rewrite.
+
+   The old body assigned `PBoolean(crAddress)^` directly, skipping validation, the `crA`
+   hook, the multi-op `crNetwork` sync and the ini write — so a toggle applied to the
+   running session, told the other positions nothing, and vanished on restart. Its
+   `QuickDisplay` feedback also sat inside `if crP <> 0`, so any boolean without a
+   change-handler toggled in silence.
+
+**BOOLSWAP IS NO LONGER A BLOCKER ON MOVING BOOLEANS TO JSON.** It respects `crS` now, so a
+`csJSON` boolean is refused rather than flipped behind the store's back. The four `csOwned`
+radio booleans (`RADIO ONE/TWO CW BY CAT`, `RADIO ONE/TWO CW SPEED SYNC`) can convert
+whenever their appliers are ready.
+
+The trigger syntax is transitional in any case: the `<03>`/`<04>` control-character form is
+not shipping (NY4I, 2026-08-13), and BOOLSWAP is undocumented outside a 2010 release note,
+so it is expected to be deprecated before it is ever used in a contest. The body was fixed
+so that whatever replaces the syntax inherits a correct implementation — not because the
+feature is load-bearing.
 
 ---
 
