@@ -137,7 +137,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 {$IF MMTTYMODE} + 1{$IFEND}{$IF LANG = 'RUS'} + 3{$IFEND} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914};
+    T_MENU_ARRAY_SIZE                     = 176 {$IF MMTTYMODE} + 1{$IFEND}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914};
   T_MENU_ARRAY                          : array[0..T_MENU_ARRAY_SIZE] of MenuRecord = (
     (mrText: RC_FILE; mrId: MAXWORD),
  //{
@@ -390,18 +390,18 @@ const
 
     (mrText: HELP_WORD; mrId: MAXWORD),        // n4af 4.42.5
  //{
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
     (mrText: RC_CONTENTS + RC_CONTENTS_HK; mrId: menu_contents),
     (mrText: '-'; mrId: 0),
-{$IFEND}
+{$ENDIF}
 //    (mrText: RC_SEND_BUG; mrId: menu_send_bug),
 //    (mrText: '-'; mrId: 0),
     (mrText: RC_HOMEPAGE; mrId: menu_home_page),
     (mrText: RC_Download + RC_Download_HK; mrID: menu_download_latest_cty_dat), // 4.75.3
     (mrText: 'Download POTA Parks'; mrId: menu_download_pota_parks),  // issue #864
-    {$IF LANG = 'RUS'}
+    {$IFDEF LANG_RUS}
     (mrText: RC_WIKI; mrId: menu_wiki_rus),
-{$IFEND}
+{$ENDIF}
 //    (mrText: 'History.txt'; mrId: menu_historytxt),
     (mrText: RC_ABOUT; mrId: menu_about)
 

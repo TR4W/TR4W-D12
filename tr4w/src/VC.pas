@@ -235,17 +235,25 @@ const
 {$IFDEF LANG_CHN}  LANG = 'CHN';{$ENDIF}
 {$IFDEF LANG_GER}  LANG = 'GER';{$ENDIF}
 {$IFDEF LANG_UKR}  LANG = 'UKR';{$ENDIF}
-{$IF LANG = 'ENG'}{$INCLUDE lang\tr4w_consts_eng.pas}{$IFEND}
-{$IF LANG = 'RUS'}{$INCLUDE lang\tr4w_consts_rus.pas} {$IFEND}
-{$IF LANG = 'SER'}{$INCLUDE lang\tr4w_consts_ser.pas}{$IFEND}
-{$IF LANG = 'ESP'}{$INCLUDE lang\tr4w_consts_esp.pas}{$IFEND}
-{$IF LANG = 'MNG'}{$INCLUDE lang\tr4w_consts_mng.pas}{$IFEND}
-{$IF LANG = 'POL'}{$INCLUDE lang\tr4w_consts_pol.pas}{$IFEND}
-{$IF LANG = 'CZE'}{$INCLUDE lang\tr4w_consts_cze.pas}{$IFEND}
-{$IF LANG = 'ROM'}{$INCLUDE lang\tr4w_consts_rom.pas}{$IFEND}
-{$IF LANG = 'CHN'}{$INCLUDE lang\tr4w_consts_chn.pas}{$IFEND}
-{$IF LANG = 'GER'}{$INCLUDE lang\tr4w_consts_ger.pas}{$IFEND}
-{$IF LANG = 'UKR'}{$INCLUDE lang\tr4w_consts_ukr.pas}{$IFEND}
+// Keyed off the LANG_<xxx> symbol, not off the LANG string constant.  FPC's
+// compile-time IF cannot resolve a STRING constant: an identifier it cannot
+// resolve degrades to a string literal of its own name, so a test of LANG
+// against 'RUS' silently evaluates 'LANG' = 'RUS' -- false, in every build,
+// in both directions, with no error, warning or hint.  Boolean and integer
+// constants DO resolve, which is why only the LANG family is affected.
+// The LANG_<xxx> symbols are real compiler defines and mean the same thing to
+// both compilers.  See src\tr4w.inc.
+{$IFDEF LANG_ENG}{$INCLUDE lang\tr4w_consts_eng.pas}{$ENDIF}
+{$IFDEF LANG_RUS}{$INCLUDE lang\tr4w_consts_rus.pas} {$ENDIF}
+{$IFDEF LANG_SER}{$INCLUDE lang\tr4w_consts_ser.pas}{$ENDIF}
+{$IFDEF LANG_ESP}{$INCLUDE lang\tr4w_consts_esp.pas}{$ENDIF}
+{$IFDEF LANG_MNG}{$INCLUDE lang\tr4w_consts_mng.pas}{$ENDIF}
+{$IFDEF LANG_POL}{$INCLUDE lang\tr4w_consts_pol.pas}{$ENDIF}
+{$IFDEF LANG_CZE}{$INCLUDE lang\tr4w_consts_cze.pas}{$ENDIF}
+{$IFDEF LANG_ROM}{$INCLUDE lang\tr4w_consts_rom.pas}{$ENDIF}
+{$IFDEF LANG_CHN}{$INCLUDE lang\tr4w_consts_chn.pas}{$ENDIF}
+{$IFDEF LANG_GER}{$INCLUDE lang\tr4w_consts_ger.pas}{$ENDIF}
+{$IFDEF LANG_UKR}{$INCLUDE lang\tr4w_consts_ukr.pas}{$ENDIF}
 
 {$IF tDebugMode}
 

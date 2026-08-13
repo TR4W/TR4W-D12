@@ -115,9 +115,9 @@ begin
         if wParam = 101 then RunPOSTGetScoresThread;
         if wParam = 106 then OpenUrl(@GetScoresSeverReadingAddress[1]);
 
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
 //        if wParam = 104 then ShowHelp('ru_getscores');
-{$IFEND}
+{$ENDIF}
 
         if HiWord(wParam) = BN_CLICKED then FrmSetFocus;
       end;

@@ -111,9 +111,9 @@ begin
         end;
 
         case wParam of
-{$IF LANG = 'RUS'}
+{$IFDEF LANG_RUS}
           110: ShowHelp('ru_dxcluster'); 
-{$IFEND}
+{$ENDIF}
 
            2: goto 1;
 

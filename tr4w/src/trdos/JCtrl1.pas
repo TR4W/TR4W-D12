@@ -18,6 +18,7 @@
  <http: www.gnu.org/licenses/>.
  }
 unit JCtrl1;
+{$I ..\tr4w.inc}
 
 {$O+}
 {$F+}
@@ -47,10 +48,10 @@ uses Tree,
   LogNet,
   BeepUnit,
   LogStuff
-{$IF LANG = 'ENG'}, TR4W_CONSTS_ENG{$IFEND}
-{$IF LANG = 'RUS'}, TR4W_CONSTS_RUS{$IFEND}
-{$IF LANG = 'SER'}, TR4W_CONSTS_SER{$IFEND}
-{$IF LANG = 'ESP'}, TR4W_CONSTS_ESP{$IFEND}
+{$IFDEF LANG_ENG}, TR4W_CONSTS_ENG{$ENDIF}
+{$IFDEF LANG_RUS}, TR4W_CONSTS_RUS{$ENDIF}
+{$IFDEF LANG_SER}, TR4W_CONSTS_SER{$ENDIF}
+{$IFDEF LANG_ESP}, TR4W_CONSTS_ESP{$ENDIF}
   ;
 
 type
