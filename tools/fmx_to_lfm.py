@@ -172,8 +172,25 @@ def convert(text, path):
     def cur_type():
         return stack[-1][2] if stack else ''
 
-    for raw in text.split('\r\n'):
+    # A dropped property whose value is a MULTI-LINE collection or list --
+    # 'CustomIcon = <' followed by 'item' / 'end>' -- used to leave its body
+    # behind as orphan lines, and the orphan 'end' was then miscounted as an
+    # object terminator.  The value has to be swallowed with the property.
+    # Depth, not a flag: FMX nests collections inside collections.
+    swallow = 0
+
+    def opens_multiline(v):
+        v = v.strip()
+        return v.endswith('<') or v.endswith('(')
+    for raw in text.split('\r\n'):
         line = raw.rstrip('\r')
+        if swallow:
+            s = line.strip()
+            swallow += s.count('<') + s.count('(')
+            swallow -= s.count('>') + s.count(')')
+            if swallow < 0:
+                swallow = 0
+            continue
 
         m = OBJ_RE.match(line)
         if m:
@@ -229,9 +246,13 @@ def convert(text, path):
             if prop == 'Size.PlatformDefault':
                 if value.strip().lower() == 'false' and stack[-1][1] != 'form':
                     out.append('%sAutoSize = False' % indent)
+                if opens_multiline(value):
+                    swallow = 1
                 continue
 
             if prop in DROP:
+                if opens_multiline(value):
+                    swallow = 1
                 continue
 
             if prop in RENAME:
