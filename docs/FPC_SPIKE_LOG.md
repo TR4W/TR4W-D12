@@ -603,13 +603,64 @@ paid twice:
   to delete the facility outright -- its 2 asm blocks are inside a `False`
   switch, so they neither compile nor block anything.
 
-### Remaining live blocks: 4
+### `TF.pas` -- the harness was not needed, because nothing called them
 
-`TF.pas` 2 -- `_Pow10`/`ValExt` float parsing. TF's own comment already scopes
-this correctly: it needs a golden harness covering precision, the `code` error
-index and whitespace handling, because a silent regression corrupts CTY.DAT
-lat/lon and every beam heading and distance downstream. **Do not convert these
-without the harness.**
+`_Pow10` and `ValExt` were ~350 lines of assembly carrying two Borland RTL
+internals, and the standing note said converting them needed a golden harness
+because a CTY.DAT lat/lon regression silently corrupts every beam heading.
 
-`uWinKey` 2 -- inside the `False` switch described above.
+**Nothing calls them.** `uCTYDAT` moved to the RTL `Val` intrinsic under Issue
+#1033, and the only other references (in `uCFG`) were already commented out;
+`_Pow10` was called from nowhere but `ValExt`. The safe conversion was a
+deletion. Checked before removing rather than after -- the harness would have
+been real work spent proving the equivalence of dead code.
+
+### Remaining live blocks: 2
+
+Both in `uWinKey`, inside the `False` `K6VVA_WK_DEBUG` switch, in a facility that
+does not compile and is superseded by Log4D. **The tree is otherwise free of
+inline assembly.**
+
+## STEP 9 -- the string model, measured. It is a genuine fork.
+
+With `TF.pas` clear, `uFactoryRadioBase` was compiled in BOTH modes. They
+disagree, and in the way that matters:
+
+| Mode | `string` is | Result |
+|---|---|---|
+| `-Mdelphi` | 8-bit `AnsiString` | **Indy compiles.** `TF.pas` fails on 2 sites |
+| `-MdelphiUnicode` | UTF-16, same as D12 | **Indy does NOT compile** -- 7 errors in `IdGlobal.pas` |
+
+**This corrects step 6 of this log.** "Indy compiles unmodified" is true *only in
+8-bit mode*. Under `-MdelphiUnicode` the vendored 10.6.3.3 fails on
+`GetChars(...PChar...)` vs `PWideChar` signature mismatches and three
+`Typecast has different size (1 -> 2)` assignments. Indy's FPC support targets
+FPC's native 8-bit world.
+
+The two options are therefore no longer "one is riskier" -- each breaks something
+real:
+
+- **`-MdelphiUnicode`** keeps `string` semantics identical to D12, the lowest
+  migration risk across 152k lines of our own code, but **costs the vendored
+  Indy**, which carries the network radios, the DX cluster, TCI and tr4wserver.
+  That reopens NY4I's note that the community recommends UPSTREAM Indy over the
+  RAD-supplied copy: it may be a prerequisite rather than an option.
+- **`-Mdelphi`** keeps Indy and is idiomatic for Lazarus, but silently redefines
+  every `string` in the tree, and every `PChar(s)` handed to a `...W` API becomes
+  a type error. `TF.pas`'s two failures are exactly that shape -- and they are
+  *diagnosed*, which is the good case. The dangerous half of this class is the one
+  D12 already taught us: a bare buffer passed to a generic Win32 name that
+  compiles silently.
+
+**Neither is a blocker; both are a bill.** This is the measurement the decision
+needed, and no amount of argument would have produced it.
+
+### The corpus gate needs a 32-bit FPC first
+
+The corpus runs `tr4w.exe <contest>.CFG /EXPORT` over **D7-written binary `.dat`
+logs** and byte-diffs the output. This install has `ppcx64` ONLY. A 64-bit build
+changes record padding and pointer width, and `tr4w.dproj` pins `-$A8` alignment
+on top, so a 64-bit FPC build would not read those logs equivalently. **`ppc386`
+is a prerequisite for the gate, not a detail** -- an fpcupdeluxe install, but it
+has to happen before any corpus result under FPC means anything.
 
