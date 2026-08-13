@@ -47,7 +47,7 @@ unit uKeyerConfigStore;
   without booting MainUnit and the contest engine's globals.
 
   ON UNIT DEPENDENCIES.  SysUtils, Classes, Generics.Collections and
-  System.JSON -- all RTL.  No VCL, no FMX, no TR4W unit at all.
+  uJSON -- all RTL.  No VCL, no FMX, no TR4W unit at all.
 
   VOCABULARY VALUES ARE HELD AS STRINGS, NOT ENUMS OR INDEXES.  Port is the
   PortTypeSA spelling ('SERIAL 15', 'NONE'), KeyerMode is the KeyerModeSA
@@ -66,7 +66,7 @@ interface
 uses
    SysUtils,
    Classes,
-   System.JSON,
+   uJSON,
    Generics.Collections;
 
 type
@@ -532,7 +532,7 @@ procedure TKeyerConfigStore.KeyerFromJSON(const aObj: TJSONObject;
       v := aObj.GetValue(aKey);
       if v <> nil then
          begin
-         Result := v.Value;
+         Result := JSONText(v);
          end;
    end;
 
@@ -544,7 +544,7 @@ procedure TKeyerConfigStore.KeyerFromJSON(const aObj: TJSONObject;
       v := aObj.GetValue(aKey);
       if v <> nil then
          begin
-         Result := StrToIntDef(v.Value, aDefault);
+         Result := StrToIntDef(JSONText(v), aDefault);
          end;
    end;
 
@@ -563,7 +563,7 @@ procedure TKeyerConfigStore.KeyerFromJSON(const aObj: TJSONObject;
          // Tolerate 'TRUE'/'FALSE' from a hand-edited file. The store's job is
          // to read what an operator plausibly wrote, not to be strict for its
          // own sake.
-         Result := SameText(v.Value, 'TRUE');
+         Result := SameText(JSONText(v), 'TRUE');
          end;
    end;
 

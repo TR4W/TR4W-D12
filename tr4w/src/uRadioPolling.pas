@@ -19,6 +19,7 @@ If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uRadioPolling;
+{$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
@@ -1110,8 +1111,11 @@ begin
       (rig.CurrentStatus.VFO[VFOA].ExtendedMode <>
        rig.CurrentStatus.previousVFO[VFOA].ExtendedMode) then
       begin
+      // The A variant needs ANSI bytes.  Under D12 PChar is PWideChar, and this
+      // compiled only through an implicit conversion (W1057) -- the same latent
+      // defect fixed in TF.pas:644.  Stated explicitly so it cannot drift back.
       Windows.SetWindowTextA(rig.ModeVFOAWndHandle,
-         PChar(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOA].ExtendedMode]));
+         PAnsiChar(AnsiString(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOA].ExtendedMode])));
       rig.CurrentStatus.previousVFO[VFOA].ExtendedMode :=
          rig.CurrentStatus.VFO[VFOA].ExtendedMode;
       end;
@@ -1121,8 +1125,11 @@ begin
       (rig.CurrentStatus.VFO[VFOB].ExtendedMode <>
        rig.CurrentStatus.previousVFO[VFOB].ExtendedMode) then
       begin
+      // The A variant needs ANSI bytes.  Under D12 PChar is PWideChar, and this
+      // compiled only through an implicit conversion (W1057) -- the same latent
+      // defect fixed in TF.pas:644.  Stated explicitly so it cannot drift back.
       Windows.SetWindowTextA(rig.ModeVFOBWndHandle,
-         PChar(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOB].ExtendedMode]));
+         PAnsiChar(AnsiString(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOB].ExtendedMode])));
       rig.CurrentStatus.previousVFO[VFOB].ExtendedMode :=
          rig.CurrentStatus.VFO[VFOB].ExtendedMode;
       end;

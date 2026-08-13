@@ -56,6 +56,9 @@ $searchPaths = @(
    Join-Path $src 'lang'
    Join-Path $src 'radioFactory'
    Join-Path $src 'ui\fmx'
+   # fcl-json supplies fpjson/jsonparser, which uJSON.pas shims onto the
+   # System.JSON spellings the config stores are written against.
+   Join-Path $fpcRoot "units\$Cpu-$Os\fcl-json"
    Join-Path $Repo 'tr4w\Include'
    Join-Path $Repo 'tr4w\include\Core'
    Join-Path $Repo 'tr4w\include\System'
