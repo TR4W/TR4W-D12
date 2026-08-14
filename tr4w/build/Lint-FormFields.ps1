@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
    Checks that every published control field on a designed FMX form has a
    component of that name in the .fmx -- a mismatch is nil at run time, with no
@@ -40,6 +40,36 @@ param(
    [switch] $SelfTest
 )
 
+# COMMENTS OUT FIRST, or a comment decides where the published section ends.
+#
+# The visibility scan below anchors on a line STARTING with private/public/...,
+# and a comment line that merely contains one of those words matched it: a doc
+# comment reading "Declared private (as these were)" silently closed the
+# published region and turned every handler after it into a violation -- 62 of
+# them, all false, on a form that loads perfectly.
+#
+# The mirror image is the dangerous one and would be SILENT: a comment saying
+# published inside the private section would make real private handlers look
+# published, and the lint would MISS the RTE 217 it exists to prevent.
+#
+# Newlines are preserved so the anchors still land where they did; only comment
+# BODIES become spaces. Lint-PCharAnsi does the same thing for the same reason.
+function Remove-PascalComments {
+   param([string] $PasText)
+
+   $blank = {
+      param($m)
+      ($m.Value -replace '[^
+]', ' ')
+   }
+
+   $t = [regex]::Replace($PasText, '\(\*.*?\*\)', $blank, [Text.RegularExpressions.RegexOptions]::Singleline)
+   $t = [regex]::Replace($t,       '\{.*?\}',       $blank, [Text.RegularExpressions.RegexOptions]::Singleline)
+   $t = [regex]::Replace($t,       '//[^
+]*',    $blank)
+   return $t
+}
+
 # The published section is everything between `= class(TForm)` and the first
 # visibility keyword -- Delphi's implicit-published region on a TPersistent
 # descendant, which is exactly what the streamer can bind to.
@@ -47,7 +77,8 @@ function Get-PublishedControlFields {
    param([string] $PasText)
 
    $result = @()
-   $m = [regex]::Match($PasText, '=\s*class\(TForm\)(.*?)^\s*(private|protected|public|strict)\b',
+   $code = Remove-PascalComments -PasText $PasText
+   $m = [regex]::Match($code, '=\s*class\(TForm\)(.*?)^\s*(private|protected|public|strict)\b',
                        [Text.RegularExpressions.RegexOptions]::Singleline -bor
                        [Text.RegularExpressions.RegexOptions]::Multiline)
    if (-not $m.Success) {
@@ -72,7 +103,8 @@ function Get-PublishedMethodNames {
    param([string] $PasText)
 
    $result = @()
-   $m = [regex]::Match($PasText, '=\s*class\(TForm\)(.*?)^\s*(private|protected|public|strict)\b',
+   $code = Remove-PascalComments -PasText $PasText
+   $m = [regex]::Match($code, '=\s*class\(TForm\)(.*?)^\s*(private|protected|public|strict)\b',
                        [Text.RegularExpressions.RegexOptions]::Singleline -bor
                        [Text.RegularExpressions.RegexOptions]::Multiline)
    if (-not $m.Success) {

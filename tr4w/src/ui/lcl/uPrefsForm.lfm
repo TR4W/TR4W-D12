@@ -1,4 +1,4 @@
-object PrefsForm: TPrefsForm
+﻿object PrefsForm: TPrefsForm
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
@@ -9,11 +9,23 @@ object PrefsForm: TPrefsForm
   Position = poScreenCenter
   OnClose = FormClose
   OnShow = FormShow
-  object tvNav: TTreeView
-    Align = alLeft
-    Width = 170
-    Height = 620
+  object edtSearch: TEdit
+    Left = 4
+    Top = 4
+    Width = 162
+    Height = 23
     TabOrder = 0
+    TextHint = 'Search settings'
+    OnChange = edtSearchChange
+    OnKeyDown = edtSearchKeyDown
+  end
+  object tvNav: TTreeView
+    Left = 0
+    Top = 31
+    Width = 170
+    Height = 541
+    Align = alNone
+    TabOrder = 1
     OnChange = tvNavChange
   end
   object layContent: TPanel

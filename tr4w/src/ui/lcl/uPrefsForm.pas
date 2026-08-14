@@ -107,9 +107,30 @@ type
    end;
 
    { What ForEachNavItem calls for each item. }
+   { ONE SEARCHABLE SETTING.  Built by walking the bindings: the binding knows
+     the key, the registry knows the caption and the legacy Ctrl-J name, and the
+     control's parent panel knows which of the 27 sections it sits in.
+
+     These live here rather than in uPrefsSearch because they name a TWinControl,
+     and that unit is deliberately free of the LCL so the ranking can be unit
+     tested without a UI framework. }
+   TPrefsSearchEntry = record
+      Caption: string;
+      Command: string;       // the legacy Ctrl-J spelling, or ''
+      SectionTag: NativeInt;
+      SectionName: string;
+      Control: TWinControl;
+   end;
+
+   TPrefsSearchHit = record
+      Score: integer;
+      Entry: integer;        // index into FSearchIndex
+   end;
+
    TNavItemVisit = procedure (item: TTreeNode) of object;
 
    TPrefsForm = class(TForm)
+      edtSearch: TEdit;
       tvNav: TTreeView;
       layContent: TPanel;
       lblPlaceholder: TLabel;
@@ -442,6 +463,14 @@ type
       lblUDPHint: TLabel;
 
       procedure tvNavChange(Sender: TObject);
+
+      { PUBLISHED because the RESOURCE binds them by name -- TWriter stores an
+        event as a string and the loader looks it up in published RTTI. Declared
+        anywhere else, as these briefly were, the .lfm streams until it reaches
+        OnChange and then fails: the same RTE 217 that made Preferences
+        unopenable for a day. Lint-FormFields caught it here instead. }
+      procedure edtSearchChange(Sender: TObject);
+      procedure edtSearchKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
       procedure btnAddClick(Sender: TObject);
       procedure btnEditClick(Sender: TObject);
       procedure btnDuplicateClick(Sender: TObject);
@@ -538,6 +567,21 @@ type
       // STATE, not controls: nothing here is streamed, so it keeps the F prefix
       // and stays private.
       FStore: TRadioConfigStore;
+
+      { THE SEARCH BOX.  Not streamed: the results list is created in code, so
+        it must not be a published field or Lint-FormFields would demand a
+        component for it in the resource.
+
+        A CHILD LISTBOX, NOT A POPUP FORM.  A popup would have to be shown with
+        SW_SHOWNOACTIVATE and hand focus back by hand; a child control simply
+        never takes focus, because nothing focuses it. The overlay only needs to
+        cover this window's own content, and Preferences is a fixed-size window,
+        so there is nothing a popup would buy. }
+      FSearchList: TListBox;
+      FSearchHits: array of TPrefsSearchHit;
+      FSearchIndexBuilt: boolean;
+      FSearchIndex: array of TPrefsSearchEntry;
+
       { Controls bound to settings by KEY -- see uSettingsBinding.  Anything
         bound needs no load/save code of its own. }
       FBindings: TSettingBindings;
@@ -696,6 +740,15 @@ type
         factories: `of object` names the owner of whatever the visitor touches,
         and it compiles without closures. }
       procedure ForEachNavItem(const aVisit: TNavItemVisit);
+
+      { The Preferences search box -- see the SEARCH block in the implementation. }
+      procedure BuildSearchIndex;
+      procedure RunSearch(const aNeedle: string);
+      procedure ActivateSearchHit(const aIndex: integer);
+      procedure HideSearchResults;
+      function SectionPanelFor(const aControl: TWinControl): TControl;
+      function NavItemForTag(const aTag: NativeInt): TTreeNode;
+      procedure SearchListClick(Sender: TObject);
       { Visitors. Each is a method because each needs Self anyway -- one to reach
         the form's helpers, one to record what it found. }
       procedure BuildNavTree;
@@ -816,6 +869,7 @@ implementation
 
 uses
    uLCLTranslate,
+   uPrefsSearch,   // PrefsMatchScore -- the ranking, unit tested without a UI
    Windows,
    IniFiles,
    Generics.Collections,
@@ -993,6 +1047,24 @@ begin
    // error anywhere, because an empty tree is not a failure to any layer here.
    BuildNavTree;
    LogPhase(FTiming, 'BuildNavTree');
+
+   // THE SEARCH RESULTS OVERLAY, created here rather than streamed.
+   //
+   // A child of the FORM, not of the nav strip or the content panel: it has to
+   // straddle both, exactly as the Windows Settings drop-down spills over the
+   // page beneath it. Parenting it to either one would clip it at that control's
+   // edge.
+   //
+   // Created in code, so it is a private field and NOT published -- a published
+   // field with no component in the .lfm is what Lint-FormFields exists to
+   // catch.
+   FSearchList := TListBox.Create(Self);
+   FSearchList.Parent   := Self;
+   FSearchList.Visible  := False;
+   FSearchList.TabStop  := False;   // Tab must skip it: focus belongs to the box
+   FSearchList.SetBounds(4, 28, 430, 200);
+   FSearchList.OnClick  := SearchListClick;
+   LogPhase(FTiming, 'SearchOverlay');
 
    SelectFirstSection;
    LogPhase(FTiming, 'SelectFirstSection');
@@ -1930,6 +2002,298 @@ begin
 end;
 
 { -------------------------------------------------------------- events ---- }
+
+{ ============================================================== SEARCH ===== }
+
+const
+   { How many rows the overlay shows. The list is a WINDOW onto the ranking, not
+     the ranking itself -- putting every candidate into a TListBox is what made a
+     726-item combo cost 1.8 seconds to populate. }
+   SEARCH_MAX_HITS = 12;
+
+function TPrefsForm.NavItemForTag(const aTag: NativeInt): TTreeNode;
+var
+   i: integer;
+begin
+   // tvNav.Items walks the WHOLE tree, children included -- the sections that
+   // matter most here (WSJT-X, External Logger, MMTTY) are children of External
+   // Software, and a top-level-only loop would silently never find them.
+   Result := nil;
+   for i := 0 to tvNav.Items.Count - 1 do
+      begin
+      if NavTagOf(tvNav.Items[i]) = aTag then
+         begin
+         Result := tvNav.Items[i];
+         Exit;
+         end;
+      end;
+end;
+
+function TPrefsForm.SectionPanelFor(const aControl: TWinControl): TControl;
+var
+   c: TControl;
+begin
+   // Walk up to the child OF layContent -- that is the section panel, and it
+   // carries the same Tag as its nav item. No table and no case statement,
+   // exactly as tvNavChange works, so a section added in the designer is found
+   // here automatically.
+   Result := nil;
+   c := aControl;
+   while (c <> nil) and (c.Parent <> nil) do
+      begin
+      if c.Parent = layContent then
+         begin
+         Result := c;
+         Exit;
+         end;
+      c := c.Parent;
+      end;
+end;
+
+procedure TPrefsForm.BuildSearchIndex;
+var
+   i, n: integer;
+   b: TSettingBinding;
+   s: TSettingBase;
+   ctl: TWinControl;
+   panel: TControl;
+   navItem: TTreeNode;
+begin
+   FSearchIndexBuilt := True;
+   SetLength(FSearchIndex, 0);
+   if FBindings = nil then
+      begin
+      Exit;
+      end;
+
+   n := 0;
+   SetLength(FSearchIndex, FBindings.Count);
+   for i := 0 to FBindings.Count - 1 do
+      begin
+      b := FBindings.Item(i);
+      if b = nil then
+         begin
+         Continue;
+         end;
+
+      s   := FindSetting(b.Key);
+      ctl := b.Control;
+      if (s = nil) or (ctl = nil) then
+         begin
+         Continue;
+         end;
+
+      panel := SectionPanelFor(ctl);
+      if panel = nil then
+         begin
+         Continue;
+         end;
+
+      FSearchIndex[n].Caption    := s.Caption;
+      FSearchIndex[n].Command    := s.LegacyCommand;
+      FSearchIndex[n].SectionTag := panel.Tag;
+      FSearchIndex[n].Control    := ctl;
+
+      // The section's own nav caption, so a hit reads
+      // "CW Settings  >  Send a greeting" and the operator LEARNS the layout
+      // instead of depending on search for ever.
+      FSearchIndex[n].SectionName := '';
+      navItem := NavItemForTag(panel.Tag);
+      if navItem <> nil then
+         begin
+         FSearchIndex[n].SectionName := navItem.Text;
+         end;
+
+      Inc(n);
+      end;
+   SetLength(FSearchIndex, n);
+
+   // SAY WHAT IS NOT COVERED. Only settings registered through the registry are
+   // indexed; the hand-wired panels call ApplyAndStoreCommand directly and are
+   // invisible here. A search covering part of the settings is worse than none,
+   // because an empty result reads as "TR4W cannot do that" and the operator
+   // stops looking -- so the shortfall is logged rather than left for someone to
+   // discover mid-contest.
+   logger.Info('[Prefs] search index: %d of %d registered setting(s) indexed',
+               [n, SettingCount]);
+end;
+
+procedure TPrefsForm.RunSearch(const aNeedle: string);
+var
+   i, j, score, count: integer;
+   hit: TPrefsSearchHit;
+begin
+   if not FSearchIndexBuilt then
+      begin
+      BuildSearchIndex;
+      end;
+
+   SetLength(FSearchHits, 0);
+   if Trim(aNeedle) = '' then
+      begin
+      HideSearchResults;
+      Exit;
+      end;
+
+   count := 0;
+   SetLength(FSearchHits, Length(FSearchIndex));
+   for i := 0 to High(FSearchIndex) do
+      begin
+      score := PrefsMatchScore(FSearchIndex[i].Caption, FSearchIndex[i].Command, aNeedle);
+      if score > PREFS_MATCH_NONE then
+         begin
+         FSearchHits[count].Score := score;
+         FSearchHits[count].Entry := i;
+         Inc(count);
+         end;
+      end;
+   SetLength(FSearchHits, count);
+
+   // Insertion sort, descending by score then by caption. The caption tiebreak
+   // is what keeps the order STABLE while the operator keeps typing -- a list
+   // that reshuffles under the cursor is how you select the wrong row.
+   for i := 1 to High(FSearchHits) do
+      begin
+      hit := FSearchHits[i];
+      j   := i - 1;
+      while (j >= 0) and
+            ((FSearchHits[j].Score < hit.Score) or
+             ((FSearchHits[j].Score = hit.Score) and
+              (CompareText(FSearchIndex[FSearchHits[j].Entry].Caption,
+                           FSearchIndex[hit.Entry].Caption) > 0))) do
+         begin
+         FSearchHits[j + 1] := FSearchHits[j];
+         Dec(j);
+         end;
+      FSearchHits[j + 1] := hit;
+      end;
+
+   if count = 0 then
+      begin
+      HideSearchResults;
+      Exit;
+      end;
+
+   if count > SEARCH_MAX_HITS then
+      begin
+      count := SEARCH_MAX_HITS;
+      SetLength(FSearchHits, count);
+      end;
+
+   FSearchList.Items.BeginUpdate;
+   try
+      FSearchList.Items.Clear;
+      for i := 0 to High(FSearchHits) do
+         begin
+         FSearchList.Items.Add(FSearchIndex[FSearchHits[i].Entry].SectionName +
+                               '  >  ' +
+                               FSearchIndex[FSearchHits[i].Entry].Caption);
+         end;
+   finally
+      FSearchList.Items.EndUpdate;
+   end;
+
+   FSearchList.ItemIndex := 0;
+   FSearchList.Height    := 8 + (FSearchList.ItemHeight * Length(FSearchHits));
+   FSearchList.Visible   := True;
+   FSearchList.BringToFront;
+end;
+
+procedure TPrefsForm.HideSearchResults;
+begin
+   if FSearchList <> nil then
+      begin
+      FSearchList.Visible := False;
+      end;
+end;
+
+procedure TPrefsForm.ActivateSearchHit(const aIndex: integer);
+var
+   e: TPrefsSearchEntry;
+   navItem: TTreeNode;
+begin
+   if (aIndex < 0) or (aIndex > High(FSearchHits)) then
+      begin
+      Exit;
+      end;
+
+   e := FSearchIndex[FSearchHits[aIndex].Entry];
+   HideSearchResults;
+
+   // Select the NAV ITEM rather than showing the panel directly, so the tree
+   // agrees with what is on screen and tvNavChange does the switching. One code
+   // path, the same one a click uses.
+   navItem := NavItemForTag(e.SectionTag);
+   if navItem <> nil then
+      begin
+      navItem.Selected := True;
+      end;
+
+   // FOCUS THE CONTROL, not merely the page it lives on. That is the difference
+   // between "here is the section, go hunting" and "here it is" -- and it is the
+   // part Windows Settings itself does not do.
+   if (e.Control <> nil) and e.Control.CanFocus then
+      begin
+      e.Control.SetFocus;
+      end;
+
+   logger.Debug('[Prefs] search -> %s (%s), section tag=%d',
+                [e.Caption, e.Command, e.SectionTag]);
+end;
+
+procedure TPrefsForm.edtSearchChange(Sender: TObject);
+begin
+   RunSearch(edtSearch.Text);
+end;
+
+procedure TPrefsForm.edtSearchKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+   // FOCUS NEVER LEAVES THE BOX. Up/Down move the list's selection WITHOUT
+   // focusing it, so the operator keeps typing, narrowing and choosing without
+   // reaching for the mouse. Focusing the list instead would stop the next
+   // keystroke reaching the edit, which is the whole point of the pattern.
+   if (FSearchList = nil) or (not FSearchList.Visible) then
+      begin
+      Exit;
+      end;
+
+   case Key of
+      VK_DOWN:
+         begin
+         if FSearchList.ItemIndex < FSearchList.Items.Count - 1 then
+            begin
+            FSearchList.ItemIndex := FSearchList.ItemIndex + 1;
+            end;
+         Key := 0;
+         end;
+
+      VK_UP:
+         begin
+         if FSearchList.ItemIndex > 0 then
+            begin
+            FSearchList.ItemIndex := FSearchList.ItemIndex - 1;
+            end;
+         Key := 0;
+         end;
+
+      VK_RETURN:
+         begin
+         ActivateSearchHit(FSearchList.ItemIndex);
+         Key := 0;
+         end;
+
+      VK_ESCAPE:
+         begin
+         HideSearchResults;
+         Key := 0;
+         end;
+   end;
+end;
+
+procedure TPrefsForm.SearchListClick(Sender: TObject);
+begin
+   ActivateSearchHit(FSearchList.ItemIndex);
+end;
 
 procedure TPrefsForm.tvNavChange(Sender: TObject);
 var
