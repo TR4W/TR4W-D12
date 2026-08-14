@@ -20,6 +20,20 @@ program tr4w_unit_tests;
 {$APPTYPE CONSOLE}
 
 uses
+{$IFDEF FPC}
+   // The LCL is split into an interface half and a widgetset half, and linking
+   // the first without the second fails with ~50 undefined WSRegisterXxx
+   // symbols at LINK time -- long after every unit has compiled clean, which
+   // makes it read like a corrupt build rather than a missing unit.
+   //
+   // The tests do not test any form.  They reach one TRANSITIVELY: a suite
+   // links uCAT, uCAT uses uPrefsForm, and under FPC that is the LCL form.
+   // So the whole widgetset comes along for the ride.  That is worth removing
+   // -- a unit-test binary should not depend on a UI toolkit -- but the cut
+   // belongs at the uCAT seam, not here, and not in the same change that got
+   // the suite building again.
+   Interfaces,
+{$ENDIF}
    SysUtils,
    Log4D,
    MainUnit,
