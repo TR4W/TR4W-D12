@@ -308,7 +308,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..25] of string =
+   MIGRATED_COMMANDS: array[0..46] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -335,7 +335,32 @@ const
       'FARNSWORTH SPEED',
       'WEIGHT',
       'TWO RADIO MODE',
-      'LEADING ZEROS'
+      'LEADING ZEROS',
+
+      // The csOwned batch, 2026-08-14: already written to JSON by the
+      // hand-wired Preferences panels, but their rows still round-tripped the
+      // ini until now.
+      'BACKUP LOG FILE NAME',
+      'BACKUP LOG FREQUENCY',
+      'BAND MAP DECAY TIME',
+      'BAND MAP DISPLAY LIMIT',
+      'BAND MAP GUARD BAND',
+      'COMPUTER ID',
+      'EXTERNAL LOGGER',
+      'EXTERNAL LOGGER ADDRESS',
+      'EXTERNAL LOGGER PORT',
+      'FONT SIZE',
+      'MAIN FONT',
+      'MMTTY ENGINE',
+      'RADIO TCP SERVER PORT',
+      'SCP COUNTRY STRING',
+      'SCP MINIMUM LETTERS',
+      'SERVER ADDRESS',
+      'SERVER PASSWORD',
+      'SERVER PORT',
+      'TELNET SERVER',
+      'WSJT-X BROADCAST PORT',
+      'WSJT-X MULTICAST GROUP'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);
