@@ -28,6 +28,12 @@
     Height = 541
     Align = alNone
     TabOrder = 1
+    BorderStyle = bsNone
+    Color = clBtnFace
+    DefaultItemHeight = 26
+    Options = [tvoShowButtons, tvoKeepCollapsedNodes, tvoToolTips, tvoThemedDraw, tvoRowSelect, tvoHotTrack, tvoNoDoubleClickExpand]
+    ReadOnly = True
+    ScrollBars = ssAutoVertical
     OnChange = tvNavChange
   end
   object layContent: TPanel

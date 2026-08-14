@@ -2326,18 +2326,22 @@ begin
 
    // LCLType.odSelected, for the same reason the parameter types are qualified:
    // Windows declares an odSelected of its own.
+   // SYSTEM COLOURS, not invented ones. A hardcoded wash looks deliberate until
+   // the operator runs a dark or high-contrast theme, at which point it is text
+   // nobody can read. clHighlight follows whatever the desktop is set to.
    if LCLType.odSelected in State then
       begin
-      c.Brush.Color := $00F2E4D5;   // a soft accent wash, not the harsh system blue
+      c.Brush.Color := clHighlight;
+      c.Font.Color  := clHighlightText;
       end
    else
       begin
       c.Brush.Color := clWindow;
+      c.Font.Color  := clWindowText;
       end;
    c.FillRect(ARect);
 
    // The caption, vertically centred rather than sat on the top edge.
-   c.Font.Color := clWindowText;
    y := ARect.Top + ((ARect.Bottom - ARect.Top - c.TextHeight('Ag')) div 2);
    x := ARect.Left + 10;
    c.TextOut(x, y, e.Caption);
@@ -2347,7 +2351,12 @@ begin
    sectionText := e.SectionName;
    if sectionText <> '' then
       begin
-      c.Font.Color := clGrayText;
+      // Greyed against the row's OWN background: clGrayText on a highlighted
+      // row is unreadable, so a selected row keeps the highlight text colour.
+      if not (LCLType.odSelected in State) then
+         begin
+         c.Font.Color := clGrayText;
+         end;
       x := ARect.Right - 10 - c.TextWidth(sectionText);
       if x > ARect.Left + 10 + c.TextWidth(e.Caption) + 16 then
          begin
