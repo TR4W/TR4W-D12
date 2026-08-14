@@ -338,11 +338,33 @@ begin
          begin
          ShowMessage(TC_RADIOEDIT_NONEFOUND);
          end
-      else if FFound.Count = 1 then
+      else
          begin
-         // Exactly one answer is not a choice -- fill it in.
+         { ALWAYS SELECT SOMETHING, and that is the fix for a real complaint:
+           "the drop-down of discovered radios does not populate -- if I click
+           the arrow the IPs appear, but only if I click."
+
+           They were always there. A TComboBox with ItemIndex = -1 renders its
+           closed edit area BLANK no matter how many items it holds, so a
+           successful two-radio discovery was indistinguishable from a failed
+           one until the operator opened the list on spec.
+
+           The old code only selected when EXACTLY ONE radio answered -- the
+           reasoning being that two is a choice the operator should make. That
+           reasoning is sound and the presentation was wrong: showing the first
+           result does not prevent choosing the second, it just stops the window
+           claiming nothing was found. What is displayed and what edtIP holds
+           now always agree, which is the property that matters when the next
+           thing the operator does is press Save. }
          FForm.cbxFound.ItemIndex := 0;
          FForm.edtIP.Text := FFound[0];
+
+         if FFound.Count > 1 then
+            begin
+            logger.Debug('[RadioEdit] %d radios answered; selected the first (%s) -- ' +
+                         'the others are in the drop-down',
+                         [FFound.Count, FFound[0]]);
+            end;
          end;
    except
       // A FAILURE HERE USED TO BE INVISIBLE. This runs from TThread.Queue, so an
@@ -406,7 +428,34 @@ begin
    // Ownership of `found` passes to TDiscoverDone, which frees it after the UI
    // has read it -- on the main thread.
    done := TDiscoverDone.Create(FForm, found);
-   TThread.Queue(nil, done.Apply);
+
+   { SYNCHRONIZE, NOT QUEUE -- and this is a fix, not a preference.
+     Diagnosed 2026-08-14 from a discovery that found two radios and then never
+     updated the form: the log showed "worker finished -- 2 address(es)" and no
+     "DONE ... back on the main thread" at all.
+
+     TThread.Queue stamps every entry with the CALLING thread's id --
+     `queueentry^.ThreadID := GetCurrentThreadID` in InternalQueue -- even when
+     the thread argument is nil, as it is here. TThread.Destroy then calls
+     RemoveQueuedEvents(Self), and that matches on
+     `entry^.ThreadID = aThread.ThreadID` (FPC 3.2.2 classes.inc:603).
+
+     So: Queue is the last statement in Execute, the thread terminates
+     immediately after, FreeOnTerminate frees it, and IT DELETES ITS OWN QUEUED
+     CALLBACK. Whether the callback survives is a race against the main thread
+     draining the queue in the intervening microseconds -- which is exactly the
+     "worked once, then stopped working" shape that was reported.
+
+     Synchronize is immune by construction: those entries carry a SyncEvent, and
+     the same RemoveQueuedEvents skips anything with one (classes.inc:601). It
+     also blocks this worker until the main thread has run Apply, so the thread
+     cannot reach Destroy before delivery. The worker is about to exit anyway, so
+     the block costs nothing.
+
+     NOT solved by clearing FreeOnTerminate: that only moves the destruction, and
+     something still has to free the thread eventually. The lifetime coupling is
+     the bug; Synchronize removes it. }
+   TThread.Synchronize(nil, done.Apply);
 end;
 
 
