@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -111,7 +111,7 @@ begin
    RegisterLegacySetting('cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
                          'Match the speed a station was worked at before');
    // MIGRATED 2026-08-14 -- the first row to graduate.  Stored: writes go to
-   // settings	r4w.json, the CFGCA row is csJSON, and so it no longer appears
+   // settings\tr4w.json, the CFGCA row is csJSON, and so it no longer appears
    // in Ctrl-J nor in tr4w.ini.  The two halves must stay in step; see
    // docs/CFG_MIGRATION_PLAN.md.
    RegisterStoredSetting('cw.speedIncrement',    'CW SPEED INCREMENT',
@@ -140,15 +140,15 @@ begin
                          'Skip the band the other radio is on');
 
    // --- Operating: online scoring ------------------------------------------
-   RegisterLegacySetting('scoring.hamscore.enable',      'HAMSCORE ENABLE',
+   RegisterStoredSetting('scoring.hamscore.enable',      'HAMSCORE ENABLE',
                          'Post my score while the contest runs');
-   RegisterLegacySetting('scoring.hamscore.url',         'HAMSCORE URL',
+   RegisterStoredSetting('scoring.hamscore.url',         'HAMSCORE URL',
                          'Service URL');
-   RegisterLegacySetting('scoring.hamscore.username',    'HAMSCORE USERNAME',
+   RegisterStoredSetting('scoring.hamscore.username',    'HAMSCORE USERNAME',
                          'Username');
-   RegisterLegacySetting('scoring.hamscore.password',    'HAMSCORE PASSWORD',
+   RegisterStoredSetting('scoring.hamscore.password',    'HAMSCORE PASSWORD',
                          'Password');
-   RegisterLegacySetting('scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
+   RegisterStoredSetting('scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
                          'Include contact information');
    RegisterLegacySetting('scoring.board.postingUrl',     'SCORE POSTING URL',
                          'Posting URL');

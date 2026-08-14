@@ -31,23 +31,45 @@ row's own state and persists to whichever file is that row's system of record.
 
 ## What is actually true today
 
-**One of the thirty has completed the move: `CW SPEED INCREMENT`.** It is `csJSON`, it is gone from
-Ctrl-J, Preferences writes it to `settings\tr4w.json`, an existing ini value is carried across once,
-and its global is now `Config.CodeSpeedIncrement`. It is the worked example for the other 29 — chosen
-because it is the one NY4I saw duplicated between Preferences and Ctrl-J.
+**Six of the thirty have completed the move: `CW SPEED INCREMENT` and the five HAMSCORE
+settings.** They are `csJSON`, gone from Ctrl-J, written by Preferences to
+`settings\tr4w.json`, their existing ini values carried across once, and their globals are now
+fields of `Config`.
 
-The remaining 29 are still `csOld`/`csNew`: they show in Ctrl-J, round-trip through the ini, and
-drive a global each.
+`CW SPEED INCREMENT` went first because it is the one NY4I saw duplicated between Preferences and
+Ctrl-J. HAMSCORE went second on purpose: it is the first **string** group, and a `ctString` row
+aimed at anything other than a `ShortString` would write 256 bytes into the next field with nothing
+to report it — not the compiler, which sees only a pointer, and not a test, because the damage lands
+elsewhere. The `Config` fields therefore carry the *exact* old types.
 
-The reason is that Preferences reaches them through `RegisterLegacySetting`, which the code
-accurately describes as *"a CFGCA row wearing the registry's interface"*. An edit goes:
+The remaining 24 are still `csOld`/`csNew`: they show in Ctrl-J, round-trip through the ini, and
+drive a global each. The bridge they still use is:
 
 ```
-Preferences → TLegacySetting.TrySetText → SetCFGCommandValue → WritePrivateProfileStringA → tr4w.ini
+Preferences -> TLegacySetting.TrySetText -> SetCFGCommandValue -> WritePrivateProfileStringA -> tr4w.ini
 ```
 
-So the new UI writes the old store. That is a deliberate bridge, not a defect — but it is a bridge
-nobody has crossed yet.
+So the new UI writes the old store. A deliberate bridge, not a defect — but one that has now been
+crossed six times and needs crossing 24 more.
+
+### A password in the ini is not trustworthy as a password
+
+Ctrl-J displays `ctPassword` rows as a fixed `********` mask. `uOption.pas:761` refuses to write that
+mask back — but an existing file can already contain it, and **NY4I's does**:
+
+```
+HAMSCORE PASSWORD=********
+```
+
+Carrying that across would set the password to the literal mask and produce an authentication
+failure that reads like a server problem. A masked value is indistinguishable from a real one, so
+seeding skips `ctPassword` rows entirely and logs that the operator should type it once in
+Preferences. Note what this also says: that ini value is *already* useless to the running program,
+so the migration lost nothing that was working.
+
+Passwords in `settings\tr4w.json` are plaintext, exactly as they were in `tr4w.ini`, and that file
+already holds cluster and server passwords. Not made worse here — but it is the open decision this
+work should not finish without.
 
 ## The machinery for crossing it already exists, and it works
 
@@ -170,16 +192,16 @@ the CFGCA table binding itself.
 |---|---|---|---|---|
 | operating.cw.serial.ditDahRatio | DIT DAH RATIO | csNew | tDitDahRatio | 3 |
 | operating.tworadio.altDCQ | ALT-D CQ ENABLE | csOld | AltDCQEnable | 3 |
-| scoring.hamscore.contactInfo | HAMSCORE SEND CONTACT INFO | csNew | HamScoreSendContactInfo | 3 |
-| scoring.hamscore.username | HAMSCORE USERNAME | csNew | HamScoreUsername | 3 |
+| scoring.hamscore.contactInfo | HAMSCORE SEND CONTACT INFO | **csJSON** | Config.HamScoreSendContactInfo | **migrated** |
+| scoring.hamscore.username | HAMSCORE USERNAME | **csJSON** | Config.HamScoreUsername | **migrated** |
 | operating.cw.keypadMemories | KEYPAD CW MEMORIES | csOld | KeypadCWMemories | 4 |
 | operating.tworadio.blindCQ | ALWAYS CALL BLIND CQ | csOld | AlwaysCallBlindCQ | 4 |
 | scoring.board.postingUrl | SCORE POSTING URL | csOld | GetScoresSeverPostingAddress | 4 |
 | scoring.board.readingUrl | SCORE READING URL | csNew | GetScoresSeverReadingAddress | 4 |
-| scoring.hamscore.enable | HAMSCORE ENABLE | csNew | HamScoreEnable | 4 |
-| scoring.hamscore.password | HAMSCORE PASSWORD | csNew | HamScorePassword | 4 |
+| scoring.hamscore.enable | HAMSCORE ENABLE | **csJSON** | Config.HamScoreEnable | **migrated** |
+| scoring.hamscore.password | HAMSCORE PASSWORD | **csJSON** | Config.HamScorePassword | **migrated** |
 | cluster.connectAtStartup | CONNECTION AT STARTUP | csNew | tConnectionAtStartup | 5 |
-| scoring.hamscore.url | HAMSCORE URL | csNew | HamScoreURL | 5 |
+| scoring.hamscore.url | HAMSCORE URL | **csJSON** | Config.HamScoreURL | **migrated** |
 | cluster.connectCommand | CONNECTION COMMAND | csNew | ConnectionCommand | 6 |
 | cw.speedFromDatabase | CW SPEED FROM DATABASE | csOld | CWSpeedFromDataBase | 6 |
 | operating.cw.leadingZeroChar | LEADING ZERO CHARACTER | csOld | LeadingZeroCharacter | 6 |

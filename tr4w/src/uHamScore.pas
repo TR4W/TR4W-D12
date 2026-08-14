@@ -1,4 +1,4 @@
-unit uHamScore;
+﻿unit uHamScore;
 {$I tr4w.inc}
 
 (*
@@ -54,6 +54,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, SyncObjs, IdHTTP, IdSSLOpenSSL,
+  uConfigValues,   // Config -- the five HAMSCORE settings live here now
   VC, Log4D, Version;
 
 type
@@ -137,23 +138,15 @@ type
 // Module-level configuration (parsed by uCFG via CFGCA entries)
 // ---------------------------------------------------------------------------
 
-var
-  HamScoreEnable:          Boolean = False;
-  // Issue #920: RTC 3.0 endpoint is http://scoredistributor.net/ (per the
-  // spec).  Users may override via HAMSCORE URL to point at
-  // hamscore.com/postxml/index.php (which also serves 3.0) or any future
-  // mirror.  Plain HTTP is the spec default; if the operator points the URL
-  // at https://... the existing TIdHTTP + TLS path kicks in transparently.
-  HamScoreURL:             ShortString = 'http://scoredistributor.net/';
-  HamScoreUsername:        ShortString = '';   // empty -> falls back to MyCall
-  HamScorePassword:        ShortString = '';
-  HamScoreSendContactInfo: Boolean = True;     // Issue #931 -- per-QSO <contactinfo> uploads; gated additionally by ContestsBooleanArray RTC_CAPABLE_BIT
+// The five HAMSCORE settings moved to Config (uConfigValues) when their CFGCA
+// rows became csJSON.  Their defaults and types moved with them unchanged; see
+// that unit for why the types must match the rows exactly.
 
 // ---------------------------------------------------------------------------
 // Lifecycle (called from tr4w.dpr / shutdown path)
 // ---------------------------------------------------------------------------
 
-procedure HamScoreInit;       // No-op if HamScoreEnable is False or password missing
+procedure HamScoreInit;       // No-op if Config.HamScoreEnable is False or password missing
 procedure HamScoreShutdown;   // Safe to call even if Init didn't start the worker
 
 // ---------------------------------------------------------------------------
@@ -880,23 +873,23 @@ end;
 procedure HamScoreInit;
 begin
   if Uploader <> nil then Exit;   // already running
-  if not HamScoreEnable then Exit;
+  if not Config.HamScoreEnable then Exit;
 
-  if HamScorePassword = '' then
+  if Config.HamScorePassword = '' then
      begin
      GetModuleLogger.Warn('[HamScore] HAMSCORE ENABLE = TRUE but HAMSCORE PASSWORD is empty -- uploader not started');
      Exit;
      end;
 
-  if HamScoreURL = '' then
+  if Config.HamScoreURL = '' then
      begin
-     HamScoreURL := 'http://scoredistributor.net/';   // RTC 3.0 default (issue #920)
+     Config.HamScoreURL := 'http://scoredistributor.net/';   // RTC 3.0 default (issue #920)
      end;
 
   Uploader := THamScoreUploader.Create(
-    string(HamScoreURL),
-    string(HamScoreUsername),
-    string(HamScorePassword));
+    string(Config.HamScoreURL),
+    string(Config.HamScoreUsername),
+    string(Config.HamScorePassword));
   Uploader.Resume;   // Delphi 7 TThread; later Delphis renamed to Start.
   GetModuleLogger.Info('[HamScore] Started');
 end;
@@ -916,7 +909,7 @@ end;
 // <dynamicresults> score posts remain unaffected (handled elsewhere).
 function ContactInfoUploadAllowed(const RXData: ContestExchange): Boolean;
    begin
-   if not HamScoreSendContactInfo then
+   if not Config.HamScoreSendContactInfo then
       begin
       Result := False;
       Exit;

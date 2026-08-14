@@ -109,7 +109,7 @@ type
    end;
 
    //procedure F_MY_GRID;
-// Is this command's system of record settings	r4w.json rather than the ini?
+// Is this command's system of record settings\tr4w.json rather than the ini?
 //
 // csJSON means the row is INERT: recognised so an old config does not error,
 // but not applied and hidden from Ctrl-J.  A writer that still emitted such a
@@ -555,11 +555,11 @@ const
  (crCommand: 'HAMLIB DEBUG';                crAddress: @TR4W_HAMLIB_DEBUG;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
 (crCommand: 'HAMLIB ASYNC ONLY';          crAddress: @TR4W_HAMLIB_ASYNC_ONLY;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
 (crCommand: 'HAMLIB TRACE';               crAddress: @TR4W_HAMLIB_TRACE;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
- (crCommand: 'HAMSCORE ENABLE';               crAddress: @HamScoreEnable;                 crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean;       crNetwork: 0),  // Issue #783
- (crCommand: 'HAMSCORE URL';                  crAddress: @HamScoreURL;                    crMin:0;  crMax:200;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctString;        crNetwork: 0),  // Issue #783
- (crCommand: 'HAMSCORE USERNAME';             crAddress: @HamScoreUsername;               crMin:0;  crMax:50;      crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctCaseSensitive; crNetwork: 0),  // Issue #783 -- empty falls back to MY CALL
- (crCommand: 'HAMSCORE PASSWORD';             crAddress: @HamScorePassword;               crMin:0;  crMax:50;      crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctPassword;      crNetwork: 0),  // Issue #783
- (crCommand: 'HAMSCORE SEND CONTACT INFO';    crAddress: @HamScoreSendContactInfo;        crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean;       crNetwork: 0),  // Issue #931 -- per-contest RTC contact-info gating override
+ (crCommand: 'HAMSCORE ENABLE';               crAddress: @Config.HamScoreEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean;       crNetwork: 0),  // Issue #783
+ (crCommand: 'HAMSCORE URL';                  crAddress: @Config.HamScoreURL;                    crMin:0;  crMax:200;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctString;        crNetwork: 0),  // Issue #783
+ (crCommand: 'HAMSCORE USERNAME';             crAddress: @Config.HamScoreUsername;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctCaseSensitive; crNetwork: 0),  // Issue #783 -- empty falls back to MY CALL
+ (crCommand: 'HAMSCORE PASSWORD';             crAddress: @Config.HamScorePassword;               crMin:0;  crMax:50;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctPassword;      crNetwork: 0),  // Issue #783
+ (crCommand: 'HAMSCORE SEND CONTACT INFO';    crAddress: @Config.HamScoreSendContactInfo;        crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean;       crNetwork: 0),  // Issue #931 -- per-contest RTC contact-info gating override
  (crCommand: 'HAND LOG MODE';                 crAddress: @tHandLogMode;                   crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:1 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'HF BAND ENABLE';                crAddress: @HFBandEnable;                   crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'HOUR DISPLAY';                  crAddress: pointer(8);                      crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
@@ -1387,7 +1387,7 @@ begin
 
          // csJSON joins csRem: both are ACCEPTED so an old config file does
          // not error, and both are INERT.  The difference is only why --
-         // csRem was withdrawn, csJSON moved to settings	r4w.json, which is
+         // csRem was withdrawn, csJSON moved to settings\tr4w.json, which is
          // now the system of record for it.
          // csRem is ACCEPTED AND INERT unconditionally: it was withdrawn,
          // there is nowhere for its value to go, and an old config file
