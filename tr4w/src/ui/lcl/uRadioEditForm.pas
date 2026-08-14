@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -902,6 +902,7 @@ var
    id: string;
    transport: TRadioTransport;
    isIcom: boolean;
+   usesCredentials: boolean;
    civDefault: integer;
 begin
    // Reached during construction, from the first tab becoming active -- see
@@ -927,6 +928,31 @@ begin
    // itself.  Broadcasting for a radio that cannot answer would produce a
    // three-second wait and an empty list, which reads as a fault.
    btnDiscover.Enabled := (id <> '') and RegisteredDiscoverableId(id);
+
+   // CREDENTIALS ARE NOT A PROPERTY OF "BEING A NETWORK RADIO" (NY4I).
+   //
+   // The Elecraft K4 is reached over TCP 9200 with no login at all, while every
+   // network Icom and the two Kenwood LAN radios want a username and a password.
+   // The editor offered the fields to all of them, so adding a K4 asked for
+   // credentials it can never use -- and an operator who filled them in had no
+   // way to learn they were ignored.
+   //
+   // The registry is the authority, exactly as it is for discovery and CI-V
+   // above: RegisteredNetworkCredentialsId, declared by the radio's own unit.
+   usesCredentials := (id <> '') and RegisteredNetworkCredentialsId(id);
+   edtUser.Enabled     := usesCredentials;
+   edtPassword.Enabled := usesCredentials;
+   lblUser.Enabled     := usesCredentials;
+   lblPassword.Enabled := usesCredentials;
+   if not usesCredentials then
+      begin
+      // Cleared, not just greyed: a value left behind in a disabled box is saved
+      // with the radio and reappears if the operator later picks a model that
+      // DOES authenticate, silently supplying a credential they never typed for
+      // that rig.
+      edtUser.Text     := '';
+      edtPassword.Text := '';
+      end;
 
    // HamLib ID is the operator's value ONLY for HamLib-any; for every other
    // radio the registry supplies it and typing one here would pin a model the

@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -165,5 +165,10 @@ initialization
      ,
      3081
      , 162);
+
+  // This radio's NETWORK link authenticates, so the editor offers user and
+  // password. ApplyNetworkCredentials on the class is what USES them; this is
+  // what lets the UI ask before a radio object exists.
+  MarkNetworkCredentials(IC9700);
 
 end.

@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -282,6 +282,27 @@ function DisplayNameId(const id: string): string;
 function RegisteredNetworkPortId(const id: string): integer;
 function RegisteredDiscoverableId(const id: string): Boolean;
 
+{ Does this radio's NETWORK link authenticate -- should a UI offer user+password?
+
+  NOT the same question as "is it a network radio". The Elecraft K4 is reached
+  over TCP 9200 with no credentials at all, while every network Icom and the
+  Kenwood LAN radios want both. The editor offered the fields to all of them, so
+  adding a K4 asked for a username it can never use (NY4I).
+
+  The BEHAVIOUR already existed: ApplyNetworkCredentials is a no-op on
+  TFactoryRadioBase and overridden by TIcomRadio and TKenwoodLAN. What was
+  missing is a way to ASK before a radio object exists -- and the editor needs
+  the answer while the operator is still choosing a model, with no transport to
+  construct one with. }
+function RegisteredNetworkCredentials(model: InterfacedRadioType): Boolean;
+function RegisteredNetworkCredentialsId(const id: string): Boolean;
+
+{ Declare that this radio's network link authenticates. Called from the radio's
+  own initialization right after RegisterRadio, so the fact stays in the same
+  file as the model: one radio, one unit, one registration. }
+procedure MarkNetworkCredentials(const id: string); overload;
+procedure MarkNetworkCredentials(model: InterfacedRadioType); overload;
+
 // id <-> enum bridge and enumeration.
 function ModelId(model: InterfacedRadioType): string;         // enum -> id ('' if unregistered)
 function ModelForId(const id: string): InterfacedRadioType;   // id -> enum (NoInterfacedRadio if none)
@@ -303,6 +324,7 @@ type
       links: TRadioLinks;
       networkPort: integer;
       discoverable: Boolean;
+      networkCredentials: Boolean;  // the network link authenticates: offer user+password
       serial: TSerialParams;
       hamlibOnly: Boolean;          // True => no native TR4W driver; driven through HamLib
       civAddress: Byte;             // default CI-V receiver address (Icom); 0 = not a CI-V radio
@@ -343,6 +365,11 @@ begin
    reg.links := links;
    reg.networkPort := networkPort;
    reg.discoverable := discoverable;
+   // OFF unless the radio says otherwise (MarkNetworkCredentials). A radio that
+   // authenticates but forgets to declare it shows no credential fields and then
+   // simply fails to connect -- which is why the pin test exists rather than a
+   // comment asking people to remember.
+   reg.networkCredentials := False;
    reg.serial := serial;
    reg.hamlibOnly := False;   // RegisterHamLibOnlyRadio patches this after the call
    // The HamLib rig_model for THIS radio, used when the operator drives an
@@ -552,6 +579,56 @@ var
    reg: TRadioReg;
 begin
    Result := RegById(id, reg) and reg.discoverable;
+end;
+
+function RegisteredNetworkCredentialsId(const id: string): Boolean;
+var
+   reg: TRadioReg;
+begin
+   Result := RegById(id, reg) and reg.networkCredentials;
+end;
+
+function RegisteredNetworkCredentials(model: InterfacedRadioType): Boolean;
+var
+   id: string;
+begin
+   Result := False;
+   if gByModel.TryGetValue(model, id) then
+      begin
+      Result := RegisteredNetworkCredentialsId(id);
+      end;
+end;
+
+procedure MarkNetworkCredentials(model: InterfacedRadioType);
+begin
+   // The enum form, so a radio unit writes MarkNetworkCredentials(IC705) instead
+   // of spelling the id through TypInfo. The id IS the enum name, and the
+   // registry is the one place that should know that.
+   //
+   // GetEnumName, NOT a call with `model` -- that is a call to THIS procedure and
+   // recurses until the stack runs out. It happened: a blanket "simplify the call
+   // sites" rewrite included the unit that defines them, and the unit tests died
+   // with an access violation before printing a single line.
+   MarkNetworkCredentials(GetEnumName(TypeInfo(InterfacedRadioType), Ord(model)));
+end;
+
+procedure MarkNetworkCredentials(const id: string);
+var
+   reg: TRadioReg;
+begin
+   // LOUD if the id is unknown. This is called from a radio's initialization
+   // section immediately after its own RegisterRadio, so a miss means the id was
+   // mistyped or the calls were ordered wrongly -- and the symptom would
+   // otherwise be a radio that silently offers no credential fields and then
+   // cannot log in.
+   if not gById.TryGetValue(id, reg) then
+      begin
+      raise Exception.CreateFmt(
+         'MarkNetworkCredentials: no radio registered as "%s"', [id]);
+      end;
+
+   reg.networkCredentials := True;
+   gById.AddOrSetValue(id, reg);
 end;
 
 // ---- enum-facing lookups (bridge for the legacy path) -----------------------
