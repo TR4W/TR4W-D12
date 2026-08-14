@@ -263,7 +263,7 @@ This is that answer for the 24 not yet migrated, decided by **who else writes th
 scanned for live assignments only, because half the apparent writers in `CFGDEF.PAS` are
 commented-out lines and a naive grep reports them as real.
 
-### A. Nothing else writes them — migrate as flat settings (14)
+### A. Nothing else writes them — migrate as flat settings (13, see A-bis)
 
 The stored value is the only source, so these are pure Preferences settings and the cheapest work
 left. Roughly in ascending cost:
@@ -277,6 +277,18 @@ left. Roughly in ascending cost:
 runs **once** at startup and **before** the config files — it is an initial default, not a
 competing owner. Checked rather than assumed, because a defaults procedure that ran on contest
 change would silently reset the setting instead.)
+
+### A-bis. `LEADING ZEROS` is a station default with contest overrides
+
+Measured, not assumed: of the 30, **only `LEADING ZEROS` appears in a contest `.cfg`** — 6 of 137
+scanned files, including `CQ-WPX-CW.CFG` and `CQ-WPX-SSB.CFG`, which fits a serial-number contest.
+The other 29 appear in none.
+
+So it is *not* category A. No code writes it, but a loaded contest does, and a `.cfg` legitimately
+winning while loaded is the agreed semantics rather than a precedence bug. The open question is the
+**write path**: editing it in Preferences during WPX must update the station default, not the event
+override — or the reverse — and nothing in `CheckCommand` knows layers exist. Settle that before
+migrating this one.
 
 ### B. The contest owns them, not the operator (3)
 
