@@ -30,6 +30,7 @@ object PrefsForm: TPrefsForm
       Width = 500
       Height = 60
       AutoSize = False
+      WordWrap = True
       Caption = 
         'This section has not been migrated yet.'#13#10'Use the existing config' +
         'uration screens for it.'
@@ -106,6 +107,7 @@ object PrefsForm: TPrefsForm
         Width = 540
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Only devices with their own settings live here - a WinKeyer or a' +
           ' YCCC SO2R+ box.  Keying on a radio'#39's own port, or by CAT, is pa' +
@@ -421,6 +423,7 @@ object PrefsForm: TPrefsForm
           Width = 300
           Height = 32
           AutoSize = False
+          WordWrap = True
           Caption = 
             'Saving stores your changes. It does not switch the radios over -' +
             ' use this button for that.'
@@ -615,6 +618,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Leave blank and this rotator turns for every band, which is what' +
           ' a station with one antenna wants.  List bands - 20 15 10 - to h' +
@@ -626,6 +630,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'PstRotator is reached over UDP and has no serial port; the other' +
           's use one.  A blank baud rate lets each type use what it expects' +
@@ -722,6 +727,7 @@ object PrefsForm: TPrefsForm
         Width = 540
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Each destination is one program listening.  Add a second row for' +
           ' the same address when it expects different data on a different ' +
@@ -760,6 +766,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Takes effect immediately - no restart.  INFO is the normal settin' +
           'g; DEBUG and TRACE make the log much larger and are for diagnosin' +
@@ -824,6 +831,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'The three HamLib settings take effect when TR4W next starts.  The' +
           'y are very verbose and are for diagnosing a radio problem - leave' +
@@ -859,12 +867,20 @@ object PrefsForm: TPrefsForm
       object chkTCIServer: TCheckBox
         Left = 12
         Top = 12
-        Width = 400
+        Width = 185
         Height = 22
         AutoSize = False
         TabOrder = 0
         Caption = 'Enable the TCI server'
         OnChange = chkTCIServerChange
+      end
+      object lblTCIServerScope: TLabel
+        Left = 200
+        Top = 15
+        Width = 450
+        Height = 17
+        AutoSize = False
+        Caption = '- this computer only (127.0.0.1), until you tick the box below'
       end
       object lblTCIIntro: TLabel
         Left = 12
@@ -872,7 +888,8 @@ object PrefsForm: TPrefsForm
         Width = 640
         Height = 51
         AutoSize = False
-        Caption = 
+        WordWrap = True
+        Caption =
           'Lets other programs - WSJT-X, JTDX, a skimmer - control whichever' +
           ' radio TR4W has the port open on, even a radio with no TCI of its' +
           ' own.  Radio 1 is trx 0 and radio 2 is trx 1.'
@@ -900,7 +917,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 4
-        Caption = 'Accept connections from other computers'
+        Caption = 'Also listen on the network (other computers can connect)'
       end
       object lblTCIBindAllWarning: TLabel
         Left = 30
@@ -908,6 +925,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Off by default, and worth leaving off.  This is an unauthenticate' +
           'd radio-control socket: anything that can reach the port can move' +
@@ -943,6 +961,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'A safety net, not a timer for normal use: if a client keys the ra' +
           'dio and then stops answering - it crashed, or the network went aw' +
@@ -954,6 +973,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'To log every TCI command in both directions, see the Logging sect' +
           'ion.'
@@ -1246,6 +1266,7 @@ object PrefsForm: TPrefsForm
         Width = 640
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'These are sent to the other stations in a multi-operator network w' +
           'hen you change them, so all positions agree on the exchange.'
@@ -1333,6 +1354,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'These take effect when TR4W next starts.  Leave the multicast gr' +
           'oup blank unless WSJT-X is configured to use one.'
@@ -1343,6 +1365,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'To let WSJT-X drive the radio over TCI instead, see the TCI Serv' +
           'er section - that works with any radio TR4W controls, not only o' +
@@ -1429,6 +1452,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'These take effect when TR4W next starts.'
       end
@@ -1438,6 +1462,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'DXKEEPER is complete.  ACLOG and HRD are not finished - selectin' +
           'g one logs a warning and no QSOs are sent.'
@@ -1466,6 +1491,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 68
         AutoSize = False
+        WordWrap = True
         Caption = 
           'DXLab needs no settings of its own.  TR4W offers a DX Commander ' +
           'compatible interface on TCP port 52002 whenever the WSJT-X suppo' +
@@ -1477,6 +1503,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'The port is not configurable today.  If you want it to be, say s' +
           'o and it becomes a setting here.'
@@ -1531,6 +1558,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks t' +
           'o it directly.'
@@ -1641,6 +1669,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'host:port, for example dxc.nc7j.com:7373.  The drop-down lists t' +
           'he servers in TRCLUSTER.DAT; you can also type one that is not o' +
@@ -1712,6 +1741,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Sent once the login is accepted - filters, set/name, sh/dx.  Sep' +
           'arate several with a semicolon.'
@@ -1748,6 +1778,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'The cluster reconnects on its own after a drop.  Telnet logging ' +
           'is on the Logging page; spot display and ageing are on Band Map.'
@@ -1929,6 +1960,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'A band map does not need a DX cluster: it also holds spots you m' +
           'ake yourself and anything the SO2R radio hears.  Cluster setting' +
@@ -1998,6 +2030,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Blank shows matches from everywhere.  A list of country prefixes' +
           ' narrows it, which is useful in a domestic contest where the who' +
@@ -2009,6 +2042,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Matches come from TRMASTER.DTA in the program folder.  Without t' +
           'hat file Super Check Partial simply shows nothing; it is not an ' +
@@ -2120,6 +2154,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'TR4WServer runs on one machine and every operating position conn' +
           'ects to it.  It holds the shared log, the multipliers and the se' +
@@ -2155,6 +2190,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Lets another position read this station''s radio.  Takes effect w' +
           'hen TR4W next starts.'
@@ -2233,6 +2269,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'The font applies to the main contest window.  All four take effe' +
           'ct when TR4W next starts.'
@@ -2243,6 +2280,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Window colours are still on the Settings menu.  They belong here' +
           ' and will move once the main window is resizable, which is the c' +
@@ -2322,6 +2360,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'A second copy of the log, written as you go.  Put it somewhere t' +
           'hat is not the same disk as the log itself, or it protects again' +
@@ -2418,6 +2457,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'These take effect when TR4W next starts.'
       end
@@ -2467,6 +2507,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Where TR4W posts its score and where it reads other stations'' sc' +
           'ores from.  The two are separate so a club board can be read whi' +
@@ -2570,6 +2611,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Serial numbers are padded to that many digits.  T for a zero is ' +
           'the usual cut-number choice; leave it as 0 to send them plainly.'
@@ -2588,6 +2630,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'These shape the CW that TR4W generates itself by toggling a seri' +
           'al line.  They do nothing for a WinKeyer, a YCCC box, or CW sent' +
@@ -2709,6 +2752,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Which bands TR4W offers when you change band, and which appear i' +
           'n the multiplier and band-map displays.  WARC bands are off by d' +
@@ -2747,6 +2791,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 34
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Everything below applies only while two radio mode is on.'
       end
@@ -2792,6 +2837,7 @@ object PrefsForm: TPrefsForm
         Width = 620
         Height = 51
         AutoSize = False
+        WordWrap = True
         Caption = 
           'Skipping the other radio''s band is what stops a band change on o' +
           'ne radio landing you on top of the other.'

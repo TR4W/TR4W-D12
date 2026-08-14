@@ -152,6 +152,11 @@ type
       // in another is exactly the split this settings pass exists to remove.
       layTCIServer: TPanel;
       chkTCIServer: TCheckBox;
+      // Sits beside the enable box rather than in the paragraph below it: the
+      // scope is the thing an operator needs at the moment of ticking, and
+      // "Enable the TCI server" on its own reads as though it already permits
+      // what the second checkbox controls. (NY4I, 2026-08-14.)
+      lblTCIServerScope: TLabel;
       lblTCIIntro: TLabel;
       lblTCIPort: TLabel;
       edtTCIPort: TEdit;
