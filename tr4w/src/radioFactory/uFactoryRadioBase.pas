@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -302,6 +302,7 @@ Type TFactoryRadioBase = class(TObject)
       FPollLastFrameTick: cardinal;
       FLastSerialReopenTick: LongWord;  // MaintainSerialLink throttle
       FSerialReopenDelay: Integer;      // grows to RECONNECT_MAX_DELAY while silent
+      FFrequencyOffset: integer;   // transverter offset in Hz; 0 = none
       FActiveVFO: TVFO;  // RX/operating VFO; nrVFOA = swap model (K4: A/B swaps contents so A is always active), selectable-model radios (Kenwood FR, Flex slice) drive it via SetActiveVFO
 
       function GetRadioPort: integer;
@@ -614,6 +615,21 @@ Type TFactoryRadioBase = class(TObject)
       property IsXITOn[whichVFO: TVFO]: boolean read GetIsXITOn;
       property IsSplitEnabled: boolean read GetSplitEnabled;
       property band[whichVFO: TVFO]: TRadioBand read GetBand;
+
+      { TRANSVERTER OFFSET, in Hz, added to every frequency this radio REPORTS and
+        subtracted from every frequency it is TOLD to tune.
+
+        NY4I operates a 10m-to-2m transverter: the radio reads 28.000 MHz and the
+        QSO happened on 144.000, so the offset is 116000000 and the log must say
+        144. Zero means no transverter, which is every radio by default and costs
+        nothing.
+
+        The setting has existed all along (FREQUENCY ADDER, documented in the
+        Czech help as "transpozicni kmitocet") but its implementation was applied
+        inside the per-model frequency decoders and went with them when the radio
+        factory replaced the legacy pollers -- so it has been stored, persisted,
+        synced to multi-op peers and editable, while doing nothing. }
+      property FrequencyOffset: integer read FFrequencyOffset write FFrequencyOffset;
       property frequency[whichVFO: TVFO]: integer read GetFrequency;
       property mode[whichVFO: TVFO]: TRadioMode read GetMode;
       property dataMode[whichVFO: TVFO]: TRadioMode read GetDataMode;
@@ -1920,8 +1936,21 @@ end;
 
 function TFactoryRadioBase.GetFrequency(whichVFO: TVFO) : integer;
 begin
-
    Result := Self.vfo[whichVFO].frequency;
+
+   // THE ONE PLACE THE OFFSET IS ADDED. Everything outside the factory reads the
+   // frequency through the `frequency[]` property, which is this getter -- the
+   // publish into rig^.CurrentStatus.Freq (uRadioPolling) included. Adding it at
+   // each driver's decode site is what the legacy code did, and it is how the
+   // feature was lost: 21 drivers, and a new one silently opts out.
+   //
+   // ZERO IS NOT A FREQUENCY. It means "nothing known yet" -- a radio that has
+   // not answered, or a VFO B that does not exist. Offsetting it would turn an
+   // unknown into a confident 116 MHz and put a band on it.
+   if (Result <> 0) and (FFrequencyOffset <> 0) then
+      begin
+      Inc(Result, FFrequencyOffset);
+      end;
 end;
 
 function TFactoryRadioBase.BandToFreq(band: TRadioBand): LongInt;
@@ -1983,7 +2012,24 @@ end;
 
 function TFactoryRadioBase.GetBand(whichVFO: TVFO): TRadioBand;
 begin
-   Result := Self.vfo[whichVFO].band;
+   // THE BAND MUST FOLLOW THE OFFSET, or the QSO is logged on the wrong one.
+   //
+   // The band is a STORED field the driver derived from the radio's own reading,
+   // and ActiveBand comes straight from it (uRadioPolling: ActiveBand :=
+   // rig.FilteredStatus.Band). With a 10m-to-2m transverter that would log
+   // 144.200 MHz as 10 METRES -- the right frequency on the wrong band, in the
+   // submitted Cabrillo.
+   //
+   // Only when an offset is in force: with none, the driver's own answer is
+   // returned untouched, so no existing radio changes behaviour.
+   if FFrequencyOffset <> 0 then
+      begin
+      Result := FreqToRadioBand(GetFrequency(whichVFO));
+      end
+   else
+      begin
+      Result := Self.vfo[whichVFO].band;
+      end;
 end;
 
 function TFactoryRadioBase.GetMode(whichVFO: TVFO): TRadioMode;
