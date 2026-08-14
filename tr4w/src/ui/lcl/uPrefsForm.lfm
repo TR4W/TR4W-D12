@@ -10,10 +10,9 @@ object PrefsForm: TPrefsForm
   OnClose = FormClose
   OnShow = FormShow
   object tvNav: TTreeView
-    Align = Left
+    Align = alLeft
     Width = 170
     Height = 620
-    AutoSize = False
     TabOrder = 0
     OnChange = tvNavChange
   end
@@ -58,7 +57,6 @@ object PrefsForm: TPrefsForm
         Top = 30
         Width = 420
         Height = 150
-        AutoSize = False
         TabOrder = 1
         OnDblClick = lstKeyersDblClick
       end
@@ -211,7 +209,6 @@ object PrefsForm: TPrefsForm
         Top = 30
         Width = 420
         Height = 150
-        AutoSize = False
         TabOrder = 1
         OnDblClick = lstRadiosDblClick
       end
@@ -462,9 +459,8 @@ object PrefsForm: TPrefsForm
         Top = 30
         Width = 420
         Height = 130
-        AutoSize = False
         TabOrder = 1
-        OnChange = lstRotatorsChange
+        OnSelectionChange = lstRotatorsChange
       end
       object btnAddRotator: TButton
         Left = 445
@@ -501,7 +497,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 5
-        OnChangeTracking = edtRotatorNameChange
+        OnChange = edtRotatorNameChange
       end
       object lblRotatorType: TLabel
         Left = 12
@@ -552,7 +548,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 11
-        OnChangeTracking = edtRotatorBaudChange
+        OnChange = edtRotatorBaudChange
       end
       object lblRotatorBaudHint: TLabel
         Left = 240
@@ -577,7 +573,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 14
-        OnChangeTracking = edtRotatorIPChange
+        OnChange = edtRotatorIPChange
       end
       object lblRotatorUDP: TLabel
         Left = 12
@@ -594,7 +590,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 16
-        OnChangeTracking = edtRotatorUDPChange
+        OnChange = edtRotatorUDPChange
       end
       object lblRotatorBands: TLabel
         Left = 12
@@ -611,7 +607,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 18
-        OnChangeTracking = edtRotatorBandsChange
+        OnChange = edtRotatorBandsChange
       end
       object lblRotatorBandsHint: TLabel
         Left = 12
@@ -667,7 +663,6 @@ object PrefsForm: TPrefsForm
         Top = 66
         Width = 420
         Height = 150
-        AutoSize = False
         TabOrder = 2
         OnDblClick = lstUDPDestinationsDblClick
       end
@@ -1563,9 +1558,8 @@ object PrefsForm: TPrefsForm
         Top = 30
         Width = 420
         Height = 110
-        AutoSize = False
         TabOrder = 1
-        OnChange = lstClustersChange
+        OnSelectionChange = lstClustersChange
       end
       object btnAddCluster: TButton
         Left = 445
@@ -1620,7 +1614,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 7
-        OnChangeTracking = edtClusterNameChange
+        OnChange = edtClusterNameChange
       end
       object lblClusterServer: TLabel
         Left = 12
@@ -1667,7 +1661,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 12
-        OnChangeTracking = edtClusterLoginChange
+        OnChange = edtClusterLoginChange
       end
       object lblClusterLoginHint: TLabel
         Left = 310
@@ -1693,7 +1687,7 @@ object PrefsForm: TPrefsForm
         AutoSize = False
         TabOrder = 15
         PasswordChar = '*'
-        OnChangeTracking = edtClusterPasswordChange
+        OnChange = edtClusterPasswordChange
       end
       object lblClusterCommand: TLabel
         Left = 12
@@ -1710,7 +1704,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         AutoSize = False
         TabOrder = 17
-        OnChangeTracking = edtClusterCommandChange
+        OnChange = edtClusterCommandChange
       end
       object lblClusterCommandHint: TLabel
         Left = 12

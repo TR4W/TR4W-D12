@@ -46,7 +46,13 @@ $ErrorActionPreference = 'Stop'
 # The extensions the IDE opens, parses and rewrites. Deliberately NOT every
 # text file: .sh must stay LF (Git Bash), and .md/.json/.py are never touched
 # by the designer, so forcing CRLF on them would be noise without a reason.
-$extensions = @('.pas', '.dpr', '.dpk', '.inc', '.dproj', '.bdsproj', '.fmx', '.dfm', '.rc')
+#
+# .lfm/.lpi joined the list on 2026-08-13 with the first Lazarus project. The
+# Lazarus designer rewrites a .lfm on every form save, which is the same
+# co-ownership that put .fmx and .dfm here -- the toolchain changed, the hazard
+# did not.
+$extensions = @('.pas', '.dpr', '.dpk', '.inc', '.dproj', '.bdsproj', '.fmx', '.dfm', '.rc',
+                '.lfm', '.lpi')
 
 if (-not (Test-Path -LiteralPath $SourceDir))
    {

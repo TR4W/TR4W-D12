@@ -1223,7 +1223,15 @@ end;
 
 procedure TFactoryRadioBase.OnRadioStatus(Sender: TObject; const Status: TIdStatus; const AStatusText: TIdText);
 begin
-   logger.trace('Received text from radio: [%s]',[AStatusText]);
+   // Indy's TIdComponent.OnStatus: the TRANSPORT narrating itself
+   // ("Connecting to 192.168.73.108.", "Connected.", "Disconnected."), which is
+   // not one byte of radio traffic.  It logged as "Received text from radio"
+   // until 2026-08-13, and that framing actively misleads during the one
+   // situation the line exists for -- reading back a failed connection, where
+   // it reads as the rig answering before it has said anything at all.  Radio
+   // bytes are logged by ProcessMessage and the RX/TX hex dumps; nothing that
+   // reaches here came from the air.
+   logger.trace('[Link] %s', [AStatusText]);
 end;
 
 {procedure TFactoryRadioBase.IdThreadComponentRun(Sender: TIdThreadComponent);
