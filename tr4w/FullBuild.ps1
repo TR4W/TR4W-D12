@@ -296,6 +296,96 @@ if (-not (Test-Path $appExe)) { Fail "application binary missing at $appExe" }
 $vi = (Get-Item $appExe).VersionInfo
 Write-Host "  tr4w.exe $($vi.FileVersion) ($([int]((Get-Item $appExe).Length / 1KB)) KB)"
 
+# ---------------------------------------------------------------------------
+# THE MANIFEST AS THE LOADER WILL SEE IT.
+#
+# Checking W11.manifest before compiling proves the SOURCE is good. It does not
+# prove what ended up inside the exe, and the exe is what Windows parses. When a
+# double hyphen inside an XML comment made the manifest malformed, fpcres
+# compiled it happily, the presence grep found "Common-Controls" because the
+# string was there regardless, 10 lints passed and 4007 tests passed -- and the
+# binary would not start at all:
+#
+#   "The application failed to start because its side-by-side configuration is
+#    incorrect."
+#
+# So this reads RT_MANIFEST back OUT of the linked binary, parses it, and
+# requires the dependency. It is the cheapest check that can tell a build which
+# runs from a build which merely links, and it is the only one here that looks at
+# the artifact rather than at its inputs.
+# ---------------------------------------------------------------------------
+function Assert-EmbeddedManifest
+   {
+   param([string] $ExePath)
+
+   Add-Type -Namespace TR4W -Name Res -MemberDefinition @'
+[DllImport("kernel32.dll", SetLastError=true, CharSet=CharSet.Unicode)] public static extern IntPtr LoadLibraryExW(string f, IntPtr h, uint flags);
+[DllImport("kernel32.dll", SetLastError=true)] public static extern IntPtr FindResourceW(IntPtr h, IntPtr name, IntPtr type);
+[DllImport("kernel32.dll", SetLastError=true)] public static extern IntPtr LoadResource(IntPtr h, IntPtr res);
+[DllImport("kernel32.dll", SetLastError=true)] public static extern IntPtr LockResource(IntPtr d);
+[DllImport("kernel32.dll", SetLastError=true)] public static extern uint SizeofResource(IntPtr h, IntPtr res);
+[DllImport("kernel32.dll", SetLastError=true)] public static extern bool FreeLibrary(IntPtr h);
+'@ -ErrorAction SilentlyContinue
+
+   $LOAD_LIBRARY_AS_DATAFILE = 0x2
+   $RT_MANIFEST              = 24
+   $CREATEPROCESS_MANIFEST   = 1
+
+   $h = [TR4W.Res]::LoadLibraryExW($ExePath, [IntPtr]::Zero, $LOAD_LIBRARY_AS_DATAFILE)
+   if ($h -eq [IntPtr]::Zero)
+      {
+      # RETURN after every Fail. Fail currently exits, so these are redundant
+      # today -- and that is exactly the assumption worth not making: the
+      # no-manifest case below ran on past its Fail, dereferenced a null pointer
+      # and then printed "manifest verified". A check that keeps going after
+      # deciding it failed is worse than no check.
+      Fail "could not open $ExePath to read its manifest"
+      return
+      }
+
+   try
+      {
+      $r = [TR4W.Res]::FindResourceW($h, [IntPtr]$CREATEPROCESS_MANIFEST, [IntPtr]$RT_MANIFEST)
+      if ($r -eq [IntPtr]::Zero)
+         {
+         Fail "$ExePath has no application manifest -- Win11.res did not link"
+         return
+         }
+
+      $size = [TR4W.Res]::SizeofResource($h, $r)
+      $ptr  = [TR4W.Res]::LockResource([TR4W.Res]::LoadResource($h, $r))
+      $buf  = New-Object byte[] $size
+      [Runtime.InteropServices.Marshal]::Copy($ptr, $buf, 0, $size)
+      $xmlText = [Text.Encoding]::UTF8.GetString($buf)
+      }
+   finally
+      {
+      [void][TR4W.Res]::FreeLibrary($h)
+      }
+
+   try
+      {
+      [xml]$null = $xmlText
+      }
+   catch
+      {
+      Fail ("the manifest embedded in $ExePath is not well-formed XML: " +
+            "$($_.Exception.Message) -- Windows will refuse to start it")
+      return
+      }
+
+   if ($xmlText -notmatch 'Common-Controls')
+      {
+      Fail "the manifest embedded in $ExePath does not request Common-Controls v6 -- visual styles would be off"
+      return
+      }
+
+   Write-Host "  manifest verified in the binary (parses, visual styles declared)"
+   }
+
+Assert-EmbeddedManifest -ExePath $appExe
+
+
 if ($vi.FileVersion -notlike "$vMajor.$vMinor.$vBuild*")
    {
    # The stamp is the one thing a user can check without running anything, and
