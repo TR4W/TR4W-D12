@@ -23,6 +23,7 @@ unit LogWind;
 {$IMPORTEDDATA OFF}
 interface
 uses
+  uConfigValues,   // Config -- migrated settings
   SysUtils,
 utils_text,
   uWinKey,
@@ -495,8 +496,6 @@ var
   AlarmSet                              : boolean;
   AlarmMinute                           : integer;
   AlarmHour                             : integer;
-  AltDBufferEnable                      : boolean;
-  AltDCQEnable                          : boolean;
   AskForFrequencies                     : boolean;
   AutoReturnToCQMode                    : boolean = True;
   AutoSAPEnableRate                     : LONGINT = 500;
@@ -766,7 +765,6 @@ var
 
  S2SW                                   : boolean = False;
 
-  SayHiEnable                           : boolean;
 
   SCPDupeBackground                     : tr4wColors = trCyan;
   SCPDupeColor                          : tr4wColors = trRed;
@@ -1751,7 +1749,7 @@ procedure DisplayNamePercentage({TotalNamesSent: integer; QSONumber: integer});
   //TNS                                   : integer;
 begin
 {
-  if (TotalContacts > 0) and SayHiEnable then
+  if (TotalContacts > 0) and Config.SayHiEnable then
   begin
     TNS := TotalNamesSent ;
     Percentage := TNS / TotalContacts;

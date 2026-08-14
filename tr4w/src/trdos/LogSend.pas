@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -24,6 +24,7 @@ unit LOGSend;
 interface
 
 uses
+  uConfigValues,   // Config -- migrated settings
   TF,
 utils_text,
   Tree,
@@ -245,7 +246,7 @@ begin
 
             while LeadingZeros > length(TempString) do
                begin
-               TempString := LeadingZeroCharacter + TempString;
+               TempString := Config.LeadingZeroCharacter + TempString;
                end;
               if ShortIntegers then
                  begin
@@ -342,12 +343,12 @@ begin
           end;
 
         '$':
-          if SayHiEnable and (Rate < SayHiRateCutOff) then
+          if Config.SayHiEnable and (Rate < Config.SayHiRateCutOff) then
              begin
              SayHello(CallWindowString);
              end;
         '%':
-          if SayHiEnable and (Rate < SayHiRateCutOff) then
+          if Config.SayHiEnable and (Rate < Config.SayHiRateCutOff) then
              begin
              SayName(CallWindowString);
              end;
@@ -593,7 +594,7 @@ begin
                    TempString := QSONumberString (QSONumber);
 
                    WHILE LeadingZeros > Length (TempString) DO
-                       TempString := LeadingZeroCharacter + TempString;
+                       TempString := Config.LeadingZeroCharacter + TempString;
 
                    ContinueRTTYTransmission (TempString);
                    END;

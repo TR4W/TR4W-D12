@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -83,7 +83,6 @@ var
   AutoCQMemory                          : Char = CHR(112);
   CWEnable                              : boolean = True;
   CWMessageCommand                      : CWMessageCommandType {= NoCWCommand};
-  CWSpeedFromDataBase                   : boolean;
   CWTone                                : integer = 700;
   CQMemory                              : FunctionKeyMemoryArray;
   EXMemory                              : FunctionKeyMemoryArray;
@@ -97,7 +96,6 @@ var
 
   LastRSTSent                           : Word;
   LeadingZeros                          : integer = 3;
-  LeadingZeroCharacter                  : AnsiChar = 'T';
 
   NeedToSetCQMode                       : boolean; {KK1L: 6.69 This variable is used to leap around some AutoS&PMode code.}
 

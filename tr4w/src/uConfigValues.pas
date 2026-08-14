@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -75,6 +75,23 @@ type
       HamScoreUsername: ShortString;
       HamScorePassword: ShortString;
       HamScoreSendContactInfo: boolean;
+
+      { SO2R / two-radio, CW and scoreboard settings migrated 2026-08-14.
+        Types copied verbatim from the declarations they replace -- CheckCommand
+        writes through @Config.<field> and cannot see a mismatch. }
+      AltDBufferEnable: boolean;
+      AltDCQEnable: boolean;
+      AlwaysCallBlindCQ: boolean;
+      SkipActiveBand: boolean;
+      CWSpeedFromDataBase: boolean;
+      KeypadCWMemories: boolean;
+      SayHiEnable: boolean;
+      SayHiRateCutOff: integer;
+      LeadingZeroCharacter: AnsiChar;
+      tDitDahRatio: integer;
+      GetScoresSeverPostingAddress: ShortString;
+      GetScoresSeverReadingAddress: ShortString;
+      tConnectionAtStartup: boolean;
    end;
 
 var
@@ -93,7 +110,21 @@ var
       HamScoreURL: 'http://scoredistributor.net/';
       HamScoreUsername: '';   // empty falls back to MY CALL
       HamScorePassword: '';
-      HamScoreSendContactInfo: True
+      HamScoreSendContactInfo: True;
+
+      AltDBufferEnable: False;
+      AltDCQEnable: False;
+      AlwaysCallBlindCQ: False;
+      SkipActiveBand: False;
+      CWSpeedFromDataBase: False;
+      KeypadCWMemories: False;
+      SayHiEnable: False;
+      SayHiRateCutOff: 200;
+      LeadingZeroCharacter: 'T';
+      tDitDahRatio: 3;
+      GetScoresSeverPostingAddress: '';
+      GetScoresSeverReadingAddress: '';
+      tConnectionAtStartup: False
    );
 
 implementation

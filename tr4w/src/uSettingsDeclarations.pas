@@ -81,22 +81,22 @@ begin
    GDeclared := True;
 
    // --- Operating: CW ------------------------------------------------------
-   RegisterLegacySetting('operating.cw.sayHi',            'SAY HI ENABLE',
+   RegisterStoredSetting('operating.cw.sayHi',            'SAY HI ENABLE',
                          'Send a greeting to stations worked before');
-   RegisterLegacySetting('operating.cw.sayHiRateCutoff',  'SAY HI RATE CUTOFF',
+   RegisterStoredSetting('operating.cw.sayHiRateCutoff',  'SAY HI RATE CUTOFF',
                          'Stop above this rate');
-   RegisterLegacySetting('operating.cw.keypadMemories',   'KEYPAD CW MEMORIES',
+   RegisterStoredSetting('operating.cw.keypadMemories',   'KEYPAD CW MEMORIES',
                          'Number keypad sends CW memories');
    RegisterLegacySetting('operating.cw.leadingZeros',     'LEADING ZEROS',
                          'Leading zeros');
-   RegisterLegacySetting('operating.cw.leadingZeroChar',  'LEADING ZERO CHARACTER',
+   RegisterStoredSetting('operating.cw.leadingZeroChar',  'LEADING ZERO CHARACTER',
                          'Leading zero sent as');
 
    // Radio serial keying.  These shape only the CW TR4W generates itself by
    // toggling DTR/RTS -- a WinKeyer, a YCCC box or CW-by-CAT keep their own
    // timing -- which is why they sit in their own frame rather than beside the
    // settings that apply to every keyer.
-   RegisterLegacySetting('operating.cw.serial.ditDahRatio',    'DIT DAH RATIO',
+   RegisterStoredSetting('operating.cw.serial.ditDahRatio',    'DIT DAH RATIO',
                          'Dit/dah ratio');
    RegisterLegacySetting('operating.cw.serial.weight',         'WEIGHT',
                          'Weight');
@@ -108,7 +108,7 @@ begin
    // --- CW Settings (the keyer page) ---------------------------------------
    RegisterLegacySetting('cw.enable',            'CW ENABLE',
                          'Send CW');
-   RegisterLegacySetting('cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
+   RegisterStoredSetting('cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
                          'Match the speed a station was worked at before');
    // MIGRATED 2026-08-14 -- the first row to graduate.  Stored: writes go to
    // settings\tr4w.json, the CFGCA row is csJSON, and so it no longer appears
@@ -130,13 +130,13 @@ begin
    // --- Operating: two radio -----------------------------------------------
    RegisterLegacySetting('operating.tworadio.enable',       'TWO RADIO MODE',
                          'Two radio mode');
-   RegisterLegacySetting('operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
+   RegisterStoredSetting('operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
                          'Alt-D remembers what you typed');
-   RegisterLegacySetting('operating.tworadio.altDCQ',       'ALT-D CQ ENABLE',
+   RegisterStoredSetting('operating.tworadio.altDCQ',       'ALT-D CQ ENABLE',
                          'Alt-D can start a CQ on the second radio');
-   RegisterLegacySetting('operating.tworadio.blindCQ',      'ALWAYS CALL BLIND CQ',
+   RegisterStoredSetting('operating.tworadio.blindCQ',      'ALWAYS CALL BLIND CQ',
                          'Always call a blind CQ');
-   RegisterLegacySetting('operating.tworadio.skipActiveBand','SKIP ACTIVE BAND',
+   RegisterStoredSetting('operating.tworadio.skipActiveBand','SKIP ACTIVE BAND',
                          'Skip the band the other radio is on');
 
    // --- Operating: online scoring ------------------------------------------
@@ -150,13 +150,13 @@ begin
                          'Password');
    RegisterStoredSetting('scoring.hamscore.contactInfo', 'HAMSCORE SEND CONTACT INFO',
                          'Include contact information');
-   RegisterLegacySetting('scoring.board.postingUrl',     'SCORE POSTING URL',
+   RegisterStoredSetting('scoring.board.postingUrl',     'SCORE POSTING URL',
                          'Posting URL');
-   RegisterLegacySetting('scoring.board.readingUrl',     'SCORE READING URL',
+   RegisterStoredSetting('scoring.board.readingUrl',     'SCORE READING URL',
                          'Reading URL');
 
    // --- DX cluster ---------------------------------------------------------
-   RegisterLegacySetting('cluster.connectAtStartup', 'CONNECTION AT STARTUP',
+   RegisterStoredSetting('cluster.connectAtStartup', 'CONNECTION AT STARTUP',
                          'Connect at startup');
    RegisterLegacySetting('cluster.connectCommand',   'CONNECTION COMMAND',
                          'After connecting, send');

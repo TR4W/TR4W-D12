@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -40,8 +40,8 @@ unit uSettingsRegistry;
   getter and setter over whatever storage actually holds it:
 
       RegisterSetting(TBoolSetting.Create('operating.cw.sayHi', 'Send a greeting',
-         function: boolean begin Result := SayHiEnable end,
-         procedure (const v: boolean) begin SayHiEnable := v end));
+         function: boolean begin Result := Config.SayHiEnable end,
+         procedure (const v: boolean) begin Config.SayHiEnable := v end));
 
   What that buys, point by point against the old table:
 
@@ -68,9 +68,11 @@ unit uSettingsRegistry;
   ON THE GLOBALS.  This does NOT try to abolish TR4W's global variables; they
   are read from thousands of places and that is a separate, much larger job.
   The registry sits in FRONT of them: the store persists by key, the UI binds by
-  key, and the setter is the one place that knows a given setting lives in a
-  global called SayHiEnable.  When a global is eventually replaced, only its
-  closure changes.
+  key, and the setter is the one place that knows WHERE a given setting lives.
+  When that storage moves, only the closure changes -- which is exactly what
+  happened to this unit's own example: SayHiEnable is no longer a global at all,
+  it is Config.SayHiEnable in uConfigValues, and nothing outside the closure
+  above had to know.
 
   ON CFGCA.  It stays as the READER FOR OLD INI FILES, which is a job it does
   well and which nothing else can do.  A setting that moves here has its CFGCA

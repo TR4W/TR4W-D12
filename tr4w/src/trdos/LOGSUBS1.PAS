@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -23,6 +23,7 @@ unit LOGSUBS1;
 interface
 
 uses
+  uConfigValues,   // Config -- migrated settings
   uNet,
   uWinKey,
   uYCCCSO2R,
@@ -424,7 +425,7 @@ begin
 
   if ActiveMode in [Phone, FM] then
      begin
-     if (CQPhoneExchangeNameKnown <> '') and SayHiEnable then
+     if (CQPhoneExchangeNameKnown <> '') and Config.SayHiEnable then
         begin
         Name := UpperCase(CD.GetName(RootCall(CallsignICameBackTo)));
 
@@ -446,7 +447,7 @@ begin
      end
   else
      begin
-     if CWSpeedFromDataBase then
+     if Config.CWSpeedFromDataBase then
         begin
         StationSpeed := CD.GetCodeSpeed(RootCall(CallsignICameBackTo));
 
@@ -458,7 +459,7 @@ begin
            end;
         end;
 
-     if (CQExchangeNameKnown <> '') and SayHiEnable then
+     if (CQExchangeNameKnown <> '') and Config.SayHiEnable then
         begin
         Name := UpperCase(CD.GetName(RootCall(CallsignICameBackTo)));
         if (Name = '') or (Name = 'CLUB') then

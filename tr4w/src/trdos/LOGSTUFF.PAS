@@ -384,7 +384,6 @@ var
   //  _networktest                          : boolean;
 
   AllCWMessagesChainable: boolean;
-  AlwaysCallBlindCQ: boolean;
   //  AskIfContestOver                      : boolean = True;
   AutoAltDWindowString: Str20;
   AutoCallTerminate: boolean;
@@ -462,7 +461,6 @@ var
   //  IntercomFileWrite                : Text;
 
   KeyHistory: KeyHistoryRecord;
-  KeypadCWMemories: boolean;
 
   //   LastDeletedLogEntry             : Str160;
   tLastLogEntryIsDeleted: boolean;
@@ -556,7 +554,6 @@ var
     RemoteTerminalPort                    : PortType = NoPort;
   }
 
-  SayHiRateCutOff: integer = 200;
   SendCompleteFourLetterCall: boolean;
   SendQSOImmediately: boolean = True;
   SeventyThreeMessageSent: boolean;
@@ -568,7 +565,6 @@ var
   ShortIntegers: boolean;
   ShowQSOStatusCall: CallString;
   //  ShowSearchAndPounce                   : boolean;
-  SkipActiveBand: boolean;
   SpaceBarDupeCheckEnable: boolean = True;
   StartSendingNowKey: Char = '''';
 
@@ -855,7 +851,7 @@ begin
      end;
 
   // The walk below is a `goto` loop with no bound: every filter (WARC, VHF,
-  // SkipActiveBand, and now radio coverage) can send it round again, and if
+  // Config.SkipActiveBand, and now radio coverage) can send it round again, and if
   // between them they reject EVERY band it never returns.  That was survivable
   // while the filters were all operator settings; one driven by what the radio
   // reports deserves a belt.  Two full cycles is far more than any legitimate
@@ -938,7 +934,7 @@ begin
        goto NextBand;
        end;
 
-  if SkipActiveBand then
+  if Config.SkipActiveBand then
      begin
      if (Radio1.BandMemory = ActiveBand) then
         begin

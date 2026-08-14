@@ -31,18 +31,18 @@ row's own state and persists to whichever file is that row's system of record.
 
 ## What is actually true today
 
-**Six of the thirty have completed the move: `CW SPEED INCREMENT` and the five HAMSCORE
-settings.** They are `csJSON`, gone from Ctrl-J, written by Preferences to
+**Nineteen of the thirty have completed the move.** They are `csJSON`, gone from Ctrl-J, written by Preferences to
 `settings\tr4w.json`, their existing ini values carried across once, and their globals are now
 fields of `Config`.
 
 `CW SPEED INCREMENT` went first because it is the one NY4I saw duplicated between Preferences and
-Ctrl-J. HAMSCORE went second on purpose: it is the first **string** group, and a `ctString` row
+Ctrl-J. Then the five HAMSCORE settings, then the thirteen of category A below — the SO2R/two-radio
+group, the small CW settings, the scoreboard URLs and the cluster connect-at-startup flag. HAMSCORE went second on purpose: it is the first **string** group, and a `ctString` row
 aimed at anything other than a `ShortString` would write 256 bytes into the next field with nothing
 to report it — not the compiler, which sees only a pointer, and not a test, because the damage lands
 elsewhere. The `Config` fields therefore carry the *exact* old types.
 
-The remaining 24 are still `csOld`/`csNew`: they show in Ctrl-J, round-trip through the ini, and
+The remaining 11 are still `csOld`/`csNew`: they show in Ctrl-J, round-trip through the ini, and
 drive a global each. The bridge they still use is:
 
 ```
@@ -50,7 +50,7 @@ Preferences -> TLegacySetting.TrySetText -> SetCFGCommandValue -> WritePrivatePr
 ```
 
 So the new UI writes the old store. A deliberate bridge, not a defect — but one that has now been
-crossed six times and needs crossing 24 more.
+crossed nineteen times and needs crossing 11 more.
 
 ### A password in the ini is not trustworthy as a password
 
@@ -201,29 +201,29 @@ the CFGCA table binding itself.
 
 | key | CFGCA command | row | backing global | refs |
 |---|---|---|---|---|
-| operating.cw.serial.ditDahRatio | DIT DAH RATIO | csNew | tDitDahRatio | 3 |
-| operating.tworadio.altDCQ | ALT-D CQ ENABLE | csOld | AltDCQEnable | 3 |
+| operating.cw.serial.ditDahRatio | DIT DAH RATIO | **csJSON** | Config.tDitDahRatio | **migrated** |
+| operating.tworadio.altDCQ | ALT-D CQ ENABLE | **csJSON** | Config.AltDCQEnable | **migrated** |
 | scoring.hamscore.contactInfo | HAMSCORE SEND CONTACT INFO | **csJSON** | Config.HamScoreSendContactInfo | **migrated** |
 | scoring.hamscore.username | HAMSCORE USERNAME | **csJSON** | Config.HamScoreUsername | **migrated** |
-| operating.cw.keypadMemories | KEYPAD CW MEMORIES | csOld | KeypadCWMemories | 4 |
-| operating.tworadio.blindCQ | ALWAYS CALL BLIND CQ | csOld | AlwaysCallBlindCQ | 4 |
-| scoring.board.postingUrl | SCORE POSTING URL | csOld | GetScoresSeverPostingAddress | 4 |
-| scoring.board.readingUrl | SCORE READING URL | csNew | GetScoresSeverReadingAddress | 4 |
+| operating.cw.keypadMemories | KEYPAD CW MEMORIES | **csJSON** | Config.KeypadCWMemories | **migrated** |
+| operating.tworadio.blindCQ | ALWAYS CALL BLIND CQ | **csJSON** | Config.AlwaysCallBlindCQ | **migrated** |
+| scoring.board.postingUrl | SCORE POSTING URL | **csJSON** | Config.GetScoresSeverPostingAddress | **migrated** |
+| scoring.board.readingUrl | SCORE READING URL | **csJSON** | Config.GetScoresSeverReadingAddress | **migrated** |
 | scoring.hamscore.enable | HAMSCORE ENABLE | **csJSON** | Config.HamScoreEnable | **migrated** |
 | scoring.hamscore.password | HAMSCORE PASSWORD | **csJSON** | Config.HamScorePassword | **migrated** |
-| cluster.connectAtStartup | CONNECTION AT STARTUP | csNew | tConnectionAtStartup | 5 |
+| cluster.connectAtStartup | CONNECTION AT STARTUP | **csJSON** | Config.tConnectionAtStartup | **migrated** |
 | scoring.hamscore.url | HAMSCORE URL | **csJSON** | Config.HamScoreURL | **migrated** |
 | cluster.connectCommand | CONNECTION COMMAND | csNew | ConnectionCommand | 6 |
-| cw.speedFromDatabase | CW SPEED FROM DATABASE | csOld | CWSpeedFromDataBase | 6 |
-| operating.cw.leadingZeroChar | LEADING ZERO CHARACTER | csOld | LeadingZeroCharacter | 6 |
-| operating.tworadio.altDBuffer | ALT-D BUFFER ENABLE | csOld | AltDBufferEnable | 6 |
-| operating.cw.sayHiRateCutoff | SAY HI RATE CUTOFF | csOld | SayHiRateCutOff | 8 |
+| cw.speedFromDatabase | CW SPEED FROM DATABASE | **csJSON** | Config.CWSpeedFromDataBase | **migrated** |
+| operating.cw.leadingZeroChar | LEADING ZERO CHARACTER | **csJSON** | Config.LeadingZeroCharacter | **migrated** |
+| operating.tworadio.altDBuffer | ALT-D BUFFER ENABLE | **csJSON** | Config.AltDBufferEnable | **migrated** |
+| operating.cw.sayHiRateCutoff | SAY HI RATE CUTOFF | **csJSON** | Config.SayHiRateCutOff | **migrated** |
 | operating.cw.serial.farnsworth | FARNSWORTH ENABLE | csOld | FarnsworthEnable | 8 |
-| operating.tworadio.skipActiveBand | SKIP ACTIVE BAND | csOld | SkipActiveBand | 8 |
+| operating.tworadio.skipActiveBand | SKIP ACTIVE BAND | **csJSON** | Config.SkipActiveBand | **migrated** |
 | operating.bands.hf | HF BAND ENABLE | csOld | HFBandEnable | 8 |
 | operating.cw.leadingZeros | LEADING ZEROS | csOld | LeadingZeros | 10 |
 | **cw.speedIncrement** | **CW SPEED INCREMENT** | **csJSON** | **Config.CodeSpeedIncrement** | **migrated** |
-| operating.cw.sayHi | SAY HI ENABLE | csOld | SayHiEnable | 12 |
+| operating.cw.sayHi | SAY HI ENABLE | **csJSON** | Config.SayHiEnable | **migrated** |
 | operating.bands.warc | WARC BAND ENABLE | csOld | WARCBandsEnabled | 16 |
 | operating.cw.serial.farnsworthSpeed | FARNSWORTH SPEED | csOld | FarnsworthSpeed | 24 |
 | operating.bands.vhf | VHF BAND ENABLE | csOld | VHFBandsEnabled | 25 |
@@ -265,8 +265,9 @@ commented-out lines and a naive grep reports them as real.
 
 ### A. Nothing else writes them — migrate as flat settings (13, see A-bis)
 
-The stored value is the only source, so these are pure Preferences settings and the cheapest work
-left. Roughly in ascending cost:
+The stored value is the only source, so these were pure Preferences settings and the cheapest work.
+**All thirteen migrated 2026-08-14** (the fourteenth, `LEADING ZERO CHARACTER`, went with them; only
+`LEADING ZEROS` is held back — see A-bis):
 
 `DIT DAH RATIO`, `ALT-D CQ ENABLE`, `KEYPAD CW MEMORIES`, `ALWAYS CALL BLIND CQ`,
 `SCORE POSTING URL`, `SCORE READING URL`, `CONNECTION AT STARTUP`, `CW SPEED FROM DATABASE`,
