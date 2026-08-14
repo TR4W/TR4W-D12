@@ -21,6 +21,25 @@
             <supportedOS Id="{e2011457-1546-43c5-a5fe-008deee3d3f0}"/> 
         </application>
     </compatibility>
+    <!-- VISUAL STYLES. Without this dependency Windows renders every stock
+         control -- buttons, edits, combo boxes, list boxes, the tree view -- in
+         the CLASSIC unthemed style, which is Windows 2000 chrome on a Windows 11
+         desktop. It is not an LCL limitation and it costs no code; the manifest
+         simply never asked for it. Verified absent from the shipped 5.0.0 exe
+         before this was added. -->
+    <dependency>
+        <dependentAssembly>
+            <assemblyIdentity
+                type="win32"
+                name="Microsoft.Windows.Common-Controls"
+                version="6.0.0.0"
+                processorArchitecture="x86"
+                publicKeyToken="6595b64144ccf1df"
+                language="*"
+            />
+        </dependentAssembly>
+    </dependency>
+
     <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
         <security>
             <requestedPrivileges>
