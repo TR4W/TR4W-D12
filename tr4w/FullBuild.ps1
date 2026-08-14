@@ -180,6 +180,27 @@ $manXml = Join-Path $TR4W_DIR 'W11.manifest'
 
 if (-not (Test-Path $manXml)) { Fail "W11.manifest not found at $manXml" }
 
+# WELL-FORMED XML FIRST, before it is compiled into anything.
+#
+# A malformed manifest does not fail the build, does not fail fpcres, and does
+# not warn: it produces an exe that Windows REFUSES TO START, with
+# "the application failed to start because its side-by-side configuration is
+# incorrect" and no clue which file is at fault. That is exactly what shipped
+# from this script the first time -- a double hyphen inside an XML comment,
+# which is illegal and which no editor flags.
+#
+# The grep further down proves the dependency is PRESENT; this proves the file
+# is PARSEABLE. Neither implies the other, and only the pair keeps a build that
+# cannot launch from looking green.
+try
+   {
+   [xml]$null = Get-Content -LiteralPath $manXml -Raw
+   }
+catch
+   {
+   Fail "W11.manifest is not well-formed XML: $($_.Exception.Message)"
+   }
+
 & $FPCRES -i $manRc -o $manRes -of res 2>&1 | Out-Host
 if ($LASTEXITCODE -ne 0) { Fail 'fpcres could not compile Win11.rc' }
 

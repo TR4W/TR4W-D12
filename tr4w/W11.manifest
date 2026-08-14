@@ -22,11 +22,15 @@
         </application>
     </compatibility>
     <!-- VISUAL STYLES. Without this dependency Windows renders every stock
-         control -- buttons, edits, combo boxes, list boxes, the tree view -- in
-         the CLASSIC unthemed style, which is Windows 2000 chrome on a Windows 11
+         control (buttons, edits, combo boxes, list boxes, the tree view) in the
+         CLASSIC unthemed style, which is Windows 2000 chrome on a Windows 11
          desktop. It is not an LCL limitation and it costs no code; the manifest
          simply never asked for it. Verified absent from the shipped 5.0.0 exe
-         before this was added. -->
+         before this was added.
+
+         NOTE: no double hyphen may appear inside an XML comment. One here made
+         the whole manifest malformed, and Windows answered with "the side-by-side
+         configuration is incorrect" and refused to start the program at all. -->
     <dependency>
         <dependentAssembly>
             <assemblyIdentity
