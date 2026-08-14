@@ -108,6 +108,10 @@ type
       FarnsworthEnable: boolean;
       FarnsworthSpeed: integer;
       Weight: REAL;
+
+      { TWO RADio MODE -- the sole mode knob. SINGLE RADIO MODE, its
+        deprecated inverse, was withdrawn in the same commit. }
+      TwoRadioMode: boolean;
    end;
 
 var
@@ -146,7 +150,9 @@ var
       CWTone: 700;
       FarnsworthEnable: False;
       FarnsworthSpeed: 25;
-      Weight: 1.0
+      Weight: 1.0;
+
+      TwoRadioMode: False
    );
 
 implementation

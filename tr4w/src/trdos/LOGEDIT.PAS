@@ -1835,7 +1835,7 @@ begin
   { If Config.AltDBufferEnable - then the initial entry will be either from
     the left over entry from before - or from the bandmap. }
 
-  if (Config.AltDBufferEnable) and (TwoRadioMode) then
+  if (Config.AltDBufferEnable) and (Config.TwoRadioMode) then
      begin
      if DupeInfoCall <> '' then
         begin

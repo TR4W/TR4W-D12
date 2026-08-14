@@ -361,11 +361,6 @@ var
    WSJTXRadioControlEnabled: boolean = false;
    SpotCollectorEnabled: boolean = false;
    CTYUpdateCheckOnStartup: boolean = true;
-   // Issue #965 -- TRUE once a TWO RADIO MODE line has been parsed in the current
-   // config file.  Reset per file in LogCfg.ReadInConfigFile so a contest .cfg can
-   // still override the mode set by tr4w.ini.  Used to make TWO RADIO MODE win over
-   // a (deprecated) SINGLE RADIO MODE line appearing later in the SAME file.
-   TwoRadioModeWasSet: boolean = false;
 
 const
 
@@ -872,7 +867,7 @@ const
  (crCommand: 'TOTAL SCORE MESSAGE';           crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'TUNE ALT-D ENABLE';             crAddress: @TuneDupeCheckEnable;            crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'TUNE WITH DITS';                crAddress: @TuneWithDits;                   crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'TWO RADIO MODE';                crAddress: @TwoRadioMode;                   crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
+ (crCommand: 'TWO RADIO MODE';                crAddress: @Config.TwoRadioMode;                   crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'UDP BROADCAST APP INFO';        crAddress: @UDPBroadcastAppInfo;            crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i 4.44.9
  (crCommand: 'UDP BROADCAST CONTACT INFO';    crAddress: @UDPBroadcastContact;            crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i 4.44.9
  (crCommand: 'UDP BROADCAST RADIO INFO';      crAddress: @UDPBroadcastRadio;              crMin:0;  crMax:0;       crS: csJSON;   crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),  // ny4i 4.44.9
@@ -1332,46 +1327,29 @@ begin
          end;
       end;
 
-   // Issue #965 -- TWO RADIO MODE is the sole mode knob.  Remember that it was
-   // specified in THIS config file so a (deprecated) SINGLE RADIO MODE line below
-   // cannot flip the mode back -- TWO RADIO MODE wins.  We do NOT Exit here: the
-   // command table below applies the actual boolean value to TwoRadioMode.
-   if pshortstring(Command)^ = 'TWO RADIO MODE' then
-      begin
-      if CustomCMD[1] in ['T', 'F'] then
-         begin
-         TwoRadioModeWasSet := True;
-         logger.Info('[RadioMode] TWO RADIO MODE = %s -- this file decides the mode; any SINGLE RADIO MODE line in this file is ignored', [CustomCMD]);
-         end;
-      end;
 
-   // Issue #965 -- SINGLE RADIO MODE is the deprecated inverse of TWO RADIO MODE.
-   // Kept parseable so existing .cfg files still load (Option A): TRUE => single
-   // => TwoRadioMode False; FALSE => two-radio => TwoRadioMode True.  But if THIS
-   // file already specified TWO RADIO MODE, that wins and SINGLE RADIO MODE here is
-   // inert (still consumed so it is not flagged as an unknown command).
+   // SINGLE RADIO MODE -- WITHDRAWN, and reported rather than obeyed.
+   //
+   // NY4I 2026-08-14: "in the new system (and not caring to migrate existing
+   // configs) we only use TWO RADIO MODE true or false."
+   //
+   // It was the deprecated inverse of TWO RADIO MODE (issue #965), kept
+   // parseable so old .cfg files still loaded. Measured before removing it: of
+   // 146 real .cfg/.ini files in this tree -- every contest config, the D7 test
+   // logs and the operator's own ini -- NOT ONE contains it. It is dead in
+   // practice as well as in intent.
+   //
+   // Still CONSUMED, so an old file does not report an unknown command, but it
+   // no longer sets anything and it says so at WARN. A withdrawn setting that
+   // silently does nothing is how an operator ends up in the wrong mode without
+   // a single clue; one that says "I ignored this, use TWO RADIO MODE" is a
+   // five-second fix.
    if pshortstring(Command)^ = 'SINGLE RADIO MODE' then
       begin
-      if CustomCMD[1] in ['T', 'F'] then
-         begin
-         if not TwoRadioModeWasSet then
-            begin
-            TwoRadioMode := CustomCMD[1] = 'F';
-            if TwoRadioMode then
-               begin
-               logger.Info('[RadioMode] SINGLE RADIO MODE = %s applied (deprecated alias) -- TwoRadioMode now TRUE (two-radio/SO2R)', [CustomCMD]);
-               end
-            else
-               begin
-               logger.Info('[RadioMode] SINGLE RADIO MODE = %s applied (deprecated alias) -- TwoRadioMode now FALSE (single radio)', [CustomCMD]);
-               end;
-            end
-         else
-            begin
-            logger.Info('[RadioMode] SINGLE RADIO MODE = %s IGNORED -- TWO RADIO MODE already set in this file (TWO RADIO MODE wins)', [CustomCMD]);
-            end;
-         Result := True;
-         end;
+      logger.Warn('[RadioMode] SINGLE RADIO MODE = %s IGNORED -- withdrawn. ' +
+                  'Use TWO RADIO MODE = TRUE for two-radio/SO2R, FALSE for single radio.',
+                  [CustomCMD]);
+      Result := True;
       Exit;
       end;
 

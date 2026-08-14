@@ -172,7 +172,7 @@ begin // 1
      TempChar := Message[1];
 
      if TempChar = ControlA then
-       if TwoRadioMode then
+       if Config.TwoRadioMode then
           begin // 3
           if ActiveRadio = RadioOne then
              begin // 4
@@ -192,7 +192,7 @@ begin // 1
           end; // 2
 
      if TempChar = ControlB then
-       if TwoRadioMode then      
+       if Config.TwoRadioMode then      
           begin
           SetUpToSendOnInactiveRadio;
           if autosendenable then
@@ -601,7 +601,7 @@ procedure SwapRadios;
 
 begin
   DebugMsg('>>>>Entering SWAPRADIOS');
-  if not TwoRadioMode then
+  if not Config.TwoRadioMode then
      begin
      QuickDisplay(TC_ALTRCOMMANDDISABLED);
      //      Wait(3000); {KK1L: 6.71}
@@ -749,7 +749,7 @@ var
   TimeOut: Byte;
 
 begin
-  if not TwoRadioMode then
+  if not Config.TwoRadioMode then
      begin
      TwoRadioState := TwoRadiosDisabled;
      Exit;
@@ -1326,7 +1326,7 @@ end;
 procedure DualingCQs;
 
 begin
-  if not TwoRadioMode then
+  if not Config.TwoRadioMode then
      begin
      Exit;
      end;

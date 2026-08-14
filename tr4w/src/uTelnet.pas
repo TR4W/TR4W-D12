@@ -1772,7 +1772,7 @@ begin
          end;
 
 {$IFDEF AUTOSPOT}
-    if TwoRadioMode then
+    if Config.TwoRadioMode then
        begin
        if first then
           begin

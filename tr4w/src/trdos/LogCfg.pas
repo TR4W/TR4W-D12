@@ -642,9 +642,6 @@ begin
      begin
      SetLength(gSeenINICmds, 0);
      end;
-  // Issue #965 -- reset per file so TWO RADIO MODE "wins" only within a single
-  // file; a later-loaded contest .cfg can still override the mode set by the ini.
-  TwoRadioModeWasSet := False;
   logger.Info('[Config] Loading %s', [CFGFilesArray[ConfigFileName]]);
   EnumerateLinesInFile(CFGFilesArray[ConfigFileName], EnmuCFGFile, True);
 

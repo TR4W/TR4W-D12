@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -25,6 +25,7 @@ unit uSpots;
 interface
 
 uses
+  uConfigValues,
   VC,
   TF,
   uDupesheet,
@@ -178,7 +179,7 @@ begin
           begin
           Continue;
           end;
-     //if TwoRadioMode then
+     //if Config.TwoRadioMode then
      if ((ActiveBand <> Spot.Fband) and (InactiveRadioptr.BandMemory <>
        Spot.Fband)) then
         begin
