@@ -1,4 +1,4 @@
-# Runs every gating lint, once, from one place.
+﻿# Runs every gating lint, once, from one place.
 #
 # WHY THIS EXISTS.  The lint list lived only in tr4w.dproj's PreBuildEvent, so
 # it gated the DELPHI build and nothing else.  As FPC becomes the shipping
@@ -48,6 +48,27 @@ $failed  = 0
 $ran     = 0
 $skipped = 0
 
+# ---------------------------------------------------------------------------
+# LAUNCH ALL, THEN COLLECT -- the lints run CONCURRENTLY.
+#
+# Measured before changing anything: the ten lints do about 5 seconds of work
+# between them, and Run-Lints took 47. The difference is process startup --
+# powershell.exe costs roughly four seconds to start and this spawned one per
+# lint, serially. So 42 of those 47 seconds were Windows loading PowerShell ten
+# times, not any lint reading any file.
+#
+# Each lint still gets its OWN process, which is not incidental: several call
+# exit to report a failure, and exit inside a dot-sourced or call-operator script
+# terminates the caller. Isolation is why they were spawned in the first place;
+# only the serialisation was accidental.
+#
+# NOTHING IS SKIPPED to achieve this. Every lint still reads every file it read
+# before -- NY4I: "I will never change testing for speed".
+# ---------------------------------------------------------------------------
+$queue  = New-Object System.Collections.ArrayList
+$tmpDir = Join-Path ([IO.Path]::GetTempPath()) ("tr4w-lints-" + [Guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
+
 foreach ($lint in $lints)
    {
    $path = Join-Path $build "$($lint.Name).ps1"
@@ -68,15 +89,49 @@ foreach ($lint in $lints)
       continue
       }
 
-   $out = & powershell -NoProfile -ExecutionPolicy Bypass -File $path -SourceDir $lint.Arg 2>&1
-   $rc  = $LASTEXITCODE
+   # LAUNCHED, NOT AWAITED. See the note above the loop.
+   $outFile = Join-Path $tmpDir ("lint-$($queue.Count)-out.txt")
+   $errFile = Join-Path $tmpDir ("lint-$($queue.Count)-err.txt")
+   $proc = Start-Process -FilePath 'powershell' `
+                         -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass',
+                                         '-File', $path, '-SourceDir', $lint.Arg) `
+                         -NoNewWindow -PassThru `
+                         -RedirectStandardOutput $outFile `
+                         -RedirectStandardError  $errFile
+   $queue.Add([pscustomobject]@{
+      Name    = $lint.Name
+      Proc    = $proc
+      OutFile = $outFile
+      ErrFile = $errFile
+   }) | Out-Null
+   }
+
+# ---------------------------------------------------------------------------
+# Collect, IN THE ORDER THEY WERE LAUNCHED. Parallel execution must not mean
+# interleaved output: a lint report that changes order between runs cannot be
+# diffed, and the eye stops trusting it.
+# ---------------------------------------------------------------------------
+foreach ($job in $queue)
+   {
+   $job.Proc.WaitForExit()
+   $rc  = $job.Proc.ExitCode
    $ran++
+
+   $out = @()
+   foreach ($f in @($job.OutFile, $job.ErrFile))
+      {
+      if (Test-Path -LiteralPath $f)
+         {
+         $out += (Get-Content -LiteralPath $f -ErrorAction SilentlyContinue)
+         }
+      }
+   $out = $out | Where-Object { $_ -ne $null -and $_.Trim() -ne '' }
 
    if ($rc -ne 0)
       {
       $failed++
       Write-Host ''
-      Write-Host "=== $($lint.Name) FAILED (exit $rc) ===" -ForegroundColor Red
+      Write-Host "=== $($job.Name) FAILED (exit $rc) ===" -ForegroundColor Red
       $out | ForEach-Object { Write-Host "  $_" }
       }
    elseif (-not $Quiet)
@@ -84,6 +139,8 @@ foreach ($lint in $lints)
       $out | ForEach-Object { Write-Host "  $_" }
       }
    }
+
+Remove-Item -LiteralPath $tmpDir -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host ''
 if ($failed -eq 0)
