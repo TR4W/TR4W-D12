@@ -39,6 +39,9 @@ param(
    # FPC_HOME / LAZARUS_DIR. Pass these only to force a particular install.
    [string] $Fpc  = '',
    [string] $Laz  = '',
+   # NSIS directory (the one containing makensis.exe). Also read from
+   # $env:NSIS_BIN. Only consulted when -BuildInstaller is given.
+   [string] $NsisBin = '',
    [string] $Cpu  = 'i386',
    [string] $Os   = 'win32'
 )
@@ -269,12 +272,25 @@ if ($BuildInstaller)
    Phase 'Installer'
 
    $nsi = Join-Path $BUILD_DIR 'full.nsi'
-   $makensis = @(
-      'C:\Program Files (x86)\NSIS\makensis.exe'
-      'C:\Program Files\NSIS\makensis.exe'
-   ) | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-   if (-not $makensis) { Fail 'makensis.exe not found -- install NSIS or omit -BuildInstaller' }
+   # -NsisBin (or $env:NSIS_BIN) first, then the usual install locations. CI
+   # pins it explicitly so a release build cannot depend on where an installer
+   # happened to put things.
+   $nsisCandidates = @()
+   if ($NsisBin)      { $nsisCandidates += (Join-Path $NsisBin      'makensis.exe') }
+   if ($env:NSIS_BIN) { $nsisCandidates += (Join-Path $env:NSIS_BIN 'makensis.exe') }
+   $nsisCandidates += 'C:\Program Files (x86)\NSIS\makensis.exe'
+   $nsisCandidates += 'C:\Program Files\NSIS\makensis.exe'
+
+   $makensis = $nsisCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+   if (-not $makensis)
+      {
+      Write-Host '  looked in:' -ForegroundColor Red
+      $nsisCandidates | ForEach-Object { Write-Host "    $_" }
+      Fail 'makensis.exe not found -- install NSIS, set NSIS_BIN, or omit -BuildInstaller'
+      }
+   Write-Host "  makensis : $makensis"
    if (-not (Test-Path $nsi)) { Fail "full.nsi not found at $nsi" }
 
    # full.nsi refuses to build without /DTR4WVERSION, which is what stops a

@@ -80,26 +80,41 @@ function Find-Tr4wToolchain
 
    $fpcCandidates = [System.Collections.Generic.List[string]]::new()
 
-   if ($Fpc)          { $fpcCandidates.Add($Fpc) }
-   if ($env:FPC_HOME)
+   # AN EXPLICIT PIN IS AUTHORITATIVE, NOT A FIRST GUESS.
+   #
+   # If -Fpc or FPC_HOME names something, that is the ONLY thing tried: a
+   # rejected pin fails the run rather than silently falling through to some
+   # other install. Discovery running as a fallback would defeat the entire
+   # point of pinning on CI -- the build would succeed while using a toolchain
+   # nobody configured, which is far worse than failing. (Measured 2026-08-13:
+   # before this, -Laz <an x86_64-only Lazarus> quietly resolved to C:\Lazarus.)
+   #
+   # Either spelling is accepted -- fpc.exe itself or the directory holding it.
+   # CI passes an FPC_HOME directory, a developer usually pastes the exe path,
+   # and rejecting one of them is a pointless failure to explain.
+   $fpcPin = if ($Fpc) { $Fpc } elseif ($env:FPC_HOME) { $env:FPC_HOME } else { '' }
+
+   if ($fpcPin)
       {
-      # Accept either the compiler's own bin dir or the install root.
-      $fpcCandidates.Add((Join-Path $env:FPC_HOME 'fpc.exe'))
-      $fpcCandidates.Add((Join-Path $env:FPC_HOME "bin\$Cpu-$Os\fpc.exe"))
+      $fpcCandidates.Add($fpcPin)
+      $fpcCandidates.Add((Join-Path $fpcPin 'fpc.exe'))
+      $fpcCandidates.Add((Join-Path $fpcPin "bin\$Cpu-$Os\fpc.exe"))
       }
-
-   $onPath = Get-Command 'fpc.exe' -ErrorAction SilentlyContinue
-   if ($onPath) { $fpcCandidates.Add($onPath.Source) }
-
-   # Common layouts, newest version directory first so a machine with several
-   # FPC versions picks the newest rather than an arbitrary one.
-   foreach ($base in @('C:\FPC', 'C:\fpc', 'C:\fpcupdeluxe\fpc', 'C:\lazarus\fpc', 'C:\Lazarus\fpc'))
+   else
       {
-      if (-not (Test-Path -LiteralPath $base)) { continue }
-      $fpcCandidates.Add((Join-Path $base "bin\$Cpu-$Os\fpc.exe"))
-      Get-ChildItem -LiteralPath $base -Directory -ErrorAction SilentlyContinue |
-         Sort-Object Name -Descending |
-         ForEach-Object { $fpcCandidates.Add((Join-Path $_.FullName "bin\$Cpu-$Os\fpc.exe")) }
+      $onPath = Get-Command 'fpc.exe' -ErrorAction SilentlyContinue
+      if ($onPath) { $fpcCandidates.Add($onPath.Source) }
+
+      # Common layouts, newest version directory first so a machine with several
+      # FPC versions picks the newest rather than an arbitrary one.
+      foreach ($base in @('C:\FPC', 'C:\fpc', 'C:\fpcupdeluxe\fpc', 'C:\lazarus\fpc', 'C:\Lazarus\fpc'))
+         {
+         if (-not (Test-Path -LiteralPath $base)) { continue }
+         $fpcCandidates.Add((Join-Path $base "bin\$Cpu-$Os\fpc.exe"))
+         Get-ChildItem -LiteralPath $base -Directory -ErrorAction SilentlyContinue |
+            Sort-Object Name -Descending |
+            ForEach-Object { $fpcCandidates.Add((Join-Path $_.FullName "bin\$Cpu-$Os\fpc.exe")) }
+         }
       }
 
    foreach ($c in $fpcCandidates)
@@ -112,12 +127,20 @@ function Find-Tr4wToolchain
    # ------------------------------------------------------------ Lazarus ----
    $lazFound = $null
 
+   # Same rule as FPC above: a pin is authoritative, never a first guess.
+   $lazPin = if ($Laz) { $Laz } elseif ($env:LAZARUS_DIR) { $env:LAZARUS_DIR } else { '' }
+
    $lazCandidates = [System.Collections.Generic.List[string]]::new()
-   if ($Laz)              { $lazCandidates.Add($Laz) }
-   if ($env:LAZARUS_DIR)  { $lazCandidates.Add($env:LAZARUS_DIR) }
-   foreach ($base in @('C:\Lazarus', 'C:\lazarus', 'C:\fpcupdeluxe\lazarus'))
+   if ($lazPin)
       {
-      $lazCandidates.Add($base)
+      $lazCandidates.Add($lazPin)
+      }
+   else
+      {
+      foreach ($base in @('C:\Lazarus', 'C:\lazarus', 'C:\fpcupdeluxe\lazarus'))
+         {
+         $lazCandidates.Add($base)
+         }
       }
 
    foreach ($c in $lazCandidates)
@@ -142,15 +165,35 @@ function Find-Tr4wToolchain
       Write-Host 'TOOLCHAIN NOT FOUND' -ForegroundColor Red
       if (-not $fpcFound)
          {
-         Write-Host "  No FPC able to target $Cpu-$Os." -ForegroundColor Red
-         Write-Host '  Needs fpc.exe with a ppc386/ppcross386 backend and an i386-win32 RTL.'
-         Write-Host '  Set FPC_HOME, or pass -Fpc <path to fpc.exe>.'
+         if ($fpcPin)
+            {
+            Write-Host "  PINNED FPC REJECTED: $fpcPin" -ForegroundColor Red
+            Write-Host "  It has no ppc386/ppcross386 backend or no $Cpu-$Os RTL, so it cannot"
+            Write-Host '  build TR4W. Discovery is NOT attempted when a pin is given -- fix the'
+            Write-Host '  pin or clear FPC_HOME / -Fpc to search instead.'
+            }
+         else
+            {
+            Write-Host "  No FPC able to target $Cpu-$Os." -ForegroundColor Red
+            Write-Host '  Needs fpc.exe with a ppc386/ppcross386 backend and an i386-win32 RTL.'
+            Write-Host '  Set FPC_HOME, or pass -Fpc <path to fpc.exe or its directory>.'
+            }
          }
       if (-not $lazFound)
          {
-         Write-Host "  No Lazarus with LCL units for $Cpu-$Os." -ForegroundColor Red
-         Write-Host '  An x86_64-only install (fpcupdeluxe default) will NOT do -- TR4W is Win32.'
-         Write-Host '  Set LAZARUS_DIR, or pass -Laz <lazarus dir>.'
+         if ($lazPin)
+            {
+            Write-Host "  PINNED LAZARUS REJECTED: $lazPin" -ForegroundColor Red
+            Write-Host "  It carries no LCL units for $Cpu-$Os. An x86_64-only install (the"
+            Write-Host '  fpcupdeluxe default) cannot build TR4W, which is Win32. Discovery is'
+            Write-Host '  NOT attempted when a pin is given -- fix the pin or clear LAZARUS_DIR.'
+            }
+         else
+            {
+            Write-Host "  No Lazarus with LCL units for $Cpu-$Os." -ForegroundColor Red
+            Write-Host '  An x86_64-only install (fpcupdeluxe default) will NOT do -- TR4W is Win32.'
+            Write-Host '  Set LAZARUS_DIR, or pass -Laz <lazarus dir>.'
+            }
          }
       Write-Host ''
       Write-Host 'Looked in:'
