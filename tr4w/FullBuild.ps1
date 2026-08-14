@@ -1,4 +1,4 @@
-# TR4W full build -- FreePascal / Lazarus LCL, English, one binary.
+﻿# TR4W full build -- FreePascal / Lazarus LCL, English, one binary.
 #
 # Replaces the Delphi 12 script, which is kept as FullBuild-D12-deprecated.ps1
 # for reference only. Do not run both: they produce the same file names from
@@ -159,6 +159,40 @@ $rcLines = $rc -split "`r?`n"
 & $FPCRES -i $rcPath -o $resPath -of res 2>&1 | Out-Host
 if ($LASTEXITCODE -ne 0) { Fail 'fpcres could not compile tr4w_versioninfo.rc' }
 Write-Host "  tr4w_versioninfo.res ($((Get-Item $resPath).Length) bytes)"
+
+# ---------------------------------------------------------------------------
+# The application manifest.
+#
+# COMPILED HERE rather than shipped as a checked-in .res, because that is what
+# it was: tr4w.dpr links {$R 'Win11.res'} and NOTHING rebuilt it, so editing
+# W11.manifest changed nothing at all. The same shape as tr4w.cfg and tr4w.dof
+# -- a source file that looks live and is not -- and it hid the fact that the
+# manifest never asked for Common-Controls v6, which is why every stock control
+# rendered unthemed on Windows 11.
+#
+# Now the .manifest is the source of record and the .res is a build artifact.
+# ---------------------------------------------------------------------------
+Phase 'Manifest resource'
+
+$manRc  = Join-Path $TR4W_DIR 'Win11.rc'
+$manRes = Join-Path $TR4W_DIR 'Win11.res'
+$manXml = Join-Path $TR4W_DIR 'W11.manifest'
+
+if (-not (Test-Path $manXml)) { Fail "W11.manifest not found at $manXml" }
+
+& $FPCRES -i $manRc -o $manRes -of res 2>&1 | Out-Host
+if ($LASTEXITCODE -ne 0) { Fail 'fpcres could not compile Win11.rc' }
+
+# A FLOOR on the result. fpcres is happy to emit a resource that does not
+# contain the manifest at all if the .rc reference cannot be resolved, and an
+# unthemed build looks like a styling opinion rather than a missing file.
+$manBytes = [IO.File]::ReadAllBytes($manRes)
+$manText  = [Text.Encoding]::ASCII.GetString($manBytes)
+if ($manText -notmatch 'Common-Controls')
+   {
+   Fail 'Win11.res does not contain the Common-Controls v6 dependency -- visual styles would be off'
+   }
+Write-Host "  Win11.res ($($manBytes.Length) bytes, visual styles declared)"
 
 # ---------------------------------------------------------------------------
 # Lints.
