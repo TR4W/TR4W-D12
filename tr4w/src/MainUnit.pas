@@ -505,8 +505,9 @@ uses
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
 {$IFNDEF FPC}
   uFMXDesignedProbe, // SPIKE ONLY -- the FMXDESIGN command; remove with the spike
-  uPrefsForm,       // the PREF command -- the radio Preferences window
 {$ENDIF}
+  uPrefsForm,       // the PREF command -- the radio Preferences window; FMX or
+                    // LCL depending on the compiler, same ShowPreferences either way
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
@@ -3776,11 +3777,7 @@ begin
     // but still reachable with the CATLEGACY call-window command while the new
     // path is being proven on the bench.  Delete them, and uCAT.CATDlgProc,
     // once Track F has replaced it outright.
-{$IFNDEF FPC}
-    // uPrefsForm is FMX, which has no FPC equivalent yet -- see the guard on
-    // the uses clause.  The menu arm goes with it.
     menu_radio_preferences: ShowPreferences;
-{$ENDIF}
 
     menu_cat_radio_one:
       begin
@@ -8163,7 +8160,9 @@ begin
     13: SendViaTelnetSocket('SH/WWV');
 {$IFNDEF FPC}
     14: ShowFMXSpikeForm;   // SPIKE ONLY -- remove with the spike
+{$ENDIF}
     15: ShowPreferences;
+{$IFNDEF FPC}
     16: ShowFMXDesignedProbe;   // SPIKE ONLY -- remove with the spike
 {$ENDIF}
     17:

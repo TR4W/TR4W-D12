@@ -69,7 +69,12 @@ $searchPaths = @(
 # -Sc for C-style operators, -B to rebuild everything: an incremental FPC build
 # across a compiler port has already produced one phantom result in this repo's
 # history, and the app build is under two minutes.
-$fpcArgs = @("-M$Mode", "-P$Cpu", "-T$Os", '-Sc', '-B', "-FU$out", "-o$exe")
+# -WG = GUI subsystem. NOT cosmetic and NOT a guess: the shipping Delphi
+# tr4w.exe has PE subsystem 2 (GUI) and FPC defaults to 3 (CONSOLE), so
+# without this every launch pops a blank console window next to the real
+# one. (tr4w.dproj still says <AppType>Console</AppType>; the linked binary
+# says otherwise, and the binary is the authority.)
+$fpcArgs = @("-M$Mode", "-P$Cpu", "-T$Os", '-Sc', '-B', '-WG', "-FU$out", "-o$exe")
 foreach ($p in $searchPaths)
    {
    $fpcArgs += "-Fu$p"
