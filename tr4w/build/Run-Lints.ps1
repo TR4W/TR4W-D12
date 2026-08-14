@@ -98,6 +98,19 @@ foreach ($lint in $lints)
                          -NoNewWindow -PassThru `
                          -RedirectStandardOutput $outFile `
                          -RedirectStandardError  $errFile
+
+   # TOUCH .Handle, or ExitCode reads back EMPTY.
+   #
+   # Windows PowerShell 5.1 releases the process handle once the child exits,
+   # and $proc.ExitCode is then $null -- so every lint reported
+   # "FAILED (exit )" while its own output said it passed. Reading .Handle here
+   # caches it and keeps ExitCode readable after WaitForExit.
+   #
+   # It reproduces only under 5.1. The first verification of this runner ran
+   # under pwsh 7, where it works, while FullBuild spawns powershell.exe -- so a
+   # green lint check and a build that could not pass its own lints coexisted.
+   $null = $proc.Handle
+
    $queue.Add([pscustomobject]@{
       Name    = $lint.Name
       Proc    = $proc
