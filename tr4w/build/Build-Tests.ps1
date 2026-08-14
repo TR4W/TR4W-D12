@@ -82,6 +82,44 @@ if ($rc -ne 0)
 Write-Host ''
 Write-Host "BUILD OK -> $exe"
 
+# THE TEST EXE CANNOT START WITHOUT THESE, and the failure is silent.
+#
+# libhamlib-4.dll is a LOAD-TIME import of the test binary (the radio-factory
+# suites link the HamLib IDs), so Windows resolves it before a single line of
+# our code runs. The exe must live in test\unit -- several suites resolve their
+# data from ParamStr(0) -- but the DLLs ship in target\, so nothing put them
+# side by side and nothing ever noticed.
+#
+# It went unnoticed because the machine this was developed on has an unrelated
+# HamLib checkout (C:\projects\hamlib\bin) on PATH, which satisfied the import
+# by accident. Anywhere else -- a CI runner, a new contributor's PC -- the exe
+# dies with STATUS_DLL_NOT_FOUND (exit -1073741515) before printing anything,
+# so FullBuild reports "unit tests failed" with no failing test to look at.
+# Found by building on a clean box, which is exactly what Test-FreshClone is
+# for and exactly what it could not see while running here.
+$runtimeDlls = @(
+   'libhamlib-4.dll',      # the load-time import itself
+   'libgcc_s_dw2-1.dll',   # ...and what it needs in turn
+   'libwinpthread-1.dll',
+   'libusb-1.0.dll'
+)
+$dllSrc = Join-Path $PSScriptRoot '..\target'
+$dllDst = Split-Path $exe -Parent
+foreach ($d in $runtimeDlls)
+   {
+   $src = Join-Path $dllSrc $d
+   if (Test-Path -LiteralPath $src)
+      {
+      Copy-Item -LiteralPath $src -Destination $dllDst -Force
+      }
+   else
+      {
+      # Report rather than fail: only libhamlib-4.dll is strictly load-time, and
+      # a tree without the others should say so rather than die here.
+      Write-Host "  note: $d not found in target\ -- tests may not start" -ForegroundColor Yellow
+      }
+   }
+
 if ($Run)
    {
    Push-Location $test
