@@ -289,7 +289,7 @@ begin
   //  Config.KeypadCWMemories := False;
 
   //  LeaveCursorInCallWindow := False;
-  //  LeadingZeros := 0;
+  //  Config.LeadingZeros := 0;
   //  Config.LeadingZeroCharacter := 'T';
   //  LiteralDomesticQTH := False;
 

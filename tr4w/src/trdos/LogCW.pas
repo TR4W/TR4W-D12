@@ -94,7 +94,6 @@ var
   KeyPressedMemory                      : Char { = CHR(0)};
 
   LastRSTSent                           : Word;
-  LeadingZeros                          : integer = 3;
 
   NeedToSetCQMode                       : boolean; {KK1L: 6.69 This variable is used to leap around some AutoS&PMode code.}
 

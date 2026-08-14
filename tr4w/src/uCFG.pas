@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -122,6 +122,26 @@ type
 // out of step with the row it is meant to match (NY4I).
 function CommandIsJSONOwned(const aCommand: string): boolean;
 
+{ AN EXPLICIT CONTEST .cfg LINE BEATS THE STORED VALUE, while that contest is
+  loaded.
+
+  Startup applies, in order: compiled defaults, tr4w.ini, the contest .cfg,
+  common messages, and finally the JSON store. The store therefore wins BY BEING
+  LAST -- right for a station setting, wrong for one a contest deliberately sets.
+  LEADING ZEROS is the live example: six real contest configs set it, both
+  CQ-WPX files among them, and a serial-number contest asking for leading zeros
+  must not be overruled by a station preference.
+
+  This is the station-defaults <- contest-overrides model in its minimal form:
+  the .cfg needs no storage of its own, it only needs to be SEEN. A command
+  recorded here is skipped by ApplyStoredCommands for this run.
+
+  Reset at the start of each contest .cfg load, so switching contests re-decides
+  rather than accumulating. }
+procedure NoteCommandFromContestCFG(const aCommand: string);
+procedure ClearContestCFGCommands;
+function CommandCameFromContestCFG(const aCommand: string): boolean;
+
 // Index of a command in CFGCA, or -1.  Exported because a settings screen edits
 // a row BY NAME and otherwise has to re-scan the table itself.
 function FindCFGCommand(const aCommand: string): integer;
@@ -218,7 +238,7 @@ const
     (arArrayPtr: @CAT_BAUDRATE_ARRAY;              arArrayLength: high(CAT_BAUDRATE_ARRAY);              arVar: @Radio1.RadioBaudRate),
     (arArrayPtr: @CAT_BAUDRATE_ARRAY;              arArrayLength: high(CAT_BAUDRATE_ARRAY);              arVar: @Radio2.RadioBaudRate),
     (arArrayPtr: @DITDAHRATIO_ARRAY;               arArrayLength: high(DITDAHRATIO_ARRAY);               arVar: @Config.tDitDahRatio),
-    (arArrayPtr: @LEADING_ZEROS_ARRAY;             arArrayLength: high(LEADING_ZEROS_ARRAY);             arVar: @LeadingZeros),
+    (arArrayPtr: @LEADING_ZEROS_ARRAY;             arArrayLength: high(LEADING_ZEROS_ARRAY);             arVar: @Config.LeadingZeros),
 
     (arArrayPtr: @ICOM_FILTER_WIDTH;               arArrayLength: high(ICOM_FILTER_WIDTH);               arVar: @Radio1.tIcomFilterWidth),
     (arArrayPtr: @ICOM_FILTER_WIDTH;               arArrayLength: high(ICOM_FILTER_WIDTH);               arVar: @Radio2.tIcomFilterWidth)
@@ -581,7 +601,7 @@ const
  (crCommand: 'KEYPAD CW MEMORIES';            crAddress: @Config.KeypadCWMemories;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'LATEST CONFIG FILE';            crAddress: @TR4W_LATESTCFG_FILENAME;        crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctFilename; crNetwork: 0),
  (crCommand: 'LEADING ZERO CHARACTER';        crAddress: @Config.LeadingZeroCharacter;           crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctChar; crNetwork: 1),
- (crCommand: 'LEADING ZEROS';                 crAddress: pointer(14);                     crMin:0;  crMax:3;       crS: csOld; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckArray;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
+ (crCommand: 'LEADING ZEROS';                 crAddress: pointer(14);                     crMin:0;  crMax:3;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckArray;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'LEAVE CURSOR IN CALL WINDOW';   crAddress: @LeaveCursorInCallWindow;        crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'LITERAL DOMESTIC QTH';          crAddress: @LiteralDomesticQTH;             crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:1 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'LOG FILE NAME';                 crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctString; crNetwork: 0),
@@ -948,6 +968,57 @@ var
 implementation
 uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
      uRadioRegistry;       // RegisteredCIVAddress -- the per-model Icom CI-V default
+
+var
+   { Commands the CURRENT contest .cfg set explicitly. Single digits in every
+     real config measured, so a linear scan is the right shape -- a dictionary
+     here would be more code than the problem. }
+   gContestCFGCommands: array of string;
+
+procedure ClearContestCFGCommands;
+begin
+   SetLength(gContestCFGCommands, 0);
+end;
+
+procedure NoteCommandFromContestCFG(const aCommand: string);
+var
+   i: integer;
+   name: string;
+begin
+   name := UpperCase(Trim(aCommand));
+   if name = '' then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to High(gContestCFGCommands) do
+      begin
+      if gContestCFGCommands[i] = name then
+         begin
+         Exit;
+         end;
+      end;
+
+   SetLength(gContestCFGCommands, Length(gContestCFGCommands) + 1);
+   gContestCFGCommands[High(gContestCFGCommands)] := name;
+end;
+
+function CommandCameFromContestCFG(const aCommand: string): boolean;
+var
+   i: integer;
+   name: string;
+begin
+   Result := False;
+   name := UpperCase(Trim(aCommand));
+   for i := 0 to High(gContestCFGCommands) do
+      begin
+      if gContestCFGCommands[i] = name then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
 
 function CommandIsJSONOwned(const aCommand: string): boolean;
 var

@@ -308,7 +308,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..24] of string =
+   MIGRATED_COMMANDS: array[0..25] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -334,7 +334,8 @@ const
       'FARNSWORTH ENABLE',
       'FARNSWORTH SPEED',
       'WEIGHT',
-      'TWO RADIO MODE'
+      'TWO RADIO MODE',
+      'LEADING ZEROS'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);
@@ -470,6 +471,23 @@ begin
       value := aStore.Commands.ValueFromIndex[i];
       if name = '' then
          begin
+         Continue;
+         end;
+
+      // THE LOADED CONTEST WINS OVER THE STATION DEFAULT.
+      //
+      // A contest .cfg that names a migrated setting has already applied it (see
+      // LogCfg), and applying the stored value here would immediately undo it --
+      // silently, because this runs after every config file. LEADING ZEROS is the
+      // case that forced this: six real contest configs set it, and a
+      // serial-number contest asking for leading zeros must not be overruled by
+      // a station preference.
+      //
+      // The stored value is untouched and returns as soon as a contest that does
+      // not claim it is loaded.
+      if CommandCameFromContestCFG(name) then
+         begin
+         logger.Info('[ApplyStoredCommands] %s left to the contest .cfg -- stored value not applied', [name]);
          Continue;
          end;
 

@@ -244,7 +244,7 @@ begin
 
             TempString := QSONumberString(QSONumber);
 
-            while LeadingZeros > length(TempString) do
+            while Config.LeadingZeros > length(TempString) do
                begin
                TempString := Config.LeadingZeroCharacter + TempString;
                end;
@@ -593,7 +593,7 @@ begin
 
                    TempString := QSONumberString (QSONumber);
 
-                   WHILE LeadingZeros > Length (TempString) DO
+                   WHILE Config.LeadingZeros > Length (TempString) DO
                        TempString := Config.LeadingZeroCharacter + TempString;
 
                    ContinueRTTYTransmission (TempString);
