@@ -1,4 +1,4 @@
-program tr4w_unit_tests;
+﻿program tr4w_unit_tests;
 
 {
   TR4W Automated Unit Test Runner
@@ -165,10 +165,12 @@ uses
    uRadioIcomReadLimited in '..\..\src\radioFactory\uRadioIcomReadLimited.pas',
    uRadioIcomModern in '..\..\src\radioFactory\uRadioIcomModern.pas',
    uRadioHamLibOnly in '..\..\src\radioFactory\uRadioHamLibOnly.pas',
+   uPrefsSearch in '..\..\src\uPrefsSearch.pas',
    uCWFraming in '..\..\src\radioFactory\uCWFraming.pas',
    uRadioKYBase in '..\..\src\radioFactory\uRadioKYBase.pas',
    uRadioElecraftBase in '..\..\src\radioFactory\uRadioElecraftBase.pas',
    uRadioKenwoodBase in '..\..\src\radioFactory\uRadioKenwoodBase.pas',
+   uTestPrefsSearch in 'uTestPrefsSearch.pas',
    uTestCWFraming in 'uTestCWFraming.pas',
    // Pins the radio-status change detector.  LOGRADIO itself is not listed
    // here -- it arrives through the search path, the same way uTestIcomRegistry
@@ -319,6 +321,7 @@ begin
    RegisterSuite(THamLibIDTests.Create('HamLibIDs'));
    RegisterSuite(TCWKeyerTests.Create('CWKeyer'));
    RegisterSuite(TCWFramingTests.Create('CWFraming'));
+   RegisterSuite(TPrefsSearchTests.Create('PrefsSearch'));
    RegisterSuite(TRadioStatusTests.Create('RadioStatus'));
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TAutoInfoTests.Create('AutoInfo'));
