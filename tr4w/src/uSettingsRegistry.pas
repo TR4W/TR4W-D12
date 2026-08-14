@@ -150,6 +150,7 @@ type
    private
       FKey: string;
       FCaption: string;
+      FLegacyCommand: string;
       FNeedsRestart: boolean;
       FOnApply: TSettingApplyProc;
       { A cell this setting created for itself, or nil.  See TBoolCell. }
@@ -183,6 +184,16 @@ type
         translated without moving anyone's settings. }
       property Key: string read FKey;
       property Caption: string read FCaption write FCaption;
+
+      { The Ctrl-J spelling this setting used to have -- 'SAY HI ENABLE' -- or
+        '' for one that never had a CFGCA row.
+
+        SEARCH INDEXES IT ALONGSIDE THE CAPTION, which is why it lives here
+        rather than staying private to the legacy adapter. Every migrated
+        setting is a row that LEFT Ctrl-J, where an operator could type this
+        exact name to find it; dropping the name from the index would make the
+        migration silently cost fifteen years of muscle memory. }
+      property LegacyCommand: string read FLegacyCommand write FLegacyCommand;
 
       { True when the running program will not pick this up until restart.  A UI
         that knows this can say so; today that fact lives only in crJ:1 and in

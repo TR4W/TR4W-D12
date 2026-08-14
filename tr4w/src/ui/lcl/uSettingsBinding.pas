@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -58,6 +58,7 @@ interface
 uses
    SysUtils,
    Generics.Collections,
+   Controls,
    StdCtrls,
    uSettingsRegistry;
 
@@ -79,6 +80,13 @@ type
       { Setting -> control.  Also fills a combo's items from the setting's
         allowed values, so the offered list cannot drift from the accepted one. }
       procedure Load;
+
+      { WHICHEVER control this binding holds, as the common ancestor.
+
+        For the search box: a hit must be able to focus the actual control, not
+        merely open the page it sits on -- the difference between "here is the
+        section, go hunting" and "here it is". }
+      function Control: TWinControl;
 
       property Key: string read FKey;
    end;
@@ -103,6 +111,11 @@ type
       function SaveAll(out aErrors: string): boolean;
 
       function Count: integer;
+
+      { Read-only access, for building the search index: the binding knows the
+        key, the registry knows the caption and the legacy name, and the
+        control's parent panel knows which section it is in. }
+      function Item(const aIndex: integer): TSettingBinding;
    end;
 
 implementation
@@ -301,6 +314,30 @@ end;
 function TSettingBindings.Count: integer;
 begin
    Result := FItems.Count;
+end;
+
+{ ------------------------------------------------- enumeration and access - }
+
+function TSettingBinding.Control: TWinControl;
+begin
+   // Exactly one of the three is ever set -- Bind is the only writer.
+   if FCheck <> nil then
+      begin
+      Result := FCheck;
+      end
+   else if FEdit <> nil then
+      begin
+      Result := FEdit;
+      end
+   else
+      begin
+      Result := FCombo;
+      end;
+end;
+
+function TSettingBindings.Item(const aIndex: integer): TSettingBinding;
+begin
+   Result := FItems[aIndex];
 end;
 
 end.

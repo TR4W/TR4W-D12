@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -134,6 +134,7 @@ var
 begin
    inherited Create(aKey, aCaption);
    FCommand := aCommand;
+   LegacyCommand := aCommand;   // indexed by the Preferences search box
 
    idx := FindCFGCommand(aCommand);
    if idx < 0 then
