@@ -42,6 +42,7 @@ uses
 var
    gFiles:  integer = 0;
    gProps:  integer = 0;
+   gValues: integer = 0;
    gBad:    integer = 0;
 
 // The form classes in the .lfm files are the project's own descendants of
@@ -79,6 +80,93 @@ begin
       end;
 end;
 
+// Enum and set VALUES.  Every LCL enum member carries a prefix (alLeft,
+// bvNone, bsSingle, csDropDown, poScreenCenter); the FMX spellings are bare
+// (Left, Client).  GetEnumValue returns -1 for a name the type does not have,
+// which is exactly the test the streaming loader applies.
+//
+// Deliberately silent on every other kind.  Strings, numbers and method names
+// cannot be judged here -- a method name would need the form's own RTTI, which
+// this tool does not link -- and a checker that guessed at them would produce
+// false positives on correct files, which is how a linter gets ignored.
+procedure CheckValue(const aPath: string; aLine: integer;
+                     const aClass, aProp, aValue: string;
+                     aInfo: PPropInfo);
+
+   procedure Bad(const aWhat: string);
+   begin
+      WriteLn(Format('%s(%d): %s.%s = %s -- %s',
+                     [ExtractFileName(aPath), aLine, aClass, aProp,
+                      aValue, aWhat]));
+      Inc(gBad);
+   end;
+
+var
+   kind:    TTypeKind;
+   inner:   string;
+   member:  string;
+   comma:   integer;
+   baseTI:  PTypeInfo;
+begin
+   if aValue = '' then
+      begin
+      Exit;
+      end;
+
+   kind := aInfo^.PropType^.Kind;
+
+   if kind = tkEnumeration then
+      begin
+      // Booleans are tkEnumeration in FPC and True/False ARE members of the
+      // type, so they validate without a special case.
+      Inc(gValues);
+      if GetEnumValue(aInfo^.PropType, aValue) < 0 then
+         begin
+         Bad(Format('not a member of %s', [aInfo^.PropType^.Name]));
+         end;
+      Exit;
+      end;
+
+   if kind = tkSet then
+      begin
+      // "[biSystemMenu, biMinimize]", or "[]" for the empty set.  A set that
+      // spans lines is skipped rather than half-parsed -- see the note above
+      // about false positives.
+      if (Length(aValue) < 2) or (aValue[1] <> '[') or
+         (aValue[Length(aValue)] <> ']') then
+         begin
+         Exit;
+         end;
+
+      baseTI := GetTypeData(aInfo^.PropType)^.CompType;
+      inner  := Trim(Copy(aValue, 2, Length(aValue) - 2));
+
+      while inner <> '' do
+         begin
+         comma := Pos(',', inner);
+         if comma > 0 then
+            begin
+            member := Trim(Copy(inner, 1, comma - 1));
+            inner  := Trim(Copy(inner, comma + 1, MaxInt));
+            end
+         else
+            begin
+            member := inner;
+            inner  := '';
+            end;
+
+         if member <> '' then
+            begin
+            Inc(gValues);
+            if GetEnumValue(baseTI, member) < 0 then
+               begin
+               Bad(Format('%s is not a member of %s', [member, baseTI^.Name]));
+               end;
+            end;
+         end;
+      end;
+end;
+
 procedure CheckFile(const aPath: string);
 var
    lines:    TStringList;
@@ -86,6 +174,8 @@ var
    i, eq:    integer;
    raw, s:   string;
    propName: string;
+   propValue: string;
+   info:     PPropInfo;
    objName:  string;
    clsName:  string;
    cls:      TPersistentClass;
@@ -139,7 +229,8 @@ begin
             Continue;
             end;
 
-         propName := RootOf(Copy(s, 1, eq - 1));
+         propValue := Trim(Copy(s, eq + 3, MaxInt));
+         propName  := RootOf(Copy(s, 1, eq - 1));
          if (propName = '') or not (propName[1] in ['A'..'Z', 'a'..'z', '_']) then
             begin
             Continue;
@@ -158,11 +249,25 @@ begin
 
          Inc(gProps);
 
-         if GetPropInfo(cls.ClassInfo, propName) = nil then
+         info := GetPropInfo(cls.ClassInfo, propName);
+
+         if info = nil then
             begin
             WriteLn(Format('%s(%d): %s has no published %s',
                            [ExtractFileName(aPath), i + 1, clsName, propName]));
             Inc(gBad);
+            Continue;
+            end;
+
+         // The NAME being real is only half of it.  "Align = Left" names a
+         // published property and gives it FMX's spelling of the value, and
+         // that was the very first defect this port hit -- so checking names
+         // alone would have declared the file clean and left the crash in
+         // place.  Only dotted-free enum and set properties are checked, which
+         // is where the FMX/LCL spellings actually differ.
+         if Pos('.', Copy(s, 1, eq - 1)) = 0 then
+            begin
+            CheckValue(aPath, i + 1, clsName, propName, propValue, info);
             end;
          end;
    finally
@@ -191,8 +296,8 @@ begin
       end;
 
    WriteLn;
-   WriteLn(Format('lintlfm: %d file(s), %d properties checked, %d unstreamable.',
-                  [gFiles, gProps, gBad]));
+   WriteLn(Format('lintlfm: %d file(s), %d properties and %d enum/set values checked, %d unstreamable.',
+                  [gFiles, gProps, gValues, gBad]));
 
    if gBad > 0 then
       begin

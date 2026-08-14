@@ -27,7 +27,14 @@ param(
    [int]    $Command,
    [string] $Repo    = 'C:\tr4w-d12',
    [string] $Exe     = 'C:\tr4w-d12\spike\units\app-i386-win32-delphi\tr4w_fpc.exe',
-   [string] $Config  = 'uidrive.cfg',   # relative to tr4w\target
+   # NO DEFAULT ON PURPOSE.  This needs a contest config, and TR4W will not
+   # create the main window without one -- it stops on the "Open configuration
+   # file or start a new contest" dialog, and there is nothing to drive.
+   # Any .cfg in tr4w\target works; a corpus set is the easy source:
+   #     cp tr4w/test/corpus/cqww_ssb_2025_ny4i/log.cfg tr4w/target/drive.cfg
+   #     cp tr4w/test/corpus/cqww_ssb_2025_ny4i/log.trw tr4w/target/drive.trw
+   [Parameter(Mandatory = $true)]
+   [string] $Config,
    [int]    $SettleMs = 4000,   # startup: config, CTY.DAT, main window
    [int]    $AfterMs  = 3000,   # time for the command to finish or to fault
    [switch] $KeepOpen
