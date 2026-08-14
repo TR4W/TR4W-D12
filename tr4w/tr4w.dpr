@@ -1009,7 +1009,15 @@ begin
   logger.debug('Current TR4W Server version = %s',[TR4WSERVER_CURRENTVERSION]);
   logger.debug('Current log version = %s',[LOGVERSION]);
   logger.info('HamLib version = %s',[GetHamLibVersion]);
-  logger.debug('Windows version = %s %s (raw: %d.%d Build %d)',[GetOSInfo, GetWindowsBuildDetail, tr4w_osverinfo.dwMajorVersion, tr4w_osverinfo.dwMinorVersion, tr4w_osverinfo.dwBuildNumber]);
+  // INFO, not DEBUG: this is the first thing anyone asks a tester for, and at
+  // DEBUG it is absent from exactly the logs that get sent in. HamLib version on
+  // the line above is info for the same reason.
+  //
+  // The raw numbers are printed alongside the friendly name on purpose. They come
+  // from the supportedOS block in W11.manifest; without it Windows reports 6.2
+  // (Windows 8) to an unmanifested program forever, so "raw: 10.0" is also a
+  // check that the manifest is intact.
+  logger.info('Windows version = %s %s (raw: %d.%d Build %d)',[GetOSInfo, GetWindowsBuildDetail, tr4w_osverinfo.dwMajorVersion, tr4w_osverinfo.dwMinorVersion, tr4w_osverinfo.dwBuildNumber]);
   if CTY.CtyRFOblMode then       // n4af 4.42.6
      ctyLoadInRFOblList;
 
