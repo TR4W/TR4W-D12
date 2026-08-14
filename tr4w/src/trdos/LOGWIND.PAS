@@ -2483,7 +2483,7 @@ begin
     case RateDisplay of
       QSOs: TotalThisHour := TotalThisHour + NumberContactsThisMinute;
       Points: TotalThisHour := TotalThisHour + NumberQSOPointsThisMinute;
-      if tworadiomode then
+      if Config.TwoRadioMode then
       BandQSOs: if ActiveBand in [Band160..Band10] then TotalThisHour := TotalThisHour + NumberBandQSOsThisMinute[ActiveBand] + NumberBandQSOsThisMinute[InActiveBand]  // n4af 4.41.2
       else
      BandQSOs: if ActiveBand in [Band160..Band10] then TotalThisHour := TotalThisHour + NumberBandQSOsThisMinute[ActiveBand] ;
@@ -4054,7 +4054,7 @@ begin
   //            tLB_SETCURSEL(BandMapListBox, 0);
   CC := Windows.SendMessage(BandMapListBox, LB_GETCOUNT, 0, 0);
     if CC = LB_ERR then Exit;
-     if TwoRadioMode and QSYInactiveRadio then
+     if Config.TwoRadioMode and QSYInactiveRadio then
         begin
         Band := InactiveRadioptr.BandMemory
         end

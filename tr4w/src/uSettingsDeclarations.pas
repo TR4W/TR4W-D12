@@ -129,7 +129,7 @@ begin
                          'VHF and up');
 
    // --- Operating: two radio -----------------------------------------------
-   RegisterLegacySetting('operating.tworadio.enable',       'TWO RADIO MODE',
+   RegisterStoredSetting('operating.tworadio.enable',       'TWO RADIO MODE',
                          'Two radio mode');
    RegisterStoredSetting('operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
                          'Alt-D remembers what you typed');

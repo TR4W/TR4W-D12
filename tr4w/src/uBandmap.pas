@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -24,6 +24,7 @@ unit uBandmap;
 interface
 
 uses
+  uConfigValues,
   SysUtils,
   uMenu,
   uCommctrl,
@@ -250,8 +251,8 @@ begin
                 BandColor := clred ;
                 end;
 
-              if (Spot.FBand = InactiveRadioPtr.BandMemory) and TwoRadioMode or
-                 (Spot.FBand = BandmapBand) and (not TwoRadioMode)  then
+              if (Spot.FBand = InactiveRadioPtr.BandMemory) and Config.TwoRadioMode or
+                 (Spot.FBand = BandmapBand) and (not Config.TwoRadioMode)  then
                  begin
                  BandColor := clblue
                  end
@@ -432,11 +433,11 @@ begin
               SpotsList.Clear;
               KillFocus; // Gav 4.47.4 #141
             end;
-          205: if TwoRadioMode then
+          205: if Config.TwoRadioMode then
                   begin
                   InvertBooleanCommand(@QSYInactiveRadio); // Gav     4.37.12
                   end;
-          206: if TwoRadioMode then
+          206: if Config.TwoRadioMode then
                   begin
                   InvertBooleanCommand(@BandMapSO2RDisplay); // 4.105.14
                   end;
@@ -482,7 +483,7 @@ begin
 
                  end
               else
-           //   if (BandMapSO2RDisplay) or (not TwoRadioMode) then
+           //   if (BandMapSO2RDisplay) or (not Config.TwoRadioMode) then
                  begin
                  logger.trace('[BandMap::BandmapDlgProc] Calling TuneRadioToSpot for active Radio');
                  TuneRadioToSpot(SpotsList.Get(TempInt), ActiveRadio);
@@ -537,11 +538,11 @@ begin
      begin
      Windows.CheckMenuItem(BandMapMenu, 69, MF_CHECKED);
      end;
-  if QSYInactiveRadio and TwoRadioMode then
+  if QSYInactiveRadio and Config.TwoRadioMode then
      begin
      Windows.CheckMenuItem(BandMapMenu, 205, MF_CHECKED); //GAV  4.37.12
      end;
-  if BandMapSO2RDisplay and TwoRadioMode then
+  if BandMapSO2RDisplay and Config.TwoRadioMode then
      begin
      Windows.CheckMenuItem(BandMapMenu, 206, MF_CHECKED); // 4.105.14
      end;
@@ -607,7 +608,7 @@ begin
        QSYInactiveRadio := True;
        Radio := InactiveRadio;
        end;
-  if ((InBandLock) and (TwoRadioMode)) then
+  if ((InBandLock) and (Config.TwoRadioMode)) then
      begin
      if QSYInactiveRadio then
        if ((InActiveRadioPtr.BandMemory <> EntryBand) and (EntryBand =

@@ -445,7 +445,7 @@ var
   isDupe                                : boolean;
 
 begin
-  if not TwoRadioMode then
+  if not Config.TwoRadioMode then
      begin
      QuickDisplay(TC_ALTDCOMMANDDISABLED);
      Exit;

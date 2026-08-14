@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -31,6 +31,7 @@ unit LogRadio;
 interface
 
 uses
+  uConfigValues,
    Classes,
    Math,
    SysUtils,
@@ -92,8 +93,8 @@ type
 
    TRMode = (
       TR0,
-      TR1, //spacebar TwoRadioMode = false
-      TR2, //spacebar TwoRadioMode = true
+      TR1, //spacebar Config.TwoRadioMode = false
+      TR2, //spacebar Config.TwoRadioMode = true
       TR3
       );
 
@@ -333,7 +334,6 @@ var
    // configured the deleted per-model Icom poller and had no reader left.
    newIcomResponseTimeout: integer = 60;
    InBandLock:     boolean = True;      // 4.92.1
-   TwoRadioMode: boolean;
 
    Radio1:           RadioObject {=
     (
