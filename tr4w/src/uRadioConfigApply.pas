@@ -308,14 +308,27 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..5] of string =
+   MIGRATED_COMMANDS: array[0..18] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
       'HAMSCORE URL',
       'HAMSCORE USERNAME',
       'HAMSCORE PASSWORD',
-      'HAMSCORE SEND CONTACT INFO'
+      'HAMSCORE SEND CONTACT INFO',
+      'ALT-D BUFFER ENABLE',
+      'ALT-D CQ ENABLE',
+      'ALWAYS CALL BLIND CQ',
+      'SKIP ACTIVE BAND',
+      'CW SPEED FROM DATABASE',
+      'KEYPAD CW MEMORIES',
+      'SAY HI ENABLE',
+      'SAY HI RATE CUTOFF',
+      'LEADING ZERO CHARACTER',
+      'DIT DAH RATIO',
+      'SCORE POSTING URL',
+      'SCORE READING URL',
+      'CONNECTION AT STARTUP'   // 2026-08-14
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);

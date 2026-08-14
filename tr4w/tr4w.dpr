@@ -1095,7 +1095,7 @@ begin
      Halt(0);
      end;
 
-  if SayHiEnable then
+  if Config.SayHiEnable then
      DisplayNamePercentage;
   SetStereoPin(StereoControlPin, StereoPinState);
   DisplayRadio(ActiveRadio);
@@ -1338,7 +1338,7 @@ begin
       WM_SYSKEYDOWN, WM_KEYDOWN:
         begin
 
-          if KeypadCWMemories then
+          if Config.KeypadCWMemories then
             if Msg.wParam in [VK_NUMPAD0..VK_NUMPAD9] then
             begin
               if Msg.wParam <> VK_NUMPAD0 then

@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -26,6 +26,7 @@ unit LogEdit;
 interface
 
 uses
+  uConfigValues,   // Config -- migrated settings
   SysUtils,
   utils_text,
   uCallSignRoutines,
@@ -1831,10 +1832,10 @@ begin
 
   InputString := '';
 
-  { If AltDBufferEnable - then the initial entry will be either from
+  { If Config.AltDBufferEnable - then the initial entry will be either from
     the left over entry from before - or from the bandmap. }
 
-  if (AltDBufferEnable) and (TwoRadioMode) then
+  if (Config.AltDBufferEnable) and (TwoRadioMode) then
      begin
      if DupeInfoCall <> '' then
         begin

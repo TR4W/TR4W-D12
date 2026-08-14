@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -25,6 +25,7 @@ unit uAltD;
 interface
 
 uses
+  uConfigValues,   // Config -- migrated settings
   VC,
   TF,
   Windows,
@@ -84,7 +85,7 @@ begin
 
         SendMessage(AltDEditWindowHandle, EM_LIMITTEXT, 12, 0);
          OldAltDEditProc := Pointer(Windows.SetWindowLong(AltDEditWindowHandle, GWL_WNDPROC, integer(@NewAltDEditProc)));
-         if AltDBufferEnable then
+         if Config.AltDBufferEnable then
             begin
             Windows.SetWindowTextA(AltDEditWindowHandle, @DupeInfoCall[1]);
             end;

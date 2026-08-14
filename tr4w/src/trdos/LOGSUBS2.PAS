@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
  This file is part of TR4W    (TRDOS)
  TR4W is free software: you can redistribute it and/or
@@ -19,6 +19,7 @@ unit LOGSUBS2;
 { $ O + }
 interface
 uses
+  uConfigValues,   // Config -- migrated settings
   uMMTTY,
   uCallSignRoutines,
 //  uSCP,
@@ -1744,7 +1745,7 @@ begin
        showwarning(TC_LOGFILESIZECHECKFAILED);
          //            ReminderPostedCount := 60;
        end;
-  if CWSpeedFromDataBase and (RememberCWSpeed <> 0) then
+  if Config.CWSpeedFromDataBase and (RememberCWSpeed <> 0) then
      begin
      SetSpeed(RememberCWSpeed);
      RememberCWSpeed := 0;
@@ -2397,7 +2398,7 @@ begin
   end;
   { We are now ready to accept input.  The CQ EXCHANGE is being sent,
     all of the windows are setup and we are ready to go }
-  if (ActiveMode = CW) and AlwaysCallBlindCQ then
+  if (ActiveMode = CW) and Config.AlwaysCallBlindCQ then
      begin
      SendExchangeKeyWhenCWHasStopped := F7;
      end;
@@ -2667,7 +2668,7 @@ var
   RememberTime                          : Cardinal {TimeRecord};
   begin
 //  ReadInConfigFile('');
-  if SayHiEnable then
+  if Config.SayHiEnable then
      begin
      DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
      end;
@@ -2916,7 +2917,7 @@ var
              end;
           end
        else
-         if CWSpeedFromDataBase and (RememberCWSpeed > 0) then
+         if Config.CWSpeedFromDataBase and (RememberCWSpeed > 0) then
             begin
             SetSpeed(RememberCWSpeed);
             RememberCWSpeed := 0;

@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -25,6 +25,7 @@ unit uTelnet;
 interface
 
 uses
+  uConfigValues,   // Config -- migrated settings
   // ClipBrd (Vcl.ClipBrd) was listed here and never referenced -- there is no
   // Clipboard use anywhere in this unit.  Removed with the rest of the VCL.
   uCTYDAT,
@@ -315,7 +316,7 @@ var
 
   // ---- auto-reconnect ------------------------------------------------------
   // Armed when a session we did not end goes away; cancelled the moment the
-  // OPERATOR ends one.  Gated on CONNECTION AT STARTUP (tConnectionAtStartup):
+  // OPERATOR ends one.  Gated on CONNECTION AT STARTUP (Config.tConnectionAtStartup):
   // an operator who does not want TR4W dialling the cluster on its own has
   // already said so with that command, and reconnecting would contradict it.
   //
@@ -938,7 +939,7 @@ begin
                 //        SendMessage(hwnddlg, WM_SETICON, ICON_SMALL, DisconnectedIcon);
         //            SendMessage(TelnetConnectionStatus, STM_SETICON, 0, 0);
 
-        if tConnectionAtStartup then
+        if Config.tConnectionAtStartup then
            begin
            SendMessage(hwnddlg, WM_COMMAND, 200, 0);
            end;
@@ -2021,7 +2022,7 @@ procedure ArmTelnetRetry;
 var
   wnd: HWND;
 begin
-  if not tConnectionAtStartup then
+  if not Config.tConnectionAtStartup then
      begin
      Exit;   // operator has opted out of TR4W dialling on its own
      end;

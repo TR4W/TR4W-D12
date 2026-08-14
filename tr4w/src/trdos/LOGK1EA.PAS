@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -24,7 +24,9 @@ unit LogK1EA;
 {$IMPORTEDDATA OFF}
 interface
 
-uses {Dos, Crt, SlowTree,} Tree,
+uses
+  uConfigValues,   // Config -- migrated settings
+  {Dos, Crt, SlowTree,} Tree,
   uWinKey,
   TF,
   VC,
@@ -405,7 +407,6 @@ var
   CWBufferEnd                           : integer;
   tWaitForNextChar                      : boolean;
 //  tAllowIncrementCWBufferStart          : boolean = True;
-  tDitDahRatio                          : integer = 3;
 implementation
 
 uses
@@ -1041,7 +1042,7 @@ begin
   end;
 }
 
-  CWBuffer^[CWBufferEnd].length := tDitDahRatio * 10;
+  CWBuffer^[CWBufferEnd].length := Config.tDitDahRatio * 10;
   CWBuffer^[CWBufferEnd].Key := True;
 
   IncrementBufferEnd;
@@ -3038,7 +3039,7 @@ begin
      InActiveRadioPtr^.tTwoRadioMode := TR0;
      SwapRadios;
      SetOpMode(CQOpMode);
-      if AltDCQEnable then  // 4.89.3
+      if Config.AltDCQEnable then  // 4.89.3
       if OnDeckCall = '' then
          begin
          SendCrypticMessage(GetCQMemoryString(ActiveMode, F1))

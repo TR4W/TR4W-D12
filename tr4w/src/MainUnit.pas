@@ -7638,7 +7638,7 @@ begin
 
     WM_SYSKEYDOWN, WM_KEYDOWN:
       begin
-        if KeypadCWMemories then
+        if Config.KeypadCWMemories then
           if wParam in [VK_NUMPAD0..VK_NUMPAD9] then
              begin
              if wParam <> VK_NUMPAD0 then

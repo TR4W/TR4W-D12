@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -24,6 +24,7 @@ unit uGetScores;
 interface
 
 uses
+  uConfigValues,   // Config -- migrated settings
 
   TF,
   Version,
@@ -65,8 +66,6 @@ function BuildDynamicResultsXml: AnsiString;
 
 var
   GetScoresPostingID                    : integer;
-  GetScoresSeverPostingAddress          : ShortString {= 'https://post.contestonlinescore.com/post/'};
-  GetScoresSeverReadingAddress          : ShortString {= 'https://contestonlinescore.com/scoreboard/'};
   GetScoresBuffer                       : array[0..4096 - 1] of AnsiChar;
   GetScoresThreadID                     : Cardinal;
   GetScoresThreadHandle                 : Cardinal;
@@ -119,7 +118,7 @@ begin
            end;
         if wParam = 106 then
            begin
-           OpenUrl(@GetScoresSeverReadingAddress[1]);
+           OpenUrl(@Config.GetScoresSeverReadingAddress[1]);
            end;
 
 {$IFDEF LANG_RUS}
@@ -161,7 +160,7 @@ begin
    ShowGetScoresStatus(TC_CONNECT);
    MakePOSTRequestNew; // fills GetScoresBuffer with the URL-encoded POST body
 
-   sURL := string(GetScoresSeverPostingAddress);
+   sURL := string(Config.GetScoresSeverPostingAddress);
 
    http := TIdHTTP.Create(nil);
    ssl  := TIdSSLIOHandlerSocketOpenSSL.Create(nil);

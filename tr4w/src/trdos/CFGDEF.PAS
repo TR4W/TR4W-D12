@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -23,6 +23,7 @@ unit CFGDEF;
 interface
 
 uses
+  uConfigValues,   // Config -- migrated settings
   SysUtils,
   Windows,
   LogDom,
@@ -97,8 +98,8 @@ begin
   //  ActiveStereoPort := NoPort;
   //  ActiveZoneMult := NoZoneMults;
   //  AllCWMessagesChainable := False;
-  //  AltDBufferEnable := False;
-  //  AlwaysCallBlindCQ := False;
+  //  Config.AltDBufferEnable := False;
+  //  Config.AlwaysCallBlindCQ := False;
   //  AskForFrequencies := {wli True} False;
   //  AskIfContestOver := True;
   //  AutoCallTerminate := False;
@@ -169,7 +170,7 @@ begin
   //  CustomUserString := '';
   //  CWEnable := True;
   //  CWEnabled := True;
-  //  CWSpeedFromDataBase := False;
+  //  Config.CWSpeedFromDataBase := False;
   //  CWTone := 700;
 
   //  DDXCall1 := '';
@@ -285,11 +286,11 @@ begin
 
     //  K1EANetworkEnable := False;
 //  K5KA.ModeEnabled := False;
-  //  KeypadCWMemories := False;
+  //  Config.KeypadCWMemories := False;
 
   //  LeaveCursorInCallWindow := False;
   //  LeadingZeros := 0;
-  //  LeadingZeroCharacter := 'T';
+  //  Config.LeadingZeroCharacter := 'T';
   //  LiteralDomesticQTH := False;
 
   //  LogFrequencyEnable := False;
@@ -426,8 +427,8 @@ begin
 //  RTTYReceiveString := ControlR;
 //  RTTYSendString := ControlT;
 
-//  SayHiEnable := False;
-//  SayHiRateCutOff := 200;
+//  Config.SayHiEnable := False;
+//  Config.SayHiRateCutOff := 200;
 
 //  SCPDupeBackground := trWhite;
 //  SCPDupeColor := trRed;
@@ -484,7 +485,7 @@ begin
   SetEXMemoryString(CW, F11, '<03>MM_GRABLASTCALL<04>');
   SetEXCaptionMemoryString(CW, F11, 'GRAB');
 
-  LeadingZeroCharacter := '0';
+  Config.LeadingZeroCharacter := '0';
   Short0 := '0';
   Short1 := '1';
   Short9 := '9';
@@ -526,7 +527,7 @@ begin
   //  ShowSearchAndPounce := False;
   //  SingleBand := All;
   //  SingleRadioMode := False;
-  //  SkipActiveBand := False;
+  //  Config.SkipActiveBand := False;
   //  SpaceBarDupeCheckEnable := True;
   //  SprintQSYRule := False;
   {
