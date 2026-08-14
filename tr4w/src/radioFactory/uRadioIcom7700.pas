@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -82,10 +82,13 @@ initialization
   logger := TLogLogger.GetLogger('uRadioIcom7700');
   RegisterRadio(IC7700,
      CreateIcom7700,
-     'Icom IC-7700', [rlSerial], 0, False,
+     'Icom IC-7700', [rlSerial, rlNetwork], 50001, True,
      SerialParams(19200, 8, PARITY_NONE, 1)
      ,
      3062
      , 116);
+
+  // The network link authenticates, as on every other network Icom.
+  MarkNetworkCredentials(IC7700);
 
 end.
