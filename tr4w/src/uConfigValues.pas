@@ -112,6 +112,12 @@ type
       { TWO RADio MODE -- the sole mode knob. SINGLE RADIO MODE, its
         deprecated inverse, was withdrawn in the same commit. }
       TwoRadioMode: boolean;
+
+      { LEADING ZEROS -- a CW setting (NY4I), not a contest one: it shapes the
+        string the keyer sends. Contest .cfg files DO set it (six of them,
+        both CQ-WPX among them) and such a line wins while that contest is
+        loaded -- see CommandCameFromContestCFG. }
+      LeadingZeros: integer;
    end;
 
 var
@@ -152,7 +158,9 @@ var
       FarnsworthSpeed: 25;
       Weight: 1.0;
 
-      TwoRadioMode: False
+      TwoRadioMode: False;
+
+      LeadingZeros: 3
    );
 
 implementation

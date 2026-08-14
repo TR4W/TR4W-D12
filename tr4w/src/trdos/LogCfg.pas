@@ -642,6 +642,14 @@ begin
      begin
      SetLength(gSeenINICmds, 0);
      end;
+
+  // Reset the contest-override tracker per contest .cfg load, so switching
+  // contests re-decides which commands that contest claims rather than
+  // accumulating them across every contest opened this session.
+  if ConfigFileName = cfgCFG then
+     begin
+     ClearContestCFGCommands;
+     end;
   logger.Info('[Config] Loading %s', [CFGFilesArray[ConfigFileName]]);
   EnumerateLinesInFile(CFGFilesArray[ConfigFileName], EnmuCFGFile, True);
 
@@ -930,7 +938,36 @@ var
       begin
       CMD := 'FM';
       end;
-  if not CheckCommand(@ID, CMD) then
+  // A MIGRATED SETTING NAMED IN THE CONTEST .cfg IS APPLIED HERE, AND WINS.
+  //
+  // csJSON makes CheckCommand inert for the config loader -- that is the point,
+  // and it is why an ini line for a migrated setting is correctly ignored
+  // (NY4I: "settings in the ini file that correspond to entries marked csJSON
+  // should be ignored"). But the SAME early exit fires for the contest .cfg,
+  // which is not the same thing at all: a station preference should not be read
+  // from a stale ini, while a contest deliberately asking for LEADING ZEROS must
+  // be obeyed. Six real contest configs set that one, both CQ-WPX among them.
+  //
+  // So for the CONTEST .cfg only, a csJSON row is applied as a trusted caller
+  // and recorded. ApplyStoredCommands then skips it, so the station's stored
+  // value cannot overwrite the contest's while that contest is loaded.
+  //
+  // Station defaults <- contest overrides, with the .cfg needing no storage of
+  // its own: it only needs to be SEEN.
+  if (CurrentConfigFile = cfgCFG) and CommandIsJSONOwned(string(ID)) then
+     begin
+     NoteCommandFromContestCFG(string(ID));
+     if CheckCommand(@ID, CMD, True) then
+        begin
+        logger.Info('[Config] %s = %s from the contest .cfg -- overrides the stored value for this contest',
+                    [ID, CMD]);
+        end
+     else
+        begin
+        logger.Warn('[Config] %s = %s in the contest .cfg was REFUSED by CFGCA', [ID, CMD]);
+        end;
+     end
+  else if not CheckCommand(@ID, CMD) then
      begin
      // Commands removed in a prior version — log quietly, no dialog
      if (ID = 'HAMLIB RIGCTLD PORT') or

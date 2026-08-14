@@ -88,7 +88,7 @@ begin
                          'Stop above this rate');
    RegisterStoredSetting('operating.cw.keypadMemories',   'KEYPAD CW MEMORIES',
                          'Number keypad sends CW memories');
-   RegisterLegacySetting('operating.cw.leadingZeros',     'LEADING ZEROS',
+   RegisterStoredSetting('operating.cw.leadingZeros',     'LEADING ZEROS',
                          'Leading zeros');
    RegisterStoredSetting('operating.cw.leadingZeroChar',  'LEADING ZERO CHARACTER',
                          'Leading zero sent as');
