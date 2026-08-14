@@ -1,63 +1,70 @@
-# Place at .github/workflows/release.yml in TR4W/TR4W
+# .github/workflows/release.yml
 #
 # Triggers:
-#   1. Tag push vX.Y.Z       -> English-only build + ENG installer
-#   2. Tag push vX.Y.Z-all   -> Full ENG + 7 per-language installers
-#   3. Manual (Actions UI)   -> Run workflow button, "Build all languages" checkbox
+#   1. Tag push vX.Y.Z       -> build + installer + draft release
+#   2. Manual (Actions UI)   -> build + installer, no release
 #
 # Pipeline (TR4W is Windows-only; ALL jobs run on the self-hosted
 # [self-hosted, win-ci] lab runner -- nothing runs on GitHub-hosted servers):
-#   build (win-ci)                -> compile, NSIS, upload installer artifact
-#                                    (UPX is opt-in via FullBuild.ps1's -UseUpx
-#                                    switch; CI does not pass it as of 2026-05-28)
-#   virustotal-scan (win-ci)      -> download installer(s), scan via VT API
-#                                    (Windows PowerShell 5.1: .github/scripts/Invoke-VirusTotalScan.ps1),
-#                                    produce virustotal-report.md, upload as artifact
-#   release (win-ci)              -> only on tag push; download both artifacts,
-#                                    create draft release with installer(s)
-#                                    AND the VT report attached
+#   build (win-ci)           -> FullBuild.ps1: lints, unit tests, app, server,
+#                               NSIS installer; upload installer artifact
+#   virustotal-scan (win-ci) -> download installer, scan via VT API, produce
+#                               virustotal-report.md, upload as artifact
+#   release (win-ci)         -> only on tag push; download both artifacts,
+#                               create a draft release with each attached
 #
-# Single source of truth = src/Version.pas; passes /DTR4WVERSION to NSIS.
-# The -all suffix on the tag is stripped before comparing to Version.pas
-# (so both v4.147.17 and v4.147.17-all must match Version.pas = 4.147.17).
+# Single source of truth = tr4w/src/Version.pas; FullBuild passes /DTR4WVERSION
+# to NSIS and then VERIFIES the linked tr4w.exe reports that version, so a
+# resource that failed to link cannot ship silently.
 #
-# Runner setup (one-time on self-hosted win-ci runner):
-#   - RAD Studio 23.0 (Delphi 12 Athens) -- rsvars.bat + msbuild + brcc32.
-#     Default C:\Program Files (x86)\Embarcadero\Studio\23.0\bin.
-#     Override per-runner by setting repo variable STUDIO_BIN.
-#     Delphi 7 is NO LONGER required: tr4wserver was the last DCC32 consumer
-#     and now builds under D12 via msbuild (16412f1 / 76de84c).
-#   - NSIS (makensis.exe)  -- default C:\Program Files (x86)\NSIS\. Override with NSIS_BIN.
-#   - Indy 10 lib          -- bundled in tr4w\include (no install needed).
-#                             Override with $INDY_ROOT only if you want to point
-#                             at an external Indy tree.
-#   - UPX                  -- no longer required.  CI skips UPX entirely;
-#                             FullBuild.ps1 makes it opt-in via -UseUpx.
+# ---------------------------------------------------------------------------
+# PORTED TO FREEPASCAL, 2026-08-13. What changed and why:
+#
+#   * No RAD Studio. The toolchain is FPC + the Lazarus LCL. There is no
+#     rsvars.bat, no msbuild and no brcc32 -- the version resource is compiled
+#     with fpcres, because windres needs a C preprocessor (cc1) that the FPC
+#     distribution does not ship.
+#
+#   * No language matrix. TR4W builds ONE English binary and is moving to
+#     resourcestrings for I18N (NY4I, 2026-08-13). The '-all' tag suffix, the
+#     all_languages input, the parallel-worktree language build and the
+#     per-language artifact naming are all gone. A tag ending in '-all' still
+#     validates (the suffix is stripped) but produces the same single build.
+#
+#   * Toolchain paths are DISCOVERED, not configured. tr4w/build/Find-Toolchain.ps1
+#     locates FPC and Lazarus and verifies what actually matters: a compiler
+#     that can TARGET i386-win32 (fpc.exe is only a driver -- the backend is
+#     ppc386/ppcross386), an i386 RTL, and i386 LCL units. FPC_HOME and
+#     LAZARUS_DIR below pin it explicitly, which is what you want on CI.
+#
+#   * The lints now run as part of the build. They used to live in
+#     tr4w.dproj's PreBuildEvent, so msbuild ran them and nothing else did;
+#     FullBuild.ps1 invokes build/Run-Lints.ps1 explicitly.
+#
+# Runner setup (one-time on the self-hosted win-ci runner):
+#   - FPC able to target i386-win32 (fpc.exe + ppc386/ppcross386 + i386 RTL).
+#     Pin with repo variable FPC_HOME (the directory holding fpc.exe).
+#   - Lazarus WITH LCL units for i386-win32. An x86_64-only install -- the
+#     fpcupdeluxe default -- CANNOT build TR4W. Pin with LAZARUS_DIR.
+#   - NSIS (makensis.exe) -- default C:\Program Files (x86)\NSIS. Pin with NSIS_BIN.
+#   - Indy 10 is bundled in tr4w\include; nothing to install.
 #
 # Secrets required:
-#   - VIRUS_TOTAL_API_KEY  -- VT public API key (free tier is fine for the
-#                             release cadence; rate-limited but plenty for 1-8
-#                             scans per release).
+#   - VIRUS_TOTAL_API_KEY  -- VT public API key (free tier is fine for this
+#                             release cadence).
 
 name: Release Build
 
 on:
   push:
     tags:
-      # Deliberately MAJOR-AGNOSTIC.  This read 'v4.*.*' until 2026-08-10, when
-      # the D12 line became the release line and the version went to 5.0.0 --
-      # a v5.0.0 tag matched nothing and would have run NO release build and NO
-      # VirusTotal scan, silently, because a tag that matches no trigger is not
-      # an error.  Nothing else here is major-locked: the version is parsed by
-      # stripping a leading 'v' and a trailing '-all', and version-guard.yml
-      # checks only that the shape is dotted-numeric.
-      - 'v[0-9]*.*.*'      # matches v4.147.17, v5.0.0, and either with -all
+      # Deliberately MAJOR-AGNOSTIC. This read 'v4.*.*' until 2026-08-10, when
+      # the version went to 5.0.0 -- a v5.0.0 tag matched nothing and would have
+      # run NO release build and NO VirusTotal scan, silently, because a tag
+      # that matches no trigger is not an error.
+      - 'v[0-9]*.*.*'
   workflow_dispatch:
     inputs:
-      all_languages:
-        description: 'Build all language installers (ENG + 7 langs). Slower (~25 min).'
-        type: boolean
-        default: false
       skip_virustotal:
         description: 'Skip VirusTotal scan (emergency releases only).'
         type: boolean
@@ -72,58 +79,38 @@ permissions:
   contents: write
 
 env:
-  # Toolchain locations. Override via repo Settings -> Variables -> Actions
-  # to point at non-default installs without editing this file.
-  # Indy is bundled in tr4w\include -- no external install needed; the
-  # FullBuild.ps1 script defaults to the bundled tree when $env:INDY_ROOT
-  # is unset.
-  STUDIO_BIN:  ${{ vars.STUDIO_BIN  || 'C:\Program Files (x86)\Embarcadero\Studio\23.0\bin' }}
+  # Toolchain locations. Override via repo Settings -> Variables -> Actions to
+  # pin non-default installs without editing this file. Left EMPTY by default:
+  # Find-Toolchain.ps1 discovers the toolchain and reports every path it tried
+  # when it cannot, which is more useful than a wrong hardcoded default.
+  FPC_HOME:    ${{ vars.FPC_HOME    || '' }}
+  LAZARUS_DIR: ${{ vars.LAZARUS_DIR || '' }}
   NSIS_BIN:    ${{ vars.NSIS_BIN    || 'C:\Program Files (x86)\NSIS' }}
   # VirusTotal: max malicious detections before blocking the release.
-  # TR4W's NSIS + UPX --lzma + bundled inpout32.dll consistently trips
-  # ~7 engines on an unsigned build:
+  # TR4W's NSIS installer + bundled inpout32.dll consistently trips ~7 engines
+  # on an unsigned build:
   #   - 4-5 ML black-box engines (APEX, Trapmine, Cylance, Defender Wacatac.B!ml,
-  #     Xcitium MUPX.Gen) -- pure heuristic on the "unsigned + packed PE" shape
+  #     Xcitium MUPX.Gen) -- pure heuristic on the "unsigned PE" shape
   #   - 1 generic heuristic (VBA32 BScope)
   #   - 1 true positive: DrWeb flags inpout32.dll as a known vulnerable driver
-  #     (correct -- inpout32 IS a privilege-escalation primitive; TR4W ships
-  #     it for legitimate LPT-port CW keying)
-  # Threshold 8 = baseline 7 + 1 buffer for engine churn. Tighten after
-  # code-signing is in place (signed PEs eliminate most of the ML noise).
+  #     (correct -- inpout32 IS a privilege-escalation primitive; TR4W ships it
+  #     for legitimate LPT-port CW keying)
+  # Threshold 8 = baseline 7 + 1 for engine churn. Tighten once code-signing is
+  # in place, since signed PEs eliminate most of the ML noise.
   VT_MALICIOUS_THRESHOLD: '8'
 
 jobs:
   build:
     name: Build TR4W installer
     runs-on: [self-hosted, win-ci]
-    timeout-minutes: 60   # All-lang mode can take ~25 min on first run.
+    timeout-minutes: 30
 
-    # Exposed outputs so downstream jobs (virustotal-scan, release) don't
-    # have to recompute version / mode.
     outputs:
       version: ${{ steps.ver.outputs.version }}
-      mode:    ${{ steps.mode.outputs.mode }}
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v5
-
-      - name: Determine build mode
-        id: mode
-        shell: powershell
-        run: |
-          # All-languages mode is triggered by EITHER:
-          #   a) A tag ending in '-all' (e.g. v4.147.17-all), OR
-          #   b) workflow_dispatch with the all_languages input set to true.
-          $tagAll = $false
-          if ($env:GITHUB_REF -like 'refs/tags/*') {
-              $tagAll = $env:GITHUB_REF -match '-all$'
-          }
-          $inputAll = '${{ inputs.all_languages }}' -eq 'true'
-          $allLang = $tagAll -or $inputAll
-          $mode = if ($allLang) { 'all_languages' } else { 'english_only' }
-          Write-Host "Trigger: $env:GITHUB_EVENT_NAME | Ref: $env:GITHUB_REF | Mode: $mode"
-          "mode=$mode" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
       - name: Extract version from src/Version.pas
         id: ver
@@ -133,7 +120,7 @@ jobs:
                                 -Pattern "TR4W_CURRENTVERSION_NUMBER\s*=\s*'([^']+)'" `
                                 | Select-Object -First 1
           if (-not $line) {
-            throw "Could not extract TR4W_CURRENTVERSION_NUMBER from src/Version.pas"
+            throw "Could not extract TR4W_CURRENTVERSION_NUMBER from tr4w/src/Version.pas"
           }
           $version = $line.Matches[0].Groups[1].Value
           Write-Host "Extracted version: $version"
@@ -143,8 +130,9 @@ jobs:
         if: github.event_name == 'push'
         shell: powershell
         run: |
-          # Strip leading 'v' AND trailing '-all' so v4.147.17-all and v4.147.17 both
-          # validate against the same Version.pas entry (4.147.17).
+          # Strip leading 'v' and a trailing '-all'. The '-all' suffix no longer
+          # selects a different build -- there is only one -- but tolerating it
+          # means an old-habit tag still releases instead of failing obscurely.
           $tag = $env:GITHUB_REF -replace '^refs/tags/v', '' -replace '-all$', ''
           $version = "${{ steps.ver.outputs.version }}"
           if ($tag -ne $version) {
@@ -152,68 +140,41 @@ jobs:
           }
           Write-Host "Tag v$tag matches Version.pas $version - OK"
 
-      - name: Verify required tools
+      - name: Verify toolchain
         shell: powershell
         run: |
-          # Indy is bundled in tr4w\include; FullBuild.ps1 defaults to it.
-          # UPX is opt-in in FullBuild.ps1 and CI does NOT pass -UseUpx
-          # (see param doc in FullBuild.ps1).  Only Delphi + NSIS need an
-          # external presence check here.
-          $tools = [ordered]@{
-            'RAD Studio msbuild' = Join-Path $env:STUDIO_BIN 'rsvars.bat'
-            'NSIS makensis'    = Join-Path $env:NSIS_BIN    'makensis.exe'
+          $ErrorActionPreference = 'Stop'
+
+          # Ask the SAME resolver the build uses, so this step cannot pass while
+          # the build then fails to find a compiler -- and so its failure output
+          # lists every location tried.
+          . "$env:GITHUB_WORKSPACE\tr4w\build\Find-Toolchain.ps1"
+          $tc = Find-Tr4wToolchain -Fpc $env:FPC_HOME -Laz $env:LAZARUS_DIR
+          if (-not $tc) {
+            throw "No FPC + Lazarus able to target i386-win32. Set repo variables FPC_HOME / LAZARUS_DIR."
           }
-          $missing = @()
-          foreach ($k in $tools.Keys) {
-            if (-not (Test-Path $tools[$k])) { $missing += "$($k): $($tools[$k]) not found" }
+
+          $makensis = Join-Path $env:NSIS_BIN 'makensis.exe'
+          if (-not (Test-Path $makensis)) {
+            throw "NSIS not found at $makensis. Set repo variable NSIS_BIN."
           }
-          if ($missing.Count -gt 0) {
-            throw "Missing required tools:`n$($missing -join "`n")"
-          }
-          Write-Host "All required tools present."
+          Write-Host "  makensis : $makensis"
 
       # ---------------------------------------------------------------
-      # Both english_only and all_languages go through FullBuild.ps1's
-      # Invoke-Packaging chain (which does the dep check + (opt-in UPX) +
-      # makensis internally). Single packaging code path = single source
-      # of truth for the build, and the new Test-InstallerDependencies
-      # pre-flight fires on every release.  UPX is opt-in since 2026-05-28
-      # (AV false-positive cost outweighs ~1 MB exe savings); CI does not
-      # pass -UseUpx.
+      # ONE packaging path. FullBuild.ps1 runs the lints, builds and RUNS the
+      # unit tests (a failing test aborts before any binary is produced),
+      # builds the app and tr4wserver, and drives NSIS. Nothing here duplicates
+      # any of that -- if the release build and a developer build can diverge,
+      # they eventually will.
       # ---------------------------------------------------------------
-      - name: Run FullBuild.ps1 (English only + installer)
-        if: steps.mode.outputs.mode == 'english_only'
+      - name: Build (FullBuild.ps1)
         shell: powershell
         working-directory: ${{ github.workspace }}\tr4w
         run: |
-          .\FullBuild.ps1 `
-            -BuildInstallers `
-            -ProjectRoot $env:GITHUB_WORKSPACE `
-            -NSISBin     $env:NSIS_BIN
+          .\FullBuild.ps1 -BuildInstaller
           if ($LASTEXITCODE -ne 0) { throw "FullBuild.ps1 failed with exit code $LASTEXITCODE" }
 
-      - name: Run FullBuild.ps1 (all languages + installers)
-        if: steps.mode.outputs.mode == 'all_languages'
-        shell: powershell
-        working-directory: ${{ github.workspace }}\tr4w
-        run: |
-          # -ParallelLanguages compiles the 8 non-English variants concurrently
-          # in isolated git worktrees (then packages serially), cutting the
-          # all-languages build from ~46 min to ~12 min on the 4-core runner.
-          # -Throttle defaults to the CPU count. To fall back to the serial
-          # loop (e.g. if a runner misbehaves), just drop -ParallelLanguages.
-          .\FullBuild.ps1 `
-            -AllLanguages `
-            -ParallelLanguages `
-            -BuildInstallers `
-            -ProjectRoot $env:GITHUB_WORKSPACE `
-            -NSISBin     $env:NSIS_BIN
-          if ($LASTEXITCODE -ne 0) { throw "FullBuild.ps1 -AllLanguages failed with exit code $LASTEXITCODE" }
-
-      # ---------------------------------------------------------------
-      # Both paths land their installer(s) under tr4w\build\release\.
-      # ---------------------------------------------------------------
-      - name: Locate installers
+      - name: Locate installer
         id: artifact
         shell: powershell
         run: |
@@ -221,32 +182,35 @@ jobs:
           if (-not (Test-Path $releaseDir)) {
             throw "Release directory not found: $releaseDir"
           }
-          $installers = Get-ChildItem $releaseDir -Filter 'tr4w_setup_*.exe' -File `
-                      | Sort-Object Name
-          if ($installers.Count -eq 0) {
-            throw "No installers found in $releaseDir"
+          $version = "${{ steps.ver.outputs.version }}"
+          # Match THIS version explicitly. A wildcard would happily pick up a
+          # stale installer from an earlier version left in the directory and
+          # ship it under the new tag.
+          $installer = Get-ChildItem $releaseDir -Filter "tr4w_setup_$version.exe" -File |
+                       Select-Object -First 1
+          if (-not $installer) {
+            Write-Host "Contents of ${releaseDir}:"
+            Get-ChildItem $releaseDir -File | ForEach-Object { Write-Host "  $($_.Name)" }
+            throw "No installer named tr4w_setup_$version.exe in $releaseDir"
           }
-          Write-Host "Found $($installers.Count) installer(s):"
-          $installers | ForEach-Object { Write-Host "  - $($_.Name) ($($_.Length) bytes)" }
+          Write-Host "Found $($installer.Name) ($($installer.Length) bytes)"
           "release_dir=$releaseDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-          "count=$($installers.Count)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
-      - name: Upload installer artifact(s)
+      - name: Upload installer artifact
         uses: actions/upload-artifact@v7
         with:
-          name: tr4w-installer-${{ steps.ver.outputs.version }}${{ steps.mode.outputs.mode == 'all_languages' && '-all' || '' }}
-          path: ${{ steps.artifact.outputs.release_dir }}\tr4w_setup_*.exe
+          name: tr4w-installer-${{ steps.ver.outputs.version }}
+          path: ${{ steps.artifact.outputs.release_dir }}\tr4w_setup_${{ steps.ver.outputs.version }}.exe
           retention-days: 90
           if-no-files-found: error
 
   # =================================================================
-  # VirusTotal scan -- runs on the self-hosted win-ci runner (PowerShell 7).
-  # Pulls the installer artifact from the build job, uploads each installer
-  # to VT, polls for completion, builds a Markdown report, and uploads
-  # it as a separate artifact for the release job to attach.
+  # VirusTotal scan. Pulls the installer artifact from the build job, uploads
+  # it to VT, polls for completion, builds a Markdown report and uploads it as
+  # a separate artifact for the release job to attach.
   #
-  # Fails the job if any installer hits VT_MALICIOUS_THRESHOLD, which
-  # in turn blocks the release job (release `needs:` this job).
+  # Fails the job if the installer hits VT_MALICIOUS_THRESHOLD, which in turn
+  # blocks the release job (release `needs:` this one).
   # =================================================================
   virustotal-scan:
     name: VirusTotal Scan
@@ -258,24 +222,25 @@ jobs:
       && !(github.event_name == 'workflow_dispatch' && inputs.skip_virustotal == true)
 
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
       - name: Download installer artifact
         uses: actions/download-artifact@v4
         with:
-          name: tr4w-installer-${{ needs.build.outputs.version }}${{ needs.build.outputs.mode == 'all_languages' && '-all' || '' }}
+          name: tr4w-installer-${{ needs.build.outputs.version }}
           path: installers
 
-      - name: Scan installers with VirusTotal
+      - name: Scan installer with VirusTotal
         env:
           VT_API_KEY: ${{ secrets.VIRUS_TOTAL_API_KEY }}
         shell: powershell
         run: |
-          # VT-scan under Windows PowerShell 5.1 (the runner has 5.1
-          # machine-wide; the script is runtime-agnostic -- curl.exe upload,
-          # no -Form -- so this CI step and FullBuild's local pre-flight share
-          # one file). Logic lives in a
-          # standalone, unit-tested script (run it with -SelfTest to validate
-          # the parse/report logic without the API). The API key is passed via
-          # the VT_API_KEY env var above, never on the command line.
+          # The scan logic lives in a standalone, self-testable script (run it
+          # with -SelfTest to validate the parse/report logic without the API).
+          # It is runtime-agnostic -- curl.exe upload, no -Form -- so this step
+          # and any local pre-flight share one file. The API key travels via the
+          # VT_API_KEY env var above, never on the command line.
           & '${{ github.workspace }}\.github\scripts\Invoke-VirusTotalScan.ps1' `
             -InstallerDir 'installers' `
             -ReportPath   'virustotal-report.md' `
@@ -288,14 +253,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: virustotal-report-${{ needs.build.outputs.version }}${{ needs.build.outputs.mode == 'all_languages' && '-all' || '' }}
+          name: virustotal-report-${{ needs.build.outputs.version }}
           path: virustotal-report.md
           retention-days: 90
 
   # =================================================================
-  # Release -- only fires on tag push. Pulls installer + VT report,
-  # creates a draft GitHub Release with both attached.
-  # workflow_dispatch runs intentionally don't create a release.
+  # Release -- only fires on tag push. Pulls installer + VT report and creates
+  # a DRAFT release with both attached. workflow_dispatch runs intentionally
+  # do not create a release.
   # =================================================================
   release:
     name: Create draft GitHub Release
@@ -304,16 +269,13 @@ jobs:
     if: github.event_name == 'push'
 
     steps:
-      # Checkout at the tag with the DEFAULT shallow fetch: actions/checkout
-      # then fetches only the single triggering ref and never pulls
-      # refs/heads/*. That matters on the self-hosted Windows runner
-      # (case-insensitive NTFS, 'files' ref backend): two branch names that
-      # differ only in case -- e.g. Issue861PLus vs Issue861Plus -- cannot
-      # both be stored on disk, and a previous `fetch-depth: 0` (which fetches
-      # EVERY head) aborted the entire release job on that collision
-      # ("references that only differ in casing" -> the retry's --unshallow
-      # then failed "on a complete repository"). The notes step only needs
-      # TAGS + history for `git describe`, not branch heads, so the next step
+      # Checked out with the DEFAULT shallow fetch: actions/checkout then
+      # fetches only the triggering ref and never pulls refs/heads/*. That
+      # matters on this runner (case-insensitive NTFS, 'files' ref backend):
+      # two branch names differing only in case cannot both exist on disk, and
+      # a previous `fetch-depth: 0` -- which fetches EVERY head -- aborted the
+      # whole release job on exactly that collision. The notes step needs TAGS
+      # and history for `git describe`, not branch heads, so the next step
       # fetches tags explicitly. Checked out first so its clean step does not
       # wipe the artifacts downloaded below.
       - name: Checkout source at the tag
@@ -322,38 +284,37 @@ jobs:
       - name: Fetch tags + history for the changelog range
         shell: powershell
         run: |
-          # Fetch ONLY refs/tags/* (never refs/heads/*), so a case-only
-          # branch-name collision can never break the release again. A very
-          # large --depth fully deepens history whether the repo is currently
-          # shallow or already complete -- unlike --unshallow, which errors
-          # ("does not make sense") once a prior fetch has completed the repo.
-          # git describe needs the ancestry from the tag back to the previous
-          # tag, and the previous tag's ref itself, both of which this provides.
+          # ONLY refs/tags/* (never refs/heads/*), so a case-only branch-name
+          # collision can never break the release again. A very large --depth
+          # fully deepens history whether the repo is currently shallow or
+          # already complete -- unlike --unshallow, which errors ("does not make
+          # sense") once a prior fetch has completed the repo. git describe needs
+          # the ancestry from this tag back to the previous one, and that tag's
+          # ref itself, both of which this provides.
           git fetch --prune --no-tags --depth=2147483647 origin "+refs/tags/*:refs/tags/*"
           if ($LASTEXITCODE -ne 0) { throw "Tag fetch failed with exit code $LASTEXITCODE" }
 
       - name: Download installer artifact
         uses: actions/download-artifact@v4
         with:
-          name: tr4w-installer-${{ needs.build.outputs.version }}${{ needs.build.outputs.mode == 'all_languages' && '-all' || '' }}
+          name: tr4w-installer-${{ needs.build.outputs.version }}
           path: release-files
 
       - name: Download VT report artifact
         uses: actions/download-artifact@v4
         with:
-          name: virustotal-report-${{ needs.build.outputs.version }}${{ needs.build.outputs.mode == 'all_languages' && '-all' || '' }}
+          name: virustotal-report-${{ needs.build.outputs.version }}
           path: release-files
 
       - name: List release files
         shell: powershell
         run: Get-ChildItem -LiteralPath release-files | Format-Table Name, Length, LastWriteTime
 
-      # Generate the changelog body ourselves against the REAL previous
-      # tag. GitHub's built-in generate_release_notes auto-detects the
-      # previous tag via semver and skips '-all' tags (they parse as a
-      # prerelease), which made e.g. v4.148.4 diff against v4.148.2 and
-      # re-list everything already shipped in v4.148.3-all. git describe
-      # walks history instead, so the '-all' suffix no longer matters.
+      # Generate the changelog body against the REAL previous tag. GitHub's
+      # built-in generate_release_notes auto-detects the previous tag via semver
+      # and skips '-all' tags (they parse as a prerelease), which once made
+      # v4.148.4 diff against v4.148.2 and re-list everything already shipped.
+      # git describe walks history instead, so tag spellings do not matter.
       - name: Generate release notes (scoped to the real previous tag)
         shell: powershell
         env:
@@ -378,18 +339,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: TR4W v${{ needs.build.outputs.version }}${{ needs.build.outputs.mode == 'all_languages' && ' (all languages)' || '' }}
-          # Draft = True so we can review/edit the notes and add manual
-          # context (radio support, breaking changes, etc.) before
-          # publishing. Promote to a final release via the GitHub UI.
+          name: TR4W v${{ needs.build.outputs.version }}
+          # Draft so the notes can be reviewed and manual context added (radio
+          # support, breaking changes) before publishing. Promote via the UI.
           draft: true
-          # Body is generated in the previous step against the real
-          # previous tag (git ancestry), so the '-all' suffix no longer
-          # widens the range. CHANGES.md / RELEASE_NOTES.md sections can
-          # still be pasted in during the draft review.
           body_path: release-notes.md
-          # Attach all installer(s) AND the VT report so users can
-          # download both from the release page.
           files: |
             release-files/tr4w_setup_*.exe
             release-files/virustotal-report.md
