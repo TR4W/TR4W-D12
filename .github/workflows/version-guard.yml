@@ -1,4 +1,4 @@
-# Place at .github/workflows/version-guard.yml in TR4W/TR4W
+# .github/workflows/version-guard.yml
 #
 # Purpose:
 #   Guard against tr4w/src/Version.pas being dropped or corrupted by a merge.
@@ -6,19 +6,28 @@
 #   On 2026-05-29 an "evil merge" (commit 2beeb9b) resolved a Version.pas
 #   conflict between two version-bumped branches by deleting the file
 #   entirely. Nothing caught it at merge time -- release.yml only reads
-#   Version.pas at TAG time, long after the bad merge had landed on master.
+#   Version.pas at TAG time, long after the bad merge had landed.
 #
 #   This workflow runs at the moment a change lands -- on every pull request
-#   and on every push to master -- and fails fast if Version.pas is missing
-#   or no longer contains a parseable version string.
+#   and on every push to the default branch -- and fails fast if Version.pas
+#   is missing or no longer contains a parseable version string.
+#
+# BRANCH NAME:
+#   Triggers on `fpc`, the default branch as of 2026-08-13. It previously said
+#   `master`, which in this repository is the frozen pre-migration fork point --
+#   so the guard had quietly stopped firing on the active line of development
+#   the moment work moved to delphi12, and would have stayed silent through the
+#   whole FPC migration. If the default branch is renamed again, this trigger
+#   moves with it; a guard pointed at a branch nobody pushes to is not a guard.
 #
 # What it deliberately does NOT do:
 #   It does NOT require the version to be bumped or changed in a PR. The
 #   project's release process intentionally bumps Version.pas LATE -- only
 #   after a PR is validated on a teammate's machine, as a separate step right
-#   before tagging. So a normal PR (and a fresh merge to master) legitimately
-#   still carries the PREVIOUS version string. This guard only asserts the
-#   file exists and parses; the tag/version match stays in release.yml.
+#   before tagging. So a normal PR (and a fresh merge to the default branch)
+#   legitimately still carries the PREVIOUS version string. This guard only
+#   asserts the file exists and parses; the tag/version match stays in
+#   release.yml.
 #
 # Runner / shell:
 #   Runs on the same self-hosted [self-hosted, win-ci] runner as release.yml's
@@ -33,7 +42,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - fpc
 
 # A newer push to the same ref supersedes an in-flight check.
 concurrency:
