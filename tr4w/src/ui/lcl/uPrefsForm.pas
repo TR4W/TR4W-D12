@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -464,6 +464,7 @@ type
       lblUDPHint: TLabel;
 
       procedure tvNavChange(Sender: TObject);
+      procedure tvNavExpanded(Sender: TObject; Node: TTreeNode);
 
       { PUBLISHED because the RESOURCE binds them by name -- TWriter stores an
         event as a string and the loader looks it up in published RTTI. Declared
@@ -2368,6 +2369,37 @@ end;
 procedure TPrefsForm.SearchListClick(Sender: TObject);
 begin
    ActivateSearchHit(FSearchList.ItemIndex);
+end;
+
+procedure TPrefsForm.tvNavExpanded(Sender: TObject; Node: TTreeNode);
+var
+   i: integer;
+   sibling: TTreeNode;
+begin
+   // ONE BRANCH OPEN AT A TIME, so the strip never needs a scrollbar.
+   //
+   // The arithmetic, because this is a constraint rather than a preference
+   // (NY4I: "I don't want to scroll that vertical left pane"): the pane shows
+   // 20 rows at 26px. There are 16 top-level sections, so collapsed it fits with
+   // four to spare -- but Operating alone has five children, and expanding any
+   // branch pushes past the bottom. Everything open is 27 rows.
+   //
+   // Collapsing the siblings keeps the worst case at 16 + the largest branch.
+   // ssAutoVertical is still set, so if a future section adds a sixth child the
+   // strip scrolls rather than clipping -- it degrades, it does not break.
+   if (Node = nil) or (Node.Parent <> nil) then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to tvNav.Items.TopLvlCount - 1 do
+      begin
+      sibling := tvNav.Items.TopLvlItems[i];
+      if (sibling <> Node) and sibling.Expanded then
+         begin
+         sibling.Collapse(False);
+         end;
+      end;
 end;
 
 procedure TPrefsForm.tvNavChange(Sender: TObject);

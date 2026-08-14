@@ -35,6 +35,7 @@
     ReadOnly = True
     ScrollBars = ssAutoVertical
     OnChange = tvNavChange
+    OnExpanded = tvNavExpanded
   end
   object layContent: TPanel
     Color = clWindow
