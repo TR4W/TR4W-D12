@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -26,6 +26,7 @@ unit uCFG;
 interface
 
 uses
+  uConfigValues,   // Config -- the live values migrated rows write into
   uAnsiStr,
    uIO,
    uCTYDAT,
@@ -207,7 +208,7 @@ const
 
     (arArrayPtr: @ROW_COUNT_ARRAY;                 arArrayLength: high(ROW_COUNT_ARRAY);                 arVar: @LinesInEditableLog),
     (arArrayPtr: @WINDOW_SIZE_ARRAY;               arArrayLength: high(WINDOW_SIZE_ARRAY);               arVar: @WindowSize),
-    (arArrayPtr: @CW_SPEED_INCREMENT;              arArrayLength: high(CW_SPEED_INCREMENT);              arVar: @CodeSpeedIncrement),
+    (arArrayPtr: @CW_SPEED_INCREMENT;              arArrayLength: high(CW_SPEED_INCREMENT);              arVar: @Config.CodeSpeedIncrement),
     (arArrayPtr: @MULT_REPORT_MINIMUM_BANDS_ARRAY; arArrayLength: high(MULT_REPORT_MINIMUM_BANDS_ARRAY); arVar: @MultReportMinimumBands),
     (arArrayPtr: @STEREO_CONTROL_PIN_ARRAY;        arArrayLength: high(STEREO_CONTROL_PIN_ARRAY);        arVar: @StereoControlPin),
     (arArrayPtr: @RECORDER_BITRATE_ARRAY;          arArrayLength: high(RECORDER_BITRATE_ARRAY);          arVar: @RecorderBitrate),
@@ -507,7 +508,7 @@ const
  (crCommand: 'CUSTOM USER STRING';            crAddress: @CustomUserString;               crMin:0;  crMax:40;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'CW ENABLE';                     crAddress: @CWEnable;                       crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'CW SPEED FROM DATABASE';        crAddress: @CWSpeedFromDataBase;            crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'CW SPEED INCREMENT';            crAddress: pointer(6);                      crMin:1;  crMax:10;      crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
+ (crCommand: 'CW SPEED INCREMENT';            crAddress: pointer(6);                      crMin:1;  crMax:10;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'CW TONE';                       crAddress: @CWTone;                         crMin:0;  crMax:MAXWORD; crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'DE ENABLE';                     crAddress: @DEEnable;                       crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'DEBUG LOG LEVEL';               crAddress: pointer(52);                     crMin:0;   crMax:0;      crS: csJSON; crA: 0; crC:0 ; crP:13; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),

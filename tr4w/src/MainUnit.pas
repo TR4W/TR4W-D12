@@ -1,4 +1,4 @@
-
+﻿
 {
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
@@ -28,6 +28,7 @@ unit MainUnit;
 interface
 
 uses
+  uConfigValues,   // Config.CodeSpeedIncrement
   ShellAPI,
   Logstuff,
   uADIF,
@@ -4186,15 +4187,15 @@ begin
       ExportToCSV;
 
     menu_inactiveradio_cwspeedup:
-      if InActiveRadioPtr.SpeedMemory < (99 - CodeSpeedIncrement) then
+      if InActiveRadioPtr.SpeedMemory < (99 - Config.CodeSpeedIncrement) then
          begin
-         inc(InActiveRadioPtr.SpeedMemory, CodeSpeedIncrement);
+         inc(InActiveRadioPtr.SpeedMemory, Config.CodeSpeedIncrement);
          end;
 
     menu_inactiveradio_cwspeeddown:
-      if InActiveRadioPtr.SpeedMemory > (CodeSpeedIncrement + 1) then
+      if InActiveRadioPtr.SpeedMemory > (Config.CodeSpeedIncrement + 1) then
          begin
-         dec(InActiveRadioPtr.SpeedMemory, CodeSpeedIncrement);
+         dec(InActiveRadioPtr.SpeedMemory, Config.CodeSpeedIncrement);
          end;
 
     menu_cwspeedup:

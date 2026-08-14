@@ -51,14 +51,55 @@ uses
 
   aKey is the JSON/store key ('operating.cw.sayHi'); aCommand is the CFGCA row
   ('SAY HI ENABLE').  The two are deliberately different: the key is ours and
-  stable, the command is the legacy spelling and will eventually go. }
+  stable, the command is the legacy spelling and will eventually go.
+
+  WRITES GO TO THE INI.  This is the un-migrated state: SetCFGCommandValue puts
+  the value in tr4w.ini, the row stays visible in Ctrl-J, and the ini loader
+  re-applies it at startup.  See RegisterStoredSetting for the migrated form. }
 function RegisterLegacySetting(const aKey, aCommand, aCaption: string): TSettingBase;
+
+{ The SAME adapter, but writing to settings\tr4w.json instead of tr4w.ini.
+
+  This is what a row graduates to.  The only difference is the write path --
+  ApplyAndStoreCommand rather than SetCFGCommandValue -- because the read side
+  was never the problem: CFGCommandValueAsString reads the live global either
+  way.
+
+  USE IT WITH crS = csJSON, IN THE SAME COMMIT, and not otherwise.  The two
+  halves are one change:
+
+    * flip the row without moving the writer, and Preferences keeps writing an
+      ini nothing reads -- the setting appears to save and is gone on restart;
+    * move the writer without flipping the row, and the ini stays a second,
+      staler source of the same value, which the loader will happily apply over
+      the top of the JSON one.
+
+  The store is the one PREFERENCES IS EDITING, supplied by ActiveStoreProvider
+  below, not a fresh one loaded from disk.  That is what keeps Cancel working:
+  the value lands in the working copy and is written out only when the operator
+  saves. }
+function RegisterStoredSetting(const aKey, aCommand, aCaption: string): TSettingBase;
+
+type
+   { Returns the TRadioConfigStore currently being edited, or nil.  Typed as
+     TObject so this unit does not have to pull in uRadioConfigStore's interface
+     -- the implementation casts it back. }
+   TActiveStoreProvider = function: TObject;
+
+var
+   { Set by Preferences while it is open, cleared when it closes.  Nil means
+     "no store", and a stored setting then refuses the write rather than
+     silently dropping it -- a settings screen that accepts a value it did not
+     save is the failure this whole exercise is about. }
+   ActiveStoreProvider: TActiveStoreProvider = nil;
 
 implementation
 
 uses
    SysUtils,
-   uCFG;
+   uCFG,
+   uRadioConfigStore,     // TRadioConfigStore -- the cast in TStoredSetting
+   uRadioConfigApply;     // ApplyAndStoreCommand
 
 type
    { A CFGCA row wearing the registry's interface.  See the unit header for why
@@ -72,6 +113,17 @@ type
       function TrySetText(const aText: string; out aError: string): boolean; override;
       function AllowedValues: TArray<string>; override;
       property Command: string read FCommand;
+   end;
+
+   { The migrated form: identical except that a write goes to the JSON store.
+
+     Descends from TLegacySetting rather than duplicating it, because everything
+     other than the write -- the registration-time check, reading through
+     CFGCommandValueAsString, the allow-list, NeedsRestart -- is the same and
+     should stay the same. Only TrySetText differs, which is the whole point. }
+   TStoredSetting = class(TLegacySetting)
+   public
+      function TrySetText(const aText: string; out aError: string): boolean; override;
    end;
 
 { ---------------------------------------------------------- TLegacySetting - }
@@ -134,9 +186,58 @@ begin
       end;
 end;
 
+{ ----------------------------------------------------------- TStoredSetting - }
+
+function TStoredSetting.TrySetText(const aText: string; out aError: string): boolean;
+var
+   store: TObject;
+begin
+   aError := '';
+
+   if not Assigned(ActiveStoreProvider) then
+      begin
+      // REFUSE, don't fall back to the ini. Falling back would write the value
+      // to a file the row no longer reads (crS = csJSON), so the setting would
+      // appear to save and be gone on restart -- silently, and only for the
+      // settings that had graduated. Refusing is visible.
+      aError := Format('%s cannot be saved: no configuration store is open', [Command]);
+      Result := False;
+      Exit;
+      end;
+
+   store := ActiveStoreProvider();
+   if not (store is TRadioConfigStore) then
+      begin
+      aError := Format('%s cannot be saved: no configuration store is open', [Command]);
+      Result := False;
+      Exit;
+      end;
+
+   // APPLY THEN RECORD, and both through one call: ApplyAndStoreCommand runs
+   // CheckCommand with aApplyJSONOwned = True -- which is what makes a csJSON
+   // row accept the value at all -- and only records it in the store if CFGCA
+   // took it. A rejected value never reaches the file.
+   Result := ApplyAndStoreCommand(TRadioConfigStore(store), Command, aText);
+   if not Result then
+      begin
+      aError := Format('%s does not accept "%s"', [Command, aText]);
+      Exit;
+      end;
+
+   if Assigned(OnApply) then
+      begin
+      OnApply();
+      end;
+end;
+
 function RegisterLegacySetting(const aKey, aCommand, aCaption: string): TSettingBase;
 begin
    Result := RegisterSetting(TLegacySetting.Create(aKey, aCommand, aCaption));
+end;
+
+function RegisterStoredSetting(const aKey, aCommand, aCaption: string): TSettingBase;
+begin
+   Result := RegisterSetting(TStoredSetting.Create(aKey, aCommand, aCaption));
 end;
 
 end.

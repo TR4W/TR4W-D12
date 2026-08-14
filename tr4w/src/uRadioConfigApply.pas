@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -172,6 +172,29 @@ function ApplyAndStoreCommand(const aStore: TRadioConfigStore;
 
 function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
 
+{ One config parameter arriving from a MULTI-OP PEER.  Returns True if it was
+  accepted, so the caller can tell the operator; False means CFGCA refused it.
+
+  WHY THIS EXISTS.  uNet applied a peer's parameter with a bare CheckCommand and
+  then wrote the key to tr4w.ini.  Neither half works for a migrated row:
+  CheckCommand is inert for csJSON, so the call returned False, nothing was
+  applied, nothing was displayed, and the operator was told nothing -- while the
+  station that made the change saw it take effect locally.  Seventeen rows are
+  already in that state, the UDP broadcast block among them.
+
+  A PEER IS A TRUSTED SOURCE, exactly as Preferences is: multi-op parameter sync
+  is a feature, and the peer has already validated the value through its own
+  CFGCA.  So a migrated row is applied with aApplyJSONOwned and recorded in the
+  JSON store, which is where that row's system of record now is; an
+  un-migrated row keeps the ini write it always had.
+
+  It loads and saves the store per call.  That is heavy, and it is fine: these
+  arrive when a human changes a setting, not per QSO.  Holding a long-lived
+  store instead would mean two writers to one file -- this path and Preferences,
+  which loads its own working copy -- and a peer's change would be silently
+  reverted the next time the operator pressed Save. }
+function ApplyPeerCommand(const aCommand, aValue: string): boolean;
+
 // UI-free description of the port collisions a profile WOULD cause, '' when
 // clean.  Advisory: unlike TRadioConfigStore.Validate, this also covers the
 // keyer lines and CAT-versus-keyer sharing, which are warnings rather than
@@ -193,6 +216,7 @@ uses
    uRadioRegistry,
    uKeyerConfigApply,   // resolve a named keyer device and configure it
    uTR4WConfigFile,     // LoadConfig -- both libraries live in the one file
+   uUDPBroadcastConfig, // round-tripped by ApplyPeerCommand so its section survives
    LOGRADIO,
    LOGK1EA,    // ActiveRadio
    uRotatorControl,   // ConfigureRotators -- the rotator library goes live here
@@ -260,6 +284,80 @@ end;
 // inert, so nothing else will call it: assigning logLevels without this would
 // store the new level correctly, show it correctly, and leave the running
 // logger exactly as it was.
+{ ONE-TIME MIGRATION for a command whose row has just become csJSON.
+
+  THE STEP THAT IS EASY TO FORGET, and it loses operator settings when it is.
+  A csJSON row is inert to the ini loader. So on the first run after a row
+  graduates, the value the operator set months ago is sitting in tr4w.ini,
+  nothing reads it, and the setting silently reverts to its compiled default.
+  For CW SPEED INCREMENT that is 2 becoming 3; for something like TWO RADIO MODE
+  it would be a station behaving differently mid-contest.
+
+  So each migrated command is copied ini -> store ONCE, and only when the store
+  has no value of its own. After Preferences saves, the store answers and the
+  ini is never consulted for that key again -- which matters, because otherwise
+  a value deliberately CHANGED later could be resurrected by the stale ini line
+  still sitting in the file.
+
+  AN EXPLICIT LIST, not "every csJSON row". Deriving it would be tidier and is
+  wrong: the RADIO rows are csJSON too, their ini keys are known to be stale
+  duplicates, and seeding those into Commands would let ApplyStoredCommands
+  apply them over the top of the active profile. Every entry here is added in
+  the same commit that flips its row.
+
+  The ini keys are left in place: inert, harmless, and a fallback for anyone who
+  rolls back to a previous build. }
+const
+   MIGRATED_COMMANDS: array[0..0] of string =
+      (
+      'CW SPEED INCREMENT'      // 2026-08-14
+      );
+
+procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);
+var
+   ini: TIniFile;
+   i: integer;
+   value: string;
+begin
+   if aStore = nil then
+      begin
+      Exit;
+      end;
+
+   ini := TIniFile.Create(SettingsDirectory + 'tr4w.ini');
+   try
+      for i := Low(MIGRATED_COMMANDS) to High(MIGRATED_COMMANDS) do
+         begin
+         // Already in the store means Preferences has saved it at least once;
+         // the ini is history from that point on.
+         if aStore.CommandValue(MIGRATED_COMMANDS[i], '') <> '' then
+            begin
+            Continue;
+            end;
+
+         value := ini.ReadString(string(_COMMANDS), MIGRATED_COMMANDS[i], '');
+         if value = '' then
+            begin
+            Continue;
+            end;
+
+         aStore.SetCommand(MIGRATED_COMMANDS[i], value);
+         logger.Info('[SeedMigratedCommands] %s = %s carried over from tr4w.ini',
+                     [MIGRATED_COMMANDS[i], value]);
+         end;
+   finally
+      ini.Free;
+   end;
+
+   // DELIBERATELY NOT SAVED HERE, matching SeedLoggingFromIni. Writing
+   // settings\tr4w.json during startup would mean the first run after an
+   // upgrade rewrites the operator's configuration file before they have asked
+   // for anything -- on a directory that may not even be writable. Until
+   // Preferences saves, the ini stays the source and the carry-over simply
+   // happens again next start: same key, same value, idempotent, and nothing
+   // else writes that ini key now that the row is csJSON.
+end;
+
 procedure SeedLoggingFromIni(const aStore: TRadioConfigStore);
 var
    ini: TIniFile;
@@ -367,6 +465,75 @@ begin
       begin
       aStore.SetCommand(aCommand, aValue);
       end;
+end;
+
+function ApplyPeerCommand(const aCommand, aValue: string): boolean;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   udp: TUDPBroadcastConfig;
+   loadErr: string;
+   ini: TIniFile;
+begin
+   Result := False;
+
+   if not CommandIsJSONOwned(aCommand) then
+      begin
+      // UNCHANGED BEHAVIOUR for a row that has not migrated: apply, then write
+      // the ini key.  ApplyAndStoreCommand with a nil store is exactly
+      // CheckCommand here -- aApplyJSONOwned only gates csJSON rows, and this
+      // is not one.
+      Result := ApplyAndStoreCommand(nil, aCommand, aValue);
+      if Result then
+         begin
+         // TIniFile rather than WritePrivateProfileStringA: D12/FPC bind the
+         // generic name to the W variant, and this call site was passing
+         // @ShortString[1] to it.  It happened to work because the parameter is
+         // an untyped pointer; it is the trap documented in CLAUDE.md and there
+         // is no reason to keep it when the RTL wrapper says what it means.
+         ini := TIniFile.Create(SettingsDirectory + 'tr4w.ini');
+         try
+            ini.WriteString(string(_COMMANDS), aCommand, aValue);
+         finally
+            ini.Free;
+         end;
+         end;
+      Exit;
+      end;
+
+   // A MIGRATED ROW.  All three libraries are loaded and saved together even
+   // though only one command changes: they share one file, and saving a store
+   // that was loaded without the others would silently drop their sections.
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   udp    := TUDPBroadcastConfig.Create;
+   try
+      if FileExists(RadioStoreFileName) then
+         begin
+         if not LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
+            begin
+            // REFUSE rather than write over a file we could not read.  Returning
+            // False means the caller says nothing changed, which is true.
+            logger.Error('[ApplyPeerCommand] "%s" not applied: %s cannot be read (%s)',
+                         [aCommand, RadioStoreFileName, loadErr]);
+            Exit;
+            end;
+         end;
+
+      Result := ApplyAndStoreCommand(store, aCommand, aValue);
+      if Result then
+         begin
+         // Creating the file when it did not exist is intended.  Startup skips
+         // the store entirely when there is no file, so without writing one the
+         // peer's change would apply to this session and be gone on restart --
+         // which is the failure this routine exists to remove.
+         SaveConfig(RadioStoreFileName, store, keyers, udp);
+         end;
+   finally
+      udp.Free;
+      keyers.Free;
+      store.Free;
+   end;
 end;
 
 procedure ApplyActiveCluster(const aStore: TRadioConfigStore);
@@ -1171,6 +1338,10 @@ begin
       // is the exact silent failure csJSON is documented to cause without an
       // applier; I wrote the appliers and then did not call them.
       ApplyLoggingSettings(store);
+      // BEFORE ApplyStoredCommands, not after: it carries a migrated command's
+      // value out of tr4w.ini and into the store, and the apply below is what
+      // then puts it into force on this very run.
+      SeedMigratedCommandsFromIni(store);
       ApplyStoredCommands(store);
       ApplyActiveCluster(store);
 

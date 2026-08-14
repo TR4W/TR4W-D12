@@ -1,4 +1,4 @@
-program tr4w;
+﻿program tr4w;
 {$IMPORTEDDATA OFF}
 {$I src\tr4w.inc}
 
@@ -150,6 +150,7 @@ uses
   uStations in 'src\uStations.pas',
   uAltD in 'src\uAltD.pas',
   uWinKey in 'src\uWinKey.pas',
+  uConfigValues in 'src\uConfigValues.pas',
   uCFG in 'src\uCFG.pas',
   uCRC32 in 'src\uCRC32.pas',
   uMP3Recorder in 'src\uMP3Recorder.pas',

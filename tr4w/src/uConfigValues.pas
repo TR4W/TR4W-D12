@@ -1,0 +1,75 @@
+{
+ Copyright Thomas M. Schaefer, NY4I (c) 2026.
+ This file is part of TR4W  (SRC)
+ TR4W is free software: you can redistribute it and/or
+ modify it under the terms of the GNU General Public License as
+ published by the Free Software Foundation, either version 2 of the
+ License, or (at your option) any later version.
+ TR4W is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ You should have received a copy of the GNU General
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
+http://www.gnu.org/licenses/gpl-3.0.txt
+}
+unit uConfigValues;
+{$I tr4w.inc}
+
+{
+  THE LIVE CONFIGURATION VALUES -- the "cfg object" (NY4I).
+
+  Step 3 of retiring the ini is that a migrated setting's controlling variable
+  stops being a global and is reached through the configuration object instead.
+  This is that object: one record variable, one field per migrated setting,
+  replacing one scattered global each.
+
+  WHY A RECORD VARIABLE AND NOT A CLASS.  Not a stylistic choice -- CFGCA and
+  ArrayRecordArray are const arrays holding the ADDRESS of each setting's
+  storage, and CheckCommand writes through that address.  A compile-time
+  initialiser can take @SomeVar.Field, whose offset is known when the program is
+  linked; it cannot take the address of a field of an object that will not exist
+  until run time.  So as long as CheckCommand is the applier, the storage must be
+  statically addressable.
+
+  The existing @CD.CountryString row is the same construction and has always
+  compiled, which is what established this works before anything was moved.
+
+  WHAT THIS BUYS, given that `Config` is itself one global.  The thirty settings
+  in question are today thirty unrelated variables scattered across LOGWIND,
+  VC and half the TRDOS core -- writable from anywhere, with nothing naming them
+  as configuration and no way to enumerate them.  Gathering them here makes them
+  one named thing, gives every call site a reason to say Config.X out loud, and
+  leaves exactly one place to change when the applier stops being CheckCommand.
+  That last step is what finally removes the address-taking, and it cannot
+  happen until the rows have moved.
+
+  WHAT DOES NOT BELONG HERE.  Per-QSO or per-contest state.  This record is for
+  values an operator SETS, and it should stay small enough to read at a glance.
+}
+
+interface
+
+type
+   { One field per migrated setting.  Add a field in the same commit that flips
+     the row -- an orphan field is harmless, a missing one does not compile. }
+   TR4WConfig = record
+      { CW SPEED INCREMENT -- how far a speed-up/slow-down keystroke moves.
+        Was a typed constant in LOGWIND.PAS, reached by nine call sites across
+        MainUnit and LOGSTUFF.  Range 1..10, enforced by the CFGCA row. }
+      CodeSpeedIncrement: integer;
+   end;
+
+var
+   { Initialised to the SAME defaults the globals carried, so a station with no
+     settings file behaves exactly as before.  A zero here would not be a
+     neutral starting point -- a speed increment of zero means the speed-up and
+     slow-down keys quietly stop working. }
+   Config: TR4WConfig = (
+      CodeSpeedIncrement: 3
+   );
+
+implementation
+
+end.

@@ -181,6 +181,7 @@ uses
   LOGSUBS2,
 //  uMultsFrequencies,
   uRadioPolling,
+  uRadioConfigApply,   // ApplyPeerCommand -- a peer's config change
   uTelnet,
   uGetServerLog,
   MainUnit;
@@ -324,9 +325,16 @@ begin
           NET_PARAMETER_ID:
             begin
               ParameterToNetworkPtr := @NetBuffer[Bufindex];
-              if CheckCommand(@ParameterToNetworkPtr^.pnCommand, ParameterToNetworkPtr^.pnValue) then
+              // ApplyPeerCommand, not CheckCommand + an ini write.  A row that
+              // has moved to settings\tr4w.json is INERT to CheckCommand, so
+              // this returned False for seventeen rows -- the UDP broadcast
+              // block among them -- and the operator was told nothing while the
+              // station that made the change saw it take effect.  The routine
+              // routes on the row's own state and persists to whichever file is
+              // that row's system of record.
+              if ApplyPeerCommand(string(ParameterToNetworkPtr^.pnCommand),
+                                  string(ParameterToNetworkPtr^.pnValue)) then
                  begin
-                 Windows.WritePrivateProfileStringA(_COMMANDS, @ParameterToNetworkPtr^.pnCommand[1], @ParameterToNetworkPtr^.pnValue[1], TR4W_INI_FILENAME);
  //                ShowTrayTips();
                  QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
                  end;
