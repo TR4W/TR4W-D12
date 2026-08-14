@@ -1947,6 +1947,23 @@ begin
    // GOING to be, so nobody has to guess whether Preferences is meant to grow.
    lblPlaceholder.Visible := not shown;
 
+   // SAY WHICH SECTION OPENED AND WHETHER IT HAD ANYTHING TO SHOW.  Nothing
+   // outside the process can determine this: an LCL TLabel is a TGraphicControl
+   // with no window handle, so a placeholder-only section is indistinguishable
+   // from an empty one to any window-enumerating harness -- which is precisely
+   // how the nav tree itself stayed empty for a whole session without a single
+   // line in the log.  One Debug line per section click makes the sweep in
+   // spike/fpc-sweep-prefs.ps1 assert against the form's OWN answer instead of
+   // inferring one from the outside.
+   if shown then
+      begin
+      logger.Debug('[Prefs] section tag=%d -> panel', [wanted]);
+      end
+   else
+      begin
+      logger.Debug('[Prefs] section tag=%d -> placeholder', [wanted]);
+      end;
+
    // The cluster directory is NOT built here.  Opening the section was already
    // far better than building it on every refresh -- 1864 ms measured, once --
    // but a section that pauses when you click it still reads as a slow program.
