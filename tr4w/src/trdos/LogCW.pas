@@ -23,6 +23,7 @@
 interface
 
 uses
+  uConfigValues,
 utils_text,
   MMSystem,
   uWinKey,
@@ -81,9 +82,7 @@ var
 
   AutoCQDelayTime                       : integer = 3000;
   AutoCQMemory                          : Char = CHR(112);
-  CWEnable                              : boolean = True;
   CWMessageCommand                      : CWMessageCommandType {= NoCWCommand};
-  CWTone                                : integer = 700;
   CQMemory                              : FunctionKeyMemoryArray;
   EXMemory                              : FunctionKeyMemoryArray;
 
@@ -244,7 +243,7 @@ begin
       CWBurstAccum := CWBurstAccum + Msg;
       end;
    if ( (Msg = CWByCATBufferTerminator) or
-        ((CWEnable and CWEnabled and IsCWByCATActive )) ) then   // ny4i 4.44.5    + Issue 111
+        ((Config.CWEnable and CWEnabled and IsCWByCATActive )) ) then   // ny4i 4.44.5    + Issue 111
       begin
       // Gate expression unchanged (note the terminator BYPASSES the enable
       // gates on purpose).  The arm body moved verbatim into
@@ -293,7 +292,7 @@ begin
      end;
 {$IFEND}
 
-  if CWEnable and CWEnabled then
+  if Config.CWEnable and CWEnabled then
   begin
 {$IF OZCR2008}
     CWMessageToNetwork                                      := CWMessageToNetwork + Msg;
@@ -501,10 +500,10 @@ procedure SendStringAndStop(Msg: Str160);
 begin
   if ActiveMode = CW then
      begin
-     if CWEnable and CWEnabled then
+     if Config.CWEnable and CWEnabled then
         begin
-        //            CPUKeyer.AddStringToCWBuffer (MSG, CWTone);
-    AddStringToBuffer(Msg, CWTone);
+        //            CPUKeyer.AddStringToCWBuffer (MSG, Config.CWTone);
+    AddStringToBuffer(Msg, Config.CWTone);
     if IsCWByCATActive then
        begin
        // Q7 no longer bypasses the factory: the terminator goes through the
@@ -521,7 +520,7 @@ begin
        {
       PTTOn;
       PostMmttyMessage(RXM_PTT, $00000002);
-      AddStringToBuffer(Msg, CWTone);
+      AddStringToBuffer(Msg, Config.CWTone);
       PostMessage(MMTTYEXE_Handle, MSG_MMTTY, RXM_PTT, $00000001);
       }
      end;
@@ -642,7 +641,7 @@ begin
   BufferStart                                               := 0;
   BufferEnd                                                 := 0;
 
-  if not CWEnable then
+  if not Config.CWEnable then
      begin
      logger.Warn('Trying SendKeyboardInput while CWEnable is false');
      Exit;
@@ -2275,7 +2274,7 @@ begin
   DebugMsg('<<<<< EXIT SetUpToSendOnInactiveRadio');
 end;
 
-// Single owner of the CW on/off state. Keeps the two flags (CWEnable and
+// Single owner of the CW on/off state. Keeps the two flags (Config.CWEnable and
 // CWEnabled) coherent, flushes the keyer buffer and drops PTT when disabling,
 // and refreshes the speed display. All callers that turn CW on or off should
 // route through here so the on-screen state can never disagree with reality.
@@ -2284,7 +2283,7 @@ procedure SetCWState(Enable, DisplayPrompt: boolean);
 begin
    if Enable then
       begin
-      CWEnable  := True;
+      Config.CWEnable  := True;
       CWEnabled := True;
       QuickDisplay('');
       end
@@ -2295,7 +2294,7 @@ begin
          QuickDisplay(TC_CWDISABLEDWITHALTK);
          end;
       FlushCWBufferAndClearPTT;
-      CWEnable  := False;
+      Config.CWEnable  := False;
       CWEnabled := False;
       end;
    DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
@@ -2306,7 +2305,7 @@ procedure ToggleCW(DisplayPrompt: boolean);
 begin
    if ActiveMode = CW then
       begin
-      SetCWState(not (CWEnabled or CWEnable), DisplayPrompt);
+      SetCWState(not (CWEnabled or Config.CWEnable), DisplayPrompt);
       end
    else
       begin

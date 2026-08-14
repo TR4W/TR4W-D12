@@ -66,6 +66,7 @@ procedure DeclareAllSettings;
 implementation
 
 uses
+  uConfigValues,
    uSettingsRegistry,
    uSettingsLegacy;   // RegisterLegacySetting -- no FMX
 
@@ -98,15 +99,15 @@ begin
    // settings that apply to every keyer.
    RegisterStoredSetting('operating.cw.serial.ditDahRatio',    'DIT DAH RATIO',
                          'Dit/dah ratio');
-   RegisterLegacySetting('operating.cw.serial.weight',         'WEIGHT',
+   RegisterStoredSetting('operating.cw.serial.weight',         'WEIGHT',
                          'Weight');
-   RegisterLegacySetting('operating.cw.serial.farnsworth',     'FARNSWORTH ENABLE',
+   RegisterStoredSetting('operating.cw.serial.farnsworth',     'FARNSWORTH ENABLE',
                          'Farnsworth spacing');
-   RegisterLegacySetting('operating.cw.serial.farnsworthSpeed','FARNSWORTH SPEED',
+   RegisterStoredSetting('operating.cw.serial.farnsworthSpeed','FARNSWORTH SPEED',
                          'Character speed');
 
    // --- CW Settings (the keyer page) ---------------------------------------
-   RegisterLegacySetting('cw.enable',            'CW ENABLE',
+   RegisterStoredSetting('cw.enable',            'CW ENABLE',
                          'Send CW');
    RegisterStoredSetting('cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
                          'Match the speed a station was worked at before');
@@ -116,7 +117,7 @@ begin
    // docs/CFG_MIGRATION_PLAN.md.
    RegisterStoredSetting('cw.speedIncrement',    'CW SPEED INCREMENT',
                          'Speed step');
-   RegisterLegacySetting('cw.tone',              'CW TONE',
+   RegisterStoredSetting('cw.tone',              'CW TONE',
                          'Sidetone');
 
    // --- Operating: bands ---------------------------------------------------

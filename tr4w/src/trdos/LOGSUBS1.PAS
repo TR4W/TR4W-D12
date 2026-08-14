@@ -138,7 +138,7 @@ begin // 1
      begin
      goto DontCheckPTT;
      end;
-  if (ActiveMode = CW) and (CWEnable = False) then
+  if (ActiveMode = CW) and (Config.CWEnable = False) then
      begin
      goto DontCheckPTT;
      end;
@@ -327,7 +327,7 @@ begin
           begin
           if CWStillBeingSent then
              begin
-             AddStringToBuffer(' ', CWTone);
+             AddStringToBuffer(' ', Config.CWTone);
              end;
           end
        else if pos(ControlD, Message) = 0 then
@@ -592,7 +592,7 @@ begin
     begin
       TailEndCallString := PostcedingString(CallWindowString, ',');
       TailEnding := True;
-      AddStringToBuffer(TailEndMessage + ' ' + TailEndCallString, CWTone);
+      AddStringToBuffer(TailEndMessage + ' ' + TailEndCallString, Config.CWTone);
     end;
 }
 end;

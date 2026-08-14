@@ -1420,7 +1420,7 @@ begin
 
   if ExchangeHasBeenSent = False then
     if MessageEnable and not BeSilent then
-      if not (DebugFlag and (CWTone = 0)) then
+      if not (DebugFlag and (Config.CWTone = 0)) then
          begin
          // Frm.ExchangeWindow . SetFocus;
          tExchangeWindowSetFocus;
@@ -1733,7 +1733,7 @@ begin
            begin
            if QTCsEnabled and (MyContinent = Europe) then
               begin
-              AddStringToBuffer(' B4 ', CWTone);
+              AddStringToBuffer(' B4 ', Config.CWTone);
               // WAEQTC (CallWindowString);
               end
            else if MessageEnable and not BeSilent then
@@ -2760,11 +2760,11 @@ begin
      begin
      ReviewBackCopyFiles
      end
-  else if CWTone <> 0 then
+  else if Config.CWTone <> 0 then
      begin
-     OldCWTone := CWTone;
-     CWTone := 0;
-     AddStringToBuffer('', CWTone);
+     OldCWTone := Config.CWTone;
+     Config.CWTone := 0;
+     AddStringToBuffer('', Config.CWTone);
      NoSound;
      end
   else
@@ -2773,8 +2773,8 @@ begin
         begin
         OldCWTone := 700;
         end;
-     CWTone := OldCWTone;
-     AddStringToBuffer('', CWTone);
+     Config.CWTone := OldCWTone;
+     AddStringToBuffer('', Config.CWTone);
      end;
 end;
 
@@ -2838,17 +2838,17 @@ var
   PeviousDVPEnable: boolean;
   PreviousBeSilent: boolean;
 begin
-  PeviousCWEnable := CWEnable;
+  PeviousCWEnable := Config.CWEnable;
   PeviousDVPEnable := DVKEnable;
   PreviousBeSilent := BeSilent;
 
-  CWEnable := False;
+  Config.CWEnable := False;
   DVKEnable := False;
   BeSilent := True;
 
   ProcessReturn;
 
-  CWEnable := PeviousCWEnable;
+  Config.CWEnable := PeviousCWEnable;
   DVKEnable := PeviousDVPEnable;
   BeSilent := PreviousBeSilent;
 end;
@@ -3971,7 +3971,7 @@ begin
         if SendKeyboardInputDialogOpen then Exit;
         focus := GetFocus;
         if ActiveMode = CW then
-          if not CWEnable then
+          if not Config.CWEnable then
              begin
              logger.Warn('Trying menu_ctrl_sendkeyboardinput while CWEnable is false');
              Exit;
@@ -4818,10 +4818,10 @@ procedure RepeatLastCWMessage;
 begin
    if LastCWMessage <> '' then
       begin
-      AddStringToBuffer(LastCWMessage, CWTone);
+      AddStringToBuffer(LastCWMessage, Config.CWTone);
       if IsCWByCATActive then
          begin
-         AddStringToBuffer(CWByCATBufferTerminator, CWTone);
+         AddStringToBuffer(CWByCATBufferTerminator, Config.CWTone);
          end;
       end;
 end;
@@ -4868,11 +4868,11 @@ begin
                 CheckInactiveRigCallingCQ;
                 DebugMsg('[CallWindowKeyDownProc] Call AddStringToBuffer with ' +
                   CallWindowString);
-                AddStringToBuffer(CallWindowString, CWTone);
+                AddStringToBuffer(CallWindowString, Config.CWTone);
                 if IsCWByCATActive then
                    begin
                    DebugMsg('[CallWindowKeyDownProc] Calling AddStringToBuffer with CWByCATBufferTerminator');
-                   AddStringToBuffer(CWByCATBufferTerminator, CWTone);
+                   AddStringToBuffer(CWByCATBufferTerminator, Config.CWTone);
                    end;
                 // PTTForceOn;
                 tAutoSendMode := True;
@@ -4897,7 +4897,7 @@ begin
         else
            begin
            logger.trace('[CallWindowKeyDownProc] Calling AddStringToBuffer with !');
-           AddStringToBuffer('!', CWTone);
+           AddStringToBuffer('!', Config.CWTone);
            EditingCallsignSent := True;
            end;
 
@@ -8133,12 +8133,12 @@ begin
       // TODO: candidate for LogCW.SetCWState(False, ...) once the 'CW Off'/'CW On'
       // quick-display text is parameterized (Issue 380 cleanup). Left inline for now.
       begin
-        if CWEnabled or CWEnable then
+        if CWEnabled or Config.CWEnable then
            begin
            QuickDisplay('CW Off');
            FlushCWBufferAndClearPTT('MainUnit: CW turned Off');
            CWEnabled := False;
-           CWEnable := false;
+           Config.CWEnable := false;
            DisplayCodeSpeed;
            end;
       end;
@@ -8146,7 +8146,7 @@ begin
       // TODO: candidate for LogCW.SetCWState(True, ...) (Issue 380 cleanup). Left inline for now.
       begin
         CWEnabled := True;
-        CWEnable := true;
+        Config.CWEnable := true;
         QuickDisplay('CW On');
         DisplayCodeSpeed;
         SetSpeed(CodeSpeed);

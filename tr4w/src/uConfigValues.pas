@@ -92,6 +92,22 @@ type
       GetScoresSeverPostingAddress: ShortString;
       GetScoresSeverReadingAddress: ShortString;
       tConnectionAtStartup: boolean;
+
+      { CW KEYING, migrated 2026-08-14. These five differ from everything above:
+        THE SESSION MUTATES THEM. Weight, FarnsworthEnable and FarnsworthSpeed are
+        changed by CW-buffer control codes mid-message (LOGK1EA), and CWEnable and
+        CWTone by live keystrokes. So the stored value is what the session STARTS
+        with; a change made while operating is not written back. That was already
+        true and simply undocumented.
+
+        Weight is REAL, not integer, and its CFGCA bounds are stored x10 --
+        crMin:5/crMax:15 means 0.5..1.5 (uCFG.pas:1526 divides by ten), which is
+        why a default of 1.0 sits correctly in the middle of a 5..15 row. }
+      CWEnable: boolean;
+      CWTone: integer;
+      FarnsworthEnable: boolean;
+      FarnsworthSpeed: integer;
+      Weight: REAL;
    end;
 
 var
@@ -124,7 +140,13 @@ var
       tDitDahRatio: 3;
       GetScoresSeverPostingAddress: '';
       GetScoresSeverReadingAddress: '';
-      tConnectionAtStartup: False
+      tConnectionAtStartup: False;
+
+      CWEnable: True;
+      CWTone: 700;
+      FarnsworthEnable: False;
+      FarnsworthSpeed: 25;
+      Weight: 1.0
    );
 
 implementation

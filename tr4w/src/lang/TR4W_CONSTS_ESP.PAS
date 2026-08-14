@@ -1166,7 +1166,7 @@
   WBE1                                  = 'WARC bands are enabled';
   WBE2                                  = 'WARC bands skipped with Alt-B or Alt-V';
 
-  {WEIGHT}
+  {Config.WEIGHT}
   WEI1                                  = 'Keying weight';
 
   {WILDCARD PARTIALS}

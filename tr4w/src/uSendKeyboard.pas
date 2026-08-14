@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -25,6 +25,7 @@ unit uSendKeyboard;
 interface
 
 uses
+  uConfigValues,
   uMMTTY,
   uTelnet,
   VC,
@@ -92,11 +93,11 @@ begin
                                          newpos := length(s);
                                          if newpos > oldpos then
                                             begin
-                                            AddStringToBuffer(s[newpos], CWTone);
+                                            AddStringToBuffer(s[newpos], Config.CWTone);
                                             end
                                          else
                                             begin
-                                            AddStringToBuffer(#8, CWTone);
+                                            AddStringToBuffer(#8, Config.CWTone);
                                             end;
                                          oldpos := newpos;
                            end

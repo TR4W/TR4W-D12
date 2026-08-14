@@ -176,10 +176,10 @@ begin
            '@':
              if StringHas(CallWindowString, '?') then
                 begin
-                AddStringToBuffer(' ' + CallWindowString, CWTone);
+                AddStringToBuffer(' ' + CallWindowString, Config.CWTone);
                 end;
 
-         else AddStringToBuffer(ControlLeftBracket + SendChar, CWTone);
+         else AddStringToBuffer(ControlLeftBracket + SendChar, Config.CWTone);
          end;
          CommandMode := False;
          Continue;
@@ -194,7 +194,7 @@ begin
                  end;
         //       while length(PrevNr) < 3  do
         //       PrevNr := '0' + PrevNr;
-               AddStringToBuffer(PrevNr,CWTone);
+               AddStringToBuffer(PrevNr,Config.CWTone);
             end;                                    // end 4.52.
 
         '#':
@@ -272,35 +272,35 @@ begin
                  end;
 
 
-            AddStringToBuffer(TempString, CWTone);
+            AddStringToBuffer(TempString, Config.CWTone);
           end;
 
-        '_': AddStringToBuffer(' ', CWTone);
+        '_': AddStringToBuffer(' ', Config.CWTone);
 
         ControlD:
           if CWStillBeingSent then
              begin
-             AddStringToBuffer(' ', CWTone);
+             AddStringToBuffer(' ', Config.CWTone);
              end;
 
         ',':      // n4af 4.56.7
         begin
          TempString := copy(gettimestring,1,2) + copy(gettimestring,4,2);
          STString := TempString;     
-         AddStringToBuffer(TempString , CWTone);
+         AddStringToBuffer(TempString , Config.CWTone);
         end;
 
              '.':
              if StString <> '' then
                 begin
-                AddStringToBuffer(STString, CWTone);     // n4af 04.35.2
+                AddStringToBuffer(STString, Config.CWTone);     // n4af 04.35.2
                 end;
 
         '*':
           begin //KK1L: 6.72 New character to send Alt-D dupe checked call or call in call window
             if (DupeInfoCall <> '') and (DupeInfoCall <> EscapeKey) then
                begin
-               AddStringToBuffer(DupeInfoCall, CWTone)
+               AddStringToBuffer(DupeInfoCall, Config.CWTone)
                end
             else
                begin
@@ -317,7 +317,7 @@ begin
 
                if CallWindowString <> '' then
                   begin
-                  AddStringToBuffer(CallWindowString, CWTone);
+                  AddStringToBuffer(CallWindowString, Config.CWTone);
                   end;
                end;
           end;
@@ -338,7 +338,7 @@ begin
 
             if CallWindowString <> '' then
                begin
-               AddStringToBuffer(CallWindowString, CWTone);
+               AddStringToBuffer(CallWindowString, Config.CWTone);
                end;
           end;
 
@@ -361,8 +361,8 @@ begin
           end;
   
         '~': SendSalutation(CallWindowString);
-        '\': AddStringToBuffer(MyCall, CWTone);
-        '&': AddStringToBuffer(MyState, CWTone);
+        '\': AddStringToBuffer(MyCall, Config.CWTone);
+        '&': AddStringToBuffer(MyState, Config.CWTone);
 
         '|':
           begin
@@ -373,7 +373,7 @@ begin
             ProcessExchange(TempString, TempReceivedData);
             if TempReceivedData.Name <> '' then
                begin
-               AddStringToBuffer(TempReceivedData.Name + ' ', CWTone);
+               AddStringToBuffer(TempReceivedData.Name + ' ', Config.CWTone);
                end;
           end;
 
@@ -382,7 +382,7 @@ begin
             WarningSounded := False;
 
             //            QuickDisplay('WAITING FOR YOU ENTER STRENGTH OF RST (Single digit)!!');
-            //            AddStringToBuffer('5', CWTone);
+            //            AddStringToBuffer('5', Config.CWTone);
             if WaitForStrength then
                begin
                i := QuickEditInteger(TC_WAITINGFORYOUENTERSTRENGTHOFRST, 1)
@@ -403,27 +403,27 @@ begin
             Key := IntToStr(i)[1];
             if i = 9 then
                begin
-               AddStringToBuffer('5NN', CWTone)
+               AddStringToBuffer('5NN', Config.CWTone)
                end
             else
                begin
-               AddStringToBuffer('5' + Key + 'N', CWTone);
+               AddStringToBuffer('5' + Key + 'N', Config.CWTone);
                end;
             ReceivedData.RSTSent := 509 + i * 10;
 
             LastRSTSent := ReceivedData.RSTSent;
           end;
 
-        ']': AddStringToBuffer(IntToStr(LastRSTSent), CWTone);
+        ']': AddStringToBuffer(IntToStr(LastRSTSent), Config.CWTone);
 
-        '{': AddStringToBuffer(ReceivedData.Callsign, CWTone);
+        '{': AddStringToBuffer(ReceivedData.Callsign, Config.CWTone);
 
         '}':
           if StringHas(ReceivedData.Callsign, '/') or
             ((length(ReceivedData.Callsign) = 4) and SendCompleteFourLetterCall) or
             StringHas(CallsignICameBackTo, '/') then
              begin
-             AddStringToBuffer(ReceivedData.Callsign, CWTone)
+             AddStringToBuffer(ReceivedData.Callsign, Config.CWTone)
              end
           else
             if GetPrefix(ReceivedData.Callsign) =
@@ -434,41 +434,41 @@ begin
                   begin
                   TempString := Copy(ReceivedData.Callsign, length(ReceivedData.Callsign) - 1, 2);
                   end;
-               AddStringToBuffer(TempString, CWTone);
+               AddStringToBuffer(TempString, Config.CWTone);
                end
             else
               if GetSuffix(ReceivedData.Callsign) =
                 GetSuffix(CallsignICameBackTo) then
                  begin
-                 AddStringToBuffer(GetPrefix(ReceivedData.Callsign), CWTone)
+                 AddStringToBuffer(GetPrefix(ReceivedData.Callsign), Config.CWTone)
                  end
               else
                  begin
-                 AddStringToBuffer(ReceivedData.Callsign, CWTone);
+                 AddStringToBuffer(ReceivedData.Callsign, Config.CWTone);
                  end;
 
-        ')': AddStringToBuffer(VisibleLog.LastEntry(False, letCallsign), CWTone);
+        ')': AddStringToBuffer(VisibleLog.LastEntry(False, letCallsign), Config.CWTone);
 
         '(':
           if TotalContacts = 0 then
              begin
              if MyName <> '' then
                 begin
-                AddStringToBuffer(MyName, CWTone)
+                AddStringToBuffer(MyName, Config.CWTone)
                 end
              else
                 begin
-                AddStringToBuffer(MyPostalCode, CWTone);
+                AddStringToBuffer(MyPostalCode, Config.CWTone);
                 end;
              end
           else
              begin
 
-             AddStringToBuffer(VisibleLog.LastEntry(False, letQTHString), CWTone);
+             AddStringToBuffer(VisibleLog.LastEntry(False, letQTHString), Config.CWTone);
 
              end;
 
-        ControlW: AddStringToBuffer(VisibleLog.LastName(4), CWTone);
+        ControlW: AddStringToBuffer(VisibleLog.LastName(4), Config.CWTone);
 
         ControlR:
           begin
@@ -480,14 +480,14 @@ begin
                 CHR(Random(25) + Ord('A'));
             until length(ReceivedData.RandomCharsSent) = 5;
 
-            AddStringToBuffer(ReceivedData.RandomCharsSent, CWTone);
+            AddStringToBuffer(ReceivedData.RandomCharsSent, Config.CWTone);
 
             //                      SaveSetAndClearActiveWindow (DupeInfoWindow);
             //                      Write ('Sent = ', ReceivedData.RandomCharsSent);
             //                      RestorePreviousWindow;
           end;
 
-        ControlT: AddStringToBuffer(ReceivedData.RandomCharsSent, CWTone);
+        ControlT: AddStringToBuffer(ReceivedData.RandomCharsSent, Config.CWTone);
 
         ControlU:
           begin
@@ -507,7 +507,7 @@ begin
 
         ControlLeftBracket: CommandMode := True;
 
-      else AddStringToBuffer(SendChar, CWTone);
+      else AddStringToBuffer(SendChar, Config.CWTone);
       end;
       inc(CharacterCount);
 
@@ -517,7 +517,7 @@ begin
   InactiveRigCallingCQ := False;
    if (IsCWByCATActive)  then
       begin
-      AddStringToBuffer(CWByCATBufferTerminator,CWTone); // Flushes the buffer when the $242 is passed to SendCW - by only By CAT
+      AddStringToBuffer(CWByCATBufferTerminator,Config.CWTone); // Flushes the buffer when the $242 is passed to SendCW - by only By CAT
       end;
 
 // if IsCWByCATActive then backtoinactiveradioafterqso;
@@ -601,7 +601,7 @@ begin
 
               '*': BEGIN {KK1L: 6.72 New character to send Alt-D dupe checked call or call in call window}
   {                 IF (DupeInfoCall <> '') AND (DupeInfoCall <> EscapeKey) THEN
-                       AddStringToBuffer (DupeInfoCall, CWTone)
+                       AddStringToBuffer (DupeInfoCall, Config.CWTone)
                    ELSE
                        BEGIN
                        IF (CallsignUpdateEnable) AND (TempString <> '') THEN

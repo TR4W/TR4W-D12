@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -24,6 +24,7 @@ unit uHistory;
 interface
 
 uses
+  uConfigValues,
 VC,
   TF,
 //  Tree,
