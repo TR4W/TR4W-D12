@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -24,6 +24,7 @@ unit LogCfg;
 interface
 
 uses
+  uConfigValues,
 
   TF,
   VC,
@@ -493,7 +494,7 @@ begin
 
   TryRunPaddleAndFootSwitchThread;
   InitializeOtherLPTPorts;
-  MonitorTone := CWTone;
+  MonitorTone := Config.CWTone;
 
 //  ActiveBand := ActiveRadioPtr.BandMemory;
 //  ActiveMode := ActiveRadioPtr.ModeMemory;
@@ -512,7 +513,7 @@ begin
   begin
     AutoDupeEnableCQ := False;
 
-    if CWTone = 0 then
+    if Config.CWTone = 0 then
     begin
       FlushCWBufferAndClearPTT('LogCfg: config reload');
       CWEnabled := False;
@@ -656,15 +657,15 @@ begin
      EnumerateLinesInFile(TR4W_INI_FILENAME, RestoreCFGPasswordCase, False);
      end;
 
-  // CW-state desync fix: the 'CW ENABLE' config command writes only CWEnable,
+  // CW-state desync fix: the 'CW ENABLE' config command writes only Config.CWEnable,
   // but the actual transmit gate (SendCrypticCWString) and the Alt-K toggle
   // (SetCWState) key off CWEnabled, while the speed display ORs the two.  With
   // nothing syncing them, "CW ENABLE = FALSE" left CWEnabled at its True
   // default -- so the display showed "WPM" yet no CW was sent until two Alt-K
   // toggles reconciled both.  Mirror the configured value into the runtime gate
-  // after every config read so the two can never start out of step.  (CWEnable
+  // after every config read so the two can never start out of step.  (Config.CWEnable
   // and CWEnabled represent the same thing and SetCWState always sets both.)
-  CWEnabled := CWEnable;
+  CWEnabled := Config.CWEnable;
 
   if ConfigFileName = cfgCFG then if not ConfigurationOkay then halt;
 end;

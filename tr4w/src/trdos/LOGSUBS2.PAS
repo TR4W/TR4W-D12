@@ -1065,9 +1065,9 @@ begin
                begin
                SendChar := TempString[CharacterCount];
                case SendChar of
-                 '\': AddStringToBuffer(MyCall, CWTone);
+                 '\': AddStringToBuffer(MyCall, Config.CWTone);
                  '>': RITClear;
-               else AddStringToBuffer(SendChar, CWTone);
+               else AddStringToBuffer(SendChar, Config.CWTone);
                end;
                end;
             end;
@@ -1751,7 +1751,7 @@ begin
      RememberCWSpeed := 0;
      DisplayCodeSpeed;
      end;
-  //  if (DDXState <> Off) and Debug and (CWTone = 0) then if Random(100) = 0 then BandUp;
+  //  if (DDXState <> Off) and Debug and (Config.CWTone = 0) then if Random(100) = 0 then BandUp;
   if BandMapEnable then
      begin
       //UpdateBandMapMultiplierStatus;
@@ -1894,10 +1894,10 @@ begin
             begin
             if MessageEnable then
                begin
-               AddStringToBuffer(CallWindowString, CWTone);
+               AddStringToBuffer(CallWindowString, Config.CWTone);
                if IsCWByCATActive then
                   begin
-                  AddStringToBuffer(CWByCATBufferTerminator,CWTone);
+                  AddStringToBuffer(CWByCATBufferTerminator,Config.CWTone);
                   end;
  //              PTTForceOn;
                end;
@@ -1948,7 +1948,7 @@ begin
                        end
                     else
                        begin
-                       AddStringToBuffer('!', CWTone);
+                       AddStringToBuffer('!', Config.CWTone);
                        Delete(CallWindowString, length(CallWindowString), 1);
                        EditingCallsignSent := True;
                        end;
@@ -2005,7 +2005,7 @@ begin
                    begin
                    EditingCallsignSent := False;
                    CallWindowString := CallWindowString + TempKey;
-                   AddStringToBuffer(TempKey, CWTone);
+                   AddStringToBuffer(TempKey, Config.CWTone);
                    Write(TempKey);
                    if PartialCallEnable then
                      if Sheet.TwoLetterCrunchProcess(CallWindowString) then
@@ -2326,7 +2326,7 @@ begin
                    begin
                    InactiveRigCallingCQ := False;
                    SetUpToSendOnActiveRadio;
-                   if MessageEnable and not ((CWTone = 0) and DebugFlag) then
+                   if MessageEnable and not ((Config.CWTone = 0) and DebugFlag) then
                        //wli                                SendFunctionKeyMessage (F1, CQOpMode);
                                                    { This is where the initial CQ gets sent if you
                                                     are in debug mode! }
@@ -2710,9 +2710,9 @@ var
     if (ActiveMode = CW) and (not TailEnding) and (not CallAlreadySent) then
        begin
        if MessageEnable and not BeSilent then
-         if not (DebugFlag and (CWTone = 0)) then
+         if not (DebugFlag and (Config.CWTone = 0)) then
             begin
-            AddStringToBuffer(CallsignICameBackTo, CWTone);
+            AddStringToBuffer(CallsignICameBackTo, Config.CWTone);
             end;
        CallAlreadySent := True;
        end;
@@ -2745,7 +2745,7 @@ var
                begin
                if QTCsEnabled and (MyContinent = Europe) then
                   begin
-                  AddStringToBuffer(' B4 ', CWTone);
+                  AddStringToBuffer(' B4 ', Config.CWTone);
                             //wli                            WAEQTC (CallWindowString);
                   end
                else
@@ -2810,7 +2810,7 @@ var
     else { not a dupe or not AutoDupeEnable }
        begin
        if MessageEnable and not BeSilent then
-         if not (DebugFlag and (CWTone = 0)) then
+         if not (DebugFlag and (Config.CWTone = 0)) then
              //wli                    AddOnCQExchange;
             begin
             ShowName(CallsignICameBackTo);
@@ -2842,7 +2842,7 @@ var
              begin
              TailEndCallString := '';
                    //wli                    SendCorrectCallIfNeeded;
-         //    if MessageEnable then AddStringToBuffer(TailEndMessage + ' ', CWTone);
+         //    if MessageEnable then AddStringToBuffer(TailEndMessage + ' ', Config.CWTone);
              repeat
                repeat until NewKeyPressed;
                TempKey := AnsiChar(UpCase(NewReadKey));
@@ -2851,7 +2851,7 @@ var
                     begin
                     if MessageEnable then
                        begin
-                       AddStringToBuffer(TempKey, CWTone);
+                       AddStringToBuffer(TempKey, Config.CWTone);
                        end;
                     TailEndCallString := TailEndCallString + TempKey;
                     end;
@@ -2869,7 +2869,7 @@ var
                 begin
                 RememberInactiveCQ := InactiveRigCallingCQ;
                         //wli                        SendCorrectCallIfNeeded;
-                if not (DebugFlag and (CWTone = 0)) then
+                if not (DebugFlag and (Config.CWTone = 0)) then
                    begin
                    if MessageEnable and not (BeSilent or TailEnding) then
                      if QuickQSL <> NoQuickQSLKey then

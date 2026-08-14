@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -65,6 +65,7 @@ unit uKeyerConfigStore;
 interface
 
 uses
+  uConfigValues,
    SysUtils,
    Classes,
    uJSON,
@@ -84,7 +85,7 @@ type
      None of those are library entries; they are METHODS available to a radio,
      with no settings of their own.
 
-     A WinKeyer's dit/dah ratio, weight, lead-in and sidetone are different:
+     A WinKeyer's dit/dah ratio, Config.weight, lead-in and sidetone are different:
      they belong to the DEVICE, and putting them on a radio would mean retyping
      seventeen settings for every rig the WinKeyer might key.  That is what this
      library is for.

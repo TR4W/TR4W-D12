@@ -1215,7 +1215,7 @@ begin
      begin
      Exit;
      end;
-  AddStringToBuffer(ProperSalutation(Call), CWTone);
+  AddStringToBuffer(ProperSalutation(Call), Config.CWTone);
 end;
 
 procedure SayHello(Call: CallString);
@@ -1240,7 +1240,7 @@ begin
         begin
         Salutation := 'HI';
         end;
-     AddStringToBuffer(Salutation + ' ' + Name + ' ', CWTone);
+     AddStringToBuffer(Salutation + ' ' + Name + ' ', Config.CWTone);
      ReceivedData.NameSent := True;
      end
   else
@@ -1282,7 +1282,7 @@ begin
 
   if (Name <> '') and (Name <> 'CLUB') then
      begin
-     AddStringToBuffer(Name + ' ', CWTone);
+     AddStringToBuffer(Name + ' ', Config.CWTone);
      ReceivedData.NameSent := True;
      end
   else

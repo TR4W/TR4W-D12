@@ -288,8 +288,6 @@ var
 
   EnableSixDVKMessages                  : boolean = True;
 
-  FarnsworthEnable                      : boolean;
-  FarnsworthSpeed                       : integer = 25;
   FootSwitchDebug                       : boolean;
   FootSwitchMode                        : FootSwitchModeType {= FootSwitchDisabled};
   tFootSwitchPressed                    : boolean;
@@ -364,7 +362,6 @@ var
   Tuning                                : boolean;
   TuneWithDits                          : boolean;
 
-  Weight                                : REAL = 1.0;
 
   ActiveBeep                            : BeepType;
   CWMessageToNetwork                    : string[CWMessageToNetworkLength];
@@ -965,7 +962,7 @@ procedure K1EAKeyer.Dit;
 
 begin
 
-  //   SpeakerBeep(CWTone, 90);
+  //   SpeakerBeep(Config.CWTone, 90);
   //   Sleep(30);
   if not CWBufferAvailable then
      begin
@@ -1025,7 +1022,7 @@ procedure K1EAKeyer.Dah;
 
 begin
 
-  //   SpeakerBeep(CWTone, 270);
+  //   SpeakerBeep(Config.CWTone, 270);
   //   Sleep(30);
 
   if not CWBufferAvailable then
@@ -1794,14 +1791,14 @@ begin
         IncrementBufferEnd;
       end;
 
-    ControlX: { Decrease weight command }
+    ControlX: { Decrease Config.weight command }
       begin
         CWBuffer^[CWBufferEnd].length := -1;
         CWBuffer^[CWBufferEnd].Key := False;
         IncrementBufferEnd;
       end;
 
-    ControlY: { Increase weight command }
+    ControlY: { Increase Config.weight command }
       begin
         CWBuffer^[CWBufferEnd].length := -1;
         CWBuffer^[CWBufferEnd].Key := True;
@@ -2118,17 +2115,17 @@ begin
             case CWBuffer^[CWBufferStart].length of
               -1:
                 if CWBuffer^[CWBufferStart].Key then
-                  Weight := Weight + 0.03
+                  Config.Weight := Config.Weight + 0.03
                 else
-                  Weight := Weight - 0.03;
+                  Config.Weight := Config.Weight - 0.03;
 
-              -2: FarnsworthEnable := not FarnsworthEnable;
-              -3: FarnsworthSpeed := 25;
-              -4: FarnsworthSpeed := 35;
-              -5: FarnsworthSpeed := 45;
-              -6: FarnsworthSpeed := 55;
-              -7: FarnsworthSpeed := 75;
-              -8: FarnsworthSpeed := 95;
+              -2: Config.FarnsworthEnable := not Config.FarnsworthEnable;
+              -3: Config.FarnsworthSpeed := 25;
+              -4: Config.FarnsworthSpeed := 35;
+              -5: Config.FarnsworthSpeed := 45;
+              -6: Config.FarnsworthSpeed := 55;
+              -7: Config.FarnsworthSpeed := 75;
+              -8: Config.FarnsworthSpeed := 95;
             end;
           end
           else
@@ -2137,7 +2134,7 @@ begin
             begin
 
               TurnOnActivePort;
-              CWElementLength := round(Weight * (CWBuffer^[CWBufferStart].length * ElementLength) / 10.0);
+              CWElementLength := round(Config.Weight * (CWBuffer^[CWBufferStart].length * ElementLength) / 10.0);
                         //                                    if (BeepCount = 0) and (MonitorTone <> 0) then SpeakerBeep(MonitorTone, CWElementLength * 13); //Sound(MonitorTone);
 
             end
@@ -2147,20 +2144,20 @@ begin
               TurnOffActivePort;
                         //                                    if (MonitorTone <> 0) and (BeepCount = 0) then NoSound;
 
-              if FarnsworthEnable and
+              if Config.FarnsworthEnable and
                 (CWBuffer^[CWBufferStart].length >= 15) and
-                (CodeSpeed < FarnsworthSpeed) then
+                (CodeSpeed < Config.FarnsworthSpeed) then
               begin
                 if CWBuffer^[CWBufferStart].length = 15 then
                   CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length
-                    + (FarnsworthSpeed - CodeSpeed)
+                    + (Config.FarnsworthSpeed - CodeSpeed)
                 else
                   CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length
-                    + ((FarnsworthSpeed - CodeSpeed) * 2);
+                    + ((Config.FarnsworthSpeed - CodeSpeed) * 2);
               end;
 
               CWElementLength := round(((CWBuffer^[CWBufferStart].length * ElementLength) / 10.0) -
-                ((Weight - 1.0) * 2 * ElementLength));
+                ((Config.Weight - 1.0) * 2 * ElementLength));
 
             end;
           end;
@@ -2444,20 +2441,20 @@ begin
          -1:
            if CWBuffer^[CWBufferStart].Key then
               begin
-              Weight := Weight + 0.03
+              Config.Weight := Config.Weight + 0.03
               end
            else
               begin
-              Weight := Weight - 0.03;
+              Config.Weight := Config.Weight - 0.03;
               end;
 
-         -2: InvertBoolean(FarnsworthEnable);
-         -3: FarnsworthSpeed := 25;
-         -4: FarnsworthSpeed := 35;
-         -5: FarnsworthSpeed := 45;
-         -6: FarnsworthSpeed := 55;
-         -7: FarnsworthSpeed := 75;
-         -8: FarnsworthSpeed := 95;
+         -2: InvertBoolean(Config.FarnsworthEnable);
+         -3: Config.FarnsworthSpeed := 25;
+         -4: Config.FarnsworthSpeed := 35;
+         -5: Config.FarnsworthSpeed := 45;
+         -6: Config.FarnsworthSpeed := 55;
+         -7: Config.FarnsworthSpeed := 75;
+         -8: Config.FarnsworthSpeed := 95;
        end;
        end
     else
@@ -2465,30 +2462,30 @@ begin
        if CWBuffer^[CWBufferStart].Key then
           begin
           TurnOnActivePort;
-          CWElementLength := round(Weight * (CWBuffer^[CWBufferStart].length * ElementLength) / 10.0);
+          CWElementLength := round(Config.Weight * (CWBuffer^[CWBufferStart].length * ElementLength) / 10.0);
 
-          // Was: Sound(CWTone) on Windows 9x, ntBeep otherwise, then NoSound.
+          // Was: Sound(Config.CWTone) on Windows 9x, ntBeep otherwise, then NoSound.
           // The 9x arm drove the PC speaker through privileged IN/OUT and could
           // not execute on any NT Windows, so this is the branch that always ran.
-          ntBeep(CWTone, CWElementLength);
+          ntBeep(Config.CWTone, CWElementLength);
           tCWSleep(CWElementLength, tCW_Event);
           end
        else
           begin
           SendingADah := False;
           TurnOffActivePort;
-          if FarnsworthEnable and (CWBuffer^[CWBufferStart].length >= 15) and (CodeSpeed < FarnsworthSpeed) then
+          if Config.FarnsworthEnable and (CWBuffer^[CWBufferStart].length >= 15) and (CodeSpeed < Config.FarnsworthSpeed) then
              begin
              if CWBuffer^[CWBufferStart].length = 15 then
                 begin
-                CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + (FarnsworthSpeed - CodeSpeed)
+                CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + (Config.FarnsworthSpeed - CodeSpeed)
                 end
              else
                 begin
-                CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + ((FarnsworthSpeed - CodeSpeed) * 2);
+                CWBuffer^[CWBufferStart].length := CWBuffer^[CWBufferStart].length + ((Config.FarnsworthSpeed - CodeSpeed) * 2);
                 end;
              end;
-          CWElementLength := round(((CWBuffer^[CWBufferStart].length * ElementLength) / 10.0) - ((Weight - 1.0) * 2 * ElementLength));
+          CWElementLength := round(((CWBuffer^[CWBufferStart].length * ElementLength) / 10.0) - ((Config.Weight - 1.0) * 2 * ElementLength));
           tCWSleep(CWElementLength, tCW_Event);
           end;
        end;

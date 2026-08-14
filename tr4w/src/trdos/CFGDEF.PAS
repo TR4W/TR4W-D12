@@ -168,10 +168,10 @@ begin
 //  CQPhoneExchangeNameKnown := 'CQEXNAME.WAV';
   //  CustomInitialExchangeString := '';
   //  CustomUserString := '';
-  //  CWEnable := True;
+  //  Config.CWEnable := True;
   //  CWEnabled := True;
   //  Config.CWSpeedFromDataBase := False;
-  //  CWTone := 700;
+  //  Config.CWTone := 700;
 
   //  DDXCall1 := '';
   //  DDXCall2 := '';
@@ -211,8 +211,8 @@ begin
 }
 //  ExchangeMemoryEnable := True;
 
-//  FarnsworthEnable := False;
-//  FarnsworthSpeed := 25;
+//  Config.FarnsworthEnable := False;
+//  Config.FarnsworthSpeed := 25;
 
   //FloppyFileSaveName := 'logback.dat';
   //  FloppyFileSaveFrequency := 0;

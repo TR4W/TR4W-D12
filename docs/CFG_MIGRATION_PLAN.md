@@ -31,7 +31,7 @@ row's own state and persists to whichever file is that row's system of record.
 
 ## What is actually true today
 
-**Nineteen of the thirty have completed the move.** They are `csJSON`, gone from Ctrl-J, written by Preferences to
+**Twenty-four of the thirty have completed the move.** They are `csJSON`, gone from Ctrl-J, written by Preferences to
 `settings\tr4w.json`, their existing ini values carried across once, and their globals are now
 fields of `Config`.
 
@@ -42,7 +42,7 @@ aimed at anything other than a `ShortString` would write 256 bytes into the next
 to report it — not the compiler, which sees only a pointer, and not a test, because the damage lands
 elsewhere. The `Config` fields therefore carry the *exact* old types.
 
-The remaining 11 are still `csOld`/`csNew`: they show in Ctrl-J, round-trip through the ini, and
+The remaining 6 are still `csOld`/`csNew`: they show in Ctrl-J, round-trip through the ini, and
 drive a global each. The bridge they still use is:
 
 ```
@@ -50,7 +50,7 @@ Preferences -> TLegacySetting.TrySetText -> SetCFGCommandValue -> WritePrivatePr
 ```
 
 So the new UI writes the old store. A deliberate bridge, not a defect — but one that has now been
-crossed nineteen times and needs crossing 11 more.
+crossed twenty-four times and needs crossing 6 more.
 
 ### A password in the ini is not trustworthy as a password
 
@@ -218,19 +218,19 @@ the CFGCA table binding itself.
 | operating.cw.leadingZeroChar | LEADING ZERO CHARACTER | **csJSON** | Config.LeadingZeroCharacter | **migrated** |
 | operating.tworadio.altDBuffer | ALT-D BUFFER ENABLE | **csJSON** | Config.AltDBufferEnable | **migrated** |
 | operating.cw.sayHiRateCutoff | SAY HI RATE CUTOFF | **csJSON** | Config.SayHiRateCutOff | **migrated** |
-| operating.cw.serial.farnsworth | FARNSWORTH ENABLE | csOld | FarnsworthEnable | 8 |
+| operating.cw.serial.farnsworth | FARNSWORTH ENABLE | **csJSON** | Config.FarnsworthEnable | **migrated** |
 | operating.tworadio.skipActiveBand | SKIP ACTIVE BAND | **csJSON** | Config.SkipActiveBand | **migrated** |
 | operating.bands.hf | HF BAND ENABLE | csOld | HFBandEnable | 8 |
 | operating.cw.leadingZeros | LEADING ZEROS | csOld | LeadingZeros | 10 |
 | **cw.speedIncrement** | **CW SPEED INCREMENT** | **csJSON** | **Config.CodeSpeedIncrement** | **migrated** |
 | operating.cw.sayHi | SAY HI ENABLE | **csJSON** | Config.SayHiEnable | **migrated** |
 | operating.bands.warc | WARC BAND ENABLE | csOld | WARCBandsEnabled | 16 |
-| operating.cw.serial.farnsworthSpeed | FARNSWORTH SPEED | csOld | FarnsworthSpeed | 24 |
+| operating.cw.serial.farnsworthSpeed | FARNSWORTH SPEED | **csJSON** | Config.FarnsworthSpeed | **migrated** |
 | operating.bands.vhf | VHF BAND ENABLE | csOld | VHFBandsEnabled | 25 |
-| operating.cw.serial.weight | WEIGHT | csOld | Weight | 34 |
-| cw.enable | CW ENABLE | csOld | CWEnable | 30 |
+| operating.cw.serial.weight | WEIGHT | **csJSON** | Config.Weight | **migrated** |
+| cw.enable | CW ENABLE | **csJSON** | Config.CWEnable | **migrated** |
 | operating.tworadio.enable | TWO RADIO MODE | csOld | TwoRadioMode | 34 |
-| cw.tone | CW TONE | csOld | CWTone | 93 |
+| cw.tone | CW TONE | **csJSON** | Config.CWTone | **migrated** |
 
 `refs` is a case-**insensitive** count over the compiled tree, `.PAS` and `.pas` alike, excluding the
 uncompiled `JCTRL1`/`JCTRL2`. A case-sensitive `--include=*.pas` misses every TRDOS file spelled
@@ -300,7 +300,7 @@ flat settings would give Preferences an editor for a value the next contest sele
 overwrites. They belong with the contest definition; the Preferences panel should show them read-only
 or not at all. **NY4I's call, and the clearest example of "somewhere else".**
 
-### C. The session mutates them — a stored value is the STARTING value (5)
+### C. ~~The session mutates them~~ **MIGRATED 2026-08-14** (5)
 
 | setting | live writer | what changes it |
 |---|---|---|

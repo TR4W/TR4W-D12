@@ -1,4 +1,4 @@
-unit uTestCWKeyer;
+﻿unit uTestCWKeyer;
 {$I ..\..\src\tr4w.inc}
 
 {
@@ -17,12 +17,13 @@ unit uTestCWKeyer;
 interface
 
 uses
+  uConfigValues,
    SysUtils, uTR4WTestFramework, uCWKeyerBase, uWinKey, uYCCCSO2R,
    LogRadio, LogCW,
    Tree,       // CodeSpeed
    LogWind,    // CWEnabled, DisplayedCodeSpeed
    MainUnit,   // CWByCATBufferTerminator
-   VC;         // CWEnable, tAutoSendMode, InterfacedRadioType
+   VC;         // Config.CWEnable, tAutoSendMode, InterfacedRadioType
 
 type
    TCWKeyerTests = class(TTestCase)
@@ -283,7 +284,7 @@ begin
    savedYccc := ycccActive;
    savedCWByCAT := Radio1.CWByCAT;
    savedModel := Radio1.RadioModel;
-   savedEnable := CWEnable;
+   savedEnable := Config.CWEnable;
    savedEnabled := CWEnabled;
    savedMode := ActiveMode;
    try
@@ -292,7 +293,7 @@ begin
       // any keyer is reached.  Leaving it at the default made these checks
       // silently exercise nothing.
       ActiveMode := CW;
-      CWEnable := True;
+      Config.CWEnable := True;
       CWEnabled := True;
       wkActive := False;
       ycccActive := False;
@@ -324,7 +325,7 @@ begin
       ycccActive := savedYccc;
       Radio1.CWByCAT := savedCWByCAT;
       Radio1.RadioModel := savedModel;
-      CWEnable := savedEnable;
+      Config.CWEnable := savedEnable;
       CWEnabled := savedEnabled;
       ActiveMode := savedMode;
       RestoreKeyers(saved, spyCAT, spyWK, spyYCCC, spyCPU);

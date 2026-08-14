@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -23,7 +23,8 @@ unit LOGDDX;
 {$IMPORTEDDATA OFF}
 interface
 
-uses {Dos, Printer, } Tree,
+uses
+  uConfigValues, {Dos, Printer, } Tree,
   VC,
   Windows,
   Country9,
@@ -375,11 +376,11 @@ procedure DDXAnswerACQ(var Call: CallString;
   the exchange at the same tone.                                          }
 
 begin
-  if (Random(15) > 0) or (CWTone = 0) then
+  if (Random(15) > 0) or (Config.CWTone = 0) then
      begin
      Call := GetRandomDDXCallsign(ActiveExchange);
 
-     if CWTone <> 0 then
+     if Config.CWTone <> 0 then
         begin
         Tone := Random(1000) + 200;
 
@@ -1209,7 +1210,7 @@ var
   Name                                  : Str20;
 
 begin
-  if CWTone = 0 then
+  if Config.CWTone = 0 then
      begin
      DDXState := SAndPExchangeSent;
      Exit;
@@ -1288,7 +1289,7 @@ begin
       begin
         if DDXState <> WaitingForCQ then Exit;
 
-        if (CWTone <> 0) then
+        if (Config.CWTone <> 0) then
            begin
            repeat until not CWStillBeingSent;
            sleep(100 + Random(200));
@@ -1317,7 +1318,7 @@ begin
 
     SendExchange:
       begin
-        if CWTone <> 0 then
+        if Config.CWTone <> 0 then
            begin
            repeat until not CWStillBeingSent;
            end;
@@ -1492,7 +1493,7 @@ begin
     MaybeRespondToMyCall:
       if DDXState = WaitingForYourCall then
          begin
-         if CWTone <> 0 then
+         if Config.CWTone <> 0 then
             begin
             repeat until not CWStillBeingSent;
             sleep(100 + Random(200));
@@ -1505,7 +1506,7 @@ begin
     QSLMyExchange:
       if DDXState = WaitingForYourExchange then
          begin
-         if CWTone <> 0 then
+         if Config.CWTone <> 0 then
             begin
             repeat until not CWStillBeingSent;
             sleep(100 + Random(200));

@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -26,6 +26,7 @@ unit uProcessCommand;
 interface
 
 uses
+  uConfigValues,
   uMMTTY,
 utils_text,
   VC,
@@ -351,17 +352,17 @@ begin
      begin
      OldCWTone := 700;
      end;
-  CWTone := OldCWTone;
-  AddStringToBuffer('', CWTone);
+  Config.CWTone := OldCWTone;
+  AddStringToBuffer('', Config.CWTone);
 end;
 
 procedure scCWMONITOROFF;
 begin
-  if CWTone <> 0 then
+  if Config.CWTone <> 0 then
      begin
-     OldCWTone := CWTone;
-     CWTone := 0;
-     AddStringToBuffer('', CWTone);
+     OldCWTone := Config.CWTone;
+     Config.CWTone := 0;
+     AddStringToBuffer('', Config.CWTone);
      end;
 end;
 
@@ -396,7 +397,7 @@ end;
 
 procedure scCWENABLETOGGLE;
 begin
-  //CWEnable := not CWEnable;  // Going to try and call ToggleCW
+  //Config.CWEnable := not Config.CWEnable;  // Going to try and call ToggleCW
   ToggleCW(false); // no display as this was a command.
 end;
 
