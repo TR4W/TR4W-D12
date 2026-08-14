@@ -9,19 +9,30 @@
   Run on a Windows dev box (Windows PowerShell 5.1 -- same shell the CI runner
   uses, so anything that works here works there).
 
-  Tagging  v<Version>-all  triggers .github/workflows/release.yml, which builds
-  ENG + 7 language installers and runs the VirusTotal scan (~25 min). The CI
-  "version-guard" requires the tag version (with 'v' and '-all' stripped) to
-  EXACTLY equal Version.pas TR4W_CURRENTVERSION_NUMBER -- this script keeps them
-  in lockstep so the build can't fail on a version mismatch.
+  Tagging v<Version> triggers .github/workflows/release.yml, which builds the
+  installer and runs the VirusTotal scan. The CI "version-guard" requires the tag
+  version (with 'v' stripped) to EXACTLY equal Version.pas
+  TR4W_CURRENTVERSION_NUMBER -- this script keeps them in lockstep so the build
+  cannot fail on a version mismatch.
 
   Order (each step aborts on failure):
     preconditions -> CHANGES check -> TRMASTER regen+validate -> CTY download+
     validate -> TRCLUSTER download+validate -> Version.pas bump -> LOCAL build
-    -> confirm -> commit -> push master -> tag -> push tag.
+    -> confirm -> commit -> push -> tag -> push tag.
+
+  PORTED TO FPC 2026-08-13:
+    * The BRANCH and REMOTE are derived from the current branch's upstream, not
+      hardcoded to 'master' / 'origin'. In this clone `origin` is TR4W/TR4W --
+      the Delphi 7 heritage repo -- while the active line is `d12/fpc`. Run
+      unchanged this would have pushed a release commit and tag into the wrong
+      repository.
+    * No '-all' tag and no -EnglishOnly switch. TR4W builds ONE English binary;
+      the per-language installers are gone.
+    * The local build now includes the INSTALLER, so an NSIS failure is caught
+      here rather than after the tag is already pushed.
 
 .PARAMETER Version
-  Release version, e.g. 4.147.25  (no leading 'v', no '-all').
+  Release version, e.g. 5.0.1  (no leading 'v').
 
 .PARAMETER CtyUrl
   URL of the current CTY.DAT. Default points at AD1C / country-files.com --
@@ -30,9 +41,6 @@
 .PARAMETER ClusterUrl
   URL of the current TRCLUSTER.DAT (DX-cluster telnet host list read by
   uTelnet.pas). Default points at dxcluster.info.
-
-.PARAMETER EnglishOnly
-  Tag without '-all' (ENG-only build). Default is all languages.
 
 .PARAMETER SkipTrmaster
   Don't regenerate TRMASTER.DTA; ship whatever is already in target\.
@@ -51,15 +59,17 @@
   Skip the final confirmation prompt before the irreversible commit/tag/push.
 
 .EXAMPLE
-  .\Invoke-Release.ps1 -Version 4.147.25
+  .\Invoke-Release.ps1 -Version 5.0.1
 .EXAMPLE
-  .\Invoke-Release.ps1 -Version 4.147.25 -DryRun
+  .\Invoke-Release.ps1 -Version 5.0.1 -DryRun
 #>
 [CmdletBinding()]
 param(
    [Parameter(Mandatory = $true)][string] $Version,
    [string] $CtyUrl = 'https://www.country-files.com/cty/cty.dat',   # from uCTYUpdate.pas CTY_DOWNLOAD_URL (the app's Alt-O fetch)
    [string] $ClusterUrl = 'http://www.dxcluster.info/telnet/TRCLUSTER.DAT',
+   # Accepted and ignored. There is only an English build now, so this is always
+   # true; kept so an old command line does not fail on an unknown parameter.
    [switch] $EnglishOnly,
    [switch] $SkipTrmaster,
    [switch] $SkipCty,
@@ -113,32 +123,52 @@ function GitTry { & git.exe -C $RepoRoot @args 2>$null; return $LASTEXITCODE }
 # 0. Validate inputs / compute tag
 # ---------------------------------------------------------------------------
 Step "Validate"
-if ($Version -notmatch '^\d+\.\d+\.\d+$') { Fail "Version '$Version' must look like 4.147.25 (no 'v', no '-all')." }
-$suffix = '-all'; if ($EnglishOnly) { $suffix = '' }
-$Tag = "v$Version$suffix"
-$DateStr = (Get-Date -Format 'MMMM, yyyy')   # e.g. "May, 2026"
+if ($Version -notmatch '^\d+\.\d+\.\d+$') { Fail "Version '$Version' must look like 5.0.1 (no 'v')." }
+
+# No '-all' suffix. It selected an all-languages CI build that no longer exists;
+# release.yml still strips the suffix if it sees one, but nothing should add it.
+$Tag = "v$Version"
+$DateStr = (Get-Date -Format 'MMMM, yyyy')   # e.g. "August, 2026"
 Info "Version : $Version"
-Info "Tag     : $Tag    (CI: $(if ($EnglishOnly) {'ENG only'} else {'ENG + 7 languages'}))"
+Info "Tag     : $Tag    (CI: one English installer)"
 Info "Date    : $DateStr"
 Info "DryRun  : $DryRun"
+if ($EnglishOnly) { Info "Note    : -EnglishOnly is now the only behaviour; the switch is ignored." }
 
 foreach ($p in @($VersionPas, $FullBuild)) { if (-not (Test-Path $p)) { Fail "Not found: $p (run from a TR4W checkout)" } }
 
 # ---------------------------------------------------------------------------
-# 1. Git preconditions: on master, clean-ish, current, tag is free
+# 1. Git preconditions: on the release branch, clean-ish, current, tag is free
+#
+# THE BRANCH AND REMOTE ARE DERIVED, NOT ASSUMED. This required branch 'master'
+# and pushed to 'origin' until 2026-08-13. In this clone `origin` is TR4W/TR4W --
+# the DELPHI 7 heritage repository -- and the active line is `d12/fpc`, so the
+# old form would have refused to run at all and, had it run, pushed a release
+# commit and tag into the wrong project.
+#
+# Using the branch's own upstream means this keeps working through the next
+# rename without anyone remembering to edit it.
 # ---------------------------------------------------------------------------
 Step "Git preconditions"
 $branch = (& git.exe -C $RepoRoot rev-parse --abbrev-ref HEAD).Trim()
-if ($branch -ne 'master') { Fail "On branch '$branch'; releases are tagged from master. Checkout master first." }
+
+$upstream = (& git.exe -C $RepoRoot rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>$null)
+if ($LASTEXITCODE -ne 0 -or -not $upstream) {
+   Fail "Branch '$branch' has no upstream. Set one (git push -u <remote> $branch) so this script knows which repository to release to."
+}
+$upstream     = $upstream.Trim()
+$Remote       = $upstream.Split('/')[0]
+$RemoteBranch = $upstream.Substring($Remote.Length + 1)
+Info "Branch  : $branch -> $upstream (remote '$Remote')"
 
 # Pull so we don't tag a stale tree
-Git fetch origin master
-$behind = (& git.exe -C $RepoRoot rev-list --count 'HEAD..origin/master').Trim()
-if ($behind -ne '0') { Git merge --ff-only origin/master }
+Git fetch $Remote $RemoteBranch
+$behind = (& git.exe -C $RepoRoot rev-list --count "HEAD..$upstream").Trim()
+if ($behind -ne '0') { Git merge --ff-only $upstream }
 
 # Tag must not already exist (local or remote)
 if ((GitTry rev-parse -q --verify "refs/tags/$Tag") -eq 0) { Fail "Tag $Tag already exists locally. Bump the version or delete the tag." }
-if ((& git.exe -C $RepoRoot ls-remote --tags origin "$Tag") ) { Fail "Tag $Tag already exists on origin." }
+if ((& git.exe -C $RepoRoot ls-remote --tags $Remote "$Tag") ) { Fail "Tag $Tag already exists on $Remote." }
 
 # Warn on unexpected dirty files (the data files are expected to change; flag anything else)
 $dirty = (& git.exe -C $RepoRoot status --porcelain) | Where-Object {
@@ -248,13 +278,17 @@ Info "TR4W_CURRENTVERSION_NUMBER = '$Version'  /  TR4W_CURRENTVERSIONDATE = '$Da
 # ---------------------------------------------------------------------------
 # 6. LOCAL build BEFORE tagging (don't burn a full CI run on a compile error)
 # ---------------------------------------------------------------------------
-Step "Local build (FullBuild.ps1)"
+# -BuildInstaller so NSIS runs HERE. Without it a packaging failure only shows up
+# after the tag is pushed and CI has already started, which means deleting a tag
+# to fix it. FullBuild also runs the lints and the unit tests before it builds
+# anything, so this one call is the whole pre-flight.
+Step "Local build (FullBuild.ps1 -BuildInstaller)"
 Push-Location $TrDir
-& powershell.exe -ExecutionPolicy Bypass -File $FullBuild
+& powershell.exe -ExecutionPolicy Bypass -File $FullBuild -BuildInstaller
 $bc = $LASTEXITCODE
 Pop-Location
 if ($bc -ne 0) { Fail "Local build FAILED (exit $bc). Fix before releasing -- not committing or tagging." }
-Info "Local build OK."
+Info "Local build OK (lints, unit tests, app, tr4wserver, installer)."
 
 # ---------------------------------------------------------------------------
 # 7. Confirm the irreversible part
@@ -267,7 +301,7 @@ if ($DryRun) {
 }
 Step "Ready to release"
 Info "Will commit Version.pas + cty.dat + TRMASTER.DTA + trcluster.dat (+ changelogs if changed),"
-Info "push master, tag $Tag, and push the tag (this triggers the CI installer build)."
+Info "push $branch to $Remote, tag $Tag, and push the tag (this triggers the CI installer build)."
 if (-not $Yes) { $a = Read-Host "Proceed with commit/tag/push? (y/N)"; if ($a -ne 'y') { Fail "Aborted by user (nothing committed)." } }
 
 # ---------------------------------------------------------------------------
@@ -289,14 +323,24 @@ if (Test-Path $ClusterFile) { Git add $ClusterFile }
 
 $commitMsg = "Release $Version`n`nVersion.pas -> $Version ($DateStr); refreshed CTY.DAT, TRMASTER.DTA, and TRCLUSTER.DAT. Tag $Tag triggers the CI installer build."
 Git commit -m $commitMsg
-Git push origin master
+Git push $Remote $branch
 Git tag -a $Tag -m "TR4W $Version"
-Git push origin $Tag
+Git push $Remote $Tag
 
 # Re-apply skip-worktree so day-to-day runtime rewrites stay out of git status
 foreach ($df in @($CtyFile, $TrmasterFile)) { & git.exe -C $RepoRoot update-index --skip-worktree $df 2>$null }
 
 Step "Done"
-Info "Pushed master + tag $Tag. CI is building now:"
-Info "  https://github.com/n4af/TR4W/actions"
+Info "Pushed $branch + tag $Tag to $Remote."
+
+# Derive the Actions URL from the remote actually used, rather than naming a
+# repository in a string -- the old hardcoded n4af/TR4W link had been wrong since
+# the fork.
+$remoteUrl = (& git.exe -C $RepoRoot remote get-url $Remote).Trim()
+if ($remoteUrl -match '[:/]([^/:]+/[^/]+?)(\.git)?$') {
+   Info "  https://github.com/$($Matches[1])/actions"
+} else {
+   Info "  (could not derive the Actions URL from $remoteUrl)"
+}
 Info "Watch for the version-guard + VirusTotal steps; the Release appears when the build finishes."
+Info "NOTE: CI needs a self-hosted [self-hosted, win-ci] runner with FPC + Lazarus attached."
