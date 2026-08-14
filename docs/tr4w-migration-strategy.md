@@ -1,5 +1,12 @@
 # TR4W Migration Strategy
 
+> ## ~~HISTORICAL — this described the route to Delphi 12~~
+>
+> The strategy it sets out was followed and then overtaken: the D12 migration completed, and TR4W
+> moved on to **FreePascal + Lazarus LCL** (2026-08-13). Read it as the reasoning behind the
+> sequencing — factories first, legacy deleted only once proven on hardware — not as a live plan.
+
+
 This document captures recommendations for the phased migration of TR4W from Delphi 7
 to a modern Delphi version, and the testing strategy that supports it.
 Read alongside `tr4w-analysis.md` (upstream architectural analysis).

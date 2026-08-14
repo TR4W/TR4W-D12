@@ -1,5 +1,15 @@
 # TR4W — Delphi 12 Release Readiness
 
+> ## ~~SUPERSEDED 2026-08-13 — release readiness is now measured against FPC~~
+>
+> This assessed whether the **Delphi 12** build was fit to replace the D7 release. It never
+> shipped in that form: the release build is **FreePascal + Lazarus LCL** as of 2026-08-13, and
+> `FullBuild.ps1` produces `tr4w_setup_<version>.exe` from a clean clone.
+>
+> The *criteria* here are still worth reading — what "ready" means for TR4W has not changed. The
+> toolchain specifics, the language matrix (now one English build) and the msbuild mechanics have.
+
+
 Status: **v2 — cutover in progress** (updated 2026-07-18). Branch: `delphi12`.
 Since v1: the committed build script (`FullBuild.ps1`) is fully migrated from Delphi 7 DCC32 to D12
 `msbuild` (**C-1 done** for the local build), the record/enum wire layout is pinned in the `.dproj`

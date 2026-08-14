@@ -1,5 +1,17 @@
 # TR4W — Delphi 12 Migration Roadmap (what remains)
 
+> ## ~~SUPERSEDED 2026-08-13 — the destination changed~~
+>
+> This roadmap tracked the migration to **Delphi 12**. That migration succeeded and was then
+> **left behind**: TR4W now builds with **FreePascal 3.2.2 + the Lazarus LCL**, which passes the
+> unit tests (3978/0), the golden corpus (22/0/4) and ships the installer.
+>
+> Read it for *why* things are shaped as they are — the radio factory, the CW keyer factory, the
+> string work and the legacy deletions are all still real and still current. Do **not** read the
+> per-area status tables, the 64-bit scope notes or anything about `.dproj`/msbuild as live
+> guidance. Current build: [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md).
+
+
 **Date:** 2026-08-02 (updated overnight: **Track A complete except the CI runner**; C-1 closed) · **Branch:** `delphi12` · **Purpose:** one place that answers
 "what is left before we call the D12 migration *done*".
 

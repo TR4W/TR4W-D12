@@ -11,7 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## MANDATORY: Git command form
 
 Run **every** git command as `git -C /c/tr4w-d12 <subcommand>` (e.g. `git -C /c/tr4w-d12 commit ...`,
-`git -C /c/tr4w-d12 push d12 delphi12`). **NEVER** prepend `cd /c/tr4w-d12` (or any `cd`) as the first
+`git -C /c/tr4w-d12 push d12 fpc`). **NEVER** prepend `cd /c/tr4w-d12` (or any `cd`) as the first
 command in a shell block. A `cd` to the already-current directory triggers a permission prompt every
 time — the `-C` flag targets the repo explicitly with no `cd` and no prompt. (A PreToolUse hook in
 `.claude/settings.json` enforces this; if it warns you, fix the command — don't work around it.)
@@ -29,31 +29,42 @@ It supports 120+ contests with multi-user networking, extensive radio control, a
 integration. Roughly **129,000 lines across ~260 units** (`tr4w/src`, `src/trdos`, `src/radioFactory`,
 `src/utils`, `src/lang`).
 
-**Branch:** `delphi12` — the active line of development. `master` is the Delphi 7 heritage.
-**Toolchain:** **Delphi 12 Athens** (Studio 23.0). The Delphi 7 era ended 2026-08-02, when
-`tr4wserver` — the last DCC32 consumer — moved to msbuild. **DCC32 is retired; do not use it.**
-**Version:** see `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) — `4.149.0` as of 2026-08.
+**Repository:** `TR4W/TR4W-D12`, remote **`d12`**. Note `origin` is a *different* repo —
+`TR4W/TR4W`, the Delphi 7 heritage — so `git push origin ...` pushes to the wrong project.
+**Branch:** **`fpc`** — the active line and the default since 2026-08-13. `delphi12` is its
+predecessor and is fully contained in it. `master` means the D7 heritage on both remotes.
+**Toolchain:** **FreePascal 3.2.2 + the Lazarus LCL.** ~~Delphi 12 Athens~~ was left behind on
+2026-08-13 once FPC passed the unit tests (3978/0), the golden corpus (22/0/4) and shipped the
+installer. Delphi survives only as `tr4w/FullBuild-D12-deprecated.ps1`, kept so an old build can
+be reproduced for comparison. **DCC32 was retired earlier and is long gone.**
+**Version:** see `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) — `5.0.0` as of 2026-08.
 **Website:** https://tr4w.net
 
-## Where the D12 migration stands
+## Where the FPC migration stands
 
-**Definition of done:** a Win32 D12 build replaces the D7 release and no part of the release pipeline
-still needs Delphi 7. That deliberately excludes 64-bit, VCL/FMX, SQLite and the contest factory.
+**Definition of done (NY4I):** clone from GitHub onto any PC with FPC and Lazarus installed, run
+`FullBuild.ps1`, get the setup `.exe`. **That passes**, and is re-verifiable with
+`tr4w/build/Test-FreshClone.ps1`. Out of scope, unchanged: 64-bit, SQLite, the contest factory.
 
-**Per-area status lives in [`docs/D12_MIGRATION_ROADMAP.md`](docs/D12_MIGRATION_ROADMAP.md)** — the
-only document that should be treated as current. A status table here would be a second copy going
-stale in the file every session loads. What is stable enough to state: compile, release mechanics,
-the radio factory and the CW keyer factory are done; 64-bit is out of scope; **live/bench
-verification is the largest open block** and nothing in it is provable by code review.
+Done: the build system, the lints, the unit tests (3978/0), the golden corpus (22/0/4), the LCL
+port of all four designed forms, `tr4wserver`, the NSIS installer, and `release.yml`.
+**The largest open block is still live/bench verification, and nothing in it is provable by code
+review.** Next in line: attaching a `win-ci` runner, and the FMX twins can be deleted once the
+LCL forms have been exercised on real hardware.
+
+~~Per-area D12 status lives in `docs/D12_MIGRATION_ROADMAP.md`~~ — that roadmap is **superseded**;
+read it for *why* things are shaped as they are, not for status.
 
 The honest gate on radios is **one verified rig per protocol family**, not 100 rigs. Verified:
 Elecraft serial, Elecraft network, Kenwood serial, Icom serial, Flex CAT, Yaesu binary (FT-1000MP,
 2026-08-09 — first proof of that family). **Unproven: Icom LAN, Yaesu ASCII, HamLib.** Track that in
-[`docs/RADIO_BENCH_STATUS.md`](docs/RADIO_BENCH_STATUS.md).
+[`docs/RADIO_BENCH_STATUS.md`](docs/RADIO_BENCH_STATUS.md). **Those results were obtained under
+Delphi**; the Elecraft K4 (network) and K3S (serial) have since been re-confirmed against the FPC
+binary, the rest have not.
 
-Language matrix for this release is **ENG + 8** (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP). **POL and CHN are
-decided-out**, not pending. The 8 build green but **no one has eyeballed the rendered UI** — the
-corpus is pure ASCII and cannot see it. Recommendation on file: ship English first.
+**One English build.** ~~ENG + 8 (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP)~~ — the compile-time language
+matrix is no longer built by anything. Translation moves to `resourcestring`, arriving from a
+separate worktree. POL and CHN were already decided-out.
 
 ## Build System
 
@@ -129,8 +140,8 @@ msbuild tr4w.dproj /t:Make /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo
 
 `tr4w.dpr` is the **program source** and is shared by both toolchains — the LCL and FMX unit sets are
 selected by `{$IFDEF FPC}` in its uses clause. `tr4w.cfg` / `tr4w.dof` are D7 leftovers and editing
-them does nothing; `BatchCompile.cmd` is a retired D7 recipe. Full D12 recipe:
-[`tr4w/docs/D12_BUILD.md`](tr4w/docs/D12_BUILD.md).
+them does nothing; `BatchCompile.cmd` is a retired D7 recipe. The full recipe for both toolchains,
+FPC first and Delphi struck through, is [`tr4w/docs/BUILD.md`](tr4w/docs/BUILD.md).
 
 ### Lazarus
 
@@ -161,16 +172,17 @@ is why a blanket conversion was wrong. Background:
 Three layers, all real and all expected to be green before a commit.
 
 **1. Unit tests** — `tr4w/test/unit/tr4w_unit_tests.dpr`, a minimal DUnit-compatible framework
-(`uTR4WTestFramework.pas`, no external deps). **2021 tests, 0 failures** is the baseline as of
-`55f4f5ed` (2026-08-04). The count grows steadily — take it from the newest commit message, and if
-the checked-in `.exe` reports fewer, it is stale.
+(`uTR4WTestFramework.pas`, no external deps). **3978 tests, 0 failures** is the baseline (2026-08-13,
+identical under FPC and Delphi). The count grows steadily — take it from the newest commit message,
+and if the checked-in `.exe` reports fewer, it is stale.
 
-```bat
-call "...\rsvars.bat"
-cd /d C:\tr4w-d12\tr4w\test\unit
-msbuild tr4w_unit_tests.dproj /t:Make /p:Config=Debug /p:Platform=Win32
-tr4w_unit_tests.exe
+```powershell
+.\tr4w\build\Build-Tests.ps1 -Run
 ```
+
+`FullBuild.ps1` runs them too, **before** it builds the app, so a failing test stops the build before
+it produces a shippable binary. **The exe must land in `tr4w/test/unit/`** — several suites resolve
+their data from `ParamStr(0)`, not the working directory.
 
 Covers ADIF, Cabrillo, callsign routines, multipliers, CTY.DAT, band lookup, CRC32, grid/distance,
 text/file/math utils, DX-spot parsing, CW framing/keyer, and the radio factory (Icom CI-V, Kenwood,
@@ -487,19 +499,19 @@ Read the specific doc before acting in its area — these are current and this f
 
 | Topic | Document |
 |-------|----------|
-| Build & test recipe | `tr4w/docs/D12_BUILD.md` |
+| Build & test recipe | `tr4w/docs/BUILD.md` |
 | Adding a radio | `docs/ADDING_A_RADIO.md` |
 | Radio factory design | `docs/RADIO_FACTORY_README.md`, `docs/NETWORK_RADIO_FACTORY_ANALYSIS.md` |
 | Radio bench status | `docs/RADIO_BENCH_STATUS.md`, `docs/BENCH_TEST_PLAN_2026-08-01.md` |
 | Legacy removal plan | `docs/LEGACY_DEPENDENCY_AUDIT.md`, `docs/PHASE_INVENTORIES.md` |
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
 | Adding a contest | `docs/ADDING_A_NEW_CONTEST.md` |
-| D12 migration roadmap | `docs/D12_MIGRATION_ROADMAP.md`, `tr4w/docs/D12_RELEASE_READINESS.md` |
+| ~~D12 migration roadmap~~ | ~~`docs/D12_MIGRATION_ROADMAP.md`, `tr4w/docs/D12_RELEASE_READINESS.md`~~ — superseded, read for *why* not *status* |
 | String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
 | VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |
 | Icom network protocol | `docs/ICOM_NETWORK_SPEC.md`, `docs/ICOM_NETWORK_PROTOCOL_GUIDE.md` |
 | TCI server | `docs/TCI_SERVER_DESIGN.md` |
-| Release process | `docs/RELEASE_WORKFLOW.md`, `docs/FORK_PROCESS.md` |
+| Release process | `docs/RELEASE_WORKFLOW.md` (sections 5-8; 1-4 superseded by BUILD.md), `docs/FORK_PROCESS.md` |
 | Hardware test plan | `tr4w/docs/D12_HARDWARE_TEST_PLAN.md` |
 
 ## Runtime Dependencies
