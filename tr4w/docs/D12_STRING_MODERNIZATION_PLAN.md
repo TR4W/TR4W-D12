@@ -1,5 +1,16 @@
 # TR4W — Delphi 12 String Modernization Plan
 
+> ## ~~PARTLY SUPERSEDED 2026-08-13~~
+>
+> The **string work is still current** — the `ShortString` boundary, the `PAnsiChar` rules and the
+> done-criterion all still apply, and FPC did not change them.
+>
+> The **language sections are not.** TR4W builds ONE English binary; the eight non-English
+> compile-time variants are no longer built by anything, and translation is moving to
+> `resourcestring`. The per-language codepage/BOM notes remain useful only for the files that are
+> still in the tree.
+
+
 Status: **v2, post architecture-review** (2026-07-05). Branch: `delphi12`.
 Verdict from independent adversarial review: **GO-WITH-CHANGES** — phases re-drawn, three
 pre-start decisions added, two blind spots (wire==disk==DTO; CP1251 source literals) folded in.

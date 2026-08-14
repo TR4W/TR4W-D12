@@ -1,57 +1,73 @@
 # TR4W Build & Release Workflow
 
+> ## ⚠ PARTLY SUPERSEDED 2026-08-13 — read this box before anything below
+>
+> Most of this document was written for the **Delphi 7** era and was already stale before the
+> FreePascal move. What is true **now**:
+>
+> | | Then (below) | Now |
+> |---|---|---|
+> | Toolchain | ~~Delphi 7, DCC32, UPX~~ | **FPC 3.2.2 + Lazarus LCL** |
+> | Repository | ~~`TR4W/TR4W`~~ | **`TR4W/TR4W-D12`**, remote `d12` |
+> | Branch | ~~`master`~~ | **`fpc`** (default since 2026-08-13) |
+> | Languages | ~~ENG + 8, `-all` tags~~ | **One English build.** `-all` is tolerated, does nothing |
+> | Local build | ~~`Build.cmd` → DCC32~~ | `utils\Build.cmd` → `FullBuild.ps1` (FPC) |
+> | Installer | ~~`BuildAllInstallers.cmd`~~ | `utils\BuildEnglishInstaller.cmd` |
+>
+> **Sections 1-4 (prerequisites, PR review, building, smoke testing): use
+> [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md) instead.** It is current.
+>
+> **Sections 5-8 (version policy, tagging, the GitHub release flow) are still broadly right** —
+> the one rule below has not changed, and `TagIt.cmd` now derives the remote and branch from the
+> current branch's upstream rather than assuming `origin master`. Read `master` as `fpc` and
+> `origin` as `d12` throughout.
+>
+> **`utils\MonthlyBuild.cmd` / `tr4w\build\Invoke-Release.ps1` have NOT been ported.** They still
+> require branch `master`, fetch `origin/master`, and default to an `-all` tag. They fail fast on
+> `fpc` rather than doing damage, but they will not run until someone updates them.
+
 ## TL;DR — the caveman version
 
-Two release commands. Pick one. Both run from the repo root (e.g. `C:\TR4W\`).
-
-**Interim release** — English only, between monthlies, **no** CTY.DAT / TRMASTER.DTA refresh:
+**Interim release** — bump, tag, let CI build:
 
 ```
-:: 1. bump Version.pas (number + date) -- locally on master OR on the GitHub web UI
+:: 1. bump Version.pas (number + date) -- on fpc, locally or via the GitHub web UI
 :: 2. tag it:
-utils\TagIt.cmd 4.147.27           :: English installer only
-utils\TagIt.cmd 4.147.27-all       :: all 8 languages (use when non-English testers need a build)
+utils\TagIt.cmd 5.0.1
 ```
 
-`TagIt` fast-forwards your local master to origin first (so it picks up a GitHub-web
-bump and never tags a stale checkout), checks the tag matches `Version.pas`, then
-creates and pushes the tag. CI builds the installer(s).
+`TagIt` derives the remote and branch from the current branch's upstream (`d12/fpc`),
+fast-forwards to it so it never tags a stale checkout, refuses to proceed if `Version.pas` is
+uncommitted or if local HEAD is ahead of the remote, checks the tag matches the **committed**
+`Version.pas`, then creates and pushes the tag. CI builds the installer once a `win-ci` runner is
+attached.
 
-**Monthly release** — the superset: refreshes CTY.DAT + TRMASTER.DTA, bumps
-`Version.pas` for you (number + date), builds locally, commits, pushes, tags **all
-languages**:
+~~**Monthly release** — refreshes CTY.DAT + TRMASTER.DTA, bumps `Version.pas`, builds, commits,
+pushes, tags all languages:~~
 
 ```
-utils\MonthlyBuild.cmd 4.148.0            :: do the real thing
-utils\MonthlyBuild.cmd 4.148.0 -DryRun    :: rehearse -- does everything EXCEPT commit/push/tag
+utils\MonthlyBuild.cmd 4.148.0            :: NOT PORTED -- requires branch 'master'
+utils\MonthlyBuild.cmd 4.148.0 -DryRun
 ```
 
-**The one rule:** the tag number must equal `TR4W_CURRENTVERSION_NUMBER` in
-`Version.pas`. `TagIt` *checks* it for you; `MonthlyBuild` *sets* it for you. (On
-2026-06-01 a hand `git tag` landed on a stale pre-bump commit and CI rejected it —
-that's exactly what `TagIt`'s check prevents.)
-
-Everything below is the detail behind those two commands.
+**The one rule, unchanged:** the tag number must equal `TR4W_CURRENTVERSION_NUMBER` in
+`Version.pas`. `TagIt` *checks* it for you. (On 2026-06-01 a hand `git tag` landed on a stale
+pre-bump commit and CI rejected it — exactly what that check prevents.)
 
 ---
 
-End-to-end guide covering: reviewing a PR, building locally, smoke-testing, tagging
-for the English CI build, promoting to a full English installer release, and (for
-major releases) producing the multi-language installers.
-
-If you only want to compile the source on your dev box and never publish anything,
-sections 1-4 are all you need. Section 5 covers the version-bump policy.
-Sections 6-8 cover tagging and the GitHub-side release flow.
+End-to-end guide covering: reviewing a PR, building locally, smoke-testing, tagging for the CI
+build, and promoting to an installer release.
 
 ---
 
 ## 0. Audience and assumptions
 
-- You have **write access** to `TR4W/TR4W` on GitHub.
-- You're on Windows with the toolchain installed (Delphi 7, Indy, NSIS, UPX -- see
-  section 1).
-- You're working from a clone of the repo (default `C:\TR4W`; Howie uses
-  `D:\newsrc\TR4W`; either works).
+- You have **write access** to ~~`TR4W/TR4W`~~ **`TR4W/TR4W-D12`** on GitHub.
+- You're on Windows with the toolchain installed (~~Delphi 7, Indy, NSIS, UPX~~ **FPC + Lazarus
+  with i386 LCL units, NSIS**; Indy is vendored — see
+  [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md)).
+- You're working from a clone of the repo (any location — the build derives its own paths).
 - You have `gh` (GitHub CLI) authenticated, or you'll use the GitHub web UI for PR
   review and tagging.
 
@@ -59,59 +75,41 @@ Sections 6-8 cover tagging and the GitHub-side release flow.
 
 ## 1. Prerequisites (one-time setup)
 
-Install once. Defaults match the assumed locations; if yours differ, see
-[section 1a](#1a-non-default-tool-locations).
+> **Rewritten 2026-08-13.** The Delphi 7 / DCC32 / UPX checklist that stood here is gone. The
+> authoritative version of this section is [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md); the
+> summary below is enough to get a release out.
 
-- [ ] **Delphi 7** -- `C:\Program Files (x86)\Borland\Delphi7\Bin\DCC32.EXE`
-- [ ] **Indy 10 library** -- **already bundled in `tr4w\include`** (Indy 10.6.3.3).
-  No external install required. If you happen to have your own Indy install
-  (e.g. `C:\Indy\Indy\Lib\`) and prefer to use it, see
-  [section 1a](#1a-non-default-tool-locations).
-- [ ] **PowerShell** -- built into Windows; nothing to install
-- [ ] **Git** -- used by the build script to read the current branch name for zip
-  filenames
-
-For `-BuildInstallers` mode (anything that produces `tr4w_setup_*.exe`):
-
-- [ ] **NSIS** -- `C:\Program Files (x86)\NSIS\makensis.exe`
-- [ ] **UPX** -- `upx.exe` discoverable via one of: `PATH`, the `UPX_BIN`
-  environment variable (directory containing `upx.exe`), or the `-UpxBin`
-  parameter to `FullBuild.ps1`. Any version that supports `--lzma`.
-  Download: https://upx.github.io/
-
-Plain `Build.cmd` and `BuildAll.cmd` only need Delphi 7 + Indy.
+- [ ] **FPC able to target i386-win32** — `fpc.exe` plus a `ppc386`/`ppcross386` backend and an
+      i386-win32 RTL. `fpc.exe` is only a driver; an x86_64-only install cannot build TR4W.
+- [ ] **Lazarus carrying LCL units for i386-win32** (`<lazarus>\lcl\units\i386-win32`).
+      **An x86_64-only install — the fpcupdeluxe default — will not do.**
+- [ ] **NSIS** — only for `-BuildInstaller`.
+- [ ] **Indy 10.6.3.3** — **vendored** in `tr4w\include`. Nothing to install, and no `INDY_ROOT`.
+- [ ] **PowerShell** and **Git** — built in / already present.
+- [ ] ~~**Delphi 7**, **UPX**~~ — no longer used by anything.
 
 ### 1a. Non-default tool locations
 
-Skip this if you accepted the installer defaults.
+Locations are **discovered**, not configured — `tr4w\build\Find-Toolchain.ps1` searches PATH and
+the usual roots, and prints every path it tried when it fails. Set these only to pin a specific
+install (which is what you want on CI):
 
-The build script reads three environment variables. Set them only if YOUR install
-differs from the defaults.
+- [ ] `FPC_HOME` — the directory holding `fpc.exe` (or the install root).
+- [ ] `LAZARUS_DIR` — the Lazarus directory.
+- [ ] `NSIS_BIN` — the directory holding `makensis.exe`.
+- [ ] `VIRUS_TOTAL_API_KEY` — VT public API key. **Optional**; CI is the authoritative gate.
+      Free key at https://www.virustotal.com/gui/my-apikey
+- [ ] ~~`DELPHI7_BIN`, `INDY_ROOT`, `UPX_BIN`~~ — read by nothing now.
 
-- [ ] `DELPHI7_BIN` -- directory containing `DCC32.EXE`
-  (default `C:\Program Files (x86)\Borland\Delphi7\Bin`)
-- [ ] `INDY_ROOT` -- Indy `Lib` directory containing `Core`/`System`/`Protocols`.
-  **Optional** -- if unset, the script uses the bundled Indy at
-  `tr4w\include`. Set this if you want to point at your own external Indy
-  install (e.g. `C:\Indy\Indy\Lib`).
-- [ ] `NSIS_BIN` -- NSIS directory containing `makensis.exe`
-  (default `C:\Program Files (x86)\NSIS`)
-- [ ] `UPX_BIN` -- directory containing `upx.exe`. **Optional** -- if unset,
-  the script falls back to `PATH` lookup. Set this if you have UPX installed
-  somewhere odd (e.g., `C:\Tools\upx-4.2.4-win64\`) and don't want to modify
-  `PATH`.
-- [ ] `VIRUS_TOTAL_API_KEY` -- VirusTotal public API key. **Optional** -- if
-  unset, the local build prints a "skipping scan" note and continues. When set,
-  `BuildAllInstallers.cmd` (and CI) upload each installer to VT and print a
-  CLEAN/WARN/BLOCKED summary. Local scans are informational only; CI is the
-  authoritative gate. Get a free key at https://www.virustotal.com/gui/my-apikey
-  (4 requests/min, 500/day -- plenty for a 1-8-installer release).
+**A pin is authoritative.** If `FPC_HOME`/`LAZARUS_DIR` names something that cannot build TR4W, the
+build **fails** naming what was rejected rather than quietly falling back to another install — so a
+runner cannot silently ship from a toolchain nobody configured.
 
 Set permanently:
 
 ```
 Win+R -> sysdm.cpl -> Advanced -> Environment Variables -> User variables -> New
-Variable name:  DELPHI7_BIN (or INDY_ROOT, or NSIS_BIN)
+Variable name:  FPC_HOME (or LAZARUS_DIR, or NSIS_BIN)
 Variable value: <your path>
 ```
 
@@ -120,11 +118,12 @@ Close any open terminal so it picks up the new value.
 Or, override per-invocation:
 
 ```
-powershell -File tr4w\FullBuild.ps1 -Delphi7Bin "D:\Delphi7\Bin" -IndyRoot "E:\Indy\Lib"
+powershell -File tr4w\FullBuild.ps1 -Fpc "D:\FPC\3.2.2" -Laz "E:\Lazarus" -NsisBin "E:\NSIS"
 ```
 
-You can also point the script at a checkout in a non-default location anywhere on
-disk with `-ProjectRoot`. Default is auto-detected from where `FullBuild.ps1` lives.
+There is no `-ProjectRoot`: every script derives the repo root from its own location, so a clone
+works from anywhere with no arguments. That is verified rather than assumed — see
+`tr4w\build\Test-FreshClone.ps1`.
 
 ---
 
@@ -138,12 +137,12 @@ to verify before merging).
    - If the PR touches `Version.pas` AND other files, that's the normal case (one
      PR bundles the feature change + version bump).
    - If the PR is `Version.pas`-only, it's the narrow carve-out for version bumps;
-     those can also land direct to master without a PR -- but if it arrived as a
-     PR anyway, just merge it.
+     those can also land direct to the default branch without a PR -- but if it
+     arrived as a PR anyway, just merge it.
 
 2. **Check out the branch locally.**
    ```
-   git fetch origin
+   git fetch d12
    git checkout <branch-name>
    git pull
    ```
@@ -160,9 +159,9 @@ to verify before merging).
 
 6. **Merge.** Use the GitHub merge UI. Default is "Create a merge commit" for TR4W.
 
-7. **Back to master.**
+7. **Back to the default branch.**
    ```
-   git checkout master
+   git checkout fpc
    git pull
    ```
 
@@ -170,176 +169,36 @@ to verify before merging).
 
 ## 3. Building locally
 
-The build wrappers live in `utils\`. Invoke them with the `utils\` prefix from the
-**repo root** (e.g., `C:\TR4W\` -> `utils\Build.cmd`). They resolve their own paths,
-so they work from any clone location. (Bare names like `Build.cmd` below are
-shorthand for `utils\Build.cmd`.)
+> **Rewritten 2026-08-13.** Everything that stood here — the `Build.cmd`/`BuildAll.cmd` table, the
+> DCU-cache incremental notes, the per-language build, the DCC32 troubleshooting and the local UPX
+> and VirusTotal steps — described the Delphi 7 build. It is replaced by
+> [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md), which is the single current source and is kept
+> alongside the build scripts it documents.
 
-| Wrapper                 | What it does                                                                    | When to use                                | Typical duration                                       |
-|-------------------------|---------------------------------------------------------------------------------|--------------------------------------------|--------------------------------------------------------|
-| `utils\Build.cmd`             | English `tr4w.exe` + `tr4wserver.exe` + zip                               | PR review, day-to-day dev iteration        | ~30 sec (cached) to ~3 min (first build)               |
-| `utils\BuildAll.cmd`          | The above + 7 per-language exes in `tr4w\target\dist\lang-test\`          | Verify every language still compiles       | ~25 min first time / ~1-2 min on re-run unchanged      |
-| `utils\BuildAllInstallers.cmd`| All the above + 8 installers in `tr4w\build\release\` (ENG + 7 langs)     | Producing shippable installers locally     | First time same as `BuildAll` + ~10 sec per installer  |
-
-**For PR review, `Build.cmd` is almost always enough.** Only use `BuildAll.cmd`
-when the PR touches `src\lang\` or `tr4w_consts_*.pas`. Only use
-`BuildAllInstallers.cmd` if you're producing release-candidate installers locally
-(rare -- CI does this on a tag push).
-
-### `Build.cmd` is incremental after the first run
-
-Despite the script being named `FullBuild.ps1`, plain `Build.cmd` does **not**
-clear DCUs or force a full recompile every time. The name is historical -- it
-refers to the full chain (tests -> main build -> server -> zip -> optional
-installers), not a clean build.
-
-What actually happens:
-
-- **First-ever run** (`tr4w\target\.dcu-managed-by-fullbuild` marker file missing):
-  the script clears `src\*.dcu` to migrate cleanly from the pre-DCU-cache version
-  of the script, then DCC32 does a full ~3-minute compile and drops the marker.
-- **Every subsequent run**: marker exists, `src\*.dcu` is left alone, DCC32 runs
-  **without `-B`** and recompiles only units whose `.pas` files changed. Typical
-  incremental main-build time: ~30 sec, often less.
-
-Per-language DCUs (`tr4w\target\dcu-cache\<lang>\`) are never read or written by
-plain `Build.cmd` -- only by `BuildAll.cmd` / `BuildAllInstallers.cmd` and only
-for non-ENG languages. ENG DCUs always live in `src\` (where Delphi 7 IDE
-expects them, so opening the project in the IDE after a script build doesn't
-trigger a phantom rebuild).
-
-To force a full rebuild manually:
-
-```
-del tr4w\target\.dcu-managed-by-fullbuild
-Build.cmd
+```bat
+utils\Build.cmd                    :: lints -> unit tests -> app -> tr4wserver
+utils\BuildEnglishInstaller.cmd    :: the above + the NSIS installer
 ```
 
-Next run will be a full ~3 minute compile and the marker gets recreated.
+Both work from any directory and take no configuration. What matters for a release:
 
-### 3a. What lands where
+- **A failing unit test aborts the build before any binary exists.** That ordering is the reason
+  `FullBuild.ps1` exists; do not work around it with `-SkipTests` for anything you intend to ship.
+- **The version is checked, not assumed.** It comes from `tr4w\src\Version.pas`, the build fails
+  rather than defaulting if it cannot be parsed, and the linked `tr4w.exe` is then verified to
+  report it — so a version resource that failed to link cannot ship silently.
+- **Artifacts land where they ship**: `tr4w	arget	r4w.exe`, `tr4w	r4wserver	r4wserver.exe`,
+  `tr4wuildelease	r4w_setup_<version>.exe`. Intermediates go to `build-out\` (gitignored).
+- **Before shipping to testers, prove a clone builds it**, not just your working tree:
+  `.	r4wuild\Test-FreshClone.ps1 -WithInstaller`. It diffs binary sizes against your tree and
+  has already caught an untracked file being linked into the shipping server binary.
 
-After `Build.cmd`:
+~~`BuildAll.cmd` / `BuildAllInstallers.cmd`~~ are retired — they built the eight non-English
+variants. Running either now prints a signpost and exits non-zero.
 
-- `tr4w\target\tr4w.exe` -- English program. Double-click to run.
-- `tr4w\tr4wserver\tr4wserver.exe` -- Multi-op server.
-- `tr4w\target\dist\tr4w-<version>-<branch>-<timestamp>.zip` -- Zipped exe for
-  emailing to testers.
+Local VirusTotal scanning is no longer wired into the local build; CI remains the authoritative
+gate (`.github/scripts/Invoke-VirusTotalScan.ps1`, threshold in `release.yml`).
 
-After `BuildAll.cmd` (everything above plus):
-
-- `tr4w\target\dist\lang-test\tr4w-RUS.exe` (also `-SER`, `-MNG`, `-CZE`, `-ROM`,
-  `-GER`, `-UKR`).
-
-After `BuildAllInstallers.cmd` (everything above plus):
-
-- `tr4w\build\release\tr4w_setup_<version>.exe` -- English installer.
-- `tr4w\build\release\tr4w_setup_<version>_<lang>.exe` -- Per-language installers.
-
-### 3b. Things that go wrong
-
-- **`DCC32.EXE not found at: <path>`** -- Delphi 7 not at default location. See
-  [section 1a](#1a-non-default-tool-locations).
-- **`Indy lib root not found`** -- only happens if you've set `INDY_ROOT` or
-  passed `-IndyRoot` to a non-existent path. With both unset the script falls
-  back to the bundled `tr4w\include`, which is always present in the repo.
-- **`makensis.exe not found`** -- NSIS not installed. Only matters for
-  `-BuildInstallers`.
-- **`upx.exe not found`** -- only matters for `-BuildInstallers`. The script
-  tries three resolution paths in order:
-  1. `-UpxBin <dir>` command-line parameter, OR
-  2. `UPX_BIN` environment variable (directory containing `upx.exe`), OR
-  3. `PATH` lookup.
-
-  Pick whichever is least disruptive for your machine. Download UPX from
-  https://upx.github.io/ if you don't have it.
-- **`Could not create output file 'tr4w.exe'`** -- `tr4w.exe` is currently
-  running. Close it.
-- **`Could not compile used unit 'src\VC.pas'`** -- almost always a missing
-  language constant in `tr4w_consts_<lang>.pas`. See issue #925.
-- **Weird state after Ctrl+C'ing a previous build** -- delete
-  `tr4w\target\.dcu-managed-by-fullbuild` and re-run. Script defensively clears
-  stale DCUs on the next run.
-
-### 3c. Why clone location doesn't matter
-
-You can clone TR4W to **any path** -- `C:\TR4W`, `D:\newsrc\TR4W`,
-`E:\projects\contesting\tr4w`, whatever -- and the build script Just Works with
-zero config. The mechanism:
-
-- `tr4w\FullBuild.ps1` derives `$ProjectRoot` from `$PSScriptRoot` (the directory
-  it lives in) by going one level up. Every other path in the script
-  (`$SRC_DIR`, `$EXE_DIR`, `$BUILD_DIR`, `$VERSION_PAS`, etc.) is built from
-  `$ProjectRoot` via `Join-Path`. So wherever the script lives, the script
-  finds its own repo.
-- The three `.cmd` wrappers (`Build.cmd`, `BuildAll.cmd`,
-  `BuildAllInstallers.cmd`) invoke `tr4w\FullBuild.ps1` with a **relative** path,
-  so they also work from any clone location -- just run them from the repo root.
-- Toolchain locations (`DELPHI7_BIN`, `INDY_ROOT`, `NSIS_BIN`) are about your dev
-  machine, not the repo. They don't move when you change clone location, so
-  defaults apply and you only override if your toolchain install is non-standard
-  ([section 1a](#1a-non-default-tool-locations)).
-- The CI runner uses the same script with an explicit
-  `-ProjectRoot $env:GITHUB_WORKSPACE` because GitHub's checkout path varies
-  per-runner -- documented in `.github/workflows/release.yml`.
-
-**No symlinks, no junctions, no `C:\TR4W` hardcoding anywhere.** If you find code
-or docs that assume a specific clone path, that's a bug -- file it.
-
-### 3d. Local VirusTotal scan (optional)
-
-When `BuildAllInstallers.cmd` (or any `-BuildInstallers` invocation) finishes
-successfully and the env var `VIRUS_TOTAL_API_KEY` is set, `FullBuild.ps1`
-uploads each `tr4w_setup_*.exe` to VirusTotal, polls for analysis completion,
-and prints a one-line verdict per file:
-
-```
-tr4w_setup_4.147.18.exe
-    CLEAN -- 0 malicious / 0 suspicious / 73 clean of 73 engines
-    https://www.virustotal.com/gui/file/<sha256>
-```
-
-Or, if engines flag the file:
-
-```
-    WARN (below CI threshold) -- 2 malicious / 0 suspicious / 71 clean of 73 engines
-    BLOCKED (>= CI threshold of 8) -- 9 malicious / 1 suspicious / 63 clean of 73 engines
-```
-
-**Local scan is informational only** -- it never fails the build. The CI VT-scan
-on tag push (see [section 6](#6-tagging-for-an-english-only-release)) is the
-authoritative gate. Local exists for catching surprises before you tag and
-trigger a release that gets blocked at the CI gate.
-
-When the env var is unset, the script prints a "skipping scan" note and
-continues. Set it once per machine:
-
-```
-[Environment]::SetEnvironmentVariable('VIRUS_TOTAL_API_KEY', '<your-key>', 'User')
-```
-
-(reopen the terminal afterward). Or per-session:
-
-```
-$env:VIRUS_TOTAL_API_KEY = '<your-key>'
-```
-
-Each VT scan takes 30 sec to ~3 min depending on queue depth -- typically
-~1 min. Upload + 10-min poll cap per installer; if VT is slow or down, the
-script logs the failure and moves on.
-
-### 3e. How the per-language build works (one paragraph)
-
-`tr4w.exe` is the same Delphi 7 project compiled with a different `-DLANG_xxx`
-flag per language. Each language's compiled `.dcu` files live in
-`tr4w\target\dcu-cache\<lang>\`. The canonical English DCUs live in `src\` (where
-Delphi IDE puts them by default -- so opening the project in the IDE after a
-script build doesn't trigger a phantom rebuild). The first time you build a given
-language, it does a full ~3-minute compile (`-B` flag to force DCC32 to ignore the
-ENG DCUs in `src\`). After that, the language's DCU cache is populated and
-subsequent builds of the same language are ~5-10 seconds.
-
----
 
 ## 4. Smoke testing
 
@@ -399,18 +258,23 @@ Use this when:
   monthly cadence), OR
 - A `-all` tag follows an English `vX.Y.Z` release: bump version, push, tag.
 
-Steps -- runs **directly on master**, no branch, no PR:
+Steps -- runs **directly on the default branch**, no branch, no PR:
 
 ```
-git checkout master
+git checkout fpc
 git pull
 # edit tr4w\src\Version.pas: bump TR4W_CURRENTVERSION_NUMBER and _DATE
 git add tr4w\src\Version.pas
-git commit -m "Bump Version.pas to 4.147.18"
-git push origin master
+git commit -m "Bump Version.pas to 5.0.1"
+git push d12 fpc
 ```
 
-This is the narrow exception to the "no direct commits on master" rule. It
+> **The remote is `d12`, not `origin`.** In this clone `origin` is `TR4W/TR4W` — the Delphi 7
+> heritage repository. `git push origin ...` would push into the wrong project. This is not
+> hypothetical: `TagIt.ps1` hardcoded `origin master` until 2026-08-13 and would have pushed a v5
+> tag there.
+
+This is the narrow exception to the "no direct commits on the default branch" rule. It
 applies **only** to `Version.pas`-only diffs whose review value is essentially
 zero. Comment-only changes, typo fixes, and everything else still go through a
 branch + PR.
@@ -442,12 +306,12 @@ branch + PR.
 
 This is the **normal** release path. Use it for the vast majority of releases.
 
-**Precondition:** `Version.pas` on master reflects the version you're about to
-tag. If not, do [section 5](#5-when-to-update-versionpas) first.
+**Precondition:** `Version.pas` on the default branch reflects the version you're
+about to tag. If not, do [section 5](#5-when-to-update-versionpas) first.
 
-1. **Make sure master is clean and you're on it.**
+1. **Make sure the branch is clean and you're on it.**
    ```
-   git checkout master
+   git checkout fpc
    git pull
    git status   # should be clean
    ```
@@ -464,18 +328,18 @@ tag. If not, do [section 5](#5-when-to-update-versionpas) first.
    Annotated tag (recommended -- carries a message and a tagger date):
    ```
    git tag -a v4.147.18 -m "TR4W v4.147.18"
-   git push origin v4.147.18
+   git push d12 v4.147.18
    ```
 
    Lightweight tag (also works, no message):
    ```
    git tag v4.147.18
-   git push origin v4.147.18
+   git push d12 v4.147.18
    ```
 
    To push **all** local tags at once (rarely needed):
    ```
-   git push origin --tags
+   git push d12 --tags
    ```
 
 4. **CI fires.** `.github/workflows/release.yml` matches `v4.*.*` and runs three
@@ -509,11 +373,11 @@ tag. If not, do [section 5](#5-when-to-update-versionpas) first.
 If you tagged the wrong commit (or tagged before bumping `Version.pas`):
 
 ```
-git push --delete origin v4.147.18    # remove tag from remote
+git push --delete d12 v4.147.18    # remove tag from remote
 git tag -d v4.147.18                  # remove tag locally
 # fix the underlying issue (bump Version.pas, push, etc.)
 git tag v4.147.18
-git push origin v4.147.18
+git push d12 v4.147.18
 ```
 
 This is safe as long as the draft release hasn't been published yet. Once
@@ -521,32 +385,44 @@ published, prefer cutting a new version instead of force-retagging.
 
 ---
 
-## 7. Tagging for an all-languages release (major releases only)
+## ~~7. Tagging for an all-languages release (major releases only)~~
 
-Use this for major releases where you want shippable installers for every
-language. It's slower (~25 min) and the per-language installers are mostly
-appreciated by international contesters who don't want to muddle through English
-menus.
+> **RETIRED 2026-08-13.** There is no all-languages build. TR4W ships ONE English binary and
+> translation is moving to `resourcestring`; `-AllLanguages` no longer exists as a switch, the
+> per-language installers are gone, and `utils\BuildAllInstallers.cmd` is a signpost that exits
+> non-zero.
+>
+> A `vX.Y.Z-all` tag is still *tolerated* — the suffix is stripped before the version comparison,
+> so an old-habit tag releases rather than failing obscurely — but it produces exactly the same
+> single build as `vX.Y.Z`. Prefer the plain form.
+>
+> The original procedure is struck through below for reference only.
 
-Same as [section 6](#6-tagging-for-an-english-only-release) except:
 
-- **Tag with `-all` suffix:** `v4.147.18-all` instead of `v4.147.18`.
-- CI detects the `-all` suffix and runs `FullBuild.ps1 -AllLanguages
-  -BuildInstallers`.
-- The draft release gets all 8 installers attached (`tr4w_setup_4.147.18.exe`
-  plus 7 per-language `_rus`, `_ser`, `_mng`, `_cze`, `_rom`, `_ger`, `_ukr`).
-- Release title in the draft includes "(all languages)".
+~~Use this for major releases where you want shippable installers for every~~
+~~language. It's slower (~25 min) and the per-language installers are mostly~~
+~~appreciated by international contesters who don't want to muddle through English~~
+~~menus.~~
 
-The tag matching strips `-all` before comparing to `Version.pas`, so both
-`v4.147.18` and `v4.147.18-all` validate against `Version.pas = 4.147.18`. You
-can use either on the same version; you cannot use both with two separate tag
-events without an intermediate version bump.
+~~Same as [section 6](#6-tagging-for-an-english-only-release) except:~~
 
-**Typical cadence:** ship English-only on point releases; ship all-languages on
-the first release of a quarter, or whenever language files have meaningfully
-changed.
+~~- **Tag with `-all` suffix:** `v4.147.18-all` instead of `v4.147.18`.~~
+~~- CI detects the `-all` suffix and runs `FullBuild.ps1 -AllLanguages~~
+~~  -BuildInstallers`.~~
+~~- The draft release gets all 8 installers attached (`tr4w_setup_4.147.18.exe`~~
+~~  plus 7 per-language `_rus`, `_ser`, `_mng`, `_cze`, `_rom`, `_ger`, `_ukr`).~~
+~~- Release title in the draft includes "(all languages)".~~
 
----
+~~The tag matching strips `-all` before comparing to `Version.pas`, so both~~
+~~`v4.147.18` and `v4.147.18-all` validate against `Version.pas = 4.147.18`. You~~
+~~can use either on the same version; you cannot use both with two separate tag~~
+~~events without an intermediate version bump.~~
+
+~~**Typical cadence:** ship English-only on point releases; ship all-languages on~~
+~~the first release of a quarter, or whenever language files have meaningfully~~
+~~changed.~~
+
+~~---~~
 
 ## 8. Ad-hoc full builds without a release
 

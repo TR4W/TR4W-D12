@@ -1,5 +1,16 @@
 # Toolchain SWOT: staying on Delphi 12 vs moving to Lazarus / Free Pascal
 
+> ## ~~DECIDED 2026-08-13 — FreePascal/Lazarus won~~
+>
+> This weighed Lazarus against Delphi while the choice was open. **The choice is made.** TR4W
+> builds with FPC 3.2.2 + the Lazarus LCL; Delphi survives only as
+> `tr4w/FullBuild-D12-deprecated.ps1`, kept so an old build can be reproduced for comparison.
+>
+> Kept because the reasoning is the record of *why*, and because several risks it identified were
+> then measured rather than guessed — the string model, Indy, closures and the LCL all held. Do
+> not reopen the comparison from this document; reopen it from evidence.
+
+
 **Status:** analysis for review. No decision taken.
 **Author:** drafted 2026-08-12 at NY4I's request, for a decision he owns.
 **Question asked:** *"I may have made a mistake selecting D7 → D12. Consider switching to

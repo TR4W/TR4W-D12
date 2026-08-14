@@ -1,5 +1,15 @@
 # TR4W Delphi 12 — Hardware / Bench Test Plan
 
+> ## ~~PARTLY SUPERSEDED 2026-08-13 — the toolchain changed, the radios did not~~
+>
+> The **test plan is still valid**: one verified rig per protocol family remains the gate, and the
+> per-radio procedures here are unchanged by the compiler.
+>
+> What is obsolete is the framing — this was written to qualify a **Delphi 12** build. Bench
+> results must now be obtained against the **FreePascal** binary, which is what ships. Anything
+> verified only under Delphi 12 should be treated as needing re-confirmation.
+
+
 Bench-verification gates for the D12 cutover (readiness items **P1-6, P1-7, P1-8**).
 These paths touch real bytes on wires the golden-master corpus cannot exercise —
 it only validates the scoring engine on ASCII log data. The D12 compiler moved

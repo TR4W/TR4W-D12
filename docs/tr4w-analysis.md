@@ -1,5 +1,14 @@
 # TR4W Codebase Analysis for Delphi 12 Athens Migration
 
+> ## ~~HISTORICAL — written against the Delphi 7 tree~~
+>
+> A survey of TR4W as it stood before modernization. Its architectural observations are largely
+> still true (the TRDOS core, the globals, the Win32 message loop), but every statement about the
+> **toolchain** is obsolete: TR4W builds with FreePascal + the Lazarus LCL as of 2026-08-13.
+>
+> For what is current, start at `CLAUDE.md` and [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md).
+
+
 **Date:** 2026-03-13
 **Repository:** TR4W v4.145.1
 **Current Target:** Delphi 7 (Borland) / Win32
