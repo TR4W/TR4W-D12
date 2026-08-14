@@ -35,8 +35,10 @@ param(
    [switch] $SkipTests,
    [switch] $SkipLints,
    [string] $Repo = (Split-Path $PSScriptRoot -Parent),
-   [string] $Fpc  = 'C:\FPC\3.2.2\bin\i386-win32\fpc.exe',
-   [string] $Laz  = 'C:\Lazarus',
+   # Empty by default: Find-Toolchain discovers FPC and Lazarus and honours
+   # FPC_HOME / LAZARUS_DIR. Pass these only to force a particular install.
+   [string] $Fpc  = '',
+   [string] $Laz  = '',
    [string] $Cpu  = 'i386',
    [string] $Os   = 'win32'
 )
@@ -48,8 +50,6 @@ $BUILD_DIR   = Join-Path $TR4W_DIR 'build'
 $TARGET_DIR  = Join-Path $TR4W_DIR 'target'
 $SERVER_DIR  = Join-Path $TR4W_DIR 'tr4wserver'
 $VERSION_PAS = Join-Path $TR4W_DIR 'src\Version.pas'
-$SPIKE       = Join-Path $Repo 'spike'
-$FPCRES      = Join-Path (Split-Path $Fpc -Parent) 'fpcres.exe'
 
 function Fail([string] $msg)
    {
@@ -65,19 +65,19 @@ function Phase([string] $name)
    }
 
 # ---------------------------------------------------------------------------
-# Preconditions. Checked up front so a missing toolchain fails in one second
-# rather than three minutes into a compile.
+# Toolchain. Resolved up front so a missing or wrong-architecture install fails
+# in one second with a list of where it looked, rather than three minutes into a
+# compile with "can't find unit Forms".
 # ---------------------------------------------------------------------------
-if (-not (Test-Path $Fpc))    { Fail "FPC not found at $Fpc" }
-if (-not (Test-Path $FPCRES)) { Fail "fpcres not found at $FPCRES" }
+Phase 'Toolchain'
 
-$lclUnits = Join-Path $Laz "lcl\units\$Cpu-$Os"
-if (-not (Test-Path $lclUnits))
-   {
-   # Naming the likely cause: an fpcupdeluxe install is commonly x86_64-only,
-   # and TR4W targets Win32.
-   Fail "No LCL units for $Cpu-$Os at $lclUnits (an x86_64-only Lazarus cannot build this)"
-   }
+. (Join-Path $BUILD_DIR 'Find-Toolchain.ps1')
+
+$tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os
+if (-not $tc) { Fail 'no FPC + Lazarus able to target this platform (see above)' }
+
+$FPCRES = $tc.FpcRes
+if (-not (Test-Path $FPCRES)) { Fail "fpcres not found at $FPCRES" }
 
 # ---------------------------------------------------------------------------
 # Version. src\Version.pas is the single source of truth -- the installer
@@ -184,7 +184,7 @@ else
    {
    Phase 'Unit tests'
 
-   & (Join-Path $SPIKE 'fpc-build-tests.ps1') -Cpu $Cpu -Os $Os -Fpc $Fpc -Repo $Repo -Laz $Laz | Out-Host
+   & (Join-Path $BUILD_DIR 'Build-Tests.ps1') -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'unit test build failed' }
 
    # Run from tr4w\test\unit: several suites resolve their data relative to the
@@ -227,8 +227,8 @@ Phase 'Application'
 
 $appExe = Join-Path $TARGET_DIR 'tr4w.exe'
 
-& (Join-Path $SPIKE 'fpc-build-app.ps1') `
-      -Cpu $Cpu -Os $Os -Fpc $Fpc -Repo $Repo -Laz $Laz `
+& (Join-Path $BUILD_DIR 'Build-App.ps1') `
+      -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
       -Defines @('LANG_ENG', 'VERSIONINFO_RES') `
       -OutExe $appExe | Out-Host
 
@@ -250,57 +250,14 @@ if ($vi.FileVersion -notlike "$vMajor.$vMinor.$vBuild*")
 # ---------------------------------------------------------------------------
 Phase 'TR4WServer'
 
-$serverOut = Join-Path $Repo "spike\units\server-$Cpu-$Os"
 $serverExe = Join-Path $SERVER_DIR 'tr4wserver.exe'
 
-if (-not (Test-Path $serverOut))
-   {
-   New-Item -ItemType Directory -Path $serverOut | Out-Null
-   }
+& (Join-Path $BUILD_DIR 'Build-Server.ps1') `
+      -Cpu $Cpu -Os $Os -Fpc $tc.FpcExe -Laz $tc.LazDir `
+      -OutExe $serverExe | Out-Host
 
-$src = Join-Path $TR4W_DIR 'src'
-$fpcRoot = Split-Path (Split-Path (Split-Path $Fpc -Parent) -Parent) -Parent
-
-$serverPaths = @(
-   $src
-   Join-Path $src 'trdos'
-   Join-Path $src 'utils'
-   Join-Path $src 'lang'
-   Join-Path $src 'radioFactory'
-   Join-Path $src 'rotatorFactory'
-   Join-Path $fpcRoot "units\$Cpu-$Os\regexpr"
-   Join-Path $fpcRoot "units\$Cpu-$Os\fcl-json"
-   Join-Path $TR4W_DIR 'Include'
-   Join-Path $TR4W_DIR 'include\Core'
-   Join-Path $TR4W_DIR 'include\System'
-   Join-Path $TR4W_DIR 'include\Protocols'
-)
-
-# No LCL and no -WG: the server is a console program with no UI at all.
-$serverArgs = @('-Mdelphi', "-P$Cpu", "-T$Os", '-Sc', '-B', "-FU$serverOut", "-o$serverExe")
-foreach ($p in $serverPaths)
-   {
-   $serverArgs += "-Fu$p"
-   }
-$serverArgs += 'tr4wserver.dpr'
-
-Push-Location $SERVER_DIR
-try
-   {
-   $serverOutput = & $Fpc @serverArgs 2>&1
-   $serverRc = $LASTEXITCODE
-   }
-finally
-   {
-   Pop-Location
-   }
-
-if ($serverRc -ne 0)
-   {
-   $serverOutput | Select-String 'Error:|Fatal:' | Select-Object -First 10 |
-      ForEach-Object { Write-Host "  $($_.Line.Trim())" -ForegroundColor Red }
-   Fail 'tr4wserver build failed'
-   }
+if ($LASTEXITCODE -ne 0) { Fail 'tr4wserver build failed' }
+if (-not (Test-Path $serverExe)) { Fail "tr4wserver binary missing at $serverExe" }
 
 Write-Host "  tr4wserver.exe ($([int]((Get-Item $serverExe).Length / 1KB)) KB)"
 

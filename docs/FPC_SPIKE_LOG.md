@@ -1,5 +1,13 @@
 # FPC spike log
 
+> **Historical record — the spike is over and it succeeded.** FPC is the shipping toolchain as of
+> 2026-08-13 and `spike/` was deleted, so the probe files named below (`spike/fpc_tests.pas`,
+> `spike/fpc-compile.ps1`, `spike/gate_*`, `spike/probe_*`, `spike/rxprobe/`, `spike/lclprobe/`)
+> no longer exist in the working tree. They are in git history if a measurement ever needs
+> repeating. What replaced them: `tr4w/build/Build-App.ps1`, `Build-Tests.ps1`, `Build-Server.ps1`
+> and `tr4w/FullBuild.ps1`. This document is kept because the *findings* below are still the
+> reasoning behind the port, not because the harnesses survive.
+
 **Branch:** `fpc-spike`, from `config-json` at `76cea17a`.
 **Run:** 2026-08-12.
 **Rule observed:** nothing in `tr4w/src` was edited. Every `{$IFDEF FPC}` added to force a pass is
