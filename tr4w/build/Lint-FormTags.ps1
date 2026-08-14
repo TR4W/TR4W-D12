@@ -364,7 +364,12 @@ if (-not (Test-Path -LiteralPath $SourceDir)) {
    exit 1
 }
 
-$files = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -Filter *.fmx -File |
+# .fmx AND .lfm.  The two designers write the same object/property/end grammar,
+# so this lint reads both -- verified 2026-08-13 by running it over the LCL
+# forms renamed to .fmx and getting identical, sensible answers. Filtering on
+# .fmx alone meant that as each form was ported to the LCL it silently dropped
+# out of this gate, which is how a designed-form defect gets shipped.
+$files = @(Get-ChildItem -LiteralPath $SourceDir -Recurse -File | Where-Object { $_.Extension -in '.fmx', '.lfm' } |
            Where-Object { $_.FullName -notmatch '\\__history\\|\\__recovery\\' })
 
 $violations = @()

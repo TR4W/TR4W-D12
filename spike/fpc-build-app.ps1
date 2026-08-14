@@ -33,13 +33,22 @@ param(
    # incremental while chasing one defect, and a full build before believing
    # any result -- green corpus, fixed bug, anything you would commit on.
    [switch] $Incremental,
+   # Extra -d defines, e.g. @('LANG_ENG','VERSIONINFO_RES'). Left empty for the
+   # bare engine builds this script was written for; FullBuild.ps1 passes the
+   # release set. Kept as a parameter rather than hard-coded so that the SEARCH
+   # PATHS below stay defined in exactly one place -- they were already
+   # duplicated once into fpc-build-tests.ps1 and a third copy would drift.
+   [string[]] $Defines = @(),
+   # Where the linked binary goes. FullBuild overrides this to stage a release
+   # build without disturbing the developer one.
+   [string] $OutExe = '',
    [string] $Laz  = 'C:\Lazarus'
 )
 
 $app = Join-Path $Repo 'tr4w'
 $src = Join-Path $app  'src'
 $out = Join-Path $Repo "spike\units\app-$Cpu-$Os-$Mode"
-$exe = Join-Path $out  'tr4w_fpc.exe'
+$exe = if ($OutExe -ne '') { $OutExe } else { Join-Path $out 'tr4w_fpc.exe' }
 
 if (-not (Test-Path $Fpc))
    {
@@ -89,6 +98,10 @@ $fpcArgs = @("-M$Mode", "-P$Cpu", "-T$Os", '-Sc', '-WG', "-FU$out", "-o$exe")
 if (-not $Incremental)
    {
    $fpcArgs += '-B'
+   }
+foreach ($d in $Defines)
+   {
+   $fpcArgs += "-d$d"
    }
 foreach ($p in $searchPaths)
    {
