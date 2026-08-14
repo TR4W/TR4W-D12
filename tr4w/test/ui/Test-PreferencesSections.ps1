@@ -21,8 +21,10 @@
 # parent, no-op on a leaf) then DOWN.
 
 param(
-   [string] $Repo   = 'C:\tr4w-d12',
-   [string] $Exe    = 'C:\tr4w-d12\spike\units\app-i386-win32-delphi\tr4w_fpc.exe',
+   [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
+   # Defaults to the binary FullBuild.ps1 produces. Derived from this script's
+   # own location so a clone anywhere works without arguments.
+   [string] $Exe = (Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'target\tr4w.exe'),
    # NO DEFAULT ON PURPOSE.  This needs a contest config, and TR4W will not
    # create the main window without one -- it stops on the "Open configuration
    # file or start a new contest" dialog, and there is nothing to drive.

@@ -82,17 +82,31 @@ Don't reintroduce a language loop.
 ### Iterating
 
 ```powershell
-.\spike\fpc-build-app.ps1                 # full rebuild (-B), the safe default
-.\spike\fpc-build-app.ps1 -Incremental    # seconds instead of minutes
-.\spike\fpc-build-tests.ps1               # the unit-test binary
+.\build\Build-App.ps1                 # full rebuild (-B), the safe default
+.\build\Build-App.ps1 -Incremental    # seconds instead of minutes
+.\build\Build-Tests.ps1 -Run          # the unit-test binary, then run it
+.\build\Build-Server.ps1              # tr4wserver
 ```
 
 - **`-Incremental` for chasing one defect; a full build before believing any result.** FPC's mtime
   rule cannot see a changed compiler switch, `.inc`, or define flip. A designed form is *two* files
   and FPC only watches the `.pas`, so the script touches a `.pas` whose `.lfm` is newer.
-- The app build output goes to `spike/units/`; `FullBuild.ps1` overrides it to `target/tr4w.exe`.
+- Intermediate output goes to `build-out/` at the repo root (gitignored). `FullBuild.ps1` puts the
+  binaries where they ship: `target/tr4w.exe` and `tr4wserver/tr4wserver.exe`.
 - **The unit-test exe must live in `tr4w/test/unit/`** — several suites resolve their data from
   `ParamStr(0)`, not the working directory.
+
+**No hardcoded toolchain.** `build/Find-Toolchain.ps1` discovers FPC and Lazarus (honouring
+`FPC_HOME` / `LAZARUS_DIR`), and checks what actually matters: a compiler that can *target*
+i386-win32 — `fpc.exe` is only a driver, the backend is `ppc386`/`ppcross386` — an i386 RTL, and LCL
+units for i386. It lists every location it tried when it fails.
+
+**The unit search paths are defined once**, in `build/Get-SearchPaths.ps1`, for three targets that
+genuinely differ (App / Tests / Server). They previously existed in three copies and had already
+drifted. `Server` deliberately gets no LCL: `tr4wserver` is a console program.
+
+**`spike/` is gone** (2026-08-13). It answered "can FPC do this", the answer was yes, and its probes
+are in git history. UI harnesses live in `tr4w/test/ui/`.
 
 ### Lints gate the build — from one place
 

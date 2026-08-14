@@ -1953,7 +1953,7 @@ begin
    // from an empty one to any window-enumerating harness -- which is precisely
    // how the nav tree itself stayed empty for a whole session without a single
    // line in the log.  One Debug line per section click makes the sweep in
-   // spike/fpc-sweep-prefs.ps1 assert against the form's OWN answer instead of
+   // test/ui/Test-PreferencesSections.ps1 assert on the form's OWN answer than
    // inferring one from the outside.
    if shown then
       begin
