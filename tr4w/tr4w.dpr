@@ -183,6 +183,13 @@ uses
   // The LCL side of hosting a toolkit in TR4W's own loop.  FPC-only:
   // Delphi cannot compile the LCL, just as FPC cannot compile FMX.
   uLCLCoexist in 'src\ui\lcl\uLCLCoexist.pas',
+  uLCLTranslate in 'src\ui\lcl\uLCLTranslate.pas',
+  uLCLFormHelpers in 'src\ui\lcl\uLCLFormHelpers.pas',
+  uSettingsBinding in 'src\ui\lcl\uSettingsBinding.pas',
+  uUDPDestinationEditForm in 'src\ui\lcl\uUDPDestinationEditForm.pas',
+  uKeyerEditForm in 'src\ui\lcl\uKeyerEditForm.pas',
+  uRadioEditForm in 'src\ui\lcl\uRadioEditForm.pas',
+  uPrefsForm in 'src\ui\lcl\uPrefsForm.pas',
 {$ENDIF}
   uJSON in 'src\utils\uJSON.pas',
   utils_text in 'src\utils\utils_text.pas',
@@ -778,6 +785,15 @@ begin
    // form stays Active=False and its edits never show a caret.  See
    // uFMXCoexist.TellFMXTheApplicationIsRunning for the full chain.
    TellFMXTheApplicationIsRunning;
+{$ELSE}
+   // The LCL equivalent, and it is genuinely smaller: Application.Initialize
+   // creates the widgetset, and that is all this needs. There is no
+   // ApplicationState to lie about, because the LCL does not gate a form's
+   // Active flag on one the way FMX does.
+   //
+   // Application.Run is NOT called here and must never be -- TR4W owns the
+   // message loop below. See uLCLCoexist.
+   InitLCLForHostedLoop;
 {$ENDIF}
 
    // Check for another running instance BEFORE opening any shared files
@@ -1256,6 +1272,15 @@ begin
     // no FMX window for a message to belong to.  See tr4w.dpr's uses clause.
 {$IFNDEF FPC}
     if MessageIsForFMXWindow(Msg) then
+       begin
+       goto TransMess;
+       end;
+{$ELSE}
+    // Same question, asked of the LCL forms: does this message belong to a
+    // hosted window rather than to TR4W's own? The registry behind it
+    // (uHostedFormWindows) is shared and toolkit-blind on purpose -- both
+    // toolkits register a plain HWND and neither one is named here.
+    if MessageIsForHostedWindow(Msg) then
        begin
        goto TransMess;
        end;
