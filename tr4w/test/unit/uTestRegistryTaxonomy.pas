@@ -1,4 +1,4 @@
-unit uTestRegistryTaxonomy;
+﻿unit uTestRegistryTaxonomy;
 {$I ..\..\src\tr4w.inc}
 
 {
@@ -48,6 +48,8 @@ type
       procedure Test_ManufacturerOf_YaesuMatchesRetiredSet;
       procedure Test_ManufacturerOf_EmptyForUnregistered;
       procedure Test_HamLibOnlyRegistrations;
+      procedure Test_NetworkCredentialsArePinned;
+      procedure Test_EveryNetworkRadioDeclaresCredentialsEitherWay;
    public
       procedure RunAllTests; override;
    end;
@@ -180,12 +182,94 @@ begin
    CheckEquals('', bad, bad);
 end;
 
+{ WHICH NETWORK RADIOS AUTHENTICATE -- exhaustive, and it fails on a radio that
+  is not listed.
+
+  "Network" and "wants a username" are different questions. The Elecraft K4 is
+  reached over TCP 9200 with no login; every network Icom and both Kenwood LAN
+  radios want user and password. The radio editor greys the credential fields on
+  what the registry says here, so a model that forgets to declare it offers no
+  fields and then cannot log in -- a silent failure that looks like a network
+  fault rather than a missing declaration.
+
+  The list is the AUTHORITY, not a sample: the second test below fails if any
+  network-capable radio is missing from it, so adding one forces a decision. }
+const
+   CREDENTIALED_NETWORK_RADIOS: array[0..10] of InterfacedRadioType =
+      (IC705, IC7300MK2, IC7600, IC7610, IC7760, IC7850, IC7851, IC905, IC9700,
+       TS890, TS990);
+
+   { Network-capable and deliberately WITHOUT credentials. Named rather than
+     merely absent, so "nobody looked at this one" cannot masquerade as "this one
+     does not authenticate". }
+   OPEN_NETWORK_RADIOS: array[0..1] of InterfacedRadioType = (K4, FLEX);
+
+function InSet(model: InterfacedRadioType;
+               const list: array of InterfacedRadioType): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(list) to High(list) do
+      begin
+      if list[i] = model then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+procedure TRegistryTaxonomyTests.Test_NetworkCredentialsArePinned;
+var
+   m: InterfacedRadioType;
+   expected: boolean;
+begin
+   for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
+      begin
+      if not IsRegistered(m) then
+         begin
+         Continue;
+         end;
+
+      expected := InSet(m, CREDENTIALED_NETWORK_RADIOS);
+      Check(RegisteredNetworkCredentials(m) = expected,
+            Format('%s: the registry says credentials=%s, the pinned list says %s',
+                   [DisplayName(m),
+                    BoolToStr(RegisteredNetworkCredentials(m), True),
+                    BoolToStr(expected, True)]));
+      end;
+end;
+
+procedure TRegistryTaxonomyTests.Test_EveryNetworkRadioDeclaresCredentialsEitherWay;
+var
+   m: InterfacedRadioType;
+begin
+   // A NETWORK radio must appear in one list or the other. Being in neither
+   // means nobody decided, and the default (no credentials) would quietly become
+   // the answer.
+   for m := Low(InterfacedRadioType) to High(InterfacedRadioType) do
+      begin
+      if (not IsRegistered(m)) or (RegisteredNetworkPort(m) <= 0) then
+         begin
+         Continue;
+         end;
+
+      Check(InSet(m, CREDENTIALED_NETWORK_RADIOS) or InSet(m, OPEN_NETWORK_RADIOS),
+            Format('%s is a network radio (port %d) but appears in neither the ' +
+                   'credentialed nor the open list -- say which it is',
+                   [DisplayName(m), RegisteredNetworkPort(m)]));
+      end;
+end;
+
 procedure TRegistryTaxonomyTests.RunAllTests;
 begin
    Test_IsHamLibOnly_MatchesRetiredSet;
    Test_ManufacturerOf_YaesuMatchesRetiredSet;
    Test_ManufacturerOf_EmptyForUnregistered;
    Test_HamLibOnlyRegistrations;
+   Test_NetworkCredentialsArePinned;
+   Test_EveryNetworkRadioDeclaresCredentialsEitherWay;
 end;
 
 end.
