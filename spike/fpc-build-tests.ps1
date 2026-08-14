@@ -21,13 +21,32 @@ param(
    [string] $Os   = 'win32',
    [string] $Fpc  = 'C:\FPC\3.2.2\bin\i386-win32\fpc.exe',
    [string] $Repo = 'C:\tr4w-d12',
-   [switch] $Run
+   [switch] $Run,
+   # Same default and same reasoning as fpc-build-app.ps1: C:\Lazarus carries
+   # LCL units for i386-win32, and the fpcupdeluxe install does not.
+   [string] $Laz  = 'C:\Lazarus'
 )
 
 $src  = Join-Path $Repo 'tr4w\src'
 $test = Join-Path $Repo 'tr4w\test\unit'
 $out  = Join-Path $Repo "spike\units\tests-$Cpu-$Os-$Mode"
-$exe  = Join-Path $out  'tr4w_unit_tests_fpc.exe'
+
+# THE EXE LANDS IN THE TEST DIRECTORY, not next to the .ppu files, and that is
+# a requirement of the suite rather than a preference.  Several tests locate
+# their data relative to the BINARY, not the working directory:
+#
+#   uTestADIFFixtures : ExtractFilePath(ParamStr(0)) + 'fixtures\...'
+#   uTestCTYDAT       : ExtractFilePath(ParamStr(0)) + '..\..\target\cty.dat'
+#
+# Both resolve correctly only from tr4w\test\unit, which is where the Delphi
+# build has always put its exe -- so the assumption was invisible until a
+# second toolchain built the same suite somewhere else.  Run from spike\units
+# the failure is 30 red CTYDAT tests plus a bare RTE 217 in ADIFFixtures, and
+# neither points at the real cause.
+#
+# Only the .ppu/.o output stays under spike\.  The two exes differ by name
+# (tr4w_unit_tests.exe vs ..._fpc.exe) so the toolchains do not collide.
+$exe  = Join-Path $test 'tr4w_unit_tests_fpc.exe'
 
 if (-not (Test-Path $Fpc))
    {
@@ -50,12 +69,35 @@ if (-not (Test-Path $out))
 
 $searchPaths = @(
    $test
+   # ui\lcl, and BEFORE $src -- both halves of that matter.
+   #
+   # ui\lcl rather than ui\fmx: the FMX forms cannot compile under FPC at all
+   # (System.Diagnostics, FMX.StdCtrls and the rest are Delphi-only).  The
+   # tests reach a form transitively through uCAT, and kept resolving it to the
+   # FMX copy once the LCL port began -- which is why this build broke between
+   # 1c13c532 (3978 / 0) and 2026-08-13 without anyone editing a test.
+   #
+   # BEFORE $src because exactly one unit name lives in both directories --
+   # uSettingsBinding -- and the two files are genuinely different: the src
+   # root one binds FMX controls, the ui\lcl one binds LCL controls.  tr4w.dpr
+   # chooses between them with {$IFDEF FPC} and an explicit path; the test
+   # project lists neither, so here the SEARCH ORDER is the only thing
+   # choosing.  Verified with comm(1) that this is the ONLY collision -- if a
+   # second one ever appears, this line begins shadowing it silently.
+   Join-Path $src 'ui\lcl'
    $src
    Join-Path $src 'trdos'
    Join-Path $src 'utils'
    Join-Path $src 'lang'
    Join-Path $src 'radioFactory'
-   Join-Path $src 'ui\fmx'
+   Join-Path $src 'rotatorFactory'
+   # The LCL itself, exactly as fpc-build-app.ps1 resolves it. Kept in step
+   # with that script by hand; if they drift, the tests link a different LCL
+   # than the app does.
+   "$Laz\lcl\units\$Cpu-$Os"
+   "$Laz\lcl\units\$Cpu-$Os\win32"
+   "$Laz\components\lazutils\lib\$Cpu-$Os"
+   "$Laz\packager\units\$Cpu-$Os"
    # regexpr supplies TRegExpr, which uRegex.pas uses in place of TPerlRegEx --
    # the vendored PCRE library is twenty Borland-format .obj files and FPC's
    # linker cannot read them.
