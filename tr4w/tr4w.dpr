@@ -628,6 +628,17 @@ begin
       ApplyLoadedParks(lParam);
       end;
 
+    WM_TCI_APPLY:
+      begin
+      // Posted by a TCI connection thread (see uTCIServer). lParam is the apply
+      // command; TCIRunQueuedApply runs it here on the main thread and frees it.
+      //
+      // A posted message rather than TThread.Queue because a queueing thread
+      // that exits purges its own callback, and rather than Synchronize because
+      // that would block an Indy connection thread against TTCIServer.Stop.
+      TCIRunQueuedApply(lParam);
+      end;
+
     WM_CTY_VERSION_CHECKED:
       begin
       if wParam = 1 then

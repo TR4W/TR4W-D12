@@ -47,9 +47,10 @@ unit uTCIServer;
      but they must NEVER call the radio.  RadioObject.SetRadioFreq writes
      globals (tCommandedQSYFreq, the auto-S&P hook) and the display routines
      around it are main-thread things.  So every write is marshalled onto the
-     main thread with TThread.Queue.  That works here because TR4W's message
-     loop falls through to DispatchMessage, which drains the queue -- proven
-     on the bench during the FMX coexistence work.
+     main thread by POSTING WM_TCI_APPLY to TR4W's own message loop.  It was
+     TThread.Queue until 2026-08-14, which is a race: a connection thread that
+     queues an apply and then exits purges its own callback.  See WM_TCI_APPLY
+     for why neither Synchronize nor QueueAsyncCall can replace it here.
 
   2. THE RADIO POLLING THREAD calls PublishRadioState through the
      RadioStatusPublished hook.  It must not be blocked: a slow observer
@@ -82,6 +83,45 @@ uses
 
 const
    TCI_SERVER_DEFAULT_PORT = 50001;
+
+   { Posted by a TCI connection thread to hand an apply to the main thread.
+     lParam carries the command object; the handler in tr4w.dpr calls
+     TCIRunQueuedApply, which takes ownership.
+
+     WHY A WINDOW MESSAGE AND NOT TThread.Queue -- the reason is specific and was
+     paid for elsewhere in this program on 2026-08-14.
+
+     TThread.Queue stamps every entry with the CALLING thread's id, even when the
+     thread argument is nil (FPC 3.2.2 classes.inc:562). TThread.Destroy later
+     purges by that id (classes.inc:603), so a thread that queues and then exits
+     DELETES ITS OWN PENDING CALLBACK. Radio discovery lost its results to
+     exactly that and looked like a hang. Here the queueing threads are Indy
+     connection threads, so the window is narrower -- but a client that sets a
+     frequency and immediately disconnects is an ordinary thing for WSJT-X to do,
+     and losing a PTT or a split is not an ordinary consequence.
+
+     TThread.Synchronize is immune to the purge but CANNOT be used here: it
+     blocks the connection thread until the main thread runs the method, and
+     TTCIServer.Stop -- on the main thread -- takes the Indy server down, which
+     waits for those same connection threads. That is a deadlock, not a
+     trade-off.
+
+     Application.QueueAsyncCall is lifetime-independent and non-blocking, but the
+     LCL only drains it from Application.Idle / ProcessMessages / HandleMessage,
+     and TR4W runs its own GetMessage loop rather than Application.Run. It would
+     never be delivered.
+
+     A posted message has none of those problems: it does not block the sender,
+     it is not tied to any thread's lifetime, and it is drained by TR4W's OWN
+     message loop, which is the one mechanism here that is not borrowed. It is
+     also already the house pattern -- uPOTAParks hands a parsed list over the
+     same way (WM_POTA_LOAD_DONE). }
+   WM_TCI_APPLY = WM_APP + 220;   // 200/201 POTA, 210/211 CTY
+
+{ Runs an apply posted with WM_TCI_APPLY and frees it. aLParam is the command
+  object. Exposed because the message is handled in tr4w.dpr, which has no
+  business knowing the command classes -- they stay in the implementation. }
+procedure TCIRunQueuedApply(aLParam: LPARAM);
 
 type
    { Per-connection TCI state.  Owned by the TWSServerSession that carries it
@@ -242,9 +282,10 @@ uses
 
 // WHY THESE ARE OBJECTS AND NOT ANONYMOUS METHODS.
 //
-// Each apply below runs on the MAIN thread via TThread.Queue, because
-// SetRadioFreq and friends write program globals and touch the display.  The
-// values they act on are read on the CLIENT's thread, so they have to travel.
+// Each apply below runs on the MAIN thread -- posted there with WM_TCI_APPLY --
+// because SetRadioFreq and friends write program globals and touch the display.
+// The values they act on are read on the CLIENT's thread, so they have to
+// travel, and an object that NAMES what it carries is what travels.
 //
 // A closure captured them implicitly.  That reads well and costs two things,
 // and rotatorFactory\uRotatorBase.pas:62 already wrote down both: it needs a
@@ -334,6 +375,46 @@ begin
    finally
       Free;
    end;
+end;
+
+{ Hands a finished command to the main thread. See WM_TCI_APPLY for why this is
+  a posted message rather than TThread.Queue or Synchronize.
+
+  NEVER LEAKS ON FAILURE. If there is no main window yet, or during shutdown, or
+  the thread's message queue refuses the post, the command is freed here. The
+  alternative -- posting and hoping -- is how a transmit command becomes a slow
+  leak nobody attributes to TCI. }
+procedure PostTCIApply(aCmd: TTCIApplyCommand);
+begin
+   if aCmd = nil then
+      begin
+      Exit;
+      end;
+
+   if tr4whandle = 0 then
+      begin
+      logger.Warn('[TCI-SRV] no main window; apply discarded');
+      aCmd.Free;
+      Exit;
+      end;
+
+   if not PostMessage(tr4whandle, WM_TCI_APPLY, 0, LPARAM(aCmd)) then
+      begin
+      logger.Warn('[TCI-SRV] PostMessage refused the apply (error %d); discarded',
+                  [GetLastError]);
+      aCmd.Free;
+      end;
+end;
+
+procedure TCIRunQueuedApply(aLParam: LPARAM);
+begin
+   if aLParam = 0 then
+      begin
+      Exit;
+      end;
+
+   // Run frees the command, including when Execute raises.
+   TTCIApplyCommand(aLParam).Run;
 end;
 
 constructor TTCIApplyFreq.Create(aServer: TTCIServer; aRig: RadioPtr;
@@ -1390,7 +1471,7 @@ begin
 
    // Marshalled: SetRadioFreq writes program globals and the display
    // routines around it belong to the main thread.
-   TThread.Queue(nil, TTCIApplyFreq.Create(Self, rig, Trx, Channel, Hz).Run);
+   PostTCIApply(TTCIApplyFreq.Create(Self, rig, Trx, Channel, Hz));
 
    // CONFIRM IMMEDIATELY, AND CONFIRM WHAT WE ACCEPTED.  WSJT-X's
    // do_frequency() waits about two seconds for this echo and then reports
@@ -1433,7 +1514,7 @@ begin
       FLock.Leave;
    end;
 
-   TThread.Queue(nil, TTCIApplyMode.Create(Self, rig, mode, extended).Run);
+   PostTCIApply(TTCIApplyMode.Create(Self, rig, mode, extended));
 
    // CONFIRM, exactly as a tune is confirmed.  WSJT-X's do_mode() waits on
    // this echo and reports "TCI failed set mode" and drops the socket without
@@ -1468,7 +1549,7 @@ begin
       Exit;
       end;
 
-   TThread.Queue(nil, TTCIApplySplit.Create(Self, rig, TurnOn).Run);
+   PostTCIApply(TTCIApplySplit.Create(Self, rig, TurnOn));
 end;
 
 procedure TTCIServer.ApplyPTT(Session: TWSServerSession; Trx: integer;
@@ -1559,7 +1640,7 @@ begin
    // MAIN thread once the answer is known.  A refused key still gets an
    // explicit trx:<n>,false -- silence is what WSJT-X surfaces as "TCI failed
    // to set ptt" with no cause.
-   TThread.Queue(nil, TTCIApplyPTT.Create(Self, rig, Trx, KeyDown, Session).Run);
+   PostTCIApply(TTCIApplyPTT.Create(Self, rig, Trx, KeyDown, Session));
 end;
 
 { ------------------------------------------------------------ broadcast -- }
