@@ -2374,6 +2374,10 @@ begin
    // them.  Adopt runs before Connect at every site, which is the ordering
    // this needs -- the level has to be known before the driver sends AI.
    Self.tFactoryObject.ApplyAutoInfoLevel(Self.AutoInfoLevel);
+
+   // The transverter offset, for the same reason everything else is handed over
+   // here rather than at a construction site. Zero for every radio without one.
+   Self.tFactoryObject.FrequencyOffset := Self.FrequencyAdder;
 end;
 
 procedure RadioObject.ShutDownRadioInterface;
@@ -2923,6 +2927,23 @@ begin
    if Self.tFactoryObject <> nil then
       begin
       tNetMode := AdjustSSBModeForFreq(ModeTypeToNetMode(mode), freq);
+
+      // THE OTHER HALF OF THE TRANSVERTER OFFSET, and it must be subtracted.
+      //
+      // freq here is the frequency TR4W means -- 144.200 from a band map click on
+      // a 2m spot. The radio is a 28 MHz rig behind a transverter and has never
+      // heard of 144, so it is sent 28.200. GetFrequency adds the offset on the
+      // way back, which closes the loop: click 144.200, radio tunes 28.200,
+      // TR4W reads 28.200 and reports 144.200.
+      //
+      // Mode is decided BEFORE this, from the frequency TR4W means, which is the
+      // right way round: SSB above/below 10 MHz is a property of the real band,
+      // not of the transverter's IF.
+      if Self.FrequencyAdder <> 0 then
+         begin
+         freq := freq - Self.FrequencyAdder;
+         end;
+
       if VFO = 'B' then
          begin
          Self.tFactoryObject.SetFrequency(freq, nrVFOB, tNetMode);

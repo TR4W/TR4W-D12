@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -162,6 +162,8 @@ type
       edtDataMode: TEdit;
       lblAutoInfo: TLabel;
       edtAutoInfo: TEdit;
+      lblFreqOffset: TLabel;
+      edtFreqOffset: TEdit;
       chkWideCW: TCheckBox;
       chkFT1000MPReverse: TCheckBox;
       btnOK: TButton;
@@ -770,6 +772,18 @@ begin
       edtAutoInfo.Text := IntToStr(FRadio.AutoInfoLevel);
       end;
 
+   // BLANK FOR NONE, not '0'. Almost every radio has no transverter, and a box
+   // showing 0 reads as a value someone chose; blank plus the hint reads as
+   // "nothing here", which is what it is.
+   if FRadio.FrequencyAdder <> 0 then
+      begin
+      edtFreqOffset.Text := IntToStr(FRadio.FrequencyAdder);
+      end
+   else
+      begin
+      edtFreqOffset.Text := '';
+      end;
+
    if FRadio.IcomDataModeID > 0 then
       begin
       edtDataMode.Text := IntToStr(FRadio.IcomDataModeID);
@@ -889,6 +903,9 @@ begin
       begin
       FRadio.AutoInfoLevel := StrToIntDef(Trim(edtAutoInfo.Text), AUTOINFO_RADIO_DEFAULT);
       end;
+   // Blank or unparseable means no transverter. StrToIntDef with 0 is right
+   // here -- 0 IS the "no offset" value, so a typo cannot invent one.
+   FRadio.FrequencyAdder    := StrToIntDef(Trim(edtFreqOffset.Text), 0);
    FRadio.WideCWFilter      := chkWideCW.Checked;
    FRadio.FT1000MPCWReverse := chkFT1000MPReverse.Checked;
    FRadio.UseHamLib       := chkUseHamLib.Checked;

@@ -451,6 +451,22 @@ object RadioEditForm: TRadioEditForm
         TabOrder = 10
         Caption = 'FT-1000MP CW reverse'
       end
+      object lblFreqOffset: TLabel
+        Left = 10
+        Top = 170
+        Width = 220
+        Height = 17
+        AutoSize = False
+        Caption = 'Frequency offset (transverter), Hz'
+      end
+      object edtFreqOffset: TEdit
+        Left = 240
+        Top = 166
+        Width = 130
+        Height = 22
+        TabOrder = 12
+        TextHint = '0 = none, e.g. 116000000'
+      end
       object chkPolling: TCheckBox
         Left = 10
         Top = 136
