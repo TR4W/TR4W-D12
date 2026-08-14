@@ -57,63 +57,90 @@ corpus is pure ASCII and cannot see it. Recommendation on file: ship English fir
 
 ## Build System
 
-### The one recipe that matters
+**The toolchain is FreePascal 3.2.2 + the Lazarus LCL.** Delphi 12 is behind us (2026-08-13): the
+FPC build passes the unit tests (3978/0) and the golden corpus (22/0/4), runs the LCL UI, and is what
+`FullBuild.ps1` ships. The Delphi script is kept as `FullBuild-D12-deprecated.ps1` for reference —
+**don't run both**, they write the same file names from different compilers.
 
-`rsvars.bat` is a **batch** file and must be `call`ed first to put msbuild and the compiler on PATH.
+### Everything at once
+
+```powershell
+.\FullBuild.ps1                    # lints + unit tests + app + tr4wserver
+.\FullBuild.ps1 -BuildInstaller    # + the NSIS installer
+```
+
+`tr4w/FullBuild.ps1` is the **single packaging path**: lints, then unit tests, then the app — in that
+order, so a failing test stops the build *before* it produces a binary anyone could ship. It derives
+the version from `src/Version.pas` and **fails** (rather than defaulting to 0.0.0) if it cannot parse
+it, then checks the linked `tr4w.exe` actually reports that version. `full.nsi` refuses to build
+without `/DTR4WVERSION`.
+
+**One build, English only.** The nine per-language variants are gone; I18N is moving to
+`resourcestring` + one binary (NY4I, 2026-08-13), and that work arrives from a separate worktree.
+Don't reintroduce a language loop.
+
+### Iterating
+
+```powershell
+.\spike\fpc-build-app.ps1                 # full rebuild (-B), the safe default
+.\spike\fpc-build-app.ps1 -Incremental    # seconds instead of minutes
+.\spike\fpc-build-tests.ps1               # the unit-test binary
+```
+
+- **`-Incremental` for chasing one defect; a full build before believing any result.** FPC's mtime
+  rule cannot see a changed compiler switch, `.inc`, or define flip. A designed form is *two* files
+  and FPC only watches the `.pas`, so the script touches a `.pas` whose `.lfm` is newer.
+- The app build output goes to `spike/units/`; `FullBuild.ps1` overrides it to `target/tr4w.exe`.
+- **The unit-test exe must live in `tr4w/test/unit/`** — several suites resolve their data from
+  `ParamStr(0)`, not the working directory.
+
+### Lints gate the build — from one place
+
+`tr4w/build/Run-Lints.ps1` runs all ten. The list previously lived **only** in `tr4w.dproj`'s
+PreBuildEvent, so it gated msbuild and nothing else; an FPC build saw none of them. Add a lint by
+editing that one array.
+
+`Lint-LFMProperties` is the odd one out: it compiles a small FPC helper (`build/lintlfm/`) that links
+the LCL and asks the same RTTI the streaming loader uses, because "does this class publish this
+property, and is this a legal value" cannot be answered by grepping a `published` block. It fails
+closed if FPC or the LCL is missing.
+
+### Delphi 12 (deprecated — reference only)
 
 ```bat
 call "C:\Program Files (x86)\Embarcadero\Studio\23.0\bin\rsvars.bat"
 cd /d C:\tr4w-d12\tr4w
 msbuild tr4w.dproj /t:Make /p:Config=Debug /p:Platform=Win32 /v:minimal /nologo
-echo EXITCODE=%ERRORLEVEL%
 ```
 
-- **`/t:Make` = incremental** — use it for a targeted fix. Editing `VC`, `TF`, `tree`, `LOGWIND`, or
-  `LOGSTUFF` cascades a large recompile regardless.
-- **`/t:Build` = full** — use it before committing anything that changes a class hierarchy. `Make`
-  skips up-to-date units and will hide a `W1020` missing-abstract-method warning.
-- Output binary: `tr4w/target/tr4w.exe`. DCUs land in `src\` — **do not** delete DCUs or add cache wipes.
-- Compiler options live in `tr4w.dproj`, including the vendored Indy search path
-  (`DCC_UnitSearchPath`) and the pinned `-$A8` / `-$Z1`. **`tr4w.cfg` / `tr4w.dof` are D7 leftovers**
-  — editing them does nothing, and neither does `BatchCompile.cmd` (retired D7 recipe; don't use it).
-- `tr4w.dpr` is the **program source** and is current — every Delphi version has one. What changed
-  from D7 is the *project* file: `.dpr` + `.dof` + `.cfg` under DCC32 became `.dproj` under msbuild.
-
-Full recipe, including the Bash one-liner form and output filtering:
+`tr4w.dpr` is the **program source** and is shared by both toolchains — the LCL and FMX unit sets are
+selected by `{$IFDEF FPC}` in its uses clause. `tr4w.cfg` / `tr4w.dof` are D7 leftovers and editing
+them does nothing; `BatchCompile.cmd` is a retired D7 recipe. Full D12 recipe:
 [`tr4w/docs/D12_BUILD.md`](tr4w/docs/D12_BUILD.md).
 
-### Everything at once
+### Lazarus
 
-```powershell
-.\FullBuild.ps1                     # unit tests + ENG app
-.\FullBuild.ps1 -AllLanguages       # + the 8 non-ENG variants (isolated DCU cache per language)
-.\FullBuild.ps1 -BuildInstallers    # + tr4wserver + NSIS installers
-```
+Open **`tr4w/tr4w.lpi`** with `C:\Lazarus` — **not** the fpcupdeluxe shortcut, which is x86_64-only
+and cannot build a Win32 target at all. The project pins the i386 compiler, since the IDE defaults to
+its own x86_64 one.
 
-`tr4w/FullBuild.ps1` is the **single packaging path**. It runs the unit tests before it builds
-anything and derives the version from `src/Version.pas`; `full.nsi` refuses to build without
-`/DTR4WVERSION`, so an installer cannot be silently mis-versioned.
+### Language variants — being replaced, don't extend
 
-### Language variants
+`FullBuild.ps1` builds **ENG only** and passes `-dLANG_ENG -dVERSIONINFO_RES`. The compile-time
+language mechanism still exists in the source (`{$IFDEF LANG_RUS} LANG = 'RUS';{$ENDIF}` in `VC.pas`,
+per-language `src/lang/tr4w_consts_<LANG>.pas` and `res/tr4w_<lang>.res`), but **nothing builds those
+variants any more** and no new work should assume they will.
 
-Language is selected by a **compiler define**, not by editing a constant:
+The replacement is `resourcestring` + one binary per platform (NY4I, 2026-08-13), arriving from a
+separate worktree once the FPC migration is done and English builds clean. Resource DLLs are out —
+they have no FMX/macOS/Linux equivalent.
 
-```pascal
-{$IFDEF LANG_RUS}  LANG = 'RUS';{$ENDIF}   // VC.pas ~line 224
-```
-
-Build one with `/p:ExtraDefines="LANG_RUS;VERSIONINFO_RES"` (that's what `FullBuild.ps1` does).
-Strings live in `tr4w/src/lang/tr4w_consts_<LANG>.pas`, one file per language, `{$INCLUDE}`d into
-`VC.pas`. Resources are `res/tr4w_<lang>.res`.
-
-**These files are UTF-8 *with a BOM*** — keep them that way. A no-BOM file is decoded with the build
-machine's ANSI codepage and silently corrupts the non-ASCII literals. Delphi's per-file mechanism is
-the BOM; **`{$CODEPAGE}` is FreePascal-only and Delphi rejects it with `E1030`**. The historical
-codepages were per-language (1251 rus/ukr/mng, **1250 cze/rom/ser** — Serbian is *Latin* — 1252
-ger/esp/eng), which is why a blanket conversion was wrong.
-
-Eight non-ENG variants (RUS/SER/MNG/CZE/ROM/GER/UKR/ESP) build green. **POL and CHN stay excluded**
-(known-bad / corrupt source). See [`tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`](tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md).
+Until that lands, the old constraint still governs the files that are still there: **`src/lang/*.pas`
+are UTF-8 *with a BOM*** and must stay that way — a no-BOM file is decoded with the build machine's
+ANSI codepage and silently corrupts the non-ASCII literals. The historical codepages were
+per-language (1251 rus/ukr/mng, **1250 cze/rom/ser** — Serbian is *Latin* — 1252 ger/esp/eng), which
+is why a blanket conversion was wrong. Background:
+[`tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`](tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md).
 
 ## Testing
 
@@ -322,8 +349,9 @@ ready: gate post-connect sends on link *stability*, not presence.
 
 ### 6. Multi-user networking
 
-**TR4WServer** (`tr4w/tr4wserver/`, separate `.dproj`, built via `BuildServer.ps1` or `FullBuild.ps1
--BuildInstallers`) is the TCP/IP server for multi-op stations: centralised log, multipliers, dupe
+**TR4WServer** (`tr4w/tr4wserver/`, its own `.dpr`, built by `FullBuild.ps1` as a normal step — it
+compiles under FPC unchanged and links no LCL, being a console program) is the TCP/IP server for
+multi-op stations: centralised log, multipliers, dupe
 checking, serial-number lockout, time sync. Binary packet protocol with CRC32
 (`src/utils/networkmessageutils.pas`).
 

@@ -132,3 +132,7 @@ spike/lclprobe/*.exe
 spike/lclprobe/*.o
 spike/lclprobe/*.or
 spike/lclprobe/*.ppu
+
+# Lint-LFMProperties compiles its checker on demand (build\lintlfm\lintlfm.lpr);
+# the .ppu/.o/.exe are build output, not source.
+tr4w/build/lintlfm/units/
