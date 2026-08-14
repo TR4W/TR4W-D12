@@ -243,6 +243,10 @@ function  NavTagOf(const aNode: TTreeNode): integer;
 
 procedure AddListItem(const aList: TListBox; const aText, aTag: string);
 procedure ClearListItems(const aList: TListBox);
+// Clears a tagged COMBO -- items and tags together. Never call aCombo.Clear
+// directly: it empties Items and leaves the tag list behind, after which
+// SelectedTag returns a stale tag from the previous fill. See the implementation.
+procedure ClearComboItems(const aCombo: TComboBox);
 function  SelectedListTag(const aList: TListBox): string;
 procedure SetListItemText(const aList: TListBox; const aIndex: integer;
                           const aText: string);
@@ -461,6 +465,28 @@ begin
    // mutation goes through this unit.
    aList.Items.Clear;
    TagsOf(aList).Clear;
+end;
+
+{ The combo equivalent, and its absence was a real defect.
+
+  TListBox had ClearListItems from the start; TComboBox did not, so four call
+  sites cleared the combo directly -- cbxType, cbxPort, cbxKeyerPort and the
+  discovery result cbxFound. `TComboBox.Clear` empties Items and knows nothing
+  about the parallel tag list, so every repopulation left the tags one full
+  generation longer than the items.
+
+  What that costs is not a crash: SelectedTag indexes the TAG list by ItemIndex,
+  and the guard there only checks the index is in range. After one repopulation
+  the ranges still overlap, so it returns a STALE TAG from the previous fill --
+  the wrong radio, the wrong COM port, the wrong discovered address, silently and
+  plausibly. Repopulate the radio-type combo a few times and the tag list is
+  hundreds of entries long while the combo shows twenty.
+
+  Everything that empties a tagged combo must come through here. }
+procedure ClearComboItems(const aCombo: TComboBox);
+begin
+   aCombo.Items.Clear;
+   TagsOf(aCombo).Clear;
 end;
 
 function SelectedListTag(const aList: TListBox): string;

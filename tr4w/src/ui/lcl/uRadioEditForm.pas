@@ -311,6 +311,18 @@ var
    i: integer;
 begin
    try
+      // THE ARRIVAL IS LOGGED, not just the departure. Without this there is no
+      // way to distinguish "the worker never came back" from "it came back and
+      // the controls did not update" -- which is precisely the ambiguity the
+      // second-discovery report left open.
+      logger.Debug('[RadioEdit] Discovery DONE -- %d address(es) back on the main thread',
+                   [FFound.Count]);
+
+      // Restore the cursor FIRST. Everything below can raise or block on a modal
+      // ShowMessage, and an hourglass left spinning over a dialog that is waiting
+      // for the operator is worse than no hourglass at all.
+      Screen.Cursor := crDefault;
+
       FForm.btnDiscover.Caption := TC_RADIOEDIT_DISCOVER;
       FForm.btnDiscover.Enabled := True;
 
@@ -318,6 +330,9 @@ begin
          begin
          AddComboItem(FForm.cbxFound, FFound[i], FFound[i]);
          end;
+
+      logger.Debug('[RadioEdit] Discovery populated cbxFound: %d item(s)',
+                   [FForm.cbxFound.Items.Count]);
 
       if FFound.Count = 0 then
          begin
@@ -329,12 +344,28 @@ begin
          FForm.cbxFound.ItemIndex := 0;
          FForm.edtIP.Text := FFound[0];
          end;
-   finally
-      // Frees the list too, and runs whether or not the UI work raised.  The
-      // anonymous version freed the list inside the queued block and again in
-      // an except handler; one owner with one destructor is easier to be sure of.
-      Free;
+   except
+      // A FAILURE HERE USED TO BE INVISIBLE. This runs from TThread.Queue, so an
+      // exception unwinds into the message loop with nothing to attribute it to,
+      // and the symptom is exactly what was reported: the button never comes
+      // back and the drop-down stays empty. Now it says which stage failed, and
+      // the cursor and the button are restored rather than left mid-flight.
+      on E: Exception do
+         begin
+         Screen.Cursor := crDefault;
+         FForm.btnDiscover.Caption := TC_RADIOEDIT_DISCOVER;
+         FForm.btnDiscover.Enabled := True;
+         logger.Error('[RadioEdit] Discovery FAILED while updating the form: %s: %s',
+                      [E.ClassName, E.Message]);
+         end;
    end;
+
+   // Frees the list too, and runs whether or not the UI work raised -- the
+   // except above swallows anything from the form update, so control always
+   // reaches here. The anonymous version freed the list inside the queued block
+   // and again in an except handler; one owner with one destructor is easier to
+   // be sure of.
+   Free;
 end;
 
 constructor TDiscoverThread.Create(aForm: TRadioEditForm; const aModel: InterfacedRadioType);
@@ -354,7 +385,10 @@ begin
    found := TStringList.Create;
    try
       try
+         logger.Debug('[RadioEdit] Discovery worker running');
          DiscoverNetworkRadios(FModel, found);
+         logger.Debug('[RadioEdit] Discovery worker finished -- %d address(es)',
+                      [found.Count]);
       except
          // A discovery failure is not worth taking the program down for; it
          // comes back as "nothing answered", which is what the operator sees
@@ -437,7 +471,7 @@ begin
    // must make it selectable here with no change to this file.  RegisteredIds
    // covers enum-backed and string-id radios alike, which is what makes TCI
    // appear without a special case.
-   cbxType.Clear;
+   ClearComboItems(cbxType);
    ids := RegisteredIds;
 
    labels := TStringList.Create;
@@ -468,8 +502,8 @@ var
    i: integer;
    caption: string;
 begin
-   cbxPort.Clear;
-   cbxKeyerPort.Clear;
+   ClearComboItems(cbxPort);
+   ClearComboItems(cbxKeyerPort);
 
    AddComboItem(cbxPort,      TC_PREFS_NONE, PORT_NONE);
    AddComboItem(cbxKeyerPort, TC_PREFS_NONE, PORT_NONE);
@@ -1066,7 +1100,21 @@ begin
    // the first is still listening would have two sockets on the same port.
    btnDiscover.Enabled := False;
    btnDiscover.Caption    := TC_RADIOEDIT_SEARCHING;
-   cbxFound.Clear;
+   ClearComboItems(cbxFound);
+
+   // AN HOURGLASS, because a three-second wait with a greyed button and nothing
+   // else moving reads as a hung dialog. Safe to set from here even though TR4W
+   // owns the message loop: discovery runs on a WORKER, so the loop keeps
+   // turning and the WM_SETCURSOR that applies this actually arrives. Restored
+   // in TDiscoverDone.Apply -- including the nothing-found path, which is
+   // exactly when an operator is most likely to still be waiting.
+   Screen.Cursor := crHourGlass;
+
+   // SAY SO IN THE LOG. The second discovery on a form was reported as not
+   // populating the drop-down and not showing it had finished, and nothing in
+   // this path said anything -- so there was no way to tell a discovery that
+   // never returned from one that returned and failed to reach the controls.
+   logger.Debug('[RadioEdit] Discovery START model=%d', [Ord(model)]);
 
    // OFF THE MAIN THREAD.  DiscoverNetworkRadios broadcasts and then waits out
    // its timeout -- about three seconds -- and doing that on the main thread
