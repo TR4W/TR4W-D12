@@ -832,6 +832,7 @@ uses
    ShellAPI,    // ShellExecute -- open the log in the operator's editor
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
    uSettingsRegistry,     // the settings themselves
+   uSettingsLegacy,       // ActiveStoreProvider -- graduated settings write to OUR store
    uSettingsDeclarations, // DeclareAllSettings
    ComPortEnumerator,   // the real serial ports, same source as the radio editor
    uRotatorBase,        // UsesSerialPort / PreferredBaudRate -- asked, not assumed
@@ -923,6 +924,26 @@ begin
 end;
 
 
+{ Supplies the store a graduated setting should write to.
+
+  A plain function, not a method, because ActiveStoreProvider is a `function:
+  TObject` -- deliberately, so uSettingsLegacy does not have to know this form
+  exists.  It reads the single form instance, as the rest of this unit does.
+
+  Nil-safe on purpose: a provider that returned a dangling store would corrupt
+  a save rather than fail one. }
+function ProvideActiveStore: TObject;
+begin
+   if gPrefsForm <> nil then
+      begin
+      Result := gPrefsForm.FStore;
+      end
+   else
+      begin
+      Result := nil;
+      end;
+end;
+
 constructor TPrefsForm.Create(AOwner: TComponent);
 begin
    // Create, NOT CreateNew -- the inherited constructor streams uPrefsForm.fmx.
@@ -956,6 +977,13 @@ begin
    FStore := TRadioConfigStore.Create;
    FKeyerStore := TKeyerConfigStore.Create;
    FUDPConfig := TUDPBroadcastConfig.Create;
+
+   // Hand the WORKING COPY to the settings registry, so a graduated setting
+   // (RegisterStoredSetting) writes to the store this form will save, not to a
+   // fresh one loaded from disk. That is what keeps Cancel meaning Cancel.
+   // Cleared in the destructor -- a provider outliving the form would hand out
+   // a freed store.
+   uSettingsLegacy.ActiveStoreProvider := ProvideActiveStore;
 
    // BEFORE SelectFirstSection, which selects the first top-level node and so
    // has nothing to select until the tree exists.  Under FMX the 27 nav items
@@ -1045,6 +1073,10 @@ end;
 
 destructor TPrefsForm.Destroy;
 begin
+   // Before FStore goes: a provider still pointing here would hand a freed
+   // store to the next setting that tried to save.
+   uSettingsLegacy.ActiveStoreProvider := nil;
+
    FreeAndNil(FBindings);
    FreeAndNil(FEditClone);
    FreeAndNil(FKeyerEditClone);

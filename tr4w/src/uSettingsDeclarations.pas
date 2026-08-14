@@ -110,7 +110,11 @@ begin
                          'Send CW');
    RegisterLegacySetting('cw.speedFromDatabase', 'CW SPEED FROM DATABASE',
                          'Match the speed a station was worked at before');
-   RegisterLegacySetting('cw.speedIncrement',    'CW SPEED INCREMENT',
+   // MIGRATED 2026-08-14 -- the first row to graduate.  Stored: writes go to
+   // settings	r4w.json, the CFGCA row is csJSON, and so it no longer appears
+   // in Ctrl-J nor in tr4w.ini.  The two halves must stay in step; see
+   // docs/CFG_MIGRATION_PLAN.md.
+   RegisterStoredSetting('cw.speedIncrement',    'CW SPEED INCREMENT',
                          'Speed step');
    RegisterLegacySetting('cw.tone',              'CW TONE',
                          'Sidetone');

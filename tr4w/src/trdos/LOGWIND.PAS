@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Larry Tyree, N6TR, 2011,2012,2013,2014,2015.
 
  This file is part of TR4W    (TRDOS)
@@ -564,7 +564,6 @@ var
   ContestTitle                          : ShortString;
   ContinentQSOCount                     : array[BandType, ContinentType] of Word;
   ControlBMemory                        : CallString;
-  CodeSpeedIncrement                    : integer = 3; {KK1L: 6.72}
   CountryString                         : Str20;
   //   CQMenu                          : Str80;
   CustomInitialExchangeString           : Str40; {KK1L: 6.67 was Str80;}
