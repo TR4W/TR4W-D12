@@ -1,0 +1,201 @@
+{ Checks every property named in a .lfm against the LCL's own RTTI.
+
+  WHY THIS EXISTS.  The FMX -> LCL port carries form resources across two
+  component libraries whose properties only mostly overlap, and the failure
+  mode is punishing: LCL form streaming aborts at the FIRST bad property, so a
+  file with five defects reveals them one build-run-crash cycle at a time.
+  Worse, the IDE's own "Fix LFM" dialog offers to REMOVE what it cannot
+  resolve, which silently discards meaning -- TRadioButton.GroupName is the
+  live example, since LCL groups radio buttons by PARENT and dropping the
+  property fuses three independent groups into one.
+
+  WHY RTTI RATHER THAN READING stdctrls.pp.  A published property can be
+  inherited through several ancestors, so "is it in this class's published
+  block" is the wrong question and grep answers it wrongly.  GetPropInfo walks
+  the chain the same way the streaming system does, which makes this tool
+  agree with the loader by construction rather than by care.
+
+  The class list below is not a guess: it is every class named by an `object`
+  line across the four .lfm files (regenerate with the grep in the header of
+  spike/fpc-run-menu.ps1's sibling audit).  A class that is not registered is
+  REPORTED, never skipped -- an unknown class silently passing would defeat
+  the whole point. }
+program lintlfm;
+
+{$MODE DELPHI}{$H+}
+
+uses
+   // Interfaces supplies the widgetset's WSRegister* symbols. Linking Forms
+   // without it fails at link time with 50 undefined WSRegisterXxx -- the LCL
+   // is split into interface and widgetset halves and both must be present
+   // even for a tool that never opens a window.
+   Interfaces,
+   SysUtils,
+   Classes,
+   TypInfo,
+   Forms,
+   Controls,
+   StdCtrls,
+   ComCtrls,
+   ExtCtrls;
+
+var
+   gFiles:  integer = 0;
+   gProps:  integer = 0;
+   gBad:    integer = 0;
+
+// The form classes in the .lfm files are the project's own descendants of
+// TForm.  We cannot link the project here, so they are checked AS TForm --
+// correct for every property a designer writes, because a designed property
+// must be published and TPrefsForm publishes nothing of its own.
+function ResolveClass(const aName: string): TPersistentClass;
+begin
+   if (aName = 'TPrefsForm') or (aName = 'TRadioEditForm') or
+      (aName = 'TfrmKeyerEdit') or (aName = 'TfrmUDPDestinationEdit') then
+      begin
+      Result := TForm;
+      end
+   else
+      begin
+      Result := GetClass(aName);
+      end;
+end;
+
+// 'Font.Height' streams by asking the object for 'Font' and then recursing, so
+// only the ROOT name is a property of this class.  Checking the whole dotted
+// string would report every legitimate sub-property as missing.
+function RootOf(const aProp: string): string;
+var
+   dot: integer;
+begin
+   dot := Pos('.', aProp);
+   if dot > 0 then
+      begin
+      Result := Copy(aProp, 1, dot - 1);
+      end
+   else
+      begin
+      Result := aProp;
+      end;
+end;
+
+procedure CheckFile(const aPath: string);
+var
+   lines:    TStringList;
+   stack:    TStringList;   // class name per nesting level
+   i, eq:    integer;
+   raw, s:   string;
+   propName: string;
+   objName:  string;
+   clsName:  string;
+   cls:      TPersistentClass;
+begin
+   lines := TStringList.Create;
+   stack := TStringList.Create;
+   try
+      lines.LoadFromFile(aPath);
+      Inc(gFiles);
+
+      for i := 0 to lines.Count - 1 do
+         begin
+         raw := lines[i];
+         s   := Trim(raw);
+
+         if s = '' then
+            begin
+            Continue;
+            end;
+
+         // "object Name: TClass" opens a scope; "end" closes the innermost.
+         if (Pos('object ', s) = 1) or (Pos('inline ', s) = 1) then
+            begin
+            objName := Copy(s, Pos(' ', s) + 1, MaxInt);
+            clsName := Trim(Copy(objName, Pos(':', objName) + 1, MaxInt));
+            stack.Add(clsName);
+            Continue;
+            end;
+
+         if s = 'end' then
+            begin
+            if stack.Count > 0 then
+               begin
+               stack.Delete(stack.Count - 1);
+               end;
+            Continue;
+            end;
+
+         if stack.Count = 0 then
+            begin
+            Continue;
+            end;
+
+         // A property line is "Name = value".  Collection items, binary blobs
+         // and continuation lines are not, and are skipped rather than guessed
+         // at: a false positive here would be worse than a miss, because it
+         // would train the reader to ignore the tool.
+         eq := Pos(' = ', s);
+         if eq <= 1 then
+            begin
+            Continue;
+            end;
+
+         propName := RootOf(Copy(s, 1, eq - 1));
+         if (propName = '') or not (propName[1] in ['A'..'Z', 'a'..'z', '_']) then
+            begin
+            Continue;
+            end;
+
+         clsName := stack[stack.Count - 1];
+         cls     := ResolveClass(clsName);
+
+         if cls = nil then
+            begin
+            WriteLn(Format('%s(%d): UNKNOWN CLASS %s -- cannot check %s',
+                           [ExtractFileName(aPath), i + 1, clsName, propName]));
+            Inc(gBad);
+            Continue;
+            end;
+
+         Inc(gProps);
+
+         if GetPropInfo(cls.ClassInfo, propName) = nil then
+            begin
+            WriteLn(Format('%s(%d): %s has no published %s',
+                           [ExtractFileName(aPath), i + 1, clsName, propName]));
+            Inc(gBad);
+            end;
+         end;
+   finally
+      stack.Free;
+      lines.Free;
+   end;
+end;
+
+var
+   n: integer;
+
+begin
+   RegisterClasses([TForm, TPanel, TLabel, TButton, TCheckBox, TEdit,
+                    TComboBox, TListBox, TGroupBox, TTreeView, TPageControl,
+                    TTabSheet, TRadioButton]);
+
+   if ParamCount = 0 then
+      begin
+      WriteLn('usage: lintlfm <file.lfm> [file.lfm ...]');
+      Halt(2);
+      end;
+
+   for n := 1 to ParamCount do
+      begin
+      CheckFile(ParamStr(n));
+      end;
+
+   WriteLn;
+   WriteLn(Format('lintlfm: %d file(s), %d properties checked, %d unstreamable.',
+                  [gFiles, gProps, gBad]));
+
+   if gBad > 0 then
+      begin
+      Halt(1);
+      end;
+end.
