@@ -171,6 +171,17 @@ Two things it does not survive, both of which the compiler also catches:
 5. **The expensive globals** (`CWTone` at 93, `Weight` at 34, `TwoRadioMode` at 34) — the function
    swap, once the cheap ones have proved the shape.
 
+### The corpus cannot see a migrated setting
+
+`tr4w.dpr:971` skips `ApplyActiveProfileToConfigAtStartup` under `/EXPORT` — deliberately, so
+automated testing never touches the operator's live settings. The consequence for this work:
+**headless export runs on compiled defaults, so a migrated setting is invisible to the corpus.**
+
+That is fine for the six migrated so far — none of them changes ADIF or Cabrillo output — but it
+means a green corpus is *not* evidence for a setting that affects an exported field. Anything in
+that class has to be checked another way, and the check has to be named in the commit rather than
+implied by "22 passed".
+
 ### What NY4I should check on screen
 
 The build is green, 3978/0, corpus 22/0/4 — but none of that can see a settings screen. Worth
@@ -244,6 +255,70 @@ cheaper batch — the writer has already moved — but **not a blind sweep**: 45
 rows are `crNetwork: 1`, so each one has to be checked against the peer path above, and each needs
 its seed-list entry. Do them in small themed commits (backup, band map, WSJT-X …), not one change of
 22.
+
+## What is left, and where each of it lands
+
+NY4I asked to see "what is left and where it lands in either settings or some other location".
+This is that answer for the 24 not yet migrated, decided by **who else writes the variable** —
+scanned for live assignments only, because half the apparent writers in `CFGDEF.PAS` are
+commented-out lines and a naive grep reports them as real.
+
+### A. Nothing else writes them — migrate as flat settings (14)
+
+The stored value is the only source, so these are pure Preferences settings and the cheapest work
+left. Roughly in ascending cost:
+
+`DIT DAH RATIO`, `ALT-D CQ ENABLE`, `KEYPAD CW MEMORIES`, `ALWAYS CALL BLIND CQ`,
+`SCORE POSTING URL`, `SCORE READING URL`, `CONNECTION AT STARTUP`, `CW SPEED FROM DATABASE`,
+`ALT-D BUFFER ENABLE`, `SAY HI RATE CUTOFF`, `SKIP ACTIVE BAND`, `LEADING ZEROS`,
+`LEADING ZERO CHARACTER`, `SAY HI ENABLE`.
+
+(`LEADING ZERO CHARACTER` is assigned in `CFGDEF.PAS:487`, but `SetConfigurationDefaultValues`
+runs **once** at startup and **before** the config files — it is an initial default, not a
+competing owner. Checked rather than assumed, because a defaults procedure that ran on contest
+change would silently reset the setting instead.)
+
+### B. The contest owns them, not the operator (3)
+
+`HF BAND ENABLE`, `WARC BAND ENABLE`, `VHF BAND ENABLE` are assigned by `FCONTEST.PAS` when a
+contest is selected — `ARRLVHFJUN` sets `HFBandEnable := False` (`FCONTEST.PAS:634`), and there are
+fourteen such sites. They are **contest properties wearing a settings costume**. Migrating them as
+flat settings would give Preferences an editor for a value the next contest selection silently
+overwrites. They belong with the contest definition; the Preferences panel should show them read-only
+or not at all. **NY4I's call, and the clearest example of "somewhere else".**
+
+### C. The session mutates them — a stored value is the STARTING value (5)
+
+| setting | live writer | what changes it |
+|---|---|---|
+| `WEIGHT` | `LOGK1EA.PAS:2120` | CW-buffer control codes, mid-message |
+| `FARNSWORTH SPEED` | `LOGK1EA.PAS:2125+` | same |
+| `FARNSWORTH ENABLE` | `LOGK1EA.PAS:2124` | same |
+| `CW ENABLE` | `MainUnit.pas:2845`, `LogCW.pas:2289` | live keystroke toggle |
+| `CW TONE` | `MainUnit.pas:2766`, `uProcessCommand.pas:354` | live keystroke toggle |
+
+These can migrate, but the semantics have to be **stated rather than assumed**: Preferences sets the
+value the session *starts* with, and a live change is not written back. Today that is also true and
+nobody has said so. `CW TONE` at 93 references is the single most expensive item in the whole
+exercise and should go last, with the function swap.
+
+### D. A library already owns it — do not migrate, remove the duplicate editor (1)
+
+`CONNECTION COMMAND`. `ApplyActiveCluster` assigns `ConnectionCommand` from the active cluster
+definition (`uRadioConfigApply.pas:601`), and it runs **after** `ApplyStoredCommands`. So there are
+two owners and the cluster wins.
+
+**This is a live defect, not a future one:** editing "Connection command" in Preferences today writes
+the ini, and the cluster library overwrites it on the next start. Migrating it to JSON would not fix
+that — it would move the losing value to a different file. The fix is to drop `cluster.connectCommand`
+from the flat registry and let the cluster editor own it, which is where the operator already expects
+to find it.
+
+### E. Two commands feed one variable (1)
+
+`TWO RADIO MODE` also receives the deprecated `SINGLE RADIO MODE` alias (`uCFG.pas:1359`, inverted).
+Migrating one row without the other leaves the alias writing the ini into a variable the JSON store
+also claims. Retire the alias in the same commit.
 
 ## What does not belong in Preferences
 
