@@ -6,7 +6,10 @@
 > **left behind**: TR4W now builds with **FreePascal 3.2.2 + the Lazarus LCL**, which passes the
 > unit tests (3978/0), the golden corpus (22/0/4) and ships the installer.
 >
-> Read it for *why* things are shaped as they are — the radio factory, the CW keyer factory, the
+> **The current roadmap is [`ROADMAP.md`](ROADMAP.md)** -- it carries what is still open, with
+> everything finished struck through.
+>
+> Read this one for *why* things are shaped as they are — the radio factory, the CW keyer factory, the
 > string work and the legacy deletions are all still real and still current. Do **not** read the
 > per-area status tables, the 64-bit scope notes or anything about `.dproj`/msbuild as live
 > guidance. Current build: [`tr4w/docs/BUILD.md`](../tr4w/docs/BUILD.md).
