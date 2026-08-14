@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -71,6 +71,7 @@ interface
 uses
    SysUtils,
    Classes,
+   Types,          // TRect -- the implementation uses Windows, which has its own
    System.UITypes,
    uLCLFormHelpers,      // TStopwatch and the list/combo tag helpers
    Controls,
@@ -749,6 +750,14 @@ type
       function SectionPanelFor(const aControl: TWinControl): TControl;
       function NavItemForTag(const aTag: NativeInt): TTreeNode;
       procedure SearchListClick(Sender: TObject);
+      { BOTH TYPES QUALIFIED, and that is not pedantry: FPC's Windows unit
+        declares its OWN TOwnerDrawState and TRect, and this unit uses Windows
+        in the implementation section. Unqualified, the declaration and the
+        implementation name different types with identical spellings, and FPC
+        reports a header mismatch printing two signatures that read the same. }
+      procedure SearchListDrawItem(Control: TWinControl; Index: Integer;
+                                   ARect: Types.TRect;
+                                   State: StdCtrls.TOwnerDrawState);
       { Visitors. Each is a method because each needs Self anyway -- one to reach
         the form's helpers, one to record what it found. }
       procedure BuildNavTree;
@@ -868,6 +877,7 @@ implementation
 {$R *.lfm}
 
 uses
+   LCLType,        // odSelected -- Windows declares one too
    uLCLTranslate,
    uPrefsSearch,   // PrefsMatchScore -- the ranking, unit tested without a UI
    Windows,
@@ -1063,7 +1073,11 @@ begin
    FSearchList.Visible  := False;
    FSearchList.TabStop  := False;   // Tab must skip it: focus belongs to the box
    FSearchList.SetBounds(4, 28, 430, 200);
-   FSearchList.OnClick  := SearchListClick;
+   FSearchList.Style       := lbOwnerDrawFixed;   // ItemHeight is only honoured here
+   FSearchList.ItemHeight  := 26;                 // room to breathe; the default is font-tall
+   FSearchList.BorderStyle := bsSingle;
+   FSearchList.OnClick     := SearchListClick;
+   FSearchList.OnDrawItem  := SearchListDrawItem;
    LogPhase(FTiming, 'SearchOverlay');
 
    SelectFirstSection;
@@ -2185,9 +2199,9 @@ begin
       FSearchList.Items.Clear;
       for i := 0 to High(FSearchHits) do
          begin
-         FSearchList.Items.Add(FSearchIndex[FSearchHits[i].Entry].SectionName +
-                               '  >  ' +
-                               FSearchIndex[FSearchHits[i].Entry].Caption);
+         // The TEXT is only a fallback -- SearchListDrawItem paints the row from
+         // the index, so caption and section can carry different colours.
+         FSearchList.Items.Add(FSearchIndex[FSearchHits[i].Entry].Caption);
          end;
    finally
       FSearchList.Items.EndUpdate;
@@ -2288,6 +2302,58 @@ begin
          Key := 0;
          end;
    end;
+end;
+
+procedure TPrefsForm.SearchListDrawItem(Control: TWinControl; Index: Integer;
+                                        ARect: Types.TRect;
+                                        State: StdCtrls.TOwnerDrawState);
+var
+   c: TCanvas;
+   e: TPrefsSearchEntry;
+   x, y: integer;
+   sectionText: string;
+begin
+   // OWNER-DRAWN because a standard TListBox row is font-height tall with no
+   // padding, which is most of what makes an LCL list look like 1995. The row
+   // height, the left margin and the second colour are the whole difference.
+   if (Index < 0) or (Index > High(FSearchHits)) then
+      begin
+      Exit;
+      end;
+
+   c := FSearchList.Canvas;
+   e := FSearchIndex[FSearchHits[Index].Entry];
+
+   // LCLType.odSelected, for the same reason the parameter types are qualified:
+   // Windows declares an odSelected of its own.
+   if LCLType.odSelected in State then
+      begin
+      c.Brush.Color := $00F2E4D5;   // a soft accent wash, not the harsh system blue
+      end
+   else
+      begin
+      c.Brush.Color := clWindow;
+      end;
+   c.FillRect(ARect);
+
+   // The caption, vertically centred rather than sat on the top edge.
+   c.Font.Color := clWindowText;
+   y := ARect.Top + ((ARect.Bottom - ARect.Top - c.TextHeight('Ag')) div 2);
+   x := ARect.Left + 10;
+   c.TextOut(x, y, e.Caption);
+
+   // The section, greyed and right-aligned: context without competing with the
+   // thing the operator is actually reading.
+   sectionText := e.SectionName;
+   if sectionText <> '' then
+      begin
+      c.Font.Color := clGrayText;
+      x := ARect.Right - 10 - c.TextWidth(sectionText);
+      if x > ARect.Left + 10 + c.TextWidth(e.Caption) + 16 then
+         begin
+         c.TextOut(x, y, sectionText);
+         end;
+      end;
 end;
 
 procedure TPrefsForm.SearchListClick(Sender: TObject);
