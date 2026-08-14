@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectOptions>
+    <Version Value="12"/>
+    <General>
+      <Flags>
+        <MainUnitHasCreateFormStatements Value="False"/>
+        <MainUnitHasTitleStatement Value="False"/>
+        <MainUnitHasScaledStatement Value="False"/>
+        <CompatibilityMode Value="True"/>
+      </Flags>
+      <SessionStorage Value="InProjectDir"/>
+      <Title Value="TR4W"/>
+      <UseAppBundle Value="False"/>
+      <ResourceType Value="res"/>
+    </General>
+    <BuildModes>
+      <Item Name="Debug" Default="True"/>
+    </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default">
+          <local>
+            <WorkingDirectory Value="$(ProjPath)/target"/>
+          </local>
+        </Mode0>
+      </Modes>
+    </RunParams>
+    <RequiredPackages Count="1">
+      <Item1>
+        <PackageName Value="LCL"/>
+      </Item1>
+    </RequiredPackages>
+    <Units Count="6">
+      <Unit0>
+        <Filename Value="tr4w.dpr"/>
+        <IsPartOfProject Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="src/ui/lcl/uPrefsForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="PrefsForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uPrefsForm"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="src/ui/lcl/uRadioEditForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="RadioEditForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uRadioEditForm"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="KeyerEditForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uKeyerEditForm"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="src/ui/lcl/uUDPDestinationEditForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="UDPDestinationEditForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="uUDPDestinationEditForm"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="src/ui/lcl/uLCLFormHelpers.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="uLCLFormHelpers"/>
+      </Unit5>
+    </Units>
+  </ProjectOptions>
+  <CompilerOptions>
+    <Version Value="11"/>
+    <Target>
+      <Filename Value="target/tr4w_laz.exe"/>
+    </Target>
+    <SearchPaths>
+      <IncludeFiles Value="src;src/trdos;Include;include/Core;include/System;include/Protocols"/>
+      <OtherUnitFiles Value="src;src/trdos;src/utils;src/lang;src/radioFactory;src/rotatorFactory;src/ui/lcl;Include;include/Core;include/System;include/Protocols;C:/FPC/3.2.2/units/i386-win32/regexpr;C:/FPC/3.2.2/units/i386-win32/fcl-json"/>
+      <UnitOutputDirectory Value="../spike/units/laz-$(TargetCPU)-$(TargetOS)"/>
+    </SearchPaths>
+    <Parsing>
+      <SyntaxOptions>
+        <SyntaxMode Value="Delphi"/>
+        <CStyleOperator Value="True"/>
+      </SyntaxOptions>
+    </Parsing>
+    <CodeGeneration>
+      <TargetCPU Value="i386"/>
+      <TargetOS Value="win32"/>
+    </CodeGeneration>
+    <Linking>
+      <Options>
+        <Win32>
+          <GraphicApplication Value="True"/>
+        </Win32>
+      </Options>
+    </Linking>
+    <Other>
+      <CompilerPath Value="C:\FPC\3.2.2\bin\i386-win32\fpc.exe"/>
+    </Other>
+  </CompilerOptions>
+</CONFIG>

@@ -470,7 +470,13 @@ type
       procedure cbxLogLevelChange(Sender: TObject);
       procedure btnBrowseMMTTYClick(Sender: TObject);
       procedure btnBrowseBackupClick(Sender: TObject);
-      procedure lstClustersChange(Sender: TObject);
+      // OnSelectionChange, NOT OnChange -- and hence the extra parameter.  An
+      // LCL TListBox has no OnChange at all (TComboBox does, which is why only
+      // the two list boxes differ), so this is TSelectionChangeEvent; `User` is
+      // True when the operator moved the selection and False when code did.
+      // Both handlers ignore it deliberately: re-showing the selected item's
+      // fields is correct either way.
+      procedure lstClustersChange(Sender: TObject; User: boolean);
       procedure cbxClusterServerChange(Sender: TObject);
       procedure cbxClusterServerEnter(Sender: TObject);
       // ONE HANDLER PER CONTROL, each delegating to the same capture routine --
@@ -487,7 +493,8 @@ type
       procedure btnAddClusterClick(Sender: TObject);
       procedure btnRemoveClusterClick(Sender: TObject);
       procedure btnUseClusterClick(Sender: TObject);
-      procedure lstRotatorsChange(Sender: TObject);
+      // TSelectionChangeEvent -- see lstClustersChange above.
+      procedure lstRotatorsChange(Sender: TObject; User: boolean);
       procedure cbxRotatorTypeChange(Sender: TObject);
       procedure cbxRotatorPortChange(Sender: TObject);
       procedure edtRotatorNameChange(Sender: TObject);
@@ -863,21 +870,51 @@ begin
    aWatch := TStopwatch.StartNew;
 end;
 
+// OPENING A SETTINGS WINDOW MUST NOT BE ABLE TO TAKE DOWN A CONTEST LOGGER.
+// An exception escaping here reaches the message loop, and under FPC that is a
+// bare "RTE 217" on the console with no class, no message and no location --
+// which is exactly the state the LCL port was in when this guard was written
+// (2026-08-13).  The handler is PERMANENT, not a debugging aid to be removed
+// once that fault is found: an operator mid-contest should lose Preferences,
+// not the log.
+//
+// The phase string is the diagnostic.  gPrefsForm is nil on entry to the first
+// open and a failing constructor destroys its own instance, so a construction
+// failure leaves the global nil and the next open retries cleanly; a failure
+// after that point leaves a form that exists but may not be usable, which the
+// phase name distinguishes in the log.
 procedure ShowPreferences;
 var
    sw: TStopwatch;
+   phase: string;
 begin
    sw := TStopwatch.StartNew;
+   phase := 'construct';
 
-   if gPrefsForm = nil then
-      begin
-      gPrefsForm := TPrefsForm.Create(nil);
-      LogPhase(sw, 'CONSTRUCT first open', True);
+   try
+      if gPrefsForm = nil then
+         begin
+         gPrefsForm := TPrefsForm.Create(nil);
+         LogPhase(sw, 'CONSTRUCT first open', True);
+         end;
+
+      phase := 'show';
+      gPrefsForm.Show;
+
+      phase := 'bring to front';
+      gPrefsForm.BringToFront;
+      LogPhase(sw, 'Show + BringToFront');
+   except
+      on E: Exception do
+         begin
+         logger.Error(Format('[Prefs] FAILED during %s: %s: %s',
+                             [phase, E.ClassName, E.Message]));
+         ShowMessage(Format('Preferences could not be opened (%s).'#13#10 +
+                            '%s: %s'#13#10#13#10 +
+                            'Logging continues normally; see tr4w.log.',
+                            [phase, E.ClassName, E.Message]));
+         end;
       end;
-
-   gPrefsForm.Show;
-   gPrefsForm.BringToFront;
-   LogPhase(sw, 'Show + BringToFront');
 end;
 
 
@@ -914,6 +951,16 @@ begin
    FStore := TRadioConfigStore.Create;
    FKeyerStore := TKeyerConfigStore.Create;
    FUDPConfig := TUDPBroadcastConfig.Create;
+
+   // BEFORE SelectFirstSection, which selects the first top-level node and so
+   // has nothing to select until the tree exists.  Under FMX the 27 nav items
+   // were streamed with the form and no call was needed; the LCL cannot stream
+   // them (see BuildNavTree), and the port left the routine written but
+   // uncalled -- which opened Preferences with an empty navigation strip and no
+   // error anywhere, because an empty tree is not a failure to any layer here.
+   BuildNavTree;
+   LogPhase(FTiming, 'BuildNavTree');
+
    SelectFirstSection;
    LogPhase(FTiming, 'SelectFirstSection');
    LoadStore;
@@ -2223,6 +2270,16 @@ begin
    // reproduced EXACTLY as the designer had them -- the panel dispatch keys
    // off Tag and Lint-FormTags gates it, so renumbering would silently point
    // every menu entry at the wrong page.
+
+   // INSTALLED HERE, not left to the caller.  Every line below hard-casts a
+   // TTreeNode to TNavNode to set Tag, which is only true because the node
+   // class hook makes the tree produce TNavNodes.  Without it those casts
+   // write an integer past the end of a plain TTreeNode -- silent heap
+   // corruption, no exception, and nothing the compiler can see.  Putting the
+   // install in the same routine as the casts makes the ordering an invariant
+   // of the code rather than a rule someone has to remember.
+   UseNavNodes(tvNav);
+
    tvNav.Items.BeginUpdate;
    try
       tvNav.Items.Clear;
@@ -2790,7 +2847,7 @@ begin
    Dirty := True;
 end;
 
-procedure TPrefsForm.lstClustersChange(Sender: TObject);
+procedure TPrefsForm.lstClustersChange(Sender: TObject; User: boolean);
 begin
    ShowSelectedCluster;
 end;
@@ -3184,7 +3241,7 @@ begin
    Dirty := True;
 end;
 
-procedure TPrefsForm.lstRotatorsChange(Sender: TObject);
+procedure TPrefsForm.lstRotatorsChange(Sender: TObject; User: boolean);
 begin
    ShowSelectedRotator;
 end;

@@ -43,6 +43,13 @@
 *.dfm           text eol=crlf
 *.rc            text eol=crlf
 
+# The Lazarus IDE co-owns these exactly as RAD Studio co-owns the four above:
+# it rewrites a .lfm wholesale every time a form is saved in the designer, and
+# a .lpi whenever project options change.  Same tool, same hazard, different
+# toolchain -- added 2026-08-13 with the first Lazarus project file.
+*.lfm           text eol=crlf
+*.lpi           text eol=crlf
+
 # ---------------------------------------------------------------------------
 # Scripts that run under Git Bash.  A CRLF here is not cosmetic: the carriage
 # return becomes part of the last token on the line, which breaks shebangs and

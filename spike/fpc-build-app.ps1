@@ -11,7 +11,8 @@
 # settings dialogs and the two spike commands are absent (tr4w.dpr and
 # MainUnit carry the {$IFNDEF FPC} guards).  Do not hand this binary to a user.
 #
-#   .\fpc-build-app.ps1              # build
+#   .\fpc-build-app.ps1              # full rebuild (-B), the safe default
+#   .\fpc-build-app.ps1 -Incremental # recompile only what changed -- see below
 #   .\fpc-build-app.ps1 -Run         # build, then print the version banner
 
 param(
@@ -21,6 +22,17 @@ param(
    [string] $Fpc  = 'C:\FPC\3.2.2\bin\i386-win32\fpc.exe',
    [string] $Repo = 'C:\tr4w-d12',
    [switch] $Run,
+   # Drop -B.  FPC then recompiles a unit only when its source is newer than its
+   # PPU, which turns the edit-run-look-at-the-log loop from ~2-3 minutes into
+   # seconds -- the difference between iterating on a GUI fault and not.
+   #
+   # THE DEFAULT STAYS FULL, deliberately.  A stale incremental build has
+   # already cost this repo two sessions once (a phantom corpus crash that was
+   # nothing but out-of-date DCUs), and FPC's mtime rule cannot see a changed
+   # COMPILER SWITCH, a changed .inc, or a conditional-define flip.  So:
+   # incremental while chasing one defect, and a full build before believing
+   # any result -- green corpus, fixed bug, anything you would commit on.
+   [switch] $Incremental,
    [string] $Laz  = 'C:\Lazarus'
 )
 
@@ -66,20 +78,49 @@ $searchPaths = @(
    Join-Path $app 'include\Protocols'
 )
 
-# -Sc for C-style operators, -B to rebuild everything: an incremental FPC build
-# across a compiler port has already produced one phantom result in this repo's
-# history, and the app build is under two minutes.
+# -Sc for C-style operators.  -B (rebuild everything) unless -Incremental was
+# asked for; see the parameter for why full is the default.
 # -WG = GUI subsystem. NOT cosmetic and NOT a guess: the shipping Delphi
 # tr4w.exe has PE subsystem 2 (GUI) and FPC defaults to 3 (CONSOLE), so
 # without this every launch pops a blank console window next to the real
 # one. (tr4w.dproj still says <AppType>Console</AppType>; the linked binary
 # says otherwise, and the binary is the authority.)
-$fpcArgs = @("-M$Mode", "-P$Cpu", "-T$Os", '-Sc', '-B', '-WG', "-FU$out", "-o$exe")
+$fpcArgs = @("-M$Mode", "-P$Cpu", "-T$Os", '-Sc', '-WG', "-FU$out", "-o$exe")
+if (-not $Incremental)
+   {
+   $fpcArgs += '-B'
+   }
 foreach ($p in $searchPaths)
    {
    $fpcArgs += "-Fu$p"
    }
 $fpcArgs += 'tr4w.dpr'
+
+# A DESIGNED FORM IS TWO FILES AND FPC ONLY WATCHES ONE.  uPrefsForm.lfm is
+# pulled in by {$R *.lfm} while uPrefsForm.pas is compiling, so editing the
+# LAYOUT leaves the .pas older than its PPU and an incremental build silently
+# keeps the previous resource.  That is not hypothetical: it cost a full
+# edit-build-run cycle within minutes of this switch existing (2026-08-13 --
+# an `Align = Left` fix that appeared not to take, because it had not).
+#
+# Touching the .pas is the whole fix.  It uses exactly the mtime rule FPC
+# already uses, so it needs to know nothing about PPUs or resource formats.
+if ($Incremental)
+   {
+   foreach ($lfm in Get-ChildItem -Path $src -Recurse -Filter '*.lfm')
+      {
+      $pas = [System.IO.Path]::ChangeExtension($lfm.FullName, '.pas')
+      if (Test-Path $pas)
+         {
+         $pasItem = Get-Item $pas
+         if ($lfm.LastWriteTime -gt $pasItem.LastWriteTime)
+            {
+            $pasItem.LastWriteTime = $lfm.LastWriteTime
+            Write-Host "  layout newer than code -- forcing recompile of $($pasItem.Name)"
+            }
+         }
+      }
+   }
 
 Push-Location $app
 try
@@ -96,7 +137,10 @@ $errLines = $output | Select-String -Pattern '\bError:|\bFatal:'
 $report = Join-Path $Repo "spike\app-build-$Mode.txt"
 $output | Out-File -FilePath $report -Encoding utf8
 
-Write-Host "FPC application build -- $Cpu-$Os -M$Mode"
+# Name the build kind on every run.  An incremental result read as a full one is
+# the exact mistake this switch makes easy, so it is never left to memory.
+$kind = if ($Incremental) { 'INCREMENTAL (no -B)' } else { 'full (-B)' }
+Write-Host "FPC application build -- $Cpu-$Os -M$Mode -- $kind"
 Write-Host "errors+fatals : $($errLines.Count)"
 Write-Host "full output   : $report"
 
