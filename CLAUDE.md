@@ -500,6 +500,8 @@ Read the specific doc before acting in its area — these are current and this f
 | Topic | Document |
 |-------|----------|
 | Build & test recipe | `tr4w/docs/BUILD.md` |
+| **Setting up a build environment** | **`tr4w/docs/BUILD.md`** — one installer; verified from scratch 2026-08-14 |
+| CI runner setup | `docs/CI_RUNNER_SETUP.md` |
 | Adding a radio | `docs/ADDING_A_RADIO.md` |
 | Radio factory design | `docs/RADIO_FACTORY_README.md`, `docs/NETWORK_RADIO_FACTORY_ANALYSIS.md` |
 | Radio bench status | `docs/RADIO_BENCH_STATUS.md`, `docs/BENCH_TEST_PLAN_2026-08-01.md` |
