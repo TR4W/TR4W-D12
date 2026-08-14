@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -356,7 +356,7 @@ begin
   for Command := 1 to CommandsArraySize do
     // Three reasons a row is hidden from Ctrl-J, and they are NOT the same:
     //   csRem   withdrawn -- inert.
-    //   csJSON  moved to settings	r4w.json -- inert; Preferences owns it now.
+    //   csJSON  moved to settings\tr4w.json -- inert; Preferences owns it now.
     //   csOwned another dialog owns the UI, but CheckCommand STILL APPLIES it,
     //           so the ini value remains the transport.
     if not (CFGCA[Command].crS in [csRem, csOwned, csJSON]) then

@@ -1,4 +1,4 @@
-
+﻿
 {
  Copyright Dmitriy Gulyaev UA4WLI 2015.
  This file is part of TR4W  (SRC)
@@ -897,7 +897,7 @@ type
   //           (NY4I 2026-08-05) -- a setting that belongs to a specific radio
   //           does not belong in a flat global command list, where it reads as
   //           applying to the station.
-  // csJSON -- the setting has MOVED to settings	r4w.json and the ini row is
+  // csJSON -- the setting has MOVED to settings\tr4w.json and the ini row is
   //           now inert: still recognised so an old config does not error, but
   //           the value is not applied and it is hidden from Ctrl-J.
   //           Deliberately NOT csRem, which means "this command was withdrawn":

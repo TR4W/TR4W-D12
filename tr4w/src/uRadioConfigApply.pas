@@ -308,15 +308,21 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..0] of string =
+   MIGRATED_COMMANDS: array[0..5] of string =
       (
-      'CW SPEED INCREMENT'      // 2026-08-14
+      'CW SPEED INCREMENT',          // 2026-08-14
+      'HAMSCORE ENABLE',             // 2026-08-14
+      'HAMSCORE URL',
+      'HAMSCORE USERNAME',
+      'HAMSCORE PASSWORD',
+      'HAMSCORE SEND CONTACT INFO'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);
 var
    ini: TIniFile;
    i: integer;
+   idx: integer;
    value: string;
 begin
    if aStore = nil then
@@ -338,6 +344,23 @@ begin
          value := ini.ReadString(string(_COMMANDS), MIGRATED_COMMANDS[i], '');
          if value = '' then
             begin
+            Continue;
+            end;
+
+         // A PASSWORD IN THE INI IS NOT TRUSTWORTHY AS A PASSWORD.  Ctrl-J
+         // displays ctPassword rows as a fixed '********' mask, and although
+         // uOption:761 now refuses to write the mask back, an existing file can
+         // already contain it -- NY4I's does, for HAMSCORE PASSWORD.  Carrying
+         // that across would set the operator's password to the literal mask
+         // and produce an authentication failure that looks like a server
+         // problem.  There is no way to tell a masked value from a real one, so
+         // the row is skipped and the operator is told to type it once.
+         idx := FindCFGCommand(MIGRATED_COMMANDS[i]);
+         if (idx >= 0) and (CFGCA[idx].crType = ctPassword) then
+            begin
+            logger.Warn('[SeedMigratedCommands] %s not carried over from tr4w.ini ' +
+                        '-- passwords there may be a display mask.  Re-enter it in Preferences.',
+                        [MIGRATED_COMMANDS[i]]);
             Continue;
             end;
 

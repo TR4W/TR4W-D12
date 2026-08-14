@@ -59,6 +59,22 @@ type
         Was a typed constant in LOGWIND.PAS, reached by nine call sites across
         MainUnit and LOGSTUFF.  Range 1..10, enforced by the CFGCA row. }
       CodeSpeedIncrement: integer;
+
+      { HAMSCORE -- live score posting to scoredistributor.net (issues #783,
+        #931).  Was five variables in uHamScore.pas.
+
+        THE TYPES MUST MATCH THE OLD DECLARATIONS EXACTLY.  CheckCommand writes
+        through @Config.<field> with no idea what is on the other side, so a
+        ctString row aimed at anything other than a ShortString would write 256
+        bytes into whatever fits there.  Nothing would report it: not the
+        compiler, which sees only a pointer, and not a test, because the damage
+        lands in the NEXT field.  These four are ShortString and Boolean because
+        that is what they were. }
+      HamScoreEnable: boolean;
+      HamScoreURL: ShortString;
+      HamScoreUsername: ShortString;
+      HamScorePassword: ShortString;
+      HamScoreSendContactInfo: boolean;
    end;
 
 var
@@ -67,7 +83,17 @@ var
      neutral starting point -- a speed increment of zero means the speed-up and
      slow-down keys quietly stop working. }
    Config: TR4WConfig = (
-      CodeSpeedIncrement: 3
+      CodeSpeedIncrement: 3;
+
+      HamScoreEnable: False;
+      // Issue #920: the RTC 3.0 endpoint per the spec.  An operator may point
+      // HAMSCORE URL at hamscore.com/postxml/index.php (which also serves 3.0)
+      // or any future mirror.  Plain HTTP is the spec default; an https:// URL
+      // takes the existing TIdHTTP + TLS path transparently.
+      HamScoreURL: 'http://scoredistributor.net/';
+      HamScoreUsername: '';   // empty falls back to MY CALL
+      HamScorePassword: '';
+      HamScoreSendContactInfo: True
    );
 
 implementation
