@@ -52,7 +52,9 @@ if (-not (Test-Path $factoryDir)) {
 }
 
 $violations = @()
-$checked = 0
+$checked    = 0
+$overrides  = 0    # PollRadioState implementations seen at all
+$flagSeen   = 0    # files that mention requiresPolling at all
 
 foreach ($file in Get-ChildItem -Path $factoryDir -Filter *.pas -File) {
     $text = Get-Content -Path $file.FullName -Raw
@@ -60,6 +62,11 @@ foreach ($file in Get-ChildItem -Path $factoryDir -Filter *.pas -File) {
     # Strip { } and // comments so a commented-out assignment cannot mislead us.
     $code = [regex]::Replace($text, '\{[\s\S]*?\}', ' ')
     $code = [regex]::Replace($code, '//[^\r\n]*', ' ')
+
+    # Counted for the floor and the summary BEFORE any filtering, so the report
+    # can say what exists as well as what was judged.
+    if ([regex]::IsMatch($code, 'procedure\s+T\w+\.PollRadioState\s*;', 'IgnoreCase')) { $overrides++ }
+    if ([regex]::IsMatch($code, 'requiresPolling', 'IgnoreCase'))                      { $flagSeen++ }
 
     $setsFalse = [regex]::IsMatch($code, 'requiresPolling\s*:=\s*False\s*;', 'IgnoreCase')
     if (-not $setsFalse) { continue }
@@ -102,5 +109,23 @@ if ($violations.Count -gt 0) {
     exit 0
 }
 
-Write-Output "Lint-PollRadioState: $checked PollRadioState override(s) checked, none unreachable."
+# A FLOOR. Zero here does not mean "clean", it means this lint judged nothing --
+# because requiresPolling was renamed, the drivers moved, or the polling model
+# changed. Lint-RadioRegistry once reported "0 registrations, no collisions" and
+# PASSED, which is the mistake being avoided; a guard that cannot fire must say
+# so rather than print a reassuring line.
+if ($overrides -eq 0 -or $flagSeen -eq 0) {
+    Write-Output "Lint-PollRadioState: refusing to pass -- nothing to judge."
+    Write-Output "  PollRadioState overrides found : $overrides"
+    Write-Output "  files mentioning requiresPolling: $flagSeen"
+    Write-Output "  Both should be non-zero in src\radioFactory. If the polling model changed,"
+    Write-Output "  update this lint; if it is gone, delete it."
+    exit 1
+}
+
+# SAY WHAT WAS FILTERED, not just what was judged. The old wording was
+# "$checked override(s) checked", which reads as "there are no overrides" when
+# $checked is 0 -- while 24 exist and were deliberately skipped as safe. A
+# reader cannot tell a clean run from a broken lint without these numbers.
+Write-Output ("Lint-PollRadioState: {0} override(s) present, {1} with an unconditional requiresPolling := False; none unreachable." -f $overrides, $checked)
 exit 0
