@@ -3052,7 +3052,19 @@ begin
 
    // DX cluster
    FBindings.Bind(chkClusterAtStartup, 'cluster.connectAtStartup');
-   FBindings.Bind(edtClusterCommand,   'cluster.connectCommand');
+   // NOT BOUND to a flat setting -- the CLUSTER DEFINITION owns this box.
+   //
+   // It was bound both ways: this binding wrote CONNECTION COMMAND to tr4w.ini,
+   // while the control's OnChange captured the same text into the selected
+   // cluster. Only one of them was ever read -- ApplyActiveCluster assigns
+   // ConnectionCommand from the cluster definition at startup, after the config
+   // files -- so the ini write was noise that looked authoritative to anyone who
+   // opened the file, and an edit made here appeared to save to a setting that
+   // could never win.
+   //
+   // The editor populates the box (LoadSelectedCluster) and captures it
+   // (CaptureSelectedCluster), so removing the binding removes a writer, not a
+   // reader.
 end;
 
 

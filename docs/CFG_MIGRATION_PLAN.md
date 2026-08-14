@@ -31,7 +31,8 @@ row's own state and persists to whichever file is that row's system of record.
 
 ## What is actually true today
 
-**Twenty-four of the thirty have completed the move.** They are `csJSON`, gone from Ctrl-J, written by Preferences to
+**Twenty-seven of the thirty have completed the move, and one has been removed rather than
+migrated.** They are `csJSON`, gone from Ctrl-J, written by Preferences to
 `settings\tr4w.json`, their existing ini values carried across once, and their globals are now
 fields of `Config`.
 
@@ -42,7 +43,7 @@ aimed at anything other than a `ShortString` would write 256 bytes into the next
 to report it — not the compiler, which sees only a pointer, and not a test, because the damage lands
 elsewhere. The `Config` fields therefore carry the *exact* old types.
 
-The remaining 6 are still `csOld`/`csNew`: they show in Ctrl-J, round-trip through the ini, and
+The remaining 3 are still `csOld`/`csNew`: they show in Ctrl-J, round-trip through the ini, and
 drive a global each. The bridge they still use is:
 
 ```
@@ -213,7 +214,7 @@ the CFGCA table binding itself.
 | scoring.hamscore.password | HAMSCORE PASSWORD | **csJSON** | Config.HamScorePassword | **migrated** |
 | cluster.connectAtStartup | CONNECTION AT STARTUP | **csJSON** | Config.tConnectionAtStartup | **migrated** |
 | scoring.hamscore.url | HAMSCORE URL | **csJSON** | Config.HamScoreURL | **migrated** |
-| cluster.connectCommand | CONNECTION COMMAND | csNew | ConnectionCommand | 6 |
+| cluster.connectCommand | CONNECTION COMMAND | csNew | *(cluster definition)* | **removed from the flat registry** |
 | cw.speedFromDatabase | CW SPEED FROM DATABASE | **csJSON** | Config.CWSpeedFromDataBase | **migrated** |
 | operating.cw.leadingZeroChar | LEADING ZERO CHARACTER | **csJSON** | Config.LeadingZeroCharacter | **migrated** |
 | operating.tworadio.altDBuffer | ALT-D BUFFER ENABLE | **csJSON** | Config.AltDBufferEnable | **migrated** |
@@ -221,7 +222,7 @@ the CFGCA table binding itself.
 | operating.cw.serial.farnsworth | FARNSWORTH ENABLE | **csJSON** | Config.FarnsworthEnable | **migrated** |
 | operating.tworadio.skipActiveBand | SKIP ACTIVE BAND | **csJSON** | Config.SkipActiveBand | **migrated** |
 | operating.bands.hf | HF BAND ENABLE | csOld | HFBandEnable | 8 |
-| operating.cw.leadingZeros | LEADING ZEROS | csOld | LeadingZeros | 10 |
+| operating.cw.leadingZeros | LEADING ZEROS | **csJSON** | Config.LeadingZeros | **migrated** |
 | **cw.speedIncrement** | **CW SPEED INCREMENT** | **csJSON** | **Config.CodeSpeedIncrement** | **migrated** |
 | operating.cw.sayHi | SAY HI ENABLE | **csJSON** | Config.SayHiEnable | **migrated** |
 | operating.bands.warc | WARC BAND ENABLE | csOld | WARCBandsEnabled | 16 |
@@ -229,7 +230,7 @@ the CFGCA table binding itself.
 | operating.bands.vhf | VHF BAND ENABLE | csOld | VHFBandsEnabled | 25 |
 | operating.cw.serial.weight | WEIGHT | **csJSON** | Config.Weight | **migrated** |
 | cw.enable | CW ENABLE | **csJSON** | Config.CWEnable | **migrated** |
-| operating.tworadio.enable | TWO RADIO MODE | csOld | TwoRadioMode | 34 |
+| operating.tworadio.enable | TWO RADIO MODE | **csJSON** | Config.TwoRadioMode | **migrated** |
 | cw.tone | CW TONE | **csJSON** | Config.CWTone | **migrated** |
 
 `refs` is a case-**insensitive** count over the compiled tree, `.PAS` and `.pas` alike, excluding the
@@ -279,7 +280,7 @@ runs **once** at startup and **before** the config files — it is an initial de
 competing owner. Checked rather than assumed, because a defaults procedure that ran on contest
 change would silently reset the setting instead.)
 
-### A-bis. `LEADING ZEROS` is a station default with contest overrides
+### A-bis. ~~`LEADING ZEROS`~~ **MIGRATED** — a CW setting a contest may override
 
 Measured, not assumed: of the 30, **only `LEADING ZEROS` appears in a contest `.cfg`** — 6 of 137
 scanned files, including `CQ-WPX-CW.CFG` and `CQ-WPX-SSB.CFG`, which fits a serial-number contest.
@@ -315,7 +316,7 @@ value the session *starts* with, and a live change is not written back. Today th
 nobody has said so. `CW TONE` at 93 references is the single most expensive item in the whole
 exercise and should go last, with the function swap.
 
-### D. A library already owns it — do not migrate, remove the duplicate editor (1)
+### D. ~~A library already owns it~~ **DONE — duplicate editor removed** (1)
 
 `CONNECTION COMMAND`. `ApplyActiveCluster` assigns `ConnectionCommand` from the active cluster
 definition (`uRadioConfigApply.pas:601`), and it runs **after** `ApplyStoredCommands`. So there are
@@ -327,7 +328,7 @@ that — it would move the losing value to a different file. The fix is to drop 
 from the flat registry and let the cluster editor own it, which is where the operator already expects
 to find it.
 
-### E. Two commands feed one variable (1)
+### E. ~~Two commands feed one variable~~ **DONE — alias withdrawn** (1)
 
 `TWO RADIO MODE` also receives the deprecated `SINGLE RADIO MODE` alias (`uCFG.pas:1359`, inverted).
 Migrating one row without the other leaves the alias writing the ini into a variable the JSON store

@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -159,8 +159,14 @@ begin
    // --- DX cluster ---------------------------------------------------------
    RegisterStoredSetting('cluster.connectAtStartup', 'CONNECTION AT STARTUP',
                          'Connect at startup');
-   RegisterLegacySetting('cluster.connectCommand',   'CONNECTION COMMAND',
-                         'After connecting, send');
+   // CONNECTION COMMAND is NOT registered as a flat setting. It belongs to the
+   // cluster definition -- one cluster, one connect command -- and the cluster
+   // editor in Preferences owns it. Registering it here as well gave one edit box
+   // two stores, of which only the cluster one was ever read.
+   //
+   // The CFGCA row stays live (not csJSON) on purpose: a station with no cluster
+   // library still has ApplyActiveCluster leave the legacy value alone, so an old
+   // tr4w.ini CONNECTION COMMAND must keep working.
 end;
 
 end.
