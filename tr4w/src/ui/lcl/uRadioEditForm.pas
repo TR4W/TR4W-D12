@@ -99,10 +99,24 @@ type
       // invisible until the radio does not answer, and '8N1' vs '8-N-1' vs
       // 'N81' all look reasonable to someone typing quickly.  Three groups can
       // only ever produce a combination the parser accepts.
+      //
+      // EACH GROUP LIVES IN ITS OWN PANEL, and that is load-bearing rather than
+      // decorative.  FMX separated radio buttons by GroupName; the LCL has no
+      // GroupName at all and groups by PARENT -- TRadioButton.Checked := True
+      // unchecks every SIBLING TRadioButton (lcl/include/radiobutton.inc:107).
+      // Parented flat onto tabSerial, all seven would form one group, and
+      // RefreshFrom would leave exactly one button lit across all three rows:
+      // it sets data bits, then parity (unchecking data bits), then stop bits
+      // (unchecking parity).  The panels are BevelOuter=bvNone with an empty
+      // caption, so they are invisible -- they exist only to draw the grouping
+      // boundary the LCL reads.
+      pnlDataBits: TPanel;
       lblDataBits: TLabel;
       optData7, optData8: TRadioButton;
+      pnlParity: TPanel;
       lblParity: TLabel;
       optParityNone, optParityOdd, optParityEven: TRadioButton;
+      pnlStopBits: TPanel;
       lblStopBits: TLabel;
       optStop1, optStop2: TRadioButton;
       // The CAT port has its own two control lines, same NONE/OFF/ON/CW/PTT

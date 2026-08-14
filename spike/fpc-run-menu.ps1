@@ -104,9 +104,19 @@ if (-not (Test-Path (Join-Path $target $Config)))
    exit 1
    }
 
+# PASS AN ABSOLUTE PATH.  TR4W copies this argument into TR4W_CFG_FILENAME with
+# lstrcpyA and never expands it (tr4w.dpr ~881), and FCONTEST then derives
+# TR4W_LOG_PATH_NAME from it by scanning backwards for a '\'.  Given a bare
+# relative name there is no '\' to find, so what should be a DIRECTORY ends up
+# as the base name and every path built from it is wrong -- the reports file
+# lands as "uidriveNY4I.LOG" instead of "NY4I.LOG", and CTY.DAT, TRMASTER.DTA,
+# SERVERLOG.TMP and the rest are mis-derived the same way.  Measured both ways
+# 2026-08-13.  The underlying fragility is TR4W's and pre-dates FPC; passing a
+# full path here keeps the harness from manufacturing bug reports.
+$configPath = Join-Path $target $Config
 $proc = Start-Process -FilePath $Exe -WorkingDirectory $target `
-                      -ArgumentList $Config -PassThru
-Write-Host "launched PID $($proc.Id) from $target with $Config"
+                      -ArgumentList $configPath -PassThru
+Write-Host "launched PID $($proc.Id) from $target with $configPath"
 
 # Poll for the window rather than sleeping a fixed time -- startup cost varies
 # with CTY.DAT and the log size, and a fixed wait either wastes time or posts
