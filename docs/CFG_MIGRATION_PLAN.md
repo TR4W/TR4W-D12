@@ -239,7 +239,7 @@ uncompiled `JCTRL1`/`JCTRL2`. A case-sensitive `--include=*.pas` misses every TR
 `Weight` is a generic word and its 34 will include unrelated identifiers; count it again before
 believing it.
 
-## The csOwned batch — 22 settings, already half-migrated
+## The csOwned batch — ~~22 settings, already half-migrated~~ **21 DONE, 1 held back**
 
 The **hand-wired** Preferences panels (SCP, network, fonts, backup, band map, WSJT-X, external
 logger, MMTTY, …) already call `ApplyAndStoreCommand`, so 22 commands are already written to JSON.
@@ -256,6 +256,16 @@ cheaper batch — the writer has already moved — but **not a blind sweep**: 45
 rows are `crNetwork: 1`, so each one has to be checked against the peer path above, and each needs
 its seed-list entry. Do them in small themed commits (backup, band map, WSJT-X …), not one change of
 22.
+
+
+**Done 2026-08-14.** Twenty-one flipped to `csJSON`, each added to the ini→store seed list so a
+station that has never opened Preferences keeps its values: backup (2), band map (3), external
+logger (3), fonts (2), MMTTY, SCP (2), server/network (4), radio TCP port, telnet, WSJT-X (2).
+
+**`MY CONTINENT` was held back**, and not because it is risky to flip. It is the wrong *shape*: it
+has 71 references in `LOGSTUFF.PAS` — scoring, multipliers, DX/domestic decisions — and belongs to
+the station-vs-contest question above, not to a batch of UI-owned settings. `/EXPORT` also skips the
+JSON apply, so a flip could change an exported log for an operator who had overridden it.
 
 ## What is left, and where each of it lands
 
@@ -333,6 +343,39 @@ to find it.
 `TWO RADIO MODE` also receives the deprecated `SINGLE RADIO MODE` alias (`uCFG.pas:1359`, inverted).
 Migrating one row without the other leaves the alias writing the ini into a variable the JSON store
 also claims. Retire the alias in the same commit.
+
+## The `MY *` family is not a station setting (NY4I, 2026-08-14)
+
+There is a **line** between the MY... fields in Station settings and the MY info a
+contest uses. Home state Florida, but operating a contest from Georgia: the state
+*sent* comes from the contest setup, while the Cabrillo header still carries the
+operator's real details. In NAQP people send a short made-up name — `JO` rather
+than `Joseph` — purely because it is faster to key.
+
+So three values, not one:
+
+| | value |
+|---|---|
+| station identity | the operator's own details |
+| what the contest sends | set at contest setup; legitimately different |
+| the Cabrillo header | the real details again, not the exchange |
+
+The header is already structurally separate: `uCbrSum.pas` marks the address tags
+`ctrCFG: False` / `ctrSave: True`, so it keeps its own storage rather than reading
+the exchange globals.
+
+**The rule** is *what did the contest setup ask for* — the contest value when the
+setup collected one, the station value otherwise, with the station value shown as
+**greyed hint text rather than pre-filled**, so blank reads as "use my default"
+instead of as an omission. Same idiom the radio editor uses for the CI-V default.
+
+**Deferred to the contest factory**, deliberately. The consequence here and now is
+that `MY CONTINENT` was excluded from the `csOwned` batch: 71 references in
+`LOGSTUFF.PAS`, and `/EXPORT` skips the JSON apply, so a row flip could silently
+change an exported log for anyone who had overridden it.
+
+The read side already exists — a contest `.cfg` naming a migrated command applies
+it and wins while that contest is loaded. What is missing is the UI half.
 
 ## What does not belong in Preferences
 
