@@ -120,6 +120,7 @@ object frmUDPDestinationEdit: TfrmUDPDestinationEdit
     Width = 292
     Height = 51
     AutoSize = False
+    WordWrap = True
     Caption = ''
   end
   object btnOK: TButton
