@@ -55,7 +55,7 @@ This table is the gate on that decision.
 | Icom IC-761 | IC761 | - | - |  |
 | Icom IC-7610 | IC7610 | - | - |  |
 | Icom IC-765 | IC765 | - | - |  |
-| Icom IC-7700 | IC7700 | - | - |  |
+| Icom IC-7700 | IC7700 | - | - | **Network link added 2026-08-14, UNTESTED and expected to stay that way for a while.** It had been registered `[rlSerial]` with port 0 while every other network Icom carried `[rlSerial, rlNetwork], 50001, True` -- an oversight (NY4I), found because the credentials work forced the whole network set to be written down. It now matches its siblings and declares credentials. NY4I: *"I have to find an Icom 7700. Not very much used anymore."* So the option is available and consistent, not verified -- and Icom LAN is unproven on **every** model, not just this one. |
 | Icom IC-775 | IC775 | - | - |  |
 | Icom IC-7760 | IC7760 | - | - |  |
 | Icom IC-78 | IC78 | - | - |  |
