@@ -28,15 +28,40 @@
 #   powershell -File tr4w\build\Lint-LFMProperties.ps1 -SourceDir tr4w\src -Rebuild
 
 param(
+   # EMPTY means DISCOVER, via Find-Toolchain.ps1 -- the same discovery every
+   # other script here uses.  These used to default to C:\FPC\3.2.2\... and
+   # C:\Lazarus, which is the one hardcoded toolchain that survived the move to
+   # Find-Toolchain, and it hid on any machine that happens to have those paths.
+   # It was found by building on a clean box whose only Pascal install is the
+   # 32-bit Lazarus, whose FPC lives at C:\lazarus\fpc\3.2.2: every other lint
+   # passed, the app and the tests built, and this one lint failed -- so the
+   # whole build failed on a machine that was correctly set up.
    [string] $SourceDir = (Join-Path $PSScriptRoot '..\src'),
-   [string] $Fpc       = 'C:\FPC\3.2.2\bin\i386-win32\fpc.exe',
-   [string] $Laz       = 'C:\Lazarus',
+   [string] $Fpc       = '',
+   [string] $Laz       = '',
    [string] $Cpu       = 'i386',
    [string] $Os        = 'win32',
    [switch] $Rebuild
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Resolve before anything uses them.  A caller may still pin either one, and a
+# pin is honoured exactly as Find-Toolchain honours FPC_HOME / LAZARUS_DIR.
+if ((-not $Fpc) -or (-not $Laz))
+   {
+   . (Join-Path $PSScriptRoot 'Find-Toolchain.ps1')
+   $tc = Find-Tr4wToolchain -Fpc $Fpc -Laz $Laz -Cpu $Cpu -Os $Os -Quiet
+   if ($null -eq $tc)
+      {
+      Write-Host 'Lint-LFMProperties: no FPC + Lazarus able to target i386-win32.' -ForegroundColor Red
+      Write-Host '  Find-Toolchain printed every path it tried. This lint needs FPC and the'
+      Write-Host '  LCL to answer the question at all -- see the header.'
+      exit 2
+      }
+   if (-not $Fpc) { $Fpc = $tc.FpcExe }
+   if (-not $Laz) { $Laz = $tc.LazDir }
+   }
 
 $toolSrc = Join-Path $PSScriptRoot 'lintlfm\lintlfm.lpr'
 $toolOut = Join-Path $PSScriptRoot 'lintlfm\units'

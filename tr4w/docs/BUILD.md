@@ -7,17 +7,106 @@
 **Toolchain: FreePascal 3.2.2 + the Lazarus LCL.** Delphi is behind us. The FPC build passes the
 unit tests (3978/0) and the golden corpus (22/0/4), runs the LCL UI, and is what ships.
 
-## Prerequisites
+## Setting up a build environment
 
-Install these; nothing else is configured by hand.
+TR4W is a **32-bit (i386-win32) program**. Everything below exists because of that one fact, and it
+is the whole reason a default Windows Pascal install does not work: the modern defaults are all
+64-bit, they fail *late*, and they fail in ways that read like a bug in TR4W.
 
-- **FPC able to target i386-win32** — `fpc.exe` plus a `ppc386`/`ppcross386` backend and an
-  i386-win32 RTL. `fpc.exe` is only a *driver*; an x86_64-only install has no i386 backend and
-  cannot build TR4W.
-- **Lazarus carrying LCL units for i386-win32** (`<lazarus>\lcl\units\i386-win32`). An
-  **x86_64-only install — the fpcupdeluxe default — will not do.**
-- **NSIS** (`makensis.exe`), only for `-BuildInstaller`.
+### One installer, and that is genuinely all
+
+Install **`lazarus-4.8-fpc-3.2.2-win32.exe`** — the **32-bit** Lazarus — from
+<https://www.lazarus-ide.org/> (or SourceForge, under *Lazarus Windows 32 bits*). Accept the
+default location; `C:\Lazarus` is what the build looks for.
+
+That single package carries everything TR4W needs, because it is the 32-bit distribution:
+
+| what the build needs | where the installer puts it |
+|---|---|
+| an i386-win32 FPC 3.2.2 with a `ppc386` backend | `C:\Lazarus\fpc\3.2.2\bin\i386-win32` |
+| an i386-win32 RTL | `C:\Lazarus\fpc\3.2.2\units\i386-win32` |
+| LCL units for i386-win32 | `C:\Lazarus\lcl\units\i386-win32` |
+| `lazbuild`, `objdump` and friends | `C:\Lazarus` |
+
+**Verified, not assumed** (2026-08-14): a Windows 11 machine with no Pascal toolchain of any kind
+went from that one installer to `tr4w_setup_5.0.0.exe` — 10 lints, 3978/0 unit tests, app, server
+and NSIS installer — with no environment variables set and nothing else installed but NSIS and git.
+Silent install, if you want it scripted:
+
+```powershell
+lazarus-4.8-fpc-3.2.2-win32.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=C:\Lazarus
+```
+
+### Why the 32-bit one, specifically
+
+TR4W is a **32-bit (i386-win32) program**, and every modern default is 64-bit. Install the 64-bit
+Lazarus and everything *looks* right — the IDE runs, `fpc -iV` says 3.2.2 — but:
+
+- `fpc.exe` is only a **driver**. The compiler is a backend: `ppc386.exe` (native i386) or
+  `ppcross386.exe` (cross). A 64-bit install has neither, so "FPC is installed" is true while
+  TR4W cannot be compiled at all.
+- the LCL ships as `x86_64-win64` only, and the build stops with *"no Lazarus with LCL units for
+  i386-win32"*.
+
+If you already run a 64-bit Lazarus and would rather not replace it, you can add the missing i386
+LCL units yourself — this is how the reference machine got there, and `lazbuild` is unattended so
+it scripts fine:
+
+```powershell
+C:\Lazarus\lazbuild.exe --cpu=i386 --os=win32 --ws=win32 C:\Lazarus\lcl\lclbase.lpk
+C:\Lazarus\lazbuild.exe --cpu=i386 --os=win32 --ws=win32 C:\Lazarus\lcl\interfaces\lcl.lpk
+```
+
+You still need a **32-bit FPC** beside it (<https://www.freepascal.org/download.html>, the
+`i386-win32` installer, default `C:\FPC\3.2.2`). Two installers and two commands instead of one
+installer — which is why the 32-bit Lazarus is the recommendation.
+
+### On fpcupdeluxe
+
+A fine way to *obtain* FPC and Lazarus, and how the reference machine originally got there. But
+**its own tree is not the toolchain the build uses**: on that machine
+`C:\fpcupdeluxe\fpc\units\i386-win32` and `C:\fpcupdeluxe\lazarus\lcl\units\i386-win32` do not
+exist, because that install is x86_64-only. You do not need it for TR4W.
+
+Whatever you install with, the test is not "which tool did I use" — it is the checks below.
+
+### The IDE is optional
+
+Only the **LCL** is used. TR4W is not a Lazarus *project* in the usual sense: it runs its own
+`GetMessage` loop and never calls `Application.Run`. The IDE is a convenience for editing the four
+designed forms — open `tr4w/tr4w.lpi` — not a build dependency.
+
+### Also needed
+
+- **NSIS** (`makensis.exe`) — only for `-BuildInstaller`. Default `C:\Program Files (x86)\NSIS`.
+- **Git**, for the clone. Nothing else.
 - Indy 10.6.3.3 is **vendored** in `tr4w\include`. Nothing to install.
+
+### Verify before you build
+
+One command, and it answers the only question that matters — *what will the build actually use*:
+
+```powershell
+. .\tr4w\build\Find-Toolchain.ps1 ; Find-Tr4wToolchain
+```
+
+It should name an `fpc.exe` under `bin\i386-win32` and an LCL unit directory ending
+`lcl\units\i386-win32`. When it cannot find a usable toolchain it prints **every path it tried**,
+which is the first thing to read — and the first thing to paste if you ask for help.
+
+**Nothing is configured by hand.** Locations are discovered: PATH, the usual install roots, and the
+`FPC_HOME` / `LAZARUS_DIR` environment variables. Setting those is only needed for a non-default
+install, and mostly on CI.
+
+Then, from the repo root:
+
+```powershell
+.\tr4w\FullBuild.ps1                  # lints, unit tests, app, server
+.\tr4w\FullBuild.ps1 -BuildInstaller  # ...and the NSIS setup exe
+```
+
+A clean machine to a shippable installer is **one installer, one clone, one command** — about
+2½ minutes of build time.
 
 Locations are **discovered**, not configured. `tr4w\build\Find-Toolchain.ps1` searches PATH, the
 usual install roots, and the `FPC_HOME` / `LAZARUS_DIR` environment variables, and prints every
