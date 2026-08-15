@@ -2072,7 +2072,7 @@
       object edtDVKPath: TEdit
         Left = 220
         Top = 182
-        Width = 380
+        Width = 340
         Height = 25
         TabOrder = 3
       end
@@ -2087,7 +2087,7 @@
       object edtDVKRecorder: TEdit
         Left = 220
         Top = 214
-        Width = 380
+        Width = 340
         Height = 25
         TabOrder = 4
       end
@@ -2118,7 +2118,7 @@
       object edtMP3Path: TEdit
         Left = 220
         Top = 316
-        Width = 380
+        Width = 340
         Height = 25
         TabOrder = 6
       end
@@ -2133,7 +2133,7 @@
       object edtMP3Player: TEdit
         Left = 220
         Top = 348
-        Width = 380
+        Width = 340
         Height = 25
         TabOrder = 7
       end
@@ -2145,6 +2145,42 @@
         AutoSize = False
         WordWrap = True
         Caption = 'Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately.'
+      end
+      object btnBrowseDVKPath: TButton
+        Left = 568
+        Top = 182
+        Width = 70
+        Height = 25
+        Caption = 'Browse...'
+        TabOrder = 20
+        OnClick = btnBrowseDVKPathClick
+      end
+      object btnBrowseDVKRecorder: TButton
+        Left = 568
+        Top = 214
+        Width = 70
+        Height = 25
+        Caption = 'Browse...'
+        TabOrder = 21
+        OnClick = btnBrowseDVKRecorderClick
+      end
+      object btnBrowseMP3Path: TButton
+        Left = 568
+        Top = 316
+        Width = 70
+        Height = 25
+        Caption = 'Browse...'
+        TabOrder = 22
+        OnClick = btnBrowseMP3PathClick
+      end
+      object btnBrowseMP3Player: TButton
+        Left = 568
+        Top = 348
+        Width = 70
+        Height = 25
+        Caption = 'Browse...'
+        TabOrder = 23
+        OnClick = btnBrowseMP3PlayerClick
       end
     end
     object layDXLab: TPanel
