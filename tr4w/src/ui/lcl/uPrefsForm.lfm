@@ -1556,6 +1556,25 @@ object PrefsForm: TPrefsForm
         TabOrder = 0
         OnChange = cbxRelayPortChange
       end
+      object chkYCCCSO2R: TCheckBox
+        Left = 12
+        Top = 176
+        Width = 400
+        Height = 19
+        Caption = 'YCCC SO2R Plus box connected'
+        TabOrder = 1
+      end
+      object lblYCCCInfo: TLabel
+        Left = 12
+        Top = 200
+        Width = 620
+        Height = 34
+        AutoSize = False
+        WordWrap = True
+        Caption = 
+          'Station controllers will get a factory of their own, as radios a' +
+          'nd keyers did. This checkbox is the interim home for the setting.'
+      end
       object lblRelayPortInfo: TLabel
         Left = 12
         Top = 120
