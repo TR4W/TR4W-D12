@@ -1394,7 +1394,7 @@ begin
            begin
              if ActiveMode = CW then
                 begin
-                if not AllCWMessagesChainable then
+                if not Config.AllCWMessagesChainable then
                    begin
                    FlushCWBuffer;
                    end;
@@ -1450,7 +1450,7 @@ begin
            if ActiveMode in [CW, Digital] then
               begin
               if ActiveMode = CW then
-                if not AllCWMessagesChainable then
+                if not Config.AllCWMessagesChainable then
                    begin
                    FlushCWBuffer;
                    end;

@@ -383,7 +383,6 @@ var
   //  _showstarttime                        : boolean;
   //  _networktest                          : boolean;
 
-  AllCWMessagesChainable: boolean;
   //  AskIfContestOver                      : boolean = True;
   AutoAltDWindowString: Str20;
   AutoCallTerminate: boolean;
@@ -554,7 +553,6 @@ var
     RemoteTerminalPort                    : PortType = NoPort;
   }
 
-  SendCompleteFourLetterCall: boolean;
   SendQSOImmediately: boolean = True;
   SeventyThreeMessageSent: boolean;
   SCPMinimumLetters: integer;

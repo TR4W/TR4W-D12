@@ -1650,6 +1650,184 @@
           ' the setting.'
       end
     end
+    object layPaddlePTT: TPanel
+      Color = clWindow
+      ParentColor = False
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 28
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 22
+      object lblPaddlePTTHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Paddle and PTT'
+      end
+      object lblPaddlePTTInfo: TLabel
+        Left = 12
+        Top = 34
+        Width = 620
+        Height = 40
+        AutoSize = False
+        WordWrap = True
+        Caption = 
+          'The paddle keyer TR4W runs itself, and the PTT line it ass' +
+          'erts. A WinKeyer or YCCC box keeps its own paddle timing, ' +
+          'so these do not apply to it.'
+      end
+      object lblPaddleGroup: TLabel
+        Left = 12
+        Top = 88
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Paddle'
+      end
+      object lblPaddleSpeed: TLabel
+        Left = 12
+        Top = 120
+        Width = 240
+        Height = 17
+        AutoSize = False
+        Caption = 'Paddle speed'
+      end
+      object edtPaddleSpeed: TEdit
+        Left = 260
+        Top = 116
+        Width = 70
+        Height = 25
+        TabOrder = 0
+      end
+      object lblPaddleSpeedUnits: TLabel
+        Left = 340
+        Top = 120
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'WPM  (0 follows the keyboard speed)'
+      end
+      object lblPaddleTone: TLabel
+        Left = 12
+        Top = 152
+        Width = 240
+        Height = 17
+        AutoSize = False
+        Caption = 'Paddle sidetone'
+      end
+      object edtPaddleTone: TEdit
+        Left = 260
+        Top = 148
+        Width = 70
+        Height = 25
+        TabOrder = 1
+      end
+      object lblPaddleToneUnits: TLabel
+        Left = 340
+        Top = 152
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'Hz'
+      end
+      object lblPaddleHold: TLabel
+        Left = 12
+        Top = 184
+        Width = 240
+        Height = 17
+        AutoSize = False
+        Caption = 'Hold PTT after the last element'
+      end
+      object edtPaddleHold: TEdit
+        Left = 260
+        Top = 180
+        Width = 70
+        Height = 25
+        TabOrder = 2
+      end
+      object lblPaddleHoldUnits: TLabel
+        Left = 340
+        Top = 184
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'dit counts'
+      end
+      object chkSwapPaddles: TCheckBox
+        Left = 12
+        Top = 214
+        Width = 460
+        Height = 22
+        Caption = 'Swap dit and dah'
+        TabOrder = 3
+      end
+      object lblPTTGroup: TLabel
+        Left = 12
+        Top = 256
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'PTT'
+      end
+      object chkPTTEnable: TCheckBox
+        Left = 12
+        Top = 284
+        Width = 460
+        Height = 22
+        Caption = 'Assert PTT when transmitting'
+        TabOrder = 4
+      end
+      object lblPTTDelay: TLabel
+        Left = 12
+        Top = 320
+        Width = 240
+        Height = 17
+        AutoSize = False
+        Caption = 'Delay after PTT before sending'
+      end
+      object edtPTTDelay: TEdit
+        Left = 260
+        Top = 316
+        Width = 70
+        Height = 25
+        TabOrder = 5
+      end
+      object lblPTTDelayUnits: TLabel
+        Left = 340
+        Top = 320
+        Width = 300
+        Height = 17
+        AutoSize = False
+        Caption = 'x 1.7 ms  (0 disables)'
+      end
+      object chkNoPollDuringPTT: TCheckBox
+        Left = 12
+        Top = 350
+        Width = 460
+        Height = 22
+        Caption = 'Stop polling the radio while transmitting'
+        TabOrder = 6
+      end
+      object lblPaddlePortNote: TLabel
+        Left = 12
+        Top = 386
+        Width = 620
+        Height = 54
+        AutoSize = False
+        WordWrap = True
+        Caption = 
+          'The parallel port a paddle or foot switch is wired to is n' +
+          'ot here. Whether TR4W keeps supporting LPT at all is an op' +
+          'en question, so PADDLE PORT stays on the Ctrl-J command li' +
+          'st until that is settled rather than being given a home it' +
+          ' may not keep.'
+      end
+    end
     object layDXLab: TPanel
       Color = clWindow
       ParentColor = False
@@ -2047,6 +2225,30 @@
         Height = 17
         AutoSize = False
         Caption = 'Hz'
+      end
+      object chkCWMessagesChainable: TCheckBox
+        Left = 12
+        Top = 416
+        Width = 460
+        Height = 22
+        Caption = 'Any CW message may chain into the next'
+        TabOrder = 40
+      end
+      object chkTuneWithDits: TCheckBox
+        Left = 12
+        Top = 442
+        Width = 460
+        Height = 22
+        Caption = 'Tune with dits rather than a solid carrier'
+        TabOrder = 41
+      end
+      object chkSendFourLetterCall: TCheckBox
+        Left = 12
+        Top = 468
+        Width = 460
+        Height = 22
+        Caption = 'Always send all four letters of a four-letter call'
+        TabOrder = 42
       end
       object lblBandMapLimit: TLabel
         Left = 12

@@ -454,6 +454,30 @@ type
 
       // --- CW section (Tag = NAV_CW), the keying-device library ---------------
       layCW: TPanel;
+      chkCWMessagesChainable: TCheckBox;
+      chkTuneWithDits: TCheckBox;
+      chkSendFourLetterCall: TCheckBox;
+      layPaddlePTT: TPanel;
+      lblPaddlePTTHeading: TLabel;
+      lblPaddlePTTInfo: TLabel;
+      lblPaddleGroup: TLabel;
+      lblPaddleSpeed: TLabel;
+      edtPaddleSpeed: TEdit;
+      lblPaddleSpeedUnits: TLabel;
+      lblPaddleTone: TLabel;
+      edtPaddleTone: TEdit;
+      lblPaddleToneUnits: TLabel;
+      lblPaddleHold: TLabel;
+      edtPaddleHold: TEdit;
+      lblPaddleHoldUnits: TLabel;
+      chkSwapPaddles: TCheckBox;
+      lblPTTGroup: TLabel;
+      chkPTTEnable: TCheckBox;
+      lblPTTDelay: TLabel;
+      edtPTTDelay: TEdit;
+      lblPTTDelayUnits: TLabel;
+      chkNoPollDuringPTT: TCheckBox;
+      lblPaddlePortNote: TLabel;
       lblMyKeyers: TLabel;
       lstKeyers: TListBox;
       btnAddKeyer: TButton;
@@ -664,6 +688,7 @@ type
       navBackup: TTreeNode;
       navContest: TTreeNode;
       navCW: TTreeNode;
+   navPaddlePTT: TTreeNode;
       navWebServer: TTreeNode;
       navTCIServer: TTreeNode;
       navExternalSoftware: TTreeNode;
@@ -2875,6 +2900,8 @@ begin
       TNavNode(navContest).Tag := 10;
       navCW := tvNav.Items.Add(nil, 'CW Settings');
       TNavNode(navCW).Tag := 11;
+      navPaddlePTT := tvNav.Items.AddChild(navCW, 'Paddle and PTT');
+      TNavNode(navPaddlePTT).Tag := 28;
       navWebServer := tvNav.Items.Add(nil, 'Web Server');
       TNavNode(navWebServer).Tag := 12;
       navTCIServer := tvNav.Items.Add(nil, 'TCI Server');
@@ -3056,6 +3083,21 @@ begin
    FBindings.Bind(chkCWSpeedFromDatabase,  'cw.speedFromDatabase');
    FBindings.Bind(cbxCWSpeedIncrement,     'cw.speedIncrement');
    FBindings.Bind(edtCWTone,               'cw.tone');
+   FBindings.Bind(chkCWMessagesChainable,  'cw.messagesChainable');
+   FBindings.Bind(chkTuneWithDits,         'cw.tuneWithDits');
+   FBindings.Bind(chkSendFourLetterCall,   'cw.sendFourLetterCall');
+
+   // Paddle and PTT -- a CHILD of CW Settings, so the nav gains nothing
+   // in height while collapsed. NY4I asked that the left pane never
+   // need scrolling, and these ten settings would not fit on the CW
+   // page itself.
+   FBindings.Bind(edtPaddleSpeed,          'cw.paddle.speed');
+   FBindings.Bind(edtPaddleTone,           'cw.paddle.monitorTone');
+   FBindings.Bind(edtPaddleHold,           'cw.paddle.pttHoldCount');
+   FBindings.Bind(chkSwapPaddles,          'cw.paddle.swap');
+   FBindings.Bind(chkPTTEnable,            'ptt.enable');
+   FBindings.Bind(edtPTTDelay,             'ptt.turnOnDelay');
+   FBindings.Bind(chkNoPollDuringPTT,      'ptt.noPollDuringPTT');
 
    // Operating - Bands
    FBindings.Bind(chkHFBands,   'operating.bands.hf');

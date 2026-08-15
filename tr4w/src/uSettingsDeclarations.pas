@@ -120,6 +120,38 @@ begin
    RegisterStoredSetting('cw.tone',              'CW TONE',
                          'Sidetone');
 
+   { CW SENDING BEHAVIOUR. These shape what the keyer sends and how, whichever
+     keyer is selected -- unlike the serial-keying group above, which only
+     affects CW TR4W generates itself. }
+   RegisterStoredSetting('cw.messagesChainable',  'ALL CW MESSAGES CHAINABLE',
+                         'Any message may chain into the next');
+   RegisterStoredSetting('cw.tuneWithDits',       'TUNE WITH DITS',
+                         'Tune with dits rather than a solid carrier');
+   RegisterStoredSetting('cw.sendFourLetterCall', 'SEND COMPLETE FOUR LETTER CALL',
+                         'Always send all four letters of a four-letter call');
+
+   { PADDLE. The paddle keyer TR4W runs itself; a WinKeyer or YCCC box keeps its
+     own. PADDLE PORT is deliberately NOT here -- it is a parallel port, and
+     whether TR4W keeps supporting those is an open question (see the Hardware
+     panel). Speed and tone are useful regardless of which port carries it. }
+   RegisterStoredSetting('cw.paddle.speed',       'PADDLE SPEED',
+                         'Paddle speed');
+   RegisterStoredSetting('cw.paddle.monitorTone', 'PADDLE MONITOR TONE',
+                         'Paddle sidetone');
+   RegisterStoredSetting('cw.paddle.swap',        'SWAP PADDLES',
+                         'Swap dit and dah');
+   RegisterStoredSetting('cw.paddle.pttHoldCount','PADDLE PTT HOLD COUNT',
+                         'Hold PTT for');
+
+   { PTT. Not CW-only -- PTT ENABLE keys the transmitter for phone too -- but it
+     is grouped with the keyer because that is where an operator changes it. }
+   RegisterStoredSetting('ptt.enable',            'PTT ENABLE',
+                         'Assert PTT when transmitting');
+   RegisterStoredSetting('ptt.turnOnDelay',       'PTT TURN ON DELAY',
+                         'Delay after PTT before sending');
+   RegisterStoredSetting('ptt.noPollDuringPTT',   'NO POLL DURING PTT',
+                         'Stop polling the radio while transmitting');
+
    // --- Operating: bands ---------------------------------------------------
    RegisterLegacySetting('operating.bands.hf',   'HF BAND ENABLE',
                          'HF (160 - 10 m)');

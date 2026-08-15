@@ -268,7 +268,7 @@ begin
      begin
      //    SendMessageToMixW(Msg);
          if ActiveRadioPtr.tPTTStatus = PTT_OFF then
-           if PTTEnable then
+           if Config.PTTEnable then
               begin
               logger.debug('Calling PTTOn from AddStringToBuffer');
               PTTOn;

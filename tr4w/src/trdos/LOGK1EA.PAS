@@ -294,28 +294,22 @@ var
 
   MonitorTone                           : integer = 700;
 
-  NoPollDuringPTT                       : boolean;
 
   PaddleActive                          : boolean;
   PaddleBug                             : boolean;
   PaddleBugDahBeingSent                 : boolean;
   PaddlePTTOffTimerCount                : integer;
-  PaddlePTTHoldCount                    : integer = 13;
   PaddlePTTOffTimer                     : integer;
-  PaddleMonitorTone                     : integer = 700;
-  PaddleSpeed                           : integer;
   tPaddleElementLength                  : Cardinal;
 
   PortBeingUsed                         : PortType {= NoPort};
-  PTTEnable                             : boolean = True;
   PTTLockout                            : boolean;
-  PTTTurnOnDelay                        : integer = 15;
   // Default TRUE (NY4I, 2026-08-09).  This selects the PTT INTERFACE -- key by
   // CAT command, or key by the hardware line above -- and defaulting it FALSE
   // meant the CAT path silently did nothing: tPTTVIACAT logs one DEBUG line
   // and returns False, and every caller in the program ignored that result.
   // The switch is kept because the choice is real (CI-V bus contention during
-  // transmit, amplifier sequencing off PTTTurnOnDelay, radios with no CAT
+  // transmit, amplifier sequencing off Config.PTTTurnOnDelay, radios with no CAT
   // transmit command at all) -- only the default changes, so a station that
   // wants the hardware line still turns it off.
   //
@@ -353,14 +347,12 @@ var
   ShiftKeyEnable                        : boolean = True;
   StereoControlPin                      : integer = 9;
   StereoPinState                        : boolean;
-  SwapPaddles                           : boolean;
   SwapRadioRelaySense                   : boolean;
 
   TalkDebugWrite                        : file;
   TuningWithDits                        : boolean;
   //  Trace                                 : boolean;
   Tuning                                : boolean;
-  TuneWithDits                          : boolean;
 
 
   ActiveBeep                            : BeepType;
@@ -473,7 +465,7 @@ var
   PTTDelayCount                         : integer; { When non zero, indicates that
   PTT turn on delay is in progress }
 
-//  PTTAsserted                           : boolean; { Indicates that the PTT signal is asserted.  Comes on PTTTurnOnDelay before CW starts.  }
+//  PTTAsserted                           : boolean; { Indicates that the PTT signal is asserted.  Comes on Config.PTTTurnOnDelay before CW starts.  }
 
   PTTFootSwitch                         : boolean; { Indicates that the footswitch wants the PTT
   to be on. }
@@ -667,7 +659,7 @@ var
   TempByte                              : Byte;
 begin
   if ActiveRadioPtr.tKeyerPortHandle = INVALID_HANDLE_VALUE then Exit;
-//  ActivePortOn := (PTTAsserted or PTTForcedOn or PTTFootSwitch) and PTTEnable;
+//  ActivePortOn := (PTTAsserted or PTTForcedOn or PTTFootSwitch) and Config.PTTEnable;
 
    if ActiveRadioPtr.tKeyerPort in SerialPorts then
       begin
@@ -770,7 +762,7 @@ procedure TurnOnActivePort;
 
 var
   SerialOn                              : Cardinal;
-  { PTT will always be on if PTTEnable. }
+  { PTT will always be on if Config.PTTEnable. }
 
   hand                                  : HWND;
   TempByte                              : Byte;
@@ -952,7 +944,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    if not PTTForcedOn then PTTDelayCount := PTTTurnOnDelay;
+    if not PTTForcedOn then PTTDelayCount := Config.PTTTurnOnDelay;
     TurnOffActivePort;
   end;
 end;
@@ -996,7 +988,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    PTTDelayCount := PTTTurnOnDelay;
+    PTTDelayCount := Config.PTTTurnOnDelay;
     TurnOffActivePort;
   end;
 }
@@ -1012,7 +1004,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    PTTDelayCount := PTTTurnOnDelay;
+    PTTDelayCount := Config.PTTTurnOnDelay;
     TurnOffActivePort;
   end;
 }
@@ -1034,7 +1026,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    PTTDelayCount := PTTTurnOnDelay;
+    PTTDelayCount := Config.PTTTurnOnDelay;
     TurnOffActivePort;
   end;
 }
@@ -1051,7 +1043,7 @@ begin
   if not PTTAsserted then
   begin
     PTTAsserted := True;
-    PTTDelayCount := PTTTurnOnDelay;
+    PTTDelayCount := Config.PTTTurnOnDelay;
     TurnOffActivePort;
   end;
 }
@@ -1956,7 +1948,7 @@ begin
      begin
      CodeSpeed := Speed;
      ElementLength := round(ElementLengthConstant / Speed);
- //    PaddlePTTOffTimerCount := ElementLength * PaddlePTTHoldCount;
+ //    PaddlePTTOffTimerCount := ElementLength * Config.PaddlePTTHoldCount;
      end;
 end;
 
@@ -2072,7 +2064,7 @@ begin
 
   if PTTDelayCount > 0 then
   begin
-    if PTTDelayCount = PTTTurnOnDelay then TurnOffActivePort;
+    if PTTDelayCount = Config.PTTTurnOnDelay then TurnOffActivePort;
 
     if FootSwitchMode = CWGrant then
     begin
@@ -2239,7 +2231,7 @@ begin
 
   DoingPaddle := ActivePaddlePort <> NoPort;
 
-//  PaddlePTTOffTimerCount := ElementLength * PaddlePTTHoldCount;
+//  PaddlePTTOffTimerCount := ElementLength * Config.PaddlePTTHoldCount;
 
 //  if BeepCount = 0 then NoSound;
 
@@ -2870,7 +2862,7 @@ begin
              begin
              CWElementLength := tPaddleElementLength * 3;
              end;
-          if SwapPaddles then
+          if Config.SwapPaddles then
              begin
              if DahContact then
                 begin
@@ -2884,7 +2876,7 @@ begin
 
           // See the note at the CW-buffer sidetone above: the Windows 9x arm
           // (Sound/NoSound over privileged IN/OUT) could never run here.
-          ntBeep(PaddleMonitorTone, CWElementLength);
+          ntBeep(Config.PaddleMonitorTone, CWElementLength);
 
               //        Sleep(CWElementLength);
           tCWSleep(CWElementLength, tCWPaddle_Event);
@@ -2898,7 +2890,7 @@ begin
              inc(tPTTOnCounter);
              end;
           end;
-       if PaddlePTTOn then if tPTTOnCounter = PaddlePTTHoldCount then
+       if PaddlePTTOn then if tPTTOnCounter = Config.PaddlePTTHoldCount then
                               begin
                               PaddlePTTOn := False;
                               if CWBufferStart = CWBufferEnd then
@@ -2920,7 +2912,7 @@ var
   TempSpeed                             : Cardinal;
 begin
 
-  TempSpeed := PaddleSpeed;
+  TempSpeed := Config.PaddleSpeed;
   if TempSpeed = 0 then
      begin
      TempSpeed := CodeSpeed;

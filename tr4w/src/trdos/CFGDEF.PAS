@@ -97,7 +97,7 @@ begin
   //  ActiveRotatorType := NoRotator;
   //  ActiveStereoPort := NoPort;
   //  ActiveZoneMult := NoZoneMults;
-  //  AllCWMessagesChainable := False;
+  //  Config.AllCWMessagesChainable := False;
   //  Config.AltDBufferEnable := False;
   //  Config.AlwaysCallBlindCQ := False;
   //  AskForFrequencies := {wli True} False;
@@ -326,7 +326,7 @@ begin
   }
   //  NameFlagEnable := True;
   //  NoLog := False;
-  //  NoPollDuringPTT := False;
+  //  Config.NoPollDuringPTT := False;
 
   //  PacketAddLF := False;
   //  PacketAutoCR := False;
@@ -345,9 +345,9 @@ begin
   Packet.PacketSpots := MultSpots;
   Packet.BroadcastAllPacketData := True;
 
-  //  PaddleMonitorTone := 700;
+  //  Config.PaddleMonitorTone := 700;
   //  PaddleBug := False;
-  //  PaddleSpeed := 0;
+  //  Config.PaddleSpeed := 0;
   //  ParameterOkayMode := Standard;
   //  PartialCallEnable := True;
   //  PartialCallLoadLogEnable := False;
@@ -359,7 +359,7 @@ begin
 
 //  PrefixInfoFileName := '';
   //W_L_I  PrinterEnabled := False;
-//  PTTEnable := True;
+//  Config.PTTEnable := True;
 
 //  QSLMessage := 'TU \ TEST';
 //  QSLPhoneMessage := 'QSL.WAV';
@@ -437,7 +437,7 @@ begin
 //  SearchAndPounceExchange := '';
 //  SearchAndPouncePhoneExchange := 'SAPEXCHG.WAV';
 //  SendAltDSpotsToPacket := False;
-//  SendCompleteFourLetterCall := False;
+//  Config.SendCompleteFourLetterCall := False;
 //  SendQSOImmediately := True;
 
   TR4W_HAMLIB_DEBUG := false;
@@ -560,7 +560,7 @@ begin
     StoppingFrequencies[Band2] := 148000000;
   }
   //  SwapPacketSpotRadios := False;
-  //  SwapPaddles := False;
+  //  Config.SwapPaddles := False;
   //  SwapRadioRelaySense := False;
 
   //  TabMode := NormalTabMode;
@@ -568,7 +568,7 @@ begin
   //  TailEndMessage := 'R';
   //  TailEndPhoneMessage := 'TAILEND.WAV';
   //  TenMinuteRule := NoTenMinuteRule;
-  //  TuneWithDits := False;
+  //  Config.TuneWithDits := False;
   //  TuneDupeCheckEnable := False; {KK1L: 6.73}
   //  TwoRadioState := TwoRadiosDisabled;
 

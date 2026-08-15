@@ -1266,7 +1266,7 @@ begin
       end;
 {$IFEND}
 
-   //  if NoPollDuringPTT then while rig.tPTTStatus = PTT_ON do Sleep(100);
+   //  if Config.NoPollDuringPTT then while rig.tPTTStatus = PTT_ON do Sleep(100);
    Result := False;
    c := 0;
    stat.cbInQue := 0;
