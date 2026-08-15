@@ -713,7 +713,9 @@ procedure SpeedUp;
 
 procedure StuffInit;
 procedure SendUDPRotorCommand(Heading: integer);
-procedure SendPSTRotorCommand(Heading: integer);   // Issue #732
+procedure SendPSTRotorCommand(Heading: integer;
+                              const IPAddress: string;
+                              UDPPort: integer);   // Issue #732
 function ValidClass(sClass: Str10): boolean;
 
 { Header and Stamp routines - used when generating a log string }
@@ -10869,19 +10871,25 @@ begin
 
 end; // SendUDPRotatorCommand
 
-procedure SendPSTRotorCommand(Heading: integer); // Issue #732
+procedure SendPSTRotorCommand(Heading: integer;
+                              const IPAddress: string;
+                              UDPPort: integer); // Issue #732
 // Send an azimuth to PstRotator via its native UDP interface.  PstRotator
-// listens on its "UDP Control Port" (PSTRotatorUDPPort, default 12000) at
-// PSTRotatorIPAddress.  Reuses the shared 'udp' Indy client, same as the N1MM
+// listens on its "UDP Control Port", 12000 by default, at the address the
+// CALLER nominates.  Reuses the shared 'udp' Indy client, same as the N1MM
 // path above.  Command format per the PstRotator UDP spec:
 //   <PST><AZIMUTH>nnn</AZIMUTH></PST>
 var
   sBuf: AnsiString;
 begin
   sBuf := '<PST><AZIMUTH>' + SysUtils.Format('%d', [Heading]) + '</AZIMUTH></PST>';
+  // THE ENDPOINT IS A PARAMETER, not a global this looks up for itself. Reading
+  // PSTRotatorIPAddress/PSTRotatorUDPPort here made the rotator library's own
+  // per-definition address unreachable, and two PstRotator hosts inexpressible.
+  // The caller nominates the rotator; the transport only sends.
   logger.Trace('[SendPSTRotorCommand] -> %s:%d %s',   // Issue #989
-    [PSTRotatorIPAddress, PSTRotatorUDPPort, sBuf]);
-  udp.Send(PSTRotatorIPAddress, PSTRotatorUDPPort, sBuf);
+    [IPAddress, UDPPort, sBuf]);
+  udp.Send(IPAddress, UDPPort, sBuf);
 end; // SendPSTRotorCommand
 
 function ValidClass(sClass: Str10): boolean; // ny4i 4.45.3

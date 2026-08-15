@@ -96,6 +96,22 @@ type
         Reconstructing it from the payload would work today and would break the
         first time a UDP rotator sent anything but bare digits. }
       LastHeading: integer;
+      { THE UDP ENDPOINT, on the rotator rather than in a global.
+
+        It was two globals -- PSTRotatorIPAddress and PSTRotatorUDPPort, fed by
+        the PSTROTATOR IP ADDRESS / UDP PORT rows in tr4w.ini -- while the
+        rotator LIBRARY had IPAddress and UDPPort on every definition, edited in
+        Preferences and saved to tr4w.json. Two owners, and the one the operator
+        could see did nothing: ConfigureRotators never carried those two fields
+        across, so editing a PstRotator's address in Preferences saved happily
+        and changed nothing about where the datagram went.
+
+        Same shape as the band output port: a value with a visible editor and an
+        invisible second owner. Holding it here makes the definition the single
+        source, and means two PstRotator definitions on different hosts are
+        expressible at all -- which a pair of globals could never be. }
+      IPAddress: string;
+      UDPPort: integer;
       { The driver's outlet. A METHOD on the live rotator rather than a closure
         capturing it: same effect, and it names the owner instead of implying it.
         Each driver is handed ITS OWN rotator's SendBytes, which is what stops
@@ -189,7 +205,7 @@ begin
       // here it is simply a different Send for a driver that answered
       // UsesSerialPort = False, and the routine that owns the socket is reused
       // untouched rather than reimplemented.
-      SendPSTRotorCommand(aLive.LastHeading);
+      SendPSTRotorCommand(aLive.LastHeading, aLive.IPAddress, aLive.UDPPort);
       Exit;
       end;
 
@@ -222,7 +238,8 @@ begin
       end;
 end;
 
-procedure AddLive(const aName, aRotatorId, aPortName, aBands: string);
+procedure AddLive(const aName, aRotatorId, aPortName, aBands: string;
+                  const aIPAddress: string = ''; const aUDPPort: integer = 0);
 var
    live: TLiveRotator;
 begin
@@ -235,6 +252,28 @@ begin
    live.Name  := aName;
    live.Port  := PortFromName(aPortName);
    live.Bands := aBands;
+
+   // FALL BACK TO THE LEGACY GLOBALS RATHER THAN TO NOTHING. A definition made
+   // before the library carried an endpoint has neither field set, and sending
+   // to '' on port 0 would be a silent failure of exactly the kind this change
+   // exists to remove. The globals still carry the tr4w.ini value, so an
+   // unmigrated station keeps working and says so once in the log.
+   live.IPAddress := aIPAddress;
+   live.UDPPort   := aUDPPort;
+   if live.IPAddress = '' then
+      begin
+      live.IPAddress := string(PSTRotatorIPAddress);
+      end;
+   if live.UDPPort = 0 then
+      begin
+      live.UDPPort := PSTRotatorUDPPort;
+      end;
+   if (aIPAddress = '') or (aUDPPort = 0) then
+      begin
+      logger.Info('[uRotatorControl] %s has no stored UDP endpoint; using the '
+                  + 'legacy %s:%d from tr4w.ini',
+                  [aName, live.IPAddress, live.UDPPort]);
+      end;
 
    // Each driver gets ITS OWN rotator's SendBytes, so a driver's frame can only
    // reach that rotator's port.  A shared send would put one rotator's frame on
@@ -274,6 +313,8 @@ begin
       end;
 
    id := string(RotatorTypeSA[ActiveRotatorType]);
+   // The legacy seed passes no endpoint on purpose: AddLive fills it from the
+   // same globals this path already represents, in one place rather than two.
    AddLive('Rotator', id, string(PortTypeSA[ActiveRotatorPort]), '');
    logger.Info('[uRotatorControl] seeded one %s rotator from the legacy settings', [id]);
 end;
@@ -291,7 +332,9 @@ begin
          AddLive(aStore.Rotator(i).Name,
                  aStore.Rotator(i).RotatorId,
                  aStore.Rotator(i).ControlPort,
-                 aStore.Rotator(i).Bands);
+                 aStore.Rotator(i).Bands,
+                 aStore.Rotator(i).IPAddress,
+                 aStore.Rotator(i).UDPPort);
          end;
       end;
 
