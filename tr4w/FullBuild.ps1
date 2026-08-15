@@ -296,6 +296,29 @@ if (-not (Test-Path $appExe)) { Fail "application binary missing at $appExe" }
 $vi = (Get-Item $appExe).VersionInfo
 Write-Host "  tr4w.exe $($vi.FileVersion) ($([int]((Get-Item $appExe).Length / 1KB)) KB)"
 
+# THE .dbg IS THE RELEASE'S SYMBOLS AND HAS TO BE KEPT WITH IT.
+#
+# -gl -gw2 -Xg puts the line-number info in tr4w.dbg beside the exe rather than
+# inside it: 4.5 MB stays 4.5 MB and the symbols are ~46 MB alongside. That file
+# is what turns an emailed "$0040DC52" into a file and a line, and it is valid
+# ONLY for the exact binary it was linked with -- rebuild and the addresses in an
+# operator's log become unresolvable for good.
+#
+# It is deliberately NOT put in the installer (46 MB for something almost no user
+# needs). Two ways to use it, both proven 2026-08-15: hand the matching .dbg to
+# an operator with a hard fault and have them drop it beside tr4w.exe, or keep it
+# here and resolve their addresses yourself -- the address is identical whether
+# the file is present or not, and a missing .dbg degrades to bare addresses
+# rather than failing.
+$appDbg = [System.IO.Path]::ChangeExtension($appExe, '.dbg')
+if (Test-Path -LiteralPath $appDbg) {
+   Write-Host ("  tr4w.dbg {0} MB -- ARCHIVE THIS WITH THE RELEASE" -f `
+               [int]((Get-Item $appDbg).Length / 1MB))
+} else {
+   Write-Host "  tr4w.dbg MISSING -- crash reports from this build cannot be resolved" `
+              -ForegroundColor Yellow
+}
+
 # ---------------------------------------------------------------------------
 # THE MANIFEST AS THE LOADER WILL SEE IT.
 #

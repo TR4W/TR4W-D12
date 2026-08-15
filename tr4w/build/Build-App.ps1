@@ -45,7 +45,16 @@ if (-not (Test-Path $out)) { New-Item -ItemType Directory -Path $out | Out-Null 
 # -WG  GUI subsystem. NOT cosmetic: the shipping binary has PE subsystem 2 and
 #      FPC defaults to 3 (CONSOLE), so without it every launch pops a blank
 #      console window beside the real one.
-$fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-WG', "-FU$out", "-o$exe")
+# -gl LINKS THE LINE-INFO UNIT, which is what turns a crash report from three
+# raw addresses into file and line. Without it BackTraceStrFunc can only print
+# $0040DC52, and the first real crash caught by uCrashLog (2026-08-15, an
+# EAccessViolation on Ctrl-P) produced exactly that -- proof that the handler
+# worked and that the addresses alone were not enough to act on.
+#
+# It costs exe size and nothing else: no slower code, no behaviour change. For a
+# program whose users report crashes by email, a bigger binary that says WHERE is
+# the right trade.
+$fpcArgs = @("-Mdelphi", "-P$Cpu", "-T$Os", '-Sc', '-WG', '-gl', '-gw2', '-Xg', "-FU$out", "-o$exe")
 if (-not $Incremental) { $fpcArgs += '-B' }
 foreach ($d in $Defines) { $fpcArgs += "-d$d" }
 foreach ($p in (Get-Tr4wSearchPaths -Tr4wDir $TR4W_DIR -Toolchain $tc -For App)) { $fpcArgs += "-Fu$p" }

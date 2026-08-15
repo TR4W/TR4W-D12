@@ -59,6 +59,9 @@ implementation
 
 uses
    SysUtils,
+   Windows,    // GetCurrentThreadId
+   Version,    // TR4W_CURRENTVERSION_NUMBER -- a raw address is useless
+               // unless the exact binary that produced it can be identified
 {$IFDEF FPC}
    Forms,      // Application.OnException -- the LCL's own handler
 {$ENDIF}
@@ -74,9 +77,28 @@ var
    GPreviousExceptProc: TExceptProc = nil;
    GReporter: TCrashReporter = nil;
    GInstalled: boolean = False;
+   GMainThreadId: DWORD = 0;
 
 { The common writer.  Everything that reports a crash goes through here so the
   two hooks cannot drift into producing different-looking records. }
+{ ' (main)' when this is the main thread, '' otherwise.  Named rather than
+  inlined because the test reads badly inside a format call. }
+function IfMainThread: string;
+begin
+   // OUR OWN RECORD OF IT, captured in InstallCrashLog. The RTL's
+   // MainThreadID does not resolve in this configuration, and recording it
+   // ourselves removes the question -- InstallCrashLog runs on the main
+   // thread at startup by construction.
+   if GetCurrentThreadId = GMainThreadId then
+      begin
+      Result := ' (main)';
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
 procedure WriteCrashReport(const aSource: string; aObj: TObject;
                            aAddr: CodePointer;
                            aFrameCount: Longint; aFrames: PCodePointer);
@@ -104,7 +126,12 @@ begin
          Exit;
          end;
 
-      logger.Fatal('[CRASH] %s: unhandled %s -- %s', [aSource, cls, msg]);
+      // WHICH THREAD, and which build. TR4W runs a reading thread per radio,
+      // a WinKey thread, network threads and CW playback, so "an access
+      // violation" means something different depending on where it happened.
+      logger.Fatal('[CRASH] %s: unhandled %s in thread %d%s (TR4W %s) -- %s',
+                   [aSource, cls, GetCurrentThreadId, IfMainThread,
+                    TR4W_CURRENTVERSION_NUMBER, msg]);
       if aAddr <> nil then
          begin
          logger.Fatal('[CRASH]   at %s', [BackTraceStrFunc(aAddr)]);
@@ -152,6 +179,7 @@ begin
       Exit;
       end;
    GInstalled := True;
+   GMainThreadId := GetCurrentThreadId;
 
    GPreviousExceptProc := ExceptProc;
    ExceptProc := @CatchUnhandledException;
