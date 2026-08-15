@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -139,6 +139,8 @@ type
       lblRelayPort: TLabel;
       cbxRelayPort: TComboBox;
       lblRelayPortInfo: TLabel;
+      chkYCCCSO2R: TCheckBox;
+      lblYCCCInfo: TLabel;
       layContent: TPanel;
       lblPlaceholder: TLabel;
 
@@ -4080,6 +4082,19 @@ begin
       Exit;
       end;
 
+   // Read the configured value FIRST: whether to collapse the list to
+   // "not available" depends on it, not only on what the machine reports.
+   v := UpperCase(Trim(FStore.CommandValue('RELAY CONTROL PORT',
+                       CFGCommandValueAsString('RELAY CONTROL PORT'))));
+   if (v = '') or (v = 'NONE') then
+      begin
+      want := 0;
+      end
+   else
+      begin
+      want := StrToIntDef(v, 0);
+      end;
+
    cbxRelayPort.Items.BeginUpdate;
    try
       cbxRelayPort.Items.Clear;
@@ -4087,6 +4102,26 @@ begin
       // (CfgCmd:192) reads 'NONE' or '1'/'2'/'3'. It is carried in Objects[] so
       // the label is free to say more than the value does; reading the value
       // back off the visible text would break the moment the label changed.
+      // NOTHING TO PICK AND NOTHING CONFIGURED -> say so, and stop.
+      //
+      // Listing three ports that do not exist invites a choice that cannot work
+      // (NY4I). But a station whose port TR4W cannot SEE must still show it --
+      // an unusual driver or an oddly enumerated add-in card is exactly the case
+      // where silently rewriting the setting would be worst -- so the list is
+      // only collapsed when the machine has no ports AND none is configured.
+      if (PresentLPTPortsDescription = '') and (want = 0) then
+         begin
+         cbxRelayPort.Items.AddObject('Not available (no parallel ports)',
+                                      TObject(PtrInt(0)));
+         cbxRelayPort.ItemIndex := 0;
+         cbxRelayPort.Enabled   := False;
+         lblRelayPort.Enabled   := False;
+         logger.Info('[Prefs] no parallel ports on this machine and none configured');
+         Exit;
+         end;
+
+      cbxRelayPort.Enabled := True;
+      lblRelayPort.Enabled := True;
       cbxRelayPort.Items.AddObject('None', TObject(PtrInt(0)));
       for i := 1 to 3 do
          begin
@@ -4111,20 +4146,11 @@ begin
       cbxRelayPort.Items.EndUpdate;
    end;
 
+   chkYCCCSO2R.Checked := CommandBool('YCCC SO2R ENABLE');
+
    logger.Info('[Prefs] parallel ports detected: %s',
                [IfThen(PresentLPTPortsDescription = '', 'none',
                        PresentLPTPortsDescription)]);
-
-   v := UpperCase(Trim(FStore.CommandValue('RELAY CONTROL PORT',
-                       CFGCommandValueAsString('RELAY CONTROL PORT'))));
-   if (v = '') or (v = 'NONE') then
-      begin
-      want := 0;
-      end
-   else
-      begin
-      want := StrToIntDef(v, 0);
-      end;
 
    // BY STORED VALUE, never by index. The labels carry detection text, so
    // matching on them would break the first time that wording changed -- and
@@ -4159,6 +4185,8 @@ begin
       begin
       ApplyAndStoreCommand(FStore, 'RELAY CONTROL PORT', IntToStr(n));
       end;
+
+   SetCommandBool('YCCC SO2R ENABLE', chkYCCCSO2R.Checked);
 end;
 
 procedure TPrefsForm.cbxRelayPortChange(Sender: TObject);
