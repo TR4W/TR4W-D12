@@ -195,7 +195,51 @@ eyeballing once:
   `tr4w.ini` — is what changed;
 * the speed-up/slow-down keys still step by that amount on air.
 
-(placeholder)## Beyond the original 30 (2026-08-14)
+## The Appearance menu folds into the Appearance page (NY4I, 2026-08-15)
+
+**Correcting a misreading of mine.** I took an earlier remark to mean the Preferences Appearance
+page was frozen, and stopped migrating to it. NY4I meant the **Appearance item on TR4W's own
+Settings menu** — `RunOptionsDialog(cfAppearance)` (`MainUnit.pas:3749`), which is the Ctrl-J grid
+filtered to one `cfFunc`.
+
+> *"I did not mean to imply freeze the Appearance panel. I meant the items on the Appearance menu in
+> the existing TR4W program. But I reconsidered. You can move these items to the Appearance tab and
+> we can get rid of the old Appearance form in TR4W."*
+
+So it is the opposite of blocked: it is a deliverable with an end state — **the menu item goes
+away**.
+
+The old form's nine rows:
+
+| row | state |
+|---|---|
+| `BOLD FONT`, `MAIN FONT` | already migrated |
+| `NO BORDER`, `NO CAPTION`, `NO COLUMN HEADER`, `SHOW GRIDLINES` | migrated 2026-08-15, "Main window" group |
+| `ROW COUNT`, `WINDOW SIZE` | **`ckArray`** — target is an `ArrayRecordArray` entry, not `crAddress`. Different move. |
+| `REMINDER` | **not a scalar setting** — Alt-O appends `REMINDER = …` lines (`HELP.PAS:855`); wants a list editor |
+
+**The menu item cannot be removed until the last three land**, or it strips the only editor those
+settings have.
+
+### What is genuinely blocked, and why it is not the same thing
+
+The grid painting itself, and colours.
+
+Colours are stored as `tr4wColors` — a **16-value enum**, one per `TMainWindowElement`
+(`TWindows[e].mweColor` / `.mweBackG`) — and edited through `uDialogs.SelectColor`, a hand-declared
+wrapper over the Win32 `ChooseColorA` common dialog (`uDialogs.pas:165`, with its own
+`TChooseColorA` record and API import). Under the LCL that becomes `TColorDialog` and the whole
+hand-rolled block can go.
+
+But a real picker returns RGB. Adopting one **widens the stored type**, and every consumer of
+`tr4wColors` has to follow. That is a design step inside the LCL main-window work, not a settings
+migration, and it should not be smuggled in as one.
+
+**Not blocked despite reading like Appearance:** `DISTANCE MODE`, `RADIUS OF EARTH` and
+`GRID MAP CENTER` are distance *arithmetic*, not painting. `INCLUDE F-KEY NUMBER` gates one string
+prefix in `uFunctionKeys`, so it went to CW Settings where those messages are configured.
+
+## Beyond the original 30 (2026-08-14)
 
 The 30 above are done, **including item 5's "expensive globals"** — `CWTone`, `Weight` and
 `TwoRadioMode` all reach `Config` and no standalone declaration survives. What follows is the work
