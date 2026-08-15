@@ -249,8 +249,9 @@ either changes amplifier sequencing on air, so it needs bench evidence.
 
 Stopped before the repoint on that instruction, and it is the right call for a reason worth writing
 down: **`CodeSpeed` is not a setting that happens to be mutable — it is live shared runtime state.**
-Every keyer reads it, the speed keys move it ±6% (`uCWKeyerCAT`), SO2R restores it per radio from
-`Radio1/2.SpeedMemory`, and `CW SPEED FROM DATABASE` sets it from the station's last-worked speed.
+Every keyer reads it, the speed keys move it ±6% (`uCWKeyerCAT`), it is reloaded from
+`RadioN.SpeedMemory` on every change of active radio, and `CW SPEED FROM DATABASE` sets it from the
+station's last-worked speed.
 
 `Config` holds what the operator configured. Pointing 151 keyer reads at `Config.CodeSpeed` would
 work mechanically and would quietly redefine the config record as a place runtime state lives — the
@@ -261,10 +262,18 @@ same category error as putting the current frequency there.
 both jobs. If the setting is wanted in Preferences, it wants its own stored field seeding the global
 at startup — not a repoint. Left `csOld` until that is designed.
 
-**Related, pre-existing and unfixed:** `Radio1/2.SpeedMemory` default to `InitialCodeSpeed` (35,
+**A per-radio CW speed already exists**, which is worth knowing before anyone designs one.
+`SetUpToSendOnRadioOne/Two` (`LogCW.pas:2142+`, tagged KK1L 6.73) does
+`CodeSpeed := RadioN.SpeedMemory` on every change of active radio, and `LOGWIND.PAS:1587` writes the
+live speed back with `ActiveRadioPtr.SpeedMemory := CodeSpeed`. So set 30 WPM on radio one and 22 on
+radio two and each is restored as you switch. This is *not* SO2R-gated — it runs on any active-radio
+change. What is missing is only that the two speeds are invisible: nothing displays or configures
+them, and `CWSpeedSync` changes whether the speed is pushed to the rig.
+
+**Pre-existing and unfixed:** `Radio1/2.SpeedMemory` default to `InitialCodeSpeed` (35,
 `tree.pas:742`) independently of the configured `CODE SPEED`, so a station configured to 28 WPM jumps
-to 35 on its first radio switch. `LOGWIND.PAS:1587` writes the live speed back into the active
-radio's memory, so it self-corrects after one manual change. Worth deciding when the setting is.
+to 35 on its first radio switch, self-correcting after one manual change. Worth settling when the
+setting is.
 
 ### Still `csOld`, and mostly not Preferences work
 
