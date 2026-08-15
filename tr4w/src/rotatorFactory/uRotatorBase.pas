@@ -180,8 +180,14 @@ end;
 
 function TRotatorBase.PreferredBaudRate: integer;
 begin
-   // What LogCfg used for every rotator except the DCU-1.
-   Result := 9600;
+   // 1200, NOT 9600. This said 9600 and cited LogCfg for it; LogCfg opens the
+   // rotator port at 1200 for every type but the DCU-1, and so does the D7
+   // heritage it was ported from (C:\TR4W LogCfg.pas:268). Checked rather than
+   // trusted, because nothing consumed this function yet -- so the wrong value
+   // cost nothing until the moment the port-opening path started asking, which
+   // is what this commit makes it do. Every non-DCU-1 rotator would have jumped
+   // from 1200 to 9600 baud and stopped turning.
+   Result := 1200;
 end;
 
 function TRotatorBase.UsesSerialPort: boolean;

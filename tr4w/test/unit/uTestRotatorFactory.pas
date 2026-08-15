@@ -249,9 +249,15 @@ var
    r: TRotatorBase;
 begin
    BeginTest('the DCU-1 carries its own 4800 baud; the rest take the default');
-   // LogCfg.pas:293 was `if ActiveRotatorType = DCU1Rotator then BaudRate := 4800`
-   // -- the only per-type branch in the port-opening path.  It is now a fact the
-   // driver states about itself.
+   // LogCfg was `BaudRate := 1200; if ActiveRotatorType = DCU1Rotator then
+   // BaudRate := 4800` -- the only per-type branch in the port-opening path. It
+   // is now a fact the driver states about itself, and OpenRotatorPorts asks.
+   //
+   // THIS TEST PINNED 9600 AND WAS WRONG, which mattered the moment anything
+   // consumed PreferredBaudRate: every non-DCU-1 rotator would have jumped from
+   // 1200 to 9600 baud and stopped turning, with a green test agreeing. 1200 is
+   // what LogCfg opened the port at and what the D7 heritage does
+   // (C:\TR4W tr4w/src/trdos/LogCfg.pas:268) -- read, not remembered.
    r := CreateRotator('DCU1', nil);
    try
       CheckEquals(4800, r.PreferredBaudRate, 'DCU-1 wants 4800');
@@ -261,7 +267,7 @@ begin
 
    r := CreateRotator('YAESU', nil);
    try
-      CheckEquals(9600, r.PreferredBaudRate, 'the others take the default');
+      CheckEquals(1200, r.PreferredBaudRate, 'the others take the legacy 1200');
    finally
       r.Free;
    end;
