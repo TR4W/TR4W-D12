@@ -401,13 +401,13 @@ begin
         case wParam of
           FLD_PLAY_BUTTON:
             begin
-              if TR4W_MP3_PLAYER_FILENAME[0] = #0 then
+              if Config.MP3Player[0] = #0 then
                  begin
                  SetCommand('MP3 PLAYER');
                  Exit;
                  end;
 
-              TF.Format(wsprintfBuffer, '"%s" "%s"', TR4W_MP3_PLAYER_FILENAME,
+              TF.Format(wsprintfBuffer, '"%s" "%s"', Config.MP3Player,
                 DeleteSlashes(MakeMP3Filename(@EditableQSORXData)));
               //                wsprintf(wsprintfBuffer, '"E:\Program Files\Windows Media Player\wmplayer.exe" "%s"');
 

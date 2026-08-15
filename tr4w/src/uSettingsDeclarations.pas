@@ -144,6 +144,24 @@ begin
    RegisterStoredSetting('appearance.showGridlines',          'SHOW GRIDLINES',
                          'Draw gridlines in the log');
 
+   { Audio: MP3 recording and the digital voice keyer, 2026-08-15. }
+   RegisterStoredSetting('audio.mp3.recorderEnable',          'MP3 RECORDER ENABLE',
+                         'Record each QSO to MP3');
+   RegisterStoredSetting('audio.mp3.path',                    'MP3 PATH',
+                         'Folder for MP3 recordings');
+   RegisterStoredSetting('audio.mp3.player',                  'MP3 PLAYER',
+                         'MP3 player program');
+   RegisterStoredSetting('audio.dvk.enable',                  'DVK ENABLE',
+                         'Use the digital voice keyer');
+   RegisterStoredSetting('audio.dvk.localizedMessages',       'DVK LOCALIZED MESSAGES ENABLE',
+                         'Use localized DVK message files');
+   RegisterStoredSetting('audio.dvk.path',                    'DVK PATH',
+                         'Folder for DVK recordings');
+   RegisterStoredSetting('audio.dvk.recorder',                'DVK RECORDER',
+                         'DVK recorder program');
+   RegisterStoredSetting('audio.useRecordedSigns',            'USE RECORDED SIGNS',
+                         'Send recorded audio for callsign characters');
+
    { PADDLE. The paddle keyer TR4W runs itself; a WinKeyer or YCCC box keeps its
      own. PADDLE PORT is deliberately NOT here -- it is a parallel port, and
      whether TR4W keeps supporting those is an open question (see the Hardware

@@ -283,7 +283,6 @@ var
     )};
 
   RecorderBitrate                       : Cardinal = 16;
-  RecorderEnable                        : boolean;
 //  RecorderSampleRate               : integer = Freq;
   RecorderDuration                      : TMP3RecorderDuration {= rdEachQSO};
 
@@ -347,7 +346,8 @@ const
   OUTPUTFILE                            = 'TEMP.MP3';
 implementation
 
-uses uCFG,
+uses
+   uConfigValues, uCFG,
   MainUnit;
 
 function mp3recDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -391,9 +391,9 @@ begin
 
         Windows.SetWindowTextA(hwnddlg, TR4W_TEMP_MP3_FILENAME);
 
-        Windows.CreateDirectoryA(TR4W_MP3PATH, nil);
+        Windows.CreateDirectoryA(Config.MP3Path, nil);
 
-        if RecorderEnable then
+        if Config.MP3RecorderEnable then
            begin
            SwapRecorderStatus;
            Windows.SendDlgItemMessage(hwnddlg, 100, BM_SETCHECK, BST_CHECKED, 0);
@@ -597,7 +597,7 @@ end;
 
 procedure OpenTempMP3File;
 begin
-  TF.Format(TR4W_TEMP_MP3_FILENAME, '%s\TEMP_%02u_%02u.MP3', TR4W_MP3PATH, UTC.wHour, UTC.wDay);
+  TF.Format(TR4W_TEMP_MP3_FILENAME, '%s\TEMP_%02u_%02u.MP3', Config.MP3Path, UTC.wHour, UTC.wDay);
   TempMP3FileHandle := CreateFileA(TR4W_TEMP_MP3_FILENAME, GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   RecorderStartTime := Windows.GetTickCount;
 end;
@@ -611,7 +611,7 @@ function MakeMP3Filename(CE: ContestExchangePtr): PAnsiChar;
 begin
   TF.Format(TR4W_GET_MP3_FILENAME, '%s\%u%02u%02u_%02u%02u%02u_%sm_%s.MP3',
 
-    TR4W_MP3PATH,
+    Config.MP3Path,
     CE.tSysTime.qtYear + 2000,
     CE.tSysTime.qtMonth,
     CE.tSysTime.qtDay,

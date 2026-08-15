@@ -51,6 +51,18 @@ unit uConfigValues;
 
 interface
 
+uses
+   { FOR FileNameType ONLY, and it must be THAT type and not a lookalike.
+     It is array[0..MAX_PATH-1] of AnsiChar (VC.pas:188) -- a character
+     buffer, not a string. CheckCommand writes through @Config.<field>
+     with no idea what is on the other side, so re-declaring the array
+     here with a hardcoded 260 would work until the day MAX_PATH moved,
+     and then write past the end of the field in silence.
+
+     This unit was deliberately dependency-free. VC does not reference it
+     back, so there is no cycle, and the test executable already links VC. }
+   VC;
+
 type
    { One field per migrated setting.  Add a field in the same commit that flips
      the row -- an orphan field is harmless, a missing one does not compile. }
@@ -214,6 +226,25 @@ type
       NoCaption: boolean;
       NoColumnHeader: boolean;
       ShowGridlines: boolean;
+
+      { AUDIO -- MP3 recording and the digital voice keyer, migrated 2026-08-15.
+
+        THE FOUR PATHS ARE FileNameType, which is array[0..MAX_PATH-1] of
+        AnsiChar (VC.pas:188) -- a CHARACTER ARRAY, not a string. CheckCommand
+        writes through @Config.<field> knowing nothing about what is there, so
+        declaring these as string would have it write a string header over the
+        first bytes of a buffer and scribble past whatever follows. Nothing
+        would report it: not the compiler, which sees a pointer, and not a test,
+        because the damage lands in the NEXT field. The type is copied verbatim
+        from the declarations being replaced. }
+      MP3RecorderEnable: boolean;
+      MP3Path: FileNameType;
+      MP3Player: FileNameType;
+      DVKEnable: boolean;
+      DVKLocalizedMessagesEnable: boolean;
+      DVKPath: FileNameType;
+      DVKRecorder: FileNameType;
+      UseRecordedSigns: boolean;
    end;
 
 var
@@ -300,7 +331,15 @@ var
       NoBorder: False;
       NoCaption: False;
       NoColumnHeader: False;
-      ShowGridlines: False
+      ShowGridlines: False;
+      MP3RecorderEnable: False;
+      MP3Path: '';
+      MP3Player: '';
+      DVKEnable: False;
+      DVKLocalizedMessagesEnable: False;
+      DVKPath: '';
+      DVKRecorder: '';
+      UseRecordedSigns: False
    );
 
 implementation

@@ -65,7 +65,7 @@ var
   FileName                              : ShortString;
   QSONumber                             : integer;
 begin
-  if (not DVKEnable) or (not CWEnabled) then Exit;
+  if (not Config.DVKEnable) or (not CWEnabled) then Exit;
 //  if not DVPEnabled then Exit;
 
   while SendString <> '' do
@@ -90,7 +90,7 @@ begin
           FileName := CallWindowString;
           end;
 
-     if (StringHas(FileName, '.WAV')) or tUseRecordedSigns then
+     if (StringHas(FileName, '.WAV')) or Config.UseRecordedSigns then
         begin
         DVPMessagesArray[DVPMessagesArrayIndex] := FileName;
         inc(DVPMessagesArrayIndex);

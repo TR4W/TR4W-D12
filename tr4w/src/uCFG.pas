@@ -537,10 +537,10 @@ const
  (crCommand: 'DUPE SHEET AUTO RESET';         crAddress: @Sheet.tAutoReset;               crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'DUPE SHEET ENABLE';             crAddress: @Sheet.DupeSheetEnable;          crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
 // (crCommand: 'DVK PORT';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'DVK ENABLE';                    crAddress: @DVKEnable;                      crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'DVK LOCALIZED MESSAGES ENABLE'; crAddress: @DVKLocalizedMessagesEnable;     crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'DVK PATH';                      crAddress: @TR4W_DVKPATH;                   crMin:0;  crMax:255;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
- (crCommand: 'DVK RECORDER';                  crAddress: @TR4W_DVP_RECORDER_FILENAME;     crMin:0;  crMax:255;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
+ (crCommand: 'DVK ENABLE';                    crAddress: @Config.DVKEnable;                      crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
+ (crCommand: 'DVK LOCALIZED MESSAGES ENABLE'; crAddress: @Config.DVKLocalizedMessagesEnable;     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
+ (crCommand: 'DVK PATH';                      crAddress: @Config.DVKPath;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
+ (crCommand: 'DVK RECORDER';                  crAddress: @Config.DVKRecorder;     crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
  (crCommand: 'DX MULTIPLIER';                 crAddress: pointer(11);                     crMin:0;  crMax:0;       crS: csOld; crA:20; crC:0 ; crP:0; crJ: 2; crKind: ckList; cfFunc: cfAll; crType: ctMultiplier; crNetwork: 1),
  (crCommand: 'EIGHT BIT PACKET PORT';         crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'ESCAPE EXITS SEARCH AND POUNCE';crAddress: @Config.EscapeExitsSearchAndPounce;     crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -624,11 +624,11 @@ const
  (crCommand: 'MODEM PORT BAUD RATE';          crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctInteger; crNetwork: 0),
  (crCommand: 'MODEM PORT';                    crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctOther; crNetwork: 0),
  (crCommand: 'MOUSE ENABLE';                  crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'MP3 PATH';                      crAddress: @TR4W_MP3PATH;                   crMin:0;  crMax:255;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
- (crCommand: 'MP3 PLAYER';                    crAddress: @TR4W_MP3_PLAYER_FILENAME;       crMin:0;  crMax:255;     crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
+ (crCommand: 'MP3 PATH';                      crAddress: @Config.MP3Path;                   crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctDirectory; crNetwork: 1),
+ (crCommand: 'MP3 PLAYER';                    crAddress: @Config.MP3Player;       crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctFileName; crNetwork: 1),
  (crCommand: 'MP3 RECORDER BITRATE';          crAddress: pointer(9);                      crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'MP3 RECORDER DURATION';         crAddress: pointer(41);                     crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList;    cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'MP3 RECORDER ENABLE';           crAddress: @RecorderEnable;                 crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
+ (crCommand: 'MP3 RECORDER ENABLE';           crAddress: @Config.MP3RecorderEnable;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MP3 RECORDER SAMPLERATE';       crAddress: pointer(10);                     crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckArray; cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'MULT BY BAND';                  crAddress: @MultByBand;                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'MULT BY MODE';                  crAddress: @MultByMode;                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -909,7 +909,7 @@ const
  (crCommand: 'USE BIOS KEY CALLS';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USE CONTROL PORT';              crAddress: @tUseControlPort;                crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USE IRQS';                      crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'USE RECORDED SIGNS';            crAddress: @tUseRecordedSigns;              crMin:0;  crMax:0;       crS: csNew; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
+ (crCommand: 'USE RECORDED SIGNS';            crAddress: @Config.UseRecordedSigns;              crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'USER INFO SHOWN';               crAddress: pointer(19);                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'VGA DISPLAY ENABLE';            crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal; cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'VHF BAND ENABLE';               crAddress: @VHFBandsEnabled;                crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:1 ; crP:1; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
@@ -2368,8 +2368,8 @@ begin
    p := 'logback.tr4w';
    Windows.lstrcatA(TR4W_FLOPPY_FILENAME, p); // 4.56.13
    Windows.lstrcatA(TR4W_INITIALEX_FILENAME, 'INITIAL.EX');
-   Windows.lstrcatA(TR4W_MP3PATH, 'MP3');
-   Windows.lstrcatA(TR4W_DVKPATH, 'DVK');
+   Windows.lstrcatA(Config.MP3Path, 'MP3');
+   Windows.lstrcatA(Config.DVKPath, 'DVK');
 
 end;
 

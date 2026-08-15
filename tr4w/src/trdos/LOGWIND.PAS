@@ -572,9 +572,7 @@ var
 
   DisplayBandMapEnable                  : boolean = True; {KK1L: 6.73}
   DisplayedCodeSpeed                    : Byte;
-  DVKEnable                             : boolean;
 
-  DVKLocalizedMessagesEnable            : boolean;
 //  DVPEnabled                            : boolean = True;
   DXMultLimit                           : integer = 32766; {KK1L: 6.65}
 
@@ -1584,7 +1582,7 @@ begin
 
   if ActiveMode in [Phone, FM] then
      begin
-     if DVKEnable then
+     if Config.DVKEnable then
         begin
         if DVPOn then
            begin

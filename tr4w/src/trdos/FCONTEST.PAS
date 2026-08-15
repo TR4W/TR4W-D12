@@ -75,7 +75,8 @@ var
 
 implementation
 
-uses LogGrid,
+uses
+   uConfigValues, LogGrid,
   LogStuff,
   MainUnit,
   LogSCP; {KK1L: 6.71 attempt to get POST to compile. Moved here from INTERFACE section.}
@@ -140,7 +141,7 @@ begin
 
 {$IF MAKE_DEFAULT_VALUES = false}
 
-  TF.Format(TR4W_MP3PATH, '%sMP3', TR4W_LOG_PATH_NAME);
+  TF.Format(Config.MP3Path, '%sMP3', TR4W_LOG_PATH_NAME);
 
 {$IFEND}
 

@@ -71,7 +71,8 @@ var
   HintListBoxCreated                    : boolean;
   SelPos                                : array[102..103] of integer = (255, 255);
 implementation
-uses uCFG,
+uses
+   uConfigValues, uCFG,
   uAltP,
   MainUnit;
 
@@ -200,13 +201,13 @@ begin
               if i < 5 then Exit;
               if PInteger(@TempBuffer2[i - 4])^ <> 1447122734 then Exit;
 
-              if TR4W_DVP_RECORDER_FILENAME[0] = #0 then
+              if Config.DVKRecorder[0] = #0 then
                  begin
                  SetCommand('DVP RECORDER');
                  Exit;
                  end;
 
-              p := GetRealPath(TR4W_DVKPATH, TempBuffer2, nil);
+              p := GetRealPath(Config.DVKPath, TempBuffer2, nil);
 {
               asm
               lea  eax,TempBuffer2
@@ -228,7 +229,7 @@ begin
                     end;
                  end;
 
-              TF.Format(TempBuffer1, '"%s" "%s"', TR4W_DVP_RECORDER_FILENAME, p);
+              TF.Format(TempBuffer1, '"%s" "%s"', Config.DVKRecorder, p);
               WinExec(TempBuffer1, SW_SHOWNORMAL);
 //              if FileExists(TempBuffer1) then if sndPlaySound(TempBuffer1, SND_ASYNC or SND_NODEFAULT) then Exit;
 //              ShowSysErrorMessage('PLAY FILE');

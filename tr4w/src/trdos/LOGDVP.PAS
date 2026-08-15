@@ -56,7 +56,6 @@ var
   DVPMessagesArray                      : array[1..DVPArraySize] of Str40;
   DVPMessagesArrayIndex                 : integer = 1;
   DVPThreadID                           : Cardinal;
-  tUseRecordedSigns                     : boolean;
   tMissCallsFileEnable                  : boolean;
 //  MissedCallsignsListInitialized        : boolean;
 //  MissedWAVCallsigns                    : integer = -1;
@@ -92,6 +91,7 @@ function PlayWAVFile(f: PAnsiChar; DisplayError: boolean): PlayResult;
 
 implementation
 uses
+   uConfigValues,
   MainUnit,
   LogStuff;
 
@@ -451,7 +451,7 @@ begin
          goto NextMessage;
      end;
 
-  if tUseRecordedSigns then
+  if Config.UseRecordedSigns then
      begin
      //QSO Number
    if StringIsAllNumbers(DVPMessagesArray[Index]) then
@@ -556,7 +556,7 @@ var
 begin
   if not tMissCallsFileEnable then Exit;
   if not LooksLikeACallSign(Callsign) then Exit;
-  p := GetRealPath(TR4W_DVKPATH, 'FULLCALLSIGNS\MISSINGCALLSIGNS.TXT', nil);
+  p := GetRealPath(Config.DVKPath, 'FULLCALLSIGNS\MISSINGCALLSIGNS.TXT', nil);
   h := CreateFileA(p, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
   if h = INVALID_HANDLE_VALUE then
      begin
@@ -618,7 +618,7 @@ begin
 
   WAVFile := nil;
 
-  if DVKLocalizedMessagesEnable then
+  if Config.DVKLocalizedMessagesEnable then
     if CallWindowString <> '' then
        begin
        Windows.ZeroMemory(@countrtyId, SizeOf(countrtyId));
@@ -630,7 +630,7 @@ begin
              countrtyId[3] := #0;
              end;
 
-          WAVFile := GetRealPath(TR4W_DVKPATH, f, @countrtyId[1]);
+          WAVFile := GetRealPath(Config.DVKPath, f, @countrtyId[1]);
         //ShowMessage(WAVFile);
           if not FileExists(WAVFile) then
              begin
@@ -641,7 +641,7 @@ begin
 
   if WAVFile = nil then
      begin
-     WAVFile := GetRealPath(TR4W_DVKPATH, f, nil);
+     WAVFile := GetRealPath(Config.DVKPath, f, nil);
      end;
 
   if tGetWAVDurationFromHeader(WAVFile, Duration, DisplayError) then

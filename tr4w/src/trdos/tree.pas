@@ -5090,7 +5090,7 @@ end;
 function GetRealPath(Path, FileName, AddFolder: PAnsiChar): PAnsiChar;
 begin
   Windows.ZeroMemory(@GETREALPATHBUFFER, SizeOf(GETREALPATHBUFFER));
-  if pPos('\', TR4W_DVKPATH) = -1 then
+  if pPos('\', Config.DVKPath) = -1 then
      begin
      TF.Format(GETREALPATHBUFFER, '%s%s\', TR4W_PATH_NAME, Path);
      end

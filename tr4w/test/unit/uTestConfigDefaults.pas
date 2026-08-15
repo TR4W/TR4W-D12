@@ -29,7 +29,8 @@ unit uTestConfigDefaults;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, uConfigValues;
+   SysUtils, uTR4WTestFramework, uConfigValues,
+   VC;   // FileNameType, for the buffer-size pins
 
 type
    TConfigDefaultsTests = class(TTestCase)
@@ -41,6 +42,7 @@ type
       procedure Test_OperatingAndPTTDefaults;
       procedure Test_SCPBandMapAndFileDefaults;
       procedure Test_AppearanceAndFKeyDefaults;
+      procedure Test_AudioDefaultsAndBufferSizes;
    public
       procedure RunAllTests; override;
    end;
@@ -188,6 +190,38 @@ begin
    CheckFalse(Config.IncludeFKeyNumber, 'IncludeFKeyNumber was False');
 end;
 
+procedure TConfigDefaultsTests.Test_AudioDefaultsAndBufferSizes;
+begin
+   // Migrated 2026-08-15. The booleans are ordinary; the FOUR PATHS are not.
+   //
+   // FileNameType is array[0..MAX_PATH-1] of AnsiChar (VC.pas:188) -- a
+   // character BUFFER, not a string. CheckCommand writes through
+   // @Config.<field> knowing nothing about what is there, so a field declared
+   // as string would take a string header where bytes were expected and the
+   // write would run past it into whatever follows. The compiler cannot see it
+   // (it has a pointer) and no functional test would either, because the damage
+   // lands in the NEXT field.
+   //
+   // So the SIZE is what gets pinned, not the value: this fails the moment
+   // someone re-types one of these as string or re-declares the array with a
+   // literal length that no longer matches MAX_PATH.
+   BeginTest('the audio defaults, and the path fields are real MAX_PATH buffers');
+
+   CheckFalse(Config.DVKEnable,                  'DVKEnable was False');
+   CheckFalse(Config.DVKLocalizedMessagesEnable, 'DVKLocalizedMessagesEnable was False');
+   CheckFalse(Config.UseRecordedSigns,           'UseRecordedSigns was False');
+   CheckFalse(Config.MP3RecorderEnable,          'MP3RecorderEnable was False');
+
+   CheckEquals(SizeOf(FileNameType), SizeOf(Config.MP3Path),     'MP3Path is a FileNameType buffer');
+   CheckEquals(SizeOf(FileNameType), SizeOf(Config.MP3Player),   'MP3Player is a FileNameType buffer');
+   CheckEquals(SizeOf(FileNameType), SizeOf(Config.DVKPath),     'DVKPath is a FileNameType buffer');
+   CheckEquals(SizeOf(FileNameType), SizeOf(Config.DVKRecorder), 'DVKRecorder is a FileNameType buffer');
+
+   // And they start empty, which is what makes "no folder configured" detectable.
+   CheckEquals(0, Length(StrPas(Config.MP3Path)), 'MP3Path starts empty');
+   CheckEquals(0, Length(StrPas(Config.DVKPath)), 'DVKPath starts empty');
+end;
+
 procedure TConfigDefaultsTests.RunAllTests;
 begin
    Test_KeyingAndPTTDefaults;
@@ -197,6 +231,7 @@ begin
    Test_OperatingAndPTTDefaults;
    Test_SCPBandMapAndFileDefaults;
    Test_AppearanceAndFKeyDefaults;
+   Test_AudioDefaultsAndBufferSizes;
 end;
 
 end.
