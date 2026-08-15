@@ -21,6 +21,11 @@ CONTEST_PATTERNS = [
     # but I do so it goes there." Which settles the HF/WARC/VHF inconsistency --
     # all three are contest-scoped, and WARC's crC:0 is simply wrong.
     r'^HF BAND ENABLE$', r'^WARC BAND ENABLE$', r'^VHF BAND ENABLE$',
+    # NY4I 2026-08-15: "band is the startup band but since fcontest uses it, it
+    # goes on the contest." Note the REASONING -- what the setting means matters
+    # less than who writes it; a startup value a contest overwrites cannot be a
+    # station setting whatever it is called.
+    r'^BAND$',
 ]
 PAT = re.compile('|'.join(CONTEST_PATTERNS))
 
@@ -88,14 +93,14 @@ at all but *current operating state* that a contest initialises, the same catego
 nothing; migrating a contest-owned row costs a defect that only shows up when someone changes
 contest.
 
-### Macro siblings NY4I named by example — confirm the intent
+### Macro siblings
 
-He wrote `CQ CW *` and `CQ SSB *`, which leaves the **mode-neutral** pair unmatched: `CQ EXCHANGE`
-and `CQ EXCHANGE NAME KNOWN`. `CQ EXCHANGE` has 18 `FCONTEST` writes, so the evidence says it is
-contest-scoped and the omission was wording, not intent — but it is his call.
+**Answered 2026-08-15:** *"cq exchange was an omission. it is a macro."* `CQ EXCHANGE` and
+`CQ EXCHANGE NAME KNOWN` are in the contest set with the CW and SSB members. The pattern is
+`^CQ EXCHANGE` and not a blanket `^CQ ` — `CQ MENU` is a menu, not a message.
 
-`TAIL END MESSAGE` / `TAIL END CW MESSAGE` / `TAIL END SSB MESSAGE` are the same shape of message
-macro and appear on no list. `MULTI INFO MESSAGE` is a message but a multi-op one, not a contest
+**Still unplaced:** `TAIL END MESSAGE` / `TAIL END CW MESSAGE` / `TAIL END SSB MESSAGE`, the same
+shape of macro and on no list. `MULTI INFO MESSAGE` is a message but a multi-op one, not a contest
 exchange.
 
 """
@@ -106,6 +111,15 @@ section = section % (len(contest), len(rows),
 
 p = r'C:\tr4w-d12\docs\CFG_COMMAND_TABLE.md'
 t = io.open(p, encoding='utf-8', errors='surrogateescape', newline='').read()
+
+# IDEMPOTENT. Running this over a file that already carries the section used to
+# insert a second copy, which is what happened once already -- the document had
+# the whole classification twice, with the older copy still saying an answered
+# question was open.
+start = t.find('## Contest scope')
+if start != -1:
+    t = t[:start] + t[t.index('### `crP` — post-change UI refresh', start):]
+
 anchor = '### `crP` — post-change UI refresh'
 assert t.count(anchor) == 1
 t = t.replace(anchor, section.lstrip('\n') + '\n' + anchor, 1)
