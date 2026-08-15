@@ -138,6 +138,8 @@
           ' YCCC SO2R+ box.  Keying on a radio'#39's own port, or by CAT, is pa' +
           'rt of that radio'#39's setup; a station profile then chooses which m' +
           'ethod each slot uses.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblCWSendHeading: TLabel
         Left = 12
@@ -146,6 +148,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Sending'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object chkCWEnable: TCheckBox
         Left = 12
@@ -188,6 +192,8 @@
         Height = 17
         AutoSize = False
         Caption = 'WPM per PageUp / PageDown'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblCWTone: TLabel
         Left = 12
@@ -212,6 +218,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Hz  (0 = the radios own sidetone)'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkCWMessagesChainable: TCheckBox
         Left = 12
@@ -486,6 +494,8 @@
           Caption = 
             'Saving stores your changes. It does not switch the radios over -' +
             ' use this button for that.'
+          ParentFont = False
+          Font.Color = clGrayText
         end
       end
       object chkAutoConnect: TCheckBox
@@ -621,6 +631,8 @@
         Height = 17
         AutoSize = False
         Caption = 'blank or 0 = the default for this type'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblRotatorIP: TLabel
         Left = 12
@@ -684,6 +696,8 @@
           'Leave blank and this rotator turns for every band, which is what' +
           ' a station with one antenna wants.  List bands - 20 15 10 - to h' +
           'ave TR4W choose between several rotators by band.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblRotatorNote: TLabel
         Left = 12
@@ -696,6 +710,8 @@
           'PstRotator is reached over UDP and has no serial port; the other' +
           's use one.  A blank baud rate lets each type use what it expects' +
           ' - the DCU-1 wants 4800 where the rest want 9600.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layUDP: TPanel
@@ -795,6 +811,8 @@
           'Each destination is one program listening.  Add a second row for' +
           ' the same address when it expects different data on a different ' +
           'port.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layLogging: TPanel
@@ -836,6 +854,8 @@
           'Takes effect immediately - no restart.  INFO is the normal settin' +
           'g; DEBUG and TRACE make the log much larger and are for diagnosin' +
           'g a problem.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblDetailLogs: TLabel
         Left = 12
@@ -926,6 +946,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Log files'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object chkCheckLogFileSize: TCheckBox
         Left = 12
@@ -1053,6 +1075,8 @@
         Height = 17
         AutoSize = False
         Caption = 'seconds  (0 = no limit)'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblTCIMaxTxHint: TLabel
         Left = 30
@@ -1065,6 +1089,8 @@
           'A safety net, not a timer for normal use: if a client keys the ra' +
           'dio and then stops answering - it crashed, or the network went aw' +
           'ay - this is what puts the transmitter back into receive.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblTCILogHint: TLabel
         Left = 12
@@ -1076,6 +1102,8 @@
         Caption = 
           'To log every TCI command in both directions, see the Logging sect' +
           'ion.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layStation: TPanel
@@ -1093,9 +1121,12 @@
         Left = 12
         Top = 8
         Width = 340
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Station information'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblMyCall: TLabel
         Left = 12
@@ -1261,9 +1292,12 @@
         Left = 380
         Top = 8
         Width = 280
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Contest exchange'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblMyCheck: TLabel
         Left = 380
@@ -1371,6 +1405,8 @@
         Caption = 
           'These are sent to the other stations in a multi-operator network w' +
           'hen you change them, so all positions agree on the exchange.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layWSJTX: TPanel
@@ -1388,9 +1424,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'WSJT-X / JTDX'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object chkWSJTXEnabled: TCheckBox
         Left = 12
@@ -1473,6 +1512,8 @@
           'To let WSJT-X drive the radio over TCI instead, see the TCI Serv' +
           'er section - that works with any radio TR4W controls, not only o' +
           'ne with TCI of its own.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layExternalLogger: TPanel
@@ -1490,9 +1531,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'External logger'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblLoggerType: TLabel
         Left = 12
@@ -1588,9 +1632,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Hardware'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblHardwareInfo: TLabel
         Left = 12
@@ -1602,6 +1649,8 @@
         Caption = 
           'Station-wide hardware. Settings that belong to one radio are und' +
           'er Radios; rotators are under Rotators.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblRelayPort: TLabel
         Left = 12
@@ -1683,6 +1732,8 @@
           'eave them None unless you have such an interface - whether' +
           ' TR4W keeps supporting LPT at all is still an open questio' +
           'n, which the greyed box below is a placeholder for.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkUseControlPort: TCheckBox
         Left = 12
@@ -1712,6 +1763,8 @@
           'Station controllers will get a factory of their own, as ra' +
           'dios and keyers did. This checkbox is the interim home for' +
           ' the setting.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layPaddlePTT: TPanel
@@ -1729,9 +1782,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Paddle and PTT'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblPaddlePTTInfo: TLabel
         Left = 12
@@ -1744,6 +1800,8 @@
           'The paddle keyer TR4W runs itself, and the PTT line it ass' +
           'erts. A WinKeyer or YCCC box keeps its own paddle timing, ' +
           'so these do not apply to it.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblPaddleGroup: TLabel
         Left = 12
@@ -1752,6 +1810,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Paddle'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object lblPaddleSpeed: TLabel
         Left = 12
@@ -1775,6 +1835,8 @@
         Height = 17
         AutoSize = False
         Caption = 'WPM  (0 follows the keyboard speed)'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblPaddleTone: TLabel
         Left = 12
@@ -1798,6 +1860,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Hz'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblPaddleHold: TLabel
         Left = 12
@@ -1821,6 +1885,8 @@
         Height = 17
         AutoSize = False
         Caption = 'dit counts'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkSwapPaddles: TCheckBox
         Left = 12
@@ -1837,6 +1903,8 @@
         Height = 17
         AutoSize = False
         Caption = 'PTT'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object chkPTTEnable: TCheckBox
         Left = 12
@@ -1868,6 +1936,8 @@
         Height = 17
         AutoSize = False
         Caption = 'x 1.7 ms  (0 disables)'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkNoPollDuringPTT: TCheckBox
         Left = 12
@@ -1906,6 +1976,8 @@
           'en question, so PADDLE PORT stays on the Ctrl-J command li' +
           'st until that is settled rather than being given a home it' +
           ' may not keep.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layOperating: TPanel
@@ -1923,9 +1995,12 @@
         Left = 12
         Top = 8
         Width = 620
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Operating'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblOperatingInfo: TLabel
         Left = 12
@@ -1935,6 +2010,8 @@
         AutoSize = False
         WordWrap = True
         Caption = 'How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkAutoReturnToCQ: TCheckBox
         Left = 12
@@ -2016,9 +2093,12 @@
         Left = 12
         Top = 8
         Width = 620
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Audio'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblAudioInfo: TLabel
         Left = 12
@@ -2028,6 +2108,8 @@
         AutoSize = False
         WordWrap = True
         Caption = 'Voice keying and QSO recording. CW keying is on the CW Settings page.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblDVKHeading: TLabel
         Left = 12
@@ -2036,6 +2118,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Digital voice keyer'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object chkDVKEnable: TCheckBox
         Left = 12
@@ -2098,6 +2182,8 @@
         Height = 17
         AutoSize = False
         Caption = 'QSO recording'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object chkMP3RecorderEnable: TCheckBox
         Left = 12
@@ -2145,6 +2231,8 @@
         AutoSize = False
         WordWrap = True
         Caption = 'Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object btnBrowseDVKPath: TButton
         Left = 568
@@ -2198,9 +2286,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'DXLab'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblDXLabInfo: TLabel
         Left = 12
@@ -2213,6 +2304,8 @@
           'DXLab needs no settings of its own.  TR4W offers a DX Commander ' +
           'compatible interface on TCP port 52002 whenever the WSJT-X suppo' +
           'rt is running, and DXLab programs connect to that.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblDXLabInfo2: TLabel
         Left = 12
@@ -2241,9 +2334,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'MMTTY'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblMMTTYEngine: TLabel
         Left = 12
@@ -2281,6 +2377,8 @@
         Caption = 
           'The full path to MMTTY.EXE.  TR4W starts it for RTTY and talks t' +
           'o it directly.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layCluster: TPanel
@@ -2298,9 +2396,12 @@
         Left = 12
         Top = 8
         Width = 300
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'My DX clusters'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lstClusters: TListBox
         Left = 12
@@ -2395,6 +2496,8 @@
           'host:port, for example dxc.nc7j.com:7373.  The drop-down lists t' +
           'he servers in TRCLUSTER.DAT; you can also type one that is not o' +
           'n it.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblClusterLogin: TLabel
         Left = 12
@@ -2420,6 +2523,8 @@
         Height = 17
         AutoSize = False
         Caption = 'blank = my station callsign'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblClusterPassword: TLabel
         Left = 12
@@ -2466,6 +2571,8 @@
         Caption = 
           'Sent once the login is accepted - filters, set/name, sh/dx.  Sep' +
           'arate several with a semicolon.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblClusterGlobalHeading: TLabel
         Left = 12
@@ -2474,6 +2581,8 @@
         Height = 17
         AutoSize = False
         Caption = 'For every cluster'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object chkClusterAtStartup: TCheckBox
         Left = 12
@@ -2503,6 +2612,8 @@
         Caption = 
           'The cluster reconnects on its own after a drop.  Telnet logging ' +
           'is on the Logging page; spot display and ageing are on Band Map.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layBandMap: TPanel
@@ -2520,9 +2631,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Band map'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object chkBandMapEnable: TCheckBox
         Left = 12
@@ -2556,6 +2670,8 @@
         Height = 17
         AutoSize = False
         Caption = 'seconds'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblBandMapGuard: TLabel
         Left = 12
@@ -2580,6 +2696,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Hz'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblBandMapLimit: TLabel
         Left = 12
@@ -2604,6 +2722,8 @@
         Height = 17
         AutoSize = False
         Caption = 'spots'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkBandMapDupes: TCheckBox
         Left = 12
@@ -2688,6 +2808,8 @@
           'A band map does not need a DX cluster: it also holds spots you m' +
           'ake yourself and anything the SO2R radio hears.  Cluster setting' +
           's are on the DX Cluster page.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkCallWindowShowAllSpots: TCheckBox
         Left = 12
@@ -2721,9 +2843,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Super Check Partial'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblSCPMinLetters: TLabel
         Left = 12
@@ -2748,6 +2873,8 @@
         Height = 17
         AutoSize = False
         Caption = 'letters typed'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblSCPCountry: TLabel
         Left = 12
@@ -2776,6 +2903,8 @@
           'Blank shows matches from everywhere.  A list of country prefixes' +
           ' narrows it, which is useful in a domestic contest where the who' +
           'le world is not workable.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblSCPFileHint: TLabel
         Left = 12
@@ -2788,6 +2917,8 @@
           'Matches come from TRMASTER.DTA in the program folder.  Without t' +
           'hat file Super Check Partial simply shows nothing; it is not an ' +
           'error.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblSCPMatchHeading: TLabel
         Left = 12
@@ -2796,6 +2927,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Matching'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object chkPossibleCalls: TCheckBox
         Left = 12
@@ -2845,9 +2978,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Multi-operator network'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblNetAddress: TLabel
         Left = 12
@@ -2921,6 +3057,8 @@
         Height = 17
         AutoSize = False
         Caption = 'a single letter, unique in the network'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkNetAutoSync: TCheckBox
         Left = 12
@@ -2958,6 +3096,8 @@
           'TR4WServer runs on one machine and every operating position conn' +
           'ects to it.  It holds the shared log, the multipliers and the se' +
           'rial numbers.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblRadioTCPHeading: TLabel
         Left = 12
@@ -2966,6 +3106,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Radio sharing'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object lblRadioTCPPort: TLabel
         Left = 12
@@ -2993,6 +3135,8 @@
         Caption = 
           'Lets another position read this station''s radio.  Takes effect w' +
           'hen TR4W next starts.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layAppearance: TPanel
@@ -3010,9 +3154,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Main window'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblMainFont: TLabel
         Left = 12
@@ -3074,6 +3221,8 @@
         Caption = 
           'The font applies to the main contest window.  All four take effe' +
           'ct when TR4W next starts.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblAppearColorsHint: TLabel
         Left = 12
@@ -3086,6 +3235,8 @@
           'Window colors are still on the Settings menu.  They belong here' +
           ' and will move once the main window is resizable, which is the c' +
           'hange that decides what the layout options need to be.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblMainWindowHeading: TLabel
         Left = 12
@@ -3094,6 +3245,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Main window'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object chkNoBorder: TCheckBox
         Left = 12
@@ -3138,6 +3291,8 @@
           'These were on the Appearance item of the Settings menu. That' +
           ' window goes away once ROW COUNT and WINDOW SIZE join them he' +
           're.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layBackup: TPanel
@@ -3155,9 +3310,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Log backup'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object lblBackupEvery: TLabel
         Left = 12
@@ -3182,6 +3340,8 @@
         Height = 17
         AutoSize = False
         Caption = 'QSOs  (0 = never)'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblBackupFile: TLabel
         Left = 12
@@ -3220,6 +3380,8 @@
           'A second copy of the log, written as you go.  Put it somewhere t' +
           'hat is not the same disk as the log itself, or it protects again' +
           'st nothing worth protecting against.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layOnlineScoring: TPanel
@@ -3237,9 +3399,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Online scoring'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object chkHamScoreEnable: TCheckBox
         Left = 12
@@ -3325,6 +3490,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Score board'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object lblScorePostURL: TLabel
         Left = 12
@@ -3369,6 +3536,8 @@
           'Where TR4W posts its score and where it reads other stations'' sc' +
           'ores from.  The two are separate so a club board can be read whi' +
           'le posting elsewhere.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layOperatingCW: TPanel
@@ -3386,9 +3555,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'CW while operating'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object chkSayHiEnable: TCheckBox
         Left = 12
@@ -3422,6 +3594,8 @@
         Height = 17
         AutoSize = False
         Caption = 'QSOs per hour'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object chkKeypadCWMemories: TCheckBox
         Left = 12
@@ -3474,6 +3648,8 @@
         Caption = 
           'Serial numbers are padded to that many digits.  T for a zero is ' +
           'the usual cut-number choice; leave it as 0 to send them plainly.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
       object lblSerialKeyHeading: TLabel
         Left = 12
@@ -3482,6 +3658,8 @@
         Height = 17
         AutoSize = False
         Caption = 'Radio serial keying  (DTR/RTS keying only)'
+        ParentFont = False
+        Font.Style = [fsBold]
       end
       object lblSerialKeyIntro: TLabel
         Left = 12
@@ -3559,6 +3737,8 @@
         Height = 17
         AutoSize = False
         Caption = 'WPM'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layBands: TPanel
@@ -3576,9 +3756,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Bands in use'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object chkHFBands: TCheckBox
         Left = 12
@@ -3618,6 +3801,8 @@
           'Which bands TR4W offers when you change band, and which appear i' +
           'n the multiplier and band-map displays.  WARC bands are off by d' +
           'efault because most contests do not allow them.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
     object layTwoRadio: TPanel
@@ -3635,9 +3820,12 @@
         Left = 12
         Top = 8
         Width = 400
-        Height = 17
+        Height = 21
         AutoSize = False
         Caption = 'Two radio operating'
+        ParentFont = False
+        Font.Height = -15
+        Font.Style = [fsBold]
       end
       object chkTwoRadioMode: TCheckBox
         Left = 12
@@ -3736,6 +3924,8 @@
         Caption = 
           'Skipping the other radio''s band is what stops a band change on o' +
           'ne radio landing you on top of the other.'
+        ParentFont = False
+        Font.Color = clGrayText
       end
     end
   end
@@ -3747,6 +3937,7 @@
     Height = 25
     AutoSize = False
     TabOrder = 2
+    Default = True
     Caption = 'Save and close'
     OnClick = btnOKClick
   end
@@ -3758,6 +3949,7 @@
     Height = 25
     AutoSize = False
     TabOrder = 3
+    Cancel = True
     Caption = 'Cancel'
     OnClick = btnCancelClick
   end
