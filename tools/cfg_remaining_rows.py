@@ -40,10 +40,15 @@ for m in ROW.finditer(cfg):
     r = dict(cmd=cmd, addr=addr, status=status, crC=int(crC), kind=kind,
              fn=fn, typ=typ)
     allrows.append(r)
-    if status == 'csOld':
+    # csNew IS IN SCOPE TOO. Ctrl-J hides only csRem, csOwned and csJSON, so a
+    # csNew row is exactly as visible to the operator as a csOld one. Scanning
+    # csOld alone reported 152 rows left when the dialog still held 207 -- the
+    # status names say where a row CAME FROM, not whether it still needs a home.
+    if status in ('csOld', 'csNew'):
         rows.append(r)
-assert len(rows) == cfg.count('crS: csOld'), \
-    'parsed %d of %d csOld rows' % (len(rows), cfg.count('crS: csOld'))
+assert len(rows) == cfg.count('crS: csOld') + cfg.count('crS: csNew'), \
+    'parsed %d of %d live rows' % (len(rows),
+                                   cfg.count('crS: csOld') + cfg.count('crS: csNew'))
 
 
 def table_entries(name, varfield, lo):
