@@ -1271,7 +1271,7 @@ begin
 
             LeftArrow:
               begin
-                if SwapPacketSpotRadios then
+                if Config.SwapPacketSpotRadios then
                    begin
                    if Radio1.tCATPortType <> NoPort then
                       begin
@@ -1295,7 +1295,7 @@ begin
 
             RightArrow:
               begin
-                if SwapPacketSpotRadios then
+                if Config.SwapPacketSpotRadios then
                    begin
                    if Radio2.tCATPortType <> NoPort then
                       begin

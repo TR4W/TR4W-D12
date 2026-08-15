@@ -887,6 +887,38 @@
         Height = 17
         AutoSize = False
       end
+      object lblLogFilesHeading: TLabel
+        Left = 12
+        Top = 344
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Log files'
+      end
+      object chkCheckLogFileSize: TCheckBox
+        Left = 12
+        Top = 372
+        Width = 540
+        Height = 22
+        Caption = 'Warn when the log file grows unexpectedly'
+        TabOrder = 30
+      end
+      object chkUnknownCountryFile: TCheckBox
+        Left = 12
+        Top = 398
+        Width = 540
+        Height = 22
+        Caption = 'Record callsigns with no country match'
+        TabOrder = 31
+      end
+      object chkUpdateRestartFile: TCheckBox
+        Left = 12
+        Top = 424
+        Width = 540
+        Height = 22
+        Caption = 'Keep the restart file up to date'
+        TabOrder = 32
+      end
     end
     object layTCIServer: TPanel
       Color = clWindow
@@ -2467,6 +2499,22 @@
           'ake yourself and anything the SO2R radio hears.  Cluster setting' +
           's are on the DX Cluster page.'
       end
+      object chkCallWindowShowAllSpots: TCheckBox
+        Left = 12
+        Top = 412
+        Width = 540
+        Height = 22
+        Caption = 'Show every spot in the call window'
+        TabOrder = 20
+      end
+      object chkSwapPacketSpotRadios: TCheckBox
+        Left = 12
+        Top = 438
+        Width = 540
+        Height = 22
+        Caption = 'Send spots to the other radio'
+        TabOrder = 21
+      end
     end
     object laySCP: TPanel
       Color = clWindow
@@ -2550,6 +2598,46 @@
           'Matches come from TRMASTER.DTA in the program folder.  Without t' +
           'hat file Super Check Partial simply shows nothing; it is not an ' +
           'error.'
+      end
+      object lblSCPMatchHeading: TLabel
+        Left = 12
+        Top = 204
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Matching'
+      end
+      object chkPossibleCalls: TCheckBox
+        Left = 12
+        Top = 232
+        Width = 540
+        Height = 22
+        Caption = 'Offer possible calls'
+        TabOrder = 10
+      end
+      object chkPartialCall: TCheckBox
+        Left = 12
+        Top = 258
+        Width = 540
+        Height = 22
+        Caption = 'Match on a partial callsign'
+        TabOrder = 11
+      end
+      object chkWildcardPartials: TCheckBox
+        Left = 12
+        Top = 284
+        Width = 540
+        Height = 22
+        Caption = 'Allow wildcards in a partial'
+        TabOrder = 12
+      end
+      object chkNameFlag: TCheckBox
+        Left = 12
+        Top = 310
+        Width = 540
+        Height = 22
+        Caption = 'Flag a station whose name is already known'
+        TabOrder = 13
       end
     end
     object layNetwork: TPanel

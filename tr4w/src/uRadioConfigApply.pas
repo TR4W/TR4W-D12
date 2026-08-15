@@ -308,7 +308,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..76] of string =
+   MIGRATED_COMMANDS: array[0..85] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -401,7 +401,18 @@ const
       'LOG WITH SINGLE ENTER',
       'SPACE BAR DUPE CHECK ENABLE',
       'CONFIRM EDIT CHANGES',
-      'AUTO QSO NUMBER DECREMENT'
+      'AUTO QSO NUMBER DECREMENT',
+
+      // SCP, band map and log files, 2026-08-15.
+      'POSSIBLE CALLS',
+      'PARTIAL CALL ENABLE',
+      'WILDCARD PARTIALS',
+      'NAME FLAG ENABLE',
+      'CALL WINDOW SHOW ALL SPOTS',
+      'SWAP PACKET SPOT RADIOS',
+      'CHECK LOG FILE SIZE',
+      'UNKNOWN COUNTRY FILE ENABLE',
+      'UPDATE RESTART FILE ENABLE'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);

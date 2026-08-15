@@ -195,7 +195,7 @@ eyeballing once:
   `tr4w.ini` — is what changed;
 * the speed-up/slow-down keys still step by that amount on air.
 
-## Beyond the original 30 (2026-08-14)
+(placeholder)## Beyond the original 30 (2026-08-14)
 
 The 30 above are done, **including item 5's "expensive globals"** — `CWTone`, `Weight` and
 `TwoRadioMode` all reach `Config` and no standalone declaration survives. What follows is the work

@@ -170,6 +170,25 @@ type
       SpaceBarDupeCheckEnable: boolean;
       ConfirmEditChanges: boolean;
       AutoQSONumberDecrement: boolean;
+
+      { SUPER CHECK PARTIAL, BAND MAP AND LOG FILES, migrated 2026-08-15.
+
+        UpdateRestartFileEnable is the odd one: its declaration carries no
+        initialiser, but CFGDEF.PAS:577 assigns True in
+        SetConfigurationDefaultValues. That runs ONCE at startup and BEFORE the
+        config files, so it is an initial default and not a competing owner --
+        checked rather than assumed, because a defaults routine that ran on
+        contest change would silently reset the setting instead. The record
+        default matches it, and the assignment now writes the same field. }
+      PossibleCallEnable: boolean;
+      PartialCallEnable: boolean;
+      WildCardPartials: boolean;
+      NameFlagEnable: boolean;
+      CallWindowShowAllSpots: boolean;
+      SwapPacketSpotRadios: boolean;
+      CheckLogFileSize: boolean;
+      UnknownCountryFileEnable: boolean;
+      UpdateRestartFileEnable: boolean;
    end;
 
 var
@@ -242,7 +261,16 @@ var
       LogWithSingleEnter: False;
       SpaceBarDupeCheckEnable: True;
       ConfirmEditChanges: True;
-      AutoQSONumberDecrement: False
+      AutoQSONumberDecrement: False;
+      PossibleCallEnable: True;
+      PartialCallEnable: True;
+      WildCardPartials: True;
+      NameFlagEnable: True;
+      CallWindowShowAllSpots: False;
+      SwapPacketSpotRadios: False;
+      CheckLogFileSize: False;
+      UnknownCountryFileEnable: False;
+      UpdateRestartFileEnable: True
    );
 
 implementation
