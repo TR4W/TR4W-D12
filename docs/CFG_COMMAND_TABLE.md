@@ -380,7 +380,7 @@ NY4I: *"This does not currently consider that a contest level but I do so it goe
 settles an inconsistency in the table — `HF` and `VHF` are `crC:1` while `WARC` is `crC:0`, for three
 settings handled identically, so **`WARC BAND ENABLE` should become `crC:1`** as a data fix.
 
-### The contest set — 59 of the 165 rows still `csOld`
+### The contest set — 60 of the 158 rows still `csOld`
 
 * `BAND`
 * `CALL OK NOW CW MESSAGE`
@@ -403,6 +403,7 @@ settings handled identically, so **`WARC BAND ENABLE` should become `crC:1`** as
 * `HF BAND ENABLE`
 * `LOG RS SENT`
 * `LOG RST SENT`
+* `LOOK FOR RST SENT`
 * `MODE`
 * `MULT BY BAND`
 * `MULT BY MODE`
@@ -450,7 +451,7 @@ re-home them yet.
 Three on his list are already `csNew` rather than `csOld` and so need no action: `LATEST CONFIG
 FILE`, `R150S MODE`, `RFOBL MODE`.
 
-### 106 rows to migrate to the registry
+### 98 rows to migrate to the registry
 
 Everything else still `csOld`. They leave Ctrl-J, stop being read from and written to `tr4w.ini`,
 and their globals move into the config object.
@@ -487,7 +488,7 @@ rows just ruled on, and those were not the only ones.
 `BAND` and `MODE` are the extreme cases — 29 and 9 `FCONTEST` writes — and are arguably not settings
 at all but *current operating state* that a contest initialises, the same category as `CODE SPEED`.
 
-**Until this is ruled on they are held back and the other 87 proceed.** Splitting the batch costs
+**Until this is ruled on they are held back and the other 79 proceed.** Splitting the batch costs
 nothing; migrating a contest-owned row costs a defect that only shows up when someone changes
 contest.
 

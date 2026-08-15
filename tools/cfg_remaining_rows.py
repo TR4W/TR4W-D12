@@ -17,6 +17,18 @@ OUT = r'C:\tr4w-d12\docs\CFG_REMAINING_ROWS.md'
 cfg = io.open(os.path.join(SRC, 'uCFG.pas'), encoding='utf-8',
               errors='surrogateescape', newline='').read()
 
+# COMMENTED-OUT ROWS ARE NOT LIVE ROWS. CFGCA still carries six of them marked
+# crS: csOld, and reading the file as text counted every one -- which is how the
+# whole TAIL END family (MESSAGE / CW MESSAGE / SSB MESSAGE / KEY) came to be
+# raised as an open question. It was withdrawn years ago, which is also why the
+# help file has no entry for it.
+#
+# A row is deprecated if it is COMMENTED OUT or marked csRem. Those are two
+# different sets and both have to go before anything counts as live.
+NL = chr(13) + chr(10)
+cfg = NL.join(l for l in cfg.split(NL)
+              if not l.lstrip().startswith(('//', '{ (', '{(')))
+
 ROW = re.compile(
     r"crCommand:\s*'([^']*)';\s*crAddress:\s*([^;]*?);.*?crS:\s*(cs\w+);"
     r"\s*crA:\s*(\d+);\s*crC:\s*(\d+)\s*;.*?crKind:\s*(\w+);\s*cfFunc:\s*(\w+);"

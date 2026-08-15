@@ -38,6 +38,11 @@ CONTEST_PATTERNS = [
     # wrong. Whether the log records the RST you sent is a property of the
     # contest's exchange, and no scan of this codebase can know that.
     r'^LOG RS SENT$', r'^LOG RST SENT$',
+    # The third of that family, settled from commands_help_eng.ini rather than by
+    # asking: "a transmitted RST may be entered into the Exchange Window by
+    # preceding it with S". That is exchange entry, so it goes where the other
+    # two went.
+    r'^LOOK FOR RST SENT$',
 ]
 PAT = re.compile('|'.join(CONTEST_PATTERNS))
 
