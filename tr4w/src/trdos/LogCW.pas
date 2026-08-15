@@ -2050,10 +2050,21 @@ begin
 
     The caller was fixed too, but this is the layer that owns the invariant, and
     a silent out-of-bounds write is worth refusing wherever it arrives from. }
-  if not (Key in [F1..AltF12]) then
+  { ORDINALS, NOT A SET. `Key in [F1..AltF12]` rejected key #139 at run time
+    even though F1 = CHR(112) and AltF12 = CHR(147) -- it is inside the
+    range by inspection, and a standalone probe with the same mode switches
+    agrees. Char is WideChar here -- tr4w.inc turns on the UnicodeStrings
+    mode switch -- and a set
+    of WideChar is not something to rely on; the first version of this guard
+    silently discarded every Alt-F memory during config load.
+
+    Comparing ordinals says exactly what is meant and cannot be affected by
+    the set representation. The bounds are logged with any rejection so a
+    future surprise names its own numbers instead of needing a probe. }
+  if (Ord(Key) < Ord(F1)) or (Ord(Key) > Ord(AltF12)) then
      begin
-     logger.Error('[SetCQCaptionMemoryString] key #%d is outside F1..AltF12 -- ignored',
-                  [Ord(Key)]);
+     logger.Error('[SetCQCaptionMemoryString] key #%d is outside F1..AltF12 (%d..%d) -- ignored',
+                  [Ord(Key), Ord(F1), Ord(AltF12)]);
      Exit;
      end;
 
@@ -2086,10 +2097,21 @@ begin
 
     The caller was fixed too, but this is the layer that owns the invariant, and
     a silent out-of-bounds write is worth refusing wherever it arrives from. }
-  if not (Key in [F1..AltF12]) then
+  { ORDINALS, NOT A SET. `Key in [F1..AltF12]` rejected key #139 at run time
+    even though F1 = CHR(112) and AltF12 = CHR(147) -- it is inside the
+    range by inspection, and a standalone probe with the same mode switches
+    agrees. Char is WideChar here -- tr4w.inc turns on the UnicodeStrings
+    mode switch -- and a set
+    of WideChar is not something to rely on; the first version of this guard
+    silently discarded every Alt-F memory during config load.
+
+    Comparing ordinals says exactly what is meant and cannot be affected by
+    the set representation. The bounds are logged with any rejection so a
+    future surprise names its own numbers instead of needing a probe. }
+  if (Ord(Key) < Ord(F1)) or (Ord(Key) > Ord(AltF12)) then
      begin
-     logger.Error('[SetEXCaptionMemoryString] key #%d is outside F1..AltF12 -- ignored',
-                  [Ord(Key)]);
+     logger.Error('[SetEXCaptionMemoryString] key #%d is outside F1..AltF12 (%d..%d) -- ignored',
+                  [Ord(Key), Ord(F1), Ord(AltF12)]);
      Exit;
      end;
 
@@ -2118,11 +2140,22 @@ begin
     non-nil, valid-looking pointer in a slot nothing ever allocated,
     and whoever reads it later takes the access violation, in another
     unit, with nothing to connect the two. }
-  if not (Key in [F1..AltF12]) then
+  { ORDINALS, NOT A SET. `Key in [F1..AltF12]` rejected key #139 at run time
+    even though F1 = CHR(112) and AltF12 = CHR(147) -- it is inside the
+    range by inspection, and a standalone probe with the same mode switches
+    agrees. Char is WideChar here -- tr4w.inc turns on the UnicodeStrings
+    mode switch -- and a set
+    of WideChar is not something to rely on; the first version of this guard
+    silently discarded every Alt-F memory during config load.
+
+    Comparing ordinals says exactly what is meant and cannot be affected by
+    the set representation. The bounds are logged with any rejection so a
+    future surprise names its own numbers instead of needing a probe. }
+  if (Ord(Key) < Ord(F1)) or (Ord(Key) > Ord(AltF12)) then
      begin
-     logger.Error('[SetCQMemoryString] key #%d is outside F1..AltF12 -- ignored, it '
+     logger.Error('[SetCQMemoryString] key #%d is outside F1..AltF12 (%d..%d) -- ignored, it '
                   + 'would have written into the next array',
-                  [Ord(Key)]);
+                  [Ord(Key), Ord(F1), Ord(AltF12)]);
      Exit;
      end;
 
@@ -2154,11 +2187,22 @@ begin
     non-nil, valid-looking pointer in a slot nothing ever allocated,
     and whoever reads it later takes the access violation, in another
     unit, with nothing to connect the two. }
-  if not (Key in [F1..AltF12]) then
+  { ORDINALS, NOT A SET. `Key in [F1..AltF12]` rejected key #139 at run time
+    even though F1 = CHR(112) and AltF12 = CHR(147) -- it is inside the
+    range by inspection, and a standalone probe with the same mode switches
+    agrees. Char is WideChar here -- tr4w.inc turns on the UnicodeStrings
+    mode switch -- and a set
+    of WideChar is not something to rely on; the first version of this guard
+    silently discarded every Alt-F memory during config load.
+
+    Comparing ordinals says exactly what is meant and cannot be affected by
+    the set representation. The bounds are logged with any rejection so a
+    future surprise names its own numbers instead of needing a probe. }
+  if (Ord(Key) < Ord(F1)) or (Ord(Key) > Ord(AltF12)) then
      begin
-     logger.Error('[SetEXMemoryString] key #%d is outside F1..AltF12 -- ignored, it '
+     logger.Error('[SetEXMemoryString] key #%d is outside F1..AltF12 (%d..%d) -- ignored, it '
                   + 'would have written into the next array',
-                  [Ord(Key)]);
+                  [Ord(Key), Ord(F1), Ord(AltF12)]);
      Exit;
      end;
 
