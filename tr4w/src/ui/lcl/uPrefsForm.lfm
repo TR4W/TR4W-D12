@@ -1813,9 +1813,25 @@
         Caption = 'Stop polling the radio while transmitting'
         TabOrder = 6
       end
+      object chkPTTViaCommands: TCheckBox
+        Left = 12
+        Top = 376
+        Width = 540
+        Height = 22
+        Caption = 'Key the transmitter with a CAT command instead of a hardware line'
+        TabOrder = 7
+      end
+      object chkPTTLockout: TCheckBox
+        Left = 12
+        Top = 402
+        Width = 540
+        Height = 22
+        Caption = 'Lock out PTT'
+        TabOrder = 8
+      end
       object lblPaddlePortNote: TLabel
         Left = 12
-        Top = 386
+        Top = 434
         Width = 620
         Height = 54
         AutoSize = False
@@ -1826,6 +1842,99 @@
           'en question, so PADDLE PORT stays on the Ctrl-J command li' +
           'st until that is settled rather than being given a home it' +
           ' may not keep.'
+      end
+    end
+    object layOperating: TPanel
+      Color = clWindow
+      ParentColor = False
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 21
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 23
+      object lblOperatingHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 620
+        Height = 17
+        AutoSize = False
+        Caption = 'Operating'
+      end
+      object lblOperatingInfo: TLabel
+        Left = 12
+        Top = 34
+        Width = 620
+        Height = 40
+        AutoSize = False
+        WordWrap = True
+        Caption = 'How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below.'
+      end
+      object chkAutoReturnToCQ: TCheckBox
+        Left = 12
+        Top = 88
+        Width = 540
+        Height = 22
+        Caption = 'Return to CQ mode after logging a QSO'
+        TabOrder = 0
+      end
+      object chkAutoCallTerminate: TCheckBox
+        Left = 12
+        Top = 114
+        Width = 540
+        Height = 22
+        Caption = 'Stop sending when the call window changes'
+        TabOrder = 1
+      end
+      object chkEscapeExitsSAP: TCheckBox
+        Left = 12
+        Top = 140
+        Width = 540
+        Height = 22
+        Caption = 'Escape leaves search and pounce'
+        TabOrder = 2
+      end
+      object chkLeaveCursorInCall: TCheckBox
+        Left = 12
+        Top = 166
+        Width = 540
+        Height = 22
+        Caption = 'Leave the cursor in the call window'
+        TabOrder = 3
+      end
+      object chkLogWithSingleEnter: TCheckBox
+        Left = 12
+        Top = 192
+        Width = 540
+        Height = 22
+        Caption = 'Log with a single Enter'
+        TabOrder = 4
+      end
+      object chkSpaceBarDupeCheck: TCheckBox
+        Left = 12
+        Top = 218
+        Width = 540
+        Height = 22
+        Caption = 'Space bar performs a dupe check'
+        TabOrder = 5
+      end
+      object chkConfirmEditChanges: TCheckBox
+        Left = 12
+        Top = 244
+        Width = 540
+        Height = 22
+        Caption = 'Confirm before saving an edited QSO'
+        TabOrder = 6
+      end
+      object chkAutoQSONumberDecrement: TCheckBox
+        Left = 12
+        Top = 270
+        Width = 540
+        Height = 22
+        Caption = 'Give the serial number back when a QSO is abandoned'
+        TabOrder = 7
       end
     end
     object layDXLab: TPanel

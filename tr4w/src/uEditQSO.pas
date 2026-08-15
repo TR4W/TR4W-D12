@@ -130,7 +130,8 @@ implementation
 uses
   MainUnit,
   uLogEdit,
-  uHamScore;     // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
+  uHamScore,         // Issue #783 -- HamScoreOnEdit / HamScoreOnDelete hooks
+  uConfigValues;
 
 function EditQSODlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
   lParam): BOOL; stdcall;
@@ -509,7 +510,7 @@ var
   TempSysTime: SYSTEMTIME;
 begin
   Result := True;
-  if ConfirmEditChanges then
+  if Config.ConfirmEditChanges then
     if YesOrNo(eq_handle, TC_SAVECHANGES) = IDno then
        begin
        Exit;

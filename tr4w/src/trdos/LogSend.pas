@@ -77,7 +77,7 @@ begin
      if FileName = '#' then
         begin
         QSONumber := NextSerialToSend;  // Issue #954
-        if AutoQSONumberDecrement then
+        if Config.AutoQSONumberDecrement then
           if (ActiveMainWindow = awCallWindow)
           //if tr4w_CallWindowActive
           and (CallWindowString = '') and (ExchangeWindowString = '') then dec(QSONumber);
@@ -206,7 +206,7 @@ begin
                inc(QSONumber);
                end;
 
-            if AutoQSONumberDecrement then
+            if Config.AutoQSONumberDecrement then
               //              if (ActiveWindow = CallWindow) and
 //              if tr4w_CallWindowActive and
               if (ActiveMainWindow = awCallWindow) and
@@ -559,7 +559,7 @@ begin
 
                    IF TailEnding THEN Inc (QSONumber);
 
-                   IF AutoQSONumberDecrement THEN
+                   IF Config.AutoQSONumberDecrement THEN
                        IF (ActiveWindow = CallWindow) AND
                           (CallWindowString = '') AND (ExchangeWindowString = '') THEN
                               Dec (QSONumber);

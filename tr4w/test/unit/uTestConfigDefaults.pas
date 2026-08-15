@@ -38,6 +38,7 @@ type
       procedure Test_NonZeroDefaultsAreNotZero;
       procedure Test_EarlierMigrationsStillHoldTheirDefaults;
       procedure Test_TwoRadioAndNetworkDefaults;
+      procedure Test_OperatingAndPTTDefaults;
    public
       procedure RunAllTests; override;
    end;
@@ -125,12 +126,36 @@ begin
    CheckFalse(Config.IntercomFileEnable,  'IntercomFileEnable was False');
 end;
 
+procedure TConfigDefaultsTests.Test_OperatingAndPTTDefaults;
+begin
+   // Migrated 2026-08-15. FIVE of these ten were typed constants = True, which
+   // is the whole reason this test exists: a record field starts at zero, and
+   // each of the five turns a working default into an off switch.
+   //
+   // PTTViaCommand False stops a CAT-keyed radio transmitting at all. The other
+   // four change how the log behaves under the operator's hands mid-contest.
+   BeginTest('the operating and PTT defaults survived the move');
+
+   CheckTrue(Config.PTTViaCommand,             'PTTViaCommand was True');
+   CheckTrue(Config.AutoReturnToCQMode,        'AutoReturnToCQMode was True');
+   CheckTrue(Config.EscapeExitsSearchAndPounce,'EscapeExitsSearchAndPounce was True');
+   CheckTrue(Config.SpaceBarDupeCheckEnable,   'SpaceBarDupeCheckEnable was True');
+   CheckTrue(Config.ConfirmEditChanges,        'ConfirmEditChanges was True');
+
+   CheckFalse(Config.PTTLockout,             'PTTLockout was False');
+   CheckFalse(Config.AutoCallTerminate,      'AutoCallTerminate was False');
+   CheckFalse(Config.LeaveCursorInCallWindow,'LeaveCursorInCallWindow was False');
+   CheckFalse(Config.LogWithSingleEnter,     'LogWithSingleEnter was False');
+   CheckFalse(Config.AutoQSONumberDecrement, 'AutoQSONumberDecrement was False');
+end;
+
 procedure TConfigDefaultsTests.RunAllTests;
 begin
    Test_KeyingAndPTTDefaults;
    Test_NonZeroDefaultsAreNotZero;
    Test_EarlierMigrationsStillHoldTheirDefaults;
    Test_TwoRadioAndNetworkDefaults;
+   Test_OperatingAndPTTDefaults;
 end;
 
 end.

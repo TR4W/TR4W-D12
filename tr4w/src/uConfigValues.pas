@@ -154,6 +154,22 @@ type
       WaitForStrength: boolean;
       MultiMultsOnly: boolean;
       IntercomFileEnable: boolean;
+
+      { OPERATING AND PTT, migrated 2026-08-15.
+
+        Five of these ten were typed constants = True. A record field defaults to
+        zero, so carrying the value across by hand is the whole safeguard, and
+        uTestConfigDefaults pins every one in the same commit. }
+      PTTViaCommand: boolean;
+      PTTLockout: boolean;
+      AutoCallTerminate: boolean;
+      AutoReturnToCQMode: boolean;
+      EscapeExitsSearchAndPounce: boolean;
+      LeaveCursorInCallWindow: boolean;
+      LogWithSingleEnter: boolean;
+      SpaceBarDupeCheckEnable: boolean;
+      ConfirmEditChanges: boolean;
+      AutoQSONumberDecrement: boolean;
    end;
 
 var
@@ -216,7 +232,17 @@ var
       SwapRadioRelaySense: False;
       WaitForStrength: True;
       MultiMultsOnly: False;
-      IntercomFileEnable: False
+      IntercomFileEnable: False;
+      PTTViaCommand: True;
+      PTTLockout: False;
+      AutoCallTerminate: False;
+      AutoReturnToCQMode: True;
+      EscapeExitsSearchAndPounce: True;
+      LeaveCursorInCallWindow: False;
+      LogWithSingleEnter: False;
+      SpaceBarDupeCheckEnable: True;
+      ConfirmEditChanges: True;
+      AutoQSONumberDecrement: False
    );
 
 implementation

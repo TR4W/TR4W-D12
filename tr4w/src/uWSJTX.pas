@@ -131,12 +131,14 @@ uses
   , TF // for SetMainWindowText
   , Tree // for LooksLikeAGrid
   , utils_text
-  , LogK1EA // for tPTTViaCommand
+  , LogK1EA // for Config.PTTViaCommand
   , LogDOM // for ActiveDomesticMult
   , uCFG // for WSJTXRadioControlEnabled
   , PostUnit
-  , uCabrilloFormat // for tCabrilloFreqString (moved here from PostUnit; see uCabrilloFormat.pas)
+  , uCabrilloFormat // for tCabrilloFreqString (moved here from PostUnit,
+                    // see uCabrilloFormat.pas)
   , IdStack // for GStack.AddMulticastMembership
+  , uConfigValues // for Config.PTTViaCommand
   ;
 // {$R *.dfm}
 
@@ -1237,10 +1239,10 @@ begin
           end
        else if fieldValue = 'CmdRX' then // No reply
           begin
-          if not tPTTViaCommand then
+          if not Config.PTTViaCommand then
              begin
              QuickDisplay('PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true');
-             tPTTViaCommand := true;
+             Config.PTTViaCommand := true;
              end;
           logger.Debug('[uWSJTX] <<<<<<<<<<<<<<<<<<<<< PTT OFF *********************');
           tPTTVIACAT(false);
@@ -1250,11 +1252,11 @@ begin
           end
        else if fieldValue = 'CmdTX' then
           begin
-          if not tPTTViaCommand then
+          if not Config.PTTViaCommand then
              begin
              QuickDisplay('PTT VIA COMMANDS (CTRL-J) option must be true for WSJT-X use - Setting to true');
              logger.Info('[uWSJTX] Set tPTTViaCommand for user');
-             tPTTViaCommand := true;
+             Config.PTTViaCommand := true;
              end;
           logger.debug('>>>>>>>>>>>>>>>>>>> PTT ON *********************');
           tPTTVIACAT(true);

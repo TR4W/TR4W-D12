@@ -146,6 +146,19 @@ type
       lblStereoPort: TLabel;
       cbxStereoPort: TComboBox;
       chkUseControlPort: TCheckBox;
+      chkPTTViaCommands: TCheckBox;
+      chkPTTLockout: TCheckBox;
+      layOperating: TPanel;
+      lblOperatingHeading: TLabel;
+      lblOperatingInfo: TLabel;
+      chkAutoReturnToCQ: TCheckBox;
+      chkAutoCallTerminate: TCheckBox;
+      chkEscapeExitsSAP: TCheckBox;
+      chkLeaveCursorInCall: TCheckBox;
+      chkLogWithSingleEnter: TCheckBox;
+      chkSpaceBarDupeCheck: TCheckBox;
+      chkConfirmEditChanges: TCheckBox;
+      chkAutoQSONumberDecrement: TCheckBox;
       chkYCCCSO2R: TCheckBox;
       lblYCCCInfo: TLabel;
       layContent: TPanel;
@@ -3104,6 +3117,21 @@ begin
    FBindings.Bind(chkPTTEnable,            'ptt.enable');
    FBindings.Bind(edtPTTDelay,             'ptt.turnOnDelay');
    FBindings.Bind(chkNoPollDuringPTT,      'ptt.noPollDuringPTT');
+   FBindings.Bind(chkPTTViaCommands,     'ptt.viaCommands');
+   FBindings.Bind(chkPTTLockout,         'ptt.lockout');
+
+   // Operating -- a NEW page on the parent nav node (Tag 21). It had a
+   // node with children and no page of its own, so clicking it showed
+   // nothing; Hardware already works this way.
+   FBindings.Bind(chkAutoReturnToCQ,     'operating.autoReturnToCQ');
+   FBindings.Bind(chkAutoCallTerminate,  'operating.autoCallTerminate');
+   FBindings.Bind(chkEscapeExitsSAP,     'operating.escapeExitsSAP');
+   FBindings.Bind(chkLeaveCursorInCall,  'operating.leaveCursorInCall');
+   FBindings.Bind(chkLogWithSingleEnter, 'operating.logWithSingleEnter');
+   FBindings.Bind(chkSpaceBarDupeCheck,  'operating.spaceBarDupeCheck');
+   FBindings.Bind(chkConfirmEditChanges, 'operating.confirmEditChanges');
+   FBindings.Bind(chkAutoQSONumberDecrement,
+                                         'operating.autoQSONumberDecrement');
 
    // Operating - Bands
    FBindings.Bind(chkHFBands,   'operating.bands.hf');

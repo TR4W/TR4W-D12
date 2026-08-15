@@ -152,6 +152,30 @@ begin
    RegisterStoredSetting('ptt.noPollDuringPTT',   'NO POLL DURING PTT',
                          'Stop polling the radio while transmitting');
 
+   { Operating and PTT, 2026-08-15. Captions follow each command's help entry:
+     AUTO CALL TERMINATE stops sending when the call window changes, and
+     CONFIRM EDIT CHANGES asks before an edited QSO is written back. }
+   RegisterStoredSetting('ptt.viaCommands',                   'PTT VIA COMMANDS',
+                         'Key the transmitter with a CAT command');
+   RegisterStoredSetting('ptt.lockout',                       'PTT LOCKOUT',
+                         'Lock out PTT');
+   RegisterStoredSetting('operating.autoCallTerminate',       'AUTO CALL TERMINATE',
+                         'Stop sending when the call window changes');
+   RegisterStoredSetting('operating.autoReturnToCQ',          'AUTO RETURN TO CQ MODE',
+                         'Return to CQ mode after logging');
+   RegisterStoredSetting('operating.escapeExitsSAP',          'ESCAPE EXITS SEARCH AND POUNCE',
+                         'Escape leaves search and pounce');
+   RegisterStoredSetting('operating.leaveCursorInCall',       'LEAVE CURSOR IN CALL WINDOW',
+                         'Leave the cursor in the call window');
+   RegisterStoredSetting('operating.logWithSingleEnter',      'LOG WITH SINGLE ENTER',
+                         'Log with a single Enter');
+   RegisterStoredSetting('operating.spaceBarDupeCheck',       'SPACE BAR DUPE CHECK ENABLE',
+                         'Space bar performs a dupe check');
+   RegisterStoredSetting('operating.confirmEditChanges',      'CONFIRM EDIT CHANGES',
+                         'Confirm before saving an edited QSO');
+   RegisterStoredSetting('operating.autoQSONumberDecrement',  'AUTO QSO NUMBER DECREMENT',
+                         'Give the serial number back when a QSO is abandoned');
+
    // --- Operating: bands ---------------------------------------------------
    RegisterLegacySetting('operating.bands.hf',   'HF BAND ENABLE',
                          'HF (160 - 10 m)');

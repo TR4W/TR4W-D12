@@ -3007,7 +3007,7 @@ end;
 function RadioObject.CheckAutoCallTerminate: boolean;
 begin
   Result := False;
-  if AutoCallTerminate then
+  if Config.AutoCallTerminate then
      begin
      if not ExchangeHasBeenSent then
         if tAutoSendMode then
@@ -3197,7 +3197,7 @@ const
 
 begin
    Result := False;
-   if not tPTTViaCommand then
+   if not Config.PTTViaCommand then
       begin
       logger.debug('**** tPTTVIACAT called but tPTTViaCommand is false');
       Exit;
