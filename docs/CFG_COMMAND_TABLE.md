@@ -380,7 +380,7 @@ NY4I: *"This does not currently consider that a contest level but I do so it goe
 settles an inconsistency in the table — `HF` and `VHF` are `crC:1` while `WARC` is `crC:0`, for three
 settings handled identically, so **`WARC BAND ENABLE` should become `crC:1`** as a data fix.
 
-### The contest set — 56 of the 165 rows still `csOld`
+### The contest set — 59 of the 165 rows still `csOld`
 
 * `BAND`
 * `CALL OK NOW CW MESSAGE`
@@ -401,6 +401,9 @@ settings handled identically, so **`WARC BAND ENABLE` should become `crC:1`** as
 * `DX MULTIPLIER`
 * `EXCHANGE RECEIVED`
 * `HF BAND ENABLE`
+* `LOG RS SENT`
+* `LOG RST SENT`
+* `MODE`
 * `MULT BY BAND`
 * `MULT BY MODE`
 * `PREFIX MULTIPLIER`
@@ -447,12 +450,12 @@ re-home them yet.
 Three on his list are already `csNew` rather than `csOld` and so need no action: `LATEST CONFIG
 FILE`, `R150S MODE`, `RFOBL MODE`.
 
-### 109 rows to migrate to the registry
+### 106 rows to migrate to the registry
 
 Everything else still `csOld`. They leave Ctrl-J, stop being read from and written to `tr4w.ini`,
 and their globals move into the config object.
 
-### 20 of those are contest-driven ANYWAY — this needs a ruling
+### 19 of those are contest-driven ANYWAY — this needs a ruling
 
 Not on NY4I's list, but `FCONTEST.PAS` assigns them when a contest is selected, or they are declared
 `crC:1`. **Migrating one as a flat station setting gives Preferences an editor whose value is
@@ -462,7 +465,6 @@ rows just ruled on, and those were not the only ones.
 | command | `crC` | `FCONTEST` writes | in real `.cfg` |
 |---|---|---|---|
 | `LITERAL DOMESTIC QTH` | 1 | **11×** | — |
-| `MODE` | 1 | **9×** | 1 |
 | `EXCHANGE MEMORY ENABLE` | 0 | **6×** | — |
 | `AUTO DUPE ENABLE CQ` | 0 | **5×** | — |
 | `COUNT DOMESTIC COUNTRIES` | 0 | **5×** | — |
@@ -485,7 +487,7 @@ rows just ruled on, and those were not the only ones.
 `BAND` and `MODE` are the extreme cases — 29 and 9 `FCONTEST` writes — and are arguably not settings
 at all but *current operating state* that a contest initialises, the same category as `CODE SPEED`.
 
-**Until this is ruled on they are held back and the other 89 proceed.** Splitting the batch costs
+**Until this is ruled on they are held back and the other 87 proceed.** Splitting the batch costs
 nothing; migrating a contest-owned row costs a defect that only shows up when someone changes
 contest.
 
@@ -498,6 +500,17 @@ contest.
 **Still unplaced:** `TAIL END MESSAGE` / `TAIL END CW MESSAGE` / `TAIL END SSB MESSAGE`, the same
 shape of macro and on no list. `MULTI INFO MESSAGE` is a message but a multi-op one, not a contest
 exchange.
+
+### The limit of the mechanical signals, demonstrated
+
+`LOG RS SENT` and `LOG RST SENT` were ruled contest-scoped on 2026-08-15 while carrying **no
+mechanical signal at all** — no `.cfg` file names them, `FCONTEST` never assigns them, and `crC` says
+`tr4w.ini`. Every automated test available says station setting, and every one of them is wrong,
+because whether the log records the RST you sent is a property of the contest's exchange.
+
+So the scans in this document **narrow the review, they do not replace it**. A row landing in the
+"no contest signal" pile is a default, not a finding. `LOOK FOR RST SENT` is the third member of
+that family and is still unruled for exactly this reason.
 
 
 ### `crP` — post-change UI refresh
