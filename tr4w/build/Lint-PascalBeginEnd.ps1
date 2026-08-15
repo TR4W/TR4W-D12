@@ -45,7 +45,28 @@ foreach ($file in $Path) {
    if (-not (Test-Path -LiteralPath $file -PathType Leaf)) { continue }
 
    $lines = Get-Content -LiteralPath $file
+
+   # BLOCK-COMMENT STATE, tracked across lines. The stripping below removes
+   # only TRAILING comments, so every line of a multi-line { } header looked
+   # like code -- and a sentence that happened to end in "then" was reported
+   # as an unwrapped if body. Not hypothetical: it fired on a unit header
+   # explaining exception handling. A linter that fires on prose gets ignored,
+   # which costs more than the rule it was meant to enforce.
+   $inBlock = $false
    for ($i = 0; $i -lt $lines.Count; $i++) {
+
+      $raw = $lines[$i]
+      if ($inBlock) {
+         if ($raw -match '\}') { $inBlock = $false }
+         continue
+      }
+      # Opens a block and does not close it on the same line. {$IFDEF} is a
+      # directive, not a comment, and must not start one.
+      if (($raw -match '\{') -and ($raw -notmatch '\{[^}]*\}') -and
+          ($raw -notmatch '\{\$')) {
+         $inBlock = $true
+         continue
+      }
 
       # Strip trailing comments, then trim.
       $code = $lines[$i]
