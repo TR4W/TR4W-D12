@@ -26,6 +26,18 @@ CONTEST_PATTERNS = [
     # less than who writes it; a startup value a contest overwrites cannot be a
     # station setting whatever it is called.
     r'^BAND$',
+    # NY4I 2026-08-15: "yes mode is the same idea" -- the startup mode, contest
+    # for the same reason as BAND.
+    r'^MODE$',
+    # NY4I 2026-08-15: "log rs sent and log rst sent is a contest. (It's
+    # borderline but go with contest)."
+    #
+    # THESE TWO ARE THE REASON THE LIST NEEDED A HUMAN. Neither is named by any
+    # .cfg file, neither is assigned by FCONTEST, and crC says tr4w.ini -- every
+    # mechanical signal available says station setting, and all of them are
+    # wrong. Whether the log records the RST you sent is a property of the
+    # contest's exchange, and no scan of this codebase can know that.
+    r'^LOG RS SENT$', r'^LOG RST SENT$',
 ]
 PAT = re.compile('|'.join(CONTEST_PATTERNS))
 
@@ -102,6 +114,17 @@ contest.
 **Still unplaced:** `TAIL END MESSAGE` / `TAIL END CW MESSAGE` / `TAIL END SSB MESSAGE`, the same
 shape of macro and on no list. `MULTI INFO MESSAGE` is a message but a multi-op one, not a contest
 exchange.
+
+### The limit of the mechanical signals, demonstrated
+
+`LOG RS SENT` and `LOG RST SENT` were ruled contest-scoped on 2026-08-15 while carrying **no
+mechanical signal at all** — no `.cfg` file names them, `FCONTEST` never assigns them, and `crC` says
+`tr4w.ini`. Every automated test available says station setting, and every one of them is wrong,
+because whether the log records the RST you sent is a property of the contest's exchange.
+
+So the scans in this document **narrow the review, they do not replace it**. A row landing in the
+"no contest signal" pile is a default, not a finding. `LOOK FOR RST SENT` is the third member of
+that family and is still unruled for exactly this reason.
 
 """
 section = section % (len(contest), len(rows),
