@@ -88,11 +88,11 @@ var
 
 //  FKCloseButton                         : HWND;
   FKRButtonTimerHAndle                  : HWND;
-  tIncludeFKeyNumber                    : boolean;
 
 implementation
 uses
-  MainUnit;
+  MainUnit,
+  uConfigValues;   // Config.IncludeFKeyNumber
 
 function FunctionKeysWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 label
@@ -301,7 +301,7 @@ begin
         begin
         Insert('&', s, PosOfAmp);
         end;
-     if tIncludeFKeyNumber then
+     if Config.IncludeFKeyNumber then
         begin
         ButtonsText[i] := 'F' + IntToStr(i - 111) + #13#10 + s
         end

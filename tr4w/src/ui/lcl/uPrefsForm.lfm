@@ -237,6 +237,14 @@
         Caption = 'Always send all four letters of a four-letter call'
         TabOrder = 42
       end
+      object chkIncludeFKeyNumber: TCheckBox
+        Left = 12
+        Top = 494
+        Width = 460
+        Height = 22
+        Caption = 'Show the key number on the function-key buttons'
+        TabOrder = 43
+      end
     end
     object layRadios: TPanel
       Color = clWindow
@@ -2896,6 +2904,58 @@
           'Window colors are still on the Settings menu.  They belong here' +
           ' and will move once the main window is resizable, which is the c' +
           'hange that decides what the layout options need to be.'
+      end
+      object lblMainWindowHeading: TLabel
+        Left = 12
+        Top = 292
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Main window'
+      end
+      object chkNoBorder: TCheckBox
+        Left = 12
+        Top = 320
+        Width = 540
+        Height = 22
+        Caption = 'Main window has no border'
+        TabOrder = 20
+      end
+      object chkNoCaption: TCheckBox
+        Left = 12
+        Top = 346
+        Width = 540
+        Height = 22
+        Caption = 'Main window has no title bar'
+        TabOrder = 21
+      end
+      object chkNoColumnHeader: TCheckBox
+        Left = 12
+        Top = 372
+        Width = 540
+        Height = 22
+        Caption = 'Hide the log column headings'
+        TabOrder = 22
+      end
+      object chkShowGridlines: TCheckBox
+        Left = 12
+        Top = 398
+        Width = 540
+        Height = 22
+        Caption = 'Draw gridlines in the log'
+        TabOrder = 23
+      end
+      object lblAppearMenuNote: TLabel
+        Left = 12
+        Top = 428
+        Width = 620
+        Height = 51
+        AutoSize = False
+        WordWrap = True
+        Caption = 
+          'These were on the Appearance item of the Settings menu. That' +
+          ' window goes away once ROW COUNT and WINDOW SIZE join them he' +
+          're.'
       end
     end
     object layBackup: TPanel

@@ -3317,7 +3317,7 @@ begin
 
      tCreateStaticWindow(
        '',
-       TWindows[e].mweiStyle and (not (Cardinal(NoBorder) * SS_SUNKEN))
+       TWindows[e].mweiStyle and (not (Cardinal(Config.NoBorder) * SS_SUNKEN))
        {or SS_ETCHEDFRAME},
        TWindows[e].mweiX * ws,
        TWindows[e].mweiY * ws + TWindows[e].mweB * EditableLogHeight,
@@ -5149,7 +5149,7 @@ begin
   }
   tr4w_WindowsArray[ID].WndHandle := h;
 
-  if NoCaption then
+  if Config.NoCaption then
     // if ID <> tw_FUNCTIONKEYSWINDOW_INDEX then
      begin
      Windows.SetWindowLong(h, GWL_STYLE, GetWindowLong(h, GWL_STYLE) -
@@ -5212,7 +5212,7 @@ begin
     tr4w_WindowsArray[ID].WndRect.Bottom - tr4w_WindowsArray[ID].WndRect.Top,
     TempFlag);
 
-  if NoCaption then
+  if Config.NoCaption then
     if TempFlag = NORESIZEEDWINDOW then
        begin
        Windows.GetWindowRect(h, temprect);
@@ -5834,7 +5834,7 @@ begin
           Right + c * (round(ws * w)),
           ws * 2 + r * ws,
           LabelWidth,
-          defStyle and (not (Cardinal(NoBorder) * SS_SUNKEN))
+          defStyle and (not (Cardinal(Config.NoBorder) * SS_SUNKEN))
           );
 
         end;
@@ -5846,7 +5846,7 @@ begin
         begin
         TotWinheadHandles[7] :=
           tCreateStaticWindow('',
-          (defStyle + SS_CENTERIMAGE) and (not (Cardinal(NoBorder) * SS_SUNKEN))
+          (defStyle + SS_CENTERIMAGE) and (not (Cardinal(Config.NoBorder) * SS_SUNKEN))
           , X, 0, round(ws * 3) {ws2 * 10}, ws * 2, tr4whandle, 0)
         end
      else
@@ -5857,7 +5857,7 @@ begin
         tCreateStaticWindow(
 
           '',
-          (defStyle + SS_CENTERIMAGE) and (not (Cardinal(NoBorder) * SS_SUNKEN)),
+          (defStyle + SS_CENTERIMAGE) and (not (Cardinal(Config.NoBorder) * SS_SUNKEN)),
           X,
           0,
           round(ws * w) {ws2 * 10},
@@ -6276,7 +6276,7 @@ end;
 
 function CreateCallOrExchangeWin(Top, ID: integer): HWND;
 begin
-  Result := CreateWindowExW(Cardinal(not NoBorder) * WS_EX_STATICEDGE, EditPChar,
+  Result := CreateWindowExW(Cardinal(not Config.NoBorder) * WS_EX_STATICEDGE, EditPChar,
     nil, CallsignExchangeWinStyle,
     ws * 15 {col4}, Top, 13 * ws, MainWindowEditHeight, tr4whandle, ID,
     hInstance, nil);
@@ -6558,8 +6558,8 @@ begin
      Style := style1;
      end;
   Factor := ws;
-  Result := CreateWindowExW(Cardinal(not NoBorder) * WS_EX_STATICEDGE,
-    WC_LISTVIEW, nil, Style + integer(NoColumnHeader) * LVS_NOCOLUMNHEADER, X,
+  Result := CreateWindowExW(Cardinal(not Config.NoBorder) * WS_EX_STATICEDGE,
+    WC_LISTVIEW, nil, Style + integer(Config.NoColumnHeader) * LVS_NOCOLUMNHEADER, X,
     Y,
     Width, Height, Parent, 0, hInstance, nil);
   // Issue #997: asm tWM_SETFONT (EAX = Result above).
@@ -6599,7 +6599,7 @@ begin
     WC_LISTVIEW,
     nil,
     Style or WS_CHILD or WS_VISIBLE or LVS_REPORT or LVS_SINGLESEL or
-    LVS_SHOWSELALWAYS or LVS_NOSORTHEADER or integer(NoColumnHeader) *
+    LVS_SHOWSELALWAYS or LVS_NOSORTHEADER or integer(Config.NoColumnHeader) *
     LVS_NOCOLUMNHEADER,
     0,
     0,
@@ -6614,7 +6614,7 @@ begin
   tWM_SETFONT(wh[Window], MainFixedFont);
   SetListViewColor(Window);
 
-  ListView_SetExtendedListViewStyle(wh[Window], integer(tShowGridlines) *
+  ListView_SetExtendedListViewStyle(wh[Window], integer(Config.ShowGridlines) *
     LVS_EX_GRIDLINES or LVS_EX_FULLROWSELECT);
 end;
 

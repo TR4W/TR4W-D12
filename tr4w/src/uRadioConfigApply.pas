@@ -308,7 +308,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..85] of string =
+   MIGRATED_COMMANDS: array[0..90] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -412,7 +412,16 @@ const
       'SWAP PACKET SPOT RADIOS',
       'CHECK LOG FILE SIZE',
       'UNKNOWN COUNTRY FILE ENABLE',
-      'UPDATE RESTART FILE ENABLE'
+      'UPDATE RESTART FILE ENABLE',
+
+      // The F-key button captions, 2026-08-15.
+      'INCLUDE F-KEY NUMBER',
+
+      // The old Appearance menu, 2026-08-15.
+      'NO BORDER',
+      'NO CAPTION',
+      'NO COLUMN HEADER',
+      'SHOW GRIDLINES'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);
