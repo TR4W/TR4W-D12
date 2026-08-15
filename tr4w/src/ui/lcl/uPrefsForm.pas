@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -133,6 +133,12 @@ type
    TPrefsForm = class(TForm)
       edtSearch: TEdit;
       tvNav: TTreeView;
+      layHardware: TPanel;
+      lblHardwareHeading: TLabel;
+      lblHardwareInfo: TLabel;
+      lblRelayPort: TLabel;
+      cbxRelayPort: TComboBox;
+      lblRelayPortInfo: TLabel;
       layContent: TPanel;
       lblPlaceholder: TLabel;
 
@@ -465,6 +471,7 @@ type
 
       procedure tvNavChange(Sender: TObject);
       procedure tvNavExpanded(Sender: TObject; Node: TTreeNode);
+      procedure cbxRelayPortChange(Sender: TObject);
 
       { PUBLISHED because the RESOURCE binds them by name -- TWriter stores an
         event as a string and the loader looks it up in published RTTI. Declared
@@ -761,6 +768,8 @@ type
                                    State: StdCtrls.TOwnerDrawState);
       { Visitors. Each is a method because each needs Self anyway -- one to reach
         the form's helpers, one to record what it found. }
+      procedure LoadHardwarePanel;
+      procedure SaveHardwarePanel;
       procedure BuildNavTree;
       procedure NoteRadiosNavItem(item: TTreeNode);
       procedure ApplyChevrons;
@@ -1789,6 +1798,7 @@ begin
       LoadStationPanel;
       LogPhase(FTiming, '  Station');
       LoadExternalSoftwarePanels;
+      LoadHardwarePanel;
       LogPhase(FTiming, '  External software');
       LoadClusterPanels;
       LogPhase(FTiming, '  Cluster panels');
@@ -1983,6 +1993,7 @@ begin
    FStore.AutoConnectOnStartup := chkAutoConnect.Checked;
    SaveStationPanel;
    SaveExternalSoftwarePanels;
+   SaveHardwarePanel;
    SaveClusterPanels;
    SaveRemainingPanels;
 
@@ -4049,6 +4060,69 @@ begin
 
    edtMMTTYEngine.Text   := FStore.CommandValue('MMTTY ENGINE',
                                CFGCommandValueAsString('MMTTY ENGINE'));
+end;
+
+{ HARDWARE ROOT -- station-wide hardware.
+
+  NY4I: the relay control port is per STATION, not per radio ("someone using an
+  LPT port to handle switching external hardware"), so it belongs here rather
+  than on a radio. Anything targeting a Radio1/Radio2 variable belongs on the
+  radio form instead -- that is the rule this panel exists to respect. }
+procedure TPrefsForm.LoadHardwarePanel;
+var
+   v: string;
+   idx: integer;
+begin
+   if cbxRelayPort = nil then
+      begin
+      Exit;
+      end;
+
+   cbxRelayPort.Items.BeginUpdate;
+   try
+      cbxRelayPort.Items.Clear;
+      // The spellings CFGCA itself accepts -- GetLPTPortFromChar (CfgCmd:192)
+      // reads 'NONE' or '1'/'2'/'3', so the picker offers exactly those and no
+      // translation layer can drift from the parser.
+      cbxRelayPort.Items.Add('NONE');
+      cbxRelayPort.Items.Add('1');
+      cbxRelayPort.Items.Add('2');
+      cbxRelayPort.Items.Add('3');
+   finally
+      cbxRelayPort.Items.EndUpdate;
+   end;
+
+   v := Trim(FStore.CommandValue('RELAY CONTROL PORT',
+                                 CFGCommandValueAsString('RELAY CONTROL PORT')));
+   if v = '' then
+      begin
+      v := 'NONE';
+      end;
+
+   idx := cbxRelayPort.Items.IndexOf(UpperCase(v));
+   if idx < 0 then
+      begin
+      idx := 0;   // an unrecognised value reads as None rather than as blank
+      end;
+   cbxRelayPort.ItemIndex := idx;
+end;
+
+procedure TPrefsForm.SaveHardwarePanel;
+begin
+   if (cbxRelayPort = nil) or (cbxRelayPort.ItemIndex < 0) then
+      begin
+      Exit;
+      end;
+   ApplyAndStoreCommand(FStore, 'RELAY CONTROL PORT',
+                        cbxRelayPort.Items[cbxRelayPort.ItemIndex]);
+end;
+
+procedure TPrefsForm.cbxRelayPortChange(Sender: TObject);
+begin
+   // Nothing to do until Save: the panel follows the same working-copy rule as
+   // the rest of Preferences, so Cancel discards. The handler exists because the
+   // resource binds one, and Lint-FormEvents requires every wired handler to be
+   // real.
 end;
 
 procedure TPrefsForm.SaveExternalSoftwarePanels;
