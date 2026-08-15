@@ -2079,7 +2079,7 @@
       end
     end
     object layAudio: TPanel
-      Color = clWindow
+      Color = clBtnFace
       ParentColor = False
       BevelOuter = bvNone
       Caption = ''
@@ -2090,185 +2090,229 @@
       Visible = False
       TabOrder = 24
       object lblAudioHeading: TLabel
-        Left = 12
+          Left = 12
         Top = 8
-        Width = 620
-        Height = 21
-        AutoSize = False
-        Caption = 'Audio'
-        ParentFont = False
-        Font.Height = -15
-        Font.Style = [fsBold]
+          Width = 620
+          Height = 21
+          AutoSize = False
+          Caption = 'Audio'
+          ParentFont = False
+          Font.Height = -15
+          Font.Style = [fsBold]
       end
       object lblAudioInfo: TLabel
-        Left = 12
+          Left = 12
         Top = 34
-        Width = 620
-        Height = 20
+          Width = 620
+          Height = 20
+          AutoSize = False
+          WordWrap = True
+          Caption = 'Voice keying and QSO recording. CW keying is on the CW Settings page.'
+          ParentFont = False
+          Font.Color = clGrayText
+      end
+      object cardDVK: TPanel
+        Color = $00E5E5E5
+        ParentColor = False
+        BevelOuter = bvNone
+        Caption = ''
+        Left = 12
+        Top = 84
+        Width = 640
+        Height = 194
         AutoSize = False
-        WordWrap = True
-        Caption = 'Voice keying and QSO recording. CW keying is on the CW Settings page.'
-        ParentFont = False
-        Font.Color = clGrayText
+        object cardDVKInner: TPanel
+          Color = clWindow
+          ParentColor = False
+          BevelOuter = bvNone
+          Caption = ''
+          Left = 1
+          Top = 1
+          Width = 638
+          Height = 192
+          AutoSize = False
+        object lblDVKHeading: TLabel
+          Left = 16
+          Top = 16
+            Width = 620
+            Height = 17
+            AutoSize = False
+            Caption = 'Digital voice keyer'
+            ParentFont = False
+            Font.Style = [fsBold]
+        end
+        object chkDVKEnable: TCheckBox
+          Left = 16
+          Top = 44
+            Width = 540
+            Height = 22
+            Caption = 'Use the digital voice keyer'
+            TabOrder = 0
+        end
+        object chkDVKLocalizedMessages: TCheckBox
+          Left = 16
+          Top = 70
+            Width = 540
+            Height = 22
+            Caption = 'Use localized DVK message files'
+            TabOrder = 1
+        end
+        object chkUseRecordedSigns: TCheckBox
+          Left = 16
+          Top = 96
+            Width = 540
+            Height = 22
+            Caption = 'Send recorded audio for callsign characters'
+            TabOrder = 2
+        end
+        object lblDVKPath: TLabel
+          Left = 16
+          Top = 130
+            Width = 200
+            Height = 17
+            AutoSize = False
+            Caption = 'DVK recording folder'
+        end
+        object edtDVKPath: TEdit
+          Left = 220
+          Top = 126
+          Width = 316
+            Height = 25
+            TabOrder = 3
+        end
+        object btnBrowseDVKPath: TButton
+          Left = 544
+          Top = 126
+            Width = 70
+            Height = 25
+            Caption = 'Browse...'
+            TabOrder = 20
+            OnClick = btnBrowseDVKPathClick
+        end
+        object lblDVKRecorder: TLabel
+          Left = 16
+          Top = 162
+            Width = 200
+            Height = 17
+            AutoSize = False
+            Caption = 'DVK recorder program'
+        end
+        object edtDVKRecorder: TEdit
+          Left = 220
+          Top = 158
+          Width = 316
+            Height = 25
+            TabOrder = 4
+        end
+        object btnBrowseDVKRecorder: TButton
+          Left = 544
+          Top = 158
+            Width = 70
+            Height = 25
+            Caption = 'Browse...'
+            TabOrder = 21
+            OnClick = btnBrowseDVKRecorderClick
+        end
+        end
       end
-      object lblDVKHeading: TLabel
+      object cardMP3: TPanel
+        Color = $00E5E5E5
+        ParentColor = False
+        BevelOuter = bvNone
+        Caption = ''
         Left = 12
-        Top = 72
-        Width = 620
-        Height = 17
+        Top = 302
+        Width = 640
+        Height = 142
         AutoSize = False
-        Caption = 'Digital voice keyer'
-        ParentFont = False
-        Font.Style = [fsBold]
-      end
-      object chkDVKEnable: TCheckBox
-        Left = 12
-        Top = 100
-        Width = 540
-        Height = 22
-        Caption = 'Use the digital voice keyer'
-        TabOrder = 0
-      end
-      object chkDVKLocalizedMessages: TCheckBox
-        Left = 12
-        Top = 126
-        Width = 540
-        Height = 22
-        Caption = 'Use localized DVK message files'
-        TabOrder = 1
-      end
-      object chkUseRecordedSigns: TCheckBox
-        Left = 12
-        Top = 152
-        Width = 540
-        Height = 22
-        Caption = 'Send recorded audio for callsign characters'
-        TabOrder = 2
-      end
-      object lblDVKPath: TLabel
-        Left = 12
-        Top = 186
-        Width = 200
-        Height = 17
-        AutoSize = False
-        Caption = 'DVK recording folder'
-      end
-      object edtDVKPath: TEdit
-        Left = 220
-        Top = 182
-        Width = 340
-        Height = 25
-        TabOrder = 3
-      end
-      object lblDVKRecorder: TLabel
-        Left = 12
-        Top = 218
-        Width = 200
-        Height = 17
-        AutoSize = False
-        Caption = 'DVK recorder program'
-      end
-      object edtDVKRecorder: TEdit
-        Left = 220
-        Top = 214
-        Width = 340
-        Height = 25
-        TabOrder = 4
-      end
-      object lblMP3Heading: TLabel
-        Left = 12
-        Top = 258
-        Width = 620
-        Height = 17
-        AutoSize = False
-        Caption = 'QSO recording'
-        ParentFont = False
-        Font.Style = [fsBold]
-      end
-      object chkMP3RecorderEnable: TCheckBox
-        Left = 12
-        Top = 286
-        Width = 540
-        Height = 22
-        Caption = 'Record each QSO to MP3'
-        TabOrder = 5
-      end
-      object lblMP3Path: TLabel
-        Left = 12
-        Top = 320
-        Width = 200
-        Height = 17
-        AutoSize = False
-        Caption = 'MP3 folder'
-      end
-      object edtMP3Path: TEdit
-        Left = 220
-        Top = 316
-        Width = 340
-        Height = 25
-        TabOrder = 6
-      end
-      object lblMP3Player: TLabel
-        Left = 12
-        Top = 352
-        Width = 200
-        Height = 17
-        AutoSize = False
-        Caption = 'MP3 player program'
-      end
-      object edtMP3Player: TEdit
-        Left = 220
-        Top = 348
-        Width = 340
-        Height = 25
-        TabOrder = 7
+        object cardMP3Inner: TPanel
+          Color = clWindow
+          ParentColor = False
+          BevelOuter = bvNone
+          Caption = ''
+          Left = 1
+          Top = 1
+          Width = 638
+          Height = 140
+          AutoSize = False
+        object lblMP3Heading: TLabel
+          Left = 16
+          Top = 16
+            Width = 620
+            Height = 17
+            AutoSize = False
+            Caption = 'QSO recording'
+            ParentFont = False
+            Font.Style = [fsBold]
+        end
+        object chkMP3RecorderEnable: TCheckBox
+          Left = 16
+          Top = 44
+            Width = 540
+            Height = 22
+            Caption = 'Record each QSO to MP3'
+            TabOrder = 5
+        end
+        object lblMP3Path: TLabel
+          Left = 16
+          Top = 78
+            Width = 200
+            Height = 17
+            AutoSize = False
+            Caption = 'MP3 folder'
+        end
+        object edtMP3Path: TEdit
+          Left = 220
+          Top = 74
+          Width = 316
+            Height = 25
+            TabOrder = 6
+        end
+        object btnBrowseMP3Path: TButton
+          Left = 544
+          Top = 74
+            Width = 70
+            Height = 25
+            Caption = 'Browse...'
+            TabOrder = 22
+            OnClick = btnBrowseMP3PathClick
+        end
+        object lblMP3Player: TLabel
+          Left = 16
+          Top = 110
+            Width = 200
+            Height = 17
+            AutoSize = False
+            Caption = 'MP3 player program'
+        end
+        object edtMP3Player: TEdit
+          Left = 220
+          Top = 106
+          Width = 316
+            Height = 25
+            TabOrder = 7
+        end
+        object btnBrowseMP3Player: TButton
+          Left = 544
+          Top = 106
+            Width = 70
+            Height = 25
+            Caption = 'Browse...'
+            TabOrder = 23
+            OnClick = btnBrowseMP3PlayerClick
+        end
+        end
       end
       object lblAudioNote: TLabel
-        Left = 12
-        Top = 392
-        Width = 620
-        Height = 34
-        AutoSize = False
-        WordWrap = True
-        Caption = 'Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately.'
-        ParentFont = False
-        Font.Color = clGrayText
-      end
-      object btnBrowseDVKPath: TButton
-        Left = 568
-        Top = 182
-        Width = 70
-        Height = 25
-        Caption = 'Browse...'
-        TabOrder = 20
-        OnClick = btnBrowseDVKPathClick
-      end
-      object btnBrowseDVKRecorder: TButton
-        Left = 568
-        Top = 214
-        Width = 70
-        Height = 25
-        Caption = 'Browse...'
-        TabOrder = 21
-        OnClick = btnBrowseDVKRecorderClick
-      end
-      object btnBrowseMP3Path: TButton
-        Left = 568
-        Top = 316
-        Width = 70
-        Height = 25
-        Caption = 'Browse...'
-        TabOrder = 22
-        OnClick = btnBrowseMP3PathClick
-      end
-      object btnBrowseMP3Player: TButton
-        Left = 568
-        Top = 348
-        Width = 70
-        Height = 25
-        Caption = 'Browse...'
-        TabOrder = 23
-        OnClick = btnBrowseMP3PlayerClick
+          Left = 12
+        Top = 460
+          Width = 620
+          Height = 34
+          AutoSize = False
+          WordWrap = True
+          Caption = 'Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately.'
+          ParentFont = False
+          Font.Color = clGrayText
       end
     end
     object layDXLab: TPanel
