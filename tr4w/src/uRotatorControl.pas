@@ -121,6 +121,13 @@ type
       { 0 means "whatever the driver prefers" -- the store's own wording, and the
         reason a definition need not know that a DCU-1 wants 4800. }
       BaudRate: integer;
+      { Whether the "port is not available" line has already been logged.
+
+        The port comes and goes with the hardware -- NY4I: "as soon as I turn the
+        rotor controller on, COM3 will come back" -- so the open is retried on
+        every send. Without this the log would gain a line per attempt for a
+        rotator that is simply switched off, which buries anything real. }
+      PortReported: boolean;
       { The driver's outlet. A METHOD on the live rotator rather than a closure
         capturing it: same effect, and it names the owner instead of implying it.
         Each driver is handed ITS OWN rotator's SendBytes, which is what stops
@@ -136,6 +143,11 @@ var
 // delegates to needs PortFromName and the driver's UsesSerialPort, so it lives
 // further down with the rest of the transport.
 procedure SendToRotator(const aLive: TLiveRotator; const aBytes: TBytes); forward;
+
+// Forward for the same reason: SendToRotator retries the open before it
+// writes, and the routine that does the opening needs the driver's
+// PreferredBaudRate, so it lives further down with the rest of the setup.
+function OpenPortFor(const aLive: TLiveRotator): boolean; forward;
 
 destructor TLiveRotator.Destroy;
 begin
@@ -218,7 +230,12 @@ begin
       Exit;
       end;
 
-   if aLive.Port = NoPort then
+   // RETRY HERE, because the hardware comes and goes: the port only exists
+   // while the controller is powered, and TR4W is usually started first. Opening
+   // solely at startup meant an operator who switched the controller on
+   // afterwards had to restart the program, with nothing on screen to say why
+   // the rotator did not move.
+   if not OpenPortFor(aLive) then
       begin
       Exit;
       end;
@@ -358,6 +375,63 @@ begin
    logger.Info('[uRotatorControl] %d rotator(s) live', [LiveRotatorCount]);
 end;
 
+{ Open this rotator's port if it is not open already.  True when it is
+  usable afterwards.
+
+  QUIET ON FAILURE, DELIBERATELY. A missing port used to raise a system-modal
+  message box saying only "COM3: The system cannot find the file specified" --
+  at startup, naming no device, over whatever the operator was doing. A rotator
+  controller that is switched off is a completely ordinary state, not an error
+  worth stopping the program for. The log gets one line saying which rotator and
+  which port, and the operator finds out from the rotator not turning, which is
+  the same way they would find out from a modal they dismissed at start-up. }
+function OpenPortFor(const aLive: TLiveRotator): boolean;
+var
+   baud: integer;
+   h: HWND;
+begin
+   Result := False;
+   if (aLive = nil) or (not aLive.Driver.UsesSerialPort) or (aLive.Port = NoPort) then
+      begin
+      Exit;
+      end;
+
+   h := CPUKeyer.SerialPortConfigured_Handle[aLive.Port];
+   if h <> INVALID_HANDLE_VALUE then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   baud := aLive.BaudRate;
+   if baud = 0 then
+      begin
+      baud := aLive.Driver.PreferredBaudRate;
+      end;
+
+   // ReportFailure = False: this routine does its own reporting, below.
+   InitializeSerialPort(aLive.Port, baud, 8, tNoParity, 1,
+                        FILE_ATTRIBUTE_NORMAL, #0, False);
+
+   Result := CPUKeyer.SerialPortConfigured_Handle[aLive.Port] <> INVALID_HANDLE_VALUE;
+   if Result then
+      begin
+      logger.Info('[uRotatorControl] %s opened on %s at %d baud',
+                  [aLive.Name, string(PortTypeSA[aLive.Port]), baud]);
+      // Say it again if it goes away and comes back.
+      aLive.PortReported := False;
+      end
+   else if not aLive.PortReported then
+      begin
+      // ONCE, not once per attempt.
+      logger.Warn('[uRotatorControl] %s: %s is not available -- %s. It will be '
+                  + 'opened when it appears.',
+                  [aLive.Name, string(PortTypeSA[aLive.Port]),
+                   SysUtils.SysErrorMessage(GetLastError)]);
+      aLive.PortReported := True;
+      end;
+end;
+
 procedure OpenRotatorPorts;
 var
    i, j: integer;
@@ -415,10 +489,7 @@ begin
          baud := GLive[i].Driver.PreferredBaudRate;
          end;
 
-      InitializeSerialPort(GLive[i].Port, baud, 8, tNoParity, 1,
-                           FILE_ATTRIBUTE_NORMAL, #0);
-      logger.Info('[uRotatorControl] %s on %s at %d baud',
-                  [GLive[i].Name, string(PortTypeSA[GLive[i].Port]), baud]);
+      OpenPortFor(GLive[i]);
       end;
 end;
 

@@ -882,7 +882,14 @@ function InitializeSerialPort(
   Parity: ParityType;
   StopBits: Byte;
   dwFlagsAndAttributes: DWORD;
-  EvtChar: Char): HWND;
+  EvtChar: Char;
+  { A FAILED OPEN IS NOT ALWAYS WORTH A MODAL. showwarning puts up a
+    SYSTEM-MODAL, topmost box; for a USB adapter that is merely unplugged
+    that is an ambush at startup, and it names only the port number, so it
+    does not even say WHAT failed to open. Pass False and report it
+    yourself with the context you have. Defaulted True, so no existing
+    caller changes behaviour. }
+  ReportFailure: boolean = True): HWND;
 
 function KeyId(Key: Char): string;
 
@@ -2773,7 +2780,14 @@ function InitializeSerialPort(
   Parity: ParityType;
   StopBits: Byte;
   dwFlagsAndAttributes: DWORD;
-  EvtChar: Char): HWND;
+  EvtChar: Char;
+  { A FAILED OPEN IS NOT ALWAYS WORTH A MODAL. showwarning puts up a
+    SYSTEM-MODAL, topmost box; for a USB adapter that is merely unplugged
+    that is an ambush at startup, and it names only the port number, so it
+    does not even say WHAT failed to open. Pass False and report it
+    yourself with the context you have. Defaulted True, so no existing
+    caller changes behaviour. }
+  ReportFailure: boolean = True): HWND;
 var
   DCB                                   : TDCB;
   CommTimeouts                          : TCommTimeouts;
@@ -2793,7 +2807,10 @@ begin
   Result := TryToOpenCOMPort(com_port_name, dwFlagsAndAttributes);
   if Result = INVALID_HANDLE_VALUE then
      begin
-     showwarning(SysUtils.Format('COM%d:'#13'%s', [com_port_name, SysUtils.SysErrorMessage(GetLastError)]));
+     if ReportFailure then
+        begin
+        showwarning(SysUtils.Format('COM%d:'#13'%s', [com_port_name, SysUtils.SysErrorMessage(GetLastError)]));
+        end;
      Exit;
      end;
 
