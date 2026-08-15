@@ -213,6 +213,30 @@
         AutoSize = False
         Caption = 'Hz  (0 = the radios own sidetone)'
       end
+      object chkCWMessagesChainable: TCheckBox
+        Left = 12
+        Top = 416
+        Width = 460
+        Height = 22
+        Caption = 'Any CW message may chain into the next'
+        TabOrder = 40
+      end
+      object chkTuneWithDits: TCheckBox
+        Left = 12
+        Top = 442
+        Width = 460
+        Height = 22
+        Caption = 'Tune with dits rather than a solid carrier'
+        TabOrder = 41
+      end
+      object chkSendFourLetterCall: TCheckBox
+        Left = 12
+        Top = 468
+        Width = 460
+        Height = 22
+        Caption = 'Always send all four letters of a four-letter call'
+        TabOrder = 42
+      end
     end
     object layRadios: TPanel
       Color = clWindow
@@ -2367,30 +2391,6 @@
         AutoSize = False
         Caption = 'Hz'
       end
-      object chkCWMessagesChainable: TCheckBox
-        Left = 12
-        Top = 416
-        Width = 460
-        Height = 22
-        Caption = 'Any CW message may chain into the next'
-        TabOrder = 40
-      end
-      object chkTuneWithDits: TCheckBox
-        Left = 12
-        Top = 442
-        Width = 460
-        Height = 22
-        Caption = 'Tune with dits rather than a solid carrier'
-        TabOrder = 41
-      end
-      object chkSendFourLetterCall: TCheckBox
-        Left = 12
-        Top = 468
-        Width = 460
-        Height = 22
-        Caption = 'Always send all four letters of a four-letter call'
-        TabOrder = 42
-      end
       object lblBandMapLimit: TLabel
         Left = 12
         Top = 132
@@ -2501,7 +2501,7 @@
       end
       object chkCallWindowShowAllSpots: TCheckBox
         Left = 12
-        Top = 412
+        Top = 448
         Width = 540
         Height = 22
         Caption = 'Show every spot in the call window'
@@ -2509,7 +2509,7 @@
       end
       object chkSwapPacketSpotRadios: TCheckBox
         Left = 12
-        Top = 438
+        Top = 474
         Width = 540
         Height = 22
         Caption = 'Send spots to the other radio'
@@ -2601,7 +2601,7 @@
       end
       object lblSCPMatchHeading: TLabel
         Left = 12
-        Top = 204
+        Top = 222
         Width = 400
         Height = 17
         AutoSize = False
@@ -2609,7 +2609,7 @@
       end
       object chkPossibleCalls: TCheckBox
         Left = 12
-        Top = 232
+        Top = 250
         Width = 540
         Height = 22
         Caption = 'Offer possible calls'
@@ -2617,7 +2617,7 @@
       end
       object chkPartialCall: TCheckBox
         Left = 12
-        Top = 258
+        Top = 276
         Width = 540
         Height = 22
         Caption = 'Match on a partial callsign'
@@ -2625,7 +2625,7 @@
       end
       object chkWildcardPartials: TCheckBox
         Left = 12
-        Top = 284
+        Top = 302
         Width = 540
         Height = 22
         Caption = 'Allow wildcards in a partial'
@@ -2633,7 +2633,7 @@
       end
       object chkNameFlag: TCheckBox
         Left = 12
-        Top = 310
+        Top = 328
         Width = 540
         Height = 22
         Caption = 'Flag a station whose name is already known'
@@ -2739,7 +2739,7 @@
         Height = 22
         AutoSize = False
         TabOrder = 10
-        Caption = 'Synchronise the log when connecting'
+        Caption = 'Synchronize the log when connecting'
       end
       object chkMultiMultsOnly: TCheckBox
         Left = 12
@@ -2771,7 +2771,7 @@
       end
       object lblRadioTCPHeading: TLabel
         Left = 12
-        Top = 268
+        Top = 320
         Width = 400
         Height = 17
         AutoSize = False
@@ -2779,7 +2779,7 @@
       end
       object lblRadioTCPPort: TLabel
         Left = 12
-        Top = 302
+        Top = 354
         Width = 140
         Height = 17
         AutoSize = False
@@ -2787,7 +2787,7 @@
       end
       object edtRadioTCPPort: TEdit
         Left = 160
-        Top = 298
+        Top = 350
         Width = 90
         Height = 22
         AutoSize = False
@@ -2795,7 +2795,7 @@
       end
       object lblRadioTCPHint: TLabel
         Left = 12
-        Top = 330
+        Top = 382
         Width = 620
         Height = 51
         AutoSize = False
@@ -2872,7 +2872,7 @@
         Height = 22
         AutoSize = False
         TabOrder = 6
-        Caption = 'Colour the dupe sheet columns'
+        Caption = 'Color the dupe sheet columns'
       end
       object lblAppearHint: TLabel
         Left = 12
@@ -2893,7 +2893,7 @@
         AutoSize = False
         WordWrap = True
         Caption = 
-          'Window colours are still on the Settings menu.  They belong here' +
+          'Window colors are still on the Settings menu.  They belong here' +
           ' and will move once the main window is resizable, which is the c' +
           'hange that decides what the layout options need to be.'
       end

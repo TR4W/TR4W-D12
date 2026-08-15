@@ -43,8 +43,12 @@ param(
    [switch] $SelfTest
 )
 
+# TTabSheet/TPage join the list for the same reason TTabItem is already on it:
+# the pages of a tab control are SUPPOSED to sit on top of each other, and
+# flagging them would train the reader to ignore this lint.
 $CONTAINERS = @('TLayout', 'TGroupBox', 'TTreeView', 'TTreeViewItem', 'TPanel',
-                'TForm', 'TTabControl', 'TTabItem', 'TScrollBox', 'TVertScrollBox')
+                'TForm', 'TTabControl', 'TTabItem', 'TScrollBox', 'TVertScrollBox',
+                'TPageControl', 'TTabSheet', 'TNotebook', 'TPage')
 
 function Get-FmxControls {
    param([string[]] $Lines)
@@ -75,10 +79,19 @@ function Get-FmxControls {
       if ($stack.Count -eq 0) { continue }
       $top = $stack[$stack.Count - 1]
 
+      # BOTH DIALECTS. FMX writes Position.X / Size.Width; the LCL writes plain
+      # Left / Top / Width / Height. .lfm was added to the file filter without
+      # teaching the parser that, so every LCL control parsed as 0x0 at (0,0),
+      # the W>0 filter discarded all of them, and the lint reported "no overlaps"
+      # having examined nothing. It passed over a real overlap on the Network page.
       if ($line -match '^Position\.X\s*=\s*([\d.]+)')  { $top.X = [double]$Matches[1] }
       elseif ($line -match '^Position\.Y\s*=\s*([\d.]+)')  { $top.Y = [double]$Matches[1] }
       elseif ($line -match '^Size\.Width\s*=\s*([\d.]+)')  { $top.W = [double]$Matches[1] }
       elseif ($line -match '^Size\.Height\s*=\s*([\d.]+)') { $top.H = [double]$Matches[1] }
+      elseif ($line -match '^Left\s*=\s*(-?[\d.]+)')      { $top.X = [double]$Matches[1] }
+      elseif ($line -match '^Top\s*=\s*(-?[\d.]+)')       { $top.Y = [double]$Matches[1] }
+      elseif ($line -match '^Width\s*=\s*(-?[\d.]+)')     { $top.W = [double]$Matches[1] }
+      elseif ($line -match '^Height\s*=\s*(-?[\d.]+)')    { $top.H = [double]$Matches[1] }
    }
 
    return $nodes
@@ -92,6 +105,7 @@ function Test-Overlaps {
    # Containers are excluded, and so is anything with no width -- see the
    # description for why each of those would otherwise be noise.
    $laid = @($Nodes | Where-Object { $CONTAINERS -notcontains $_.Type -and $_.W -gt 0 -and $_.H -gt 0 })
+   $script:totalLaid += $laid.Count
 
    foreach ($group in ($laid | Group-Object Parent)) {
       $items = @($group.Group)
@@ -261,6 +275,7 @@ if (-not $SourceDir) {
 # forms renamed to .fmx and getting identical, sensible answers. Filtering on
 # .fmx alone meant that as each form was ported to the LCL it silently dropped
 # out of this gate, which is how a designed-form defect gets shipped.
+$totalLaid = 0
 $files = @(Get-ChildItem -Path $SourceDir -Recurse -File | Where-Object { $_.Extension -in '.fmx', '.lfm' })
 $violations = @()
 foreach ($f in $files) {
@@ -274,5 +289,13 @@ if ($violations.Count -gt 0) {
    exit 1
 }
 
-Write-Output ("Lint-FormOverlap: {0} .fmx file(s) checked, no sibling controls overlap." -f $files.Count)
+# THE COUNT OF CONTROLS, not just of files. "9 files checked" was true while
+# the parser understood none of the LCL ones -- a clean result that had
+# examined nothing. Saying how many controls were laid out makes that
+# visible, and the floor below makes it fail rather than pass.
+if ($totalLaid -lt 1) {
+   Write-Output "Lint-FormOverlap: parsed 0 positioned controls -- the parser is not reading these files."
+   exit 1
+}
+Write-Output ("Lint-FormOverlap: {0} form file(s), {1} positioned control(s) checked, no sibling controls overlap." -f $files.Count, $totalLaid)
 exit 0
