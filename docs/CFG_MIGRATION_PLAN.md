@@ -195,6 +195,27 @@ eyeballing once:
   `tr4w.ini` — is what changed;
 * the speed-up/slow-down keys still step by that amount on air.
 
+## A path setting gets a picker (NY4I, 2026-08-15)
+
+> *"These file and folder options should have a file and folder picker behind them."*
+
+A standing rule for the rest of the migration, not a one-off request. Any row typed `ctDirectory` or
+`ctFileName` gets a **Browse...** button beside its edit — `TSelectDirectoryDialog` for a folder,
+`TOpenDialog` for a file — following `btnBrowseMMTTYClick`, which was already doing this.
+
+All six path settings now in Preferences comply: `BACKUP LOG FILE NAME`, `MMTTY ENGINE`, `DVK PATH`,
+`DVK RECORDER`, `MP3 PATH`, `MP3 PLAYER`.
+
+**Still to come, and each owes a picker when it lands:** `COUNTRY INFORMATION FILE`,
+`UNKNOWN COUNTRY FILE NAME`, `DOMESTIC FILENAME` and `INITIAL EXCHANGE FILENAME` (the last two are
+contest-scoped).
+
+Two details worth keeping. The folder picker opens at `ExpandFileName` of the current value, because
+the shipped defaults are RELATIVE (`DVK`, `MP3`) and expand against the program directory — opening
+at the process working directory would send the operator somewhere the setting never meant. And the
+DVK recorder filter offers `.dll` as well as `.exe`: NY4I's own station has `lame_enc.dll` in that
+field, so an exe-only filter would hide the working answer.
+
 ## The Appearance menu folds into the Appearance page (NY4I, 2026-08-15)
 
 **Correcting a misreading of mine.** I took an earlier remark to mean the Preferences Appearance

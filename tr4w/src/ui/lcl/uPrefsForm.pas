@@ -512,6 +512,10 @@ type
       lblMP3Player: TLabel;
       edtMP3Player: TEdit;
       lblAudioNote: TLabel;
+      btnBrowseDVKPath: TButton;
+      btnBrowseDVKRecorder: TButton;
+      btnBrowseMP3Path: TButton;
+      btnBrowseMP3Player: TButton;
       layPaddlePTT: TPanel;
       lblPaddlePTTHeading: TLabel;
       lblPaddlePTTInfo: TLabel;
@@ -600,6 +604,17 @@ type
       procedure chkTCIServerChange(Sender: TObject);
       procedure cbxLogLevelChange(Sender: TObject);
       procedure btnBrowseMMTTYClick(Sender: TObject);
+      procedure btnBrowseDVKPathClick(Sender: TObject);
+      procedure btnBrowseDVKRecorderClick(Sender: TObject);
+      procedure btnBrowseMP3PathClick(Sender: TObject);
+      procedure btnBrowseMP3PlayerClick(Sender: TObject);
+      { The pickers themselves. ONE handler per button, each
+        delegating with explicit arguments -- no branching on
+        Sender, which is the house rule and what keeps a rename
+        from silently repointing a button at the wrong edit. }
+      procedure BrowseForFolder(const aEdit: TEdit; const aTitle: string);
+      procedure BrowseForProgram(const aEdit: TEdit; const aTitle,
+                                 aFilter: string);
       procedure btnBrowseBackupClick(Sender: TObject);
       // OnSelectionChange, NOT OnChange -- and hence the extra parameter.  An
       // LCL TListBox has no OnChange at all (TComboBox does, which is why only
@@ -4461,6 +4476,79 @@ begin
    finally
       dlg.Free;
    end;
+end;
+
+
+procedure TPrefsForm.BrowseForFolder(const aEdit: TEdit; const aTitle: string);
+var
+   dlg: TSelectDirectoryDialog;
+begin
+   dlg := TSelectDirectoryDialog.Create(nil);
+   try
+      dlg.Title := aTitle;
+      // START WHERE THE OPERATOR ALREADY IS. A relative folder ('DVK' is the
+      // shipped default) expands against the program directory, which is what it
+      // means at run time -- opening the picker at the current working directory
+      // instead would send them somewhere the setting never referred to.
+      if Trim(aEdit.Text) <> '' then
+         begin
+         dlg.InitialDir := ExpandFileName(Trim(aEdit.Text));
+         end;
+      if dlg.Execute then
+         begin
+         aEdit.Text := dlg.FileName;
+         end;
+   finally
+      dlg.Free;
+   end;
+end;
+
+procedure TPrefsForm.BrowseForProgram(const aEdit: TEdit; const aTitle,
+                                      aFilter: string);
+var
+   dlg: TOpenDialog;
+begin
+   dlg := TOpenDialog.Create(nil);
+   try
+      dlg.Title  := aTitle;
+      dlg.Filter := aFilter;
+      if Trim(aEdit.Text) <> '' then
+         begin
+         dlg.FileName := Trim(aEdit.Text);
+         end;
+      if dlg.Execute then
+         begin
+         aEdit.Text := dlg.FileName;
+         end;
+   finally
+      dlg.Free;
+   end;
+end;
+
+procedure TPrefsForm.btnBrowseDVKPathClick(Sender: TObject);
+begin
+   BrowseForFolder(edtDVKPath, 'Folder for DVK recordings');
+end;
+
+procedure TPrefsForm.btnBrowseDVKRecorderClick(Sender: TObject);
+begin
+   // DLLs ARE OFFERED, and that is not a slip: NY4I's own station has
+   // lame_enc.dll in this field. The recorder is whatever component does the
+   // encoding, so a filter that showed only .exe would hide the working answer.
+   BrowseForProgram(edtDVKRecorder, 'DVK recorder',
+                    'Programs and encoders (*.exe;*.dll)|*.exe;*.dll|' +
+                    'All files (*.*)|*.*');
+end;
+
+procedure TPrefsForm.btnBrowseMP3PathClick(Sender: TObject);
+begin
+   BrowseForFolder(edtMP3Path, 'Folder for MP3 recordings');
+end;
+
+procedure TPrefsForm.btnBrowseMP3PlayerClick(Sender: TObject);
+begin
+   BrowseForProgram(edtMP3Player, 'MP3 player',
+                    'Programs (*.exe)|*.exe|All files (*.*)|*.*');
 end;
 
 procedure TPrefsForm.LoadStationPanel;
