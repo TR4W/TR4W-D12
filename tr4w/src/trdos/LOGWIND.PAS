@@ -3904,7 +3904,7 @@ procedure DispalayLogGridLines;
 var
   Style                                 : integer;
 begin
-  if tShowGridlines then
+  if Config.ShowGridlines then
      begin
      Style := LVS_EX_GRIDLINES or LVS_EX_FULLROWSELECT
      end

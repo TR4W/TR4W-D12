@@ -76,7 +76,7 @@ begin
         tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle := hwnddlg;
         CreateListView(tw_STATIONS_INDEX, mweStations, LVS_SORTASCENDING);
 
-//        ListView_SetExtendedListViewStyle(wh[mweStations], integer(tShowGridlines) * LVS_EX_GRIDLINES or LVS_EX_FULLROWSELECT);
+//        ListView_SetExtendedListViewStyle(wh[mweStations], integer(Config.ShowGridlines) * LVS_EX_GRIDLINES or LVS_EX_FULLROWSELECT);
 
         elvc.Mask := LVCF_TEXT or LVCF_WIDTH or LVCF_FMT;
 

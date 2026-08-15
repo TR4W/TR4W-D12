@@ -487,6 +487,13 @@ type
       chkCWMessagesChainable: TCheckBox;
       chkTuneWithDits: TCheckBox;
       chkSendFourLetterCall: TCheckBox;
+      chkIncludeFKeyNumber: TCheckBox;
+      lblMainWindowHeading: TLabel;
+      chkNoBorder: TCheckBox;
+      chkNoCaption: TCheckBox;
+      chkNoColumnHeader: TCheckBox;
+      chkShowGridlines: TCheckBox;
+      lblAppearMenuNote: TLabel;
       layPaddlePTT: TPanel;
       lblPaddlePTTHeading: TLabel;
       lblPaddlePTTInfo: TLabel;
@@ -3116,6 +3123,12 @@ begin
    FBindings.Bind(chkCWMessagesChainable,  'cw.messagesChainable');
    FBindings.Bind(chkTuneWithDits,         'cw.tuneWithDits');
    FBindings.Bind(chkSendFourLetterCall,   'cw.sendFourLetterCall');
+   FBindings.Bind(chkIncludeFKeyNumber,  'cw.includeFKeyNumber');
+
+   FBindings.Bind(chkNoBorder,           'appearance.noBorder');
+   FBindings.Bind(chkNoCaption,          'appearance.noCaption');
+   FBindings.Bind(chkNoColumnHeader,     'appearance.noColumnHeader');
+   FBindings.Bind(chkShowGridlines,      'appearance.showGridlines');
 
    // Paddle and PTT -- a CHILD of CW Settings, so the nav gains nothing
    // in height while collapsed. NY4I asked that the left pane never

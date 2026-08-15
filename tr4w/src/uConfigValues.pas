@@ -189,6 +189,31 @@ type
       CheckLogFileSize: boolean;
       UnknownCountryFileEnable: boolean;
       UpdateRestartFileEnable: boolean;
+
+      { The function-key button captions, migrated 2026-08-15.
+
+        NOT held with the Appearance group even though it changes what is drawn.
+        What it gates is one string prefix in uFunctionKeys ('F1' above the
+        message text); it does not touch the grid the LCL conversion replaces,
+        and the page it belongs on -- CW Settings, where those messages are
+        configured -- already exists. }
+      IncludeFKeyNumber: boolean;
+
+      { The old Appearance menu, migrated 2026-08-15.
+
+        NY4I: "You can move these items to the Appearance tab and we can get rid
+        of the old Appearance form in TR4W." That form is RunOptionsDialog
+        (cfAppearance) -- the Ctrl-J grid filtered to one cfFunc -- reached from
+        the Appearance menu item.
+
+        ROW COUNT and WINDOW SIZE are NOT here: both are ckArray rows whose
+        target is an ArrayRecordArray entry rather than crAddress, which is a
+        different move. REMINDER is not a scalar setting at all. The menu item
+        cannot go until all three are dealt with. }
+      NoBorder: boolean;
+      NoCaption: boolean;
+      NoColumnHeader: boolean;
+      ShowGridlines: boolean;
    end;
 
 var
@@ -270,7 +295,12 @@ var
       SwapPacketSpotRadios: False;
       CheckLogFileSize: False;
       UnknownCountryFileEnable: False;
-      UpdateRestartFileEnable: True
+      UpdateRestartFileEnable: True;
+      IncludeFKeyNumber: False;
+      NoBorder: False;
+      NoCaption: False;
+      NoColumnHeader: False;
+      ShowGridlines: False
    );
 
 implementation

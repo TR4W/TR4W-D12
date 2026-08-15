@@ -130,6 +130,20 @@ begin
    RegisterStoredSetting('cw.sendFourLetterCall', 'SEND COMPLETE FOUR LETTER CALL',
                          'Always send all four letters of a four-letter call');
 
+   { The F-key button captions, 2026-08-15. }
+   RegisterStoredSetting('cw.includeFKeyNumber',              'INCLUDE F-KEY NUMBER',
+                         'Show the key number on the function-key buttons');
+
+   { The old Appearance menu's contents, 2026-08-15. }
+   RegisterStoredSetting('appearance.noBorder',               'NO BORDER',
+                         'Main window has no border');
+   RegisterStoredSetting('appearance.noCaption',              'NO CAPTION',
+                         'Main window has no title bar');
+   RegisterStoredSetting('appearance.noColumnHeader',         'NO COLUMN HEADER',
+                         'Hide the log column headings');
+   RegisterStoredSetting('appearance.showGridlines',          'SHOW GRIDLINES',
+                         'Draw gridlines in the log');
+
    { PADDLE. The paddle keyer TR4W runs itself; a WinKeyer or YCCC box keeps its
      own. PADDLE PORT is deliberately NOT here -- it is a parallel port, and
      whether TR4W keeps supporting those is an open question (see the Hardware

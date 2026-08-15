@@ -40,6 +40,7 @@ type
       procedure Test_TwoRadioAndNetworkDefaults;
       procedure Test_OperatingAndPTTDefaults;
       procedure Test_SCPBandMapAndFileDefaults;
+      procedure Test_AppearanceAndFKeyDefaults;
    public
       procedure RunAllTests; override;
    end;
@@ -173,6 +174,20 @@ begin
    CheckFalse(Config.UnknownCountryFileEnable,'UnknownCountryFileEnable was False');
 end;
 
+procedure TConfigDefaultsTests.Test_AppearanceAndFKeyDefaults;
+begin
+   // Migrated 2026-08-15, all five False. Pinned anyway: False is the RIGHT
+   // value here, and a test that only guards non-zero defaults would leave
+   // nothing to notice if one of these were flipped while shuffling the record.
+   BeginTest('the appearance and F-key defaults survived the move');
+
+   CheckFalse(Config.NoBorder,          'NoBorder was False');
+   CheckFalse(Config.NoCaption,         'NoCaption was False');
+   CheckFalse(Config.NoColumnHeader,    'NoColumnHeader was False');
+   CheckFalse(Config.ShowGridlines,     'ShowGridlines was False');
+   CheckFalse(Config.IncludeFKeyNumber, 'IncludeFKeyNumber was False');
+end;
+
 procedure TConfigDefaultsTests.RunAllTests;
 begin
    Test_KeyingAndPTTDefaults;
@@ -181,6 +196,7 @@ begin
    Test_TwoRadioAndNetworkDefaults;
    Test_OperatingAndPTTDefaults;
    Test_SCPBandMapAndFileDefaults;
+   Test_AppearanceAndFKeyDefaults;
 end;
 
 end.

@@ -2803,9 +2803,6 @@ var
 //  line6                                 : integer;
 //  Line7                                 : integer;
 //  line8                                 : integer;
-  NoBorder                              : boolean;
-  NoCaption                             : boolean;
-  NoColumnHeader                        : boolean;
   FKButtonWidth                         : integer;
 
   tCRC32                                : longword = 0;
@@ -2851,7 +2848,6 @@ var
   WAV_STOP_PTT_TIMER_IDENTIFIER         : integer;
 
   tLogIndex                             : integer;
-  tShowGridlines                        : boolean;
   // SHOW ALL SERIAL PORTS.  The radio dialog's port list normally shows only the
   // ports Windows is reporting (plus the one already configured, even if absent).
   // Set this True to list SERIAL 1..MAX_SERIAL_PORT instead, for ports that exist
