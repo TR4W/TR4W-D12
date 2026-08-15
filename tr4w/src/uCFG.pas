@@ -2086,6 +2086,29 @@ begin
             inc(Offset, 8 + 7);
          end;
    end;
+
+   { THE CASE ABOVE HAS NO else, AND THAT WAS A CRASH.
+
+     TempValue is the base of the function-key code: 111 for plain F-keys,
+     123 for Ctrl, 135 for Alt. If the character is none of F/A/C it stays
+     ZERO and Offset is never advanced -- so the key became CHR(0 + FuncKey),
+     i.e. 1..12, written into an array declared [F1..AltF12] = 112..147.
+     That is an out-of-bounds New() roughly 111 elements BEFORE the array,
+     silently, because range checking is off in this build. It leaves a
+     valid-looking heap pointer in whatever global sits there.
+
+     ShowFMessages then finds that slot non-nil, dereferences it and takes
+     an access violation -- which is the Ctrl-P crash of 2026-08-15
+     (uFunctionKeys.pas:279, reached from tr4w.dpr:1415 where Ctrl calls
+     ShowFMessages(12)). The corruption and the symptom are in different
+     units, which is why it took a symbolicated backtrace to find.
+
+     An unrecognised prefix means this is not a function-key memory command
+     at all, so refuse it rather than inventing a key for it. }
+   if TempValue = 0 then
+      begin
+      Exit;
+      end;
    FuncKey := Ord(ID[Offset]) - Ord('0');
    if length(ID) > Offset then
       if ID[Offset + 1] in ['0'..'2'] then
