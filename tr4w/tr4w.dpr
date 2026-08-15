@@ -153,6 +153,7 @@ uses
   uLPTPortEnumerator in 'src\uLPTPortEnumerator.pas',
   uPrefsSearch in 'src\uPrefsSearch.pas',
   uConfigValues in 'src\uConfigValues.pas',
+  uCrashLog in 'src\uCrashLog.pas',
   uCFG in 'src\uCFG.pas',
   uCRC32 in 'src\uCRC32.pas',
   uMP3Recorder in 'src\uMP3Recorder.pas',
@@ -831,6 +832,12 @@ begin
    appender.Layout := CreateTR4WLogLayout;
    TLogBasicConfigurator.Configure(appender);
    logger := TLogLogger.GetLogger('TR4WDebugLog');
+
+   // IMMEDIATELY AFTER THE LOGGER EXISTS, and before anything that could
+   // fault. Until now an unhandled exception left tr4w.log ending in the
+   // ordinary unit finalizations -- indistinguishable from a clean exit --
+   // so a crash report could only say that the program had closed.
+   InstallCrashLog;
 
    // BATCH MODE, decided here rather than at the /EXPORT block far below,
    // because two things before that block need to know.
