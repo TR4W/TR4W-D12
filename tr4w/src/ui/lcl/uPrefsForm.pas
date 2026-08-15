@@ -139,6 +139,7 @@ type
       lblRelayPort: TLabel;
       cbxRelayPort: TComboBox;
       lblRelayPortInfo: TLabel;
+      chkUseControlPort: TCheckBox;
       chkYCCCSO2R: TCheckBox;
       lblYCCCInfo: TLabel;
       layContent: TPanel;
@@ -4145,6 +4146,24 @@ begin
    finally
       cbxRelayPort.Items.EndUpdate;
    end;
+
+   // USE CONTROL PORT -- A PLACEHOLDER, deliberately unchecked and deliberately
+   // not editable (NY4I 2026-08-14).
+   //
+   // It selects the radio's CAT port instead of an LPT port for paddle and foot
+   // switch, and the code around it is old enough that its intent is no longer
+   // clear from reading it: LogCfg's TryRunPaddleAndFootSwitchThread gates on the
+   // CAT port HANDLE, which NY4I reads as "unless the CAT port is open we will
+   // not use a foot switch or paddle on the LPT port at all".
+   //
+   // It is here so the decision is visible rather than buried in Ctrl-J: whether
+   // TR4W supports LPT ports at all in 2026. NY4I is leaning towards not.
+   //
+   // SHOWN FALSE, BUT NOT WRITTEN. SaveHardwarePanel does not store this, so a
+   // station that has it set keeps its value and its paddle keeps working. A
+   // disabled control that silently rewrote the setting behind it would be a
+   // data change disguised as a UI decision -- and this one is not decided yet.
+   chkUseControlPort.Checked := False;
 
    chkYCCCSO2R.Checked := CommandBool('YCCC SO2R ENABLE');
 

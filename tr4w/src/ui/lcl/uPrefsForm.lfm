@@ -1,4 +1,4 @@
-object PrefsForm: TPrefsForm
+﻿object PrefsForm: TPrefsForm
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
@@ -1556,6 +1556,15 @@ object PrefsForm: TPrefsForm
         TabOrder = 0
         OnChange = cbxRelayPortChange
       end
+      object chkUseControlPort: TCheckBox
+        Left = 12
+        Top = 146
+        Width = 400
+        Height = 19
+        Caption = 'Use the radio control port for paddle and foot switch'
+        Enabled = False
+        TabOrder = 2
+      end
       object chkYCCCSO2R: TCheckBox
         Left = 12
         Top = 176
@@ -1585,7 +1594,8 @@ object PrefsForm: TPrefsForm
         Caption = 
           'A parallel (LPT) port used to switch external hardware. Station-' +
           'wide, not per radio. Leave as None unless you have such an inter' +
-          'face.'
+          'face. Whether TR4W supports LPT at all is still open - the greye' +
+          'd box below is a placeholder for that decision.'
       end
     end
     object layDXLab: TPanel
