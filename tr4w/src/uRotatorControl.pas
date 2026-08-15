@@ -67,6 +67,11 @@ procedure ConfigureRotators(const aStore: TRadioConfigStore);
   care", which matches every rotator that has not claimed specific bands. }
 procedure TurnRotator(const aHeading: integer; const aBandName: string);
 
+{ Open the serial port of every live rotator that has one.  Call AFTER
+  ConfigureRotators -- the startup order does exactly that (tr4w.dpr:974, then
+  LogCfg from :1091). }
+procedure OpenRotatorPorts;
+
 { How many rotators are live.  For the log and for a test. }
 function LiveRotatorCount: integer;
 
@@ -79,6 +84,7 @@ uses
    LOGSTUFF,     // SendPSTRotorCommand -- the UDP socket, reused not rebuilt
    LOGK1EA,      // CPUKeyer.SerialPortConfigured_Handle -- the open port handles
    LOGWIND,      // RotatorType / RotatorTypeSA, for the legacy seed
+   Windows,      // FILE_ATTRIBUTE_NORMAL, for InitializeSerialPort
    uRotatorRegistry,
    MainUnit;     // logger
 
@@ -112,6 +118,9 @@ type
         expressible at all -- which a pair of globals could never be. }
       IPAddress: string;
       UDPPort: integer;
+      { 0 means "whatever the driver prefers" -- the store's own wording, and the
+        reason a definition need not know that a DCU-1 wants 4800. }
+      BaudRate: integer;
       { The driver's outlet. A METHOD on the live rotator rather than a closure
         capturing it: same effect, and it names the owner instead of implying it.
         Each driver is handed ITS OWN rotator's SendBytes, which is what stops
@@ -239,7 +248,8 @@ begin
 end;
 
 procedure AddLive(const aName, aRotatorId, aPortName, aBands: string;
-                  const aIPAddress: string = ''; const aUDPPort: integer = 0);
+                  const aIPAddress: string = ''; const aUDPPort: integer = 0;
+                  const aBaudRate: integer = 0);
 var
    live: TLiveRotator;
 begin
@@ -260,6 +270,7 @@ begin
    // unmigrated station keeps working and says so once in the log.
    live.IPAddress := aIPAddress;
    live.UDPPort   := aUDPPort;
+   live.BaudRate  := aBaudRate;
    if live.IPAddress = '' then
       begin
       live.IPAddress := string(PSTRotatorIPAddress);
@@ -334,7 +345,8 @@ begin
                  aStore.Rotator(i).ControlPort,
                  aStore.Rotator(i).Bands,
                  aStore.Rotator(i).IPAddress,
-                 aStore.Rotator(i).UDPPort);
+                 aStore.Rotator(i).UDPPort,
+                 aStore.Rotator(i).BaudRate);
          end;
       end;
 
@@ -344,6 +356,70 @@ begin
       end;
 
    logger.Info('[uRotatorControl] %d rotator(s) live', [LiveRotatorCount]);
+end;
+
+procedure OpenRotatorPorts;
+var
+   i, j: integer;
+   baud: integer;
+   already: boolean;
+begin
+   { OPEN THE PORTS THE LIVE ROTATORS NAME, which is not what used to happen.
+
+     LogCfg opened exactly one port -- ActiveRotatorPort, the legacy
+     single-rotator ini key -- at a baud rate chosen by asking
+     `if ActiveRotatorType = DCU1Rotator`. Meanwhile SendToRotator writes to
+     CPUKeyer.SerialPortConfigured_Handle[aLive.Port], the port named by the
+     DEFINITION. Two consequences, both silent:
+
+       * define a rotator on a different port from the legacy key and the frame
+         goes to a handle nobody opened -- no error, no turn;
+       * define a SECOND rotator and it could never work at all, because only
+         one port was ever opened.
+
+     The library has been able to define many rotators since it landed; this is
+     the half that was missing. It also removes the last per-type branch from the
+     port-opening path: the driver answers PreferredBaudRate. }
+   if GLive = nil then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to GLive.Count - 1 do
+      begin
+      if (not GLive[i].Driver.UsesSerialPort) or (GLive[i].Port = NoPort) then
+         begin
+         Continue;
+         end;
+
+      // TWO ROTATORS MAY SHARE A PORT -- an antenna switch on one line is a real
+      // arrangement -- and opening it twice is what would make the second fail
+      // with "access denied" rather than work.
+      already := False;
+      for j := 0 to i - 1 do
+         begin
+         if GLive[j].Driver.UsesSerialPort and (GLive[j].Port = GLive[i].Port) then
+            begin
+            already := True;
+            Break;
+            end;
+         end;
+      if already then
+         begin
+         Continue;
+         end;
+
+      baud := GLive[i].BaudRate;
+      if baud = 0 then
+         begin
+         baud := GLive[i].Driver.PreferredBaudRate;
+         end;
+
+      InitializeSerialPort(GLive[i].Port, baud, 8, tNoParity, 1,
+                           FILE_ATTRIBUTE_NORMAL, #0);
+      logger.Info('[uRotatorControl] %s on %s at %d baud',
+                  [GLive[i].Name, string(PortTypeSA[GLive[i].Port]), baud]);
+      end;
 end;
 
 procedure TurnRotator(const aHeading: integer; const aBandName: string);

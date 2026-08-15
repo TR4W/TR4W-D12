@@ -94,7 +94,8 @@ uses
   uRadioPolling,
    uUDPBroadcaster,
    uUDPBroadcastConfig,
-   uTR4WConfigFile;
+   uTR4WConfigFile,
+   uRotatorControl;   // OpenRotatorPorts -- the library opens its own ports
 
 type
   // One single-valued tr4w.ini key already applied this load pass, plus the raw
@@ -297,19 +298,20 @@ begin
 end;
 
 procedure CheckAndInitializeSerialPorts;
-var
-  BaudRate                              : Cardinal;
 begin
 
-  if ActiveRotatorPort <> NoPort then
-     begin
-     BaudRate := 1200;
-     if ActiveRotatorType = DCU1Rotator then
-        begin
-        BaudRate := 4800;
-        end;
-     InitializeSerialPort(ActiveRotatorPort, BaudRate, 8, tNoParity, 1, FILE_ATTRIBUTE_NORMAL, #0);
-     end;
+  // THE ROTATOR LIBRARY OPENS ITS OWN PORTS. This opened ONE port -- the one
+  // named by the legacy ActiveRotatorPort key -- at a baud rate chosen by asking
+  // what type of rotator it was. A library rotator on any other port therefore
+  // never turned, silently, and a second rotator could not work at all.
+  // uRotatorControl now opens the port each LIVE rotator names, and the driver
+  // states its own baud rate.
+  //
+  // ConfigureRotators has already run by this point (tr4w.dpr:974; this routine
+  // is reached from :1091) and seeds itself from ActiveRotatorType/Port when the
+  // library is empty, so a station that has never opened the Rotators page is
+  // unaffected.
+  OpenRotatorPorts;
  
 
   // A hand-edited config can point BOTH radios at the same serial port; the
