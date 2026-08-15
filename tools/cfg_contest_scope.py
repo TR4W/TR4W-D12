@@ -6,7 +6,11 @@ exec(src.split('agree_event =')[0])
 
 CONTEST_PATTERNS = [
     r'^CONTEST$', r'^CONTEST NAME$', r'^CONTEST TITLE$', r'^CALL OK NOW ',
-    r'^CLEAR DUPE SHEET$', r'^CQ CW ', r'^CQ SSB ', r'^DOMESTIC FILENAME$',
+    r'^CLEAR DUPE SHEET$',
+    # NY4I 2026-08-15: "cq exchange was an omission. it is a macro." The
+    # mode-neutral pair joins the CW and SSB ones. NOT a blanket ^CQ -- CQ MENU
+    # is a menu, not a message.
+    r'^CQ EXCHANGE', r'^CQ CW ', r'^CQ SSB ', r'^DOMESTIC FILENAME$',
     r'^DOMESTIC MULTIPLIER$', r'^DX MULTIPLIER$', r'^PREFIX MULTIPLIER$',
     r'^ZONE MULTIPLIER$', r'^EXCHANGE RECEIVED$', r'^LATEST CONFIG FILE$',
     r'^MULT BY BAND$', r'^MULT BY MODE$', r'^QSL MESSAGE$', r'^QSL CW MESSAGE$',
