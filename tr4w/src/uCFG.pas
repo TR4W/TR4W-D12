@@ -813,7 +813,7 @@ const
  (crCommand: 'RADIUS OF EARTH';               crAddress: @RadiusOfEarth;                  crMin:0;  crMax:MAXWORD;   crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctReal; crNetwork: 1),
  (crCommand: 'RANDOM CQ MODE';                crAddress: @RandomCQMode;                   crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'RATE DISPLAY';                  crAddress: pointer(0);                      crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
+ (crCommand: 'RELAY CONTROL PORT';            crAddress: @RelayControlPort;               crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfRadio1; crType: ctPortLPT; crNetwork: 0),
  (crCommand: 'REMAINING MULT DISPLAY MODE';   crAddress: pointer(16);                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:2; crJ: 0; crKind: ckList; cfFunc: cfAll; crType: ctOther; crNetwork: 1),
  (crCommand: 'REMINDER';                      crAddress: pointer(51);                     crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 2; crKind: ckNormal; cfFunc: cfAppearance; crType: ctOther; crNetwork: 1),
  (crCommand: 'REPEAT S&P CW EXCHANGE';        crAddress: @RepeatSearchAndPounceExchange;  crMin:0;  crMax:0;       crS: csOld; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
@@ -1146,6 +1146,23 @@ begin
          Result := string(BA[PBoolean(CFGCA[idx].crAddress)^]);
       ctReal:
          Result := RealToStr2(PDouble(CFGCA[idx].crAddress)^);
+      ctPortLPT:
+         begin
+            // The INVERSE of GetLPTPortFromChar (CfgCmd:192), which is what the
+            // writer uses: 'NONE' or '1'/'2'/'3'. Without this the type fell
+            // through to the else below, and an unrendered type is exactly the
+            // hazard that comment describes -- an empty control reads as "unset",
+            // the operator sets it, and their real value is overwritten by
+            // whatever they typed over the blank.
+            case PPortType(CFGCA[idx].crAddress)^ of
+               Parallel1: Result := '1';
+               Parallel2: Result := '2';
+               Parallel3: Result := '3';
+            else
+               Result := 'NONE';
+            end;
+         end;
+
       ctChar, ctAlphaChar:
          // A single AnsiChar, not a ShortString -- no length byte, so no +1.
          Result := string(PAnsiChar(CFGCA[idx].crAddress)^);

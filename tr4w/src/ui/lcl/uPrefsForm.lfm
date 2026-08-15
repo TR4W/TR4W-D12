@@ -1,4 +1,4 @@
-﻿object PrefsForm: TPrefsForm
+object PrefsForm: TPrefsForm
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
@@ -1507,6 +1507,66 @@
         Caption = 
           'DXKEEPER is complete.  ACLOG and HRD are not finished - selectin' +
           'g one logs a warning and no QSOs are sent.'
+      end
+    end
+    object layHardware: TPanel
+      Color = clWindow
+      ParentColor = False
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 2
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 21
+      object lblHardwareHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 400
+        Height = 17
+        AutoSize = False
+        Caption = 'Hardware'
+      end
+      object lblHardwareInfo: TLabel
+        Left = 12
+        Top = 34
+        Width = 620
+        Height = 40
+        AutoSize = False
+        WordWrap = True
+        Caption = 
+          'Station-wide hardware. Settings that belong to one radio are und' +
+          'er Radios; rotators are under Rotators.'
+      end
+      object lblRelayPort: TLabel
+        Left = 12
+        Top = 92
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'Relay control port'
+      end
+      object cbxRelayPort: TComboBox
+        Left = 220
+        Top = 88
+        Width = 140
+        Height = 25
+        Style = csDropDownList
+        TabOrder = 0
+        OnChange = cbxRelayPortChange
+      end
+      object lblRelayPortInfo: TLabel
+        Left = 12
+        Top = 120
+        Width = 620
+        Height = 40
+        AutoSize = False
+        WordWrap = True
+        Caption = 
+          'A parallel (LPT) port used to switch external hardware. Station-' +
+          'wide, not per radio. Leave as None unless you have such an inter' +
+          'face.'
       end
     end
     object layDXLab: TPanel
