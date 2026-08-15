@@ -1556,46 +1556,98 @@
         TabOrder = 0
         OnChange = cbxRelayPortChange
       end
+      object lblBandOutput1: TLabel
+        Left = 12
+        Top = 124
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'Radio 1 band output port'
+      end
+      object cbxBandOutput1: TComboBox
+        Left = 220
+        Top = 120
+        Width = 140
+        Height = 25
+        Style = csDropDownList
+        TabOrder = 1
+      end
+      object lblBandOutput2: TLabel
+        Left = 12
+        Top = 156
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'Radio 2 band output port'
+      end
+      object cbxBandOutput2: TComboBox
+        Left = 220
+        Top = 152
+        Width = 140
+        Height = 25
+        Style = csDropDownList
+        TabOrder = 2
+      end
+      object lblStereoPort: TLabel
+        Left = 12
+        Top = 188
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'Stereo control port'
+      end
+      object cbxStereoPort: TComboBox
+        Left = 220
+        Top = 184
+        Width = 140
+        Height = 25
+        Style = csDropDownList
+        TabOrder = 3
+      end
+      object lblRelayPortInfo: TLabel
+        Left = 12
+        Top = 216
+        Width = 620
+        Height = 54
+        AutoSize = False
+        WordWrap = True
+        Caption = 
+          'Parallel (LPT) port wiring for this station: relay switchi' +
+          'ng, band data out to a decoder per operating position, and' +
+          ' stereo audio control. These follow the DESK, not the radi' +
+          'o, so they stay put when you activate a different radio. L' +
+          'eave them None unless you have such an interface - whether' +
+          ' TR4W keeps supporting LPT at all is still an open questio' +
+          'n, which the greyed box below is a placeholder for.'
+      end
       object chkUseControlPort: TCheckBox
         Left = 12
-        Top = 146
+        Top = 282
         Width = 400
         Height = 19
         Caption = 'Use the radio control port for paddle and foot switch'
         Enabled = False
-        TabOrder = 2
+        TabOrder = 5
       end
       object chkYCCCSO2R: TCheckBox
         Left = 12
-        Top = 176
+        Top = 316
         Width = 400
         Height = 19
         Caption = 'YCCC SO2R Plus box connected'
-        TabOrder = 1
+        TabOrder = 4
       end
       object lblYCCCInfo: TLabel
         Left = 12
-        Top = 200
+        Top = 340
         Width = 620
         Height = 34
         AutoSize = False
         WordWrap = True
         Caption = 
-          'Station controllers will get a factory of their own, as radios a' +
-          'nd keyers did. This checkbox is the interim home for the setting.'
-      end
-      object lblRelayPortInfo: TLabel
-        Left = 12
-        Top = 120
-        Width = 620
-        Height = 40
-        AutoSize = False
-        WordWrap = True
-        Caption = 
-          'A parallel (LPT) port used to switch external hardware. Station-' +
-          'wide, not per radio. Leave as None unless you have such an inter' +
-          'face. Whether TR4W supports LPT at all is still open - the greye' +
-          'd box below is a placeholder for that decision.'
+          'Station controllers will get a factory of their own, as ra' +
+          'dios and keyers did. This checkbox is the interim home for' +
+          ' the setting.'
       end
     end
     object layDXLab: TPanel

@@ -209,7 +209,6 @@ begin
    Result.WideCWFilter      := True;
    Result.FT1000MPCWReverse := True;
    Result.FrequencyAdder    := 12000;
-   Result.BandOutputPort    := 'PARALLEL 1';
    Result.StartupCommand    := 'FA00014025000;';
    Result.PollingEnable     := False;
 end;
@@ -253,7 +252,6 @@ begin
    CheckTrue(aExpected.WideCWFilter      = aActual.WideCWFilter,      'WideCWFilter');
    CheckTrue(aExpected.FT1000MPCWReverse = aActual.FT1000MPCWReverse, 'FT1000MPCWReverse');
    CheckEquals(aExpected.FrequencyAdder,  aActual.FrequencyAdder,  'FrequencyAdder');
-   CheckEquals(aExpected.BandOutputPort,  aActual.BandOutputPort,  'BandOutputPort');
    CheckEquals(aExpected.StartupCommand,  aActual.StartupCommand,  'StartupCommand');
    CheckTrue(aExpected.PollingEnable = aActual.PollingEnable, 'PollingEnable');
 end;

@@ -139,6 +139,12 @@ type
       lblRelayPort: TLabel;
       cbxRelayPort: TComboBox;
       lblRelayPortInfo: TLabel;
+      lblBandOutput1: TLabel;
+      cbxBandOutput1: TComboBox;
+      lblBandOutput2: TLabel;
+      cbxBandOutput2: TComboBox;
+      lblStereoPort: TLabel;
+      cbxStereoPort: TComboBox;
       chkUseControlPort: TCheckBox;
       chkYCCCSO2R: TCheckBox;
       lblYCCCInfo: TLabel;
@@ -773,6 +779,12 @@ type
         the form's helpers, one to record what it found. }
       procedure LoadHardwarePanel;
       procedure SaveHardwarePanel;
+      { ONE parallel-port picker, used by all four. They differ only in which
+        command they carry, and four copies of the detection-and-collapse rules
+        would drift the first time one of them was corrected. }
+      procedure LoadLPTCombo(const aCombo: TComboBox; const aLabel: TLabel;
+                             const aCommand: string);
+      procedure SaveLPTCombo(const aCombo: TComboBox; const aCommand: string);
       procedure BuildNavTree;
       procedure NoteRadiosNavItem(item: TTreeNode);
       procedure ApplyChevrons;
@@ -4073,20 +4085,21 @@ end;
   LPT port to handle switching external hardware"), so it belongs here rather
   than on a radio. Anything targeting a Radio1/Radio2 variable belongs on the
   radio form instead -- that is the rule this panel exists to respect. }
-procedure TPrefsForm.LoadHardwarePanel;
+procedure TPrefsForm.LoadLPTCombo(const aCombo: TComboBox; const aLabel: TLabel;
+                                  const aCommand: string);
 var
    v, label_: string;
    idx, i, want: integer;
 begin
-   if cbxRelayPort = nil then
+   if aCombo = nil then
       begin
       Exit;
       end;
 
    // Read the configured value FIRST: whether to collapse the list to
    // "not available" depends on it, not only on what the machine reports.
-   v := UpperCase(Trim(FStore.CommandValue('RELAY CONTROL PORT',
-                       CFGCommandValueAsString('RELAY CONTROL PORT'))));
+   v := UpperCase(Trim(FStore.CommandValue(aCommand,
+                       CFGCommandValueAsString(aCommand))));
    if (v = '') or (v = 'NONE') then
       begin
       want := 0;
@@ -4096,9 +4109,9 @@ begin
       want := StrToIntDef(v, 0);
       end;
 
-   cbxRelayPort.Items.BeginUpdate;
+   aCombo.Items.BeginUpdate;
    try
-      cbxRelayPort.Items.Clear;
+      aCombo.Items.Clear;
       // The VALUE is the spelling CFGCA accepts -- GetLPTPortFromChar
       // (CfgCmd:192) reads 'NONE' or '1'/'2'/'3'. It is carried in Objects[] so
       // the label is free to say more than the value does; reading the value
@@ -4112,18 +4125,23 @@ begin
       // only collapsed when the machine has no ports AND none is configured.
       if (PresentLPTPortsDescription = '') and (want = 0) then
          begin
-         cbxRelayPort.Items.AddObject('Not available (no parallel ports)',
-                                      TObject(PtrInt(0)));
-         cbxRelayPort.ItemIndex := 0;
-         cbxRelayPort.Enabled   := False;
-         lblRelayPort.Enabled   := False;
-         logger.Info('[Prefs] no parallel ports on this machine and none configured');
+         aCombo.Items.AddObject('Not available (no parallel ports)',
+                                TObject(PtrInt(0)));
+         aCombo.ItemIndex := 0;
+         aCombo.Enabled   := False;
+         if aLabel <> nil then
+            begin
+            aLabel.Enabled := False;
+            end;
          Exit;
          end;
 
-      cbxRelayPort.Enabled := True;
-      lblRelayPort.Enabled := True;
-      cbxRelayPort.Items.AddObject('None', TObject(PtrInt(0)));
+      aCombo.Enabled := True;
+      if aLabel <> nil then
+         begin
+         aLabel.Enabled := True;
+         end;
+      aCombo.Items.AddObject('None', TObject(PtrInt(0)));
       for i := 1 to 3 do
          begin
          // ANNOTATED, NOT REMOVED. Dropping undetected ports would silently
@@ -4141,11 +4159,76 @@ begin
             begin
             label_ := label_ + '   (not detected)';
             end;
-         cbxRelayPort.Items.AddObject(label_, TObject(PtrInt(i)));
+         aCombo.Items.AddObject(label_, TObject(PtrInt(i)));
          end;
    finally
-      cbxRelayPort.Items.EndUpdate;
+      aCombo.Items.EndUpdate;
    end;
+
+   // BY STORED VALUE, never by index. The labels carry detection text, so
+   // matching on them would break the first time that wording changed -- and
+   // index arithmetic is what the COM picker was fixed for.
+   aCombo.ItemIndex := 0;
+   for idx := 0 to aCombo.Items.Count - 1 do
+      begin
+      if PtrInt(aCombo.Items.Objects[idx]) = want then
+         begin
+         aCombo.ItemIndex := idx;
+         Break;
+         end;
+      end;
+end;
+
+procedure TPrefsForm.SaveLPTCombo(const aCombo: TComboBox; const aCommand: string);
+var
+   n: integer;
+begin
+   if (aCombo = nil) or (aCombo.ItemIndex < 0) then
+      begin
+      Exit;
+      end;
+   // NOT WHEN THE LIST COLLAPSED. "Not available" carries 0, and writing that
+   // would turn "this machine has no parallel port today" into "the operator
+   // chose None" -- erasing the setting of someone who moved a log to a laptop
+   // and back. Nothing to pick means nothing to save.
+   if not aCombo.Enabled then
+      begin
+      Exit;
+      end;
+
+   // The stored value comes from Objects[], NOT from the visible text -- the
+   // label says '1   (not detected)' and CFGCA accepts '1'.
+   n := PtrInt(aCombo.Items.Objects[aCombo.ItemIndex]);
+   if n = 0 then
+      begin
+      ApplyAndStoreCommand(FStore, aCommand, 'NONE');
+      end
+   else
+      begin
+      ApplyAndStoreCommand(FStore, aCommand, IntToStr(n));
+      end;
+end;
+
+procedure TPrefsForm.LoadHardwarePanel;
+begin
+   if cbxRelayPort = nil then
+      begin
+      Exit;
+      end;
+
+   // ALL FOUR ARE STATION CABLING, not radio settings, which is why they are
+   // here and not on the radio form. NY4I placed the two BAND OUTPUT ports here
+   // deliberately ('breaking my own rule'): the rule sends anything addressing
+   // Radio1/Radio2 to the radio form, but what these name is which LPT pin
+   // header drives the band decoder for an operating position -- that belongs to
+   // the desk, and it stays put when a different radio is activated into the
+   // slot. Holding it on the radio DEFINITION was in fact a live defect: every
+   // activation re-rendered the key, and would have reverted whatever was set
+   // here. See the note in uRadioConfigLegacyMap.
+   LoadLPTCombo(cbxRelayPort,   lblRelayPort,   'RELAY CONTROL PORT');
+   LoadLPTCombo(cbxBandOutput1, lblBandOutput1, 'RADIO ONE BAND OUTPUT PORT');
+   LoadLPTCombo(cbxBandOutput2, lblBandOutput2, 'RADIO TWO BAND OUTPUT PORT');
+   LoadLPTCombo(cbxStereoPort,  lblStereoPort,  'STEREO CONTROL PORT');
 
    // USE CONTROL PORT -- A PLACEHOLDER, deliberately unchecked and deliberately
    // not editable (NY4I 2026-08-14).
@@ -4153,8 +4236,8 @@ begin
    // It selects the radio's CAT port instead of an LPT port for paddle and foot
    // switch, and the code around it is old enough that its intent is no longer
    // clear from reading it: LogCfg's TryRunPaddleAndFootSwitchThread gates on the
-   // CAT port HANDLE, which NY4I reads as "unless the CAT port is open we will
-   // not use a foot switch or paddle on the LPT port at all".
+   // CAT port HANDLE, which NY4I reads as 'unless the CAT port is open we will
+   // not use a foot switch or paddle on the LPT port at all'.
    //
    // It is here so the decision is visible rather than buried in Ctrl-J: whether
    // TR4W supports LPT ports at all in 2026. NY4I is leaning towards not.
@@ -4170,40 +4253,14 @@ begin
    logger.Info('[Prefs] parallel ports detected: %s',
                [IfThen(PresentLPTPortsDescription = '', 'none',
                        PresentLPTPortsDescription)]);
-
-   // BY STORED VALUE, never by index. The labels carry detection text, so
-   // matching on them would break the first time that wording changed -- and
-   // index arithmetic is what the COM picker was fixed for.
-   cbxRelayPort.ItemIndex := 0;
-   for idx := 0 to cbxRelayPort.Items.Count - 1 do
-      begin
-      if PtrInt(cbxRelayPort.Items.Objects[idx]) = want then
-         begin
-         cbxRelayPort.ItemIndex := idx;
-         Break;
-         end;
-      end;
 end;
 
 procedure TPrefsForm.SaveHardwarePanel;
-var
-   n: integer;
 begin
-   if (cbxRelayPort = nil) or (cbxRelayPort.ItemIndex < 0) then
-      begin
-      Exit;
-      end;
-   // The stored value comes from Objects[], NOT from the visible text -- the
-   // label says "1   (not detected)" and CFGCA accepts '1'.
-   n := PtrInt(cbxRelayPort.Items.Objects[cbxRelayPort.ItemIndex]);
-   if n = 0 then
-      begin
-      ApplyAndStoreCommand(FStore, 'RELAY CONTROL PORT', 'NONE');
-      end
-   else
-      begin
-      ApplyAndStoreCommand(FStore, 'RELAY CONTROL PORT', IntToStr(n));
-      end;
+   SaveLPTCombo(cbxRelayPort,   'RELAY CONTROL PORT');
+   SaveLPTCombo(cbxBandOutput1, 'RADIO ONE BAND OUTPUT PORT');
+   SaveLPTCombo(cbxBandOutput2, 'RADIO TWO BAND OUTPUT PORT');
+   SaveLPTCombo(cbxStereoPort,  'STEREO CONTROL PORT');
 
    SetCommandBool('YCCC SO2R ENABLE', chkYCCCSO2R.Checked);
 end;

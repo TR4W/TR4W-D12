@@ -60,6 +60,7 @@ type
       procedure Test_HamLibIdOnlyForHamLibAny;
       procedure Test_EmptySlotClearsEverything;
       procedure Test_NilRadioRendersAnEmptySlot;
+      procedure Test_BandOutputPortIsNotRadioScoped;
    public
       procedure RunAllTests; override;
    end;
@@ -76,7 +77,12 @@ const
    // them backward-compatible ALIASES that CFGCA still parses from old files,
    // and uCAT actively DELETES them when it saves.  Writing them would be
    // writing a key the legacy code is trying to retire.
-   GOLDENKEYS: array[0..28] of string = (
+   // RADIO ONE BAND OUTPUT PORT is absent for a different reason again: it
+   // is STATION CABLING, migrated to the JSON store and edited on
+   // Preferences > Hardware (NY4I, 2026-08-14). Rendering it from a radio
+   // definition is what this list now guards AGAINST -- see
+   // Test_BandOutputPortIsNotRadioScoped below.
+   GOLDENKEYS: array[0..27] of string = (
       'RADIO ONE TYPE',
       'RADIO ONE FACTORY ID',
       'RADIO ONE NAME',
@@ -103,7 +109,6 @@ const
       'RADIO ONE WIDE CW FILTER',
       'RADIO ONE FT1000MP CW REVERSE',
       'RADIO ONE FREQUENCY ADDER',
-      'RADIO ONE BAND OUTPUT PORT',
       'RADIO ONE STARTUP COMMAND',
       'POLL RADIO ONE'
    );
@@ -832,6 +837,44 @@ begin
    end;
 end;
 
+
+procedure TRadioConfigLegacyMapTests.Test_BandOutputPortIsNotRadioScoped;
+var
+   kv: TConfigKeyValues;
+   radio: TRadioDefinition;
+begin
+   { A REGRESSION GUARD WITH A REAL DEFECT BEHIND IT.
+
+     BAND OUTPUT PORT used to be a field on TRadioDefinition, so activating a
+     radio rendered the key from the definition -- and RenderEmptySlot blanked
+     it to NONE. Once the setting moved to station level and became editable on
+     Preferences > Hardware (NY4I, 2026-08-14), that made it self-erasing: pick
+     LPT1 for the band decoder, activate any radio, and the activation writes
+     the definition's value straight back over it. Choosing a different radio
+     for the slot would silently retune the band decoder wiring, and an empty
+     slot would set it to None outright.
+
+     The failure is invisible where it is caused, which is why it is pinned
+     here rather than left to the panel: nothing about editing a radio suggests
+     it should touch station cabling. GOLDENKEYS covers the populated slot; this
+     covers the EMPTY slot, whose blanking pass is a separate code path and the
+     more destructive of the two. }
+   BeginTest('a radio definition never renders BAND OUTPUT PORT');
+
+   radio := MakeSerialRadio;
+   try
+      kv := RenderRadioKeys(1, radio, Default(TRadioTypeRendering), nil);
+      CheckTrue(ValueOf(kv, 'RADIO ONE BAND OUTPUT PORT') = NOSUCHKEY,
+                'a populated slot must not write the station band output port');
+
+      kv := RenderEmptySlot(1);
+      CheckTrue(ValueOf(kv, 'RADIO ONE BAND OUTPUT PORT') = NOSUCHKEY,
+                'an EMPTY slot must not blank the station band output port');
+   finally
+      radio.Free;
+   end;
+end;
+
 procedure TRadioConfigLegacyMapTests.RunAllTests;
 begin
    Test_KeyerDeviceNameNeverReachesTheLegacyPortKey;
@@ -858,6 +901,7 @@ begin
 
    Test_EmptySlotClearsEverything;
    Test_NilRadioRendersAnEmptySlot;
+   Test_BandOutputPortIsNotRadioScoped;
 end;
 
 end.
