@@ -1535,7 +1535,7 @@ var
 
 begin
 {
-  if not DVKEnable then
+  if not Config.DVKEnable then
     if RadioModel = TS850 then
       if nNumberOfBytesToWrite = 4 then
         if PChar(Buffer)[0] = 'P' then

@@ -2001,6 +2001,152 @@
         TabOrder = 7
       end
     end
+    object layAudio: TPanel
+      Color = clWindow
+      ParentColor = False
+      BevelOuter = bvNone
+      Caption = ''
+      Tag = 29
+      Width = 675
+      Height = 572
+      AutoSize = False
+      Visible = False
+      TabOrder = 24
+      object lblAudioHeading: TLabel
+        Left = 12
+        Top = 8
+        Width = 620
+        Height = 17
+        AutoSize = False
+        Caption = 'Audio'
+      end
+      object lblAudioInfo: TLabel
+        Left = 12
+        Top = 34
+        Width = 620
+        Height = 20
+        AutoSize = False
+        WordWrap = True
+        Caption = 'Voice keying and QSO recording. CW keying is on the CW Settings page.'
+      end
+      object lblDVKHeading: TLabel
+        Left = 12
+        Top = 72
+        Width = 620
+        Height = 17
+        AutoSize = False
+        Caption = 'Digital voice keyer'
+      end
+      object chkDVKEnable: TCheckBox
+        Left = 12
+        Top = 100
+        Width = 540
+        Height = 22
+        Caption = 'Use the digital voice keyer'
+        TabOrder = 0
+      end
+      object chkDVKLocalizedMessages: TCheckBox
+        Left = 12
+        Top = 126
+        Width = 540
+        Height = 22
+        Caption = 'Use localized DVK message files'
+        TabOrder = 1
+      end
+      object chkUseRecordedSigns: TCheckBox
+        Left = 12
+        Top = 152
+        Width = 540
+        Height = 22
+        Caption = 'Send recorded audio for callsign characters'
+        TabOrder = 2
+      end
+      object lblDVKPath: TLabel
+        Left = 12
+        Top = 186
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'DVK recording folder'
+      end
+      object edtDVKPath: TEdit
+        Left = 220
+        Top = 182
+        Width = 380
+        Height = 25
+        TabOrder = 3
+      end
+      object lblDVKRecorder: TLabel
+        Left = 12
+        Top = 218
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'DVK recorder program'
+      end
+      object edtDVKRecorder: TEdit
+        Left = 220
+        Top = 214
+        Width = 380
+        Height = 25
+        TabOrder = 4
+      end
+      object lblMP3Heading: TLabel
+        Left = 12
+        Top = 258
+        Width = 620
+        Height = 17
+        AutoSize = False
+        Caption = 'QSO recording'
+      end
+      object chkMP3RecorderEnable: TCheckBox
+        Left = 12
+        Top = 286
+        Width = 540
+        Height = 22
+        Caption = 'Record each QSO to MP3'
+        TabOrder = 5
+      end
+      object lblMP3Path: TLabel
+        Left = 12
+        Top = 320
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'MP3 folder'
+      end
+      object edtMP3Path: TEdit
+        Left = 220
+        Top = 316
+        Width = 380
+        Height = 25
+        TabOrder = 6
+      end
+      object lblMP3Player: TLabel
+        Left = 12
+        Top = 352
+        Width = 200
+        Height = 17
+        AutoSize = False
+        Caption = 'MP3 player program'
+      end
+      object edtMP3Player: TEdit
+        Left = 220
+        Top = 348
+        Width = 380
+        Height = 25
+        TabOrder = 7
+      end
+      object lblAudioNote: TLabel
+        Left = 12
+        Top = 392
+        Width = 620
+        Height = 34
+        AutoSize = False
+        WordWrap = True
+        Caption = 'Bit rate and recording length are not here yet: both are stored through a lookup table rather than directly, and move separately.'
+      end
+    end
     object layDXLab: TPanel
       Color = clWindow
       ParentColor = False

@@ -1354,10 +1354,10 @@ begin
              TempString                                      := LineInput('Msg = ',
                GetCQMemoryString(ActiveMode, FunctionKey), {KK1L: 6.73 Added mode}
                True,
-               (ActiveMode = Phone) and (DVKEnable or (ActiveDVKPort <> NoPort)));
+               (ActiveMode = Phone) and (Config.DVKEnable or (ActiveDVKPort <> NoPort)));
 
              if TempString[1] = NullKey then
-               if DVKEnable then
+               if Config.DVKEnable then
                   begin
                   //                case TempString[2] of
                              {KK1L: 6.73 Added mode}
@@ -1464,10 +1464,10 @@ begin
                  {KK1L: 6.73 Added mode to GetExMemoryString}
                GetEXMemoryString(ActiveMode, FunctionKey),
                True,
-               (ActiveMode = Phone) and (DVKEnable or (ActiveDVKPort <> NoPort)));
+               (ActiveMode = Phone) and (Config.DVKEnable or (ActiveDVKPort <> NoPort)));
 
              if TempString[1] = NullKey then
-               if DVKEnable then
+               if Config.DVKEnable then
                   begin
                   //                case TempString[2] of
                              {KK1L: 6.73 Added mode to GetExMemoryString}
@@ -1559,7 +1559,7 @@ begin
                      True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         {                      case TempString[2] of
                                                   AltW: DVPRecordMessage(CorrectedCallPhoneMessage, False);
@@ -1604,7 +1604,7 @@ begin
                      True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(CQPhoneExchange, False);
@@ -1650,7 +1650,7 @@ begin
                      True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(CQPhoneExchangeNameKnown, False);
@@ -1694,7 +1694,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(QSLPhoneMessage, False);
@@ -1738,7 +1738,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(QSOBeforePhoneMessage, False);
@@ -1782,7 +1782,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(QuickQSLPhoneMessage, False);
@@ -1826,7 +1826,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(RepeatSearchAndPouncePhoneExchange, False);
@@ -1870,7 +1870,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(SearchAndPouncePhoneExchange, False);
@@ -1914,7 +1914,7 @@ begin
                      True, True);
 
                    if TempString[1] = NullKey then
-                     if DVKEnable then
+                     if Config.DVKEnable then
                         begin
                         case TempString[2] of
                           AltW: DVPRecordMessage(TailEndPhoneMessage, False);
@@ -2127,7 +2127,7 @@ procedure SetUpToSendOnActiveRadio;
 begin
 
   {
-    if (ActiveMode = Phone) and DVKEnable and DVPActive and DVPMessagePlaying then
+    if (ActiveMode = Phone) and Config.DVKEnable and DVPActive and DVPMessagePlaying then
       begin
         TimeOut                                             := 0;
  
@@ -2217,7 +2217,7 @@ begin
   if KeyersSwapped then Exit; { Already swapped to inactive rig }
   DebugMsg('>>>>>ENTER SetUpToSendOnInactiveRadio');
 {
-  if (ActiveMode = Phone) and DVKEnable and DVPActive and DVPMessagePlaying then
+  if (ActiveMode = Phone) and Config.DVKEnable and DVPActive and DVPMessagePlaying then
   begin
     TimeOut                                                 := 0;
 
@@ -2308,7 +2308,7 @@ begin
       end
    else
       begin
-      if DVKEnable then
+      if Config.DVKEnable then
          begin
          Escape_proc;
          if DisplayPrompt then
@@ -2320,7 +2320,7 @@ begin
          begin
          SetTextInQuickCommandWindow('');
          end;
-      InvertBoolean(DVKEnable);
+      InvertBoolean(Config.DVKEnable);
       DisplayCodeSpeed {(CodeSpeed, CWEnabled, DVPOn, ActiveMode)};
       SetSpeed(CodeSpeed);
       end;

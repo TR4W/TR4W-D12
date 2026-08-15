@@ -161,7 +161,7 @@ begin
              begin
              CloseSendKeyboardInputDialog(False);
              end;
-          if DVKEnable then
+          if Config.DVKEnable then
              begin
              while s <> '' do
                 begin

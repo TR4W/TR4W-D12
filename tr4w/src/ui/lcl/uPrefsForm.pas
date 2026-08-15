@@ -494,6 +494,24 @@ type
       chkNoColumnHeader: TCheckBox;
       chkShowGridlines: TCheckBox;
       lblAppearMenuNote: TLabel;
+      layAudio: TPanel;
+      lblAudioHeading: TLabel;
+      lblAudioInfo: TLabel;
+      lblDVKHeading: TLabel;
+      chkDVKEnable: TCheckBox;
+      chkDVKLocalizedMessages: TCheckBox;
+      chkUseRecordedSigns: TCheckBox;
+      lblDVKPath: TLabel;
+      edtDVKPath: TEdit;
+      lblDVKRecorder: TLabel;
+      edtDVKRecorder: TEdit;
+      lblMP3Heading: TLabel;
+      chkMP3RecorderEnable: TCheckBox;
+      lblMP3Path: TLabel;
+      edtMP3Path: TEdit;
+      lblMP3Player: TLabel;
+      edtMP3Player: TEdit;
+      lblAudioNote: TLabel;
       layPaddlePTT: TPanel;
       lblPaddlePTTHeading: TLabel;
       lblPaddlePTTInfo: TLabel;
@@ -725,6 +743,7 @@ type
       navBackup: TTreeNode;
       navContest: TTreeNode;
       navCW: TTreeNode;
+      navAudio: TTreeNode;
    navPaddlePTT: TTreeNode;
       navWebServer: TTreeNode;
       navTCIServer: TTreeNode;
@@ -2935,6 +2954,8 @@ begin
       TNavNode(navBackup).Tag := 9;
       navContest := tvNav.Items.Add(nil, 'Contest');
       TNavNode(navContest).Tag := 10;
+      navAudio := tvNav.Items.Add(nil, 'Audio');
+      TNavNode(navAudio).Tag := 29;
       navCW := tvNav.Items.Add(nil, 'CW Settings');
       TNavNode(navCW).Tag := 11;
       navPaddlePTT := tvNav.Items.AddChild(navCW, 'Paddle and PTT');
@@ -3129,6 +3150,16 @@ begin
    FBindings.Bind(chkNoCaption,          'appearance.noCaption');
    FBindings.Bind(chkNoColumnHeader,     'appearance.noColumnHeader');
    FBindings.Bind(chkShowGridlines,      'appearance.showGridlines');
+
+   FBindings.Bind(chkDVKEnable,          'audio.dvk.enable');
+   FBindings.Bind(chkDVKLocalizedMessages,
+                                         'audio.dvk.localizedMessages');
+   FBindings.Bind(chkUseRecordedSigns,   'audio.useRecordedSigns');
+   FBindings.Bind(edtDVKPath,            'audio.dvk.path');
+   FBindings.Bind(edtDVKRecorder,        'audio.dvk.recorder');
+   FBindings.Bind(chkMP3RecorderEnable,  'audio.mp3.recorderEnable');
+   FBindings.Bind(edtMP3Path,            'audio.mp3.path');
+   FBindings.Bind(edtMP3Player,          'audio.mp3.player');
 
    // Paddle and PTT -- a CHILD of CW Settings, so the nav gains nothing
    // in height while collapsed. NY4I asked that the left pane never

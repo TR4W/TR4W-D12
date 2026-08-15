@@ -743,7 +743,7 @@ begin
      begin
      SendScoreToUDP;
      end;
-  if DVKEnable then
+  if Config.DVKEnable then
      begin
      DVPUnInit;
      end;
@@ -1095,7 +1095,7 @@ begin
             {    Wait (20); {KK1L: 6.71}
              {UNTIL NOT (DVPMessagePlaying OR DVKMessagePlaying); {KK1L: 6.71 should start timer at END of message}
              {KK1L: 6.72 Replaced above with this}
-         if DVKEnable then
+         if Config.DVKEnable then
             begin
             repeat
               while TempString <> '' do
@@ -1106,7 +1106,7 @@ begin
                  end;
               if AutoCQLoopKeyCheck = EscapeKey then
                  begin
-                 if DVKEnable and DVPMessagePlaying then {KK1L: 6.71b Kill DVP}
+                 if Config.DVKEnable and DVPMessagePlaying then {KK1L: 6.71b Kill DVP}
                     begin
                     TimeOut := 0;
                     DVPStopPlayback;
@@ -1201,7 +1201,7 @@ begin
   repeat
     //{WLI}         ClrScr;
     if ActiveMode = Phone then
-      if DVKEnable then {KK1L: 6.72 Now need to differentiate DVP and DVK}
+      if Config.DVKEnable then {KK1L: 6.72 Now need to differentiate DVP and DVK}
         {Write ('Number of seconds between start of transmissions : ')}{KK1L: 6.71 fixed this in AutoCQResume}
          begin
          Write('Number of seconds of listening time : ') {KK1L: 6.71 fixed this in AutoCQResume}

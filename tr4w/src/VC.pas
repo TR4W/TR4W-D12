@@ -2903,17 +2903,13 @@ var
   TR4W_GET_MP3_FILENAME                 : FileNameType;
 
   TR4W_EXECONFIGFILE_FILENAME           : FileNameType;
-  TR4W_MP3_PLAYER_FILENAME              : FileNameType;
   TR4W_ADIF_FILENAME                    : FileNameType;
-  TR4W_DVP_RECORDER_FILENAME            : FileNameType;
 //  TR4W_IODRIVER_FILENAME                : FileNameType;
 
   TR4W_FLOPPY_FILENAME                  : FileNameType {= 'C:\TR4W\LOGBACK.TRW'};
   TR4W_INITIALEX_FILENAME               : FileNameType {= 'INITIAL.EX'};
   TR4W_LATESTCFG_FILENAME               : FileNameType;
 
-  TR4W_MP3PATH                          : FileNameType {= 'MP3'};
-  TR4W_DVKPATH                          : FileNameType {= 'DVP'};
 
   TR4W_MMTTYPATH                        : FileNameType;
 
