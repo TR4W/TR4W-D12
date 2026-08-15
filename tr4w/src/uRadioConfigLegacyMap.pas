@@ -248,8 +248,14 @@ end;
 // The two keys outside KEYSPECS, so that "the complete set" is one list in one
 // place rather than a table plus some ad-hoc additions.
 const
-   EXTRAKEYSPECS: array[0..2] of TKeySpec = (
-      (Shape: ksRadioPrefixed;   Suffix: 'BAND OUTPUT PORT'),
+   { BAND OUTPUT PORT IS NOT HERE, AND THAT IS THE POINT. It was, and a radio
+     definition rendered it on activation -- which would have silently reverted
+     whatever the Hardware panel stored the next time a radio was activated, and
+     blanked it to NONE for an empty slot. It is STATION CABLING (which LPT pin
+     header drives the band decoder), so it lives at station level, migrated to
+     the JSON store and edited on Preferences > Hardware (NY4I, 2026-08-14).
+     Same reasoning as RELAY CONTROL PORT and STEREO CONTROL PORT. }
+   EXTRAKEYSPECS: array[0..1] of TKeySpec = (
       (Shape: ksRadioPrefixed;   Suffix: 'STARTUP COMMAND'),
       (Shape: ksPollRadio;       Suffix: '')
    );
@@ -557,7 +563,6 @@ begin
    Emit(Result, 'RADIO ' + slot + ' WIDE CW FILTER',      BoolValue(aRadio.WideCWFilter));
    Emit(Result, 'RADIO ' + slot + ' FT1000MP CW REVERSE', BoolValue(aRadio.FT1000MPCWReverse));
    Emit(Result, 'RADIO ' + slot + ' FREQUENCY ADDER',     NumericValue(aRadio.FrequencyAdder, 0));
-   Emit(Result, 'RADIO ' + slot + ' BAND OUTPUT PORT',    aRadio.BandOutputPort);
    Emit(Result, 'RADIO ' + slot + ' STARTUP COMMAND',     aRadio.StartupCommand);
 
    Emit(Result, 'POLL RADIO ' + slot, BoolValue(aRadio.PollingEnable));
@@ -592,10 +597,6 @@ begin
          Emit(Result, names[i], PORT_NONE);
          end
       else if names[i] = 'KEYER RADIO ' + slot + ' OUTPUT PORT' then
-         begin
-         Emit(Result, names[i], PORT_NONE);
-         end
-      else if names[i] = 'RADIO ' + slot + ' BAND OUTPUT PORT' then
          begin
          Emit(Result, names[i], PORT_NONE);
          end

@@ -308,7 +308,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..47] of string =
+   MIGRATED_COMMANDS: array[0..50] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -361,7 +361,15 @@ const
       'TELNET SERVER',
       'WSJT-X BROADCAST PORT',
       'WSJT-X MULTICAST GROUP',
-      'RELAY CONTROL PORT'
+      'RELAY CONTROL PORT',
+
+      // The rest of the parallel-port wiring, 2026-08-14. These were the
+      // last radio-scoped strays; NY4I placed them on Hardware rather than
+      // the radio form because they describe the STATION's cabling, not the
+      // radio -- see the note in uRadioConfigLegacyMap.
+      'RADIO ONE BAND OUTPUT PORT',
+      'RADIO TWO BAND OUTPUT PORT',
+      'STEREO CONTROL PORT'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);

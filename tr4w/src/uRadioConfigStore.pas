@@ -232,7 +232,6 @@ type
       WideCWFilter: boolean;
       FT1000MPCWReverse: boolean;
       FrequencyAdder: integer;
-      BandOutputPort: string;
       StartupCommand: string;
       PollingEnable: boolean;
       // Auto-info level.  The radio pushes state changes instead of being
@@ -608,7 +607,6 @@ begin
    Transport         := rtSerial;
    ControlPort       := PORT_NONE;
    KeyerOutputPort   := PORT_NONE;
-   BandOutputPort    := PORT_NONE;
    // Polling on is the useful default -- a radio defined but never polled
    // looks broken to the operator.
    PollingEnable     := True;
@@ -653,7 +651,6 @@ begin
    WideCWFilter      := aSource.WideCWFilter;
    FT1000MPCWReverse := aSource.FT1000MPCWReverse;
    FrequencyAdder    := aSource.FrequencyAdder;
-   BandOutputPort    := aSource.BandOutputPort;
    StartupCommand    := aSource.StartupCommand;
    PollingEnable     := aSource.PollingEnable;
    AutoInfoLevel     := aSource.AutoInfoLevel;
@@ -688,7 +685,6 @@ begin
       (WideCWFilter      = aOther.WideCWFilter)                     and
       (FT1000MPCWReverse = aOther.FT1000MPCWReverse)                and
       (FrequencyAdder    = aOther.FrequencyAdder)                   and
-      (BandOutputPort    = aOther.BandOutputPort)                   and
       (StartupCommand    = aOther.StartupCommand)                   and
       (PollingEnable     = aOther.PollingEnable) and
       (AutoInfoLevel     = aOther.AutoInfoLevel);
@@ -1463,7 +1459,6 @@ begin
    aIni.WriteBool(section,    'WideCWFilter',      aRadio.WideCWFilter);
    aIni.WriteBool(section,    'FT1000MPCWReverse', aRadio.FT1000MPCWReverse);
    aIni.WriteInteger(section, 'FrequencyAdder',    aRadio.FrequencyAdder);
-   aIni.WriteString(section,  'BandOutputPort',    aRadio.BandOutputPort);
    aIni.WriteString(section,  'StartupCommand',    aRadio.StartupCommand);
    aIni.WriteBool(section,    'PollingEnable',     aRadio.PollingEnable);
    aIni.WriteInteger(section, 'AutoInfoLevel',     aRadio.AutoInfoLevel);
@@ -1508,7 +1503,6 @@ begin
    radioDef.WideCWFilter      := aIni.ReadBool(aSection,    'WideCWFilter',      False);
    radioDef.FT1000MPCWReverse := aIni.ReadBool(aSection,    'FT1000MPCWReverse', False);
    radioDef.FrequencyAdder    := aIni.ReadInteger(aSection, 'FrequencyAdder',    0);
-   radioDef.BandOutputPort    := aIni.ReadString(aSection,  'BandOutputPort',    PORT_NONE);
    radioDef.StartupCommand    := aIni.ReadString(aSection,  'StartupCommand',    '');
    radioDef.PollingEnable     := aIni.ReadBool(aSection,    'PollingEnable',     True);
    radioDef.AutoInfoLevel     := aIni.ReadInteger(aSection, 'AutoInfoLevel',     AUTOINFO_RADIO_DEFAULT);
@@ -1654,7 +1648,6 @@ begin
    Result.AddPair('wideCWFilter',    TJSONBool.Create(aRadio.WideCWFilter));
    Result.AddPair('ft1000mpCWReverse', TJSONBool.Create(aRadio.FT1000MPCWReverse));
    Result.AddPair('frequencyAdder',  TJSONNumber.Create(aRadio.FrequencyAdder));
-   Result.AddPair('bandOutputPort',  aRadio.BandOutputPort);
    Result.AddPair('startupCommand',  aRadio.StartupCommand);
    Result.AddPair('pollingEnable',   TJSONBool.Create(aRadio.PollingEnable));
    Result.AddPair('autoInfoLevel',   TJSONNumber.Create(aRadio.AutoInfoLevel));
@@ -1968,7 +1961,6 @@ begin
          radioDef.WideCWFilter      := JSONBool(obj, 'wideCWFilter',    False);
          radioDef.FT1000MPCWReverse := JSONBool(obj, 'ft1000mpCWReverse', False);
          radioDef.FrequencyAdder    := JSONInt(obj,  'frequencyAdder',  0);
-         radioDef.BandOutputPort    := JSONStr(obj,  'bandOutputPort',  PORT_NONE);
          radioDef.StartupCommand    := JSONStr(obj,  'startupCommand',  '');
          radioDef.PollingEnable     := JSONBool(obj, 'pollingEnable',   True);
          radioDef.AutoInfoLevel     := JSONInt(obj,  'autoInfoLevel',  AUTOINFO_RADIO_DEFAULT);
@@ -2368,11 +2360,6 @@ begin
       radioDef.WideCWFilter      := ReadBool('WIDE CW FILTER');
       radioDef.FT1000MPCWReverse := ReadBool('FT1000MP CW REVERSE');
       radioDef.FrequencyAdder    := ReadInt('FREQUENCY ADDER', 0);
-      radioDef.BandOutputPort    := ReadStr('BAND OUTPUT PORT');
-      if radioDef.BandOutputPort = '' then
-         begin
-         radioDef.BandOutputPort := PORT_NONE;
-         end;
       radioDef.StartupCommand    := ReadStr('STARTUP COMMAND');
 
       // POLL RADIO ONE, again spelled the other way round.  Absent means on,
