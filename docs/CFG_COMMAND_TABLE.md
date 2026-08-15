@@ -380,7 +380,7 @@ NY4I: *"This does not currently consider that a contest level but I do so it goe
 settles an inconsistency in the table — `HF` and `VHF` are `crC:1` while `WARC` is `crC:0`, for three
 settings handled identically, so **`WARC BAND ENABLE` should become `crC:1`** as a data fix.
 
-### The contest set — 60 of the 158 rows still `csOld`
+### The contest set — 63 of the 207 rows still `csOld`
 
 * `BAND`
 * `CALL OK NOW CW MESSAGE`
@@ -401,6 +401,7 @@ settings handled identically, so **`WARC BAND ENABLE` should become `crC:1`** as
 * `DX MULTIPLIER`
 * `EXCHANGE RECEIVED`
 * `HF BAND ENABLE`
+* `LATEST CONFIG FILE`
 * `LOG RS SENT`
 * `LOG RST SENT`
 * `LOOK FOR RST SENT`
@@ -428,9 +429,11 @@ settings handled identically, so **`WARC BAND ENABLE` should become `crC:1`** as
 * `QUICK QSL MESSAGE 1`
 * `QUICK QSL MESSAGE 2`
 * `QUICK QSL SSB MESSAGE`
+* `R150S MODE`
 * `REPEAT S&P CW EXCHANGE`
 * `REPEAT S&P EXCHANGE`
 * `REPEAT S&P SSB EXCHANGE`
+* `RFOBL MODE`
 * `S&P CW EXCHANGE`
 * `S&P EXCHANGE`
 * `S&P SSB EXCHANGE`
@@ -451,12 +454,12 @@ re-home them yet.
 Three on his list are already `csNew` rather than `csOld` and so need no action: `LATEST CONFIG
 FILE`, `R150S MODE`, `RFOBL MODE`.
 
-### 98 rows to migrate to the registry
+### 144 rows to migrate to the registry
 
 Everything else still `csOld`. They leave Ctrl-J, stop being read from and written to `tr4w.ini`,
 and their globals move into the config object.
 
-### 19 of those are contest-driven ANYWAY — this needs a ruling
+### 31 of those are contest-driven ANYWAY — this needs a ruling
 
 Not on NY4I's list, but `FCONTEST.PAS` assigns them when a contest is selected, or they are declared
 `crC:1`. **Migrating one as a flat station setting gives Preferences an editor whose value is
@@ -467,6 +470,7 @@ rows just ruled on, and those were not the only ones.
 |---|---|---|---|
 | `LITERAL DOMESTIC QTH` | 1 | **11×** | — |
 | `EXCHANGE MEMORY ENABLE` | 0 | **6×** | — |
+| `MINITOUR DURATION` | 0 | **6×** | — |
 | `AUTO DUPE ENABLE CQ` | 0 | **5×** | — |
 | `COUNT DOMESTIC COUNTRIES` | 0 | **5×** | — |
 | `DIGITAL MODE ENABLE` | 0 | **5×** | — |
@@ -480,15 +484,26 @@ rows just ruled on, and those were not the only ones.
 | `QSO NUMBER BY BAND` | 1 | **2×** | — |
 | `CONTACTS PER PAGE` | 0 | **1×** | — |
 | `QTC ENABLE` | 0 | **1×** | — |
+| `CATEGORY-ASSISTED` | 1 | — | 73 |
+| `CATEGORY-BAND` | 1 | — | 73 |
+| `CATEGORY-MODE` | 1 | — | 73 |
+| `CATEGORY-OPERATOR` | 1 | — | 73 |
+| `CATEGORY-OVERLAY` | 1 | — | — |
+| `CATEGORY-POWER` | 1 | — | 73 |
+| `CATEGORY-TRANSMITTER` | 1 | — | 73 |
+| `COLUMN AUTOSIZE` | 1 | — | — |
+| `HAND LOG MODE` | 1 | — | — |
 | `INITIAL EXCHANGE` | 1 | — | — |
 | `INITIAL EXCHANGE FILENAME` | 1 | — | — |
+| `SHIFT KEY ENABLE` | 1 | — | — |
 | `SHORT INTEGERS` | 1 | — | — |
+| `STATIONS CALLSIGNS MASK` | 1 | — | — |
 | `TEN MINUTE RULE` | 1 | — | — |
 
 `BAND` and `MODE` are the extreme cases — 29 and 9 `FCONTEST` writes — and are arguably not settings
 at all but *current operating state* that a contest initialises, the same category as `CODE SPEED`.
 
-**Until this is ruled on they are held back and the other 79 proceed.** Splitting the batch costs
+**Until this is ruled on they are held back and the other 113 proceed.** Splitting the batch costs
 nothing; migrating a contest-owned row costs a defect that only shows up when someone changes
 contest.
 
