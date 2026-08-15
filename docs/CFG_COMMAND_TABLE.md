@@ -367,6 +367,138 @@ command "simple".
 `crC:1`, 477 are `crC:0`. See `docs/` audit notes: 16 keys that appear in real contest
 `.CFG` files are nonetheless `crC:0`, which is where the layering work concentrates.
 
+## Contest scope — NY4I's classification (2026-08-15)
+
+**This is the authoritative answer to "which commands belong to a contest".** It supersedes guessing
+from names, and it is what the migration works from: everything NOT on this list *"should go into
+the registry and not exist in this Ctrl-J any longer"* (NY4I).
+
+`crC` was the closest thing to this attribute and it is **not reliable** — see the conflicts below.
+
+**Ruled 2026-08-15:** `HF BAND ENABLE`, `WARC BAND ENABLE` and `VHF BAND ENABLE` are contest-level.
+NY4I: *"This does not currently consider that a contest level but I do so it goes there."* That also
+settles an inconsistency in the table — `HF` and `VHF` are `crC:1` while `WARC` is `crC:0`, for three
+settings handled identically, so **`WARC BAND ENABLE` should become `crC:1`** as a data fix.
+
+### The contest set — 53 of the 168 rows still `csOld`
+
+* `CALL OK NOW CW MESSAGE`
+* `CALL OK NOW MESSAGE`
+* `CALL OK NOW SSB MESSAGE`
+* `CLEAR DUPE SHEET`
+* `CONTEST`
+* `CONTEST NAME`
+* `CONTEST TITLE`
+* `CQ CW EXCHANGE`
+* `CQ CW EXCHANGE NAME KNOWN`
+* `CQ SSB EXCHANGE`
+* `CQ SSB EXCHANGE NAME KNOWN`
+* `DOMESTIC FILENAME`
+* `DOMESTIC MULTIPLIER`
+* `DX MULTIPLIER`
+* `EXCHANGE RECEIVED`
+* `HF BAND ENABLE`
+* `MULT BY BAND`
+* `MULT BY MODE`
+* `PREFIX MULTIPLIER`
+* `QSL CW MESSAGE`
+* `QSL MESSAGE`
+* `QSL SSB MESSAGE`
+* `QSO BEFORE CW MESSAGE`
+* `QSO BEFORE MESSAGE`
+* `QSO BEFORE SSB MESSAGE`
+* `QSO BY BAND`
+* `QSO BY MODE`
+* `QSO POINT METHOD`
+* `QSO POINTS DOMESTIC CW`
+* `QSO POINTS DOMESTIC PHONE`
+* `QSO POINTS DX CW`
+* `QSO POINTS DX PHONE`
+* `QUICK QSL CW MESSAGE`
+* `QUICK QSL CW MESSAGE1`
+* `QUICK QSL KEY 1`
+* `QUICK QSL KEY 2`
+* `QUICK QSL MESSAGE 1`
+* `QUICK QSL MESSAGE 2`
+* `QUICK QSL SSB MESSAGE`
+* `REPEAT S&P CW EXCHANGE`
+* `REPEAT S&P EXCHANGE`
+* `REPEAT S&P SSB EXCHANGE`
+* `S&P CW EXCHANGE`
+* `S&P EXCHANGE`
+* `S&P SSB EXCHANGE`
+* `SHORT 0`
+* `SHORT 1`
+* `SHORT 2`
+* `SHORT 9`
+* `SINGLE BAND SCORE`
+* `VHF BAND ENABLE`
+* `WARC BAND ENABLE`
+* `ZONE MULTIPLIER`
+
+Marked **(macro)** by NY4I, meaning a CW/SSB message template: `CALL OK NOW *`, `CQ CW *`,
+`CQ SSB *`, `QSL *`, `QSO BEFORE *`, `QUICK QSL *`, `REPEAT *`, `S&P *`. **These come last** — the
+macro definitions are contest-scoped but their design is deferred, so nothing should migrate or
+re-home them yet.
+
+Three on his list are already `csNew` rather than `csOld` and so need no action: `LATEST CONFIG
+FILE`, `R150S MODE`, `RFOBL MODE`.
+
+### 115 rows to migrate to the registry
+
+Everything else still `csOld`. They leave Ctrl-J, stop being read from and written to `tr4w.ini`,
+and their globals move into the config object.
+
+### 22 of those are contest-driven ANYWAY — this needs a ruling
+
+Not on NY4I's list, but `FCONTEST.PAS` assigns them when a contest is selected, or they are declared
+`crC:1`. **Migrating one as a flat station setting gives Preferences an editor whose value is
+silently replaced at the next contest selection.** It is the same problem as the three band-enable
+rows just ruled on, and those were not the only ones.
+
+| command | `crC` | `FCONTEST` writes | in real `.cfg` |
+|---|---|---|---|
+| `BAND` | 1 | **29×** | — |
+| `CQ EXCHANGE` | 0 | **18×** | — |
+| `LITERAL DOMESTIC QTH` | 1 | **11×** | — |
+| `MODE` | 1 | **9×** | 1 |
+| `EXCHANGE MEMORY ENABLE` | 0 | **6×** | — |
+| `AUTO DUPE ENABLE CQ` | 0 | **5×** | — |
+| `COUNT DOMESTIC COUNTRIES` | 0 | **5×** | — |
+| `DIGITAL MODE ENABLE` | 0 | **5×** | — |
+| `MULTIPLE BANDS` | 1 | **5×** | 1 |
+| `SPRINT QSY RULE` | 1 | **5×** | — |
+| `AUTO DUPE ENABLE S AND P` | 0 | **4×** | — |
+| `INITIAL EXCHANGE OVERWRITE` | 1 | **4×** | — |
+| `CALLSIGN UPDATE ENABLE` | 1 | **2×** | 10 |
+| `INITIAL EXCHANGE CURSOR POS` | 1 | **2×** | — |
+| `MULTIPLE MODES` | 1 | **2×** | 1 |
+| `QSO NUMBER BY BAND` | 1 | **2×** | — |
+| `CONTACTS PER PAGE` | 0 | **1×** | — |
+| `QTC ENABLE` | 0 | **1×** | — |
+| `INITIAL EXCHANGE` | 1 | — | — |
+| `INITIAL EXCHANGE FILENAME` | 1 | — | — |
+| `SHORT INTEGERS` | 1 | — | — |
+| `TEN MINUTE RULE` | 1 | — | — |
+
+`BAND` and `MODE` are the extreme cases — 29 and 9 `FCONTEST` writes — and are arguably not settings
+at all but *current operating state* that a contest initialises, the same category as `CODE SPEED`.
+
+**Until this is ruled on they are held back and the other 93 proceed.** Splitting the batch costs
+nothing; migrating a contest-owned row costs a defect that only shows up when someone changes
+contest.
+
+### Macro siblings NY4I named by example — confirm the intent
+
+He wrote `CQ CW *` and `CQ SSB *`, which leaves the **mode-neutral** pair unmatched: `CQ EXCHANGE`
+and `CQ EXCHANGE NAME KNOWN`. `CQ EXCHANGE` has 18 `FCONTEST` writes, so the evidence says it is
+contest-scoped and the omission was wording, not intent — but it is his call.
+
+`TAIL END MESSAGE` / `TAIL END CW MESSAGE` / `TAIL END SSB MESSAGE` are the same shape of message
+macro and appear on no list. `MULTI INFO MESSAGE` is a message but a multi-op one, not a contest
+exchange.
+
+
 ### `crP` — post-change UI refresh
 Index into `CommandsProcArray[1..13]` (`uCFG.pas:225`), all `@Display*` / `@Update*`
 procedures (`DisplayBandMap`, `DisplayCodeSpeed`, `UpadateMainWindow`, …). `0` = none.
