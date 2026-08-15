@@ -2442,6 +2442,20 @@ begin
 
   //  TempString := VisibleLog.GetInitialExchangeFromEditableLog(Call);
 
+  { THE LINE ABOVE IS THE ONLY THING THAT EVER SET TempString, and it is
+    commented out -- so the test below read an uninitialised local
+    ShortString. Its length byte is whatever the stack held, so the window
+    filled with binary garbage, and worse: non-empty garbage made both this
+    test and the "if TempString = ''" below FALSE, which skipped the
+    callsigns-list lookup AND the computed exchange. The garbage then went
+    straight to the operator as the initial exchange.
+
+    Inherited from D7, where the same line is commented out (C:\TR4W
+    LOGEDIT.PAS:2302). It rarely bit under Delphi because that stack was
+    usually zero there; FPC's is not, which is the same way the dangling
+    PChar in the Cabrillo writer surfaced. }
+  TempString := '';
+
     if ((TempString = '') and (not ReverseInitialEx)) then
        begin
        TempString := CallsignsList.GetIniitialExchange(Call);
