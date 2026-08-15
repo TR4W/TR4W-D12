@@ -1576,8 +1576,14 @@ begin
        tLastLoopFailure := Int64(GetTickCount64);
        Inc(tLoopFailures);
 
-       logger.Error('[MessageLoop] recovered from %s -- %s (failure %d). The '
-                    + 'log is intact; see the [CRASH] record above for where.',
+       // THE BACKTRACE FIRST. ExceptProc only fires for exceptions nobody
+       // handles, so catching the fault here removed the [CRASH] record that
+       // said WHERE -- the first recovered run logged 'recovered from
+       // EAccessViolation' and nothing else. Surviving a fault must not cost
+       // the ability to find it.
+       LogCaughtException('MessageLoop', E);
+       logger.Error('[MessageLoop] recovered from %s -- %s (failure %d). '
+                    + 'TR4W is still running; the [CRASH] lines above say where.',
                     [E.ClassName, E.Message, tLoopFailures]);
 
        if tLoopFailures >= 10 then

@@ -55,6 +55,19 @@ interface
 { Call once at startup, after the logger exists.  Idempotent. }
 procedure InstallCrashLog;
 
+{ Report an exception that WAS caught, with the same detail an unhandled one
+  gets.
+
+  Needed because the two hooks only see what nobody handles. Once the message
+  loop began recovering from faults instead of dying, the program stayed up --
+  and the backtrace vanished with it, leaving a bare "recovered from
+  EAccessViolation" and no idea where. Surviving a fault must not cost the
+  ability to find it.
+
+  Call from inside the except block: ExceptAddr and ExceptFrames describe the
+  exception being handled and are only valid there. }
+procedure LogCaughtException(const aSource: string; aObj: TObject);
+
 implementation
 
 uses
@@ -170,6 +183,11 @@ begin
    // to look at.
    Application.ShowException(E);
 {$ENDIF}
+end;
+
+procedure LogCaughtException(const aSource: string; aObj: TObject);
+begin
+   WriteCrashReport(aSource, aObj, ExceptAddr, ExceptFrameCount, ExceptFrames);
 end;
 
 procedure InstallCrashLog;
