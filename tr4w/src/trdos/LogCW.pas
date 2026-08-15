@@ -2108,6 +2108,24 @@ end;
 procedure SetCQMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString {Str80});
 
 begin
+  { REFUSE A KEY THIS ARRAY CANNOT HOLD -- and this one matters more than
+    the caption pair, because of what sits next to it.
+
+    CQMemory, EXMemory, CQCaptionMemory and EXCaptionMemory are four
+    adjacent globals of the same type (LogCW.pas:86-90). Range checking
+    is off, so an index past AltF12 here does not raise -- it writes a
+    freshly New()ed pointer into the NEXT array along. That is a
+    non-nil, valid-looking pointer in a slot nothing ever allocated,
+    and whoever reads it later takes the access violation, in another
+    unit, with nothing to connect the two. }
+  if not (Key in [F1..AltF12]) then
+     begin
+     logger.Error('[SetCQMemoryString] key #%d is outside F1..AltF12 -- ignored, it '
+                  + 'would have written into the next array',
+                  [Ord(Key)]);
+     Exit;
+     end;
+
   if Mode = Digital then
      begin
      Mode                               := CW;
@@ -2126,6 +2144,24 @@ end;
 procedure SetEXMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString {Str80});
 
 begin
+  { REFUSE A KEY THIS ARRAY CANNOT HOLD -- and this one matters more than
+    the caption pair, because of what sits next to it.
+
+    CQMemory, EXMemory, CQCaptionMemory and EXCaptionMemory are four
+    adjacent globals of the same type (LogCW.pas:86-90). Range checking
+    is off, so an index past AltF12 here does not raise -- it writes a
+    freshly New()ed pointer into the NEXT array along. That is a
+    non-nil, valid-looking pointer in a slot nothing ever allocated,
+    and whoever reads it later takes the access violation, in another
+    unit, with nothing to connect the two. }
+  if not (Key in [F1..AltF12]) then
+     begin
+     logger.Error('[SetEXMemoryString] key #%d is outside F1..AltF12 -- ignored, it '
+                  + 'would have written into the next array',
+                  [Ord(Key)]);
+     Exit;
+     end;
+
   if Mode = Digital then
      begin
      Mode                               := CW;

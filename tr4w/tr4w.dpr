@@ -1,4 +1,4 @@
-﻿program tr4w;
+program tr4w;
 {$IMPORTEDDATA OFF}
 {$I src\tr4w.inc}
 
@@ -762,6 +762,11 @@ var
   TempString                            : ShortString;
   // The radio library's complaint, if it has one -- see the call site.
   tRadioLibraryError                    : string;
+  // Surviving a fault in the message loop -- see the loop itself.
+  tLoopFailures                         : integer;
+  // Int64, NOT QWord: networkmessageutils declares a QWord of its own and
+  // the unqualified name resolves to that one here.
+  tLastLoopFailure                      : Int64;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -1288,6 +1293,27 @@ begin
       end;
     {****************************  Main CallBack  ****************************}
 
+  { AN EXCEPTION IN THE MESSAGE LOOP NO LONGER ENDS THE PROGRAM.
+
+    NY4I, after the third Ctrl-P crash: "I am not a fan of the abrupt
+    termination." Nor is anything else about it defensible. TR4W is a CONTEST
+    LOGGER: a fault while drawing a caption used to take the whole session down,
+    mid-contest, with the log open -- when the fault itself had nothing to do
+    with logging QSOs. Windows applications survive a bad window procedure; this
+    one did not, because nothing here caught anything.
+
+    The loop body is untouched. It is re-entered after a fault, which keeps the
+    two gotos (TransMess / NoTransMess) inside a single block and avoids
+    restructuring the most heavily-edited code in the program.
+
+    A LIMIT, so a persistent fault cannot become a silent spin: ten failures
+    inside a minute and it gives up and re-raises, which is the old behaviour.
+    The count resets after a quiet minute, so occasional unrelated faults over a
+    long contest do not accumulate into a shutdown. }
+  tLoopFailures := 0;
+  tLastLoopFailure := 0;
+  repeat
+  try
   while (GetMessage(Msg, 0, 0, 0)) do
   begin
 
@@ -1538,6 +1564,31 @@ begin
     NoTransMess:
 //  except sm end;
   end;
+    // GetMessage returned False: WM_QUIT, the ordinary way out.
+    Break;
+  except
+    on E: Exception do
+       begin
+       if (Int64(GetTickCount64) - tLastLoopFailure) > 60000 then
+          begin
+          tLoopFailures := 0;
+          end;
+       tLastLoopFailure := Int64(GetTickCount64);
+       Inc(tLoopFailures);
+
+       logger.Error('[MessageLoop] recovered from %s -- %s (failure %d). The '
+                    + 'log is intact; see the [CRASH] record above for where.',
+                    [E.ClassName, E.Message, tLoopFailures]);
+
+       if tLoopFailures >= 10 then
+          begin
+          logger.Fatal('[MessageLoop] 10 faults inside a minute -- giving up '
+                       + 'rather than spinning.');
+          raise;
+          end;
+       end;
+  end;
+  until False;
   finally
      // Issue #783 -- stop the HamScore RTC uploader cleanly so the worker
      // thread isn't holding sockets when the process exits.
