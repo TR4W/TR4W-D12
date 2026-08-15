@@ -303,7 +303,6 @@ var
   tPaddleElementLength                  : Cardinal;
 
   PortBeingUsed                         : PortType {= NoPort};
-  PTTLockout                            : boolean;
   // Default TRUE (NY4I, 2026-08-09).  This selects the PTT INTERFACE -- key by
   // CAT command, or key by the hardware line above -- and defaulting it FALSE
   // meant the CAT path silently did nothing: tPTTVIACAT logs one DEBUG line
@@ -317,7 +316,6 @@ var
   // back to tr4w.ini, so an existing station already has an explicit
   // 'PTT VIA COMMANDS=' line and the file still wins.  This changes fresh
   // installs.
-  tPTTViaCommand                        : boolean = True;
   tr4w_PTTStartTime                     : DWORD;
   tElapsedTimeFromLastQSO               : DWORD;
 
@@ -2565,7 +2563,7 @@ end;
 function tStartAutoCallTerminate(idAttach: DWORD): boolean;
 begin
   Result := False;
-  if AutoCallTerminate = True then
+  if Config.AutoCallTerminate = True then
     if ExchangeHasBeenSent = False then
       if tAutoSendMode then
         if ControlAMode = False then

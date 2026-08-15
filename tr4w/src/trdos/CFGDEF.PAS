@@ -102,11 +102,11 @@ begin
   //  Config.AlwaysCallBlindCQ := False;
   //  AskForFrequencies := {wli True} False;
   //  AskIfContestOver := True;
-  //  AutoCallTerminate := False;
+  //  Config.AutoCallTerminate := False;
   //  AutoDupeEnableCQ := True;
   //  AutoDupeEnableSandP := True;
-  //  AutoQSONumberDecrement := False;
-  //  AutoReturnToCQMode := True;
+  //  Config.AutoQSONumberDecrement := False;
+  //  Config.AutoReturnToCQMode := True;
   //  AutoSAPEnable := False;
   //  AutoSAPEnableRate := 1000; {KK1L 6.72}
   //  AutoSendCharacterCount := 0;
@@ -149,7 +149,7 @@ begin
   //  ColumnDupeSheetEnable := False;
   //  ComputerID := CHR(0);
   //  ContactsPerPage := 50;
-  //  ConfirmEditChanges := True;
+  //  Config.ConfirmEditChanges := True;
   //  ContestTitle := '';
   //  ContinentString := '';
 //   CorrectedCallMessage := '} OK %';
@@ -191,7 +191,7 @@ begin
   //   EightBitRTTYPort := False; {KK1L: 6.71}
 
 //  EnableSixDVKMessages := True; {KK1L: 6.72}
-//  EscapeExitsSearchAndPounce := True;
+//  Config.EscapeExitsSearchAndPounce := True;
   //   ExchangeFunctionKeyMenu := '';
 
 //  windows.ZeroMemory(@ExchangeInformation, sizeof(ExchangeInformation));
@@ -288,7 +288,7 @@ begin
 //  K5KA.ModeEnabled := False;
   //  Config.KeypadCWMemories := False;
 
-  //  LeaveCursorInCallWindow := False;
+  //  Config.LeaveCursorInCallWindow := False;
   //  Config.LeadingZeros := 0;
   //  Config.LeadingZeroCharacter := 'T';
   //  LiteralDomesticQTH := False;
@@ -297,7 +297,7 @@ begin
   //  LogRSTSent := '599';
   //  LogRSSent := '59';
   //  LogSubTitle := '';
-  //  LogWithSingleEnter := False;
+  //  Config.LogWithSingleEnter := False;
   //  LookForRSTSent := False;
 
   //  MessageEnable := True;
@@ -528,7 +528,7 @@ begin
   //  SingleBand := All;
   //  SingleRadioMode := False;
   //  Config.SkipActiveBand := False;
-  //  SpaceBarDupeCheckEnable := True;
+  //  Config.SpaceBarDupeCheckEnable := True;
   //  SprintQSYRule := False;
   {
     StartingFrequencies[Band160] := 1800000;

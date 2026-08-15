@@ -38,7 +38,8 @@ uses
   LogGrid,
   LogWind,
   LogNet,
-  LogRadio;
+  LogRadio,
+   uConfigValues;
 
 type
   HelpSubject = (NoSubject);
@@ -46,7 +47,7 @@ type
   //  TabModeType = (NormalTabMode, ControlFTabMode);
 
 var
-  ConfirmEditChanges               : boolean = True;
+  Config.ConfirmEditChanges               : boolean = True;
   //  TabMode                               : TabModeType = NormalTabMode;
   UserNameString                   : Str40;
   VideoGameLength                  : integer;
@@ -1266,7 +1267,7 @@ begin
             EditLines[WhereY] := WindowString;
             DisplayEditableLogString(WindowString, 80);
 
-            if DataChanged and ConfirmEditChanges then
+            if DataChanged and Config.ConfirmEditChanges then
             begin
               TempString := UpperCase(QuickEditResponse('Save changes? (Y/N) : ', 1));
 
@@ -1489,7 +1490,7 @@ begin
                   EditLines[WhereY] := WindowString;
                   DisplayEditableLogString(WindowString, 80);
 
-                  if DataChanged and ConfirmEditChanges then
+                  if DataChanged and Config.ConfirmEditChanges then
                   begin
                     TempString := UpperCase(QuickEditResponse('Save changes? (Y/N) : ', 1));
 

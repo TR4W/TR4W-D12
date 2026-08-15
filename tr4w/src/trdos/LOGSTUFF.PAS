@@ -385,12 +385,10 @@ var
 
   //  AskIfContestOver                      : boolean = True;
   AutoAltDWindowString: Str20;
-  AutoCallTerminate: boolean;
   AutoAltDEnable: boolean;
   AutoDisplayDupeQSO: boolean;
   AutoQSLCount: Byte {= 0};
   AutoQSLInterval: integer;
-  AutoQSONumberDecrement: boolean;
   AutoSAPEnable: boolean;
 
   BandMapCallWindowEnable: boolean = True;
@@ -429,7 +427,6 @@ var
 
   EscapeDeletedCallEntry: CallString;
   EscapeDeletedExchangeEntry: Str40;
-  EscapeExitsSearchAndPounce: boolean = True;
   ExchangeHasBeenSent: boolean;
   ExchangeErrorMessage: PAnsiChar;
   ExchangeErrorToken: Str40;   // Issue #1010: the offending exchange token, so the caller can place the caret right after it
@@ -469,13 +466,11 @@ var
   LastMultiInfoMessageSum: array[BandType, ModeType] of Byte;
   //  LastQSOLogged                    : ContestExchange;
 
-  LeaveCursorInCallWindow: boolean;
 
   LogFileRead: Text;
 
   LogRSSent: Word = 59;
   LogRSTSent: Word = 599;
-  LogWithSingleEnter: boolean;
   LookForRSTSent: boolean;
   LookingForCQExchange: boolean;
 
@@ -561,7 +556,6 @@ var
   ShortIntegers: boolean;
   ShowQSOStatusCall: CallString;
   //  ShowSearchAndPounce                   : boolean;
-  SpaceBarDupeCheckEnable: boolean = True;
   StartSendingNowKey: Char = '''';
 
   StationInformationCall: CallString;

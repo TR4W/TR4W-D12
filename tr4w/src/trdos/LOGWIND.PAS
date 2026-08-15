@@ -497,7 +497,6 @@ var
   AlarmMinute                           : integer;
   AlarmHour                             : integer;
   AskForFrequencies                     : boolean;
-  AutoReturnToCQMode                    : boolean = True;
   AutoSAPEnableRate                     : LONGINT = 500;
   AutoSendCharacterCount                : integer;
   AutoSendEnable                        : boolean;
@@ -1769,7 +1768,7 @@ begin
   // numbers sent + 1), NOT a QSO count.  Count-based display reverted the number
   // whenever a QSO stopped counting (X-QSO, mid-log delete).  NextSerialToSend
   // also returns ServerSerialNumber in networked mode, matching the old value.
-  TF.Format(wsprintfBuffer, QSONumberStringArray[AutoQSONumberDecrement], NextSerialToSend);
+  TF.Format(wsprintfBuffer, QSONumberStringArray[Config.AutoQSONumberDecrement], NextSerialToSend);
   if ServerSerialNumber <> 0 then
     if PreviousSerialNumberType = sntReserved then
        begin

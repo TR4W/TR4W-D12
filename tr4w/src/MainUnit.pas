@@ -787,7 +787,7 @@ begin
   // Move focus to exchange.  The caller's existing focus-move logic only
   // fires when ExchangeWindowString is empty (which won't be true after
   // we just populated it), so we have to do it ourselves here.
-  if not LeaveCursorInCallWindow then
+  if not Config.LeaveCursorInCallWindow then
      begin
      tExchangeWindowSetFocus;
      end;
@@ -1054,7 +1054,7 @@ begin
 
   if OpMode = SearchAndPounceOpMode then
     if not Call_Found then
-      if (EscapeExitsSearchAndPounce) then
+      if (Config.EscapeExitsSearchAndPounce) then
          begin
          SetOpMode(CQOpMode);
          end;
@@ -1107,7 +1107,7 @@ begin
      end
   else
      begin
-     if (OpMode <> SearchAndPounceOpMode) and ((CallWindowString = '') or not SpaceBarDupeCheckEnable) then
+     if (OpMode <> SearchAndPounceOpMode) and ((CallWindowString = '') or not Config.SpaceBarDupeCheckEnable) then
         begin
         if CWStillBeingSent then
            begin
@@ -1210,7 +1210,7 @@ begin
     { Still a SpaceBar, but not doing DupeInfoCall }
 
   else if ((OpMode <> SearchAndPounceOpMode)                        and 
-          ((CallWindowString = '') or not SpaceBarDupeCheckEnable)) then
+          ((CallWindowString = '') or not Config.SpaceBarDupeCheckEnable)) then
      begin
 
      FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
@@ -1402,7 +1402,7 @@ begin
      if (ExchangeWindowString = '') and 
         (ExchangeMemoryEnable)      then // 4.83.3
         begin
-        if not LeaveCursorInCallWindow then
+        if not Config.LeaveCursorInCallWindow then
            begin
            tExchangeWindowSetFocus;
            end;
@@ -1410,7 +1410,7 @@ begin
         CheckAndSetInitialExchangeCursorPos;
         end;
 
-     if not LogWithSingleEnter then
+     if not Config.LogWithSingleEnter then
         begin
         Exit;
         end;
@@ -1507,7 +1507,7 @@ begin
   ParseFourFields(ExchangeWindowString, s1, s2, s3, s4);
   loop:
   if (ExchangeWindowString = '') and (CallWindowString = '') then
-    if AutoReturnToCQMode then
+    if Config.AutoReturnToCQMode then
        begin
        //     tClearDupeInfoCall; // 4.126.1
        //     clearAltD;         //4.126.1
@@ -4654,7 +4654,7 @@ end;
 
 procedure ProcessKeyDownTerm; // 4.46.2
 begin
-  if activeradioptr^.cwbycat and autosendenable and autocallterminate then
+  if activeradioptr^.cwbycat and autosendenable and Config.AutoCallTerminate then
     if length(CallWindowString) = AutoSendCharacterCount then
        begin
        tExchangeWindowSetFocus;
@@ -6012,7 +6012,7 @@ begin
   // D12: InitialExchangeEntry + SetMainWindowText are native string now, so the
   // Str80 local, its ZeroMemory, and the @ie[1] ASCIIZ view are all gone.
   SetMainWindowText(mweExchange, InitialExchangeEntry(CallWindowString));
-  if LeaveCursorInCallWindow then
+  if Config.LeaveCursorInCallWindow then
      begin
      tCallWindowSetFocus;
      end;

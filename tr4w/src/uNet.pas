@@ -184,7 +184,8 @@ uses
   uRadioConfigApply,   // ApplyPeerCommand -- a peer's config change
   uTelnet,
   uGetServerLog,
-  MainUnit;
+  MainUnit,
+   uConfigValues;
 
 function NetDlgProc(hwnddlg: HWND; Msg: UINT; wp: wParam; lp: lParam): BOOL; stdcall;
 label
@@ -601,7 +602,7 @@ begin
     STATUS_BYTE_BIT_PTT * Byte(ActiveRadioPtr.tPTTStatus) +
     STATUS_BYTE_BIT_OPMODE * Byte(OpMode) +
     STATUS_BYTE_BIT_DUPE * Byte(tCallWindowStringIsDupe) +
-    STATUS_BYTE_BIT_PTT_LOCKOUT * Byte(PTTLockout);
+    STATUS_BYTE_BIT_PTT_LOCKOUT * Byte(Config.PTTLockout);
 //    + STATUS_BYTE_BIT_MULT * Byte(tNewMultIndicatorPrevState)
   ;
 end;

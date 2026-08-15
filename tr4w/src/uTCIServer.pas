@@ -274,7 +274,7 @@ implementation
 uses
    MainUnit,          // logger
    tree,              // CodeSpeed
-   LOGK1EA,           // tPTTViaCommand
+   LOGK1EA,           // Config.PTTViaCommand
    uConfigValues,     // Config.NoPollDuringPTT -- named in the refusal
    uRadioPolling,     // RadioStatusPublished
    uFactoryRadioBase;
@@ -557,7 +557,7 @@ begin
       begin
       // Named explicitly, because the operator has to change a setting and
       // "it did not transmit" gives them nothing to act on.
-      if not tPTTViaCommand then
+      if not Config.PTTViaCommand then
          begin
          logger.Warn('[TCI-SRV] PTT refused: "PTT VIA COMMANDS" is FALSE, ' +
                      'so no transmit command is sent to the radio');

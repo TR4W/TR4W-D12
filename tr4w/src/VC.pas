@@ -2813,7 +2813,6 @@ var
   VideoGameLength                       : integer;
 
   MesWindow                             : MesWindowType;
-  ConfirmEditChanges                    : boolean = True;
   tEightBitsPerPixel                    : boolean;
   EditabledLogFocused                   : boolean = False;
 

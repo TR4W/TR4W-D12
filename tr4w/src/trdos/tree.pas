@@ -1051,7 +1051,7 @@ uses
   LogK1EA
   ,
   uFreqTimeFormat   // Issue #997: golden-tested time formatter
-  ;
+  , uConfigValues;
 
 //{WLI}FUNCTION  BYTADDR  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): INTEGER; EXTERNAL;
 //{WLI}FUNCTION  BYTDUPE  (Call: Pointer; NumberCalls: INTEGER; A: Pointer): BOOLEAN; EXTERNAL;
@@ -5072,7 +5072,7 @@ var
   c                                     : integer;
 begin
   Result := False;
-  if PTTLockout then
+  if Config.PTTLockout then
     if NetSocket <> 0 then
        begin
        for c := 1 to 26 do

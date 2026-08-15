@@ -1882,7 +1882,7 @@ begin
         if (Key = StartSendingNowKey) and (ActiveWindow = CallWindow) and (length(CallWindowString) >= 1) then
            begin
            //                  if ReminderPostedCount = 0 then
-         if AutoCallTerminate then
+         if Config.AutoCallTerminate then
             begin
             QuickDisplay('Continue entering characters.  Auto terminate active!!')
             end
@@ -1908,7 +1908,7 @@ begin
             repeat
               repeat
                 if (ActiveMode = CW) and CWEnabled {and (not ReadInLog)} and
-                  AutoCallTerminate and not CWStillBeingSent then
+                  Config.AutoCallTerminate and not CWStillBeingSent then
                    begin
                    CallAlreadySent := True;
                    CallsignICameBackTo := CallWindowString;
@@ -2149,7 +2149,7 @@ begin
                  end
                   { Still a SpaceBar, but not doing DupeInfoCall }
               else
-                if (CallWindowString = '') or not SpaceBarDupeCheckEnable then
+                if (CallWindowString = '') or not Config.SpaceBarDupeCheckEnable then
                    begin
                    if CWStillBeingSent then FlushCWBufferAndClearPTT; { Clear CW sent on Inactive Radio}
                    SetUpToSendOnActiveRadio;
@@ -2381,7 +2381,7 @@ begin
      begin
      DualingCQState := DualSendingExchange;
      end;
-  //{WLI}    IF LogWithSingleEnter THEN
+  //{WLI}    IF Config.LogWithSingleEnter THEN
   begin
     if ParametersOkay(CallWindowString,
       ExchangeWindowString,
@@ -2423,7 +2423,7 @@ begin
                       LookingForCQExchange := False;
                       Exit;
                       END;
-                  SpaceBar: IF SpaceBarDupeCheckEnable THEN
+                  SpaceBar: IF Config.SpaceBarDupeCheckEnable THEN
                                 IF WindowDupeCheck THEN
                                     BEGIN
                                     RemoveWindow (ExchangeWindow);
@@ -2549,7 +2549,7 @@ begin
                              LookingForCQExchange := False;
                              Exit;
                              END;
-                  SpaceBar: IF SpaceBarDupeCheckEnable THEN
+                  SpaceBar: IF Config.SpaceBarDupeCheckEnable THEN
                                 IF WindowDupeCheck THEN
                                     BEGIN
                                     RemoveWindow (ExchangeWindow);
