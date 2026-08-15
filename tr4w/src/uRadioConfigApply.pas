@@ -308,7 +308,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..60] of string =
+   MIGRATED_COMMANDS: array[0..66] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -381,7 +381,15 @@ const
       'PADDLE PTT HOLD COUNT',
       'PTT ENABLE',
       'PTT TURN ON DELAY',
-      'NO POLL DURING PTT'
+      'NO POLL DURING PTT',
+
+      // Two radio and multi-op, 2026-08-15.
+      'IN BAND LOCKOUT',
+      'QSY INACTIVE RADIO',
+      'SWAP RADIO RELAY SENSE',
+      'WAIT FOR STRENGTH',
+      'MULTI MULTS ONLY',
+      'INTERCOM FILE ENABLE'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);

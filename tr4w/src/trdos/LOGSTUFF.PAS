@@ -455,7 +455,6 @@ var
   InitialExchangePutUp: boolean;
   InitialExchangeOverwrite: boolean; {KK1L: 6.70}
   InsertMode: boolean = True;
-  IntercomFileenable: boolean;
   //  IntercomFileOpen                 : boolean;
   //  IntercomFileWrite                : Text;
 
@@ -483,7 +482,6 @@ var
   MessageEnable: boolean = True;
   //   ModemPortBaudRate               : integer;
   MultiInfoMessageTimeout: TimeRecord;
-  MultiMultsOnly: boolean;
   MultiplierFileEnable: boolean;
   //  MultiMessageBuffer               : array[1..5] of Str80;
   MultiRememberBuffer: MultiMessageListPointer;
@@ -603,7 +601,6 @@ var
   PSTRotatorIPAddress: string[255] = '127.0.0.1';
   PSTRotatorUDPPort: integer = 12000;
 
-  WaitForStrength: boolean = True;
 
   WindowDupeCheckCall: CallString;
 

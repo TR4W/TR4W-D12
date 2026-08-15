@@ -282,7 +282,7 @@ begin
     //  InitialExchangeCursorPos := AtEnd;
     //  InitialExchangeOverwrite := False; {KK1L: 6.70}
     //  InsertMode := True;
-    //  IntercomFileenable := False;
+    //  Config.IntercomFileEnable := False;
 
     //  K1EANetworkEnable := False;
 //  K5KA.ModeEnabled := False;
@@ -303,7 +303,7 @@ begin
   //  MessageEnable := True;
      //   ModemPortBaudRate := 4800;
   //  MultiInfoMessage := '';
-  //  MultiMultsOnly := False;
+  //  Config.MultiMultsOnly := False;
   //  MultipleBandsEnabled := True;
   //  MultipleModesEnabled := True;
   //  MultiPortBaudRate := 4800;
@@ -561,7 +561,7 @@ begin
   }
   //  SwapPacketSpotRadios := False;
   //  Config.SwapPaddles := False;
-  //  SwapRadioRelaySense := False;
+  //  Config.SwapRadioRelaySense := False;
 
   //  TabMode := NormalTabMode;
   //  TailEndKey := ']';
@@ -583,7 +583,7 @@ begin
      //   VisibleDupesheetEnable := False;
 
   //  WakeUpTimeOut := 0;
-  //  WaitForStrength := True;
+  //  Config.WaitForStrength := True;
   //  WARCBandsEnabled := False;
   //  WildCardPartials := True;
 {

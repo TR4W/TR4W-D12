@@ -383,7 +383,7 @@ begin
 
             //            QuickDisplay('WAITING FOR YOU ENTER STRENGTH OF RST (Single digit)!!');
             //            AddStringToBuffer('5', Config.CWTone);
-            if WaitForStrength then
+            if Config.WaitForStrength then
                begin
                i := QuickEditInteger(TC_WAITINGFORYOUENTERSTRENGTHOFRST, 1)
                end
@@ -658,7 +658,7 @@ begin
                        REPEAT
                            IF NOT CWStillBeingSent THEN
                                BEGIN
-                               IF NOT WaitForStrength THEN
+                               IF NOT Config.WaitForStrength THEN
                                    BEGIN
                                    Key := '9';
                                    Break;

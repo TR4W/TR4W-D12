@@ -347,7 +347,6 @@ var
   ShiftKeyEnable                        : boolean = True;
   StereoControlPin                      : integer = 9;
   StereoPinState                        : boolean;
-  SwapRadioRelaySense                   : boolean;
 
   TalkDebugWrite                        : file;
   TuningWithDits                        : boolean;
@@ -834,7 +833,7 @@ begin
 
   TempRadio := Radio;
 
-  if SwapRadioRelaySense then
+  if Config.SwapRadioRelaySense then
     if Radio = RadioOne then
        begin
        TempRadio := RadioTwo
@@ -858,7 +857,7 @@ begin
   DriverBitOperation(TempByte, RELAY_SIGNAL, Operation);
 
   SetPortByte(tRelayControlPortBaseAddress, otControl, TempByte);
-  {    IF SwapRadioRelaySense THEN
+  {    IF Config.SwapRadioRelaySense THEN
           IF Radio = RadioOne THEN
               Radio := RadioTwo
           ELSE

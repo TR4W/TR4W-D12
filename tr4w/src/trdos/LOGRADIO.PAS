@@ -333,7 +333,6 @@ var
    // newIcomResponseTimeoutAuto and icomCIVTransceiveEnable are GONE: they
    // configured the deleted per-model Icom poller and had no reader left.
    newIcomResponseTimeout: integer = 60;
-   InBandLock:     boolean = True;      // 4.92.1
 
    Radio1:           RadioObject {=
     (

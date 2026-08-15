@@ -141,6 +141,19 @@ type
       PaddleSpeed: integer;
       PaddleMonitorTone: integer;
       PaddlePTTHoldCount: integer;
+
+      { TWO-RADIO AND MULTI-OP, migrated 2026-08-15.
+
+        Defaults copied from the declarations they replace, NOT chosen here.
+        InBandLock and WaitForStrength were typed constants = True; losing that
+        turns the in-band guard off and stops the SO2R code waiting for a signal
+        report, neither of which announces itself. }
+      InBandLock: boolean;
+      QSYInactiveRadio: boolean;
+      SwapRadioRelaySense: boolean;
+      WaitForStrength: boolean;
+      MultiMultsOnly: boolean;
+      IntercomFileEnable: boolean;
    end;
 
 var
@@ -197,7 +210,13 @@ var
       SwapPaddles: False;
       PaddleSpeed: 0;
       PaddleMonitorTone: 700;
-      PaddlePTTHoldCount: 13
+      PaddlePTTHoldCount: 13;
+      InBandLock: True;
+      QSYInactiveRadio: False;
+      SwapRadioRelaySense: False;
+      WaitForStrength: True;
+      MultiMultsOnly: False;
+      IntercomFileEnable: False
    );
 
 implementation

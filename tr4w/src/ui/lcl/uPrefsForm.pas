@@ -409,6 +409,12 @@ type
       chkAltDCQ: TCheckBox;
       chkAlwaysBlindCQ: TCheckBox;
       chkSkipActiveBand: TCheckBox;
+      chkInBandLockout: TCheckBox;
+      chkQSYInactive: TCheckBox;
+      chkSwapRelaySense: TCheckBox;
+      chkWaitForStrength: TCheckBox;
+      chkMultiMultsOnly: TCheckBox;
+      chkIntercomFile: TCheckBox;
 
       // --- Rotators (Tag = NAV_ROTATORS) --------------------------------------
       layRotators: TPanel;
@@ -3110,6 +3116,12 @@ begin
    FBindings.Bind(chkAltDCQ,          'operating.tworadio.altDCQ');
    FBindings.Bind(chkAlwaysBlindCQ,   'operating.tworadio.blindCQ');
    FBindings.Bind(chkSkipActiveBand,  'operating.tworadio.skipActiveBand');
+   FBindings.Bind(chkInBandLockout,     'operating.tworadio.inBandLockout');
+   FBindings.Bind(chkQSYInactive,       'operating.tworadio.qsyInactive');
+   FBindings.Bind(chkSwapRelaySense,    'operating.tworadio.swapRelaySense');
+   FBindings.Bind(chkWaitForStrength,   'operating.tworadio.waitForStrength');
+   FBindings.Bind(chkMultiMultsOnly,    'network.multiMultsOnly');
+   FBindings.Bind(chkIntercomFile,      'network.intercomFile');
 
    // Operating - Online scoring
    FBindings.Bind(chkHamScoreEnable,  'scoring.hamscore.enable');
