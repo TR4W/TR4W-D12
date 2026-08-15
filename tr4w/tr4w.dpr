@@ -150,6 +150,7 @@ uses
   uStations in 'src\uStations.pas',
   uAltD in 'src\uAltD.pas',
   uWinKey in 'src\uWinKey.pas',
+  uLPTPortEnumerator in 'src\uLPTPortEnumerator.pas',
   uPrefsSearch in 'src\uPrefsSearch.pas',
   uConfigValues in 'src\uConfigValues.pas',
   uCFG in 'src\uCFG.pas',
