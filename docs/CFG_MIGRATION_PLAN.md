@@ -241,8 +241,30 @@ UI: three checkboxes on **CW Settings**, the other seven on a new **Paddle and P
 it down in keyer ticks, which the help documents as × 1.7 ms. Both readings are live. Correcting
 either changes amplifier sequencing on air, so it needs bench evidence.
 
-**Held back:** `AUTO SEND CHARACTER COUNT` (`ckArray` via `pointer(2)` — a different mechanism) and
-`CODE SPEED` (14 live writes, 151 references; category C, wants its own commit).
+**Held back:** `AUTO SEND CHARACTER COUNT` (`ckArray` via `pointer(2)` — a different mechanism).
+
+### `CODE SPEED` does not belong in `Config` at all (NY4I, 2026-08-14)
+
+> *"CodeSpeed is a global for all keyers to access."*
+
+Stopped before the repoint on that instruction, and it is the right call for a reason worth writing
+down: **`CodeSpeed` is not a setting that happens to be mutable — it is live shared runtime state.**
+Every keyer reads it, the speed keys move it ±6% (`uCWKeyerCAT`), SO2R restores it per radio from
+`Radio1/2.SpeedMemory`, and `CW SPEED FROM DATABASE` sets it from the station's last-worked speed.
+
+`Config` holds what the operator configured. Pointing 151 keyer reads at `Config.CodeSpeed` would
+work mechanically and would quietly redefine the config record as a place runtime state lives — the
+same category error as putting the current frequency there.
+
+**The distinction to keep:** `CODE SPEED` the *stored setting* is the speed a session STARTS at;
+`CodeSpeed` the *global* is the speed it is at now. Those are two values, and today one variable does
+both jobs. If the setting is wanted in Preferences, it wants its own stored field seeding the global
+at startup — not a repoint. Left `csOld` until that is designed.
+
+**Related, pre-existing and unfixed:** `Radio1/2.SpeedMemory` default to `InitialCodeSpeed` (35,
+`tree.pas:742`) independently of the configured `CODE SPEED`, so a station configured to 28 WPM jumps
+to 35 on its first radio switch. `LOGWIND.PAS:1587` writes the live speed back into the active
+radio's memory, so it self-corrects after one manual change. Worth deciding when the setting is.
 
 ### Still `csOld`, and mostly not Preferences work
 
