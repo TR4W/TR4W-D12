@@ -84,10 +84,27 @@ for r in allrows:
     r['cfg'] = [n for n, b, d in blobs if pat.search(b)]
     r['defn'] = [n for n, b, d in blobs if d and pat.search(b)]
 
+# SIGNAL 2, and the first cut of this document was wrong to omit it. A row can
+# be contest-driven without appearing in any .cfg file: FCONTEST.PAS assigns it
+# when a contest is selected. WARC BAND ENABLE is exactly that -- crC:0, in no
+# .cfg, and assigned five times by FCONTEST -- so grouping on crC and .cfg alone
+# filed it under "no confirmation needed", which is the opposite of true.
+fc = io.open(os.path.join(SRC, 'trdos', 'FCONTEST.PAS'), encoding='utf-8',
+             errors='surrogateescape', newline='').read()
+fc_live = re.sub(r'\{[^}]*\}', ' ', fc)   # a commented assignment is not one
+for r in rows:
+    tail = (r.get('sym') or '').split('.')[-1]
+    # Case-INSENSITIVE: Pascal is, and this tree spells the same identifier
+    # differently at declaration and use.
+    r['fc'] = (len(re.findall('(?<![A-Za-z0-9_])' + re.escape(tail)
+                             + r'\s*:=', fc_live, re.I))
+               if tail else 0)
+
 agree_event = [r for r in rows if r['crC'] == 1 and r['cfg']]
 declared_unused = [r for r in rows if r['crC'] == 1 and not r['cfg']]
 mismatch = [r for r in allrows if r['crC'] == 0 and r['cfg']]
-station = [r for r in rows if r['crC'] == 0 and not r['cfg']]
+station = [r for r in rows if r['crC'] == 0 and not r['cfg'] and not r['fc']]
+fcdriven = [r for r in rows if r['crC'] == 0 and not r['cfg'] and r['fc']]
 
 
 def table(rs, cols=('cmd', 'typ', 'sym', 'ev')):
@@ -96,6 +113,8 @@ def table(rs, cols=('cmd', 'typ', 'sym', 'ev')):
         n = len(r['cfg'])
         ev = ('**%d** — %s' % (n, ', '.join(sorted(r['cfg'])[:3])
                                + (' …' if n > 3 else ''))) if n else '—'
+        if not r['cfg'] and r.get('fc'):
+            ev = '`FCONTEST` assigns it **%d×**' % r['fc']
         tgt = ('`%s`%s' % (r['sym'], r['via'])) if r.get('sym') else '—'
         out.append('| `%s` | %s | %s | %s |' % (r['cmd'], r['typ'], tgt, ev))
     return '\n'.join(out)
@@ -122,8 +141,24 @@ question is answered per row in `CFGCA` today, and NY4I's read is right — **%d
 `csOld` are `crC:0`, i.e. not contest-scoped**, against %d marked `crC:1`.
 
 What follows is therefore not a fresh classification. It is `crC` **checked against what the %d
-contest `.cfg` files on this machine actually contain**, because the only rows worth anyone's
-attention are the ones where the two disagree.
+contest `.cfg` files on this machine actually contain, and against `FCONTEST.PAS`**, because the
+rows worth anyone's attention are the ones where those disagree.
+
+### The headline: `crC` under-declares by 38 rows
+
+Counting a row as contest-related if **any** signal says so — `crC:1`, a real `.cfg` sets it, or
+`FCONTEST` assigns it on contest selection — gives **55 of the 168**, not the 17 that `crC:1` marks.
+The other 113 have no contest signal at all, so the "majority are not contest related" reading is
+right; the count is simply higher than the table admits.
+
+The gap is `FCONTEST.PAS`. Rows like `DX MULTIPLIER` (28 assignments), `S&P EXCHANGE` (19),
+`CQ EXCHANGE` (18) and `WARC BAND ENABLE` (5) are written in code whenever a contest is selected
+while being marked `crC:0`, "write me to `tr4w.ini`". `CFG_COMMAND_TABLE.md` already notes this
+class for the 16 keys visible in `.cfg` files; the `FCONTEST` half more than doubles it.
+
+**This is a data defect in `CFGCA`, not merely a documentation gap.** A `crC:0` row that a contest
+overwrites gives Preferences an editor whose value is silently replaced at the next contest
+selection — the `HF/WARC/VHF BAND ENABLE` problem, but across 38 rows rather than three.
 
 ---
 
@@ -175,10 +210,20 @@ Agreed and uncontroversial. Contest-scoped, no action.
 
 ---
 
-## The remaining %d — `crC:0`, and no contest file touches them
+## `crC:0`, no `.cfg` names them, but `FCONTEST` assigns them — %d rows
+
+**Contest-driven without appearing in any contest file.** Selecting a contest writes these in code,
+so a Preferences editor would be silently overwritten. `WARC BAND ENABLE` is the clearest case:
+`crC:0`, in no `.cfg`, and assigned five times by `FCONTEST`.
+
+%s
+
+---
+
+## The remaining %d — `crC:0`, no `.cfg`, no `FCONTEST` write
 
 The bulk, and the pool future station-settings work draws from. **No confirmation needed** unless one
-looks wrong to you; `crC` and the evidence agree.
+looks wrong to you; every signal agrees.
 
 %s
 """ % (len([r for r in rows if r['crC'] == 0]), len(rows),
@@ -186,6 +231,7 @@ looks wrong to you; `crC` and the evidence agree.
        len(mismatch), table2(mismatch),
        len(declared_unused), table(declared_unused),
        len(agree_event), table(agree_event),
+       len(fcdriven), table(fcdriven),
        len(station), table(station))
 
 io.open(OUT, 'w', encoding='utf-8', newline='\n').write(doc)
@@ -195,4 +241,5 @@ print('  csOld rows: %d   (crC:0 %d / crC:1 %d)'
 print('  MISMATCH crC:0 but contests set it (all statuses): %d' % len(mismatch))
 print('  crC:1 unexercised here                           : %d' % len(declared_unused))
 print('  crC:1 and contests set it                        : %d' % len(agree_event))
-print('  crC:0 and nothing sets it                        : %d' % len(station))
+print('  crC:0, no cfg, but FCONTEST assigns it           : %d' % len(fcdriven))
+print('  crC:0 and nothing sets it at all                 : %d' % len(station))

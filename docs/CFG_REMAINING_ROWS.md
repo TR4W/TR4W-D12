@@ -6,8 +6,24 @@ question is answered per row in `CFGCA` today, and NY4I's read is right — **15
 `csOld` are `crC:0`, i.e. not contest-scoped**, against 17 marked `crC:1`.
 
 What follows is therefore not a fresh classification. It is `crC` **checked against what the 74
-contest `.cfg` files on this machine actually contain**, because the only rows worth anyone's
-attention are the ones where the two disagree.
+contest `.cfg` files on this machine actually contain, and against `FCONTEST.PAS`**, because the
+rows worth anyone's attention are the ones where those disagree.
+
+### The headline: `crC` under-declares by 38 rows
+
+Counting a row as contest-related if **any** signal says so — `crC:1`, a real `.cfg` sets it, or
+`FCONTEST` assigns it on contest selection — gives **55 of the 168**, not the 17 that `crC:1` marks.
+The other 113 have no contest signal at all, so the "majority are not contest related" reading is
+right; the count is simply higher than the table admits.
+
+The gap is `FCONTEST.PAS`. Rows like `DX MULTIPLIER` (28 assignments), `S&P EXCHANGE` (19),
+`CQ EXCHANGE` (18) and `WARC BAND ENABLE` (5) are written in code whenever a contest is selected
+while being marked `crC:0`, "write me to `tr4w.ini`". `CFG_COMMAND_TABLE.md` already notes this
+class for the 16 keys visible in `.cfg` files; the `FCONTEST` half more than doubles it.
+
+**This is a data defect in `CFGCA`, not merely a documentation gap.** A `crC:0` row that a contest
+overwrites gives Preferences an editor whose value is silently replaced at the next contest
+selection — the `HF/WARC/VHF BAND ENABLE` problem, but across 38 rows rather than three.
 
 ---
 
@@ -75,19 +91,19 @@ absence is visible rather than assumed.
 
 | command | type | target | in real `.cfg` files |
 |---|---|---|---|
-| `BAND` | Band | `ActiveBand` *(ListParamArray[24])* | — |
-| `HF BAND ENABLE` | Boolean | `HFBandEnable` | — |
+| `BAND` | Band | `ActiveBand` *(ListParamArray[24])* | `FCONTEST` assigns it **29×** |
+| `HF BAND ENABLE` | Boolean | `HFBandEnable` | `FCONTEST` assigns it **4×** |
 | `INITIAL EXCHANGE` | Other | `Pointer(7)` | — |
-| `INITIAL EXCHANGE CURSOR POS` | Other | `InitialExchangeCursorPos` *(ListParamArray[6])* | — |
+| `INITIAL EXCHANGE CURSOR POS` | Other | `InitialExchangeCursorPos` *(ListParamArray[6])* | `FCONTEST` assigns it **2×** |
 | `INITIAL EXCHANGE FILENAME` | Filename | `TR4W_INITIALEX_FILENAME` | — |
-| `INITIAL EXCHANGE OVERWRITE` | Boolean | `InitialExchangeOverwrite` | — |
-| `LITERAL DOMESTIC QTH` | Boolean | `LiteralDomesticQTH` | — |
-| `QSO NUMBER BY BAND` | Boolean | `QSONumberByBand` | — |
+| `INITIAL EXCHANGE OVERWRITE` | Boolean | `InitialExchangeOverwrite` | `FCONTEST` assigns it **4×** |
+| `LITERAL DOMESTIC QTH` | Boolean | `LiteralDomesticQTH` | `FCONTEST` assigns it **11×** |
+| `QSO NUMBER BY BAND` | Boolean | `QSONumberByBand` | `FCONTEST` assigns it **2×** |
 | `SHORT INTEGERS` | Boolean | `ShortIntegers` | — |
 | `SINGLE BAND SCORE` | Band | `SingleBand` *(ListParamArray[25])* | — |
-| `SPRINT QSY RULE` | Boolean | `SprintQSYRule` | — |
+| `SPRINT QSY RULE` | Boolean | `SprintQSYRule` | `FCONTEST` assigns it **5×** |
 | `TEN MINUTE RULE` | Other | `TenMinuteRule` *(ListParamArray[18])* | — |
-| `VHF BAND ENABLE` | Boolean | `VHFBandsEnabled` | — |
+| `VHF BAND ENABLE` | Boolean | `VHFBandsEnabled` | `FCONTEST` assigns it **9×** |
 
 ---
 
@@ -104,18 +120,51 @@ Agreed and uncontroversial. Contest-scoped, no action.
 
 ---
 
-## The remaining 137 — `crC:0`, and no contest file touches them
+## `crC:0`, no `.cfg` names them, but `FCONTEST` assigns them — 24 rows
+
+**Contest-driven without appearing in any contest file.** Selecting a contest writes these in code,
+so a Preferences editor would be silently overwritten. `WARC BAND ENABLE` is the clearest case:
+`crC:0`, in no `.cfg`, and assigned five times by `FCONTEST`.
+
+| command | type | target | in real `.cfg` files |
+|---|---|---|---|
+| `AUTO DUPE ENABLE CQ` | Boolean | `AutoDupeEnableCQ` | `FCONTEST` assigns it **5×** |
+| `AUTO DUPE ENABLE S AND P` | Boolean | `AutoDupeEnableSandP` | `FCONTEST` assigns it **4×** |
+| `CALL OK NOW CW MESSAGE` | Message | `CorrectedCallMessage` | `FCONTEST` assigns it **4×** |
+| `CALL OK NOW MESSAGE` | Message | `CorrectedCallMessage` | `FCONTEST` assigns it **4×** |
+| `CONTACTS PER PAGE` | Integer | `ContactsPerPage` | `FCONTEST` assigns it **1×** |
+| `COUNT DOMESTIC COUNTRIES` | Boolean | `CountDomesticCountries` | `FCONTEST` assigns it **5×** |
+| `CQ EXCHANGE` | Message | `CQExchange` | `FCONTEST` assigns it **18×** |
+| `DIGITAL MODE ENABLE` | Boolean | `DigitalModeEnable` | `FCONTEST` assigns it **5×** |
+| `DX MULTIPLIER` | Multiplier | `ActiveDXMult` *(ListParamArray[11])* | `FCONTEST` assigns it **28×** |
+| `EXCHANGE MEMORY ENABLE` | Boolean | `ExchangeMemoryEnable` | `FCONTEST` assigns it **6×** |
+| `PREFIX MULTIPLIER` | Multiplier | `ActivePrefixMult` *(ListParamArray[3])* | `FCONTEST` assigns it **14×** |
+| `QSL MESSAGE` | Message | `QSLMessage` | `FCONTEST` assigns it **10×** |
+| `QSO BEFORE CW MESSAGE` | Message | `QSOBeforeMessage` | `FCONTEST` assigns it **4×** |
+| `QSO BEFORE MESSAGE` | Message | `QSOBeforeMessage` | `FCONTEST` assigns it **4×** |
+| `QSO BY BAND` | Boolean | `QSOByBand` | `FCONTEST` assigns it **7×** |
+| `QSO BY MODE` | Boolean | `QSOByMode` | `FCONTEST` assigns it **7×** |
+| `QTC ENABLE` | Boolean | `QTCsEnabled` | `FCONTEST` assigns it **1×** |
+| `QUICK QSL CW MESSAGE` | Message | `QuickQSLMessage1` | `FCONTEST` assigns it **4×** |
+| `QUICK QSL CW MESSAGE1` | Message | `QuickQSLMessage1` | `FCONTEST` assigns it **4×** |
+| `QUICK QSL MESSAGE 1` | Message | `QuickQSLMessage1` | `FCONTEST` assigns it **4×** |
+| `REPEAT S&P EXCHANGE` | Message | `RepeatSearchAndPounceExchange` | `FCONTEST` assigns it **11×** |
+| `S&P EXCHANGE` | Message | `SearchAndPounceExchange` | `FCONTEST` assigns it **19×** |
+| `WARC BAND ENABLE` | Boolean | `WARCBandsEnabled` | `FCONTEST` assigns it **5×** |
+| `ZONE MULTIPLIER` | Multiplier | `ActiveZoneMult` *(ListParamArray[23])* | `FCONTEST` assigns it **4×** |
+
+---
+
+## The remaining 113 — `crC:0`, no `.cfg`, no `FCONTEST` write
 
 The bulk, and the pool future station-settings work draws from. **No confirmation needed** unless one
-looks wrong to you; `crC` and the evidence agree.
+looks wrong to you; every signal agrees.
 
 | command | type | target | in real `.cfg` files |
 |---|---|---|---|
 | `ASK FOR FREQUENCIES` | Boolean | `AskForFrequencies` | — |
 | `AUTO CALL TERMINATE` | Boolean | `AutoCallTerminate` | — |
 | `AUTO DISPLAY DUPE QSO` | Boolean | `AutoDisplayDupeQSO` | — |
-| `AUTO DUPE ENABLE CQ` | Boolean | `AutoDupeEnableCQ` | — |
-| `AUTO DUPE ENABLE S AND P` | Boolean | `AutoDupeEnableSandP` | — |
 | `AUTO QSL INTERVAL` | Integer | `AutoQSLInterval` *(ArrayRecordArray[3])* | — |
 | `AUTO QSO NUMBER DECREMENT` | Boolean | `AutoQSONumberDecrement` | — |
 | `AUTO RETURN TO CQ MODE` | Boolean | `AutoReturnToCQMode` | — |
@@ -128,8 +177,6 @@ looks wrong to you; `crC` and the evidence agree.
 | `BEEP ENABLE` | Boolean | `BeepEnable` | — |
 | `BEEP EVERY 10 QSOS` | Boolean | `BeepEvery10QSOs` | — |
 | `BROADCAST ALL PACKET DATA` | Boolean | `Packet.BroadcastAllPacketData` | — |
-| `CALL OK NOW CW MESSAGE` | Message | `CorrectedCallMessage` | — |
-| `CALL OK NOW MESSAGE` | Message | `CorrectedCallMessage` | — |
 | `CALL OK NOW SSB MESSAGE` | Message | `CorrectedCallPhoneMessage` | — |
 | `CALL WINDOW SHOW ALL SPOTS` | Boolean | `CallWindowShowAllSpots` | — |
 | `CHECK LOG FILE SIZE` | Boolean | `CheckLogFileSize` | — |
@@ -137,23 +184,17 @@ looks wrong to you; `crC` and the evidence agree.
 | `CODE SPEED` | Integer | `CodeSpeed` | — |
 | `COLUMN DUPESHEET ENABLE` | Boolean | `ColumnDupeSheetEnable` | — |
 | `CONFIRM EDIT CHANGES` | Boolean | `ConfirmEditChanges` | — |
-| `CONTACTS PER PAGE` | Integer | `ContactsPerPage` | — |
-| `COUNT DOMESTIC COUNTRIES` | Boolean | `CountDomesticCountries` | — |
 | `COUNTRY INFORMATION FILE` | String | `CountryInformationFile` | — |
-| `CQ EXCHANGE` | Message | `CQExchange` | — |
 | `CQ EXCHANGE NAME KNOWN` | Message | `CQExchangeNameKnown` | — |
 | `CQ SSB EXCHANGE` | Message | `CQPhoneExchange` | — |
 | `CQ SSB EXCHANGE NAME KNOWN` | Message | `CQPhoneExchangeNameKnown` | — |
 | `CUSTOM INITIAL EXCHANGE STRING` | String | `CustomInitialExchangeString` | — |
 | `CUSTOM USER STRING` | String | `CustomUserString` | — |
 | `DE ENABLE` | Boolean | `DEEnable` | — |
-| `DIGITAL MODE ENABLE` | Boolean | `DigitalModeEnable` | — |
 | `DISPLAY REFRESH` | Integer | `DisplayRefresh` | — |
 | `DISTANCE MODE` | Other | `DistanceMode` *(ListParamArray[20])* | — |
 | `DUPE CHECK SOUND` | Other | `DupeCheckSound` *(ListParamArray[12])* | — |
-| `DX MULTIPLIER` | Multiplier | `ActiveDXMult` *(ListParamArray[11])* | — |
 | `ESCAPE EXITS SEARCH AND POUNCE` | Boolean | `EscapeExitsSearchAndPounce` | — |
-| `EXCHANGE MEMORY ENABLE` | Boolean | `ExchangeMemoryEnable` | — |
 | `FREQUENCY MEMORY` | FreqList | `tFrequencyMemory` | — |
 | `FREQUENCY MEMORY ENABLE` | Boolean | `FrequencyMemoryEnable` | — |
 | `FREQUENCY POLL RATE` | Integer | `FreqPollRate` | — |
@@ -185,31 +226,21 @@ looks wrong to you; `crC` and the evidence agree.
 | `POSSIBLE CALL MODE` | Other | `CD.PossibleCallAction` *(ListParamArray[4])* | — |
 | `POSSIBLE CALL RIGHT KEY` | Char | `PossibleCallRightKey` | — |
 | `POSSIBLE CALLS` | Boolean | `PossibleCallEnable` | — |
-| `PREFIX MULTIPLIER` | Multiplier | `ActivePrefixMult` *(ListParamArray[3])* | — |
-| `QSL MESSAGE` | Message | `QSLMessage` | — |
 | `QSL MODE` | Other | `ParameterOkayMode` *(ListParamArray[2])* | — |
 | `QSL SSB MESSAGE` | Message | `QSLPhoneMessage` | — |
-| `QSO BEFORE CW MESSAGE` | Message | `QSOBeforeMessage` | — |
-| `QSO BEFORE MESSAGE` | Message | `QSOBeforeMessage` | — |
 | `QSO BEFORE SSB MESSAGE` | Message | `QSOBeforePhoneMessage` | — |
-| `QSO BY BAND` | Boolean | `QSOByBand` | — |
-| `QSO BY MODE` | Boolean | `QSOByMode` | — |
 | `QSO POINTS DOMESTIC CW` | Integer | `QSOPointsDomesticCW` | — |
 | `QSO POINTS DOMESTIC PHONE` | Integer | `QSOPointsDomesticPhone` | — |
 | `QSO POINTS DX CW` | Integer | `QSOPointsDXCW` | — |
 | `QSO POINTS DX PHONE` | Integer | `QSOPointsDXPhone` | — |
 | `QSX ENABLE` | Boolean | `QSXEnable` | — |
 | `QSY INACTIVE RADIO` | Boolean | `QSYInactiveRadio` | — |
-| `QTC ENABLE` | Boolean | `QTCsEnabled` | — |
 | `QTC EXTRA SPACE` | Boolean | `QTCExtraSpace` | — |
 | `QTC MINUTES` | Boolean | `QTCMinutes` | — |
 | `QTC QRS` | Boolean | `QTCQRS` | — |
 | `QUESTION MARK CHAR` | Char | `QuestionMarkChar` | — |
-| `QUICK QSL CW MESSAGE` | Message | `QuickQSLMessage1` | — |
-| `QUICK QSL CW MESSAGE1` | Message | `QuickQSLMessage1` | — |
 | `QUICK QSL KEY 1` | Char | `QuickQSLKey1` | — |
 | `QUICK QSL KEY 2` | Char | `QuickQSLKey2` | — |
-| `QUICK QSL MESSAGE 1` | Message | `QuickQSLMessage1` | — |
 | `QUICK QSL MESSAGE 2` | Message | `QuickQSLMessage2` | — |
 | `QUICK QSL SSB MESSAGE` | Message | `QuickQSLPhoneMessage` | — |
 | `RADIUS OF EARTH` | Real | `RadiusOfEarth` | — |
@@ -217,11 +248,9 @@ looks wrong to you; `crC` and the evidence agree.
 | `RATE DISPLAY` | Other | `RateDisplay` *(ListParamArray[0])* | — |
 | `REMAINING MULT DISPLAY MODE` | Other | `RemainingMultDisplayMode` *(ListParamArray[16])* | — |
 | `REMINDER` | Other | — | — |
-| `REPEAT S&P EXCHANGE` | Message | `RepeatSearchAndPounceExchange` | — |
 | `REPEAT S&P SSB EXCHANGE` | Message | `RepeatSearchAndPouncePhoneExchange` | — |
 | `ROTATOR PORT` | Other | `ActiveRotatorPort` *(ListParamArray[40])* | — |
 | `ROTATOR TYPE` | Other | `ActiveRotatorType` *(ListParamArray[17])* | — |
-| `S&P EXCHANGE` | Message | `SearchAndPounceExchange` | — |
 | `S&P SSB EXCHANGE` | Message | `SearchAndPouncePhoneExchange` | — |
 | `SHORT 0` | Char | `Short0` | — |
 | `SHORT 1` | Char | `Short1` | — |
@@ -245,6 +274,4 @@ looks wrong to you; `crC` and the evidence agree.
 | `USER INFO SHOWN` | Other | `UserInfoShown` *(ListParamArray[19])* | — |
 | `WAIT FOR STRENGTH` | Boolean | `WaitForStrength` | — |
 | `WAKE UP TIME OUT` | Integer | `WakeUpTimeOut` | — |
-| `WARC BAND ENABLE` | Boolean | `WARCBandsEnabled` | — |
 | `WILDCARD PARTIALS` | Boolean | `WildCardPartials` | — |
-| `ZONE MULTIPLIER` | Multiplier | `ActiveZoneMult` *(ListParamArray[23])* | — |
