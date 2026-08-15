@@ -163,6 +163,24 @@ begin
    // --- Operating: two radio -----------------------------------------------
    RegisterStoredSetting('operating.tworadio.enable',       'TWO RADIO MODE',
                          'Two radio mode');
+
+   { Two radio and multi-op, 2026-08-15. Captions from each command's own entry
+     in commands_help_eng.ini rather than invented -- IN BAND LOCKOUT is
+     documented as "prevents Band Map selection that would place both radios on
+     a single band", and MULTI MULTS ONLY decides whether all QSOs or only new
+     multipliers are passed around the network. }
+   RegisterStoredSetting('operating.tworadio.inBandLockout',  'IN BAND LOCKOUT',
+                         'Stop both radios landing on one band');
+   RegisterStoredSetting('operating.tworadio.qsyInactive',    'QSY INACTIVE RADIO',
+                         'QSY the inactive radio');
+   RegisterStoredSetting('operating.tworadio.swapRelaySense', 'SWAP RADIO RELAY SENSE',
+                         'Invert the radio relay sense');
+   RegisterStoredSetting('operating.tworadio.waitForStrength', 'WAIT FOR STRENGTH',
+                         'Wait for a signal strength reading');
+   RegisterStoredSetting('network.multiMultsOnly',            'MULTI MULTS ONLY',
+                         'Pass only new multipliers around the network');
+   RegisterStoredSetting('network.intercomFile',              'INTERCOM FILE ENABLE',
+                         'Log network messages to INTERCOM.TXT');
    RegisterStoredSetting('operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
                          'Alt-D remembers what you typed');
    RegisterStoredSetting('operating.tworadio.altDCQ',       'ALT-D CQ ENABLE',

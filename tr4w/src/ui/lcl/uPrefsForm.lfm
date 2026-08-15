@@ -2544,9 +2544,25 @@
         TabOrder = 10
         Caption = 'Synchronise the log when connecting'
       end
+      object chkMultiMultsOnly: TCheckBox
+        Left = 12
+        Top = 196
+        Width = 520
+        Height = 22
+        Caption = 'Pass only new multipliers around the network'
+        TabOrder = 20
+      end
+      object chkIntercomFile: TCheckBox
+        Left = 12
+        Top = 222
+        Width = 520
+        Height = 22
+        Caption = 'Log network messages to INTERCOM.TXT'
+        TabOrder = 21
+      end
       object lblNetHint: TLabel
         Left = 12
-        Top = 204
+        Top = 256
         Width = 620
         Height = 51
         AutoSize = False
@@ -3239,9 +3255,41 @@
         TabOrder = 6
         Caption = 'Skip the band the other radio is on'
       end
+      object chkInBandLockout: TCheckBox
+        Left = 12
+        Top = 214
+        Width = 520
+        Height = 22
+        Caption = 'Stop both radios landing on one band'
+        TabOrder = 5
+      end
+      object chkQSYInactive: TCheckBox
+        Left = 12
+        Top = 240
+        Width = 520
+        Height = 22
+        Caption = 'QSY the inactive radio when I change band'
+        TabOrder = 6
+      end
+      object chkSwapRelaySense: TCheckBox
+        Left = 12
+        Top = 266
+        Width = 520
+        Height = 22
+        Caption = 'Invert the radio relay sense'
+        TabOrder = 7
+      end
+      object chkWaitForStrength: TCheckBox
+        Left = 12
+        Top = 292
+        Width = 520
+        Height = 22
+        Caption = 'Wait for a signal strength reading before switching'
+        TabOrder = 8
+      end
       object lblTwoRadioHint: TLabel
         Left = 12
-        Top = 222
+        Top = 326
         Width = 620
         Height = 51
         AutoSize = False

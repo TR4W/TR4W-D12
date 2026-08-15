@@ -746,7 +746,6 @@ var
   QSOPointsDXCW                         : integer = -1;
   QSOPointsDXPhone                      : integer = -1;
 
-  QSYInactiveRadio                      : boolean;        // Gav     4.37.12
   QTCDataArray                          : QTCDataArrayPtr;
   QTCsEnabled                           : boolean;
   QTCMinutes                            : boolean;
@@ -4054,7 +4053,7 @@ begin
   //            tLB_SETCURSEL(BandMapListBox, 0);
   CC := Windows.SendMessage(BandMapListBox, LB_GETCOUNT, 0, 0);
     if CC = LB_ERR then Exit;
-     if Config.TwoRadioMode and QSYInactiveRadio then
+     if Config.TwoRadioMode and Config.QSYInactiveRadio then
         begin
         Band := InactiveRadioptr.BandMemory
         end
@@ -4084,7 +4083,7 @@ if (K = -1) or (k > CC) then
         SetOpMode(SEARCHAndPOUNCEOpMode);
         logger.info('[NEXTBM] CALL = '+ SPOT.FCALL);
         logger.info('Freq = ' + IntToStr(Spot.ffrequency));
-        if (Spot.FBand =  InactiveRadioptr.BandMemory) and (Spot.FMode = ActiveMode) and (QSYInactiveRadio) then
+        if (Spot.FBand =  InactiveRadioptr.BandMemory) and (Spot.FMode = ActiveMode) and (Config.QSYInactiveRadio) then
            begin
            logger.Info('Enter NextBandMap INACTIVE-Radio: ' + spot.fcall );
            LOGGER.INFO('Freq = ' + IntToStr(Spot.ffrequency));
@@ -4095,7 +4094,7 @@ if (K = -1) or (k > CC) then
            end
          else
         if (Spot.FBand = ActiveRadioptr.BandMemory) and (Spot.FMode = ActiveMode) then
-        if not (QSYInactiveRadio) then
+        if not (Config.QSYInactiveRadio) then
            begin
            logger.info('[NEXTBM-Active] CALL = '+ SPOT.FCALL);
            LOGGER.INFO('Freq = ' + IntToStr(Spot.ffrequency));

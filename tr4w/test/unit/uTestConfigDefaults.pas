@@ -37,6 +37,7 @@ type
       procedure Test_KeyingAndPTTDefaults;
       procedure Test_NonZeroDefaultsAreNotZero;
       procedure Test_EarlierMigrationsStillHoldTheirDefaults;
+      procedure Test_TwoRadioAndNetworkDefaults;
    public
       procedure RunAllTests; override;
    end;
@@ -107,11 +108,29 @@ begin
    CheckTrue(Abs(Config.Weight - 1.0) < 0.0001, 'CW weight 1.0');
 end;
 
+procedure TConfigDefaultsTests.Test_TwoRadioAndNetworkDefaults;
+begin
+   // Migrated 2026-08-15. Two of the six were typed constants = True, and those
+   // are the ones that matter: a False InBandLock stops the guard that prevents
+   // both radios landing on one band, and a False WaitForStrength stops the SO2R
+   // path waiting for a signal report. Neither announces itself.
+   BeginTest('the two-radio and multi-op defaults survived the move');
+
+   CheckTrue(Config.InBandLock,       'InBandLock was a typed constant = True');
+   CheckTrue(Config.WaitForStrength,  'WaitForStrength was a typed constant = True');
+
+   CheckFalse(Config.QSYInactiveRadio,    'QSYInactiveRadio was False');
+   CheckFalse(Config.SwapRadioRelaySense, 'SwapRadioRelaySense was False');
+   CheckFalse(Config.MultiMultsOnly,      'MultiMultsOnly was False');
+   CheckFalse(Config.IntercomFileEnable,  'IntercomFileEnable was False');
+end;
+
 procedure TConfigDefaultsTests.RunAllTests;
 begin
    Test_KeyingAndPTTDefaults;
    Test_NonZeroDefaultsAreNotZero;
    Test_EarlierMigrationsStillHoldTheirDefaults;
+   Test_TwoRadioAndNetworkDefaults;
 end;
 
 end.

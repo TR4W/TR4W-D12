@@ -435,7 +435,7 @@ begin
             end;
           205: if Config.TwoRadioMode then
                   begin
-                  InvertBooleanCommand(@QSYInactiveRadio); // Gav     4.37.12
+                  InvertBooleanCommand(@Config.QSYInactiveRadio); // Gav     4.37.12
                   end;
           206: if Config.TwoRadioMode then
                   begin
@@ -470,7 +470,7 @@ begin
                  logger.Trace('In BandMap::BandmapDlgProc, GetBMSelItemData = LB_ERR so exiting without changing radio');
                  Exit;
                  end;
-              if ((radio1.filteredstatus.freq <> 0) and (radio2.filteredstatus.freq <> 0)) and (QSYInactiveRadio) then
+              if ((radio1.filteredstatus.freq <> 0) and (radio2.filteredstatus.freq <> 0)) and (Config.QSYInactiveRadio) then
                  begin
                  InActiveRadioPtr.BandMemory := Spot.FBand;
                  tClearDupeInfoCall;              // issue 872: zero buffer before assign to prevent PChar read-past-end
@@ -538,7 +538,7 @@ begin
      begin
      Windows.CheckMenuItem(BandMapMenu, 69, MF_CHECKED);
      end;
-  if QSYInactiveRadio and Config.TwoRadioMode then
+  if Config.QSYInactiveRadio and Config.TwoRadioMode then
      begin
      Windows.CheckMenuItem(BandMapMenu, 205, MF_CHECKED); //GAV  4.37.12
      end;
@@ -591,8 +591,8 @@ begin
   if ((radio1.filteredstatus.freq = 0) or (radio2.filteredstatus.freq = 0)) then
      begin
      BandMapSO2RDisplay := False;
-     QSYInActiveRadio := False;
-     InBandLock := False;
+     Config.QSYInactiveRadio := False;
+     Config.InBandLock := False;
      end;
   if BandMapSO2RDisplay then
     // B1: was (not WKBusy).  This is the WIDEST of the B1 substitutions -- CPU,
@@ -601,23 +601,23 @@ begin
     if (ActiveBand = Spot.FBand) and (not CWStillBeingSent) then
        begin
        Radio := ActiveRadio;
-       QSYInactiveRadio := False;
+       Config.QSYInactiveRadio := False;
        end
     else
        begin
-       QSYInactiveRadio := True;
+       Config.QSYInactiveRadio := True;
        Radio := InactiveRadio;
        end;
-  if ((InBandLock) and (Config.TwoRadioMode)) then
+  if ((Config.InBandLock) and (Config.TwoRadioMode)) then
      begin
-     if QSYInactiveRadio then
+     if Config.QSYInactiveRadio then
        if ((InActiveRadioPtr.BandMemory <> EntryBand) and (EntryBand =
          ActiveRadioPtr.BandMemory)) then
           begin
           QuickDisplay(TC_2radio_warn);
           exit;
           end;
-     if not QSYInactiveRadio then
+     if not Config.QSYInactiveRadio then
        if ((ActiveBand <> EntryBand) and (EntryBand =
          InActiveRadioPtr.BandMemory)) then // 4.92.1
           begin
@@ -681,7 +681,7 @@ begin
      begin
      Exit;
      end;
-    if not QSYInactiveRadio then
+    if not Config.QSYInactiveRadio then
    //  tSetExchWindInitExchangeEntry ; // 4.138.2
        begin
        PutCallToCallWindow(Spot.FCall);

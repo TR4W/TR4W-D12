@@ -45,7 +45,8 @@ var
   LastItemInIntercomListBox        : integer;
 
 implementation
-uses MainUnit;
+uses MainUnit,
+   uConfigValues;
 
 function IntercomDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 label
@@ -136,7 +137,7 @@ begin
   // (PChar, integer, PChar) overload.
   stored := TF.Format(wsprintfBuffer, '%s %C :   %s', GetTimeString, Ord(Sender), mes);
 
-  if IntercomFileenable then
+  if Config.IntercomFileEnable then
      begin
      h := CreateFileA(TR4W_INTERCOM_FILENAME, GENERIC_WRITE or GENERIC_READ, FILE_SHARE_WRITE or FILE_SHARE_READ, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
      if h <> INVALID_HANDLE_VALUE then
