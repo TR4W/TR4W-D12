@@ -195,6 +195,63 @@ eyeballing once:
   `tr4w.ini` — is what changed;
 * the speed-up/slow-down keys still step by that amount on air.
 
+## Beyond the original 30 (2026-08-14)
+
+The 30 above are done, **including item 5's "expensive globals"** — `CWTone`, `Weight` and
+`TwoRadioMode` all reach `Config` and no standalone declaration survives. What follows is the work
+after that list, and the method is the same two tests, applied before any code is touched:
+
+1. **Does a contest `.cfg` claim it?** All 74 `.cfg` files under `target/` are scanned. This is not
+   ceremony — it is how `LEADING ZEROS` was caught.
+2. **Does anything else write the global?** Live assignments only. Half the apparent writers in
+   `CFGDEF.PAS` are commented out and a naive grep reports them as real.
+
+### The parallel-port wiring — station cabling, not radio settings
+
+`RELAY CONTROL PORT`, `RADIO ONE/TWO BAND OUTPUT PORT`, `STEREO CONTROL PORT` → **Preferences >
+Hardware**. NY4I placed the two band-output ports there deliberately, against his own "anything
+addressing `Radio1`/`Radio2` goes on the radio form" rule, because what they name is which LPT pin
+header drives the band decoder for an operating position. That follows the desk, not the radio.
+
+**It was already a defect.** `BandOutputPort` was a field on `TRadioDefinition`, so activating a
+radio re-rendered the CFG key and clearing a slot blanked it to `NONE` — any Hardware edit would
+have been silently reverted by the next activation. The field is removed, and
+`Test_BandOutputPortIsNotRadioScoped` pins both render paths including the empty slot.
+
+**Before putting any setting on a station-level panel, check whether something else RENDERS its CFG
+key.** `RenderedKeyNames` in `uRadioConfigLegacyMap` is the list.
+
+### CW keying, paddle and PTT — ten settings, all category A
+
+`ALL CW MESSAGES CHAINABLE`, `TUNE WITH DITS`, `SEND COMPLETE FOUR LETTER CALL`, `PADDLE SPEED`,
+`PADDLE MONITOR TONE`, `SWAP PADDLES`, `PADDLE PTT HOLD COUNT`, `PTT ENABLE`, `PTT TURN ON DELAY`,
+`NO POLL DURING PTT`. No contest names one; the config table was their only writer.
+
+**Four were typed constants with non-zero values** (`PTTEnable = True`, `PTTTurnOnDelay = 15`,
+`PaddleMonitorTone = 700`, `PaddlePTTHoldCount = 13`) and **a record field defaults to zero**. Losing
+those means PTT disabled, a 0 Hz sidetone, and PTT dropping between characters — hot switching, on an
+amplifier. Neither the compiler nor the corpus can see it (headless export skips the settings apply,
+`tr4w.dpr:971`). `test/unit/uTestConfigDefaults.pas` pins every default and was proved to fail.
+
+UI: three checkboxes on **CW Settings**, the other seven on a new **Paddle and PTT** page made a
+*child* of it — collapsed by default, so the nav gains no height.
+
+**Open, reported not fixed:** the two consumers of `PTT TURN ON DELAY` disagree about its unit.
+`MainUnit.pas:9646` does `Sleep(Config.PTTTurnOnDelay)` — plain milliseconds — while `LOGK1EA` counts
+it down in keyer ticks, which the help documents as × 1.7 ms. Both readings are live. Correcting
+either changes amplifier sequencing on air, so it needs bench evidence.
+
+**Held back:** `AUTO SEND CHARACTER COUNT` (`ckArray` via `pointer(2)` — a different mechanism) and
+`CODE SPEED` (14 live writes, 151 references; category C, wants its own commit).
+
+### Still `csOld`, and mostly not Preferences work
+
+178 rows remain. The bulk are **contest properties** — `QSO POINTS *`, the `* MULTIPLIER` family, the
+CQ/S&P/QSL message set, `MULT BY BAND`, `DOMESTIC MULTIPLIER` — and belong with the contest factory,
+not in a settings dialog. NY4I said he would identify those. What is left that is genuinely
+station-scoped is a short list: the remaining LPT rows (blocked on the LPT decision), `CODE SPEED`,
+and a handful of display and keyboard preferences.
+
 ## Where each of the 30 stands
 
 `refs` counts live references to the backing global, excluding the dead `JCtrl1`/`JCTRL2` units and
