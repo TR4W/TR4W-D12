@@ -512,6 +512,13 @@ type
       lblMP3Player: TLabel;
       edtMP3Player: TEdit;
       lblAudioNote: TLabel;
+      { The cards. Two panels each: a hairline-coloured outer and a white
+        inner one pixel inside it, which is how the LCL draws a 1px border
+        without owner-drawing. Published because they are streamed. }
+      cardDVK: TPanel;
+      cardDVKInner: TPanel;
+      cardMP3: TPanel;
+      cardMP3Inner: TPanel;
       btnBrowseDVKPath: TButton;
       btnBrowseDVKRecorder: TButton;
       btnBrowseMP3Path: TButton;
