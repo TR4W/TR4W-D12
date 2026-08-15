@@ -887,6 +887,8 @@ implementation
 {$R *.lfm}
 
 uses
+   uLPTPortEnumerator,   // which parallel ports this machine actually has
+   StrUtils,             // IfThen
    LCLType,        // odSelected -- Windows declares one too
    uLCLTranslate,
    uPrefsSearch,   // PrefsMatchScore -- the ranking, unit tested without a UI
@@ -4070,8 +4072,8 @@ end;
   radio form instead -- that is the rule this panel exists to respect. }
 procedure TPrefsForm.LoadHardwarePanel;
 var
-   v: string;
-   idx: integer;
+   v, label_: string;
+   idx, i, want: integer;
 begin
    if cbxRelayPort = nil then
       begin
@@ -4081,40 +4083,82 @@ begin
    cbxRelayPort.Items.BeginUpdate;
    try
       cbxRelayPort.Items.Clear;
-      // The spellings CFGCA itself accepts -- GetLPTPortFromChar (CfgCmd:192)
-      // reads 'NONE' or '1'/'2'/'3', so the picker offers exactly those and no
-      // translation layer can drift from the parser.
-      cbxRelayPort.Items.Add('NONE');
-      cbxRelayPort.Items.Add('1');
-      cbxRelayPort.Items.Add('2');
-      cbxRelayPort.Items.Add('3');
+      // The VALUE is the spelling CFGCA accepts -- GetLPTPortFromChar
+      // (CfgCmd:192) reads 'NONE' or '1'/'2'/'3'. It is carried in Objects[] so
+      // the label is free to say more than the value does; reading the value
+      // back off the visible text would break the moment the label changed.
+      cbxRelayPort.Items.AddObject('None', TObject(PtrInt(0)));
+      for i := 1 to 3 do
+         begin
+         // ANNOTATED, NOT REMOVED. Dropping undetected ports would silently
+         // change a station whose port TR4W cannot see -- a driver arrangement
+         // this does not recognise, or an add-in card enumerated oddly -- from
+         // its configured port to whatever happened to be first. Saying "not
+         // detected" informs without deciding, and the operator keeps the final
+         // say over their own hardware.
+         label_ := IntToStr(i);
+         if LPTPortPresent(i) then
+            begin
+            label_ := label_ + '   (LPT' + IntToStr(i) + ' detected)';
+            end
+         else
+            begin
+            label_ := label_ + '   (not detected)';
+            end;
+         cbxRelayPort.Items.AddObject(label_, TObject(PtrInt(i)));
+         end;
    finally
       cbxRelayPort.Items.EndUpdate;
    end;
 
-   v := Trim(FStore.CommandValue('RELAY CONTROL PORT',
-                                 CFGCommandValueAsString('RELAY CONTROL PORT')));
-   if v = '' then
+   logger.Info('[Prefs] parallel ports detected: %s',
+               [IfThen(PresentLPTPortsDescription = '', 'none',
+                       PresentLPTPortsDescription)]);
+
+   v := UpperCase(Trim(FStore.CommandValue('RELAY CONTROL PORT',
+                       CFGCommandValueAsString('RELAY CONTROL PORT'))));
+   if (v = '') or (v = 'NONE') then
       begin
-      v := 'NONE';
+      want := 0;
+      end
+   else
+      begin
+      want := StrToIntDef(v, 0);
       end;
 
-   idx := cbxRelayPort.Items.IndexOf(UpperCase(v));
-   if idx < 0 then
+   // BY STORED VALUE, never by index. The labels carry detection text, so
+   // matching on them would break the first time that wording changed -- and
+   // index arithmetic is what the COM picker was fixed for.
+   cbxRelayPort.ItemIndex := 0;
+   for idx := 0 to cbxRelayPort.Items.Count - 1 do
       begin
-      idx := 0;   // an unrecognised value reads as None rather than as blank
+      if PtrInt(cbxRelayPort.Items.Objects[idx]) = want then
+         begin
+         cbxRelayPort.ItemIndex := idx;
+         Break;
+         end;
       end;
-   cbxRelayPort.ItemIndex := idx;
 end;
 
 procedure TPrefsForm.SaveHardwarePanel;
+var
+   n: integer;
 begin
    if (cbxRelayPort = nil) or (cbxRelayPort.ItemIndex < 0) then
       begin
       Exit;
       end;
-   ApplyAndStoreCommand(FStore, 'RELAY CONTROL PORT',
-                        cbxRelayPort.Items[cbxRelayPort.ItemIndex]);
+   // The stored value comes from Objects[], NOT from the visible text -- the
+   // label says "1   (not detected)" and CFGCA accepts '1'.
+   n := PtrInt(cbxRelayPort.Items.Objects[cbxRelayPort.ItemIndex]);
+   if n = 0 then
+      begin
+      ApplyAndStoreCommand(FStore, 'RELAY CONTROL PORT', 'NONE');
+      end
+   else
+      begin
+      ApplyAndStoreCommand(FStore, 'RELAY CONTROL PORT', IntToStr(n));
+      end;
 end;
 
 procedure TPrefsForm.cbxRelayPortChange(Sender: TObject);
