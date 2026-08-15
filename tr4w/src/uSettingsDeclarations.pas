@@ -205,6 +205,26 @@ begin
                          'Pass only new multipliers around the network');
    RegisterStoredSetting('network.intercomFile',              'INTERCOM FILE ENABLE',
                          'Log network messages to INTERCOM.TXT');
+
+   { Super Check Partial, band map and log files, 2026-08-15. }
+   RegisterStoredSetting('scp.possibleCalls',                 'POSSIBLE CALLS',
+                         'Offer possible calls');
+   RegisterStoredSetting('scp.partialCall',                   'PARTIAL CALL ENABLE',
+                         'Match on a partial callsign');
+   RegisterStoredSetting('scp.wildcardPartials',              'WILDCARD PARTIALS',
+                         'Allow wildcards in a partial');
+   RegisterStoredSetting('scp.nameFlag',                      'NAME FLAG ENABLE',
+                         'Flag a station whose name is known');
+   RegisterStoredSetting('bandmap.callWindowShowAllSpots',    'CALL WINDOW SHOW ALL SPOTS',
+                         'Show every spot in the call window');
+   RegisterStoredSetting('bandmap.swapPacketSpotRadios',      'SWAP PACKET SPOT RADIOS',
+                         'Send spots to the other radio');
+   RegisterStoredSetting('logging.checkLogFileSize',          'CHECK LOG FILE SIZE',
+                         'Warn when the log file grows unexpectedly');
+   RegisterStoredSetting('logging.unknownCountryFile',        'UNKNOWN COUNTRY FILE ENABLE',
+                         'Record callsigns with no country match');
+   RegisterStoredSetting('logging.updateRestartFile',         'UPDATE RESTART FILE ENABLE',
+                         'Keep the restart file up to date');
    RegisterStoredSetting('operating.tworadio.altDBuffer',   'ALT-D BUFFER ENABLE',
                          'Alt-D remembers what you typed');
    RegisterStoredSetting('operating.tworadio.altDCQ',       'ALT-D CQ ENABLE',

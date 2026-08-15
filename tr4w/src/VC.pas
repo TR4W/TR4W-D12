@@ -2768,7 +2768,6 @@ var
 
 var
   LogFrequencyEnable                    : boolean;
-  NameFlagEnable                        : boolean = True;
   BoldFont                              : boolean = True;
 //  DateFormat                            : Str10 = 'dd-MM-yy';
   ImportFromADIFThreadID                : Cardinal;

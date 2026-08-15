@@ -1732,13 +1732,13 @@ begin
          begin
          SaveLogFileToFloppy;
          end;
-  if UpdateRestartFileEnable then
+  if Config.UpdateRestartFileEnable then
      begin
      Sheet.SaveRestartFile;
      end;
   BeSilent := False;
   NameCallsignPutUp := '';
-  if CheckLogFileSize then
+  if Config.CheckLogFileSize then
     if not LogFileLooksOkay then
        begin
        DoABeep(Warning);
@@ -2007,7 +2007,7 @@ begin
                    CallWindowString := CallWindowString + TempKey;
                    AddStringToBuffer(TempKey, Config.CWTone);
                    Write(TempKey);
-                   if PartialCallEnable then
+                   if Config.PartialCallEnable then
                      if Sheet.TwoLetterCrunchProcess(CallWindowString) then
                         begin
                         {

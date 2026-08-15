@@ -104,6 +104,7 @@ var
 implementation
 uses
   SysUtils,            // Issue #997 - SysUtils.Format / StrPCopy
+  uConfigValues,
   LogStuff,
   LogDupe,
   LogWind;
@@ -495,7 +496,7 @@ var
   TempIndex                             : integer;
 //  TempMode                              : ModeType;
 begin
-  if not PossibleCallEnable then Exit;
+  if not Config.PossibleCallEnable then Exit;
   tLB_RESETCONTENT(wh[mwePossibleCall]);
   if length(Call) < 2 then Exit;
   Result := 0;

@@ -1212,7 +1212,7 @@ begin
 
   PossibleCallList.NumberPossibleCalls := 0;
   PossibleCallList.CursorPosition := 0;
-  if not PossibleCallEnable then
+  if not Config.PossibleCallEnable then
      begin
      Exit;
      end;
@@ -1901,7 +1901,7 @@ begin
              {                    GoToXY (WhereX - 1, WhereY);
                                 ClrEol;
             }
-             if PartialCallEnable then
+             if Config.PartialCallEnable then
                if Sheet.TwoLetterCrunchProcess(InputString) then
                   begin
                   {
@@ -1958,7 +1958,7 @@ begin
          Write(Key);
          InputString := InputString + Key;
 
-         if PartialCallEnable then
+         if Config.PartialCallEnable then
            if Sheet.TwoLetterCrunchProcess(InputString) then
               begin
               {

@@ -39,6 +39,7 @@ type
       procedure Test_EarlierMigrationsStillHoldTheirDefaults;
       procedure Test_TwoRadioAndNetworkDefaults;
       procedure Test_OperatingAndPTTDefaults;
+      procedure Test_SCPBandMapAndFileDefaults;
    public
       procedure RunAllTests; override;
    end;
@@ -149,6 +150,29 @@ begin
    CheckFalse(Config.AutoQSONumberDecrement, 'AutoQSONumberDecrement was False');
 end;
 
+procedure TConfigDefaultsTests.Test_SCPBandMapAndFileDefaults;
+begin
+   // Migrated 2026-08-15. Five of the nine were True.
+   //
+   // UpdateRestartFileEnable is the one worth reading twice: its DECLARATION
+   // carried no initialiser, so the obvious default is False -- but
+   // CFGDEF.PAS:577 assigns True in SetConfigurationDefaultValues, which runs
+   // once at startup and before the config files. Taking the declaration at face
+   // value would have stopped the restart file being maintained, silently.
+   BeginTest('the SCP, band map and log-file defaults survived the move');
+
+   CheckTrue(Config.PossibleCallEnable,      'PossibleCallEnable was True');
+   CheckTrue(Config.PartialCallEnable,       'PartialCallEnable was True');
+   CheckTrue(Config.WildCardPartials,        'WildCardPartials was True');
+   CheckTrue(Config.NameFlagEnable,          'NameFlagEnable was True');
+   CheckTrue(Config.UpdateRestartFileEnable, 'set True by CFGDEF, not by its declaration');
+
+   CheckFalse(Config.CallWindowShowAllSpots,  'CallWindowShowAllSpots was False');
+   CheckFalse(Config.SwapPacketSpotRadios,    'SwapPacketSpotRadios was False');
+   CheckFalse(Config.CheckLogFileSize,        'CheckLogFileSize was False');
+   CheckFalse(Config.UnknownCountryFileEnable,'UnknownCountryFileEnable was False');
+end;
+
 procedure TConfigDefaultsTests.RunAllTests;
 begin
    Test_KeyingAndPTTDefaults;
@@ -156,6 +180,7 @@ begin
    Test_EarlierMigrationsStillHoldTheirDefaults;
    Test_TwoRadioAndNetworkDefaults;
    Test_OperatingAndPTTDefaults;
+   Test_SCPBandMapAndFileDefaults;
 end;
 
 end.

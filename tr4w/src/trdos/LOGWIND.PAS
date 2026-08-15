@@ -551,7 +551,6 @@ var
   CalledFromCQMode                      : boolean = True; {KK1L: 6.73}
   CallLastTimeIWasHere                  : CallString; {KK1L: 6.73 Used in LOGSUBS2 to trigger band map info update}
   CallWindowPosition                    : CallWindowPositionType {= NormalCallWindowPosition};
-  CallWindowShowAllSpots                : boolean; {KK1L: 6.65}
 
   CommandUseInactiveRadio               : boolean; {KK1L: 6.73}
   ContactsPerPage                       : integer = 50;
@@ -811,7 +810,6 @@ var
   //  StoppingFrequencies                   : array[BandType] of LONGINT;
   //  SuperDupeSheet                        : boolean;
   SuperDupeSheetWindowRY                : integer;
-  SwapPacketSpotRadios                  : boolean;
 
   TenMinuteRule                         : TenMinuteRuleType {= NoTenMinuteRule};
   TenMinuteTime                         : TenMinuteTimeRecord = (Band: NoBand; Mode: NoMode);
@@ -827,7 +825,6 @@ var
   TwoRadioState                         : TwoRadioStates {= TwoRadiosDisabled};
   TuneDupeCheckEnable                   : boolean; {KK1L: 6.73}
 
-  UnknownCountryFileEnable              : boolean;
   UnknownCountryFileName                : ShortString {= 'UNKNOWN.CTY'};
   UserInfoShown                         : UserInfoType {= NoUserInfo};
 

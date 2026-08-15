@@ -142,9 +142,9 @@ begin
 
     CallsignUpdateEnable := False; // 4.63.1
   //  CallWindowPosition := NormalCallWindowPosition;
-  //  CallWindowShowAllSpots := False;
+  //  Config.CallWindowShowAllSpots := False;
   //  CfgDvpPath := '';
-  //  CheckLogFileSize := False;
+  //  Config.CheckLogFileSize := False;
   //  CodeSpeed := 35;
   //  ColumnDupeSheetEnable := False;
   //  ComputerID := CHR(0);
@@ -324,7 +324,7 @@ begin
     MyState := '';
     MyZone := '';
   }
-  //  NameFlagEnable := True;
+  //  Config.NameFlagEnable := True;
   //  NoLog := False;
   //  Config.NoPollDuringPTT := False;
 
@@ -349,11 +349,11 @@ begin
   //  PaddleBug := False;
   //  Config.PaddleSpeed := 0;
   //  ParameterOkayMode := Standard;
-  //  PartialCallEnable := True;
+  //  Config.PartialCallEnable := True;
   //  PartialCallLoadLogEnable := False;
   //  PartialCallMultsEnable := True;
 //  PossibleCallAcceptKey := ';';
-//  PossibleCallEnable := True;
+//  Config.PossibleCallEnable := True;
 //  PossibleCallLeftKey := ',';
 //  PossibleCallRightKey := '.';
 
@@ -559,7 +559,7 @@ begin
     StoppingFrequencies[Band6] := 54000000;
     StoppingFrequencies[Band2] := 148000000;
   }
-  //  SwapPacketSpotRadios := False;
+  //  Config.SwapPacketSpotRadios := False;
   //  Config.SwapPaddles := False;
   //  Config.SwapRadioRelaySense := False;
 
@@ -572,9 +572,9 @@ begin
   //  TuneDupeCheckEnable := False; {KK1L: 6.73}
   //  TwoRadioState := TwoRadiosDisabled;
 
-  //  UnknownCountryFileEnable := False;
+  //  Config.UnknownCountryFileEnable := False;
   //  UnknownCountryFileName := 'UNKNOWN.CTY';
-  UpdateRestartFileEnable := True;
+  Config.UpdateRestartFileEnable := True;
      //   UseBIOSKeyCalls := False;
   //  UserInfoShown := NoUserInfo;
 
@@ -585,7 +585,7 @@ begin
   //  WakeUpTimeOut := 0;
   //  Config.WaitForStrength := True;
   //  WARCBandsEnabled := False;
-  //  WildCardPartials := True;
+  //  Config.WildCardPartials := True;
 {
   with MonoColors do
     begin

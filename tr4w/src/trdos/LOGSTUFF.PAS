@@ -404,7 +404,6 @@ var
   CallsignIsTypedByOperator: boolean;
 
   CallsignICameBackTo: CallString;
-  CheckLogFileSize: boolean;
   ColumnDupeSheetColor: boolean;
   ColumnDupeSheetEnable: boolean = False;
   ComputerID: AnsiChar { = CHR(0)};
@@ -501,7 +500,6 @@ var
   PartialCallFileEnable: boolean;
   //  PartialCallMultsEnable                : boolean = True;
   PossibleCallAcceptKey: Char = ';';
-  PossibleCallEnable: boolean = True;
   PossibleCallLeftKey: Char = ',';
   PossibleCallRightKey: Char = '.';
   PreviousQSOReceivedData: ContestExchange;
@@ -569,7 +567,6 @@ var
   TotalDXContacts: integer;
   TotalIntermediateContacts: integer;
 
-  UpdateRestartFileEnable: boolean;
 
   UDPBroadcastAppInfo: boolean; // ny4i 4.44.8
   UDPBroadcastContact: boolean; // ny4i 4.44.8
@@ -10450,7 +10447,7 @@ end;
 procedure ProcessPartialCallAndInitialExchange(RXData: ContestExchange);
 
 begin
-  if PartialCallEnable or ExchangeMemoryEnable then // n4af 40.40.1
+  if Config.PartialCallEnable or ExchangeMemoryEnable then // n4af 40.40.1
     //     AddCallToPartialList(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
      begin
      GetInitialExchangeStringFromContestExchange(RXData); // n4af 40.40.1       }

@@ -289,7 +289,6 @@ var
 
   OffTimeStart                          : TimeRecord;
 
-  PartialCallEnable                     : boolean = True;
   //  PartialCallList                  : array[1..MaxPartialCallBlocks] of PartialCallArrayPtr;
   PartialCallLoadLogEnable              : boolean = {false} True;
 
@@ -328,7 +327,6 @@ var
   MOQSOPartyPeakHourCount               : Integer;   // 40/80m QSOs in 1400-2000 UTC window (max 250)
 //  TwoLetterCrunchPartialCallList        : array[0..TwoLetterPartialCallListLength] of integer;
 
-  WildCardPartials                      : boolean = True;
   //  tTotalRecordsInLog               : integer;
   tRestartInfo                          : RestartInfo;
 
@@ -394,6 +392,7 @@ implementation
 //{WLI}{$I RemMults}
 uses
   //  OZCHR,
+  uConfigValues,
   uNet,
   uGetScores,
   PostUnit,
@@ -663,7 +662,7 @@ begin
   PossCallList.NumberPossibleCalls := 0;
   PossCallList.CursorPosition := 0;
 
-  if not PartialCallEnable then Exit;
+  if not Config.PartialCallEnable then Exit;
   if length(Call) < 2 then Exit;
 
   if NumberTwoLetterPartialCalls > 0 then
@@ -1034,7 +1033,7 @@ begin
   { Wildcard partials means the two letters can show up anywhere in the
     callsign. }
 
-  if WildCardPartials then
+  if Config.WildCardPartials then
      begin
      NumberCallsToCrunch := NumberPartialCalls - LastTwoLetterCrunchedAddress - 1;
 

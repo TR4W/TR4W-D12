@@ -159,6 +159,17 @@ type
       chkSpaceBarDupeCheck: TCheckBox;
       chkConfirmEditChanges: TCheckBox;
       chkAutoQSONumberDecrement: TCheckBox;
+      lblSCPMatchHeading: TLabel;
+      chkPossibleCalls: TCheckBox;
+      chkPartialCall: TCheckBox;
+      chkWildcardPartials: TCheckBox;
+      chkNameFlag: TCheckBox;
+      chkCallWindowShowAllSpots: TCheckBox;
+      chkSwapPacketSpotRadios: TCheckBox;
+      lblLogFilesHeading: TLabel;
+      chkCheckLogFileSize: TCheckBox;
+      chkUnknownCountryFile: TCheckBox;
+      chkUpdateRestartFile: TCheckBox;
       chkYCCCSO2R: TCheckBox;
       lblYCCCInfo: TLabel;
       layContent: TPanel;
@@ -3132,6 +3143,18 @@ begin
    FBindings.Bind(chkConfirmEditChanges, 'operating.confirmEditChanges');
    FBindings.Bind(chkAutoQSONumberDecrement,
                                          'operating.autoQSONumberDecrement');
+
+   FBindings.Bind(chkPossibleCalls,      'scp.possibleCalls');
+   FBindings.Bind(chkPartialCall,        'scp.partialCall');
+   FBindings.Bind(chkWildcardPartials,   'scp.wildcardPartials');
+   FBindings.Bind(chkNameFlag,           'scp.nameFlag');
+   FBindings.Bind(chkCallWindowShowAllSpots,
+                                         'bandmap.callWindowShowAllSpots');
+   FBindings.Bind(chkSwapPacketSpotRadios,
+                                         'bandmap.swapPacketSpotRadios');
+   FBindings.Bind(chkCheckLogFileSize,   'logging.checkLogFileSize');
+   FBindings.Bind(chkUnknownCountryFile, 'logging.unknownCountryFile');
+   FBindings.Bind(chkUpdateRestartFile,  'logging.updateRestartFile');
 
    // Operating - Bands
    FBindings.Bind(chkHFBands,   'operating.bands.hf');
