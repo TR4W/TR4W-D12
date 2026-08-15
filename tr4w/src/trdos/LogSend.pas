@@ -420,7 +420,7 @@ begin
 
         '}':
           if StringHas(ReceivedData.Callsign, '/') or
-            ((length(ReceivedData.Callsign) = 4) and SendCompleteFourLetterCall) or
+            ((length(ReceivedData.Callsign) = 4) and Config.SendCompleteFourLetterCall) or
             StringHas(CallsignICameBackTo, '/') then
              begin
              AddStringToBuffer(ReceivedData.Callsign, Config.CWTone)

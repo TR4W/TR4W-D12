@@ -9576,7 +9576,7 @@ var
   TempByte: Byte;
 begin
   DebugMsg('Enter MainUnit.PTTOn');
-  if not PTTEnable then
+  if not Config.PTTEnable then
      begin
 
      if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
@@ -9643,7 +9643,7 @@ begin
        ActiveRadioPtr.tPTTStatus := PTT_ON;
        PTTStatusChanged;
 
-       Sleep(PTTTurnOnDelay);
+       Sleep(Config.PTTTurnOnDelay);
        end;
   end;
 end;
@@ -9657,7 +9657,7 @@ var
   TempByte: Byte;
 begin
   DebugMsg('Enter MainUnit.PTTOff');
-  if not PTTEnable then
+  if not Config.PTTEnable then
      begin
      if ActiveRadioPtr.tKeyerPort in [Parallel1..Parallel3] then
        if DriverIsLoaded() then

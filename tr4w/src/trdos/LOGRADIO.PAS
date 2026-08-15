@@ -1509,7 +1509,7 @@ end;
 function RadioObject.WritePollRequest(const Buffer;
    nNumberOfBytesToWrite: DWORD): longbool;
 begin
- { if NoPollDuringPTT then
+ { if Config.NoPollDuringPTT then
   if tPTTStatus = PTT_ON then
   Sleep(500);   }
  //     try
@@ -3203,7 +3203,7 @@ begin
       logger.debug('**** tPTTVIACAT called but tPTTViaCommand is false');
       Exit;
       end;
-   if NoPollDuringPTT then
+   if Config.NoPollDuringPTT then
       begin
       Exit;
       end;

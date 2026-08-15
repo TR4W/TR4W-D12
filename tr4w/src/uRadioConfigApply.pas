@@ -308,7 +308,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..50] of string =
+   MIGRATED_COMMANDS: array[0..60] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -369,7 +369,19 @@ const
       // radio -- see the note in uRadioConfigLegacyMap.
       'RADIO ONE BAND OUTPUT PORT',
       'RADIO TWO BAND OUTPUT PORT',
-      'STEREO CONTROL PORT'
+      'STEREO CONTROL PORT',
+
+      // CW keying, paddle and PTT, 2026-08-14.
+      'ALL CW MESSAGES CHAINABLE',
+      'TUNE WITH DITS',
+      'SEND COMPLETE FOUR LETTER CALL',
+      'PADDLE SPEED',
+      'PADDLE MONITOR TONE',
+      'SWAP PADDLES',
+      'PADDLE PTT HOLD COUNT',
+      'PTT ENABLE',
+      'PTT TURN ON DELAY',
+      'NO POLL DURING PTT'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);

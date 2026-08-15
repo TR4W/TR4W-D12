@@ -43,7 +43,7 @@ type
       function DeleteLastChar: boolean; override;
       procedure Flush; override;
       procedure SetSpeed(wpm: integer); override;
-      // No tune: TuneWithDits is functionally dead -- out of scope.
+      // No tune: Config.TuneWithDits is functionally dead -- out of scope.
    end;
 
 implementation
@@ -53,6 +53,7 @@ uses
    Log4D,
    TF,         // tCreateThread
    MainUnit,   // PTTOn, logger
+   uConfigValues, // Config.PTTEnable and the paddle settings
    LogRadio,   // ActiveRadioPtr, PTT_OFF
    LogK1EA,    // CPUKeyer, CWThreadProc
    uWinKey;    // wkBusy (Q8)

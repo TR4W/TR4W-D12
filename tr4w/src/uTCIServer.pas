@@ -274,7 +274,8 @@ implementation
 uses
    MainUnit,          // logger
    tree,              // CodeSpeed
-   LOGK1EA,           // tPTTViaCommand, NoPollDuringPTT -- named in the refusal
+   LOGK1EA,           // tPTTViaCommand
+   uConfigValues,     // Config.NoPollDuringPTT -- named in the refusal
    uRadioPolling,     // RadioStatusPublished
    uFactoryRadioBase;
 
@@ -561,7 +562,7 @@ begin
          logger.Warn('[TCI-SRV] PTT refused: "PTT VIA COMMANDS" is FALSE, ' +
                      'so no transmit command is sent to the radio');
          end
-      else if NoPollDuringPTT then
+      else if Config.NoPollDuringPTT then
          begin
          logger.Warn('[TCI-SRV] PTT refused: NO POLL DURING PTT is set');
          end
@@ -1628,7 +1629,7 @@ begin
    // tPTTVIACAT has THREE gates before anything reaches the radio, and two of
    // them exit in near-silence (LOGRADIO.PAS:3037):
    //   1. 'PTT VIA COMMANDS' false  -> one DEBUG line, nothing sent
-   //   2. NoPollDuringPTT           -> no log at all, nothing sent
+   //   2. Config.NoPollDuringPTT           -> no log at all, nothing sent
    //   3. it keys ActiveRadio, NOT the receiver the client addressed
    // It returns False in the first two cases and every caller in the program
    // ignores that.  Confirming trx:<n>,true after one of them fires tells the

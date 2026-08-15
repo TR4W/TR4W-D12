@@ -118,6 +118,29 @@ type
         both CQ-WPX among them) and such a line wins while that contest is
         loaded -- see CommandCameFromContestCFG. }
       LeadingZeros: integer;
+
+      { CW KEYING, PADDLE AND PTT -- migrated 2026-08-14.
+
+        Category A by the plan's own test: no code assigns any of them (the
+        apparent writers in CFGDEF.PAS are all commented out), and none of the
+        74 contest .cfg files names one. The config table was their only writer.
+
+        FOUR OF THEM WERE TYPED CONSTANTS WITH NON-ZERO DEFAULTS, and that is
+        the trap in this batch. A record field defaults to zero, so moving them
+        without carrying the value across would disable PTT outright, drop the
+        paddle sidetone to 0 Hz and set the PTT hold to nothing -- silently, on
+        every station with no settings file, with nothing to report it. The
+        initialiser below is the whole safeguard. }
+      AllCWMessagesChainable: boolean;
+      TuneWithDits: boolean;
+      SendCompleteFourLetterCall: boolean;
+      PTTEnable: boolean;
+      PTTTurnOnDelay: integer;
+      NoPollDuringPTT: boolean;
+      SwapPaddles: boolean;
+      PaddleSpeed: integer;
+      PaddleMonitorTone: integer;
+      PaddlePTTHoldCount: integer;
    end;
 
 var
@@ -160,7 +183,21 @@ var
 
       TwoRadioMode: False;
 
-      LeadingZeros: 3
+      LeadingZeros: 3;
+
+      AllCWMessagesChainable: False;
+      TuneWithDits: False;
+      SendCompleteFourLetterCall: False;
+      { True, 15, 700 and 13 are NOT arbitrary -- they are the values the typed
+        constants in LOGK1EA carried, kept so a station with no settings file
+        behaves exactly as it did before. }
+      PTTEnable: True;
+      PTTTurnOnDelay: 15;
+      NoPollDuringPTT: False;
+      SwapPaddles: False;
+      PaddleSpeed: 0;
+      PaddleMonitorTone: 700;
+      PaddlePTTHoldCount: 13
    );
 
 implementation
