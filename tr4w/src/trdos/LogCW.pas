@@ -2037,6 +2037,26 @@ end;
 procedure SetCQCaptionMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString);
 
 begin
+
+  { REFUSE A KEY THIS ARRAY CANNOT HOLD.
+
+    FunctionKeyMemoryArray is [CW..Phone, F1..AltF12] -- 112..147. Range checking
+    is off in this build, so an index outside that does not raise: it writes a
+    heap pointer into whatever global happens to sit there, and the damage
+    surfaces somewhere else entirely. That is exactly what happened on
+    2026-08-15: a config line whose key prefix was not F/A/C produced CHR(1..12)
+    here, and the crash appeared later in ShowFMessages dereferencing a
+    neighbouring global that now looked like a valid pointer.
+
+    The caller was fixed too, but this is the layer that owns the invariant, and
+    a silent out-of-bounds write is worth refusing wherever it arrives from. }
+  if not (Key in [F1..AltF12]) then
+     begin
+     logger.Error('[SetCQCaptionMemoryString] key #%d is outside F1..AltF12 -- ignored',
+                  [Ord(Key)]);
+     Exit;
+     end;
+
   if Mode = Digital then
      begin
      Mode                               := CW;
@@ -2053,6 +2073,26 @@ end;
 procedure SetEXCaptionMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString);
 
 begin
+
+  { REFUSE A KEY THIS ARRAY CANNOT HOLD.
+
+    FunctionKeyMemoryArray is [CW..Phone, F1..AltF12] -- 112..147. Range checking
+    is off in this build, so an index outside that does not raise: it writes a
+    heap pointer into whatever global happens to sit there, and the damage
+    surfaces somewhere else entirely. That is exactly what happened on
+    2026-08-15: a config line whose key prefix was not F/A/C produced CHR(1..12)
+    here, and the crash appeared later in ShowFMessages dereferencing a
+    neighbouring global that now looked like a valid pointer.
+
+    The caller was fixed too, but this is the layer that owns the invariant, and
+    a silent out-of-bounds write is worth refusing wherever it arrives from. }
+  if not (Key in [F1..AltF12]) then
+     begin
+     logger.Error('[SetEXCaptionMemoryString] key #%d is outside F1..AltF12 -- ignored',
+                  [Ord(Key)]);
+     Exit;
+     end;
+
   if Mode = Digital then
      begin
      Mode                               := CW;
