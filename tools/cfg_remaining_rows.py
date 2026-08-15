@@ -44,7 +44,12 @@ for m in ROW.finditer(cfg):
     # csNew row is exactly as visible to the operator as a csOld one. Scanning
     # csOld alone reported 152 rows left when the dialog still held 207 -- the
     # status names say where a row CAME FROM, not whether it still needs a home.
-    if status in ('csOld', 'csNew'):
+    # CASE-INSENSITIVELY. Pascal does not care how csOld is spelled and four
+    # rows in CFGCA are written csOLD or csoLD; comparing the strings exactly
+    # dropped all four, IE SWITCH among them. Third time this scan has silently
+    # narrowed its own denominator, so the comparison is folded now and the
+    # source spellings are normalized as well.
+    if status.lower() in ('csold', 'csnew'):
         rows.append(r)
 assert len(rows) == cfg.count('crS: csOld') + cfg.count('crS: csNew'), \
     'parsed %d of %d live rows' % (len(rows),
