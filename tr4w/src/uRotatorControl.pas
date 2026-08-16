@@ -250,7 +250,27 @@ begin
       buf[i] := aBytes[i];
       end;
 
-   sWriteFile(CPUKeyer.SerialPortConfigured_Handle[aLive.Port], buf, n);
+   { A WRITE THAT FAILS MEANS THE PORT WENT AWAY, and the handle does not say
+     so. Retrying the OPEN only covers a port that was never opened -- power
+     the controller off after TR4W has opened it and the handle stays
+     non-invalid, so every later write goes quietly nowhere and the rotator
+     stops turning with nothing to explain it.
+
+     Closing it here is what makes the NEXT send reopen: OpenPortFor treats
+     INVALID_HANDLE_VALUE as its cue. Same idea as MaintainSerialLink on the
+     radios -- an open handle is not a working link. }
+   if not sWriteFile(CPUKeyer.SerialPortConfigured_Handle[aLive.Port], buf, n) then
+      begin
+      logger.Warn('[uRotatorControl] %s: write to %s failed (%s) -- closing '
+                  + 'the port; it will be reopened on the next command',
+                  [aLive.Name, string(PortTypeSA[aLive.Port]),
+                   SysUtils.SysErrorMessage(GetLastError)]);
+      CloseHandle(CPUKeyer.SerialPortConfigured_Handle[aLive.Port]);
+      CPUKeyer.SerialPortConfigured_Handle[aLive.Port] := INVALID_HANDLE_VALUE;
+      // Say it again when it comes back.
+      aLive.PortReported := False;
+      Exit;
+      end;
 
    logger.Trace('[uRotatorControl] %s (%s) on %s, %d bytes',
       [aLive.Name, aLive.Driver.DisplayName, string(PortTypeSA[aLive.Port]), n]);
