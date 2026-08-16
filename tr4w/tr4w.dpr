@@ -1018,9 +1018,14 @@ begin
   UpdateDebugLogLevel;
   //logger.debug('**************** Program Startup ************************');
   logger.info('DecimalSeparator = ' + FormatSettings.DecimalSeparator);
-  logger.debug('Current program version = %s',[TR4W_CURRENTVERSION]);
-  logger.debug('Current TR4W Server version = %s',[TR4WSERVER_CURRENTVERSION]);
-  logger.debug('Current log version = %s',[LOGVERSION]);
+  // INFO, NOT DEBUG. These three identify the software in the log, and a
+  // support log is normally gathered at info -- so the first question asked of
+  // any crash report, "which version is this?", was answered only for people
+  // already running at debug. The ENVIRONMENT versions beside them (HamLib,
+  // Windows) were already info, which made the omission easy to miss.
+  logger.info('Current program version = %s',[TR4W_CURRENTVERSION]);
+  logger.info('Current TR4W Server version = %s',[TR4WSERVER_CURRENTVERSION]);
+  logger.info('Current log version = %s',[LOGVERSION]);
   logger.info('HamLib version = %s',[GetHamLibVersion]);
   // INFO, not DEBUG: this is the first thing anyone asks a tester for, and at
   // DEBUG it is absent from exactly the logs that get sent in. HamLib version on
