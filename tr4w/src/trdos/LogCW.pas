@@ -1997,9 +1997,38 @@ function GetCQMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 
 begin
   {Mode                                                     := ActiveMode;}{KK1L: 6.73 Removed}
 
+  { THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
+    that was missing.
+
+    ModeType is (CW, Digital, Phone, Both, NoMode, FM) -- six values --
+    while FunctionKeyMemoryArray is array[CW..Phone, ...], which is the
+    first THREE. Mapping Digital to CW covered one of the three strays and
+    left Both, NoMode and FM writing a whole ROW or more past the array: 36
+    pointers, 144 bytes, landing squarely in the next one along. Range
+    checking is off, so it does not raise -- it plants a New()ed pointer in
+    a slot nothing allocated, and the fault surfaces later in whoever reads
+    it. ShowFMessages folds FM into Phone for exactly this reason
+    (uFunctionKeys.pas:263); the setters never got the same treatment.
+
+    ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not
+    a theoretical argument about what a caller might pass. }
   if Mode = Digital then
      begin
      Mode                               := CW;
+     end;
+  if Mode = FM then
+     begin
+     Mode                               := Phone;
+     end;
+  if (Mode < CW) or (Mode > Phone) then
+     begin
+     logger.Error('[GetCQMemoryString] mode %d has no memory row (CW..Phone only) -- ignored',
+                  [Ord(Mode)]);
+     // Result FIRST. A bare Exit from a ShortString function returns
+     // whatever the stack held -- the same defect as the garbage that
+     // filled the exchange window this morning.
+     Result := '';
+     Exit;
      end;
 
   GetCQMemoryString                                         := '';
@@ -2019,9 +2048,38 @@ function GetEXMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 
 begin
   {Mode                                                     := ActiveMode;}{KK1L: 6.73 Removed}
 
+  { THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
+    that was missing.
+
+    ModeType is (CW, Digital, Phone, Both, NoMode, FM) -- six values --
+    while FunctionKeyMemoryArray is array[CW..Phone, ...], which is the
+    first THREE. Mapping Digital to CW covered one of the three strays and
+    left Both, NoMode and FM writing a whole ROW or more past the array: 36
+    pointers, 144 bytes, landing squarely in the next one along. Range
+    checking is off, so it does not raise -- it plants a New()ed pointer in
+    a slot nothing allocated, and the fault surfaces later in whoever reads
+    it. ShowFMessages folds FM into Phone for exactly this reason
+    (uFunctionKeys.pas:263); the setters never got the same treatment.
+
+    ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not
+    a theoretical argument about what a caller might pass. }
   if Mode = Digital then
      begin
      Mode                               := CW;
+     end;
+  if Mode = FM then
+     begin
+     Mode                               := Phone;
+     end;
+  if (Mode < CW) or (Mode > Phone) then
+     begin
+     logger.Error('[GetEXMemoryString] mode %d has no memory row (CW..Phone only) -- ignored',
+                  [Ord(Mode)]);
+     // Result FIRST. A bare Exit from a ShortString function returns
+     // whatever the stack held -- the same defect as the garbage that
+     // filled the exchange window this morning.
+     Result := '';
+     Exit;
      end;
 
   if EXMemory[Mode, Key] <> nil then
@@ -2068,9 +2126,34 @@ begin
      Exit;
      end;
 
+  { THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
+    that was missing.
+
+    ModeType is (CW, Digital, Phone, Both, NoMode, FM) -- six values --
+    while FunctionKeyMemoryArray is array[CW..Phone, ...], which is the
+    first THREE. Mapping Digital to CW covered one of the three strays and
+    left Both, NoMode and FM writing a whole ROW or more past the array: 36
+    pointers, 144 bytes, landing squarely in the next one along. Range
+    checking is off, so it does not raise -- it plants a New()ed pointer in
+    a slot nothing allocated, and the fault surfaces later in whoever reads
+    it. ShowFMessages folds FM into Phone for exactly this reason
+    (uFunctionKeys.pas:263); the setters never got the same treatment.
+
+    ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not
+    a theoretical argument about what a caller might pass. }
   if Mode = Digital then
      begin
      Mode                               := CW;
+     end;
+  if Mode = FM then
+     begin
+     Mode                               := Phone;
+     end;
+  if (Mode < CW) or (Mode > Phone) then
+     begin
+     logger.Error('[SetCQCaptionMemoryString] mode %d has no memory row (CW..Phone only) -- ignored',
+                  [Ord(Mode)]);
+     Exit;
      end;
 
   if CQCaptionMemory[Mode, Key] = nil then
@@ -2115,9 +2198,34 @@ begin
      Exit;
      end;
 
+  { THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
+    that was missing.
+
+    ModeType is (CW, Digital, Phone, Both, NoMode, FM) -- six values --
+    while FunctionKeyMemoryArray is array[CW..Phone, ...], which is the
+    first THREE. Mapping Digital to CW covered one of the three strays and
+    left Both, NoMode and FM writing a whole ROW or more past the array: 36
+    pointers, 144 bytes, landing squarely in the next one along. Range
+    checking is off, so it does not raise -- it plants a New()ed pointer in
+    a slot nothing allocated, and the fault surfaces later in whoever reads
+    it. ShowFMessages folds FM into Phone for exactly this reason
+    (uFunctionKeys.pas:263); the setters never got the same treatment.
+
+    ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not
+    a theoretical argument about what a caller might pass. }
   if Mode = Digital then
      begin
      Mode                               := CW;
+     end;
+  if Mode = FM then
+     begin
+     Mode                               := Phone;
+     end;
+  if (Mode < CW) or (Mode > Phone) then
+     begin
+     logger.Error('[SetEXCaptionMemoryString] mode %d has no memory row (CW..Phone only) -- ignored',
+                  [Ord(Mode)]);
+     Exit;
      end;
   if EXCaptionMemory[Mode, Key] = nil then
      begin
@@ -2159,9 +2267,34 @@ begin
      Exit;
      end;
 
+  { THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
+    that was missing.
+
+    ModeType is (CW, Digital, Phone, Both, NoMode, FM) -- six values --
+    while FunctionKeyMemoryArray is array[CW..Phone, ...], which is the
+    first THREE. Mapping Digital to CW covered one of the three strays and
+    left Both, NoMode and FM writing a whole ROW or more past the array: 36
+    pointers, 144 bytes, landing squarely in the next one along. Range
+    checking is off, so it does not raise -- it plants a New()ed pointer in
+    a slot nothing allocated, and the fault surfaces later in whoever reads
+    it. ShowFMessages folds FM into Phone for exactly this reason
+    (uFunctionKeys.pas:263); the setters never got the same treatment.
+
+    ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not
+    a theoretical argument about what a caller might pass. }
   if Mode = Digital then
      begin
      Mode                               := CW;
+     end;
+  if Mode = FM then
+     begin
+     Mode                               := Phone;
+     end;
+  if (Mode < CW) or (Mode > Phone) then
+     begin
+     logger.Error('[SetCQMemoryString] mode %d has no memory row (CW..Phone only) -- ignored',
+                  [Ord(Mode)]);
+     Exit;
      end;
 
   if CQMemory[Mode, Key] = nil then
@@ -2206,9 +2339,34 @@ begin
      Exit;
      end;
 
+  { THE FIRST INDEX NEEDS THE SAME CARE AS THE SECOND, and it was the half
+    that was missing.
+
+    ModeType is (CW, Digital, Phone, Both, NoMode, FM) -- six values --
+    while FunctionKeyMemoryArray is array[CW..Phone, ...], which is the
+    first THREE. Mapping Digital to CW covered one of the three strays and
+    left Both, NoMode and FM writing a whole ROW or more past the array: 36
+    pointers, 144 bytes, landing squarely in the next one along. Range
+    checking is off, so it does not raise -- it plants a New()ed pointer in
+    a slot nothing allocated, and the fault surfaces later in whoever reads
+    it. ShowFMessages folds FM into Phone for exactly this reason
+    (uFunctionKeys.pas:263); the setters never got the same treatment.
+
+    ActiveMode reaches here directly (LogCW.pas:1386, :1490), so this is not
+    a theoretical argument about what a caller might pass. }
   if Mode = Digital then
      begin
      Mode                               := CW;
+     end;
+  if Mode = FM then
+     begin
+     Mode                               := Phone;
+     end;
+  if (Mode < CW) or (Mode > Phone) then
+     begin
+     logger.Error('[SetEXMemoryString] mode %d has no memory row (CW..Phone only) -- ignored',
+                  [Ord(Mode)]);
+     Exit;
      end;
 
   if EXMemory[Mode, Key] = nil then
