@@ -55,6 +55,10 @@ interface
 { Call once at startup, after the logger exists.  Idempotent. }
 procedure InstallCrashLog;
 
+{ Say in the log whether this run can produce usable backtraces.  Called by
+  InstallCrashLog. }
+procedure ReportSymbolState;
+
 { Report an exception that WAS caught, with the same detail an unhandled one
   gets.
 
@@ -190,6 +194,93 @@ begin
    WriteCrashReport(aSource, aObj, ExceptAddr, ExceptFrameCount, ExceptFrames);
 end;
 
+
+{ WHETHER THE .dbg BESIDE US IS THE RIGHT ONE.
+
+  The scenario this exists for (NY4I): an operator hits a fault nobody can
+  reproduce, is sent the matching tr4w.dbg, drops it beside tr4w.exe and sends a
+  new log. If they still have an OLD one from a previous version, we need to know
+  before reading a single address.
+
+  MEASURED, NOT ASSUMED. A deliberate build-mismatch test showed FPC validates
+  the link: a .dbg from a different build is REJECTED, not used, so it cannot
+  produce plausible-but-wrong file and line -- which was the real fear. It
+  degrades to bare addresses exactly as a missing file does.
+
+  So the probe is: raise and catch an exception on a known line, resolve its
+  address, and see whether a line comes back. If one does, the symbols are
+  present AND belong to this binary. If not, the file is either absent or
+  rejected -- and those two want different advice, so the message says which. }
+function ProbeSymbolLine(out aResolved: string): integer;
+var
+   n, p: integer;
+begin
+   Result := 0;
+   aResolved := '';
+   try
+      try
+         raise Exception.Create('symbol probe');
+      except
+         aResolved := BackTraceStrFunc(ExceptAddr);
+      end;
+   except
+      // The probe must never be the thing that breaks startup.
+      Exit;
+   end;
+
+   p := Pos('line ', aResolved);
+   if p = 0 then
+      begin
+      Exit;
+      end;
+   n := p + 5;
+   while (n <= Length(aResolved)) and (aResolved[n] >= '0')
+         and (aResolved[n] <= '9') do
+      begin
+      Result := Result * 10 + Ord(aResolved[n]) - Ord('0');
+      Inc(n);
+      end;
+end;
+
+procedure ReportSymbolState;
+var
+   resolved, dbg: string;
+   line: integer;
+begin
+   if logger = nil then
+      begin
+      Exit;
+      end;
+
+   // The build itself, so an archived .dbg can be matched to this log.
+   logger.Info('[CRASH] TR4W %s built %s %s',
+               [TR4W_CURRENTVERSION_NUMBER, {$I %DATE%}, {$I %TIME%}]);
+
+   line := ProbeSymbolLine(resolved);
+   dbg  := ChangeFileExt(ParamStr(0), '.dbg');
+
+   if line > 0 then
+      begin
+      logger.Info('[CRASH] symbols OK -- backtraces will name file and line '
+                  + '(probe resolved to %s)', [Trim(resolved)]);
+      end
+   else if FileExists(dbg) then
+      begin
+      // The dangerous-looking case, and the reason for the whole check.
+      logger.Warn('[CRASH] %s EXISTS BUT WAS REJECTED -- it does not belong to '
+                  + 'this build. Backtraces will show raw addresses only. '
+                  + 'Replace it with the .dbg archived for TR4W %s.',
+                  [dbg, TR4W_CURRENTVERSION_NUMBER]);
+      end
+   else
+      begin
+      logger.Info('[CRASH] no %s -- backtraces will show raw addresses. That is '
+                  + 'normal; the addresses can still be resolved from the .dbg '
+                  + 'archived for TR4W %s.',
+                  [ExtractFileName(dbg), TR4W_CURRENTVERSION_NUMBER]);
+      end;
+end;
+
 procedure InstallCrashLog;
 begin
    if GInstalled then
@@ -213,6 +304,7 @@ begin
    if logger <> nil then
       begin
       logger.Info('[CRASH] unhandled-exception logging installed (RTL + LCL)');
+      ReportSymbolState;
       end;
 end;
 
