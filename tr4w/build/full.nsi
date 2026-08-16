@@ -117,6 +117,18 @@ Section "tr4w.exe" secexe
 	SectionIn RO
 	SetOutPath "$INSTDIR"
 	File ..\target\tr4w.exe
+
+	; SYMBOLS, WHILE WE ARE ON BENCH TESTERS (NY4I, 2026-08-16): "until we
+	; go to release, we can ship the debug files with the release in the
+	; installer. I might need it from our testers."
+	;
+	; tr4w.dbg is what turns an address in a tester's log into a file and a
+	; line, and it is valid ONLY for this exact binary. ~46 MB uncompressed.
+	; A public release should be built with -ExcludeSymbols and ship without
+	; it; the file is archived beside the installer either way.
+!ifdef INCLUDE_SYMBOLS
+	File ..\target\tr4w.dbg
+!endif
 	File ..\target\r150s.dat
 	File ..\target\rfobl.dat
 	; inpout32.dll is intentionally NOT bundled: its kernel port-I/O driver is

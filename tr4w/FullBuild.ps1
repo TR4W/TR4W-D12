@@ -32,6 +32,11 @@
 
 param(
    [switch] $BuildInstaller,
+   # Leave the ~46 MB tr4w.dbg OUT of the installer. Symbols are bundled by
+   # default while the build is going to bench testers (NY4I, 2026-08-16), so
+   # an address in their log can be turned into a file and a line without
+   # shipping them a second download. Pass this for a public release.
+   [switch] $ExcludeSymbols,
    [switch] $SkipTests,
    [switch] $SkipLints,
    [string] $Repo = (Split-Path $PSScriptRoot -Parent),
@@ -463,7 +468,15 @@ if ($BuildInstaller)
 
    # full.nsi refuses to build without /DTR4WVERSION, which is what stops a
    # silently mis-versioned installer.
-   & $makensis "/DTR4WVERSION=$TR4W_VERSION" $nsi | Out-Host
+   $nsisArgs = @("/DTR4WVERSION=$TR4W_VERSION")
+   if ($ExcludeSymbols) {
+      Write-Host "  symbols  : EXCLUDED -- release build"
+   } else {
+      $nsisArgs += "/DINCLUDE_SYMBOLS"
+      Write-Host "  symbols  : bundled (tr4w.dbg) -- testing build, "  `
+                 "pass -ExcludeSymbols for a public release"
+   }
+   & $makensis $nsisArgs $nsi | Out-Host
    if ($LASTEXITCODE -ne 0) { Fail 'NSIS installer build failed' }
    }
 
