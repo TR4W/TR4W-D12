@@ -19,7 +19,7 @@ unit version;
 {$I tr4w.inc}
 interface
 const
-  TR4W_CURRENTVERSION_NUMBER            = '5.0.0';
+  TR4W_CURRENTVERSION_NUMBER            = '5.0.1';
 
   TR4W_CURRENTVERSION                   = 'TR4W v.' + TR4W_CURRENTVERSION_NUMBER; //  {$IF MMTTYMODE} + '_mmtty'{$IFEND};//{$IF LANG <> 'ENG'} + ' [' + LANG + ']'{$IFEND}{$IF MMTTYMODE} + '_mmtty'{$IFEND};
 
