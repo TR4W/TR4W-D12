@@ -172,6 +172,26 @@ Two things it does not survive, both of which the compiler also catches:
 5. **The expensive globals** (`CWTone` at 93, `Weight` at 34, `TwoRadioMode` at 34) — the function
    swap, once the cheap ones have proved the shape.
 
+### A setting that reaches the EXPORT must not be `csJSON` (proved 2026-08-16)
+
+The warning below was right and still got past us. `COMPUTER ID` was migrated to `csJSON`, and
+`PostUnit.PAS:3021` compares it against each QSO's stored id to decide the Cabrillo **transmitter
+digit**. Under `/EXPORT` the ini loader skips a `csJSON` row and the JSON apply never runs, so the
+value fell back to its compiled default and **2632 QSO lines in the Winter Field Day set exported
+wrongly**. The corpus caught it: 21/1/4 against a 22/0/4 baseline.
+
+**The fix is `csOwned`, not a change to the export path.** `csOwned` hides the row from Ctrl-J — the
+point of the migration — while `CheckCommand` still applies the ini value, so export behaves as it
+always did.
+
+Making `/EXPORT` apply the JSON store instead was tried and is **wrong**: it takes the operator's
+*current* settings over the log's own `.cfg`, which is the opposite of what re-exporting an old log
+should do. Measured, not argued — it took the corpus from 21/1/4 to **8/14/4**.
+
+**So the rule: if a setting is read by `PostUnit`, `uCabrillo*`, `uADIF` or `uCbrSum`, it may become
+`csOwned` but never `csJSON`.** Swept the other 70 `csJSON` rows against those units on 2026-08-16 —
+none is read by an export unit, so `COMPUTER ID` was the only one.
+
 ### The corpus cannot see a migrated setting
 
 `tr4w.dpr:971` skips `ApplyActiveProfileToConfigAtStartup` under `/EXPORT` — deliberately, so
