@@ -145,3 +145,8 @@ build-out/
 # tracked and must stay so, since it carries the search paths and the
 # debug settings.
 *.lps
+
+# Release symbols: ~46 MB per build, kept beside the installer so an emailed
+# crash address can be resolved later. Never committed -- archive with the
+# release artefacts instead.
+tr4w/build/release/symbols/
