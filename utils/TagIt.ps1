@@ -20,6 +20,27 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent          # ..\ from utils\
 
+# ---------------------------------------------------------------------------
+# NORMALISE THE TAG ONCE, HERE, AND USE $tagName EVERYWHERE AFTER THIS POINT.
+#
+# This used to strip a leading 'v' for the version COMPARISON and then build the
+# tag itself as "v$Tag" from the original string. With the documented usage
+# (TagIt.cmd 4.147.26 -- no 'v') the two agreed and it was invisible. Passing the
+# tag the way it is actually written down, 'v5.0.1', passed every guard and then
+# created and pushed 'vv5.0.1'. A wrong tag is not a local mistake: it is pushed
+# to GitHub and it is what release.yml keys on.
+#
+# So: accept either spelling, derive one canonical name, and never re-derive it.
+# '-all' once selected an all-languages build. That build is gone; the suffix is
+# still tolerated so an old-habit tag releases rather than failing obscurely.
+# ---------------------------------------------------------------------------
+$bare = $Tag -replace '^v', '' -replace '-all$', ''
+if ($bare -notmatch '^\d+(\.\d+)*$')
+   {
+   throw "Tag '$Tag' does not look like a version (expected e.g. 5.0.1 or v5.0.1)."
+   }
+$tagName = "v$bare"
+
 function Fail([string] $msg)
    {
    throw $msg
@@ -76,15 +97,10 @@ if ($head -ne $remoteHead)
    }
 
 # ---------------------------------------------------------------------------
-# Guard 3: the tag must match the committed Version.pas. Mirrors release.yml:
-# strip a leading 'v' and a trailing '-all', then compare. Reads the file via
-# 'git show HEAD:...' -- NOT the working tree -- so it validates exactly what
-# the tag will capture.
-#
-# '-all' once selected an all-languages build. That build is gone; the suffix is
-# still tolerated so an old-habit tag releases rather than failing obscurely.
+# Guard 3: the tag must match the committed Version.pas. Mirrors release.yml.
+# Reads the file via 'git show HEAD:...' -- NOT the working tree -- so it
+# validates exactly what the tag will capture.
 # ---------------------------------------------------------------------------
-$bare    = $Tag -replace '^v', '' -replace '-all$', ''
 $verLine = git -C $repo show HEAD:tr4w/src/Version.pas |
            Select-String -Pattern 'TR4W_CURRENTVERSION_NUMBER' |
            Select-Object -First 1
@@ -96,15 +112,15 @@ if (-not $verLine)
 $version = [regex]::Match($verLine.Line, "'([^']+)'").Groups[1].Value
 if ($bare -ne $version)
    {
-   Fail "Tag v$bare does not match committed Version.pas ($version). Bump one or the other before tagging."
+   Fail "Tag $tagName does not match committed Version.pas ($version). Bump one or the other before tagging."
    }
-Write-Host "Tag v$bare matches committed Version.pas $version - OK"
+Write-Host "Tag $tagName matches committed Version.pas $version - OK"
 
-git -C $repo tag -a "v$Tag" -m "TR4W v$Tag"
-if ($LASTEXITCODE -ne 0) { Fail "Could not create tag v$Tag (does it already exist?)" }
+git -C $repo tag -a $tagName -m "TR4W $tagName"
+if ($LASTEXITCODE -ne 0) { Fail "Could not create tag $tagName (does it already exist?)" }
 
-git -C $repo push $remote "v$Tag"
-if ($LASTEXITCODE -ne 0) { Fail "Could not push v$Tag to $remote." }
+git -C $repo push $remote $tagName
+if ($LASTEXITCODE -ne 0) { Fail "Could not push $tagName to $remote." }
 
 Write-Host ""
-Write-Host "Pushed v$Tag to $remote -- release.yml will pick it up when a win-ci runner is attached."
+Write-Host "Pushed $tagName to $remote -- release.yml will pick it up when a win-ci runner is attached."
