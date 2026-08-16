@@ -1326,9 +1326,7 @@
     </CodeGeneration>
     <Linking>
       <Debugging>
-        <GenerateDebugInfo Value="True"/>
         <DebugInfoType Value="dsDwarf3"/>
-        <UseLineInfoUnit Value="True"/>
       </Debugging>
       <Options>
         <Win32>
