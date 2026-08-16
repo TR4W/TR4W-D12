@@ -254,7 +254,20 @@ var
   s                                     : string;
   plus                                  : Byte;
   PosOfAmp                              : integer;
-  b                                     : Char;
+  { AnsiChar, NOT Char -- and this was the Ctrl-P crash.
+
+    Char is WideChar here (tr4w.inc turns on the UnicodeStrings mode
+    switch) while the memory arrays are indexed by F1..AltF12, which are
+    AnsiChar constants from tree.pas -- SizeOf(F1) is 1. CHR(139) stored in
+    a WideChar does NOT hold 139: it round-trips through CP1252 and holds
+    U+2039, ordinal 8249. Indexing an AnsiChar-ranged array with that reads
+    roughly eight thousand elements past the row.
+
+    Below 128 the two agree, which is why plain F1..F12 (112..123) always
+    worked and only Ctrl (124..135) and Alt (136..147) faulted -- the range
+    that crosses 128. With range checking off it does not raise; it just
+    reads whatever is there and dereferences it. }
+  b                                     : AnsiChar;
   TempMode                              : ModeType;
 begin
 

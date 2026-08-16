@@ -143,8 +143,8 @@ procedure SetSpeed(Speed: integer {byte});
 procedure SetPTT;
 procedure UnInitializeKeyer;
 
-function GetCQMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 Added mode}
-function GetEXMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 Added mode}
+function GetCQMemoryString(Mode: ModeType; Key: AnsiChar): ShortString; {KK1L: 6.73 Added mode}
+function GetEXMemoryString(Mode: ModeType; Key: AnsiChar): ShortString; {KK1L: 6.73 Added mode}
 
 procedure MemoryProgram;
 
@@ -153,11 +153,11 @@ function QSONumberString(QSONumber: integer): string;
 function TimeString: Str10;
 
 procedure SendKeyboardInput;
-procedure SetCQMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString {Str80});
-procedure SetEXMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString {Str80});
+procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
+procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
-procedure SetCQCaptionMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString);
-procedure SetEXCaptionMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString);
+procedure SetCQCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
+procedure SetEXCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
 
 procedure SetNewCodeSpeed;
 procedure SetUpToSendOnActiveRadio;
@@ -812,7 +812,10 @@ end;
 procedure ShowCQFunctionKeyStatus;
 
 var
-  Key                                   : Char;
+  { AnsiChar: these loops run past 127 (ControlF1..AltF12 are 124..147) and
+    the F-key constants are AnsiChar. A WideChar loop variable holds U+20xx
+    for those values, not the ordinal -- see uFunctionKeys.ShowFMessages. }
+  Key                                   : AnsiChar;
   TempString                            : Str160;
 
 begin
@@ -906,7 +909,10 @@ end;
 procedure ShowExFunctionKeyStatus;
 
 var
-  Key                                   : Char;
+  { AnsiChar: these loops run past 127 (ControlF1..AltF12 are 124..147) and
+    the F-key constants are AnsiChar. A WideChar loop variable holds U+20xx
+    for those values, not the ordinal -- see uFunctionKeys.ShowFMessages. }
+  Key                                   : AnsiChar;
   TempString                            : Str160;
 
 begin
@@ -1990,7 +1996,7 @@ begin
   end;
 end;
 
-function GetCQMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 Added Mode to do split mode}
+function GetCQMemoryString(Mode: ModeType; Key: AnsiChar): ShortString; {KK1L: 6.73 Added Mode to do split mode}
 
 {VAR Mode: ModeType;}{KK1L: 6.73 Removed}
 
@@ -2041,7 +2047,7 @@ begin
     
 end;
 
-function GetEXMemoryString(Mode: ModeType; Key: Char): ShortString; {KK1L: 6.73 Added Mode to do split mode}
+function GetEXMemoryString(Mode: ModeType; Key: AnsiChar): ShortString; {KK1L: 6.73 Added Mode to do split mode}
 
 {VAR Mode: ModeType;}{KK1L: 6.73 Removed}
 
@@ -2092,7 +2098,7 @@ begin
      end
 end;
 
-procedure SetCQCaptionMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString);
+procedure SetCQCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
 
 begin
 
@@ -2164,7 +2170,7 @@ begin
   CQCaptionMemory[Mode, Key]^[length(MemoryString) + 1]     := #0;
 end;
 
-procedure SetEXCaptionMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString);
+procedure SetEXCaptionMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString);
 
 begin
 
@@ -2235,7 +2241,7 @@ begin
   EXCaptionMemory[Mode, Key]^[length(MemoryString) + 1]     := #0;
 end;
 
-procedure SetCQMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString {Str80});
+procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
 begin
   { REFUSE A KEY THIS ARRAY CANNOT HOLD -- and this one matters more than
@@ -2307,7 +2313,7 @@ begin
   CQMemory[Mode, Key]^[length(MemoryString) + 1]            := #0;
 end;
 
-procedure SetEXMemoryString(Mode: ModeType; Key: Char; MemoryString: ShortString {Str80});
+procedure SetEXMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
 begin
   { REFUSE A KEY THIS ARRAY CANNOT HOLD -- and this one matters more than

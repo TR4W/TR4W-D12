@@ -169,7 +169,13 @@ procedure DisplaymessagesList(mt: MesWindowType; MessageMode: ModeType);
 label
   1;
 var
-  Key                                   : Char;
+  { AnsiChar, for the reason documented in uFunctionKeys.ShowFMessages: Char
+    is WideChar here, the memory arrays are indexed by the AnsiChar
+    constants F1..AltF12, and a WideChar holding CHR(139) actually holds
+    U+2039 -- ordinal 8249 -- so `for Key := F1 to AltF12` walked straight
+    off the end of the array as soon as it passed 127. This is the same
+    fault as the Ctrl-P crash, reached through Alt-P instead. }
+  Key                                   : AnsiChar;
   TempString                            : ShortString;
   elvi                                  : TLVItem;
 //  TempPchar                             : PChar;

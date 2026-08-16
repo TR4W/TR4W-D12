@@ -77,7 +77,9 @@ end;
 
 procedure SetConfigurationDefaultValues;
 var
-  c                                     : Char;
+  { AnsiChar: the loops below run to AltF12 (147), past 127, and the F-key
+    constants are AnsiChar -- see uFunctionKeys.ShowFMessages. }
+  c                                     : AnsiChar;
   TempString                            : ShortString;
 begin
   //  ActiveBand := Band160;
