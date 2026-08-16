@@ -139,3 +139,9 @@ tr4w/build/lintlfm/units/
 
 # FPC intermediate output (units, logs). Binaries land in target\ and tr4wserver\.
 build-out/
+
+# Lazarus SESSION state -- open tabs, cursor positions, breakpoints, watches.
+# Per-developer and rewritten on every close; the PROJECT file (.lpi) is
+# tracked and must stay so, since it carries the search paths and the
+# debug settings.
+*.lps
