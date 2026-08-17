@@ -70,69 +70,26 @@ if ($SourceDir) {
                 Select-Object -ExpandProperty FullName)
 }
 
-# Blank out everything that is not live code, carrying block-comment state
-# across lines, and return the code-only text.
+# The code-only reader MOVED to build\PascalSource.psm1 (2026-08-17), unchanged.
+# It was the careful implementation of the three rules below and a second, naive
+# copy had grown in Count-LiveAsm.ps1; a third consumer (Lint-Win32Dialogs) made
+# it time to lift it out. The module header records what the naive copy got
+# wrong. The rules it must not break, kept here because this is the lint whose
+# false positives paid for them:
 #
-# The previous version stripped only TRAILING single-line comments, so it could
-# not see a `{ ... }` block spanning lines -- and reported four "violations"
-# inside a commented-out TS-850 block in LOGRADIO.PAS.  A linter that fires on
-# commented-out code is one people learn to ignore, which is worse than no
-# linter, so this scans properly.
-#
-# Three things it must NOT get wrong:
 #   * `{$IFDEF}` / `(*$...*)` are DIRECTIVES, not comments -- the code they
 #     guard is live and must still be linted.
 #   * a brace inside a string literal ('{') opens nothing.
 #   * `//` inside a string literal ('http://...') comments out nothing.
-function Get-CodeOnly {
-   param([string] $Line, [ref] $State)   # State: '' | '{' | '(*'
+#
+# An earlier version stripped only TRAILING single-line comments, could not see
+# a `{ ... }` block spanning lines, and reported four "violations" inside a
+# commented-out TS-850 block in LOGRADIO.PAS. A linter that fires on
+# commented-out code is one people learn to ignore, which is worse than no
+# linter.
+Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
 
-   $out = New-Object System.Text.StringBuilder
-   $i = 0
-   $inStr = $false
-
-   while ($i -lt $Line.Length) {
-      $c  = $Line[$i]
-      $c2 = if ($i + 1 -lt $Line.Length) { $Line[$i + 1] } else { "`0" }
-
-      switch ($State.Value) {
-         '{' {
-            if ($c -eq '}') { $State.Value = '' }
-            $i++
-            continue
-         }
-         '(*' {
-            if ($c -eq '*' -and $c2 -eq ')') { $State.Value = ''; $i += 2 } else { $i++ }
-            continue
-         }
-      }
-
-      if ($inStr) {
-         if ($c -eq "'") { $inStr = $false }
-         [void]$out.Append($c)
-         $i++
-         continue
-      }
-
-      if ($c -eq "'") { $inStr = $true; [void]$out.Append($c); $i++; continue }
-      if ($c -eq '/' -and $c2 -eq '/') { break }                      # rest of line
-      if ($c -eq '{') {
-         if ($c2 -eq '$') { [void]$out.Append($c); $i++; continue }   # directive: live code
-         $State.Value = '{'; $i++; continue
-      }
-      if ($c -eq '(' -and $c2 -eq '*') {
-         if (($i + 2 -lt $Line.Length) -and $Line[$i + 2] -eq '$') {
-            [void]$out.Append($c); $i++; continue                     # directive: live code
-         }
-         $State.Value = '(*'; $i += 2; continue
-      }
-
-      [void]$out.Append($c)
-      $i++
-   }
-
-   return $out.ToString()
-}
+Set-Alias Get-CodeOnly Get-PascalCodeOnlyLine
 
 $violations = 0
 

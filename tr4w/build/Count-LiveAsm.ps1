@@ -18,24 +18,22 @@ param(
    [switch] $Detail
 )
 
-function Remove-PascalComments {
-   param([string] $Source)
-   $s = [regex]::Replace($Source, '(?s)\{.*?\}',     { param($m) ($m.Value -replace '[^\r\n]', ' ') })
-   $s = [regex]::Replace($s,      '(?s)\(\*.*?\*\)', { param($m) ($m.Value -replace '[^\r\n]', ' ') })
-   $s = [regex]::Replace($s,      '(?m)//[^\r\n]*',  { param($m) ($m.Value -replace '[^\r\n]', ' ') })
-   return $s
-}
-
-$skipDir  = '\\include\\|\\dcu|dcu-cache|\\target\\|\\backup'
-$skipFile = '\.bad$|\.bakup$|\.old$|~'
+# The comment stripper MOVED to build\PascalSource.psm1 (2026-08-17), and the
+# one that used to stand here is GONE rather than moved: it was a three-line
+# regex that blanked `(?s)\{.*?\}` unconditionally, so a `{` inside a string
+# literal opened a comment running to the next `}` and blanked live code with
+# it. For a counter whose entire job is "how much inline asm is left" that fails
+# OPEN -- it under-reports, and under-reporting reads as progress. The careful
+# reader had existed in Lint-PCharAnsi.ps1 the whole time and never propagated
+# here, which is the ordinary way a copy goes wrong.
+Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
 
 $total = 0
-$files = Get-ChildItem -LiteralPath $Root -Recurse -Include *.pas,*.PAS,*.dpr,*.dpk,*.inc -ErrorAction SilentlyContinue |
-   Where-Object { $_.FullName -notmatch $skipDir -and $_.Name -notmatch $skipFile }
+$files = Get-TR4WPascalFiles -Root $Root
 
 foreach ($f in $files) {
    $raw   = [IO.File]::ReadAllText($f.FullName)
-   $clean = Remove-PascalComments $raw
+   $clean = Get-PascalCodeOnlyText -Path $f.FullName
    $hits  = [regex]::Matches($clean, '(?im)^[ \t]*asm\b')
    if ($hits.Count -eq 0) { continue }
 
