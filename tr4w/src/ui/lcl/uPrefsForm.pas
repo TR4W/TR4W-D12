@@ -99,6 +99,11 @@ const
      never will does not spin a timer for the life of the window. }
    FOCUS_MAX_TRIES = 15;
 
+   { How far below the top of a scrolling page a searched setting is placed.
+     Enough that it does not sit on the frame, little enough that the rows above
+     it stay visible for context. }
+   FOUND_ROW_MARGIN = 60;
+
 type
 
    { Edits ONE TRadioDefinition.  It edits the caller's object directly and only
@@ -912,6 +917,7 @@ type
       function  ControlForCommand(const aCommand: string): TWinControl;
       procedure FocusControlOnItsSection(const aControl: TWinControl);
       procedure FocusTimerTick(Sender: TObject);
+      procedure ScrollControlIntoView(const aControl: TControl);
 
       { GENERATED SECTIONS -- the Ctrl-J replacement.
 
@@ -1095,6 +1101,7 @@ implementation
 uses
    uLPTPortEnumerator,   // which parallel ports this machine actually has
    StrUtils,             // IfThen
+   Math,                 // Max -- clamping the scroll position
    uLCLTranslate,
    uPrefsSearch,   // PrefsMatchScore -- the ranking, unit tested without a UI
    Windows,
@@ -2979,6 +2986,53 @@ begin
 end;
 
 // The second half of FocusControlOnItsSection -- see the comment there.
+// Bring a control into view inside whatever scrolling container holds it.
+//
+// The INNERMOST one: a generated page is a TScrollBox inside layContent inside
+// the form, and scrolling the form instead of the box would move the wrong
+// thing.  Nothing to do when there is no scrolling ancestor, which is the case
+// for a control sitting on a designed panel that fits.
+procedure TPrefsForm.ScrollControlIntoView(const aControl: TControl);
+var
+   p: TWinControl;
+   sc: TScrollingWinControl;
+   pos: integer;
+begin
+   if aControl = nil then
+      begin
+      Exit;
+      end;
+
+   p := aControl.Parent;
+   while p <> nil do
+      begin
+      if p is TScrollingWinControl then
+         begin
+         sc  := TScrollingWinControl(p);
+         pos := sc.VertScrollBar.Position;
+
+         // ONLY IF IT IS NOT ALREADY VISIBLE.  Scrolling a setting that is
+         // already on screen would move the page under the operator for no
+         // reason.
+         if (aControl.Top < pos) or
+            (aControl.Top + aControl.Height > pos + p.Height) then
+            begin
+            // NEAR THE TOP, not the minimum scroll.  ScrollInView moves just
+            // far enough, which leaves a searched row jammed against the bottom
+            // edge -- measured at top=664 in a 572-high box, scrolled to 117,
+            // so the row sat on the last pixel.  Landing it a little below the
+            // top is where the eye goes and shows what follows it.
+            sc.VertScrollBar.Position := Max(0, aControl.Top - FOUND_ROW_MARGIN);
+            logger.Debug('[Prefs] scrolled to %s (top=%d, scroll %d -> %d, view=%d)',
+                         [aControl.Name, aControl.Top, pos,
+                          sc.VertScrollBar.Position, p.Height]);
+            end;
+         Exit;
+         end;
+      p := p.Parent;
+      end;
+end;
+
 // BOUNDED RETRY, not a single shot.
 //
 // One tick was enough when the hit was already on the visible page, and not
@@ -3006,6 +3060,24 @@ begin
       end;
 
    Inc(FFocusTries);
+
+   // SCROLL FIRST, and on every attempt.  A hit below the fold is barely found
+   // -- the generated pages are scroll boxes and a searched setting is often
+   // well down one (NY4I, 2026-08-17).  Doing it before the focus attempt also
+   // means a row that can never take focus is still brought into view.
+   ScrollControlIntoView(ctl);
+
+   // A DISPLAY-ONLY ROW WILL NEVER FOCUS, by design -- read-only and ckList /
+   // ctFreqList rows are deliberately unbound and disabled.  Scrolling to it is
+   // the whole of what we can do, so stop here rather than spending fifteen
+   // attempts and then warning about something working as intended.
+   if not ctl.Enabled then
+      begin
+      FFocusTimer.Enabled := False;
+      FPendingFocus       := nil;
+      logger.Debug('[Prefs] scrolled to %s (read-only, cannot take focus)', [ctl.Name]);
+      Exit;
+      end;
 
    if ctl.CanFocus then
       begin
