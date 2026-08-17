@@ -319,6 +319,11 @@ type
         file, so a station whose settings had all reached the JSON still got an
         ini back on every start. }
       FLatestConfigFile: string;
+      { Whether TR4W has already offered to set MY GRID.  Asked ONCE per
+        installation, not once per start: an operator who does not want a grid
+        should not be asked again every time they open the program, and one who
+        does can set it in Preferences > Station, where it is also searchable. }
+      FGridPromptShown: boolean;
       { The Cabrillo header -- tr4w.ini's [REPORT] section, moved here.
         Name=Value, using the same _TAG spellings the ini used, so the tag table
         in uCbrSum stays the single source of truth for what a header contains.
@@ -529,6 +534,7 @@ type
       property  ActiveClusterName: string read FActiveClusterName write FActiveClusterName;
       property  ActiveRotatorName: string read FActiveRotatorName write FActiveRotatorName;
       property  LatestConfigFile: string read FLatestConfigFile write FLatestConfigFile;
+      property  GridPromptShown: boolean read FGridPromptShown write FGridPromptShown;
       property  CabrilloHeader: TStringList read FCabrilloHeader;
       function  CommandValue(const aCommand: string; const aDefault: string = ''): string;
       procedure SetCommand(const aCommand, aValue: string);
@@ -1793,6 +1799,7 @@ begin
    general.AddPair('activeCluster', FActiveClusterName);
    general.AddPair('activeRotator', FActiveRotatorName);
    general.AddPair('latestConfigFile', FLatestConfigFile);
+   general.AddPair('gridPromptShown', TJSONBool.Create(FGridPromptShown));
 
    // The Cabrillo header, as its own object rather than inside `commands`:
    // these are not CFGCA commands and ApplyStoredCommands must not try to
@@ -1902,6 +1909,7 @@ begin
    FActiveClusterName := JSONStr(general, 'activeCluster', '');
    FActiveRotatorName := JSONStr(general, 'activeRotator', '');
    FLatestConfigFile  := JSONStr(general, 'latestConfigFile', '');
+   FGridPromptShown   := JSONBool(general, 'gridPromptShown', False);
 
    FCabrilloHeader.Clear;
    v := aRoot.GetValue('cabrilloHeader');

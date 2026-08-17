@@ -1342,10 +1342,25 @@ begin
   //
   // NOT in headless /EXPORT: there is no operator to answer, and a batch export
   // that stops on a modal is a hang. Same rule as the CTY prompt above.
+  // ASKED ONCE PER INSTALLATION, not once per start (NY4I, 2026-08-17: "the
+  // program keeps showing the MY GRID request upon startup").
+  //
+  // An operator who does not want a grid should not be asked again every time
+  // they open TR4W, and one who does can set it in Preferences > Station --
+  // where it is now also findable by search.  The flag is recorded whatever the
+  // answer, because being asked and saying no IS an answer.
   if (not tSilentExport) and (Trim(string(MyGrid)) = '') then
      begin
-     logger.Info('MY GRID is empty; offering to set it');
-     SetCommand('MY GRID');
+     if GridPromptAlreadyShown then
+        begin
+        logger.Info('MY GRID is empty; already offered once, not asking again');
+        end
+     else
+        begin
+        logger.Info('MY GRID is empty; offering to set it');
+        MarkGridPromptShown;   // BEFORE the modal: a crash mid-prompt must not re-arm it
+        SetCommand('MY GRID');
+        end;
      end;
 
   // The four synchronization events: CW element, CW paddle, DVP playback and

@@ -1,4 +1,4 @@
-﻿{
+{
  Copyright Thomas M. Schaefer, NY4I (c) 2026.
  This file is part of TR4W  (SRC)
  TR4W is free software: you can redistribute it and/or
@@ -208,6 +208,11 @@ function ApplyPeerCommand(const aCommand, aValue: string): boolean;
 // ordinary first-run state.
 function  GetLatestConfigFile: string;
 procedure SetLatestConfigFile(const aFileName: string);
+
+// Has TR4W already offered to set MY GRID?  Asked once per installation rather
+// than once per start -- see the store's GridPromptShown.
+function  GridPromptAlreadyShown: boolean;
+procedure MarkGridPromptShown;
 
 // Apply ONE stored command from settings\tr4w.json, and return whether it was
 // found and accepted.
@@ -709,6 +714,71 @@ begin
          begin
          logger.Warn('[Startup] CFGCA refused stored %s = "%s"', [aCommand, value]);
          end;
+   finally
+      udp.Free;
+      keyers.Free;
+      store.Free;
+   end;
+end;
+
+function GridPromptAlreadyShown: boolean;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   udp: TUDPBroadcastConfig;
+   loadErr: string;
+begin
+   Result := False;
+   if not FileExists(RadioStoreFileName) then
+      begin
+      Exit;   // first run: nothing asked yet
+      end;
+
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   udp    := TUDPBroadcastConfig.Create;
+   try
+      if LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
+         begin
+         Result := store.GridPromptShown;
+         end;
+   finally
+      udp.Free;
+      keyers.Free;
+      store.Free;
+   end;
+end;
+
+procedure MarkGridPromptShown;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   udp: TUDPBroadcastConfig;
+   loadErr: string;
+begin
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   udp    := TUDPBroadcastConfig.Create;
+   try
+      if FileExists(RadioStoreFileName) then
+         begin
+         if not LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
+            begin
+            // REFUSE rather than write over a file we could not read.  The cost
+            // is being asked again next start, which is the old behaviour.
+            logger.Error('[Startup] not recording the grid prompt: %s could not be read (%s)',
+                         [RadioStoreFileName, loadErr]);
+            Exit;
+            end;
+         end;
+
+      if store.GridPromptShown then
+         begin
+         Exit;   // already recorded -- do not rewrite the file every start
+         end;
+
+      store.GridPromptShown := True;
+      SaveConfig(RadioStoreFileName, store, keyers, udp);
    finally
       udp.Free;
       keyers.Free;

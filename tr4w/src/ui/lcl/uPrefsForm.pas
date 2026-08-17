@@ -72,6 +72,8 @@ uses
    SysUtils,
    Classes,
    Types,          // TRect -- the implementation uses Windows, which has its own
+   LCLType,        // LM_USER for the deferred-focus message, and odSelected
+                   // for the search list's owner-draw (Windows declares one too)
    System.UITypes,
    uLCLFormHelpers,      // TStopwatch and the list/combo tag helpers
    Controls,
@@ -88,6 +90,7 @@ uses
    uUDPDestinationEditForm,   // one UDP destination, edited in isolation
    uUDPBroadcastConfig,       // the settings this panel edits
    uSettingsBinding;          // TSettingBindings -- a field on the form below
+
 
 type
 
@@ -717,6 +720,10 @@ type
         exactly that, 2026-08-16). Containers only: freeing one frees its
         children, and tracking the children too would double-free them. }
       FGeneratedRoots: array of TControl;
+      { The control a deep link or a search hit wants focused, held until
+        QueueAsyncCall can act on it -- see FocusControlOnItsSection. }
+      FPendingFocus: TWinControl;
+      FFocusTimer: TTimer;
 
       { Controls bound to settings by KEY -- see uSettingsBinding.  Anything
         bound needs no load/save code of its own. }
@@ -896,6 +903,7 @@ type
         control) that a search hit already performed inline. }
       function  ControlForCommand(const aCommand: string): TWinControl;
       procedure FocusControlOnItsSection(const aControl: TWinControl);
+      procedure FocusTimerTick(Sender: TObject);
 
       { GENERATED SECTIONS -- the Ctrl-J replacement.
 
@@ -1054,6 +1062,7 @@ const
    // what it is, so it does not read as a permanent home.
    NAV_MORE              = 30;
 
+
 // Opens Preferences, creating it on first use.  Called from the PREF
 // call-window command.
 procedure ShowPreferences;
@@ -1078,7 +1087,6 @@ implementation
 uses
    uLPTPortEnumerator,   // which parallel ports this machine actually has
    StrUtils,             // IfThen
-   LCLType,        // odSelected -- Windows declares one too
    uLCLTranslate,
    uPrefsSearch,   // PrefsMatchScore -- the ranking, unit tested without a UI
    Windows,
@@ -2925,10 +2933,64 @@ begin
    //
    // CanFocus is False while the panel is still hidden, which is why this runs
    // AFTER the nav selection above and not before it.
-   if aControl.CanFocus then
+   // FOCUS IS DEFERRED, and it has to be.
+   //
+   // Measured (2026-08-17): calling SetFocus here does nothing at all --
+   //    focus edtMyGrid: visible=True enabled=True canfocus=False -> active=edtSearch
+   // The control is visible and enabled, but CanFocus is still False because the
+   // panel was made visible microseconds ago in this same message and its parent
+   // chain is not realised yet.  So the guarded call was skipped silently and
+   // focus stayed in the search box -- which is exactly what NY4I saw.
+   //
+   // A search hit has a second problem on top: ActivateSearchHit runs inside the
+   // result list's OnClick, and the LCL restores focus to the clicked control
+   // after the handler returns, undoing anything set during it.
+   //
+   // QueueAsyncCall runs after the current message is finished, by which time
+   // the panel is real and the click is over.  Both problems, one mechanism.
+   FPendingFocus := aControl;
+   // A ONE-SHOT TIMER, and the two simpler things were tried first and measured.
+   //
+   // Application.QueueAsyncCall never ran: the LCL drains that queue from
+   // TApplication.Idle, and TR4W runs its OWN GetMessage loop and never calls
+   // Application.Run, so nothing drains it.  A message posted straight to the
+   // form's handle did not arrive either.  A TTimer becomes SetTimer/WM_TIMER,
+   // which is the mechanism the rest of TR4W already relies on and which its
+   // loop demonstrably dispatches (QuickDisplay uses exactly that).
+   //
+   // Interval 1: as soon as the current message is finished, not later.
+   if FFocusTimer = nil then
       begin
-      aControl.SetFocus;
+      FFocusTimer := TTimer.Create(Self);
+      FFocusTimer.Enabled  := False;
+      FFocusTimer.Interval := 1;
+      FFocusTimer.OnTimer  := FocusTimerTick;
       end;
+   FFocusTimer.Enabled := True;
+end;
+
+// The second half of FocusControlOnItsSection -- see the comment there.
+procedure TPrefsForm.FocusTimerTick(Sender: TObject);
+var
+   ctl: TWinControl;
+begin
+   FFocusTimer.Enabled := False;   // one shot
+   ctl := FPendingFocus;
+   FPendingFocus := nil;
+
+   // The form may have closed, or the control been freed with a regenerated
+   // page, between queueing and now.  Both are ordinary.
+   if (ctl = nil) or (not ctl.CanFocus) then
+      begin
+      logger.Debug('[Prefs] deferred focus skipped: %s',
+                   [IfThen(ctl = nil, '<gone>', ctl.Name + ' cannot focus')]);
+      Exit;
+      end;
+
+   ctl.SetFocus;
+   logger.Debug('[Prefs] focus -> %s (active=%s)',
+                [ctl.Name,
+                 IfThen(ActiveControl <> nil, ActiveControl.Name, '<none>')]);
 end;
 
 // Maps a legacy Ctrl-J command spelling to the control that edits it.
@@ -4102,7 +4164,7 @@ end;
 procedure TPrefsForm.LoadClusterList;
 var
    i: integer;
-   keep: integer;
+   keep, active: integer;
 begin
    // NOT LoadClusterServerList.  The directory is populated when the DX Cluster
    // section is first opened (see tvNavChange), not whenever the operator's own
@@ -4125,13 +4187,24 @@ begin
       lstClusters.Items.EndUpdate;
    end;
 
+   // OPEN ON THE ACTIVE ONE, same rule as the rotator list and for the same
+   // reason: the tick sat on one cluster while the fields below described
+   // another, so the page contradicted itself on open.
    if (keep >= 0) and (keep < lstClusters.Items.Count) then
       begin
       lstClusters.ItemIndex := keep;
       end
    else if lstClusters.Items.Count > 0 then
       begin
-      lstClusters.ItemIndex := 0;
+      active := FStore.IndexOfCluster(FStore.ActiveClusterName);
+      if (active >= 0) and (active < lstClusters.Items.Count) then
+         begin
+         lstClusters.ItemIndex := active;
+         end
+      else
+         begin
+         lstClusters.ItemIndex := 0;
+         end;
       end;
 
    ShowActiveCluster;
@@ -4479,7 +4552,7 @@ procedure TPrefsForm.LoadRotatorList;
 var
    i: integer;
    id: string;
-   keep: integer;
+   keep, active: integer;
    enumerator: TComPortEnumerator;
    names: TArray<string>;
    info: TComPortInfo;
@@ -4549,13 +4622,32 @@ begin
       lstRotators.Items.EndUpdate;
    end;
 
+   // KEEP THE OPERATOR'S SELECTION on a redraw, but OPEN on the ACTIVE one.
+   //
+   // Opening on index 0 meant the tick sat on one rotator while the fields
+   // below described another -- the page said "Turning: RT-21" over PSTRotator's
+   // port and baud rate (NY4I, 2026-08-17).  Reading a form that contradicts
+   // itself costs more than the redraw it saved.
+   //
+   // `keep` is >= 0 only when this is a REDRAW of a list the operator was
+   // already working in, so their selection survives Add, Remove and Use this.
    if (keep >= 0) and (keep < lstRotators.Items.Count) then
       begin
       lstRotators.ItemIndex := keep;
       end
    else if lstRotators.Items.Count > 0 then
       begin
-      lstRotators.ItemIndex := 0;
+      active := FStore.IndexOfRotator(FStore.ActiveRotatorName);
+      if (active >= 0) and (active < lstRotators.Items.Count) then
+         begin
+         lstRotators.ItemIndex := active;
+         end
+      else
+         begin
+         // No choice recorded: the first is what ConfigureRotators will use, so
+         // it is also what the page should be showing.
+         lstRotators.ItemIndex := 0;
+         end;
       end;
 
    ShowSelectedRotator;
