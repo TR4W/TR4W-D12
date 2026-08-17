@@ -37,6 +37,18 @@ procedure DownloadCTYAsync(const ATargetFile: string; ANotifyWnd: HWND);
 // Starts a background thread that downloads cty.dat to ATargetFile.
 // Posts WM_CTY_DOWNLOAD_DONE on completion.
 
+function DownloadCTYFile(const ATargetFile: string): boolean;
+// Downloads cty.dat to ATargetFile and returns True on success. SYNCHRONOUS:
+// it runs on the calling thread. This is exactly what DownloadCTYAsync's
+// thread does, minus the thread and the completion PostMessage.
+//
+// It exists for the one caller that cannot use the async form: the startup
+// country-file check runs BEFORE CreateMainWindow, so there is no window to
+// post WM_CTY_DOWNLOAD_DONE to and no message loop to receive it.
+//
+// PREFER DownloadCTYAsync EVERYWHERE ELSE. Blocking on a network fetch is
+// only acceptable at startup because there is no UI yet to freeze.
+
 function GetInstalledCTYVersion: integer;
 // Scans the installed CTY.DAT for the embedded =VER\d{8} version marker
 // and returns the date as an integer (e.g. 20260414), or 0 if not found.
@@ -46,7 +58,10 @@ implementation
 
 uses
    MainUnit,
-   VC;
+   VC,
+   // The atomic HTTPS fetch used to live in this unit as a private helper.  It
+   // moved out when TRMASTER.DTA became a second caller -- see uHTTPDownload.
+   uHTTPDownload;
 
 const
    CTY_RSS_URL      = 'https://www.country-files.com/feed/';
@@ -224,54 +239,6 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-// DownloadFileToPath
-//
-// Shared HTTP download helper used by all download threads.
-// Downloads AURL to ATargetFile using an atomic .tmp-then-rename pattern
-// so the target file is never left in a partial state.
-// Returns True on success. Called from background threads only.
-// ---------------------------------------------------------------------------
-
-function DownloadFileToPath(const AURL, ATargetFile: string): boolean;
-var
-   http:    TIdHTTP;
-   ssl:     TIdSSLIOHandlerSocketOpenSSL;
-   fs:      TFileStream;
-   tmpFile: string;
-begin
-   Result  := False;
-   tmpFile := ATargetFile + '.tmp';
-   http := TIdHTTP.Create(nil);
-   ssl  := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-   try
-      ssl.SSLOptions.Method  := TIdSSLVersion(sslvTLSv1_2);
-      http.IOHandler         := ssl;
-      http.HandleRedirects   := True;
-      http.Request.UserAgent := 'TR4W';
-      try
-         fs := TFileStream.Create(tmpFile, fmCreate);
-         try
-            http.Get(AURL, fs);
-         finally
-            fs.Free;
-         end;
-         // Atomic replace: only remove the live file once .tmp is fully written
-         SysUtils.DeleteFile(ATargetFile);
-         Result := RenameFile(tmpFile, ATargetFile);
-      except
-         on E: Exception do
-            begin
-            logger.Error('[CTYUpdate] Download failed: %s', [E.Message]);
-            SysUtils.DeleteFile(tmpFile);
-            end;
-      end;
-   finally
-      http.Free;
-      ssl.Free;
-   end;
-end;
-
-// ---------------------------------------------------------------------------
 // Version check thread
 // ---------------------------------------------------------------------------
 
@@ -308,6 +275,15 @@ begin
       http.IOHandler         := ssl;
       http.HandleRedirects   := True;
       http.Request.UserAgent := 'TR4W';
+
+      // Same reasoning as uHTTPDownload's timeouts, less urgently: this one is
+      // always on a background thread. But a thread wedged forever in a socket
+      // read is still a leaked thread for the life of the process, and this
+      // check runs on every startup.  (This is a plain GET of a small feed into
+      // a string, not a file fetch, so it does not go through that unit.)
+      http.ConnectTimeout := 15000;   // ms
+      http.ReadTimeout    := 30000;   // ms
+
       try
          rssXml := http.Get(CTY_RSS_URL);
          if ParseCTYRSS(rssXml, latestDate, numericBuild) then
@@ -399,6 +375,13 @@ var
 begin
    Thread := TCTYDownloadThread.Create(ATargetFile, ANotifyWnd);
    Thread.Resume;
+end;
+
+// The URL stays private: callers name the FILE they want, never the site it
+// comes from. TCTYDownloadThread.Execute above is the same one line.
+function DownloadCTYFile(const ATargetFile: string): boolean;
+begin
+   Result := DownloadFileToPath(CTY_DOWNLOAD_URL, ATargetFile);
 end;
 
 end.

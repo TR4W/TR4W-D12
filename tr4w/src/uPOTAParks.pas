@@ -129,6 +129,9 @@ function GetLastPOTAExchange: string;
 
 implementation
 
+uses
+   uHTTPDownload;   // the shared atomic fetch -- see TPOTADownloadThread.Execute
+
 // ---------------------------------------------------------------------------
 // Internal state
 // ---------------------------------------------------------------------------
@@ -551,38 +554,26 @@ end;
 
 procedure TPOTADownloadThread.Execute;
 var
-   http: TIdHTTP;
-   ssl: TIdSSLIOHandlerSocketOpenSSL;
-   FileStream: TFileStream;
    Success: Boolean;
 begin
-   Success := False;
-   http := TIdHTTP.Create(nil);
-   ssl := TIdSSLIOHandlerSocketOpenSSL.Create(nil);
-   try
-      ssl.SSLOptions.Method := TIdSSLVersion(sslvTLSv1_2);
-      http.IOHandler := ssl;
-      http.HandleRedirects := True;
-      http.Request.UserAgent := 'TR4W';
-      try
-         FileStream := TFileStream.Create(FTargetFile, fmCreate);
-         try
-            http.Get(POTA_PARKS_URL, FileStream);
-            Success := True;
-         finally
-            FileStream.Free;
-         end;
-      except
-         // Remove any partial file so a retry starts clean
-         if FileExists(FTargetFile) then
-            begin
-            SysUtils.DeleteFile(FTargetFile);
-            end;
-      end;
-   finally
-      http.Free;
-      ssl.Free;
-   end;
+   // FOLDED ONTO uHTTPDownload (2026-08-16). This was a third hand-rolled copy
+   // of the same Indy fetch, and it had a defect the other copies did not:
+   //
+   //   * it opened the LIVE target with fmCreate, so the file was TRUNCATED the
+   //     moment the transfer began -- and the except arm then DELETED it. A
+   //     network blip part-way through "Download POTA Parks" therefore destroyed
+   //     a perfectly good parks database that the operator already had. The
+   //     shared helper writes <target>.tmp and renames, so a failure leaves the
+   //     previous file untouched.
+   //   * it had no timeouts, so a black-holed connection leaked this thread for
+   //     the life of the process.
+   //   * it swallowed the exception with no logging at all, making "download
+   //     failed" permanently unexplainable.
+   //
+   // The POTA URL stays in this unit -- the unit that owns the file owns its
+   // address.
+   Success := DownloadFileToPath(POTA_PARKS_URL, FTargetFile);
+
    // Notify main thread: wParam=1 success, 0 failure.
    // Main thread calls LoadPOTAParks and shows result via QuickDisplay.
    PostMessage(FNotifyWnd, WM_POTA_DOWNLOAD_DONE, Ord(Success), 0);

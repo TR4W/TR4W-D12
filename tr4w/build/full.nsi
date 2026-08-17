@@ -223,6 +223,16 @@ Section "TRMASTER.DTA" Sectrmaster
 SectionEnd
 
  Section "cty.dat" Seccty
+  ; REQUIRED, NOT OPTIONAL (NY4I, 2026-08-16).  TR4W cannot start without a
+  ; country file -- it reports the missing file and terminates -- so leaving
+  ; this deselectable let a user uncheck one box and install a TR4W that
+  ; refuses to run.  tr4w.exe and tr4wserver.exe were already RO; this is the
+  ; third file that is genuinely not optional.
+  ;
+  ; The copy in the repo goes stale between drops, and that is fine: it only
+  ; has to be good enough to start the program.  Startup offers to fetch a
+  ; current one, and Alt-O refreshes it on demand thereafter.
+  SectionIn RO
   File ..\target\cty.dat
 SectionEnd
 
