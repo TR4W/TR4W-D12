@@ -92,6 +92,13 @@ uses
    uSettingsBinding;          // TSettingBindings -- a field on the form below
 
 
+const
+   { How many timer ticks to spend getting the caret into a searched setting
+     before giving up and saying so.  ~15 x 15 ms: long enough for a page that
+     has just been shown to become focusable, short enough that a control which
+     never will does not spin a timer for the life of the window. }
+   FOCUS_MAX_TRIES = 15;
+
 type
 
    { Edits ONE TRadioDefinition.  It edits the caller's object directly and only
@@ -724,6 +731,7 @@ type
         QueueAsyncCall can act on it -- see FocusControlOnItsSection. }
       FPendingFocus: TWinControl;
       FFocusTimer: TTimer;
+      FFocusTries: integer;
 
       { Controls bound to settings by KEY -- see uSettingsBinding.  Anything
         bound needs no load/save code of its own. }
@@ -2963,34 +2971,70 @@ begin
       begin
       FFocusTimer := TTimer.Create(Self);
       FFocusTimer.Enabled  := False;
-      FFocusTimer.Interval := 1;
+      FFocusTimer.Interval := 15;
       FFocusTimer.OnTimer  := FocusTimerTick;
       end;
+   FFocusTries := 0;
    FFocusTimer.Enabled := True;
 end;
 
 // The second half of FocusControlOnItsSection -- see the comment there.
+// BOUNDED RETRY, not a single shot.
+//
+// One tick was enough when the hit was already on the visible page, and not
+// enough when it was on another (NY4I, 2026-08-17: "if I was already on the
+// panel ... the cursor does go to the field.  But if I was on a different one,
+// then the cursor stays in the searchbox").  Two things can still be in flight
+// 1 ms after a search hit changes pages: the newly shown panel may not have its
+// handle yet, so CanFocus is False; and the LCL restores focus to the clicked
+// result list after its OnClick returns, taking it back from us.
+//
+// So keep asking until the focus has ACTUALLY LANDED -- ActiveControl is the
+// only honest test -- and give up loudly after a bounded number of tries rather
+// than spinning a timer forever on a page that will never accept focus.
 procedure TPrefsForm.FocusTimerTick(Sender: TObject);
 var
    ctl: TWinControl;
 begin
-   FFocusTimer.Enabled := False;   // one shot
    ctl := FPendingFocus;
-   FPendingFocus := nil;
 
-   // The form may have closed, or the control been freed with a regenerated
-   // page, between queueing and now.  Both are ordinary.
-   if (ctl = nil) or (not ctl.CanFocus) then
+   // Gone: the form closed, or a regenerated page freed the control.  Ordinary.
+   if ctl = nil then
       begin
-      logger.Debug('[Prefs] deferred focus skipped: %s',
-                   [IfThen(ctl = nil, '<gone>', ctl.Name + ' cannot focus')]);
+      FFocusTimer.Enabled := False;
       Exit;
       end;
 
-   ctl.SetFocus;
-   logger.Debug('[Prefs] focus -> %s (active=%s)',
-                [ctl.Name,
-                 IfThen(ActiveControl <> nil, ActiveControl.Name, '<none>')]);
+   Inc(FFocusTries);
+
+   if ctl.CanFocus then
+      begin
+      ctl.SetFocus;
+      end;
+
+   // LANDED?  Asking ActiveControl rather than trusting SetFocus is the whole
+   // point: SetFocus succeeded on the first attempt too, and focus was then
+   // taken straight back.
+   if ActiveControl = ctl then
+      begin
+      FFocusTimer.Enabled := False;
+      FPendingFocus       := nil;
+      logger.Debug('[Prefs] focus -> %s after %d attempt(s)', [ctl.Name, FFocusTries]);
+      Exit;
+      end;
+
+   if FFocusTries >= FOCUS_MAX_TRIES then
+      begin
+      FFocusTimer.Enabled := False;
+      FPendingFocus       := nil;
+      // NOT silent.  A setting the operator searched for and cannot type into
+      // is exactly the failure this whole mechanism exists to prevent.
+      logger.Warn('[Prefs] gave up focusing %s after %d attempts ' +
+                  '(canfocus=%s, active=%s)',
+                  [ctl.Name, FFocusTries,
+                   BoolToStr(ctl.CanFocus, True),
+                   IfThen(ActiveControl <> nil, ActiveControl.Name, '<none>')]);
+      end;
 end;
 
 // Maps a legacy Ctrl-J command spelling to the control that edits it.
