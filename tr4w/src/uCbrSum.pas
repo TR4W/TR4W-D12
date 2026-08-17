@@ -165,42 +165,17 @@ uses
   uAnsiStr,          // StrPCopy / StrLen for the ANSI buffers below
   uCabrilloHeader;   // the Cabrillo header, from settings\tr4w.json
 
-// ONE PLACE THAT KNOWS WHICH STORE A HEADER TAG LIVES IN.
+// HeaderTagText / SetHeaderTagText come from uCabrilloHeader.
 //
-// The Cabrillo header moved to settings\tr4w.json (2026-08-16), because that
-// [REPORT] section was the last thing keeping tr4w.ini load-bearing -- delete
-// the ini and every Winter Field Day / ARRL10 export aborted in silence.
+// Both header sections live in settings\tr4w.json: [REPORT] moved 2026-08-16
+// because it was the last thing keeping tr4w.ini load-bearing -- delete the ini
+// and every Winter Field Day / ARRL10 export aborted in silence -- and
+// [ERMAKREPORT] followed on 2026-08-17 (NY4I: "Nothing should use the INI file
+// again").
 //
-// ERMAK did NOT move: it keeps [ERMAKREPORT] in the ini. Both readers and the
-// writer route through these two helpers so the choice is made once, by the
-// section the caller is already holding, rather than repeated at three call
-// sites that could drift apart.
-function HeaderTagText(const aSection, aTag: PAnsiChar;
-                       aBuffer: PAnsiChar; aSize: integer): cardinal;
-begin
-  if aSection = ERMAKSECTION then
-     begin
-     Result := GetPrivateProfileStringA(aSection, aTag, nil, aBuffer, aSize,
-                                        TR4W_INI_FILENAME);
-     end
-  else
-     begin
-     uAnsiStr.StrPCopy(aBuffer, CabrilloHeaderValue(string(aTag)));
-     Result := uAnsiStr.StrLen(aBuffer);
-     end;
-end;
-
-procedure SetHeaderTagText(const aSection, aTag, aValue: PAnsiChar);
-begin
-  if aSection = ERMAKSECTION then
-     begin
-     WritePrivateProfileStringA(aSection, aTag, aValue, TR4W_INI_FILENAME);
-     end
-  else
-     begin
-     SetCabrilloHeaderValue(string(aTag), string(aValue));
-     end;
-end;
+// The section is no longer a FORK, only an argument: this dialog already holds
+// the right one in FormatSpecification, and uCabrilloHeader treats the two
+// alike.
 
 function CreateCabrilloDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 label
@@ -266,8 +241,8 @@ begin
                  // Issue #976: restore the saved value into ctrSave drop-downs
                  // that are outside the index-based range above (e.g.
                  // CATEGORY-STATION).  GetDlgItemText on exit saves it back.
-                 // Cabrillo header now comes from settings	r4w.json;
-                 // ERMAK still uses its own ini section (2026-08-16).
+                 // Both header sections come from settings\tr4w.json --
+                 // [REPORT] 2026-08-16, [ERMAKREPORT] 2026-08-17.
                  if HeaderTagText(FormatSpecification,
                      CabrilloTagSArray[TempTag].ctrTag, TempBuffer1,
                      SizeOf(TempBuffer1)) > 0 then

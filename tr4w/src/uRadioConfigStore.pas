@@ -324,12 +324,19 @@ type
         should not be asked again every time they open the program, and one who
         does can set it in Preferences > Station, where it is also searchable. }
       FGridPromptShown: boolean;
-      { The Cabrillo header -- tr4w.ini's [REPORT] section, moved here.
-        Name=Value, using the same _TAG spellings the ini used, so the tag table
-        in uCbrSum stays the single source of truth for what a header contains.
+      { The export headers -- tr4w.ini's [REPORT] and [ERMAKREPORT] sections,
+        moved here. One Name=Value list per section, using the same _TAG
+        spellings the ini used, so the tag table in uCbrSum stays the single
+        source of truth for what a header contains.
         NOT settings: they are not CFGCA rows, were never registered, and do not
-        appear in Preferences or the search index. See uCabrilloHeader. }
-      FCabrilloHeader: TStringList;
+        appear in Preferences or the search index. See uCabrilloHeader.
+
+        A MAP rather than a field per section: ERMAK is the same kind of thing
+        as the Cabrillo header -- the Russian format's own header block, written
+        by the same dialog with FormatSpecification swapped -- so giving it its
+        own field would have duplicated the load/save/seed path that already
+        exists, and the two copies would drift. }
+      FHeaders: TStringList;   // section name -> TStringList, owned
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
       FAutoConnectOnStartup: boolean;
@@ -397,6 +404,10 @@ type
       procedure SaveRadio(const aIni: TCustomIniFile; const aRadio: TRadioDefinition);
       procedure LoadProfile(const aIni: TCustomIniFile; const aSection, aName: string);
       procedure SaveProfile(const aIni: TCustomIniFile; const aProfile: TStationProfile);
+      // Frees the per-section lists FHeaders owns.  TStringList.OwnsObjects is
+      // not relied on: it is a property this code would have to remember to set,
+      // and forgetting it leaks silently rather than failing.
+      procedure ClearHeaders;
    public
       constructor Create;
       destructor Destroy; override;
@@ -535,7 +546,10 @@ type
       property  ActiveRotatorName: string read FActiveRotatorName write FActiveRotatorName;
       property  LatestConfigFile: string read FLatestConfigFile write FLatestConfigFile;
       property  GridPromptShown: boolean read FGridPromptShown write FGridPromptShown;
-      property  CabrilloHeader: TStringList read FCabrilloHeader;
+      { The Name=Value list for one export header section ('REPORT',
+        'ERMAKREPORT'). Created on demand, so a caller never has to test for
+        nil and an unknown section is an empty header rather than a crash. }
+      function  Header(const aSection: string): TStringList;
       function  CommandValue(const aCommand: string; const aDefault: string = ''): string;
       procedure SetCommand(const aCommand, aValue: string);
    end;
@@ -562,6 +576,22 @@ const
    JSONKEY_COMMANDS      = 'commands';
    JSONKEY_ROTATORS      = 'rotators';
    JSONKEY_CLUSTERS      = 'clusters';
+
+type
+   TExportHeaderSection = record
+      Section: string;     // the ini section name it replaced, and the key callers pass
+      JSONKey: string;     // where it lives in tr4w.json
+   end;
+
+const
+   // THE ONE PLACE THAT SAYS WHICH EXPORT HEADERS EXIST.  Save, load and the
+   // one-time ini seed all iterate this, so adding a header section is one row
+   // here and nothing else.  The section spellings match CABRILLOSECTION and
+   // ERMAKSECTION in VC.pas -- repeated as literals rather than pulling VC into
+   // the store, which has no other reason to know about the program's globals.
+   HEADER_SECTIONS: array[0..1] of TExportHeaderSection = (
+      (Section: 'REPORT';      JSONKey: 'cabrilloHeader'),
+      (Section: 'ERMAKREPORT'; JSONKey: 'ermakHeader'));
 
    // The level TR4W has always shipped with.  A spelling, not an ordinal --
    // see TRadioConfigStore.FLogLevelName.
@@ -1035,7 +1065,8 @@ begin
    // SameText everywhere else, and a store that disagreed would answer '' for
    // a command the program is perfectly happy to apply.
    FRotators := TObjectList<TRotatorDefinition>.Create(True);
-   FCabrilloHeader := TStringList.Create;
+   FHeaders := TStringList.Create;
+   FHeaders.CaseSensitive := False;   // section names are matched like ini's
    FClusters := TObjectList<TClusterDefinition>.Create(True);
 
    FCommands := TStringList.Create;
@@ -1067,9 +1098,37 @@ begin
    FCommands.Values[aCommand] := aValue;
 end;
 
+function TRadioConfigStore.Header(const aSection: string): TStringList;
+var
+   idx: integer;
+begin
+   idx := FHeaders.IndexOf(aSection);
+   if idx < 0 then
+      begin
+      Result := TStringList.Create;
+      FHeaders.AddObject(aSection, Result);
+      end
+   else
+      begin
+      Result := TStringList(FHeaders.Objects[idx]);
+      end;
+end;
+
+procedure TRadioConfigStore.ClearHeaders;
+var
+   i: integer;
+begin
+   for i := 0 to FHeaders.Count - 1 do
+      begin
+      FHeaders.Objects[i].Free;
+      end;
+   FHeaders.Clear;
+end;
+
 destructor TRadioConfigStore.Destroy;
 begin
-   FreeAndNil(FCabrilloHeader);
+   ClearHeaders;
+   FreeAndNil(FHeaders);
    FreeAndNil(FCommands);
    FreeAndNil(FClusters);
    FreeAndNil(FRotators);
@@ -1098,6 +1157,13 @@ begin
    if FCommands <> nil then
       begin
       FCommands.Clear;
+      end;
+
+   // Headers too: a Clear that left the previous station's Cabrillo name and
+   // address behind would carry them into the next file loaded.
+   if FHeaders <> nil then
+      begin
+      ClearHeaders;
       end;
 
    FHasLoggingSection    := False;
@@ -1716,7 +1782,8 @@ var
    radios, profiles: TJSONArray;
    general, tci, logging, commands, rot, clu, hdr: TJSONObject;
    rotators, clusters: TJSONArray;
-   i: integer;
+   lst: TStringList;
+   i, s: integer;
 begin
    Result := TJSONObject.Create;
    Result.AddPair(JSONKEY_VERSION, TJSONNumber.Create(JSON_SCHEMA_VERSION));
@@ -1801,15 +1868,19 @@ begin
    general.AddPair('latestConfigFile', FLatestConfigFile);
    general.AddPair('gridPromptShown', TJSONBool.Create(FGridPromptShown));
 
-   // The Cabrillo header, as its own object rather than inside `commands`:
+   // The export headers, each as its own object rather than inside `commands`:
    // these are not CFGCA commands and ApplyStoredCommands must not try to
    // apply them through CheckCommand, which would refuse every one.
-   hdr := TJSONObject.Create;
-   for i := 0 to FCabrilloHeader.Count - 1 do
+   for s := Low(HEADER_SECTIONS) to High(HEADER_SECTIONS) do
       begin
-      hdr.AddPair(FCabrilloHeader.Names[i], FCabrilloHeader.ValueFromIndex[i]);
+      hdr := TJSONObject.Create;
+      lst := Header(HEADER_SECTIONS[s].Section);
+      for i := 0 to lst.Count - 1 do
+         begin
+         hdr.AddPair(lst.Names[i], lst.ValueFromIndex[i]);
+         end;
+      Result.AddPair(HEADER_SECTIONS[s].JSONKey, hdr);
       end;
-   Result.AddPair('cabrilloHeader', hdr);
 
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
    // form had to encode the name in the section header, which made a name
@@ -1840,7 +1911,8 @@ var
    cluDef: TClusterDefinition;
    profile: TStationProfile;
    v: TJSONValue;
-   i: integer;
+   lst: TStringList;
+   i, s: integer;
    err: string;
 begin
    Clear;
@@ -1911,14 +1983,18 @@ begin
    FLatestConfigFile  := JSONStr(general, 'latestConfigFile', '');
    FGridPromptShown   := JSONBool(general, 'gridPromptShown', False);
 
-   FCabrilloHeader.Clear;
-   v := aRoot.GetValue('cabrilloHeader');
-   if (v <> nil) and (v is TJSONObject) then
+   // Clear (above) has already emptied the headers.
+   for s := Low(HEADER_SECTIONS) to High(HEADER_SECTIONS) do
       begin
-      for i := 0 to TJSONObject(v).Count - 1 do
+      v := aRoot.GetValue(HEADER_SECTIONS[s].JSONKey);
+      if (v <> nil) and (v is TJSONObject) then
          begin
-         FCabrilloHeader.Values[JSONPairName(TJSONObject(v), i)] :=
-            JSONText(JSONPairValue(TJSONObject(v), i));
+         lst := Header(HEADER_SECTIONS[s].Section);
+         for i := 0 to TJSONObject(v).Count - 1 do
+            begin
+            lst.Values[JSONPairName(TJSONObject(v), i)] :=
+               JSONText(JSONPairValue(TJSONObject(v), i));
+            end;
          end;
       end;
    v := aRoot.GetValue(JSONKEY_CLUSTERS);

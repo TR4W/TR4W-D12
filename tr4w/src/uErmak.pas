@@ -83,7 +83,16 @@ var
   ErmakWindow                           : HWND;
 
 implementation
-uses MainUnit;
+uses
+  MainUnit,
+  uCabrilloHeader;   // [ERMAKREPORT], from settings\tr4w.json (2026-08-17)
+
+// THE OPERATOR ROSTER, in the same store as the header tags.
+//
+// This dialog and uCbrSum both write [ERMAKREPORT]: uCbrSum the Cabrillo tags
+// when ErmakSpecification is set, this one the ten _OP_INFO_nnn rows.  Both now
+// route through uCabrilloHeader, so the section has ONE reader and ONE writer
+// rather than a json path and an ini path that would each hold half of it.
 
 function ErmakDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 label
@@ -133,7 +142,7 @@ begin
 
               TF.Format(TempBuffer2, OPERATORINFO, ControlID);
 
-              TempInteger := GetPrivateProfileStringA(ERMAKSECTION, TempBuffer2, nil, TempBuffer1, SizeOf(TempBuffer1), TR4W_INI_FILENAME);
+              TempInteger := HeaderTagText(ERMAKSECTION, TempBuffer2, TempBuffer1, SizeOf(TempBuffer1));
 
               case TempErmakField of
                 efOp:
@@ -210,6 +219,12 @@ begin
 
           1: begin
 
+              // ONE save for the whole roster.  Without the batch this loop
+              // would load and rewrite settings\tr4w.json 90 times.  try/finally
+              // because the save must happen even if a field read raises --
+              // otherwise OK silently discards what the operator typed.
+              BeginHeaderBatch;
+              try
               for Operator := 1 to 10 do
                  begin
                  for TempErmakField := Low(TErmakFields) to High(TErmakFields) do
@@ -239,11 +254,14 @@ begin
 
                     if wsprintfBuffer[0] <> #0 then
                        begin
-                       WritePrivateProfileStringA(ERMAKSECTION, TempBuffer1, wsprintfBuffer, TR4W_INI_FILENAME);
+                       SetHeaderTagText(ERMAKSECTION, TempBuffer1, wsprintfBuffer);
                        end;
 
                     end;
                  end;
+              finally
+                 EndHeaderBatch;
+              end;
 
               goto ExitAndClose;
             end;

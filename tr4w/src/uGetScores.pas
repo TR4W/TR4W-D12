@@ -89,7 +89,7 @@ implementation
 uses
   MainUnit,
   uAnsiStr,
-  uCabrilloHeader;   // the Cabrillo header, from settings	r4w.json
+  uCabrilloHeader;   // the Cabrillo header, from settings\tr4w.json
 
 function GetScoresDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 label
@@ -302,9 +302,12 @@ var
    buf: array[0..255] of AnsiChar;
    n:   Cardinal;
    begin
-   // The Cabrillo header lives in settings	r4w.json now, not tr4w.ini's
-   // [REPORT] section (2026-08-16).
-   uAnsiStr.StrPCopy(buf, CabrilloHeaderValue(string(Key)));
+   // The Cabrillo header lives in settings\tr4w.json now, not tr4w.ini's
+   // [REPORT] section (2026-08-16).  CABRILLOSECTION, not the ERMAK section:
+   // the scores server takes the standard Cabrillo tags, and an ERMAK contest
+   // posts the same club and overlay it always did.
+   uAnsiStr.StrPLCopy(buf, AnsiString(HeaderValue(string(CABRILLOSECTION), string(Key))),
+                      SizeOf(buf) - 1);
    n := uAnsiStr.StrLen(buf);
    if n = 0 then
       begin

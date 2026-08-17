@@ -52,6 +52,9 @@ type
       procedure Test_MissingFileIsReported;
       procedure Test_MalformedFileIsReportedNotSilentlyEmpty;
       procedure Test_SaveCreatesTheDirectory;
+      procedure Test_EveryHeaderSectionSurvivesARoundTrip;
+      procedure Test_HeaderSectionsAreIndependent;
+      procedure Test_ClearEmptiesTheHeaders;
    public
       constructor Create(const AName: string);
       destructor Destroy; override;
@@ -255,6 +258,97 @@ begin
    end;
 end;
 
+// EXHAUSTIVE over HEADER_SECTIONS, not over the two names known today.  A new
+// header section added to that table without a save/load path would otherwise
+// read back empty -- and an empty header is a LEGAL value, so the export would
+// simply omit the tags rather than fail. That is the same silent-zero shape
+// that hid the missing frame rules in the CW work.
+procedure TTR4WConfigFileTests.Test_EveryHeaderSectionSurvivesARoundTrip;
+var
+   radios: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   fn, err: string;
+   s: integer;
+begin
+   BeginTest('Test_EveryHeaderSectionSurvivesARoundTrip');
+   fn := TempFileName;
+   radios := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   try
+      for s := Low(HEADER_SECTIONS) to High(HEADER_SECTIONS) do
+         begin
+         radios.Header(HEADER_SECTIONS[s].Section).Values['_TAG'] :=
+            'value for ' + HEADER_SECTIONS[s].Section;
+         end;
+      SaveConfig(fn, radios, keyers);
+   finally
+      keyers.Free;
+      radios.Free;
+   end;
+
+   radios := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   try
+      CheckTrue(LoadConfig(fn, radios, keyers, err), 'loaded: ' + err);
+      for s := Low(HEADER_SECTIONS) to High(HEADER_SECTIONS) do
+         begin
+         CheckEquals('value for ' + HEADER_SECTIONS[s].Section,
+                     radios.Header(HEADER_SECTIONS[s].Section).Values['_TAG'],
+                     HEADER_SECTIONS[s].Section + ' survived the round trip');
+         end;
+   finally
+      keyers.Free;
+      radios.Free;
+   end;
+end;
+
+// The sections must not share storage.  They hold the SAME tag spellings --
+// uCbrSum writes _LOCATION into whichever section the contest selects -- so a
+// map that collapsed them would silently show a Cabrillo station its ERMAK
+// answers.
+procedure TTR4WConfigFileTests.Test_HeaderSectionsAreIndependent;
+var
+   radios: TRadioConfigStore;
+begin
+   BeginTest('Test_HeaderSectionsAreIndependent');
+   radios := TRadioConfigStore.Create;
+   try
+      radios.Header('REPORT').Values['_LOCATION']      := 'WCF';
+      radios.Header('ERMAKREPORT').Values['_LOCATION'] := 'UA4';
+      CheckEquals('WCF', radios.Header('REPORT').Values['_LOCATION'],
+                  'REPORT keeps its own value');
+      CheckEquals('UA4', radios.Header('ERMAKREPORT').Values['_LOCATION'],
+                  'ERMAKREPORT keeps its own value');
+      // Case-insensitive, as ini section lookup was: a caller passing the VC
+      // spelling and one passing lower case must reach the same list.
+      CheckEquals('WCF', radios.Header('report').Values['_LOCATION'],
+                  'section lookup is case-insensitive');
+      // An unknown section reads empty rather than raising.
+      CheckEquals('', radios.Header('NOSUCHSECTION').Values['_LOCATION'],
+                  'an unknown section is an empty header');
+   finally
+      radios.Free;
+   end;
+end;
+
+// Clear is what LoadFromJSON calls first.  A Clear that left headers behind
+// would carry one station's name and address into the next file loaded.
+procedure TTR4WConfigFileTests.Test_ClearEmptiesTheHeaders;
+var
+   radios: TRadioConfigStore;
+begin
+   BeginTest('Test_ClearEmptiesTheHeaders');
+   radios := TRadioConfigStore.Create;
+   try
+      radios.Header('REPORT').Values['_NAME'] := 'Tom';
+      radios.Clear;
+      CheckEquals('', radios.Header('REPORT').Values['_NAME'],
+                  'Clear emptied the header');
+   finally
+      radios.Free;
+   end;
+end;
+
 procedure TTR4WConfigFileTests.RunAllTests;
 begin
    Test_BothSectionsSurviveARoundTrip;
@@ -263,6 +357,9 @@ begin
    Test_MissingFileIsReported;
    Test_MalformedFileIsReportedNotSilentlyEmpty;
    Test_SaveCreatesTheDirectory;
+   Test_EveryHeaderSectionSurvivesARoundTrip;
+   Test_HeaderSectionsAreIndependent;
+   Test_ClearEmptiesTheHeaders;
 end;
 
 end.

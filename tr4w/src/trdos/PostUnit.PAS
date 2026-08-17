@@ -2574,25 +2574,15 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 begin
                 section := CABRILLOSECTION;
                 end;
-             if ErmakSpecification then
-                begin
-                // ERMAK keeps its own [ERMAKREPORT] section in the ini. Only
-                // the CABRILLO header moved to settings\tr4w.json (2026-08-16);
-                // moving both at once would widen the blast radius for no gain.
-                Result := GetPrivateProfileStringA( section,
-                   CabrilloTagsArray[ Tag ].ctrTag, nil, @TempBuffer2,
-                   SizeOf( TempBuffer2 ), TR4W_INI_FILENAME );
-                end
-             else
-                begin
-                // FROM settings\tr4w.json, seeded once from [REPORT]. This read
-                // is what the LOCATION guard below depends on, and it is why
-                // deleting tr4w.ini used to abort every Winter Field Day and
-                // ARRL10 batch export in silence.
-                uAnsiStr.StrPCopy( TempBuffer2,
-                   CabrilloHeaderValue( string( CabrilloTagsArray[ Tag ].ctrTag ) ) );
-                Result := uAnsiStr.StrLen( TempBuffer2 );
-                end;
+             // FROM settings\tr4w.json, seeded once from the ini. This read is
+             // what the LOCATION guard below depends on, and it is why deleting
+             // tr4w.ini used to abort every Winter Field Day and ARRL10 batch
+             // export in silence.  Both sections live there since 2026-08-17,
+             // so the section is now only an argument -- the ini fork that used
+             // to stand here is gone.
+             Result := integer( HeaderTagText( section,
+                CabrilloTagsArray[ Tag ].ctrTag, @TempBuffer2,
+                SizeOf( TempBuffer2 ) ) );
              end;
           end;
 

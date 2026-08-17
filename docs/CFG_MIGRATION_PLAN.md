@@ -12,6 +12,28 @@ When a setting moves from the old world to the new one it must, in one step:
 3. have every reference to its controlling variable go **through the config object**, so the
    global disappears.
 
+### What still touches `tr4w.ini` (measured 2026-08-17)
+
+NY4I, 2026-08-17: *"Nothing should use the INI file again. I am not sure how much clearer I can
+make that rule."* So here is the standing list, from a grep for `GetPrivateProfile*` /
+`WritePrivateProfile*` across `tr4w/src` — rerun it rather than trusting this table's age.
+
+| Where | What it still does | Belongs to |
+|---|---|---|
+| `uCAT.pas` (10), `uRadioConfigApply.pas` (2) | mirror `[Radio]` keys | the radio library — the JSON store is already authoritative, this is the legacy mirror |
+| `MainUnit.pas` (4), `uCFG.pas`, `uAutoCQ.pas`, `LPT.pas`, `uNewContest.pas` | write `[COMMANDS]` rows | the `csOwned` remainder — each disappears as its row flips to `csJSON` |
+| `uBMCF.pas` | writes `[BAND PLAN]` | the band-plan grids, still to be built |
+| `uOption.pas` | reads `DESCRIPTION` / `DEFAULT` | the Ctrl-J help text |
+| `LogCfg.pas` | reads it as a *text* file, not via the ini API | the CFG loader itself |
+
+Two things on that list are a **different file** and are not covered by the rule: `uEditMessage.pas`
+and `MainUnit.pas:8056` write `TR4W_CFG_FILENAME` (the contest `.cfg`), and `tr4wserver.dpr` reads
+its own `tr4wserver.ini`.
+
+**Done and not to be reopened:** `[REPORT]` (2026-08-16) and `[ERMAKREPORT]` (2026-08-17) both live
+in `settings\tr4w.json` — see `uCabrilloHeader.pas`. Those were never CFGCA rows, so the csOwned /
+csJSON machinery above never applied to them.
+
 ### Two steps the rule implies but does not say, and both are silent when missed
 
 **4a. …and the seeding has to actually run. It did not, for two weeks.** `SeedMigratedCommandsFromIni`
