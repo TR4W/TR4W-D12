@@ -160,7 +160,47 @@ const
   VALUE_RIG                             = 166 - 30;
 
 implementation
-uses MainUnit;
+uses
+  MainUnit,
+  uAnsiStr,          // StrPCopy / StrLen for the ANSI buffers below
+  uCabrilloHeader;   // the Cabrillo header, from settings\tr4w.json
+
+// ONE PLACE THAT KNOWS WHICH STORE A HEADER TAG LIVES IN.
+//
+// The Cabrillo header moved to settings\tr4w.json (2026-08-16), because that
+// [REPORT] section was the last thing keeping tr4w.ini load-bearing -- delete
+// the ini and every Winter Field Day / ARRL10 export aborted in silence.
+//
+// ERMAK did NOT move: it keeps [ERMAKREPORT] in the ini. Both readers and the
+// writer route through these two helpers so the choice is made once, by the
+// section the caller is already holding, rather than repeated at three call
+// sites that could drift apart.
+function HeaderTagText(const aSection, aTag: PAnsiChar;
+                       aBuffer: PAnsiChar; aSize: integer): cardinal;
+begin
+  if aSection = ERMAKSECTION then
+     begin
+     Result := GetPrivateProfileStringA(aSection, aTag, nil, aBuffer, aSize,
+                                        TR4W_INI_FILENAME);
+     end
+  else
+     begin
+     uAnsiStr.StrPCopy(aBuffer, CabrilloHeaderValue(string(aTag)));
+     Result := uAnsiStr.StrLen(aBuffer);
+     end;
+end;
+
+procedure SetHeaderTagText(const aSection, aTag, aValue: PAnsiChar);
+begin
+  if aSection = ERMAKSECTION then
+     begin
+     WritePrivateProfileStringA(aSection, aTag, aValue, TR4W_INI_FILENAME);
+     end
+  else
+     begin
+     SetCabrilloHeaderValue(string(aTag), string(aValue));
+     end;
+end;
 
 function CreateCabrilloDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 label
@@ -226,9 +266,11 @@ begin
                  // Issue #976: restore the saved value into ctrSave drop-downs
                  // that are outside the index-based range above (e.g.
                  // CATEGORY-STATION).  GetDlgItemText on exit saves it back.
-                 if GetPrivateProfileStringA(FormatSpecification,
-                     CabrilloTagSArray[TempTag].ctrTag, nil, TempBuffer1,
-                     SizeOf(TempBuffer1), TR4W_INI_FILENAME) > 0 then
+                 // Cabrillo header now comes from settings	r4w.json;
+                 // ERMAK still uses its own ini section (2026-08-16).
+                 if HeaderTagText(FormatSpecification,
+                     CabrilloTagSArray[TempTag].ctrTag, TempBuffer1,
+                     SizeOf(TempBuffer1)) > 0 then
                     begin
                     SendMessageA(TempHWND, CB_SELECTSTRING, -1, integer(@TempBuffer1));
                     end;
@@ -241,12 +283,10 @@ begin
 
               if CabrilloTagSArray[TempTag].ctrSave then
                  begin
-                 TempCardinal := GetPrivateProfileStringA(FormatSpecification,
+                 TempCardinal := HeaderTagText(FormatSpecification,
                    CabrilloTagSArray[TempTag].ctrTag,
-                   nil,
                    TempBuffer1,
-                   SizeOf(TempBuffer1),
-                   TR4W_INI_FILENAME);
+                   SizeOf(TempBuffer1));
 
                  if TempCardinal <> 0 then
                     begin
@@ -282,7 +322,7 @@ begin
              begin
              if Windows.GetDlgItemTextA(hwnddlg, integer(TempTag) + 200, TempBuffer1, SizeOf(TempBuffer1)) > 0 then
                 begin
-                WritePrivateProfileStringA(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1, TR4W_INI_FILENAME);
+                SetHeaderTagText(FormatSpecification, CabrilloTagSArray[TempTag].ctrTag, TempBuffer1);
                 end;
 
              end;

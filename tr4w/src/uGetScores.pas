@@ -86,7 +86,10 @@ const
     GSCR + '<timestamp>%s</timestamp>' + GSCR + '</dynamicresults>';
 }
 implementation
-uses MainUnit;
+uses
+  MainUnit,
+  uAnsiStr,
+  uCabrilloHeader;   // the Cabrillo header, from settings	r4w.json
 
 function GetScoresDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 label
@@ -299,7 +302,10 @@ var
    buf: array[0..255] of AnsiChar;
    n:   Cardinal;
    begin
-   n := GetPrivateProfileStringA(CABRILLOSECTION, Key, nil, buf, SizeOf(buf), TR4W_INI_FILENAME);
+   // The Cabrillo header lives in settings	r4w.json now, not tr4w.ini's
+   // [REPORT] section (2026-08-16).
+   uAnsiStr.StrPCopy(buf, CabrilloHeaderValue(string(Key)));
+   n := uAnsiStr.StrLen(buf);
    if n = 0 then
       begin
       Result := ''

@@ -378,6 +378,7 @@ uses
   uPendingCounties in 'src\uPendingCounties.pas',
   uCTYUpdate in 'src\uCTYUpdate.pas',
   uTRMasterUpdate in 'src\uTRMasterUpdate.pas',
+  uCabrilloHeader in 'src\uCabrilloHeader.pas',
   // D12: transitively-compiled units added so project-wide file searches see them
   // (they were pulled in via other units' uses clauses but never listed here).
   uADIF in 'src\uADIF.pas',

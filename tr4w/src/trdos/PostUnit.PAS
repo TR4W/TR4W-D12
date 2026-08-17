@@ -414,6 +414,7 @@ const
 implementation
 
 uses
+  uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
   uAnsiStr,
   // uAnsiStr.StrPCopy for ANSI (PAnsiChar) buffers under D12
   uCbrSum,
@@ -2573,9 +2574,25 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 begin
                 section := CABRILLOSECTION;
                 end;
-             Result := GetPrivateProfileStringA( section,
-                CabrilloTagsArray[ Tag ].ctrTag, nil, @TempBuffer2,
-                SizeOf( TempBuffer2 ), TR4W_INI_FILENAME );
+             if ErmakSpecification then
+                begin
+                // ERMAK keeps its own [ERMAKREPORT] section in the ini. Only
+                // the CABRILLO header moved to settings\tr4w.json (2026-08-16);
+                // moving both at once would widen the blast radius for no gain.
+                Result := GetPrivateProfileStringA( section,
+                   CabrilloTagsArray[ Tag ].ctrTag, nil, @TempBuffer2,
+                   SizeOf( TempBuffer2 ), TR4W_INI_FILENAME );
+                end
+             else
+                begin
+                // FROM settings\tr4w.json, seeded once from [REPORT]. This read
+                // is what the LOCATION guard below depends on, and it is why
+                // deleting tr4w.ini used to abort every Winter Field Day and
+                // ARRL10 batch export in silence.
+                uAnsiStr.StrPCopy( TempBuffer2,
+                   CabrilloHeaderValue( string( CabrilloTagsArray[ Tag ].ctrTag ) ) );
+                Result := uAnsiStr.StrLen( TempBuffer2 );
+                end;
              end;
           end;
 

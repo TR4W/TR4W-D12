@@ -307,6 +307,12 @@ type
         file, so a station whose settings had all reached the JSON still got an
         ini back on every start. }
       FLatestConfigFile: string;
+      { The Cabrillo header -- tr4w.ini's [REPORT] section, moved here.
+        Name=Value, using the same _TAG spellings the ini used, so the tag table
+        in uCbrSum stays the single source of truth for what a header contains.
+        NOT settings: they are not CFGCA rows, were never registered, and do not
+        appear in Preferences or the search index. See uCabrilloHeader. }
+      FCabrilloHeader: TStringList;
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
       FAutoConnectOnStartup: boolean;
@@ -510,6 +516,7 @@ type
       function  ActiveCluster: TClusterDefinition;
       property  ActiveClusterName: string read FActiveClusterName write FActiveClusterName;
       property  LatestConfigFile: string read FLatestConfigFile write FLatestConfigFile;
+      property  CabrilloHeader: TStringList read FCabrilloHeader;
       function  CommandValue(const aCommand: string; const aDefault: string = ''): string;
       procedure SetCommand(const aCommand, aValue: string);
    end;
@@ -1001,6 +1008,7 @@ begin
    // SameText everywhere else, and a store that disagreed would answer '' for
    // a command the program is perfectly happy to apply.
    FRotators := TObjectList<TRotatorDefinition>.Create(True);
+   FCabrilloHeader := TStringList.Create;
    FClusters := TObjectList<TClusterDefinition>.Create(True);
 
    FCommands := TStringList.Create;
@@ -1034,6 +1042,7 @@ end;
 
 destructor TRadioConfigStore.Destroy;
 begin
+   FreeAndNil(FCabrilloHeader);
    FreeAndNil(FCommands);
    FreeAndNil(FClusters);
    FreeAndNil(FRotators);
@@ -1677,7 +1686,7 @@ end;
 function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
-   general, tci, logging, commands, rot, clu: TJSONObject;
+   general, tci, logging, commands, rot, clu, hdr: TJSONObject;
    rotators, clusters: TJSONArray;
    i: integer;
 begin
@@ -1761,6 +1770,16 @@ begin
    Result.AddPair(JSONKEY_CLUSTERS, clusters);
    general.AddPair('activeCluster', FActiveClusterName);
    general.AddPair('latestConfigFile', FLatestConfigFile);
+
+   // The Cabrillo header, as its own object rather than inside `commands`:
+   // these are not CFGCA commands and ApplyStoredCommands must not try to
+   // apply them through CheckCommand, which would refuse every one.
+   hdr := TJSONObject.Create;
+   for i := 0 to FCabrilloHeader.Count - 1 do
+      begin
+      hdr.AddPair(FCabrilloHeader.Names[i], FCabrilloHeader.ValueFromIndex[i]);
+      end;
+   Result.AddPair('cabrilloHeader', hdr);
 
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
    // form had to encode the name in the section header, which made a name
@@ -1859,6 +1878,17 @@ begin
    FClusters.Clear;
    FActiveClusterName := JSONStr(general, 'activeCluster', '');
    FLatestConfigFile  := JSONStr(general, 'latestConfigFile', '');
+
+   FCabrilloHeader.Clear;
+   v := aRoot.GetValue('cabrilloHeader');
+   if (v <> nil) and (v is TJSONObject) then
+      begin
+      for i := 0 to TJSONObject(v).Count - 1 do
+         begin
+         FCabrilloHeader.Values[JSONPairName(TJSONObject(v), i)] :=
+            JSONText(JSONPairValue(TJSONObject(v), i));
+         end;
+      end;
    v := aRoot.GetValue(JSONKEY_CLUSTERS);
    if (v <> nil) and (v is TJSONArray) then
       begin
