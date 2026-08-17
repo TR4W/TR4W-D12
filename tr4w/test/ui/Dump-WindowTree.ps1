@@ -25,6 +25,11 @@ param(
    # Attach to an already-running TR4W instead of launching one.
    [int]    $ProcessId,
    [string] $Out,
+   # Drop the HWNDs. They are different on every run, so a committed baseline
+   # that carried them would diff as "everything changed" and be useless for the
+   # one job baselines have. Use this whenever the output is going to be
+   # committed under test\ui\baselines\.
+   [switch] $NoHandles,
    [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
    [string] $Exe,
    [string] $Config,
@@ -102,15 +107,17 @@ function Get-ChildTree
    # parent, and a flat list cannot express that.
    [void][Win32.Tree]::EnumChildWindows($Parent, $cb, [IntPtr]::Zero)
 
-   $direct = @()
+   # A List, and `, $result` on return. A bare `return @()` hands back $null,
+   # and `@($null)` is an array of ONE $null -- so a window with no children
+   # reported "1 child(ren)" and the -NoHandles pass then tried to set a
+   # property on nothing. The comma keeps PowerShell from unwrapping a
+   # one-element array on the way out, too.
+   $direct = New-Object 'System.Collections.Generic.List[object]'
    foreach ($k in $kids)
       {
-      $p = [Win32.Tree]::GetDlgCtrlID($k)   # touched to keep the call ordering obvious
-      $null = $p
-      $facts = Get-WindowFacts -Hwnd $k
-      $direct += $facts
+      [void]$direct.Add((Get-WindowFacts -Hwnd $k))
       }
-   return $direct
+   return ,$direct.ToArray()
 }
 
 function Get-ProcessWindows
@@ -189,6 +196,14 @@ try
 {
 
 $tree = Get-ProcessWindows -Pid2 $pidToDump
+if ($NoHandles)
+   {
+   foreach ($w in $tree)
+      {
+      $w.Handle = ''
+      foreach ($c in @($w.Children)) { $c.Handle = '' }
+      }
+   }
 $json = $tree | ConvertTo-Json -Depth 8
 
 if ($Out)
