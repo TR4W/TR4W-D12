@@ -380,8 +380,6 @@ procedure CPUButtonProc;
 procedure TREscapeCommFunction(hFile: THandle; dwFunc: Byte);
 function Get_Ctl_Code(nr: integer): Cardinal;
 procedure DebugMsg(s: string); // ny4i
-procedure DebugRadioTempBuffer(sDecorator: string; var bRay: array of AnsiChar);
-// ny4i Issue 145
 function IsCWByCATActive(theRadio: RadioPtr): boolean; overload;
 // ny4i Issue # 111
 function IsCWByCATActive: boolean; overload; // ny4i Issue # 111
@@ -525,6 +523,7 @@ uses
   uPOTAParks,
   uPendingCounties,
   uCTYUpdate,
+  uTRMasterUpdate,  // Download TRMASTER.DTA (Super Check Partial)
   uWin32Compat,   // AnimateWindow -- see that unit for the whole FPC gap list
   Types;
 
@@ -3706,6 +3705,38 @@ begin
    RotorControl(heading);
 end;
 
+// Where a downloaded TRMASTER.DTA should be written.
+//
+// CD.ActiveFilename is a RESOLVER RESULT, not a name to create files under.
+// FCONTEST.SetUpFileNames tries, in order, TRMASTER.DTA in the contest .cfg
+// directory, then TRMASTER.DTA in the working directory, and finally
+// MASTER.DTA in the working directory -- the old K1EA name. When NOTHING is
+// installed, which is exactly the first-run case a download serves, it holds
+// that last fallback. Handing it straight to the downloader saved the file as
+// `MASTER.DTA` (observed 2026-08-16). SCP would still read it, so nothing
+// would have looked broken, and the operator would have a legacy-named file
+// they never asked for -- plus a second copy the day they drop a real
+// TRMASTER.DTA beside it.
+//
+// So: UPDATING replaces whatever file is actually there, whatever it is
+// called; CREATING uses the canonical name, in the directory the resolver
+// already chose.
+function TRMasterDownloadTarget: string;
+var
+   resolved: string;
+begin
+   resolved := string(PAnsiChar(@CD.ActiveFilename));
+
+   if SysUtils.FileExists(resolved) then
+      begin
+      Result := resolved;
+      end
+   else
+      begin
+      Result := SysUtils.ExtractFilePath(resolved) + 'TRMASTER.DTA';
+      end;
+end;
+
 procedure ProcessMenu(menuID: integer);
 var
   LowordWparam: integer;
@@ -4413,6 +4444,12 @@ begin
       begin
       QuickDisplay(PAnsiChar('Downloading CTY.DAT...'));
       DownloadCTYAsync(string(PAnsiChar(@TR4W_CTY_FILENAME)), tr4whandle);
+      end;
+
+    menu_download_trmaster:
+      begin
+      QuickDisplay('Downloading TRMASTER.DTA...');
+      DownloadTRMasterAsync(TRMasterDownloadTarget, tr4whandle);
       end;
 
     menu_download_pota_parks:
@@ -9134,13 +9171,59 @@ begin
   // AddStringToTelnetConsole(Text, tstSend);
 end;
 
+// Offers to set a configuration command now, and takes the operator to WHERE
+// THAT SETTING ACTUALLY LIVES.
+//
+// THE DEFECT THIS FIXES (2026-08-16).  This used to send every prompt to the
+// Ctrl-J options dialog.  That was right when Ctrl-J was the only settings UI,
+// and it silently stopped being right as Preferences took ownership of rows:
+// CommandsToListView2 (uOption.pas) EXCLUDES crS in [csRem, csOwned, csJSON],
+// so an owned command is simply not in that list. Worse, the dialog's
+// not-found path selected row 0 -- so the operator answered "yes, set it now"
+// and landed on an arbitrary unrelated command, highlighted as though it were
+// the one they asked for.
+//
+// Both live callers were already broken by this: COMPUTER ID is csOwned and
+// MMTTY ENGINE is csJSON (uCFG.pas:500, :622). Neither has been reachable
+// through this prompt since Preferences took those rows.
+//
+// So route by OWNERSHIP rather than sending everything to one dialog:
+//   csOwned / csJSON -> Preferences, at the owning section, control focused
+//   everything else  -> Ctrl-J, as before
+//
+// The ownership test is the SAME crS the Ctrl-J filter reads, so the two
+// cannot disagree about who owns a row. An unknown command falls through to
+// Ctrl-J, which is the old behaviour and no worse than it was.
 procedure SetCommand(c: PAnsiChar);
+var
+  cmd: string;
+  idx: integer;
+  ownedElsewhere: boolean;
 begin
   TF.Format(TempBuffer1, TC_SET_VALUE_OF_SET_NOW, c);
   if YesOrNo(tr4whandle, TempBuffer1) = IDno then
      begin
      Exit;
      end;
+
+  cmd := string(c);
+  idx := FindCFGCommand(cmd);
+  ownedElsewhere := (idx >= 0) and (CFGCA[idx].crS in [csOwned, csJSON]);
+
+  if ownedElsewhere then
+     begin
+     // ShowPreferencesForCommand reports its own failure and still leaves
+     // Preferences open, so there is nothing useful to fall back TO here --
+     // Ctrl-J is precisely the dialog that cannot show this row.
+     if not ShowPreferencesForCommand(cmd) then
+        begin
+        logger.Warn('[SetCommand] "%s" is owned by Preferences but has no ' +
+                    'control there; opened Preferences without a deep link',
+                    [cmd]);
+        end;
+     Exit;
+     end;
+
   CommandToSet := c;
   ProcessMenu(menu_options);
 end;
@@ -9284,11 +9367,28 @@ begin
       end;
 end;
 
+// CTRL-J NOW OPENS PREFERENCES (NY4I, 2026-08-16).
+//
+// The old options dialog listed every CFGCA row whose crS was not csRem /
+// csOwned / csJSON. As of 2026-08-16 there are NONE: all 173 that were left
+// were registered in uSettingsDeclarations and flipped to csOwned in the same
+// commit, so this dialog would open on an empty list.
+//
+// csOwned was the right flip rather than csJSON: it hides the row from here
+// while CheckCommand still applies the ini value, so nothing about how a
+// setting LOADS changed — only where it is edited. Retiring the ini is a
+// separate, per-row job, and only six of those rows are read by an export unit
+// and must stay csOwned for good. See docs/CTRLJ_INVENTORY.md.
+//
+// The menu entry stays where fifteen years of muscle memory expects it; it just
+// arrives somewhere better. `f` is now unused — kept in the signature because
+// several call sites pass a filter and changing them all is churn for no gain
+// while the entry point may still want to select a page one day.
 procedure RunOptionsDialog(f: CFGFunc);
 begin
   CommandsFilter := f;
-  // tDialogBox(61, @SettingsDlgProc2);
-  CreateModalDialog(390, 250, tr4whandle, @SettingsDlgProc2, 0);
+  logger.Info('[Options] Ctrl-J -> Preferences (the old options list is empty by design)');
+  ShowPreferences;
 end;
 
 procedure OpenUrl(url: PChar);
@@ -9728,25 +9828,6 @@ begin
      end;
 end;
 
-procedure DebugRadioTempBuffer(sDecorator: string; var bRay: array of AnsiChar);
-// ny4i Added in Issue 145
-{$IF NEWER_DEBUG}
-var
-  i: integer;
-  s: string;
-  Buf: array[0..100 * 2] of Char;
-  nLen: integer;
-{$IFEND}
-begin
-{$IF NEWER_DEBUG}
-  // Only do this stuff if the log level is set right (future change) ny4i
-  nLen := Ord(bRay[0]);
-  BinToHex(@bRay[1], Buf, nLen);
-  Buf[(nLen * 2) - 2] := #0;
-  DebugMsg(sDecorator + ': ' + Buf);
-{$IFEND}
-end;
-
 procedure CreateLogfile(aLine: string);
 var
   aFileName: string;
@@ -9776,51 +9857,12 @@ begin
     CloseFile(myFile);
   end;
 end;
-{--------------------------------------------------------------------
- We always write to the Logger facility. If NEWER_DEBUG is set, we also write to the TELNET window
-}
-
 procedure DebugMsg(s: string);
-{$IF NEWER_DEBUG}
-var
-  formattedDate: string;
-  bytesToWrite: integer;
-  first: boolean;
-{$IFEND}
 begin
-  if Assigned(logger) then
-  begin
-    logger.Debug(s);
-  end;
-{$IF NEWER_DEBUG}
-  // Switched to write a file
-
-  first := true;
-  FormatSettings.LongTimeFormat := 'hh nn ss (zzz)';
-  DateTimeToString(formattedDate, 'tt', Now);
-  if length(s) > 60 then
-  begin
-    while Length(s) > 0 do
-    begin
-      bytesToWrite := min(length(s), 60);
-      if first then
+   if Assigned(logger) then
       begin
-        AddStringToTelnetConsole('[' + ' ' + '] ' +
-          AnsiLeftStr(s, bytesToWrite))), tstSend);
-        first := false;
-      end
-      else
-      begin
-        AddStringToTelnetConsole('[' + formattedDate + '] ' +
-          AnsiLeftStr(s, bytesToWrite))), tstSend);
+      logger.Debug(s);
       end;
-      s := AnsiRightStr(s, length(s) - bytesToWrite);
-    end;
-  end;
-
-  AddStringToTelnetConsole('[' + formattedDate + '] ' + s, tstSend);
-{$IFEND}
-
 end;
 
 // These two functions are overloaded so on can call without any parameters to

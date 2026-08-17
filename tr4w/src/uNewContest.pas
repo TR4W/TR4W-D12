@@ -55,7 +55,9 @@ procedure DisplayInitialCommand(Command: InitialCommands);
 //procedure FillMyStateComboBox;
 
 implementation
-uses MainUnit;
+uses
+  MainUnit,
+  uRadioConfigApply;   // GetLatestConfigFile -- the last contest, from tr4w.json
 
 const
 
@@ -155,7 +157,13 @@ begin
          {LISTBOX}
         CreateListBox(5, 35, 250, 370, hwnddlg, NC_LISTBOX);
 
-        GetPrivateProfileStringA(_COMMANDS, LATEST_CONFIG_FILE, nil, TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType), TR4W_INI_FILENAME);
+        // FROM settings\tr4w.json, not tr4w.ini (NY4I, 2026-08-16). This is the
+        // read half of the move; the write is in tr4w.dpr. An empty result is
+        // the ordinary first-run state and simply hides the button below.
+        Windows.ZeroMemory(@TR4W_LATESTCFG_FILENAME, SizeOf(FileNameType));
+        Windows.lstrcpynA(TR4W_LATESTCFG_FILENAME,
+                          PAnsiChar(AnsiString(GetLatestConfigFile)),
+                          SizeOf(FileNameType));
         if TR4W_LATESTCFG_FILENAME[0] <> #0 then
            begin
 
@@ -696,8 +704,22 @@ begin
         sWriteFile(f, wsprintfBuffer, BytesToWrite);
         end;
 
+     // TERMINATE THE LAST LINE (2026-08-16). Every other line this routine
+     // writes ends #13#10; this one did not, so every .cfg TR4W creates ended
+     // mid-line -- 8 of the 13 golden-corpus fixtures still do.
+     //
+     // A file whose last line has no terminator is a trap for anything that
+     // APPENDS to it: the new text welds onto the CONTEST= line and TR4W then
+     // reports "Invalid statement in config file" for a line nobody typed.
+     // This same file is written again later through
+     // WritePrivateProfileStringA (MainUnit, uEditMessage), and hand-editing
+     // is normal for .cfg files, so the append case is not hypothetical.
+     //
+     // Pre-existing in D7 (uNewContest.pas:660 there), not a port regression.
+     // Existing .cfg files are unaffected -- this only changes what is newly
+     // written, and TR4W already reads an unterminated last line correctly.
      Windows.GetDlgItemTextA(h, NC_CONTEST_COMBOBOX, TempBuffer1, SizeOf(TempBuffer1));
-     BytesToWrite := TF.Format(wsprintfBuffer, 'CONTEST=%s', TempBuffer1);
+     BytesToWrite := TF.Format(wsprintfBuffer, 'CONTEST=%s'#13#10, TempBuffer1);
      sWriteFile(f, wsprintfBuffer, BytesToWrite);
 
      CloseHandle(f);

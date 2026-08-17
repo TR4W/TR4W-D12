@@ -195,6 +195,20 @@ function ApplyActiveProfileToConfigAtStartup(out aError: string): boolean;
   reverted the next time the operator pressed Save. }
 function ApplyPeerCommand(const aCommand, aValue: string): boolean;
 
+// The contest .cfg last opened, read from and written to the `general` section
+// of settings\tr4w.json.
+//
+// NOT a setting: it is bookkeeping, it is not registered, and it does not
+// appear in Preferences or in the search index (NY4I, 2026-08-16). It lives
+// here rather than in tr4w.ini because that ini write was the only thing
+// recreating the file on a station whose settings had all moved to JSON.
+//
+// GetLatestConfigFile returns '' when there is no store yet, which the caller
+// must treat as "no previous contest" rather than as an error -- it is the
+// ordinary first-run state.
+function  GetLatestConfigFile: string;
+procedure SetLatestConfigFile(const aFileName: string);
+
 // UI-free description of the port collisions a profile WOULD cause, '' when
 // clean.  Advisory: unlike TRadioConfigStore.Validate, this also covers the
 // keyer lines and CAT-versus-keyer sharing, which are warnings rather than
@@ -308,7 +322,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..98] of string =
+   MIGRATED_COMMANDS: array[0..101] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -431,7 +445,19 @@ const
       'DVK LOCALIZED MESSAGES ENABLE',
       'DVK PATH',
       'DVK RECORDER',
-      'USE RECORDED SIGNS'
+      'USE RECORDED SIGNS',
+
+      // Contest-set band enables, 2026-08-16.  Seeded like any other migrated
+      // row: the value an operator had in tr4w.ini must survive the flip, and
+      // a csJSON row is inert to the ini loader, so without this entry the
+      // setting silently reverts to its compiled default on the first run.
+      //
+      // FCONTEST still assigns these when a contest is selected -- that is the
+      // intended behaviour, not a competing owner, and it is why the plan calls
+      // for the Bands panel to say the value came from the contest.
+      'HF BAND ENABLE',
+      'WARC BAND ENABLE',
+      'VHF BAND ENABLE'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);
@@ -621,6 +647,79 @@ begin
       begin
       aStore.SetCommand(aCommand, aValue);
       end;
+end;
+
+function GetLatestConfigFile: string;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   udp: TUDPBroadcastConfig;
+   loadErr: string;
+begin
+   Result := '';
+   if not FileExists(RadioStoreFileName) then
+      begin
+      Exit;   // first run: no previous contest, not an error
+      end;
+
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   udp    := TUDPBroadcastConfig.Create;
+   try
+      if LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
+         begin
+         Result := store.LatestConfigFile;
+         end
+      else
+         begin
+         logger.Warn('[Startup] cannot read %s for the latest config file: %s',
+                     [RadioStoreFileName, loadErr]);
+         end;
+   finally
+      udp.Free;
+      keyers.Free;
+      store.Free;
+   end;
+end;
+
+procedure SetLatestConfigFile(const aFileName: string);
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   udp: TUDPBroadcastConfig;
+   loadErr: string;
+begin
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   udp    := TUDPBroadcastConfig.Create;
+   try
+      // ALL THREE LIBRARIES ARE LOADED AND SAVED TOGETHER even though only one
+      // scalar changes: they share one file, and saving a store that was loaded
+      // without the others would silently drop their sections. Same rule as
+      // ApplyPeerCommand below.
+      if FileExists(RadioStoreFileName) then
+         begin
+         if not LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
+            begin
+            // REFUSE rather than write over a file we could not read.
+            logger.Error('[Startup] not recording the latest config file: %s could not be read (%s)',
+                         [RadioStoreFileName, loadErr]);
+            Exit;
+            end;
+         end;
+
+      if SameText(store.LatestConfigFile, aFileName) then
+         begin
+         Exit;   // unchanged -- do not rewrite the file on every start
+         end;
+
+      store.LatestConfigFile := aFileName;
+      SaveConfig(RadioStoreFileName, store, keyers, udp);
+   finally
+      udp.Free;
+      keyers.Free;
+      store.Free;
+   end;
 end;
 
 function ApplyPeerCommand(const aCommand, aValue: string): boolean;
@@ -1448,8 +1547,37 @@ begin
 
    if not FileExists(RadioStoreFileName) then
       begin
-      // No library: this station has never opened Preferences, and must boot
-      // exactly as it always did.
+      // NO RADIO LIBRARY YET -- this station has never opened Preferences.
+      //
+      // The RADIO side must boot exactly as it always did, and below this it
+      // does.  The MIGRATED COMMANDS must not, and that distinction is the
+      // defect this guard used to have (found and fixed 2026-08-16).
+      //
+      // "Boots exactly as it always did" stopped being achievable for a csJSON
+      // row the moment rows started moving: the ini loader treats csJSON as
+      // accepted-and-INERT (uCFG.pas:1482), so the value in tr4w.ini is never
+      // applied. With this guard also skipping SeedMigratedCommandsFromIni,
+      // such a station got the COMPILED DEFAULT for every migrated setting --
+      // all 161 csJSON rows -- with no error, no log line, and nothing to
+      // notice until mid-contest. Exactly the silent loss the seed list exists
+      // to prevent, defeated by a guard added for an unrelated reason.
+      //
+      // Measured, not reasoned: same tr4w.ini with HF BAND ENABLE=FALSE, same
+      // binary. Without settings\tr4w.json, no seeding ran and the value was
+      // lost. With a tr4w.json containing nothing but `{}`, seeding carried it
+      // across correctly. An empty object was the whole difference.
+      //
+      // So seed and apply against an EMPTY store, which is a no-op for a
+      // station that genuinely has nothing: the seeding reads tr4w.ini, and
+      // ApplyStoredCommands puts whatever it found into force on this run.
+      // Everything else here is radio-library work and stays behind the guard.
+      store := TRadioConfigStore.Create;
+      try
+         SeedMigratedCommandsFromIni(store);
+         ApplyStoredCommands(store);
+      finally
+         store.Free;
+      end;
       Exit;
       end;
 

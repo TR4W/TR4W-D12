@@ -299,6 +299,14 @@ type
       FRotators: TObjectList<TRotatorDefinition>;
       FClusters: TObjectList<TClusterDefinition>;
       FActiveClusterName: string;
+      { The contest .cfg last opened. NOT a setting -- it is bookkeeping, which
+        is why it lives in `general` beside activeProfile rather than in
+        `commands`, and why it is deliberately absent from Preferences and from
+        the search index. It moved here from tr4w.ini (NY4I, 2026-08-16): that
+        one WritePrivateProfileString was the only thing recreating the ini
+        file, so a station whose settings had all reached the JSON still got an
+        ini back on every start. }
+      FLatestConfigFile: string;
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
       FAutoConnectOnStartup: boolean;
@@ -501,6 +509,7 @@ type
       function  UniqueClusterName(const aBase: string): string;
       function  ActiveCluster: TClusterDefinition;
       property  ActiveClusterName: string read FActiveClusterName write FActiveClusterName;
+      property  LatestConfigFile: string read FLatestConfigFile write FLatestConfigFile;
       function  CommandValue(const aCommand: string; const aDefault: string = ''): string;
       procedure SetCommand(const aCommand, aValue: string);
    end;
@@ -1751,6 +1760,7 @@ begin
       end;
    Result.AddPair(JSONKEY_CLUSTERS, clusters);
    general.AddPair('activeCluster', FActiveClusterName);
+   general.AddPair('latestConfigFile', FLatestConfigFile);
 
    // Arrays, so ORDER is preserved and a name is an ordinary value.  The ini
    // form had to encode the name in the section header, which made a name
@@ -1848,6 +1858,7 @@ begin
    // than needing a check of its own.
    FClusters.Clear;
    FActiveClusterName := JSONStr(general, 'activeCluster', '');
+   FLatestConfigFile  := JSONStr(general, 'latestConfigFile', '');
    v := aRoot.GetValue(JSONKEY_CLUSTERS);
    if (v <> nil) and (v is TJSONArray) then
       begin

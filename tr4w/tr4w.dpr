@@ -196,6 +196,7 @@ uses
   uPrefsForm in 'src\ui\lcl\uPrefsForm.pas',
 {$ENDIF}
   uJSON in 'src\utils\uJSON.pas',
+  uHTTPDownload in 'src\utils\uHTTPDownload.pas',
   utils_text in 'src\utils\utils_text.pas',
   utils_math in 'src\utils\utils_math.pas',
   utils_file in 'src\utils\utils_file.pas',
@@ -376,6 +377,7 @@ uses
   uPOTAParks in 'src\uPOTAParks.pas',
   uPendingCounties in 'src\uPendingCounties.pas',
   uCTYUpdate in 'src\uCTYUpdate.pas',
+  uTRMasterUpdate in 'src\uTRMasterUpdate.pas',
   // D12: transitively-compiled units added so project-wide file searches see them
   // (they were pulled in via other units' uses clauses but never listed here).
   uADIF in 'src\uADIF.pas',
@@ -625,6 +627,34 @@ begin
          QuickDisplay(PAnsiChar('POTA parks download failed'));
       end;
 
+    WM_TRMASTER_DOWNLOAD_DONE:
+      begin
+      // Fired by the async download thread (see uTRMasterUpdate).
+      // wParam=1: file saved OK; wParam=0: download failed.
+      //
+      // WHY THIS DOES NOT RELOAD SCP, unlike the CTY handler above.
+      // ctyLoadInCountryFile is a clean, idempotent reload entry point.
+      // TRMASTER has no equivalent: LOGSCP loads it LAZILY into a heap index
+      // array behind three flags (TRMasterFileOpen, IndexArrayAllocated,
+      // MasterFileExists) plus a cached OperatorNameSet built once, and the
+      // only close routine, SCPDisableAndDeAllocateFileBuffer, also sets
+      // SCPDisabledByApplication -- it disables SCP rather than reloading it.
+      //
+      // A partial reload that left OperatorNameSet stale, or SCP disabled,
+      // would be wrong data during a contest and would look like nothing at
+      // all. Telling the operator to restart is honest and costs one restart;
+      // guessing at TRDOS load state is not worth a wrong callsign hint.
+      // A proper CD.ReloadTRMaster belongs with the SQLite log work, not here.
+      if wParam = 1 then
+         begin
+         QuickDisplay(PAnsiChar('TRMASTER.DTA downloaded -- restart TR4W to use it'));
+         end
+      else
+         begin
+         QuickDisplay(PAnsiChar('TRMASTER.DTA download failed'));
+         end;
+      end;
+
     WM_POTA_LOAD_DONE:
       begin
       // Fired by TPOTALoadThread after parsing the CSV off the UI thread.
@@ -750,6 +780,124 @@ begin
 
   CallDefWindowProc:
   Result := longword(DefWindowProc(TRHWND, Msg, wParam, lParam));
+end;
+
+// ---------------------------------------------------------------------------
+// EnsureCountryFile
+//
+// Loads CTY.DAT and, when that fails, offers to download a current one.
+//
+// WHY (NY4I, 2026-08-16). TR4W cannot run without a country file, so the old
+// code reported the missing file and halted -- a dead end on a first run, and
+// the operator's only recourse was to go find the file by hand. We already
+// know how to fetch one: that is what Alt-O does. Offer it here instead.
+// (The equivalent in TR4QT extracts a bundled copy from Qt resources; TR4W
+// downloads, which has the side benefit of arriving current rather than as
+// old as the installer.)
+//
+// SYNCHRONOUS, DELIBERATELY. This runs before CreateMainWindow, so there is
+// no window to post WM_CTY_DOWNLOAD_DONE to and no message loop to receive
+// it -- DownloadCTYAsync is unusable this early, and so is QuickDisplay,
+// which writes into a main-window element. The main thread blocks for the
+// duration of the fetch. That is acceptable ONLY because there is no UI yet
+// to freeze; do not copy this shape anywhere the window already exists.
+//
+// TARGET PATH. TR4W_CTY_FILENAME is whatever SetUpFileNames resolved -- the
+// contest .cfg directory, else the working directory (FCONTEST.PAS:122-128).
+// We write to exactly that name, so the reload below reads the file we just
+// fetched, and so does every later Alt-O. Note the working directory is not
+// guaranteed writable (an install under Program Files launched from a
+// shortcut): that surfaces as a failed download and is reported WITH the
+// path, because "download failed" alone does not tell the operator that the
+// folder, not the network, is the problem.
+//
+// Returns True if a country file is loaded and startup may continue.
+// ---------------------------------------------------------------------------
+function EnsureCountryFile: boolean;
+var
+  ctyPath                               : string;
+  prompt                                : string;
+begin
+  Result := ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
+
+  if Result then
+     begin
+     Exit;
+     end;
+
+  ctyPath := string(PAnsiChar(@TR4W_CTY_FILENAME));
+
+  // Headless /EXPORT has no operator to answer a prompt, and a batch export
+  // should not make an unannounced network request. Report and fail, exactly
+  // as this code did before.
+  if tSilentExport then
+     begin
+     UnableToFindFileMessage(TR4W_CTY_FILENAME);
+     logger.Fatal('Unable to load ' + ctyPath);
+     Exit;
+     end;
+
+  // ctyLoadInCountryFile returns False for BOTH "no such file" and "the file
+  // is there but could not be read", so ask the filesystem which it is. A
+  // fresh download is the right offer either way, but telling an operator a
+  // file is missing when it is actually corrupt sends them after the wrong
+  // problem.
+  // SysUtils.FileExists explicitly: the unqualified name resolves to a legacy
+  // PChar-taking FileExists pulled in from the TRDOS units, which will not
+  // take a string.
+  if SysUtils.FileExists(ctyPath) then
+     begin
+     prompt := 'The country file could not be read:' + #13#10#13#10 +
+               ctyPath + #13#10#13#10 +
+               'TR4W cannot run without it.' + #13#10 +
+               'Download a current CTY.DAT now?';
+     end
+  else
+     begin
+     prompt := 'The country file was not found:' + #13#10#13#10 +
+               ctyPath + #13#10#13#10 +
+               'TR4W cannot run without it.' + #13#10 +
+               'Download it now?';
+     end;
+
+  if MessageBoxW(0, PChar(prompt), 'TR4W',
+     MB_YESNO or MB_ICONQUESTION or MB_SYSTEMMODAL or MB_TOPMOST) <> IDYES then
+     begin
+     logger.Fatal('Unable to load ' + ctyPath +
+                  ' -- operator declined the download');
+     Exit;
+     end;
+
+  logger.Info('CTY.DAT not loaded; downloading to ' + ctyPath);
+
+  if not DownloadCTYFile(ctyPath) then
+     begin
+     // uCTYUpdate has already logged the underlying exception.
+     showwarning('Could not download CTY.DAT to:' + #13#10#13#10 +
+                 ctyPath + #13#10#13#10 +
+                 'Check the network connection, and that the folder above is ' +
+                 'writable, then start TR4W again.' + #13#10 +
+                 'tr4w.log records the reason.');
+     logger.Fatal('CTY.DAT download failed; cannot continue');
+     Exit;
+     end;
+
+  // VERIFY, DO NOT ASSUME. A download can report success and still leave a
+  // file the parser rejects -- a captive-portal HTML page saved as cty.dat is
+  // the obvious way. Say so here, where the cause is still obvious, rather
+  // than continuing into a program with no country data.
+  Result := ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True);
+
+  if Result then
+     begin
+     logger.Info('CTY.DAT downloaded and loaded from ' + ctyPath);
+     end
+  else
+     begin
+     showwarning('CTY.DAT was downloaded but could not be read:' +
+                 #13#10#13#10 + ctyPath);
+     logger.Fatal('Downloaded CTY.DAT failed to load');
+     end;
 end;
 
 label
@@ -950,10 +1098,11 @@ begin
   LoadTR4WPOSFILE;
 
 
-  if not ctyLoadInCountryFile(TR4W_CTY_FILENAME, False, True) then
+  // Offers to download CTY.DAT when it is missing or unreadable, rather than
+  // halting on a file the operator has no easy way to obtain. See the
+  // function for why the fetch is synchronous here.
+  if not EnsureCountryFile then
   begin
-    UnableToFindFileMessage(TR4W_CTY_FILENAME);
-    logger.Fatal('Unable to find ' + TR4W_CTY_FILENAME);
     halt;
   end;
 
@@ -1157,6 +1306,31 @@ begin
   if CTYUpdateCheckOnStartup then
      CheckCTYVersionAsync(tr4whandle);
 
+  // MY GRID, if it has never been set.
+  //
+  // WHY AT STARTUP AND NOT ONLY FOR GRID CONTESTS (NY4I, 2026-08-16): MY GRID
+  // drives the distance and beam heading to the DX station, so it earns its
+  // keep in every contest -- not just the ones that exchange a grid. This
+  // restores behaviour that TR4W documented long ago (uHistory.pas:125) and
+  // that no longer existed in the code.
+  //
+  // SetCommand routes it to Preferences with the Station page open and the grid
+  // field focused, because MY GRID is a csOwned row and Ctrl-J does not list
+  // it -- see SetCommand for the full story.
+  //
+  // Placed here deliberately: config is loaded (so MyGrid is the operator's
+  // real value, not the CFGDEF default) and the main window exists, but the
+  // message loop has not started -- which is fine, as the prompt is a modal
+  // MessageBox with its own loop and Preferences is opened non-modally.
+  //
+  // NOT in headless /EXPORT: there is no operator to answer, and a batch export
+  // that stops on a modal is a hang. Same rule as the CTY prompt above.
+  if (not tSilentExport) and (Trim(string(MyGrid)) = '') then
+     begin
+     logger.Info('MY GRID is empty; offering to set it');
+     SetCommand('MY GRID');
+     end;
+
   // The four synchronization events: CW element, CW paddle, DVP playback and
   // network.  All auto-reset, all starting unsignalled -- which is what the
   // assembly this replaces built, by pushing four zeros for
@@ -1224,9 +1398,20 @@ begin
   end;
 
 {$IF not tDebugMode}
+  // THE LAST CONTEST OPENED, recorded in settings\tr4w.json (NY4I, 2026-08-16).
+  //
+  // It used to go to tr4w.ini, and that single WritePrivateProfileString was
+  // the ONLY thing recreating that file: a station whose settings had all
+  // reached the JSON still got a two-line tr4w.ini back on every start, which
+  // made "the ini is gone" untestable and untrue. Measured before changing it —
+  // the recreated file was exactly `[COMMANDS]` and this one key.
+  //
+  // It stays valid data (it names the contest .cfg to reopen) but it is NOT a
+  // setting, so it lives in the store's `general` section beside activeProfile
+  // rather than in `commands`, and it is deliberately not registered — nothing
+  // in Preferences edits it and it is absent from the search index.
   Windows.CopyMemory(@TR4W_LATESTCFG_FILENAME, @TR4W_CFG_FILENAME, SizeOf(FileNameType));
-//  Windows.CharLower(TR4W_LATESTCFG_FILENAME);
-  Windows.WritePrivateProfileStringA(_COMMANDS, LATEST_CONFIG_FILE, TR4W_LATESTCFG_FILENAME, TR4W_INI_FILENAME);
+  SetLatestConfigFile(string(PAnsiChar(@TR4W_LATESTCFG_FILENAME)));
 {$IFEND}
 
 {$IF NEWER_DEBUG}

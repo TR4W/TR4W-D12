@@ -166,6 +166,23 @@ begin
            TempInteger := ListView_FindItem(SettingshLV, -1, plvfi);
            if TempInteger = -1 then
               begin
+              // NO LONGER SILENT (2026-08-16).  Row 0 is still the fallback --
+              // it is the same default a plain Ctrl-J open uses, and there is
+              // no better selection to invent inside WM_INITDIALOG -- but it is
+              // no longer indistinguishable from success.  The operator
+              // answered "yes, set it now" and got an arbitrary unrelated
+              // command highlighted as though it were the one they asked for,
+              // and nothing anywhere recorded that.
+              //
+              // The usual cause was a row this dialog deliberately hides
+              // (crS in [csRem, csOwned, csJSON] -- see CommandsToListView2).
+              // SetCommand now routes those to Preferences, so reaching here
+              // means a command that no UI owns, which is a real defect and
+              // wants a log line naming it.
+              logger.Warn('[Options] Ctrl-J was asked to select "%s", which is ' +
+                          'not in its list (hidden row, or no such command); ' +
+                          'falling back to the first row',
+                          [string(CommandToSet)]);
               TempInteger := 0;
               end;
            CommandToSet := nil;
