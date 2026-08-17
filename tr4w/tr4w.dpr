@@ -1132,6 +1132,22 @@ begin
   // Skipped entirely under batch /EXPORT: automated testing must not touch
   // the operator's live settings, and the export halts before the radios are
   // ever used, so the [Radio] keys are irrelevant to its output anyway.
+  // COMPUTER ID COMES FROM settings\tr4w.json, INCLUDING UNDER /EXPORT.
+  //
+  // It is Preferences > Network > "This station", written there through
+  // ApplyAndStoreCommand, so the JSON is already where an operator sets it
+  // (NY4I, 2026-08-16).  PostUnit compares each QSO's stored cecomputerid
+  // against this global to decide the Cabrillo TRANSMITTER DIGIT
+  // (PostUnit.PAS:3038), so a headless export that never applied it wrote the
+  // wrong digit on every line -- 2632 of them in the Winter Field Day set.
+  //
+  // ONE named command, not the store.  ApplyStoredCommands stays skipped under
+  // /EXPORT: applying everything takes today's settings over the log's own
+  // .cfg, which was measured wrong (21/1/4 -> 8/14/4).  This is the station's
+  // own identity rather than a property of the log being exported, so the
+  // current value is the correct one -- and no corpus .cfg sets it.
+  ApplyStoredCommand('COMPUTER ID');
+
   if (not tSilentExport) and
      (not ApplyActiveProfileToConfigAtStartup(tRadioLibraryError)) then
      begin

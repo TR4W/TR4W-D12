@@ -209,6 +209,19 @@ function ApplyPeerCommand(const aCommand, aValue: string): boolean;
 function  GetLatestConfigFile: string;
 procedure SetLatestConfigFile(const aFileName: string);
 
+// Apply ONE stored command from settings\tr4w.json, and return whether it was
+// found and accepted.
+//
+// For the handful of settings a HEADLESS /EXPORT genuinely needs.  That path
+// deliberately skips ApplyStoredCommands, because applying every stored command
+// takes the operator's current settings over the log's own .cfg -- measured
+// wrong, 21/1/4 -> 8/14/4.  Applying ONE NAMED command is a different thing:
+// the caller states which, and why, at the call site.
+//
+// Do not turn this into a loop over the store.  That is ApplyStoredCommands,
+// and it is skipped under /EXPORT on purpose.
+function ApplyStoredCommand(const aCommand: string): boolean;
+
 // UI-free description of the port collisions a profile WOULD cause, '' when
 // clean.  Advisory: unlike TRadioConfigStore.Validate, this also covers the
 // keyer lines and CAT-versus-keyer sharing, which are warnings rather than
@@ -647,6 +660,60 @@ begin
       begin
       aStore.SetCommand(aCommand, aValue);
       end;
+end;
+
+function ApplyStoredCommand(const aCommand: string): boolean;
+var
+   store: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   udp: TUDPBroadcastConfig;
+   loadErr, value: string;
+   keyShort, valueShort: ShortString;
+begin
+   Result := False;
+   if not FileExists(RadioStoreFileName) then
+      begin
+      Exit;
+      end;
+
+   store  := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   udp    := TUDPBroadcastConfig.Create;
+   try
+      if not LoadConfig(RadioStoreFileName, store, keyers, loadErr, udp) then
+         begin
+         logger.Warn('[Startup] %s could not be read for %s: %s',
+                     [RadioStoreFileName, aCommand, loadErr]);
+         Exit;
+         end;
+
+      value := store.CommandValue(aCommand, '');
+      if value = '' then
+         begin
+         Exit;   // not stored: the ini or the .cfg keeps whatever it set
+         end;
+
+      Windows.ZeroMemory(@keyShort, SizeOf(keyShort));
+      Windows.ZeroMemory(@valueShort, SizeOf(valueShort));
+      keyShort   := ShortString(AnsiString(aCommand));
+      valueShort := ShortString(AnsiString(value));
+
+      // True: apply even when the row is csJSON, which is the whole point.
+      Result := CheckCommand(@keyShort, valueShort, True);
+      if Result then
+         begin
+         logger.Info('[Startup] %s = %s applied from %s',
+                     [aCommand, value, RadioStoreFileName]);
+         end
+      else
+         begin
+         logger.Warn('[Startup] CFGCA refused stored %s = "%s"', [aCommand, value]);
+         end;
+   finally
+      udp.Free;
+      keyers.Free;
+      store.Free;
+   end;
 end;
 
 function GetLatestConfigFile: string;
