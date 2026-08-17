@@ -151,9 +151,11 @@ build-out/
 # release artefacts instead.
 tr4w/build/release/symbols/
 
-# Raw contest logs and captures that NO automated test reads -- 36 MB of D7-era
-# log sets kept only as a source for building NEW corpus sets by hand (the
-# D12_ROOT flow in tr4w/test/corpus/corpus-lib.sh).  The 13 sets the corpus
-# actually exercises are staged from their own tracked log.cfg/log.trw, so this
-# directory can be absent and the corpus still runs 22/0/4 from a fresh clone.
+# Raw contest logs and cluster captures that NO automated test reads -- 53 MB:
+# 37 D7-era log sets kept as a source for building NEW corpus sets by hand (the
+# D12_ROOT flow in tr4w/test/corpus/corpus-lib.sh), and dxcluster/, 209 captured
+# sessions used by hand when changing spot column/comment logic.  The 13 sets
+# the corpus exercises are staged from their own tracked log.cfg/log.trw, and
+# uTestDXSpotParse carries its sample lines inline, so this directory can be
+# absent and the corpus still runs 22/0/4 from a fresh clone.
 corpus_test_data/local_test_data/

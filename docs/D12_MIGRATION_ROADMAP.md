@@ -275,7 +275,7 @@ and the window layer.
   real nodes emit; it moved without being touched, and behaviour was pinned
   first.
 - **`test/unit/uTestDXSpotParse.pas`** — 27 tests, fixtures taken byte-for-byte
-  from the captured sessions in `corpus_test_data/dxcluster` (265 files,
+  from the captured sessions in `corpus_test_data/local_test_data/dxcluster` (265 files,
   198,979 `DX de` lines). Suite total is now **1,765 green**.
 
 That corpus also settled what the mysterious `Offset` logic is *for*. 198,977 of
@@ -315,7 +315,7 @@ stack garbage.
 
 **Done 2026-08-04.** With the decoder under test, the two defects above were
 fixed and the comment parser was rewritten. What made this tractable is that the
-capture in `corpus_test_data/dxcluster` is big enough to be evidence: a
+capture in `corpus_test_data/local_test_data/dxcluster` is big enough to be evidence: a
 throwaway probe ran the **committed decoder and the new one side by side over all
 198,979 lines** and diffed every field. Final state of that diff:
 
