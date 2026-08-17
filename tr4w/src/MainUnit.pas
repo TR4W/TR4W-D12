@@ -9387,6 +9387,26 @@ end;
 procedure RunOptionsDialog(f: CFGFunc);
 begin
   CommandsFilter := f;
+
+  // COLORS STILL USES THE OLD DIALOG, and that is not an oversight.
+  //
+  // cfCol is not a filter over CFGCA at all -- it is a different dialog wearing
+  // the same window.  CommandsToListView2 builds it from
+  // TWindows[TMainWindowElement], two rows per element (colour and background)
+  // for ~60 elements, valued from the tr4wColors enum and saved to the ini's
+  // [COLORS] section.  None of those are CFGCA rows, so emptying Ctrl-J did not
+  // touch them and Preferences has nowhere to show them.
+  //
+  // Repointing every filter at Preferences therefore made the Colours editor
+  // UNREACHABLE (caught by NY4I, 2026-08-16).  A Colours page under Appearance
+  // is the right answer and needs a real picker rather than a list of enum
+  // names; until it exists, this keeps the editor working.
+  if f = cfCol then
+     begin
+     CreateModalDialog(390, 250, tr4whandle, @SettingsDlgProc2, 0);
+     Exit;
+     end;
+
   logger.Info('[Options] Ctrl-J -> Preferences (the old options list is empty by design)');
   ShowPreferences;
 end;
