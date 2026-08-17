@@ -497,16 +497,9 @@ uses
 // mean never finding out whether the CONTEST ENGINE works under FPC.  Excluded
 // here so the FPC build can be built and tested; the three commands below are
 // simply unavailable in it.  This guard comes OUT with the LCL port.
-{$IFNDEF FPC}
-  uFMXSpikeForm,    // SPIKE ONLY -- the FMXTEST command, remove with the spike
-{$ENDIF}
   uUDPBroadcastConfig, // TUDPStream / usLookup
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
-{$IFNDEF FPC}
-  uFMXDesignedProbe, // SPIKE ONLY -- the FMXDESIGN command; remove with the spike
-{$ENDIF}
-  uPrefsForm,       // the PREF command -- the radio Preferences window; FMX or
-                    // LCL depending on the compiler, same ShowPreferences either way
+  uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
@@ -8145,22 +8138,19 @@ begin
     ['ADIF', 'CAB', 'CMD', 'COL', 'CWOFF', 'CWON', 'EXIT', 'NOTE', 'OPON',
     'SCORE',
       'SUM', 'UDP', 'WCY', 'WWV',
-    // SPIKE ONLY -- opens the FMX coexistence test form; remove with the spike.
-    // Appended out of alphabetical order deliberately: AnsiIndexText does not
-    // care about order, and slotting it after 'EXIT' would renumber seven case
-    // arms below, where an off-by-one silently fires the WRONG command.
-    'FMXTEST',
-    // Opens the new radio Preferences window.  Appended for the same reason
-    // as FMXTEST -- renumbering the arms above is where the off-by-one lives.
+    // Opens the radio Preferences window.  Appended out of alphabetical order
+    // deliberately: AnsiIndexText does not care about order, and slotting it
+    // after 'EXIT' would renumber the case arms below, where an off-by-one
+    // silently fires the WRONG command.
+    //
+    // 'FMXTEST' (was 14) and 'FMXDESIGN' (was 16) were removed with the FMX
+    // twins on 2026-08-17, which is why PREF and CATLEGACY renumbered here --
+    // the one edit this array's ordering rule was written to make deliberate.
     'PREF',
-    // SPIKE ONLY -- the designed-form probe; remove with the spike.  Appended
-    // for the same reason as FMXTEST: renumbering the arms is the hazard.
-    'FMXDESIGN',
     // TRANSITIONAL -- the legacy per-slot CAT dialog, which came off the
     // Settings menu when 'CAT and CW Keying' was repointed at the Preferences
     // window.  Kept reachable until Track F has replaced it on the bench, then
-    // deleted along with uCAT.CATDlgProc.  Appended, like the two above:
-    // renumbering the case arms is where the off-by-one lives.
+    // deleted along with uCAT.CATDlgProc.
     'CATLEGACY']) of
     0: ProcessMenu(menu_adif);
     1: ProcessMenu(menu_cabrillo);
@@ -8196,14 +8186,8 @@ begin
     11: SendFullLogToUDP;
     12: SendViaTelnetSocket('SH/WCY');
     13: SendViaTelnetSocket('SH/WWV');
-{$IFNDEF FPC}
-    14: ShowFMXSpikeForm;   // SPIKE ONLY -- remove with the spike
-{$ENDIF}
-    15: ShowPreferences;
-{$IFNDEF FPC}
-    16: ShowFMXDesignedProbe;   // SPIKE ONLY -- remove with the spike
-{$ENDIF}
-    17:
+    14: ShowPreferences;
+    15:
       begin
       // Radio 1, because the legacy dialog is per-slot and this is only an
       // escape hatch; Settings -> CAT and CW Keying is the supported route.

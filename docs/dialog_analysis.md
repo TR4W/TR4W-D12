@@ -122,8 +122,30 @@ Delphi `TForm` with manually placed controls matching the binary template layout
   — templates in non-English `.RES`, English is missing them
 - **1 main window** (`MAINTR4WDLGTEMPLATE`) — fully inline, no `.RES` entry anywhere
 
-### Refactor Approach
-1. Non-English `.RES` files already have the templates for almost everything
-2. Only the main window (`MAINTR4WDLGTEMPLATE`) and the `tw_RADIO*` windows have no `.RES` entry
-3. For Delphi migration: extract from Russian/Spanish `.RES` → generate `.dfm` skeletons  
-   → wire up the existing `DlgProc` logic into `TForm` event handlers
+### ~~Refactor Approach~~ — WRONG, corrected 2026-08-17
+
+> The three steps that stood here said: the non-English `.RES` files have the templates for
+> almost everything, only the main window and the `tw_RADIO*` windows lack a `.RES` entry, and
+> the migration should extract Russian/Spanish templates and generate `.dfm` skeletons.
+>
+> **Do not do that.** All three premises were measured and are false.
+
+1. **The templates are empty.** `TF.CreateModalDialog` (`TF.pas:1099`) zeroes a `DLGTEMPLATE`,
+   sets only X/Y/cx/cy/Style and creates **zero controls**; every control is built in the
+   `DlgProc`'s `WM_INITDIALOG` from the `TF.pas` factories. Same for the 21 child panels via
+   `MAINTR4WDLGTEMPLATE`. So for ~44 of ~47 surfaces there is **no resource layout to extract** —
+   the `.RES` cannot be a source for something it does not contain.
+2. **The 38 dialogs that do carry layouts exist only in the nine non-English files** and describe
+   a UI generation the English build has never instantiated. Reviving them would re-create
+   dialogs no operator has seen. Layout also differs per language (`#ifdef RUSSIANVERSION` adds
+   controls; dialog 66 is 910 B in `ger` vs 1268 B in `eng`), so there is no single "the" layout.
+3. **`.dfm` is the wrong target anyway** — the toolchain is FPC + Lazarus since 2026-08-13, so
+   designed forms are `.lfm` under `src/ui/lcl/`.
+
+**The layout source is the hand-coded builder** — each `DlgProc`'s `WM_INITDIALOG`. The one place
+the `.RES` earns a role is dialogs **46, 66 and 73**, where the English template *is* the shipping
+layout: decompile those as a *measurement reference* for positions and tab order, not as a
+generator. Full reasoning and the phased plan:
+`~/.claude/plans/this-project-has-windows-binary-hammock.md`.
+
+The inventory tables above are accurate and still worth reading.

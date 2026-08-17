@@ -33,18 +33,19 @@ unit uWinTimer;
   implemented exactly this way; this is the same mechanism with the framework
   peeled off.
 
-  WHY NOT FMX.Types.TTimer, WHICH IS WHERE THIS PROJECT IS HEADED.  It is, and
-  NY4I's stated direction is that TR4W moves to FMX and away from the Win32 API
-  entirely (2026-08-05).  This unit is a STEPPING STONE, not a destination, and
-  the reason is sequencing: FMX's Windows timer runs through FMX.Platform.Win
-  and needs the platform services that the coexistence spike is about to test.
-  Putting the CW-by-CAT busy window -- contest-critical timing -- on that
-  framework BEFORE the spike answers whether FMX works under TR4W's foreign
-  message loop would be betting the CW path on the unknown.
+  WHY NOT THE FRAMEWORK'S TTimer, WHICH IS WHERE THIS PROJECT IS HEADED.  It
+  is: TR4W is moving off the Win32 API entirely, for macOS and Linux.  This
+  unit is a STEPPING STONE, not a destination.
 
-  So: revisit this once the spike passes.  The surface is TTimer's, so switching
-  to FMX.Types.TTimer is a `uses` change and a type name, and
-  test/unit/uTestWinTimer.pas carries over unchanged as the safety net for it.
+  ~~FMX.Types.TTimer~~ was the original target (2026-08-05); the toolchain
+  became FPC + LCL on 2026-08-13, so the destination is now LCL's TTimer.  The
+  sequencing argument is unchanged and still holds: SetTimer is a bare Win32
+  call that needs no widgetset, and the CW-by-CAT busy window is contest-
+  critical timing, so it does not move until the loop does.  That is Phase 3 of
+  the LCL migration, where SetTimer callbacks become TTimers as a group.
+
+  The surface is TTimer's, so the switch is a `uses` change and a type name,
+  and test/unit/uTestWinTimer.pas carries over unchanged as the safety net.
 
   BEHAVIOUR IS TTimer's, deliberately, including the part that surprises people:
 

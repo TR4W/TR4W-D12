@@ -97,35 +97,12 @@ uses
   uTR4WConfigFile in 'src\uTR4WConfigFile.pas',
   uRadioConfigLegacyMap in 'src\uRadioConfigLegacyMap.pas',
   uRadioConfigApply in 'src\uRadioConfigApply.pas',
-  // FMX coexistence spike -- see docs\FMX_WIN32_COEXISTENCE.md.  FMX.Forms is
-  // needed for Application.Initialize; the spike form is opened on demand by
-  // the FMXTEST call-window command and never at startup.
-  //
-  // EXCLUDED UNDER FPC.  FMX has no FPC equivalent; the LCL is the intended
-  // replacement and that port is not done.  Nothing on the headless /EXPORT
-  // path -- which is what the golden-master corpus drives -- ever creates a
-  // form, so an FPC build without these can still answer the question the
-  // corpus asks.  An FPC build is therefore ENGINE-ONLY and cannot be shipped:
-  // the four settings dialogs and the two spike commands are simply absent.
-  // This guard comes out with the LCL port.  MainUnit already carries the
-  // matching guards for the commands that open these forms.
-{$IFNDEF FPC}
-  FMX.Forms,
-  uFMXCoexist in 'src\ui\fmx\uFMXCoexist.pas',
-  uFMXSpikeForm in 'src\ui\fmx\uFMXSpikeForm.pas',
-  // SPIKE ONLY -- the designed-form probe (FMXDESIGN); remove with the spike.
-  uFMXDesignedProbe in 'src\ui\fmx\uFMXDesignedProbe.pas' {FMXDesignedProbe},
-  uFMXFormHelpers in 'src\ui\fmx\uFMXFormHelpers.pas',
-  uFMXTranslate in 'src\ui\fmx\uFMXTranslate.pas',
-  uRadioEditForm in 'src\ui\fmx\uRadioEditForm.pas' {RadioEditForm},
-  uKeyerEditForm in 'src\ui\fmx\uKeyerEditForm.pas' {frmKeyerEdit},
-  uUDPDestinationEditForm in 'src\ui\fmx\uUDPDestinationEditForm.pas' {frmUDPDestinationEdit},
-  // TSettingBindings binds FMX controls to settings, so it belongs with the
-  // forms.  RegisterLegacySetting moved to uSettingsLegacy, which has no FMX
-  // and stays in the build.
-  uSettingsBinding in 'src\uSettingsBinding.pas',
-  uPrefsForm in 'src\ui\fmx\uPrefsForm.pas' {PrefsForm},
-{$ENDIF}
+  // The FMX twins were DELETED 2026-08-17, at the start of the Win32-to-LCL
+  // migration.  They were never in an FPC build -- FMX has no FPC compiler --
+  // so under the decided toolchain they were code nothing compiled, and had
+  // already drifted from the LCL forms that replaced them.  Deleting them here
+  // rather than per-form means no conversion has to ask whether it owes a twin.
+  // The LCL set is in the {$IFDEF FPC} block below.
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
   VC in 'src\VC.pas',
@@ -938,30 +915,13 @@ begin
    // the main thread initialize simultaneously.
    IsMultiThread := True;
 
-   // FMX platform services, set up but NEVER RUN.  Application.Initialize
-   // registers the platform services an FMX form needs to create its window;
-   // it does not start a message loop and does not create a main form.  The
-   // loop below stays TR4W's own -- Application.Run is never called, and there
-   // is deliberately no Application.CreateForm anywhere.
+   // Application.Initialize creates the widgetset, and that is all this needs.
    //
-   // Both calls go with the FMX units under FPC -- see the uses clause.  They
-   // only REGISTER services for forms that build cannot create.
-{$IFNDEF FPC}
-   FMX.Forms.Application.Initialize;
-
-   // ...and then tell FMX the application is running, because Application.Run
-   // is what normally says so and we never call it.  Without this every FMX
-   // form stays Active=False and its edits never show a caret.  See
-   // uFMXCoexist.TellFMXTheApplicationIsRunning for the full chain.
-   TellFMXTheApplicationIsRunning;
-{$ELSE}
-   // The LCL equivalent, and it is genuinely smaller: Application.Initialize
-   // creates the widgetset, and that is all this needs. There is no
-   // ApplicationState to lie about, because the LCL does not gate a form's
-   // Active flag on one the way FMX does.
-   //
-   // Application.Run is NOT called here and must never be -- TR4W owns the
-   // message loop below. See uLCLCoexist.
+   // Application.Run is NOT called here -- TR4W owns the message loop below.
+   // That is TRANSITIONAL, not the design: the hand-rolled loop is Win32 API
+   // and has to go for macOS/Linux, at which point Application.Run replaces it
+   // (Phase 3 of the LCL migration). See uLCLCoexist.
+{$IFDEF FPC}
    InitLCLForHostedLoop;
 {$ENDIF}
 
@@ -1540,20 +1500,13 @@ begin
   begin
 
     // FIRST question, before accelerators and before every case arm below.
-    // A message for an FMX window gets a plain Translate + Dispatch and
+    // A message for a hosted form gets a plain Translate + Dispatch and
     // nothing else: this loop routes WM_CHAR into the callsign window and
     // treats F-keys and the numeric keypad as CW memories, all of which would
     // steal keystrokes from a text box in another window.  One test closes
-    // every such leak at once.  See uFMXCoexist.
-    // No FMX under FPC -- the units are excluded from the project, so there is
-    // no FMX window for a message to belong to.  See tr4w.dpr's uses clause.
-{$IFNDEF FPC}
-    if MessageIsForFMXWindow(Msg) then
-       begin
-       goto TransMess;
-       end;
-{$ELSE}
-    // Same question, asked of the LCL forms: does this message belong to a
+    // every such leak at once.
+{$IFDEF FPC}
+    // Does this message belong to a
     // hosted window rather than to TR4W's own? The registry behind it
     // (uHostedFormWindows) is shared and toolkit-blind on purpose -- both
     // toolkits register a plain HWND and neither one is named here.

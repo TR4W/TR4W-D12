@@ -116,19 +116,93 @@ function Get-FmxObjects {
    return $objects
 }
 
+# Nav items built IN CODE, not in the designer.
+#
+# The LCL Preferences form replaced the FMX list of nav* controls with a
+# TTreeView whose NODES carry the Tag -- and a TTreeNode is not a component, so
+# it appears nowhere in the .lfm. The designed file holds only the panels.
+#
+# That silently emptied this lint: it skipped any form with no nav* OBJECT, so
+# from the day the LCL form landed it checked nothing and passed. Exactly the
+# fail-open shape a gate must not have. So the nav side is now read from the
+# form's .pas as well, and a form with tagged panels and no nav source at all
+# is a FAILURE rather than a skip.
+#
+# Pattern, from uPrefsForm.pas: `TNavNode(navStation).Tag := 1;` with the value
+# either a literal or a NAV_* constant declared in the same unit.
+function Get-NavTagsFromUnit {
+   param([string] $Path)
+
+   $navItems = @()
+   if (-not (Test-Path -LiteralPath $Path)) {
+      return $navItems
+   }
+
+   $lines = Get-Content -LiteralPath $Path
+   # Named constants first: `NAV_MORE = 30;` (const section, one per line).
+   $consts = @{}
+   for ($i = 0; $i -lt $lines.Count; $i++) {
+      if ($lines[$i] -match '^\s*(NAV_[A-Za-z0-9_]+)\s*=\s*(-?\d+)\s*;') {
+         $consts[$Matches[1]] = [int]$Matches[2]
+      }
+   }
+
+   for ($i = 0; $i -lt $lines.Count; $i++) {
+      if ($lines[$i] -match '\(\s*(nav[A-Za-z0-9_]*)\s*\)\s*\.Tag\s*:=\s*([A-Za-z0-9_]+)\s*;') {
+         $name  = $Matches[1]
+         $value = $Matches[2]
+         if ($value -match '^-?\d+$') {
+            $tag = [int]$value
+         } elseif ($consts.ContainsKey($value)) {
+            $tag = $consts[$value]
+         } else {
+            # An unresolvable value is NOT treated as 0 -- 0 is the "untagged"
+            # violation and would be reported as a defect that is really a
+            # limitation of this parser. Say so instead.
+            $navItems += [pscustomobject]@{ Name = $name; Line = $i + 1; Tag = 0; Unresolved = $value }
+            continue
+         }
+         $navItems += [pscustomobject]@{ Name = $name; Line = $i + 1; Tag = $tag; Unresolved = $null }
+      }
+   }
+   return $navItems
+}
+
 # Applies the four rules to one parsed form. Returns violation strings.
 function Test-FormTags {
    param(
       [string] $DisplayPath,
-      [object[]] $Objects
+      [object[]] $Objects,
+      [object[]] $CodeNavItems = @()
    )
 
    $violations = @()
 
    $navItems = @($Objects | Where-Object { $_.Name -like 'nav*' })
    if ($navItems.Count -eq 0) {
-      # Not a tag-dispatched form. No opinion -- see SCOPE in the description.
+      $navItems = @($CodeNavItems)
+   }
+   if ($navItems.Count -eq 0) {
+      # No nav side found. Two very different cases, and the discriminator is a
+      # nav CONTAINER, not the presence of tags:
+      #
+      #  * A form entitled to use Tag for something else -- RadioEditForm tags
+      #    its transport tabs -- has no nav container, and this lint has no
+      #    opinion about it (see SCOPE).
+      #  * A form that HAS a nav container but whose items this parser cannot
+      #    see is the lint going blind. That must fail, not pass: it is how the
+      #    LCL Preferences form dropped out of this gate unnoticed.
+      $navContainer = @($Objects | Where-Object { $_.Name -match '(?i)nav' })
+      if ($navContainer.Count -gt 0) {
+         $violations += ("{0}:{1}: '{2}' looks like a nav container but no nav items were found in the form or its .pas -- this lint cannot see the nav side, so it is NOT checking this form. Teach Get-NavTagsFromUnit the pattern rather than leaving the gate open." -f $DisplayPath, $navContainer[0].Line, $navContainer[0].Name)
+      }
       return $violations
+   }
+
+   foreach ($nav in $navItems) {
+      if ($nav.PSObject.Properties.Name -contains 'Unresolved' -and $nav.Unresolved) {
+         $violations += ("{0}:{1}: nav item '{2}' has Tag := {3}, which this lint could not resolve to a number -- it is not being checked" -f $DisplayPath, $nav.Line, $nav.Name, $nav.Unresolved)
+      }
    }
 
    foreach ($nav in $navItems) {
@@ -300,6 +374,21 @@ object RadioEditForm: TRadioEditForm
 end
 '@ },
 
+      # THE FAIL-OPEN CASE. A nav container whose items this parser cannot see
+      # (a TTreeView builds its nodes in code) must be reported, not skipped --
+      # skipping it is how the LCL Preferences form silently left this gate.
+      # Contrast with not_a_nav_form above: no nav container, so no opinion.
+      @{ Name = 'nav_container_with_invisible_items'; Expect = 1; Body = @'
+object PrefsForm: TPrefsForm
+  object tvNav: TTreeView
+    ReadOnly = True
+  end
+  object layStation: TPanel
+    Tag = 1
+  end
+end
+'@ },
+
       # A collection property must not confuse the object/end tracking: if it
       # did, layHardware's Tag would be attributed to the wrong control and the
       # panel would look unreachable.
@@ -377,10 +466,11 @@ $formsChecked = 0
 
 foreach ($file in $files) {
    $objects = Get-FmxObjects -Path $file.FullName
-   if (@($objects | Where-Object { $_.Name -like 'nav*' }).Count -gt 0) {
+   $codeNav = @(Get-NavTagsFromUnit -Path ([System.IO.Path]::ChangeExtension($file.FullName, '.pas')))
+   if (@($objects | Where-Object { $_.Name -like 'nav*' }).Count -gt 0 -or $codeNav.Count -gt 0) {
       $formsChecked++
    }
-   $violations += Test-FormTags -DisplayPath $file.FullName -Objects $objects
+   $violations += Test-FormTags -DisplayPath $file.FullName -Objects $objects -CodeNavItems $codeNav
 }
 
 if ($violations.Count -gt 0) {
@@ -389,5 +479,13 @@ if ($violations.Count -gt 0) {
    exit 1
 }
 
-Write-Output ("Lint-FormTags: {0} .fmx file(s) checked, {1} tag-dispatched, no tag defects." -f $files.Count, $formsChecked)
+if ($formsChecked -eq 0) {
+   # A FLOOR. This lint exists for the Preferences nav; if it ever reports that
+   # it found no tag-dispatched form at all, it has stopped being a gate and is
+   # reporting success for doing nothing.
+   Write-Output "Lint-FormTags: NO tag-dispatched form found. This lint checks the Preferences nav; finding none means it is no longer looking where the forms are."
+   exit 1
+}
+
+Write-Output ("Lint-FormTags: {0} designed form(s) checked, {1} tag-dispatched, no tag defects." -f $files.Count, $formsChecked)
 exit 0

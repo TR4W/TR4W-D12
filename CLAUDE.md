@@ -35,8 +35,9 @@ integration. Roughly **129,000 lines across ~260 units** (`tr4w/src`, `src/trdos
 predecessor and is fully contained in it. `master` means the D7 heritage on both remotes.
 **Toolchain:** **FreePascal 3.2.2 + the Lazarus LCL.** ~~Delphi 12 Athens~~ was left behind on
 2026-08-13 once FPC passed the unit tests (3978/0), the golden corpus (22/0/4) and shipped the
-installer. Delphi survives only as `tr4w/FullBuild-D12-deprecated.ps1`, kept so an old build can
-be reproduced for comparison. **DCC32 was retired earlier and is long gone.**
+installer. `tr4w/FullBuild-D12-deprecated.ps1` still exists but **no longer works**: deleting the
+FMX twins on 2026-08-17 removed units its uses clause needs, so a Delphi build can only be
+reproduced by checking out a commit before that. **DCC32 was retired earlier and is long gone.**
 **Version:** see `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`) — `5.0.0` as of 2026-08.
 **Website:** https://tr4w.net
 
@@ -49,8 +50,12 @@ be reproduced for comparison. **DCC32 was retired earlier and is long gone.**
 Done: the build system, the lints, the unit tests (3978/0), the golden corpus (22/0/4), the LCL
 port of all four designed forms, `tr4wserver`, the NSIS installer, and `release.yml`.
 **The largest open block is still live/bench verification, and nothing in it is provable by code
-review.** Next in line: attaching a `win-ci` runner, and the FMX twins can be deleted once the
-LCL forms have been exercised on real hardware.
+review.** Next in line: attaching a `win-ci` runner.
+
+**The FMX twins are gone (2026-08-17)** — deleted at the start of the Win32-to-LCL migration
+rather than after bench-exercising the LCL forms, because FPC cannot compile FMX at all: they
+were units no build compiled, and they had already drifted. See the plan at
+`~/.claude/plans/this-project-has-windows-binary-hammock.md`, Phase 0.
 
 ~~Per-area D12 status lives in `docs/D12_MIGRATION_ROADMAP.md`~~ — that roadmap is **superseded**;
 read it for *why* things are shaped as they are, not for status.
