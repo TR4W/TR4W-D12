@@ -777,6 +777,17 @@ const
 // call-window command.
 procedure ShowPreferences;
 
+// Deep link -- SIGNATURE ONLY on this deprecated FMX twin.
+//
+// The LCL form implements this properly (select the owning section, focus the
+// control).  It exists here so MainUnit.SetCommand can call it unconditionally
+// rather than carry an {$IFDEF FPC} around a routing decision that has nothing
+// to do with the compiler.  This one opens Preferences and returns False, which
+// its caller already handles as "I could not take you there" -- a correct, if
+// unhelpful, answer.  Do not build the real thing here: the FMX forms are
+// scheduled for deletion once the LCL forms have been exercised on hardware.
+function ShowPreferencesForCommand(const aCommand: string): boolean;
+
 implementation
 
 {$R *.fmx}
@@ -842,6 +853,14 @@ begin
       logger.Debug('[Prefs] %-22s %5d ms', [aName, aWatch.ElapsedMilliseconds]);
       end;
    aWatch := TStopwatch.StartNew;
+end;
+
+function ShowPreferencesForCommand(const aCommand: string): boolean;
+begin
+   // See the interface comment: no deep link on the deprecated FMX twin.
+   ShowPreferences;
+   Result := False;
+   logger.Warn('[Prefs] deep link to "%s" not supported by the FMX form', [aCommand]);
 end;
 
 procedure ShowPreferences;

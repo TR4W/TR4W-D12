@@ -700,6 +700,19 @@ type
       FSearchHits: array of TPrefsSearchHit;
       FSearchIndexBuilt: boolean;
       FSearchIndex: array of TPrefsSearchEntry;
+      { Generated rows that are DISPLAY-ONLY and therefore deliberately not
+        bound -- see AddGeneratedRows. They have no binding for BuildSearchIndex
+        to walk, so they are collected here and appended to the index by hand.
+        Without this, making them unsaveable would also make them unfindable,
+        and "I can search and find every one of these" is a requirement. }
+      FDisplayOnlyRows: array of TPrefsSearchEntry;
+      { The CONTAINERS the generated sections created -- the pages, and the block
+        panel added to a designed page. BuildBindings runs again on Cancel, so
+        the generator runs again; without freeing these first the second pass
+        raises "Duplicate name: a component named gen_… already exists" (NY4I hit
+        exactly that, 2026-08-16). Containers only: freeing one frees its
+        children, and tracking the children too would double-free them. }
+      FGeneratedRoots: array of TControl;
 
       { Controls bound to settings by KEY -- see uSettingsBinding.  Anything
         bound needs no load/save code of its own. }
@@ -764,6 +777,7 @@ type
       navLogging: TTreeNode;
       navBackup: TTreeNode;
       navContest: TTreeNode;
+      navMore: TTreeNode;
       navCW: TTreeNode;
       navAudio: TTreeNode;
    navPaddlePTT: TTreeNode;
@@ -864,11 +878,41 @@ type
 
       { The Preferences search box -- see the SEARCH block in the implementation. }
       procedure BuildSearchIndex;
+      procedure AddStationFieldsToSearchIndex(var aN: integer);
       procedure RunSearch(const aNeedle: string);
       procedure ActivateSearchHit(const aIndex: integer);
       procedure HideSearchResults;
       function SectionPanelFor(const aControl: TWinControl): TControl;
       function NavItemForTag(const aTag: NativeInt): TTreeNode;
+
+      { Deep link: "open Preferences AT this setting."  ControlForCommand maps a
+        legacy Ctrl-J command spelling to the control that edits it;
+        FocusControlOnItsSection is the two-step (select the nav item, focus the
+        control) that a search hit already performed inline. }
+      function  ControlForCommand(const aCommand: string): TWinControl;
+      procedure FocusControlOnItsSection(const aControl: TWinControl);
+
+      { GENERATED SECTIONS -- the Ctrl-J replacement.
+
+        One panel built at run time per key prefix, a label and a control per
+        registered setting.  This is how 152 settings get a home without 152
+        controls in the designer, and it is what makes regrouping them later a
+        rename rather than a week in the form editor.
+
+        Ctrl-J was itself a generic renderer -- a ListView over CFGCA -- so this
+        is that idea moved into Preferences, with sections and search instead of
+        one flat alphabetical list. }
+      procedure BuildGeneratedSections;
+      function  BuildGeneratedSection(const aTag: NativeInt; const aHeading: string;
+                                      const aPrefixes: array of string): integer;
+      function  AddGeneratedRows(const aParent: TWinControl; const aKeyPrefix: string;
+                                 var aY: integer): integer;
+      procedure BuildGeneratedBlock(const aParent: TWinControl; const aTop: integer;
+                                    const aHeading: string;
+                                    const aPrefixes: array of string);
+      procedure TrackGeneratedRoot(const aControl: TControl);
+      procedure AddHandWiredToSearchIndex(var aN: integer; const aCommand: string;
+                                          const aControl: TWinControl);
       procedure SearchListClick(Sender: TObject);
       { BOTH TYPES QUALIFIED, and that is not pedantry: FPC's Windows unit
         declares its OWN TOwnerDrawState and TRect, and this unit uses Windows
@@ -996,9 +1040,31 @@ const
    NAV_RADIOS            = 26;
    NAV_ROTATORS          = 27;
 
+   // 28 and 29 are layPaddlePTT and layAudio, which carry literal Tags in the
+   // .lfm rather than these constants. 30 is the first free number.
+   //
+   // A HOLDING PAGE for the settings that left Ctrl-J and have no designed page
+   // yet. It is meant to shrink to nothing: each time a page is designed, its
+   // settings' key prefix changes and they move off here. Named on screen as
+   // what it is, so it does not read as a permanent home.
+   NAV_MORE              = 30;
+
 // Opens Preferences, creating it on first use.  Called from the PREF
 // call-window command.
 procedure ShowPreferences;
+
+// Opens Preferences AT a specific setting: the section that owns aCommand is
+// selected and the control that edits it is focused, so the operator lands on
+// the field rather than on a page to go hunting through.
+//
+// aCommand is the legacy Ctrl-J spelling ('MY GRID', 'COMPUTER ID'), which is
+// what the rest of TR4W already uses to name a setting -- see CFGCA in uCFG.
+//
+// RETURNS FALSE IF THE COMMAND IS NOT ON ANY PANEL, and the form is then left
+// showing whatever it showed before.  The caller MUST handle that rather than
+// assume: guessing wrong here is what the Ctrl-J path used to do, silently
+// selecting row 0 when it could not find the command (uOption.pas).
+function ShowPreferencesForCommand(const aCommand: string): boolean;
 
 implementation
 
@@ -1113,6 +1179,46 @@ begin
                             '%s: %s'#13#10#13#10 +
                             'Logging continues normally; see tr4w.log.',
                             [phase, E.ClassName, E.Message]));
+         end;
+      end;
+end;
+
+function ShowPreferencesForCommand(const aCommand: string): boolean;
+var
+   ctl: TWinControl;
+begin
+   Result := False;
+
+   // Open first: the form has to exist before it can be asked which control
+   // edits a command, and the operator should see Preferences either way. A
+   // command we cannot locate is still better served by an open Preferences
+   // window than by nothing at all.
+   ShowPreferences;
+
+   if gPrefsForm = nil then
+      begin
+      Exit;
+      end;
+
+   try
+      ctl := gPrefsForm.ControlForCommand(aCommand);
+      if ctl = nil then
+         begin
+         // NOT silent. This is the failure the old Ctrl-J path hid by selecting
+         // row 0; if a command ever loses its control, the log says which one.
+         logger.Warn('[Prefs] no control edits "%s" -- opened Preferences ' +
+                     'without a deep link', [aCommand]);
+         Exit;
+         end;
+
+      gPrefsForm.FocusControlOnItsSection(ctl);
+      Result := True;
+      logger.Debug('[Prefs] deep link -> %s (%s)', [aCommand, ctl.Name]);
+   except
+      on E: Exception do
+         begin
+         logger.Error('[Prefs] deep link to "%s" failed: %s: %s',
+                      [aCommand, E.ClassName, E.Message]);
          end;
       end;
 end;
@@ -2196,9 +2302,323 @@ begin
       end;
 end;
 
+{ ------------------------------------------------- generated sections ----- }
+
+// One generated panel per key prefix. Called from the constructor, after
+// BuildNavTree so the nav items exist and before LoadStore so the bindings are
+// in place when values are read.
+//
+// The prefix IS the placement rule: a setting registered as `contest.foo` lands
+// on the Contest page and nowhere else. That is the whole of the layout policy,
+// which is what makes "we will organise these once the contest factory is done"
+// a rename rather than a redesign.
+procedure TPrefsForm.BuildGeneratedSections;
+var
+   total, i: integer;
+begin
+   // IDEMPOTENT, because BuildBindings runs again every time the form reloads --
+   // Cancel is the obvious one. Without this the second pass tried to create
+   // `gen_contest_autoQslInterval` a second time and the LCL raised
+   // "Duplicate name" over a half-built page (2026-08-16).
+   //
+   // Containers only. Freeing a scroll box frees the labels and controls inside
+   // it; freeing those separately afterwards would be a double free.
+   logger.Debug('[Prefs] BuildGeneratedSections: freeing %d previous root(s)',
+                [Length(FGeneratedRoots)]);
+   for i := High(FGeneratedRoots) downto Low(FGeneratedRoots) do
+      begin
+      FGeneratedRoots[i].Free;
+      end;
+   SetLength(FGeneratedRoots, 0);
+
+   // Their index entries went with them. Left behind, they would point at freed
+   // controls and a search hit would focus a dangling reference.
+   SetLength(FDisplayOnlyRows, 0);
+
+   // ONE GENERATED PAGE PER TAG THAT HAS NO DESIGNED PANEL.
+   //
+   // A generated page is a child of layContent carrying a section Tag, so it is
+   // found by exactly the same tvNavChange loop as a designed one. That also
+   // means a tag may have ONE panel: generating a page for a tag that already
+   // has a designed panel would put two panels on screen at once, and binding a
+   // second control to a key that already has one makes both write, with the
+   // operator seeing whichever loaded last.
+   //
+   // Only NAV_CONTEST and NAV_ADVANCED are panel-less today. The rest of the
+   // Ctrl-J tail therefore lands on "More settings" until each page is designed
+   // -- see the heading text, which says so on screen rather than in a comment
+   // nobody reads.
+   total := 0;
+   total := total + BuildGeneratedSection(NAV_CONTEST, 'Contest settings',
+                                          ['contest.']);
+   total := total + BuildGeneratedSection(NAV_ADVANCED, 'Advanced',
+                                          ['advanced.']);
+   total := total + BuildGeneratedSection(NAV_MORE,
+      'More settings' + #13#10 +
+      'Settings that left Ctrl-J and do not have a designed page yet. ' +
+      'They work here; they will move to the pages named below.',
+      ['operating.ctrlj.', 'cw.ctrlj.', 'appearance.ctrlj.', 'hardware.ctrlj.',
+       'files.ctrlj.', 'bandmap.ctrlj.', 'network.ctrlj.', 'voice.ctrlj.',
+       'cluster.ctrlj.']);
+
+   // Onto the DESIGNED Appearance panel, below its controls (they end at
+   // y=452 of 572, so there is room for a small block and no more).
+   BuildGeneratedBlock(layAppearance, 462, 'Layout', ['appearance.layout.']);
+
+   logger.Info('[Prefs] generated sections: %d control(s) built', [total]);
+end;
+
+// Build one generated page and return how many controls it carries.
+//
+// Returns 0 rather than failing when a prefix matches nothing -- a page with no
+// settings is a real state while the tail is being re-homed -- but the count is
+// logged, so an unexpected zero is visible instead of silent.
+function TPrefsForm.BuildGeneratedSection(const aTag: NativeInt; const aHeading: string;
+                                          const aPrefixes: array of string): integer;
+var
+   box: TScrollBox;
+   head: TLabel;
+   p: string;
+   y, n: integer;
+begin
+   box := TScrollBox.Create(Self);
+   box.Parent      := layContent;
+   box.Tag         := aTag;          // tvNavChange finds it by this and nothing else
+   box.Align       := alClient;
+   box.BorderStyle := bsNone;
+   box.Color       := clWindow;
+   box.ParentColor := False;
+   box.Visible     := False;         // tvNavChange owns visibility
+   TrackGeneratedRoot(box);
+
+   head := TLabel.Create(box);
+   head.Parent    := box;
+   head.Caption   := aHeading;
+   head.WordWrap  := True;
+   head.SetBounds(16, 12, 620, 40);
+   head.Font.Style := [fsBold];
+
+   y := 64;
+   n := 0;
+   for p in aPrefixes do
+      begin
+      n := n + AddGeneratedRows(box, p, y);
+      end;
+
+   Result := n;
+   logger.Debug('[Prefs] generated page tag=%d -> %d setting(s)', [aTag, n]);
+end;
+
+// Append generated rows to an EXISTING DESIGNED PANEL, below whatever the
+// designer put there.
+//
+// The other overload builds a whole page; this one adds a block to a page that
+// already exists. It is how a setting reaches its real home without waiting for
+// its whole page to be regenerated -- ROW COUNT and WINDOW SIZE went onto the
+// designed Appearance panel this way (NY4I, 2026-08-16).
+//
+// The prefix is still the placement rule, so moving a setting here is a rename:
+// `appearance.ctrlj.rowCount` became `appearance.layout.rowCount` and that
+// alone took it off the holding page.
+//
+// aTop must clear the designed controls. There is no layout manager on these
+// panels -- everything is absolutely positioned -- so a block placed too high
+// silently overlaps rather than pushing anything down. Lint-FormOverlap checks
+// the .lfm and cannot see runtime children, which is exactly why this takes an
+// explicit top rather than guessing one.
+procedure TPrefsForm.BuildGeneratedBlock(const aParent: TWinControl; const aTop: integer;
+                                         const aHeading: string;
+                                         const aPrefixes: array of string);
+var
+   host: TPanel;
+   head: TLabel;
+   p: string;
+   y, n: integer;
+begin
+   // A HOST PANEL rather than parenting straight onto the designed page, so the
+   // block is one thing to free when BuildBindings runs again. Parenting the
+   // rows directly would leave them scattered among the designer's controls
+   // with nothing to free them by.
+   host := TPanel.Create(Self);
+   host.Parent      := aParent;
+   host.BevelOuter  := bvNone;
+   host.Color       := clWindow;
+   host.ParentColor := False;
+   host.Caption     := '';
+   host.SetBounds(0, aTop, aParent.Width, aParent.Height - aTop);
+   TrackGeneratedRoot(host);
+
+   y := 0;
+   n := 0;
+
+   head := TLabel.Create(host);
+   head.Parent     := host;
+   head.Caption    := aHeading;
+   head.SetBounds(16, y, 500, 18);
+   head.Font.Style := [fsBold];
+   Inc(y, 26);
+
+   for p in aPrefixes do
+      begin
+      n := n + AddGeneratedRows(host, p, y);
+      end;
+
+   host.Visible := n > 0;   // no heading, and no empty host, over nothing
+   logger.Debug('[Prefs] generated block on %s -> %d setting(s)', [aParent.Name, n]);
+end;
+
+// Remember a generated container so the next BuildBindings can free it.
+procedure TPrefsForm.TrackGeneratedRoot(const aControl: TControl);
+var
+   n: integer;
+begin
+   n := Length(FGeneratedRoots);
+   SetLength(FGeneratedRoots, n + 1);
+   FGeneratedRoots[n] := aControl;
+end;
+
+// Emit a label and a control for every registered setting whose key starts with
+// aKeyPrefix, advancing aY. Returns how many rows it added.
+//
+// CONTROL CHOICE, in this order and for these reasons:
+//   * ctBoolean            -> CHECK BOX. AllowedValues cannot answer this (it
+//                             speaks only for ckArray), so a boolean would
+//                             otherwise render as a text field that happily
+//                             accepts "maybe".
+//   * AllowedValues <> []  -> DROP-DOWN, filled BY THE BINDING from the setting
+//                             itself. A ckArray is a discrete allow-list, so a
+//                             text box offers values the program will refuse
+//                             (NY4I, 2026-08-16).
+//   * otherwise            -> text box.
+//
+// A read-only row (crJ 2 or 3) renders DISABLED rather than hidden: Ctrl-J
+// showed those values and operators read them, so hiding them loses
+// information -- but letting them be edited would invite changing something the
+// next contest selection silently overwrites.
+function TPrefsForm.AddGeneratedRows(const aParent: TWinControl; const aKeyPrefix: string;
+                                     var aY: integer): integer;
+const
+   ROW_H   = 30;
+   LABEL_W = 300;
+   CTRL_X  = 330;
+   CTRL_W  = 280;
+var
+   lbl: TLabel;
+   chk: TCheckBox;
+   cbo: TComboBox;
+   edt: TEdit;
+   ctl: TWinControl;
+   s: TSettingBase;
+   n, n2: integer;
+   ro: boolean;
+begin
+   n := 0;
+
+   for s in AllSettings do
+      begin
+      if not SameText(Copy(s.Key, 1, Length(aKeyPrefix)), aKeyPrefix) then
+         begin
+         Continue;
+         end;
+
+      // DISPLAY-ONLY, and it must not be BOUND -- disabling is not enough.
+      //
+      // A binding is saved by SaveAll whether or not its control is enabled, so
+      // a disabled control still writes its text back. For these rows that text
+      // is a display form the parser refuses, and Preferences wrote
+      // `SINGLE BAND SCORE=All` into tr4w.ini, breaking every later start with
+      // "Invalid statement in config file" (2026-08-16). Not binding them is
+      // the fix: a row that cannot be edited cannot be saved either.
+      //
+      // Two kinds qualify: crJ 2/3 (Ctrl-J showed them read-only too), and
+      // ckList, whose spelling list cannot yet be offered as a drop-down.
+      ro := (s.LegacyCommand <> '') and
+            (CFGCommandIsReadOnly(s.LegacyCommand) or CFGCommandIsList(s.LegacyCommand));
+
+      lbl := TLabel.Create(aParent);
+      lbl.Parent  := aParent;
+      lbl.Caption := s.Caption;
+      lbl.SetBounds(16, aY + 4, LABEL_W, 18);
+
+      if ro then
+         begin
+         edt := TEdit.Create(aParent);
+         edt.Parent   := aParent;
+         edt.Text     := s.AsText;   // straight from the setting, never bound
+         edt.ReadOnly := True;
+         edt.Enabled  := False;
+         edt.SetBounds(CTRL_X, aY, CTRL_W, 24);
+         ctl := edt;
+         end
+      else if (s.LegacyCommand <> '') and CFGCommandIsBoolean(s.LegacyCommand) then
+         begin
+         chk := TCheckBox.Create(aParent);
+         chk.Parent  := aParent;
+         chk.Caption := '';
+         chk.SetBounds(CTRL_X, aY + 2, 24, 22);
+         FBindings.Bind(chk, s.Key);
+         ctl := chk;
+         end
+      else if Length(s.AllowedValues) > 0 then
+         begin
+         cbo := TComboBox.Create(aParent);
+         cbo.Parent := aParent;
+         cbo.Style  := csDropDownList;   // the allow-list IS the list
+         cbo.SetBounds(CTRL_X, aY, CTRL_W, 24);
+         FBindings.Bind(cbo, s.Key);
+         ctl := cbo;
+         end
+      else
+         begin
+         edt := TEdit.Create(aParent);
+         edt.Parent := aParent;
+         edt.SetBounds(CTRL_X, aY, CTRL_W, 24);
+         FBindings.Bind(edt, s.Key);
+         ctl := edt;
+         end;
+
+      if ro then
+         begin
+         lbl.Caption := s.Caption + '   (set by the contest)';
+
+         // Remembered for the search index. It has no binding, so
+         // BuildSearchIndex would never see it -- and a row an operator cannot
+         // find is barely better than one that is not there.
+         n2 := Length(FDisplayOnlyRows);
+         SetLength(FDisplayOnlyRows, n2 + 1);
+         FDisplayOnlyRows[n2].Caption     := s.Caption;
+         FDisplayOnlyRows[n2].Command     := s.LegacyCommand;
+         FDisplayOnlyRows[n2].Control     := ctl;
+         FDisplayOnlyRows[n2].SectionTag  := 0;   // resolved in BuildSearchIndex
+         FDisplayOnlyRows[n2].SectionName := '';
+         end;
+
+      // NAMED: a nameless control is invisible to a bug report and to the
+      // PostMessage-driven UI checks. Not PUBLISHED, so Lint-FormFields is
+      // untroubled -- it checks published fields against the .lfm.
+      //
+      // THE NAME GOES ON BEFORE THE CAPTION IS CLEARED, and that order matters:
+      // TControl.SetName copies the new Name into Caption when the caption still
+      // matches the old name -- which it does on a control created moments ago
+      // with both blank. Naming a check box last therefore captioned it
+      // `gen_advanced_handLogMode` on screen (NY4I, 2026-08-16). The label to
+      // its left already says what it is, so the caption is cleared after.
+      ctl.Name := 'gen_' + StringReplace(s.Key, '.', '_', [rfReplaceAll]);
+      if ctl is TCheckBox then
+         begin
+         TCheckBox(ctl).Caption := '';
+         end;
+
+      Inc(n);
+      Inc(aY, ROW_H);
+      end;
+
+   Result := n;
+end;
+
 procedure TPrefsForm.BuildSearchIndex;
 var
-   i, n: integer;
+   i, n, k: integer;
    b: TSettingBinding;
    s: TSettingBase;
    ctl: TWinControl;
@@ -2254,14 +2674,125 @@ begin
       end;
    SetLength(FSearchIndex, n);
 
-   // SAY WHAT IS NOT COVERED. Only settings registered through the registry are
-   // indexed; the hand-wired panels call ApplyAndStoreCommand directly and are
-   // invisible here. A search covering part of the settings is worse than none,
-   // because an empty result reads as "TR4W cannot do that" and the operator
-   // stops looking -- so the shortfall is logged rather than left for someone to
-   // discover mid-contest.
-   logger.Info('[Prefs] search index: %d of %d registered setting(s) indexed',
+   // THE HAND-WIRED PANELS, added 2026-08-16 (NY4I: "make sure I can search and
+   // find every one of these").
+   //
+   // The comment that used to sit here said the shortfall was logged and left:
+   // the Station panel and its neighbours call ApplyAndStoreCommand directly,
+   // so they are not in FBindings and were invisible to search. In practice
+   // that meant MY CALL and MY GRID could not be found -- two of the first
+   // things anyone looks for.
+   //
+   // StationFields already pairs each command with its control, which is
+   // everything an index entry needs, so this is a second pass over that list
+   // rather than a second source of truth. The caption comes from the control's
+   // own label where there is one, and falls back to the command spelling,
+   // which is what an operator types anyway.
+   AddStationFieldsToSearchIndex(n);
+
+   // The generated DISPLAY-ONLY rows, which have no binding by design (a bound
+   // row is a saved row, and these must never be written back -- see
+   // AddGeneratedRows). Collected when they were created; the section tag is
+   // resolved here, once they are parented.
+   for k := Low(FDisplayOnlyRows) to High(FDisplayOnlyRows) do
+      begin
+      panel := SectionPanelFor(FDisplayOnlyRows[k].Control);
+      if panel = nil then
+         begin
+         Continue;
+         end;
+      SetLength(FSearchIndex, n + 1);
+      FSearchIndex[n] := FDisplayOnlyRows[k];
+      FSearchIndex[n].SectionTag := panel.Tag;
+      navItem := NavItemForTag(panel.Tag);
+      if navItem <> nil then
+         begin
+         FSearchIndex[n].SectionName := navItem.Text;
+         end;
+      Inc(n);
+      end;
+
+   SetLength(FSearchIndex, n);
+
+   logger.Info('[Prefs] search index: %d entries (%d registered setting(s) exist)',
                [n, SettingCount]);
+end;
+
+// One index entry for a hand-wired control -- one that edits a CFGCA command
+// directly rather than through a binding, so BuildSearchIndex's own loop cannot
+// see it.
+//
+// Skips a nil control and a control on no section panel, both of which are
+// ordinary states while a page is being built rather than errors.
+procedure TPrefsForm.AddHandWiredToSearchIndex(var aN: integer;
+                                               const aCommand: string;
+                                               const aControl: TWinControl);
+var
+   panel: TControl;
+   navItem: TTreeNode;
+begin
+   if aControl = nil then
+      begin
+      Exit;
+      end;
+
+   panel := SectionPanelFor(aControl);
+   if panel = nil then
+      begin
+      Exit;
+      end;
+
+   SetLength(FSearchIndex, aN + 1);
+   FSearchIndex[aN].Caption     := aCommand;
+   FSearchIndex[aN].Command     := aCommand;
+   FSearchIndex[aN].SectionTag  := panel.Tag;
+   FSearchIndex[aN].Control     := aControl;
+   FSearchIndex[aN].SectionName := '';
+   navItem := NavItemForTag(panel.Tag);
+   if navItem <> nil then
+      begin
+      FSearchIndex[aN].SectionName := navItem.Text;
+      end;
+   Inc(aN);
+end;
+
+// Every hand-wired panel's settings, so search covers them too.
+//
+// These panels call ApplyAndStoreCommand / FStore.CommandValue directly and are
+// invisible to FBindings -- BuildSearchIndex said so in its own comment for
+// months. Station was added first; NY4I then searched "external", found
+// nothing, and landed on the External Software placeholder (2026-08-16), which
+// is what this list is for.
+//
+// IT IS A HAND-KEPT LIST AND THAT IS A KNOWN COST. The right end state is for
+// these panels to bind like the rest, at which point this routine deletes
+// itself. Until then a missing line here costs searchability, not correctness,
+// and Lint-FormFields will not catch it -- so add to this when adding to a
+// hand-wired panel.
+procedure TPrefsForm.AddStationFieldsToSearchIndex(var aN: integer);
+var
+   f: TStationField;
+begin
+   for f in StationFields do
+      begin
+      AddHandWiredToSearchIndex(aN, f.Command, f.Edit);
+      end;
+
+   // --- WSJT-X (page tag NAV_WSJTX) ---
+   AddHandWiredToSearchIndex(aN, 'WSJT-X ENABLED',               chkWSJTXEnabled);
+   AddHandWiredToSearchIndex(aN, 'WSJT-X RADIO CONTROL ENABLED', chkWSJTXRadioControl);
+   AddHandWiredToSearchIndex(aN, 'WSJT-X SEND HIGHLIGHTS',       chkWSJTXHighlights);
+   AddHandWiredToSearchIndex(aN, 'WSJT-X BROADCAST PORT',        edtWSJTXPort);
+   AddHandWiredToSearchIndex(aN, 'WSJT-X MULTICAST GROUP',       edtWSJTXMulticast);
+
+   // --- External logger (page tag NAV_EXTERNALLOGGER) ---
+   AddHandWiredToSearchIndex(aN, 'EXTERNAL LOGGER',         cbxLoggerType);
+   AddHandWiredToSearchIndex(aN, 'EXTERNAL LOGGER ENABLED', chkLoggerEnabled);
+   AddHandWiredToSearchIndex(aN, 'EXTERNAL LOGGER ADDRESS', edtLoggerAddress);
+   AddHandWiredToSearchIndex(aN, 'EXTERNAL LOGGER PORT',    edtLoggerPort);
+
+   // --- MMTTY (page tag NAV_MMTTY) ---
+   AddHandWiredToSearchIndex(aN, 'MMTTY ENGINE',           edtMMTTYEngine);
 end;
 
 procedure TPrefsForm.RunSearch(const aNeedle: string);
@@ -2353,10 +2884,95 @@ begin
       end;
 end;
 
+// Select the section that owns aControl, then focus aControl itself.
+//
+// Extracted from ActivateSearchHit so the deep link (ControlForCommand, below)
+// and a search hit reach a setting by exactly ONE code path.  Two copies of
+// "select the page, then focus the field" would drift, and the drift would show
+// up as a deep link that lands on the right page with nothing focused --
+// visible only to whoever tried it.
+procedure TPrefsForm.FocusControlOnItsSection(const aControl: TWinControl);
+var
+   panel: TControl;
+   navItem: TTreeNode;
+begin
+   if aControl = nil then
+      begin
+      Exit;
+      end;
+
+   // Select the NAV ITEM rather than showing the panel directly, so the tree
+   // agrees with what is on screen and tvNavChange does the switching. One code
+   // path, the same one a click uses.
+   panel := SectionPanelFor(aControl);
+   if panel <> nil then
+      begin
+      navItem := NavItemForTag(panel.Tag);
+      if navItem <> nil then
+         begin
+         navItem.Selected := True;
+         end;
+      end;
+
+   // FOCUS THE CONTROL, not merely the page it lives on. That is the difference
+   // between "here is the section, go hunting" and "here it is" -- and it is the
+   // part Windows Settings itself does not do.
+   //
+   // CanFocus is False while the panel is still hidden, which is why this runs
+   // AFTER the nav selection above and not before it.
+   if aControl.CanFocus then
+      begin
+      aControl.SetFocus;
+      end;
+end;
+
+// Maps a legacy Ctrl-J command spelling to the control that edits it.
+//
+// TWO SOURCES, DELIBERATELY, because the form genuinely has two kinds of field
+// and neither alone would cover 'MY GRID':
+//
+//   1. The hand-wired Station panel (StationFields), which calls
+//      ApplyAndStoreCommand directly and is NOT in the settings registry --
+//      BuildSearchIndex says so itself, and that is exactly why Preferences
+//      search cannot find MY GRID today.
+//   2. FSearchIndex, covering every registry-bound setting.
+//
+// Returns nil when the command is on no panel -- an honest "I cannot take you
+// there", which the caller turns into a fallback rather than a wrong guess.
+function TPrefsForm.ControlForCommand(const aCommand: string): TWinControl;
+var
+   f: TStationField;
+   i: integer;
+begin
+   Result := nil;
+
+   for f in StationFields do
+      begin
+      if SameText(f.Command, aCommand) then
+         begin
+         Result := f.Edit;
+         Exit;
+         end;
+      end;
+
+   if not FSearchIndexBuilt then
+      begin
+      BuildSearchIndex;
+      end;
+
+   for i := Low(FSearchIndex) to High(FSearchIndex) do
+      begin
+      if SameText(FSearchIndex[i].Command, aCommand) then
+         begin
+         Result := FSearchIndex[i].Control;
+         Exit;
+         end;
+      end;
+end;
+
 procedure TPrefsForm.ActivateSearchHit(const aIndex: integer);
 var
    e: TPrefsSearchEntry;
-   navItem: TTreeNode;
 begin
    if (aIndex < 0) or (aIndex > High(FSearchHits)) then
       begin
@@ -2366,22 +2982,7 @@ begin
    e := FSearchIndex[FSearchHits[aIndex].Entry];
    HideSearchResults;
 
-   // Select the NAV ITEM rather than showing the panel directly, so the tree
-   // agrees with what is on screen and tvNavChange does the switching. One code
-   // path, the same one a click uses.
-   navItem := NavItemForTag(e.SectionTag);
-   if navItem <> nil then
-      begin
-      navItem.Selected := True;
-      end;
-
-   // FOCUS THE CONTROL, not merely the page it lives on. That is the difference
-   // between "here is the section, go hunting" and "here it is" -- and it is the
-   // part Windows Settings itself does not do.
-   if (e.Control <> nil) and e.Control.CanFocus then
-      begin
-      e.Control.SetFocus;
-      end;
+   FocusControlOnItsSection(e.Control);
 
    logger.Debug('[Prefs] search -> %s (%s), section tag=%d',
                 [e.Caption, e.Command, e.SectionTag]);
@@ -2581,9 +3182,42 @@ begin
          end;
       end;
 
+   // A PARENT OPENS ITSELF (NY4I, 2026-08-16).
+   //
+   // External Software has no panel -- it is a grouping, and its settings live
+   // on WSJT-X, External Logger, DXLab and MMTTY beneath it. But the tree opens
+   // collapsed, so selecting it showed a bare placeholder reading "this section
+   // has not been migrated yet" over four pages that HAVE been migrated. It
+   // read as missing functionality; it was a closed node.
+   //
+   // Expanding on selection makes the children visible at the moment the
+   // operator asks about them. tvNavExpanded still collapses the siblings, so
+   // the one-branch-at-a-time rule (and the no-scrollbar constraint behind it)
+   // is untouched.
+   if (tvNav.Selected <> nil) and (tvNav.Selected.HasChildren) and
+      (not tvNav.Selected.Expanded) then
+      begin
+      tvNav.Selected.Expand(False);
+      end;
+
    // The placeholder is the answer for every section that has no panel yet --
    // which is most of them, deliberately: the nav says what this window is
    // GOING to be, so nobody has to guess whether Preferences is meant to grow.
+   //
+   // Two DIFFERENT states, and saying the wrong one is worse than saying
+   // nothing: a grouping node has no panel because its pages are its children,
+   // not because nobody has written it.
+   if (not shown) and (tvNav.Selected <> nil) and (tvNav.Selected.HasChildren) then
+      begin
+      lblPlaceholder.Caption :=
+         'Choose one of the pages listed under this heading.';
+      end
+   else
+      begin
+      lblPlaceholder.Caption :=
+         'This section has not been migrated yet.' + #13#10 +
+         'Use the existing configuration screens for it.';
+      end;
    lblPlaceholder.Visible := not shown;
 
    // SAY WHICH SECTION OPENED AND WHETHER IT HAD ANYTHING TO SHOW.  Nothing
@@ -2976,6 +3610,10 @@ begin
       TNavNode(navBackup).Tag := 9;
       navContest := tvNav.Items.Add(nil, 'Contest');
       TNavNode(navContest).Tag := 10;
+      // The holding page for settings that left Ctrl-J -- see NAV_MORE. Last in
+      // the list on purpose: it is the page that should shrink to nothing.
+      navMore := tvNav.Items.Add(nil, 'More settings');
+      TNavNode(navMore).Tag := NAV_MORE;
       navAudio := tvNav.Items.Add(nil, 'Audio');
       TNavNode(navAudio).Tag := 29;
       navCW := tvNav.Items.Add(nil, 'CW Settings');
@@ -3264,6 +3902,29 @@ begin
    // The editor populates the box (LoadSelectedCluster) and captures it
    // (CaptureSelectedCluster), so removing the binding removes a writer, not a
    // reader.
+
+   // THE GENERATED PAGES GO LAST, AND HAVE TO.
+   //
+   // Two reasons, both learned the hard way on 2026-08-16 by building them in
+   // the constructor and getting three empty pages:
+   //
+   //   * DeclareAllSettings is called at the TOP of this routine, so before it
+   //     runs the registry is empty and a generator finds nothing to render;
+   //   * this routine does FreeAndNil(FBindings) and creates a new collection,
+   //     which would throw away any binding made earlier.
+   //
+   // Building them here means the registry is populated and FBindings is the
+   // one that survives, so a generated control loads and saves exactly like a
+   // designed one.
+   BuildGeneratedSections;
+
+   // INDEX EAGERLY, so the coverage line is in every log rather than only in
+   // one where somebody happened to search. "Every setting must be findable"
+   // is a requirement now (NY4I, 2026-08-16), and a requirement whose only
+   // evidence appears when a user exercises it is one nobody notices breaking.
+   // The cost is a pass over ~230 bindings; the expensive part of opening this
+   // window was never this, it was populating combos.
+   BuildSearchIndex;
 end;
 
 

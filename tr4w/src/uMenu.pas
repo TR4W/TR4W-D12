@@ -153,7 +153,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 {$IF MMTTYMODE} + 1{$IFEND}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914};
+    T_MENU_ARRAY_SIZE                     = 176 {$IF MMTTYMODE} + 1{$IFEND}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16};
   T_MENU_ARRAY                          : array[0..T_MENU_ARRAY_SIZE] of MenuRecord = (
     (mrText: RC_FILE; mrId: MAXWORD),
  //{
@@ -198,7 +198,12 @@ const
     (mrText: '-'; mrId: 0),
 
     (mrText: RC_COLORS; mrId: menu_colors),
-    (mrText: RC_APPEARANCE; mrId: menu_appearance),
+    // APPEARANCE REMOVED 2026-08-16 (NY4I). It opened RunOptionsDialog with the
+    // cfAppearance filter, and every row that filter selected is now csOwned --
+    // so it opened an empty list. Its settings live on the Preferences
+    // Appearance page, which the Ctrl-J entry above reaches. menu_appearance
+    // itself is kept in VC.pas and still handled in ProcessMenu, because the
+    // id may arrive from an accelerator or a saved menu state.
     (mrText: 'Winkeyer'#9'Ctrl+W'; mrId: menu_winkeyer2),
 
     // One item, not a submenu: the Preferences window owns BOTH radio slots
@@ -414,6 +419,7 @@ const
 //    (mrText: '-'; mrId: 0),
     (mrText: RC_HOMEPAGE; mrId: menu_home_page),
     (mrText: RC_Download + RC_Download_HK; mrID: menu_download_latest_cty_dat), // 4.75.3
+    (mrText: 'Download TRMASTER.DTA'; mrId: menu_download_trmaster),  // 2026-08-16
     (mrText: 'Download POTA Parks'; mrId: menu_download_pota_parks),  // issue #864
     {$IFDEF LANG_RUS}
     (mrText: RC_WIKI; mrId: menu_wiki_rus),

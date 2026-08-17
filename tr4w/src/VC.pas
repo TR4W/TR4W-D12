@@ -2594,6 +2594,7 @@ const
   menu_download_pota_parks              = 10607;  // issue #864
   menu_repeat_pota_parks               = 10608;  // repeat last logged parks for second operator
   menu_hamscore_resync                 = 10609;  // Issue #783 -- HamScore RTC: wipe server log + re-send all QSOs
+  menu_download_trmaster               = 10610;  // TRMASTER.DTA (Super Check Partial), 2026-08-16
   // menu_windows_hamscore is intentionally placed in the 10200-10219 auto-mapped
   // range as 10199 + Ord(tw_HAMSCOREWINDOW_INDEX) = 10199 + 20.  This lets the
   // existing CheckMenuItem in OpenTR4WWindow auto-toggle the menu checkmark and
