@@ -1,4 +1,4 @@
-# Drives the FPC build's MENU from outside the program.
+# Drives the FPC build's MENU from outside the program -- ONE command.
 #
 # The golden corpus and the unit tests are both blind to the UI -- the corpus
 # runs the headless /EXPORT path and never creates a window -- so a GUI defect
@@ -10,8 +10,13 @@
 # under Delphi and under FPC, which is what makes the two builds comparable
 # window by window.
 #
-#   .\fpc-run-menu.ps1 -Command 10111        # open Preferences
-#   .\fpc-run-menu.ps1 -Command 10111 -KeepOpen
+#   .\Invoke-MenuCommand.ps1 -Command 10111 -Config drive.cfg
+#   .\Invoke-MenuCommand.ps1 -Command 10111 -Config drive.cfg -KeepOpen
+#
+# For a LIST of commands as a per-phase gate, use Invoke-MenuSmoke.ps1, which
+# stages its own config. The launch, window search and log slicing they share
+# live in UiDriver.psm1 -- one behaviour, two front ends. They were duplicated
+# briefly and that is exactly what the module exists to prevent.
 #
 # A CONFIG FILE IS REQUIRED, and this is not an accident of the script: with no
 # argument TR4W stops on the "Open configuration file or start a new contest"
@@ -42,70 +47,23 @@ param(
    [switch] $KeepOpen
 )
 
+Import-Module (Join-Path $PSScriptRoot 'UiDriver.psm1') -Force
+
 $target = Join-Path $Repo 'tr4w\target'
 $log    = Join-Path $target 'tr4w.log'
 
 if (-not (Test-Path $Exe))
    {
-   Write-Error "No FPC build at $Exe -- run fpc-build-app.ps1 first"
+   Write-Error "No FPC build at $Exe -- run FullBuild.ps1 first"
    exit 1
    }
 
 # A second instance dies on the single-instance mutex and would look exactly
 # like the crash being investigated.
-$stale = Get-Process -Name 'tr4w_fpc', 'tr4w' -ErrorAction SilentlyContinue
-if ($stale)
-   {
-   Write-Error "TR4W is already running (PID $($stale.Id -join ', ')) -- close it first"
-   exit 1
-   }
+try { Assert-NoRunningTR4W }
+catch { Write-Error "$_"; exit 1 }
 
-# ENUMERATE BY PID, do not FindWindow by class.  Two reasons, and the first is
-# not a preference: FindWindowW('TR4W', nil) returns 0 against this program even
-# while EnumWindows reports a visible top-level window of exactly that class
-# (measured 2026-08-13, 20 s of polling, both the A and W entry points).  The
-# second reason stands on its own -- a class-name search would just as happily
-# return a DIFFERENT TR4W that happened to be running, and the whole point here
-# is to drive the build that was just compiled.
-Add-Type -Namespace Win32 -Name U -MemberDefinition @'
-public delegate bool EnumWindowsProc(IntPtr h, IntPtr p);
-[DllImport("user32.dll")]
-public static extern bool EnumWindows(EnumWindowsProc cb, IntPtr p);
-[DllImport("user32.dll", CharSet = CharSet.Unicode)]
-public static extern int GetClassNameW(IntPtr h, System.Text.StringBuilder s, int n);
-[DllImport("user32.dll")]
-public static extern int GetWindowThreadProcessId(IntPtr h, out int pid);
-[DllImport("user32.dll")]
-public static extern bool IsWindowVisible(IntPtr h);
-[DllImport("user32.dll")]
-public static extern bool PostMessageW(IntPtr hWnd, uint msg, IntPtr wp, IntPtr lp);
-'@
-
-function Find-MainWindow([int] $ProcessId)
-   {
-   $found = [IntPtr]::Zero
-   $cb = [Win32.U+EnumWindowsProc]{
-      param($h, $l)
-      $owner = 0
-      [void][Win32.U]::GetWindowThreadProcessId($h, [ref]$owner)
-      if (($owner -eq $ProcessId) -and [Win32.U]::IsWindowVisible($h))
-         {
-         $cls = New-Object System.Text.StringBuilder 256
-         [void][Win32.U]::GetClassNameW($h, $cls, 256)
-         if ($cls.ToString() -eq 'TR4W')
-            {
-            $script:found = $h
-            return $false
-            }
-         }
-      return $true
-   }
-   $script:found = [IntPtr]::Zero
-   [void][Win32.U]::EnumWindows($cb, [IntPtr]::Zero)
-   return $script:found
-   }
-
-$logMark = if (Test-Path $log) { (Get-Item $log).Length } else { 0 }
+$logMark = Get-TR4WLogMark -LogPath $log
 
 if (-not (Test-Path (Join-Path $target $Config)))
    {
@@ -113,98 +71,53 @@ if (-not (Test-Path (Join-Path $target $Config)))
    exit 1
    }
 
-# PASS AN ABSOLUTE PATH.  TR4W copies this argument into TR4W_CFG_FILENAME with
-# lstrcpyA and never expands it (tr4w.dpr ~881), and FCONTEST then derives
-# TR4W_LOG_PATH_NAME from it by scanning backwards for a '\'.  Given a bare
-# relative name there is no '\' to find, so what should be a DIRECTORY ends up
-# as the base name and every path built from it is wrong -- the reports file
-# lands as "uidriveNY4I.LOG" instead of "NY4I.LOG", and CTY.DAT, TRMASTER.DTA,
-# SERVERLOG.TMP and the rest are mis-derived the same way.  Measured both ways
-# 2026-08-13.  The underlying fragility is TR4W's and pre-dates FPC; passing a
-# full path here keeps the harness from manufacturing bug reports.
+# An ABSOLUTE path -- see Start-TR4WForDriving in UiDriver.psm1 for why a bare
+# relative name mis-derives every path TR4W builds from it.
 $configPath = Join-Path $target $Config
-$proc = Start-Process -FilePath $Exe -WorkingDirectory $target `
-                      -ArgumentList $configPath -PassThru
-Write-Host "launched PID $($proc.Id) from $target with $configPath"
+$started = Start-TR4WForDriving -Exe $Exe -TargetDir $target -ConfigPath $configPath -SettleMs $SettleMs
+Write-Host "launched PID $($started.Process.Id) from $target with $configPath"
 
-# Poll for the window rather than sleeping a fixed time -- startup cost varies
-# with CTY.DAT and the log size, and a fixed wait either wastes time or posts
-# into a window that does not exist yet.
-$hwnd    = [IntPtr]::Zero
-$deadline = (Get-Date).AddMilliseconds($SettleMs)
-while ((Get-Date) -lt $deadline)
+if ($started.Failure)
    {
-   if ($proc.HasExited)
-      {
-      Write-Host "DIED during startup -- exit code $($proc.ExitCode)"
-      exit 1
-      }
-   $hwnd = Find-MainWindow $proc.Id
-   if ($hwnd -ne [IntPtr]::Zero)
-      {
-      break
-      }
-   Start-Sleep -Milliseconds 100
-   }
-
-if ($hwnd -eq [IntPtr]::Zero)
-   {
-   Write-Host 'FAIL: main window never appeared'
-   if (-not $proc.HasExited)
-      {
-      $proc.Kill()
-      }
+   Write-Host "FAIL: $($started.Failure)"
+   Stop-TR4WForDriving -Process $started.Process
    exit 1
    }
 
-Write-Host ("main window 0x{0:X} -- posting WM_COMMAND {1}" -f [int64]$hwnd, $Command)
-[void][Win32.U]::PostMessageW($hwnd, 0x0111, [IntPtr]$Command, [IntPtr]::Zero)
+Write-Host ("main window 0x{0:X} -- posting WM_COMMAND {1}" -f [int64]$started.Hwnd, $Command)
+Send-TR4WMenuCommand -Hwnd $started.Hwnd -Command $Command
 
 Start-Sleep -Milliseconds $AfterMs
 
-$alive = -not $proc.HasExited
+$alive = -not $started.Process.HasExited
 if ($alive)
    {
    Write-Host "ALIVE after command $Command"
    }
 else
    {
-   Write-Host "DIED after command $Command -- exit code $($proc.ExitCode)"
+   Write-Host "DIED after command $Command -- exit code $($started.Process.ExitCode)"
    }
 
 # Only the lines this run added.  tr4w.log is a rolling file that accumulates
 # across sessions, and tailing a fixed number of lines has already shown a
 # previous run's error as if it were this one's.
-if (Test-Path $log)
+$written = Get-TR4WLogSince -LogPath $log -Mark $logMark
+if ($written)
    {
-   $fs = [System.IO.File]::Open($log, 'Open', 'Read', 'ReadWrite')
-   try
-      {
-      if ($fs.Length -gt $logMark)
-         {
-         [void]$fs.Seek($logMark, 'Begin')
-         $reader = New-Object System.IO.StreamReader($fs)
-         $new = $reader.ReadToEnd()
-         Write-Host ''
-         Write-Host '=== log written by this run ==='
-         Write-Host $new
-         }
-      else
-         {
-         Write-Host ''
-         Write-Host '(no new log output)'
-         }
-      }
-   finally
-      {
-      $fs.Dispose()
-      }
+   Write-Host ''
+   Write-Host '=== log written by this run ==='
+   Write-Host $written
+   }
+else
+   {
+   Write-Host ''
+   Write-Host '(no new log output)'
    }
 
 if ($alive -and -not $KeepOpen)
    {
-   $proc.Kill()
-   $proc.WaitForExit(5000) | Out-Null
+   Stop-TR4WForDriving -Process $started.Process
    }
 
 if (-not $alive)

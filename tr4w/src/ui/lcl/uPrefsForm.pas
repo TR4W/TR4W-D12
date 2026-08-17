@@ -1287,7 +1287,7 @@ begin
    // stranded in mid-air on resize (NY4I, 2026-08-05).
    FTiming := TStopwatch.StartNew;
    inherited Create(AOwner);
-   LogPhase(FTiming, 'stream .fmx');
+   LogPhase(FTiming, 'stream .lfm');
 
    // English lives in the .fmx; TranslateForm overrides only what a language
    // table supplies and leaves the designed text alone otherwise.  Today no
