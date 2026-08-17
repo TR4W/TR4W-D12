@@ -299,6 +299,18 @@ type
       FRotators: TObjectList<TRotatorDefinition>;
       FClusters: TObjectList<TClusterDefinition>;
       FActiveClusterName: string;
+      { The rotator that turns. ONE at a time (NY4I, 2026-08-16).
+
+        Before this, ConfigureRotators made EVERY defined rotator live and
+        TurnRotator turned every one whose band claim matched -- and a blank
+        claim matches every band. Two rotators with blank Bands therefore both
+        received every command, with nothing on screen saying so: the list
+        selection only chose which one you were EDITING.
+
+        By NAME, like ActiveClusterName, so renaming the active one has to carry
+        this with it; an index would silently re-point at whatever moved into
+        the slot. }
+      FActiveRotatorName: string;
       { The contest .cfg last opened. NOT a setting -- it is bookkeeping, which
         is why it lives in `general` beside activeProfile rather than in
         `commands`, and why it is deliberately absent from Preferences and from
@@ -515,6 +527,7 @@ type
       function  UniqueClusterName(const aBase: string): string;
       function  ActiveCluster: TClusterDefinition;
       property  ActiveClusterName: string read FActiveClusterName write FActiveClusterName;
+      property  ActiveRotatorName: string read FActiveRotatorName write FActiveRotatorName;
       property  LatestConfigFile: string read FLatestConfigFile write FLatestConfigFile;
       property  CabrilloHeader: TStringList read FCabrilloHeader;
       function  CommandValue(const aCommand: string; const aDefault: string = ''): string;
@@ -877,6 +890,14 @@ begin
    // leaves those bands unserved, which is a decision the operator just made.
    if (aIndex >= 0) and (aIndex < FRotators.Count) then
       begin
+      // Deleting the ACTIVE one clears the choice rather than silently
+      // promoting a neighbour -- same rule as DeleteCluster, and for the same
+      // reason: turning a rotator the operator never picked is worse than
+      // turning none until they say which.
+      if SameText(FRotators[aIndex].Name, FActiveRotatorName) then
+         begin
+         FActiveRotatorName := '';
+         end;
       FRotators.Delete(aIndex);
       end;
 end;
@@ -1057,6 +1078,7 @@ begin
    FRotators.Clear;
    FClusters.Clear;
    FActiveClusterName := '';
+   FActiveRotatorName := '';
    FProfiles.Clear;
    FActiveProfileName    := '';
    FAutoConnectOnStartup := False;
@@ -1769,6 +1791,7 @@ begin
       end;
    Result.AddPair(JSONKEY_CLUSTERS, clusters);
    general.AddPair('activeCluster', FActiveClusterName);
+   general.AddPair('activeRotator', FActiveRotatorName);
    general.AddPair('latestConfigFile', FLatestConfigFile);
 
    // The Cabrillo header, as its own object rather than inside `commands`:
@@ -1877,6 +1900,7 @@ begin
    // than needing a check of its own.
    FClusters.Clear;
    FActiveClusterName := JSONStr(general, 'activeCluster', '');
+   FActiveRotatorName := JSONStr(general, 'activeRotator', '');
    FLatestConfigFile  := JSONStr(general, 'latestConfigFile', '');
 
    FCabrilloHeader.Clear;

@@ -556,6 +556,24 @@
         Caption = 'Remove'
         OnClick = btnRemoveRotatorClick
       end
+      object btnUseRotator: TButton
+        Left = 445
+        Top = 94
+        Width = 95
+        Height = 25
+        AutoSize = False
+        TabOrder = 4
+        Caption = 'Use this'
+        OnClick = btnUseRotatorClick
+      end
+      object lblActiveRotator: TLabel
+        Left = 12
+        Top = 161
+        Width = 520
+        Height = 14
+        AutoSize = False
+        Caption = ''
+      end
       object lblRotatorName: TLabel
         Left = 12
         Top = 180

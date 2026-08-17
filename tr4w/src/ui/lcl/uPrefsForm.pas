@@ -313,6 +313,8 @@ type
       btnAddCluster: TButton;
       btnRemoveCluster: TButton;
       btnUseCluster: TButton;
+      btnUseRotator: TButton;
+      lblActiveRotator: TLabel;
       lblActiveCluster: TLabel;
       lblClusterName: TLabel;
       edtClusterName: TEdit;
@@ -646,6 +648,8 @@ type
       procedure btnAddClusterClick(Sender: TObject);
       procedure btnRemoveClusterClick(Sender: TObject);
       procedure btnUseClusterClick(Sender: TObject);
+      procedure btnUseRotatorClick(Sender: TObject);
+      procedure ShowActiveRotator;
       // TSelectionChangeEvent -- see lstClustersChange above.
       procedure lstRotatorsChange(Sender: TObject; User: boolean);
       procedure cbxRotatorTypeChange(Sender: TObject);
@@ -846,6 +850,7 @@ type
       procedure ShowClusterRow(const aIndex: integer;
                                const aCluster: TClusterDefinition);
       procedure RefreshClusterRows;
+      function  RotatorIsActive(const aRotator: TRotatorDefinition): boolean;
       procedure ShowRotatorRow(const aIndex: integer;
                                const aRotator: TRotatorDefinition);
       procedure ShowActiveCluster;
@@ -4345,6 +4350,57 @@ begin
    LoadClusterList;
 end;
 
+// Choose the rotator that turns.  Mirrors btnUseClusterClick, deliberately: the
+// operator learns one idiom -- a tick in the list and a "Use this" button --
+// and it means the same thing on both pages.
+procedure TPrefsForm.btnUseRotatorClick(Sender: TObject);
+begin
+   if (lstRotators.ItemIndex < 0) or (lstRotators.ItemIndex >= FStore.RotatorCount) then
+      begin
+      Exit;
+      end;
+
+   FStore.ActiveRotatorName := FStore.Rotator(lstRotators.ItemIndex).Name;
+   ShowActiveRotator;
+   LoadRotatorList;   // redraw so the tick moves
+
+   // Choosing which rotator turns IS a change to be saved.  Without this the
+   // tick moves, the operator closes the window, and the choice is gone.
+   Dirty := True;
+
+   // NOT re-configured here.  ConfigureRotators reopens serial ports, and doing
+   // that from a settings window while the operator is mid-contest would drop a
+   // working port for a choice that takes effect on the next start anyway.
+end;
+
+// Say which rotator turns, in words, under the list.  The tick alone answers
+// "which one" but not "and the others do nothing", which is the part that was
+// invisible when every defined rotator was live.
+procedure TPrefsForm.ShowActiveRotator;
+var
+   i: integer;
+begin
+   i := FStore.IndexOfRotator(FStore.ActiveRotatorName);
+   if i < 0 then
+      begin
+      if FStore.RotatorCount > 0 then
+         begin
+         // Matches what ConfigureRotators will actually do, rather than leaving
+         // the operator to guess that "none chosen" means "the first one".
+         lblActiveRotator.Caption :=
+            'No rotator chosen -- ' + FStore.Rotator(0).Name + ' will be used.';
+         end
+      else
+         begin
+         lblActiveRotator.Caption := 'No rotators defined.';
+         end;
+      Exit;
+      end;
+
+   lblActiveRotator.Caption := 'Turning: ' + FStore.Rotator(i).Name +
+      '   (the others are configured but do not turn)';
+end;
+
 procedure TPrefsForm.btnUseClusterClick(Sender: TObject);
 begin
    if (lstClusters.ItemIndex < 0) or (lstClusters.ItemIndex >= FStore.ClusterCount) then
@@ -4364,10 +4420,47 @@ begin
    // choice takes effect on the next connect, which the operator controls.
 end;
 
-function RotatorRowText(const aRotator: TRotatorDefinition): string;
+// The tick is the SAME mark the cluster list uses, because it means the same
+// thing: this is the one in use. Without it the list said only which rotator
+// you were editing, while every defined rotator was turning (NY4I, 2026-08-16).
+//
+// The band claim is shown too. A blank claim means EVERY band, and that being
+// invisible is what made "both of mine are turning" impossible to see.
+function RotatorRowText(const aRotator: TRotatorDefinition;
+                        const aIsActive: boolean): string;
+var
+   mark, bands: string;
 begin
-   Result := Format('%s [%s]',
-      [aRotator.Name, RotatorDisplayName(aRotator.RotatorId)]);
+   if aIsActive then
+      begin
+      mark := CLUSTER_ACTIVE_MARK;
+      end
+   else
+      begin
+      mark := CLUSTER_INACTIVE_MARK;
+      end;
+
+   if Trim(aRotator.Bands) = '' then
+      begin
+      bands := 'all bands';
+      end
+   else
+      begin
+      bands := aRotator.Bands;
+      end;
+
+   Result := Format('%s%s [%s]  -  %s',
+      [mark, aRotator.Name, RotatorDisplayName(aRotator.RotatorId), bands]);
+end;
+
+function TPrefsForm.RotatorIsActive(const aRotator: TRotatorDefinition): boolean;
+begin
+   // BY NAME, like the cluster: renaming the active rotator must carry
+   // ActiveRotatorName with it, and an index would re-point at whatever moved
+   // into the slot.
+   Result := (aRotator <> nil)
+             and (FStore.ActiveRotatorName <> '')
+             and SameText(aRotator.Name, FStore.ActiveRotatorName);
 end;
 
 procedure TPrefsForm.ShowRotatorRow(const aIndex: integer;
@@ -4379,7 +4472,7 @@ begin
       end;
 
    SetListItemText(lstRotators, aIndex,
-                   RotatorRowText(aRotator));
+                   RotatorRowText(aRotator, RotatorIsActive(aRotator)));
 end;
 
 procedure TPrefsForm.LoadRotatorList;
@@ -4449,7 +4542,8 @@ begin
       ClearListItems(lstRotators);
       for i := 0 to FStore.RotatorCount - 1 do
          begin
-         lstRotators.Items.Add(RotatorRowText(FStore.Rotator(i)));
+         lstRotators.Items.Add(RotatorRowText(FStore.Rotator(i),
+                                              RotatorIsActive(FStore.Rotator(i))));
          end;
    finally
       lstRotators.Items.EndUpdate;
@@ -4465,6 +4559,7 @@ begin
       end;
 
    ShowSelectedRotator;
+   ShowActiveRotator;   // the tick says which; this says what that means
 end;
 
 procedure TPrefsForm.ShowSelectedRotator;

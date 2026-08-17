@@ -369,21 +369,53 @@ end;
 
 procedure ConfigureRotators(const aStore: TRadioConfigStore);
 var
-   i: integer;
+   active: integer;
 begin
    ClearLive;
 
    if aStore <> nil then
       begin
-      for i := 0 to aStore.RotatorCount - 1 do
+      // ONE ROTATOR IS LIVE (NY4I, 2026-08-16: "just one should be active at a
+      // time").
+      //
+      // Every defined rotator used to go live, and TurnRotator turns EVERY one
+      // whose band claim matches -- a blank claim matching every band.  So two
+      // rotators with blank Bands both received every command, and nothing on
+      // screen said so: the Rotators list showed which one you were EDITING,
+      // not which one turned.
+      //
+      // Same shape as the active cluster: chosen by NAME, shown with a tick.
+      // The Bands claim still decides whether the ACTIVE one serves the band in
+      // play, so the day several rotators on different bands become real work,
+      // this is the one place that opens back up.
+      active := aStore.IndexOfRotator(aStore.ActiveRotatorName);
+
+      // NO CHOICE RECORDED -- an existing config, or one written before this
+      // existed.  Take the first and SAY SO, rather than falling back to the
+      // turn-everything behaviour this replaces.
+      if (active < 0) and (aStore.RotatorCount > 0) then
          begin
-         AddLive(aStore.Rotator(i).Name,
-                 aStore.Rotator(i).RotatorId,
-                 aStore.Rotator(i).ControlPort,
-                 aStore.Rotator(i).Bands,
-                 aStore.Rotator(i).IPAddress,
-                 aStore.Rotator(i).UDPPort,
-                 aStore.Rotator(i).BaudRate);
+         active := 0;
+         logger.Info('[uRotatorControl] no active rotator chosen; using "%s"',
+                     [aStore.Rotator(0).Name]);
+         end;
+
+      if active >= 0 then
+         begin
+         AddLive(aStore.Rotator(active).Name,
+                 aStore.Rotator(active).RotatorId,
+                 aStore.Rotator(active).ControlPort,
+                 aStore.Rotator(active).Bands,
+                 aStore.Rotator(active).IPAddress,
+                 aStore.Rotator(active).UDPPort,
+                 aStore.Rotator(active).BaudRate);
+         end;
+
+      if aStore.RotatorCount > 1 then
+         begin
+         logger.Info('[uRotatorControl] %d rotator(s) defined, 1 active -- the ' +
+                     'others are configured but do not turn',
+                     [aStore.RotatorCount]);
          end;
       end;
 
