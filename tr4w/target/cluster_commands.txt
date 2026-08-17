@@ -2,7 +2,6 @@
 DIRECTORY
 -
 #AR-CLUSTER COMMANDS:
-set/dx/filter call={CALL} or (not skimmer and spottercont=NA) or ((skimmer and unique>2)
 set/dx/filter call={MY_CALL} or (not skimmer and spottercont=NA) or ((skimmer and unique>2))
 SET/NOFILTER
 >SET FILTER
