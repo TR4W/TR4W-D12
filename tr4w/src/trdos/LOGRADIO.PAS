@@ -2284,7 +2284,9 @@ begin
       begin
       CommandsBufferPointer := 0;
       end;
-   DebugRadioTempBuffer('AddCommandToBuffer',CommandsTempBuffer); // ny4i Issue 145 - Decorator string, pointer, length
+   // DebugRadioTempBuffer call removed with the NEWER_DEBUG cleanup (2026-08-16).
+   // Its whole body was inside {$IF NEWER_DEBUG}, so with that off it had
+   // already been a no-op -- the routine went, this call site did not.
    Windows.CopyMemory(@CommandsBuffer[CommandsBufferPointer],
       @CommandsTempBuffer, Ord(CommandsTempBuffer[0]));
    Inc(CommandsBufferPointer);
