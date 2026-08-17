@@ -7,7 +7,7 @@ unit uTestDXSpotParse;
 
   WHERE THE FIXTURES COME FROM.  Every line marked "REAL" below is copied
   byte-for-byte out of the captured cluster sessions in
-  D7-LogFilesForTesting/dxcluster (265 files, 198,979 "DX de" lines, AR-Cluster
+  corpus_test_data/dxcluster (265 files, 198,979 "DX de" lines, AR-Cluster
   and DXSpider nodes).  That matters because the decoder is fixed-column
   arithmetic with no format validation: the only way to know an offset is right
   is to feed it what real nodes actually sent.  The survey behind the column
@@ -129,7 +129,7 @@ type
 implementation
 
 const
-   // ---- REAL lines, byte-for-byte from D7-LogFilesForTesting/dxcluster ------
+   // ---- REAL lines, byte-for-byte from corpus_test_data/dxcluster ------
    //         0         1         2         3         4         5         6         7
    //         0123456789012345678901234567890123456789012345678901234567890123456789012345
    PLAIN   = 'DX de N4RJ:      14332.0  KL5DX        USB                            1537Z';

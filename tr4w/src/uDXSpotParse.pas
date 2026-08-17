@@ -52,7 +52,7 @@ unit uDXSpotParse;
       offsets, and applies ONE band check to every form.
 
   The format, measured over 198,979 real "DX de" lines captured from AR-Cluster
-  and DXSpider nodes (D7-LogFilesForTesting/dxcluster):
+  and DXSpider nodes (corpus_test_data/dxcluster):
 
      0         1         2         3         4         5         6         7
      0123456789012345678901234567890123456789012345678901234567890123456789012345
@@ -238,7 +238,7 @@ end;
   admits new spellings without new scanning.
 
   THE VOCABULARY IS MEASURED, NOT IMAGINED.  Every keyword below was counted in
-  the 198,979 captured "DX de" lines in D7-LogFilesForTesting/dxcluster:
+  the 198,979 captured "DX de" lines in corpus_test_data/dxcluster:
   QSX 548, UP 436, SPLIT 19, LISTENING 14, LSN 3, LSTN 1, DOWN 2.
 
   NOTE ON "R" AND "RX".  The brief asked for RX/R receive hints.  RX is

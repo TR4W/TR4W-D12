@@ -13,7 +13,10 @@
 #     bash tr4w/test/corpus/export-d12-corpus.sh                # all sets, then sweep
 #     bash tr4w/test/corpus/export-d12-corpus.sh arrl_fd_2026_ny4i   # one set (smoke test)
 #
-# Override the D12 log-staging root with env D12_ROOT.
+# The inputs come from the TRACKED log.cfg/log.trw beside each manifest, staged
+# into build-out/corpus-work -- a fresh clone can run this with no out-of-tree
+# data, and the (destructive) export cannot touch a real log directory.  Set
+# D12_ROOT to export from a raw log directory instead; see corpus-lib.sh.
 #
 # Override the binary under test with env TR4W_EXE (a file name inside
 # tr4w/target, not a path).  That is how the FPC-built app is put through the
@@ -26,9 +29,9 @@
 # agree with whatever the first compiler happened to emit.
 set -u
 here="tr4w/test/corpus"
+. "$here/corpus-lib.sh"
 EXE_NAME="${TR4W_EXE:-tr4w.exe}"
 EXE="tr4w/target/$EXE_NAME"
-D12_ROOT="${D12_ROOT:-/c/tr4w-d12/D7-LogFilesForTesting}"
 ONLY="${1:-}"
 # Sets whose load pops an interactive dialog would BLOCK batch -- skip them.
 #
@@ -51,11 +54,12 @@ towin(){ cygpath -d "$1"; }   # DOS 8.3 short path -- NO spaces, so Git-Bash->ex
 rm -f "$here"/*/cand.adi "$here"/*/cand.cbr 2>/dev/null
 n=0
 for m in "$here"/*/manifest.json; do
-   slug=$(python -c "import json,sys;print(json.load(open(sys.argv[1]))['slug'])" "$m")
+   slug=$(corpus_manifest_get "$m" slug)
    [ -n "$ONLY" ] && [ "$ONLY" != "$slug" ] && continue
    case "$SKIP" in *" $slug "*) printf '  SKIP   %-26s (interactive dialog)\n' "$slug"; continue;; esac
-   src=$(python -c "import json,sys;print(json.load(open(sys.argv[1]))['source_dir'])" "$m")
-   d12="$D12_ROOT/$(basename "$src")"
+   src=$(corpus_manifest_get "$m" source_dir)
+   d12=$(corpus_set_dir "$slug" "$(basename "$src")")
+   corpus_stage_set "$m" "$slug" "$d12" || { printf '  MISS   %-26s (staging failed)\n' "$slug"; continue; }
    cfg=$(ls "$d12"/*.CFG "$d12"/*.cfg 2>/dev/null | grep -vi backup | head -1)
    [ -n "$cfg" ] || { printf '  MISS   %-26s (no cfg in %s)\n' "$slug" "$d12"; continue; }
    printf '  export %-26s\n' "$slug"
@@ -76,7 +80,7 @@ done
 echo "exported $n set(s)"; echo
 
 if [ -z "$ONLY" ]; then
-   GOLDEN_STRICT=1 bash "$here/pull-d12-candidates.sh" "$D12_ROOT"
+   GOLDEN_STRICT=1 bash "$here/pull-d12-candidates.sh"
 else
    echo "(single-set smoke test -- run with no args for the full export + sweep)"
 fi
