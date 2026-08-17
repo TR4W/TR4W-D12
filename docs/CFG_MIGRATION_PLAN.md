@@ -14,6 +14,23 @@ When a setting moves from the old world to the new one it must, in one step:
 
 ### Two steps the rule implies but does not say, and both are silent when missed
 
+**4a. …and the seeding has to actually run. It did not, for two weeks.** `SeedMigratedCommandsFromIni`
+was called only from inside `ApplyActiveProfileToConfigAtStartup`, which **exited early when
+`settings\tr4w.json` did not exist** (`uRadioConfigApply.pas:1461`) — "this station has never opened
+Preferences, and must boot exactly as it always did".
+
+That sentence stopped being achievable the moment the first row moved. A `csJSON` row is inert to
+the ini loader, so on a station with a populated `tr4w.ini` and no `tr4w.json`, **every migrated
+setting fell back to its compiled default** — all 161 of them — with no error and no log line.
+
+Measured, not reasoned: same `tr4w.ini` with `HF BAND ENABLE=FALSE`, same binary. With no
+`tr4w.json`, nothing seeded and the value was lost. With a `tr4w.json` containing nothing but `{}`,
+all values carried across. **An empty object was the entire difference.**
+
+Fixed 2026-08-16: the guard is about the *radio library*, so only radio work stays behind it. Seed
+and apply now run against an empty store first — a no-op for a station that genuinely has nothing.
+Verified with `CW SPEED INCREMENT = 2`, the very "2 becoming 3" case described below.
+
 **4. Seed the existing ini value into the store, once.** A `csJSON` row is inert to the ini loader,
 so on the first run after the flip nothing applies the value the operator set months ago — it is
 still sitting in `tr4w.ini` and the setting reverts to its compiled default. For
@@ -28,6 +45,47 @@ that made the change saw it work, the others neither applied it nor said anythin
 were already in that state before this work started**, the whole UDP broadcast block among them.
 Fixed at the layer that owns the question rather than per row: `ApplyPeerCommand` routes on the
 row's own state and persists to whichever file is that row's system of record.
+
+## Every parameter is a registry parameter (NY4I, 2026-08-16)
+
+An earlier draft of this plan sorted rows by *who owns the value* and used that to decide whether a
+row should migrate **at all**: category B was held back as "contest properties wearing a settings
+costume", `LEADING ZEROS` because a contest `.cfg` writes it, `MY CONTINENT` because the contest
+supplies it. **That line is artificial, and it is withdrawn.**
+
+> "We are drawing an artificial line between contest parameters and others. All parameters should go
+> into the registry. The only question today is where we set those." — NY4I, 2026-08-16
+
+The registry is the **system of record for the value**. It is not a claim about who writes it, and
+"something other than the operator writes this" was never a reason to leave a parameter in the ini.
+So the migration question collapses to the five-step rule for **every** row, and what remains open is
+a smaller, different question:
+
+| question                                                      | answer                                                                       |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Does it live in the registry (`csJSON`, `settings\tr4w.json`)? | **Yes — always.**                                                            |
+| Who sets it?                                                   | `FCONTEST` on contest selection, a contest `.cfg`, the operator, or the session |
+| Where is it shown?                                             | its natural panel; contest-set values on the **Contest** panel for now       |
+
+**Where a value is set is a UI and ownership question, not a storage question.** Most contest-driven
+parameters are set by `FCONTEST` when a contest is selected. The rest go on the **Contest settings
+panel for now**, and several of those will move into the contest factory later — but that is a later
+move of the *editor*, not of the *storage*, and it does not block the row from migrating today.
+
+What this does **not** dissolve: the layering question in A-bis. "Which layer does an edit write —
+the station default or the event override?" is real, and it is about *write semantics*, not about
+whether the row belongs in the registry. It is now the only genuine blocker in the set.
+
+### The UI half, as it stands today
+
+`NAV_CONTEST = 10` and a "Contest" nav item already exist (`uPrefsForm.pas:3107-3108`), but **no
+panel carries Tag 10** — selecting it shows the placeholder. Building that panel is the work this
+principle creates.
+
+The band-enable rows show the point is already settled in shipped code: `layBands` (Tag 24) carries
+`chkHFBands` / `chkWARCBands` / `chkVHFBands`, bound to `operating.bands.hf|warc|vhf`
+(`uPrefsForm.pas:3356-3358`). The panel that the previous draft said should show those "read-only or
+not at all" **already edits them**.
 
 ## What is actually true today
 
@@ -63,8 +121,7 @@ HAMSCORE PASSWORD=********
 ```
 
 Carrying that across would set the password to the literal mask and produce an authentication
-failure that reads like a server problem. A masked value is indistinguishable from a real one, so
-seeding skips `ctPassword` rows entirely and logs that the operator should type it once in
+failure that reads like a server problem. A masked value is indistinguishable from a real one, so seeding skips `ctPassword` rows entirely and logs that the operator should type it once in
 Preferences. Note what this also says: that ini value is *already* useless to the running program,
 so the migration lost nothing that was working.
 
@@ -72,20 +129,261 @@ Passwords in `settings\tr4w.json` are plaintext, exactly as they were in `tr4w.i
 already holds cluster and server passwords. Not made worse here — but it is the open decision this
 work should not finish without.
 
+### Decided 2026-08-16 (NY4I): a secret store, not an encrypted config
+
+The first form of this decision was "encrypt the passwords with a build-time key, held in GitHub
+secrets and a local env var." **Superseded the same day**, for two reasons that came out of working
+it through:
+
+1. **A key inside the binary is obfuscation, not secrecy.** Every install ships the same key, so one
+   extraction with a debugger breaks every user at once. It would have bought exactly one thing —
+   that a password is not *readable* in a file the operator hands over — while requiring CI secrets,
+   an env var, a rotation story, and an "unconfigured build" failure mode.
+2. **The OS already does this properly, and for free.** No key to ship, rotate, or leak.
+
+**Two stores, and the split is the whole point:**
+
+| file                     | holds                                       | safe to send? |
+| ------------------------ | ------------------------------------------- | ------------- |
+| `settings\tr4w.json`     | everything else — **no secrets, ever**      | **yes**       |
+| the platform secret store | passwords only, machine- and user-bound     | it never leaves |
+
+That makes `tr4w.json` a file the operator can attach to a bug report or hand to a fellow op without
+thinking about it, which is worth more than encrypting it in place: an encrypted blob still travels
+with the config, and the key travels in the download.
+
+### The contract is a KEYRING, not a blob encryptor
+
+The shape matters more than the mechanism, because the mechanism differs per platform and the shape
+must not:
+
+| platform | mechanism                                   | shape it offers        |
+| -------- | ------------------------------------------- | ---------------------- |
+| Windows  | DPAPI (`CryptProtectData`) over a small file | encrypt a blob         |
+| Windows  | Credential Manager                          | store a **named secret** |
+| macOS    | Keychain Services (generic password items)  | store a **named secret** |
+| Linux    | Secret Service / libsecret                  | store a **named secret** |
+
+**Two of the three platforms only offer a keyring.** DPAPI is the odd one out, so an interface in
+DPAPI's shape would have to be emulated on macOS and Linux — an abstraction fighting the platform on
+two of three targets, and the kind of mistake that only surfaces when the second platform lands,
+which is when it is most expensive to fix.
+
+```pascal
+ISecretStore = interface
+   function  Available: boolean;                                    // honest "no store here"
+   function  Store (const aName, aSecret: string): boolean;
+   function  Fetch (const aName: string; out aSecret: string): boolean;
+   function  Delete(const aName: string): boolean;
+end;
+```
+
+Names are stable identifiers, not UI labels: `hamscore`, `server`, `cluster/<node>`,
+`radio/<name>/network`, `qrz`.
+
+**The backend is then free to differ.** The caller asking for the cluster password does not care
+whether that is a Keychain item or a DPAPI-decrypted line in `settings\tr4w.secrets`. So on Windows
+use **DPAPI over a file**, not Credential Manager — it avoids CredMan's per-item naming layer, whose
+target names are **case-insensitive**, so `TR4W/Cluster/NC7J` and `tr4w/cluster/nc7j` collide
+silently. DPAPI has no naming layer to get wrong.
+
+NY4I's compile-time key keeps a real role — as DPAPI's `pOptionalEntropy`, so another program
+running as the same user cannot decrypt TR4W's blob merely by calling `CryptUnprotectData`. That is
+what a baked constant can honestly provide; being *the* key is not.
+
+**Only the Windows backend gets written now.** macOS and Linux ship as stubs returning
+`Available = False` — truthful rather than broken. Settling the interface first is the entire point:
+they drop in later without touching a caller.
+
+### Failure is a normal state, not an exception
+
+- **A DPAPI blob does not survive an admin password *reset*** on a local account (a password
+  *change* is fine — Windows re-wraps the master key), nor a new user profile.
+- **Linux has no guaranteed keyring**: Secret Service needs a D-Bus session and a running daemon,
+  absent on a headless box or over SSH. `Available = False` is ordinary there.
+
+So the UI must say *"the saved password can't be read on this machine — please re-enter it"*, once,
+and **never fall back to sending an empty password**. A silent empty auth to a cluster or to QRZ
+looks like a server fault and is precisely the silent downgrade this project treats as a defect.
+
+A fourth backend — an encrypted file unlocked by a passphrase typed once per session — works
+identically on all three platforms, is the honest floor when no OS store exists, and is the only
+option that offers real secrecy. Worth having as opt-in; wrong as the default, because a contest
+station must come up unattended and reconnect the cluster after a power blip.
+
+**Also required:** a format version so existing plaintext files are read and upgraded rather than
+rejected, and passwords stay out of the multi-op peer sync regardless — which the split enforces
+structurally, since the ciphertext is useless on another position.
+
+### Every secret TR4W holds — the inventory the split has to cover
+
+Audited 2026-08-16. This is the list `ISecretStore` must serve, and the list that must be **absent
+from `tr4w.json`** before anyone is told the file is safe to send.
+
+| secret                        | today                                     | secret name              |
+| ----------------------------- | ----------------------------------------- | ------------------------ |
+| `HAMSCORE PASSWORD`           | `csJSON` → `tr4w.json`                    | `hamscore`               |
+| `SERVER PASSWORD`             | `csJSON` → `tr4w.json`                    | `server`                 |
+| `RADIO ONE NETWORK PASSWORD`  | `csJSON` → `tr4w.json`                    | `radio/<name>/network`   |
+| `RADIO TWO NETWORK PASSWORD`  | `csJSON` → `tr4w.json`                    | `radio/<name>/network`   |
+| radio library `networkPassword` | `tr4w.json` (`uRadioConfigStore:1633`)  | `radio/<name>/network`   |
+| cluster library `password`    | `tr4w.json` (`uRadioConfigStore:1748`)    | `cluster/<node>`         |
+| QRZ                           | **not implemented yet**                   | `qrz`                    |
+
+`RADIO ONE/TWO ICOM NETWORK PASSWORD` are `csRem` back-compat aliases and need no entry.
+`TRadioConfigStore.SaveTo(aIni)` writes `NetworkPassword` to an ini (`:1444`) but **has no callers** —
+a dead path, confirmed by call-graph, not by inspection. Delete it rather than leave a plaintext
+writer lying in the tree.
+
+### Two exposures the split does NOT close
+
+Both were checked rather than assumed, and neither is a reason to delay the split — but the claim
+"send me your config" must be scoped to `tr4w.json` and no wider until they are fixed.
+
+**1. Stale plaintext left behind in `tr4w.ini`.** Seeding deliberately **skips `ctPassword` rows**
+(the `********` mask problem above), and nothing erases the old key. So an operator who set
+`HAMSCORE PASSWORD=` before the flip still has that value sitting in `tr4w.ini`, orphaned and
+unread. **Add a one-time scrub of migrated password keys from the ini**, in the same pass as the
+secret store — otherwise the split produces a clean `tr4w.json` while the older file still carries
+the secret.
+
+**2. `tr4w.log` is the file operators actually send.** It is clean *today*, and that is by design
+rather than luck — worth recording so it stays that way:
+
+- the cluster password is sent by `SendClusterPasswordQuietly` (`uTelnet.pas:1456`), which writes
+  `<password sent>` to the console instead of the value — and the console **is** logged
+  (`uTelnet.pas:1638`), so the masking is load-bearing;
+- HamScore puts the password in the HTTP **Basic-Auth header**
+  (`http.Request.Password`, `uHamScore.pas:651`); the `payload=%s` logged at TRACE
+  (`uHamScore.pas:659`) is the QSO XML, not credentials;
+- the Icom network transport logs the session **token**, not the password
+  (`uIcomNetworkTransport.pas:1019`).
+
+The one remaining path is an operator **typing** a password into the telnet window by hand, which
+is echoed to the console and therefore to the log. Operator-initiated rather than stored-credential
+leakage, but it is the reason "the log is safe" should never be stated more strongly than "TR4W does
+not write your stored passwords to it".
+
+### Keeping it clean: `LogConfigParameter` and a lint (NY4I, 2026-08-16)
+
+> "a string function called `LogConfigParameter()` that determines if it's secure to mask will be a
+> good way to avoid logging info. Of course, if a patch decrypts a password and logs it, that is
+> something we can catch with a commit hook."
+
+Right on both counts, and the two halves cover different failure modes: the function makes the safe
+thing the easy thing, and the lint catches the case where someone bypasses it.
+
+```pascal
+function LogConfigParameter(const aName, aValue: string): string;
+// Renders "NAME=value" for a log line, masking the value when the parameter is
+// a secret.  Use this instead of formatting a config name and value by hand.
+```
+
+**Derive the decision, do not maintain a list.** `CFGCA` already records `crType: ctPassword` for
+every password row, and `FindCFGCommand` already looks a row up by name. A hand-kept list of secret
+names would be a second source of truth that silently goes stale the day someone adds a row — the
+same drift that put three copies of the HTTP downloader in this tree. So:
+
+1. look the name up in `CFGCA`; `crType = ctPassword` → mask;
+2. for names that are **not** CFGCA rows — the JSON store's `networkPassword`, the cluster
+   library's `password`, `qrz` — fall back to a name test (`PASSWORD`, `PASSWD`, `SECRET`, `TOKEN`);
+3. **unknown name → mask.** Fail closed. A parameter nobody recognises is far more likely to be a
+   misspelling of a real one than something that had to be logged in full, and the cost is
+   asymmetric: a masked value costs one debugging round-trip, a leaked one cannot be recalled.
+
+Mask to a **fixed-width** `********` regardless of length — a mask that reveals the length is a mask
+that leaks something.
+
+**The lint: `Lint-SecretLogging.ps1`, added to the `Run-Lints.ps1` array**, not a separate commit
+hook — the ten-lint array already gates the build on every path, which a hook does not.
+
+The rule: in a `logger.Debug/Info/Warn/Error/Trace(fmt, [args])` call, examine **the argument array,
+never the format string**. A literal that merely contains the word is fine and must not fire —
+`uIcomNetworkTransport.pas:1009` legitimately logs `'Authentication failed - check
+username/password'`. Firing on that would make the lint noise, and this project has already learned
+where that ends: *"a linter that fires on commented-out code gets ignored"* (Lint-PCharAnsi's first
+run reported five violations, all five false). So the check is narrow and about **identifiers**:
+flag an argument matching `Password|Passwd|Secret|Token` unless it is a call to
+`LogConfigParameter`, with an explicit `// lint:secret-ok` escape for a reviewed exception.
+
+And per the guards-must-not-fail-open rule: **give it a floor.** If the scan finds fewer than a few
+hundred `logger.` calls, the pattern is broken rather than the tree clean, and it must fail rather
+than report success.
+
+### Two additions that enforce it rather than ask for it
+
+`LogConfigParameter` and the lint are both good and both stay. What they share is that they depend
+on **discipline** — remembering to call one, and a text scan catching what the other misses. These
+two remove the discipline.
+
+**1. A test that asserts the promise. Cheapest, and do it first.**
+
+The claim this whole design exists to support is *"`tr4w.json` is safe to send."* That should be a
+test, not a promise:
+
+> Build a config with **every** secret populated with a distinctive sentinel — `hamscore`, `server`,
+> both radio network passwords, the radio library's `networkPassword`, a cluster definition's
+> `password` — serialise it exactly as `SaveConfig` does, and **assert that no sentinel appears
+> anywhere in the output text.**
+
+It is deterministic, needs no OS store, runs in the existing 4165-test suite, and it fails the
+moment someone adds a secret-bearing field to the serialiser. Nothing else on this page keeps the
+claim true two years from now; this does. Pair it with the inverse — round-trip through
+`ISecretStore` and assert the value comes back — so "no secret in the file" cannot be satisfied by
+accidentally not saving it at all.
+
+**2. Make a secret un-loggable by TYPE, so leaking it has to be deliberate.**
+
+A masking function must be remembered. A type cannot be forgotten:
+
+```pascal
+type
+   TSecret = record
+   private
+      FValue: string;
+   public
+      class operator Implicit(const aValue: string): TSecret;
+      function Reveal: string;      // the ONLY way out -- and greppable
+      function ToString: string;    // always the fixed-width mask
+   end;
+```
+
+The property that makes this better than masking-at-the-call-site: **a record cannot go into an
+`array of const`**, so `logger.Info('pw=%s', [FPassword])` stops *compiling* once `FPassword` is a
+`TSecret`. Not masked at runtime — rejected at build time, in every branch, including the ones no
+test covers.
+
+That also collapses the lint into something precise. Instead of guessing at identifier names, it
+audits `.Reveal` call sites, of which there should be a countable handful — the telnet send, the
+HamScore Basic-Auth assignment, the Icom login packet, the server login. Any `.Reveal` in the same
+statement as a `logger.` call is the actual defect, and any *new* `.Reveal` site is worth a review
+comment. Fewer false positives, and it catches the "a patch decrypts a password and logs it" case
+NY4I raised — because decrypting now means calling `Reveal`.
+
+**Verify `class operator Implicit` on records under FPC 3.2.2 / `-Mdelphi` before committing to
+this.** Advanced records with operators are supported, but confirm it compiles in this tree rather
+than assume — that is the whole reason the spike existed.
+
+**A smaller note while the types are being touched:** the plaintext currently lives in
+process-lifetime globals (`TelnetPassword`, `FPassword`, `ServerPassword`). TR4W ships `tr4w.dbg`
+and writes stack traces on a fault, not minidumps, so the exposure is small today — but fetching
+from `ISecretStore` at point of use rather than holding it for the session is strictly better and
+costs nothing while this code is open.
+
 ## The machinery for crossing it already exists, and it works
 
 This is the important finding: **no new plumbing is needed.** The path is built, wired, and proven
 by the radio rows.
 
-| piece | where | what it does |
-|---|---|---|
-| `ApplyAndStoreCommand` | `uRadioConfigApply` | applies via `CheckCommand(…, True)` **and** records in the store |
-| `TRadioConfigStore.Commands` | `uRadioConfigStore` | persists as the `commands` section of `settings\tr4w.json` |
-| `ApplyStoredCommands` | `uRadioConfigApply:307` | applies every stored command at startup |
-| `ApplyActiveProfileToConfigAtStartup` | called from `tr4w.dpr:971` | **the live startup hook** |
-| `crS = csJSON` | `uCFG:1415` | the ini loader skips the row |
-| `crS = csJSON` | `uOption:362` | Ctrl-J hides the row |
-| `CommandIsJSONOwned` | `uCFG:965` | the ini writer skips the row |
+| piece                                 | where                      | what it does                                                     |
+| ------------------------------------- | -------------------------- | ---------------------------------------------------------------- |
+| `ApplyAndStoreCommand`                | `uRadioConfigApply`        | applies via `CheckCommand(…, True)` **and** records in the store |
+| `TRadioConfigStore.Commands`          | `uRadioConfigStore`        | persists as the `commands` section of `settings\tr4w.json`       |
+| `ApplyStoredCommands`                 | `uRadioConfigApply:307`    | applies every stored command at startup                          |
+| `ApplyActiveProfileToConfigAtStartup` | called from `tr4w.dpr:971` | **the live startup hook**                                        |
+| `crS = csJSON`                        | `uCFG:1415`                | the ini loader skips the row                                     |
+| `crS = csJSON`                        | `uOption:362`              | Ctrl-J hides the row                                             |
+| `CommandIsJSONOwned`                  | `uCFG:965`                 | the ini writer skips the row                                     |
 
 `ApplyStoredCommands` is **generic** — it applies whatever is in the store, not just radio keys —
 and `settings\tr4w.json` already carries 52 commands through it. So steps 1 and 2 of the rule are a
@@ -252,12 +550,12 @@ away**.
 
 The old form's nine rows:
 
-| row | state |
-|---|---|
-| `BOLD FONT`, `MAIN FONT` | already migrated |
-| `NO BORDER`, `NO CAPTION`, `NO COLUMN HEADER`, `SHOW GRIDLINES` | migrated 2026-08-15, "Main window" group |
-| `ROW COUNT`, `WINDOW SIZE` | **`ckArray`** — target is an `ArrayRecordArray` entry, not `crAddress`. Different move. |
-| `REMINDER` | **not a scalar setting** — Alt-O appends `REMINDER = …` lines (`HELP.PAS:855`); wants a list editor |
+| row                                                             | state                                                                                               |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `BOLD FONT`, `MAIN FONT`                                        | already migrated                                                                                    |
+| `NO BORDER`, `NO CAPTION`, `NO COLUMN HEADER`, `SHOW GRIDLINES` | migrated 2026-08-15, "Main window" group                                                            |
+| `ROW COUNT`, `WINDOW SIZE`                                      | **`ckArray`** — target is an `ArrayRecordArray` entry, not `crAddress`. Different move.             |
+| `REMINDER`                                                      | **not a scalar setting** — Alt-O appends `REMINDER = …` lines (`HELP.PAS:855`); wants a list editor |
 
 **The menu item cannot be removed until the last three land**, or it strips the only editor those
 settings have.
@@ -373,38 +671,38 @@ and a handful of display and keyboard preferences.
 `refs` counts live references to the backing global, excluding the dead `JCtrl1`/`JCTRL2` units and
 the CFGCA table binding itself.
 
-| key | CFGCA command | row | backing global | refs |
-|---|---|---|---|---|
-| operating.cw.serial.ditDahRatio | DIT DAH RATIO | **csJSON** | Config.tDitDahRatio | **migrated** |
-| operating.tworadio.altDCQ | ALT-D CQ ENABLE | **csJSON** | Config.AltDCQEnable | **migrated** |
-| scoring.hamscore.contactInfo | HAMSCORE SEND CONTACT INFO | **csJSON** | Config.HamScoreSendContactInfo | **migrated** |
-| scoring.hamscore.username | HAMSCORE USERNAME | **csJSON** | Config.HamScoreUsername | **migrated** |
-| operating.cw.keypadMemories | KEYPAD CW MEMORIES | **csJSON** | Config.KeypadCWMemories | **migrated** |
-| operating.tworadio.blindCQ | ALWAYS CALL BLIND CQ | **csJSON** | Config.AlwaysCallBlindCQ | **migrated** |
-| scoring.board.postingUrl | SCORE POSTING URL | **csJSON** | Config.GetScoresSeverPostingAddress | **migrated** |
-| scoring.board.readingUrl | SCORE READING URL | **csJSON** | Config.GetScoresSeverReadingAddress | **migrated** |
-| scoring.hamscore.enable | HAMSCORE ENABLE | **csJSON** | Config.HamScoreEnable | **migrated** |
-| scoring.hamscore.password | HAMSCORE PASSWORD | **csJSON** | Config.HamScorePassword | **migrated** |
-| cluster.connectAtStartup | CONNECTION AT STARTUP | **csJSON** | Config.tConnectionAtStartup | **migrated** |
-| scoring.hamscore.url | HAMSCORE URL | **csJSON** | Config.HamScoreURL | **migrated** |
-| cluster.connectCommand | CONNECTION COMMAND | csNew | *(cluster definition)* | **removed from the flat registry** |
-| cw.speedFromDatabase | CW SPEED FROM DATABASE | **csJSON** | Config.CWSpeedFromDataBase | **migrated** |
-| operating.cw.leadingZeroChar | LEADING ZERO CHARACTER | **csJSON** | Config.LeadingZeroCharacter | **migrated** |
-| operating.tworadio.altDBuffer | ALT-D BUFFER ENABLE | **csJSON** | Config.AltDBufferEnable | **migrated** |
-| operating.cw.sayHiRateCutoff | SAY HI RATE CUTOFF | **csJSON** | Config.SayHiRateCutOff | **migrated** |
-| operating.cw.serial.farnsworth | FARNSWORTH ENABLE | **csJSON** | Config.FarnsworthEnable | **migrated** |
-| operating.tworadio.skipActiveBand | SKIP ACTIVE BAND | **csJSON** | Config.SkipActiveBand | **migrated** |
-| operating.bands.hf | HF BAND ENABLE | csOld | HFBandEnable | 8 |
-| operating.cw.leadingZeros | LEADING ZEROS | **csJSON** | Config.LeadingZeros | **migrated** |
-| **cw.speedIncrement** | **CW SPEED INCREMENT** | **csJSON** | **Config.CodeSpeedIncrement** | **migrated** |
-| operating.cw.sayHi | SAY HI ENABLE | **csJSON** | Config.SayHiEnable | **migrated** |
-| operating.bands.warc | WARC BAND ENABLE | csOld | WARCBandsEnabled | 16 |
-| operating.cw.serial.farnsworthSpeed | FARNSWORTH SPEED | **csJSON** | Config.FarnsworthSpeed | **migrated** |
-| operating.bands.vhf | VHF BAND ENABLE | csOld | VHFBandsEnabled | 25 |
-| operating.cw.serial.weight | WEIGHT | **csJSON** | Config.Weight | **migrated** |
-| cw.enable | CW ENABLE | **csJSON** | Config.CWEnable | **migrated** |
-| operating.tworadio.enable | TWO RADIO MODE | **csJSON** | Config.TwoRadioMode | **migrated** |
-| cw.tone | CW TONE | **csJSON** | Config.CWTone | **migrated** |
+| key                                 | CFGCA command              | row        | backing global                      | refs                               |
+| ----------------------------------- | -------------------------- | ---------- | ----------------------------------- | ---------------------------------- |
+| operating.cw.serial.ditDahRatio     | DIT DAH RATIO              | **csJSON** | Config.tDitDahRatio                 | **migrated**                       |
+| operating.tworadio.altDCQ           | ALT-D CQ ENABLE            | **csJSON** | Config.AltDCQEnable                 | **migrated**                       |
+| scoring.hamscore.contactInfo        | HAMSCORE SEND CONTACT INFO | **csJSON** | Config.HamScoreSendContactInfo      | **migrated**                       |
+| scoring.hamscore.username           | HAMSCORE USERNAME          | **csJSON** | Config.HamScoreUsername             | **migrated**                       |
+| operating.cw.keypadMemories         | KEYPAD CW MEMORIES         | **csJSON** | Config.KeypadCWMemories             | **migrated**                       |
+| operating.tworadio.blindCQ          | ALWAYS CALL BLIND CQ       | **csJSON** | Config.AlwaysCallBlindCQ            | **migrated**                       |
+| scoring.board.postingUrl            | SCORE POSTING URL          | **csJSON** | Config.GetScoresSeverPostingAddress | **migrated**                       |
+| scoring.board.readingUrl            | SCORE READING URL          | **csJSON** | Config.GetScoresSeverReadingAddress | **migrated**                       |
+| scoring.hamscore.enable             | HAMSCORE ENABLE            | **csJSON** | Config.HamScoreEnable               | **migrated**                       |
+| scoring.hamscore.password           | HAMSCORE PASSWORD          | **csJSON** | Config.HamScorePassword             | **migrated**                       |
+| cluster.connectAtStartup            | CONNECTION AT STARTUP      | **csJSON** | Config.tConnectionAtStartup         | **migrated**                       |
+| scoring.hamscore.url                | HAMSCORE URL               | **csJSON** | Config.HamScoreURL                  | **migrated**                       |
+| cluster.connectCommand              | CONNECTION COMMAND         | csNew      | *(cluster definition)*              | **removed from the flat registry** |
+| cw.speedFromDatabase                | CW SPEED FROM DATABASE     | **csJSON** | Config.CWSpeedFromDataBase          | **migrated**                       |
+| operating.cw.leadingZeroChar        | LEADING ZERO CHARACTER     | **csJSON** | Config.LeadingZeroCharacter         | **migrated**                       |
+| operating.tworadio.altDBuffer       | ALT-D BUFFER ENABLE        | **csJSON** | Config.AltDBufferEnable             | **migrated**                       |
+| operating.cw.sayHiRateCutoff        | SAY HI RATE CUTOFF         | **csJSON** | Config.SayHiRateCutOff              | **migrated**                       |
+| operating.cw.serial.farnsworth      | FARNSWORTH ENABLE          | **csJSON** | Config.FarnsworthEnable             | **migrated**                       |
+| operating.tworadio.skipActiveBand   | SKIP ACTIVE BAND           | **csJSON** | Config.SkipActiveBand               | **migrated**                       |
+| operating.bands.hf                  | HF BAND ENABLE             | csOld      | HFBandEnable                        | 8                                  |
+| operating.cw.leadingZeros           | LEADING ZEROS              | **csJSON** | Config.LeadingZeros                 | **migrated**                       |
+| **cw.speedIncrement**               | **CW SPEED INCREMENT**     | **csJSON** | **Config.CodeSpeedIncrement**       | **migrated**                       |
+| operating.cw.sayHi                  | SAY HI ENABLE              | **csJSON** | Config.SayHiEnable                  | **migrated**                       |
+| operating.bands.warc                | WARC BAND ENABLE           | csOld      | WARCBandsEnabled                    | 16                                 |
+| operating.cw.serial.farnsworthSpeed | FARNSWORTH SPEED           | **csJSON** | Config.FarnsworthSpeed              | **migrated**                       |
+| operating.bands.vhf                 | VHF BAND ENABLE            | csOld      | VHFBandsEnabled                     | 25                                 |
+| operating.cw.serial.weight          | WEIGHT                     | **csJSON** | Config.Weight                       | **migrated**                       |
+| cw.enable                           | CW ENABLE                  | **csJSON** | Config.CWEnable                     | **migrated**                       |
+| operating.tworadio.enable           | TWO RADIO MODE             | **csJSON** | Config.TwoRadioMode                 | **migrated**                       |
+| cw.tone                             | CW TONE                    | **csJSON** | Config.CWTone                       | **migrated**                       |
 
 `refs` is a case-**insensitive** count over the compiled tree, `.PAS` and `.pas` alike, excluding the
 uncompiled `JCTRL1`/`JCTRL2`. A case-sensitive `--include=*.pas` misses every TRDOS file spelled
@@ -418,10 +716,10 @@ The **hand-wired** Preferences panels (SCP, network, fonts, backup, band map, WS
 logger, MMTTY, …) already call `ApplyAndStoreCommand`, so 22 commands are already written to JSON.
 All 22 rows are `csOwned`, which is a real state and not an oversight:
 
-| | hidden from Ctrl-J | applied from the ini | written to the ini |
-|---|---|---|---|
-| `csOwned` | yes | **yes** | yes |
-| `csJSON` | yes | no | no |
+|           | hidden from Ctrl-J | applied from the ini | written to the ini |
+| --------- | ------------------ | -------------------- | ------------------ |
+| `csOwned` | yes                | **yes**              | yes                |
+| `csJSON`  | yes                | no                   | no                 |
 
 So `csOwned` satisfies step 1 but not step 2: the value is in both files and the ini is still a
 second, staler source that the loader applies before `ApplyStoredCommands` overrides it. They are a
@@ -430,15 +728,34 @@ rows are `crNetwork: 1`, so each one has to be checked against the peer path abo
 its seed-list entry. Do them in small themed commits (backup, band map, WSJT-X …), not one change of
 22.
 
-
 **Done 2026-08-14.** Twenty-one flipped to `csJSON`, each added to the ini→store seed list so a
 station that has never opened Preferences keeps its values: backup (2), band map (3), external
 logger (3), fonts (2), MMTTY, SCP (2), server/network (4), radio TCP port, telnet, WSJT-X (2).
 
-**`MY CONTINENT` was held back**, and not because it is risky to flip. It is the wrong *shape*: it
-has 71 references in `LOGSTUFF.PAS` — scoring, multipliers, DX/domestic decisions — and belongs to
-the station-vs-contest question above, not to a batch of UI-owned settings. `/EXPORT` also skips the
-JSON apply, so a flip could change an exported log for an operator who had overridden it.
+**`MY CONTINENT` was held back.** Two reasons were given; only one survives.
+
+*Withdrawn:* "it belongs to the station-vs-contest question, not to a batch of UI-owned settings."
+Per *Every parameter is a registry parameter*, that is not a reason to hold a row out of the
+registry — it is a question about which panel edits it.
+
+*Stands, and is the actual blocker:* **`MY CONTINENT` reaches the export.** With 71 references in
+`LOGSTUFF.PAS` driving scoring, multipliers and DX/domestic decisions, it is squarely in the class
+that *"A setting that reaches the EXPORT must not be `csJSON`"* below already governs — and that
+section is not a warning, it is a measured result: `COMPUTER ID` went `csJSON`, and 2632 Winter
+Field Day QSO lines exported wrongly.
+
+So the answer for this row is already decided by that rule, and it is **not** "hold it back":
+
+> **`MY CONTINENT` belongs at `csOwned`, never `csJSON` — and checking the code on 2026-08-16, it
+> is already `csOwned`. Nothing to do.**
+
+`csOwned` hides it from Ctrl-J — which is the point of the migration — while `CheckCommand` still
+applies the ini value, so `/EXPORT` behaves exactly as it always did. The row moves out of the
+operator's way without changing a single exported byte.
+
+Do **not** reach for "make `/EXPORT` apply the store" — that was tried and measured wrong
+(21/1/4 → 8/14/4), because re-exporting an old log must honour that log's own `.cfg`, not the
+operator's current settings.
 
 ## What is left, and where each of it lands
 
@@ -463,36 +780,80 @@ runs **once** at startup and **before** the config files — it is an initial de
 competing owner. Checked rather than assumed, because a defaults procedure that ran on contest
 change would silently reset the setting instead.)
 
-### A-bis. ~~`LEADING ZEROS`~~ **MIGRATED** — a CW setting a contest may override
+### A-bis. `LEADING ZEROS` — **already `csJSON`**; only the write layer is open
 
 Measured, not assumed: of the 30, **only `LEADING ZEROS` appears in a contest `.cfg`** — 6 of 137
 scanned files, including `CQ-WPX-CW.CFG` and `CQ-WPX-SSB.CFG`, which fits a serial-number contest.
 The other 29 appear in none.
 
-So it is *not* category A. No code writes it, but a loaded contest does, and a `.cfg` legitimately
-winning while loaded is the agreed semantics rather than a precedence bug. The open question is the
-**write path**: editing it in Preferences during WPX must update the station default, not the event
-override — or the reverse — and nothing in `CheckCommand` knows layers exist. Settle that before
-migrating this one.
+**NY4I, 2026-08-16: "Move LEADING ZEROS from Contest and into the cfg registry."** It goes in like
+everything else. No code writes it; a loaded contest does, and a `.cfg` winning while loaded is the
+agreed semantics rather than a precedence bug.
 
-### B. The contest owns them, not the operator (3)
+What is *not* dissolved by that, and is the reason this row is still called out separately: the
+**write path**. Editing it in Preferences during WPX must update either the station default or the
+event override, and `CheckCommand` has no concept of layers — it writes one value to one place. So:
+
+- **Storage: done.** Checked in the code rather than taken from this page — the row is already
+  `csJSON` and already in `MIGRATED_COMMANDS`. This section previously read "held back"; it was
+  stale.
+- **Read:** already built, and built *for this row*. `ApplyStoredCommands` skips any command the
+  loaded contest claimed — `CommandCameFromContestCFG` (`uRadioConfigApply.pas:584`) — so the
+  contest wins while loaded and the stored value returns untouched the moment a contest that does
+  not claim it is loaded. The comment there names `LEADING ZEROS` as the case that forced it.
+- **Write:** the open decision. Until it is settled, an edit made while a contest that overrides the
+  value is loaded is ambiguous, and the honest interim is to say which layer the editor is writing
+  rather than let it look like it changed the value the contest is using.
+
+This is the same station-default ← event-override shape as the `MY *` family, and the two should be
+settled together rather than each inventing an answer.
+
+### B. ~~Set by the contest~~ **MIGRATED 2026-08-16** (3)
 
 `HF BAND ENABLE`, `WARC BAND ENABLE`, `VHF BAND ENABLE` are assigned by `FCONTEST.PAS` when a
 contest is selected — `ARRLVHFJUN` sets `HFBandEnable := False` (`FCONTEST.PAS:634`), and there are
-fourteen such sites. They are **contest properties wearing a settings costume**. Migrating them as
-flat settings would give Preferences an editor for a value the next contest selection silently
-overwrites. They belong with the contest definition; the Preferences panel should show them read-only
-or not at all. **NY4I's call, and the clearest example of "somewhere else".**
+fourteen such sites.
+
+**Superseded 2026-08-16.** The previous text called these "contest properties wearing a settings
+costume" and proposed showing them read-only or not at all. Per *Every parameter is a registry
+parameter*, being contest-set is not a reason to keep a row in the ini — these migrate like any
+other. `FCONTEST` is simply one of the writers, and it writes through the same applier everything
+else does.
+
+Two things this makes explicit rather than leaving implicit:
+
+- **The next contest selection overwriting an operator edit is the intended behaviour**, not the
+  defect the old text feared. It is the same semantics already agreed for a contest `.cfg` winning
+  while that contest is loaded. What it needs is *visibility* — the Bands panel should say the value
+  came from the contest, in the same greyed-hint idiom agreed for the `MY *` family, so an edit that
+  is about to be overwritten does not look permanent.
+- **The editors already exist.** `layBands` binds all three to `operating.bands.hf|warc|vhf`
+  (`uPrefsForm.pas:3356-3358`), so the UI half of this row group is done and the migration is the
+  ordinary five-step flip plus a seed-list entry.
+
+**Done 2026-08-16.** `RegisterLegacySetting` → `RegisterStoredSetting`, rows `csOld` → `csJSON`,
+three seed-list entries (bound `0..98` → `0..101`). All three are `crNetwork: 1` and needed no
+per-row peer work — `ApplyPeerCommand` routes on `CommandIsJSONOwned`. Checked against the export
+rule first: none of the globals is read by `PostUnit`, `uCbrSum`, `uADIF` or `uCabrillo*`, so
+`csJSON` rather than `csOwned`.
+
+**A search trap worth recording**, because the first check returned a false clean: the globals are
+spelled **inconsistently** — `HFBandEnable` but `VHFBandsEnabled` and `WARCBandsEnabled`. A sweep
+that derives the identifier from the command name finds nothing for two of the three and reports
+them safe. Read the row's `crAddress`; do not guess the global from the command.
+
+Still owed (UI, not storage): the Bands panel should say the value came from the contest, in the
+greyed-hint idiom agreed for the `MY *` family.
 
 ### C. ~~The session mutates them~~ **MIGRATED 2026-08-14** (5)
 
-| setting | live writer | what changes it |
-|---|---|---|
-| `WEIGHT` | `LOGK1EA.PAS:2120` | CW-buffer control codes, mid-message |
-| `FARNSWORTH SPEED` | `LOGK1EA.PAS:2125+` | same |
-| `FARNSWORTH ENABLE` | `LOGK1EA.PAS:2124` | same |
-| `CW ENABLE` | `MainUnit.pas:2845`, `LogCW.pas:2289` | live keystroke toggle |
-| `CW TONE` | `MainUnit.pas:2766`, `uProcessCommand.pas:354` | live keystroke toggle |
+| setting             | live writer                                    | what changes it                      |
+| ------------------- | ---------------------------------------------- | ------------------------------------ |
+| `WEIGHT`            | `LOGK1EA.PAS:2120`                             | CW-buffer control codes, mid-message |
+| `FARNSWORTH SPEED`  | `LOGK1EA.PAS:2125+`                            | same                                 |
+| `FARNSWORTH ENABLE` | `LOGK1EA.PAS:2124`                             | same                                 |
+| `CW ENABLE`         | `MainUnit.pas:2845`, `LogCW.pas:2289`          | live keystroke toggle                |
+| `CW TONE`           | `MainUnit.pas:2766`, `uProcessCommand.pas:354` | live keystroke toggle                |
 
 These can migrate, but the semantics have to be **stated rather than assumed**: Preferences sets the
 value the session *starts* with, and a live change is not written back. Today that is also true and
@@ -527,11 +888,11 @@ than `Joseph` — purely because it is faster to key.
 
 So three values, not one:
 
-| | value |
-|---|---|
-| station identity | the operator's own details |
+|                        | value                                        |
+| ---------------------- | -------------------------------------------- |
+| station identity       | the operator's own details                   |
 | what the contest sends | set at contest setup; legitimately different |
-| the Cabrillo header | the real details again, not the exchange |
+| the Cabrillo header    | the real details again, not the exchange     |
 
 The header is already structurally separate: `uCbrSum.pas` marks the address tags
 `ctrCFG: False` / `ctrSave: True`, so it keeps its own storage rather than reading
@@ -555,3 +916,27 @@ it and wins while that contest is loaded. What is missing is the UI half.
 Not every CFGCA row is a *setting*. Some are per-contest state, some are commands rather than
 configuration. Sorting those is the last step, once the genuine settings have moved and what remains
 is visible.
+
+**Read that as a question about the UI only.** Since 2026-08-16 it is not a question about storage:
+a row that turns out to be per-contest state or a command still lives in the registry, and "this
+does not belong on a Preferences panel" is never a reason to leave it in `tr4w.ini`. The three
+possible answers are *which panel*, *read-only or editable*, and *set by whom* — not *whether it
+migrates*.
+
+## What the 2026-08-16 principle adds to the order of work
+
+These follow the numbered list under [Order of work](#order-of-work); they do not replace it, and
+they inherit its rules — in particular *"a setting that reaches the EXPORT must not be `csJSON`"*,
+which decides the storage class for several of them.
+
+1. **Settle the write-layer question** — station default vs event override — once, for
+   `LEADING ZEROS` and the `MY *` family together. The read side already exists
+   (`CommandCameFromContestCFG`, `uRadioConfigApply.pas:584`); only the write side is undecided.
+   This is the one genuine design blocker the principle did *not* dissolve.
+2. ~~**Migrate category B**~~ **Done 2026-08-16** — the three band-enable rows are `csJSON` and
+   seeded. The greyed "the contest set this" hint on `layBands` is still owed.
+3. ~~**`MY CONTINENT` → `csOwned`**~~ **Already there** — verified in the code, not assumed.
+4. **Build the Contest panel.** `NAV_CONTEST = 10` has a nav item and no panel, and it is where
+   contest-set parameters are shown until the contest factory takes them.
+5. **The secret store**, per the decision above, before this work is called finished — starting with
+   the serialiser test, which is cheap and guards the claim everything else rests on.
