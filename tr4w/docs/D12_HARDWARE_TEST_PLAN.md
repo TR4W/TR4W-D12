@@ -311,27 +311,46 @@ D7 vs D12 comparison, severity.)*
   revisited: add a ~1 s poll of the inactive VFO's frequency (`$25 $01`) to
   `PollRadioState`, gated on `FDirectFreqRoute`. *(details: )*
 
-## Phase 3c: three entry-field key bindings that need a radio (2026-08-18)
+## Phase 3c: entry-field key bindings -- ALL PASSED on the bench (2026-08-18)
 
 The callsign and exchange fields' keyboard handling moved off the hand-rolled
 GetMessage loop and onto the LCL controls in `89b91cdd`. NY4I bench-tested the
-whole list the same day; everything that can be checked without hardware passed
-(typing, `?`/`/` substitution, space and right-arrow between the fields, arrow
-tabbing, Up-on-empty-callsign opening the last QSO, PgUp/PgDn CW speed, Alt and
-Ctrl showing the function-key row).
+whole list the same day. **Everything passed, including all four items that
+needed a radio.**
 
-**These four could not be, and are the only open items on that change:**
+Checked without hardware: typing, `?` / `/` substitution, space and right-arrow
+between the fields, arrow tabbing, Up-on-empty-callsign opening the last QSO,
+PgUp/PgDn CW speed, Alt and Ctrl showing the function-key row.
 
-| # | binding | what to check | why it is at risk |
-|---|---|---|---|
-| 1 | **F1-F12** | each sends its CW/voice memory, and **F4 leaks no character into the field** | the F-key arm and the F4 consume are separate `if`s in the moved code; a wrong order shows up only as a stray character |
-| 2 | **Ctrl+=** | repeats the exact characters last sent on CW (CW mode, either field) | `'='` alone is QUICK QSL KEY 2, so the Ctrl test is what keeps them apart |
-| 3 | **Apostrophe** in the callsign field | starts sending, when `START SENDING NOW KEY` is `'` | the only surviving arm of the loop's `WM_KEYUP` block; if the key-up handler is not reached at all, nothing happens and nothing is logged |
-| 4 | **Left / right Shift** with `SHIFT KEY ENABLE` | left bumps **down**, right bumps **up** -- RIT in RUN, VFO in S&P | **the highest-risk item in the change.** The loop read the scan code from `Msg.lParam` (42 left, 54 right). An LCL `OnKeyDown` has no `lParam` and the win32 widgetset does not split `VK_SHIFT`, so this is re-expressed as `GetKeyState(VK_LSHIFT/VK_RSHIFT)` -- a different mechanism answering the same question, not a copy |
+Checked with a radio:
 
-Item 4 is also the one genuinely Windows-only line in `TTR4WEntryEvents`: no LCL
-cross-platform API distinguishes the two shift keys, so it needs a per-platform
-answer whenever a macOS or Linux build is attempted.
+| binding | result | why it was at risk |
+|---|---|---|
+| **F1-F12**, and F4 leaking no character | PASS | the F-key arm and the F4 consume are separate `if`s in the moved code; a wrong order shows only as a stray character |
+| **Ctrl+=** repeat last CW message | PASS | `'='` alone is QUICK QSL KEY 2, so the Ctrl test is what keeps them apart |
+| **Apostrophe** start-sending | PASS | the only surviving arm of the loop's `WM_KEYUP` block -- the single check that `CallKeyUp` is reached at all |
+| **Left / right Shift** RIT bump down / up | PASS | **the one binding that is not a copy.** The loop read the scan code from `Msg.lParam` (42 left, 54 right); an LCL `OnKeyDown` has no `lParam` and the win32 widgetset does not split `VK_SHIFT`, so it is re-expressed as `GetKeyState(VK_LSHIFT/VK_RSHIFT)` -- a different mechanism answering the same question |
+
+The Shift pair remains the one genuinely Windows-only line in `TTR4WEntryEvents`:
+no LCL cross-platform API distinguishes the two shift keys, so it needs a
+per-platform answer whenever a macOS or Linux build is attempted. Passing here
+does not change that.
+
+## ShortString display overruns -- ALL PASSED on the bench (2026-08-18)
+
+`56a8ae97` and `c523ac6b` fixed six main-window fields that read a `ShortString`
+through `PAnsiChar(@X[1])` -- past the length byte, into stale bytes from a
+longer previous value. NY4I found it as **"K3Sio 2" for a radio named K3S**
+("K3S" + the "io 2" left behind by "Radio 2").
+
+Confirmed clean: **radio names, beam heading, user info, grid/locator.** The WAE
+QTC callsign field (`LOGWAE:453`) is the same fix and was not staged -- it shows
+only in WAE contests.
+
+Grid/locator is worth a note for whoever checks it next: it is written only from
+`DisplayBeamHeading` (`LOGWIND.PAS:1421`), needs `MyGrid` set and the callsign to
+resolve to a grid, and `tBeamHeadingPrevState` suppresses a redraw when the grid
+has not changed -- so it takes a call from a different country to force one.
 
 ## Reporting
 
