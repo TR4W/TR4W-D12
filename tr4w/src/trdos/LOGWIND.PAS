@@ -1376,7 +1376,9 @@ end;
 procedure DispalyGrid(Grid: GridString);
 begin
   Grid[5] := #0;
-  SetMainWindowText(mweLocator, string(PAnsiChar(@Grid[1])));
+  // Grid is a GridString -- a ShortString -- so PAnsiChar(@Grid[1]) read past
+  // its length into whatever followed.  See the radio-name fix (56a8ae97).
+  SetMainWindowText(mweLocator, string(Grid));
 //windows.CopyMemory(@TempBuffer1,
 {  asm
   mov eax,Grid
@@ -1468,7 +1470,8 @@ begin
        //        WHILE Length (TempString) < (BeamHeadingWindowRX - BeamHeadingWindowLX) DO
        //            TempString := ' ' + TempString;
 
-     SetMainWindowText(mweBeamHeading, string(PAnsiChar(@TempString[1])));
+     // TempString is a Str40 local; same ShortString hazard.
+     SetMainWindowText(mweBeamHeading, string(TempString));
        //        Showmessage (TempString);
        //        RestorePreviousWindow;
      end;
@@ -3743,7 +3746,11 @@ begin
      //         while length(InfoString) < 32 do
      //            InfoString := ' ' + InfoString + ' ';
 
-   SetMainWindowText(mweUserInfo, string(PAnsiChar(@InfoString[1])));
+   // InfoString is a Str40 local.  The ZeroMemory above was a WORKAROUND for
+   // this very read -- zeroing the buffer so the PAnsiChar scan would find a
+   // terminator -- and it is left in place as an initializer, no longer as the
+   // thing that makes this line correct.
+   SetMainWindowText(mweUserInfo, string(InfoString));
 
      //         Write(InfoString);
      end

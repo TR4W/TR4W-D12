@@ -450,7 +450,10 @@ begin
           until TempString <> EscapeKey;
       }
 
-    SetMainWindowText(mweCall, string(PAnsiChar(@QTCCallsign[1])));
+    // QTCCallsign is a CallString -- a ShortString -- and a GLOBAL, so a
+    // shorter reassignment leaves the tail of the previous call behind it,
+    // exactly as the radio name did (56a8ae97).
+    SetMainWindowText(mweCall, string(QTCCallsign));
       {
           QTCHeaderString := QuickEditResponse(PChar('Enter QTC #/# (max of ' + MaxQTCString + ') or RETURN if QRU'), 8);
 
