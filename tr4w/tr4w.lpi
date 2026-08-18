@@ -38,7 +38,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="313">
+    <Units Count="314">
       <Unit0>
         <Filename Value="tr4w.dpr"/>
         <IsPartOfProject Value="True"/>
@@ -71,6 +71,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit312>
+      <Unit313>
+        <Filename Value="src/ui/lcl/uSendKeyboardForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmSendKeyboard"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit313>
       <Unit3>
         <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
         <IsPartOfProject Value="True"/>

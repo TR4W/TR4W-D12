@@ -1,0 +1,41 @@
+object frmSendKeyboard: TfrmSendKeyboard
+  Left = 0
+  Height = 38
+  Top = 0
+  Width = 456
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Sending CW'
+  ClientHeight = 38
+  ClientWidth = 456
+  KeyPreview = True
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object edtText: TEdit
+    Left = 5
+    Height = 26
+    Top = 5
+    Width = 380
+    AutoSize = False
+    CharCase = ecUpperCase
+    MaxLength = 255
+    OnChange = edtTextChange
+    OnKeyDown = edtTextKeyDown
+    OnKeyUp = edtTextKeyUp
+    TabOrder = 0
+  end
+  object btnClose: TButton
+    Left = 390
+    Height = 26
+    Top = 5
+    Width = 60
+    AutoSize = False
+    Cancel = True
+    Caption = 'Close'
+    Default = True
+    OnClick = btnCloseClick
+    TabOrder = 1
+  end
+end

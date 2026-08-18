@@ -40,11 +40,21 @@ uses
   Messages
   ;
 
-function SendKeyboardCWDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-function NewSendKeyboardEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
-procedure CloseSendKeyboardInputDialog(StopSending: boolean);
-function SendKeyboardInputDialogOpen: boolean;
+{
+  THE SEND-KEYBOARD-CW SEAM.  The dialog itself is now an LCL form --
+  src\ui\lcl\uSendKeyboardForm.pas -- and this unit is the entry point and
+  the two exported helpers, all three forwarding.
 
+  DELETED here, not wrapped (Phase 4a): SendKeyboardCWDlgProc and
+  NewSendKeyboardEditProc -- a whole window procedure subclassed onto the edit
+  to catch Enter, PageUp/PageDown and F10 -- plus the EN_CHANGE arm that keyed
+  each character as it was typed, and the SendKeyboardWindow HWND that served
+  as the open/closed flag.  A form knows whether it is visible.
+
+  It was DEFERRED in f75eb405 because its parent can be a QTC window and LCL
+  ShowModal disables LCL forms only; ShowModalOverWin32Parent (d2aff49a)
+  removed that blocker.
+}
 
 // the send-CW-from-keyboard box.  Takes its parent EXPLICITLY: the caller
 // passes tCardinal, not tr4whandle, and that is a real difference rather
@@ -52,203 +62,30 @@ function SendKeyboardInputDialogOpen: boolean;
 //
 // THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
 // no longer knows this is a Win32 modal dialog, only that the window opens.
-// When the dialog becomes an LCL form, this body changes and nothing else does.
+//
+// Phase 4a, 2026-08-18: that is exactly what happened, and no call site moved.
 procedure ShowSendKeyboardCW(const aParent: HWND);
+procedure CloseSendKeyboardInputDialog(StopSending: boolean);
+function SendKeyboardInputDialogOpen: boolean;
 
 implementation
+
 uses
-  MainUnit;
+  uSendKeyboardForm;
 
-var
-  newpos, oldpos                        : integer;
-  OldSendKeyboardEditProc               : Pointer;
-  SendKeyboardWindow                    : HWND;
-
-function SendKeyboardCWDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-var
-s{, nextfilename}                       : ShortString;
-//label  1;
+procedure ShowSendKeyboardCW(const aParent: HWND);
 begin
-  Result := False;
-  case Msg of
-    WM_INITDIALOG:
-      begin
-        Windows.SetWindowTextA(hwnddlg, RC_SENDINGCW);
-        tWM_SETFONT(CreateEdit(ES_LEFT or ES_AUTOHSCROLL or ES_UPPERCASE, 5, 5, 380, 26, hwnddlg, 101), MainWindowEditFont);
-        CreateButton(BS_DEFPUSHBUTTON, CLOSE_WORD, 390, 5, 60, hwnddlg, 102);
-
-        SendKeyboardWindow := hwnddlg;
-        tAutoSendMode := True;
-        SendDlgItemMessage(hwnddlg, 101, EM_LIMITTEXT, 255, 0);
-        OldSendKeyboardEditProc := Pointer(Windows.SetWindowLong(Get101Window(hwnddlg), GWL_WNDPROC, integer(@NewSendKeyboardEditProc)));
-        ControlAMode := True;
-        if ActiveMode = Phone then
-           begin
-           Windows.SetWindowTextA(hwnddlg, TC_SENDINGSSBWAVFILENAME);
-           end;
-//        Windows.SetDlgItemTextA(hwnddlg, 101, CHR(153));
-      end;
-
-    WM_COMMAND:
-      begin
-        if HiWord(wParam) = EN_CHANGE then
-           begin
-           //          s := GetDialogItemText(hwnddlg, 101);
-                     s[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @s[1], SizeOf(s) - 1));
-                     if ActiveMode <> Phone then
-                        begin
-                        if s <> '' then
-                           begin
-                           //              CPUKeyer.CodeSpeed := CPUKeyer.CodeSpeed;
-                                         newpos := length(s);
-                                         if newpos > oldpos then
-                                            begin
-                                            AddStringToBuffer(s[newpos], Config.CWTone);
-                                            end
-                                         else
-                                            begin
-                                            AddStringToBuffer(#8, Config.CWTone);
-                                            end;
-                                         oldpos := newpos;
-                           end
-                        else
-                           begin
-                           oldpos := 0;
-                           end;
-                        end;
-           end;
-        case wParam of
-{
-          102:
-            begin
-              if ActiveMode = Phone then
-              begin
-                s := GetDialogItemText(hwnddlg, 101);
-                if s = '' then CloseSendKeyboardInputDialog(False);
-                if DVPEnable then
-                  while s <> '' do
-                  begin
-                    nextfilename := RemoveFirstString(s);
-                    GetRidOfPrecedingSpaces(nextfilename);
-                    SendCrypticDVPString(nextfilename + '.WAV');
-                  end;
-              end;
-              CloseSendKeyboardInputDialog(False);
-            end;
-}
-          102, 2:
-            CloseSendKeyboardInputDialog(True);
-        end;
-      end;
-
-    WM_CLOSE:
-      begin
-        CloseSendKeyboardInputDialog(False);
-{
-        1:
-        oldpos := 0;
-        newpos := 0;
-        ControlAMode := False;
-        tAutoSendMode := False;
-//        CPUKeyer.PTTUnForce;
-        CPUKeyer.FlushCWBuffer;
-        EndDialog(hwnddlg, 0);
-      }end;
-  end;
+   uSendKeyboardForm.ShowSendKeyboardCW(aParent);
 end;
-
-function NewSendKeyboardEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
-var
-  s, nextfilename                       : ShortString;
-begin
-  if Msg = WM_KEYUP then
-    if wParam = VK_RETURN then
-       begin
-       if ActiveMode = Phone then
-          begin
-          s := GetDialogItemText(hwnddlg, 101);
-          if s = '' then
-             begin
-             CloseSendKeyboardInputDialog(False);
-             end;
-          if Config.DVKEnable then
-             begin
-             while s <> '' do
-                begin
-                nextfilename := RemoveFirstString(s);
-                GetRidOfPrecedingSpaces(nextfilename);
-                SendCrypticDVPString(nextfilename + '.WAV');
-                end;
-             end;
-          end;
-       CloseSendKeyboardInputDialog(False);
-       end;
-
-  if Msg = WM_KEYDOWN then
-     begin
-     //    if wParam in [VK_F1..vk_f12] then ProcessFuntionKeys(wParam);
-         if wParam = VK_PRIOR then
-            begin
-            ProcessMenu(menu_cwspeedup);
-            end;
-         if wParam = VK_NEXT then
-            begin
-            ProcessMenu(menu_cwspeeddown);
-            end;
-     end;
-  if Msg = WM_SYSKEYDOWN then if wParam = VK_F10 then
-                                 begin
-                                 CloseSendKeyboardInputDialog(False); //Windows.PostMessage(SendKeyboardWindow, WM_CLOSE, 0, 0);
-                                 end;
-    {$RangeChecks Off}     // 4.79.4
-   Result := CallWindowProc(OldSendKeyboardEditProc, hwnddlg, Msg, wParam, lParam);
-   
-  end;
 
 procedure CloseSendKeyboardInputDialog(StopSending: boolean);
 begin
-  oldpos := 0;
-  newpos := 0;
-  ControlAMode := False;
-  tAutoSendMode := False;
-  // Only tear down the keyer/port if CW is actually being sent. When idle, the
-  // keying line is already low and the WinKeyer buffer already empty, so
-  // FlushCWBuffer (TurnOffActivePort + wkClearBuffer) is pure no-op work that
-  // can cost ~300ms of serial/port teardown. CWStillBeingSent is keyer-mode
-  // aware (CWByCAT / WinKeyer / YCCC / CPU keyer). Issue #1006.
-  if StopSending and CWStillBeingSent then
-     begin
-     // B3: KeyerCPU.Flush is CPUKeyer.FlushCWBuffer, unchanged.  Deliberately
-     // NOT "upgraded" to the LogCW.FlushCWBuffer facade -- that would ALSO stop
-     // CAT sending and flush the YCCC box, which this site never did.
-     KeyerCPU.Flush;
-     // The WinKeyer clear used to reach this site THROUGH the CPU keyer's flush;
-     // it now lives in the WinKeyer's own adapter (task #22), so it has to be
-     // asked for explicitly or closing this dialog would stop keying the CPU
-     // port while leaving a sending WinKeyer running.  Self-guarded: a WinKeyer
-     // with nothing outstanding does no I/O.
-     KeyerWinKey.Flush;
-     end;
-{$IF MMTTYMODE}
-  PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);
-{$IFEND}
-
-  EndDialog(SendKeyboardWindow, 0);
-  SendKeyboardWindow := 0;   // Issue #1006: keep the open/closed flag honest
+   uSendKeyboardForm.CloseSendKeyboardInputDialog(StopSending);
 end;
 
-// Issue #1006: true while the Send Keyboard Input dialog is open, so callers can
-// avoid opening a second (nested) instance that the single SendKeyboardWindow
-// handle cannot unwind.
 function SendKeyboardInputDialogOpen: boolean;
 begin
-  Result := SendKeyboardWindow <> 0;
+   Result := uSendKeyboardForm.SendKeyboardInputDialogOpen;
 end;
 
-
-procedure ShowSendKeyboardCW(const aParent: HWND);
-begin
-   CreateModalDialog(230, 20, aParent, @SendKeyboardCWDlgProc, 0);
-end;
 end.
-
