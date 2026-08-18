@@ -46,13 +46,14 @@ param(
    [int[]]  $Command = @(
       10111,   # Settings -> CAT and CW Keying (ShowPreferences -- the LCL form)
       10405,   # Tools -> Missing Mults report (menu_ctrl_missmultsreport)
-      10302    # Alt+D dupe check (menu_alt_dupecheck -- the LCL form, Phase 4a)
+      10302,   # Alt+D dupe check (menu_alt_dupecheck -- the LCL form, Phase 4a)
+      10101    # Tools -> Program message (menu_messages -- the LCL form, Phase 4a)
    ),
    # Commands that MUST produce a new top-level window.  Surviving is not
    # passing: a program that has stopped acting on its menu entirely survives
    # every command put to it, which is exactly how the 2026-08-18 regression got
    # past this runner and reached the bench.
-   [int[]]  $ExpectsWindow = @(10111, 10302),
+   [int[]]  $ExpectsWindow = @(10111, 10302, 10101),
    [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
    [string] $Exe,
    # A .cfg already in tr4w\target. Omit to stage one from the golden corpus.

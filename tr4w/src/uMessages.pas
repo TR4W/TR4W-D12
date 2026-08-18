@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -31,7 +31,17 @@ uses
   Messages,
   Tree;
 
-function MESDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{
+  THE PROGRAM-MESSAGE SEAM.  The dialog itself is now an LCL form --
+  src\ui\lcl\uProgramMessageForm.pas -- and this unit keeps only the entry
+  point and the two shared handle arrays.
+
+  DELETED here, not wrapped (Phase 4a): MESDlgProc, its CreateButton loop, and
+  the WM_COMMAND arm that switched on the control id to pick a message bank.
+  Each button has its own named handler on the form now; a three-way id switch
+  is precisely what "never branch on Sender" exists to prevent.
+}
+
 var
   MessagesKeys                          : array[1..12] of HWND;
   MessagesValues                        : array[1..12] of HWND;
@@ -44,69 +54,18 @@ var
 // When the dialog becomes an LCL form, this body changes and nothing else
 // does. Deliberately here, in the unit that owns the DlgProc, rather than at
 // the call site.
+//
+// Phase 4a, 2026-08-18: that is exactly what happened, and no call site moved.
 procedure ShowProgramMessage;
 
 implementation
-uses uRadioPolling,
-  MainUnit;
 
-function MESDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-var
-  i                                     : integer;
-const
-  LineHeight                            = 15;
-  ceoa                                  : array[1..3] of PAnsiChar = (RC_PRESS_C, RC_PRESS_E, RC_PRESS_O);
-label
-  1;
-
-begin
-  Result := False;
-  case Msg of
-
-    WM_INITDIALOG:
-      begin
-
-        Windows.SetWindowTextA(hwnddlg, RC_MEMPROGFUNC);
-
-        for i := 1 to 3 do
-           begin
-           CreateButton(BS_LEFT, ceoa[i], 30, -10 + i * 30, 350, hwnddlg, i + 100);
-           end;
-
-      end;
-
-    WM_COMMAND:
-      begin
-        if wParam = 2 then
-           begin
-           goto 1;
-           end;
-        if HiWord(wParam) = BN_CLICKED then
-           begin
-           MesWindow := CQMsgWin;
-           if LoWord(wParam) = 102 then
-              begin
-              MesWindow := ExMsgWin;
-              end;
-           if LoWord(wParam) = 103 then
-              begin
-              MesWindow := OtherMsgWin;
-              end;
-           EndDialog(hwnddlg, 0);
-           OpenListOfMessages;
-           end;
-
-      end;
-
-    WM_CLOSE: 1: EndDialog(hwnddlg, 0);
-
-  end;
-end;
-
+uses
+  uProgramMessageForm;
 
 procedure ShowProgramMessage;
 begin
-   CreateModalDialog(205, 70, tr4whandle, @MESDlgProc, 0);
+   uProgramMessageForm.ShowProgramMessage;
 end;
-end.
 
+end.
