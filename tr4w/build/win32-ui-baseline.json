@@ -1,17 +1,17 @@
 {
-  "CreateModalDialog": 27,
+  "CreateModalDialog": 26,
   "tDialogBox": 8,
   "DialogBox*": 4,
   "CreateDialogIndirectParam": 2,
   "CreateDialogParam": 0,
   "CreateWindowEx": 23,
-  "TF.CreateStatic": 36,
+  "TF.CreateStatic": 35,
   "TF.CreateButton": 32,
-  "TF.CreateEdit": 17,
+  "TF.CreateEdit": 16,
   "TF.CreateComboBox": 4,
   "TF.CreateListBox": 5,
   "TF.CreateListView2": 6,
   "TF.CreateOwnerDrawListBox": 8,
   "TF.CreateRichEdit": 4,
-  "CreateOKCancelButtons": 14
+  "CreateOKCancelButtons": 13
 }

@@ -24,31 +24,18 @@ unit uAltD;
 
 interface
 
-uses
-  uConfigValues,   // Config -- migrated settings
-  VC,
-  TF,
-  Windows,
-  Tree,
-  uCallsigns,
-  uDupeSheet,   // 4.53.7
-  uMaster,
-  LogEdit,
-  LogStuff,
-  LOGSend,
-  LogCW,
-  LogRadio,
-  LogK1EA,
-  LogWind,
-  Messages
-  ;
+{
+  THE ALT-D SEAM.  The dialog itself is now an LCL form -- src\ui\lcl\uAltDForm.pas
+  -- and this unit is what is left of the Win32 one: the entry point, and
+  nothing else.
 
-function AltDDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-function NewAltDEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
-
-var
-  AltDEditWindowHandle                  : HWND;
-  OldAltDEditProc                       : Pointer;
+  DELETED here, not wrapped (Phase 4a): AltDDlgProc, its WM_INITDIALOG control
+  construction, the WM_CTLCOLOREDIT arm that painted the edit yellow, the
+  WM_COMMAND / EN_CHANGE routing, and NewAltDEditProc -- a whole window
+  procedure that existed to subclass the edit for one keystroke test, now
+  edtCall.OnKeyPress.  AltDEditWindowHandle and OldAltDEditProc went with them;
+  nothing outside this unit ever referenced any of it.
+}
 
 // the Alt-D dupe-check box.
 //
@@ -57,107 +44,18 @@ var
 // When the dialog becomes an LCL form, this body changes and nothing else
 // does. Deliberately here, in the unit that owns the DlgProc, rather than at
 // the call site.
+//
+// Phase 4a, 2026-08-18: that is exactly what happened, and no call site moved.
 procedure ShowAltD;
 
 implementation
+
 uses
-  MainUnit;
-
-function AltDDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-
-begin
-  Result := False;
-  case Msg of
-    WM_INITDIALOG:
-      begin
-
-        Windows.SetWindowTextA(hwnddlg, RC_DUPECHECKOAR);
-
-        TF.Format(TempBuffer1, TC_ENTERCALLTOBECHECKEDON, BandStringsArray[InActiveRadioPtr.BandMemory], ModeStringArray[InActiveRadioPtr.ModeMemory]);
-          CreateStatic(TempBuffer1, 15, 3, 250, hwnddlg, 102);
-
-
-
-
-  //      tcreatestaticwindow(tempbuffer1,es_center,15,3,250,30,hwnddlg,0);
-  //      tcreateeditwindow($00020014,tempbuffer1,$50010014,es_center,15,27,250,30,hwnddlg);
-          AltDEditWindowHandle := CreateEdit( WS_MaximizeBox or WS_MinimizeBOX or  ES_CENTER or ES_UPPERCASE or WS_BORDER,15, 27, 250, 30, hwnddlg, 101);
-      //  altdeditwindowhandle := createmodaldialog( 250,15,hwnddlg,@newaltdeditproc,0);
-
-        // Issue #997: asm tWM_SETFONT -> call the TF helper directly.
-        // EAX held AltDEditWindowHandle (the CreateEdit result above), EDX = font.
-        tWM_SETFONT(AltDEditWindowHandle, MainWindowEditFont);
-        CreateOKCancelButtons(hwnddlg);
-
-//        AltDEditWindowHandle := Get101Window(hwnddlg);
-
-        SendMessage(AltDEditWindowHandle, EM_LIMITTEXT, 12, 0);
-         OldAltDEditProc := Pointer(Windows.SetWindowLong(AltDEditWindowHandle, GWL_WNDPROC, integer(@NewAltDEditProc)));
-         if Config.AltDBufferEnable then
-            begin
-            Windows.SetWindowTextA(AltDEditWindowHandle, @DupeInfoCall[1]);
-            end;
-      end;
-
-    WM_CTLCOLOREDIT:
-      begin
-//        SetBkMode(HDC(wParam), TRANSPARENT);
-        SetBkColor(HDC(wParam), tr4wColorsArray[trYellow]);
-        Result := BOOL(tr4wBrushArray[trYellow]);
-      end;
-
-    WM_COMMAND:
-      begin
-        if HiWord(wParam) = EN_CHANGE then
-           begin
-           //    tClearDupeInfoCall;   4.39.4
-               DupeInfoCall[0] := AnsiChar(Windows.GetDlgItemTextA(hwnddlg, 101, @DupeInfoCall[1], SizeOf(DupeInfoCall) - 1));
-     //          DupeInfoCall := GetDialogItemText(hwnddlg, 101);
-               if SCPMinimumLetters > 0 then
-                  begin
-                  ClearMasterListBox;
-                  VisibleLog.SuperCheckPartial(DupeInfoCall, True, InActiveRadioPtr);
-                  end;
-               CallsignsList.CreatePartialsList(DupeInfoCall);
-           end;
-        case wParam of
-          1, 2:
-            begin
-              if wParam = 2 then
-                 begin
-                 tClearDupeInfoCall;
-                 ClearAltD; // 4.53.7
-                 end;
-              goto 1;
-            end;
-        end;
-      end;
-
-    WM_CLOSE:
-      begin
-        1:
-        EndDialog(hwnddlg, 0);
-      end;
-  end;
-end;
-
-function NewAltDEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
-begin
-   if Msg = WM_CHAR then
-      begin
-      if KeyboardCallsignChar(wParam, False) = False then Exit;
-      end;
-  {$RangeChecks OFF}     // 4.79.4
-  Result := CallWindowProc(OldAltDEditProc, hwnddlg, Msg, wParam, lParam);
-
-end;
+  uAltDForm;
 
 procedure ShowAltD;
 begin
-   CreateModalDialog(140, 50, tr4whandle, @AltDDlgProc, 0);
+   uAltDForm.ShowAltD;
 end;
+
 end.
-
-

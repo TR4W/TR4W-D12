@@ -170,6 +170,7 @@ uses
   uLCLFormHelpers in 'src\ui\lcl\uLCLFormHelpers.pas',
   uSettingsBinding in 'src\ui\lcl\uSettingsBinding.pas',
   uUDPDestinationEditForm in 'src\ui\lcl\uUDPDestinationEditForm.pas',
+  uAltDForm in 'src\ui\lcl\uAltDForm.pas',
   uKeyerEditForm in 'src\ui\lcl\uKeyerEditForm.pas',
   uRadioEditForm in 'src\ui\lcl\uRadioEditForm.pas',
   uMainForm in 'src\ui\lcl\uMainForm.pas',

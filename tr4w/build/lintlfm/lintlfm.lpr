@@ -48,17 +48,27 @@ var
 // The form classes in the .lfm files are the project's own descendants of
 // TForm.  We cannot link the project here, so they are checked AS TForm --
 // correct for every property a designer writes, because a designed property
-// must be published and TPrefsForm publishes nothing of its own.
-function ResolveClass(const aName: string): TPersistentClass;
+// must be published, and none of these forms publishes anything of its own.
+//
+// WHICH CLASS GETS THAT TREATMENT IS DECIDED BY POSITION, NOT BY NAME.  This
+// used to be a hardcoded list -- TPrefsForm, TRadioEditForm, TfrmKeyerEdit,
+// TfrmUDPDestinationEdit -- and the fifth form added (TfrmAltD, Phase 4a)
+// failed the lint on its first run for no reason but not being on it.  Phase 4
+// converts roughly twenty more; a list that must be edited once per form is a
+// list that will be forgotten, and the failure it produces looks exactly like a
+// real defect.
+//
+// The ROOT object of an .lfm for a form IS the form class, so an unresolvable
+// name at stack depth 1 is checked as TForm.  Nested objects keep the strict
+// treatment: an unknown class inside the tree is still reported, which is what
+// catches a mistyped control class.
+function ResolveClass(const aName: string; const aIsRoot: boolean): TPersistentClass;
 begin
-   if (aName = 'TPrefsForm') or (aName = 'TRadioEditForm') or
-      (aName = 'TfrmKeyerEdit') or (aName = 'TfrmUDPDestinationEdit') then
+   Result := GetClass(aName);
+
+   if (Result = nil) and aIsRoot then
       begin
       Result := TForm;
-      end
-   else
-      begin
-      Result := GetClass(aName);
       end;
 end;
 
@@ -237,7 +247,7 @@ begin
             end;
 
          clsName := stack[stack.Count - 1];
-         cls     := ResolveClass(clsName);
+         cls     := ResolveClass(clsName, stack.Count = 1);
 
          if cls = nil then
             begin

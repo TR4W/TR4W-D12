@@ -1,4 +1,4 @@
-# The per-phase GUI gate for the Win32-to-LCL migration.
+﻿# The per-phase GUI gate for the Win32-to-LCL migration.
 #
 # Posts a list of WM_COMMAND ids at the running program and asserts it survives
 # each one. That is a low bar deliberately: the corpus and the unit tests are
@@ -45,13 +45,14 @@ param(
    # known-doubtful and wants an answer (10405 -- see below).
    [int[]]  $Command = @(
       10111,   # Settings -> CAT and CW Keying (ShowPreferences -- the LCL form)
-      10405    # Tools -> Missing Mults report (menu_ctrl_missmultsreport)
+      10405,   # Tools -> Missing Mults report (menu_ctrl_missmultsreport)
+      10302    # Alt+D dupe check (menu_alt_dupecheck -- the LCL form, Phase 4a)
    ),
    # Commands that MUST produce a new top-level window.  Surviving is not
    # passing: a program that has stopped acting on its menu entirely survives
    # every command put to it, which is exactly how the 2026-08-18 regression got
    # past this runner and reached the bench.
-   [int[]]  $ExpectsWindow = @(10111),
+   [int[]]  $ExpectsWindow = @(10111, 10302),
    [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
    [string] $Exe,
    # A .cfg already in tr4w\target. Omit to stage one from the golden corpus.

@@ -1,0 +1,61 @@
+object frmAltD: TfrmAltD
+  Left = 0
+  Height = 104
+  Top = 0
+  Width = 280
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Dupe Check On Inactive Radio'
+  ClientHeight = 104
+  ClientWidth = 280
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object lblPrompt: TLabel
+    AnchorSideLeft.Control = Owner
+    Left = 15
+    Height = 15
+    Top = 6
+    Width = 250
+    AutoSize = False
+    Caption = 'Enter call to be checked on:'
+    ParentColor = False
+  end
+  object edtCall: TEdit
+    Left = 15
+    Height = 26
+    Top = 26
+    Width = 250
+    Alignment = taCenter
+    AutoSize = False
+    CharCase = ecUpperCase
+    MaxLength = 12
+    OnChange = edtCallChange
+    OnKeyPress = edtCallKeyPress
+    TabOrder = 0
+  end
+  object btnOK: TButton
+    Left = 55
+    Height = 25
+    Top = 68
+    Width = 80
+    AutoSize = False
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    OnClick = btnOKClick
+    TabOrder = 1
+  end
+  object btnCancel: TButton
+    Left = 145
+    Height = 25
+    Top = 68
+    Width = 80
+    AutoSize = False
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    OnClick = btnCancelClick
+    TabOrder = 2
+  end
+end
