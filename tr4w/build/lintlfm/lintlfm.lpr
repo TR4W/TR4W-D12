@@ -37,7 +37,8 @@ uses
    Controls,
    StdCtrls,
    ComCtrls,
-   ExtCtrls;
+   ExtCtrls,
+   Spin;       // TSpinEdit -- Auto-CQ's delay field
 
 var
    gFiles:  integer = 0;
@@ -317,7 +318,9 @@ begin
                     TSplitter, TScrollBox, TTimer, TPaintBox,
                     // ComCtrls
                     TListView, TProgressBar, TTrackBar, TStatusBar, TToolBar,
-                    TUpDown]);
+                    TUpDown,
+                    // Spin
+                    TSpinEdit, TFloatSpinEdit]);
 
    if ParamCount = 0 then
       begin

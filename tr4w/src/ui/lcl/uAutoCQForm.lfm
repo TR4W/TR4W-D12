@@ -1,0 +1,79 @@
+object frmAutoCQ: TfrmAutoCQ
+  Left = 0
+  Height = 140
+  Top = 0
+  Width = 330
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Auto-CQ'
+  ClientHeight = 140
+  ClientWidth = 330
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object lblMemoryKey: TLabel
+    Left = 10
+    Height = 32
+    Top = 10
+    Width = 215
+    AutoSize = False
+    Caption = 'Press the memory key you want to repeat:'
+    ParentColor = False
+    WordWrap = True
+  end
+  object edtHotKey: TEdit
+    Left = 235
+    Height = 23
+    Top = 10
+    Width = 85
+    Alignment = taCenter
+    AutoSize = False
+    ReadOnly = True
+    OnKeyDown = edtHotKeyKeyDown
+    TabOrder = 0
+  end
+  object lblDelay: TLabel
+    Left = 10
+    Height = 32
+    Top = 52
+    Width = 215
+    AutoSize = False
+    Caption = 'Number of milliseconds of listening time:'
+    ParentColor = False
+    WordWrap = True
+  end
+  object spnDelay: TSpinEdit
+    Left = 235
+    Height = 23
+    Top = 52
+    Width = 85
+    AutoSize = False
+    Increment = 250
+    MaxValue = 10000
+    MinValue = 500
+    TabOrder = 1
+    Value = 500
+  end
+  object btnOK: TButton
+    Left = 80
+    Height = 25
+    Top = 100
+    Width = 80
+    AutoSize = False
+    Caption = 'OK'
+    Default = True
+    OnClick = btnOKClick
+    TabOrder = 2
+  end
+  object btnCancel: TButton
+    Left = 170
+    Height = 25
+    Top = 100
+    Width = 80
+    AutoSize = False
+    Cancel = True
+    Caption = 'Cancel'
+    OnClick = btnCancelClick
+    TabOrder = 3
+  end
+end
