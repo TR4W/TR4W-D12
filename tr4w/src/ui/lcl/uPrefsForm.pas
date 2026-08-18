@@ -2601,6 +2601,19 @@ begin
          edt := TEdit.Create(aParent);
          edt.Parent := aParent;
          edt.SetBounds(CTRL_X, aY, CTRL_W, 24);
+
+         // AN INTEGER ROW GETS AN INTEGER BOX.  This branch is the catch-all --
+         // not read-only, not boolean, no allow-list -- and it rendered a plain
+         // TEdit for everything, so an integer setting accepted letters. NY4I
+         // typed "ewed" into Auto-CQ Delay Time, 2026-08-18.
+         //
+         // The type is already declared on the CFGCA row, so the panel can just
+         // ask rather than the operator being trusted. Same shape as the
+         // CFGCommandIsBoolean test above, which is what stops a boolean
+         // rendering as a text box that accepts "maybe".
+         edt.NumbersOnly := (s.LegacyCommand <> '') and
+                            CFGCommandIsInteger(s.LegacyCommand);
+
          FBindings.Bind(edt, s.Key);
          ctl := edt;
          end;

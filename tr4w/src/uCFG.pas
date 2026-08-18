@@ -171,6 +171,7 @@ function CFGCommandIsReadOnly(const aCommand: string): boolean;
 // MULTI-VALUED -- one ini line per entry). Both must be shown READ-ONLY rather
 // than as a text box; see the implementation for the two different ways
 // getting this wrong corrupts tr4w.ini.
+function CFGCommandIsInteger(const aCommand: string): boolean;
 function CFGCommandIsList(const aCommand: string): boolean;
 
 // Apply a value to a command and persist it.  Returns False when CFGCA REFUSES
@@ -1207,6 +1208,23 @@ begin
    // render as a free-text field that happily accepts "maybe".
    idx := FindCFGCommand(aCommand);
    Result := (idx >= 0) and (CFGCA[idx].crType = ctBoolean);
+end;
+
+function CFGCommandIsInteger(const aCommand: string): boolean;
+var
+   idx: integer;
+begin
+   // Asked by the generated settings panel so an integer row gets a
+   // NUMBERS-ONLY text box.  Without it the row is an ordinary TEdit that
+   // accepts anything: NY4I typed "ewed" into Auto-CQ Delay Time
+   // (2026-08-18), and the value would have gone to CheckCommand as text.
+   //
+   // Safe for every integer row in this table: nothing here declares a
+   // negative crMin (checked -- zero rows), so refusing '-' cannot reject a
+   // legal value.  If a signed setting is ever added, this predicate is where
+   // it has to be excluded.
+   idx := FindCFGCommand(aCommand);
+   Result := (idx >= 0) and (CFGCA[idx].crType = ctInteger);
 end;
 
 function CFGCommandIsList(const aCommand: string): boolean;
