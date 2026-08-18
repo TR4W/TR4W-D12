@@ -311,6 +311,27 @@ D7 vs D12 comparison, severity.)*
   revisited: add a ~1 s poll of the inactive VFO's frequency (`$25 $01`) to
   `PollRadioState`, gated on `FDirectFreqRoute`. *(details: )*
 
+## Phase 3c: three entry-field key bindings that need a radio (2026-08-18)
+
+The callsign and exchange fields' keyboard handling moved off the hand-rolled
+GetMessage loop and onto the LCL controls in `89b91cdd`. NY4I bench-tested the
+whole list the same day; everything that can be checked without hardware passed
+(typing, `?`/`/` substitution, space and right-arrow between the fields, arrow
+tabbing, Up-on-empty-callsign opening the last QSO, PgUp/PgDn CW speed, Alt and
+Ctrl showing the function-key row, the apostrophe start-sending key).
+
+**These three could not be, and are the only open items on that change:**
+
+| # | binding | what to check | why it is at risk |
+|---|---|---|---|
+| 1 | **F1-F12** | each sends its CW/voice memory, and **F4 leaks no character into the field** | the F-key arm and the F4 consume are separate `if`s in the moved code; a wrong order shows up only as a stray character |
+| 2 | **Ctrl+=** | repeats the exact characters last sent on CW (CW mode, either field) | `'='` alone is QUICK QSL KEY 2, so the Ctrl test is what keeps them apart |
+| 3 | **Left / right Shift** with `SHIFT KEY ENABLE` | left bumps **down**, right bumps **up** -- RIT in RUN, VFO in S&P | **the highest-risk item in the change.** The loop read the scan code from `Msg.lParam` (42 left, 54 right). An LCL `OnKeyDown` has no `lParam` and the win32 widgetset does not split `VK_SHIFT`, so this is re-expressed as `GetKeyState(VK_LSHIFT/VK_RSHIFT)` -- a different mechanism answering the same question, not a copy |
+
+Item 3 is also the one genuinely Windows-only line in `TTR4WEntryEvents`: no LCL
+cross-platform API distinguishes the two shift keys, so it needs a per-platform
+answer whenever a macOS or Linux build is attempted.
+
 ## Reporting
 
 For each group, note PASS / FAIL / N-A and, on any FAIL, attach the relevant
