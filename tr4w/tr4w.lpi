@@ -38,7 +38,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="306">
+    <Units Count="312">
       <Unit0>
         <Filename Value="tr4w.dpr"/>
         <IsPartOfProject Value="True"/>
@@ -57,27 +57,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit2>
-      <Unit303>
-        <Filename Value="src/ui/lcl/uAltDForm.pas"/>
+      <Unit311>
+        <Filename Value="src/ui/lcl/uSendSpotForm.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmAltD"/>
+        <ComponentName Value="frmSendSpot"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit303>
-      <Unit304>
-        <Filename Value="src/ui/lcl/uProgramMessageForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmProgramMessage"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit304>
-      <Unit305>
-        <Filename Value="src/ui/lcl/uInputQueryForm.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmInputQuery"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit305>
+      </Unit311>
       <Unit3>
         <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
         <IsPartOfProject Value="True"/>
@@ -1284,6 +1270,47 @@
         <Filename Value="src/utils/networkmessageutils.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit302>
+      <Unit303>
+        <Filename Value="src/ui/lcl/uAltDForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmAltD"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit303>
+      <Unit304>
+        <Filename Value="src/ui/lcl/uProgramMessageForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmProgramMessage"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit304>
+      <Unit305>
+        <Filename Value="src/ui/lcl/uInputQueryForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmInputQuery"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit305>
+      <Unit306>
+        <Filename Value="src/uAccelerators.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit306>
+      <Unit307>
+        <Filename Value="src/uMainWindowProc.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit307>
+      <Unit308>
+        <Filename Value="src/utils/uHTTPDownload.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit308>
+      <Unit309>
+        <Filename Value="src/uTRMasterUpdate.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit309>
+      <Unit310>
+        <Filename Value="src/uCabrilloHeader.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit310>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

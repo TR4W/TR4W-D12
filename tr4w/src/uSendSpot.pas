@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -37,8 +37,15 @@ uses
   PostUnit,
   Messages;
 
-function SendSpotDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{
+  THE SEND-SPOT SEAM.  The dialog itself is now an LCL form --
+  src\ui\lcl\uSendSpotForm.pas -- and this unit is the entry point only.
 
+  DELETED here, not wrapped (Phase 4a): SendSpotDlgProc, its CreateStatic /
+  CreateEdit loop, the BN_CLICKED arm that mirrored the tick into the comment
+  field, and the pointer-built spot string.  A LANG_RUS-only help arm went with
+  them: it answered control id 110, which no arm of this dialog ever created.
+}
 
 // the Send Spot dialog.
 //
@@ -47,127 +54,18 @@ function SendSpotDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lPara
 // When the dialog becomes an LCL form, this body changes and nothing else
 // does. Deliberately here, in the unit that owns the DlgProc, rather than at
 // the call site.
+//
+// Phase 4a, 2026-08-18: that is exactly what happened, and no call site moved.
 procedure ShowSendSpot;
 
 implementation
-uses uTelnet,
-  MainUnit;
 
-function SendSpotDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-var
-  i                                     : integer;
-  Hz100                                 : integer;
-  p                                     : PAnsiChar;
-  LastCallsign                          : CallString;
-const
-  l                                     : array[1..3] of PAnsiChar = (RC_CALLSIGN, RC_FREQUENCY, RC_COMMENT);
-label
-  1;
-begin
-  Result := False;
-  case Msg of
-//    WM_HELP: tWinHelp(59);
-    WM_INITDIALOG:
-      begin
-        Windows.SetWindowTextA(hwnddlg, RC_SENDSPOT);
-        for i := 1 to 3 do
-           begin
-           CreateStatic(l[i], 10, i * 30 - 20, 100, hwnddlg, 100 + i);
-           CreateEdit(0, 120, i * 30 - 20, 160, 23, hwnddlg, 106 + i);
-           end;
-
-        CreateButton(BS_AUTOCHECKBOX or BS_VCENTER, RC_CONTESTNAMEIC, 10, 100, 200, hwnddlg, 104);
-
-        CreateOKCancelButtons(hwnddlg);
-
-        if CallWindowString <> '' then
-           begin
-           SetDlgItemTextA(hwnddlg, 107, @CallWindowString[1])
-           end
-        else
-           begin
-           Windows.ZeroMemory(@LastCallsign, SizeOf(LastCallsign));
-           LastCallsign := VisibleLog.LastEntry(True,letCallsign);
-           SetDlgItemTextA(hwnddlg, 107, @LastCallsign[1]);
-           end;
-
-        Hz100 := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]} mod 100;
-        i := ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]} - Hz100;
-        if Hz100 >= 50 then
-           begin
-           i := i + 100;
-           end;
-
-        SetDlgItemTextW(hwnddlg, 108, PChar(FreqToPChar(i)));
-
-        if tContestNameInComment then
-           begin
-           Windows.SendDlgItemMessage(hwnddlg, 104, BM_SETCHECK, BST_CHECKED, 0);
-           Windows.SetDlgItemTextA(hwnddlg, 109, ContestTypeSA[Contest]);
-           end;
-      end;
-
-    WM_COMMAND:
-      begin
-        if ((HiWord(wParam) = BN_CLICKED) and (LoWord(wParam) = 104)) or (HiWord(wParam) = BM_SETCHECK) then
-           begin
-
-           if TF.SendDlgItemMessage(hwnddlg, 104, BM_GETCHECK) = BST_CHECKED
-             then
-              begin
-              p := ContestTypeSA[Contest];
-              tContestNameInComment := True;
-              end
-           else
-              begin
-              p := nil;
-              tContestNameInComment := False;
-              end;
-           SetDlgItemTextA(hwnddlg, 109, p);
-           end;
-
-        case wParam of
-{$IFDEF LANG_RUS}
-          110: ShowHelp('ru_dxcluster'); 
-{$ENDIF}
-
-           2: goto 1;
-
-          1:
-            begin
-
-              PInteger(@TempBuffer2)^ := $00005844 {DX#0#0};
-              TempBuffer1[0] := ' ';
-              for i := 107 to 109 do
-                 begin
-                 Windows.GetDlgItemTextA(hwnddlg, i, @TempBuffer1[1], SizeOf(TempBuffer1) - 1);
-                 Windows.lstrcatA(TempBuffer2, TempBuffer1);
-                 end;
-              // Was `TelnetSock <> 0`: spot straight up the cluster link when
-              // it is up, otherwise hand it to the TR4W network.  The raw
-              // socket handle is gone; uTelnet answers for the link now.
-              if TelnetIsConnected then
-                 begin
-                 SendViaTelnetSocket(TempBuffer2);
-                 end
-              else
-                 begin
-                 Windows.ZeroMemory(@SendSpotViaNetwork.vnMessage, SizeOf(SendSpotViaNetwork.vnMessage));
-                 Windows.CopyMemory(@SendSpotViaNetwork.vnMessage, @TempBuffer2, SizeOf(SendSpotViaNetwork.vnMessage) - 1);
-                 SendToNet(SendSpotViaNetwork, SizeOf(SendSpotViaNetwork));
-                 end;
-//              if I <> 0 then ShowSyserror(I);
-              goto 1;
-            end;
-        end;
-      end;
-    WM_CLOSE: 1: EndDialog(hwnddlg, 0);
-  end;
-end;
+uses
+  uSendSpotForm;
 
 procedure ShowSendSpot;
 begin
-   CreateModalDialog(150, 90, tr4whandle, @SendSpotDlgProc, 0);
+   uSendSpotForm.ShowSendSpot;
 end;
-end.
 
+end.
