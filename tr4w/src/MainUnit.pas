@@ -5945,8 +5945,23 @@ begin
      begin
      Exit;
      end;
+
+  // DESTROY FIRST, and repaint after.  Windows has one caret per thread, but
+  // the entry fields became LCL TEdits in Phase 3b and the LCL manages a caret
+  // on focus too -- so TR4W's bitmap caret and the control's own were being
+  // created one after the other, and whichever lost left its pixels painted.
+  // NY4I saw it as TWO cursors side by side in the exchange window,
+  // 2026-08-18.
+  //
+  // The BLOCK shape itself is not the bug and is not new: it is this bitmap,
+  // and CUSTOM CARET (uCFG.pas:536, default True) is the setting that turns it
+  // off in favour of the system's thin caret.
+  DestroyCaret;
   CreateCaret(h, CursorBitmap, ws - 4, MainWindowEditHeight);
   ShowCaret(h);
+  // Clear anything the previous caret left behind; a caret is painted INTO the
+  // control, so destroying it does not necessarily restore what was under it.
+  Windows.InvalidateRect(h, nil, True);
 end;
 
 procedure EditableLogWindowDblClick;
