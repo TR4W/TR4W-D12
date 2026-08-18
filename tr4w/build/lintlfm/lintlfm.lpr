@@ -290,9 +290,34 @@ var
    n: integer;
 
 begin
+   // THE CLASSES THIS TOOL CAN RESOLVE BY NAME.
+   //
+   // GetClass answers from the RegisterClass table, and the LCL does not
+   // register its controls -- linking ExtCtrls is not enough, the class has to
+   // be named here. So this IS a list, and unlike the form-class list removed
+   // above it cannot be replaced by a positional rule: an unresolvable control
+   // name in the middle of a tree is exactly the typo (TEditt, TLabell) this
+   // lint should fail on, so it must keep failing closed.
+   //
+   // What it CAN do is not fail on legitimate controls, which means listing
+   // generously rather than reactively. TImage was missing and the first form
+   // to use one failed the build for no better reason (2026-08-18) -- the same
+   // shape of defect as the hardcoded form-class list.
+   //
+   // Everything below comes from a unit this program already links, so widening
+   // the list costs nothing. If a form uses a control that is not here, the
+   // failure names it and the fix is one identifier.
    RegisterClasses([TForm, TPanel, TLabel, TButton, TCheckBox, TEdit,
                     TComboBox, TListBox, TGroupBox, TTreeView, TPageControl,
-                    TTabSheet, TRadioButton]);
+                    TTabSheet, TRadioButton,
+                    // StdCtrls
+                    TMemo, TStaticText, TScrollBar,
+                    // ExtCtrls
+                    TImage, TShape, TBevel, TRadioGroup, TCheckGroup,
+                    TSplitter, TScrollBox, TTimer, TPaintBox,
+                    // ComCtrls
+                    TListView, TProgressBar, TTrackBar, TStatusBar, TToolBar,
+                    TUpDown]);
 
    if ParamCount = 0 then
       begin

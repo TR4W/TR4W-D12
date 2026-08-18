@@ -1,0 +1,63 @@
+object frmInputQuery: TfrmInputQuery
+  Left = 0
+  Height = 116
+  Top = 0
+  Width = 420
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'TR4W'
+  ClientHeight = 116
+  ClientWidth = 420
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object imgIcon: TImage
+    Left = 3
+    Height = 32
+    Top = 10
+    Width = 32
+    Center = True
+  end
+  object lblPrompt: TLabel
+    Left = 40
+    Height = 24
+    Top = 10
+    Width = 370
+    AutoSize = False
+    Caption = 'Enter value:'
+    ParentColor = False
+    WordWrap = True
+  end
+  object edtValue: TEdit
+    Left = 40
+    Height = 28
+    Top = 40
+    Width = 370
+    Alignment = taCenter
+    AutoSize = False
+    CharCase = ecUpperCase
+    TabOrder = 0
+  end
+  object btnOK: TButton
+    Left = 125
+    Height = 25
+    Top = 80
+    Width = 80
+    AutoSize = False
+    Caption = 'OK'
+    Default = True
+    OnClick = btnOKClick
+    TabOrder = 1
+  end
+  object btnCancel: TButton
+    Left = 215
+    Height = 25
+    Top = 80
+    Width = 80
+    AutoSize = False
+    Cancel = True
+    Caption = 'Cancel'
+    OnClick = btnCancelClick
+    TabOrder = 2
+  end
+end

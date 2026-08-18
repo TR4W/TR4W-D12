@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -33,8 +33,18 @@ var
   IQresult                              : ShortString;
   IQMaxInputLength                      : integer;
 
-function IQDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{
+  THE INPUT-QUERY SEAM.  The dialog itself is now an LCL form --
+  src\ui\lcl\uInputQueryForm.pas -- and this unit keeps the caller's contract
+  and nothing else: IQresult and IQMaxInputLength, which LOGWIND writes and
+  reads around the call.
 
+  DELETED here, not wrapped (Phase 4a): IQDlgProc, its control construction, the
+  SetWindowLong(GWL_STYLE) that poked ES_NUMBER/ES_UPPERCASE into an edit AFTER
+  creating it, the EM_SETPASSWORDCHAR, the EM_LIMITTEXT, and the icon-ordinal
+  arithmetic that had already needed one D12 repair because PChar stride doubled
+  under PWideChar. Every one of those is a control property in the LCL.
+}
 
 // the one-line input query.  Parent is explicit: LOGWIND picks between the
 // active window and tr4whandle before calling.
@@ -42,110 +52,18 @@ function IQDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BO
 // THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
 // no longer knows this is a Win32 modal dialog, only that the window opens.
 // When the dialog becomes an LCL form, this body changes and nothing else does.
+//
+// Phase 4a, 2026-08-18: that is exactly what happened, and no call site moved.
 procedure ShowInputQuery(const aParent: HWND);
 
 implementation
 
-uses MainUnit;
-
-function IQDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-var
-  dwNewLong                             : LONGINT;
-const
-  MainStyle                             = WS_CHILD + WS_VISIBLE + WS_TABSTOP + ES_CENTER + ES_AUTOHSCROLL;
-  l                                     = 40;
-  w                                     = 370;
-begin
-  Result := False;
-  case Msg of
-    WM_INITDIALOG:
-      begin
-        tWM_SETFONT(CreateEdit(ES_CENTER or ES_AUTOHSCROLL or ES_UPPERCASE or WS_CHILD or WS_VISIBLE or WS_TABSTOP, l, 40, w, 28, hwnddlg, 101), MainWindowEditFont);
-        CreateOKCancelButtons(hwnddlg);
-
-        CreateStatic(IQPrompt, l , 10, w , hwnddlg, 102);
-        CreateWindowW(StaticPChar, nil, SS_ICON or WS_CHILD or WS_VISIBLE, 3, 10, 32, 32, hwnddlg, 106, hInstance, nil);
-
-        dwNewLong := MainStyle;
-
-        if not tInputDialogLowerCase then
-           begin
-           dwNewLong := dwNewLong + ES_UPPERCASE;
-           end;
-        if tInputDialogInteger then
-           begin
-           dwNewLong := dwNewLong + ES_NUMBER;
-           end;
-
-//        SetDlgItemText(hwnddlg, 102, IQPrompt);
-        Windows.SetWindowTextA(hwnddlg, 'TR4W');
-        SendDlgItemMessage(hwnddlg, 101, EM_LIMITTEXT, IQMaxInputLength, 0);
-{
-        TempPchar := IDI_QUESTION;
-        if tInputDialogWarning then TempPchar := IDI_WARNING;
-        iqicon := LoadIcon(0, TempPchar);
-        SendDlgItemMessage(hwnddlg, 106, STM_SETIMAGE, IMAGE_ICON, iqicon);
-}
-        // D12: IDI_QUESTION/IDI_WARNING are consecutive MAKEINTRESOURCE
-        // ordinals.  The original expression abused PChar pointer arithmetic
-        // to compute the ordinal; under a 2-byte PWideChar that stride doubles
-        // and selects the wrong icon.  Compute the ordinal in integer space,
-        // then cast to a resource pointer (LoadIconW accepts the ordinal form).
-        SendDlgItemMessage(hwnddlg, 106, STM_SETIMAGE, IMAGE_ICON, LoadIconW(0, PChar(integer(IDI_QUESTION) + integer(tInputDialogWarning))));
-
-        Windows.SetWindowLong(Get101Window(hwnddlg), GWL_STYLE, dwNewLong);
-        SetDlgItemTextA(hwnddlg, 101, @tInputDialogPreviousValue[1]);
-
-        // Issue #783 -- when editing a ctPassword field with "Show passwords"
-        // off, the caller sets tInputDialogPassword and pre-fills the value
-        // with '********'.  Switch the edit to password-input mode using '*'
-        // as the masking character, matching the listview's PASSWORD_MASK so
-        // the operator sees consistent UX.  EM_SETPASSWORDCHAR is the only
-        // Win32 way to convert an existing edit to password mode after
-        // creation -- toggling ES_PASSWORD via SetWindowLong does not work.
-        if tInputDialogPassword then
-           begin
-           SendDlgItemMessage(hwnddlg, 101, EM_SETPASSWORDCHAR, Ord('*'), 0);
-           end;
-
-        tInputDialogWarning := False;
-        tInputDialogInteger := False;
-        tInputDialogLowerCase := False;
-        tInputDialogPassword := False;
-        Windows.ZeroMemory(@tInputDialogPreviousValue, SizeOf(tInputDialogPreviousValue));
-        Windows.ZeroMemory(@IQresult, SizeOf(IQresult));
-      end;
-
-    WM_COMMAND:
-      case wParam of
-        2:
-          begin
-            IQresult := '';
-            goto 1; //    SendMessage(hwnddlg, WM_CLOSE, 0, 0);
-          end;
-
-        1:
-          begin
-            IQresult := GetDialogItemText(hwnddlg, 101);
-            goto 1;
-          end;
-
-      end;
-
-    WM_CLOSE: 1:
-      begin
-        tLoadKeyboardLayout;
-        EndDialog(hwnddlg, 0);
-      end;
-  end;
-
-end;
+uses
+  uInputQueryForm;
 
 procedure ShowInputQuery(const aParent: HWND);
 begin
-   CreateModalDialog(225, 55, aParent, @IQDlgProc, 0);
+   uInputQueryForm.ShowInputQuery(aParent);
 end;
-end.
 
+end.

@@ -45,6 +45,8 @@ uses
    Controls,
    StdCtrls,
    ComCtrls,   // TTreeView / TTreeNode -- see TNavNode below
+   Forms,      // TCustomForm -- see ShowModalOverWin32Parent
+   LCLType,    // HWND
    Dialogs;    // InputQuery -- see AskForText
 
 const
@@ -235,6 +237,31 @@ type
   The conversions themselves are safe: the LCL sets the default codepage to
   UTF-8 at startup, so UnicodeString <-> AnsiString round-trips losslessly for
   the non-Latin languages TR4W ships. }
+{ SHOW AN LCL MODAL OVER A RAW WIN32 PARENT, disabling it the way the Win32
+  dialog manager did.
+
+  DialogBoxIndirectParam disables its owner window for the life of the dialog.
+  TCustomForm.ShowModal does NOT do the equivalent: it calls Screen.DisableForms,
+  which walks Screen.CustomForms -- LCL FORMS ONLY -- plus the widgetset's
+  AppHandle (screen.inc:418-428). A raw Win32 window is never touched.
+
+  That is invisible until a converted dialog is opened FROM one. TR4W has three
+  such parents today -- the legacy Settings dialog (settingswindowhandle, the
+  parent of the input query), and QTCRWindow / QTCSWindow (parents of the send-
+  keyboard-CW box). Convert those dialogs without this and the parent stays
+  clickable underneath a modal, which is a re-entrancy hazard rather than a
+  cosmetic one: the operator can start a second edit in the window that owns the
+  first.
+
+  The main window needs no special handling -- it IS an LCL form since Phase 3a,
+  so DisableForms already covers it. This is only for the Win32 remnants, and it
+  becomes a no-op as they convert.
+
+  aParent = 0, or an already-disabled parent, is handled: nothing is disabled and
+  nothing is re-enabled, so this never enables a window that was disabled for
+  some other reason. }
+function ShowModalOverWin32Parent(const aForm: TCustomForm; const aParent: HWND): integer;
+
 function AskForText(const aCaption, aPrompt: string; var aValue: string): boolean;
 
 // Install the node class on a tree. Call BEFORE adding any node.
@@ -322,12 +349,42 @@ function TryParseHexByte(const aText: string; out aValue: integer): boolean;
 implementation
 
 uses
+   Windows,    // EnableWindow / IsWindowEnabled -- see ShowModalOverWin32Parent
    SysUtils,
    StrUtils,
    uRadioConfigStore,
    uRadioRegistry,
    ComPortEnumerator,
    VC;
+
+function ShowModalOverWin32Parent(const aForm: TCustomForm; const aParent: HWND): integer;
+var
+   reEnable: boolean;
+begin
+   reEnable := (aParent <> 0) and
+               Windows.IsWindow(aParent) and
+               Windows.IsWindowEnabled(aParent);
+
+   if reEnable then
+      begin
+      Windows.EnableWindow(aParent, False);
+      end;
+
+   try
+      Result := aForm.ShowModal;
+   finally
+      // RE-ENABLE BEFORE THE FORM GOES, and in a finally: an exception escaping
+      // ShowModal would otherwise leave the parent permanently dead, which the
+      // operator experiences as a frozen window with no dialog on screen.
+      if reEnable then
+         begin
+         Windows.EnableWindow(aParent, True);
+         // Windows gives focus to nothing in particular after re-enabling, so
+         // put it back where the dialog manager would have left it.
+         Windows.SetActiveWindow(aParent);
+         end;
+   end;
+end;
 
 { ------------------------------------------------------------- helpers ---- }
 

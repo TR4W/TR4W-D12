@@ -78,7 +78,19 @@ function Get-PublishedControlFields {
 
    $result = @()
    $code = Remove-PascalComments -PasText $PasText
-   $m = [regex]::Match($code, '=\s*class\(TForm\)(.*?)^\s*(private|protected|public|strict)\b',
+   # TERMINATED BY A VISIBILITY KEYWORD **OR BY THE CLASS'S OWN end;**.
+   #
+   # Requiring a visibility keyword assumed every form has a private or public
+   # section.  A form that needs neither -- all published controls, all
+   # published handlers, no helper members -- is legal, and is what the very
+   # simplest forms look like.  On one of those the match failed outright, the
+   # function returned an EMPTY list, and every event handler was reported as
+   # "not a PUBLISHED method - the form will fail to load".
+   #
+   # A false positive, and the worst kind: it accuses correct code of the exact
+   # defect the lint exists to catch, so the reader's instinct is to 'fix'
+   # working code.  Found when uInputQueryForm was added, 2026-08-18.
+   $m = [regex]::Match($code, '=\s*class\(TForm\)(.*?)(?:^\s*(?:private|protected|public|strict)\b|^\s*end;)',
                        [Text.RegularExpressions.RegexOptions]::Singleline -bor
                        [Text.RegularExpressions.RegexOptions]::Multiline)
    if (-not $m.Success) {
@@ -104,7 +116,19 @@ function Get-PublishedMethodNames {
 
    $result = @()
    $code = Remove-PascalComments -PasText $PasText
-   $m = [regex]::Match($code, '=\s*class\(TForm\)(.*?)^\s*(private|protected|public|strict)\b',
+   # TERMINATED BY A VISIBILITY KEYWORD **OR BY THE CLASS'S OWN end;**.
+   #
+   # Requiring a visibility keyword assumed every form has a private or public
+   # section.  A form that needs neither -- all published controls, all
+   # published handlers, no helper members -- is legal, and is what the very
+   # simplest forms look like.  On one of those the match failed outright, the
+   # function returned an EMPTY list, and every event handler was reported as
+   # "not a PUBLISHED method - the form will fail to load".
+   #
+   # A false positive, and the worst kind: it accuses correct code of the exact
+   # defect the lint exists to catch, so the reader's instinct is to 'fix'
+   # working code.  Found when uInputQueryForm was added, 2026-08-18.
+   $m = [regex]::Match($code, '=\s*class\(TForm\)(.*?)(?:^\s*(?:private|protected|public|strict)\b|^\s*end;)',
                        [Text.RegularExpressions.RegexOptions]::Singleline -bor
                        [Text.RegularExpressions.RegexOptions]::Multiline)
    if (-not $m.Success) {
