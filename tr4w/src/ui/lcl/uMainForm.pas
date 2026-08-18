@@ -40,13 +40,33 @@ unit uMainForm;
 interface
 
 uses
-  Windows, Forms, Controls, Graphics, LCLType, LMessages;
+  Windows, Forms, Controls, Graphics, StdCtrls, LCLType, LMessages;
 
 type
   TTR4WMainForm = class(TForm)
   protected
     procedure WndProc(var TheMessage: TLMessage); override;
   end;
+
+{ Creates the callsign or exchange entry field as an LCL TEdit and returns its
+  HANDLE, which the caller stores in wh[mweCall] / wh[mweExchange] exactly as
+  before.
+
+  RETURNING A HANDLE, NOT THE CONTROL, is what makes this step safe on its own.
+  Everything in TR4W addresses these fields through wh[] -- SetWindowText,
+  focus, the caret, the colour handler -- and the message loop routes keystrokes
+  by comparing Msg.HWND against wh[mweCall]. A TEdit's Handle IS that HWND, so
+  every one of those paths keeps working unchanged while the control underneath
+  becomes an LCL object.
+
+  That is the point of doing it now: the loop still runs, the routing is
+  untouched, and the only thing that changed is what kind of object owns the
+  window. Phase 3c then moves the keyboard onto this control's own events and
+  DELETES the Msg.HWND comparisons -- which it can only do once the control is
+  an LCL control able to raise them. }
+function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
+                              const aId: integer;
+                              const aBorder: boolean): HWND;
 
 { Creates the main form and returns its handle, which becomes tr4whandle.
   aMenu is TR4W's own menu, built by CreateTR4WMenu -- CreateWindowExW used to
@@ -128,6 +148,50 @@ begin
       begin
       inherited WndProc(TheMessage);
       end;
+end;
+
+function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
+                              const aId: integer;
+                              const aBorder: boolean): HWND;
+var
+   edit: TEdit;
+begin
+   edit := TEdit.Create(TR4WMainForm);
+   edit.Parent := TR4WMainForm;
+
+   // The style bits CreateWindowExW used to pass, one by one:
+   //   ES_UPPERCASE   -> CharCase
+   //   WS_TABSTOP     -> TabStop
+   //   ES_AUTOHSCROLL -> AutoSize False + no word wrap; a single-line TEdit
+   //                     scrolls horizontally by default
+   //   ES_NOHIDESEL   -> HideSelection False, so the selection stays visible
+   //                     when focus moves. Contest logging depends on it: the
+   //                     operator must see what is selected while the caret is
+   //                     in the other field.
+   //   WS_EX_STATICEDGE, conditional on NOT Config.NoBorder -> BorderStyle
+   edit.CharCase := ecUpperCase;
+   edit.TabStop := True;
+   edit.HideSelection := False;
+   edit.AutoSize := False;
+   if aBorder then
+      begin
+      edit.BorderStyle := bsSingle;
+      end
+   else
+      begin
+      edit.BorderStyle := bsNone;
+      end;
+
+   // AutoSize False BEFORE SetBounds. LCL controls autosize by default and FMX
+   // ones do not, so a streamed or assigned Height is silently overridden --
+   // this tree has paid for that once already.
+   edit.SetBounds(aLeft, aTop, aWidth, aHeight);
+
+   // The control id is what test/ui/Test-Typing.ps1 and every other instrument
+   // finds these fields by, and what the dialog-item helpers use. A TEdit does
+   // not set one, so it is applied to the handle directly.
+   Result := edit.Handle;
+   Windows.SetWindowLong(Result, GWL_ID, aId);
 end;
 
 function CreateTR4WMainForm(const aMenu: HMENU): HWND;

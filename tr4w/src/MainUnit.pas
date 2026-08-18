@@ -6310,10 +6310,13 @@ end;
 
 function CreateCallOrExchangeWin(Top, ID: integer): HWND;
 begin
-  Result := CreateWindowExW(Cardinal(not Config.NoBorder) * WS_EX_STATICEDGE, EditPChar,
-    nil, CallsignExchangeWinStyle,
-    ws * 15 {col4}, Top, 13 * ws, MainWindowEditHeight, tr4whandle, ID,
-    hInstance, nil);
+  // PHASE 3b: an LCL TEdit, addressed by its Handle exactly as before.  The
+  // message loop still routes keystrokes by comparing Msg.HWND against
+  // wh[mweCall], and a TEdit's Handle IS that HWND, so nothing about the
+  // routing changes here.  See src\ui\lcl\uMainForm.pas.
+  Result := CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
+                                 MainWindowEditHeight, ID,
+                                 not Config.NoBorder);
   // Issue #997: asm tWM_SETFONT (EAX = Result above).
   tWM_SETFONT(Result, MainWindowEditFont);
   SendMessage(Result, EM_LIMITTEXT, 12, 0);
