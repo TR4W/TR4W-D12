@@ -1350,33 +1350,28 @@ begin
           // edit that key's message (CQ vs S&P aware). No-op elsewhere.
           ShowFunctionKeyContextMenu(Msg.HWND);
         end;
-{
-      WM_RBUTTONDOWN:
-        begin
-          if Msg.HWND = wh[mweBandMode] then ProcessMenu(75857);
-          if Msg.HWND = CodeSpeedWindowHandle then ProcessMenu(76039);
-        end;
-
-      WM_LBUTTONDOWN:
-        begin
-          if Msg.HWND = wh[mweBandMode] then ProcessMenu(75858);
-          if Msg.HWND = CodeSpeedWindowHandle then ProcessMenu(76040);
-        end;
-
-      WM_MBUTTONDOWN:
-        if Msg.HWND = wh[mweBandMode] then ProcessMenu(75859);
-
-      WM_LBUTTONDBLCLK:
-        begin
-          if (Msg.HWND = wh[mweClock]) or (Msg.HWND = wh[mweDate]) then ProcessMenu(75851);
-          if (Msg.HWND = PaddleWindowHandle) or (Msg.HWND = FootSwWindowHandle) then ProcessMenu(menu_lpt);
-
-//          Windows.GetWindowText(Msg.HWND, @wsprintfBuffer, 100);
-//          GetTextFace(windows.GetDC (Msg.HWND), 100, @wsprintfBuffer);
-//          ShowMessage(wsprintfBuffer);
-
-        end;
-}
+      // DELETED HERE, Phase 3c: a brace-commented block of six mouse arms --
+      // WM_RBUTTONDOWN / WM_LBUTTONDOWN / WM_MBUTTONDOWN on wh[mweBandMode] and
+      // CodeSpeedWindowHandle, and WM_LBUTTONDBLCLK on wh[mweClock] /
+      // wh[mweDate] / PaddleWindowHandle / FootSwWindowHandle.
+      //
+      // THE PLAN NAMED THESE AS SIX OF THE EIGHT HANDLES THE LOOP ROUTES, and
+      // warned that retiring the loop would silently break the band/mode menus,
+      // the clock menu, the CW-speed menus and the LPT shortcut. It would not:
+      // they have not run in this program, or in the D7 heritage it was copied
+      // from, where the same block is commented at tr4w.dpr:1116.
+      //
+      // The proof is the compiler, not reading: WM_RBUTTONDOWN was a live case
+      // label immediately above, and the deleted block opened with a second
+      // WM_RBUTTONDOWN. Object Pascal rejects a duplicate case label, so a
+      // build that succeeds is a build in which that text was a comment.
+      //
+      // Nothing reachable is lost. Menu ids 75857/75858/75859/76039/76040/75851
+      // appeared ONLY inside the block -- they are not declared in VC.pas and
+      // not present in uMenu.pas, so ProcessMenu would not have found them
+      // anyway. menu_lpt is the exception and it is fine: it is a real command
+      // (VC.pas:2462) on the menu bar as LPT / Ctrl+Alt+L (uMenu.pas:139), so
+      // only the undocumented double-click shortcut to it was dead.
     end; //of case
     TransMess:
       //      inc(Tw);
