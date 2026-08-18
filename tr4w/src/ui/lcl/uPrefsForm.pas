@@ -3291,17 +3291,42 @@ var
    i: integer;
    sibling: TTreeNode;
 begin
-   // ONE BRANCH OPEN AT A TIME, so the strip never needs a scrollbar.
+   // ONE BRANCH OPEN AT A TIME, so the strip needs a scrollbar as rarely as
+   // possible.
    //
    // The arithmetic, because this is a constraint rather than a preference
-   // (NY4I: "I don't want to scroll that vertical left pane"): the pane shows
-   // 20 rows at 26px. There are 16 top-level sections, so collapsed it fits with
-   // four to spare -- but Operating alone has five children, and expanding any
-   // branch pushes past the bottom. Everything open is 27 rows.
+   // (NY4I: "I don't want to scroll that vertical left pane"). RECOUNTED
+   // 2026-08-18 -- the numbers that were here had gone stale as sections were
+   // added, and they overstated the headroom:
    //
-   // Collapsing the siblings keeps the worst case at 16 + the largest branch.
-   // ssAutoVertical is still set, so if a future section adds a sixth child the
-   // strip scrolls rather than clipping -- it degrades, it does not break.
+   //   pane 541px at 26px/row      = 20 rows visible
+   //   top-level sections          = 18   (this comment used to say 16)
+   //   every row with all open     = 30   (this comment used to say 27)
+   //
+   //   collapsed              18 rows   fits, two spare (not four)
+   //   Hardware open          20 rows   fits exactly, none spare
+   //   CW Settings open       19 rows   fits
+   //   External Software open 22 rows   SCROLLS
+   //   Operating open         23 rows   SCROLLS
+   //
+   // SO THE NO-SCROLL PROMISE IS ALREADY NOT BEING KEPT for the two largest
+   // branches, and it stopped being kept silently. ssAutoVertical means it
+   // degrades rather than clips, which is why nobody noticed.
+   //
+   // LEFT AS IS ON PURPOSE (NY4I, 2026-08-18): "leave it for now. I have seen
+   // places to rearrange some of the items (like more CW Settings under
+   // hardware but that is an example). So once I rearrange, we can review this
+   // again." Rearranging the sections changes the counts, so tuning the rule
+   // before that would be tuning against numbers about to move.
+   //
+   // Collapsing the siblings keeps the worst case at 18 + the largest branch.
+   //
+   // Worth knowing when that review happens: this rule is ALSO why Hardware
+   // appears collapsed after visiting another section. Preferences selects
+   // Hardware on open and tvNavChange expands it, so the first sight of the
+   // window shows its children -- but navigating to any other branch collapses
+   // it, and coming back from a modal does not re-run the initial selection.
+   // NY4I read that as a regression on 2026-08-18; it is this rule working.
    if (Node = nil) or (Node.Parent <> nil) then
       begin
       Exit;
