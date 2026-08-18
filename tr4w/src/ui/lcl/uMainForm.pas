@@ -173,11 +173,23 @@ begin
       begin
       Result := uMainWindowProc.WindowProc(TRHWND, Msg, wParam, lParam);
 
+      // Three messages run BOTH handlers, for two different reasons.
+      //
       // WM_SIZE and WM_WINDOWPOSCHANGING are STRUCTURAL: the LCL tracks its own
       // idea of the form's bounds from them, and a form whose bookkeeping
       // disagrees with its HWND misbehaves later in ways hard to trace back.
       // TR4W's handlers for both are advisory, so running both is correct.
-      if (Msg = WM_SIZE) or (Msg = WM_WINDOWPOSCHANGING) then
+      //
+      // WM_COMMAND is chained because CLAIMING IT STARVES THE LCL'S OWN
+      // CONTROLS.  A child control's notifications -- EN_CHANGE, EN_SETFOCUS
+      // and the rest -- reach their control only through the parent's
+      // WM_COMMAND, so an LCL TEdit on this form would never raise OnChange or
+      // OnEnter while TR4W swallowed it.  Nothing depends on that yet, which is
+      // exactly why it is worth fixing now: the entry fields cannot stop using
+      // TR4W's hand-rolled EN_* routing until the framework's own routing
+      // works.  TR4W still gets first refusal and still decides; the LCL simply
+      // stops being deaf.
+      if (Msg = WM_SIZE) or (Msg = WM_WINDOWPOSCHANGING) or (Msg = WM_COMMAND) then
          begin
          Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
          end;
