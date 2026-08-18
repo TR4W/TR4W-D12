@@ -89,7 +89,8 @@ uses
   LogK1EA,
   uCWKeyerBase,   // KeyerCPU / KeyerWinKey -- the targeted flush
   uMenu,          // menu_cwspeedup / menu_cwspeeddown
-  MainUnit,       // ProcessMenu, ActiveMode, logger
+  MainUnit,       // ProcessMenu, ActiveMode, IsCWByCATActive,
+                  // CWByCATBufferTerminator, logger
   uLCLFormHelpers,
   uHostedFormWindows,
   Log4D,
@@ -202,6 +203,32 @@ begin
       begin
       AddStringToBuffer(#8, Config.CWTone);   // the CW delete-last-character
       end;
+
+   // A CAT-KEYED RADIO NEEDS THE TERMINATOR OR NOTHING LEAVES THE BUFFER.
+   //
+   // CWByCATSend accumulates into radio.CWByCATBuffer and transmits only when
+   // CWByCATBufferTerminator arrives (uCWKeyerCAT.pas). Without this, typing
+   // into this box on a CAT-keyed radio queued every character and sent the lot
+   // when the box closed -- NY4I on a K4, 2026-08-18, and the tr4w.log shows it
+   // exactly: four "Adding (T/E/S/T)" lines as they were typed, then nothing
+   // until an "Adding (terminator)" three seconds later at close.
+   //
+   // NOT INTRODUCED BY THE LCL CONVERSION. The Win32 EN_CHANGE arm made the
+   // same single call per character with no terminator, so it behaved this way
+   // too; it simply looks correct on a WinKeyer, whose own thread drains its
+   // buffer continuously, which is why it went unnoticed.
+   //
+   // The same pairing is what MainUnit's autosend does when it starts sending a
+   // callsign (MainUnit.pas:4905) -- this is that precedent, not a new idea.
+   //
+   // CONSEQUENCE WORTH KNOWING: one character per KY command is the staccato
+   // keying NY4I already identified as inherent to CW-by-CAT. Staccato beats
+   // silent, but it is why the standing advice for SO2R is a WinKeyer.
+   if IsCWByCATActive then
+      begin
+      AddStringToBuffer(CWByCATBufferTerminator, Config.CWTone);
+      end;
+
    FOldPos := newPos;
 end;
 
