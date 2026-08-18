@@ -236,9 +236,13 @@ SectionEnd
   File ..\target\cty.dat
 SectionEnd
 
-Section "cursor.bmp" seccursor
-  File ..\target\cursor.bmp
-SectionEnd
+;  cursor.bmp is no longer installed (2026-08-18).  It was the bitmap for
+;  TR4W's own block caret in the callsign and exchange fields; those fields
+;  are LCL TEdits since Phase 3b and carry their own caret, so the program no
+;  longer loads the file.  The CUSTOM CARET command is csRem in uCFG.pas.
+;
+;  The file stays in target\ so an existing installation is unaffected; it is
+;  simply not shipped to new ones.
 
 Section "Desktop shortcut"
   CreateShortCut "$DESKTOP\TR4W.lnk" "$INSTDIR\tr4w.exe"

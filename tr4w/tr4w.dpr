@@ -867,7 +867,6 @@ begin
 
   RegisterClass(tr4w_WinClass);
 
-  CursorBitmap := LoadImage(hInstance, 'cursor.bmp', IMAGE_BITMAP, ws2 * 3, ws + 2, LR_LOADFROMFILE);
 
   SetUpExchangeInformation(ActiveExchange, ExchangeInformation);
   SetColumnsWidth;

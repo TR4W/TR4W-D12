@@ -533,7 +533,10 @@ const
  (crCommand: 'CQ SSB EXCHANGE';               crAddress: @CQPhoneExchange;                crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 3; crKind: ckNormal;  cfFunc: cfAll; crType: ctMessage; crNetwork: 0),
  (crCommand: 'CTY UPDATE CHECK ON STARTUP';   crAddress: @CTYUpdateCheckOnStartup;        crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),
  (crCommand: 'CURTIS KEYER MODE';             crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctOther; crNetwork: 1),
- (crCommand: 'CUSTOM CARET';                  crAddress: @tr4w_CustomCaret;               crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
+// CUSTOM CARET retired 2026-08-18: TR4W drew a block caret from cursor.bmp into
+// the entry fields, which are LCL TEdits since Phase 3b and carry their own.
+// csRem, not deleted, so an existing .cfg that sets it still loads.
+ (crCommand: 'CUSTOM CARET';                  crAddress: nil;                             crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'CUSTOM INITIAL EXCHANGE STRING';crAddress: @CustomInitialExchangeString;    crMin:0;  crMax:40;      crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'CUSTOM USER STRING';            crAddress: @CustomUserString;               crMin:0;  crMax:40;      crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'CW ENABLE';                     crAddress: @Config.CWEnable;                       crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:7; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 0),

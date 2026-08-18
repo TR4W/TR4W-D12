@@ -2943,8 +2943,6 @@ var
 
   IndexOfItemInLogForEdit               : integer;
 
-  CursorBitmap                          : HBITMAP;
-  tr4w_CustomCaret                      : boolean = True;
 
 //  trWSAData                             : TWSAData;
   ConnectionCommand                     : Str20;

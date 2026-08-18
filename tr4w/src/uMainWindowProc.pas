@@ -421,15 +421,15 @@ begin
         begin
           if HiWord(wParam) = EN_KILLFOCUS then
           begin
-            if tr4w_CustomCaret then DestroyCaret;
             CheckQuestionMark;
           end;
           if HiWord(wParam) = EN_UPDATE {EN_CHANGE} then CallWindowChange;
 
           if HiWord(wParam) = EN_SETFOCUS then
           begin
+            // The caret is the TEdit's own now -- see the note on the
+            // exchange arm below.
             ActiveMainWindow := awCallWindow;
-            ChangeCaret(wh[mweCall]);
 {$IF MORSERUNNER}
 //            Windows.SendMessage(MorseRunner_Callsign, WM_SETFOCUS, 0, 0);
 {$IFEND}
@@ -438,15 +438,24 @@ begin
 
         if lParam = integer(wh[mweExchange]) then
         begin
-          if HiWord(wParam) = EN_KILLFOCUS then
-          begin
-            if tr4w_CustomCaret then DestroyCaret;
-          end;
           if HiWord(wParam) = EN_CHANGE then ExchangeWindowChange;
           if HiWord(wParam) = EN_SETFOCUS then
           begin
+            // NO ChangeCaret, AND NO DestroyCaret ON THE WAY OUT.  TR4W drew
+            // its own block caret from cursor.bmp into whichever entry field had
+            // focus, created here and destroyed on EN_KILLFOCUS.  The fields are
+            // LCL TEdits since Phase 3b and a TEdit maintains its own caret, so
+            // both ran: NY4I saw two cursors side by side, 2026-08-18.
+            //
+            // 241b408c sequenced them -- destroy-before-create plus an
+            // invalidate -- which made the symptom go away without removing
+            // either system.  This is the removal.  NY4I chose the LCL caret
+            // over re-expressing the block shape as control painting, on the
+            // grounds that D7 showed a plain underline anyway.
+            //
+            // The CUSTOM CARET command is retired to csRem in uCFG.pas rather
+            // than deleted, so an existing .cfg carrying it still loads.
             ActiveMainWindow := awExchangeWindow;
-            ChangeCaret(wh[mweExchange]);
 {$IF MORSERUNNER}
 //            Windows.SendMessage(MorseRunner_nUMBER, WM_SETFOCUS, 0, 0);
 {$IFEND}

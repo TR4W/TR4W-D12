@@ -565,7 +565,9 @@ begin
    RegisterLegacySetting('cw.ctrlj.tuneAltDEnable',           'TUNE ALT-D ENABLE',
                           'Tune Alt-D Enable');
 
-   // --- Appearance (14) -------------------------------
+   // --- Appearance (13) -------------------------------
+   // customCaret was here until 2026-08-18; the CFG row is csRem now and
+   // retired rows are not registered (cf. AUTO ALT-D ENABLE, BACKCOPY ENABLE).
    RegisterLegacySetting('appearance.ctrlj.beepEnable',       'BEEP ENABLE',
                           'Beep Enable');
    RegisterLegacySetting('appearance.ctrlj.columnAutosize',   'COLUMN AUTOSIZE',
@@ -574,8 +576,6 @@ begin
                           'Complete Callsign Mask');
    RegisterLegacySetting('appearance.ctrlj.contactsPerPage',  'CONTACTS PER PAGE',
                           'Contacts Per Page');
-   RegisterLegacySetting('appearance.ctrlj.customCaret',      'CUSTOM CARET',
-                          'Custom Caret');
    RegisterLegacySetting('appearance.ctrlj.hourDisplay',      'HOUR DISPLAY',
                           'Hour Display');
    RegisterLegacySetting('appearance.ctrlj.insertMode',       'INSERT MODE',
