@@ -3478,6 +3478,11 @@ begin
     tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Left,
     tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Top, 0, 0, SWP_NOSIZE or
     SWP_SHOWWINDOW);
+  // ...and tell the LCL, which cannot see a raw SWP_SHOWWINDOW.  Without this
+  // the form's Visible stays False and it never shows its CHILD CONTROLS --
+  // which is how the callsign and exchange fields came to be created, sized and
+  // positioned correctly and never drawn.
+  ShowTR4WMainForm;
      { DWM rounding is compositor-managed; no reapplication needed after move }
     ApplyDWMRoundedCorners;
 end;

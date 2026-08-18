@@ -36,6 +36,11 @@ param(
       10111,   # Settings -> CAT and CW Keying (ShowPreferences -- the LCL form)
       10405    # Tools -> Missing Mults report (menu_ctrl_missmultsreport)
    ),
+   # Commands that MUST produce a new top-level window.  Surviving is not
+   # passing: a program that has stopped acting on its menu entirely survives
+   # every command put to it, which is exactly how the 2026-08-18 regression got
+   # past this runner and reached the bench.
+   [int[]]  $ExpectsWindow = @(10111),
    [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
    [string] $Exe,
    # A .cfg already in tr4w\target. Omit to stage one from the golden corpus.
@@ -49,6 +54,30 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 Import-Module (Join-Path $PSScriptRoot 'UiDriver.psm1') -Force
+
+Add-Type -Namespace Win32 -Name Smoke -MemberDefinition @'
+public delegate bool EnumProc(System.IntPtr h, System.IntPtr p);
+[DllImport("user32.dll")] public static extern bool EnumWindows(EnumProc cb, System.IntPtr p);
+[DllImport("user32.dll")] public static extern int GetWindowThreadProcessId(System.IntPtr h, out int pid);
+[DllImport("user32.dll")] public static extern bool IsWindowVisible(System.IntPtr h);
+'@
+
+# Visible top-level windows belonging to one process. The COUNT is the check:
+# a command that is supposed to open something must increase it.
+function Get-VisibleTopLevelCount
+{
+   param([int] $ProcessId)
+   $script:smokeCount = 0
+   $cb = [Win32.Smoke+EnumProc]{
+      param($h, $l)
+      $owner = 0
+      [void][Win32.Smoke]::GetWindowThreadProcessId($h, [ref]$owner)
+      if (($owner -eq $ProcessId) -and [Win32.Smoke]::IsWindowVisible($h)) { $script:smokeCount++ }
+      return $true
+   }
+   [void][Win32.Smoke]::EnumWindows($cb, [IntPtr]::Zero)
+   return $script:smokeCount
+}
 
 $target = Join-Path $Repo 'tr4w\target'
 $log    = Join-Path $target 'tr4w.log'
@@ -103,6 +132,7 @@ foreach ($id in $Command)
       continue
       }
 
+   $before = Get-VisibleTopLevelCount -ProcessId $start.Process.Id
    Send-TR4WMenuCommand -Hwnd $start.Hwnd -Command $id
    Start-Sleep -Milliseconds $AfterMs
 
@@ -112,7 +142,21 @@ foreach ($id in $Command)
       }
    else
       {
-      $results += [pscustomobject]@{ Command = $id; Result = 'ALIVE'; Detail = '' }
+      $after = Get-VisibleTopLevelCount -ProcessId $start.Process.Id
+      if (($ExpectsWindow -contains $id) -and ($after -le $before))
+         {
+         # THE ASSERTION THAT MATTERS. Menu commands stopped reaching TR4W at all
+         # when the main window became an LCL form -- the LCL delivers a raw
+         # HMENU's WM_COMMAND as CN_COMMAND -- and every command still "passed"
+         # here because the process was perfectly alive throughout.
+         $results += [pscustomobject]@{ Command = $id; Result = 'NO WINDOW'
+                                        Detail = "expected a new top-level window; still $after" }
+         }
+      else
+         {
+         $results += [pscustomobject]@{ Command = $id; Result = 'ALIVE'
+                                        Detail = if ($after -gt $before) { "+$($after - $before) window(s)" } else { '' } }
+         }
       }
 
    $written = Get-TR4WLogSince -LogPath $log -Mark $mark
@@ -143,5 +187,5 @@ if ($bad.Count -gt 0)
    exit 1
    }
 
-Write-Output ("Invoke-MenuSmoke: {0} command(s), all survived. NOT a check that any window is CORRECT." -f $results.Count)
+Write-Output ("Invoke-MenuSmoke: {0} command(s) survived; the {1} expected to open a window did. Still NOT a check that any window is CORRECT." -f $results.Count, @($ExpectsWindow).Count)
 exit 0

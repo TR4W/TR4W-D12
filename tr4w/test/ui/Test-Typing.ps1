@@ -65,7 +65,7 @@ public delegate bool EnumProc(System.IntPtr h, System.IntPtr p);
 [DllImport("user32.dll")] public static extern int GetDlgCtrlID(System.IntPtr h);
 [DllImport("user32.dll")] public static extern bool PostMessageW(System.IntPtr h, uint m, System.IntPtr w, System.IntPtr l);
 [DllImport("user32.dll", CharSet=CharSet.Unicode)] public static extern int GetWindowTextW(System.IntPtr h, System.Text.StringBuilder s, int n);
-[DllImport("user32.dll")] public static extern System.IntPtr SetFocus(System.IntPtr h);
+[DllImport("user32.dll")] public static extern bool IsWindowVisible(System.IntPtr h);
 '@
 
 # VC.pas:471-472. By CONTROL ID, never by position or tab order: an id is stable
@@ -111,7 +111,17 @@ try
       Write-Output "Test-Typing: FAIL -- no control with id $CALLSIGNWINDOWID (the callsign window) under the main window"
       exit 1
    }
-   Write-Output ("callsign window found: id {0}" -f $CALLSIGNWINDOWID)
+   # VISIBLE, not merely present.  The LCL will not show a form's child controls
+   # while the form's own Visible is False, and TR4W shows its main window with a
+   # raw SetWindowPos the LCL cannot see -- so the entry fields existed at the
+   # right id, size and position and were never drawn.  NY4I found that on the
+   # bench, 2026-08-18; every check here passed, because none of them looked.
+   if (-not [W.Typ]::IsWindowVisible($script:call)) {
+      Write-Output "Test-Typing: FAIL -- the callsign window exists but is NOT VISIBLE"
+      Stop-TR4WForDriving -Process $started.Process
+      exit 1
+   }
+   Write-Output ("callsign window found and visible: id {0}" -f $CALLSIGNWINDOWID)
 
    foreach ($ch in $Text.ToCharArray()) {
       # WM_CHAR = 0x0102, posted AT THE CALLSIGN WINDOW so Msg.HWND matches

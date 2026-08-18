@@ -44,8 +44,6 @@ uses
 
 type
   TTR4WMainForm = class(TForm)
-  protected
-    procedure WndProc(var TheMessage: TLMessage); override;
   end;
 
 { Creates the callsign or exchange entry field as an LCL TEdit and returns its
@@ -71,6 +69,23 @@ function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
 { Creates the main form and returns its handle, which becomes tr4whandle.
   aMenu is TR4W's own menu, built by CreateTR4WMenu -- CreateWindowExW used to
   take it as a parameter, so it is attached here instead. }
+{ Tell the LCL the main window is on screen.
+
+  TR4W SHOWS ITS MAIN WINDOW WITH A RAW SetWindowPos(..., SWP_SHOWWINDOW)
+  (OpenOtherWindows), which the LCL cannot see.  A form whose Visible property
+  is still False does not show its CHILD CONTROLS -- so the callsign and
+  exchange fields were created, sized and positioned correctly and never
+  appeared.  NY4I found that on the bench, 2026-08-18; every automated check
+  here passed, because a control that exists with the right id at the right
+  geometry looks identical to a working one unless something reads its
+  Visible flag.  Dump-WindowTree now does.
+
+  Called beside the SetWindowPos rather than replacing it: the raw call still
+  does the positioning and z-order the program wants, and this only reconciles
+  the LCL's own state with what already happened. }
+procedure ShowTR4WMainForm;
+
+
 function CreateTR4WMainForm(const aMenu: HMENU): HWND;
 
 var
@@ -83,6 +98,11 @@ implementation
 
 uses
   uMainWindowProc;
+
+var
+   { The LCL's own window procedure for the main form, saved when TR4W's is
+     installed in front of it.  Everything TR4W does not claim chains here. }
+   GLCLFormProc: Pointer = nil;
 
 { The messages TR4W's own window procedure handles.
 
@@ -121,34 +141,52 @@ begin
              (aMsg = WM_APP + 100);     // WM_TRAYBALLON
 end;
 
-procedure TTR4WMainForm.WndProc(var TheMessage: TLMessage);
-begin
-   if IsTR4WsOwnMessage(TheMessage.msg) then
-      begin
-      // QUALIFIED. TWinControl already publishes a WindowProc property (a
-      // TWndMethod), so a bare WindowProc inside a form method resolves to the
-      // inherited one and fails with "wrong number of parameters" -- a name
-      // collision the compiler reports in terms that do not name it.
-      TheMessage.Result := uMainWindowProc.WindowProc(Handle, TheMessage.msg,
-                                                      TheMessage.wParam,
-                                                      TheMessage.lParam);
+{ TR4W'S WINDOW PROCEDURE, INSTALLED ON THE FORM'S HWND AHEAD OF THE LCL'S.
 
-      // Two of them are STRUCTURAL: the LCL tracks its own idea of the form's
-      // size and position from these, and a form whose bookkeeping disagrees
-      // with its HWND misbehaves later in ways that are hard to trace back.
-      // TR4W's handlers for both are advisory -- WM_SIZE only nudges the MMTTY
-      // window, WM_WINDOWPOSCHANGING only constrains -- so running both is
-      // correct rather than a compromise.
-      if (TheMessage.msg = WM_SIZE) or (TheMessage.msg = WM_WINDOWPOSCHANGING) then
-         begin
-         inherited WndProc(TheMessage);
-         end;
-      end
-   else
+  WHY A SUBCLASS AND NOT A WndProc OVERRIDE.  The first version of this overrode
+  TWinControl.WndProc and matched on TLMessage.msg.  That was wrong, and wrong in
+  a way only a person operating the program could find: THE LCL RENAMES MESSAGES
+  BEFORE ANY FORM SEES THEM.
+
+    WM_CLOSE   arrives as LM_CLOSEQUERY                (win32callback.inc:2094)
+    WM_COMMAND arrives as CN_COMMAND via Perform, for a raw HMENU        (:2205)
+
+  and WM_DRAWITEM, WM_MEASUREITEM, WM_CTLCOLOR* and WM_LBUTTONDOWN are consumed
+  by the widgetset's own handlers on the way past.  An allow-list keyed on the
+  Win32 numbers therefore never matched: TR4W's menu did nothing, the program
+  could not be closed and had to be killed, and owner-drawn parts of the main
+  window were being drawn by the wrong code.
+
+  Found on the bench by NY4I, 2026-08-18.  No gate here caught it -- the smoke
+  runner asserts only that the process SURVIVED a command, which a program that
+  refuses to exit does very well indeed.
+
+  Subclassing removes the class of problem rather than the three instances of
+  it: TR4W's procedure sees the RAW Win32 message first, exactly as it did when
+  it owned the window class, and anything it does not claim chains on to the LCL
+  untouched.  What used to fall through to DefWindowProc now falls through to
+  the LCL's proc, which is the right default for a form. }
+function TR4WFormSubclassProc(TRHWND: HWND; Msg: UINT;
+                              wParam: wParam; lParam: lParam): longword; stdcall;
+begin
+   if IsTR4WsOwnMessage(Msg) then
       begin
-      inherited WndProc(TheMessage);
+      Result := uMainWindowProc.WindowProc(TRHWND, Msg, wParam, lParam);
+
+      // WM_SIZE and WM_WINDOWPOSCHANGING are STRUCTURAL: the LCL tracks its own
+      // idea of the form's bounds from them, and a form whose bookkeeping
+      // disagrees with its HWND misbehaves later in ways hard to trace back.
+      // TR4W's handlers for both are advisory, so running both is correct.
+      if (Msg = WM_SIZE) or (Msg = WM_WINDOWPOSCHANGING) then
+         begin
+         Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
+         end;
+      Exit;
       end;
+
+   Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
 end;
+
 
 function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
                               const aId: integer;
@@ -194,6 +232,15 @@ begin
    Windows.SetWindowLong(Result, GWL_ID, aId);
 end;
 
+procedure ShowTR4WMainForm;
+begin
+   if Assigned(TR4WMainForm) then
+      begin
+      TR4WMainForm.Visible := True;
+      end;
+end;
+
+
 function CreateTR4WMainForm(const aMenu: HMENU): HWND;
 begin
    TR4WMainForm := TTR4WMainForm.CreateNew(nil);
@@ -219,6 +266,12 @@ begin
 
    // Touching Handle is what forces the window to exist.
    Result := TR4WMainForm.Handle;
+
+   // INSTALL TR4W'S PROCEDURE IN FRONT OF THE LCL'S, keeping the LCL's to
+   // chain to.  After Handle has forced the window into existence, before
+   // anything is shown.
+   GLCLFormProc := Pointer(Windows.SetWindowLongPtr(Result, GWL_WNDPROC,
+                                                    LONG_PTR(@TR4WFormSubclassProc)));
 
    if aMenu <> 0 then
       begin
