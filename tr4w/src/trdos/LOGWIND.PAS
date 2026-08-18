@@ -1811,8 +1811,20 @@ end;
 
 procedure DisplayRadio(Radio: RadioType);
 begin
-  SetMainWindowText(mweRadioOne, string(PAnsiChar(@Radio1.RadioName[1])));
-  SetMainWindowText(mweRadioTwo, string(PAnsiChar(@Radio2.RadioName[1])));
+  // RadioName IS A ShortString (Str20, LOGRADIO.PAS:154), so it is NOT
+  // null-terminated -- its length lives in byte 0.  PAnsiChar(@RadioName[1])
+  // ignored that and read from byte 1 until it happened to find a #0, which
+  // means it read STALE BYTES LEFT BY A LONGER PREVIOUS VALUE.
+  //
+  // Assigning 'K3S' over 'Radio 2' sets the length to 3 and copies 3 bytes; the
+  // 'io 2' behind it is untouched.  The field then displayed "K3Sio 2", and
+  // "K4Zio 1" for 'K4Z' over 'Radio 1'.  NY4I saw exactly that, 2026-08-18.
+  //
+  // Converting the ShortString directly uses the length byte, which is the
+  // whole fix.  Not a port regression: D7 passes @Radio1.RadioName[1] the same
+  // way (LOGWIND.PAS:1845) and has the same defect.
+  SetMainWindowText(mweRadioOne, string(Radio1.RadioName));
+  SetMainWindowText(mweRadioTwo, string(Radio2.RadioName));
 end;
 
 procedure DisplayQSOsByOpMode;

@@ -537,6 +537,7 @@ var
   Item                                  : integer;
   p1                                    : PAnsiChar;
   p2                                    : PAnsiChar;
+  rn                                    : AnsiString;   // the radio name, length-correct
 begin
 //  if not Sheet.DupeSheetEnable then Exit;
   TempDSHandle := Radio.tDupeSheetWnd;// tr4w_WindowsArray[tw_DUPESHEETWINDOW1_INDEX].WndHandle;
@@ -612,8 +613,14 @@ begin
   // appended ' - %s' adds the radio name -> three PAnsiChar args.  Writing
   // straight into the ANSI wsprintfBuffer avoids the D12 wide StrPCopy /
   // SysUtils.Format round-trip (dest is PAnsiChar).
+  // Same defect as LOGWIND's radio-name row, same variable: RadioName is a
+  // ShortString and PAnsiChar(@RadioName[1]) reads past its length into stale
+  // bytes from a longer previous value, so this caption showed "K3Sio 2".
+  // The AnsiString conversion is length-correct, and rn is a LOCAL held across
+  // the call -- PAnsiChar of a temporary would dangle under FPC.
+  rn := AnsiString(Radio.RadioName);
   TF.Format(wsprintfBuffer, TC_DUPESHEET + ' - %s',
-    BandStringsArray[Band], ModeStringArray[Mode], PAnsiChar(@Radio.RadioName[1]));
+    BandStringsArray[Band], ModeStringArray[Mode], PAnsiChar(rn));
 //  asm add esp,16  end;
   Windows.SetWindowTextA(Radio.tDupeSheetWnd, wsprintfBuffer);
 end;
