@@ -85,6 +85,19 @@ public delegate bool EnumProc(System.IntPtr h, System.IntPtr p);
 $CALLSIGNWINDOWID = 73
 $EXCHANGEWINDOWID = 88
 
+function Get-VisibleChildCount
+{
+   param([IntPtr] $Parent)
+   $script:visCount = 0
+   $cb = [W.Typ+EnumProc]{
+      param($h, $l)
+      if ([W.Typ]::IsWindowVisible($h)) { $script:visCount++ }
+      return $true
+   }
+   [void][W.Typ]::EnumChildWindows($Parent, $cb, [IntPtr]::Zero)
+   return $script:visCount
+}
+
 $target = Join-Path $Repo 'tr4w\target'
 if (-not $Exe) { $Exe = Join-Path $target 'tr4w.exe' }
 
@@ -134,6 +147,8 @@ try
    }
    Write-Output ("callsign window found and visible: id {0}" -f $CALLSIGNWINDOWID)
 
+   $script:beforeTyping = Get-VisibleChildCount -Parent $started.Hwnd
+
    foreach ($ch in $Text.ToCharArray()) {
       # WM_CHAR = 0x0102, posted AT THE CALLSIGN WINDOW so Msg.HWND matches
       # wh[mweCall] when TR4W's loop collects it.
@@ -143,6 +158,28 @@ try
    Start-Sleep -Milliseconds 800
 
    # Only what this run appended -- tr4w.log accumulates across sessions.
+   # THE CALLSIGN ALSO HAS TO REACH THE DISPLAY, not just the handler.
+   #
+   # Typing a call makes TR4W reveal its QSO-need and multiplier-need windows
+   # -- the "QSO needs for W8UHY: CW: 160 80 40 20 15 10" panel.  Those are raw
+   # statics in their own arrays, shown with ShowWindow from LOGEDIT, and
+   # nothing else here watches them.  NY4I reported them missing on 2026-08-18;
+   # they proved present on the current build and absent on a stale one, which
+   # is exactly the ambiguity a check removes.
+   #
+   # Counting VISIBLE children rather than naming windows: which ones appear
+   # depends on the contest, the band plan and what has already been worked,
+   # none of which this test should encode.  That MORE became visible is the
+   # invariant.
+   $afterTyping = Get-VisibleChildCount -Parent $started.Hwnd
+   Write-Output ("visible children: {0} before typing, {1} after" -f $script:beforeTyping, $afterTyping)
+   if ($afterTyping -le $script:beforeTyping) {
+      Write-Output 'Test-Typing: FAIL -- typing a callsign revealed NO additional windows.'
+      Write-Output '  The QSO-need / multiplier-need panels are the ones expected to appear.'
+      Stop-TR4WForDriving -Process $started.Process
+      exit 1
+   }
+
    $written = Get-TR4WLogSince -LogPath $log -Mark $mark
    $seen = @($written -split "`n" |
              Where-Object { $_ -match '\[CallWindowKeyDownProc\] Key pressed = (.)' } |
