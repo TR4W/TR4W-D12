@@ -222,6 +222,24 @@ begin
    edit.CharCase := ecUpperCase;
    edit.TabStop := True;
    edit.HideSelection := False;
+
+   // AutoSelect OFF.  This is an LCL behaviour with no Win32 counterpart, not a
+   // style bit being translated: TCustomEdit.Create sets FAutoSelect := True
+   // (customedit.inc:81) and then SelectAll's on DoEnter and on the first left
+   // click after focus (:632, :526).  A raw Win32 edit never did that outside a
+   // dialog, and TR4W is not a dialog -- it owns its own caret placement
+   // (PlaceCaretToTheEnd, and the EM_SETSEL calls in MainUnit around 5380 /
+   // 5385 / 5511) and decides for itself whether an exchange is selected for
+   // overtype or appended to.
+   //
+   // Left True it selects the exchange the operator has already typed, and
+   // ES_NOHIDESEL -- which IS faithful, VC.pas:2197 -- then keeps that block
+   // painted after focus leaves.  NY4I on the bench, 2026-08-18: the exchange
+   // field showed "20" reverse-video where D7 shows plain text and a caret.
+   // The next character typed would have replaced the exchange instead of
+   // extending it, so this was a data defect, not a colour one.
+   edit.AutoSelect := False;
+
    edit.AutoSize := False;
    if aBorder then
       begin

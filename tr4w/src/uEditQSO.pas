@@ -261,7 +261,23 @@ begin
               tSetDlgItemIntFalse(hwnddlg, FLD_FREQUENCY, inAct_Freq);
               end;
 
-        SendDlgItemMessage(hwnddlg, 180, DTM_SETFORMAT, 0, integer(PChar(f)));
+        // DTM_SETFORMAT*W*, and the W is the whole fix.
+        //
+        // This read DTM_SETFORMAT, which uCommctrl.pas:3659 defines as
+        // DTM_SETFORMATA -- the ANSI message -- while PChar under FPC -Mdelphi
+        // is PWideChar.  The control therefore read the UTF-16 bytes of f as
+        // ANSI: 'H', #0, and the #0 terminated it.  The effective format was
+        // "H", a bare hour, instead of 'HH:mm dd-MM-yyyy', so EDITING A QSO
+        // LOGGED AT 23:46 SHOWED "23" IN THE DATE FIELD -- and this dialog
+        // writes back to the log, so a wrong date could be committed by anyone
+        // who edited a QSO.  NY4I found it on the bench, 2026-08-18.
+        //
+        // Lint-PCharAnsi cannot see this class: the ANSI-ness is chosen by the
+        // MESSAGE CONSTANT, not by a function name it can match on.  Same
+        // family as the GetPrivateProfileString-bound-to-W defect that made
+        // TR4WServer reject every client (1bea7af4) -- and the reason CLAUDE.md
+        // says any remaining generic Win32 name has to be found by reading.
+        SendDlgItemMessage(hwnddlg, 180, DTM_SETFORMATW, 0, integer(PChar(f)));
 
         Windows.ZeroMemory(@TempSysTime, SizeOf(TempSysTime));
         TempSysTime.wYear := EditableQSORXData.tSysTime.qtYear + 2000;
