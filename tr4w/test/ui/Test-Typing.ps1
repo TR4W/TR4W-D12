@@ -47,6 +47,17 @@
    .\Test-Typing.ps1 -Text W1AW
 #>
 
+# A SINGLE PERSISTENT HARNESS CONFIG, and it is deliberately never deleted.
+#
+# These scripts used to stage smoke.cfg / drive.cfg / typing.cfg and remove them
+# afterwards.  That corrupted the operator's settings: TR4W records the last
+# configuration opened in settings	r4w.json, so the store ended up naming a
+# file the harness had just deleted -- and the open-contest dialog then HID its
+# "most recent configuration" button, because that button only appears when the
+# recorded file still exists (uNewContest.pas:180).  NY4I found it, 2026-08-18.
+#
+# One name, left in place, keeps the recorded path valid.
+
 param(
    [string] $Text = 'NY4I',
    [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
@@ -79,9 +90,9 @@ if (-not $Exe) { $Exe = Join-Path $target 'tr4w.exe' }
 
 if (-not $Config) {
    $set = Join-Path $Repo 'tr4w\test\corpus\cqww_ssb_2025_ny4i'
-   Copy-Item (Join-Path $set 'log.cfg') (Join-Path $target 'typing.cfg') -Force
-   Copy-Item (Join-Path $set 'log.trw') (Join-Path $target 'typing.trw') -Force
-   $Config = 'typing.cfg'
+   Copy-Item (Join-Path $set 'log.cfg') (Join-Path $target 'uitest.cfg') -Force
+   Copy-Item (Join-Path $set 'log.trw') (Join-Path $target 'uitest.trw') -Force
+   $Config = 'uitest.cfg'
 }
 
 try { Assert-NoRunningTR4W } catch { Write-Output "Test-Typing: $_"; exit 1 }

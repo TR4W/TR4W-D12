@@ -233,11 +233,42 @@ begin
 end;
 
 procedure ShowTR4WMainForm;
+var
+   r: TRect;
 begin
-   if Assigned(TR4WMainForm) then
+   if not Assigned(TR4WMainForm) then
       begin
-      TR4WMainForm.Visible := True;
+      Exit;
       end;
+
+   // READ THE REAL BOUNDS BACK FIRST.  Everything that sizes this window --
+   // CreateMainWindow, CheckEditableWindowHeight, SetWindowSize -- does it with
+   // a raw SetWindowPos on tr4whandle, so the LCL's own idea of the form's
+   // bounds is still the placeholder CreateNew was given.  Setting Visible then
+   // makes the LCL apply THAT, and the window collapses to the placeholder:
+   // NY4I, 2026-08-18, "the screen is quite small and only a partial view" --
+   // a 400x200 window with the menu wrapped onto two lines.
+   //
+   // Reconciling instead of assigning: read what the window actually is and
+   // tell the LCL, rather than deciding here what it should be. The program
+   // owns its geometry; this only stops the framework overwriting it.
+   Windows.GetWindowRect(TR4WMainForm.Handle, r);
+   TR4WMainForm.SetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+
+   TR4WMainForm.Visible := True;
+
+   // AND PUT IT BACK.  Telling the LCL the bounds is not enough: showing the
+   // form makes it apply its own adjustments -- menu height, border metrics --
+   // and the window came out 1018x705 where TR4W had made it 1012x656.  Close
+   // enough to look almost right, which is worse than obviously wrong.
+   //
+   // TR4W computes that geometry from the font-size setting and the MEASURED
+   // height of the log ListView; it is not a number the framework can improve
+   // on.  So the raw rect is restored after the show, and the LCL is left
+   // holding a correct BoundsRect either way.
+   Windows.SetWindowPos(TR4WMainForm.Handle, 0, r.Left, r.Top,
+                        r.Right - r.Left, r.Bottom - r.Top,
+                        SWP_NOZORDER or SWP_NOACTIVATE);
 end;
 
 

@@ -28,6 +28,17 @@
 # existing file instead; otherwise a corpus set is staged into target\ as
 # smoke.cfg / smoke.trw.
 
+# A SINGLE PERSISTENT HARNESS CONFIG, and it is deliberately never deleted.
+#
+# These scripts used to stage smoke.cfg / drive.cfg / typing.cfg and remove them
+# afterwards.  That corrupted the operator's settings: TR4W records the last
+# configuration opened in settings	r4w.json, so the store ended up naming a
+# file the harness had just deleted -- and the open-contest dialog then HID its
+# "most recent configuration" button, because that button only appears when the
+# recorded file still exists (uNewContest.pas:180).  NY4I found it, 2026-08-18.
+#
+# One name, left in place, keeps the recorded path valid.
+
 param(
    # Menu ids to post. The default set is deliberately SMALL and stable: the
    # windows most likely to be broken by a form conversion, plus one that is
@@ -100,9 +111,9 @@ if (-not $Config)
       Write-Output "Invoke-MenuSmoke: no corpus set at $set to stage a config from -- pass -Config"
       exit 1
       }
-   Copy-Item (Join-Path $set 'log.cfg') (Join-Path $target 'smoke.cfg') -Force
-   Copy-Item (Join-Path $set 'log.trw') (Join-Path $target 'smoke.trw') -Force
-   $Config = 'smoke.cfg'
+   Copy-Item (Join-Path $set 'log.cfg') (Join-Path $target 'uitest.cfg') -Force
+   Copy-Item (Join-Path $set 'log.trw') (Join-Path $target 'uitest.trw') -Force
+   $Config = 'uitest.cfg'
    Write-Output "staged $Config from the corpus set cqww_ssb_2025_ny4i"
    }
 
