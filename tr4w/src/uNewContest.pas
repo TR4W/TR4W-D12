@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -67,7 +67,8 @@ procedure ShowNewContest;
 implementation
 uses
   MainUnit,
-  uRadioConfigApply;   // GetLatestConfigFile -- the last contest, from tr4w.json
+  uRadioConfigApply,   // GetLatestConfigFile -- the last contest, from tr4w.json
+  uCFG;                // SetCFGCommandValue -- the one route to a [COMMANDS] value
 
 const
 
@@ -667,9 +668,15 @@ begin
     i := Windows.GetDlgItemTextA(h, NC_CALL_EDIT, TempBuffer1, SizeOf(TempBuffer1));
     if MainCallsign = '' then
        begin
-       MainCallsign[0] := AnsiChar(i);
-       Windows.CopyMemory(@MainCallsign[1], @TempBuffer1, i);
-       Windows.WritePrivateProfileStringA(_COMMANDS, MAIN_CALLSIGN, TempBuffer1, TR4W_INI_FILENAME);
+       // THROUGH THE REGISTRY, NOT STRAIGHT AT THE INI.  'MAIN CALLSIGN' is a
+       // CFGCA row (uCFG.pas:635) with a crMax of 13, and this assigned the
+       // global by hand and then wrote the file, so the length bound and the
+       // row's crA hook never ran at all.
+       //
+       // SetCFGCommandValue assigns MainCallsign itself via CheckCommand, so
+       // the two lines that did it here are gone rather than duplicated.
+       SetCFGCommandValue(string(MAIN_CALLSIGN),
+                          string(PAnsiChar(@TempBuffer1[0])));
        end;
     DeleteSlashes(TempBuffer1);
 

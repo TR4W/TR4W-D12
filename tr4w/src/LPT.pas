@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -153,8 +153,12 @@ begin
 
               ID := GetDialogItemText(hwnddlg, c);
               CMD := GetDialogItemText(hwnddlg, c + 100);
-              Windows.WritePrivateProfileStringA(_COMMANDS, @ID[1], @CMD[1], TR4W_INI_FILENAME);
-              CheckCommand(@ID, CMD);
+              // WAS: write the ini, THEN CheckCommand.  Exactly the inverted
+              // order SetCFGCommandValue exists to prevent -- a value CFGCA
+              // rejects still reached the operator's file, and the next start
+              // stopped on it with "Invalid statement in config file".
+              // SetCFGCommandValue validates first and persists only on success.
+              SetCFGCommandValue(string(ID), string(CMD));
 
               tDoingFootSwitchEnable := ActiveFootSwitchPort <> NoPort;
               DoingPaddle := ActivePaddlePort <> NoPort;

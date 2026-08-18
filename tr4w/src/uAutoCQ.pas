@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -145,7 +145,10 @@ function AutoCQDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam)
 procedure ShowAutoCQ;
 
 implementation
-uses MainUnit;
+uses
+  MainUnit,
+  SysUtils,   // IntToStr
+  uCFG;       // SetCFGCommandValue -- the one route to a [COMMANDS] value
 var
   U                                     : _UDACCEL = (nSec: 1; nInc: 250);
 
@@ -170,7 +173,11 @@ begin
         CreateStatic(RC_NUMBEROSOLT, 5, 45, 220, hwnddlg, 105);
 
         tWM_SETFONT(CreateWindowW('msctls_hotkey32', nil, WS_CHILD or WS_VISIBLE or WS_TABSTOP, 230, 5, 50, 21, hwnddlg, 107, hInstance, nil), MSSansSerifFont);
-        CreateEdit(0, 230, 45, 50, 21, hwnddlg, 106);
+        // ES_NUMBER: the delay is an integer and the field used to accept
+        // letters, which GetDlgItemInt then silently read as 0.  NY4I,
+        // 2026-08-18.  When this dialog becomes an LCL form the style word
+        // goes away and this is edtDelay.NumbersOnly := True.
+        CreateEdit(ES_NUMBER, 230, 45, 50, 21, hwnddlg, 106);
 
         CreateOKCancelButtons(hwnddlg);
 
@@ -204,8 +211,24 @@ begin
                TempByte := TempByte + 24;
                end;
             AutoCQMemory := Char(TempByte);
-            AutoCQDelayTime := GetDlgItemInt(hwnddlg, 106, lpTranslated, False) {* 1000};
-            Windows.WritePrivateProfileStringA(_COMMANDS, 'AUTO-CQ DELAY TIME', inttopchar(AutoCQDelayTime), TR4W_INI_FILENAME);
+            // THROUGH THE REGISTRY, NOT STRAIGHT AT THE INI.  This wrote the
+            // file directly and assigned the global itself, which skipped
+            // what CheckCommand does for this row: the crMin 500 / crMax 10000
+            // bounds (uCFG.pas:469) and the row's crA hook.  A delay of 5 was
+            // accepted here and then rejected at the next start as an invalid
+            // statement.
+            //
+            // It is also the function uNet's receive side calls to apply an
+            // inbound change, so a value now behaves identically whether it is
+            // typed here or arrives from another position.  (It does NOT send:
+            // crNetwork is read only by uOption.SendParameterToNetwork, which is
+            // a separate explicit action -- checked, not assumed.)
+            //
+            // SetCFGCommandValue validates first and persists second, and it is
+            // what assigns AutoCQDelayTime -- so the assignment that stood here
+            // is gone rather than duplicated.
+            SetCFGCommandValue('AUTO-CQ DELAY TIME',
+                               IntToStr(GetDlgItemInt(hwnddlg, 106, lpTranslated, False)));
             RunAutoCQ;
             goto 1;
           end;
