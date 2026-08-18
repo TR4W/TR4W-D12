@@ -1,4 +1,4 @@
-object frmProgramMessage: TfrmProgramMessage
+﻿object frmProgramMessage: TfrmProgramMessage
   Left = 0
   Height = 116
   Top = 0
@@ -8,8 +8,10 @@ object frmProgramMessage: TfrmProgramMessage
   Caption = 'Memory program function'
   ClientHeight = 116
   ClientWidth = 410
+  KeyPreview = True
   Position = poMainFormCenter
   OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
   OnShow = HandleShow
   object btnCQ: TButton
     Left = 30

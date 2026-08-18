@@ -1,4 +1,4 @@
-object frmUDPDestinationEdit: TfrmUDPDestinationEdit
+﻿object frmUDPDestinationEdit: TfrmUDPDestinationEdit
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
@@ -124,6 +124,7 @@ object frmUDPDestinationEdit: TfrmUDPDestinationEdit
     Caption = ''
   end
   object btnOK: TButton
+    Default = True
     Left = 222
     Top = 292
     Width = 90
@@ -134,6 +135,7 @@ object frmUDPDestinationEdit: TfrmUDPDestinationEdit
     OnClick = btnOKClick
   end
   object btnCancel: TButton
+    Cancel = True
     Left = 322
     Top = 292
     Width = 90

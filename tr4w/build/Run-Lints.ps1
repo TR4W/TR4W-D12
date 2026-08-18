@@ -40,6 +40,7 @@ $lints = @(
    @{ Name = 'Lint-FormFields';      Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormOverlap';     Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormEvents';      Arg = $src;     NeedsFpc = $false }
+   @{ Name = 'Lint-FormDefaults';    Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-ConfigOwnership'; Arg = $src;     NeedsFpc = $false }
    # The Win32-UI burn-down ratchet. $Tr4wDir, not $src: tr4w.dpr creates windows
    # too and lives one level up, and a ratchet that cannot see the program's own

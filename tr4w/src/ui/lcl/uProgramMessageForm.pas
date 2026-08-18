@@ -45,6 +45,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls,
+  LCLType,   // VK_ESCAPE
   VC;   // MesWindowType -- named in the class declaration below, so it belongs
         // in the INTERFACE uses, not the implementation one
 
@@ -55,6 +56,7 @@ type
     btnOther: TButton;
     procedure HandleShow(Sender: TObject);
     procedure HandleClose(Sender: TObject; var Action: TCloseAction);
+    procedure HandleKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
     procedure btnCQClick(Sender: TObject);
     procedure btnExchangeClick(Sender: TObject);
     procedure btnOtherClick(Sender: TObject);
@@ -102,6 +104,23 @@ procedure TfrmProgramMessage.HandleClose(Sender: TObject; var Action: TCloseActi
 begin
    UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
+end;
+
+{ ESCAPE HAS TO BE ASKED FOR.  A Win32 DialogBox synthesises IDCANCEL from the
+  Escape key -- which is how the original closed, via its `wParam = 2` arm -- and
+  an LCL form does no such thing: Escape activates the button whose Cancel is
+  True, and does nothing at all when there isn't one.
+  
+  This form is three choice buttons with no Cancel, so the path is KeyPreview
+  plus this handler. Forms that DO have a Cancel button use that instead; see
+  Lint-FormDefaults, which now refuses a designed form with no way out. }
+procedure TfrmProgramMessage.HandleKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+begin
+   if Key = VK_ESCAPE then
+      begin
+      Key := 0;
+      Close;      // FChosen stays False, so no list opens -- as before
+      end;
 end;
 
 procedure TfrmProgramMessage.ChooseBank(const aWindow: MesWindowType);

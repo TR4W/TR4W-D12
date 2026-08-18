@@ -1,4 +1,4 @@
-object frmKeyerEdit: TfrmKeyerEdit
+﻿object frmKeyerEdit: TfrmKeyerEdit
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
@@ -247,6 +247,7 @@ object frmKeyerEdit: TfrmKeyerEdit
     end
   end
   object btnOK: TButton
+    Default = True
     Anchors = [akRight, akBottom]
     Left = 352
     Top = 352
@@ -257,6 +258,7 @@ object frmKeyerEdit: TfrmKeyerEdit
     OnClick = HandleOK
   end
   object btnCancel: TButton
+    Cancel = True
     Anchors = [akRight, akBottom]
     Left = 452
     Top = 352

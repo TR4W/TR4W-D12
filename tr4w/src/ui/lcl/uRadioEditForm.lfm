@@ -1,4 +1,4 @@
-object RadioEditForm: TRadioEditForm
+﻿object RadioEditForm: TRadioEditForm
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu, biMinimize]
@@ -559,6 +559,7 @@ object RadioEditForm: TRadioEditForm
     TabOrder = 14
   end
   object btnOK: TButton
+    Default = True
     Anchors = [akRight, akBottom]
     Left = 320
     Top = 432
@@ -570,6 +571,7 @@ object RadioEditForm: TRadioEditForm
     OnClick = HandleOK
   end
   object btnCancel: TButton
+    Cancel = True
     Anchors = [akRight, akBottom]
     Left = 420
     Top = 432
