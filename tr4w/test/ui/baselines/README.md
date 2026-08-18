@@ -45,3 +45,45 @@ keys.
   geometry is only comparable between captures made with the same settings.
   See the plan's Phase 3 for why the main window will NOT become a designed
   `.lfm`.
+
+## What the baseline does and does not compare (2026-08-18)
+
+`Dump-WindowTree.ps1 -NoHandles` NORMALIZES before writing, and the switch now
+means "this is going into a committed baseline", not merely "drop the handles".
+
+The first committed baseline diffed **472 lines against a healthy build**: 466
+were absolute screen coordinates, which move whenever the window does
+(`tr4w.pos` records its position), and the rest were the wall clock. A baseline
+that can never match is not a weak gate, it is an ignored one -- the same
+failure as a lint that reports "0 found" and passes.
+
+Normalized away, recursively (the first attempt walked one level and a clock at
+depth 3 still flapped):
+
+| field | treatment | why |
+|---|---|---|
+| `Handle` | blanked | different every run by definition |
+| `Left` / `Top` | made relative to the top-level window | keeps *where a control sits in the layout*, drops *where the user last dragged the window* |
+| `Text` | `HH:MM` / `HH:MM:SS` masked to `<time>` | times only; masking broadly would hide the captions this dump exists to notice |
+
+`Width` and `Height` are absolute sizes and are left alone.
+
+### The one known flap, deliberately NOT masked
+
+Control **id 104** in the radio-interface window -- the VFO B frequency display
+(`MainUnit.pas:5228`) -- flips `Enabled` between runs. Its state tracks radio
+connection, and the harness attaches no radio, so the polling thread's
+reconnect backoff decides what it looks like at dump time.
+
+It is left unmasked because `Enabled` is real signal everywhere else, and
+hiding it would cost more than the two-line diff it produces. **A diff confined
+to that one field on that one control is expected; anything else is not.**
+
+### How to compare
+
+There is no `-Compare` switch. Dump and diff:
+
+```powershell
+.\Dump-WindowTree.ps1 -NoHandles -Out $env:TEMP	ree-now.json
+Compare-Object (Get-Content .aselines\main-window.json) (Get-Content $env:TEMP	ree-now.json)
+```

@@ -207,12 +207,46 @@ try
 {
 
 $tree = Get-ProcessWindows -Pid2 $pidToDump
+
+# -NoHandles means "this dump is going into a committed baseline", so it strips
+# EVERYTHING that varies between two runs of an unchanged program -- not just the
+# handles it is named for.
+#
+# WHY THIS GREW: the first committed baseline diffed 472 lines against a healthy
+# build. 466 of them were absolute screen coordinates, which move whenever the
+# window does (tr4w.pos records its position), and the rest were the wall clock.
+# A baseline that can never match is not a weak gate, it is an ignored one -- so
+# it fails exactly like a lint that reports "0 found" and passes.
+#
+#   - Handles      : different every run by definition.
+#   - Left / Top   : made RELATIVE TO THE TOP-LEVEL WINDOW. This keeps the thing
+#                    worth checking -- where a control sits within the layout --
+#                    and drops the thing that is not: where the user last
+#                    dragged the window. Width and Height are already absolute
+#                    sizes and stay as they are.
+#   - Text         : times of day are masked. HH:MM and HH:MM:SS only; anything
+#                    else is left alone, because masking broadly would hide the
+#                    captions this dump exists to notice.
 if ($NoHandles)
    {
+   # RECURSIVE, and it has to be. The first attempt normalized the top level and
+   # its direct children only, and two consecutive runs still differed -- on a
+   # clock that sits at depth 3. ConvertTo-Json is called with -Depth 8 for the
+   # same reason: this tree is not two levels deep.
+   function Repair-Node
+      {
+      param($Node, [int] $OriginX, [int] $OriginY)
+
+      $Node.Handle = ''
+      $Node.Left   = $Node.Left - $OriginX
+      $Node.Top    = $Node.Top  - $OriginY
+      $Node.Text   = ($Node.Text -replace '\b\d{1,2}:\d{2}(:\d{2})?\b', '<time>')
+      foreach ($c in @($Node.Children)) { Repair-Node -Node $c -OriginX $OriginX -OriginY $OriginY }
+      }
+
    foreach ($w in $tree)
       {
-      $w.Handle = ''
-      foreach ($c in @($w.Children)) { $c.Handle = '' }
+      Repair-Node -Node $w -OriginX $w.Left -OriginY $w.Top
       }
    }
 $json = $tree | ConvertTo-Json -Depth 8
