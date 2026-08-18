@@ -70,6 +70,47 @@ typed/<slug>/
 * band changes driven by the radio, and the mults that depend on them;
 * scoring at the moment of logging rather than at export.
 
+## It does not have to wait for the export: the window ITSELF is assertable
+
+NY4I, extending the idea: *"we can verify the score calculations, mults worked, edit form
+and more... Add in the cluster simulator you have a nice test suite."*
+
+That is a better oracle than the export for anything that goes wrong DURING entry, because
+it fails at the QSO that caused it rather than at the end of the file. The main window
+displays all of it, and every element is individually addressable by
+`TMainWindowElement` -- `Dump-WindowTree.ps1` already reads their text. Fourteen of the
+fifty are directly relevant:
+
+    mweTotalScore        mweRate              mweHourRate
+    mweQSONumber         mweCQQSOCounter      mweSPQSOCounter
+    mweNewMultStatus     mweMultNeedsHeader   mweQSONeedsHeader
+    mweQSOB4Status       mweDupeInfoCall      mweQSOsWithThisStation
+    mweBandMode          mweLastQSOTime
+
+So a typed set can assert **after every QSO**: the score advanced by the right points, the
+multiplier registered, the dupe flagged, the serial incremented, the band followed the
+radio. The export diff at the end then confirms the same facts survived to the file.
+
+### The Edit QSO form
+
+Dialog 46, 78 controls, the densest in the program -- and the ONE converted dialog that can
+change log bytes, which is why the migration plan already makes the corpus a real gate for
+it. A typed set is what makes that gate meaningful: log a QSO, open Edit QSO, change a
+field, save, re-export, diff. Without typed input there is nothing to edit that the test
+itself produced.
+
+### The cluster simulator
+
+`c:\projects	est-tools\mockDXCluster` (do not modify it -- it is a shared tool). Feeding
+it a fixed spot script exercises the path nothing else covers end to end: telnet transport
+-> `uDXSpotParse` -> band map -> click-to-tune -> the callsign arriving in the entry field.
+The DX-cluster capture corpus (198,979 real lines) already covers PARSING; this covers what
+happens to a spot AFTER it parses.
+
+Note the shape this gives the suite: three simulators standing in for the three things a
+contest station is connected to -- a radio (`tools/radiosim` or TCI), a cluster
+(mockDXCluster), and an operator (the typing harness). None of them needs hardware.
+
 ## Deliberately not run on every commit
 
 NY4I's own framing, and right: it needs a GUI, a simulator and wall-clock time. It belongs
