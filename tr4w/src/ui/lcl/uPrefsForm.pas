@@ -6404,6 +6404,25 @@ end;
 procedure TPrefsForm.FormShow(Sender: TObject);
 begin
    RegisterHostedFormHandle(Self.Handle);
+
+   // A FRESH SEARCH BOX ON EVERY OPENING.  This form is a cached singleton
+   // shown modeless (ShowPreferences reuses gPrefsForm), so everything about it
+   // survives a close -- including the search text.  Reopening Preferences
+   // showed the PREVIOUS search still sitting in the box while the results list
+   // it belonged to was long hidden, which is text describing nothing on
+   // screen.  NY4I, 2026-08-18.
+   //
+   // Assigning Text fires edtSearchChange -> RunSearch(''), which takes the
+   // empty-needle path and hides the results, so this needs no second call and
+   // cannot leave a stale hit list behind.
+   //
+   // NOT cleared when a hit is CHOSEN, which is the other half of what NY4I
+   // raised. ActivateSearchHit already hides the list; keeping the text is what
+   // lets a search with several matches be revisited -- type one character and
+   // the list is back -- and the box AutoSelects on focus, so replacing the
+   // query is still a single action. Clearing there would mean retyping the
+   // whole query to check the second match, which is the common case.
+   edtSearch.Text := '';
 end;
 
 procedure TPrefsForm.FormClose(Sender: TObject; var Action: TCloseAction);
