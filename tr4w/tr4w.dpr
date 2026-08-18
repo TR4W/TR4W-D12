@@ -103,6 +103,7 @@ uses
   // already drifted from the LCL forms that replaced them.  Deleting them here
   // rather than per-form means no conversion has to ask whether it owes a twin.
   // The LCL set is in the {$IFDEF FPC} block below.
+  uAccelerators in 'src\uAccelerators.pas',
   uDialogs in 'src\uDialogs.pas',
   Version in 'src\Version.pas',
   VC in 'src\VC.pas',
@@ -1217,8 +1218,24 @@ begin
 {$IFDEF AUTOSPOT}
    ShowMessage('AUTOSPOT is enabled - Test Mode Only'); // Hard on relays - be careful
 {$ENDIF}
-  tr4w_accelerators := LoadAccelerators(hInstance, 'T');
-  // Ctrl+T → menu_repeat_pota_parks is defined directly in the .res file.
+  // ONE Pascal table, not the 'T' resource -- and not the ELEVEN copies of it
+  // that had drifted apart across the language .RES files (see
+  // docs\ACCELERATOR_AUDIT.md).  TranslateAccelerator below is unchanged;
+  // only where the table comes from has changed, which is what lets the menu
+  // caption and the binding be derived from one row.
+  tr4w_accelerators := BuildAcceleratorTable;
+  // FAIL LOUD. A table that failed to build leaves tr4w_accelerators = 0 and
+  // TranslateAccelerator then quietly does nothing -- the program runs and the
+  // whole keyboard is dead, with nothing in the log to say why. The count is
+  // logged either way so a shrinking table is visible in a bug report.
+  if tr4w_accelerators = 0 then
+     begin
+     logger.Error('[Accelerators] CreateAcceleratorTable FAILED -- no keyboard shortcuts will work');
+     end
+  else
+     begin
+     logger.Info('[Accelerators] %d binding(s) installed', [Length(ACCELERATORS)]);
+     end;
 
   RegisterClass(tr4w_WinClass);
 

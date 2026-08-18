@@ -56,7 +56,12 @@ const
 
   RC_EXIT_HK                            = #9'Alt+X';
   RC_OPTIONS_HK                         = #9'Ctrl+J';
-  RC_PROGRAMMES_HK                      = #9'Alt+P';
+  // GONE 2026-08-17: menu_messages no longer owns Alt+P.  NY4I -- "menu alt p
+  // should be alt-p" -- moved that keystroke to 10317 menu_alt_p, whose caption
+  // had claimed it all along while the accelerator table bound it here.  Two
+  // commands cannot answer one keystroke, so this one gives it up and its menu
+  // item now advertises nothing rather than advertising a key it does not have.
+  // See docs\ACCELERATOR_AUDIT.md and src\uAccelerators.pas.
   RC_RADIOONE_HK                        = #9'Ctrl+Alt+1';
   RC_RADIOTWO_HK                        = #9'Ctrl+Alt+2';
   RC_BANDMAP_HK                         = #9'Shift+Ctrl+`';
@@ -218,7 +223,7 @@ const
     (mrText: RC_CATANDCW; mrId: menu_radio_preferences),
 
     (mrText: '-'; mrId: 0),
-    (mrText: RC_PROGRAMMES + RC_PROGRAMMES_HK; mrId: menu_messages),
+    (mrText: RC_PROGRAMMES; mrId: menu_messages),
 
     (mrText: 'LPT'#9'Ctrl+Alt+L'; mrId: menu_lpt),
 

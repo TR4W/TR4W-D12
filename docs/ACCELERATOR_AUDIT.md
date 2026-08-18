@@ -3,6 +3,15 @@
 **Measured 2026-08-17**, Phase 2 of the Win32-to-LCL migration. Regenerate with
 `tr4w/test/ui/Dump-Accelerators.ps1`; the comparison method is described at the end.
 
+> **STATUS 2026-08-17: the unified table is BUILT** — `tr4w/src/uAccelerators.pas`, 97 rows
+> generated from the dump below, `CreateAcceleratorTable` in place of `LoadAccelerators`
+> (`tr4w.dpr`), pinned by `test/unit/uTestAccelerators.pas`. Both open questions are
+> answered and applied. Runtime proof: the program logs
+> `[Accelerators] 97 binding(s) installed`, and fails loudly if the table ever builds empty.
+>
+> Still to come in Phase 2: deriving the MENU CAPTION from the same row, which removes the
+> 77 `RC_X + RC_X_HK` concatenations, and `TMenuItem.ShortCut` when the menus become LCL.
+
 ## Why this exists
 
 A command's keystroke is currently stated **twice**, with no generator keeping them in
