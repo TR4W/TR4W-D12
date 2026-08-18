@@ -40,9 +40,14 @@ unit uAutoCQForm;
      window managers claim Alt+F2 / Alt+F4 before an application sees them.
 
   2. The updown buddy on the delay field became a TSpinEdit, which carries the
-     500..10000 range and the 250 step the CreateUpDownControl call set, and is
-     numeric by construction -- so the "field accepted letters" defect NY4I hit
-     on 2026-08-18 cannot be written here at all.
+     500..10000 range and the 250 step the CreateUpDownControl call set.
+
+     A TSpinEdit IS NOT NUMERIC BY CONSTRUCTION, which I claimed in 65845983 and
+     NY4I disproved in about a minute by typing "eeeee" into it. It descends
+     from TCustomEdit (spin.pp:33) and inherits NumbersOnly OFF, and TSpinEdit
+     does not re-publish the property -- so it cannot be set in the designer and
+     has to be set here. Being spinnable and being numeric are separate
+     properties; the arrows never implied the keyboard was filtered.
 }
 
 interface
@@ -136,6 +141,11 @@ begin
    FCtrl := False;
    FAlt  := False;
    ShowCapturedKey;
+
+   // NOT SETTABLE IN THE DESIGNER: TSpinEdit inherits NumbersOnly from
+   // TCustomEdit but does not re-publish it, so this is one of the few lines
+   // that genuinely has to be code rather than a form property.
+   spnDelay.NumbersOnly := True;
 
    spnDelay.Value := AutoCQDelayTime;
 
