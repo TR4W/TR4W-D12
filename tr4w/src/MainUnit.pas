@@ -289,7 +289,6 @@ procedure MakeTestLog;
 procedure PlaceCaretToTheEnd(wnd: HWND);
 //function TryToCheckTheLatestVersion: boolean;
 procedure tGetSystemTime;
-procedure ShowLogPopupMenu(wnd: HWND);
 procedure SystemTimeChanging;
 procedure DefTR4WProc(Msg: Cardinal; var lp: integer; wnd: HWND);
 function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
@@ -7859,19 +7858,6 @@ begin
   // inc(GetSystemTimeCounter);
   // Windows.SetWindowTextA(tr4whandle, inttopchar(GetSystemTimeCounter));
 {$IFEND}
-end;
-
-procedure ShowLogPopupMenu(wnd: HWND);
-var
-  CPos: TPoint;
-  LOGMENU: HMENU;
-begin
-  LOGMENU := LoadMenu(hInstance, 'E');
-  GetCursorPos(CPos);
-  TrackPopupMenu(GetSubMenu(LOGMENU, 0), TPM_LEFTALIGN or TPM_TOPALIGN, CPos.X,
-    CPos.Y, 0, wnd, nil);
-  DestroyMenu(LOGMENU);
-  FrmSetFocus;
 end;
 
 procedure SystemTimeChanging;
