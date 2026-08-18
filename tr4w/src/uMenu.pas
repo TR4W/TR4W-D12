@@ -113,7 +113,11 @@ const
   RC_VIEWPAKSPOTS_HK                    = #9'Ctrl+U';
   RC_EXECONFIGFILE_HK                   = #9'Ctrl+V' ;
   RC_REFRESHBM_HK                       = #9'Ctrl+Y';
-  RC_SPLITOFF_HK                        = #9'-';
+  // Ctrl+- , not '-'. The caption had dropped its modifier while the
+  // accelerator table bound Ctrl+- all along, so the menu advertised a
+  // bare '-' that does nothing on its own (audited 2026-08-17, see
+  // docs\ACCELERATOR_AUDIT.md; NY4I: add the Ctrl modifier).
+  RC_SPLITOFF_HK                        = #9'Ctrl+-';
   RC_CURSORINBM_HK                      = #9'Ctrl+End';
   RC_CURSORTELNET_HK                    = #9'Ctrl+Home';
   RC_QSOWITHNOCW_HK                     = #9'Ctrl+Enter';
