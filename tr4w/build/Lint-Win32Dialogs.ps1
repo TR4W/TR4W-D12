@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
    Burn-down ratchet for the Win32 UI surface. Counts may only go DOWN.
 
@@ -71,6 +71,24 @@ $patterns = [ordered]@{
    'TF.CreateOwnerDrawListBox' = '\bCreateOwnerDrawListBox\s*\('
    'TF.CreateRichEdit'         = '\bCreateRichEdit\s*\('
    'CreateOKCancelButtons'     = '\bCreateOKCancelButtons\s*\('
+   # THE MAIN WINDOW'S OWN SURFACE, added 2026-08-18. NY4I named the
+   # done-criterion for Phase 7 directly: "before we call this done, the above
+   # SetMainWindowText will be moved to something like edLocator.Text := ..".
+   #
+   # That is checkable rather than remembered, so it is checked here. These
+   # three are how the ~43 display elements of the main window are built and
+   # written today -- raw Win32 statics from the placement loop at
+   # MainUnit.pas:3304, addressed through wh[] by element, never by control.
+   # Phase 7 drives all three to ZERO; until then the ratchet stops them
+   # growing, and the number is the honest measure of how much of that phase
+   # is left.
+   #
+   # It is not bookkeeping. Reading a field's text through this path is what
+   # produced the ShortString overruns fixed in 56a8ae97 and c523ac6b: a
+   # property assignment carries its own length and cannot express that bug.
+   'SetMainWindowText'         = '\bSetMainWindowText\s*\('
+   'tCreateStaticWindow'       = '\btCreateStaticWindow\s*\('
+   'CreateTR4WStaticWindow'    = '\bCreateTR4WStaticWindow(ID)?\s*\('
 }
 
 if ($SelfTest) {
