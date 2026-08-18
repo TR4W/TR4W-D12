@@ -28,6 +28,7 @@ unit MainUnit;
 interface
 
 uses
+  uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
   uConfigValues,   // Config.CodeSpeedIncrement
   ShellAPI,
   Logstuff,
@@ -250,7 +251,7 @@ procedure tExchangeWindowSetFocus;
 procedure tRuntPaddleAndFootSwitchThread;
 //procedure TryToLoadRICHED32DLL;
 procedure InitializeQSO;
-function CreateCallOrExchangeWin(Top, ID: integer): HWND;
+function CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField): HWND;
 procedure TimeApplet(i: Cardinal);
 
 function YesOrNo(h: HWND; Text: PAnsiChar): integer;
@@ -3334,7 +3335,7 @@ begin
   tWM_SETFONT(wh[mweQSONumber], MainWindowEditFont {QSONumberFont});
 
   wh[mweCall] := CreateCallOrExchangeWin(EditableLogHeight + ws * 8 {Line2},
-    CALLSIGNWINDOWID);
+    CALLSIGNWINDOWID, efCall);
 
 {$IF OZCR2008}
   // QuickMemoryWindowHandle := nfCreateTR4WStaticWindow('Quick M.', col9, Line5, 4 * ws, DefStyleDis);
@@ -3353,7 +3354,7 @@ begin
     EditableLogHeight + 10 * ws {Line4}, $00FF0000);
 
   wh[mweExchange] := CreateCallOrExchangeWin(EditableLogHeight + ws * 8
-    {+ round(ws * 1.5)} + MainWindowEditHeight + 1, EXCHANGEWINDOWID);
+    {+ round(ws * 1.5)} + MainWindowEditHeight + 1, EXCHANGEWINDOWID, efExchange);
 
   SendMessage(wh[mweExchange], EM_LIMITTEXT, 35, 0);
 
@@ -6302,7 +6303,7 @@ begin
      end;
 end;
 
-function CreateCallOrExchangeWin(Top, ID: integer): HWND;
+function CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField): HWND;
 begin
   // PHASE 3b: an LCL TEdit, addressed by its Handle exactly as before.  The
   // message loop still routes keystrokes by comparing Msg.HWND against
@@ -6310,7 +6311,7 @@ begin
   // routing changes here.  See src\ui\lcl\uMainForm.pas.
   Result := CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
                                  MainWindowEditHeight, ID,
-                                 not Config.NoBorder);
+                                 not Config.NoBorder, aField);
   // Issue #997: asm tWM_SETFONT (EAX = Result above).
   tWM_SETFONT(Result, MainWindowEditFont);
   SendMessage(Result, EM_LIMITTEXT, 12, 0);

@@ -1175,26 +1175,10 @@ begin
       WM_CHAR:
         begin
           if (Char(Msg.wParam) = QuickQSLKey1) or (Char(Msg.wParam) = QuickQSLKey2) then QuickQSLProcedure(Char(Msg.wParam));
-          if (Msg.HWND = wh[mweCall]) or (Msg.HWND = wh[mweExchange]) then
-          begin
-            if (Msg.HWND = wh[mweCall]) then
-               begin
-               CallWindowKeyDownProc(Msg.wParam);
-               if CallWindowCharConsumed then
-                  begin
-                  CallWindowCharConsumed := False;
-                  goto NoTransMess;
-                  end;
-               end
-            else if Msg.HWND = wh[mweExchange] then       // ny4i Issue 87
-               begin
-               ExchangeWindowKeyDownProc(Msg.wParam);     // 4.102.7
-               end;
-              if KeyboardCallsignChar(Msg.wParam, boolean(ActiveMainWindow) {tr4w_ExchangeWindowActive}) = False then
-               begin
-               goto NoTransMess;
-               end;
-          end;
+           // The callsign/exchange block that stood here MOVED to
+           // TTR4WEntryEvents.CallKeyPress / ExchangeKeyPress -- Phase 3c.
+           // QuickQSL above stays: it fires whatever has focus, so it has no
+           // control to belong to.
         end;
 
       WM_SYSKEYDOWN, WM_KEYDOWN:
@@ -1215,72 +1199,14 @@ begin
           // presses, so the behaviour no longer depends on this loop existing.
           // It is the first arm retired rather than relocated.
 
-          if (Msg.HWND = wh[mweCall]) or (Msg.HWND = wh[mweExchange]) then
-          begin
-            // Ctrl+= : repeat the exact characters last sent on CW (call +
-            // exchange windows, CW mode).  '=' alone is QUICK QSL KEY 2, so a
-            // bare key collides; a Ctrl combo avoids that and is dispatched
-            // here like the other WM_KEYDOWN shortcuts, then fully consumed.
-            if (Msg.wParam = 187 {VK_OEM_PLUS '='}) and (ActiveMode = CW) and
-               ((GetKeyState(VK_CONTROL) and $8000) <> 0) then
-            begin
-              RepeatLastCWMessage;
-              goto NoTransMess;
-            end;
-            if Msg.wParam in [VK_F1..vk_f12] then ProcessFuntionKeys(Msg.wParam);
-            if Msg.wParam = VK_F4 then goto NoTransMess;
-            if Msg.wParam > 40 then goto TransMess;
-            if Msg.wParam = VK_RIGHT {39} then if Msg.HWND = wh[mweExchange] then TryPutSpaceinExchangeWindow;
-            if Msg.wParam = VK_PRIOR {33} then ProcessMenu(menu_cwspeedup);
-            if Msg.wParam = VK_NEXT {34} then ProcessMenu(menu_cwspeeddown);
-            if Msg.wParam = VK_SPACE {32} then if Msg.HWND = wh[mweCall] then
-              begin
-                SpaceBarProc2;
-//                if ActiveRadioPtr^.CWByCAT then BackToInactiveRadioAfterQSO;
-                goto NoTransMess;
-              end;
-
-            if (Msg.wParam = VK_UP)                                      and
-               (ActiveMainWindow = awCallWindow {tr4w_CallWindowActive}) and
-               (CallWindowString = '')                                   then
-                begin
-                if tLogIndex <> 0 then
-                   begin
-                   tAltE;
-                   end;
-                end;
-
-            if (Msg.wParam = VK_UP {38}) or (Msg.wParam = VK_DOWN {40}) then
-            begin
-              ProcessTAB(0);
-              Msg.wParam := 0;
-            end;
-            if {18} Msg.wParam = VK_MENU then ShowFMessages(24);
-            if {17} Msg.wParam = VK_CONTROL then
-
-              ShowFMessages(12);
-
-
-  if Msg.wParam = VK_SHIFT  then
-            begin
-              if ShiftKeyEnable then    // 4.105.6
-                {*in S&P the shift key tunes the K3 VFO with the RIT or XIT on, but RIT/XIT do not change
-                  ?In RUN mode the shift key should tune the RIT and not the xmit VFO...  but the VFO DISPLAY must change to show the RX frequency
-                *}
-              begin
-                if lobyte(HiWord(Msg.lParam)) = 42 then
-                if OpMode = CQOpMode then      // 4.97.3
-                {RITBumpDown;} RITBumpDown
-                  else        // 4.105.6
-                   VFOBumpDown;
-                if lobyte(HiWord(Msg.lParam)) = 54 then
-                 if OpMode = CQOpMode then       // 4.97.3
-                 {RITBumpUp;} RITBumpUp
-                  else
-                   VFOBumpUP;
-                end;
-              end;
-            end;
+          // EVERYTHING THE CALLSIGN AND EXCHANGE FIELDS DID ON A KEY DOWN moved
+          // to TTR4WEntryEvents.CallKeyDown / ExchangeKeyDown -- Phase 3c.  The
+          // keypad CW memories above stay here: they fire whatever has focus.
+          //
+          // One behaviour did NOT survive as written.  The left/right shift test
+          // read the scan code out of Msg.lParam, and an LCL OnKeyDown has no
+          // lParam; it is re-expressed with GetKeyState(VK_LSHIFT/VK_RSHIFT).
+          // See the note on the handler.
           end;
 
       WM_KEYUP:
@@ -1290,19 +1216,13 @@ begin
           if (Msg.wParam = VK_CONTROL) or (Msg.wParam = VK_MENU) then ShowFMessages(0);
           if Msg.wParam < 40 then goto TransMess;
 
-          if Msg.HWND = wh[mweCall] then
-          begin
-
-            if Msg.wParam = 222 then
-            begin
-              if StartSendingNowKey = '''' then
-                StartSendingNow(True);
-              goto NoTransMess;
-            end;
-
-                //                CallWindowKeyDownProc(Msg.wParam);
-
-          end;
+          // The callsign field's apostrophe arm moved to
+          // TTR4WEntryEvents.CallKeyUp -- Phase 3c.  ShowFMessages(0) above stays:
+          // it fires whatever has focus.
+          //
+          // BandMapListBox below does NOT move yet.  It is a raw Win32 list box in
+          // the band map, a different window, and it converts when that window
+          // does -- not as a side effect of the entry fields.
 
           if Msg.HWND = BandMapListBox then
           begin

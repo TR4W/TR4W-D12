@@ -40,7 +40,8 @@ unit uMainForm;
 interface
 
 uses
-  Windows, Forms, Controls, Graphics, StdCtrls, LCLType, LMessages;
+  Windows, Forms, Controls, Graphics, StdCtrls, LCLType, LMessages,
+  uMainWindowProc;   // TTR4WEntryField, EntryEvents -- the fields' key handlers
 
 type
   TTR4WMainForm = class(TForm)
@@ -64,7 +65,8 @@ type
   an LCL control able to raise them. }
 function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
                               const aId: integer;
-                              const aBorder: boolean): HWND;
+                              const aBorder: boolean;
+                              const aField: TTR4WEntryField): HWND;
 
 { Creates the main form and returns its handle, which becomes tr4whandle.
   aMenu is TR4W's own menu, built by CreateTR4WMenu -- CreateWindowExW used to
@@ -93,11 +95,10 @@ var
     Phase 3c hands it to Application.Run.  Nothing else should need it: the rest
     of the program continues to work in tr4whandle. }
   TR4WMainForm: TTR4WMainForm = nil;
+  TR4WCallEdit: TEdit = nil;
+  TR4WExchangeEdit: TEdit = nil;
 
 implementation
-
-uses
-  uMainWindowProc;
 
 var
    { The LCL's own window procedure for the main form, saved when TR4W's is
@@ -202,7 +203,8 @@ end;
 
 function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
                               const aId: integer;
-                              const aBorder: boolean): HWND;
+                              const aBorder: boolean;
+                              const aField: TTR4WEntryField): HWND;
 var
    edit: TEdit;
 begin
@@ -258,6 +260,28 @@ begin
    // The control id is what test/ui/Test-Typing.ps1 and every other instrument
    // finds these fields by, and what the dialog-item helpers use. A TEdit does
    // not set one, so it is applied to the handle directly.
+   // THE KEYBOARD ARMS, ATTACHED TO THE CONTROL -- Phase 3c.  These behaviours
+   // lived in the GetMessage loop and dispatched by comparing Msg.HWND against
+   // wh[mweCall] / wh[mweExchange].  A named handler per field, chosen HERE at
+   // creation from an explicit parameter: nothing branches on Sender, and the
+   // handler for a field cannot be reached by the other one.
+   if aField = efCall then
+      begin
+      edit.OnKeyPress := EntryEvents.CallKeyPress;
+      edit.OnKeyDown  := EntryEvents.CallKeyDown;
+      edit.OnKeyUp    := EntryEvents.CallKeyUp;
+      TR4WCallEdit := edit;
+      end
+   else
+      begin
+      edit.OnKeyPress := EntryEvents.ExchangeKeyPress;
+      edit.OnKeyDown  := EntryEvents.ExchangeKeyDown;
+      TR4WExchangeEdit := edit;
+      end;
+
+   // THE OBJECT IS KEPT, not only its handle.  Nothing reads these two yet;
+   // they exist because Phase 7 cannot write TR4WMainForm.edtCall.Text while
+   // the only thing this function returns is an HWND.
    Result := edit.Handle;
    Windows.SetWindowLong(Result, GWL_ID, aId);
 end;

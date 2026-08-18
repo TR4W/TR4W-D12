@@ -22,7 +22,55 @@ unit uMainWindowProc;
 interface
 
 uses
-  Windows;
+  Windows,
+  Classes;   // TShiftState, TObject -- the LCL event signatures
+
+type
+   { WHICH entry field a handler belongs to. Passed EXPLICITLY from a named
+     handler rather than derived from Sender: branching on Sender is banned
+     here, and it is also what makes the shared body below safe to share. }
+   TTR4WEntryField = (efCall, efExchange);
+
+   { THE CALLSIGN AND EXCHANGE FIELDS' KEYBOARD BEHAVIOUR, as LCL events.
+
+     Phase 3c. These arms lived in the hand-rolled GetMessage loop in tr4w.dpr
+     and dispatched by comparing Msg.HWND against wh[mweCall] / wh[mweExchange].
+     That comparison existed only because there were no control objects to hang
+     events on; the fields became LCL TEdits in Phase 3b, so the arms are not
+     relocated so much as given the home they always wanted.
+
+     It matters beyond tidiness: HWND is Win32-only, and a raw handle comparison
+     in the input path is one of the things that cannot follow this program to
+     macOS or Linux.
+
+     The loop still exists and still owns what is genuinely GLOBAL -- the
+     QuickQSL keys, the numeric-keypad CW memories, and ShowFMessages on the
+     Ctrl/Alt keyup -- because those fire no matter which window has focus and
+     have no control to belong to. }
+   { ON AnsiChar: this tree compiles with char = WideChar, but the LCL's
+     TKeyPressEvent is `var Key: char` compiled in the LCL's own mode, where
+     char is AnsiChar.  Writing `char` here produced "got (TObject;var
+     WideChar) expected (TObject;var Char)" -- so the type is stated
+     explicitly, for the same reason the house rule says to name the ...A
+     variant of a generic Win32 call rather than let the binding be inferred. }
+   TTR4WEntryEvents = class
+   private
+      procedure EntryKeyPress(var Key: AnsiChar; const aField: TTR4WEntryField);
+      procedure EntryKeyDown(var Key: word; const aField: TTR4WEntryField);
+   public
+      procedure CallKeyPress(Sender: TObject; var Key: AnsiChar);
+      procedure CallKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+      procedure CallKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+      procedure ExchangeKeyPress(Sender: TObject; var Key: AnsiChar);
+      procedure ExchangeKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+   end;
+
+var
+   { Created on first use by EntryEvents. One instance serves both fields. }
+   TR4WEntryEvents: TTR4WEntryEvents = nil;
+
+function EntryEvents: TTR4WEntryEvents;
+
 
 function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
 
@@ -48,7 +96,13 @@ uses
   uTCIServer,         // WM_TCI_APPLY
   uMMTTY,             // the MMTTY window message, under MMTTYMODE
   LOGSUBS2,           // ExitProgram, on WM_CLOSE
-  uCTYDAT;            // ctyLoadInCountryFile, after a CTY.DAT download
+  uCTYDAT,            // ctyLoadInCountryFile, after a CTY.DAT download
+  LOGSTUFF,           // CallWindowKeyDownProc, ProcessTAB, SpaceBarProc2, ...
+  tree,               // KeyboardCallsignChar
+  LOGK1EA,            // ShiftKeyEnable
+  LOGRADIO,           // RITBumpUp/Down, VFOBumpUp/Down
+  LogCW,              // RepeatLastCWMessage
+  uMenu;              // menu_cwspeedup / menu_cwspeeddown via ProcessMenu
                       // (NOT cty.pas -- that one is the DLL import and takes
                       // a PWideChar, which is not what this call site passes)
 
@@ -74,6 +128,218 @@ uses
 // choice.
 const
   COLUMN_DOUBLECLICK_PAD_PX = 12;
+
+function EntryEvents: TTR4WEntryEvents;
+begin
+   if TR4WEntryEvents = nil then
+      begin
+      TR4WEntryEvents := TTR4WEntryEvents.Create;
+      end;
+   Result := TR4WEntryEvents;
+end;
+
+{ The two fields' OnKeyPress bodies differ by one call, so they share one and
+  the caller says which field it is. Setting Key to #0 is the LCL's "consume",
+  and it replaces the loop's `goto NoTransMess`. }
+procedure TTR4WEntryEvents.EntryKeyPress(var Key: AnsiChar; const aField: TTR4WEntryField);
+var
+   vk: wParam;
+begin
+   if aField = efCall then
+      begin
+      CallWindowKeyDownProc(Ord(Key));
+      if CallWindowCharConsumed then
+         begin
+         CallWindowCharConsumed := False;
+         Key := #0;
+         Exit;
+         end;
+      end
+   else
+      begin
+      ExchangeWindowKeyDownProc(Ord(Key));    // 4.102.7, ny4i Issue 87
+      end;
+
+   // KeyboardCallsignChar TAKES ITS KEY BY var AND CAN REPLACE IT -- it maps
+   // QuestionMarkChar to '?' and SlashMarkChar to '/' (tree.pas:5152). The loop
+   // passed Msg.wParam and then dispatched the mutated message, so the
+   // substitution reached the field. Passing Ord(Key) here would have compiled
+   // if the parameter were by value, silently dropped the substitution, and
+   // left the operator's ? and / keys inserting the wrong character.
+   //
+   // The compiler caught it -- "call by var for arg no. 1 has to match exactly"
+   // -- which is the only reason it is handled rather than lost.
+   vk := Ord(Key);
+   if KeyboardCallsignChar(vk, boolean(ActiveMainWindow)) = False then
+      begin
+      Key := #0;
+      end
+   else
+      begin
+      Key := AnsiChar(Byte(vk));
+      end;
+end;
+
+procedure TTR4WEntryEvents.CallKeyPress(Sender: TObject; var Key: AnsiChar);
+begin
+   EntryKeyPress(Key, efCall);
+end;
+
+procedure TTR4WEntryEvents.ExchangeKeyPress(Sender: TObject; var Key: AnsiChar);
+begin
+   EntryKeyPress(Key, efExchange);
+end;
+
+{ Key := 0 consumes (the loop's `goto NoTransMess`); a bare Exit lets the key
+  through untouched (the loop's `goto TransMess`). }
+procedure TTR4WEntryEvents.EntryKeyDown(var Key: word; const aField: TTR4WEntryField);
+begin
+   // Ctrl+= : repeat the exact characters last sent on CW. '=' alone is QUICK
+   // QSL KEY 2, so a bare key collides; the Ctrl combo avoids that.
+   if (Key = 187 {VK_OEM_PLUS '='}) and (ActiveMode = CW) and
+      ((GetKeyState(VK_CONTROL) and $8000) <> 0) then
+      begin
+      RepeatLastCWMessage;
+      Key := 0;
+      Exit;
+      end;
+
+   if Key in [VK_F1..VK_F12] then
+      begin
+      ProcessFuntionKeys(Key);
+      end;
+
+   if Key = VK_F4 then
+      begin
+      Key := 0;
+      Exit;
+      end;
+
+   if Key > 40 then
+      begin
+      Exit;
+      end;
+
+   if (Key = VK_RIGHT {39}) and (aField = efExchange) then
+      begin
+      TryPutSpaceinExchangeWindow;
+      end;
+
+   if Key = VK_PRIOR {33} then
+      begin
+      ProcessMenu(menu_cwspeedup);
+      end;
+
+   if Key = VK_NEXT {34} then
+      begin
+      ProcessMenu(menu_cwspeeddown);
+      end;
+
+   if (Key = VK_SPACE {32}) and (aField = efCall) then
+      begin
+      SpaceBarProc2;
+      Key := 0;
+      Exit;
+      end;
+
+   if (Key = VK_UP)                                              and
+      (ActiveMainWindow = awCallWindow {tr4w_CallWindowActive})  and
+      (CallWindowString = '')                                    then
+      begin
+      if tLogIndex <> 0 then
+         begin
+         tAltE;
+         end;
+      end;
+
+   if (Key = VK_UP {38}) or (Key = VK_DOWN {40}) then
+      begin
+      ProcessTAB(0);
+      Key := 0;
+      end;
+
+   if {18} Key = VK_MENU then
+      begin
+      ShowFMessages(24);
+      end;
+
+   if {17} Key = VK_CONTROL then
+      begin
+      ShowFMessages(12);
+      end;
+
+   if Key = VK_SHIFT then
+      begin
+      // In S&P the shift key tunes the VFO with RIT/XIT on but RIT/XIT do not
+      // change; in RUN mode it tunes the RIT, and the VFO DISPLAY must change
+      // to show the RX frequency.  4.105.6 / 4.97.3.
+      //
+      // LEFT vs RIGHT SHIFT IS ASKED OF THE KEYBOARD, NOT OF THE MESSAGE.  The
+      // loop read the scan code out of lParam -- 42 left, 54 right -- and an
+      // LCL OnKeyDown has no lParam to read: it is handed a virtual key and a
+      // TShiftState, and the win32 widgetset does not split VK_SHIFT into
+      // VK_LSHIFT / VK_RSHIFT (there is no VK_LSHIFT anywhere under
+      // lcl\interfaces\win32).
+      //
+      // GetKeyState is therefore the substitute, and it is the ONE genuinely
+      // Windows-only line in this class.  Better named here than buried in a
+      // scan-code test: no LCL cross-platform API distinguishes the two shift
+      // keys, so this behaviour needs a per-platform answer whenever a Mac or
+      // Linux build is attempted.
+      if ShiftKeyEnable then
+         begin
+         if (GetKeyState(VK_LSHIFT) and $8000) <> 0 then
+            begin
+            if OpMode = CQOpMode then
+               begin
+               RITBumpDown;
+               end
+            else
+               begin
+               VFOBumpDown;
+               end;
+            end;
+
+         if (GetKeyState(VK_RSHIFT) and $8000) <> 0 then
+            begin
+            if OpMode = CQOpMode then
+               begin
+               RITBumpUp;
+               end
+            else
+               begin
+               VFOBumpUP;
+               end;
+            end;
+         end;
+      end;
+end;
+
+procedure TTR4WEntryEvents.CallKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+begin
+   EntryKeyDown(Key, efCall);
+end;
+
+procedure TTR4WEntryEvents.ExchangeKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+begin
+   EntryKeyDown(Key, efExchange);
+end;
+
+{ Only the callsign field had a WM_KEYUP arm. The loop's other two KEYUP lines
+  stay in the loop: ShowFMessages(0) on the Ctrl/Alt keyup is global, and the
+  band map's list box is a raw Win32 control in a different window, which will
+  move when that window converts. }
+procedure TTR4WEntryEvents.CallKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
+begin
+   if Key = 222 {apostrophe} then
+      begin
+      if StartSendingNowKey = '''' then
+         begin
+         StartSendingNow(True);
+         end;
+      Key := 0;
+      end;
+end;
 
 function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
 
