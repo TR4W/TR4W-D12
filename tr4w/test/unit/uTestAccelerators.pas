@@ -39,6 +39,7 @@ type
       procedure Test_DisplayTextMatchesTheBinding;
       procedure Test_EveryRowHasAKeyAndACommand;
       procedure Test_LookupFindsAndMisses;
+      procedure Test_DisplayOnlyRowsAreNotInstalled;
    public
       procedure RunAllTests; override;
    end;
@@ -116,10 +117,23 @@ var
    i, j: integer;
 begin
    BeginTest('Test_NoDuplicateKeystroke');
+   // INSTALLED rows only. Two rows may legitimately show the same keystroke when
+   // one of them is display-only: 10337 menu_alt_x shows Alt+X because 10002
+   // menu_exit is bound to it and both run ExitProgram(True). What must never
+   // happen is two rows both HANDED TO WINDOWS for one key -- that is the
+   // ambiguity Alt+P had, and Windows resolves it by picking one silently.
    for i := Low(ACCELERATORS) to High(ACCELERATORS) - 1 do
       begin
+      if not ACCELERATORS[i].acInstall then
+         begin
+         Continue;
+         end;
       for j := i + 1 to High(ACCELERATORS) do
          begin
+         if not ACCELERATORS[j].acInstall then
+            begin
+            Continue;
+            end;
          CheckFalse((ACCELERATORS[i].acKey   = ACCELERATORS[j].acKey) and
                     (ACCELERATORS[i].acCtrl  = ACCELERATORS[j].acCtrl) and
                     (ACCELERATORS[i].acAlt   = ACCELERATORS[j].acAlt) and
@@ -178,6 +192,44 @@ begin
    CheckEquals('Ctrl+T', AcceleratorDisplayFor(10608), 'POTA repeat kept its key');
 end;
 
+// A display-only row exists so the MENU can show a keystroke that something
+// else answers -- the message loop (PgUp/PgDn), another command id (Alt+X), or
+// in one case nothing at all (Alt+-, a known defect). Handing those to Windows
+// would create a second binding for a key already spoken for.
+//
+// Pinned because the flag is a boolean whose default is False: a row added
+// without stating acInstall silently stops being a keyboard binding while still
+// looking like one on the menu.
+procedure TAcceleratorTests.Test_DisplayOnlyRowsAreNotInstalled;
+var
+   i, installed, displayOnly: integer;
+begin
+   BeginTest('Test_DisplayOnlyRowsAreNotInstalled');
+   installed := 0;
+   displayOnly := 0;
+   for i := Low(ACCELERATORS) to High(ACCELERATORS) do
+      begin
+      if ACCELERATORS[i].acInstall then
+         begin
+         Inc(installed);
+         end
+      else
+         begin
+         Inc(displayOnly);
+         end;
+      end;
+
+   CheckEquals(97, installed, 'installed bindings (the table read out of the binary)');
+   CheckEquals(4, displayOnly, 'display-only rows');
+
+   // Named individually: each is here for a DIFFERENT reason and losing any one
+   // of them removes a keystroke from the menu without removing the behaviour.
+   CheckEquals('PgUp', AcceleratorDisplayFor(10503), 'CW speed up, bound by the message loop');
+   CheckEquals('PgDn', AcceleratorDisplayFor(10504), 'CW speed down, bound by the message loop');
+   CheckEquals('Alt+X', AcceleratorDisplayFor(10337), 'Alt+X, answered by 10002');
+   CheckEquals('Alt+-', AcceleratorDisplayFor(10320), 'Alt+-, advertised and unbound');
+end;
+
 procedure TAcceleratorTests.RunAllTests;
 begin
    Test_TableIsNotEmpty;
@@ -185,6 +237,7 @@ begin
    Test_DisplayTextMatchesTheBinding;
    Test_EveryRowHasAKeyAndACommand;
    Test_LookupFindsAndMisses;
+   Test_DisplayOnlyRowsAreNotInstalled;
 end;
 
 end.
