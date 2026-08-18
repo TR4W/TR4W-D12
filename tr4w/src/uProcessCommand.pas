@@ -117,7 +117,7 @@ const
   sCommandsArray                        : array[0..sCommands - 1] of TsCommandsArrayType =
     (
 
-//{$IF MMTTYMODE}    //5
+// (a commented-out MMTTYMODE guard stood here; the switch is gone -- 2026-08-18)
       (caCommand: 'MM_CLEAR_THE_TX_BUFFER'; caAddress: @csMMTTY_CLEAR_THE_TX_BUFFER),
       (caCommand: 'MM_SWITCH_TO_TX'; caAddress: @csMMTTY_SWITCH_TO_TX),
       (caCommand: 'MM_SWITCH_TO_RX_IMMEDIATELY'; caAddress: @csMMTTY_SWITCH_TO_RX_IMMEDIATELY),
@@ -803,42 +803,32 @@ end;
 
 procedure csMMTTY_GRABLASTCALL;
 begin
-{$IF MMTTYMODE}
   PutCallToCallWindow(MMTTY.mmttyLastCallsign);
   if tAutoCQMode and (length(MMTTY.mmttyLastCallsign) > 0) then      // wli issue 84 4.70.6
     if TryKillAutoCQ then
        begin
        Escape_proc;
        end;
-{$IFEND}
 end;
 
 procedure csMMTTY_SWITCH_TO_RX_IMMEDIATELY;
 begin
-{$IF MMTTYMODE}
   PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_IMMEDIATELY);
-{$IFEND}
 end;
 
 procedure csMMTTY_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED;
 begin
-{$IF MMTTYMODE}
   PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);
-{$IFEND}
 end;
 
 procedure csMMTTY_SWITCH_TO_TX;
 begin
-{$IF MMTTYMODE}
   PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_TX);
-{$IFEND}
 end;
 
 procedure csMMTTY_CLEAR_THE_TX_BUFFER;
 begin
-{$IF MMTTYMODE}
   PostMmttyMessage(RXM_PTT, RXM_PTT_CLEAR_THE_TX_BUFFER);
-{$IFEND}
 end;
 
 end.

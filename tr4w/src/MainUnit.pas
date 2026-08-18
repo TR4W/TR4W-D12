@@ -925,14 +925,12 @@ begin
 
   TryKillAutoCQ;
 
-{$IF MMTTYMODE}
   if ActiveMode = Digital then
     if MMTTY.mmttyTXIsOn then
        begin
        PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_IMMEDIATELY);
        Exit;
        end;
-{$IFEND}
 
   // B1: the busy test is now the facade's -- CWStillBeingSent asks exactly the
   // ACTIVE keyer, instead of OR-ing three backends' latches together.  The
@@ -2179,9 +2177,7 @@ begin
   tr4w_WindowsArray[tw_STATIONS_RM_PREFIX].WndProcAdr := @RemainingMultsDlgProc
     {RemainingMultsZoneDlgProc};
   tr4w_WindowsArray[tw_MP3RECORDER].WndProcAdr := @MP3RecDlgProc;
-{$IF MMTTYMODE}
   tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndProcAdr := @MMTTYDlgProc;
-{$IFEND}
 
 end;
 
@@ -3423,9 +3419,7 @@ begin
 
   EnableNetworkMenuItem(MF_GRAYED + MF_BYPOSITION);
 
-{$IF MMTTYMODE}
   // Windows.EnableMenuItem(tr4w_main_menu, menu_windows_mmtty, MF_BYCOMMAND or MF_ENABLED);
-{$IFEND}
 
 {$IF not OZCR2008}
   // DeleteMenu(tr4w_main_menu, menu_windows_stack, MF_BYCOMMAND or MF_GRAYED);
@@ -5112,12 +5106,6 @@ begin
        Exit;
        end;
 
-{$IF NOT MMTTYMODE}
-  if ID = tw_MMTTYWINDOW_INDEX then
-     begin
-     Exit;
-     end;
-{$IFEND}
 
   if ID = tw_NETWINDOW_INDEX then
     if not (ComputerID in ['A'..'Z']) then
@@ -5128,7 +5116,6 @@ begin
        Exit;
        end;
 
-{$IF MMTTYMODE}
   if ID = tw_MMTTYWINDOW_INDEX then
      begin
      if TR4W_MMTTYPATH[0] = #0 then
@@ -5138,7 +5125,6 @@ begin
         end;
      RichEditOperation(True);
      end;
-{$IFEND}
 
   if tWindowsExist(ID) then
      begin

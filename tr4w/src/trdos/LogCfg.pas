@@ -844,7 +844,6 @@ begin
 
   end;
 
-{$IF MMTTYMODE}
 {
   case Contest of
     CQWWRTTY:
@@ -863,7 +862,6 @@ begin
   CQExchangeNameKnown := tCQExchange;
   Exit;
 }
-{$IFEND}
 
   if CQExchange = '' then
      begin
@@ -871,7 +869,7 @@ begin
      end;
 
   if SearchAndPounceExchange = '' then
-    SearchAndPounceExchange := {$IF MMTTYMODE} '_@_' + {$IFEND}CQExchange;
+    SearchAndPounceExchange := '_@_' + CQExchange;
 
   if RepeatSearchAndPounceExchange = '' then
      begin

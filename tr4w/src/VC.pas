@@ -35,7 +35,6 @@ uses
 const
   tDebugMode                            = False;
   NEWER_DEBUG                           = False; // ny4i added this as tDebugMode changes too much.
-  MMTTYMODE                             = True;
 
 
 type

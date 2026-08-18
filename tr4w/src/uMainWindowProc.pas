@@ -94,7 +94,7 @@ uses
   uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
   uCTYUpdate,         // WM_CTY_DOWNLOAD_DONE / WM_CTY_VERSION_CHECKED
   uTCIServer,         // WM_TCI_APPLY
-  uMMTTY,             // the MMTTY window message, under MMTTYMODE
+  uMMTTY,             // the MMTTY window message
   LOGSUBS2,           // ExitProgram, on WM_CLOSE
   uCTYDAT,            // ctyLoadInCountryFile, after a CTY.DAT download
   LOGSTUFF,           // CallWindowKeyDownProc, ProcessTAB, SpaceBarProc2, ...
@@ -393,7 +393,6 @@ begin
 
     //    WM_CONTEXTMENU: if HWND(wParam) = _NewELogWindow then ShowLogPopupMenu(tr4whandle);
 
-{$IF MMTTYMODE}
     WM_SIZE:
       begin
         if MMTTY.MMTTYEngine <> 0 then
@@ -402,7 +401,6 @@ begin
           if wParam = SIZE_RESTORED then Windows.ShowWindow(MMTTY.MMTTYEngine, SW_RESTORE);
         end;
       end;
-{$IFEND}
 
     WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
     WM_NOTIFY:
@@ -732,9 +730,7 @@ begin
 
   end; {of case}
 
-{$IF MMTTYMODE}
   if Msg = MMTTY.mmttyMSG then mmttyProcessMessage(wParam, lParam);
-{$IFEND}
 
   CallDefWindowProc:
   Result := longword(DefWindowProc(TRHWND, Msg, wParam, lParam));

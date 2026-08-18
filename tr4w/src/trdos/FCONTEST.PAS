@@ -172,11 +172,7 @@ procedure SetUpRSTMyZoneExchange;
 var
   OldMyZone: string[31];
 const
-{$IF MMTTYMODE}
   Code599 = '599';
-{$ELSE}
-  Code599 = '5NN';
-{$IFEND}
 begin
   Windows.ZeroMemory(@OldMyZone, SizeOf(OldMyZone));
 

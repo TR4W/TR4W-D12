@@ -484,7 +484,7 @@ var
   ActiveColor                           : Byte;
   ActiveExchange                        : ExchangeType {= NoExchangeReceived};
   ActiveInitialExchange                 : InitialExchangeType {= NoInitialExchange};
-  ActiveMode                            : ModeType{$IF MMTTYMODE} = Digital{$IFEND};
+  ActiveMode                            : ModeType = Digital;
 
   //  ActiveModemPort: PortType;
   ActiveQSOPointMethod                  : QSOPointMethodType {= NoQSOPointMethod};

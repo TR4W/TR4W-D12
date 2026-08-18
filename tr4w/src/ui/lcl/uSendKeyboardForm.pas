@@ -93,13 +93,7 @@ uses
   uLCLFormHelpers,
   uHostedFormWindows,
   Log4D,
-  // uMMTTY UNCONDITIONALLY, even though only the MMTTYMODE block below calls
-  // it.  A {$IF MMTTYMODE} inside a uses clause cannot work: MMTTYMODE is a
-  // constant in VC, and the clause naming VC has not been processed yet, so the
-  // identifier degrades to the STRING 'MMTTYMODE' and FPC reports "Wanted
-  // Boolean but got AnsiString".  The original unit listed uMMTTY
-  // unconditionally for the same reason.
-  uMMTTY;
+  uMMTTY;      // PostMmttyMessage on close
 
 var
   frmSendKeyboard: TfrmSendKeyboard = nil;
@@ -176,9 +170,7 @@ begin
       KeyerWinKey.Flush;
       end;
 
-{$IF MMTTYMODE}
    PostMmttyMessage(RXM_PTT, RXM_PTT_SWITCH_TO_RX_AFTER_THE_TRANSMISSION_IS_COMPLETED);
-{$IFEND}
 
    UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;

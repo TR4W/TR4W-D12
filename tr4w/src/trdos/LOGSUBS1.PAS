@@ -246,14 +246,12 @@ begin // 1
         SendCrypticCWstring(Message);
         EndCWCapture;
       end;
-{$IF MMTTYMODE}
     Digital:
       begin
         SendCrypticCWString(Message);
         //        ProcessMMTTYMessage(TXM_CHAR, 10);
 
       end;
-{$IFEND}
 
     //wli    Digital: SendCrypticDigitalString(message);
   end;

@@ -472,7 +472,6 @@ begin
 
 {$IFEND}
 
-{$IF MMTTYMODE}
 
   SetCQMemoryString(CW, F1, 'CQ CQ \  \ TEST');
   SetCQMemoryString(CW, F2, 'CQ CQ CQ CQ CQ CQ \  \ TEST');
@@ -492,7 +491,6 @@ begin
   Short1 := '1';
   Short9 := '9';
   DigitalModeEnable := True;
-{$IFEND}
 
   for c := F1 to F12 do
      begin

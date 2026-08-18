@@ -662,9 +662,7 @@ begin
 {$IFEND}
 //  GetLogColumnsWidth;
 //  timeEndPeriod(1);
-{$IF MMTTYMODE}
   PostMmttyMessage(RXM_EXIT, 0);
-{$IFEND}
 {$IF  LANG = 'RUS'}
 //  if (OCXHandle <> 0) then FreeLibrary(OCXHandle);
 {$IFEND}

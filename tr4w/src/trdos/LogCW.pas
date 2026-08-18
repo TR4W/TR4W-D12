@@ -263,7 +263,6 @@ begin
      { First question is how do we poll the radio}
       Exit;
       end;
-{$IF MMTTYMODE}
   if ActiveMode = Digital then
      begin
      //    SendMessageToMixW(Msg);
@@ -289,7 +288,6 @@ begin
 
          Exit;
      end;
-{$IFEND}
 
   if Config.CWEnable and CWEnabled then
   begin
