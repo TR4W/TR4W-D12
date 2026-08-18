@@ -462,7 +462,7 @@ begin
           if not DetermineQTCNumberAndQuanity(QTCHeaderString, QTCNumber, NumberMessagesToBeSent) then Exit;
       }
 //    tDialogBox(62, @QTCRDlgProc);
-      CreateModalDialog(230, 180, tr4whandle, @QTCRDlgProc, 0);
+      ShowQTCReceive;
 
       //    ClearWindow(EditableLogwindow);
 
@@ -562,7 +562,7 @@ begin
 
      if YesOrNo2(tr4whandle, wsprintfBuffer) <> IDOK then Exit;
      //tDialogBox(63, @QTCSDlgProc);
-     CreateModalDialog(230, 160, tr4whandle, @QTCSDlgProc, 0);
+     ShowQTCSend;
 
        {
           ClearPTTForceOn;

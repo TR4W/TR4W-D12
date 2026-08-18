@@ -70,6 +70,15 @@ var
   SelectedItemInHitListBox              : integer;
   HintListBoxCreated                    : boolean;
   SelPos                                : array[102..103] of integer = (255, 255);
+
+// the single-message editor.  Parent and message index both come from the
+// caller (uAltP passes its own window and the selected message).
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else does.
+procedure ShowEditMessage(const aParent: HWND; const aMessage: lParam);
+
 implementation
 uses
    uConfigValues, uCFG,
@@ -188,7 +197,7 @@ begin
             begin
             // SelPos[102] is saved by EN_KILLFOCUS when the edit field loses
             // focus to this button, so it already holds the cursor position.
-            if CreateModalDialog(225, 170, EditMessageWnd, @MessagesListDlgProc, 0) = 1 then
+            if ShowMessagesList(EditMessageWnd) = 1 then
                begin
                Windows.SendMessage(MsgEditHWND, EM_SETSEL, SelPos[102], SelPos[102]);
                Windows.SendMessageA(MsgEditHWND, EM_REPLACESEL, 1, Integer(PAnsiChar(AnsiString(LastSelectedCommand))));
@@ -513,5 +522,10 @@ begin
   s[l + 1] := #0;
 end;
 
+
+procedure ShowEditMessage(const aParent: HWND; const aMessage: lParam);
+begin
+   CreateModalDialog(250, 70, aParent, @EditMessageDlgProc, aMessage);
+end;
 end.
 

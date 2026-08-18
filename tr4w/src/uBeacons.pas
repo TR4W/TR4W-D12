@@ -68,6 +68,16 @@ const
     );
 }
   FreqArray                             : array[101..110] of Word = (14100, 18110, 21150, 24930, 28200, 10000, 9996, 5000, 4996, 10144);
+
+// the Beacon Monitor window.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowBeaconsMonitor;
+
 implementation
 uses MainUnit;
 
@@ -228,5 +238,10 @@ KH6WO is not currently licensed for 18 or 24 MHz.
 
 }
 
+
+procedure ShowBeaconsMonitor;
+begin
+   CreateModalDialog(170, 175, tr4whandle, @BeaconsMonitorDlgProc, 0);
+end;
 end.
 

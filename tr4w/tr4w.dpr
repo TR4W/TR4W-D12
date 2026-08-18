@@ -1018,7 +1018,7 @@ begin
   end;
 
   begin
-    CreateModalDialog(305, 235, tr4whandle, @NewContestDlgProc, 0);
+    ShowNewContest;
     if TR4W_CFG_FILENAME[0] = '_' then Exit;
   end;
 {$IFEND}

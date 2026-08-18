@@ -82,6 +82,15 @@ procedure SetErmakFieldEnabled(Field: integer);
 var
   ErmakWindow                           : HWND;
 
+
+// the ERMAK operator roster.  Opened from INSIDE the Cabrillo dialog, so the
+// parent is that dialog's handle, not the main window.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else does.
+procedure ShowErmakReport(const aParent: HWND);
+
 implementation
 uses
   MainUnit,
@@ -284,5 +293,10 @@ begin
      end;
 end;
 
+
+procedure ShowErmakReport(const aParent: HWND);
+begin
+   CreateModalDialog(320, 155, aParent, @ErmakDlgProc, 0);
+end;
 end.
 

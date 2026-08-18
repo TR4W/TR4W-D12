@@ -42,6 +42,14 @@ var
   LogCompareListView                    : HWND;
   TimeDifference                        : integer;
 
+
+// the log-comparison dialog.  Two call sites in uNet pass the same shape.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else does.
+procedure ShowLogCompare(const aInitParam: lParam);
+
 implementation
 uses
   uGetServerLog,
@@ -256,5 +264,10 @@ begin
 
 end;
 
+
+procedure ShowLogCompare(const aInitParam: lParam);
+begin
+   CreateModalDialog(220, 110, tr4whandle, @LogCompareDlgProc, aInitParam);
+end;
 end.
 

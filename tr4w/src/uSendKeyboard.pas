@@ -45,6 +45,16 @@ function NewSendKeyboardEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lPara
 procedure CloseSendKeyboardInputDialog(StopSending: boolean);
 function SendKeyboardInputDialogOpen: boolean;
 
+
+// the send-CW-from-keyboard box.  Takes its parent EXPLICITLY: the caller
+// passes tCardinal, not tr4whandle, and that is a real difference rather
+// than an oversight -- do not quietly normalise it here.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else does.
+procedure ShowSendKeyboardCW(const aParent: HWND);
+
 implementation
 uses
   MainUnit;
@@ -235,5 +245,10 @@ begin
   Result := SendKeyboardWindow <> 0;
 end;
 
+
+procedure ShowSendKeyboardCW(const aParent: HWND);
+begin
+   CreateModalDialog(230, 20, aParent, @SendKeyboardCWDlgProc, 0);
+end;
 end.
 

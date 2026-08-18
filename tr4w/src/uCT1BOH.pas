@@ -36,6 +36,16 @@ uses
   ;
 function ct1bohDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 function CT1BOHInfoString(QSOs: integer; Percents: integer): PAnsiChar;
+
+// the CT1BOH information box.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowCT1BOHInfo;
+
 implementation
 uses MainUnit;
 function ct1bohDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -163,5 +173,10 @@ begin
      TF.Format(wsprintfBuffer, '%u (%u%%)', QSOs, Percents);
      end;
   Result := wsprintfBuffer;
+end;
+
+procedure ShowCT1BOHInfo;
+begin
+   CreateModalDialog(330 + 10, 68 + 10, tr4whandle, @ct1bohDlgProc, 0);
 end;
 end.

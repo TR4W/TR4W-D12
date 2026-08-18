@@ -467,7 +467,7 @@ begin
      if not Tune then
   //    tDialogBox(54, @AltDDlgProc);
         begin
-        CreateModalDialog(140, 50, tr4whandle, @AltDDlgProc, 0);
+        ShowAltD;
         end;
      end;    
   { Put the band map on the band/mode of the inactive radio }

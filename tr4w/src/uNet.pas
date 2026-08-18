@@ -954,7 +954,7 @@ begin
              begin
              logger.Error('Auto-sync: could not create %s', [TR4W_SYN_FILENAME]);
              // Fall through to the existing dialog so the operator can react.
-             CreateModalDialog(220, 110, tr4whandle, @LogCompareDlgProc, integer(s));
+             ShowLogCompare(integer(s));
              end
           else
              begin
@@ -968,7 +968,7 @@ begin
        else
  //      DialogBoxParam(hInstance, MAKEINTRESOURCE(75), tr4whandle, @LogCompareDlgProc, integer(s))
           begin
-          CreateModalDialog(220, 110, tr4whandle, @LogCompareDlgProc, integer(s));
+          ShowLogCompare(integer(s));
           end;
        end
     else

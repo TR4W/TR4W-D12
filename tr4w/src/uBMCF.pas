@@ -35,6 +35,16 @@ uses
 
 function BMCFDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 
+
+// the band-plan editor.  Nested INSIDE the settings dialog, so its parent is
+// the settings window -- see the plan's rule about converting inner before
+// outer.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else does.
+procedure ShowBandPlan(const aParent: HWND);
+
 implementation
 
 uses
@@ -162,5 +172,10 @@ begin
   end;
 end;
 
+
+procedure ShowBandPlan(const aParent: HWND);
+begin
+   CreateModalDialog(200, 155, aParent, @BMCFDlgProc, 0);
+end;
 end.
 

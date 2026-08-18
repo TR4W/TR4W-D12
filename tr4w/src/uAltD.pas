@@ -49,6 +49,16 @@ function NewAltDEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lPara
 var
   AltDEditWindowHandle                  : HWND;
   OldAltDEditProc                       : Pointer;
+
+// the Alt-D dupe-check box.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowAltD;
+
 implementation
 uses
   MainUnit;
@@ -142,6 +152,11 @@ begin
   {$RangeChecks OFF}     // 4.79.4
   Result := CallWindowProc(OldAltDEditProc, hwnddlg, Msg, wParam, lParam);
 
+end;
+
+procedure ShowAltD;
+begin
+   CreateModalDialog(140, 50, tr4whandle, @AltDDlgProc, 0);
 end;
 end.
 

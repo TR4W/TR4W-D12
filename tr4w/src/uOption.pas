@@ -78,6 +78,16 @@ procedure SendParameterToNetwork;
 
 function NewSLVProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
 
+
+// the Ctrl-J configuration-command editor.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowSettingsDialog;
+
 implementation
 uses MainUnit;
 
@@ -733,7 +743,7 @@ begin
          begin
  //          tDialogBox(44, @BMCFDlgProc);
  //          DialogBox(hInstance, MAKEINTRESOURCE(44), settingswindowhandle, @BMCFDlgProc);
-           CreateModalDialog(200, 155, settingswindowhandle, @BMCFDlgProc, 0);
+           ShowBandPlan(settingswindowhandle);
            Exit;
          end;
 
@@ -969,5 +979,10 @@ begin
   SendToNet(ParameterToNetwork, SizeOf(ParameterToNetwork));
 end;
 
+
+procedure ShowSettingsDialog;
+begin
+   CreateModalDialog(390, 250, tr4whandle, @SettingsDlgProc2, 0);
+end;
 end.
 

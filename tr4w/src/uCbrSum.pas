@@ -159,6 +159,15 @@ const
   VALUE_OPERATORS                       = 156;
   VALUE_RIG                             = 166 - 30;
 
+
+// the Cabrillo summary dialog.  The init param selects the export mode, so it
+// is a parameter here rather than a constant.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else does.
+procedure ShowCreateCabrillo(const aInitParam: lParam);
+
 implementation
 uses
   MainUnit,
@@ -335,11 +344,16 @@ begin
           2: goto ExitAndClose;
           3:
           //DialogBox(hInstance, MAKEINTRESOURCE(50), hwnddlg, @ErmakDlgProc);
-            CreateModalDialog(320, 155, hwnddlg, @ErmakDlgProc, 0);
+            ShowErmakReport(hwnddlg);
         end;
       end;
   end;
 end;
 
+
+procedure ShowCreateCabrillo(const aInitParam: lParam);
+begin
+   CreateModalDialog(187, 260, tr4whandle, @CreateCabrilloDlgProc, aInitParam);
+end;
 end.
 

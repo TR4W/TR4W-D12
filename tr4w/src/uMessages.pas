@@ -36,6 +36,16 @@ var
   MessagesKeys                          : array[1..12] of HWND;
   MessagesValues                        : array[1..12] of HWND;
 
+
+// the program-message box (Tools -> Program message).
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowProgramMessage;
+
 implementation
 uses uRadioPolling,
   MainUnit;
@@ -93,5 +103,10 @@ begin
   end;
 end;
 
+
+procedure ShowProgramMessage;
+begin
+   CreateModalDialog(205, 70, tr4whandle, @MESDlgProc, 0);
+end;
 end.
 

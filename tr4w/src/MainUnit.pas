@@ -3779,7 +3779,7 @@ begin
     // DialogBoxParam(hInstance, MAKEINTRESOURCE(61), tr4whandle, @SettingsDlgProc2, integer(cfAll));
 
     menu_messages: //tDialogBox(71, @MESDlgProc);
-      CreateModalDialog(205, 70, tr4whandle, @MESDlgProc, 0);
+      ShowProgramMessage;
 
     menu_import_adif:
       begin
@@ -3820,7 +3820,7 @@ begin
       end;
 
     menu_lpt:
-      CreateModalDialog(145, 170, tr4whandle, @LPTDlgProc, 0);
+      ShowLPTDialog;
     // tDialogBox(64, @LPTDlgProc);
 
     // menu_winkeyer2: tDialogBox(67, @WinKeyer2SettingsDlgProc);
@@ -3879,7 +3879,7 @@ begin
     menu_alt_killcw: ToggleCW(True);
     menu_alt_searchlog:
       // tDialogBox(47, @LogSearchDlgProc);
-      CreateModalDialog(387, 150, tr4whandle, @LogSearchDlgProc, 0);
+      ShowLogSearch;
 
     menu_alt_transfreq: tr4w_alt_n_transmit_frequency;
 
@@ -3891,7 +3891,7 @@ begin
         if tAutoCQMode = False then
           // tDialogBox(70, @AutoCQDlgProc);
            begin
-           CreateModalDialog(145, 60, tr4whandle, @AutoCQDlgProc, 0);
+           ShowAutoCQ;
            end;
         //QuickDisplay('Enter Time XX:YY GMT:');
         //Readln(junk);
@@ -4010,7 +4010,7 @@ begin
            tCardinal := QTCSWindow;
            end;
         // DialogBox(hInstance, MAKEINTRESOURCE(60), tCardinal, @SendKeyboardCWDlgProc);
-        CreateModalDialog(230, 20, tCardinal, @SendKeyboardCWDlgProc, 0);
+        ShowSendKeyboardCW(tCardinal);
         SetFocus(focus);
       end;
     // tDialogBox(60, @SendKeyboardCWDlgProc);
@@ -4020,7 +4020,7 @@ begin
 
     menu_ctrl_viewlogdat:
       // tDialogBox(74, @LogEditDlgProc);
-      CreateModalDialog(396, 212, tr4whandle, @LogEditDlgProc, 0);
+      ShowLogEdit;
 
     menu_ctrl_note:
       tr4w_add_note_in_log;
@@ -4170,7 +4170,7 @@ begin
     menu_ctrl_sendspot:
       // if TelnetSock <> 0 then
       // tDialogBox(59, @SendSpotDlgProc);
-      CreateModalDialog(150, 90, tr4whandle, @SendSpotDlgProc, 0);
+      ShowSendSpot;
 
     menu_ctrl_clearmultsheet:
       begin
@@ -4193,7 +4193,7 @@ begin
 
     menu_ctrl_ct1bohscreen:
       // tDialogBox(40, @ct1bohDlgProc);
-      CreateModalDialog(330 + 10, 68 + 10, tr4whandle, @ct1bohDlgProc, 0);
+      ShowCT1BOHInfo;
 
     menu_ctrl_PlaceHolder: AddBandMapPlaceHolder;
 
@@ -4256,7 +4256,7 @@ begin
     menu_syncpctime:
       begin
         //tDialogBox(48, @SynchronizeTimeDlgProc);
-        CreateModalDialog(235, 90, tr4whandle, @SynchronizeTimeDlgProc, 0);
+        ShowSynchronizeTime;
         {
         WinExec('w32tm /config /syncfromflags:manual,domhier /manualpeerlist:pool.ntp.org', SW_NORMAL);
         WinExec('w32tm /config /update', SW_NORMAL);
@@ -4279,7 +4279,7 @@ begin
 
     menu_beaconsmonitor:
       // tDialogBox(49, @BeaconsMonitorDlgProc);
-      CreateModalDialog(170, 175, tr4whandle, @BeaconsMonitorDlgProc, 0);
+      ShowBeaconsMonitor;
 
     // menu_COAX_Length_Calculator:
     // tDialogBox(51, @COAX_Length_CalculatorDlgProc);
@@ -4339,7 +4339,7 @@ begin
     menu_windowsmanager:
       begin
         //tDialogBox(57, @WindowsManagerDlgProc);
-        CreateModalDialog(150, 120, tr4whandle, @WindowsManagerDlgProc, 0);
+        ShowWindowsManager;
         if ManageWindow = 0 then
            begin
            Exit;
@@ -6204,7 +6204,7 @@ begin
   RichEditOperation(True);
   //DialogBox(hInstance, MAKEINTRESOURCE(69), 0, @FullLogDlgProc);
   //tDialogBox(69, @FullLogDlgProc);
-  CreateModalDialog(450, 300, tr4whandle, @FullLogDlgProc, 0);
+  ShowFullLog;
   if CreateCabrilloWindow <> 0 then
      begin
      Windows.SetFocus(CreateCabrilloWindow);
@@ -9387,7 +9387,7 @@ begin
   // names; until it exists, this keeps the editor working.
   if f = cfCol then
      begin
-     CreateModalDialog(390, 250, tr4whandle, @SettingsDlgProc2, 0);
+     ShowSettingsDialog;
      Exit;
      end;
 
@@ -9643,12 +9643,12 @@ end;
 
 procedure OpenStationInformationWindow(dwInitParam: lParam);
 begin
-  CreateModalDialog(187, 260, tr4whandle, @CreateCabrilloDlgProc, dwInitParam);
+  ShowCreateCabrillo(dwInitParam);
 end;
 
 procedure OpenListOfMessages;
 begin
-  CreateModalDialog(397, 177, tr4whandle, @AltPDlgProc, 0);
+  ShowAltP;
 end;
 
 procedure RenameCommand(Old, New: PAnsiChar);

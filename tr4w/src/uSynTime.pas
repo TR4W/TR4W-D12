@@ -47,6 +47,16 @@ procedure GetInt64AndSysTimeFromBuffer(BufPtr: Byte; var St: SYSTEMTIME);
 procedure ConnectToNTPServer;
 procedure CheckNTPAtStartup;
 
+
+// the Synchronize PC Time dialog.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowSynchronizeTime;
+
 implementation
 uses
   MainUnit,
@@ -402,5 +412,10 @@ begin
    tCreateThread(@NTPStartupCheck, NTPStartupThreadID);
 end;
 
+
+procedure ShowSynchronizeTime;
+begin
+   CreateModalDialog(235, 90, tr4whandle, @SynchronizeTimeDlgProc, 0);
+end;
 end.
 

@@ -81,6 +81,16 @@ var
   CurrentQTC                            : HWND ;
   QTCSWindow                            : HWND ;
   LastSendedQTCHour                     : integer = -1;
+
+// the WAE QTC send window.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowQTCSend;
+
 implementation
 uses
   uNet,
@@ -483,5 +493,10 @@ begin
   Windows.RegisterHotKey(QTCSWindow, QTC_HK_F10, 0, VK_F10);
 end;
 
+
+procedure ShowQTCSend;
+begin
+   CreateModalDialog(230, 160, tr4whandle, @QTCSDlgProc, 0);
+end;
 end.
 

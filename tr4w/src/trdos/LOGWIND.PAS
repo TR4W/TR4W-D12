@@ -1983,7 +1983,7 @@ begin
      h := tr4whandle;
      end;
   //DialogBox(hInstance, MAKEINTRESOURCE(41 {Window}), h, @IQDlgProc);
-  CreateModalDialog(225, 55, h, @IQDlgProc, 0);
+  ShowInputQuery(h);
   Result := IQresult;
 end;
 

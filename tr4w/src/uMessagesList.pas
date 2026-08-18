@@ -34,6 +34,14 @@ function MessagesListDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: l
 var
   LastSelectedCommand                   : String;
 
+
+// the list of program messages, as a picker.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else does.
+function ShowMessagesList(const aParent: HWND): integer;
+
 implementation
 
 uses
@@ -194,5 +202,13 @@ begin
   end;
 end;
 
+
+function ShowMessagesList(const aParent: HWND): integer;
+begin
+   // RETURNS the dialog result -- uEditMessage tests it for 1 to decide
+   // whether to paste the chosen command. A procedure here would silently
+   // drop that.
+   Result := CreateModalDialog(225, 170, aParent, @MessagesListDlgProc, 0);
+end;
 end.
 

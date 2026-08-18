@@ -90,6 +90,16 @@ var
   // dialog consumes and resets it on WM_INITDIALOG. Issue #1001.
   InitialAltPSelection                  : integer;
 
+
+// the Alt-P programmable-message window.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowAltP;
+
 implementation
 uses MainUnit;
 var
@@ -365,8 +375,13 @@ begin
   if LastSelectedMessage = -1 then Exit;
   if MesWindow = ExMsgWin then if LastSelectedMessage in [0, 1] then Exit;
 //  DialogBoxParam(hInstance, MAKEINTRESOURCE(76), AltWnd, @EditMessageDlgProc, LastSelectedMessage);
-  CreateModalDialog(250, 70, AltWnd, @EditMessageDlgProc, LastSelectedMessage);
+  ShowEditMessage(AltWnd, LastSelectedMessage);
 end;
 
+
+procedure ShowAltP;
+begin
+   CreateModalDialog(397, 177, tr4whandle, @AltPDlgProc, 0);
+end;
 end.
 

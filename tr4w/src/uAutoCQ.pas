@@ -134,6 +134,16 @@ const
 
 function AutoCQDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 
+
+// the Auto-CQ settings dialog.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowAutoCQ;
+
 implementation
 uses MainUnit;
 var
@@ -205,5 +215,10 @@ begin
   end;
 end;
 
+
+procedure ShowAutoCQ;
+begin
+   CreateModalDialog(145, 60, tr4whandle, @AutoCQDlgProc, 0);
+end;
 end.
 

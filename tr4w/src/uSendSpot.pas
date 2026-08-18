@@ -39,6 +39,16 @@ uses
 
 function SendSpotDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 
+
+// the Send Spot dialog.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowSendSpot;
+
 implementation
 uses uTelnet,
   MainUnit;
@@ -153,6 +163,11 @@ begin
       end;
     WM_CLOSE: 1: EndDialog(hwnddlg, 0);
   end;
+end;
+
+procedure ShowSendSpot;
+begin
+   CreateModalDialog(150, 90, tr4whandle, @SendSpotDlgProc, 0);
 end;
 end.
 

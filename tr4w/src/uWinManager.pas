@@ -34,6 +34,16 @@ function WindowsManagerDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
 var
   ManageWindow                          : HWND;
 
+
+// the Window control dialog.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else
+// does. Deliberately here, in the unit that owns the DlgProc, rather than at
+// the call site.
+procedure ShowWindowsManager;
+
 implementation
 uses MainUnit;
 
@@ -128,5 +138,10 @@ begin
   Windows.FlashWindow(ManageWindow, True)
 end;
 
+
+procedure ShowWindowsManager;
+begin
+   CreateModalDialog(150, 120, tr4whandle, @WindowsManagerDlgProc, 0);
+end;
 end.
 

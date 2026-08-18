@@ -35,6 +35,15 @@ var
 
 function IQDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 
+
+// the one-line input query.  Parent is explicit: LOGWIND picks between the
+// active window and tr4whandle before calling.
+//
+// THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
+// no longer knows this is a Win32 modal dialog, only that the window opens.
+// When the dialog becomes an LCL form, this body changes and nothing else does.
+procedure ShowInputQuery(const aParent: HWND);
+
 implementation
 
 uses MainUnit;
@@ -132,6 +141,11 @@ begin
       end;
   end;
 
+end;
+
+procedure ShowInputQuery(const aParent: HWND);
+begin
+   CreateModalDialog(225, 55, aParent, @IQDlgProc, 0);
 end;
 end.
 
