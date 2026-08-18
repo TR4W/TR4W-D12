@@ -107,9 +107,44 @@ it a fixed spot script exercises the path nothing else covers end to end: telnet
 The DX-cluster capture corpus (198,979 real lines) already covers PARSING; this covers what
 happens to a spot AFTER it parses.
 
+### A UDP listener -- the OUTBOUND contract
+
+NY4I: *"Add a UDP listener to check the radioinfo and contact (and delete and replace) work
+too."*
+
+Everything above tests what TR4W stores and shows. This tests what it TELLS THE WORLD, and
+that is a contract with other programs -- N1MM-compatible consumers, DXLab, a second
+station -- which is exactly the kind of thing that breaks silently because no operator sees
+it and no file records it.
+
+TR4W broadcasts six streams (`TUDPStream`, `uUDPBroadcastConfig.pas:123`):
+`usAppInfo`, `usContact`, `usScore`, `usRadio`, `usRotor`, `usLookup`. The contact stream
+carries three record kinds (`UDPType`, `VC.pas:140`), each a distinct XML root:
+
+| kind | root | sent from |
+|---|---|---|
+| `udpContactInfo` | `<contactinfo>` | `LOGSUBS2.PAS:3382`, on logging a QSO |
+| `udpContactReplace` | `<contactreplace>` | `LOGSUBS2.PAS:3388`, on editing one |
+| `udpContactDelete` | `<contactdelete>` | on deleting one |
+
+A listener is the cheapest instrument in the whole suite -- bind a socket, record what
+arrives, assert. It is passive, so it cannot perturb what it measures.
+
+What it buys, and none of it is reachable any other way:
+
+* **`contactreplace` and `contactdelete` are otherwise untested end to end.** The export
+  shows the FINAL state of a log; it cannot show that an edit or a delete was ANNOUNCED.
+  A consumer that never hears the delete keeps a QSO forever.
+* **RadioInfo tracks the radio.** With `tools/radiosim` changing frequency, the listener
+  asserts the band change was broadcast -- pairing the inbound simulator with the outbound
+  contract in one test.
+* **Ordering and timing.** A `contactreplace` that arrives before its `contactinfo`, or a
+  duplicate broadcast, is invisible to every other check here.
+
 Note the shape this gives the suite: three simulators standing in for the three things a
 contest station is connected to -- a radio (`tools/radiosim` or TCI), a cluster
-(mockDXCluster), and an operator (the typing harness). None of them needs hardware.
+(mockDXCluster), and an operator (the typing harness) -- plus one listener for what TR4W
+says back. None of them needs hardware.
 
 ## Deliberately not run on every commit
 
