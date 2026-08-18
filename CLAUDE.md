@@ -290,7 +290,7 @@ Contest-specific modules: `LOGWAE.PAS` (WAE), `LOGDOM.PAS` (domestic/QSO parties
 
 **`VC.pas` is the source of truth** for types: 120+ `ContestType` values, band and mode enums, the
 ~60-element `TMainWindowElement`, colour schemes, and the compile-time switches (`tDebugMode`,
-`MMTTYMODE`, the `LANG_xxx` block near line 223).
+the `LANG_xxx` block near line 223).  ~~`MMTTYMODE`~~ was deleted 2026-08-18.
 
 **`TF.pas`** holds UI helpers, dialog utilities, and format/conversion functions. Note: TF's
 hand-rolled `IntToStr`/`StrToInt`-style shims are legacy weight — prefer the RTL and delete the shim
@@ -409,7 +409,10 @@ extending the `case`.
 
 - **WSJT-X** (`uWSJTX.pas`) — UDP; sends colorization hints, receives decodes/QSOs.
   Enabled with `WSJT-X ENABLE = TRUE`.
-- **MMTTY** (`uMMTTY.pas`) — RTTY engine, gated on `MMTTYMODE` in `VC.pas`.
+- **MMTTY** (`uMMTTY.pas`) — RTTY engine.  ~~Gated on `MMTTYMODE` in `VC.pas`~~ — that
+  compile-time switch was deleted 2026-08-18 (NY4I: "the boolean controls it now").  It
+  had been `= True` for the life of this tree, so all 20 of its `{$IF}` blocks always
+  compiled; one `{$IF NOT MMTTYMODE}` block and one `{$ELSE}` arm never did.
 - **MixW** (`uMixW.pas`).
 
 ### 9. DX tools
@@ -643,7 +646,7 @@ DTR/RTS keying).
   re-propose it.
 
 ### Conditional compilation
-`tDebugMode`, `MMTTYMODE` and the `LANG_xxx` block live in `VC.pas`. Use `{$IF cond}...{$IFEND}`.
+`tDebugMode` and the `LANG_xxx` block live in `VC.pas`. Use `{$IF cond}...{$IFEND}`.
 
 ## Critical Notes for AI Assistants
 
