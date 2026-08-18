@@ -498,6 +498,7 @@ uses
 // simply unavailable in it.  This guard comes OUT with the LCL port.
   uUDPBroadcastConfig, // TUDPStream / usLookup
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
+  uMainForm,        // the main window IS a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
   uRadioPolling,
@@ -3274,12 +3275,16 @@ var
   temprect: TRect;
   // OffsetY : integer;
 begin
-  tr4whandle := CreateWindowExW($00010100 { WS_EX_CONTROLPARENT or WS_EX_WINDOWEDGE },
-    tr4w_ClassName, nil,
-    WS_SYSMENU or WS_MINIMIZEBOX,
-    0, 30, MainWindowWidth, 0 {MainWindowHeight},
-    0, tr4w_main_menu,
-    hInstance, nil);
+  // PHASE 3a: the main window is an LCL TForm, and tr4whandle is its Handle.
+  // Behaviour-neutral -- everything below this line is unchanged, the children
+  // are still parented to tr4whandle, and the hand-rolled message loop is still
+  // running. See src\ui\lcl\uMainForm.pas for what did and did not change.
+  //
+  // Was: CreateWindowExW($00010100, tr4w_ClassName, nil,
+  //                      WS_SYSMENU or WS_MINIMIZEBOX,
+  //                      0, 30, MainWindowWidth, 0, 0, tr4w_main_menu,
+  //                      hInstance, nil)
+  tr4whandle := CreateTR4WMainForm(tr4w_main_menu);
   tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndHandle := tr4whandle;
   wh[mweWholeScreen] := tr4whandle;
   wh[mweEditableLog] := CreateEditableLog(tr4whandle, 0, ws * 7,

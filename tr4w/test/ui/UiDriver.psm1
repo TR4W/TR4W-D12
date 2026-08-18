@@ -46,9 +46,17 @@ function Find-TR4WMainWindow
       [void][Win32.UiDrv]::GetWindowThreadProcessId($h, [ref]$owner)
       if (($owner -eq $ProcessId) -and [Win32.UiDrv]::IsWindowVisible($h))
          {
+         # CLASS 'TR4W' *OR* 'Window'. Phase 3a made the main window an LCL
+         # TForm, and an LCL form's Win32 class is 'Window' -- hardcoded in the
+         # widgetset, with no override. The old name is still accepted so this
+         # harness can drive a pre-3a binary for comparison.
+         #
+         # 'Window' is not distinctive, so the other two filters carry the
+         # weight: the window must belong to THIS process and be visible, which
+         # excludes the LCL's own invisible 0x0 helper window of the same class.
          $cls = New-Object System.Text.StringBuilder 256
          [void][Win32.UiDrv]::GetClassNameW($h, $cls, 256)
-         if ($cls.ToString() -eq 'TR4W')
+         if (($cls.ToString() -eq 'TR4W') -or ($cls.ToString() -eq 'Window'))
             {
             $script:uiDrvFound = $h
             return $false

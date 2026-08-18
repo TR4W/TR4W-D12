@@ -21,8 +21,14 @@ run, so a baseline carrying them diffs as "everything changed".
 
 ## What is in `main-window.json`
 
-The pre-migration state, for Phase 3 to be measured against. Captured at TR4W
-**5.0.1** with the corpus config `cqww_ssb_2025_ny4i`.
+The main window as it stands, for later phases to be measured against. Captured at
+TR4W **5.0.1** with the corpus config `cqww_ssb_2025_ny4i`.
+
+**Re-captured 2026-08-17 after Phase 3a**, which made the main window an LCL `TForm`:
+its Win32 class changed from `TR4W` to `Window` and nothing else did. The pre-3a
+capture and this one differ in exactly that one field plus the clock/date statics --
+same 1012x656, same 103 children, same positions to the pixel. That diff IS the
+evidence 3a was behaviour-neutral, and it is in the commit history if wanted again.
 
 The four windows that matter are the `TR4W` main window (103 children), and the
 three `#32770` tool windows TR4W opens with it — Radio 1, Radio 2 and Function

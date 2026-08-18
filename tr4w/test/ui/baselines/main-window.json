@@ -485,7 +485,7 @@
   },
   {
     "Handle": "",
-    "Class": "TR4W",
+    "Class": "Window",
     "Text": "TR4W v.5.0.1 - 2026 CQ-WW-SSB NY4I",
     "Id": 0,
     "Visible": true,
@@ -563,7 +563,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "23:35",
+        "Text": "03:28",
         "Id": 0,
         "Visible": true,
         "Enabled": true,
@@ -654,7 +654,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "17-08-26",
+        "Text": "18-08-26",
         "Id": 0,
         "Visible": true,
         "Enabled": true,
@@ -693,7 +693,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "23:35:59",
+        "Text": "03:28:34",
         "Id": 0,
         "Visible": true,
         "Enabled": true,
@@ -1838,6 +1838,19 @@
   },
   {
     "Handle": "",
+    "Class": "Window",
+    "Text": "tr4w",
+    "Id": 0,
+    "Visible": false,
+    "Enabled": true,
+    "Left": 0,
+    "Top": 0,
+    "Width": 0,
+    "Height": 0,
+    "Children": []
+  },
+  {
+    "Handle": "",
     "Class": "tooltips_class32",
     "Text": "",
     "Id": 0,
@@ -1866,19 +1879,6 @@
     "Handle": "",
     "Class": "DDEMLMom",
     "Text": "",
-    "Id": 0,
-    "Visible": false,
-    "Enabled": true,
-    "Left": 0,
-    "Top": 0,
-    "Width": 0,
-    "Height": 0,
-    "Children": []
-  },
-  {
-    "Handle": "",
-    "Class": "Window",
-    "Text": "tr4w",
     "Id": 0,
     "Visible": false,
     "Enabled": true,

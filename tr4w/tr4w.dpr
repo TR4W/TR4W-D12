@@ -172,6 +172,7 @@ uses
   uUDPDestinationEditForm in 'src\ui\lcl\uUDPDestinationEditForm.pas',
   uKeyerEditForm in 'src\ui\lcl\uKeyerEditForm.pas',
   uRadioEditForm in 'src\ui\lcl\uRadioEditForm.pas',
+  uMainForm in 'src\ui\lcl\uMainForm.pas',
   uPrefsForm in 'src\ui\lcl\uPrefsForm.pas',
 {$ENDIF}
   uJSON in 'src\utils\uJSON.pas',
