@@ -149,6 +149,44 @@ begin
 
               NM_DBLCLK: EditableLogWindowDblClick;
 
+              // ARROW-DOWN OFF THE LAST ROW RETURNS FOCUS TO THE CALL WINDOW.
+              //
+              // Moved here from the message loop (tr4w.dpr, the one
+              // `Msg.HWND = wh[mweEditableLog]` keyboard arm) as part of Phase
+              // 3b.  The loop dies in 3c, and every arm in it has to find a
+              // home that outlives it.
+              //
+              // LVN_KEYDOWN, and NOT an LCL TListView.  A ListView notifies its
+              // PARENT of key presses, which is a native mechanism that works
+              // whoever owns the message pump.  Converting this control to a
+              // TListView instead would have been the obvious move and is the
+              // wrong one: TR4W drives it through EIGHTEEN raw API call sites
+              // -- insert, delete, item state, column widths -- while a
+              // TListView keeps its own Items/Columns model.  That model would
+              // be EMPTY while the control was full, and any property change
+              // forcing RecreateWnd would rebuild the control from it and wipe
+              // the visible log.  Mid-contest.
+              LVN_KEYDOWN:
+                begin
+                if PLVKeyDown(lParam)^.wVKey = VK_DOWN then
+                   begin
+                   // Only when the selection is already on the last row --
+                   // otherwise Down just moves down the log, as it should.
+                   if ListView_GetNextItem(wh[mweEditableLog], LVNI_ALL, LVNI_SELECTED)
+                      = tLogIndex - 1 then
+                      begin
+                      // Traced like every other key path in this program -- and
+                      // for a reason beyond consistency: a focus transition is
+                      // otherwise invisible to any test that is not the
+                      // operator's eyes.  Cross-process focus reads report
+                      // nothing when the program is not in the foreground, so
+                      // the log is the only observable this behaviour has.
+                      logger.Trace('[EditableLog] VK_DOWN on the last row -> focus to the call window');
+                      tCallWindowSetFocus;
+                      end;
+                   end;
+                end;
+
               // Issue #750: gray out the editable-log row for X-QSO
               // records.  The X-QSO flag is stashed in the row's
               // per-item lParam by tAddContestExchangeToLog ->

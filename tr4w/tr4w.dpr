@@ -1211,9 +1211,10 @@ begin
               goto NoTransMess;
             end;
 
-          if (Msg.HWND = wh[mweEditableLog]) and (Msg.wParam = VK_DOWN) then
-            if ListView_GetNextItem(wh[mweEditableLog], LVNI_ALL, LVNI_SELECTED) = tLogIndex - 1 then
-              tCallWindowSetFocus;
+          // The editable-log arrow-down arm MOVED to LVN_KEYDOWN in
+          // uMainWindowProc (Phase 3b): a ListView notifies its parent of key
+          // presses, so the behaviour no longer depends on this loop existing.
+          // It is the first arm retired rather than relocated.
 
           if (Msg.HWND = wh[mweCall]) or (Msg.HWND = wh[mweExchange]) then
           begin
