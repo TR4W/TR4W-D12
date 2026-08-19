@@ -30,6 +30,26 @@ unit uEditMessageForm;
   armed and falls through to the insert. That two-step latch is preserved
   exactly; it is the kind of thing an operator has in their fingers.
 
+  WHAT THE CONTROL CHARACTERS ARE FOR, from the manual (NY4I, 2026-08-19),
+  because the code nowhere says and it explains why this exists at all:
+
+    <03> and <04> -- Ctrl+C and Ctrl+D -- BRACKET AN EMBEDDED COMMAND inside a
+    CW message. Everything between them is run as a command sequence rather than
+    keyed. The sample configuration has
+
+        CQ CW MEMORY CONTROLF5=<03>SRS=PB1;<04>
+
+    A command sequence therefore CANNOT CONTAIN A 4: the first one ends it.
+
+  So Ctrl+P/Ctrl+C and Ctrl+P/Ctrl+D are the two combinations that actually
+  matter here, and both work out of the arithmetic above -- Ord('C') - 64 = 3,
+  Ord('D') - 64 = 4.
+
+  NY4I: "I always edited the CFG file to add the <03> at the start and the <04>
+  at the end", which is a fair verdict on how discoverable this is. It is
+  expected to be replaced rather than polished -- see the CW macro-token note in
+  the keyer plan -- so this preserves it rather than improving it.
+
   It used to need a whole subclassed window procedure (NewMsgEditProc) to see
   those keystrokes, and hand-spliced the character into a raw buffer with a
   reverse copy loop before calling SetWindowTextA. It is OnKeyDown and SelStart
@@ -199,14 +219,6 @@ begin
       Exit;      // the modifier itself, not a combination
       end;
 
-   // Ctrl+V is blocked, as it was: a pasted control character would defeat the
-   // escape mechanism below and the message format cannot carry one safely.
-   if Key = Ord('V') then
-      begin
-      Key := 0;
-      Exit;
-      end;
-
    // Ctrl+P ARMS the escape rather than inserting one -- unless it is already
    // armed, in which case it falls through and inserts #16 like any other
    // letter. Two-step, and preserved exactly; see the unit header.
@@ -219,6 +231,15 @@ begin
 
    if not FAllowEscapes then
       begin
+      // UNARMED Ctrl+V is a paste, and the original blocked it: a pasted
+      // control character would defeat the escape mechanism.  ARMED Ctrl+V is
+      // an escape like any other and inserts #22, which is why this test is
+      // here and not before the arming check -- putting it first (as the first
+      // draft did) silently removed one of the 26 escapes.
+      if Key = Ord('V') then
+         begin
+         Key := 0;
+         end;
       Exit;
       end;
 
