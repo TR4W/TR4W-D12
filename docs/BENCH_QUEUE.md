@@ -1,0 +1,75 @@
+# Bench queue — what is waiting for a real run
+
+A **living list**, not a log. An item goes in when a change lands that no
+automated gate can check, and comes **out** when NY4I confirms it. Items that
+pass are deleted from here; if the result is interesting it goes into the
+document that owns the area (`RADIO_BENCH_STATUS.md`, `D12_HARDWARE_TEST_PLAN.md`,
+`CW_Keyer_Factory_Plan.md`) rather than accumulating here.
+
+**Why this exists.** Every defect NY4I found during the Phase 3/4 conversions was
+invisible to the eleven lints, the 9244 unit tests and the golden corpus: a
+swallowed menu, invisible entry fields, a double caret, a window collapsed to
+400×200, the "most recent configuration" button vanishing, `K3Sio 2` for a radio
+named `K3S`, Escape not closing a dialog, a settings field accepting letters, and
+a message key written with four bytes of garbage on the end. The gates are good
+at what they cover; this is the list of what they cannot see.
+
+---
+
+## Waiting now (as of 2026-08-19)
+
+### 1. Program message editor — Alt-P, pick a memory, Edit  (`d036b949`, `feb180f0`, `bede4637`)
+
+Partly confirmed already: the dialog opens and Ctrl+P / Ctrl+A inserts a control
+character. **Still open:**
+
+- [ ] **Ctrl+P then Ctrl+C** inserts `<03>`, **Ctrl+P then Ctrl+D** inserts `<04>`.
+      These are the two that matter — they bracket an embedded command, e.g.
+      `CQ CW MEMORY CONTROLF5=<03>SRS=PB1;<04>` — and if they work, that message
+      can be built in the editor instead of hand-editing the `.cfg`.
+- [ ] **The saved key is clean.** After OK, the contest `.cfg` line should read
+      `CQ CW MEMORY F5=...` with **no trailing garbage** on the key. The earlier
+      attempt wrote `CQ CW MEMORY F5<A4><AE>6w=<01>` — an unterminated
+      `ShortString` read past its length. Fixed; unverified.
+- [ ] **An empty Caption REMOVES the key**, rather than writing a blank one. A
+      blank caption and an absent one are read differently downstream.
+- [ ] Caption field is **disabled** for the "other messages" bank.
+- [ ] **&Edit** is enabled only in Phone mode, and only acts on a message naming
+      a `.WAV`.
+- [ ] Leftover: the stray `CQ CW MEMORY F5<garbage>` line in the contest `.cfg`
+      from the earlier attempt is safe to delete by hand.
+
+### 2. List of commands picker — the button inside that editor  (`ed0fdec5`, `fdb7bf5c`)
+
+- [ ] **OK with nothing selected CLOSES** (it did not; fixed).
+- [ ] **Double-click with nothing selected does NOT close** — deliberately
+      different from OK, and that difference is the original's.
+- [ ] The pasted command lands **at the caret**, not at the end.
+- [ ] The command pasted is the one **highlighted**. The list is alphabetical
+      while `sCommandsArray` is not, so an index-vs-text mistake here pastes a
+      plausible-looking wrong command.
+
+### 3. Window control dialog — Ctrl+Alt+M  (`f11a1093`)
+
+Converted tonight; not yet opened once.
+
+- [ ] It **opens** and lists the visible TR4W windows by title.
+- [ ] Moving the selection **flashes** the corresponding window.
+- [ ] **OK** then lets you move the chosen window (the caller repositions it).
+- [ ] **Cancel / Escape / the window button move NOTHING.** This is the one worth
+      being deliberate about: the dialog returns its answer in a global whose
+      zero means "nothing chosen", so a missed clearing path would move whatever
+      window was picked the *previous* time it was opened.
+
+---
+
+## Known and accepted — no action, listed so they are not re-reported
+
+- **CW-by-CAT keys one character per `KY` command** when typing into the
+  send-from-keyboard box (Ctrl+A) or during autosend. Staccato, inherent, and
+  better than D7 (which sent nothing until Enter). Full explanation and three
+  untried directions in `CW_Keyer_Factory_Plan.md`.
+- **Preferences collapses the Hardware branch** after visiting another section.
+  That is the one-branch-at-a-time rule working. The pane arithmetic behind it
+  was recounted 2026-08-18 and two branches now overflow; NY4I is rearranging the
+  sections first, then it gets revisited.
