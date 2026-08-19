@@ -6,6 +6,13 @@ pass are deleted from here; if the result is interesting it goes into the
 document that owns the area (`RADIO_BENCH_STATUS.md`, `D12_HARDWARE_TEST_PLAN.md`,
 `CW_Keyer_Factory_Plan.md`) rather than accumulating here.
 
+**"Does it open" is already covered.** `Invoke-MenuSmoke.ps1` now drives all six
+converted dialogs (10111, 10302, 10101, 10104, 10557, 10416) and fails if any of
+them does not produce a window -- which proves the `.lfm` streams, the form
+constructs and `OnShow` runs without raising. So nothing below is asking whether
+a dialog appears; every item is about whether what appears is CORRECT, which is
+the part no gate reaches.
+
 **Why this exists.** Every defect NY4I found during the Phase 3/4 conversions was
 invisible to the eleven lints, the 9244 unit tests and the golden corpus: a
 swallowed menu, invisible entry fields, a double caret, a window collapsed to
