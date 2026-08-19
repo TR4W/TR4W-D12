@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -33,8 +33,16 @@ uses
   Tree,
   LogWind;
 
-function BMCFDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{
+  THE BAND-PLAN SEAM.  The dialog itself is now an LCL form --
+  src\ui\lcl\uBandPlanForm.pas -- and this unit is the entry point only.
 
+  DELETED here, not wrapped (Phase 4b): BMCFDlgProc, its nested loop building a
+  static and three ES_NUMBER edits per band addressed by the computed id
+  `integer(TempBand) + TempColumn * 100`, and the two gotos.  A TStringGrid
+  replaces 33 controls, and adding a band to BandType no longer means the
+  dialog quietly stops showing it.
+}
 
 // the band-plan editor.  Nested INSIDE the settings dialog, so its parent is
 // the settings window -- see the plan's rule about converting inner before
@@ -43,139 +51,18 @@ function BMCFDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): 
 // THE SEAM for the Win32-to-LCL migration (Phase 1, 2026-08-17): the caller
 // no longer knows this is a Win32 modal dialog, only that the window opens.
 // When the dialog becomes an LCL form, this body changes and nothing else does.
+//
+// Phase 4b, 2026-08-19: that is exactly what happened, and no call site moved.
 procedure ShowBandPlan(const aParent: HWND);
 
 implementation
 
 uses
-  MainUnit;
-
-function BMCFDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  ExitAndClose;
-var
-  TempHWND                              : HWND;
-  TempColumn                            : integer;
-  TempFreq                              : integer;
-  TempBand                              : BandType;
-  Top                                   : integer;
-  pTranslated                           : LongBool;
-  TempPos                               : integer;
-const
-  itemHeight                            = 18;
-  itemHeight2                           = 30;
-begin
-  Result := False;
-  case Msg of
-    WM_INITDIALOG:
-      begin
-        Windows.SetWindowTextA(hwnddlg, RC_BANDPLAN);
-        CreateOKCancelButtons( hwnddlg);
-
-        tCreateStaticWindow('Band', defStyle, 10, 5, 40, itemHeight2, hwnddlg, 0);
-        tCreateStaticWindow('BAND MAP CUTOFF FREQUENCY', defStyle, 55, 5, 110, itemHeight2, hwnddlg, 0);
-        tCreateStaticWindow('FREQUENCY MEMORY CW', defStyle, 170, 5, 110, itemHeight2, hwnddlg, 0);
-        tCreateStaticWindow('FREQUENCY MEMORY SSB', defStyle, 285, 5, 110, itemHeight2, hwnddlg, 0);
-
-        for TempBand := Band160 to Band2 do
-           begin
-           //            Left := 10 + c * 67;
-       Top := integer(TempBand) * 20 + 40;
-
-       tCreateStaticWindow(BandStringsArrayWithOutSpaces[TempBand], defStyle, 10, Top, 40, itemHeight, hwnddlg, 0);
-
-       for TempColumn := 1 to 3 do
-          begin
-
-          if TempColumn = 1 then
-             begin
-             TempFreq := BandMapModeCutoffFrequency[TempBand];
-             end;
-          if TempColumn = 2 then
-             begin
-             TempFreq := DefaultFreqMemory[TempBand, CW];
-             end;
-          if TempColumn = 3 then
-             begin
-             TempFreq := DefaultFreqMemory[TempBand, Phone];
-             end;
-
-          TempHWND :=
-            tCreateEditWindow(
-            WS_EX_STATICEDGE,
-            inttopchar(TempFreq),
-            WS_TABSTOP or WS_CHILD or WS_VISIBLE or ES_CENTER or ES_NUMBER or ES_AUTOHSCROLL,
-            55 + (TempColumn - 1) * 115,
-            Top,
-            110,
-            itemHeight,
-            hwnddlg,
-            integer(TempBand) + TempColumn * 100);
-          end;
-           end;
-
-//  WritePrivateProfileSection('BAND MAP CUTOFF FREQUENCY', s, TR4W_INI_FILENAME);
-      end;
-
-    WM_COMMAND:
-      begin
-
-        if wParam = 1 then
-           begin
-
-           Windows.ZeroMemory(@wsprintfBuffer, SizeOf(wsprintfBuffer));
-           TempPos := 0;
-
-           for TempColumn := 1 to 3 do
-              begin
-              for TempBand := Band160 to Band2 do
-                 begin
-                 TempFreq := Windows.GetDlgItemInt(hwnddlg, integer(TempBand) + TempColumn * 100, pTranslated, False);
-                 if not pTranslated then Continue;
-                 if TempColumn = 1 then
-                    begin
-                    BandMapModeCutoffFrequency[TempBand] := TempFreq;
-                    TempPos := TempPos + TF.Format(@wsprintfBuffer[TempPos], 'BAND MAP CUTOFF FREQUENCY=%u', TempFreq) + 1;
-                    end;
-                 if TempColumn = 2 then
-                    begin
-                    DefaultFreqMemory[TempBand, CW] := TempFreq;
-                    TempPos := TempPos + TF.Format(@wsprintfBuffer[TempPos], 'FREQUENCY MEMORY=%u', TempFreq) + 1;
-                    end;
-                 if TempColumn = 3 then
-                    begin
-                    DefaultFreqMemory[TempBand, Phone] := TempFreq;
-                    TempPos := TempPos + TF.Format(@wsprintfBuffer[TempPos], 'FREQUENCY MEMORY=SSB %u', TempFreq) + 1;
-                    end;
-
-                 end;
-
-              end;
-
-           WritePrivateProfileSectionA('BAND PLAN', wsprintfBuffer, TR4W_INI_FILENAME);
-           goto ExitAndClose;
-           end;
-
-        if wParam = 2 then
-           begin
-           goto ExitAndClose;
-           end;
-
-      end;
-
-    WM_CLOSE:
-      begin
-        ExitAndClose:
-        EndDialog(hwnddlg, 0);
-      end;
-
-  end;
-end;
-
+  uBandPlanForm;
 
 procedure ShowBandPlan(const aParent: HWND);
 begin
-   CreateModalDialog(200, 155, aParent, @BMCFDlgProc, 0);
+   uBandPlanForm.ShowBandPlan(aParent);
 end;
-end.
 
+end.

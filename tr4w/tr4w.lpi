@@ -38,7 +38,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="317">
+    <Units Count="318">
       <Unit0>
         <Filename Value="tr4w.dpr"/>
         <IsPartOfProject Value="True"/>
@@ -99,6 +99,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit316>
+      <Unit317>
+        <Filename Value="src/ui/lcl/uBandPlanForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmBandPlan"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit317>
       <Unit3>
         <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
         <IsPartOfProject Value="True"/>

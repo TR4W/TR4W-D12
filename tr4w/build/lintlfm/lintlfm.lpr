@@ -38,7 +38,8 @@ uses
    StdCtrls,
    ComCtrls,
    ExtCtrls,
-   Spin;       // TSpinEdit -- Auto-CQ's delay field
+   Spin,       // TSpinEdit -- Auto-CQ's delay field
+   Grids;      // TStringGrid -- the band plan
 
 var
    gFiles:  integer = 0;
@@ -320,7 +321,9 @@ begin
                     TListView, TProgressBar, TTrackBar, TStatusBar, TToolBar,
                     TUpDown,
                     // Spin
-                    TSpinEdit, TFloatSpinEdit]);
+                    TSpinEdit, TFloatSpinEdit,
+                    // Grids
+                    TStringGrid, TDrawGrid]);
 
    if ParamCount = 0 then
       begin

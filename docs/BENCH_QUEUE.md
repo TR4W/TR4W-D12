@@ -61,6 +61,31 @@ Converted tonight; not yet opened once.
       zero means "nothing chosen", so a missed clearing path would move whatever
       window was picked the *previous* time it was opened.
 
+### 4. Band plan editor — Settings, then the band-plan button  (`uBandPlanForm`)
+
+Converted tonight from 33 generated edit boxes to a single `TStringGrid`.
+
+- [ ] It **opens** and shows one row per band with the three current values.
+- [ ] Editing a cell and pressing **OK** writes `[BAND PLAN]` in `tr4w.ini` and
+      the new values survive a restart.
+- [ ] **Cancel changes nothing.**
+- [ ] A cell left **empty or non-numeric is skipped** — that band keeps its old
+      value rather than becoming 0.
+
+**A DECISION FOR NY4I, not a defect.** The grid costs **295 KB of binary**
+(4734 -> 5029 KB, ~6%): `Grids` is linked for the first time and nothing else in
+TR4W uses it. It buys one designed control instead of 33 generated ones, and a
+dialog that keeps working when a band is added to `BandType`. Two standing rules
+point opposite ways here — "limit hand-coding of LCL components" versus "assume
+every dependency has a cost" — so this is flagged rather than silently chosen.
+Say the word and it goes back to generated `TEdit`s with no new unit linked.
+
+**Also worth knowing while testing:** the ROW does not decide the band — the
+FREQUENCY does. Both loaders call `CalculateBandMode` on the value, so typing a
+20m frequency into the 80m row updates 20m. That is pre-existing behaviour, not
+new, and it surprised me enough while reading that it is worth surprising you
+deliberately rather than accidentally.
+
 ---
 
 ## Known and accepted — no action, listed so they are not re-reported
