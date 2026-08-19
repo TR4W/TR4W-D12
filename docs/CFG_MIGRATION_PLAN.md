@@ -933,6 +933,39 @@ change an exported log for anyone who had overridden it.
 The read side already exists — a contest `.cfg` naming a migrated command applies
 it and wins while that contest is loaded. What is missing is the UI half.
 
+## The function-key messages belong to the CONTEST, not to the settings store (NY4I, 2026-08-19)
+
+While the Program message editor was being converted, NY4I: *"It occurs to me
+that these items would go into the contest.sqlite since they are related to the
+contest -- just to keep that in mind. But fixing this so the CFG works for now is
+good."*
+
+Recording it because it settles a question this plan does not otherwise answer,
+and because the answer is **not** "another key in tr4w.json".
+
+**Where they live today.** `CQ CW MEMORY F1..F12`, their `... CAPTION` twins, and
+the exchange and other-message banks are written to the **contest `.cfg`**
+(`TR4W_CFG_FILENAME`, `[Messages]` section) by the Program message editor, and
+read back through `CheckCommand`. They are *not* in `tr4w.json` -- checked,
+2026-08-19: that file has no `MEMORY` key at all.
+
+**Why that is right rather than an oversight.** A CQ message contains the
+contest's exchange. It is not a station preference that should follow the
+operator between contests, which is what `tr4w.json` is for. The same argument
+this plan already makes for the `MY *` family -- station identity is not contest
+configuration -- runs the other way here: contest configuration is not station
+identity.
+
+**Where they are going.** The contest database, alongside the log, when log
+storage moves to SQLite. Not `tr4w.json`, and not a fourth store invented for
+them.
+
+**What that means for work done now.** Nothing is blocked. The `.cfg` write is a
+legitimate target under the "nothing uses the ini" rule (`c823c055` classified
+every remaining `WritePrivateProfileString` call site, and this is one of the
+contest-config ones). Fixing it in place is correct; it simply should not grow a
+JSON mirror on the way past.
+
 ## What does not belong in Preferences
 
 Not every CFGCA row is a *setting*. Some are per-contest state, some are commands rather than

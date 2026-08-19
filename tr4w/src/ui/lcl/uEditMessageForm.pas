@@ -304,46 +304,70 @@ end;
 
 procedure TfrmEditMessage.SaveToConfig;
 var
-  id, cmd: ShortString;
+  idShort, cmdShort: ShortString;
+  idText, valueText: AnsiString;
   capValue: PAnsiChar;
-  capText: AnsiString;
+
+  procedure WriteKey(const aKey: AnsiString; const aValue: PAnsiChar;
+                     const aCheckValue: ShortString);
+  var
+     k: ShortString;
+  begin
+     // TWO SPELLINGS OF THE SAME KEY, DELIBERATELY, AND THIS IS WHERE IT BIT.
+     //
+     // WritePrivateProfileStringA wants a NULL-TERMINATED PAnsiChar, and an
+     // AnsiString is one.  CheckCommand wants the LENGTH-PREFIXED ShortString
+     // form -- it is called as CheckCommand(@k, ...), so the byte it points at
+     // is the length.  Handing either one the other's layout is silent
+     // corruption, not a type error.
+     //
+     // NY4I found exactly that: `id := ShortString(caption)` sets the length
+     // byte and leaves NO terminator, so @id[1] ran past the text into stale
+     // stack bytes and the .cfg got
+     //     CQ CW MEMORY F5<A4><AE>6w=<01>
+     // -- a brand new key rather than an edit of the real one, which is why the
+     // memory "showed up differently". Same defect class as the radio-name
+     // overrun (56a8ae97); the Win32 original avoided it only by accident,
+     // because GetDlgItemTextA null-terminates what it writes.
+     k := ShortString(aKey);
+     Windows.WritePrivateProfileStringA(MESSAGES_SECTION, PAnsiChar(aKey), aValue,
+                                        @TR4W_CFG_FILENAME);
+     CheckCommand(@k, aCheckValue);
+  end;
+
 begin
    // THE CONTEST .cfg, NOT tr4w.ini. Different file, different rule -- see the
    // unit header and c823c055.
-   id  := ShortString(lblKeyName.Caption);
-   cmd := ShortString(edtMessage.Text);
-   DeleteEscapeChars(cmd);
+   idText  := AnsiString(lblKeyName.Caption);
 
-   Windows.WritePrivateProfileStringA(MESSAGES_SECTION, @id[1], @cmd[1],
-                                      @TR4W_CFG_FILENAME);
-   CheckCommand(@id, cmd);
+   cmdShort := ShortString(edtMessage.Text);
+   DeleteEscapeChars(cmdShort);
+   valueText := AnsiString(cmdShort);
+
+   WriteKey(idText, PAnsiChar(valueText), cmdShort);
 
    if MesWindow = OtherMsgWin then
       begin
       Exit;      // no function-key button, so no caption
       end;
 
-   capText := AnsiString(edtCaption.Text);
-   id := ShortString(lblKeyName.Caption) + ' CAPTION';
+   valueText := AnsiString(edtCaption.Text);
 
    // A nil VALUE deletes the key. An empty caption therefore REMOVES the entry
    // rather than writing a blank one, which is what the original did by setting
    // p to nil -- and it matters, because a blank caption and an absent one are
    // read differently.
-   if capText = '' then
+   if valueText = '' then
       begin
       capValue := nil;
       end
    else
       begin
-      capValue := PAnsiChar(capText);
+      capValue := PAnsiChar(valueText);
       end;
 
-   Windows.WritePrivateProfileStringA(MESSAGES_SECTION, @id[1], capValue,
-                                      @TR4W_CFG_FILENAME);
-
-   cmd := ShortString(capText);
-   CheckCommand(@id, cmd);
+   idShort := ShortString(valueText);
+   WriteKey(idText + ' CAPTION', capValue, idShort);
 end;
 
 procedure TfrmEditMessage.btnOKClick(Sender: TObject);
