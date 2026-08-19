@@ -171,6 +171,7 @@ uses
   uSettingsBinding in 'src\ui\lcl\uSettingsBinding.pas',
   uUDPDestinationEditForm in 'src\ui\lcl\uUDPDestinationEditForm.pas',
   uAltDForm in 'src\ui\lcl\uAltDForm.pas',
+  uWinManagerForm in 'src\ui\lcl\uWinManagerForm.pas',
   uMessagesListForm in 'src\ui\lcl\uMessagesListForm.pas',
   uEditMessageForm in 'src\ui\lcl\uEditMessageForm.pas',
   uSendKeyboardForm in 'src\ui\lcl\uSendKeyboardForm.pas',

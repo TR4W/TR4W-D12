@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -29,11 +29,20 @@ uses
   Windows,
   Messages;
 
-function WindowsManagerDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{
+  THE WINDOW-CONTROL SEAM.  The dialog itself is now an LCL form --
+  src\ui\lcl\uWinManagerForm.pas -- and this unit keeps the entry point and
+  ManageWindow, which is where the caller reads the chosen window.
+
+  DELETED here, not wrapped (Phase 4b): WindowsManagerDlgProc, its
+  Enumtr4wWindowsProc callback and CreateListBox, and the FIVE gotos -- three
+  labels (FlashWind, SelectItem, ExitAndClose) that existed only because a
+  DlgProc is one procedure handling every message with no other way to share an
+  exit path.  A form has Close.
+}
 
 var
   ManageWindow                          : HWND;
-
 
 // the Window control dialog.
 //
@@ -42,106 +51,18 @@ var
 // When the dialog becomes an LCL form, this body changes and nothing else
 // does. Deliberately here, in the unit that owns the DlgProc, rather than at
 // the call site.
+//
+// Phase 4b, 2026-08-19: that is exactly what happened, and no call site moved.
 procedure ShowWindowsManager;
 
 implementation
-uses MainUnit;
 
-var
-  Manager                               : HWND;
-
-function Enumtr4wWindowsProc(wnd: HWND; l: lParam): BOOL; stdcall;
-begin
-  Result := True;
-  if (Windows.GetParent(wnd) = tr4whandle) or (wnd = tr4whandle) then
-    if IsWindowVisible(wnd) then
-       begin
-       Windows.GetWindowTextA(wnd, wsprintfBuffer, 100);
- //      if wnd = tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndHandle then Exit;
-       Windows.SendMessage(Manager, LB_SETITEMDATA, Windows.SendMessageA(Manager, LB_ADDSTRING, 0, integer(@wsprintfBuffer)), wnd);
-       end;
-end;
-
-function WindowsManagerDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  FlashWind, SelectItem, ExitAndClose;
-begin
-  Result := False;
-  case Msg of
-    WM_INITDIALOG:
-      begin
-        Windows.SetWindowTextA(hwnddlg, RC_WINCONTROL2);
-        Manager := CreateListBox(0, 0, 300, 200, hwnddlg, 101);
-        CreateOKCancelButtons(hwnddlg);
-
-        //Manager := Get101Window(hwnddlg);
-        ManageWindow := 0;
-//        WindowIndexInManager := 0;
-//        wmhwnd := hwnddlg;
-//        Windows.RegisterHotKey(hwnddlg, 1, MOD_ALT or MOD_CONTROL, Ord('M'));
-        EnumWindows(@Enumtr4wWindowsProc, 0);
-        Windows.SendMessage(Manager, LB_SETCURSEL, 0, 0);
-      end;
-{
-    WM_HOTKEY:
-      begin
-        i := tLB_GETCURSEL(Manager);
-        if i = Windows.SendMessage(Manager, LB_GETCOUNT, 0, 0) - 1 then i := 0
-        else inc(i);
-        Windows.SendMessage(Manager, LB_SETCURSEL, i, 0);
-        goto FlashWind;
-      end;
-}
-    WM_CLOSE:
-      begin
-        ManageWindow := 0;
-        ExitAndClose:
-//        UnregisterHotKey(hwnddlg, 1);
-        EndDialog(hwnddlg, 0);
-      end;
-{$IFDEF LANG_RUS}
-    WM_HELP: ShowHelp('ru_windowscontrol');
-{$ENDIF}
-
-    WM_COMMAND:
-
-      begin
-
-        if HiWord(wParam) = LBN_SELCHANGE then
-           begin
-           goto FlashWind;
-           end;
-        if HiWord(wParam) = LBN_DBLCLK then
-           begin
-           goto SelectItem;
-           end;
-
-        case wParam of
-          2:
-            begin
-              ManageWindow := 0;
-              goto ExitAndClose;
-            end;
-          1:
-            begin
-              SelectItem:
-              ManageWindow := Windows.SendMessage(Manager, LB_GETITEMDATA, tLB_GETCURSEL(Manager), 0);
-              goto ExitAndClose;
-            end;
-
-        end;
-      end;
-  end;
-  Exit;
-  FlashWind:
-  ManageWindow := Windows.SendMessage(Manager, LB_GETITEMDATA, tLB_GETCURSEL(Manager), 0);
-  Windows.FlashWindow(ManageWindow, True)
-end;
-
+uses
+  uWinManagerForm;
 
 procedure ShowWindowsManager;
 begin
-   CreateModalDialog(150, 120, tr4whandle, @WindowsManagerDlgProc, 0);
+   uWinManagerForm.ShowWindowsManager;
 end;
-end.
 
+end.

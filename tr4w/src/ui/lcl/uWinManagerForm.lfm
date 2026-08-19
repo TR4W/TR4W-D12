@@ -1,0 +1,47 @@
+object frmWinManager: TfrmWinManager
+  Left = 0
+  Height = 245
+  Top = 0
+  Width = 310
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Window control'
+  ClientHeight = 245
+  ClientWidth = 310
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object lstWindows: TListBox
+    Left = 5
+    Height = 200
+    Top = 5
+    Width = 300
+    ItemHeight = 0
+    OnDblClick = lstWindowsDblClick
+    OnSelectionChange = lstWindowsSelectionChange
+    ScrollWidth = 298
+    TabOrder = 0
+  end
+  object btnOK: TButton
+    Left = 70
+    Height = 25
+    Top = 212
+    Width = 80
+    AutoSize = False
+    Caption = 'OK'
+    Default = True
+    OnClick = btnOKClick
+    TabOrder = 1
+  end
+  object btnCancel: TButton
+    Left = 160
+    Height = 25
+    Top = 212
+    Width = 80
+    AutoSize = False
+    Cancel = True
+    Caption = 'Cancel'
+    OnClick = btnCancelClick
+    TabOrder = 2
+  end
+end
