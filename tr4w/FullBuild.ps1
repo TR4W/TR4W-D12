@@ -449,11 +449,19 @@ if ($BuildInstaller)
    # -NsisBin (or $env:NSIS_BIN) first, then the usual install locations. CI
    # pins it explicitly so a release build cannot depend on where an installer
    # happened to put things.
+   #
+   # The usual locations are searched on EVERY fixed drive, not just C:, via the
+   # same Get-Tr4wFixedDriveRoots that Find-Toolchain uses -- a PC whose tools
+   # live on D: is a normal PC, not a misconfiguration, and hardcoding C: made
+   # it look like NSIS was missing when it was merely elsewhere.
    $nsisCandidates = @()
    if ($NsisBin)      { $nsisCandidates += (Join-Path $NsisBin      'makensis.exe') }
    if ($env:NSIS_BIN) { $nsisCandidates += (Join-Path $env:NSIS_BIN 'makensis.exe') }
-   $nsisCandidates += 'C:\Program Files (x86)\NSIS\makensis.exe'
-   $nsisCandidates += 'C:\Program Files\NSIS\makensis.exe'
+   foreach ($drive in Get-Tr4wFixedDriveRoots)
+      {
+      $nsisCandidates += (Join-Path $drive 'Program Files (x86)\NSIS\makensis.exe')
+      $nsisCandidates += (Join-Path $drive 'Program Files\NSIS\makensis.exe')
+      }
 
    $makensis = $nsisCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 

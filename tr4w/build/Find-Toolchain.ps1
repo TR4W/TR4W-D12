@@ -18,12 +18,57 @@
 #     x86_64-only and cannot build TR4W at all. Finding "a Lazarus" is not
 #     enough; finding one with the right units is.
 #
+# WHERE IT LOOKS.  Every FIXED drive, not just C:.  The install roots below are
+# relative names crossed with each fixed drive root, because "C:" is not a fact
+# about the user's machine -- it was a fact about the machine this script was
+# written on.  N4AF hit exactly that on 2026-08-19: a correct 32-bit FPC +
+# Lazarus install on a PC whose tools live on D:, reported as TOOLCHAIN NOT
+# FOUND with no hint that the drive was the problem.
+#
 # Overrides, highest priority first: explicit -Fpc/-Laz parameters, then the
 # FPC_HOME / LAZARUS_DIR environment variables, then discovery.
 #
 # FAILS LOUD AND SPECIFIC. On failure it reports every location it looked in,
 # because "toolchain not found" with no list is the least useful build error
 # there is.
+
+# Roots of every fixed local drive, C:\ first -- e.g. @('C:\', 'D:\').
+#
+# FIXED ONLY.  A removable or optical drive would make discovery depend on what
+# happens to be plugged in, and an unready network drive can stall Test-Path for
+# seconds on every build.  IsReady also excludes a locked BitLocker volume.
+#
+# C:\ is emitted first and unconditionally, so this can never find LESS than the
+# hardcoded C: list it replaced, and the common case is still tested first.
+#
+# It lives in this file because FullBuild.ps1 already dot-sources it and is the
+# only other caller (NSIS discovery).  A third caller is the moment to give it
+# its own file -- not before.
+function Get-Tr4wFixedDriveRoots
+   {
+   $roots = [System.Collections.Generic.List[string]]::new()
+   $roots.Add('C:\')
+
+   try
+      {
+      [System.IO.DriveInfo]::GetDrives() |
+         Where-Object { $_.DriveType -eq [System.IO.DriveType]::Fixed -and $_.IsReady } |
+         ForEach-Object { $_.RootDirectory.FullName } |
+         Sort-Object |
+         ForEach-Object {
+            # -notcontains is case-insensitive, which is what we want here: C:\
+            # must not be added twice because GetDrives spells it differently.
+            if ($roots -notcontains $_) { $roots.Add($_) }
+         }
+      }
+   catch
+      {
+      # Enumeration failed.  C:\ alone is exactly the old behaviour, so degrade
+      # to it rather than failing a build over a drive-listing hiccup.
+      }
+
+   return $roots
+   }
 
 function Find-Tr4wToolchain
    {
@@ -105,15 +150,29 @@ function Find-Tr4wToolchain
       $onPath = Get-Command 'fpc.exe' -ErrorAction SilentlyContinue
       if ($onPath) { $fpcCandidates.Add($onPath.Source) }
 
-      # Common layouts, newest version directory first so a machine with several
-      # FPC versions picks the newest rather than an arbitrary one.
-      foreach ($base in @('C:\FPC', 'C:\fpc', 'C:\fpcupdeluxe\fpc', 'C:\lazarus\fpc', 'C:\Lazarus\fpc'))
+      # Common layouts, on every fixed drive, newest version directory first so a
+      # machine with several FPC versions picks the newest rather than arbitrary.
+      #
+      # Windows paths are case-insensitive, so the old list's 'C:\FPC' + 'C:\fpc'
+      # pair named ONE directory.  Kept as a single entry here: crossing a
+      # duplicate with every drive pads the not-found listing without testing
+      # anything new.
+      foreach ($drive in Get-Tr4wFixedDriveRoots)
          {
-         if (-not (Test-Path -LiteralPath $base)) { continue }
-         $fpcCandidates.Add((Join-Path $base "bin\$Cpu-$Os\fpc.exe"))
-         Get-ChildItem -LiteralPath $base -Directory -ErrorAction SilentlyContinue |
-            Sort-Object Name -Descending |
-            ForEach-Object { $fpcCandidates.Add((Join-Path $_.FullName "bin\$Cpu-$Os\fpc.exe")) }
+         foreach ($rel in @('FPC', 'fpcupdeluxe\fpc', 'Lazarus\fpc'))
+            {
+            $base = Join-Path $drive $rel
+
+            # Added even when $base does not exist, so a wrong-drive install
+            # shows up in the 'Looked in' list instead of being skipped in
+            # silence.  That listing is the entire diagnostic a remote user has.
+            $fpcCandidates.Add((Join-Path $base "bin\$Cpu-$Os\fpc.exe"))
+
+            if (-not (Test-Path -LiteralPath $base)) { continue }
+            Get-ChildItem -LiteralPath $base -Directory -ErrorAction SilentlyContinue |
+               Sort-Object Name -Descending |
+               ForEach-Object { $fpcCandidates.Add((Join-Path $_.FullName "bin\$Cpu-$Os\fpc.exe")) }
+            }
          }
       }
 
@@ -137,9 +196,12 @@ function Find-Tr4wToolchain
       }
    else
       {
-      foreach ($base in @('C:\Lazarus', 'C:\lazarus', 'C:\fpcupdeluxe\lazarus'))
+      foreach ($drive in Get-Tr4wFixedDriveRoots)
          {
-         $lazCandidates.Add($base)
+         foreach ($rel in @('Lazarus', 'fpcupdeluxe\lazarus'))
+            {
+            $lazCandidates.Add((Join-Path $drive $rel))
+            }
          }
       }
 

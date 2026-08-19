@@ -46,7 +46,7 @@ The site usually defaults to the 64-bit Windows build, so be sure to select the 
 ## Verify before you build
 
 One command answers the only question that matters — *what will the build actually use*.
-From a **cmd prompt** — see [If PowerShell refuses to run the scripts](#if-powershell-refuses-to-run-the-scripts):
+Run it from a **cmd prompt** — see [If PowerShell refuses to run the scripts](#if-powershell-refuses-to-run-the-scripts) — and **from the repo root**, since every path in this document is written relative to it:
 
 ```bat
 tr4w\build\Find-Toolchain.cmd
@@ -72,6 +72,10 @@ A clean machine to a shippable installer is **one installer, one clone, one comm
 
 Tool locations are **discovered**, not configured. `tr4w\build\Find-Toolchain.ps1` searches `PATH`, the usual install roots, and the `FPC_HOME` / `LAZARUS_DIR` environment variables, and prints every path it tried when it fails.
 Setting those variables is usually only needed for a non-default install or CI.
+
+**The drive does not matter.** The usual roots (`\FPC`, `\Lazarus`, `\fpcupdeluxe\...`) are searched on **every fixed drive**, so a toolchain on `D:` is found exactly like one on `C:`.
+Removable, optical and network drives are skipped deliberately: discovery must not depend on what happens to be plugged in, and an unready network drive can stall the search on every build.
+What is *not* searched is `Program Files` — if you installed there, or anywhere else unusual, use the pin below.
 
 Pin them explicitly on CI:
 
@@ -105,8 +109,10 @@ That is the default state of a fresh Windows install, not a misconfiguration. **
 
 Each wrapper resolves its own directory (`%~dp0`), so it works from any current directory; forwards all arguments; and returns the script's exit code, so a failing lint or test still fails the command.
 
-Three things worth knowing:
+Four things worth knowing:
 
+- **Run the `.cmd` itself. Do not type `cmd` in front of it, and do not aim it at the `.ps1`.** `cmd tr4w\FullBuild.ps1` does not build anything. Without `/c` or `/k`, `cmd.exe` ignores a bare argument, prints its version banner and drops you into a *nested* command prompt — so it returns instantly, writes nothing to `target\`, and looks like a build that failed silently. No build ran at all. The command is `tr4w\FullBuild.cmd`. (Reported by N4AF, 2026-08-19.)
+- **`FullBuild` lives in `tr4w\`, not in `tr4w\build\`.** The two are easy to confuse because every *other* script in the table is under `build\`. Run it from the repo root as `tr4w\FullBuild.cmd`, or use `utils\Build.cmd`, which is the same build.
 - **`-ExecutionPolicy Bypass` on the command line changes nothing on the machine.** It applies to that one PowerShell process. It needs no elevation, and it is not the same as `Set-ExecutionPolicy`.
 - **`Find-Toolchain.cmd` is the odd one out.** `Find-Toolchain.ps1` is a *library* — running it does nothing, it only defines `Find-Tr4wToolchain` — so its wrapper dot-sources and calls the function rather than using `-File`. A consequence: its arguments are parsed by PowerShell, so a path with spaces needs **single** quotes (`-Laz 'C:\Program Files\Lazarus'`). The other wrappers take ordinary cmd double quotes.
 - If a Group Policy has set the execution policy at machine or user scope, `Bypass` on the command line is refused and even the `.cmd` fails. That is a managed-machine question for whoever manages it — the wrappers cannot work around it and deliberately do not try.
