@@ -127,6 +127,33 @@ Open it with a log that has QSOs on several bands, or the grid says nothing.
       should add to roughly 100%.
 - [ ] **Escape closes it.** It has no buttons and never did.
 
+### 7. Log comparison dialog  (`uLogCompareForm`)
+
+**Multi-op only** -- it appears by itself when a client's log does not match the
+server's. To provoke it, connect a client whose `.dat` differs from the server's
+(a few QSOs logged while disconnected will do).
+
+- [ ] It **opens** and the table shows six rows -- size, records, CRC32, USQ,
+      USQE, contest -- with a **server** and a **local** column. USQ and USQE are
+      local-only counters, so their server cells are **blank on purpose**.
+- [ ] The **records** row is bytes/record minus one; the log's first record is a
+      header, so a 10-QSO log reads 10, not 11.
+- [ ] **Synchronize is greyed when the contests differ.** That is the one thing
+      this dialog must not allow -- it would merge one contest's QSOs into
+      another's log. A server that has not said which contest yet reads
+      DUMMYCONTEST, and that is NOT a mismatch, so Synchronize stays available.
+- [ ] **Synchronize** closes this window and then opens the server-log dialog.
+- [ ] **THE FIX WORTH TESTING:** closing with **Exit**, **Escape** or the window
+      **X** must **NOT** open the server-log dialog. It could before, at random.
+      The flag meaning "the operator pressed Synchronize" was a LOCAL of the
+      window procedure, so a close that did not come from that button read it
+      uninitialised -- whatever happened to be on the stack. Someone had already
+      seen the symptom: there is a commented-out attempt at a fix in the old code
+      that could not have worked either. It is a field now.
+- [ ] **Clear all logs** does what the menu item does, and closes.
+- [ ] If the local log **cannot be opened**, the window closes immediately rather
+      than drawing a comparison against a log that is not there. Unchanged.
+
 ---
 
 ## Known and accepted — no action, listed so they are not re-reported

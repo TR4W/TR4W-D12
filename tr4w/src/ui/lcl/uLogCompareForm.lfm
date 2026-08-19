@@ -1,0 +1,58 @@
+object frmLogCompare: TfrmLogCompare
+  Left = 0
+  Height = 265
+  Top = 0
+  Width = 460
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Differences in the log'
+  ClientHeight = 265
+  ClientWidth = 460
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object lvCompare: TListView
+    Left = 8
+    Height = 160
+    Top = 8
+    Width = 444
+    Columns = <>
+    GridLines = True
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 0
+    ViewStyle = vsReport
+  end
+  object btnSynchronize: TButton
+    Left = 55
+    Height = 25
+    Top = 180
+    Width = 160
+    AutoSize = False
+    Caption = 'Synchronize'
+    Default = True
+    OnClick = btnSynchronizeClick
+    TabOrder = 1
+  end
+  object btnClearAllLogs: TButton
+    Left = 55
+    Height = 25
+    Top = 215
+    Width = 160
+    AutoSize = False
+    Caption = 'Clear all logs'
+    OnClick = btnClearAllLogsClick
+    TabOrder = 2
+  end
+  object btnExit: TButton
+    Left = 240
+    Height = 25
+    Top = 180
+    Width = 160
+    AutoSize = False
+    Cancel = True
+    Caption = 'Exit'
+    OnClick = btnExitClick
+    TabOrder = 3
+  end
+end
