@@ -79,13 +79,14 @@ Converted tonight from 33 generated edit boxes to a single `TStringGrid`.
 - [ ] A cell left **empty or non-numeric is skipped** — that band keeps its old
       value rather than becoming 0.
 
-**A DECISION FOR NY4I, not a defect.** The grid costs **295 KB of binary**
-(4734 -> 5029 KB, ~6%): `Grids` is linked for the first time and nothing else in
-TR4W uses it. It buys one designed control instead of 33 generated ones, and a
-dialog that keeps working when a band is added to `BandType`. Two standing rules
-point opposite ways here — "limit hand-coding of LCL components" versus "assume
-every dependency has a cost" — so this is flagged rather than silently chosen.
-Say the word and it goes back to generated `TEdit`s with no new unit linked.
+**DECIDED 2026-08-19 (NY4I): the grid stays.** It cost **295 KB of binary**
+(4734 -> 5029 KB, ~6%) because `Grids` is linked for the first time and nothing
+else in TR4W uses it. Two standing rules pointed opposite ways — "limit
+hand-coding of LCL components" against "assume every dependency has a cost" —
+and the first wins here: one designed control instead of 33 generated ones, and a
+dialog that keeps working when a band is added to `BandType`. Recorded so the
+size is not re-litigated, and so the next unit that wants `Grids` knows it is
+already paid for.
 
 **Also worth knowing while testing:** the ROW does not decide the band — the
 FREQUENCY does. Both loaders call `CalculateBandMode` on the value, so typing a
