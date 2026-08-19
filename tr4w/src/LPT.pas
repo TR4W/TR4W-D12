@@ -40,8 +40,17 @@ uses
 
 var
 LPTBaseAddressArray                   : array[Parallel1..Parallel3] of Cardinal = ($378, $278, $3BC);  
-function LPTDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{
+  THE LPT SEAM.  The dialog itself is now an LCL form --
+  src\ui\lcl\uLPTForm.pas -- and this unit keeps the entry point and
+  LPTBaseAddressArray.
 
+  DELETED here, not wrapped (Phase 4b): LPTDlgProc, its two loops building nine
+  static/edit and static/combo pairs, the three gotos, and three arms that
+  could never run -- control 50 (an Apply button that is enabled and disabled
+  but never created) and the wParam 51 and 52 handlers, which no control could
+  send because no control with those ids exists.
+}
 
 // the LPT port dialog.
 //
@@ -50,169 +59,18 @@ function LPTDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): B
 // When the dialog becomes an LCL form, this body changes and nothing else
 // does. Deliberately here, in the unit that owns the DlgProc, rather than at
 // the call site.
+//
+// Phase 4b, 2026-08-19: that is exactly what happened, and no call site moved.
 procedure ShowLPTDialog;
 
 implementation
-uses MainUnit;
 
-function LPTDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  ExitAndClose;
-var
-  c                                     : Cardinal;
-  Top                                   : Cardinal;
-  ID, CMD                               : ShortString;
-  Style                                 : Cardinal;
-//  p                                     : PChar;
-const
-  LPTPortNamesArray                     : array[1..6] of PAnsiChar = ('FOOT SWITCH', 'PADDLE', 'RADIO ONE BAND OUTPUT', 'RADIO TWO BAND OUTPUT', 'RELAY CONTROL', 'STEREO CONTROL');
-begin
-  Result := False;
-  case Msg of
-    //    WM_HELP: tWinHelp(49);
-    WM_INITDIALOG:
-      begin
-
-        CreateOKCancelButtons(hwnddlg);
-        Windows.SetWindowTextA(hwnddlg, 'LPT');
-
-        for c := 1 to 3 do
-           begin
-           Top := c * (17 + 8);
-
-           TF.Format(wsprintfBuffer, 'LPT%u BASE ADDRESS', c);
-
-           tCreateStaticWindow(wsprintfBuffer, LeftVisNoSunStyle, 10, Top, 180, 17, hwnddlg, 100 + c);
-           tCreateEditWindow(WS_EX_STATICEDGE, '', ES_UPPERCASE or ES_NUMBER or WS_TABSTOP or WS_CHILD or SS_center or WS_VISIBLE, 200, Top, 80, 17, hwnddlg, 200 + c);
-           end;
-        tSetDlgItemIntFalse(hwnddlg, 201, LPTBaseAA[Parallel1]);
-        tSetDlgItemIntFalse(hwnddlg, 202, LPTBaseAA[Parallel2]);
-        tSetDlgItemIntFalse(hwnddlg, 203, LPTBaseAA[Parallel3]);
-
-        for c := 1 to 6 do
-           begin
-           Top := c * (17 + 8) + 100;
-
-           TF.Format(wsprintfBuffer, '%s PORT', LPTPortNamesArray[c]);
-
-           tCreateStaticWindow(wsprintfBuffer, LeftVisNoSunStyle, 10, Top, 180, 17, hwnddlg, 103 + c);
-           Style := CBS_DROPDOWNLIST or WS_CHILD or WS_VISIBLE or WS_VSCROLL or WS_TABSTOP;
-           if tUseControlPort and (c < 3) then
-              begin
-              Style := Style or WS_DISABLED;
-              end;
-
-           tCreateComboBoxWindow(Style, 200, Top, 80, hwnddlg, 203 + c);
-
-           tCB_ADDSTRING(hwnddlg, 203 + c, 'NONE');
-           for Top := 1 to 3 do
-              begin
-              tCB_ADDSTRING(hwnddlg, 203 + c, IntToStr(Top));
-              end;
-           tCB_SETCURSEL(hwnddlg, 203 + c, 0);
-           end;
-        if ActiveFootSwitchPort <> NoPort then
-           begin
-           tCB_SETCURSEL(hwnddlg, 204, Ord(ActiveFootSwitchPort) - 20);
-           end;
-        if ActivePaddlePort <> NoPort then
-           begin
-           tCB_SETCURSEL(hwnddlg, 205, Ord(ActivePaddlePort) - 20);
-           end;
-
-        if Radio1.BandOutputPort <> NoPort then
-           begin
-           tCB_SETCURSEL(hwnddlg, 206, Ord(Radio1.BandOutputPort) - 20);
-           end;
-        if Radio2.BandOutputPort <> NoPort then
-           begin
-           tCB_SETCURSEL(hwnddlg, 207, Ord(Radio2.BandOutputPort) - 20);
-           end;
-        if RelayControlPort <> NoPort then
-           begin
-           tCB_SETCURSEL(hwnddlg, 208, Ord(RelayControlPort) - 20);
-           end;
-        if ActiveStereoPort <> NoPort then
-           begin
-           tCB_SETCURSEL(hwnddlg, 209, Ord(ActiveStereoPort) - 20);
-           end;
-        EnableWindowFalse(hwnddlg, 50);
-      end;
-    WM_COMMAND:
-      begin
-        if wParam = 2 then
-           begin
-           goto ExitAndClose;
-           end;
-        if wParam = 1 then              //n4af 4.37.6
-           begin
-           for c := 101 to 109 - 0 do
-              begin
-              Windows.ZeroMemory(@ID, SizeOf(ID));
-              Windows.ZeroMemory(@CMD, SizeOf(CMD));
-
-              ID := GetDialogItemText(hwnddlg, c);
-              CMD := GetDialogItemText(hwnddlg, c + 100);
-              // WAS: write the ini, THEN CheckCommand.  Exactly the inverted
-              // order SetCFGCommandValue exists to prevent -- a value CFGCA
-              // rejects still reached the operator's file, and the next start
-              // stopped on it with "Invalid statement in config file".
-              // SetCFGCommandValue validates first and persists only on success.
-              SetCFGCommandValue(string(ID), string(CMD));
-
-              tDoingFootSwitchEnable := ActiveFootSwitchPort <> NoPort;
-              DoingPaddle := ActivePaddlePort <> NoPort;
-              end;
-
-           if tUseControlPort then
-             if Radio1.tCATPortHandle <> INVALID_HANDLE_VALUE then
-                begin
-                DoingPaddle := True;
-                tDoingFootSwitchEnable := True;
-                end;
-
-           tDispalyPaddleAndFootSwitchStatus;
-
-           if (DoingPaddle = False) and (tDoingFootSwitchEnable = False) then
-              begin
-              tExitFromPaddleFootSwitchThread := True;
-              tPaddleFootSwitchThread := INVALID_HANDLE_VALUE;
-              end
-           else
-              begin
-              TryRunPaddleAndFootSwitchThread;
-              end;
-           InitializeOtherLPTPorts;
-             //              end;
-           goto ExitAndClose;
-           end;
-        if wParam = 51 then
-           begin
-           goto ExitAndClose;
-           end;
-        if wParam = 52 then
-           begin
-           MainUnit.ProcessMenu(item_calculator);
-           end;
-
-        if (HiWord(wParam) = CBN_SELCHANGE) or (HiWord(wParam) = EN_CHANGE) then
-           begin
-           EnableWindowTrue(hwnddlg, 50);
-           end;
-      end;
-
-    WM_CLOSE:
-      begin
-        ExitAndClose:
-        EndDialog(hwnddlg, 0);
-      end;
-
-  end;
-end;
+uses
+  uLPTForm;
 
 procedure ShowLPTDialog;
 begin
-   CreateModalDialog(145, 170, tr4whandle, @LPTDlgProc, 0);
+   uLPTForm.ShowLPTDialog;
 end;
-end.
 
+end.

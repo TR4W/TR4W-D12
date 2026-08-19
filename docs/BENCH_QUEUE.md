@@ -86,6 +86,24 @@ FREQUENCY does. Both loaders call `CalculateBandMode` on the value, so typing a
 new, and it surprised me enough while reading that it is worth surprising you
 deliberately rather than accidentally.
 
+### 5. LPT port dialog — Ctrl+Alt+L, or the LPT menu item  (`uLPTForm`)
+
+**Bench this one on hardware if you can**, because it is the dialog that decides
+which parallel port keys the paddle and reads the foot switch.
+
+- [ ] It **opens** and shows the three base addresses and the six port
+      assignments as they currently are.
+- [ ] **OK saves and takes effect** — the paddle and foot switch still work
+      afterwards, and the status display updates.
+- [ ] With the **radio control port in use**, the FOOT SWITCH and PADDLE combos
+      are **greyed** (they come off the radio, not off an LPT).
+- [ ] Setting every port to NONE stops the paddle/foot-switch thread; setting one
+      back starts it.
+- [ ] **Cancel changes nothing.**
+
+The base-address fields are numbers-only now, which they were before via
+`ES_NUMBER`.
+
 ---
 
 ## Known and accepted — no action, listed so they are not re-reported
