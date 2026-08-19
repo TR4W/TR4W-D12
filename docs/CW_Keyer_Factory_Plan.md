@@ -369,6 +369,56 @@ Golden corpus after every commit: `bash tr4w/test/corpus/export-d12-corpus.sh` �
 - **MMTTY branch** stays inline (mode dispatch, not a keyer). **DVK/DVP** separate domain. **Paddle** separate. **Legacy LOGRADIO CW protocol case** (:2405-2752) + legacy set guard (:2379) + commented kludge (:2398-2404) stay until legacy radio removal — the CAT adapter is the single future repoint.
 - `wkSwapTune` (uWinKey.pas:1073) divergence from scWK_SWAPTUNE — pre-existing, untouched.
 
+## CW-by-CAT does not stream, and that shapes two features (2026-08-18)
+
+**The mechanism.** `CWByCATSend` (`uCWKeyerCAT.pas`) does not transmit as it is
+called. It appends to `radio.CWByCATBuffer` and sends **nothing** until
+`CWByCATBufferTerminator` arrives, at which point the accumulated text is framed
+into one or more `KY` commands. Every other keyer streams: a WinKeyer takes a
+byte into its own hardware buffer and its read thread drains it continuously;
+the CPU keyer buffers and plays.
+
+So "send this text now" and "send these characters as they arrive" are the same
+operation for every keyer except this one.
+
+**Where it shows, both confirmed on NY4I's K4:**
+
+| feature | on a WinKeyer | on CW-by-CAT |
+|---|---|---|
+| Send-from-keyboard (Ctrl+A) | keys as you type | **kept silent until the box closed** until `1344701e` |
+| Autosend (`'` then typing the rest of a call) | smooth | **staccato** -- one `KY` per character |
+
+`1344701e` fixed the first by sending a terminator after each character, which is
+the pairing `MainUnit`'s autosend already used (`MainUnit.pas:4905`). That makes
+CAT behave like the WinKeyer *in timing* -- and it is worth noting this is now
+**better than D7**, which sent nothing at all from that box until Enter (NY4I
+checked, 2026-08-18).
+
+**The residue: `TEST` goes out as `KY T` `KY E` `KY S` `KY T`.** Four commands,
+four keying starts, a gap between each. Audible, and it is the same staccato as
+the autosend case because it is the same cause.
+
+**DELIBERATELY NOT GATED.** The obvious "fix" -- refusing keyboard CW on a
+CAT-keyed radio -- was considered and rejected (NY4I: *"let's not gate that just
+yet"*). Chopped keying beats no keying, and gating would remove a feature that
+does work.
+
+**Directions if this is picked up later**, none of them tried:
+
+- **Batch on a short timer.** Hold characters for ~100 ms and flush, so a normal
+  typing burst becomes one `KY`. Trades a little latency for continuity, and the
+  operator types faster than one character per keying period anyway.
+- **Keep the radio's buffer fed.** Elecraft's `TB` command reports how many
+  characters remain unsent; top the buffer up before it drains rather than
+  waiting for empty. Radio-specific, and the `CWFrame` capability is already the
+  place a radio states how its command must be cut up.
+- **A streaming capability on the keyer base.** Let a keyer declare whether it
+  streams, and have the callers that send character-at-a-time ask, rather than
+  each site rediscovering this.
+
+Until then: **the standing advice for SO2R is a WinKeyer** (NY4I), and this is a
+second concrete reason for it rather than only the SO2R interlock.
+
 ## Risks and mitigations
 
 - **Threading:** UI thread drives the facade; WinKeyer read thread calls `SetSpeed`; CWThreadProc+timeSetEvent do CPU timing. Adapters are stateless singletons created in unit initialization (before any thread starts) — no new shared mutable state, no locks. `LastLoggedKeyer` race is log-only.
