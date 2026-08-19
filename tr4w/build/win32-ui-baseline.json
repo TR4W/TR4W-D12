@@ -4,7 +4,7 @@
   "DialogBox*": 4,
   "CreateDialogIndirectParam": 2,
   "CreateDialogParam": 0,
-  "CreateWindowEx": 23,
+  "CreateWindowEx": 22,
   "TF.CreateStatic": 31,
   "TF.CreateButton": 29,
   "TF.CreateEdit": 12,

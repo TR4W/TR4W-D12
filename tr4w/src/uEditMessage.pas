@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -25,7 +25,6 @@ interface
 //
 uses
   uMessagesList,
-  uGradient,
   CFGCMD,
   TF,
   VC,
@@ -41,21 +40,8 @@ uses
 
 function EditMessageDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 function NewMsgEditProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
-procedure CreateHintListBox;
-function DestroyHintListBox: boolean;
-procedure AddHintsToHintListBox;
-procedure MoveSelectedItemInHintListBox(wParam: integer);
 procedure DeleteEscapeChars(var s: ShortString);
 
-type
-  THintMessageType = packed record
-    hmVisibleCommand: PChar;
-    hmCommand: PChar;
-    hmComment: PChar;
-
-  end;
-const
-  MESSAGESHINTS                         = 55;
 
 var
   flashreminder                         : boolean;
@@ -63,12 +49,8 @@ var
   MsgEditHWND                           : HWND;
   OldMsgEditProc                        : Pointer;
   AllowEscapes                          : boolean;
-  ControlSpace                          : boolean;
-  HintListView                          : HWND;
   EditMessageWnd                        : HWND;
 //  EditMessageWndRect                    : TRect;
-  SelectedItemInHitListBox              : integer;
-  HintListBoxCreated                    : boolean;
   SelPos                                : array[102..103] of integer = (255, 255);
 
 // the single-message editor.  Parent and message index both come from the
@@ -102,31 +84,6 @@ const
 begin
   Result := False;
   case Msg of
-{
-    WM_DRAWITEM:
-      begin
-
-        HDS := Pointer(lParam);
-        Index := SendMessage(HDS^.hwndItem, LB_GETITEMDATA, HDS^.ItemID, 0);
-        if (lobyte(HDS^.itemState) in [ODS_SELECTED]) or (HDS^.itemAction = ODA_FOCUS) then
-        begin
-          Windows.FillRect(HDS^.HDC, HDS^.rcItem, tr4wBrushArray[trBrown]);
-          Color1 := $FFFFFF;
-          Color2 := $FFFFFF;
-        end
-        else
-        begin
-          Color1 := $00FF0000;
-          Color2 := $00000000;
-          GradientRect(HDS^.HDC, HDS^.rcItem, $FFFFFF, $FFFFFF, gdHorizontal);
-        end;
-        SetBkMode(HDS^.HDC, TRANSPARENT);
-        Windows.SetTextColor(HDS^.HDC, Color2);
-        Windows.TextOutA(HDS^.HDC, HDS^.rcItem.Left + 120, HDS^.rcItem.Top, HintMessageArray[Index].hmComment, StrLen(HintMessageArray[Index].hmComment));
-        Windows.SetTextColor(HDS^.HDC, Color1);
-        Windows.TextOutA(HDS^.HDC, HDS^.rcItem.Left + 005, HDS^.rcItem.Top, HintMessageArray[Index].hmVisibleCommand, StrLen(HintMessageArray[Index].hmVisibleCommand));
-      end;
-}
     WM_INITDIALOG:
       begin
 
@@ -286,41 +243,10 @@ var
   i                                     : integer;
 begin
   Result := 0;
-  if Msg = WM_CHAR then
-     begin
-     // 3  -1070071807
-     // 4  -1070071807
-     //    if wParam = $2665 then showint(wParam);
-     //    wParam := 65;
-     //    Exit;
-         if ControlSpace then
-            begin
-            ControlSpace := False;
-            Exit;
-            end;
-     end;
-{
-  if Msg = WM_KEYUP then
-  begin
-    if wParam = 32 then
-      if GetKeyState(VK_CONTROL) < -126 then
-      begin
-        CreateHintListBox;
-        wParam := 0;
-      end;
-  end;
-}
   if Msg = WM_PASTE then if GetKeyState(VK_CONTROL) < -126 then Exit;
 
   if Msg = WM_KEYDOWN then
      begin
-     //    Windows.SetWindowTextA(EditMessageWnd, inttopchar(wParam));
-         if HintListBoxCreated then
-           if wParam in [VK_UP, VK_DOWN, VK_HOME, VK_END, VK_PRIOR, VK_NEXT] then
-              begin
-              MoveSelectedItemInHintListBox(wParam);
-              Exit;
-              end;
          if GetKeyState(VK_CONTROL) < -126 then
             begin
 
@@ -366,132 +292,16 @@ begin
 //  if Msg = WM_CHAR then showint(RESULT);
 end;
 
-procedure CreateHintListBox;
-begin
-  if HintListBoxCreated then Exit;
-  HintListView := CreateWindowEx
-    (WS_EX_DLGMODALFRAME,
-    'SysListView32' {LISTBOX},
-    nil,
-
-//    WS_BORDER + LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_NOINTEGRALHEIGHT or WS_POPUP { WS_CHILD } or WS_VISIBLE + WS_VSCROLL,
-    WS_POPUP or WS_VISIBLE or LVS_SINGLESEL or LVS_REPORT or LVS_NOCOLUMNHEADER + LVS_SHOWSELALWAYS,
-//    40, 40,
-
-    {EditMessageWndRect.Left +}15,
-    {EditMessageWndRect.Top + }105,
-
-    485 + 30,
-    200,
-    EditMessageWnd,
-    0,
-    hInstance,
-    nil);
-  // Issue #997: asm tWM_SETFONT (EAX = HintListView from CreateWindowEx above).
-  tWM_SETFONT(HintListView, MainFixedFont);
-  ListView_SetExtendedListViewStyle(HintListView, LVS_EX_GRIDLINES + LVS_EX_FULLROWSELECT);
-  AddHintsToHintListBox;
-  HintListBoxCreated := True;
-  SetFocus(EditMessageWnd);
-end;
-
-function DestroyHintListBox: boolean;
-begin
-  Result := HintListBoxCreated;
-  if HintListBoxCreated then
-     begin
-     Windows.DestroyWindow(HintListView);
-     end;
-  HintListBoxCreated := False;
-end;
-
-procedure AddHintsToHintListBox;
-//var  elvc                                  : tagLVCOLUMNA;
-begin
-{
-  elvc.Mask := LVCF_WIDTH or LVCF_FMT;
-  elvc.fmt := LVCFMT_LEFT;
-  elvc.cx := 120;
-  ListView_InsertColumn(HintListView, 0, elvc);
-
-  elvc.cx := 340;
-  ListView_InsertColumn(HintListView, 1, elvc);
-
-  for I := 0 to MESSAGESHINTS - 1 do
-  begin
-    elvi.Mask := LVIF_TEXT;
-    elvi.iItem := I;
-    elvi.iSubItem := 0;
-    elvi.pszText := HintMessageArray[I].hmVisibleCommand;
-
-    ListView_InsertItem(HintListView, elvi);
-
-    elvi.iSubItem := 1;
-    elvi.pszText := HintMessageArray[I].hmComment;
-    ListView_SetItem(HintListView, elvi);
-  end;
-  elvi.Mask := LVIF_STATE;
-  elvi.stateMask := 3;
-  elvi.State := LVIS_SELECTED or LVIS_FOCUSED;
-  ListView_SetItemState(HintListView, 0, LVIS_SELECTED or LVIS_FOCUSED, 3);
-}
-//  SendMessage(HintListBox, LVM_SETITEMSTATE, 0, LONGINT(@elvi));
-//  SendMessage(HintListBox, LVM_SETBKCOLOR, 0, $FFFFff00);
-//  SendMessage(HintListBox, LVM_SETTEXTBKCOLOR, 0, $0000ffff);
-
-{
-  for I := 0 to MESSAGESHINTS - 1 do SendMessage(HintListBox, LB_ADDSTRING, 0, I);
-  tLB_SETCURSEL(HintListBox, 0);
-}
-  SelectedItemInHitListBox := 0;
-end;
-
-procedure MoveSelectedItemInHintListBox(wParam: integer);
-begin
-
-  if wParam = VK_UP then
-     begin
-     if SelectedItemInHitListBox > 0 then dec(SelectedItemInHitListBox) else Exit;
-     end;
-
-  if wParam = VK_DOWN then
-     begin
-     if SelectedItemInHitListBox < MESSAGESHINTS - 1 then inc(SelectedItemInHitListBox) else Exit;
-     end;
-
-  if wParam = VK_END then
-     begin
-     SelectedItemInHitListBox := MESSAGESHINTS - 1;
-     end;
-  if wParam = VK_HOME then
-     begin
-     SelectedItemInHitListBox := 0;
-     end;
-
-  if wParam = VK_NEXT then
-     begin
-     SelectedItemInHitListBox := SelectedItemInHitListBox + 11;
-     if SelectedItemInHitListBox > (MESSAGESHINTS - 1) then
-        begin
-        SelectedItemInHitListBox := MESSAGESHINTS - 1;
-        end;
-     end;
-
-  if wParam = VK_PRIOR then
-     begin
-     SelectedItemInHitListBox := SelectedItemInHitListBox - 11;
-     if SelectedItemInHitListBox < 0 then
-        begin
-        SelectedItemInHitListBox := 0;
-        end;
-     end;
-  ListView_SetItemState(HintListView, SelectedItemInHitListBox, LVIS_SELECTED or LVIS_FOCUSED, 3);
-  SendMessage(HintListView, LVM_ENSUREVISIBLE, SelectedItemInHitListBox, LONGINT(False));
-//  SendMessage(HintListBox, LVM_REDRAWITEMS, 0, 100);
-
-//  tLB_SETCURSEL(HintListBox, SelectedItemInHitListBox);
-end;
-
+// DELETED HERE (Phase 4b): CreateHintListBox, DestroyHintListBox,
+// AddHintsToHintListBox and MoveSelectedItemInHintListBox -- the whole
+// command-hint / autocomplete popup, about 125 lines.
+//
+// IT WAS NOT MERELY UNREACHABLE, IT COULD NOT COMPILE IF IT WERE.  Its only
+// live call was inside a brace comment, so HintListBoxCreated was never set
+// and every guard on it was dead -- but the proof is stronger than that:
+// AddHintsToHintListBox referenced HintMessageArray, an identifier that exists
+// NOWHERE in this tree (checked across src, tr4w.dpr and every .inc).  FPC
+// would refuse it.  The program builds; therefore that text was a comment.
 procedure DeleteEscapeChars(var s: ShortString);
 const
   HexChars                              : array[0..$F] of AnsiChar = '0123456789ABCDEF';
