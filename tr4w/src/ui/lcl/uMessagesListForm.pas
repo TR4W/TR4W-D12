@@ -58,7 +58,7 @@ type
     procedure btnCancelClick(Sender: TObject);
   private
     FPicked: boolean;
-    procedure Accept;
+    function TryCapture: boolean;
   end;
 
 // the list of program messages, as a picker.
@@ -112,13 +112,14 @@ begin
    Action := caHide;
 end;
 
-procedure TfrmMessagesList.Accept;
+function TfrmMessagesList.TryCapture: boolean;
 var
   s: AnsiString;
 begin
-   if lstCommands.ItemIndex < 0 then
+   Result := lstCommands.ItemIndex >= 0;
+   if not Result then
       begin
-      Exit;      // nothing selected: OK does nothing, exactly as before
+      Exit;
       end;
 
    // The ITEM'S TEXT, re-parsed -- not sCommandsArray[ItemIndex]. The list is
@@ -126,19 +127,35 @@ begin
    // and indexing the array would paste a different command than the one shown.
    s := AnsiString(lstCommands.Items[lstCommands.ItemIndex]);
    LastSelectedCommand := GetInsertableCommand(PAnsiChar(s));
-
    FPicked := True;
-   Close;
 end;
 
+{ OK AND DOUBLE-CLICK ARE NOT THE SAME, and the difference is only visible with
+  nothing selected.  In the Win32 original:
+
+    OK           TryCapture, else `goto 1` -- which is EndDialog(hwnddlg, 0).
+                 It CLOSED either way.
+    double-click TryCapture, and nothing at all otherwise.  It stayed open.
+
+  The first version of this form shared one Accept for both and returned early
+  when nothing was selected, so OK stopped closing.  NY4I found it immediately:
+  "ok with nothing selected does not close the form but cancel does".  The
+  comment I wrote there -- "OK does nothing, exactly as before" -- asserted the
+  behaviour instead of reading it; the original says otherwise three lines from
+  where I was already looking. }
 procedure TfrmMessagesList.lstCommandsDblClick(Sender: TObject);
 begin
-   Accept;
+   if TryCapture then
+      begin
+      Close;
+      end;
+   // No selection: stays open, as it did.
 end;
 
 procedure TfrmMessagesList.btnOKClick(Sender: TObject);
 begin
-   Accept;
+   TryCapture;   // sets FPicked when there was a selection
+   Close;        // closes either way
 end;
 
 procedure TfrmMessagesList.btnCancelClick(Sender: TObject);
