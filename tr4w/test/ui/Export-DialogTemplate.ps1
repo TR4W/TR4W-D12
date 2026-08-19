@@ -18,6 +18,22 @@
      .rc  : 388 x 222 dialog units, 66 controls
      .RES : 389 x 254 dialog units, 69 controls
 
+   AND THE SAME DRIFT HAPPENED BETWEEN THE ELEVEN .RES FILES. Running this over
+   every one of them reconstructs the history exactly, and it is not pretty:
+
+     Tr4w.rc                    388 x 222   66 controls   (the original)
+     tr4w_ger.RES, _ukr.RES     388 x 222   67 controls   (+ X-QSO)
+     the other nine .RES        389 x ~250  69 controls   (+ X-QSO, + Operator)
+
+   So X-QSO (170) was added by hand to all eleven; the Operator label and edit
+   (168, 167) reached nine of them and MISSED German and Ukrainian; and the .rc
+   was never updated for either. Two separate hand-edits, two separate misses.
+   That is not carelessness -- it is what eleven copies of one dialog COST, and
+   it is the concrete argument for the .lfm: one form retires all eleven.
+
+   Moot in practice today, because only tr4w_eng.RES is linked (one English
+   build since 2026-08-13) -- but worth knowing before anyone reaches for a
+   non-English .RES as a reference. Use eng, or use the live window.
    The three controls the .rc does not have are X-QSO (170) and the Operator
    label and edit (168, 167) -- all three of which uEditQSO.pas READS AND
    WRITES. So the .rc is stale by at least one feature, and a form transcribed

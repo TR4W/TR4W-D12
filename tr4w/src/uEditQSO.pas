@@ -61,8 +61,6 @@ procedure OpenEditQSOWindow(Parent: HWND);
 function SaveQSOToEditableLog: boolean;
 function CheckSystemTimeRecord(Time: TQSOTime): boolean;
 procedure ShowNote(CE: ContestExchange);
-procedure MakeEditWindows;
-procedure MakeEditWindow(Caption: PAnsiChar; FType: CFGType; ValueAdr: Pointer);
 //procedure ShowSysMonthCal32(show: integer);
 
 const
@@ -123,7 +121,6 @@ const
 var
   eq_handle: HWND;
   EditableQSORXData: ContestExchange;
-  CurrentEditRow: integer;
   //const  eqMultsArray                          : array[1..5] of PBoolean = (nil, nil, nil, nil, nil);
 
 implementation
@@ -188,7 +185,6 @@ begin
            goto 1;
            end;
 
-        //        MakeEditWindows;
         //        EditabledLogFocused := True;
         for IndexInMap := 180 to 184 do            
            begin
@@ -885,63 +881,6 @@ begin
   TF.Format(wsprintfBuffer, RC_NOTE + ' :'#13#10#13#10'%s',
     @EditableQSORXData.Prefix);
   ShowMessageParent(wsprintfBuffer, eq_handle);
-end;
-
-procedure MakeEditWindows;
-
-begin
-  MakeEditWindow('Callsign', ctString, @EditableQSORXData.Callsign[1]);
-  inc(CurrentEditRow, 1);
-  if ExchangeInformation.QTH then
-     begin
-     MakeEditWindow('QTH', ctString, @EditableQSORXData.QTHString[1]);
-     end;
-  if ExchangeInformation.Power then
-     begin
-     MakeEditWindow('Power', ctString, @EditableQSORXData.Power[1]);
-     end;
-  // if ExchangeInformation.FOCNumber then MakeEditWindow('FOC', ctByte, @EditableQSORXData.FOCNumber[1]);
-  if ExchangeInformation.RST then
-     begin
-     MakeEditWindow('RST recv', ctInteger {ctWord},
-       @EditableQSORXData.RSTReceived);
-     MakeEditWindow('RST sent', ctInteger {ctWord}, @EditableQSORXData.RSTSent);
-     end;
-
-  if ExchangeInformation.QSONumber then
-     begin
-     MakeEditWindow('Number recv', ctInteger, @EditableQSORXData.NumberReceived);
-     MakeEditWindow('Number sent', ctInteger, @EditableQSORXData.NumberSent);
-     end;
-end;
-
-procedure MakeEditWindow(Caption: PAnsiChar; FType: CFGType; ValueAdr: Pointer);
-var
-  Value: PAnsiChar;
-  w: integer;
-begin
-  Value := PAnsiChar(ValueAdr);
-  if FType in [ctWord, ctInteger] then
-     begin
-     if FType = ctWord then
-        begin
-        w := PWORD(ValueAdr)^;
-        end;
-     //    if FType = ctByte then w := PByte(ValueAdr)^;
-     if FType = ctInteger then
-        begin
-        w := PDWORD(ValueAdr)^;
-        end;
-
-     // Issue #997: asm-push wsprintf -> Format (single %d arg = W).
-     TF.Format(IntToPCharBuffer, '%d', W);
-     Value := IntToPCharBuffer;
-     end;
-  tCreateStaticWindow(Caption, LeftStyle, 10, CurrentEditRow * 20 + 400, 70, ws,
-    eq_handle, 0);
-  tCreateEditWindow($00020004, Value, $50010088, 90, CurrentEditRow * 20 + 400,
-    150, ws, eq_handle, 0);
-  inc(CurrentEditRow);
 end;
 
 procedure OpenEditQSOWindow(Parent: HWND);
