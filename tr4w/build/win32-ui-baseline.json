@@ -1,5 +1,5 @@
 {
-  "CreateModalDialog": 16,
+  "CreateModalDialog": 15,
   "tDialogBox": 8,
   "DialogBox*": 4,
   "CreateDialogIndirectParam": 2,
@@ -10,7 +10,7 @@
   "TF.CreateEdit": 10,
   "TF.CreateComboBox": 4,
   "TF.CreateListBox": 3,
-  "TF.CreateListView2": 6,
+  "TF.CreateListView2": 5,
   "TF.CreateOwnerDrawListBox": 8,
   "TF.CreateRichEdit": 4,
   "CreateOKCancelButtons": 5,

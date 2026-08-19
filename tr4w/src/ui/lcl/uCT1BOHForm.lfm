@@ -1,0 +1,28 @@
+object frmCT1BOH: TfrmCT1BOH
+  Left = 0
+  Height = 240
+  Top = 0
+  Width = 690
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'CT1BOH information'
+  ClientHeight = 240
+  ClientWidth = 690
+  KeyPreview = True
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object lvStats: TListView
+    Left = 8
+    Height = 224
+    Top = 8
+    Width = 674
+    Columns = <>
+    GridLines = True
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 0
+    ViewStyle = vsReport
+  end
+end

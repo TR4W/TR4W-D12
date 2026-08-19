@@ -171,6 +171,7 @@ uses
   uSettingsBinding in 'src\ui\lcl\uSettingsBinding.pas',
   uUDPDestinationEditForm in 'src\ui\lcl\uUDPDestinationEditForm.pas',
   uAltDForm in 'src\ui\lcl\uAltDForm.pas',
+  uCT1BOHForm in 'src\ui\lcl\uCT1BOHForm.pas',
   uLPTForm in 'src\ui\lcl\uLPTForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uWinManagerForm in 'src\ui\lcl\uWinManagerForm.pas',

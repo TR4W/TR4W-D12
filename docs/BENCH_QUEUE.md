@@ -104,6 +104,22 @@ which parallel port keys the paddle and reads the foot switch.
 The base-address fields are numbers-only now, which they were before via
 `ES_NUMBER`.
 
+### 6. CT1BOH information report  (`uCT1BOHForm`)
+
+A read-only statistics grid: time per band, then QSOs and share per continent.
+Open it with a log that has QSOs on several bands, or the grid says nothing.
+
+- [ ] **Eight columns**: a blank label column, then 160 / 80 / 40 / 20 / 15 / 10
+      and All.
+- [ ] **Row order**: Time ON first, then North America, South America, Europe,
+      Africa, Asia, Oceania, Antarctica. If a row is missing or the order is
+      shuffled, that is the thing to report -- the rows used to be placed by
+      explicit index and now they are appended.
+- [ ] A band/continent with **no QSOs shows blank**, not `0 (0%)`.
+- [ ] The percentages are a share of that BAND's total, so each band column
+      should add to roughly 100%.
+- [ ] **Escape closes it.** It has no buttons and never did.
+
 ---
 
 ## Known and accepted — no action, listed so they are not re-reported
