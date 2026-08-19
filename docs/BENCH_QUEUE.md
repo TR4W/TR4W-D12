@@ -155,6 +155,35 @@ server's. To provoke it, connect a client whose `.dat` differs from the server's
 - [ ] If the local log **cannot be opened**, the window closes immediately rather
       than drawing a comparison against a log that is not there. Unchanged.
 
+### 8. Beacon monitor  (`uBeaconsForm`)
+
+The NCDXF/IBP schedule window. **Opening it QSYs Radio 1 to 14100 kHz CW** --
+that is what the Win32 dialog did too, so do not open it mid-QSO to test it.
+
+- [ ] **Ninety cells, 18 rows x 5 columns**, every cell in a row showing the same
+      beacon name. That repetition is correct: the row names the beacon, the
+      column names the band.
+- [ ] **Five cells are black and the other 85 are grey**, and the five sit on a
+      diagonal -- one per column. This replaced `EnableWindow` on ninety STATIC
+      controls, so if the highlight looks wrong this is the thing to report.
+- [ ] **The diagonal steps every ten seconds** and wraps at the top of the list.
+      Watch it for a full three minutes if you can: the cycle should return to
+      where it started.
+- [ ] The highlighted beacon should agree with the schedule table at the foot of
+      `src/uBeacons.pas` for the current UTC time.
+- [ ] **Ten frequency buttons**, five above the grid and five below, behaving as
+      ONE mutually-exclusive group -- pressing any one releases the others. The
+      top five are the IBP frequencies and line up with the five columns.
+- [ ] **Pressing a button tunes Radio 1** to that frequency in CW.
+- [ ] **14100 is pressed when the window opens**, and the radio is already there.
+- [ ] **Escape closes it.** It has no buttons and never did.
+
+A behaviour that is deliberately *better* rather than identical: the refresh now
+fires when the ten-second SLOT changes, not when a timer tick happens to land on
+a second divisible by ten. A dropped or coalesced tick used to leave the display
+a slot behind for the next ten seconds. Same picture, no missed edges -- but if
+you ever see it stall, that assumption is what to doubt.
+
 ---
 
 ## Known and accepted — no action, listed so they are not re-reported

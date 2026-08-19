@@ -38,7 +38,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="321">
+    <Units Count="322">
       <Unit0>
         <Filename Value="tr4w.dpr"/>
         <IsPartOfProject Value="True"/>
@@ -127,7 +127,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit320>
-      <Unit3>
+      <Unit321>
+        <Filename Value="src/ui/lcl/uBeaconsForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmBeacons"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit321>      <Unit3>
         <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="KeyerEditForm"/>

@@ -1,0 +1,138 @@
+object frmBeacons: TfrmBeacons
+  Left = 0
+  Height = 350
+  Top = 0
+  Width = 347
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Beacons monitor'
+  ClientHeight = 350
+  ClientWidth = 347
+  KeyPreview = True
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object sbFreq1: TSpeedButton
+    Tag = 101
+    Left = 10
+    Height = 20
+    Top = 5
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    Down = True
+    OnClick = FrequencyClick
+  end
+  object sbFreq2: TSpeedButton
+    Tag = 102
+    Left = 75
+    Height = 20
+    Top = 5
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object sbFreq3: TSpeedButton
+    Tag = 103
+    Left = 140
+    Height = 20
+    Top = 5
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object sbFreq4: TSpeedButton
+    Tag = 104
+    Left = 205
+    Height = 20
+    Top = 5
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object sbFreq5: TSpeedButton
+    Tag = 105
+    Left = 270
+    Height = 20
+    Top = 5
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object grdBeacons: TStringGrid
+    Left = 10
+    Height = 290
+    Top = 30
+    Width = 327
+    ColCount = 5
+    DefaultColWidth = 65
+    DefaultRowHeight = 16
+    FixedCols = 0
+    FixedRows = 0
+    Options = [goVertLine, goHorzLine, goSmoothScroll]
+    RowCount = 18
+    ScrollBars = ssNone
+    TabStop = False
+    OnPrepareCanvas = GridPrepareCanvas
+  end
+  object sbFreq6: TSpeedButton
+    Tag = 106
+    Left = 10
+    Height = 20
+    Top = 322
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object sbFreq7: TSpeedButton
+    Tag = 107
+    Left = 75
+    Height = 20
+    Top = 322
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object sbFreq8: TSpeedButton
+    Tag = 108
+    Left = 140
+    Height = 20
+    Top = 322
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object sbFreq9: TSpeedButton
+    Tag = 109
+    Left = 205
+    Height = 20
+    Top = 322
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object sbFreq10: TSpeedButton
+    Tag = 110
+    Left = 270
+    Height = 20
+    Top = 322
+    Width = 62
+    AllowAllUp = False
+    GroupIndex = 1
+    OnClick = FrequencyClick
+  end
+  object tmrSlot: TTimer
+    Interval = 1000
+    Enabled = False
+    OnTimer = HandleSlotTimer
+  end
+end

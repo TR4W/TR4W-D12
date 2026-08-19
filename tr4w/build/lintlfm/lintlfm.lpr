@@ -39,7 +39,8 @@ uses
    ComCtrls,
    ExtCtrls,
    Spin,       // TSpinEdit -- Auto-CQ's delay field
-   Grids;      // TStringGrid -- the band plan
+   Grids,      // TStringGrid -- the band plan and the beacon monitor
+   Buttons;    // TSpeedButton -- the beacon monitor's push-like radio group
 
 var
    gFiles:  integer = 0;
@@ -323,7 +324,9 @@ begin
                     // Spin
                     TSpinEdit, TFloatSpinEdit,
                     // Grids
-                    TStringGrid, TDrawGrid]);
+                    TStringGrid, TDrawGrid,
+                    // Buttons
+                    TSpeedButton, TBitBtn]);
 
    if ParamCount = 0 then
       begin

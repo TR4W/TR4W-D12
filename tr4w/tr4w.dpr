@@ -173,6 +173,7 @@ uses
   uAltDForm in 'src\ui\lcl\uAltDForm.pas',
   uLogCompareForm in 'src\ui\lcl\uLogCompareForm.pas',
   uCT1BOHForm in 'src\ui\lcl\uCT1BOHForm.pas',
+  uBeaconsForm in 'src\ui\lcl\uBeaconsForm.pas',
   uLPTForm in 'src\ui\lcl\uLPTForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uWinManagerForm in 'src\ui\lcl\uWinManagerForm.pas',

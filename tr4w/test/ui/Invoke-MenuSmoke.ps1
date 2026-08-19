@@ -1,4 +1,4 @@
-﻿# The per-phase GUI gate for the Win32-to-LCL migration.
+# The per-phase GUI gate for the Win32-to-LCL migration.
 #
 # Posts a list of WM_COMMAND ids at the running program and asserts it survives
 # each one. That is a low bar deliberately: the corpus and the unit tests are
@@ -50,13 +50,17 @@ param(
       10101,   # Tools -> Program message (menu_messages -- LCL form, Phase 4a)
       10104,   # LPT ports, Ctrl+Alt+L (menu_lpt -- LCL form, Phase 4b)
       10557,   # Window control, Ctrl+Alt+M (menu_windowsmanager -- LCL form, 4b)
-      10416    # CT1BOH report (menu_ctrl_ct1bohscreen -- LCL form, Phase 4b)
+      10416,   # CT1BOH report (menu_ctrl_ct1bohscreen -- LCL form, Phase 4b)
+      10551    # Beacon monitor (menu_beaconsmonitor -- LCL form, Phase 4b).
+               # NOTE: this one QSYs Radio 1 to 14100 kHz CW on open, as the
+               # Win32 dialog also did. Harmless with no radio attached; do
+               # not run the smoke suite mid-QSO on a live rig.
    ),
    # Commands that MUST produce a new top-level window.  Surviving is not
    # passing: a program that has stopped acting on its menu entirely survives
    # every command put to it, which is exactly how the 2026-08-18 regression got
    # past this runner and reached the bench.
-   [int[]]  $ExpectsWindow = @(10111, 10302, 10101, 10104, 10557, 10416),
+   [int[]]  $ExpectsWindow = @(10111, 10302, 10101, 10104, 10557, 10416, 10551),
    [string] $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
    [string] $Exe,
    # A .cfg already in tr4w\target. Omit to stage one from the golden corpus.

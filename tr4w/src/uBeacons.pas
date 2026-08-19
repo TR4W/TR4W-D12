@@ -14,59 +14,49 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General
-     Public License along with TR4W in  GPL_License.TXT. 
-If not, ref: 
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
 unit uBeacons;
 {$I tr4w.inc}
 {$IMPORTEDDATA OFF}
+
+{
+  THE BEACON SEAM, AND THE BEACON DATA.  The window itself is now an LCL form --
+  src\ui\lcl\uBeaconsForm.pas -- and what is left here is the entry point plus
+  the two tables that say what the NCDXF/IBP schedule IS.
+
+  The split is deliberate. The names and the frequencies are domain data with a
+  life of their own: a beacon goes off the air, a new one is licensed, and the
+  table changes without anything about the window changing. The 18x5 grid of
+  window handles that used to display them was presentation, and it is gone.
+
+  DELETED here, not wrapped (Phase 4b): BeaconsMonitorDlgProc, its ninety
+  tCreateStaticWindow calls and the BeaconsHandle array that held their handles,
+  the ten tCreateButtonWindow calls, SetBeaconFreq and ShowBeaconsNames (both
+  took an HWND neither of them used, and nothing outside this unit called
+  either), the write-only `FC` global, one goto, and the commented-out
+  BeaconsGrids locator table.
+
+  KEPT: the IBP schedule at the foot of this unit. It is the reference that says
+  what the program is modelling, and no code replaces it.
+}
+
 interface
-
-uses
-  TF,
-  VC,
-  Windows,
-  Tree,
-  LogGrid,
-  LogRadio,
-  LogK1EA,
-  //Country9,
-  Messages;
-
-function BeaconsMonitorDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-procedure SetBeaconFreq(h: HWND; Control: integer);
-procedure ShowBeaconsNames(h: HWND);
-
-var
-  BeaconsHandle                         : array[0..17, 0..4] of HWND;
-  FC                                    : Byte;
 
 const
   BEACONS                               = 18;
+
+  // The eighteen NCDXF/IBP beacons, in transmission order.  The order is the
+  // schedule: index 0 starts each three-minute cycle on the first frequency and
+  // every other beacon follows it up the bands.  DO NOT SORT THIS.
   BeaconsNames                          : array[0..BEACONS - 1] of PAnsiChar = ('4U1UN', 'VE8AT', 'W6WX', 'KH6WO', 'ZL6B', 'VK6RBP', 'JA2IGY', 'RR9O', 'VR2B', '4S7B', 'ZS6DN', '5Z4B', '4X6TU', 'OH2B', 'CS3B', 'LU4AA', 'OA4B', 'YV5B');
-{
-  BeaconsGrids                          : array[0..BEACONS - 1] of string[4] = (
-    'FN30',
-    'EQ79',
-    'CM97',
-    'BL11',
-    'RE78',
-    'OF87',
-    'PM84',
-    'NO14',
-    'OL72',
-    'NJ06',
-    'KG44',
-    'KI88',
-    'KM72',
-    'KP20',
-    'IM12',
-    'GF05',
-    'FH17',
-    'FK60'
-    );
-}
+
+  // Indexed by the original dialog's control ids, which the form's buttons
+  // still carry as their Tag.  101..105 are the five IBP frequencies, in kHz,
+  // and are the five columns of the display; 106..110 are time-standard
+  // stations, offered as buttons only -- they have no beacon schedule.
   FreqArray                             : array[101..110] of Word = (14100, 18110, 21150, 24930, 28200, 10000, 9996, 5000, 4996, 10144);
 
 // the Beacon Monitor window.
@@ -76,135 +66,18 @@ const
 // When the dialog becomes an LCL form, this body changes and nothing else
 // does. Deliberately here, in the unit that owns the DlgProc, rather than at
 // the call site.
+//
+// Phase 4b, 2026-08-19: that is exactly what happened, and no call site moved.
 procedure ShowBeaconsMonitor;
 
 implementation
-uses MainUnit;
 
-function BeaconsMonitorDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  ExitAndClose;
-var
-  r, c                                  : Byte;
-  delta                                 : integer;
-  Top                                   : integer;
+uses
+  uBeaconsForm;
+
+procedure ShowBeaconsMonitor;
 begin
-  Result := False;
-  case Msg of
-//    WM_HELP: tWinHelp(49);
-
-{$IFDEF LANG_RUS}
-    WM_HELP: ShowHelp('ru_beaconsmonitor');
-{$ENDIF}
-    WM_INITDIALOG:
-      begin
-
-        Windows.SetWindowTextA(hwnddlg, RC_BEACONSM);
-
-        SetBeaconFreq(hwnddlg, 101);
-
-        for r := 0 to 17 do
-          for c := 0 to 4 do
-             begin
-              //            Left := 10 + c * 67;
-            BeaconsHandle[r, c] :=
-              tCreateStaticWindow(
-              BeaconsNames[r], WS_DISABLED or WS_CHILD or BS_TEXT or WS_VISIBLE or WS_TABSTOP or BS_NOTIFY or SS_SUNKEN or SS_CENTER,
-              10 + c * 65, 30 + r * 16, 62, 15, hwnddlg, 0);
-{
-            asm
-            mov edx,[ArialFont]
-            call tWM_SETFONT
-            end;
-}
-          end;
-
-        delta := 0;
-        Top := 5;
-        for c := 101 to 110 do
-           begin
-           if c > 105 then
-              begin
-              delta := 325;
-              Top := 320;
-              end;
-           tCreateButtonWindow(WS_EX_STATICEDGE, inttopchar(FreqArray[c]), BS_AUTORADIOBUTTON + BS_PUSHLIKE + WS_CHILD + WS_VISIBLE + WS_TABSTOP,
-             10 + (c - 101) * 65 - delta, Top, 62, 20, hwnddlg, c);
-           end;
-
-        Windows.SendDlgItemMessage(hwnddlg, 101, BM_SETCHECK, BST_CHECKED, 0);
-
-        SetTimer(hwnddlg, BEACONS_ONE_SECOND_TIMER_HANDLE, 1000, nil);
-//        SendDlgItemMessage(hwnddlg, 99, PBM_SETRANGE, 0, MakeLParam(0, 10000));
-//        SendDlgItemMessage(hwnddlg, 99, PBM_SETSTEP, 1, 0);
-        ShowBeaconsNames(hwnddlg);
-      end;
-    WM_TIMER:
-      begin
-        //tGetSystemTime;
-        //Sec := UTC.wSecond;
-        //SendDlgItemMessage(hwnddlg, 99, PBM_SETPOS, (Sec mod 10) * 1000 + UTC.wMilliseconds, 0);
-        if UTC.wSecond mod 10 = 0 then
-           begin
-           ShowBeaconsNames(hwnddlg);
-           end;
-      end;
-    WM_COMMAND:
-      begin
-        if wParam > 100 then
-           begin
-           SetBeaconFreq(hwnddlg, wParam);
-           FC := wParam - 101;
-           ShowBeaconsNames(hwnddlg);
- //          if wParam > 105 then SetDlgItemText(hwnddlg, 98, nil);
-           end;
-        if wParam = 2 then
-           begin
-           goto ExitAndClose;
-           end;
-
-      end;
-
-    WM_CLOSE:
-      begin
-        ExitAndClose:
-        Windows.KillTimer(hwnddlg, BEACONS_ONE_SECOND_TIMER_HANDLE);
-        EndDialog(hwnddlg, 0);
-      end;
-
-  end;
-end;
-
-procedure SetBeaconFreq(h: HWND; Control: integer);
-begin
-  SetRadioFreq(RadioOne, FreqArray[Control] * 1000, CW, 'A');
-end;
-
-procedure ShowBeaconsNames(h: HWND);
-var
-  r, c                                  : Byte;
-begin
-  begin
-    for r := 0 to 17 do
-       begin
-       for c := 0 to 4 do
-          begin
-          Windows.EnableWindow(BeaconsHandle[r, c], False);
-          end;
-       end;
-
-    r := (UTC.wMinute mod 3) * 6;
-    r := r + UTC.wSecond div 10;
-    for c := 0 to 4 do
-       begin
-       Windows.EnableWindow(BeaconsHandle[r, c], True);
-       if r = 0 then
-          begin
-          r := 18;
-          end;
-       dec(r);
-       end;
-  end;
+   uBeaconsForm.ShowBeaconsMonitor;
 end;
 
 {
@@ -238,10 +111,4 @@ KH6WO is not currently licensed for 18 or 24 MHz.
 
 }
 
-
-procedure ShowBeaconsMonitor;
-begin
-   CreateModalDialog(170, 175, tr4whandle, @BeaconsMonitorDlgProc, 0);
-end;
 end.
-
