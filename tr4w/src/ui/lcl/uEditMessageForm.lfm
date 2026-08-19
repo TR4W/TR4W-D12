@@ -1,0 +1,105 @@
+object frmEditMessage: TfrmEditMessage
+  Left = 0
+  Height = 145
+  Top = 0
+  Width = 505
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Program message'
+  ClientHeight = 145
+  ClientWidth = 505
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object lblKeyName: TLabel
+    Left = 5
+    Height = 20
+    Top = 5
+    Width = 490
+    AutoSize = False
+    ParentColor = False
+  end
+  object lblMessage: TLabel
+    Left = 5
+    Height = 18
+    Top = 38
+    Width = 60
+    AutoSize = False
+    Caption = 'Message'
+    ParentColor = False
+  end
+  object lblCaption: TLabel
+    Left = 5
+    Height = 18
+    Top = 63
+    Width = 60
+    AutoSize = False
+    Caption = 'Caption'
+    ParentColor = False
+  end
+  object edtMessage: TEdit
+    Left = 70
+    Height = 23
+    Top = 35
+    Width = 425
+    AutoSize = False
+    MaxLength = 255
+    OnEnter = edtMessageEnter
+    OnExit = edtMessageExit
+    OnKeyDown = edtMessageKeyDown
+    TabOrder = 0
+  end
+  object edtCaption: TEdit
+    Left = 70
+    Height = 23
+    Top = 60
+    Width = 425
+    AutoSize = False
+    MaxLength = 255
+    OnEnter = edtCaptionEnter
+    OnExit = edtCaptionExit
+    TabOrder = 1
+  end
+  object btnEditWav: TButton
+    Left = 5
+    Height = 25
+    Top = 105
+    Width = 110
+    AutoSize = False
+    Caption = '&Edit'
+    OnClick = btnEditWavClick
+    TabOrder = 2
+  end
+  object btnOK: TButton
+    Left = 165
+    Height = 25
+    Top = 105
+    Width = 80
+    AutoSize = False
+    Caption = 'OK'
+    Default = True
+    OnClick = btnOKClick
+    TabOrder = 3
+  end
+  object btnCancel: TButton
+    Left = 255
+    Height = 25
+    Top = 105
+    Width = 80
+    AutoSize = False
+    Cancel = True
+    Caption = 'Cancel'
+    OnClick = btnCancelClick
+    TabOrder = 4
+  end
+  object btnList: TButton
+    Left = 385
+    Height = 25
+    Top = 105
+    Width = 110
+    AutoSize = False
+    Caption = 'List of commands'
+    OnClick = btnListClick
+    TabOrder = 5
+  end
+end
