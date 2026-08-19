@@ -56,7 +56,7 @@
         "Text": "",
         "Id": 104,
         "Visible": true,
-        "Enabled": false,
+        "Enabled": true,
         "Left": 58,
         "Top": 61,
         "Width": 135,
@@ -563,7 +563,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "160CW",
+        "Text": " 20CW",
         "Id": 0,
         "Visible": true,
         "Enabled": true,
@@ -602,7 +602,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "35 WPM",
+        "Text": "20 WPM",
         "Id": 0,
         "Visible": true,
         "Enabled": true,
@@ -654,7 +654,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "CQ total: 1",
+        "Text": "CQ total: 21",
         "Id": 0,
         "Visible": true,
         "Enabled": true,
@@ -667,7 +667,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "NY4I",
+        "Text": "W8RD",
         "Id": 0,
         "Visible": true,
         "Enabled": true,
@@ -680,7 +680,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "18-08-26",
+        "Text": "<date>",
         "Id": 0,
         "Visible": true,
         "Enabled": true,
@@ -1005,7 +1005,7 @@
       {
         "Handle": "",
         "Class": "Static",
-        "Text": "K3Sio 2",
+        "Text": "",
         "Id": 0,
         "Visible": true,
         "Enabled": false,

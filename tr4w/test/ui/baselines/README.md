@@ -64,7 +64,12 @@ depth 3 still flapped):
 |---|---|---|
 | `Handle` | blanked | different every run by definition |
 | `Left` / `Top` | made relative to the top-level window | keeps *where a control sits in the layout*, drops *where the user last dragged the window* |
-| `Text` | `HH:MM` / `HH:MM:SS` masked to `<time>` | times only; masking broadly would hide the captions this dump exists to notice |
+| `Text` | `HH:MM` / `HH:MM:SS` masked to `<time>`, and `dd-MM-yy` to `<date>` | clocks only; masking broadly would hide the captions this dump exists to notice |
+
+The DATE mask was added 2026-08-19 for the same reason as the time mask and was
+missed the first time: the main window shows `dd-MM-yy`, so a baseline that
+masked only clock times still drifted -- just once a day rather than once a
+second, which is exactly why it took longer to notice.
 
 `Width` and `Height` are absolute sizes and are left alone.
 
@@ -87,3 +92,15 @@ There is no `-Compare` switch. Dump and diff:
 .\Dump-WindowTree.ps1 -NoHandles -Out $env:TEMP	ree-now.json
 Compare-Object (Get-Content .aselines\main-window.json) (Get-Content $env:TEMP	ree-now.json)
 ```
+
+### What still varies, and why the baseline is for STRUCTURE
+
+Some `Text` values reflect the operator's session rather than the program's
+shape: band and mode, code speed, the callsign in the entry field, the QSO and
+CQ counters. They are deterministic for a given staged config -- two consecutive
+runs are byte-identical, which is the check that matters -- but they will differ
+against a baseline captured under different conditions.
+
+So when this diffs, **read what changed before assuming a regression**. A
+control that moved, resized, vanished or changed `Visible` is the signal. A
+counter that went from 1 to 21 is the operator having used the program.

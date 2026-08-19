@@ -241,6 +241,10 @@ if ($NoHandles)
       $Node.Left   = $Node.Left - $OriginX
       $Node.Top    = $Node.Top  - $OriginY
       $Node.Text   = ($Node.Text -replace '\b\d{1,2}:\d{2}(:\d{2})?\b', '<time>')
+      # DATES TOO.  The main window shows dd-MM-yy, so a baseline that masks
+      # only clock times still drifts once a day -- which is the same defect as
+      # the one the time mask was added for, just on a slower clock.
+      $Node.Text   = ($Node.Text -replace '\b\d{2}-\d{2}-\d{2,4}\b', '<date>')
       foreach ($c in @($Node.Children)) { Repair-Node -Node $c -OriginX $OriginX -OriginY $OriginY }
       }
 
