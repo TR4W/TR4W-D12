@@ -1,4 +1,4 @@
-{
+﻿{
  Copyright Dmitriy Gulyaev UA4WLI 2015.
 
  This file is part of TR4W  (SRC)
@@ -29,7 +29,24 @@ uses
   Windows,
   Messages;
 
-function MessagesListDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{
+  THE LIST-OF-COMMANDS SEAM.  The dialog itself is now an LCL form --
+  src\ui\lcl\uMessagesListForm.pas -- and this unit keeps the entry point, the
+  chosen command, and the parser that extracts it.
+
+  DELETED here, not wrapped (Phase 4b): MessagesListDlgProc, its CreateListBox +
+  tLB_ADDSTRING fill loop, and TryCaptureSelectedCommand -- which existed only
+  to reach the listbox through LB_GETCURSEL / LB_GETTEXTLEN / LB_GETTEXT.  A
+  TListBox answers ItemIndex and Items[] directly.
+
+  GetInsertableCommand STAYS: it is a string parser, not dialog code, and the
+  form calls it.
+}
+
+// Extracts the insertable token from a caCommand display string.  Kept here
+// rather than moved into the form: it is pure parsing, and it is the piece most
+// worth having somewhere testable.
+function GetInsertableCommand(src: PAnsiChar): String;
 
 var
   LastSelectedCommand                   : String;
@@ -45,14 +62,7 @@ function ShowMessagesList(const aParent: HWND): integer;
 implementation
 
 uses
-  uProcessCommand,
-  MainUnit;
-
-// Extract the insertable command token from a caCommand display string.
-// Entries have the form "  CMD = description" or just "CMDNAME".
-// We strip leading spaces, then take everything up to the first " = "
-// separator (searching from position 1 so that "  = = BT" yields "=").
-// Trailing spaces are also stripped.
+  uMessagesListForm;
 
 function GetInsertableCommand(src: PAnsiChar): String;
 var
@@ -118,97 +128,12 @@ end;
 // because the listbox is created with LBS_SORT — its visible index order
 // does not match the array's insertion order.
 
-function TryCaptureSelectedCommand(hwnddlg: HWND): Boolean;
-var
-  lb: HWND;
-  sel, textLen: Integer;
-  buf: array[0..255] of AnsiChar;
-begin
-  Result := False;
-  lb := GetDlgItem(hwnddlg, 90);
-  sel := SendMessage(lb, LB_GETCURSEL, 0, 0);
-  if sel = -1 then
-     begin
-     Exit;
-     end;
-  textLen := SendMessage(lb, LB_GETTEXTLEN, sel, 0);
-  if (textLen < 0) or (textLen >= SizeOf(buf)) then
-     begin
-     Exit;
-     end;
-  SendMessageA(lb, LB_GETTEXT, sel, Integer(@buf));
-  LastSelectedCommand := GetInsertableCommand(@buf);
-  Result := True;
-end;
-
-function MessagesListDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-var
-  TempHWND                              : HWND;
-  i                                     : integer;
-begin
-  Result := False;
-  case Msg of
-    WM_SETFONT:
-      begin
-        // Issue #997: removed asm nop. WM_SETFONT is intentionally ignored
-        // (Result stays False -> default processing).
-      end;
-
-    WM_INITDIALOG:
-      begin
-//        CreateButton('OK', 180, 305, 70, hwnddlg, 1);
-        CreateOKCancelButtons( hwnddlg);
-        Windows.SetWindowTextA(hwnddlg, TC_LIST_OF_COMMAND);
-        TempHWND := CreateListBox(5, 5, 440, 280, hwnddlg, 90);
-
-        for i := 0 to sCommands - 1 do
-           begin
-           TF.Format(wsprintfBuffer, '%s', sCommandsArray[i].caCommand);
-           tLB_ADDSTRING(TempHWND, wsprintfBuffer);
-           end;
-
-      end;
-
-    WM_COMMAND:
-      begin
-      // Double-click on list box: insert selected command and close
-      if (HiWord(wParam) = LBN_DBLCLK) and (LoWord(wParam) = 90) then
-         begin
-         if TryCaptureSelectedCommand(hwnddlg) then
-            begin
-            EndDialog(hwnddlg, 1);
-            end;
-         end;
-      case wParam of
-        1:  // OK: insert if something is selected, otherwise just close
-          begin
-          if TryCaptureSelectedCommand(hwnddlg) then
-             begin
-             EndDialog(hwnddlg, 1)
-             end
-          else
-             begin
-             goto 1;
-             end;
-          end;
-        2: goto 1;  // Cancel
-      end;
-      end;
-
-    WM_CLOSE: 1: EndDialog(hwnddlg, 0);
-
-  end;
-end;
-
-
 function ShowMessagesList(const aParent: HWND): integer;
 begin
    // RETURNS the dialog result -- uEditMessage tests it for 1 to decide
    // whether to paste the chosen command. A procedure here would silently
    // drop that.
-   Result := CreateModalDialog(225, 170, aParent, @MessagesListDlgProc, 0);
+   Result := uMessagesListForm.ShowMessagesList(aParent);
 end;
-end.
 
+end.

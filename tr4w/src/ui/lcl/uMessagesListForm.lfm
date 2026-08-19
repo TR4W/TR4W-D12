@@ -1,0 +1,47 @@
+object frmMessagesList: TfrmMessagesList
+  Left = 0
+  Height = 330
+  Top = 0
+  Width = 460
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'List of commands'
+  ClientHeight = 330
+  ClientWidth = 460
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object lstCommands: TListBox
+    Left = 5
+    Height = 280
+    Top = 5
+    Width = 450
+    ItemHeight = 0
+    OnDblClick = lstCommandsDblClick
+    ScrollWidth = 448
+    Sorted = True
+    TabOrder = 0
+  end
+  object btnOK: TButton
+    Left = 145
+    Height = 25
+    Top = 295
+    Width = 80
+    AutoSize = False
+    Caption = 'OK'
+    Default = True
+    OnClick = btnOKClick
+    TabOrder = 1
+  end
+  object btnCancel: TButton
+    Left = 235
+    Height = 25
+    Top = 295
+    Width = 80
+    AutoSize = False
+    Cancel = True
+    Caption = 'Cancel'
+    OnClick = btnCancelClick
+    TabOrder = 2
+  end
+end
