@@ -303,9 +303,37 @@ begin
       for i := High(gLast) downto 0 do
          begin
          // Children are forgotten by handle, and a child's handle is not the
-         // panel's -- so also drop any entry whose target is no longer a window.
-         // That is what actually clears the RIT/XIT/SPLIT statics.
-         if (gLast[i].Target = aPanel) or (not IsWindow(gLast[i].Target)) then
+         // panel's -- so ask Windows whether the target IS one of this panel's
+         // children while the panel still exists.
+         //
+         // THIS USED TO SAY `not IsWindow(Target)` AND THAT DID NOT WORK, which
+         // NY4I found on the bench 2026-08-20: RIT, XIT and SPLIT came back
+         // YELLOW after closing and reopening the panel with no radio attached,
+         // and no amount of forcing a repaint changed it.
+         //
+         // The reason is the call ORDER, and the old comment claiming this line
+         // "is what actually clears the RIT/XIT/SPLIT statics" was simply wrong.
+         // CloseTR4WWindow calls ForgetPanel BEFORE DestroyWindow -- deliberately
+         // -- so at this moment the children are still perfectly good windows and
+         // IsWindow says so. Their three puEnable entries therefore SURVIVED the
+         // close holding Enabled=False. Windows reuses handles, so a freshly
+         // created static landing on a remembered HWND made PostControlEnable
+         // match the cache and SKIP the post -- while the new control was created
+         // ENABLED. The panel then showed enabled (yellow) controls that the
+         // cache believed were disabled, and a repaint could not fix it because
+         // they genuinely were enabled.
+         //
+         // MOVING THE CALL AFTER DestroyWindow WOULD NOT BE A FIX. A freed HWND
+         // can be reused immediately, so IsWindow can be true again for an
+         // unrelated window and the stale entry survives anyway. IsChild answers
+         // the question actually being asked, and only works BEFORE the destroy,
+         // which is why the existing order is right and only this test was wrong.
+         //
+         // The IsWindow arm stays as a backstop for an entry whose window died
+         // some other way -- it is now belt-and-braces rather than the mechanism.
+         if (gLast[i].Target = aPanel) or
+            IsChild(aPanel, gLast[i].Target) or
+            (not IsWindow(gLast[i].Target)) then
             begin
             Forget(i);
             end;

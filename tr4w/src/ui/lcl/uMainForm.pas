@@ -100,6 +100,22 @@ var
 
 implementation
 
+uses
+   // IMPLEMENTATION-section, so these are not imposed on anything that uses
+   // this unit and a cycle back to here is legal.
+   //
+   // Solely for the message CONSTANTS in IsTR4WsOwnMessage below. The list used
+   // to spell them as literal integers to avoid exactly these six lines; three
+   // of the eight literals were wrong and each failure was silent. Six units in
+   // an implementation clause is the cheaper mistake.
+   VC,                 // WM_TRAYBALLON
+   uPOTAParks,         // WM_POTA_DOWNLOAD_DONE / WM_POTA_LOAD_DONE
+   uCTYUpdate,         // WM_CTY_VERSION_CHECKED / WM_CTY_DOWNLOAD_DONE
+   uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
+   uTCIServer,         // WM_TCI_APPLY
+   uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE
+   uPanelUpdate;       // WM_PANEL_UPDATE
+
 var
    { The LCL's own window procedure for the main form, saved when TR4W's is
      installed in front of it.  Everything TR4W does not claim chains here. }
@@ -130,16 +146,45 @@ begin
              (aMsg = WM_DISPLAYCHANGE) or
              (aMsg = WM_WINDOWPOSCHANGING) or
              (aMsg = WM_SIZE) or
-             // The WM_APP+n messages TR4W posts to itself from worker threads.
-             // Named by value rather than by constant to keep this unit from
-             // depending on five more units for four integers.
-             (aMsg = WM_APP + 200) or   // WM_POTA_DOWNLOAD_DONE
-             (aMsg = WM_APP + 201) or   // WM_POTA_LOAD_DONE
-             (aMsg = WM_APP + 211) or   // WM_CTY_DOWNLOAD_DONE
-             (aMsg = WM_APP + 212) or   // WM_TRMASTER_DOWNLOAD_DONE
-             (aMsg = WM_APP + 213) or   // WM_CTY_VERSION_CHECKED
-             (aMsg = WM_APP + 220) or   // WM_TCI_APPLY
-             (aMsg = WM_APP + 100);     // WM_TRAYBALLON
+             // The messages TR4W posts to itself from worker threads, BY THEIR
+             // CONSTANTS.
+             //
+             // These were written out as literal values, with a comment saying
+             // that avoided "depending on five more units for four integers".
+             // Measured 2026-08-20: THREE OF THE EIGHT WERE WRONG, and every one
+             // of them failed in total silence -- the message simply chained to
+             // the LCL, which does not know it, and the handler in
+             // uMainWindowProc.WindowProc never ran.
+             //
+             //   WM_APP + 213 was claimed for WM_CTY_VERSION_CHECKED, which is
+             //     actually WM_APP + 210. 213 is not any message at all.
+             //   WM_APP + 100 was claimed for WM_TRAYBALLON, which is actually
+             //     WM_SOCK + 3 = $5F7. Not close.
+             //   WM_PANEL_UPDATE (WM_APP + 230) was never added, so the radio
+             //     panel marshalling seam never delivered a single update --
+             //     which is why RIT/XIT/SPLIT stayed yellow on the bench and
+             //     survived two wrong diagnoses before this one.
+             //
+             // The units cost is real and it is worth paying. A list of integers
+             // that must agree with constants declared elsewhere cannot be
+             // checked by anything; a list of the constants themselves cannot be
+             // wrong about a value at all. What it can still be wrong about is
+             // MEMBERSHIP -- a new message nobody adds here -- and that is what
+             // Lint-AppMessages exists to catch.
+             (aMsg = WM_POTA_DOWNLOAD_DONE) or
+             (aMsg = WM_POTA_LOAD_DONE) or
+             (aMsg = WM_CTY_VERSION_CHECKED) or
+             (aMsg = WM_CTY_DOWNLOAD_DONE) or
+             (aMsg = WM_TRMASTER_DOWNLOAD_DONE) or
+             (aMsg = WM_TCI_APPLY) or
+             (aMsg = WM_PANEL_UPDATE) or
+             (aMsg = WM_TRAYBALLON) or
+             // NOT a WM_APP message -- WM_USER + 200 -- and the fourth one this
+             // list was dropping. It is SENT, not posted, by uGetServerLog so
+             // the multi-op log replace happens on the UI thread; unclaimed, it
+             // chained to the LCL, the replace never ran, and the sending thread
+             // blocked to be told nothing happened.
+             (aMsg = WM_USER_HEADLESS_SYNC_REPLACE);
 end;
 
 { TR4W'S WINDOW PROCEDURE, INSTALLED ON THE FORM'S HWND AHEAD OF THE LCL'S.
@@ -348,6 +393,26 @@ begin
    // trBtnFace. Set explicitly because a form paints its own background and
    // would otherwise use the LCL default.
    TR4WMainForm.Color := clBtnFace;
+
+   // A TASKBAR BUTTON, which the Win32 window got for free and this one does
+   // not.
+   //
+   // stDefault means "show in the taskbar if this is the application's MAIN
+   // form".  TR4W has no main form: this is CreateNew(nil), and
+   // Application.CreateForm -- the thing that sets Application.MainForm -- is
+   // never called, because Application.Run is never called either (the
+   // hand-rolled loop still owns the program).  So the form was not the main
+   // form, took no WS_EX_APPWINDOW, and Windows gave it no button.
+   //
+   // The Win32 window this replaced had the button because it was a plain
+   // unowned top-level window with WS_SYSMENU. An LCL form is owned by the
+   // hidden Application window, and an OWNED window is not a taskbar candidate
+   // unless it says so.
+   //
+   // BEFORE Handle is touched, deliberately: the setter recreates the window
+   // handle if it already exists, which would throw away both tr4whandle and
+   // the subclass installed below.
+   TR4WMainForm.ShowInTaskBar := stAlways;
 
    // Touching Handle is what forces the window to exist.
    Result := TR4WMainForm.Handle;
