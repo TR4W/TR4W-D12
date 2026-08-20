@@ -40,7 +40,8 @@ uses
    ExtCtrls,
    Spin,       // TSpinEdit -- Auto-CQ's delay field
    Grids,      // TStringGrid -- the band plan and the beacon monitor
-   Buttons;    // TSpeedButton -- the beacon monitor's push-like radio group
+   Buttons,    // TSpeedButton -- the beacon monitor's push-like radio group
+   DateTimePicker;  // TDateTimePicker -- the Edit QSO date/time field
 
 var
    gFiles:  integer = 0;
@@ -326,7 +327,9 @@ begin
                     // Grids
                     TStringGrid, TDrawGrid,
                     // Buttons
-                    TSpeedButton, TBitBtn]);
+                    TSpeedButton, TBitBtn,
+                    // DateTimeCtrls
+                    TDateTimePicker]);
 
    if ParamCount = 0 then
       begin

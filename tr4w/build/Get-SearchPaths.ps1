@@ -65,6 +65,12 @@ function Get-Tr4wSearchPaths
       $paths.Add((Join-Path $laz "lcl\units\$cpu-$os\$os"))
       $paths.Add((Join-Path $laz "components\lazutils\lib\$cpu-$os"))
       $paths.Add((Join-Path $laz "packager\units\$cpu-$os"))
+      # TDateTimePicker for the Edit QSO date/time field. Lazarus ships
+      # datetimectrls but prebuilds it for x86_64 only, so this is the SOURCE
+      # directory -- FPC compiles datetimepicker.pas for i386 into our own
+      # output dir. Derived from LAZARUS_DIR like everything else above, so a
+      # fresh clone still builds.
+      $paths.Add((Join-Path $laz 'components\datetimectrls'))
       }
 
    # regexpr supplies TRegExpr, which uRegex.pas uses in place of TPerlRegEx --

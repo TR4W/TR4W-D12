@@ -38,7 +38,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="322">
+    <Units Count="323">
       <Unit0>
         <Filename Value="tr4w.dpr"/>
         <IsPartOfProject Value="True"/>
@@ -133,7 +133,15 @@
         <ComponentName Value="frmBeacons"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit321>      <Unit3>
+      </Unit321>
+      <Unit322>
+        <Filename Value="src/ui/lcl/uEditQSOForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmEditQSO"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit322>
+      <Unit3>
         <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="KeyerEditForm"/>

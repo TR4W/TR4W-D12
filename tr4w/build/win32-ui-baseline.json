@@ -1,7 +1,7 @@
 {
   "CreateModalDialog": 13,
   "tDialogBox": 8,
-  "DialogBox*": 4,
+  "DialogBox*": 3,
   "CreateDialogIndirectParam": 2,
   "CreateDialogParam": 0,
   "CreateWindowEx": 22,

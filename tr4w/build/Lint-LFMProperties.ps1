@@ -118,6 +118,10 @@ if ($needBuild)
       Join-Path $lclUnits 'win32'
       Join-Path $Laz "components\lazutils\lib\$Cpu-$Os"
       Join-Path $Laz "packager\units\$Cpu-$Os"
+      # TDateTimePicker: Lazarus prebuilds datetimectrls for x86_64 only, so
+      # this is the source dir and FPC compiles it for i386 -- the same line
+      # Get-SearchPaths adds for the app.
+      Join-Path $Laz "components\datetimectrls"
    )
 
    $args = @("-M`delphi", "-P$Cpu", "-T$Os", '-B', "-FU$toolOut", "-o$toolExe")

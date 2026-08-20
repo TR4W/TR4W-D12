@@ -1,0 +1,676 @@
+object frmEditQSO: TfrmEditQSO
+  Left = 0
+  Height = 413
+  Top = 0
+  Width = 584
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = 'Edit QSO'
+  ClientHeight = 413
+  ClientWidth = 584
+  Position = poMainFormCenter
+  OnClose = HandleClose
+  OnShow = HandleShow
+  object lblCallsign: TLabel
+    Left = 8
+    Height = 17
+    Top = 16
+    Width = 75
+    AutoSize = False
+    Caption = 'Callsign'
+    Layout = tlCenter
+  end
+  object edtCallsign: TEdit
+    Left = 90
+    Height = 21
+    Top = 16
+    Width = 135
+    CharCase = ecUpperCase
+    MaxLength = 12
+    OnChange = CallsignChanged
+    TabOrder = 0
+    Text = ''
+  end
+  object lblCountryName: TLabel
+    Left = 240
+    Height = 17
+    Top = 16
+    Width = 232
+    AutoSize = False
+    Caption = ''
+    Layout = tlCenter
+  end
+  object lblRadio: TLabel
+    Left = 480
+    Height = 17
+    Top = 16
+    Width = 90
+    AutoSize = False
+    Caption = 'RADIO ONE'
+    Alignment = taCenter
+    Layout = tlCenter
+  end
+  object lblBand: TLabel
+    Left = 8
+    Height = 17
+    Top = 41
+    Width = 75
+    AutoSize = False
+    Caption = 'Band'
+    Layout = tlCenter
+  end
+  object cboBand: TComboBox
+    Left = 90
+    Height = 23
+    Top = 41
+    Width = 135
+    ItemHeight = 15
+    OnChange = FieldChanged
+    ReadOnly = True
+    Style = csDropDownList
+    TabOrder = 1
+  end
+  object lblDX: TLabel
+    Left = 240
+    Height = 17
+    Top = 41
+    Width = 90
+    AutoSize = False
+    Caption = 'DX'
+    Layout = tlCenter
+  end
+  object edtDXQTH: TEdit
+    Left = 338
+    Height = 21
+    Top = 41
+    Width = 135
+    ReadOnly = True
+    OnChange = FieldChanged
+    TabOrder = 2
+    Text = ''
+  end
+  object chkDXMult: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 41
+    Width = 90
+    Caption = 'DX Mult'
+    Enabled = False
+    TabOrder = 3
+  end
+  object lblMode: TLabel
+    Left = 8
+    Height = 17
+    Top = 65
+    Width = 75
+    AutoSize = False
+    Caption = 'Mode'
+    Layout = tlCenter
+  end
+  object cboMode: TComboBox
+    Left = 90
+    Height = 23
+    Top = 65
+    Width = 135
+    ItemHeight = 15
+    OnChange = FieldChanged
+    ReadOnly = True
+    Style = csDropDownList
+    TabOrder = 4
+  end
+  object lblDomestic: TLabel
+    Left = 240
+    Height = 17
+    Top = 65
+    Width = 90
+    AutoSize = False
+    Caption = 'Domestic'
+    Layout = tlCenter
+  end
+  object edtDomMultQTH: TEdit
+    Left = 338
+    Height = 21
+    Top = 65
+    Width = 135
+    ReadOnly = True
+    OnChange = FieldChanged
+    TabOrder = 5
+    Text = ''
+  end
+  object chkDomesticMult: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 65
+    Width = 90
+    Caption = 'Domestic Mult'
+    Enabled = False
+    TabOrder = 6
+  end
+  object lblFrequency: TLabel
+    Left = 8
+    Height = 17
+    Top = 89
+    Width = 75
+    AutoSize = False
+    Caption = 'Frequency, Hz'
+    Layout = tlCenter
+  end
+  object edtFrequency: TEdit
+    Left = 90
+    Height = 21
+    Top = 89
+    Width = 135
+    NumbersOnly = True
+    OnChange = FieldChanged
+    TabOrder = 7
+    Text = ''
+  end
+  object lblPrefix: TLabel
+    Left = 240
+    Height = 17
+    Top = 89
+    Width = 90
+    AutoSize = False
+    Caption = 'Prefix'
+    Layout = tlCenter
+  end
+  object edtPrefix: TEdit
+    Left = 338
+    Height = 21
+    Top = 89
+    Width = 135
+    Enabled = False
+    OnChange = FieldChanged
+    TabOrder = 8
+    Text = ''
+  end
+  object chkPrefixMult: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 89
+    Width = 90
+    Caption = 'Prefix Mult'
+    Enabled = False
+    TabOrder = 9
+  end
+  object lblDate: TLabel
+    Left = 8
+    Height = 17
+    Top = 114
+    Width = 75
+    AutoSize = False
+    Caption = 'Date'
+    Layout = tlCenter
+  end
+  object dtpDateTime: TDateTimePicker
+    Left = 90
+    Height = 21
+    Top = 114
+    Width = 135
+    Kind = dtkDateTime
+    OnChange = FieldChanged
+    TabOrder = 10
+  end
+  object lblZone: TLabel
+    Left = 240
+    Height = 17
+    Top = 114
+    Width = 90
+    AutoSize = False
+    Caption = 'Zone'
+    Layout = tlCenter
+  end
+  object edtZone: TEdit
+    Left = 338
+    Height = 21
+    Top = 114
+    Width = 135
+    NumbersOnly = True
+    MaxLength = 2
+    OnChange = FieldChanged
+    TabOrder = 11
+    Text = ''
+  end
+  object chkZoneMult: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 114
+    Width = 90
+    Caption = 'Zone Mult'
+    Enabled = False
+    TabOrder = 12
+  end
+  object lblName: TLabel
+    Left = 240
+    Height = 17
+    Top = 138
+    Width = 90
+    AutoSize = False
+    Caption = 'Name'
+    Layout = tlCenter
+  end
+  object edtName: TEdit
+    Left = 338
+    Height = 21
+    Top = 138
+    Width = 135
+    OnChange = FieldChanged
+    TabOrder = 13
+    Text = ''
+  end
+  object chkNameSent: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 138
+    Width = 90
+    Caption = 'Name Sent'
+    Enabled = False
+    TabOrder = 14
+  end
+  object lblComputerID: TLabel
+    Left = 8
+    Height = 17
+    Top = 162
+    Width = 75
+    AutoSize = False
+    Caption = 'Computer ID'
+    Layout = tlCenter
+  end
+  object edtComputerID: TEdit
+    Left = 90
+    Height = 21
+    Top = 162
+    Width = 135
+    CharCase = ecUpperCase
+    MaxLength = 1
+    OnChange = FieldChanged
+    TabOrder = 15
+    Text = ''
+  end
+  object lblQTH: TLabel
+    Left = 240
+    Height = 17
+    Top = 162
+    Width = 90
+    AutoSize = False
+    Caption = 'QTH'
+    Layout = tlCenter
+  end
+  object edtQTHString: TEdit
+    Left = 338
+    Height = 21
+    Top = 162
+    Width = 135
+    CharCase = ecUpperCase
+    OnChange = FieldChanged
+    TabOrder = 16
+    Text = ''
+  end
+  object chkInhibitMults: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 162
+    Width = 90
+    Caption = 'Inhibit Mults'
+    Enabled = False
+    TabOrder = 17
+  end
+  object lblQSOPoints: TLabel
+    Left = 8
+    Height = 17
+    Top = 187
+    Width = 75
+    AutoSize = False
+    Caption = 'QSO points'
+    Layout = tlCenter
+  end
+  object edtQSOPoints: TEdit
+    Left = 90
+    Height = 21
+    Top = 187
+    Width = 135
+    NumbersOnly = True
+    Enabled = False
+    OnChange = FieldChanged
+    TabOrder = 18
+    Text = ''
+  end
+  object lblPostalCode: TLabel
+    Left = 240
+    Height = 17
+    Top = 187
+    Width = 90
+    AutoSize = False
+    Caption = 'Postal Code'
+    Layout = tlCenter
+  end
+  object edtPostalCode: TEdit
+    Left = 338
+    Height = 21
+    Top = 187
+    Width = 135
+    OnChange = FieldChanged
+    TabOrder = 19
+    Text = ''
+  end
+  object chkDupe: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 187
+    Width = 90
+    Caption = 'Dupe'
+    Enabled = False
+    TabOrder = 20
+  end
+  object lblAge: TLabel
+    Left = 8
+    Height = 17
+    Top = 211
+    Width = 75
+    AutoSize = False
+    Caption = 'Age'
+    Layout = tlCenter
+  end
+  object edtAge: TEdit
+    Left = 90
+    Height = 21
+    Top = 211
+    Width = 135
+    NumbersOnly = True
+    MaxLength = 3
+    OnChange = FieldChanged
+    TabOrder = 21
+    Text = ''
+  end
+  object lblPower: TLabel
+    Left = 240
+    Height = 17
+    Top = 211
+    Width = 90
+    AutoSize = False
+    Caption = 'Power'
+    Layout = tlCenter
+  end
+  object edtPower: TEdit
+    Left = 338
+    Height = 21
+    Top = 211
+    Width = 135
+    OnChange = FieldChanged
+    TabOrder = 22
+    Text = ''
+  end
+  object chkDeleted: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 211
+    Width = 90
+    Caption = '&Deleted'
+    OnChange = FieldChanged
+    TabOrder = 23
+  end
+  object lblChapter: TLabel
+    Left = 8
+    Height = 17
+    Top = 236
+    Width = 75
+    AutoSize = False
+    Caption = 'Chapter'
+    Layout = tlCenter
+  end
+  object edtChapter: TEdit
+    Left = 90
+    Height = 21
+    Top = 236
+    Width = 135
+    OnChange = FieldChanged
+    TabOrder = 24
+    Text = ''
+  end
+  object lblPrecedence: TLabel
+    Left = 240
+    Height = 17
+    Top = 236
+    Width = 90
+    AutoSize = False
+    Caption = 'Precedence'
+    Layout = tlCenter
+  end
+  object edtPrecedence: TEdit
+    Left = 338
+    Height = 21
+    Top = 236
+    Width = 135
+    CharCase = ecUpperCase
+    MaxLength = 1
+    OnChange = FieldChanged
+    TabOrder = 25
+    Text = ''
+  end
+  object chkSAP: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 236
+    Width = 90
+    Caption = 'S&P'
+    OnChange = FieldChanged
+    TabOrder = 26
+  end
+  object chkXQSO: TCheckBox
+    Left = 480
+    Height = 18
+    Top = 258
+    Width = 56
+    Caption = 'X-QSO'
+    OnChange = FieldChanged
+    TabOrder = 27
+  end
+  object lblCheck: TLabel
+    Left = 8
+    Height = 17
+    Top = 260
+    Width = 75
+    AutoSize = False
+    Caption = 'Check'
+    Layout = tlCenter
+  end
+  object edtCheck: TEdit
+    Left = 90
+    Height = 21
+    Top = 260
+    Width = 135
+    NumbersOnly = True
+    MaxLength = 2
+    OnChange = FieldChanged
+    TabOrder = 28
+    Text = ''
+  end
+  object lblPrefecture: TLabel
+    Left = 240
+    Height = 17
+    Top = 260
+    Width = 90
+    AutoSize = False
+    Caption = 'Prefecture'
+    Layout = tlCenter
+  end
+  object edtPrefecture: TEdit
+    Left = 338
+    Height = 21
+    Top = 260
+    Width = 135
+    NumbersOnly = True
+    MaxLength = 3
+    OnChange = FieldChanged
+    TabOrder = 29
+    Text = ''
+  end
+  object lblClass: TLabel
+    Left = 8
+    Height = 17
+    Top = 284
+    Width = 75
+    AutoSize = False
+    Caption = 'Class'
+    Layout = tlCenter
+  end
+  object edtClass: TEdit
+    Left = 90
+    Height = 21
+    Top = 284
+    Width = 135
+    OnChange = FieldChanged
+    TabOrder = 30
+    Text = ''
+  end
+  object lblTenTen: TLabel
+    Left = 240
+    Height = 17
+    Top = 284
+    Width = 90
+    AutoSize = False
+    Caption = 'Ten Ten Number'
+    Layout = tlCenter
+  end
+  object edtTenTen: TEdit
+    Left = 338
+    Height = 21
+    Top = 284
+    Width = 135
+    NumbersOnly = True
+    MaxLength = 5
+    OnChange = FieldChanged
+    TabOrder = 31
+    Text = ''
+  end
+  object lblNumberSent: TLabel
+    Left = 8
+    Height = 17
+    Top = 309
+    Width = 75
+    AutoSize = False
+    Caption = 'Number Sent'
+    Layout = tlCenter
+  end
+  object edtNumberSent: TEdit
+    Left = 90
+    Height = 21
+    Top = 309
+    Width = 135
+    NumbersOnly = True
+    OnChange = FieldChanged
+    TabOrder = 32
+    Text = ''
+  end
+  object lblRSTSent: TLabel
+    Left = 240
+    Height = 17
+    Top = 309
+    Width = 90
+    AutoSize = False
+    Caption = 'RST sent'
+    Layout = tlCenter
+  end
+  object edtRSTSent: TEdit
+    Left = 338
+    Height = 21
+    Top = 309
+    Width = 135
+    NumbersOnly = True
+    MaxLength = 3
+    OnChange = FieldChanged
+    TabOrder = 33
+    Text = ''
+  end
+  object btnPlay: TButton
+    Left = 483
+    Height = 23
+    Top = 323
+    Width = 90
+    AutoSize = False
+    Caption = '&Play'
+    Enabled = False
+    OnClick = btnPlayClick
+    TabOrder = 34
+  end
+  object lblNumberRcvd: TLabel
+    Left = 8
+    Height = 17
+    Top = 333
+    Width = 75
+    AutoSize = False
+    Caption = 'Number Rcvd'
+    Layout = tlCenter
+  end
+  object edtNumberReceived: TEdit
+    Left = 90
+    Height = 21
+    Top = 333
+    Width = 135
+    NumbersOnly = True
+    OnChange = FieldChanged
+    TabOrder = 35
+    Text = ''
+  end
+  object lblRSTReceived: TLabel
+    Left = 240
+    Height = 17
+    Top = 333
+    Width = 90
+    AutoSize = False
+    Caption = 'RST received'
+    Layout = tlCenter
+  end
+  object edtRSTReceived: TEdit
+    Left = 338
+    Height = 21
+    Top = 333
+    Width = 135
+    NumbersOnly = True
+    MaxLength = 3
+    OnChange = FieldChanged
+    TabOrder = 36
+    Text = ''
+  end
+  object btnSave: TButton
+    Left = 483
+    Height = 23
+    Top = 353
+    Width = 90
+    AutoSize = False
+    Caption = '&Save'
+    Default = True
+    Enabled = False
+    OnClick = btnSaveClick
+    TabOrder = 37
+  end
+  object lblOperator: TLabel
+    Left = 8
+    Height = 17
+    Top = 356
+    Width = 75
+    AutoSize = False
+    Caption = 'Operator'
+    Layout = tlCenter
+  end
+  object edtOperator: TEdit
+    Left = 90
+    Height = 21
+    Top = 356
+    Width = 135
+    OnChange = FieldChanged
+    TabOrder = 38
+    Text = ''
+  end
+  object btnCancel: TButton
+    Left = 483
+    Height = 23
+    Top = 380
+    Width = 90
+    AutoSize = False
+    Caption = 'Cancel'
+    Cancel = True
+    OnClick = btnCancelClick
+    TabOrder = 39
+  end
+end

@@ -184,6 +184,48 @@ a second divisible by ten. A dropped or coalesced tick used to leave the display
 a slot behind for the next ten seconds. Same picture, no missed edges -- but if
 you ever see it stall, that assumption is what to doubt.
 
+### 9. Edit QSO  (`uEditQSOForm`) -- THE ONE THAT WRITES TO THE LOG
+
+Double-click a QSO in the editable log, or reach it from Log Edit / Log Search.
+69 controls, and the only converted dialog that writes back to the contest log,
+so this is the one worth an unhurried pass. **Work on a copy of a log**, or on a
+contest you do not mind editing.
+
+- [ ] **It opens over its parent** from all THREE routes -- the main window, Log
+      Edit and Log Search -- and the parent is not clickable underneath.
+- [ ] **The date field shows a full date and time**, not a bare hour. This is the
+      bench defect from 2026-08-18 (`DTM_SETFORMAT` bound to the ANSI variant);
+      a `TDateTimePicker` has no format string to get wrong, so it should now be
+      structurally impossible. Confirm on a QSO logged late in the evening.
+- [ ] **Round-trip with no edits**: open a QSO, press Save, reopen. Every field
+      should read back identically. This is the single most valuable check here.
+- [ ] **Edit one field at a time and verify it lands** -- callsign, band, mode,
+      frequency, RST both ways, serials both ways, name, QTH, power, class,
+      chapter, check, age, precedence, prefecture, Ten-Ten, zone, operator.
+- [ ] **The four mult flags, Name Sent, Inhibit Mults and Dupe are GREYED.** That
+      is deliberate and it is a visual change. They were never editable -- the
+      template made them `BS_CHECKBOX`, which Windows does not toggle on click,
+      and the save path never reads them. Under the LCL every check box toggles,
+      so greying them is what keeps the UI from lying about a scoring flag.
+- [ ] **S&P, Deleted and X-QSO ARE editable and DO save.** Those three are the
+      `BS_AUTOCHECKBOX` ones and the only three the save path reads back.
+- [ ] **X-QSO still behaves as X-QSO**: the QSO stays in the log, keeps its
+      serial, leaves the score, and exports with the `X-QSO:` Cabrillo prefix.
+- [ ] **Deleted still sends a contactdelete** to UDP / the external logger.
+- [ ] **Callsign typing updates country, prefix and DX QTH** as you type.
+- [ ] **A bad callsign is refused** on Save with the check-callsign warning.
+- [ ] **Cancel and Escape discard everything.**
+- [ ] `CONFIRM EDIT CHANGES = TRUE` still prompts before saving.
+- [ ] **Play** is enabled only when the QSO has an MP3 and the file exists; with
+      no MP3 player configured it prompts to set one.
+- [ ] Opening a **note** record or a **skipped** QSO shows the note / closes,
+      rather than opening an editor over a record it cannot edit.
+
+**Not a defect, do not report:** the RST fields still refuse a minus sign. That
+is deliberate and now has a written reason -- a negative "RST" is a WSJT-X dB
+report, and the fix is separate received/sent SNR fields when the log moves to
+contest.sqlite, not a wider RST. See the `uEditQSOForm.pas` header.
+
 ---
 
 ## Known and accepted — no action, listed so they are not re-reported
