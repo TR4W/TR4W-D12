@@ -94,6 +94,7 @@ uses
   uKeyerConfigApply in 'src\uKeyerConfigApply.pas',
   uUDPBroadcastConfig in 'src\uUDPBroadcastConfig.pas',
   uUDPBroadcaster in 'src\uUDPBroadcaster.pas',
+  uWindowLayoutStore in 'src\uWindowLayoutStore.pas',
   uTR4WConfigFile in 'src\uTR4WConfigFile.pas',
   uRadioConfigLegacyMap in 'src\uRadioConfigLegacyMap.pas',
   uRadioConfigApply in 'src\uRadioConfigApply.pas',
@@ -743,7 +744,7 @@ begin
   ReadInConfigFile(cfgCFG);          //n4af 4.31.5
   ReadInConfigFile(cfgCommMes);      //common messages gets precedence - n4af
 
-  // The radio library (settings	r4w.json) is the FORMAT OF RECORD for radio
+  // The radio library (settings\tr4w.json) is the FORMAT OF RECORD for radio
   // settings, so it gets the last word -- after every config file above, and
   // before anything reads a [Radio] key.  Without this the ini wins simply by
   // being read here, and a hand-edit of RADIO ONE CONTROL PORT silently

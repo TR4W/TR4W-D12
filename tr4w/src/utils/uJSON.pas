@@ -126,6 +126,20 @@ function JSONPairValue(aObj: TJSONObject; aIndex: integer): TJSONValue;
 function JSONGetStr(aObj: TJSONObject; const aName, aDefault: string): string;
 function JSONGetInt(aObj: TJSONObject; const aName: string; aDefault: integer): integer;
 
+// Replaces aName in aObj, or adds it when absent, and takes ownership of aValue
+// either way.
+//
+// THIS IS NOT AddPair.  fpjson's Add APPENDS unconditionally, so setting a name
+// that is already present leaves TWO pairs with that name in the document --
+// legal JSON that every reader is entitled to disagree about.  The old pair is
+// removed first.
+procedure JSONSetSection(aObj: TJSONObject; const aName: string; aValue: TJSONValue);
+
+// A deep, independent copy.  Needed whenever a value moves between two
+// documents: adding a value that another object already owns would give it two
+// owners and free it twice.
+function JSONClone(aValue: TJSONValue): TJSONValue;
+
 implementation
 
 uses
@@ -283,5 +297,49 @@ begin
       Result := StrToIntDef(JSONText(v), aDefault);
       end;
 end;
+
+{$IFDEF FPC}
+
+procedure JSONSetSection(aObj: TJSONObject; const aName: string; aValue: TJSONValue);
+var
+   idx: integer;
+begin
+   idx := aObj.IndexOfName(aName);
+   if idx >= 0 then
+      begin
+      // Delete FREES the old value, which is what we want -- the document owned
+      // it and is about to own the replacement instead.
+      aObj.Delete(idx);
+      end;
+   aObj.Add(aName, aValue);
+end;
+
+function JSONClone(aValue: TJSONValue): TJSONValue;
+begin
+   Result := aValue.Clone;
+end;
+
+{$ELSE}
+
+procedure JSONSetSection(aObj: TJSONObject; const aName: string; aValue: TJSONValue);
+var
+   pair: System.JSON.TJSONPair;
+begin
+   // RemovePair hands ownership BACK to the caller and returns nil when the
+   // name is absent; Free tolerates both.
+   pair := aObj.RemovePair(aName);
+   pair.Free;
+   aObj.AddPair(aName, aValue);
+end;
+
+function JSONClone(aValue: TJSONValue): TJSONValue;
+begin
+   // A re-parse of the value's own text, rather than a Clone whose spelling has
+   // moved between the System.JSON versions this tree has been built against.
+   // Exact by construction, and this path is the deprecated one.
+   Result := TJSONObject.ParseJSONValue(aValue.ToJSON);
+end;
+
+{$ENDIF}
 
 end.

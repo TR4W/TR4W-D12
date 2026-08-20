@@ -29,7 +29,15 @@ unit uTestTR4WConfigFile;
       keyer store simply empty rather than the load failing;
     * no BOM, because Python and jq reject one and our own reader would not;
     * an unreadable file is REPORTED rather than silently read as "no config",
-      which would present as a lost configuration.
+      which would present as a lost configuration;
+    * and a save that is handed ONE store leaves the other sections standing.
+
+  That last group is the one worth explaining.  SaveConfig used to build the
+  document from the tenants it was given and nothing else, so a store the
+  caller did not pass was DELETED from the file -- and nothing in the build
+  could see that happen.  These tests are the guard, because the failure is
+  invisible: the file that results is perfectly valid JSON, and the section
+  that is gone reads exactly like a feature the operator never configured.
 }
 
 interface
@@ -55,6 +63,10 @@ type
       procedure Test_EveryHeaderSectionSurvivesARoundTrip;
       procedure Test_HeaderSectionsAreIndependent;
       procedure Test_ClearEmptiesTheHeaders;
+      procedure Test_SavingOneTenantKeepsTheOthers;
+      procedure Test_SavingKeepsAForeignSectionItKnowsNothingAbout;
+      procedure Test_ReplacingASectionLeavesOneCopyOfIt;
+      procedure Test_AnUnparseableFileIsSetAsideRatherThanDestroyed;
    public
       constructor Create(const AName: string);
       destructor Destroy; override;
@@ -360,6 +372,170 @@ begin
    Test_EveryHeaderSectionSurvivesARoundTrip;
    Test_HeaderSectionsAreIndependent;
    Test_ClearEmptiesTheHeaders;
+   Test_SavingOneTenantKeepsTheOthers;
+   Test_SavingKeepsAForeignSectionItKnowsNothingAbout;
+   Test_ReplacingASectionLeavesOneCopyOfIt;
+   Test_AnUnparseableFileIsSetAsideRatherThanDestroyed;
+end;
+
+procedure TTR4WConfigFileTests.Test_SavingOneTenantKeepsTheOthers;
+var
+   radios, radios2: TRadioConfigStore;
+   keyers, keyers2: TKeyerConfigStore;
+   fn, err: string;
+begin
+   BeginTest('Test_SavingOneTenantKeepsTheOthers');
+   // The shape the window layout needs: a caller that holds ONE store and
+   // saves it must not take the others down with it.
+   radios  := TRadioConfigStore.Create;
+   keyers  := TKeyerConfigStore.Create;
+   radios2 := TRadioConfigStore.Create;
+   keyers2 := TKeyerConfigStore.Create;
+   try
+      fn := TempFileName;
+      AddNamedRadio(radios, 'K4');
+      keyers.AddKeyer('Desk WinKey', kkWinKeyer).Port := 'SERIAL 7';
+      SaveConfig(fn, radios, keyers);
+
+      // Now save the KEYERS alone, exactly as a caller with no radio store
+      // would have to.
+      keyers.AddKeyer('YCCC box', kkYCCC).Port := 'SERIAL 9';
+      SaveConfig(fn, nil, keyers);
+
+      CheckTrue(LoadConfig(fn, radios2, keyers2, err), 'load succeeded: ' + err);
+      CheckEquals(2, keyers2.KeyerCount, 'the keyer section was updated');
+      CheckEquals(1, radios2.RadioCount, 'and the radio section SURVIVED');
+      CheckEquals('K4', radios2.Radio(0).Name, 'with its contents intact');
+
+      // And the other way round: saving the radios alone keeps the keyers.
+      AddNamedRadio(radios, 'IC-7610');
+      SaveConfig(fn, radios, nil);
+
+      radios2.Clear;
+      keyers2.Clear;
+      CheckTrue(LoadConfig(fn, radios2, keyers2, err), 'reload succeeded: ' + err);
+      CheckEquals(2, radios2.RadioCount, 'the radio section was updated');
+      CheckEquals(2, keyers2.KeyerCount, 'and the keyer section SURVIVED');
+   finally
+      keyers2.Free;
+      radios2.Free;
+      keyers.Free;
+      radios.Free;
+   end;
+end;
+
+procedure TTR4WConfigFileTests.Test_SavingKeepsAForeignSectionItKnowsNothingAbout;
+var
+   radios: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   fn: string;
+   root: TJSONObject;
+   value: TJSONValue;
+begin
+   BeginTest('Test_SavingKeepsAForeignSectionItKnowsNothingAbout');
+   // A section belonging to a tenant this build has never heard of -- which is
+   // what EVERY future tenant looks like to the version before it, and what an
+   // older TR4W sees after a newer one has written the file.  Losing it would
+   // make a downgrade-then-upgrade quietly destructive.
+   radios := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   try
+      fn := TempFileName;
+      WriteAllTextUTF8(fn, '{"somethingFromTheFuture": {"a": 1}}');
+
+      AddNamedRadio(radios, 'K4');
+      SaveConfig(fn, radios, keyers);
+
+      value := TJSONObject.ParseJSONValue(ReadAllTextUTF8(fn));
+      try
+         CheckTrue(value is TJSONObject, 'still a JSON object');
+         root := TJSONObject(value);
+         CheckTrue(root.FindValue('somethingFromTheFuture') <> nil,
+                   'the unknown section is still there');
+         CheckTrue(root.FindValue('radios') <> nil,
+                   'and ours was written beside it');
+      finally
+         value.Free;
+      end;
+   finally
+      keyers.Free;
+      radios.Free;
+   end;
+end;
+
+procedure TTR4WConfigFileTests.Test_ReplacingASectionLeavesOneCopyOfIt;
+var
+   radios: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   fn: string;
+   root: TJSONObject;
+   value: TJSONValue;
+   i, seen: integer;
+begin
+   BeginTest('Test_ReplacingASectionLeavesOneCopyOfIt');
+   // fpjson's Add APPENDS, so a read-modify-write that merely added its
+   // sections back would leave TWO 'keyers' pairs in the document. That is
+   // legal JSON, our own reader would pick one, and the file would grow a
+   // duplicate section on every save -- none of which shows up as a failure.
+   radios := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   try
+      fn := TempFileName;
+      keyers.AddKeyer('Desk WinKey', kkWinKeyer);
+      SaveConfig(fn, radios, keyers);
+      SaveConfig(fn, radios, keyers);
+      SaveConfig(fn, radios, keyers);
+
+      value := TJSONObject.ParseJSONValue(ReadAllTextUTF8(fn));
+      try
+         CheckTrue(value is TJSONObject, 'still a JSON object');
+         root := TJSONObject(value);
+         seen := 0;
+         for i := 0 to root.Count - 1 do
+            begin
+            if JSONPairName(root, i) = 'keyers' then
+               begin
+               Inc(seen);
+               end;
+            end;
+         CheckEquals(1, seen, 'exactly one keyers section after three saves');
+      finally
+         value.Free;
+      end;
+   finally
+      keyers.Free;
+      radios.Free;
+   end;
+end;
+
+procedure TTR4WConfigFileTests.Test_AnUnparseableFileIsSetAsideRatherThanDestroyed;
+var
+   radios: TRadioConfigStore;
+   keyers: TKeyerConfigStore;
+   fn: string;
+begin
+   BeginTest('Test_AnUnparseableFileIsSetAsideRatherThanDestroyed');
+   // A save must not be the thing that loses a configuration. The file cannot
+   // be preserved in place -- the caller asked to write -- so it is copied
+   // aside first and the operator has something to look at.
+   radios := TRadioConfigStore.Create;
+   keyers := TKeyerConfigStore.Create;
+   try
+      fn := TempFileName;
+      FTempFiles.Add(fn + '.bad');
+      WriteAllTextUTF8(fn, 'this is not json');
+
+      SaveConfig(fn, radios, keyers);
+
+      CheckTrue(FileTextExists(fn + '.bad'), 'the old file was set aside');
+      CheckEquals('this is not json', ReadAllTextUTF8(fn + '.bad'),
+                  'byte for byte');
+      CheckTrue(Pos('radios', ReadAllTextUTF8(fn)) > 0,
+                'and the save still went through');
+   finally
+      keyers.Free;
+      radios.Free;
+   end;
 end;
 
 end.

@@ -94,12 +94,14 @@ uses
    uTR4WConfigFile      in '..\..\src\uTR4WConfigFile.pas',
    uUDPBroadcastConfig  in '..\..\src\uUDPBroadcastConfig.pas',
    uUDPBroadcaster      in '..\..\src\uUDPBroadcaster.pas',
+   uWindowLayoutStore   in '..\..\src\uWindowLayoutStore.pas',
    uTestKeyerConfigStore in 'uTestKeyerConfigStore.pas',
    uTestWebSocketFraming in 'uTestWebSocketFraming.pas',
    uTestWebSocketLoopback in 'uTestWebSocketLoopback.pas',
    uTestTCIProtocol     in 'uTestTCIProtocol.pas',
    uTestTCIServer       in 'uTestTCIServer.pas',
    uTestTR4WConfigFile  in 'uTestTR4WConfigFile.pas',
+   uTestWindowLayoutStore in 'uTestWindowLayoutStore.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
    uTestADIFRegression  in 'uTestADIFRegression.pas',
@@ -348,6 +350,7 @@ begin
    RegisterSuite(TTCIProtocolTests.Create('TCIProtocol'));
    RegisterSuite(TTCIServerTests.Create('TCIServer'));
    RegisterSuite(TTR4WConfigFileTests.Create('TR4WConfigFile'));
+   RegisterSuite(TWindowLayoutStoreTests.Create('WindowLayoutStore'));
 
    if RunAllSuites then
       begin

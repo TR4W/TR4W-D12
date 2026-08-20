@@ -97,10 +97,10 @@ var
 
 function StoreFileName: string;
 begin
-   // Derived the same way uRadioConfigApply derives it -- from the ini path, so
-   // the two cannot disagree about which settings folder is in play.
-   Result := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))))
-             + 'tr4w.json';
+   // Delegated. This used to re-derive the path with a comment noting it was
+   // done "the same way uRadioConfigApply derives it" -- two copies of one
+   // rule, which is the arrangement that drifts.
+   Result := TR4WConfigFileName;
 end;
 
 // Read every key in one ini section.  GetPrivateProfileSectionA returns the

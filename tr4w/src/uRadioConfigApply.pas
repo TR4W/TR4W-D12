@@ -1614,7 +1614,8 @@ end;
 
 function RadioStoreFileName: string;
 begin
-   Result := SettingsDirectory + 'tr4w.json';
+   // Delegated: uTR4WConfigFile owns the file, so it owns where the file is.
+   Result := TR4WConfigFileName;
 end;
 
 function LegacyRadioStoreFileName: string;

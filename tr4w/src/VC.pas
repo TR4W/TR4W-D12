@@ -2252,6 +2252,33 @@ type
    {21}tw_Dummy11
     );
 
+const
+  // THE WINDOW'S NAME, and since 2026-08-20 an ON-DISK CONTRACT: this is the
+  // key each window's saved position is stored under in the 'windows' section
+  // of settings/tr4w.json.  It started life in MainUnit as short labels for the
+  // [SaveRect] / [EnsureRect] log lines, and moved here because it now has to
+  // sit beside the enum it enumerates.
+  //
+  // TWO RULES FOLLOW FROM IT BEING ON DISK, neither of which the compiler can
+  // state and both of which uTestWindowLayoutStore pins:
+  //
+  //   * RENAMING an entry ORPHANS that window's saved position.  The old key
+  //     stays in the file, unread, and the window comes back at its default.
+  //     Nothing fails; the operator just finds one window moved.
+  //   * The names must be UNIQUE.  Two windows sharing a name would share one
+  //     rectangle, and which of them won would depend on iteration order.
+  //
+  // Note ADDING or REORDERING WindowsType is now safe, which is the whole point
+  // of the change: the format this replaced was addressed by array index, so a
+  // reorder silently moved every window's position onto a different window.
+  WindowNames: array[WindowsType] of string = (
+    'Main', 'BandMap', 'DupeSheet1', 'FunctionKeys', 'Master',
+    'RemMults', 'Radio1', 'Radio2', 'Telnet', 'Network',
+    'MMTTY', 'Intercom', 'PostScores', 'Stations', 'StationsRMDX',
+    'StationsRMDOM', 'StationsRMZone', 'MP3Recorder', 'StationsRMPrefix',
+    'DupeSheet2', 'HamScore', 'Dummy11');
+
+type
   LogColumnsType =
     (
     logColBand,

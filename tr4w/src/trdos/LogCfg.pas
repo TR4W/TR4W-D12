@@ -342,8 +342,10 @@ var
    cfg: TUDPBroadcastConfig;
    settingsDir: string;
 begin
+   // The json path from uTR4WConfigFile, which owns that file; the ini path is
+   // still derived here because no unit owns tr4w.ini in the same way.
    settingsDir := ExtractFilePath(string(AnsiString(PAnsiChar(@TR4W_INI_FILENAME[0]))));
-   cfg := LoadUDPForStartup(settingsDir + 'tr4w.json', settingsDir + 'tr4w.ini');
+   cfg := LoadUDPForStartup(TR4WConfigFileName, settingsDir + 'tr4w.ini');
    try
       UDPBroadcaster.Configure(cfg);   // takes a copy
    finally

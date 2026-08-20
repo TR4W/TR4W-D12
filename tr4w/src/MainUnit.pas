@@ -519,6 +519,8 @@ uses
   uCTYUpdate,
   uTRMasterUpdate,  // Download TRMASTER.DTA (Super Check Partial)
   uWin32Compat,   // AnimateWindow -- see that unit for the whole FPC gap list
+  uWindowLayoutStore, // the window layout, keyed by name
+  uTR4WConfigFile,    // TR4WConfigFileName / Save- LoadWindowLayout
   Types;
 
 
@@ -1771,17 +1773,41 @@ begin
 
 end;
 
+// Where every window was left, into the 'windows' section of settings/tr4w.json.
+//
+// THE NAME IS NOW HISTORICAL.  It is kept because ExitProgram in
+// LOGSUBS2.PAS calls it and renaming a routine across the trdos boundary buys
+// nothing; the file it used to write is described in uWindowLayoutStore.
+//
+// It used to be `sWriteFile(h, tr4w_WindowsArray, SizeOf(tr4w_WindowsArray))` --
+// a raw dump of the array, HWNDs and WndProcAdr pointers included. See
+// uWindowLayoutStore for the three ways that silently reset an operator's
+// layout, of which "someone builds this 64-bit" is the one now on the roadmap.
 procedure SaveTR4WPOSFILE;
 var
-  h: HWND;
+  store: TWindowLayoutStore;
+  i: WindowsType;
 begin
   FindAndSaveRectOfAllWindows;
-  if not tOpenFileForWrite(h, TR4W_POS_FILENAME) then
-     begin
-     Exit;
-     end;
-  sWriteFile(h, tr4w_WindowsArray, SizeOf(tr4w_WindowsArray));
-  CloseHandle(h);
+
+  store := TWindowLayoutStore.Create;
+  try
+     // The SAME range FindAndSaveRectOfAllWindows fills, deliberately. Beyond
+     // tw_HAMSCOREWINDOW_INDEX is only tw_Dummy11, which is not a window and
+     // whose rect is therefore whatever the array was initialised with --
+     // writing it would put a permanent entry for a non-existent window in the
+     // operator's settings file.
+     for i := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
+        begin
+        store.SetLayout(WindowNames[i],
+                        tr4w_WindowsArray[i].WndRect,
+                        tr4w_WindowsArray[i].WndVisible);
+        end;
+
+     SaveWindowLayout(TR4WConfigFileName, store);
+  finally
+     store.Free;
+  end;
 end;
 
 // Issue #739: a saved window rectangle can land off-screen when the monitor it
@@ -1817,15 +1843,6 @@ type
 
 var
   RelocState: array[WindowsType] of TRelocInfo;
-
-const
-  // Short names for the diagnostic [SaveRect]/[EnsureRect] logging only.
-  WindowNames: array[WindowsType] of string = (
-    'Main', 'BandMap', 'DupeSheet1', 'FunctionKeys', 'Master',
-    'RemMults', 'Radio1', 'Radio2', 'Telnet', 'Network',
-    'MMTTY', 'Intercom', 'PostScores', 'Stations', 'StationsRMDX',
-    'StationsRMDOM', 'StationsRMZone', 'MP3Recorder', 'StationsRMPrefix',
-    'DupeSheet2', 'HamScore', 'Dummy11');
 
 function PositionsMatch(const A, B: TRect): boolean;
 const
@@ -2070,12 +2087,81 @@ begin
       end;
 end;
 
-procedure LoadTR4WPOSFILE;
-label
-  1, 2;
+// The saved layout from the 'windows' section of settings/tr4w.json, into
+// tr4w_WindowsArray.  False when there is no such section, which is every
+// settings folder written before this format existed.
+//
+// A window the file does not MENTION is left exactly as the array already held
+// it -- TryGetLayout does not touch its arguments on a miss -- so the default
+// rects computed further down still apply to it.  That matters: a zero rect is
+// how LoadTR4WPOSFILE decides a window has never been placed, so a miss must
+// not be reported as (0,0,0,0).
+function LoadWindowLayoutFromJSON: boolean;
 var
-  h: HWND;
-  pNumberOfBytesRead: Cardinal;
+   store: TWindowLayoutStore;
+   i: WindowsType;
+   r: TRect;
+   visible: boolean;
+begin
+   store := TWindowLayoutStore.Create;
+   try
+      Result := LoadWindowLayout(TR4WConfigFileName, store);
+      if not Result then
+         begin
+         Exit;
+         end;
+
+      for i := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
+         begin
+         r       := tr4w_WindowsArray[i].WndRect;
+         visible := tr4w_WindowsArray[i].WndVisible;
+         if store.TryGetLayout(WindowNames[i], r, visible) then
+            begin
+            tr4w_WindowsArray[i].WndRect    := r;
+            tr4w_WindowsArray[i].WndVisible := visible;
+            end;
+         end;
+   finally
+      store.Free;
+   end;
+end;
+
+// ONE-TIME SEED from the binary settings/tr4w.pos, so an operator upgrading
+// does not lose the layout they have.  Read EXACTLY as the old loader read it,
+// same size check and same whole-array read, because the job is to reproduce
+// that result rather than to improve on it.
+//
+// THE FILE IS READ AND LEFT IN PLACE.  Deleting it would be a destructive step
+// on the operator's data with nothing to undo it, and leaving it means an older
+// TR4W still finds its layout.  It simply stops being read once tr4w.json has a
+// 'windows' section -- which the very next exit writes.
+//
+// This does read HWND and WndProcAdr bytes off disk into the array, as it
+// always did; the loader below zeroes the handles and reassigns every window
+// procedure from literals a few lines further on.
+procedure SeedLayoutFromLegacyPOSFile;
+var
+   h: HWND;
+   pNumberOfBytesRead: Cardinal;
+begin
+   if not TF.tOpenFileForRead(h, TR4W_POS_FILENAME) then
+      begin
+      Exit;
+      end;
+   try
+      if Windows.GetFileSize(h, nil) <> SizeOf(tr4w_WindowsArray) then
+         begin
+         Exit;
+         end;
+      Windows.ReadFile(h, tr4w_WindowsArray, SizeOf(tr4w_WindowsArray),
+         pNumberOfBytesRead, nil);
+   finally
+      CloseHandle(h);
+   end;
+end;
+
+procedure LoadTR4WPOSFILE;
+var
   i: WindowsType;
   Left: integer;
   CascadeIndex: integer;
@@ -2084,19 +2170,10 @@ begin
 {$IF MAKE_DEFAULT_VALUES = true}
   Exit;
 {$IFEND}
-  if not TF.tOpenFileForRead(h, TR4W_POS_FILENAME) then
+  if not LoadWindowLayoutFromJSON then
      begin
-     goto 2;
+     SeedLayoutFromLegacyPOSFile;
      end;
-  if Windows.GetFileSize(h, nil) <> SizeOf(tr4w_WindowsArray) then
-     begin
-     goto 1;
-     end;
-  Windows.ReadFile(h, tr4w_WindowsArray, SizeOf(tr4w_WindowsArray),
-    pNumberOfBytesRead, nil);
-  1:
-  CloseHandle(h);
-  2:
   for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
     if tr4w_WindowsArray[i].WndRect.Right = 0 then
        begin
@@ -5097,6 +5174,9 @@ var
   // Local, so a failed GetMenuStringW leaves an EMPTY caption rather than
   // whatever the shared TempBuffer1 happened to be holding.
   menuText: array[0..255] of WideChar;
+  // The radio panels' caption -- see the block that sets it.
+  radioCaption: string;
+  rigName: string;
 begin
   if Contest = WRTC then
     if ID in [tw_MASTERWINDOW_INDEX, tw_TELNETWINDOW_INDEX,
@@ -5205,6 +5285,42 @@ begin
      // generic opener that has no other business knowing what a radio is.
      Radio.ModeVFOAWndHandle := Windows.GetDlgItem(h, 105);
      Radio.ModeVFOBWndHandle := Windows.GetDlgItem(h, 106);
+
+     // CAPTION: the localized label plus the rig, e.g. "Radio 1 K4" (NY4I,
+     // 2026-08-20). The generic caption a few lines up is the MENU text, which
+     // says only "Radio 1" and cannot tell an operator which of two rigs a
+     // panel belongs to -- the thing a panel is for on an SO2R station.
+     //
+     // TC_RADIO1/TC_RADIO2, not a literal, so this follows the language the
+     // rest of the UI is in.
+     //
+     // THE GUARD IS NOT DEFENSIVE PADDING. RadioName is INITIALISED to
+     // TC_RADIO1/TC_RADIO2 in LOGRADIO.PAS:3423 and is only replaced when a
+     // radio definition from the library is applied, so appending it
+     // unconditionally reads "Radio 1 Radio 1" on a station with no radio
+     // configured -- which is exactly the state this panel is most often opened
+     // in while setting one up.
+     if ID = tw_RADIOINTERFACEWINDOW1_INDEX then
+        begin
+        radioCaption := TC_RADIO1;
+        end
+     else
+        begin
+        radioCaption := TC_RADIO2;
+        end;
+
+     rigName := Trim(string(Radio.RadioName));
+     if (rigName <> '') and (not SameText(rigName, radioCaption)) then
+        begin
+        radioCaption := radioCaption + ' ' + rigName;
+        end;
+
+     // Set at OPEN only. Changing the radio in the CAT dialog while the panel
+     // is up leaves the old caption until it is reopened; refreshing it from
+     // RestartPollingThread would be the place, and is not done here because
+     // that is a second change to a path this one does not otherwise touch.
+     Windows.SetWindowTextW(h, PWideChar(WideString(radioCaption)));
+
      DisplayCurrentStatus(Radio);
      end;
 

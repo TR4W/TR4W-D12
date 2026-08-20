@@ -38,7 +38,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="324">
+    <Units Count="325">
       <Unit0>
         <Filename Value="tr4w.dpr"/>
         <IsPartOfProject Value="True"/>
@@ -145,6 +145,10 @@
         <Filename Value="src/uPanelUpdate.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit323>
+      <Unit324>
+        <Filename Value="src/uWindowLayoutStore.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit324>
       <Unit3>
         <Filename Value="src/ui/lcl/uKeyerEditForm.pas"/>
         <IsPartOfProject Value="True"/>
