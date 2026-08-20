@@ -370,7 +370,6 @@ uses
   //uMultsFrequencies in 'src\uMultsFrequencies.pas',
   uMakeHelpFile in 'src\uMakeHelpFile.pas',
   uLogConfig in 'src\uLogConfig.pas',
-  uTrayBalloon in 'src\uTrayBalloon.pas',
   uPOTAParks in 'src\uPOTAParks.pas',
   uPendingCounties in 'src\uPendingCounties.pas',
   uCTYUpdate in 'src\uCTYUpdate.pas',

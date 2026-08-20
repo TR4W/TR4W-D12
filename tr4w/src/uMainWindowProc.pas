@@ -382,10 +382,6 @@ begin
       end;
 
 //    WM_MOUSEWHEEL: SetStackPointerOnMouseWheel(SHORT(HiWord(Cardinal(wParam))));
-    WM_TRAYBALLON:
-      begin
-
-      end;
     WM_TIMECHANGE:
       begin
         GetSystemTime(UTC);

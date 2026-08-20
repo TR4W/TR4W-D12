@@ -104,41 +104,31 @@ end;
 procedure SpeakerBeep(Tone, Duration: Word);
 
 begin
- // if Tone < 40 then Exit;
-  if not BeepEnable then Exit;
+  if not BeepEnable then 
+     begin
+     Exit;
+     end;
 
   ntBeep(Tone, Duration);
   Sleep(Duration);
-{
-  Exit;
 
-  if WindowsOSversion = VER_PLATFORM_WIN32_NT then
-    Windows.Beep(Tone, Duration)
-
-  else
-  begin
-    //if BeepEnable then
-    Sound(Tone);
-    Sleep(Duration);
-    NoSound;
-  end;
-}
 end;
 
 procedure ntBeepInit;
 begin
   OwnDevName := False;
 
-  if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then Exit;
+  if WindowsOSversion = VER_PLATFORM_WIN32_WINDOWS then
+     begin
+     Exit;
+     end;
+     
   if Windows.QueryDosDeviceA(DevName, wsprintfBuffer, MAX_PATH) = 0 then
      begin
-     //if not
      Windows.DefineDosDeviceA(DDD_RAW_TARGET_PATH, DevName, '\Device\Beep');
-     //then ShowSysErrorMessage('GET SPEAKER');
      OwnDevName := True;
 
      hBeep := Windows.CreateFileA(BeepFileName, GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, 0, 0);
- //    if hBeep = INVALID_HANDLE_VALUE then ShowSysErrorMessage('COMPUTER SPEAKER');
      ntBeep(32767 - 1, 1);
      end;
 end;
@@ -181,14 +171,31 @@ var
   BeepSetParams                         : BEEP_SET_PARAMETERS;
   BytesReturned                         : Cardinal;
 begin
-  if hBeep = INVALID_HANDLE_VALUE then Exit;
-  if Freq < 37 then Exit;
-  if Freq > 32767 then Exit;
+  if hBeep = INVALID_HANDLE_VALUE then 
+     begin
+     Exit;
+     end;
+     
+  if Freq < 37 then 
+     begin
+     Exit;
+     end;
+     
+  if Freq > 32767 then 
+     begin
+     Exit;
+     end;
+     
   BeepSetParams.Frequency := Freq;
   BeepSetParams.Duration := Duration;
-//  if not
-  DeviceIoControl(hBeep, IOCTL_BEEP_SET, @BeepSetParams, SizeOf(BEEP_SET_PARAMETERS), nil, 0, BytesReturned, nil);
-//    then ShowSysErrorMessage('SET SPEAKER');
+  DeviceIoControl(hBeep, 
+                  IOCTL_BEEP_SET, 
+                  @BeepSetParams, 
+                  SizeOf(BEEP_SET_PARAMETERS), 
+                  nil, 
+                  0, 
+                  BytesReturned, 
+                  nil);
 end;
 
 end.

@@ -28,7 +28,6 @@ uses
   utils_net,
   utils_text,
   utils_file,
-//  uTrayBalloon,
   uMP3Recorder,
   uWinKey,
   uAltD,
@@ -769,7 +768,6 @@ begin
      scpClose;
      end;
 {$IFEND}
-//  if TrayBallonDisplayed then Balloon_DeleteTrayIcon;
   FreeAndNil(udp); // ny4i 4.44.9 Destroy the udp object
   FreeAndNil(slElements);
   // Restore StickyKeys settings // ny4i Issue 126

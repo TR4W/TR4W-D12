@@ -108,7 +108,6 @@ uses
    // to spell them as literal integers to avoid exactly these six lines; three
    // of the eight literals were wrong and each failure was silent. Six units in
    // an implementation clause is the cheaper mistake.
-   VC,                 // WM_TRAYBALLON
    uPOTAParks,         // WM_POTA_DOWNLOAD_DONE / WM_POTA_LOAD_DONE
    uCTYUpdate,         // WM_CTY_VERSION_CHECKED / WM_CTY_DOWNLOAD_DONE
    uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
@@ -158,8 +157,11 @@ begin
              //
              //   WM_APP + 213 was claimed for WM_CTY_VERSION_CHECKED, which is
              //     actually WM_APP + 210. 213 is not any message at all.
-             //   WM_APP + 100 was claimed for WM_TRAYBALLON, which is actually
-             //     WM_SOCK + 3 = $5F7. Not close.
+             //   WM_APP + 100 was claimed for WM_TRAYBALLON, which was
+             //     actually WM_SOCK + 3 = $5F7. Not close. (That message and
+             //     uTrayBalloon are gone now -- the tray feature was not
+             //     wanted -- but the mistake is left described because it is
+             //     the CLASS of error this list must not repeat.)
              //   WM_PANEL_UPDATE (WM_APP + 230) was never added, so the radio
              //     panel marshalling seam never delivered a single update --
              //     which is why RIT/XIT/SPLIT stayed yellow on the bench and
@@ -178,7 +180,6 @@ begin
              (aMsg = WM_TRMASTER_DOWNLOAD_DONE) or
              (aMsg = WM_TCI_APPLY) or
              (aMsg = WM_PANEL_UPDATE) or
-             (aMsg = WM_TRAYBALLON) or
              // NOT a WM_APP message -- WM_USER + 200 -- and the fourth one this
              // list was dropping. It is SENT, not posted, by uGetServerLog so
              // the multi-op log replace happens on the UI thread; unclaimed, it

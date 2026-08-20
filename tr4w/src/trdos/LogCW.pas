@@ -2408,19 +2408,7 @@ procedure SetUpToSendOnActiveRadio;
 
 begin
 
-  {
-    if (ActiveMode = Phone) and Config.DVKEnable and DVPActive and DVPMessagePlaying then
-      begin
-        TimeOut                                             := 0;
- 
-        DVPStopPlayback;
- 
-        repeat
-          Wait(5);
-          inc(TimeOut);
-        until (not DVPMessagePlaying) or (TimeOut > 50);
-      end;
-  }
+  
   if ActiveRadio = RadioOne then
      begin
      if not SendingOnRadioOne then
@@ -2455,10 +2443,8 @@ begin
        begin
        FlushCWBufferAndClearPTT('LogCW: SetUpToSendOn*Radio - clear CW on the radio being left');
 
- //      ActiveKeyerPort                                     := Radio2.tKeyerPort;
- //      tActiveKeyerHandle                                  := Radio2.tKeyerPortHandle;
        SerialInvert                                          := Radio2SerialInvert;
-         {CodeSpeed                                          := RadioTwoSpeed;}
+        
        if not Radio2.CWSpeedSync then     // ny4i: radio is master → don't push speed back
           begin
           CodeSpeed := Radio2.SpeedMemory; {KK1L: 6.73}
@@ -2471,19 +2457,18 @@ begin
          {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioTwo] for split mode SO2R}
          {KK1L: 6.72 Moved this to SendCrypticMessage to only handle CTRL-A requests      }
          {           SwapRadios is run prior to coming here for SO2R and that hoses things}
-         {ActiveMode                                         := ModeMemory [RadioTwo]; {KK1L: 6.71 for split mode SO2R}
+         
        SendingOnRadioOne                                     := False;
        SendingOnRadioTwo                                     := True;
        SetRelayForActiveRadio(ActiveRadio);
        end;
-    // If this line really wantsa to send F1 upon if CWByCat, it would beed to call IsActiveCWByCAT
+    // If this line really wants a to send F1 upon if CWByCat, it would beed to call IsActiveCWByCAT
     // but as this code is called in other places, I do not believe this is the right thing to do.
     // ny4i
 //if cwbycat then ActiveRadioPtr.SendCW(F1);  // ny4i - This does not do anything. This is not the right variable to check.
   wkSetKeyerOutput(ActiveRadioPtr);
 
   KeyersSwapped                                             := False;
- // InactiveRigCallingCQ                                    := False; // n4af 4.44.7
 end;
 
 procedure SetUpToSendOnInactiveRadio;
@@ -2498,20 +2483,7 @@ begin
 
   if KeyersSwapped then Exit; { Already swapped to inactive rig }
   DebugMsg('>>>>>ENTER SetUpToSendOnInactiveRadio');
-{
-  if (ActiveMode = Phone) and Config.DVKEnable and DVPActive and DVPMessagePlaying then
-  begin
-    TimeOut                                                 := 0;
 
-      DVPStopPlayback;
-
-      repeat
-        Wait(5);
-        inc(TimeOut);
-      until (not DVPMessagePlaying) or (TimeOut > 50);
-
-  end;
-}
   if ActiveRadio = RadioOne then
      begin
      if not SendingOnRadioTwo then
@@ -2536,15 +2508,13 @@ begin
     if not SendingOnRadioOne then
        begin
        FlushCWBufferAndClearPTT('LogCW: SetUpToSendOnInactiveRadio - clear CW on the active radio');
- //      ActiveKeyerPort                                     := Radio1.tKeyerPort;
- //      tActiveKeyerHandle                                  := Radio1.tKeyerPortHandle;
+ 
        SerialInvert                                          := Radio1SerialInvert;
          {CodeSpeed                                          := RadioOneSpeed;}
        CodeSpeed                                             := Radio1.SpeedMemory; {KK1L: 6.73}
        SetSpeed(CodeSpeed);
        SetRelayForActiveRadio(RadioOne);
          {KK1L: 6.71 Need to set mode to that of ModeMemory [RadioOne] for split mode SO2R}
-         {ActiveMode                                         := ModeMemory [RadioOne]; {KK1L: 6.71 for split mode SO2R}
        SendingOnRadioOne                                     := True;
        SendingOnRadioTwo                                     := False;
        end;

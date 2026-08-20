@@ -2184,7 +2184,6 @@ const
   WM_SOCK                               = $5F4; //WM_APP + 115;
   WM_SOCK_SYNC_TIME                     = WM_SOCK + 1;
   WM_SOCK_NET                           = WM_SOCK + 2;
-  WM_TRAYBALLON                         = WM_SOCK + 3;
 
   StatusEquality                        = 1;
   tr4w_MAX_RATE                         = 200;
@@ -4242,15 +4241,6 @@ QSOPartiesCount = 20;
    //   lhDummy: array[0..(SizeOfContestExchange-SizeOfTLogHeader-1)] of Char;  // three fields above are 60 bytes
 
     end;
-  (*
-  TLogHeader = record
-      lhVersionString: array[0..7] of Char;
-      lhFileDesc: array[0..15] of Char;
-      lhWarningString: array[0..35] of Char;
-   //   lhDummy: array[0..(SIZEOFCONTEXTEXCHANGE-60-1)] of Char;  // three fields above are 60 bytes
-   //   lhDummy: array[0..(SizeOfContestExchange-SizeOfTLogHeader-1)] of Char;  // three fields above are 60 bytes
-    end;
-  *)
 
   const
     LogHeader                           : TLogHeader =

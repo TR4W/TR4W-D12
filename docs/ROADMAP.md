@@ -331,6 +331,24 @@ code review, and it is the reason the FMX twins should not be deleted yet.
   End state: a `.dpr` that reads about `begin RunTR4W; end.`, with the body in
   `src/uStartup.pas` and `src/uMessageLoop.pas` -- at which point the extension stops
   mattering at all.
+- **Delete `src/uTrayBalloon.pas` — DECIDED, not inferred** (NY4I, 2026-08-20).
+  *"I have thought about that feature but the taskbar is sufficient, and a tray icon is easily
+  missed as some do not remember to look in the tray."* So the notification-area icon is not
+  wanted, and this stops being a judgement call about unreferenced code.
+
+  State of it, measured the same day: the unit is **compiled and linked** (`tr4w.dpr:373`) but
+  **nothing calls it**. Every `uses uTrayBalloon` in the tree is commented out — `LOGSUBS2`,
+  `LOGWIND`, `uNet`, `uTelnet` — and there is no live call to any of its four exported routines,
+  so the tray icon is never registered. `WM_TRAYBALLON`'s handler in `uMainWindowProc.pas:385` is
+  an empty `begin end`, which is why nobody ever noticed: clicking a tray icon that does not
+  exist, to reach a handler that does nothing.
+
+  **This one the compiler CAN vouch for**, unlike `HELP.PAS`. That unit is in no program's uses
+  clause, so deleting it proved nothing and it was kept. This one is linked, so removing it from
+  `tr4w.dpr` and getting a green `FullBuild` is real evidence. Take the `WM_TRAYBALLON` case
+  label and its `VC.pas` constant with it, and `Lint-AppMessages` will confirm the allow-list
+  entry goes too.
+
 - **Retire the selectable editable-log row count in favour of a resizable log window** (NY4I,
   2026-08-20). Today the number of visible QSOs is a config value picked from a list —
   `ROW_COUNT_ARRAY` in `uCFG.pas`, 5 to 15, into `LinesInEditableLog`. The intent is to drop the
