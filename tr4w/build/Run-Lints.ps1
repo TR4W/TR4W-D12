@@ -36,6 +36,10 @@ $lints = @(
    @{ Name = 'Lint-PollRadioState';  Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PCharAnsi';       Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-LineEndings';     Arg = $Tr4wDir; NeedsFpc = $false }
+   # The BOM's sibling, and it took six silent losses in one session to earn its
+   # place: line endings were gated, encoding was not. $Tr4wDir because tr4w.dpr
+   # and the test .dpr files carry BOMs too and live outside src\.
+   @{ Name = 'Lint-BOM';             Arg = $Tr4wDir; NeedsFpc = $false }
    @{ Name = 'Lint-FormTags';        Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormFields';      Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-FormOverlap';     Arg = $src;     NeedsFpc = $false }
@@ -49,6 +53,10 @@ $lints = @(
    # too and lives one level up, and a ratchet that cannot see the program's own
    # entry point would let new Win32 UI in through the door it does not watch.
    @{ Name = 'Lint-Win32Dialogs';    Arg = $Tr4wDir; NeedsFpc = $false }
+   # Every message WindowProc handles must be claimed by IsTR4WsOwnMessage, or
+   # the LCL swallows it. Four were being dropped when this was written, one of
+   # them since the day the marshalling seam was built.
+   @{ Name = 'Lint-AppMessages';     Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-LFMProperties';   Arg = $src;     NeedsFpc = $true  }
 )
 
