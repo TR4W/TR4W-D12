@@ -10,6 +10,7 @@ object frmEditQSO: TfrmEditQSO
   ClientWidth = 584
   Position = poMainFormCenter
   OnClose = HandleClose
+  OnCloseQuery = HandleCloseQuery
   OnShow = HandleShow
   object lblCallsign: TLabel
     Left = 8

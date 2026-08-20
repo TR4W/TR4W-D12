@@ -409,11 +409,25 @@ var
   TempSysTime: SYSTEMTIME;
 begin
   Result := True;
-  if Config.ConfirmEditChanges then
-    if YesOrNo(EditQSOFormHandle, TC_SAVECHANGES) = IDno then
-       begin
-       Exit;
-       end;
+
+  // THE CONFIRMATION USED TO BE HERE, and it has moved to the two places the
+  // operator can actually ask for a save -- btnSaveClick and the form's
+  // OnCloseQuery (uEditQSOForm).  Reasons, in order of weight:
+  //
+  //   * A routine that writes 340 lines of binary into the contest log should
+  //     not also be deciding whether to ask a question.  Its caller knows what
+  //     the operator did; this does not.
+  //   * There are now TWO ways to reach a save -- the button, and answering
+  //     Yes to "Save changes?" on the way out.  Left here, the second one
+  //     prompted twice for one action.
+  //   * It was never guarded by whether anything had CHANGED, so it fired on a
+  //     QSO nobody had touched.  In D7 that was invisible, because the Save
+  //     button was only enabled once a field changed and so was unreachable on
+  //     an untouched QSO.  The LCL form had lost that (it enabled Save in
+  //     OnShow); with that fixed, moving the prompt out is behaviour-preserving
+  //     for the button and correct for the new path.
+  //
+  // Config.ConfirmEditChanges still governs it -- see uEditQSOForm.
 
   //EditableQSORXData.QTH
 

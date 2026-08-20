@@ -107,6 +107,8 @@ type
 
     procedure HandleShow(Sender: TObject);
     procedure HandleClose(Sender: TObject; var Action: TCloseAction);
+    procedure HandleCloseQuery(Sender: TObject; var CanClose: boolean);
+    function  ConfirmSave: boolean;
     procedure FieldChanged(Sender: TObject);
     procedure CallsignChanged(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
@@ -253,6 +255,9 @@ uses
   uLCLFormHelpers,    // ShowModalOverWin32Parent -- every caller is still Win32
   uHostedFormWindows,
   MainUnit,           // logger
+  uConfigValues,      // Config.ConfirmEditChanges
+  uDialogs,           // YesOrNo
+  VC,                 // TC_SAVECHANGES
   Log4D;
 
 var
@@ -525,9 +530,22 @@ begin
       Exit;
       end;
 
-   // Save starts disabled and every field's OnChange turns it on, exactly as
+   // Save starts DISABLED and every field's OnChange turns it on, exactly as
    // the WM_COMMAND EN_CHANGE / CBN_SELCHANGE / BN_CLICKED arm did.
-   btnSave.Enabled := True;
+   //
+   // This line said True, which is what the comment above it has always said it
+   // should not (bench, NY4I 2026-08-20: "Save was already enabled upon dialog
+   // open and I was prompted to save upon close even though I changed
+   // nothing").  D7 enables it only from that message arm --
+   // EnableWindowTrue(hwnddlg, FLD_SAVE_BUTTON) -- so this was a port
+   // regression, not a design choice.
+   //
+   // AND IT IS THE DIRTY FLAG, which is why it is worth more than it looks:
+   // the dialog has no other record of whether anything changed, and
+   // HandleCloseQuery below asks this button whether to confirm.  Enabling it
+   // on open did not just offer a pointless Save -- it destroyed the only
+   // change-tracking the dialog has.
+   btnSave.Enabled := False;
    EditQSOSetFocusTo(FLD_CALLSIGN);
 end;
 
@@ -552,17 +570,85 @@ begin
    btnSave.Enabled := True;
 end;
 
+// "Save changes?", when CONFIRM EDIT CHANGES asks for it. True to go ahead.
+//
+// ONE PLACE, because there are now two ways to reach a save -- the button, and
+// answering Yes on the way out -- and the question must be asked once per
+// operator action. It used to live inside SaveQSOToEditableLog; see the note
+// there for why a routine that writes to the contest log should not be the one
+// asking.
+function TfrmEditQSO.ConfirmSave: boolean;
+begin
+   Result := (not Config.ConfirmEditChanges) or
+             (YesOrNo(Self.Handle, TC_SAVECHANGES) = IDyes);
+end;
+
 procedure TfrmEditQSO.btnSaveClick(Sender: TObject);
 begin
+   if not ConfirmSave then
+      begin
+      Exit;
+      end;
+
    if SaveQSOToEditableLog then
       begin
+      // Not dirty any more, so HandleCloseQuery does not ask a second time for
+      // the same action. The button's enabled state IS the dirty flag.
+      btnSave.Enabled := False;
       Close;
       end;
 end;
 
 procedure TfrmEditQSO.btnCancelClick(Sender: TObject);
 begin
+   // Nothing but Close: the confirmation belongs to HandleCloseQuery, which
+   // covers Escape and the window's X as well. Asking here would leave the
+   // other two routes silent, which is the state this replaced.
    Close;
+end;
+
+// Escape, Cancel and the window's X all arrive here -- Escape because
+// btnCancel has Cancel = True in the .lfm, so it raises btnCancelClick.
+//
+// NEW BEHAVIOUR, and worth saying so plainly: D7 did NOT do this. Its WM_CLOSE
+// was a bare EndDialog(hwnddlg, 0) and discarded silently. Requested by NY4I on
+// the bench 2026-08-20 ("I do have edit confirm enabled so when I change a
+// field and hit esc, I should be prompted"), and gated on the same
+// CONFIRM EDIT CHANGES setting so an operator who turned it off still gets the
+// old silent discard.
+//
+// It costs nothing to track because btnSave.Enabled already answers "has
+// anything changed" -- provided OnShow leaves it False, which is what the
+// regression above was about.
+procedure TfrmEditQSO.HandleCloseQuery(Sender: TObject; var CanClose: boolean);
+begin
+   CanClose := True;
+
+   if not btnSave.Enabled then
+      begin
+      // Nothing changed. Close without a word, exactly as before.
+      Exit;
+      end;
+
+   if not Config.ConfirmEditChanges then
+      begin
+      Exit;
+      end;
+
+   if YesOrNo(Self.Handle, TC_SAVECHANGES) = IDno then
+      begin
+      // Discard. This is the answer that throws the edits away, and it is the
+      // one D7 gave silently.
+      Exit;
+      end;
+
+   // Yes -- write it. A save that FAILS must not close: the operator would lose
+   // the edit to a validation refusal they never saw resolved.
+   CanClose := SaveQSOToEditableLog;
+   if CanClose then
+      begin
+      btnSave.Enabled := False;
+      end;
 end;
 
 procedure TfrmEditQSO.btnPlayClick(Sender: TObject);
