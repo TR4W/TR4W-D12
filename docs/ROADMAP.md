@@ -156,9 +156,31 @@ write; the seam is only for the panels that have no such flag today.
 (Separate and still unaudited: whether the SPOT DATA shared between the cluster thread and the main
 thread is itself handed over safely. That is a data-race question, not an LCL one.)
 
+**A SEARCH HAZARD THAT PRODUCED THE ERRORS ABOVE, worth knowing before trusting any count in this
+section.** `grep -r --include='*.pas'` matches the FILE NAME case-sensitively, and `src/trdos/` uses
+UPPERCASE extensions — 27 `.PAS` files against 334 `.pas`. So that glob silently skips the entire
+contest engine. It is how `tAddContestExchangeToLog` was undercounted, and on 2026-08-20 it nearly
+produced a much worse claim: that `SaveTR4WPOSFILE` had no callers and window positions were never
+saved. It is called from `LOGSUBS2.PAS:728` in `ExitProgram`, exactly as in D7.
+
+Use `--include='*.[pP][aA][sS]'` or no glob at all. `.dpr`, `.inc`, `.dpk` and `.lpr` are uniformly
+lowercase in this tree and in `C:\TR4W`, so only `.pas` varies today — but the failure is silent, so
+do not rely on that.
+
+Re-audited under the correct glob on 2026-08-20, the rest of this section holds: `CreateEditableLog`
+really does have four callers, nothing in trdos calls `CheckSynchronize`, and the cluster path really
+does only set `BandMapNeedsRefresh` rather than repainting (`uTelnet.pas:1771`, with a comment saying
+why). One addition for the panel conversion: `SwapRadios` (`LOGSUBS1.PAS:668-674`) calls
+`InvalidateRect` on both radio panels. That is the OPERATOR's thread, so it needs no marshalling — but
+it is a raw-HWND call site that becomes the form's `Invalidate`.
+
 **Related scoping note (same date):** dialog 73 also should NOT be converted before the shared
 editable-log control is. `CreateEditableLog` has four callers — the main window's editable log,
-Log Edit, Log Search and the sync-log dialog — and `tAddContestExchangeToLog` has five. Converting
+Log Edit, Log Search and the sync-log dialog — and `tAddContestExchangeToLog` has **seven**, not the
+five first written here: `LOGSTUFF.PAS:6213` also renders into `tPreviousDupeQSOsWndHandle`, an
+EIGHTH window this section did not list, and `LOGSUBS2.PAS:2953` into the main editable log.
+(Corrected 2026-08-20 — the original count came from a `grep --include=*.pas`, which is blind to the
+27 UPPERCASE `.PAS` files in `src/trdos`. See the note at the end of this section.) Converting
 73 alone would create a second, LCL implementation of the QSO list beside the Win32 one, which is
 the copies-drift failure `CLAUDE.md` warns about, on the code that renders the log.
 
