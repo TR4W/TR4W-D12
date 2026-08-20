@@ -121,10 +121,40 @@ A converted panel poked from a radio thread will corrupt or crash, and it will d
 intermittently and under contest load rather than on the bench.
 
 So the real next piece of work is **one marshalling seam** — a small "update this panel's field"
-call that is safe to make from any thread and lands on the main one — shared by every tool window.
-Build it once, prove it with RadioInterface (the smallest panel, 63 lines), and Telnet, the
-bandmap and dialog 73 all stop being blocked. Converting a panel first and discovering the
-threading afterwards is the expensive order.
+call that is safe to make from any thread and lands on the main one — shared by the panels a worker
+writes DIRECTLY. Build it once, prove it with RadioInterface (the smallest panel, 63 lines), and
+dialog 73 and Telnet's status writes stop being blocked. Converting a panel first and discovering
+the threading afterwards is the expensive order.
+
+**THE MECHANISM IS A POSTED MESSAGE, NOT `Synchronize` AND NOT `Queue`**, and this codebase has
+already paid for that answer twice:
+
+- Nothing in TR4W calls `CheckSynchronize`. `TThread.Queue` works at all only because `Forms` hooks
+  `WakeMainThread` and that message reaches the LCL through the hand-rolled loop's fall-through
+  `DispatchMessage` (`uRadioEditForm.pas:1216`). That is load-bearing on the very loop Phase 3/7
+  deletes — a poor thing to add twenty new dependencies on.
+- **A queueing thread that exits purges its own callback** (`uMainWindowProc.pas:617`). Radio
+  threads are torn down on every reconnect, which is exactly when an update would vanish silently.
+- `Synchronize` blocks the worker until the main thread services it — a latency and deadlock risk on
+  a poll thread, and the reason the TCI path rejected it (it would block an Indy connection thread
+  against `TTCIServer.Stop`).
+
+`PostMessage(tr4whandle, WM_..., ...)` is what the TCI apply path already does, and `SendMessage` is
+used for the one case that must block (`uGetServerLog`'s replace). The seam should follow them.
+
+**THE BANDMAP IS NOT IN THE BLOCKED SET — IT IS THE MODEL.** Correcting what this section said when
+first written: worker threads never touch the bandmap's controls. `uRadioPolling` and `uTelnet` only
+set `BandMapNeedsRefresh := True`, and `BandMapRefreshTimerProc` (`MainUnit.pas:2203`) repaints on
+the MAIN thread from a 250 ms `SetTimer` callback (`tr4w.dpr:1038`). Converting it to a `TListBox`
+changes none of that.
+
+So no — a bandmap update does not marshal per spot, and it must not start. A dirty flag plus one
+coalesced repaint at 4 Hz is bounded work however many spots arrive, blocks no worker, and floods no
+queue. Every panel converted from here should copy that shape rather than marshalling each field
+write; the seam is only for the panels that have no such flag today.
+
+(Separate and still unaudited: whether the SPOT DATA shared between the cluster thread and the main
+thread is itself handed over safely. That is a data-race question, not an LCL one.)
 
 **Related scoping note (same date):** dialog 73 also should NOT be converted before the shared
 editable-log control is. `CreateEditableLog` has four callers — the main window's editable log,
