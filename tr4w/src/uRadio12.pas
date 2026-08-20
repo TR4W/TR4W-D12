@@ -38,6 +38,27 @@ uses
   LOGSUBS2,
   MainUnit;
 
+// One mode label: flat, left-aligned, in the dialog's own font, four pixels to
+// the right of the VFO frequency static it belongs to.
+procedure CreateModeLabel(const aParent: HWND; const aId: integer; const aTop: integer);
+const
+   VFO_LEFT   = 50;    // the VFO statics' X
+   VFO_WIDTH  = 135;   // and their width
+   VFO_HEIGHT = 23;    // CreateStatic's fixed height
+   GAP        = 4;
+   MODE_WIDTH = 55;
+var
+  h: HWND;
+begin
+   h := Windows.CreateWindowA('STATIC', '',
+      WS_CHILD or WS_VISIBLE or SS_LEFT,
+      VFO_LEFT + VFO_WIDTH + GAP, aTop, MODE_WIDTH, VFO_HEIGHT,
+      aParent, aId, hInstance, nil);
+
+   Windows.SendMessage(h, WM_SETFONT,
+      Windows.SendMessage(aParent, WM_GETFONT, 0, 0), 1);
+end;
+
 function RadioInterfaceWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 var
 //  p                                     : PChar;
@@ -55,6 +76,25 @@ begin
 
         tWM_SETFONT(CreateStatic(nil, 50, 5, 135, hwnddlg, 102), CATWindowFont);
         tWM_SETFONT(CreateStatic(nil, 50, 30, 135, hwnddlg, 104), CATWindowFont);
+
+        // The MODE labels, one to the right of each VFO frequency (Issue #566).
+        //
+        // THESE USED TO BE BUILT IN MainUnit.OpenTR4WWindow -- thirty lines of
+        // GetWindowRect / ScreenToClient arithmetic against the two controls
+        // created immediately above, sitting inside the GENERIC window opener
+        // that knows nothing else about radios. Two units owned one panel, and
+        // the geometry was derived at runtime from coordinates written
+        // literally on the previous lines.
+        //
+        // Same window, same style, same font, same place. 50 + 135 is the right
+        // edge of the VFO static and CreateStatic's height is a fixed 23, so the
+        // arithmetic collapses to constants.
+        //
+        // DELIBERATELY NOT CreateStatic: that would add SS_SUNKEN, SS_CENTER and
+        // the MS Sans Serif font. These are flat, left-aligned and in the
+        // dialog's own font, and that is how they have always looked.
+        CreateModeLabel(hwnddlg, 105, 5);
+        CreateModeLabel(hwnddlg, 106, 30);
 
         for i := 0 to 3 do
            begin

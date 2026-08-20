@@ -262,6 +262,13 @@ Everything below should look exactly as it did. The point of the list is that
       last sent, and a panel that reopens BLANK and stays blank would mean the
       cache was not cleared with the window. It is cleared in `CloseTR4WWindow`.
 - [ ] Leave it open for a while with the rig idle. Nothing should flicker.
+- [ ] **The MODE labels beside each VFO still show the mode** (CW / USB / …).
+      They moved house in the same sitting: they used to be created by the
+      generic window opener in `MainUnit` with runtime geometry arithmetic, and
+      are now built by `uRadio12` with the rest of the panel and found by
+      control id. Verified structurally identical by `Dump-WindowTree` -- same
+      197/36 and 197/61, same 55x23 -- so this is confirming they still get
+      TEXT, which no dump can show.
 
 **Worth knowing:** the radio thread no longer blocks waiting for the UI on these
 writes -- `SetDlgItemTextA` across threads is a synchronous `SendMessage` and
