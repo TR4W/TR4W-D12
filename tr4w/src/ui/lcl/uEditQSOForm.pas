@@ -290,15 +290,37 @@ begin
       end;
 end;
 
+// MAXLENGTH MUST NOT APPLY TO A LOAD, ONLY TO TYPING -- and that is not what
+// the LCL does by default.
+//
+// The .lfm carries MaxLength for the fields the Win32 dialog limited with
+// EM_SETLIMITTEXT. Those are not the same thing. EM_SETLIMITTEXT constrains what
+// the OPERATOR can type and has no effect on SetDlgItemText, so the old dialog
+// happily displayed a value longer than the limit. An LCL TEdit truncates on
+// assignment once it has a handle -- measured, not assumed: MaxLength 12, assign
+// 15 characters, and Text is 12 the moment the handle exists (it is 15 before).
+//
+// Left alone that is SILENT DATA LOSS IN THE CONTEST LOG: a record whose
+// callsign is longer than the limit would load short and be saved short, with
+// nothing to show for it. So a programmatic set lifts the limit for the
+// assignment and puts it straight back, which reproduces the Win32 split
+// exactly -- unrestricted load, restricted typing.
 procedure EditQSOSetText(const aId: integer; const aText: string);
 var
   c: TControl;
+  saved: integer;
 begin
    c := FieldControl(aId);
 
    if c is TCustomEdit then
       begin
-      TCustomEdit(c).Text := aText;
+      saved := TCustomEdit(c).MaxLength;
+      try
+         TCustomEdit(c).MaxLength := 0;
+         TCustomEdit(c).Text := aText;
+      finally
+         TCustomEdit(c).MaxLength := saved;
+      end;
       end
    else if c is TLabel then
       begin

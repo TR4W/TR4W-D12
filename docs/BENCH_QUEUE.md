@@ -199,6 +199,16 @@ contest you do not mind editing.
       structurally impossible. Confirm on a QSO logged late in the evening.
 - [ ] **Round-trip with no edits**: open a QSO, press Save, reopen. Every field
       should read back identically. This is the single most valuable check here.
+- [ ] **A LONG CALLSIGN SURVIVES.** Find or log a QSO whose callsign is longer
+      than 12 characters (a portable like `VP2E/W1ABCDE`), open it, Save, and
+      confirm it is NOT shortened. This was a real regression in the first cut
+      of the conversion: the .lfm carries MaxLength for the fields the Win32
+      dialog limited with EM_SETLIMITTEXT, but those are not the same thing --
+      EM_SETLIMITTEXT limits TYPING and never touched SetDlgItemText, while an
+      LCL TEdit truncates on assignment once it has a handle. Measured: assign
+      15 characters with MaxLength 12 and Text is 12. Fixed by lifting the limit
+      for programmatic sets only, so loading is unrestricted and typing is not.
+      Worth confirming on the bench because it was silent log corruption.
 - [ ] **Edit one field at a time and verify it lands** -- callsign, band, mode,
       frequency, RST both ways, serials both ways, name, QTH, power, class,
       chapter, check, age, precedence, prefecture, Ten-Ten, zone, operator.
