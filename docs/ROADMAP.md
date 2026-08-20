@@ -103,6 +103,35 @@ since landed:
 A `tw_` tool window that must live alongside TR4W's own `GetMessage` loop for a whole contest is a
 different claim, and worth proving with one window before committing to twenty.
 
+**AND A HARDER PREREQUISITE, MEASURED 2026-08-19: the tool windows are written from WORKER
+THREADS, and LCL controls are not thread-safe.**
+
+This is not a guess about one window; it turned up independently in two of them while scoping:
+
+- **RadioInterface 1 & 2** — `uRadioPolling.pas` calls `SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, ...)`
+  at `:351`, `:593`, `:594`, `:643` and around `:1034`. Each radio runs its own reading thread
+  (`tRadioInterfaceThreadHandle`), so those writes are cross-thread.
+- **Sync log (dialog 73)** — `uGetServerLog.RunSyncThread` writes the byte, record and QSO counters
+  and fills the list view directly, from the download thread. The unit's own Issue #912 comment
+  already says Win32 controls need their creating thread and marshals the *replace* step for that
+  reason; the progress updates were never marshalled.
+
+Win32 lets this pass because `SendMessage` marshals across threads for you. **The LCL does not.**
+A converted panel poked from a radio thread will corrupt or crash, and it will do so
+intermittently and under contest load rather than on the bench.
+
+So the real next piece of work is **one marshalling seam** — a small "update this panel's field"
+call that is safe to make from any thread and lands on the main one — shared by every tool window.
+Build it once, prove it with RadioInterface (the smallest panel, 63 lines), and Telnet, the
+bandmap and dialog 73 all stop being blocked. Converting a panel first and discovering the
+threading afterwards is the expensive order.
+
+**Related scoping note (same date):** dialog 73 also should NOT be converted before the shared
+editable-log control is. `CreateEditableLog` has four callers — the main window's editable log,
+Log Edit, Log Search and the sync-log dialog — and `tAddContestExchangeToLog` has five. Converting
+73 alone would create a second, LCL implementation of the QSO list beside the Win32 one, which is
+the copies-drift failure `CLAUDE.md` warns about, on the code that renders the log.
+
 ---
 
 ## 3. 64-bit — much closer than the old roadmap says
