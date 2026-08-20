@@ -66,6 +66,49 @@ destination editor. All four stream clean and are validated by `Lint-LFMProperti
 resource IDs. That is the last part of the program that cannot be edited in a designer, cannot be
 laid out by anyone but its author, and blocks any future platform move.
 
+### The end state, stated plainly (NY4I, 2026-08-20)
+
+> *"Given that we would never write a new Lazarus app this way, this is our goal. We want to get
+> completely away from the non-Lazarus way, as that will give us the greatest chance at
+> cross-platform capability."*
+
+**That is the criterion, and it is stronger than style.** `WM_*`, `HWND`, `PostMessage`,
+`SendMessage`, `CallWindowProc`, `WNDPROC`, `DLGTEMPLATE` — **none of these exist on GTK or
+Cocoa.** Every one is a hard portability blocker, not a preference. A file that still speaks them
+is a file that cannot compile off Windows, however green it is here.
+
+So the target is the code a person would write if they started this app in Lazarus today, which
+means **no window procedure of our own at all** — the LCL owns it, and behaviour hangs off form
+and control events:
+
+| What the tree does today | What it becomes |
+|---|---|
+| `WindowProc` + `TR4WFormSubclassProc` + `IsTR4WsOwnMessage` | nothing — deleted; the LCL's own proc is the only one |
+| `WM_COMMAND` → `EN_CHANGE` / `BN_CLICKED` routing | `OnChange`, `OnClick`, `OnEnter` on the control |
+| `WM_DRAWITEM` / `WM_MEASUREITEM` | `Style := lbOwnerDrawFixed` + `OnDrawItem`; `ItemHeight` |
+| `WM_CTLCOLORSTATIC` / `…EDIT` / `…LISTBOX` | `Control.Color`, `Font.Color` |
+| `wh[]` of `HWND`s, `SetDlgItemText`, `GetDlgItem` | control references; `Caption :=` / `Text :=` |
+| `PostMessage(tr4whandle, WM_APP+n)` from a worker | `Application.QueueAsyncCall` |
+| `SendMessage` for the one case that must block | `TThread.Synchronize` |
+| `GetMessage` / `TranslateMessage` / `DispatchMessage` | `Application.Run` |
+| `TranslateAccelerator` + the accelerator table | `TMenuItem.ShortCut` |
+| `DLGTEMPLATE` + `DialogBox` | designed `.lfm` forms |
+
+**Where a Windows message is genuinely unavoidable** — a shell notification, a device-change
+broadcast — the LCL idiom is a *message method on the form*
+(`procedure WMFoo(var Msg: TMessage); message WM_FOO;`) inside `{$IFDEF WINDOWS}`. Never a
+subclass, and never a shared allow-list two units have to agree about.
+
+**This revises something said earlier in this file.** The eight private thread→UI messages were
+described as likely to *survive* Phase 7, on the grounds that cross-thread marshalling is
+orthogonal to who pumps messages. The requirement is orthogonal; **the mechanism is not, and it
+is the mechanism that is unportable.** They should become `Application.QueueAsyncCall`. The
+reason `TThread.Queue` was rejected still stands and still needs checking against the
+replacement — `TThread.Destroy` purges a queued callback by thread id, and radio threads are torn
+down on every reconnect, which is exactly when a status update matters. `QueueAsyncCall` is not
+tied to a thread's lifetime in the same way, which makes it the candidate; **that needs verifying
+against the LCL source before anything is built on it**, not assuming.
+
 **The inventory is already done** — `docs/dialog_analysis.md`. Restating its counts against what has
 since landed:
 
