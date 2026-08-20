@@ -547,16 +547,38 @@ was reaching the panel to be suppressed in the first place.
 - [x] Open Radio 1 with no radio attached. **RIT, XIT and SPLIT must be GREY.**
       **CONFIRMED 2026-08-20 (NY4I): "rit xit and split appear gray now."** That
       is the first update the marshalling seam has ever delivered.
-- [ ] Close and reopen it a few times. Still grey every time (that is the
-      `ForgetPanel` half, which is a separate bug and has not been exercised
-      yet -- it needed a close/reopen cycle to show).
+- [x] Close and reopen it a few times. Still grey every time (that is the
+      `ForgetPanel` half, a separate bug from the message routing).
+      **CONFIRMED 2026-08-20 (NY4I): "closed and reopened the radio panel, still
+      gray."** Both halves of F7 are now verified: the message reaches the panel
+      at all, and the coalescing cache no longer suppresses the first update
+      after a reopen.
 - [ ] With a radio connected, **bench item 10 becomes testable for the first
       time** -- VFO A/B text, the mode labels, RIT/XIT/SPLIT following the rig.
       None of it can ever have worked, so treat that whole item as unrun rather
       than as a regression check.
 - [ ] **Multi-op:** a client log replace from the server should now actually
       happen (`WM_USER_HEADLESS_SYNC_REPLACE`).
-- [ ] **Tray icon:** clicking the balloon/icon should reach TR4W again.
+- ~~**Tray icon:** clicking the notification-area icon should reach TR4W
+  again.~~ **STRUCK -- NOT OBSERVABLE, and it should never have been listed.**
+  `WM_TRAYBALLON`'s handler in `uMainWindowProc.pas:385` is an EMPTY
+  `begin end`. Clicking the tray icon has always done nothing and still does;
+  the routing fix means the message now arrives somewhere that ignores it,
+  which looks identical from the outside. Written into the checklist without
+  reading the handler first.
+
+  Worth knowing rather than deleting: the icon is registered with
+  `Balloon_AddTrayIcon(tr4whandle, 11, ..., WM_TRAYBALLON, 'TR4W')`
+  (`uTrayBalloon.pas:214`), so the plumbing is real and the click callback now
+  genuinely lands. If a tray click is ever meant to DO something -- restore the
+  window, show a menu -- the handler is where it goes, and it will work now
+  whereas before the message never got there.
+- [x] **Taskbar button:** the main window has one again, and clicking it
+      restores/minimises normally. **CONFIRMED 2026-08-20 (NY4I).** This is the
+      `ShowInTaskBar := stAlways` fix, not a message-routing one: the window had
+      had no taskbar button at all since it became an LCL form, because
+      stDefault means "show if this is the application's MAIN form" and TR4W has
+      none -- `Application.CreateForm` is never called.
 - [ ] **CTY.DAT version check** should report a newer version when there is one.
 
 ---
