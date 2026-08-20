@@ -175,6 +175,7 @@ uses
   uCT1BOHForm in 'src\ui\lcl\uCT1BOHForm.pas',
   uBeaconsForm in 'src\ui\lcl\uBeaconsForm.pas',
   uEditQSOForm in 'src\ui\lcl\uEditQSOForm.pas',
+  uPanelUpdate in 'src\uPanelUpdate.pas',
   uLPTForm in 'src\ui\lcl\uLPTForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uWinManagerForm in 'src\ui\lcl\uWinManagerForm.pas',

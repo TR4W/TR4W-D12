@@ -124,6 +124,9 @@ const
 
 implementation
 
+uses
+   uPanelUpdate;   // cross-thread panel writes -- the seam and why, in that unit
+
 procedure pFactoryRadio(rig: RadioPtr); // Network classes (K4 network, Flex 6000 series network, etc)
 var
    ro: TFactoryRadioBase;
@@ -348,7 +351,7 @@ begin
                QuickDisplayError(authErrBuf);
                if rig^.tRadioInterfaceWndHandle <> 0 then
                   begin
-                  SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
+                  PostPanelText(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
                   end;
                Break;
                end;
@@ -590,8 +593,8 @@ begin
                end;
             if rig^.tRadioInterfaceWndHandle <> 0 then
                begin
-               SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 102, '');
-               SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 104, '');
+               PostPanelText(rig^.tRadioInterfaceWndHandle, 102, '');
+               PostPanelText(rig^.tRadioInterfaceWndHandle, 104, '');
                end;
             reconnectDelay := RECONNECT_INITIAL_DELAY;  // Reset backoff on new disconnect
             end;
@@ -640,7 +643,7 @@ begin
             QuickDisplayError(authErrBuf);
             if rig^.tRadioInterfaceWndHandle <> 0 then
                begin
-               SetDlgItemTextA(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
+               PostPanelText(rig^.tRadioInterfaceWndHandle, 130, 'AUTH FAILED');
                end;
             Break;
             end;
@@ -1125,25 +1128,30 @@ begin
          end;
       if rig.CurrentStatus.VFOStatus = VFOA then
          begin
-         EnableWindowTrue(h, 102);
-         EnableWindowFalse(h, 104);
+         PostControlEnable(GetDlgItem(h, 102), True);
+         PostControlEnable(GetDlgItem(h, 104), False);
          end;
       if rig.CurrentStatus.VFOStatus = VFOB then
          begin
-         EnableWindowTrue(h, 104);
-         EnableWindowFalse(h, 102);
+         PostControlEnable(GetDlgItem(h, 104), True);
+         PostControlEnable(GetDlgItem(h, 102), False);
          end;
       if rig.CurrentStatus.VFOStatus = vfoUnknown then
          begin
-         EnableWindowTrue(h, 104);
-         EnableWindowTrue(h, 102);
+         PostControlEnable(GetDlgItem(h, 104), True);
+         PostControlEnable(GetDlgItem(h, 102), True);
          end;
       rig.CurrentStatus.PrevVFOStatus := rig.CurrentStatus.VFOStatus;
       end;
 
-   Windows.EnableWindow(rig.RITWndHandle, rig.CurrentStatus.RIT);
-   Windows.EnableWindow(rig.XITWndHandle, rig.CurrentStatus.XIT);
-   Windows.EnableWindow(rig.SplitWndHandle, rig.CurrentStatus.Split);
+   // THESE RUN ON EVERY POLL -- rates go down to 10 ms -- and they were three
+   // unconditional cross-thread EnableWindow calls, each of which blocked this
+   // radio thread until the UI serviced it. PostControlEnable coalesces: a
+   // value equal to the last one posted is dropped, so a steady state costs
+   // nothing and only a real RIT/XIT/SPLIT change reaches the main thread.
+   PostControlEnable(rig.RITWndHandle, rig.CurrentStatus.RIT);
+   PostControlEnable(rig.XITWndHandle, rig.CurrentStatus.XIT);
+   PostControlEnable(rig.SplitWndHandle, rig.CurrentStatus.Split);
 
    // Drive the split warning from confirmed radio state, not from CallWindowChange.
    // CallWindowChange fires before CurrentStatus.Split is updated, causing the

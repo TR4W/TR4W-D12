@@ -94,6 +94,7 @@ uses
   uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
   uCTYUpdate,         // WM_CTY_DOWNLOAD_DONE / WM_CTY_VERSION_CHECKED
   uTCIServer,         // WM_TCI_APPLY
+  uPanelUpdate,       // WM_PANEL_UPDATE
   uMMTTY,             // the MMTTY window message
   LOGSUBS2,           // ExitProgram, on WM_CLOSE
   uCTYDAT,            // ctyLoadInCountryFile, after a CTY.DAT download
@@ -607,6 +608,14 @@ begin
       // Fired by TPOTALoadThread after parsing the CSV off the UI thread.
       // lParam is the parsed TStringList — ApplyLoadedParks takes ownership.
       ApplyLoadedParks(lParam);
+      end;
+
+    WM_PANEL_UPDATE:
+      begin
+      // Posted by a radio reading thread (see uPanelUpdate). lParam carries the
+      // update; RunQueuedPanelUpdate applies it here on the main thread and
+      // frees it. Same reasoning as WM_TCI_APPLY below, and the same shape.
+      RunQueuedPanelUpdate(lParam);
       end;
 
     WM_TCI_APPLY:

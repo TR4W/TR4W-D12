@@ -236,6 +236,38 @@ is deliberate and now has a written reason -- a negative "RST" is a WSJT-X dB
 report, and the fix is separate received/sent SNR fields when the log moves to
 contest.sqlite, not a wider RST. See the `uEditQSOForm.pas` header.
 
+### 10. Radio panel updates now go through a posted message  (`uPanelUpdate`)
+
+**NEEDS A RADIO.** No UI changed and no control moved -- what changed is HOW the
+radio's reading thread reaches the Radio 1 / Radio 2 panels. It used to call
+`SetDlgItemTextA` and `EnableWindow` directly across the thread boundary; it now
+posts to the main thread, and identical consecutive values are dropped.
+
+Everything below should look exactly as it did. The point of the list is that
+"looks the same" is the pass condition, and any DIFFERENCE is the finding.
+
+- [ ] Open the Radio 1 panel (and Radio 2 on an SO2R setup). **VFO A and VFO B
+      read the right frequencies and keep up while you tune.**
+- [ ] **RIT, XIT and SPLIT light up and go out as you toggle them on the rig**,
+      with no lag you did not have before. These are the three that used to be
+      written on every single poll; they are now only written when they change,
+      so a stuck indicator is the thing to report.
+- [ ] **The active VFO highlight follows the radio** when you switch VFO A/B.
+- [ ] **Disconnect the radio** (pull the cable or stop the network rig): both VFO
+      fields should clear.
+- [ ] **A network radio with wrong credentials still shows `AUTH FAILED`** in the
+      status line.
+- [ ] **Close the panel and reopen it.** Everything should repopulate. This is
+      the one genuinely new failure mode: the coalescing cache remembers what it
+      last sent, and a panel that reopens BLANK and stays blank would mean the
+      cache was not cleared with the window. It is cleared in `CloseTR4WWindow`.
+- [ ] Leave it open for a while with the rig idle. Nothing should flicker.
+
+**Worth knowing:** the radio thread no longer blocks waiting for the UI on these
+writes -- `SetDlgItemTextA` across threads is a synchronous `SendMessage` and
+held the poll thread until the main thread serviced it. It should if anything
+poll more evenly now. That is a side effect of the change, not its purpose.
+
 ---
 
 ## Known and accepted — no action, listed so they are not re-reported

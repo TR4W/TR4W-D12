@@ -497,6 +497,7 @@ uses
 // here so the FPC build can be built and tested; the three commands below are
 // simply unavailable in it.  This guard comes OUT with the LCL port.
   uUDPBroadcastConfig, // TUDPStream / usLookup
+  uPanelUpdate,     // ForgetPanel -- see CloseTR4WWindow
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
   uMainForm,        // the main window IS a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
@@ -5275,6 +5276,12 @@ begin
      begin
      Radio2.tRadioInterfaceWndHandle := 0;
      end;
+  // Drop anything uPanelUpdate remembers about this panel BEFORE the window
+  // goes. Windows reuses handles, and a stale 'last posted' entry would then
+  // suppress the first update to a completely different window -- a panel
+  // that reopens blank and stays blank, with nothing to point at.
+  ForgetPanel(tr4w_WindowsArray[ID].WndHandle);
+
   DestroyWindow(tr4w_WindowsArray[ID].WndHandle);
   tr4w_WindowsArray[ID].WndHandle := 0;
   tr4w_WindowsArray[ID].WndVisible := False;
