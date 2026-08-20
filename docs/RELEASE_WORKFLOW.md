@@ -187,10 +187,10 @@ Both work from any directory and take no configuration. What matters for a relea
 - **The version is checked, not assumed.** It comes from `tr4w\src\Version.pas`, the build fails
   rather than defaulting if it cannot be parsed, and the linked `tr4w.exe` is then verified to
   report it — so a version resource that failed to link cannot ship silently.
-- **Artifacts land where they ship**: `tr4w	arget	r4w.exe`, `tr4w	r4wserver	r4wserver.exe`,
-  `tr4wuildelease	r4w_setup_<version>.exe`. Intermediates go to `build-out\` (gitignored).
+- **Artifacts land where they ship**: `tr4w\target\tr4w.exe`, `tr4w\tr4wserver\tr4wserver.exe`,
+  `tr4w\build\release\tr4w_setup_<version>.exe`. Intermediates go to `build-out\` (gitignored).
 - **Before shipping to testers, prove a clone builds it**, not just your working tree:
-  `.	r4wuild\Test-FreshClone.ps1 -WithInstaller`. It diffs binary sizes against your tree and
+  `.\tr4w\build\Test-FreshClone.ps1 -WithInstaller`. It diffs binary sizes against your tree and
   has already caught an untracked file being linked into the shipping server binary.
 
 ~~`BuildAll.cmd` / `BuildAllInstallers.cmd`~~ are retired — they built the eight non-English

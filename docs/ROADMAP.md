@@ -260,6 +260,43 @@ code review, and it is the reason the FMX twins should not be deleted yet.
   main-window work in §2.
 - **`ActiveCWKeyer` precedence** (CAT → WinKeyer → YCCC → CPU) is an artifact of if/else ordering,
   not a decision. An explicit `CW INTERFACE` config command would make it a lookup.
+- **Move the body of `tr4w.dpr` into units, AFTER Phase 3/7** (NY4I raised it, 2026-08-20).
+  Measured that day: the file is **1382 lines** -- a 388-line uses clause (338 entries carrying
+  an explicit `in '...'` path), one routine (`EnsureCountryFile`), and **~826 lines of program
+  body** in a single `begin...end.`: the startup sequence, `/EXPORT`, `/FIELDCHECK` and the
+  `GetMessage` loop.
+
+  **The `.dpr` itself does not go away** -- FPC and Lazarus still need a program file, and
+  `tr4w.lpi` already names `tr4w.dpr` directly, so renaming it `.lpr` buys nothing. What the
+  split buys is four things, none of them cosmetic:
+
+  1. **It is invisible to `src/`-scoped search.** `tr4w.dpr` sits at `tr4w/`, so every
+     `grep -rn ... src/` skips the file that lists every unit. That is how a reachability
+     question gets the right answer for the wrong reason -- the `unit Help` proof on
+     2026-08-20 turned entirely on "it is in none of the 8 `.dpr`/`.lpr` files".
+  2. **It cannot be unit-tested.** The startup sequence and both headless modes live in a
+     program file; the test binary cannot link one. None of the 9558 tests reach them.
+  3. **The message loop is scheduled for deletion** (Phase 3/7, `Application.Run`). In
+     `src/uMessageLoop.pas` that is a unit swap; in the program file it is surgery on the one
+     source both toolchains share. Hence *after* -- moving code that is about to be deleted is
+     wasted motion.
+  4. **Two parallel unit inventories.** The `.dpr` uses clause and the `.lpi` `<Units>` list
+     are kept in step by hand and nothing checks they agree; adding `uWindowLayoutStore` on
+     2026-08-20 meant editing both. A lint comparing the two is small and independent of this
+     item's schedule.
+
+  End state: a `.dpr` that reads about `begin RunTR4W; end.`, with the body in
+  `src/uStartup.pas` and `src/uMessageLoop.pas` -- at which point the extension stops
+  mattering at all.
+- **Retire the selectable editable-log row count in favour of a resizable log window** (NY4I,
+  2026-08-20). Today the number of visible QSOs is a config value picked from a list —
+  `ROW_COUNT_ARRAY` in `uCFG.pas`, 5 to 15, into `LinesInEditableLog`. The intent is to drop the
+  setting entirely and let the operator **drag the log panel taller**, keeping the fixed-aspect
+  regions above and below it as they are. Belongs to the main-window work in §2, because that is
+  when the log stops being a hand-placed Win32 child and gains a layout that can express "this one
+  grows". Worth noting while there: `NumberEditableLines = 5` in `LOGWIND.PAS` is a **constant**
+  that bounds `LogEntryArray`, so it is a separate thing from the selectable count despite the
+  similar name — a resizable log has to reconcile the two.
 
 ---
 
@@ -267,6 +304,39 @@ code review, and it is the reason the FMX twins should not be deleted yet.
 
 - **I18N** — `resourcestring` + one binary per platform, arriving from a separate worktree once
   English is stable. **Do not reintroduce the compile-time language matrix.**
+
+  **It also retires an entire class of encoding bug, which is worth stating because it is not
+  what I18N is usually argued for** (NY4I, 2026-08-20). Under `resourcestring` the *default*
+  text stays in the Pascal source and every TRANSLATION lives in a `.po` file, outside the
+  source tree. If no string literal in `src` carries a byte above 127, the codepage the compiler
+  happens to use stops mattering — and the UTF-8 BOM question, which needed a whole lint
+  (`Lint-BOM`) and cost six silent losses in a single session, has nothing left to get wrong in
+  source.
+
+  The rule that follows is **"no non-ASCII in source"**, not "no need to care":
+
+  * comments may still hold an em-dash and that is harmless — 44 files do it today and compile
+    perfectly, because a comment never reaches the binary;
+  * genuinely non-ASCII DATA (a degree sign, a protocol byte) should be written as a Pascal
+    escape — `#176`, `#$B0` — so the file stays ASCII and the intent is explicit;
+  * the `.po` files inherit the discipline instead: UTF-8, no BOM, the same rule the JSON
+    settings file already follows. One clear rule in one place, rather than per-file state
+    spread across 435 files.
+
+  **Then `Lint-BOM` can gain the rule it could not have on day one.** "Non-ASCII in a string
+  literal, in a file without a BOM" was measured on 2026-08-20 and rejected as a gate: 13 files
+  violate it *today*, and a gate that cannot pass when it is written cannot be wired into the
+  build. The I18N migration is what clears those 13, at which point the rule becomes a hard error
+  and the guarantee is provable rather than hoped for.
+
+  **A concrete instance of the damage, already realised and already shipped.**
+  `src/uCbrSum.pas:230` hardcodes a RUSSIAN button caption — the Ermak-spec Operators button —
+  directly in a general unit rather than through `TC_`/`RC_`. Its bytes are now `EF BF BD` seven
+  times over: U+FFFD, the replacement character. The Cyrillic was destroyed when the file was
+  read in the wrong codepage and saved, and no decoding recovers it. The D7 tree holds the
+  identical byte sequence at `uCbrSum.pas:205`, so the loss happened upstream, before this port.
+  `src/uErmak.pas` carries 16 more non-ASCII literals in a file with no BOM and should be checked
+  in the same pass.
 - **`win-ci` runner** — being set up. Start with `version-guard.yml`: no toolchain, so it proves the
   runner connection by itself.
 
