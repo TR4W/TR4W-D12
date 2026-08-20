@@ -157,24 +157,14 @@ draw:
 
   glTranslatef( -1.0, 0, -2 );
 
-  // delta2 := delta2 + 1;
   glRotatef( theta, delta2, delta2, delta2 * 1 );
-  // glRotatef(theta, 1, 0, 0);
-  // glRotatef(theta, 0, 1, 0);
-  // glRotatef(theta, 1, 0, 0);
-  // if (theta > 0) and (theta < 90) then glRotatef(theta, delta2, 1, delta2);
-  // if (theta > 90) and (theta < 270) then delta := delta+0.2 else delta := 0.5;
-  // if theta > 360 then begin theta := 0;end;
-  // if theta > 360 then begin theta := 0;end;
-  // if theta > 90 then   glRotatef(180, 0, 0, 0);
-
-  // glTranslatef(-1.3, -0.15, 0.15);
+  
 
   glCallLists( 4, GL_UNSIGNED_BYTE, @txtIntro );
-  // Issue #997: FPU asm (fld/fadd/fstp) -> Pascal. theta, delta are Single.
+ 
   theta := theta + delta;
 
-  // Windows.SetDlgItemInt(AboutHWND, 102, round(theta), False);
+  
   SwapBuffers( OGLDC );
   Sleep( 10 );
   if tid = 0 then
