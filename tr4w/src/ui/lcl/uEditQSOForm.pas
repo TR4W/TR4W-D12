@@ -219,11 +219,29 @@ procedure EditQSOCloseForm;
 // which is what MessageBox wants for "no owner" anyway.
 function  EditQSOFormHandle: HWND;
 
+// HEADLESS FIELD ROUND-TRIP.  Puts a probe value into every input control and
+// reads it straight back, reporting any that does not survive. Returns the
+// number of failures and appends one line each to aReport.
+//
+// THIS EXISTS BECAUSE A LINT CANNOT SEE THIS CLASS OF DEFECT. Lint-EditQSOTemplate
+// proves the WIRING -- that every id reaches the control it should. It cannot
+// prove that a VALUE survives the trip, and the MaxLength truncation (4f0339d4)
+// was exactly that: correct wiring, correct-looking .lfm, and a callsign
+// silently shortened on its way into the log. It only manifested once the
+// control had a window handle, so this forces handles rather than testing a
+// form that was never realised.
+function EditQSOFieldRoundTrip(aReport: TStrings): integer;
+
+// The /FIELDCHECK entry point: runs the round-trip, writes the report into the
+// working directory, and returns the failure count as a process exit code.
+function RunEditQSOFieldCheck: integer;
+
 // the Edit QSO window.
 //
 // THE SEAM established in Phase 1: the caller does not know what this is, only
 // that the window opens.  The HWND parameter survives because the caller varies
 // -- the main window, Log Edit and Log Search each open this over themselves.
+
 procedure ShowEditQSO(const aParent: HWND);
 
 implementation
@@ -550,6 +568,181 @@ end;
 procedure TfrmEditQSO.btnPlayClick(Sender: TObject);
 begin
    PlayMP3ForEditedQSO;
+end;
+
+// The probe for one edit box: longer than any limit it declares, so a limit
+// that wrongly applies to a programmatic set shows up as a short read-back.
+// Uppercase and digits only, because CharCase and NumbersOnly legitimately
+// transform input and this routine is not testing those.
+function ProbeFor(const aEdit: TCustomEdit): string;
+const
+  LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  DIGITS  = '12345678901234567890123456789012345678901234567890';
+var
+  want: integer;
+  src: string;
+begin
+   want := 20;
+   if aEdit.MaxLength > 0 then
+      begin
+      want := aEdit.MaxLength + 5;
+      end;
+
+   if (aEdit is TEdit) and TEdit(aEdit).NumbersOnly then
+      begin
+      src := DIGITS;
+      end
+   else
+      begin
+      src := LETTERS;
+      end;
+
+   if want > Length(src) then
+      begin
+      want := Length(src);
+      end;
+   Result := Copy(src, 1, want);
+end;
+
+function EditQSOFieldRoundTrip(aReport: TStrings): integer;
+var
+  i: integer;
+  c: TControl;
+  name: string;
+  probe, back: string;
+  whenSet, whenBack: TDateTime;
+begin
+   Result := 0;
+
+   if frmEditQSO = nil then
+      begin
+      frmEditQSO := TfrmEditQSO.Create(Application);
+      end;
+
+   // The truncation this exists to catch only happens once the control has a
+   // handle, so realise the form and every child WITHOUT showing it.
+   frmEditQSO.HandleNeeded;
+
+   for i := Low(EDITQSO_FIELDS) to High(EDITQSO_FIELDS) do
+      begin
+      c := FieldControl(EDITQSO_FIELDS[i].Id);
+      name := Format('%s (id %d)', [EDITQSO_FIELDS[i].Name, EDITQSO_FIELDS[i].Id]);
+
+      if c = nil then
+         begin
+         aReport.Add(name + ': no control -- Lint-EditQSOTemplate should have caught this');
+         Inc(Result);
+         Continue;
+         end;
+
+      if c is TWinControl then
+         begin
+         TWinControl(c).HandleNeeded;
+         end;
+
+      if c is TCustomEdit then
+         begin
+         probe := ProbeFor(TCustomEdit(c));
+         EditQSOSetText(EDITQSO_FIELDS[i].Id, probe);
+         back := EditQSOGetText(EDITQSO_FIELDS[i].Id);
+
+         if back <> probe then
+            begin
+            aReport.Add(Format('%s: set %d char(s) %s, read back %d %s',
+              [name, Length(probe), QuotedStr(probe), Length(back), QuotedStr(back)]));
+            Inc(Result);
+            end;
+         end
+      else if c is TCheckBox then
+         begin
+         EditQSOSetCheck(EDITQSO_FIELDS[i].Id, True);
+         if not EditQSOGetCheck(EDITQSO_FIELDS[i].Id) then
+            begin
+            aReport.Add(name + ': set True, read back False');
+            Inc(Result);
+            end;
+
+         EditQSOSetCheck(EDITQSO_FIELDS[i].Id, False);
+         if EditQSOGetCheck(EDITQSO_FIELDS[i].Id) then
+            begin
+            aReport.Add(name + ': set False, read back True');
+            Inc(Result);
+            end;
+         end
+      else if c is TCustomComboBox then
+         begin
+         EditQSOClearItems(EDITQSO_FIELDS[i].Id);
+         EditQSOAddItem(EDITQSO_FIELDS[i].Id, 'ZERO');
+         EditQSOAddItem(EDITQSO_FIELDS[i].Id, 'ONE');
+         EditQSOAddItem(EDITQSO_FIELDS[i].Id, 'TWO');
+         EditQSOSetItemIndex(EDITQSO_FIELDS[i].Id, 2);
+
+         if EditQSOGetItemIndex(EDITQSO_FIELDS[i].Id) <> 2 then
+            begin
+            aReport.Add(Format('%s: set item index 2, read back %d',
+              [name, EditQSOGetItemIndex(EDITQSO_FIELDS[i].Id)]));
+            Inc(Result);
+            end;
+         end
+      else if c is TDateTimePicker then
+         begin
+         // A date and a time together, which is the whole point of this field:
+         // the defect it replaced showed only the hour.
+         whenSet := EncodeDate(2024, 11, 23) + EncodeTime(23, 46, 17, 0);
+         EditQSOSetDateTime(whenSet);
+         whenBack := EditQSOGetDateTime;
+
+         // One second of tolerance: the control stores whole seconds.
+         if Abs(whenBack - whenSet) > (1 / (24 * 60 * 60)) then
+            begin
+            aReport.Add(Format('%s: set %s, read back %s',
+              [name, FormatDateTime('yyyy-mm-dd hh:nn:ss', whenSet),
+                     FormatDateTime('yyyy-mm-dd hh:nn:ss', whenBack)]));
+            Inc(Result);
+            end;
+         end;
+      // TLabel and TButton carry no operator value; nothing to round-trip.
+      end;
+end;
+
+function RunEditQSOFieldCheck: integer;
+var
+  report: TStringList;
+begin
+   report := TStringList.Create;
+   try
+      try
+         Result := EditQSOFieldRoundTrip(report);
+
+         if Result = 0 then
+            begin
+            report.Insert(0, Format('OK: %d field(s) round-tripped.',
+              [Length(EDITQSO_FIELDS)]));
+            end
+         else
+            begin
+            report.Insert(0, Format('FAIL: %d field(s) did not survive a set/get.',
+              [Result]));
+            end;
+      except
+         on E: Exception do
+            begin
+            // An exception here IS the finding, and the process must not exit 0
+            // because the check never ran.
+            report.Add('EXCEPTION: ' + E.ClassName + ': ' + E.Message);
+            Result := -1;
+            end;
+      end;
+
+      try
+         report.SaveToFile('editqso-fieldcheck.txt');
+      except
+         // A report we cannot write does not change the verdict.
+         on E: Exception do ;
+      end;
+   finally
+      report.Free;
+   end;
 end;
 
 procedure ShowEditQSO(const aParent: HWND);

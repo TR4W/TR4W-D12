@@ -422,6 +422,27 @@ if ($vi.FileVersion -notlike "$vMajor.$vMinor.$vBuild*")
    }
 
 # ---------------------------------------------------------------------------
+# Edit QSO field round-trip.
+#
+# The one gate that runs the BINARY rather than reading files. It puts a probe
+# value through every input control of the Edit QSO form and fails if any does
+# not come back unchanged -- the class of defect the lints structurally cannot
+# see, and which cost a silently truncated callsign in the contest log
+# (4f0339d4). Needs no contest and no settings; takes about a second.
+# ---------------------------------------------------------------------------
+Phase 'Edit QSO field round-trip'
+
+# Piped through Write-Host so it interleaves with the rest of the build log:
+# this script writes to the success stream and the build writes to the host,
+# and unpiped the two arrive in the wrong order.
+& (Join-Path $PSScriptRoot 'test\ui\Invoke-FieldCheck.ps1') -Exe $appExe |
+   ForEach-Object { Write-Host $_ }
+if ($LASTEXITCODE -ne 0)
+   {
+   Fail 'the Edit QSO field round-trip failed -- see the report above'
+   }
+
+# ---------------------------------------------------------------------------
 # TR4WServer.
 # ---------------------------------------------------------------------------
 Phase 'TR4WServer'

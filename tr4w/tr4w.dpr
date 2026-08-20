@@ -569,6 +569,27 @@ begin
    InitLCLForHostedLoop;
 {$ENDIF}
 
+{$IFDEF FPC}
+   // HEADLESS FIELD ROUND-TRIP:  tr4w.exe /FIELDCHECK
+   //
+   // Puts a probe value through every input control of the Edit QSO form and
+   // reads it back, then exits with the number of fields that did not survive.
+   // Driven by test\ui\Invoke-FieldCheck.ps1.
+   //
+   // DELIBERATELY HERE, before the mutex and before any config or log is
+   // touched: it needs the widgetset and nothing else, so it does not need a
+   // contest, cannot disturb settings, and runs happily while TR4W is already
+   // open. That also makes it fast enough to gate a build with.
+   //
+   // It exists because Lint-EditQSOTemplate proves the WIRING and cannot prove
+   // that a VALUE survives -- which is what the MaxLength truncation
+   // (4f0339d4) was: right wiring, right-looking .lfm, callsign silently cut.
+   if SameText(ParamStr(1), '/FIELDCHECK') then
+      begin
+      Halt(RunEditQSOFieldCheck);
+      end;
+{$ENDIF}
+
    // Check for another running instance BEFORE opening any shared files
    // (log file, etc.) to avoid an EFOpenError crash on the second instance.
    tMutex := CreateMutex(nil, False, tr4w_ClassName);
