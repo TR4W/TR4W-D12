@@ -9087,16 +9087,25 @@ begin
   // whatever page Preferences was last left on is not what the menu said it
   // would do (NY4I, 2026-08-21).
   //
-  // Only the filters that name a page map to one.  cfAll is the whole of
-  // Preferences and has no page of its own; cfWK, cfRadio1 and cfRadio2 name
-  // DEVICES in a library rather than sections, and picking one means picking
-  // which radio or keyer, which is a deeper link than this entry point knows
-  // how to make.  Those open Preferences as it was, which is the old
-  // behaviour and not a regression.
+  // EVERY filter maps to the page that now owns those settings.
+  //
+  // cfWK, cfRadio1 and cfRadio2 were left unmapped in the first pass on the
+  // grounds that they name DEVICES rather than sections.  That was wrong, and
+  // NY4I found it immediately: "where did all those winkeyer options go?"  The
+  // devices live in a LIBRARY, and the library is on a page -- CW Settings
+  // holds the keying devices, Radios holds the radios.  Landing there is
+  // exactly what the menu item means, and the operator picks the device from
+  // the list.  Opening Preferences wherever it was last left made settings that
+  // are perfectly present look deleted.
+  //
+  // cfAll stays unmapped because it genuinely has no page: it IS Preferences.
   page := -1;
   case f of
     cfCol:        page := NAV_COLORS;
     cfAppearance: page := NAV_APPEARANCE;
+    cfWK:         page := NAV_CW;       // the CW keying-device library
+    cfRadio1,
+    cfRadio2:     page := NAV_RADIOS;
   end;
 
   if page >= 0 then

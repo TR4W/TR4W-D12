@@ -54,6 +54,16 @@ function ApplyKeyerToWinKey(const aKeyer: TKeyerDefinition; out aError: string):
 // here so this unit stays the only one that touches WinKeySettings.
 procedure SetWinKeyerEnabled(const aEnabled: boolean);
 
+{ Seed ONE WinKeyer into an EMPTY keyer library from the legacy WinKeySettings,
+  returning True if it added one so the caller knows to write the file.
+
+  IT LIVES HERE, not in uRadioConfigApply where it is called from, because this
+  unit is the only one that touches WinKeySettings -- see SetWinKeyerEnabled
+  above.  Writing the seed there would have meant exporting the enum-typed
+  spelling converters and letting another unit read the legacy record, which is
+  exactly the boundary this unit exists to hold. }
+function SeedKeyerLibraryFromLegacy(const aKeyers: TKeyerConfigStore): boolean;
+
 implementation
 
 uses
@@ -69,6 +79,82 @@ uses
 procedure SetWinKeyerEnabled(const aEnabled: boolean);
 begin
    WinKeySettings.wksWinKey2Enable := aEnabled;
+end;
+
+function SeedKeyerLibraryFromLegacy(const aKeyers: TKeyerConfigStore): boolean;
+var
+   k: TKeyerDefinition;
+begin
+   // WHY THIS EXISTS.  The seventeen WK rows are csJSON, so an upgrading
+   // station's WinKeyer settings are carried into the store and applied into
+   // WinKeySettings -- the keyer KEYS correctly.  But the editor does not read
+   // WinKeySettings; it reads the keyer LIBRARY, and nothing ever seeded that.
+   //
+   // So on a station that had a WinKeyer configured, every option applied and
+   // none of them could be seen or changed: "where did all those winkeyer
+   // options go?" (NY4I, 2026-08-21).  They had not gone anywhere, which is
+   // exactly what made it hard to see.
+   //
+   // Same shape as the rotator library, which seeds one rotator from the legacy
+   // ROTATOR TYPE / ROTATOR PORT for the same reason.
+   Result := False;
+
+   if aKeyers = nil then
+      begin
+      Exit;
+      end;
+
+   // ONLY INTO AN EMPTY LIBRARY.  An operator who has defined keyers has said
+   // what they want, and a legacy record must not add a phantom device beside
+   // them on every start.
+   if aKeyers.KeyerCount > 0 then
+      begin
+      Exit;
+      end;
+
+   // NOTHING TO SEED FROM.  A station that never enabled a WinKeyer should get
+   // an empty list, not a device it has to work out how to delete.
+   if not WinKeySettings.wksWinKey2Enable then
+      begin
+      Exit;
+      end;
+
+   k := aKeyers.AddKeyer(aKeyers.UniqueKeyerName('WinKeyer'), kkWinKeyer);
+   if k = nil then
+      begin
+      Exit;
+      end;
+
+   // NO "Enabled" IS SET, because a keyer definition has no such field: whether
+   // the WinKeyer is in use is a property of the PROFILE, settled by
+   // ApplyKeyersForProfile.  See SetWinKeyerEnabled.  The seed describes the
+   // DEVICE on the desk and nothing more.
+   //
+   // SPELLINGS, through the same arrays the FromString functions read back --
+   // the store holds 'SERIAL 1' and 'IAMBIC B', not ordinals.
+   k.Port    := string(PortTypeSA[WinKeySettings.wksWinKey2Port]);
+
+   k.WKAutospace          := WinKeySettings.wksAutospace;
+   k.WKCTSpacing          := WinKeySettings.wksCTSpacing;
+   k.WKIgnoreSpeedPot     := WinKeySettings.wksIgnoreSpeedSpot;
+   k.WKSidetoneEnable     := WinKeySettings.wksSideTEnable;
+   k.WKPaddleOnlySidetone := WinKeySettings.wksPadOnlySideT;
+   k.WKPaddleSwap         := WinKeySettings.wksPaddleSwap;
+
+   k.WKKeyerMode          := string(KeyerModeSA[WinKeySettings.wksKeyerMode]);
+   k.WKSidetoneFrequency  := string(SidetoneFrequencySA[WinKeySettings.wksValueList.vlSidetoneFrequency]);
+
+   k.WKWeight             := WinKeySettings.wksValueList.vlWeight;
+   k.WKDitDahRatio        := WinKeySettings.wksValueList.vlDitDahRatio;
+   k.WKLeadInTime         := WinKeySettings.wksValueList.vlLeadInTime;
+   k.WKTailTime           := WinKeySettings.wksValueList.vlTailTime;
+   k.WKFirstExtension     := WinKeySettings.wksValueList.vl1stExtension;
+   k.WKKeyerCompensation  := WinKeySettings.wksValueList.vlKeyCompensation;
+   k.WKPaddleSwitchpoint  := WinKeySettings.wksValueList.vlPaddleSWPoint;
+
+   // NOT LOGGED HERE.  This unit has no logger and deliberately no MainUnit
+   // dependency; the caller has both and reports it.
+   Result := True;
 end;
 
 function KeyerModeFromString(const aText: string; out aMode: TWK2KeyerMode): boolean;

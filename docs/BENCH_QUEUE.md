@@ -753,6 +753,53 @@ and message boxes declare their text there from now on, not as a `TC_` constant
 in the nine per-language files. Nothing existing was converted -- that sweep
 belongs with the translation work, not a feature commit.
 
+### 24. WinKeyer -- the menu now lands on it, and an upgrading station gets its keyer back
+
+**"Where did all those WinKeyer options go?" (NY4I, 2026-08-21).** Two separate
+faults, and neither had lost a setting.
+
+**1. The menu did not go anywhere in particular.** `RunOptionsDialog` has taken
+a `CFGFunc` filter since Ctrl-J, and once every filter routed to Preferences the
+parameter was ignored -- so Settings > WinKeyer opened Preferences wherever it
+was last left. Every filter that names a page now maps to one:
+
+| menu | page |
+|---|---|
+| Colors | Appearance > Colors |
+| Appearance | Appearance |
+| WinKeyer | **CW Settings** -- the keying-device library |
+| Radio 1 / Radio 2 | Radios |
+
+- [ ] Settings > WinKeyer must land on **CW Settings**, with the keying devices
+  list at the top. Pick the keyer, **Edit...**, and all seventeen options are
+  there.
+- [ ] Settings > Colors, Appearance, and the radio items likewise.
+
+**2. The keyer LIBRARY was never seeded from the legacy settings, and this is
+the real one.** The seventeen `WK` rows are `csJSON`, so an upgrading station's
+WinKeyer settings were carried into the store and applied into `WinKeySettings`
+-- the keyer KEYED correctly. But the editor does not read `WinKeySettings`; it
+reads the device library, and nothing ever populated it. So every option was in
+force and none could be seen or changed. Rotators already had this seed; keyers
+did not.
+
+- [ ] **On a station that had a WinKeyer configured before today:** start TR4W
+  and look for `[Keyers] seeded "WinKeyer" from the legacy WinKeyer settings` in
+  `tr4w.log`. CW Settings should then list one device.
+- [ ] **Open it and check every value against what you had** -- port, keyer
+  mode, sidetone frequency, weight, dit/dah ratio, lead-in, tail, first
+  extension, key compensation, paddle switchpoint, and the six switches.
+- [ ] **It seeds ONCE, into an EMPTY library only.** Restart again: there must
+  still be exactly one keyer, not two.
+- [ ] **A station that never enabled a WinKeyer must get an empty list** -- not
+  a phantom device it has to work out how to delete.
+- [ ] **Then key some CW.** The seed writes the device; `ApplyKeyerToWinKey`
+  reads it back on the next start, so this is the round trip that matters.
+
+**Note:** there is no "enabled" flag on a keyer DEVICE, deliberately -- whether
+the WinKeyer is in use is a property of the PROFILE (`SetWinKeyerEnabled`). The
+seed describes the device on the desk and nothing more.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)

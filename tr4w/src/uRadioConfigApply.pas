@@ -2181,6 +2181,16 @@ begin
       // as a fallback.
       uRotatorControl.ConfigureRotators(store);
 
+      // The keyer library, for the same reason and at the same point.  Written
+      // back immediately: the seed is only useful if Preferences can see it,
+      // and Preferences loads the file rather than sharing this store.
+      if SeedKeyerLibraryFromLegacy(keyers) then
+         begin
+         logger.Info('[Keyers] seeded "%s" from the legacy WinKeyer settings',
+                     [keyers.Keyer(0).Name]);
+         SaveConfig(RadioStoreFileName, store, keyers, nil);
+         end;
+
       profile := store.ActiveProfile;
       if profile = nil then
          begin
