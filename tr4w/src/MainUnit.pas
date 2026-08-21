@@ -100,7 +100,6 @@ uses
   uTelnet,
   uFunctionKeys,
   uRadio12,
-  uOption,
   uSendKeyboard,
   uSendSpot,
   uDupesheet,
@@ -8924,8 +8923,15 @@ begin
      Exit;
      end;
 
-  CommandToSet := c;
-  ProcessMenu(menu_options);
+  // NO OTHER EDITOR EXISTS.  This used to hand the command to Ctrl-J through
+  // CommandToSet, which pre-selected its row in that list.  Ctrl-J is gone, and
+  // measured against comment-stripped source there are ZERO live csOld/csNew
+  // rows left for it to have shown -- every live row is csOwned, csJSON, or
+  // csRem (withdrawn and not applied).  So the only honest thing is to say so
+  // rather than open a window that cannot show it.
+  logger.Warn('[SetCommand] "%s" is not a setting any editor shows -- ' +
+              'it is neither owned by Preferences nor a live CFGCA row', [cmd]);
+  ShowMessage(Format('%s cannot be edited here.', [cmd]));
 end;
 
 function Get101Window(h: HWND): HWND;
@@ -9075,28 +9081,23 @@ end;
 // while the entry point may still want to select a page one day.
 procedure RunOptionsDialog(f: CFGFunc);
 begin
-  CommandsFilter := f;
+  // f IS IGNORED and the parameter is kept deliberately: every menu item that
+  // used to pick a Ctrl-J filter still calls this, and Preferences opens at its
+  // own last page.  Wiring f to a Preferences page is a worthwhile follow-up,
+  // which is why the callers were not flattened to ShowPreferences.
 
-  // COLORS STILL USES THE OLD DIALOG, and that is not an oversight.
+  // EVERY filter goes to Preferences now, colours included.
   //
-  // cfCol is not a filter over CFGCA at all -- it is a different dialog wearing
-  // the same window.  CommandsToListView2 builds it from
-  // TWindows[TMainWindowElement], two rows per element (colour and background)
-  // for ~60 elements, valued from the tr4wColors enum and saved to the ini's
-  // [COLORS] section.  None of those are CFGCA rows, so emptying Ctrl-J did not
-  // touch them and Preferences has nowhere to show them.
+  // cfCol was the last holdout and it was never a filter over CFGCA at all --
+  // it was a different dialog wearing the same window, built from
+  // TWindows[TMainWindowElement], two rows per element, and saved to the ini's
+  // [COLORS] section.  None of those are CFGCA rows, which is why emptying
+  // Ctrl-J did not touch them and why Preferences had nowhere to show them
+  // (NY4I caught the editor going unreachable, 2026-08-16).
   //
-  // Repointing every filter at Preferences therefore made the Colours editor
-  // UNREACHABLE (caught by NY4I, 2026-08-16).  A Colours page under Appearance
-  // is the right answer and needs a real picker rather than a list of enum
-  // names; until it exists, this keeps the editor working.
-  if f = cfCol then
-     begin
-     ShowSettingsDialog;
-     Exit;
-     end;
-
-  logger.Info('[Options] Ctrl-J -> Preferences (the old options list is empty by design)');
+  // Preferences has a Colours page under Appearance now, so the old dialog has
+  // no remaining caller and uOption.pas is gone.
+  logger.Info('[Options] Ctrl-J -> Preferences');
   ShowPreferences;
 end;
 

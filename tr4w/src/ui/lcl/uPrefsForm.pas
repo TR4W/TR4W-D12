@@ -762,6 +762,14 @@ type
       // The keyer editor and its working copy. Modeless like the radio editor,
       // so the result arrives in a callback rather than on the next line.
       FKeyerEditor: TfrmKeyerEdit;
+      { One generated colour row: which element, and the two combos editing it.
+        Held so Save can walk them without searching the control tree by name. }
+      FColorRows: array of record
+         Element: string;
+         Foreground: TComboBox;
+         Background: TComboBox;
+      end;
+
       FKeyerEditTarget: TKeyerDefinition;
       FKeyerEditClone: TKeyerDefinition;
       FKeyerEditIsNew: boolean;
@@ -807,6 +815,7 @@ type
       navUDPBroadcast: TTreeNode;
       navNetwork: TTreeNode;
       navAppearance: TTreeNode;
+      navColors: TTreeNode;
       navLogging: TTreeNode;
       navBackup: TTreeNode;
       navContest: TTreeNode;
@@ -948,6 +957,15 @@ type
         is that idea moved into Preferences, with sections and search instead of
         one flat alphabetical list. }
       procedure BuildGeneratedSections;
+
+      { THE COLOURS PAGE.  Not a BuildGeneratedSection: those are driven by
+        setting-key prefixes, and the main-window colours are not settings at
+        all -- CheckCommand matches them by PREFIX against TWindows[..].mweName,
+        so no CFGCA row exists for any of them.  The rows are generated from
+        TWindows itself, which is the only list there is. }
+      function  BuildColorsSection: integer;
+      procedure LoadColorRows;
+      procedure SaveColorRows;
       function  BuildGeneratedSection(const aTag: NativeInt; const aHeading: string;
                                       const aPrefixes: array of string): integer;
       function  AddGeneratedRows(const aParent: TWinControl; const aKeyPrefix: string;
@@ -1098,6 +1116,11 @@ const
    // settings' key prefix changes and they move off here. Named on screen as
    // what it is, so it does not read as a permanent home.
    NAV_MORE              = 30;
+
+   // Colours. A page of its own under Appearance rather than a block on it:
+   // fifty elements with two drop-downs each is a hundred controls, and the
+   // designed panel has room for a small block and no more.
+   NAV_COLORS            = 31;
 
 
 // Opens Preferences, creating it on first use.  Called from the PREF
@@ -1531,6 +1554,9 @@ begin
          begin
          logger.Info('[Preferences] migrated %d radio(s) from %s to %s',
                      [FStore.RadioCount, LegacyStoreFileName, StoreFileName]);
+         // The colour rows are not bindings -- they edit TWindows, not settings --
+         // so SaveAll does not know about them and they are written here.
+         SaveColorRows;
          FStore.SaveToFile(StoreFileName);
          Exit;
          end;
@@ -2420,7 +2446,161 @@ begin
    // y=452 of 572, so there is room for a small block and no more).
    BuildGeneratedBlock(layAppearance, 462, 'Layout', ['appearance.layout.']);
 
+   total := total + BuildColorsSection;
+
    logger.Info('[Prefs] generated sections: %d control(s) built', [total]);
+end;
+
+function TPrefsForm.BuildColorsSection: integer;
+const
+   ROW_H   = 28;
+   LABEL_W = 260;
+   FG_X    = 290;
+   BG_X    = 480;
+   CBO_W   = 175;
+var
+   box: TScrollBox;
+   head, lbl, capFg, capBg: TLabel;
+   e: TMainWindowElement;
+   palette: TArray<string>;
+   v, name: string;
+   y, n: integer;
+
+   function MakeCombo(const aX: integer): TComboBox;
+   begin
+      Result := TComboBox.Create(box);
+      Result.Parent := box;
+      Result.Style  := csDropDownList;
+      Result.SetBounds(aX, y - 4, CBO_W, 24);
+      for v in palette do
+         begin
+         Result.Items.Add(v);
+         end;
+   end;
+
+begin
+   box := TScrollBox.Create(Self);
+   box.Parent      := layContent;
+   box.Tag         := NAV_COLORS;
+   box.Align       := alClient;
+   box.BorderStyle := bsNone;
+   box.Color       := clWindow;
+   box.ParentColor := False;
+   box.Visible     := False;
+   TrackGeneratedRoot(box);
+
+   head := TLabel.Create(box);
+   head.Parent     := box;
+   head.Caption    := 'Colours' + #13#10 +
+                      'The colours of each main-window element. ' +
+                      'Changes take effect when the window next repaints.';
+   head.WordWrap   := True;
+   head.SetBounds(16, 12, 620, 40);
+   head.Font.Style := [fsBold];
+
+   capFg := TLabel.Create(box);
+   capFg.Parent := box;
+   capFg.Caption := 'Text';
+   capFg.SetBounds(FG_X, 60, CBO_W, 18);
+   capFg.Font.Style := [fsBold];
+
+   capBg := TLabel.Create(box);
+   capBg.Parent := box;
+   capBg.Caption := 'Background';
+   capBg.SetBounds(BG_X, 60, CBO_W, 18);
+   capBg.Font.Style := [fsBold];
+
+   // FROM THE ENUM, through uRadioConfigApply.PaletteSpellings -- not a list
+   // typed in here.  A hand-kept copy would offer a colour this build does not
+   // have the moment the palette changes, and the applier would then refuse it.
+   palette := PaletteSpellings;
+
+   y := 84;
+   n := 0;
+   SetLength(FColorRows, 0);
+
+   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+      begin
+      // A nameless element is one with no window of its own; there is nothing
+      // to colour and nothing for CheckCommand to have matched either.
+      if TWindows[e].mweName = nil then
+         begin
+         Continue;
+         end;
+      name := string(AnsiString(TWindows[e].mweName));
+
+      lbl := TLabel.Create(box);
+      lbl.Parent  := box;
+      lbl.Caption := name;
+      lbl.SetBounds(16, y, LABEL_W, 18);
+
+      SetLength(FColorRows, n + 1);
+      FColorRows[n].Element    := name;
+      FColorRows[n].Foreground := MakeCombo(FG_X);
+      FColorRows[n].Background := MakeCombo(BG_X);
+      lbl.FocusControl := FColorRows[n].Foreground;
+
+      Inc(n);
+      Inc(y, ROW_H);
+      end;
+
+   LoadColorRows;
+   Result := n * 2;
+   logger.Debug('[Prefs] colours page: %d element(s)', [n]);
+end;
+
+procedure TPrefsForm.LoadColorRows;
+var
+   i: integer;
+   e: TMainWindowElement;
+begin
+   // FROM THE LIVE VALUES, not from the store.  The store may hold nothing yet
+   // on a station that has never saved, and TWindows is what is actually on
+   // screen -- which is what the operator is editing.
+   for i := 0 to High(FColorRows) do
+      begin
+      for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+         begin
+         if (TWindows[e].mweName <> nil) and
+            SameText(string(AnsiString(TWindows[e].mweName)), FColorRows[i].Element) then
+            begin
+            FColorRows[i].Foreground.ItemIndex := Ord(TWindows[e].mweColor);
+            FColorRows[i].Background.ItemIndex := Ord(TWindows[e].mweBackG);
+            Break;
+            end;
+         end;
+      end;
+end;
+
+procedure TPrefsForm.SaveColorRows;
+var
+   i: integer;
+   fg, bg: string;
+begin
+   if FStore = nil then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to High(FColorRows) do
+      begin
+      fg := '';
+      bg := '';
+      if FColorRows[i].Foreground.ItemIndex >= 0 then
+         begin
+         fg := FColorRows[i].Foreground.Items[FColorRows[i].Foreground.ItemIndex];
+         end;
+      if FColorRows[i].Background.ItemIndex >= 0 then
+         begin
+         bg := FColorRows[i].Background.Items[FColorRows[i].Background.ItemIndex];
+         end;
+      FStore.SetElementColors(FColorRows[i].Element, fg, bg);
+      end;
+
+   // Straight onto the program as well as into the store, so the change is
+   // visible without a restart -- the same reason ApplyLoggingSettings is
+   // called from here.
+   ApplyElementColors(FStore);
 end;
 
 // Build one generated page and return how many controls it carries.
@@ -4005,6 +4185,11 @@ begin
       TNavNode(navNetwork).Tag := 6;
       navAppearance := tvNav.Items.Add(nil, 'Appearance');
       TNavNode(navAppearance).Tag := 7;
+      // Under Appearance, because that is where an operator looks for it, and
+      // as its own page because fifty elements x two drop-downs will not fit
+      // on the designed panel.
+      navColors := tvNav.Items.AddChild(navAppearance, 'Colours');
+      TNavNode(navColors).Tag := NAV_COLORS;
       navLogging := tvNav.Items.Add(nil, 'Logging');
       TNavNode(navLogging).Tag := 8;
       navBackup := tvNav.Items.Add(nil, 'Backup');

@@ -166,6 +166,15 @@ procedure ApplyStoredCommands(const aStore: TRadioConfigStore);
 // keeps the plan it had.
 procedure ApplyBandPlan(const aStore: TRadioConfigStore);
 
+// Main-window element colours from the store into TWindows.  Seeds itself once
+// from whatever the config load already put there, which is the faithful
+// migration: the ini's [COLORS] lines have been applied by then.
+procedure ApplyElementColors(const aStore: TRadioConfigStore);
+
+// The palette spellings, for a settings screen that offers them.  Here rather
+// than in the UI so there is one list and it comes from the enum.
+function PaletteSpellings: TArray<string>;
+
 // Render the chosen cluster into the globals the connect path reads: server,
 // login callsign, password and post-login command.  Called at startup and
 // whenever Preferences is saved, so the two cannot disagree.
@@ -915,6 +924,118 @@ begin
    if aStore.BandPlanCount > 0 then
       begin
       logger.Info('[BandPlan] seeded %d band(s) from tr4w.ini', [aStore.BandPlanCount]);
+      end;
+end;
+
+function PaletteSpellings: TArray<string>;
+var
+   c: tr4wColors;
+begin
+   SetLength(Result, Ord(High(tr4wColors)) - Ord(Low(tr4wColors)) + 1);
+   for c := Low(tr4wColors) to High(tr4wColors) do
+      begin
+      Result[Ord(c)] := string(AnsiString(tr4wColorsSA[c]));
+      end;
+end;
+
+function ColorFromSpelling(const aSpelling: string; out aColor: tr4wColors): boolean;
+var
+   c: tr4wColors;
+begin
+   Result := False;
+   for c := Low(tr4wColors) to High(tr4wColors) do
+      begin
+      if SameText(string(AnsiString(tr4wColorsSA[c])), aSpelling) then
+         begin
+         aColor := c;
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+procedure SeedElementColorsFromGlobals(const aStore: TRadioConfigStore);
+var
+   e: TMainWindowElement;
+begin
+   // ONE-TIME, into an empty store, and FROM THE GLOBALS rather than from the
+   // ini -- which is the faithful migration here and was not an option for the
+   // band plan.
+   //
+   // The config loader is SECTION-BLIND: it reads every line of tr4w.ini in
+   // order regardless of which [SECTION] it sits under, which is the only
+   // reason writing colours into [COLORS] ever worked.  So by the time this
+   // runs, whatever the ini said is already in TWindows, and copying it out is
+   // exact -- no second parser, and no chance of the two disagreeing.
+   if aStore.ColorCount > 0 then
+      begin
+      Exit;
+      end;
+
+   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+      begin
+      if TWindows[e].mweName = nil then
+         begin
+         Continue;
+         end;
+      aStore.SetElementColors(string(AnsiString(TWindows[e].mweName)),
+                              string(AnsiString(tr4wColorsSA[TWindows[e].mweColor])),
+                              string(AnsiString(tr4wColorsSA[TWindows[e].mweBackG])));
+      end;
+
+   logger.Info('[Colors] seeded %d element(s) from the loaded configuration',
+               [aStore.ColorCount]);
+end;
+
+procedure ApplyElementColors(const aStore: TRadioConfigStore);
+var
+   e: TMainWindowElement;
+   entry: TElementColors;
+   col: tr4wColors;
+begin
+   SeedElementColorsFromGlobals(aStore);
+
+   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+      begin
+      if TWindows[e].mweName = nil then
+         begin
+         Continue;
+         end;
+
+      entry := aStore.FindElementColors(string(AnsiString(TWindows[e].mweName)));
+      if entry = nil then
+         begin
+         Continue;
+         end;
+
+      // An UNRECOGNISED spelling leaves the element alone and says so.  A
+      // hand-edited file with a typo in it should not silently repaint the
+      // callsign window black.
+      if entry.Foreground <> '' then
+         begin
+         if ColorFromSpelling(entry.Foreground, col) then
+            begin
+            TWindows[e].mweColor := col;
+            end
+         else
+            begin
+            logger.Warn('[Colors] %s: "%s" is not a colour this build knows',
+                        [entry.Element, entry.Foreground]);
+            end;
+         end;
+
+      if entry.Background <> '' then
+         begin
+         if ColorFromSpelling(entry.Background, col) then
+            begin
+            TWindows[e].mweBackG := col;
+            end
+         else
+            begin
+            logger.Warn('[Colors] %s background: "%s" is not a colour this build knows',
+                        [entry.Element, entry.Background]);
+            end;
+         end;
       end;
 end;
 
@@ -1995,6 +2116,7 @@ begin
          SeedMigratedCommandsFromIni(store);
          ApplyStoredCommands(store);
          ApplyBandPlan(store);
+         ApplyElementColors(store);
       finally
          store.Free;
       end;
@@ -2048,6 +2170,7 @@ begin
       SeedMigratedCommandsFromIni(store);
       ApplyStoredCommands(store);
       ApplyBandPlan(store);
+      ApplyElementColors(store);
       ApplyActiveCluster(store);
 
       // The rotator library.  ConfigureRotators seeds one rotator from the

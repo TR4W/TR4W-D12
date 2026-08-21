@@ -63,7 +63,6 @@ uses
   uDupesheet in 'src\uDupesheet.pas',
   uSendSpot in 'src\uSendSpot.pas',
   uSendKeyboard in 'src\uSendKeyboard.pas',
-  uOption in 'src\uOption.pas',
   uRadio12 in 'src\uRadio12.pas',
   uFunctionKeys in 'src\uFunctionKeys.pas',
   uinet in 'src\uinet.pas',

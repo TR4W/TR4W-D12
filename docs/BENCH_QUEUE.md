@@ -675,6 +675,50 @@ SQLite contest file). No station setting writes `tr4w.ini` any more.
 **What still does:** `[COLORS]` (~112 elements x 2, and the reason Ctrl-J cannot
 be deleted), `[WINKEYER]`, and `uNewContest`'s `MAIN CALLSIGN` read.
 
+### 22. Colours moved to JSON, and Ctrl-J is GONE
+
+`uOption.pas` is deleted -- 960-odd lines, the last Win32 settings dialog. What
+kept it alive was the Colours editor, which was never a Ctrl-J filter at all: it
+was a different dialog wearing the same window, built from
+`TWindows[TMainWindowElement]`, two rows per element, saved to `[COLORS]` in
+`tr4w.ini`. Preferences now has a **Colours** page under Appearance.
+
+**Why `[COLORS]` in the ini ever worked, which is worth knowing:** the config
+loader is SECTION-BLIND. It reads every line of `tr4w.ini` in order regardless
+of which `[SECTION]` heading it sits under. That is also what made the migration
+exact -- the seed copies out of `TWindows` AFTER the load, so whatever the ini
+said is already in force and there is no second parser to disagree with.
+
+- [ ] **Appearance -> Colours.** Fifty elements, each with a Text and a
+  Background drop-down from the 18-colour palette. Change one, OK, and check it
+  repaints. Restart and check it stuck.
+- [ ] **Look at `settings\tr4w.json`** -- a `colors` object keyed by element
+  name, values as SPELLINGS (`"YELLOW"`, not `15`).
+- [ ] **Your existing colours must survive.** On first run with an old
+  `tr4w.ini`, the log should say `[Colors] seeded 50 element(s) from the loaded
+  configuration` and the window should look exactly as it did.
+- [ ] **Ctrl-J.** Every menu route that used to open the old list -- Ctrl-J
+  itself, Appearance, Colours, WinKeyer -- must open Preferences and nothing
+  else. Nothing should open an empty list, and nothing should fail to open.
+- [ ] **`QuickEditResponse` prompts still parent correctly.** They used to
+  prefer `settingswindowhandle`, which only existed while the old dialog was
+  open; that branch is gone and they parent to the main window. Trigger one
+  (any prompt that asks for a value) and confirm it appears where it should.
+
+**A stranding check that came out clean:** measured against comment-stripped
+source there are ZERO live `csOld`/`csNew` rows -- every live row is `csOwned`,
+`csJSON` or `csRem`. So no setting lost its only editor when Ctrl-J went. Six
+rows LOOK like csOld in the raw file (`DISPLAY REFRESH`, `MULTIPLIER ITEM
+WIDTH`, four `TAIL END *`), and all six are commented out.
+
+**Counts that fell as a result:** ini writes 7 -> 6, ini reads 10 -> 8, Win32 UI
+call sites 245 -> 236, non-UI platform 110 -> 107.
+
+**What still touches `tr4w.ini`, and it is now only the seed path:** the
+one-time readers that migrate an existing installation, plus three CFGCA rows --
+`CLEAR DUPE SHEET` (an action trigger that must never persist) and `BAND` +
+`SINGLE BAND SCORE` (contest-owned, going to the SQLite contest file).
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)

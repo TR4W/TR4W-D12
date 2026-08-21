@@ -171,6 +171,24 @@ type
       SSB: integer;       // FREQUENCY MEMORY, with the old 'SSB ' prefix
    end;
 
+   { ONE MAIN-WINDOW ELEMENT'S COLOURS.
+
+     Fifty elements, each with a foreground and a background drawn from a fixed
+     18-entry palette.  They were never CFGCA rows: CheckCommand matches them by
+     PREFIX against TWindows[..].mweName, so "CALLSIGN COLOR" and "CALLSIGN
+     BACKGROUND" are recognised without either existing in any table.
+
+     SPELLINGS, not ordinals -- 'YELLOW', not 15.  An ordinal silently
+     re-points at a different colour the day the palette gains an entry, and
+     trBtnFace and trAlert were both added to the end of that enum at some
+     point. }
+   TElementColors = class(TObject)
+   public
+      Element: string;    // mweName, e.g. 'CALLSIGN'
+      Foreground: string; // a tr4wColorsSA spelling, '' meaning not set
+      Background: string;
+   end;
+
    TRotatorDefinition = class(TObject)
    public
       Name: string;
@@ -328,6 +346,7 @@ type
       FRadios: TObjectList<TRadioDefinition>;
       FRotators: TObjectList<TRotatorDefinition>;
       FBandPlan: TObjectList<TBandPlanEntry>;
+      FColors: TObjectList<TElementColors>;
       FClusters: TObjectList<TClusterDefinition>;
       FActiveClusterName: string;
       { The rotator that turns. ONE at a time (NY4I, 2026-08-16).
@@ -562,6 +581,15 @@ type
         write every band it has without first asking what is already there, and
         a band whose values are all 0 is REMOVED rather than stored as zeros --
         see TBandPlanEntry on why 0 has to mean absent. }
+      { MAIN-WINDOW COLOURS.  SetElementColors is an upsert by element name, and
+        an entry with neither colour set is REMOVED rather than stored blank --
+        the same rule as the band plan, and for the same reason: "not set" has
+        to mean "leave the compiled default alone". }
+      function  ColorCount: integer;
+      function  ColorEntry(const aIndex: integer): TElementColors;
+      function  FindElementColors(const aElement: string): TElementColors;
+      procedure SetElementColors(const aElement, aForeground, aBackground: string);
+
       function  BandPlanCount: integer;
       function  BandPlanEntry(const aIndex: integer): TBandPlanEntry;
       function  FindBandPlan(const aBand: string): TBandPlanEntry;
@@ -617,6 +645,7 @@ const
    JSONKEY_ROTATORS      = 'rotators';
    JSONKEY_CLUSTERS      = 'clusters';
    JSONKEY_BANDPLAN      = 'bandPlan';
+   JSONKEY_COLORS        = 'colors';
 
 type
    TExportHeaderSection = record
@@ -912,6 +941,63 @@ begin
    Bands       := aOther.Bands;
 end;
 
+function TRadioConfigStore.ColorCount: integer;
+begin
+   Result := FColors.Count;
+end;
+
+function TRadioConfigStore.ColorEntry(const aIndex: integer): TElementColors;
+begin
+   Result := FColors[aIndex];
+end;
+
+function TRadioConfigStore.FindElementColors(const aElement: string): TElementColors;
+var
+   i: integer;
+begin
+   Result := nil;
+   for i := 0 to FColors.Count - 1 do
+      begin
+      if SameText(FColors[i].Element, aElement) then
+         begin
+         Result := FColors[i];
+         Exit;
+         end;
+      end;
+end;
+
+procedure TRadioConfigStore.SetElementColors(const aElement, aForeground,
+                                             aBackground: string);
+var
+   e: TElementColors;
+begin
+   if aElement = '' then
+      begin
+      Exit;
+      end;
+
+   e := FindElementColors(aElement);
+
+   if (aForeground = '') and (aBackground = '') then
+      begin
+      if e <> nil then
+         begin
+         FColors.Remove(e);
+         end;
+      Exit;
+      end;
+
+   if e = nil then
+      begin
+      e := TElementColors.Create;
+      e.Element := aElement;
+      FColors.Add(e);
+      end;
+
+   e.Foreground := aForeground;
+   e.Background := aBackground;
+end;
+
 function TRadioConfigStore.BandPlanCount: integer;
 begin
    Result := FBandPlan.Count;
@@ -1168,6 +1254,7 @@ begin
    // a command the program is perfectly happy to apply.
    FRotators := TObjectList<TRotatorDefinition>.Create(True);
    FBandPlan := TObjectList<TBandPlanEntry>.Create(True);
+   FColors   := TObjectList<TElementColors>.Create(True);
    FHeaders := TStringList.Create;
    FHeaders.CaseSensitive := False;   // section names are matched like ini's
    FClusters := TObjectList<TClusterDefinition>.Create(True);
@@ -1236,6 +1323,7 @@ begin
    FreeAndNil(FClusters);
    FreeAndNil(FRotators);
    FreeAndNil(FBandPlan);
+   FreeAndNil(FColors);
    FreeAndNil(FProfiles);
    FreeAndNil(FRadios);
    inherited Destroy;
@@ -1245,6 +1333,7 @@ procedure TRadioConfigStore.Clear;
 begin
    FRadios.Clear;
    FBandPlan.Clear;
+   FColors.Clear;
    FRotators.Clear;
    FClusters.Clear;
    FActiveClusterName := '';
@@ -1886,7 +1975,7 @@ function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
    general, tci, logging, commands, rot, clu, hdr: TJSONObject;
-   bandPlan, bp: TJSONObject;
+   bandPlan, bp, colors, col: TJSONObject;
    rotators, clusters: TJSONArray;
    lst: TStringList;
    i, s: integer;
@@ -1981,6 +2070,25 @@ begin
       end;
    Result.AddPair(JSONKEY_BANDPLAN, bandPlan);
 
+   // Main-window colours.  Keyed by element name, and a colour that is not set
+   // is omitted rather than written empty -- so an element the operator never
+   // touched keeps its compiled default rather than being forced to blank.
+   colors := TJSONObject.Create;
+   for i := 0 to FColors.Count - 1 do
+      begin
+      col := TJSONObject.Create;
+      if FColors[i].Foreground <> '' then
+         begin
+         col.AddPair('fg', FColors[i].Foreground);
+         end;
+      if FColors[i].Background <> '' then
+         begin
+         col.AddPair('bg', FColors[i].Background);
+         end;
+      colors.AddPair(FColors[i].Element, col);
+      end;
+   Result.AddPair(JSONKEY_COLORS, colors);
+
    // Clusters, and which one is active.  The active NAME rather than an index:
    // an index silently re-points at a different server the moment the list is
    // reordered, and reordering a list is exactly what an operator does.
@@ -2039,7 +2147,7 @@ var
    arr: TJSONArray;
    obj: TJSONObject;
    general, tci, logging, commands: TJSONObject;
-   bandPlan, bp: TJSONObject;
+   bandPlan, bp, colors, col: TJSONObject;
    radioDef: TRadioDefinition;
    rotDef: TRotatorDefinition;
    cluDef: TClusterDefinition;
@@ -2152,6 +2260,24 @@ begin
             begin
             cluDef.Free;
             end;
+         end;
+      end;
+
+   FColors.Clear;
+   v := aRoot.GetValue(JSONKEY_COLORS);
+   if (v <> nil) and (v is TJSONObject) then
+      begin
+      colors := TJSONObject(v);
+      for i := 0 to colors.Count - 1 do
+         begin
+         if not (JSONPairValue(colors, i) is TJSONObject) then
+            begin
+            Continue;
+            end;
+         col := TJSONObject(JSONPairValue(colors, i));
+         SetElementColors(JSONPairName(colors, i),
+                          JSONStr(col, 'fg', ''),
+                          JSONStr(col, 'bg', ''));
          end;
       end;
 

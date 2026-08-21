@@ -62,11 +62,10 @@ if ($SelfTest) {
 # name plus a distinctive fragment, NOT on a line number, because line numbers
 # move and a stale allow-list entry silently re-permits the wrong site.
 $allowed = @(
-   @{ Unit = 'uCFG.pas';            Match = '_COMMANDS';    Why = '153 settings still RegisterLegacySetting; removing this write stops them persisting. Goes with the settings migration.' }
+   @{ Unit = 'uCFG.pas';            Match = '_COMMANDS';    Why = 'the last 3 legacy rows: CLEAR DUPE SHEET (an action trigger), BAND and SINGLE BAND SCORE (contest-owned, going to the SQLite contest file).' }
    @{ Unit = 'MainUnit.pas';        Match = '_COMMANDS';    Why = 'same: the [COMMANDS] remainder, incl. the key-rename helper.' }
    @{ Unit = 'uNewContest.pas';     Match = '_COMMANDS';    Why = 'reads MAIN CALLSIGN from the [COMMANDS] remainder.' }
    @{ Unit = 'uBandPlanForm.pas';   Match = 'BAND PLAN';    Why = 'multi-valued section with no JSON home yet; one ini line per band.' }
-   @{ Unit = 'uOption.pas';         Match = '';             Why = 'Ctrl-J: reads DESCRIPTION/DEFAULT help text and writes the few rows it still shows.' }
    @{ Unit = 'uCabrilloHeader.pas'; Match = '';             Why = 'ONE-TIME seed of the JSON store from an existing ini, per installation.' }
    @{ Unit = 'uTR4WConfigFile.pas'; Match = '';             Why = 'the seed reader that uCabrilloHeader uses; same one-time path.' }
    @{ Unit = 'uPrefsForm.pas';      Match = '';             Why = 'reads the legacy stores once to offer a migration; does not write.' }

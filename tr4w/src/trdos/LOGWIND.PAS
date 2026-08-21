@@ -1013,7 +1013,6 @@ uses
   LogPack,
   uTelnet,
   uBandmap,
-  uOption,
   MainUnit,
   LogEdit,
   uTotal,
@@ -1684,14 +1683,12 @@ var
 begin
   TF.Format(IQPrompt, TC_ENTER, Prompt);
   IQMaxInputLength := MaxInputLength;
-  if settingswindowhandle <> 0 then
-     begin
-     h := settingswindowhandle
-     end
-  else
-     begin
-     h := tr4whandle;
-     end;
+  // ALWAYS the main window.  This used to prefer settingswindowhandle, which
+  // was non-zero only while the old Win32 settings dialog was open so that a
+  // prompt raised from it got the right parent.  That dialog is gone
+  // (uOption.pas deleted 2026-08-21), so the handle was always 0 and the
+  // branch always took this arm.
+  h := tr4whandle;
   //DialogBox(hInstance, MAKEINTRESOURCE(41 {Window}), h, @IQDlgProc);
   ShowInputQuery(h);
   Result := IQresult;

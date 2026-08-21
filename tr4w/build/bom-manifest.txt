@@ -64,7 +64,6 @@ src\uLPTPortEnumerator.pas
 src\uMessages.pas
 src\uMessagesList.pas
 src\uNewContest.pas
-src\uOption.pas
 src\uProcessCommand.pas
 src\uRadioPolling.pas
 src\uSendKeyboard.pas
