@@ -383,21 +383,10 @@ used to do nothing at all with nothing in the log. Both routines log now -- so i
 one of these does not start, `tr4w.log` should say why, and that line is worth
 reporting.
 
-**One decision, not a test:**
-
-- [ ] **`K6VVA_WK_DEBUG` (VC.pas:220) is `False`**, and the WinKeyer HTML debug
-  block it guards has therefore never compiled in this tree. It holds the last
-  `wsprintf` in the program, written in the cdecl varargs-asm style. Deleting the
-  block would retire that count; converting it would mean rewriting code nobody
-  can run. Same shape as `MMTTYMODE`, which was deleted on 2026-08-18.
-
----
-
-## Findings — bench run 2026-08-20 (NY4I)
-
-Defects found while working the list above. **A finding is not a checklist item.** They
-are written down here rather than in the checklists because a checklist item is
-a question and these are answers.
+**The decision that was here is DONE (NY4I, 2026-08-21):** `K6VVA_WK_DEBUG`
+and the WinKeyer HTML debug facility are deleted -- *"we now have a wk_debug
+extra flag"* -- and the program's last `wsprintf` went with them
+(`fb26b49b`). Nothing to test: none of it had ever compiled.
 
 ### F1 — a stray character appears before a message with a blank caption — **ANSWERED: the command delimiters; PARKED behind the JSON/F-key rewrite**
 
