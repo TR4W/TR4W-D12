@@ -102,6 +102,7 @@ implementation
 {$R *.lfm}
 
 uses
+  uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   VC,           // UTC, RC_BEACONSM, CW
   LogRadio,     // SetRadioFreq, RadioOne
   uBeacons,     // BEACONS, BeaconsNames, FreqArray -- the data stayed put
@@ -296,7 +297,11 @@ begin
          begin
          frmBeacons := TfrmBeacons.Create(Application);
          end;
-      frmBeacons.ShowModal;
+      // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
+      // disable here, but ShowModalOverWin32Parent is also where the main
+      // window is made the owner and the form is centred over it -- see
+      // OwnFormByMainWindow.  A bare ShowModal skips both.
+      ShowModalOverWin32Parent(frmBeacons, 0);
    except
       on E: Exception do
          begin

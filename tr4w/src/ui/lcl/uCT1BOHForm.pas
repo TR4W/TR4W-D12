@@ -66,6 +66,7 @@ implementation
 {$R *.lfm}
 
 uses
+  uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   VC,          // RC_CT1BOHIS2, TC_TIMEON, tContinentArray, BandStrings...
   TF,          // MillisecondsToFormattedString
   PostUnit,    // CalculateTotals
@@ -204,7 +205,11 @@ begin
          begin
          frmCT1BOH := TfrmCT1BOH.Create(Application);
          end;
-      frmCT1BOH.ShowModal;
+      // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
+      // disable here, but ShowModalOverWin32Parent is also where the main
+      // window is made the owner and the form is centred over it -- see
+      // OwnFormByMainWindow.  A bare ShowModal skips both.
+      ShowModalOverWin32Parent(frmCT1BOH, 0);
    except
       on E: Exception do
          begin

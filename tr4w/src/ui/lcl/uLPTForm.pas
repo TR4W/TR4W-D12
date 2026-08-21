@@ -262,7 +262,11 @@ begin
          begin
          frmLPT := TfrmLPT.Create(Application);
          end;
-      frmLPT.ShowModal;
+      // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
+      // disable here, but ShowModalOverWin32Parent is also where the main
+      // window is made the owner and the form is centred over it -- see
+      // OwnFormByMainWindow.  A bare ShowModal skips both.
+      ShowModalOverWin32Parent(frmLPT, 0);
    except
       on E: Exception do
          begin

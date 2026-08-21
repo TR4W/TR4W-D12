@@ -77,6 +77,7 @@ implementation
 {$R *.lfm}
 
 uses
+  uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   MainUnit,    // MesWindow, OpenListOfMessages, logger
   uHostedFormWindows,
   Log4D;
@@ -156,7 +157,11 @@ begin
          frmProgramMessage := TfrmProgramMessage.Create(Application);
          end;
 
-      frmProgramMessage.ShowModal;
+      // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
+      // disable here, but ShowModalOverWin32Parent is also where the main
+      // window is made the owner and the form is centred over it -- see
+      // OwnFormByMainWindow.  A bare ShowModal skips both.
+      ShowModalOverWin32Parent(frmProgramMessage, 0);
 
       // AFTER the chooser has gone, exactly as EndDialog-then-OpenListOfMessages
       // did.  Closing with the window button or Escape chooses nothing, and then

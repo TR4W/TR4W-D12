@@ -262,6 +262,37 @@ type
   some other reason. }
 function ShowModalOverWin32Parent(const aForm: TCustomForm; const aParent: HWND): integer;
 
+{ MAKE THE TR4W MAIN WINDOW THE FORM'S OWNER, AND CENTRE OVER IT.
+
+  BOTH ARE THE SAME DEFECT, and it is a nil Application.MainForm.
+  CreateTR4WMainForm builds the main window with TTR4WMainForm.CreateNew(nil)
+  because Application.Run is never called and so Application.CreateForm -- the
+  thing that assigns Application.MainForm -- never runs either. Two consequences
+  nothing warns about:
+
+  1. OWNERSHIP. An LCL form is owned by the hidden Application window, not by
+     TR4W's main window. The taskbar button belongs to the main form
+     (ShowInTaskBar := stAlways), so clicking it raises the MAIN window, and
+     Windows has no reason to keep a dialog above a window that does not own it
+     -- a modal dialog ends up behind its own application, and the operator has
+     to hunt for it (NY4I, 2026-08-21). PopupParent is the LCL's supported way
+     to set GWL_HWNDPARENT; setting it by hand does not survive a handle
+     recreation.
+
+  2. CENTRING. Every converted dialog says Position = poMainFormCenter, and
+     customform.inc:1265 silently degrades that to poScreenCenter when
+     Application.MainForm is nil. So "centre on the main window" has never once
+     centred on the main window. Centring explicitly is the honest fix; setting
+     Application.MainForm would fix both at a stroke but the LCL treats the main
+     form closing as application shutdown, which is not a thing to change under
+     a hand-rolled message loop without a bench run.
+
+  Call OWN before showing. CENTRE is separate because a form that resizes itself
+  in OnShow -- the band plan measures its columns there -- must centre AFTER
+  that, and only when it has not restored a saved position. }
+procedure OwnFormByMainWindow(const aForm: TCustomForm);
+procedure CentreOverMainWindow(const aForm: TCustomForm);
+
 function AskForText(const aCaption, aPrompt: string; var aValue: string): boolean;
 
 // Install the node class on a tree. Call BEFORE adding any node.
@@ -350,6 +381,8 @@ implementation
 
 uses
    Windows,    // EnableWindow / IsWindowEnabled -- see ShowModalOverWin32Parent
+   uMainForm,  // TR4WMainForm -- the owner every dialog should have had
+   Types,      // TRect
    SysUtils,
    StrUtils,
    uRadioConfigStore,
@@ -357,10 +390,54 @@ uses
    ComPortEnumerator,
    VC;
 
+procedure OwnFormByMainWindow(const aForm: TCustomForm);
+begin
+   if (aForm = nil) or (TR4WMainForm = nil) then
+      begin
+      Exit;
+      end;
+
+   // pmExplicit already set means a caller has nominated a different owner --
+   // a dialog opened from another dialog, say. Its choice wins.
+   if aForm.PopupMode = pmExplicit then
+      begin
+      Exit;
+      end;
+
+   aForm.PopupParent := TR4WMainForm;
+   aForm.PopupMode   := pmExplicit;
+end;
+
+procedure CentreOverMainWindow(const aForm: TCustomForm);
+var
+   owner: TRect;
+begin
+   if (aForm = nil) or (TR4WMainForm = nil) then
+      begin
+      Exit;
+      end;
+
+   owner := TR4WMainForm.BoundsRect;
+
+   // poDesigned FIRST, or the LCL re-applies its own rule when the form is
+   // shown and throws this away.
+   aForm.Position := poDesigned;
+   aForm.SetBounds(owner.Left + ((owner.Right  - owner.Left) - aForm.Width)  div 2,
+                   owner.Top  + ((owner.Bottom - owner.Top)  - aForm.Height) div 2,
+                   aForm.Width, aForm.Height);
+end;
 function ShowModalOverWin32Parent(const aForm: TCustomForm; const aParent: HWND): integer;
 var
    reEnable: boolean;
 begin
+   // EVERY MODAL COMES THROUGH HERE, which is why ownership is applied here
+   // and not in sixteen ShowBlah routines. See OwnFormByMainWindow.
+   OwnFormByMainWindow(aForm);
+   if aForm.Position = poMainFormCenter then
+      begin
+      CentreOverMainWindow(aForm);
+      end;
+
    reEnable := (aParent <> 0) and
                Windows.IsWindow(aParent) and
                Windows.IsWindowEnabled(aParent);

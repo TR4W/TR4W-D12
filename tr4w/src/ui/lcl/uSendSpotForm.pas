@@ -72,6 +72,7 @@ implementation
 {$R *.lfm}
 
 uses
+  uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   VC,           // RC_* captions, ContestTypeSA, tContestNameInComment
   PostUnit,     // Contest -- the active contest type
   TF,           // FreqToPChar
@@ -207,7 +208,11 @@ begin
          begin
          frmSendSpot := TfrmSendSpot.Create(Application);
          end;
-      frmSendSpot.ShowModal;
+      // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
+      // disable here, but ShowModalOverWin32Parent is also where the main
+      // window is made the owner and the form is centred over it -- see
+      // OwnFormByMainWindow.  A bare ShowModal skips both.
+      ShowModalOverWin32Parent(frmSendSpot, 0);
    except
       on E: Exception do
          begin

@@ -80,6 +80,7 @@ implementation
 {$R *.lfm}
 
 uses
+  uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   Windows,
   TF,               // tDialogBox -- the server-log dialog is still Win32
   PostUnit,         // Contest, ContestExchange
@@ -234,7 +235,11 @@ begin
       // The init param IS the server's log information -- uNet passes the
       // record's address through the dialog's lParam.
       frmLogCompare.FInfo := PLogFileInformation(aInitParam);
-      frmLogCompare.ShowModal;
+      // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
+      // disable here, but ShowModalOverWin32Parent is also where the main
+      // window is made the owner and the form is centred over it -- see
+      // OwnFormByMainWindow.  A bare ShowModal skips both.
+      ShowModalOverWin32Parent(frmLogCompare, 0);
    except
       on E: Exception do
          begin

@@ -87,6 +87,7 @@ implementation
 {$R *.lfm}
 
 uses
+  uLCLFormHelpers,   // ShowModalOverWin32Parent -- ownership and centring
   LCLType,     // VK_F1..VK_F12
   VC,          // RC_AUTOCQ2, RC_PRESSMKYWTR, RC_NUMBEROSOLT
   LogCW,       // AutoCQMemory
@@ -222,7 +223,11 @@ begin
          begin
          frmAutoCQ := TfrmAutoCQ.Create(Application);
          end;
-      frmAutoCQ.ShowModal;
+      // THROUGH THE ONE DOOR, parent 0.  There is no raw Win32 parent to
+      // disable here, but ShowModalOverWin32Parent is also where the main
+      // window is made the owner and the form is centred over it -- see
+      // OwnFormByMainWindow.  A bare ShowModal skips both.
+      ShowModalOverWin32Parent(frmAutoCQ, 0);
    except
       on E: Exception do
          begin
