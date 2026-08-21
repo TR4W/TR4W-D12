@@ -70,10 +70,33 @@ not a queue of identical work; it is four different problems.
 |---|---:|---|
 | `ckList` | 30 | **rendered READ-ONLY in Preferences** -- see below, this is the one worth doing |
 | `ctMessage` (QUICK QSL x5) | 5 | `crJ: 2` -- read-only rows; nobody can edit them, so moving their storage moves nothing |
-| `CLEAR DUPE SHEET` | 1 | **not a setting.** `crAddress: @ClearDupeSheetCommandGiven` -- an ACTION trigger. Persisting `TRUE` would clear the dupe sheet on every start |
+| `CLEAR DUPE SHEET` | 1 | **not a setting, and its stored value would be meaningless** -- see below |
 | `CONTEST NAME`, `REMINDER` | 2 | `crJ: 2`, read-only; `CONTEST NAME` is set by the contest |
 | `PADDLE PORT` | 1 | LPT, and LPT is settled as-is (section 17 of the bench queue) |
 | `BAND MAP CUTOFF FREQUENCY`, `FREQUENCY MEMORY` | 2 | `ctFreqList`, multi-valued -- one ini line per band, no JSON home yet |
+
+**`CLEAR DUPE SHEET` deserves its own paragraph, because the first write-up of
+it here was wrong.** It said persisting `TRUE` would clear the dupe sheet on
+every start. It would not: NY4I supplied the reference manual (4.2.49) --
+*"Program will clear the dupesheet when this parameter is set to TRUE in a
+*.CFG file that is executed with the ctrl-V command. TR4W does nothing if the
+command is found in the *.CFG file during the start-up process"* -- and the
+code implements exactly that, in the hook rather than the caller:
+
+```pascal
+function F_CLEAR_DUPE_SHEET: boolean;
+begin
+   ClearDupeSheetCommandGiven := RunningConfigFile;
+   Result := True;
+end;
+```
+
+The hook IGNORES the value in the file and sets the flag from
+`RunningConfigFile` -- true only while a `.CFG` is being executed with Ctrl-V,
+false at start-up. So the real reason not to migrate it is better than the
+scary one: **whatever were stored could never be the value used.** It is a
+transient action flag that lives in `CFGCA` only because that was the
+mechanism available. It wants reclassifying, not moving.
 
 **Nine of those eleven non-`ckList` rows should probably never migrate.** A
 read-only row and an action trigger do not belong in a settings store at all; if
