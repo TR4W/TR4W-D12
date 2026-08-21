@@ -61,6 +61,63 @@ at a time.
 failure this document warns about), and **0** graduated writers whose row is not `csJSON`. The
 discipline in the rule below has held for all 230.
 
+### The 41 settings still on the ini, 2026-08-21 -- and why each one is
+
+**112 migrated overnight** (77 -> 189 stored, 153 -> 41 legacy). What is left is
+not a queue of identical work; it is four different problems.
+
+| what | count | why it is still on the ini |
+|---|---:|---|
+| `ckList` | 30 | **rendered READ-ONLY in Preferences** -- see below, this is the one worth doing |
+| `ctMessage` (QUICK QSL x5) | 5 | `crJ: 2` -- read-only rows; nobody can edit them, so moving their storage moves nothing |
+| `CLEAR DUPE SHEET` | 1 | **not a setting.** `crAddress: @ClearDupeSheetCommandGiven` -- an ACTION trigger. Persisting `TRUE` would clear the dupe sheet on every start |
+| `CONTEST NAME`, `REMINDER` | 2 | `crJ: 2`, read-only; `CONTEST NAME` is set by the contest |
+| `PADDLE PORT` | 1 | LPT, and LPT is settled as-is (section 17 of the bench queue) |
+| `BAND MAP CUTOFF FREQUENCY`, `FREQUENCY MEMORY` | 2 | `ctFreqList`, multi-valued -- one ini line per band, no JSON home yet |
+
+**Nine of those eleven non-`ckList` rows should probably never migrate.** A
+read-only row and an action trigger do not belong in a settings store at all; if
+anything they want reclassifying, not moving.
+
+### Unlocking the 30 `ckList` rows -- analysed, NOT done
+
+These are the ones worth having: they are real settings an operator would want
+to change, and today **Preferences renders them read-only** so nobody can. The
+blocker is one function.
+
+**What is already true, and was verified rather than assumed:**
+
+* `CFGCommandValueAsString` ALREADY returns the right thing for `ckList` -- it
+  reads the spelling straight out of `ListParamArray[..].lpArray` at the current
+  `lpVar^`.
+* `CheckCommand`'s `ckList` arm ALREADY accepts a spelling: it calls
+  `GetValueFromArray`, which searches that same array.
+* So the round trip is sound in principle. The only missing piece is
+  `CFGCommandAllowedValues`, which handles `ckArray` and returns `nil` for
+  `ckList` -- which is what makes `CFGCommandIsList` force the row read-only.
+
+**THE TRAP, and it is why this was not done unattended.** `GetValueFromArray`
+matches with `StrComp` -- an EXACT comparison. The spellings in these arrays are
+SPACE-PADDED to a fixed width. That is the whole of the `SINGLE BAND SCORE`
+incident recorded above: `AsText` returned the padded `'All '`, the generated
+text box handed back the trimmed `'All'`, and `CheckCommand` refused it, writing
+`SINGLE BAND SCORE=All` into `tr4w.ini` and breaking every later start with
+"Invalid statement in config file".
+
+So the work is:
+
+1. Extend `CFGCommandAllowedValues` to enumerate `ckList` from `lpArray`,
+   returning the spellings **exactly as stored, padding included**.
+2. Make sure the Preferences binding hands the chosen item back **untrimmed** --
+   this is the step that will bite, and it wants a test that round-trips a padded
+   spelling through `TrySetText` and back.
+3. Only then drop `ckList` from `CFGCommandIsList`, so the rows render as
+   drop-downs instead of disabled boxes.
+4. Then migrate all 30 with `tools`-style batching and the three-way lint.
+
+Doing 1-3 without 2 proven is how `SINGLE BAND SCORE` happened, and it corrupts
+the operator's ini rather than merely failing.
+
 ### Corrected 2026-08-21: two claims in the older table were wrong
 
 * `uAutoCQ.pas` and `LPT.pas` were listed as writing `[COMMANDS]`. **They no longer do** -- both

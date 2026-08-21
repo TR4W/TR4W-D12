@@ -560,7 +560,7 @@ begin
                           'Short Integers');
    RegisterStoredSetting('cw.ctrlj.slashMarkChar',            'SLASH MARK CHAR',
                           'Slash Mark Char');
-   RegisterLegacySetting('cw.ctrlj.startSendingNowKey',       'START SENDING NOW KEY',
+   RegisterStoredSetting('cw.ctrlj.startSendingNowKey',       'START SENDING NOW KEY',
                           'Start Sending Now Key');
    RegisterStoredSetting('cw.ctrlj.tuneAltDEnable',           'TUNE ALT-D ENABLE',
                           'Tune Alt-D Enable');

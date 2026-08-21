@@ -340,7 +340,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..212] of string =
+   MIGRATED_COMMANDS: array[0..213] of string =
       (
       'CW SPEED INCREMENT',          // 2026-08-14
       'HAMSCORE ENABLE',             // 2026-08-14
@@ -593,7 +593,9 @@ const
       'ROW COUNT',
       'WINDOW SIZE',
       'MP3 RECORDER BITRATE',
-      'STEREO CONTROL PIN'
+      'STEREO CONTROL PIN',
+      // Migrated 2026-08-21.
+      'START SENDING NOW KEY'
       );
 
 procedure SeedMigratedCommandsFromIni(const aStore: TRadioConfigStore);
