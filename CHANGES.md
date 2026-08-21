@@ -31,7 +31,107 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate "## 4.147.x" month group below, and bump tr4w/src/Version.pas to match.
 -->
 
-_Nothing yet._
+#### Preferences and the band plan editor — the editor had no way in
+
+- **The band plan editor was unreachable from anywhere in the program**
+  (`src/uCFG.pas`, `src/ui/lcl/uPrefsForm.pas`). Its only caller is
+  `uOption.pas:746`, reached by activating a `ctFreqList` settings row -- and
+  `79d4b6f0` ("empty Ctrl-J") flipped the only two such rows, `BAND MAP CUTOFF
+  FREQUENCY` and `FREQUENCY MEMORY`, from `csOld` to `csOwned`, which the Ctrl-J
+  list builder skips. Preferences showed them disabled, correctly (they are
+  multi-valued `[BAND PLAN]` rows and a bound edit box could replace a whole band
+  plan with one frequency). They now carry an **Edit...** button instead, still
+  unbound, gated on a new `CFGCommandIsFreqList` -- a refinement of
+  `CFGCommandIsList`, since both kinds stay unbound but only this one has an
+  editor behind it. Bench finding F3.
+- **The band plan dialog is resizable and readable** (`uBandPlanForm`). Column
+  widths are measured from the text -- headings in `TitleFont`, data in `Font`,
+  because the grid paints them in different fonts -- instead of a flat 110px that
+  clipped `BAND MAP CUTOFF FREQUENCY`. That width becomes `Constraints.MinWidth`,
+  so it is a floor rather than a fixed size; surplus width is spread across the
+  three frequency columns on every resize, recomputed from the minimums so
+  repeated drags cannot compound. Height is pinned to the row count: with eleven
+  bands and no scrolling to do, extra height could only be empty grid.
+- **Its position is remembered** under `"BandPlan"` in the `windows` section of
+  `settings\tr4w.json` -- the same store the main window's own windows use, not a
+  second mechanism. Saved on every close including Cancel; a rect that no longer
+  intersects any monitor is refused and the dialog centres instead, since it is
+  modal and restoring it off-screen would look like a hung application.
+
+#### Dialog ownership — a modal could hide behind its own application
+
+- **Every LCL dialog is now owned by the TR4W main window** (`uLCLFormHelpers`,
+  and the nine dialogs that called `ShowModal` directly). `CreateTR4WMainForm`
+  uses `TTR4WMainForm.CreateNew(nil)` because `Application.Run` is never called,
+  so `Application.MainForm` is nil and dialogs were owned by the LCL's hidden
+  Application window. The taskbar button belongs to the main form, so clicking it
+  raised the main window and left the modal dialog behind it, with no way to
+  reach it but hunting (NY4I, 2026-08-21). `OwnFormByMainWindow` sets
+  `PopupParent`/`PopupMode`, which is the LCL's supported route to
+  `GWL_HWNDPARENT` and survives a handle recreation.
+- **Dialogs now centre over the main window.** `Position = poMainFormCenter`
+  silently degrades to `poScreenCenter` when `Application.MainForm` is nil
+  (`customform.inc:1265`), so no converted dialog has ever centred where it said
+  it would. `CentreOverMainWindow` does it explicitly. `Application.MainForm` was
+  deliberately NOT set: the LCL treats the main form closing as application
+  shutdown, which is not a thing to change under a hand-rolled message loop
+  without a bench run.
+- **One door.** Both are applied inside `ShowModalOverWin32Parent`, and the nine
+  dialogs that called `ShowModal` directly were repointed through it with parent
+  0 -- AltD, AutoCQ, Beacons, CT1BOH, Log Compare, LPT, Program Message, Send
+  Spot, Window Manager.
+
+#### Preferences navigation — parents looked like leaves
+
+- **Chevrons appear on the four sections that have children**
+  (`uPrefsForm.lfm`). `tvoShowButtons` was set but `tvoShowRoot` was not, and
+  `treeview.inc:5574` draws an expand sign on a TOP-LEVEL node only when
+  `tvoShowRoot` is present -- so Hardware, Operating, CW Settings and External
+  Software gave no sign they opened. `ApplyChevrons` had been emptied in the
+  FMX->LCL conversion and now records why.
+- **Clicking an already-selected parent toggles it** (`tvNavMouseDown`). The
+  expand lives in `tvNavChange`, which fires only when the SELECTION changes, so
+  a branch could be opened but not closed by the same click that opened it.
+  Handled on mouse-DOWN, while `tvNav.Selected` still names the previous row;
+  clicks on the expand sign itself are left to the tree.
+
+#### Lint — `Lint-FormFields` accused correct code
+
+- **A wrapped method declaration is no longer read as a field**
+  (`build/Lint-FormFields.ps1`). Its field regex matched the continuation line of
+  a two-line `procedure` declaration, reporting *published field 'Shift' has no
+  component* -- the false positive this lint's own header calls "the worst kind",
+  since it accuses correct code of the defect the lint exists to catch. Parameter
+  lists are now stripped before field matching (Pascal parameter lists do not
+  nest), with a `wrapped_method_declaration` fixture added; self-test 8/8.
+
+#### Build hygiene — the Delphi DCU artifacts are gone from the working tree
+
+- **All 3,601 `.dcu` files deleted (86.7 MB), including the entire per-language
+  cache `tr4w\target\dcu-cache\<lang>\`** for the eight language variants
+  (cze/esp/ger/mng/rom/rus/ser/ukr), plus the canonical ENG DCUs in
+  `tr4w\src\`, the vendored Indy DCUs in `tr4w\include\`, and the unit-test and
+  `tr4wserver` output. The empty `dcu-cache` directories went with them.
+- **THIS DELETION DOES NOT APPEAR IN ANY COMMIT, which is the reason it is
+  written down here.** Not one of the 3,601 was tracked -- every one was matched
+  by `tr4w\src\.gitignore` or the root `.gitignore` -- so `git status` was
+  byte-identical before and after. Without this entry there is nothing anywhere
+  to explain where 86.7 MB of a working tree went.
+- **Nothing needs them.** FPC cannot read a `.dcu` at all; it reads `.ppu`/`.o`
+  from `build-out\`. A fresh clone contains none (they were never tracked) and
+  still builds to a setup `.exe`, which is what `tr4w\build\Test-FreshClone.ps1`
+  verifies -- so the build's independence from these files is proven by
+  construction, not asserted. Every one was last written 2026-08-13, the day the
+  toolchain moved to FPC, and a Delphi build is not reproducible on this tree in
+  any case since the FMX twins were deleted on 2026-08-17.
+- **The per-language cache mechanism itself is described under 4.147.19** (the
+  DCC32 `/N` flag, the `.dcu-managed-by-fullbuild` marker). That machinery went
+  with the language matrix on 2026-08-13; this removes the last artifacts it
+  left behind.
+- **No evidence was lost.** The one `.dcu` this project ever used as evidence --
+  `uDocumentation.dcu`, which settled what `csNew`/`csOld` mean in `CFGCA`
+  (`docs/CFG_COMMAND_TABLE.md`) -- has not been on disk since it was untracked
+  long ago, and survives in git history in both repositories.
 
 ---
 

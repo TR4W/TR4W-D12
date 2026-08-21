@@ -97,9 +97,27 @@ function Get-PublishedControlFields {
       return $result
    }
 
+   # PARAMETER LISTS OUT BEFORE ANY FIELD MATCHING, and this is not cosmetic.
+   #
+   # The claim below -- "methods are skipped because they do not match
+   # <names> : T<type> ;" -- holds only while a method declaration fits on ONE
+   # line. Wrapped, its continuation looks exactly like a field:
+   #
+   #    procedure tvNavMouseDown(Sender: TObject; Button: TMouseButton;
+   #                             Shift: TShiftState; X, Y: integer);
+   #
+   # The second line matches, and the lint reported published field 'Shift' has
+   # no component -- accusing correct code of the very defect it exists to
+   # catch, which is the failure mode this file already calls "the worst kind"
+   # (NY4I, 2026-08-21). Pascal parameter lists do not nest, so removing every
+   # (...) span -- newlines included -- leaves the wrapped declaration looking
+   # like the one-line form the field regex was always safe against.
+   $body = [regex]::Replace($m.Groups[1].Value, '\([^)]*\)', '',
+                            [Text.RegularExpressions.RegexOptions]::Singleline)
+
    # `lbl: TLabel;` and the comma form `rbData7, rbData8: TRadioButton;`.
    # Methods are skipped because they do not match `<names> : T<type> ;`.
-   foreach ($f in [regex]::Matches($m.Groups[1].Value,
+   foreach ($f in [regex]::Matches($body,
                    '^\s{4,}([A-Za-z_][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z_][A-Za-z0-9_]*)*)\s*:\s*T[A-Za-z0-9_]+\s*;',
                    [Text.RegularExpressions.RegexOptions]::Multiline)) {
       foreach ($n in $f.Groups[1].Value -split ',') {
@@ -225,6 +243,12 @@ function Invoke-SelfTest {
       @{ Name = 'handler_published_is_fine'; Expect = 0
          Pas = "type`r`n  TfrmX = class(TForm)`r`n    lblA: TLabel;`r`n    procedure HandleOK(Sender: TObject);`r`n  private`r`n  end;"
          Fmx = "object frmX: TfrmX`r`n  object lblA: TLabel`r`n    OnChange = HandleOK`r`n  end`r`nend" },
+
+      # A WRAPPED method declaration: its continuation line reads exactly like
+      # a field declaration. Expect 0 -- 'Shift' is a parameter, not a field.
+      @{ Name = 'wrapped_method_declaration'; Expect = 0
+         Pas = "type`r`n  TfrmX = class(TForm)`r`n    lblA: TLabel;`r`n    procedure OnDown(Sender: TObject; Button: TMouseButton;`r`n                     Shift: TShiftState; X, Y: integer);`r`n  private`r`n  end;"
+         Fmx = "object frmX: TfrmX`r`n  object lblA: TLabel`r`n  end`r`nend" },
 
       @{ Name = 'private_fields_ignored'; Expect = 0
          Pas = "type`r`n  TfrmX = class(TForm)`r`n    lblA: TLabel;`r`n  private`r`n    lblPrivate: TLabel;`r`n  end;"

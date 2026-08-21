@@ -48,20 +48,32 @@ area.
 ### 3. Window control dialog — Ctrl+Alt+M  (`f11a1093`)
 
 It opens and lists the windows, and Cancel / Escape / the window button correctly
-move nothing. The flash-on-selection check has become **finding F2** -- it does
-something else entirely. Still open:
+move nothing. The flash-on-selection check became **finding F2**, which is now
+answered: the system menu NY4I saw is the accept path doing what it was always
+meant to do, and it is the mechanism behind the item still open below. Still
+open:
 
-- [ ] **OK** then lets you move the chosen window (the caller repositions it).
+- [ ] **OK** then lets you move the chosen window -- it pops the chosen window's
+  SYSTEM MENU at its top-left corner (`WM_POPUPSYSTEMMENU`), and Move from that
+  menu is how the repositioning happens. That is the design, in D7 too.
+- [ ] Moving the selection with the ARROW KEYS, without accepting, flashes the
+  window and does nothing else. This is the half of F2 that is still a question.
 
-### 4. Band plan editor — Settings, then the band-plan button  (`uBandPlanForm`)
+### 4. Band plan editor — Preferences, More settings, the Edit... button  (`uBandPlanForm`)
 
-**BLOCKED 2026-08-20 (NY4I): "I do not see this option in Settings."** Nothing
-below can be tested until there is a way in. See finding F3 -- until that is
-answered, the checklist stands but is unreachable.
+**UNBLOCKED 2026-08-21.** The way in is an "Edit..." button on the two
+band-plan rows in **Preferences -> More settings** -- captioned *Band Map Cutoff
+Frequency* and *Frequency Memory*. Note it is NOT in Ctrl-J Settings, which is
+where it used to be and where it was looked for; finding F3 records why.
+Confirmed opening on the bench (NY4I).
 
 Converted from 33 generated edit boxes to a single `TStringGrid`.
 
-- [ ] It **opens** and shows one row per band with the three current values.
+**Confirmed 2026-08-21 (NY4I):** it opens from Preferences, it is resizable, the
+headings are readable, the grid fills the window, and the position is remembered
+across openings. **What is still unrun is everything that WRITES:**
+
+- [x] It **opens** and shows one row per band with the three current values.
 - [ ] Editing a cell and pressing **OK** writes `[BAND PLAN]` in `tr4w.ini` and
   the new values survive a restart.
 - [ ] **Cancel changes nothing.**
@@ -276,11 +288,11 @@ entry silently.
 
 ## Findings — bench run 2026-08-20 (NY4I)
 
-Defects found while working the list above. **None of these are fixed.** They
+Defects found while working the list above. **A finding is not a checklist item.** They
 are written down here rather than in the checklists because a checklist item is
 a question and these are answers.
 
-### F1 — a stray character appears before a message with a blank caption
+### F1 — a stray character appears before a message with a blank caption — **ANSWERED: the command delimiters; PARKED behind the JSON/F-key rewrite**
 
 **Seen:** F5 saved with the command `EXCHANGERADIOS` and **no caption**. The
 function-key display shows *"a random character before the word
@@ -288,41 +300,95 @@ EXCHANGERADIOS"*. With a caption present the command is fine.
 
 Screenshot: `C:\Users\toms\Pictures\Screenshots\Screenshot 2026-08-20 112902.png`
 
-**Why it is worth chasing rather than shrugging at:** "a random character" is the
-signature of a length byte or a terminator being read as text, and this dialog
-has already produced exactly that once -- the earlier `CQ CW MEMORY F5<A4><AE>6w=`
-was an unterminated `ShortString` read past its length. A second sighting in the
-same area, on the path where a string is EMPTY, says the first fix may have
-addressed the symptom at one call site rather than the cause. **An empty caption
-is the interesting input**: length zero is the case a length-prefixed read is
-most likely to get wrong.
+**ANSWERED 2026-08-21: it is the command delimiters, drawn raw. It is NOT the
+length-byte bug, and it is NOT new.** The suspicion below was that "a random
+character" is the signature of a length byte read as text, because this area had
+produced exactly that once (`CQ CW MEMORY F5<A4><AE>6w=`, an unterminated
+`ShortString` read past its length). It is not the same defect.
 
-Note this also settles the struck checklist item in section 1 -- the question is
-not whether a blank caption should REMOVE the key, it is why a blank caption
-renders a character that was never typed.
+A message is STORED with its control characters in it. A command is bracketed by
+`ControlC`/`ControlD` -- `<03>EXCHANGERADIOS<04>` is how `tr4w.ini` spells it,
+and `CfgCmd.SniffOutControlCharacters` turns that spelling into the two real
+bytes on load, which is what `uProcessCommand.FoundCommand` then parses.
+`uFunctionKeys.ShowFMessages` puts the STORED string on the button
+(`uFunctionKeys.pas:319`/`:323`), so both delimiters are drawn, each as a
+missing-glyph box. The screenshot shows one before the word and one after.
 
-### F2 — the window control dialog opens a system menu instead of flashing
+A caption hides it because the caption is displayed INSTEAD of the message, so
+the blank-caption path is not a length-zero read going wrong -- it is simply the
+only path that shows the message itself. The D7 tree's `uFunctionKeys.pas` does
+the identical thing, so this is original behaviour, not a port regression.
+`uAltP`'s message column (`uAltP.pas:312`/`:316`) has it too.
+
+**PARKED, deliberately, and not fixed (NY4I, 2026-08-21):** the function-key
+messages are moving to JSON and the way commands are processed is being redone.
+The control characters ARE the storage format, so a display-side strip written
+now is thrown away by that work -- and worse, it would hide the question the
+rewrite has to answer, which is how a command should be represented once the
+message is no longer a byte string with markers in it. Park it there.
+
+Note this also settles the struck checklist item in section 1 -- the question was
+never whether a blank caption should REMOVE the key; the character it renders was
+typed, just not by the operator.
+
+### F2 — the window control dialog opens a system menu instead of flashing — **ANSWERED: that menu is the accept path, by design**
 
 **Seen:** *"Selecting a window here activates the window but opens the menu with
 maximize, minimize, close, etc."*
 
-Expected: moving the selection flashes the corresponding window. What happens
-instead is the window's SYSTEM MENU appearing, which is what Windows does for
-Alt+Space or a right-click on a title bar -- so the likely cause is the dialog
-sending or synthesising something that reaches the target window as a system
-command rather than as a flash. Activating the window at all is already more
-than intended.
+**ANSWERED 2026-08-21: the system menu is the ACCEPT path, and it is the
+original design.** It does not come from the dialog and it is not the flash.
+Once a window is chosen, `MainUnit.pas:4429` sends the chosen window `$313` --
+`WM_POPUPSYSTEMMENU` -- at its own top-left corner. That IS the mechanism behind
+section 3's remaining checklist item "OK then lets you move the chosen window":
+the operator is meant to pick Move from that menu. The D7 tree has the same line
+at `MainUnit.pas:3965`, so nothing about it came from the LCL conversion.
 
-### F3 — the band plan editor has no way in
+The selection-change handler is correct as written --
+`uWinManagerForm.lstWindowsSelectionChange` calls `Windows.FlashWindow`, which
+inverts the target's caption and does not activate anything. So there is no
+defect proven here, and the reading is that the menu was seen after ACCEPTING a
+row (double-click, OK or Enter) rather than after merely moving the selection.
+
+**Not closed, because one half is still a bench question:** does moving the
+selection with the arrow keys, without accepting, flash the window and nothing
+else? If it does, F2 is a misreading of intended behaviour and can be deleted.
+If a system menu appears on selection alone, the diagnosis above is wrong and
+that is worth knowing.
+
+### F3 — the band plan editor has no way in — **FIXED 2026-08-21, confirmed on the bench**
 
 **Seen:** *"I do not see this option in Settings."*
 
 The form exists and `Invoke-MenuSmoke` proves it constructs and shows, so this is
-about the ROUTE, not the dialog. Either the button was never added to the
-Settings dialog, or it is there and disabled, or it is behind a mode. Until it is
-answered, section 4's checklist cannot be run at all -- and note that the smoke
-test passing is exactly why nothing caught this: it opens dialogs by resource
-id, not by clicking through the UI a person actually uses.
+about the ROUTE, not the dialog -- and note that the smoke test passing is
+exactly why nothing caught this: it opens dialogs by resource id, not by clicking
+through the UI a person actually uses.
+
+**ANSWERED 2026-08-21: the editor has no live caller at all, and the route was
+removed on 2026-08-16.** Its only entry point is `uOption.pas:746`, reached by
+activating a settings row whose type is `ctFreqList`. There are exactly two such
+rows, `BAND MAP CUTOFF FREQUENCY` and `FREQUENCY MEMORY` (`uCFG.pas:478`,
+`:585`). Commit `79d4b6f0`, "empty Ctrl-J -- 173 settings move into Preferences",
+flipped both from `csOld` to `csOwned`, and the Ctrl-J list builder skips
+`csOwned` rows (`uOption.pas:389`). So the rows are not listed, and the call that
+opens the band plan editor can no longer be reached.
+
+Preferences does show both, and renders them DISABLED on purpose: they are
+multi-valued `[BAND PLAN]` rows and a bound edit box would write one frequency
+into `[COMMANDS]` and could replace a whole band plan (`uCFG.pas:1247` states
+this at length, and it is right). So the fix is not to bind them.
+
+**Decided (NY4I, 2026-08-21): put the way back in Preferences**, as an "Edit..."
+button on those two rows calling `ShowBandPlan`. That keeps them unbound -- a row
+that cannot be edited in place still cannot be saved -- while giving the dialog
+that owns the setting the job of offering the editor for it.
+
+**DONE, and confirmed opening on the bench the same day.** `CFGCommandIsFreqList`
+(`uCFG.pas`) is the predicate -- a refinement of `CFGCommandIsList`, because both
+kinds stay unbound but only this one has an editor behind it. The button carries
+no binding, so the `[BAND PLAN]` hazard is untouched. Section 4's checklist is
+live again; the items that WRITE the ini are still unrun.
 
 ### F4 — Edit QSO is dirty before you touch it — **FIXED, needs a bench pass**
 
