@@ -8393,36 +8393,6 @@ procedure tEnumeratePorts;
 // PortsPtr : Pointer;
 // InfoPtr : PPortInfo1;
 begin
-  {
-
-  Success := EnumPorts(nil, 1, nil, 0, BytesNeeded, Returned);
-
-  if (not Success) and (GetLastError = ERROR_INSUFFICIENT_BUFFER) then
-  begin
-  Windows.ZeroMemory(@wsprintfBuffer, SizeOf(wsprintfBuffer));
-  Windows.lstrcatA(wsprintfBuffer, 'Available ports: '#13#10);
-
-  GetMem(PortsPtr, BytesNeeded);
-  try
-
-  Success := EnumPorts(nil, 1, PortsPtr, BytesNeeded, BytesNeeded, Returned);
-
-  for I := 0 to Returned - 1 do
-  begin
-  InfoPtr := PPortInfo1(DWORD(PortsPtr) + I * SizeOf(InfoPtr));
-  if InfoPtr^.pName[0] in ['C', 'L'] then
-  begin
-  Windows.lstrcatA(wsprintfBuffer, InfoPtr^.pName);
-  Windows.lstrcatA(wsprintfBuffer, ' ');
-  end;
-
-  end;
-  finally
-  FreeMem(PortsPtr);
-  end;
-  ShowMessage(wsprintfBuffer);
-  end;
-  }
 end;
 
 function KeyerDebugDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:

@@ -1431,37 +1431,6 @@ procedure CallDatabase.ClearField;
 //var  Key: Char;
 
 begin
-  {
-
-       WriteLn ('This procedure will allow you to clear out one of the data fields in the ');
-       WriteLn ('database.  For string values, they will be set to null string.  Numberic');
-       WriteLn ('values will be set to zero.');
-       WriteLn;
-
-       WriteLn ('A - Section    K - Check        U - User 1');
-       WriteLn ('C - CQ Zone    N - Name         V - User 2');
-       WriteLn ('F - FOC        O - Old Call     W - User 3');
-       WriteLn ('G - Grid       Q - QTH          X - User 4');
-       WriteLn ('H - Hits       S - Speed        Y - User 5');
-       WriteLn ('I - ITU Zone   T - Ten ten #');
-       WriteLn;
-
-       REPEAT
-           Key := UpCase (GetKey ('Enter field to clear (escape to abort) : '));
-           IF Key = EscapeKey THEN Exit;
-       UNTIL (Key = 'A') OR (Key = 'C') OR (Key = 'F') OR (Key = 'G') OR
-             (Key = 'H') OR (Key = 'I') OR (Key = 'K') OR (Key = 'N') OR
-             (Key = 'O') OR (Key = 'Q') OR (Key = 'S') OR (Key = 'T') OR
-             (Key = 'U') OR (Key = 'V') OR (Key = 'W') OR (Key = 'X') OR
-             (Key = 'Y');
-
-       IF NOT ASCIIFileIsCurrent THEN SaveToASCIIFile;
-
-       BuildNewDatabaseFromASCIIFile (Key);
-
-       WriteLn ('COMPLETE.  If for some reason, you want to undo this operation, simply run');
-       WriteLn ('the Build command from the main menu.');
-  }
 end;
 
 procedure CallDatabase.ClearDataEntry(var data: DataBaseEntryRecord);
@@ -3193,45 +3162,6 @@ begin
         end;
      end;
 
-  //{WLI}    GoToXY (1, WhereY);
-  //{WLI}    ClrEol;
-  {
-      Write   ('Total calls = ', TotalCalls);
-      GoToXY (40, WhereY);
-      WriteLn ('Total QTHs = ', TotalQTHs);
-
-      Write   ('Total Names = ', TotalNames);
-      GoToXY (40, WhereY);
-      WriteLn ('Total Grids = ', TotalGrids);
-
-      Write   ('Total CQ Zones = ', TotalCQZones);
-      GoToXY (40, WhereY);
-      WriteLn ('Total ITU Zones = ', TotalITUZones);
-
-      Write   ('Total Checks = ', TotalChecks);
-      GoToXY (40, WhereY);
-      WriteLn ('Total Sections = ', TotalSections);
-
-      Write   ('Total TenTens = ', TotalTenTens);
-      GoToXY (40, WhereY);
-      WriteLn ('Total FOCs = ', TotalFOCs);
-
-      Write   ('Total User1s = ', TotalUser1s);
-      GoToXY (40, WhereY);
-      WriteLn ('Total User2s = ', TotalUser2s);
-
-      Write   ('Total User3s = ', TotalUser3s);
-      GoToXY (40, WhereY);
-      WriteLn ('Total User4s = ', TotalUser4s);
-
-      Write   ('Total User5s = ', TotalUser5s);
-      GoToXY (40, WhereY);
-      WriteLn ('Total CW Speeds = ', TotalSpeeds);
-
-      WriteLn ('Total OldCalls = ', TotalOldCalls);
-
-      WriteLn;
-  }
   ShowMessage('Hit count histogram for 0 to 50+ : ');
   {
       FOR Entry := 0 TO 51 DO

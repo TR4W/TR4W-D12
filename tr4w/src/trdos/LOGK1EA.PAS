@@ -495,40 +495,6 @@ begin
     HexChars[Lo(w) and $F]);
 end;
 
-{
-procedure K1EAKeyer.AddSerialPortCharacter(port: PortType; Character: Char);
-
-var
-  DebugString                           : string;
-
-begin
-
-   // Check to see if the buffer is full - if so, we wait here
-
-  if SerialPortOutputBuffer[port].FreeSpace = 0 then
-  begin
-    if SerialPortOutputBuffer[port].Debug then
-    begin
-      DebugString := ' **BUFFER FULL** ';
-//wli      BlockWrite(SerialPortOutputBuffer[port].DebugFile, DebugString, length(DebugString) + 1);
-    end;
-
-    while SerialPortOutputBuffer[port].FreeSpace = 0 do ;
-  end;
-
-  SerialPortOutputBuffer[port].AddEntry(ord(Character));
-end;
-}
-{
-procedure K1EAKeyer.AddSerialPortString(port: PortType; data: Str80);
-var
-  PortHWND                              : HWND;
-begin
-  if Radio1.tCATPortType = port then PortHWND := Radio1.tCATPortHandle;
-  if Radio2.tCATPortType = port then PortHWND := Radio2.tCATPortHandle;
-  WriteToSerialCATPort(data, PortHWND);
-end;
-}
 
 procedure StartDVK(MemorySwitch: integer);
 
@@ -612,40 +578,6 @@ begin
 
   SetPortByte(tActiveStereoPortBaseAddress, otData, TempByte);
 
-  //  case PinNumber of
-  //    5: Image := $08; { Pin five, bit 3 }
-  //    9: Image := $80; { Pin nine, bit 7 }
-  //    else Exit;
-  //  end;
-    {    CASE ActiveStereoPort OF
-
-            Parallel1: BEGIN
-                       IF PinSet THEN
-                           LPT1Image := (LPT1Image AND (not Image)) OR Image
-                       ELSE
-                           LPT1Image := (LPT1Image AND (not Image));
-                       Port [LPT1BaseAddress] := LPT1Image;
-                       END;
-
-            Parallel2: BEGIN
-                       IF PinSet THEN
-                           LPT2Image := (LPT2Image AND (not Image)) OR Image
-                       ELSE
-                           LPT2Image := (LPT2Image AND (not Image));
-                       Port [LPT2BaseAddress] := LPT2Image;
-                       END;
-
-            Parallel3: BEGIN
-                       IF PinSet THEN
-                           LPT3Image := (LPT3Image AND (not Image)) OR Image
-                       ELSE
-                           LPT3Image := (LPT3Image AND (not Image));
-                       Port [LPT3BaseAddress] := LPT3Image;
-                       END;
-
-            ELSE       Exit;
-            END;
-    }
 end;
 
 procedure TurnOffActivePort;
@@ -855,60 +787,6 @@ begin
   DriverBitOperation(TempByte, RELAY_SIGNAL, Operation);
 
   SetPortByte(tRelayControlPortBaseAddress, otControl, TempByte);
-  {    IF Config.SwapRadioRelaySense THEN
-          IF Radio = RadioOne THEN
-              Radio := RadioTwo
-          ELSE
-              Radio := RadioOne;
-
-      CASE Radio OF
-          RadioOne:
-              CASE RelayControlPort OF
-                  Parallel1:
-                      BEGIN
-                      CWLPT1Image := CWLPT1Image AND $FD;
-                      Port [LPT1BaseAddress + ParallelOutputAddressOffset] := CWLPT1Image;
-                      END;
-
-                  Parallel2:
-                      BEGIN
-                      CWLPT2Image := CWLPT2Image AND $FD;
-                      Port [LPT2BaseAddress + ParallelOutputAddressOffset] := CWLPT2Image;
-                      END;
-
-                  Parallel3:
-                      BEGIN
-                      CWLPT3Image := CWLPT3Image AND $FD;
-                      Port [LPT3BaseAddress + ParallelOutputAddressOffset] := CWLPT3Image;
-                      END;
-
-                  END;
-
-          RadioTwo:
-              CASE RelayControlPort OF
-                  Parallel1:
-                      BEGIN
-                      CWLPT1Image := CWLPT1Image OR $02;
-                      Port [LPT1BaseAddress + ParallelOutputAddressOffset] := CWLPT1Image;
-                      END;
-
-                  Parallel2:
-                      BEGIN
-                      CWLPT2Image := CWLPT2Image OR $02;
-                      Port [LPT2BaseAddress + ParallelOutputAddressOffset] := CWLPT2Image;
-                      END;
-
-                  Parallel3:
-                      BEGIN
-                      CWLPT3Image := CWLPT3Image OR $02;
-                      Port [LPT3BaseAddress + ParallelOutputAddressOffset] := CWLPT3Image;
-                      END;
-
-                  END;
-          END;
-
-      Wait (2);
-   }
 end;
 {
 procedure K1EAKeyer.PTTForceOn;
@@ -1121,46 +999,6 @@ begin
 
 end;
 
-{
-procedure K1EAKeyer.CheckSerialPortReceiveData(SerialPort: PortType);
-
-// Checks to see if a character is ready for the specified port.  If so,
-//  it will read it in, and put it in the buffer for the port. I had to
-//  move all of the ReadChar stuff in here, as I was getting hangs at
-//  power up otherwise (seemed to be some kind of uninitialized variable
-//  that I could never track down
-
-var
-  PortData                              : Byte;
-  PortAddress                           : word;
-   //    Regs: Registers;
-
-begin
-    PortAddress := 0;
-
-       CASE SerialPort OF
-           Serial1: PortAddress := Com1PortBaseAddress;
-           Serial2: PortAddress := Com2PortBaseAddress;
-           Serial3: PortAddress := Com3PortBaseAddress;
-           Serial4: PortAddress := Com4PortBaseAddress;
-           Serial5: PortAddress := Com5PortBaseAddress;
-           Serial6: PortAddress := Com6PortBaseAddress;
-           ELSE Exit;
-           END;
-
-       IF (Port [PortAddress + 5] AND 1) = 0 THEN Exit; // No character ready
-
-   //    Character ready - go read it
-
-       PortData := Port [PortAddress];
-
-       SerialPortInputBuffer [SerialPort].AddEntry (PortData);
-
-       IF SerialPortInputBuffer [SerialPort].Debug THEN
-           BlockWrite (SerialPortInputBuffer [SerialPort].DebugFile, PortData, 1);
-
-end;
-   }
 
 procedure K1EAKeyer.AddCharacterToCWBuffer(Character: Char);
 
@@ -1829,49 +1667,6 @@ begin
   // now set it on the real handle. BEHAVIOR CHANGE: beep thread now runs IDLE.
   SetThreadPriority(TR4W_BeepThread, THREAD_PRIORITY_IDLE);
 
-  {   Exit;
-     if not BeepEnable then
-        begin
-           //        NoSound;
-           Exit;
-        end;
-
-     case ActiveBeep of
-        ThreeHarmonics:
-           begin
-
-              SpeakerBeep(300, 60);
-              SpeakerBeep(450, 150);
-              SpeakerBeep(550, 60);
-              SpeakerBeep(350, 150);
-
-           end;
-
-        Warning:
-           begin
-              SpeakerBeep(1500, 150);
-           end;
-
-        single:
-           begin
-              SpeakerBeep(2000, 75);
-           end;
-
-        PromptBeep:
-           begin
-              SpeakerBeep(2000, 100);
-           end;
-
-        BeepCongrats:
-           begin
-              SpeakerBeep(500, 80);
-              SpeakerBeep(400, 80);
-              SpeakerBeep(300, 80);
-              SpeakerBeep(600, 80);
-              SpeakerBeep(800, 80);
-           end;
-     end;
-  }
 end;
 
 function DVKMessagePlaying: boolean;

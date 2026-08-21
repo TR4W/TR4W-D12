@@ -558,79 +558,7 @@ begin
      CloseServerLog;
      end;
 end;
-{
-procedure SortServerLog;
-label
-  1, 3;
-var
-  pNumberOfBytesRead                    : Cardinal;
-  dwSize                                : integer;
-  MapFin                                : Cardinal;
-  MapBase                               : Pointer;
-begin
 
-  dwSize := Windows.GetFileSize(ServerLogHandle, nil) - SizeOfTLogHeader;
-  if dwSize <= SizeOfTLogHeader + SizeOf(ContestExchange) then Exit;
-  LogArraySize := dwSize div SizeOf(ContestExchange);
-
-  MapFin := Windows.CreateFileMapping(ServerLogHandle, nil, PAGE_READWRITE, 0, 0, nil);
-  if MapFin = 0 then Exit;
-
-  MapBase := Windows.MapViewOfFile(MapFin, FILE_MAP_ALL_ACCESS, 0, 0, 0);
-  if MapBase = nil then goto 3;
-
-  asm
-     add eax,SizeOfTLogHeader
-     mov LogArrayPtr,eax
-  end;
-
-  if SortServerLogArrayShell then FlushViewOfFile(MapBase, 0);
-  Windows.UnmapViewOfFile(MapBase);
-  3: CloseHandle(MapFin);
-
-end;
-}
-
-{
-
-function SortServerLogArrayShell: boolean;
-var
-  bis, i, J, k                          : LONGINT;
-  h                                     : ContestExchange;
-  T1, T2                                : Cardinal;
-begin
-
-  Result := False;
-  bis := LogArraySize - 1;
-  k := bis shr 1; // div 2
-  while k > 0 do
-  begin
-    for i := 0 to bis - k do
-    begin
-      J := i;
-      T1 := LogArrayPtr[J].tSysTime.qtSecond + LogArrayPtr[J].tSysTime.qtMinute * 60 + LogArrayPtr[J].tSysTime.qtHour * 60 * 60 + +LogArrayPtr[J].tSysTime.qtDay * 60 * 60 * 24;
-      T2 := LogArrayPtr[J + k].tSysTime.qtSecond + LogArrayPtr[J + k].tSysTime.qtMinute * 60 + LogArrayPtr[J + k].tSysTime.qtHour * 60 * 60 + +LogArrayPtr[J + k].tSysTime.qtDay * 60 * 60 * 24;
-      //      while (J >= 0) and (STToInt64(LogArrayPtr[J].tSysTime) > STToInt64(LogArrayPtr[J + k].tSysTime)) do
-      while (J >= 0) and (T1 > T2) do
-      begin
-        Result := True;
-        h := LogArrayPtr[J];
-        LogArrayPtr[J] := LogArrayPtr[J + k];
-        LogArrayPtr[J + k] := h;
-        if J > k then
-          dec(J, k)
-        else
-          J := 0;
-        T1 := LogArrayPtr[J].tSysTime.qtSecond + LogArrayPtr[J].tSysTime.qtMinute * 60 + LogArrayPtr[J].tSysTime.qtHour * 60 * 60 + +LogArrayPtr[J].tSysTime.qtDay * 60 * 60 * 24;
-        T2 := LogArrayPtr[J + k].tSysTime.qtSecond + LogArrayPtr[J + k].tSysTime.qtMinute * 60 + LogArrayPtr[J + k].tSysTime.qtHour * 60 * 60 + +LogArrayPtr[J + k].tSysTime.qtDay * 60 * 60 * 24;
-
-      end;
-    end;
-    k := k shr 1; // div 2
-  end;
-
-end;
-}
 
 function Load_MSWSOCK: boolean;
 begin
@@ -890,47 +818,6 @@ begin
        end;
   Result := True;
 end;
-{
-procedure LoadinMultsFrequencies;
-label
-  1;
-var
-  h                                     : HWND;
-  pNumberOfBytesRead                    : Cardinal;
-begin
-
-  if not Tree.tOpenFileForRead(h, MultsFrequenciesFileName) then Exit;
-  if Windows.GetFileSize(h, nil) <> SizeOf(MultsFrequencies) then goto 1;
-  Windows.ReadFile(h, ServerMF, SizeOf(MultsFrequencies), pNumberOfBytesRead, nil);
-  1: CloseHandle(h);
-
-end;
-}
-{
-procedure SaveMultsFrequencies;
-var
-  h                                     : HWND;
-  lpNumberOfBytesWritten                : Cardinal;
-begin
-  if not Tree.tOpenFileForWrite(h, MultsFrequenciesFileName) then Exit;
-  Windows.WriteFile(h, ServerMF, SizeOf(MultsFrequencies), lpNumberOfBytesWritten, nil);
-  CloseHandle(h);
-end;
-}
-{
-procedure SendMFToClients;
-var
-  i                                     : Cardinal;
-  I2                                    : integer;
-begin
-  NetMF.mfQSOTotals := ServerMF;
-  for i := 1 to maxclients do
-    if ClientsSoocketsArray[i].clSocket <> 0 then
-    begin
-      I2 := sSend(ClientsSoocketsArray[i].clSocket, NetMF, SizeOf(NetMultsFrequencies), dmMF);
-    end;
-end;
-}
 
 procedure GetServerLogCRC32;
 label

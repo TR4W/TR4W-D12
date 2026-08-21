@@ -852,57 +852,6 @@ begin
        if Key = NullKey then
           begin
           Key := NewReadKey;
-              //        case Key of
-              //          AltA:
-              //            if (CallWindowString = '') and (LastSCPCall = '') then
-              //              SetAlarm
-              //            else
-              //              VisibleLog.SuperCheckPartial(CallWindowString, False, ActiveRadio);
-                                   {KK1L: 6.73 Added ActiveRadio}
-              //          AltB:
-              //            begin
-                                         //{WLI}                        RememberFrequency;
-              //              BandUp;
-                                         {KK1L: 6.73 NOTE the following statement is redundant. It is in BandUp and BandDown.}
-              //              if QSONumberByBand then
-              //                DisplayNextQSONumber(TotalContacts + 1);
-              //            end;
-              //          AltD:
-              //            if K1EANetworkEnable then
-              //              PassStationToCTNetwork
-              //            else
-              //              DupeCheckOnInactiveRadio;
-              //          AltK: ToggleCW(true);
-              //          AltM:
-              //            begin
-                                         //{WLI}                        RememberFrequency;
-              //              ToggleModes;
-              //            end;
-              //          AltR:
-              //            begin
-                                         //{WLI}                        SwapRadios;
-              //              InactiveRigCallingCQ := False;
-              //              Str(SpeedMemory[InactiveRadio], SpeedString); {KK1L: 6.73 Used to use a variable CheckSpeed}
-              //            end;
-              //          AltS: SetNewCodeSpeed;
-              //          AltT: TimeAndDateSet;
-              //          AltV:
-              //            begin
-                                         //{WLI}                        RememberFrequency;
-              //              BandDown;
-              //            end;
-              //          AltX: ExitProgram;
-              //          AltY:
-              //            begin
-              //              DeleteLastContact;
-              //              LastTwoLettersCrunchedOn := '';
-              //            end;
-              //          PageUpKey: SpeedUp;
-              //          PageDownKey: SlowDown;
-              //        else
-                                      //{WLI}                      SendFunctionKeyMessage (Key, OpMode);
-                                                            {KK1L: note: this is where to add switch to SAPMode if NextBandMap command}
-              //        end;
           end
        else
           begin

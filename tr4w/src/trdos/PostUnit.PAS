@@ -1201,39 +1201,6 @@ function MakeCategoryString: string;
      GetDialogItemText( CreateCabrilloWindow, 124 );
 
   end;
-{
-  function DetermineNumberOfQTCs: integer;
-
-  // This procedure will look at the QTC.DAT file and determine how many QTCs
-  //  were sent or received.
-
-  var
-  FileRead                         : Text;
-  //  FileString                            : Str80;
-  QTCsThisStation, NumberQTCs      : integer;
-
-  begin
-  NumberQTCs := 0;
-
-  if OpenFileForRead(FileRead, 'QTCLIST.DAT') then
-  begin
-  while not Eof(FileRead) do
-  begin
-  ReadLn(FileRead);
-
-  if not Eof(FileRead) then
-  begin
-  ReadLn(FileRead, QTCsThisStation);
-  NumberQTCs := NumberQTCs + QTCsThisStation;
-  end;
-  end;
-
-  Close(FileRead);
-  end;
-
-  DetermineNumberOfQTCs := NumberQTCs;
-  end;
-}
 
 procedure ScoreByHour;
   begin
@@ -3335,39 +3302,6 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
             ZoneIndex ].FirstCall[ 1 ] ) ),
             string( PAnsiChar( @CountryMultTotals^[ Band10,
             ZoneIndex ].FirstCall[ 1 ] ) ) ] );
-         {
-          Str(ZoneIndex: 3, TempString);
-
-          TempString := TempString + '  ';
-
-          if CountryMultTotals^[Band160, ZoneIndex].TotalQSOs > 0 then
-          TempString := TempString + CountryMultTotals^[Band160, ZoneIndex].FirstCall;
-
-          while length(TempString) < 16 do TempString := TempString + ' ';
-
-          if CountryMultTotals^[Band80, ZoneIndex].TotalQSOs > 0 then
-          TempString := TempString + CountryMultTotals^[Band80, ZoneIndex].FirstCall;
-
-          while length(TempString) < 28 do TempString := TempString + ' ';
-
-          if CountryMultTotals^[Band40, ZoneIndex].TotalQSOs > 0 then
-          TempString := TempString + CountryMultTotals^[Band40, ZoneIndex].FirstCall;
-
-          while length(TempString) < 40 do TempString := TempString + ' ';
-
-          if CountryMultTotals^[Band20, ZoneIndex].TotalQSOs > 0 then
-          TempString := TempString + CountryMultTotals^[Band20, ZoneIndex].FirstCall;
-
-          while length(TempString) < 52 do TempString := TempString + ' ';
-
-          if CountryMultTotals^[Band15, ZoneIndex].TotalQSOs > 0 then
-          TempString := TempString + CountryMultTotals^[Band15, ZoneIndex].FirstCall;
-
-          while length(TempString) < 64 do TempString := TempString + ' ';
-
-          if CountryMultTotals^[Band10, ZoneIndex].TotalQSOs > 0 then
-          TempString := TempString + CountryMultTotals^[Band10, ZoneIndex].FirstCall;
-        }
          WriteLn( FileWrite, TempString );
          inc( Lines );
          end;

@@ -55,36 +55,6 @@ label
 begin
   Result := False;
   case Msg of
-{
-    WM_DRAWITEM:
-
-      begin
-        IntercomDIS := Pointer(lParam);
-        if (IntercomDIS^.itemAction = ODA_FOCUS) then
-        begin
-          DrawFocusRect(IntercomDIS^.HDC, IntercomDIS^.rcItem);
-          Exit;
-        end;
-
-        if IntercomDIS^.itemAction = ODA_DRAWENTIRE then
-        begin
-          i := SendMessageA(IntercomDIS^.hwndItem, LB_GETTEXT, IntercomDIS^.ItemID, integer(@MessageBuf));
-          Color := tr4wColorsArray[tr4wColors(((Ord(MessageBuf[6]) - Ord('A')) mod integer(High(tr4wColors))))];
-
-//          Color := clgreen;
-          GradientRect(IntercomDIS^.HDC, IntercomDIS^.rcItem, Color, Color, gdHorizontal);
-          // Issue #997: removed dead asm (it set TextColor via bswap, but the
-          // next line unconditionally overwrites TextColor).
-          TextColor := $00FFFFFF - Color;
-          Windows.SetTextColor(IntercomDIS^.HDC, TextColor);
-          SetBkMode(IntercomDIS^.HDC, TRANSPARENT);
-          Windows.TextOutA(IntercomDIS^.HDC, IntercomDIS^.rcItem.Left + 2, IntercomDIS^.rcItem.Top, MessageBuf, i);
-          Result := True;
-        end;
-      end;
-}
-    //    WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
-    //    WM_EXITSIZEMOVE: FrmSetFocus;
     WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
 
     WM_SIZE:

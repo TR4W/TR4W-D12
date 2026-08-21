@@ -1404,51 +1404,6 @@ begin
      SetMainWindowText(mweCodeSpeed, tPChar);
      end;
 
-  {
-    DisplayedCodeSpeed := WPM;
-    if SendingEnabled then
-      TempString := IntToStr(WPM) + ' WPM'
-    else
-      TempString := IntToStr(WPM) + ' NO CW';
-    if Mode = CW then
-
-    begin
-      Windows.EnableWindow(CodeSpeedWindowHandle, True);
-      SpeedMemory[ActiveRadio] := WPM;
-    end
-
-    else
-
-    begin
-
-      if DVPEnable then
-      begin
-        if DVPEnabled then
-          TempString := ' DVP ON'
-        else
-          TempString := ' DVP OFF';
-      end;
-
-  }
-  {    if DVPEnable then
-      begin
-        if DVPEnabled then
-          ShowMessage(' DVP ON')
-        else
-          ShowMessage(' DVP OFF');
-      end
-      else
-        if (ActiveDVKPort <> NoPort) then
-        begin
-          if DVPEnabled then
-            ShowMessage(' DVK ON')
-          else
-            ShowMessage(' DVK OFF');
-        end
-        else
-          }
-  //    Windows.EnableWindow(CodeSpeedWindowHandle, False);
-  //    Windows.ShowWindow(CodeSpeedWindowHandle, SW_HIDE);
 
     //        RestorePreviousWindow;
   //      end;
@@ -1481,54 +1436,6 @@ var
    PassFreqStr, RunFreqStr         : Str20;
 }
 begin
-  {    SaveSetAndClearActiveWindow (EditableLogWindow);
-
-      IF K1EANetworkEnable THEN
-          BEGIN
-          FOR Band := Band160 TO Band10 DO
-              WITH K1EAMultiInfo [Band] DO
-                  BEGIN
-                  Str (PassFreq, PassFreqStr);
-                  Str (RunFreq, RunFreqStr);
-
-                  Insert ('.', PassFreqStr, Length (PassFreqStr) - 2);
-                  Delete (PassFreqStr, Length (PassFreqStr) - 1, 2);
-
-                  Insert ('.', RunFreqStr, Length (RunFreqStr) - 2);
-                  Delete (RunFreqStr, Length (RunFreqStr) - 1, 2);
-
-                  Write ('Run: ', RunFreqStr:7, '  Pass: ', PassFreqStr:7);
-
-                  IF WhereX > 40 THEN
-                      BEGIN
-                      WriteLn;
-                      ClrEol;
-                      END
-                  ELSE
-                      GoToXY (41, WhereY);
-                  END;
-          END
-
-      ELSE  { TR network }
-  {        FOR Band := Band160 TO BandLight DO
-              FOR Mode := CW TO Phone DO
-                  IF MultiStatus [Band, Mode] <> nil THEN
-                      BEGIN
-                      TempString := BandString [Band] + ModeString [Mode] + ' ' + MultiStatus [Band, Mode]^;
-
-                      Write (TempString);
-
-                      IF WhereX > 40 THEN
-                          BEGIN
-                          WriteLn;
-                          ClrEol;
-                          END
-                      ELSE
-                          GoToXY (41, WhereY);
-                      END;
-
-      RestorePreviousWindow;
- }
 end;
 
 
@@ -2039,55 +1946,6 @@ begin
             end;
          end;
 end;
-{
-procedure ResetBandMapTimes;
-
-//KK1L: 6.70 Sets all times to BandmapDecayTime. Called when BandMapDecayTime is changed.
-
-var
-  BandMapEntryRecord               : BandMapEntryPointer;
-  Band                             : BandType;
-  Mode                             : ModeType;
-
-begin
-  for Band := Band160 to Band2 do
-    for Mode := CW to Phone do
-      if BandMapFirstEntryList[Band, Mode] <> nil then
-        begin
-          BandMapEntryRecord := BandMapFirstEntryList[Band, Mode];
-
-          while BandMapEntryRecord <> nil do
-            begin
-              BandMapEntryRecord^.StatusByte := BandMapEntryRecord^.StatusByte and $C0;
-              BandMapEntryRecord^.StatusByte := BandMapEntryRecord^.StatusByte or BandMapDecayTime;
-              BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-            end;
-        end;
-end;
-}
-{
-procedure ResetBandMapDupes;
-var
-  BandMapEntryRecord               : BandMapEntryPointer;
-  Band                             : BandType;
-  Mode                             : ModeType;
-
-begin
-  for Band := Band160 to Band2 do
-    for Mode := CW to Phone do
-      if BandMapFirstEntryList[Band, Mode] <> nil then
-        begin
-          BandMapEntryRecord := BandMapFirstEntryList[Band, Mode];
-
-          while BandMapEntryRecord <> nil do
-            begin
-              BandMapEntryRecord^.StatusByte := BandMapEntryRecord^.StatusByte and 191;
-              //              BandMapEntryRecord^.StatusByte := BandMapEntryRecord^.StatusByte or BandMapDecayTime;
-              BandMapEntryRecord := BandMapEntryRecord^.NextEntry;
-            end;
-        end;
-end;
-}
 
 procedure UpdateTimeAndRateDisplays(ShowTime: boolean; DoRadios: boolean);
 
@@ -2526,37 +2384,6 @@ begin
      RadioToUse := ActiveRadio;
      end;
   tSetStartStopBandMode;
-  {
-    if BandMapAllBands then
-      begin
-        if VHFBandsEnabled then //KK1L: 6.64 Keep band map within contest limits
-          begin
-            StartBand := Band160;
-            StopBand := Band2;
-          end
-        else
-          begin
-            StartBand := Band160;
-            StopBand := Band12; //KK1L: 6.65 fixes WARC display enable
-          end;
-      end
-    else
-      begin
-        StartBand := BandMapBand;
-        StopBand := BandMapBand;
-      end;
-
-    if BandMapAllModes then
-      begin
-        StartMode := CW;
-        StopMode := Phone;
-      end
-    else
-      begin
-        StartMode := BandMapMode;
-        StopMode := BandMapMode;
-      end;
-  }
   for Band := StartBand to StopBand do
      begin
      for Mode := StartMode to StopMode do
@@ -2642,37 +2469,6 @@ begin
      RadioToUse := ActiveRadio;
      end;
   tSetStartStopBandMode;
-  {
-    if BandMapAllBands then
-      begin
-        if VHFBandsEnabled then //KK1L: 6.64 Keep band map within contest limits
-          begin
-            StartBand := Band160;
-            StopBand := Band2;
-          end
-        else
-          begin
-            StartBand := Band160;
-            StopBand := Band12; //KK1L: 6.65 fixes WARC display enable
-          end;
-      end
-    else
-      begin
-        StartBand := BandMapBand;
-        StopBand := BandMapBand;
-      end;
-
-    if BandMapAllModes then
-      begin
-        StartMode := CW;
-        StopMode := Phone;
-      end
-    else
-      begin
-        StartMode := BandMapMode;
-        StopMode := BandMapMode;
-      end;
-  }
   for Band := StartBand to StopBand do
      begin
      for Mode := StartMode to StopMode do
@@ -3031,37 +2827,6 @@ var
 begin
 
   tSetStartStopBandMode;
-  {
-    if BandMapAllBands then
-      begin
-        if VHFBandsEnabled then //KK1L: 6.64 Keep band map within contest limits
-          begin
-            StartBand := Band160;
-            StopBand := Band2;
-          end
-        else
-          begin
-            StartBand := Band160;
-            StopBand := Band12; //KK1L: 6.65 fixes WARC display enable
-          end;
-      end
-    else
-      begin
-        StartBand := BandMapBand;
-        StopBand := BandMapBand;
-      end;
-
-    if BandMapAllModes then
-      begin
-        StartMode := CW;
-        StopMode := Phone;
-      end
-    else
-      begin
-        StartMode := BandMapMode;
-        StopMode := BandMapMode;
-      end;
-  }
   EntryNumber := 0;
   GetRecordForBandMapCursor := False;
   FoundRecord := False;
@@ -3940,41 +3705,6 @@ var
      SetMainWindowText(mweLastQSOTime, MillisecondsToFormattedString(k, False));     // display elapsed since last qso
      end;
      tDispalyOnAirTime;
-{    if (k < T1) then
-  begin
-  if K < B then
-  begin
-  A := B;     // restore former K value
-
-  end;
-  if Gate then
-  Gate := False;
-  if C = 0 then
-  D1 :=  D        // save previous K
-    else
-  D1 := b + c + e;
-
-
-  if (d1 div 1000) mod 2 = 0 then         // if 2 seconds elapsed
-  //       // display elapsed since last qso
-      SetMainWindowText(mweOnAirTimeCounter, MillisecondsToFormattedString(TimeSpentByBand[AllBands] * 1000, False));
-   b := K;  // last value of K before enter pressed
-
-  end;
-
-   if K > T1 then
-   begin
-   
-   if not Gate then
-   begin
-   e := c;    // save old c value into var e  Snap last good K ONCE
-   Gate := true;
-   end;
-  
- C := A;       // c points to the last K
-
-end;
-}
 end;
 
 procedure tDispalyMyComputerID;
@@ -4060,46 +3790,6 @@ procedure DisplayCountryInformation(FileName: Str80; Call: CallString);
   //FileString                            : Str80;
   //WhereY                                : integer;
 begin
-{  REMOVECANDIDATE
-  //  if tr4w_WindowsArray[tr4w_LAST5WINDOW_INDEX].tr4w_WndHandle = 0 then Exit;
-  if not OpenFileForRead(FileRead, FileName) then Exit;
-
-  CountryID := CountryTable.GetCountryID(CountryTable.GetCountry(Call, True));
-
-  strU(CountryID);
-  WhereY := 1;
-  while not Eof(FileRead) do
-  begin
-    ReadLn(FileRead, FileString);
-
-    if UpperCase(FileString) = CountryID then
-    begin
-          //      SaveSetAndClearActiveWindow(EditableLogWindow);
-
-      repeat
-        ReadLn(FileRead, FileString);
-
-        if FileString <> '' then
-        begin
-                //          if WhereX > 1 then WriteLn;
-                //          Write(FileString);
-                //          SendDlgItemMessage(tr4w_WindowsArray[tr4w_LAST5WINDOW_INDEX].tr4w_WndHandle, 101, LB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(FileString))));
-                //          SendMessage(_EditableLogWindow, LB_ADDSTRING, 0, integer(PAnsiChar(AnsiString(FileString))));
-          inc(WhereY);
-        end;
-
-      until (WhereY = 5) or (FileString = '');
-
-      Close(FileRead);
-          //      RestorePreviousWindow;
-      Exit;
-
-    end;
-
-  end;
-
-  Close(FileRead);
-}
 end;
 
 procedure FlashQickDisplay;

@@ -504,39 +504,6 @@
   TC_RST_PROMPT                         = 'RST Prompt';
   TC_SEND_CALLASSETBYMYCALLCOMMAND      = 'Sende Call wie es in der MY CALL Variable steht';
   TC_REPEATRSTSENT                      = 'Wiederhole gesendetes RST';
- {
-  TC_HALFSPACE                          = 'Half space';
-  TC_LASTQSOSCALL                       = 'Last QSO''s call';
-  TC_RECEIVEDNAME                       = 'Received name';
-  TC_PARTIALCORRECTEDCALL               = 'Partial corrected call';
-  TC_SENDPROPERSALUTATIONWITHOUTNAME    = 'Send proper salutation without name';
-  TC_GOTONEXTBANDLOWERINFREQUENCY       = 'Go to next band lower in frequency';
-  TC_GOTONEXTBANDHIGHERINFREQUENCY      = 'Go to next band higher in frequency';
-  TC_COMPLETECALLSIGN                   = 'Complete callsign';
-  TC_FORCESTOENTERCQMODE                = 'Forces to enter CQ Mode';
-  TC_TOGGLECWENABLE                     = 'Toggle CW ENABLE';
-  TC_TURNSOFFMONITORING                 = 'Turns off monitoring of CW on the computer speaker.';
-  TC_TURNSONMONITORING                  = 'Turns on monitoring of CW on the computer speaker';
-  TC_CWENABLETRUE                       = 'CW ENABLE = TRUE';
-  TC_CWENABLEFALSE                      = 'CW ENABLE = FALSE';
-  TC_WORKSAMEASENTERONKEYBOARD          = 'Work same as "Enter" on keyboard';
-  TC_WORKSAMEASESCONKEYBOARD            = 'Work same as "Esc" on keyboard';
-  TC_EXCHANGESTHEFREQUENCIES            = ' Exchanges the frequencies on the Active and inactive rigs';
-  TC_EXECUTEACONFIGURATIONFILE          = 'Execute a configuration file';
-  TC_MOVESTHERIGTOLASTCQFREQUENCY       = 'Moves the rig to last frequency where you called CQ';
-  TC_LOGSTHELASTCALL                    = 'Logs the last call that appeared in the Call Window';
-  TC_FORCESTOENTERMODE                  = 'Forces to enter S&P Mode';
-  TC_CHANGESCWSPEEDTOXX                 = 'Changes CW speed to xx';
-  TC_SENDSXXTOTHEACTIVERADIO            = 'Sends xx to the active radio';
-  TC_SENDSXXTOTHERADIO1                 = 'Sends xx to the Radio 1';
-  TC_SENDSXXTOTHERADIO2                 = 'Sends xx to the Radio 2';
-  TC_SENDSXXTOTHEINACTIVERADIO          = 'Sends xx to the inactive radio';
-  TC_SWAPSTHEACTIVEANDINACTIVERIGS      = 'Swaps the active and inactive rigs';
-  TC_TOGGLESSENDINGSENDING              = 'Toggles sending Â— sending, not monitoring Â— of CW';
-  TC_TOGGLESMODEBETWEENCWANDSSB         = 'Toggles mode between CW and SSB';
-  TC_RUNXXAPPLICATION                   = 'Run xx application';
-}
-  {UCHECKLATESTVERSION}
   TC_VERSIONONSERVER                    = 'Die letzte Version auf dem Server';
   TC_THISVERSION2                       = 'Diese Version';
   TC_DOWNLOADIT                         = 'Willst du die neueste Version herunterladen?';

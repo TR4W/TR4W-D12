@@ -1367,43 +1367,6 @@ end;
 procedure EditableLog.DeleteLastLogEntry;
 
 begin
-  {
-    if LastDeletedLogEntry = '' then
-    begin
-      LastDeletedLogEntry := LogEntries[NumberEditableLines];
-
-      if LastDeletedLogEntry <> '' then
-      begin
-                 //      SaveSetAndClearActiveWindow(QuickCommandWindow);
-        QuickDisplay('You have deleted the last log entry!!  Use Alt-Y to restore it.');
-                 //      RestorePreviousWindow;
-        Call := UpperCase(GetLogEntryCall(LogEntries[NumberEditableLines]));
-        Band := GetLogEntryBand(LogEntries[NumberEditableLines]);
-        Mode := GetLogEntryMode(LogEntries[NumberEditableLines]);
-        LogEntries[NumberEditableLines] := '';
-        DisplayEditableLog(LogEntries);
-        UpdateTempLogFile;
-  //               KK1L: 6.64 Deleting a contact should reverse the dupe and mult process
-        UpdateBandMapMultiplierStatus;
-        UpdateBandMapDupeStatus(Call, Band, Mode, False);
-      end;
-    end
-    else
-    begin
-           //        RemoveWindow (QuickCommandWindow);
-      QuickDisplay('');
-      LogEntries[NumberEditableLines] := LastDeletedLogEntry;
-      DisplayEditableLog(LogEntries);
-      LastDeletedLogEntry := '';
-      UpdateTempLogFile;
-           //KK1L: 6.64 Restoring contact should update the bandmap again
-      Call := UpperCase(GetLogEntryCall(LogEntries[NumberEditableLines]));
-      Band := GetLogEntryBand(LogEntries[NumberEditableLines]);
-      Mode := GetLogEntryMode(LogEntries[NumberEditableLines]);
-      UpdateBandMapMultiplierStatus;
-      UpdateBandMapDupeStatus(Call, Band, Mode, True);
-    end;
-  }
 end;
 
 function EditableLog.LastName(Entry: integer): Str20;
@@ -1418,40 +1381,6 @@ begin
     Ord(ColumnsArray[logColName].pos), @Result[1], 100);
   Result[0] := AnsiChar(i);
 
-  {
-    TempString := GetLogEntryExchangeString(LogEntries[Entry]);
-    RemoveFirstString(TempString);
-
-    case ActiveExchange of
-      QSONumberNameDomesticOrDXQTHExchange:
-        begin
-          LastName := RemoveFirstString(TempString);
-          Exit;
-        end;
-
-      RSTAndPostalCodeExchange:
-        begin
-          RemoveFirstString(TempString);
-          LastName := RemoveFirstString(TempString) + ' ' + RemoveFirstString(TempString);
-          Exit;
-        end;
-    end;
-
-    while TempString <> '' do
-    begin
-      EntryString := RemoveFirstString(TempString);
-
-      if (not StringIsAllNumbers(EntryString)) or (length(EntryString) >= 4) then
-      begin
-        LastName := EntryString;
-        Exit;
-      end;
-    end;
-
-    TempString := GetLogEntryExchangeString(LogEntries[Entry]);
-    RemoveFirstString(TempString);
-    LastName := RemoveFirstString(TempString);
-  }
 end;
 
 function EditableLog.LastEntry(InMyLog: boolean; let: LastEntryType):
@@ -1528,39 +1457,6 @@ begin
     end;
   }
 end;
-{
-procedure EditableLog.GeneratePartialCallList(InputCall: CallString;
-  Band: BandType;
-  Mode: ModeType;
-  var PossCallList: PossibleCallRecord);
-
-var
-  Call                             : CallString;
-  Entry                            : integer;
-
-begin
-  Sheet.MakePartialCallList(InputCall, Band, Mode, PossibleCallList);
-}
-  {
-    for Entry := 1 to 5 do
-    begin
-      Call := GetLogEntryCall(LogEntries[Entry]);
-
-      if pos(InputCall, Call) <> 0 then
-        if CallNotInPossibleCallList(Call, PossibleCallList) then
-        begin
-          PossCallList.List[PossCallList.NumberPossibleCalls].Call := Call;
-          PossCallList.List[PossCallList.NumberPossibleCalls].Dupe := False;
-          inc(PossCallList.NumberPossibleCalls);
-          if PossCallList.NumberPossibleCalls > 50 then Break;
-        end;
-    end;
-  }
-{
-  FlagDupesInPossibleCallList(Band, Mode, PossCallList);
-
-end;
-}
 
 {
 function EditableLog.NumberNamesSentInEditableLog: integer;

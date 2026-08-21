@@ -579,60 +579,6 @@ const
   AltF11                                = CHR(146);
   AltF12                                = CHR(147);
 
-  {
-    F1 = CHR(59); // Function key codes
-    F2 = CHR(60);
-    F3 = CHR(61);
-    F4 = CHR(62);
-    F5 = CHR(63);
-    F6 = CHR(64);
-    F7 = CHR(65);
-    F8 = CHR(66);
-    F9 = CHR(67);
-    F10 = CHR(68);
-    F11 = CHR($85);
-    F12 = CHR($86);
-
-    ShiftF1 = CHR(84);
-    ShiftF2 = CHR(85);
-    ShiftF3 = CHR(86);
-    ShiftF4 = CHR(87);
-    ShiftF5 = CHR(88);
-    ShiftF6 = CHR(89);
-    ShiftF7 = CHR(90);
-    ShiftF8 = CHR(91);
-    ShiftF9 = CHR(92);
-    ShiftF10 = CHR(93);
-    ShiftF11 = CHR($87);
-    ShiftF12 = CHR($88);
-
-    ControlF1 = CHR(94);
-    ControlF2 = CHR(95);
-    ControlF3 = CHR(96);
-    ControlF4 = CHR(97);
-    ControlF5 = CHR(98);
-    ControlF6 = CHR(99);
-    ControlF7 = CHR(100);
-    ControlF8 = CHR(101);
-    ControlF9 = CHR(102);
-    ControlF10 = CHR(103);
-    ControlF11 = CHR($89);
-    ControlF12 = CHR($8A);
-
-    AltF1 = CHR(104);
-    AltF2 = CHR(105);
-    AltF3 = CHR(106);
-    AltF4 = CHR(107);
-    AltF5 = CHR(108);
-    AltF6 = CHR(109);
-    AltF7 = CHR(110);
-    AltF8 = CHR(111);
-    AltF9 = CHR(112);
-    AltF10 = CHR(113);
-    AltF11 = CHR($8B);
-    AltF12 = CHR($8C);
-  }
-  //  AltQ = CHR(16);
   AltW                                  = CHR(17);
   //  AltE = CHR(18);
   AltR                                  = CHR(19);
@@ -1104,49 +1050,6 @@ begin
        Result := CHR(IntegerValue + 54);
        end;
 
-  {
-    case IntegerValue of
-      0: CharacterFromIntegerValue := ' ';
-      1: CharacterFromIntegerValue := '0';
-      2: CharacterFromIntegerValue := '1';
-      3: CharacterFromIntegerValue := '2';
-      4: CharacterFromIntegerValue := '3';
-      5: CharacterFromIntegerValue := '4';
-      6: CharacterFromIntegerValue := '5';
-      7: CharacterFromIntegerValue := '6';
-      8: CharacterFromIntegerValue := '7';
-      9: CharacterFromIntegerValue := '8';
-
-      10: CharacterFromIntegerValue := '9';
-      11: CharacterFromIntegerValue := 'A';
-      12: CharacterFromIntegerValue := 'B';
-      13: CharacterFromIntegerValue := 'C';
-      14: CharacterFromIntegerValue := 'D';
-      15: CharacterFromIntegerValue := 'E';
-      16: CharacterFromIntegerValue := 'F';
-      17: CharacterFromIntegerValue := 'G';
-      18: CharacterFromIntegerValue := 'H';
-      19: CharacterFromIntegerValue := 'I';
-      20: CharacterFromIntegerValue := 'J';
-      21: CharacterFromIntegerValue := 'K';
-      22: CharacterFromIntegerValue := 'L';
-      23: CharacterFromIntegerValue := 'M';
-      24: CharacterFromIntegerValue := 'N';
-      25: CharacterFromIntegerValue := 'O';
-      26: CharacterFromIntegerValue := 'P';
-      27: CharacterFromIntegerValue := 'Q';
-      28: CharacterFromIntegerValue := 'R';
-      29: CharacterFromIntegerValue := 'S';
-      30: CharacterFromIntegerValue := 'T';
-      31: CharacterFromIntegerValue := 'U';
-      32: CharacterFromIntegerValue := 'V';
-      33: CharacterFromIntegerValue := 'W';
-      34: CharacterFromIntegerValue := 'X';
-      35: CharacterFromIntegerValue := 'Y';
-      36: CharacterFromIntegerValue := 'Z';
-    else CharacterFromIntegerValue := '?';
-    end;
-  }
 end;
 
 function WordValueFromCharacter(Character: AnsiChar): Word;
@@ -1552,37 +1455,6 @@ function PacketCharReady(SerialPort: PortType; var CIn: Char): boolean;
     Ready: BOOLEAN;
     }
 begin
-  {    PortAddress := 0;
-
-      CASE SerialPort OF
-          Serial1: PortAddress := Com1PortBaseAddress;
-          Serial2: PortAddress := Com2PortBaseAddress;
-          Serial3: PortAddress := Com3PortBaseAddress;
-          Serial4: PortAddress := Com4PortBaseAddress;
-          Serial5: PortAddress := Com5PortBaseAddress;
-          Serial6: PortAddress := Com6PortBaseAddress;
-
-          DRSI: BEGIN
-                Regs.AX := 0;
-                Intr ($FF, Regs);
-                CIn := Chr (Regs.AL);
-                PacketCharReady := Regs.AH <> 0;
-                Exit;
-                END;
-          END;
-
-      IF PortAddress <> 0 THEN
-          BEGIN
-          Ready := (Port [PortAddress + 5] AND 1) = 1;
-
-          IF Ready THEN Cin := Chr (Port [PortAddress]);
-
-          PacketCharReady := Ready;
-          END
-      ELSE
-          PacketCharReady := False;
-
- }
 end;
 
 function CharReady(SerialPort: PortType): boolean;
@@ -1593,52 +1465,6 @@ function CharReady(SerialPort: PortType): boolean;
     Regs: REGISTERS;
 }
 begin
-  {    IF UseBIOSCOMIO THEN
-          BEGIN
-          Regs.AH := 3;
-
-          CASE SerialPort OF
-              Serial1: Regs.DX := 0;
-              Serial2: Regs.DX := 1;
-              Serial3: Regs.DX := 2;
-              Serial4: Regs.DX := 3;
-
-              ELSE
-                  BEGIN
-                  CharReady := True;   // a safer value than false
-                  Exit;
-                  END;
-              END;
-
-          Intr ($14, Regs);
-
-          CharReady := (Regs.AH AND 1) = 1;
-          END
-
-      ELSE
-
-          BEGIN
-          PortAddress := 0;
-
-          CASE SerialPort OF
-              Serial1: PortAddress := Com1PortBaseAddress;
-              Serial2: PortAddress := Com2PortBaseAddress;
-              Serial3: PortAddress := Com3PortBaseAddress;
-              Serial4: PortAddress := Com4PortBaseAddress;
-              Serial5: PortAddress := Com5PortBaseAddress;
-              Serial6: PortAddress := Com6PortBaseAddress;
-              END;
-
-          IF PortAddress <> 0 THEN
-              BEGIN
-              PortAddress := PortAddress + 5;
-              CharReady := (Port [PortAddress] AND 1) = 1;
-              END
-          ELSE
-              CharReady := False;
-          END;
-
- }
 end;
 
 function CheckSum(InputString: string): Byte;
@@ -2311,45 +2137,6 @@ begin
   //��������  inputquery('TR4W', Prompt, InputString);
   Result := QuickEditResponse(Prompt, 10);
 
-  //   Result := InputString;
-     {    TextColor (Cyan);
-         TextBackground (Black);
-
-         Write (Prompt);
-         TextColor (Yellow);
-
-         InputString := '';
-
-         REPEAT
-             REPEAT UNTIL KeyPressed;
-
-             Key := ReadKey;
-
-             IF Key = CarriageReturn THEN
-                 BEGIN
-                 GetResponse := InputString;
-                 WriteLn;
-                 Exit;
-                 END;
-
-             IF Key = BackSpace THEN
-                 BEGIN
-                 IF InputString <> '' THEN
-                     BEGIN
-                     GoToXY (WhereX - 1, WhereY);
-                     Write (' ');
-                     GoToXY (WhereX - 1, WhereY);
-                     Delete (InputString, Length (InputString), 1);
-                     END;
-                 END
-             ELSE
-                 BEGIN
-                 Write (Key);
-                 InputString := InputString + Key;
-                 END;
-
-         UNTIL Length (InputString) > 250;
-    }
 end;
 
 
@@ -3177,48 +2964,6 @@ function ReadChar(SerialPort: PortType): Char;
   //{WLI}    Regs: REGISTERS;
 
 begin
-  {    REPEAT UNTIL CharReady (SerialPort);
-
-      IF UseBIOSCOMIO THEN
-          BEGIN
-          Regs.AH := 2;       // Read character
-
-          CASE SerialPort OF
-              Serial1: Regs.DX := 0;
-              Serial2: Regs.DX := 1;
-              Serial3: Regs.DX := 2;
-              Serial4: Regs.DX := 3;
-              ELSE
-                  BEGIN
-                  ReadChar := Chr (0);
-                  Exit;
-                  END;
-              END;
-
-          Intr ($14, Regs);
-
-          ReadChar := Chr (Regs.AL);
-          END
-
-      ELSE
-          BEGIN
-          PortAddress := 0;
-
-          CASE SerialPort OF
-              Serial1: PortAddress := Com1PortBaseAddress;
-              Serial2: PortAddress := Com2PortBaseAddress;
-              Serial3: PortAddress := Com3PortBaseAddress;
-              Serial4: PortAddress := Com4PortBaseAddress;
-              Serial5: PortAddress := Com5PortBaseAddress;
-              Serial6: PortAddress := Com6PortBaseAddress;
-              END;
-
-          IF PortAddress <> 0 THEN
-              ReadChar := Chr (Port [PortAddress])
-          ELSE
-              ReadChar := Chr (0);
-          END;
- }
 end;
 
 function RemoveBand(var LongString: ShortString): BandType;
@@ -3471,42 +3216,6 @@ procedure SendChar(SerialPort: PortType; CharToSend: Char);
   //{WLI}    Regs: REGISTERS;
 
 begin
-  {    IF UseBIOSCOMIO THEN
-          BEGIN
-          Regs.AH := 1;           // Function 01h
-          Regs.AL := Ord (CharToSend);  // Data to send
-
-          CASE SerialPort OF
-              Serial1: Regs.DX := 0;
-              Serial2: Regs.DX := 1;
-              Serial3: Regs.DX := 2;
-              Serial4: Regs.DX := 3;
-              ELSE Exit;
-              END;
-
-          Intr ($14, Regs);
-          END
-
-      ELSE
-          BEGIN
-          PortAddress := 0;
-
-          CASE SerialPort OF
-              Serial1: PortAddress := Com1PortBaseAddress;
-              Serial2: PortAddress := Com2PortBaseAddress;
-              Serial3: PortAddress := Com3PortBaseAddress;
-              Serial4: PortAddress := Com4PortBaseAddress;
-              Serial5: PortAddress := Com5PortBaseAddress;
-              Serial6: PortAddress := Com6PortBaseAddress;
-              END;
-
-          IF PortAddress = 0 THEN Exit;
-
-          REPEAT UNTIL (Port [PortAddress + 5] AND $20) = $20;
-
-          Port [PortAddress] := Ord (CharToSend);
-          END;
- }
 end;
 
 
@@ -3596,47 +3305,6 @@ begin
        Exit;
        end;
 
-  //showint(number);
-{
-  RSTString := '';
-  //  if Tree.StringIsAllNumbers(Ex) then //wli
-  while (Copy(Ex, 1, 1) >= '0') and (Copy(Ex, 1, 1) <= '9') do
-  //while Copy(Ex, 1, 1) in ['0'..'9'] do
-  begin
-    RSTString := RSTString + Copy(Ex, 1, 1);
-    Delete(Ex, 1, 1);
-  end;
-
-  case length(RSTString) of
-    0:
-      begin
-        RST := DefaultRST;
-        ValidRST := True;
-      end;
-
-    1:
-      begin
-        Delete(DefaultRST, 2, 1);
-        Insert(RSTString, DefaultRST, 2);
-        RST := DefaultRST;
-        ValidRST := True;
-      end;
-
-    2:
-      if Mode = Phone then
-      begin
-        RST := RSTString;
-        ValidRST := (RST[1] >= '1') and (RST[1] <= '5');
-      end;
-
-    3:
-      if (Mode = CW) or (Mode = Digital) then
-      begin
-        RST := RSTString;
-        ValidRST := (RST[1] >= '1') and (RST[1] <= '5');
-      end;
-  end;
-}
 end;
 
 //procedure WriteColor(Prompt: Str80; FColor: INTEGER; BColor: INTEGER);

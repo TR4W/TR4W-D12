@@ -603,46 +603,6 @@ function GetSaveFileNameW; external 'comdlg32.dll' Name 'GetSaveFileNameW';
 function GetSaveFileName; external 'comdlg32.dll' Name 'GetSaveFileNameA';
 function CommDlgExtendedError; external 'comdlg32.dll' Name 'CommDlgExtendedError';
 
-{
-function ChangeIconDialog(hOwner: HWND; var FileName: string; var IconIndex: integer): boolean;
-type
-   SHChangeIconProc = function(wnd: HWND; szFileName: PChar; Reserved: integer; var lpIconIndex: integer): DWORD; stdcall;
-   SHChangeIconProcW = function(wnd: HWND; szFileName: PWideChar; Reserved: integer; var lpIconIndex: integer): DWORD; stdcall;
-var
-   ShellHandle                     : HWND;
-   SHChangeIcon                    : SHChangeIconProc;
-   SHChangeIconW                   : SHChangeIconProcW;
-   buf                             : array[0..MAX_PATH] of Char;
-   BufW                            : array[0..MAX_PATH] of widechar;
-begin
-   Result := False;
-   SHChangeIcon := nil;
-   SHChangeIconW := nil;
-   ShellHandle := LoadLibrary(PChar(Shell32));
-   try
-      if ShellHandle <> 0 then
-         begin
-            if Win32Platform = VER_PLATFORM_WIN32_NT
-               then SHChangeIconW := GetProcAddress(ShellHandle, PChar(62))
-            else SHChangeIcon := GetProcAddress(ShellHandle, PChar(62));
-         end;
-      if Assigned(SHChangeIconW) then
-         begin
-            StringToWideChar(FileName, BufW, SizeOf(BufW));
-            Result := SHChangeIconW(hOwner, BufW, SizeOf(BufW), IconIndex) = 1;
-            if Result then FileName := BufW;
-         end else
-         if Assigned(SHChangeIcon) then
-            begin
-               StrPCopy(buf, FileName);
-               Result := SHChangeIcon(hOwner, buf, SizeOf(buf), IconIndex) = 1;
-               if Result then FileName := buf;
-            end;
-   finally
-      if ShellHandle <> 0 then FreeLibrary(ShellHandle);
-   end;
-end;
-}
 
 function SelectColor(hWin: HWND; FullOpen: boolean): TColorRef;
 var

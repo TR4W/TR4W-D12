@@ -236,46 +236,6 @@ begin
      IndexInList := -1;
      end;
 end;
-{
-procedure TCallsignsList.Clear;
-begin
-  if FCount <> 0 then
-  begin
-    Finalize(FList^[0], FCount);
-    FCount := 0;
-    SetCapacity(0);
-  end;
-end;
-
-procedure TCallsignsList.Delete(Index: integer);
-begin
-  if (Index < 0) or (Index >= FCount) then Exit; //Error(@SListIndexError, Index);
-  Finalize(FList^[Index]);
-  dec(FCount);
-  if Index < FCount then System.Move(FList^[Index + 1], FList^[Index], (FCount - Index) * SizeOf(TCallsignItem));
-end;
-}
-{
-procedure TCallsignsList.ExchangeItems(Index1, Index2: integer);
-var
-  temp                             : integer;
-  Item1, Item2                     : PStringItem;
-  DI                               : TDupesArray;
-begin
-  Item1 := @FList^[Index1];
-  Item2 := @FList^[Index2];
-  temp := integer(Item1^.FCall);
-  integer(Item1^.FCall) := integer(Item2^.FCall);
-  integer(Item2^.FCall) := temp;
-  //  temp := integer(Item1^.FObject);
-  //  integer(Item1^.FObject) := integer(Item2^.FObject);
-  //  integer(Item2^.FObject) := temp;
-
-  DI := Item1^.FDupesArray;
-  Item1^.FDupesArray := Item2^.FDupesArray;
-  Item2^.FDupesArray := DI;
-end;
-}
 
 function TCallsignsList.FindCallsign(const s: string; var Index: integer): boolean;
 var

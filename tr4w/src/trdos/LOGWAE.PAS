@@ -248,40 +248,6 @@ begin
      ShowQTCSend;
 
      end;
-  {
-    SaveQTC:
-
-    Str(QTCNumber, QTCNumberString);
-
-    TempString := 'QTC ' + QTCNumberString + '/' + NumberMessagesToBeSentString +
-      ' with ' + QTCCallsign + ' on ' + GetDateString + ' at ' +
-      GetTimeString + ' on ' + BandString[ActiveBand] + ModeString[ActiveMode];
-
-    if OpenFileForAppend(FileWrite, QTCFileName) then
-    begin
-      WriteLn(FileWrite);
-
-      WriteLn(FileWrite, TempString);
-
-      for Line := 1 to 5 do
-        if QTCBuffer[Line] <> '' then
-          WriteLn(FileWrite, QTCBuffer[Line]);
-
-      Close(FileWrite);
-    end;
-
-    SaveQTCDataFile;
-    DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)));
-    VisibleLog.SetUpEditableLog;
-
-    QTCNote := TempString;
-
-    QuickDisplay(TempString);
-
-    UpdateTotals2;
-
-    if DDXState = QTCInProgress then DDXState := SAndPExchangeSent;
-  }
 end;
 
 procedure LastQTCSent(var Call: CallString; var Time: Str20; var QSONumber: integer);

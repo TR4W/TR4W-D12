@@ -334,78 +334,8 @@ var
    // configured the deleted per-model Icom poller and had no reader left.
    newIcomResponseTimeout: integer = 60;
 
-   Radio1:           RadioObject {=
-    (
-    SpeedMemory: InitialCodeSpeed;
-    BandMemory: Band160;
-    ModeMemory: CW;
-    RadioName: 'Rig 1';
-    ICOM_COMMAND_PTT: #255;
-    tRadioInterfaceWndHandle: 0;
-    FT1000MPCWReverse: False;
-    IDCharacter: #0;
-    //    PollTimeout: 500;
-    PollingEnable: True;
-    AutoInfoLevel: 0;
-    PollStatus: NoPollStatus;
-    RadioModel: NoInterfacedRadio;
-
-    RadioBaudRate: 4800;
-
-    RadioNumberBits: 8;
-
-    RadioStopBits: 2;
-
-    RadioParity: tNoParity;
-
-    ReceiverAddress: 4;
-    WaitingForCommandPause: False;
-    //    TrackingEnable: True;
-    //    UpdateSeconds: 0;
-
-    tCATPortType: NoPort;
-    tCATPortHandle: INVALID_HANDLE_VALUE;
-
-    tKeyerPortHandle: INVALID_HANDLE_VALUE;
-    tr4w_keyer_rts_state: RtsDtr_PTT;
-    tr4w_keyer_DTR_state: RtsDtr_CW;
-    tr4w_cat_rts_state: RtsDtr_OFF; //CAT RTS
-    tr4w_cat_dtr_state: RtsDtr_OFF; //CAT DTR
-    );
-};
-   Radio2:           RadioObject {=
-    (
-    SpeedMemory: InitialCodeSpeed;
-    BandMemory: Band160;
-    ModeMemory: CW;
-    RadioName: 'Rig 2';
-    ICOM_COMMAND_PTT: #255;
-    tRadioInterfaceWndHandle: 0;
-    FT1000MPCWReverse: False;
-    IDCharacter: #0;
-    //    PollTimeout: 500;
-    PollingEnable: True;
-    AutoInfoLevel: 0;
-    PollStatus: NoPollStatus;
-    RadioModel: NoInterfacedRadio;
-    RadioBaudRate: 4800;
-    RadioNumberBits: 8;
-    RadioStopBits: 2;
-    RadioParity: tNoParity;
-    ReceiverAddress: 4;
-    WaitingForCommandPause: False;
-    //    TrackingEnable: True;
-    //    UpdateSeconds: 0;
-    tCATPortType: NoPort;
-    tCATPortHandle: INVALID_HANDLE_VALUE;
-
-    tKeyerPortHandle: INVALID_HANDLE_VALUE;
-    tr4w_keyer_rts_state: RtsDtr_PTT;
-    tr4w_keyer_DTR_state: RtsDtr_CW;
-    tr4w_cat_rts_state: RtsDtr_OFF; //CAT RTS
-    tr4w_cat_dtr_state: RtsDtr_OFF; //CAT DTR
-    );
-};
+   Radio1:           RadioObject;
+   Radio2:           RadioObject;
    //  RITCommandTimeStamp              : Cardinal {TimeRecord};
    ActiveRadioPtr:   RadioPtr = @Radio1;
    InActiveRadioPtr: RadioPtr = @Radio2;
@@ -1114,50 +1044,6 @@ begin
       // it is logged only so a dead RIT key can be told apart from a broken one.
       logger.warn('[RITClear] No radio driver -- RIT clear not sent');
       end;
-   {
-   case IntRadioType of
-      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
-      TS950, TS990, TS2000, FLEX, K2, K3, K4, FTDX10, FTDX101, FTX1F, FT450, FT891, FT950, FT991, FT1200, FT2000, FTDX3000,
-      FTDX5000, FTDX9000:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('RC;');
-         end;
-      FT710:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('CF001+0000;'); // Set frequency to +0
-         end;
-      FT747GX, FT890, FT920, FT990, FT1000, FT1000MP:
-         begin
-         ActiveRadioPtr.WriteToCATPort(CHR(0) + CHR(0) + CHR(0) + CHR($FF) + CHR($09), 5);
-         end;
-
-      IC78..IC9700:
-         begin
-         // Ask the RADIO, not a table keyed by model.  rcReadRIT is the same
-         // fact IcomRadiosThatSupportRIT encoded, but owned by the radio object.
-         if ActiveRadioPtr.HasCapability(rcReadRIT) then
-            begin
-            ActiveRadioPtr.SendIcomClearRITCommand;
-            end;
-         end;
-      OMNI6: {KK1L: 6.73 Added OMNI6}
-      {   begin
-         // Check what radios support this and send command to clear 21 00 00 00 00 on 9700
-         Exit;
-         end;
-
-      Orion:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('*RMR0' + CarriageReturn);
-         Exit;
-         end;
-
-      else
-         begin
-         Exit;
-         end;
-      end;
-      }
 end;
 
 procedure RITBumpUp;
@@ -1186,52 +1072,6 @@ begin
       // No factory driver: same as no radio.  See RITClear.
       logger.warn('[RITBumpUp] No radio driver -- RIT bump not sent');
       end;
- {  if ActiveRadio = RadioOne then
-      begin
-      IntRadioType := Radio1.RadioModel;
-//      SerialPort := Radio1.tCATPortType;
-      end
-   else
-      begin
-      IntRadioType := Radio2.RadioModel;
-//      SerialPort := Radio2.tCATPortType;
-      end;
-
-   case IntRadioType of
-      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
-      TS950, TS990, TS2000, K2, K3, K4 {, FTDX9000}{:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('RU;');
-         end;
-
-      FT890, FT920, FT990, FT1000, FT1000MP:
-         begin
-         Exit;
-         end;
-
-      IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6}    // This does not work for all Icom radios.
-     {    begin
-         // NOTE: nothing here is implemented -- the guard that used to wrap
-         // these comments (IntRadioType in IcomRadiosThatSupportRIT) protected
-         // no code at all, so it is gone rather than translated.
-         // Have to know what RIT is set to now and then increase it by a bit. RIT should be in radio poll so we always know
-         // Not implemented yet due to issues converting the hz to BCD
-         //ActiveRadioPtr.SetICOMRITFrequency(ActiveRadioPtr.CurrentStatus.RITFreq + 10);
-         Exit;
-         end;
-
-      Orion:
-         begin
-         ActiveRadioPtr.WriteBufferToCATPort('*RMR200' + CarriageReturn);
-         Exit;
-         end;
-
-      else
-         begin
-         Exit;
-         end;
-      end;
-      }
 end;
 
 procedure RITBumpDown;
@@ -1261,50 +1101,6 @@ begin
       logger.warn('[RITBumpDown] No radio driver -- RIT bump not sent');
       end;
 
- //  if ActiveRadio = RadioOne then
-//      begin
-//      IntRadioType := Radio1.RadioModel;
-////      SerialPort := Radio1.tCATPortType;
-//      end
-//   else
-//      begin
-//      IntRadioType := Radio2.RadioModel;
-////      SerialPort := Radio2.tCATPortType;
-//      end;
-//
-//   case IntRadioType of
-//      TS140, TS440, TS450, TS480, TS570, TS590, TS690, TS850, TS870, TS890, TS940,
-//      TS950, TS990, TS2000, K2, K3, K4 {, FTDX9000}:
-//         begin
-//         ActiveRadioPtr.WriteBufferToCATPort('RD;');
-//         end;
-//
-//      FT890, FT920, FT990, FT1000, FT1000MP:
-//         begin
-//         Exit;
-//         end;
-//
-//      IC78..IC9700, OMNI6: {KK1L: 6.73 Added OMNI6} // Add code somewhere tohandle radios that do not support 21 code.
-//         begin
-//         // NOTE: nothing here is implemented -- the guard that used to wrap
-//         // these comments (IntRadioType in IcomRadiosThatSupportRIT) protected
-//         // no code at all, so it is gone rather than translated.
-//         // Not implemented yet due to issues converting the hz to BCD
-//         //ActiveRadioPtr.SetICOMRITFrequency(ActiveRadioPtr.CurrentStatus.RITFreq - 10);
-//         Exit;
-//         end;
-//
-//      Orion:
-//         begin
-//         ActiveRadioPtr.WriteBufferToCATPort('*RMR-200' + CarriageReturn);
-//         Exit;
-//         end;
-//
-//      else
-//         begin
-//         Exit;
-//         end;
-//      end;
 end;
 
 procedure VFOBumpUp;
@@ -1381,45 +1177,6 @@ end;
 
 
 
- {
-procedure CheckRITKeys;
-
-var
-  TestByte                         : Byte;
-
-begin
-  if not ShiftKeyEnable then Exit;
-
-  //WLI    TestByte := Mem [$40:$17];
-
-  TestByte := TestByte and $0F; // Mask off the lock keys
-
-  case TestByte of
-    1:
-      if MicroTimeElapsed(RITCommandTimeStamp) > 0 then
-      begin
-        RITBumpUp;
-        MarkTime(RITCommandTimeStamp);
-      end;
-
-    2:
-      if MicroTimeElapsed(RITCommandTimeStamp) > 0 then
-      begin
-        RITBumpDown;
-        MarkTime(RITCommandTimeStamp);
-      end;
-
-    3:
-      if MicroTimeElapsed(RITCommandTimeStamp) > 0 then
-      begin
-        RITClear;
-        MarkTime(RITCommandTimeStamp);
-      end;
-
-  end;
-
-end;
-} 
 
 function GetRadioParameters(Radio: RadioType; RadioInfoString: string;
    var Freq: longint; var Band: BandType; var Mode: ModeType;
@@ -1957,37 +1714,6 @@ end; // SendRITFreqCommand;
 procedure RadioObject.SetICOMRITFrequency(hz: integer);
 
 begin
-   {CommandsTempBuffer[0] := AnsiChar(11);
-   CommandsTempBuffer[1] := ICOM_PREAMBLE_CODE;
-   CommandsTempBuffer[2] := ICOM_PREAMBLE_CODE;
-   CommandsTempBuffer[3] := AnsiChar(ReceiverAddress);
-   CommandsTempBuffer[4] := ICOM_CONTROLLER_ADDRESS;
-   CommandsTempBuffer[5] := ICOM_GET_RIT_FREQ;
-   CommandsTempBuffer[6] := AnsiChar(0);
-   {absHz := abs(hz);
-   foo := Integer4ToBCD(absHz);
-   newFreq := ((absHz mod 100) * 100) + absHz div 100;
-
-   CommandsTempBuffer[7] := AnsiChar(absHz mod 100);// Put frequency here
-   CommandsTempBuffer[8] := AnsiChar(absHz div 100);
-   CommandsTempBuffer[7] := AnsiChar(absHz div 1000 mod 10);
-   CommandsTempBuffer[8] := AnsiChar(absHz div 100 mod 10);
-   CommandsTempBuffer[7] := AnsiChar(foo div 100);
-   CommandsTempBuffer[8] := AnsiChar(foo mod 100);
-
-
-
-    if hz < 0 then
-      begin
-      CommandsTempBuffer[9] := AnsiChar(1);
-      end
-   else
-      begin
-      CommandsTempBuffer[9] := AnsiChar(0);
-      end;
-   CommandsTempBuffer[10] := ICOM_END_OF_MESSAGE_CODE;
-   AddCommandToBuffer;
-   }
 end;
 
 function RadioObject.MemoryKeyer(mem: integer): boolean;

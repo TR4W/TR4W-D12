@@ -589,41 +589,6 @@ begin
        Exit;
        end;
 end;
-{
-procedure DupeAndMultSheet.MakePartialCallList(Call: CallString;
-  ActiveBand: BandType;
-  ActiveMode: ModeType;
-  var PossCallList: PossibleCallRecord);
-
-var
-  Address                          : integer;
-  TempCall                         : CallString;
-
-begin
-  PossCallList.NumberPossibleCalls := 0;
-  PossCallList.CursorPosition := 0;
-
-  if not Config.PartialCallEnable then Exit;
-  if length(Call) < 2 then Exit;
-
-  if NumberTwoLetterPartialCalls > 0 then
-    for Address := 0 to NumberTwoLetterPartialCalls - 1 do
-      begin
-        TempCall := GetPartialCall(TwoLetterCrunchPartialCallList[Address]);
-
-        if pos(Call, TempCall) <> 0 then
-          if CallNotInPossibleCallList(TempCall, PossCallList) then
-            begin
-              PossCallList.List[PossCallList.NumberPossibleCalls].Call := TempCall;
-              PossCallList.List[PossCallList.NumberPossibleCalls].Dupe :=
-                CallIsADupe(TempCall, ActiveBand, ActiveMode);
-
-              inc(PossCallList.NumberPossibleCalls);
-              if PossCallList.NumberPossibleCalls > 12 then Exit;
-            end;
-      end;
-end;
-}
 
 function PointsToBigCall(Entry: FourBytes): boolean;
 

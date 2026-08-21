@@ -547,51 +547,6 @@ end;
 procedure SendDVKMessage(Message: Str20);
 
 begin
-{
-  Message := UpperCase(Message);
-
-  if (Message = 'DVK0') or DVKMessagePlaying then //KK1L: 6.71 If already playing then stop it first
-  begin
-    StartDVK(0);
-    DVKPlaying := False;
-  end;
-
-  if Message = 'DVK1' then
-  begin
-    StartDVK(1);
-    DVKStamp;
-  end;
-
-  if Message = 'DVK2' then
-  begin
-    StartDVK(2);
-    DVKStamp;
-  end;
-
-  if Message = 'DVK3' then
-  begin
-    StartDVK(3);
-    DVKStamp;
-  end;
-
-  if Message = 'DVK4' then
-  begin
-    StartDVK(4);
-    DVKStamp;
-  end;
-
-  if Message = 'DVK5' then //KK1L: 6.71
-  begin
-    StartDVK(5);
-    DVKStamp;
-  end;
-
-  if Message = 'DVK6' then //KK1L: 6.71
-  begin
-    StartDVK(6);
-    DVKStamp;
-  end;
-}
 end;
 
 begin

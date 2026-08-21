@@ -510,39 +510,6 @@ const
   TC_RST_PROMPT                         = 'Nabídka RST';
   TC_SEND_CALLASSETBYMYCALLCOMMAND      = 'Vysílej značku podle příkazu MY CALL';
   TC_REPEATRSTSENT                      = 'Opakuj vyslané RST';
- {
-  TC_HALFSPACE                          = 'Poloviční mezera';
-  TC_LASTQSOSCALL                       = 'Značka z posledního QSO';
-  TC_RECEIVEDNAME                       = 'Přijaté jméno';
-  TC_PARTIALCORRECTEDCALL               = 'Částečně opravená značka';
-  TC_SENDPROPERSALUTATIONWITHOUTNAME    = 'Vysílej správný pozdrav bez jména';
-  TC_GOTONEXTBANDLOWERINFREQUENCY       = 'Přejdi na další nižší pásmo';
-  TC_GOTONEXTBANDHIGHERINFREQUENCY      = 'Přejdi na další vyšší pásmo';
-  TC_COMPLETECALLSIGN                   = 'Úplná značka';
-  TC_FORCESTOENTERCQMODE                = 'Musíš přejít do módu CQ';
-  TC_TOGGLECWENABLE                     = 'Ovladač CW AKTIVNÍ';
-  TC_TURNSOFFMONITORING                 = 'Vypíná příposlech CW z reproduktoru PC.';
-  TC_TURNSONMONITORING                  = 'Zapíná příposlech CW z reproduktoru PC';
-  TC_CWENABLETRUE                       = 'CW ENABLE = TRUE';
-  TC_CWENABLEFALSE                      = 'CW ENABLE = FALSE';
-  TC_WORKSAMEASENTERONKEYBOARD          = 'Shodná funkce jako "ENTER" na klávesnici';
-  TC_WORKSAMEASESCONKEYBOARD            = 'Shodná funkce jako "ESC" na klávesnici';
-  TC_EXCHANGESTHEFREQUENCIES            = 'Zamění kmitočty aktivního a neaktivního RIGu';
-  TC_EXECUTEACONFIGURATIONFILE          = 'Spusť konfigurační soubor';
-  TC_MOVESTHERIGTOLASTCQFREQUENCY       = 'Přeladí na kmitočet, kde jsi naposled volal CQ';
-  TC_LOGSTHELASTCALL                    = 'Zapíše poslední značku z okna QSO';
-  TC_FORCESTOENTERMODE                  = 'Musíš přejít do módu SP';
-  TC_CHANGESCWSPEEDTOXX                 = 'Změní rychlost CW na hodnotu xx';
-  TC_SENDSXXTOTHEACTIVERADIO            = 'Vyšle xx na aktivní RIG';
-  TC_SENDSXXTOTHERADIO1                 = 'Vyšle xx na RIG 1';
-  TC_SENDSXXTOTHERADIO2                 = 'Vyšle xx na RIG 2';
-  TC_SENDSXXTOTHEINACTIVERADIO          = 'Vyšle xx na neaktivní RIG';
-  TC_SWAPSTHEACTIVEANDINACTIVERIGS      = 'Zamění aktivní a neaktivní RIG';
-  TC_TOGGLESSENDINGSENDING              = 'Přepne vysílání — vysílání bez příposlechu - CW';
-  TC_TOGGLESMODEBETWEENCWANDSSB         = 'Zamění módy CW a SSB';
-  TC_RUNXXAPPLICATION                   = 'Spusť aplikaci xx';
- }
-  {UCHECKLATESTVERSION}
   TC_VERSIONONSERVER                    = 'Poslední verze na serveru je ';
   TC_THISVERSION2                       = 'Aktivní verze je ';
   TC_DOWNLOADIT                         = 'Má se stáhnout poslední verze?';

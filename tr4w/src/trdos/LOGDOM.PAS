@@ -150,36 +150,6 @@ begin
   LoadInDomQTHFile := True;
 //  ActiveDomQTHFile := FileName;
 end;
-{
-function DomQTHTableObject.GetDomMultInteger(InputString: Str20): integer;
-
-var
-  Entry                                 : integer;
-
-begin
-
-  strU(InputString);
-
-  if NumberRemainingMults > 0 then
-    for Entry := 0 to NumberRemainingMults - 1 do
-      if InputString = UpperCase(RemainingDomMults^[Entry].ID) then
-      begin
-        GetDomMultInteger := Entry;
-        Exit;
-      end;
-
-  GetDomMultInteger := -1;
-end;
-
-function DomQTHTableObject.GetDomMultName(DomMultInteger: integer): Str20;
-
-begin
-  if (NumberRemainingMults > 0) and (DomMultInteger >= 0) and (DomMultInteger <= NumberRemainingMults - 1) then
-    GetDomMultName := RemainingDomMults^[DomMultInteger].ID
-  else
-    GetDomMultName := '';
-end;
-}
 
 function DomQTHTableObject.GetStandardDomesticQTH(InputString: Str20): Str20;
 

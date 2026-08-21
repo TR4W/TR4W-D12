@@ -1042,56 +1042,6 @@ begin
         Exit;
         end;
 
-     {
-        case TempQTHData.Zone of
-          -1: ZeroZuluOffset := 18; // These are US calls not in a proper zone
-          1: ZeroZuluOffset := 14;
-          2: ZeroZuluOffset := 19;
-          3: ZeroZuluOffset := 16;
-          4: ZeroZuluOffset := 18;
-          5: ZeroZuluOffset := 19;
-          6: ZeroZuluOffset := 17;
-          7: ZeroZuluOffset := 18;
-          8: ZeroZuluOffset := 19;
-          9: ZeroZuluOffset := 18;
-          10: ZeroZuluOffset := 19;
-          11: ZeroZuluOffset := 21;
-          12: ZeroZuluOffset := 19;
-          13: ZeroZuluOffset := 20;
-          14: ZeroZuluOffset := 0;
-          15: ZeroZuluOffset := 1;
-          16: ZeroZuluOffset := 2;
-          17: ZeroZuluOffset := 4;
-          18: ZeroZuluOffset := 6;
-          19: ZeroZuluOffset := 9;
-          20: ZeroZuluOffset := 2;
-          21: ZeroZuluOffset := 4;
-          22: ZeroZuluOffset := 5;
-          23: ZeroZuluOffset := 7;
-          24: ZeroZuluOffset := 8;
-          25: ZeroZuluOffset := 9;
-          26: ZeroZuluOffset := 7;
-          27: ZeroZuluOffset := 8;
-          28: ZeroZuluOffset := 7;
-          29: ZeroZuluOffset := 8;
-          30: ZeroZuluOffset := 10;
-          31: ZeroZuluOffset := 14;
-          32: ZeroZuluOffset := 12;
-          33: ZeroZuluOffset := 0;
-          34: ZeroZuluOffset := 2;
-          35: ZeroZuluOffset := 0;
-          36: ZeroZuluOffset := 0;
-          37: ZeroZuluOffset := 2;
-          38: ZeroZuluOffset := 1;
-          39: ZeroZuluOffset := 3;
-          40:
-            begin
-              ProperSalutation := 'TU';
-              Exit;
-            end;
-
-        end;
-    }
      end
   else
      begin
@@ -1161,39 +1111,6 @@ begin
      Exit;
      end;
   EnumerateLinesInFile('HELLO.DAT', EnumHelloDAT, True);
-  {
-    if OpenFileForRead(FileRead, 'HELLO.DAT') then
-    begin
-      while not Eof(FileRead) do
-      begin
-        ReadLn(FileRead, FileString);
-        GetRidOfPrecedingSpaces(FileString);
-        ID := RemoveFirstString(FileString);
-        GetRidOfPrecedingSpaces(FileString);
-        GetRidOfPostcedingSpaces(FileString);
-        Greeting := FileString;
-
-        if FirstHelloRecord = nil then
-        begin
-          FirstHelloRecord := New(HelloRecPtr);
-          FirstHelloRecord^.ID := ID;
-          FirstHelloRecord^.Greeting := Greeting;
-          FirstHelloRecord^.NextRecord := nil;
-          LastHelloRecord := FirstHelloRecord;
-        end
-        else
-        begin
-          LastHelloRecord^.NextRecord := New(HelloRecPtr);
-          LastHelloRecord := LastHelloRecord^.NextRecord;
-          LastHelloRecord^.ID := ID;
-          LastHelloRecord^.Greeting := Greeting;
-          LastHelloRecord^.NextRecord := nil;
-        end;
-      end;
-
-      Close(FileRead);
-    end;
-  }
 end;
 
 procedure SendSalutation(Call: CallString);
@@ -3928,56 +3845,6 @@ begin
         end;
      end;
 end;
-{
-function ProcessRSTAndFOCNumberExchange(Exchange:Str80; var RXData:ContestExchange):boolean;     //n4af function added 4.32.5
-//    ProcessExchange := ProcessRSTNAMEAndNumber(ExchangeString, RData);             //n4af add foc marathon
-var
-NumberEntries,  Result1       : integer;
- EntryList                             : EntryArray;
- Exch : Str10;
-begin
-ProcessRSTAndFOCNumberExchange := False;
-ParseExchangeIntoFields(Exchange, EntryList, NumberEntries);
-if NumberEntries = 1 then
-begin
-RXData.RSTReceived := DefaultRST;
-RXData.FOCNumber := EntryList[1];
-   end
-else
-if ((EntryList[2][1] = '5') and (EntryList[2][3] = '9'))     then
-begin
-RXData.RSTReceived := StrToIntDef(EntryList[2], 0);
-RXData.FOCNumber := EntryList[1];
-end
-else
-begin
-RXData.RSTReceived := StrToIntDef(EntryList[1], 0);
-RXData.FOCNumber := EntryList[2];
-end;
-RXData.FOCNumber := Exchange;
-ProcessRSTAndFOCNumberExchange := RXData.FOCNumber <> '';
-
-ProcessRSTAndFOCNumberExchange := True;
-end;
-}
-{
-if StringIsAllNumbers(FirstString) then
-FirstString := StrToIntDef(FirstString, 0);
-else
-FirstString := DefaultRST;
-
- SecondString := RXData.Name;
-if StringIsAllNumbers(ThirdString)  then
-  ThirdString := StrToIntDef(ThirdString, 0);
-
- if ThirdString <> '' then
- begin
-   if StringIsAllNumbers(ThirdString) then
-   RXData.NumberReceived := StrToIntDef(ThirdString, 0);
- end
- else
-   RXData.NumberReceived := ' ';
- Exit;      }
 
 function ProcessRSTAndDomesticOrDXQTHExchange(Exchange: ShortString {Str80}; var
   RXData: ContestExchange): boolean;
@@ -5565,54 +5432,6 @@ begin
      TF.Format(QuickDisplayBuffer, TC_FILESAVEDTOSUCCESSFULLY, TR4W_FLOPPY_FILENAME);
      QuickDisplay(QuickDisplayBuffer);
      end;
-  {
-    if FloppyFileSaveName = '' then Exit;
-    Windows.ZeroMemory(@TR4W_FLOPPY_FILENAME, SizeOf(TR4W_FLOPPY_FILENAME));
-    I := pos(':', FloppyFileSaveName);
-    if I = 0 then I := 3 else I := 0;
-    TR4W_FLOPPY_FILENAME[0] := 'A';
-    TR4W_FLOPPY_FILENAME[1] := ':';
-    TR4W_FLOPPY_FILENAME[2] := '/';
-    Windows.CopyMemory(@TR4W_FLOPPY_FILENAME[I], @FloppyFileSaveName[1], length(FloppyFileSaveName));
-    asm
-    lea  eax,TR4W_FLOPPY_FILENAME
-    push eax
-    lea  eax,TR4W_LOG_FILENAME
-    push eax
-    end;
-    wsprintf(QuickDisplayBuffer, TC_SAVINGTO);
-    asm add esp,16  end;
-    QuickDisplay(QuickDisplayBuffer);
-
-    if not Windows.CopyFileA(TR4W_LOG_FILENAME, TR4W_FLOPPY_FILENAME, False) then
-    begin
-      SysErrorMessage(GetLastError);
-      asm
-      push eax
-      lea  eax,TR4W_FLOPPY_FILENAME
-      push eax
-      end;
-      wsprintf(QuickDisplayBuffer, '%s: %s');
-      asm add esp,16  end;
-      QuickDisplay(QuickDisplayBuffer);
-
-      DoABeep(Warning);
-    end
-    else
-    begin
-      if I <> 0 then QuickDisplay(TC_FILESAVEDTOFLOPPYSUCCESSFULLY)
-      else
-      begin
-        asm
-        lea  eax,FloppyFileSaveName[1]
-        push eax
-        end;
-        wsprintf(QuickDisplayBuffer, TC_FILESAVEDTOSUCCESSFULLY);
-        asm add esp,12 end;
-        QuickDisplay(QuickDisplayBuffer);
-      end;
-    end;
-  }
 end;
 
 
@@ -8146,42 +7965,6 @@ begin
          for example, G3, GJ0, MM0 etc., on each band and each mode.
         }
 
-      //               if ((copy(RXData.QTH.CountryID,1,1) <> 'G') and  (copy(RXData.QTH.CountryID,1,1) <> 'M')) then
-      {          if (MyCountry[1] = 'G') or  (MyCountry[1] = 'M') then       // ukorcd
-                begin
-                 ActiveDXMult := CQDXCC;
-                  if (RXCty[1] = 'G') or (RXCty[1] = 'M') then
-                   begin
-                    ActiveDXMult := NoDXMults;
-                    RXData.QSOPoints := 1 ;
-                   end
-                  else
-                   if MyContinent <>  RXData.QTH.Continent then
-                     RXData.QSOPoints := 6
-                    else
-                     RXData.QSOPoints := 2;
-                   end
-               else       // my country not uk
-                begin
-                if ((RXData.Callsign[1] = 'G') or (RXData.Callsign[1] = 'M')) then
-                  begin
-                   ActivePrefixMult := Prefix;
-                   RXData.QSOPoints := 1 ;
-                  end
-                   else               // QSO is not UK
-                   begin
-                    rxdata.Prefix := '';
-                    if RXData.QTH.Continent <> MyContinent then
-                      RXData.QSOPoints := 6
-                   else
-                    if (RXData.QTH.Continent = MyContinent) and (MyCountry <> RXCty) then
-                    RXData.QSOPoints := 2
-                   else
-                    RXData.QSOPoints := 1;
-                  end;
-               end;
-           end;
-        }
     RDAQSOPointMethod:
       begin
         RXData.QSOPoints := 0;

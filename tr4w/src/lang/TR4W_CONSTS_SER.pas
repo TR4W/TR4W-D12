@@ -513,39 +513,6 @@ const
   TC_RST_PROMPT                         = 'RST upit';
   TC_SEND_CALLASSETBYMYCALLCOMMAND      = 'posalji znak koji je podesen u MY CALL komandi';
   TC_REPEATRSTSENT                      = 'Ponovi poslati RST';
- {
-  TC_HALFSPACE                          = 'Pola razmaka';
-  TC_LASTQSOSCALL                       = 'Poslednji QSO''s znak';
-  TC_RECEIVEDNAME                       = 'Primljeno ime';
-  TC_PARTIALCORRECTEDCALL               = 'Parcijalno ispravljen znak';
-  TC_SENDPROPERSALUTATIONWITHOUTNAME    = 'Poslati odgovarajuci pozdrav bez imena';
-  TC_GOTONEXTBANDLOWERINFREQUENCY       = 'Idi na sledeci opseg nize frekvencije';
-  TC_GOTONEXTBANDHIGHERINFREQUENCY      = 'Idi na sledeci opseg vise frekvencije';
-  TC_COMPLETECALLSIGN                   = 'Kompletan pozivni znak';
-  TC_FORCESTOENTERCQMODE                = 'Prisili za ulazak u CQ mod';
-  TC_TOGGLECWENABLE                     = 'Promena CW ENABLE';
-  TC_TURNSOFFMONITORING                 = 'Iskljuci monitoring CW na zvucniku racunara.';
-  TC_TURNSONMONITORING                  = 'Ukljuci monitoring CW na zvucniku racunara';
-  TC_CWENABLETRUE                       = 'CW ENABLE = Ukljuci';
-  TC_CWENABLEFALSE                      = 'CW ENABLE = Iskljuci';
-  TC_WORKSAMEASENTERONKEYBOARD          = 'Radi isto kao "Enter" na tastaturi';
-  TC_WORKSAMEASESCONKEYBOARD            = 'Radi isto kao "Esc" na tastaturi';
-  TC_EXCHANGESTHEFREQUENCIES            = ' Menja frekvencije na aktivnoj i neaktivnoj stanici';
-  TC_EXECUTEACONFIGURATIONFILE          = 'Izvrsi konfiguraciionu datoteku';
-  TC_MOVESTHERIGTOLASTCQFREQUENCY       = 'Vraca stanicu na zadnju frekvenciju gde si zvao CQ';
-  TC_LOGSTHELASTCALL                    = 'Loguj zadnji znak koji se pojavio u prozoru za znak';
-  TC_FORCESTOENTERMODE                  = 'Prisili za ulazak u S&P mod';
-  TC_CHANGESCWSPEEDTOXX                 = 'Menja CW brzinu u xx';
-  TC_SENDSXXTOTHEACTIVERADIO            = 'Salje xx na aktivnu stanicu';
-  TC_SENDSXXTOTHERADIO1                 = 'Salje xx na stanicu 1';
-  TC_SENDSXXTOTHERADIO2                 = 'Salje xx na stanicu 2';
-  TC_SENDSXXTOTHEINACTIVERADIO          = 'Salje xx na neaktivnu stanicu';
-  TC_SWAPSTHEACTIVEANDINACTIVERIGS      = 'Zameni aktivnu i neaktivnu stanicu';
-  TC_TOGGLESSENDINGSENDING              = 'Promena za slanje ?, bez monitoringa ? na CW';
-  TC_TOGGLESMODEBETWEENCWANDSSB         = 'Promena moda izmedju CW i SSB';
-  TC_RUNXXAPPLICATION                   = 'Startuj xx program';
-}
-  {UCHECKLATESTVERSION}
   TC_VERSIONONSERVER                    = 'Poslednja verzija na serveru';
   TC_THISVERSION2                       = 'Ova verzija';
   TC_DOWNLOADIT                         = 'Preuzeti poslednju verziju programa?';

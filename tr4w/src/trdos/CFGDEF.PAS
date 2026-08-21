@@ -242,38 +242,6 @@ begin
   //FreqMemory[Band3456, CW] := 3400100000;
   //  FreqMemory[Band5760, CW] := 5760100000;
 
-//  FreqMemory[Band160, Phone] := 1840000;
-//  FreqMemory[Band80, Phone] := 3850000;
-//  FreqMemory[Band40, Phone] := 7225000;
-//  FreqMemory[Band30, Phone] := 10000000;
-//  FreqMemory[Band20, Phone] := 14225000;
-//  FreqMemory[Band17, Phone] := 18110000;
-//  FreqMemory[Band15, Phone] := 21300000;
-//  FreqMemory[Band12, Phone] := 24930000;
-//  FreqMemory[Band10, Phone] := 28400000;
-//  FreqMemory[Band6, Phone] := 50125000;
-//  FreqMemory[Band2, Phone] := 144200000;
-//  FreqMemory[Band222, Phone] := 222100000;
-//  FreqMemory[Band432, Phone] := 433200000;
-//  FreqMemory[Band902, Phone] := 902000000;
-//  FreqMemory[Band1296, Phone] := 1296200000;
-  //FreqMemory[Band2304, Phone] := 2320200000;
-  //FreqMemory[Band3456, Phone] := 3400100000;
-  //  FreqMemory[Band5760, Phone] := 5760100000;
-    {
-      FreqMemory[Band160, Digital] := 1840000;
-      FreqMemory[Band80, Digital] := 3880000;
-      FreqMemory[Band40, Digital] := 7040000;
-      FreqMemory[Band30, Digital] := 10125000;
-      FreqMemory[Band20, Digital] := 14080000;
-      FreqMemory[Band17, Digital] := 18110000;
-      FreqMemory[Band15, Digital] := 21080000;
-      FreqMemory[Band12, Digital] := 24920000;
-      FreqMemory[Band10, Digital] := 28080000;
-    //  FreqMemory[Band6, Digital] := 50125000;
-    //  FreqMemory[Band2, Digital] := 144200000;
-    }
-    //  FrequencyMemoryEnable := True;
 
     //  GridMapCenter := '';
 
@@ -528,49 +496,6 @@ begin
      //   VisibleDupesheetEnable := False;
 
 
-//  with ColorColors do
-//  begin
-//    AlarmWindowBackground := trRed;
-//    AlarmWindowColor := trBlack;
-      //      AltCallWindowBackground := clBlue; //KK1L: 6.73
-      //      AltCallWindowColor := clLightGray; //KK1L: 6.73
-      {
-            BandMapWindowBackground := clCyan;
-            BandMapWindowColor := clBlack;
-            BandModeWindowBackground := Cyan;
-            BandModeWindowColor := clBlack;
-            BeamHeadingWindowBackground := White;
-            BeamHeadingWindowColor := clBlack;
-            BigWindowBackground := Cyan;
-            BigWindowColor := clBlack;
-}
-    //CallWindowBackground := trWhite {trMagenta};
-    //CallWindowColor := trBlack {trYellow};
-      {
-                  ClockWindowBackground := Cyan;
-                  ClockWindowColor := clBlack;
-
-                  CodeSpeedWindowBackground := Cyan;
-                  CodeSpeedWindowColor := clBlack;
-
-                  ContestTitleWindowBackground := White;
-                  ContestTitleWindowColor := clBlack;
-
-                  CountryNameWindowBackground := Cyan;
-                  CountryNameWindowColor := clBlack;
-
-                  DateWindowBackground := Cyan;
-                  DateWindowColor := clBlack;
-
-                  DupeInfoWindowBackground := Cyan;
-                  DupeInfoWindowColor := clBlack;
-
-                  DupeSheetWindowBackground := Cyan;
-                  DupeSheetWindowColor := clBlack;
-      }
-//    EditableLogWindowBackground := trWhite {trCyan};
-//    EditableLogWindowColor := trBlack;
-//    ExchangeSAndPWindowBackground := trGreen;
 
       {
                   ExchangeWindowBackground := Magenta;

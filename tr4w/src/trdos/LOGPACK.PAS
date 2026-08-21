@@ -1243,54 +1243,6 @@ procedure PacketObject.CheckPacket;
   the packet stuff all works.   }
 
 begin
-{
-  if PacketInputFileName <> '' then
-  begin
-    if not PacketInputFileOpen then
-    begin
-      PacketInputFileOpen := OpenFileForRead(PacketInputFileRead, PacketInputFileName);
-      MarkTime(StartTime);
-    end;
-
-    if PacketInputFileOpen then
-    begin
-      if ElaspedSec100(StartTime) >= PacketInputFileDelay then
-      begin
-        ReadLn(PacketInputFileRead, PacketInputString);
-
-        if OH2AQFileInputSpot(PacketInputString, DXSpot) then
-        begin
-                  //          QuickDisplay(Copy(DXSpot.PacketString, 1, 70));
-          ProcessPacketSpot(DXSpot);
-        end;
-
-        if PacketFileInputSpot(PacketInputString, DXSpot) then
-        begin
-                  //          QuickDisplay(Copy(DXSpot.PacketString, 1, 70));
-          ProcessPacketSpot(DXSpot);
-
-                  //                           if BroadcastAllPacketData and (Packet.PacketSerialPort <> NoPort) and (ActiveMultiPort <> NoPort) then
-                  //                              SendMultiCommand(MultiBandAddressArray[ActiveBand], $FF,
-                  //                                 MultiPacketReceivedMessage, DXSpot.PacketString);
-        end;
-
-        if Eof(PacketInputFileRead) then
-        begin
-          Close(PacketInputFileRead);
-          PacketInputFileName := '';
-        end;
-
-        MarkTime(StartTime);
-      end;
-    end;
-  end;
-
-  if Packet.PacketSerialPort <> NoPort then // Added in 6.25
-  begin
-    CheckPacketBuffer(False);
-    CheckPacketMessage;
-  end;
-}
 end;
 
 procedure PacketObject.SetUpPacketPortAndBuffer;

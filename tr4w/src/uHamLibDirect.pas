@@ -1,52 +1,6 @@
 unit uHamLibDirect;
 {$I tr4w.inc}
 
-{
-  HamLib Direct DLL Bindings for Delphi 7
-
-  Translated from HamLib 4.7.0 C headers and VB6 bindings
-
-  Purpose: Direct DLL interface to libhamlib-4.dll, eliminating the need
-           for rigctld TCP/IP daemon.
-
-  Usage Example:
-    var
-      myRig: PRIG;
-      freq: freq_t;
-      mode: rmode_t;
-      width: pbwidth_t;
-      err: Integer;
-    begin
-      // Initialize
-      rig_set_debug(RIG_DEBUG_TRACE);
-      myRig := rig_init(RIG_MODEL_K4);  // Elecraft K4
-
-      // Configure serial port
-      rig_set_conf(myRig, TOK_PATHNAME, 'COM3');
-      rig_set_conf(myRig, TOK_SERIAL_SPEED, '38400');
-
-      // Open connection
-      err := rig_open(myRig);
-      if err = RIG_OK then
-      begin
-        // Get frequency
-        err := rig_get_freq(myRig, RIG_VFO_A, freq);
-        if err = RIG_OK then
-          ShowMessage(Format('VFO A: %.0f Hz', [freq]));
-
-        // Set mode
-        err := rig_set_mode(myRig, RIG_VFO_A, RIG_MODE_USB, RIG_PASSBAND_NORMAL);
-
-        // Cleanup
-        rig_close(myRig);
-      end;
-      rig_cleanup(myRig);
-    end;
-
-  File References:
-    C:\projects\hamlib\include\hamlib\rig.h
-    C:\projects\Hamlib-4.6.5\Hamlib-4.6.5\bindings\hamlibvb.bas.in
-}
 
 interface
 
