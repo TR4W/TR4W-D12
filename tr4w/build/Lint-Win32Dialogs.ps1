@@ -37,6 +37,8 @@ param(
    [string] $SourceDir = (Split-Path -Parent $PSScriptRoot),
    [string] $BaselineFile,
    [switch] $UpdateBaseline,
+   [ValidateSet('ui','platform')]
+   [string] $Group = 'ui',
    [switch] $SelfTest
 )
 
@@ -44,7 +46,13 @@ Set-StrictMode -Version Latest
 Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
 
 if (-not $BaselineFile) {
-   $BaselineFile = Join-Path $PSScriptRoot 'win32-ui-baseline.json'
+   # ONE BASELINE PER GROUP -- see the platform table below for why they are
+   # not merged.
+   $BaselineFile = if ($Group -eq 'platform') {
+      Join-Path $PSScriptRoot 'win32-platform-baseline.json'
+   } else {
+      Join-Path $PSScriptRoot 'win32-ui-baseline.json'
+   }
 }
 
 # WHAT IS COUNTED, and why each one is here.
@@ -91,6 +99,71 @@ $patterns = [ordered]@{
    'CreateTR4WStaticWindow'    = '\bCreateTR4WStaticWindow(ID)?\s*\('
 }
 
+# THE PLATFORM GROUP -- PHASE 8, added 2026-08-21 (NY4I: "add the lint counters
+# for phase 8").
+#
+# The UI group above measures phase 7. This one measures what phase 7 does NOT
+# buy: the Win32 the program still speaks OUTSIDE its windows. None of it stops
+# an LCL build here and all of it stops a build on GTK or Cocoa, so it is
+# exactly the surface the end state has to reach zero on -- see "THE END STATE"
+# at the top of the plan.
+#
+# SEPARATE BASELINE ON PURPOSE, not a bigger table. The two groups are different
+# phases with different owners and different done-criteria: mixing them would
+# mean a UI conversion and a serial-port abstraction moving one number, and
+# neither could be read.
+#
+# GROUPED BY WHAT HAPPENS TO THEM, because the three are not the same work:
+#   REPLACE  -- an RTL/LCL equivalent exists; mechanical, drive to 0.
+#   ABSTRACT -- genuinely differs per OS; drive to 0 behind a seam.
+#   GUARD    -- stays Windows-only; drive into {$IFDEF WINDOWS}, not to 0.
+$platformPatterns = [ordered]@{
+   # --- REPLACE ------------------------------------------------------------
+   # The ini API has no Mac/Linux equivalent at all. docs/CFG_MIGRATION_PLAN.md
+   # owns the replacement; this counts what is left to move.
+   'ini.Read'          = '\bGetPrivateProfile[A-Za-z]*\s*\('
+   'ini.Write'         = '\bWritePrivateProfile[A-Za-z]*\s*\('
+   # wsprintfA -- the RTL has Format. TF.pas holds most of them.
+   'wsprintf'          = '\bwsprintf[AW]?\s*\('
+   # WinExec/ShellExecute -> OpenDocument (LazFileUtils) or TProcess.
+   'process.Launch'    = '\b(WinExec|ShellExecute[AW]?|CreateProcess[AW]?)\s*\('
+   # Raw thread and event handles -> TThread and TEvent (syncobjs). Counted as
+   # two kinds because the thread bodies and the signalling move separately.
+   'thread.Create'     = '\bCreateThread\s*\('
+   'thread.Event'      = '\b(CreateEvent[AW]?|SetEvent|ResetEvent|WaitForSingleObject)\s*\('
+
+   # --- ABSTRACT -----------------------------------------------------------
+   # The serial API behind uSerialPort. CreateFile is deliberately NOT counted:
+   # it opens ordinary files too, so it cannot be attributed without reading
+   # each site, and a ratchet built on a number nobody can reconcile is worse
+   # than no ratchet (the lesson this file already learned about tDialogBox).
+   'serial.CommAPI'    = '\b(SetCommState|GetCommState|SetCommTimeouts|GetCommTimeouts|BuildCommDCB[AW]?|SetupComm|PurgeComm|EscapeCommFunction|ClearCommError)\s*\('
+   # Port enumeration and version info. Needs a per-OS implementation, not a
+   # translation. TRegistry is a TYPE, hence no call parenthesis.
+   'registry'          = '\bTRegistry\b|\b(RegOpenKey[A-Za-z]*|RegQueryValue[A-Za-z]*|RegSetValue[A-Za-z]*|RegEnumValue[A-Za-z]*|RegCloseKey)\s*\('
+
+   # --- GUARD (stays Windows-only; the target is a deliberate IFDEF) --------
+   'audio.MMSystem'    = '\b(waveOut[A-Za-z]+|waveIn[A-Za-z]+|mciSendCommand[AW]?|mciSendString[AW]?)\s*\('
+   # inpout32 LPT keying -- KEPT deliberately (NY4I 2026-08-17), so this number
+   # is not expected to reach zero. It is here to notice the surface SPREADING
+   # beyond uIO/LPT.pas, which is what would make the guard expensive to draw.
+   'lpt.inpout32'      = '\b(Out32|Inp32|IsInpOutDriverOpen)\s*\(|inpout32'
+   # MMTTY is out-of-process and Windows-only by nature.
+   'mmtty.WindowMsg'   = '\bRegisterWindowMessage[AW]?\s*\('
+}
+
+$patternGroups = [ordered]@{
+   'ui'       = $patterns
+   'platform' = $platformPatterns
+}
+
+if (-not $patternGroups.Contains($Group)) {
+   Write-Output "Lint-Win32Dialogs: unknown -Group '$Group'."
+   exit 1
+}
+$patterns = $patternGroups[$Group]
+$groupNoun = if ($Group -eq 'ui') { 'Win32 UI' } else { 'non-UI Win32 platform' }
+
 if ($SelfTest) {
    $failed = Invoke-PascalSourceSelfTest
    if ($failed -gt 0) {
@@ -110,6 +183,20 @@ if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
 # `.Count` on the bare FileInfo throws under StrictMode -- so a directory holding
 # exactly one Pascal file crashed the lint.
 $files = @(Get-TR4WPascalFiles -Root $SourceDir)
+
+# API HEADER TRANSLATIONS ARE NOT CALL SITES.
+#
+# src\MMSystem.pas is a translation of Windows' mmsystem.h -- 61 of its lines
+# match audio.MMSystem, every one of them a `function waveOutOpen(...)`
+# DECLARATION rather than TR4W calling anything. Counting them made the first
+# platform baseline read 49 for a family with 12 real uses, and a ratchet whose
+# number nobody can reconcile against the source is worse than no ratchet (the
+# same lesson this file learned about tDialogBox being double-counted).
+#
+# The UI group is unaffected -- it names no API this unit declares -- but the
+# exclusion is applied to both so the two groups cannot disagree about which
+# files exist.
+$files = @($files | Where-Object { $_.Name -ne 'MMSystem.pas' })
 if ($files.Count -eq 0) {
    # A FLOOR. Zero files scanned means the path or the filter is wrong, and a
    # ratchet that reports "nothing grew" because it looked at nothing is worse
@@ -159,7 +246,7 @@ foreach ($k in $counts.Keys) { $total += $counts[$k] }
 
 if ($UpdateBaseline) {
    $counts | ConvertTo-Json | Set-Content -LiteralPath $BaselineFile -Encoding UTF8
-   Write-Output ("Lint-Win32Dialogs: baseline rewritten -- {0} call site(s) across {1} kind(s)." -f $total, $counts.Count)
+   Write-Output ("Lint-Win32Dialogs[{2}]: baseline rewritten -- {0} call site(s) across {1} kind(s)." -f $total, $counts.Count, $Group)
    Write-Output "Commit it with the conversion that lowered it, not on its own."
    exit 0
 }
@@ -183,7 +270,7 @@ foreach ($k in $counts.Keys) {
    }
    elseif ($counts[$k] -gt $was) {
       $sites = if ($where.ContainsKey($k)) { ($where[$k] | Select-Object -Last 5) -join ', ' } else { '' }
-      $grew += ("{0}: {1} call site(s), baseline {2} -- NEW Win32 UI was added. Recent: {3}" -f $k, $counts[$k], $was, $sites)
+      $grew += ("{0}: {1} call site(s), baseline {2} -- NEW {4} code was added. Recent: {3}" -f $k, $counts[$k], $was, $sites, $groupNoun)
    }
    elseif ($counts[$k] -lt $was) {
       $shrank += ("{0}: {1}, was {2}" -f $k, $counts[$k], $was)
@@ -192,16 +279,22 @@ foreach ($k in $counts.Keys) {
 
 if ($grew.Count -gt 0) {
    $grew | ForEach-Object { Write-Output ("  " + $_) }
-   Write-Output ("Lint-Win32Dialogs: the Win32 UI surface GREW. It is being retired -- build new UI as an LCL designed form under src\ui\lcl\.")
+   Write-Output ("Lint-Win32Dialogs[{1}]: the {0} surface GREW. It is being retired -- see THE END STATE in the migration plan." -f $groupNoun, $Group)
+   if ($Group -eq 'ui') {
+      Write-Output "  Build new UI as an LCL designed form under src\ui\lcl\."
+   }
+   else {
+      Write-Output "  Use the RTL/LCL equivalent (Format, TThread/TEvent, TProcess, the JSON store), or put it behind a platform seam."
+   }
    exit 1
 }
 
 if ($shrank.Count -gt 0) {
    $shrank | ForEach-Object { Write-Output ("  " + $_) }
    Write-Output "Lint-Win32Dialogs: counts went DOWN -- good, but the baseline is now stale."
-   Write-Output "Run:  .\build\Lint-Win32Dialogs.ps1 -UpdateBaseline   and commit it with the conversion."
+   Write-Output ("Run:  .\build\Lint-Win32Dialogs.ps1 -Group {0} -UpdateBaseline   and commit it with the conversion." -f $Group)
    exit 1
 }
 
-Write-Output ("Lint-Win32Dialogs: {0} Win32 UI call site(s) across {1} file(s), none above baseline." -f $total, $files.Count)
+Write-Output ("Lint-Win32Dialogs[{2}]: {0} {3} call site(s) across {1} file(s), none above baseline." -f $total, $files.Count, $Group, $groupNoun)
 exit 0

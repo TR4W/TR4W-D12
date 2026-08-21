@@ -52,7 +52,14 @@ $lints = @(
    # The Win32-UI burn-down ratchet. $Tr4wDir, not $src: tr4w.dpr creates windows
    # too and lives one level up, and a ratchet that cannot see the program's own
    # entry point would let new Win32 UI in through the door it does not watch.
-   @{ Name = 'Lint-Win32Dialogs';    Arg = $Tr4wDir; NeedsFpc = $false }
+   @{ Name = 'Lint-Win32Dialogs';    Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Group', 'ui') }
+   # THE SAME RATCHET, SECOND GROUP -- phase 8, the Win32 the program speaks
+   # OUTSIDE its windows: the ini API, serial, the registry, raw threads and
+   # events, audio, LPT. Phase 7 does not touch any of it, and none of it
+   # compiles on GTK or Cocoa. Separate baseline because it is a separate
+   # phase: mixing the two would mean a dialog conversion and a serial
+   # abstraction moving one number that neither could be read from.
+   @{ Name = 'Lint-Win32Dialogs';    Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Group', 'platform') }
    # Every message WindowProc handles must be claimed by IsTR4WsOwnMessage, or
    # the LCL swallows it. Four were being dropped when this was written, one of
    # them since the day the marshalling seam was built.
@@ -109,8 +116,12 @@ foreach ($lint in $lints)
    $outFile = Join-Path $tmpDir ("lint-$($queue.Count)-out.txt")
    $errFile = Join-Path $tmpDir ("lint-$($queue.Count)-err.txt")
    $proc = Start-Process -FilePath 'powershell' `
-                         -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass',
-                                         '-File', $path, '-SourceDir', $lint.Arg) `
+                         -ArgumentList (@('-NoProfile', '-ExecutionPolicy', 'Bypass',
+                                          '-File', $path, '-SourceDir', $lint.Arg) +
+                                        # Optional per-entry switches, so one script can be
+                                        # listed twice with different arguments rather than
+                                        # being copied into a sibling that would drift.
+                                        $(if ($lint.ContainsKey('Extra')) { $lint.Extra } else { @() })) `
                          -NoNewWindow -PassThru `
                          -RedirectStandardOutput $outFile `
                          -RedirectStandardError  $errFile
