@@ -107,6 +107,12 @@ type
    TLegacySetting = class(TSettingBase)
    private
       FCommand: string;
+   protected
+      { Everything that has to happen AFTER a value is accepted, in both
+        subclasses: repaint what the change made stale, then tell the form.
+        Shared rather than written twice, because the two TrySetText bodies
+        differ only in WHERE the value is stored. }
+      procedure AfterApplied;
    public
       constructor Create(const aKey, aCommand, aCaption: string);
       function AsText: string; override;
@@ -152,6 +158,24 @@ begin
    NeedsRestart := (CFGCA[idx].crJ = 1);
 end;
 
+procedure TLegacySetting.AfterApplied;
+begin
+   // TAKE EFFECT NOW.  Thirty CFGCA rows carry a crP redraw handler, and until
+   // 2026-08-21 only the old Ctrl-J dialog ran it -- so a setting changed in
+   // Preferences reached its global immediately but did not reach the screen
+   // until the next start.  NY4I hit it on AUTO SEND CHARACTER COUNT ("is there
+   // any reason that cannot be created right away?") and it was general.
+   //
+   // Rows with no handler are the ones nothing draws from; RunCommandRedrawProc
+   // returns for those.
+   RunCommandRedrawProc(FindCFGCommand(FCommand));
+
+   if Assigned(OnApply) then
+      begin
+      OnApply();
+      end;
+end;
+
 function TLegacySetting.AsText: string;
 begin
    Result := CFGCommandValueAsString(FCommand);
@@ -181,10 +205,7 @@ begin
       Exit;
       end;
 
-   if Assigned(OnApply) then
-      begin
-      OnApply();
-      end;
+   AfterApplied;
 end;
 
 { ----------------------------------------------------------- TStoredSetting - }
@@ -225,10 +246,7 @@ begin
       Exit;
       end;
 
-   if Assigned(OnApply) then
-      begin
-      OnApply();
-      end;
+   AfterApplied;
 end;
 
 function RegisterLegacySetting(const aKey, aCommand, aCaption: string): TSettingBase;

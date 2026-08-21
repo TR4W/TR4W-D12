@@ -928,6 +928,15 @@ type
       procedure FocusTimerTick(Sender: TObject);
       procedure ScrollControlIntoView(const aControl: TControl);
 
+      { SAY WHICH ROW WAS FOUND.  Scrolling to a hit and focusing it is enough
+        for an edit box -- the caret is the indicator -- but a drop-down or a
+        read-only row lands with nothing to look at, on a page of forty rows
+        that all look alike (NY4I, 2026-08-21, on AUTO SEND CHARACTER COUNT).
+        The row's CAPTION is marked rather than the control, because that is the
+        one part every row shape has. }
+      procedure HighlightSearchedRow(const aControl: TWinControl);
+      procedure ClearSearchHighlight(const aRoot: TWinControl);
+
       { GENERATED SECTIONS -- the Ctrl-J replacement.
 
         One panel built at run time per key prefix, a label and a control per
@@ -2669,6 +2678,12 @@ begin
          ctl := edt;
          end;
 
+      // PAIRS THE CAPTION TO THE CONTROL, and is how HighlightSearchedRow
+      // finds one from the other.  FocusControl is the LCL's own way of saying
+      // "this label belongs to that control" -- no parallel array, and a click
+      // on the caption now lands in the field as it does everywhere else.
+      lbl.FocusControl := ctl;
+
       if ro then
          begin
          // NOT ON A BAND-PLAN ROW.  It is `ro` for a different reason -- it
@@ -3116,6 +3131,62 @@ end;
 // So keep asking until the focus has ACTUALLY LANDED -- ActiveControl is the
 // only honest test -- and give up loudly after a bounded number of tries rather
 // than spinning a timer forever on a page that will never accept focus.
+procedure TPrefsForm.ClearSearchHighlight(const aRoot: TWinControl);
+var
+   i: integer;
+begin
+   for i := 0 to aRoot.ControlCount - 1 do
+      begin
+      // Only a GENERATED row caption: those are the labels that carry a
+      // FocusControl.  Section headings are bold by design and must be left
+      // alone, and they have none.
+      if (aRoot.Controls[i] is TLabel) and
+         (TLabel(aRoot.Controls[i]).FocusControl <> nil) then
+         begin
+         TLabel(aRoot.Controls[i]).Font.Style := [];
+         TLabel(aRoot.Controls[i]).Font.Color := clDefault;
+         end;
+
+      if aRoot.Controls[i] is TWinControl then
+         begin
+         ClearSearchHighlight(TWinControl(aRoot.Controls[i]));
+         end;
+      end;
+end;
+
+procedure TPrefsForm.HighlightSearchedRow(const aControl: TWinControl);
+var
+   i: integer;
+   lbl: TLabel;
+begin
+   // Whole form, not just this page: the operator may have searched twice, and
+   // the earlier hit can be on a page that is no longer showing.  Walking a
+   // LIVE tree also means a regenerated page cannot leave a dangling label
+   // reference behind -- which storing "the last one highlighted" would.
+   ClearSearchHighlight(Self);
+
+   if (aControl = nil) or (aControl.Parent = nil) then
+      begin
+      Exit;
+      end;
+
+   for i := 0 to aControl.Parent.ControlCount - 1 do
+      begin
+      if not (aControl.Parent.Controls[i] is TLabel) then
+         begin
+         Continue;
+         end;
+
+      lbl := TLabel(aControl.Parent.Controls[i]);
+      if lbl.FocusControl = aControl then
+         begin
+         lbl.Font.Style := [fsBold];
+         lbl.Font.Color := clHighlight;
+         Exit;
+         end;
+      end;
+end;
+
 procedure TPrefsForm.FocusTimerTick(Sender: TObject);
 var
    ctl: TWinControl;
@@ -3136,6 +3207,7 @@ begin
    // well down one (NY4I, 2026-08-17).  Doing it before the focus attempt also
    // means a row that can never take focus is still brought into view.
    ScrollControlIntoView(ctl);
+   HighlightSearchedRow(ctl);
 
    // A DISPLAY-ONLY ROW WILL NEVER FOCUS, by design -- read-only and ckList /
    // ctFreqList rows are deliberately unbound and disabled.  Scrolling to it is

@@ -8936,7 +8936,6 @@ end;
 procedure InvertBooleanCommand(Command: PBoolean);
 var
   i: integer;
-  cmdProc: procedure;   // Issue #997: typed call of a Pointer change-handler
 begin
   for i := 1 to CommandsArraySize do
     if CFGCA[i].crAddress = Command then
@@ -8944,13 +8943,7 @@ begin
        InvertBoolean(Command^);
        Windows.WritePrivateProfileStringA(_COMMANDS, CFGCA[i].crCommand,
          BA[Command^], TR4W_INI_FILENAME);
-       // Issue #997: asm `call p` (untyped Pointer change-handler) -> typed call,
-       // nil-guarded against a nil entry in the CommandsProcArray definition.
-       @cmdProc := CommandsProcArray[CFGCA[i].crP];
-       if Assigned(cmdProc) then
-          begin
-          cmdProc;
-          end;
+       RunCommandRedrawProc(i);
        end;
 end;
 

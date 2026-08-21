@@ -187,6 +187,20 @@ function CFGCommandIsFreqList(const aCommand: string): boolean;
 // the value, in which case nothing is written -- see the implementation.
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
 
+// Run the row's redraw handler -- CommandsProcArray[crP] -- so that a changed
+// setting takes effect on screen NOW rather than at the next restart.
+//
+// Thirty rows carry a crP, and the handler is the ONLY thing that repaints for
+// them: CheckCommand moves the value into the global, and nothing looks at that
+// global again until whatever draws it happens to run.  AUTO SEND CHARACTER
+// COUNT is the visible example -- the arrow beside the callsign field appeared
+// only after a restart (NY4I, 2026-08-21).
+//
+// It lives here, once, because the call is guarded twice over -- crP may be 0
+// (no handler) and the array entry itself may be nil -- and there were already
+// two hand-written copies of those guards, in uOption and in MainUnit.
+procedure RunCommandRedrawProc(aIndex: integer);
+
 function F_RADIO_ONE_TYPE: boolean;
 function F_RADIO_TWO_TYPE: boolean;
 function F_SCP_COUNTRY_STRING: boolean;
@@ -1317,6 +1331,27 @@ begin
    for i := 0 to ArrayRecordArray[arrIdx].arArrayLength do
       begin
       Result[i] := IntToStr(PIntegerArray(values)^[i]);
+      end;
+end;
+
+procedure RunCommandRedrawProc(aIndex: integer);
+var
+   cmdProc: procedure;   // Issue #997: typed call of a Pointer change-handler
+begin
+   if (aIndex < 1) or (aIndex > CommandsArraySize) then
+      begin
+      Exit;
+      end;
+
+   if CFGCA[aIndex].crP = 0 then
+      begin
+      Exit;
+      end;
+
+   @cmdProc := CommandsProcArray[CFGCA[aIndex].crP];
+   if Assigned(cmdProc) then
+      begin
+      cmdProc;
       end;
 end;
 

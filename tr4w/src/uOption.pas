@@ -497,7 +497,6 @@ var
   TempInteger                           : integer;
   TempReal                              : REAL;
   p                                     : Pointer;
-  cmdProc                               : procedure;   // Issue #997: typed call of a Pointer change-handler
   c                                     : integer;
 //  h                                     :HWND;
   TempColor                             : Ptr4wColors;
@@ -811,16 +810,7 @@ begin
      end;
 
      Change:
-     if CFGCA[Index].crP <> 0 then
-        begin
-        // Issue #997: asm `call P` (untyped Pointer change-handler) -> typed
-        // call, guarded against a nil entry in the CommandsProcArray definition.
-        @cmdProc := CommandsProcArray[CFGCA[Index].crP];
-        if Assigned(cmdProc) then
-           begin
-           cmdProc;
-           end;
-        end;
+     RunCommandRedrawProc(Index);
 
      EnableButtons:
      Changed[Row] := True;
