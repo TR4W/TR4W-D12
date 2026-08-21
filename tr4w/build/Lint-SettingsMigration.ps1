@@ -139,7 +139,7 @@ if ($problems.Count -gt 0) {
 # why: 153 -> 42 was one night's work, and nothing else in the build would notice
 # it drifting back. The number may FALL freely; raising it means editing this
 # line, which is the point at which somebody has to explain themselves.
-$LEGACY_CEILING = 41
+$LEGACY_CEILING = 20
 
 if ($legacy.Count -gt $LEGACY_CEILING) {
    Write-Output ("Lint-SettingsMigration: {0} settings still write tr4w.ini; the ceiling is {1}." -f $legacy.Count, $LEGACY_CEILING)

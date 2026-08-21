@@ -545,6 +545,52 @@ Each reason is written down in `docs/CFG_MIGRATION_PLAN.md`, along with what
 unlocking the `ckList` thirty would take and the padding trap that makes it
 delicate.
 
+### 19. The `ckList` rows are editable for the first time  (21 more settings to JSON)
+
+**These rows have NEVER been editable in Preferences.** They rendered as
+disabled boxes because `CFGCommandAllowedValues` returned nothing for a `ckList`
+row, and a row with no allowed values is forced read-only. They are drop-downs
+now, and 21 of them store to `settings\tr4w.json` instead of `tr4w.ini`.
+
+- [ ] **Three station settings, set and restart:** `HOUR DISPLAY`,
+  `RATE DISPLAY`, `DUPE CHECK SOUND`. Each should be a drop-down, take effect,
+  and still be what you set after a restart. Before today none of that was true.
+- [ ] **`MP3 RECORDER DURATION` and `BAND MAP SPLIT MODE`** -- same test, and
+  the second one has a redraw handler (`crP: 1`), so the band map should change
+  WITHOUT a restart.
+- [ ] **A Cabrillo category, e.g. `CATEGORY-POWER`.** These are contest-scoped.
+  Set one, then load a contest `.cfg` that names the same key: **the contest
+  must win.** That precedence already existed (`CommandCameFromContestCFG`);
+  this is confirming the migration did not disturb it.
+- [ ] **`tr4w.log` should be quiet.** `[ApplyStoredCommands] CFGCA refused` names
+  a stored value a row will not accept -- the failure mode of this change.
+
+**The mixed-case fix is the one to watch for surprises.** Six spellings across
+the whole program are not all-caps -- `All`, `Yes`, `No`,
+`Indonesian Districts`, `NC QSO Party`. The config loader uppercases every line
+before parsing, and the matcher compared case-SENSITIVELY, so those six could be
+written and never read back. That was the whole of the
+`SINGLE BAND SCORE=All` -> "Invalid statement in config file" failure of
+2026-08-16. The matcher now folds case.
+
+- [ ] **Load a few real contest `.cfg` files** and confirm no
+  "Invalid statement in config file" and no new `[Config] ... was REFUSED`
+  lines. The golden corpus (22/0/4) covers 13 of them already; this is about
+  configs the corpus does not carry.
+
+**Two defects found while doing this, NEITHER fixed -- they need a decision:**
+
+1. **`QSOPointMethodArray` has two identical `'ONY'` entries** (`VC.pas:3264`
+   and `:3319`). Only the first is reachable by name, so one QSO-point method
+   cannot be selected by spelling and shows the wrong label. Aligning the array
+   to the enum did not reconcile (133 members vs 136 entries), so which value is
+   mislabelled needs a read rather than a guess.
+2. **`SetCFGCommandValue` ignores `crC`.** Ctrl-J wrote a contest-scoped row to
+   the contest `.cfg` (`uOption.pas:851`); Preferences writes every row to
+   `tr4w.ini`. So a contest-scoped setting edited in Preferences was written to
+   the wrong file and lost on the next start, silently. The 11 migrated today
+   are out of that path; the rest go when the remaining 20 do.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)

@@ -338,19 +338,19 @@ begin
                           'Auto-CQ Delay Time');
    RegisterStoredSetting('contest.beepEvery10Qsos',     'BEEP EVERY 10 QSOS',
                           'Beep Every 10 QSOs');
-   RegisterLegacySetting('contest.categoryAssisted',    'CATEGORY-ASSISTED',
+   RegisterStoredSetting('contest.categoryAssisted',    'CATEGORY-ASSISTED',
                           'Category-Assisted');
-   RegisterLegacySetting('contest.categoryBand',        'CATEGORY-BAND',
+   RegisterStoredSetting('contest.categoryBand',        'CATEGORY-BAND',
                           'Category-Band');
-   RegisterLegacySetting('contest.categoryMode',        'CATEGORY-MODE',
+   RegisterStoredSetting('contest.categoryMode',        'CATEGORY-MODE',
                           'Category-Mode');
-   RegisterLegacySetting('contest.categoryOperator',    'CATEGORY-OPERATOR',
+   RegisterStoredSetting('contest.categoryOperator',    'CATEGORY-OPERATOR',
                           'Category-Operator');
-   RegisterLegacySetting('contest.categoryOverlay',     'CATEGORY-OVERLAY',
+   RegisterStoredSetting('contest.categoryOverlay',     'CATEGORY-OVERLAY',
                           'Category-Overlay');
-   RegisterLegacySetting('contest.categoryPower',       'CATEGORY-POWER',
+   RegisterStoredSetting('contest.categoryPower',       'CATEGORY-POWER',
                           'Category-Power');
-   RegisterLegacySetting('contest.categoryTransmitter', 'CATEGORY-TRANSMITTER',
+   RegisterStoredSetting('contest.categoryTransmitter', 'CATEGORY-TRANSMITTER',
                           'Category-Transmitter');
    RegisterStoredSetting('contest.columnDupesheetEnable','COLUMN DUPESHEET ENABLE',
                           'Column Dupesheet Enable');
@@ -374,9 +374,9 @@ begin
                           'Exchange Received');
    RegisterStoredSetting('contest.gridMapCenter',       'GRID MAP CENTER',
                           'Grid Map Center');
-   RegisterLegacySetting('contest.initialExchange',     'INITIAL EXCHANGE',
+   RegisterStoredSetting('contest.initialExchange',     'INITIAL EXCHANGE',
                           'Initial Exchange');
-   RegisterLegacySetting('contest.initialExchangeCursorPos','INITIAL EXCHANGE CURSOR POS',
+   RegisterStoredSetting('contest.initialExchangeCursorPos','INITIAL EXCHANGE CURSOR POS',
                           'Initial Exchange Cursor Pos');
    RegisterStoredSetting('contest.initialExchangeOverwrite','INITIAL EXCHANGE OVERWRITE',
                           'Initial Exchange Overwrite');
@@ -406,7 +406,7 @@ begin
                           'Multiple Modes');
    RegisterLegacySetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
                           'Prefix Multiplier');
-   RegisterLegacySetting('contest.qslMode',             'QSL MODE',
+   RegisterStoredSetting('contest.qslMode',             'QSL MODE',
                           'QSL Mode');
    RegisterStoredSetting('contest.qsoByBand',           'QSO BY BAND',
                           'QSO By Band');
@@ -450,7 +450,7 @@ begin
                           'R150S Mode');
    RegisterStoredSetting('contest.randomCqMode',        'RANDOM CQ MODE',
                           'Random CQ Mode');
-   RegisterLegacySetting('contest.remainingMultDisplayMode','REMAINING MULT DISPLAY MODE',
+   RegisterStoredSetting('contest.remainingMultDisplayMode','REMAINING MULT DISPLAY MODE',
                           'Remaining Mult Display Mode');
    RegisterStoredSetting('contest.reverseInitialEx',    'REVERSE INITIAL EX',
                           'Reverse Initial Ex');
@@ -464,7 +464,7 @@ begin
                           'Single Band Score');
    RegisterStoredSetting('contest.sprintQsyRule',       'SPRINT QSY RULE',
                           'Sprint Qsy Rule');
-   RegisterLegacySetting('contest.tenMinuteRule',       'TEN MINUTE RULE',
+   RegisterStoredSetting('contest.tenMinuteRule',       'TEN MINUTE RULE',
                           'Ten Minute Rule');
    RegisterLegacySetting('contest.zoneMultiplier',      'ZONE MULTIPLIER',
                           'Zone Multiplier');
@@ -494,9 +494,9 @@ begin
                           'De Enable');
    RegisterStoredSetting('operating.ctrlj.digitalModeEnable', 'DIGITAL MODE ENABLE',
                           'Digital Mode Enable');
-   RegisterLegacySetting('operating.ctrlj.distanceMode',      'DISTANCE MODE',
+   RegisterStoredSetting('operating.ctrlj.distanceMode',      'DISTANCE MODE',
                           'Distance Mode');
-   RegisterLegacySetting('operating.ctrlj.dupeCheckSound',    'DUPE CHECK SOUND',
+   RegisterStoredSetting('operating.ctrlj.dupeCheckSound',    'DUPE CHECK SOUND',
                           'Dupe Check Sound');
    RegisterStoredSetting('operating.ctrlj.dupeSheetAutoReset','DUPE SHEET AUTO RESET',
                           'Dupe Sheet Auto Reset');
@@ -516,13 +516,13 @@ begin
                           'Log Sub Title');
    RegisterStoredSetting('operating.ctrlj.mainCallsign',      'MAIN CALLSIGN',
                           'Main Callsign');
-   RegisterLegacySetting('operating.ctrlj.mode',              'MODE',
+   RegisterStoredSetting('operating.ctrlj.mode',              'MODE',
                           'Mode');
    RegisterStoredSetting('operating.ctrlj.possibleCallAcceptKey','POSSIBLE CALL ACCEPT KEY',
                           'Possible Call Accept Key');
    RegisterStoredSetting('operating.ctrlj.possibleCallLeftKey','POSSIBLE CALL LEFT KEY',
                           'Possible Call Left Key');
-   RegisterLegacySetting('operating.ctrlj.possibleCallMode',  'POSSIBLE CALL MODE',
+   RegisterStoredSetting('operating.ctrlj.possibleCallMode',  'POSSIBLE CALL MODE',
                           'Possible Call Mode');
    RegisterStoredSetting('operating.ctrlj.possibleCallRightKey','POSSIBLE CALL RIGHT KEY',
                           'Possible Call Right Key');
@@ -576,11 +576,11 @@ begin
                           'Complete Callsign Mask');
    RegisterStoredSetting('appearance.ctrlj.contactsPerPage',  'CONTACTS PER PAGE',
                           'Contacts Per Page');
-   RegisterLegacySetting('appearance.ctrlj.hourDisplay',      'HOUR DISPLAY',
+   RegisterStoredSetting('appearance.ctrlj.hourDisplay',      'HOUR DISPLAY',
                           'Hour Display');
    RegisterStoredSetting('appearance.ctrlj.insertMode',       'INSERT MODE',
                           'Insert Mode');
-   RegisterLegacySetting('appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
+   RegisterStoredSetting('appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
                           'Rate Display');
    RegisterLegacySetting('appearance.ctrlj.reminder',         'REMINDER',
                           'Reminder');
@@ -590,7 +590,7 @@ begin
                           'Show Frequency In Log');
    RegisterStoredSetting('appearance.ctrlj.showTypedCallsign','SHOW TYPED CALLSIGN',
                           'Show Typed Callsign');
-   RegisterLegacySetting('appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
+   RegisterStoredSetting('appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
                           'User Info Shown');
    RegisterStoredSetting('appearance.layout.windowSize',       'WINDOW SIZE',
                           'Window Size');
@@ -632,7 +632,7 @@ begin
                           'Band Map Item Width');
    RegisterStoredSetting('bandmap.ctrlj.bandMapSize',         'BAND MAP SIZE',
                           'Band Map Size');
-   RegisterLegacySetting('bandmap.ctrlj.bandMapSplitMode',    'BAND MAP SPLIT MODE',
+   RegisterStoredSetting('bandmap.ctrlj.bandMapSplitMode',    'BAND MAP SPLIT MODE',
                           'Band Map Split Mode');
 
    // --- Network (2) ----------------------------------
@@ -644,7 +644,7 @@ begin
    // --- Voice/DVK (2) --------------------------------
    RegisterStoredSetting('voice.ctrlj.mp3RecorderBitrate',    'MP3 RECORDER BITRATE',
                           'Mp3 Recorder Bitrate');
-   RegisterLegacySetting('voice.ctrlj.mp3RecorderDuration',   'MP3 RECORDER DURATION',
+   RegisterStoredSetting('voice.ctrlj.mp3RecorderDuration',   'MP3 RECORDER DURATION',
                           'Mp3 Recorder Duration');
 
    // --- Advanced (2) ---------------------------------

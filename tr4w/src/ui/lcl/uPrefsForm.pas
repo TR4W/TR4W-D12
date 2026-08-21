@@ -2600,7 +2600,17 @@ begin
       // the fix: a row that cannot be edited cannot be saved either.
       //
       // Two kinds qualify: crJ 2/3 (Ctrl-J showed them read-only too), and
-      // ckList, whose spelling list cannot yet be offered as a drop-down.
+      // ctFreqList, which is genuinely MULTI-VALUED and gets an Edit... button
+      // below instead.
+      //
+      // ckList USED TO BE HERE and no longer is (2026-08-21).  Those rows have
+      // a fixed spelling list, CFGCommandAllowedValues now enumerates it, and
+      // they render as ordinary drop-downs.  What had kept them out was
+      // diagnosed as space-padded spellings; that was wrong -- not one of the
+      // 40 arrays is padded.  The real fault was case: the config loader
+      // uppercases the line and the matcher compared case-sensitively, so the
+      // six mixed-case spellings could be written and never read back.  Fixed
+      // in TF.GetValueFromArray.
       ro := (s.LegacyCommand <> '') and
             (CFGCommandIsReadOnly(s.LegacyCommand) or CFGCommandIsList(s.LegacyCommand));
 

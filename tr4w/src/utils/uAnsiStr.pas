@@ -43,6 +43,17 @@ interface
 
 function StrLen(const Str: PAnsiChar): Cardinal;
 function StrComp(const Str1, Str2: PAnsiChar): Integer;
+
+// Case-insensitive over ASCII A-Z only, DELIBERATELY.
+//
+// Its caller matches an operator's config value against a table of fixed
+// spellings, and the config loader has already uppercased the whole line
+// (LogCfg.pas, EnumerateLinesInFile with UpperCase = True).  A locale-aware
+// fold would be wrong here twice over: the spellings are program tokens, not
+// prose, and TR4W's non-English builds carry high-bit bytes whose case mapping
+// depends on a codepage this comparison must not depend on.
+function StrIComp(const Str1, Str2: PAnsiChar): Integer;
+
 function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;
 function StrPCopy(Dest: PAnsiChar; const Source: AnsiString): PAnsiChar;
 function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal): PAnsiChar;
@@ -84,6 +95,41 @@ begin
       end;
 
    Result := Integer(Byte(p1^)) - Integer(Byte(p2^));
+end;
+
+function StrIComp(const Str1, Str2: PAnsiChar): Integer;
+var
+   p1, p2: PAnsiChar;
+   b1, b2: Byte;
+begin
+   p1 := Str1;
+   p2 := Str2;
+
+   while True do
+      begin
+      b1 := Byte(p1^);
+      b2 := Byte(p2^);
+
+      // ASCII lowercase -> uppercase, and nothing else.  See the header.
+      if (b1 >= Ord('a')) and (b1 <= Ord('z')) then
+         begin
+         Dec(b1, 32);
+         end;
+      if (b2 >= Ord('a')) and (b2 <= Ord('z')) then
+         begin
+         Dec(b2, 32);
+         end;
+
+      if (b1 <> b2) or (b1 = 0) then
+         begin
+         Break;
+         end;
+
+      Inc(p1);
+      Inc(p2);
+      end;
+
+   Result := Integer(b1) - Integer(b2);
 end;
 
 function StrPos(const Str1, Str2: PAnsiChar): PAnsiChar;

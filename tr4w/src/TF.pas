@@ -122,7 +122,7 @@ procedure UnableToFindFileMessage(FileName: string);
 function DeleteSlashes(p: PAnsiChar): PAnsiChar;
 function SetParameterInArray(ArrayPtr: PInteger; ArrayLength: integer; aVar: PInteger; ValueToSet: integer): boolean;
 function GetGUID: string;
-function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; CMD: PAnsiChar): Byte;
+function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; const CMD: AnsiString): Byte;
 function StrPosPartial(const Str1, Str2: PAnsiChar): PAnsiChar;
 function GetDialogItemText(h: HWND; Control: integer): ShortString;
 function GetNumberFromCharBuffer(p: PAnsiChar): integer;
@@ -244,7 +244,7 @@ const
 
 implementation
 
-uses Log4D, uFreqTimeFormat, uStrSearch;   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr;   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former
 // MainUnit.logger borrow.  MainUnit was used for NOTHING ELSE here -- three
@@ -833,18 +833,39 @@ end;
 // StrPos removed (D12): callers use uAnsiStr.StrPos directly -- the
 // TF -> uStrSearch -> RTL forwarding was asm-eradication scaffolding, obsolete now.
 
-function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; CMD: PAnsiChar): Byte;
+function GetValueFromArray(PCharArrayAddress: PAnsiChar; ArraySize: Byte; const CMD: AnsiString): Byte;
 var
   b                                     : Byte;
   p                                     : Pointer;
 begin
-  CMD[Ord(CMD[0]) + 1] := #0;
+  // CMD IS A STRING, and used to be a PAnsiChar that this function indexed as
+  // if it were a ShortString: `CMD[Ord(CMD[0]) + 1] := #0` read a length byte
+  // out of a pointer type that has none, and WROTE a terminator back into the
+  // caller's buffer -- a side effect on an argument nothing declared as var.
+  // Every caller held a ShortString and passed its address.  Taking the value
+  // instead deletes the length-byte walk, the @CMD[1] offset, and the mutation.
   for b := 0 to ArraySize {- 1} do
      begin
      p := PCharArrayAddress + (b * 4);
      p := Pointer(p^);
  //    showmessage(p);
-     if StrComp(PAnsiChar(@CMD[1]), PAnsiChar(p)) = 0 then
+     // CASE-INSENSITIVE, and this is a FIX rather than a loosening.
+     //
+     // The config loader uppercases the whole line before it is split into key
+     // and value (LogCfg.pas ~601, EnumerateLinesInFile with UpperCase = True),
+     // while these tables hold the DISPLAY spelling.  Six of them are not all
+     // upper -- 'All', 'Yes', 'No', 'Indonesian Districts', 'NC QSO Party' --
+     // so a value that was written correctly came back as 'ALL' and matched
+     // nothing.  That is the whole of the SINGLE BAND SCORE incident of
+     // 2026-08-16: Preferences wrote `SINGLE BAND SCORE=All`, and every later
+     // start reported "Invalid statement in config file".
+     //
+     // Widening cannot reject anything that used to be accepted.  Checked
+     // across all 40 spelling arrays: folding case creates NO new ambiguity.
+     // (QSOPointMethodArray does contain two identical 'ONY' entries, so its
+     // second one is unreachable by name -- but that is true today and is not
+     // made worse here.)
+     if uAnsiStr.StrIComp(PAnsiChar(CMD), PAnsiChar(p)) = 0 then
         begin
         Result := b;
         Exit;
