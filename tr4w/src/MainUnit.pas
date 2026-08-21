@@ -1548,7 +1548,7 @@ begin
 
        begin
        // ExchangeHasBeenSent := False;
-       if GoodCallSyntax(CallWindowString) then
+       if IsAGoodCall(CallWindowString) then
           begin
           if not Send_DE then
              begin
@@ -4579,9 +4579,12 @@ begin
         TempCallstring := QuickEditResponse(TC_CURRENT_OPERATOR_CALLSIGN, 6);
         if length(TempCallstring) > 0 then
            begin
-           if IsValidUSPrefix(TempCallString) then
+           // A US-looking call is held to the stricter US form; anything else
+           // only has to be a good callsign. Same two tiers as before, with
+           // the regexes replaced by uCallSignRoutines -- see IsAGoodCall.
+           if IsAUSPrefix(TempCallString) then
               begin
-              if IsValidUSCallsign(TempCallString) then
+              if IsAGoodUSCall(TempCallString) then
                  begin
                  Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
                  SetMainWindowText(mweCurrentOperator, CurrentOperator);
@@ -4593,7 +4596,7 @@ begin
                  ShowMessage('Login call does not look like a callsign');
                  end;
               end
-           else if IsValidCallsign(TempCallString) then
+           else if IsAGoodCall(TempCallString) then
               begin
               Windows.CopyMemory(@CurrentOperator, @TempCallstring[1], 6);
               SetMainWindowText(mweCurrentOperator, CurrentOperator);
@@ -5750,7 +5753,7 @@ begin
      Exit;
      end;
 
-  if not GoodCallSyntax(RData.Callsign) then
+  if not IsAGoodCall(RData.Callsign) then
      begin
      TF.Format(QuickDisplayBuffer, TC_HASIMPROPERSYNTAX, @RData.Callsign[1]);
      QuickDisplay(QuickDisplayBuffer);

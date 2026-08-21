@@ -514,7 +514,7 @@ begin
      Exit;
      end;
   Call := GetDialogItemText(QTCRWindow, 300 + Item);
-  if not GoodCallSyntax(Call) then
+  if not IsAGoodCall(Call) then
      begin
      if Call <> '' then
         begin

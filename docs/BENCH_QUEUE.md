@@ -335,17 +335,18 @@ deploy into `target\`, which is yours).
   author's own machine. It could never have worked on a user's PC. Delete, or
   say what it was meant to do.
 
-### 14. Still open from the earlier sweep -- the judgement calls
+### 14. The judgement calls -- F5 is DECIDED
 
-**Blocks under 30 lines were left alone deliberately**, along with anything that
-looked like a DISABLED RULE rather than replaced code. Finding F5 is the standing
-example: `GoodCallSyntax`'s "no digit in positions 2-4" test has been commented
-out since 4.38.3, and deleting it would make that decision permanent and silent.
+**Blocks under 30 lines were left alone deliberately**, along with anything
+that looked like a DISABLED RULE rather than replaced code.
 
-- [ ] **Decide F5**: should `GoodCallSyntax` reject a letters-only string like
-  `FRED`? That is a callsign-routines decision with unit tests
-  (`uTestCallSignRoutines.Test_GoodCallSyntax_Rejects`), not an Edit QSO one.
-  Until it is answered the commented rule must stay where it is.
+**F5 is now answered by NY4I, 2026-08-21: the rule stays disabled.** The
+`//n4af 4.38.3` block in `GoodCallSyntax` -- "no digit in positions 2-4",
+plus the clause refusing a call that ends in a digit unless it is a
+five-character `B...` prefix -- has been DELETED rather than reinstated. So
+`GoodCallSyntax` deliberately accepts a letters-only string like `FRED`, and
+that is now a decision on the record instead of an accident of a comment.
+Nothing to bench; `uTestCallSignRoutines` still passes.
 
 ### 15. Launching other programs now goes through one unit  (`07c55fa4`)
 
@@ -515,7 +516,7 @@ The second symptom had a second cause: the "Save changes?" prompt lived inside
 `SaveQSOToEditableLog` and was never guarded by whether anything had changed. It
 has moved to the UI layer -- see F6.
 
-### F5 — a bad callsign is accepted on Save — **ANSWERED: not a dialog bug**
+### F5 — a bad callsign is accepted on Save — **CLOSED 2026-08-21: it is a feature**
 
 **Seen:** *"I entered callsign FRED and it accepted it."* NY4I's follow-up:
 *"I have no issue if this is a feature, but your test request of me in this file
@@ -558,6 +559,13 @@ Whether a letters-only string should be refused is a decision about
 Worth noting for the commented-code sweep: this block is not inert scaffolding,
 it is a **behaviour change hiding in a comment** since 4.38.3. Deleting it
 without deciding the question would quietly make the decision permanent.
+
+**DECIDED AND DONE (NY4I, 2026-08-21).** The commented `//n4af 4.38.3` block
+was DELETED, not reinstated -- so accepting `FRED` is the intended behaviour
+of `GoodCallSyntax`, on the record, rather than a rule that happened to be
+switched off in a comment since 4.38.3. The point this finding was making
+stands either way: the block had to be DECIDED, because deleting it blind
+would have settled the question without anyone noticing it was asked.
 
 ### F6 — Escape after a change does not prompt — **IMPLEMENTED as NEW behaviour**
 

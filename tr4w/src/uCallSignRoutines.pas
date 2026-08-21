@@ -72,7 +72,59 @@ function CaliforniaCall(Call: string): boolean;
 function RootCall(Call: string): string;
 function RoverCall(Call: string): boolean;
 function SimilarCall(Call1: string; Call2: string): boolean;
-function GoodCallSyntax(Call: string): boolean;
+// TRUE when this looks like a real callsign.
+//
+// RENAMED from GoodCallSyntax (NY4I, 2026-08-21) to match the house naming for
+// predicates, and it is now the ONE callsign validator in TR4W: the RX_CALLSIGN
+// regular expression in LOGSTUFF was retired in favour of it.
+//
+// MEASURED, not asserted (tr4w\test\bench\bench_callsign.dpr, over the 234,467
+// callsigns in ARRL's LOTW activity file):
+//
+//   IsAGoodCall              327 ns/call   accepted 234,466 of 234,467
+//   RX_CALLSIGN            1,367 ns/call   accepted 234,335
+//   a 725-branch ITU prefix regex  21,524 ns/call   accepted 203,101
+//
+// So this is four times faster than the pattern it replaced AND a strict
+// SUPERSET of it: of the 234,467, there are 131 that this accepts and
+// RX_CALLSIGN refused -- 3DA/G3SXW, 3DA0/ZS6BCR, 5JSTAYHOME, 5VDE,
+// 7L3DNX/1/QRP -- and NOT ONE that RX_CALLSIGN accepted and this refuses. The
+// regex was stricter in the wrong direction: DX prefix-portables, special-event
+// calls and double suffixes are exactly what a contest logger sees.
+//
+// The single call in that corpus this refuses is 2SZ, whose last activity was
+// 2014 and which matches no current callsign format. Deliberately still refused
+// (NY4I): "I am not changing it for one call that does not follow any standard."
+function IsAGoodCall(Call: string): boolean;
+
+// Does this callsign carry a US prefix -- A, W, K or N?  Together with
+// IsAGoodUSCall this is the two-tier test the operator-login field applies:
+// anything that LOOKS American is then held to the stricter US form.
+function IsAUSPrefix(const Call: string): boolean;
+
+// The strict US form: prefix letter, optional second letter, one digit, then
+// one to three letters.  W1AW, K5ZZ, KC2ABC, N0AX.
+//
+// OPEN QUESTION, DELIBERATELY NOT ANSWERED HERE (NY4I, 2026-08-21).  "US" is
+// not one idea, and this routine quietly picks one of them:
+//
+//   * By CALLSIGN FORM -- what this does. KL7 and KH6 have US prefix letters,
+//     so they answer True.
+//   * By DXCC ENTITY -- what CTY.DAT says. Alaska and Hawaii are their OWN
+//     entities, separate from the continental US.
+//   * By 50-STATE MEMBERSHIP -- what several contests actually mean, where AK
+//     and HI ARE states and count as such.
+//
+// Which one is right DEPENDS ON THE CONTEST, so it cannot be settled by a
+// callsign routine at all. The likely shape is a second predicate --
+// IsAGoodUSCall50State, or whatever the contest factory ends up calling it --
+// answering the states question from CTY.DAT rather than from letters. That
+// belongs with the contest factory; it is recorded here because THIS is the
+// routine somebody will reach for when they hit the question.
+//
+// Its one caller today is the operator-login field, which only wants "does
+// this look like a well-formed US call" -- so the ambiguity does not bite yet.
+function IsAGoodUSCall(const Call: string): boolean;
 function ValidCallCharacter(CallChar: Char): boolean;
 implementation
 uses uCTYDAT;
@@ -540,15 +592,20 @@ begin
   if (pos(Call1, Call2) = 0) and (pos(Call2, Call1) = 0) then Exit;
   SimilarCall := True;
 end;
-function GoodCallSyntax(Call: string): boolean;
+
+function IsAGoodCall(Call: string): boolean;
 { This function will look at the callsign passed to it and see if it
     looks like a real callsign.                                           }
 var
   CharacterPointer                      : integer;
 begin
-  GoodCallSyntax := False;
-  if length(Call) < 3 then Exit;
-  Call := UpperCase(Call);   // was uStrSearch.StrU(Call) (var ShortString); ASCII-uppercase, identical for callsigns
+  IsAGoodCall := False;
+  if length(Call) < 3 then 
+     begin
+     Exit;
+     end;
+     
+  Call := UpperCase(Call);   
   if not StringHasLetters(Call) then Exit;
   case length(Call) of
     8:
@@ -566,7 +623,7 @@ begin
   end;
   if Call = 'RAEM' then
      begin
-     GoodCallSyntax := True;
+     IsAGoodCall := True;
      Exit;
      end;
   for CharacterPointer := 1 to length(Call) do
@@ -576,7 +633,7 @@ begin
        begin
        if CharacterPointer = 1 then Exit;
        if CharacterPointer = length(Call) then Exit;
-       GoodCallSyntax := True;
+       IsAGoodCall := True;
        Exit;
        end;
   if (Call[1] <= '9') and (Call[2] <= '9') then Exit;
@@ -589,21 +646,74 @@ begin
         Exit;
         end;
      end ;
-  { //n4af 4.38.3
-  else
-    if
-      ((Call[2] < '0') or (Call[2] > '9')) and
-      ((Call[3] < '0') or (Call[3] > '9')) and
-      ((Call[4] < '0') or (Call[4] > '9')) then
-      Exit;
-  if Call[length(Call)] in ['0'..'9'] then
-  begin
-//    if (Call <> 'BP100') and (Call <> 'BV100')and (Call <> 'BM100') then Exit;
-    if ((length(Call) <> 5) and (Call[1] = 'B')) then Exit;
-  end;
-  }
-  GoodCallSyntax := True;
+  IsAGoodCall := True;
 end;
+function IsAUSPrefix(const Call: string): boolean;
+begin
+   // Replaces RX_US_PREFIX, '^[AaWaKkNn][a-zA-Z]?', WHICH CARRIED A TYPO: the
+   // character class has 'a' twice and NO lowercase 'w', so a lowercase w4ta
+   // failed this test, fell through to the general branch and silently skipped
+   // the strict US check below. Fixed here by asking the question directly.
+   Result := (Length(Call) >= 1) and (UpCase(Call[1]) in ['A', 'W', 'K', 'N']);
+end;
+
+function IsAGoodUSCall(const Call: string): boolean;
+var
+   i: integer;
+   digitAt: integer;
+begin
+   // RX_US_CALLSIGN was '^[AaWaKkNn][a-zA-Z]?[0-9][a-zA-Z]{1,3}$' -- one prefix
+   // letter, an optional second, one digit, then one to three letters. Written
+   // out because a four-times-faster hand test is worth more here than a
+   // pattern, and because the typo above lived in this one too.
+   Result := False;
+
+   // THREE, not four: '^[AWKN][a-zA-Z]?[0-9][a-zA-Z]{1,3}$' can match with the
+   // optional second prefix letter absent and a single-letter suffix -- W1A is
+   // a legal 1x1. Six is the other end: two prefix letters, a digit, three
+   // suffix letters.
+   if (Length(Call) < 3) or (Length(Call) > 6) then
+      begin
+      Exit;
+      end;
+
+   if not IsAUSPrefix(Call) then
+      begin
+      Exit;
+      end;
+
+   // The digit is at position 2 or 3 -- one or two prefix letters before it.
+   if (Call[2] >= '0') and (Call[2] <= '9') then
+      begin
+      digitAt := 2;
+      end
+   else if (Length(Call) >= 3) and (Call[3] >= '0') and (Call[3] <= '9') and
+           (UpCase(Call[2]) in ['A'..'Z']) then
+      begin
+      digitAt := 3;
+      end
+   else
+      begin
+      Exit;
+      end;
+
+   // One to three letters after it, and nothing else.
+   if (Length(Call) - digitAt < 1) or (Length(Call) - digitAt > 3) then
+      begin
+      Exit;
+      end;
+
+   for i := digitAt + 1 to Length(Call) do
+      begin
+      if not (UpCase(Call[i]) in ['A'..'Z']) then
+         begin
+         Exit;
+         end;
+      end;
+
+   Result := True;
+end;
+
 function ValidCallCharacter(CallChar: Char): boolean;
 begin
   Result := CallChar in ['/', '0'..'9', 'A'..'Z'];

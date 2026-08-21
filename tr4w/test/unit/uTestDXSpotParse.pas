@@ -432,7 +432,7 @@ var
    spot: TSpotRecord;
 begin
    BeginTest('Test_BadCallSyntaxRejected');
-   // The one validation the decoder does perform: GoodCallSyntax on the DX
+   // The one validation the decoder does perform: IsAGoodCall on the DX
    // call.  "12345" has no letters.
    CheckFalse(ParseDXSpotLine(BADCALL, spot), 'a call with no letters is rejected');
 end;
@@ -444,7 +444,7 @@ begin
    BeginTest('Test_TruncatedLineRejected');
    // REGRESSION PIN.  REAL: exactly one of the 198,979 captured lines is cut off
    // like this, a node dropping mid-write.  The call-scan loop never matches, so
-   // GoodCallSyntax -- the only validation there is -- was never reached, and
+   // IsAGoodCall -- the only validation there is -- was never reached, and
    // the decoder used to report SUCCESS.  ProcessDX would then dupe-check,
    // band-map and display a spot with an empty callsign and a zero frequency.
    CheckFalse(ParseDXSpotLine(TRUNC, spot), 'a line with no call is not a spot');

@@ -1430,7 +1430,7 @@ begin
          Result := TempRXData.QTHString;
      end;
 
-     if GoodCallSyntax(Result) then
+     if IsAGoodCall(Result) then
         begin
         Break
         end
@@ -1450,7 +1450,7 @@ begin
       if i > 0 then
       begin
         Result[0] := CHR(i);
-        if GoodCallSyntax(Result) then Break else
+        if IsAGoodCall(Result) then Break else
         //Result := '';
           Windows.ZeroMemory(@Result, SizeOf(Result));
       end;
@@ -2331,7 +2331,7 @@ begin
 
   { InitialExchangePutUp := False; }
   InitialExchangeEntry := ' ';
-  if not GoodCallSyntax(Call) then
+  if not IsAGoodCall(Call) then
      begin
      Exit;
      end;

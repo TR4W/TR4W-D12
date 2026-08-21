@@ -1140,7 +1140,7 @@ uses
    uRotatorBase,        // UsesSerialPort / PreferredBaudRate -- asked, not assumed
    uRotatorControl,     // rebuild the live rotators when the library is saved
    uRotatorRegistry,    // the rotator type list comes from the registry
-   uCallSignRoutines,   // GoodCallSyntax -- the MY CALL sanity check
+   uCallSignRoutines,   // IsAGoodCall -- the MY CALL sanity check
    uBandPlanForm,       // ShowBandPlan -- the two ctFreqList rows' Edit button.
                         // Direct, not via uBMCF: that unit is the seam for the
                         // Win32 caller (uOption) and drags VC/TF/Tree/LogWind
@@ -5718,23 +5718,23 @@ begin
    // A CALLSIGN THAT DOES NOT LOOK LIKE ONE IS QUERIED, NOT REFUSED (NY4I: "if
    // it looks wrong ask the user to confirm... but accept it if they confirm").
    //
-   // Refusing outright would be worse than useless.  GoodCallSyntax is a syntax
+   // Refusing outright would be worse than useless.  IsAGoodCall is a syntax
    // heuristic and real operators hold calls it will not love -- special event
    // calls, unusual prefixes, /MM.  A settings screen that will not accept the
    // operator's own callsign is a bug however good the checker is.  So the
    // check exists to catch a TYPO, and confirming means it is taken as typed.
    //
-   // GoodCallSyntax, NOT LooksLikeACallSign.  They answer different questions.
+   // IsAGoodCall, NOT LooksLikeACallSign.  They answer different questions.
    // LooksLikeACallSign asks "is this token in a RECEIVED EXCHANGE probably a
    // call", so it deliberately tolerates partials -- and it reads the global
-   // `contest` for a PCC special case.  GoodCallSyntax asks "is this a
+   // `contest` for a PCC special case.  IsAGoodCall asks "is this a
    // well-formed callsign", which is what a settings field is asking, and it is
    // already extracted into uCallSignRoutines and already unit-tested.
    //
-   // Blank is NOT queried: GoodCallSyntax('') is False, so checking it would
+   // Blank is NOT queried: IsAGoodCall('') is False, so checking it would
    // nag every time the operator cleared the field.
    callText := Trim(edtMyCall.Text);
-   if (callText <> '') and (not GoodCallSyntax(callText)) then
+   if (callText <> '') and (not IsAGoodCall(callText)) then
       begin
       if MessageDlg(Format('"%s" does not look like a regular callsign.' + sLineBreak +
                            sLineBreak + 'Use it anyway?', [callText]),

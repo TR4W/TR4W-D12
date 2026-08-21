@@ -426,7 +426,7 @@ begin
 
      Call := RemoveFirstString(InputString);
 
-     if not GoodCallSyntax(Call) then Exit;
+     if not IsAGoodCall(Call) then Exit;
 
      TimeString := RemoveLastString(InputString);
 
@@ -481,7 +481,7 @@ begin
 
      Notes := InputString;
 
-     if not GoodCallSyntax(Call) then Exit;
+     if not IsAGoodCall(Call) then Exit;
 
      if not StringHas(FrequencyString, '.') then Exit;
 
@@ -576,7 +576,7 @@ begin
 
      Notes := InputString;
 
-     if not GoodCallSyntax(Call) then Exit;
+     if not IsAGoodCall(Call) then Exit;
 
      if not StringHas(FrequencyString, '.') then Exit;
 
@@ -665,7 +665,7 @@ begin
 
      Notes := InputString;
 
-     if not GoodCallSyntax(Call) then Exit;
+     if not IsAGoodCall(Call) then Exit;
 
      if not StringHas(FrequencyString, '.') then Exit;
 

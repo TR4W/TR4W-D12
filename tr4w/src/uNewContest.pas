@@ -643,7 +643,7 @@ begin
      res := False;
      end;
   Call[0] := AnsiChar(i);
-  if not GoodCallSyntax(Call) then
+  if not IsAGoodCall(Call) then
      begin
      res := False;
      end;

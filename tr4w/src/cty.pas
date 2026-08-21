@@ -49,7 +49,7 @@ function ctyGetCountryIdByIndex(Country: Word): DXMultiplierString;
 function GetPrefix(Call: CallString): PrefixString;
 function ctyGetTotalCountries: integer;
 function ctyGetVersion: PAnsiChar;
-function GoodCallSyntax(Call: CallString): boolean;
+function IsAGoodCall(Call: CallString): boolean;
 function ctyGetContinentByIndex(Country: Word): ContinentType;
 function ctyGetCountryIdPchar(Index: Word): PAnsiChar;
 procedure ctySetCountryMode(CountryMode: CountryModeType);
@@ -79,7 +79,7 @@ function ctyGetCountryIdByIndex; external ctydll Name 'ctyGetCountryIdByIndex';
 function GetPrefix; external ctydll Name 'GetPrefix';
 function ctyGetTotalCountries; external ctydll Name 'ctyGetTotalCountries';
 function ctyGetVersion; external ctydll Name 'ctyGetVersion';
-function GoodCallSyntax; external ctydll Name 'GoodCallSyntax';
+function IsAGoodCall; external ctydll Name 'IsAGoodCall';
 function ctyGetContinentByIndex; external ctydll Name 'ctyGetContinentByIndex';
 function ctyGetCountryIdPchar; external ctydll Name 'ctyGetCountryIdPchar';
 

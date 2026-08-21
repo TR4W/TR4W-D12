@@ -122,7 +122,7 @@ begin
 
   if QTCCallsign = '' then Exit;
 
-  if not GoodCallSyntax(QTCCallsign) then
+  if not IsAGoodCall(QTCCallsign) then
      begin
      DoABeep(Warning);
      QuickDisplay(TC_INVALIDCALLSIGNINCALLWINDOW);

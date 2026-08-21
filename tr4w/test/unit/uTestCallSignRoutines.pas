@@ -37,8 +37,11 @@ type
       procedure Test_GetFirstSuffixLetter;
       procedure Test_GetPrefix;
       procedure Test_GetPrefix_Portable;
-      procedure Test_GoodCallSyntax_Valid;
-      procedure Test_GoodCallSyntax_Rejects;
+      procedure Test_IsAGoodCall_Valid;
+      procedure Test_IsAGoodCall_Rejects;
+      procedure Test_IsAGoodCall_RealCorpus;
+      procedure Test_IsAUSPrefix;
+      procedure Test_IsAGoodUSCall;
       procedure Test_RoverAndMobile;
       procedure Test_RootCall_Simple;
       procedure Test_CountryPredicates;
@@ -49,6 +52,7 @@ type
 implementation
 
 uses
+   Classes, SysUtils,   // the corpus fixture: TStringList, FileExists
    VC, uCallSignRoutines;
 
 procedure TCallSignRoutinesTests.CheckNum(const Call: string; Expected: Char; const Ctx: string);
@@ -125,32 +129,140 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-// GoodCallSyntax: accepts real-looking calls.
+// IsAGoodCall: accepts real-looking calls.
 // ---------------------------------------------------------------------------
-procedure TCallSignRoutinesTests.Test_GoodCallSyntax_Valid;
+procedure TCallSignRoutinesTests.Test_IsAGoodCall_Valid;
 begin
-   BeginTest('Test_GoodCallSyntax_Valid');
-   CheckTrue(GoodCallSyntax('W1AW'),   'W1AW valid');
-   CheckTrue(GoodCallSyntax('K5ZZ'),   'K5ZZ valid');
-   CheckTrue(GoodCallSyntax('DL1ABC'), 'DL1ABC valid');
-   CheckTrue(GoodCallSyntax('W1AW/7'), 'W1AW/7 (portable) valid');
+   BeginTest('Test_IsAGoodCall_Valid');
+   CheckTrue(IsAGoodCall('W1AW'),   'W1AW valid');
+   CheckTrue(IsAGoodCall('K5ZZ'),   'K5ZZ valid');
+   CheckTrue(IsAGoodCall('DL1ABC'), 'DL1ABC valid');
+   CheckTrue(IsAGoodCall('W1AW/7'), 'W1AW/7 (portable) valid');
 end;
 
 // ---------------------------------------------------------------------------
-// GoodCallSyntax: rejects malformed input.
+// IsAGoodCall: rejects malformed input.
 // ---------------------------------------------------------------------------
-procedure TCallSignRoutinesTests.Test_GoodCallSyntax_Rejects;
+procedure TCallSignRoutinesTests.Test_IsAGoodCall_Rejects;
 begin
-   BeginTest('Test_GoodCallSyntax_Rejects');
-   CheckFalse(GoodCallSyntax('AB'),  'too short (<3)');
-   CheckFalse(GoodCallSyntax('12A'), 'two leading digits');
-   CheckFalse(GoodCallSyntax('ABC'), 'no digit, 3 letters');
-   CheckFalse(GoodCallSyntax('333'), 'no letters');
+   BeginTest('Test_IsAGoodCall_Rejects');
+   CheckFalse(IsAGoodCall('AB'),  'too short (<3)');
+   CheckFalse(IsAGoodCall('12A'), 'two leading digits');
+   CheckFalse(IsAGoodCall('ABC'), 'no digit, 3 letters');
+   CheckFalse(IsAGoodCall('333'), 'no letters');
 end;
 
 // ---------------------------------------------------------------------------
 // RoverCall / MobileCall: trailing /R and /M.
 // ---------------------------------------------------------------------------
+// EVERY CALLSIGN IN THE FIXTURE MUST BE ACCEPTED.
+//
+// The fixture is 254 REAL callsigns sampled by SHAPE out of the 234,467 in
+// ARRL's LOTW user-activity file -- prefix-portables, double suffixes, /P /M
+// /QRP, area-number suffixes, digit-first prefixes, nine-character calls and
+// three-character calls. Hand-written examples do not reach those shapes, and
+// they are precisely where a validator goes wrong: the RX_CALLSIGN regular
+// expression this routine replaced refused 131 of the 234,467, all of them
+// legitimate (3DA/G3SXW, 5JSTAYHOME, 7L3DNX/1/QRP).
+//
+// A failure here means IsAGoodCall has started refusing a callsign that a real
+// operator really holds -- which in a contest is a QSO the operator cannot log.
+procedure TCallSignRoutinesTests.Test_IsAGoodCall_RealCorpus;
+var
+   fixture: TStringList;
+   path, call: string;
+   i, checked: integer;
+begin
+   BeginTest('Test_IsAGoodCall_RealCorpus');
+
+   // Relative to the EXECUTABLE, not the working directory -- the convention
+   // every fixture-using suite here follows.
+   path := ExtractFilePath(ParamStr(0)) + 'fixtures\callsigns_lotw_sample.txt';
+
+   if not FileExists(path) then
+      begin
+      CheckTrue(False, 'fixture not found: ' + path);
+      Exit;
+      end;
+
+   checked := 0;
+   fixture := TStringList.Create;
+   try
+      fixture.LoadFromFile(path);
+      for i := 0 to fixture.Count - 1 do
+         begin
+         call := Trim(fixture[i]);
+         if (call = '') or (call[1] = '#') then
+            begin
+            Continue;
+            end;
+         CheckTrue(IsAGoodCall(call), 'real callsign refused: ' + call);
+         Inc(checked);
+         end;
+   finally
+      fixture.Free;
+   end;
+
+   // A fixture that silently became empty would pass every assertion above.
+   CheckTrue(checked > 200, 'fixture should hold 200+ callsigns, saw ' + IntToStr(checked));
+end;
+
+// IsAUSPrefix -- "does this START American", deliberately NOT anchored at the
+// end, so a US call with any suffix still answers yes.
+procedure TCallSignRoutinesTests.Test_IsAUSPrefix;
+begin
+   BeginTest('Test_IsAUSPrefix');
+
+   CheckTrue(IsAUSPrefix('W1AW'),  'W');
+   CheckTrue(IsAUSPrefix('K1TTT'), 'K');
+   CheckTrue(IsAUSPrefix('N6TR'),  'N');
+   CheckTrue(IsAUSPrefix('AA1K'),  'A');
+   CheckTrue(IsAUSPrefix('NY4I'),  'NY4I');
+
+   // NOT anchored: a suffix does not stop it being a US call.
+   CheckTrue(IsAUSPrefix('W1AW/KH6'), 'US call with a suffix is still US');
+
+   // LOWER CASE W NOW ANSWERS YES, AND THAT IS THE POINT OF THE REWRITE.
+   // The regex this replaced was '^[AaWaKkNn][a-zA-Z]?' -- 'a' twice and NO
+   // lowercase 'w' -- so w1aw fell through to the general branch and silently
+   // skipped the strict US check. The old suite pinned that typo as expected
+   // behaviour, which is why it survived.
+   CheckTrue(IsAUSPrefix('a1aw'),  'lower case a');
+   CheckTrue(IsAUSPrefix('k1ttt'), 'lower case k');
+   CheckTrue(IsAUSPrefix('n6tr'),  'lower case n');
+   CheckTrue(IsAUSPrefix('w1aw'),  'lower case w -- was a typo in the old regex');
+
+   CheckFalse(IsAUSPrefix('DL1ABC'), 'German');
+   CheckFalse(IsAUSPrefix('G3XYZ'),  'British');
+   CheckFalse(IsAUSPrefix('1A0KM'),  'leading digit');
+   CheckFalse(IsAUSPrefix(''),       'empty');
+end;
+
+// IsAGoodUSCall -- the whole string must be a well-formed US call.
+procedure TCallSignRoutinesTests.Test_IsAGoodUSCall;
+begin
+   BeginTest('Test_IsAGoodUSCall');
+
+   CheckTrue(IsAGoodUSCall('W1AW'),   '1x2');
+   CheckTrue(IsAGoodUSCall('K1TTT'),  '1x3');
+   CheckTrue(IsAGoodUSCall('NY4I'),   '2x1');
+   CheckTrue(IsAGoodUSCall('AA1K'),   '2x1, double-letter prefix');
+   CheckTrue(IsAGoodUSCall('N6TR'),   '1x2');
+   CheckTrue(IsAGoodUSCall('KC2ABC'), '2x3, the longest legal form');
+   CheckTrue(IsAGoodUSCall('W1A'),    '1x1, the shortest legal form');
+
+   CheckFalse(IsAGoodUSCall('DL1ABC'),  'not a US prefix');
+   CheckFalse(IsAGoodUSCall('W1AWXYZ'), 'suffix too long');
+   CheckFalse(IsAGoodUSCall('W1'),      'no suffix at all');
+   CheckFalse(IsAGoodUSCall('W1AW/KH6'), 'ANCHORED: a suffix is not a bare US call');
+   // WW1AAW is a legal 2x3 and the first draft of this test wrongly asserted
+   // otherwise -- the regex it replaced accepted it too.
+   CheckTrue(IsAGoodUSCall('WW1AAW'), '2x3 with a two-letter prefix');
+   CheckFalse(IsAGoodUSCall('WWAAW'),  'no digit at all');
+   CheckFalse(IsAGoodUSCall('W12AB'),  'two digits where one belongs');
+   CheckFalse(IsAGoodUSCall(''),        'empty');
+end;
+
 procedure TCallSignRoutinesTests.Test_RoverAndMobile;
 begin
    BeginTest('Test_RoverAndMobile');
@@ -228,8 +340,11 @@ begin
    Test_GetFirstSuffixLetter;
    Test_GetPrefix;
    Test_GetPrefix_Portable;
-   Test_GoodCallSyntax_Valid;
-   Test_GoodCallSyntax_Rejects;
+   Test_IsAGoodCall_Valid;
+   Test_IsAGoodCall_Rejects;
+   Test_IsAGoodCall_RealCorpus;
+   Test_IsAUSPrefix;
+   Test_IsAGoodUSCall;
    Test_RoverAndMobile;
    Test_RootCall_Simple;
    Test_CountryPredicates;

@@ -76,7 +76,7 @@ uses
 
 // Decode a complete cluster line.  Returns False -- leaving Spot partly filled
 // and NOT usable -- when the line does not decode: an absurd frequency, no DX
-// call in the call columns at all, or a DX call that fails GoodCallSyntax.
+// call in the call columns at all, or a DX call that fails IsAGoodCall.
 //
 // Fills FFrequency, FFreqString, FCall, FSourceCall, FNotes and FQSXFrequency.
 // FBand/FMode are left NoBand/NoMode: the band-map band/mode mapping is a
@@ -176,7 +176,7 @@ uses
    Windows,
    SysUtils,            // LowerCase -- the RTL, not a TF shim
    uBandLookup,         // CalculateBandMode -- tree.pas forwards to this unit
-   uCallSignRoutines;   // GoodCallSyntax
+   uCallSignRoutines;   // IsAGoodCall
 
 const
    // The token, in one place.  Lower case because the test lower-cases the line
@@ -1019,7 +1019,7 @@ begin
          SetLength(Spot.FCall, i - (DX + 25 + Offset));
          Windows.lstrcpynA(@Spot.FCall[1], @LineBuf[DX + 26 + Offset],
                            i - (DX + 24 + Offset));
-         if not GoodCallSyntax(Spot.FCall) then
+         if not IsAGoodCall(Spot.FCall) then
             begin
             Exit;
             end;
@@ -1029,7 +1029,7 @@ begin
       end;
 
    // FIXED: a line cut off before the call columns used to be reported as a
-   // SUCCESSFUL decode.  The loop above simply never matched, so GoodCallSyntax
+   // SUCCESSFUL decode.  The loop above simply never matched, so IsAGoodCall
    // -- the only validation there is -- was never reached, and the caller went
    // on to dupe-check, band-map and display a spot with an empty callsign and a
    // zero frequency.  One line in the 198,979 captured is truncated like that

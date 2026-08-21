@@ -452,7 +452,7 @@ begin
   Windows.ZeroMemory(@EditableQSORXData.Callsign, SizeOf(CallString));
   EditableQSORXData.Callsign := EditQSOGetText(FLD_CALLSIGN);
 
-  if not GoodCallSyntax(EditableQSORXData.Callsign) then
+  if not IsAGoodCall(EditableQSORXData.Callsign) then
      begin
      showwarning(TC_CHECKCALLSIGN);
      Result := False;

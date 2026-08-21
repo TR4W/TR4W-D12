@@ -126,6 +126,7 @@ uses
   , utils_file // For tWriteFile
   , LOGSUBS2 // For LogContact
   , LogStuff // For CalculateQSOPoints
+  , uCallSignRoutines   // IsAGoodCall -- was LogStuff's IsValidCallsign regex
   , LogEdit // For ShowStationInformation and DetermineIfNewMult and DetermineIfNewDomesticMult
   , LOGWIND // for GetBandMapBandModeFromFrequency
   , TF // for SetMainWindowText
@@ -554,7 +555,7 @@ begin
                           begin
                           if not foundCall then
                              begin
-                             if IsValidCallsign(slCQMessage[i]) then
+                             if IsAGoodCall(slCQMessage[i]) then
                                 begin
                                 foundCall := true;
                                // CallIndex := i;

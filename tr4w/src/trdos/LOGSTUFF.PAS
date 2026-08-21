@@ -629,11 +629,7 @@ function GetSentRSTFromExchangeString(var ExchangeString: OpenString {Str40}):
 
 procedure IncrementQTCCount(Call: CallString);
 function IsValidPOTAPark(const park: string): boolean;
-function IsValidCallsign(const callsign: string): boolean;
 function IsValidGUID(const guid: string): boolean;
-function IsValidUSCallsign(const callsign: string): boolean;
-function IsValidUSPrefix(const callsign: string): boolean;
-
 function KeyRecentlyPressed(Key: Char; MaxElaspedSec100: LONGINT): boolean;
 procedure KeyStamp(Key: Char);
 
@@ -1452,7 +1448,7 @@ begin
          if Cardinal(ParserArray.paStatus) = Cardinal(exNMNU) then
             begin
             RXData.Age := ParserArray.paElements[0].prInteger;
-            if not GoodCallSyntax(ParserArray.paElements[1].prString) then
+            if not IsAGoodCall(ParserArray.paElements[1].prString) then
                begin
                Exit;
                end;
@@ -1474,7 +1470,7 @@ begin
                Exit;
                end;
             RXData.Age := ParserArray.paElements[1].prInteger;
-            if not GoodCallSyntax(ParserArray.paElements[2].prString) then
+            if not IsAGoodCall(ParserArray.paElements[2].prString) then
                begin
                Exit;
                end;
@@ -10529,9 +10525,6 @@ const
   // both; the expanded form is the one both engines agree on.
   RX_GUID        = '^[{]?[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?' +
                    '[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}[}]?$';
-  RX_US_PREFIX   = '^[AaWaKkNn][a-zA-Z]?';
-  RX_US_CALLSIGN = '^[AaWaKkNn][a-zA-Z]?[0-9][a-zA-Z]{1,3}$';
-  RX_CALLSIGN    = '^(?:\w{1,2}\d\/|\d\w\/|\w{1,2}\/)?\w+[0-9]+\w+\/?\w*\s*$';
   RX_POTA_PARK   = '^([A-Za-z]{2})-(\d{4,5})$';
 
 function IsValidGUID(const guid: string): boolean;
@@ -10541,39 +10534,6 @@ begin
   if Result then
      begin
      logger.debug('%s is a valid GUID', [guid]);
-     end;
-end;
-
-function IsValidUSPrefix(const callsign: string): boolean;
-begin
-  logger.debug('Checking if %s is a valid US prefix', [callsign]);
-  Result := RegexMatches(RX_US_PREFIX, callsign);
-  if Result then
-     begin
-     logger.debug('%s is a valid US prefix', [callsign]);
-     end;
-end;
-
-function IsValidUSCallsign(const callsign: string): boolean;
-begin
-  logger.debug('Checking if %s is a valid US call', [callsign]);
-  Result := RegexMatches(RX_US_CALLSIGN, callsign);
-  if Result then
-     begin
-     logger.debug('%s is a valid US call', [callsign]);
-     end;
-end;
-
-// Originally from https://regular-expressions.mobi/delphi.html?wlr=1 via
-// TPerlRegEx; the engine now comes from uRegex so FPC can link it too.
-
-function IsValidCallsign(const callsign: string): boolean;
-begin
-  logger.debug('Checking if %s is a valid call', [callsign]);
-  Result := RegexMatches(RX_CALLSIGN, callsign);
-  if Result then
-     begin
-     logger.debug('%s is a valid call', [callsign]);
      end;
 end;
 
