@@ -164,6 +164,8 @@ var
 
 implementation
 uses
+  uPlatformProcess,   // RunWindowsUtility -- the only launcher
+  SysUtils,           // Format -- the RTL one, not TF's buffer shim
   LogEdit,
   uFileView,
   MainUnit;
@@ -193,14 +195,18 @@ begin
 
 //        if TR4W_MMTTYPATH[0] = #0 then SetCommand('MMTTY ENGINE');
 
-        TF.Format(wsprintfBuffer, '"%s" -t -s -u -r', TR4W_MMTTYPATH);
+        // MMTTY is a Windows program and out-of-process, so it stays on the
+        // Windows-utility route rather than pretending to be portable. The
+        // path is quoted because this IS a command line -- the one shape
+        // RunProgram's argument list cannot express.
 {
 -t FFT spectrum, Waterfall, and XY scope are displayed.
 -s Control menus are displayed in addition to the above components.
 -u Control buttons are displayed.
 -r Control menus are also displayed in addition to the above components.
 }
-        WinExec(wsprintfBuffer, SW_SHOW);
+        RunWindowsUtility(SysUtils.Format('"%s" -t -s -u -r',
+                                          [string(PAnsiChar(TR4W_MMTTYPATH))]));
 {
         if WinExec(wsprintfBuffer, SW_SHOW) < 31 then
         begin

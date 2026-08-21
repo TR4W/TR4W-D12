@@ -160,6 +160,7 @@ uses
   utils_hw in 'src\utils\utils_hw.pas',
   uAnsiStr in 'src\utils\uAnsiStr.pas',
   uFileText in 'src\utils\uFileText.pas',
+  uPlatformProcess in 'src\utils\uPlatformProcess.pas',
   uRegex in 'src\utils\uRegex.pas',
   uWin32Compat in 'src\utils\uWin32Compat.pas',
   uHostedFormWindows in 'src\utils\uHostedFormWindows.pas',

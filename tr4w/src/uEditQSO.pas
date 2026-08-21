@@ -131,6 +131,7 @@ var
 
 implementation
 uses
+   uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
   SysUtils,         // SystemTimeToDateTime / DateTimeToSystemTime
   MainUnit,
   uLogEdit,
@@ -372,9 +373,10 @@ begin
       Exit;
       end;
 
-   TF.Format(wsprintfBuffer, '"%s" "%s"', Config.MP3Player,
-     DeleteSlashes(MakeMP3Filename(@EditableQSORXData)));
-   Windows.WinExec(wsprintfBuffer, SW_SHOWNORMAL);
+   // The operator's own player, with the file as an ARGUMENT rather than
+   // pasted into a command line -- see uPlatformProcess on quoting.
+   RunProgram(string(PAnsiChar(@Config.MP3Player[1])),
+              [string(PAnsiChar(DeleteSlashes(MakeMP3Filename(@EditableQSORXData))))]);
 end;
 
 procedure AfterEditQSOClosed;

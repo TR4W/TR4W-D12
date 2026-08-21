@@ -218,6 +218,9 @@ var
   scFileName                            : ShortString;
 implementation
 
+uses
+   uPlatformProcess;   // RunProgram / RunWindowsUtility -- the only launchers
+
 function FoundCommand(var SendString: Str160): boolean;
 
 var
@@ -369,7 +372,7 @@ end;
 procedure scWINEXEC;
 begin
    logger.Info('[scWINEXEC] Calling WinExec with %s',[scFileName]);
-   if Windows.WinExec(@scFileName[1], SW_SHOWMINIMIZED) < 31 then
+   if not RunWindowsUtility(string(PAnsiChar(@scFileName[1])), lwMinimised) then
       begin
       ShowSysErrorMessage('WINEXEC');
       end;

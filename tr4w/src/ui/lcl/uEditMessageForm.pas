@@ -108,6 +108,7 @@ implementation
 {$R *.lfm}
 
 uses
+   uPlatformProcess,   // RunProgram / RunWindowsUtility -- the only launchers
   Windows,
   VC,             // RC_*, TC_*, MesWindow / OtherMsgWin, TR4W_CFG_FILENAME
   TF,             // Format, YesOrNo
@@ -319,8 +320,7 @@ begin
          end;
       end;
 
-   TF.Format(cmd, '"%s" "%s"', Config.DVKRecorder, PAnsiChar(path));
-   WinExec(cmd, SW_SHOWNORMAL);
+   RunProgram(string(PAnsiChar(@Config.DVKRecorder[1])), [path]);
 end;
 
 procedure TfrmEditMessage.SaveToConfig;

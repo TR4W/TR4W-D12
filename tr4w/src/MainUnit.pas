@@ -32,6 +32,7 @@ uses
   uConfigValues,   // Config.CodeSpeedIncrement
   ShellAPI,
   LCLIntf,             // OpenURL / OpenDocument -- the cross-platform launchers
+  uPlatformProcess,    // RunProgram / RunWindowsUtility -- the only launchers
   Logstuff,
   uADIF,
   uMenu,
@@ -4380,7 +4381,7 @@ begin
     // menu_lc:
     // tDialogBox(56, @LCDlgProc);
 
-    item_calculator: WinExec('calc.exe', SW_SHOW);
+    item_calculator: RunWindowsUtility('calc.exe');
 
     menu_reset_radio_ports:
       begin
@@ -4413,14 +4414,16 @@ begin
 
     menu_pingserver:
       begin
-        TF.Format(wsprintfBuffer, 'ping %s -w 2000 -n 10', @ServerAddress[1]);
-        WinExec(wsprintfBuffer, SW_SHOW);
+        // Windows ping: -w and -n are its spelling of timeout and count.
+        RunWindowsUtility(SysUtils.Format('ping %s -w 2000 -n 10',
+                                          [string(PAnsiChar(@ServerAddress[1]))]));
       end;
 
     menu_runserver:
       begin
-        TF.Format(wsprintfBuffer, '%sserver\tr4wserver.exe', TR4W_PATH_NAME);
-        WinExec(wsprintfBuffer, SW_NORMAL);
+        // OUR program, so RunProgram -- it is meaningful on every platform
+        // and needs no Windows guard.
+        RunProgram(string(TR4W_PATH_NAME) + 'server\tr4wserver.exe', []);
       end;
 
     menu_windowsmanager:
@@ -4437,8 +4440,8 @@ begin
         FrmSetFocus;
       end;
 
-    menu_volume_control: WinExec('SNDVOL32.EXE', SW_SHOWNORMAL);
-    menu_recording_control: WinExec('SNDVOL32.EXE -r', SW_SHOWNORMAL);
+    menu_volume_control: RunWindowsUtility('SNDVOL32.EXE');
+    menu_recording_control: RunWindowsUtility('SNDVOL32.EXE -r');
     // menu_soundrecorder: WinExec('SNDREC32.EXE', SW_SHOWNORMAL);
 
     menu_cabrillo: OpenStationInformationWindow(integer(@CreateCabrilloFile));
@@ -4689,7 +4692,7 @@ begin
 
     menu_run_devicemanager:
       // tEnumeratePorts;
-      WinExec('rundll32.exe devmgr.dll, DeviceManager_Execute', SW_SHOWNORMAL);
+      RunWindowsUtility('rundll32.exe devmgr.dll, DeviceManager_Execute');
 
     menu_ctrl_execute_config: // 4.67.5
       begin
@@ -6412,9 +6415,8 @@ end;
 
 procedure TimeApplet(i: Cardinal);
 begin
-  TF.Format(TempBuffer2,
-    'rundll32.exe shell32.dll,Control_RunDLL timedate.cpl,,%u', i);
-  WinExec(TempBuffer2, SW_SHOWNORMAL);
+  RunWindowsUtility(SysUtils.Format(
+    'rundll32.exe shell32.dll,Control_RunDLL timedate.cpl,,%u', [i]));
 end;
 
 procedure LoadinLog;
@@ -8236,7 +8238,7 @@ begin
     'CATLEGACY']) of
     0: ProcessMenu(menu_adif);
     1: ProcessMenu(menu_cabrillo);
-    2: WinExec('cmd.exe', SW_SHOW);
+    2: RunWindowsUtility('cmd.exe');
     3: ProcessMenu(menu_colors);
     4:
       // TODO: candidate for LogCW.SetCWState(False, ...) once the 'CW Off'/'CW On'
@@ -8985,8 +8987,7 @@ begin
      TempPchar := 'explorer %s';
      end;
 
-  TF.Format(wsprintfBuffer, TempPchar, Command);
-  WinExec(wsprintfBuffer, SW_SHOW);
+  RunWindowsUtility(SysUtils.Format(string(TempPchar), [string(Command)]));
 end;
 
 const
@@ -9020,21 +9021,18 @@ begin
      begin
      if editor[0] <> #0 then
         begin
-        // The file path may contain spaces, so pass it as a quoted argument.
-        TF.Format(cmdBuf, '"%s"', FileName);
-        if ShellExecuteA(0, nil, editor, cmdBuf, nil,
-              SW_SHOWNORMAL) > 32 then
-           begin
-           launched := True;
-           end;
+        // NO QUOTING. RunProgram passes arguments as a LIST, so a path with
+        // a space in it needs no quotes -- and hand-quoting was the bug this
+        // line was written to avoid.
+        launched := RunProgram(string(PAnsiChar(@editor[0])),
+                               [string(FileName)]);
         end;
      end;
 
   if not launched then
      begin
-     // Fallback: Notepad, opened in a normal (non-maximized) window.
-     TF.Format(cmdBuf, 'Notepad %s', FileName);
-     WinExec(cmdBuf, SW_SHOWNORMAL);
+     // Fallback: Notepad. Windows-only by name, hence the utility route.
+     RunWindowsUtility(SysUtils.Format('Notepad %s', [string(FileName)]));
      end;
 end;
 
