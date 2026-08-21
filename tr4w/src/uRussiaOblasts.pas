@@ -521,62 +521,6 @@ begin
        end;
 
 end;
-{
-function GetRegion(Callsign: CallString): RegionType;
-var
-  TwoChars                              : Str2;
-begin
-  Result := rtUnknownRegion;
-  TwoChars := GetOblast(Callsign);
-  if length(TwoChars) <> 2 then Exit;
-  Result := GetRussiaOblastByTwoChars(TwoChars[1], TwoChars[2]);
-end;
-}
-{
-procedure MakeRegionsList;
-var
-  c1, c2                                : Char;
-  TempCallsign                          : CallString;
-  ResultRegion, TempRegion              : RegionType;
-  h                                     : HWND;
-  TempBuffer                            : array[0..255] of Char;
-begin
-
-  h := CreateFile('regions.txt', GENERIC_WRITE, FILE_SHARE_WRITE, nil, CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, 0);
-
-  for TempRegion := Low(RegionType) to High(RegionType) do
-  begin
-
-    if TempRegion = rtUnknownRegion then Continue;
-
-    TF.Format(TempBuffer, '%3u %-50s: ', integer(TempRegion), RegionTypeStringArray[TempRegion]);
-    sWriteFile(h, TempBuffer);
-    for c1 := '0' to '9' do
-      for c2 := 'A' to 'Z' do
-      begin
-        Windows.ZeroMemory(@TempCallsign, SizeOf(TempCallsign));
-        TempCallsign[0] := CHR(4);
-        TempCallsign[1] := 'U';
-        TempCallsign[2] := 'A';
-        TempCallsign[3] := c1;
-        TempCallsign[4] := c2;
-
-        ResultRegion := GetRegion(TempCallsign);
-
-        if ResultRegion = TempRegion then
-        begin
-          TF.Format(TempBuffer, ' %s', @TempCallsign[1]);
-          sWriteFile(h, TempBuffer);
-        end;
-      end;
-
-    sWriteFile(h, #13#10);
-  end;
-
-  CloseHandle(h);
-
-end;
-}
 
 function GetOkrugByOblast(Oblast: RussianRegionType): OkrugType;
 begin

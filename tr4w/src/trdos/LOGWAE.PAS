@@ -204,61 +204,6 @@ begin
 
       //    ClearWindow(EditableLogwindow);
 
-{
- while MessageINT <= NumberMessagesToBeSent do
- begin
-   Str(MessageINT, MessageString);
-
-   KeepGoing:
-
-   QTCString := QTCQuickEditResponse('Enter QTC #' + MessageString +
-     ' of ' + NumberMessagesToBeSentString +
-     ' : ', QTCAction, ControlEnterUsed);
-
-   case QTCAction of
-
-     AbortThisQTC:
-       begin
-         NextQTCToBeSent := NextQTCToBeSent - NumberMessagesToBeSent;
-         DecrementQTCCount(QTCCallsign, MessageINT - 1);
-         VisibleLog.SetUpEditableLog;
-         DoABeep(Warning);
-         QuickDisplay('QTC cancelled since it was not QSLed');
-         Exit;
-       end;
-
-     SaveThisQTC:
-       begin
-         Dec(MessageINT);
-         Str(MessageINT, MessageString);
-         NumberMessagesToBeSent := -1;
-         NumberMessagesToBeSentString := MessageString;
-                     //            RestorePreviousWindow;
-         goto SaveQTC;
-       end;
-   end;
-
-   if not ControlEnterUsed then SendStringAndStop('R');
-
-   AddQTCToQTCBuffer(QTCBuffer, QTCString, MessageINT);
-
-   IncrementQTCCount(QTCCallsign);
-   inc(MessageINT);
- end;
-}
-{
- repeat
-   TempString := UpperCase(QuickEditResponse('Press RETURN to log or E to Edit : ', 1));
- until (TempString = '') or (TempString = 'E');
-
- if TempString = 'E' then
- begin
-   QuickDisplay('You are editing the QTC data.  Press ESCAPE to exit.');
-   EditWindowEditor(QTCBuffer, 5, 1, DataChanged);
- end;
-
- SendStringAndStop('QSL ' + QTCNumberString + '/' + MessageString);
-}
   end
 
   else
@@ -343,76 +288,6 @@ procedure LastQTCSent(var Call: CallString; var Time: Str20; var QSONumber: inte
 
 
 begin
-{
-  NumberQTCBooksSent := 0;
-
-  if OpenFileForRead(FileRead, QTCFileName) then
-  begin
-    while not Eof(FileRead) do
-    begin
-      ReadLn(FileRead, FileString);
-
-//      GetRidOfPostcedingSpaces(FileString);
-
-      if FileString = '' then Continue;
-
-      if Copy(FileString, 1, 3) = 'QTC' then
-      begin
-        inc(NumberQTCBooksSent);
-        LastFirstString := '';
-        LastSecondString := '';
-        Continue;
-      end;
-
-      TempString := Copy(FileString, 1, 40);
-
-      if (Copy(TempString, 1, 3) = ' 1:') or
-        (Copy(TempString, 1, 3) = ' 2:') or
-        (Copy(TempString, 1, 3) = ' 3:') or
-        (Copy(TempString, 1, 3) = ' 4:') or
-        (Copy(TempString, 1, 3) = ' 5:') then
-      begin
-        RemoveFirstString(TempString);
-        LastFirstString := TempString;
-      end;
-
-      TempString := Copy(FileString, 41, 30);
-
-      if (Copy(TempString, 1, 3) = ' 6:') or
-        (Copy(TempString, 1, 3) = ' 7:') or
-        (Copy(TempString, 1, 3) = ' 8:') or
-        (Copy(TempString, 1, 3) = ' 9:') or
-        (Copy(TempString, 1, 3) = '10:') then
-      begin
-        RemoveFirstString(TempString);
-        LastSecondString := TempString;
-      end;
-    end;
-
-    Close(FileRead);
-
-    if LastSecondString <> '' then
-    begin
-      Time := RemoveFirstString(LastSecondString);
-      Call := RemoveFirstString(LastSecondString);
-      QSONumber := RemoveFirstLongInteger(LastSecondString);
-    end
-    else
-    begin
-      Time := RemoveFirstString(LastFirstString);
-      Call := RemoveFirstString(LastFirstString);
-      QSONumber := RemoveFirstLongInteger(LastFirstString);
-    end;
-
-    Insert(':', Time, 3);
-
-    Exit;
-  end;
-
-  Call := '';
-  Time := '';
-  QSONumber := 0;
-}
 end;
 
 function NumberAvailableQTCsForThisCall(Call: CallString): integer;

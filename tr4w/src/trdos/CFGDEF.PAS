@@ -363,61 +363,6 @@ begin
   //W_L_I  PrinterEnabled := False;
 //  Config.PTTEnable := True;
 
-//  QSLMessage := 'TU \ TEST';
-//  QSLPhoneMessage := 'QSL.WAV';
-//  QSOBeforeMessage := ' SRI QSO B4 TU \ TEST';
-//  QSOBeforePhoneMessage := 'QSOB4.WAV';
-  //  QTCMinutes := False;
-  //  QTCsEnabled := False;
-  //  QSONumberByBand := False;
-  //  QSOPointsDomesticCW := -1;
-  //  QSOPointsDomesticPhone := -1;
-  // QSOPointsDXCW := -1;
-  //  QSOPointsDXPhone := -1;
-  //  QSXEnable := True;
-  //  QTCExtraSpace := True;
-  //  QTCQRS := True;
-//  QuickQSLKey1 := '\';
-//  QuickQSLKey2 := '=';
-//  QuickQSLMessage1 := 'TU';
-//  QuickQSLMessage2 := 'EE';
-//  QuickQSLPhoneMessage := 'QUICKQSL.WAV';
-  {
-    Radio1.CommandPause := 0;
-    Radio1.FT1000MPCWReverse := False;
-    Radio1.IDCharacter := #0;
-    Radio1.PollTimeout := 500; // one half second
-    Radio1.RadioBaudRate := 4800;
-    Radio1.RadioModel := NoInterfacedRadio;
-    Radio1.FactoryId := '';
-    Radio1.RadioNumberBits := 8;
-    Radio1.tr4w_CATPort := NoPort;
-    Radio1.RadioStopBits := 2;
-    Radio1.RadioParity := tNoParity;
-    Radio1.ReceiverAddress := 4;
-    Radio1.TrackingEnable := True;
-    Radio1.UpdateSeconds := 0;
-
-    Radio2.CommandPause := 0;
-
-     //   RADIO1.FilterRadioMessageLength := False;
-     //   radio2.FilterRadioMessageLength := False;
-
-    Radio2.FT1000MPCWReverse := False;
-    Radio2.IDCharacter := #0;
-    Radio2.PollTimeout := 500; // one half second
-
-    Radio2.RadioBaudRate := 4800;
-    Radio2.RadioModel := NoInterfacedRadio;
-    Radio2.FactoryId := '';
-    Radio2.RadioNumberBits := 8;
-    Radio2.tr4w_CATPort := NoPort;
-    Radio2.RadioStopBits := 2;
-    Radio2.RadioParity := tNoParity;
-    Radio2.ReceiverAddress := 4;
-    Radio2.TrackingEnable := True;
-    Radio2.UpdateSeconds := 0;
-  }
 
 //  RadioOneName := 'Rig 1';
 //  RadioTwoName := 'Rig 2';
@@ -638,73 +583,6 @@ begin
 //    FrequencyOneWindowColor := trLightGray;
 //    FrequencyOneWindowHighlight := trBlack;
 
-//    FrequencyTwoWindowBackground := trBtnFace;
-//    FrequencyTwoWindowColor := trLightGray;
-//    FrequencyTwoWindowHighlight := trBlack;
-      {
-            FunctionKeyWindowBackground := White;
-            FunctionKeyWindowColor := clBlack;
-
-            InsertWindowBackground := Cyan;
-            InsertWindowColor := clBlack;
-
-            MultiplierInformationWindowBackground := Cyan;
-            MultiplierInformationWindowColor := clBlack;
-
-            NamePercentageWindowBackground := Cyan;
-            NamePercentageWindowColor := clBlack;
-
-            NameSentWindowBackground := Cyan;
-            NameSentWindowColor := clBlack;
-
-            PossibleCallWindowBackground := Cyan;
-            PossibleCallWindowColor := clBlack;
-
-            PossibleCallWindowDupeBackground := clBlack;
-            PossibleCallWindowDupeColor := Red;
-
-            QSOInformationWindowBackground := Cyan;
-            QSOInformationWindowColor := clBlack;
-
-            QSONumberWindowBackground := Cyan;
-            QSONumberWindowColor := clBlack;
-
-            QTCNumberWindowBackground := Cyan;
-            QTCNumberWindowColor := clBlack;
-
-            QuickCommandWindowBackground := White;
-            QuickCommandWindowColor := clBlue;
-
-            RadioOneWindowBackground := Cyan; //KK1L: 6.73 Changed from RadioWindowBackground
-            RadioOneWindowColor := clBlack; //KK1L: 6.73 Changed from RadioWindowColor
-            RadioTwoWindowBackground := Cyan; //KK1L: 6.73
-            RadioTwoWindowColor := clBlack; //KK1L: 6.73
-            RateWindowBackground := Cyan;
-            RateWindowColor := clBlack;
-      }
-//    RemainingMultsWindowBackground := trLightBlue {trBlue};
-//    RemainingMultsWindowColor := trWhite;
-//    RemainingMultsWindowSubdue := trCyan;
-      {
-            RTTYWindowColor := Cyan;
-            RTTYWindowBackground := clBlack;
-            RTTYInverseWindowColor := clBlack;
-            RTTYInverseWindowBackground := White;
-
-            TotalScoreWindowBackground := White;
-            TotalScoreWindowColor := clBlack;
-
-            TotalWindowBackground := clBlue;
-            TotalWindowColor := White;
-
-            UserInfoWindowBackground := clBlue;
-            UserInfoWindowColor := White;
-
-            WholeScreenColor := Yellow;
-
-      }
-//    WholeScreenBackground := trBtnFace;
-//  end;
 
   //  SelectedColors := MonoColors;
 
