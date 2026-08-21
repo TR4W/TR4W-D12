@@ -500,7 +500,7 @@ begin
                           'Dupe Check Sound');
    RegisterStoredSetting('operating.ctrlj.dupeSheetAutoReset','DUPE SHEET AUTO RESET',
                           'Dupe Sheet Auto Reset');
-   RegisterLegacySetting('operating.ctrlj.frequencyMemory',   'FREQUENCY MEMORY',
+   RegisterStoredSetting('operating.ctrlj.frequencyMemory',   'FREQUENCY MEMORY',
                           'Frequency Memory');
    RegisterStoredSetting('operating.ctrlj.frequencyMemoryEnable','FREQUENCY MEMORY ENABLE',
                           'Frequency Memory Enable');
@@ -624,7 +624,7 @@ begin
                           'Unknown Country File Name');
 
    // --- Band Map (5) ---------------------------------
-   RegisterLegacySetting('bandmap.ctrlj.bandMapCutoffFrequency','BAND MAP CUTOFF FREQUENCY',
+   RegisterStoredSetting('bandmap.ctrlj.bandMapCutoffFrequency','BAND MAP CUTOFF FREQUENCY',
                           'Band Map Cutoff Frequency');
    RegisterStoredSetting('bandmap.ctrlj.bandMapItemHeight',   'BAND MAP ITEM HEIGHT',
                           'Band Map Item Height');

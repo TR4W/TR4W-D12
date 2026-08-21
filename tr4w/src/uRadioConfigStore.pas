@@ -141,6 +141,36 @@ type
      activate one" like radios -- they are "define many, each responsible for
      some bands", which is a different SELECTION model and the reason this
      carries a band list rather than being chosen by a profile. }
+   { ONE BAND'S ENTRY IN THE BAND PLAN.
+
+     Three numbers per band, and the ini shape they replace could express none
+     of that directly: [BAND PLAN] held REPEATED keys -- twelve
+     `BAND MAP CUTOFF FREQUENCY=` lines and up to twenty-four
+     `FREQUENCY MEMORY=` ones -- with the band DERIVED from each frequency by
+     CalculateBandMode, and the phone memory told apart from the CW one by an
+     'SSB ' prefix inside the value. That works, but nothing about the file says
+     what it means, and a value that lands in the wrong band is invisible.
+
+     Keyed by the band SPELLING rather than a BandType, because this unit
+     deliberately knows nothing about the program's types -- the same reason
+     HEADER_SECTIONS repeats its section names as literals. uRadioConfigApply
+     maps the spelling to a band; it is the half that is allowed to know. }
+   TBandPlanEntry = class(TObject)
+   public
+      // The band spelling, as BandStringsArrayWithOutSpaces writes it: '160',
+      // '80' ... '2'.  Not an ordinal: an ordinal silently re-points at a
+      // different band the day the enum gains a member.
+      Band: string;
+
+      // 0 means NOT SET, and is not written to the file.  That distinction is
+      // the whole reason these are not simply zeroed defaults: the editor
+      // leaves a band's stored value alone when its cell is not a number, and
+      // an absent entry has to survive the round trip to keep doing that.
+      Cutoff: integer;    // BAND MAP CUTOFF FREQUENCY -- CW/data above, phone below
+      CW: integer;        // FREQUENCY MEMORY
+      SSB: integer;       // FREQUENCY MEMORY, with the old 'SSB ' prefix
+   end;
+
    TRotatorDefinition = class(TObject)
    public
       Name: string;
@@ -297,6 +327,7 @@ type
    private
       FRadios: TObjectList<TRadioDefinition>;
       FRotators: TObjectList<TRotatorDefinition>;
+      FBandPlan: TObjectList<TBandPlanEntry>;
       FClusters: TObjectList<TClusterDefinition>;
       FActiveClusterName: string;
       { The rotator that turns. ONE at a time (NY4I, 2026-08-16).
@@ -527,6 +558,15 @@ type
 
       { The rotator library.  Same shape as the radio one -- see AddRadio for
         why Add takes ownership. }
+      { THE BAND PLAN.  SetBand is an upsert by spelling, so the editor can
+        write every band it has without first asking what is already there, and
+        a band whose values are all 0 is REMOVED rather than stored as zeros --
+        see TBandPlanEntry on why 0 has to mean absent. }
+      function  BandPlanCount: integer;
+      function  BandPlanEntry(const aIndex: integer): TBandPlanEntry;
+      function  FindBandPlan(const aBand: string): TBandPlanEntry;
+      procedure SetBandPlan(const aBand: string; const aCutoff, aCW, aSSB: integer);
+
       function  RotatorCount: integer;
       function  Rotator(const aIndex: integer): TRotatorDefinition;
       function  IndexOfRotator(const aName: string): integer;
@@ -576,6 +616,7 @@ const
    JSONKEY_COMMANDS      = 'commands';
    JSONKEY_ROTATORS      = 'rotators';
    JSONKEY_CLUSTERS      = 'clusters';
+   JSONKEY_BANDPLAN      = 'bandPlan';
 
 type
    TExportHeaderSection = record
@@ -871,6 +912,67 @@ begin
    Bands       := aOther.Bands;
 end;
 
+function TRadioConfigStore.BandPlanCount: integer;
+begin
+   Result := FBandPlan.Count;
+end;
+
+function TRadioConfigStore.BandPlanEntry(const aIndex: integer): TBandPlanEntry;
+begin
+   Result := FBandPlan[aIndex];
+end;
+
+function TRadioConfigStore.FindBandPlan(const aBand: string): TBandPlanEntry;
+var
+   i: integer;
+begin
+   Result := nil;
+   for i := 0 to FBandPlan.Count - 1 do
+      begin
+      if SameText(FBandPlan[i].Band, aBand) then
+         begin
+         Result := FBandPlan[i];
+         Exit;
+         end;
+      end;
+end;
+
+procedure TRadioConfigStore.SetBandPlan(const aBand: string;
+                                        const aCutoff, aCW, aSSB: integer);
+var
+   e: TBandPlanEntry;
+begin
+   if aBand = '' then
+      begin
+      Exit;
+      end;
+
+   e := FindBandPlan(aBand);
+
+   // ALL ZERO MEANS ABSENT, not "three zeros".  Storing zeros would make the
+   // next load set three frequencies to 0 rather than leaving the band alone,
+   // which is the opposite of what an empty cell in the editor means.
+   if (aCutoff = 0) and (aCW = 0) and (aSSB = 0) then
+      begin
+      if e <> nil then
+         begin
+         FBandPlan.Remove(e);
+         end;
+      Exit;
+      end;
+
+   if e = nil then
+      begin
+      e := TBandPlanEntry.Create;
+      e.Band := aBand;
+      FBandPlan.Add(e);
+      end;
+
+   e.Cutoff := aCutoff;
+   e.CW     := aCW;
+   e.SSB    := aSSB;
+end;
+
 function TRadioConfigStore.RotatorCount: integer;
 begin
    Result := FRotators.Count;
@@ -1065,6 +1167,7 @@ begin
    // SameText everywhere else, and a store that disagreed would answer '' for
    // a command the program is perfectly happy to apply.
    FRotators := TObjectList<TRotatorDefinition>.Create(True);
+   FBandPlan := TObjectList<TBandPlanEntry>.Create(True);
    FHeaders := TStringList.Create;
    FHeaders.CaseSensitive := False;   // section names are matched like ini's
    FClusters := TObjectList<TClusterDefinition>.Create(True);
@@ -1132,6 +1235,7 @@ begin
    FreeAndNil(FCommands);
    FreeAndNil(FClusters);
    FreeAndNil(FRotators);
+   FreeAndNil(FBandPlan);
    FreeAndNil(FProfiles);
    FreeAndNil(FRadios);
    inherited Destroy;
@@ -1140,6 +1244,7 @@ end;
 procedure TRadioConfigStore.Clear;
 begin
    FRadios.Clear;
+   FBandPlan.Clear;
    FRotators.Clear;
    FClusters.Clear;
    FActiveClusterName := '';
@@ -1781,6 +1886,7 @@ function TRadioConfigStore.SaveToJSON: TJSONObject;
 var
    radios, profiles: TJSONArray;
    general, tci, logging, commands, rot, clu, hdr: TJSONObject;
+   bandPlan, bp: TJSONObject;
    rotators, clusters: TJSONArray;
    lst: TStringList;
    i, s: integer;
@@ -1848,6 +1954,33 @@ begin
       end;
    Result.AddPair(JSONKEY_ROTATORS, rotators);
 
+   // The band plan.  An OBJECT keyed by band spelling, not an array, because
+   // there is exactly one entry per band and the band is the identity -- the
+   // file reads as "160": { "cutoff": 1800 } and needs no schema to follow.
+   //
+   // A zero is OMITTED rather than written, so "not set" survives the round
+   // trip: an absent value leaves that band alone on load, which is what an
+   // empty cell in the editor has always meant.
+   bandPlan := TJSONObject.Create;
+   for i := 0 to FBandPlan.Count - 1 do
+      begin
+      bp := TJSONObject.Create;
+      if FBandPlan[i].Cutoff <> 0 then
+         begin
+         bp.AddPair('cutoff', TJSONNumber.Create(FBandPlan[i].Cutoff));
+         end;
+      if FBandPlan[i].CW <> 0 then
+         begin
+         bp.AddPair('cw', TJSONNumber.Create(FBandPlan[i].CW));
+         end;
+      if FBandPlan[i].SSB <> 0 then
+         begin
+         bp.AddPair('ssb', TJSONNumber.Create(FBandPlan[i].SSB));
+         end;
+      bandPlan.AddPair(FBandPlan[i].Band, bp);
+      end;
+   Result.AddPair(JSONKEY_BANDPLAN, bandPlan);
+
    // Clusters, and which one is active.  The active NAME rather than an index:
    // an index silently re-points at a different server the moment the list is
    // reordered, and reordering a list is exactly what an operator does.
@@ -1906,6 +2039,7 @@ var
    arr: TJSONArray;
    obj: TJSONObject;
    general, tci, logging, commands: TJSONObject;
+   bandPlan, bp: TJSONObject;
    radioDef: TRadioDefinition;
    rotDef: TRotatorDefinition;
    cluDef: TClusterDefinition;
@@ -2018,6 +2152,31 @@ begin
             begin
             cluDef.Free;
             end;
+         end;
+      end;
+
+   FBandPlan.Clear;
+   v := aRoot.GetValue(JSONKEY_BANDPLAN);
+   if (v <> nil) and (v is TJSONObject) then
+      begin
+      bandPlan := TJSONObject(v);
+      for i := 0 to bandPlan.Count - 1 do
+         begin
+         // JSONPairName/JSONPairValue rather than .Pairs[]: FPC's fpjson has
+         // no Pairs property, and these helpers are what the commands section
+         // above already uses to stay portable across both JSON units.
+         if not (JSONPairValue(bandPlan, i) is TJSONObject) then
+            begin
+            Continue;
+            end;
+         bp := TJSONObject(JSONPairValue(bandPlan, i));
+         // Through SetBandPlan rather than by construction, so the all-zero
+         // rule lives in ONE place and a hand-edited file with three zeros in
+         // it behaves the same as an absent entry.
+         SetBandPlan(JSONPairName(bandPlan, i),
+                     JSONInt(bp, 'cutoff', 0),
+                     JSONInt(bp, 'cw',     0),
+                     JSONInt(bp, 'ssb',    0));
          end;
       end;
 

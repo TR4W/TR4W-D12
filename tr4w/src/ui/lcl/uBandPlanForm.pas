@@ -41,12 +41,21 @@ unit uBandPlanForm;
   Same as the original, which tested GetDlgItemInt's pTranslated and did
   `Continue`.
 
-  THIS STILL WRITES tr4w.ini, AND THAT IS NOT AN OVERSIGHT. [BAND PLAN] has no
-  JSON home yet: its rows are ctFreqList, multi-valued, and uCFG.pas:1249 records
-  that they are display-only in Preferences for exactly that reason. The whole
-  section is replaced in one WritePrivateProfileSectionA because the keys REPEAT
-  -- twelve `BAND MAP CUTOFF FREQUENCY=` lines, one per band -- which no
-  single-value write can express.
+  IT WRITES settings	r4w.json, as of 2026-08-21.  It used to replace a whole
+  [BAND PLAN] ini section in one WritePrivateProfileSectionA, because the keys
+  REPEAT there -- twelve `BAND MAP CUTOFF FREQUENCY=` lines and up to
+  twenty-four `FREQUENCY MEMORY=` ones -- which no single-value write can
+  express, and which is also why these two rows could never be ordinary
+  settings.
+
+  The store holds it as what it is: one entry per band, three numbers, keyed by
+  the band spelling.  The ini shape stated none of that -- the band was DERIVED
+  from each frequency by CalculateBandMode, and the phone memory was told apart
+  from the CW one by an 'SSB ' prefix inside the value.  A frequency that landed
+  in the wrong band was invisible in that file and is obvious in this one.
+
+  An existing [BAND PLAN] is seeded into the store once, by
+  uRadioConfigApply.SeedBandPlanFromIni.
 }
 
 interface
@@ -114,8 +123,10 @@ uses
   Types,               // TRect / IntersectRect
   uTR4WConfigFile,     // TR4WConfigFileName, Save/LoadWindowLayout
   uWindowLayoutStore,  // TWindowLayoutStore -- the same store the main windows use
-  VC,              // RC_BANDPLAN, BandStringsArrayWithOutSpaces, TR4W_INI_FILENAME
+  VC,              // RC_BANDPLAN, BandStringsArrayWithOutSpaces
   LogWind,         // BandMapModeCutoffFrequency, DefaultFreqMemory
+  uRadioConfigStore,   // TRadioConfigStore -- the band plan lives here now
+  uSettingsLegacy,     // ActiveStoreProvider -- the same store Preferences writes
   MainUnit,        // logger
   uLCLFormHelpers,
   uHostedFormWindows,
@@ -399,19 +410,32 @@ procedure TfrmBandPlan.SaveBandPlan;
 var
   b: BandType;
   col, row, freq, err: integer;
-  section: AnsiString;
-
-  procedure Emit(const aLine: AnsiString);
-  begin
-     // The section is a run of null-separated "key=value" strings ending in a
-     // SECOND null -- the shape WritePrivateProfileSectionA wants.  The original
-     // built it by stepping a write position past each terminator inside one
-     // buffer; an AnsiString holds embedded nulls perfectly well.
-     section := section + aLine + #0;
-  end;
-
+  store: TObject;
+  vCutoff, vCW, vSSB: array[BandType] of integer;   // v- prefixed: a local named cw would SHADOW the CW member of ModeType
 begin
-   section := '';
+   // THE STORE, not the ini.  Refusing when there is none is deliberate and
+   // matches TStoredSetting: falling back to tr4w.ini would write a band plan
+   // nothing reads any more, so the editor would appear to work and the plan
+   // would be gone on restart.
+   if not Assigned(uSettingsLegacy.ActiveStoreProvider) then
+      begin
+      ShowMessage(RC_BANDPLAN + ': no configuration store is open, nothing was saved.');
+      Exit;
+      end;
+
+   store := uSettingsLegacy.ActiveStoreProvider();
+   if not (store is TRadioConfigStore) then
+      begin
+      ShowMessage(RC_BANDPLAN + ': no configuration store is open, nothing was saved.');
+      Exit;
+      end;
+
+   for b := Low(BandType) to High(BandType) do
+      begin
+      vCutoff[b] := 0;
+      vCW[b]     := 0;
+      vSSB[b]    := 0;
+      end;
 
    // COLUMN-MAJOR, exactly as the original: every cutoff, then every CW memory,
    // then every SSB memory.  The loaders do not care about order -- each value
@@ -436,29 +460,33 @@ begin
             COL_CUTOFF:
                begin
                BandMapModeCutoffFrequency[b] := freq;
-               Emit(AnsiString('BAND MAP CUTOFF FREQUENCY=' + IntToStr(freq)));
+               vCutoff[b] := freq;
                end;
             COL_CW:
                begin
                DefaultFreqMemory[b, CW] := freq;
-               Emit(AnsiString('FREQUENCY MEMORY=' + IntToStr(freq)));
+               vCW[b] := freq;
                end;
             COL_SSB:
                begin
+               // No 'SSB ' prefix any more.  That string lived inside the ini
+               // VALUE because the format had nowhere else to say "phone"; the
+               // store has a field for it.
                DefaultFreqMemory[b, Phone] := freq;
-               // The 'SSB ' prefix is what selects Phone on the way back in --
-               // F_FREQUENCY_MEMORY looks for it (uCFG.pas:1850). Without it the
-               // value silently becomes a CW memory.
-               Emit(AnsiString('FREQUENCY MEMORY=SSB ' + IntToStr(freq)));
+               vSSB[b] := freq;
                end;
          end;
          end;
       end;
 
-   section := section + #0;   // the terminating second null
+   for b := Low(BandType) to High(BandType) do
+      begin
+      TRadioConfigStore(store).SetBandPlan(
+         string(AnsiString(BandStringsArrayWithOutSpaces[b])),
+         vCutoff[b], vCW[b], vSSB[b]);
+      end;
 
-   Windows.WritePrivateProfileSectionA('BAND PLAN', PAnsiChar(section),
-                                       TR4W_INI_FILENAME);
+   TRadioConfigStore(store).SaveToFile(TR4WConfigFileName);
 end;
 
 procedure TfrmBandPlan.btnOKClick(Sender: TObject);

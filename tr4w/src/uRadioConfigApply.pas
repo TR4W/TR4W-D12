@@ -160,6 +160,12 @@ procedure ApplyLoggingSettings(const aStore: TRadioConfigStore);
 // ARE applied, with their bounds and crA hooks -- see the implementation.
 procedure ApplyStoredCommands(const aStore: TRadioConfigStore);
 
+// The band plan -- per-band mode cutoff and the CW/phone frequency memories --
+// from the store into the globals.  Seeds itself once from an existing
+// tr4w.ini [BAND PLAN] section when the store has none, so a station upgrading
+// keeps the plan it had.
+procedure ApplyBandPlan(const aStore: TRadioConfigStore);
+
 // Render the chosen cluster into the globals the connect path reads: server,
 // login callsign, password and post-login command.  Called at startup and
 // whenever Preferences is saved, so the two cannot disagree.
@@ -255,6 +261,7 @@ uses
    uCWKeyerBase,   // KeyerSelectionIsProfileDriven
    LogCW,
    LOGWIND,
+   uBandLookup,   // CalculateBandMode -- the extracted, unit-tested copy, not tree.pas
    MainUnit;   // logger
 
 function ResolveTypeRendering(const aRegistryId: string): TRadioTypeRendering;
@@ -340,8 +347,10 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..249] of string =
+   MIGRATED_COMMANDS: array[0..251] of string =
    (
+      'BAND MAP CUTOFF FREQUENCY',
+      'FREQUENCY MEMORY',
       'CONTEST NAME',
       'CONTEST',
       'DOMESTIC MULTIPLIER',
@@ -797,6 +806,157 @@ begin
          // Loud: a stored value CFGCA refuses is a setting the operator
          // believes is in force and is not.
          logger.Warn('[ApplyStoredCommands] CFGCA refused "%s" = "%s"', [name, value]);
+         end;
+      end;
+end;
+
+procedure SeedBandPlanFromIni(const aStore: TRadioConfigStore);
+var
+   buf: array[0..8191] of AnsiChar;
+   n, i, start, freq, err: integer;
+   line, key, value: string;
+   band: BandType;
+   mode: ModeType;
+   vCutoff, vCW, vSSB: array[BandType] of integer;   // v- prefixed: a local named cw would SHADOW the CW member of ModeType
+begin
+   // ONE-TIME, and only into an empty store.  A station that has already saved
+   // a band plan must not have it overwritten by a stale ini.
+   if aStore.BandPlanCount > 0 then
+      begin
+      Exit;
+      end;
+
+   // GetPrivateProfileSectionA, not TIniFile.  [BAND PLAN] has REPEATED keys --
+   // twelve `BAND MAP CUTOFF FREQUENCY=` lines and up to twenty-four
+   // `FREQUENCY MEMORY=` ones -- and a TIniFile collapses duplicates, so it
+   // would read one of each and silently drop the rest.  This is the exact
+   // counterpart of the WritePrivateProfileSectionA that used to write it.
+   Windows.ZeroMemory(@buf, SizeOf(buf));
+   n := Windows.GetPrivateProfileSectionA('BAND PLAN', @buf[0], SizeOf(buf),
+                                          PAnsiChar(AnsiString(TR4W_INI_FILENAME)));
+   if n = 0 then
+      begin
+      Exit;
+      end;
+
+   for band := Low(BandType) to High(BandType) do
+      begin
+      vCutoff[band] := 0;
+      vCW[band]     := 0;
+      vSSB[band]    := 0;
+      end;
+
+   // The buffer is a run of null-terminated "key=value" strings ending in a
+   // second null.
+   start := 0;
+   for i := 0 to n do
+      begin
+      if buf[i] <> #0 then
+         begin
+         Continue;
+         end;
+      if i = start then
+         begin
+         Break;      // the second null: end of section
+         end;
+
+      line  := string(AnsiString(PAnsiChar(@buf[start])));
+      start := i + 1;
+
+      if Pos('=', line) = 0 then
+         begin
+         Continue;
+         end;
+      key   := Trim(Copy(line, 1, Pos('=', line) - 1));
+      value := Trim(Copy(line, Pos('=', line) + 1, Length(line)));
+
+      // The band is DERIVED from the frequency, exactly as F_FREQUENCY_MEMORY
+      // and AddBandMapModeCutoffFrequency do it -- the ini format never stated
+      // which band a line was for.
+      if SameText(key, 'BAND MAP CUTOFF FREQUENCY') then
+         begin
+         Val(value, freq, err);
+         if err = 0 then
+            begin
+            CalculateBandMode(freq, band, mode);
+            vCutoff[band] := freq;
+            end;
+         end
+      else if SameText(key, 'FREQUENCY MEMORY') then
+         begin
+         // The 'SSB ' prefix inside the VALUE is what selected phone.
+         if Copy(UpperCase(value), 1, 4) = 'SSB ' then
+            begin
+            Val(Trim(Copy(value, 5, Length(value))), freq, err);
+            if err = 0 then
+               begin
+               CalculateBandMode(freq, band, mode);
+               vSSB[band] := freq;
+               end;
+            end
+         else
+            begin
+            Val(value, freq, err);
+            if err = 0 then
+               begin
+               CalculateBandMode(freq, band, mode);
+               vCW[band] := freq;
+               end;
+            end;
+         end;
+      end;
+
+   for band := Low(BandType) to High(BandType) do
+      begin
+      aStore.SetBandPlan(string(AnsiString(BandStringsArrayWithOutSpaces[band])),
+                         vCutoff[band], vCW[band], vSSB[band]);
+      end;
+
+   if aStore.BandPlanCount > 0 then
+      begin
+      logger.Info('[BandPlan] seeded %d band(s) from tr4w.ini', [aStore.BandPlanCount]);
+      end;
+end;
+
+procedure ApplyBandPlan(const aStore: TRadioConfigStore);
+var
+   band: BandType;
+   e: TBandPlanEntry;
+   cfgOwnsCutoff, cfgOwnsMemory: boolean;
+begin
+   SeedBandPlanFromIni(aStore);
+
+   // THE LOADED CONTEST WINS, exactly as it does in ApplyStoredCommands.  A
+   // contest .cfg that carries FREQUENCY MEMORY lines has already applied them,
+   // and a station-wide band plan must not undo that -- the two rows are csJSON
+   // now, and LogCfg applies a csJSON row from the contest .cfg as a trusted
+   // caller for precisely this reason.
+   cfgOwnsCutoff := CommandCameFromContestCFG('BAND MAP CUTOFF FREQUENCY');
+   cfgOwnsMemory := CommandCameFromContestCFG('FREQUENCY MEMORY');
+
+   for band := Low(BandType) to High(BandType) do
+      begin
+      e := aStore.FindBandPlan(string(AnsiString(BandStringsArrayWithOutSpaces[band])));
+      if e = nil then
+         begin
+         Continue;
+         end;
+
+      // A ZERO IS NOT A VALUE.  An absent number leaves that band's compiled
+      // default alone, which is what an empty cell in the editor means and what
+      // the ini loader did by simply never seeing a line for it.
+      if (e.Cutoff <> 0) and (not cfgOwnsCutoff) and
+         (band >= Band160) and (band <= Band2) then
+         begin
+         BandMapModeCutoffFrequency[band] := e.Cutoff;
+         end;
+      if (e.CW <> 0) and (not cfgOwnsMemory) then
+         begin
+         DefaultFreqMemory[band, CW] := e.CW;
+         end;
+      if (e.SSB <> 0) and (not cfgOwnsMemory) then
+         begin
+         DefaultFreqMemory[band, Phone] := e.SSB;
          end;
       end;
 end;
@@ -1834,6 +1994,7 @@ begin
       try
          SeedMigratedCommandsFromIni(store);
          ApplyStoredCommands(store);
+         ApplyBandPlan(store);
       finally
          store.Free;
       end;
@@ -1886,6 +2047,7 @@ begin
       // then puts it into force on this very run.
       SeedMigratedCommandsFromIni(store);
       ApplyStoredCommands(store);
+      ApplyBandPlan(store);
       ApplyActiveCluster(store);
 
       // The rotator library.  ConfigureRotators seeds one rotator from the

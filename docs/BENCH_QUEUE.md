@@ -633,6 +633,48 @@ contest file), and `BAND MAP CUTOFF FREQUENCY` + `FREQUENCY MEMORY` (multi-value
 `[COLORS]` (~112 elements x 2, and the reason Ctrl-J cannot be deleted yet),
 `[WINKEYER]`, and `uNewContest`'s `MAIN CALLSIGN` read.
 
+### 21. The band plan moved to JSON -- and its file finally says what it means
+
+`[BAND PLAN]` in `tr4w.ini` is gone. `settings\tr4w.json` now holds:
+
+```json
+"bandPlan": { "160": { "cutoff": 1800, "cw": 1815, "ssb": 1845 } }
+```
+
+**Why this was the awkward one.** The ini held REPEATED keys -- twelve
+`BAND MAP CUTOFF FREQUENCY=` lines and up to twenty-four `FREQUENCY MEMORY=`
+ones -- with the band DERIVED from each frequency, and the phone memory told
+apart from the CW one by an `SSB ` prefix inside the VALUE. Nothing in that file
+said which band a line was for, so a frequency in the wrong band was invisible.
+It is also why these two rows could never be ordinary settings.
+
+- [ ] **Open the band plan editor, change one cutoff, OK, restart.** It should
+  stick, and `settings\tr4w.json` should show it under `bandPlan`.
+- [ ] **Look at the file.** Every band you have set should be there and read
+  sensibly. A band with no values should be ABSENT rather than three zeros --
+  absent means "leave that band alone", which is what an empty cell means.
+- [ ] **The seed, which is the part with a real risk.** If you still have a
+  `tr4w.ini` with a `[BAND PLAN]` section, TR4W reads it ONCE into the store
+  (`[BandPlan] seeded N band(s) from tr4w.ini` in the log) and never again.
+  **Check the seeded values land on the right bands** -- the seed re-derives the
+  band from each frequency exactly as the old loader did, and that arithmetic is
+  the one thing that could put a memory on the wrong band.
+- [ ] **A contest `.cfg` carrying `FREQUENCY MEMORY` lines must still win.** The
+  store is skipped for whichever of the two keys the contest names, the same
+  rule `ApplyStoredCommands` uses. Load such a contest and confirm its memories
+  are in force, not your station ones.
+- [ ] **The band map mode cutoff still splits CW from phone** on each band.
+
+**Note for a station with no `tr4w.ini`:** the seed reads nothing, so the band
+plan starts from the compiled defaults. Set it once in the editor.
+
+**Settings still on the ini: 3.** `CLEAR DUPE SHEET` (an action trigger, must
+never persist), and `BAND` + `SINGLE BAND SCORE` (contest-owned, going to the
+SQLite contest file). No station setting writes `tr4w.ini` any more.
+
+**What still does:** `[COLORS]` (~112 elements x 2, and the reason Ctrl-J cannot
+be deleted), `[WINKEYER]`, and `uNewContest`'s `MAIN CALLSIGN` read.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)
