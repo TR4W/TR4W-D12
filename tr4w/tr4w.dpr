@@ -178,6 +178,7 @@ uses
   uPanelUpdate in 'src\uPanelUpdate.pas',
   uLPTForm in 'src\ui\lcl\uLPTForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
+  uLegacyIniPrompt in 'src\ui\lcl\uLegacyIniPrompt.pas',
   uWinManagerForm in 'src\ui\lcl\uWinManagerForm.pas',
   uMessagesListForm in 'src\ui\lcl\uMessagesListForm.pas',
   uEditMessageForm in 'src\ui\lcl\uEditMessageForm.pas',
@@ -373,6 +374,7 @@ uses
   uPendingCounties in 'src\uPendingCounties.pas',
   uCTYUpdate in 'src\uCTYUpdate.pas',
   uTRMasterUpdate in 'src\uTRMasterUpdate.pas',
+  uAppStrings in 'src\uAppStrings.pas',
   uCabrilloHeader in 'src\uCabrilloHeader.pas',
   // D12: transitively-compiled units added so project-wide file searches see them
   // (they were pulled in via other units' uses clauses but never listed here).
@@ -935,6 +937,17 @@ begin
      CreateCabrilloFile;
      Halt(0);
      end;
+
+  // OFFER TO RETIRE tr4w.ini -- once, and only now.
+  //
+  // AFTER the /EXPORT Halt above, which is not a detail: the golden-master
+  // corpus drives tr4w.exe headless, and a modal dialog there would hang all
+  // thirteen runs rather than fail them.
+  //
+  // After the seeding too -- every station setting has been carried into the
+  // JSON store by this point, so the question can honestly say the old file is
+  // no longer read.
+  OfferToRetireLegacyIni(TR4WConfigFileName);
 
   if Config.SayHiEnable then
      DisplayNamePercentage;

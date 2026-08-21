@@ -390,6 +390,7 @@ type
       FProfiles: TObjectList<TStationProfile>;
       FActiveProfileName: string;
       FAutoConnectOnStartup: boolean;
+      FKeepLegacyIni: boolean;
 
       // TCI SERVER -- ITS OWN SECTION, not three more keys in "general".
       //
@@ -533,6 +534,11 @@ type
 
       property ActiveProfileName: string read FActiveProfileName write FActiveProfileName;
       property AutoConnectOnStartup: boolean read FAutoConnectOnStartup write FAutoConnectOnStartup;
+
+      { The operator was offered the removal of a now-unused tr4w.ini and said
+        no.  Recorded so the question is asked ONCE: a prompt that returns every
+        start is not a choice, it is nagging. }
+      property KeepLegacyIni: boolean read FKeepLegacyIni write FKeepLegacyIni;
 
       // Offers a TCI server so other programs can reach the radio THIS
       // program has the COM port open on.  Station-wide, not a property of any
@@ -1341,6 +1347,7 @@ begin
    FProfiles.Clear;
    FActiveProfileName    := '';
    FAutoConnectOnStartup := False;
+   FKeepLegacyIni := False;
 
    FTCIServerEnabled     := False;
    FTCIPort              := TCI_PORT_USE_SERVER_DEFAULT;
@@ -1989,6 +1996,7 @@ begin
    general := TJSONObject.Create;
    general.AddPair('activeProfile', FActiveProfileName);
    general.AddPair('autoConnect',   TJSONBool.Create(FAutoConnectOnStartup));
+   general.AddPair('keepLegacyIni', TJSONBool.Create(FKeepLegacyIni));
    Result.AddPair(JSONKEY_GENERAL, general);
 
    // tciServer USED to be written into "general" above.  It is not written
@@ -2171,6 +2179,7 @@ begin
       end;
    FActiveProfileName    := JSONStr(general,  'activeProfile', '');
    FAutoConnectOnStartup := JSONBool(general, 'autoConnect',   False);
+   FKeepLegacyIni        := JSONBool(general, 'keepLegacyIni', False);
 
    // TCI: the new section, falling back to the OLD general.tciServer key.
    //

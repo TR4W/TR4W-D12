@@ -719,6 +719,40 @@ one-time readers that migrate an existing installation, plus three CFGCA rows --
 `CLEAR DUPE SHEET` (an action trigger that must never persist) and `BAND` +
 `SINGLE BAND SCORE` (contest-owned, going to the SQLite contest file).
 
+### 23. TR4W offers to remove tr4w.ini -- once -- and the first resourcestring
+
+Every station setting is in `settings\tr4w.json`. What remains of `tr4w.ini` is
+a file read ONCE per installation to carry an existing configuration across, and
+never again. So TR4W now asks, one time, whether to remove it.
+
+**The wording states what has already happened before it asks for anything.** An
+operator told "may I delete your configuration" reasonably says no; an operator
+told "your settings have already been copied, this file is no longer read" can
+answer the question actually being asked.
+
+- [ ] **On a station WITH a `tr4w.ini`:** start TR4W. The prompt should appear
+  once, after the window is up. Say **No** -- it must not ask again on the next
+  start, and `settings\tr4w.json` should carry `"keepLegacyIni": true`.
+- [ ] **Then flip that back to `false` by hand, restart, and say Yes.** The file
+  should be gone and a confirmation shown. **No `.bak` is made** -- that is
+  deliberate ("There should not be any backups of the ini or anything else").
+- [ ] **Restart again with everything you had set** -- radios, colours, band
+  plan, DE ENABLE, auto-send count. All of it must survive the ini being gone.
+  This is the real test of the whole migration and the reason to do it on a
+  station you can restore.
+- [ ] **Make the ini read-only and say Yes.** It should report that it could not
+  remove it and carry on -- the file is ignored either way.
+- [ ] **A station with no `tr4w.ini` must never see the prompt.**
+
+**The corpus is the automated half of this and is green (22/0/4).** The prompt
+sits AFTER the `/EXPORT` Halt in `tr4w.dpr` for exactly that reason: a modal
+dialog in headless mode would HANG all thirteen runs rather than fail them.
+
+**First `resourcestring` in the program** (`src\uAppStrings.pas`). New dialogs
+and message boxes declare their text there from now on, not as a `TC_` constant
+in the nine per-language files. Nothing existing was converted -- that sweep
+belongs with the translation work, not a feature commit.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)
