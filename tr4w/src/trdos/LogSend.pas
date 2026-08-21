@@ -52,7 +52,6 @@ utils_text,
 
 procedure SendCrypticDVPString(SendString: ShortString);
 procedure SendCrypticCWString(SendString: Str160);
-procedure SendCrypticDigitalString(SendString: Str160);
 procedure SendDVKMessage(Message: Str20);
 implementation
 
@@ -523,26 +522,6 @@ begin
 // if IsCWByCATActive then backtoinactiveradioafterqso;
 end;
 
-
-procedure SendCrypticDigitalString(SendString: Str160);
-
-{ Control-A will put the message out on the InactiveRadio and set the flag
-  InactiveRadioSendingCW.  It does not change the ActiveRadio any more.
-
-  If you decide to answer someone who responds to CW on the inactive radio,
-  you will want to call SwapRadios.  This will now make Control-A messages
-  be sent on the new inactive radio (which is probably what you want).   }
-
-//var
-//  CharPointer, NumberCharsBeingSent, CharacterCount, QSONumber: integer;
-//  RESULT, Entry, Offset                 : integer;
-//  Key, SendChar, TempChar               : Char;
-//  TempCall                              : CallString;
-//  WarningSounded                        : boolean;
-//  TempString                            : str80;
-
-begin
-end;
 
 procedure SendDVKMessage(Message: Str20);
 

@@ -2,7 +2,7 @@
     "ini.Read":  14,
     "ini.Write":  21,
     "wsprintf":  1,
-    "process.Launch":  3,
+    "process.Launch":  2,
     "thread.Create":  6,
     "thread.Event":  29,
     "serial.CommAPI":  22,

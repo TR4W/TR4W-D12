@@ -886,7 +886,6 @@ procedure DisplayQSOsWithThisStation(QSOs: integer);
 //procedure DisplayFrequency(Freq: LONGINT; Radio: RadioType); {KK1L: 6.73 Added Radio}
 procedure DisplayFrequency(RSR: RadioStatusRecord {Freq: LONGINT}; Radio: RadioType);
 procedure DisplayInsertMode;
-procedure DisplayMultiMessages;
 procedure DisplayNamePercentage({TotalNamesSent: integer; QSONumber: integer});
 procedure DisplayNextQSONumber {(QSONumber: integer)};
 //procedure DisplayPossibleCalls(Call: CallString);
@@ -1424,18 +1423,6 @@ begin
        Write ('Mem =', MemAvail:7);
        RestorePreviousWindow;
   }
-end;
-
-procedure DisplayMultiMessages;
-{
-var
-   Band                            : BandType;
-   Mode                            : ModeType;
-   TempString                      : Str40;
-   Index                           : integer;
-   PassFreqStr, RunFreqStr         : Str20;
-}
-begin
 end;
 
 

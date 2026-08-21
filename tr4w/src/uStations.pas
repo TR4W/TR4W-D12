@@ -236,11 +236,6 @@ begin
   Windows.SetWindowTextA(tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle, wsprintfBuffer);
 end;
 
-procedure SelectCallsignInStationsList();
-begin
-
-end;
-
 procedure UpdateCallsignAfterEditing(Before, After: CallString);
 var
   Index                                 : integer;

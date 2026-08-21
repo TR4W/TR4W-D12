@@ -86,7 +86,6 @@ QTCHEIGHT                             = 26;
  
 //procedure WAEQTC(var QTCCallsign: CallString);
 procedure WAEQTC2;
-procedure LastQTCSent(var Call: CallString; var Time: Str20; var QSONumber: integer);
 function NumberAvailableQTCsForThisCall(Call: CallString): integer;
 
 implementation
@@ -98,19 +97,6 @@ function QTCQuickEditResponse(Prompt: Str80;
   var ControlEnterUsed: boolean): Str80;
 
 begin
-end;
-
-procedure WAEQTC(var QTCCallsign: CallString);
-
-{ This procedure gets called whenever we are asking for a QTC.  It will
-  handle everything needed to do the QTC.  It will return after everything
-  has been done.  }
-
-label
-  SaveQTC, StopQTC, KeepGoing;
-
-  begin
-
 end;
 
 procedure WAEQTC2;
@@ -248,12 +234,6 @@ begin
      ShowQTCSend;
 
      end;
-end;
-
-procedure LastQTCSent(var Call: CallString; var Time: Str20; var QSONumber: integer);
-
-
-begin
 end;
 
 function NumberAvailableQTCsForThisCall(Call: CallString): integer;

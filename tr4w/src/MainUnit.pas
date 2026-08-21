@@ -202,7 +202,6 @@ procedure scWK_RESET; // n4af 4.43.10
 procedure SetCommand(c: PAnsiChar);
 procedure ChangeFocus(Text: PAnsiChar);
 procedure ImportFromADIF;
-procedure StartNewContest;
 procedure CheckQuestionMark;
 function Get101Window(h: HWND): HWND;
 function TelnetWantsClipboardKey(const aMsg: TMsg): boolean;   // Issue #23
@@ -336,7 +335,6 @@ procedure ClearMultSheet_CtrlC;
 procedure tClearMultSheet;
 procedure ReCalculateHourDisplay;
 procedure SetRemMultsColumnWidth;
-procedure tEnumeratePorts;
 function KeyerDebugDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
   lParam): BOOL; stdcall;
 procedure CheckInactiveRigCallingCQ;
@@ -7834,11 +7832,6 @@ begin
 end;
 }
 
-procedure EnumLogRecords();
-begin
-
-end;
-
 procedure ReadVersionBlock;
 begin
   tSetFilePointer(SizeOfTLogHeader, FILE_BEGIN);
@@ -8388,15 +8381,6 @@ begin
 
 end;
 
-procedure tEnumeratePorts;
-//var
-// BytesNeeded, Returned, i : DWORD;
-// Success : boolean;
-// PortsPtr : Pointer;
-// InfoPtr : PPortInfo1;
-begin
-end;
-
 function KeyerDebugDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:
   lParam): BOOL; stdcall;
 begin
@@ -8831,15 +8815,6 @@ begin
   ImportFromADIFThreadID := 0;
 
 end; // of ImportFromADIF
-
-procedure StartNewContest;
-begin
-  // ReleaseMutex(tMutex);
-  CloseHandle(tMutex);
-  Windows.SetCurrentDirectoryA(TR4W_PATH_NAME);
-  Windows.WinExec('D:\TR4W_WinAPI\out\tr4w.exe', 0);
-  ExitProgram(False);
-end;
 
 procedure CheckQuestionMark;
 var

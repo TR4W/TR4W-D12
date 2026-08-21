@@ -158,11 +158,6 @@ uses
   uExchangeBuilder, // Canonical SentExchange builder for UDP broadcast
   uUDPBroadcastConfig, // TUDPStream / usContact, usScore, usLookup
   uUDPBroadcaster;
-procedure CreateAndSendPacketSpot(PacketSpotCall: CallString; PacketSpotFreq: LONGINT);
-
-begin
-
-end;
 procedure PutContactIntoLogFile(LogString: string {Str80});
 
 begin
@@ -609,12 +604,6 @@ begin
     GetTimeString + ' for ' + SecString + ' seconds.';
   PushLogStringIntoEditableLogAndLogPopedQSO(TempString, True);
 end;
-procedure PlayLastSeconds(Seconds: integer);
-
-begin
-
-end;
-
 // Wait for a thread handle to signal, pumping Windows messages so that
 // cross-thread SendMessage calls (e.g. SetDlgItemText from the polling
 // thread) don't deadlock the main thread.
@@ -777,12 +766,6 @@ begin
  logger.Info('[ExitProgram] Exiting');
 end;
 
-procedure TalkToRTTYPort;
-
-
-begin
-
-end;
 procedure PacketWindow;
 var
   Key                                   : Char;
@@ -1716,12 +1699,6 @@ begin
   //**************************
   ///StationInformationCall := ''; // ny4i - Moved this to be cleared here.
 end;
-procedure loglastcall;
-
-begin
-
-end;
-
 function SearchAndPounce: boolean;
 label
   ControlEnterCommand1, ControlEnterCommand2;

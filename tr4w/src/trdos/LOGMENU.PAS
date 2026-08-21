@@ -225,15 +225,6 @@ begin
       }
 end;
 
-procedure DeleteOrMoveLog(RootName: Str20);
-
-var
-  Key                         : Char;
-  DestFileName                : Str80;
-
-begin
-end;
-
 begin
 end.
 

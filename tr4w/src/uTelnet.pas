@@ -95,7 +95,6 @@ function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 procedure tCreateAndAddNewSpot(Call: CallString; Dupe: boolean; Radio:
   RadioPtr);
-procedure CheckClusterType(ByteReceived: integer);
 procedure AppendTelnetPopupMenu(MenuText: PAnsiChar);
 procedure EmunTRCLUSTERDAT(FileString: PShortString);
 procedure EmunDXCLUSTERALERTLISTTXT(FileString: PShortString);
@@ -1987,12 +1986,6 @@ begin
   SpotsList.AddSpot(TempSpot, True);
 
   DisplayBandMap;
-end;
-
-procedure CheckClusterType(ByteReceived: integer);
-
-begin
-
 end;
 
 function TelnetIsConnected: boolean;

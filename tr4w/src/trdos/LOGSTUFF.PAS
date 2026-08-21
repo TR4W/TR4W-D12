@@ -663,8 +663,6 @@ function NumberQTCsThisStation(Call: CallString): integer;
 //procedure NameReceivedHeader(var LogString: Str80; var Underline: Str80);
 
 procedure ParseFourFields(sExch: Str80; var s1, s2, s3, s4: Str20);
-procedure PassStationToCTNetwork;
-
 //procedure PrintLogHeader;
 function ProcessClassAndDomesticOrDXQTHExchange(Exchange: string {Str80}; var
   RXData: ContestExchange): boolean;
@@ -676,8 +674,6 @@ function SetRST(Ex: integer; var RST: smallInt {Word}): boolean;
 
 procedure ProcessPartialCallAndInitialExchange(RXData: ContestExchange);
 function ProperSalutation(Call: CallString): string;
-
-procedure PushMultiMessageBuffer(Message: Str80);
 
 
 procedure ReviewBackCopyFiles;
@@ -5979,12 +5975,6 @@ begin
 end;
 
 
-procedure PushMultiMessageBuffer(Message: Str80);
-
-begin
-
-end;
-
 
 procedure DisplayGridSquareStatus(Call: CallString);
 
@@ -10353,12 +10343,6 @@ begin
        ProcessTemplateExchange := True;
        Exit;
        end;
-
-end;
-
-procedure PassStationToCTNetwork;
-
-begin
 
 end;
 
