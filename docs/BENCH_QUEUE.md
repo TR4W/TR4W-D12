@@ -260,7 +260,7 @@ and only runs in the real application. Nothing in the build exercises it.
   the seed from the old binary file; if anything moved, the seed is wrong
   and nothing after this is worth testing.
 - [ ] **Move two windows somewhere obvious**, then exit TR4W normally.
-- [ ] **Open `settings  r4w.json`.** There should be a `"windows"` section with
+- [ ] **Open `settings  tr4w.json`.** There should be a `"windows"` section with
   one entry per window, keyed by NAME (`"BandMap"`, `"Telnet"`, `"Radio1"`
   ...), each with `left`/`top`/`right`/`bottom`/`visible`. The two you moved
   should show their new positions.
@@ -269,7 +269,7 @@ and only runs in the real application. Nothing in the build exercises it.
   be expensive to get wrong: exit-save is the first caller in the program
   that saves ONE tenant, and the read-modify-write change exists to stop it
   wiping the others. Check the radio library is still there.
-- [ ] **`settings   r4w.pos` should still exist, unchanged.** It is deliberately
+- [ ] **`settings   tr4w.pos` should still exist, unchanged.** It is deliberately
   left in place and simply stops being read. Nothing writes it any more.
 - [ ] Start TR4W again. The two windows should be where you left them -- read
   from the JSON this time, not the `.pos`.
@@ -297,9 +297,9 @@ replaced by `LCLIntf.OpenURL`/`OpenDocument`, and four menu items that had grown
 their own `ShellExecute` now go through `OpenUrl` like the other six callers did
 all along.
 
-- [ ] **3830 scores** and **ARRL log submission** (both under the log-submission
+- [x] **3830 scores** and **ARRL log submission** (both under the log-submission
   menu) each open a browser.
-- [ ] **QRZ.RU calendar** and **WA7BNM calendar** open the page **for the CURRENT
+- [x] **QRZ.RU calendar** and **WA7BNM calendar** open the page **for the CURRENT
   CONTEST** -- these two build their URL from `ContestsArray[Contest]`, and the
   URL is now composed with `SysUtils.Format` into a string instead of
   `TF.Format` into a buffer, so a wrong contest id or a truncated URL is the
@@ -324,12 +324,12 @@ deploy into `target\`, which is yours).
 
 **Two decisions this sweep surfaced, both yours and neither urgent:**
 
-- [ ] **EMPTY PROCEDURES.** `DeleteOrMoveLog` (`LOGMENU`), and routines in
+- [x] **EMPTY PROCEDURES.** `DeleteOrMoveLog` (`LOGMENU`), and routines in
   `LOGWAE` and `LOGHP`, had their ENTIRE bodies commented out -- so removing the
   comment leaves `begin end;`. They have been silent no-ops for years while
   still being called. That is a dead FEATURE, not dead text: delete the
   routines and their call sites, or reinstate the behaviour.
-- [ ] **`StartNewContest` is dead and carries a hardcoded path.** No callers
+- [x] **`StartNewContest` is dead and carries a hardcoded path.** No callers
   anywhere (checked case-insensitively, including `tr4w.dpr` and `test\`), and
   its body is `WinExec('D:\TR4W_WinAPI\out\tr4w.exe', 0)` -- the original
   author's own machine. It could never have worked on a user's PC. Delete, or
@@ -364,18 +364,18 @@ as an argument, so quoting is no longer their problem:
   the recording.
 - [ ] The **DVK recorder** starts from the program-message editor with the file
   to record.
-- [ ] **Open in editor** (file preview, history.txt) opens the operator's
+- [x] **Open in editor** (file preview, history.txt) opens the operator's
   `.txt`-associated program -- and still falls back to Notepad when there is no
   association.
 
 **The rest should be unremarkable:**
 
 - [ ] **Run server** starts `tr4wserver.exe`; **Ping server** pings it.
-- [ ] Calculator, Volume control, Recording control, Device manager, the
+- [x] Calculator, Volume control, Recording control, Device manager, the
   date/time applet, a command prompt, and "show the log folder" all still open.
-- [ ] **MMTTY** starts with its `-t -s -u -r` switches. It stays Windows-only by
+- [x] **MMTTY** starts with its `-t -s -u -r` switches. It stays Windows-only by
   decision (NY4I, 2026-08-21: not on macOS, and not on Linux either).
-- [ ] The **WINEXEC** function-key command still runs an operator command line,
+- [x] The **WINEXEC** function-key command still runs an operator command line,
   minimised as before.
 
 **A FAILURE NOW SAYS SO.** WinExec's "less than 32 means it failed" was checked
@@ -412,6 +412,92 @@ refused, none the other way). 254 of those callsigns are now a test fixture.
 will:** `build\Build-Bench.ps1`, then run `test\bench\bench_callsign.exe` over
 any list of callsigns -- it reports exactly which ones are accepted and refused,
 rather than leaving us to infer it from behaviour.
+
+### 17. LPT CW keying and the YCCC box -- test before any decision
+
+**NY4I, 2026-08-21: "I have Windows users using the LPT port for CW and YCCC box
+control so I cannot delete it yet."** Nothing here is a removal candidate. It is
+listed so the testing happens before the questions below are reopened.
+
+**Two different dependencies, often spoken of together but not the same thing:**
+
+- **LPT** -- `uIO.pas` loads `inpout32.dll` and drives the parallel port: CW
+  keying, PTT, and the paddle / foot-switch INPUTS. `LPT.pas` is the settings
+  dialog for the port assignments.
+- **YCCC SO2R+** -- `uYCCCSO2R.pas`, a USB **HID** device. Different transport,
+  different future.
+
+#### To test
+
+- [ ] **CW keys from the LPT port** at the configured base address, with clean
+  timing at contest speed.
+- [ ] **PTT asserts and releases** on the LPT line.
+- [ ] **The paddle and the foot switch read back.** These are INPUTS on the same
+  port, and an input that never asserts looks exactly like an unplugged switch --
+  worth testing deliberately rather than assuming.
+- [ ] **The YCCC SO2R+ box opens and switches.** HID, so a separate check.
+- [ ] **A machine with no `inpout32.dll`** still starts and reports the absence
+  ONCE rather than on every attempt (`NoInpOut32Message`; the load is attempted
+  at most once by design).
+
+#### The HWND in OpenLPT is a mislabel, not a design problem
+
+An earlier reading of this called the platform seam an API DESIGN decision. That
+was wrong, and the body says so:
+
+```pascal
+function OpenLPT(var PortHandle: HWND; LPT: PortType): boolean;
+begin
+  ...
+  PortHandle := LPTBaseAA[LPT];    // an I/O BASE ADDRESS -- 0x378, not a window
+  Result := True;
+end;
+```
+
+`PortHandle` never holds a window handle. Every caller passes something that is
+plainly an address: `tPaddlePortBaseAddress`, `tBandOutputPortBaseAddress`,
+`Radio1.tKeyerPortHandle`. `HWND` is simply the integer type that happened to be
+in scope. So the fix is a TYPE CORRECTION -- `HWND` to `Word`, or a named
+`TLPTBaseAddress` -- with no behaviour change whatsoever, which is the
+type-honesty rule in CLAUDE.md: fix the declaration, do not cast at the call
+site.
+
+Worth noting: `src\DLPortIO.pas`, the DEAD predecessor, has the more portable
+signature already -- `GetPortByte(Address: Word)`, `OpenDriver: boolean`.
+
+- [ ] **Sequencing is NY4I's call:** correct the type BEFORE the lab test (so the
+  binary tested is the corrected one, and it is only tested once), or AFTER (so
+  the binary tested is exactly what ships today). It is mechanical either way.
+
+#### Linux is possible -- with two real conditions
+
+NY4I, 2026-08-21, pointing at <https://wiki.freepascal.org/Hardware_Access>: the
+parallel-port methods there cover Windows AND Linux, and they share TR4W's model
+of "read or write a byte at an I/O base address".
+
+| | how | condition |
+|---|---|---|
+| Windows | `inpout32.dll`, `Inp32`/`Out32` | what `uIO` already does |
+| Linux | `ports` unit + `ioperm()` from libc, or FPC's `fpioperm` in unit `x86` | **requires root**, and is **x86-only** |
+
+**Both conditions matter and neither should be designed away.** Asking a contest
+operator to run the logger as root is a genuine deployment problem, and
+`fpioperm` does not exist on ARM because ARM has no x86 I/O ports -- so a
+Raspberry Pi station gets no LPT by this route regardless. `ppdev`
+(`/dev/parport`) is the other Linux path and does not require root, but the wiki
+does not cover it and it has not been looked at here.
+
+**So LPT moves from GUARD to a candidate for ABSTRACT in Phase 8** -- a seam with
+a per-OS implementation behind it, rather than a permanent `{$IFDEF WINDOWS}`.
+Not scheduled, and not before the bench test.
+
+#### `src\DLPortIO.pas` stays
+
+668 lines, in no project file, referenced by no unit -- the older parallel-port
+driver `uIO` replaced (GM0GAV, 2015: *"Rewrite of uIO to use InpOut32.dll"*).
+Dead, but it is the reference for how the previous driver did this, and deleting
+it in the week the LPT path gets bench-tested would throw away the comparison
+exactly when it might be wanted. Revisit after the test.
 
 ---
 

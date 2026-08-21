@@ -8,13 +8,13 @@ program bench_callsign;
 
   Five measurements over the SAME corpus:
 
-    1. GoodCallSyntax                  what TR4W does today: character tests.
+    1. IsAGoodCall                  what TR4W does today: character tests.
     2. uRegex.RegexMatches             what TR4W's regex API does today, which
                                        CONSTRUCTS AND COMPILES TRegExpr on every
                                        single call.
     3. TRegExpr, compiled once, anchored     the fair regex number.
     4. TRegExpr, compiled once, unanchored   the pattern exactly as published.
-    5. Hybrid: GoodCallSyntax first, regex only for what it accepts.
+    5. Hybrid: IsAGoodCall first, regex only for what it accepts.
 
   It also reports AGREEMENT, because speed is only half the question: a
   validator that is fast and wrong is not a candidate.
@@ -36,6 +36,9 @@ uses
 
 const
    // Copied verbatim from LOGSTUFF.PAS:10534 -- the pattern TR4W uses today.
+   RX_POTA  = '^([A-Za-z]{2})-(\d{4,5})$';
+   RX_GUIDP = '^[{]?[0-9a-fA-F]{8}-?[0-9a-fA-F]{4}-?[0-9a-fA-F]{4}-?' +
+              '[0-9a-fA-F]{4}-?[0-9a-fA-F]{12}[}]?$';
    RX_TREE = '^(?:\w{1,2}\d\/|\d\w\/|\w{1,2}\/)?\w+[0-9]+\w+\/?\w*\s*$';
 
 var
@@ -103,19 +106,19 @@ begin
 
    SetLength(goodFlags, n);
 
-   { 1. GoodCallSyntax -------------------------------------------------- }
+   { 1. IsAGoodCall -------------------------------------------------- }
    acc := 0;
    StartClock(t0);
    for i := 0 to n - 1 do
       begin
-      goodFlags[i] := GoodCallSyntax(calls[i]);
+      goodFlags[i] := IsAGoodCall(calls[i]);
       if goodFlags[i] then
          begin
          Inc(acc);
          end;
       end;
    ms := StopClock(t0);
-   Report('1. GoodCallSyntax (character tests)', ms, n, acc);
+   Report('1. IsAGoodCall (character tests)', ms, n, acc);
 
    { 2. uRegex.RegexMatches -- compiles the pattern EVERY call.
         Deliberately run over a small subset: at this cost the full corpus
@@ -177,7 +180,7 @@ begin
    StartClock(t0);
    for i := 0 to n - 1 do
       begin
-      if GoodCallSyntax(calls[i]) then
+      if IsAGoodCall(calls[i]) then
          begin
          if rxOnce.Exec(AnsiString(calls[i])) then
             begin
@@ -186,7 +189,7 @@ begin
          end;
       end;
    ms := StopClock(t0);
-   Report('5. HYBRID: GoodCallSyntax then regex', ms, n, acc);
+   Report('5. HYBRID: IsAGoodCall then regex', ms, n, acc);
 
    { agreement ----------------------------------------------------------- }
    WriteLn;
@@ -221,7 +224,7 @@ begin
    // callsigns every rejection is either a genuine oddity or a bug in the
    // rule, so they are worth naming rather than counting.
    WriteLn;
-   WriteLn('GoodCallSyntax REJECTED these:');
+   WriteLn('IsAGoodCall REJECTED these:');
    for i := 0 to n - 1 do
       begin
       if not goodFlags[i] then
@@ -231,9 +234,9 @@ begin
       end;
    WriteLn;
    WriteLn(Format('AGREEMENT over %d real callsigns:', [n]));
-   WriteLn(Format('   GoodCallSyntax says YES, regex says NO : %6d   e.g. %s',
+   WriteLn(Format('   IsAGoodCall says YES, regex says NO : %6d   e.g. %s',
                   [disagreeRegexNo, sampleNo]));
-   WriteLn(Format('   GoodCallSyntax says NO,  regex says YES: %6d   e.g. %s',
+   WriteLn(Format('   IsAGoodCall says NO,  regex says YES: %6d   e.g. %s',
                   [disagreeRegexYes, sampleYes]));
 
    { The tree's OWN callsign pattern, which is the swap actually on the table:
@@ -274,10 +277,38 @@ begin
          end;
       end;
    WriteLn;
-   WriteLn('GoodCallSyntax vs TR4W RX_CALLSIGN:');
-   WriteLn(Format('   GoodCallSyntax YES, RX_CALLSIGN NO : %6d   e.g. %s', [disagreeRegexNo, sampleNo]));
-   WriteLn(Format('   GoodCallSyntax NO,  RX_CALLSIGN YES: %6d   e.g. %s', [disagreeRegexYes, sampleYes]));
+   WriteLn('IsAGoodCall vs TR4W RX_CALLSIGN:');
+   WriteLn(Format('   IsAGoodCall YES, RX_CALLSIGN NO : %6d   e.g. %s', [disagreeRegexNo, sampleNo]));
+   WriteLn(Format('   IsAGoodCall NO,  RX_CALLSIGN YES: %6d   e.g. %s', [disagreeRegexYes, sampleYes]));
    rxTree.Free;
+
+   { THE TWO PATTERNS THAT REMAIN in LOGSTUFF, at the size they really are.
+     The 0.5 ms figure for RegexMatches was measured with a 6.5 KB pattern;
+     whether a per-call compile matters for a 30-character one is a different
+     question and wants its own number. POTA park runs per ADIF record. }
+   acc := 0;
+   StartClock(t0);
+   for i := 0 to subset - 1 do
+      begin
+      if RegexMatches(RX_POTA, 'US-1234') then
+         begin
+         Inc(acc);
+         end;
+      end;
+   ms := StopClock(t0);
+   Report('7. RegexMatches RX_POTA_PARK (compiles per call)', ms, subset, acc);
+
+   acc := 0;
+   StartClock(t0);
+   for i := 0 to subset - 1 do
+      begin
+      if RegexMatches(RX_GUIDP, '6B29FC40-CA47-1067-B31D-00DD010662DA') then
+         begin
+         Inc(acc);
+         end;
+      end;
+   ms := StopClock(t0);
+   Report('8. RegexMatches RX_GUID (compiles per call)', ms, subset, acc);
 
    rxOnce.Free;
    rxUnanchored.Free;
