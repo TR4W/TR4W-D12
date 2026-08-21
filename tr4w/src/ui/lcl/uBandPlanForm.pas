@@ -127,7 +127,7 @@ const
   FIRST_BAND = Band160;
   LAST_BAND  = Band2;
 
-  // The key this dialog's bounds are stored under in settings	r4w.json.
+  // The key this dialog's bounds are stored under in settings\tr4w.json.
   // Deliberately not one of VC.WindowNames -- those name the main window's
   // OWN windows and are indexed by WindowsType; this is a dialog, and the
   // store is keyed by name precisely so a newcomer needs no enum slot.

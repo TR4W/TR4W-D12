@@ -1363,7 +1363,7 @@ begin
    // writes the JSON store, rather than RegisterLegacySetting.
    if CommandIsJSONOwned(aCommand) then
       begin
-      logger.Error('[SetCFGCommandValue] "%s" is csJSON -- settings	r4w.json owns it. '
+      logger.Error('[SetCFGCommandValue] "%s" is csJSON -- settings\tr4w.json owns it. '
                  + 'Refusing to write tr4w.ini. Use RegisterStoredSetting for this row.',
                    [aCommand]);
       Result := False;

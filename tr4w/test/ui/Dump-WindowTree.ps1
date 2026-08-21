@@ -23,7 +23,7 @@
 #
 # These scripts used to stage smoke.cfg / drive.cfg / typing.cfg and remove them
 # afterwards.  That corrupted the operator's settings: TR4W records the last
-# configuration opened in settings	r4w.json, so the store ended up naming a
+# configuration opened in settings\tr4w.json, so the store ended up naming a
 # file the harness had just deleted -- and the open-contest dialog then HID its
 # "most recent configuration" button, because that button only appears when the
 # recorded file still exists (uNewContest.pas:180).  NY4I found it, 2026-08-18.

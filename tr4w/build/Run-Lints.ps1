@@ -63,6 +63,13 @@ $lints = @(
    # MIGRATED_COMMANDS -- and each omission fails differently and silently.
    # 153 settings still have to make that move; this is what keeps them honest.
    @{ Name = 'Lint-SettingsMigration'; Arg = $Tr4wDir; NeedsFpc = $false }
+   # A Windows path written through a backslash-interpreting tool loses its
+   # backslash-t to
+   # a literal TAB: 'settings\tr4w.json' becomes 'settings<TAB>r4w.json'. It
+   # compiles, it tests clean, and it is invisible in a diff -- it has landed in
+   # this tree at least seven times, every one of them agent-written. $ProjectRoot
+   # rather than $Tr4wDir because docs\ and the repo-root markdown get it too.
+   @{ Name = 'Lint-PathEscapes';     Arg = (Split-Path -Parent $Tr4wDir); NeedsFpc = $false }
    # THE SAME RATCHET, SECOND GROUP -- phase 8, the Win32 the program speaks
    # OUTSIDE its windows: the ini API, serial, the registry, raw threads and
    # events, audio, LPT. Phase 7 does not touch any of it, and none of it
