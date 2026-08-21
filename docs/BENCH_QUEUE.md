@@ -389,6 +389,38 @@ and the WinKeyer HTML debug facility are deleted -- *"we now have a wk_debug
 extra flag"* -- and the program's last `wsprintf` went with them
 (`fb26b49b`). Nothing to test: none of it had ever compiled.
 
+### 16. One callsign validator: IsAGoodCall  (`d3d4d5b3`)
+
+The three callsign REGEXES are gone -- `RX_CALLSIGN`, `RX_US_PREFIX`,
+`RX_US_CALLSIGN` -- replaced by hand-written tests in `uCallSignRoutines`.
+Measured over 234,467 real callsigns: four times faster than the pattern it
+replaced and a strict SUPERSET of it (131 real calls it accepts that the regex
+refused, none the other way). 254 of those callsigns are now a test fixture.
+
+- [x] **Operator login** -- confirmed 2026-08-21 (NY4I). The only path whose
+  behaviour genuinely changed: lower-case `w1aw` now takes the STRICT US check
+  it used to skip, because the old `RX_US_PREFIX` had 'a' twice and no
+  lower-case 'w'.
+- [ ] **WSJT-X CQ decoding** (`uWSJTX.pas:557`) -- swapped from
+  `IsValidCallsign` to `IsAGoodCall`. Marginal calls in the decode list are
+  where a difference would show.
+- [ ] **DX spots and packet spots** -- the heaviest users of `IsAGoodCall`. The
+  tell would be a spot that used to be filtered out and now is not, or the
+  reverse.
+
+**If something looks wrong, the benchmark diagnoses it faster than a symptom
+will:** `build\Build-Bench.ps1`, then run `test\bench\bench_callsign.exe` over
+any list of callsigns -- it reports exactly which ones are accepted and refused,
+rather than leaving us to infer it from behaviour.
+
+---
+
+## Findings — bench run 2026-08-20 (NY4I)
+
+Defects found while working the list above. **A finding is not a checklist item.** They
+are written down here rather than in the checklists because a checklist item is
+a question and these are answers.
+
 ### F1 — a stray character appears before a message with a blank caption — **ANSWERED: the command delimiters; PARKED behind the JSON/F-key rewrite**
 
 **Seen:** F5 saved with the command `EXCHANGERADIOS` and **no caption**. The
