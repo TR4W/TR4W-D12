@@ -26,6 +26,24 @@ param(
 
 $ErrorActionPreference = 'Continue'
 
+# RESOLVED, NOT JOINED.  The default $Tr4wDir is the literal string
+# "<repo>/tr4w/build/.." -- a path with an unresolved ".." still in it.
+# Split-Path is TEXTUAL, so `Split-Path -Parent` on that strips the last
+# segment, which is the ".." itself, and hands back the BUILD folder instead
+# of the repository root.
+#
+# That is not hypothetical: Lint-PathEscapes was invoked that way and so
+# scanned 33 files in the build folder rather than the 1200 in the tree. It
+# reported a clean pass while two corrupted paths sat in src -- the lint that
+# exists precisely to catch backslash-t corruption could not see the source
+# (found 2026-08-21).
+#
+# Forward slashes above on purpose: a Windows path written with backslashes
+# in a comment is the very thing this lint fires on, and it fired on the
+# first draft of this note.
+$Tr4wDir = (Resolve-Path -LiteralPath $Tr4wDir).Path
+$repoRoot = (Resolve-Path -LiteralPath (Join-Path $Tr4wDir '..')).Path
+
 $src   = Join-Path $Tr4wDir 'src'
 $build = $PSScriptRoot
 
@@ -69,7 +87,7 @@ $lints = @(
    # compiles, it tests clean, and it is invisible in a diff -- it has landed in
    # this tree at least seven times, every one of them agent-written. $ProjectRoot
    # rather than $Tr4wDir because docs\ and the repo-root markdown get it too.
-   @{ Name = 'Lint-PathEscapes';     Arg = (Split-Path -Parent $Tr4wDir); NeedsFpc = $false }
+   @{ Name = 'Lint-PathEscapes';     Arg = $repoRoot; NeedsFpc = $false }
    # THE SAME RATCHET, SECOND GROUP -- phase 8, the Win32 the program speaks
    # OUTSIDE its windows: the ini API, serial, the registry, raw threads and
    # events, audio, LPT. Phase 7 does not touch any of it, and none of it

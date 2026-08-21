@@ -286,7 +286,17 @@ begin
            SendMessage(InitialCommandsHWNDArray[TempCardinal, 2], CB_SETCURSEL, 0, 0);
            end;
 
-        MainCallsign[0] := AnsiChar(GetPrivateProfileStringA(_COMMANDS, MAIN_CALLSIGN, nil, @MainCallsign[1], SizeOf(MainCallsign), TR4W_INI_FILENAME));
+        // THE LIVE VALUE, NOT THE INI.  This used to read MAIN CALLSIGN out of
+        // tr4w.ini straight into the MainCallsign global -- but that row is
+        // csJSON, so settings\tr4w.json owns it and ApplyStoredCommands has
+        // already put the right value in that global at startup.  Reading the
+        // ini here did not merely show a stale callsign in the box: it
+        // OVERWROTE the live global with it, so opening New Contest on a
+        // station whose ini disagreed silently changed the operator's callsign.
+        // On a station with no ini at all it blanked it.
+        //
+        // Same defect as tr4w.dpr's DEBUG LOG LEVEL read (fixed 2026-08-21):
+        // a migrated row still being read from the file it no longer lives in.
         if MainCallsign <> '' then
            begin
            Windows.SetDlgItemTextA(hwnddlg, NC_CALL_EDIT, @MainCallsign[1]);

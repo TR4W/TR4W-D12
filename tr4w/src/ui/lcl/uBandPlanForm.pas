@@ -41,7 +41,7 @@ unit uBandPlanForm;
   Same as the original, which tested GetDlgItemInt's pTranslated and did
   `Continue`.
 
-  IT WRITES settings	r4w.json, as of 2026-08-21.  It used to replace a whole
+  IT WRITES settings\tr4w.json, as of 2026-08-21.  It used to replace a whole
   [BAND PLAN] ini section in one WritePrivateProfileSectionA, because the keys
   REPEAT there -- twelve `BAND MAP CUTOFF FREQUENCY=` lines and up to
   twenty-four `FREQUENCY MEMORY=` ones -- which no single-value write can
