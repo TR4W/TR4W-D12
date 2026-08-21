@@ -23,7 +23,13 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
-## Waiting now (as of 2026-08-20)
+## Waiting now (as of 2026-08-21)
+
+**STILL UNRUN AND THE OLDEST ITEM HERE: the radio bench test (section 10).**
+The 2026-08-20 commits were held for it and then pushed on 2026-08-21 without
+it having happened, at NY4I's instruction. Nothing in the radio panel seam has
+been exercised on hardware, and it had NEVER delivered an update before that
+fix -- so section 10 is new behaviour, not a regression check.
 
 **Bench run 2026-08-20 (NY4I).** Items 2 and 6 passed in full and are gone; the
 numbering keeps its gaps on purpose, because commit messages cite these numbers.
@@ -283,6 +289,63 @@ means a rect read as (0,0,0,0) -- which is a LEGAL saved value, so nothing will
 report it. A window back at its default position means its name did not match:
 `WindowNames` in `VC.pas` is now the on-disk key, and a rename orphans a saved
 entry silently.
+
+### 12. Six links, after `OpenUrl` became the only launcher  (`f3fece6d`)
+
+**One click each, and the point is that they still open.** `ShellExecute` was
+replaced by `LCLIntf.OpenURL`/`OpenDocument`, and four menu items that had grown
+their own `ShellExecute` now go through `OpenUrl` like the other six callers did
+all along.
+
+- [ ] **3830 scores** and **ARRL log submission** (both under the log-submission
+  menu) each open a browser.
+- [ ] **QRZ.RU calendar** and **WA7BNM calendar** open the page **for the CURRENT
+  CONTEST** -- these two build their URL from `ContestsArray[Contest]`, and the
+  URL is now composed with `SysUtils.Format` into a string instead of
+  `TF.Format` into a buffer, so a wrong contest id or a truncated URL is the
+  thing to watch for.
+- [ ] **Check for updates** opens the download link.
+- [ ] **Preferences -> Logging -> open the log file** opens `tr4w.log` in
+  whatever editor the operator has associated with `.txt`.
+
+### 13. Nothing should have changed -- 7,187 lines of commented-out code are gone
+  (`dd53c1ab`, `67af7f28`, `3c1c4703`)
+
+**No behaviour change is intended anywhere in this, which is exactly why it wants
+a normal session rather than a checklist.** The app, `tr4wserver`, 16 lints and
+9558 unit tests are green, and the golden corpus has NOT been run (it needs a
+deploy into `target\`, which is yours).
+
+- [ ] **Run a short contest normally** -- log a few QSOs, work a dupe, change
+  band and mode, send CW from the function keys, and exit cleanly.
+- [ ] **Then run the golden corpus** once you have deployed, since the sweep
+  touched `LOGSTUFF`, `LOGSUBS2`, `LOGDUPE`, `PostUnit` and `tree` -- the units
+  the corpus is built to protect. That is the real regression gate here.
+
+**Two decisions this sweep surfaced, both yours and neither urgent:**
+
+- [ ] **EMPTY PROCEDURES.** `DeleteOrMoveLog` (`LOGMENU`), and routines in
+  `LOGWAE` and `LOGHP`, had their ENTIRE bodies commented out -- so removing the
+  comment leaves `begin end;`. They have been silent no-ops for years while
+  still being called. That is a dead FEATURE, not dead text: delete the
+  routines and their call sites, or reinstate the behaviour.
+- [ ] **`StartNewContest` is dead and carries a hardcoded path.** No callers
+  anywhere (checked case-insensitively, including `tr4w.dpr` and `test\`), and
+  its body is `WinExec('D:\TR4W_WinAPI\out\tr4w.exe', 0)` -- the original
+  author's own machine. It could never have worked on a user's PC. Delete, or
+  say what it was meant to do.
+
+### 14. Still open from the earlier sweep -- the judgement calls
+
+**Blocks under 30 lines were left alone deliberately**, along with anything that
+looked like a DISABLED RULE rather than replaced code. Finding F5 is the standing
+example: `GoodCallSyntax`'s "no digit in positions 2-4" test has been commented
+out since 4.38.3, and deleting it would make that decision permanent and silent.
+
+- [ ] **Decide F5**: should `GoodCallSyntax` reject a letters-only string like
+  `FRED`? That is a callsign-routines decision with unit tests
+  (`uTestCallSignRoutines.Test_GoodCallSyntax_Rejects`), not an Edit QSO one.
+  Until it is answered the commented rule must stay where it is.
 
 ---
 
