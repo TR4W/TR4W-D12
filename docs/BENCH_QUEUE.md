@@ -591,6 +591,48 @@ written and never read back. That was the whole of the
    the wrong file and lost on the next start, silently. The 11 migrated today
    are out of that path; the rest go when the remaining 20 do.
 
+### 20. 15 more settings to JSON -- ini count now 5, and the risky ones are here
+
+The rule used was the table's own: **`crC` says which FILE owns the value.**
+`crC=0` means the station file, which today is `tr4w.ini`, so those must move.
+Only `BAND` and `SINGLE BAND SCORE` are `crC=1` (contest-owned) and stay for the
+contest file.
+
+**These 15 are read-only in Preferences, so nothing can be tested by changing
+them.** That is exactly why they need watching: their values arrive only through
+the config parser reading a file, and the file just changed.
+
+- [ ] **The multiplier and scoring rows are the ones to watch:**
+  `DOMESTIC MULTIPLIER`, `DX MULTIPLIER`, `PREFIX MULTIPLIER`, `ZONE
+  MULTIPLIER`, `QSO POINT METHOD`, `EXCHANGE RECEIVED`, `CONTEST`,
+  `CONTEST NAME`. Start a contest of each kind you care about and confirm the
+  multipliers and scoring are what they should be. **If a stale value were being
+  applied over the contest's, wrong SCORING is how it would show** -- not an
+  error message.
+- [ ] **The golden corpus covers 13 contests and is green (22/0/4)**, so this is
+  about contests the corpus does not carry.
+- [ ] **QUICK QSL messages x5 and `REMINDER`** -- confirm the quick-QSL message
+  still sends what it used to.
+- [ ] **`PADDLE PORT`** is the one genuinely editable row in this batch. Set it,
+  restart, confirm it stuck.
+
+**Why this should be safe, and what would disprove it:** nothing in the program
+writes these keys -- there is no writer for any of them outside CFGCA -- so a
+value only ever came from a file line. `MIGRATED_COMMANDS` carries an existing
+`tr4w.ini` value into the store once, and the contest `.cfg` still overrides via
+`CommandCameFromContestCFG`. Equivalent to today, minus the ini. A contest whose
+multipliers come out wrong disproves it.
+
+**Still on the ini, 5:** `CLEAR DUPE SHEET` (an ACTION trigger --
+`@ClearDupeSheetCommandGiven` -- persisting TRUE would clear the dupe sheet on
+every start), `BAND` and `SINGLE BAND SCORE` (contest-owned, going to the SQLite
+contest file), and `BAND MAP CUTOFF FREQUENCY` + `FREQUENCY MEMORY` (multi-valued
+`ctFreqList`, needing a JSON home for the whole `[BAND PLAN]` section).
+
+**Sections still ahead before `tr4w.ini` can be deleted:** `[BAND PLAN]`,
+`[COLORS]` (~112 elements x 2, and the reason Ctrl-J cannot be deleted yet),
+`[WINKEYER]`, and `uNewContest`'s `MAIN CALLSIGN` read.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)

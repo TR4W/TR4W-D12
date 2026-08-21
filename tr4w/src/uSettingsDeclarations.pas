@@ -354,9 +354,9 @@ begin
                           'Category-Transmitter');
    RegisterStoredSetting('contest.columnDupesheetEnable','COLUMN DUPESHEET ENABLE',
                           'Column Dupesheet Enable');
-   RegisterLegacySetting('contest.contest',             'CONTEST',
+   RegisterStoredSetting('contest.contest',             'CONTEST',
                           'Contest');
-   RegisterLegacySetting('contest.contestName',         'CONTEST NAME',
+   RegisterStoredSetting('contest.contestName',         'CONTEST NAME',
                           'Contest Name');
    RegisterStoredSetting('contest.contestTitle',        'CONTEST TITLE',
                           'Contest Title');
@@ -364,13 +364,13 @@ begin
                           'Count Domestic Countries');
    RegisterStoredSetting('contest.customInitialExchangeString','CUSTOM INITIAL EXCHANGE STRING',
                           'Custom Initial Exchange String');
-   RegisterLegacySetting('contest.domesticMultiplier',  'DOMESTIC MULTIPLIER',
+   RegisterStoredSetting('contest.domesticMultiplier',  'DOMESTIC MULTIPLIER',
                           'Domestic Multiplier');
-   RegisterLegacySetting('contest.dxMultiplier',        'DX MULTIPLIER',
+   RegisterStoredSetting('contest.dxMultiplier',        'DX MULTIPLIER',
                           'DX Multiplier');
    RegisterStoredSetting('contest.exchangeMemoryEnable','EXCHANGE MEMORY ENABLE',
                           'Exchange Memory Enable');
-   RegisterLegacySetting('contest.exchangeReceived',    'EXCHANGE RECEIVED',
+   RegisterStoredSetting('contest.exchangeReceived',    'EXCHANGE RECEIVED',
                           'Exchange Received');
    RegisterStoredSetting('contest.gridMapCenter',       'GRID MAP CENTER',
                           'Grid Map Center');
@@ -404,7 +404,7 @@ begin
                           'Multiple Bands');
    RegisterStoredSetting('contest.multipleModes',       'MULTIPLE MODES',
                           'Multiple Modes');
-   RegisterLegacySetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
+   RegisterStoredSetting('contest.prefixMultiplier',    'PREFIX MULTIPLIER',
                           'Prefix Multiplier');
    RegisterStoredSetting('contest.qslMode',             'QSL MODE',
                           'QSL Mode');
@@ -414,7 +414,7 @@ begin
                           'QSO By Mode');
    RegisterStoredSetting('contest.qsoNumberByBand',     'QSO NUMBER BY BAND',
                           'QSO Number By Band');
-   RegisterLegacySetting('contest.qsoPointMethod',      'QSO POINT METHOD',
+   RegisterStoredSetting('contest.qsoPointMethod',      'QSO POINT METHOD',
                           'QSO Point Method');
    RegisterStoredSetting('contest.qsoPointsDomesticCw', 'QSO POINTS DOMESTIC CW',
                           'QSO Points Domestic CW');
@@ -432,19 +432,19 @@ begin
                           'Qtc Minutes');
    RegisterStoredSetting('contest.qtcQrs',              'QTC QRS',
                           'Qtc Qrs');
-   RegisterLegacySetting('contest.quickQslCwMessage',   'QUICK QSL CW MESSAGE',
+   RegisterStoredSetting('contest.quickQslCwMessage',   'QUICK QSL CW MESSAGE',
                           'Quick QSL CW Message');
-   RegisterLegacySetting('contest.quickQslCwMessage1',  'QUICK QSL CW MESSAGE1',
+   RegisterStoredSetting('contest.quickQslCwMessage1',  'QUICK QSL CW MESSAGE1',
                           'Quick QSL CW Message1');
    RegisterStoredSetting('contest.quickQslKey1',        'QUICK QSL KEY 1',
                           'Quick QSL Key 1');
    RegisterStoredSetting('contest.quickQslKey2',        'QUICK QSL KEY 2',
                           'Quick QSL Key 2');
-   RegisterLegacySetting('contest.quickQslMessage1',    'QUICK QSL MESSAGE 1',
+   RegisterStoredSetting('contest.quickQslMessage1',    'QUICK QSL MESSAGE 1',
                           'Quick QSL Message 1');
-   RegisterLegacySetting('contest.quickQslMessage2',    'QUICK QSL MESSAGE 2',
+   RegisterStoredSetting('contest.quickQslMessage2',    'QUICK QSL MESSAGE 2',
                           'Quick QSL Message 2');
-   RegisterLegacySetting('contest.quickQslSsbMessage',  'QUICK QSL SSB MESSAGE',
+   RegisterStoredSetting('contest.quickQslSsbMessage',  'QUICK QSL SSB MESSAGE',
                           'Quick QSL SSB Message');
    RegisterStoredSetting('contest.r150sMode',           'R150S MODE',
                           'R150S Mode');
@@ -466,7 +466,7 @@ begin
                           'Sprint Qsy Rule');
    RegisterStoredSetting('contest.tenMinuteRule',       'TEN MINUTE RULE',
                           'Ten Minute Rule');
-   RegisterLegacySetting('contest.zoneMultiplier',      'ZONE MULTIPLIER',
+   RegisterStoredSetting('contest.zoneMultiplier',      'ZONE MULTIPLIER',
                           'Zone Multiplier');
 
    // --- Operating (34) --------------------------------
@@ -544,7 +544,7 @@ begin
                           'Auto Send Character Count');
    RegisterStoredSetting('cw.ctrlj.codeSpeed',                'CODE SPEED',
                           'Code Speed');
-   RegisterLegacySetting('cw.ctrlj.paddlePort',               'PADDLE PORT',
+   RegisterStoredSetting('cw.ctrlj.paddlePort',               'PADDLE PORT',
                           'Paddle Port');
    RegisterStoredSetting('cw.ctrlj.questionMarkChar',         'QUESTION MARK CHAR',
                           'Question Mark Char');
@@ -582,7 +582,7 @@ begin
                           'Insert Mode');
    RegisterStoredSetting('appearance.ctrlj.rateDisplay',      'RATE DISPLAY',
                           'Rate Display');
-   RegisterLegacySetting('appearance.ctrlj.reminder',         'REMINDER',
+   RegisterStoredSetting('appearance.ctrlj.reminder',         'REMINDER',
                           'Reminder');
    RegisterStoredSetting('appearance.layout.rowCount',         'ROW COUNT',
                           'Row Count');

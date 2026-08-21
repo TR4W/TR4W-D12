@@ -340,8 +340,23 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..234] of string =
+   MIGRATED_COMMANDS: array[0..249] of string =
    (
+      'CONTEST NAME',
+      'CONTEST',
+      'DOMESTIC MULTIPLIER',
+      'DX MULTIPLIER',
+      'EXCHANGE RECEIVED',
+      'PADDLE PORT',
+      'PREFIX MULTIPLIER',
+      'QSO POINT METHOD',
+      'QUICK QSL CW MESSAGE',
+      'QUICK QSL CW MESSAGE1',
+      'QUICK QSL MESSAGE 1',
+      'QUICK QSL MESSAGE 2',
+      'QUICK QSL SSB MESSAGE',
+      'REMINDER',
+      'ZONE MULTIPLIER',
       'BAND MAP SPLIT MODE',
       'CATEGORY-ASSISTED',
       'CATEGORY-BAND',
