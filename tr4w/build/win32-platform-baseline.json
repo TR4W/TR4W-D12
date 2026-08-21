@@ -2,12 +2,12 @@
     "ini.Read":  14,
     "ini.Write":  21,
     "wsprintf":  1,
-    "process.Launch":  19,
+    "process.Launch":  23,
     "thread.Create":  6,
     "thread.Event":  29,
     "serial.CommAPI":  22,
     "registry":  13,
-    "audio.MMSystem":  2,
-    "lpt.inpout32":  7,
+    "audio.MMSystem":  10,
+    "lpt.inpout32":  10,
     "mmtty.WindowMsg":  1
 }

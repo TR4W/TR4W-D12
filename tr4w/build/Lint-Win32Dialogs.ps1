@@ -223,7 +223,22 @@ foreach ($f in $files) {
    $text = Get-PascalCodeOnlyText -Path $f.FullName
    $rel  = $f.FullName.Substring($SourceDir.Length).TrimStart('\')
    foreach ($k in $patterns.Keys) {
-      $m = [regex]::Matches($text, $patterns[$k])
+      # IGNORECASE, AND IT IS NOT OPTIONAL: PASCAL IDENTIFIERS ARE NOT
+      # CASE-SENSITIVE AND .NET REGEX IS.
+      #
+      # Found 2026-08-21 while adding the platform group, by a discrepancy no
+      # one would have chased otherwise: the lint reported ONE wsprintf call
+      # site and grep -i found twelve. The others are spelled the same way and
+      # matched -- what differed was nothing; the miss was `Shellexecute` with a
+      # lowercase e, `Winexec`, and the trdos units' own spellings. TR4W spells
+      # the same identifier three ways between declaration, assignment and use,
+      # which CLAUDE.md warns about for exactly this reason.
+      #
+      # A ratchet that cannot see a differently-cased call is a ratchet with a
+      # hole in it: new Win32 could be added through the one door it does not
+      # watch, and the count would still read "none above baseline".
+      $m = [regex]::Matches($text, $patterns[$k],
+                            [Text.RegularExpressions.RegexOptions]::IgnoreCase)
       if ($m.Count -eq 0) { continue }
       $counts[$k] = $counts[$k] + $m.Count
       if (-not $where.ContainsKey($k)) {
