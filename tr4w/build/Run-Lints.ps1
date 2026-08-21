@@ -53,6 +53,12 @@ $lints = @(
    # too and lives one level up, and a ratchet that cannot see the program's own
    # entry point would let new Win32 UI in through the door it does not watch.
    @{ Name = 'Lint-Win32Dialogs';    Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Group', 'ui') }
+   # THE INI RULE, as a gate rather than a document. NY4I: "Only json should be
+   # used except for the contest.cfg." That rule had drifted twice by 2026-08-21,
+   # both times because checking it meant believing a document. It catches BOTH
+   # spellings -- the Win32 profile API and TIniFile -- because an audit that
+   # searched only for the first missed seven sites.
+   @{ Name = 'Lint-IniUsage';        Arg = $Tr4wDir; NeedsFpc = $false }
    # THE SAME RATCHET, SECOND GROUP -- phase 8, the Win32 the program speaks
    # OUTSIDE its windows: the ini API, serial, the registry, raw threads and
    # events, audio, LPT. Phase 7 does not touch any of it, and none of it

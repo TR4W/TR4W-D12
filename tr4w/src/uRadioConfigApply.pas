@@ -90,7 +90,7 @@ function ResolveTypeRendering(const aRegistryId: string): TRadioTypeRendering;
 procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
                            const aProfile: TStationProfile;
-                           const aPersist: boolean = True;
+
                            const aNamesAKeyerDevice: boolean = False);
 
 // The whole sequence: stop both radios, write both slots, regroup the ini,
@@ -1219,7 +1219,7 @@ end;
 procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
                            const aProfile: TStationProfile;
-                           const aPersist: boolean = True;
+
                            const aNamesAKeyerDevice: boolean = False);
 var
    rendered: TConfigKeyValues;
@@ -1334,24 +1334,6 @@ begin
                      [rendered[i].Key, rendered[i].Value]);
          end;
 
-      if aPersist then
-         begin
-         if rendered[i].Delete then
-            begin
-            // A DELETE is always safe to persist: removing a key cannot make
-            // the file unparseable, and CheckCommand has no say in it.
-            // nil, not '' -- a nil value REMOVES the key.  An empty string
-            // would leave the key present with a blank value, which for
-            // FACTORY ID is not the same thing at all.
-            Windows.WritePrivateProfileStringA('Radio', @keyShort[1], nil,
-                                               TR4W_INI_FILENAME);
-            end
-         else if accepted then
-            begin
-            Windows.WritePrivateProfileStringA('Radio', @keyShort[1], @valueShort[1],
-                                               TR4W_INI_FILENAME);
-            end;
-         end;
       end;
 
    if aRadio <> nil then
@@ -1557,7 +1539,7 @@ begin
          // radioDef is nil for an empty slot, and the renderer treats that as
          // "clear it" -- necessary, or the slot keeps whatever the previously
          // active profile left there.
-         ApplyRadioToSlot(radioDef, slot, aProfile, True,
+         ApplyRadioToSlot(radioDef, slot, aProfile,
                           KeyerDeviceForSlot(aKeyers, aProfile, slot) <> nil);
          end;
 
@@ -1623,25 +1605,8 @@ begin
    Result := SettingsDirectory + 'tr4wradios.ini';
 end;
 
-function ReadRadioKey(const aKey: string): string;
-var
-   ini: TIniFile;
-begin
-   // TIniFile, not GetPrivateProfileString: under D12 the generic name
-   // binds to the W variant and a bare buffer would compile silently while
-   // reading UTF-16 into ANSI (see CLAUDE.md).  The RTL wrapper sidesteps
-   // the whole question.
-   ini := TIniFile.Create(SettingsDirectory + 'tr4w.ini');
-   try
-      Result := ini.ReadString('Radio', aKey, '');
-   finally
-      ini.Free;
-   end;
-end;
-
-// The value the library WOULD render for one key -- read-only, so the startup
-// path can report a disagreement without writing anything.  '' when the slot
-// is empty or the key is not in the rendered set.
+// The value the library WOULD render for one key -- read-only.  '' when the
+// slot is empty or the key is not in the rendered set.
 function RenderedValueFor(const aStore: TRadioConfigStore;
                           const aProfile: TStationProfile;
                           const aSlot: integer;
@@ -1828,7 +1793,7 @@ begin
             // every start would be writing to disk purely to set globals --
             // and it would fail silently on a read-only program directory.
             // It also means a start CANNOT damage the operator's ini.
-            ApplyRadioToSlot(radioDef, slot, profile, False,
+            ApplyRadioToSlot(radioDef, slot, profile,
                              KeyerDeviceForSlot(keyers, profile, slot) <> nil);
             end;
 
@@ -1837,30 +1802,14 @@ begin
          CATWTR := previousCATWTR;
       end;
 
-      // REPORT a stale ini; do not fix it.  Nothing above wrote to the file,
-      // so the [Radio] keys may still say something the program is no longer
-      // doing.  That is the intended answer to "ignore the ini where they
-      // conflict" (NY4I) -- but silence would leave an operator reading a
-      // file that has not been true since they last used Preferences, so the
-      // disagreement is named, with the value that actually won.
-      //
-      // One representative key rather than all of them: this is a signpost
-      // pointing at Preferences, not a diff.
-      before := ReadRadioKey('RADIO ONE CONTROL PORT');
-      after  := RenderedValueFor(store, profile, 1, 'RADIO ONE CONTROL PORT');
-      if (after <> '') and (not SameText(before, after)) then
-         begin
-         logger.Warn('[Startup] tr4w.ini disagrees with the radio library and is being IGNORED: ' +
-                     'RADIO ONE CONTROL PORT says "%s", profile "%s" uses "%s". ' +
-                     'settings\tr4w.json is the format of record -- edit radios in Preferences. ' +
-                     'The ini is rewritten only when a profile is applied there.',
-                     [before, profile.Name, after]);
-         end
-      else
-         begin
-         logger.Info('[Startup] radio profile "%s" applied from the library',
-                     [profile.Name]);
-         end;
+      // NOTHING COMPARES AGAINST THE INI ANY MORE.  This used to read
+      // RADIO ONE CONTROL PORT back and warn when it disagreed with the
+      // library, which made sense while the [Radio] keys were still being
+      // written.  Nothing has written them since 2026-08-21, so a
+      // difference now means only that the operator has an old file, and
+      // saying so on every start is noise rather than information.
+      logger.Info('[Startup] radio profile "%s" applied from the library',
+                  [profile.Name]);
    finally
       keyers.Free;
       store.Free;

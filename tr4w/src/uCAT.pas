@@ -2246,8 +2246,6 @@ var
    end;
 
 begin
-   // Flush the profile cache so the file reflects every write made above.
-   Windows.WritePrivateProfileStringA(nil, nil, nil, TR4W_INI_FILENAME);
    lines := TStringList.Create;
    try
       try
@@ -2425,7 +2423,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
         CMD := ShortString(StrPas(PortTypeSA[ComboSelectedPort(CATWndHWND, i + 20)]));
         end;
      logger.Trace('[RestartPollingThread] ID = %s, CMD = %s',[ID, CMD]);
-     Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
  //    if not
      CheckCommand(@ID, CMD)
  //    then      showwarning(@id[1])
@@ -2450,13 +2447,11 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
   if (sel >= 0) and Assigned(gComboFactoryIds) and (sel < gComboFactoryIds.Count) then
      begin
      CMD := gComboFactoryIds[sel];
-     Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
      CheckCommand(@ID, CMD);
      end
   else
      begin
      // enum radio -- delete any stale FACTORY ID key; clear it in memory.
-     Windows.WritePrivateProfileStringA('Radio', @ID[1], nil, TR4W_INI_FILENAME);
      CheckCommand(@ID, CMD);
      end;
 
@@ -2475,7 +2470,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
      end;
 
   logger.Trace('[RestartPollingThread] ID = %s, CMD = %s',[ID, CMD]);
-  Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
 
 
@@ -2495,7 +2489,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
      ID := 'RADIO TWO NETWORK USERNAME';
      end;
   CMD := GetDialogItemText(CATWndHWND, 132);
-  Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
   // Delete the legacy ICOM NETWORK USERNAME key (nil value = delete).
   if CATWTR = @Radio1 then
@@ -2506,7 +2499,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
      begin
      ID := 'RADIO TWO ICOM NETWORK USERNAME';
      end;
-  Windows.WritePrivateProfileStringA('Radio', @ID[1], nil, TR4W_INI_FILENAME);
 
   Windows.ZeroMemory(@ID, SizeOf(ID));
   Windows.ZeroMemory(@CMD, SizeOf(CMD));
@@ -2519,7 +2511,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
      ID := 'RADIO TWO NETWORK PASSWORD';
      end;
   CMD := GetDialogItemText(CATWndHWND, 133);
-  Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
   // Delete the legacy ICOM NETWORK PASSWORD key.
   if CATWTR = @Radio1 then
@@ -2530,7 +2521,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
      begin
      ID := 'RADIO TWO ICOM NETWORK PASSWORD';
      end;
-  Windows.WritePrivateProfileStringA('Radio', @ID[1], nil, TR4W_INI_FILENAME);
 
   // Save the DATA/PARITY/STOP combo (runtime-created, so outside the 101..111
   // label loop) explicitly.  CheckAndInitializePorts below re-runs
@@ -2547,7 +2537,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
      end;
   CMD := GetDialogItemText(CATWndHWND, SERIALFMT_COMBO_ID);
   logger.Trace('[RestartPollingThread] ID = %s, CMD = %s', [ID, CMD]);
-  Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
   CheckCommand(@ID, CMD);
 
   // Save the HAMLIB ID edit only when it is the OPERATOR'S value -- i.e. the
@@ -2567,7 +2556,6 @@ if (CATWTR^.tCATPortHandle <> INVALID_HANDLE_VALUE) or
         end;
      CMD := GetDialogItemText(CATWndHWND, HAMLIBID_EDIT_ID);
      logger.Trace('[RestartPollingThread] ID = %s, CMD = %s', [ID, CMD]);
-     Windows.WritePrivateProfileStringA('Radio', @ID[1], @CMD[1], TR4W_INI_FILENAME);
      CheckCommand(@ID, CMD);
      end;
   GroupRadioIniKeys;

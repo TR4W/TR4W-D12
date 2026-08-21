@@ -1348,6 +1348,28 @@ begin
    keyShort   := ShortString(idKey);
    valueShort := ShortString(cmdValue);
 
+   // A csJSON ROW MUST NOT COME THROUGH HERE, and refusing is the only safe
+   // answer.  CheckCommand returns TRUE for such a row WITHOUT APPLYING IT
+   // (uCFG.pas:1591 -- accepted so an old config does not error, then Exit),
+   // so the write below would fire on a value that never reached the global:
+   // the setting would not take effect AND tr4w.ini would gain a key nothing
+   // reads, which -- as the contract on CommandIsJSONOwned puts it -- 'looks
+   // authoritative to the next person who opens it'.
+   //
+   // Nothing calls this with a csJSON command today (cross-checked across all
+   // 230 registered settings, 2026-08-21, zero hits). This is here so that
+   // when someone eventually does, it FAILS LOUDLY instead of half-working:
+   // the fix is to register the setting with RegisterStoredSetting, which
+   // writes the JSON store, rather than RegisterLegacySetting.
+   if CommandIsJSONOwned(aCommand) then
+      begin
+      logger.Error('[SetCFGCommandValue] "%s" is csJSON -- settings	r4w.json owns it. '
+                 + 'Refusing to write tr4w.ini. Use RegisterStoredSetting for this row.',
+                   [aCommand]);
+      Result := False;
+      Exit;
+      end;
+
    Result := CheckCommand(@keyShort, valueShort);
    if Result then
       begin

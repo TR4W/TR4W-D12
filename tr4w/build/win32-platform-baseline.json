@@ -1,6 +1,6 @@
 ﻿{
     "ini.Read":  10,
-    "ini.Write":  21,
+    "ini.Write":  8,
     "wsprintf":  0,
     "process.Launch":  2,
     "thread.Create":  6,
