@@ -777,7 +777,7 @@ var
     (
 {(*}
 
-{mweAutoSendCount}        (mweName: 'ARROW';                   mweiStyle: DefStyleNoSun;     mweText:#175#0      ; mweColor: trRed;   mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 16; mweiY: 07; mweiWidth: 01; mweiHeight: 1 ),
+{mweAutoSendCount}        (mweName: 'ARROW';                   mweiStyle: DefStyleNoSun;     mweText:nil         ; mweColor: trRed;   mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 16; mweiY: 07; mweiWidth: 01; mweiHeight: 1 ),
 {mweBandMode}             (mweName: 'BAND MODE';               mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:0; mweB: 1; mweiX: 00; mweiY: 07; mweiWidth: 04; mweiHeight: 1 ),
 {mweBeamHeading}          (mweName: 'BEAM HEADING';            mweiStyle: defStyle;          mweText:nil         ; mweColor: trBlack; mweBackG: trBtnFace; mweI:1; mweB: 0; mweiX: 32; mweiY: 06; mweiWidth: 14; mweiHeight: 1 ),
 {mweCall}                 (mweName: 'CALL';                    mweiStyle: 0;                 mweText:nil         ; mweColor: trBlack; mweBackG: trWhite;   mweI:0; mweB: 1; mweiX: 08; mweiY: 07; mweiWidth: 03; mweiHeight: 1 ),
@@ -2867,7 +2867,6 @@ var
   LucidaConsoleFont                     : HFONT;
 
   TerminalFont                          : HFONT;
-  SymbolFont                            : HFONT;
   Fontstructure                         : TLogFont;
 
   WAV_STOP_PTT_TIMER_IDENTIFIER         : integer;

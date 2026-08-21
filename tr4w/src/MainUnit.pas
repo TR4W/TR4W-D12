@@ -3408,7 +3408,24 @@ begin
         end
      end;
 
-  tWM_SETFONT(wh[mweAutoSendCount], SymbolFont);
+  // THE AUTO-SEND ARROW: a real code point in the main font, not byte 175 in
+  // the Symbol font.
+  //
+  // It used to be mweText: #175#0 rendered in Symbol, where 0xAF is the down
+  // arrow -- correct under D7, which set window text through SetWindowTextA and
+  // handed the font a byte. SetMainWindowText now writes through
+  // SetWindowTextW ("so the whole path is Unicode", TF.pas), so that byte is
+  // widened by the codepage to U+00AF MACRON, which Symbol has no glyph for.
+  // Windows drew the missing-glyph box.
+  //
+  // It went unnoticed because the arrow only appears when AUTO SEND CHARACTER
+  // COUNT > 0, and on a station whose tr4w.ini could not be written that
+  // setting reverted to 0 on every restart. Migrating it to the JSON store on
+  // 2026-08-21 made it persist, and the box appeared (NY4I).
+  //
+  // U+2193 in the ordinary font also drops a Windows-only font dependency:
+  // Symbol does not exist on GTK or Cocoa. See ROADMAP.md section 2.
+  Windows.SetWindowTextW(wh[mweAutoSendCount], PWideChar(WideString(#$2193)));
   DisplayAutoSendCharacterCount;
 
   tWM_SETFONT(wh[mweQSONumber], MainWindowEditFont {QSONumberFont});
@@ -3600,7 +3617,6 @@ begin
  MainWindowEditFont := tCreateFont(ws + 3, FW_EXTRABOLD, lcfn);
 
  {AutoSend}
- SymbolFont := tCreateFont(ws, FW_SEMIBOLD, 'Symbol');
  {Alt-P}
  TerminalFont :=
  Windows.CreateFontW(
