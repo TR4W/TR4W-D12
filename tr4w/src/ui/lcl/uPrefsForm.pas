@@ -1131,7 +1131,7 @@ uses
    uUDPBroadcaster,   // TestDestination, and Configure once the settings are saved
    uTCIServer,        // started/stopped when the check box is saved
    uFileText,          // FileTextExists -- System.IOUtils is Delphi-only
-   ShellAPI,    // ShellExecute -- open the log in the operator's editor
+   LCLIntf,     // OpenDocument -- open the log in the operator's editor
    uCFG,        // CFGCommandValueAsString / SetCFGCommandValue -- Station edits CFGCA rows
    uSettingsRegistry,     // the settings themselves
    uSettingsLegacy,       // ActiveStoreProvider -- graduated settings write to OUR store
@@ -5963,12 +5963,13 @@ begin
       Exit;
       end;
 
-   // ShellExecute with no verb, so the operator's own choice of text editor
-   // opens it.  Nothing is written and the file stays open in the appender --
+   // OpenDocument, so the operator's own choice of text editor opens it --
+   // the LCL's own launcher, which is ShellExecute here and xdg-open or `open`
+   // elsewhere.  Nothing is written and the file stays open in the appender --
    // which is why there is no "Clear log file" button beside this one: the
    // rolling appender holds the handle, and truncating underneath it is not
    // something to do casually from a settings screen.
-   ShellExecute(0, nil, PChar(fileName), nil, nil, SW_SHOWNORMAL);
+   LCLIntf.OpenDocument(fileName);
 end;
 
 procedure TPrefsForm.cbxRadio1Change(Sender: TObject);

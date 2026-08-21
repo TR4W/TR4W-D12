@@ -31,6 +31,7 @@ uses
   uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
   uConfigValues,   // Config.CodeSpeedIncrement
   ShellAPI,
+  LCLIntf,             // OpenURL / OpenDocument -- the cross-platform launchers
   Logstuff,
   uADIF,
   uMenu,
@@ -208,7 +209,12 @@ procedure InvertBooleanCommand(Command: PBoolean);
 procedure RunExplorer(Command: PAnsiChar);
 procedure OpenInDefaultTextEditor(FileName: PAnsiChar);   // Issue #986
 procedure RunOptionsDialog(f: CFGFunc);
-procedure OpenUrl(url: PChar);
+// A STRING, NOT A PChar.  The declaration was PChar, which binds to PWideChar
+// in this unit, while every interesting caller holds an ANSI buffer -- so the
+// two menu items repointed here in 2026-08 did not compile until the TYPE was
+// fixed rather than cast at the call site.  See CLAUDE.md on type honesty:
+// the program passes strings, and conversions belong at the real boundary.
+procedure OpenUrl(const url: string);
 function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
 procedure ProcessImportedSRX_String(fieldValue: string; var exch:
   ContestExchange);
@@ -4656,31 +4662,28 @@ begin
     end;
     end;
     }
+    // THROUGH OpenUrl, which is what the commented-out line above each of
+    // these already said.  Four menu items had grown their own ShellExecute
+    // beside a disabled call to the helper -- so the helper had six callers and
+    // four bypassers, and only the callers would have been fixed by a change to
+    // it.  Phase 8: ShellExecute has no Mac or GTK equivalent; LCLIntf.OpenURL
+    // does, and it now lives in exactly one place.
     menu_3830_scores_posting: // 4.51.8
-      // OpenUrl('http://www.3830scores.com/');
-      Shellexecute(0, 'open', 'http://www.3830scores.com/', nil, nil,
-        SW_NORMAL);
-    // 4.75.3
+      OpenUrl('http://www.3830scores.com/');
+
     menu_arrl_submit: // 4.53.3
-      // OpenUrl('http://contest-log-submission.arrl.org/');
-      Shellexecute(0, 'open', 'http://contest-log-submission.arrl.org/', nil,
-        nil, SW_NORMAL); // 4.75.3
+      OpenUrl('http://contest-log-submission.arrl.org/');
 
     menu_qrzru_calendar:
       begin
-        TF.Format(TempBuffer1, 'http://www.qrz.ru/contest/detail/%d.html',
-          ContestsArray[Contest].QRZRUID);
-        // OpenUrl(TempBuffer1);
-        ShellexecuteA(0, 'open', TempBuffer1, nil, nil, SW_NORMAL); // 4.75.3
+        OpenUrl(SysUtils.Format('http://www.qrz.ru/contest/detail/%d.html',
+                                [ContestsArray[Contest].QRZRUID]));
       end;
 
     menu_WA7BNM_calendar:
       begin
-        TF.Format(TempBuffer1,
-          'https://contestcalendar.com/contestdetails.php?ref=%u', // 4.127.1',
-          ContestsArray[Contest].WA7BNM);
-        //   OpenUrl(TempBuffer1);
-        ShellexecuteA(0, 'open', tempbuffer1, nil, nil, SW_NORMAL); // 4.127.1
+        OpenUrl(SysUtils.Format('https://contestcalendar.com/contestdetails.php?ref=%u',
+                                [ContestsArray[Contest].WA7BNM]));   // 4.127.1
 
       end;
 
@@ -9474,7 +9477,7 @@ begin
   ShowPreferences;
 end;
 
-procedure OpenUrl(url: PChar);
+procedure OpenUrl(const url: string);
 var
  // lpcbValue: DWORD;
  // phkResult: hkey;
@@ -9501,7 +9504,12 @@ begin
   else
      begin}
   sURI := TIDURI.URLEncode(url);
-  ShellExecuteW(0, 'open', PChar(sURI), nil, nil, SW_SHOWNORMAL);
+
+  // QUALIFIED, AND IT MUST BE.  Pascal identifiers are case-insensitive, so
+  // LCLIntf's OpenURL and this unit's OpenUrl are THE SAME NAME: an unqualified
+  // call here resolves to the routine we are standing in and recurses until the
+  // stack goes.  The compiler cannot warn -- both are legal and one is nearer.
+  LCLIntf.OpenURL(string(sURI));
   { end;}
   //RunExplorer(url);
 end;
