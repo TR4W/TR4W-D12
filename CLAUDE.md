@@ -303,10 +303,31 @@ Loaded from `settings/tr4w.ini`, contest `.cfg` files, and common messages. The 
 `MY CALL = N6TR`-style commands via `CFGRecord` structures (command text → variable address → type →
 range). Supports network synchronisation for multi-station setups.
 
-**Known backlog:** the whole CFG system is slated for a rewrite onto Delphi's native `TIniFile`.
+**THE DESTINATION IS JSON, NOT `TIniFile`** — this said "slated for a rewrite onto Delphi's native
+`TIniFile`" until 2026-08-21, which had been wrong for months. NY4I: *"We switched to all json a
+while ago. Except for the contest.cfg file we should not be writing ini files."*
+
+**Where it actually stands, measured 2026-08-21** (rerun rather than trusting this):
+
+| | |
+|---|---|
+| The **stores** — radios, keyers, profiles, window layout, UDP | **all JSON**, in `settings/tr4w.json` |
+| Settings graduated to JSON (`csJSON` + `RegisterStoredSetting`) | **77** |
+| Settings still writing `tr4w.ini` (`RegisterLegacySetting`) | **153** |
+| Remaining Win32 ini API call sites outside `tr4wserver` | **26** |
+
+So the stores moved wholesale; the settings move **one at a time**, and `tr4w.ini` is still read
+at startup for the 153 that have not. The two halves of each move — `crS: csJSON` and
+`RegisterStoredSetting` — **must land in the same commit**, and were verified in sync for all 230
+on 2026-08-21. Flip one without the other and the setting appears to save and is gone on restart.
+
+**The contest `.cfg` is deliberately exempt**: it is going to an SQLite3 contest file, not to JSON
+(NY4I, 2026-08-21). `tr4wserver.ini` belongs to a different program and is out of scope.
+
 `CommandsArray` *is* the ini parser, so every key is an editable "command" — there is no read-only
-attribute, no cross-key invariant, and no value validation. Park config design defects against that
-rewrite rather than patching piecemeal.
+attribute, no cross-key invariant, and no value validation. Park config design defects against the
+JSON move rather than patching piecemeal. The full state, the per-unit table and the rule for
+moving a setting are in [`docs/CFG_MIGRATION_PLAN.md`](docs/CFG_MIGRATION_PLAN.md).
 
 ### 4. Contest flow
 

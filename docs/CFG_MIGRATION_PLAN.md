@@ -12,27 +12,75 @@ When a setting moves from the old world to the new one it must, in one step:
 3. have every reference to its controlling variable go **through the config object**, so the
    global disappears.
 
-### What still touches `tr4w.ini` (measured 2026-08-17)
+### What still touches `tr4w.ini` (measured 2026-08-21 -- RERUN THIS, do not trust its age)
 
 NY4I, 2026-08-17: *"Nothing should use the INI file again. I am not sure how much clearer I can
-make that rule."* So here is the standing list, from a grep for `GetPrivateProfile*` /
-`WritePrivateProfile*` across `tr4w/src` — rerun it rather than trusting this table's age.
+make that rule."*
 
-| Where | What it still does | Belongs to |
-|---|---|---|
-| `uCAT.pas` (10), `uRadioConfigApply.pas` (2) | mirror `[Radio]` keys | the radio library — the JSON store is already authoritative, this is the legacy mirror |
-| `MainUnit.pas` (4), `uCFG.pas`, `uAutoCQ.pas`, `LPT.pas`, `uNewContest.pas` | write `[COMMANDS]` rows | the `csOwned` remainder — each disappears as its row flips to `csJSON` |
-| `uBMCF.pas` | writes `[BAND PLAN]` | the band-plan grids, still to be built |
-| `uOption.pas` | reads `DESCRIPTION` / `DEFAULT` | the Ctrl-J help text |
-| `LogCfg.pas` | reads it as a *text* file, not via the ini API | the CFG loader itself |
+**Measured with the lint's own reader** (`Lint-Win32Dialogs -Group platform`, which strips
+comments and skips editor debris), not with a grep -- a grep over this tree counts commented-out
+code and reports numbers 20-60% high. **26 sites outside `tr4wserver`**, and they are not one
+kind of thing:
 
-Two things on that list are a **different file** and are not covered by the rule: `uEditMessage.pas`
-and `MainUnit.pas:8056` write `TR4W_CFG_FILENAME` (the contest `.cfg`), and `tr4wserver.dpr` reads
-its own `tr4wserver.ini`.
+| Where | Sites | What it does | Verdict |
+|---|---:|---|---|
+| `uCAT.pas` | 11 | writes `[Radio]` keys | **the mirror** -- radios live in JSON; this is a second copy |
+| `uRadioConfigApply.pas` | 2 | writes `[Radio]` keys | same mirror |
+| `MainUnit.pas` | 4 | writes/reads `[COMMANDS]` (incl. a key-rename helper) | the `csOwned` remainder |
+| `uCFG.pas` | 1 | `SetCFGCommandValue` writes `[COMMANDS]` | the legacy write path, still used by 153 settings |
+| `uNewContest.pas` | 1 | reads `MAIN CALLSIGN` | the `csOwned` remainder |
+| `uBandPlanForm.pas` | 1 | writes `[BAND PLAN]` as a section | multi-valued; no JSON home yet |
+| `uOption.pas` | 3 | Ctrl-J: help `DESCRIPTION`/`DEFAULT`, and its own write | Ctrl-J is nearly empty now |
+| `uCabrilloHeader.pas` | 1 | reads a section ONCE per installation | **legitimate** -- the JSON seed |
+| `MainUnit.pas:8129`, `uEditMessageForm.pas` | 2 | write the contest `.cfg` | **not this rule** -- see below |
 
-**Done and not to be reopened:** `[REPORT]` (2026-08-16) and `[ERMAKREPORT]` (2026-08-17) both live
-in `settings\tr4w.json` — see `uCabrilloHeader.pas`. Those were never CFGCA rows, so the csOwned /
-csJSON machinery above never applied to them.
+**The contest `.cfg` is deliberately excluded, and now has a stated reason** (NY4I,
+2026-08-21): *"We left the contest.cfg as that will be going to an sqlite3 contest file."* So
+those two sites are not ini debt at all; they are waiting on a different move.
+`tr4wserver.ini` is a separate program's config and is out of scope (NY4I).
+
+### The per-setting migration, which is the number that was drifting
+
+The section above counts CALL SITES. The number that describes progress is how many SETTINGS
+have graduated, and it is measurable in one line each:
+
+| | count |
+|---|---:|
+| `RegisterStoredSetting` -- writes `settings\tr4w.json` | **77** |
+| `RegisterLegacySetting` -- still writes `tr4w.ini` | **153** |
+| `csJSON` CFGCA rows with no registered setting (radios, keyers, windows, UDP: owned by their own stores) | 89 |
+
+**So "we moved to JSON" is true of the STORES and of 77 settings; it is not yet true of the
+other 153.** `tr4w.ini` is still read at startup and still written by those. That gap is what
+made this document's status drift: the stores moved wholesale and visibly, the settings move one
+at a time.
+
+**The two halves are IN SYNC, which is the good news** and was verified rather than assumed on
+2026-08-21: cross-referencing every `RegisterLegacySetting` command against its CFGCA row found
+**0** settings that write the ini while marked `csJSON` (the "appears to save, gone on restart"
+failure this document warns about), and **0** graduated writers whose row is not `csJSON`. The
+discipline in the rule below has held for all 230.
+
+### Corrected 2026-08-21: two claims in the older table were wrong
+
+* `uAutoCQ.pas` and `LPT.pas` were listed as writing `[COMMANDS]`. **They no longer do** -- both
+  were repointed at some point after 2026-08-17 and the table was never updated.
+* `[REPORT]` and `[ERMAKREPORT]` were listed as **"Done and not to be reopened"**. The MIGRATION
+  was done -- `uCabrilloHeader` reads them from JSON with a one-time ini seed -- but **four
+  readers in `PostUnit.PAS` were missed** and went on reading `tr4w.ini` directly: the three
+  Cabrillo-summary fields in the 3830 report (`_OPERATORS`, `_CATEGORY-OPERATOR`,
+  `_CATEGORY-POWER`) and the Ermak operator-info loop.
+
+  **That was a live defect, not a tidiness issue.** On any station that edited its Cabrillo
+  summary after 2026-08-16 the values are in `settings\tr4w.json`, so the 3830 report was
+  emitting the PRE-MIGRATION ini values -- or blank lines on a station with no `tr4w.ini` at
+  all. Silent, because a blank there is indistinguishable from a field the operator left empty.
+  Fixed 2026-08-21; `PostUnit` already imported `uCabrilloHeader`, so the fix was to call
+  `HeaderTagText` like every other reader.
+
+  **The lesson for the rest of this list:** migrating a section is not finished when the OWNER
+  reads JSON. It is finished when every reader does, and readers in other units do not announce
+  themselves. Grep for the section NAME, not for the unit.
 
 ### Two steps the rule implies but does not say, and both are silent when missed
 

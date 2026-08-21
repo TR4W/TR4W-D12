@@ -651,11 +651,18 @@ procedure ExportTo3830Scores;
      [ TR4W_CURRENTVERSION ] );
   buf := buf + '3830Scores summary'#13#10#13#10;
 
-  // Metadata from the Cabrillo Summary fields the operator saved (read
-  // silently from tr4w.ini [REPORT] - no dialog popup).  Empty values
-  // emit blank lines so the operator types them directly on 3830's form.
-  if GetPrivateProfileStringA( 'REPORT', '_OPERATORS', nil, iniBuf,
-     SizeOf( iniBuf ), TR4W_INI_FILENAME ) > 0 then
+  // Metadata from the Cabrillo Summary fields the operator saved, read
+  // silently -- no dialog popup.  Empty values emit blank lines so the operator
+  // types them directly on 3830's form.
+  //
+  // FROM settings\tr4w.json VIA uCabrilloHeader, not from tr4w.ini.  These
+  // three were still reading the ini directly after [REPORT] moved to the JSON
+  // store on 2026-08-16 -- so on any station that had edited its Cabrillo
+  // summary since, this report showed the PRE-MIGRATION values, or nothing at
+  // all on a station with no tr4w.ini.  Silent, because a blank line here is
+  // indistinguishable from a field the operator chose to leave empty.
+  if HeaderTagText( CABRILLOSECTION, '_OPERATORS', iniBuf,
+     SizeOf( iniBuf ) ) > 0 then
      begin
      operatorsStr := string( iniBuf )
      end
@@ -663,8 +670,8 @@ procedure ExportTo3830Scores;
      begin
      operatorsStr := '';
      end;
-  if GetPrivateProfileStringA( 'REPORT', '_CATEGORY-OPERATOR', nil, iniBuf,
-     SizeOf( iniBuf ), TR4W_INI_FILENAME ) > 0 then
+  if HeaderTagText( CABRILLOSECTION, '_CATEGORY-OPERATOR', iniBuf,
+     SizeOf( iniBuf ) ) > 0 then
      begin
      classStr := string( iniBuf )
      end
@@ -672,8 +679,8 @@ procedure ExportTo3830Scores;
      begin
      classStr := '';
      end;
-  if GetPrivateProfileStringA( 'REPORT', '_CATEGORY-POWER', nil, iniBuf,
-     SizeOf( iniBuf ), TR4W_INI_FILENAME ) > 0 then
+  if HeaderTagText( CABRILLOSECTION, '_CATEGORY-POWER', iniBuf,
+     SizeOf( iniBuf ) ) > 0 then
      begin
      powerStr := string( iniBuf )
      end
@@ -2655,8 +2662,17 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                // OPERATORINFO is C '_OP_INFO_%03u' (zero-pad); Delphi Format uses '%.3u'.
                uAnsiStr.StrPCopy( TempBuffer2,
                   sysutils.Format( '_OP_INFO_%.3u', [ ControlID ] ) );
-               TempInteger := GetPrivateProfileStringA( ERMAKSECTION, TempBuffer2,
-                  '?', TempBuffer1, SizeOf( TempBuffer1 ), TR4W_INI_FILENAME );
+               // From settings\tr4w.json, same as every other ERMAKREPORT
+               // read since 2026-08-17.  The ini default of '?' is reproduced
+               // explicitly: HeaderTagText has no default parameter, and the
+               // loop below tests TempBuffer1[0] against '1' to decide whether
+               // this operator slot is populated.
+               TempInteger := HeaderTagText( ERMAKSECTION, TempBuffer2,
+                  TempBuffer1, SizeOf( TempBuffer1 ) );
+               if TempInteger = 0 then
+                  begin
+                  uAnsiStr.StrPCopy( TempBuffer1, '?' );
+                  end;
                TempPchar := @TempBuffer1[ 0 ];
                if TempErmakField = efOp then
                   begin
