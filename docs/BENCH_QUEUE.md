@@ -469,6 +469,16 @@ signature already -- `GetPortByte(Address: Word)`, `OpenDriver: boolean`.
   binary tested is the corrected one, and it is only tested once), or AFTER (so
   the binary tested is exactly what ships today). It is mechanical either way.
 
+#### DECIDED: what we have today is fine (NY4I, 2026-08-21)
+
+*"I am ok to use what we have today."* So **no LPT work is scheduled** -- not
+the seam, not the type correction, not the Linux path. `inpout32` on Windows
+stays exactly as it is, and the only open item above is the BENCH TEST.
+
+What follows is recorded because it was investigated, not because it is
+planned. It exists so that whoever picks LPT up later starts from the answers
+rather than the questions.
+
 #### Linux is possible -- with two real conditions
 
 NY4I, 2026-08-21, pointing at <https://wiki.freepascal.org/Hardware_Access>: the
