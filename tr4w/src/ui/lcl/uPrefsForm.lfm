@@ -31,11 +31,12 @@
     BorderStyle = bsNone
     Color = clBtnFace
     DefaultItemHeight = 26
-    Options = [tvoShowButtons, tvoKeepCollapsedNodes, tvoToolTips, tvoThemedDraw, tvoRowSelect, tvoHotTrack, tvoNoDoubleClickExpand]
+    Options = [tvoShowButtons, tvoShowRoot, tvoKeepCollapsedNodes, tvoToolTips, tvoThemedDraw, tvoRowSelect, tvoHotTrack, tvoNoDoubleClickExpand]
     ReadOnly = True
     ScrollBars = ssAutoVertical
     OnChange = tvNavChange
     OnExpanded = tvNavExpanded
+    OnMouseDown = tvNavMouseDown
   end
   object layContent: TPanel
     Color = clWindow

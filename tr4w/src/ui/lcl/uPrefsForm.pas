@@ -587,6 +587,15 @@ type
 
       procedure tvNavChange(Sender: TObject);
       procedure tvNavExpanded(Sender: TObject; Node: TTreeNode);
+      // CLICKING AN ALREADY-SELECTED PARENT TOGGLES IT.  Without this a branch
+      // can be opened but not closed by the same click that opened it: the
+      // expand lives in tvNavChange, which only fires when the SELECTION
+      // changes, and clicking the selected row changes nothing (NY4I,
+      // 2026-08-21).  MouseDOWN deliberately -- the selection has not moved yet,
+      // so tvNav.Selected still names the row that was already selected, which
+      // is the whole test.
+      procedure tvNavMouseDown(Sender: TObject; Button: TMouseButton;
+                               Shift: TShiftState; X, Y: integer);
       procedure cbxRelayPortChange(Sender: TObject);
 
       { PUBLISHED because the RESOURCE binds them by name -- TWriter stores an
@@ -934,6 +943,11 @@ type
                                       const aPrefixes: array of string): integer;
       function  AddGeneratedRows(const aParent: TWinControl; const aKeyPrefix: string;
                                  var aY: integer): integer;
+      // The OnClick of the "Edit..." button a ctFreqList row gets instead of a
+      // dead text box. One handler for both such rows, because there is one
+      // editor and it edits the whole band plan -- there is nothing to branch
+      // on, so this is not the branch-on-Sender the house rule forbids.
+      procedure GeneratedBandPlanClick(Sender: TObject);
       procedure BuildGeneratedBlock(const aParent: TWinControl; const aTop: integer;
                                     const aHeading: string;
                                     const aPrefixes: array of string);
@@ -1127,6 +1141,10 @@ uses
    uRotatorControl,     // rebuild the live rotators when the library is saved
    uRotatorRegistry,    // the rotator type list comes from the registry
    uCallSignRoutines,   // GoodCallSyntax -- the MY CALL sanity check
+   uBandPlanForm,       // ShowBandPlan -- the two ctFreqList rows' Edit button.
+                        // Direct, not via uBMCF: that unit is the seam for the
+                        // Win32 caller (uOption) and drags VC/TF/Tree/LogWind
+                        // in with it; an LCL form calls the LCL form.
    uExternalLoggerBase, // ExternalLoggerTypeSA -- the logger-program list
    MainUnit,    // logger, and `appender` for the log file's real path
    VC;          // tLogLevels / tLogLevelsSA / logLevels, TR4W_TCI_DEBUG
@@ -2523,6 +2541,19 @@ end;
 // showed those values and operators read them, so hiding them loses
 // information -- but letting them be edited would invite changing something the
 // next contest selection silently overwrites.
+// The way back into the band plan editor.  See AddGeneratedRows for why the two
+// ctFreqList rows carry a button rather than a text box.
+//
+// PARENT 0, NOT Self.Handle, and that is the documented contract rather than an
+// omission: ShowModalOverWin32Parent disables a WIN32 parent because LCL modal
+// forms disable only LCL ones.  Preferences IS an LCL form, so ShowModal
+// already covers it, and passing a handle here would disable and re-enable it a
+// second time from underneath the LCL's own bookkeeping.  uOption still passes
+// its handle because it is still a raw Win32 window.
+procedure TPrefsForm.GeneratedBandPlanClick(Sender: TObject);
+begin
+   ShowBandPlan(0);
+end;
 function TPrefsForm.AddGeneratedRows(const aParent: TWinControl; const aKeyPrefix: string;
                                      var aY: integer): integer;
 const
@@ -2535,6 +2566,7 @@ var
    chk: TCheckBox;
    cbo: TComboBox;
    edt: TEdit;
+   btn: TButton;
    ctl: TWinControl;
    s: TSettingBase;
    n, n2: integer;
@@ -2568,7 +2600,26 @@ begin
       lbl.Caption := s.Caption;
       lbl.SetBounds(16, aY + 4, LABEL_W, 18);
 
-      if ro then
+      // A ctFreqList ROW GETS A WAY IN, not a dead box.  BAND MAP CUTOFF
+      // FREQUENCY and FREQUENCY MEMORY are the only two, they are multi-valued
+      // and so must stay unbound (see `ro` below and uCFG.pas:1247), but unlike
+      // a ckList they HAVE an editor -- uBandPlanForm.  Rendering them as a
+      // disabled edit box left that editor with no live caller in the whole
+      // program once Ctrl-J stopped listing them: finding F3, 2026-08-20.
+      //
+      // The button is deliberately NOT bound.  A row that cannot be edited in
+      // place still must not be saved from here; the band plan editor writes
+      // [BAND PLAN] itself, as a section.
+      if (s.LegacyCommand <> '') and CFGCommandIsFreqList(s.LegacyCommand) then
+         begin
+         btn := TButton.Create(aParent);
+         btn.Parent  := aParent;
+         btn.Caption := 'Edit...';
+         btn.OnClick := GeneratedBandPlanClick;
+         btn.SetBounds(CTRL_X, aY, 90, 24);
+         ctl := btn;
+         end
+      else if ro then
          begin
          edt := TEdit.Create(aParent);
          edt.Parent   := aParent;
@@ -2620,7 +2671,13 @@ begin
 
       if ro then
          begin
-         lbl.Caption := s.Caption + '   (set by the contest)';
+         // NOT ON A BAND-PLAN ROW.  It is `ro` for a different reason -- it
+         // cannot be represented by one edit box -- and no contest sets it,
+         // so that suffix would be a plain lie next to an Edit button.
+         if not (ctl is TButton) then
+            begin
+            lbl.Caption := s.Caption + '   (set by the contest)';
+            end;
 
          // Remembered for the search index. It has no binding, so
          // BuildSearchIndex would never see it -- and a row an operator cannot
@@ -3299,6 +3356,47 @@ begin
    ActivateSearchHit(FSearchList.ItemIndex);
 end;
 
+procedure TPrefsForm.tvNavMouseDown(Sender: TObject; Button: TMouseButton;
+                                    Shift: TShiftState; X, Y: integer);
+var
+   node: TTreeNode;
+begin
+   if Button <> mbLeft then
+      begin
+      Exit;
+      end;
+
+   // THE EXPAND SIGN IS NOT OURS TO HANDLE.  The tree already toggles on a
+   // click there; toggling again here would undo it and the chevron would look
+   // dead.  htOnButton is that hit and nothing else.
+   if htOnButton in tvNav.GetHitTestInfoAt(X, Y) then
+      begin
+      Exit;
+      end;
+
+   node := tvNav.GetNodeAt(X, Y);
+   if (node = nil) or (not node.HasChildren) then
+      begin
+      Exit;
+      end;
+
+   // A DIFFERENT row: let the selection change, and tvNavChange opens it. Only
+   // a re-click on the row that is ALREADY selected toggles, which is what
+   // makes this additive rather than a second, competing expand rule.
+   if node <> tvNav.Selected then
+      begin
+      Exit;
+      end;
+
+   if node.Expanded then
+      begin
+      node.Collapse(False);
+      end
+   else
+      begin
+      node.Expand(False);
+      end;
+end;
 procedure TPrefsForm.tvNavExpanded(Sender: TObject; Node: TTreeNode);
 var
    i: integer;
@@ -3902,7 +4000,21 @@ end;
 
 procedure TPrefsForm.ApplyChevrons;
 begin
-   // Every item, collapsed parents included -- see ForEachNavItem.
+   // EMPTY, AND THAT IS NOW DELIBERATE RATHER THAN AN OVERSIGHT.
+   //
+   // FMX had no expand indicator of its own, so this drew one per item.  The
+   // LCL draws them natively from tvNav.Options, and the body was emptied in
+   // the conversion -- but the option that makes them appear on a TOP-LEVEL
+   // node, tvoShowRoot, was not set, so no chevron was drawn anywhere and the
+   // four parents (Hardware, Operating, CW Settings, External Software) looked
+   // like leaves.  treeview.inc:5574 is the rule:
+   //
+   //   HasExpandSign := ShowButtons and Node.HasChildren and
+   //                    ((tvoShowRoot in Options) or (Node.Parent <> nil));
+   //
+   // Fixed in the .lfm (NY4I, 2026-08-21).  This routine and its call in
+   // SelectFirstSection are kept as the named place that answers "where did
+   // the chevrons go", and because a future custom glyph would go here.
 end;
 
 

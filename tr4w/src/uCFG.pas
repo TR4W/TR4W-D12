@@ -174,6 +174,15 @@ function CFGCommandIsReadOnly(const aCommand: string): boolean;
 function CFGCommandIsInteger(const aCommand: string): boolean;
 function CFGCommandIsList(const aCommand: string): boolean;
 
+// True for a ctFreqList row -- BAND MAP CUTOFF FREQUENCY and FREQUENCY MEMORY,
+// and only those two. A REFINEMENT of CFGCommandIsList, not a replacement: both
+// remain unbound and unsaveable for the reason spelled out there, but these two
+// have a real editor behind them (uBandPlanForm) and so can offer a way in,
+// which a ckList row cannot. Preferences is the only caller and that is the
+// distinction it needs -- see finding F3 in docs/BENCH_QUEUE.md, where these
+// rows lost their last route into that editor.
+function CFGCommandIsFreqList(const aCommand: string): boolean;
+
 // Apply a value to a command and persist it.  Returns False when CFGCA REFUSES
 // the value, in which case nothing is written -- see the implementation.
 function SetCFGCommandValue(const aCommand, aValue: string): boolean;
@@ -1225,6 +1234,14 @@ begin
    // it has to be excluded.
    idx := FindCFGCommand(aCommand);
    Result := (idx >= 0) and (CFGCA[idx].crType = ctInteger);
+end;
+
+function CFGCommandIsFreqList(const aCommand: string): boolean;
+var
+   idx: integer;
+begin
+   idx := FindCFGCommand(aCommand);
+   Result := (idx >= 0) and (CFGCA[idx].crType = ctFreqList);
 end;
 
 function CFGCommandIsList(const aCommand: string): boolean;
