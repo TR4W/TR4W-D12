@@ -1,9 +1,58 @@
 # The rows still `csOld` — what needs confirming, and what does not
 
+> ## CORRECTION, 2026-08-21 — read this before the numbers below
+>
+> **This report was written 2026-08-15 and the rows it analyses were relabelled
+> the next day.** Commit `79d4b6f0` ("empty Ctrl-J — 173 settings move into
+> Preferences", 2026-08-16) reclassified them from `csOld` to `csOwned`. Nothing
+> about the analysis changed — it is the same set of settings, asking the same
+> question about `crC` — but every "still `csOld`" below now means
+> "**now `csOwned`**", and a reader who greps for `csOld` today finds **6 rows**,
+> not 168.
+>
+> **Status counts in `CFGCA` today** (re-measure rather than trusting this line;
+> `grep -oP 'crS:\s*cs\w+' tr4w/src/uCFG.pas | sort | uniq -c`):
+>
+> | status | rows | edited in | **stored in** |
+> |---|---:|---|---|
+> | `csOld` / `csNew` | 6 | Ctrl-J | `tr4w.ini` |
+> | `csOwned` | 247 | **Preferences** | **`tr4w.ini`** |
+> | `csJSON` | 166 | Preferences | `settings\tr4w.json` |
+> | `csRem` | 89 | — (withdrawn) | — |
+>
+> **THE DISTINCTION THAT CAUSES THE MOST CONFUSION, and it caused some on
+> 2026-08-21:** `csOwned` is a **UI-ownership** marker, not a storage one.
+> `VC.pas:891` — *"STILL APPLIED, but hidden from Options because another dialog
+> owns it"*. So the 173 settings that "moved into Preferences" moved their
+> EDITING; their STORAGE is still `tr4w.ini`. Only `csJSON` moves storage.
+>
+> That is why a setting can appear in the new Preferences UI and still not
+> persist on a station whose `tr4w.ini` is read-only or absent: it is `csOwned`,
+> not `csJSON`. `DE ENABLE` is the worked example — see
+> `docs/CFG_MIGRATION_PLAN.md`, and `SetCFGCommandValue`, which since 2026-08-21
+> reports a failed ini write instead of losing it silently.
+>
+> **Per-setting migration state today:** 77 settings graduated to JSON
+> (`RegisterStoredSetting`), **153 still write `tr4w.ini`**
+> (`RegisterLegacySetting`), 102 in `MIGRATED_COMMANDS`.
+> `Lint-SettingsMigration.ps1` fails the build if those three ever disagree.
+>
+> **One number below cannot be re-checked from the repository.** The "74 contest
+> `.cfg` files on this machine" were NY4I's runtime configs, which are not
+> tracked — `target/dom/` holds 126 `.DOM` domestic-multiplier files, a different
+> thing entirely. Treat that part as a snapshot of one station, not a repeatable
+> measurement.
+>
+> **What is NOT stale:** the finding that `crC` under-declares contest scope by
+> 38 rows, because `FCONTEST.PAS` assigns settings in code when a contest is
+> selected. That is about `crC` versus behaviour and is untouched by the
+> relabelling.
+
+
 **The classification already exists: it is `crC`.** `crC:1` means the editor writes the key to the
 contest `.CFG`; `crC:0` means `tr4w.ini` (`uOption.pas:765`, `:772`). So the station-vs-event
-question is answered per row in `CFGCA` today, and NY4I's read is right — **151 of the 168 rows still
-`csOld` are `crC:0`, i.e. not contest-scoped**, against 17 marked `crC:1`.
+question is answered per row in `CFGCA` today, and NY4I's read is right — **151 of the 168 rows then
+`csOld` (today `csOwned`) are `crC:0`, i.e. not contest-scoped**, against 17 marked `crC:1`.
 
 What follows is therefore not a fresh classification. It is `crC` **checked against what the 74
 contest `.cfg` files on this machine actually contain, and against `FCONTEST.PAS`**, because the
@@ -12,7 +61,7 @@ rows worth anyone's attention are the ones where those disagree.
 ### The headline: `crC` under-declares by 38 rows
 
 Counting a row as contest-related if **any** signal says so — `crC:1`, a real `.cfg` sets it, or
-`FCONTEST` assigns it on contest selection — gives **55 of the 168**, not the 17 that `crC:1` marks.
+`FCONTEST` assigns it on contest selection — gives **55 of those 168**, not the 17 that `crC:1` marks.
 The other 113 have no contest signal at all, so the "majority are not contest related" reading is
 right; the count is simply higher than the table admits.
 

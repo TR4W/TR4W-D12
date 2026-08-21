@@ -321,6 +321,24 @@ at startup for the 153 that have not. The two halves of each move — `crS: csJS
 `RegisterStoredSetting` — **must land in the same commit**, and were verified in sync for all 230
 on 2026-08-21. Flip one without the other and the setting appears to save and is gone on restart.
 
+**`csOwned` IS A UI MARKER, NOT A STORAGE ONE** — the single most confusing thing here, and
+it confused NY4I and me on 2026-08-21. `VC.pas:891`: *"STILL APPLIED, but hidden from Options
+because another dialog owns it."* Commit `79d4b6f0` moved **173 settings into Preferences** by
+marking them `csOwned` — that moved their EDITING. Their STORAGE is still `tr4w.ini`. Only
+`csJSON` moves storage.
+
+| status | rows | edited in | stored in |
+|---|---:|---|---|
+| `csOld`/`csNew` | 6 | Ctrl-J | `tr4w.ini` |
+| `csOwned` | 247 | **Preferences** | **`tr4w.ini`** |
+| `csJSON` | 166 | Preferences | `settings\tr4w.json` |
+| `csRem` | 89 | — withdrawn | — |
+
+So a setting can appear in the new Preferences UI and still not persist on a station whose
+`tr4w.ini` is read-only or absent. `SetCFGCommandValue` reports that now instead of losing it
+silently, and `Lint-SettingsMigration.ps1` fails the build if the three halves of a migration
+(`csJSON`, `RegisterStoredSetting`, `MIGRATED_COMMANDS`) ever disagree.
+
 **The contest `.cfg` is deliberately exempt**: it is going to an SQLite3 contest file, not to JSON
 (NY4I, 2026-08-21). `tr4wserver.ini` belongs to a different program and is out of scope.
 
