@@ -139,6 +139,23 @@ function LoadConfig(const aFileName: string;
 // One-time migration in the only place that can know it is needed -- without it
 // the CFGCA rows going inert would silently reset every station's broadcast
 // settings to the defaults.  Caller owns the result.
+// The log level from settings\tr4w.json, or '' when the file, the section or
+// the key is absent.
+//
+// FOR THE STARTUP BOOTSTRAP ONLY, and it exists because that moment is a
+// chicken-and-egg: the logger has to be configured before the config system is
+// up, so tr4w.dpr needs ONE value before anything else can supply it. It used
+// to read that value from tr4w.ini -- which stopped being the system of record
+// when DEBUG LOG LEVEL became csJSON, so an operator who set the level in
+// Preferences got their old ini value for the earliest lines, or the compiled
+// default on a station with no ini at all (NY4I, 2026-08-21: "the ini file is
+// not there, so solve it another way with reading the json file").
+//
+// Deliberately NOT the full store: this runs before the logger, so it must not
+// depend on anything that logs. ReadRootOrEmpty and two lookups is the whole of
+// it. ApplyLoggingSettings applies the real value moments later.
+function StartupLogLevel(const aFileName: string): string;
+
 function LoadUDPForStartup(const aFileName, aIniFileName: string): TUDPBroadcastConfig;
 
 implementation
@@ -406,6 +423,39 @@ begin
          end;
 
       Result := True;
+   finally
+      root.Free;
+   end;
+end;
+
+function StartupLogLevel(const aFileName: string): string;
+var
+   root: TJSONObject;
+   logging: TJSONValue;
+   level: TJSONValue;
+begin
+   Result := '';
+
+   root := ReadRootOrEmpty(aFileName);
+   if root = nil then
+      begin
+      Exit;
+      end;
+
+   try
+      logging := root.GetValue('logging');
+      if not (logging is TJSONObject) then
+         begin
+         Exit;
+         end;
+
+      level := TJSONObject(logging).GetValue('level');
+      if level = nil then
+         begin
+         Exit;
+         end;
+
+      Result := Trim(level.Value);
    finally
       root.Free;
    end;

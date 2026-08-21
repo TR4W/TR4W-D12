@@ -71,7 +71,14 @@ $allowed = @(
    @{ Unit = 'uTR4WConfigFile.pas'; Match = '';             Why = 'the seed reader that uCabrilloHeader uses; same one-time path.' }
    @{ Unit = 'uPrefsForm.pas';      Match = '';             Why = 'reads the legacy stores once to offer a migration; does not write.' }
    @{ Unit = 'uRadioConfigApply.pas'; Match = '';           Why = 'reads the legacy radio ini once to seed the library; the WRITES were removed 2026-08-21.' }
-   @{ Unit = 'tr4w.dpr';            Match = '';             Why = 'startup read of the ini for the settings that have not graduated.' }
+   # tr4w.dpr USED to be on this list, and is the example of how an entry should
+   # leave it. It read [COMMANDS] DEBUG LOG LEVEL from the ini to configure the
+   # logger before the config system existed -- but that key is a csJSON row, so
+   # the ini was a STALE source: an operator who set the level in Preferences got
+   # their old value for the earliest lines, or the compiled default on a station
+   # with no ini at all. It now reads the store through
+   # uTR4WConfigFile.StartupLogLevel, so the entry is GONE rather than excused
+   # (NY4I, 2026-08-21: "solve it another way with reading the json file").
 )
 
 if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {

@@ -59,6 +59,10 @@ $lints = @(
    # spellings -- the Win32 profile API and TIniFile -- because an audit that
    # searched only for the first missed seven sites.
    @{ Name = 'Lint-IniUsage';        Arg = $Tr4wDir; NeedsFpc = $false }
+   # A setting migration is THREE edits -- csJSON, RegisterStoredSetting, and
+   # MIGRATED_COMMANDS -- and each omission fails differently and silently.
+   # 153 settings still have to make that move; this is what keeps them honest.
+   @{ Name = 'Lint-SettingsMigration'; Arg = $Tr4wDir; NeedsFpc = $false }
    # THE SAME RATCHET, SECOND GROUP -- phase 8, the Win32 the program speaks
    # OUTSIDE its windows: the ini API, serial, the registry, raw threads and
    # events, audio, LPT. Phase 7 does not touch any of it, and none of it

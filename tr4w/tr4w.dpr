@@ -19,7 +19,6 @@ uses
   Messages,
   MMSystem,
   Windows,
-  iniFiles,
   SysUtils,
   MainUnit in 'src\MainUnit.pas',
   BeepUnit in 'src\trdos\BeepUnit.pas',
@@ -551,7 +550,6 @@ var
   sDebugLevel                           : string;
   i                                     : tLogLevels;
   //rgb                                   : cardinal;
-  iniFile                               : TINIFile;                    // Used to simply find the DEBUG setting so we can set it when the logger object is created.
                                                                        // This way we can log before we read the DEBUG LOG LEVEL the legacy method in uCFG. // ny4i
 begin
    // Enable thread-safe memory management. TR4W creates threads via Win32
@@ -607,7 +605,6 @@ begin
 
    TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
    Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
-   iniFile := TINIFile.create(TR4W_INI_FILENAME);
    try
    appender := TLogRollingFileAppender.Create('name','tr4w.log');
    appender.Layout := CreateTR4WLogLayout;
@@ -633,11 +630,21 @@ begin
    // Reported at the startup banner below, NOT here: the file appender is not
    // attached yet at this point, so a line logged now goes nowhere.
    tSilentExport := SameText(ParamStr(2), '/EXPORT');
-   // Default TRACE (was ERROR) when the key is absent from tr4w.ini.  Radio-driver
-   // bring-up is diagnosed almost entirely from the TX/RX frame trace, and asking a
-   // volunteer tester to hand-edit tr4w.ini before their first run is a poor trade
-   // for log volume.  Only affects a MISSING key: anyone who has set a level keeps it.
-   sDebugLevel := iniFile.ReadString('COMMANDS','DEBUG LOG LEVEL', 'TRACE');
+   // FROM settings\tr4w.json, not tr4w.ini.  DEBUG LOG LEVEL is a csJSON row --
+   // the store is its system of record -- so reading the ini here handed the
+   // earliest log lines a stale value, or the compiled default on a station with
+   // no ini at all.
+   //
+   // Default TRACE (was ERROR) when there is no stored level.  Radio-driver
+   // bring-up is diagnosed almost entirely from the TX/RX frame trace, and asking
+   // a volunteer tester to hand-edit a config before their first run is a poor
+   // trade for log volume.  Only affects a MISSING value: anyone who has set a
+   // level keeps it.
+   sDebugLevel := StartupLogLevel(TR4WConfigFileName);
+   if sDebugLevel = '' then
+      begin
+      sDebugLevel := 'TRACE';
+      end;
    for i := Low(tLogLevelsSA) to High(tLogLevelsSA) do
       begin
       if sDebugLevel = tLogLevelsSA[i] then
@@ -1372,11 +1379,6 @@ begin
      // Issue #783 -- stop the HamScore RTC uploader cleanly so the worker
      // thread isn't holding sockets when the process exits.
      HamScoreShutdown;
-     if Assigned(iniFile) then
-        begin
-        iniFile.Free;
-        //Pointer(TINIFile(iniFile)) := nil;
-        end;
   end; // of Try...finally
 
 end.
