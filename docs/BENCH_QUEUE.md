@@ -347,6 +347,50 @@ out since 4.38.3, and deleting it would make that decision permanent and silent.
   (`uTestCallSignRoutines.Test_GoodCallSyntax_Rejects`), not an Edit QSO one.
   Until it is answered the commented rule must stay where it is.
 
+### 15. Launching other programs now goes through one unit  (`07c55fa4`)
+
+`WinExec`/`ShellExecute` were replaced by `uPlatformProcess` -- `RunProgram`
+(TProcess, no guard) for programs the operator chose or we ship, and
+`RunWindowsUtility` (the only WinExec left, inside a WINDOWS conditional) for
+Windows programs. **Behaviour on Windows should be identical**; the point of the
+list is that "identical" is the pass condition.
+
+**THE THREE THAT CHANGED SHAPE, and so are worth trying with a path that has a
+SPACE in it** -- they used to build `'"%s" "%s"'` by hand and now pass the file
+as an argument, so quoting is no longer their problem:
+
+- [ ] **Play** on a QSO in Edit QSO starts the configured **MP3 player** with
+  the recording.
+- [ ] The **DVK recorder** starts from the program-message editor with the file
+  to record.
+- [ ] **Open in editor** (file preview, history.txt) opens the operator's
+  `.txt`-associated program -- and still falls back to Notepad when there is no
+  association.
+
+**The rest should be unremarkable:**
+
+- [ ] **Run server** starts `tr4wserver.exe`; **Ping server** pings it.
+- [ ] Calculator, Volume control, Recording control, Device manager, the
+  date/time applet, a command prompt, and "show the log folder" all still open.
+- [ ] **MMTTY** starts with its `-t -s -u -r` switches. It stays Windows-only by
+  decision (NY4I, 2026-08-21: not on macOS, and not on Linux either).
+- [ ] The **WINEXEC** function-key command still runs an operator command line,
+  minimised as before.
+
+**A FAILURE NOW SAYS SO.** WinExec's "less than 32 means it failed" was checked
+at two of the seventeen old sites, so a mistyped path in the MP3 Player setting
+used to do nothing at all with nothing in the log. Both routines log now -- so if
+one of these does not start, `tr4w.log` should say why, and that line is worth
+reporting.
+
+**One decision, not a test:**
+
+- [ ] **`K6VVA_WK_DEBUG` (VC.pas:220) is `False`**, and the WinKeyer HTML debug
+  block it guards has therefore never compiled in this tree. It holds the last
+  `wsprintf` in the program, written in the cdecl varargs-asm style. Deleting the
+  block would retire that count; converting it would mean rewriting code nobody
+  can run. Same shape as `MMTTYMODE`, which was deleted on 2026-08-18.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)
