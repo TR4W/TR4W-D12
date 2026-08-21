@@ -67,7 +67,6 @@ procedure wkAddCharToHostBuffer(c: AnsiChar);
 procedure wkSetKeyerOutput(r: RadioPtr);
 function wkSendNextByteFromHostBuffer: boolean;
 procedure wkSwapTune;
-procedure wkWriteToDebugFile(b: Char; TX: boolean);
 //procedure wkSetLeadInTail;
 
 type
@@ -142,7 +141,6 @@ type
   end;
 
 const
-  wkDebugFileHeader                     = '<HTML><STYLE>.RX {BACKGROUND:#00FF00} .ST{BACKGROUND:#FFFF00}</STYLE><BODY><TABLE BORDER=1 WIDTH=40% ALIGN=LEFT>';
   // ADMIN COMMANDS -- two RAW BYTES on the wire ($00 + sub-command), passed to
   // wkSendAdminCommand's untyped `const Buffer` and written verbatim.
   //
@@ -193,13 +191,6 @@ const
 //  wk_STATUS_BYTE_START                  = 196;
 //  wk_STATUS_BYTE_END                    = 192;
 var
-{$IF K6VVA_WK_DEBUG}
-//  wkDebugFileRX                         : HWND;
-  wkDebugFileTX                         : HWND;
-  wkDebu1310                            : PChar = #13#10;
-  wkDebugBuffer                         : array[0..63] of Char;
-  wkDebugFileRecordNumber               : integer;
-{$IFEND}
   wkTune                                : boolean;
   WK2                                   : boolean;
   wkSpeedUp                             : integer;
@@ -474,9 +465,6 @@ begin
   t0 := wkPerfNow;
   sWriteFile(WinKeyHandle, b, 1);
   wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
-{$IF K6VVA_WK_DEBUG}
-  wkWriteToDebugFile(Char(b), True);
-{$IFEND}
 
 //  wkBuffer[0] := b;
 //  tWriteFile(WinKeyHandle, wkBuffer, 1, RESULT);
@@ -496,10 +484,6 @@ begin
   t0 := wkPerfNow;
   tWriteFile(WinKeyHandle, TwoBytesBuffer, 2, Result);
   wkWriteMsAccum := wkWriteMsAccum + wkPerfMs(t0);
-{$IF K6VVA_WK_DEBUG}
-  wkWriteToDebugFile(Char(B1), True);
-  wkWriteToDebugFile(Char(B2), True);
-{$IFEND}
 
 //  wkSendByte(B1);
 //  wkSendByte(B2);
@@ -906,9 +890,6 @@ begin
       if lpNumberOfBytesRead > 0 then
         for i := 0 to lpNumberOfBytesRead - 1 do
         begin
-{$IF K6VVA_WK_DEBUG}
-          wkWriteToDebugFile(Char(wkThreadReadBuffer[i]), False);
-{$IFEND}
 
           if (wkThreadReadBuffer[i] and $C0) = $C0 then
           begin
@@ -1279,9 +1260,6 @@ begin
   begin
     if wkWaitingBytesInHost <= 0 then Exit;
 {!!!}
-{$IF NOT K6VVA_WK_DEBUG}
-//    if wkXOFF then Exit;
-{$IFEND}
 
     logger.Trace('[wkSendNextByteFromHostBuffer] sending char=%s (ord=%d $%s)',
                  [string(wkInternalCWBuffer[wkHostBufferSendIndex]),
@@ -1289,10 +1267,6 @@ begin
                   IntToHex(Ord(wkInternalCWBuffer[wkHostBufferSendIndex]), 2)]);
     wkSendByte(Ord(wkInternalCWBuffer[wkHostBufferSendIndex]));
 
-{$IF K6VVA_WK_DEBUG}
-    CID_TWO_BYTES[0] := wkInternalCWBuffer[wkHostBufferSendIndex];
-    AddStringToTelnetConsole(CID_TWO_BYTES);
-{$IFEND}
 
     if wkWaitingBytesInHost > 0 then
        begin
@@ -1319,45 +1293,5 @@ begin
   wkSendTwoBytes(wkCMD_KEYIMMEDIATE, Byte(not wkBUSY));
 end;
 
-procedure wkWriteToDebugFile(b: Char; TX: boolean);
-const
-  InOutArray                            : array[boolean] of PAnsiChar = ('RX <', 'TX >');
-  InOutClassArray                       : array[boolean] of PAnsiChar = ('RX', 'TX');
-{$IF K6VVA_WK_DEBUG}
-var
-  lpNumberOfBytesWritten                : Cardinal;
-  DirectionChar                         : PChar;
-  ClassName                             : PChar;
-{$IFEND}
-begin
-{$IF K6VVA_WK_DEBUG}
-  inc(wkDebugFileRecordNumber);
-  DirectionChar := InOutArray[TX];
-  ClassName := InOutClassArray[TX];
-  if Ord(b) > 150 then ClassName := 'ST';
-  asm
-  xor eax,eax
-  mov al,byte ptr b
-  push eax
-  push eax
-  push DirectionChar
-  call windows.GetTickCount
-  push eax
-  push wkDebugFileRecordNumber
-  push ClassName
-  end;
-  lpNumberOfBytesWritten := wsprintf(wkDebugBuffer, '<TR CLASS=%s><TD>%u</TD><TD>%u</TD><TD>%s</TD><TD>%#02x</TD><TD><b>%C</b></TD></TR>');
-  asm add esp,32
-  end;
-
-  sWriteFile(wkDebugFileTX, wkDebugBuffer, lpNumberOfBytesWritten);
-{$IFEND}
-end;
-
-{$IF K6VVA_WK_DEBUG}
-begin
-  Tree.tOpenFileForWrite(wkDebugFileTX, 'wkDebug.html');
-  sWriteFile(wkDebugFileTX, wkDebugFileHeader, length(wkDebugFileHeader));
-{$IFEND}
 end.
 

@@ -1,7 +1,7 @@
 ﻿{
     "ini.Read":  14,
     "ini.Write":  21,
-    "wsprintf":  1,
+    "wsprintf":  0,
     "process.Launch":  2,
     "thread.Create":  6,
     "thread.Event":  29,

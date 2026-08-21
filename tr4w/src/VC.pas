@@ -217,7 +217,6 @@ const
   tr4w_ClassName                        = 'TR4W';
   MASKEVENT                             = False;
   OGLVERSION                            = False;
-  K6VVA_WK_DEBUG                        = False;
   MORSERUNNER                           = False;
   ICOM_LONG_MODECOMMAND                 = True ;
 
