@@ -4,18 +4,20 @@ object frmBandPlan: TfrmBandPlan
   Top = 0
   Width = 420
   BorderIcons = [biSystemMenu]
-  BorderStyle = bsDialog
+  BorderStyle = bsSizeable
   Caption = 'Band plan'
   ClientHeight = 330
   ClientWidth = 420
   Position = poMainFormCenter
   OnClose = HandleClose
+  OnResize = HandleResize
   OnShow = HandleShow
   object grdBandPlan: TStringGrid
     Left = 8
     Height = 275
     Top = 8
     Width = 404
+    Anchors = [akTop, akLeft, akRight, akBottom]
     ColCount = 4
     DefaultColWidth = 110
     FixedCols = 1
@@ -24,10 +26,11 @@ object frmBandPlan: TfrmBandPlan
     TabOrder = 0
   end
   object btnOK: TButton
-    Left = 120
+    Left = 244
     Height = 25
     Top = 295
     Width = 80
+    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'OK'
     Default = True
@@ -35,10 +38,11 @@ object frmBandPlan: TfrmBandPlan
     TabOrder = 1
   end
   object btnCancel: TButton
-    Left = 220
+    Left = 332
     Height = 25
     Top = 295
     Width = 80
+    Anchors = [akRight, akBottom]
     AutoSize = False
     Cancel = True
     Caption = 'Cancel'

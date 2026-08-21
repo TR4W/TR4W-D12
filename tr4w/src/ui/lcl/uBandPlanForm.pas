@@ -54,6 +54,17 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, Grids, LCLType;
 
+const
+  // IN THE INTERFACE because FMinColWidth's RANGE is written in terms of
+  // them, and a class field's type is part of the interface -- the
+  // implementation section cannot be seen from a declaration above it.
+  // Kept as named columns rather than 0..3 so that adding a column is one
+  // edit here and a compile error everywhere it matters.
+  COL_BAND   = 0;
+  COL_CUTOFF = 1;
+  COL_CW     = 2;
+  COL_SSB    = 3;
+
 type
   TfrmBandPlan = class(TForm)
     grdBandPlan: TStringGrid;
@@ -63,8 +74,28 @@ type
     procedure HandleClose(Sender: TObject; var Action: TCloseAction);
     procedure btnOKClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
+    procedure HandleResize(Sender: TObject);
   private
+    // The measured widths from FitColumnsToText, kept because the spread has to
+    // be recomputed from the MINIMUMS on every resize. Growing the current
+    // widths instead compounds: drag the window wider twice and the columns end
+    // up wider than the window.
+    FMinColWidth: array[COL_BAND..COL_SSB] of integer;
     procedure SaveBandPlan;
+    // Column widths come from the TEXT, not from a guess.  DefaultColWidth was
+    // 110px and the widest heading, 'BAND MAP CUTOFF FREQUENCY', does not fit
+    // in it -- so three of the four headings were clipped and the operator
+    // could not tell which column was which (NY4I, 2026-08-21).
+    procedure FitColumnsToText;
+    // Widths follow the window; height is pinned to the row count. See the
+    // implementations for why only one of the two dimensions is free.
+    procedure SpreadColumnsAcrossWidth;
+    procedure LockHeightToContent;
+    // Bounds persistence, keyed LAYOUT_NAME in settings\tr4w.json -- the same
+    // 'windows' section and the same store the main window's own windows use,
+    // rather than a second mechanism for one dialog.
+    function  RestoreSavedBounds: boolean;
+    procedure SaveCurrentBounds;
   end;
 
 // the band-plan editor.  Nested INSIDE the settings dialog, so its parent is
@@ -80,6 +111,9 @@ implementation
 
 uses
   Windows,
+  Types,               // TRect / IntersectRect
+  uTR4WConfigFile,     // TR4WConfigFileName, Save/LoadWindowLayout
+  uWindowLayoutStore,  // TWindowLayoutStore -- the same store the main windows use
   VC,              // RC_BANDPLAN, BandStringsArrayWithOutSpaces, TR4W_INI_FILENAME
   LogWind,         // BandMapModeCutoffFrequency, DefaultFreqMemory
   MainUnit,        // logger
@@ -93,10 +127,21 @@ const
   FIRST_BAND = Band160;
   LAST_BAND  = Band2;
 
-  COL_BAND   = 0;
-  COL_CUTOFF = 1;
-  COL_CW     = 2;
-  COL_SSB    = 3;
+  // The key this dialog's bounds are stored under in settings	r4w.json.
+  // Deliberately not one of VC.WindowNames -- those name the main window's
+  // OWN windows and are indexed by WindowsType; this is a dialog, and the
+  // store is keyed by name precisely so a newcomer needs no enum slot.
+  LAYOUT_NAME     = 'BandPlan';
+
+  // Cell text to cell edge, both sides, plus the grid line.
+  CELL_PADDING    = 12;
+  GRID_MARGIN     = 8;    // the grid's Left, mirrored on the right
+  GRID_SLACK      = 4;    // rounding, so the last column never clips by a pixel
+  GRID_BORDER          = 4;    // the grid's own frame, top and bottom
+  // Grid bottom to the buttons (12), the buttons (25), and below them (10)
+  // -- the .lfm geometry, stated once so LockHeightToContent cannot drift
+  // from it silently.
+  BUTTON_STRIP_HEIGHT  = 47;
 
 var
   frmBandPlan: TfrmBandPlan = nil;
@@ -129,14 +174,227 @@ begin
 
    grdBandPlan.Col := COL_CUTOFF;
    grdBandPlan.Row := 1;
+
+   // ORDER MATTERS: the columns are measured first because the width floor
+   // is derived from them, and the saved bounds are applied last so the
+   // operator's own size wins over the computed minimum (the constraint
+   // still stops it going below readable).
+   FitColumnsToText;
+   LockHeightToContent;
+
+   // CENTRED AFTER SIZING, and only when there is no saved position to
+   // honour.  ShowModalOverWin32Parent centred this form before it was
+   // shown, but the two calls above have changed its size since -- so that
+   // centring is now stale by half the difference.
+   if not RestoreSavedBounds then
+      begin
+      CentreOverMainWindow(Self);
+      end;
+
+   SpreadColumnsAcrossWidth;   // the restored width may be wider than measured
 end;
 
 procedure TfrmBandPlan.HandleClose(Sender: TObject; var Action: TCloseAction);
 begin
+   // SAVED ON EVERY CLOSE, Cancel included.  Where the operator put the
+   // window is not part of the band plan they are cancelling.
+   SaveCurrentBounds;
+
    UnregisterHostedFormHandle(Self.Handle);
    Action := caHide;
 end;
 
+// Fixed cells are drawn in TitleFont and data cells in Font, so each is measured
+// with the font it will actually be painted in -- measuring both with one font
+// is how a heading ends up one bold-space too narrow.
+procedure TfrmBandPlan.FitColumnsToText;
+var
+   col, row, w, t, needed, frame: integer;
+begin
+   needed := 0;
+
+   for col := 0 to grdBandPlan.ColCount - 1 do
+      begin
+      grdBandPlan.Canvas.Font := grdBandPlan.TitleFont;
+      w := grdBandPlan.Canvas.TextWidth(grdBandPlan.Cells[col, 0]);
+
+      grdBandPlan.Canvas.Font := grdBandPlan.Font;
+      for row := 1 to grdBandPlan.RowCount - 1 do
+         begin
+         t := grdBandPlan.Canvas.TextWidth(grdBandPlan.Cells[col, row]);
+         if t > w then
+            begin
+            w := t;
+            end;
+         end;
+
+      grdBandPlan.ColWidths[col] := w + CELL_PADDING;
+      FMinColWidth[col]          := grdBandPlan.ColWidths[col];
+      needed := needed + grdBandPlan.ColWidths[col];
+      end;
+
+   // THE FORM IS GROWN TO FIT AND THEN FLOORED THERE.  goColSizing is not in
+   // the grid's options, so the operator cannot drag a column narrow; the only
+   // way a heading could be clipped again is the WINDOW being dragged narrow,
+   // which the constraint now prevents.  Resizing wider still works -- it is a
+   // floor, not a fixed size (NY4I asked for both).
+   frame  := Width - ClientWidth;                        // borders
+   needed := needed + (2 * GRID_MARGIN) + frame +
+             Windows.GetSystemMetrics(SM_CXVSCROLL) + GRID_SLACK;
+
+   Constraints.MinWidth  := needed;
+
+   if Width < needed then
+      begin
+      Width := needed;
+      end;
+end;
+
+function TfrmBandPlan.RestoreSavedBounds: boolean;
+var
+   store: TWindowLayoutStore;
+   saved: TRect;
+   visible: boolean;
+   desktop, overlap: TRect;
+begin
+   Result := False;
+
+   store := TWindowLayoutStore.Create;
+   try
+      if not LoadWindowLayout(TR4WConfigFileName, store) then
+         begin
+         Exit;
+         end;
+
+      if not store.TryGetLayout(LAYOUT_NAME, saved, visible) then
+         begin
+         Exit;
+         end;
+
+      // OFF-SCREEN IS NOT RESTORED.  A monitor that is no longer attached
+      // leaves a perfectly well-formed rect that puts the dialog where nobody
+      // can reach it, and this one is modal -- the operator would be looking at
+      // a dead application.  Any overlap with the virtual desktop is enough;
+      // Windows itself will nudge a partly-off window back.
+      desktop := Rect(Screen.DesktopLeft, Screen.DesktopTop,
+                      Screen.DesktopLeft + Screen.DesktopWidth,
+                      Screen.DesktopTop  + Screen.DesktopHeight);
+      if not IntersectRect(overlap, saved, desktop) then
+         begin
+         logger.Warn('[BandPlan] saved bounds are off-screen -- centring instead');
+         Exit;
+         end;
+
+      // poDesigned FIRST: with poMainFormCenter still set, the LCL re-centres
+      // the form when it is shown and the restored position is thrown away.
+      Position := poDesigned;
+      // HEIGHT IS NOT RESTORED -- it is computed from the row count and pinned
+      // by LockHeightToContent, which has already run.  Passing the saved
+      // height would be silently clamped by the constraint; passing the real
+      // one says so.  Position and WIDTH are the operator's to keep.
+      SetBounds(saved.Left, saved.Top, saved.Right - saved.Left, Height);
+      Result := True;
+   finally
+      store.Free;
+   end;
+end;
+
+procedure TfrmBandPlan.SaveCurrentBounds;
+var
+   store: TWindowLayoutStore;
+begin
+   // A minimised or maximised window reports bounds that are not what to
+   // restore.  This form has no maximise box, so this is a guard rather than a
+   // live case -- and a cheap one next to writing a -32000 sentinel into the
+   // config, which is the failure it prevents.
+   if WindowState <> wsNormal then
+      begin
+      Exit;
+      end;
+
+   store := TWindowLayoutStore.Create;
+   try
+      // SetLayout on an EMPTY store, not the file's contents: SaveWindowLayout
+      // re-reads the file and overlays these entries, so every other window's
+      // row is preserved without this dialog having to know they exist.
+      store.SetLayout(LAYOUT_NAME,
+                      Rect(Left, Top, Left + Width, Top + Height), True);
+      SaveWindowLayout(TR4WConfigFileName, store);
+   finally
+      store.Free;
+   end;
+end;
+// THE GRID FILLS, NOT JUST THE CONTROL.  The grid was already anchored on all
+// four sides, so it did follow the window -- but its COLUMNS kept their measured
+// widths, and the surplus showed as a band of dead white inside the grid (NY4I,
+// 2026-08-21, screenshot after widening).
+//
+// The surplus goes to the three FREQUENCY columns only. 'Band' is a label column
+// two or three characters wide; stretching it would put '160' adrift in the
+// middle of a wide cell and buy nothing.
+procedure TfrmBandPlan.SpreadColumnsAcrossWidth;
+var
+   col, total, avail, surplus, share: integer;
+begin
+   // Before FitColumnsToText has run there is nothing to spread -- OnResize
+   // fires during form construction, well before HandleShow.
+   if FMinColWidth[COL_SSB] = 0 then
+      begin
+      Exit;
+      end;
+
+   total := 0;
+   for col := COL_BAND to COL_SSB do
+      begin
+      grdBandPlan.ColWidths[col] := FMinColWidth[col];
+      total := total + FMinColWidth[col];
+      end;
+
+   avail := grdBandPlan.ClientWidth - GRID_SLACK;
+   if avail <= total then
+      begin
+      Exit;                      // narrower than the text: the minimums stand
+      end;
+
+   surplus := avail - total;
+   share   := surplus div 3;
+
+   grdBandPlan.ColWidths[COL_CUTOFF] := FMinColWidth[COL_CUTOFF] + share;
+   grdBandPlan.ColWidths[COL_CW]     := FMinColWidth[COL_CW]     + share;
+   // The remainder lands on the last column rather than being lost to integer
+   // division, so the columns always add up to the full width.
+   grdBandPlan.ColWidths[COL_SSB]    := FMinColWidth[COL_SSB] + surplus - (2 * share);
+end;
+
+// VERTICAL DEAD SPACE IS MADE IMPOSSIBLE RATHER THAN TIDIED UP.  There are
+// exactly eleven bands and no scrolling to do, so height is not a dimension the
+// operator has anything to gain from: any extra is empty grid under the last
+// row. The height is therefore computed from the rows and pinned with equal Min
+// and Max constraints. Width stays free -- that is the one that matters, since
+// it decides whether the headings are readable.
+procedure TfrmBandPlan.LockHeightToContent;
+var
+   row, rows: integer;
+begin
+   rows := 0;
+   for row := 0 to grdBandPlan.RowCount - 1 do
+      begin
+      rows := rows + grdBandPlan.RowHeights[row];
+      end;
+
+   // The grid is anchored top AND bottom, so its height follows the form's --
+   // setting ClientHeight is what sizes it, and setting grdBandPlan.Height
+   // directly would be undone by the next layout pass.
+   ClientHeight := grdBandPlan.Top + rows + GRID_BORDER + BUTTON_STRIP_HEIGHT;
+
+   Constraints.MinHeight := Height;
+   Constraints.MaxHeight := Height;
+end;
+
+procedure TfrmBandPlan.HandleResize(Sender: TObject);
+begin
+   SpreadColumnsAcrossWidth;
+end;
 procedure TfrmBandPlan.SaveBandPlan;
 var
   b: BandType;
