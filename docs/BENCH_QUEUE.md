@@ -675,13 +675,13 @@ SQLite contest file). No station setting writes `tr4w.ini` any more.
 **What still does:** `[COLORS]` (~112 elements x 2, and the reason Ctrl-J cannot
 be deleted), `[WINKEYER]`, and `uNewContest`'s `MAIN CALLSIGN` read.
 
-### 22. Colours moved to JSON, and Ctrl-J is GONE
+### 22. Colors moved to JSON, and Ctrl-J is GONE
 
 `uOption.pas` is deleted -- 960-odd lines, the last Win32 settings dialog. What
-kept it alive was the Colours editor, which was never a Ctrl-J filter at all: it
+kept it alive was the Colors editor, which was never a Ctrl-J filter at all: it
 was a different dialog wearing the same window, built from
 `TWindows[TMainWindowElement]`, two rows per element, saved to `[COLORS]` in
-`tr4w.ini`. Preferences now has a **Colours** page under Appearance.
+`tr4w.ini`. Preferences now has a **Colors** page under Appearance.
 
 **Why `[COLORS]` in the ini ever worked, which is worth knowing:** the config
 loader is SECTION-BLIND. It reads every line of `tr4w.ini` in order regardless
@@ -689,16 +689,16 @@ of which `[SECTION]` heading it sits under. That is also what made the migration
 exact -- the seed copies out of `TWindows` AFTER the load, so whatever the ini
 said is already in force and there is no second parser to disagree with.
 
-- [ ] **Appearance -> Colours.** Fifty elements, each with a Text and a
-  Background drop-down from the 18-colour palette. Change one, OK, and check it
+- [ ] **Appearance -> Colors.** Fifty elements, each with a Text and a
+  Background drop-down from the 18-color palette. Change one, OK, and check it
   repaints. Restart and check it stuck.
 - [ ] **Look at `settings\tr4w.json`** -- a `colors` object keyed by element
   name, values as SPELLINGS (`"YELLOW"`, not `15`).
-- [ ] **Your existing colours must survive.** On first run with an old
+- [ ] **Your existing colors must survive.** On first run with an old
   `tr4w.ini`, the log should say `[Colors] seeded 50 element(s) from the loaded
   configuration` and the window should look exactly as it did.
 - [ ] **Ctrl-J.** Every menu route that used to open the old list -- Ctrl-J
-  itself, Appearance, Colours, WinKeyer -- must open Preferences and nothing
+  itself, Appearance, Colors, WinKeyer -- must open Preferences and nothing
   else. Nothing should open an empty list, and nothing should fail to open.
 - [ ] **`QuickEditResponse` prompts still parent correctly.** They used to
   prefer `settingswindowhandle`, which only existed while the old dialog was
@@ -736,7 +736,7 @@ answer the question actually being asked.
 - [ ] **Then flip that back to `false` by hand, restart, and say Yes.** The file
   should be gone and a confirmation shown. **No `.bak` is made** -- that is
   deliberate ("There should not be any backups of the ini or anything else").
-- [ ] **Restart again with everything you had set** -- radios, colours, band
+- [ ] **Restart again with everything you had set** -- radios, colors, band
   plan, DE ENABLE, auto-send count. All of it must survive the ini being gone.
   This is the real test of the whole migration and the reason to do it on a
   station you can restore.

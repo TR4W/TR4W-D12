@@ -171,7 +171,7 @@ type
       SSB: integer;       // FREQUENCY MEMORY, with the old 'SSB ' prefix
    end;
 
-   { ONE MAIN-WINDOW ELEMENT'S COLOURS.
+   { ONE MAIN-WINDOW ELEMENT'S COLORS.
 
      Fifty elements, each with a foreground and a background drawn from a fixed
      18-entry palette.  They were never CFGCA rows: CheckCommand matches them by
@@ -179,7 +179,7 @@ type
      BACKGROUND" are recognised without either existing in any table.
 
      SPELLINGS, not ordinals -- 'YELLOW', not 15.  An ordinal silently
-     re-points at a different colour the day the palette gains an entry, and
+     re-points at a different color the day the palette gains an entry, and
      trBtnFace and trAlert were both added to the end of that enum at some
      point. }
    TElementColors = class(TObject)
@@ -587,8 +587,8 @@ type
         write every band it has without first asking what is already there, and
         a band whose values are all 0 is REMOVED rather than stored as zeros --
         see TBandPlanEntry on why 0 has to mean absent. }
-      { MAIN-WINDOW COLOURS.  SetElementColors is an upsert by element name, and
-        an entry with neither colour set is REMOVED rather than stored blank --
+      { MAIN-WINDOW COLORS.  SetElementColors is an upsert by element name, and
+        an entry with neither color set is REMOVED rather than stored blank --
         the same rule as the band plan, and for the same reason: "not set" has
         to mean "leave the compiled default alone". }
       function  ColorCount: integer;
@@ -2078,7 +2078,7 @@ begin
       end;
    Result.AddPair(JSONKEY_BANDPLAN, bandPlan);
 
-   // Main-window colours.  Keyed by element name, and a colour that is not set
+   // Main-window colors.  Keyed by element name, and a color that is not set
    // is omitted rather than written empty -- so an element the operator never
    // touched keeps its compiled default rather than being forced to blank.
    colors := TJSONObject.Create;

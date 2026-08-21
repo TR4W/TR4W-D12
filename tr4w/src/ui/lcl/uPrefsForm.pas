@@ -762,7 +762,7 @@ type
       // The keyer editor and its working copy. Modeless like the radio editor,
       // so the result arrives in a callback rather than on the next line.
       FKeyerEditor: TfrmKeyerEdit;
-      { One generated colour row: which element, and the two combos editing it.
+      { One generated color row: which element, and the two combos editing it.
         Held so Save can walk them without searching the control tree by name. }
       FColorRows: array of record
          Element: string;
@@ -932,6 +932,12 @@ type
         legacy Ctrl-J command spelling to the control that edits it;
         FocusControlOnItsSection is the two-step (select the nav item, focus the
         control) that a search hit already performed inline. }
+      { Open AT a page.  ControlForCommand deep-links to one CONTROL; this
+        selects a whole section, which is what a menu item naming a page wants
+        -- Settings > Colors should land on Colors, not on wherever Preferences
+        was last left (NY4I, 2026-08-21). }
+      function  SelectPage(const aTag: NativeInt): boolean;
+
       function  ControlForCommand(const aCommand: string): TWinControl;
       procedure FocusControlOnItsSection(const aControl: TWinControl);
       procedure FocusTimerTick(Sender: TObject);
@@ -958,8 +964,8 @@ type
         one flat alphabetical list. }
       procedure BuildGeneratedSections;
 
-      { THE COLOURS PAGE.  Not a BuildGeneratedSection: those are driven by
-        setting-key prefixes, and the main-window colours are not settings at
+      { THE COLORS PAGE.  Not a BuildGeneratedSection: those are driven by
+        setting-key prefixes, and the main-window colors are not settings at
         all -- CheckCommand matches them by PREFIX against TWindows[..].mweName,
         so no CFGCA row exists for any of them.  The rows are generated from
         TWindows itself, which is the only list there is. }
@@ -1117,7 +1123,7 @@ const
    // what it is, so it does not read as a permanent home.
    NAV_MORE              = 30;
 
-   // Colours. A page of its own under Appearance rather than a block on it:
+   // Colors. A page of its own under Appearance rather than a block on it:
    // fifty elements with two drop-downs each is a hundred controls, and the
    // designed panel has room for a small block and no more.
    NAV_COLORS            = 31;
@@ -1139,6 +1145,9 @@ procedure ShowPreferences;
 // assume: guessing wrong here is what the Ctrl-J path used to do, silently
 // selecting row 0 when it could not find the command (uOption.pas).
 function ShowPreferencesForCommand(const aCommand: string): boolean;
+
+// Open Preferences AT a section, by its nav tag (the NAV_* constants).
+function ShowPreferencesAtPage(const aTag: NativeInt): boolean;
 
 implementation
 
@@ -1259,6 +1268,17 @@ begin
                             [phase, E.ClassName, E.Message]));
          end;
       end;
+end;
+
+function ShowPreferencesAtPage(const aTag: NativeInt): boolean;
+begin
+   Result := False;
+   ShowPreferences;
+   if gPrefsForm = nil then
+      begin
+      Exit;
+      end;
+   Result := gPrefsForm.SelectPage(aTag);
 end;
 
 function ShowPreferencesForCommand(const aCommand: string): boolean;
@@ -1554,7 +1574,7 @@ begin
          begin
          logger.Info('[Preferences] migrated %d radio(s) from %s to %s',
                      [FStore.RadioCount, LegacyStoreFileName, StoreFileName]);
-         // The colour rows are not bindings -- they edit TWindows, not settings --
+         // The color rows are not bindings -- they edit TWindows, not settings --
          // so SaveAll does not know about them and they are written here.
          SaveColorRows;
          FStore.SaveToFile(StoreFileName);
@@ -2344,6 +2364,26 @@ const
      726-item combo cost 1.8 seconds to populate. }
    SEARCH_MAX_HITS = 12;
 
+function TPrefsForm.SelectPage(const aTag: NativeInt): boolean;
+var
+   navItem: TTreeNode;
+begin
+   // THROUGH THE TREE, not by showing the panel directly.  Assigning Selected
+   // fires tvNavChange, which is the one place that decides which panel is
+   // visible -- setting a panel's Visible here would leave the tree disagreeing
+   // with the screen.  Same reasoning as FocusControlOnItsSection.
+   Result := False;
+   navItem := NavItemForTag(aTag);
+   if navItem = nil then
+      begin
+      logger.Warn('[Prefs] no navigation item with tag %d', [aTag]);
+      Exit;
+      end;
+
+   navItem.Selected := True;
+   Result := True;
+end;
+
 function TPrefsForm.NavItemForTag(const aTag: NativeInt): TTreeNode;
 var
    i: integer;
@@ -2491,8 +2531,8 @@ begin
 
    head := TLabel.Create(box);
    head.Parent     := box;
-   head.Caption    := 'Colours' + #13#10 +
-                      'The colours of each main-window element. ' +
+   head.Caption    := 'Colors' + #13#10 +
+                      'The colors of each main-window element. ' +
                       'Changes take effect when the window next repaints.';
    head.WordWrap   := True;
    head.SetBounds(16, 12, 620, 40);
@@ -2511,7 +2551,7 @@ begin
    capBg.Font.Style := [fsBold];
 
    // FROM THE ENUM, through uRadioConfigApply.PaletteSpellings -- not a list
-   // typed in here.  A hand-kept copy would offer a colour this build does not
+   // typed in here.  A hand-kept copy would offer a color this build does not
    // have the moment the palette changes, and the applier would then refuse it.
    palette := PaletteSpellings;
 
@@ -2522,7 +2562,7 @@ begin
    for e := Low(TMainWindowElement) to High(TMainWindowElement) do
       begin
       // A nameless element is one with no window of its own; there is nothing
-      // to colour and nothing for CheckCommand to have matched either.
+      // to color and nothing for CheckCommand to have matched either.
       if TWindows[e].mweName = nil then
          begin
          Continue;
@@ -2546,7 +2586,7 @@ begin
 
    LoadColorRows;
    Result := n * 2;
-   logger.Debug('[Prefs] colours page: %d element(s)', [n]);
+   logger.Debug('[Prefs] colors page: %d element(s)', [n]);
 end;
 
 procedure TPrefsForm.LoadColorRows;
@@ -4188,7 +4228,7 @@ begin
       // Under Appearance, because that is where an operator looks for it, and
       // as its own page because fifty elements x two drop-downs will not fit
       // on the designed panel.
-      navColors := tvNav.Items.AddChild(navAppearance, 'Colours');
+      navColors := tvNav.Items.AddChild(navAppearance, 'Colors');
       TNavNode(navColors).Tag := NAV_COLORS;
       navLogging := tvNav.Items.Add(nil, 'Logging');
       TNavNode(navLogging).Tag := 8;

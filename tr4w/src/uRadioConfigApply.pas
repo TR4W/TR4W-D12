@@ -166,7 +166,7 @@ procedure ApplyStoredCommands(const aStore: TRadioConfigStore);
 // keeps the plan it had.
 procedure ApplyBandPlan(const aStore: TRadioConfigStore);
 
-// Main-window element colours from the store into TWindows.  Seeds itself once
+// Main-window element colors from the store into TWindows.  Seeds itself once
 // from whatever the config load already put there, which is the faithful
 // migration: the ini's [COLORS] lines have been applied by then.
 procedure ApplyElementColors(const aStore: TRadioConfigStore);
@@ -964,7 +964,7 @@ begin
    //
    // The config loader is SECTION-BLIND: it reads every line of tr4w.ini in
    // order regardless of which [SECTION] it sits under, which is the only
-   // reason writing colours into [COLORS] ever worked.  So by the time this
+   // reason writing colors into [COLORS] ever worked.  So by the time this
    // runs, whatever the ini said is already in TWindows, and copying it out is
    // exact -- no second parser, and no chance of the two disagreeing.
    if aStore.ColorCount > 0 then
@@ -1019,7 +1019,7 @@ begin
             end
          else
             begin
-            logger.Warn('[Colors] %s: "%s" is not a colour this build knows',
+            logger.Warn('[Colors] %s: "%s" is not a color this build knows',
                         [entry.Element, entry.Foreground]);
             end;
          end;
@@ -1032,7 +1032,7 @@ begin
             end
          else
             begin
-            logger.Warn('[Colors] %s background: "%s" is not a colour this build knows',
+            logger.Warn('[Colors] %s background: "%s" is not a color this build knows',
                         [entry.Element, entry.Background]);
             end;
          end;

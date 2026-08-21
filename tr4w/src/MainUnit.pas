@@ -9080,13 +9080,38 @@ end;
 // several call sites pass a filter and changing them all is churn for no gain
 // while the entry point may still want to select a page one day.
 procedure RunOptionsDialog(f: CFGFunc);
+var
+  page: NativeInt;
 begin
-  // f IS IGNORED and the parameter is kept deliberately: every menu item that
-  // used to pick a Ctrl-J filter still calls this, and Preferences opens at its
-  // own last page.  Wiring f to a Preferences page is a worthwhile follow-up,
-  // which is why the callers were not flattened to ShowPreferences.
+  // THE MENU ITEM NAMES A PAGE, SO OPEN AT IT.  Settings > Colors landing on
+  // whatever page Preferences was last left on is not what the menu said it
+  // would do (NY4I, 2026-08-21).
+  //
+  // Only the filters that name a page map to one.  cfAll is the whole of
+  // Preferences and has no page of its own; cfWK, cfRadio1 and cfRadio2 name
+  // DEVICES in a library rather than sections, and picking one means picking
+  // which radio or keyer, which is a deeper link than this entry point knows
+  // how to make.  Those open Preferences as it was, which is the old
+  // behaviour and not a regression.
+  page := -1;
+  case f of
+    cfCol:        page := NAV_COLORS;
+    cfAppearance: page := NAV_APPEARANCE;
+  end;
 
-  // EVERY filter goes to Preferences now, colours included.
+  if page >= 0 then
+     begin
+     if ShowPreferencesAtPage(page) then
+        begin
+        logger.Info('[Options] menu -> Preferences page %d', [page]);
+        Exit;
+        end;
+     // SelectPage reports its own failure; Preferences is open either way, so
+     // fall through rather than leaving the operator with nothing.
+     end;
+
+
+  // EVERY filter goes to Preferences now, colors included.
   //
   // cfCol was the last holdout and it was never a filter over CFGCA at all --
   // it was a different dialog wearing the same window, built from
@@ -9095,7 +9120,7 @@ begin
   // Ctrl-J did not touch them and why Preferences had nowhere to show them
   // (NY4I caught the editor going unreachable, 2026-08-16).
   //
-  // Preferences has a Colours page under Appearance now, so the old dialog has
+  // Preferences has a Colors page under Appearance now, so the old dialog has
   // no remaining caller and uOption.pas is gone.
   logger.Info('[Options] Ctrl-J -> Preferences');
   ShowPreferences;
