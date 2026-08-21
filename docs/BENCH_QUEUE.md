@@ -509,6 +509,42 @@ Dead, but it is the reference for how the previous driver did this, and deleting
 it in the week the LPT path gets bench-tested would throw away the comparison
 exactly when it might be wanted. Revisit after the test.
 
+### 18. 112 settings now persist to JSON instead of tr4w.ini  (`de15d7c4`, `cfcba0f8`)
+
+**This is the one to test first, and your read-only `tr4w.ini` is the perfect
+rig for it.** Before tonight, 153 settings appeared in Preferences, applied
+immediately when changed, and wrote `tr4w.ini` -- which on your station is empty
+and read-only, so they silently reverted on restart. `DE ENABLE` was the one you
+noticed. 112 of them now write `settings\tr4w.json`.
+
+- [ ] **`DE ENABLE`, the worked example.** Change it in Preferences, close TR4W,
+  reopen. It should still be what you set. Before tonight it would not have been.
+- [ ] **Two or three others from different panels** -- say `ROW COUNT` (a
+  drop-down, `ckArray`), `AUTO-CQ DELAY TIME` (an integer), and any check box.
+  Same test: set, restart, still set.
+- [ ] **Hand-edit one in `settings\tr4w.json`**, as you did to verify the radio
+  settings, and confirm TR4W honours it on the next start.
+- [ ] **The log should be quiet.** `[ApplyStoredCommands] CFGCA refused "X" =
+  "Y"` in `tr4w.log` means a stored value the row will not accept -- that is the
+  failure mode of this change and it names itself. Worth one grep after a
+  session.
+- [ ] **A setting you have NOT touched keeps its old value.** The seeding path
+  (`MIGRATED_COMMANDS`, 214 entries now) carries an existing `tr4w.ini` value
+  into the store once, so an operator upgrading does not silently revert to
+  compiled defaults. Your station has an EMPTY ini, so this one is better tested
+  on a machine with a populated one.
+
+**A failure now says so.** `SetCFGCommandValue` checks the ini write result --
+it never did -- so a setting that cannot be saved reports "applied but could NOT
+be saved" instead of vanishing quietly.
+
+**Still on the ini, deliberately: 41.** Thirty are `ckList` rows that Preferences
+renders READ-ONLY, so they cannot be edited at all yet; the rest are read-only
+rows, an action trigger (`CLEAR DUPE SHEET`), the band plan, and the LPT port.
+Each reason is written down in `docs/CFG_MIGRATION_PLAN.md`, along with what
+unlocking the `ckList` thirty would take and the padding trap that makes it
+delicate.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)
