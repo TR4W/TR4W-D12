@@ -128,5 +128,31 @@ if ($problems.Count -gt 0) {
    exit 1
 }
 
-Write-Output ("Lint-SettingsMigration: {0} stored, {1} still on the ini, {2} seeded -- all three lists agree." -f $stored.Count, $legacy.Count, $migrated.Count)
+# A RATCHET ON THE REMAINING COUNT.
+#
+# The three-way check above catches a HALF-DONE migration. It cannot catch one
+# going BACKWARDS -- a setting moved from RegisterStoredSetting back to
+# RegisterLegacySetting, or a NEW setting added on the ini path -- because such a
+# change is internally consistent and passes every check above.
+#
+# NY4I asked for the counts to be linted as well as the ini writes, and this is
+# why: 153 -> 42 was one night's work, and nothing else in the build would notice
+# it drifting back. The number may FALL freely; raising it means editing this
+# line, which is the point at which somebody has to explain themselves.
+$LEGACY_CEILING = 42
+
+if ($legacy.Count -gt $LEGACY_CEILING) {
+   Write-Output ("Lint-SettingsMigration: {0} settings still write tr4w.ini; the ceiling is {1}." -f $legacy.Count, $LEGACY_CEILING)
+   Write-Output "  A setting moved BACK to the ini, or a new one was added on the ini path."
+   Write-Output "  New settings take RegisterStoredSetting + crS: csJSON + MIGRATED_COMMANDS."
+   Write-Output "  If the increase is deliberate, raise the ceiling in this script and say why."
+   exit 1
+}
+
+if ($legacy.Count -lt $LEGACY_CEILING) {
+   Write-Output ("Lint-SettingsMigration: {0} on the ini, below the ceiling of {1} -- good. Lower the ceiling and commit it with the migration." -f $legacy.Count, $LEGACY_CEILING)
+   exit 1
+}
+
+Write-Output ("Lint-SettingsMigration: {0} stored, {1} still on the ini (ceiling {3}), {2} seeded -- all three lists agree." -f $stored.Count, $legacy.Count, $migrated.Count, $LEGACY_CEILING)
 exit 0
