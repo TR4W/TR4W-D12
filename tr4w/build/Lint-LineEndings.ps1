@@ -51,8 +51,17 @@ $ErrorActionPreference = 'Stop'
 # Lazarus designer rewrites a .lfm on every form save, which is the same
 # co-ownership that put .fmx and .dfm here -- the toolchain changed, the hazard
 # did not.
+#
+# .ps1/.psm1 joined on 2026-08-21, for a DIFFERENT reason than the designer.
+# These are the build and lint scripts, and they are increasingly written and
+# edited by tooling rather than by hand -- which is exactly how six of them
+# ended up LF or MIXED (Lint-SettingsMigration.ps1 was 28 CRLF and 130 LF)
+# without anything noticing. This lint passed the whole time because it was not
+# looking at them: the gate that catches a corrupted source file did not watch
+# the gate. A mixed-ending script makes git warn on every touch and makes a diff
+# unreadable, and neither symptom points at the cause.
 $extensions = @('.pas', '.dpr', '.dpk', '.inc', '.dproj', '.bdsproj', '.fmx', '.dfm', '.rc',
-                '.lfm', '.lpi')
+                '.lfm', '.lpi', '.ps1', '.psm1')
 
 if (-not (Test-Path -LiteralPath $SourceDir))
    {

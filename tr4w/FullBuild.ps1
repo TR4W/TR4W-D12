@@ -1,4 +1,4 @@
-﻿# TR4W full build -- FreePascal / Lazarus LCL, English, one binary.
+# TR4W full build -- FreePascal / Lazarus LCL, English, one binary.
 #
 # Replaces the Delphi 12 script, which is kept as FullBuild-D12-deprecated.ps1
 # for reference only. Do not run both: they produce the same file names from
