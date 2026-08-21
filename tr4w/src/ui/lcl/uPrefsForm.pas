@@ -79,6 +79,7 @@ uses
    Controls,
    Forms,
    StdCtrls,
+   Grids,          // TStringGrid -- the colors page is one grid, not 100 combos
    // TComboBox -- the cluster server picker is editable
    ComCtrls,
    ExtCtrls,       // TPath -- the nav expander chevron
@@ -762,13 +763,17 @@ type
       // The keyer editor and its working copy. Modeless like the radio editor,
       // so the result arrives in a callback rather than on the next line.
       FKeyerEditor: TfrmKeyerEdit;
-      { One generated color row: which element, and the two combos editing it.
-        Held so Save can walk them without searching the control tree by name. }
-      FColorRows: array of record
-         Element: string;
-         Foreground: TComboBox;
-         Background: TComboBox;
-      end;
+      { The colors page is ONE GRID, not a control per cell.
+
+        It was 50 labels and 100 combo boxes, built when the form was
+        constructed -- 150 windowed controls, each combo filled one item at a
+        time.  That delayed opening PREFERENCES ITSELF by seconds and the page
+        still drew empty (NY4I, 2026-08-21: "I stopped waiting for any of the
+        color fields at 5 seconds").
+        A TStringGrid with pick-list columns is one control with one editor,
+        which is what uBandPlanForm already does for the same shape of data. }
+      FColorGrid: TStringGrid;
+      FColorElements: TStringList;   // row -> mweName, owned
 
       FKeyerEditTarget: TKeyerDefinition;
       FKeyerEditClone: TKeyerDefinition;
@@ -1498,6 +1503,7 @@ begin
    uSettingsLegacy.ActiveStoreProvider := nil;
 
    FreeAndNil(FBindings);
+   FreeAndNil(FColorElements);
    FreeAndNil(FEditClone);
    FreeAndNil(FKeyerEditClone);
    FreeAndNil(FUDPEditClone);
@@ -2452,6 +2458,11 @@ begin
       end;
    SetLength(FGeneratedRoots, 0);
 
+   // The colors grid was a child of one of those scroll boxes and has just been
+   // freed with it.  Left dangling, LoadColorRows would write into freed memory
+   // the next time a page was shown.
+   FColorGrid := nil;
+
    // Their index entries went with them. Left behind, they would point at freed
    // controls and a search hit would focus a dangling reference.
    SetLength(FDisplayOnlyRows, 0);
@@ -2493,31 +2504,16 @@ end;
 
 function TPrefsForm.BuildColorsSection: integer;
 const
-   ROW_H   = 28;
-   LABEL_W = 260;
-   FG_X    = 290;
-   BG_X    = 480;
-   CBO_W   = 175;
+   COL_ELEMENT = 0;
+   COL_FG      = 1;
+   COL_BG      = 2;
 var
    box: TScrollBox;
-   head, lbl, capFg, capBg: TLabel;
+   head: TLabel;
    e: TMainWindowElement;
    palette: TArray<string>;
    v, name: string;
-   y, n: integer;
-
-   function MakeCombo(const aX: integer): TComboBox;
-   begin
-      Result := TComboBox.Create(box);
-      Result.Parent := box;
-      Result.Style  := csDropDownList;
-      Result.SetBounds(aX, y - 4, CBO_W, 24);
-      for v in palette do
-         begin
-         Result.Items.Add(v);
-         end;
-   end;
-
+   row: integer;
 begin
    box := TScrollBox.Create(Self);
    box.Parent      := layContent;
@@ -2538,55 +2534,78 @@ begin
    head.SetBounds(16, 12, 620, 40);
    head.Font.Style := [fsBold];
 
-   capFg := TLabel.Create(box);
-   capFg.Parent := box;
-   capFg.Caption := 'Text';
-   capFg.SetBounds(FG_X, 60, CBO_W, 18);
-   capFg.Font.Style := [fsBold];
-
-   capBg := TLabel.Create(box);
-   capBg.Parent := box;
-   capBg.Caption := 'Background';
-   capBg.SetBounds(BG_X, 60, CBO_W, 18);
-   capBg.Font.Style := [fsBold];
-
    // FROM THE ENUM, through uRadioConfigApply.PaletteSpellings -- not a list
    // typed in here.  A hand-kept copy would offer a color this build does not
    // have the moment the palette changes, and the applier would then refuse it.
    palette := PaletteSpellings;
 
-   y := 84;
-   n := 0;
-   SetLength(FColorRows, 0);
+   // FREED FIRST: BuildGeneratedSections runs again on every reload (Cancel is
+   // the obvious one), and this list is ours rather than a component's child,
+   // so it is not freed with the page.  The grid IS a child of the scroll box
+   // and goes with it; the pointer is re-assigned below.
+   FreeAndNil(FColorElements);
+   FColorElements := TStringList.Create;
 
+   FColorGrid := TStringGrid.Create(box);
+   FColorGrid.Parent      := box;
+   FColorGrid.SetBounds(16, 64, 620, 470);
+   FColorGrid.Anchors     := [akLeft, akTop, akRight, akBottom];
+   FColorGrid.ColCount    := 3;
+   FColorGrid.FixedRows   := 1;
+   FColorGrid.FixedCols   := 0;
+   FColorGrid.Options     := FColorGrid.Options + [goEditing, goVertLine, goHorzLine,
+                                                   goColSizing, goDrawFocusSelected];
+   FColorGrid.Cells[COL_ELEMENT, 0] := 'Element';
+   FColorGrid.Cells[COL_FG,      0] := 'Text';
+   FColorGrid.Cells[COL_BG,      0] := 'Background';
+   FColorGrid.ColWidths[COL_ELEMENT] := 260;
+   FColorGrid.ColWidths[COL_FG]      := 170;
+   FColorGrid.ColWidths[COL_BG]      := 170;
+
+   // PICK LISTS, so the palette is offered without a combo per cell.  One
+   // editor serves every row, which is the whole point of using a grid here.
+   FColorGrid.Columns.Add;
+   FColorGrid.Columns.Add;
+   FColorGrid.Columns.Add;
+   FColorGrid.Columns[COL_ELEMENT].Title.Caption := 'Element';
+   FColorGrid.Columns[COL_ELEMENT].ReadOnly      := True;
+   FColorGrid.Columns[COL_ELEMENT].Width         := 260;
+
+   for row := COL_FG to COL_BG do
+      begin
+      FColorGrid.Columns[row].Title.Caption := FColorGrid.Cells[row, 0];
+      FColorGrid.Columns[row].ButtonStyle   := cbsPickList;
+      FColorGrid.Columns[row].Width         := 170;
+      FColorGrid.Columns[row].PickList.BeginUpdate;
+      try
+         for v in palette do
+            begin
+            FColorGrid.Columns[row].PickList.Add(v);
+            end;
+      finally
+         FColorGrid.Columns[row].PickList.EndUpdate;
+      end;
+      end;
+
+   row := 1;
    for e := Low(TMainWindowElement) to High(TMainWindowElement) do
       begin
-      // A nameless element is one with no window of its own; there is nothing
-      // to color and nothing for CheckCommand to have matched either.
+      // A nameless element has no window of its own; there is nothing to color
+      // and nothing for CheckCommand to have matched either.
       if TWindows[e].mweName = nil then
          begin
          Continue;
          end;
       name := string(AnsiString(TWindows[e].mweName));
-
-      lbl := TLabel.Create(box);
-      lbl.Parent  := box;
-      lbl.Caption := name;
-      lbl.SetBounds(16, y, LABEL_W, 18);
-
-      SetLength(FColorRows, n + 1);
-      FColorRows[n].Element    := name;
-      FColorRows[n].Foreground := MakeCombo(FG_X);
-      FColorRows[n].Background := MakeCombo(BG_X);
-      lbl.FocusControl := FColorRows[n].Foreground;
-
-      Inc(n);
-      Inc(y, ROW_H);
+      FColorElements.Add(name);
+      Inc(row);
       end;
 
+   FColorGrid.RowCount := FColorElements.Count + 1;
    LoadColorRows;
-   Result := n * 2;
-   logger.Debug('[Prefs] colors page: %d element(s)', [n]);
+
+   Result := FColorElements.Count;
+   logger.Debug('[Prefs] colors page: %d element(s) in one grid', [Result]);
 end;
 
 procedure TPrefsForm.LoadColorRows;
@@ -2594,47 +2613,49 @@ var
    i: integer;
    e: TMainWindowElement;
 begin
+   if (FColorGrid = nil) or (FColorElements = nil) then
+      begin
+      Exit;
+      end;
+
    // FROM THE LIVE VALUES, not from the store.  The store may hold nothing yet
    // on a station that has never saved, and TWindows is what is actually on
    // screen -- which is what the operator is editing.
-   for i := 0 to High(FColorRows) do
-      begin
-      for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+   FColorGrid.BeginUpdate;
+   try
+      for i := 0 to FColorElements.Count - 1 do
          begin
-         if (TWindows[e].mweName <> nil) and
-            SameText(string(AnsiString(TWindows[e].mweName)), FColorRows[i].Element) then
+         FColorGrid.Cells[0, i + 1] := FColorElements[i];
+         for e := Low(TMainWindowElement) to High(TMainWindowElement) do
             begin
-            FColorRows[i].Foreground.ItemIndex := Ord(TWindows[e].mweColor);
-            FColorRows[i].Background.ItemIndex := Ord(TWindows[e].mweBackG);
-            Break;
+            if (TWindows[e].mweName <> nil) and
+               SameText(string(AnsiString(TWindows[e].mweName)), FColorElements[i]) then
+               begin
+               FColorGrid.Cells[1, i + 1] := string(AnsiString(tr4wColorsSA[TWindows[e].mweColor]));
+               FColorGrid.Cells[2, i + 1] := string(AnsiString(tr4wColorsSA[TWindows[e].mweBackG]));
+               Break;
+               end;
             end;
          end;
-      end;
+   finally
+      FColorGrid.EndUpdate;
+   end;
 end;
 
 procedure TPrefsForm.SaveColorRows;
 var
    i: integer;
-   fg, bg: string;
 begin
-   if FStore = nil then
+   if (FStore = nil) or (FColorGrid = nil) or (FColorElements = nil) then
       begin
       Exit;
       end;
 
-   for i := 0 to High(FColorRows) do
+   for i := 0 to FColorElements.Count - 1 do
       begin
-      fg := '';
-      bg := '';
-      if FColorRows[i].Foreground.ItemIndex >= 0 then
-         begin
-         fg := FColorRows[i].Foreground.Items[FColorRows[i].Foreground.ItemIndex];
-         end;
-      if FColorRows[i].Background.ItemIndex >= 0 then
-         begin
-         bg := FColorRows[i].Background.Items[FColorRows[i].Background.ItemIndex];
-         end;
-      FStore.SetElementColors(FColorRows[i].Element, fg, bg);
+      FStore.SetElementColors(FColorElements[i],
+                              Trim(FColorGrid.Cells[1, i + 1]),
+                              Trim(FColorGrid.Cells[2, i + 1]));
       end;
 
    // Straight onto the program as well as into the store, so the change is

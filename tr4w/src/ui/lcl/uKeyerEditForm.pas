@@ -104,6 +104,7 @@ type
       FBuilt: boolean;
 
       procedure PopulateKindCombo;
+      procedure PopulateWinKeyCombos;
       procedure PopulatePortCombo;
       procedure LoadFromKeyer;
       function SaveToKeyer(out aError: string): boolean;
@@ -122,6 +123,7 @@ uses
    Dialogs,
    uLCLFormHelpers,
    uLCLTranslate,
+   uKeyerConfigApply,   // KeyerModeSpellings / SidetoneSpellings -- one vocabulary
    ComPortEnumerator;
 
 constructor TfrmKeyerEdit.Create(AOwner: TComponent);
@@ -142,6 +144,7 @@ begin
    FBuilt := True;
    PopulateKindCombo;
    PopulatePortCombo;
+   PopulateWinKeyCombos;
 end;
 
 procedure TfrmKeyerEdit.PopulateKindCombo;
@@ -155,6 +158,38 @@ begin
       begin
       AddComboItem(cbxKind, KeyerKindToStr(k), KeyerKindToStr(k));
       end;
+end;
+
+procedure TfrmKeyerEdit.PopulateWinKeyCombos;
+var
+   v: string;
+begin
+   // DECLARED BUT NEVER FILLED until 2026-08-21: both of these were read from
+   // and selected into, and nothing ever put an item in them, so keyer mode and
+   // sidetone frequency were permanently blank and could not be set at all
+   // (NY4I).  Built ONCE with the form -- unlike the port list, these two
+   // vocabularies cannot change while TR4W is running.
+   cbxWKKeyerMode.Items.BeginUpdate;
+   try
+      cbxWKKeyerMode.Clear;
+      for v in KeyerModeSpellings do
+         begin
+         AddComboItem(cbxWKKeyerMode, v, v);
+         end;
+   finally
+      cbxWKKeyerMode.Items.EndUpdate;
+   end;
+
+   cbxWKSidetone.Items.BeginUpdate;
+   try
+      cbxWKSidetone.Clear;
+      for v in SidetoneSpellings do
+         begin
+         AddComboItem(cbxWKSidetone, v, v);
+         end;
+   finally
+      cbxWKSidetone.Items.EndUpdate;
+   end;
 end;
 
 procedure TfrmKeyerEdit.PopulatePortCombo;

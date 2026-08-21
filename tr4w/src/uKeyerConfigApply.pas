@@ -64,6 +64,16 @@ procedure SetWinKeyerEnabled(const aEnabled: boolean);
   exactly the boundary this unit exists to hold. }
 function SeedKeyerLibraryFromLegacy(const aKeyers: TKeyerConfigStore): boolean;
 
+{ THE VOCABULARIES a settings screen must offer, as SPELLINGS.
+
+  Here rather than in the form for the same reason PaletteSpellings is in
+  uRadioConfigApply: this unit owns the mapping, and a list typed into the UI
+  would offer a value ApplyKeyerToWinKey then refuses.  Both combos were
+  DECLARED and never populated (found 2026-08-21), so keyer mode and sidetone
+  frequency could not be set at all. }
+function KeyerModeSpellings: TArray<string>;
+function SidetoneSpellings: TArray<string>;
+
 implementation
 
 uses
@@ -79,6 +89,28 @@ uses
 procedure SetWinKeyerEnabled(const aEnabled: boolean);
 begin
    WinKeySettings.wksWinKey2Enable := aEnabled;
+end;
+
+function KeyerModeSpellings: TArray<string>;
+var
+   m: TWK2KeyerMode;
+begin
+   SetLength(Result, Ord(High(TWK2KeyerMode)) - Ord(Low(TWK2KeyerMode)) + 1);
+   for m := Low(TWK2KeyerMode) to High(TWK2KeyerMode) do
+      begin
+      Result[Ord(m)] := string(KeyerModeSA[m]);
+      end;
+end;
+
+function SidetoneSpellings: TArray<string>;
+var
+   f: TWKSidetoneFrequency;
+begin
+   SetLength(Result, Ord(High(TWKSidetoneFrequency)) - Ord(Low(TWKSidetoneFrequency)) + 1);
+   for f := Low(TWKSidetoneFrequency) to High(TWKSidetoneFrequency) do
+      begin
+      Result[Ord(f)] := string(SidetoneFrequencySA[f]);
+      end;
 end;
 
 function SeedKeyerLibraryFromLegacy(const aKeyers: TKeyerConfigStore): boolean;
