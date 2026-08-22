@@ -317,6 +317,53 @@ show the right text, right-click opens the editor on the right row, and the
 window still docks where it was.
 
 
+### The band map: the LAST thing gating `Application.Run` (designed 2026-08-22)
+
+With the function-keys window converted, **one message-loop arm remains**: the
+`WM_KEYUP` on `BandMapListBox` in `tr4w.dpr` (~1285), which handles `VK_DELETE`.
+It cannot move until that list box is an LCL control, because a raw Win32 child
+raises no LCL key events. Nothing else blocks the loop.
+
+**Three controls, not one** -- this is bigger than the function-keys window:
+
+| today | becomes |
+|---|---|
+| `CreateOwnerDrawListBox(LB_STYLE_1, ...)` = `LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_NOINTEGRALHEIGHT` | `TListBox`, `Style := lbOwnerDrawFixed` |
+| `WM_MEASUREITEM` | `ItemHeight` |
+| `WM_DRAWITEM` | `OnDrawItem` |
+| `WM_CONTEXTMENU` -> `ShowBandMapPopupMenu` | `PopupMenu` (a designed `TPopupMenu`) |
+| `WM_COMMAND` ids 66/68/69/77/202/203/204 | the menu items' `OnClick` |
+| `CreateWindowA(STATUSCLASSNAME, ...)` | `TStatusBar` |
+| `WM_CTLCOLORLISTBOX` -> `BandMapBckgrndBrush` | `Color` |
+| loop arm `WM_KEYUP` / `VK_DELETE` | `OnKeyUp` |
+
+**THE PAINTING IS REAL AND MOVES AS-IS.** Unlike the function keys -- whose
+owner-draw turned out to be a flat fill and a caption, so it became `Color` and
+`Caption` -- this one measures `'28888.8'` to compute `FreqRectWidth`, honours
+`BandMapDisplayGhz`, fills with a brush and colours each row by dupe / mult /
+CQ. Port the plumbing (`DRAWITEMSTRUCT` -> `Index`/`ARect`/`State`, HDC from the
+canvas) and change nothing inside. Converting the GDI to `Canvas` calls at the
+same time would make any visual difference impossible to attribute, and this
+window is watched constantly during a contest.
+
+**The item data is REAL here, and that is the difference from the possible-call
+list.** `uSpots` fills it with `LB_ADDSTRING` whose lParam is `FiltSpotIndex[k]`,
+and `uBandmap` reads it back with `LB_GETITEMDATA` in two places (~710, ~802) to
+find which spot a row is. A `TListBox`'s `Handle` IS that HWND, so the `LB_*`
+messages keep working untouched -- take that path, exactly as the possible-call
+list did, rather than moving to `Items.Objects[]` in the same step.
+
+**The same cache caveat applies and is again tolerable:** the LCL's own `Items`
+stay empty while the control is full, so a handle recreation would blank it --
+but `DisplayBandMap` clears and refills on every spot change, so it would repair
+itself. That is NOT true of the editable log, which is why that one waits for
+SQLite.
+
+**The seam is already built:** `OpenTR4WWindow` gained an `if ID = ...` branch
+for the function-keys window; the band map is the second user of it, which is
+the first real test of whether that seam generalises.
+
+
 ### The numbers, and why they are quoted from the lints
 
 Prose status decays; a ratchet does not. These come from `Run-Lints` on every build, so a
