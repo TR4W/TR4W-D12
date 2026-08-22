@@ -177,6 +177,7 @@ uses
   uEditQSOForm in 'src\ui\lcl\uEditQSOForm.pas',
   uPanelUpdate in 'src\uPanelUpdate.pas',
   uLPTForm in 'src\ui\lcl\uLPTForm.pas',
+  uAboutForm in 'src\ui\lcl\uAboutForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uLegacyIniPrompt in 'src\ui\lcl\uLegacyIniPrompt.pas',
   uWinManagerForm in 'src\ui\lcl\uWinManagerForm.pas',

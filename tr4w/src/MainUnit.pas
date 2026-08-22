@@ -524,7 +524,8 @@ uses
   uUDPBroadcastConfig, // TUDPStream / usLookup
   uPanelUpdate,     // ForgetPanel -- see CloseTR4WWindow
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
-  uMainForm,        // the main window IS a TForm now -- CreateTR4WMainForm
+  uMainForm,
+  uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
   uRadioPolling,
@@ -4537,10 +4538,12 @@ begin
     menu_about:
       tDialogBox(68, @AboutDlgProc);
 {$ELSE}
+    // A DESIGNED FORM, not a MessageBox.  MessageBox does not exist off Windows,
+    // and a message box cannot be opened in the designer by anyone who wants to
+    // change what About says.  Same content, assembled from the same constants,
+    // with the website as a clickable link.  See src/ui/lcl/uAboutForm.pas.
     menu_about:
-      MessageBox(tr4whandle, tAboutText, tr4w_ClassName, MB_TOPMOST
-        {or MB_RTLREADING});
-    //tDialogBox(68, @AboutDlgProc);
+      ShowAboutBox;
 {$IFEND}
 
     // menu_send_bug: SendMail('tr4w@qrz.ru', True);
