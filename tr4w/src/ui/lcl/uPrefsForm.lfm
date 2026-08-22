@@ -2701,18 +2701,9 @@
         Font.Height = -15
         Font.Style = [fsBold]
       end
-      object chkBandMapEnable: TCheckBox
-        Left = 12
-        Top = 34
-        Width = 460
-        Height = 22
-        AutoSize = False
-        TabOrder = 1
-        Caption = 'Show the band map'
-      end
       object lblBandMapDecay: TLabel
         Left = 12
-        Top = 72
+        Top = 34
         Width = 140
         Height = 17
         AutoSize = False
@@ -2720,7 +2711,7 @@
       end
       object edtBandMapDecay: TEdit
         Left = 160
-        Top = 68
+        Top = 30
         Width = 80
         Height = 22
         AutoSize = False
@@ -2728,7 +2719,7 @@
       end
       object lblBandMapDecayUnits: TLabel
         Left = 248
-        Top = 72
+        Top = 34
         Width = 160
         Height = 17
         AutoSize = False
@@ -2738,7 +2729,7 @@
       end
       object lblBandMapGuard: TLabel
         Left = 12
-        Top = 102
+        Top = 64
         Width = 140
         Height = 17
         AutoSize = False
@@ -2746,7 +2737,7 @@
       end
       object edtBandMapGuard: TEdit
         Left = 160
-        Top = 98
+        Top = 60
         Width = 80
         Height = 22
         AutoSize = False
@@ -2754,7 +2745,7 @@
       end
       object lblBandMapGuardUnits: TLabel
         Left = 248
-        Top = 102
+        Top = 64
         Width = 160
         Height = 17
         AutoSize = False
@@ -2764,7 +2755,7 @@
       end
       object lblBandMapLimit: TLabel
         Left = 12
-        Top = 132
+        Top = 94
         Width = 140
         Height = 17
         AutoSize = False
@@ -2772,7 +2763,7 @@
       end
       object edtBandMapLimit: TEdit
         Left = 160
-        Top = 128
+        Top = 90
         Width = 80
         Height = 22
         AutoSize = False
@@ -2780,7 +2771,7 @@
       end
       object lblBandMapLimitUnits: TLabel
         Left = 248
-        Top = 132
+        Top = 94
         Width = 160
         Height = 17
         AutoSize = False
@@ -2790,7 +2781,7 @@
       end
       object chkBandMapDupes: TCheckBox
         Left = 12
-        Top = 170
+        Top = 132
         Width = 460
         Height = 22
         AutoSize = False
@@ -2799,7 +2790,7 @@
       end
       object chkBandMapMultsOnly: TCheckBox
         Left = 12
-        Top = 196
+        Top = 158
         Width = 460
         Height = 22
         AutoSize = False
@@ -2808,7 +2799,7 @@
       end
       object chkBandMapAllBands: TCheckBox
         Left = 12
-        Top = 222
+        Top = 184
         Width = 460
         Height = 22
         AutoSize = False
@@ -2817,7 +2808,7 @@
       end
       object chkBandMapAllModes: TCheckBox
         Left = 12
-        Top = 248
+        Top = 210
         Width = 460
         Height = 22
         AutoSize = False
@@ -2826,7 +2817,7 @@
       end
       object chkBandMapCQ: TCheckBox
         Left = 12
-        Top = 274
+        Top = 236
         Width = 460
         Height = 22
         AutoSize = False
@@ -2835,7 +2826,7 @@
       end
       object chkBandMapCallWindow: TCheckBox
         Left = 12
-        Top = 300
+        Top = 262
         Width = 460
         Height = 22
         AutoSize = False
@@ -2844,7 +2835,7 @@
       end
       object chkBandMapSO2R: TCheckBox
         Left = 12
-        Top = 326
+        Top = 288
         Width = 460
         Height = 22
         AutoSize = False
@@ -2853,7 +2844,7 @@
       end
       object chkBandMapGHz: TCheckBox
         Left = 12
-        Top = 352
+        Top = 314
         Width = 460
         Height = 22
         AutoSize = False
@@ -2862,7 +2853,7 @@
       end
       object lblBandMapNote: TLabel
         Left = 12
-        Top = 388
+        Top = 350
         Width = 620
         Height = 51
         AutoSize = False
@@ -2876,7 +2867,7 @@
       end
       object chkCallWindowShowAllSpots: TCheckBox
         Left = 12
-        Top = 448
+        Top = 410
         Width = 540
         Height = 22
         Caption = 'Show every spot in the call window'
@@ -2884,7 +2875,7 @@
       end
       object chkSwapPacketSpotRadios: TCheckBox
         Left = 12
-        Top = 474
+        Top = 436
         Width = 540
         Height = 22
         Caption = 'Send spots to the other radio'

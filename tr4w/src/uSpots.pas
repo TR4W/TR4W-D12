@@ -46,9 +46,6 @@ type
   PSpotsList = ^TSpotsList;
   TSpotsList = array[0..1000] of TSpotRecord;
 
-  PSpotsListBuffer = ^TSpotsListBuffer; // Gav 4.45.6
-  TSpotsListBuffer = array[0..1000] of TSpotRecord; // Gav 4.45.6
-
   TDXSpotsList = object {class}
 
   private
@@ -56,22 +53,22 @@ type
     FCount{, j}: integer;
     FCurrentCursorFreq: integer;
     FCapacity: integer;
-    BList: PSpotsListBuffer; // Gav 4.45.6
-    BCount: integer; // Gav 4.45.6
-    BCapacity: integer; // Gav 4.45.6
     FCriticalSection: TCriticalSection;
+    // THE REPAINT TOKEN.  Bumped by every mutator and by RequestRepaint; the
+    // band map compares it against what it last painted.  It replaces the
+    // global boolean BandMapNeedsRefresh, which three units raised and a fourth
+    // cleared -- a mutator that forgot to raise it simply did not appear until
+    // something unrelated repainted, and there was no way to tell that from a
+    // spot that had not arrived.  A counter cannot be missed or double-cleared.
+    FRepaintToken: cardinal;
+    FPaintedToken: cardinal;
     procedure Grow;
-    procedure GrowBuffer; // Gav 4.45.6
-
 
   protected
     function GetCapacity: integer;
     procedure SetCapacity(NewCapacity: integer);
-    procedure SetCapacityBuffer(NewCapacity: integer); // Gav 4.45.6
     function CompareStrings(const s1, s2: CallString): integer;
     procedure InsertSpot(Index: integer; const Spot: TSpotRecord); virtual;
-    procedure InsertSpotBuffer(Index: integer; const Spot: TSpotRecord); virtual;
-      // Gav 4.45.6
 
   public
     //destructor Destroy; override;
@@ -79,7 +76,6 @@ type
     function Get(Index: integer): TSpotRecord;
     function AddSpot(var Spot: TSpotRecord; SendToNetwork: boolean): integer;
     procedure Clear;
-    procedure SendAndClearBuffer;
     procedure SetCursor;
     procedure DecrementSpotsTimes;
     procedure UpdateSpotsMultiplierStatus;
@@ -96,6 +92,13 @@ type
     function FindSpot(const Spot: TSpotRecord; var Index: integer): boolean;
       virtual;
     property Count: integer read FCount;
+
+    // Ask for a repaint WITHOUT changing the list -- the VFO moved, or a filter
+    // was toggled.  Mutators do this for themselves; this is for the callers
+    // whose change is to the VIEW.
+    procedure RequestRepaint;
+    function NeedsRepaint: boolean;
+    property RepaintToken: cardinal read FRepaintToken;
   end;
 
 var
@@ -117,7 +120,6 @@ uses
 constructor TDXSpotsList.Init;
 begin
   Grow;
-  GrowBuffer; // Gav 4.45.6
   FCriticalSection := TCriticalSection.Create;
 end;
 
@@ -138,10 +140,17 @@ begin
 
   SetCursor;
   ie_check := False;
-  if BandMapPreventRefresh then
-     begin
-     exit;
-     end;
+  // The BandMapPreventRefresh gate that stood here DISCARDED the spot: it
+  // returned before InsertSpot, so a spot arriving while the operator had the
+  // band map focused never entered the list at all.  SendAndClearBuffer was
+  // meant to replay those, but InsertSpotBuffer -- the only thing that could
+  // fill the buffer -- was declared, defined and never called, so BCount never
+  // left zero and the replay was a no-op.  The whole BList group is gone with
+  // this gate.
+  //
+  // Focus must freeze the VIEW, never the MODEL.  Display still honours the
+  // flag, so the rows stay put under the operator's mouse; the spots are now
+  // waiting there when focus leaves instead of being lost.
   if BandMapSO2RDisplay then
     if ((Radio1.FilteredStatus.Freq <> 0) and (Radio2.FilteredStatus.Freq <> 0))
       then
@@ -225,6 +234,7 @@ begin
   end;
   Add:    // How to experienced programmers write GoTo statements? I don't get it! // ny4i
   FList^[Result] := Spot;
+  RequestRepaint;
   //  if CallWinKeyDown then
   //   Windows.SetFocus(wh[mweCall]);
   // end;
@@ -268,6 +278,11 @@ begin
      logger.Trace('[SpotsList.Display] exit: BandMapListBox=0');
      Exit;
      end;
+  // The focus freeze STAYS here, and only here.  Holding the rows still under
+  // the operator's mouse is the behaviour that was wanted; discarding the spots
+  // (the copy of this gate that used to sit at the top of AddSpot) never was.
+  // Leaving without recording FPaintedToken means NeedsRepaint stays true and
+  // the next tick after focus leaves paints everything that arrived meanwhile.
   if BandMapPreventRefresh then
      begin
      logger.Trace('[SpotsList.Display] exit: BandMapPreventRefresh=True');
@@ -483,13 +498,18 @@ begin
      begin
      ClearSpotInfo;
      end;
-
+  // LAST, and only on the path that actually painted.  Every early Exit above
+  // leaves the token unequal, so a repaint refused because the window did not
+  // exist yet, or because the list was frozen, is retried on the next tick
+  // rather than being silently marked done.
+  FPaintedToken := FRepaintToken;
 end;
 
 // Gav end of section added
 
 procedure TDXSpotsList.Clear;
 begin
+  RequestRepaint;
   FCriticalSection.Enter;
   try
      if FCount <> 0 then
@@ -502,19 +522,14 @@ begin
   end;
 end;
 
-procedure TDXSpotsList.SendAndClearBuffer; // Gav 4.45.6
-var
-  i: integer;
+procedure TDXSpotsList.RequestRepaint;
 begin
-  if BCount <> 0 then
-     begin
-     i := BCount;
-     for i := 0 to i - 1 do
-        begin
-        AddSpot(BList^[i], False)
-        end;
-     end;
-  BCount := 0;
+  Inc(FRepaintToken);
+end;
+
+function TDXSpotsList.NeedsRepaint: boolean;
+begin
+  Result := FRepaintToken <> FPaintedToken;
 end;
 
 procedure TDXSpotsList.Delete(Index: integer);
@@ -523,6 +538,13 @@ begin
      begin
      Exit; //Error(@SListIndexError, Index);
      end;
+  // THE Enter WAS MISSING.  This routine has always had `try ... finally
+  // FCriticalSection.Leave end` with nothing acquiring the section first, so it
+  // called LeaveCriticalSection on a section this thread did not own -- which
+  // decrements the recursion count of whoever DOES own it and can hand the list
+  // to two threads at once.  Every sibling (InsertSpot, Clear, SetCursor) pairs
+  // them correctly; this one was the odd man out.
+  FCriticalSection.Enter;
   try
      dec(FCount);
      if Index < FCount then
@@ -532,6 +554,7 @@ begin
   finally
      FCriticalSection.Leave;
   end;
+  RequestRepaint;
 end;
 
 function TDXSpotsList.FindSpot(const Spot: TSpotRecord; var Index: integer):
@@ -594,7 +617,7 @@ begin
           end;
      //    FList^[i].FMult := MultString <> 0;
      end;
-  //  Display;
+  RequestRepaint;
 end;
 
 procedure TDXSpotsList.DecrementSpotsTimes;
@@ -610,6 +633,10 @@ begin
      begin
      Exit;
      end;
+  // Up here, not at the end: the loop below leaves through a goto and two
+  // Exits, so there is no single end to hang it on.  Past the empty-list guard,
+  // every remaining path changes FMinutesLeft.
+  RequestRepaint;
   GetSystemTime(St);
   CurrentTime := St.wMinute + St.wHour * 60 + St.wDay * 60 * 24 + St.wMonth * 60
     * 24 * 30;
@@ -648,7 +675,9 @@ begin
             FList^[i].FDupe := True;
             end;
      end;
-  Display;
+  // Was `Display` -- a model routine painting a control.  Its caller
+  // (LOGSUBS2.PAS:1710) calls DisplayBandMap immediately afterwards anyway.
+  RequestRepaint;
 end;
 
 procedure TDXSpotsList.Grow;
@@ -670,25 +699,6 @@ begin
   SetCapacity(FCapacity + delta);
 end;
 
-procedure TDXSpotsList.GrowBuffer; // Gav 4.45.6
-var
-  delta: integer;
-begin
-  if BCapacity > 64 then
-     begin
-     delta := BCapacity div 4
-     end
-  else if BCapacity > 8 then
-     begin
-     delta := 16
-     end
-  else
-     begin
-     delta := 4;
-     end;
-  SetCapacityBuffer(BCapacity + delta);
-end;
-
 procedure TDXSpotsList.InsertSpot(Index: integer; const Spot: TSpotRecord);
 begin
   FCriticalSection.Enter;
@@ -708,37 +718,10 @@ begin
   end;
 end;
 
-procedure TDXSpotsList.InsertSpotBuffer(Index: integer; const Spot: TSpotRecord);
-  // Gav 4.45.6
-begin
-  FCriticalSection.Enter;
-  try
-     if BCount = BCapacity then
-        begin
-        GrowBuffer;
-        end;
-     if Index < BCount then
-        begin
-        System.Move(BList^[Index], BList^[Index + 1],
-          (BCount - Index) * SizeOf(TSpotRecord));
-        end;
-     BList^[Index] := Spot;
-     inc(BCount);
-  finally
-     FCriticalSection.Leave;
-  end;
-end;
-
 procedure TDXSpotsList.SetCapacity(NewCapacity: integer);
 begin
   ReallocMem(FList, NewCapacity * SizeOf(TSpotRecord));
   FCapacity := NewCapacity;
-end;
-
-procedure TDXSpotsList.SetCapacityBuffer(NewCapacity: integer); // Gav 4.45.6
-begin
-  ReallocMem(BList, NewCapacity * SizeOf(TSpotRecord));
-  BCapacity := NewCapacity;
 end;
 
 function TDXSpotsList.CompareStrings(const s1, s2: CallString): integer;
@@ -788,6 +771,7 @@ begin
   finally
      FCriticalSection.Leave;
   end;
+  RequestRepaint;
 end;
 
 procedure TDXSpotsList.ResetSpotsDupes;
@@ -806,6 +790,7 @@ begin
   finally
      FCriticalSection.Leave;
   end;
+  RequestRepaint;
 end;
 
 procedure TDXSpotsList.SetCursor;

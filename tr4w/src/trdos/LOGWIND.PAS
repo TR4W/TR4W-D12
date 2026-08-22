@@ -531,8 +531,6 @@ var
   BandMapDecayValue                     : integer = 60; {KK1L: 6.65}
   BandMapDecayMultiplier                : integer = 1; {KK1L: 6.65}
   BandMapDupeDisplay                    : boolean = True;
-  BandMapEnable                         : boolean;
-  BandMapNeedsRefresh                   : boolean = False;
   BandMapEntryInCallWindow              : boolean;
   BandMapFileVersion                    : AnsiChar = '1';
   {KK1L: 6.65 Expanded array to cover all cases to keep BM from going whacko when tuning out of band}
@@ -626,7 +624,6 @@ var
 
   FrequencyMemoryEnable                 : boolean = True;
   FreqPollRate                          : integer = 10; {KK1L: 6.71a Frequency Poll Rate in milliseconds}
-  BMDelay                               :  integer = 0; // 4.93.3
   GridSquareListShown                   : boolean;
 
   HourDisplay                           : HourDisplayType {= ThisHour};
@@ -850,6 +847,21 @@ procedure AddBandMapModeCutoffFrequency(Freq: LONGINT);
 procedure AddBandMapPlaceHolder; {KK1L: 6.65}
 
 //procedure AddQSOToPendingQTCList(Time: integer; Call: CallString; QSONumber: integer);
+
+// THE BAND MAP IS ON WHEN ITS WINDOW IS OPEN.  Was a boolean global, and it
+// was also the storage of the setting BAND MAP ENABLE -- two jobs, one
+// variable.  WM_DESTROY set it False, so CLOSING THE WINDOW TURNED THE SETTING
+// OFF and the next settings save persisted that.  NY4I's store held
+// "BAND MAP ENABLE" : "FALSE" on 2026-08-22 and the band map was dead on every
+// start, with spots arriving (FCount=49) and every one refused at the gate.
+//
+// The 4.01 manual says the setting "determines whether the bandmap is
+// displayed", and warns you must restart "for it to be in the correct video
+// mode to display the bandmap" -- a DOS artifact with no meaning here.  So the
+// setting and the window were always the same fact, and this is the one that
+// cannot go stale.  The command is retired to csRem in uCFG.pas (2026-08-22),
+// following the CUSTOM CARET precedent.
+function BandMapEnable: boolean;
 
 function BandMapExpandedString(Call: EightBytes): CallString;
 
@@ -2010,8 +2022,12 @@ begin
         begin
         MinutesSinceLastBMUpdate := 0;
             //DecrementBandMapTimes;
+        // The DisplayBandMap that stood here is redundant AND unconditional.
+        // DecrementSpotsTimes bumps the repaint token itself now, so the
+        // refresh timer picks the decay up -- and unlike a direct call, it
+        // respects the "no window" and "not visible" tests, so a minimised
+        // TR4W no longer repaints the band map once a minute for nobody.
         SpotsList.DecrementSpotsTimes;
-        DisplayBandMap;
         end;
      SetMainWindowText(mweClock, GetTimeString);
 
@@ -3488,6 +3504,11 @@ begin
   SetMainWindowText(mweLocalTime, wsprintfBuffer);
 end;
 
+
+function BandMapEnable: boolean;
+begin
+  Result := tWindowsExist(tw_BANDMAPWINDOW_INDEX);
+end;
 
 procedure DisplayBandMap;
 begin

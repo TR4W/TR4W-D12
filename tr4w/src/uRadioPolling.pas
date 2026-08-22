@@ -957,7 +957,7 @@ begin
          BandMapCursorFrequency := rig.FilteredStatus.Freq;
          BandMapBand := ActiveBand;
          BandMapMode := ActiveMode;
-         BandMapNeedsRefresh := True; // coalesced via 250ms timer � avoids flash on every VFO poll
+         SpotsList.RequestRepaint; // the VFO moved -- a VIEW change, not a list change; coalesced via the 250ms timer � avoids flash on every VFO poll
          end;
       end
    else
@@ -998,7 +998,7 @@ begin
          BandMapMode := rig.FilteredStatus.Mode;
          VisibleDupeSheetChanged := True;
          BandMapCursorFrequency := rig.FilteredStatus.Freq;
-         BandMapNeedsRefresh := True; // coalesced via 250ms timer � avoids flash on every VFO poll
+         SpotsList.RequestRepaint; // the VFO moved -- a VIEW change, not a list change; coalesced via the 250ms timer � avoids flash on every VFO poll
          end;
 
       //GAV End of added

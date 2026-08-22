@@ -107,7 +107,6 @@ const
 var
   ItemsInTelnetPopupMenu: integer;
   ClientStatus: TClientStatus = (csID: NET_CLIENTSTATUS_ID);
-  // BandMapNeedsRefresh moved to LogWind so it is accessible from uRadioPolling without circular dependencies
   //  ClusterTypeDetermined            : boolean;
 
   //  tClusterType                          : ClusterType = ctDXSpider;
@@ -1757,17 +1756,19 @@ begin
 
   if AddedSpot then
   begin
-    sleep(BMDelay);
-    // So we do not drive the serial port and radio too fast.    // 4.93.beta       // 4.102.5
-    // Signal the 250ms refresh timer rather than repainting immediately.
-    // The timer coalesces bursts of spots into a single repaint, eliminating
-    // flashing. The spot data (FList) is always current; the display is at
-    // most 250ms behind.
-    if BandMapAllBands or (TempSpot.FBand = BandmapBand) then
-      if BandMapAllModes or (TempSpot.FMode = BandmapMode) then
-         begin
-         BandMapNeedsRefresh := True;
-         end;
+    // `sleep(BMDelay)` stood here -- a sleep on the MAIN THREAD, inside a
+    // message handler, once per accepted spot, stalling the message pump for
+    // every window in the program.  Its comment said it was to avoid driving
+    // the radio too fast, which is a concern for the AUTOSPOT tuning path
+    // below, not for the message loop.  BMDelay was `= 0` with no CFG row and
+    // no way to set it, so nothing changes today -- but a throttle for the
+    // radio belongs on the radio call, not on the pump.
+    //
+    // The BandMapNeedsRefresh block that stood here is gone too: AddSpot bumps
+    // SpotsList's repaint token itself, so the 250 ms timer picks the spot up
+    // whether or not this path remembers to ask.  The band/mode test it was
+    // guarded by only decided whether the spot was VISIBLE -- which is
+    // Display's filter pass's job, and it re-runs anyway.
 
 {$IFDEF AUTOSPOT}
     if Config.TwoRadioMode then

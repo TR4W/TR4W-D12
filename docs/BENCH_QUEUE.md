@@ -911,6 +911,97 @@ for this window, but it is still registered in `tr4w_WindowsArray[..].WndProcAdr
 and this tree's rule is that unreachable-looking is not proof. Retiring it is a
 separate, deliberate step.
 
+### 27. Band map step 1: the model, before any form exists
+
+**No UI change.** The band map is still the Win32 window; what changed is
+underneath it. Design at `docs/BANDMAP_LCL_DESIGN.md` -- these are the three
+defects that were provable by reading and did not need the new form.
+
+- [ ] **THE BIG ONE -- spots no longer vanish while the band map has focus.**
+      Connect to a cluster, click INTO the band map list and leave it focused
+      for a minute or two on a busy node, then click away (or into the callsign
+      window). **Every spot that arrived while you were looking should now be
+      there.** Before this change they were gone for good: `AddSpot` returned
+      before inserting, and the buffer that was supposed to replay them was
+      never filled by anything -- `InsertSpotBuffer` was declared, defined and
+      never called. Cross-check against the telnet console, which always showed
+      the lines.
+- [ ] **The rows still hold still while you have focus.** That half was
+      deliberate and is kept -- the freeze now applies to the VIEW only. If the
+      list starts re-sorting under the mouse, that is a regression.
+- [ ] **Ordinary spot flow is unchanged** -- new spots appear within about a
+      quarter second, no more flashing than before, no less.
+- [ ] **The VFO cursor line still tracks the radio.** `uRadioPolling` used to
+      set a global flag; it now calls `SpotsList.RequestRepaint`.
+- [ ] **A logged QSO still turns its spot into a dupe**, and clearing the dupe
+      sheet still un-dupes them.
+- [ ] **Deleting a spot** from the band map's context menu still works and the
+      list is intact afterwards -- `Delete` had `try ... finally
+      CriticalSection.Leave` with **no matching `Enter`**, so it released a lock
+      it never took. Fixed here. This is the one item where a latent
+      intermittent (two threads in the list at once) becomes less likely rather
+      than visibly different, so there is nothing to see -- just confirm delete
+      behaves.
+
+
+**Added after the first bench attempt (NY4I, 2026-08-22 evening) -- the band map
+showed nothing at all.** Three separate things, and the log settled all of them.
+
+- [ ] **BAND MAP ENABLE is RETIRED. Opening the window is what enables it.**
+      `settings\tr4w.json` held `"BAND MAP ENABLE" : "FALSE"`, so
+      `DisplayBandMap` refused every spot at the gate -- the log showed
+      `BandMapEnable=0, BandMapWindowExists=1, FCount=49`: the spots were
+      arriving and being thrown away. The cause is that one boolean was both the
+      persisted setting AND the window's runtime flag, and `WM_DESTROY` wrote
+      False to it -- so **closing the band map turned the feature off and the
+      next settings save persisted that.** Opening Preferences to change the
+      cluster re-applied the stored FALSE over the live TRUE.
+      `BandMapEnable` is now a function returning
+      `tWindowsExist(tw_BANDMAPWINDOW_INDEX)`, the command is `csRem`, and the
+      Preferences checkbox is gone. **Test: open the band map -- spots should
+      appear. Close it and reopen it, repeatedly, including with a trip through
+      Preferences in between. It must never go dead again.** The stale FALSE
+      still in your json is now ignored rather than obeyed.
+- [ ] **The Preferences band map page lost a row.** "Show the band map" is gone
+      and everything below it moved up 38px. Check the page still reads
+      properly and nothing is clipped or overlapping.
+- [ ] **The log should be readable again.** 1,287 of the 9,810 lines in that
+      run were `[DisplayBandMap]` trace, ~2,600 of them before the window even
+      existed -- my regression: the repaint token stays raised until Display
+      actually paints (deliberately, so spots that arrive while the window is
+      shut are drawn when it opens), but with no window it never paints, so the
+      250 ms timer called `DisplayBandMap` forever. The timer now returns early
+      when there is no band map window, WITHOUT consuming the token. **Test:
+      run for a few minutes with the band map CLOSED and confirm `tr4w.log` is
+      not full of `[DisplayBandMap]` lines.**
+- [ ] **Minimise TR4W with the band map open and a busy cluster running.** The
+      tool windows are owned popups, so Windows hides the band map with its
+      owner -- and until now that hidden window still cost a full render four
+      times a second. The refresh timer now skips a window that is not visible.
+      **Restore TR4W and every spot that arrived while it was down should be
+      there immediately**, because the skip does not consume the repaint token.
+      Watch for a stale or empty list on restore; that would mean the token
+      logic is wrong.
+- [ ] **Leave it minimised over a decay boundary** (a minute or more). Spot ages
+      must still advance -- `DecrementSpotsTimes` is model work and still runs;
+      only its repaint waits. Restore and check the age colours are right, not
+      a minute behind.
+- [ ] **NOT tested and deliberately not implemented: occlusion.** If another
+      window is simply sitting on top of the band map, TR4W still repaints it.
+      Windows will not answer "am I covered" reliably and guessing would trade
+      a real repaint for a maybe-saved one.
+
+- [ ] **DX cluster logging was never broken** -- 56 `[Telnet RX]` lines were in
+      that log, buried under the flood above. Nothing to fix; noted so it is
+      not re-reported.
+
+**What did NOT change, deliberately.** `UpdateSpotsMultiplierStatus` still runs
+on the paint path -- a CTY prefix resolution per spot per repaint. Moving it
+needs the full list of places the LOG changes, and `UpdateWindows` demonstrably
+covers QSO-logged, log-load, network QSO and WSJT-X but **not** an in-place log
+edit. A stale multiplier flag shows up as WRONG SCORING, not as an error, so it
+is carved out into its own change rather than guessed at here.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)

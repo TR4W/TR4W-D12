@@ -397,7 +397,6 @@ begin
 
         tLB_SETCOLUMNWIDTH(hwnddlg, BandMapItemWidth); // 4.98.9
 
-        BandMapEnable := True;
         // WS_EX_COMPOSITED causes Windows to paint all children via a back
         // buffer and blit atomically, eliminating the visible top-to-bottom
         // sweep when the owner-draw list box repaints its ~164 items.
@@ -497,7 +496,10 @@ begin
 
     WM_DESTROY:
       begin
-        BandMapEnable := False;
+        // `BandMapEnable := False` stood here.  It is a function now --
+        // tWindowsExist(tw_BANDMAPWINDOW_INDEX) -- so the answer follows the
+        // window instead of being kept in step with it by hand.  See the
+        // comment on the declaration in LOGWIND.PAS.
         BandMapListBox := 0;
         //      ReleaseDC(BandMapListBox, BandMapListBoxHDC);
       end;
@@ -782,7 +784,10 @@ begin
      Exit;
      end;
   BandMapPreventRefresh := False;
-  SpotsList.SendAndClearBuffer;
+  // SendAndClearBuffer stood here to replay spots held back while the list had
+  // focus.  It never replayed anything -- nothing ever filled that buffer --
+  // and nothing needs to now: AddSpot no longer discards them, so they are
+  // already in the list and this repaint is what reveals them.
   DisplayBandMap;
   Windows.SetFocus(wh[mweCall]);
 end;

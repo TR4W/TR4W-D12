@@ -351,7 +351,6 @@ type
       lblClusterNote: TLabel;
       layBandMap: TPanel;
       lblBandMapHeading: TLabel;
-      chkBandMapEnable: TCheckBox;
       lblBandMapDecay: TLabel;
       edtBandMapDecay: TEdit;
       lblBandMapDecayUnits: TLabel;
@@ -5656,7 +5655,6 @@ begin
    // whichever cluster is active, written in SaveClusterPanels.
    chkSpotCollector.Checked := CommandBool('SPOT COLLECTOR ENABLED');
 
-   chkBandMapEnable.Checked     := CommandBool('BAND MAP ENABLE');
    edtBandMapDecay.Text := FStore.CommandValue('BAND MAP DECAY TIME',
                               CFGCommandValueAsString('BAND MAP DECAY TIME'));
    edtBandMapGuard.Text := FStore.CommandValue('BAND MAP GUARD BAND',
@@ -5689,7 +5687,6 @@ begin
    ApplyActiveCluster(FStore);
    SetCommandBool('SPOT COLLECTOR ENABLED', chkSpotCollector.Checked);
 
-   SetCommandBool('BAND MAP ENABLE', chkBandMapEnable.Checked);
    ApplyAndStoreCommand(FStore, 'BAND MAP DECAY TIME',    Trim(edtBandMapDecay.Text));
    ApplyAndStoreCommand(FStore, 'BAND MAP GUARD BAND',    Trim(edtBandMapGuard.Text));
    ApplyAndStoreCommand(FStore, 'BAND MAP DISPLAY LIMIT', Trim(edtBandMapLimit.Text));

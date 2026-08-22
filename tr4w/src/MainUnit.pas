@@ -2306,9 +2306,51 @@ end;
 procedure BandMapRefreshTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
   stdcall;
 begin
-  if BandMapNeedsRefresh then
+  // Was `if BandMapNeedsRefresh then ... := False`.  That boolean was raised in
+  // two units and cleared here, so any mutator that forgot to raise it simply
+  // did not appear until something unrelated repainted.  SpotsList now bumps a
+  // token from every mutator and Display records what it painted, so nothing
+  // has to remember.
+  // NOTHING TO PAINT INTO -- ask no further.  The token is deliberately NOT
+  // consumed here: it stays raised so the spots that arrived while the window
+  // was shut are drawn the moment it opens.
+  //
+  // This guard is why the token needs it.  The old boolean was cleared by this
+  // timer whether or not the repaint happened, so a closed band map cost one
+  // wasted call; the token stays raised until Display actually paints, so
+  // without this test a closed band map called DisplayBandMap four times a
+  // second forever.  Measured on NY4I's 2026-08-22 log: ~2,600 trace lines
+  // before the window was even created.
+  if not tWindowsExist(tw_BANDMAPWINDOW_INDEX) then
      begin
-     BandMapNeedsRefresh := False;
+     Exit;
+     end;
+
+  // NOBODY IS LOOKING.  The tool windows are OWNED POPUPS of the main window
+  // (WS_POPUP, created with tr4whandle as the owner), so Windows hides them
+  // for us when TR4W is minimised -- and a hidden band map still cost a full
+  // render four times a second: the filter pass over every spot, the centring
+  // arithmetic, LB_RESETCONTENT plus one LB_ADDSTRING per row, and a CTY
+  // prefix resolution per spot inside UpdateSpotsMultiplierStatus.
+  //
+  // Same rule as the test above: DO NOT consume the token.  Everything that
+  // arrived while TR4W was minimised is drawn by the first tick after it is
+  // restored, so there is no stale display to reason about -- which is the
+  // whole reason the token records what was PAINTED rather than what was seen.
+  //
+  // Only visibility is tested, never occlusion.  Whether another window is
+  // sitting on top of this one is not something Windows will answer reliably,
+  // and guessing at it would trade a real repaint for a maybe-saved one.
+  // IsIconic is not tested either: the dialog template carries no
+  // WS_MINIMIZEBOX (VC.pas:207), so the band map cannot be minimised on its
+  // own -- only hidden along with its owner, which is what this catches.
+  if not IsWindowVisible(tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndHandle) then
+     begin
+     Exit;
+     end;
+
+  if SpotsList.NeedsRepaint then
+     begin
      DisplayBandMap;
      end;
 end;

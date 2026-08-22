@@ -312,11 +312,27 @@ callers respectively, all still Win32.
 
 Each step builds and is testable on its own; none of them requires the next.
 
-1. **Model first, no UI change.** Add `Revision`; move
-   `UpdateSpotsMultiplierStatus` off the paint path; delete the `BList` group and
-   the `BandMapPreventRefresh` gate in `AddSpot`. The existing Win32 form still
-   works. **This alone fixes 3.1, 3.5 and 3.6** and can be benched before any form
-   exists.
+1. **Model first, no UI change. DONE, awaiting bench (queue section 27).**
+   `TDXSpotsList` gained `RepaintToken` / `RequestRepaint` / `NeedsRepaint`,
+   bumped by every mutator, with `Display` recording `FPaintedToken` **last and
+   only on the path that painted** -- so a repaint refused because the window did
+   not exist, or because the list was frozen, is retried rather than marked done.
+   `BandMapNeedsRefresh` is deleted. The `BandMapPreventRefresh` gate is gone from
+   `AddSpot` (3.1) and kept in `Display` (the freeze was only ever wanted for the
+   view). The dead `BList` group and `sleep(BMDelay)` (3.6) are gone.
+
+   Found while doing it: **`Delete` had `try ... finally FCriticalSection.Leave`
+   with no matching `Enter`** -- releasing a section this thread did not own,
+   which decrements the recursion count of whoever does. Every sibling pairs them
+   correctly. Fixed in the same change.
+
+   **3.5 is NOT in step 1.** Moving `UpdateSpotsMultiplierStatus` off the paint
+   path needs the complete list of places the LOG changes. `UpdateWindows`
+   (MainUnit.pas:6404) demonstrably covers QSO-logged, log-load, network QSO and
+   WSJT-X, and `LOGSUBS2.PAS:1686` covers the logged QSO directly -- but nothing
+   proves an in-place log EDIT is covered, and a stale multiplier flag presents as
+   wrong scoring rather than as an error. It gets its own change, with the site
+   list established rather than assumed.
 2. **The form.** `.lfm` with `TDrawGrid` + `TStatusBar` + `TPopupMenu`, the
    snapshot builder, `OnDrawCell` carrying the painting rules across, the seam in
    `OpenTR4WWindow`. Behind the existing menu item, so it is either the new window
