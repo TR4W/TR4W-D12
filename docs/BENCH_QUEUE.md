@@ -800,6 +800,44 @@ did not.
 the WinKeyer is in use is a property of the PROFILE (`SetWinKeyerEnabled`). The
 seed describes the device on the desk and nothing more.
 
+### 25. Overnight 2026-08-22: the main window is a designed form, and two controls moved
+
+Everything below is built, green (9803 unit tests, 21 lints, corpus 22/0/4) and
+committed but **not pushed**.
+
+- [ ] **The main window still looks and behaves as it did.** It is a designed
+  `TForm` now (`uMainForm.lfm`) rather than one built in code. Border, minimise
+  box, taskbar button, background colour all moved from Pascal into the designer,
+  so this is the check that nothing was dropped in the move.
+- [ ] **The possible-call list.** Type a partial callsign and watch the row of
+  suggestions below the entry fields: same font, same column width, dupes still
+  red, the selected one still outlined. It is an LCL `TListBox` now, drawn
+  through `OnDrawItem` instead of `WM_DRAWITEM`.
+- [ ] **A specific thing to watch on that list, recorded honestly:** TR4W fills
+  it with raw `LB_ADDSTRING`, so the LCL's own `Items` are empty. Nothing
+  recreates the control's handle today, but if it ever DOES the list would go
+  blank and refill on the next keystroke. If you see that once, that is what it
+  was.
+- [ ] **Help > About** opens a designed form instead of a system message box, with
+  the same content and the website as a clickable link. Check the version and
+  date read correctly -- they are composed from the same constants, not typed
+  into the form.
+
+**Not done, and each for a stated reason** (docs/ROADMAP.md section 2):
+
+* **The editable log stays a Win32 ListView.** `TListView` caches its rows and
+  TR4W does not use that cache -- it inserts with raw `LVM_INSERTITEM` across
+  ~150 call sites. The control would show hundreds of rows while the LCL believed
+  it had none, and anything that recreated the handle would rebuild it from the
+  empty cache: **a blank log, mid-contest, with no error.** Converting it means
+  moving those call sites to the `Items` API, with the log-dump harness proving
+  rows survive.
+* **The three remaining Win32 dialogs are all entangled** -- CAT is 2570 lines and
+  actively maintained, Missing Mults builds a runtime grid of child windows, and
+  Get Server Log embeds the editable log and so is blocked on the same work.
+* **`Application.Run` is still gated on the band map and the function-keys
+  window**, not on the main form.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)
