@@ -106,6 +106,44 @@ every message for the thread — they are not main-window work, and `WM_PARENTNO
 an escape (it carries a cursor point, not the child handle, and is not sent for
 `WM_RBUTTONDBLCLK` at all).
 
+### OPEN QUESTION for NY4I: should the main window have a `.lfm`?
+
+**The rule (NY4I, 2026-08-22):** *"Your task is not to create LCL forms via code.
+It is to create LCL forms via editor file which allows someone to manually edit a
+form in the future."* `Lint-DesignedForms` enforces it.
+
+**Measured: 20 `TForm` descendants, 19 designed, one built in code** —
+`TTR4WMainForm`. So the rule already holds everywhere except the single place the
+plan argued an exception, and it is now a named exception in the lint rather than
+a silence.
+
+**The plan's reason is real and still stands:** the main window's 50 elements are
+placed at `TWindows[e].mweiX * ws`, where `ws` comes from the operator's font-size
+setting and the vertical origin is *measured at run time* from the log's height.
+Freezing 50 positions into a designed form would be a regression, not a
+modernisation.
+
+**But that argues against designing the CHILDREN, not against the form having a
+`.lfm`.** Those are separable, and conflating them is what produced a code-built
+form:
+
+| | designed `.lfm` | built in code |
+|---|---|---|
+| the form's own properties, menu, events | can be edited by anyone | Pascal only |
+| the 50 table-driven elements | would be wrong to freeze | correct as-is |
+| a NEW control (the possible-call list) | could be designed and repositioned at run time | Pascal only |
+
+A `.lfm` carrying only the form itself would give the main window an editable
+identity, let future controls be added in the designer, and leave the placement
+loop owning exactly what the table owns. **That looks like the answer, but it
+changes Phase 3a's shape and is NY4I's call, not mine.**
+
+**Blocked on this:** the rest of Phase 3b. Converting the possible-call list and
+the editable-log ListView means creating two controls — and whether they are born
+in the designer or in code depends on this answer. An attempt at the possible-call
+list was made in code on 2026-08-22 and reverted unbuilt for exactly that reason.
+
+
 ### The numbers, and why they are quoted from the lints
 
 Prose status decays; a ratchet does not. These come from `Run-Lints` on every build, so a
