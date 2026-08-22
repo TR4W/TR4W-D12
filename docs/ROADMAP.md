@@ -199,6 +199,63 @@ function-keys window â€” Phases 6/7, and what actually gates `Application.Run` â
 are the other front.
 
 
+### DECIDED 2026-08-22: the editable-log form waits for the SQLite log
+
+**NY4I asked the right question -- "does it make sense to do the edit log form
+after the log is converted to sqlite3?" -- and the answer is yes, for a reason
+stronger than convenience.**
+
+**The ListView is currently the MODEL, not a view.** Three sites read QSO data
+back OUT of the control:
+
+```
+LOGEDIT.PAS:1380   ListView_GetItemText(wh[mweEditableLog], Entry, ...)
+LOGEDIT.PAS:1449   ListView_GetItemText(wh[mweEditableLog], Index, Ord(logColCall...
+uQuickEdit.pas:68  ListView_GetItemText(wh[mweEditableLog], 1, ColumnsArray[...]
+```
+
+The rows live in the widget. That is the whole problem, in three lines.
+
+**Converting before SQLite is the expensive order, twice.** Porting the ~150
+`ListView_*` call sites to the LCL `Items` API is the SAME control-as-model
+shape, respelled: it keeps the cache-desync hazard (the LCL's `Items` become the
+store), it is a large mechanical change with a bad failure mode, and the SQLite
+move would then throw all of it away.
+
+**Converting after SQLite produces a different and better result.** The natural
+LCL shape becomes a VIRTUAL list -- `OwnerData := True` plus `OnData` -- which
+holds no rows at all and asks for row N on demand. That:
+
+* **deletes the item-cache problem by construction.** No cache, so the blank-log
+  failure mode cannot occur;
+* **deletes the three read-back sites**, because there is finally somewhere real
+  to read a callsign from;
+* handles a 5,000-QSO log without inserting 5,000 items into a widget.
+
+`OwnerData` appears NOWHERE in this tree today, so the pattern is unexplored
+either way. Better to explore it once, against a real model.
+
+**What deferring costs, measured rather than assumed:**
+
+* **`Application.Run` is NOT blocked.** Phase 3c is gated on the band map and the
+  function-keys window. The log has nothing to do with it.
+* **Only `Get Server Log` (dialog 73) is blocked**, because it embeds the same
+  control.
+* Phase 7's no-HWND end state needs it eventually, and Phase 7 is last anyway.
+
+**Consequence for the SQLite log itself:** section 7 listed it as "decided
+direction, not scheduled". Still unscheduled -- but no longer OPTIONAL, because
+two pieces of the LCL migration now queue behind it.
+
+**So the order is:**
+
+1. **Band map + function-keys window** -- these gate `Application.Run`, the pivot
+   the whole plan turns on.
+2. **`uCAT`**, as a deliberate project, when nobody is mid-change in it.
+3. **Editable log + Get Server Log, after the log is SQLite**, as one piece of
+   work built on a virtual list.
+
+
 ### The numbers, and why they are quoted from the lints
 
 Prose status decays; a ratchet does not. These come from `Run-Lints` on every build, so a
@@ -555,8 +612,12 @@ code review, and it is the reason the FMX twins should not be deleted yet.
 
 ## 7. Explicitly not on this roadmap
 
-- **SQLite log storage.** Decided direction, not scheduled. Binary `.dat` compatibility is a
-  one-time converter, but the corpus reads 13 such fixtures and would have to move with it.
+- **SQLite log storage.** Decided direction, not scheduled -- but **no longer optional**, and it
+  has moved from "someday" to "a dependency". Reconfirmed by NY4I 2026-08-22, and section 2 now
+  queues **the editable-log form and Get Server Log behind it**: converting that ListView before
+  the log has a real model would mean porting ~150 call sites to a shape SQLite then discards.
+  Binary `.dat` compatibility is a one-time converter, but the corpus reads 13 such fixtures and
+  would have to move with it.
 - **The contest factory.** The radio and CW keyer factories are the model for how it should be built
   (strangler pattern, prove the seam, then delete the legacy path). Not started.
 - **macOS / Linux / ARM.** Native builds per platform on NY4I's own runners; no cross-toolchain. The
