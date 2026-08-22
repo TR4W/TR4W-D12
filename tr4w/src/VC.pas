@@ -2624,6 +2624,7 @@ const
   // existing CheckMenuItem in OpenTR4WWindow auto-toggle the menu checkmark and
   // lets the windows-menu dispatch in MainUnit auto-route open/close.
   menu_windows_hamscore                = 10219;  // Issue #783 Phase 4 -- HamScore status window toggle
+  menu_check_latest_version             = 10611;  // 2026-08-22 -- Help menu
   menu_home_page                        = 10606;
 //  menu_send_bug                         = 10605;
   menu_wiki_rus                         = 10604;

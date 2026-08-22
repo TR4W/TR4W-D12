@@ -304,7 +304,21 @@ all along.
   URL is now composed with `SysUtils.Format` into a string instead of
   `TF.Format` into a buffer, so a wrong contest id or a truncated URL is the
   thing to watch for.
-- [~] ~~**Check for updates** opens the download link.~~ **THIS ITEM WAS WRONG -- there is no such option.** NY4I could not find it because it does not exist: `uCheckLatestVersion` (97 lines) has NO CALLER, and the only `OpenURL(TR4W_DOWNLOAD_LINK)` in MainUnit sits inside a brace-commented block along with its `TC_DOYOUWANTTOCHECKTHELATESTVERSION` prompt. I wrote the item from the existence of the launcher call rather than from a reachable menu item. Nothing to test; see the roadmap question about what to do with the unit. (Not to be confused with `ALLOW AUTO UPDATE`, which IS live -- that is the multi-op LOG sync in `uNet.pas:422`, not a version check.)
+- [ ] **Help -> Check for Updates** -- NEW, 2026-08-22, and it has NEVER RUN
+  BEFORE. `uCheckLatestVersion` had existed complete since the D7 days with no
+  caller; NY4I asked for it on the Help menu after this queue sent him looking
+  for an option that did not exist.
+  - [ ] It should reach `www.tr4w.net`, compare versions, and either say you have
+    the latest or offer the download link. **It dialled `tr4w.com` while sending
+    `Host: www.tr4w.net`** -- corrected to `www.tr4w.net`, and since the routine
+    had never run, nothing had ever exercised that mismatch. If the check fails,
+    the host is the first thing to suspect.
+  - [ ] **EXPECT THE UI TO FREEZE for about two seconds.** It does its socket
+    work on the main thread and sleeps 2s waiting for the reply. That breaks
+    NY4I's own no-I/O-on-the-UI-thread rule and is a KNOWN follow-up: wiring it
+    up was the request, and rewriting it in the same change would have meant a
+    bench failure could not be attributed to either.
+  - [ ] Confirm the menu item sits in **Help**, after "Download POTA Parks".
 - [ ] **Preferences -> Logging -> the "Open log file" BUTTON** (bottom of the
   Logging page, below the trace check boxes) opens `tr4w.log` in whatever
   editor the operator has associated with `.txt`. It is a button, not a menu

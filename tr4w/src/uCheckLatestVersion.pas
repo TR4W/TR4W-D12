@@ -56,7 +56,12 @@ const
     'Host: www.tr4w.net'#13#10 +
     #13#10;                      // n4af 04.42.5
 begin
-  if not GetConnection(TempSocket, 'tr4w.com', 80, SOCK_STREAM) then
+  // tr4w.NET, not tr4w.com.  It dialled 'tr4w.com' while sending
+  // 'Host: www.tr4w.net' in the request three lines above -- so the two
+  // disagreed, and the version check could only ever have worked if .com served
+  // the same content.  Found on 2026-08-22 when the routine was given its first
+  // caller; it had never run, so nothing had exercised the mismatch.
+  if not GetConnection(TempSocket, 'www.tr4w.net', 80, SOCK_STREAM) then
      begin
      ShowSyserror(WSAGetLastError);
      Exit;

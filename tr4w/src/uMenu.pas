@@ -73,7 +73,7 @@ const
     // per-slot entries to ONE item opening the Preferences window, removing
     // the MAXWORD-1 submenu marker, the two Radio entries and the MAXWORD-2
     // terminator, and adding one item (net -3).
-    T_MENU_ARRAY_SIZE                     = 176 + 1 {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16};
+    T_MENU_ARRAY_SIZE                     = 176 + 1 + 1 {Check for Updates, 2026-08-22} {MMTTY window}{$IFDEF LANG_RUS} + 3{$ENDIF} + 2 {RC_RESET_RADIO_PORTS, separator, Repeat POTA Parks} + 2 {HamScore Resync (Tools) + HamScore Status (Windows menu), Issue #783} + 1 {3830 Score under File-Reports} + 1 {Edit Cabrillo Summary under Tools, Issue #914} + 1 {Download TRMASTER.DTA, 2026-08-16} - 1 {Appearance removed, 2026-08-16};
   T_MENU_ARRAY                          : array[0..T_MENU_ARRAY_SIZE] of MenuRecord = (
     (mrText: RC_FILE; mrId: MAXWORD),
  //{
@@ -339,6 +339,11 @@ const
     (mrText: RC_Download; mrID: menu_download_latest_cty_dat), // 4.75.3
     (mrText: 'Download TRMASTER.DTA'; mrId: menu_download_trmaster),  // 2026-08-16
     (mrText: 'Download POTA Parks'; mrId: menu_download_pota_parks),  // issue #864
+    // A LITERAL caption, like the two above it.  A new RC_ would mean editing
+    // eleven per-language ANSI files -- NY4I's by hand, and the thing
+    // resourcestring is replacing anyway; a resourcestring also cannot appear
+    // in this typed-constant array.  These belong together in the i18n sweep.
+    (mrText: 'Check for Updates'; mrId: menu_check_latest_version),  // 2026-08-22
     {$IFDEF LANG_RUS}
     (mrText: RC_WIKI; mrId: menu_wiki_rus),
 {$ENDIF}

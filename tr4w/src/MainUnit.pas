@@ -4575,6 +4575,23 @@ begin
       DownloadCTYAsync(string(PAnsiChar(@TR4W_CTY_FILENAME)), tr4whandle);
       end;
 
+    // CHECK FOR UPDATES.  uCheckLatestVersion has existed complete, with a
+    // download link and a translated prompt, since the D7 days and had NO
+    // CALLER -- the only route to it was inside a brace-commented block.  NY4I
+    // asked for it on the Help menu (2026-08-22), after the bench queue sent him
+    // looking for an option that did not exist.
+    //
+    // ONE KNOWN DEFECT REMAINS IN WHAT THIS CALLS, flagged rather than silently
+    // shipped and recorded in docs/BENCH_QUEUE.md: it does its socket work ON
+    // THIS THREAD and sleeps 2 seconds waiting for the reply, so the UI freezes
+    // for at least that long.  NY4I's own standing rule is no I/O on the main
+    // thread.  Wiring it up was the request; rewriting it is the follow-up, and
+    // doing both at once would mean a bench failure could not be attributed.
+    menu_check_latest_version:
+      begin
+      CheckLatestVersion;
+      end;
+
     menu_download_trmaster:
       begin
       QuickDisplay('Downloading TRMASTER.DTA...');
