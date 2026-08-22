@@ -256,6 +256,67 @@ two pieces of the LCL migration now queue behind it.
    work built on a virtual list.
 
 
+### The function-keys window: the FIRST `tw_` conversion, and the pattern for ~20 (designed 2026-08-22)
+
+**Why this one first:** it owns two of the three loop arms that gate
+`Application.Run` (`WM_RBUTTONDBLCLK` -> `GetButtonByRDblClick`,
+`WM_RBUTTONDOWN` -> `ShowFunctionKeyContextMenu`, both in `tr4w.dpr` ~1319).
+The band map owns the third. Nothing else about Phase 3c is outstanding.
+
+**Why it needs a design note rather than just doing it:** no `tw_` tool window
+has been converted yet. `OpenTR4WWindow` creates all twenty the same way, from
+`tr4w_WindowsArray[ID].WndProcAdr` via `CreateDialogParam`. The seam chosen here
+is the seam nineteen more windows will use. And this window sends CW: a mistake
+in it is F1 not answering a CQ, mid-contest.
+
+**The good news, measured: the owner-draw maps to plain LCL properties.** The
+`WM_DRAWITEM` body (`uFunctionKeys.pas:120`) does three things — `DrawEdge` with
+`EDGE_SUNKEN` or `EDGE_ETCHED`, a `GradientRect` with the SAME colour at both
+ends (so a flat fill), and centred text. That is a `TPanel`:
+
+| today | becomes |
+|---|---|
+| `BS_OWNERDRAW` button + `WM_DRAWITEM` | `TPanel` |
+| `GradientRect(..., TempColor, TempColor, ...)` | `Color := ButtonsColor[i]` |
+| `DrawEdge(EDGE_SUNKEN / EDGE_ETCHED)` | `BevelOuter := bvLowered / bvRaised` |
+| `ButtonsText[i]` + `DrawText` | `Caption` |
+| `WM_COMMAND` / `BN_CLICKED` | `OnClick` |
+| loop arm `WM_RBUTTONDBLCLK` | `OnMouseDown` with `mbRight` and `ssDouble in Shift` |
+| loop arm `WM_RBUTTONDOWN` | `OnMouseDown` with `mbRight` |
+| `ResolveFunctionKeyRow(h)` scanning `KeysHandles[112..123]` | `Sender.Tag` |
+
+**No custom painting survives.** That is the whole point: porting the GDI would
+carry Win32 into the replacement.
+
+**The seam for `OpenTR4WWindow`.** One `if ID = tw_FUNCTIONKEYSWINDOW_INDEX`
+before the `CreateDialogParam`, returning the LCL form's `Handle` — the same
+strangler shape `CreateTR4WMainForm` used for the main window in Phase 3a, and
+the same shape the next nineteen get. `tr4w_WindowsArray[ID].WndHandle`,
+`WndVisible` and `WndRect` keep working because they only ever held a handle and
+a rectangle.
+
+**What must NOT change, and each is a trap:**
+
+1. **`ButtonsText[i]` keeps its doubled `&`.** `ShowFMessages` inserts a second
+   ampersand (`uFunctionKeys.pas:312`) so the owner-draw shows one. A `TPanel`
+   caption treats `&` the same way, so the doubling stays correct -- removing it
+   because "the LCL is different" would eat every ampersand in a CW message.
+2. **The layout is runtime, not designed.** `WM_SIZE` spreads the twelve buttons
+   across the width with a 10px gap after F4 and F8. Declare the panels in the
+   `.lfm`, position them in code -- the same rule the main window settled on.
+3. **`OpMode2` vs `OpMode`.** `ShowFMessages` reads `OpMode2` for the CQ/S&P
+   bank; the resolver reads `OpMode`. That difference is deliberate and
+   pre-existing. Do not "tidy" it.
+4. **The bank is read from the LIVE modifier state** at right-click time and must
+   be captured BEFORE the menu pops, because the operator releases Ctrl/Alt to
+   click it (Issue #1001, already commented in the source).
+
+**Verification available:** none of this is provable by build. `Lint-AppMessages`
+will show the two arms gone; the rest is bench -- F1..F12 send, Ctrl/Alt banks
+show the right text, right-click opens the editor on the right row, and the
+window still docks where it was.
+
+
 ### The numbers, and why they are quoted from the lints
 
 Prose status decays; a ratchet does not. These come from `Run-Lints` on every build, so a
