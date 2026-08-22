@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
    Every designed form must have a way out with the keyboard, and an OK button
    must answer Enter.
@@ -81,7 +81,18 @@ if ($forms.Count -eq 0) {
 # Named rather than pattern-matched: "is this a dialog" is not something a .lfm
 # states, and guessing it from the presence of an OK button would quietly excuse
 # any form that happens to lack one.
-$notDialogs = @('uMainForm.lfm')
+#
+# EXPECT THIS LIST TO GROW to about twenty as the tw_ tool windows convert --
+# band map, master, remaining mults, telnet and the rest are all docked panels
+# that must not close on Escape.  A tool window belongs here; a dialog never
+# does, and the difference is worth stating per entry rather than assuming.
+$notDialogs = @(
+   'uMainForm.lfm',          # the main window
+   'uFunctionKeysForm.lfm'   # a docked tw_ TOOL WINDOW, and the first of ~20 to
+                             # convert.  Escape belongs to the callsign field
+                             # while this window is on screen; closing the F-key
+                             # row on it would be a defect, not a courtesy.
+)
 
 $problems = New-Object System.Collections.ArrayList
 

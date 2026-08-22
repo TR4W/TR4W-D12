@@ -178,6 +178,7 @@ uses
   uPanelUpdate in 'src\uPanelUpdate.pas',
   uLPTForm in 'src\ui\lcl\uLPTForm.pas',
   uAboutForm in 'src\ui\lcl\uAboutForm.pas',
+  uFunctionKeysForm in 'src\ui\lcl\uFunctionKeysForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uLegacyIniPrompt in 'src\ui\lcl\uLegacyIniPrompt.pas',
   uWinManagerForm in 'src\ui\lcl\uWinManagerForm.pas',
@@ -1316,17 +1317,18 @@ begin
 //          SendMessage(hwndTT, TTM_RELAYEVENT, 0, integer(@Msg));
         end;
 
-      WM_RBUTTONDBLCLK:
-        begin
-          GetButtonByRDblClick(Msg.HWND);
-        end;
-
-      WM_RBUTTONDOWN:
-        begin
-          // Issue #1001: right-click a function-key button -> context menu to
-          // edit that key's message (CQ vs S&P aware). No-op elsewhere.
-          ShowFunctionKeyContextMenu(Msg.HWND);
-        end;
+      // WM_RBUTTONDBLCLK and WM_RBUTTONDOWN are GONE -- Phase 3c, 2026-08-22.
+      //
+      // They existed because the function-key buttons were raw Win32 children:
+      // a right-click on one arrived here as a message carrying an HWND, and
+      // ResolveFunctionKeyRow had to scan twelve handles to work out which key
+      // it was.  WM_PARENTNOTIFY was not an escape -- it carries a cursor point
+      // rather than the child handle, and is not sent for WM_RBUTTONDBLCLK at
+      // all -- so the arms could not move until the buttons became LCL controls.
+      //
+      // They are TPanels now, in uFunctionKeysForm.lfm, and their OnMouseDown
+      // says which key and whether the click was a double.  Nothing dispatches
+      // by handle any more.
       // DELETED HERE, Phase 3c: a brace-commented block of six mouse arms --
       // WM_RBUTTONDOWN / WM_LBUTTONDOWN / WM_MBUTTONDOWN on wh[mweBandMode] and
       // CodeSpeedWindowHandle, and WM_LBUTTONDBLCLK on wh[mweClock] /

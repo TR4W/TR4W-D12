@@ -40,9 +40,18 @@ utils_text,
 
 function FunctionKeysWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure ShowFMessages(VirtualKey: Byte);
-procedure GetButtonByRDblClick(h: HWND);
-procedure EditFunctionKeyMessage(h: HWND);
-procedure ShowFunctionKeyContextMenu(h: HWND);
+procedure EditFunctionKeyMessage(const aKey: integer);
+procedure ShowFunctionKeyContextMenu(const aKey: integer);
+
+{ THE BEHAVIOUR BEHIND THE PANELS.  Installed into uFunctionKeysForm's procedure
+  variables at unit initialisation -- see the note there for why the two units
+  reach each other that way rather than by a uses clause.
+
+  Each takes the KEY CODE (112..123), not a window handle: the panel's Tag says
+  which key it is, so nothing has to scan twelve handles looking for a match. }
+procedure FKeyClicked(const aKey: integer);
+procedure FKeyRightClicked(const aKey: integer);
+procedure FKeyRightDoubleClicked(const aKey: integer);
 
 const
   ButtonsColor                          : array[112..123] of tcolor =
@@ -92,6 +101,7 @@ var
 implementation
 uses
   MainUnit,
+  uFunctionKeysForm,   // the panels; this unit supplies what a key press MEANS
   uConfigValues;   // Config.IncludeFKeyNumber
 
 function FunctionKeysWindowDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -272,6 +282,19 @@ var
 begin
 
   if not tWindowsExist(tw_FUNCTIONKEYSWINDOW_INDEX) then Exit;
+
+  // THE COLOURS, applied here rather than at creation.  ButtonsColor is the same
+  // table the owner-draw read; setting it on every refresh costs nothing (twelve
+  // property writes, and the LCL skips a repaint when the value is unchanged)
+  // and means the panels cannot drift from the table if it is ever made
+  // configurable -- which is the obvious next thing to ask for.
+  if TR4WFunctionKeysForm <> nil then
+     begin
+     for i := 112 to 123 do
+        begin
+        TR4WFunctionKeysForm.SetKeyColor(i, ButtonsColor[i]);
+        end;
+     end;
   TempMode := ActiveMode;
   if TempMode = FM then
      begin
@@ -322,7 +345,17 @@ begin
         begin
         ButtonsText[i] := s;
         end;
-     InvalidateRect(KeysHandles[i], nil, False);
+
+     // ONTO THE PANEL.  This used to write ButtonsText[i] and invalidate the
+     // owner-draw button; the caption IS the text now, and the LCL repaints.
+     //
+     // ButtonsText is kept because it is the value, and keeping it means this
+     // loop still reads the same before and after -- but nothing draws from it
+     // any more.
+     if TR4WFunctionKeysForm <> nil then
+        begin
+        TR4WFunctionKeysForm.SetKeyCaption(i, ButtonsText[i]);
+        end;
      end;
 end;
 
@@ -333,46 +366,51 @@ end;
 // row = (button - 112) + bank offset (0/12/24). Returns -1 if `h` is not a
 // function-key button. Caller must capture this BEFORE the modifier is released
 // (e.g. before popping a menu). Issue #1001.
-function ResolveFunctionKeyRow(h: HWND): integer;
+function ResolveFunctionKeyRow(const aKey: integer): integer;
 var
-  i                                     : integer;
   plus                                  : integer;
 begin
+  // BY KEY CODE, not by scanning twelve window handles.  The panels carry their
+  // key in Tag, so the caller already knows which one was clicked -- the scan
+  // existed only because a Win32 message handed us an HWND and nothing else.
   Result := -1;
-  for i := 112 to 123 do
+  if (aKey < 112) or (aKey > 123) then
      begin
-     if h = KeysHandles[i] then
-        begin
-        if OpMode = SearchAndPounceOpMode then
-           begin
-           MesWindow := ExMsgWin
-           end
-        else
-           begin
-           MesWindow := CQMsgWin;
-           end;
-        plus := 0;
-        if (GetKeyState(VK_MENU) and $8000) <> 0 then
-           begin
-           plus := 24
-           end
-        else if (GetKeyState(VK_CONTROL) and $8000) <> 0 then
-           begin
-           plus := 12;
-           end;
-        Result := (i - 112) + plus;
-        Break;
-        end;
+     Exit;
      end;
+
+  if OpMode = SearchAndPounceOpMode then
+     begin
+     MesWindow := ExMsgWin
+     end
+  else
+     begin
+     MesWindow := CQMsgWin;
+     end;
+
+  // The bank comes from the LIVE modifier state, and the caller must read it
+  // BEFORE anything lets the operator release Ctrl/Alt -- popping a menu, for
+  // one.  Issue #1001.
+  plus := 0;
+  if (GetKeyState(VK_MENU) and $8000) <> 0 then
+     begin
+     plus := 24
+     end
+  else if (GetKeyState(VK_CONTROL) and $8000) <> 0 then
+     begin
+     plus := 12;
+     end;
+
+  Result := (aKey - 112) + plus;
 end;
 
 // Open the Alt-P message editor focused on the function key whose button is `h`
 // (mode- and shift-bank-aware). Used by the legacy right-double-click path.
-procedure EditFunctionKeyMessage(h: HWND);
+procedure EditFunctionKeyMessage(const aKey: integer);
 var
   row                                   : integer;
 begin
-  row := ResolveFunctionKeyRow(h);
+  row := ResolveFunctionKeyRow(aKey);
   if row < 0 then Exit;
   InitialAltPSelection := row;
 //tDialogBox(72, @MemoryProgramDlgProc);
@@ -380,9 +418,19 @@ begin
   FrmSetFocus;   // see note in ShowFunctionKeyContextMenu
 end;
 
-procedure GetButtonByRDblClick(h: HWND);
+procedure FKeyRightDoubleClicked(const aKey: integer);
 begin
-  EditFunctionKeyMessage(h);
+  EditFunctionKeyMessage(aKey);
+end;
+
+procedure FKeyClicked(const aKey: integer);
+begin
+  // WM_COMMAND / BN_CLICKED used to arrive here with LoWord(wParam) as the
+  // control id, which was the key code.  The panel's Tag is that same number.
+  logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d received', [aKey - 111]);
+  FrmSetFocus;
+  ProcessFuntionKeys(aKey);
+  logger.Trace('[FunctionKeysWindow] MOUSE CLICK on F%d dispatched', [aKey - 111]);
 end;
 
 // Right-click a function-key button -> show a one-item context menu that opens
@@ -390,7 +438,12 @@ end;
 // modifier is still held) so the bank stays correct even after the user
 // releases the modifier to click the menu. Label is composed from translated
 // words; the key name (e.g. "F3") is not translated. Issue #1001.
-procedure ShowFunctionKeyContextMenu(h: HWND);
+procedure FKeyRightClicked(const aKey: integer);
+begin
+  ShowFunctionKeyContextMenu(aKey);
+end;
+
+procedure ShowFunctionKeyContextMenu(const aKey: integer);
 const
   ID_EDITFKEY                           = 1;
 var
@@ -413,7 +466,7 @@ begin
      begin
      Exit;
      end;
-  row := ResolveFunctionKeyRow(h);
+  row := ResolveFunctionKeyRow(aKey);
   if row < 0 then Exit;
 
   case row div 12 of            // 0 = plain, 1 = Ctrl, 2 = Alt
@@ -459,5 +512,14 @@ begin
   FrmSetFocus;
 end;
 
-end.
+initialization
+  // THE PANELS CALL BACK IN HERE.  uFunctionKeysForm owns the widgets and knows
+  // nothing about memories, banks or the Alt-P editor; this unit owns all of
+  // that and nothing about TPanel.  Procedure variables rather than a uses
+  // clause because the dependency genuinely runs both ways -- see the type
+  // declaration in that unit.
+  uFunctionKeysForm.FunctionKeyClicked            := @FKeyClicked;
+  uFunctionKeysForm.FunctionKeyRightClicked       := @FKeyRightClicked;
+  uFunctionKeysForm.FunctionKeyRightDoubleClicked := @FKeyRightDoubleClicked;
 
+end.

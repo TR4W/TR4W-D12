@@ -525,7 +525,8 @@ uses
   uPanelUpdate,     // ForgetPanel -- see CloseTR4WWindow
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
   uMainForm,
-  uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS a TForm now -- CreateTR4WMainForm
+  uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
+  uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
   uRadioPolling,
@@ -5276,8 +5277,24 @@ begin
  }
 
   //h := CreateDialogParam(hInstance, MAKEINTRESOURCE(wi[ID]), tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
-  h := CreateDialogIndirectParam(hInstance, PDlgTemplate(@MAINTR4WDLGTEMPLATE)^,
-    tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
+
+  // THE FIRST tw_ WINDOW THAT IS AN LCL FORM, and the seam every other one will
+  // use as it converts.  One test before the DLGTEMPLATE call, returning the
+  // form's Handle -- the same strangler shape CreateTR4WMainForm used for the
+  // main window in Phase 3a.
+  //
+  // Everything downstream keeps working because it only ever dealt in a handle
+  // and a rectangle: WndHandle, WndVisible, WndRect, the SetWindowPos that
+  // positions it, and CloseTR4WWindow.
+  if ID = tw_FUNCTIONKEYSWINDOW_INDEX then
+     begin
+     h := CreateTR4WFunctionKeysWindow(tr4whandle);
+     end
+  else
+     begin
+     h := CreateDialogIndirectParam(hInstance, PDlgTemplate(@MAINTR4WDLGTEMPLATE)^,
+       tr4whandle, tr4w_WindowsArray[ID].WndProcAdr, integer(ID));
+     end;
 
   // The window's caption is its MENU ITEM's text with the accelerator cut off,
   // so this reads back what CreateTR4WMenu wrote. W on both sides: the menu is
