@@ -254,29 +254,29 @@ and only runs in the real application. Nothing in the build exercises it.
 
 **Do this in order -- the first step is the migration and it happens once.**
 
-- [ ] **Before starting, note where a few windows are** (Band Map, Telnet, the
-  two radio panels) and confirm `settings    r4w.pos` exists and is 550 bytes.
-- [ ] Start TR4W. **Every window should come up exactly where it was.** This is
+- [X] **Before starting, note where a few windows are** (Band Map, Telnet, the
+  two radio panels) and confirm `settings tr4w.pos` exists and is 550 bytes.
+- [x] Start TR4W. **Every window should come up exactly where it was.** This is
   the seed from the old binary file; if anything moved, the seed is wrong
   and nothing after this is worth testing.
-- [ ] **Move two windows somewhere obvious**, then exit TR4W normally.
-- [ ] **Open `settings  tr4w.json`.** There should be a `"windows"` section with
+- [x] **Move two windows somewhere obvious**, then exit TR4W normally.
+- [x] **Open `settings  tr4w.json`.** There should be a `"windows"` section with
   one entry per window, keyed by NAME (`"BandMap"`, `"Telnet"`, `"Radio1"`
   ...), each with `left`/`top`/`right`/`bottom`/`visible`. The two you moved
   should show their new positions.
-- [ ] **The rest of the file must be intact** -- `radios`, `profiles`, `keyers`,
+- [x] **The rest of the file must be intact** -- `radios`, `profiles`, `keyers`,
   `udpBroadcast`, the Cabrillo header sections. This is the one that would
   be expensive to get wrong: exit-save is the first caller in the program
   that saves ONE tenant, and the read-modify-write change exists to stop it
   wiping the others. Check the radio library is still there.
-- [ ] **`settings   tr4w.pos` should still exist, unchanged.** It is deliberately
+- [x] **`settings   tr4w.pos` should still exist, unchanged.** It is deliberately
   left in place and simply stops being read. Nothing writes it any more.
-- [ ] Start TR4W again. The two windows should be where you left them -- read
+- [x] Start TR4W again. The two windows should be where you left them -- read
   from the JSON this time, not the `.pos`.
-- [ ] **Open Preferences, change something small, save.** Exit. The `windows`
+- [x] **Open Preferences, change something small, save.** Exit. The `windows`
   section must still be there afterwards: that is the same guarantee from
   the other direction.
-- [ ] **Minimise a window and exit.** Its saved rect should not become the
+- [x] **Minimise a window and exit.** Its saved rect should not become the
   `-32000` sentinel -- `FindAndSaveRectOfAllWindows` skips iconic windows
   and that logic is untouched, so this is confirming it still is.
 - [ ] **Optional, if you have a second monitor:** put a window on it, exit,
@@ -304,9 +304,12 @@ all along.
   URL is now composed with `SysUtils.Format` into a string instead of
   `TF.Format` into a buffer, so a wrong contest id or a truncated URL is the
   thing to watch for.
-- [ ] **Check for updates** opens the download link.
-- [ ] **Preferences -> Logging -> open the log file** opens `tr4w.log` in
-  whatever editor the operator has associated with `.txt`.
+- [~] ~~**Check for updates** opens the download link.~~ **THIS ITEM WAS WRONG -- there is no such option.** NY4I could not find it because it does not exist: `uCheckLatestVersion` (97 lines) has NO CALLER, and the only `OpenURL(TR4W_DOWNLOAD_LINK)` in MainUnit sits inside a brace-commented block along with its `TC_DOYOUWANTTOCHECKTHELATESTVERSION` prompt. I wrote the item from the existence of the launcher call rather than from a reachable menu item. Nothing to test; see the roadmap question about what to do with the unit. (Not to be confused with `ALLOW AUTO UPDATE`, which IS live -- that is the multi-op LOG sync in `uNet.pas:422`, not a version check.)
+- [ ] **Preferences -> Logging -> the "Open log file" BUTTON** (bottom of the
+  Logging page, below the trace check boxes) opens `tr4w.log` in whatever
+  editor the operator has associated with `.txt`. It is a button, not a menu
+  item -- the original wording read like a menu path, which is why it could
+  not be found.
 
 ### 13. Nothing should have changed -- 7,187 lines of commented-out code are gone
   (`dd53c1ab`, `67af7f28`, `3c1c4703`)
