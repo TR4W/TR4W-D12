@@ -1,0 +1,12 @@
+﻿object TR4WMainForm: TTR4WMainForm
+  Left = 0
+  Top = 30
+  BorderIcons = [biSystemMenu, biMinimize]
+  BorderStyle = bsSingle
+  Caption = 'TR4W'
+  ClientHeight = 200
+  ClientWidth = 400
+  Color = clBtnFace
+  Position = poDesigned
+  ShowInTaskBar = stAlways
+end

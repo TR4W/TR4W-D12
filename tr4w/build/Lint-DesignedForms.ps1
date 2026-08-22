@@ -34,24 +34,17 @@ if (-not $SourceDir) {
    $SourceDir = Join-Path (Split-Path -Parent $PSScriptRoot) 'src'
 }
 
-# THE KNOWN EXCEPTION, and it is the one this migration still has to answer.
+# NO EXCEPTIONS, and there is no longer one to make.
 #
-# TTR4WMainForm is built entirely in code (Phase 3a).  The plan's reasoning is
-# real: the main window's 50 elements are placed at TWindows[e].mweiX * ws, where
-# ws comes from the operator's font-size setting and the vertical origin is
-# measured from the log at run time.  Freezing 50 positions into a .lfm would be
-# a regression.
+# TTR4WMainForm was the only form built in code.  It has a .lfm as of
+# 2026-08-22: NY4I's answer was that the form gets an editor file and new
+# controls are DECLARED in it, while the existing placement loop keeps
+# REPOSITIONING them at run time from TWindows.  Those two were never in
+# conflict -- the plan's objection was to freezing 50 positions into a designed
+# layout, which nothing here does.
 #
-# But that argues against DESIGNING THE CHILDREN, not against the form itself
-# having a .lfm.  A .lfm carrying the form's own properties, with the placement
-# loop still owning the table-driven children, would satisfy both -- and is the
-# open question recorded in docs/ROADMAP.md section 2.
-#
-# Until that is decided this stays as ONE NAMED exception rather than a silence.
-# Do not add a second without NY4I.
-$allowed = @{
-   'uMainForm.pas' = 'TTR4WMainForm -- Phase 3a; the .lfm question is open, see ROADMAP section 2'
-}
+# An empty list is the point.  Adding a name to it needs NY4I.
+$allowed = @{}
 
 if (-not (Test-Path -LiteralPath $SourceDir -PathType Container)) {
    Write-Output "Lint-DesignedForms: source directory not found: $SourceDir"

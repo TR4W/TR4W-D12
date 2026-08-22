@@ -44,6 +44,19 @@ uses
   uMainWindowProc;   // TTR4WEntryField, EntryEvents -- the fields' key handlers
 
 type
+  { DESIGNED, from uMainForm.lfm.  NY4I, 2026-08-22: forms come from an editor
+    file so a person can open them in the designer and change them without
+    reading Pascal.
+
+    WHAT THE .lfm OWNS: the form itself -- border, icons, colour, taskbar
+    button -- and, from here on, any control added to the main window.
+
+    WHAT IT DOES NOT OWN: the positions of the 50 legacy elements.  Those are
+    placed at TWindows[e].mweiX * ws, where ws comes from the operator's
+    font-size setting and the vertical origin is measured from the log's height
+    at run time.  Freezing them into a designed layout would be a regression.
+    A designed control is still REPOSITIONED by that loop; being in the .lfm
+    gives it an editable identity, not a fixed geometry. }
   TTR4WMainForm = class(TForm)
   end;
 
@@ -99,6 +112,8 @@ var
   TR4WExchangeEdit: TEdit = nil;
 
 implementation
+
+{$R *.lfm}
 
 uses
    // IMPLEMENTATION-section, so these are not imposed on anything that uses
@@ -374,46 +389,33 @@ end;
 
 function CreateTR4WMainForm(const aMenu: HMENU): HWND;
 begin
-   TR4WMainForm := TTR4WMainForm.CreateNew(nil);
-
-   // The style bits CreateWindowExW used to pass: WS_SYSMENU or WS_MINIMIZEBOX,
-   // and no WS_THICKFRAME or WS_MAXIMIZEBOX. bsSingle is the fixed-border
-   // equivalent; the operator could never resize this window by dragging and
-   // still cannot.
-   TR4WMainForm.BorderStyle := bsSingle;
-   TR4WMainForm.BorderIcons := [biSystemMenu, biMinimize];
-
-   // Position and size are placeholders. CreateMainWindow calls SetWindowPos
-   // immediately afterwards with the real geometry, which it can only compute
-   // once the editable-log ListView exists and has been measured.
-   TR4WMainForm.Position := poDesigned;
-   TR4WMainForm.SetBounds(0, 30, 400, 200);
-
-   // Matches the class brush the registered window class carried:
-   // tr4wBrushArray[TWindows[mweWholeScreen].mweBackG], and mweBackG is
-   // trBtnFace. Set explicitly because a form paints its own background and
-   // would otherwise use the LCL default.
-   TR4WMainForm.Color := clBtnFace;
-
-   // A TASKBAR BUTTON, which the Win32 window got for free and this one does
-   // not.
+   // Create, NOT CreateNew.  CreateNew deliberately does not load a .lfm, and
+   // that is what made this form unopenable in the designer.
    //
-   // stDefault means "show in the taskbar if this is the application's MAIN
-   // form".  TR4W has no main form: this is CreateNew(nil), and
-   // Application.CreateForm -- the thing that sets Application.MainForm -- is
-   // never called, because Application.Run is never called either (the
-   // hand-rolled loop still owns the program).  So the form was not the main
-   // form, took no WS_EX_APPWINDOW, and Windows gave it no button.
-   //
-   // The Win32 window this replaced had the button because it was a plain
-   // unowned top-level window with WS_SYSMENU. An LCL form is owned by the
-   // hidden Application window, and an OWNED window is not a taskbar candidate
-   // unless it says so.
-   //
-   // BEFORE Handle is touched, deliberately: the setter recreates the window
-   // handle if it already exists, which would throw away both tr4whandle and
-   // the subclass installed below.
-   TR4WMainForm.ShowInTaskBar := stAlways;
+   // Everything that used to be assigned here is now IN uMainForm.lfm, which is
+   // the point of the change rather than a side effect:
+   //   BorderStyle bsSingle + BorderIcons [biSystemMenu, biMinimize]
+   //       -- the style bits CreateWindowExW passed (WS_SYSMENU or
+   //          WS_MINIMIZEBOX, no WS_THICKFRAME or WS_MAXIMIZEBOX).  The
+   //          operator could never resize this window by dragging and still
+   //          cannot.
+   //   Color clBtnFace
+   //       -- matches the class brush the registered window class carried,
+   //          tr4wBrushArray[TWindows[mweWholeScreen].mweBackG].  A form paints
+   //          its own background and would otherwise take the LCL default.
+   //   ShowInTaskBar stAlways
+   //       -- the Win32 window got a taskbar button for free as a plain unowned
+   //          top-level window.  An LCL form is owned by the hidden Application
+   //          window, and an owned window is not a taskbar candidate unless it
+   //          says so.  stDefault would only work for Application.MainForm, and
+   //          TR4W has none: Application.CreateForm is never called because
+   //          Application.Run is never called (the hand-rolled loop still owns
+   //          the program).
+   //   Position poDesigned and the bounds
+   //       -- placeholders.  CreateMainWindow calls SetWindowPos immediately
+   //          afterwards with the real geometry, which it can only compute once
+   //          the editable-log ListView exists and has been measured.
+   TR4WMainForm := TTR4WMainForm.Create(nil);
 
    // Touching Handle is what forces the window to exist.
    Result := TR4WMainForm.Handle;

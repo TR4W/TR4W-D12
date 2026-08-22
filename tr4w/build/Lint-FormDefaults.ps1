@@ -70,9 +70,24 @@ if ($forms.Count -eq 0) {
    exit 1
 }
 
+# NOT EVERY FORM IS A DIALOG, and this lint's whole premise is about dialogs:
+# "a Win32 DialogBox closed on Escape for free, this one does not".
+#
+# The MAIN WINDOW is not a dialog and MUST NOT close on Escape.  In TR4W, Escape
+# clears the callsign field and aborts CW that is being sent -- an operator hits
+# it constantly, mid-contest, and a main window that took it as "close" would end
+# the session.  Demanding an escape path here would be demanding a defect.
+#
+# Named rather than pattern-matched: "is this a dialog" is not something a .lfm
+# states, and guessing it from the presence of an OK button would quietly excuse
+# any form that happens to lack one.
+$notDialogs = @('uMainForm.lfm')
+
 $problems = New-Object System.Collections.ArrayList
 
 foreach ($f in $forms) {
+   if ($notDialogs -contains $f.Name) { continue }
+
    $text = Get-Content -LiteralPath $f.FullName -Raw
 
    $hasCancel     = $text -match '(?m)^\s*Cancel\s*=\s*True\s*$'
