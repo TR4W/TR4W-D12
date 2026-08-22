@@ -54,6 +54,7 @@ uses
    Controls,
    uAppStrings,
    uRadioConfigStore,
+   uTR4WConfigFile,   // SaveConfig -- the ONE writer of tr4w.json
    VC,          // TR4W_INI_FILENAME
    MainUnit;    // logger
 
@@ -108,7 +109,7 @@ begin
          // because nothing else runs while a modal dialog is up -- but the
          // narrow write is what makes that not need arguing about.
          store.KeepLegacyIni := True;
-         store.SaveToFile(aStoreFileName);
+         SaveConfig(aStoreFileName, store, nil, nil);
          logger.Info('[LegacyIni] operator chose to keep %s; not asking again', [ini]);
          Exit;
          end;

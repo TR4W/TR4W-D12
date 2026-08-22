@@ -774,6 +774,7 @@ type
         which is what uBandPlanForm already does for the same shape of data. }
       FColorGrid: TStringGrid;
       FColorElements: TStringList;   // row -> mweName, owned
+      FPalette: TStringList;         // the colour spellings, owned; see ColorGridSelectEditor
 
       FKeyerEditTarget: TKeyerDefinition;
       FKeyerEditClone: TKeyerDefinition;
@@ -975,6 +976,8 @@ type
         so no CFGCA row exists for any of them.  The rows are generated from
         TWindows itself, which is the only list there is. }
       function  BuildColorsSection: integer;
+      procedure ColorGridSelectEditor(Sender: TObject; aCol, aRow: integer;
+                                      var Editor: TWinControl);
       procedure LoadColorRows;
       procedure SaveColorRows;
       function  BuildGeneratedSection(const aTag: NativeInt; const aHeading: string;
@@ -1504,6 +1507,7 @@ begin
 
    FreeAndNil(FBindings);
    FreeAndNil(FColorElements);
+   FreeAndNil(FPalette);
    FreeAndNil(FEditClone);
    FreeAndNil(FKeyerEditClone);
    FreeAndNil(FUDPEditClone);
@@ -1580,10 +1584,7 @@ begin
          begin
          logger.Info('[Preferences] migrated %d radio(s) from %s to %s',
                      [FStore.RadioCount, LegacyStoreFileName, StoreFileName]);
-         // The color rows are not bindings -- they edit TWindows, not settings --
-         // so SaveAll does not know about them and they are written here.
-         SaveColorRows;
-         FStore.SaveToFile(StoreFileName);
+         SaveConfig(StoreFileName, FStore, FKeyerStore, FUDPConfig);
          Exit;
          end;
       end;
@@ -1635,6 +1636,18 @@ begin
       end;
 
    try
+      // BEFORE the write, and this is THE save path.  The colour rows are not
+      // bindings -- they edit TWindows, not settings -- so SaveAll does not know
+      // about them and they have to be folded into the store by hand.
+      //
+      // The first version called this from the LEGACY MIGRATION branch above,
+      // which only runs on a station being converted from the old radio ini, so
+      // on every ordinary save it never ran at all: colours applied on screen,
+      // the store's "colors" stayed {}, and the next start restored the
+      // defaults (NY4I, 2026-08-22: "I changed and saved values of certain
+      // colors but when I started up again, they were reverted black").
+      SaveColorRows;
+
       // Every library in one atomic write -- see uTR4WConfigFile.
       SaveConfig(StoreFileName, FStore, FKeyerStore, FUDPConfig);
 
@@ -2502,24 +2515,39 @@ begin
    logger.Info('[Prefs] generated sections: %d control(s) built', [total]);
 end;
 
-function TPrefsForm.BuildColorsSection: integer;
+{ The colors grid's columns.  Shared by the builder and the editor callback,
+  which is why they are not local to either. }
 const
-   COL_ELEMENT = 0;
-   COL_FG      = 1;
-   COL_BG      = 2;
+   COLORS_COL_ELEMENT = 0;
+   COLORS_COL_FG      = 1;
+   COLORS_COL_BG      = 2;
+
+function TPrefsForm.BuildColorsSection: integer;
 var
-   box: TScrollBox;
+   box: TPanel;
    head: TLabel;
    e: TMainWindowElement;
    palette: TArray<string>;
    v, name: string;
    row: integer;
 begin
-   box := TScrollBox.Create(Self);
+   // A PANEL, NOT A SCROLL BOX, and the GRID does the scrolling.
+   //
+   // The other generated pages are scroll boxes because they are a tall column
+   // of individual controls.  This one is a single grid that scrolls itself, and
+   // nesting it in a scroll box gave neither of them a scrollbar: the box sized
+   // itself to the grid, and the grid had been handed absolute bounds while the
+   // page was still Visible := False, so it never knew it was too short for
+   // fifty rows (NY4I, 2026-08-22: "colors grid has no scroll vertical bars").
+   //
+   // Aligned rather than positioned, so the layout is right whatever the page
+   // is sized to and whenever it is first shown.
+   box := TPanel.Create(Self);
    box.Parent      := layContent;
    box.Tag         := NAV_COLORS;
    box.Align       := alClient;
-   box.BorderStyle := bsNone;
+   box.BevelOuter  := bvNone;
+   box.Caption     := '';
    box.Color       := clWindow;
    box.ParentColor := False;
    box.Visible     := False;
@@ -2531,7 +2559,9 @@ begin
                       'The colors of each main-window element. ' +
                       'Changes take effect when the window next repaints.';
    head.WordWrap   := True;
-   head.SetBounds(16, 12, 620, 40);
+   head.Align      := alTop;
+   head.Height     := 52;
+   head.BorderSpacing.Around := 12;
    head.Font.Style := [fsBold];
 
    // FROM THE ENUM, through uRadioConfigApply.PaletteSpellings -- not a list
@@ -2548,43 +2578,43 @@ begin
 
    FColorGrid := TStringGrid.Create(box);
    FColorGrid.Parent      := box;
-   FColorGrid.SetBounds(16, 64, 620, 470);
-   FColorGrid.Anchors     := [akLeft, akTop, akRight, akBottom];
+   FColorGrid.Align       := alClient;
+   FColorGrid.BorderSpacing.Around := 12;
+   // EXPLICIT.  Fifty rows will not fit whatever the page is sized to, so the
+   // vertical bar has to be there; ssAutoBoth also covers a window narrowed
+   // past the three columns.
+   FColorGrid.ScrollBars  := ssAutoBoth;
+   // NO Columns COLLECTION, and that is the fix rather than a simplification.
+   //
+   // The first version set ColCount := 3 AND added three Columns.  In the LCL
+   // the collection DEFINES the column count, so the grid ended up with the
+   // three configured columns plus three empty ones -- the white space to the
+   // right of the values -- and a content width that no longer matched what was
+   // drawn.  It never worked out that it needed to scroll, so fifty elements
+   // showed about twenty-two and the rest were unreachable (NY4I, 2026-08-22).
+   //
+   // uBandPlanForm's grid, which works, uses ColCount and no collection.  This
+   // one now does too, and the pick list arrives through OnSelectEditor -- the
+   // LCL's own way to give a column a drop-down without a Columns entry, and
+   // still ONE editor for the whole grid rather than a control per cell.
    FColorGrid.ColCount    := 3;
    FColorGrid.FixedRows   := 1;
    FColorGrid.FixedCols   := 0;
    FColorGrid.Options     := FColorGrid.Options + [goEditing, goVertLine, goHorzLine,
-                                                   goColSizing, goDrawFocusSelected];
-   FColorGrid.Cells[COL_ELEMENT, 0] := 'Element';
-   FColorGrid.Cells[COL_FG,      0] := 'Text';
-   FColorGrid.Cells[COL_BG,      0] := 'Background';
-   FColorGrid.ColWidths[COL_ELEMENT] := 260;
-   FColorGrid.ColWidths[COL_FG]      := 170;
-   FColorGrid.ColWidths[COL_BG]      := 170;
+                                                   goColSizing, goSmoothScroll];
+   FColorGrid.Cells[COLORS_COL_ELEMENT, 0] := 'Element';
+   FColorGrid.Cells[COLORS_COL_FG,      0] := 'Text';
+   FColorGrid.Cells[COLORS_COL_BG,      0] := 'Background';
+   FColorGrid.ColWidths[COLORS_COL_ELEMENT] := 260;
+   FColorGrid.ColWidths[COLORS_COL_FG]      := 170;
+   FColorGrid.ColWidths[COLORS_COL_BG]      := 170;
+   FColorGrid.OnSelectEditor := ColorGridSelectEditor;
 
-   // PICK LISTS, so the palette is offered without a combo per cell.  One
-   // editor serves every row, which is the whole point of using a grid here.
-   FColorGrid.Columns.Add;
-   FColorGrid.Columns.Add;
-   FColorGrid.Columns.Add;
-   FColorGrid.Columns[COL_ELEMENT].Title.Caption := 'Element';
-   FColorGrid.Columns[COL_ELEMENT].ReadOnly      := True;
-   FColorGrid.Columns[COL_ELEMENT].Width         := 260;
-
-   for row := COL_FG to COL_BG do
+   FreeAndNil(FPalette);
+   FPalette := TStringList.Create;
+   for v in palette do
       begin
-      FColorGrid.Columns[row].Title.Caption := FColorGrid.Cells[row, 0];
-      FColorGrid.Columns[row].ButtonStyle   := cbsPickList;
-      FColorGrid.Columns[row].Width         := 170;
-      FColorGrid.Columns[row].PickList.BeginUpdate;
-      try
-         for v in palette do
-            begin
-            FColorGrid.Columns[row].PickList.Add(v);
-            end;
-      finally
-         FColorGrid.Columns[row].PickList.EndUpdate;
-      end;
+      FPalette.Add(v);
       end;
 
    row := 1;
@@ -2606,6 +2636,28 @@ begin
 
    Result := FColorElements.Count;
    logger.Debug('[Prefs] colors page: %d element(s) in one grid', [Result]);
+end;
+
+procedure TPrefsForm.ColorGridSelectEditor(Sender: TObject; aCol, aRow: integer;
+                                           var Editor: TWinControl);
+begin
+   // COLUMN 0 IS THE ELEMENT NAME and is not editable.  Refusing an editor is
+   // how a grid says that per-column when there is no Columns collection to
+   // carry a ReadOnly flag.
+   if aCol = COLORS_COL_ELEMENT then
+      begin
+      Editor := nil;
+      Exit;
+      end;
+
+   // ONE editor, borrowed from the grid and refilled each time it is shown.
+   // EditorByStyle is the LCL's own pick-list cell editor; nothing here creates
+   // a control, which is the whole reason this page is a grid.
+   Editor := TStringGrid(Sender).EditorByStyle(cbsPickList);
+   if (Editor is TCustomComboBox) and (FPalette <> nil) then
+      begin
+      TCustomComboBox(Editor).Items.Assign(FPalette);
+      end;
 end;
 
 procedure TPrefsForm.LoadColorRows;

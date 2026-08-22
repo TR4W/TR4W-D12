@@ -486,7 +486,13 @@ begin
          vCutoff[b], vCW[b], vSSB[b]);
       end;
 
-   TRadioConfigStore(store).SaveToFile(TR4WConfigFileName);
+   // SaveConfig, NOT store.SaveToFile.  SaveToFile writes the radio store's
+   // own sections and nothing else, so it would have DROPPED the keyer library
+   // and the UDP settings from the file every time a band plan was saved.
+   // SaveConfig preserves the sections it was not given -- which is why it is
+   // the only writer (NY4I, 2026-08-22: "two paths to write anything is a bad
+   // idea").
+   SaveConfig(TR4WConfigFileName, TRadioConfigStore(store), nil, nil);
 end;
 
 procedure TfrmBandPlan.btnOKClick(Sender: TObject);

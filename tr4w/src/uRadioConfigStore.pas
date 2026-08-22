@@ -518,6 +518,20 @@ type
       // raises nothing on malformed JSON -- a corrupt settings file must not
       // stop the program from starting.
       function  LoadFromFile(const aFileName: string; out aError: string): boolean;
+
+      { WRITES ONLY THIS STORE'S SECTIONS, and so is NOT the way to save the
+        configuration file.
+
+        tr4w.json also holds the keyer library and the UDP settings, which this
+        object knows nothing about -- so calling this drops them.  Two callers
+        added on 2026-08-21 did exactly that: saving a band plan would have
+        deleted every configured keyer.
+
+        uTR4WConfigFile.SaveConfig is the ONE writer.  It preserves the sections
+        it was not given, so `SaveConfig(file, store, nil, nil)` writes this
+        store and leaves the others alone.  Kept public only because SaveConfig
+        itself and the unit tests use it; call it from nowhere else.
+        (NY4I, 2026-08-22: "two paths to write anything is a bad idea.") }
       procedure SaveToFile(const aFileName: string);
 
       // aIni is the CALLER'S -- this never opens or frees a file.
