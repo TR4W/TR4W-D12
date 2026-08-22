@@ -91,9 +91,9 @@ only thing that was actually true.
 | 1 | One `ShowXxx` seam per form | **done** — `26f12d7e` |
 | 2 | Menus and shortcuts | **done** — menus built in code, shortcuts carried |
 | 3a | Main window is a `TForm`; `tr4whandle` = `TMainForm.Handle` | **done** — `uMainForm.pas` |
-| 3b | The four input-bearing controls become LCL | **2 of 4** — call + exchange are `TEdit` (`89b91cdd`); editable log and possible-call list still raw Win32 |
+| 3b | The four input-bearing controls become LCL | **3 of 4** — call + exchange `TEdit` (`89b91cdd`), possible-call `TListBox` (2026-08-22, designed). The editable log is **deliberately not** converted — see below |
 | 3c | `Application.Run` replaces the loop | **blocked** — see below |
-| 4 | The ~25 modal forms | **19 designed** |
+| 4 | The ~25 modal forms | **21 designed** (About converted 2026-08-22). **Three Win32 dialogs left**, all entangled — see below |
 | 5 | The three real resource dialogs | not started |
 | 6 | The 21 child panels | not started |
 | 7 | Retire the scaffolding | not started |
@@ -179,6 +179,24 @@ Nothing recreates either handle today — after creation TR4W only sends message
 and uses the raw `tWM_SETFONT`, never the LCL `Font` property. **Worth a bench
 eye: if the possible-call list ever goes blank and comes back on the next
 keystroke, this is why.**
+
+
+### The three Win32 dialogs that remain, and why none is a quick win (2026-08-22)
+
+`tDialogBox` had five call sites. One (`SelectFileDlgProc`, 77) is inside a
+COMMENTED-OUT procedure and is not a dialog at all. Of the rest:
+
+| dialog | unit | why it is not an evening's work |
+|---|---|---|
+| **CAT / radio config** (66) | `uCAT.pas`, 2570 lines | The largest dialog in the program and, unlike the others, ACTIVELY MAINTAINED — port enumeration, the filtered COM drop-down, string-id factory radios, `RestartPollingThread`. Converting it is a project, and it wants doing when nobody is mid-change in it. |
+| **Missing mults report** (74) | `uMissingMults.pas`, 58 lines | The unit is tiny and misleading: it delegates to `EditableLog.ShowMissingMultiplierReport`, which BUILDS A GRID OF CHILD WINDOWS at run time — 25 rows of coloured cells created into the dialog. The conversion is that grid, not the 58 lines. |
+| **Get server log** (73) | `uGetServerLog.pas`, 309 lines | Embeds `CreateEditableLog` — **the very ListView that must not become a `TListView` yet**, for the item-cache reason above. Blocked on the same work. |
+
+**So the next Win32 UI work is not another dialog.** It is either the editable-log
+ListView conversion (which unblocks Get server log as well and is the fourth
+control of Phase 3b), or `uCAT` as a deliberate project. The band map and the
+function-keys window — Phases 6/7, and what actually gates `Application.Run` —
+are the other front.
 
 
 ### The numbers, and why they are quoted from the lints
