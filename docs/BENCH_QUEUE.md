@@ -319,6 +319,20 @@ all along.
     up was the request, and rewriting it in the same change would have meant a
     bench failure could not be attributed to either.
   - [ ] Confirm the menu item sits in **Help**, after "Download POTA Parks".
+
+  **DEFERRED, and the client side is only half the question (NY4I, 2026-08-22).**
+  This routine expects `GET /include_pages/version.txt` from `www.tr4w.net` to
+  return a version string it can compare against `TR4W_CURRENTVERSION`. Whether
+  that endpoint still exists, still contains a current number, and still matches
+  the format the compare expects is a question about the RELEASES SITE, not
+  about this code -- NY4I is checking that infrastructure separately and this
+  item stays UNTESTED until he has.
+
+  Worth asking at the same time whether this mechanism is still the right one:
+  releases now go out with `Invoke-Release.ps1` and a GitHub tag, so a hand-kept
+  `version.txt` is a second place the version has to be right. If the answer is
+  a GitHub releases API call, the socket code and the 2-second freeze both go
+  away with it rather than needing the threading rewrite.
 - [ ] **Preferences -> Logging -> the "Open log file" BUTTON** (bottom of the
   Logging page, below the trace check boxes) opens `tr4w.log` in whatever
   editor the operator has associated with `.txt`. It is a button, not a menu
