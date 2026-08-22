@@ -1037,6 +1037,12 @@ begin
             end;
          end;
       end;
+
+   // ON SCREEN NOW, not at the next start.  Assigning TWindows changes what the
+   // next paint WOULD use; a list view has already been handed its colours and
+   // never asks again.  RefreshMainWindowColors does both halves and is a no-op
+   // before the main window exists, which is the case at startup.
+   RefreshMainWindowColors;
 end;
 
 procedure ApplyBandPlan(const aStore: TRadioConfigStore);

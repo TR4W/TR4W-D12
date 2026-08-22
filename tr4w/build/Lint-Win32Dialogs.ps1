@@ -132,6 +132,18 @@ $platformPatterns = [ordered]@{
    'thread.Create'     = '\bCreateThread\s*\('
    'thread.Event'      = '\b(CreateEvent[AW]?|SetEvent|ResetEvent|WaitForSingleObject)\s*\('
 
+   # Asking Windows ABOUT a window: its class, its style bits, its text.  These
+   # are the ones that read as harmless because they only QUERY -- and they are
+   # how a Windows-only assumption gets written into code that has no other
+   # reason to be Windows-only.
+   #
+   # Added 2026-08-22 after RefreshMainWindowColors was written with
+   # GetClassNameA and a literal 'SysListView32' to work out which elements were
+   # list views.  It passed every lint, because none of them were looking.  The
+   # fix was for CreateListView to record what it creates; the fact belongs to
+   # the code that knows it, not to a question put to the window manager.
+   'window.Query'      = '\b(GetClassName[AW]?|\bGetWindowLong[AW]?|\bGetWindowText[AW]?|\bGetWindowTextLength[AW]?)\s*\('
+
    # --- ABSTRACT -----------------------------------------------------------
    # The serial API behind uSerialPort. CreateFile is deliberately NOT counted:
    # it opens ordinary files too, so it cannot be attributed without reading

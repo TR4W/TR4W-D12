@@ -6755,6 +6755,12 @@ begin
     );
 
   tWM_SETFONT(wh[Window], MainFixedFont);
+
+  // SAY SO.  RefreshMainWindowColors has to re-push the colours into a list
+  // view when they change -- a list view keeps its own copy and will not read
+  // TWindows again -- and this is the only place that knows which elements are
+  // list views.
+  Include(ListViewElements, Window);
   SetListViewColor(Window);
 
   ListView_SetExtendedListViewStyle(wh[Window], integer(Config.ShowGridlines) *

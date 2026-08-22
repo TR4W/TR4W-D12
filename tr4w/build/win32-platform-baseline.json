@@ -5,6 +5,7 @@
   "process.Launch": 2,
   "thread.Create": 6,
   "thread.Event": 29,
+  "window.Query": 13,
   "serial.CommAPI": 22,
   "registry": 13,
   "audio.MMSystem": 10,

@@ -990,6 +990,20 @@ procedure FlashQickDisplay;
 procedure ShowTourDuration;
 procedure DisplayAutoQSLInterval;
 procedure SetListViewColor(Window: TMainWindowElement);
+
+{ WHICH ELEMENTS ARE LIST VIEWS, recorded by the one routine that makes them.
+
+  CreateListView adds itself here.  Nothing else should: the point is that the
+  fact is stated by the code that knows it, so it cannot drift the way a list
+  written out somewhere else would.
+
+  RefreshMainWindowColors is the reader -- see there for why it has to know. }
+var
+   ListViewElements: set of TMainWindowElement = [];
+
+// Put a changed set of element colours on screen NOW.  See the implementation
+// for why an InvalidateRect alone is not enough.
+procedure RefreshMainWindowColors;
 procedure UpadateMainWindow;
 procedure UpadateAutoSend;
 //function GetInitialExchangeFromString(CMD: pShortString): InitialExchangeType;
@@ -3836,6 +3850,42 @@ end;
 
 procedure UpadateMainWindow;
 begin
+  Windows.InvalidateRect(tr4whandle, nil, True);
+end;
+
+procedure RefreshMainWindowColors;
+var
+  e: TMainWindowElement;
+begin
+  // TWO KINDS OF ELEMENT, and only one of them repaints from TWindows.
+  //
+  // An ordinary element reads tr4wColorsArray[TWindows[e].mweColor] while it is
+  // PAINTING (MainUnit ~8470), so invalidating is all it needs.  A LIST VIEW
+  // does not: CreateListView pushes the colours into the control with
+  // ListView_SetTextBkColor and friends, and the control keeps its own copy.
+  // Repainting one redraws it in the colours it was given at creation, which is
+  // why changing a colour appeared to do nothing until the next start
+  // (NY4I, 2026-08-22).
+  //
+  // RECORDED AT CREATION, not asked of Windows.  The first version of this
+  // called GetClassNameA and compared against 'SysListView32' -- a magic Win32
+  // class name and a new Win32 call, added on the day we agreed to stop adding
+  // Win32 surface (NY4I, 2026-08-22: "it looks windows-like").  CreateListView
+  // already knows which elements it made; having it say so costs nothing, works
+  // on any widgetset, and cannot drift.
+  if tr4whandle = 0 then
+     begin
+     Exit;      // startup, before the main window exists
+     end;
+
+  for e in ListViewElements do
+     begin
+     if wh[e] <> 0 then
+        begin
+        SetListViewColor(e);
+        end;
+     end;
+
   Windows.InvalidateRect(tr4whandle, nil, True);
 end;
 
