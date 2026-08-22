@@ -144,6 +144,43 @@ in the designer or in code depends on this answer. An attempt at the possible-ca
 list was made in code on 2026-08-22 and reverted unbuilt for exactly that reason.
 
 
+### Phase 3b's fourth control: the editable log should NOT be a `TListView` yet
+
+**Measured 2026-08-22, before attempting it.** Three of the four input-bearing
+controls are LCL: the callsign and exchange `TEdit`s, and now the possible-call
+`TListBox`. The fourth — the editable-log ListView — is different in kind, and
+converting it the same way would risk the operator's log.
+
+**The reason is the ITEM CACHE.** `TEdit` holds no copy of its text, so TR4W
+setting it with `WM_SETTEXT` is invisible and harmless. **`TListView` keeps its
+rows in a `TListItems` collection**, and TR4W does not use it — it inserts and
+updates rows with raw `LVM_INSERTITEM` / `LVM_SETITEM`. Measured: **~150
+`ListView_*` call sites in the tree, 19 of them directly on the editable log.**
+
+So the control would show hundreds of rows while the LCL believed it had none.
+That is survivable right up until **anything recreates the window handle** — a
+font change, a style change, a re-parent, an explicit `RecreateWnd` — because the
+LCL then rebuilds the control **from its cache**. An empty cache means a blank
+log, mid-contest, with no error.
+
+**Converting it properly means moving those call sites to the `Items` API**, which
+is a large job with a bad failure mode, not a widget swap. It should be its own
+piece of work with the log-dump harness (`tr4w/test/logdump/`) verifying rows
+survive, not an evening's change.
+
+**The same latent risk exists on the possible-call `TListBox` just converted, and
+is tolerable there for a specific reason:** TR4W fills it with `LB_ADDSTRING` and
+the LCL's `Items` are likewise empty — but `uCallsigns` and `LOGEDIT` **clear and
+refill that list on every keystroke** (`tLB_RESETCONTENT` then re-add). A blank
+after a handle recreation would be corrected by the next character typed. The log
+has no such refresh: it is the data.
+
+Nothing recreates either handle today — after creation TR4W only sends messages
+and uses the raw `tWM_SETFONT`, never the LCL `Font` property. **Worth a bench
+eye: if the possible-call list ever goes blank and comes back on the next
+keystroke, this is why.**
+
+
 ### The numbers, and why they are quoted from the lints
 
 Prose status decays; a ratchet does not. These come from `Run-Lints` on every build, so a
