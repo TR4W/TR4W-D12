@@ -556,6 +556,7 @@ Read the specific doc before acting in its area — these are current and this f
 | CW keyer factory | `docs/CW_Keyer_Factory_Plan.md` |
 | Adding a contest | `docs/ADDING_A_NEW_CONTEST.md` |
 | **Roadmap (what's next)** | **`docs/ROADMAP.md`** |
+| **Band map -> LCL (read before touching `uBandmap`/`uSpots`)** | **`docs/BANDMAP_LCL_DESIGN.md`** |
 | ~~D12 migration roadmap~~ | ~~`docs/D12_MIGRATION_ROADMAP.md`, `tr4w/docs/D12_RELEASE_READINESS.md`~~ — superseded, read for *why* not *status* |
 | String/ShortString work | `tr4w/docs/D12_STRING_MODERNIZATION_PLAN.md`, `docs/SHORTSTRING_BOUNDARY_AUDIT.md` |
 | VCL coexistence / FMX | `docs/VCL_WIN32_COEXISTENCE.md`, `docs/FMX Migration Discussion.md` |

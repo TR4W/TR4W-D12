@@ -317,47 +317,37 @@ show the right text, right-click opens the editor on the right row, and the
 window still docks where it was.
 
 
-### The band map: the LAST thing gating `Application.Run` (designed 2026-08-22)
+### The band map: the LAST thing gating `Application.Run`
 
 With the function-keys window converted, **one message-loop arm remains**: the
 `WM_KEYUP` on `BandMapListBox` in `tr4w.dpr` (~1285), which handles `VK_DELETE`.
 It cannot move until that list box is an LCL control, because a raw Win32 child
 raises no LCL key events. Nothing else blocks the loop.
 
-**Three controls, not one** -- this is bigger than the function-keys window:
+**The design lives in [`BANDMAP_LCL_DESIGN.md`](BANDMAP_LCL_DESIGN.md)** -- read
+it before touching `uBandmap.pas` or `uSpots.pas`.
 
-| today | becomes |
-|---|---|
-| `CreateOwnerDrawListBox(LB_STYLE_1, ...)` = `LBS_NOTIFY or LBS_OWNERDRAWFIXED or LBS_NOINTEGRALHEIGHT` | `TListBox`, `Style := lbOwnerDrawFixed` |
-| `WM_MEASUREITEM` | `ItemHeight` |
-| `WM_DRAWITEM` | `OnDrawItem` |
-| `WM_CONTEXTMENU` -> `ShowBandMapPopupMenu` | `PopupMenu` (a designed `TPopupMenu`) |
-| `WM_COMMAND` ids 66/68/69/77/202/203/204 | the menu items' `OnClick` |
-| `CreateWindowA(STATUSCLASSNAME, ...)` | `TStatusBar` |
-| `WM_CTLCOLORLISTBOX` -> `BandMapBckgrndBrush` | `Color` |
-| loop arm `WM_KEYUP` / `VK_DELETE` | `OnKeyUp` |
+**It is a redesign, not a port, and the first draft of this section was wrong.**
+That draft (2026-08-22, morning) said: keep the owner-draw list box, port
+`WM_DRAWITEM` to `OnDrawItem`, and keep `LB_ADDSTRING`/`LB_GETITEMDATA` on the
+`TListBox.Handle` because "the item data is real here". Reading the ingest path
+afterwards showed that carrying that shape across carries six defects with it --
+spots silently DISCARDED while the window has focus, a row payload that is an
+index into an array that shifts under it, a parsed QSX frequency that is never
+displayed, and a multiplier recomputation on the paint path. The rebuild-the-whole-list
+model is also the actual cause of the flashing that `WS_EX_COMPOSITED`,
+`WM_SETREDRAW` and an explicit `RDW_NOERASE` are all in there to paper over.
 
-**THE PAINTING IS REAL AND MOVES AS-IS.** Unlike the function keys -- whose
-owner-draw turned out to be a flat fill and a caption, so it became `Color` and
-`Caption` -- this one measures `'28888.8'` to compute `FreqRectWidth`, honours
-`BandMapDisplayGhz`, fills with a brush and colours each row by dupe / mult /
-CQ. Port the plumbing (`DRAWITEMSTRUCT` -> `Index`/`ARect`/`State`, HDC from the
-canvas) and change nothing inside. Converting the GDI to `Canvas` calls at the
-same time would make any visual difference impossible to attribute, and this
-window is watched constantly during a contest.
+The shape that replaces it, in one line each: a **`TDrawGrid`** whose `RowCount`
+is the model size, painting from a **value-copy snapshot** the form owns, driven
+by a **revision counter** on `TDXSpotsList` and one 250 ms `TTimer`, with focus
+freezing the *view* and never the *model*. `TDXSpotsList.Display` -- the model
+reaching into a list box -- goes away entirely.
 
-**The item data is REAL here, and that is the difference from the possible-call
-list.** `uSpots` fills it with `LB_ADDSTRING` whose lParam is `FiltSpotIndex[k]`,
-and `uBandmap` reads it back with `LB_GETITEMDATA` in two places (~710, ~802) to
-find which spot a row is. A `TListBox`'s `Handle` IS that HWND, so the `LB_*`
-messages keep working untouched -- take that path, exactly as the possible-call
-list did, rather than moving to `Items.Objects[]` in the same step.
-
-**The same cache caveat applies and is again tolerable:** the LCL's own `Items`
-stay empty while the control is full, so a handle recreation would blank it --
-but `DisplayBandMap` clears and refills on every spot change, so it would repair
-itself. That is NOT true of the editable log, which is why that one waits for
-SQLite.
+**Step 1 needs no form and is worth doing on its own:** the revision counter,
+moving `UpdateSpotsMultiplierStatus` off the paint path, and deleting the
+`BandMapPreventRefresh` gate in `AddSpot`. That fixes the dropped spots against
+the *existing* Win32 window, so it is benchable before any `.lfm` exists.
 
 **The seam is already built:** `OpenTR4WWindow` gained an `if ID = ...` branch
 for the function-keys window; the band map is the second user of it, which is
