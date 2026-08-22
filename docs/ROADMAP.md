@@ -66,6 +66,63 @@ destination editor. All four stream clean and are validated by `Lint-LFMProperti
 resource IDs. That is the last part of the program that cannot be edited in a designer, cannot be
 laid out by anyone but its author, and blocks any future platform move.
 
+### Phase status — THE tick list, and the only one (2026-08-22)
+
+**Status lives here, not in the plan document.** The plan
+(`~/.claude/plans/this-project-has-windows-binary-hammock.md`) is REASONING and is
+append-only: it records why the main window cannot be a designed `.lfm`, why 3c must follow
+3b, and — its most valuable content — the dated corrections where measurement beat
+assumption (*"it is EIGHT handles, not four, and the list was wrong"*, then *"six of those
+eight are DEAD CODE"*). Rewriting those to match today would destroy the point of keeping it.
+
+It also **is not in this repository**. It cannot be reviewed in a PR, does not exist on
+another machine, and disappears if that directory is cleared. So a tick mark there is not
+a record of anything.
+
+**What forced this split:** on 2026-08-22 the plan's Phase 3 body still read as future
+work and still carried a blocker marked *"needs NY4I's answer before 3a runs"* — when 3a
+was already done and half of 3b with it. Fifteen `STATUS` / `DONE` / `CORRECTED` markers
+had accreted through the file. The state was found by grepping the source, which is the
+only thing that was actually true.
+
+| Phase | What it is | State |
+|---|---|---|
+| 0 | Ground truth and guards | **done** |
+| 1 | One `ShowXxx` seam per form | **done** — `26f12d7e` |
+| 2 | Menus and shortcuts | **done** — menus built in code, shortcuts carried |
+| 3a | Main window is a `TForm`; `tr4whandle` = `TMainForm.Handle` | **done** — `uMainForm.pas` |
+| 3b | The four input-bearing controls become LCL | **2 of 4** — call + exchange are `TEdit` (`89b91cdd`); editable log and possible-call list still raw Win32 |
+| 3c | `Application.Run` replaces the loop | **blocked** — see below |
+| 4 | The ~25 modal forms | **19 designed** |
+| 5 | The three real resource dialogs | not started |
+| 6 | The 21 child panels | not started |
+| 7 | Retire the scaffolding | not started |
+| 8 | The rest of Win32 (non-UI) | not started |
+
+**3c is gated on Phases 6/7, not on the main form.** Measured 2026-08-18: what still forces
+the hand-rolled loop is the **band map list box** and the **function-keys window's
+owner-draw buttons**. They appear in the main loop's `case` only because the loop collects
+every message for the thread — they are not main-window work, and `WM_PARENTNOTIFY` is not
+an escape (it carries a cursor point, not the child handle, and is not sent for
+`WM_RBUTTONDBLCLK` at all).
+
+### The numbers, and why they are quoted from the lints
+
+Prose status decays; a ratchet does not. These come from `Run-Lints` on every build, so a
+stale figure here sits visibly beside a fresh one:
+
+```
+Lint-Win32Dialogs[ui]:       236 Win32 UI call site(s) across 435 file(s)
+Lint-Win32Dialogs[platform]: 120 non-UI Win32 platform call site(s)
+Lint-SettingsMigration:      227 stored, 3 still on the ini (ceiling 3), 252 seeded
+Lint-IniUsage:               11 known site(s), all one-time seeding
+```
+
+The UI mass is the main window, not the dialogs: `SetMainWindowText` 66,
+`tCreateStaticWindow` 27, `TF.CreateStatic` 24, `CreateWindowEx` 22, `TF.CreateButton` 22 —
+343 of the 356 total sites are those five kinds plus the platform top four.
+
+
 ### The end state, stated plainly (NY4I, 2026-08-20)
 
 > *"Given that we would never write a new Lazarus app this way, this is our goal. We want to get
