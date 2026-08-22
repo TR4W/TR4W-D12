@@ -838,6 +838,48 @@ committed but **not pushed**.
 * **`Application.Run` is still gated on the band map and the function-keys
   window**, not on the main form.
 
+### 26. The function-keys window is an LCL form -- TEST THIS ONE PROPERLY
+
+**This window sends CW.** It is the first `tw_` tool window converted, two of the
+three message-loop arms blocking `Application.Run` went with it, and none of it
+is provable by build. Please give it a real session.
+
+- [ ] **F1 through F12 send.** Click each button and confirm the right message
+  goes out -- this replaced `WM_COMMAND` / `BN_CLICKED` with `OnClick`, and the
+  key code now comes from the panel's `Tag` rather than the control id.
+- [ ] **The CQ and S&P banks both show the right text.** Toggle mode and watch
+  the captions change. `ShowFMessages` drives them now by setting `Caption`
+  instead of invalidating an owner-draw.
+- [ ] **Ctrl and Alt banks.** Hold Ctrl, then Alt, and confirm the captions
+  switch to those banks and back on release.
+- [ ] **AN AMPERSAND IN A CW MESSAGE.** Put `&` in an F-key message and check it
+  shows as one `&`, not none and not two. `ShowFMessages` deliberately doubles
+  it; a `TPanel` caption treats `&` the same way the owner-draw did, so the
+  doubling had to stay. This is the single most likely thing to be wrong.
+- [ ] **Right-click a key** -> the one-item context menu, opening the editor on
+  the RIGHT row. Do it while holding Ctrl and again holding Alt: the bank is read
+  before the menu pops, precisely so releasing the modifier to click the menu
+  does not change the answer (Issue #1001).
+- [ ] **Right-DOUBLE-click a key** -> the Alt-P editor straight to that row.
+- [ ] **The layout.** Twelve buttons across the width, with a wider gap after F4
+  and after F8, resizing with the window. That arithmetic was copied unchanged
+  from the Win32 `WM_SIZE` handler.
+- [ ] **Colours.** F1-F4 white, F5-F8 yellow, F9-F12 as before -- straight from
+  the same `ButtonsColor` table the owner-draw read.
+- [ ] **The window still docks and remembers its place**, and closing it from the
+  menu still works. It goes through the same `WndRect` / `WndVisible` /
+  `CloseTR4WWindow` path as before; only the creation changed.
+- [ ] **Escape still belongs to the callsign field** while this window is open --
+  it must NOT close the F-key row.
+
+**What is left before `Application.Run` can replace the message loop:** the band
+map's `WM_KEYUP` arm, and nothing else. That is the next piece of item 1.
+
+**Follow-up noted, not done:** `FunctionKeysWindowDlgProc` is no longer reached
+for this window, but it is still registered in `tr4w_WindowsArray[..].WndProcAdr`
+and this tree's rule is that unreachable-looking is not proof. Retiring it is a
+separate, deliberate step.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)
