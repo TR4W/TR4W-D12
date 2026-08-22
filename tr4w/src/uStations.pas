@@ -63,7 +63,12 @@ begin
     //    WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
     //    WM_EXITSIZEMOVE: FrmSetFocus;
     WM_SIZE, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
-    WM_NOTIFY: if PNMHdr(lParam)^.code = NM_RELEASEDCAPTURE then FrmSetFocus;
+      // Integer(): NMHDR.code is UNSIGNED as FPC's Windows unit declares it,
+      // and every NM_/CDN_ constant is NEGATIVE, so the bare comparison is
+      // ALWAYS FALSE and this never ran.  Delphi declares that field signed,
+      // which is why it worked before the FPC port.  The compiler warned --
+      // "Comparison might be always false" -- and the build did not fail.
+    WM_NOTIFY: if Integer(PNMHdr(lParam)^.code) = NM_RELEASEDCAPTURE then FrmSetFocus;
 
     {
         WM_NOTIFY:

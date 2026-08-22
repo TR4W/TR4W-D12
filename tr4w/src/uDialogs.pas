@@ -642,14 +642,14 @@ begin
 
     WM_NOTIFY:
       begin
-        if PNMHdr(lParam)^.code = CDN_HELP then
+        if Integer(PNMHdr(lParam)^.code) = CDN_HELP then
            begin
            TR4W_LOG_FILENAME[0] := '_';
  //          PostMessage(GetParent(wnd), WM_CLOSE, 0, 0);
            PostMessage(GetParent(wnd), WM_COMMAND, {Windows.MakeWParam(-IDABORT-IDCANCEL, BN_CLICKED)} 2, 0);
            end;
 
-        if PNMHdr(lParam)^.code = CDN_SELCHANGE then
+        if Integer(PNMHdr(lParam)^.code) = CDN_SELCHANGE then
           if FirstCDN_SELCHANGE then
              begin
              p := GetParent(wnd);

@@ -350,6 +350,10 @@ var
   HDNotifyPtr: PHDNotify;
   lplvcd: PNMLVCustomDraw;
   hdrColIdx: Integer;
+  { NMHDR.code SIGNED.  See the note at the assignment: the Windows unit
+    declares that field unsigned for FPC, and every notification constant
+    is negative. }
+  hdrCode: Integer;
   hdrNewWidth: Integer;
 begin
 
@@ -402,7 +406,6 @@ begin
     WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
     WM_NOTIFY:
       begin
-
         with PNMHdr(lParam)^ do
 
           if (hWndFrom = wh[mweEditableLog]) then
@@ -502,7 +505,23 @@ begin
             // Result suppresses the default header auto-fit; Exit
             // bypasses DefWindowProc which would otherwise overwrite
             // Result with its own return value.
-            if (code = HDN_DIVIDERDBLCLICKA) or (code = HDN_DIVIDERDBLCLICKW) then
+            // SIGNED, and this is the whole defect.
+            //
+            // NMHDR.code as the Windows unit declares it for FPC is UNSIGNED,
+            // while every HDN_/NM_/LVN_ notification constant is NEGATIVE
+            // (HDN_ENDTRACKW = HDN_FIRST - 27 = -327).  Comparing the two
+            // promotes both to a wider type, so the code arrives as 4294966969
+            // and never equals -327.  Delphi's Windows.pas declares that field
+            // as Integer, which is why this worked before the FPC port and
+            // fails silently after it: the operator drags a column, nothing is
+            // saved, and nothing is logged.
+            //
+            // Proved rather than assumed (2026-08-22): the log printed
+            // `code=-327` and `ENDTRACKW=-327` on one line -- %d reinterprets
+            // the bits -- and `eq(ENDTRACKW)=0` on the next.
+            hdrCode := Integer(code);
+
+            if (hdrCode = HDN_DIVIDERDBLCLICKA) or (hdrCode = HDN_DIVIDERDBLCLICKW) then
                begin
                HDNotifyPtr := PHDNotify(lParam);
                hdrColIdx := HDNotifyPtr^.Item;
@@ -517,7 +536,7 @@ begin
                Result := 1; // suppress default header auto-fit
                Exit;
                end
-            else if (code = HDN_ENDTRACK) or (code = HDN_ENDTRACKW) then
+            else if (hdrCode = HDN_ENDTRACK) or (hdrCode = HDN_ENDTRACKW) then
                begin
                // Normal end-of-drag: save the dragged width exactly
                // as the operator left it.  No padding here -- the

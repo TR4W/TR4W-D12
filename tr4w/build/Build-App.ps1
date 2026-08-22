@@ -111,6 +111,47 @@ if ($errLines.Count -gt 0)
    $errLines | Select-Object -First 20 | ForEach-Object { Write-Host "  $($_.Line.Trim())" }
    }
 
+# ---------------------------------------------------------------------------
+# THE ALWAYS-FALSE RATCHET.
+#
+# "Comparison might be always false due to range of constant and expression" is
+# the compiler telling us a branch is DEAD.  On 2026-08-22 it was saying so
+# eleven times and the build passed anyway; five of those were real, silently
+# broken features:
+#
+#   the log's column widths never saved   (HDN_ENDTRACKW)
+#   FrmSetFocus never ran, twice          (NM_RELEASEDCAPTURE)
+#   two file-dialog handlers never ran    (CDN_HELP, CDN_SELCHANGE)
+#
+# All five had the same cause: NMHDR.code is UNSIGNED as FPC's Windows unit
+# declares it, while every NM_/HDN_/CDN_ constant is NEGATIVE.  Delphi declares
+# that field signed, so this is a class of defect the FPC port INTRODUCED, and
+# it fails silently in every case -- the feature simply never happens.
+#
+# A count, not a list, so the ratchet is one number to argue about.  Lower it
+# whenever you fix one; raising it needs a reason in the commit message.
+$WARN_CEILING = 6
+
+$warnLines = $output | Select-String -Pattern 'Comparison might be always (false|true)'
+Write-Host "range warnings: $($warnLines.Count) (ceiling $WARN_CEILING)"
+
+if ($warnLines.Count -gt $WARN_CEILING)
+   {
+   Write-Host ''
+   $warnLines | ForEach-Object { Write-Host "  $($_.Line.Trim())" }
+   Write-Host ''
+   Write-Host "BUILD FAILED: $($warnLines.Count) always-false/true comparisons, ceiling is $WARN_CEILING."
+   Write-Host '  Each one is a branch the compiler can prove never runs, or always does.'
+   Write-Host '  The usual cause here is an UNSIGNED field compared against a NEGATIVE'
+   Write-Host '  constant -- NMHDR.code against NM_/HDN_/CDN_. Cast the field: Integer(x) = NM_FOO.'
+   exit 1
+   }
+
+if ($warnLines.Count -lt $WARN_CEILING)
+   {
+   Write-Host "  down from $WARN_CEILING -- lower `$WARN_CEILING in this script and commit it with the fix."
+   }
+
 # State the outcome explicitly -- a filtered pipeline that matches nothing prints
 # nothing, which reads as success.
 if ($rc -ne 0)

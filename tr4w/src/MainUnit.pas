@@ -8258,7 +8258,20 @@ var
    TempColumn: LogColumnsType;
    KeyName: ShortString;
    WidthStr: ShortString;
+   matched: boolean;
 begin
+   // ENTERED, and said so.  "The width did not stick" has THREE causes and the
+   // logging could only distinguish one of them:
+   //
+   //   1. the header notification never arrived  -> no line at all
+   //   2. it arrived but matched no column       -> the "no column at index" line
+   //   3. it matched and the write failed        -> the "could NOT be saved" line
+   //
+   // Without 1 and 2 spelled out, a silent log looked the same as a working one.
+   logger.Debug('[ColumnWidth] header reports column %d is now %d wide',
+                [ColIndex, NewWidth]);
+
+   matched := False;
    for TempColumn := Low(LogColumnsType) to High(LogColumnsType) do
       begin
       if ColumnsArray[TempColumn].Enable and (ColumnsArray[TempColumn].pos = ColIndex) then
@@ -8298,8 +8311,19 @@ begin
                             StrPas(@TR4W_CFG_FILENAME[0])]);
                end;
             end;
+         matched := True;
          Exit;
          end;
+      end;
+
+   if not matched then
+      begin
+      // The header gave an index that no ENABLED column claims.  ColumnsArray
+      // .pos is recomputed by SetColumnsWidth whenever the contest's exchange
+      // changes which columns exist, so an index can outlive the column it
+      // referred to.
+      logger.Warn('[ColumnWidth] no enabled column sits at index %d -- ' +
+                  'width %d was not saved', [ColIndex, NewWidth]);
       end;
 end;
 
