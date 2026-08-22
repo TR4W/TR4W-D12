@@ -31,6 +31,18 @@ uses
   uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
   uConfigValues,   // Config.CodeSpeedIncrement
   ShellAPI,
+  Types,               // TRect -- the OnDrawItem signature qualifies it as
+                       // Types.TRect because this unit also uses Windows,
+                       // whose TRect is a DIFFERENT declaration; a method
+                       // built on the wrong one will not match TDrawItemEvent
+                       // however identical the two records look.
+  Controls,            // TWinControl -- the OnDrawItem signature (Phase 3b).
+                       // TRect is QUALIFIED as Types.TRect where that signature is
+                       // declared: this unit also uses Windows, whose TRect is a
+                       // DIFFERENT declaration, and a method built on the wrong one
+                       // will not match TDrawItemEvent however identical the two
+                       // records look.  Types is already in the implementation uses.
+  StdCtrls,            // TListBox, TOwnerDrawState -- same
   LCLIntf,             // OpenURL / OpenDocument -- the cross-platform launchers
   uPlatformProcess,    // RunProgram / RunWindowsUtility -- the only launchers
   Logstuff,
@@ -207,6 +219,15 @@ function TelnetWantsClipboardKey(const aMsg: TMsg): boolean;   // Issue #23
 procedure InvertBooleanCommand(Command: PBoolean);
 procedure RunExplorer(Command: PAnsiChar);
 procedure OpenInDefaultTextEditor(FileName: PAnsiChar);   // Issue #986
+{ THE POSSIBLE-CALL LIST'S OWNER-DRAW, declared here because CreateMainWindow
+  assigns it long before the drawing code appears further down.
+
+  A CLASS because OnDrawItem is a METHOD pointer -- the same reason
+  TTR4WEntryEvents exists for the entry fields' key handlers.  One instance, no
+  state; it exists to give the handler an implicit Self. }
+procedure PossibleCallsDrawItem(Control: TWinControl; Index: integer;
+                                ARect: Types.TRect; State: TOwnerDrawState);
+
 procedure RunOptionsDialog(f: CFGFunc);
 // A STRING, NOT A PChar.  The declaration was PChar, which binds to PWideChar
 // in this unit, while every interesting caller holds an ANSI buffer -- so the
@@ -524,8 +545,9 @@ uses
   uTRMasterUpdate,  // Download TRMASTER.DTA (Super Check Partial)
   uWin32Compat,   // AnimateWindow -- see that unit for the whole FPC gap list
   uWindowLayoutStore, // the window layout, keyed by name
-  uTR4WConfigFile,    // TR4WConfigFileName / Save- LoadWindowLayout
-  Types;
+  uTR4WConfigFile;   // TR4WConfigFileName / Save- LoadWindowLayout
+
+
 
 
 // GetCPU -- a monotonic high-resolution counter for the debug timing readout.
@@ -3469,14 +3491,21 @@ begin
      ShowTourDuration;
      end;
 
-  wh[mwePossibleCall] := CreateWindowExW(0, LISTBOX, nil,
-    LBS_NOTIFY or LBS_OWNERDRAWFIXED or {LBS_HASSTRINGS or }LBS_NOINTEGRALHEIGHT
-    or LBS_MULTICOLUMN or WS_CHILD or WS_VISIBLE,
+  // PHASE 3b: DESIGNED in uMainForm.lfm, positioned here.  It is addressed by
+  // its Handle exactly as before, so the five LB_* messages uCallsigns and
+  // LOGEDIT send it still land -- a TListBox's Handle IS that HWND.
+  //
+  // What moved: WM_MEASUREITEM and WM_DRAWITEM were answered by the main window
+  // proc for this one control id, and are now ItemHeight and OnDrawItem.
+  wh[mwePossibleCall] := CreateTR4WPossibleCallList(
     0, EditableLogHeight + ws * 13 {line6}, MainWindowChildsWidth, ws,
-    tr4whandle, MainWindowPCLID, hInstance, nil);
-  // Issue #997: asm tWM_SETFONT (EAX = wh[mwePossibleCall] above).
+    MainWindowPCLID, ws, 5 * ws {the old LB_SETCOLUMNWIDTH});
   tWM_SETFONT(wh[mwePossibleCall], MainFont);
-  SendMessage(wh[mwePossibleCall], LB_SETCOLUMNWIDTH, 5 * ws {19 * ws2}, 0);
+
+  // The drawing is attached HERE, not in uMainForm: it reads PossibleCallList
+  // and the colour table, which that unit has no business knowing about.
+  // The form's OnDrawItem is wired in uMainForm.lfm and delegates to this.
+  PossibleCallDrawProc := @PossibleCallsDrawItem;
 
   CreateTotalWindow;
 
@@ -5885,6 +5914,79 @@ begin
 
   RData.ExchString := ExchangeString;
   CalculateQSOPoints(Rdata);
+end;
+
+{ THE OWNER-DRAW, as an LCL event.  Phase 3b.
+
+  PossibleCallsProc's body, reached through OnDrawItem instead of WM_DRAWITEM.
+  DRAWITEMSTRUCT's fields map exactly: ItemID is Index, rcItem is ARect, and the
+  ODS_SELECTED / ODA_FOCUS bits are the TOwnerDrawState set.  The HDC comes from
+  the control's Canvas.
+
+  A CLASS because OnDrawItem is a METHOD pointer -- the same reason
+  TTR4WEntryEvents exists for the entry fields' key handlers.  One instance, no
+  state; it exists to give the handler an implicit Self.
+
+  THE GDI INSIDE IS UNCHANGED ON PURPOSE.  Moving the plumbing and redrawing the
+  pixels in one step would make any visual difference impossible to attribute,
+  and this control repaints on every keystroke in the callsign field.  Converting
+  the body to Canvas calls is Phase 7 burn-down and is counted separately. }
+procedure PossibleCallsDrawItem(Control: TWinControl; Index: integer;
+                                ARect: Types.TRect; State: TOwnerDrawState);
+const
+  nWidth = 2;
+var
+  TempColor: tcolor;
+  Pen, PenOld: HPEN;
+  dc: HDC;
+  r: TRect;
+begin
+  if (Index < 0) or (Index > High(PossibleCallList.List)) then
+     begin
+     Exit;
+     end;
+
+  dc := TListBox(Control).Canvas.Handle;
+  r  := ARect;
+
+  if odFocused in State then
+     begin
+     DrawFocusRect(dc, r);
+     Exit;
+     end;
+
+  if odSelected in State then
+     begin
+     Pen := CreatePen(PS_SOLID, nWidth, $FF0000 {RGB(255, 0, 0)});
+     SetBkMode(dc, TRANSPARENT);
+     PenOld := SelectObject(dc, Pen);
+     Rectangle(dc, r.Left + 1, r.Top + 1, r.Right, r.Bottom);
+     SelectObject(dc, PenOld);
+     DeleteObject(Pen);
+     r.Top    := r.Top + nWidth;
+     r.Left   := r.Left + nWidth;
+     r.Right  := r.Right - nWidth;
+     r.Bottom := r.Bottom - nWidth;
+     end;
+
+  if PossibleCallList.List[Index].Dupe then
+     begin
+     TempColor := clred;
+     Windows.SetTextColor(dc, $00FFFFFF);
+     end
+  else
+     begin
+     TempColor := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
+     Windows.SetTextColor(dc, tr4wColorsArray[TWindows[mwePossibleCall].mweColor]);
+     end;
+
+  GradientRect(dc, r, TempColor, TempColor, gdHorizontal);
+
+  SetBkMode(dc, TRANSPARENT);
+  Windows.DrawTextA(dc,
+    @PossibleCallList.List[Index].Call[1],
+    length(PossibleCallList.List[Index].Call),
+    r, DT_END_ELLIPSIS + DT_SINGLELINE + DT_CENTER + DT_VCENTER);
 end;
 
 procedure PossibleCallsProc(PCDRAWITEMSTRUCT: PDrawItemStruct);

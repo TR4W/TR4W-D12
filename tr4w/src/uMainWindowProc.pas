@@ -535,14 +535,11 @@ begin
                end;
             end;
       end;
-    WM_MEASUREITEM: if wParam = MainWindowPCLID then
-        PMeasureItemStruct(lParam).itemHeight := ws;
-       
-    WM_DRAWITEM:
-      begin
-        if wParam = MainWindowPCLID then
-          PossibleCallsProc(PDrawItemStruct(lParam));
-      end;
+    // WM_MEASUREITEM and WM_DRAWITEM for the possible-call list are GONE.
+    // Phase 3b made it a designed LCL TListBox, so its item height is a property
+    // and its drawing is OnDrawItem on the control -- see uMainForm.lfm and
+    // CreateTR4WPossibleCallList.  Both arms only ever served this one control
+    // id, so there is nothing left for them to answer.
 
 
     WM_LBUTTONDOWN: DragWindow(TRHWND);

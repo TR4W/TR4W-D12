@@ -58,7 +58,33 @@ type
     A designed control is still REPOSITIONED by that loop; being in the .lfm
     gives it an editable identity, not a fixed geometry. }
   TTR4WMainForm = class(TForm)
+    { PUBLISHED so the streaming loader finds it in uMainForm.lfm, and so
+      Lint-FormFields can check the two agree.  Declared in the designer,
+      REPOSITIONED at run time -- see CreateTR4WPossibleCallList. }
+    lstPossibleCall: TListBox;
+
+    { THE EVENT IS THE FORM'S, and is wired in uMainForm.lfm so it is visible in
+      the designer.  It delegates to PossibleCallDrawProc, which MainUnit sets:
+      the drawing reads PossibleCallList and the colour table, and this unit has
+      no business knowing about either.
+
+      Declaring it here also keeps the LCL's own types in the one unit that
+      already speaks them.  MainUnit uses both Windows and the LCL, so a method
+      signature written there has to name which TRect and which TOwnerDrawState
+      it means -- and getting that wrong produces a type error that reads as if
+      the signatures were identical, because printed out they are. }
+    procedure lstPossibleCallDrawItem(Control: TWinControl; Index: integer;
+                                      ARect: TRect; State: TOwnerDrawState);
   end;
+
+type
+  { The drawing itself, as a PLAIN procedure so the unit that owns the knowledge
+    does not have to build a class to satisfy a method pointer. }
+  TPossibleCallDrawProc = procedure(Control: TWinControl; Index: integer;
+                                    ARect: TRect; State: TOwnerDrawState);
+
+var
+  PossibleCallDrawProc: TPossibleCallDrawProc = nil;
 
 { Creates the callsign or exchange entry field as an LCL TEdit and returns its
   HANDLE, which the caller stores in wh[mweCall] / wh[mweExchange] exactly as
@@ -99,6 +125,29 @@ function CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
   does the positioning and z-order the program wants, and this only reconciles
   the LCL's own state with what already happened. }
 procedure ShowTR4WMainForm;
+
+{ THE POSSIBLE-CALL LIST.  Phase 3b.
+
+  DESIGNED IN uMainForm.lfm and merely configured here.  It replaces a raw
+  CreateWindowExW(LISTBOX, LBS_OWNERDRAWFIXED or LBS_MULTICOLUMN or ...), and the
+  two Win32 messages that made that work become properties: WM_MEASUREITEM is
+  ItemHeight, WM_DRAWITEM is OnDrawItem -- the mapping docs/ROADMAP.md section 2
+  states for exactly this case.
+
+  THE GEOMETRY IS APPLIED HERE, not in the designer, because this control is one
+  of the fifty in the TWindows table: its position is a runtime scale factor
+  times a table entry, and freezing it would break the operator's font-size
+  setting.  Designed identity, runtime placement -- the two are not in conflict
+  (NY4I, 2026-08-22).
+
+  RETURNS THE HANDLE, like CreateTR4WEntryField, so wh[mwePossibleCall] keeps
+  working and the five LB_* messages the rest of the program sends still land.
+
+  The DRAWING is attached by the caller through TR4WMainForm.lstPossibleCall: it
+  reads PossibleCallList and the colour table, which this unit has no business
+  knowing about. }
+function CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
+                                    aId, aItemHeight, aColumnWidth: integer): HWND;
 
 
 function CreateTR4WMainForm(const aMenu: HMENU): HWND;
@@ -259,6 +308,53 @@ begin
       end;
 
    Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
+end;
+
+
+procedure TTR4WMainForm.lstPossibleCallDrawItem(Control: TWinControl;
+                                                Index: integer; ARect: TRect;
+                                                State: TOwnerDrawState);
+begin
+   if Assigned(PossibleCallDrawProc) then
+      begin
+      PossibleCallDrawProc(Control, Index, ARect, State);
+      end;
+end;
+
+function CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
+                                    aId, aItemHeight, aColumnWidth: integer): HWND;
+begin
+   Result := 0;
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   with TR4WMainForm.lstPossibleCall do
+      begin
+      // WM_MEASUREITEM, which the main window proc used to answer with
+      // `itemHeight := ws` for this one control id.  A property, and that arm is
+      // deleted.
+      ItemHeight := aItemHeight;
+
+      // LB_SETCOLUMNWIDTH set the column width directly; the LCL says how MANY
+      // columns and divides the client width.  Derived from the same two
+      // numbers, so the operator sees the width they always have.
+      if (aColumnWidth > 0) and (aWidth > aColumnWidth) then
+         begin
+         Columns := aWidth div aColumnWidth;
+         end;
+
+      SetBounds(aLeft, aTop, aWidth, aHeight);
+
+      // NO ITEM TEXT is set anywhere, and that is faithful rather than lazy.
+      // The Win32 control was created WITHOUT LBS_HASSTRINGS: LB_ADDSTRING's
+      // lParam was item DATA, not a string, and the owner-draw never read it
+      // either -- it indexes PossibleCallList by the item's ORDINAL.  This
+      // list's whole job is to have the right NUMBER of items.  Giving them
+      // captions would invent a second source of truth for what each row says.
+      Result := Handle;
+      end;
 end;
 
 

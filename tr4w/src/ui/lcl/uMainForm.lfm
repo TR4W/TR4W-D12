@@ -1,4 +1,4 @@
-﻿object TR4WMainForm: TTR4WMainForm
+object TR4WMainForm: TTR4WMainForm
   Left = 0
   Top = 30
   BorderIcons = [biSystemMenu, biMinimize]
@@ -9,4 +9,15 @@
   Color = clBtnFace
   Position = poDesigned
   ShowInTaskBar = stAlways
+  object lstPossibleCall: TListBox
+    Left = 0
+    Top = 160
+    Width = 400
+    Height = 18
+    Columns = 4
+    ItemHeight = 18
+    Style = lbOwnerDrawFixed
+    TabOrder = 0
+    OnDrawItem = lstPossibleCallDrawItem
+  end
 end
