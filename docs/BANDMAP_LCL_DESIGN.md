@@ -88,7 +88,7 @@ Volume, honestly: a busy cluster is a handful of spots a second before filtering
 and the display is capped at 164 rows. The flashing is not caused by the rate. It
 is caused by destroying and recreating 164 items to show that one changed.
 
-## 3. Six defects the current shape produces
+## 3. Seven defects the current shape produces
 
 These are the reasons this is a redesign and not a port. Each was read out of the
 code, and each survives a mechanical port.
@@ -133,6 +133,19 @@ changed at most once since the last QSO.
 message handler, once per accepted spot. `BMDelay` is `= 0` (LOGWIND.PAS:629) and
 has no CFG row, so it is inert today -- but it is a message-pump sleep sitting in
 the ingest path waiting for someone to give it a value.
+
+
+**3.7 -- the cursor row is off by the scroll offset once the list is long.**
+Surfaced by splitting `Display`, and preserved verbatim by that split rather
+than fixed. `CurrentCursorPos` is set to `NumberEntriesDisplayed` -- an index
+into the FILTERED list -- but it is then handed to `LB_SETCURSEL` on a list box
+holding only rows `bottom..top`, whose item 0 is `FiltSpotIndex[bottom]`. The
+correct index is `CurrentCursorPos - bottom`. Invisible while everything fits,
+because `bottom` is 0; wrong by exactly the scroll offset the moment more than
+`BAND MAP DISPLAY LIMIT` (default 164) spots pass the filter and the window
+scrolls. Section 4.4 removes the class of bug rather than patching the
+arithmetic: the form holds the selection by frequency and callsign and re-finds
+it after each snapshot, so no index is carried across a rebuild at all.
 
 Dead weight to remove while here: `NEWBMLBPROC` / `OLDBMLBPROC` -- a list box
 subclass that is declared and defined and never installed.

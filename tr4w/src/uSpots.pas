@@ -81,6 +81,17 @@ type
     procedure UpdateSpotsMultiplierStatus;
     procedure UpdateSpotsDupeStatus(const RXCall: string; RXBand: BandType;
       RXMode: ModeType);
+    // WHICH spots to show, in display order -- the filter pass and the centring
+    // window, with no control anywhere in it.  Returns the count; aIndex[0..n-1]
+    // are indexes into FList and aCursorRow is the row carrying the cursor
+    // frequency, or whatever the caller passed in when no row does.
+    //
+    // FList INDEXES, NOT COPIES, because the Win32 list box stores them as item
+    // data and reads them back through Get().  A caller that keeps them past
+    // the call must copy: InsertSpot Moves the array, so an insert renumbers
+    // every index above it.  The LCL form takes copies immediately.
+    function BuildVisibleSpots(var aIndex: array of integer;
+                               var aCursorRow: integer): integer;
     procedure Display;
     procedure Delete(Index: integer);
     //    procedure ClearDupes;
@@ -249,9 +260,9 @@ begin
 
 end;
 
-procedure TDXSpotsList.Display;
+function TDXSpotsList.BuildVisibleSpots(var aIndex: array of integer;
+                                        var aCursorRow: integer): integer;
 var
-  FiltSpotIndex: array of Integer;
   FilteredSpotCount: integer;
   k: integer;
   i: integer;
@@ -259,8 +270,6 @@ var
   top: integer;
   centre: integer;
   centrefound: boolean;
-  CurrentCursorPos: integer;
-  //    CurCursorPosData                     : integer;
   NumberEntriesDisplayed: integer;
   // Diagnostic counters -- per-filter rejection tallies (issue: bandmap-startup-clear).
   // Total of all reject* + rejNoNext + NumberEntriesDisplayed should equal FCount.
@@ -273,24 +282,7 @@ begin
   rejCQ := 0; rejWARC := 0; rejMultsOnly := 0; rejVHF := 0;
   //  inc(SpotsDisplayed);
   //  setwindowtext(OpModeWindowHandle,inttopchar(SpotsDisplayed));
-  if BandMapListBox = 0 then
-     begin
-     logger.Trace('[SpotsList.Display] exit: BandMapListBox=0');
-     Exit;
-     end;
-  // The focus freeze STAYS here, and only here.  Holding the rows still under
-  // the operator's mouse is the behaviour that was wanted; discarding the spots
-  // (the copy of this gate that used to sit at the top of AddSpot) never was.
-  // Leaving without recording FPaintedToken means NeedsRepaint stays true and
-  // the next tick after focus leaves paints everything that arrived meanwhile.
-  if BandMapPreventRefresh then
-     begin
-     logger.Trace('[SpotsList.Display] exit: BandMapPreventRefresh=True');
-     Exit; // Gav 4.45.6
-     end;
-  TDXSpotsList.UpdateSpotsMultiplierStatus;
-  CurrentCursorPos := tLB_GETCURSEL(BandMapListBox); //0;
-  setlength(FiltSpotIndex, FCount);
+  UpdateSpotsMultiplierStatus;
   NumberEntriesDisplayed := 0;
   k := 0;
   for i := 0 to FCount - 1 do
@@ -353,30 +345,30 @@ begin
 
      if FList^[i].FFrequency = FCurrentCursorFreq then
         begin
-        CurrentCursorPos := NumberEntriesDisplayed;
+        aCursorRow := NumberEntriesDisplayed;
         end;
-     FiltSpotIndex[k] := i;
+     aIndex[k] := i;
      inc(NumberEntriesDisplayed);
      inc(k);
 
      end;
-  logger.Trace('[SpotsList.Display] filter pass: FCount=%d, passed=%d, rejected by: NextDup=%d Band=%d Mode=%d DupeFlag=%d CQ=%d WARC=%d MultsOnly=%d VHF=%d',
+  logger.Trace('[BuildVisibleSpots] filter pass: FCount=%d, passed=%d, rejected by: NextDup=%d Band=%d Mode=%d DupeFlag=%d CQ=%d WARC=%d MultsOnly=%d VHF=%d',
     [FCount, NumberEntriesDisplayed, rejDupeNext, rejBand, rejMode, rejDupeFlag,
      rejCQ, rejWARC, rejMultsOnly, rejVHF]);
 
-  //Gav   Start of added section to limit and centre bandmap on vfo, using pointers to Flist stored in FiltSpotIndex arrray
+  //Gav   Start of added section to limit and centre bandmap on vfo, using pointers to Flist stored in aIndex arrray
 
   FilteredSpotCount := k;
 
   if FilteredSpotCount > BandMapDisplayLimit then
      begin
-     // Every endpoint test below must go through FiltSpotIndex.  The window
+     // Every endpoint test below must go through aIndex.  The window
      // (bottom..top) indexes the FILTERED list, so asking the UNFILTERED FList
      // about it is asking a different list: with any filter active FList^[0] is
      // not the first spot on display, and FList^[FilteredSpotCount] is not the
      // last -- it is an unrelated spot, and off the end of the array[0..1000]
      // once the list fills up.
-     if FList^[FiltSpotIndex[0]].FFrequency >= BandMapCursorFrequency then
+     if FList^[aIndex[0]].FFrequency >= BandMapCursorFrequency then
         begin
         // Everything on display is at or above the cursor -- show the low end.
         top := BandMapDisplayLimit - 1;
@@ -384,7 +376,7 @@ begin
         centrefound := true;
         end;
 
-     if FList^[FiltSpotIndex[FilteredSpotCount - 1]].FFrequency <= BandMapCursorFrequency then
+     if FList^[aIndex[FilteredSpotCount - 1]].FFrequency <= BandMapCursorFrequency then
         begin
         // Everything on display is at or below the cursor -- show the high end.
         top := FilteredSpotCount - 1;
@@ -396,7 +388,7 @@ begin
      // what produced the out-of-range window this routine used to clamp.
      for k := 0 to FilteredSpotCount - 1 do
         begin
-        if FList^[FiltSpotIndex[k]].FFrequency > BandMapCursorFrequency then
+        if FList^[aIndex[k]].FFrequency > BandMapCursorFrequency then
            begin
            centre := k;
            if (centre >= (BandMapDisplayLimit div 2)) and (centre <=
@@ -458,43 +450,81 @@ begin
   // and no unit here turns it on, so a negative index is a SILENT bad read, not
   // a raised exception.  With $R-, an ERangeError comes from the RTL itself --
   // chiefly SetLength with a NEGATIVE length, which in this routine means
-  // `setlength(FiltSpotIndex, FCount)` above with FCount < 0.  That crash is
+  // `setlength(aIndex, FCount)` above with FCount < 0.  That crash is
   // still unexplained; do not treat it as fixed by this clamp.
   if bottom < 0 then
      begin
-     logger.Warn('[SpotsList.Display] bottom=%d clamped to 0 (top=%d, filtered=%d, limit=%d)',
+     logger.Warn('[BuildVisibleSpots] bottom=%d clamped to 0 (top=%d, filtered=%d, limit=%d)',
                  [bottom, top, FilteredSpotCount, BandMapDisplayLimit]);
      bottom := 0;
      end;
   if top > FilteredSpotCount - 1 then
      begin
-     logger.Warn('[SpotsList.Display] top=%d clamped to %d (bottom=%d, limit=%d)',
+     logger.Warn('[BuildVisibleSpots] top=%d clamped to %d (bottom=%d, limit=%d)',
                  [top, FilteredSpotCount - 1, bottom, BandMapDisplayLimit]);
      top := FilteredSpotCount - 1;
      end;
+  // The caller renders aIndex[bottom..top].  Returning the COUNT and the
+  // bottom row rather than a pair of endpoints would be a second convention to
+  // get wrong; these are the same two numbers the list box loop already used.
+  Result := 0;
+  if FilteredSpotCount > 0 then
+     begin
+     for k := bottom to top do
+        begin
+        aIndex[Result] := aIndex[k];
+        Inc(Result);
+        end;
+     end;
+  logger.Trace('[BuildVisibleSpots] window: bottom=%d, top=%d, rows=%d, cursorRow=%d, limit=%d',
+    [bottom, top, Result, aCursorRow, BandMapDisplayLimit]);
+end;
+
+procedure TDXSpotsList.Display;
+var
+  rows: integer;
+  k: integer;
+  idx: array of integer;
+  aCursorRow: integer;
+begin
+  if BandMapListBox = 0 then
+     begin
+     logger.Trace('[SpotsList.Display] exit: BandMapListBox=0');
+     Exit;
+     end;
+  // The focus freeze STAYS here, and only here.  Holding the rows still under
+  // the operator's mouse is the behaviour that was wanted; discarding the spots
+  // (the copy of this gate that used to sit at the top of AddSpot) never was.
+  // Leaving without recording FPaintedToken means NeedsRepaint stays true and
+  // the next tick after focus leaves paints everything that arrived meanwhile.
+  if BandMapPreventRefresh then
+     begin
+     logger.Trace('[SpotsList.Display] exit: BandMapPreventRefresh=True');
+     Exit; // Gav 4.45.6
+     end;
+
+  aCursorRow := tLB_GETCURSEL(BandMapListBox);
+  SetLength(idx, FCount + 1);
+  rows := BuildVisibleSpots(idx, aCursorRow);
 
   tSetWindowRedraw(BandMapListBox, False);
   tLB_RESETCONTENT(BandMapListBox);
-  // The item count, not `k` -- k is a loop variable and is undefined here on
-  // the path where the centring loop above ran to completion.
-  SendMessage(BandMapListBox, LB_INITSTORAGE, top - bottom + 1, 10000);
-  for k := bottom to top do
+  SendMessage(BandMapListBox, LB_INITSTORAGE, rows, 10000);
+  for k := 0 to rows - 1 do
      begin
-     SendMessage(BandMapListBox, LB_ADDSTRING, 0, FiltSpotIndex[k]);
+     SendMessage(BandMapListBox, LB_ADDSTRING, 0, idx[k]);
      end;
-  tLB_SETCURSEL(BandMapListBox, CurrentCursorPos);
+  tLB_SETCURSEL(BandMapListBox, aCursorRow);
   tSetWindowRedraw(BandMapListBox, True);
-  logger.Trace('[SpotsList.Display] listbox populated: bottom=%d, top=%d, items_added=%d, CurrentCursorPos=%d, BandMapDisplayLimit=%d',
-    [bottom, top, top - bottom + 1, CurrentCursorPos, BandMapDisplayLimit]);
   // WM_SETREDRAW(True) causes the list box to queue an erase+paint, which
   // produces a visible flash. Cancel the pending erase, then repaint
-  // immediately without erasing — owner-draw items fill their own background.
+  // immediately without erasing -- owner-draw items fill their own background.
   ValidateRect(BandMapListBox, nil);
   RedrawWindow(BandMapListBox, nil, 0, RDW_INVALIDATE or RDW_NOERASE or RDW_UPDATENOW);
   // Issue #997: asm-push wsprintf -> SysUtils.Format (TC_SPOTS = '%d spots').
-  uAnsiStr.StrPCopy(wsprintfBuffer, SysUtils.Format(TC_SPOTS, [NumberEntriesDisplayed]));
+  uAnsiStr.StrPCopy(wsprintfBuffer, SysUtils.Format(TC_SPOTS, [rows]));
   SetTextInBMSB(5, wsprintfBuffer);
-  if NumberEntriesDisplayed = 0 then
+  if rows = 0 then
      begin
      ClearSpotInfo;
      end;
@@ -504,6 +534,7 @@ begin
   // rather than being silently marked done.
   FPaintedToken := FRepaintToken;
 end;
+
 
 // Gav end of section added
 
