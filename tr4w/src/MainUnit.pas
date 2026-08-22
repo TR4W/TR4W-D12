@@ -6785,10 +6785,15 @@ begin
   UpdateWindows;
   Sheet.SaveRestartFile;
 
-  if tRestartInfo.riTotalRecordsInLog > 0 then
-     begin
-     EnsureListViewColumnVisible(wh[mweEditableLog]);
-     end;
+  // UNCONDITIONAL.  This used to run only when the log already had QSOs
+  // (`riTotalRecordsInLog > 0`), so starting a NEW contest -- or opening one
+  // whose log is still empty -- restored none of the operator's column widths.
+  // The widths are a property of how they like to read the screen, not of
+  // whether anyone has been worked yet.
+  //
+  // EnsureListViewColumnVisible is a no-op for any column with no override, so
+  // running it on an empty log costs nothing and changes nothing else.
+  EnsureListViewColumnVisible(wh[mweEditableLog]);
   ReCalculateHourDisplay;
 {$IF tDebugMode}
   QuickDisplay(inttopchar(Windows.GetTickCount - T1));
@@ -8269,7 +8274,29 @@ begin
             KeyName[Ord(KeyName[0]) + 1] := #0;
             Str(NewWidth, WidthStr);
             WidthStr[Ord(WidthStr[0]) + 1] := #0;
-            Windows.WritePrivateProfileStringA('COMMANDS', @KeyName[1], @WidthStr[1], @TR4W_CFG_FILENAME);
+
+            // CHECKED, and it never was.  WritePrivateProfileStringA returns a
+            // BOOL and this discarded it, so a width the operator dragged went
+            // nowhere without a word -- exactly the failure NY4I found on
+            // tr4w.ini (2026-08-21), in a second place.
+            //
+            // The likely causes are worth naming because the operator cannot
+            // guess them: no contest is loaded, so TR4W_CFG_FILENAME is not a
+            // real path; or the .cfg is read-only.
+            if Windows.WritePrivateProfileStringA('COMMANDS', @KeyName[1],
+                                                  @WidthStr[1], @TR4W_CFG_FILENAME) then
+               begin
+               logger.Debug('[ColumnWidth] %s = %d saved to %s',
+                            [StrPas(ColumnCanonicalName[TempColumn]), NewWidth,
+                             StrPas(@TR4W_CFG_FILENAME[0])]);
+               end
+            else
+               begin
+               logger.Warn('[ColumnWidth] %s = %d could NOT be saved to "%s" -- ' +
+                           'it will not survive a restart',
+                           [StrPas(ColumnCanonicalName[TempColumn]), NewWidth,
+                            StrPas(@TR4W_CFG_FILENAME[0])]);
+               end;
             end;
          Exit;
          end;
