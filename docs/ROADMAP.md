@@ -23,6 +23,7 @@ Measured 2026-08-23, not recalled -- rerun before trusting any of it.
 | Golden corpus | **22 passed, 0 failed, 4 known-divergence** |
 | Lints | **21**, gating every build |
 | `tw_` tool windows converted | **2 of 17** -- function keys, band map |
+| **`HWND` in TR4W's own code** | **644** -- the number that has to reach zero, and the honest measure of this phase |
 | Win32 UI call sites (lint baseline) | **234** |
 | Win32 non-UI platform call sites | **119** |
 | **TR4W's own message loop** | **GONE** -- `Application.Run` since 2026-08-23 |
@@ -106,6 +107,13 @@ only thing that was actually true.
 | 6 | The 21 child panels | not started |
 | 7 | Retire the scaffolding | not started |
 | 8 | The rest of Win32 (non-UI) | not started |
+
+**WHERE THE 644 HWNDs ARE**, because the call counts do not say it and this is
+what the next batch should be chosen against: `MainUnit` 96, `TF` 91, `uCAT` 36,
+`VC` 33, `uDialogs` 29, `uTelnet` 17, then a long tail over 94 files.
+`uCommctrl.pas` and `MMSystem.pas` are excluded from the count and always will
+be -- they are translations of commctrl.h and mmsystem.h, where an HWND appears
+because Windows says so, and they disappear whole when their last consumer does.
 
 **`tw_` tool windows: 2 of 17 converted** — function keys (2026-08-22) and the
 band map (2026-08-23). Measured by counting `WndProcAdr := @` in `MainUnit.pas`:
