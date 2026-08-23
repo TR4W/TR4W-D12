@@ -39,6 +39,11 @@ resourcestring
    // no, and an operator who is told "your settings have already been copied,
    // this file is no longer read" can answer the question that is actually
    // being asked.
+   { The single-instance warning's title.  It used to be tr4w_ClassName -- the
+     WINDOW CLASS NAME -- which happens to read as 'TR4W' and so looked
+     deliberate.  A caption is user-facing text and belongs here. }
+   SAlreadyRunningTitle = 'TR4W';
+
    SIniRetireTitle = 'Old settings file';
 
    SIniRetirePrompt =

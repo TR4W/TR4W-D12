@@ -598,16 +598,30 @@ begin
 
    // Check for another running instance BEFORE opening any shared files
    // (log file, etc.) to avoid an EFOpenError crash on the second instance.
+   // BREADCRUMBS, because nothing here can use the logger -- it does not
+   // exist yet, and that is the whole point of doing this first.  A TR4W
+   // process with no window and no log lines was found running on 2026-08-23
+   // and there was no way to tell where it had stopped.
+   EarlyTrace('startup: checking the single-instance mutex');
    tMutex := CreateMutex(nil, False, tr4w_ClassName);
    if tMutex = 0 then
       begin
+      EarlyTrace('startup: CreateMutex FAILED -- exiting');
       Exit;
       end;
    if GetLastError = ERROR_ALREADY_EXISTS then
       begin
-      MessageBoxW(0, Pchar(TC_RUNWARN), tr4w_ClassName, MB_OK or MB_ICONWARNING or MB_SYSTEMMODAL or MB_TOPMOST);
+      EarlyTrace('startup: another instance holds the mutex -- warning the operator');
+      // THE LCL'S MESSAGE BOX, NOT MessageBoxW.  The raw call blocked forever
+      // and created NO WINDOW -- proved with tr4w-early.log rather than
+      // reasoned about: the breadcrumb before it is written and the one after
+      // it never is, and the process owns no top-level window.  That is the
+      // invisible TR4W that had to be found with pslist and killed.
+      ReportAlreadyRunning(TC_RUNWARN);
+      EarlyTrace('startup: warning dismissed -- exiting as a duplicate');
       Exit;
       end;
+   EarlyTrace('startup: mutex acquired -- this is the only instance');
 
    TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
    Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);

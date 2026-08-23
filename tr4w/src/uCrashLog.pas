@@ -72,6 +72,20 @@ procedure ReportSymbolState;
   exception being handled and are only valid there. }
 procedure LogCaughtException(const aSource: string; aObj: TObject);
 
+{ A LINE FOR THE PATHS THAT RUN BEFORE THE LOGGER EXISTS.
+
+  Three things happen before TLogRollingFileAppender is created -- /FIELDCHECK,
+  the single-instance mutex, and the "already running" warning -- and until now
+  none of them could say anything at all.  So when NY4I found a TR4W process
+  with pslist that had no window, no taskbar button and NO LOG LINES
+  (2026-08-23), the absence of evidence was the only evidence: it had to have
+  stopped somewhere in those three, and nothing could narrow it further.
+
+  Appends to tr4w-early.log beside the program.  Deliberately NOT the main log:
+  the mutex check exists precisely because a second instance must not open the
+  shared log file. }
+procedure EarlyTrace(const aMessage: string);
+
 implementation
 
 uses
@@ -187,6 +201,37 @@ begin
    // to look at.
    Application.ShowException(E);
 {$ENDIF}
+end;
+
+procedure EarlyTrace(const aMessage: string);
+var
+   f: TextFile;
+   fn: string;
+begin
+   // EVERYTHING SWALLOWED.  This is diagnostic scaffolding on a path that has no
+   // error reporting of its own; a breadcrumb that can itself fail the startup
+   // would be worse than no breadcrumb.
+   try
+      fn := ExtractFilePath(ParamStr(0)) + 'tr4w-early.log';
+      AssignFile(f, fn);
+      if FileExists(fn) then
+         begin
+         Append(f);
+         end
+      else
+         begin
+         Rewrite(f);
+         end;
+      try
+         WriteLn(f, Format('%s  pid %d  %s',
+                           [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now),
+                            GetCurrentProcessId, aMessage]));
+      finally
+         CloseFile(f);
+      end;
+   except
+      // nothing -- see above
+   end;
 end;
 
 procedure LogCaughtException(const aSource: string; aObj: TObject);

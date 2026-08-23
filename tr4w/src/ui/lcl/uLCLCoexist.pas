@@ -66,6 +66,21 @@ interface
 // It does NOT call Application.Run and never will -- see the unit header.
 procedure InitLCLForHostedLoop;
 
+{ Tell the operator that TR4W is already running, and say it VISIBLY.
+
+  This was a raw MessageBoxW(0, ...) in tr4w.dpr, and on 2026-08-23 it was
+  PROVED -- not guessed -- to block forever while creating NO WINDOW: the
+  breadcrumb written immediately before the call reaches tr4w-early.log and the
+  one immediately after it never does, while EnumWindows finds no top-level
+  window belonging to the process at all.  That is the invisible TR4W that had
+  to be found with pslist and killed, twice, and which also holds the executable
+  locked against a rebuild.
+
+  Application.Initialize has already run by this point, so the LCL owns the
+  message pump such a dialog needs.  Going around it with a raw Win32 call was
+  the mistake. }
+procedure ReportAlreadyRunning(const aMessage: string);
+
 // True once InitLCLForHostedLoop has run.  A form that creates itself before
 // the widgetset is initialised fails in ways that do not name the cause, so
 // the form units assert on this rather than discovering it at random.
@@ -86,10 +101,23 @@ uses
    // rather than in tr4w.dpr keeps the whole LCL dependency in one place, and
    // the uses order guarantees it initialises before Forms.
    Interfaces,
-   Forms;
+   Forms,
+   LCLType,      { MB_OK, MB_ICONWARNING }
+   uAppStrings;  { SAlreadyRunningTitle }
 
 var
    gInitialised: boolean = False;
+
+procedure ReportAlreadyRunning(const aMessage: string);
+begin
+   // PAnsiChar, and this one IS a real byte boundary: TApplication.MessageBox
+   // takes PChar meaning PAnsiChar, while this unit compiles with
+   // {$MODESWITCH UnicodeStrings} so a bare PChar cast would hand it UTF-16 and
+   // it would render the first letter and stop.
+   Application.MessageBox(PAnsiChar(AnsiString(aMessage)),
+                          PAnsiChar(AnsiString(SAlreadyRunningTitle)),
+                          MB_OK or MB_ICONWARNING);
+end;
 
 procedure InitLCLForHostedLoop;
 begin
