@@ -602,6 +602,25 @@ begin
    // exist yet, and that is the whole point of doing this first.  A TR4W
    // process with no window and no log lines was found running on 2026-08-23
    // and there was no way to tell where it had stopped.
+   // BATCH MODE IS DECIDED HERE, BEFORE THE SINGLE-INSTANCE CHECK, and that
+   // ordering is the whole point.  It used to be decided fifty lines below,
+   // after the mutex -- so a headless export launched while TR4W was open took
+   // the duplicate-instance path and opened a MODAL WARNING with nobody there
+   // to dismiss it.  The process then blocked forever: no window the operator
+   // would look for, nothing in tr4w.log because the appender is not attached
+   // yet, and the executable held locked against a rebuild.
+   //
+   // That is exactly the invisible TR4W found with pslist on 2026-08-23, and
+   // the corpus is what produces it: export-d12-corpus.sh runs
+   // `tr4w.exe "<contest>.CFG" /EXPORT` over THIRTEEN logs, so a corpus run
+   // started while TR4W is open leaves thirteen of them.
+   //
+   // The reasoning was already written down one step below -- "a warning raised
+   // while READING THE CONFIG could still open a modal and block a headless run
+   // with no one there to dismiss it".  Same argument; it just had to apply
+   // sooner.
+   tSilentExport := SameText(ParamStr(2), '/EXPORT');
+
    EarlyTrace('startup: checking the single-instance mutex');
    tMutex := CreateMutex(nil, False, tr4w_ClassName);
    if tMutex = 0 then
@@ -611,12 +630,20 @@ begin
       end;
    if GetLastError = ERROR_ALREADY_EXISTS then
       begin
+      // A HEADLESS RUN NEVER OPENS A DIALOG.  It fails fast and loudly with a
+      // distinct exit code instead, so the corpus reports a failure rather than
+      // hanging invisibly and locking the executable.
+      if tSilentExport then
+         begin
+         EarlyTrace('startup: another instance holds the mutex -- refusing the '
+                    + 'headless export rather than opening a dialog nobody can see');
+         Halt(EXITCODE_ALREADY_RUNNING);
+         end;
+
       EarlyTrace('startup: another instance holds the mutex -- warning the operator');
-      // THE LCL'S MESSAGE BOX, NOT MessageBoxW.  The raw call blocked forever
-      // and created NO WINDOW -- proved with tr4w-early.log rather than
-      // reasoned about: the breadcrumb before it is written and the one after
-      // it never is, and the process owns no top-level window.  That is the
-      // invisible TR4W that had to be found with pslist and killed.
+      // THE LCL'S MESSAGE BOX, NOT MessageBoxW.  Application.Initialize has
+      // already run, so the LCL owns the pump a modal needs; going around it
+      // with a raw MessageBoxW and MB_SYSTEMMODAL was gratuitous Win32.
       ReportAlreadyRunning(TC_RUNWARN);
       EarlyTrace('startup: warning dismissed -- exiting as a duplicate');
       Exit;
@@ -649,7 +676,8 @@ begin
    // never write to the operator's live settings (NY4I, 2026-08-06).
    // Reported at the startup banner below, NOT here: the file appender is not
    // attached yet at this point, so a line logged now goes nowhere.
-   tSilentExport := SameText(ParamStr(2), '/EXPORT');
+   //
+   // ASSIGNED ABOVE, before the single-instance check -- see the note there.
    // FROM settings\tr4w.json, not tr4w.ini.  DEBUG LOG LEVEL is a csJSON row --
    // the store is its system of record -- so reading the ini here handed the
    // earliest log lines a stale value, or the compiled default on a station with

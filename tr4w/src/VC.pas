@@ -215,6 +215,11 @@ const
   // worked because Delphi decays it implicitly.  FPC does not, and neither
   // does anything else -- see docs/FPC_SPIKE_LOG.md.
   tr4w_ClassName                        = 'TR4W';
+
+  { A headless /EXPORT refused because TR4W is already running.
+    Distinct so a corpus or CI run can tell it apart from an export
+    that ran and produced the wrong bytes. }
+  EXITCODE_ALREADY_RUNNING              = 3;
   MASKEVENT                             = False;
   OGLVERSION                            = False;
   MORSERUNNER                           = False;
