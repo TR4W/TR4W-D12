@@ -18,22 +18,27 @@ unit uLCLCoexist;
 {$I ..\..\tr4w.inc}
 
 {
-  Hosting LCL forms inside TR4W's own message loop.
+  TR4W's LCL dependency, in one unit.
 
-  `program tr4w;` owns its GetMessage / TranslateMessage / DispatchMessage loop
-  and builds its windows with CreateWindow.  There is no MainForm and
-  Application.Run is never called.  Any toolkit here has to tolerate that.
+  HISTORICAL, AND NO LONGER TRUE OF THE FIRST LINE: this unit was called into
+  being to host LCL forms inside TR4W's OWN GetMessage / TranslateMessage /
+  DispatchMessage loop, and its header said "Application.Run is never called".
+  That stopped being true on 2026-08-23 (Phase 3c).  RunLCLApplication below IS
+  that call, and tr4w.dpr no longer has a loop of its own.
+
+  What survives from the old arrangement, because it is still the reason this
+  unit exists: tr4w.dpr does not link Forms, so every reference to Application
+  lives here.
 
   THIS UNIT IS DELIBERATELY ALMOST EMPTY, and the reason is worth stating
   because its FMX counterpart is not.
 
-  uFMXCoexist carries TellFMXTheApplicationIsRunning, a shim installed because
+  uFMXCoexist carried TellFMXTheApplicationIsRunning, a shim installed because
   FMX asks "is the application running?" before it will activate a form, and on
-  Windows that answer comes from TPlatformWin.FRunning -- set by
-  Application.Run, the one call this architecture never makes.  Every hosted FMX
-  form therefore stayed Active=False for its whole life, and the only visible
-  symptom was that an edit accepted keystrokes but SHOWED NO CARET (diagnosed on
-  the bench 2026-08-05).
+  Windows that answer came from TPlatformWin.FRunning -- set by Application.Run,
+  which this architecture did not then call.  Every hosted FMX form therefore
+  stayed Active=False for its whole life, and the only visible symptom was that
+  an edit accepted keystrokes but SHOWED NO CARET (bench, 2026-08-05).
 
   The LCL was asked the same question directly rather than assumed to differ
   (spike\lclprobe, 2026-08-13).  With Application.Initialize called and
@@ -48,11 +53,12 @@ unit uLCLCoexist;
   without being told anything, which is why this unit holds an initialiser and
   no shim.
 
-  WHICH WINDOWS ARE OURS is NOT here either: that lives in uHostedFormWindows,
-  which is pure Win32, names no toolkit, and is shared with the FMX side.  A
-  form registers its handle there as it shows and unregisters as it closes, and
-  tr4w.dpr's loop asks that unit whether a message belongs to a hosted window
-  before applying its own CW-memory and accelerator handling.
+  WHICH WINDOWS ARE OURS was in uHostedFormWindows -- pure Win32, naming no
+  toolkit, shared with the FMX side.  A form registered its handle as it showed
+  and unregistered as it closed, and tr4w.dpr's loop asked that unit whether a
+  message belonged to a hosted window before applying its own CW-memory and
+  accelerator handling.  With the loop gone nothing asks any more: the registry
+  is still written by eighteen forms and read by nobody, and should be retired.
 }
 
 interface
@@ -63,7 +69,8 @@ interface
 // calling it twice is harmless, which matters because the call site is a
 // startup path that has grown conditional branches over the years.
 //
-// It does NOT call Application.Run and never will -- see the unit header.
+// It does NOT start the message loop; RunLCLApplication does, once TR4W has
+// finished starting up.
 procedure InitLCLApplication;
 
 { Tell the operator that TR4W is already running, and say it VISIBLY.

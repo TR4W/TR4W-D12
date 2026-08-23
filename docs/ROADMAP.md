@@ -19,13 +19,14 @@ Measured 2026-08-23, not recalled -- rerun before trusting any of it.
 | | |
 |---|---|
 | Unit tests | **9803 / 0** |
+| Phase | **3c done** -- the pivot is behind us |
 | Golden corpus | **22 passed, 0 failed, 4 known-divergence** |
 | Lints | **21**, gating every build |
-| Designed LCL forms | **23** |
 | `tw_` tool windows converted | **2 of 17** -- function keys, band map |
 | Win32 UI call sites (lint baseline) | **234** |
 | Win32 non-UI platform call sites | **119** |
-| Message-loop arms keyed to a window handle | **0** |
+| **TR4W's own message loop** | **GONE** -- `Application.Run` since 2026-08-23 |
+| Designed LCL forms | **24** |
 | Installer | `tr4w_setup_5.0.0.exe`, built from a clean clone |
 
 ---
@@ -99,7 +100,7 @@ only thing that was actually true.
 | 2 | Menus and shortcuts | **done** — menus built in code, shortcuts carried |
 | 3a | Main window is a `TForm`; `tr4whandle` = `TMainForm.Handle` | **done** — `uMainForm.pas` |
 | 3b | The four input-bearing controls become LCL | **3 of 4** — call + exchange `TEdit` (`89b91cdd`), possible-call `TListBox` (2026-08-22, designed). The editable log is **deliberately not** converted — see below |
-| 3c | `Application.Run` replaces the loop | **UNBLOCKED, not done** — the loop has no window-specific dispatch arm left (2026-08-23). See below for the two things to settle first |
+| 3c | `Application.Run` replaces the loop | **DONE** — 2026-08-23, `57c278fd`. `tr4w.dpr` lost 220 lines and has no `GetMessage` at all. **Bench queue section 30 is the gate and is unrun.** |
 | 4 | The ~25 modal forms | **21 designed** (About converted 2026-08-22). **Three Win32 dialogs left**, all entangled — see below |
 | 5 | The three real resource dialogs | not started |
 | 6 | The 21 child panels | not started |
@@ -112,26 +113,42 @@ band map (2026-08-23). Measured by counting `WndProcAdr := @` in `MainUnit.pas`:
 intercom, post-scores, HamScore, stations, remaining-mults ×4, MP3 recorder,
 MMTTY. 23 designed forms exist in `src/ui/lcl`.
 
-**3c IS NO LONGER GATED ON A CONTROL (2026-08-23).** The two things that forced the
-hand-rolled loop — the function-keys window's owner-draw buttons and the band map list box
-— are LCL controls now, and their message-loop arms are deleted. `grep 'Msg.HWND'` over
-`tr4w.dpr`'s loop returns only comments.
+**3c IS DONE (2026-08-23).** `Application.Run` drives the program; `tr4w.dpr` has no
+`GetMessage` at all and lost 220 lines. What the loop carried is in
+`src/ui/lcl/uAppInputHooks.pas` — read that unit's header before touching any of it.
 
-**Two things still to settle before `Application.Run` can replace it**, neither of them a
-control:
+**What looked like the blocker, and was not.** LCL's Win32 pump has no message-filter hook,
+so `TranslateAccelerator` can never run under `Application.Run`. The obvious conclusion is
+that the ~181-item Win32 `HMENU` and its 101 accelerators must become a `TMainMenu` with LCL
+`ShortCut`s first. They need not:
+`TWinControl.DoKeyDownBeforeInterface` calls `Application.NotifyKeyDownBeforeHandler` for
+every control, before focus and before `KeyPreview`, and `VK_UNKNOWN` swallows the key —
+which is what an accelerator table *is*. The same `ACCELERATORS` table now drives the menu
+captions and the bindings, so **the Win32 menu converts on its own schedule** instead of
+being dragged into the pivot.
 
-1. **`MessageIsForHostedWindow`** — the coexistence hook that routes a message belonging to
-   an LCL form. It exists *because* the loop is hand-rolled and goes with it.
-2. **`TelnetWantsClipboardKey`** (`MainUnit.pas`) — suppresses the accelerator table for
-   Ctrl-A/C/V/X/Z when the telnet window or one of its children has focus. It is a raw-HWND
-   test, and it is a predicate rather than a dispatch arm, so it does not block the pivot —
-   but the LCL owns accelerators under `Application.Run`, so it needs an answer *at* the
-   pivot rather than being discovered during it. It goes away with the telnet window.
+| the loop carried | now |
+|---|---|
+| `TranslateAccelerator` | `AddOnKeyDownBeforeHandler` over `ACCELERATORS` |
+| keypad CW memories, F10 swallow | the same handler |
+| `ShowFMessages` on modifier release | `AddOnUserInputHandler` |
+| fault recovery, 10-per-minute | `AddOnExceptionHandler` |
+| QuickQSL (`WM_CHAR`) | `TTR4WEntryEvents.EntryKeyPress` |
+| `MessageIsForHostedWindow` | nothing — it routed around a loop that is gone |
 
-The historical note is still worth keeping: those arms appeared in the loop's `case` only
-because the loop collects every message for the thread — they were never main-window work,
-and `WM_PARENTNOTIFY` was not an escape (it carries a cursor point, not the child handle,
-and is not sent for `WM_RBUTTONDBLCLK` at all).
+**Two consequences worth carrying forward:**
+
+* **`uHostedFormWindows` is now WRITE-ONLY.** Eighteen forms still register and unregister
+  their handle and nothing reads it. It should be retired; it is left standing only so the
+  pivot commit stayed readable.
+* **`TelnetWantsClipboardKey` survived**, as a focus test inside the new key handler rather
+  than a message test. It is still a raw-HWND dependency and still goes with the telnet
+  window.
+
+The historical note is worth keeping: those arms appeared in the loop's `case` only because
+the loop collected every message for the thread — they were never main-window work, and
+`WM_PARENTNOTIFY` was not an escape (it carries a cursor point, not the child handle, and is
+not sent for `WM_RBUTTONDBLCLK` at all).
 
 ### OPEN QUESTION for NY4I: should the main window have a `.lfm`?
 
@@ -754,14 +771,12 @@ code review, and it is the reason the FMX twins should not be deleted yet.
 
 Revised 2026-08-23, now that the band map has cleared the message loop.
 
-1. **`Application.Run`** (Phase 3c) — the pivot the whole plan turns on, and nothing is in
-   front of it any more. Two things to settle first, both named in §2: the
-   `MessageIsForHostedWindow` hook (which goes *with* the loop) and
-   `TelnetWantsClipboardKey` (accelerator suppression keyed to an HWND). Do this before
-   converting more tool windows, so the remaining fifteen are written against the loop
-   they will actually live in rather than against scaffolding.
-2. **Bench the band map properly** (§4, queue sections 27–29) — it is the most-watched
-   window in a contest and none of its painting is provable by review.
+1. **BENCH WHAT IS ALREADY IN.** Queue sections 27–30 are all unrun, and section 30 —
+   `Application.Run` — is the one nothing automated can touch: the corpus halts before any
+   GUI init. Four things one loop used to answer are answered by four separate LCL
+   mechanisms, and each fails as "a key does nothing" rather than a crash. Nothing else
+   should start before this.
+2. **Retire `uHostedFormWindows`** — write-only since the pivot. 18 forms, mechanical.
 3. **`uCAT`**, as a deliberate project, when nobody is mid-change in it.
 4. **The remaining fifteen `tw_` windows**, in batches. The seam is proven twice; the trap
    is not the mechanics but assuming what a control does from its drawing code — see the
