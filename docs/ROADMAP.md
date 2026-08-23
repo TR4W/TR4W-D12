@@ -14,11 +14,18 @@ next thing.
 TR4W builds with **FreePascal 3.2.2 + the Lazarus LCL**, English, one binary, from a clean clone at
 any path on any machine with the toolchain installed. Version 5.0.0.
 
+Measured 2026-08-23, not recalled -- rerun before trusting any of it.
+
 | | |
 |---|---|
-| Unit tests | **3978 / 0** |
+| Unit tests | **9803 / 0** |
 | Golden corpus | **22 passed, 0 failed, 4 known-divergence** |
-| Lints | **10**, gating every build |
+| Lints | **21**, gating every build |
+| Designed LCL forms | **23** |
+| `tw_` tool windows converted | **2 of 17** -- function keys, band map |
+| Win32 UI call sites (lint baseline) | **234** |
+| Win32 non-UI platform call sites | **119** |
+| Message-loop arms keyed to a window handle | **0** |
 | Installer | `tr4w_setup_5.0.0.exe`, built from a clean clone |
 
 ---
@@ -92,19 +99,39 @@ only thing that was actually true.
 | 2 | Menus and shortcuts | **done** — menus built in code, shortcuts carried |
 | 3a | Main window is a `TForm`; `tr4whandle` = `TMainForm.Handle` | **done** — `uMainForm.pas` |
 | 3b | The four input-bearing controls become LCL | **3 of 4** — call + exchange `TEdit` (`89b91cdd`), possible-call `TListBox` (2026-08-22, designed). The editable log is **deliberately not** converted — see below |
-| 3c | `Application.Run` replaces the loop | **blocked** — see below |
+| 3c | `Application.Run` replaces the loop | **UNBLOCKED, not done** — the loop has no window-specific dispatch arm left (2026-08-23). See below for the two things to settle first |
 | 4 | The ~25 modal forms | **21 designed** (About converted 2026-08-22). **Three Win32 dialogs left**, all entangled — see below |
 | 5 | The three real resource dialogs | not started |
 | 6 | The 21 child panels | not started |
 | 7 | Retire the scaffolding | not started |
 | 8 | The rest of Win32 (non-UI) | not started |
 
-**3c is gated on Phases 6/7, not on the main form.** Measured 2026-08-18: what still forces
-the hand-rolled loop is the **band map list box** and the **function-keys window's
-owner-draw buttons**. They appear in the main loop's `case` only because the loop collects
-every message for the thread — they are not main-window work, and `WM_PARENTNOTIFY` is not
-an escape (it carries a cursor point, not the child handle, and is not sent for
-`WM_RBUTTONDBLCLK` at all).
+**`tw_` tool windows: 2 of 17 converted** — function keys (2026-08-22) and the
+band map (2026-08-23). Measured by counting `WndProcAdr := @` in `MainUnit.pas`:
+**15 remain**, sharing 11 dialog procs — dupe sheet ×2, master, telnet, net,
+intercom, post-scores, HamScore, stations, remaining-mults ×4, MP3 recorder,
+MMTTY. 23 designed forms exist in `src/ui/lcl`.
+
+**3c IS NO LONGER GATED ON A CONTROL (2026-08-23).** The two things that forced the
+hand-rolled loop — the function-keys window's owner-draw buttons and the band map list box
+— are LCL controls now, and their message-loop arms are deleted. `grep 'Msg.HWND'` over
+`tr4w.dpr`'s loop returns only comments.
+
+**Two things still to settle before `Application.Run` can replace it**, neither of them a
+control:
+
+1. **`MessageIsForHostedWindow`** — the coexistence hook that routes a message belonging to
+   an LCL form. It exists *because* the loop is hand-rolled and goes with it.
+2. **`TelnetWantsClipboardKey`** (`MainUnit.pas`) — suppresses the accelerator table for
+   Ctrl-A/C/V/X/Z when the telnet window or one of its children has focus. It is a raw-HWND
+   test, and it is a predicate rather than a dispatch arm, so it does not block the pivot —
+   but the LCL owns accelerators under `Application.Run`, so it needs an answer *at* the
+   pivot rather than being discovered during it. It goes away with the telnet window.
+
+The historical note is still worth keeping: those arms appeared in the loop's `case` only
+because the loop collects every message for the thread — they were never main-window work,
+and `WM_PARENTNOTIFY` was not an escape (it carries a cursor point, not the child handle,
+and is not sent for `WM_RBUTTONDBLCLK` at all).
 
 ### OPEN QUESTION for NY4I: should the main window have a `.lfm`?
 
@@ -317,42 +344,42 @@ show the right text, right-click opens the editor on the right row, and the
 window still docks where it was.
 
 
-### The band map: the LAST thing gating `Application.Run`
+### The band map: DONE (2026-08-23), and what it cost to find out
 
-With the function-keys window converted, **one message-loop arm remains**: the
-`WM_KEYUP` on `BandMapListBox` in `tr4w.dpr` (~1285), which handles `VK_DELETE`.
-It cannot move until that list box is an LCL control, because a raw Win32 child
-raises no LCL key events. Nothing else blocks the loop.
+**It is an LCL form** -- `src/ui/lcl/uBandMapForm.pas` + `.lfm`, a `TDrawGrid`
+with a `TStatusBar` and a designed `TPopupMenu`. `uBandmap.pas` went 830 -> 237
+lines and holds `TuneRadioToSpot` and three settings. The design, and the
+reasoning behind every decision in it, is
+[`BANDMAP_LCL_DESIGN.md`](BANDMAP_LCL_DESIGN.md) -- read that before touching
+either file.
 
-**The design lives in [`BANDMAP_LCL_DESIGN.md`](BANDMAP_LCL_DESIGN.md)** -- read
-it before touching `uBandmap.pas` or `uSpots.pas`.
+**Two things this conversion should be remembered for:**
 
-**It is a redesign, not a port, and the first draft of this section was wrong.**
-That draft (2026-08-22, morning) said: keep the owner-draw list box, port
-`WM_DRAWITEM` to `OnDrawItem`, and keep `LB_ADDSTRING`/`LB_GETITEMDATA` on the
-`TListBox.Handle` because "the item data is real here". Reading the ingest path
-afterwards showed that carrying that shape across carries six defects with it --
-spots silently DISCARDED while the window has focus, a row payload that is an
-index into an array that shifts under it, a parsed QSX frequency that is never
-displayed, and a multiplier recomputation on the paint path. The rebuild-the-whole-list
-model is also the actual cause of the flashing that `WS_EX_COMPOSITED`,
-`WM_SETREDRAW` and an explicit `RDW_NOERASE` are all in there to paper over.
+**1. It was a redesign, not a port, and the first plan was wrong twice.** The
+first draft said "keep the owner-draw list box, port `WM_DRAWITEM` to
+`OnDrawItem`". Reading the ingest path afterwards found seven defects that a
+port would have carried across -- spots silently DISCARDED while the window had
+focus, a row payload that was an index into an array that shifts under it, a
+parsed QSX frequency displayed nowhere, a multiplier recomputation on the paint
+path. The second draft then laid the spots out as a TABLE of field columns. It
+is a **newspaper layout** -- the Win32 control was a MULTI-COLUMN list box, so
+widening the window shows MORE SPOTS, not wider ones. Fifty-odd at once on a
+1280px window against the eight a table would show. **NY4I's screenshot is what
+caught it**, after two rounds of reading code.
 
-The shape that replaces it, in one line each: a **`TDrawGrid`** whose `RowCount`
-is the model size, painting from a **value-copy snapshot** the form owns, driven
-by a **revision counter** on `TDXSpotsList` and one 250 ms `TTimer`, with focus
-freezing the *view* and never the *model*. `TDXSpotsList.Display` -- the model
-reaching into a list box -- goes away entirely.
+**2. The bench found five defects that no lint or test could.** A `.lfm`
+declaring four status panels against code indexing six -- which threw from
+`OnCreate`, so the CONSTRUCTOR never completed and the symptom was a dead window
+rather than a wrong status bar. A form shown by raw `SWP_SHOWWINDOW` whose
+`TForm.Visible` therefore stayed False, so its refresh timer skipped every tick
+and the LCL never showed its children. That one **had already been found once**,
+for the main window -- the note is on `ShowTR4WMainForm`. `OpenTR4WWindow` now
+tells the LCL for whichever form the seam built, so the next conversion inherits
+it.
 
-**Step 1 needs no form and is worth doing on its own:** the revision counter,
-moving `UpdateSpotsMultiplierStatus` off the paint path, and deleting the
-`BandMapPreventRefresh` gate in `AddSpot`. That fixes the dropped spots against
-the *existing* Win32 window, so it is benchable before any `.lfm` exists.
-
-**The seam is already built:** `OpenTR4WWindow` gained an `if ID = ...` branch
-for the function-keys window; the band map is the second user of it, which is
-the first real test of whether that seam generalises.
-
+**The lesson for the remaining fifteen:** the seam and the mechanics are proven
+twice over now, but *what the Win32 control actually does* is not learnable by
+reading the drawing code. Ask for a screenshot before designing the replacement.
 
 ### The numbers, and why they are quoted from the lints
 
@@ -725,11 +752,23 @@ code review, and it is the reason the FMX twins should not be deleted yet.
 
 ## 8. Suggested order
 
-1. **`win-ci` runner** — unblocks automated release; smallest effort, in flight.
-2. **Bench re-verification** (§4) — gates deleting the FMX twins, and gates trusting the release.
-3. **One dialog, end to end** (§2 step 1) — proves the Win32 → `.lfm` path before committing to ~45
-   of them.
-4. **64-bit, when wanted** (§3) — genuinely a decision now, not a project. Two errors and a bounded
+Revised 2026-08-23, now that the band map has cleared the message loop.
+
+1. **`Application.Run`** (Phase 3c) — the pivot the whole plan turns on, and nothing is in
+   front of it any more. Two things to settle first, both named in §2: the
+   `MessageIsForHostedWindow` hook (which goes *with* the loop) and
+   `TelnetWantsClipboardKey` (accelerator suppression keyed to an HWND). Do this before
+   converting more tool windows, so the remaining fifteen are written against the loop
+   they will actually live in rather than against scaffolding.
+2. **Bench the band map properly** (§4, queue sections 27–29) — it is the most-watched
+   window in a contest and none of its painting is provable by review.
+3. **`uCAT`**, as a deliberate project, when nobody is mid-change in it.
+4. **The remaining fifteen `tw_` windows**, in batches. The seam is proven twice; the trap
+   is not the mechanics but assuming what a control does from its drawing code — see the
+   band map note in §2.
+5. **`win-ci` runner** — unblocks automated release; small, and still not done.
+6. **Editable log + Get Server Log**, after the log is SQLite (§2, decided 2026-08-22).
+7. **64-bit, when wanted** (§3) — a decision now, not a project. Two errors and a bounded
    pointer audit.
-5. **The main window** (§2 step 4) — last, alone, and only once the tool windows have proven the
+8. **The main window** last, alone, and only once the tool windows have proven the
    coexistence layer holds for the length of a contest.
