@@ -61,6 +61,21 @@ if (-not $BaselineFile) {
 # `tDialogBox(` and every site is counted twice, which would make the baseline a
 # number nobody could reconcile against the source.
 $patterns = [ordered]@{
+   # THE HANDLE ITSELF, and the only number here that has to reach ZERO.
+   #
+   # NY4I, 2026-08-23: "I do not believe we should be using those after win32 is
+   # gone."  Right, and it is the honest scalar for this whole phase -- the call
+   # counts below fall as dialogs convert, but a converted form that still
+   # passes an HWND around has moved its widgets and not its architecture.  An
+   # HWND cannot exist on GTK or Cocoa, so every one is either a real Win32
+   # boundary or work that is not finished.
+   #
+   # \bHWND\b does NOT match HWND_TOP, HWND_TOPMOST or PHWND: `_` and the
+   # surrounding letters are word characters, so the boundary fails.  Those are
+   # constants and a pointer type, not the type itself, and counting them would
+   # make the number one nobody could reconcile against the source.
+   'type.HWND'                 = '\bHWND\b'
+
    # Window creation -- the surfaces themselves.
    'CreateModalDialog'         = '\bCreateModalDialog\s*\('
    'tDialogBox'                = '\btDialogBox\s*\('
@@ -164,6 +179,23 @@ $platformPatterns = [ordered]@{
    'mmtty.WindowMsg'   = '\bRegisterWindowMessage[AW]?\s*\('
 }
 
+# FILES A GIVEN KIND DOES NOT APPLY TO.
+#
+# Only type.HWND needs this, and only for the two units that are TRANSLATIONS OF
+# THE WINDOWS API rather than TR4W code: uCommctrl.pas is commctrl.h and
+# MMSystem.pas is mmsystem.h.  Their HWNDs are the API declaring its own
+# signatures -- PFNPROPSHEETCALLBACK takes an HWND because Windows says so --
+# and no amount of LCL work removes one.  They go when the last consumer does,
+# whole.
+#
+# It matters because they are 899 of the 1543: counting them makes the ratchet
+# 58% inert, so a real reduction of twenty in TR4W's own code would round to
+# nothing.  Excluded, the number is what it claims to be -- TR4W's own use of a
+# handle that cannot exist on GTK or Cocoa.
+$patternFileExclusions = @{
+   'type.HWND' = '(?i)\\(uCommctrl|MMSystem)\.pas$'
+}
+
 $patternGroups = [ordered]@{
    'ui'       = $patterns
    'platform' = $platformPatterns
@@ -235,6 +267,10 @@ foreach ($f in $files) {
    $text = Get-PascalCodeOnlyText -Path $f.FullName
    $rel  = $f.FullName.Substring($SourceDir.Length).TrimStart('\')
    foreach ($k in $patterns.Keys) {
+      if ($patternFileExclusions.ContainsKey($k) -and
+          ($f.FullName -match $patternFileExclusions[$k])) {
+         continue
+      }
       # IGNORECASE, AND IT IS NOT OPTIONAL: PASCAL IDENTIFIERS ARE NOT
       # CASE-SENSITIVE AND .NET REGEX IS.
       #
