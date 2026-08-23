@@ -2990,6 +2990,14 @@ begin
      logger.Info('------------------------------Program shutdown----------------------------');
      FreeAndNil(logger);
      end;
+  // Issue #783 -- stop the HamScore RTC uploader cleanly so its worker thread
+  // is not holding sockets when the process exits.  This was a `finally` at the
+  // bottom of tr4w.dpr, below the message loop, which meant it only ran if the
+  // loop RETURNED -- and it never does: the exit path is ExitProcess, three
+  // lines below this one.  So the clean shutdown it exists to provide has never
+  // actually happened.  Here it does.
+  HamScoreShutdown;
+
   Windows.UnregisterClass(tr4w_ClassName, hInstance);
   // ny4i Issue 145. UnregisterClass was not qualifies and it conflicted with classes.UnregisterClass
   ExitProcess(hInstance);

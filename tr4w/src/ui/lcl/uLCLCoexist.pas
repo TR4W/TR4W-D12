@@ -64,24 +64,37 @@ interface
 // startup path that has grown conditional branches over the years.
 //
 // It does NOT call Application.Run and never will -- see the unit header.
-procedure InitLCLForHostedLoop;
+procedure InitLCLApplication;
 
 { Tell the operator that TR4W is already running, and say it VISIBLY.
 
-  This was a raw MessageBoxW(0, ...) in tr4w.dpr, and on 2026-08-23 it was
-  PROVED -- not guessed -- to block forever while creating NO WINDOW: the
-  breadcrumb written immediately before the call reaches tr4w-early.log and the
-  one immediately after it never does, while EnumWindows finds no top-level
-  window belonging to the process at all.  That is the invisible TR4W that had
-  to be found with pslist and killed, twice, and which also holds the executable
-  locked against a rebuild.
-
+  This was a raw MessageBoxW(0, ...) in tr4w.dpr with MB_SYSTEMMODAL.
   Application.Initialize has already run by this point, so the LCL owns the
-  message pump such a dialog needs.  Going around it with a raw Win32 call was
-  the mistake. }
+  message pump such a dialog needs; going around it with a raw Win32 call was
+  gratuitous.
+
+  A NOTE ON WHAT THIS DID *NOT* FIX, because an earlier version of this comment
+  claimed otherwise.  It was written believing the raw call created no window at
+  all -- read off a probe that reported no top-level window for the process.
+  That probe could not see ANY window, not even Notepad's, so it proved nothing;
+  NY4I confirmed the dialog does appear on his desktop.  The real cause of the
+  invisible, unkillable-looking TR4W was a HEADLESS EXPORT reaching this dialog,
+  and that is fixed in tr4w.dpr by deciding batch mode before the
+  single-instance check. }
 procedure ReportAlreadyRunning(const aMessage: string);
 
-// True once InitLCLForHostedLoop has run.  A form that creates itself before
+{ Hand the program to the LCL and do not come back.
+
+  Phase 3c: TR4W ran its own GetMessage loop until 2026-08-23, which is why the
+  initialiser above used to be called InitLCLForHostedLoop -- the LCL was a
+  guest inside TR4W's loop.  It is the other way round now.
+
+  Application.Run is HERE rather than in tr4w.dpr for the same reason
+  Application.Initialize is: this unit owns the whole LCL dependency, and
+  tr4w.dpr does not link Forms. }
+procedure RunLCLApplication;
+
+// True once InitLCLApplication has run.  A form that creates itself before
 // the widgetset is initialised fails in ways that do not name the cause, so
 // the form units assert on this rather than discovering it at random.
 function LCLReadyForHostedForms: boolean;
@@ -119,7 +132,7 @@ begin
                           MB_OK or MB_ICONWARNING);
 end;
 
-procedure InitLCLForHostedLoop;
+procedure InitLCLApplication;
 begin
    if gInitialised then
       begin
@@ -127,10 +140,24 @@ begin
       end;
 
    // Registers the widgetset and the platform services an LCL form needs to
-   // create its window.  It does not start a message loop and does not create
-   // a main form -- the loop below it stays TR4W's own.
+   // create its window.  It does not start a message loop; RunLCLApplication
+   // does that, once TR4W has finished starting up.
    Application.Initialize;
    gInitialised := True;
+end;
+
+procedure RunLCLApplication;
+begin
+   // NOT SHOWN BY Run.  CreateMainWindow has already positioned and shown the
+   // main form with geometry it can only compute once the editable log exists
+   // and has been measured; letting Run show it again would flash it at its
+   // designed size first.
+   Application.ShowMainForm := False;
+
+   // Does not return in normal use: TR4W exits through ExitProcess in
+   // tr4w_ShutDown, reached from ExitProgram.  Nothing may be placed after the
+   // call site that has to run.
+   Application.Run;
 end;
 
 function LCLReadyForHostedForms: boolean;

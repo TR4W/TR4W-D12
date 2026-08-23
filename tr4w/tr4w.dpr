@@ -72,6 +72,7 @@ uses
   uBandmap in 'src\uBandmap.pas',
   uBandMapView in 'src\uBandMapView.pas',
   uBandMapForm in 'src\ui\lcl\uBandMapForm.pas',
+  uAppInputHooks in 'src\ui\lcl\uAppInputHooks.pas',
   uFileView in 'src\uFileView.pas',
   uAutoCQ in 'src\uAutoCQ.pas',
   uCAT in 'src\uCAT.pas',
@@ -539,11 +540,6 @@ var
   TempString                            : ShortString;
   // The radio library's complaint, if it has one -- see the call site.
   tRadioLibraryError                    : string;
-  // Surviving a fault in the message loop -- see the loop itself.
-  tLoopFailures                         : integer;
-  // Int64, NOT QWord: networkmessageutils declares a QWord of its own and
-  // the unqualified name resolves to that one here.
-  tLastLoopFailure                      : Int64;
    //  P                                   : Pchar; //n4af
    //   P1                                   : boolean; //n4af
    // S1                                   : String; //n4af
@@ -565,14 +561,12 @@ begin
    // the main thread initialize simultaneously.
    IsMultiThread := True;
 
-   // Application.Initialize creates the widgetset, and that is all this needs.
-   //
-   // Application.Run is NOT called here -- TR4W owns the message loop below.
-   // That is TRANSITIONAL, not the design: the hand-rolled loop is Win32 API
-   // and has to go for macOS/Linux, at which point Application.Run replaces it
-   // (Phase 3 of the LCL migration). See uLCLCoexist.
+   // Application.Initialize creates the widgetset.  Application.Run at the
+   // bottom of this file drives it -- Phase 3c, 2026-08-23.  The hand-rolled
+   // GetMessage loop that owned the program until then is gone; what lived
+   // inside it is in uAppInputHooks.
 {$IFDEF FPC}
-   InitLCLForHostedLoop;
+   InitLCLApplication;
 {$ENDIF}
 
 {$IFDEF FPC}
@@ -652,7 +646,11 @@ begin
 
    TR4W_PATH_NAME[Windows.GetCurrentDirectoryA(SizeOf(TR4W_PATH_NAME), @TR4W_PATH_NAME)] := '\';
    Format(TR4W_INI_FILENAME, '%ssettings\tr4w.ini', TR4W_PATH_NAME);
-   try
+   // The `try` that opened here had its `finally HamScoreShutdown` at the very
+   // bottom, after the message loop.  Both are gone: TR4W exits through
+   // ExitProcess in tr4w_ShutDown, so that finally could never have run in
+   // normal use -- and HamScoreShutdown is on the shutdown path now, where it
+   // does run.
    appender := TLogRollingFileAppender.Create('name','tr4w.log');
    appender.Layout := CreateTR4WLogLayout;
    TLogBasicConfigurator.Configure(appender);
@@ -1227,212 +1225,33 @@ begin
       end;
     {****************************  Main CallBack  ****************************}
 
-  { AN EXCEPTION IN THE MESSAGE LOOP NO LONGER ENDS THE PROGRAM.
+  // ============================ THE MESSAGE LOOP IS THE LCL'S ==============
+  //
+  // Phase 3c, 2026-08-23.  What stood here was a GetMessage / TranslateMessage
+  // / DispatchMessage loop wrapped in a fault-recovery repeat, with a `case
+  // Msg.Message of` carrying the accelerator table, the numeric-keypad CW
+  // memories, QuickQSL, the F-key label refresh and two gotos.
+  //
+  // It could not go while any input-bearing control was a raw Win32 child,
+  // because a raw child raises no LCL events and only a loop that sees every
+  // message for the thread could reach it.  The last two -- the function-key
+  // buttons and the band map list box -- became LCL controls on 2026-08-22 and
+  // 08-23, and the arms went with them.
+  //
+  // WHERE THE REST WENT, all of it in uAppInputHooks:
+  //   TranslateAccelerator      -> AddOnKeyDownBeforeHandler over ACCELERATORS
+  //   keypad CW memories        -> the same handler
+  //   ShowFMessages on modifier -> AddOnUserInputHandler
+  //   the fault-recovery repeat -> AddOnExceptionHandler
+  //   QuickQSL (WM_CHAR)        -> TTR4WEntryEvents.EntryKeyPress
+  //   MessageIsForHostedWindow  -> nothing: it existed to route messages around
+  //                                a loop that no longer exists
+  //
+  // TR4W STILL EXITS THROUGH ExitProcess (tr4w_ShutDown, via ExitProgram), so
+  // Application.Run does not return in normal use and nothing after it can be
+  // relied upon -- which is why HamScoreShutdown moved INTO the shutdown path
+  // rather than staying in a finally here.
+  InstallTR4WInputHooks;
 
-    NY4I, after the third Ctrl-P crash: "I am not a fan of the abrupt
-    termination." Nor is anything else about it defensible. TR4W is a CONTEST
-    LOGGER: a fault while drawing a caption used to take the whole session down,
-    mid-contest, with the log open -- when the fault itself had nothing to do
-    with logging QSOs. Windows applications survive a bad window procedure; this
-    one did not, because nothing here caught anything.
-
-    The loop body is untouched. It is re-entered after a fault, which keeps the
-    two gotos (TransMess / NoTransMess) inside a single block and avoids
-    restructuring the most heavily-edited code in the program.
-
-    A LIMIT, so a persistent fault cannot become a silent spin: ten failures
-    inside a minute and it gives up and re-raises, which is the old behaviour.
-    The count resets after a quiet minute, so occasional unrelated faults over a
-    long contest do not accumulate into a shutdown. }
-  tLoopFailures := 0;
-  tLastLoopFailure := 0;
-  repeat
-  try
-  while (GetMessage(Msg, 0, 0, 0)) do
-  begin
-
-    // FIRST question, before accelerators and before every case arm below.
-    // A message for a hosted form gets a plain Translate + Dispatch and
-    // nothing else: this loop routes WM_CHAR into the callsign window and
-    // treats F-keys and the numeric keypad as CW memories, all of which would
-    // steal keystrokes from a text box in another window.  One test closes
-    // every such leak at once.
-{$IFDEF FPC}
-    // Does this message belong to a
-    // hosted window rather than to TR4W's own? The registry behind it
-    // (uHostedFormWindows) is shared and toolkit-blind on purpose -- both
-    // toolkits register a plain HWND and neither one is named here.
-    if MessageIsForHostedWindow(Msg) then
-       begin
-       goto TransMess;
-       end;
-{$ENDIF}
-
-    // Issue #23 -- when a clipboard/edit key (Ctrl-C/V/X/A/Z) is pressed with
-    // the DX Cluster command field focused, skip the main accelerator table so
-    // the keystroke reaches the field (e.g. Ctrl-V pastes) instead of firing
-    // Execute Config File / Clear Mult Sheet.
-    if (not TelnetWantsClipboardKey(Msg)) and
-       (TranslateAccelerator(tr4whandle, tr4w_accelerators, Msg) <> 0) then
-    begin
-      // (an `asm nop end;` breakpoint placeholder stood here)
-      goto NoTransMess;
-    end;
-    case Msg.Message of
-
-      WM_CHAR:
-        begin
-          if (Char(Msg.wParam) = QuickQSLKey1) or (Char(Msg.wParam) = QuickQSLKey2) then QuickQSLProcedure(Char(Msg.wParam));
-           // The callsign/exchange block that stood here MOVED to
-           // TTR4WEntryEvents.CallKeyPress / ExchangeKeyPress -- Phase 3c.
-           // QuickQSL above stays: it fires whatever has focus, so it has no
-           // control to belong to.
-        end;
-
-      WM_SYSKEYDOWN, WM_KEYDOWN:
-        begin
-
-          if Config.KeypadCWMemories then
-            if Msg.wParam in [VK_NUMPAD0..VK_NUMPAD9] then
-            begin
-              if Msg.wParam <> VK_NUMPAD0 then
-                ProcessFuntionKeys(Msg.wParam + 27)
-              else
-                ProcessFuntionKeys(Msg.wParam + 37);
-              goto NoTransMess;
-            end;
-
-          // The editable-log arrow-down arm MOVED to LVN_KEYDOWN in
-          // uMainWindowProc (Phase 3b): a ListView notifies its parent of key
-          // presses, so the behaviour no longer depends on this loop existing.
-          // It is the first arm retired rather than relocated.
-
-          // EVERYTHING THE CALLSIGN AND EXCHANGE FIELDS DID ON A KEY DOWN moved
-          // to TTR4WEntryEvents.CallKeyDown / ExchangeKeyDown -- Phase 3c.  The
-          // keypad CW memories above stay here: they fire whatever has focus.
-          //
-          // One behaviour did NOT survive as written.  The left/right shift test
-          // read the scan code out of Msg.lParam, and an LCL OnKeyDown has no
-          // lParam; it is re-expressed with GetKeyState(VK_LSHIFT/VK_RSHIFT).
-          // See the note on the handler.
-          end;
-
-      WM_KEYUP:
-        begin
-      {    if (Msg.wParam = VK_SPACE) and (Msg.HWND = wh[mweCall]) then           //   4.102.4
-          tailend;       }
-          if (Msg.wParam = VK_CONTROL) or (Msg.wParam = VK_MENU) then ShowFMessages(0);
-          if Msg.wParam < 40 then goto TransMess;
-
-          // The callsign field's apostrophe arm moved to
-          // TTR4WEntryEvents.CallKeyUp -- Phase 3c.  ShowFMessages(0) above stays:
-          // it fires whatever has focus.
-          //
-          // THE LOOP HAS NO WINDOW-SPECIFIC ARM LEFT.
-          //
-          // What stood here dispatched VK_DELETE and the B / M / D filter
-          // toggles by comparing Msg.HWND against the band map list box handle,
-          // because a raw Win32 child raises no LCL key events and nothing else
-          // could see them.  The band map is a TDrawGrid on a designed form now,
-          // so they are its OnKeyUp -- uBandMapForm.SpotsKeyUp, which also
-          // records why the wParam 80 and 206 tests that were here are not
-          // reproduced.
-          //
-          // This was the last thing gating Application.Run.
-        end;
-
-      WM_SYSKEYUP:
-        begin
-          if (Msg.wParam = VK_MENU) then
-          begin
-            ShowFMessages(0);
-            //if Cardinal(Msg.lParam) and 16777216 = 0 then goto NoTransMess;
-          end;
-          if Msg.wParam = VK_F10 then goto NoTransMess;
-        end;
-
-      WM_MOUSEMOVE:
-        begin
-//          SendMessage(hwndTT, TTM_RELAYEVENT, 0, integer(@Msg));
-        end;
-
-      // WM_RBUTTONDBLCLK and WM_RBUTTONDOWN are GONE -- Phase 3c, 2026-08-22.
-      //
-      // They existed because the function-key buttons were raw Win32 children:
-      // a right-click on one arrived here as a message carrying an HWND, and
-      // ResolveFunctionKeyRow had to scan twelve handles to work out which key
-      // it was.  WM_PARENTNOTIFY was not an escape -- it carries a cursor point
-      // rather than the child handle, and is not sent for WM_RBUTTONDBLCLK at
-      // all -- so the arms could not move until the buttons became LCL controls.
-      //
-      // They are TPanels now, in uFunctionKeysForm.lfm, and their OnMouseDown
-      // says which key and whether the click was a double.  Nothing dispatches
-      // by handle any more.
-      // DELETED HERE, Phase 3c: a brace-commented block of six mouse arms --
-      // WM_RBUTTONDOWN / WM_LBUTTONDOWN / WM_MBUTTONDOWN on wh[mweBandMode] and
-      // CodeSpeedWindowHandle, and WM_LBUTTONDBLCLK on wh[mweClock] /
-      // wh[mweDate] / PaddleWindowHandle / FootSwWindowHandle.
-      //
-      // THE PLAN NAMED THESE AS SIX OF THE EIGHT HANDLES THE LOOP ROUTES, and
-      // warned that retiring the loop would silently break the band/mode menus,
-      // the clock menu, the CW-speed menus and the LPT shortcut. It would not:
-      // they have not run in this program, or in the D7 heritage it was copied
-      // from, where the same block is commented at tr4w.dpr:1116.
-      //
-      // The proof is the compiler, not reading: WM_RBUTTONDOWN was a live case
-      // label immediately above, and the deleted block opened with a second
-      // WM_RBUTTONDOWN. Object Pascal rejects a duplicate case label, so a
-      // build that succeeds is a build in which that text was a comment.
-      //
-      // Nothing reachable is lost. Menu ids 75857/75858/75859/76039/76040/75851
-      // appeared ONLY inside the block -- they are not declared in VC.pas and
-      // not present in uMenu.pas, so ProcessMenu would not have found them
-      // anyway. menu_lpt is the exception and it is fine: it is a real command
-      // (VC.pas:2462) on the menu bar as LPT / Ctrl+Alt+L (uMenu.pas:139), so
-      // only the undocumented double-click shortcut to it was dead.
-    end; //of case
-    TransMess:
-      //      inc(Tw);
-    TranslateMessage(Msg);
-    DispatchMessage(Msg);
-    NoTransMess:
-//  except sm end;
-  end;
-    // GetMessage returned False: WM_QUIT, the ordinary way out.
-    Break;
-  except
-    on E: Exception do
-       begin
-       if (Int64(GetTickCount64) - tLastLoopFailure) > 60000 then
-          begin
-          tLoopFailures := 0;
-          end;
-       tLastLoopFailure := Int64(GetTickCount64);
-       Inc(tLoopFailures);
-
-       // THE BACKTRACE FIRST. ExceptProc only fires for exceptions nobody
-       // handles, so catching the fault here removed the [CRASH] record that
-       // said WHERE -- the first recovered run logged 'recovered from
-       // EAccessViolation' and nothing else. Surviving a fault must not cost
-       // the ability to find it.
-       LogCaughtException('MessageLoop', E);
-       logger.Error('[MessageLoop] recovered from %s -- %s (failure %d). '
-                    + 'TR4W is still running; the [CRASH] lines above say where.',
-                    [E.ClassName, E.Message, tLoopFailures]);
-
-       if tLoopFailures >= 10 then
-          begin
-          logger.Fatal('[MessageLoop] 10 faults inside a minute -- giving up '
-                       + 'rather than spinning.');
-          raise;
-          end;
-       end;
-  end;
-  until False;
-  finally
-     // Issue #783 -- stop the HamScore RTC uploader cleanly so the worker
-     // thread isn't holding sockets when the process exits.
-     HamScoreShutdown;
-  end; // of Try...finally
-
+  RunLCLApplication;
 end.

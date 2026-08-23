@@ -146,6 +146,26 @@ procedure TTR4WEntryEvents.EntryKeyPress(var Key: AnsiChar; const aField: TTR4WE
 var
    vk: wParam;
 begin
+   // QUICK QSL.  This was the WM_CHAR arm at the top of the message loop, where
+   // it fired whatever had focus.  There is no application-wide KeyPress hook in
+   // the LCL -- AddOnKeyDownBeforeHandler carries a virtual key, not a character,
+   // and QUICK QSL KEY 1 / 2 are characters an operator chooses (default '\' and
+   // '=').  Mapping one to a virtual key means VkKeyScan and the current keyboard
+   // layout, which is a Win32 call and a locale question, to answer something
+   // this field already knows.
+   //
+   // It belongs here anyway: QuickQSLProcedure returns immediately unless
+   // CallWindowString is non-empty, so it has never done anything except while
+   // the operator was part-way through a callsign.
+   //
+   // THE NARROWING, stated rather than hidden: it no longer fires while a TOOL
+   // WINDOW has focus.  Typing a call, clicking into the band map and then
+   // pressing '\' used to QSL; now it does not.  Bench queue section 30.
+   if (Key = QuickQSLKey1) or (Key = QuickQSLKey2) then
+      begin
+      QuickQSLProcedure(Key);
+      end;
+
    if aField = efCall then
       begin
       CallWindowKeyDownProc(Ord(Key));

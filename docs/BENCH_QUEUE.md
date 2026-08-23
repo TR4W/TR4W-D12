@@ -720,15 +720,15 @@ of which `[SECTION]` heading it sits under. That is also what made the migration
 exact -- the seed copies out of `TWindows` AFTER the load, so whatever the ini
 said is already in force and there is no second parser to disagree with.
 
-- [ ] **Appearance -> Colors.** Fifty elements, each with a Text and a
+- [X] **Appearance -> Colors.** Fifty elements, each with a Text and a
   Background drop-down from the 18-color palette. Change one, OK, and check it
   repaints. Restart and check it stuck.
-- [ ] **Look at `settings\tr4w.json`** -- a `colors` object keyed by element
+- [X] **Look at `settings\tr4w.json`** -- a `colors` object keyed by element
   name, values as SPELLINGS (`"YELLOW"`, not `15`).
-- [ ] **Your existing colors must survive.** On first run with an old
+- [X] **Your existing colors must survive.** On first run with an old
   `tr4w.ini`, the log should say `[Colors] seeded 50 element(s) from the loaded
   configuration` and the window should look exactly as it did.
-- [ ] **Ctrl-J.** Every menu route that used to open the old list -- Ctrl-J
+- [X] **Ctrl-J.** Every menu route that used to open the old list -- Ctrl-J
   itself, Appearance, Colors, WinKeyer -- must open Preferences and nothing
   else. Nothing should open an empty list, and nothing should fail to open.
 - [ ] **`QuickEditResponse` prompts still parent correctly.** They used to
@@ -1060,6 +1060,64 @@ reaches `Dirty` through its handler or is picked up by `HookDirtyMarker`, whose
 arms cover every control type the form actually uses. The remainder of the
 report is buttons, which do their own work, and navigation, which is excluded
 on purpose.
+
+### 30. Application.Run -- THE PIVOT.  Test this harder than anything before it
+
+**TR4W no longer owns its message loop.** `Application.Run` does. Nothing in
+this section is provable by a build, a lint or the corpus -- the corpus runs
+headless `/EXPORT`, which halts before any GUI init, so it says nothing at all
+about this change. Branch `phase3c-application-run`.
+
+**If something feels wrong that is not listed here, say so before rationalising
+it.** Four things that used to be answered by one loop are now answered by four
+different LCL mechanisms, and the failure mode of each is "a key does nothing"
+rather than a crash.
+
+- [ ] **EVERY MENU SHORTCUT.** All 101 rows of `ACCELERATORS` are now matched in
+      an `AddOnKeyDownBeforeHandler` instead of by `TranslateAccelerator`. Work
+      down the menus and try the ones you actually use -- Alt+X, Ctrl+J,
+      Ctrl+Alt+B, Ctrl+W, the Ctrl+Shift+digit window shortcuts. A shortcut that
+      does nothing is the signature failure of this change.
+- [ ] **The same shortcuts with a TOOL WINDOW focused.** The handler is
+      application-wide by design, so Ctrl+Shift+1 should open the dupe sheet
+      whether the callsign field or the band map has focus.
+- [ ] **Ctrl-C / V / X / A / Z in the DX cluster command field** must still
+      paste and copy, NOT fire Execute Config File or Clear Mult Sheet
+      (issue #23). This is now a focus test rather than a message test.
+- [ ] **The numeric keypad as CW memories**, if you use them
+      (`KEYPAD CW MEMORIES`). They fire whatever has focus.
+- [ ] **F10 does nothing**, as before -- it must not open the menu bar.
+- [ ] **The F-key labels follow Ctrl and Alt.** Hold Ctrl: the alternate bank
+      shows. Release: the plain one comes back. This is the arm with the largest
+      change in mechanism -- the loop watched for a key-up whose key WAS Ctrl or
+      Alt; there is no application-wide key-up hook, so it now watches the
+      modifier state TRANSITION through `OnUserInput`. Watch for labels that
+      stick on the wrong bank.
+- [ ] **QUICK QSL -- and a deliberate narrowing.** `\` and `=` still QSL while
+      you are typing a callsign. They no longer fire while a TOOL WINDOW has
+      focus: type a call, click into the band map, press `\` -- nothing happens,
+      where it used to QSL. There is no application-wide KeyPress hook, and
+      QuickQSL does nothing unless the call window has text, so it moved onto
+      the entry fields. **If that edge case matters to you, say so** -- it can
+      come back, at the cost of a `VkKeyScan` and a keyboard-layout assumption.
+- [ ] **A fault must not take the session down.** The recovery wrapper is an
+      `AddOnExceptionHandler` now, same 10-faults-in-a-minute limit. Hard to
+      provoke deliberately; what to watch for is the OPPOSITE failure -- a
+      dialog appearing for an exception that used to be swallowed and logged.
+      `grep AppException tr4w.log`.
+- [ ] **Shutdown.** `HamScoreShutdown` moved into `tr4w_ShutDown`. It was a
+      `finally` below the message loop, which **could never have run**: TR4W
+      exits through `ExitProcess`. So this is the first build in which the
+      HamScore uploader is actually stopped cleanly -- watch for a hang or a
+      delay on exit that was not there before.
+- [ ] **Long soak.** Leave it running for a session with a cluster connected.
+      The loop had its own fault recovery for a reason.
+
+**Still Win32, deliberately, and not blocked by any of this:** the main menu is
+a raw `HMENU` of ~181 items attached with `SetMenu`, and it stays one. The
+accelerator handler reads the same `ACCELERATORS` table the menu captions are
+drawn from, so there is still ONE source of truth and the menu can convert on
+its own schedule rather than being dragged into the pivot.
 
 ---
 
