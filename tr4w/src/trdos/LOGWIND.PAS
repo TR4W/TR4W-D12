@@ -1045,7 +1045,8 @@ uses
   LogCW,
   LogStuff,
   PostUnit,
-  LogDupe;
+  LogDupe,
+  uBandMapView;
 
 
 type
@@ -3519,7 +3520,6 @@ begin
   // through this unit's tangled uses chain.
   logger.Trace('[DisplayBandMap] enter: ' +
                'BandMapEnable=%d, BandMapWindowExists=%d, ' +
-               'BandMapPreventRefresh=%d, ' +
                'BandMapBand=%d, BandMapMode=%d, ' +
                'BandMapAllBands=%d, BandMapAllModes=%d, ' +
                'BandMapDupeDisplay=%d, BandMapDisplayCQ=%d, ' +
@@ -3527,7 +3527,6 @@ begin
                'FCount=%d',
     [Ord(BandMapEnable),
      Ord(tWindowsExist(tw_BANDMAPWINDOW_INDEX)),
-     Ord(BandMapPreventRefresh),
      Ord(BandMapBand), Ord(BandMapMode),
      Ord(BandMapAllBands),
      Ord(BandMapAllModes),
@@ -3547,8 +3546,13 @@ begin
      logger.Trace('[DisplayBandMap] exit: bandmap window does not exist');
      Exit;
      end;
-//  if  BandMapPreventRefresh then  Exit;             // GAV  4.45.6
-  SpotsList.Display;
+  // ASK WHOEVER IS SHOWING IT.  This used to be SpotsList.Display -- the
+  // model reaching into a list box.  The band map is a form now and owns its
+  // own painting; what crosses the seam is a request, not a control.
+  if Assigned(BandMapRefresh) then
+     begin
+     BandMapRefresh;
+     end;
   end;
 
  procedure NextBandMapEntry;
@@ -3570,8 +3574,12 @@ begin
    TempSpot.FBand := NoBand;
               BMp := 0;
   //            tLB_SETCURSEL(BandMapListBox, 0);
-  CC := Windows.SendMessage(BandMapListBox, LB_GETCOUNT, 0, 0);
-    if CC = LB_ERR then Exit;
+  // THE MODEL'S COUNT, not the control's.  This asked the list box how many
+  // items it held and then indexed SpotsList.Get with the answer -- two
+  // different lists whenever a filter was active or the display limit had
+  // scrolled.  Get() is indexed against FList, so FList is what to count.
+  CC := SpotsList.Count;
+    if CC = 0 then Exit;
      if Config.TwoRadioMode and Config.QSYInactiveRadio then
         begin
         Band := InactiveRadioptr.BandMemory
@@ -3595,7 +3603,7 @@ if (K = -1) or (k > CC) then
    end;
     for j := k to CC do      // loop thru bm entries looking for match to band and mode
        begin
-       CC := Windows.SendMessage(BandMapListBox, LB_GETCOUNT, 0, 0);     // Current Cursor
+       CC := SpotsList.Count;
         Spot := SpotsList.Get(j);                                       // get current spot
      //   GetBandMapBandModeFromFrequency(TempSpot.FFrequency, TempSpot.FBand, TempSpot.FMode);
         CallWindowString := Spot.FCall;
@@ -3632,22 +3640,24 @@ if (K = -1) or (k > CC) then
             if k > CC then
                begin
                k := 0;
-               CC := Windows.SendMessage(BandMapListBox, LB_GETCOUNT, 0, 0);
+               CC := SpotsList.Count;
                end;
        end;     // end loop
            if k > CC-1 then
               begin
               k := 0;
-              CC := Windows.SendMessage(BandMapListBox, LB_GETCOUNT, 0, 0);
+              CC := SpotsList.Count;
               end;
 
 end;     // end procedure
 
 procedure BMFirst;
 begin
-              BMp := 0;
-              tLB_SETCURSEL(BandMapListBox, 0);
-
+   BMp := 0;
+   if Assigned(BandMapSelectTop) then
+      begin
+      BandMapSelectTop;
+      end;
 end;
 
 

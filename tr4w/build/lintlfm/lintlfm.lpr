@@ -41,7 +41,13 @@ uses
    Spin,       // TSpinEdit -- Auto-CQ's delay field
    Grids,      // TStringGrid -- the band plan and the beacon monitor
    Buttons,    // TSpeedButton -- the beacon monitor's push-like radio group
+   Menus,      // TPopupMenu / TMenuItem -- the band map's context menu
    DateTimePicker;  // TDateTimePicker -- the Edit QSO date/time field
+
+const
+   { Stands in for a collection item's unnamed class -- see the parser. Not a
+     legal Pascal identifier, so it can never collide with a real class name. }
+   COLLECTION_ITEM = '<item>';
 
 var
    gFiles:  integer = 0;
@@ -219,6 +225,26 @@ begin
             Continue;
             end;
 
+         // A COLLECTION ITEM OPENS A SCOPE WITH NO CLASS NAME.  "Panels = <"
+         // is an ordinary property line and is checked as one, but each
+         // "item ... end" inside it describes a TCollectionItem whose class the
+         // .lfm never names -- TStatusPanel here, and something different for
+         // every other collection.  Pushing a sentinel keeps the stack balanced
+         // so the enclosing object's scope survives; without it, every property
+         // inside an item was attributed to the PARENT and reported as missing
+         // (TStatusBar was said to have no published Text, which is a property
+         // of its panels).
+         //
+         // The properties inside are then NOT checked.  That is the deliberate
+         // trade this tool's parser already makes elsewhere: "a false positive
+         // here would be worse than a miss, because it would train the reader
+         // to ignore the tool."
+         if s = 'item' then
+            begin
+            stack.Add(COLLECTION_ITEM);
+            Continue;
+            end;
+
          if s = 'end' then
             begin
             if stack.Count > 0 then
@@ -251,6 +277,10 @@ begin
             end;
 
          clsName := stack[stack.Count - 1];
+         if clsName = COLLECTION_ITEM then
+            begin
+            Continue;
+            end;
          cls     := ResolveClass(clsName, stack.Count = 1);
 
          if cls = nil then
@@ -328,6 +358,8 @@ begin
                     TStringGrid, TDrawGrid,
                     // Buttons
                     TSpeedButton, TBitBtn,
+                    // Menus
+                    TPopupMenu, TMenuItem, TMainMenu,
                     // DateTimeCtrls
                     TDateTimePicker]);
 

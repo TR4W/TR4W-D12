@@ -70,6 +70,8 @@ uses
   uDXSpotParse in 'src\uDXSpotParse.pas',
   uTelnet in 'src\uTelnet.pas',
   uBandmap in 'src\uBandmap.pas',
+  uBandMapView in 'src\uBandMapView.pas',
+  uBandMapForm in 'src\ui\lcl\uBandMapForm.pas',
   uFileView in 'src\uFileView.pas',
   uAutoCQ in 'src\uAutoCQ.pas',
   uCAT in 'src\uCAT.pas',
@@ -1058,7 +1060,11 @@ begin
   if not tHandLogMode then
      begin
      SetTimer(tr4whandle, ONE_SECOND_TIMER_HANDLE, 1000, @OneSecTimerProc);
-     SetTimer(tr4whandle, BANDMAP_REFRESH_TIMER_HANDLE, 250, @BandMapRefreshTimerProc);
+     // The 250 ms band map refresh timer stood here: a SetTimer on the MAIN
+     // window, armed once and never killed, ticking for the life of the
+     // program whether or not the band map existed.  The band map form owns
+     // a TTimer now -- a window refreshes itself, and the timer lives and
+     // dies with the window.
      for c := menu_alt_increment_time_1 to menu_alt_increment_time_0 do EnableMenuItem(tr4w_main_menu, c, MF_GRAYED + MF_BYCOMMAND);
      end
   else
@@ -1279,27 +1285,17 @@ begin
           // TTR4WEntryEvents.CallKeyUp -- Phase 3c.  ShowFMessages(0) above stays:
           // it fires whatever has focus.
           //
-          // BandMapListBox below does NOT move yet.  It is a raw Win32 list box in
-          // the band map, a different window, and it converts when that window
-          // does -- not as a side effect of the entry fields.
-
-          if Msg.HWND = BandMapListBox then
-          begin
-            if Msg.wParam = VK_DELETE then DeleteSpotFromBandmap;
-{ $ I F  O L DCTRLJ}
-            if Msg.wParam in [66, 77, 68, 80, 206] then
-            begin
-              if Msg.wParam = 66 then InvertBoolean(BandMapAllBands);
-              DisplayBandMap; //ProcessInput(BAB);
-             if Msg.wParam = 77 then InvertBoolean(BandMapAllModes) ;
-              DisplayBandMap; //ProcessInput(BAM);
-              if Msg.wParam = 68 then InvertBoolean(BandMapDupeDisplay);
-              DisplayBandMap; //ProcessInput(BDD);
-              if Msg.wParam = 206 then InvertBoolean(BandMapSO2RDisplay);
-              DisplayBandMap; //ProcessInput(BDD);
-            end;
-{ $ I F END}
-          end;
+          // THE LOOP HAS NO WINDOW-SPECIFIC ARM LEFT.
+          //
+          // What stood here dispatched VK_DELETE and the B / M / D filter
+          // toggles by comparing Msg.HWND against the band map list box handle,
+          // because a raw Win32 child raises no LCL key events and nothing else
+          // could see them.  The band map is a TDrawGrid on a designed form now,
+          // so they are its OnKeyUp -- uBandMapForm.SpotsKeyUp, which also
+          // records why the wParam 80 and 206 tests that were here are not
+          // reproduced.
+          //
+          // This was the last thing gating Application.Run.
         end;
 
       WM_SYSKEYUP:

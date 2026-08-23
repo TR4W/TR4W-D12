@@ -369,8 +369,10 @@ begin
      VisibleLog.ShowRemainingMultipliers;
      end;
   BandMapBand := ActiveBand;
+  // ShowSpotInfo stood here.  DisplayBandMap now goes through the band map
+  // form, whose refresh updates its own status bar -- the second call was
+  // asking a window to do what it had just done.
   DisplayBandMap;
-  ShowSpotInfo;
   if QSONumberByBand then
      begin
      DisplayNextQSONumber;

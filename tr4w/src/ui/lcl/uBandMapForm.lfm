@@ -1,0 +1,116 @@
+object frmBandMap: TfrmBandMap
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Band map'
+  ClientHeight = 300
+  ClientWidth = 460
+  Color = clWindow
+  DoubleBuffered = True
+  KeyPreview = True
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnResize = HandleResize
+  OnDestroy = HandleDestroy
+  object grdSpots: TDrawGrid
+    Left = 0
+    Top = 0
+    Width = 460
+    Height = 281
+    Align = alClient
+    BorderStyle = bsNone
+    ColCount = 1
+    DefaultColWidth = 135
+    DefaultDrawing = False
+    DefaultRowHeight = 14
+    FixedCols = 0
+    FixedRows = 0
+    Options = [goThumbTracking, goSmoothScroll]
+    PopupMenu = pmBandMap
+    RowCount = 1
+    ScrollBars = ssAutoHorizontal
+    TabOrder = 0
+    OnDblClick = SpotsDblClick
+    OnDrawCell = SpotsDrawCell
+    OnEnter = SpotsEnter
+    OnExit = SpotsExit
+    OnKeyUp = SpotsKeyUp
+    OnSelection = SpotsSelection
+  end
+  object sbSpot: TStatusBar
+    Left = 0
+    Top = 281
+    Width = 460
+    Height = 19
+    Panels = <
+      item
+        Text = ' '
+        Width = 90
+      end
+      item
+        Text = ' '
+        Width = 60
+      end
+      item
+        Text = ' '
+        Width = 160
+      end
+      item
+        Text = ' '
+        Width = 150
+      end>
+    SimplePanel = False
+  end
+  object tmrRefresh: TTimer
+    Interval = 250
+    OnTimer = RefreshTick
+  end
+  object pmBandMap: TPopupMenu
+    OnPopup = MenuPopup
+    object miAllBands: TMenuItem
+      Caption = 'BAND MAP ALL BANDS'
+      ShortCut = 66
+      OnClick = MenuAllBandsClick
+    end
+    object miAllModes: TMenuItem
+      Caption = 'BAND MAP ALL MODES'
+      ShortCut = 77
+      OnClick = MenuAllModesClick
+    end
+    object miDisplayCQ: TMenuItem
+      Caption = 'BAND MAP DISPLAY CQ'
+      OnClick = MenuDisplayCQClick
+    end
+    object miDupeDisplay: TMenuItem
+      Caption = 'BAND MAP DUPE DISPLAY'
+      ShortCut = 68
+      OnClick = MenuDupeDisplayClick
+    end
+    object miMultsOnly: TMenuItem
+      Caption = 'BAND MAP MULTS ONLY'
+      OnClick = MenuMultsOnlyClick
+    end
+    object miSep1: TMenuItem
+      Caption = '-'
+    end
+    object miDeleteSpot: TMenuItem
+      Caption = 'Delete selected spot'
+      OnClick = MenuDeleteSpotClick
+    end
+    object miRemoveAll: TMenuItem
+      Caption = 'Remove all spots'
+      OnClick = MenuRemoveAllClick
+    end
+    object miSep2: TMenuItem
+      Caption = '-'
+    end
+    object miQSYInactive: TMenuItem
+      Caption = 'Send spot to inactive radio'
+      OnClick = MenuQSYInactiveClick
+    end
+    object miSO2RDisplay: TMenuItem
+      Caption = 'BAND MAP SO2R DISPLAY'
+      OnClick = MenuSO2RDisplayClick
+    end
+  end
+end

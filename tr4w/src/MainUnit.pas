@@ -286,8 +286,6 @@ procedure PTTOffWhenStopWAV(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
   stdcall;
 procedure OneSecTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
   stdcall;
-procedure BandMapRefreshTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
-  stdcall;
 
 procedure SaveTR4WPOSFILE;
 procedure LoadTR4WPOSFILE;
@@ -526,6 +524,7 @@ uses
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
   uMainForm,
   uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
+  uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
@@ -2255,7 +2254,8 @@ begin
      tr4w_WindowsArray[i].WndHandle := 0;
      end;
 
-  tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndProcAdr := @BandmapDlgProc;
+  // No WndProcAdr for the band map: OpenTR4WWindow's seam builds an LCL form
+  // for tw_BANDMAPWINDOW_INDEX and never reaches CreateDialogIndirectParam.
   tr4w_WindowsArray[tw_DUPESHEETWINDOW1_INDEX].WndProcAdr := @DupesheetDlgProc;
   tr4w_WindowsArray[tw_DUPESHEETWINDOW2_INDEX].WndProcAdr := @DupesheetDlgProc;
   tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndProcAdr :=
@@ -2301,58 +2301,6 @@ begin
   // Windows.SetWindowTextA(tr4whandle, inttopchar({GetHeapStatus.TotalFree}AllocMemSize));
  // Windows.SetWindowTextA(InsertWindowHandle, inttopchar(FreeMemCount));
 {$IFEND}
-end;
-
-procedure BandMapRefreshTimerProc(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
-  stdcall;
-begin
-  // Was `if BandMapNeedsRefresh then ... := False`.  That boolean was raised in
-  // two units and cleared here, so any mutator that forgot to raise it simply
-  // did not appear until something unrelated repainted.  SpotsList now bumps a
-  // token from every mutator and Display records what it painted, so nothing
-  // has to remember.
-  // NOTHING TO PAINT INTO -- ask no further.  The token is deliberately NOT
-  // consumed here: it stays raised so the spots that arrived while the window
-  // was shut are drawn the moment it opens.
-  //
-  // This guard is why the token needs it.  The old boolean was cleared by this
-  // timer whether or not the repaint happened, so a closed band map cost one
-  // wasted call; the token stays raised until Display actually paints, so
-  // without this test a closed band map called DisplayBandMap four times a
-  // second forever.  Measured on NY4I's 2026-08-22 log: ~2,600 trace lines
-  // before the window was even created.
-  if not tWindowsExist(tw_BANDMAPWINDOW_INDEX) then
-     begin
-     Exit;
-     end;
-
-  // NOBODY IS LOOKING.  The tool windows are OWNED POPUPS of the main window
-  // (WS_POPUP, created with tr4whandle as the owner), so Windows hides them
-  // for us when TR4W is minimised -- and a hidden band map still cost a full
-  // render four times a second: the filter pass over every spot, the centring
-  // arithmetic, LB_RESETCONTENT plus one LB_ADDSTRING per row, and a CTY
-  // prefix resolution per spot inside UpdateSpotsMultiplierStatus.
-  //
-  // Same rule as the test above: DO NOT consume the token.  Everything that
-  // arrived while TR4W was minimised is drawn by the first tick after it is
-  // restored, so there is no stale display to reason about -- which is the
-  // whole reason the token records what was PAINTED rather than what was seen.
-  //
-  // Only visibility is tested, never occlusion.  Whether another window is
-  // sitting on top of this one is not something Windows will answer reliably,
-  // and guessing at it would trade a real repaint for a maybe-saved one.
-  // IsIconic is not tested either: the dialog template carries no
-  // WS_MINIMIZEBOX (VC.pas:207), so the band map cannot be minimised on its
-  // own -- only hidden along with its owner, which is what this catches.
-  if not IsWindowVisible(tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndHandle) then
-     begin
-     Exit;
-     end;
-
-  if SpotsList.NeedsRepaint then
-     begin
-     DisplayBandMap;
-     end;
 end;
 
 procedure PTTOffWhenStopWAV(uTimerID, uMessage: UINT; dwUser, dw1, dw2: DWORD)
@@ -4237,16 +4185,24 @@ begin
          end;
 
     menu_ctrl_refreshbandmap:
-      // UpdateBlinkingBandMapCall;
-      Windows.SetFocus(BandMapListBox); // 4.84.1
+      begin
+        if TR4WBandMapForm <> nil then
+           begin
+           TR4WBandMapForm.grdSpots.SetFocus;
+           end;
+      end;
 
     menu_ctrl_cursorinbandmap:
       begin
-        if tWindowsExist(tw_BANDMAPWINDOW_INDEX) then
+        // BandMapSettingFocus bracketed this call to stop DefDlgProc's
+        // WM_ACTIVATE handling firing a nested SetFocus that immediately
+        // produced LBN_KILLFOCUS, which stole the focus straight back
+        // (issue #861).  There is no DefDlgProc and no LBN_KILLFOCUS now --
+        // the LCL owns focus for a control on a form -- so the guard goes with
+        // the thing it was guarding against.
+        if TR4WBandMapForm <> nil then
            begin
-           BandMapSettingFocus := True;
-           Windows.SetFocus(BandMapListBox);
-           BandMapSettingFocus := False;
+           TR4WBandMapForm.grdSpots.SetFocus;
            end;
       end;
 
@@ -4911,10 +4867,16 @@ begin
      Exit;
      end;
 
-  if TempHWND = BandMapListBox then
+  // ENTER IN THE BAND MAP TUNES THE RADIO.  This used to PostMessage a
+  // hand-assembled WM_COMMAND -- 131173 is LBN_DBLCLK in the high word and the
+  // list box's control id in the low word -- so the band map's dialog proc
+  // would run its double-click arm.  Synthesising a notification in order to
+  // reach a routine is a Win32 idiom for "I have no way to call that"; the form
+  // exposes the action.
+  if (TR4WBandMapForm <> nil) and
+     (TempHWND = TR4WBandMapForm.grdSpots.Handle) then
      begin
-     PostMessage(tr4w_WindowsArray[tw_BANDMAPWINDOW_INDEX].WndHandle, WM_COMMAND,
-       131173, TempHWND);
+     TR4WBandMapForm.SpotsDblClick(nil);
      Exit;
      end;
 
@@ -5348,6 +5310,10 @@ begin
   if ID = tw_FUNCTIONKEYSWINDOW_INDEX then
      begin
      h := CreateTR4WFunctionKeysWindow(tr4whandle);
+     end
+  else if ID = tw_BANDMAPWINDOW_INDEX then
+     begin
+     h := CreateTR4WBandMapWindow(tr4whandle);
      end
   else
      begin

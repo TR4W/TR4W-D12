@@ -1914,10 +1914,11 @@ begin
      begin
      Exit;
      end;
-  if bandmappreventrefresh then
-     begin
-     exit;
-     end;
+  // A SECOND COPY OF DEFECT 3.1, and it drops data for the same reason: this
+  // returned when the band map had focus, so a CQ marker for the frequency the
+  // operator was sitting on was never created at all.  BandMapPreventRefresh is
+  // gone with the Win32 window -- freezing the VIEW is the form's business and
+  // it does not involve refusing to record anything.
   if StringIsAllNumbers(Call) then
      begin
      Exit;

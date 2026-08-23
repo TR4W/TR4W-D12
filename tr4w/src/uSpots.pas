@@ -92,7 +92,6 @@ type
     // every index above it.  The LCL form takes copies immediately.
     function BuildVisibleSpots(var aIndex: array of integer;
                                var aCursorRow: integer): integer;
-    procedure Display;
     procedure Delete(Index: integer);
     //    procedure ClearDupes;
     procedure ResetSpotsTimes;
@@ -109,6 +108,20 @@ type
     // whose change is to the VIEW.
     procedure RequestRepaint;
     function NeedsRepaint: boolean;
+
+    // "I have drawn everything up to here."  Display does this for itself at
+    // the end of its own successful path; the LCL form has to say so explicitly
+    // because it paints from a snapshot rather than inside this object.
+    procedure MarkPainted;
+
+    // WHERE A SPOT IS NOW, found by identity rather than trusted from an index
+    // the caller kept.  InsertSpot Moves the array, so an index taken a quarter
+    // second ago may name a different spot -- which is exactly how the old band
+    // map could paint, and delete, the wrong row.  Frequency AND callsign,
+    // because the list may legitimately hold the same call twice on different
+    // frequencies.  Linear over at most a thousand entries and only ever called
+    // from an operator action.
+    function IndexOfSpot(const aSpot: TSpotRecord): integer;
     property RepaintToken: cardinal read FRepaintToken;
   end;
 
@@ -123,6 +136,7 @@ uses
   LOGSUBS2,
   MainUnit,
   uNet,
+  uBandMapView,   // BandMapSelected -- ask the view, do not reach into it
   uBandmap,
   LogWind;
 
@@ -480,64 +494,6 @@ begin
     [bottom, top, Result, aCursorRow, BandMapDisplayLimit]);
 end;
 
-procedure TDXSpotsList.Display;
-var
-  rows: integer;
-  k: integer;
-  idx: array of integer;
-  aCursorRow: integer;
-begin
-  if BandMapListBox = 0 then
-     begin
-     logger.Trace('[SpotsList.Display] exit: BandMapListBox=0');
-     Exit;
-     end;
-  // The focus freeze STAYS here, and only here.  Holding the rows still under
-  // the operator's mouse is the behaviour that was wanted; discarding the spots
-  // (the copy of this gate that used to sit at the top of AddSpot) never was.
-  // Leaving without recording FPaintedToken means NeedsRepaint stays true and
-  // the next tick after focus leaves paints everything that arrived meanwhile.
-  if BandMapPreventRefresh then
-     begin
-     logger.Trace('[SpotsList.Display] exit: BandMapPreventRefresh=True');
-     Exit; // Gav 4.45.6
-     end;
-
-  aCursorRow := tLB_GETCURSEL(BandMapListBox);
-  SetLength(idx, FCount + 1);
-  rows := BuildVisibleSpots(idx, aCursorRow);
-
-  tSetWindowRedraw(BandMapListBox, False);
-  tLB_RESETCONTENT(BandMapListBox);
-  SendMessage(BandMapListBox, LB_INITSTORAGE, rows, 10000);
-  for k := 0 to rows - 1 do
-     begin
-     SendMessage(BandMapListBox, LB_ADDSTRING, 0, idx[k]);
-     end;
-  tLB_SETCURSEL(BandMapListBox, aCursorRow);
-  tSetWindowRedraw(BandMapListBox, True);
-  // WM_SETREDRAW(True) causes the list box to queue an erase+paint, which
-  // produces a visible flash. Cancel the pending erase, then repaint
-  // immediately without erasing -- owner-draw items fill their own background.
-  ValidateRect(BandMapListBox, nil);
-  RedrawWindow(BandMapListBox, nil, 0, RDW_INVALIDATE or RDW_NOERASE or RDW_UPDATENOW);
-  // Issue #997: asm-push wsprintf -> SysUtils.Format (TC_SPOTS = '%d spots').
-  uAnsiStr.StrPCopy(wsprintfBuffer, SysUtils.Format(TC_SPOTS, [rows]));
-  SetTextInBMSB(5, wsprintfBuffer);
-  if rows = 0 then
-     begin
-     ClearSpotInfo;
-     end;
-  // LAST, and only on the path that actually painted.  Every early Exit above
-  // leaves the token unequal, so a repaint refused because the window did not
-  // exist yet, or because the list was frozen, is retried on the next tick
-  // rather than being silently marked done.
-  FPaintedToken := FRepaintToken;
-end;
-
-
-// Gav end of section added
-
 procedure TDXSpotsList.Clear;
 begin
   RequestRepaint;
@@ -561,6 +517,31 @@ end;
 function TDXSpotsList.NeedsRepaint: boolean;
 begin
   Result := FRepaintToken <> FPaintedToken;
+end;
+
+procedure TDXSpotsList.MarkPainted;
+begin
+  FPaintedToken := FRepaintToken;
+end;
+
+function TDXSpotsList.IndexOfSpot(const aSpot: TSpotRecord): integer;
+var
+  i: integer;
+begin
+  Result := -1;
+  if not Assigned(FList) then
+     begin
+     Exit;
+     end;
+  for i := 0 to FCount - 1 do
+     begin
+     if (FList^[i].FFrequency = aSpot.FFrequency) and
+        (FList^[i].FCall = aSpot.FCall) then
+        begin
+        Result := i;
+        Exit;
+        end;
+     end;
 end;
 
 procedure TDXSpotsList.Delete(Index: integer);
@@ -828,19 +809,17 @@ procedure TDXSpotsList.SetCursor;
 begin
   FCriticalSection.Enter;
   try
-     if BandMapListBox <> 0 then
+     // WHICH SPOT THE OPERATOR IS ON, remembered as a FREQUENCY so the
+     // centring window can find it again after the list has been rebuilt.
+     // This used to ask the list box for its selected item's data; the band
+     // map is a form now and answers through the view seam.
+     if Assigned(BandMapSelected) then
         begin
-        FCurrentCursorFreq := GetBMSelItemData;
-        if FCurrentCursorFreq <> LB_ERR then
+        FCurrentCursorFreq := BandMapSelected;
+        if (FCurrentCursorFreq >= 0) and (FCurrentCursorFreq < FCount) and
+           Assigned(FList) then
            begin
-           if Assigned(FList) then
-              begin
-              FCurrentCursorFreq := FList^[FCurrentCursorFreq].FFrequency;
-              end
-           else
-              begin
-              DebugMsg('FList was nil in SetCursor');
-              end;
+           FCurrentCursorFreq := FList^[FCurrentCursorFreq].FFrequency;
            end;
         end;
   finally
