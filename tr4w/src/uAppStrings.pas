@@ -47,8 +47,13 @@ resourcestring
       'The old file is no longer read:' + sLineBreak +
       '    %s' + sLineBreak + sLineBreak +
       'Remove it now?' + sLineBreak + sLineBreak +
-      'Choosing No keeps the file and TR4W will not ask again. ' +
       'The file is ignored either way.';
+
+   { THE SECOND QUESTION, ASKED SEPARATELY.  It used to be a sentence in the
+     prompt above saying that No would also stop TR4W asking -- so an operator
+     who was simply not ready to delete a file today gave a permanent answer
+     without meaning to.  Two questions, two controls. }
+   SIniRetireDontAsk = 'Do not ask me about this file again';
 
    SIniRetireRemoved  = 'Removed %s.';
    SIniRetireFailed   = 'Could not remove %s -- %s.' + sLineBreak +

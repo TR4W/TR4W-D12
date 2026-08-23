@@ -183,6 +183,7 @@ uses
   uFunctionKeysForm in 'src\ui\lcl\uFunctionKeysForm.pas',
   uBandPlanForm in 'src\ui\lcl\uBandPlanForm.pas',
   uLegacyIniPrompt in 'src\ui\lcl\uLegacyIniPrompt.pas',
+  uIniRetireForm in 'src\ui\lcl\uIniRetireForm.pas',
   uWinManagerForm in 'src\ui\lcl\uWinManagerForm.pas',
   uMessagesListForm in 'src\ui\lcl\uMessagesListForm.pas',
   uEditMessageForm in 'src\ui\lcl\uEditMessageForm.pas',

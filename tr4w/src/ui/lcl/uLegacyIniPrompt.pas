@@ -54,6 +54,7 @@ uses
    Controls,
    uAppStrings,
    uRadioConfigStore,
+   uIniRetireForm,    // the Yes/No + do-not-ask-again dialog
    uTR4WConfigFile,   // SaveConfig -- the ONE writer of tr4w.json
    VC,          // TR4W_INI_FILENAME
    MainUnit;    // logger
@@ -63,7 +64,8 @@ var
    ini: string;
    err: string;
    store: TRadioConfigStore;
-   answer: integer;
+   dontAskAgain: boolean;
+   remove: boolean;
 begin
    ini := string(TR4W_INI_FILENAME);
    if not FileExists(ini) then
@@ -97,34 +99,39 @@ begin
          Exit;
          end;
 
-      // DISMISSING IS NOT ANSWERING.  This read `<> mrYes`, which lumped the
-      // title-bar X in with No -- and No is recorded permanently.  So closing
-      // the dialog without reading it silenced the offer for good, with no way
-      // back from the UI: the only cure is editing keepLegacyIni in
-      // settings\tr4w.json by hand.  A question that can be answered by
-      // accident, irreversibly, is worse than one that is asked twice.
-      //
-      // Now only an explicit No is recorded.  Escape or the X leaves the flag
-      // alone and the offer comes back next start.
-      answer := MessageDlg(SIniRetireTitle,
-                           Format(SIniRetirePrompt, [aStoreFileName, ini]),
-                           mtConfirmation, [mbYes, mbNo], 0);
+      // TWO QUESTIONS, TWO CONTROLS.  This was a MessageDlg read as
+      // `<> mrYes`, so No -- and the title-bar X with it -- recorded a
+      // PERMANENT "never ask again", which is not what No means.  "Remove the
+      // file?" and "should I stop asking?" are separate, and the second one is
+      // a check box now (NY4I, 2026-08-23).
+      remove := AskToRetireLegacyIni(Format(SIniRetirePrompt,
+                                            [aStoreFileName, ini]),
+                                     dontAskAgain);
 
-      if answer <> mrYes then
+      // THE CHECK BOX IS ANSWERED FIRST, AND INDEPENDENTLY OF THE BUTTON.  It
+      // is its own question, so it is recorded whichever way the operator
+      // answered the other one -- including alongside Yes.  That matters here
+      // rather than being a nicety: the removal below can FAIL (a read-only
+      // ini is exactly NY4I's case), and if the tick were only recorded on the
+      // No path, an operator who ticked it and pressed Yes would be asked again
+      // next start despite having said not to be.
+      //
+      // RE-READ, SET, WRITE.  The store was loaded before the dialog; saving
+      // the whole object now would write back a snapshot taken before the
+      // operator had a chance to change anything else, which is only safe
+      // because nothing else runs while a modal dialog is up -- but the narrow
+      // write is what makes that not need arguing about.
+      if dontAskAgain then
          begin
-         if answer <> mrNo then
-            begin
-            logger.Info('[LegacyIni] offer dismissed rather than answered -- asking again next start');
-            Exit;
-            end;
-         // RE-READ, SET, WRITE.  The store was loaded before the dialog; saving
-         // the whole object now would write back a snapshot taken before the
-         // operator had a chance to change anything else, which is only safe
-         // because nothing else runs while a modal dialog is up -- but the
-         // narrow write is what makes that not need arguing about.
          store.KeepLegacyIni := True;
          SaveConfig(aStoreFileName, store, nil, nil);
-         logger.Info('[LegacyIni] operator chose to keep %s; not asking again', [ini]);
+         logger.Info('[LegacyIni] operator asked not to be reminded about %s again',
+                     [ini]);
+         end;
+
+      if not remove then
+         begin
+         logger.Info('[LegacyIni] operator left %s in place', [ini]);
          Exit;
          end;
    finally
