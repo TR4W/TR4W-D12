@@ -76,6 +76,19 @@ $patterns = [ordered]@{
    # make the number one nobody could reconcile against the source.
    'type.HWND'                 = '\bHWND\b'
 
+   # THE MAIN WINDOW'S HANDLE REGISTRY, counted separately because type.HWND
+   # CANNOT SEE IT.  That pattern matches where the TYPE NAME appears --
+   # declarations, parameters, casts -- so `wh: array[TMainWindowElement] of
+   # HWND` is one match however many places index it.  Converting nineteen
+   # wh[mweCall] / wh[mweExchange] sites to the TEdit objects moved type.HWND by
+   # exactly zero, which is true and useless.
+   #
+   # This is the number that moves when a control stops being reached by handle,
+   # and it is the one to drive down: 24 elements, and it can only reach zero
+   # when every main-window control is an LCL object.  See
+   # docs/MAIN_WINDOW_CONTROL_CROSSWALK.md for which are ready.
+   'array.wh'                  = '\bwh\[mwe'
+
    # Window creation -- the surfaces themselves.
    'CreateModalDialog'         = '\bCreateModalDialog\s*\('
    'tDialogBox'                = '\btDialogBox\s*\('

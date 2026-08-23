@@ -160,6 +160,28 @@ var
   TR4WCallEdit: TEdit = nil;
   TR4WExchangeEdit: TEdit = nil;
 
+{ THE ENTRY FIELDS, REACHED SAFELY.
+
+  A headless /EXPORT boots the contest, writes the files and halts before any
+  GUI exists, so TR4WCallEdit and TR4WExchangeEdit are NIL on that path.  The
+  Win32 calls these replace -- SetWindowTextA(wh[mweCall], ...), EM_SETSEL and
+  the rest -- were SILENT NO-OPS on handle 0, so nothing on the export path ever
+  had to think about it.
+
+  That is not a detail to rediscover per call site.  Converting nineteen of them
+  to direct property access took the golden corpus from 22/0/4 to 0/26 in one
+  step: every export died before it wrote a line, and it died so early that not
+  even the startup breadcrumbs ran.  Turning "does nothing when the window is
+  absent" into "faults when the window is absent" is the characteristic hazard
+  of replacing a handle with an object, and it belongs in ONE place. }
+function  EntryText(const aEdit: TEdit): string;
+procedure SetEntryText(const aEdit: TEdit; const aText: string);
+procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
+function  EntrySelStart(const aEdit: TEdit): integer;
+procedure FocusEntry(const aEdit: TEdit);
+procedure ShowEntry(const aEdit: TEdit; const aVisible: boolean);
+procedure RepaintEntry(const aEdit: TEdit);
+
 implementation
 
 {$R *.lfm}
@@ -526,6 +548,84 @@ begin
       begin
       Windows.SetMenu(Result, aMenu);
       end;
+end;
+
+
+function EntryText(const aEdit: TEdit): string;
+begin
+   if aEdit = nil then
+      begin
+      Result := '';
+      Exit;
+      end;
+   Result := aEdit.Text;
+end;
+
+procedure SetEntryText(const aEdit: TEdit; const aText: string);
+begin
+   if aEdit = nil then
+      begin
+      Exit;
+      end;
+   aEdit.Text := aText;
+end;
+
+{ aLength < 0 selects to the end, which is what EM_SETSEL with -1 meant. }
+procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
+begin
+   if aEdit = nil then
+      begin
+      Exit;
+      end;
+   aEdit.SelStart := aStart;
+   if aLength < 0 then
+      begin
+      aEdit.SelLength := Length(aEdit.Text) - aStart;
+      end
+   else
+      begin
+      aEdit.SelLength := aLength;
+      end;
+end;
+
+function EntrySelStart(const aEdit: TEdit): integer;
+begin
+   if aEdit = nil then
+      begin
+      Result := 0;
+      Exit;
+      end;
+   Result := aEdit.SelStart;
+end;
+
+procedure FocusEntry(const aEdit: TEdit);
+begin
+   // CanFocus as well as nil: a control on a form that is not visible cannot
+   // take focus, and SetFocus RAISES rather than returning a failure the way
+   // Windows.SetFocus did.
+   if (aEdit = nil) or (not aEdit.CanFocus) then
+      begin
+      Exit;
+      end;
+   aEdit.SetFocus;
+end;
+
+procedure ShowEntry(const aEdit: TEdit; const aVisible: boolean);
+begin
+   if aEdit = nil then
+      begin
+      Exit;
+      end;
+   aEdit.Visible := aVisible;
+end;
+
+procedure RepaintEntry(const aEdit: TEdit);
+begin
+   if aEdit = nil then
+      begin
+      Exit;
+      end;
+   aEdit.Invalidate;
 end;
 
 end.

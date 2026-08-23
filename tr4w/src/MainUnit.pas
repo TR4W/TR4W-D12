@@ -806,7 +806,7 @@ begin
   ExchangeWindowString := RoverCounty;
   // The string() step is what Delphi was doing implicitly: PChar() of a
   // ShortString is not a legal cast, PChar() of a string expression is.
-  Windows.SetWindowTextW(wh[mweExchange], PChar(string(ExchangeWindowString)));
+  SetEntryText(TR4WExchangeEdit, string(ExchangeWindowString));
   // Move focus to exchange.  The caller's existing focus-move logic only
   // fires when ExchangeWindowString is empty (which won't be true after
   // we just populated it), so we have to do it ourselves here.
@@ -1305,7 +1305,7 @@ begin
      end;
   tCallWindowSetFocus;
   DisplayAutoSendCharacterCount;
-  InvalidateRect(wh[mweExchange], nil, False);
+  RepaintEntry(TR4WExchangeEdit);
   ShowFMessages(0);
   SendStationStatus(sstOpMode);
 end;
@@ -3062,8 +3062,9 @@ var
   TempExchange: ContestExchange;
   DQTH: boolean;
 begin
-  ExchangeWindowString[0] := AnsiChar(Windows.GetWindowTextA(wh[mweExchange],
-    @ExchangeWindowString[1], SizeOf(ExchangeWindowString)));
+  // Was GetWindowTextA writing the ShortString's bytes and setting its length
+  // byte by hand.  The assignment does both and cannot get the length wrong.
+  ExchangeWindowString := ShortString(AnsiString(EntryText(TR4WExchangeEdit)));
   if VHFBandsEnabled then
      begin
      ShowBeamAndHeadingInVHFContest(ExchangeWindowString);
@@ -3202,8 +3203,10 @@ begin
      WagCheck; //n4af
      end;
 
-  CallWindowString[0] := AnsiChar(Windows.SendMessageA(wh[mweCall], WM_GETTEXT,
-    CallstringLength, integer(@CallWindowString[1])));
+  // Was WM_GETTEXT with CallstringLength as the cap.  Copy keeps the cap; the
+  // assignment sets the length byte.
+  CallWindowString := ShortString(AnsiString(Copy(EntryText(TR4WCallEdit), 1,
+                                                  CallstringLength)));
 
   CallWindowEmpty := CallWindowString[0] = #0;
   if CallWindowEmpty then
@@ -3503,7 +3506,7 @@ begin
   wh[mweExchange] := CreateCallOrExchangeWin(EditableLogHeight + ws * 8
     {+ round(ws * 1.5)} + MainWindowEditHeight + 1, EXCHANGEWINDOWID, efExchange);
 
-  SendMessage(wh[mweExchange], EM_LIMITTEXT, 35, 0);
+  TR4WExchangeEdit.MaxLength := 35;   // created immediately above
 
   if TourDuration <> 0 then
      begin
@@ -5623,17 +5626,17 @@ procedure CheckAndSetInitialExchangeCursorPos;
 begin
   if InitialExchangeCursorPos = AtEnd then
      begin
-     PlaceCaretToTheEnd(wh[mweExchange]);
+     SetEntrySel(TR4WExchangeEdit, Length(EntryText(TR4WExchangeEdit)), 0);
      end;
   if InitialExchangeCursorPos = AtStart then
     // SetCursorPos(0,1); // n4af 4.42.7
      begin
-     SendMessage(wh[mweExchange], EM_SETSEL, 0, 0); // 4.108.8
+     SetEntrySel(TR4WExchangeEdit, 0, 0); // 4.108.8
      end;
 
   if InitialExchangeOverwrite then
      begin
-     Windows.SendMessage(wh[mweExchange], EM_SETSEL, 0, -1);
+     SetEntrySel(TR4WExchangeEdit, 0, -1);
      end;
 end;
 
@@ -5759,7 +5762,7 @@ begin
   if p > 0 then
      begin
      p := (p - 1) + Length(ExchangeErrorToken);   // 0-based caret just past the token
-     Windows.SendMessage(wh[mweExchange], EM_SETSEL, p, p);
+     SetEntrySel(TR4WExchangeEdit, p, 0);
      end;
 end;
 
@@ -6348,7 +6351,7 @@ end;
 procedure tCleareCallWindow;
 begin
   logger.debug('Clearing main call window');
-  Windows.SetWindowTextA(wh[mweCall], nil);
+  SetEntryText(TR4WCallEdit, '');
 
 end;
 
@@ -6356,7 +6359,7 @@ procedure tCleareExchangeWindow;
 begin
   // Windows.SetWindowTextA(ExchangeWindowHandle, nil);
   // SetMainWindowText(mweExchange, nil);
-  Windows.SetWindowTextA(wh[mweExchange], nil);
+  SetEntryText(TR4WExchangeEdit, '');
   
 end;
 
@@ -6388,10 +6391,9 @@ begin
      end;
 
   // Pre-fill exchange window; leave call window empty for the new callsign.
-  Windows.ZeroMemory(@ExchBuf[0], SizeOf(ExchBuf));
-  Move(ExchStr[1], ExchBuf[0], Length(ExchStr));
+  // ExchBuf was a byte buffer built only to hand SetWindowTextA a PAnsiChar.
   ExchangeWindowString := ExchStr;
-  Windows.SetWindowTextA(wh[mweExchange], ExchBuf);
+  SetEntryText(TR4WExchangeEdit, string(ExchStr));
 
   tCallWindowSetFocus;
   QuickDisplay('2nd op: type callsign, verify exchange, then Enter - ' + ExchStr);
@@ -6541,7 +6543,7 @@ begin
 
   begin
     // ChangeFocus('call');
-    Windows.SetFocus(wh[mweCall]);
+    FocusEntry(TR4WCallEdit);
     // Windows.SetWindowTextA(InsertWindowHandle, inttopchar(Windows.GetTickCount));
 
 {$IF MORSERUNNER}
@@ -7878,8 +7880,8 @@ procedure TryPutSpaceinExchangeWindow;
 var
   Selection: TSelection;
 begin
-  SendMessage(wh[mweExchange], EM_GETSEL, LONGINT(@Selection.StartPos),
-    LONGINT(@Selection.EndPos));
+  Selection.StartPos := EntrySelStart(TR4WExchangeEdit);
+  Selection.EndPos   := Selection.StartPos;
 
   if Selection.StartPos = Selection.EndPos then
     if Selection.StartPos = length(ExchangeWindowString) then
@@ -7957,8 +7959,9 @@ end;
 procedure StartSendingNow(FromKeyBoard: boolean);
 begin
 
-  if AutoSendCharacterCount > LoWord(Windows.SendMessage(wh[mweCall], EM_GETSEL,
-    0, 0)) then
+  // LoWord of EM_GETSEL is the selection START, which for a caret is how many
+  // characters have been typed.
+  if AutoSendCharacterCount > EntrySelStart(TR4WCallEdit) then
      begin
      Exit;
      end;
@@ -8237,9 +8240,9 @@ end;
 
 procedure FlashCallWindow;
 begin
-  Windows.ShowWindow(wh[mweCall], SW_HIDE);
+  ShowEntry(TR4WCallEdit, False);
   Sleep(100);
-  Windows.ShowWindow(wh[mweCall], SW_SHOW);
+  ShowEntry(TR4WCallEdit, True);
 end;
 
 procedure ProcessCommandLine;
@@ -8269,9 +8272,9 @@ begin
      logger.debug('[PutCallToCallWindow] Exiting early because call (%s) = MyCall (%s)', [call, MyCall]);
      exit; // n4af issue 158
      end;
-  logger.debug('Calling Windows.SetWindowText wh[mweCall] to %s',[call]);
-  Windows.SetWindowTextA(wh[mweCall], @Call[1]);
-  PlaceCaretToTheEnd(wh[mweCall]);
+  logger.debug('Putting "%s" into the call field', [Call]);
+  SetEntryText(TR4WCallEdit, string(Call));
+  SetEntrySel(TR4WCallEdit, Length(EntryText(TR4WCallEdit)), 0);
 end;
 
 procedure SetColumnsWidth;
@@ -9115,7 +9118,7 @@ begin
      begin
      if CallWindowString[i] = '?' then
         begin
-        SendMessage(wh[mweCall], EM_SETSEL, i - 1, i);
+        SetEntrySel(TR4WCallEdit, i - 1, 1);
         Break;
         end;
      end;
