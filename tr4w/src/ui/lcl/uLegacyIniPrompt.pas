@@ -63,7 +63,7 @@ var
    ini: string;
    err: string;
    store: TRadioConfigStore;
-   keep: boolean;
+   answer: integer;
 begin
    ini := string(TR4W_INI_FILENAME);
    if not FileExists(ini) then
@@ -97,12 +97,26 @@ begin
          Exit;
          end;
 
-      keep := MessageDlg(SIniRetireTitle,
-                         Format(SIniRetirePrompt, [aStoreFileName, ini]),
-                         mtConfirmation, [mbYes, mbNo], 0) <> mrYes;
+      // DISMISSING IS NOT ANSWERING.  This read `<> mrYes`, which lumped the
+      // title-bar X in with No -- and No is recorded permanently.  So closing
+      // the dialog without reading it silenced the offer for good, with no way
+      // back from the UI: the only cure is editing keepLegacyIni in
+      // settings\tr4w.json by hand.  A question that can be answered by
+      // accident, irreversibly, is worse than one that is asked twice.
+      //
+      // Now only an explicit No is recorded.  Escape or the X leaves the flag
+      // alone and the offer comes back next start.
+      answer := MessageDlg(SIniRetireTitle,
+                           Format(SIniRetirePrompt, [aStoreFileName, ini]),
+                           mtConfirmation, [mbYes, mbNo], 0);
 
-      if keep then
+      if answer <> mrYes then
          begin
+         if answer <> mrNo then
+            begin
+            logger.Info('[LegacyIni] offer dismissed rather than answered -- asking again next start');
+            Exit;
+            end;
          // RE-READ, SET, WRITE.  The store was loaded before the dialog; saving
          // the whole object now would write back a snapshot taken before the
          // operator had a chance to change anything else, which is only safe
