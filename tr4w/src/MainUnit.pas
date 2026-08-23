@@ -2724,22 +2724,51 @@ begin
     SWP_NOSIZE);
 end;
 
+// ALT+I -- INCREMENT THE NUMBER IN THE EXCHANGE FIELD.
+//
+// TALKS TO THE CONTROL, NOT TO A WINDOW.  It used to ask Windows:
+//
+//     Value := GetDlgItemInt(tr4whandle, EXCHANGEWINDOWID, lpTranslated, False);
+//     SetMainWindowText(mweExchange, ...);
+//     PlaceCaretToTheEnd(wh[mweExchange]);
+//
+// -- three Win32 calls addressing an LCL TEdit by dialog-item id and by HWND.
+// It stopped working (NY4I, 2026-08-23: "It did not work which is why I
+// asked"), and it could not have been noticed by a build: GetDlgItemInt simply
+// reports lpTranslated = False and the routine does nothing at all.  A silent
+// no-op is the characteristic failure of reaching an LCL control through the
+// Win32 API.
+//
+// The object has been sitting there for exactly this.  CreateEntryField keeps
+// TR4WExchangeEdit and says why: "THE OBJECT IS KEPT, not only its handle.
+// Nothing reads these two yet."  Something does now.
+//
+// This is the worked example for the other 644 HWNDs the Win32 lint counts --
+// the conversion that matters is not moving a widget into a .lfm, it is
+// deleting the handle that reaches it.
 procedure tAltI;
 var
-  lpTranslated: LongBool;
-  Value: Cardinal;
+  value: integer;
 begin
-  Value := Windows.GetDlgItemInt(tr4whandle, EXCHANGEWINDOWID, lpTranslated, False);
-  if lpTranslated then
+  if TR4WExchangeEdit = nil then
      begin
-     // Issue #997: asm `inc eax; push eax; wsprintf(' %u')` -> TF.Format. The
-     // Integer() cast is load-bearing: it forces the TF.Format(...; i: integer)
-     // wsprintfA overload. Without it, the Cardinal arg can bind a different
-     // overload and the field doesn't update.
-     TF.Format(wsprintfBuffer, ' %u', Integer(Value + 1));
-     SetMainWindowText(mweExchange, wsprintfBuffer);
-     PlaceCaretToTheEnd(wh[mweExchange]);
+     Exit;
      end;
+
+  // Not a number: do nothing, which is what lpTranslated = False meant.
+  if not TryStrToInt(Trim(TR4WExchangeEdit.Text), value) then
+     begin
+     Exit;
+     end;
+
+  // THE LEADING SPACE IS KEPT.  The old format string was ' %u' -- the field is
+  // written with one and every other writer of this field matches it, so
+  // dropping it here would make the exchange shift by a character only when
+  // Alt+I was used.
+  TR4WExchangeEdit.Text := ' ' + IntToStr(value + 1);
+
+  TR4WExchangeEdit.SelStart  := Length(TR4WExchangeEdit.Text);
+  TR4WExchangeEdit.SelLength := 0;
 end;
 
 procedure tr4w_alt_n_transmit_frequency;
