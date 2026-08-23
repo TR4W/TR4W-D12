@@ -175,6 +175,14 @@ const
   SB_NOTES   = 4;
   SB_COUNT   = 5;
 
+  { These index a collection declared in the .lfm, and the compiler cannot see
+    the .lfm.  Shipping five constants against four declared panels raised
+    "List index (5) out of bounds" from inside OnCreate, which aborted the
+    form's construction -- so the symptom was not a wrong status bar but an
+    empty band map and a context menu that would not open (NY4I, 2026-08-22).
+    SB_PANELS is checked once at create, where it names the problem. }
+  SB_PANELS  = 6;
+
   { Inside one cell, left to right.  The frequency field was sized by measuring
     '28888.8' with the actual font; Canvas.TextWidth asks the LCL the same
     question. }
@@ -191,6 +199,14 @@ begin
    miDeleteSpot.Caption  := RC_DELETESELSPOT;
    miRemoveAll.Caption   := RC_REMOVEALLSP;
    miQSYInactive.Caption := RC_SENDINRIG;
+
+   if sbSpot.Panels.Count <> SB_PANELS then
+      begin
+      // Fail with the reason rather than an index number three calls deeper.
+      raise Exception.CreateFmt(
+         'uBandMapForm.lfm declares %d status panels; the code indexes %d.',
+         [sbSpot.Panels.Count, SB_PANELS]);
+      end;
 
    FHasSel   := False;
    FRowCount := 0;

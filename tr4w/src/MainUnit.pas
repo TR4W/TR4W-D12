@@ -37,6 +37,7 @@ uses
                        // built on the wrong one will not match TDrawItemEvent
                        // however identical the two records look.
   Controls,            // TWinControl -- the OnDrawItem signature (Phase 3b).
+  Forms,               // TCustomForm -- the tw_ windows that are LCL forms
                        // TRect is QUALIFIED as Types.TRect where that signature is
                        // declared: this unit also uses Windows, whose TRect is a
                        // DIFFERENT declaration, and a method built on the wrong one
@@ -5247,6 +5248,9 @@ var
   temprect: TRect;
   Radio: RadioPtr;
   i: integer;
+  // The LCL form this window IS, when it is one, so the show at the bottom does
+  // not have to ask a second time which windows are forms.
+  lclForm: TCustomForm;
   // Local, so a failed GetMenuStringW leaves an EMPTY caption rather than
   // whatever the shared TempBuffer1 happened to be holding.
   menuText: array[0..255] of WideChar;
@@ -5307,13 +5311,16 @@ begin
   // Everything downstream keeps working because it only ever dealt in a handle
   // and a rectangle: WndHandle, WndVisible, WndRect, the SetWindowPos that
   // positions it, and CloseTR4WWindow.
+  lclForm := nil;
   if ID = tw_FUNCTIONKEYSWINDOW_INDEX then
      begin
      h := CreateTR4WFunctionKeysWindow(tr4whandle);
+     lclForm := TR4WFunctionKeysForm;
      end
   else if ID = tw_BANDMAPWINDOW_INDEX then
      begin
      h := CreateTR4WBandMapWindow(tr4whandle);
+     lclForm := TR4WBandMapForm;
      end
   else
      begin
@@ -5440,6 +5447,27 @@ begin
          temprect.Right - temprect.Left, temprect.Bottom - temprect.Top,
          SWP_SHOWWINDOW);
        end;
+
+  // TELL THE LCL THE WINDOW IS UP -- IT CANNOT SEE A RAW SWP_SHOWWINDOW.
+  //
+  // This is the same defect ShowTR4WMainForm exists to fix, and it bit the band
+  // map the same way: everything above shows the window through SetWindowPos on
+  // an HWND, so the form's Visible property stays FALSE while the window is
+  // plainly on the screen.  The LCL then does not show the CHILD CONTROLS, and
+  // anything that asks the form whether it is visible gets the wrong answer.
+  //
+  // For the band map that meant an empty grid AND no context menu: the refresh
+  // timer skips a form that is not visible -- which is right, and is how a
+  // minimised TR4W stops costing a repaint four times a second -- so it skipped
+  // every tick, and there was no live grid under the cursor to right-click on.
+  //
+  // Done HERE rather than in each Create function so the next tool window to
+  // convert inherits it.  Positioning happens above, so this shows the form
+  // where it belongs rather than at its designed position first.
+  if lclForm <> nil then
+     begin
+     lclForm.Visible := True;
+     end;
 
   FrmSetFocus;
 end;

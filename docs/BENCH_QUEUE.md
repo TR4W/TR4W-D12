@@ -1002,6 +1002,65 @@ covers QSO-logged, log-load, network QSO and WSJT-X but **not** an in-place log
 edit. A stale multiplier flag shows up as WRONG SCORING, not as an error, so it
 is carved out into its own change rather than guessed at here.
 
+### 28. The band map form, and three defects the bench run found
+
+The band map is an LCL form (section 27 covers the model work underneath it).
+Everything here was found by NY4I running it on 2026-08-22/23, and none of it
+was visible to a lint or a unit test.
+
+- [x] **Status bar panel count.** The .lfm declared four panels; the code
+      indexed six. `List index (5) out of bounds` came out of the form's
+      OnCreate, so the CONSTRUCTOR never completed and TR4WBandMapForm stayed
+      nil -- which presented as an empty band map with no context menu rather
+      than as a wrong status bar. There is a `SB_PANELS` check at create now
+      that names the mismatch instead.
+- [x] **A form shown by SetWindowPos is not Visible to the LCL.** Every tw_
+      window is shown with a raw `SWP_SHOWWINDOW` on an HWND, which the LCL
+      cannot see, so `TForm.Visible` stayed False while the window was on
+      screen: the refresh timer skipped every tick and the LCL never showed the
+      child controls. `OpenTR4WWindow` now tells the LCL, once, for whichever
+      form the seam built -- so the next tool window to convert inherits it.
+      **The same note already existed on ShowTR4WMainForm**; it is the second
+      time this has been discovered.
+- [ ] **Re-test the band map end to end** now those are fixed: resize wide and
+      narrow (the columns reflow -- it is a newspaper layout, widening shows
+      MORE spots), a spot arriving while a row is selected, a split spot that
+      is also a dupe, double-click and Enter both tuning, Ctrl-End landing
+      focus in the grid, and Delete.
+
+### 29. Preferences: two defects, one of them the reason settings did not stick
+
+- [x] **THE LOAD GUARD DID NOT NEST.** `FLoading` was a plain boolean and
+      nested loaders each set it True and then set it **False** on the way out.
+      `ShowSelectedCluster` and `ShowSelectedRotator` both do that, and
+      construction calls both before `FBindings.LoadAll` -- so the guard was OFF
+      for the rest of construction, the bindings' change events fired, and
+      `CaptureProfileFields` wrote every panel's UNLOADED controls back over the
+      store. A check box the operator had turned on came back off because
+      construction saved False over it from an unticked box and then read that
+      False back. It is now a DEPTH COUNTER, which an inner scope cannot clear.
+      **Test: set the logging check boxes, restart, and confirm they hold** --
+      and the same for anything on a panel loaded after the cluster and rotator
+      lists.
+- [x] **An empty handler is not the same as no handler.** `cbxLogLevel` and
+      `cbxRelayPort` had do-nothing OnChange stubs, and `HookDirtyMarker`
+      attaches its MarkDirty only to a control with NO handler -- so merely
+      existing stopped them marking the form dirty: Apply stayed greyed, the
+      close prompt never appeared, and the edit went in silence. Both now mark
+      dirty without applying, so Cancel still discards.
+      **Test: change the log level alone, close, and it should offer to save.**
+- [x] **Preferences vanished behind TR4W after switching to another program.**
+      It had no PopupParent, and pmAuto resolves to `Application.MainForm`,
+      which is nil here because TR4W never calls `Application.CreateForm`. So
+      it was a top-level window owned by nothing. `OwnFormByMainWindow` now
+      owns it, like every other form.
+
+**Audited while there, and clean:** every other control on Preferences either
+reaches `Dirty` through its handler or is picked up by `HookDirtyMarker`, whose
+arms cover every control type the form actually uses. The remainder of the
+report is buttons, which do their own work, and navigation, which is excluded
+on purpose.
+
 ---
 
 ## Findings — bench run 2026-08-20 (NY4I)

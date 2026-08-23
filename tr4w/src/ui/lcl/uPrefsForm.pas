@@ -795,7 +795,16 @@ type
       FUDPEditTarget: TUDPDestination;
       FUDPEditClone: TUDPDestination;
       FUDPEditIsNew: boolean;
-      FLoading: boolean;
+      { HOW DEEP IN A LOAD WE ARE, not whether we are in one.
+        A boolean here was cleared by whichever inner scope finished FIRST:
+        ShowSelectedCluster and ShowSelectedRotator both ran inside
+        construction's own load and both ended with Loading := False, so the
+        rest of construction ran unguarded and the bindings' change events
+        drove a full CaptureProfileFields over controls that had not been
+        populated yet.  Three other call sites had each grown their own
+        wasLoading save/restore to work around it.  A counter cannot be
+        cleared by an inner scope, so none of them need to. }
+      FLoadingDepth: integer;
       // The cluster directory is built once per program run, on first visit to
       // the DX Cluster section.  See LoadClusterServerList for the measurement.
       FClusterServersLoaded: boolean;
@@ -850,6 +859,14 @@ type
       // and a stale "Save" button is exactly the confusion this fixes.
       procedure SetDirty(const aValue: boolean);
       property Dirty: boolean read FDirty write SetDirty;
+
+      { Bracket every routine that WRITES controls from the store.  Always in
+        a try/finally: an exception between them would otherwise leave the form
+        permanently unable to notice an edit. }
+      function  GetLoading: boolean;
+      procedure BeginLoading;
+      procedure EndLoading;
+      property Loading: boolean read GetLoading;
 
       procedure SelectFirstSection;
 
@@ -1255,6 +1272,22 @@ begin
       if gPrefsForm = nil then
          begin
          gPrefsForm := TPrefsForm.Create(nil);
+
+         // OWNED BY THE MAIN WINDOW, like every other form TR4W shows.
+         //
+         // Without this the form has no PopupParent, and PopupMode pmAuto
+         // resolves to Application.MainForm -- which is NIL here, because TR4W
+         // never calls Application.CreateForm.  So Preferences was a top-level
+         // window owned by nothing: switching to another program and back
+         // brought the MAIN window forward and left this one behind, and the
+         // operator had to reopen Preferences to see it again (NY4I,
+         // 2026-08-23).
+         //
+         // OwnFormByMainWindow sets PopupParent / pmExplicit, which is what
+         // makes a window follow its owner on activate and restore.  It is the
+         // same call the converted tool windows use.
+         OwnFormByMainWindow(gPrefsForm);
+
          LogPhase(sw, 'CONSTRUCT first open', True);
          end;
 
@@ -1429,7 +1462,7 @@ begin
    LogPhase(FTiming, 'RefreshAll');
 
    // AFTER the form is populated, so that loading cannot mark it dirty even if
-   // a future Load routine forgets to set FLoading.  Belt and braces on purpose:
+   // a future Load routine forgets to set Loading.  Belt and braces on purpose:
    // the cost of getting this wrong is a save prompt on an untouched window.
    HookDirtyMarkers(Self);
    LogPhase(FTiming, 'HookDirtyMarkers');
@@ -2104,10 +2137,10 @@ procedure TPrefsForm.RefreshProfileFields;
 var
    prof: TStationProfile;
 begin
-   // FLoading guards the OnChange handlers: filling a combo fires OnChange, and
+   // Loading guards the OnChange handlers: filling a combo fires OnChange, and
    // without this the act of DISPLAYING a profile would write the previous
    // profile's values into it.
-   FLoading := True;
+   BeginLoading;
    try
       prof := CurrentProfile;
       if prof = nil then
@@ -2169,7 +2202,7 @@ begin
          lblActive.Caption := TC_PREFS_ACTIVELABEL + TC_PREFS_NONE;
          end;
    finally
-      FLoading := False;
+      EndLoading;
    end;
 end;
 
@@ -2216,7 +2249,7 @@ begin
    // Loading is not editing.  Without this, populating the form would arm the
    // unsaved-changes prompt on a window nobody has touched -- and DiscardChanges
    // would leave the form dirty immediately after discarding.
-   if FLoading then
+   if Loading then
       begin
       Exit;
       end;
@@ -2316,6 +2349,24 @@ begin
       end;
 end;
 
+function TPrefsForm.GetLoading: boolean;
+begin
+   Result := FLoadingDepth > 0;
+end;
+
+procedure TPrefsForm.BeginLoading;
+begin
+   Inc(FLoadingDepth);
+end;
+
+procedure TPrefsForm.EndLoading;
+begin
+   if FLoadingDepth > 0 then
+      begin
+      Dec(FLoadingDepth);
+      end;
+end;
+
 procedure TPrefsForm.SetDirty(const aValue: boolean);
 begin
    FDirty := aValue;
@@ -2330,7 +2381,7 @@ var
    prof: TStationProfile;
    ignoredErrors: string;
 begin
-   if FLoading then
+   if Loading then
       begin
       Exit;
       end;
@@ -4169,7 +4220,7 @@ end;
 
 procedure TPrefsForm.cbxProfileChange(Sender: TObject);
 begin
-   if FLoading then
+   if Loading then
       begin
       Exit;
       end;
@@ -4209,6 +4260,7 @@ procedure TPrefsForm.chkAutoConnectChange(Sender: TObject);
 begin
    CaptureProfileFields;
 end;
+
 
 procedure TPrefsForm.chkTCIServerChange(Sender: TObject);
 begin
@@ -4899,7 +4951,7 @@ begin
       Exit;
       end;
 
-   FLoading := True;
+   BeginLoading;
    try
       c := FStore.Cluster(lstClusters.ItemIndex);
       edtClusterName.Text     := c.Name;
@@ -4908,7 +4960,7 @@ begin
       edtClusterPassword.Text := c.Password;
       edtClusterCommand.Text  := c.ConnectCommand;
    finally
-      FLoading := False;
+      EndLoading;
    end;
 end;
 
@@ -4917,7 +4969,7 @@ var
    c: TClusterDefinition;
    wasActive: boolean;
 begin
-   if FLoading then
+   if Loading then
       begin
       Exit;
       end;
@@ -4961,7 +5013,7 @@ begin
    ShowClusterRow(lstClusters.ItemIndex, c);
 
    // Set HERE rather than in each of the five handlers, so the sixth cannot
-   // forget it.  Below the FLoading guard on purpose: loading the form is not
+   // forget it.  Below the Loading guard on purpose: loading the form is not
    // an edit, and marking it dirty would arm the unsaved-changes prompt on a
    // window nobody has touched.
    Dirty := True;
@@ -5338,7 +5390,7 @@ begin
    edtRotatorBands.Enabled  := True;
    btnRemoveRotator.Enabled := True;
 
-   FLoading := True;
+   BeginLoading;
    try
       r := FStore.Rotator(lstRotators.ItemIndex);
       edtRotatorName.Text := r.Name;
@@ -5400,7 +5452,7 @@ begin
       edtRotatorIP.Enabled   := not serial;
       edtRotatorUDP.Enabled  := not serial;
    finally
-      FLoading := False;
+      EndLoading;
    end;
 end;
 
@@ -5410,7 +5462,7 @@ var
    n: integer;
    ids: TArray<string>;
 begin
-   if FLoading then
+   if Loading then
       begin
       Exit;
       end;
@@ -5929,10 +5981,11 @@ end;
 
 procedure TPrefsForm.cbxRelayPortChange(Sender: TObject);
 begin
-   // Nothing to do until Save: the panel follows the same working-copy rule as
-   // the rest of Preferences, so Cancel discards. The handler exists because the
-   // resource binds one, and Lint-FormEvents requires every wired handler to be
-   // real.
+   // Was empty, for the same reason and with the same consequence as
+   // cbxLogLevelChange above: an assigned handler suppresses MarkDirty, so
+   // changing the relay port and closing the window lost it without a prompt.
+   // Mark, do not apply -- Cancel still discards.
+   Dirty := True;
 end;
 
 procedure TPrefsForm.SaveExternalSoftwarePanels;
@@ -6318,9 +6371,19 @@ end;
 
 procedure TPrefsForm.cbxLogLevelChange(Sender: TObject);
 begin
-   // Deliberately does NOT apply the level here.  Save is what commits every
-   // other setting on this form, and a level that changed on selection while
-   // Cancel still promised to discard it would be lying about Cancel.
+   // AN EMPTY HANDLER IS NOT THE SAME AS NO HANDLER, and that is the whole bug.
+   //
+   // This was empty, on the reasoning that nothing should be applied until Save.
+   // That reasoning is right -- DiscardChanges really does reload from disk, so
+   // applying here would survive a Cancel that promised to discard it.  But
+   // HookDirtyMarker attaches MarkDirty only to a control with NO handler
+   // assigned, so merely EXISTING stopped this combo from marking the form
+   // dirty: Apply stayed greyed, the close prompt never appeared, and choosing
+   // a log level and shutting the window lost it in silence.
+   //
+   // Mark, do not apply.  That keeps the Cancel contract and lets Apply, OK and
+   // the close prompt do what they are for.
+   Dirty := True;
 end;
 
 procedure TPrefsForm.btnOpenLogFileClick(Sender: TObject);
@@ -6377,7 +6440,6 @@ end;
 // operator had just made and not yet saved.
 procedure TPrefsForm.SlotRadioChanged(const aThisCombo, aOtherCombo, aThisCWCombo: TComboBox);
 var
-   wasLoading: boolean;
    prof: TStationProfile;
    thisCombo, otherCombo: TComboBox;
    chosen, taken, previous: string;
@@ -6385,7 +6447,7 @@ begin
    thisCombo  := aThisCombo;
    otherCombo := aOtherCombo;
 
-   if FLoading then
+   if Loading then
       begin
       CaptureProfileFields;
       Exit;
@@ -6424,14 +6486,13 @@ begin
       // It also removes a real defect rather than papering over it: showing a
       // message box from inside a combo's OnChange put the dialog up TWICE
       // (NY4I 2026-08-08).  Reverting is a control assignment, which the
-      // FLoading guard already covers; a modal is re-entrant in a way no guard
+      // Loading guard already covers; a modal is re-entrant in a way no guard
       // here was going to make reliable.
-      wasLoading := FLoading;
-      FLoading := True;
+      BeginLoading;
       try
          SelectByTag(thisCombo, previous);
       finally
-         FLoading := wasLoading;
+         EndLoading;
       end;
       Exit;
       end;
@@ -6440,8 +6501,7 @@ begin
 
    // Refilling fires the combo's own OnChange; the guard stops that from
    // writing a half-built list back into the profile.
-   wasLoading := FLoading;
-   FLoading := True;
+   BeginLoading;
    try
       FillCWOutputCombo(aThisCWCombo, SelectedTag(aThisCWCombo), SelectedTag(thisCombo));
 
@@ -6452,7 +6512,7 @@ begin
       FillRadioNameCombo(cbxRadio1, SelectedTag(cbxRadio1), SelectedTag(cbxRadio2), TC_PREFS_RADIO2);
       FillRadioNameCombo(cbxRadio2, SelectedTag(cbxRadio2), SelectedTag(cbxRadio1), TC_PREFS_RADIO1);
    finally
-      FLoading := wasLoading;
+      EndLoading;
    end;
 
    // The refill may have dropped a choice the new radio cannot provide, so the
@@ -6516,7 +6576,6 @@ end;
 
 procedure TPrefsForm.RefreshUDPList;
 var
-   wasLoading: boolean;
    keep: integer;
    i: integer;
 begin
@@ -6528,8 +6587,7 @@ begin
    // The two checkboxes below fire OnChange when assigned, and their handlers
    // capture and mark the panel dirty.  Without this guard, merely OPENING
    // Preferences would light up Apply.
-   wasLoading := FLoading;
-   FLoading := True;
+   BeginLoading;
    try
       keep := lstUDPDestinations.ItemIndex;
 
@@ -6549,7 +6607,7 @@ begin
       chkUDPEnabled.Checked := FUDPConfig.Enabled;
       chkUDPAllQSOs.Checked := FUDPConfig.AllQSOs;
    finally
-      FLoading := wasLoading;
+      EndLoading;
    end;
 end;
 
@@ -6716,7 +6774,7 @@ end;
 
 procedure TPrefsForm.CaptureUDPFields;
 begin
-   if (FUDPConfig = nil) or FLoading then
+   if (FUDPConfig = nil) or Loading then
       begin
       Exit;
       end;
@@ -6878,7 +6936,7 @@ begin
    LoadStore;
    RefreshAll;
    // CLEARED AFTER THE REFRESH, not before.  Repopulating the controls fires
-   // their change events, and while FLoading suppresses the marker, clearing the
+   // their change events, and while Loading suppresses the marker, clearing the
    // flag first would leave the form dirty the moment anything slipped past that
    // guard -- discarding changes and being told there are unsaved changes.
    Dirty := False;

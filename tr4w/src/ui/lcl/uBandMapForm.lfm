@@ -58,6 +58,14 @@ object frmBandMap: TfrmBandMap
       item
         Text = ' '
         Width = 150
+      end
+      item
+        Text = ' '
+        Width = 260
+      end
+      item
+        Text = ' '
+        Width = 90
       end>
     SimplePanel = False
   end
