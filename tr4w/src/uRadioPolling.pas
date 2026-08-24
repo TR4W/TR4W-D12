@@ -125,7 +125,62 @@ const
 implementation
 
 uses
-   uPanelUpdate;   // cross-thread panel writes -- the seam and why, in that unit
+   uPanelUpdate,    // cross-thread panel writes -- the seam and why, in that unit
+   uMainThreadWork; // the UI work below runs on the MAIN thread -- see MarshalledJobs
+
+{ ===========================================================================
+  THE UI WORK THAT USED TO RUN ON THIS THREAD.
+
+  ProcessFilteredStatus runs on a radio's reading thread.  Two of the things it
+  did from there are UI, and both are now requested rather than performed: the
+  bodies below execute on the main thread, coalesced, via uMainThreadWork.
+
+  A THIRD ONE IS DELIBERATELY NOT HERE.  The bandmap cursor block further down
+  already does this correctly -- it sets a repaint token that the bandmap's own
+  250 ms timer drains -- and it is the precedent both of these follow rather
+  than something left undone.
+
+  WHAT IS STILL WRONG, SO THAT NOBODY READS THIS AS FINISHED: this thread still
+  writes ActiveBand, ActiveMode, BandMapCursorFrequency and rig.tPTTStatus
+  directly and unsynchronised, and the main thread reads them.  Marshalling the
+  DISPLAY calls does not address that, it is a separate defect, and it predates
+  this change.
+  =========================================================================== }
+
+{ AUTO S&P -- the operator tuned the dial far enough to leave CQ mode.  One job
+  rather than four requests because the steps are a sequence: the focus move at
+  the end is only correct after the QSO has been reinitialised. }
+procedure RunSwitchToSearchAndPounce;
+begin
+   SetOpMode(SearchAndPounceOpMode);
+   tClearDupeInfoCall;
+   ClearAltD; // 4.53.7
+   initializeQSO; // 4.53.5
+   Second := False;
+      // n4af 4.46.7  first esc d/n clear call
+   switchnext := False; // n4af issue  230
+   tCallWindowSetFocus;  // 4.139.1
+end;
+
+{ The active radio changed band or mode.  Pure display refresh: ActiveBand and
+  ActiveMode are already set by the time this runs, deliberately -- they are
+  model state and moving them here would change WHEN the rest of the program
+  sees a band change, which is not what this is for. }
+procedure RunBandModeDisplay;
+begin
+   DisplayBandMode(ActiveBand, ActiveMode, False);
+
+   DisplayCodeSpeed;
+   DisplayAutoSendCharacterCount;
+   VisibleLog.ShowRemainingMultipliers; //wli
+
+   if QSONumberByBand then
+      begin
+      DisplayNextQSONumber;
+      end;
+
+   ShowFMessages(0);
+end;
 
 procedure pFactoryRadio(rig: RadioPtr); // Network classes (K4 network, Flex 6000 series network, etc)
 var
@@ -878,14 +933,10 @@ begin
                   (Abs(rig.FilteredStatus.Freq - rig.tCommandedQSYFreq) > AutoSAPEnableRate) then // n4af 4.44.10
                  // if OpMode = CQOpMode then    // 4.139.3
                   begin
-                  SetOpMode(SearchAndPounceOpMode);
-                  tClearDupeInfoCall;
-                  ClearAltD; // 4.53.7
-                  initializeQSO; // 4.53.5
-                  Second := False;
-                     // n4af 4.46.7  first esc d/n clear call
-                  switchnext := False; // n4af issue  230
-                  tCallWindowSetFocus;  // 4.139.1
+                  // Was seven statements inline on THIS thread.  See
+                  // RunSwitchToSearchAndPounce at the top of the
+                  // implementation for what they are and why they moved.
+                  RequestMainThreadJob(mtSwitchToSearchAndPounce);
                   end;
       if rig.CurrentStatus.TxOn then
          begin
@@ -934,19 +985,13 @@ begin
                       rig.FilteredStatus.Freq]);
          ActiveBand := rig.FilteredStatus.Band;
          ActiveMode := rig.FilteredStatus.Mode;
-         DisplayBandMode(ActiveBand, ActiveMode, False);
          VisibleDupeSheetChanged := True;
 
-         DisplayCodeSpeed;
-         DisplayAutoSendCharacterCount;
-         VisibleLog.ShowRemainingMultipliers; //wli
-
-         if QSONumberByBand then
-            begin
-            DisplayNextQSONumber;
-            end;
-
-         ShowFMessages(0);
+         // The six display calls that were here run on the main thread now --
+         // see RunBandModeDisplay.  The two assignments above stay put: they
+         // are model state, not display, and deferring them would change when
+         // the rest of the program sees the band change.
+         RequestMainThreadJob(mtBandModeDisplay);
          end;
 
       if ((dif > 0) and ((rig.FilteredStatus.Freq <> BandMapCursorFrequency)
@@ -1580,5 +1625,10 @@ begin
      Result := '';
      end;
 end;
+
+initialization
+   { The two pieces of UI work this unit used to do on a radio thread. }
+   RegisterMainThreadJob(mtSwitchToSearchAndPounce, @RunSwitchToSearchAndPounce);
+   RegisterMainThreadJob(mtBandModeDisplay, @RunBandModeDisplay);
 
 end.
