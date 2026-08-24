@@ -44,6 +44,16 @@ unit uPanelUpdate;
       Forms hooks WakeMainThread and the hand-rolled loop happens to fall
       through to DispatchMessage -- a mechanism Phase 3/7 deletes.
 
+  THE MARSHALLING CHOICE HERE IS AN INTERIM.  Corrected 2026-08-24: the
+  TThread.Queue objection below describes a SYMPTOM and was written as though it
+  settled the question.  Its purge -- a thread that queues and then exits
+  deletes its own callback -- is CORRECT semantics; what is wrong is that
+  TReadingThread (uFactoryRadioBase:211) is destroyed and recreated on EVERY
+  RECONNECT.  Fix the thread lifetime and TThread.Queue becomes the right
+  answer, and it is RTL rather than bound to Forms.  NY4I called this, and it is
+  scheduled in docs\DOMAIN_LAYER_SEQUENCE.md section 0.  Do not read the
+  paragraph below as a conclusion.
+
   THIS USED TO BE A POSTED MESSAGE, AND THE THIRD LEG OF THAT ARGUMENT EXPIRED.
   WM_PANEL_UPDATE was chosen partly because TR4W ran a hand-rolled GetMessage
   loop -- the note above even called that "a mechanism Phase 3/7 deletes". Phase

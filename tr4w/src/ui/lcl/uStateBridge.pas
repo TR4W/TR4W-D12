@@ -32,11 +32,33 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   was visible.  The caption and the visibility are decisions about APPEARANCE
   and they live here.  uWSJTX now sets a boolean.
 
-  MARSHALLING: one hop, Application.QueueAsyncCall, and NOT TThread.Queue.  That
-  is measured, not stylistic -- TThread.Queue stamps entries with the CALLING
-  thread's id and TThread.Destroy purges by it, so a thread that queues and then
-  exits deletes its own callback.  Radio threads are torn down on every
-  reconnect.  See uPanelUpdate's header, and DOMAIN_LAYER_SEQUENCE.md.
+  MARSHALLING IS Application.QueueAsyncCall, AND THAT IS AN INTERIM, NOT A
+  CONCLUSION.  It was first written here as "measured, do not modernise it
+  back", which cements a workaround and hides the defect underneath it.  NY4I
+  called that, 2026-08-24: "this sounds like a capitulation we would not do if
+  this was started from scratch."
+
+  THE FROM-SCRATCH ANSWER IS TThread.Queue.  Two things stand in the way and
+  only the first is about the RTL:
+
+    * TThread.Queue stamps each entry with the CALLING thread's id
+      (classes.inc:556 -- unconditionally, so passing nil as the thread does NOT
+      dodge it) and TThread.Destroy purges by the object AND by that id.  A
+      thread that queues and then exits deletes its own pending callback.
+      THAT SEMANTIC IS CORRECT: when a thread dies, an update about its work
+      refers to something that no longer exists.  What is WRONG is that
+      TReadingThread (uFactoryRadioBase:211) is DESTROYED AND RECREATED ON EVERY
+      RECONNECT.  A radio connection is a long-lived resource and reconnecting is
+      a state transition inside one thread's life; with a persistent thread the
+      purge fires only at shutdown, which is exactly when it should.
+
+    * QueueAsyncCall lives in Forms, so it binds marshalling to the LCL.
+      TThread.Queue is RTL -- it works in a console tool, in the unit tests and
+      on any widget set.  For a program meant to reach macOS and Linux that is
+      the wrong default for a core mechanism, purge or no purge.
+
+  So: fix the thread lifetime, then move to TThread.Queue.  Scheduled in
+  docs\DOMAIN_LAYER_SEQUENCE.md rather than left as a comment nobody acts on.
 
   WHAT THIS UNIT WILL GROW INTO: one Apply per state object.  When radio state,
   keyer state and contest state follow, they subscribe here and nothing else in

@@ -27,6 +27,37 @@ Every one of them is *extract a model*. So the order follows one rule:
 
 ## The order, and why
 
+### 0. Persistent worker threads, and `TThread.Queue` — a PREREQUISITE, not a nicety
+
+Added 2026-08-24 after NY4I pushed back on the marshalling choice: *"this sounds
+like a capitulation we would not do if this was started from scratch."* He is
+right, and the capitulation is one level below the mechanism.
+
+Everything in this tree marshals with `Application.QueueAsyncCall` because
+`TThread.Queue` stamps each entry with the **calling thread's** id
+(`classes.inc:556`, unconditionally — passing `nil` as the thread does **not**
+dodge it) and `TThread.Destroy` purges by the object *and* by that id. A thread
+that queues and then exits deletes its own pending callback.
+
+**That semantic is correct.** When a thread dies, an update about its work
+refers to something that no longer exists. The defect is that `TReadingThread`
+(`uFactoryRadioBase:211`) is **destroyed and recreated on every reconnect**. A
+radio connection is a long-lived resource; reconnecting is a state transition
+*inside* one thread's life, not a reason to tear the thread down. Move the
+backoff loop inside a persistent thread and the purge fires only at shutdown —
+which is when dropping pending updates is right.
+
+There is a second reason, independent of the purge: **`QueueAsyncCall` lives in
+`Forms`**, so it binds marshalling to the LCL. `TThread.Queue` is RTL — it works
+in a console tool, in the unit tests, and on any widget set. For a program that
+intends to reach macOS and Linux, choosing the widget-set-specific primitive for
+a core mechanism is the wrong default on its own.
+
+**So this comes before, or with, the display-state work rather than after it** —
+otherwise every state object added below inherits the interim. The order is:
+persistent radio threads, then `TThread.Queue` throughout, then the rest of this
+document.
+
 ### 1. Display state — smallest, and it goes first
 
 Not because it matters most. Because **the other two will write against whatever
