@@ -83,6 +83,48 @@ The editable log then converts as an LCL **virtual list** (`OwnerData` /
 converts AFTER the log has a model, not before. That is the 36 remaining `wh[]`
 sites, and they fall out rather than being fought.
 
+#### THE SCHEMA CONSTRAINT THAT COMES FIRST: event sourcing (issue #2)
+
+TR4W has **no true event source**. The MY fields are not in the log record, so
+they are read live at export time — and any later change to station data
+retroactively rewrites every past export. NY4I, issue #2: *"any import, export,
+etc is not affected by the current state (such as if i changed my grid or POTA
+park)."* Rover operation is the visible symptom; the disease is that a corrected
+typo or a house move silently changes what old QSOs claim.
+
+**There are THREE values, not two** (NY4I, issue #2 comment): station identity;
+what the contest SENT (legitimately different — `GA` not `FL`, or NAQP `JO`
+rather than `Joseph`, purely because it is faster to key); and the Cabrillo
+header, which is the real details again and agrees with identity, not with what
+was sent. A single global per field cannot serve all three.
+
+Refined with NY4I 2026-08-24 into **three tiers**:
+
+| tier | what | where | note |
+|---|---|---|---|
+| **1. durable station identity** | name, address, city, state/province, postcode, country, email, club, certificate | JSON, cross-contest | **seeds** the export form; must stay overridable AT export; **if changed, ask whether to save it for next time** (the operator physically moved QTH) |
+| **2. per-contest entry declaration** | category, transmitter count, assisted, overlay, power, station, mode, band, time, soapbox | the contest row | declared once for the entry |
+| **3. per-QSO event** | **what was sent**; **my county** (QSO parties); **my grid** (some contests); **my park ref** (POTA) | the QSO record | the only things that change WITHIN a contest |
+
+`_OPERATORS` is **derived from the log**, not stored — it leaves the schema
+entirely.
+
+**What the tree already has, and what it does not.** `uCbrSum.pas` separates the
+header from the live exchange globals — which is why sending `GA` while the
+header says `FL` works today. But its `ctrSave` flag means "remember last time's
+answer", a UX convenience persisted to `tr4w.ini [REPORT]`; it is **not** this
+classification, and it is not even consistent as a convenience flag
+(`_CATEGORY-TRANSMITTER` and `_CATEGORY-POWER` are `True`, `_CATEGORY-ASSISTED`
+is `False`). Its sibling `ctrCFG` is **dead** — declared at `uCbrSum.pas:75`
+with the comment `//do not used`, set on all 22 rows, never read.
+
+**Consequence for taking TR4QT's schema:** it is right for tier 2 (category,
+power, assisted on its `contests` row), has no tier 1 at all, and gets tier 3
+half right — `qsos.exchange_sent` per QSO is correct and is exactly the fix for
+our known corpus divergence, but `my_grid`/`my_state`/`my_county` sit on the
+CONTEST row, so a location change mid-log cannot be represented. Lift those onto
+the QSO before adopting it.
+
 **A design constraint, not an afterthought: the golden corpus is the regression
 oracle and it reads binary `.dat` through the export path.** The migration has
 to keep that oracle working across the change, or the only proof that scoring
