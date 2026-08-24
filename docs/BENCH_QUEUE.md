@@ -25,7 +25,7 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-39 were added 2026-08-24 and are UNRUN.**  Section 37 is the
+**Sections 31-40 were added 2026-08-24 and are UNRUN.**  Section 37 is the
 biggest of them: the entire main window display changed. NY4I confirmed
 the dupe sheet window, the stations window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
@@ -1338,6 +1338,41 @@ listener thread no longer names a widget.
       install for exactly that case, and it is the half most likely to be wrong.
 - [ ] **It does not flicker.** A heartbeat arrives every few seconds and setting
       the state to what it already holds must notify nobody.
+
+
+### 40. Two multi-op message-loop defects fixed, and the silent drop now reports
+
+`uNet.pas`. Multi-op only -- **not** the DX cluster; those are unrelated
+subsystems and the only place they touch is the spot-forwarding call fixed
+below. Needs a real multi-op session; nothing automated reaches any of it (there
+is no `uNet` test at all).
+
+- [ ] **A spot announced by another operator still reaches the cluster**, and
+      **the QSO behind it in the same segment still arrives.** The spot arm
+      advanced by 264 bytes for a 48-byte message -- an overshoot of 216 -- so
+      one network-forwarded spot desynchronised the rest of that buffer. This is
+      the fix most likely to be observable.
+- [ ] **When one station drops off the network, the others' QSOs still arrive.**
+      The disconnect arm overwrote the recv byte count with a client index, so
+      the loop exited early and discarded whatever followed the notice.
+- [ ] **Watch `tr4w.log` for `[Net] Unrecognised message id`.** New. If it never
+      appears, the framing is holding. **If it does, capture the log** -- it
+      names the id and the offset, and it is the first evidence this program has
+      ever produced for a class of loss that was previously invisible.
+- [ ] **A busy multi-op run.** The remaining structural defect is NOT fixed:
+      there is no partial-message handling -- no length check before a whole
+      record is cast, no carry-over buffer, `Bufindex := 1` on every message. A
+      264-byte QSO or a 514-byte parameter message split across two TCP segments
+      is still assembled from stale bytes. That is the transport rewrite, and
+      the new log line is what will show whether it is actually happening.
+
+**Not a defect, do not re-report:** `NET_MESSAGESTATE_ID` is sent and received
+only under `{$IF OZCR2008}`, and that is `False` -- so no shipping TR4W emits it
+and the missing receive arm cannot fire. It was briefly reported as live during
+this session and that was wrong: the `SetTimer` that would arm it is inside the
+same conditional (`uCWKeyerCPU.pas:87`). The residual hazard is cross-build
+only -- `tr4wserver` relays the id ungated, so a client compiled WITH the switch
+would feed standard clients something they cannot advance past.
 
 ---
 

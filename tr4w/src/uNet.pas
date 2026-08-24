@@ -195,6 +195,8 @@ var
   i                                     : integer;
   Bufindex                              : integer;
   ClientID                              : integer;
+  DisconnectedClient                    : integer;
+  LastBufindex                          : integer;
   nColor                                : Cardinal;
   StationStPtr                          : TStationStatePtr;
   NetQSOInfoPtr                         : NetQSOInformationPtr;
@@ -286,6 +288,7 @@ begin
         //        Bufindex- � ����� ������� �������� ������
 
         CheckBuffer:
+        LastBufindex := Bufindex;
         case PWORD(@NetBuffer[Bufindex])^ of
           NET_STATIONSTATUS_ID:
             begin
@@ -432,8 +435,20 @@ begin
 
           NET_SPOTVIANETWORK_ID:
             begin
+              // A SPOT ANOTHER OPERATOR ANNOUNCED ON THE MULTI-OP NETWORK,
+              // forwarded out to the DX cluster.  This is the ONLY place the
+              // two subsystems touch, and it is a feature, not shared
+              // transport: tr4wserver carries QSOs, radio and operator state;
+              // the cluster carries spot text.
               SendViaTelnetSocket(TSendSpotViaNetworkPtr(@NetBuffer[Bufindex])^.vnMessage);
-              inc(Bufindex, SizeOf(NetQSOInfoToSend));
+
+              // WAS SizeOf(NetQSOInfoToSend) -- 264 bytes for a 48-byte
+              // message, an overshoot of 216.  The line above casts this to
+              // TSendSpotViaNetworkPtr, which is what it is; the advance
+              // disagreed with the cast.  One network spot desynchronised the
+              // rest of the buffer, and the desync is silent (see the
+              // no-advance guard at the foot of this loop).
+              inc(Bufindex, SizeOf(TSendSpotViaNetwork));
               if Bufindex - 1 >= i then Exit;
             end;
 
@@ -453,9 +468,16 @@ begin
 
                 SM_DISCONECT_CLIENT_MESSAGE:
                   begin
-                    i := ServerMessagePtr^.smParam;
-                    Windows.ZeroMemory(@StatusArray[i], SizeOf(TStationState));
-                    DisplayClientStatus(i);
+                    // `i` IS THE RECV BYTE COUNT, not scratch.  This arm used
+                    // to assign smParam (a client index, 1..26) straight into
+                    // it, after which the loop's `Bufindex - 1 >= i` test
+                    // compared against a small integer and exited -- dropping
+                    // every message that had arrived behind the disconnect
+                    // notice in the same segment.
+                    DisconnectedClient := ServerMessagePtr^.smParam;
+                    Windows.ZeroMemory(@StatusArray[DisconnectedClient],
+                                       SizeOf(TStationState));
+                    DisplayClientStatus(DisconnectedClient);
                   end;
 
                 SM_GETSTATUS_MESSAGE: SendFullStationStatus;
@@ -512,6 +534,36 @@ begin
            if Bufindex - 1 >= i then Exit;
            end;
 {$IFEND}
+        // NOTHING CLAIMED THOSE BYTES, AND THAT USED TO BE SILENT.
+        //
+        // Every arm above ends by advancing Bufindex.  An id no arm matches
+        // advances nothing, so control reached here, span the counter to 30 and
+        // returned -- DISCARDING THE WHOLE REST OF THE BUFFER with no log line
+        // and nothing visible to the operator.  The network window simply
+        // stopped updating for a station, or a QSO never arrived, and the
+        // connection still said "connected".
+        //
+        // Three ways in, all real: a message split across two recv calls (this
+        // loop has no carry-over buffer -- see the bench queue); an arm whose
+        // advance disagrees with its cast, as NET_SPOTVIANETWORK_ID's did until
+        // today; and a CROSS-BUILD id.  That last one is live but narrow:
+        // NET_MESSAGESTATE_ID is sent and received only under {$IF OZCR2008},
+        // which is False, so no shipping TR4W emits it -- but tr4wserver relays
+        // it ungated (tr4wserver.dpr:152), so a client built WITH that switch
+        // on the same network would feed standard clients an id they cannot
+        // advance past.
+        //
+        // Reporting it does not fix the framing.  It converts a silent loss
+        // into a log line naming the id, which is the difference between a
+        // defect somebody can chase and one nobody can see.
+        if Bufindex = LastBufindex then
+           begin
+           logger.Warn('[Net] Unrecognised message id %d at offset %d of %d ' +
+                       'bytes -- the rest of this buffer is discarded',
+                       [PWORD(@NetBuffer[Bufindex])^, Bufindex, i]);
+           Exit;
+           end;
+
         inc(nColor);
         if nColor < 30 then
            begin
