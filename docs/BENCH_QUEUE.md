@@ -1359,12 +1359,15 @@ is no `uNet` test at all).
       appears, the framing is holding. **If it does, capture the log** -- it
       names the id and the offset, and it is the first evidence this program has
       ever produced for a class of loss that was previously invisible.
-- [ ] **A busy multi-op run.** The remaining structural defect is NOT fixed:
-      there is no partial-message handling -- no length check before a whole
-      record is cast, no carry-over buffer, `Bufindex := 1` on every message. A
-      264-byte QSO or a 514-byte parameter message split across two TCP segments
-      is still assembled from stale bytes. That is the transport rewrite, and
-      the new log line is what will show whether it is actually happening.
+- [ ] **A busy multi-op run.** HALF the structural defect is now fixed: a
+      message whose bytes have not all arrived is REFUSED AND LOGGED rather than
+      assembled from stale buffer contents and logged as a real QSO. What is
+      still missing is the carry-over buffer -- `Bufindex := 1` on every recv --
+      so a split message is **dropped**, not recovered. Dropped-and-logged beats
+      silently-wrong, but the recovery is the transport rewrite.
+      **Watch for `[Net] Message id ... needs N bytes but only M arrived`.** If
+      that line appears in a real multi-op session, splits are happening in the
+      field and the transport rewrite moves up the list.
 
 **Not a defect, do not re-report:** `NET_MESSAGESTATE_ID` is sent and received
 only under `{$IF OZCR2008}`, and that is `False` -- so no shipping TR4W emits it

@@ -243,6 +243,8 @@ uses
    uTestRadioSupportsCaps in 'uTestRadioSupportsCaps.pas',
    uTestHamLibIDs       in 'uTestHamLibIDs.pas',
    uTestDXClusterClient in 'uTestDXClusterClient.pas',
+   uNetFraming in '..\..\src\uNetFraming.pas',
+   uTestNetFraming in 'uTestNetFraming.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
@@ -315,6 +317,7 @@ begin
    RegisterSuite(TCallCompressTests.Create('CallCompress'));
    RegisterSuite(TCTYDATTests.Create('CTYDAT'));
    RegisterSuite(TMultsTests.Create('Mults'));
+   RegisterSuite(TTestNetFraming.Create('NetFraming'));
    RegisterSuite(TCallSignRoutinesTests.Create('CallSignRoutines'));
    RegisterSuite(TYaesuASCIITests.Create('YaesuASCII'));
    RegisterSuite(TYaesuBinaryTests.Create('YaesuBinary'));

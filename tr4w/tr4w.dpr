@@ -56,6 +56,7 @@ uses
   uEditQSO in 'src\uEditQSO.pas',
   uLogSearch in 'src\uLogSearch.pas',
   uBeacons in 'src\uBeacons.pas',
+  uNetFraming in 'src\uNetFraming.pas',
   uNet in 'src\uNet.pas',
   uTotal in 'src\uTotal.pas',
   uMaster in 'src\uMaster.pas',

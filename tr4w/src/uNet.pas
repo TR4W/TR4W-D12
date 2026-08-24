@@ -30,6 +30,7 @@ uses
 
   VC,
   TF,
+  uNetFraming,   { NetMessageSize -- one table, no per-arm advances }
   utils_net,
   utils_file,
   uTotal,
@@ -196,8 +197,8 @@ var
   Bufindex                              : integer;
   ClientID                              : integer;
   DisconnectedClient                    : integer;
-  LastBufindex                          : integer;
-  nColor                                : Cardinal;
+  MsgId                                 : word;
+  MsgSize                               : integer;
   StationStPtr                          : TStationStatePtr;
   NetQSOInfoPtr                         : NetQSOInformationPtr;
   ServerMessagePtr                      : TServerMessagePtr;
@@ -282,14 +283,53 @@ begin
            end;
 
         Bufindex := 1;
-        nColor := 0;
 
         //        i-���-�� �� ����������� ����
         //        Bufindex- � ����� ������� �������� ������
 
         CheckBuffer:
-        LastBufindex := Bufindex;
-        case PWORD(@NetBuffer[Bufindex])^ of
+
+        { WHERE THIS MESSAGE ENDS IS ASKED ONCE, BEFORE ANY ARM RUNS.
+
+          Each arm used to carry its own `Bufindex := Bufindex + SizeOf(...)`,
+          and one of them named the wrong record: NET_SPOTVIANETWORK_ID cast the
+          buffer to TSendSpotViaNetworkPtr and advanced by 264 bytes for a
+          48-byte message.  While the size lives beside the arm, the arm can
+          disagree with the cast on the line above it.  uNetFraming holds one
+          table now and the arms hold none. }
+        MsgId := PWORD(@NetBuffer[Bufindex])^;
+        MsgSize := NetMessageSize(MsgId);
+
+        { AN ID NOTHING KNOWS USED TO BE A SILENT WHOLE-BUFFER LOSS.  No arm
+          matched, so nothing advanced, control span a counter to 30 and
+          returned -- the network window just stopped updating for a station
+          while the connection still said "connected". }
+        if MsgSize = 0 then
+           begin
+           logger.Warn('[Net] Unrecognised message id %d at offset %d of %d ' +
+                       'bytes -- the rest of this buffer is discarded',
+                       [MsgId, Bufindex, i]);
+           Exit;
+           end;
+
+        { THE LENGTH CHECK THE LOOP NEVER HAD.  Every arm below casts a whole
+          record out of the buffer.  If 100 bytes of a 264-byte QSO had arrived,
+          the other 164 were STALE BYTES FROM AN EARLIER recv and the QSO was
+          logged from them -- a duplicate of an earlier contact with a plausible
+          call and a wrong band, unmarked anywhere in the UI.
+
+          This does not make a split message WORK; that needs a carry-over
+          buffer the receive path does not have yet (bench queue 40).  It makes
+          it fail loudly instead of silently logging a wrong QSO. }
+        if (i - Bufindex + 1) < MsgSize then
+           begin
+           logger.Warn('[Net] Message id %d at offset %d needs %d bytes but ' +
+                       'only %d arrived -- discarded, not guessed',
+                       [MsgId, Bufindex, MsgSize, i - Bufindex + 1]);
+           Exit;
+           end;
+
+        case MsgId of
           NET_STATIONSTATUS_ID:
             begin
               StationStPtr := @NetBuffer[Bufindex];
@@ -304,23 +344,17 @@ begin
                  DisplayClientStatus(ClientID);
 
                  end;
-              Bufindex := Bufindex + SizeOf(TStationState);
-              if Bufindex - 1 >= i then Exit;
             end;
 
           NET_INTERCOMMESSAGE_ID:
             begin
               IntercomMessagePtr := @NetBuffer[Bufindex];
               AddMessageToIntercomWindow(@IntercomMessagePtr^.imMessage[1], IntercomMessagePtr^.imSender);
-              Bufindex := Bufindex + SizeOf(TIntercomMessage);
-              if Bufindex - 1 >= i then Exit;
             end;
 
           NET_LOGCOMPARE_ID:
             begin
               ProcessServerLogInfo(@NetBuffer[Bufindex + 2 - 2]);
-              Bufindex := Bufindex + SizeOf(TLogFileInformation);
-              if Bufindex - 1 >= i then Exit;
             end;
 {
           NET_MULTSFREQUENCIES_ID:
@@ -347,8 +381,6 @@ begin
  //                ShowTrayTips();
                  QuickDisplay(string(ParameterToNetworkPtr^.pnCommand) + ' was changed by other station in network');
                  end;
-              Bufindex := Bufindex + SizeOf(ParameterToNetwork);
-              if Bufindex - 1 >= i then Exit;
             end;
 
           NET_TIMESYN_ID:
@@ -369,8 +401,6 @@ begin
                           begin
                           ShowSysErrorMessage('SET SYSTEM TIME');
                           end;
-                       Bufindex := Bufindex + SizeOf(NetTimeSync);
-                       if Bufindex - 1 >= i then Exit;
                        end;
             end;
 
@@ -379,8 +409,6 @@ begin
               NetDXSpotPtr := @NetBuffer[Bufindex];
               SpotsList.AddSpot(NetDXSpotPtr^.dsSpot, False);
               DisplayBandMap;
-              Bufindex := Bufindex + SizeOf(TNetDXSpot);
-              if Bufindex - 1 >= i then Exit;
             end;
 
           NET_QSOINFO_ID:
@@ -412,8 +440,6 @@ begin
                  UpdateTotals2;
                  end;
 
-              Bufindex := Bufindex + SizeOf(NetQSOInfoToSend);
-              if Bufindex - 1 >= i then Exit;
             end;
 
           NET_EDITEDQSO_ID:
@@ -429,8 +455,6 @@ begin
                       LoadinLog;
                       end;
                  end;
-              Bufindex := Bufindex + SizeOf(NetQSOInfoToSend);
-              if Bufindex - 1 >= i then Exit;
             end;
 
           NET_SPOTVIANETWORK_ID:
@@ -448,8 +472,6 @@ begin
               // disagreed with the cast.  One network spot desynchronised the
               // rest of the buffer, and the desync is silent (see the
               // no-advance guard at the foot of this loop).
-              inc(Bufindex, SizeOf(TSendSpotViaNetwork));
-              if Bufindex - 1 >= i then Exit;
             end;
 
           NET_SERVERMESSAGE_ID:
@@ -495,8 +517,6 @@ begin
 
               ShowServerMessage(ServerMessagePtr^);
 
-              Bufindex := Bufindex + SizeOf(TServerMessage);
-              if Bufindex - 1 >= i then Exit;
             end;
         end;
 {
@@ -534,41 +554,20 @@ begin
            if Bufindex - 1 >= i then Exit;
            end;
 {$IFEND}
-        // NOTHING CLAIMED THOSE BYTES, AND THAT USED TO BE SILENT.
-        //
-        // Every arm above ends by advancing Bufindex.  An id no arm matches
-        // advances nothing, so control reached here, span the counter to 30 and
-        // returned -- DISCARDING THE WHOLE REST OF THE BUFFER with no log line
-        // and nothing visible to the operator.  The network window simply
-        // stopped updating for a station, or a QSO never arrived, and the
-        // connection still said "connected".
-        //
-        // Three ways in, all real: a message split across two recv calls (this
-        // loop has no carry-over buffer -- see the bench queue); an arm whose
-        // advance disagrees with its cast, as NET_SPOTVIANETWORK_ID's did until
-        // today; and a CROSS-BUILD id.  That last one is live but narrow:
-        // NET_MESSAGESTATE_ID is sent and received only under {$IF OZCR2008},
-        // which is False, so no shipping TR4W emits it -- but tr4wserver relays
-        // it ungated (tr4wserver.dpr:152), so a client built WITH that switch
-        // on the same network would feed standard clients an id they cannot
-        // advance past.
-        //
-        // Reporting it does not fix the framing.  It converts a silent loss
-        // into a log line naming the id, which is the difference between a
-        // defect somebody can chase and one nobody can see.
-        if Bufindex = LastBufindex then
+        { ONE ADVANCE, FROM THE TABLE, AND IT CANNOT BE FORGOTTEN.
+
+          The 30-iteration spin that used to be here was a guard against an arm
+          that advanced nothing.  Nothing can now: the size was resolved before
+          the case ran, and every path through it arrives here.  A cap that
+          exists because the loop might not terminate is worse than a loop that
+          terminates. }
+        inc(Bufindex, MsgSize);
+        if Bufindex - 1 >= i then
            begin
-           logger.Warn('[Net] Unrecognised message id %d at offset %d of %d ' +
-                       'bytes -- the rest of this buffer is discarded',
-                       [PWORD(@NetBuffer[Bufindex])^, Bufindex, i]);
            Exit;
            end;
 
-        inc(nColor);
-        if nColor < 30 then
-           begin
-           goto CheckBuffer;
-           end;
+        goto CheckBuffer;
 
       end;
 
