@@ -1225,13 +1225,16 @@ begin
      begin
      Exit;
      end;
-  tLB_RESETCONTENT(wh[mwePossibleCall]);
+  ClearPossibleCalls;
 
   for TempIndex := 0 to PossibleCallList.NumberPossibleCalls - 1 do
      begin
-     SendMessage(wh[mwePossibleCall], LB_ADDSTRING, 0, TempIndex);
+     AddPossibleCall;   // the row's DATA is PossibleCallList[TempIndex]
      end;
-  SendMessage(wh[mwePossibleCall], LB_SETCURSEL, 0, 0);
+  SelectPossibleCall(0);
+
+  // The rows are all empty strings, so the list cannot know the model moved.
+  PossibleCallsUpdated;
   //  FlagDupesInPossibleCallList(ActiveBand, ActiveMode, PossibleCallList);
   //  DisplayPossibleCalls{(PossibleCallList)};
 end;

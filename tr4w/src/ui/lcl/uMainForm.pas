@@ -177,6 +177,17 @@ procedure FocusEntry(const aEdit: TEdit;
                      const aBringForward: boolean = False);
 procedure RepaintEntry(const aEdit: TEdit);
 
+{ The possible-call list -- an LCL TListBox since Phase 3b; these replace
+  LB_RESETCONTENT / LB_ADDSTRING / LB_SETCURSEL / LB_GETCURSEL / LB_GETCOUNT
+  sent to wh[mwePossibleCall].  See the implementation for why the items
+  carry no data. }
+procedure ClearPossibleCalls;
+function  AddPossibleCall: integer;
+function  PossibleCallCount: integer;
+function  SelectedPossibleCall: integer;
+procedure SelectPossibleCall(const aIndex: integer);
+procedure PossibleCallsUpdated;
+
 implementation
 
 {$R *.lfm}
@@ -620,8 +631,11 @@ end;
   so early that not even the startup breadcrumbs ran.
   --------------------------------------------------------------------------- }
 
-{ The single funnel: both guards, in one place, for every accessor below. }
-function EntryUsable(const aEdit: TEdit): boolean;
+{ The single funnel: both guards, in one place, for every accessor below.
+  TWinControl rather than TEdit so the possible-call list shares it -- a second
+  copy would be a second place for the HandleAllocated half to get lost, which
+  is exactly how the 2026-08-23 startup crash happened. }
+function ControlUsable(const aCtrl: TWinControl): boolean;
 begin
    if not OnMainThread then
       begin
@@ -641,13 +655,13 @@ begin
    // and those are reached from CallWindowChange, i.e. from INSIDE A WINDOW
    // PROCEDURE, where a raised exception is a fatal process kill (see the guard
    // on WindowProc).  The Win32 originals were no-ops on handle 0.
-   Result := (aEdit <> nil) and aEdit.HandleAllocated;
+   Result := (aCtrl <> nil) and aCtrl.HandleAllocated;
 end;
 
 function EntryText(const aEdit: TEdit): string;
 begin
    Result := '';
-   if not EntryUsable(aEdit) then
+   if not ControlUsable(aEdit) then
       begin
       Exit;
       end;
@@ -656,7 +670,7 @@ end;
 
 procedure SetEntryText(const aEdit: TEdit; const aText: string);
 begin
-   if not EntryUsable(aEdit) then
+   if not ControlUsable(aEdit) then
       begin
       Exit;
       end;
@@ -666,7 +680,7 @@ end;
 { aLength < 0 selects to the end, which is what EM_SETSEL with -1 meant. }
 procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
 begin
-   if not EntryUsable(aEdit) then
+   if not ControlUsable(aEdit) then
       begin
       Exit;
       end;
@@ -685,7 +699,7 @@ end;
 function EntrySelStart(const aEdit: TEdit): integer;
 begin
    Result := 0;
-   if not EntryUsable(aEdit) then
+   if not ControlUsable(aEdit) then
       begin
       Exit;
       end;
@@ -695,7 +709,7 @@ end;
 function EntrySelLength(const aEdit: TEdit): integer;
 begin
    Result := 0;
-   if not EntryUsable(aEdit) then
+   if not ControlUsable(aEdit) then
       begin
       Exit;
       end;
@@ -707,7 +721,7 @@ procedure FocusEntry(const aEdit: TEdit;
 var
    frm: TCustomForm;
 begin
-   if not EntryUsable(aEdit) then
+   if not ControlUsable(aEdit) then
       begin
       Exit;
       end;
@@ -776,11 +790,142 @@ end;
 
 procedure RepaintEntry(const aEdit: TEdit);
 begin
-   if not EntryUsable(aEdit) then
+   if not ControlUsable(aEdit) then
       begin
       Exit;
       end;
    aEdit.Invalidate;
+end;
+
+
+{ ---------------------------------------------------------------------------
+  THE POSSIBLE-CALL LIST.
+
+  lstPossibleCall is an LCL TListBox and has been since Phase 3b -- it is
+  declared in uMainForm.lfm and drawn by the form's own OnDrawItem.  What was
+  still Win32 was every OPERATION on it: LB_RESETCONTENT, LB_ADDSTRING,
+  LB_SETCURSEL, LB_GETCURSEL and LB_GETCOUNT, sent to wh[mwePossibleCall] from
+  three different units.
+
+  THE ITEMS CARRY NO DATA, AND THAT IS NOT AN OVERSIGHT.  The list is
+  owner-drawn and PossibleCallsDrawItem indexes PossibleCallList.List[] by the
+  item's POSITION, so the lParam the old LB_ADDSTRING passed was never read.
+  The model is PossibleCallList; the listbox only has to agree with it on how
+  many rows there are and which one is current.  Adding an empty string is
+  therefore the faithful translation, not a shortcut.
+  --------------------------------------------------------------------------- }
+
+function PossibleCallListBox: TListBox;
+begin
+   Result := nil;
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+   Result := TR4WMainForm.lstPossibleCall;
+end;
+
+procedure ClearPossibleCalls;
+var
+   lb: TListBox;
+begin
+   lb := PossibleCallListBox;
+   if not ControlUsable(lb) then
+      begin
+      Exit;
+      end;
+   lb.Items.Clear;
+end;
+
+{ Appends one row and returns its index, or -1 when there is no list. }
+function AddPossibleCall: integer;
+var
+   lb: TListBox;
+begin
+   Result := -1;
+   lb := PossibleCallListBox;
+   if not ControlUsable(lb) then
+      begin
+      Exit;
+      end;
+   Result := lb.Items.Add('');
+end;
+
+function PossibleCallCount: integer;
+var
+   lb: TListBox;
+begin
+   Result := 0;
+   lb := PossibleCallListBox;
+   if not ControlUsable(lb) then
+      begin
+      Exit;
+      end;
+   Result := lb.Items.Count;
+end;
+
+{ -1 when nothing is selected -- the same value LB_GETCURSEL returned as
+  LB_ERR, so callers that test for it are unchanged. }
+function SelectedPossibleCall: integer;
+var
+   lb: TListBox;
+begin
+   Result := -1;
+   lb := PossibleCallListBox;
+   if not ControlUsable(lb) then
+      begin
+      Exit;
+      end;
+   Result := lb.ItemIndex;
+end;
+
+{ CALL THIS AFTER REBUILDING THE LIST, AND IT IS NOT OPTIONAL.
+
+  The rows carry no text -- the model is PossibleCallList and the owner-draw
+  reads it by ordinal -- so after a refresh the listbox's OWN content is
+  byte-identical to what it held before: the same N empty strings.  Nothing in
+  it changed, so nothing invalidates, so OnDrawItem is not called again and the
+  operator keeps seeing the PREVIOUS callsigns.  NY4I, 2026-08-24: "scp updated
+  the first time but subsequent calls did not change from the prior values."
+
+  THE WIN32 VERSION GOT THIS BY ACCIDENT, which is why the conversion lost it.
+  LB_ADDSTRING's lParam was the item DATA and every row got a different value,
+  so the items genuinely differed and the control repainted itself.  The note
+  on CreateTR4WPossibleCallList -- "the owner-draw never read it either" -- was
+  true and beside the point: the DRAW handler ignored that data, but the
+  CONTROL did not.
+
+  A control whose data lives outside it has to be told when that data moves.
+  One Invalidate per rebuild is cheaper than the item data ever was, and it
+  keeps PossibleCallList as the single source of truth. }
+procedure PossibleCallsUpdated;
+var
+   lb: TListBox;
+begin
+   lb := PossibleCallListBox;
+   if not ControlUsable(lb) then
+      begin
+      Exit;
+      end;
+   lb.Invalidate;
+end;
+
+procedure SelectPossibleCall(const aIndex: integer);
+var
+   lb: TListBox;
+begin
+   lb := PossibleCallListBox;
+   if not ControlUsable(lb) then
+      begin
+      Exit;
+      end;
+
+   // Out of range is not an error here: LB_SETCURSEL simply failed, and the
+   // arrow-key handlers walk off both ends of the list by design.
+   if (aIndex >= -1) and (aIndex < lb.Items.Count) then
+      begin
+      lb.ItemIndex := aIndex;
+      end;
 end;
 
 end.

@@ -103,6 +103,7 @@ var
 
 implementation
 uses
+  uMainForm,   { the possible-call list, named -- wh[] round 4 }
   SysUtils,            // Issue #997 - SysUtils.Format / StrPCopy
   uConfigValues,
   LogStuff,
@@ -457,7 +458,7 @@ var
 //  TempMode                              : ModeType;
 begin
   if not Config.PossibleCallEnable then Exit;
-  tLB_RESETCONTENT(wh[mwePossibleCall]);
+  ClearPossibleCalls;
   if length(Call) < 2 then Exit;
   Result := 0;
   for Index := 0 to FCount - 1 do
@@ -470,7 +471,7 @@ begin
               PossibleCallList.List[Result].Dupe :=
                 CallsignIsDupe(FList^[Index].FCall, ActiveBand, ActiveMode, TempIndex);
         //      (FList^[Index].FDupesArray[TempMode] and (1 shl Ord(ActiveBand))) <> 0;
-              SendMessage(wh[mwePossibleCall], LB_ADDSTRING, 0, Result);
+              AddPossibleCall;   // the row's DATA is PossibleCallList[Result]
               inc(Result);
               if Result = MaxCallsignsInPossibleCallsList then
                  begin
@@ -481,8 +482,11 @@ begin
   1:
   if Result > 0 then
      begin
-     SendMessage(wh[mwePossibleCall], LB_SETCURSEL, 0, 0);
+     SelectPossibleCall(0);
      end;
+
+  // The rows are all empty strings, so the list cannot know the model moved.
+  PossibleCallsUpdated;
 end;
 
 procedure TCallsignsList.DisplayDupeSheet(Radio: RadioPtr {dBand: BandType; dMode: ModeType});

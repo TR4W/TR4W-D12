@@ -5053,7 +5053,6 @@ procedure CallWindowKeyDownProc(wParam: integer);
 var
   Key: Char;
   itempos: integer;
-  p: HWND;
   c: HWND;
 label
   wait;
@@ -5150,7 +5149,6 @@ begin
      exit;
      end;
   // CallsignsList.CreatePartialsList(CallWindowString);
-  p := wh[mwePossibleCall];
   c := wh[mweCall];
   if not InsertMode then
      begin
@@ -5165,7 +5163,7 @@ begin
      InactiveSwapRadio := False;
      end;
 
-  itempos := SendMessage(p, LB_GETCURSEL, 0, 0);
+  itempos := SelectedPossibleCall;
   logger.trace('[CallWindowKeyDownProc] itemrpos');
   if Key = PossibleCallLeftKey then
      begin
@@ -5180,13 +5178,16 @@ begin
      begin
      itempos := 0;
      end;
-  SendMessage(p, LB_SETCURSEL, itempos, 0);
+  SelectPossibleCall(itempos);
 
-  itempos := SendMessage(p, LB_GETCURSEL, 0, 0);
+  // Re-read rather than trusting itempos: SelectPossibleCall ignores an index
+  // past the end, exactly as LB_SETCURSEL did, so the walk can ask for a row
+  // that does not exist and the selection simply stays put.
+  itempos := SelectedPossibleCall;
 
   if Key = PossibleCallAcceptKey then
 
-    if SendMessage(p, LB_GETCOUNT, 0, 0) > 0 then
+    if PossibleCallCount > 0 then
        begin
        logger.trace('[CallWindowKeyDownProc] PutCallToCallWindow ' + Key);
        PutCallToCallWindow(LogSCP.PossibleCallList.List[itempos].Call);
@@ -5210,16 +5211,14 @@ end;
 
 procedure ExchangeWindowKeyDownProc(wParam: integer);
 var
-  p: hwnd;
   //c: hwnd;
   itempos: integer;
   key: char;
 
 begin
-  p := wh[mwePossibleCall];
   c := wh[mweExchange];
   Key := Char(wParam);
-  itempos := SendMessage(p, LB_GETCURSEL, 0, 0);
+  itempos := SelectedPossibleCall;
   if Key = PossibleCallLeftKey then
      begin
      dec(itempos);
@@ -5232,13 +5231,16 @@ begin
      begin
      itempos := 0;
      end;
-  SendMessage(p, LB_SETCURSEL, itempos, 0);
+  SelectPossibleCall(itempos);
 
-  itempos := SendMessage(p, LB_GETCURSEL, 0, 0);
+  // Re-read rather than trusting itempos: SelectPossibleCall ignores an index
+  // past the end, exactly as LB_SETCURSEL did, so the walk can ask for a row
+  // that does not exist and the selection simply stays put.
+  itempos := SelectedPossibleCall;
 
   if Key = PossibleCallAcceptKey then
 
-    if SendMessage(p, LB_GETCOUNT, 0, 0) > 0 then
+    if PossibleCallCount > 0 then
        begin
        PutCallToCallWindow(LogSCP.PossibleCallList.List[itempos].Call);
        end;
