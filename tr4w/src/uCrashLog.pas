@@ -86,6 +86,26 @@ procedure LogCaughtException(const aSource: string; aObj: TObject);
   shared log file. }
 procedure EarlyTrace(const aMessage: string);
 
+{ True on the thread that called InstallCrashLog -- i.e. the main thread. }
+function OnMainThread: boolean;
+
+{ SAY THAT SOMETHING RAN ON THE WRONG THREAD, ONCE PER CALLER.
+
+  Round 2 of the wh[] conversion turns the main window's entry-field accessors
+  from Win32 handle calls into ordinary LCL property access.  That is only safe
+  if nothing reaches them off the main thread -- and "I traced the callers" is
+  exactly the claim that was wrong three times on 2026-08-23, each time costing
+  a crash with an empty log.
+
+  So the program says so instead.  This LOGS, it does not raise: an exception on
+  a worker thread is the failure mode being removed, not a way to report it.
+
+  DEDUPED BY CALLER, because these sit on paths that run at poll rates -- a
+  violation would otherwise produce a log flood rather than a diagnosis.  Each
+  distinct call site is reported once, with its address resolved symbolically,
+  which is the thing actually needed: WHICH caller, not how many times. }
+procedure ReportOffMainThread(const aSite: string; const aCaller: CodePointer);
+
 implementation
 
 uses
@@ -262,6 +282,65 @@ begin
    WriteCrashReport(aSource, aObj, ExceptAddr, ExceptFrameCount, ExceptFrames);
 end;
 
+function OnMainThread: boolean;
+begin
+   // GMainThreadId, not the RTL's MainThreadID -- see IfMainThread above for
+   // why this unit records it itself.
+   Result := GetCurrentThreadId = GMainThreadId;
+end;
+
+var
+   GOffThreadLock: TRTLCriticalSection;
+   GOffThreadSeen: array of PtrUInt;
+
+procedure ReportOffMainThread(const aSite: string; const aCaller: CodePointer);
+var
+   i: integer;
+   key: PtrUInt;
+   fresh: boolean;
+begin
+   // Before InstallCrashLog there is no main thread on record, so every thread
+   // would look wrong.  Say nothing rather than say something false.
+   if GMainThreadId = 0 then
+      begin
+      Exit;
+      end;
+
+   key := PtrUInt(aCaller);
+   fresh := True;
+
+   EnterCriticalSection(GOffThreadLock);
+   try
+      for i := 0 to High(GOffThreadSeen) do
+         begin
+         if GOffThreadSeen[i] = key then
+            begin
+            fresh := False;
+            Break;
+            end;
+         end;
+
+      if fresh then
+         begin
+         SetLength(GOffThreadSeen, Length(GOffThreadSeen) + 1);
+         GOffThreadSeen[High(GOffThreadSeen)] := key;
+         end;
+   finally
+      LeaveCriticalSection(GOffThreadLock);
+   end;
+
+   if not fresh then
+      begin
+      Exit;
+      end;
+
+   // WARN, not Debug: this is a latent crash, and nobody runs at debug level
+   // when it happens.
+   CrashLogger.Warn('[Thread] %s called from thread %d, NOT the main thread -- '
+                    + 'caller %s', [aSite, GetCurrentThreadId,
+                                    BackTraceStrFunc(aCaller)]);
+end;
+
 
 { WHETHER THE .dbg BESIDE US IS THE RIGHT ONE.
 
@@ -369,8 +448,10 @@ begin
 end;
 
 initialization
+   InitCriticalSection(GOffThreadLock);
 
 finalization
+   DoneCriticalSection(GOffThreadLock);
    FreeAndNil(GReporter);
 
 end.

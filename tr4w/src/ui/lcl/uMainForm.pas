@@ -160,20 +160,14 @@ var
   TR4WCallEdit: TEdit = nil;
   TR4WExchangeEdit: TEdit = nil;
 
-{ THE ENTRY FIELDS, REACHED SAFELY.
+{ THE ENTRY FIELDS.
 
-  A headless /EXPORT boots the contest, writes the files and halts before any
-  GUI exists, so TR4WCallEdit and TR4WExchangeEdit are NIL on that path.  The
-  Win32 calls these replace -- SetWindowTextA(wh[mweCall], ...), EM_SETSEL and
-  the rest -- were SILENT NO-OPS on handle 0, so nothing on the export path ever
-  had to think about it.
-
-  That is not a detail to rediscover per call site.  Converting nineteen of them
-  to direct property access took the golden corpus from 22/0/4 to 0/26 in one
-  step: every export died before it wrote a line, and it died so early that not
-  even the startup breadcrumbs ran.  Turning "does nothing when the window is
-  absent" into "faults when the window is absent" is the characteristic hazard
-  of replacing a handle with an object, and it belongs in ONE place. }
+  Ordinary LCL property access, guarded once rather than per call site.  Two
+  hazards make the guard necessary and both are compiler-invisible: these
+  objects are NIL on the headless /EXPORT path, and reaching them off the main
+  thread is now a crash where the Win32 they replaced was a harmless no-op.
+  The full history, and what licensed the conversion, is on the implementation
+  side. }
 function  EntryText(const aEdit: TEdit): string;
 procedure SetEntryText(const aEdit: TEdit; const aText: string);
 procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
@@ -200,7 +194,8 @@ uses
    uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
    uTCIServer,         // WM_TCI_APPLY
    uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE
-   uPanelUpdate;       // WM_PANEL_UPDATE
+   uPanelUpdate,       // WM_PANEL_UPDATE
+   uCrashLog;          // OnMainThread / ReportOffMainThread -- see EntryHandle
 
 var
    { The LCL's own window procedure for the main form, saved when TR4W's is
@@ -553,180 +548,151 @@ end;
 
 
 { ---------------------------------------------------------------------------
-  THE ENTRY FIELDS.  Two hazards live here, both paid for on 2026-08-23, and
-  both are why these are FUNCTIONS rather than property access at the call site.
+  THE ENTRY FIELDS.  Ordinary LCL property access, as of round 2.
 
-  1. THE MAIN WINDOW MAY NOT EXIST.  A headless /EXPORT boots the contest,
-     writes the files and halts before any GUI, so these objects are NIL on that
-     path.  The Win32 calls they replace were silent no-ops on handle 0.  Direct
-     property access took the golden corpus from 22/0/4 to 0/26.
-
-  2. THEY ARE REACHED FROM THE RADIO POLLING THREAD.  Not theoretically:
+  THEY WERE WIN32 UNTIL NOW, AND THE REASON IS WORTH KEEPING.  Round 1 named the
+  controls at nineteen call sites but had to reach them through their HANDLES,
+  because the radio polling thread did UI work directly:
 
          pFactoryRadio -> UpdateStatus -> ProcessFilteredStatus
                        -> SetOpMode(SearchAndPounceOpMode)  [uRadioPolling:881]
-                          -> tCallWindowSetFocus
-                          -> CheckAndSetInitialExchangeCursorPos
-                          -> InvalidateRect on the exchange field
+                          -> tCallWindowSetFocus ...
 
-     which fires whenever AUTO S&P switches mode because the operator tuned the
-     dial.  The Win32 originals were all SAFE BY ACCIDENT from a worker thread:
-     InvalidateRect posts, a cross-thread SetFocus harmlessly fails, a
-     cross-thread SendMessage blocks but works.  Every LCL equivalent is UNSAFE
-     there -- and the failure is not an exception.  TR4W's radio threads are raw
-     CreateThread threads, so a fault reaches neither Application's handler nor
-     ExceptProc: the process simply vanishes, with the polling thread's own line
-     last in the log.
+  Every Win32 original was SAFE BY ACCIDENT from a worker thread -- InvalidateRect
+  posts, a cross-thread SetFocus fails harmlessly, a cross-thread SendMessage
+  blocks but works -- and every LCL equivalent is unsafe there.  TR4W crashed at
+  contest-open three times before that was found, and found nothing in the log
+  each time.
 
-     So these go through the HANDLE, which is thread-safe, rather than through
-     the LCL.  That is not a retreat: the call sites now name the CONTROL
-     instead of indexing wh[], which is the conversion that matters, and the
-     Win32 is confined to these functions.  They become ordinary property
-     access the day the polling thread stops doing UI work directly -- which is
-     its own piece of work, and the real defect underneath this one.
+  WHAT MADE THE FLIP SAFE, in order, because no single step would have:
+
+    1. uMainThreadWork -- the polling thread now REQUESTS its UI work and the
+       main thread performs it.
+    2. The worker-thread guard -- tCreateThread routes through BeginThread and
+       reports faults, so a mistake here is a log line rather than a vanished
+       process.
+    3. THE PROGRAM SAID SO, RATHER THAN ME.  EntryUsable names every distinct
+       off-main-thread caller, and a full bench session with a K4 produced none
+       (NY4I, 2026-08-23).  That is what licensed this change: "I traced the
+       callers" is precisely the claim that was wrong three times.
+
+  THE THREAD CHECK STAYS, and is not scaffolding left behind.  A clean session
+  proves the paths that ran, not the paths that exist -- an untried contest mode
+  or an unplugged radio family can still reach these, and now that they are LCL
+  the consequence is a crash instead of a harmless no-op.  It costs one thread-id
+  compare on a path already doing string work, and it reports each caller once.
+
+  THE NIL GUARD ALSO STAYS, and it is the more dangerous of the two.  A headless
+  /EXPORT boots the contest, writes the files and halts before any GUI, so these
+  objects are NIL there.  The Win32 calls were silent no-ops on handle 0; direct
+  property access took the golden corpus from 22/0/4 to 0/26 in one step, dying
+  so early that not even the startup breadcrumbs ran.
   --------------------------------------------------------------------------- }
 
-function EntryHandle(const aEdit: TEdit): HWND;
+{ The single funnel: both guards, in one place, for every accessor below. }
+function EntryUsable(const aEdit: TEdit): boolean;
 begin
-   if (aEdit = nil) or (not aEdit.HandleAllocated) then
+   if not OnMainThread then
       begin
-      Result := 0;
-      Exit;
+      // LOGS, does not raise: an exception on a worker thread is the failure
+      // mode being removed, not a way to report it.  Deduped by caller.
+      ReportOffMainThread('entry field accessor', get_caller_addr(get_frame));
       end;
-   Result := aEdit.Handle;
+
+   Result := (aEdit <> nil);
 end;
 
 function EntryText(const aEdit: TEdit): string;
-var
-   buf: array[0..1023] of AnsiChar;
-   h: HWND;
-   n: integer;
 begin
    Result := '';
-   h := EntryHandle(aEdit);
-   if h = 0 then
+   if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
-   n := Windows.GetWindowTextA(h, @buf[0], SizeOf(buf));
-   if n > 0 then
-      begin
-      SetString(Result, PAnsiChar(@buf[0]), n);
-      end;
+   Result := aEdit.Text;
 end;
 
 procedure SetEntryText(const aEdit: TEdit; const aText: string);
-var
-   h: HWND;
 begin
-   h := EntryHandle(aEdit);
-   if h = 0 then
+   if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
-   Windows.SetWindowTextA(h, PAnsiChar(AnsiString(aText)));
+   aEdit.Text := aText;
 end;
 
 { aLength < 0 selects to the end, which is what EM_SETSEL with -1 meant. }
 procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
-var
-   h: HWND;
-   last: integer;
 begin
-   h := EntryHandle(aEdit);
-   if h = 0 then
+   if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
+
+   aEdit.SelStart := aStart;
    if aLength < 0 then
       begin
-      last := -1;
+      aEdit.SelLength := Length(aEdit.Text) - aStart;
       end
    else
       begin
-      last := aStart + aLength;
+      aEdit.SelLength := aLength;
       end;
-   Windows.SendMessage(h, EM_SETSEL, WPARAM(aStart), LPARAM(last));
 end;
 
 function EntrySelStart(const aEdit: TEdit): integer;
-var
-   h: HWND;
-   a, b: DWORD;
 begin
    Result := 0;
-   h := EntryHandle(aEdit);
-   if h = 0 then
+   if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
-   a := 0;
-   b := 0;
-   Windows.SendMessage(h, EM_GETSEL, WPARAM(@a), LPARAM(@b));
-   Result := integer(a);
+   Result := aEdit.SelStart;
 end;
 
 function EntrySelLength(const aEdit: TEdit): integer;
-var
-   h: HWND;
-   a, b: DWORD;
 begin
    Result := 0;
-   h := EntryHandle(aEdit);
-   if h = 0 then
+   if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
-   a := 0;
-   b := 0;
-   Windows.SendMessage(h, EM_GETSEL, WPARAM(@a), LPARAM(@b));
-   Result := integer(b) - integer(a);
+   Result := aEdit.SelLength;
 end;
 
 procedure FocusEntry(const aEdit: TEdit);
-var
-   h: HWND;
 begin
-   h := EntryHandle(aEdit);
-   if h = 0 then
+   if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
-   // Windows.SetFocus, not TWinControl.SetFocus: from a worker thread this
-   // fails harmlessly -- focus belongs to the thread owning the input queue --
-   // where the LCL one RAISES.  That difference is the crash described above.
-   Windows.SetFocus(h);
+
+   // CanFocus first, because TWinControl.SetFocus RAISES on a control that is
+   // not visible and enabled, where the Windows.SetFocus this replaces simply
+   // failed and returned.  The call sites relied on that: the call field is
+   // hidden in some contest modes and focused unconditionally.
+   if aEdit.CanFocus then
+      begin
+      aEdit.SetFocus;
+      end;
 end;
 
 procedure ShowEntry(const aEdit: TEdit; const aVisible: boolean);
-var
-   h: HWND;
 begin
-   h := EntryHandle(aEdit);
-   if h = 0 then
+   if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
-   if aVisible then
-      begin
-      Windows.ShowWindow(h, SW_SHOW);
-      end
-   else
-      begin
-      Windows.ShowWindow(h, SW_HIDE);
-      end;
+   aEdit.Visible := aVisible;
 end;
 
 procedure RepaintEntry(const aEdit: TEdit);
-var
-   h: HWND;
 begin
-   h := EntryHandle(aEdit);
-   if h = 0 then
+   if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
-   Windows.InvalidateRect(h, nil, False);
+   aEdit.Invalidate;
 end;
 
 end.
