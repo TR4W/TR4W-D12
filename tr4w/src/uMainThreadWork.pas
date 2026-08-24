@@ -82,13 +82,21 @@ type
    { One value per marshalled operation.  Add a member, register a procedure for
      it, and the coalescing comes for free. }
    TMainThreadJob = (
-      { The two radio rows' alert colour.  A radio connecting or dropping
-        changes a COLOUR and nothing else, so no text is written and nothing
-        else would push it -- the Win32 version got away with an InvalidateRect
-        from the polling thread because DrawWindows re-evaluated the rule while
-        painting.  An LCL control paints from a property, so the property has to
-        be recomputed, and that has to happen on the main thread. }
-      mtRadioAlertColors,
+      { EVERY MAIN-WINDOW ELEMENT'S COLOUR, recomputed on the main thread.
+        Two callers, one reason.
+
+        A radio connecting or dropping changes a COLOUR and nothing else, so no
+        text is written and nothing would push it -- the Win32 version got away
+        with an InvalidateRect from the polling thread because DrawWindows
+        re-evaluated the rule while painting.  And any worker thread that writes
+        an element's TEXT needs the same pass afterwards, without paying for
+        fifty queued calls.
+
+        Named for what it does rather than for the radios, which is where it
+        started: NY4I asked how a WSJT-X datagram turns that indicator green,
+        and the answer was "from an Indy listener thread", which brought the
+        second caller. }
+      mtMainWindowElementColors,
       { AUTO S&P: the operator tuned the dial far enough to leave CQ mode.  A
         SEQUENCE -- clear the dupe info, clear Alt-D, reinitialise the QSO, take
         the focus -- which is why it is one job and not four. }

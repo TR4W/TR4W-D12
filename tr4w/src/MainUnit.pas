@@ -533,6 +533,8 @@ uses
   uMainForm,
   uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
   uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
+  uCrashLog,           // OnMainThread -- see WriteMainWindowText
+  uMainThreadWork,     // mtMainWindowElementColors
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
   uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
   uMasterForm,         // CreateTR4WMasterWindow -- the SCP window
@@ -1336,8 +1338,19 @@ end;
   does now unless it is asked.  See RefreshMainWindowElementColors. }
 procedure WriteMainWindowText(Window: TMainWindowElement; const Text: string);
 begin
+  // SetElementText marshals itself when this is a worker thread.  The colour
+  // pass cannot: it walks fifty elements, so queueing it per call would be
+  // fifty async calls where the job seam coalesces to one.
   SetElementText(Window, Text);
-  RefreshMainWindowElementColors;
+
+  if OnMainThread then
+     begin
+     RefreshMainWindowElementColors;
+     end
+  else
+     begin
+     RequestMainThreadJob(mtMainWindowElementColors);
+     end;
 end;
 
 procedure RefreshMainWindowElementColors;

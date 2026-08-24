@@ -217,7 +217,7 @@ const
          begin
          logger.Info('[pFactoryRadio] %s � alert color OFF', [rig^.RadioName]);
          end;
-      RequestMainThreadJob(mtRadioAlertColors);
+      RequestMainThreadJob(mtMainWindowElementColors);
    end;
 
 begin
@@ -1252,7 +1252,7 @@ begin
       begin
       logger.Info('[SerialLiveness] %s -> alert color OFF', [rig^.RadioName]);
       end;
-   RequestMainThreadJob(mtRadioAlertColors);
+   RequestMainThreadJob(mtMainWindowElementColors);
 end;
 
 // Update the serial liveness indicator from one read attempt.  Shared by the
@@ -1614,6 +1614,6 @@ initialization
    { The two pieces of UI work this unit used to do on a radio thread. }
    RegisterMainThreadJob(mtSwitchToSearchAndPounce, @RunSwitchToSearchAndPounce);
    RegisterMainThreadJob(mtBandModeDisplay, @RunBandModeDisplay);
-   RegisterMainThreadJob(mtRadioAlertColors, @RefreshMainWindowElementColors);
+   RegisterMainThreadJob(mtMainWindowElementColors, @RefreshMainWindowElementColors);
 
 end.

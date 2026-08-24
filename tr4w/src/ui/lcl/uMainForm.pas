@@ -371,7 +371,26 @@ end;
   written for.  IsEntryFieldHandle below is above them in the file because the
   window procedure that calls it is, and a forward declaration is cheaper than
   moving either. }
+type
+   { AN ELEMENT OPERATION THAT ARRIVED ON THE WRONG THREAD.  See the note on
+     ElementOnMainThread for why this exists. }
+   TElementOp = (eoText, eoShow, eoEnable);
+
+   PElementWork = ^TElementWork;
+   TElementWork = record
+      Op: TElementOp;
+      Element: TMainWindowElement;
+      Text: string;
+      Flag: boolean;
+   end;
+
 function ControlUsable(const aCtrl: TWinControl): boolean; forward;
+
+{ Defined with the deferred actions further down, because that is where the
+  queue it uses lives.  Called by the three element accessors above it. }
+function ElementOnMainThread(const aOp: TElementOp;
+                             const aElement: TMainWindowElement;
+                             const aText: string; const aFlag: boolean): boolean; forward;
 
 { ---------------------------------------------------------------------------
   THE ELEMENT CONTROLS.
@@ -452,6 +471,10 @@ end;
 
 procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
 begin
+   if not ElementOnMainThread(eoText, aElement, aText, False) then
+      begin
+      Exit;
+      end;
    if not ElementUsable(aElement) then
       begin
       Exit;
@@ -481,6 +504,10 @@ end;
 
 procedure ShowElement(const aElement: TMainWindowElement; const aVisible: boolean);
 begin
+   if not ElementOnMainThread(eoShow, aElement, '', aVisible) then
+      begin
+      Exit;
+      end;
    if not ElementUsable(aElement) then
       begin
       Exit;
@@ -490,6 +517,10 @@ end;
 
 procedure EnableElement(const aElement: TMainWindowElement; const aEnabled: boolean);
 begin
+   if not ElementOnMainThread(eoEnable, aElement, '', aEnabled) then
+      begin
+      Exit;
+      end;
    if not ElementUsable(aElement) then
       begin
       Exit;
@@ -546,9 +577,11 @@ end;
 type
    TDeferredAction = (daAppendSpace, daStartSending, daPasteCall);
 
+
    TEntryDeferrer = class(TObject)
    public
       procedure Run(Data: PtrInt);
+      procedure RunElement(Data: PtrInt);
    end;
 
 var
@@ -576,6 +609,79 @@ begin
       Exit;
       end;
    Application.QueueAsyncCall(GDeferrer.Run, PtrInt(aAction));
+end;
+
+{ THE ELEMENT ACCESSORS ARE CALLED FROM WORKER THREADS, AND THE WIN32 THEY
+  REPLACED MADE THAT SAFE BY ACCIDENT.
+
+  SetWindowTextW, ShowWindow and EnableWindow are kernel calls: Windows marshals
+  them to the window's own thread, so uWSJTX could write the WSJT-X indicator
+  straight from an Indy UDP listener thread and it simply worked.  Assigning an
+  LCL Caption, Visible or Enabled does no such thing.
+
+  NY4I asked how a WSJT-X datagram turns that indicator green; tracing the
+  answer is what found this.  TWSJTXServer.OnServerRead runs on the listener
+  thread -- uWSJTX sets ThreadedEvent := True explicitly -- and uWinKey and
+  LOGK1EA write elements from their own threads too.
+
+  THE GUARD GOES HERE, NOT AT THE CALL SITES.  There are seventy-five callers of
+  SetMainWindowText alone, spread across the program, and asking each to know
+  which thread it is on is exactly the kind of rule that is right for a year and
+  then quietly wrong.  One funnel cannot be forgotten.
+
+  This is a SAFETY NET, not the hot path.  A radio polled every 10 ms goes
+  through uPanelUpdate.PostElementText, which coalesces; this queues one async
+  call per operation and is for the cold callers -- a heartbeat, a WinKey state
+  change, a foot switch. }
+function ElementOnMainThread(const aOp: TElementOp;
+                             const aElement: TMainWindowElement;
+                             const aText: string; const aFlag: boolean): boolean;
+var
+   work: PElementWork;
+begin
+   Result := True;
+   if OnMainThread then
+      begin
+      Exit;
+      end;
+
+   Result := False;
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;      // shutting down; dropping it is what the old no-op did
+      end;
+
+   if GDeferrer = nil then
+      begin
+      GDeferrer := TEntryDeferrer.Create;
+      end;
+
+   New(work);
+   work^.Op := aOp;
+   work^.Element := aElement;
+   work^.Text := aText;
+   work^.Flag := aFlag;
+   Application.QueueAsyncCall(GDeferrer.RunElement, PtrInt(work));
+end;
+
+procedure TEntryDeferrer.RunElement(Data: PtrInt);
+var
+   work: PElementWork;
+begin
+   work := PElementWork(Data);
+   if work = nil then
+      begin
+      Exit;
+      end;
+   try
+      case work^.Op of
+        eoText:   SetElementText(work^.Element, work^.Text);
+        eoShow:   ShowElement(work^.Element, work^.Flag);
+        eoEnable: EnableElement(work^.Element, work^.Flag);
+      end;
+   finally
+      Dispose(work);
+   end;
 end;
 
 procedure TEntryDeferrer.Run(Data: PtrInt);
