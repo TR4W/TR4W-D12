@@ -14,132 +14,130 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General
-     Public License along with TR4W in  GPL_License.TXT. 
-If not, ref: 
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
+
+{ THE SUPER CHECK PARTIAL WINDOW -- what the rest of the program says to it.
+
+  MasterDlgProc IS GONE; the window is uMasterForm.  This unit stays because it
+  is the surface LOGEDIT, MainUnit and the Alt-D form already call, and turning
+  three callers into direct users of a form would spread the conversion for no
+  gain.  Where each arm of the dialog procedure went:
+
+    WM_INITDIALOG   -> MasterWindowShown, through the form's OnShow seam.  It
+                       also built the list box and set its font and column
+                       width; those are the .lfm and TCallGrid's cell size.
+    WM_DRAWITEM     -> TfrmMaster.MasterDrawCell.
+    WM_SIZE         -> Align = alClient plus TCallGrid.LayOut.  Its other job
+                       was recomputing MaxItemsInMasterListBox from a
+                       GetWindowRect; that is TCallGrid.Capacity, asked rather
+                       than cached.
+    WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE -> DefTR4WProc.  Not reproduced, as
+                       with the stations window and the dupe sheet.
+    WM_CLOSE        -> TfrmMaster.HandleClose.
+
+  FOUR GLOBALS GO WITH IT.  MasterListBox was doing two jobs -- the write target
+  and the is-it-open flag -- and MaxItemsInMasterListBox / ItemsInMasterListBox
+  were a cached capacity and a running count that only agreed with the control
+  because one procedure kept them in step.  masterrect was scratch. }
 unit uMaster;
 {$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
 uses
-  TF,
-  VC,
-  PostUnit,
-  Windows,
-  LogEdit,
-  LogWind,
-  uGradient,
-  LogStuff,
-  Messages;
+  VC;
 
-function MasterDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{ Is the window open?  Was `MasterListBox = 0`, which meant "the handle the
+  dialog stored for its list box", i.e. the same question asked of a variable
+  that had to be cleared by hand in WM_CLOSE. }
+function  MasterWindowOpen: boolean;
+
 procedure ClearMasterListBox;
 
-var
-  MasterListBox                         : HWND;
-  masterrect                            : TRect;
+{ Adds one partial match.  Returns False when the window is full -- the caller
+  stops, which is what DisplaySCPCall did with ItemsInMasterListBox. }
+function  MasterAddCall(const aCall: string; const aIsDupe: boolean): boolean;
 
-  MaxItemsInMasterListBox               : integer;
-  ItemsInMasterListBox                  : integer;
-
-const
-  OneMasterItemWidtht                   = 80;
-  OneMasterItemHeight                   = 16;
+{ Puts the rebuilt list on screen.  Separate from MasterAddCall because SCP adds
+  in a loop and one repaint at the end is the point. }
+procedure MasterCallsUpdated;
 
 implementation
-uses MainUnit;
 
-function MasterDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
-label
-  1;
-var
-  CallsBuf                              : array[0..15] of AnsiChar;
-  MDIS                                  : PDrawItemStruct;
-  i                                     : integer;
-  TempColor                             : tr4wColors;
+uses
+  LogStuff,          { SCPMinimumLetters }
+  uMasterForm;
+
+function MasterForm: TfrmMaster;
 begin
-  Result := False;
-  case Msg of
-
-    WM_SIZE, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE:
+   Result := nil;
+   if (TR4WMasterForm <> nil) and TR4WMasterForm.HandleAllocated then
       begin
-        DefTR4WProc(Msg, lParam, hwnddlg);
-        Windows.GetWindowRect(MasterListBox, masterrect);
-//        MaxItemsInMasterListBox := (((masterrect.Right - masterrect.Left) * (masterrect.Bottom - masterrect.Top)) div OneMasterItemWeight) - 0;
-        MaxItemsInMasterListBox :=
-          (((masterrect.Right - masterrect.Left) div OneMasterItemWidtht) - 0)
-          *
-          ((masterrect.Bottom - masterrect.Top) div OneMasterItemHeight)
-          ;
-        // Issue #997: removed asm nop (no-op).
+      Result := TR4WMasterForm;
       end;
+end;
 
-//    WM_CTLCOLORLISTBOX: RESULT := BOOL(tr4wBrushArray[SCPDupeBackground]);
-
-    WM_DRAWITEM:
-
-      begin
-        MDIS := Pointer(lParam);
-        if (MDIS^.itemAction = ODA_FOCUS) then
-           begin
-           DrawFocusRect(MDIS^.HDC, MDIS^.rcItem);
-           Exit;
-           end;
-
-        if MDIS^.itemAction = ODA_DRAWENTIRE then
-           begin
-           i := SendMessageA(MDIS^.hwndItem, LB_GETTEXT, MDIS^.ItemID, integer(@CallsBuf));
-
-           if SendMessage(MDIS^.hwndItem, LB_GETITEMDATA, MDIS^.ItemID, 0) = 1 then
-              begin
-              TempColor := trWhite;
-              GradientRect(MDIS^.HDC, MDIS^.rcItem, tr4wColorsArray[SCPDupeColor], tr4wColorsArray[trWhite {SCPDupeBackground}], gdHorizontal);
-              end
-           else
-              begin
-              TempColor := trBlack;
-              end;
-
-           Windows.SetTextColor(MDIS^.HDC, tr4wColorsArray[TempColor]);
-           SetBkMode(MDIS^.HDC, TRANSPARENT);
-           Windows.TextOutA(MDIS^.HDC, MDIS^.rcItem.Left + 2, MDIS^.rcItem.Top, CallsBuf, i);
-           Result := True;
-           end;
-      end;
-
-    WM_INITDIALOG:
-      begin
-        tr4w_WindowsArray[tw_MASTERWINDOW_INDEX].WndHandle := hwnddlg;
-        MasterListBox := CreateOwnerDrawListBox(LB_STYLE_2, hwnddlg);
-        // Issue #997: asm tWM_SETFONT -> TF helper (EAX = MasterListBox above).
-        tWM_SETFONT(MasterListBox, MainFixedFont);
-        tLB_SETCOLUMNWIDTH(hwnddlg, 80);
-        if SCPMinimumLetters = 0 then
-           begin
-           SCPMinimumLetters := 3;
-           end;
-//        Windows.SendMessage(MasterListBox, LB_GETITEMRECT, 0, integer(@masterrect));
-//        OneMasterItemWeight := masterrect.Right * masterrect.Bottom;
-      end;
-
-    WM_CLOSE:
-      begin
-        1:
-        MasterListBox := 0;
-        CloseTR4WWindow(tw_MASTERWINDOW_INDEX);
-
-      end;
-
-  end;
+function MasterWindowOpen: boolean;
+begin
+   Result := (MasterForm <> nil) and TR4WMasterForm.Visible;
 end;
 
 procedure ClearMasterListBox;
+var
+  f: TfrmMaster;
 begin
-  tLB_RESETCONTENT(MasterListBox);
-  ItemsInMasterListBox := 0;
+  f := MasterForm;
+  if f = nil then
+     begin
+     Exit;
+     end;
+  f.Calls.BeginRebuild;
+  f.Calls.EndRebuild;
 end;
 
-end.
+function MasterAddCall(const aCall: string; const aIsDupe: boolean): boolean;
+var
+  f: TfrmMaster;
+begin
+  Result := False;
+  f := MasterForm;
+  if f = nil then
+     begin
+     Exit;
+     end;
+  Result := f.Calls.AddCall(aCall, PtrInt(Ord(aIsDupe)));
+end;
 
+procedure MasterCallsUpdated;
+var
+  f: TfrmMaster;
+begin
+  f := MasterForm;
+  if f = nil then
+     begin
+     Exit;
+     end;
+  f.Calls.EndRebuild;
+end;
+
+{ What WM_INITDIALOG did that was not control construction.
+
+  THE SCPMinimumLetters NUDGE IS KEPT AS IT WAS.  Opening this window with the
+  setting at zero used to set it to 3, because zero means "never super check"
+  and an operator who has just opened the SCP window plainly wants one.  It is a
+  config write from a window-open, which is not a shape to copy -- but removing
+  it would change behaviour in a commit that is not about that. }
+procedure MasterWindowShown;
+begin
+  if SCPMinimumLetters = 0 then
+     begin
+     SCPMinimumLetters := 3;
+     end;
+end;
+
+begin
+  MasterOnShow := @MasterWindowShown;
+end.

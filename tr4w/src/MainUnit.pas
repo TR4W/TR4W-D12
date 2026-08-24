@@ -531,6 +531,7 @@ uses
   uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
   uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
+  uMasterForm,         // CreateTR4WMasterWindow -- the SCP window
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
@@ -2298,7 +2299,7 @@ begin
   // and OpenTR4WWindow's seam builds them.
   tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndProcAdr :=
     @FunctionKeysWindowDlgProc;
-  tr4w_WindowsArray[tw_MASTERWINDOW_INDEX].WndProcAdr := @MasterDlgProc;
+  // No WndProcAdr for the SCP window: it is an LCL form as of 2026-08-24.
   tr4w_WindowsArray[tw_REMMULTSWINDOW_INDEX].WndProcAdr :=
     @RemainingMultsDlgProc;
   tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndProcAdr := @TelnetWndDlgProc;
@@ -5410,6 +5411,11 @@ begin
      begin
      h := CreateTR4WStationsWindow;
      lclForm := TR4WStationsForm;
+     end
+  else if ID = tw_MASTERWINDOW_INDEX then
+     begin
+     h := CreateTR4WMasterWindow;
+     lclForm := TR4WMasterForm;
      end
   else if (ID = tw_DUPESHEETWINDOW1_INDEX) or
           (ID = tw_DUPESHEETWINDOW2_INDEX) then

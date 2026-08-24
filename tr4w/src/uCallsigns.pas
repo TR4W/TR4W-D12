@@ -526,7 +526,7 @@ begin
   Band := Radio.BandMemory;
   Mode := Radio.ModeMemory;
 
-  frm.BeginRebuild;
+  frm.Calls.BeginRebuild;
 
   for TempChar := '0' to '9' do
      begin
@@ -541,7 +541,7 @@ begin
                   begin
                   if FList^[Index].FCall[i] = TempChar then
                      begin
-                     frm.AddCall(string(FList^[Index].FCall), Ord(TempChar));
+                     frm.Calls.AddCall(string(FList^[Index].FCall), Ord(TempChar));
                      end;
                   Break;
                   end;
@@ -550,7 +550,7 @@ begin
         end;
      end;
 
-  frm.EndRebuild;
+  frm.Calls.EndRebuild;
 
 
   // P1/P2 went with the pushes.  They were assigned and never read: the same

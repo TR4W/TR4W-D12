@@ -1497,28 +1497,23 @@ begin
 end;
 }
 
+{ ONE PARTIAL MATCH INTO THE SCP WINDOW.
+
+  Was LB_ADDSTRING followed by LB_SETITEMDATA carrying the dupe flag, into a
+  list box the owner-draw then read back with LB_GETTEXT and LB_GETITEMDATA
+  because it had no other way to know what it was painting.  The window keeps
+  the pair itself now; MasterAddCall returns False when it is full, which is
+  what the ItemsInMasterListBox / MaxItemsInMasterListBox pair was counting. }
 procedure DisplaySCPCall(Call: CallString; Radio: RadioPtr {RadioType});
   {KK1L: 6.73 Added Radio to allow SO2R SCP}
-var
-  Index: integer;
 begin
-  if MasterListBox = 0 then
+  if not MasterWindowOpen then
      begin
      Exit;
      end;
-  if ItemsInMasterListBox >= MaxItemsInMasterListBox then
-     begin
-     //    tLB_ADDSTRING(MasterListBox, '...');
-     Exit;
-     end;
-  Call[length(Call) + 1] := #0;
-  Index := tLB_ADDSTRING(MasterListBox, @Call[1]);
-  if Index <> -1 then
-     begin
-     SendMessage(MasterListBox, LB_SETITEMDATA, Index,
-       integer(VisibleLog.CallIsADupe(Call, ActiveBand, ActiveMode)));
-     inc(ItemsInMasterListBox);
-     end;
+
+  MasterAddCall(string(Call),
+                VisibleLog.CallIsADupe(Call, ActiveBand, ActiveMode));
 end;
 
 
@@ -1585,7 +1580,7 @@ begin
     //  SaveSetAndClearActiveWindow(EditableLogWindow);
 
   GridSquareListShown := False;
-  if MasterListBox = 0 then
+  if not MasterWindowOpen then
      begin
      Exit;
      end;
@@ -1600,8 +1595,12 @@ begin
        Result := True;
        end;
     //WLI        IF SCPScreenFull THEN Break;
-  until (CallCD = '')
+  until (CallCD = '');
 
+  // ONE REPAINT FOR THE WHOLE REBUILD.  The list box repainted per LB_ADDSTRING
+  // and nobody chose that; a grid drawing from a model outside itself has to be
+  // told when the model moved.  Same lesson as the possible-call list.
+  MasterCallsUpdated;
 end;
 
 procedure EditableLog.ShowMissingMultiplierReport(h: HWND);

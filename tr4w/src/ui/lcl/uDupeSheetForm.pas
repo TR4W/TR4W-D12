@@ -39,8 +39,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   operator is scanning for a callsign, and more of them visible beats bigger
   ones.  Two different behaviours, deliberately.
 
-  THE MODEL IS FCalls.  CallsignsList is the real source and rebuilds this on
-  every band or mode change; FCalls is the derived pair the display needs --
+  THE MODEL IS Calls, a TCallGrid.  CallsignsList is the real source and
+  rebuilds this on every band or mode change; the grid holds the derived pair --
   the callsign and its district digit -- so the grid never has to be read back
   to find out what is in it.  The Win32 version had no choice and used
   LB_GETTEXT plus LB_GETITEMDATA from inside its own draw handler. }
@@ -51,7 +51,7 @@ unit uDupeSheetForm;
 interface
 
 uses
-   Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics, VC;
+   Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics, VC, uCallGrid;
 
 type
    TfrmDupeSheet = class(TForm)
@@ -66,15 +66,12 @@ type
                               aRect: TRect; aState: TGridDrawState);
    private
       FIndex: WindowsType;
-      { The callsign, and its district digit as an ORDINAL ('0'..'9' -> 48..57)
-        because that is what indexes VDColorsArray. }
-      FCalls: TStringList;
-      function  CellIndex(const aCol, aRow: integer): integer;
-      procedure LayOutGrid;
    public
-      procedure BeginRebuild;
-      procedure AddCall(const aCall: string; const aDistrict: byte);
-      procedure EndRebuild;
+      { The model and the down-then-across arithmetic, shared with the SCP
+        window -- see uCallGrid.  The tag on each entry is the district digit
+        as an ORDINAL ('0'..'9' -> 48..57), because that is what indexes
+        VDColorsArray. }
+      Calls: TCallGrid;
    end;
 
 { What WM_INITDIALOG did, as a seam.  uCallsigns owns the contents and assigns
@@ -157,12 +154,14 @@ end;
 
 procedure TfrmDupeSheet.HandleCreate(Sender: TObject);
 begin
-   FCalls := TStringList.Create;
+   // LimitToVisible stays FALSE: a dupe sheet scrolls.  The SCP window sets it,
+   // because that one shows what fits and drops the rest.
+   Calls := TCallGrid.Create(grdDupes, CELL_WIDTH, CELL_HEIGHT);
 end;
 
 procedure TfrmDupeSheet.HandleDestroy(Sender: TObject);
 begin
-   FreeAndNil(FCalls);
+   FreeAndNil(Calls);
 end;
 
 procedure TfrmDupeSheet.HandleClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -198,59 +197,16 @@ end;
 
 procedure TfrmDupeSheet.HandleResize(Sender: TObject);
 begin
-   LayOutGrid;
-end;
-
-{ DOWN THEN ACROSS.  This one line is the layout; everything else follows from
-  it, and it is deliberately the same rule as the band map's SpotIndexAt so the
-  two windows cannot drift into different reading orders. }
-function TfrmDupeSheet.CellIndex(const aCol, aRow: integer): integer;
-begin
-   Result := (aCol * grdDupes.RowCount) + aRow;
-end;
-
-procedure TfrmDupeSheet.LayOutGrid;
-var
-   rowsDown, colsAcross, n: integer;
-begin
-   if grdDupes = nil then
+   if Calls <> nil then
       begin
-      Exit;
-      end;
-
-   grdDupes.DefaultColWidth  := CELL_WIDTH;
-   grdDupes.DefaultRowHeight := CELL_HEIGHT;
-
-   rowsDown := grdDupes.ClientHeight div CELL_HEIGHT;
-   if rowsDown < 1 then
-      begin
-      rowsDown := 1;
-      end;
-
-   n := 0;
-   if FCalls <> nil then
-      begin
-      n := FCalls.Count;
-      end;
-
-   colsAcross := (n + rowsDown - 1) div rowsDown;
-   if colsAcross < 1 then
-      begin
-      colsAcross := 1;
-      end;
-
-   // ROWS BEFORE COLUMNS.  CellIndex multiplies by RowCount, so a column count
-   // set against the old row count maps cells to the wrong callsigns for one
-   // paint.  Same ordering trap the band map documents.
-   if grdDupes.RowCount <> rowsDown then
-      begin
-      grdDupes.RowCount := rowsDown;
-      end;
-   if grdDupes.ColCount <> colsAcross then
-      begin
-      grdDupes.ColCount := colsAcross;
+      Calls.LayOut;
       end;
 end;
+
+{ CellIndex and LayOutGrid MOVED to uCallGrid when the SCP window turned out
+  to need the identical pair -- IndexAt and LayOut there.  Extracted at the
+  SECOND caller, not the third: two copies of the same arithmetic drift, and
+  the drift is invisible. }
 
 { THE GRADIENT WAS A GRADIENT BETWEEN A COLOUR AND ITSELF.
 
@@ -267,11 +223,11 @@ var
    idx: integer;
    district: byte;
 begin
-   idx := CellIndex(aCol, aRow);
+   idx := Calls.IndexAt(aCol, aRow);
 
    grdDupes.Canvas.Brush.Style := bsSolid;
 
-   if (FCalls = nil) or (idx < 0) or (idx >= FCalls.Count) then
+   if idx < 0 then
       begin
       // Past the end of the model -- the last column is rarely full.
       grdDupes.Canvas.Brush.Color := clWindow;
@@ -279,7 +235,7 @@ begin
       Exit;
       end;
 
-   district := byte(PtrInt(FCalls.Objects[idx]));
+   district := byte(Calls.TagAt(idx));
    if (district < Low(VDColorsArray)) or (district > High(VDColorsArray)) then
       begin
       district := Ord('0');
@@ -290,43 +246,8 @@ begin
 
    grdDupes.Canvas.Brush.Style := bsClear;      // SetBkMode(TRANSPARENT)
    grdDupes.Canvas.Font.Color  := clBlack;
-   grdDupes.Canvas.TextRect(aRect, aRect.Left, aRect.Top, FCalls[idx],
+   grdDupes.Canvas.TextRect(aRect, aRect.Left, aRect.Top, Calls.CallAt(idx),
                             TTextStyle(grdDupes.Canvas.TextStyle));
-end;
-
-procedure TfrmDupeSheet.BeginRebuild;
-begin
-   if FCalls = nil then
-      begin
-      FCalls := TStringList.Create;
-      end;
-   FCalls.BeginUpdate;
-   FCalls.Clear;
-end;
-
-procedure TfrmDupeSheet.AddCall(const aCall: string; const aDistrict: byte);
-begin
-   if FCalls = nil then
-      begin
-      Exit;
-      end;
-   FCalls.AddObject(aCall, TObject(PtrInt(aDistrict)));
-end;
-
-procedure TfrmDupeSheet.EndRebuild;
-begin
-   if FCalls = nil then
-      begin
-      Exit;
-      end;
-   FCalls.EndUpdate;
-
-   // The cell count changed, so the shape has to be recomputed before anything
-   // repaints -- and then repainted, because a grid whose cells carry no text
-   // of their own has no way to know its model moved.  Same lesson the
-   // possible-call list taught on 2026-08-24.
-   LayOutGrid;
-   grdDupes.Invalidate;
 end;
 
 function CreateTR4WDupeSheetWindow(const aIndex: WindowsType): HWND;

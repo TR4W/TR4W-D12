@@ -25,7 +25,7 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-34 were added 2026-08-24 and are UNRUN.** NY4I confirmed
+**Sections 31-35 were added 2026-08-24 and are UNRUN.** NY4I confirmed
 the dupe sheet window, the stations window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
 the band-change message landed -- so those are recorded here rather than
@@ -1197,6 +1197,35 @@ cover:
       with the operator IN search-and-pounce.** The exchange field must stay
       green rather than snapping to the new normal background, and must take the
       new background when S&P is left.
+
+
+### 35. Super Check Partial is a form, and the dupe sheet moved under it  (`uMasterForm`, `uCallGrid`)
+
+**Neither has been seen since this change.** The dupe sheet WAS confirmed on
+2026-08-24 (section 31) and was then refactored onto the shared `TCallGrid` --
+so its confirmation no longer covers the code that runs. Re-check both.
+
+- [ ] **SCP fills as you type.** Type three or more characters of a callsign
+      with the SCP window open; partial matches appear. Fewer than
+      `SCP MINIMUM LETTERS` shows nothing, and the window hides itself when the
+      callsign is too short, exactly as before.
+- [ ] **Dupes are painted and the text inverts.** A partial match already
+      worked on this band and mode must show in `SCP DUPE COLOR` with white
+      text; everything else plain on the window background.
+- [ ] **IT STOPS AT WHAT FITS AND DOES NOT SCROLL.** That is the old behaviour
+      (`MaxItemsInMasterListBox`), now `TCallGrid.LimitToVisible`. Make the
+      window small with a common partial like `K1` and confirm it fills and
+      stops rather than growing a scrollbar. Then make it BIG and confirm more
+      matches appear -- the capacity is asked for, not cached, so a resize must
+      change how many the next keystroke shows.
+- [ ] **Opening SCP with `SCP MINIMUM LETTERS` at 0 still sets it to 3.** A
+      config write from a window-open; kept as it was, flagged as a shape not to
+      copy.
+- [ ] **The dupe sheet still behaves as it did in section 31** -- both sheets,
+      refill on a worked station, follow band and mode, reflow on resize.
+- [ ] **The two windows read the same way.** SCP, the dupe sheet and the band
+      map all flow DOWN THEN ACROSS now. Confirm none of them reads across-then-
+      down, which would be the one arithmetic slip this extraction could hide.
 
 ---
 
