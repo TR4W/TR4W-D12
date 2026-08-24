@@ -304,8 +304,6 @@ function tSetFilePointer(lDistanceToMove: LONGINT; dwMoveMethod: DWORD):
 procedure CloseLogFile;
 function ReadLogFile: boolean;
 procedure ShowPreviousDupeQSOsWnd(show: boolean);
-procedure DestroyPreviousDupeQSOsWnd;
-procedure FlashPreviousDupeQSOsWnd(show: boolean);
 procedure TryPutSpaceinExchangeWindow;
 procedure ShowInformation;
 procedure QuickQSLProcedure(Key: Char);
@@ -6550,38 +6548,20 @@ begin
 end;
 
 procedure tExchangeWindowSetFocus;
-var
-  h: hWnd;
 begin
-  // if ActiveMainWindow <> awExchangeWindow then
-  // if not tr4w_ExchangeWindowActive then
-  // ChangeFocus('exchange');
-  { ny4i Issue 131
-  For some reason, SetFocus would return an Access Denied error when using CWBC.
-  The error was documented in various postings and it was suggested that
-  SetForegroundWindow should now be used. I changed this and it appears to work
-  now for CWBC but this also needs to be checked in earlier versions of
-  Windows. The MSDN docs state Windows 2000 is the first version so that should
-  cover most. As this can get dicey with threads, this needs through testing with
-  WinKey and K1EA keyer because of the threading used there.
-  Note that I left the call to SetFocus first so the code works as it did.
-  If that call fails, then I try SetForegroundWindow.
-  }
-  begin
-    h := Windows.SetFocus(wh[mweExchange]);
-    if h = 0 then
-       begin
-       if not Windows.SetForegroundWindow(wh[mweExchange]) then
-          begin
-          DebugMsg('SetForegroundWindow Failed');
-          end;
-       end;
+  { ny4i Issue 131, PRESERVED THROUGH THE CONVERSION.
+    SetFocus returned an Access Denied error when using CWBC, so
+    SetForegroundWindow was added as a fallback.  The original note also said
+    "this can get dicey with threads ... needs thorough testing with WinKey and
+    K1EA keyer because of the threading used there" -- and that testing has now
+    happened: NY4I keyed CW on 2026-08-23 and the accessors' off-main-thread
+    check reported NOTHING, so this runs on the main thread after all.
 
-{$IF MORSERUNNER}
-    // Windows.SendMessage(MorseRunner_Number, WM_SETFOCUS, 0, 0);
-{$IFEND}
-  end;
-
+    The fallback is kept regardless.  It was written against real symptoms, and
+    "the thread theory did not hold" is not evidence that the symptom is gone.
+    aBringForward is BringToFront, the LCL's SetForegroundWindow, and it is
+    opt-in so no other focus path gains the ability to steal the foreground. }
+  FocusEntry(TR4WExchangeEdit, {aBringForward} True);
 end;
 
 procedure tRuntPaddleAndFootSwitchThread;
@@ -7853,24 +7833,7 @@ begin
     EditableLogHeight, SWP_NOMOVE);
   // Windows.SetWindowPos(ewha[show], HWND_TOP, 0, 0, ws * 46, 6 + MainWindowCaptionAndHeader + OffsetY + ws * 14, SWP_NOMOVE);
   // Windows.ShowWindow(tPreviousDupeQSOsWndHandle, integer(show));
-  // CreateThread(nil, 0, @FlashPreviousDupeQSOsWnd, Pointer(show), 0, lpThreadId);
   // Windows.AnimateWindow(tPreviousDupeQSOsWndHandle, 100, AW_HIDE * (integer(show) + 1) or AW_VER_POSITIVE * (integer(show) + 1));
-end;
-
-procedure FlashPreviousDupeQSOsWnd(show: boolean);
-begin
-  AnimateWindow(tPreviousDupeQSOsWndHandle, 300, AW_HIDE * (integer(show)
-    + 1) or AW_HOR_POSITIVE);
-end;
-
-procedure DestroyPreviousDupeQSOsWnd;
-begin
-  // DestroyWindow(tPreviousDupeQSOsWndHandle);
-  // Windows.ShowWindow(tPreviousDupeQSOsWndHandle, SW_HIDE);
-  AnimateWindow(tPreviousDupeQSOsWndHandle, 300, AW_HIDE or
-    AW_HOR_POSITIVE);
-  tPreviousDupeQSOsShowed := False;
-  Windows.EnableWindow(wh[mweEditableLog], True);
 end;
 
 procedure TryPutSpaceinExchangeWindow;

@@ -173,8 +173,8 @@ procedure SetEntryText(const aEdit: TEdit; const aText: string);
 procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
 function  EntrySelStart(const aEdit: TEdit): integer;
 function  EntrySelLength(const aEdit: TEdit): integer;
-procedure FocusEntry(const aEdit: TEdit);
-procedure ShowEntry(const aEdit: TEdit; const aVisible: boolean);
+procedure FocusEntry(const aEdit: TEdit;
+                     const aBringForward: boolean = False);
 procedure RepaintEntry(const aEdit: TEdit);
 
 implementation
@@ -695,7 +695,8 @@ begin
    Result := aEdit.SelLength;
 end;
 
-procedure FocusEntry(const aEdit: TEdit);
+procedure FocusEntry(const aEdit: TEdit;
+                     const aBringForward: boolean = False);
 var
    frm: TCustomForm;
 begin
@@ -741,15 +742,29 @@ begin
       begin
       aEdit.SetFocus;
       end;
-end;
 
-procedure ShowEntry(const aEdit: TEdit; const aVisible: boolean);
-begin
-   if not EntryUsable(aEdit) then
+   { ISSUE 131 (NY4I), CARRIED ACROSS RATHER THAN DROPPED.
+
+     tExchangeWindowSetFocus found that SetFocus returned ACCESS DENIED under
+     CW-by-CAT and added SetForegroundWindow as a fallback -- a real bug fixed
+     against real symptoms, so it is not discarded just because the conversion
+     would be tidier without it.  BringToFront is the LCL's SetForegroundWindow.
+
+     OPT-IN, because only the exchange path ever had it.  Giving it to every
+     caller would mean TR4W could pull itself to the foreground while the
+     operator is in another application -- a new behaviour, on a path that never
+     asked for it.
+
+     Focused is asked AFTER the attempt above, so the fallback costs nothing on
+     the normal path. }
+   if aBringForward and (not aEdit.Focused) then
       begin
-      Exit;
+      frm.BringToFront;
+      if aEdit.CanFocus then
+         begin
+         aEdit.SetFocus;
+         end;
       end;
-   aEdit.Visible := aVisible;
 end;
 
 procedure RepaintEntry(const aEdit: TEdit);
