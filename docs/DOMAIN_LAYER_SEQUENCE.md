@@ -103,8 +103,21 @@ Refined with NY4I 2026-08-24 into **three tiers**:
 | tier | what | where | note |
 |---|---|---|---|
 | **1. durable station identity** | name, address, city, state/province, postcode, country, email, club, certificate | JSON, cross-contest | **seeds** the export form; must stay overridable AT export; **if changed, ask whether to save it for next time** (the operator physically moved QTH) |
-| **2. per-contest entry declaration** | category, transmitter count, assisted, overlay, power, station, mode, band, time, soapbox | the contest row | declared once for the entry |
-| **3. per-QSO event** | **what was sent**; **my county** (QSO parties); **my grid** (some contests); **my park ref** (POTA) | the QSO record | the only things that change WITHIN a contest |
+| **2. per-contest entry declaration** | category, transmitter count, assisted, overlay, power, station, mode, band, time, soapbox, **my park ref** | the contest row | captured WHEN THE LOG IS CREATED — never read live from config at export, or issue #2's symptom returns |
+| **3. per-QSO event** | **what was sent**; **my county** (QSO parties); **my grid** (some contests) | the QSO record | the only things that change WITHIN one log |
+
+**THE TIER TEST, so placement is decidable rather than argued case by case:
+DOES IT CHANGE WITHIN ONE LOG?**
+
+- **county** — yes, roving a QSO party. Tier 3.
+- **grid** — yes, roving a VHF contest inside one entry. Tier 3.
+- **park** — **no. A different park is a different log** (NY4I, 2026-08-24), so
+  it is constant for the whole log and belongs on the contest row.
+
+Tier 2 is therefore not "read it from config at export". It is **captured at log
+creation and stored**. That is what preserves the event-sourcing property at the
+right granularity: the park cannot vary per QSO, but it must still be what it
+was WHEN THE LOG WAS MADE, not what the config says today.
 
 `_OPERATORS` is **derived from the log**, not stored — it leaves the schema
 entirely.
