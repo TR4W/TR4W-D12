@@ -3949,6 +3949,11 @@ begin
         end;
      end;
 
+  // A THIRD KIND, for the same reason as the list views: the call and exchange
+  // fields are LCL TEdits and paint from their own Color / Font.Color, so a
+  // changed palette has to be handed to them too.
+  RefreshEntryFieldColors;
+
   Windows.InvalidateRect(tr4whandle, nil, True);
 end;
 

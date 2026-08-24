@@ -175,7 +175,7 @@ function  EntrySelStart(const aEdit: TEdit): integer;
 function  EntrySelLength(const aEdit: TEdit): integer;
 procedure FocusEntry(const aEdit: TEdit;
                      const aBringForward: boolean = False);
-procedure RepaintEntry(const aEdit: TEdit);
+procedure SetEntryColors(const aEdit: TEdit; const aBack, aText: TColor);
 
 { The possible-call list -- an LCL TListBox since Phase 3b; these replace
   LB_RESETCONTENT / LB_ADDSTRING / LB_SETCURSEL / LB_GETCURSEL / LB_GETCOUNT
@@ -309,9 +309,56 @@ end;
   it owned the window class, and anything it does not claim chains on to the LCL
   untouched.  What used to fall through to DefWindowProc now falls through to
   the LCL's proc, which is the right default for a form. }
+{ The entry-field guard, declared here and defined with the accessors it was
+  written for.  IsEntryFieldHandle below is above them in the file because the
+  window procedure that calls it is, and a forward declaration is cheaper than
+  moving either. }
+function ControlUsable(const aCtrl: TWinControl): boolean; forward;
+
+{ Is this handle one of the two entry fields?  Asked by the WM_CTLCOLOREDIT arm
+  below, which is the only caller and the reason this is not exported.
+
+  ControlUsable rather than a bare nil test, so a control whose window has not
+  been created yet cannot have .Handle read -- reading it would CREATE the
+  handle, from inside a window procedure, for a control the caller was only
+  asking about. }
+function IsEntryFieldHandle(const aWnd: HWND): boolean;
+begin
+   Result := False;
+   if aWnd = 0 then
+      begin
+      Exit;
+      end;
+
+   Result := (ControlUsable(TR4WCallEdit)     and (TR4WCallEdit.Handle     = aWnd)) or
+             (ControlUsable(TR4WExchangeEdit) and (TR4WExchangeEdit.Handle = aWnd));
+end;
+
 function TR4WFormSubclassProcBody(TRHWND: HWND; Msg: UINT;
                                   wParam: wParam; lParam: lParam): longword; stdcall;
 begin
+   { THE ENTRY FIELDS ARE COLOURED BY THE LCL, so their WM_CTLCOLOREDIT never
+     reaches TR4W's DrawWindows at all.
+
+     Not an exclusion inside DrawWindows, because DECLINING IS NOT EXPRESSIBLE
+     THERE.  That function has no "not mine" answer: every path -- including the
+     one where nothing matched -- falls into its DrawWindow label and returns
+     the whole-screen brush, and WindowProcBody's fallthrough is DefWindowProc,
+     not the LCL.  So a control TR4W stopped painting would have been painted
+     by the system default instead of by its own Color, which is worse than
+     what it replaced.  The fork belongs HERE, where chaining to the LCL is
+     already what "not mine" means.
+
+     TEdit.Color and TEdit.Font.Color then decide, and the LCL answers from
+     Brush.Reference.Handle (win32callback.inc:1420).  ONE system paints the
+     control, which is the whole point: while TR4W claimed this message, the
+     Color property on a converted TEdit did nothing at all. }
+   if (Msg = WM_CTLCOLOREDIT) and IsEntryFieldHandle(HWND(lParam)) then
+      begin
+      Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
+      Exit;
+      end;
+
    if IsTR4WsOwnMessage(Msg) then
       begin
       Result := uMainWindowProc.WindowProc(TRHWND, Msg, wParam, lParam);
@@ -788,13 +835,28 @@ begin
       end;
 end;
 
-procedure RepaintEntry(const aEdit: TEdit);
+{ THE ENTRY FIELDS' COLOURS ARE PROPERTIES NOW, NOT A WM_CTLCOLOR ARM.
+
+  Assigning Color also clears ParentColor, which is what we want: these two
+  fields are coloured from TWindows[] and from the operating mode, not from
+  whatever the form is painted with.  Assign only on a CHANGE -- a TColor
+  setter invalidates, and SetOpMode runs on every mode toggle. }
+procedure SetEntryColors(const aEdit: TEdit; const aBack, aText: TColor);
 begin
    if not ControlUsable(aEdit) then
       begin
       Exit;
       end;
-   aEdit.Invalidate;
+
+   if aEdit.Color <> aBack then
+      begin
+      aEdit.Color := aBack;
+      end;
+
+   if aEdit.Font.Color <> aText then
+      begin
+      aEdit.Font.Color := aText;
+      end;
 end;
 
 

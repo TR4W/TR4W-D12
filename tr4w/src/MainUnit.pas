@@ -393,8 +393,12 @@ function CreateTR4WStaticWindowID(X: Word; Y: Word; w: Word; Style: Cardinal;
 function nfCreateTR4WStaticWindow(Text: PAnsiChar; X: Word; Y: Word; w: Word; Style:
   Cardinal): HWND;
 
-procedure EditSetSelLength(h: HWND; Value: integer);
 procedure SetOpMode(OperationMode: OpModeType);
+
+{ Push the entry fields' colours into the controls.  Cheap and idempotent; call
+  it after anything that changes either the palette or the operating mode. }
+procedure RefreshEntryFieldColors;
+
 procedure ProcessFuntionKeys(Key: integer);
 procedure CreateDirectoryIfNotExist;
 procedure CheckAndSetInitialExchangeCursorPos;
@@ -1291,6 +1295,38 @@ begin
      end;
 end;
 
+{ THE ENTRY FIELDS KEEP THEIR OWN COPY OF THEIR COLOURS, exactly like the list
+  views RefreshMainWindowColors has to re-push into.  An LCL control paints from
+  its Color and Font.Color, so a change to TWindows[] or to OpMode has to be
+  handed to it; invalidating alone repaints it in the colours it already holds.
+
+  Search-and-pounce turns the exchange field green.  That used to be an arm in
+  DrawWindows keyed on wh[mweExchange]; it is one assignment here, and it is the
+  same assignment the normal case makes with a different colour, so the two
+  cannot drift apart the way a paint-time special case and a creation-time
+  default could. }
+procedure RefreshEntryFieldColors;
+var
+   exchBack: TColor;
+begin
+   SetEntryColors(TR4WCallEdit,
+                  tr4wColorsArray[TWindows[mweCall].mweBackG],
+                  tr4wColorsArray[TWindows[mweCall].mweColor]);
+
+   if OpMode = SearchAndPounceOpMode then
+      begin
+      exchBack := tr4wColorsArray[trGreen];
+      end
+   else
+      begin
+      exchBack := tr4wColorsArray[TWindows[mweExchange].mweBackG];
+      end;
+
+   SetEntryColors(TR4WExchangeEdit,
+                  exchBack,
+                  tr4wColorsArray[TWindows[mweExchange].mweColor]);
+end;
+
 procedure SetOpMode(OperationMode: OpModeType);
 begin
 
@@ -1304,7 +1340,7 @@ begin
      end;
   tCallWindowSetFocus;
   DisplayAutoSendCharacterCount;
-  RepaintEntry(TR4WExchangeEdit);
+  RefreshEntryFieldColors;
   ShowFMessages(0);
   SendStationStatus(sstOpMode);
 end;
@@ -3503,6 +3539,10 @@ begin
 
   TR4WExchangeEdit.MaxLength := 35;   // created immediately above
 
+  // Both fields exist now, so give them their colours.  Nothing else paints
+  // them any more.
+  RefreshEntryFieldColors;
+
   if TourDuration <> 0 then
      begin
      // Windows.GetWindowRect(wh[mweQuickCommand], temprect);
@@ -3719,11 +3759,11 @@ begin
   if CheckWindowAndColor(HWND(lParam), TempBrush, TempWindowColor) then
      begin
 
-     if lParam = integer(wh[mweExchange]) then
-       if OpMode = SearchAndPounceOpMode then
-          begin
-          TempBrush := tr4wBrushArray[trGreen];
-          end;
+     // The search-and-pounce green on the exchange field WAS HERE.  Both entry
+     // fields are LCL TEdits and colour themselves now -- see
+     // RefreshEntryFieldColors, and the WM_CTLCOLOREDIT fork in
+     // uMainForm.TR4WFormSubclassProcBody that stops this function ever being
+     // asked about them.
 
      if DupeInfoCallWindowState <> diNone then
        if lParam = integer(wh[mweDupeInfoCall]) then
@@ -5053,7 +5093,6 @@ procedure CallWindowKeyDownProc(wParam: integer);
 var
   Key: Char;
   itempos: integer;
-  c: HWND;
 label
   wait;
 begin
@@ -5149,10 +5188,15 @@ begin
      exit;
      end;
   // CallsignsList.CreatePartialsList(CallWindowString);
-  c := wh[mweCall];
   if not InsertMode then
      begin
-     EditSetSelLength(c, 1);
+     // OVERTYPE: select the character under the caret, so the next keystroke
+     // replaces it instead of being inserted before it.  This was
+     // EditSetSelLength on wh[mweCall] -- EM_GETSEL, EM_SETSEL and
+     // EM_SCROLLCARET.  The LCL's SelStart setter scrolls the caret into view
+     // itself (win32wsstdctrls.pp:1376), so the third message has no
+     // counterpart to lose.
+     SetEntrySel(TR4WCallEdit, EntrySelStart(TR4WCallEdit), 1);
      end;
   if CWStillBeingSent then
     // B1: same substitution as above.  4.52.10
@@ -5566,17 +5610,6 @@ function nfCreateTR4WStaticWindow(Text: PAnsiChar; X: Word; Y: Word; w: Word; St
 begin
   Result := tCreateStaticWindow(Text, Style, X, Y, w, ws, tr4whandle, 0);
   tWM_SETFONT(Result, MainFont);
-end;
-
-procedure EditSetSelLength(h: HWND; Value: integer);
-var
-  Selection: TSelection;
-begin
-  SendMessage(h, EM_GETSEL, LONGINT(@Selection.StartPos),
-    LONGINT(@Selection.EndPos));
-  Selection.EndPos := Selection.StartPos + Value;
-  SendMessage(h, EM_SETSEL, Selection.StartPos, Selection.EndPos);
-  SendMessage(h, EM_SCROLLCARET, 0, 0);
 end;
 
 procedure ProcessFuntionKeys(Key: integer);
