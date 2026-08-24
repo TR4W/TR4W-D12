@@ -178,6 +178,7 @@ function  EntryText(const aEdit: TEdit): string;
 procedure SetEntryText(const aEdit: TEdit; const aText: string);
 procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
 function  EntrySelStart(const aEdit: TEdit): integer;
+function  EntrySelLength(const aEdit: TEdit): integer;
 procedure FocusEntry(const aEdit: TEdit);
 procedure ShowEntry(const aEdit: TEdit; const aVisible: boolean);
 procedure RepaintEntry(const aEdit: TEdit);
@@ -551,81 +552,181 @@ begin
 end;
 
 
-function EntryText(const aEdit: TEdit): string;
-begin
-   if aEdit = nil then
-      begin
-      Result := '';
-      Exit;
-      end;
-   Result := aEdit.Text;
-end;
+{ ---------------------------------------------------------------------------
+  THE ENTRY FIELDS.  Two hazards live here, both paid for on 2026-08-23, and
+  both are why these are FUNCTIONS rather than property access at the call site.
 
-procedure SetEntryText(const aEdit: TEdit; const aText: string);
-begin
-   if aEdit = nil then
-      begin
-      Exit;
-      end;
-   aEdit.Text := aText;
-end;
+  1. THE MAIN WINDOW MAY NOT EXIST.  A headless /EXPORT boots the contest,
+     writes the files and halts before any GUI, so these objects are NIL on that
+     path.  The Win32 calls they replace were silent no-ops on handle 0.  Direct
+     property access took the golden corpus from 22/0/4 to 0/26.
 
-{ aLength < 0 selects to the end, which is what EM_SETSEL with -1 meant. }
-procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
-begin
-   if aEdit = nil then
-      begin
-      Exit;
-      end;
-   aEdit.SelStart := aStart;
-   if aLength < 0 then
-      begin
-      aEdit.SelLength := Length(aEdit.Text) - aStart;
-      end
-   else
-      begin
-      aEdit.SelLength := aLength;
-      end;
-end;
+  2. THEY ARE REACHED FROM THE RADIO POLLING THREAD.  Not theoretically:
 
-function EntrySelStart(const aEdit: TEdit): integer;
+         pFactoryRadio -> UpdateStatus -> ProcessFilteredStatus
+                       -> SetOpMode(SearchAndPounceOpMode)  [uRadioPolling:881]
+                          -> tCallWindowSetFocus
+                          -> CheckAndSetInitialExchangeCursorPos
+                          -> InvalidateRect on the exchange field
+
+     which fires whenever AUTO S&P switches mode because the operator tuned the
+     dial.  The Win32 originals were all SAFE BY ACCIDENT from a worker thread:
+     InvalidateRect posts, a cross-thread SetFocus harmlessly fails, a
+     cross-thread SendMessage blocks but works.  Every LCL equivalent is UNSAFE
+     there -- and the failure is not an exception.  TR4W's radio threads are raw
+     CreateThread threads, so a fault reaches neither Application's handler nor
+     ExceptProc: the process simply vanishes, with the polling thread's own line
+     last in the log.
+
+     So these go through the HANDLE, which is thread-safe, rather than through
+     the LCL.  That is not a retreat: the call sites now name the CONTROL
+     instead of indexing wh[], which is the conversion that matters, and the
+     Win32 is confined to these functions.  They become ordinary property
+     access the day the polling thread stops doing UI work directly -- which is
+     its own piece of work, and the real defect underneath this one.
+  --------------------------------------------------------------------------- }
+
+function EntryHandle(const aEdit: TEdit): HWND;
 begin
-   if aEdit = nil then
+   if (aEdit = nil) or (not aEdit.HandleAllocated) then
       begin
       Result := 0;
       Exit;
       end;
-   Result := aEdit.SelStart;
+   Result := aEdit.Handle;
+end;
+
+function EntryText(const aEdit: TEdit): string;
+var
+   buf: array[0..1023] of AnsiChar;
+   h: HWND;
+   n: integer;
+begin
+   Result := '';
+   h := EntryHandle(aEdit);
+   if h = 0 then
+      begin
+      Exit;
+      end;
+   n := Windows.GetWindowTextA(h, @buf[0], SizeOf(buf));
+   if n > 0 then
+      begin
+      SetString(Result, PAnsiChar(@buf[0]), n);
+      end;
+end;
+
+procedure SetEntryText(const aEdit: TEdit; const aText: string);
+var
+   h: HWND;
+begin
+   h := EntryHandle(aEdit);
+   if h = 0 then
+      begin
+      Exit;
+      end;
+   Windows.SetWindowTextA(h, PAnsiChar(AnsiString(aText)));
+end;
+
+{ aLength < 0 selects to the end, which is what EM_SETSEL with -1 meant. }
+procedure SetEntrySel(const aEdit: TEdit; const aStart, aLength: integer);
+var
+   h: HWND;
+   last: integer;
+begin
+   h := EntryHandle(aEdit);
+   if h = 0 then
+      begin
+      Exit;
+      end;
+   if aLength < 0 then
+      begin
+      last := -1;
+      end
+   else
+      begin
+      last := aStart + aLength;
+      end;
+   Windows.SendMessage(h, EM_SETSEL, WPARAM(aStart), LPARAM(last));
+end;
+
+function EntrySelStart(const aEdit: TEdit): integer;
+var
+   h: HWND;
+   a, b: DWORD;
+begin
+   Result := 0;
+   h := EntryHandle(aEdit);
+   if h = 0 then
+      begin
+      Exit;
+      end;
+   a := 0;
+   b := 0;
+   Windows.SendMessage(h, EM_GETSEL, WPARAM(@a), LPARAM(@b));
+   Result := integer(a);
+end;
+
+function EntrySelLength(const aEdit: TEdit): integer;
+var
+   h: HWND;
+   a, b: DWORD;
+begin
+   Result := 0;
+   h := EntryHandle(aEdit);
+   if h = 0 then
+      begin
+      Exit;
+      end;
+   a := 0;
+   b := 0;
+   Windows.SendMessage(h, EM_GETSEL, WPARAM(@a), LPARAM(@b));
+   Result := integer(b) - integer(a);
 end;
 
 procedure FocusEntry(const aEdit: TEdit);
+var
+   h: HWND;
 begin
-   // CanFocus as well as nil: a control on a form that is not visible cannot
-   // take focus, and SetFocus RAISES rather than returning a failure the way
-   // Windows.SetFocus did.
-   if (aEdit = nil) or (not aEdit.CanFocus) then
+   h := EntryHandle(aEdit);
+   if h = 0 then
       begin
       Exit;
       end;
-   aEdit.SetFocus;
+   // Windows.SetFocus, not TWinControl.SetFocus: from a worker thread this
+   // fails harmlessly -- focus belongs to the thread owning the input queue --
+   // where the LCL one RAISES.  That difference is the crash described above.
+   Windows.SetFocus(h);
 end;
 
 procedure ShowEntry(const aEdit: TEdit; const aVisible: boolean);
+var
+   h: HWND;
 begin
-   if aEdit = nil then
+   h := EntryHandle(aEdit);
+   if h = 0 then
       begin
       Exit;
       end;
-   aEdit.Visible := aVisible;
+   if aVisible then
+      begin
+      Windows.ShowWindow(h, SW_SHOW);
+      end
+   else
+      begin
+      Windows.ShowWindow(h, SW_HIDE);
+      end;
 end;
 
 procedure RepaintEntry(const aEdit: TEdit);
+var
+   h: HWND;
 begin
-   if aEdit = nil then
+   h := EntryHandle(aEdit);
+   if h = 0 then
       begin
       Exit;
       end;
-   aEdit.Invalidate;
+   Windows.InvalidateRect(h, nil, False);
 end;
 
 end.

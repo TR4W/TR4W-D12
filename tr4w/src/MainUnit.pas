@@ -3062,8 +3062,6 @@ var
   TempExchange: ContestExchange;
   DQTH: boolean;
 begin
-  // Was GetWindowTextA writing the ShortString's bytes and setting its length
-  // byte by hand.  The assignment does both and cannot get the length wrong.
   ExchangeWindowString := ShortString(AnsiString(EntryText(TR4WExchangeEdit)));
   if VHFBandsEnabled then
      begin
@@ -3203,8 +3201,6 @@ begin
      WagCheck; //n4af
      end;
 
-  // Was WM_GETTEXT with CallstringLength as the cap.  Copy keeps the cap; the
-  // assignment sets the length byte.
   CallWindowString := ShortString(AnsiString(Copy(EntryText(TR4WCallEdit), 1,
                                                   CallstringLength)));
 
@@ -7881,7 +7877,7 @@ var
   Selection: TSelection;
 begin
   Selection.StartPos := EntrySelStart(TR4WExchangeEdit);
-  Selection.EndPos   := Selection.StartPos;
+  Selection.EndPos   := Selection.StartPos + EntrySelLength(TR4WExchangeEdit);
 
   if Selection.StartPos = Selection.EndPos then
     if Selection.StartPos = length(ExchangeWindowString) then
@@ -7959,8 +7955,6 @@ end;
 procedure StartSendingNow(FromKeyBoard: boolean);
 begin
 
-  // LoWord of EM_GETSEL is the selection START, which for a caret is how many
-  // characters have been typed.
   if AutoSendCharacterCount > EntrySelStart(TR4WCallEdit) then
      begin
      Exit;
