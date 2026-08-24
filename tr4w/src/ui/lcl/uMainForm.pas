@@ -471,12 +471,17 @@ begin
       edit.OnKeyPress := EntryEvents.CallKeyPress;
       edit.OnKeyDown  := EntryEvents.CallKeyDown;
       edit.OnKeyUp    := EntryEvents.CallKeyUp;
+      edit.OnChange   := EntryEvents.CallChange;
+      edit.OnEnter    := EntryEvents.CallEnter;
+      edit.OnExit     := EntryEvents.CallExit;
       TR4WCallEdit := edit;
       end
    else
       begin
       edit.OnKeyPress := EntryEvents.ExchangeKeyPress;
       edit.OnKeyDown  := EntryEvents.ExchangeKeyDown;
+      edit.OnChange   := EntryEvents.ExchangeChange;
+      edit.OnEnter    := EntryEvents.ExchangeEnter;
       TR4WExchangeEdit := edit;
       end;
 

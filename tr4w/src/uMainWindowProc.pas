@@ -63,6 +63,18 @@ type
       procedure CallKeyUp(Sender: TObject; var Key: word; Shift: TShiftState);
       procedure ExchangeKeyPress(Sender: TObject; var Key: AnsiChar);
       procedure ExchangeKeyDown(Sender: TObject; var Key: word; Shift: TShiftState);
+
+      { THE NOTIFICATION ARMS -- Phase 3d, the same move Phase 3c made for the
+        keyboard.  These were EN_UPDATE, EN_CHANGE, EN_SETFOCUS and EN_KILLFOCUS
+        arriving as WM_COMMAND and dispatched by comparing lParam against
+        wh[mweCall] / wh[mweExchange].  A named handler per field, wired at
+        creation: nothing branches on Sender, and one field's handler cannot be
+        reached by the other. }
+      procedure CallChange(Sender: TObject);
+      procedure CallEnter(Sender: TObject);
+      procedure CallExit(Sender: TObject);
+      procedure ExchangeChange(Sender: TObject);
+      procedure ExchangeEnter(Sender: TObject);
    end;
 
 var
@@ -143,6 +155,49 @@ end;
 { The two fields' OnKeyPress bodies differ by one call, so they share one and
   the caller says which field it is. Setting Key to #0 is the LCL's "consume",
   and it replaces the loop's `goto NoTransMess`. }
+procedure TTR4WEntryEvents.CallChange(Sender: TObject);
+begin
+   { WAS EN_UPDATE, IS NOW OnChange, AND THAT IS A REAL IF SMALL DIFFERENCE.
+     EN_UPDATE fires BEFORE the control repaints; the LCL's OnChange is
+     EN_CHANGE, which fires after.  The old code even carried the doubt in a
+     comment: EN_UPDATE, with EN_CHANGE beside it in braces.  There is no LCL
+     event for EN_UPDATE,
+     and inventing one by subclassing to catch a Win32 notification would put
+     back exactly what this phase removes.  What can be observed is a repaint of
+     the raw text before CallWindowChange has processed it. }
+   CallWindowChange;
+end;
+
+procedure TTR4WEntryEvents.CallEnter(Sender: TObject);
+begin
+   // The caret is the TEdit's own -- see the note that was on the exchange arm.
+   ActiveMainWindow := awCallWindow;
+end;
+
+procedure TTR4WEntryEvents.CallExit(Sender: TObject);
+begin
+   CheckQuestionMark;
+end;
+
+procedure TTR4WEntryEvents.ExchangeChange(Sender: TObject);
+begin
+   ExchangeWindowChange;
+end;
+
+procedure TTR4WEntryEvents.ExchangeEnter(Sender: TObject);
+begin
+   { NO ChangeCaret, AND NO DestroyCaret ON THE WAY OUT.  TR4W drew its own
+     block caret from cursor.bmp into whichever entry field had focus.  The
+     fields are LCL TEdits since Phase 3b and a TEdit maintains its own caret,
+     so both ran: NY4I saw two cursors side by side, 2026-08-18.  241b408c
+     sequenced them and made the symptom go away without removing either
+     system; the removal came later.  NY4I chose the LCL caret over
+     re-expressing the block shape as control painting, on the grounds that D7
+     showed a plain underline anyway.  The CUSTOM CARET command is retired to
+     csRem in uCFG.pas rather than deleted, so an existing .cfg still loads. }
+   ActiveMainWindow := awExchangeWindow;
+end;
+
 procedure TTR4WEntryEvents.EntryKeyPress(var Key: AnsiChar; const aField: TTR4WEntryField);
 var
    vk: wParam;
@@ -715,50 +770,11 @@ begin
         if (LoWord(wParam) >= 10700) and (LoWord(wParam) <= 10750) then
             RunPlugin(LoWord(wParam));
 
-        if lParam = integer(wh[mweCall]) then
-        begin
-          if HiWord(wParam) = EN_KILLFOCUS then
-          begin
-            CheckQuestionMark;
-          end;
-          if HiWord(wParam) = EN_UPDATE {EN_CHANGE} then CallWindowChange;
+        // The call and exchange notification arms USED TO BE HERE, dispatched
+        // by comparing lParam against wh[mweCall] / wh[mweExchange].  They are
+        // OnChange / OnEnter / OnExit on the controls themselves now -- see
+        // TTR4WEntryEvents.  Phase 3d.
 
-          if HiWord(wParam) = EN_SETFOCUS then
-          begin
-            // The caret is the TEdit's own now -- see the note on the
-            // exchange arm below.
-            ActiveMainWindow := awCallWindow;
-{$IF MORSERUNNER}
-//            Windows.SendMessage(MorseRunner_Callsign, WM_SETFOCUS, 0, 0);
-{$IFEND}
-          end;
-        end;
-
-        if lParam = integer(wh[mweExchange]) then
-        begin
-          if HiWord(wParam) = EN_CHANGE then ExchangeWindowChange;
-          if HiWord(wParam) = EN_SETFOCUS then
-          begin
-            // NO ChangeCaret, AND NO DestroyCaret ON THE WAY OUT.  TR4W drew
-            // its own block caret from cursor.bmp into whichever entry field had
-            // focus, created here and destroyed on EN_KILLFOCUS.  The fields are
-            // LCL TEdits since Phase 3b and a TEdit maintains its own caret, so
-            // both ran: NY4I saw two cursors side by side, 2026-08-18.
-            //
-            // 241b408c sequenced them -- destroy-before-create plus an
-            // invalidate -- which made the symptom go away without removing
-            // either system.  This is the removal.  NY4I chose the LCL caret
-            // over re-expressing the block shape as control painting, on the
-            // grounds that D7 showed a plain underline anyway.
-            //
-            // The CUSTOM CARET command is retired to csRem in uCFG.pas rather
-            // than deleted, so an existing .cfg carrying it still loads.
-            ActiveMainWindow := awExchangeWindow;
-{$IF MORSERUNNER}
-//            Windows.SendMessage(MorseRunner_nUMBER, WM_SETFOCUS, 0, 0);
-{$IFEND}
-          end;
-        end;
 
       end;
 
