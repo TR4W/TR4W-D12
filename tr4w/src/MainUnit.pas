@@ -534,6 +534,7 @@ uses
   uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
   uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
   uCrashLog,           // OnMainThread -- see WriteMainWindowText
+  uStateBridge,        // InstallStateBridge -- the domain/UI crossing
   uMainThreadWork,     // mtMainWindowElementColors
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
   uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
@@ -3560,6 +3561,10 @@ begin
   tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndHandle := tr4whandle;
   // TF writes every element's text through this; see SetMainWindowText there.
   MainWindowTextWriter := @WriteMainWindowText;
+
+  // The domain layer's one crossing into the UI.  After the form exists: it
+  // brings the view into line with state that may already be set.
+  InstallStateBridge;
   wh[mweWholeScreen] := tr4whandle;
   wh[mweEditableLog] := CreateEditableLog(tr4whandle, 0, ws * 7,
     MainWindowChildsWidth, 0 {EditableLogWindowHeight}, False);

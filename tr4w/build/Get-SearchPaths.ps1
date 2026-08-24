@@ -53,6 +53,7 @@ function Get-Tr4wSearchPaths
    $paths.Add((Join-Path $src 'trdos'))
    $paths.Add((Join-Path $src 'utils'))
    $paths.Add((Join-Path $src 'lang'))
+   $paths.Add((Join-Path $src 'domain'))
    $paths.Add((Join-Path $src 'radioFactory'))
    $paths.Add((Join-Path $src 'rotatorFactory'))
 

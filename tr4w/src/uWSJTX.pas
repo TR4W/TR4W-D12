@@ -119,7 +119,7 @@ const
 implementation
 
 uses
-  uMainForm,   { the main window's elements are LCL controls }
+  uWSJTXState, { the link state -- uStateBridge decides what it looks like }
   VC // For ContestExchange
   , MainUnit // For ParseADIFRecord
   , LogDupe // For ClearContestExchange - Stuff is all over the place in this code! de NY4I
@@ -436,8 +436,11 @@ begin
                     logger.trace('[uWSJTX] In UDP Heartbeat, Radio frequency = ' +
                       IntToStr(radio1.CurrentStatus.VFO[VFOA].Frequency));
                     end;
-                 SetMainWindowText(mweWSJTX, 'WSJTX');
-                 ShowElement(mweWSJTX, True);
+                 // A NETWORK THREAD SETS STATE, NOT A WIDGET.  This used to
+                 // name the element, choose its caption and choose whether it
+                 // was visible -- three appearance decisions taken on an Indy
+                 // UDP listener thread.  They are in uStateBridge now.
+                 WSJTXState.Connected := True;
                  isConnected := true;
                  if firstTime then
                     begin
@@ -697,8 +700,7 @@ begin
                begin
                  logger.Info('[uWSJTX] WSJT-X close message received');
                    // We may want to indicate it somehow on main screen
-                 SetMainWindowText(mweWSJTX, '');
-                 ShowElement(mweWSJTX, False);
+                 WSJTXState.Connected := False;
                  isConnected := false;
                end;
              WSJTX_MESSAGETYPE_WSPRDECODEV:

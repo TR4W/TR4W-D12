@@ -25,7 +25,7 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-38 were added 2026-08-24 and are UNRUN.**  Section 37 is the
+**Sections 31-39 were added 2026-08-24 and are UNRUN.**  Section 37 is the
 biggest of them: the entire main window display changed. NY4I confirmed
 the dupe sheet window, the stations window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
@@ -1322,6 +1322,22 @@ through Application.QueueAsyncCall; what went away is the synthetic keystroke.
       tells a window it has gained focus rather than giving it focus. If the
       caret now lands in the call field where it did not before, that is the
       fix, not a regression.
+
+
+### 39. The WSJT-X indicator is driven by domain state  (`uWSJTXState`, `uStateBridge`)
+
+First slice of the domain layer -- one boolean, one writer, one indicator,
+chosen because it proves the whole path with almost nothing to get wrong. The
+listener thread no longer names a widget.
+
+- [ ] **Start WSJT-X: the indicator appears and goes green.**
+- [ ] **Stop WSJT-X: it goes red and then hides** when the link is declared
+      dead.
+- [ ] **Start TR4W with WSJT-X ALREADY RUNNING.** A heartbeat can arrive before
+      the main form exists; InstallStateBridge brings the view into line once at
+      install for exactly that case, and it is the half most likely to be wrong.
+- [ ] **It does not flicker.** A heartbeat arrives every few seconds and setting
+      the state to what it already holds must notify nobody.
 
 ---
 

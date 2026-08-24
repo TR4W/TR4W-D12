@@ -53,6 +53,10 @@ $lints = @(
    @{ Name = 'Lint-RadioRegistry';   Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PollRadioState';  Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-PCharAnsi';       Arg = $src;     NeedsFpc = $false }
+   # THE DOMAIN LAYER STAYS ONE.  Shipped with the first domain unit rather
+   # than after it: a `uses Forms` in src\domain\ arrives in a commit that is
+   # about something else, and nothing would point at it.
+   @{ Name = 'Lint-DomainPurity';    Arg = (Join-Path $Tr4wDir 'src\domain'); NeedsFpc = $false }
    @{ Name = 'Lint-LineEndings';     Arg = $Tr4wDir; NeedsFpc = $false }
    # The BOM's sibling, and it took six silent losses in one session to earn its
    # place: line endings were gated, encoding was not. $Tr4wDir because tr4w.dpr

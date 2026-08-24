@@ -777,21 +777,27 @@ code review, and it is the reason the FMX twins should not be deleted yet.
 
 ## 8. Suggested order
 
-Revised 2026-08-23, now that the band map has cleared the message loop.
+**Revised 2026-08-24**, after the window conversions.  The ORDER of the three
+big architectural pieces is decided and lives in
+[`DOMAIN_LAYER_SEQUENCE.md`](DOMAIN_LAYER_SEQUENCE.md); it is not restated here,
+so there is one place to change it.
 
-1. **BENCH WHAT IS ALREADY IN.** Queue sections 27–30 are all unrun, and section 30 —
-   `Application.Run` — is the one nothing automated can touch: the corpus halts before any
-   GUI init. Four things one loop used to answer are answered by four separate LCL
-   mechanisms, and each fails as "a key does nothing" rather than a crash. Nothing else
-   should start before this.
-2. **Retire `uHostedFormWindows`** — write-only since the pivot. 18 forms, mechanical.
-3. **`uCAT`**, as a deliberate project, when nobody is mid-change in it.
-4. **The remaining fifteen `tw_` windows**, in batches. The seam is proven twice; the trap
-   is not the mechanics but assuming what a control does from its drawing code — see the
-   band map note in §2.
-5. **`win-ci` runner** — unblocks automated release; small, and still not done.
-6. **Editable log + Get Server Log**, after the log is SQLite (§2, decided 2026-08-22).
-7. **64-bit, when wanted** (§3) — a decision now, not a project. Two errors and a bounded
-   pointer audit.
-8. **The main window** last, alone, and only once the tool windows have proven the
-   coexistence layer holds for the length of a contest.
+1. **BENCH WHAT IS ALREADY IN.**  Queue sections 27-38 are unrun, and 37 -- the
+   main window's forty-two elements -- is the largest visible change the program
+   has had.  Nothing else should start before this.
+2. **The network window**, which is a TRANSPORT job before it is a UI one: its
+   HWND is the `WSAAsyncSelect` target (`uNet:745`), it carries the reconnect
+   timer, and it subclasses itself for custom draw.  The socket comes off
+   `WSAAsyncSelect` first; the window converts afterwards and is then trivial.
+3. **The domain layer, in the order that document sets out** -- display state,
+   then SQLite, then the contest factory.  Started 2026-08-24.
+4. **`Lint-DomainPurity`** ships with the first domain unit, not after it.
+5. **Editable log + Get Server Log**, which fall out of the SQLite step as a
+   virtual list rather than being a project of their own.
+6. **`win-ci` runner** -- unblocks automated release; small, and still not done.
+7. **`uCAT`**, as a deliberate project, when nobody is mid-change in it.
+8. **64-bit, when wanted** (§3) -- a decision now, not a project.
+
+**No longer on this list:** the tool windows (done -- function keys, band map,
+stations, both dupe sheets, SCP, all five remaining-multiplier windows) and the
+main window itself (done 2026-08-24).  `uHostedFormWindows` went with them.
