@@ -194,7 +194,6 @@ uses
    uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
    uTCIServer,         // WM_TCI_APPLY
    uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE
-   uPanelUpdate,       // WM_PANEL_UPDATE
    SysUtils,           // Format -- the window-procedure guard
    uCrashLog;          // OnMainThread / ReportOffMainThread / LogCaughtException
 
@@ -248,7 +247,11 @@ begin
              //   WM_PANEL_UPDATE (WM_APP + 230) was never added, so the radio
              //     panel marshalling seam never delivered a single update --
              //     which is why RIT/XIT/SPLIT stayed yellow on the bench and
-             //     survived two wrong diagnoses before this one.
+             //     survived two wrong diagnoses before this one. (That message
+             //     no longer exists: uPanelUpdate hands its payload to
+             //     Application.QueueAsyncCall now, which has no id anyone can
+             //     forget to register. The example stands -- it is the CLASS of
+             //     error this list must not repeat.)
              //
              // The units cost is real and it is worth paying. A list of integers
              // that must agree with constants declared elsewhere cannot be
@@ -262,7 +265,6 @@ begin
              (aMsg = WM_CTY_DOWNLOAD_DONE) or
              (aMsg = WM_TRMASTER_DOWNLOAD_DONE) or
              (aMsg = WM_TCI_APPLY) or
-             (aMsg = WM_PANEL_UPDATE) or
              // NOT a WM_APP message -- WM_USER + 200 -- and the fourth one this
              // list was dropping. It is SENT, not posted, by uGetServerLog so
              // the multi-op log replace happens on the UI thread; unclaimed, it

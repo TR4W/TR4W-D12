@@ -30,8 +30,8 @@ unit uPanelUpdate;
   conversion: repointing the writes first is a small, reviewable change against
   the panel that exists, and it leaves the conversion with no threading in it.
 
-  WHY A POSTED MESSAGE -- not TThread.Queue, not Synchronize. The reasoning is
-  uTCIServer's, paid for on 2026-08-14, and it applies here with more force:
+  WHY NOT TThread.Queue AND NOT Synchronize. The reasoning is uTCIServer's,
+  paid for on 2026-08-14, and it still holds:
 
     * TThread.Queue stamps each entry with the CALLING thread's id even when the
       thread argument is nil, and TThread.Destroy purges by that id -- so a
@@ -44,8 +44,21 @@ unit uPanelUpdate;
       Forms hooks WakeMainThread and the hand-rolled loop happens to fall
       through to DispatchMessage -- a mechanism Phase 3/7 deletes.
 
-  A posted message does not block the sender, is not tied to any thread's
-  lifetime, and is drained by TR4W's own loop.
+  THIS USED TO BE A POSTED MESSAGE, AND THE THIRD LEG OF THAT ARGUMENT EXPIRED.
+  WM_PANEL_UPDATE was chosen partly because TR4W ran a hand-rolled GetMessage
+  loop -- the note above even called that "a mechanism Phase 3/7 deletes". Phase
+  3/7 happened: the program runs Application.Run. So this is now
+  Application.QueueAsyncCall, which answers all three objections at once -- it
+  does not block the sender, is tied to no thread's lifetime, and is drained by
+  the LCL's own loop. VERIFIED, not assumed: it enters FAsyncCall.CritSec
+  (lcl/include/application.inc:2327), so it is genuinely safe from a worker
+  thread.
+
+  AND IT DELETED A WHOLE CLASS OF BUG WITH IT. A posted message only arrived if
+  its id was listed in the main form's allow-list, and WM_PANEL_UPDATE WAS NOT --
+  so this seam delivered nothing at all, which is why RIT/XIT/SPLIT stayed yellow
+  on the bench and survived two wrong diagnoses. An async call has no id to
+  forget to register.
 
   AND WHY IT COALESCES, WHICH IS THE HALF THAT IS NOT ABOUT THREADS.
   DisplayCurrentStatus runs on EVERY POLL and ends with three unconditional
@@ -66,11 +79,7 @@ unit uPanelUpdate;
 interface
 
 uses
-  Windows, Messages;
-
-const
-  // WM_APP + 200/201 POTA, 210/211 CTY, 220 TCI -- see uTCIServer.
-  WM_PANEL_UPDATE = WM_APP + 230;
+  Windows;
 
 // Set a child control's text from ANY thread. aPanel = 0, or a panel that has
 // closed, is not an error: the update is dropped, exactly as the guarded
@@ -81,10 +90,6 @@ procedure PostPanelText(const aPanel: HWND; const aControlId: integer;
 // Enable or disable one control from ANY thread, by its window handle.
 procedure PostControlEnable(const aControl: HWND; const aEnabled: boolean);
 
-// Runs one posted update on the main thread and frees its payload.
-// Called from the main window procedure.
-procedure RunQueuedPanelUpdate(const aLParam: LPARAM);
-
 // Forget everything remembered about a panel and its children. Call when a
 // panel closes: a window handle can be REUSED by Windows, and a stale cache
 // entry would then suppress the first update to a different window.
@@ -94,7 +99,8 @@ implementation
 
 uses
   SysUtils, SyncObjs,
-  VC;          // tr4whandle -- the window the updates are posted to
+  Forms,       // Application.QueueAsyncCall -- the transport
+  uCrashLog;   // LogCaughtException -- a failed hand-off must not be silent
 
 type
   TPanelUpdateKind = (puText, puEnable);
@@ -110,7 +116,13 @@ type
     Enabled: boolean;
   end;
 
-  // What was last successfully posted for one target. Small and linear: there
+  // QueueAsyncCall wants a method, so one object owns it.
+  TPanelRunner = class(TObject)
+  public
+    procedure Apply(Data: PtrInt);
+  end;
+
+  // What was last successfully handed over for one target. Small and linear: there
   // are two radio panels with a handful of controls each, so a list beats a
   // hash both in code and in cache lines.
   TLastPosted = record
@@ -123,6 +135,7 @@ type
 
 var
   gLock: TCriticalSection = nil;
+  gRunner: TPanelRunner = nil;
   gLast: array of TLastPosted;
 
 // Caller holds the lock. Returns the index, or -1.
@@ -157,17 +170,40 @@ begin
    SetLength(gLast, Length(gLast) - 1);
 end;
 
-// Posts the payload and records what was sent, or frees it and forgets.
-// Caller holds the lock; aIndex is the cache slot to update, or -1 to append.
+// Hands the payload to the main thread and records what was sent, or frees it
+// and forgets.  Caller holds the lock; aIndex is the cache slot to update, or
+// -1 to append.
+function HandOver(aUpdate: TPanelUpdate): boolean;
+begin
+   Result := False;
+
+   // QueueAsyncCall RAISES once the queue is shut down, and a radio thread polls
+   // until its object is torn down -- so this is reached on an ordinary exit,
+   // not only on a fault.
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+
+   try
+      Application.QueueAsyncCall(gRunner.Apply, PtrInt(aUpdate));
+      Result := True;
+   except
+      on E: TObject do
+         begin
+         LogCaughtException('uPanelUpdate.HandOver', E);
+         end;
+   end;
+end;
+
 procedure SendAndRemember(aUpdate: TPanelUpdate; const aIndex: integer);
 var
   slot: integer;
 begin
-   if (tr4whandle = 0) or (not PostMessage(tr4whandle, WM_PANEL_UPDATE, 0,
-                                           LPARAM(aUpdate))) then
+   if not HandOver(aUpdate) then
       begin
       // NEVER BELIEVE A VALUE THAT DID NOT TRAVEL. Dropping the cache entry
-      // means the next identical call posts again instead of assuming the panel
+      // means the next identical call tries again instead of assuming the panel
       // already shows it.
       aUpdate.Free;
 
@@ -252,12 +288,12 @@ begin
    end;
 end;
 
-procedure RunQueuedPanelUpdate(const aLParam: LPARAM);
+procedure TPanelRunner.Apply(Data: PtrInt);
 var
   upd: TPanelUpdate;
   ansi: AnsiString;
 begin
-   upd := TPanelUpdate(aLParam);
+   upd := TPanelUpdate(Data);
    if upd = nil then
       begin
       Exit;
@@ -345,10 +381,12 @@ end;
 
 initialization
    gLock := TCriticalSection.Create;
+   gRunner := TPanelRunner.Create;
 
 finalization
-   // Any payload still in the message queue at shutdown is leaked deliberately:
+   // Any payload still in the async queue at shutdown is leaked deliberately:
    // freeing it here would race the loop that is still draining.
    FreeAndNil(gLock);
+   FreeAndNil(gRunner);
 
 end.
