@@ -358,6 +358,7 @@
 
 //  TC_WASADUPE                           = '%s was a dupe.';
   TC_ALTDCOMMANDDISABLED                = 'Alt-D command requires TWO RADIO MODE = TRUE';
+  TC_BANDCHANGEDISABLED                 = 'Band change requires MULTIPLE BANDS = TRUE once the log has QSOs';
   TC_YOUHAVERESTOREDTHELASTDELETED      = 'You have restored the last deleted log entry!!';
   TC_YOUHAVEDELETEDTHELASTLOGENTRY      = 'You have deleted the last log entry!!  Use Alt-Y to restore it.';
   TC_DOYOUREALLYWANTTOEXITTHEPROGRAM    = 'Do you really want to exit the program?';

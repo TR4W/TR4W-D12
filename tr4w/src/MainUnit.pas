@@ -529,6 +529,7 @@ uses
   uMainForm,
   uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
   uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
+  uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
@@ -2309,7 +2310,8 @@ begin
   tr4w_WindowsArray[tw_POSTSCORESWINDOW_INDEX].WndProcAdr := @GetScoresDlgProc;
   // Issue #783 Phase 4 -- HamScore RTC status window dialog
   tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndProcAdr := @HamScoreDlgProc;
-  tr4w_WindowsArray[tw_STATIONS_INDEX].WndProcAdr := @StationsDlgProc;
+  // No WndProcAdr for the stations window either: it is an LCL form as of
+  // 2026-08-24 and OpenTR4WWindow's seam builds it.
   tr4w_WindowsArray[tw_STATIONS_RM_DX].WndProcAdr := @RemainingMultsDlgProc
     {RemainingMultsDXDlgProc};
   tr4w_WindowsArray[tw_STATIONS_RM_DOM].WndProcAdr := @RemainingMultsDlgProc
@@ -5395,13 +5397,18 @@ begin
   lclForm := nil;
   if ID = tw_FUNCTIONKEYSWINDOW_INDEX then
      begin
-     h := CreateTR4WFunctionKeysWindow(tr4whandle);
+     h := CreateTR4WFunctionKeysWindow;
      lclForm := TR4WFunctionKeysForm;
      end
   else if ID = tw_BANDMAPWINDOW_INDEX then
      begin
-     h := CreateTR4WBandMapWindow(tr4whandle);
+     h := CreateTR4WBandMapWindow;
      lclForm := TR4WBandMapForm;
+     end
+  else if ID = tw_STATIONS_INDEX then
+     begin
+     h := CreateTR4WStationsWindow;
+     lclForm := TR4WStationsForm;
      end
   else
      begin
@@ -8037,9 +8044,12 @@ begin
   CloseLogFile;
 
   LoadinLog;
-  if wh[mweStations] <> 0 then
+  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle <> 0 then
      begin
-     SendMessage(wh[mweStations], LVM_DELETEALLITEMS, 0, 0);
+     // Was LVM_DELETEALLITEMS on wh[mweStations].  The rows are a model now, so
+     // emptying the control alone would leave the model holding every callsign
+     // and the two halves out of step for the rest of the contest.
+     ClearStationsColumn;
      FillStationsColumn;
      end;
   SendStationStatus(sstQSOs);

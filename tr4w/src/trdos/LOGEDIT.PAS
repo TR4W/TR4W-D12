@@ -391,6 +391,8 @@ begin
      end;
   if (not MultipleBandsEnabled) and (TotalContacts <> 0) then
      begin
+     // Same gate as BandDownOrUp, and the same reason for saying so out loud.
+     QuickDisplay(TC_BANDCHANGEDISABLED);
      Exit;
      end;
   PutRadioOutOfSplit(ActiveRadio); // n4af 4.46.5
@@ -402,11 +404,27 @@ begin
   RefreshAfterBandChange;
 end;
 
+{ A REFUSAL THE OPERATOR CAN SEE.
+
+  This gate is deliberate -- a single-band contest does not change band once
+  there are QSOs in the log -- but it used to be SILENT, and both the Band
+  Up/Band Down menu items and Alt-B/Alt-V land here, so the key did nothing and
+  said nothing.  NY4I lost a testing session to it on 2026-08-24: MULTIPLE BANDS
+  was FALSE in settings\tr4w.json with three QSOs logged, and the only way to
+  find that out was to read the config.
+
+  Prefer a reported refusal to a silent one -- the same rule that fixed the
+  WinKeyer that failed to open and downgraded without a word. }
 procedure BandDownOrUp(Direction: DirectionType);
 begin
 
-  if (MultipleBandsEnabled) or (TotalContacts = 0) then
+  if (not MultipleBandsEnabled) and (TotalContacts <> 0) then
      begin
+     QuickDisplay(TC_BANDCHANGEDISABLED);
+     Exit;
+     end;
+
+  begin
      if CommandUseInactiveRadio then
        //KK1L: 6.73 Band change on inactive radio via command
         begin

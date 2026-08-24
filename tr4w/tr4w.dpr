@@ -72,6 +72,7 @@ uses
   uBandmap in 'src\uBandmap.pas',
   uBandMapView in 'src\uBandMapView.pas',
   uBandMapForm in 'src\ui\lcl\uBandMapForm.pas',
+  uStationsForm in 'src\ui\lcl\uStationsForm.pas',
   uAppInputHooks in 'src\ui\lcl\uAppInputHooks.pas',
   uFileView in 'src\uFileView.pas',
   uAutoCQ in 'src\uAutoCQ.pas',

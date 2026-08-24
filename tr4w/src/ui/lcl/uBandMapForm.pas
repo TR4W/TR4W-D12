@@ -139,7 +139,7 @@ var
   in this signature is the last Win32 surface in the band map's path, and it is
   not the band map's own: OpenTR4WWindow and tr4w_WindowsArray deal in handles
   for all twenty tool windows, and both go when the last of them is a form. }
-function CreateTR4WBandMapWindow(const aParent: HWND): HWND;
+function CreateTR4WBandMapWindow: HWND;
 
 implementation
 
@@ -803,7 +803,7 @@ begin
    Result := SpotsList.IndexOfSpot(spot);
 end;
 
-function CreateTR4WBandMapWindow(const aParent: HWND): HWND;
+function CreateTR4WBandMapWindow: HWND;
 begin
    if TR4WBandMapForm = nil then
       begin

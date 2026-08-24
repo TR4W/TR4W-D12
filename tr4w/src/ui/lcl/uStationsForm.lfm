@@ -1,0 +1,29 @@
+object frmStations: TfrmStations
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Stations'
+  ClientHeight = 300
+  ClientWidth = 460
+  Color = clWindow
+  KeyPreview = True
+  OnClose = HandleClose
+  OnResize = HandleResize
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object lvStations: TListView
+    Left = 0
+    Height = 300
+    Top = 0
+    Width = 460
+    Align = alClient
+    BorderStyle = bsNone
+    Columns = <>
+    HideSelection = False
+    ReadOnly = True
+    RowSelect = True
+    SortType = stNone
+    TabOrder = 0
+    ViewStyle = vsReport
+  end
+end

@@ -92,7 +92,7 @@ var
   FunctionKeyRightDoubleClicked: TFunctionKeyProc = nil;
 
 { Create the window and return its handle, for OpenTR4WWindow's seam. }
-function CreateTR4WFunctionKeysWindow(const aParent: HWND): HWND;
+function CreateTR4WFunctionKeysWindow: HWND;
 
 implementation
 
@@ -195,7 +195,7 @@ begin
       end;
 end;
 
-function CreateTR4WFunctionKeysWindow(const aParent: HWND): HWND;
+function CreateTR4WFunctionKeysWindow: HWND;
 var
    f: TfrmFunctionKeys;
    i: integer;

@@ -24,18 +24,18 @@ unit uStations;
 interface
 
 uses
+  Classes,
+  SysUtils,
   TF,
   VC,
   Tree,
   Windows,
   uCallsigns,
-  uCommctrl,
   LogDupe,
   LogWind,
   Messages
   ;
 
-function StationsDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure FillStationsColumn;
 function AddCallsignToStationColumn(Call: CallString): integer;
 procedure UpdateStationStatus(Call: CallString; i: integer);
@@ -44,6 +44,9 @@ procedure UpdateAllStationsList;
 procedure UpdateCallsignAfterEditing(Before, After: CallString);
 procedure SetStationsCallsignMask;
 procedure EnumSTATIONSTXT(FileString: PShortString);
+procedure BuildStationsColumns;
+procedure ClearStationsColumn;
+procedure StationsWindowShown;
 
 var
 //  StationsListView                      : HWND;
@@ -51,62 +54,79 @@ var
   StationsStartBand                     : BandType;
 
 implementation
-uses MainUnit;
 
-function StationsDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+uses
+  MainUnit,
+  uStationsForm;   { the view -- see the model note below }
+
+{ ---------------------------------------------------------------------------
+  THE ROWS ARE A MODEL NOW, NOT THE CONTROL.
+
+  The Win32 version kept the row set INSIDE the list view and had no choice
+  about it: the control was created with LVS_SORTASCENDING, so IT decided the
+  order, insertion index did not equal row index, and the only identity a row
+  had was the text in column 0.  Two routines paid for that -- one found a
+  station with LVM_FINDITEM, the other walked every row calling
+  ListView_GetItemText just to learn which callsign it was looking at.
+
+  StationRows is that set, sorted, and the list view is a projection of it: row
+  i shows StationRows[i].  Both halves move together (Add then InsertRow,
+  Delete then DeleteRow), so an index is meaningful on either side and nothing
+  reads a row back to find out what it is.
+
+  Sorted, CaseSensitive False IS LVS_SORTASCENDING's rule -- the control sorted
+  with lstrcmpi -- and callsigns are upper-cased on the way in besides.
+  Duplicates are ACCEPTED rather than ignored, because the control accepted them
+  and this change is not the place to decide they are wrong.
+  --------------------------------------------------------------------------- }
 var
-  elvc                                  : tagLVCOLUMNA;
-  TempBand                              : BandType;
+  StationRows: TStringList = nil;
+
+function Rows: TStringList;
 begin
-  Result := False;
-  case Msg of
-    //    WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
-    //    WM_EXITSIZEMOVE: FrmSetFocus;
-    WM_SIZE, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
-      // Integer(): NMHDR.code is UNSIGNED as FPC's Windows unit declares it,
-      // and every NM_/CDN_ constant is NEGATIVE, so the bare comparison is
-      // ALWAYS FALSE and this never ran.  Delphi declares that field signed,
-      // which is why it worked before the FPC port.  The compiler warned --
-      // "Comparison might be always false" -- and the build did not fail.
-    WM_NOTIFY: if Integer(PNMHdr(lParam)^.code) = NM_RELEASEDCAPTURE then FrmSetFocus;
+  if StationRows = nil then
+     begin
+     StationRows := TStringList.Create;
+     StationRows.CaseSensitive := False;
+     StationRows.Duplicates := dupAccept;
+     StationRows.Sorted := True;
+     end;
+  Result := StationRows;
+end;
 
-    {
-        WM_NOTIFY:
-          begin
-            if PNMHdr(lParam)^.code = LVN_GETDISPINFO then PLVDispInfo(lParam).Item.pszText := 'asas';
-          end;
-    }
-    WM_INITDIALOG:
-      begin
-        tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle := hwnddlg;
-        CreateListView(tw_STATIONS_INDEX, mweStations, LVS_SORTASCENDING);
+{ StationsDlgProc IS GONE, and with it the last Win32 in this unit.
 
-//        ListView_SetExtendedListViewStyle(wh[mweStations], integer(Config.ShowGridlines) * LVS_EX_GRIDLINES or LVS_EX_FULLROWSELECT);
+  Its four arms, and where each went:
 
-        elvc.Mask := LVCF_TEXT or LVCF_WIDTH or LVCF_FMT;
+    WM_SIZE            -> tListBoxClientAlign, stretching the list over the
+                          client area.  The .lfm says Align = alClient.
+    WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE
+                       -> DefTR4WProc.  Neither converted form wires an
+                          equivalent (the band map and the function keys window
+                          do not either), so the FrmSetFocus-after-resize
+                          nicety is not reproduced.  Stated rather than
+                          silently dropped.
+    WM_NOTIFY          -> FrmSetFocus on NM_RELEASEDCAPTURE, same nicety.
+    WM_INITDIALOG      -> StationsWindowShown, reached through the form's
+                          OnShow.  See the seam in uStationsForm. }
 
-        elvc.fmt := LVCFMT_LEFT;
-        elvc.pszText := RC_CALLSIGN;
-        elvc.cx := 75;
-        uCommctrl.ListView_InsertColumnA(wh[mweStations], 0, elvc);
+{ The header, rebuilt from scratch each time the window opens.
 
-        elvc.fmt := LVCFMT_CENTER;
-        for TempBand := Band160 to Band10 do
-           begin
-           elvc.pszText := BandStringsArrayWithOutSpaces[TempBand];
-           elvc.cx := 36;
-           uCommctrl.ListView_InsertColumnA(wh[mweStations], Ord(TempBand) + 1, elvc);
-           end;
-        FillStationsColumn;
-      end;
-
-    WM_CLOSE:
-      begin
-        wh[mweStations] := 0;
-        CloseTR4WWindow(tw_STATIONS_INDEX);
-      end;
-
-  end;
+  SIX BAND COLUMNS, and the six are not fixed: Band160..Band10 is the whole
+  contest-HF set in BandType order (160, 80, 40, 20, 15, 10 -- 30/17/12 sit
+  AFTER Band10 in the enum), and UpdateAllStationsList re-captions all six from
+  StationsStartBand, which becomes Band6 on a VHF band.  So the header follows
+  the operator to VHF and the widths do not have to change with it. }
+procedure BuildStationsColumns;
+var
+  TempBand: BandType;
+begin
+  StationsClearColumns;
+  StationsAddColumn(string(RC_CALLSIGN), 75, False);
+  for TempBand := Band160 to Band10 do
+     begin
+     StationsAddColumn(string(BandStringsArrayWithOutSpaces[TempBand]), 36, True);
+     end;
 end;
 
 procedure FillStationsColumn;
@@ -114,7 +134,13 @@ var
   Index                                 : integer;
 begin
   StationsListFileInUse := False;
-  if not EnumerateLinesInFile('STATIONS.TXT', EnumSTATIONSTXT, True) then
+  if EnumerateLinesInFile('STATIONS.TXT', EnumSTATIONSTXT, True) then
+     begin
+     // The file supplied the list, so nothing else adds to it -- set AFTER the
+     // enumeration, not per line.  See EnumSTATIONSTXT.
+     StationsListFileInUse := True;
+     end
+  else
 {
   if OpenFileForRead(FileRead, TR4W_LOG_PATH_NAME + 'STATIONS.TXT') then
   begin
@@ -142,20 +168,34 @@ begin
   UpdateAllStationsList;
 end;
 
+{ Empty the rows -- both halves, together.  MainUnit reloads the log and then
+  refills this window; it used to do that by sending LVM_DELETEALLITEMS to the
+  control, which is no longer where the rows live. }
+procedure ClearStationsColumn;
+begin
+  Rows.Clear;
+  StationsClearRows;
+end;
+
+{ Returns the row this callsign now occupies, or -1 IF IT WAS NOT ADDED.
+
+  The -1 is new and it matters.  The two early exits below used to leave Result
+  UNDEFINED, and UpdateCallsignAfterEditing fed that straight into
+  UpdateStationStatus as a row number -- a garbage index into the control, which
+  Win32 ignored and an LCL list would raise on. }
 function AddCallsignToStationColumn(Call: CallString): integer;
 var
-  elvi                                  : TLVItem;
+  s: string;
 begin
+  Result := -1;
   if StationsListFileInUse then Exit;
 
   if StationsCallsignsMask <> '' then
     if pos(StationsCallsignsMask, Call) = 0 then Exit;
-  Call[length(Call) + 1] := #0;
-  strU(Call);
-  elvi.Mask := LVIF_TEXT;
-  elvi.iSubItem := 0;
-  elvi.pszText := @Call[1];
-  Result := ListView_InsertItem(wh[mweStations], elvi);
+
+  s := UpperCase(string(Call));
+  Result := Rows.Add(s);         // sorted -- this IS the row position
+  StationsInsertRow(Result, s);
 end;
 
 procedure UpdateStationStatus(Call: CallString; i: integer);
@@ -165,8 +205,7 @@ var
   da                                    : TDupesArray;
   QSOB4                                 : boolean;
   TempMode                              : ModeType;
-  p                                     : PAnsiChar;
-  h                                     : HWND;
+  p                                     : string;
   TempIndex                             : integer;
 begin
   if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
@@ -185,7 +224,9 @@ begin
      begin
      ItemIndex := i;
      end;
-  h := wh[mweStations];
+
+  // AddCallsignToStationColumn declines a callsign the mask excludes.
+  if ItemIndex < 0 then Exit;
 
   if not CallsignsList.FindCallsign(Call, Index) then Exit;
   if not CallsignsList.GetDupesArray(Index, da) then Exit;
@@ -195,50 +236,52 @@ begin
   for TempIndex := 0 to 5 { BandType(Ord(StationsStartBand) + 5)} do
      begin
      QSOB4 := (da[TempMode] and (1 shl (Ord(StationsStartBand) + TempIndex))) <> 0;
-     if QSOB4 then p := '+' else p := nil;
-     ListView_SetItemText(h, ItemIndex, TempIndex + 1, p);
+     if QSOB4 then p := '+' else p := '';
+     StationsSetCell(ItemIndex, TempIndex + 1, p);
      end;
   if i = -1 then
      begin
-     ListView_SetItemState(h, ItemIndex, LVIS_SELECTED, LVIS_SELECTED);
-     ListView_EnsureVisible(h, ItemIndex, False);
+     StationsSelectAndShow(ItemIndex);
      end;
 end;
 
+{ LVM_FINDITEM was a linear scan of the control's own text.  A sorted list finds
+  it by bisection and, more to the point, answers from the model -- so the answer
+  is a row number the caller can hand straight back to any other routine here. }
 function FindStationInCallsignColumn(Call: CallString): integer;
-var
-  plvfi                                 : TLVFindInfo;
 begin
-  Call[length(Call) + 1] := #0;
-  plvfi.Flags := LVFI_STRING;
-  plvfi.psz := @Call[1];
-  Result := SendMessage(wh[mweStations], LVM_FINDITEM, -1, LONGINT(@plvfi));
+  if not Rows.Find(UpperCase(string(Call)), Result) then
+     begin
+     Result := -1;
+     end;
 end;
 
 procedure UpdateAllStationsList;
 var
-  Call                                  : array[0..CallstringLength] of Byte;
   Index                                 : integer;
-  elvc                                  : tagLVCOLUMNA;
 begin
   if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
   if ActiveBand in [Band6..BandLight] then StationsStartBand := Band6 else StationsStartBand := Band160;
-  elvc.Mask := LVCF_TEXT;
   for Index := 0 to 5 do
      begin
-     elvc.pszText := BandStringsArrayWithOutSpaces[BandType(Index + Ord(StationsStartBand))];
-     ListView_SetColumn(wh[mweStations], Index + 1, elvc);
+     StationsSetColumnCaption(Index + 1,
+       string(BandStringsArrayWithOutSpaces[BandType(Index + Ord(StationsStartBand))]));
      end;
 
-  tSetWindowRedraw(wh[mweStations], False);
-  for Index := 0 to ListView_GetItemCount(wh[mweStations]) - 1 do
+  // THE MODEL IS THE THING WALKED.  This loop used to ask the control how many
+  // rows it had and then read each callsign back out of column 0 with
+  // ListView_GetItemText, into a 12-byte buffer.  Both of those went away with
+  // the row set: the count and the callsign are the model's, and CallString no
+  // longer has to be rebuilt from bytes.
+  StationsBeginUpdate;
+  for Index := 0 to Rows.Count - 1 do
      begin
-     Call[0] := ListView_GetItemText(wh[mweStations], Index, 0, @Call[1], 12);
-     UpdateStationStatus(CallString(Call), Index);
+     UpdateStationStatus(CallString(Rows[Index]), Index);
      end;
-  tSetWindowRedraw(wh[mweStations], True);
+  StationsEndUpdate;
+
   TF.Format(wsprintfBuffer, TC_STATIONSINMODE, ModeStringArray[ActiveMode]);
-  Windows.SetWindowTextA(tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle, wsprintfBuffer);
+  StationsSetCaption(string(PAnsiChar(@wsprintfBuffer)));
 end;
 
 procedure UpdateCallsignAfterEditing(Before, After: CallString);
@@ -249,25 +292,59 @@ begin
   if Before = After then Exit;
   Index := FindStationInCallsignColumn(Before);
   if Index = -1 then Exit;
-  ListView_DeleteItem(wh[mweStations], Index);
-  UpdateStationStatus(After, AddCallsignToStationColumn(After));
+
+  Rows.Delete(Index);
+  StationsDeleteRow(Index);
+
+  Index := AddCallsignToStationColumn(After);
+  if Index < 0 then Exit;      // excluded by the mask -- nothing to update
+  UpdateStationStatus(After, Index);
 end;
 
 procedure SetStationsCallsignMask;
 begin
-  if wh[mweStations] = 0 then Exit;
-  ListView_DeleteAllItems(wh[mweStations]);
+  if tr4w_WindowsArray[tw_STATIONS_INDEX].WndHandle = 0 then Exit;
+  ClearStationsColumn;
   FillStationsColumn;
 end;
 
+{ ONE LINE OF STATIONS.TXT USED TO LOAD, AND ONLY ONE.
+
+  This callback added a callsign and then set StationsListFileInUse := True --
+  but AddCallsignToStationColumn opens with `if StationsListFileInUse then
+  Exit`, so every line after the first was dropped in silence.  The flag means
+  "this list came from the file, so do not add worked callsigns to it
+  dynamically" (see UpdateStationStatus, which reads it exactly that way), and
+  that is a fact about the WHOLE enumeration, not about a line.  It is set by
+  FillStationsColumn when the enumeration finishes.
+
+  Found while moving the rows out of the control, 2026-08-24.  Not reproducible
+  here -- no STATIONS.TXT exists in target\ -- which is consistent with the
+  feature being rarely used rather than with it working. }
 procedure EnumSTATIONSTXT(FileString: PShortString);
 begin
   if FileString^[1] <> ';' then
      begin
      AddCallsignToStationColumn(FileString^);
-     StationsListFileInUse := True;
      end;
 end;
+
+{ Everything the dialog's WM_INITDIALOG did, minus the two lines that were about
+  being a dialog: the window handle is recorded by OpenTR4WWindow, and the list
+  view is in the .lfm.  Reached through the form's OnShow -- see the seam there. }
+procedure StationsWindowShown;
+begin
+  BuildStationsColumns;
+  ClearStationsColumn;
+  FillStationsColumn;
+end;
+
+initialization
+  StationsOnShow := @StationsWindowShown;
+
+finalization
+  StationRows.Free;
+  StationRows := nil;
 
 end.
 
