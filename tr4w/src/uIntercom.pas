@@ -46,6 +46,7 @@ var
 
 implementation
 uses MainUnit,
+  uFlasher,    { the intercom flash is a timer now }
    uConfigValues;
 
 function IntercomDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
@@ -122,31 +123,53 @@ begin
   if h = 0 then Exit;
   LastItemInIntercomListBox := tLB_ADDSTRING(h, @wsprintfBuffer);
   SendMessage(h, WM_VSCROLL, SB_BOTTOM, 0);
-  logger.Debug('Calling tCreateThread from AddMessageToIntercomWindow');
-  tCreateThread(@FlashIntercomListBox, lpThreadId);
-  logger.Debug('Created Intercom thread with id %d',[lpThreadId]);
+  FlashIntercomListBox;
+end;
+
+
+{ Lazily created, so the headless /EXPORT path -- which boots the contest,
+  writes the files and halts before any GUI -- never constructs a timer it
+  cannot run. }
+var
+  gIntercomFlasher: TFlasher = nil;
+
+function IntercomFlasher: TFlasher;
+begin
+  if gIntercomFlasher = nil then
+     begin
+     gIntercomFlasher := TFlasher.Create;
+     end;
+  Result := gIntercomFlasher;
+end;
+
+{ One phase of the intercom flash.  Was a thread that ran 49 x Sleep(150) --
+  SEVEN AND A HALF SECONDS it could not be told to stop.  See uFlasher.
+
+  Still flashes by toggling SELECTION, which is a state, not a highlight; the
+  listbox is a raw Win32 window and there is nothing else to set.  Same note as
+  the quick display. }
+procedure IntercomFlashPhase(const aOn: boolean);
+begin
+  if IntercomListBoxHandle = 0 then
+     begin
+     Exit;
+     end;
+  SendMessage(IntercomListBoxHandle, LB_SETSEL, WPARAM(Ord(aOn)),
+     LastItemInIntercomListBox);
 end;
 
 procedure FlashIntercomListBox;
-var
-  counter                          : Cardinal;
-  h                                : HWND;
- begin
-  counter := 0;
-  h := IntercomListBoxHandle;
-  SendMessage(h, LB_SETSEL, 0, -1);
-//  SendMessage(h, LB_GETITEMRECT, LastItemInIntercomListBox, integer(@r));
-//  DC := Windows.GetWindowDC(h);
-  while counter < 49 do
+begin
+  if IntercomListBoxHandle = 0 then
      begin
-     SendMessage(h, LB_SETSEL, counter mod 2, LastItemInIntercomListBox);
-
- //    Windows.TextOutA(DC, 0, r.Top, inttopchar(counter), 2);
- //Windows.InvertRect(DC, r);
- //    InvalidateRect(h, @r, true);
-     Sleep(150);
-     inc(counter);
+     Exit;
      end;
+
+  // Clear any existing selection first, as the loop did before its first pass.
+  SendMessage(IntercomListBoxHandle, LB_SETSEL, 0, -1);
+
+  // 49 phases at 150 ms -- the same flash, now cancellable and off no thread.
+  IntercomFlasher.Start(@IntercomFlashPhase, 49, 150);
 end;
 
 procedure EnumINTERCOMTXT(FileString: PShortString);

@@ -1024,6 +1024,7 @@ procedure UpadateAutoSend;
 implementation
 
 uses
+  uFlasher,    { the quick-display flash is a timer now }
   uMainForm,   { the call field, named -- wh[] round 3 }
   //  OZCHR,
 //  uStack,
@@ -1672,11 +1673,7 @@ begin
   logger.Info('[QuickDisplay] (' + Prompt + ')');
   if length(Prompt) > 0 then
      begin
-     logger.Debug('Calling tCreateThread from QuickDisplay');
-     if tFlashQDThreadID = 0 then
-        begin
-        tCreateThread(@FlashQickDisplay, tFlashQDThreadID);
-        end;
+     FlashQickDisplay;
      if ClearQuickDisplayTimer <> 0 then
         begin
         Windows.KillTimer(tr4whandle, ClearQuickDisplayTimer);
@@ -3822,18 +3819,52 @@ procedure DisplayCountryInformation(FileName: Str80; Call: CallString);
 begin
 end;
 
-procedure FlashQickDisplay;
+
+{ Lazily created, so the headless /EXPORT path -- which boots the contest,
+  writes the files and halts before any GUI -- never constructs a timer it
+  cannot run. }
 var
-  i                                     : integer;
+  gQuickDisplayFlasher: TFlasher = nil;
+
+function QuickDisplayFlasher: TFlasher;
 begin
-//  Windows.AnimateWindow(wh[mweQuickCommand], 1000, AW_ACTIVATE or AW_VER_NEGATIVE);
-  for i := 0 to 5 do
+  if gQuickDisplayFlasher = nil then
      begin
-     Windows.EnableWindow(wh[mweQuickCommand], LongBool(i mod 2));
-     Sleep(100);
+     gQuickDisplayFlasher := TFlasher.Create;
+     end;
+  Result := gQuickDisplayFlasher;
+end;
+
+{ One phase of the quick-display flash.  Was a whole OS thread that did six
+  Sleep(100)s -- see uFlasher for why that is not what a timer is for.
+
+  It still flashes by toggling ENABLED, which is a state, not a colour.  That is
+  not defended: the quick-command window is still a raw Win32 window and there is
+  no .Color to set.  When it becomes an LCL control this becomes a colour
+  assignment and uFlasher does not change. }
+function QuickCommandHandle: HWND;
+begin
+  Result := wh[mweQuickCommand];
+end;
+
+procedure QuickDisplayFlashPhase(const aOn: boolean);
+begin
+  Windows.EnableWindow(QuickCommandHandle, LongBool(aOn));
+end;
+
+procedure FlashQickDisplay;
+begin
+  // Nothing to flash before the window exists -- also what keeps a headless
+  // run from ever creating the timer.
+  if QuickCommandHandle = 0 then
+     begin
+     Exit;
      end;
 
-  tFlashQDThreadID := 0;
+  // Six phases at 100 ms, exactly as the Sleep loop ran, and Start RESTARTS a
+  // flash already in progress -- which is what the tFlashQDThreadID guard was
+  // reaching for and could not express.
+  QuickDisplayFlasher.Start(@QuickDisplayFlashPhase, 6, 100);
 end;
 
 procedure ShowTourDuration;

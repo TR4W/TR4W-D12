@@ -180,6 +180,7 @@ uses
   uEditQSOForm in 'src\ui\lcl\uEditQSOForm.pas',
   uPanelUpdate in 'src\uPanelUpdate.pas',
   uMainThreadWork in 'src\uMainThreadWork.pas',
+  uFlasher in 'src\ui\lcl\uFlasher.pas',
   uLPTForm in 'src\ui\lcl\uLPTForm.pas',
   uAboutForm in 'src\ui\lcl\uAboutForm.pas',
   uFunctionKeysForm in 'src\ui\lcl\uFunctionKeysForm.pas',
