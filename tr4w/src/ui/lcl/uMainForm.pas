@@ -696,17 +696,48 @@ begin
 end;
 
 procedure FocusEntry(const aEdit: TEdit);
+var
+   frm: TCustomForm;
 begin
    if not EntryUsable(aEdit) then
       begin
       Exit;
       end;
 
-   // CanFocus first, because TWinControl.SetFocus RAISES on a control that is
-   // not visible and enabled, where the Windows.SetFocus this replaces simply
-   // failed and returned.  The call sites relied on that: the call field is
-   // hidden in some contest modes and focused unconditionally.
-   if aEdit.CanFocus then
+   { CanFocus ALONE WAS NOT ENOUGH, and NY4I's CW session proved it: eighteen
+     times, the window-procedure guard caught
+
+         EInvalidOperation: [TCustomForm.SetFocus] TR4WMainForm Can not focus
+           FOCUSENTRY -> TCALLWINDOWSETFOCUS -> WINDOWPROCBODY msg $7
+
+     -- WM_SETFOCUS on the main window, whose handler pushes focus into the call
+     field.  CanFocus asks about the CONTROL; TWinControl.SetFocus then walks up
+     and focuses the FORM, and TCustomForm.SetFocus raises when the form is
+     neither active nor visible-and-enabled (customform.inc:395).  Read there,
+     not guessed: that is the startup and hidden-window case, which is exactly
+     when a WM_SETFOCUS arrives.
+
+     SO ASK THE FORM, AND WHEN IT CANNOT TAKE FOCUS, RECORD THE INTENT INSTEAD
+     OF DEMANDING IT.  ActiveControl is the LCL's own mechanism for "focus this
+     when you can", and SetActiveControl only validates while the form is
+     visible (customform.inc:1859), so assigning it to a form that has not been
+     shown is both safe and exactly right.  The Win32 SetFocus this replaced
+     failed silently in the same situation -- this restores that behaviour
+     without restoring the silence. }
+   frm := GetParentForm(aEdit);
+   if frm = nil then
+      begin
+      Exit;
+      end;
+
+   if not frm.IsVisible then
+      begin
+      frm.ActiveControl := aEdit;
+      Exit;
+      end;
+
+   if (frm.Active or (frm.IsControlVisible and frm.Enabled)) and
+      aEdit.CanFocus                                          then
       begin
       aEdit.SetFocus;
       end;
