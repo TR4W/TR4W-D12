@@ -1,5 +1,5 @@
 ﻿{
-    "type.HWND":  635,
+    "type.HWND":  634,
     "array.wh":  81,
     "CreateModalDialog":  12,
     "tDialogBox":  8,
@@ -13,7 +13,7 @@
     "TF.CreateComboBox":  4,
     "TF.CreateListBox":  3,
     "TF.CreateListView2":  3,
-    "TF.CreateOwnerDrawListBox":  5,
+    "TF.CreateOwnerDrawListBox":  4,
     "TF.CreateRichEdit":  4,
     "CreateOKCancelButtons":  5,
     "SetMainWindowText":  65,

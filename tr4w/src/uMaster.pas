@@ -108,7 +108,7 @@ begin
      begin
      Exit;
      end;
-  Result := f.Calls.AddCall(aCall, PtrInt(Ord(aIsDupe)));
+  Result := f.Calls.AddItem(aCall, PtrInt(Ord(aIsDupe)));
 end;
 
 procedure MasterCallsUpdated;

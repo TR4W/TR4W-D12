@@ -21,15 +21,15 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 { THE SUPER CHECK PARTIAL WINDOW, as an LCL form.  Fifth tw_ window to convert.
 
-  The grid, the model and the down-then-across arithmetic are TCallGrid, shared
-  with the dupe sheet -- see uCallGrid for why that was extracted rather than
+  The grid, the model and the down-then-across arithmetic are TFlowGrid, shared
+  with the dupe sheet -- see uFlowGrid for why that was extracted rather than
   copied.  What is here is what is DIFFERENT about this window: it shows as many
   partial matches as fit and drops the rest, and it paints dupes.
 
   NO SCROLLBAR, AND THAT IS THE OLD BEHAVIOUR.  The Win32 list box was capped at
   MaxItemsInMasterListBox -- how many 80x16 cells the window could show,
   recomputed in its WM_SIZE handler -- and DisplaySCPCall simply stopped adding
-  once it hit that.  TCallGrid.LimitToVisible is that cap, and the commented-out
+  once it hit that.  TFlowGrid.LimitToVisible is that cap, and the commented-out
   '...' the old code never added is still not added. }
 unit uMasterForm;
 
@@ -38,7 +38,7 @@ unit uMasterForm;
 interface
 
 uses
-   Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics, VC, uCallGrid;
+   Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics, VC, uFlowGrid;
 
 type
    TfrmMaster = class(TForm)
@@ -52,7 +52,7 @@ type
       procedure MasterDrawCell(Sender: TObject; aCol, aRow: integer;
                                aRect: TRect; aState: TGridDrawState);
    public
-      Calls: TCallGrid;
+      Calls: TFlowGrid;
    end;
 
 { What WM_INITDIALOG did beyond building controls.  uMaster assigns it. }
@@ -82,7 +82,7 @@ const
 
 procedure TfrmMaster.HandleCreate(Sender: TObject);
 begin
-   Calls := TCallGrid.Create(grdMaster, CELL_WIDTH, CELL_HEIGHT);
+   Calls := TFlowGrid.Create(grdMaster, CELL_WIDTH, CELL_HEIGHT);
    Calls.LimitToVisible := True;
 end;
 
@@ -126,7 +126,7 @@ end;
 { A DUPE IS GRADIENTED; EVERYTHING ELSE IS PLAIN.
 
   This is the one place the SCP window and the dupe sheet genuinely differ, and
-  it is why uCallGrid does not try to own the painting.  The gradient runs from
+  it is why uFlowGrid does not try to own the painting.  The gradient runs from
   SCPDupeColor to white and the text goes white on top of it -- an operator
   scanning partial matches needs the ones already worked to fall away, not to
   be colour-coded. }
@@ -162,7 +162,7 @@ begin
       end;
 
    grdMaster.Canvas.Brush.Style := bsClear;      // SetBkMode(TRANSPARENT)
-   grdMaster.Canvas.TextOut(aRect.Left + 2, aRect.Top, Calls.CallAt(idx));
+   grdMaster.Canvas.TextOut(aRect.Left + 2, aRect.Top, Calls.TextAt(idx));
 end;
 
 function CreateTR4WMasterWindow: HWND;

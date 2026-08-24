@@ -25,7 +25,7 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-35 were added 2026-08-24 and are UNRUN.** NY4I confirmed
+**Sections 31-36 were added 2026-08-24 and are UNRUN.** NY4I confirmed
 the dupe sheet window, the stations window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
 the band-change message landed -- so those are recorded here rather than
@@ -1226,6 +1226,37 @@ so its confirmation no longer covers the code that runs. Re-check both.
 - [ ] **The two windows read the same way.** SCP, the dupe sheet and the band
       map all flow DOWN THEN ACROSS now. Confirm none of them reads across-then-
       down, which would be the one arithmetic slip this extraction could hide.
+
+
+### 36. All five remaining-multiplier windows are forms  (`uRemMultsForm`)
+
+One dialog procedure served `tw_REMMULTSWINDOW_INDEX` and the four fixed-type
+windows; there are five instances of one form class now. **None seen.**
+
+- [ ] **Open all five.** Remaining mults, and the DX / zone / domestic / prefix
+      windows. Each must show ITS OWN multiplier type, and the generic one must
+      follow `RemainingMultDisplay` when you swap it (Alt-M or the menu).
+- [ ] **Worked multipliers fade, needed ones are plain.** In `HILIGHT` mode all
+      multipliers are listed and worked ones are gradiented to white with white
+      text. In `ERASE` mode only NEEDED ones are listed at all. `NONE` empties
+      the window.
+- [ ] **THE FADE COLOUR IS A QUESTION FOR YOU.** The original picks it with
+      `tr4wColorsArray[tr4wColors(Ord(rmt))]` -- the MULTIPLIER TYPE's ordinal
+      used as a colour index, so a faded prefix and a faded zone differ for no
+      stated reason. It is reproduced exactly rather than "fixed" unseen. Say
+      whether the colours are meaningful to you or whether they should become
+      one deliberate colour.
+- [ ] **Clean sweep.** When every multiplier is worked, the congratulations
+      message takes the window.
+- [ ] **Column width follows SHOW DOMESTIC MULTIPLIER NAME** on the generic
+      window (wider when names are shown or the contest does prefix mults).
+      **It does NOT on the other four** -- they were given the base width once
+      at creation and never followed the setting. That inconsistency is
+      preserved; tell me if it should not be.
+- [ ] **Work a multiplier and watch it fade without reopening the window.** The
+      text and the worked flag are resolved at PAINT time, not at rebuild, so
+      this is the check that the resolution seam is wired.
+- [ ] **The zone window numbers from 1, except EUHFC which numbers from 0.**
 
 ---
 

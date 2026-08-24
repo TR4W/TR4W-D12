@@ -532,6 +532,7 @@ uses
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
   uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
   uMasterForm,         // CreateTR4WMasterWindow -- the SCP window
+  uRemMultsForm,       // CreateTR4WRemMultsWindow -- all five mult windows
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
@@ -2300,8 +2301,8 @@ begin
   tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndProcAdr :=
     @FunctionKeysWindowDlgProc;
   // No WndProcAdr for the SCP window: it is an LCL form as of 2026-08-24.
-  tr4w_WindowsArray[tw_REMMULTSWINDOW_INDEX].WndProcAdr :=
-    @RemainingMultsDlgProc;
+  // No WndProcAdr for any of the five remaining-multiplier windows: they are
+  // LCL forms as of 2026-08-24.
   tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndProcAdr := @TelnetWndDlgProc;
   tr4w_WindowsArray[tw_RADIOINTERFACEWINDOW1_INDEX].WndProcAdr :=
     @RadioInterfaceWindowDlgProc;
@@ -2314,14 +2315,6 @@ begin
   tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndProcAdr := @HamScoreDlgProc;
   // No WndProcAdr for the stations window either: it is an LCL form as of
   // 2026-08-24 and OpenTR4WWindow's seam builds it.
-  tr4w_WindowsArray[tw_STATIONS_RM_DX].WndProcAdr := @RemainingMultsDlgProc
-    {RemainingMultsDXDlgProc};
-  tr4w_WindowsArray[tw_STATIONS_RM_DOM].WndProcAdr := @RemainingMultsDlgProc
-    {RemainingMultsDOMDlgProc};
-  tr4w_WindowsArray[tw_STATIONS_RM_ZONE].WndProcAdr := @RemainingMultsDlgProc
-    {RemainingMultsZoneDlgProc};
-  tr4w_WindowsArray[tw_STATIONS_RM_PREFIX].WndProcAdr := @RemainingMultsDlgProc
-    {RemainingMultsZoneDlgProc};
   tr4w_WindowsArray[tw_MP3RECORDER].WndProcAdr := @MP3RecDlgProc;
   tr4w_WindowsArray[tw_MMTTYWINDOW_INDEX].WndProcAdr := @MMTTYDlgProc;
 
@@ -5411,6 +5404,16 @@ begin
      begin
      h := CreateTR4WStationsWindow;
      lclForm := TR4WStationsForm;
+     end
+  else if (ID = tw_REMMULTSWINDOW_INDEX)  or
+          (ID = tw_STATIONS_RM_DX)        or
+          (ID = tw_STATIONS_RM_DOM)       or
+          (ID = tw_STATIONS_RM_ZONE)      or
+          (ID = tw_STATIONS_RM_PREFIX)    then
+     begin
+     // FIVE INSTANCES of one form -- the widest of the converted windows.
+     h := CreateTR4WRemMultsWindow(ID);
+     lclForm := RemMultsForm(ID);
      end
   else if ID = tw_MASTERWINDOW_INDEX then
      begin
@@ -8754,6 +8757,7 @@ end;
 procedure SetRemMultsColumnWidth;
 var
   Width: integer;
+  frm: TfrmRemMults;
  // DomWidth: integer;
 
 begin
@@ -8769,9 +8773,16 @@ begin
      Width := BASECOLUMNWIDTH;
      end;
 
-  tLB_SETCOLUMNWIDTH(tr4w_WindowsArray[tw_REMMULTSWINDOW_INDEX].WndHandle,
-    Width);
-
+  // ONLY THE GENERIC WINDOW, and that is not new: the Win32 version sent
+  // LB_SETCOLUMNWIDTH to tw_REMMULTSWINDOW_INDEX alone.  The four fixed-type
+  // windows were given BASECOLUMNWIDTH once, at creation, and never followed
+  // SHOW DOMESTIC MULTIPLIER NAME afterwards.  Left as it was -- it is a real
+  // inconsistency and a bench question, not something to change unseen.
+  frm := RemMultsForm(tw_REMMULTSWINDOW_INDEX);
+  if frm <> nil then
+     begin
+     frm.Mults.SetCellWidth(Width);
+     end;
 end;
 
 function KeyerDebugDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam:

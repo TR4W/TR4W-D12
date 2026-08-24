@@ -541,7 +541,7 @@ begin
                   begin
                   if FList^[Index].FCall[i] = TempChar then
                      begin
-                     frm.Calls.AddCall(string(FList^[Index].FCall), Ord(TempChar));
+                     frm.Calls.AddItem(string(FList^[Index].FCall), Ord(TempChar));
                      end;
                   Break;
                   end;

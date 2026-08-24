@@ -200,6 +200,7 @@ uses
   uTotal,
   LOGSUBS2,
   uRemMults,
+  uRemMultsForm,   { the five multiplier windows are forms -- wh[] conversion }
   uBandmap,
   MainUnit; {KK1L: 6.71 attempt to get POST to compile. Moved here from INTERFACE section. Was not there in original}
 
@@ -1257,14 +1258,36 @@ begin
   //  DisplayPossibleCalls{(PossibleCallList)};
 end;
 
+{ FILLS ONE REMAINING-MULTIPLIER WINDOW.
+
+  The list holds a PACKED (type, index) PAIR and no text -- MakeLong(Ord(rmt),
+  i), exactly what LB_ADDSTRING's lParam carried -- and the window resolves each
+  cell to a string when it paints.  See uRemMults.ResolveMult for why that stays
+  paint-time.
+
+  FOUR LABELS AND FOUR GOTOs ARE GONE, and the substitution is exact rather than
+  tidy.  Each arm read
+
+      if RemainingMultDisplayMode = HiLight then goto AddX;
+      if <still needed> then begin AddX: Add; end;
+
+  which says: add it if we are highlighting, otherwise add it only if it is
+  still needed.  That is `if HiLight or <still needed>`, one condition, same
+  set of entries.  The goto existed to jump INTO the other branch's body, which
+  is the shape that makes a filter hard to read. }
 procedure EditableLog.ShowRemMultsInWindow(Window: WindowsType; rmt:
   RemainingMultiplierType);
-label
-  AddZone, AddDX, AddPrefix, AddDom;
 var
   i: integer;
-  rmw: HWND;
+  frm: TfrmRemMults;
   TempMultBand: BandType;
+  HiLighting: boolean;
+
+  procedure Add(const aIndex: integer);
+  begin
+    frm.Mults.AddItem('', MakeLong(Ord(rmt), aIndex));
+  end;
+
 begin
   if rmt = rmNoRemMultDisplay then
      begin
@@ -1274,37 +1297,39 @@ begin
      begin
      Exit;
      end;
- //  DomWidth := 45;
-  SetRemMultsColumnWidth;       // 4.71.2      // 4.83.0
-  rmw := Windows.GetDlgItem(tr4w_WindowsArray[Window].WndHandle, 101);
 
-  tSetWindowRedraw(rmw, False);
-  SendMessage(rmw, LB_RESETCONTENT, 0, 0);
+  frm := RemMultsForm(Window);
+  if frm = nil then
+     begin
+     Exit;
+     end;
+
+  SetRemMultsColumnWidth;       // 4.71.2      // 4.83.0
+
+  frm.Mults.BeginRebuild;
 
   if RemainingMultDisplayMode = NoRemainingMults then
      begin
-     {?}
-     Windows.InvalidateRect(rmw, nil, True);
+     // Emptied and repainted -- the old code did the same with LB_RESETCONTENT
+     // followed by an InvalidateRect.
+     frm.Mults.EndRebuild;
      Exit;
      end;
+
+  HiLighting := RemainingMultDisplayMode = HiLight;
 
   case rmt of
 
     rmDomestic:
       begin
         TempMultBand := GetAddMultBand(DomesticMultByBand, MultBand);
-
         for i := 0 to mo.DomList.Count - 1 do
            begin
-           if RemainingMultDisplayMode = HiLight then       // 4.72.4
+           if HiLighting                                                   or
+              (not mo.DomList.StringIsDupeByIndex(i, TempMultBand, MultMode)) then
               begin
-              goto AddDom;
+              Add(i);
               end;
-          if not mo.DomList.StringIsDupeByIndex(i, TempMultBand, MultMode) then
-             begin
-             AddDom:
-            SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
-             end;
            end;
       end;
 
@@ -1312,13 +1337,10 @@ begin
       begin
         for i := 0 to mo.PrfList.Count - 1 do
            begin
-           if RemainingMultDisplayMode = HiLight then
+           if HiLighting                                                or
+              (not mo.PrfList.StringIsDupeByIndex(i, MultBand, MultMode)) then
               begin
-              goto AddPrefix;
-              end;
-           if not mo.PrfList.StringIsDupeByIndex(i, MultBand, MultMode) then
-              begin
-              AddPrefix: SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
+              Add(i);
               end;
            end;
       end;
@@ -1329,25 +1351,21 @@ begin
            begin
            for i := 1 to MaxNumberOfZones do
               begin
-              if RemainingMultDisplayMode = HiLight then
+              if HiLighting                            or
+                 mo.IsZnMult(i, MultBand, MultMode)    then
                  begin
-                 goto AddZone;
-                 end;
-              if mo.IsZnMult(i, MultBand, MultMode) then
-                 begin
-                 AddZone:
+                 // EUHFC numbers its zones from zero; everything else from one.
                  if ActiveZoneMult = EUHFCYear then
                     begin
-                    SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i - 1))
+                    Add(i - 1);
                     end
                  else
                     begin
-                    SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
+                    Add(i);
                     end;
                  end;
               end;
            end;
-
       end;
 
     rmDX:
@@ -1359,19 +1377,17 @@ begin
               begin
               Continue;
               end;
-           if RemainingMultDisplayMode = HiLight then
+           if HiLighting                                or
+              mo.IsDXMult(i, TempMultBand, MultMode)    then
               begin
-              goto AddDX;
-              end;
-           if mo.IsDXMult(i, TempMultBand, MultMode) then
-              begin
-              AddDX: SendMessage(rmw, LB_ADDSTRING, 0, MakeLong(Ord(rmt), i));
+              Add(i);
               end;
            end;
       end;
 
   end;
-  tSetWindowRedraw(rmw, True);
+
+  frm.Mults.EndRebuild;
 end;
 
 procedure EditableLog.ShowRemainingMultipliers;

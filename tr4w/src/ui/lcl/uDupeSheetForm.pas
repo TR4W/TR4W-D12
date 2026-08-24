@@ -39,7 +39,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   operator is scanning for a callsign, and more of them visible beats bigger
   ones.  Two different behaviours, deliberately.
 
-  THE MODEL IS Calls, a TCallGrid.  CallsignsList is the real source and
+  THE MODEL IS Calls, a TFlowGrid.  CallsignsList is the real source and
   rebuilds this on every band or mode change; the grid holds the derived pair --
   the callsign and its district digit -- so the grid never has to be read back
   to find out what is in it.  The Win32 version had no choice and used
@@ -51,7 +51,7 @@ unit uDupeSheetForm;
 interface
 
 uses
-   Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics, VC, uCallGrid;
+   Classes, SysUtils, LCLType, Forms, Controls, Grids, Graphics, VC, uFlowGrid;
 
 type
    TfrmDupeSheet = class(TForm)
@@ -68,10 +68,10 @@ type
       FIndex: WindowsType;
    public
       { The model and the down-then-across arithmetic, shared with the SCP
-        window -- see uCallGrid.  The tag on each entry is the district digit
+        window -- see uFlowGrid.  The tag on each entry is the district digit
         as an ORDINAL ('0'..'9' -> 48..57), because that is what indexes
         VDColorsArray. }
-      Calls: TCallGrid;
+      Calls: TFlowGrid;
    end;
 
 { What WM_INITDIALOG did, as a seam.  uCallsigns owns the contents and assigns
@@ -156,7 +156,7 @@ procedure TfrmDupeSheet.HandleCreate(Sender: TObject);
 begin
    // LimitToVisible stays FALSE: a dupe sheet scrolls.  The SCP window sets it,
    // because that one shows what fits and drops the rest.
-   Calls := TCallGrid.Create(grdDupes, CELL_WIDTH, CELL_HEIGHT);
+   Calls := TFlowGrid.Create(grdDupes, CELL_WIDTH, CELL_HEIGHT);
 end;
 
 procedure TfrmDupeSheet.HandleDestroy(Sender: TObject);
@@ -203,7 +203,7 @@ begin
       end;
 end;
 
-{ CellIndex and LayOutGrid MOVED to uCallGrid when the SCP window turned out
+{ CellIndex and LayOutGrid MOVED to uFlowGrid when the SCP window turned out
   to need the identical pair -- IndexAt and LayOut there.  Extracted at the
   SECOND caller, not the third: two copies of the same arithmetic drift, and
   the drift is invisible. }
@@ -246,7 +246,7 @@ begin
 
    grdDupes.Canvas.Brush.Style := bsClear;      // SetBkMode(TRANSPARENT)
    grdDupes.Canvas.Font.Color  := clBlack;
-   grdDupes.Canvas.TextRect(aRect, aRect.Left, aRect.Top, Calls.CallAt(idx),
+   grdDupes.Canvas.TextRect(aRect, aRect.Left, aRect.Top, Calls.TextAt(idx),
                             TTextStyle(grdDupes.Canvas.TextStyle));
 end;
 

@@ -14,265 +14,137 @@
  GNU General Public License for more details.
 
  You should have received a copy of the GNU General
-     Public License along with TR4W in  GPL_License.TXT. 
-If not, ref: 
+     Public License along with TR4W in  GPL_License.TXT.
+If not, ref:
 http://www.gnu.org/licenses/gpl-3.0.txt
  }
+
+{ THE REMAINING-MULTIPLIER WINDOWS -- what the rest of the program says to them,
+  and the one thing only this unit can answer.
+
+  RemainingMultsDlgProc IS GONE; the five windows are uRemMultsForm.  Where each
+  arm went:
+
+    WM_INITDIALOG -> the .lfm for the control, MultTypeFor for which type the
+                     window shows, and RemMultsWindowShown for the fill.  Its
+                     per-window tLB_SETCOLUMNWIDTH calls are the grid's cell
+                     width; SetRemMultsColumnWidth still decides it.
+    WM_DRAWITEM   -> TfrmRemMults.MultsDrawCell, which asks ResolveMult below
+                     for the text and the worked flag.  The unpacking of
+                     MakeLong(Ord(rmt), i) stays with the packing.
+    WM_SIZE       -> Align = alClient plus TFlowGrid.LayOut.
+    WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE -> DefTR4WProc.  Not reproduced, as
+                     with every converted window before it.
+    WM_CLOSE      -> TfrmRemMults.HandleClose.  It used to call
+                     GetWindowByHandle to work out WHICH window it was; the
+                     form knows.
+
+  RESOLVING A CELL LIVES HERE because it needs mo.PrfList, mo.DomList,
+  CTY.ctyTable and the dupe tests -- and the form must not learn what a
+  multiplier is. }
 unit uRemMults;
 {$I tr4w.inc}
 {$IMPORTEDDATA OFF}
 interface
 
 uses
+  Windows,      { LoWord / HiWord -- unpacking what MakeLong packed }
   TF,
   VC,
-  uCommctrl,
   uCTYDAT,
   uMults,
-  Windows,
   LogEdit,
-  PostUnit,
   LogWind,
-  uGradient,
-  Tree,
-  //Country9,
   LogDom,
   LogDupe,
-  LOGSUBS2,
-  Messages
+  LOGSUBS2
   ;
 
-function RemainingMultsDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
 procedure UpdateRemainingMultsWindows;
-//var  RemainingMultsWindowHandle            : HWND;
 
 implementation
 
-uses MainUnit;
+uses
+  Tree,
+  MainUnit,
+  uRemMultsForm;
 
 var
   RemMultsBuf                           : array[0..7] of AnsiChar;
-//  ShowToolTip                           : boolean;
-//  PrevItem                              : integer;
 
-function RemainingMultsDlgProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): BOOL; stdcall;
+{ ONE CELL, RESOLVED AT PAINT TIME.
+
+  aTag is MakeLong(Ord(rmt), index) -- exactly what ShowRemMultsInWindow packed
+  into LB_ADDSTRING's lParam, unpacked exactly as WM_DRAWITEM unpacked it.
+
+  THE OLD HANDLER READ THE PACKED VALUE TWICE, once for each half, sending
+  LB_GETITEMDATA both times.  One argument now, split once. }
+procedure ResolveMult(const aTag: PtrInt; out aText: string; out aWorked: boolean);
 var
-  p                                     : PAnsiChar;
-  DS                                    : PDrawItemStruct;
-  i                                     : integer;
-  Index                                 : integer;
-  TempCall                              : CallString;
-  Gradient                              : boolean;
-  rmt                                   : RemainingMultiplierType;
-//  pnt                                   : TPoint;
-//  Item                                  : integer;
-//  temprect                              : TRect;
-const
-  WM_NCMOUSELEAVE                       = $02A2;
+  rmt      : RemainingMultiplierType;
+  Index    : integer;
+  TempCall : CallString;
 begin
-   p := ''; // 4.79.3
-  Result := False;
-  case Msg of
-    //    WM_WINDOWPOSCHANGING: WINDOWPOSCHANGINGPROC(PWindowPos(lParam));
-    //    WM_EXITSIZEMOVE: FrmSetFocus;
-    WM_SIZE, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lParam, hwnddlg);
-//    WM_CTLCOLORLISTBOX: RESULT := BOOL(tr4wBrushArray[ColorColors.RemainingMultsWindowBackground]);
+  aText := '';
+  aWorked := False;
 
-{
-    WM_NCMOUSELEAVE:
-//    WM_NCMOUSEMOVE:
+  rmt := RemainingMultiplierType(LoWord(aTag));
+  Index := HiWord(aTag);
+
+  case rmt of
+
+    rmPrefix:
       begin
-        if ShowToolTip then
-        begin
-//          ti.lpszText := nil;
-//          SendMessage(hwndTT, TTM_UPDATETIPTEXT, 0, integer(@ti));
-          SendMessage(hwndTT, TTM_TRACKACTIVATE, 0, integer(@ti));
-          ShowToolTip := False;
-        end;
+        TempCall := mo.PrfList.Get(Index);
+        aText := string(TempCall);
+        aWorked := mo.PrfList.StringIsDupeByIndex(Index, MultBand, MultMode);
       end;
-}
 
-    WM_DRAWITEM:
+    rmDomestic:
       begin
-        Result := True;
-        DS := Pointer(lParam);
-
-        if (DS^.itemAction = ODA_FOCUS) then
+        if tShowDomesticMultiplierName and
+           (mo.DomList.FList[Index].FAltName <> '') then
            begin
-           //          DrawFocusRect(DS^.HDC, DS^.rcItem);
-
-                     Exit;
-           end;
-
-        if CleanSweep then
+           TempCall := mo.DomList.FList[Index].FAltName;
+           end
+        else
            begin
-           Windows.TextOutA(DS^.HDC, 0, 0, TC_CLEANSWEEPCONGRATULATIONS, 31);
-           Exit;
+           TempCall := mo.DomList.Get(Index);
            end;
-
-        // Issue #997: asm bit-extraction from the LB_GETITEMDATA result (rmt =
-        // low byte, Index = high word) -> Pascal HiWord/LoWord. This is exactly
-        // the commented-out original intent just below (lines 121-122).
-        Index := HiWord(SendMessage(DS^.hwndItem, LB_GETITEMDATA, DS^.ItemID, 0));
-        rmt := RemainingMultiplierType(LoWord(SendMessage(DS^.hwndItem, LB_GETITEMDATA, DS^.ItemID, 0)));
-//if ActiveZoneMult = EUHFCYear then        dec(Index);
-
-//        Index := HiWord(SendMessage(DS^.hwndItem, LB_GETITEMDATA, DS^.ItemID, 0));
-//        rmt := RemainingMultiplierType(LoWord(SendMessage(DS^.hwndItem, LB_GETITEMDATA, DS^.ItemID, 0)));
-
-        case rmt of
-
-          rmPrefix:
-            begin
-              Windows.ZeroMemory(@TempCall, SizeOf(TempCall));
-              TempCall := mo.PrfList.Get(Index);
-              p := @TempCall[1];
-              Gradient := mo.PrfList.StringIsDupeByIndex(Index, MultBand, MultMode);
-            end;
-
-          rmDomestic:
-            begin
-              Windows.ZeroMemory(@TempCall, SizeOf(TempCall));
-
-              if tShowDomesticMultiplierName and (mo.DomList.FList[Index].FAltName <> '') then
-                 begin
-                 TempCall := mo.DomList.FList[Index].FAltName
-                 end
-              else
-                 begin
-                 TempCall := mo.DomList.Get(Index);
-                 end;
-
-              p := @TempCall[1];
-              // Why is this QD here? When the program first starts, it display a mut for no reason.
-              // Why would we display the mult in the quick display?
-              // We do not do this for other multipler types.
-              // I commented this out for now.
-              // quickdisplay(p);
-              Gradient := mo.DomList.StringIsDupeByIndex(Index, GetAddMultBand(DomesticMultByBand, MultBand), MultMode);
-            end;
-
-          rmDX:
-            begin
-              p := @CTY.ctyTable[Index].ID[1];
-              Gradient := not mo.IsDXMult(Index, MultBand, MultMode);
-            end;
-
-          rmZone:
-            begin
-//              if ActiveZoneMult = EUHFCYear then
-//                Gradient := not mo.IsZnMult(Index-1, MultBand, MultMode)
-//              else
-              Gradient := not mo.IsZnMult(Index, MultBand, MultMode);
-
-              // Issue #997: removed `if Gradient then asm nop end` (no-op anchor)
-              // and the control-flow asm whose conditional `sub eax,1` was already
-              // commented out -- so it just formatted Index.
-              TF.Format(RemMultsBuf, '%02u', Index);
-              p := @RemMultsBuf;
-            end;
-{
-            Zone:
-              if ActiveZoneMult <> EUHFCYear then
-                Str(Index + 1: 2, TempString)
-              else
-                Str(Index: 2, TempString);
-}
-        end;
-
-        i := Windows.lstrlenA(p);
-{
-        if RemMultsColumnWidthArray[rmt] < i then
-        begin
-          RemMultsColumnWidthArray[rmt] := i;
-          tLB_SETCOLUMNWIDTH(hwnddlg, i * 10);
-        end;
-}
-        if RemainingMultDisplayMode = HiLight then
-
-          //if not RemainingMults[Index] then
-          if Gradient then
-             begin
-             //            Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trLightGray]);
-                         Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trWhite]);
-                         GradientRect(DS^.HDC, DS^.rcItem, tr4wColorsArray[tr4wColors(Ord(rmt) * 1)], tr4wColorsArray[trWhite], gdHorizontal);
-             end
-          else
-             begin
-             Windows.SetTextColor(DS^.HDC, tr4wColorsArray[trBlack {ColorColors.RemainingMultsWindowColor}]);
-             end;
-
-        SetBkMode(DS^.HDC, TRANSPARENT);
-
-        Windows.TextOutA(DS^.HDC, DS^.rcItem.Left + 2, DS^.rcItem.Top, p, i);
-
+        aText := string(TempCall);
+        aWorked := mo.DomList.StringIsDupeByIndex(Index,
+                     GetAddMultBand(DomesticMultByBand, MultBand), MultMode);
       end;
 
-    WM_INITDIALOG:
+    rmDX:
       begin
-        tWM_SETFONT(CreateOwnerDrawListBox(LB_STYLE_1, hwnddlg), MainFixedFont);
-
-        tr4w_WindowsArray[WindowsType(lParam)].WndHandle := hwnddlg;
-
-        case WindowsType(lParam) of
-
-         tw_STATIONS_RM_DOM: p := 'Domestic'; // 4.91.5
-
-          tw_STATIONS_RM_PREFIX:
-            begin
-//              p := 'Prefixes';
-//              if ActivePrefixMult = CallSignPrefix then
-//              tLB_SETCOLUMNWIDTH(hwnddlg, PREFIXCOLUMNWIDTH)   // 4.91.4
-//               else
-                tLB_SETCOLUMNWIDTH(hwnddlg, BASECOLUMNWIDTH);
-            end;
-
-          tw_STATIONS_RM_DX:
-            begin
-//              p := 'DX';
-              tLB_SETCOLUMNWIDTH(hwnddlg, BASECOLUMNWIDTH);
-            end;
-
-
-          tw_STATIONS_RM_ZONE:
-            begin
-//              p := 'Zones';
-              tLB_SETCOLUMNWIDTH(hwnddlg, BASECOLUMNWIDTH);
-            end;
-          tw_REMMULTSWINDOW_INDEX: p := 'Remaining mults';  // 4.91.5
-        end;
-         Windows.SetWindowTextA(hwnddlg, p);    // 4.91.5
-
-        SetRemMultsColumnWidth;
-
-   //      tWM_SETFONT(RemainingMultsWindowHandle, MainFixedFont);
-    //      if DoingDomesticMults or DoingDXMults or DoingZoneMults then    // 4.68.10         // 4.72.3
-        VisibleLog.ShowRemainingMultipliers;
-
-//        if RemMultsColumnWidthArray[RemainingMultDisplay] > 0 then
-//          tLB_SETCOLUMNWIDTH(hwnddlg, RemMultsColumnWidthArray[RemainingMultDisplay] * 10);
+        aText := string(CTY.ctyTable[Index].ID);
+        aWorked := not mo.IsDXMult(Index, MultBand, MultMode);
       end;
-{
-    WM_COMMAND:
+
+    rmZone:
       begin
-        if HiWord(wParam) = LBN_DBLCLK then
-        begin
-          SwapMultDisplay;
-          FrmSetFocus;
-        end;
-
+        aWorked := not mo.IsZnMult(Index, MultBand, MultMode);
+        TF.Format(RemMultsBuf, '%02u', Index);
+        aText := string(PAnsiChar(@RemMultsBuf));
       end;
-}
-    WM_CLOSE: CloseTR4WWindow(GetWindowByHandle(hwnddlg));
-
   end;
+end;
+
+{ What WM_INITDIALOG did after building its list box. }
+procedure RemMultsWindowShown;
+begin
+  SetRemMultsColumnWidth;
+  VisibleLog.ShowRemainingMultipliers;
 end;
 
 procedure UpdateRemainingMultsWindows;
 begin
   SetRemMultsColumnWidth;
-  VisibleLog.ShowRemainingMultipliers ;
+  VisibleLog.ShowRemainingMultipliers;
 end;
 
+begin
+  RemMultsOnShow := @RemMultsWindowShown;
+  RemMultsResolve := @ResolveMult;
 end.
-

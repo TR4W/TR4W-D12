@@ -1,0 +1,35 @@
+object frmRemMults: TfrmRemMults
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Remaining mults'
+  ClientHeight = 200
+  ClientWidth = 300
+  Color = clWindow
+  KeyPreview = True
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnDestroy = HandleDestroy
+  OnKeyDown = HandleKeyDown
+  OnResize = HandleResize
+  OnShow = HandleShow
+  object grdMults: TDrawGrid
+    Left = 0
+    Height = 200
+    Top = 0
+    Width = 300
+    Align = alClient
+    BorderStyle = bsNone
+    ColCount = 1
+    DefaultColWidth = 49
+    DefaultDrawing = False
+    DefaultRowHeight = 16
+    FixedCols = 0
+    FixedRows = 0
+    Options = [goThumbTracking, goSmoothScroll]
+    RowCount = 1
+    ScrollBars = ssAutoHorizontal
+    TabOrder = 0
+    OnDrawCell = MultsDrawCell
+  end
+end
