@@ -131,6 +131,7 @@ var
 
 implementation
 uses
+  uMainForm,   { the call field, named -- wh[] round 3 }
   SysUtils,   // Issue #997: Format/StrPCopy
   uAnsiStr, // D12: ANSI StrPCopy for wsprintfBuffer
   LOGSUBS2,
@@ -934,7 +935,7 @@ begin
           tCleareCallWindow;
           tClearDupeInfoCall; // 4.55.6
           PutCallToCallWindow(FList^[Index2].FCall);
-          SendMessage(wh[mweCall], EM_SETSEL, 0, -1);
+          SetEntrySel(TR4WCallEdit, 0, -1);
           CallsignIsPastedFromBandMap := True;
          // tSetExchWindInitExchangeEntry ; // 4.139.1
          // Windows.SetFocus(wh[mweCall]);      // 4.139.2

@@ -266,6 +266,12 @@ will AV on the first log call.
 
 Stable, proven contest logic. **Avoid modifying unless necessary** — prefer new units in `src/`.
 
+**The no-LCL half of that boundary was RESCINDED on 2026-08-23 (NY4I).** Until then no unit under
+`src/trdos/` referenced the widget set at all, and the rule was read as forbidding it — which would
+have meant building a forwarding facade just so `LOGWIND` could clear a text box. TRDOS units may now
+use the LCL directly, and `LOGWIND`/`LOGEDIT` are the first that do. The rest of the rule stands:
+this is proven contest logic, so new *behaviour* still belongs in `src/`.
+
 | File | Lines | Role |
 |------|-------|------|
 | `LOGSTUFF.PAS` | 9469 | Contest logging, exchange parsing, QSO validation |
@@ -690,7 +696,9 @@ DTR/RTS keying).
 
 ## Critical Notes for AI Assistants
 
-1. **Respect the TRDOS boundary.** `src/trdos/` is proven contest logic. Prefer new units in `src/`.
+1. **Respect the TRDOS boundary — but it no longer excludes the LCL** (rescinded 2026-08-23, NY4I).
+   `src/trdos/` is proven contest logic and new behaviour still belongs in `src/`; a TRDOS unit
+   reaching a converted control through the LCL seam is now ordinary. See [TRDOS subsystem](#1-trdos-subsystem-srctrdos).
 2. **The two factories are the exception to "no OOP here."** `src/radioFactory/` and the CW keyer
    are real inheritance with real invariants — hold them to that standard. Everywhere else, expect
    procedural Pascal.

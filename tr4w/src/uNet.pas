@@ -176,6 +176,7 @@ const
 
 implementation
 uses
+  uMainForm,   { the call field, named -- wh[] round 3 }
   uCFG,
   LOGSUBS2,
 //  uMultsFrequencies,
@@ -552,6 +553,9 @@ begin
 end;
 
 procedure SendStationStatus(ssType: StationStatusType);
+var
+  callAnsi: AnsiString;   { sstCallsign -- see the byte-exact note below }
+  callLen: integer;
 begin
 //  Exit;
   if NetSocket = 0 then Exit;
@@ -588,7 +592,22 @@ begin
     sstCallsign:
       begin
         SetStatusByte;
-        Windows.GetWindowTextA(wh[mweCall], @MyStationState.ssCallsign, SizeOf(MyStationState.ssCallsign));
+        // BYTE-EXACT ON PURPOSE.  ssCallsign is a fixed AnsiChar array in a
+        // record sent over the wire to tr4wserver, and this reproduces
+        // GetWindowTextA's contract exactly: copy what fits, NUL-terminate,
+        // leave the rest of the buffer alone.  Assigning a string here would
+        // change a serialised field.
+        callAnsi := AnsiString(EntryText(TR4WCallEdit));
+        callLen := Length(callAnsi);
+        if callLen > SizeOf(MyStationState.ssCallsign) - 1 then
+           begin
+           callLen := SizeOf(MyStationState.ssCallsign) - 1;
+           end;
+        if callLen > 0 then
+           begin
+           Move(callAnsi[1], MyStationState.ssCallsign[0], callLen);
+           end;
+        MyStationState.ssCallsign[callLen] := #0;
       end;
 
     sstOperator:

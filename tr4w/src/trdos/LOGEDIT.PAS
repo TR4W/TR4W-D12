@@ -188,6 +188,7 @@ procedure UpdateBandMapDupeStatus(RXCall: CallString; RXBand: BandType; RXMode:
 implementation
 
 uses
+  uMainForm,   { the exchange field, named -- wh[] round 3 }
   //OZCHR,
 //  uRemMults_DX,
 //  uRemMults_DOM,
@@ -2819,7 +2820,7 @@ begin
 
      if InitialExchangeOverwrite then
         begin
-        Windows.SendMessage(wh[mweExchange], EM_SETSEL, 0, -1);     //hh
+        SetEntrySel(TR4WExchangeEdit, 0, -1);     //hh
         InitialExchangePutUp := ExchangeWindowString <> '';
         end;
 

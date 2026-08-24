@@ -1024,6 +1024,7 @@ procedure UpadateAutoSend;
 implementation
 
 uses
+  uMainForm,   { the call field, named -- wh[] round 3 }
   //  OZCHR,
 //  uStack,
   uNet,
@@ -2343,7 +2344,7 @@ begin
        TempCallsign := BandMapExpandedString(Call);
        if CQLabel(TempCallsign) then
           begin
-          Windows.SetWindowTextA(wh[mweCall], nil);
+          SetEntryText(TR4WCallEdit, '');
           SetOpMode(CQOpMode);
           end
        else
@@ -2351,13 +2352,13 @@ begin
           SetOpMode(SearchAndPounceOpMode);
           if Copy(TempCallsign, 1, 3) <> 'NEW' then
              begin
-             tSetWindowText(wh[mweCall], TempCallsign);
+             SetEntryText(TR4WCallEdit, string(TempCallsign));
              end;
           end;
          //      Frm.CallWindow . SetFocus;
        tCallWindowSetFocus;
          //        SendMessage(CallWindowHandle, EM_SETSEL, 16, 16);
-       PlaceCaretToTheEnd(wh[mweCall]);
+       SetEntrySel(TR4WCallEdit, Length(EntryText(TR4WCallEdit)), 0);
        DisplayCountryName(CallWindowString);
        DisplayBeamHeading(CallWindowString, '');
 
