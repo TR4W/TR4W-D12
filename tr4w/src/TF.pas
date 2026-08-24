@@ -141,7 +141,10 @@ function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 // ValExt removed -- see the note at its old implementation site.  Callers use
 // the RTL `Val` intrinsic, which is what uCTYDAT already does.
 
-function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean = False): THandle;
+{ START A WORKER THREAD WHOSE FAULTS ARE NOT SILENT, AND WHOSE ALLOCATIONS ARE
+  NOT A RACE.  Two defects, both measured on 2026-08-23, both fixed by routing
+  through the RTL instead of calling CreateThread directly.  See the body. }
+function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean = False; aParameter: Pointer = nil): THandle;
 
 //function tgethostbyname(h_Name: PAnsiChar): PAnsiChar;
 function tDialogBox(WindowID: Byte; WinProcAdr: Pointer): integer;
@@ -244,7 +247,8 @@ const
 
 implementation
 
-uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr;   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+uses Log4D, uFreqTimeFormat, uStrSearch, uAnsiStr,   // Issue #997: freq/time formatters + PChar search helpers extracted + golden-tested
+     uCrashLog;   // LogCaughtException -- see tCreateThread
 
 // Own Log4D logger (initialized at the foot of this unit), replacing the former
 // MainUnit.logger borrow.  MainUnit was used for NOTHING ELSE here -- three
@@ -987,9 +991,94 @@ begin
   TWindows[Window].mweE := (Text = '');
 end;
 
-function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean): THandle;
+{ What the trampoline carries across.  Heap-allocated by tCreateThread and
+  disposed by the trampoline itself, because the two run on different threads
+  and the parent does not wait. }
+type
+   { TFNThreadStartRoutine is a bare Pointer in FPC's Windows unit, not a
+     procedural type, so the shape has to be stated here to be callable. }
+   TWorkerProc = function(aParameter: Pointer): DWORD; stdcall;
+
+   PWorkerStart = ^TWorkerStart;
+   TWorkerStart = record
+      Proc: TWorkerProc;
+      Parameter: Pointer;
+      { The same address again, untyped.  Delphi mode CALLS a procedural
+        variable when you name it, so Proc cannot also be read as a value --
+        and the crash line wants the address to resolve symbolically. }
+      Address: Pointer;
+   end;
+
+{ THE GUARD.  A plain TThreadFunc -- the RTL's own convention -- that adapts to
+  the stdcall thread procedure TR4W has always used, and wraps it. }
+function tWorkerThreadTrampoline(aStart: Pointer): PtrInt;
+var
+  start: TWorkerStart;
+  rc: DWORD;
 begin
-  Result := CreateThread(nil, 0, lpStartAddress, nil, 0, lpThreadId);
+  Result := 0;
+  start := PWorkerStart(aStart)^;
+  Dispose(PWorkerStart(aStart));
+  try
+     rc := start.Proc(start.Parameter);
+     Result := PtrInt(rc);
+  except
+     on E: TObject do
+        begin
+        // The whole point.  Without this the process simply vanishes: see the
+        // note in tCreateThread below.
+        LogCaughtException(Format('worker thread %d (%s)',
+                                  [GetCurrentThreadId,
+                                   BackTraceStrFunc(CodePointer(start.Address))]), E);
+        end;
+  end;
+end;
+
+function tCreateThread(lpStartAddress: TFNThreadStartRoutine; var lpThreadId: DWORD; Quiet: boolean; aParameter: Pointer): THandle;
+var
+  start: PWorkerStart;
+  id: TThreadID;
+begin
+  { BeginThread, NOT CreateThread, AND IT IS NOT A STYLE PREFERENCE.  Measured
+    with a standalone FPC probe on 2026-08-23, because both of these had been
+    argued from first principles and both first principles were wrong.
+
+    1. IsMultiThread STAYS FALSE FOR A RAW CreateThread THREAD.  The probe
+       spawned one, allocated a string on it, and IsMultiThread was still FALSE
+       on return.  That flag is what makes the FPC heap manager take its locks,
+       so until something else in the process happens to construct a TThread,
+       TR4W's raw worker threads and the main thread were allocating from an
+       UNLOCKED heap.  Sixteen TThread descendants exist (radio reading threads,
+       the DX cluster reader, the uploaders), so in practice the flag does get
+       set -- but by an unrelated object, at an unrelated moment, and nothing
+       ordered that before the first raw thread.  BeginThread sets it in the
+       PARENT before the child starts, which is the ordering we actually want.
+
+    2. A FAULT ON A WORKER THREAD REACHED NO HANDLER AT ALL.
+       Application.HandleException covers only the main message loop and
+       ExceptProc covers the main thread, so an access violation on a radio
+       reading thread ended the process with NOTHING in tr4w.log -- the last
+       line being whatever that thread wrote just before.  That is not a
+       hypothetical: it cost five of NY4I's test cycles on 2026-08-23 to find
+       an LCL call being made from the radio polling thread, because the log
+       kept pointing at the answer and it kept reading as coincidence.
+
+       The probe also settled the question that made this look impossible:
+       try/except DOES work on such a thread under FPC/win32 -- it caught both
+       a raise and an access violation, with a valid ExceptAddr -- so the guard
+       produces a real symbolic backtrace, not just "it died".
+
+    The return value is the thread HANDLE, as before; lpThreadId gets the id,
+    as before.  Callers see no change. }
+  New(start);
+  start^.Proc := TWorkerProc(lpStartAddress);
+  start^.Address := Pointer(lpStartAddress);
+  start^.Parameter := aParameter;
+
+  id := 0;
+  Result := BeginThread(tWorkerThreadTrampoline, start, id);
+  lpThreadId := DWORD(id);
+
   // Issue #1041: Quiet suppresses this per-create debug line so the network
   // connect-retry loop (one thread every 5s while the server is unreachable)
   // does not spam the log -- loud on a genuine attempt, silent on retries.

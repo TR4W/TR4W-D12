@@ -3,7 +3,7 @@
     "ini.Write":  6,
     "wsprintf":  0,
     "process.Launch":  2,
-    "thread.Create":  6,
+    "thread.Create":  1,
     "thread.Event":  29,
     "window.Query":  12,
     "serial.CommAPI":  22,

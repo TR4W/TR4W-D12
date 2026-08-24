@@ -96,7 +96,35 @@ uses
 {$IFDEF FPC}
    Forms,      // Application.OnException -- the LCL's own handler
 {$ENDIF}
-   MainUnit;   // logger
+   Log4D;      // our own logger -- see CrashLogger
+
+{ NOT MainUnit's `logger` GLOBAL, AND THAT IS DELIBERATE.
+
+  This unit used it, which made the crash reporter depend on the unit that
+  owns the main window and every UI global beneath it.  That is backwards on
+  its own terms -- the reporter must work when MainUnit is exactly what has
+  gone wrong -- and on 2026-08-23 it also became a build error: guarding the
+  worker threads meant TF calling LogCaughtException, and TF -> uCrashLog ->
+  MainUnit -> TF is a cycle FPC answers with an internal error, not a
+  diagnostic.
+
+  A CHILD OF THE SAME LOGGER, so nothing about the output moves.  Log4D
+  propagates to the root appender and children inherit the parent's level, and
+  the global is TLogLogger.GetLogger('TR4WDebugLog') (tr4w.dpr:657) -- so
+  'TR4WDebugLog.CrashLog' lands in the same tr4w.log at the same level, and
+  merely says which subsystem wrote the line.  Obtained lazily because a crash
+  can happen before startup has configured anything. }
+var
+   GCrashLogger: TLogLogger = nil;
+
+function CrashLogger: TLogLogger;
+begin
+   if GCrashLogger = nil then
+      begin
+      GCrashLogger := TLogLogger.GetLogger('TR4WDebugLog.CrashLog');
+      end;
+   Result := GCrashLogger;
+end;
 
 type
    TCrashReporter = class(TObject)
@@ -152,24 +180,19 @@ begin
             end;
          end;
 
-      if logger = nil then
-         begin
-         Exit;
-         end;
-
       // WHICH THREAD, and which build. TR4W runs a reading thread per radio,
       // a WinKey thread, network threads and CW playback, so "an access
       // violation" means something different depending on where it happened.
-      logger.Fatal('[CRASH] %s: unhandled %s in thread %d%s (TR4W %s) -- %s',
+      CrashLogger.Fatal('[CRASH] %s: unhandled %s in thread %d%s (TR4W %s) -- %s',
                    [aSource, cls, GetCurrentThreadId, IfMainThread,
                     TR4W_CURRENTVERSION_NUMBER, msg]);
       if aAddr <> nil then
          begin
-         logger.Fatal('[CRASH]   at %s', [BackTraceStrFunc(aAddr)]);
+         CrashLogger.Fatal('[CRASH]   at %s', [BackTraceStrFunc(aAddr)]);
          end;
       for i := 0 to aFrameCount - 1 do
          begin
-         logger.Fatal('[CRASH]   %s', [BackTraceStrFunc(aFrames[i])]);
+         CrashLogger.Fatal('[CRASH]   %s', [BackTraceStrFunc(aFrames[i])]);
          end;
    except
       // Deliberately empty: there is nothing left to report it to.
@@ -292,13 +315,8 @@ var
    resolved, dbg: string;
    line: integer;
 begin
-   if logger = nil then
-      begin
-      Exit;
-      end;
-
    // The build itself, so an archived .dbg can be matched to this log.
-   logger.Info('[CRASH] TR4W %s built %s %s',
+   CrashLogger.Info('[CRASH] TR4W %s built %s %s',
                [TR4W_CURRENTVERSION_NUMBER, {$I %DATE%}, {$I %TIME%}]);
 
    line := ProbeSymbolLine(resolved);
@@ -306,20 +324,20 @@ begin
 
    if line > 0 then
       begin
-      logger.Info('[CRASH] symbols OK -- backtraces will name file and line '
+      CrashLogger.Info('[CRASH] symbols OK -- backtraces will name file and line '
                   + '(probe resolved to %s)', [Trim(resolved)]);
       end
    else if FileExists(dbg) then
       begin
       // The dangerous-looking case, and the reason for the whole check.
-      logger.Warn('[CRASH] %s EXISTS BUT WAS REJECTED -- it does not belong to '
+      CrashLogger.Warn('[CRASH] %s EXISTS BUT WAS REJECTED -- it does not belong to '
                   + 'this build. Backtraces will show raw addresses only. '
                   + 'Replace it with the .dbg archived for TR4W %s.',
                   [dbg, TR4W_CURRENTVERSION_NUMBER]);
       end
    else
       begin
-      logger.Info('[CRASH] no %s -- backtraces will show raw addresses. That is '
+      CrashLogger.Info('[CRASH] no %s -- backtraces will show raw addresses. That is '
                   + 'normal; the addresses can still be resolved from the .dbg '
                   + 'archived for TR4W %s.',
                   [ExtractFileName(dbg), TR4W_CURRENTVERSION_NUMBER]);
@@ -346,11 +364,8 @@ begin
    Application.OnException := GReporter.HandleLCLException;
 {$ENDIF}
 
-   if logger <> nil then
-      begin
-      logger.Info('[CRASH] unhandled-exception logging installed (RTL + LCL)');
-      ReportSymbolState;
-      end;
+   CrashLogger.Info('[CRASH] unhandled-exception logging installed (RTL + LCL)');
+   ReportSymbolState;
 end;
 
 initialization

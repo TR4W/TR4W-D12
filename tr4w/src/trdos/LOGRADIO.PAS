@@ -1533,7 +1533,7 @@ begin
          begin
          tPollCount := -1;
          tRadioInterfaceThreadHandle :=
-            CreateThread(nil, 0, @BeginPolling, @Self, 0, tRadioInterfaceThreadID);
+            tCreateThread(@BeginPolling, tRadioInterfaceThreadID, False, @Self);
          logger.Info('Created Radio %s thread with threadid of %d',[Self.RadioName, tRadioInterfaceThreadID] );
          end;
       end;

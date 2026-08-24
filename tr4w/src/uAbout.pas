@@ -74,7 +74,7 @@ function AboutDlgProc( hwnddlg: HWND; Msg: UINT; wParam: wParam;
     WM_INITDIALOG:
       begin
       AboutHWND := hwnddlg;
-      CreateThread( nil, 0, @MainProc, nil, 0, tid );
+      tCreateThread(@MainProc, tid);
       Windows.SetDlgItemTextA( hwnddlg, 102, tAboutText );
       end;
     WM_COMMAND:

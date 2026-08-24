@@ -73,7 +73,8 @@ procedure YCCCSetSpeed(wpm: integer);
 implementation
 
 uses
-   Log4D, SysUtils;
+   Log4D, SysUtils,
+   TF;   { tCreateThread -- guarded worker threads }
 
 { ---- OTRSP protocol constants (from ycccprotocol.pas) ------------------- }
 
@@ -536,7 +537,7 @@ begin
       end;
 
    { Start write thread first so queued init commands get sent immediately }
-   FWriteThread := CreateThread(nil, 0, @YCCCWriteThreadProc, nil, 0, FWriteThID);
+   FWriteThread := tCreateThread(@YCCCWriteThreadProc, FWriteThID);
    if FWriteThread = 0 then
       begin
       logger.Debug('YCCC write thread creation failed');
@@ -550,7 +551,7 @@ begin
    YCCCSendCmd(CMD_KEYER_CONFIG, 0);
 
    { Start read thread }
-   FReadThread := CreateThread(nil, 0, @YCCCReadThreadProc, nil, 0, FReadThID);
+   FReadThread := tCreateThread(@YCCCReadThreadProc, FReadThID);
    if FReadThread = 0 then
       begin
       logger.Debug('YCCC read thread creation failed');
