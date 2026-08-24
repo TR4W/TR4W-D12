@@ -25,7 +25,8 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-36 were added 2026-08-24 and are UNRUN.** NY4I confirmed
+**Sections 31-38 were added 2026-08-24 and are UNRUN.**  Section 37 is the
+biggest of them: the entire main window display changed. NY4I confirmed
 the dupe sheet window, the stations window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
 the band-change message landed -- so those are recorded here rather than
@@ -1257,6 +1258,70 @@ windows; there are five instances of one form class now. **None seen.**
       text and the worked flag are resolved at PAINT time, not at rebuild, so
       this is the check that the resolution seam is wired.
 - [ ] **The zone window numbers from 1, except EUHFC which numbers from 0.**
+
+
+### 37. THE MAIN WINDOW'S FORTY-TWO ELEMENTS ARE LCL CONTROLS — test this like section 30
+
+The single largest visible change of the conversion. Every static on the main
+window -- band, mode, frequency, rate, totals, the status indicators, the radio
+rows -- was a Win32 STATIC painted by TR4W's own WM_CTLCOLORSTATIC handler.
+They are LCL TPanels now and they paint from their own properties. **Nothing
+below has been seen.**
+
+**If something on the main window is the wrong colour, blank, mispositioned or
+the wrong size, this is the change that did it.**
+
+- [ ] **Everything is there, in the right place, at the right size.** Compare
+      against a screenshot of the previous build if you have one. The positions
+      come from the same TWindows[] table and the same `ws` arithmetic; the
+      FONT is now built from the same three numbers instead of an HFONT, and a
+      wrong sign on the height would show as visibly larger text.
+- [ ] **The sunken borders.** defStyle carries SS_SUNKEN and that is
+      `BevelOuter = bvLowered`. With `NO BORDER = TRUE` they should be flat, as
+      before.
+- [ ] **The QSO number's bigger font.** It is the one element with its own --
+      Lucida Console, ws+3. FW_EXTRABOLD has no LCL counterpart and is now
+      fsBold; say if it reads lighter.
+- [ ] **The auto-send arrow.** Down arrow, and it MOVES as the character count
+      changes. Set `AUTO SEND CHARACTER COUNT` above 0 in CW.
+- [ ] **THE FIVE LIVE COLOURS.** These were re-evaluated on every repaint by
+      DrawWindows and are now pushed when the state changes. Each needs
+      exercising:
+      - **PTT** goes red on radio 1, yellow on radio 2, while transmitting.
+      - **WSJT-X** green when connected, red when not, and the element hides
+        when WSJT-X goes away.
+      - **Dupe info** takes its state colour when Alt-D reports a dupe, and
+        clears.
+      - **Radio 1 / radio 2 rows** turn the alert colour when that radio
+        disconnects and back when it reconnects. **This one has no text write
+        behind it** -- it rides on a new main-thread job (mtRadioAlertColors),
+        so it is the most likely of the five to be missed.
+- [ ] **The frequency display tracks the radio.** It is written from the
+      POLLING THREAD and now travels through uPanelUpdate's coalescing queue
+      (puElement) rather than SetWindowTextW on a handle -- because an LCL
+      control paints from a property and a handle write would leave it stale.
+      Watch it follow the VFO continuously, and go blank on disconnect.
+- [ ] **Colour scheme changes still reach the main window** (Preferences ->
+      colours). RefreshMainWindowColors pushes the elements now.
+- [ ] **Greying still works:** the inactive radio's row in two-radio mode, the
+      foot switch and WinKey indicators, and the quick-display FLASH (which is
+      still an enable/disable toggle -- see LOGWIND).
+
+### 38. Three injected keystrokes are deferred calls now
+
+Each was a PostMessage into an entry field, and the POST was doing real work --
+deferring the action until the current message finished. That deferral is kept
+through Application.QueueAsyncCall; what went away is the synthetic keystroke.
+
+- [ ] **The trailing space in the exchange field** (space bar at the end of an
+      exchange that does not already end in one).
+- [ ] **The foot switch's start-sending key** in CW. Was a WM_CHAR into the call
+      field; now calls the field's own key handler.
+- [ ] **MMTTY double-click pastes a callsign into the call field AND FOCUSES
+      IT.** The focus half never worked: the old code posted WM_SETFOCUS, which
+      tells a window it has gained focus rather than giving it focus. If the
+      caret now lands in the call field where it did not before, that is the
+      fix, not a regression.
 
 ---
 

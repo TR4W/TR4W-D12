@@ -53,7 +53,8 @@ const
     );
 
 implementation
-uses MainUnit;
+uses
+  uMainForm,   { the main window's elements are LCL controls } MainUnit;
 
  var
     VDCurrentCallDistrict                 : Byte;
@@ -63,7 +64,7 @@ begin
 DupeInfoCallWindowState := diNone;
 SetMainWindowText(mweDupeInfoCall, '');
 DupeInfoCallWindowCleared := True;
-Windows.ShowWindow(wh[mweDupeInfoCall], SW_RESTORE);
+ShowElement(mweDupeInfoCall, True);
 
 
 end;

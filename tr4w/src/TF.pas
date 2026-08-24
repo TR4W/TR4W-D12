@@ -138,6 +138,11 @@ procedure strU(var Str: OpenString);
 procedure SetMainWindowText(Window: TMainWindowElement; Text: string);
 function IntegerBetween(v: integer; i: integer; k: integer): boolean;
 
+var
+   { Assigned by MainUnit at startup -- see SetMainWindowText for why this is a
+     seam and not a uses clause. }
+   MainWindowTextWriter: procedure(Window: TMainWindowElement; const Text: string) = nil;
+
 // ValExt removed -- see the note at its old implementation site.  Callers use
 // the RTL `Val` intrinsic, which is what uCTYDAT already does.
 
@@ -977,16 +982,26 @@ begin
   //  SendMessage(Result, WM_SETICON, ICON_BIG, LoadIcon(thInstance, 'MAINICON'));
 end;
 
+{ THE ONE WRITE PATH FOR ALL FORTY-TWO ELEMENTS, and the reason it goes through
+  a procedure variable rather than calling uMainForm directly: TF sits UNDER the
+  UI -- half the program uses it, including tr4wserver-adjacent code -- and a
+  uses clause pointing up at the LCL would drag the widget set into everything.
+  MainUnit assigns MainWindowTextWriter once, at startup.
+
+  The mweE bookkeeping is kept exactly.  It means "the last thing written was
+  empty", and it is what makes a second clear a no-op. }
 procedure SetMainWindowText(Window: TMainWindowElement; Text: string);
 begin
-  // D12: Text is native string; empty ('') is the "clear" signal that nil/#0
-  // used to be.  Write via the W-API so the whole path is Unicode.
   if (Text = '') then
     if TWindows[Window].mweE then
        begin
        Exit;
        end;
-  Windows.SetWindowTextW(wh[Window], PChar(Text));
+
+  if Assigned(MainWindowTextWriter) then
+     begin
+     MainWindowTextWriter(Window, Text);
+     end;
 
   TWindows[Window].mweE := (Text = '');
 end;

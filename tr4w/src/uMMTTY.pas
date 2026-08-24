@@ -164,6 +164,7 @@ var
 
 implementation
 uses
+  uMainForm,          // QueuePasteIntoCallField -- the call field is a control
   uPlatformProcess,   // RunWindowsUtility -- the only launcher
   SysUtils,           // Format -- the RTL one, not TF's buffer shim
   LogEdit,
@@ -416,8 +417,7 @@ begin
      begin
      tCleareCallWindow;
      PostMessage(MMTTY.MMTTYRichEdit, WM_COPY, 0, 0);
-     PostMessage(wh[mweCall], WM_PASTE, 0, 0);
-     PostMessage(wh[mweCall], WM_SETFOCUS, 0, 0);
+     QueuePasteIntoCallField;
 
        //      Windows.SetFocus(CallWindowHandle);
        //      Exit;

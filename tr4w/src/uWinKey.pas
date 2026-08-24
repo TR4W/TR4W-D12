@@ -274,6 +274,7 @@ const
 
 implementation
 uses
+  uMainForm,   { the main window's elements are LCL controls }
   SysUtils,
   uNet,
   LogDupe,
@@ -1092,7 +1093,7 @@ end;
 
 procedure wkDispayState;
 begin
-  Windows.EnableWindow(wh[mweWinKey], wkActive);
+  EnableElement(mweWinKey, wkActive);
 end;
 
 procedure wkAddCharToHostBuffer(c: AnsiChar);

@@ -217,14 +217,7 @@ const
          begin
          logger.Info('[pFactoryRadio] %s � alert color OFF', [rig^.RadioName]);
          end;
-      if rig^.FreqWindowHandle <> 0 then
-         begin
-         Windows.InvalidateRect(rig^.FreqWindowHandle, nil, False);
-         end;
-      if rig^.RadioNameWndHandle <> 0 then
-         begin
-         Windows.InvalidateRect(rig^.RadioNameWndHandle, nil, False);
-         end;
+      RequestMainThreadJob(mtRadioAlertColors);
    end;
 
 begin
@@ -642,10 +635,7 @@ begin
             rig.PreviousStatus.VFO[VFOB].Frequency := 0;
             // Blank the frequency display immediately. FreqToPChar(0) shows "0.000"
             // which is as misleading as the stale value, so write '' directly.
-            if rig^.FreqWindowHandle <> 0 then
-               begin
-               Windows.SetWindowTextA(rig^.FreqWindowHandle, '');
-               end;
+            PostElementText(rig^.FreqElement, '');
             if rig^.tRadioInterfaceWndHandle <> 0 then
                begin
                PostPanelText(rig^.tRadioInterfaceWndHandle, 102, '');
@@ -1097,8 +1087,9 @@ begin
          SetDlgItemTextW(h, 102,
             PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOA].Frequency)));
          end;
-      Windows.SetWindowTextW(rig^.FreqWindowHandle,
-         PChar(FreqToPChar(rig.CurrentStatus.Freq)));
+      // HANDED OVER, NOT WRITTEN.  This runs on the polling thread and the
+      // frequency row is an LCL control; see uPanelUpdate.puElement.
+      PostElementText(rig^.FreqElement, string(FreqToPChar(rig.CurrentStatus.Freq)));
       end
    else
       begin
@@ -1112,7 +1103,7 @@ begin
          begin
          SetDlgItemTextA(h, 102, FreqToPChar(fa));
          end;
-      Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
+      PostElementText(rig^.FreqElement, string(FreqToPChar(rig.CurrentStatus.Freq)));
       end
    else
       begin
@@ -1261,14 +1252,7 @@ begin
       begin
       logger.Info('[SerialLiveness] %s -> alert color OFF', [rig^.RadioName]);
       end;
-   if rig^.FreqWindowHandle <> 0 then
-      begin
-      Windows.InvalidateRect(rig^.FreqWindowHandle, nil, False);
-      end;
-   if rig^.RadioNameWndHandle <> 0 then
-      begin
-      Windows.InvalidateRect(rig^.RadioNameWndHandle, nil, False);
-      end;
+   RequestMainThreadJob(mtRadioAlertColors);
 end;
 
 // Update the serial liveness indicator from one read attempt.  Shared by the
@@ -1630,5 +1614,6 @@ initialization
    { The two pieces of UI work this unit used to do on a radio thread. }
    RegisterMainThreadJob(mtSwitchToSearchAndPounce, @RunSwitchToSearchAndPounce);
    RegisterMainThreadJob(mtBandModeDisplay, @RunBandModeDisplay);
+   RegisterMainThreadJob(mtRadioAlertColors, @RefreshMainWindowElementColors);
 
 end.

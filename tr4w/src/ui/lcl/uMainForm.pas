@@ -40,7 +40,9 @@ unit uMainForm;
 interface
 
 uses
-  Windows, Forms, Controls, Graphics, StdCtrls, LCLType, LMessages,
+  Windows, Classes, Forms, Controls, Graphics, StdCtrls, ExtCtrls, LCLType,
+  LMessages,
+  VC,                // TMainWindowElement -- the main window's own elements
   uMainWindowProc;   // TTR4WEntryField, EntryEvents -- the fields' key handlers
 
 type
@@ -177,6 +179,58 @@ procedure FocusEntry(const aEdit: TEdit;
                      const aBringForward: boolean = False);
 procedure SetEntryColors(const aEdit: TEdit; const aBack, aText: TColor);
 
+
+{ ---------------------------------------------------------------------------
+  THE MAIN WINDOW'S OWN ELEMENTS.
+
+  Forty-two of the fifty TMainWindowElement entries were raw Win32 STATIC
+  controls, created by one loop in CreateMainWindow from the metadata in
+  TWindows[] and painted by TR4W's WM_CTLCOLORSTATIC handler.  They are LCL
+  TPanels now, held here, one per element.
+
+  A TPanel RATHER THAN A TLabel, because a Win32 static in this program is not
+  just text: defStyle is SS_CENTER or SS_SUNKEN, and DefStyleDis adds
+  WS_DISABLED.  A panel has all three -- Alignment, BevelOuter and Enabled --
+  where a label would need a container for the border.
+
+  STILL CREATED IN CODE, NOT IN THE .lfm, and deliberately: their positions come
+  from TWindows[] in character cells scaled by `ws`, which changes with the
+  font.  A designed layout would have to duplicate that table, and the table is
+  what the rest of the program reads.  See the note on the form class above. }
+function  CreateMainElement(const aElement: TMainWindowElement;
+                            const aStyle: cardinal;
+                            const aLeft, aTop, aWidth, aHeight: integer): HWND;
+function  MainElement(const aElement: TMainWindowElement): TPanel;
+procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
+procedure SetElementColors(const aElement: TMainWindowElement;
+                           const aBack, aText: TColor);
+procedure ShowElement(const aElement: TMainWindowElement; const aVisible: boolean);
+procedure EnableElement(const aElement: TMainWindowElement; const aEnabled: boolean);
+procedure SetElementLeft(const aElement: TMainWindowElement; const aLeft: integer);
+procedure SetElementBounds(const aElement: TMainWindowElement;
+                           const aLeft, aTop, aWidth, aHeight: integer);
+{ The fonts are built with tCreateFont and handed round as HFONTs; an LCL
+  control paints its caption from its own TFont, so the SHAPE is passed rather
+  than the handle. }
+procedure SetElementFont(const aElement: TMainWindowElement;
+                         const aName: string; const aHeight: integer;
+                         const aBold: boolean);
+
+{ THREE THINGS THAT USED TO BE INJECTED KEYSTROKES.
+
+  Each was a PostMessage into an entry field's window -- a space, the
+  start-sending key, a paste -- and the POST was doing real work: it deferred
+  the action until the message being handled had finished.  Calling the same
+  code directly instead would run it INSIDE the current key or click, which is a
+  reentrancy change, not a syntax one.
+
+  So the deferral is kept, through Application.QueueAsyncCall, which is what
+  this program already uses to hand work to the main loop (see uPanelUpdate).
+  What goes away is the pretence that a synthetic keystroke is being typed. }
+procedure QueueAppendSpaceToExchange;
+procedure QueueStartSendingKey(const aKey: AnsiChar);
+procedure QueuePasteIntoCallField;
+
 { The possible-call list -- an LCL TListBox since Phase 3b; these replace
   LB_RESETCONTENT / LB_ADDSTRING / LB_SETCURSEL / LB_GETCURSEL / LB_GETCOUNT
   sent to wh[mwePossibleCall].  See the implementation for why the items
@@ -187,6 +241,10 @@ function  PossibleCallCount: integer;
 function  SelectedPossibleCall: integer;
 procedure SelectPossibleCall(const aIndex: integer);
 procedure PossibleCallsUpdated;
+{ The list draws its own items, so it paints from its own TFont -- tWM_SETFONT
+  on the handle would be ignored.  Same three numbers tCreateFont was given. }
+procedure SetPossibleCallFont(const aName: string; const aHeight: integer;
+                              const aBold: boolean);
 
 implementation
 
@@ -315,6 +373,293 @@ end;
   moving either. }
 function ControlUsable(const aCtrl: TWinControl): boolean; forward;
 
+{ ---------------------------------------------------------------------------
+  THE ELEMENT CONTROLS.
+  --------------------------------------------------------------------------- }
+
+var
+   GElements: array[TMainWindowElement] of TPanel;
+
+function MainElement(const aElement: TMainWindowElement): TPanel;
+begin
+   Result := GElements[aElement];
+end;
+
+function ElementUsable(const aElement: TMainWindowElement): boolean;
+begin
+   Result := ControlUsable(GElements[aElement]);
+end;
+
+function CreateMainElement(const aElement: TMainWindowElement;
+                           const aStyle: cardinal;
+                           const aLeft, aTop, aWidth, aHeight: integer): HWND;
+var
+   p: TPanel;
+begin
+   Result := 0;
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   p := TPanel.Create(TR4WMainForm);
+   p.Parent := TR4WMainForm;
+   GElements[aElement] := p;
+
+   // THE WIN32 STYLE BITS, ONE AT A TIME.  Every one of them has a property,
+   // which is the whole reason this control can stop being painted by a
+   // WM_CTLCOLORSTATIC handler.
+   //
+   //   SS_SUNKEN    -> BevelOuter bvLowered
+   //   SS_CENTER    -> Alignment taCenter, SS_LEFT -> taLeftJustify
+   //   WS_VISIBLE   -> Visible (uVisStyle omits it; those elements start hidden)
+   //   WS_DISABLED  -> Enabled False (DefStyleDis)
+   //   SS_NOPREFIX  -> no counterpart needed: a TPanel caption is not an
+   //                   accelerator string, so there is no '&' to suppress.
+   if (aStyle and SS_SUNKEN) <> 0 then
+      begin
+      p.BevelOuter := bvLowered;
+      end
+   else
+      begin
+      p.BevelOuter := bvNone;
+      end;
+
+   if (aStyle and SS_CENTER) <> 0 then
+      begin
+      p.Alignment := taCenter;
+      end
+   else
+      begin
+      p.Alignment := taLeftJustify;
+      end;
+
+   p.Caption := '';
+   p.ParentColor := False;
+   p.ParentFont := False;
+
+   // AutoSize BEFORE SetBounds.  LCL controls autosize by default and a
+   // streamed or assigned size is silently overridden; this tree has paid for
+   // that once already (see CreateTR4WEntryField).
+   p.AutoSize := False;
+   p.SetBounds(aLeft, aTop, aWidth, aHeight);
+
+   p.Enabled := (aStyle and WS_DISABLED) = 0;
+   p.Visible := (aStyle and WS_VISIBLE) <> 0;
+
+   Result := p.Handle;
+end;
+
+procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
+begin
+   if not ElementUsable(aElement) then
+      begin
+      Exit;
+      end;
+   if GElements[aElement].Caption <> aText then
+      begin
+      GElements[aElement].Caption := aText;
+      end;
+end;
+
+procedure SetElementColors(const aElement: TMainWindowElement;
+                           const aBack, aText: TColor);
+begin
+   if not ElementUsable(aElement) then
+      begin
+      Exit;
+      end;
+   if GElements[aElement].Color <> aBack then
+      begin
+      GElements[aElement].Color := aBack;
+      end;
+   if GElements[aElement].Font.Color <> aText then
+      begin
+      GElements[aElement].Font.Color := aText;
+      end;
+end;
+
+procedure ShowElement(const aElement: TMainWindowElement; const aVisible: boolean);
+begin
+   if not ElementUsable(aElement) then
+      begin
+      Exit;
+      end;
+   GElements[aElement].Visible := aVisible;
+end;
+
+procedure EnableElement(const aElement: TMainWindowElement; const aEnabled: boolean);
+begin
+   if not ElementUsable(aElement) then
+      begin
+      Exit;
+      end;
+   GElements[aElement].Enabled := aEnabled;
+end;
+
+procedure SetElementLeft(const aElement: TMainWindowElement; const aLeft: integer);
+begin
+   if not ElementUsable(aElement) then
+      begin
+      Exit;
+      end;
+   GElements[aElement].Left := aLeft;
+end;
+
+procedure SetElementBounds(const aElement: TMainWindowElement;
+                           const aLeft, aTop, aWidth, aHeight: integer);
+begin
+   if not ElementUsable(aElement) then
+      begin
+      Exit;
+      end;
+   GElements[aElement].SetBounds(aLeft, aTop, aWidth, aHeight);
+end;
+
+procedure SetElementFont(const aElement: TMainWindowElement;
+                         const aName: string; const aHeight: integer;
+                         const aBold: boolean);
+begin
+   if not ElementUsable(aElement) then
+      begin
+      Exit;
+      end;
+
+   // NEGATIVE HEIGHT is the same convention tCreateFont passes to CreateFont:
+   // the CHARACTER height, not the cell height.  Passing it positive here would
+   // give visibly larger text than the Win32 original.
+   GElements[aElement].Font.Name := aName;
+   GElements[aElement].Font.Height := -aHeight;
+   if aBold then
+      begin
+      GElements[aElement].Font.Style := [fsBold];
+      end
+   else
+      begin
+      GElements[aElement].Font.Style := [];
+      end;
+end;
+
+{ ---------------------------------------------------------------------------
+  THE DEFERRED ACTIONS.  One runner, because QueueAsyncCall wants a method.
+  --------------------------------------------------------------------------- }
+type
+   TDeferredAction = (daAppendSpace, daStartSending, daPasteCall);
+
+   TEntryDeferrer = class(TObject)
+   public
+      procedure Run(Data: PtrInt);
+   end;
+
+var
+   GDeferrer: TEntryDeferrer = nil;
+   { The key daStartSending carries.  One pending value is enough: the foot
+     switch cannot produce two before the queue drains.
+
+     AnsiChar, not char: this unit compiles with the UnicodeStrings mode
+     switch, so a bare `char` is a WideChar -- and TKeyPressEvent's Key is
+     passed BY VAR, so the types have to match exactly rather than convert. }
+   GStartSendingKey: AnsiChar = #0;
+
+procedure Queue(const aAction: TDeferredAction);
+begin
+   if GDeferrer = nil then
+      begin
+      GDeferrer := TEntryDeferrer.Create;
+      end;
+
+   // Application can be gone on the way out, and QueueAsyncCall RAISES on a
+   // shut-down queue rather than returning False -- the same trap uPanelUpdate
+   // documents.
+   if (Application = nil) or Application.Terminated then
+      begin
+      Exit;
+      end;
+   Application.QueueAsyncCall(GDeferrer.Run, PtrInt(aAction));
+end;
+
+procedure TEntryDeferrer.Run(Data: PtrInt);
+begin
+   case TDeferredAction(Data) of
+
+     daAppendSpace:
+        begin
+        // Was PostMessage(wh[mweExchange], WM_KEYDOWN, 32, 0): a synthetic
+        // space, which TranslateMessage turned into a WM_CHAR the edit
+        // appended.  The caller has already checked that the caret is at the
+        // end and the last character is not a space.
+        if ControlUsable(TR4WExchangeEdit) then
+           begin
+           TR4WExchangeEdit.Text := TR4WExchangeEdit.Text + ' ';
+           TR4WExchangeEdit.SelStart := Length(TR4WExchangeEdit.Text);
+           end;
+        end;
+
+     daStartSending:
+        begin
+        // Was PostMessage(wh[mweCall], WM_CHAR, StartSendingNowKey, 0) from the
+        // foot switch.  The point was never to put a character in the field --
+        // it was to reach the field's key handler, which is now callable.
+        if (GStartSendingKey <> #0) and Assigned(EntryEvents) then
+           begin
+           EntryEvents.CallKeyPress(nil, GStartSendingKey);
+           GStartSendingKey := #0;
+           end;
+        end;
+
+     daPasteCall:
+        begin
+        // Was WM_PASTE followed by WM_SETFOCUS, both posted.  THE SECOND ONE
+        // NEVER DID ANYTHING: posting WM_SETFOCUS tells a window it has gained
+        // focus, it does not give it focus.  FocusEntry actually moves it.
+        if ControlUsable(TR4WCallEdit) then
+           begin
+           TR4WCallEdit.PasteFromClipboard;
+           end;
+        FocusEntry(TR4WCallEdit);
+        end;
+   end;
+end;
+
+procedure QueueAppendSpaceToExchange;
+begin
+   Queue(daAppendSpace);
+end;
+
+procedure QueueStartSendingKey(const aKey: AnsiChar);
+begin
+   GStartSendingKey := aKey;
+   Queue(daStartSending);
+end;
+
+procedure QueuePasteIntoCallField;
+begin
+   Queue(daPasteCall);
+end;
+
+{ Is this handle one of the main window's own elements?  Asked by the
+  WM_CTLCOLORSTATIC fork below for the same reason as the entry fields: a
+  control that owns its colours must not also be painted by TR4W. }
+function IsMainElementHandle(const aWnd: HWND): boolean;
+var
+   e: TMainWindowElement;
+begin
+   Result := False;
+   if aWnd = 0 then
+      begin
+      Exit;
+      end;
+
+   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+      begin
+      if ControlUsable(GElements[e]) and (GElements[e].Handle = aWnd) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
 { Is this handle one of the two entry fields?  Asked by the WM_CTLCOLOREDIT arm
   below, which is the only caller and the reason this is not exported.
 
@@ -353,7 +698,8 @@ begin
      Brush.Reference.Handle (win32callback.inc:1420).  ONE system paints the
      control, which is the whole point: while TR4W claimed this message, the
      Color property on a converted TEdit did nothing at all. }
-   if (Msg = WM_CTLCOLOREDIT) and IsEntryFieldHandle(HWND(lParam)) then
+   if ((Msg = WM_CTLCOLOREDIT)   and IsEntryFieldHandle(HWND(lParam))) or
+      ((Msg = WM_CTLCOLORSTATIC) and IsMainElementHandle(HWND(lParam)))   then
       begin
       Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
       Exit;
@@ -970,6 +1316,30 @@ begin
       Exit;
       end;
    lb.Invalidate;
+end;
+
+procedure SetPossibleCallFont(const aName: string; const aHeight: integer;
+                              const aBold: boolean);
+var
+   lb: TListBox;
+begin
+   lb := PossibleCallListBox;
+   if not ControlUsable(lb) then
+      begin
+      Exit;
+      end;
+
+   lb.ParentFont := False;
+   lb.Font.Name := aName;
+   lb.Font.Height := -aHeight;
+   if aBold then
+      begin
+      lb.Font.Style := [fsBold];
+      end
+   else
+      begin
+      lb.Font.Style := [];
+      end;
 end;
 
 procedure SelectPossibleCall(const aIndex: integer);

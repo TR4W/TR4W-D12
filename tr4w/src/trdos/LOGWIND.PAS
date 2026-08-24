@@ -2264,21 +2264,20 @@ end;
 
 procedure DisplayAutoSendCharacterCount;
 var
-  h                                     : HWND;
   nCmdShow                              : integer;
 begin
 
-  h := wh[mweAutoSendCount];
   if (AutoSendCharacterCount > 0) and AutoSendEnable and (ActiveMode = CW) and not SearchAndPounceMode then
      begin
      nCmdShow := SW_SHOW;
-     tSetWindowLeft(h, (AutoSendCharacterCount - 1) * ws2 * 3 + ws * 15 {col4});
+     SetElementLeft(mweAutoSendCount,
+                    (AutoSendCharacterCount - 1) * ws2 * 3 + ws * 15 {col4});
      end
   else
      begin
      nCmdShow := SW_HIDE;
      end;
-  Windows.ShowWindow(h, nCmdShow);
+  ShowElement(mweAutoSendCount, nCmdShow <> SW_HIDE);
 end;
 
 
@@ -3414,7 +3413,7 @@ procedure DispalayB4(nCmdShow: integer);
 begin
   if tB4IndicatorPrevState = nCmdShow then Exit;
   tB4IndicatorPrevState := nCmdShow;
-  Windows.ShowWindow(wh[mweQSOB4Status], nCmdShow);
+  ShowElement(mweQSOB4Status, nCmdShow <> SW_HIDE);
 end;
 
 procedure DispalayLogGridLines;
@@ -3440,7 +3439,7 @@ procedure DispalayNewMult(nCmndShow: integer);
 begin
   if nCmndShow = tNewMultIndicatorPrevState then Exit;
   tNewMultIndicatorPrevState := nCmndShow;
-  Windows.ShowWindow(wh[mweNewMultStatus], nCmndShow);
+  ShowElement(mweNewMultStatus, nCmndShow <> SW_HIDE);
 end;
 
 procedure DisplayLocalTime(Country: Word);
@@ -3749,7 +3748,7 @@ begin
  // Windows.EnableWindow(wh[mwePaddle], TempBool); //n4af 4.36.7
 
   if not tDoingFootSwitchEnable then TempBool := False else TempBool := True;
-  Windows.EnableWindow(wh[mweFootSwitch], TempBool);
+  EnableElement(mweFootSwitch, TempBool);
 end;
 
 procedure tDisplayCQTotal;
@@ -3838,25 +3837,26 @@ end;
 { One phase of the quick-display flash.  Was a whole OS thread that did six
   Sleep(100)s -- see uFlasher for why that is not what a timer is for.
 
-  It still flashes by toggling ENABLED, which is a state, not a colour.  That is
-  not defended: the quick-command window is still a raw Win32 window and there is
-  no .Color to set.  When it becomes an LCL control this becomes a colour
-  assignment and uFlasher does not change. }
-function QuickCommandHandle: HWND;
-begin
-  Result := wh[mweQuickCommand];
-end;
+  IT STILL FLASHES BY TOGGLING ENABLED, and now that the element IS an LCL
+  control that is a choice rather than a limitation.  The note here used to say
+  "when it becomes an LCL control this becomes a colour assignment"; it has, and
+  it is left alone anyway -- a disabled panel greys its caption, which is what
+  the operator has always seen, and swapping it for a colour flash is a visual
+  change to make in the restyle pass with the others (docs/GRID_RESTYLE_PLAN.md)
+  rather than smuggled into a conversion. }
 
 procedure QuickDisplayFlashPhase(const aOn: boolean);
 begin
-  Windows.EnableWindow(QuickCommandHandle, LongBool(aOn));
+  // The flash was always an Enable/Disable toggle -- a disabled static greys
+  // its text -- and it still is, on the control now instead of on a handle.
+  EnableElement(mweQuickCommand, aOn);
 end;
 
 procedure FlashQickDisplay;
 begin
   // Nothing to flash before the window exists -- also what keeps a headless
   // run from ever creating the timer.
-  if QuickCommandHandle = 0 then
+  if MainElement(mweQuickCommand) = nil then
      begin
      Exit;
      end;
@@ -3951,8 +3951,10 @@ begin
 
   // A THIRD KIND, for the same reason as the list views: the call and exchange
   // fields are LCL TEdits and paint from their own Color / Font.Color, so a
-  // changed palette has to be handed to them too.
+  // changed palette has to be handed to them too.  So do the forty-two
+  // elements, which stopped being painted by DrawWindows on 2026-08-24.
   RefreshEntryFieldColors;
+  RefreshMainWindowElementColors;
 
   Windows.InvalidateRect(tr4whandle, nil, True);
 end;

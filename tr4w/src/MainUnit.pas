@@ -399,6 +399,10 @@ procedure SetOpMode(OperationMode: OpModeType);
   it after anything that changes either the palette or the operating mode. }
 procedure RefreshEntryFieldColors;
 
+{ The same, for the main window's own elements -- including the five whose
+  colour depends on live state.  See the implementation. }
+procedure RefreshMainWindowElementColors;
+
 procedure ProcessFuntionKeys(Key: integer);
 procedure CreateDirectoryIfNotExist;
 procedure CheckAndSetInitialExchangeCursorPos;
@@ -1309,6 +1313,100 @@ end;
   same assignment the normal case makes with a different colour, so the two
   cannot drift apart the way a paint-time special case and a creation-time
   default could. }
+{ EVERY ELEMENT'S COLOUR, INCLUDING THE FIVE THAT DEPEND ON LIVE STATE.
+
+  DrawWindows evaluated those five WHILE PAINTING -- PTT status, the WSJT-X
+  link, the dupe-info state and the two radios' connected flags -- which is why
+  they needed no push: Windows asked on every repaint.  An LCL control paints
+  from a property, so the push has to exist, and this is it.
+
+  CALLED FROM SetMainWindowText, which is not as odd as it looks: in every one
+  of the five cases the code that changes the state also writes the element's
+  text (uRadioPolling writes the PTT string, uWSJTX writes 'WSJTX' or clears it,
+  LOGSUBS2 writes the dupe line).  So the colour lands at the same moment it
+  used to, and the one-second timer refreshes as a backstop for anything that
+  changes state without saying so.
+
+  THE WSJT-X ARM USED TO SET THE TEXT FROM INSIDE THE PAINT HANDLER.  That is
+  gone -- uWSJTX already writes it (uWSJTX.pas:438), and a paint handler that
+  mutates what it is painting cannot be called from a text setter without
+  recursing. }
+{ What SetMainWindowText calls.  Sets the caption, then re-evaluates the five
+  live colour rules -- which DrawWindows used to do on every repaint and nothing
+  does now unless it is asked.  See RefreshMainWindowElementColors. }
+procedure WriteMainWindowText(Window: TMainWindowElement; const Text: string);
+begin
+  SetElementText(Window, Text);
+  RefreshMainWindowElementColors;
+end;
+
+procedure RefreshMainWindowElementColors;
+const
+   { Hoisted out of DrawWindows, which is the only place it used to be needed. }
+   DupeInfoCallWindowColorArray: array[DupeInfoState] of tr4wColors =
+     (trBtnFace, trRed, trYellow, trLightBlue);
+var
+   e: TMainWindowElement;
+   back: tr4wColors;
+   fore: tr4wColors;
+begin
+   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+      begin
+      if TWindows[e].mweiStyle <= 2 then
+         begin
+         Continue;      // not one of the elements this creates
+         end;
+
+      back := TWindows[e].mweBackG;
+      fore := TWindows[e].mweColor;
+
+      // The five live rules, in the order DrawWindows had them.
+      if (e = mweDupeInfoCall) and (DupeInfoCallWindowState <> diNone) then
+         begin
+         back := DupeInfoCallWindowColorArray[DupeInfoCallWindowState];
+         end;
+
+      if (e = mwePTTStatus) and (ActiveRadioPtr <> nil) then
+         begin
+         if ActiveRadioPtr.tPTTStatus = PTT_ON then
+            begin
+            if ActiveRadio = RadioOne then
+               begin
+               back := trRed        // n4af 4.46.4
+               end
+            else
+               begin
+               back := trYellow;
+               end;
+            end;
+         end;
+
+      if (e = mweWSJTX) and Assigned(wsjtx) then
+         begin
+         if wsjtx.Connected then
+            begin
+            back := trGreen;
+            end
+         else
+            begin
+            back := trRed;
+            end;
+         end;
+
+      if ((e = mweRadioOneFreq) or (e = mweRadioOne)) and Radio1.RadioDisconnected then
+         begin
+         fore := AlertColor;
+         end;
+
+      if ((e = mweRadioTwoFreq) or (e = mweRadioTwo)) and Radio2.RadioDisconnected then
+         begin
+         fore := AlertColor;
+         end;
+
+      SetElementColors(e, tr4wColorsArray[back], tr4wColorsArray[fore]);
+      end;
+end;
+
 procedure RefreshEntryFieldColors;
 var
    exchBack: TColor;
@@ -3250,7 +3348,7 @@ begin
 
   if CallWindowString = '' then
      begin
-     Windows.ShowWindow(wh[mweNewMultStatus], SW_HIDE);
+     ShowElement(mweNewMultStatus, False);
      if OpMode = CQOpMode then
         begin
         if OpMode2 = SearchAndPounceOpMode then
@@ -3285,7 +3383,7 @@ begin
 {$IFEND}
   end;
 
-  Windows.ShowWindow(wh[mweMasterStatus], nCmdShow);
+  ShowElement(mweMasterStatus, nCmdShow <> SW_HIDE);
   if not InactiveRigCallingCQ then //n4af 04.40.2
      begin
      ShowInformation;
@@ -3447,6 +3545,8 @@ begin
   //                      hInstance, nil)
   tr4whandle := CreateTR4WMainForm(tr4w_main_menu);
   tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndHandle := tr4whandle;
+  // TF writes every element's text through this; see SetMainWindowText there.
+  MainWindowTextWriter := @WriteMainWindowText;
   wh[mweWholeScreen] := tr4whandle;
   wh[mweEditableLog] := CreateEditableLog(tr4whandle, 0, ws * 7,
     MainWindowChildsWidth, 0 {EditableLogWindowHeight}, False);
@@ -3468,21 +3568,27 @@ begin
         begin
         Continue;
         end;
-     wh[e] :=
-
-     // Result := tCreateStaticWindow(nil, Style, X, Y, w, StaticWindowHeight, tr4whandle, 0);
-
-     tCreateStaticWindow(
-       '',
-       TWindows[e].mweiStyle and (not (Cardinal(Config.NoBorder) * SS_SUNKEN))
-       {or SS_ETCHEDFRAME},
+     // AN LCL TPanel, not a Win32 STATIC.  Same metadata, same arithmetic --
+     // TWindows[] is still the layout -- and the style bits become properties.
+     // See CreateMainElement.
+     wh[e] := CreateMainElement(
+       e,
+       TWindows[e].mweiStyle and (not (Cardinal(Config.NoBorder) * SS_SUNKEN)),
        TWindows[e].mweiX * ws,
        TWindows[e].mweiY * ws + TWindows[e].mweB * EditableLogHeight,
        round(TWindows[e].mweiWidth * ws),
-       TWindows[e].mweiHeight * ws,
-       tr4whandle, 0
+       TWindows[e].mweiHeight * ws
        );
-     tWM_SETFONT(wh[e], MainFont);
+
+     // tWM_SETFONT handed the control an HFONT; an LCL control paints from its
+     // own TFont, so the SHAPE goes across instead.  These are the same three
+     // numbers tCreateFont was given for MainFont.
+     SetElementFont(e, string(PAnsiChar(@MainFontName[1])),
+                    ws - 2 + FontSize, BoldFont);
+
+     SetElementColors(e,
+                      tr4wColorsArray[TWindows[e].mweBackG],
+                      tr4wColorsArray[TWindows[e].mweColor]);
 
      if TWindows[e].mweText <> nil then
         begin
@@ -3507,10 +3613,21 @@ begin
   //
   // U+2193 in the ordinary font also drops a Windows-only font dependency:
   // Symbol does not exist on GTK or Cocoa. See ROADMAP.md section 2.
-  Windows.SetWindowTextW(wh[mweAutoSendCount], PWideChar(WideString(#$2193)));
+  SetElementText(mweAutoSendCount, #$2193);
   DisplayAutoSendCharacterCount;
 
-  tWM_SETFONT(wh[mweQSONumber], MainWindowEditFont {QSONumberFont});
+  // The QSO number is the one element with its own font -- tCreateFont(ws + 3,
+  // FW_EXTRABOLD, lcfn).  FW_EXTRABOLD has no LCL counterpart; fsBold is the
+  // closest a TFont offers, and the two render identically on every face TR4W
+  // ships with.
+  if LuconSZLoadded then
+     begin
+     SetElementFont(mweQSONumber, 'Lucida Console SZ', ws + 3, True);
+     end
+  else
+     begin
+     SetElementFont(mweQSONumber, 'Lucida Console', ws + 3, True);
+     end;
 
   wh[mweCall] := CreateCallOrExchangeWin(EditableLogHeight + ws * 8 {Line2},
     CALLSIGNWINDOWID, efCall);
@@ -3521,10 +3638,10 @@ begin
 
   DisplayInsertMode;
 
-  Radio1.FreqWindowHandle   := wh[mweRadioOneFreq];
-  Radio1.RadioNameWndHandle := wh[mweRadioOne];
-  Radio2.FreqWindowHandle   := wh[mweRadioTwoFreq];
-  Radio2.RadioNameWndHandle := wh[mweRadioTwo];
+  Radio1.FreqElement := mweRadioOneFreq;
+  Radio1.NameElement := mweRadioOne;
+  Radio2.FreqElement := mweRadioTwoFreq;
+  Radio2.NameElement := mweRadioTwo;
 
   LastProgressBar := CreateProgress32InMainWindow(ws * 28 {col6},
     EditableLogHeight + 10 * ws {Line4}, $000000FF);
@@ -3543,8 +3660,9 @@ begin
   if TourDuration <> 0 then
      begin
      // Windows.GetWindowRect(wh[mweQuickCommand], temprect);
-     Windows.SetWindowPos(wh[mweQuickCommand], HWND_TOP, 0, EditableLogHeight + ws
-       * 12, ws * 33, ws, SWP_SHOWWINDOW);
+     SetElementBounds(mweQuickCommand, 0, EditableLogHeight + ws * 12,
+                      ws * 33, ws);
+     ShowElement(mweQuickCommand, True);
      TorDurationWindow := CreateTR4WStaticWindow(38 * ws {col9}, EditableLogHeight
        + ws * 12 {Line7}, 8 * ws, defStyle);
      TorDurationPrBarWindow := CreateProgress32InMainWindow(33 * ws {col8},
@@ -3565,7 +3683,8 @@ begin
   wh[mwePossibleCall] := CreateTR4WPossibleCallList(
     0, EditableLogHeight + ws * 13 {line6}, MainWindowChildsWidth, ws,
     MainWindowPCLID, ws, 5 * ws {the old LB_SETCOLUMNWIDTH});
-  tWM_SETFONT(wh[mwePossibleCall], MainFont);
+  SetPossibleCallFont(string(PAnsiChar(@MainFontName[1])),
+                      ws - 2 + FontSize, BoldFont);
 
   // The drawing is attached HERE, not in uMainForm: it reads PossibleCallList
   // and the colour table, which that unit has no business knowing about.
@@ -3742,10 +3861,6 @@ label
 var
   TempBrush: HBRUSH;
   TempWindowColor: integer;
-  //charText: array [0..255] of char;
-const
-  DupeInfoCallWindowColorArray: array[DupeInfoState] of tr4wColors = (trBtnFace,
-    trRed, trYellow, trLightBlue);
 begin
   TempWindowColor := 0;
 
@@ -3756,67 +3871,17 @@ begin
   if CheckWindowAndColor(HWND(lParam), TempBrush, TempWindowColor) then
      begin
 
-     // The search-and-pounce green on the exchange field WAS HERE.  Both entry
-     // fields are LCL TEdits and colour themselves now -- see
-     // RefreshEntryFieldColors, and the WM_CTLCOLOREDIT fork in
-     // uMainForm.TR4WFormSubclassProcBody that stops this function ever being
-     // asked about them.
-
-     if DupeInfoCallWindowState <> diNone then
-       if lParam = integer(wh[mweDupeInfoCall]) then
-          begin
-          TempBrush :=
-            tr4wBrushArray[DupeInfoCallWindowColorArray[DupeInfoCallWindowState]];
-          end;
-
-     if lParam = integer(wh[mwePTTStatus]) then
-        begin
-        if ActiveRadioPtr.tPTTStatus = PTT_ON then
-           begin
-           if ActiveRadio = RadioOne then
-              begin
-              TempBrush := tr4wBrushArray[trRed] // n4af 4.46.4
-              end
-           else
-              begin
-              TempBrush := tr4wBrushArray[trYellow];
-              end;
-           end;
-        end;
-
-     if lParam = integer(wh[mweWSJTX]) then
-        begin
-        if Assigned(wsjtx) then
-           begin
-           if wsjtx.Connected then
-              begin
-              SetMainWindowText(mweWSJTX, 'WSJTX');
-              TempBrush := tr4wBrushArray[trGreen];
-              end
-           else
-              begin
-              TempBrush := tr4wBrushArray[trRed];
-              end;
-           end;
-        end;
-
-     if (lParam = integer(wh[mweRadioOneFreq])) or
-        (lParam = integer(wh[mweRadioOne])) then
-        begin
-        if Radio1.RadioDisconnected then
-           begin
-           TempWindowColor := tr4wColorsArray[AlertColor];
-           end;
-        end;
-
-     if (lParam = integer(wh[mweRadioTwoFreq])) or
-        (lParam = integer(wh[mweRadioTwo])) then
-        begin
-        if Radio2.RadioDisconnected then
-           begin
-           TempWindowColor := tr4wColorsArray[AlertColor];
-           end;
-        end;
+     // NOTHING IS LEFT IN HERE, and the guard above is what still runs.
+     //
+     // The search-and-pounce green on the exchange field, the dupe-info
+     // colours, PTT, WSJT-X and the two radio rows were all arms of this
+     // function.  Every element it painted is an LCL control now and carries
+     // its own Color and Font.Color -- see RefreshMainWindowElementColors --
+     // and uMainForm.TR4WFormSubclassProcBody sends their WM_CTLCOLOR* to the
+     // LCL rather than here, so this function is never asked about them.
+     //
+     // What still reaches it: the totals-window headers and the mults array
+     // window below, which are not TMainWindowElement at all.
 
      goto DrawWindow;
      end;
@@ -5257,7 +5322,10 @@ var
   key: char;
 
 begin
-  c := wh[mweExchange];
+  // `c := wh[mweExchange]` WAS HERE, and it was a dead store into LOGWIND's
+  // interface-scope global `c` -- the LOCAL of that name is commented out just
+  // above, which is how the write escaped.  Nothing in the program reads that
+  // global; swept every unit 2026-08-24.
   Key := Char(wParam);
   itempos := SelectedPossibleCall;
   if Key = PossibleCallLeftKey then
@@ -5717,7 +5785,7 @@ end;
 
 procedure ClearInfoWindows;
 begin
-  Windows.ShowWindow(wh[mweMasterStatus], SW_HIDE);
+  ShowElement(mweMasterStatus, False);
   DispalayB4(SW_HIDE);
   // Windows.ShowWindow(B4StatusWindowHandle, SW_HIDE);
   CleanUpDisplay;
@@ -7928,7 +7996,7 @@ begin
       if (Selection.StartPos = 0) or
         (ExchangeWindowString[length(ExchangeWindowString)] <> ' ') then
          begin
-         PostMessage(wh[mweExchange], WM_KEYDOWN, 32, 0);
+         QueueAppendSpaceToExchange;
          end;
 
 end;

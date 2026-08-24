@@ -396,6 +396,7 @@ var
 implementation
 
 uses
+  uMainForm,   { QueueStartSendingKey -- the call field is a control }
   uProcessCommand,
   uTelnet,
   LOGSUBS2,
@@ -2434,7 +2435,7 @@ begin
     StartSending:
       if ActiveMode = CW then
          begin
-         PostMessage(wh[mweCall], WM_CHAR, integer(StartSendingNowKey), 0);
+         QueueStartSendingKey(AnsiChar(StartSendingNowKey));
          end;
 
     SwapRadio:

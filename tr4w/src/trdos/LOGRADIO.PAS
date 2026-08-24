@@ -147,8 +147,13 @@ type
       BandMemory:        BandType;
       ModeMemory:        ModeType;
       tFactoryObject:          TFactoryRadioBase;  // Factory creates K4 or HamLibDirect
-      FreqWindowHandle:    HWND;
-      RadioNameWndHandle:  HWND;
+      { WHICH MAIN-WINDOW ELEMENTS THIS RADIO OWNS.  Was a pair of HWNDs, which
+        the polling thread wrote with SetWindowTextW -- and those rows are LCL
+        controls now, so a handle write updates the window and leaves the
+        control's Caption property holding the old text.  The element travels
+        instead; see uPanelUpdate.PostElementText. }
+      FreqElement:         TMainWindowElement;
+      NameElement:         TMainWindowElement;
       RadioDisconnected:   Boolean;
       tLastValidResponse:  Cardinal;   // GetTickCount of last good serial read; drives the serial liveness indicator
       RadioName:        Str20;

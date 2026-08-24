@@ -79,7 +79,8 @@ unit uPanelUpdate;
 interface
 
 uses
-  Windows;
+  Windows,
+  VC;      // TMainWindowElement -- what a puElement update addresses
 
 // Set a child control's text from ANY thread. aPanel = 0, or a panel that has
 // closed, is not an error: the update is dropped, exactly as the guarded
@@ -89,6 +90,11 @@ procedure PostPanelText(const aPanel: HWND; const aControlId: integer;
 
 // Enable or disable one control from ANY thread, by its window handle.
 procedure PostControlEnable(const aControl: HWND; const aEnabled: boolean);
+
+{ Sets one main-window element's text FROM A WORKER THREAD.  Coalesced and
+  marshalled exactly like a panel update -- see TPanelUpdateKind.puElement for
+  why it cannot simply be SetWindowText on the element's handle. }
+procedure PostElementText(const aElement: TMainWindowElement; const aText: string);
 
 // Forget everything remembered about a panel and its children. Call when a
 // panel closes: a window handle can be REUSED by Windows, and a stale cache
@@ -100,10 +106,23 @@ implementation
 uses
   SysUtils, SyncObjs,
   Forms,       // Application.QueueAsyncCall -- the transport
+  TF,          // SetMainWindowText -- the only supported way to write an element
   uCrashLog;   // LogCaughtException -- a failed hand-off must not be silent
 
 type
-  TPanelUpdateKind = (puText, puEnable);
+  { puElement IS THE ONE THAT DOES NOT TAKE A HANDLE.
+
+    The main window's elements are LCL controls now, and an LCL control paints
+    its caption from a PROPERTY -- so SetWindowTextW on its handle, which is
+    what the polling thread used to do to the frequency and radio-name rows,
+    writes to the window and leaves the property holding the old text.  The
+    control repaints itself from the property and the operator sees nothing
+    change.  (The same stale-property trap as the tool-window captions, and the
+    reason OpenTR4WWindow stopped calling SetWindowTextW on a form.)
+
+    So the element travels as its ENUM and the main thread does the assignment
+    through SetMainWindowText, which is the only supported way to write one. }
+  TPanelUpdateKind = (puText, puEnable, puElement);
 
   // The payload handed across the thread boundary. One allocation per update
   // that actually needs to travel; freed by RunQueuedPanelUpdate.
@@ -111,7 +130,7 @@ type
   public
     Kind: TPanelUpdateKind;
     Target: HWND;          // the PANEL for puText, the CONTROL for puEnable
-    ControlId: integer;
+    ControlId: integer;    // for puElement: Ord(TMainWindowElement)
     Text: string;
     Enabled: boolean;
   end;
@@ -319,9 +338,43 @@ begin
               end;
            end;
          end;
+
+      // Target is 0 for an element -- there is no window to test, and
+      // SetMainWindowText guards its own control.
+      if upd.Kind = puElement then
+         begin
+         SetMainWindowText(TMainWindowElement(upd.ControlId), upd.Text);
+         end;
    finally
       upd.Free;
    end;
+end;
+
+procedure PostElementText(const aElement: TMainWindowElement; const aText: string);
+var
+  upd: TPanelUpdate;
+  idx: integer;
+begin
+  gLock.Acquire;
+  try
+     // The same coalescing the panel updates get, and for the same reason: a
+     // radio polled every 10 ms hands over the same frequency string most of
+     // the time.
+     idx := IndexOf(puElement, 0, Ord(aElement));
+     if (idx >= 0) and (gLast[idx].Text = aText) then
+        begin
+        Exit;
+        end;
+
+     upd := TPanelUpdate.Create;
+     upd.Kind := puElement;
+     upd.Target := 0;
+     upd.ControlId := Ord(aElement);
+     upd.Text := aText;
+     SendAndRemember(upd, idx);
+  finally
+     gLock.Release;
+  end;
 end;
 
 procedure ForgetPanel(const aPanel: HWND);

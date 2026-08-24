@@ -119,6 +119,7 @@ const
 implementation
 
 uses
+  uMainForm,   { the main window's elements are LCL controls }
   VC // For ContestExchange
   , MainUnit // For ParseADIFRecord
   , LogDupe // For ClearContestExchange - Stuff is all over the place in this code! de NY4I
@@ -436,7 +437,7 @@ begin
                       IntToStr(radio1.CurrentStatus.VFO[VFOA].Frequency));
                     end;
                  SetMainWindowText(mweWSJTX, 'WSJTX');
-                 Windows.ShowWindow(wh[mweWSJTX], SW_SHOW);
+                 ShowElement(mweWSJTX, True);
                  isConnected := true;
                  if firstTime then
                     begin
@@ -697,7 +698,7 @@ begin
                  logger.Info('[uWSJTX] WSJT-X close message received');
                    // We may want to indicate it somehow on main screen
                  SetMainWindowText(mweWSJTX, '');
-                 Windows.ShowWindow(wh[mweWSJTX], SW_HIDE);
+                 ShowElement(mweWSJTX, False);
                  isConnected := false;
                end;
              WSJTX_MESSAGETYPE_WSPRDECODEV:

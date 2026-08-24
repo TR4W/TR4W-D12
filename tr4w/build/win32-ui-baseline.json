@@ -1,6 +1,6 @@
 ﻿{
     "type.HWND":  634,
-    "array.wh":  81,
+    "array.wh":  45,
     "CreateModalDialog":  12,
     "tDialogBox":  8,
     "DialogBox*":  3,
@@ -17,6 +17,6 @@
     "TF.CreateRichEdit":  4,
     "CreateOKCancelButtons":  5,
     "SetMainWindowText":  65,
-    "tCreateStaticWindow":  26,
+    "tCreateStaticWindow":  25,
     "CreateTR4WStaticWindow":  14
 }

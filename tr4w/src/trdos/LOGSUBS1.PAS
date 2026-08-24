@@ -80,6 +80,7 @@ procedure SwapRadios;
 implementation
 
 uses
+  uMainForm,   { the main window's elements are LCL controls }
   uRadioPolling,
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
   LOGSUBS2,
@@ -624,10 +625,10 @@ begin
 
   if ActiveRadio = RadioOne then
      begin
-     Windows.EnableWindow(wh[mweRadioOne], False);
-     Windows.EnableWindow(Radio1.FreqWindowHandle, False);
-     Windows.EnableWindow(wh[mweRadioTwo], True);
-     Windows.EnableWindow(Radio2.FreqWindowHandle, True);
+     EnableElement(mweRadioOne, False);
+     EnableElement(Radio1.FreqElement, False);
+     EnableElement(mweRadioTwo, True);
+     EnableElement(Radio2.FreqElement, True);
      ActiveRadioPtr := @Radio2;
      InActiveRadioPtr := @Radio1;
      ActiveBand := Radio2.BandMemory {BandMemory[RadioTwo]};
@@ -643,10 +644,10 @@ begin
      end
   else
      begin
-     Windows.EnableWindow(wh[mweRadioOne], True);
-     Windows.EnableWindow(Radio1.FreqWindowHandle, True);
-     Windows.EnableWindow(wh[mweRadioTwo], False);
-     Windows.EnableWindow(Radio2.FreqWindowHandle, False);
+     EnableElement(mweRadioOne, True);
+     EnableElement(Radio1.FreqElement, True);
+     EnableElement(mweRadioTwo, False);
+     EnableElement(Radio2.FreqElement, False);
      ActiveRadioPtr := @Radio1;
      InActiveRadioPtr := @Radio2;
      ActiveBand := Radio1.BandMemory {BandMemory[RadioOne]};
