@@ -82,6 +82,8 @@ implementation
   reading the missing identifiers.  A window procedure that pulls in everything
   is a window procedure nothing can be moved out of. }
 uses
+  SysUtils,
+  uCrashLog,          // LogCaughtException -- see the guard on WindowProc
   Messages,
   VC,                 // tr4whandle, wh[], the mwe* elements, tr4wColors
   TF,
@@ -362,7 +364,7 @@ begin
       end;
 end;
 
-function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
+function WindowProcBody(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
 
 label
   GoToExit, CallDefWindowProc;
@@ -775,6 +777,46 @@ begin
 
   CallDefWindowProc:
   Result := longword(DefWindowProc(TRHWND, Msg, wParam, lParam));
+end;
+
+{ NO EXCEPTION MAY LEAVE A WINDOW PROCEDURE, AND THE REASON IS NOT TIDINESS.
+
+  A window procedure is called BY WINDOWS, across a kernel callback boundary.  A
+  language exception cannot unwind through that boundary, so Windows does not
+  unwind it -- it TERMINATES THE PROCESS with STATUS_FATAL_APP_EXIT
+  (0xC000041D).  Nothing runs on the way out: not ExceptProc, not
+  Application.OnException, not a finally block.  tr4w.log simply stops.
+
+  That is exactly how the 2026-08-23 startup crash presented (NY4I: "we seem to
+  have a fragility issue here").  The Windows Application log recorded TWO codes
+  for one death -- 0xE0465043, which is FreePascal's own SEH exception code, and
+  0xC000041D, the fatal-callback kill -- so the sequence is not in doubt: Pascal
+  raised, the callback boundary refused it, Windows killed us.  The crash
+  reporter added earlier the same day could not help: it was never reached.
+
+  So the boundary gets the guard.  Catch, report with a real backtrace, and
+  return a defined value.  A message handled badly is a glitch; a message that
+  kills the program mid-contest is a lost log.
+
+  THIS IS A BACKSTOP, NOT A LICENCE.  The code below should still not raise, and
+  the accessors it calls still guard their own preconditions.  What changes is
+  that being wrong about that now costs a log line instead of the operator's
+  session. }
+function WindowProc(TRHWND: HWND; Msg: UINT; wParam: wParam; lParam: lParam): longword; stdcall;
+begin
+  Result := 0;
+  try
+     Result := WindowProcBody(TRHWND, Msg, wParam, lParam);
+  except
+     on E: TObject do
+        begin
+        LogCaughtException(Format('WindowProc msg $%x', [Msg]), E);
+        // DefWindowProc, not 0: for most messages 0 CLAIMS we handled it,
+        // which would suppress default behaviour on top of the fault.
+        // Letting Windows do its default is the smaller lie.
+        Result := longword(DefWindowProc(TRHWND, Msg, wParam, lParam));
+        end;
+  end;
 end;
 
 end.

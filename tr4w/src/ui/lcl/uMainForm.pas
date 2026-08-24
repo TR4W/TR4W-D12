@@ -195,7 +195,8 @@ uses
    uTCIServer,         // WM_TCI_APPLY
    uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE
    uPanelUpdate,       // WM_PANEL_UPDATE
-   uCrashLog;          // OnMainThread / ReportOffMainThread -- see EntryHandle
+   SysUtils,           // Format -- the window-procedure guard
+   uCrashLog;          // OnMainThread / ReportOffMainThread / LogCaughtException
 
 var
    { The LCL's own window procedure for the main form, saved when TR4W's is
@@ -295,8 +296,8 @@ end;
   it owned the window class, and anything it does not claim chains on to the LCL
   untouched.  What used to fall through to DefWindowProc now falls through to
   the LCL's proc, which is the right default for a form. }
-function TR4WFormSubclassProc(TRHWND: HWND; Msg: UINT;
-                              wParam: wParam; lParam: lParam): longword; stdcall;
+function TR4WFormSubclassProcBody(TRHWND: HWND; Msg: UINT;
+                                  wParam: wParam; lParam: lParam): longword; stdcall;
 begin
    if IsTR4WsOwnMessage(Msg) then
       begin
@@ -328,6 +329,29 @@ begin
    Result := Windows.CallWindowProc(GLCLFormProc, TRHWND, Msg, wParam, lParam);
 end;
 
+
+{ THE OTHER KERNEL-CALLBACK BOUNDARY, guarded for the same reason as
+  uMainWindowProc.WindowProc -- read the long note there.  An exception raised
+  in here cannot unwind back into Windows, so it does not unwind: the process
+  is terminated with STATUS_FATAL_APP_EXIT and the log simply stops.
+
+  This one matters at least as much as the other, because it runs FIRST: every
+  message reaching the main form comes through here, and what it does not claim
+  it chains to the LCL. }
+function TR4WFormSubclassProc(TRHWND: HWND; Msg: UINT;
+                              wParam: wParam; lParam: lParam): longword; stdcall;
+begin
+   Result := 0;
+   try
+      Result := TR4WFormSubclassProcBody(TRHWND, Msg, wParam, lParam);
+   except
+      on E: TObject do
+         begin
+         LogCaughtException(Format('TR4WFormSubclassProc msg $%x', [Msg]), E);
+         Result := longword(Windows.DefWindowProc(TRHWND, Msg, wParam, lParam));
+         end;
+   end;
+end;
 
 procedure TTR4WMainForm.lstPossibleCallDrawItem(Control: TWinControl;
                                                 Index: integer; ARect: TRect;
@@ -599,7 +623,18 @@ begin
       ReportOffMainThread('entry field accessor', get_caller_addr(get_frame));
       end;
 
-   Result := (aEdit <> nil);
+   // HandleAllocated, NOT just non-nil, AND THIS WAS A REGRESSION.
+   //
+   // The handle-based EntryHandle this replaced tested BOTH, and dropping the
+   // second half while "simplifying" the guard is how TR4W crashed on startup
+   // on 2026-08-23 (NY4I: "we seem to have a fragility issue here").  A TEdit
+   // exists from the moment it is constructed, but its WINDOW does not: the LCL
+   // creates that lazily.  .Text is happy either way, which is what made the
+   // omission look harmless -- but SelStart, SelLength and SetFocus are not,
+   // and those are reached from CallWindowChange, i.e. from INSIDE A WINDOW
+   // PROCEDURE, where a raised exception is a fatal process kill (see the guard
+   // on WindowProc).  The Win32 originals were no-ops on handle 0.
+   Result := (aEdit <> nil) and aEdit.HandleAllocated;
 end;
 
 function EntryText(const aEdit: TEdit): string;
