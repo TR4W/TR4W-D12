@@ -352,8 +352,6 @@ begin
                           'Category-Power');
    RegisterStoredSetting('contest.categoryTransmitter', 'CATEGORY-TRANSMITTER',
                           'Category-Transmitter');
-   RegisterStoredSetting('contest.columnDupesheetEnable','COLUMN DUPESHEET ENABLE',
-                          'Column Dupesheet Enable');
    RegisterStoredSetting('contest.contest',             'CONTEST',
                           'Contest');
    RegisterStoredSetting('contest.contestName',         'CONTEST NAME',

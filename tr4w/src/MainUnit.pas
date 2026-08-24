@@ -530,6 +530,7 @@ uses
   uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
   uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
   uStationsForm,       // CreateTR4WStationsWindow -- the stations tool window
+  uDupeSheetForm,      // CreateTR4WDupeSheetWindow -- both dupe sheets
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
   uTCIServer,       // the TCI server, stopped in tr4w_ShutDown
@@ -2293,8 +2294,8 @@ begin
 
   // No WndProcAdr for the band map: OpenTR4WWindow's seam builds an LCL form
   // for tw_BANDMAPWINDOW_INDEX and never reaches CreateDialogIndirectParam.
-  tr4w_WindowsArray[tw_DUPESHEETWINDOW1_INDEX].WndProcAdr := @DupesheetDlgProc;
-  tr4w_WindowsArray[tw_DUPESHEETWINDOW2_INDEX].WndProcAdr := @DupesheetDlgProc;
+  // No WndProcAdr for either dupe sheet: both are LCL forms as of 2026-08-24
+  // and OpenTR4WWindow's seam builds them.
   tr4w_WindowsArray[tw_FUNCTIONKEYSWINDOW_INDEX].WndProcAdr :=
     @FunctionKeysWindowDlgProc;
   tr4w_WindowsArray[tw_MASTERWINDOW_INDEX].WndProcAdr := @MasterDlgProc;
@@ -5410,6 +5411,14 @@ begin
      h := CreateTR4WStationsWindow;
      lclForm := TR4WStationsForm;
      end
+  else if (ID = tw_DUPESHEETWINDOW1_INDEX) or
+          (ID = tw_DUPESHEETWINDOW2_INDEX) then
+     begin
+     // TWO INSTANCES, which is why this one takes the index: the dupe sheet is
+     // per radio and both can be open at once.
+     h := CreateTR4WDupeSheetWindow(ID);
+     lclForm := DupeSheetForm(ID);
+     end
   else
      begin
      h := CreateDialogIndirectParam(hInstance, PDlgTemplate(@MAINTR4WDLGTEMPLATE)^,
@@ -5436,7 +5445,27 @@ begin
        Break;
        end;
 
-  Windows.SetWindowTextW(h, menuText);
+  // THROUGH THE FORM WHEN IT IS ONE, and this is not tidiness -- SetWindowTextW
+  // writes the native title BEHIND the LCL's back, leaving Caption holding
+  // whatever it held before.
+  //
+  // That is a stale-property bug with a delay fuse.  A window that sets its own
+  // caption later -- the dupe sheet writes "Radio 1 Dupesheet - 10m-CW", the
+  // stations window writes "Stations in CW mode" -- assigns the SAME STRING it
+  // assigned last time it was open.  TControl.SetCaption compares and does
+  // nothing, so the native title keeps the menu text this line just wrote, and
+  // the operator sees "Radio 1" on every reopen while the first open looked
+  // right (NY4I, 2026-08-24: "it just states Radio 1").
+  //
+  // Setting the property keeps the two in step and costs one Win32 call less.
+  if lclForm <> nil then
+     begin
+     lclForm.Caption := string(PWideChar(@menuText[0]));
+     end
+  else
+     begin
+     Windows.SetWindowTextW(h, menuText);
+     end;
   {
   Windows.GetMenuStringA(tr4w_main_menu, 10199 + Ord(ID), wsprintfBuffer, SizeOf(wsprintfBuffer), MF_BYCOMMAND);
   for TempFlag := 0 to 100 do if wsprintfBuffer[TempFlag] = #9 then wsprintfBuffer[TempFlag] := #0;

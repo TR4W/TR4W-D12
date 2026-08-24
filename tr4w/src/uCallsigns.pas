@@ -103,7 +103,8 @@ var
 
 implementation
 uses
-  uMainForm,   { the possible-call list, named -- wh[] round 4 }
+  uMainForm,       { the possible-call list, named -- wh[] round 4 }
+  uDupeSheetForm,  { the dupe sheet is a form -- see DisplayDupeSheet }
   SysUtils,            // Issue #997 - SysUtils.Format / StrPCopy
   uConfigValues,
   LogStuff,
@@ -489,84 +490,71 @@ begin
   PossibleCallsUpdated;
 end;
 
+{ FILLS THE DUPE SHEET FROM THIS LIST -- the model writing to the view, which is
+  the direction it always was.  What changed is the other end: the calls go into
+  the form's own list and the grid draws from that, instead of being pushed into
+  a list box with LB_ADDSTRING and read back out again by an owner-draw handler
+  that had no other way to know what it was painting.
+
+  THE COLUMN-PER-DISTRICT LAYOUT IS GONE WITH `COLUMN DUPESHEET ENABLE`
+  (retired 2026-08-24, NY4I).  It sent each callsign to one of ten list boxes
+  whose control ids happened to equal the ASCII codes of '0'..'9'.
+
+  AND IT CARRIED AN UNINITIALISED READ.  LB_SETITEMDATA sat OUTSIDE the
+  if/else -- the indentation hid that -- while `Item` was only assigned in the
+  non-column arm, so in column mode the call passed an uninitialised local as an
+  item index, to the hidden list box at that.  Win32 answered LB_ERR and nobody
+  ever looked. }
 procedure TCallsignsList.DisplayDupeSheet(Radio: RadioPtr {dBand: BandType; dMode: ModeType});
 var
   TempDSHandle                          : HWND;
-  VDListBox                             : HWND;
+  frm                                   : TfrmDupeSheet;
   i, Index                              : integer;
 
   Band                                  : BandType;
   Mode                                  : ModeType;
   TempChar                              : AnsiChar;
-  Item                                  : integer;
-  p1                                    : PAnsiChar;
-  p2                                    : PAnsiChar;
   rn                                    : AnsiString;   // the radio name, length-correct
 begin
 //  if not Sheet.DupeSheetEnable then Exit;
-  TempDSHandle := Radio.tDupeSheetWnd;// tr4w_WindowsArray[tw_DUPESHEETWINDOW1_INDEX].WndHandle;
+  TempDSHandle := Radio.tDupeSheetWnd;
   if TempDSHandle = 0 then Exit;
 
-  VDListBox := Windows.GetDlgItem(TempDSHandle, 101);
+  frm := DupeSheetFormForHandle(TempDSHandle);
+  if frm = nil then Exit;
 
   Band := Radio.BandMemory;
   Mode := Radio.ModeMemory;
 
-  if not ColumnDupeSheetEnable then      //n4af 04.33.7 reactive columndupesheetenable
+  frm.BeginRebuild;
+
+  for TempChar := '0' to '9' do
      begin
-     SendMessage(VDListBox, LB_RESETCONTENT, 0, 0) 
-     end
-  else
-     begin
-     for Index := 48 to 57 do
+     for Index := 0 to FCount - 1 do
         begin
-        SendDlgItemMessage(TempDSHandle, Index, LB_RESETCONTENT, 0, 0);
+        if (FList^[Index].FDupesArray[Mode] and (1 shl Ord(Band))) <> 0 then
+           begin
+           {$RangeChecks OFF}
+           for i := 0 to length(FList^[Index].FCall) do        // 4.79.3
+             if FList^[Index].FCall[i - 1] in ['A'..'Z'] then
+               if FList^[Index].FCall[i] in ['0'..'9'] then
+                  begin
+                  if FList^[Index].FCall[i] = TempChar then
+                     begin
+                     frm.AddCall(string(FList^[Index].FCall), Ord(TempChar));
+                     end;
+                  Break;
+                  end;
+           {$RangeChecks ON}
+           end;
         end;
      end;
 
-   SendMessage(VDListBox, WM_SETREDRAW, wParam(False), 0);
+  frm.EndRebuild;
 
-  for TempChar := '0' to '9' do
-  begin
-    for Index := 0 to FCount - 1 do
-    begin
-      if (FList^[Index].FDupesArray[Mode] and (1 shl Ord(Band))) <> 0 then
-      begin
-      {$RangeChecks OFF}
-        for i := 0 to length(FList^[Index].FCall) do        // 4.79.3
-          if FList^[Index].FCall[i - 1] in ['A'..'Z'] then
-            if FList^[Index].FCall[i] in ['0'..'9'] then
-               begin
-               if FList^[Index].FCall[i] = TempChar then
-                  begin
-                  if ColumnDupeSheetEnable then
-                     begin
-                     SendDlgItemMessageA(TempDSHandle, Ord(FList^[Index].FCall[i]), LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]))
-                     end
-                 else
-                    begin
-                    Item := SendMessageA(VDListBox, LB_ADDSTRING, 0, integer(@FList^[Index].FCall[1]));
-                    end;
-                      SendMessage(VDListBox, LB_SETITEMDATA, Item, Ord(TempChar));
-                  end;
-               Break;
-               end;
-      end;
-      
-    end;
- //   if not ColumnDupeSheetEnable then
-    begin
- //   Item := SendDlgItemMessage(TempDSHandle, 101, LB_ADDSTRING, 0, integer(pchar('*********')));
 
- //   Item := SendMessage(VDListBox, LB_ADDSTRING, 0, integer(PChar('---------')));
- //   SendMessage(VDListBox, LB_SETITEMDATA, Item, Ord(TempChar));
-    end;
-  end;
-
-  SendDlgItemMessage(TempDSHandle, 101, WM_SETREDRAW, wParam(True), 0);
-
-  P1 := BandStringsArray[Band];
-  P2 := ModeStringarray[Mode];
+  // P1/P2 went with the pushes.  They were assigned and never read: the same
+  // note below records that the asm which consumed them was already gone.
   // Issue #997: removed orphaned `asm push p2/push p1` -- leftover from the
   // earlier conversion below; the SysUtils.Format call replaced the wsprintf
   // that consumed these pushes, and the matching `add esp,16` was already
@@ -582,11 +570,62 @@ begin
   // bytes from a longer previous value, so this caption showed "K3Sio 2".
   // The AnsiString conversion is length-correct, and rn is a LOCAL held across
   // the call -- PAnsiChar of a temporary would dangle under FPC.
+  // THE RADIO LEADS.  Was 'Dupesheet - 10m-CW - Radio 1'; NY4I asked for the
+  // radio to be identified up front -- "Radio One Dupesheet would be useful" --
+  // and with two of these windows open at once that is the first thing to read.
+  // Composed from TC_DUPESHEET rather than a new literal, so the only English
+  // here is still the one that was already translated.
   rn := AnsiString(Radio.RadioName);
-  TF.Format(wsprintfBuffer, TC_DUPESHEET + ' - %s',
-    BandStringsArray[Band], ModeStringArray[Mode], PAnsiChar(rn));
+  TF.Format(wsprintfBuffer, '%s ' + TC_DUPESHEET,
+    PAnsiChar(rn), BandStringsArray[Band], ModeStringArray[Mode]);
 //  asm add esp,16  end;
-  Windows.SetWindowTextA(Radio.tDupeSheetWnd, wsprintfBuffer);
+  frm.Caption := string(PAnsiChar(@wsprintfBuffer));
+end;
+
+{ WHAT WM_INITDIALOG DID.  Reached through the form's OnShow -- see the seam in
+  uDupeSheetForm.  The window handle is recorded by OpenTR4WWindow; what is left
+  is telling the radio which window is its dupe sheet, and filling it. }
+procedure DupeSheetWindowShown(const aIndex: WindowsType);
+var
+   frm: TfrmDupeSheet;
+begin
+   frm := DupeSheetForm(aIndex);
+   if frm = nil then
+      begin
+      Exit;
+      end;
+
+   if aIndex = tw_DUPESHEETWINDOW2_INDEX then
+      begin
+      Radio2.tDupeSheetWnd := frm.Handle;
+      CallsignsList.DisplayDupeSheet(@Radio2);
+      end
+   else
+      begin
+      Radio1.tDupeSheetWnd := frm.Handle;
+      CallsignsList.DisplayDupeSheet(@Radio1);
+      end;
+end;
+
+{ And what WM_CLOSE did.  CloseTR4WWindow hides the window; the radio has to be
+  told its dupe sheet is gone, or DisplayDupeSheet keeps writing to a window
+  nobody can see. }
+procedure DupeSheetWindowClosed(const aIndex: WindowsType);
+begin
+   if aIndex = tw_DUPESHEETWINDOW2_INDEX then
+      begin
+      Radio2.tDupeSheetWnd := 0;
+      end
+   else
+      begin
+      Radio1.tDupeSheetWnd := 0;
+      end;
+end;
+
+procedure RegisterDupeSheetSeams;
+begin
+   DupeSheetOnShow  := @DupeSheetWindowShown;
+   DupeSheetOnClose := @DupeSheetWindowClosed;
 end;
 
 procedure TCallsignsList.ClearDupes;
@@ -608,6 +647,7 @@ end;
 begin
 //  CallsignsList := TCallsignsList.Create;
   CallsignsList.Init;
+  RegisterDupeSheetSeams;
 end.
 
 

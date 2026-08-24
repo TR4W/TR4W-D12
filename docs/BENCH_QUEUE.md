@@ -23,7 +23,13 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
-## Waiting now (as of 2026-08-21)
+## Waiting now (as of 2026-08-24)
+
+**Sections 31-34 were added 2026-08-24 and are UNRUN.** NY4I confirmed
+the dupe sheet window, the stations window and the entry-field colours on the
+bench that day, but was remote when the captions, the resize behaviours and
+the band-change message landed -- so those are recorded here rather than
+counted as tested.
 
 **STILL UNRUN AND THE OLDEST ITEM HERE: the radio bench test (section 10).**
 The 2026-08-20 commits were held for it and then pushed on 2026-08-21 without
@@ -1118,6 +1124,79 @@ a raw `HMENU` of ~181 items attached with `SetMenu`, and it stays one. The
 accelerator handler reads the same `ACCELERATORS` table the menu captions are
 drawn from, so there is still ONE source of truth and the menu can convert on
 its own schedule rather than being dragged into the pivot.
+
+
+### 31. The dupe sheet is a form and a TDrawGrid  (`uDupeSheetForm`)
+
+NY4I confirmed the window itself on 2026-08-24 -- both sheets open, refill on a
+worked station, follow band and mode, resize and close on Escape. **What is
+below was changed AFTER that sitting and he was remote when it landed, so none
+of it has been seen.**
+
+- [ ] **The title, on a REOPEN.** Open a dupe sheet, close it, open it again.
+      Both times it must read `Radio 1 Dupesheet - 10m-CW`. The first open was
+      always right; it was the second that showed the bare menu text (NY4I:
+      "it just states Radio 1"), because `OpenTR4WWindow` wrote the native title
+      with `SetWindowTextW` behind the LCL's back and left `Caption` stale, so
+      the form's own later assignment of the SAME string was compared, found
+      equal, and dropped.
+- [ ] **The stations window title, on a reopen** -- same fix, same mechanism,
+      and it had the identical latent bug: "Stations in CW mode" is likewise the
+      same string every time it is set. Must not revert to the menu text.
+- [ ] **Every other converted tool window still gets its caption.** The fix is
+      in the GENERIC opener, so the band map and the function-keys window take
+      the new path too. They must still be titled from the menu.
+- [ ] **Two dupe sheets at once, both correct.** This is the first converted
+      window with more than one instance. Open both, work a station on each
+      radio's band, and check each sheet shows ITS radio's calls with ITS radio
+      in the title.
+- [ ] **Retirement of `COLUMN DUPESHEET ENABLE`.** Setting it in a `.cfg` or
+      `tr4w.ini` must still LOAD WITHOUT AN ERROR (it is `csRem`, not deleted)
+      and must have no effect. It must not appear in Preferences. `tr4w.json`
+      may still hold the key from before the retirement; that is inert.
+
+**Not asking whether it opens** -- see the note at the head of this file.
+
+### 32. The stations window scales; the dupe sheet reflows  (`uStationsForm`, `uDupeSheetForm`)
+
+Two DIFFERENT resize behaviours, deliberately, and the pair is worth one look
+side by side because getting them backwards would be easy to miss:
+
+- [ ] **Stations SCALES.** Fixed columns; the font grows with the window and the
+      columns are sized from the font that was applied, floor 7pt, ceiling 28pt.
+      Widen it and the text gets bigger; there must be no grey strip to the
+      right of the last band column at any width.
+- [ ] **The dupe sheet REFLOWS.** Widening it gives MORE COLUMNS of the same
+      size, not bigger cells -- which is what `LB_SETCOLUMNWIDTH` did, and what
+      scanning for a callsign wants.
+- [ ] **The 28pt ceiling is mine, not NY4I's** (he asked only for a minimum).
+      Maximise the stations window and say whether 28pt is the right stopping
+      point.
+
+### 33. Band change now says why it refused  (`TC_BANDCHANGEDISABLED`)
+
+- [ ] With `MULTIPLE BANDS = FALSE` and at least one QSO logged, Alt-B / Alt-V
+      and the Band Up / Band Down menu items must show
+      "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+      instead of doing nothing in silence. Same for anything that reaches
+      `GoToBand` -- a band map click, for instance.
+- [ ] With `MULTIPLE BANDS = TRUE`, no message and band change works as before.
+
+The CAUSE of NY4I hitting this is not fixed here and is not meant to be: a
+`csJSON` stored setting outlives contest selection, so `FCONTEST.PAS`'s
+per-contest initialisation never took effect on a newly selected CQ WW. NY4I
+owns that -- the contest factory harvests those states.
+
+### 34. The entry fields colour themselves  (`RefreshEntryFieldColors`)
+
+Confirmed by NY4I on 2026-08-24 for search-and-pounce green, overtype with
+Insert off, and a palette change. Left here for ONE case that sitting did not
+cover:
+
+- [ ] **A colour change made while the program is running, from Preferences,
+      with the operator IN search-and-pounce.** The exchange field must stay
+      green rather than snapping to the new normal background, and must take the
+      new background when S&P is left.
 
 ---
 

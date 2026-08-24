@@ -540,7 +540,15 @@ const
  (crCommand: 'CODE SPEED';                    crAddress: @CodeSpeed;                      crMin:0;  crMax:99;      crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctInteger; crNetwork: 1),
  (crCommand: 'COLUMN AUTOSIZE';              crAddress: @ColumnAutoSize;                 crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:1 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
 // (crCommand: 'COLUMN DUPESHEET COLOR';        crAddress: @ColumnDupeSheetColor;           crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
- (crCommand: 'COLUMN DUPESHEET ENABLE';        crAddress: @ColumnDupeSheetEnable;          crMin:0;  crMax:0;       crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 1; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
+ // RETIRED 2026-08-24.  A DOS-era layout: the manual describes it as being for
+ // "VGA mode below the normal operating screen", and documents an auto-revert
+ // ("if two columns each contain more than 25 calls...") that NO CODE IN THIS
+ // TREE EVER IMPLEMENTED.  Default was FALSE, uHistory has recorded it as "not
+ // processed" since the TR-LOG-style dupesheet went in, and the column path
+ // carried an uninitialised read nobody had ever hit.  NY4I: "we can retire the
+ // option since it defaulted to FALSE."  csRem, not deleted, so an old config
+ // naming it still loads without an error.
+ (crCommand: 'COLUMN DUPESHEET ENABLE';        crAddress: @ColumnDupeSheetEnable;          crMin:0;  crMax:0;       crS: csRem; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctBoolean; crNetwork: 1),
  (crCommand: 'COMPLETE CALLSIGN MASK';        crAddress: @CompleteCallsignMask;           crMin:0;  crMax:255;     crS: csJSON; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;   cfFunc: cfAll; crType: ctString; crNetwork: 1),
  (crCommand: 'COMPUTER ID';                   crAddress: @ComputerID;                     crMin:0;  crMax:0;       crS: csOwned; crA: 0; crC:0 ; crP:0; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctAlphaChar; crNetwork: 0),
  (crCommand: 'COMPUTER NAME';                 crAddress: @ComputerName;                   crMin:0;  crMax:8;       crS: csJSON; crA: 0; crC:0 ; crP:6; crJ: 0; crKind: ckNormal;  cfFunc: cfAll; crType: ctString; crNetwork: 0),

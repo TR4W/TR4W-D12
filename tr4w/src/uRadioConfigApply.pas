@@ -356,7 +356,7 @@ end;
   The ini keys are left in place: inert, harmless, and a fallback for anyone who
   rolls back to a previous build. }
 const
-   MIGRATED_COMMANDS: array[0..251] of string =
+   MIGRATED_COMMANDS: array[0..250] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
@@ -533,7 +533,6 @@ const
       // Migrated 2026-08-21.
       'AUTO-CQ DELAY TIME',
       'BEEP EVERY 10 QSOS',
-      'COLUMN DUPESHEET ENABLE',
       'CONTEST TITLE',
       'COUNT DOMESTIC COUNTRIES',
       'CUSTOM INITIAL EXCHANGE STRING',
