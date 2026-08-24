@@ -43,6 +43,7 @@ uses
                        // DIFFERENT declaration, and a method built on the wrong one
                        // will not match TDrawItemEvent however identical the two
                        // records look.  Types is already in the implementation uses.
+  uFlasher,    { the call-field flash is a timer now }
   StdCtrls,            // TListBox, TOwnerDrawState -- same
   LCLIntf,             // OpenURL / OpenDocument -- the cross-platform launchers
   uPlatformProcess,    // RunProgram / RunWindowsUtility -- the only launchers
@@ -8232,11 +8233,76 @@ begin
   tAddQSOToLog(CE);
 end;
 
+{ THE CALL-FIELD FLASH.
+
+  WHAT THIS FIXES.  It hid the call field, slept 100 ms, and showed it again
+  -- the sleep being on the MAIN THREAD.  (Written as prose, not as the
+  original three statements, so that a grep for call sites or for sleeps does
+  not find this comment and count it as code.)  Its one call site (ReturnInCQOpMode, the
+  operator pressing Enter in CQ mode with AutoDupeEnableCQ set) is commented
+  out, so it never ran and nothing froze; uncommenting it as written would have
+  frozen the UI for 100 ms on EVERY auto-dupe, at the exact moment the operator
+  is typing.  A latent hazard is worth fixing when it is found rather than
+  leaving armed for whoever removes the comment (NY4I, 2026-08-23).
+
+  IT ALSO STOPS HIDING THE FIELD.  Hiding and re-showing a focused edit can move
+  the caret, which mid-callsign is worse than not flashing at all.  A background
+  colour says the same thing and touches nothing the operator is using.
+
+  trAlert from TR4W's own palette rather than a colour invented here -- this
+  fires on a DUPE, which is what that entry is for.  The resting colour is read
+  at the start rather than assumed, so a theme change cannot leave the field
+  stuck on a hardcoded "normal".
+
+  It is the FIRST of the four flashers done the right way: TR4WCallEdit is a
+  real LCL TEdit, so it has a .Color.  The quick-display and intercom flashers
+  still toggle Enabled and Selected because their targets are still raw Win32
+  windows -- see uFlasher. }
+var
+  gCallFieldFlasher: TFlasher = nil;
+  gCallFieldRestColor: TColor = clWindow;
+
+function CallFieldFlasher: TFlasher;
+begin
+  if gCallFieldFlasher = nil then
+     begin
+     gCallFieldFlasher := TFlasher.Create;
+     end;
+  Result := gCallFieldFlasher;
+end;
+
+procedure CallFieldFlashPhase(const aOn: boolean);
+begin
+  if TR4WCallEdit = nil then
+     begin
+     Exit;
+     end;
+
+  if aOn then
+     begin
+     TR4WCallEdit.Color := gCallFieldRestColor;
+     end
+  else
+     begin
+     TR4WCallEdit.Color := tr4wColorsArray[trAlert];
+     end;
+end;
+
 procedure FlashCallWindow;
 begin
-  ShowEntry(TR4WCallEdit, False);
-  Sleep(100);
-  ShowEntry(TR4WCallEdit, True);
+  if TR4WCallEdit = nil then
+     begin
+     Exit;
+     end;
+
+  // Read the resting colour now, not at unit load: it is whatever the field
+  // actually is when the flash starts.
+  gCallFieldRestColor := TR4WCallEdit.Color;
+
+  // Two phases at 100 ms -- one dark, one back to normal, the same beat the
+  // hide/Sleep/show had.  The flasher always lands on the resting state, so an
+  // interrupted flash cannot leave the field coloured.
+  CallFieldFlasher.Start(@CallFieldFlashPhase, 2, 100);
 end;
 
 procedure ProcessCommandLine;
