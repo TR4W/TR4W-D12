@@ -1339,10 +1339,34 @@ end;
   does now unless it is asked.  See RefreshMainWindowElementColors. }
 procedure WriteMainWindowText(Window: TMainWindowElement; const Text: string);
 begin
-  // SetElementText marshals itself when this is a worker thread.  The colour
-  // pass cannot: it walks fifty elements, so queueing it per call would be
-  // fifty async calls where the job seam coalesces to one.
-  SetElementText(Window, Text);
+  { NOT EVERY ELEMENT IS A PANEL, AND THIS ROUTING IS NOT OPTIONAL.
+
+    The creation loop skips any element with mweiStyle <= 2, because those are
+    not Win32 statics -- they are the call and exchange TEdits, the possible-call
+    list and the two list views.  So GElements[] is nil for them, SetElementText
+    finds no control, and the write goes NOWHERE.
+
+    That is a regression I shipped this afternoon and NY4I found on the bench
+    the same evening: with an INITIAL EXCHANGE of Zone, typing a callsign no
+    longer filled the zone, because MainUnit:6531 writes it with
+    SetMainWindowText(mweExchange, ...).  Before the conversion that reached
+    SetWindowTextW(wh[mweExchange]) and wh[mweExchange] IS the TEdit's handle;
+    afterwards it reached a nil panel and returned quietly.
+
+    Two other call sites were dead the same way: clearing the exchange on an
+    operating-mode change (SetOpMode), and LOGWAE putting a QTC callsign into
+    the call field.
+
+    THE FIX IS HERE RATHER THAN AT THE THREE CALL SITES because SetMainWindowText
+    is the ONE write path for every element and has ~75 callers; a rule that
+    each caller must know what kind of control backs its element is the rule
+    that just failed. }
+  case Window of
+    mweCall:     SetEntryText(TR4WCallEdit, Text);
+    mweExchange: SetEntryText(TR4WExchangeEdit, Text);
+  else
+    SetElementText(Window, Text);
+  end;
 
   if OnMainThread then
      begin

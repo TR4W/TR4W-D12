@@ -1303,6 +1303,17 @@ the wrong size, this is the change that did it.**
       Watch it follow the VFO continuously, and go blank on disconnect.
 - [ ] **Colour scheme changes still reach the main window** (Preferences ->
       colours). RefreshMainWindowColors pushes the elements now.
+- [ ] **THE INITIAL EXCHANGE FILLS.** With `INITIAL EXCHANGE` set to Zone, type
+      a callsign and the zone must appear in the exchange field. Found broken on
+      the bench 2026-08-24 (NY4I: "I enter AF4O, the zone in the exchange is
+      not displayed... That was working earlier") and fixed the same evening:
+      `SetMainWindowText(mweExchange, ...)` reached a nil panel, because the
+      creation loop skips `mweiStyle <= 2` and the entry fields are TEdits, not
+      panels. Two siblings were dead the same way and are worth checking too:
+- [ ] **The exchange field CLEARS when the operating mode changes** (Ctrl-Enter
+      between CQ and S&P with something typed in it).
+- [ ] **WAE QTC puts the callsign into the call field** (`LOGWAE:177`), if you
+      run WAE.
 - [ ] **Greying still works:** the inactive radio's row in two-radio mode, the
       foot switch and WinKey indicators, and the quick-display FLASH (which is
       still an enable/disable toggle -- see LOGWIND).
