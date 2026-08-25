@@ -99,11 +99,21 @@ object frmRadioPanel: TfrmRadioPanel
     BevelOuter = bvLowered
     Caption = 'SPLIT'
   end
-  object lblStatus: TPanel
+  object btnSpectrum: TButton
     Left = 5
-    Height = 20
+    Height = 21
     Top = 78
-    Width = 185
+    Width = 80
+    Caption = 'Spectrum'
+    OnClick = SpectrumClick
+    TabOrder = 0
+    Visible = False
+  end
+  object lblStatus: TPanel
+    Left = 90
+    Height = 21
+    Top = 78
+    Width = 100
     Anchors = [akTop, akLeft, akRight]
     Alignment = taCenter
     BevelOuter = bvLowered

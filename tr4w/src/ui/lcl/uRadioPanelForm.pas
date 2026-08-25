@@ -44,7 +44,10 @@ type
       lblXIT: TPanel;
       lblSplit: TPanel;
       lblStatus: TPanel;
+      btnSpectrum: TButton;
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
+      procedure SpectrumClick(Sender: TObject);
+      procedure UpdateSpectrumButton;
       procedure HandleKeyDown(Sender: TObject; var Key: word;
                               Shift: TShiftState);
    private
@@ -76,11 +79,18 @@ implementation
 uses
    MainUnit,
    LOGRADIO,
+   uFactoryRadioBase,   { rcSpectrum / SpectrumAvailable -- the two radio gates }
+   uPanadapterForm,     { ShowPanadapterWindow }
    uPanelUpdate,
    uLCLFormHelpers;
 
 var
    GForms: array[1..2] of TfrmRadioPanel = (nil, nil);
+
+const
+   { The K4's main pan.  Named rather than spelled 'A' at the call site so the
+     next reader sees that it is a protocol value, not a caption. }
+   K4_MAIN_PAN_SOURCE = 'A';
 
 function SlotOf(const aID: WindowsType): integer;
 begin
@@ -102,6 +112,86 @@ begin
    else
      Result := aForm.lblSplit;
    end;
+end;
+
+{ THE WAY INTO THE PANADAPTER, and the reason it is a button here rather than a
+  menu item (PANADAPTER_LCL_DESIGN.md 12.1).
+
+  IT BELONGS TO THE RADIO WHOSE SPECTRUM IT IS.  With two radios open there is
+  no question which one a click means -- a Windows-menu item would have to ask,
+  or guess from ActiveRadioPtr.
+
+  AND IT HIDES ITSELF RATHER THAN GREYING.  A greyed control says "not now"; an
+  absent one says "not this radio".  A K4 on a serial link has no spectrum
+  stream at all -- the stream is a second UDP socket, CAT port + 1 -- so there
+  is nothing an operator could do to enable it here, and offering a dead control
+  invites the support case.  SpectrumAvailable is the instance answer;
+  Supports(rcSpectrum) is the model one.  BOTH are asked, because a model that
+  CAN is not the same fact as a connection that DOES.
+
+  STILL MISSING, and deliberately: the operator's own enable/disable
+  (PANADAPTER_LCL_DESIGN.md 12.3, a csJSON per-radio flag) and the
+  IsSpectrumActive in MainUnit that would ask all three gates in ONE place.
+  Until that exists this button asks the two gates the radio can answer, which
+  is why the test lives here and not in a shared helper -- when the third gate
+  arrives, both this and the menu item must move to it together or they will
+  drift. }
+procedure TfrmRadioPanel.UpdateSpectrumButton;
+var
+   rig: RadioPtr;
+   obj: TFactoryRadioBase;
+begin
+   btnSpectrum.Visible := False;
+
+   if FSlot = 2 then
+      begin
+      rig := @Radio2;
+      end
+   else
+      begin
+      rig := @Radio1;
+      end;
+
+   obj := rig^.tFactoryObject;
+   if obj = nil then
+      begin
+      Exit;
+      end;
+
+   btnSpectrum.Visible := obj.Supports(rcSpectrum) and obj.SpectrumAvailable;
+end;
+
+procedure TfrmRadioPanel.SpectrumClick(Sender: TObject);
+var
+   rig: RadioPtr;
+begin
+   if FSlot = 2 then
+      begin
+      rig := @Radio2;
+      end
+   else
+      begin
+      rig := @Radio1;
+      end;
+
+   if rig^.tFactoryObject = nil then
+      begin
+      Exit;
+      end;
+
+   { 'A' IS THE MAIN PAN, and this is NOT a label -- the window filters frames
+     on equality against it (TfrmPanadapter.AcceptFrame).
+
+     A K4 streams several pans down ONE socket at once and stamps each frame
+     with its own id: 'A' and 'B' are the main pans, 'Y' the 3 kHz mini-pan.
+     uSpectrumTypes is explicit that this is OPAQUE -- not a "pan id", not a
+     character to parse -- so the only correct values are ones the producer
+     actually emits.  Anything else is not a wrong label, it is a filter that
+     matches nothing and a window that waits forever.
+
+     RADIO 1 AND RADIO 2 ARE DIFFERENT RADIOS, not the two pans of one K4, so
+     both ask for 'A' -- each rig's own main pan, on its own socket. }
+   ShowPanadapterWindow(rig^.tFactoryObject, K4_MAIN_PAN_SOURCE);
 end;
 
 procedure TfrmRadioPanel.HandleClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -199,6 +289,9 @@ begin
       if GForms[i] <> nil then
          begin
          GForms[i].SyncActiveTint;
+         // A radio connecting or dropping is exactly when "is there a spectrum
+         // stream" changes its answer, and this already runs then.
+         GForms[i].UpdateSpectrumButton;
          end;
       end;
 end;
@@ -315,6 +408,7 @@ begin
 
    Result := GForms[slot].Handle;
    GForms[slot].SyncActiveTint;
+   GForms[slot].UpdateSpectrumButton;
 end;
 
 initialization
