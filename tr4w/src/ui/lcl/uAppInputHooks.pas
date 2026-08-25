@@ -173,6 +173,32 @@ begin
      Exit;
      end;
 
+  { A MODAL DIALOG OWNS THE KEYBOARD, AND THIS HOOK DOES NOT.
+
+    NotifyKeyDownBeforeHandler fires for EVERY TWinControl in the application --
+    that is the whole reason it can serve as an accelerator table, and it is
+    also why it reaches controls on a dialog that has nothing to do with the
+    main window.
+
+    ESC and TAB are both accelerators (uAccelerators.pas:170 -> menu_escape,
+    :174 -> menu_spmode_ortab).  So on any modal form this hook matched them,
+    posted WM_COMMAND to tr4whandle and set Key := VK_UNKNOWN -- the dialog
+    never saw the keystroke AND the main window acted on it.  NY4I on the bench,
+    2026-08-24: ESC did not close the dialog and the main window reacted; TAB
+    turned the exchange field green, which is search-and-pounce.
+
+    MODAL, NOT "NOT THE MAIN FORM".  The converted tool windows -- band map,
+    stations, dupe sheets, SCP, remaining mults -- are separate forms too, and
+    accelerators SHOULD work while one of them has focus; that is a capability
+    the LCL conversion gained, because a raw Win32 dialog was never a
+    TWinControl and never reached this hook at all.  What must be suppressed is
+    the case where a form has deliberately taken the keyboard. }
+  if (Screen.ActiveCustomForm <> nil) and
+     (fsModal in Screen.ActiveCustomForm.FormState) then
+     begin
+     Exit;
+     end;
+
   id := AcceleratorFor(Key, Shift);
   if id = 0 then
      begin

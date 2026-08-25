@@ -25,7 +25,7 @@ at what they cover; this is the list of what they cannot see.
 
 ## Waiting now (as of 2026-08-24)
 
-**Sections 31-41 were added 2026-08-24 and are UNRUN.**  Section 37 is the
+**Sections 31-42 were added 2026-08-24 and are UNRUN.**  Section 37 is the
 biggest of them: the entire main window display changed. NY4I confirmed
 the dupe sheet window, the stations window and the entry-field colours on the
 bench that day, but was remote when the captions, the resize behaviours and
@@ -261,7 +261,7 @@ and only runs in the real application. Nothing in the build exercises it.
 
 **Do this in order -- the first step is the migration and it happens once.**
 
-- [X] **Before starting, note where a few windows are** (Band Map, Telnet, the
+- [x] **Before starting, note where a few windows are** (Band Map, Telnet, the
   two radio panels) and confirm `settings tr4w.pos` exists and is 550 bytes.
 - [x] Start TR4W. **Every window should come up exactly where it was.** This is
   the seed from the old binary file; if anything moved, the seed is wrong
@@ -306,15 +306,18 @@ all along.
 
 - [x] **3830 scores** and **ARRL log submission** (both under the log-submission
   menu) each open a browser.
+
 - [x] **QRZ.RU calendar** and **WA7BNM calendar** open the page **for the CURRENT
   CONTEST** -- these two build their URL from `ContestsArray[Contest]`, and the
   URL is now composed with `SysUtils.Format` into a string instead of
   `TF.Format` into a buffer, so a wrong contest id or a truncated URL is the
   thing to watch for.
+
 - [ ] **Help -> Check for Updates** -- NEW, 2026-08-22, and it has NEVER RUN
   BEFORE. `uCheckLatestVersion` had existed complete since the D7 days with no
   caller; NY4I asked for it on the Help menu after this queue sent him looking
   for an option that did not exist.
+
   - [ ] It should reach `www.tr4w.net`, compare versions, and either say you have
     the latest or offer the download link. **It dialled `tr4w.com` while sending
     `Host: www.tr4w.net`** -- corrected to `www.tr4w.net`, and since the routine
@@ -340,6 +343,7 @@ all along.
   `version.txt` is a second place the version has to be right. If the answer is
   a GitHub releases API call, the socket code and the 2-second freeze both go
   away with it rather than needing the threading rewrite.
+
 - [ ] **Preferences -> Logging -> the "Open log file" BUTTON** (bottom of the
   Logging page, below the trace check boxes) opens `tr4w.log` in whatever
   editor the operator has associated with `.txt`. It is a button, not a menu
@@ -347,6 +351,7 @@ all along.
   not be found.
 
 ### 13. Nothing should have changed -- 7,187 lines of commented-out code are gone
+
   (`dd53c1ab`, `67af7f28`, `3c1c4703`)
 
 **No behaviour change is intended anywhere in this, which is exactly why it wants
@@ -523,10 +528,10 @@ NY4I, 2026-08-21, pointing at <https://wiki.freepascal.org/Hardware_Access>: the
 parallel-port methods there cover Windows AND Linux, and they share TR4W's model
 of "read or write a byte at an I/O base address".
 
-| | how | condition |
-|---|---|---|
-| Windows | `inpout32.dll`, `Inp32`/`Out32` | what `uIO` already does |
-| Linux | `ports` unit + `ioperm()` from libc, or FPC's `fpioperm` in unit `x86` | **requires root**, and is **x86-only** |
+|         | how                                                                    | condition                              |
+| ------- | ---------------------------------------------------------------------- | -------------------------------------- |
+| Windows | `inpout32.dll`, `Inp32`/`Out32`                                        | what `uIO` already does                |
+| Linux   | `ports` unit + `ioperm()` from libc, or FPC's `fpioperm` in unit `x86` | **requires root**, and is **x86-only** |
 
 **Both conditions matter and neither should be designed away.** Asking a contest
 operator to run the logger as root is a genuine deployment problem, and
@@ -727,15 +732,15 @@ of which `[SECTION]` heading it sits under. That is also what made the migration
 exact -- the seed copies out of `TWindows` AFTER the load, so whatever the ini
 said is already in force and there is no second parser to disagree with.
 
-- [X] **Appearance -> Colors.** Fifty elements, each with a Text and a
+- [x] **Appearance -> Colors.** Fifty elements, each with a Text and a
   Background drop-down from the 18-color palette. Change one, OK, and check it
   repaints. Restart and check it stuck.
-- [X] **Look at `settings\tr4w.json`** -- a `colors` object keyed by element
+- [x] **Look at `settings\tr4w.json`** -- a `colors` object keyed by element
   name, values as SPELLINGS (`"YELLOW"`, not `15`).
-- [X] **Your existing colors must survive.** On first run with an old
+- [x] **Your existing colors must survive.** On first run with an old
   `tr4w.ini`, the log should say `[Colors] seeded 50 element(s) from the loaded
   configuration` and the window should look exactly as it did.
-- [X] **Ctrl-J.** Every menu route that used to open the old list -- Ctrl-J
+- [x] **Ctrl-J.** Every menu route that used to open the old list -- Ctrl-J
   itself, Appearance, Colors, WinKeyer -- must open Preferences and nothing
   else. Nothing should open an empty list, and nothing should fail to open.
 - [ ] **`QuickEditResponse` prompts still parent correctly.** They used to
@@ -801,12 +806,12 @@ a `CFGFunc` filter since Ctrl-J, and once every filter routed to Preferences the
 parameter was ignored -- so Settings > WinKeyer opened Preferences wherever it
 was last left. Every filter that names a page now maps to one:
 
-| menu | page |
-|---|---|
-| Colors | Appearance > Colors |
-| Appearance | Appearance |
-| WinKeyer | **CW Settings** -- the keying-device library |
-| Radio 1 / Radio 2 | Radios |
+| menu              | page                                         |
+| ----------------- | -------------------------------------------- |
+| Colors            | Appearance > Colors                          |
+| Appearance        | Appearance                                   |
+| WinKeyer          | **CW Settings** -- the keying-device library |
+| Radio 1 / Radio 2 | Radios                                       |
 
 - [ ] Settings > WinKeyer must land on **CW Settings**, with the keying devices
   list at the top. Pick the keyer, **Edit...**, and all seventeen options are
@@ -925,82 +930,87 @@ underneath it. Design at `docs/BANDMAP_LCL_DESIGN.md` -- these are the three
 defects that were provable by reading and did not need the new form.
 
 - [ ] **THE BIG ONE -- spots no longer vanish while the band map has focus.**
-      Connect to a cluster, click INTO the band map list and leave it focused
-      for a minute or two on a busy node, then click away (or into the callsign
-      window). **Every spot that arrived while you were looking should now be
-      there.** Before this change they were gone for good: `AddSpot` returned
-      before inserting, and the buffer that was supposed to replay them was
-      never filled by anything -- `InsertSpotBuffer` was declared, defined and
-      never called. Cross-check against the telnet console, which always showed
-      the lines.
+  Connect to a cluster, click INTO the band map list and leave it focused
+  for a minute or two on a busy node, then click away (or into the callsign
+  window). **Every spot that arrived while you were looking should now be
+  there.** Before this change they were gone for good: `AddSpot` returned
+  before inserting, and the buffer that was supposed to replay them was
+  never filled by anything -- `InsertSpotBuffer` was declared, defined and
+  never called. Cross-check against the telnet console, which always showed
+  the lines.
 - [ ] **The rows still hold still while you have focus.** That half was
-      deliberate and is kept -- the freeze now applies to the VIEW only. If the
-      list starts re-sorting under the mouse, that is a regression.
+  deliberate and is kept -- the freeze now applies to the VIEW only. If the
+  list starts re-sorting under the mouse, that is a regression.
 - [ ] **Ordinary spot flow is unchanged** -- new spots appear within about a
-      quarter second, no more flashing than before, no less.
+  quarter second, no more flashing than before, no less.
 - [ ] **The VFO cursor line still tracks the radio.** `uRadioPolling` used to
-      set a global flag; it now calls `SpotsList.RequestRepaint`.
+  set a global flag; it now calls `SpotsList.RequestRepaint`.
 - [ ] **A logged QSO still turns its spot into a dupe**, and clearing the dupe
-      sheet still un-dupes them.
+  sheet still un-dupes them.
 - [ ] **Deleting a spot** from the band map's context menu still works and the
-      list is intact afterwards -- `Delete` had `try ... finally
-      CriticalSection.Leave` with **no matching `Enter`**, so it released a lock
-      it never took. Fixed here. This is the one item where a latent
-      intermittent (two threads in the list at once) becomes less likely rather
-      than visibly different, so there is nothing to see -- just confirm delete
-      behaves.
-
+  list is intact afterwards -- `Delete` had `try ... finally
+  CriticalSection.Leave` with **no matching `Enter`**, so it released a lock
+  it never took. Fixed here. This is the one item where a latent
+  intermittent (two threads in the list at once) becomes less likely rather
+  than visibly different, so there is nothing to see -- just confirm delete
+  behaves.
 
 **Added after the first bench attempt (NY4I, 2026-08-22 evening) -- the band map
 showed nothing at all.** Three separate things, and the log settled all of them.
 
 - [ ] **BAND MAP ENABLE is RETIRED. Opening the window is what enables it.**
-      `settings\tr4w.json` held `"BAND MAP ENABLE" : "FALSE"`, so
-      `DisplayBandMap` refused every spot at the gate -- the log showed
-      `BandMapEnable=0, BandMapWindowExists=1, FCount=49`: the spots were
-      arriving and being thrown away. The cause is that one boolean was both the
-      persisted setting AND the window's runtime flag, and `WM_DESTROY` wrote
-      False to it -- so **closing the band map turned the feature off and the
-      next settings save persisted that.** Opening Preferences to change the
-      cluster re-applied the stored FALSE over the live TRUE.
-      `BandMapEnable` is now a function returning
-      `tWindowsExist(tw_BANDMAPWINDOW_INDEX)`, the command is `csRem`, and the
-      Preferences checkbox is gone. **Test: open the band map -- spots should
-      appear. Close it and reopen it, repeatedly, including with a trip through
-      Preferences in between. It must never go dead again.** The stale FALSE
-      still in your json is now ignored rather than obeyed.
+  `settings\tr4w.json` held `"BAND MAP ENABLE" : "FALSE"`, so
+  `DisplayBandMap` refused every spot at the gate -- the log showed
+  `BandMapEnable=0, BandMapWindowExists=1, FCount=49`: the spots were
+  arriving and being thrown away. The cause is that one boolean was both the
+  persisted setting AND the window's runtime flag, and `WM_DESTROY` wrote
+  False to it -- so **closing the band map turned the feature off and the
+  next settings save persisted that.** Opening Preferences to change the
+  cluster re-applied the stored FALSE over the live TRUE.
+  `BandMapEnable` is now a function returning
+  `tWindowsExist(tw_BANDMAPWINDOW_INDEX)`, the command is `csRem`, and the
+  Preferences checkbox is gone. **Test: open the band map -- spots should
+  appear. Close it and reopen it, repeatedly, including with a trip through
+  Preferences in between. It must never go dead again.** The stale FALSE
+  still in your json is now ignored rather than obeyed.
+
 - [ ] **The Preferences band map page lost a row.** "Show the band map" is gone
-      and everything below it moved up 38px. Check the page still reads
-      properly and nothing is clipped or overlapping.
+  and everything below it moved up 38px. Check the page still reads
+  properly and nothing is clipped or overlapping.
+
 - [ ] **The log should be readable again.** 1,287 of the 9,810 lines in that
-      run were `[DisplayBandMap]` trace, ~2,600 of them before the window even
-      existed -- my regression: the repaint token stays raised until Display
-      actually paints (deliberately, so spots that arrive while the window is
-      shut are drawn when it opens), but with no window it never paints, so the
-      250 ms timer called `DisplayBandMap` forever. The timer now returns early
-      when there is no band map window, WITHOUT consuming the token. **Test:
-      run for a few minutes with the band map CLOSED and confirm `tr4w.log` is
-      not full of `[DisplayBandMap]` lines.**
+  run were `[DisplayBandMap]` trace, ~2,600 of them before the window even
+  existed -- my regression: the repaint token stays raised until Display
+  actually paints (deliberately, so spots that arrive while the window is
+  shut are drawn when it opens), but with no window it never paints, so the
+  250 ms timer called `DisplayBandMap` forever. The timer now returns early
+  when there is no band map window, WITHOUT consuming the token. **Test:
+  run for a few minutes with the band map CLOSED and confirm `tr4w.log` is
+  not full of `[DisplayBandMap]` lines.**
+
 - [ ] **Minimise TR4W with the band map open and a busy cluster running.** The
-      tool windows are owned popups, so Windows hides the band map with its
-      owner -- and until now that hidden window still cost a full render four
-      times a second. The refresh timer now skips a window that is not visible.
-      **Restore TR4W and every spot that arrived while it was down should be
-      there immediately**, because the skip does not consume the repaint token.
-      Watch for a stale or empty list on restore; that would mean the token
-      logic is wrong.
+  tool windows are owned popups, so Windows hides the band map with its
+  owner -- and until now that hidden window still cost a full render four
+  times a second. The refresh timer now skips a window that is not visible.
+  **Restore TR4W and every spot that arrived while it was down should be
+  there immediately**, because the skip does not consume the repaint token.
+  Watch for a stale or empty list on restore; that would mean the token
+  logic is wrong.
+
 - [ ] **Leave it minimised over a decay boundary** (a minute or more). Spot ages
-      must still advance -- `DecrementSpotsTimes` is model work and still runs;
-      only its repaint waits. Restore and check the age colours are right, not
-      a minute behind.
+  must still advance -- `DecrementSpotsTimes` is model work and still runs;
+  only its repaint waits. Restore and check the age colours are right, not
+  a minute behind.
+
 - [ ] **NOT tested and deliberately not implemented: occlusion.** If another
-      window is simply sitting on top of the band map, TR4W still repaints it.
-      Windows will not answer "am I covered" reliably and guessing would trade
-      a real repaint for a maybe-saved one.
+  window is simply sitting on top of the band map, TR4W still repaints it.
+  Windows will not answer "am I covered" reliably and guessing would trade
+  a real repaint for a maybe-saved one.
+  
 
 - [ ] **DX cluster logging was never broken** -- 56 `[Telnet RX]` lines were in
-      that log, buried under the flood above. Nothing to fix; noted so it is
-      not re-reported.
+  that log, buried under the flood above. Nothing to fix; noted so it is
+  not re-reported.
 
 **What did NOT change, deliberately.** `UpdateSpotsMultiplierStatus` still runs
 on the paint path -- a CTY prefix resolution per spot per repaint. Moving it
@@ -1016,51 +1026,51 @@ Everything here was found by NY4I running it on 2026-08-22/23, and none of it
 was visible to a lint or a unit test.
 
 - [x] **Status bar panel count.** The .lfm declared four panels; the code
-      indexed six. `List index (5) out of bounds` came out of the form's
-      OnCreate, so the CONSTRUCTOR never completed and TR4WBandMapForm stayed
-      nil -- which presented as an empty band map with no context menu rather
-      than as a wrong status bar. There is a `SB_PANELS` check at create now
-      that names the mismatch instead.
+  indexed six. `List index (5) out of bounds` came out of the form's
+  OnCreate, so the CONSTRUCTOR never completed and TR4WBandMapForm stayed
+  nil -- which presented as an empty band map with no context menu rather
+  than as a wrong status bar. There is a `SB_PANELS` check at create now
+  that names the mismatch instead.
 - [x] **A form shown by SetWindowPos is not Visible to the LCL.** Every tw_
-      window is shown with a raw `SWP_SHOWWINDOW` on an HWND, which the LCL
-      cannot see, so `TForm.Visible` stayed False while the window was on
-      screen: the refresh timer skipped every tick and the LCL never showed the
-      child controls. `OpenTR4WWindow` now tells the LCL, once, for whichever
-      form the seam built -- so the next tool window to convert inherits it.
-      **The same note already existed on ShowTR4WMainForm**; it is the second
-      time this has been discovered.
+  window is shown with a raw `SWP_SHOWWINDOW` on an HWND, which the LCL
+  cannot see, so `TForm.Visible` stayed False while the window was on
+  screen: the refresh timer skipped every tick and the LCL never showed the
+  child controls. `OpenTR4WWindow` now tells the LCL, once, for whichever
+  form the seam built -- so the next tool window to convert inherits it.
+  **The same note already existed on ShowTR4WMainForm**; it is the second
+  time this has been discovered.
 - [ ] **Re-test the band map end to end** now those are fixed: resize wide and
-      narrow (the columns reflow -- it is a newspaper layout, widening shows
-      MORE spots), a spot arriving while a row is selected, a split spot that
-      is also a dupe, double-click and Enter both tuning, Ctrl-End landing
-      focus in the grid, and Delete.
+  narrow (the columns reflow -- it is a newspaper layout, widening shows
+  MORE spots), a spot arriving while a row is selected, a split spot that
+  is also a dupe, double-click and Enter both tuning, Ctrl-End landing
+  focus in the grid, and Delete.
 
 ### 29. Preferences: two defects, one of them the reason settings did not stick
 
 - [x] **THE LOAD GUARD DID NOT NEST.** `FLoading` was a plain boolean and
-      nested loaders each set it True and then set it **False** on the way out.
-      `ShowSelectedCluster` and `ShowSelectedRotator` both do that, and
-      construction calls both before `FBindings.LoadAll` -- so the guard was OFF
-      for the rest of construction, the bindings' change events fired, and
-      `CaptureProfileFields` wrote every panel's UNLOADED controls back over the
-      store. A check box the operator had turned on came back off because
-      construction saved False over it from an unticked box and then read that
-      False back. It is now a DEPTH COUNTER, which an inner scope cannot clear.
-      **Test: set the logging check boxes, restart, and confirm they hold** --
-      and the same for anything on a panel loaded after the cluster and rotator
-      lists.
+  nested loaders each set it True and then set it **False** on the way out.
+  `ShowSelectedCluster` and `ShowSelectedRotator` both do that, and
+  construction calls both before `FBindings.LoadAll` -- so the guard was OFF
+  for the rest of construction, the bindings' change events fired, and
+  `CaptureProfileFields` wrote every panel's UNLOADED controls back over the
+  store. A check box the operator had turned on came back off because
+  construction saved False over it from an unticked box and then read that
+  False back. It is now a DEPTH COUNTER, which an inner scope cannot clear.
+  **Test: set the logging check boxes, restart, and confirm they hold** --
+  and the same for anything on a panel loaded after the cluster and rotator
+  lists.
 - [x] **An empty handler is not the same as no handler.** `cbxLogLevel` and
-      `cbxRelayPort` had do-nothing OnChange stubs, and `HookDirtyMarker`
-      attaches its MarkDirty only to a control with NO handler -- so merely
-      existing stopped them marking the form dirty: Apply stayed greyed, the
-      close prompt never appeared, and the edit went in silence. Both now mark
-      dirty without applying, so Cancel still discards.
-      **Test: change the log level alone, close, and it should offer to save.**
+  `cbxRelayPort` had do-nothing OnChange stubs, and `HookDirtyMarker`
+  attaches its MarkDirty only to a control with NO handler -- so merely
+  existing stopped them marking the form dirty: Apply stayed greyed, the
+  close prompt never appeared, and the edit went in silence. Both now mark
+  dirty without applying, so Cancel still discards.
+  **Test: change the log level alone, close, and it should offer to save.**
 - [x] **Preferences vanished behind TR4W after switching to another program.**
-      It had no PopupParent, and pmAuto resolves to `Application.MainForm`,
-      which is nil here because TR4W never calls `Application.CreateForm`. So
-      it was a top-level window owned by nothing. `OwnFormByMainWindow` now
-      owns it, like every other form.
+  It had no PopupParent, and pmAuto resolves to `Application.MainForm`,
+  which is nil here because TR4W never calls `Application.CreateForm`. So
+  it was a top-level window owned by nothing. `OwnFormByMainWindow` now
+  owns it, like every other form.
 
 **Audited while there, and clean:** every other control on Preferences either
 reaches `Dirty` through its handler or is picked up by `HookDirtyMarker`, whose
@@ -1081,51 +1091,50 @@ different LCL mechanisms, and the failure mode of each is "a key does nothing"
 rather than a crash.
 
 - [ ] **EVERY MENU SHORTCUT.** All 101 rows of `ACCELERATORS` are now matched in
-      an `AddOnKeyDownBeforeHandler` instead of by `TranslateAccelerator`. Work
-      down the menus and try the ones you actually use -- Alt+X, Ctrl+J,
-      Ctrl+Alt+B, Ctrl+W, the Ctrl+Shift+digit window shortcuts. A shortcut that
-      does nothing is the signature failure of this change.
+  an `AddOnKeyDownBeforeHandler` instead of by `TranslateAccelerator`. Work
+  down the menus and try the ones you actually use -- Alt+X, Ctrl+J,
+  Ctrl+Alt+B, Ctrl+W, the Ctrl+Shift+digit window shortcuts. A shortcut that
+  does nothing is the signature failure of this change.
 - [ ] **The same shortcuts with a TOOL WINDOW focused.** The handler is
-      application-wide by design, so Ctrl+Shift+1 should open the dupe sheet
-      whether the callsign field or the band map has focus.
+  application-wide by design, so Ctrl+Shift+1 should open the dupe sheet
+  whether the callsign field or the band map has focus.
 - [ ] **Ctrl-C / V / X / A / Z in the DX cluster command field** must still
-      paste and copy, NOT fire Execute Config File or Clear Mult Sheet
-      (issue #23). This is now a focus test rather than a message test.
+  paste and copy, NOT fire Execute Config File or Clear Mult Sheet
+  (issue #23). This is now a focus test rather than a message test.
 - [ ] **The numeric keypad as CW memories**, if you use them
-      (`KEYPAD CW MEMORIES`). They fire whatever has focus.
+  (`KEYPAD CW MEMORIES`). They fire whatever has focus.
 - [ ] **F10 does nothing**, as before -- it must not open the menu bar.
 - [ ] **The F-key labels follow Ctrl and Alt.** Hold Ctrl: the alternate bank
-      shows. Release: the plain one comes back. This is the arm with the largest
-      change in mechanism -- the loop watched for a key-up whose key WAS Ctrl or
-      Alt; there is no application-wide key-up hook, so it now watches the
-      modifier state TRANSITION through `OnUserInput`. Watch for labels that
-      stick on the wrong bank.
+  shows. Release: the plain one comes back. This is the arm with the largest
+  change in mechanism -- the loop watched for a key-up whose key WAS Ctrl or
+  Alt; there is no application-wide key-up hook, so it now watches the
+  modifier state TRANSITION through `OnUserInput`. Watch for labels that
+  stick on the wrong bank.
 - [ ] **QUICK QSL -- and a deliberate narrowing.** `\` and `=` still QSL while
-      you are typing a callsign. They no longer fire while a TOOL WINDOW has
-      focus: type a call, click into the band map, press `\` -- nothing happens,
-      where it used to QSL. There is no application-wide KeyPress hook, and
-      QuickQSL does nothing unless the call window has text, so it moved onto
-      the entry fields. **If that edge case matters to you, say so** -- it can
-      come back, at the cost of a `VkKeyScan` and a keyboard-layout assumption.
+  you are typing a callsign. They no longer fire while a TOOL WINDOW has
+  focus: type a call, click into the band map, press `\` -- nothing happens,
+  where it used to QSL. There is no application-wide KeyPress hook, and
+  QuickQSL does nothing unless the call window has text, so it moved onto
+  the entry fields. **If that edge case matters to you, say so** -- it can
+  come back, at the cost of a `VkKeyScan` and a keyboard-layout assumption.
 - [ ] **A fault must not take the session down.** The recovery wrapper is an
-      `AddOnExceptionHandler` now, same 10-faults-in-a-minute limit. Hard to
-      provoke deliberately; what to watch for is the OPPOSITE failure -- a
-      dialog appearing for an exception that used to be swallowed and logged.
-      `grep AppException tr4w.log`.
+  `AddOnExceptionHandler` now, same 10-faults-in-a-minute limit. Hard to
+  provoke deliberately; what to watch for is the OPPOSITE failure -- a
+  dialog appearing for an exception that used to be swallowed and logged.
+  `grep AppException tr4w.log`.
 - [ ] **Shutdown.** `HamScoreShutdown` moved into `tr4w_ShutDown`. It was a
-      `finally` below the message loop, which **could never have run**: TR4W
-      exits through `ExitProcess`. So this is the first build in which the
-      HamScore uploader is actually stopped cleanly -- watch for a hang or a
-      delay on exit that was not there before.
+  `finally` below the message loop, which **could never have run**: TR4W
+  exits through `ExitProcess`. So this is the first build in which the
+  HamScore uploader is actually stopped cleanly -- watch for a hang or a
+  delay on exit that was not there before.
 - [ ] **Long soak.** Leave it running for a session with a cluster connected.
-      The loop had its own fault recovery for a reason.
+  The loop had its own fault recovery for a reason.
 
 **Still Win32, deliberately, and not blocked by any of this:** the main menu is
 a raw `HMENU` of ~181 items attached with `SetMenu`, and it stays one. The
 accelerator handler reads the same `ACCELERATORS` table the menu captions are
 drawn from, so there is still ONE source of truth and the menu can convert on
 its own schedule rather than being dragged into the pivot.
-
 
 ### 31. The dupe sheet is a form and a TDrawGrid  (`uDupeSheetForm`)
 
@@ -1135,26 +1144,26 @@ below was changed AFTER that sitting and he was remote when it landed, so none
 of it has been seen.**
 
 - [ ] **The title, on a REOPEN.** Open a dupe sheet, close it, open it again.
-      Both times it must read `Radio 1 Dupesheet - 10m-CW`. The first open was
-      always right; it was the second that showed the bare menu text (NY4I:
-      "it just states Radio 1"), because `OpenTR4WWindow` wrote the native title
-      with `SetWindowTextW` behind the LCL's back and left `Caption` stale, so
-      the form's own later assignment of the SAME string was compared, found
-      equal, and dropped.
+  Both times it must read `Radio 1 Dupesheet - 10m-CW`. The first open was
+  always right; it was the second that showed the bare menu text (NY4I:
+  "it just states Radio 1"), because `OpenTR4WWindow` wrote the native title
+  with `SetWindowTextW` behind the LCL's back and left `Caption` stale, so
+  the form's own later assignment of the SAME string was compared, found
+  equal, and dropped.
 - [ ] **The stations window title, on a reopen** -- same fix, same mechanism,
-      and it had the identical latent bug: "Stations in CW mode" is likewise the
-      same string every time it is set. Must not revert to the menu text.
+  and it had the identical latent bug: "Stations in CW mode" is likewise the
+  same string every time it is set. Must not revert to the menu text.
 - [ ] **Every other converted tool window still gets its caption.** The fix is
-      in the GENERIC opener, so the band map and the function-keys window take
-      the new path too. They must still be titled from the menu.
+  in the GENERIC opener, so the band map and the function-keys window take
+  the new path too. They must still be titled from the menu.
 - [ ] **Two dupe sheets at once, both correct.** This is the first converted
-      window with more than one instance. Open both, work a station on each
-      radio's band, and check each sheet shows ITS radio's calls with ITS radio
-      in the title.
+  window with more than one instance. Open both, work a station on each
+  radio's band, and check each sheet shows ITS radio's calls with ITS radio
+  in the title.
 - [ ] **Retirement of `COLUMN DUPESHEET ENABLE`.** Setting it in a `.cfg` or
-      `tr4w.ini` must still LOAD WITHOUT AN ERROR (it is `csRem`, not deleted)
-      and must have no effect. It must not appear in Preferences. `tr4w.json`
-      may still hold the key from before the retirement; that is inert.
+  `tr4w.ini` must still LOAD WITHOUT AN ERROR (it is `csRem`, not deleted)
+  and must have no effect. It must not appear in Preferences. `tr4w.json`
+  may still hold the key from before the retirement; that is inert.
 
 **Not asking whether it opens** -- see the note at the head of this file.
 
@@ -1164,23 +1173,23 @@ Two DIFFERENT resize behaviours, deliberately, and the pair is worth one look
 side by side because getting them backwards would be easy to miss:
 
 - [ ] **Stations SCALES.** Fixed columns; the font grows with the window and the
-      columns are sized from the font that was applied, floor 7pt, ceiling 28pt.
-      Widen it and the text gets bigger; there must be no grey strip to the
-      right of the last band column at any width.
+  columns are sized from the font that was applied, floor 7pt, ceiling 28pt.
+  Widen it and the text gets bigger; there must be no grey strip to the
+  right of the last band column at any width.
 - [ ] **The dupe sheet REFLOWS.** Widening it gives MORE COLUMNS of the same
-      size, not bigger cells -- which is what `LB_SETCOLUMNWIDTH` did, and what
-      scanning for a callsign wants.
+  size, not bigger cells -- which is what `LB_SETCOLUMNWIDTH` did, and what
+  scanning for a callsign wants.
 - [ ] **The 28pt ceiling is mine, not NY4I's** (he asked only for a minimum).
-      Maximise the stations window and say whether 28pt is the right stopping
-      point.
+  Maximise the stations window and say whether 28pt is the right stopping
+  point.
 
 ### 33. Band change now says why it refused  (`TC_BANDCHANGEDISABLED`)
 
 - [ ] With `MULTIPLE BANDS = FALSE` and at least one QSO logged, Alt-B / Alt-V
-      and the Band Up / Band Down menu items must show
-      "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-      instead of doing nothing in silence. Same for anything that reaches
-      `GoToBand` -- a band map click, for instance.
+  and the Band Up / Band Down menu items must show
+  "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+  instead of doing nothing in silence. Same for anything that reaches
+  `GoToBand` -- a band map click, for instance.
 - [ ] With `MULTIPLE BANDS = TRUE`, no message and band change works as before.
 
 The CAUSE of NY4I hitting this is not fixed here and is not meant to be: a
@@ -1195,10 +1204,9 @@ Insert off, and a palette change. Left here for ONE case that sitting did not
 cover:
 
 - [ ] **A colour change made while the program is running, from Preferences,
-      with the operator IN search-and-pounce.** The exchange field must stay
-      green rather than snapping to the new normal background, and must take the
-      new background when S&P is left.
-
+  with the operator IN search-and-pounce.** The exchange field must stay
+  green rather than snapping to the new normal background, and must take the
+  new background when S&P is left.
 
 ### 35. Super Check Partial is a form, and the dupe sheet moved under it  (`uMasterForm`, `uCallGrid`)
 
@@ -1207,27 +1215,26 @@ cover:
 so its confirmation no longer covers the code that runs. Re-check both.
 
 - [ ] **SCP fills as you type.** Type three or more characters of a callsign
-      with the SCP window open; partial matches appear. Fewer than
-      `SCP MINIMUM LETTERS` shows nothing, and the window hides itself when the
-      callsign is too short, exactly as before.
+  with the SCP window open; partial matches appear. Fewer than
+  `SCP MINIMUM LETTERS` shows nothing, and the window hides itself when the
+  callsign is too short, exactly as before.
 - [ ] **Dupes are painted and the text inverts.** A partial match already
-      worked on this band and mode must show in `SCP DUPE COLOR` with white
-      text; everything else plain on the window background.
+  worked on this band and mode must show in `SCP DUPE COLOR` with white
+  text; everything else plain on the window background.
 - [ ] **IT STOPS AT WHAT FITS AND DOES NOT SCROLL.** That is the old behaviour
-      (`MaxItemsInMasterListBox`), now `TCallGrid.LimitToVisible`. Make the
-      window small with a common partial like `K1` and confirm it fills and
-      stops rather than growing a scrollbar. Then make it BIG and confirm more
-      matches appear -- the capacity is asked for, not cached, so a resize must
-      change how many the next keystroke shows.
+  (`MaxItemsInMasterListBox`), now `TCallGrid.LimitToVisible`. Make the
+  window small with a common partial like `K1` and confirm it fills and
+  stops rather than growing a scrollbar. Then make it BIG and confirm more
+  matches appear -- the capacity is asked for, not cached, so a resize must
+  change how many the next keystroke shows.
 - [ ] **Opening SCP with `SCP MINIMUM LETTERS` at 0 still sets it to 3.** A
-      config write from a window-open; kept as it was, flagged as a shape not to
-      copy.
+  config write from a window-open; kept as it was, flagged as a shape not to
+  copy.
 - [ ] **The dupe sheet still behaves as it did in section 31** -- both sheets,
-      refill on a worked station, follow band and mode, reflow on resize.
+  refill on a worked station, follow band and mode, reflow on resize.
 - [ ] **The two windows read the same way.** SCP, the dupe sheet and the band
-      map all flow DOWN THEN ACROSS now. Confirm none of them reads across-then-
-      down, which would be the one arithmetic slip this extraction could hide.
-
+  map all flow DOWN THEN ACROSS now. Confirm none of them reads across-then-
+  down, which would be the one arithmetic slip this extraction could hide.
 
 ### 36. All five remaining-multiplier windows are forms  (`uRemMultsForm`)
 
@@ -1235,30 +1242,29 @@ One dialog procedure served `tw_REMMULTSWINDOW_INDEX` and the four fixed-type
 windows; there are five instances of one form class now. **None seen.**
 
 - [ ] **Open all five.** Remaining mults, and the DX / zone / domestic / prefix
-      windows. Each must show ITS OWN multiplier type, and the generic one must
-      follow `RemainingMultDisplay` when you swap it (Alt-M or the menu).
+  windows. Each must show ITS OWN multiplier type, and the generic one must
+  follow `RemainingMultDisplay` when you swap it (Alt-M or the menu).
 - [ ] **Worked multipliers fade, needed ones are plain.** In `HILIGHT` mode all
-      multipliers are listed and worked ones are gradiented to white with white
-      text. In `ERASE` mode only NEEDED ones are listed at all. `NONE` empties
-      the window.
+  multipliers are listed and worked ones are gradiented to white with white
+  text. In `ERASE` mode only NEEDED ones are listed at all. `NONE` empties
+  the window.
 - [ ] **THE FADE COLOUR IS A QUESTION FOR YOU.** The original picks it with
-      `tr4wColorsArray[tr4wColors(Ord(rmt))]` -- the MULTIPLIER TYPE's ordinal
-      used as a colour index, so a faded prefix and a faded zone differ for no
-      stated reason. It is reproduced exactly rather than "fixed" unseen. Say
-      whether the colours are meaningful to you or whether they should become
-      one deliberate colour.
+  `tr4wColorsArray[tr4wColors(Ord(rmt))]` -- the MULTIPLIER TYPE's ordinal
+  used as a colour index, so a faded prefix and a faded zone differ for no
+  stated reason. It is reproduced exactly rather than "fixed" unseen. Say
+  whether the colours are meaningful to you or whether they should become
+  one deliberate colour.
 - [ ] **Clean sweep.** When every multiplier is worked, the congratulations
-      message takes the window.
+  message takes the window.
 - [ ] **Column width follows SHOW DOMESTIC MULTIPLIER NAME** on the generic
-      window (wider when names are shown or the contest does prefix mults).
-      **It does NOT on the other four** -- they were given the base width once
-      at creation and never followed the setting. That inconsistency is
-      preserved; tell me if it should not be.
+  window (wider when names are shown or the contest does prefix mults).
+  **It does NOT on the other four** -- they were given the base width once
+  at creation and never followed the setting. That inconsistency is
+  preserved; tell me if it should not be.
 - [ ] **Work a multiplier and watch it fade without reopening the window.** The
-      text and the worked flag are resolved at PAINT time, not at rebuild, so
-      this is the check that the resolution seam is wired.
+  text and the worked flag are resolved at PAINT time, not at rebuild, so
+  this is the check that the resolution seam is wired.
 - [ ] **The zone window numbers from 1, except EUHFC which numbers from 0.**
-
 
 ### 37. THE MAIN WINDOW'S FORTY-TWO ELEMENTS ARE LCL CONTROLS — test this like section 30
 
@@ -1272,51 +1278,51 @@ below has been seen.**
 the wrong size, this is the change that did it.**
 
 - [ ] **Everything is there, in the right place, at the right size.** Compare
-      against a screenshot of the previous build if you have one. The positions
-      come from the same TWindows[] table and the same `ws` arithmetic; the
-      FONT is now built from the same three numbers instead of an HFONT, and a
-      wrong sign on the height would show as visibly larger text.
+  against a screenshot of the previous build if you have one. The positions
+  come from the same TWindows[] table and the same `ws` arithmetic; the
+  FONT is now built from the same three numbers instead of an HFONT, and a
+  wrong sign on the height would show as visibly larger text.
 - [ ] **The sunken borders.** defStyle carries SS_SUNKEN and that is
-      `BevelOuter = bvLowered`. With `NO BORDER = TRUE` they should be flat, as
-      before.
+  `BevelOuter = bvLowered`. With `NO BORDER = TRUE` they should be flat, as
+  before.
 - [ ] **The QSO number's bigger font.** It is the one element with its own --
-      Lucida Console, ws+3. FW_EXTRABOLD has no LCL counterpart and is now
-      fsBold; say if it reads lighter.
+  Lucida Console, ws+3. FW_EXTRABOLD has no LCL counterpart and is now
+  fsBold; say if it reads lighter.
 - [ ] **The auto-send arrow.** Down arrow, and it MOVES as the character count
-      changes. Set `AUTO SEND CHARACTER COUNT` above 0 in CW.
+  changes. Set `AUTO SEND CHARACTER COUNT` above 0 in CW.
 - [ ] **THE FIVE LIVE COLOURS.** These were re-evaluated on every repaint by
-      DrawWindows and are now pushed when the state changes. Each needs
-      exercising:
-      - **PTT** goes red on radio 1, yellow on radio 2, while transmitting.
-      - **WSJT-X** green when connected, red when not, and the element hides
-        when WSJT-X goes away.
-      - **Dupe info** takes its state colour when Alt-D reports a dupe, and
-        clears.
-      - **Radio 1 / radio 2 rows** turn the alert colour when that radio
-        disconnects and back when it reconnects. **This one has no text write
-        behind it** -- it rides on a new main-thread job (mtRadioAlertColors),
-        so it is the most likely of the five to be missed.
+  DrawWindows and are now pushed when the state changes. Each needs
+  exercising:
+  - **PTT** goes red on radio 1, yellow on radio 2, while transmitting.
+  - **WSJT-X** green when connected, red when not, and the element hides
+    when WSJT-X goes away.
+  - **Dupe info** takes its state colour when Alt-D reports a dupe, and
+    clears.
+  - **Radio 1 / radio 2 rows** turn the alert colour when that radio
+    disconnects and back when it reconnects. **This one has no text write
+    behind it** -- it rides on a new main-thread job (mtRadioAlertColors),
+    so it is the most likely of the five to be missed.
 - [ ] **The frequency display tracks the radio.** It is written from the
-      POLLING THREAD and now travels through uPanelUpdate's coalescing queue
-      (puElement) rather than SetWindowTextW on a handle -- because an LCL
-      control paints from a property and a handle write would leave it stale.
-      Watch it follow the VFO continuously, and go blank on disconnect.
+  POLLING THREAD and now travels through uPanelUpdate's coalescing queue
+  (puElement) rather than SetWindowTextW on a handle -- because an LCL
+  control paints from a property and a handle write would leave it stale.
+  Watch it follow the VFO continuously, and go blank on disconnect.
 - [ ] **Colour scheme changes still reach the main window** (Preferences ->
-      colours). RefreshMainWindowColors pushes the elements now.
+  colours). RefreshMainWindowColors pushes the elements now.
 - [ ] **THE INITIAL EXCHANGE FILLS.** With `INITIAL EXCHANGE` set to Zone, type
-      a callsign and the zone must appear in the exchange field. Found broken on
-      the bench 2026-08-24 (NY4I: "I enter AF4O, the zone in the exchange is
-      not displayed... That was working earlier") and fixed the same evening:
-      `SetMainWindowText(mweExchange, ...)` reached a nil panel, because the
-      creation loop skips `mweiStyle <= 2` and the entry fields are TEdits, not
-      panels. Two siblings were dead the same way and are worth checking too:
+  a callsign and the zone must appear in the exchange field. Found broken on
+  the bench 2026-08-24 (NY4I: "I enter AF4O, the zone in the exchange is
+  not displayed... That was working earlier") and fixed the same evening:
+  `SetMainWindowText(mweExchange, ...)` reached a nil panel, because the
+  creation loop skips `mweiStyle <= 2` and the entry fields are TEdits, not
+  panels. Two siblings were dead the same way and are worth checking too:
 - [ ] **The exchange field CLEARS when the operating mode changes** (Ctrl-Enter
-      between CQ and S&P with something typed in it).
+  between CQ and S&P with something typed in it).
 - [ ] **WAE QTC puts the callsign into the call field** (`LOGWAE:177`), if you
-      run WAE.
+  run WAE.
 - [ ] **Greying still works:** the inactive radio's row in two-radio mode, the
-      foot switch and WinKey indicators, and the quick-display FLASH (which is
-      still an enable/disable toggle -- see LOGWIND).
+  foot switch and WinKey indicators, and the quick-display FLASH (which is
+  still an enable/disable toggle -- see LOGWIND).
 
 ### 38. Three injected keystrokes are deferred calls now
 
@@ -1325,15 +1331,14 @@ deferring the action until the current message finished. That deferral is kept
 through Application.QueueAsyncCall; what went away is the synthetic keystroke.
 
 - [ ] **The trailing space in the exchange field** (space bar at the end of an
-      exchange that does not already end in one).
+  exchange that does not already end in one).
 - [ ] **The foot switch's start-sending key** in CW. Was a WM_CHAR into the call
-      field; now calls the field's own key handler.
+  field; now calls the field's own key handler.
 - [ ] **MMTTY double-click pastes a callsign into the call field AND FOCUSES
-      IT.** The focus half never worked: the old code posted WM_SETFOCUS, which
-      tells a window it has gained focus rather than giving it focus. If the
-      caret now lands in the call field where it did not before, that is the
-      fix, not a regression.
-
+  IT.** The focus half never worked: the old code posted WM_SETFOCUS, which
+  tells a window it has gained focus rather than giving it focus. If the
+  caret now lands in the call field where it did not before, that is the
+  fix, not a regression.
 
 ### 39. The WSJT-X indicator is driven by domain state  (`uWSJTXState`, `uStateBridge`)
 
@@ -1343,27 +1348,26 @@ listener thread no longer names a widget.
 
 - [ ] **Start WSJT-X: the indicator appears and goes green.**
 - [ ] **Stop WSJT-X: it goes red and then hides** when the link is declared
-      dead.
-- [ ] **Start TR4W with WSJT-X ALREADY RUNNING.** A heartbeat can arrive before
-      the main form exists; InstallStateBridge brings the view into line once at
-      install for exactly that case, and it is the half most likely to be wrong.
+  dead.
+- [x] **Start TR4W with WSJT-X ALREADY RUNNING.** A heartbeat can arrive before
+  the main form exists; InstallStateBridge brings the view into line once at
+  install for exactly that case, and it is the half most likely to be wrong.
 - [ ] **It does not flicker.** A heartbeat arrives every few seconds and setting
-      the state to what it already holds must notify nobody.
+  the state to what it already holds must notify nobody.
 - [x] **DISABLE WSJT-X IN PREFERENCES AND THE BOX GOES OUT. CONFIRMED
-      2026-08-24 (NY4I): "restarted it, box goes out now."** First bench
-      confirmation of the domain layer -- state object, notification, bridge and
-      view, end to end.
-      Original report and fix: Found on the bench
-      2026-08-24 and fixed the same evening: `Stop` closed the sockets without
-      telling `WSJTXState`, so the indicator stayed GREEN with nothing behind
-      it. The state is cleared in `Stop` now, before the sockets close and
-      outside the `started` guard. **Re-enable and confirm it comes back green
-      when the first heartbeat arrives -- not the moment the server binds.**
-- [ ] **Saving Preferences with WSJT-X disabled no longer logs
-      `JoinMulticastGroup called but UDP server not active`.** It fired on every
-      Save. A warning that appears during correct operation is one people learn
-      to ignore.
-
+  2026-08-24 (NY4I): "restarted it, box goes out now."** First bench
+  confirmation of the domain layer -- state object, notification, bridge and
+  view, end to end.
+  Original report and fix: Found on the bench
+  2026-08-24 and fixed the same evening: `Stop` closed the sockets without
+  telling `WSJTXState`, so the indicator stayed GREEN with nothing behind
+  it. The state is cleared in `Stop` now, before the sockets close and
+  outside the `started` guard. **Re-enable and confirm it comes back green
+  when the first heartbeat arrives -- not the moment the server binds.**
+- [x] **Saving Preferences with WSJT-X disabled no longer logs
+  `JoinMulticastGroup called but UDP server not active`.** It fired on every
+  Save. A warning that appears during correct operation is one people learn
+  to ignore. [AGENT - Note it would help if we ar erunning DEBUG or higher to log when a command is changed. with the registry and .AsText, I presume that is possible.]
 
 ### 40. Two multi-op message-loop defects fixed, and the silent drop now reports
 
@@ -1373,26 +1377,26 @@ below. Needs a real multi-op session; nothing automated reaches any of it (there
 is no `uNet` test at all).
 
 - [ ] **A spot announced by another operator still reaches the cluster**, and
-      **the QSO behind it in the same segment still arrives.** The spot arm
-      advanced by 264 bytes for a 48-byte message -- an overshoot of 216 -- so
-      one network-forwarded spot desynchronised the rest of that buffer. This is
-      the fix most likely to be observable.
+  **the QSO behind it in the same segment still arrives.** The spot arm
+  advanced by 264 bytes for a 48-byte message -- an overshoot of 216 -- so
+  one network-forwarded spot desynchronised the rest of that buffer. This is
+  the fix most likely to be observable.
 - [ ] **When one station drops off the network, the others' QSOs still arrive.**
-      The disconnect arm overwrote the recv byte count with a client index, so
-      the loop exited early and discarded whatever followed the notice.
+  The disconnect arm overwrote the recv byte count with a client index, so
+  the loop exited early and discarded whatever followed the notice.
 - [ ] **Watch `tr4w.log` for `[Net] Unrecognised message id`.** New. If it never
-      appears, the framing is holding. **If it does, capture the log** -- it
-      names the id and the offset, and it is the first evidence this program has
-      ever produced for a class of loss that was previously invisible.
+  appears, the framing is holding. **If it does, capture the log** -- it
+  names the id and the offset, and it is the first evidence this program has
+  ever produced for a class of loss that was previously invisible.
 - [ ] **A busy multi-op run.** HALF the structural defect is now fixed: a
-      message whose bytes have not all arrived is REFUSED AND LOGGED rather than
-      assembled from stale buffer contents and logged as a real QSO. What is
-      still missing is the carry-over buffer -- `Bufindex := 1` on every recv --
-      so a split message is **dropped**, not recovered. Dropped-and-logged beats
-      silently-wrong, but the recovery is the transport rewrite.
-      **Watch for `[Net] Message id ... needs N bytes but only M arrived`.** If
-      that line appears in a real multi-op session, splits are happening in the
-      field and the transport rewrite moves up the list.
+  message whose bytes have not all arrived is REFUSED AND LOGGED rather than
+  assembled from stale buffer contents and logged as a real QSO. What is
+  still missing is the carry-over buffer -- `Bufindex := 1` on every recv --
+  so a split message is **dropped**, not recovered. Dropped-and-logged beats
+  silently-wrong, but the recovery is the transport rewrite.
+  **Watch for `[Net] Message id ... needs N bytes but only M arrived`.** If
+  that line appears in a real multi-op session, splits are happening in the
+  field and the transport rewrite moves up the list.
 
 **Not a defect, do not re-report:** `NET_MESSAGESTATE_ID` is sent and received
 only under `{$IF OZCR2008}`, and that is `False` -- so no shipping TR4W emits it
@@ -1402,7 +1406,6 @@ same conditional (`uCWKeyerCPU.pas:87`). The residual hazard is cross-build
 only -- `tr4wserver` relays the id ungated, so a client compiled WITH the switch
 would feed standard clients something they cannot advance past.
 
-
 ### 41. Two ADIF export defects, found by pinning and NOT fixed
 
 Both surfaced while extracting `GetMyExchangeForExport` into `uADIFExchange` and
@@ -1410,23 +1413,48 @@ pinning its arms. Both are pinned as-is, because that commit's whole claim is
 that it changed nothing, and both need a CONTEST answer rather than a
 refactoring one.
 
-- [ ] **`AgeAndQSONumberExchange` exports `Error generating my exchange`.** The
-      arm is `Format('%-3d %-2s %03d      ', [cMyState, nrSent])` -- **three
-      format specifiers, two arguments**, and the first specifier is `%d` while
-      the first argument is a PAnsiChar. `Format` raises, the routine's own
-      `try/except` swallows it, and the caller gets the initialisation string.
-      Every contest using that exchange has been exporting the error text in
-      that ADIF field. **What should it say?**
-- [ ] **Serial numbers are not zero-padded, though the format looks like they
-      would be.** `RSTQSONumberExchange` is `'%-3d %03d '`. In C `%03d` of 7 is
-      `007`; in Object Pascal the leading zero is part of the WIDTH, so it is
-      right-justified with spaces -- serial 7 exports as `  7`. The arm carries
-      the comment "issue 177", which suggests somebody wanted `007` and wrote
-      the C spelling. **Should it be `007`?** If so it is `Format('%.3d', ...)`
-      or explicit padding, and it changes every affected log.
+- [x] **`AgeAndQSONumberExchange` exports `Error generating my exchange`.** The
+  arm is `Format('%-3d %-2s %03d      ', [cMyState, nrSent])` -- **three
+  format specifiers, two arguments**, and the first specifier is `%d` while
+  the first argument is a PAnsiChar. `Format` raises, the routine's own
+  `try/except` swallows it, and the caller gets the initialisation string.
+  Every contest using that exchange has been exporting the error text in
+  that ADIF field. **What should it say?** [ AGENT: How about we fix the issue - Identify th eocntests that use this exchange and I will check the rules. I suspect it is RST.]
+- [x] **Serial numbers are not zero-padded, though the format looks like they
+  would be.** `RSTQSONumberExchange` is `'%-3d %03d '`. In C `%03d` of 7 is
+  `007`; in Object Pascal the leading zero is part of the WIDTH, so it is
+  right-justified with spaces -- serial 7 exports as `  7`. The arm carries
+  the comment "issue 177", which suggests somebody wanted `007` and wrote
+  the C spelling. **Should it be `007`?** If so it is `Format('%.3d', ...)`
+  or explicit padding, and it changes every affected log. [AGENT - The padding is not required although it does aid readability in my view. A pad to make it a totle of 4 digits is ok as is three or none. You col dmake it dynamic and look for (DIGITSIN(max(qsoNumber)) as the pad value but it is perfectly with no 0 padding. The spec states that the spacing between the fields is what the log checking tools use]
 
 Neither is a regression -- both predate today and are unchanged by the
 extraction, which the corpus confirms byte-for-byte across all 13 ADIF fixtures.
+
+
+### 42. Accelerators no longer reach past a modal dialog
+
+Found on the bench 2026-08-24 (NY4I): with a dialog open, ESC did not close it
+and the main window reacted instead; TAB turned the exchange field green, which
+is search-and-pounce.
+
+ESC and TAB are both accelerators (`uAccelerators.pas:170` -> `menu_escape`,
+`:174` -> `menu_spmode_ortab`), and `Application.NotifyKeyDownBeforeHandler`
+fires for EVERY `TWinControl` in the application -- so the hook matched them on
+a dialog's controls, posted `WM_COMMAND` to the main window, and swallowed the
+key. Suppressed now while a modal form is active.
+
+- [ ] **ESC closes a dialog** and the main window does NOT react. Try several:
+      Preferences, Edit QSO, Send Spot, the message editor.
+- [ ] **TAB moves between controls inside a dialog** and does NOT put the main
+      window into search-and-pounce.
+- [ ] **ACCELERATORS STILL WORK FROM A MODELESS TOOL WINDOW.** This is the half
+      that must not have been broken by the fix: with focus in the band map,
+      stations, a dupe sheet, SCP or a remaining-mults window, Alt-B / Alt-V and
+      the other accelerators must still fire. The guard is on MODAL forms
+      specifically, not on "any form that is not the main window", because tool
+      windows are separate forms too.
+- [ ] **And they still work from the main window itself.**
 
 ---
 
@@ -1735,12 +1763,12 @@ it was written -- which is also why bench item 10 has nothing to report yet.
 **AND THREE MORE MESSAGES WERE BEING DROPPED THE SAME WAY**, two of them from
 long before this work:
 
-| Message | The list said | Actually | Consequence |
-|---|---|---|---|
-| `WM_CTY_VERSION_CHECKED` | `WM_APP + 213` | `WM_APP + 210` | CTY.DAT version-check result discarded |
-| `WM_TRAYBALLON` | `WM_APP + 100` | `WM_SOCK + 3` = `$5F7` | tray icon clicks never handled |
-| `WM_PANEL_UPDATE` | absent | `WM_APP + 230` | the whole radio-panel seam |
-| `WM_USER_HEADLESS_SYNC_REPLACE` | absent | `WM_USER + 200` | **multi-op log replace never ran**, and it is `SendMessage`d, so the requesting thread blocked to be told nothing happened |
+| Message                         | The list said  | Actually               | Consequence                                                                                                                |
+| ------------------------------- | -------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `WM_CTY_VERSION_CHECKED`        | `WM_APP + 213` | `WM_APP + 210`         | CTY.DAT version-check result discarded                                                                                     |
+| `WM_TRAYBALLON`                 | `WM_APP + 100` | `WM_SOCK + 3` = `$5F7` | tray icon clicks never handled                                                                                             |
+| `WM_PANEL_UPDATE`               | absent         | `WM_APP + 230`         | the whole radio-panel seam                                                                                                 |
+| `WM_USER_HEADLESS_SYNC_REPLACE` | absent         | `WM_USER + 200`        | **multi-op log replace never ran**, and it is `SendMessage`d, so the requesting thread blocked to be told nothing happened |
 
 Four of eight. Not one of them produced an error, a log line or a compiler
 diagnostic: the post SUCCEEDS, and the work simply does not happen.
@@ -1762,20 +1790,24 @@ was reaching the panel to be suppressed in the first place.
 **To verify on the bench:**
 
 - [x] Open Radio 1 with no radio attached. **RIT, XIT and SPLIT must be GREY.**
-      **CONFIRMED 2026-08-20 (NY4I): "rit xit and split appear gray now."** That
-      is the first update the marshalling seam has ever delivered.
+  **CONFIRMED 2026-08-20 (NY4I): "rit xit and split appear gray now."** That
+  is the first update the marshalling seam has ever delivered.
+
 - [x] Close and reopen it a few times. Still grey every time (that is the
-      `ForgetPanel` half, a separate bug from the message routing).
-      **CONFIRMED 2026-08-20 (NY4I): "closed and reopened the radio panel, still
-      gray."** Both halves of F7 are now verified: the message reaches the panel
-      at all, and the coalescing cache no longer suppresses the first update
-      after a reopen.
+  `ForgetPanel` half, a separate bug from the message routing).
+  **CONFIRMED 2026-08-20 (NY4I): "closed and reopened the radio panel, still
+  gray."** Both halves of F7 are now verified: the message reaches the panel
+  at all, and the coalescing cache no longer suppresses the first update
+  after a reopen.
+
 - [ ] With a radio connected, **bench item 10 becomes testable for the first
-      time** -- VFO A/B text, the mode labels, RIT/XIT/SPLIT following the rig.
-      None of it can ever have worked, so treat that whole item as unrun rather
-      than as a regression check.
+  time** -- VFO A/B text, the mode labels, RIT/XIT/SPLIT following the rig.
+  None of it can ever have worked, so treat that whole item as unrun rather
+  than as a regression check.
+
 - [ ] **Multi-op:** a client log replace from the server should now actually
-      happen (`WM_USER_HEADLESS_SYNC_REPLACE`).
+  happen (`WM_USER_HEADLESS_SYNC_REPLACE`).
+
 - ~~**Tray icon:** clicking the notification-area icon should reach TR4W
   again.~~ **STRUCK -- NOT OBSERVABLE, and it should never have been listed.**
   `WM_TRAYBALLON`'s handler in `uMainWindowProc.pas:385` is an EMPTY
@@ -1790,12 +1822,14 @@ was reaching the panel to be suppressed in the first place.
   genuinely lands. If a tray click is ever meant to DO something -- restore the
   window, show a menu -- the handler is where it goes, and it will work now
   whereas before the message never got there.
+
 - [x] **Taskbar button:** the main window has one again, and clicking it
-      restores/minimises normally. **CONFIRMED 2026-08-20 (NY4I).** This is the
-      `ShowInTaskBar := stAlways` fix, not a message-routing one: the window had
-      had no taskbar button at all since it became an LCL form, because
-      stDefault means "show if this is the application's MAIN form" and TR4W has
-      none -- `Application.CreateForm` is never called.
+  restores/minimises normally. **CONFIRMED 2026-08-20 (NY4I).** This is the
+  `ShowInTaskBar := stAlways` fix, not a message-routing one: the window had
+  had no taskbar button at all since it became an LCL form, because
+  stDefault means "show if this is the application's MAIN form" and TR4W has
+  none -- `Application.CreateForm` is never called.
+
 - [ ] **CTY.DAT version check** should report a newer version when there is one.
 
 ---
