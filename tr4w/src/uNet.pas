@@ -97,9 +97,10 @@ const
     );
 procedure SetComputerName;
 procedure ShowServerMessage(ServMess: TServerMessage);
-procedure CreateNetworkListView;
+{ ONE CELL of the station list -- see the implementation.  Exported because
+  DisplayMessageStatus writes two of the OZCR2008 columns. }
+procedure SetClientCell(const aRow, aCol: integer; const aText: string);
 function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
-function NetDlgProc(hwnddlg: HWND; Msg: UINT; wp: wParam; lp: lParam): BOOL; stdcall;
 //procedure SendEditedQSOToNetwork(var CE: ContestExchange);
 procedure ShowConnectionStatus(Operation: PAnsiChar);
 procedure AddNewClient(ClientID: integer);
@@ -121,7 +122,6 @@ function SendToNet(var buf; Len: integer): integer;
 function NetIsConnected: boolean;
 procedure CommitChangesInLocalLog;
 function SendRecordToServer(RecordType: Word; var rec: ContestExchange): boolean;
-function NewNetWndProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
 procedure SendFullStationStatus;
 procedure SendSerialNumberChange(Status: TSerialNumberType);
 
@@ -136,7 +136,6 @@ var
   tNet_Event                            : Cardinal;
   tShowTypedCallsign                    : boolean = True;
   CurrentDisplayedRow                   : integer = 1;
-  OldNetWndProc                         : Pointer;
 
   MF                                    : MultsFrequencies;
   tUSQ                                  : Cardinal;
@@ -189,6 +188,7 @@ const
 implementation
 uses
   uMainForm,   { the call field, named -- wh[] round 3 }
+  uNetworkForm,   { the station list is a TListView on a form now }
   uCFG,
   LOGSUBS2,
 //  uMultsFrequencies,
@@ -198,98 +198,6 @@ uses
   uGetServerLog,
   MainUnit,
    uConfigValues;
-
-function NetDlgProc(hwnddlg: HWND; Msg: UINT; wp: wParam; lp: lParam): BOOL; stdcall;
-label
-  CheckBuffer;
-
-var
-  i                                     : integer;
-  Bufindex                              : integer;
-  ClientID                              : integer;
-  DisconnectedClient                    : integer;
-  MsgId                                 : word;
-  MsgSize                               : integer;
-  StationStPtr                          : TStationStatePtr;
-  NetQSOInfoPtr                         : NetQSOInformationPtr;
-  ServerMessagePtr                      : TServerMessagePtr;
-  NetDXSpotPtr                          : TNetDXSpotPtr;
-  NetTimeSyncPtr                        : TNetTimeSyncPtr;
-  ParameterToNetworkPtr                 : TParameterToNetworkPtr;
-  IntercomMessagePtr                    : TIntercomMessagePtr;
-//  MessageStatePtr                       : TMessageStatePtr;
-begin
-  Result := False;
-  case Msg of
-
-      // Integer(): NMHDR.code is UNSIGNED as FPC's Windows unit declares it,
-      // and every NM_/CDN_ constant is NEGATIVE, so the bare comparison is
-      // ALWAYS FALSE and this never ran.  Delphi declares that field signed,
-      // which is why it worked before the FPC port.  The compiler warned --
-      // "Comparison might be always false" -- and the build did not fail.
-    WM_NOTIFY: if Integer(PNMHdr(lp)^.code) = NM_RELEASEDCAPTURE then FrmSetFocus;
-
-    WM_INITDIALOG:
-      begin
-        MyStationState.ssID := NET_STATIONSTATUS_ID;
-        NetSynQSOInformation.qsID := NET_TAKESERVERQSO_ID; //262
-        NetQSOInfoToSend.qiID := NET_QSOINFO_ID; //264
-        NetDXSpot.dsID := NET_NETWORKDXSPOT_ID; //98
-        NetTimeSync.tsID := NET_TIMESYN_ID; //20
-        NetIntercomMessage.imID := NET_INTERCOMMESSAGE_ID; //84
-        ParameterToNetwork.pnID := NET_PARAMETER_ID;
-        ; //514
-        SendSpotViaNetwork.vnID := NET_SPOTVIANETWORK_ID; //48
-
-        TotalClients := 0;
-        Windows.ZeroMemory(@PosInClientsList, SizeOf(PosInClientsList));
-        tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndHandle := hwnddlg;
-        TryConnectToNetwork;
-        SetTimer(hwnddlg, NETSTATUS_TIMER_HANDLE, tNetStatusUpdateInterval, nil);
-        CreateNetworkListView;
-        OldNetWndProc := Pointer(Windows.SetWindowLong(hwnddlg, GWL_WNDPROC, integer(@NewNetWndProc)));
-      end;
-
-    WM_TIMER:
-      begin
-        if NetIsConnected then
-           begin
-           //          SendStationStatus;
-           {
-          if _networktest then
-          begin
-            CallWindowString := CD.GetRandomCall;
-            ExchangeWindowString := IntToStr(CountryTable.GetCQZone(CallWindowString));
-            TryLogContact;
-          end;
-}
-           end
-        else
-           begin
-           TryConnectToNetwork;
-           end;
-
-      end;
-
-
-    WM_DESTROY:
-      begin
-        KillTimer(hwnddlg, NETSTATUS_TIMER_HANDLE);
-        // ShutDown(NetSocket, SD_BOTH) stood here.  TNetClient.Disconnect
-        // closes the IOHandler, which is what unblocks its reader.
-        NetDisconnect;
-      end;
-
-    WM_CLOSE:
-      begin
-        wh[mweNetwork] := 0;
-        CloseTR4WWindow(tw_NETWINDOW_INDEX);
-      end;
-//    WM_HELP: tWinHelp(8);
-    WM_SIZE, WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE: DefTR4WProc(Msg, lp, hwnddlg);
-
-  end;
-end;
 
 { CONSUME WHOLE MESSAGES FROM NetBuffer AND SAY HOW MANY BYTES WENT.
 
@@ -1077,19 +985,20 @@ begin
   NetThreadID := 0;
 end;
 
-procedure CreateNetworkListView;
-var
-  elvc                                  : tagLVCOLUMNA;
-  i                                     : integer;
+{ ONE CELL OF THE STATION LIST.
+
+  Was tLVSetText(h, row, col, text) against the Win32 list view's handle, with
+  `h := wh[mweNetwork]` fetched at the top of DisplayClientStatus.  The list is
+  a TListView on uNetworkForm now; the row and column arithmetic above is
+  untouched.
+
+  Silently does nothing when the window is closed, which is exactly what
+  tLVSetText did against a zero handle. }
+procedure SetClientCell(const aRow, aCol: integer; const aText: string);
 begin
-  CreateListView(tw_NETWINDOW_INDEX, mweNetwork, 0);
-  elvc.Mask := LVCF_TEXT or LVCF_WIDTH or LVCF_FMT;
-  for i := 0 to NetColumns - 1 do
+  if TR4WNetworkForm <> nil then
      begin
-     elvc.fmt := NetColumnsArray[i].fmt;
-     elvc.pszText := NetColumnsArray[i].Text;
-     elvc.cx := NetColumnsArray[i].Width;
-     uCommctrl.ListView_InsertColumnA(wh[mweNetwork], i, elvc);
+     TR4WNetworkForm.SetCell(aRow, aCol, aText);
      end;
 end;
 
@@ -1112,7 +1021,7 @@ begin
      begin
      for i2 := 0 to 7 do
         begin
-        tLVSetText(h, i, i2, '');
+        SetClientCell(i, i2, '');
         end;
      Exit;
      end;
@@ -1123,8 +1032,8 @@ begin
     sstComputerNameAndID:
       begin
         CID_TWO_BYTES[0] := StatusArray[Index].ssComputerID;
-        tLVSetText(h, i, 0, string(StatusArray[Index].ssName));
-        tLVSetText(h, i, 1, string(PAnsiChar(@CID_TWO_BYTES)));
+        SetClientCell(i, 0, string(StatusArray[Index].ssName));
+        SetClientCell(i, 1, string(PAnsiChar(@CID_TWO_BYTES)));
       end;
     sstBandModeFreq:
       begin
@@ -1142,11 +1051,11 @@ begin
 }
         TF.Format(@TempBuffer, '%s%s', BandStringsArrayWithOutSpaces[StatusArray[Index].ssCurrentBand], ModeStringArray[StatusArray[Index].ssCurrentMode]);
 
-        tLVSetText(h, i, 2, string(PAnsiChar(@TempBuffer)));
+        SetClientCell(i, 2, string(PAnsiChar(@TempBuffer)));
 
         // D12: FreqToPChar returns native string; flows straight through tLVSetText
         // (this replaced an earlier PAnsiChar(AnsiString(...)) LV_ITEMA hack).
-        tLVSetText(h, i, 3, FreqToPChar{WithoutHZ}(StatusArray[Index].ssFreq));        // 4.61.7
+        SetClientCell(i, 3, FreqToPChar{WithoutHZ}(StatusArray[Index].ssFreq));        // 4.61.7
 {
         ListView_SetItemText(h, i, 2, BandStringsArray[StatusArray[Index].ssCurrentBand]);
         ListView_SetItemText(h, i, 3, ModeString[StatusArray[Index].ssCurrentMode]);
@@ -1156,25 +1065,25 @@ begin
 
     sstPTT:
       begin
-        tLVSetText(h, i, 6 - 1, string(PTTStatusString[PTTStatusType((StatusArray[Index].ssStatusByte and (1 shl 0)) <> 0)]));
+        SetClientCell(i, 6 - 1, string(PTTStatusString[PTTStatusType((StatusArray[Index].ssStatusByte and (1 shl 0)) <> 0)]));
         //ListView_Update(h, I);
         ListView_RedrawItems(h, i, i);
       end;
 
     sstOpMode:
-      tLVSetText(h, i, 5 - 1, string(OpModeString[OpModeType((StatusArray[Index].ssStatusByte and (1 shl 1)) <> 0)]));
+      SetClientCell(i, 5 - 1, string(OpModeString[OpModeType((StatusArray[Index].ssStatusByte and (1 shl 1)) <> 0)]));
 
     sstQSOs:
-      tLVSetText(h, i, 7 - 1, IntToStr(StatusArray[Index].ssQSOTotals));
+      SetClientCell(i, 7 - 1, IntToStr(StatusArray[Index].ssQSOTotals));
 
     sstCallsign:
       begin
-        tLVSetText(h, i, 8 - 1, string(StatusArray[Index].ssCallsign));
-        tLVSetText(h, i, 9 - 1, string(da[(StatusArray[Index].ssStatusByte and (1 shl 2)) <> 0]));
+        SetClientCell(i, 8 - 1, string(StatusArray[Index].ssCallsign));
+        SetClientCell(i, 9 - 1, string(da[(StatusArray[Index].ssStatusByte and (1 shl 2)) <> 0]));
       end;
 
     sstOperator:
-      tLVSetText(h, i, 9, string(StatusArray[Index].ssOperator));
+      SetClientCell(i, 9, string(StatusArray[Index].ssOperator));
   end;
 
   //  ListView_SetItemText(h, I, 8, inttopchar(StatusArray[Index].ssCWElements));
@@ -1355,8 +1264,8 @@ begin
   i := PosInClientsList[Index] - 1;
   elvi.Mask := LVIF_TEXT;
   h := wh[mweNetwork];
-  tLVSetText(h, i, 10, string(PAnsiChar(@ProgressBarArray)));
-  tLVSetText(h, i, 11, string(Msg.msCWMessage));
+  SetClientCell(i, 10, string(PAnsiChar(@ProgressBarArray)));
+  SetClientCell(i, 11, string(Msg.msCWMessage));
 end;
 
 function SendToNet(var buf; Len: integer): integer;
@@ -1479,59 +1388,6 @@ end;
 procedure SetComputerName;
 begin
   SendStationStatus(sstComputerNameAndID);
-end;
-
-function NewNetWndProc(hwnddlg: HWND; Msg: UINT; wParam: wParam; lParam: lParam): UINT; stdcall;
-var
-  lplvcd                                : PNMLVCustomDraw;
-begin
-  if Msg = WM_NOTIFY then
-     begin
-     with PNMHdr(lParam)^ do
-        begin
-        case code of
-          NM_CUSTOMDRAW:
-            begin
-              lplvcd := PNMLVCustomDraw(lParam);
-
-              case lplvcd.nmcd.dwDrawStage of
-                CDDS_PREPAINT:
-                  begin
-                    Result := CDRF_NOTIFYITEMDRAW;
-                    Exit;
-                  end;
-                CDDS_ITEMPREPAINT:
-                // (CDDS_SUBITEM or CDDS_PREPAINT):
-
-                  begin
-                    //if StatusArray[CurrentDisplayedRow].ssPTTState = PTT_ON then
-                    //if LastStatus = sstPTT then
-                    if (StatusArray[CurrentDisplayedRow].ssStatusByte and (1 shl 0)) <> 0 then
-  //                    if lplvcd.iSubItem = CurrentDisplayedRow then
-                       begin
-                       if StatusArray[CurrentDisplayedRow].ssComputerID = ComputerID then
-                          begin
-                          lplvcd.clrTextBk := clYellow
-                          end
-                       else
-                          begin
-                          //                        if (StatusArray[CurrentDisplayedRow].ssStatusByte and (1 shl 0)) <> 0 then
-                          //                          lplvcd.clrTextBk := clblue
-                          //                        else
-                                                lplvcd.clrTextBk := clred;
-                                                lplvcd.clrText := clwhite;
-                          end;
-                       end;
-
-                  end;
-              end;
-            end;
-
-        end;
-        end;
-     end;
-
-  Result := CallWindowProc(OldNetWndProc, hwnddlg, Msg, wParam, lParam);
 end;
 
 procedure SendFullStationStatus;

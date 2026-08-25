@@ -1,0 +1,31 @@
+object frmNetwork: TfrmNetwork
+  Left = 0
+  Top = 0
+  BorderStyle = bsSizeToolWin
+  Caption = 'Network'
+  ClientHeight = 240
+  ClientWidth = 500
+  KeyPreview = True
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnKeyDown = HandleKeyDown
+  OnShow = HandleShow
+  object lvClients: TListView
+    Left = 0
+    Height = 240
+    Top = 0
+    Width = 500
+    Align = alClient
+    Columns = <>
+    OwnerDraw = False
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 0
+    ViewStyle = vsReport
+    OnCustomDrawItem = ClientsCustomDrawItem
+  end
+  object tmrStatus: TTimer
+    Enabled = False
+    OnTimer = StatusTick
+  end
+end

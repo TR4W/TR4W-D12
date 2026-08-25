@@ -544,6 +544,7 @@ uses
   uIntercomForm,           // CreateTR4WIntercomWindow
   uMP3RecorderForm,        // CreateTR4WMP3RecorderWindow
   uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
+  uNetworkForm,            // CreateTR4WNetworkWindow
   uRemMultsForm,       // CreateTR4WRemMultsWindow -- all five mult windows
   uFunctionKeysForm,   // CreateTR4WFunctionKeysWindow -- the first LCL tool window a TForm now -- CreateTR4WMainForm
   uPrefsForm,       // the PREF command -- the radio Preferences window
@@ -2447,7 +2448,9 @@ begin
   tr4w_WindowsArray[tw_TELNETWINDOW_INDEX].WndProcAdr := @TelnetWndDlgProc;
   // Neither radio panel has a WndProcAdr: they are two instances of one LCL
   // form (uRadioPanelForm) and OpenTR4WWindow reaches them directly.
-  tr4w_WindowsArray[tw_NETWINDOW_INDEX].WndProcAdr := @NetDlgProc;
+  // tw_NETWINDOW_INDEX has no WndProcAdr: it is an LCL form (uNetworkForm).
+  // It could not be one until the multi-op socket stopped being delivered to
+  // this window by WSAAsyncSelect.
   // tw_INTERCOMWINDOW_INDEX has no WndProcAdr: it is an LCL form
   // (uIntercomForm) and OpenTR4WWindow reaches it directly.
   // tw_POSTSCORESWINDOW_INDEX has no WndProcAdr: it is an LCL form
@@ -5547,6 +5550,11 @@ begin
      // FIVE INSTANCES of one form -- the widest of the converted windows.
      h := CreateTR4WRemMultsWindow(ID);
      lclForm := RemMultsForm(ID);
+     end
+  else if ID = tw_NETWINDOW_INDEX then
+     begin
+     h := CreateTR4WNetworkWindow;
+     lclForm := TR4WNetworkForm;
      end
   else if (ID = tw_RADIOINTERFACEWINDOW1_INDEX) or
           (ID = tw_RADIOINTERFACEWINDOW2_INDEX) then
