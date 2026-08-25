@@ -72,7 +72,21 @@ function  RunAllSuites: Boolean;  // Returns True if every test passes.
 implementation
 
 var
-   GSuites     : array[0..63] of TTestCase;
+   { A DYNAMIC ARRAY, because the fixed one SILENTLY DISCARDED suites.
+
+     This was `array[0..63]`, and RegisterSuite's guard read
+
+        if GSuiteCount < Length(GSuites) then ...   -- and NO else
+
+     so the 65th suite registered was dropped with no error, no warning and no
+     change to the exit code -- the run simply reported a smaller number and
+     still said "All tests passed".  A test suite that quietly stops running is
+     the worst possible failure mode for a regression net: it is trusted exactly
+     as much as before while covering less, and the headline count is the only
+     evidence, which nobody reads as an absolute.
+
+     Found 2026-08-25 when adding a suite made the total FALL by 276. }
+   GSuites     : array of TTestCase;
    GSuiteCount : Integer = 0;
 
 // ---------------------------------------------------------------------------
@@ -175,11 +189,11 @@ end;
 
 procedure RegisterSuite(Suite: TTestCase);
 begin
-   if GSuiteCount < Length(GSuites) then
-      begin
-      GSuites[GSuiteCount] := Suite;
-      Inc(GSuiteCount);
-      end;
+   { Grows to fit.  There is deliberately no capacity to exceed and therefore no
+     silent-drop branch to get wrong again. }
+   SetLength(GSuites, GSuiteCount + 1);
+   GSuites[GSuiteCount] := Suite;
+   Inc(GSuiteCount);
 end;
 
 function RunAllSuites: Boolean;
@@ -203,6 +217,10 @@ begin
       end;
 
    WriteLn('');
+   { The suite count is REPORTED, so a suite that stops being registered is
+     visible in the build log instead of hiding inside a total that only ever
+     goes up. }
+   WriteLn('SUITES: ', GSuiteCount);
    WriteLn('PASSED: ', totalPass, '  FAILED: ', totalFail);
    Result := (totalFail = 0);
 end;
