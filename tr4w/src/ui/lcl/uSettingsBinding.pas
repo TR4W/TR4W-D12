@@ -70,6 +70,16 @@ type
       FCheck: TCheckBox;
       FEdit: TEdit;
       FCombo: TComboBox;
+
+      { WHAT THE CONTROL SHOWED WHEN THE PAGE LOADED, in the same spelling Save
+        would send.  Empty FLoadedValid means "never loaded", and then Save
+        writes unconditionally -- the old behaviour, which is the safe default
+        for a control filled by something other than Load. }
+      FLoadedText: string;
+      FLoadedValid: boolean;
+
+      { The control's value as text, whichever of the three it holds. }
+      function ControlText: string;
    public
       constructor Create(const aKey: string);
 
@@ -148,12 +158,16 @@ begin
    if FCheck <> nil then
       begin
       FCheck.Checked := SameText(s.AsText, 'TRUE');
+      FLoadedText  := ControlText;
+      FLoadedValid := True;
       Exit;
       end;
 
    if FEdit <> nil then
       begin
       FEdit.Text := s.AsText;
+      FLoadedText  := ControlText;
+      FLoadedValid := True;
       Exit;
       end;
 
@@ -189,14 +203,72 @@ begin
          end;
       FCombo.ItemIndex := i;
       end;
+
+   FLoadedText  := ControlText;
+   FLoadedValid := True;
 end;
 
+function TSettingBinding.ControlText: string;
+begin
+   Result := '';
+   if FCheck <> nil then
+      begin
+      if FCheck.Checked then
+         begin
+         Result := 'TRUE';
+         end
+      else
+         begin
+         Result := 'FALSE';
+         end;
+      Exit;
+      end;
+   if FEdit <> nil then
+      begin
+      Result := FEdit.Text;
+      Exit;
+      end;
+   if (FCombo <> nil) and (FCombo.ItemIndex >= 0) then
+      begin
+      Result := FCombo.Items[FCombo.ItemIndex];
+      end;
+end;
+
+{ SAVE WHAT THE OPERATOR CHANGED, NOT EVERY CONTROL ON THE PAGE.
+
+  Saving unconditionally means opening Preferences and pressing Save writes all
+  ~230 settings back, and for a setting whose LIVE value has legitimately moved
+  away from its stored one since startup that is destructive: the write re-
+  applies the stored value over the running one.
+
+  NY4I hit it twice on the bench, 2026-08-24.  He turned the band map's All
+  bands and All modes filters off from its own right-click menu, then opened
+  Preferences to raise the display limit -- and saving switched both filters
+  back on.  CODE SPEED is the same class and worse: the operator changes it by
+  keystroke all contest long, so a Preferences save for an unrelated setting
+  would snap the keyer back to the configured default mid-run.
+
+  So the stored value is a STARTUP DEFAULT, the global is the live value, and
+  the two are allowed to differ.  Editing a field is an explicit instruction and
+  still takes effect at once; leaving it alone now means exactly that.
+
+  NY4I's model, 2026-08-24: "If run-time setting IsDirty then update run-time
+  setting else leave the run time setting alone."
+
+  Compared against what LOAD put in the control, not against the setting's
+  current value -- the setting may have moved underneath us, and that is
+  precisely the case this must not treat as an edit. }
 function TSettingBinding.Save(out aError: string): boolean;
 var
    s: TSettingBase;
 begin
    aError := '';
    Result := True;
+
+   if FLoadedValid and (ControlText = FLoadedText) then
+      begin
+      Exit;
+      end;
 
    s := FindSetting(FKey);
    if s = nil then
