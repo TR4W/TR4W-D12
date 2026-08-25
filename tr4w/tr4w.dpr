@@ -145,6 +145,7 @@ uses
   uCallsigns in 'src\uCallsigns.pas',
   uSpots in 'src\uSpots.pas',
   uSpotAge in 'src\uSpotAge.pas',
+  uClusterTokens in 'src\uClusterTokens.pas',
   uGetScores in 'src\uGetScores.pas',
   uStations in 'src\uStations.pas',
   uAltD in 'src\uAltD.pas',

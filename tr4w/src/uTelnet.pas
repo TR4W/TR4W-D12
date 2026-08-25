@@ -236,6 +236,7 @@ var
   TelnetCallsignAlertList: HWND;
 implementation
 uses uNet,
+  uClusterTokens,    // the braced-token parser, a leaf so it can be tested
   uDXClusterClient,   // the socket half, extracted so it can be tested headless
   uDXSpotParse,       // the decode half, likewise -- ProcessDX keeps only APPLY
   uBandmap,
@@ -378,174 +379,106 @@ var
   TelCmdTooltip: HWND = 0;                   // tracking tooltip for the preview
   ClusterTooltipText: array[0..511] of AnsiChar; // stable storage for the tip text
 
-// Trim surrounding spaces and upper-case A..Z so token matching is
-// case-insensitive and tolerant of '{ MY_CALL }'.
-function NormalizeClusterToken(const S: AnsiString): AnsiString;
-var
-   i, First, Last: integer;
-   c: AnsiChar;
-begin
-   First := 1;
-   Last := Length(S);
-   while (First <= Last) and (S[First] = ' ') do
-      begin
-      Inc(First);
-      end;
-   while (Last >= First) and (S[Last] = ' ') do
-      begin
-      Dec(Last);
-      end;
-   Result := '';
-   for i := First to Last do
-      begin
-      c := S[i];
-      if (c >= 'a') and (c <= 'z') then
-         begin
-         c := AnsiChar(Ord(c) - 32);
-         end;
-      Result := Result + c;
-      end;
-end;
-
-{ Returns the live value for a single (already normalized) token name.        }
-{ Found is set False for an unrecognized token so the caller can leave it      }
-{ verbatim. This is the single source of truth for the token vocabulary.       }
-function ClusterTokenValue(const Token: AnsiString; var Found: boolean): AnsiString;
+// THE TOKEN VOCABULARY -- the half that needs the application's state.
+//
+// The parser itself now lives in uClusterTokens, which links without the
+// socket, the spot model or this dialog procedure and is therefore under unit
+// test.  What stays here is the part that could never move: knowing that
+// MY_CALL means the MyCall global.
+//
+// Result is False for an unrecognised token so the parser can leave it
+// verbatim.  This is the single source of truth for the token vocabulary.
+function TelnetClusterTokenValue(const Token: string; out Value: string): boolean;
 var
    RealFreq: Real;
    FreqStr: ShortString;
 begin
-   Found := True;
+   Result := True;
+   Value := '';
+
    if Token = 'MY_CALL' then
       begin
-      Result := MyCall
+      Value := MyCall
       end
    else if Token = 'MY_STATE' then
       begin
-      Result := MyState
+      Value := MyState
       end
    else if Token = 'MY_SECTION' then
       begin
-      Result := MySection
+      Value := MySection
       end
    else if Token = 'MY_NAME' then
       begin
-      Result := MyName
+      Value := MyName
       end
    else if Token = 'MY_GRID' then
       begin
-      Result := MyGrid
+      Value := MyGrid
       end
    else if Token = 'MY_ZONE' then
       begin
-      Result := MyZone
+      Value := MyZone
       end
    else if Token = 'MY_CHECK' then
       begin
-      Result := MyCheck
+      Value := MyCheck
       end
    else if Token = 'MY_PREC' then
       begin
-      Result := MyPrec
+      Value := MyPrec
       end
    else if Token = 'MY_CLASS' then
       begin
-      Result := MyFDClass
+      Value := MyFDClass
       end
    else if Token = 'MY_PARK' then
       begin
-      Result := MyPark
+      Value := MyPark
       end
    else if Token = 'MY_POSTALCODE' then
       begin
-      Result := MyPostalCode
+      Value := MyPostalCode
       end
    else if Token = 'CALL' then
       begin
-      Result := CallWindowString
+      Value := CallWindowString
       end
    else if Token = 'DATE' then
       begin
-      Result := GetDateString
+      Value := GetDateString
       end
    else if Token = 'TIME' then
       begin
-      Result := GetTimeString
+      Value := GetTimeString
       end
    else if Token = 'BAND' then
       begin
-      Result := BandStringsArrayWithOutSpaces[ActiveBand]
+      Value := BandStringsArrayWithOutSpaces[ActiveBand]
       end
    else if Token = 'FREQ' then
       begin
       RealFreq := Radio1.FilteredStatus.Freq / 1000.0;   { Hz -> kHz }
       Str(RealFreq: 0: 1, FreqStr);
-      Result := FreqStr;
+      Value := string(FreqStr);
       end
    else
       begin
-      Found := False;
+      Result := False;
       end;
 end;
 
-// Expands every {TOKEN} in Src. Pure transform - no global state is mutated -
-// so it is safe to call both from the send path and from the menu-hover proc.
-function ExpandClusterTokens(Src: PAnsiChar): AnsiString;
-var
-   S, Token, Value: AnsiString;
-   i, Len, j: integer;
-   Found: boolean;
+// The expansion, keeping the boundary between literal text and substituted
+// values so a caller can SHOW the operator which parts came from a token.
+function TelnetClusterSegments(const Src: string): TClusterSegments;
 begin
-   S := Src;
-   Result := '';
-   i := 1;
-   Len := Length(S);
-   while i <= Len do
-      begin
-      if (S[i] = '{') and (i < Len) and (S[i + 1] = '{') then
-         begin
-         Result := Result + '{';
-         Inc(i, 2);
-         end
-      else if (S[i] = '}') and (i < Len) and (S[i + 1] = '}') then
-         begin
-         Result := Result + '}';
-         Inc(i, 2);
-         end
-      else if S[i] = '{' then
-         begin
-         j := i + 1;
-         while (j <= Len) and (S[j] <> '}') do
-            begin
-            Inc(j);
-            end;
-         if j > Len then
-            begin
-            { Unterminated brace - emit the remainder literally. }
-            Result := Result + Copy(S, i, Len - i + 1);
-            i := Len + 1;
-            end
-         else
-            begin
-            Token := NormalizeClusterToken(Copy(S, i + 1, j - i - 1));
-            Value := ClusterTokenValue(Token, Found);
-            if Found then
-               begin
-               Result := Result + Value;
-               end
-            else
-               begin
-               Result := Result + Copy(S, i, j - i + 1);   // leave {TOKEN} verbatim
-               end;
-            i := j + 1;
-            end;
-         end
-      else
-         begin
-         Result := Result + S[i];
-         Inc(i);
-         end;
-      end;
+   Result := ExpandClusterSegments(Src, TelnetClusterTokenValue);
+end;
+
+// The finished command text, for callers that do not need the boundaries.
+function ExpandClusterTokens(Src: PAnsiChar): AnsiString;
+begin
+   Result := AnsiString(SegmentsToText(TelnetClusterSegments(string(AnsiString(Src)))));
 end;
 
 { Creates the once-per-window tracking tooltip used to preview expanded        }
