@@ -1084,8 +1084,8 @@ begin
          end;
       if h <> 0 then
          begin
-         SetDlgItemTextW(h, 102,
-            PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOA].Frequency)));
+         PostPanelText(h, 102,
+            string(FreqToPChar(rig.CurrentStatus.VFO[VFOA].Frequency)));
          end;
       // HANDED OVER, NOT WRITTEN.  This runs on the polling thread and the
       // frequency row is an LCL control; see uPanelUpdate.puElement.
@@ -1122,8 +1122,8 @@ begin
          end;
       if h <> 0 then
          begin
-         SetDlgItemTextW(h, 104,
-            PChar(FreqToPChar(rig.CurrentStatus.VFO[VFOB].Frequency)));
+         PostPanelText(h, 104,
+            string(FreqToPChar(rig.CurrentStatus.VFO[VFOB].Frequency)));
          end;
       //Windows.SetWindowTextA(rig^.FreqWindowHandle, FreqToPChar(rig.CurrentStatus.Freq));
       end
@@ -1148,7 +1148,10 @@ begin
       begin
       { $ R A NGECHECKS OFF}
           //SetDlgItemInt(h, 120, Cardinal(rig.CurrentStatus.RITFreq), rig.CurrentStatus.RITFreq < 0);
-      SetDlgItemTextW(h, 120, PChar(RITFreqToPchar(rig.CurrentStatus.RITFreq)));
+      if h <> 0 then
+         begin
+         PostPanelText(h, 120, string(RITFreqToPchar(rig.CurrentStatus.RITFreq)));
+         end;
       { $ R A NGECHECKS ON}
       rig.CurrentStatus.PrevRITFreq := rig.CurrentStatus.RITFreq;
       end;
@@ -1210,11 +1213,12 @@ begin
       (rig.CurrentStatus.VFO[VFOA].ExtendedMode <>
        rig.CurrentStatus.previousVFO[VFOA].ExtendedMode) then
       begin
-      // The A variant needs ANSI bytes.  Under D12 PChar is PWideChar, and this
-      // compiled only through an implicit conversion (W1057) -- the same latent
-      // defect fixed in TF.pas:644.  Stated explicitly so it cannot drift back.
-      Windows.SetWindowTextA(rig.ModeVFOAWndHandle,
-         PAnsiChar(AnsiString(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOA].ExtendedMode])));
+      // BY CONTROL ID, NOT BY HANDLE.  ModeVFOAWndHandle is GetDlgItem(h, 105)
+      // (MainUnit), so naming the id says the same thing and goes through the
+      // one seam.  The ANSI-versus-wide note this replaces is moot now: the
+      // text is a string and uPanelUpdate owns how it reaches the control.
+      PostPanelText(h, 105,
+         string(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOA].ExtendedMode]));
       rig.CurrentStatus.previousVFO[VFOA].ExtendedMode :=
          rig.CurrentStatus.VFO[VFOA].ExtendedMode;
       end;
@@ -1224,11 +1228,9 @@ begin
       (rig.CurrentStatus.VFO[VFOB].ExtendedMode <>
        rig.CurrentStatus.previousVFO[VFOB].ExtendedMode) then
       begin
-      // The A variant needs ANSI bytes.  Under D12 PChar is PWideChar, and this
-      // compiled only through an implicit conversion (W1057) -- the same latent
-      // defect fixed in TF.pas:644.  Stated explicitly so it cannot drift back.
-      Windows.SetWindowTextA(rig.ModeVFOBWndHandle,
-         PAnsiChar(AnsiString(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOB].ExtendedMode])));
+      // See the VFO A label above -- GetDlgItem(h, 106) here.
+      PostPanelText(h, 106,
+         string(ExtendedModeStringArray[rig.CurrentStatus.VFO[VFOB].ExtendedMode]));
       rig.CurrentStatus.previousVFO[VFOB].ExtendedMode :=
          rig.CurrentStatus.VFO[VFOB].ExtendedMode;
       end;
