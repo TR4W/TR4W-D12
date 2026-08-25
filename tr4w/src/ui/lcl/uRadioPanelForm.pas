@@ -29,21 +29,21 @@ unit uRadioPanelForm;
 interface
 
 uses
-   Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, Graphics, VC;
+   Classes, SysUtils, LCLType, Forms, Controls, StdCtrls, ExtCtrls, Graphics, VC;
 
 type
    TfrmRadioPanel = class(TForm)
-      lblVFOACaption: TLabel;
-      lblVFOBCaption: TLabel;
-      lblVFOA: TLabel;
-      lblVFOB: TLabel;
-      lblModeA: TLabel;
-      lblModeB: TLabel;
-      lblRITFreq: TLabel;
-      lblRIT: TLabel;
-      lblXIT: TLabel;
-      lblSplit: TLabel;
-      lblStatus: TLabel;
+      lblVFOACaption: TPanel;
+      lblVFOBCaption: TPanel;
+      lblVFOA: TPanel;
+      lblVFOB: TPanel;
+      lblModeA: TPanel;
+      lblModeB: TPanel;
+      lblRITFreq: TPanel;
+      lblRIT: TPanel;
+      lblXIT: TPanel;
+      lblSplit: TPanel;
+      lblStatus: TPanel;
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
       procedure HandleKeyDown(Sender: TObject; var Key: word;
                               Shift: TShiftState);
@@ -94,7 +94,7 @@ begin
       end;
 end;
 
-function FlagLabel(const aForm: TfrmRadioPanel; const aIndex: integer): TLabel;
+function FlagLabel(const aForm: TfrmRadioPanel; const aIndex: integer): TPanel;
 begin
    case aIndex of
      0: Result := aForm.lblRIT;
@@ -130,7 +130,7 @@ end;
 
 procedure TfrmRadioPanel.SetFlag(const aIndex: integer; const aOn: boolean);
 var
-   lab: TLabel;
+   lab: TPanel;
 begin
    if (aIndex < 0) or (aIndex > 2) then
       begin
@@ -140,17 +140,21 @@ begin
    FFlagOn[aIndex] := aOn;
    lab := FlagLabel(Self, aIndex);
 
-   // YELLOW WHEN SET, the panel's own background when not.  The dialog got this
+   // YELLOW WHEN SET, the form's own background when not.  The dialog got this
    // by returning a yellow brush from WM_CTLCOLORSTATIC for an ENABLED control.
+   //
+   // ParentColor RATHER THAN COPYING Color, which is what the TLabel version
+   // did.  A copy goes stale: SyncActiveTint repaints the FORM when the active
+   // radio changes, and a flag that was off still held the tint from before.
+   // Parented, it follows for free.
    if aOn then
       begin
-      lab.Transparent := False;
+      lab.ParentColor := False;
       lab.Color := clYellow;
       end
    else
       begin
-      lab.Transparent := True;
-      lab.Color := Color;
+      lab.ParentColor := True;
       end;
 end;
 
@@ -205,7 +209,7 @@ end;
   unchanged, because uRadioPolling still posts them and the coalescing cache is
   keyed on them. }
 function LabelFor(const aForm: TfrmRadioPanel;
-                  const aControlId: integer): TLabel;
+                  const aControlId: integer): TPanel;
 begin
    case aControlId of
      102: Result := aForm.lblVFOA;
@@ -239,7 +243,7 @@ function PanelTextToForm(const aPanel: HWND; const aControlId: integer;
                          const aText: string): boolean;
 var
    f: TfrmRadioPanel;
-   lab: TLabel;
+   lab: TPanel;
 begin
    Result := False;
    f := FormForHandle(aPanel);
@@ -263,7 +267,7 @@ end;
   121/122/123 are RIT/XIT/SPLIT, whose "enabled" was the dialog's way of saying
   the rig has that feature ON -- see the header.  102/104 are the VFO frequency
   rows, and there the meaning really is enabled/disabled: the INACTIVE VFO is
-  greyed, which a TLabel does natively. }
+  greyed, which a TPanel does natively. }
 function PanelEnableToForm(const aPanel: HWND; const aControlId: integer;
                            const aEnabled: boolean): boolean;
 var

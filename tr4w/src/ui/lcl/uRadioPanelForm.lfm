@@ -8,100 +8,105 @@ object frmRadioPanel: TfrmRadioPanel
   KeyPreview = True
   OnClose = HandleClose
   OnKeyDown = HandleKeyDown
-  object lblVFOACaption: TLabel
+  object lblVFOACaption: TPanel
     Left = 5
     Height = 23
     Top = 5
     Width = 45
-    AutoSize = False
+    Alignment = taCenter
+    BevelOuter = bvLowered
     Caption = 'VFO A'
   end
-  object lblVFOBCaption: TLabel
+  object lblVFOBCaption: TPanel
     Left = 5
     Height = 23
     Top = 30
     Width = 45
-    AutoSize = False
+    Alignment = taCenter
+    BevelOuter = bvLowered
     Caption = 'VFO B'
   end
-  object lblVFOA: TLabel
+  object lblVFOA: TPanel
     Left = 50
     Height = 23
     Top = 5
     Width = 100
     Alignment = taCenter
-    AutoSize = False
+    BevelOuter = bvLowered
     Font.Height = -16
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object lblVFOB: TLabel
+  object lblVFOB: TPanel
     Left = 50
     Height = 23
     Top = 30
     Width = 100
     Alignment = taCenter
-    AutoSize = False
+    BevelOuter = bvLowered
     Font.Height = -16
     Font.Style = [fsBold]
     ParentFont = False
   end
-  object lblModeA: TLabel
-    Left = 152
+  object lblModeA: TPanel
+    Left = 150
     Height = 23
     Top = 5
     Width = 40
-    AutoSize = False
+    Alignment = taCenter
+    BevelOuter = bvLowered
   end
-  object lblModeB: TLabel
-    Left = 152
+  object lblModeB: TPanel
+    Left = 150
     Height = 23
     Top = 30
     Width = 40
-    AutoSize = False
+    Alignment = taCenter
+    BevelOuter = bvLowered
   end
-  object lblRITFreq: TLabel
+  object lblRITFreq: TPanel
     Left = 5
     Height = 20
     Top = 55
     Width = 45
     Alignment = taCenter
-    AutoSize = False
+    BevelOuter = bvLowered
   end
-  object lblRIT: TLabel
+  object lblRIT: TPanel
     Left = 50
     Height = 20
     Top = 55
     Width = 45
     Alignment = taCenter
-    AutoSize = False
+    BevelOuter = bvLowered
     Caption = 'RIT'
   end
-  object lblXIT: TLabel
+  object lblXIT: TPanel
     Left = 95
     Height = 20
     Top = 55
     Width = 45
     Alignment = taCenter
-    AutoSize = False
+    BevelOuter = bvLowered
     Caption = 'XIT'
   end
-  object lblSplit: TLabel
+  object lblSplit: TPanel
     Left = 140
     Height = 20
     Top = 55
     Width = 50
     Alignment = taCenter
-    AutoSize = False
+    BevelOuter = bvLowered
     Caption = 'SPLIT'
   end
-  object lblStatus: TLabel
+  object lblStatus: TPanel
     Left = 5
     Height = 20
     Top = 78
     Width = 185
     Anchors = [akTop, akLeft, akRight]
-    AutoSize = False
+    Alignment = taCenter
+    BevelOuter = bvLowered
     Font.Color = clRed
     ParentFont = False
   end
