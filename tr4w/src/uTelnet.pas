@@ -43,6 +43,7 @@ uses
   //Country9,
   LogRadio,
   uSpots,
+  uSpotAge,   // UTCNow
   Windows,
   LogEdit,
   LogDupe,
@@ -1809,7 +1810,7 @@ function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 var
   MinuteOfDay: integer;
-  ct: Cardinal;
+  ct: TDateTime;   { now, UTC -- see the stamping block below }
   { Held across the SendMessageA below -- see the note there. }
   alertCall: AnsiString;
 begin
@@ -1855,26 +1856,28 @@ begin
 
      end;
 
-  // The spot's own age.  `ct` is "now" in the same made-up unit the stamp is
-  // converted into -- minutes, with the day and month folded in as fixed-size
-  // blocks (30-day months).  It is only ever used as a difference against a
-  // stamp from the same run, so the calendar being wrong does not matter; this
-  // is unchanged.
-  ct := UTC.wMinute + UTC.wHour * 60 + UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24
-    * 30;
+  // THE SPOT'S OWN TIME WHEN THE CLUSTER GAVE US ONE, otherwise arrival.
+  //
+  // ParseDXSpotTimeUTC yields a minute of the UTC day, with no date -- so the
+  // date is today's, and a spot whose time is still AHEAD of now belongs to
+  // yesterday: the cluster line crossed midnight between being sent and being
+  // read.  Subtracting the day is what the old `if ct >= FSysTime` guard was
+  // groping at; it simply dropped the age instead.
+  ct := UTCNow;
   if ParseDXSpotTimeUTC(Line, MinuteOfDay) then
      begin
-     TempSpot.FSysTime := Cardinal(MinuteOfDay) +
-       UTC.wDay * 60 * 24 + UTC.wMonth * 60 * 24 * 30;
-     if ct >= TempSpot.FSysTime then
+     TempSpot.FSysTime := Trunc(ct) +
+       EncodeTime(MinuteOfDay div 60, MinuteOfDay mod 60, 0, 0);
+     if TempSpot.FSysTime > ct then
         begin
-        TempSpot.FMinutesLeft := ct - TempSpot.FSysTime;
+        TempSpot.FSysTime := TempSpot.FSysTime - 1;
         end;
      end
   else
      begin
      TempSpot.FSysTime := ct;
      end;
+  TempSpot.FAgeSeconds := SpotAgeSeconds(TempSpot);
 
   if TempSpot.FCall = MyCall then
      begin
@@ -1993,12 +1996,11 @@ begin
   TempSpot.FQSXFrequency := 0;
   TempSpot.FDupe := Dupe;
   TempSpot.FMult := Mult;
-  TempSpot.FMinutesLeft := 0;
+  TempSpot.FAgeSeconds := 0;
   TempSpot.FSourceCall := MyCall + '-' + ComputerID;
   TempSpot.FNotes[0] := #0;
-  //  Windows.GetSystemTime(TempSpot.FSysTime);
-  TempSpot.FSysTime := UTC.wMinute + UTC.wHour * 60 + UTC.wDay * 60 * 24 +
-    UTC.wMonth * 60 * 24 * 30;
+  // OUR OWN spot: made now, by definition.
+  TempSpot.FSysTime := UTCNow;
   SpotsList.AddSpot(TempSpot, True);
 
   DisplayBandMap;

@@ -248,7 +248,9 @@ uses
    uNetFraming in '..\..\src\uNetFraming.pas',
    uTestNetFraming in 'uTestNetFraming.pas',
    uDXSpotParse         in '..\..\src\uDXSpotParse.pas',
+   uSpotAge             in '..\..\src\uSpotAge.pas',
    uTestDXSpotParse     in 'uTestDXSpotParse.pas',
+   uTestSpotAge         in 'uTestSpotAge.pas',
    // Kenwood + Elecraft model units: listed so their initialization sections
    // self-register here, which is what puts them under the base-constructor
    // and registry coverage tests.
@@ -347,6 +349,7 @@ begin
    RegisterSuite(TRotatorFactoryTests.Create('RotatorFactory'));
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
+   RegisterSuite(TSpotAgeTests.Create('SpotAge'));
    RegisterSuite(TWinTimerTests.Create('WinTimer'));
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));

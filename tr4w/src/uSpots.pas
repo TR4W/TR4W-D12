@@ -125,6 +125,10 @@ type
     property RepaintToken: cardinal read FRepaintToken;
   end;
 
+{ HOW OLD A SPOT IS, IN WHOLE SECONDS.  The arithmetic is uSpotAge, which is a
+  leaf and therefore unit-tested; this is only the spot-shaped wrapper. }
+function SpotAgeSeconds(const aSpot: TSpotRecord): integer;
+
 var
   SpotsList: TDXSpotsList;
   SpotsDisplayed: integer;
@@ -132,6 +136,7 @@ var
 implementation
 uses
   uMainForm,   { the call field, named -- wh[] round 3 }
+  uSpotAge,   // UTCNow, AgeSeconds -- the leaf the tests can link
   SysUtils,   // Issue #997: Format/StrPCopy
   uAnsiStr, // D12: ANSI StrPCopy for wsprintfBuffer
   LOGSUBS2,
@@ -140,6 +145,11 @@ uses
   uBandMapView,   // BandMapSelected -- ask the view, do not reach into it
   uBandmap,
   LogWind;
+
+function SpotAgeSeconds(const aSpot: TSpotRecord): integer;
+begin
+   Result := AgeSeconds(aSpot.FSysTime, UTCNow);
+end;
 
 { TStringList }
 
@@ -633,14 +643,19 @@ begin
   RequestRepaint;
 end;
 
+{ AGE EVERY SPOT AND DROP THE ONES PAST THE LIMIT.
+
+  BAND MAP DECAY TIME is stated in MINUTES -- the help file and the operator's
+  habit both say so -- but it is compared in SECONDS, so a spot expires sixty
+  seconds after IT arrived rather than at the next minute boundary.  That is
+  the whole difference between spots falling off one at a time and the map
+  emptying in one tick. }
 procedure TDXSpotsList.DecrementSpotsTimes;
 label
   NextSpot;
 var
   i: integer;
-  CurrentTime: integer;
   Difference: integer;
-  St: SYSTEMTIME;
 begin
   if FCount = 0 then
      begin
@@ -648,18 +663,15 @@ begin
      end;
   // Up here, not at the end: the loop below leaves through a goto and two
   // Exits, so there is no single end to hang it on.  Past the empty-list guard,
-  // every remaining path changes FMinutesLeft.
+  // every remaining path changes FAgeSeconds.
   RequestRepaint;
-  GetSystemTime(St);
-  CurrentTime := St.wMinute + St.wHour * 60 + St.wDay * 60 * 24 + St.wMonth * 60
-    * 24 * 30;
 
   i := 0;
   NextSpot:
 
-  Difference := CurrentTime - FList^[i].FSysTime;
-  FList^[i].FMinutesLeft := Difference;
-  if Difference >= BandMapDecayTime then
+  Difference := SpotAgeSeconds(FList^[i]);
+  FList^[i].FAgeSeconds := Difference;
+  if Difference >= BandMapDecayTime * 60 then
      begin
      Delete(i)
      end
@@ -778,7 +790,7 @@ begin
         begin
         for Index := 0 to FCount - 1 do
            begin
-           FList^[Index].FMinutesLeft := 0;
+           FList^[Index].FAgeSeconds := 0;
            end;
         end;
   finally
